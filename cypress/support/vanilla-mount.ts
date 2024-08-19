@@ -11,7 +11,7 @@ const getContainerEl = () => {
     return el;
   }
   throw Error(
-    `No element found that matches selector ${ROOT_SELECTOR}. Please add a root element with data-cy-root attribute to your "component-index.html" file so that Cypress can attach your component to the DOM.`,
+    `No element found that matches selector ${ROOT_SELECTOR}. Please add a root element with data-cy-root attribute to your "component-index.html" file so that Cypress can attach your component to the DOM.`
   );
 };
 
@@ -67,7 +67,7 @@ function mount(element: HTMLElement, options = {}) {
     target.setAttribute('id', TARGET_SELECTOR);
     target.appendChild(element);
 
-    el.append(target);
+    el.appendChild(target);
 
     return cy.wait(1, { log: false }).then(() => {
       if (options.log !== false) {
