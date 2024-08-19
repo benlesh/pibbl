@@ -1,3 +1,8 @@
+/**
+ * Uses the Chrome DevTools Protocol emulation domain to set the device metrics.
+ * @see https://chromedevtools.github.io/devtools-protocol/tot/Emulation/#method-setDeviceMetricsOverride
+ */
+
 import { fireCdpCommand } from "./fireCdpCommand";
 
 export interface SetDeviceMetricsOverrideOptions {
