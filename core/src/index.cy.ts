@@ -13,11 +13,6 @@ it('renders an h1', () => {
   const h1 = document.createElement('h1')
   h1.innerText = 'Hello, World!'
   document.body.appendChild(h1)
-  cy.setDeviceMetricsOverride({
-    deviceScaleFactor: 1,
-    width: 0,
-    height: 0,
-  })
 })
 
 it.skip('renders', () => {
