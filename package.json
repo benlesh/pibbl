@@ -2,7 +2,11 @@
   "name": "@crc/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "dev": "cypress open --browser=chrome --component",
+    "test": "cypress run --browser=chrome --component",
+    "test:ci": "TAKE_SCREENSHOTS=true cypress run"
+  },
   "private": true,
   "devDependencies": {
     "@nx/eslint": "19.5.6",

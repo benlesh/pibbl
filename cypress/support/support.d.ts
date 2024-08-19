@@ -1,5 +1,5 @@
+import { mount } from './mount';
 import { setDeviceMetricsOverride } from './setDeviceMetricsOverride';
-import { mount } from './vanilla-mount';
 
 declare global {
   namespace Cypress {

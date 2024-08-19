@@ -1,4 +1,5 @@
 /// <reference types="cypress" />
+/// <reference types="./support.d.ts" />
 // ***********************************************************
 // This example support/component.js is processed and
 // loaded automatically before your test files.
@@ -15,8 +16,15 @@
 // ***********************************************************
 import 'cypress-real-events/support';
 
+import { mount } from './mount';
+import { screenshot } from './screenshot';
 import { setDeviceMetricsOverride } from './setDeviceMetricsOverride';
-import { mount } from './vanilla-mount';
 
 Cypress.Commands.add('mount', mount);
 Cypress.Commands.add('setDeviceMetricsOverride', setDeviceMetricsOverride)
+Cypress.Commands.overwrite('screenshot', screenshot)
+
+Cypress.Screenshot.defaults({
+  scale: true,
+  overwrite: true,
+})

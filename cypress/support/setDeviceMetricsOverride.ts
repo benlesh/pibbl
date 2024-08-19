@@ -3,7 +3,7 @@
  * @see https://chromedevtools.github.io/devtools-protocol/tot/Emulation/#method-setDeviceMetricsOverride
  */
 
-import { fireCdpCommand } from "./fireCdpCommand";
+import { fireCdpCommand } from "./utils/fireCdpCommand";
 
 export interface SetDeviceMetricsOverrideOptions {
   deviceScaleFactor: number;

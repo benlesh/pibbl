@@ -1,3 +1,5 @@
+import { crc, type CompEl } from '@crc/core';
+
 const ROOT_SELECTOR = '[data-cy-root]';
 const TARGET_SELECTOR = '__cy_target__';
 /**
@@ -50,33 +52,44 @@ const cleanup = () => {
   Cypress.$(`#${TARGET_SELECTOR}`).remove();
 };
 
+export interface MountOpts {
+}
+
 /**
- * Mounts a component and returns a DOM node
- * @param options
- * @returns {Cypress.Chainable<{DOMElement: T}>}
+ * Mounts a CRC Component onto a canvas element
+ * @param component The CRC Component to mount
+ * @param options Options to configure the mounting process (canvasWidth, canvasHeight)
+ * @returns {Cypress.Chainable<{HTMLCanvasElement}>}
  */
-function mount(element: HTMLElement, options = {}) {
+function mount<P>(component: CompEl<P>, options = {
+  canvasWidth: Cypress.config('viewportWidth'),
+  canvasHeight: Cypress.config('viewportHeight'),
+}) {
   // Remove last mounted component if cy.mount is called more than once in a test
   cleanup();
-
+    
   // then wait for cypress to load
   return cy.then(() => {
+    const canvasElement = document.createElement('canvas');
+    canvasElement.width = options.canvasWidth;
+    canvasElement.height = options.canvasHeight;
+
     const el = getContainerEl();
 
     const target = document.createElement('div');
     target.setAttribute('id', TARGET_SELECTOR);
-    target.appendChild(element);
+    target.appendChild(canvasElement);
 
     el.appendChild(target);
 
+    crc(canvasElement, component)
+
     return cy.wait(1, { log: false }).then(() => {
-      if (options.log !== false) {
-        Cypress.log({
-          name: 'mount',
-          message: [`<${element.tagName} ... />`],
-        });
-      }
-      return element;
+      Cypress.log({
+        name: 'mount',
+        message: [`<${component.type.name} ... />`],
+      });
+      return canvasElement;
     });
   });
 }
