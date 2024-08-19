@@ -15,23 +15,8 @@
 // ***********************************************************
 import 'cypress-real-events/support';
 
-// Import commands.js using ES2015 syntax:
-import './commands';
-
-// Alternatively you can use CommonJS syntax:
-// require('./commands')
-
+import { setDeviceMetricsOverride } from './setDeviceMetricsOverride';
 import { mount } from './vanilla-mount';
 
-declare global {
-  namespace Cypress {
-    interface Chainable {
-      mount: typeof mount;
-    }
-  }
-}
-
 Cypress.Commands.add('mount', mount);
-
-// Example use:
-// cy.mount(MyComponent)
+Cypress.Commands.add('setDeviceMetricsOverride', setDeviceMetricsOverride)

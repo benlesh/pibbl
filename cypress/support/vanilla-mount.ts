@@ -59,7 +59,6 @@ function mount(element: HTMLElement, options = {}) {
   // Remove last mounted component if cy.mount is called more than once in a test
   cleanup();
 
-  debugger;
   // then wait for cypress to load
   return cy.then(() => {
     const el = getContainerEl();
