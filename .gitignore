@@ -40,3 +40,8 @@ Thumbs.db
 
 .nx/cache
 .nx/workspace-data
+
+# Cypress
+cypress/screenshots
+cypress/videos
+cypress/downloads
