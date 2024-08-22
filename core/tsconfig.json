@@ -13,9 +13,6 @@
   "include": [],
   "references": [
     {
-      "path": "../tsconfig.cy.json"
-    },
-    {
       "path": "./tsconfig.lib.json"
     },
     {
