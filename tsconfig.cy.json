@@ -1,7 +1,0 @@
-{
-  "include": ["core/src", "core", "./src", "cypress/support"],
-  "compilerOptions": {
-    "types": ["cypress", "cypress-real-events"],
-    "composite": true
-  }
-}
