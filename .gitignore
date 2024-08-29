@@ -40,11 +40,3 @@ Thumbs.db
 
 .nx/cache
 .nx/workspace-data
-
-# Vitepress
-docs/.vitepress/cache
-docs/.vitepress/dist
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
