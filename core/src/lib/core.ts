@@ -77,7 +77,7 @@ export type PixelGridAlignment = 'none' | 'round' | 'ceil' | 'floor';
 // Shared State
 ////////////////////////////////////////////////////////////////////////////////////////
 
-let crcInstances = new Map<Canvas, CRCInstance>();
+let _crcInstances = new Map<Canvas, CRCInstance>();
 let _currentCRCInstance: CRCInstance | undefined = undefined;
 let _componentRefs: CompRefs<any> | undefined = undefined;
 let _canvas: Canvas | undefined = undefined;
@@ -87,15 +87,42 @@ let _renderContext: RenderingContext2D | undefined = undefined;
 let _unseenIds: Set<string> | undefined = undefined;
 let _seenIds: Set<string> | undefined = undefined;
 let _mouseTransform: DOMMatrix | undefined = undefined;
-let clippingStack: {
+let _clippingStack: {
   path: Path2D;
   fillRule: CanvasFillRule;
   transform: DOMMatrix;
 }[] = [];
+let _anonElementNames = new WeakMap<any, string>();
+let _anon = 0;
 
-let anonElementNames = new WeakMap<any, string>();
+function getComponentRefs() {
+  if (!_componentRefs) {
+    throw new Error('No component refs available');
+  }
+  return _componentRefs;
+}
 
-let anon = 0;
+function getCanvas() {
+  if (!_canvas) {
+    throw new Error('No canvas available');
+  }
+  return _canvas;
+}
+
+function getCurrentCRCInstance() {
+  if (!_currentCRCInstance) {
+    throw new Error('No CRC instance available');
+  }
+  return _currentCRCInstance;
+}
+
+function getCRCInstance(canvas: Canvas) {
+  const crcInstance = _crcInstances.get(canvas);
+  if (!crcInstance) {
+    throw new Error('CRC instance not found');
+  }
+  return crcInstance;
+}
 
 /**
  * Used to get a name for an anonymous function.
@@ -103,10 +130,10 @@ let anon = 0;
  * @returns A name for the anonymous function
  */
 function getAnonElemName(fn: any) {
-  if (!anonElementNames.has(fn)) {
-    anonElementNames.set(fn, `Anon${anon++}`);
+  if (!_anonElementNames.has(fn)) {
+    _anonElementNames.set(fn, `Anon${_anon++}`);
   }
-  return anonElementNames.get(fn)!;
+  return _anonElementNames.get(fn)!;
 }
 
 /**
@@ -114,12 +141,12 @@ function getAnonElemName(fn: any) {
  * DO NOT USE IN PROD
  */
 export function clearSharedState() {
-  for (const crcInstance of crcInstances.values()) {
+  for (const crcInstance of _crcInstances.values()) {
     cleanupCRCInstance(crcInstance);
   }
-  crcInstances.clear();
-  clippingStack = [];
-  anonElementNames = new WeakMap<any, string>();
+  _crcInstances.clear();
+  _clippingStack = [];
+  _anonElementNames = new WeakMap<any, string>();
   clearTempState();
 }
 
@@ -155,7 +182,7 @@ export function crc<P>(
   element: CompEl<P>,
   config?: { signal?: AbortSignal }
 ) {
-  if (!crcInstances.has(canvas)) {
+  if (!_crcInstances.has(canvas)) {
     mountCRC<P>(canvas, element, config);
   }
 
@@ -172,7 +199,7 @@ function mountCRC<P>(
   const signal = config?.signal;
 
   const cleanup = () => {
-    crcInstances.delete(canvas);
+    _crcInstances.delete(canvas);
     mainTeardowns.execute();
   };
 
@@ -207,9 +234,9 @@ function mountCRC<P>(
   };
 
   if (parent) {
-    const parentCRCInstance = crcInstances.get(parent);
+    const parentCRCInstance = getCRCInstance(parent);
 
-    for (const [type, handlers] of Object.entries(crcInstance.events)) {
+    for (const [type, handlers] of typedEntries(crcInstance.events)) {
       const handler = (e: MouseEvent) => {
         _mouseTransform = createMouseEventTransform(
           e.target as HTMLCanvasElement
@@ -253,7 +280,7 @@ function mountCRC<P>(
     }
   }
 
-  crcInstances.set(canvas, crcInstance);
+  _crcInstances.set(canvas, crcInstance);
 }
 
 /**
@@ -301,7 +328,7 @@ function executeRender(
     throw new Error('No canvas element provided');
   }
 
-  const crcInstance = crcInstances.get(canvas);
+  const crcInstance = _crcInstances.get(canvas);
 
   if (!crcInstance) {
     throw new Error('CRC is not mounted on this element');
@@ -342,7 +369,7 @@ function executeRender(
       _currentCRCInstance.refs.delete(id);
     }
   } finally {
-    const { parent } = _currentCRCInstance;
+    const { parent } = _currentCRCInstance!;
     clearTempState();
     if (updateParents) {
       if (parent) {
@@ -365,7 +392,7 @@ function executeRender(
  * @param element The optional element to update as the root element of that canvas.
  */
 function update(canvas: Canvas, rootElement?: CompEl, updateParents = false) {
-  const crcInstance = crcInstances.get(canvas)!;
+  const crcInstance = _crcInstances.get(canvas)!;
 
   if (!crcInstance) {
     throw new Error('Canvas does not have CRC mounted.');
@@ -460,10 +487,10 @@ export function Clip(props: ClipProps, ctx: RenderingContext2D) {
   const { path, fillRule = 'nonzero' } = props;
 
   _componentRefs!.onAfterRender = () => {
-    clippingStack.pop();
+    _clippingStack.pop();
   };
 
-  clippingStack.push({ path, fillRule, transform: ctx.getTransform() });
+  _clippingStack.push({ path, fillRule, transform: ctx.getTransform() });
   ctx.clip(path, fillRule);
 
   return props.children;
@@ -629,7 +656,7 @@ function isHit({
   y: number;
   fill: boolean;
   lineInteractionWidth: number;
-  currentClippingStack: typeof clippingStack;
+  currentClippingStack: typeof _clippingStack;
 }) {
   const ctx = get2dContext(canvas);
   ctx.save();
@@ -660,7 +687,7 @@ function isHit({
 }
 
 function isInAtLeastOneClippingPath(
-  currentClippingStack: typeof clippingStack,
+  currentClippingStack: typeof _clippingStack,
   x: number,
   y: number,
   ctx: RenderingContext2D
@@ -919,7 +946,7 @@ export function crcEvent<K extends keyof CRCEventRegistry>(
 
   if (handler) {
     const transform = _renderContext!.getTransform();
-    const currentClippingStack = Array.from(clippingStack);
+    const currentClippingStack = Array.from(_clippingStack);
 
     if (type === 'mouseover' || type === 'mouseout') {
       if (!componentRefs.refs[hookIndex]) {
@@ -1568,17 +1595,18 @@ export interface LayerProps extends IntrinsicProps {
 }
 
 export function Layer(props: LayerProps, ctx: RenderingContext2D) {
-  const { width = _canvas.width, height = _canvas.height } = props;
-
+  const canvas = getCanvas();
+  const { width = canvas.width, height = canvas.height } = props;
+  const componentRefs = getComponentRefs();
   if (_componentIsMounting) {
     console.log('mounting layer');
     const offscreenCanvas = new OffscreenCanvas(width, height);
-    mountCRC(offscreenCanvas, props.render, { parent: _canvas });
-    _componentRefs.refs[0] = offscreenCanvas;
+    mountCRC(offscreenCanvas, props.render, { parent: canvas });
+    componentRefs.refs[0] = offscreenCanvas;
   }
 
-  const offscreenCanvas = _componentRefs.refs[0];
-  const layerCRC = crcInstances.get(offscreenCanvas);
+  const offscreenCanvas = componentRefs.refs[0];
+  const layerCRC = getCRCInstance(offscreenCanvas);
 
   if (
     _componentIsMounting ||
@@ -1591,7 +1619,7 @@ export function Layer(props: LayerProps, ctx: RenderingContext2D) {
     console.log('rendering');
     executeRender(
       offscreenCanvas,
-      _currentCRCInstance.renderTimestamp,
+      getCurrentCRCInstance().renderTimestamp,
       layerCRC.root,
       false
     );
@@ -1605,6 +1633,10 @@ export const layer = defineComp(Layer);
 ////////////////////////////////////////////////////////////////////////////////////////
 // Utility functions
 ////////////////////////////////////////////////////////////////////////////////////////
+
+function typedEntries<T extends {}>(obj: T) {
+  return Object.entries(obj) as [keyof T, T[keyof T]][];
+}
 
 function shallowEquals(obj1: any, obj2: any): boolean {
   if (obj1 === obj2) {
