@@ -24,6 +24,9 @@
     "@nx/vite:test": {
       "cache": true,
       "inputs": ["default", "^production"]
+    },
+    "e2e-ci--**/*": {
+      "dependsOn": ["^build"]
     }
   },
   "plugins": [
@@ -63,5 +66,6 @@
       "unitTestRunner": "jest",
       "e2eTestRunner": "playwright"
     }
-  }
+  },
+  "useLegacyCache": true
 }
