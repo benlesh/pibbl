@@ -1,0 +1,36 @@
+{
+  "name": "@crc/types",
+  "type": "module",
+  "version": "0.0.1",
+  "description": "Type definitions for CRC",
+  "author": "Ben Lesh <ben@benlesh.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/benlesh/crc#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benlesh/crc.git",
+    "directory": "packages/types"
+  },
+  "bugs": "https://github.com/benlesh/crc/issues",
+  "keywords": [
+    "canvas"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "unbuild",
+    "dev": "unbuild --stub",
+    "prepublishOnly": "nr build"
+  }
+}
