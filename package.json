@@ -10,7 +10,7 @@
     "test": "vitest",
     "typecheck": "vue-tsc --noEmit",
     "build": "pnpm -r run build",
-    "dev": "pnpm -r run dev",
+    "dev": "pnpm -r run dev && pnpm playground",
     "playground": "pnpm -C playground run playground:dev",
     "playground:build": "pnpm -C docs run playground:build",
     "bench": "vitest bench"
