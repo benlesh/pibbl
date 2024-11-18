@@ -1,0 +1,14 @@
+{
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "playground:dev": "vite dev",
+    "playground:build": "vite build"
+  },
+  "dependencies": {
+    "@crc/core": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "catalog:"
+  }
+}

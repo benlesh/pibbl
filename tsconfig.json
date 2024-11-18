@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "lib": ["esnext", "DOM"],
+    "rootDir": ".",
+    "module": "esnext",
+    "moduleResolution": "Bundler",
+    "paths": {
+      "@crc/core/types": ["./packages/core/src/types.ts"],
+      "@crc/core": ["./packages/core/src/index.ts"],
+      "@crc/types": ["./packages/types/src/index.ts"]
+    },
+    "resolveJsonModule": true,
+    "types": ["vite/client", "node"],
+    "allowJs": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "noEmit": true,
+    "preserveValueImports": false,
+    "esModuleInterop": true,
+    "skipDefaultLibCheck": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.mjs",
+    "eslint.config.mjs"
+  ],
+  "exclude": [
+    "**/vendor/**",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/fixtures/**"
+  ]
+}

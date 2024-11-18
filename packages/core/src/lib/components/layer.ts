@@ -1,0 +1,54 @@
+import { defineComp } from '../define-comp';
+import { executeRender } from '../execute-render';
+import {
+  getCRCInstance,
+  getCurrentCRCInstance,
+  GLOBAL_STATE,
+} from '../global-state';
+import { mountCRC } from '../mount-crc';
+import { CompEl, IntrinsicProps, RenderingContext2D } from '../types';
+import { shallowEquals } from '../util/shallow-equals';
+
+export interface LayerProps extends IntrinsicProps {
+  render: CompEl;
+  width?: number;
+  height?: number;
+}
+
+export function Layer(props: LayerProps, ctx: RenderingContext2D) {
+  const canvas = GLOBAL_STATE.canvas!;
+  const { width = canvas.width, height = canvas.height } = props;
+  const componentRefs = GLOBAL_STATE.componentRefs!;
+  if (GLOBAL_STATE.componentIsMounting) {
+    // eslint-disable-next-line no-console
+    console.log('mounting layer');
+    const offscreenCanvas = new OffscreenCanvas(width, height);
+    mountCRC(offscreenCanvas, props.render, { parent: canvas });
+    componentRefs.refs[0] = offscreenCanvas;
+  }
+
+  const offscreenCanvas = componentRefs.refs[0];
+  const layerCRC = getCRCInstance(offscreenCanvas);
+
+  if (
+    GLOBAL_STATE.componentIsMounting ||
+    offscreenCanvas.width !== width ||
+    offscreenCanvas.height !== height ||
+    !shallowEquals(layerCRC.root.props, props.render.props)
+  ) {
+    offscreenCanvas.width = width;
+    offscreenCanvas.height = height;
+    // eslint-disable-next-line no-console
+    console.log('rendering');
+    executeRender(
+      offscreenCanvas,
+      getCurrentCRCInstance().renderTimestamp,
+      layerCRC.root,
+      false,
+    );
+  }
+
+  ctx.drawImage(offscreenCanvas, 0, 0);
+}
+
+export const layer = defineComp(Layer);
