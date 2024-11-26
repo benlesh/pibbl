@@ -5,4 +5,17 @@ export default defineConfig({
   plugins: [
     tsconfigPaths(),
   ],
+  test: {
+    browser: {
+      enabled: true,
+      headless: true,
+      name: 'chromium',
+      provider: 'playwright',
+      providerOptions: {
+        launch: {
+          devtools: false,
+        },
+      },
+    },
+  },
 });
