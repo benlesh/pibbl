@@ -28,4 +28,14 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run tests
-        run: pnpm test:ci 
+        run: pnpm test:ci
+
+      - name: Upload test screenshots
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-screenshots
+          path: |
+            test-screenshots/
+            __screenshots__/
+          retention-days: 30

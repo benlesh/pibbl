@@ -348,3 +348,7 @@ temp
 tmp
 cache
 scripts/compares
+
+# Test screenshots
+test-screenshots/
+__screenshots__/
