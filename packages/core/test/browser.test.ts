@@ -1,9 +1,11 @@
 import { crc, defineComp, rect } from '@crc/core';
 import { page } from '@vitest/browser/context';
 import { describe, expect, it } from 'vitest';
+import '../src/lib/testing/matchers';
 
-describe('crc browser tests', () => {
-  it('renders a rectangle in browser', async () => {
+describe('browser tests', () => {
+  it('should match the baseline screenshot', async () => {
+    // Setup canvas
     const canvas = document.createElement('canvas');
     canvas.width = 400;
     canvas.height = 300;
@@ -11,6 +13,7 @@ describe('crc browser tests', () => {
     canvas.style.margin = '5px';
     document.body.appendChild(canvas);
 
+    // Draw a red rectangle
     const SimpleRect = defineComp(() => {
       return rect({
         x: 50,
@@ -25,9 +28,11 @@ describe('crc browser tests', () => {
 
     crc(canvas, { type: SimpleRect, props: {} });
 
-    // Take screenshot using Playwright's page API
-    await page.screenshot({ path: 'test-screenshots/rectangle.png' });
-
-    expect(document.body.contains(canvas)).toBe(true);
+    // Compare with snapshot
+    const screenshot = await page.screenshot({ base64: true });
+    await expect({ base64: screenshot.base64 }).toMatchScreenshot({
+      threshold: 0.1,
+      failureThreshold: 0.1,
+    });
   });
 });
