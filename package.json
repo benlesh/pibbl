@@ -7,7 +7,10 @@
     "lint": "eslint . --cache",
     "release": "bumpp",
     "publish:ci": "pnpm -r publish --access public --no-git-checks",
-    "test": "vitest",
+    "test": "pnpm test:ui",
+    "test:ci": "vitest run --browser.headless",
+    "test:ui": "vitest --browser.headless=false",
+    "test:watch": "vitest --browser.headless",
     "typecheck": "vue-tsc --noEmit",
     "build": "pnpm -r run build",
     "dev": "pnpm -r run dev && pnpm playground",
@@ -26,6 +29,8 @@
     "@rollup/plugin-replace": "catalog:",
     "@rollup/plugin-terser": "catalog:",
     "@types/node": "catalog:",
+    "@vitest/browser": "^2.1.6",
+    "@vitest/ui": "^2.1.6",
     "bumpp": "catalog:",
     "diff-match-patch-es": "^0.1.1",
     "eslint": "catalog:",
@@ -35,6 +40,7 @@
     "jiti": "catalog:",
     "jsonc-parser": "catalog:",
     "picocolors": "catalog:",
+    "playwright": "^1.49.0",
     "pnpm": "catalog:",
     "prettier": "catalog:",
     "rimraf": "catalog:",
@@ -48,7 +54,7 @@
     "unbuild": "catalog:",
     "vite": "catalog:",
     "vite-tsconfig-paths": "catalog:",
-    "vitest": "catalog:",
+    "vitest": "^2.1.6",
     "vue-tsc": "catalog:"
   }
 }

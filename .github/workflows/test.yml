@@ -1,0 +1,41 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+
+      - name: Set node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run tests
+        run: pnpm test:ci
+
+      - name: Upload test screenshots
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-screenshots
+          path: |
+            test-screenshots/
+            __screenshots__/
+          retention-days: 30
