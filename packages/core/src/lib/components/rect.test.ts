@@ -4,7 +4,7 @@ import { componentTest } from '../test-utils/component-test';
 import { takeScreenshot } from '../util/test-utils';
 import { rect } from './rect';
 
-describe.sequential('rect', () => {
+describe('rect', () => {
   it('renders a rectangle in browser', async () => {
     await componentTest(rect({
       x: 50,
@@ -130,6 +130,117 @@ describe.sequential('rect', () => {
 
       await canvas.mouseUp({ position: { x: onBorderX, y: onBorderY } });
       expect(onMouseUp).toHaveBeenCalledTimes(2);
+    });
+
+    it('should handle mouse over and out events for a rect with a border', async () => {
+      const onMouseOver = vi.fn();
+      const onMouseOut = vi.fn();
+
+      const x = 50;
+      const y = 50;
+      const width = 100;
+      const height = 100;
+      const lineWidth = 10;
+      const centerX = x + width / 2;
+      const centerY = y + height / 2;
+      const onBorderX = x - 2;
+      const onBorderY = y - 2;
+
+      const canvas = await componentTest(rect({
+        x,
+        y,
+        width,
+        height,
+        fillStyle: 'red',
+        strokeStyle: 'black',
+        lineWidth,
+        onMouseOver,
+        onMouseOut,
+      }));
+
+      // start in the corner
+      await canvas.mouseMove({ position: { x: 0, y: 0 } });
+      expect(onMouseOver).not.toHaveBeenCalled();
+      expect(onMouseOut).not.toHaveBeenCalled();
+
+      // move to the border
+      await canvas.mouseMove({ position: { x: onBorderX, y: onBorderY } });
+      expect(onMouseOver).toHaveBeenCalledTimes(1);
+      expect(onMouseOut).not.toHaveBeenCalled();
+
+      // move back to the corner
+      await canvas.mouseMove({ position: { x: 0, y: 0 } });
+      expect(onMouseOver).toHaveBeenCalledTimes(1);
+      expect(onMouseOut).toHaveBeenCalledTimes(1);
+
+      // move to the center
+      await canvas.mouseMove({ position: { x: centerX, y: centerY } });
+      expect(onMouseOver).toHaveBeenCalledTimes(2);
+      expect(onMouseOut).toHaveBeenCalledTimes(1);
+
+      // move back to the corner
+      await canvas.mouseMove({ position: { x: 0, y: 0 } });
+      expect(onMouseOver).toHaveBeenCalledTimes(2);
+      expect(onMouseOut).toHaveBeenCalledTimes(2);
+    });
+
+    it('should handle mouse over and mouse out for a rect without a border', async () => {
+      const onMouseOver = vi.fn();
+      const onMouseOut = vi.fn();
+      const x = 50;
+      const y = 50;
+      const width = 100;
+      const height = 100;
+      const centerX = x + width / 2;
+      const centerY = y + height / 2;
+
+      const canvas = await componentTest(rect({
+        x,
+        y,
+        width,
+        height,
+        fillStyle: 'red',
+        lineWidth: 0,
+        onMouseOver,
+        onMouseOut,
+      }));
+
+      await canvas.mouseMove({ position: { x: 0, y: 0 } });
+      expect(onMouseOver).not.toHaveBeenCalled();
+      expect(onMouseOut).not.toHaveBeenCalled();
+
+      await canvas.mouseMove({ position: { x: centerX, y: centerY } });
+      expect(onMouseOver).toHaveBeenCalledTimes(1);
+      expect(onMouseOut).not.toHaveBeenCalled();
+
+      await canvas.mouseMove({ position: { x: 0, y: 0 } });
+      expect(onMouseOver).toHaveBeenCalledTimes(1);
+      expect(onMouseOut).toHaveBeenCalledTimes(1);
+    });
+
+    it('should handle mouse move events', async () => {
+      const onMouseMove = vi.fn();
+      const x = 50;
+      const y = 50;
+      const width = 100;
+      const height = 100;
+      const centerX = x + width / 2;
+      const centerY = y + height / 2;
+
+      const canvas = await componentTest(rect({
+        x,
+        y,
+        width,
+        height,
+        fillStyle: 'red',
+        onMouseMove,
+      }));
+
+      await canvas.mouseMove({ position: { x: 0, y: 0 } });
+      expect(onMouseMove).not.toHaveBeenCalled();
+
+      await canvas.mouseMove({ position: { x: centerX, y: centerY } });
+      expect(onMouseMove).toHaveBeenCalledTimes(1);
     });
   });
 });

@@ -66,6 +66,17 @@ export class TestCanvas {
     });
     await animationFrame();
   }
+
+  async mouseMove(options: { position: { x: number; y: number } }) {
+    const session = cdp();
+    const [left, top] = this.getCanvasOffset();
+    await session.send('Input.dispatchMouseEvent', {
+      type: 'mouseMoved',
+      x: options.position.x + left,
+      y: options.position.y + top,
+    });
+    await animationFrame();
+  }
 }
 
 beforeEach(() => {
