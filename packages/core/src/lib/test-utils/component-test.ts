@@ -5,7 +5,7 @@ import { CompEl } from '../types';
 
 export class TestCanvas {
   constructor(public readonly element: HTMLCanvasElement) {}
-  
+
   async click(options: { position: { x: number; y: number }; button?: 'left' | 'right' }) {
     await userEvent.click(this.element, options);
     await animationFrame();
@@ -77,6 +77,71 @@ export class TestCanvas {
     });
     await animationFrame();
   }
+
+  enableClickCoordinates() {
+    const ctx = this.element.getContext('2d');
+    if (!ctx) {
+      throw new Error('Failed to get 2d context');
+    }
+
+    this.element.addEventListener('click', (e) => {
+      const rect = this.element.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      this.plotCoordinates(x, y);
+    });
+  }
+
+  plotCoordinates(x: number, y: number) {
+    const ctx = this.element.getContext('2d');
+    if (!ctx) {
+      throw new Error('Failed to get 2d context');
+    }
+    ctx.save();
+    const invertedPattern = createInvertedPattern(ctx);
+    ctx.fillStyle = invertedPattern;
+    ctx.fillRect(x, y, 2, 2);
+    ctx.font = '12px Arial';
+    ctx.fillText(`${x}, ${y}`, x + 2, y + 12);
+    ctx.restore();
+  }
+}
+
+function createInvertedPattern(ctx: CanvasRenderingContext2D): CanvasPattern {
+  // Create a temporary canvas
+  const tempCanvas = document.createElement('canvas');
+  const tempCtx = tempCanvas.getContext('2d')!;
+  tempCanvas.width = ctx.canvas.width;
+  tempCanvas.height = ctx.canvas.height;
+
+  // Copy the original canvas content
+  tempCtx.drawImage(ctx.canvas, 0, 0);
+
+  // Get and invert the image data
+  const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+  const data = imageData.data;
+
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] === 0) {
+      // If transparent, make it red
+      data[i] = 255; // Red
+      data[i + 1] = 0; // Green
+      data[i + 2] = 0; // Blue
+      data[i + 3] = 255; // Alpha
+    } else {
+      // Otherwise invert the colors
+      data[i] = 255 - data[i]; // Red
+      data[i + 1] = 255 - data[i + 1]; // Green
+      data[i + 2] = 255 - data[i + 2]; // Blue
+    }
+  }
+
+  // Put the inverted image data on the temporary canvas
+  tempCtx.putImageData(imageData, 0, 0);
+
+  // Create and return the pattern from the temporary canvas
+  return ctx.createPattern(tempCanvas, 'repeat')!;
 }
 
 beforeEach(() => {

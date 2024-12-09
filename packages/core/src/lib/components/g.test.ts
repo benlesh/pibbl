@@ -194,30 +194,46 @@ describe('g', () => {
       expect(onMouseOver).toHaveBeenCalledTimes(1);
     });
 
-    it.only('handles mouse events with compound transformations', async () => {
+    it('handles mouse events with compound transformations', async () => {
       const onClick = vi.fn();
-      const rectCenter = { x: 150, y: 150 };
+      const rectCenter = { x: 50, y: 50 };
+      const rotation = 45;
+      const scale = 1.5;
+      const offset = { x: 100, y: 10 };
+      const skewX = 10;
+      const skewY = 10;
+
+      const matrix = new DOMMatrix();
+      matrix.scaleSelf(scale, scale);
+      matrix.rotateSelf(rotation);
+      matrix.translateSelf(offset.x, offset.y);
+      matrix.skewXSelf(skewX);
+      matrix.skewYSelf(skewY);
+      const transformedPoint = matrix.transformPoint(new DOMPoint(rectCenter.x, rectCenter.y));
+
       const canvas = await componentTest(g({
-        x: 100,
-        y: 100,
-        rotate: 45, // degrees
-        rotateOrigin: [rectCenter.x, rectCenter.y],
-        scaleX: 2,
-        scaleY: 2,
+        x: offset.x,
+        y: offset.y,
+        rotate: rotation, // degrees
+        scaleX: scale,
+        scaleY: scale,
+        skewX,
+        skewY,
         children: [
           rect({
             ...defaultRect,
             onClick,
+            cursor: 'crosshair',
           }),
         ],
       }));
 
-      // Click in transformed position
-      await canvas.click({ position: { x: 100, y: 100 } });
-      expect(onClick).toHaveBeenCalledTimes(1);
+      // Click off of the transformed position (should miss)
+      await canvas.click({ position: { x: 0, y: 0 } });
+      expect(onClick).toHaveBeenCalledTimes(0);
 
-      // Click in original position (should miss)
-      await canvas.click({ position: { x: 25, y: 25 } });
+      // Click in the transformed position (should hit)
+      await canvas.click({ position: transformedPoint });
       expect(onClick).toHaveBeenCalledTimes(1);
     });
   });
