@@ -4,25 +4,25 @@ import { beforeEach } from 'vitest';
 import { CompEl } from '../types';
 
 export class TestCanvas {
-  constructor(private canvas: HTMLCanvasElement) {}
-
+  constructor(public readonly element: HTMLCanvasElement) {}
+  
   async click(options: { position: { x: number; y: number }; button?: 'left' | 'right' }) {
-    await userEvent.click(this.canvas, options);
+    await userEvent.click(this.element, options);
     await animationFrame();
   }
 
   async dblClick(options: { position: { x: number; y: number }; button?: 'left' | 'right' }) {
-    await userEvent.dblClick(this.canvas, options);
+    await userEvent.dblClick(this.element, options);
     await animationFrame();
   }
 
   async contextMenu(options: { position: { x: number; y: number } }) {
-    await userEvent.click(this.canvas, { ...options, button: 'right' });
+    await userEvent.click(this.element, { ...options, button: 'right' });
     await animationFrame();
   }
 
   private getCanvasOffset() {
-    const { top, left } = this.canvas.getBoundingClientRect();
+    const { top, left } = this.element.getBoundingClientRect();
     const doc = window.top?.document;
     if (!doc) {
       throw new Error('No document found');

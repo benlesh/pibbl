@@ -1,0 +1,147 @@
+import { page } from '@vitest/browser/context';
+import { describe, expect, it, vi } from 'vitest';
+import { componentTest } from '../test-utils/component-test';
+import { takeScreenshot } from '../util/test-utils';
+import { text } from './text';
+
+const defaultOptions = {
+  x: 50,
+  y: 50,
+  text: 'Hello World',
+  fillStyle: 'black',
+  strokeStyle: 'red',
+  lineWidth: 2,
+  font: '24px Arial',
+};
+
+describe('text', () => {
+  it('renders text in browser', async () => {
+    await componentTest(text(defaultOptions));
+    await takeScreenshot(page);
+  });
+
+  describe('mouse events', () => {
+    const { x, y } = defaultOptions;
+    // We need to measure text to get accurate dimensions for hit testing
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d')!;
+    ctx.font = defaultOptions.font;
+    const metrics = ctx.measureText(defaultOptions.text);
+
+    const width = metrics.width;
+    const height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+    const lineWidth = defaultOptions.lineWidth;
+
+    const centerX = x + width / 2;
+    const centerY = y + height / 2;
+    const onBorderX = x + width + (lineWidth / 2);
+    const onBorderY = y + height + (lineWidth / 2);
+    const offTextX = x - 10;
+    const offTextY = y - 10;
+
+    describe.each([
+      { event: 'click', handler: 'onClick' },
+      { event: 'dblClick', handler: 'onDblClick' },
+      { event: 'contextMenu', handler: 'onContextMenu' },
+      { event: 'mouseDown', handler: 'onMouseDown' },
+      { event: 'mouseUp', handler: 'onMouseUp' },
+    ] as const)('should handle %s events', ({ event, handler }) => {
+      it(`should handle ${event} events`, async () => {
+        const handlerFn = vi.fn();
+
+        const canvas = await componentTest(text({
+          ...defaultOptions,
+          [handler]: handlerFn,
+        }));
+
+        const centerPosition = { x: centerX, y: centerY };
+        const onBorderPosition = { x: onBorderX, y: onBorderY };
+        const offTextPosition = { x: offTextX, y: offTextY };
+
+        await canvas[event]({ position: offTextPosition });
+        expect(handlerFn).not.toHaveBeenCalled();
+
+        await canvas[event]({ position: centerPosition });
+        expect(handlerFn).toHaveBeenCalledTimes(1);
+
+        await canvas[event]({ position: onBorderPosition });
+        expect(handlerFn).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    describe('mouse movement', () => {
+      it('should handle mouse over and out events for text with a stroke', async () => {
+        const onMouseOver = vi.fn();
+        const onMouseOut = vi.fn();
+
+        const canvas = await componentTest(text({
+          ...defaultOptions,
+          onMouseOver,
+          onMouseOut,
+        }));
+
+        // start outside
+        await canvas.mouseMove({ position: { x: 0, y: 0 } });
+        expect(onMouseOver).not.toHaveBeenCalled();
+        expect(onMouseOut).not.toHaveBeenCalled();
+
+        // move to the text area
+        await canvas.mouseMove({ position: { x: centerX, y: centerY } });
+        expect(onMouseOver).toHaveBeenCalledTimes(1);
+        expect(onMouseOut).not.toHaveBeenCalled();
+
+        // move back outside
+        await canvas.mouseMove({ position: { x: 0, y: 0 } });
+        expect(onMouseOver).toHaveBeenCalledTimes(1);
+        expect(onMouseOut).toHaveBeenCalledTimes(1);
+      });
+
+      it('should handle mouse over and mouse out for text without a stroke', async () => {
+        const onMouseOver = vi.fn();
+        const onMouseOut = vi.fn();
+
+        const canvas = await componentTest(text({
+          ...defaultOptions,
+          lineWidth: 0,
+          onMouseOver,
+          onMouseOut,
+        }));
+
+        await canvas.mouseMove({ position: { x: 0, y: 0 } });
+        expect(onMouseOver).not.toHaveBeenCalled();
+        expect(onMouseOut).not.toHaveBeenCalled();
+
+        await canvas.mouseMove({ position: { x: centerX, y: centerY } });
+        expect(onMouseOver).toHaveBeenCalledTimes(1);
+        expect(onMouseOut).not.toHaveBeenCalled();
+
+        await canvas.mouseMove({ position: { x: 0, y: 0 } });
+        expect(onMouseOver).toHaveBeenCalledTimes(1);
+        expect(onMouseOut).toHaveBeenCalledTimes(1);
+      });
+    });
+  });
+
+  describe('text specific features', () => {
+    it('should handle text overflow with ellipsis', async () => {
+      await componentTest(text({
+        ...defaultOptions,
+        text: 'This is a very long text that should be truncated',
+        maxWidth: 100,
+        overflow: 'ellipsis',
+      }));
+      await takeScreenshot(page);
+    });
+
+    it('should handle word wrap', async () => {
+      await componentTest(text({
+        ...defaultOptions,
+        text: 'This text should wrap to multiple lines',
+        maxWidth: 100,
+        wordWrap: true,
+        lineHeight: 24,
+      }));
+      await takeScreenshot(page);
+    });
+  });
+});

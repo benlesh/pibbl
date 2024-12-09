@@ -20,6 +20,23 @@ describe('rect', () => {
     await takeScreenshot(page);
   });
 
+  describe('other styles', () => {
+    it.only('should change the mouse cursor to a pointer when hovering over the rect', async () => {
+      const canvas = await componentTest(rect({
+        ...defaultOptions,
+        cursor: 'pointer',
+      }));
+
+      const { x, y, width, height } = defaultOptions;
+      const centerX = x + width / 2;
+      const centerY = y + height / 2;
+
+      await canvas.mouseMove({ position: { x: 0, y: 0 } });
+      await canvas.mouseMove({ position: { x: centerX, y: centerY } });
+      expect(getComputedStyle(canvas.element).cursor).toBe('pointer');
+    });
+  });
+
   describe('mouse events', () => {
     const { x, y, width, height, lineWidth } = defaultOptions;
 
