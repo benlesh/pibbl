@@ -114,7 +114,6 @@ describe('layer', () => {
       let renderCount = 0;
 
       const wrapperComponent = defineComp(() => {
-        console.log('WrapperComponent rendering');
         const [fillStyle, setFillStyle] = crcState('blue');
         const [layerWidth, setLayerWidth] = crcState(200);
 
@@ -125,7 +124,6 @@ describe('layer', () => {
           height: 200,
           fillStyle: 'green',
           onClick: () => {
-            console.log('Click handler called');
             setFillStyle('red');
             setLayerWidth(300);
           },
@@ -134,7 +132,6 @@ describe('layer', () => {
               width: layerWidth,
               render: rect({
                 onRender: () => {
-                  console.log('Layer rect rendering');
                   renderCount++;
                 },
                 x: 0,
@@ -149,11 +146,9 @@ describe('layer', () => {
       });
 
       const canvas = await componentTest(wrapperComponent({}));
-      console.log('Initial render count:', renderCount);
-
       // Click to trigger state changes
       await canvas.click({ position: { x: 100, y: 100 } });
-      console.log('After click render count:', renderCount);
+
 
       // Should re-render due to prop changes from state updates
       expect(renderCount).toBe(2);

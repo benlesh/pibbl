@@ -20,8 +20,6 @@ export function Layer(props: LayerProps, ctx: RenderingContext2D) {
   const { width = canvas.width, height = canvas.height } = props;
   const componentRefs = GLOBAL_STATE.componentRefs!;
   if (GLOBAL_STATE.componentIsMounting) {
-    // eslint-disable-next-line no-console
-    console.log('mounting layer');
     const offscreenCanvas = new OffscreenCanvas(width, height);
     mountCRC(offscreenCanvas, props.render, { parent: canvas });
     componentRefs.refs[0] = offscreenCanvas;
@@ -38,8 +36,7 @@ export function Layer(props: LayerProps, ctx: RenderingContext2D) {
   ) {
     offscreenCanvas.width = width;
     offscreenCanvas.height = height;
-    // eslint-disable-next-line no-console
-    console.log('rendering');
+
     executeRender(
       offscreenCanvas,
       getCurrentCRCInstance().renderTimestamp,
