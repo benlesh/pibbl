@@ -49,7 +49,7 @@ jobs:
         with:
           name: test-artifacts-${{ github.run_id }}
           path: |
-            test-screenshots/
-            __screenshots__/
-          if-no-files-found: ignore # Don't fail if no screenshots
-          compression-level: 9 # Max compression for images
+            test-screenshots/**/*
+            __screenshots__/**/*
+          if-no-files-found: ignore
+          compression-level: 9
