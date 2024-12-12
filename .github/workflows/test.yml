@@ -1,4 +1,4 @@
-name: Test
+name: Test Suite 🧪
 
 on:
   push:
@@ -8,34 +8,49 @@ on:
 
 jobs:
   test:
+    name: Run Tests 🚀
     runs-on: ubuntu-latest
+    timeout-minutes: 15 # Prevent hung jobs
+
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1 # We'll handle this in setup
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout 📦
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1 # Faster clone for tests
 
-      - name: Install pnpm
+      - name: Setup PNPM 📦
         uses: pnpm/action-setup@v2
+        with:
+          version: latest
 
-      - name: Set node
+      - name: Setup Node.js 🟢
         uses: actions/setup-node@v4
         with:
-          node-version: 18
-          cache: pnpm
+          node-version: 22
+          cache: "pnpm"
+          cache-dependency-path: "**/pnpm-lock.yaml"
 
-      - name: Install dependencies
-        run: pnpm install
+      - name: Install Dependencies 🔧
+        run: pnpm install --frozen-lockfile
 
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
+      - name: Setup Playwright 🎭
+        run: pnpm exec playwright install --with-deps chromium
 
-      - name: Run tests
+      - name: Run Tests ⚡
+        id: test-run
         run: pnpm test:ci
 
-      - name: Upload test screenshots
-        if: always()
-        uses: actions/upload-artifact@v3
+      - name: Upload Test Screenshots 📸
+        if: always() && (steps.test-run.outcome == 'failure' || steps.test-run.outcome == 'success')
+        uses: actions/upload-artifact@v4
         with:
-          name: test-screenshots
+          name: test-artifacts-${{ github.run_id }}
           path: |
-            test-screenshots/
-            __screenshots__/
-          retention-days: 30
+            **/__screenshots__/**
+            **/test-screenshots/**
+          retention-days: 7
+          if-no-files-found: error
+          compression-level: 9

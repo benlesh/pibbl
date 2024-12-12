@@ -1,6 +1,7 @@
 import { crc, defineComp, rect } from '@crc/core';
 import { page } from '@vitest/browser/context';
 import { describe, expect, it } from 'vitest';
+import { takeScreenshot } from '../src/lib/util/test-utils';
 
 describe('crc browser tests', () => {
   it('renders a rectangle in browser', async () => {
@@ -25,8 +26,17 @@ describe('crc browser tests', () => {
 
     crc(canvas, { type: SimpleRect, props: {} });
 
-    // Take screenshot using Playwright's page API
-    await page.screenshot({ path: 'test-screenshots/rectangle.png' });
+    // Method 1: Auto-generated name based on test name + timestamp
+    await takeScreenshot(page);
+
+    // Method 2: Custom name
+    await takeScreenshot(page, 'custom-name.png');
+
+    // Method 3: Custom name + options
+    await takeScreenshot(page, 'custom-name.png', { fullPage: true });
+
+    // Method 4: Just options (uses auto-generated name)
+    await takeScreenshot(page, { fullPage: true });
 
     expect(document.body.contains(canvas)).toBe(true);
   });
