@@ -11,7 +11,7 @@ const defaultOptions = {
   height: 100,
   fillStyle: 'red',
   strokeStyle: 'black',
-  lineWidth: 2,
+  lineWidth: 1,
 };
 
 describe('rect', () => {
@@ -21,7 +21,7 @@ describe('rect', () => {
   });
 
   describe('other styles', () => {
-    it.only('should change the mouse cursor to a pointer when hovering over the rect', async () => {
+    it('should change the mouse cursor to a pointer when hovering over the rect', async () => {
       const canvas = await componentTest(rect({
         ...defaultOptions,
         cursor: 'pointer',
