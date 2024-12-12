@@ -43,17 +43,6 @@ jobs:
         id: test-run
         run: pnpm test:ci
 
-      - name: Debug Directory Contents 🔍
-        if: always() # Run even if tests fail
-        run: |
-          echo "=== Current Directory Structure ==="
-          ls -la
-          echo "\n=== Screenshot Directories ==="
-          ls -la test-screenshots/ || echo "No test-screenshots directory"
-          ls -la __screenshots__/ || echo "No __screenshots__ directory"
-          echo "\n=== Find All Screenshot Files ==="
-          find . -type f -name "*.png" || echo "No PNG files found"
-
       - name: Upload Test Screenshots 📸
         if: always() && (steps.test-run.outcome == 'failure' || steps.test-run.outcome == 'success')
         uses: actions/upload-artifact@v4
