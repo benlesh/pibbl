@@ -3,7 +3,7 @@ import { expect } from 'vitest';
 
 function sanitizeFileName(name: string): string {
   // Replace invalid characters with underscores
-  return name.replace(/["|:<>|*?\r\n]/g, '_');
+  return name.replace(/[":<>|*?\r\n]/g, '_');
 }
 
 export function getScreenshotPath(name: string) {

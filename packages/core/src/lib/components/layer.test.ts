@@ -127,10 +127,12 @@ describe('layer', () => {
             setFillStyle('red');
             setLayerWidth(300);
           },
+          // @ts-expect-error children is not a valid prop for rect (yet)
           children: [
             layer({
               width: layerWidth,
               render: rect({
+                // @ts-expect-error onRender is not a valid prop for rect (yet)
                 onRender: () => {
                   renderCount++;
                 },
@@ -148,7 +150,6 @@ describe('layer', () => {
       const canvas = await componentTest(wrapperComponent({}));
       // Click to trigger state changes
       await canvas.click({ position: { x: 100, y: 100 } });
-
 
       // Should re-render due to prop changes from state updates
       expect(renderCount).toBe(2);
