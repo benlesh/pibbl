@@ -127,10 +127,12 @@ describe('layer', () => {
             setFillStyle('red');
             setLayerWidth(300);
           },
+          // @ts-expect-error children is not a valid prop for rect (yet)
           children: [
             layer({
               width: layerWidth,
               render: rect({
+                // @ts-expect-error onRender is not a valid prop for rect (yet)
                 onRender: () => {
                   renderCount++;
                 },
