@@ -1,10 +1,8 @@
 name: Type Check 📝
 
 on:
-  push:
-    branches: [main]
   pull_request:
-    branches: [main]
+    types: [opened, synchronize, reopened]
 
 jobs:
   typecheck:
@@ -32,4 +30,4 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Type Check 📝
-        run: pnpm typecheck 
+        run: pnpm typecheck
