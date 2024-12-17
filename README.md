@@ -16,11 +16,13 @@ A lightweight component system for the HTML5 Canvas.
 ```javascript
 import { Canvas, Circle } from '@crc/core';
 
-const App = () => (
-  <Canvas width={400} height={400}>
-    <Circle x={200} y={200} radius={50} fill="blue" />
-  </Canvas>
-);
+function App() {
+  return (
+    <Canvas width={400} height={400}>
+      <Circle x={200} y={200} radius={50} fill="blue" />
+    </Canvas>
+  );
+}
 ```
 
 ## Documentation

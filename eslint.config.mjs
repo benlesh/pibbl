@@ -22,6 +22,7 @@ export default antfu(
   },
   {
     rules: {
+      'jsdoc/check-param-names': 'off',
       'no-restricted-syntax': 'off',
       'ts/no-invalid-this': 'off',
       'ts/consistent-type-imports': 'off',

@@ -149,7 +149,6 @@ describe('layer', () => {
       // Click to trigger state changes
       await canvas.click({ position: { x: 100, y: 100 } });
 
-
       // Should re-render due to prop changes from state updates
       expect(renderCount).toBe(2);
     });
