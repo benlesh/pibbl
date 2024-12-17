@@ -47,6 +47,7 @@ export default antfu(
     ],
     ignores: [
       '**/*.test.ts',
+      '**/*.test-d.ts',
     ],
   },
 );
