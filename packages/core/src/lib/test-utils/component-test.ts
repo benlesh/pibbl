@@ -3,8 +3,8 @@ import { cdp, userEvent } from '@vitest/browser/context';
 import { beforeEach } from 'vitest';
 import { CompEl } from '../types';
 
-export class TestCanvas {
-  constructor(public readonly element: HTMLCanvasElement) {}
+export class TestDOM {
+  constructor(public readonly element: HTMLElement) {}
 
   async click(options: { position: { x: number; y: number }; button?: 'left' | 'right' }) {
     await userEvent.click(this.element, options);
@@ -21,7 +21,7 @@ export class TestCanvas {
     await animationFrame();
   }
 
-  private getCanvasOffset() {
+  private getContainerOffset() {
     const { top, left } = this.element.getBoundingClientRect();
     const doc = window.top?.document;
     if (!doc) {
@@ -41,7 +41,7 @@ export class TestCanvas {
   async mouseDown(options: { position: { x: number; y: number }; button?: 'left' | 'right' }) {
     const session = cdp();
 
-    const [left, top] = this.getCanvasOffset();
+    const [left, top] = this.getContainerOffset();
 
     await session.send('Input.dispatchMouseEvent', {
       type: 'mousePressed',
@@ -55,7 +55,7 @@ export class TestCanvas {
 
   async mouseUp(options: { position: { x: number; y: number }; button?: 'left' | 'right' }) {
     const session = cdp();
-    const [left, top] = this.getCanvasOffset();
+    const [left, top] = this.getContainerOffset();
 
     await session.send('Input.dispatchMouseEvent', {
       type: 'mouseReleased',
@@ -69,7 +69,7 @@ export class TestCanvas {
 
   async mouseMove(options: { position: { x: number; y: number } }) {
     const session = cdp();
-    const [left, top] = this.getCanvasOffset();
+    const [left, top] = this.getContainerOffset();
     await session.send('Input.dispatchMouseEvent', {
       type: 'mouseMoved',
       x: options.position.x + left,
@@ -79,7 +79,11 @@ export class TestCanvas {
   }
 
   enableClickCoordinates() {
-    const ctx = this.element.getContext('2d');
+    if (this.element.tagName !== 'CANVAS') {
+      return;
+    }
+
+    const ctx = (this.element as HTMLCanvasElement).getContext('2d');
     if (!ctx) {
       throw new Error('Failed to get 2d context');
     }
@@ -94,7 +98,11 @@ export class TestCanvas {
   }
 
   plotCoordinates(x: number, y: number) {
-    const ctx = this.element.getContext('2d');
+    if (this.element.tagName !== 'CANVAS') {
+      return;
+    }
+
+    const ctx = (this.element as HTMLCanvasElement).getContext('2d');
     if (!ctx) {
       throw new Error('Failed to get 2d context');
     }
@@ -148,6 +156,20 @@ beforeEach(() => {
   document.body.innerHTML = '';
 });
 
+export function renderDiv(options: {
+  width?: number;
+  height?: number;
+  backgroundColor?: string;
+} = {}) {
+  const div = document.createElement('div');
+  div.style.width = `${options.width ?? 400}px`;
+  div.style.height = `${options.height ?? 300}px`;
+  div.style.backgroundColor = options.backgroundColor ?? 'lightgreen';
+  div.style.margin = '0px';
+  document.body.appendChild(div);
+  return div;
+}
+
 export function renderCanvas(options: {
   width?: number;
   height?: number;
@@ -171,7 +193,7 @@ export async function componentTest<P>(comp: CompEl<P>, options: {
   crc(canvas, comp);
   await animationFrame();
 
-  return new TestCanvas(canvas);
+  return new TestDOM(canvas);
 }
 
 function animationFrame() {
