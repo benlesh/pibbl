@@ -148,17 +148,26 @@ beforeEach(() => {
   document.body.innerHTML = '';
 });
 
-export async function componentTest<P>(comp: CompEl<P>, options: {
+export function renderCanvas(options: {
   width?: number;
   height?: number;
+  backgroundColor?: string;
 } = {}) {
   const canvas = document.createElement('canvas');
   canvas.width = options.width ?? 400;
   canvas.height = options.height ?? 300;
+  canvas.style.backgroundColor = options.backgroundColor ?? 'transparent';
   canvas.style.border = '1px solid black';
   canvas.style.margin = '5px';
   document.body.appendChild(canvas);
+  return canvas;
+}
 
+export async function componentTest<P>(comp: CompEl<P>, options: {
+  width?: number;
+  height?: number;
+} = {}) {
+  const canvas = renderCanvas(options);
   crc(canvas, comp);
   await animationFrame();
 
