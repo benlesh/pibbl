@@ -4,9 +4,21 @@
   "version": "0.0.1",
   "description": "JSX transformer for CRC",
   "exports": {
-    ".": "./dist/index.mjs",
-    "./jsx-runtime": "./dist/jsx-runtime.mjs",
-    "./jsx-dev-runtime": "./dist/jsx-dev-runtime.mjs"
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./jsx-runtime": {
+      "types": "./dist/jsx-runtime.d.mts",
+      "import": "./dist/jsx-runtime.mjs",
+      "require": "./dist/jsx-runtime.cjs"
+    },
+    "./jsx-dev-runtime": {
+      "types": "./dist/jsx-dev-runtime.d.mts",
+      "import": "./dist/jsx-dev-runtime.mjs",
+      "require": "./dist/jsx-dev-runtime.cjs"
+    }
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -16,7 +28,7 @@
   ],
   "scripts": {
     "build": "unbuild",
-    "dev": "unbuild --stub",
+    "dev": "unbuild",
     "prepublishOnly": "pnpm run build"
   },
   "peerDependencies": {

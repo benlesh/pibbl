@@ -8,12 +8,13 @@ import tsconfig from 'vite-tsconfig-paths';
 export default defineConfig({
   plugins: [
     Inspect(),
-    // crcJSX(),
-    // fileUrl(),
+    crcJSX(),
+    fileUrl(),
     tsconfig({
       projects: [
         fileURLToPath(new URL('../tsconfig.json', import.meta.url)),
       ],
     }),
   ],
+  esbuild: { jsx: 'automatic' },
 });

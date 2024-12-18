@@ -2,11 +2,11 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "target": "ESNext",
+    "jsx": "preserve",
+    "jsxImportSource": "@crc/jsx",
     "module": "esnext",
     "moduleResolution": "Bundler",
-    "strict": true,
-    "jsx": "react-jsx",
-    "jsxImportSource": "@crc/jsx",
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "strict": true
   }
 }

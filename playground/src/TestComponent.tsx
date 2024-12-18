@@ -1,15 +1,15 @@
 /** @jsxImportSource @crc/jsx */
-import { jsx, jsxVirtual, processVirtualNode, registerHook } from '@crc/jsx';
+// import { jsx, jsxVirtual, processVirtualNode, registerHook } from '@crc/jsx/jsx-runtime';
 import { type RenderingContext2D } from '@crc/core';
 
 // Example hook for runtime modification
-registerHook('rect', (type, props) => {
-  // Add debug outline in development
-  if (process.env.NODE_ENV === 'development') {
-    return (p: any) => type({ ...p, strokeStyle: 'red', lineWidth: 1 });
-  }
-  return type;
-});
+// registerHook('rect', (type, props) => {
+//   // Add debug outline in development
+//   if (process.env.NODE_ENV === 'development') {
+//     return (p: any) => type({ ...p, strokeStyle: 'red', lineWidth: 1 });
+//   }
+//   return type;
+// });
 
 interface Props {
   x: number;
@@ -51,7 +51,7 @@ export function DirectComponent(props: Props) {
 export function VirtualComponent(props: Props & { ctx: RenderingContext2D }) {
   const { x, y, width, height, text, debug, ctx } = props;
   
-  const virtualTree = (
+  return (
     <g>
       <rect
         x={x}
@@ -74,5 +74,5 @@ export function VirtualComponent(props: Props & { ctx: RenderingContext2D }) {
   );
 
   // Process the virtual tree with context
-  return processVirtualNode(virtualTree, ctx);
+  // return processVirtualNode(virtualTree, ctx);
 } 

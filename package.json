@@ -13,18 +13,10 @@
     "test:watch": "vitest --browser.headless",
     "typecheck": "vue-tsc --noEmit",
     "build": "pnpm -r run build",
-    "dev": "pnpm -r run dev && pnpm playground",
+    "dev": "pnpm -r run build && pnpm playground",
     "playground": "pnpm -C playground run playground:dev",
     "playground:build": "pnpm -C docs run playground:build",
     "bench": "vitest bench"
-  },
-  "pnpm": {
-    "peerDependencyRules": {
-      "ignoreMissing": [
-        "@algolia/client-search",
-        "search-insights"
-      ]
-    }
   },
   "devDependencies": {
     "@antfu/eslint-config": "catalog:",
@@ -67,5 +59,13 @@
     "vite-tsconfig-paths": "catalog:",
     "vitest": "^2.1.8",
     "vue-tsc": "catalog:"
+  },
+  "pnpm": {
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "@algolia/client-search",
+        "search-insights"
+      ]
+    }
   }
 }
