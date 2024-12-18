@@ -6,9 +6,12 @@
     "playground:build": "vite build"
   },
   "dependencies": {
-    "@crc/core": "workspace:*"
+    "@crc/core": "workspace:*",
+    "@crc/jsx": "workspace:*",
+    "@crc/vite-plugin-crc-jsx": "workspace:*"
   },
   "devDependencies": {
-    "vite": "catalog:"
+    "vite": "catalog:",
+    "vite-tsconfig-paths": "^4.3.1"
   }
 }

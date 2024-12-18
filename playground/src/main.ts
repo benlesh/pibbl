@@ -1,21 +1,33 @@
-import { crc, rect } from '@crc/core';
+// import { DirectComponent, VirtualComponent } from './TestComponent';
+import { getMetrics } from '@crc/jsx';
 
-const app = document.getElementById('app');
-if (!app) {
-  throw new Error('No app element found');
-}
+// const canvas = document.querySelector<HTMLCanvasElement>('#canvas')!;
+// const ctx = canvas.getContext('2d')!;
 
-app.innerHTML = `
-  <h1>Hello from @crc/core!</h1>
-  <canvas id="canvas"></canvas>
-`;
+// // Direct transformation example
+// DirectComponent({
+//   x: 10,
+//   y: 10,
+//   width: 200,
+//   height: 100,
+//   text: 'Direct Transform',
+//   debug: true
+// });
 
-const canvas = document.getElementById('canvas') as HTMLCanvasElement;
-crc(canvas, rect({
-  x: 10,
-  y: 10,
-  width: 100,
-  height: 100,
-  fillStyle: 'red',
-  strokeStyle: 'black',
-}));
+// // Virtual tree example
+// VirtualComponent({
+//   x: 10,
+//   y: 120,
+//   width: 200,
+//   height: 100,
+//   text: 'Virtual Tree',
+//   debug: true,
+//   ctx
+// });
+
+// // Log performance metrics
+console.table(getMetrics());
+
+
+// eslint-disable-next-line no-console
+console.log('Hello World');

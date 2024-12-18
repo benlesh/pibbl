@@ -1,0 +1,30 @@
+{
+  "name": "@crc/vite-plugin-crc-jsx",
+  "type": "module",
+  "version": "0.0.1",
+  "description": "Vite plugin for CRC JSX transformation",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "unbuild",
+    "dev": "unbuild --stub",
+    "prepublishOnly": "pnpm run build"
+  },
+  "peerDependencies": {
+    "vite": "~6.0.0"
+  },
+  "dependencies": {
+    "@crc/jsx": "workspace:*"
+  }
+}

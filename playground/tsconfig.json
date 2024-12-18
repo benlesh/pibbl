@@ -4,6 +4,9 @@
     "target": "ESNext",
     "module": "esnext",
     "moduleResolution": "Bundler",
-    "strict": true
+    "strict": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "@crc/jsx",
+    "types": ["vite/client"]
   }
 }
