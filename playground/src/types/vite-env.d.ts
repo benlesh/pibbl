@@ -8,4 +8,4 @@ declare module '*.txt?raw' {
 declare module '*.json?raw' {
   const content: string;
   export default content;
-} 
+}
