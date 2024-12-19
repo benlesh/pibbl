@@ -1,6 +1,12 @@
 <template>
   <div class="app">
-    <Header @example-change="onExampleChange" />
+    <div class="header-container">
+      <Header @example-change="onExampleChange" />
+      <SnippetManager 
+        :current-code="getCurrentCode()"
+        @load="onSnippetLoad"
+      />
+    </div>
     <div class="split">
       <div id="editor" ref="editorContainer"></div>
       <div id="preview">
@@ -19,6 +25,7 @@ import { crc, defineComp } from '@crc/core'
 import { GoodButton } from './GoodButton'
 import { VanillaCtxButton } from './VanillaCtxButton'
 import Header from './Header.vue'
+import SnippetManager from './components/SnippetManager.vue'
 
 const editorContainer = ref<HTMLElement>()
 let editor: any = null
@@ -35,6 +42,19 @@ const defaultCode = `crc(canvas, GoodButton({
     console.log('Button clicked!', e);
   }
 }));`
+
+function getCodeFromURL(): string {
+  try {
+    return params.code ? atob(params.code as string) : defaultCode
+  } catch (error) {
+    console.error('Error decoding URL code:', error)
+    return defaultCode
+  }
+}
+
+function getCurrentCode(): string {
+  return editor?.getValue() || getCodeFromURL()
+}
 
 function updatePreview(code: string) {
   const canvas = document.querySelector<HTMLCanvasElement>('#canvas')!
@@ -68,22 +88,43 @@ function updatePreview(code: string) {
 
 function onExampleChange(code: string) {
   if (editor) {
-    editor.setValue(code)
+    const model = editor.getModel()
+    if (model) {
+      // Use edit operation to preserve history
+      model.pushEditOperations(
+        [],
+        [
+          {
+            range: model.getFullModelRange(),
+            text: code,
+          },
+        ],
+        () => null
+      )
+    }
+    updateURL(code)
+    updatePreview(code)
   }
 }
 
-// Load code from URL if present
-function loadCodeFromURL() {
-  const code = params.code
-  if (code) {
-    try {
-      const decodedCode = atob(code as string)
-      if (editor) {
-        editor.setValue(decodedCode)
-      }
-    } catch (error) {
-      console.error('Error loading code from URL:', error)
+function onSnippetLoad(code: string) {
+  if (editor) {
+    const model = editor.getModel()
+    if (model) {
+      // Use edit operation to preserve history
+      model.pushEditOperations(
+        [],
+        [
+          {
+            range: model.getFullModelRange(),
+            text: code,
+          },
+        ],
+        () => null
+      )
     }
+    updateURL(code)
+    updatePreview(code)
   }
 }
 
@@ -91,6 +132,32 @@ function loadCodeFromURL() {
 function updateURL(code: string) {
   params.code = btoa(code)
 }
+
+// Watch for URL changes
+watch(() => params.code, (newCode) => {
+  if (editor && newCode) {
+    try {
+      const decodedCode = atob(newCode as string)
+      const model = editor.getModel()
+      if (model) {
+        // Use edit operation to preserve history
+        model.pushEditOperations(
+          [],
+          [
+            {
+              range: model.getFullModelRange(),
+              text: decodedCode,
+            },
+          ],
+          () => null
+        )
+      }
+      updatePreview(decodedCode)
+    } catch (error) {
+      console.error('Error loading code from URL:', error)
+    }
+  }
+})
 
 // Update editor theme when dark mode changes
 watch(isDark, (dark) => {
@@ -113,7 +180,7 @@ onMounted(async () => {
   
   if (editorContainer.value) {
     editor = monaco.editor.create(editorContainer.value, {
-      value: defaultCode,
+      value: getCodeFromURL(),
       language: 'typescript',
       theme: isDark.value ? 'vs-dark' : 'vs',
       minimap: { enabled: false },
@@ -129,11 +196,8 @@ onMounted(async () => {
       updateURL(code)
     })
 
-    // Load code from URL if present
-    loadCodeFromURL()
-
     // Initial preview
-    updatePreview(editor.getValue())
+    updatePreview(getCodeFromURL())
   }
 })
 </script>
@@ -152,6 +216,14 @@ html, body, #app {
   flex-direction: column;
   background: var(--app-bg, #ffffff);
   color: var(--app-text, #000000);
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-right: 1rem;
+  background: var(--header-bg, #1e1e1e);
 }
 
 .split {
