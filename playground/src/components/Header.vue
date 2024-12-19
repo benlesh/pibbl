@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useDark, useClipboard } from '@vueuse/core';
 import { Button } from '../components/ui/button';
 import { 
   DropdownMenu,
@@ -23,7 +24,8 @@ import {
 } from '../components/ui/tooltip';
 import { ScrollArea } from '../components/ui/scroll-area';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
-import { Settings, RefreshCw } from 'lucide-vue-next';
+import { Settings, RefreshCw, Share2, Sun, Moon, ChevronDown } from 'lucide-vue-next';
+import SnippetManager from './SnippetManager.vue';
 
 const examples = [
   {
@@ -63,10 +65,13 @@ const examples = [
 ];
 
 const selectedExample = ref('Basic Button');
+const isDark = useDark();
+const { copy } = useClipboard();
 
 const emit = defineEmits<{
   (e: 'example-change', code: string): void;
   (e: 'refresh'): void;
+  (e: 'code-load', code: string): void;
 }>();
 
 function loadExample(example: typeof examples[0]) {
@@ -76,6 +81,18 @@ function loadExample(example: typeof examples[0]) {
 
 function refreshPreview() {
   emit('refresh');
+}
+
+function onShare() {
+  copy(window.location.href);
+}
+
+function onSnippetLoad(code: string) {
+  emit('code-load', code);
+}
+
+function toggleDark() {
+  isDark.value = !isDark.value;
 }
 </script>
 
@@ -101,9 +118,29 @@ function refreshPreview() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <div class="relative">
+        <SnippetManager 
+          :current-code="''"
+          @load="onSnippetLoad"
+        />
+      </div>
     </div>
 
     <div class="flex items-center gap-2">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon" @click="onShare">
+              <Share2 class="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Share</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -113,6 +150,20 @@ function refreshPreview() {
           </TooltipTrigger>
           <TooltipContent>
             <p>Refresh Preview</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon" @click="toggleDark">
+              <Sun v-if="isDark" class="h-4 w-4" />
+              <Moon v-else class="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{{ isDark ? 'Light Mode' : 'Dark Mode' }}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
