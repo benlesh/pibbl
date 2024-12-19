@@ -19,15 +19,19 @@
     </label>
 
     <!-- Snippets Menu -->
-    <div v-if="showMenu" class="absolute top-full right-0 mt-2 w-64 bg-popover border rounded-md shadow-lg">
-      <div class="p-2 border-b flex gap-2">
-        <input
+    <div 
+      v-if="showMenu" 
+      class="absolute top-full right-0 mt-2 w-[300px] rounded-md border bg-popover text-popover-foreground shadow-md"
+    >
+      <div class="flex items-center gap-2 p-3 border-b">
+        <Input
           v-model="newSnippetName"
           placeholder="Snippet name"
-          class="flex-1 px-2 py-1 text-sm rounded border bg-background"
+          class="h-8"
           @keyup.enter="saveSnippet"
-        >
+        />
         <Button 
+          variant="secondary"
           size="sm"
           :disabled="!newSnippetName"
           @click="saveSnippet"
@@ -35,49 +39,81 @@
           Save
         </Button>
       </div>
-      <div class="max-h-64 overflow-y-auto">
-        <div 
-          v-for="(snippet, name) in snippets" 
-          :key="name"
-          class="p-2 border-b flex items-center justify-between gap-2 hover:bg-muted/50"
-        >
-          <span class="truncate text-sm" :title="name">{{ name }}</span>
-          <div class="flex gap-1">
-            <Button 
-              variant="ghost"
-              size="sm"
-              @click="loadSnippet(snippet)"
-              title="Load snippet"
-            >
-              Load
-            </Button>
-            <Button 
-              variant="ghost"
-              size="sm"
-              @click="shareSnippet(snippet)"
-              title="Share snippet"
-            >
-              Share
-            </Button>
-            <Button 
-              variant="ghost"
-              size="sm"
-              @click="deleteSnippet(name)"
-              title="Delete snippet"
-            >
-              Delete
-            </Button>
+      
+      <ScrollArea class="h-[300px]">
+        <div class="p-1">
+          <div 
+            v-for="(snippet, name) in snippets" 
+            :key="name"
+            class="flex items-center justify-between gap-2 rounded-sm px-2 py-1.5 hover:bg-accent hover:text-accent-foreground"
+          >
+            <span class="truncate text-sm font-medium" :title="name">{{ name }}</span>
+            <div class="flex items-center gap-1">
+              <Button 
+                variant="ghost"
+                size="icon"
+                class="h-7 w-7"
+                @click="loadSnippet(snippet)"
+              >
+                <ArrowUpToLine class="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost"
+                size="icon"
+                class="h-7 w-7"
+                @click="shareSnippet(snippet)"
+              >
+                <Share2 class="h-4 w-4" />
+              </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="ghost"
+                    size="icon"
+                    class="h-7 w-7"
+                    @click.stop="handleDelete(name, $event)"
+                  >
+                    <Trash2 class="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Delete Snippet</DialogTitle>
+                    <DialogDescription>
+                      Are you sure you want to delete "{{ pendingDeleteName }}"? This action cannot be undone.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div class="flex justify-end gap-2">
+                    <DialogClose asChild>
+                      <Button variant="secondary">Cancel</Button>
+                    </DialogClose>
+                    <DialogClose asChild>
+                      <Button 
+                        variant="destructive" 
+                        @click="() => deleteSnippet(pendingDeleteName)"
+                      >
+                        Delete
+                      </Button>
+                    </DialogClose>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </div>
-      </div>
+      </ScrollArea>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useStorage, useClipboard } from '@vueuse/core';
-import Button from './ui/button/button.vue';
+import { useStorage, useClipboard, useMagicKeys } from '@vueuse/core';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
+import { ArrowUpToLine, Share2, Trash2 } from 'lucide-vue-next';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
 
@@ -99,6 +135,8 @@ const showMenu = ref(false);
 const newSnippetName = ref('');
 const { copy } = useClipboard();
 const snippets = useStorage<Record<string, string>>('crc-snippets', {});
+const pendingDeleteName = ref('');
+const { cmd } = useMagicKeys();
 
 async function downloadProject() {
   const zip = new JSZip();
@@ -152,8 +190,22 @@ async function shareSnippet(code: string) {
   showMenu.value = false;
 }
 
+function handleDelete(name: string, event: MouseEvent) {
+  if (event.metaKey) {
+    // If cmd/meta is pressed during click, delete immediately
+    deleteSnippet(name);
+    event.preventDefault();
+    return;
+  }
+  
+  // Otherwise, set the pending name for the confirmation dialog
+  pendingDeleteName.value = name;
+}
+
 function deleteSnippet(name: string) {
+  if (!name) return;
   delete snippets.value[name];
+  pendingDeleteName.value = '';
 }
 </script>
 
