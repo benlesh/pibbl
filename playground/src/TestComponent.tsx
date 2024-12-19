@@ -1,15 +1,6 @@
 /** @jsxImportSource @crc/jsx */
-// import { jsx, jsxVirtual, processVirtualNode, registerHook } from '@crc/jsx/jsx-runtime';
-import { type RenderingContext2D } from '@crc/core';
-
-// Example hook for runtime modification
-// registerHook('rect', (type, props) => {
-//   // Add debug outline in development
-//   if (process.env.NODE_ENV === 'development') {
-//     return (p: any) => type({ ...p, strokeStyle: 'red', lineWidth: 1 });
-//   }
-//   return type;
-// });
+import type { CompEl, g, RenderingContext2D } from '@crc/core';
+import { GProps, g } from '@crc/core';
 
 interface Props {
   x: number;
@@ -20,37 +11,36 @@ interface Props {
   debug?: boolean;
 }
 
+type GElement = CompEl<GProps>; 
 // Direct transformation example
-export function DirectComponent(props: Props) {
-  const { x, y, width, height, text, debug } = props;
-  
+export function DirectComponent(props: Props): JSX.Element {
+  const { x, y, width, height, text } = props;
   return (
-    <g>
+    <g children={[
       <rect
         x={x}
         y={y}
         width={width}
         height={height}
-        fillStyle="blue"
-      />
-      {text && (
+        fillStyle="red"
+      />,
+      text && (
         <text
           x={x + width / 2}
           y={y + height / 2}
           fillStyle="white"
           textAlign="center"
-        >
-          {text}
-        </text>
-      )}
-    </g>
+          text={text}
+        />
+      ),
+    ]}
+    />
   );
 }
 
 // Virtual tree example
-export function VirtualComponent(props: Props & { ctx: RenderingContext2D }) {
-  const { x, y, width, height, text, debug, ctx } = props;
-  
+export function VirtualComponent(props: Props & { ctx: RenderingContext2D }): JSX.Element {
+  const { x, y, width, height, text } = props;
   return (
     <g>
       <rect
@@ -65,14 +55,10 @@ export function VirtualComponent(props: Props & { ctx: RenderingContext2D }) {
           x={x + width / 2}
           y={y + height / 2}
           fillStyle="white"
-          textAlign="center"
-        >
-          {text}
-        </text>
+          textAlign="left"
+          text={text}
+        />
       )}
     </g>
   );
-
-  // Process the virtual tree with context
-  // return processVirtualNode(virtualTree, ctx);
 } 

@@ -2,16 +2,25 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "playground:dev": "vite dev",
-    "playground:build": "vite build"
+    "playground:dev": "vite",
+    "playground:build": "vite build",
+    "playground:serve": "vite preview"
   },
   "dependencies": {
     "@crc/core": "workspace:*",
     "@crc/jsx": "workspace:*",
-    "@crc/vite-plugin-crc-jsx": "workspace:*"
+    "@crc/vite-plugin-crc-jsx": "workspace:*",
+    "@monaco-editor/loader": "^1.4.0",
+    "monaco-editor": "^0.52.2",
+    "split.js": "^1.6.5",
+    "vue": "^3.5.13"
   },
   "devDependencies": {
+    "@types/split.js": "^1.6.0",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vue/tsconfig": "^0.7.0",
     "vite": "catalog:",
-    "vite-tsconfig-paths": "^4.3.1"
+    "vite-tsconfig-paths": "^5.1.4",
+    "vue-tsc": "^2.1.10"
   }
 }

@@ -7,7 +7,7 @@ export interface CompEl<P = any> {
 
 export type FalsyNodes = undefined | false | null | '' | 0;
 
-export type CRCNode = CompEl | void | FalsyNodes;
+export type CRCNode<P = any> = CompEl<P> | void | FalsyNodes;
 
 export type Canvas = HTMLCanvasElement | OffscreenCanvas;
 export type RenderingContext2D =
@@ -17,7 +17,7 @@ export type RenderingContext2D =
 export type CompFn<P> = (
   props: P,
   ctx: RenderingContext2D
-) => CRCNode[] | CRCNode | void;
+) => CRCNode<P>[] | CRCNode<P> | void;
 
 export interface CompRefs<P> {
   id: string;

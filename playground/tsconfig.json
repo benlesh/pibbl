@@ -2,7 +2,7 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "target": "ESNext",
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "jsxImportSource": "@crc/jsx",
     "module": "esnext",
     "moduleResolution": "Bundler",
