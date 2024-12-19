@@ -37,12 +37,13 @@ function GoodButtonComponent(props: GoodButtonProps, _ctx: RenderingContext2D) {
         height={height}
         fillStyle={fillStyle}
         strokeStyle={strokeStyle}
-        lineWidth={2}
+        lineWidth={3}
         cursor="pointer"
         onClick={onClick}
         onMouseOver={() => {
           console.log('mouse over');
         }}
+        alignToPixelGrid="round"
         onMouseOut={() => ({
           fillStyle,
           strokeStyle,
@@ -54,7 +55,7 @@ function GoodButtonComponent(props: GoodButtonProps, _ctx: RenderingContext2D) {
         y={y + height / 2}
         text={label}
         fillStyle="#ffffff"
-        font="14px system-ui, -apple-system, sans-serif"
+        font="24px Arial"
         textAlign="center"
         textBaseline="middle"
       />,

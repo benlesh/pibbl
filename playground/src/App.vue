@@ -1,23 +1,31 @@
 <template>
-  <div class="split">
-    <div id="editor" ref="editorContainer"></div>
-    <div id="preview">
-      <canvas id="canvas"></canvas>
+  <div class="app">
+    <Header @example-change="onExampleChange" />
+    <div class="split">
+      <div id="editor" ref="editorContainer"></div>
+      <div id="preview">
+        <canvas id="canvas"></canvas>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { useDark, useUrlSearchParams } from '@vueuse/core'
 import loader from '@monaco-editor/loader'
 import Split from 'split.js'
-import { CompEl, CompFn, crc, RenderingContext2D } from '@crc/core'
+import { crc, defineComp } from '@crc/core'
 import { GoodButton } from './GoodButton'
 import { VanillaCtxButton } from './VanillaCtxButton'
+import Header from './Header.vue'
+
 const editorContainer = ref<HTMLElement>()
+let editor: any = null
+const isDark = useDark()
+const params = useUrlSearchParams('history')
 
-const defaultCode = `
-crc(canvas, GoodButton({
+const defaultCode = `crc(canvas, GoodButton({
   x: 50,
   y: 50,
   width: 120,
@@ -26,19 +34,7 @@ crc(canvas, GoodButton({
   onClick: (e) => {
     console.log('Button clicked!', e);
   }
-}));
-
-crc(canvas, VanillaCtxButton({
-  x: 50,
-  y: 50,
-  width: 120,
-  height: 40,
-  label: "Click me!",
-  onClick: (e) => {
-    console.log('Button clicked!', e);
-  }
-}));
-`
+}));`
 
 function updatePreview(code: string) {
   const canvas = document.querySelector<HTMLCanvasElement>('#canvas')!
@@ -50,12 +46,60 @@ function updatePreview(code: string) {
   ctx?.clearRect(0, 0, canvas.width, canvas.height)
   
   try {
-    // Execute the code with GoodButton component in scope
-    new Function('canvas', 'crc', 'GoodButton', 'VanillaCtxButton', code)(canvas, crc, GoodButton, VanillaCtxButton)
+    // Execute the code with components in scope
+    new Function(
+      'canvas', 
+      'crc', 
+      'GoodButton', 
+      'VanillaCtxButton',
+      'defineComp',
+      code
+    )(
+      canvas, 
+      crc, 
+      GoodButton, 
+      VanillaCtxButton,
+      defineComp
+    )
   } catch (error) {
     console.error('Error executing code:', error)
   }
 }
+
+function onExampleChange(code: string) {
+  if (editor) {
+    editor.setValue(code)
+  }
+}
+
+// Load code from URL if present
+function loadCodeFromURL() {
+  const code = params.code
+  if (code) {
+    try {
+      const decodedCode = atob(code as string)
+      if (editor) {
+        editor.setValue(decodedCode)
+      }
+    } catch (error) {
+      console.error('Error loading code from URL:', error)
+    }
+  }
+}
+
+// Update URL when editor content changes
+function updateURL(code: string) {
+  params.code = btoa(code)
+}
+
+// Update editor theme when dark mode changes
+watch(isDark, (dark) => {
+  if (editor) {
+    editor.updateOptions({
+      theme: dark ? 'vs-dark' : 'vs',
+    })
+  }
+})
 
 onMounted(async () => {
   // Initialize split view after Vue has mounted
@@ -68,10 +112,10 @@ onMounted(async () => {
   const monaco = await loader.init()
   
   if (editorContainer.value) {
-    const editor = monaco.editor.create(editorContainer.value, {
+    editor = monaco.editor.create(editorContainer.value, {
       value: defaultCode,
       language: 'typescript',
-      theme: 'vs-dark',
+      theme: isDark.value ? 'vs-dark' : 'vs',
       minimap: { enabled: false },
       fontSize: 14,
       tabSize: 2,
@@ -80,11 +124,16 @@ onMounted(async () => {
     })
 
     editor.onDidChangeModelContent(() => {
-      updatePreview(editor.getValue())
+      const code = editor.getValue()
+      updatePreview(code)
+      updateURL(code)
     })
 
+    // Load code from URL if present
+    loadCodeFromURL()
+
     // Initial preview
-    updatePreview(defaultCode)
+    updatePreview(editor.getValue())
   }
 })
 </script>
@@ -97,10 +146,18 @@ html, body, #app {
   overflow: hidden;
 }
 
+.app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--app-bg, #ffffff);
+  color: var(--app-text, #000000);
+}
+
 .split {
   display: flex;
-  width: 100vw;
-  height: 100vh;
+  flex: 1;
+  overflow: hidden;
 }
 
 #editor, #preview {
@@ -112,7 +169,7 @@ html, body, #app {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f5f5;
+  background: var(--preview-bg, #f5f5f5);
 }
 
 canvas {
@@ -121,7 +178,7 @@ canvas {
 }
 
 .gutter {
-  background-color: #eee;
+  background-color: var(--gutter-bg, #2d2d2d);
   background-repeat: no-repeat;
   background-position: 50%;
 }
@@ -129,5 +186,19 @@ canvas {
 .gutter.gutter-horizontal {
   background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');
   cursor: col-resize;
+}
+
+:root {
+  --app-bg: #ffffff;
+  --app-text: #000000;
+  --preview-bg: #f5f5f5;
+  --gutter-bg: #e0e0e0;
+}
+
+html.dark {
+  --app-bg: #1e1e1e;
+  --app-text: #ffffff;
+  --preview-bg: #2d2d2d;
+  --gutter-bg: #2d2d2d;
 }
 </style> 
