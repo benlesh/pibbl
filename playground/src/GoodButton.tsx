@@ -1,3 +1,6 @@
+/**
+ * @jsxImportSource crc
+ */
 import { CompFn, CRCMouseEvent, defineComp, RenderingContext2D } from '@crc/core';
 
 interface GoodButtonProps {
