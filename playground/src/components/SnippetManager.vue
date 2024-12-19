@@ -1,56 +1,72 @@
 <template>
-  <div class="snippet-manager">
-    <button 
-      class="action-button" 
-      @click="showMenu = !showMenu"
-      :title="showMenu ? 'Hide snippets' : 'Show snippets'"
-    >
-      📑
-    </button>
-    
-    <div v-if="showMenu" class="menu">
-      <div class="menu-header">
-        <input 
-          v-model="newSnippetName" 
+  <div class="flex items-center gap-2">
+    <Button variant="outline" size="sm" @click="downloadProject">
+      Download Project
+    </Button>
+    <Button variant="outline" size="sm" @click="showMenu = !showMenu">
+      {{ showMenu ? 'Hide Snippets' : 'Show Snippets' }}
+    </Button>
+    <label>
+      <Button variant="outline" size="sm">
+        Upload Code
+      </Button>
+      <input
+        type="file"
+        accept=".js,.ts"
+        class="hidden"
+        @change="handleFileUpload"
+      >
+    </label>
+
+    <!-- Snippets Menu -->
+    <div v-if="showMenu" class="absolute top-full right-0 mt-2 w-64 bg-popover border rounded-md shadow-lg">
+      <div class="p-2 border-b flex gap-2">
+        <input
+          v-model="newSnippetName"
           placeholder="Snippet name"
+          class="flex-1 px-2 py-1 text-sm rounded border bg-background"
           @keyup.enter="saveSnippet"
-          class="snippet-input"
         >
-        <button 
-          class="save-button" 
-          @click="saveSnippet"
+        <Button 
+          size="sm"
           :disabled="!newSnippetName"
+          @click="saveSnippet"
         >
           Save
-        </button>
+        </Button>
       </div>
-      
-      <div class="snippets-list">
+      <div class="max-h-64 overflow-y-auto">
         <div 
           v-for="(snippet, name) in snippets" 
           :key="name"
-          class="snippet-item"
+          class="p-2 border-b flex items-center justify-between gap-2 hover:bg-muted/50"
         >
-          <span class="snippet-name" :title="name">{{ name }}</span>
-          <div class="snippet-actions">
-            <button 
+          <span class="truncate text-sm" :title="name">{{ name }}</span>
+          <div class="flex gap-1">
+            <Button 
+              variant="ghost"
+              size="sm"
               @click="loadSnippet(snippet)"
               title="Load snippet"
             >
-              ▶️
-            </button>
-            <button 
+              Load
+            </Button>
+            <Button 
+              variant="ghost"
+              size="sm"
               @click="shareSnippet(snippet)"
               title="Share snippet"
             >
-              🔗
-            </button>
-            <button 
+              Share
+            </Button>
+            <Button 
+              variant="ghost"
+              size="sm"
               @click="deleteSnippet(name)"
               title="Delete snippet"
             >
-              🗑️
-            </button>
+              Delete
+            </Button>
           </div>
         </div>
       </div>
@@ -59,43 +75,85 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useStorage, useClipboard } from '@vueuse/core'
+import { ref } from 'vue';
+import { useStorage, useClipboard } from '@vueuse/core';
+import Button from './ui/button/button.vue';
+import { saveAs } from 'file-saver';
+import JSZip from 'jszip';
+
+// Import templates
+import appTemplate from '../fixtures/templates/App.ts.txt?raw';
+import mainTemplate from '../fixtures/templates/main.ts.txt?raw';
+import indexTemplate from '../fixtures/templates/index.html.txt?raw';
+import packageJson from '../fixtures/package.json?raw';
 
 const props = defineProps<{
-  currentCode: string
-}>()
+  currentCode: string;
+}>();
 
 const emit = defineEmits<{
-  (e: 'load', code: string): void
-}>()
+  (e: 'load', code: string): void;
+}>();
 
-const showMenu = ref(false)
-const newSnippetName = ref('')
-const { copy } = useClipboard()
+const showMenu = ref(false);
+const newSnippetName = ref('');
+const { copy } = useClipboard();
+const snippets = useStorage<Record<string, string>>('crc-snippets', {});
 
-const snippets = useStorage<Record<string, string>>('crc-snippets', {})
+async function downloadProject() {
+  const zip = new JSZip();
+
+  // Add package.json
+  zip.file('package.json', packageJson);
+
+  // Add main.ts
+  zip.file('src/main.ts', mainTemplate);
+
+  // Add App.ts with the current code
+  zip.file('src/App.ts', appTemplate.replace('__CODE__', props.currentCode));
+
+  // Add index.html
+  zip.file('index.html', indexTemplate);
+
+  // Generate the zip file
+  const content = await zip.generateAsync({ type: 'blob' });
+  saveAs(content, 'crc-component.zip');
+}
+
+function handleFileUpload(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const code = e.target?.result as string;
+      emit('load', code);
+    };
+    reader.readAsText(file);
+  }
+}
 
 function saveSnippet() {
-  if (!newSnippetName.value) return
-  snippets.value[newSnippetName.value] = props.currentCode
-  newSnippetName.value = ''
+  if (!newSnippetName.value) return;
+  snippets.value[newSnippetName.value] = props.currentCode;
+  newSnippetName.value = '';
 }
 
 function loadSnippet(code: string) {
-  emit('load', code)
-  showMenu.value = false
+  emit('load', code);
+  showMenu.value = false;
 }
 
 async function shareSnippet(code: string) {
-  const url = new URL(window.location.href)
-  url.searchParams.set('code', btoa(code))
-  await copy(url.toString())
-  showMenu.value = false
+  const url = new URL(window.location.href);
+  url.hash = btoa(code);
+  await copy(url.toString());
+  showMenu.value = false;
 }
 
 function deleteSnippet(name: string) {
-  delete snippets.value[name]
+  delete snippets.value[name];
 }
 </script>
 

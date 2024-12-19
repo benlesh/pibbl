@@ -1,0 +1,10 @@
+{
+  "name": "crc-component",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@crc/core": "latest",
+    "@crc/jsx": "latest"
+  }
+} 

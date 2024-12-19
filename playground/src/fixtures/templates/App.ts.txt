@@ -1,0 +1,5 @@
+import { defineComp } from '@crc/core';
+
+export const MyComponent = defineComp((props) => {
+  __CODE__
+}); 

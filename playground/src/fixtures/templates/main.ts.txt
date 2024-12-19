@@ -1,0 +1,10 @@
+import { crc } from '@crc/core';
+import { MyComponent } from './App';
+
+// Get your canvas element
+const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+
+// Use your component
+crc(canvas, MyComponent({
+  // Your props here
+})); 
