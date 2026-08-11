@@ -225,7 +225,7 @@ These are investigation leads from the current code, not pre-approved implementa
 | DEP-02 | Done        | Upgraded package manager, TypeScript 7, lint, and formatting without typescript-eslint.       |
 | DEP-03 | Done        | Replaced unbuild/Rollup, upgraded Vite, and proved built-package parity.                      |
 | DEP-04 | Done        | Upgraded the browser stack and closed dependency freshness, dedupe, peers, and audit.         |
-| TFC-01 | Next        | Create the interaction/lifecycle characterization harness and freeze the measurable baseline. |
+| TFC-01 | In progress | Create the interaction/lifecycle characterization harness and freeze the measurable baseline. |
 | TFC-02 | Queued      | Decide and document the mouse interaction contract using native-browser evidence.             |
 | TFC-03 | Queued      | Make event registration and teardown ownership deterministic and leak-safe.                   |
 | TFC-04 | Queued      | Implement and prove event ordering, transitions, and overlap target selection.                |
@@ -437,7 +437,7 @@ Upgrade the browser test stack and remaining direct tooling, prove the visual/in
 - Visual-regression failure-artifact drill.
 - Typecheck, lint, package/playground builds, `pnpm outdated -r --format json`, and dependency audit review.
 
-## TFC-01 [NEXT] — Characterization harness and frozen baseline
+## TFC-01 [IN PROGRESS] — Characterization harness and frozen baseline
 
 ### Goal
 
