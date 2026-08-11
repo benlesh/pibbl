@@ -30,6 +30,7 @@ catalog:
   bumpp: ^9.8.1
   diff-match-patch-es: ^0.1.1
   eslint: ^10.8.1
+  esbuild: ^0.28.2
   esno: ^4.8.0
   floating-vue: ^5.2.2
   fs-extra: ^11.2.0
@@ -52,8 +53,7 @@ catalog:
   taze: ^0.18.0
   twoslash: ^0.2.12
   twoslash-vue: ^0.2.12
-  typescript: ^5.6.3
-  unbuild: ^2.0.0
+  typescript: ^7.0.2
   unocss: ^0.64.1
   unplugin-vue-components: ^0.27.4
   vite: ^5.4.11

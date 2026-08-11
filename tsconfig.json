@@ -18,6 +18,7 @@
       "@vitest/browser/providers/playwright"
     ],
     "allowJs": true,
+    "isolatedModules": true,
     "strict": true,
     "strictNullChecks": true,
     "noUnusedLocals": true,

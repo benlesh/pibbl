@@ -43,6 +43,7 @@
     "bumpp": "catalog:",
     "diff-match-patch-es": "catalog:",
     "eslint": "catalog:",
+    "esbuild": "catalog:",
     "esno": "catalog:",
     "fs-extra": "catalog:",
     "globals": "catalog:",
@@ -59,7 +60,6 @@
     "rollup-plugin-typescript2": "catalog:",
     "taze": "catalog:",
     "typescript": "catalog:",
-    "unbuild": "catalog:",
     "vite": "catalog:",
     "vite-tsconfig-paths": "catalog:",
     "vitest": "catalog:"

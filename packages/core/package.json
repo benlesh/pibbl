@@ -18,11 +18,11 @@
   "sideEffects": false,
   "exports": {
     ".": {
-      "types": "./dist/index.d.mts",
+      "types": "./dist/index.d.ts",
       "default": "./dist/index.mjs"
     },
     "./types": {
-      "types": "./dist/types.d.mts"
+      "types": "./dist/types.d.ts"
     },
     "./dist/*": "./dist/*",
     "./package.json": "./package.json",
@@ -30,11 +30,11 @@
   },
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
-  "types": "./dist/index.d.mts",
+  "types": "./dist/index.d.ts",
   "typesVersions": {
     "*": {
       "types": [
-        "./dist/types.d.mts"
+        "./dist/types.d.ts"
       ],
       "*": [
         "./dist/*",
@@ -46,8 +46,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "unbuild",
-    "dev": "unbuild --stub",
+    "build": "rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts src/types.ts --bundle --format=esm --platform=neutral --target=esnext --outdir=dist --out-extension:.js=.mjs --external:@crc/types",
+    "dev": "pnpm run build",
     "prepublishOnly": "nr build",
     "test": "vitest"
   },
