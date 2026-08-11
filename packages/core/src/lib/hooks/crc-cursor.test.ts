@@ -81,6 +81,21 @@ describe('crcCursor', () => {
     expect(getComputedStyle(canvas.element).cursor).toBe('help');
   });
 
+  it('reconciles a fallback swap even when registration is briefly empty', async () => {
+    const Scene = defineComp<{ swapped: boolean }>(({ swapped }) => {
+      crcCursor({ style: swapped ? undefined : 'wait' });
+      crcCursor({ style: swapped ? 'help' : undefined });
+    });
+    const canvas = await componentTest(Scene({ swapped: false }));
+    await canvas.mouseMove({ position: { x: 80, y: 80 } });
+    expect(getComputedStyle(canvas.element).cursor).toBe('wait');
+
+    crc(canvas.element, Scene({ swapped: true }));
+    await nextFrame();
+
+    expect(getComputedStyle(canvas.element).cursor).toBe('help');
+  });
+
   it('keeps the fallback applied when its cursorless hovered region is removed', async () => {
     const Scene = defineComp<{ region: boolean }>(({ region }) => {
       crcCursor({ style: 'wait' });
@@ -103,6 +118,26 @@ describe('crcCursor', () => {
     await nextFrame();
 
     expect(getComputedStyle(canvas.element).cursor).toBe('wait');
+  });
+
+  it('applies a newly enabled region cursor without another movement', async () => {
+    const Scene = defineComp<{ enabled: boolean }>(({ enabled }) => rect({
+      x: 40,
+      y: 40,
+      width: 80,
+      height: 80,
+      fillStyle: 'red',
+      cursor: enabled ? 'pointer' : undefined,
+      onMouseMove: () => undefined,
+    }));
+    const canvas = await componentTest(Scene({ enabled: false }));
+    await canvas.mouseMove({ position: { x: 80, y: 80 } });
+    expect(canvas.element.style.cursor).toBe('');
+
+    crc(canvas.element, Scene({ enabled: true }));
+    await nextFrame();
+
+    expect(getComputedStyle(canvas.element).cursor).toBe('pointer');
   });
 
   it('does not clear an externally replaced cursor during fallback removal', async () => {

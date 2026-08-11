@@ -48,7 +48,7 @@ export function removeInteractionRegion(
     interaction.clickStreak = 0;
   }
   if (interaction.cursorRegion === region) {
-    const canvas = interaction.cursorCanvas;
+    const canvas = interaction.pointerCanvas;
     releaseCursor(instance);
     if (canvas) {
       applyCursor(instance, undefined, canvas);
@@ -62,9 +62,9 @@ export function refreshInteractionCursor(
 ): void {
   if (
     instance.interaction.hoveredRegion === region &&
-    instance.interaction.cursorCanvas
+    instance.interaction.pointerCanvas
   ) {
-    applyCursor(instance, region, instance.interaction.cursorCanvas);
+    applyCursor(instance, region, instance.interaction.pointerCanvas);
   }
 }
 
@@ -74,7 +74,7 @@ export function removeCursorDefault(
 ): void {
   instance.cursorDefaults.delete(cursorDefault);
   if (instance.interaction.cursorDefault === cursorDefault) {
-    const canvas = instance.interaction.cursorCanvas;
+    const canvas = instance.interaction.pointerCanvas;
     releaseCursor(instance);
     if (canvas) {
       applyCursor(instance, instance.interaction.hoveredRegion, canvas);
@@ -85,8 +85,8 @@ export function removeCursorDefault(
 export function refreshCursorDefault(
   instance: CRCInstance,
 ): void {
-  const canvas = instance.interaction.cursorCanvas;
-  if (canvas && instance.interaction.cursorDefault) {
+  const canvas = instance.interaction.pointerCanvas;
+  if (canvas) {
     applyCursor(instance, instance.interaction.hoveredRegion, canvas);
   }
 }
@@ -143,6 +143,7 @@ function dispatchMouseMove(
   canvas: HTMLCanvasElement,
 ): void {
   const interaction = instance.interaction;
+  interaction.pointerCanvas = canvas;
   const previous = liveRegion(instance, interaction.hoveredRegion);
   const next = resolveTarget(instance, event, canvas);
 
@@ -176,6 +177,7 @@ function dispatchRootMouseOut(instance: CRCInstance, event: MouseEvent): void {
   const previous = liveRegion(instance, instance.interaction.hoveredRegion);
   instance.interaction.hoveredRegion = undefined;
   releaseCursor(instance);
+  instance.interaction.pointerCanvas = undefined;
   invokeRegion(instance, previous, 'mouseout', event);
 }
 

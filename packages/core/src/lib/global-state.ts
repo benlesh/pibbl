@@ -121,6 +121,7 @@ export function cleanupCRCInstance(crcInstance: CRCInstance): void {
     interaction.clickStreak = 0;
     interaction.cursorRegion = undefined;
     interaction.cursorDefault = undefined;
+    interaction.pointerCanvas = undefined;
     interaction.cursorCanvas = undefined;
     interaction.cursorStyle = undefined;
   }

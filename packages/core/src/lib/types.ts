@@ -78,6 +78,7 @@ export interface CRCInteractionState {
   clickStreak: number;
   cursorRegion: CRCInteractionRegion | undefined;
   cursorDefault: CRCCursorDefault | undefined;
+  pointerCanvas: HTMLCanvasElement | undefined;
   cursorCanvas: HTMLCanvasElement | undefined;
   cursorStyle: string | undefined;
 }

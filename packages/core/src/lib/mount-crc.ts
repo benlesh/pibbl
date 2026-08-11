@@ -61,6 +61,7 @@ export function mountCRC<P>(
       clickStreak: 0,
       cursorRegion: undefined,
       cursorDefault: undefined,
+      pointerCanvas: undefined,
       cursorCanvas: undefined,
       cursorStyle: undefined,
     },
