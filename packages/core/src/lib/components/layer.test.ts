@@ -1,3 +1,4 @@
+import type { RectProps } from './rect';
 import { page } from '@vitest/browser/context';
 import { describe, expect, it, vi } from 'vitest';
 import { defineComp } from '../define-comp';
@@ -6,7 +7,7 @@ import { componentTest } from '../test-utils/component-test';
 import { takeScreenshot } from '../util/test-utils';
 import { g } from './g';
 import { layer } from './layer';
-import { rect, type RectProps } from './rect';
+import { rect } from './rect';
 import { text } from './text';
 
 describe('layer', () => {

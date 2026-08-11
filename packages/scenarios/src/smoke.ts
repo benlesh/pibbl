@@ -1,14 +1,11 @@
+import type { SmokeScenarioState } from './smoke.example';
 import type {
   ScenarioController,
   ScenarioDefinition,
   ScenarioMountContext,
 } from './types';
 import { crc } from '@crc/core';
-import {
-  createSmokeScene,
-  SMOKE_SOURCE_ID,
-  type SmokeScenarioState,
-} from './smoke.example';
+import { createSmokeScene, SMOKE_SOURCE_ID } from './smoke.example';
 
 export { type SmokeScenarioAction, type SmokeScenarioState } from './smoke.example';
 
