@@ -4,6 +4,9 @@ packages:
   - playground
   - examples/*
   - docs
+allowBuilds:
+  esbuild: true
+  msw: false
 catalog:
   '@antfu/eslint-config': ^3.9.1
   '@antfu/ni': ^0.23.0
@@ -31,7 +34,6 @@ catalog:
   monaco-editor-core: ^0.52.0
   picocolors: ^1.1.1
   pinia: ^2.2.6
-  pnpm: ^9.13.2
   prettier: ^3.3.3
   rimraf: ^6.0.1
   rollup: ^4.26.0
