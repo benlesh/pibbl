@@ -13,6 +13,17 @@ export interface ScenarioInstruction {
   expected: string;
 }
 
+export interface ScenarioAction {
+  id: string;
+  label: string;
+}
+
+export interface ScenarioSourceReference {
+  id: string;
+  language: 'ts';
+  path: string;
+}
+
 export interface ScenarioMetadata {
   id: string;
   slug: string;
@@ -23,21 +34,22 @@ export interface ScenarioMetadata {
   conceptTags: readonly string[];
   manualSteps: readonly ScenarioInstruction[];
   knownLimitations: readonly string[];
-  sourcePath: string;
   visibility: ScenarioVisibility;
+  visibilityReason: string;
   maturity: ScenarioMaturity;
 }
 
 export interface ScenarioMountContext<TState> {
   canvas: HTMLCanvasElement;
-  onStateChange?: (state: TState) => void;
+  onStateChange?: (state: Readonly<TState>) => void;
 }
 
 export interface ScenarioController<TState> {
-  getState: () => TState;
-  update: () => void;
-  reset: () => void;
-  dispose: () => void;
+  getState: () => Readonly<TState>;
+  perform: (actionId: string) => Promise<void>;
+  reset: () => Promise<void>;
+  settled: () => Promise<void>;
+  dispose: () => Promise<void>;
 }
 
 export interface ScenarioStateField {
@@ -45,15 +57,27 @@ export interface ScenarioStateField {
   value: string;
 }
 
-export interface ScenarioCatalogEntry {
+export interface ScenarioCatalogRecord {
   metadata: ScenarioMetadata;
   canvas: {
     width: number;
     height: number;
   };
+  actions: readonly ScenarioAction[];
+  source: ScenarioSourceReference;
+  load: () => Promise<unknown>;
 }
 
-export interface ScenarioDefinition<TState> extends ScenarioCatalogEntry {
-  mount: (context: ScenarioMountContext<TState>) => ScenarioController<TState>;
-  formatState: (state: TState) => readonly ScenarioStateField[];
+export interface ScenarioCatalogEntry<TState> extends ScenarioCatalogRecord {
+  load: () => Promise<ScenarioDefinition<TState>>;
+}
+
+export interface ScenarioDefinition<TState> {
+  id: string;
+  sourceId: string;
+  actionIds: readonly string[];
+  mount: (
+    context: ScenarioMountContext<TState>,
+  ) => Promise<ScenarioController<TState>>;
+  formatState: (state: Readonly<TState>) => readonly ScenarioStateField[];
 }

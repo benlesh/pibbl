@@ -1,22 +1,22 @@
-export { scenarioCatalog, validateScenarioCatalog } from './catalog';
 export {
-  smokeScenario,
-  type SmokeScenarioAction,
-  type SmokeScenarioState,
-} from './smoke';
-export {
-  mountScenarioSurface,
-  type ScenarioSurface,
-  scenarioSurfaceStyles,
-} from './surface';
+  getScenarioBySlug,
+  loadScenario,
+  scenarioCatalog,
+  smokeScenarioEntry,
+  validateScenarioCatalog,
+} from './catalog';
+export type { SmokeScenarioAction, SmokeScenarioState } from './smoke.example';
 export type {
+  ScenarioAction,
   ScenarioCatalogEntry,
+  ScenarioCatalogRecord,
   ScenarioController,
   ScenarioDefinition,
   ScenarioInstruction,
   ScenarioMaturity,
   ScenarioMetadata,
   ScenarioMountContext,
+  ScenarioSourceReference,
   ScenarioStateField,
   ScenarioVisibility,
 } from './types';
