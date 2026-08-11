@@ -1,5 +1,7 @@
 import type {
   InteractionLabAction,
+  InteractionLabFixture,
+  InteractionLabRecord,
   InteractionLabState,
 } from './interaction-lab.example';
 import type {
@@ -7,23 +9,57 @@ import type {
   ScenarioDefinition,
   ScenarioMountContext,
 } from './types';
+import type { CRCController } from '@crc/core';
 import { crc } from '@crc/core';
 import { EventTraceRecorder } from './event-trace';
-import type { TraceEventType } from './event-trace';
+import type { EventTraceInput, TraceEventType } from './event-trace';
 import {
   createInteractionLabScene,
   INTERACTION_LAB_SOURCE_ID,
 } from './interaction-lab.example';
 
-export type { InteractionLabAction, InteractionLabState } from './interaction-lab.example';
+export type {
+  InteractionLabAction,
+  InteractionLabFixture,
+  InteractionLabState,
+} from './interaction-lab.example';
+
+const FIXTURES: readonly InteractionLabFixture[] = [
+  'regions',
+  'overlap',
+  'nested',
+  'fill',
+  'stroke',
+  'fill-stroke',
+  'transparent',
+  'interaction-width',
+  'no-hit',
+  'observer',
+  'throwing',
+  'remove-during-transition',
+];
+
+export const INTERACTION_LAB_ACTION_IDS: readonly Exclude<
+  InteractionLabAction,
+  'mount' | 'reset'
+>[] = [
+  ...FIXTURES.map(fixture => `show-${fixture}` as const),
+  'reorder-overlap',
+  'remove-top',
+  'replace-handler',
+  'remove-handler',
+  'clear-trace',
+];
 
 function initialState(lastAction: InteractionLabAction = 'mount'): InteractionLabState {
   return {
-    revision: 0,
+    fixture: 'regions',
     handlerGeneration: 1,
-    subtreeVisible: true,
-    layerVisible: false,
     lastAction,
+    lastHandlerGeneration: null,
+    leftHandlerEnabled: true,
+    topPaintedLast: true,
+    topVisible: true,
     trace: [],
   };
 }
@@ -34,10 +70,10 @@ function nextFrame(): Promise<void> {
 
 function mountNativeReference(
   host: HTMLElement,
-  recorder: EventTraceRecorder,
+  record: (input: EventTraceInput) => void,
 ): () => void {
   const title = document.createElement('p');
-  title.textContent = 'Native DOM reference · same region geometry';
+  title.textContent = 'Native DOM reference · same basic region geometry';
   title.style.cssText = 'font:700 13px/1.4 Arial,sans-serif; margin:0 0 10px; color:#334155';
   const stage = document.createElement('div');
   stage.dataset.region = 'outside';
@@ -56,7 +92,16 @@ function mountNativeReference(
   );
   host.replaceChildren(title, stage);
 
-  const eventTypes = ['mouseover', 'mousemove', 'mouseout', 'mousedown', 'mouseup', 'click'] as const;
+  const eventTypes = [
+    'click',
+    'contextmenu',
+    'dblclick',
+    'mousedown',
+    'mousemove',
+    'mouseout',
+    'mouseover',
+    'mouseup',
+  ] as const;
   const listeners = eventTypes.map((type) => {
     const listener = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
@@ -65,7 +110,7 @@ function mountNativeReference(
         return;
       }
       const bounds = stage.getBoundingClientRect();
-      recorder.record({
+      record({
         source: 'native',
         type: type as TraceEventType,
         target: region,
@@ -87,6 +132,14 @@ function mountNativeReference(
   };
 }
 
+function fixtureFromAction(actionId: string): InteractionLabFixture | undefined {
+  if (!actionId.startsWith('show-')) {
+    return undefined;
+  }
+  const fixture = actionId.slice(5) as InteractionLabFixture;
+  return FIXTURES.includes(fixture) ? fixture : undefined;
+}
+
 async function mountInteractionLab(
   context: ScenarioMountContext<InteractionLabState>,
 ): Promise<ScenarioController<InteractionLabState>> {
@@ -94,12 +147,31 @@ async function mountInteractionLab(
   let disposed = false;
   let state = initialState();
   let pendingRender = Promise.resolve();
-  const recorder = new EventTraceRecorder(() => {
-    state = { ...state, trace: recorder.getEntries() };
+  let runtimeController: CRCController | undefined;
+  const recorder = new EventTraceRecorder();
+
+  const publishTrace = (handlerGeneration: number | null = null) => {
+    state = {
+      ...state,
+      lastHandlerGeneration: handlerGeneration ?? state.lastHandlerGeneration,
+      trace: recorder.getEntries(),
+    };
     context.onStateChange?.({ ...state });
-  });
+  };
+  const record: InteractionLabRecord = (input, handlerGeneration) => {
+    recorder.record(input);
+    publishTrace(handlerGeneration ?? null);
+    if (
+      state.fixture === 'remove-during-transition' &&
+      input.type === 'mouseout' &&
+      input.target === 'left'
+    ) {
+      runtimeController?.dispose();
+      runtimeController = undefined;
+    }
+  };
   const disposeNativeReference = context.referenceHost ?
-    mountNativeReference(context.referenceHost, recorder) :
+    mountNativeReference(context.referenceHost, input => record(input)) :
     () => undefined;
 
   const assertActive = () => {
@@ -110,20 +182,28 @@ async function mountInteractionLab(
 
   const render = () => {
     assertActive();
-    crc(context.canvas, createInteractionLabScene({
-      state,
-      record: input => recorder.record(input),
-    }), { signal: abortController.signal });
+    runtimeController = crc(context.canvas, createInteractionLabScene({ state, record }), {
+      signal: abortController.signal,
+    });
     context.onStateChange?.({ ...state });
     pendingRender = nextFrame();
     return pendingRender;
   };
 
-  const transition = async (lastAction: InteractionLabAction, changes: Partial<InteractionLabState>) => {
+  const transition = async (
+    lastAction: InteractionLabAction,
+    changes: Partial<InteractionLabState>,
+    clearTrace = false,
+  ) => {
+    if (clearTrace) {
+      recorder.reset();
+    }
     state = {
       ...state,
       ...changes,
       lastAction,
+      lastHandlerGeneration: clearTrace ? null : state.lastHandlerGeneration,
+      trace: recorder.getEntries(),
     };
     await render();
   };
@@ -134,30 +214,44 @@ async function mountInteractionLab(
     getState: () => ({ ...state, trace: [...state.trace] }),
     perform: async (actionId) => {
       assertActive();
+      const fixture = fixtureFromAction(actionId);
+      if (fixture) {
+        await transition(actionId as InteractionLabAction, {
+          fixture,
+          leftHandlerEnabled: true,
+          topPaintedLast: true,
+          topVisible: true,
+        }, true);
+        return;
+      }
+
       switch (actionId as InteractionLabAction) {
-        case 'rerender-100':
-          for (let index = 0; index < 100; index++) {
-            state = {
-              ...state,
-              revision: state.revision + 1,
-              lastAction: 'rerender-100',
-            };
-            await render();
-          }
+        case 'reorder-overlap':
+          await transition('reorder-overlap', {
+            topPaintedLast: !state.topPaintedLast,
+          });
+          break;
+        case 'remove-top':
+          await transition('remove-top', { topVisible: false });
           break;
         case 'replace-handler':
           await transition('replace-handler', {
             handlerGeneration: state.handlerGeneration + 1,
+            leftHandlerEnabled: true,
           });
           break;
-        case 'remove-subtree':
-          await transition('remove-subtree', { subtreeVisible: false });
+        case 'remove-handler':
+          await transition('remove-handler', { leftHandlerEnabled: false });
           break;
-        case 'add-layer':
-          await transition('add-layer', { layerVisible: true });
-          break;
-        case 'remove-layer':
-          await transition('remove-layer', { layerVisible: false });
+        case 'clear-trace':
+          recorder.reset();
+          state = {
+            ...state,
+            lastAction: 'clear-trace',
+            lastHandlerGeneration: null,
+            trace: [],
+          };
+          context.onStateChange?.({ ...state });
           break;
         default:
           throw new Error(`Interaction lab does not support action "${actionId}".`);
@@ -179,30 +273,32 @@ async function mountInteractionLab(
       await pendingRender;
       disposed = true;
       disposeNativeReference();
+      runtimeController = undefined;
       abortController.abort();
     },
   };
 }
 
+function formatTrace(state: Readonly<InteractionLabState>): string {
+  if (!state.trace.length) {
+    return 'none';
+  }
+  return state.trace.map(entry => `${entry.type}(${entry.target})`).join(' → ');
+}
+
 export const interactionLabScenario: ScenarioDefinition<InteractionLabState> = {
   id: 'interaction-trace-lab',
   sourceId: INTERACTION_LAB_SOURCE_ID,
-  actionIds: [
-    'rerender-100',
-    'replace-handler',
-    'remove-subtree',
-    'add-layer',
-    'remove-layer',
-  ],
+  actionIds: INTERACTION_LAB_ACTION_IDS,
   mount: mountInteractionLab,
   formatState: state => [
-    { label: 'Revision', value: String(state.revision) },
-    { label: 'Handler', value: String(state.handlerGeneration) },
-    { label: 'Subtree', value: state.subtreeVisible ? 'mounted' : 'removed' },
-    { label: 'Layer', value: state.layerVisible ? 'mounted' : 'removed' },
-    { label: 'Trace entries', value: String(state.trace.length) },
-    { label: 'Last event', value: state.trace.at(-1)?.type ?? 'none' },
+    { label: 'Fixture', value: state.fixture },
+    { label: 'Actual trace', value: formatTrace(state) },
     { label: 'Last target', value: state.trace.at(-1)?.target ?? 'none' },
+    { label: 'Handler', value: String(state.handlerGeneration) },
+    { label: 'Last handler call', value: String(state.lastHandlerGeneration ?? 'none') },
+    { label: 'Overlap order', value: state.topPaintedLast ? 'top above lower' : 'lower above top' },
+    { label: 'Top region', value: state.topVisible ? 'mounted' : 'removed' },
     { label: 'Last action', value: state.lastAction },
   ],
 };
