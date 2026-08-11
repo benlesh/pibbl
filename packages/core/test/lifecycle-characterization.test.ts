@@ -23,9 +23,9 @@ const ONE_REGION_HANDLERS = {
   contextmenu: 1,
   dblclick: 1,
   mousedown: 1,
-  mousemove: 3,
-  mouseout: 2,
-  mouseover: 0,
+  mousemove: 1,
+  mouseout: 1,
+  mouseover: 1,
   mouseup: 1,
 };
 
@@ -37,16 +37,16 @@ interface ProbeSceneProps {
 }
 
 function handlers(generation: number, calls: number[]): Required<CRCBasicMouseEvents> {
-  const handler = () => calls.push(generation);
+  const noop = () => undefined;
   return {
-    onClick: handler,
-    onContextMenu: handler,
-    onDblClick: handler,
-    onMouseDown: handler,
-    onMouseMove: handler,
-    onMouseOut: handler,
-    onMouseOver: handler,
-    onMouseUp: handler,
+    onClick: () => calls.push(generation),
+    onContextMenu: noop,
+    onDblClick: noop,
+    onMouseDown: noop,
+    onMouseMove: noop,
+    onMouseOut: noop,
+    onMouseOver: noop,
+    onMouseUp: noop,
   };
 }
 
@@ -147,6 +147,13 @@ function nextFrame(): Promise<void> {
   return new Promise(resolve => requestAnimationFrame(() => resolve()));
 }
 
+function clickCanvas(canvas: HTMLCanvasElement, x: number, y: number): void {
+  const init = { bubbles: true, button: 0, clientX: x, clientY: y };
+  canvas.dispatchEvent(new MouseEvent('mousedown', init));
+  canvas.dispatchEvent(new MouseEvent('mouseup', init));
+  canvas.dispatchEvent(new MouseEvent('click', init));
+}
+
 function createHarness() {
   const canvas = document.createElement('canvas');
   canvas.width = 200;
@@ -226,7 +233,7 @@ describe('event lifecycle ownership', () => {
     }
     expect(diagnostics.snapshot()).toEqual(baseline);
 
-    canvas.dispatchEvent(new MouseEvent('click', { clientX: 40, clientY: 40 }));
+    clickCanvas(canvas, 40, 40);
     expect(calls).toEqual([1_000]);
     const liveLedger = diagnostics.ledgerSnapshot();
     for (const eventLedger of Object.values(liveLedger.handlers)) {
@@ -248,13 +255,13 @@ describe('event lifecycle ownership', () => {
     crc(canvas, ProbeScene({ calls, enabled: true, generation: 2, show: true }));
     await nextFrame();
     expect(diagnostics.snapshot()).toEqual(baseline);
-    canvas.dispatchEvent(new MouseEvent('click', { clientX: 40, clientY: 40 }));
+    clickCanvas(canvas, 40, 40);
     expect(calls).toEqual([2]);
 
     crc(canvas, ProbeScene({ calls, enabled: false, generation: 2, show: true }));
     await nextFrame();
     expect(diagnostics.snapshot().handlers).toEqual(EMPTY_HANDLERS);
-    canvas.dispatchEvent(new MouseEvent('click', { clientX: 40, clientY: 40 }));
+    clickCanvas(canvas, 40, 40);
     expect(calls).toEqual([2]);
 
     crc(canvas, ProbeScene({ calls, enabled: true, generation: 3, show: true }));
@@ -262,7 +269,7 @@ describe('event lifecycle ownership', () => {
     crc(canvas, ProbeScene({ calls, enabled: true, generation: 3, show: false }));
     await nextFrame();
     expect(diagnostics.snapshot().handlers).toEqual(EMPTY_HANDLERS);
-    canvas.dispatchEvent(new MouseEvent('click', { clientX: 40, clientY: 40 }));
+    clickCanvas(canvas, 40, 40);
     expect(calls).toEqual([2]);
 
     controller.dispose();
@@ -337,7 +344,7 @@ describe('event lifecycle ownership', () => {
     staleController.dispose();
     staleAbort.abort();
     expect(diagnostics.snapshot()).toEqual(remounted);
-    canvas.dispatchEvent(new MouseEvent('click', { clientX: 40, clientY: 40 }));
+    clickCanvas(canvas, 40, 40);
     expect(calls).toEqual([2]);
 
     liveController.dispose();
@@ -366,7 +373,7 @@ describe('event lifecycle ownership', () => {
 
     updateAbort.abort();
     expect(diagnostics.snapshot().instances).toBe(1);
-    canvas.dispatchEvent(new MouseEvent('click', { clientX: 40, clientY: 40 }));
+    clickCanvas(canvas, 40, 40);
     expect(calls).toEqual([2]);
 
     mountAbort.abort();
@@ -391,7 +398,7 @@ describe('event lifecycle ownership', () => {
       handlers: EMPTY_HANDLERS,
       scheduledFrames: 0,
     });
-    canvas.dispatchEvent(new MouseEvent('click', { clientX: 40, clientY: 40 }));
+    clickCanvas(canvas, 40, 40);
     expect(calls).toEqual([]);
 
     controller.dispose();
@@ -407,17 +414,17 @@ describe('event lifecycle ownership', () => {
     ));
     await nextFrame();
 
-    canvas.dispatchEvent(new MouseEvent('click', { clientX: 40, clientY: 40 }));
+    clickCanvas(canvas, 40, 40);
     expect(calls).toEqual([1]);
 
     crc(canvas, PersistentLayerScene({ calls, enabled: true, generation: 2, show: true }));
     await nextFrame();
-    canvas.dispatchEvent(new MouseEvent('click', { clientX: 40, clientY: 40 }));
+    clickCanvas(canvas, 40, 40);
     expect(calls).toEqual([1, 2]);
 
     crc(canvas, PersistentLayerScene({ calls, enabled: false, generation: 2, show: true }));
     await nextFrame();
-    canvas.dispatchEvent(new MouseEvent('click', { clientX: 40, clientY: 40 }));
+    clickCanvas(canvas, 40, 40);
     expect(calls).toEqual([1, 2]);
 
     controller.dispose();
@@ -429,11 +436,11 @@ describe('event lifecycle ownership', () => {
     const calls: string[] = [];
     const controller = track(crc(canvas, SwitchingLayerScene({ calls, second: false })));
     await nextFrame();
-    canvas.dispatchEvent(new MouseEvent('click', { clientX: 40, clientY: 40 }));
+    clickCanvas(canvas, 40, 40);
 
     crc(canvas, SwitchingLayerScene({ calls, second: true }));
     await nextFrame();
-    canvas.dispatchEvent(new MouseEvent('click', { clientX: 40, clientY: 40 }));
+    clickCanvas(canvas, 40, 40);
     expect(calls).toEqual(['first', 'second']);
 
     controller.dispose();

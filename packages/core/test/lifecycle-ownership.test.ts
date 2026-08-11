@@ -18,9 +18,9 @@ const BASELINE_HANDLERS = {
   contextmenu: 1,
   dblclick: 1,
   mousedown: 1,
-  mousemove: 5,
-  mouseout: 3,
-  mouseover: 0,
+  mousemove: 1,
+  mouseout: 1,
+  mouseover: 1,
   mouseup: 1,
 };
 
@@ -45,11 +45,16 @@ function pixelAt(canvas: HTMLCanvasElement, x: number, y: number): readonly numb
 
 function dispatchMouse(canvas: HTMLCanvasElement, type: 'click' | 'mousemove', x: number, y: number): void {
   const bounds = canvas.getBoundingClientRect();
-  canvas.dispatchEvent(new MouseEvent(type, {
+  const init = {
     bubbles: true,
     clientX: bounds.left + x * bounds.width / canvas.width,
     clientY: bounds.top + y * bounds.height / canvas.height,
-  }));
+  };
+  if (type === 'click') {
+    canvas.dispatchEvent(new MouseEvent('mousedown', { ...init, button: 0 }));
+    canvas.dispatchEvent(new MouseEvent('mouseup', { ...init, button: 0 }));
+  }
+  canvas.dispatchEvent(new MouseEvent(type, init));
 }
 
 async function mountLifecycleLab() {
@@ -163,8 +168,9 @@ describe('shared event lifecycle laboratory', () => {
       contextmenu: 0,
       dblclick: 0,
       mousedown: 0,
-      mousemove: 2,
-      mouseout: 1,
+      mousemove: 0,
+      mouseout: 0,
+      mouseover: 0,
       mouseup: 0,
     });
     expect(pixelAt(canvas, 50, 80)).toEqual([100, 116, 139, 255]);
