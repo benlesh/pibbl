@@ -8,6 +8,8 @@
     "./catalog": "./src/catalog.ts",
     "./event-trace": "./src/event-trace.ts",
     "./interaction-lab": "./src/interaction-lab.ts",
+    "./mouse-contract": "./src/mouse-contract.ts",
+    "./mouse-contract-scenario": "./src/mouse-contract-scenario.ts",
     "./smoke": "./src/smoke.ts",
     "./surface": "./src/surface.ts"
   },

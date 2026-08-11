@@ -4,6 +4,7 @@ export {
   loadScenario,
   scenarioCatalog,
   smokeScenarioEntry,
+  mouseContractScenarioEntry,
   validateScenarioCatalog,
 } from './catalog';
 export type { SmokeScenarioAction, SmokeScenarioState } from './smoke.example';
@@ -18,6 +19,17 @@ export type {
   InteractionLabAction,
   InteractionLabState,
 } from './interaction-lab.example';
+export {
+  formatContractTrace,
+  getMouseContractCase,
+  MOUSE_CONTRACT_CASES,
+} from './mouse-contract';
+export type {
+  MouseContractCase,
+  MouseContractCaseId,
+  MouseContractTraceEvent,
+} from './mouse-contract';
+export type { MouseContractScenarioState } from './mouse-contract.example';
 export type {
   AnyScenarioCatalogEntry,
   AnyScenarioDefinition,

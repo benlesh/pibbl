@@ -1,5 +1,7 @@
 import type { SmokeScenarioState } from './smoke.example';
 import type { InteractionLabState } from './interaction-lab.example';
+import type { MouseContractScenarioState } from './mouse-contract.example';
+import { MOUSE_CONTRACT_CASES } from './mouse-contract';
 import type {
   ScenarioCatalogEntry,
   ScenarioCatalogRecord,
@@ -228,9 +230,62 @@ export const interactionLabScenarioEntry: ScenarioCatalogEntry<InteractionLabSta
   load: async () => (await import('./interaction-lab')).interactionLabScenario,
 };
 
+const mouseContractMetadata: ScenarioMetadata = {
+  id: 'mouse-interaction-contract',
+  slug: 'mouse-interaction-contract',
+  title: 'Mouse interaction contract',
+  summary: 'Explore the approved native evidence and CRC target/order rules before the dispatcher is changed.',
+  category: 'Interaction contracts',
+  apiTags: ['crc', 'mouse events', 'rect', 'layer', 'clip', 'g'],
+  conceptTags: ['event order', 'topmost target', 'click identity', 'coordinates'],
+  manualSteps: [
+    {
+      action: 'Select Enter, Move within, Switch, and Exit cases.',
+      expected: 'The approved CRC sequence reports boundary transitions before movement.',
+    },
+    {
+      action: 'Select overlap, nested child, clip, transform, and layer cases.',
+      expected: 'The highlighted target and rule consistently use topmost reverse paint order and clip intersection.',
+    },
+    {
+      action: 'Select primary, cross-target, double-click, and context-menu cases.',
+      expected: 'The trace table distinguishes successful activation, no region click, and browser-dependent context ordering.',
+    },
+    {
+      action: 'Choose Reset.',
+      expected: 'The explorer returns to Enter a region.',
+    },
+  ],
+  knownLimitations: [
+    'The explorer shows the approved contract; TFC-04 and TFC-05 make the current runtime conform.',
+    'Pointer, touch, capture/bubble phases, stopPropagation, preventDefault, and pointer capture remain outside this plan.',
+    'Context-menu event order is shown for the reference Chromium environment and is not normalized across browsers.',
+  ],
+  visibility: 'test-laboratory',
+  visibilityReason: 'It is a design oracle and implementation guide rather than a beginner API example.',
+  maturity: 'contract',
+};
+
+export const mouseContractScenarioEntry: ScenarioCatalogEntry<MouseContractScenarioState> = {
+  metadata: mouseContractMetadata,
+  canvas: { width: 480, height: 240 },
+  actions: MOUSE_CONTRACT_CASES.map(contractCase => ({
+    id: `show-${contractCase.id}`,
+    label: contractCase.title,
+  })),
+  source: {
+    id: 'mouse-interaction-contract-example',
+    language: 'ts',
+    marker: "MOUSE_CONTRACT_SOURCE_ID = 'mouse-interaction-contract-example'",
+    path: 'packages/scenarios/src/mouse-contract.example.ts',
+  },
+  load: async () => (await import('./mouse-contract-scenario')).mouseContractScenario,
+};
+
 export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] = validateScenarioCatalog([
   smokeScenarioEntry,
   interactionLabScenarioEntry,
+  mouseContractScenarioEntry,
 ] as const);
 
 export function getScenarioBySlug(slug: string): AnyScenarioCatalogEntry | undefined {
