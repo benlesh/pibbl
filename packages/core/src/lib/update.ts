@@ -5,7 +5,8 @@ import { Canvas, CompEl } from './types';
 /**
  *
  * @param canvas The canvas with CRC mounted on it to update
- * @param element The optional element to update as the root element of that canvas.
+ * @param rootElement The optional element to update as the root element of that canvas.
+ * @param updateParents Whether to update parent components while rendering.
  */
 export function update(
   canvas: Canvas,
