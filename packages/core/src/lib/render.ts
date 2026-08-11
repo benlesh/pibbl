@@ -2,9 +2,9 @@ import {
   clearComponentState,
   getAnonElemName,
   GLOBAL_STATE,
-} from './global-state';
-import { Teardowns } from './teardowns';
-import { CompEl, CompRefs } from './types';
+} from './global-state.js';
+import { Teardowns } from './teardowns.js';
+import { CompEl, CompRefs } from './types.js';
 
 export function render<P>(
   element: CompEl<P>,

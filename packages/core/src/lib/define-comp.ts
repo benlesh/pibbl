@@ -1,5 +1,5 @@
-import { createElement } from './create-element';
-import { CompFn } from './types';
+import { createElement } from './create-element.js';
+import { CompFn } from './types.js';
 
 /**
  * Used to convert a component render function to a function that will return a component element.

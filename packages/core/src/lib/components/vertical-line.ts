@@ -1,4 +1,4 @@
-import { defineComp } from '../define-comp';
+import { defineComp } from '../define-comp.js';
 import {
   CRCBasicMouseEvents,
   CursorStyleProps,
@@ -6,9 +6,9 @@ import {
   PixelGridAlignment,
   RenderingContext2D,
   StrokeStyleProps,
-} from '../types';
-import { adjustForPixelGrid } from '../util/pixel-grid-adjustments';
-import { Line } from './line';
+} from '../types.js';
+import { adjustForPixelGrid } from '../util/pixel-grid-adjustments.js';
+import { Line } from './line.js';
 
 export interface VerticalLineProps
   extends IntrinsicProps,

@@ -1,5 +1,5 @@
-import { GLOBAL_STATE } from '../global-state';
-import { update } from '../update';
+import { GLOBAL_STATE } from '../global-state.js';
+import { update } from '../update.js';
 
 export type StateUpdater<T> = (update: T | ((oldValue: T) => T)) => void;
 

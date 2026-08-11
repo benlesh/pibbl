@@ -1,7 +1,7 @@
-import { GLOBAL_STATE } from './global-state';
-import { mountCRC } from './mount-crc';
-import { CompEl } from './types';
-import { update } from './update';
+import { GLOBAL_STATE } from './global-state.js';
+import { mountCRC } from './mount-crc.js';
+import { CompEl } from './types.js';
+import { update } from './update.js';
 
 /**
  * Mounts or updates a canvas render component on a given HTMLCanvasElement

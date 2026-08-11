@@ -1,4 +1,4 @@
-import { PixelGridAlignment } from '../types';
+import { PixelGridAlignment } from '../types.js';
 
 export function adjustRectangleToPixelGrid(
   lineWidth: number,

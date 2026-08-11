@@ -1,6 +1,6 @@
-import { executeRender } from './execute-render';
-import { GLOBAL_STATE } from './global-state';
-import { Canvas, CompEl } from './types';
+import { executeRender } from './execute-render.js';
+import { GLOBAL_STATE } from './global-state.js';
+import { Canvas, CompEl } from './types.js';
 
 /**
  *

@@ -1,4 +1,4 @@
-import type { Teardowns } from './teardowns';
+import type { Teardowns } from './teardowns.js';
 
 export interface CompEl<P = any> {
   type: CompFn<P>;

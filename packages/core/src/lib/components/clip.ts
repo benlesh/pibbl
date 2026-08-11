@@ -1,6 +1,6 @@
-import { defineComp } from '../define-comp';
-import { GLOBAL_STATE } from '../global-state';
-import { CRCNode, RenderingContext2D } from '../types';
+import { defineComp } from '../define-comp.js';
+import { GLOBAL_STATE } from '../global-state.js';
+import { CRCNode, RenderingContext2D } from '../types.js';
 
 export interface ClipProps {
   path: Path2D;

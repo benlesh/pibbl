@@ -1,13 +1,13 @@
-import { defineComp } from '../define-comp';
+import { defineComp } from '../define-comp.js';
 import {
   CRCBasicMouseEvents,
   CursorStyleProps,
   IntrinsicProps,
   RenderingContext2D,
   StrokeStyleProps,
-} from '../types';
-import { createLinePath } from '../util/create-line-path';
-import { Path } from './path';
+} from '../types.js';
+import { createLinePath } from '../util/create-line-path.js';
+import { Path } from './path.js';
 
 export interface LineProps
   extends IntrinsicProps,

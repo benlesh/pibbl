@@ -1,4 +1,4 @@
-import { crcEvent } from './crc-event';
+import { crcEvent } from './crc-event.js';
 
 /**
  * Hook: For wiring up changes to the CSS cursor style while over a corresponding path.

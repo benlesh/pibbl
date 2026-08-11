@@ -1,4 +1,4 @@
-import { GLOBAL_STATE } from '../global-state';
+import { GLOBAL_STATE } from '../global-state.js';
 
 export interface CRCRef<T> {
   current: T | undefined;

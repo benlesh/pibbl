@@ -1,6 +1,6 @@
-import { crcCursor } from '../hooks/crc-cursor';
-import { crcEvent } from '../hooks/crc-event';
-import { CRCBasicMouseEvents, CursorStyleProps } from '../types';
+import { crcCursor } from '../hooks/crc-cursor.js';
+import { crcEvent } from '../hooks/crc-event.js';
+import { CRCBasicMouseEvents, CursorStyleProps } from '../types.js';
 
 export function wireCommonEvents(
   props: CRCBasicMouseEvents & CursorStyleProps,

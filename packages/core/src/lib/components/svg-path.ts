@@ -1,5 +1,5 @@
-import { defineComp } from '../define-comp';
-import { crcSvgPath } from '../hooks/crc-svg-path';
+import { defineComp } from '../define-comp.js';
+import { crcSvgPath } from '../hooks/crc-svg-path.js';
 import {
   AlphaProps,
   CRCBasicMouseEvents,
@@ -8,8 +8,8 @@ import {
   IntrinsicProps,
   RenderingContext2D,
   StrokeStyleProps,
-} from '../types';
-import { Path } from './path';
+} from '../types.js';
+import { Path } from './path.js';
 
 export interface SvgPathProps
   extends IntrinsicProps,

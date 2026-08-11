@@ -1,6 +1,6 @@
-import { GLOBAL_STATE } from '../global-state';
-import { RenderingContext2D } from '../types';
-import { get2dContext } from './get-2d-context';
+import { GLOBAL_STATE } from '../global-state.js';
+import { RenderingContext2D } from '../types.js';
+import { get2dContext } from './get-2d-context.js';
 
 export function isHit({
   canvas,

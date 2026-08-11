@@ -1,4 +1,4 @@
-import { Canvas, CompRefs, CRCInstance, RenderingContext2D } from './types';
+import { Canvas, CompRefs, CRCInstance, RenderingContext2D } from './types.js';
 
 export interface ClippingStackEntry {
   path: Path2D;

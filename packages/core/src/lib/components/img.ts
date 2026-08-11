@@ -1,8 +1,8 @@
-import { defineComp } from '../define-comp';
-import { crcCursor } from '../hooks/crc-cursor';
-import { crcRectPath } from '../hooks/crc-rect-path';
-import { crcState } from '../hooks/crc-state';
-import { crcWhenChanged } from '../hooks/crc-when-changed';
+import { defineComp } from '../define-comp.js';
+import { crcCursor } from '../hooks/crc-cursor.js';
+import { crcRectPath } from '../hooks/crc-rect-path.js';
+import { crcState } from '../hooks/crc-state.js';
+import { crcWhenChanged } from '../hooks/crc-when-changed.js';
 import {
   AlphaProps,
   CRCBasicMouseEvents,
@@ -11,8 +11,8 @@ import {
   PixelGridAlignment,
   RenderingContext2D,
   StrokeStyleProps,
-} from '../types';
-import { wireCommonEvents } from '../util/wire-common-events';
+} from '../types.js';
+import { wireCommonEvents } from '../util/wire-common-events.js';
 
 export interface ImgProps
   extends IntrinsicProps,

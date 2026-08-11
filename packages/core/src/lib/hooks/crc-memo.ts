@@ -1,5 +1,5 @@
-import { GLOBAL_STATE } from '../global-state';
-import { shallowArrayEquals } from '../util/shallow-array-equals';
+import { GLOBAL_STATE } from '../global-state.js';
+import { shallowArrayEquals } from '../util/shallow-array-equals.js';
 
 /**
  * Hook: creates a memoized value, similar to React's `useMemo`.

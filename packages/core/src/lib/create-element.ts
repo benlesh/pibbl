@@ -1,4 +1,4 @@
-import { CompEl, CompFn } from './types';
+import { CompEl, CompFn } from './types.js';
 
 /**
  * Creates a simple structure representing a component to be rendered.

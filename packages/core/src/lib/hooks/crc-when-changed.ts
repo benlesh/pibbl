@@ -1,5 +1,5 @@
-import { GLOBAL_STATE } from '../global-state';
-import { shallowArrayEquals } from '../util/shallow-array-equals';
+import { GLOBAL_STATE } from '../global-state.js';
+import { shallowArrayEquals } from '../util/shallow-array-equals.js';
 
 /**
  * Does a shallow diff check on the deps. If they've changed, it will synchronously

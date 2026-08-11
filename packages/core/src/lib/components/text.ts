@@ -1,4 +1,4 @@
-import { defineComp } from '../define-comp';
+import { defineComp } from '../define-comp.js';
 import {
   AlphaProps,
   CRCBasicMouseEvents,
@@ -7,8 +7,8 @@ import {
   IntrinsicProps,
   RenderingContext2D,
   StrokeStyleProps,
-} from '../types';
-import { wireCommonEvents } from '../util/wire-common-events';
+} from '../types.js';
+import { wireCommonEvents } from '../util/wire-common-events.js';
 
 export interface TextProps
   extends IntrinsicProps,

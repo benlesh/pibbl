@@ -1,4 +1,4 @@
-import { defineComp } from '../define-comp';
+import { defineComp } from '../define-comp.js';
 import {
   AlphaProps,
   CRCBasicMouseEvents,
@@ -8,9 +8,9 @@ import {
   PixelGridAlignment,
   RenderingContext2D,
   StrokeStyleProps,
-} from '../types';
-import { adjustRectangleToPixelGrid } from '../util/pixel-grid-adjustments';
-import { Path } from './path';
+} from '../types.js';
+import { adjustRectangleToPixelGrid } from '../util/pixel-grid-adjustments.js';
+import { Path } from './path.js';
 
 export interface RectProps
   extends IntrinsicProps,

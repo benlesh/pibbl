@@ -1,13 +1,13 @@
-import { defineComp } from '../define-comp';
-import { executeRender } from '../execute-render';
+import { defineComp } from '../define-comp.js';
+import { executeRender } from '../execute-render.js';
 import {
   getCRCInstance,
   getCurrentCRCInstance,
   GLOBAL_STATE,
-} from '../global-state';
-import { mountCRC } from '../mount-crc';
-import { CompEl, IntrinsicProps, RenderingContext2D } from '../types';
-import { shallowEquals } from '../util/shallow-equals';
+} from '../global-state.js';
+import { mountCRC } from '../mount-crc.js';
+import { CompEl, IntrinsicProps, RenderingContext2D } from '../types.js';
+import { shallowEquals } from '../util/shallow-equals.js';
 
 export interface LayerProps extends IntrinsicProps {
   render: CompEl;

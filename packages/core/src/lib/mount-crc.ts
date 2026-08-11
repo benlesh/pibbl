@@ -1,8 +1,8 @@
-import { getCRCInstance, GLOBAL_STATE } from './global-state';
-import { Teardowns } from './teardowns';
-import { Canvas, CompEl, CRCInstance } from './types';
-import { createMouseEventTransform } from './util/create-mouse-event-transform';
-import { typedEntries } from './util/typed-entries';
+import { getCRCInstance, GLOBAL_STATE } from './global-state.js';
+import { Teardowns } from './teardowns.js';
+import { Canvas, CompEl, CRCInstance } from './types.js';
+import { createMouseEventTransform } from './util/create-mouse-event-transform.js';
+import { typedEntries } from './util/typed-entries.js';
 
 export function mountCRC<P>(
   canvas: Canvas,

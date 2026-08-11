@@ -1,4 +1,4 @@
-import { defineComp } from '../define-comp';
+import { defineComp } from '../define-comp.js';
 import {
   AlphaProps,
   CRCBasicMouseEvents,
@@ -7,9 +7,9 @@ import {
   IntrinsicProps,
   RenderingContext2D,
   StrokeStyleProps,
-} from '../types';
-import { isTransparent } from '../util/is-transparent';
-import { wireCommonEvents } from '../util/wire-common-events';
+} from '../types.js';
+import { isTransparent } from '../util/is-transparent.js';
+import { wireCommonEvents } from '../util/wire-common-events.js';
 
 export interface PathProps
   extends IntrinsicProps,

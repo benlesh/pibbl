@@ -1,7 +1,7 @@
-import { clearTempState, GLOBAL_STATE } from './global-state';
-import { render } from './render';
-import { Canvas, CompEl } from './types';
-import { get2dContext } from './util/get-2d-context';
+import { clearTempState, GLOBAL_STATE } from './global-state.js';
+import { render } from './render.js';
+import { Canvas, CompEl } from './types.js';
+import { get2dContext } from './util/get-2d-context.js';
 
 /**
  * Gets the root element for a canvas and renders it. This is the

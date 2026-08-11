@@ -1,4 +1,4 @@
-import { Canvas, RenderingContext2D } from '../types';
+import { Canvas, RenderingContext2D } from '../types.js';
 
 export function get2dContext(canvas: Canvas): RenderingContext2D {
   const ctx = canvas.getContext('2d');

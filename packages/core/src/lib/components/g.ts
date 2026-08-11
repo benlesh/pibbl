@@ -1,5 +1,5 @@
-import { defineComp } from '../define-comp';
-import { CRCNode, IntrinsicProps, RenderingContext2D } from '../types';
+import { defineComp } from '../define-comp.js';
+import { CRCNode, IntrinsicProps, RenderingContext2D } from '../types.js';
 
 export interface GProps extends IntrinsicProps {
   children: CRCNode[];

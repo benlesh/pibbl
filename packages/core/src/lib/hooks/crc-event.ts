@@ -1,7 +1,7 @@
-import { GLOBAL_STATE } from '../global-state';
-import { CRCEventRegistry, CRCMouseEventListener } from '../types';
-import { getMouseCoordinates } from '../util/get-mouse-coordinates';
-import { isHit } from '../util/is-hit';
+import { GLOBAL_STATE } from '../global-state.js';
+import { CRCEventRegistry, CRCMouseEventListener } from '../types.js';
+import { getMouseCoordinates } from '../util/get-mouse-coordinates.js';
+import { isHit } from '../util/is-hit.js';
 
 export function crcEvent<K extends keyof CRCEventRegistry>(
   type: K,

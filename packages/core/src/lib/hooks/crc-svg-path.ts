@@ -1,4 +1,4 @@
-import { crcMemo } from './crc-memo';
+import { crcMemo } from './crc-memo.js';
 
 /**
  * Creates a memoized Path2D for an SVG data string.
