@@ -4,12 +4,12 @@ Audited on 2026-08-11 for DEP-01. Registry versions are the stable `latest` tags
 
 ## Toolchain decision
 
-- Target Node.js 24 LTS with `engines.node` set to `>=24.11.0`.
+- Target Node.js 24 LTS with `engines.node` set to `>=24.15.0`.
 - Target pnpm 11.21.0 through the root `packageManager` declaration; remove the redundant direct `pnpm` development dependency.
 - Align local instructions and every CI job to those declarations.
 - TypeScript 7.0.2 is registry-latest but is externally blocked: the latest typescript-eslint parser supports TypeScript `<6.1.0`, while `unbuild@3.6.1` declares `typescript@^5.9.2`. TypeScript 5.9.3 is the newest common supported release. Retaining it requires the explicit exception described in the active plan and must be rechecked in DEP-04.
 
-The Node floor is driven by `bumpp@12.2.0`; Node recommends Active or Maintenance LTS releases for general use. Relevant upstream references: [Node releases](https://nodejs.org/en/about/previous-releases), [typescript-eslint supported versions](https://typescript-eslint.io/users/dependency-versions/), [Vitest browser setup](https://main.vitest.dev/guide/browser/), and [Vite 8 migration](https://vite.dev/guide/migration.html).
+The initial Node floor was `24.11.0`, the first Node 24 LTS patch. The resolved Antfu 9 graph raised it to `24.15.0`: `eslint-plugin-command@4`, `@es-joy/jsdoccomment`, and `jsdoc-type-pratt-parser` declare `^22.22.2 || >=24.15.0`. Node recommends Active or Maintenance LTS releases for general use. Relevant upstream references: [Node releases](https://nodejs.org/en/about/previous-releases), [typescript-eslint supported versions](https://typescript-eslint.io/users/dependency-versions/), [Vitest browser setup](https://main.vitest.dev/guide/browser/), and [Vite 8 migration](https://vite.dev/guide/migration.html).
 
 ## Used direct dependencies
 
