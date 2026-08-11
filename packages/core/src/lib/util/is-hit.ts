@@ -28,7 +28,7 @@ export function isHit({
       ({ x, y } = GLOBAL_STATE.mouseTransform.transformPoint({ x, y }));
     }
 
-    if (isInAtLeastOneClippingPath(currentClippingStack, x, y, ctx)) {
+    if (isInEveryClippingPath(currentClippingStack, x, y, ctx)) {
       if (!transform.isIdentity) {
         ctx.setTransform(transform);
       }
@@ -49,7 +49,7 @@ export function isHit({
   }
 }
 
-function isInAtLeastOneClippingPath(
+function isInEveryClippingPath(
   currentClippingStack: readonly CRCClippingStackEntry[],
   x: number,
   y: number,
@@ -65,8 +65,8 @@ function isInAtLeastOneClippingPath(
       ctx.setTransform(transform);
     }
     try {
-      if (ctx.isPointInPath(path, x, y, fillRule)) {
-        return true;
+      if (!ctx.isPointInPath(path, x, y, fillRule)) {
+        return false;
       }
     } finally {
       if (!transform.isIdentity) {
@@ -75,5 +75,5 @@ function isInAtLeastOneClippingPath(
     }
   }
 
-  return false;
+  return true;
 }

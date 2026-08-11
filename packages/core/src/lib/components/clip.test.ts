@@ -210,21 +210,22 @@ describe('clip', () => {
 
       // Move to inner hole (should not trigger)
       await canvas.mouseMove({ position: { x: 100, y: 100 } });
-      // expect(onMouseOver).toHaveBeenCalledTimes(1);
+      expect(onMouseOver).toHaveBeenCalledTimes(1);
 
       // Move back to outer rectangle (should trigger again)
       await canvas.mouseMove({ position: { x: 140, y: 140 } });
-      // expect(onMouseOver).toHaveBeenCalledTimes(2);
+      expect(onMouseOver).toHaveBeenCalledTimes(2);
     });
 
-    it.skip('respects nested clip regions for interaction', async () => {
+    it('requires every nested clip region for interaction', async () => {
       const outerClipPath = new Path2D();
       outerClipPath.rect(50, 50, 100, 100);
 
       const innerClipPath = new Path2D();
       innerClipPath.arc(100, 100, 25, 0, Math.PI * 2);
 
-      const onClick = vi.fn();
+      const onOuterClick = vi.fn();
+      const onInnerClick = vi.fn();
 
       const canvas = await componentTest(clip({
         path: outerClipPath,
@@ -236,7 +237,7 @@ describe('clip', () => {
             height: 200,
             fillStyle: 'blue',
             cursor: 'pointer',
-            onClick,
+            onClick: onOuterClick,
           }),
           clip({
             path: innerClipPath,
@@ -248,7 +249,7 @@ describe('clip', () => {
                 height: 200,
                 fillStyle: 'green',
                 cursor: 'crosshair',
-                onClick,
+                onClick: onInnerClick,
               }),
             ],
           }),
@@ -257,15 +258,18 @@ describe('clip', () => {
 
       // Click in outer rect but outside circle (should trigger once)
       await canvas.click({ position: { x: 60, y: 60 } });
-      expect(onClick).toHaveBeenCalledTimes(1);
+      expect(onOuterClick).toHaveBeenCalledTimes(1);
+      expect(onInnerClick).not.toHaveBeenCalled();
 
       // Click outside both clips (should not trigger)
       await canvas.click({ position: { x: 40, y: 40 } });
-      expect(onClick).toHaveBeenCalledTimes(1);
+      expect(onOuterClick).toHaveBeenCalledTimes(1);
+      expect(onInnerClick).not.toHaveBeenCalled();
 
-      // Click inside both clips (should trigger twice - once for each rect)
+      // Only the topmost region inside both clips is the logical target.
       await canvas.click({ position: { x: 100, y: 100 } });
-      expect(onClick).toHaveBeenCalledTimes(3);
+      expect(onOuterClick).toHaveBeenCalledTimes(1);
+      expect(onInnerClick).toHaveBeenCalledTimes(1);
     });
   });
 });
