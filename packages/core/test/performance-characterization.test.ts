@@ -28,7 +28,7 @@ const PerformanceScene = defineComp<{ onHit: () => void; regions: number }>(({ o
     width: 6,
     height: 6,
     fillStyle: '#2563eb',
-    onClick: onHit,
+    onMouseMove: onHit,
   }));
 });
 
@@ -64,14 +64,14 @@ async function observeWorkload(
     }), { signal: abortController.signal });
     await nextFrame();
 
-    expect(getCRCInstance(canvas).events.click.size).toBe(regions);
+    expect([...getCRCInstance(canvas).regions].filter(region => region.handlers.mousemove).length).toBe(regions);
 
     const context = canvas.getContext('2d');
     if (!context) {
       throw new Error('Performance Canvas has no 2D context.');
     }
     const originalIsPointInPath = context.isPointInPath.bind(context);
-    const missEvent = new MouseEvent('click', { clientX: -20, clientY: -20 });
+    const missEvent = new MouseEvent('mousemove', { clientX: -20, clientY: -20 });
     const dispatchMiss = () => canvas.dispatchEvent(missEvent);
     let hitTests = 0;
     let hitTestsPerDispatch = 0;
