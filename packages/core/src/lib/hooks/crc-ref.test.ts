@@ -19,12 +19,12 @@ describe('crcRef', () => {
       y: clickableArea.y + clickableArea.height / 2,
     };
 
-    interface TestComponentProps<T extends {}> {
+    interface TestComponentProps<T extends object> {
       value: T;
       onCheckRef?: (refValue: T | undefined) => void;
     }
 
-    function TestComponent<T extends {}>(props: TestComponentProps<T>) {
+    function TestComponent<T extends object>(props: TestComponentProps<T>) {
       const ref = crcRef<T>();
       const [count, setCount] = crcState(0);
 
@@ -71,8 +71,8 @@ describe('crcRef', () => {
 
     let renderCount = 0;
 
-    function TestComponent(_props: {}) {
-      const ref = crcRef<any>({});
+    function TestComponent(_props: Record<string, never>) {
+      const ref = crcRef<Record<string, number>>({});
 
       renderCount++;
 
