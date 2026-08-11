@@ -236,32 +236,39 @@ describe('interaction ordering and target contract', () => {
     expect(canvas.style.cursor).toBe('crosshair');
   });
 
-  it('targets the painted child inside an untransformed nested group without fan-out', async () => {
+  it('selects a child nested under an interactive ancestor without fan-out', async () => {
     await page.viewport(900, 700);
     const { canvas, controller } = await mountLab();
     await prepareFixture(controller, canvas, 'nested');
 
     await moveMouse(canvas, { x: 100, y: 110 });
-    expect(route(controller.getState().trace)).toEqual(expectedRoute(
-      'enter-region',
-      { a: 'parent' },
-    ));
-    expect(canvas.style.cursor).toBe('crosshair');
+    expect(route(controller.getState().trace)).toEqual([
+      { type: 'mousemove', target: 'ancestor' },
+    ]);
+    expect(canvas.style.cursor).toBe('');
 
     await clearTrace(controller);
     await moveMouse(canvas, { x: 220, y: 120 });
     expect(route(controller.getState().trace)).toEqual(expectedRoute(
-      'switch-regions',
-      { a: 'parent', b: 'child' },
+      'enter-region',
+      { a: 'child' },
     ));
-    expect(controller.getState().trace.filter(entry => entry.target === 'parent')).toHaveLength(1);
+    expect(controller.getState().trace.some(entry => entry.target === 'ancestor')).toBe(false);
     expect(canvas.style.cursor).toBe('pointer');
+
+    await clearTrace(controller);
+    await moveMouse(canvas, { x: 100, y: 110 });
+    expect(route(controller.getState().trace)).toEqual([
+      { type: 'mouseout', target: 'child' },
+      { type: 'mousemove', target: 'ancestor' },
+    ]);
+    expect(canvas.style.cursor).toBe('');
   });
 
   it.each([
     { fixture: 'fill', caseId: 'fill-hit', hit: { x: 150, y: 120 }, miss: { x: 50, y: 210 } },
     { fixture: 'stroke', caseId: 'stroke-hit', hit: { x: 91, y: 126 }, miss: { x: 150, y: 126 } },
-    { fixture: 'fill-stroke', caseId: 'fill-stroke-hit', hit: { x: 150, y: 120 }, miss: { x: 50, y: 210 } },
+    { fixture: 'fill-stroke', caseId: 'fill-stroke-hit', hit: { x: 91, y: 126 }, miss: { x: 50, y: 210 } },
     { fixture: 'transparent', caseId: 'transparent-fill-hit', hit: { x: 150, y: 120 }, miss: { x: 50, y: 210 } },
     { fixture: 'interaction-width', caseId: 'line-interaction-width-hit', hit: { x: 240, y: 135 }, miss: { x: 240, y: 155 } },
   ] as const)('emits entry before movement for $fixture geometry and rejects its miss', async ({
@@ -314,9 +321,8 @@ describe('interaction ordering and target contract', () => {
     expect(controller.getState().trace).toEqual([]);
   });
 
-  it('runs Canvas-wide observers after the target plan and continues after reported errors', async () => {
+  it('runs Canvas-wide observers after the target plan', async () => {
     await page.viewport(900, 700);
-    const reportError = vi.spyOn(globalThis, 'reportError').mockImplementation(() => undefined);
     const { canvas, controller } = await mountLab();
     await prepareFixture(controller, canvas, 'observer');
 
@@ -332,34 +338,82 @@ describe('interaction ordering and target contract', () => {
       { type: 'mouseout', target: 'a' },
       { type: 'mousemove', target: 'canvas-observer' },
     ]);
+  });
 
-    await prepareFixture(controller, canvas, 'throwing');
+  it('shows queued observer replacement and removal on the next movement event', async () => {
+    await page.viewport(900, 700);
+    const { canvas, controller } = await mountLab();
+    await moveMouse(canvas, BACKGROUND);
+
+    await controller.perform('show-observer-replace');
+    await moveMouse(canvas, { x: 150, y: 120 });
+    expect(route(controller.getState().trace)).toEqual([
+      { type: 'mouseover', target: 'a' },
+      { type: 'mousemove', target: 'a' },
+      { type: 'mousemove', target: 'observer-mutator' },
+      { type: 'mousemove', target: 'observer-generation-1' },
+    ]);
+    await controller.settled();
+    await clearTrace(controller);
+    await moveMouse(canvas, { x: 160, y: 130 });
+    expect(route(controller.getState().trace)).toEqual([
+      { type: 'mousemove', target: 'a' },
+      { type: 'mousemove', target: 'observer-mutator' },
+      { type: 'mousemove', target: 'observer-generation-2' },
+    ]);
+    expect(controller.getState().lastHandlerGeneration).toBe(2);
+
+    await moveMouse(canvas, BACKGROUND);
+    await controller.perform('show-observer-remove');
+    await moveMouse(canvas, { x: 150, y: 120 });
+    expect(route(controller.getState().trace)).toEqual([
+      { type: 'mouseover', target: 'a' },
+      { type: 'mousemove', target: 'a' },
+      { type: 'mousemove', target: 'observer-mutator' },
+      { type: 'mousemove', target: 'observer-removable' },
+    ]);
+    await controller.settled();
+    await clearTrace(controller);
+    await moveMouse(canvas, { x: 160, y: 130 });
+    expect(route(controller.getState().trace)).toEqual([
+      { type: 'mousemove', target: 'a' },
+      { type: 'mousemove', target: 'observer-mutator' },
+    ]);
+  });
+
+  it('continues the same observer event after a reported error', async () => {
+    await page.viewport(900, 700);
+    const reportError = vi.spyOn(globalThis, 'reportError').mockImplementation(() => undefined);
+    const { canvas, controller } = await mountLab();
+    await moveMouse(canvas, BACKGROUND);
+    await controller.perform('show-observer-throwing');
+    await moveMouse(canvas, { x: 150, y: 120 });
+    expect(route(controller.getState().trace)).toEqual([
+      { type: 'mouseover', target: 'a' },
+      { type: 'mousemove', target: 'a' },
+      { type: 'mousemove', target: 'observer-throws' },
+      { type: 'mousemove', target: 'observer-safe' },
+    ]);
+    expect(reportError).toHaveBeenCalledOnce();
+    expect(reportError.mock.calls[0][0]).toEqual(expect.objectContaining({
+      message: 'Deliberate ordering-lab observer failure',
+    }));
+  });
+
+  it('queues target-specific removal from mouseout while keeping the runtime live', async () => {
+    await page.viewport(900, 700);
+    const { canvas, controller } = await mountLab();
+    await prepareFixture(controller, canvas, 'remove-target-after-transition');
     await moveMouse(canvas, LEFT);
     await clearTrace(controller);
     await moveMouse(canvas, RIGHT);
     expect(route(controller.getState().trace)).toEqual(expectedRoute('switch-regions'));
-    expect(reportError).toHaveBeenCalledOnce();
-    expect(reportError.mock.calls[0][0]).toEqual(expect.objectContaining({
-      message: 'Deliberate ordering-lab mouseout failure',
-    }));
-  });
-
-  it('skips a planned target when the public controller removes the runtime during mouseout', async () => {
-    await page.viewport(900, 700);
-    const { canvas, controller } = await mountLab();
-    await prepareFixture(controller, canvas, 'remove-during-transition');
-    await moveMouse(canvas, LEFT);
+    await controller.settled();
+    expect(controller.getState().rightVisible).toBe(false);
+    expect(pixelAt(canvas, RIGHT.x, RIGHT.y)).toEqual([248, 250, 252, 255]);
     await clearTrace(controller);
-    await moveMouse(canvas, RIGHT);
-    expect(route(controller.getState().trace)).toEqual(expectedRoute(
-      'remove-target-during-move-plan',
-      { a: 'left', b: 'right' },
-    ));
     await moveMouse(canvas, LEFT);
-    expect(route(controller.getState().trace)).toEqual(expectedRoute(
-      'remove-target-during-move-plan',
-      { a: 'left', b: 'right' },
-    ));
+    expect(route(controller.getState().trace)).toEqual(expectedRoute('enter-region'));
   });
 
   it('enforces same-live-target primary activation and removed-target cancellation', async () => {
