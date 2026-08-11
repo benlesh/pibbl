@@ -1,4 +1,4 @@
-import type { RectProps } from '@crc/core';
+import type { CRCController, RectProps } from '@crc/core';
 import type * as CoreTypes from '@crc/core/types';
 import { crc, rect } from '@crc/core';
 
@@ -13,3 +13,8 @@ const props = {
 export type PublicCoreTypes = typeof CoreTypes;
 export const scene = rect(props);
 export const mount = crc;
+
+export function disposeMount(controller: ReturnType<typeof crc>): void {
+  const publicController: CRCController = controller;
+  publicController.dispose();
+}
