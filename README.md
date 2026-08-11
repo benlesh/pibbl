@@ -14,7 +14,7 @@ A lightweight component system for the HTML5 Canvas.
 ## Quick Start
 
 ```javascript
-import { Canvas, Circle } from '@crc/core';
+import { Canvas, Circle } from "@crc/core";
 
 function App() {
   return (

@@ -1,63 +1,90 @@
-// @ts-check
-import antfu from '@antfu/eslint-config';
+import babelParser from '@babel/eslint-parser';
+import js from '@eslint/js';
+import globals from 'globals';
+import { defineConfig, globalIgnores } from 'eslint/config';
 
-export default antfu(
+const codeRules = {
+  ...js.configs.recommended.rules,
+  eqeqeq: ['error', 'smart'],
+  'no-console': ['error', { allow: ['warn', 'error'] }],
+  'no-empty': ['error', { allowEmptyCatch: true }],
+  'no-unused-vars': ['error', {
+    args: 'after-used',
+    argsIgnorePattern: '^_',
+    caughtErrors: 'none',
+    ignoreRestSiblings: true,
+    vars: 'all',
+    varsIgnorePattern: '^_',
+  }],
+  'object-shorthand': ['error', 'always'],
+  'prefer-const': ['error', { destructuring: 'all', ignoreReadBeforeAssign: true }],
+};
+
+const typescriptRules = {
+  ...codeRules,
+  // TypeScript owns these checks. Babel parses current TS syntax without
+  // introducing a second, version-gated TypeScript scope implementation.
+  'constructor-super': 'off',
+  'getter-return': 'off',
+  'no-class-assign': 'off',
+  'no-const-assign': 'off',
+  'no-dupe-args': 'off',
+  'no-dupe-class-members': 'off',
+  'no-dupe-keys': 'off',
+  'no-func-assign': 'off',
+  'no-import-assign': 'off',
+  'no-new-native-nonconstructor': 'off',
+  'no-new-symbol': 'off',
+  'no-obj-calls': 'off',
+  'no-redeclare': 'off',
+  'no-setter-return': 'off',
+  'no-this-before-super': 'off',
+  'no-undef': 'off',
+  'no-unreachable': 'off',
+  'no-unsafe-negation': 'off',
+  'no-unused-vars': 'off',
+  'no-var': 'off',
+  'prefer-const': 'off',
+};
+
+export default defineConfig([
+  globalIgnores([
+    '**/node_modules/**',
+    '**/dist/**',
+    '**/.nx/**',
+    '**/.vite/**',
+    '**/*.d.ts',
+    '**/fixtures/**',
+    '**/vendor/**',
+    '**/test/out/**',
+  ]),
   {
-    type: 'lib',
-    stylistic: {
-      indent: 2,
-      semi: true,
-      quotes: 'single',
+    files: ['**/*.{js,mjs,cjs}'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      globals: { ...globals.browser, ...globals.node },
+      sourceType: 'module',
     },
-    formatters: {
-      html: false,
-      markdown: true,
-      css: true,
-    },
-    ignores: [
-      '**/fixtures/**',
-      '**/vendor/**',
-      '**/test/out/**',
-    ],
+    rules: codeRules,
   },
   {
-    rules: {
-      'no-restricted-syntax': 'off',
-      'ts/no-invalid-this': 'off',
-      'ts/consistent-type-imports': 'off',
-      'ts/explicit-function-return-type': 'off',
-      'prefer-template': 'off',
-      'style/operator-linebreak': ['error', 'after', {
-        overrides: {
-          '&': 'before',
-          '|': 'before',
+    files: ['**/*.{ts,mts,cts}'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      globals: { ...globals.browser, ...globals.node },
+      parser: babelParser,
+      parserOptions: {
+        requireConfigFile: false,
+        babelOptions: {
+          babelrc: false,
+          configFile: false,
+          parserOpts: {
+            plugins: ['typescript'],
+          },
         },
-      }],
-      'antfu/if-newline': 'off',
-      'style/brace-style': ['error', '1tbs', {
-        allowSingleLine: true,
-      }],
+      },
+      sourceType: 'module',
     },
+    rules: typescriptRules,
   },
-  {
-    files: ['playground/**/*.([cm])?[jt]s(x)?'],
-    rules: {
-      'ts/explicit-function-return-type': 'off',
-    },
-  },
-  {
-    files: ['pnpm-workspace.yaml'],
-    rules: {
-      'pnpm/yaml-enforce-settings': 'off',
-      'pnpm/yaml-no-unused-catalog-item': 'off',
-    },
-  },
-  {
-    files: [
-      'packages/core/**/*.ts',
-    ],
-    ignores: [
-      '**/*.test.ts',
-    ],
-  },
-);
+]);

@@ -20,16 +20,14 @@
     "allowJs": true,
     "strict": true,
     "strictNullChecks": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "noEmit": true,
     "esModuleInterop": true,
     "skipDefaultLibCheck": true,
     "skipLibCheck": true
   },
-  "include": [
-    "**/*.ts",
-    "**/*.mjs",
-    "eslint.config.mjs"
-  ],
+  "include": ["**/*.ts", "**/*.mjs", "eslint.config.mjs"],
   "exclude": [
     "**/vendor/**",
     "**/node_modules/**",

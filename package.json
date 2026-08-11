@@ -7,7 +7,10 @@
     "node": ">=24.15.0"
   },
   "scripts": {
-    "lint": "eslint . --cache",
+    "lint": "pnpm lint:code && pnpm lint:format",
+    "lint:code": "eslint . --cache",
+    "lint:format": "prettier --check '**/*.{md,css,json,jsonc,yaml,yml}'",
+    "format": "prettier --write '**/*.{md,css,json,jsonc,yaml,yml}'",
     "release": "bumpp",
     "publish:ci": "pnpm -r publish --access public --no-git-checks",
     "test": "pnpm test:ui",
