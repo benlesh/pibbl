@@ -221,8 +221,8 @@ These are investigation leads from the current code, not pre-approved implementa
 
 | Step   | Queue state | Outcome                                                                                       |
 | ------ | ----------- | --------------------------------------------------------------------------------------------- |
-| DEP-01 | In progress | Establish the shared manual/headless/visual scenario spine and freeze a pre-upgrade baseline. |
-| DEP-02 | Queued      | Upgrade package manager, language, type, lint, and formatting tooling to latest.              |
+| DEP-01 | Done        | Established the shared manual/headless/visual scenario spine and pre-upgrade baseline.        |
+| DEP-02 | Next        | Upgrade package manager, language, type, lint, and formatting tooling to latest.              |
 | DEP-03 | Queued      | Upgrade build, bundling, and package tooling to latest.                                       |
 | DEP-04 | Queued      | Upgrade browser-test and remaining tooling, then close dependency freshness.                  |
 | TFC-01 | Queued      | Create the interaction/lifecycle characterization harness and freeze the measurable baseline. |
@@ -236,7 +236,7 @@ These are investigation leads from the current code, not pre-approved implementa
 | TFC-09 | Queued      | Close confidence gaps in the existing drawing components.                                     |
 | TFC-10 | Queued      | Install the trust gate in CI and publish the supported-contract summary.                      |
 
-## DEP-01 [IN PROGRESS] — Shared scenario spine and pre-upgrade baseline
+## DEP-01 [DONE] — Shared scenario spine and pre-upgrade baseline
 
 ### Goal
 
@@ -295,7 +295,7 @@ Create the minimum trustworthy integration/visual test spine needed to modernize
 - Run and record `pnpm outdated -r --format json`.
 - Run install, committed baseline tests, typecheck, lint, package build, and direct playground build.
 
-## DEP-02 [TODO] — Package manager, language, types, lint, and formatting
+## DEP-02 [NEXT] — Package manager, language, types, lint, and formatting
 
 ### Goal
 
@@ -944,6 +944,9 @@ Make the achieved confidence durable for every future change.
 | 2026-08-11 | Record one testing field note per step and defer test-tool construction until patterns recur.                            | The testing process is itself discovery work; preserving friction and failed approaches will provide evidence for useful tools without prematurely designing them.                                                                 | TFC-10 synthesis finds no recurring opportunity worth maintaining.                                                                    |
 | 2026-08-11 | Modernize every direct dependency before feature-confidence work, in four compatibility clusters.                        | The freshness audit found 32 outdated direct development dependencies with several major-version jumps. Clustered upgrades keep regressions attributable while shared scenarios protect behavior.                                  | A latest release is externally blocked or incompatible; retaining the older version requires an explicit user-approved exception.     |
 | 2026-08-11 | Make the scenario catalog the future documentation source of truth, but keep scenario logic independent of presentation. | The same executable examples can serve manual testing, headless integration, and later documentation without three drifting copies. A curated visibility flag prevents diagnostic stress labs from becoming confusing public docs. | A later docs phase demonstrates that the catalog cannot express a required teaching format without harming test isolation.            |
+| 2026-08-11 | Use a lazy, identity-checked scenario loader and display the exact executable example source.                            | Eager metadata imports and free-form source paths allow gallery, tests, and displayed code to drift. The loaded ID, action IDs, source ID/path, and raw source marker now agree before mounting.                                   | The catalog grows beyond what typed lazy entries and the Vite raw-source adapter can maintain clearly.                                |
+| 2026-08-11 | Target Node 24 LTS and pnpm 11; treat TypeScript 7 as an explicit upstream compatibility blocker.                        | Latest ESLint requires Node 20.19/22.13/24+, latest bumpp requires Node 22.18/24.11/26+, and the latest typescript-eslint and unbuild peer ranges do not support TypeScript 7.                                                     | Upstream peer ranges add TypeScript 7 support, or the user approves TypeScript 5.9.3 as the documented temporary exception.           |
+| 2026-08-11 | Compare DEP-01 visuals exactly outside documented system-font glyph masks.                                               | Canvas/system Arial rasterization is platform-dependent; semantic text/state assertions plus tight glyph-only masks preserve structural pixel confidence without a broad tolerance.                                                | A bundled deterministic font is added, or glyph appearance becomes a supported visual contract.                                       |
 
 ## Session log
 
@@ -951,3 +954,4 @@ Make the achieved confidence durable for every future change.
 - **2026-08-11 — Plan amended for integration, visual evidence, and dependency freshness.** Made shared public-API manual/headless scenarios, deterministic visual assertions, manual checklists, and per-step testing field notes mandatory for every step. Added four dependency-modernization prerequisites after a live audit found 32 outdated direct development dependencies. Preserved TFC-01 through TFC-10 as the feature-confidence sequence. No dependencies or implementation behavior changed. Next: **DEP-01**.
 - **2026-08-11 — Gallery made documentation-ready by design.** Added a presentation-neutral scenario catalog with organization metadata, documentation-candidate versus test-laboratory classification, executable-source drift protection, and future docs-renderer boundaries. Expanded DEP-01, TFC-09, and TFC-10 completion bars while explicitly deferring the polished documentation experience. The active marker remains **DEP-01**.
 - **2026-08-11 — Baseline refreshed after concurrent `main` updates.** Rebasing for publication brought in 7 direct `line` tests, 3 direct `crcRef` tests, and separate lint/typecheck workflows. Reverified the committed browser baseline at 70 passed and 4 skipped; typecheck remains at 2 errors and lint remains red. Updated the inventory and plan baseline without changing the active step. Next: **DEP-01**.
+- **2026-08-11 — DEP-01 complete.** Added a private lazy scenario catalog, identity-checked source/loader contract, public-API smoke example, catalog-driven local gallery, independent headless driver, render-settling controller, targeted Canvas pixels, reviewed expected image, and exact expected/actual/diff comparison outside glyph-only masks. The manual in-app Chromium flow passed mount/update/click/reset with no browser warnings; ten independent focused runs passed; a forced visual regression failed on 8,298 pixels and produced useful artifacts before recovery. Full browser verification is 71 passed and 4 skipped; package/gallery builds pass. Pre-existing typecheck (2 errors) and lint (9 errors, 1 warning) remain separately recorded. Added the complete dependency/CI inventory, pre-upgrade report, gallery seam documentation, and `dep-01` field note. Next: **DEP-02**, with the TypeScript 7 peer-compatibility exception requiring resolution.
