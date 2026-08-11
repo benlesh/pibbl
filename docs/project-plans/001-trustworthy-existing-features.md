@@ -228,9 +228,9 @@ These are investigation leads from the current code, not pre-approved implementa
 | TFC-01 | Done        | Created shared native/CRC traces, deterministic lifecycle counters, and dispatch baselines. |
 | TFC-02 | Done        | Approved a native-informed target, transition, activation, mutation, and geometry contract. |
 | TFC-03 | Done        | Made event, listener, frame, cursor, and layer ownership deterministic and leak-safe.       |
-| TFC-04 | In progress | Implement and prove event ordering, transitions, and overlap target selection.              |
-| TFC-05 | Next        | Prove event geometry across transforms, scaling, clipping, groups, and layers.              |
-| TFC-06 | Queued      | Measure and harden the event hot path with explicit budgets.                                |
+| TFC-04 | Done        | Implemented and proved event ordering, transitions, and overlap target selection.           |
+| TFC-05 | In progress | Prove event geometry across transforms, scaling, clipping, groups, and layers.              |
+| TFC-06 | Next        | Measure and harden the event hot path with explicit budgets.                                |
 | TFC-07 | Queued      | Prove whole-runtime teardown and asynchronous resource cleanup.                             |
 | TFC-08 | Queued      | Close confidence gaps in the runtime and existing public hooks.                             |
 | TFC-09 | Queued      | Close confidence gaps in the existing drawing components.                                   |
@@ -586,7 +586,7 @@ Ensure every event-related resource has one owner and is released exactly once.
 - Repeated mount/update/remove/dispose stress loop.
 - Full test suite, typecheck, and lint for touched files.
 
-## TFC-04 [IN PROGRESS] — Event ordering, transitions, and target selection
+## TFC-04 [DONE] — Event ordering, transitions, and target selection
 
 ### Goal
 
@@ -634,7 +634,7 @@ Implement the approved interaction sequence and synthetic-target rules before ad
 - Full browser suite.
 - Cross-check the native oracle fixtures in current Chromium; record deliberate CRC differences.
 
-## TFC-05 [NEXT] — Event geometry and composition correctness
+## TFC-05 [IN PROGRESS] — Event geometry and composition correctness
 
 ### Goal
 
@@ -682,7 +682,7 @@ Prove that the TFC-04 target and transition rules remain correct across the coor
 - Full browser suite.
 - Targeted pixel/state assertions confirm that tested geometry matches rendered geometry.
 
-## TFC-06 [TODO] — Event hot-path performance
+## TFC-06 [NEXT] — Event hot-path performance
 
 ### Goal
 
@@ -957,6 +957,7 @@ Make the achieved confidence durable for every future change.
 | 2026-08-11 | Preserve measured browser activation/context behavior instead of inventing one universal sequence.                       | Reference Chromium clicks after leave/re-entry when down, up, and click resolve to the same live target, and emits secondary down → contextmenu → up on macOS. Pointer Events leaves hysteresis and high-level context ordering browser-dependent. | Supported browsers demonstrate an incompatible behavior that CRC must normalize explicitly.                                            |
 | 2026-08-11 | Keep logical related targets diagnostic-only and treat pathless `crcEvent` hooks as Canvas-wide observers.               | `originalEvent.relatedTarget` describes DOM targets around the Canvas and cannot represent synthetic regions. A no-path hook is an existing whole-Canvas use case, not a geometric target or implicit bubbling phase.                              | The public event type gains target/relatedTarget or a formal root propagation contract.                                                |
 | 2026-08-11 | Give each CRC mount one identity-guarded controller and make every event resource follow exactly one teardown owner.     | A stable additive `CRCController`, mount-only signal, explicit native-listener/frame releases, replaceable event-slot bindings, owned cursor token, and layer-child cascade make exact acquisition/release ledgers deterministic.                  | A future lifetime API needs signal replacement, or TFC-07 finds a resource that cannot follow the same ownership model.                |
+| 2026-08-11 | Keep one stable handler-and-cursor region per component path; keep Canvas cursor defaults outside hit testing.           | The shared root-Canvas lab proves reverse-paint-order targeting, stable rerender identity, transition-before-move, activation identity, cursor parity, and immediate fallback reconciliation without turning defaults into occluding targets.      | TFC-05 composition evidence requires a different global region identity/order model across root and layer Canvases.                    |
 
 ## Session log
 
@@ -973,3 +974,4 @@ Make the achieved confidence durable for every future change.
 - **2026-08-11 — TFC-01 complete.** Added a cataloged interaction laboratory with shared native/CRC geometry, an ordered trace recorder, manual lifecycle controls, and exact Canvas pixel probes. Test-only diagnostics froze listener, registry, teardown, instance, layer, and frame counts; the performance lab recorded exact miss hit tests plus informational median/p95 observations through 10,000 regions. The baseline exposes hover teardown growth, removed-subtree ghost handlers, retained offscreen layers/bridges, and the queued-frame abort race without changing behavior. Ten final focused runs passed; the complete suite is 78 passed/4 skipped; lint, typecheck, build, gallery build, manual visual review, and artifact-boundary checks pass. See the [baseline report](../design/tfc-01-characterization-baseline.md) and [TFC-01 field note](../testing/field-notes/tfc-01.md). Next: **TFC-02 mouse interaction contract**.
 - **2026-08-11 — TFC-02 complete.** Approved one topmost logical target, transition-before-move ordering, same-live-target activation, per-logical-event mutation semantics, Canvas-wide observer behavior, intrinsic-coordinate rules, and explicit Canvas geometry decisions. The shared oracle now separates Canvas background from root exit, labels logical related targets as diagnostic, treats context ordering as browser-dependent, and uses real public `g`/`clip`/`layer`/`line`/`crcEvent` diagrams. A fresh review initially disputed leave/re-entry activation; the executable CDP native fixture proved reference Chromium emits the click, so the contract follows measured platform behavior. Manual probes resolved `top`, `child`, transformed `a`, `layer`, stroke/interaction-width `a`, and the Canvas observer; browser output was clean. Independent oracle validation and focused native tests pass, as do lint, typecheck, gallery build, and the complete 80-pass/4-skip browser suite. See the [mouse contract](../design/mouse-interaction-contract.md) and [TFC-02 field note](../testing/field-notes/tfc-02.md). TFC-03 ownership audits selected disposable event-slot bindings, central identity-guarded disposal, explicit native-listener/RAF ownership, and cascading layer cleanup. Next active slice: **TFC-03 event ownership and teardown safety**.
 - **2026-08-11 — TFC-03 complete.** Added an additive identity-guarded `CRCController`, mount-only signal semantics, explicit native listener and legal-frame-id ownership, replaceable component event bindings, error-isolated exactly-once teardown, owned cursor cleanup, and cascading persistent-layer disposal/update behavior. The shared lifecycle laboratory drove 1,000 real rerenders, replacement/removal, layer/subtree cleanup, abort/dispose/remount/stale cleanup, and deliberate handler failure; manual visual review passed with only the intentional error. Lint, typecheck, package/source/built gallery builds, strict package consumers, publish-boundary inspection, and the complete 92-pass/4-skip browser suite pass. See the [ownership contract](../design/event-resource-ownership.md) and [TFC-03 field note](../testing/field-notes/tfc-03.md). Next active slice: **TFC-04 event ordering, transitions, and target selection**.
+- **2026-08-11 — TFC-04 complete.** Replaced all-hit per-event dispatch on the root Canvas with one stable event-type-independent region target in reverse paint order; implemented out → over → move transitions, same-live-target activation, removal/error-aware snapshots, cursor parity, and non-target pathless observers/defaults. The shared laboratory covers sibling routes, overlap/reorder/removal, component ancestry, fill/stroke/combined/transparent/interaction-width geometry, handler and observer mutation, activation, and deliberate errors. Manual Chromium review passed; the focused 23-test suite passed 20/20 independent runs (460 tests) without retries, and the complete suite passed 120/4 skipped. Lint, typecheck, package/consumer/source/built gallery gates pass. See the [mouse contract](../design/mouse-interaction-contract.md) and [TFC-04 field note](../testing/field-notes/tfc-04.md). Next active slice: **TFC-05 event geometry and composition correctness**.
