@@ -56,6 +56,14 @@ function projectTrace(trace: readonly EventTraceEntry[]) {
   }));
 }
 
+function pixelAt(canvas: HTMLCanvasElement, x: number, y: number): readonly number[] {
+  const context = canvas.getContext('2d');
+  if (!context) {
+    throw new Error('The interaction lab Canvas has no 2D context.');
+  }
+  return Array.from(context.getImageData(x, y, 1, 1).data);
+}
+
 async function mountCRCLab() {
   const canvas = document.createElement('canvas');
   canvas.width = interactionLabScenarioEntry.canvas.width;
@@ -82,6 +90,9 @@ describe('interaction trace characterization', () => {
     await page.viewport(800, 600);
     expect(interactionLabSource).toContain(interactionLabScenarioEntry.source.marker);
     const { canvas, controller } = await mountCRCLab();
+    expect(pixelAt(canvas, 10, 10)).toEqual([248, 250, 252, 255]);
+    expect(pixelAt(canvas, 60, 140)).toEqual([37, 99, 235, 255]);
+    expect(pixelAt(canvas, 300, 140)).toEqual([124, 58, 237, 255]);
 
     await dispatchMouse(canvas, { x: 10, y: 10 }, 'mouseMoved');
     await controller.reset();
