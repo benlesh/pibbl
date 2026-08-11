@@ -134,6 +134,12 @@ For the current source-mapped playground alone:
 pnpm playground
 ```
 
+To verify the gallery against built package exports instead of source aliases:
+
+```sh
+pnpm playground:built
+```
+
 Open <http://localhost:5173/> and stop the server with `Ctrl+C`.
 
 There is currently only this single playground; the `examples/*` directories linked from the README do not exist on `main`.
@@ -175,6 +181,8 @@ pnpm typecheck
 pnpm lint
 pnpm build
 pnpm playground:build
+pnpm playground:build:built
+pnpm test:package-consumer
 ```
 
 The verification snapshot above is historical pre-plan evidence. The active project plan records subsequent fixes and current verification results.
