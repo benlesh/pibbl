@@ -190,4 +190,9 @@ export const smokeScenario: ScenarioDefinition<SmokeScenarioState> = {
     height: SMOKE_CANVAS_HEIGHT,
   },
   mount: mountSmokeScenario,
+  formatState: state => [
+    { label: 'Revision', value: String(state.revision) },
+    { label: 'Clicks', value: String(state.clicks) },
+    { label: 'Last action', value: state.lastAction },
+  ],
 };

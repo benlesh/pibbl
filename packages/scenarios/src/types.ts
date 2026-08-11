@@ -40,6 +40,11 @@ export interface ScenarioController<TState> {
   dispose: () => void;
 }
 
+export interface ScenarioStateField {
+  label: string;
+  value: string;
+}
+
 export interface ScenarioCatalogEntry {
   metadata: ScenarioMetadata;
   canvas: {
@@ -50,4 +55,5 @@ export interface ScenarioCatalogEntry {
 
 export interface ScenarioDefinition<TState> extends ScenarioCatalogEntry {
   mount: (context: ScenarioMountContext<TState>) => ScenarioController<TState>;
+  formatState: (state: TState) => readonly ScenarioStateField[];
 }

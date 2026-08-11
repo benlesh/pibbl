@@ -4,6 +4,11 @@ export {
   type SmokeScenarioAction,
   type SmokeScenarioState,
 } from './smoke';
+export {
+  mountScenarioSurface,
+  type ScenarioSurface,
+  scenarioSurfaceStyles,
+} from './surface';
 export type {
   ScenarioCatalogEntry,
   ScenarioController,
@@ -12,5 +17,6 @@ export type {
   ScenarioMaturity,
   ScenarioMetadata,
   ScenarioMountContext,
+  ScenarioStateField,
   ScenarioVisibility,
 } from './types';

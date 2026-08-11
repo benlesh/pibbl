@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./catalog": "./src/catalog.ts",
-    "./smoke": "./src/smoke.ts"
+    "./smoke": "./src/smoke.ts",
+    "./surface": "./src/surface.ts"
   },
   "dependencies": {
     "@crc/core": "workspace:*"
