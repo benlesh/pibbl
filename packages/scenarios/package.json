@@ -1,0 +1,14 @@
+{
+  "name": "@crc/scenarios",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./catalog": "./src/catalog.ts",
+    "./smoke": "./src/smoke.ts"
+  },
+  "dependencies": {
+    "@crc/core": "workspace:*"
+  }
+}
