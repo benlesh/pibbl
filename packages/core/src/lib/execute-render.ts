@@ -34,7 +34,6 @@ export function executeRender(
   const prevCurrentCRCInstance = GLOBAL_STATE.currentCRCInstance;
   const prevCanvas = GLOBAL_STATE.canvas;
   const prevRenderContext = GLOBAL_STATE.renderContext;
-  const prevMouseTransform = GLOBAL_STATE.mouseTransform;
   const prevSeenIds = GLOBAL_STATE.seenIds;
   const prevUnseendIds = GLOBAL_STATE.unseenIds;
   const prevComponentRefs = GLOBAL_STATE.componentRefs;
@@ -72,7 +71,6 @@ export function executeRender(
     GLOBAL_STATE.currentCRCInstance = prevCurrentCRCInstance;
     GLOBAL_STATE.canvas = prevCanvas;
     GLOBAL_STATE.renderContext = prevRenderContext;
-    GLOBAL_STATE.mouseTransform = prevMouseTransform;
     GLOBAL_STATE.seenIds = prevSeenIds;
     GLOBAL_STATE.unseenIds = prevUnseendIds;
     GLOBAL_STATE.componentRefs = prevComponentRefs;

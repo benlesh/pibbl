@@ -10,7 +10,6 @@ export interface GlobalState {
   renderContext: RenderingContext2D | undefined;
   unseenIds: Set<string> | undefined;
   seenIds: Set<string> | undefined;
-  mouseTransform: DOMMatrix | undefined;
   clippingStack: CRCClippingStackEntry[];
   anonElementNames: WeakMap<any, string>;
   anon: number;
@@ -26,7 +25,6 @@ export const GLOBAL_STATE: GlobalState = {
   renderContext: undefined,
   unseenIds: undefined,
   seenIds: undefined,
-  mouseTransform: undefined,
   clippingStack: [],
   anonElementNames: new WeakMap(),
   anon: 0,

@@ -1,11 +1,9 @@
-import { GLOBAL_STATE } from './global-state.js';
 import type {
   CRCEventType,
   CRCCursorDefault,
   CRCInstance,
   CRCInteractionRegion,
 } from './types.js';
-import { createMouseEventTransform } from './util/create-mouse-event-transform.js';
 import { getMouseCoordinates } from './util/get-mouse-coordinates.js';
 import { isHit } from './util/is-hit.js';
 
@@ -15,14 +13,8 @@ export function dispatchCRCEvent(
   event: MouseEvent,
   canvas: HTMLCanvasElement,
 ): void {
-  const previousMouseTransform = GLOBAL_STATE.mouseTransform;
-  try {
-    GLOBAL_STATE.mouseTransform = createMouseEventTransform(canvas);
-    dispatchTargetEvent(instance, type, event, canvas);
-    dispatchObservers(instance.events[type], event);
-  } finally {
-    GLOBAL_STATE.mouseTransform = previousMouseTransform;
-  }
+  dispatchTargetEvent(instance, type, event, canvas);
+  dispatchObservers(instance.events[type], event);
 }
 
 export function removeInteractionRegion(

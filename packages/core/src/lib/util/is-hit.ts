@@ -1,4 +1,3 @@
-import { GLOBAL_STATE } from '../global-state.js';
 import { CRCClippingStackEntry, RenderingContext2D } from '../types.js';
 import { get2dContext } from './get-2d-context.js';
 
@@ -24,10 +23,6 @@ export function isHit({
   const ctx = get2dContext(canvas);
   ctx.save();
   try {
-    if (GLOBAL_STATE.mouseTransform) {
-      ({ x, y } = GLOBAL_STATE.mouseTransform.transformPoint({ x, y }));
-    }
-
     if (isInEveryClippingPath(currentClippingStack, x, y, ctx)) {
       if (!transform.isIdentity) {
         ctx.setTransform(transform);

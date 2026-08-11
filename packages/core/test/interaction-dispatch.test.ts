@@ -12,11 +12,13 @@ import { mountCRC } from '../src/lib/mount-crc';
 const activeInstances = new Set<CRCInstance>();
 const EmptyScene = defineComp<Record<string, never>>(() => undefined);
 
-function mountDispatchHarness(): { canvas: HTMLCanvasElement; instance: CRCInstance } {
+function mountDispatchHarness(
+  cssSize: readonly [number, number] = [480, 240],
+): { canvas: HTMLCanvasElement; instance: CRCInstance } {
   const canvas = document.createElement('canvas');
   canvas.width = 480;
   canvas.height = 240;
-  canvas.style.cssText = 'display:block; width:480px; height:240px';
+  canvas.style.cssText = `display:block; width:${cssSize[0]}px; height:${cssSize[1]}px`;
   document.body.replaceChildren(canvas);
   mountCRC(canvas, EmptyScene({}));
   const instance = GLOBAL_STATE.crcInstances.get(canvas);
@@ -67,6 +69,19 @@ afterEach(() => {
 });
 
 describe('interaction dispatcher mutation contract', () => {
+  it('reports intrinsic coordinates for a CSS-scaled Canvas', () => {
+    const { canvas, instance } = mountDispatchHarness([240, 120]);
+    const coordinates: number[][] = [];
+    const target = region(
+      rectanglePath(0, 0, 480, 240),
+      { mousemove: event => coordinates.push([event.x, event.y]) },
+    );
+    instance.regions.add(target);
+
+    dispatchMove(canvas, 120, 60);
+    expect(coordinates).toEqual([[240, 120]]);
+  });
+
   it('skips a removed observer and defers its replacement until the next logical event', () => {
     const { canvas, instance } = mountDispatchHarness();
     const calls: string[] = [];
