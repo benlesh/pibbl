@@ -14,6 +14,18 @@ export default defineConfig({
       providerOptions: {
         launch: {
           devtools: false,
+          args: [
+            '--force-color-profile=srgb',
+            '--font-render-hinting=none',
+          ],
+        },
+        context: {
+          viewport: { width: 800, height: 600 },
+          deviceScaleFactor: 1,
+          colorScheme: 'light',
+          reducedMotion: 'reduce',
+          locale: 'en-US',
+          timezoneId: 'UTC',
         },
       },
     },
