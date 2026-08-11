@@ -4,6 +4,9 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Run Tests 🚀
@@ -15,21 +18,16 @@ jobs:
 
     steps:
       - name: Checkout 📦
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 1 # Faster clone for tests
 
-      - name: Setup PNPM 📦
-        uses: pnpm/action-setup@v2
+      - name: Setup Node.js and PNPM 🟢
+        uses: pnpm/setup@v2
         with:
-          version: latest
-
-      - name: Setup Node.js 🟢
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-          cache-dependency-path: '**/pnpm-lock.yaml'
+          runtime: node@24
+          cache: true
+          install: false
 
       - name: Install Dependencies 🔧
         run: pnpm install --frozen-lockfile
