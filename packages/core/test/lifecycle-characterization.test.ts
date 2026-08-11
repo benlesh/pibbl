@@ -231,6 +231,33 @@ describe('event lifecycle ownership', () => {
     });
   });
 
+  it('cancels legal animation-frame id zero and makes its dequeued callback inert', () => {
+    const originalRequestAnimationFrame = window.requestAnimationFrame;
+    const originalCancelAnimationFrame = window.cancelAnimationFrame;
+    let pendingCallback: FrameRequestCallback | undefined;
+    const canceled: number[] = [];
+    window.requestAnimationFrame = (callback) => {
+      pendingCallback = callback;
+      return 0;
+    };
+    window.cancelAnimationFrame = frameId => canceled.push(frameId);
+
+    try {
+      const canvas = document.createElement('canvas');
+      const controller = track(crc(
+        canvas,
+        ProbeScene({ calls: [], enabled: true, generation: 1, show: true }),
+      ));
+      controller.dispose();
+
+      expect(canceled).toEqual([0]);
+      expect(() => pendingCallback?.(1)).not.toThrow();
+    } finally {
+      window.requestAnimationFrame = originalRequestAnimationFrame;
+      window.cancelAnimationFrame = originalCancelAnimationFrame;
+    }
+  });
+
   it('keeps a remount live when its stale controller and signal clean up again', async () => {
     const { canvas, diagnostics } = createHarness();
     const calls: number[] = [];
