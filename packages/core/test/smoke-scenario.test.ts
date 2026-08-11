@@ -12,6 +12,7 @@ import {
 import { page, userEvent } from '@vitest/browser/context';
 import { afterEach, describe, expect, it } from 'vitest';
 import smokeSource from '../../scenarios/src/smoke.example.ts?raw';
+import { expectVisualMatch } from './visual-compare';
 
 interface SmokeTestHarness {
   canvas: HTMLCanvasElement;
@@ -156,6 +157,32 @@ describe('shared smoke scenario', () => {
       lastAction: 'reset',
     });
     expect(pixelAt(canvas, 200, 150)).toEqual([37, 99, 235, 255]);
+
+    if (import.meta.env.VITE_CRC_VISUAL_DRILL === '1') {
+      await controller.perform('update');
+    }
+    const visual = document.querySelector('[data-testid="smoke-visual"]');
+    if (!visual) {
+      throw new Error('The smoke visual surface was not mounted.');
+    }
+    await expectVisualMatch({
+      element: visual,
+      expectedPath: 'visual-baselines/dep-01-smoke.expected.png',
+      expectedArtifactPath: '../../../test-screenshots/dep-01/smoke.expected.png',
+      actualPath: '../../../test-screenshots/dep-01/smoke.actual.png',
+      diffPath: '../../../test-screenshots/dep-01/smoke.diff.png',
+      ignoreRegions: [
+        { x: 40, y: 68, width: 184, height: 78 },
+        { x: 238, y: 48, width: 234, height: 104 },
+        { x: 494, y: 16, width: 218, height: 26 },
+        { x: 494, y: 52, width: 218, height: 46 },
+        { x: 494, y: 109, width: 218, height: 46 },
+        { x: 494, y: 166, width: 218, height: 46 },
+      ],
+    });
+    if (import.meta.env.VITE_CRC_VISUAL_DRILL === '1') {
+      await controller.reset();
+    }
 
     await userEvent.click(canvas, { position: { x: 100, y: 100 } });
     await controller.settled();
