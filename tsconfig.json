@@ -21,7 +21,6 @@
     "strict": true,
     "strictNullChecks": true,
     "noEmit": true,
-    "preserveValueImports": false,
     "esModuleInterop": true,
     "skipDefaultLibCheck": true,
     "skipLibCheck": true
