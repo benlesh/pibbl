@@ -23,6 +23,7 @@ export default defineConfig({
     browser: {
       enabled: true,
       headless: true,
+      viewport: { width: 800, height: 600 },
       instances: [
         { browser: 'chromium' },
       ],
@@ -34,7 +35,6 @@ export default defineConfig({
           ],
         },
         contextOptions: {
-          viewport: { width: 800, height: 600 },
           deviceScaleFactor: 1,
           colorScheme: 'light',
           reducedMotion: 'reduce',
