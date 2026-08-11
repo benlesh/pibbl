@@ -180,8 +180,8 @@ const interactionLabMetadata: ScenarioMetadata = {
   conceptTags: ['event trace', 'rerender', 'teardown', 'nested layer'],
   manualSteps: [
     {
-      action: 'Move into, within, between, and out of the blue and purple regions.',
-      expected: 'The trace count and last event/target fields update for the current implementation.',
+      action: 'Move into, within, between, and out of both the Canvas and native blue/purple regions.',
+      expected: 'The trace count and last event/target fields update, exposing the current ordering difference.',
     },
     {
       action: 'Click the blue region, then use Replace handler and click it again.',
@@ -198,7 +198,7 @@ const interactionLabMetadata: ScenarioMetadata = {
   ],
   knownLimitations: [
     'This laboratory records the current implementation; TFC-02 decides which ordering becomes supported.',
-    'Diagnostics counters are intentionally test-only and are not displayed or shipped in this scenario.',
+    'Internal resource counters remain test-only; the visible revision, handler, subtree, layer, and trace counters mirror the tested transitions.',
     'Chromium mouse input is the reference for this characterization step.',
   ],
   visibility: 'test-laboratory',

@@ -9,6 +9,7 @@ import type {
 } from './types';
 import { crc } from '@crc/core';
 import { EventTraceRecorder } from './event-trace';
+import type { TraceEventType } from './event-trace';
 import {
   createInteractionLabScene,
   INTERACTION_LAB_SOURCE_ID,
@@ -31,6 +32,61 @@ function nextFrame(): Promise<void> {
   return new Promise(resolve => requestAnimationFrame(() => resolve()));
 }
 
+function mountNativeReference(
+  host: HTMLElement,
+  recorder: EventTraceRecorder,
+): () => void {
+  const title = document.createElement('p');
+  title.textContent = 'Native DOM reference · same region geometry';
+  title.style.cssText = 'font:700 13px/1.4 Arial,sans-serif; margin:0 0 10px; color:#334155';
+  const stage = document.createElement('div');
+  stage.dataset.region = 'outside';
+  stage.dataset.testid = 'native-reference-stage';
+  stage.style.cssText = 'box-sizing:border-box; position:relative; width:480px; height:240px; background:#f8fafc; border:1px solid #cbd5e1';
+  const makeRegion = (region: 'left' | 'right', cssText: string, label: string) => {
+    const element = document.createElement('div');
+    element.dataset.region = region;
+    element.style.cssText = `${cssText}; box-sizing:border-box; position:absolute; color:#fff; font:700 15px/1.4 Arial,sans-serif; padding:22px`;
+    element.textContent = label;
+    return element;
+  };
+  stage.append(
+    makeRegion('left', 'left:28px; top:54px; width:184px; height:108px; background:#2563eb', 'native left'),
+    makeRegion('right', 'left:268px; top:54px; width:184px; height:108px; background:#7c3aed', 'native right'),
+  );
+  host.replaceChildren(title, stage);
+
+  const eventTypes = ['mouseover', 'mousemove', 'mouseout', 'mousedown', 'mouseup', 'click'] as const;
+  const listeners = eventTypes.map((type) => {
+    const listener = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      const region = target.dataset.region;
+      if (region !== 'left' && region !== 'right') {
+        return;
+      }
+      const bounds = stage.getBoundingClientRect();
+      recorder.record({
+        source: 'native',
+        type: type as TraceEventType,
+        target: region,
+        x: Math.round(event.clientX - bounds.left),
+        y: Math.round(event.clientY - bounds.top),
+        event,
+        relatedTarget: (event.relatedTarget as HTMLElement | null)?.dataset.region ?? null,
+      });
+    };
+    stage.addEventListener(type, listener, true);
+    return [type, listener] as const;
+  });
+
+  return () => {
+    for (const [type, listener] of listeners) {
+      stage.removeEventListener(type, listener, true);
+    }
+    host.replaceChildren();
+  };
+}
+
 async function mountInteractionLab(
   context: ScenarioMountContext<InteractionLabState>,
 ): Promise<ScenarioController<InteractionLabState>> {
@@ -42,6 +98,9 @@ async function mountInteractionLab(
     state = { ...state, trace: recorder.getEntries() };
     context.onStateChange?.({ ...state });
   });
+  const disposeNativeReference = context.referenceHost ?
+    mountNativeReference(context.referenceHost, recorder) :
+    () => undefined;
 
   const assertActive = () => {
     if (disposed) {
@@ -119,6 +178,7 @@ async function mountInteractionLab(
       }
       await pendingRender;
       disposed = true;
+      disposeNativeReference();
       abortController.abort();
     },
   };

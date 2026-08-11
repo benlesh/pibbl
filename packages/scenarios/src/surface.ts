@@ -129,6 +129,15 @@ export const scenarioSurfaceStyles = `
     padding: 16px;
   }
 
+  .scenario-runner__reference {
+    border-top: 1px solid #e2e8f0;
+    padding: 16px;
+  }
+
+  .scenario-runner__reference:empty {
+    display: none;
+  }
+
   .scenario-runner__button {
     background: #0f172a;
     border: 1px solid #0f172a;
@@ -324,7 +333,10 @@ export async function mountScenarioSurface<TState>(
   resetButton.type = 'button';
   resetButton.textContent = 'Reset';
   controls.appendChild(resetButton);
-  runner.append(visual, controls);
+  const referenceHost = document.createElement('div');
+  referenceHost.className = 'scenario-runner__reference';
+  referenceHost.dataset.testid = 'scenario-reference';
+  runner.append(visual, referenceHost, controls);
 
   const docs = document.createElement('div');
   docs.className = 'scenario-docs';
@@ -373,6 +385,7 @@ export async function mountScenarioSurface<TState>(
 
   const controller = await options.definition.mount({
     canvas,
+    referenceHost,
     onStateChange: state => appendStateFields(
       stateList,
       options.definition.formatState(state),

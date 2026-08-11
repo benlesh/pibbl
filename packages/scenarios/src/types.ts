@@ -42,6 +42,7 @@ export interface ScenarioMetadata {
 
 export interface ScenarioMountContext<TState> {
   canvas: HTMLCanvasElement;
+  referenceHost?: HTMLElement;
   onStateChange?: (state: Readonly<TState>) => void;
 }
 
