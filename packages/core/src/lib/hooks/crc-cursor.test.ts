@@ -66,6 +66,21 @@ describe('crcCursor', () => {
     expect(getComputedStyle(canvas.element).cursor).toBe('wait');
   });
 
+  it('applies a newly enabled later fallback immediately', async () => {
+    const Scene = defineComp<{ second: boolean }>(({ second }) => {
+      crcCursor({ style: 'wait' });
+      crcCursor({ style: second ? 'help' : undefined });
+    });
+    const canvas = await componentTest(Scene({ second: false }));
+    await canvas.mouseMove({ position: { x: 80, y: 80 } });
+    expect(getComputedStyle(canvas.element).cursor).toBe('wait');
+
+    crc(canvas.element, Scene({ second: true }));
+    await nextFrame();
+
+    expect(getComputedStyle(canvas.element).cursor).toBe('help');
+  });
+
   it('keeps the fallback applied when its cursorless hovered region is removed', async () => {
     const Scene = defineComp<{ region: boolean }>(({ region }) => {
       crcCursor({ style: 'wait' });

@@ -66,5 +66,5 @@ function crcCursorDefault(style: string | undefined): void {
 
   cursorDefault.style = style;
   instance.cursorDefaults.add(cursorDefault);
-  refreshCursorDefault(instance, cursorDefault);
+  refreshCursorDefault(instance);
 }

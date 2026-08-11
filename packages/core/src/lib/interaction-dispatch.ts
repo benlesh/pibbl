@@ -84,10 +84,9 @@ export function removeCursorDefault(
 
 export function refreshCursorDefault(
   instance: CRCInstance,
-  cursorDefault: CRCCursorDefault,
 ): void {
   const canvas = instance.interaction.cursorCanvas;
-  if (canvas && instance.interaction.cursorDefault === cursorDefault) {
+  if (canvas && instance.interaction.cursorDefault) {
     applyCursor(instance, instance.interaction.hoveredRegion, canvas);
   }
 }
