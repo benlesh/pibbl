@@ -77,6 +77,63 @@ const ToggleNestedLayerScene = defineComp<ProbeSceneProps>(({ calls, enabled, ge
   }) : undefined,
 );
 
+const PersistentLayerScene = defineComp<ProbeSceneProps>(({ calls, enabled, generation }) => layer({
+  key: 'persistent-layer',
+  render: rect({
+    key: 'persistent-region',
+    x: 20,
+    y: 20,
+    width: 100,
+    height: 100,
+    fillStyle: '#7c3aed',
+    onClick: enabled ? () => calls.push(generation) : undefined,
+  }),
+}));
+
+const FirstLayerRoot = defineComp<{ calls: string[] }>(({ calls }) => rect({
+  x: 20,
+  y: 20,
+  width: 100,
+  height: 100,
+  fillStyle: '#2563eb',
+  onClick: () => calls.push('first'),
+}));
+
+const SecondLayerRoot = defineComp<{ calls: string[] }>(({ calls }) => rect({
+  x: 20,
+  y: 20,
+  width: 100,
+  height: 100,
+  fillStyle: '#7c3aed',
+  onClick: () => calls.push('second'),
+}));
+
+const SwitchingLayerScene = defineComp<{ calls: string[]; second: boolean }>(({ calls, second }) => layer({
+  key: 'switching-layer',
+  render: second ? SecondLayerRoot({ calls }) : FirstLayerRoot({ calls }),
+}));
+
+const CursorOwnershipScene = defineComp(() => [
+  rect({
+    key: 'first-cursor',
+    x: 20,
+    y: 20,
+    width: 60,
+    height: 60,
+    fillStyle: '#2563eb',
+    cursor: 'pointer',
+  }),
+  rect({
+    key: 'second-cursor',
+    x: 100,
+    y: 20,
+    width: 60,
+    height: 60,
+    fillStyle: '#7c3aed',
+    cursor: 'crosshair',
+  }),
+]);
+
 const ObserverScene = defineComp<{ calls: string[] }>(({ calls }) => {
   crcEvent('click', () => {
     calls.push('throws');
@@ -287,6 +344,35 @@ describe('event lifecycle ownership', () => {
     expectFullyReleased(diagnostics);
   });
 
+  it('uses only the initial mount signal for an existing Canvas lifetime', async () => {
+    const { canvas, diagnostics } = createHarness();
+    const calls: number[] = [];
+    const mountAbort = new AbortController();
+    const updateAbort = new AbortController();
+    const controller = track(crc(
+      canvas,
+      ProbeScene({ calls, enabled: true, generation: 1, show: true }),
+      { signal: mountAbort.signal },
+    ));
+    await nextFrame();
+
+    const updatedController = crc(
+      canvas,
+      ProbeScene({ calls, enabled: true, generation: 2, show: true }),
+      { signal: updateAbort.signal },
+    );
+    expect(updatedController).toBe(controller);
+    await nextFrame();
+
+    updateAbort.abort();
+    expect(diagnostics.snapshot().instances).toBe(1);
+    canvas.dispatchEvent(new MouseEvent('click', { clientX: 40, clientY: 40 }));
+    expect(calls).toEqual([2]);
+
+    mountAbort.abort();
+    expectFullyReleased(diagnostics);
+  });
+
   it('releases nested layer instances and bridges when their subtree disappears', async () => {
     const { canvas, diagnostics } = createHarness();
     const calls: number[] = [];
@@ -309,6 +395,66 @@ describe('event lifecycle ownership', () => {
     expect(calls).toEqual([]);
 
     controller.dispose();
+    expectFullyReleased(diagnostics);
+  });
+
+  it('updates handlers inside a persistent layer and removes them without ghosts', async () => {
+    const { canvas, diagnostics } = createHarness();
+    const calls: number[] = [];
+    const controller = track(crc(
+      canvas,
+      PersistentLayerScene({ calls, enabled: true, generation: 1, show: true }),
+    ));
+    await nextFrame();
+
+    canvas.dispatchEvent(new MouseEvent('click', { clientX: 40, clientY: 40 }));
+    expect(calls).toEqual([1]);
+
+    crc(canvas, PersistentLayerScene({ calls, enabled: true, generation: 2, show: true }));
+    await nextFrame();
+    canvas.dispatchEvent(new MouseEvent('click', { clientX: 40, clientY: 40 }));
+    expect(calls).toEqual([1, 2]);
+
+    crc(canvas, PersistentLayerScene({ calls, enabled: false, generation: 2, show: true }));
+    await nextFrame();
+    canvas.dispatchEvent(new MouseEvent('click', { clientX: 40, clientY: 40 }));
+    expect(calls).toEqual([1, 2]);
+
+    controller.dispose();
+    expectFullyReleased(diagnostics);
+  });
+
+  it('replaces a persistent layer root when its component type changes', async () => {
+    const { canvas, diagnostics } = createHarness();
+    const calls: string[] = [];
+    const controller = track(crc(canvas, SwitchingLayerScene({ calls, second: false })));
+    await nextFrame();
+    canvas.dispatchEvent(new MouseEvent('click', { clientX: 40, clientY: 40 }));
+
+    crc(canvas, SwitchingLayerScene({ calls, second: true }));
+    await nextFrame();
+    canvas.dispatchEvent(new MouseEvent('click', { clientX: 40, clientY: 40 }));
+    expect(calls).toEqual(['first', 'second']);
+
+    controller.dispose();
+    expectFullyReleased(diagnostics);
+  });
+
+  it('does not clear a cursor value replaced by another owner', async () => {
+    const { canvas, diagnostics } = createHarness();
+    const controller = track(crc(canvas, CursorOwnershipScene({})));
+    await nextFrame();
+
+    canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: 40, clientY: 40 }));
+    expect(canvas.style.cursor).toBe('pointer');
+    canvas.style.cursor = 'wait';
+
+    canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: 120, clientY: 40 }));
+    canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: 180, clientY: 120 }));
+    expect(canvas.style.cursor).toBe('wait');
+
+    controller.dispose();
+    expect(canvas.style.cursor).toBe('wait');
     expectFullyReleased(diagnostics);
   });
 

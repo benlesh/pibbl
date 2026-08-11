@@ -3,6 +3,16 @@ import { GLOBAL_STATE } from '../global-state.js';
 
 interface CursorSlot {
   canvas: HTMLCanvasElement | undefined;
+  ownedStyle: string | undefined;
+}
+
+function releaseCursor(slot: CursorSlot): void {
+  const { canvas, ownedStyle } = slot;
+  if (canvas && ownedStyle && canvas.style.cursor === ownedStyle) {
+    canvas.style.removeProperty('cursor');
+  }
+  slot.canvas = undefined;
+  slot.ownedStyle = undefined;
 }
 
 /**
@@ -27,12 +37,11 @@ export function crcCursor({
   let slot = componentRefs.refs[hookIndex] as CursorSlot | undefined;
 
   if (GLOBAL_STATE.componentIsMounting) {
-    slot = { canvas: undefined };
+    slot = { canvas: undefined, ownedStyle: undefined };
     componentRefs.refs[hookIndex] = slot;
     componentRefs.teardowns.add(() => {
-      slot?.canvas?.style.removeProperty('cursor');
       if (slot) {
-        slot.canvas = undefined;
+        releaseCursor(slot);
       }
       componentRefs.refs[hookIndex] = null;
     });
@@ -40,8 +49,7 @@ export function crcCursor({
     throw new Error(`CRC cursor hook slot ${hookIndex} is unavailable`);
   }
 
-  slot.canvas?.style.removeProperty('cursor');
-  slot.canvas = undefined;
+  releaseCursor(slot);
 
   crcEvent(
     'mousemove',
@@ -51,7 +59,10 @@ export function crcCursor({
           if (!canvas.style.cursor) {
             // If something has already set it, don't confuse it.
             canvas.style.cursor = style;
-            slot.canvas = canvas;
+            if (canvas.style.cursor) {
+              slot.canvas = canvas;
+              slot.ownedStyle = canvas.style.cursor;
+            }
           }
         } :
       undefined,
@@ -65,9 +76,8 @@ export function crcCursor({
     style ?
         (e) => {
           const canvas = e.originalEvent.target as HTMLCanvasElement;
-          canvas.style.removeProperty('cursor');
           if (slot.canvas === canvas) {
-            slot.canvas = undefined;
+            releaseCursor(slot);
           }
         } :
       undefined,

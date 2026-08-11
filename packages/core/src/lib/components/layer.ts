@@ -33,6 +33,8 @@ export function Layer(props: LayerProps, ctx: RenderingContext2D) {
     GLOBAL_STATE.componentIsMounting ||
     offscreenCanvas.width !== width ||
     offscreenCanvas.height !== height ||
+    layerCRC.root.type !== props.render.type ||
+    layerCRC.root.props.key !== props.render.props.key ||
     !shallowEquals(layerCRC.root.props, props.render.props)
   ) {
     offscreenCanvas.width = width;
@@ -41,7 +43,7 @@ export function Layer(props: LayerProps, ctx: RenderingContext2D) {
     executeRender(
       offscreenCanvas,
       getCurrentCRCInstance().renderTimestamp,
-      layerCRC.root,
+      props.render,
       false,
     );
   }
