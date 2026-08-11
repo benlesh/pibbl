@@ -21,6 +21,7 @@ export interface ScenarioAction {
 export interface ScenarioSourceReference {
   id: string;
   language: 'ts';
+  marker: string;
   path: string;
 }
 
@@ -81,3 +82,6 @@ export interface ScenarioDefinition<TState> {
   ) => Promise<ScenarioController<TState>>;
   formatState: (state: Readonly<TState>) => readonly ScenarioStateField[];
 }
+
+export type AnyScenarioCatalogEntry = ScenarioCatalogEntry<any>;
+export type AnyScenarioDefinition = ScenarioDefinition<any>;

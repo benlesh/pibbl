@@ -1,10 +1,12 @@
 import type { SmokeScenarioState } from './smoke.example';
+import type { InteractionLabState } from './interaction-lab.example';
 import type {
   ScenarioCatalogEntry,
   ScenarioCatalogRecord,
   ScenarioDefinition,
   ScenarioMetadata,
 } from './types';
+import type { AnyScenarioCatalogEntry } from './types';
 
 const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const VISIBILITIES = new Set(['documentation-candidate', 'test-laboratory']);
@@ -65,6 +67,7 @@ export function validateScenarioCatalog<
   for (const scenario of catalog) {
     validateMetadata(scenario.metadata);
     assertNonEmpty(scenario.source.id, 'source.id', scenario.metadata.id);
+    assertNonEmpty(scenario.source.marker, 'source.marker', scenario.metadata.id);
     assertNonEmpty(scenario.source.path, 'source.path', scenario.metadata.id);
     if (scenario.source.language !== 'ts' || !scenario.source.path.endsWith('.ts')) {
       throw new Error(`Scenario "${scenario.metadata.id}" must reference TypeScript source.`);
@@ -161,15 +164,75 @@ export const smokeScenarioEntry: ScenarioCatalogEntry<SmokeScenarioState> = {
   source: {
     id: 'baseline-smoke-example',
     language: 'ts',
+    marker: "SMOKE_SOURCE_ID = 'baseline-smoke-example'",
     path: 'packages/scenarios/src/smoke.example.ts',
   },
   load: async () => (await import('./smoke')).smokeScenario,
 };
 
-export const scenarioCatalog = validateScenarioCatalog([
+const interactionLabMetadata: ScenarioMetadata = {
+  id: 'interaction-trace-lab',
+  slug: 'interaction-trace-lab',
+  title: 'Interaction trace laboratory',
+  summary: 'Observe current CRC mouse traces and lifecycle transitions without treating them as the final contract.',
+  category: 'Diagnostics',
+  apiTags: ['crc', 'rect', 'layer', 'mouse events'],
+  conceptTags: ['event trace', 'rerender', 'teardown', 'nested layer'],
+  manualSteps: [
+    {
+      action: 'Move into, within, between, and out of the blue and purple regions.',
+      expected: 'The trace count and last event/target fields update for the current implementation.',
+    },
+    {
+      action: 'Click the blue region, then use Replace handler and click it again.',
+      expected: 'Both clicks are recorded and the handler generation increases without changing the target label.',
+    },
+    {
+      action: 'Choose Run 100 rerenders, Remove subtree, Add layer, and Remove layer.',
+      expected: 'The lifecycle state changes while the remaining blue region continues recording input.',
+    },
+    {
+      action: 'Choose Reset.',
+      expected: 'The initial two-region scene returns and its trace is empty.',
+    },
+  ],
+  knownLimitations: [
+    'This laboratory records the current implementation; TFC-02 decides which ordering becomes supported.',
+    'Diagnostics counters are intentionally test-only and are not displayed or shipped in this scenario.',
+    'Chromium mouse input is the reference for this characterization step.',
+  ],
+  visibility: 'test-laboratory',
+  visibilityReason: 'It exposes diagnostic lifecycle controls and traces rather than a beginner-facing API lesson.',
+  maturity: 'characterization',
+};
+
+export const interactionLabScenarioEntry: ScenarioCatalogEntry<InteractionLabState> = {
+  metadata: interactionLabMetadata,
+  canvas: {
+    width: 480,
+    height: 240,
+  },
+  actions: [
+    { id: 'rerender-100', label: 'Run 100 rerenders' },
+    { id: 'replace-handler', label: 'Replace handler' },
+    { id: 'remove-subtree', label: 'Remove subtree' },
+    { id: 'add-layer', label: 'Add layer' },
+    { id: 'remove-layer', label: 'Remove layer' },
+  ],
+  source: {
+    id: 'interaction-trace-lab-example',
+    language: 'ts',
+    marker: "INTERACTION_LAB_SOURCE_ID = 'interaction-trace-lab-example'",
+    path: 'packages/scenarios/src/interaction-lab.example.ts',
+  },
+  load: async () => (await import('./interaction-lab')).interactionLabScenario,
+};
+
+export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] = validateScenarioCatalog([
   smokeScenarioEntry,
+  interactionLabScenarioEntry,
 ] as const);
 
-export function getScenarioBySlug(slug: string): typeof smokeScenarioEntry | undefined {
+export function getScenarioBySlug(slug: string): AnyScenarioCatalogEntry | undefined {
   return scenarioCatalog.find(scenario => scenario.metadata.slug === slug);
 }

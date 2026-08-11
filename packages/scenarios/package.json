@@ -6,6 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./catalog": "./src/catalog.ts",
+    "./event-trace": "./src/event-trace.ts",
+    "./interaction-lab": "./src/interaction-lab.ts",
     "./smoke": "./src/smoke.ts",
     "./surface": "./src/surface.ts"
   },

@@ -1,4 +1,3 @@
-import type { SmokeScenarioState } from '@crc/scenarios';
 import type { ScenarioSurface } from '@crc/scenarios/surface';
 import {
   getScenarioBySlug,
@@ -56,7 +55,7 @@ main.className = 'gallery-main';
 shell.append(sidebar, main);
 app.appendChild(shell);
 
-let activeSurface: ScenarioSurface<SmokeScenarioState> | undefined;
+let activeSurface: ScenarioSurface<any> | undefined;
 
 function selectedSlug(): string {
   const match = /^#\/scenarios\/([a-z0-9-]+)$/.exec(window.location.hash);
