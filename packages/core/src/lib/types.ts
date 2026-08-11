@@ -66,6 +66,10 @@ export interface CRCInteractionRegion {
   cursor: string | undefined;
 }
 
+export interface CRCCursorDefault {
+  style: string;
+}
+
 export interface CRCInteractionState {
   hoveredRegion: CRCInteractionRegion | undefined;
   primaryDownRegion: CRCInteractionRegion | undefined;
@@ -73,6 +77,7 @@ export interface CRCInteractionState {
   clickStreakRegion: CRCInteractionRegion | undefined;
   clickStreak: number;
   cursorRegion: CRCInteractionRegion | undefined;
+  cursorDefault: CRCCursorDefault | undefined;
   cursorCanvas: HTMLCanvasElement | undefined;
   cursorStyle: string | undefined;
 }
@@ -138,6 +143,7 @@ export interface CRCInstance {
   mainTeardowns: Teardowns;
   events: CRCEventRegistry;
   regions: Set<CRCInteractionRegion>;
+  cursorDefaults: Set<CRCCursorDefault>;
   interaction: CRCInteractionState;
   parent: Canvas | undefined;
 }

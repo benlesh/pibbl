@@ -52,6 +52,7 @@ export function mountCRC<P>(
       contextmenu: new Set(),
     },
     regions: new Set(),
+    cursorDefaults: new Set(),
     interaction: {
       hoveredRegion: undefined,
       primaryDownRegion: undefined,
@@ -59,6 +60,7 @@ export function mountCRC<P>(
       clickStreakRegion: undefined,
       clickStreak: 0,
       cursorRegion: undefined,
+      cursorDefault: undefined,
       cursorCanvas: undefined,
       cursorStyle: undefined,
     },

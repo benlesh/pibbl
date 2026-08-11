@@ -1,6 +1,7 @@
 import { GLOBAL_STATE } from './global-state.js';
 import type {
   CRCEventType,
+  CRCCursorDefault,
   CRCInstance,
   CRCInteractionRegion,
 } from './types.js';
@@ -60,6 +61,26 @@ export function refreshInteractionCursor(
     instance.interaction.cursorCanvas
   ) {
     applyCursor(instance, region, instance.interaction.cursorCanvas);
+  }
+}
+
+export function removeCursorDefault(
+  instance: CRCInstance,
+  cursorDefault: CRCCursorDefault,
+): void {
+  instance.cursorDefaults.delete(cursorDefault);
+  if (instance.interaction.cursorDefault === cursorDefault) {
+    releaseCursor(instance);
+  }
+}
+
+export function refreshCursorDefault(
+  instance: CRCInstance,
+  cursorDefault: CRCCursorDefault,
+): void {
+  const canvas = instance.interaction.cursorCanvas;
+  if (canvas && instance.interaction.cursorDefault === cursorDefault) {
+    applyCursor(instance, instance.interaction.hoveredRegion, canvas);
   }
 }
 
@@ -123,7 +144,7 @@ function dispatchMouseMove(
       applyCursor(instance, next, canvas);
       invokeRegion(instance, next, 'mousemove', event);
     } else {
-      releaseCursor(instance);
+      applyCursor(instance, undefined, canvas);
     }
     return;
   }
@@ -134,6 +155,7 @@ function dispatchMouseMove(
 
   const liveNext = liveRegion(instance, next);
   if (!liveNext) {
+    applyCursor(instance, undefined, canvas);
     return;
   }
 
@@ -276,28 +298,37 @@ function dispatchObservers(
 
 function applyCursor(
   instance: CRCInstance,
-  region: CRCInteractionRegion,
+  region: CRCInteractionRegion | undefined,
   canvas: HTMLCanvasElement,
 ): void {
   const interaction = instance.interaction;
+  const cursorDefault = region?.cursor ? undefined : lastCursorDefault(instance);
+  const style = region?.cursor ?? cursorDefault?.style;
   if (
     interaction.cursorRegion === region &&
+    interaction.cursorDefault === cursorDefault &&
     interaction.cursorCanvas === canvas &&
     interaction.cursorStyle === canvas.style.cursor &&
-    region.cursor === interaction.cursorStyle
+    style === interaction.cursorStyle
   ) {
     return;
   }
 
   releaseCursor(instance);
-  if (region.cursor && !canvas.style.cursor) {
-    canvas.style.cursor = region.cursor;
+  if (style && !canvas.style.cursor) {
+    canvas.style.cursor = style;
     if (canvas.style.cursor) {
       interaction.cursorRegion = region;
+      interaction.cursorDefault = cursorDefault;
       interaction.cursorCanvas = canvas;
       interaction.cursorStyle = canvas.style.cursor;
     }
   }
+}
+
+function lastCursorDefault(instance: CRCInstance): CRCCursorDefault | undefined {
+  const cursorDefaults = Array.from(instance.cursorDefaults);
+  return cursorDefaults.at(-1);
 }
 
 function releaseCursor(instance: CRCInstance): void {
@@ -307,6 +338,7 @@ function releaseCursor(instance: CRCInstance): void {
     cursorCanvas.style.removeProperty('cursor');
   }
   interaction.cursorRegion = undefined;
+  interaction.cursorDefault = undefined;
   interaction.cursorCanvas = undefined;
   interaction.cursorStyle = undefined;
 }

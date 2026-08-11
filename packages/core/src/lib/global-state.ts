@@ -104,6 +104,7 @@ export function cleanupCRCInstance(crcInstance: CRCInstance): void {
     handlers.clear();
   }
   crcInstance.regions?.clear();
+  crcInstance.cursorDefaults?.clear();
   const interaction = crcInstance.interaction;
   if (interaction) {
     if (
@@ -119,6 +120,7 @@ export function cleanupCRCInstance(crcInstance: CRCInstance): void {
     interaction.clickStreakRegion = undefined;
     interaction.clickStreak = 0;
     interaction.cursorRegion = undefined;
+    interaction.cursorDefault = undefined;
     interaction.cursorCanvas = undefined;
     interaction.cursorStyle = undefined;
   }
