@@ -27,7 +27,12 @@ export default antfu(
       'ts/consistent-type-imports': 'off',
       'ts/explicit-function-return-type': 'off',
       'prefer-template': 'off',
-      'style/operator-linebreak': ['error', 'after'],
+      'style/operator-linebreak': ['error', 'after', {
+        overrides: {
+          '&': 'before',
+          '|': 'before',
+        },
+      }],
       'antfu/if-newline': 'off',
       'style/brace-style': ['error', '1tbs', {
         allowSingleLine: true,
