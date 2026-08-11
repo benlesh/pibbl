@@ -2,7 +2,13 @@
 
 Audited on 2026-08-11 for DEP-01. Registry versions are the stable `latest` tags observed during the audit. Workspace packages (`@crc/core`, `@crc/types`, and private `@crc/scenarios`) are not third-party dependencies.
 
-## Toolchain decision
+## Final modernization outcome
+
+DEP-02 through DEP-04 completed the inventory on 2026-08-11. `pnpm outdated -r --format json` now returns `{}`; the lockfile is deduplicated, strict-peer clean, and audit-clean. TypeScript 7.0.2 is supported by removing the typescript-eslint and unbuild consumers. Vite 8.2.1, Vitest 4.1.10, Playwright 1.62.1, and the remaining direct tools are at their registry-latest releases. See [DEP-02 upgrade notes](./dep-02-upgrade-notes.md), [DEP-03 upgrade notes](./dep-03-upgrade-notes.md), and [dependency freshness closure](./dependency-freshness.md).
+
+The tables below preserve the initial DEP-01 audit and cluster assignments as historical evidence; their proposed TypeScript 5.9 exception was superseded by the user's TypeScript 7 architecture decision.
+
+## Initial toolchain decision (superseded where noted)
 
 - Target Node.js 24 LTS with `engines.node` set to `>=24.15.0`.
 - Target pnpm 11.21.0 through the root `packageManager` declaration; remove the redundant direct `pnpm` development dependency.
