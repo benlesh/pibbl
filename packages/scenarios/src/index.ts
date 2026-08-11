@@ -21,13 +21,18 @@ export type {
 } from './interaction-lab.example';
 export {
   formatContractTrace,
+  formatOrderingPolicy,
   getMouseContractCase,
   MOUSE_CONTRACT_CASES,
+  validateMouseContractCases,
 } from './mouse-contract';
 export type {
   MouseContractCase,
   MouseContractCaseId,
+  MouseContractOrderingPolicy,
+  MouseContractTargeting,
   MouseContractTraceEvent,
+  MouseContractVisualProbe,
 } from './mouse-contract';
 export type { MouseContractScenarioState } from './mouse-contract.example';
 export type {
