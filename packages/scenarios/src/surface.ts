@@ -1,4 +1,5 @@
 import type {
+  ScenarioCatalogEntry,
   ScenarioController,
   ScenarioDefinition,
   ScenarioStateField,
@@ -201,7 +202,8 @@ export const scenarioSurfaceStyles = `
 
 interface MountScenarioSurfaceOptions<TState> {
   container: HTMLElement;
-  scenario: ScenarioDefinition<TState>;
+  entry: ScenarioCatalogEntry<TState>;
+  definition: ScenarioDefinition<TState>;
   sourceText: string;
 }
 
@@ -209,9 +211,9 @@ export interface ScenarioSurface<TState> {
   controller: ScenarioController<TState>;
   canvas: HTMLCanvasElement;
   visual: HTMLElement;
-  updateButton: HTMLButtonElement;
+  actionButtons: ReadonlyMap<string, HTMLButtonElement>;
   resetButton: HTMLButtonElement;
-  dispose: () => void;
+  dispose: () => Promise<void>;
 }
 
 function installStyles(document: Document): void {
@@ -254,46 +256,48 @@ function createTagList(tags: readonly string[]): HTMLUListElement {
   return list;
 }
 
-export function mountScenarioSurface<TState>(
+export async function mountScenarioSurface<TState>(
   options: MountScenarioSurfaceOptions<TState>,
-): ScenarioSurface<TState> {
+): Promise<ScenarioSurface<TState>> {
   installStyles(options.container.ownerDocument);
 
   const article = document.createElement('article');
   article.className = 'scenario-detail';
-  article.dataset.scenarioId = options.scenario.metadata.id;
+  article.dataset.scenarioId = options.entry.metadata.id;
 
   const header = document.createElement('header');
   header.className = 'scenario-detail__header';
   const eyebrow = document.createElement('p');
   eyebrow.className = 'scenario-detail__eyebrow';
-  eyebrow.textContent = `${options.scenario.metadata.category} · ${options.scenario.metadata.visibility} · ${options.scenario.metadata.maturity}`;
+  eyebrow.textContent = `${options.entry.metadata.category} · ${options.entry.metadata.visibility} · ${options.entry.metadata.maturity}`;
   const title = document.createElement('h1');
   title.className = 'scenario-detail__title';
-  title.textContent = options.scenario.metadata.title;
+  title.textContent = options.entry.metadata.title;
   const summary = document.createElement('p');
   summary.className = 'scenario-detail__summary';
-  summary.textContent = options.scenario.metadata.summary;
+  summary.textContent = options.entry.metadata.summary;
   header.append(
     eyebrow,
     title,
     summary,
     createTagList([
-      ...options.scenario.metadata.apiTags,
-      ...options.scenario.metadata.conceptTags,
+      ...options.entry.metadata.apiTags,
+      ...options.entry.metadata.conceptTags,
     ]),
   );
 
   const runner = document.createElement('section');
   runner.className = 'scenario-runner';
-  runner.ariaLabel = `${options.scenario.metadata.title} interactive example`;
+  runner.ariaLabel = `${options.entry.metadata.title} interactive example`;
   const visual = document.createElement('div');
   visual.className = 'scenario-runner__visual';
   visual.dataset.testid = 'scenario-visual';
   const canvas = document.createElement('canvas');
   canvas.className = 'scenario-runner__canvas';
   canvas.dataset.testid = 'scenario-canvas';
-  canvas.setAttribute('aria-label', `${options.scenario.metadata.title} canvas`);
+  canvas.width = options.entry.canvas.width;
+  canvas.height = options.entry.canvas.height;
+  canvas.setAttribute('aria-label', `${options.entry.metadata.title} canvas`);
   const stateList = document.createElement('dl');
   stateList.className = 'scenario-runner__state';
   stateList.ariaLive = 'polite';
@@ -305,15 +309,21 @@ export function mountScenarioSurface<TState>(
 
   const controls = document.createElement('div');
   controls.className = 'scenario-runner__controls';
-  const updateButton = document.createElement('button');
-  updateButton.className = 'scenario-runner__button';
-  updateButton.type = 'button';
-  updateButton.textContent = 'Update scene';
+  const actionButtons = new Map<string, HTMLButtonElement>();
+  for (const action of options.entry.actions) {
+    const button = document.createElement('button');
+    button.className = 'scenario-runner__button';
+    button.type = 'button';
+    button.textContent = action.label;
+    button.dataset.scenarioAction = action.id;
+    actionButtons.set(action.id, button);
+    controls.appendChild(button);
+  }
   const resetButton = document.createElement('button');
   resetButton.className = 'scenario-runner__button scenario-runner__button--secondary';
   resetButton.type = 'button';
   resetButton.textContent = 'Reset';
-  controls.append(updateButton, resetButton);
+  controls.appendChild(resetButton);
   runner.append(visual, controls);
 
   const docs = document.createElement('div');
@@ -324,7 +334,7 @@ export function mountScenarioSurface<TState>(
   instructionsTitle.textContent = 'Manual procedure';
   const steps = document.createElement('ol');
   steps.className = 'scenario-docs__steps';
-  for (const step of options.scenario.metadata.manualSteps) {
+  for (const step of options.entry.metadata.manualSteps) {
     const item = document.createElement('li');
     const action = document.createElement('strong');
     action.textContent = `${step.action} `;
@@ -339,7 +349,7 @@ export function mountScenarioSurface<TState>(
   limitationsTitle.textContent = 'Known limitations';
   const limitationsList = document.createElement('ul');
   limitationsList.className = 'scenario-docs__limitations';
-  for (const limitation of options.scenario.metadata.knownLimitations) {
+  for (const limitation of options.entry.metadata.knownLimitations) {
     const item = document.createElement('li');
     item.textContent = limitation;
     limitationsList.appendChild(item);
@@ -350,7 +360,7 @@ export function mountScenarioSurface<TState>(
   const sourceSection = document.createElement('section');
   sourceSection.className = 'scenario-docs__section';
   const sourceTitle = document.createElement('h2');
-  sourceTitle.textContent = `Exercised source · ${options.scenario.metadata.sourcePath}`;
+  sourceTitle.textContent = `Exercised source · ${options.entry.source.path}`;
   const source = document.createElement('pre');
   source.className = 'scenario-source';
   const code = document.createElement('code');
@@ -361,28 +371,37 @@ export function mountScenarioSurface<TState>(
   article.append(header, runner, docs, sourceSection);
   options.container.replaceChildren(article);
 
-  const controller = options.scenario.mount({
+  const controller = await options.definition.mount({
     canvas,
     onStateChange: state => appendStateFields(
       stateList,
-      options.scenario.formatState(state),
+      options.definition.formatState(state),
     ),
   });
-  const update = () => controller.update();
-  const reset = () => controller.reset();
-  updateButton.addEventListener('click', update);
+  const actionListeners = new Map<string, () => void>();
+  for (const [actionId, button] of actionButtons) {
+    const listener = () => void controller.perform(actionId);
+    actionListeners.set(actionId, listener);
+    button.addEventListener('click', listener);
+  }
+  const reset = () => void controller.reset();
   resetButton.addEventListener('click', reset);
 
   return {
     controller,
     canvas,
     visual,
-    updateButton,
+    actionButtons,
     resetButton,
-    dispose: () => {
-      updateButton.removeEventListener('click', update);
+    dispose: async () => {
+      for (const [actionId, button] of actionButtons) {
+        const listener = actionListeners.get(actionId);
+        if (listener) {
+          button.removeEventListener('click', listener);
+        }
+      }
       resetButton.removeEventListener('click', reset);
-      controller.dispose();
+      await controller.dispose();
       article.remove();
     },
   };
