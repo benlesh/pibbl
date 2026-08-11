@@ -1,6 +1,15 @@
-import { getCRCInstance, GLOBAL_STATE } from './global-state.js';
+import {
+  cleanupCRCInstance,
+  getCRCInstance,
+  GLOBAL_STATE,
+} from './global-state.js';
 import { Teardowns } from './teardowns.js';
-import { Canvas, CompEl, CRCInstance } from './types.js';
+import {
+  Canvas,
+  CompEl,
+  CRCController,
+  CRCInstance,
+} from './types.js';
 import { createMouseEventTransform } from './util/create-mouse-event-transform.js';
 import { typedEntries } from './util/typed-entries.js';
 
@@ -8,31 +17,28 @@ export function mountCRC<P>(
   canvas: Canvas,
   element: CompEl<P>,
   config?: { signal?: AbortSignal; parent?: Canvas },
-) {
+): CRCController {
   const mainTeardowns = new Teardowns();
-
   const signal = config?.signal;
-
-  const cleanup = () => {
-    GLOBAL_STATE.crcInstances.delete(canvas);
-    mainTeardowns.execute();
+  let ownedInstance: CRCInstance | undefined;
+  const controller: CRCController = {
+    dispose(): void {
+      const instance = ownedInstance;
+      if (!instance) {
+        return;
+      }
+      ownedInstance = undefined;
+      cleanupCRCInstance(instance);
+    },
   };
-
-  if (signal) {
-    signal.addEventListener('abort', cleanup, {
-      once: true,
-    });
-    mainTeardowns.add(() => {
-      signal.removeEventListener('abort', cleanup);
-    });
-  }
-
   const parent = config?.parent;
 
   const crcInstance: CRCInstance = {
+    canvas,
+    controller,
     root: element,
     refs: new Map(),
-    animationFrameId: 0,
+    animationFrameId: undefined,
     renderTimestamp: 0,
     mainTeardowns,
     events: {
@@ -47,53 +53,85 @@ export function mountCRC<P>(
     },
     parent,
   };
+  ownedInstance = crcInstance;
+  GLOBAL_STATE.crcInstances.set(canvas, crcInstance);
 
-  if (parent) {
-    const parentCRCInstance = getCRCInstance(parent);
-
-    for (const [type, handlers] of typedEntries(crcInstance.events)) {
-      const handler = (e: MouseEvent) => {
-        GLOBAL_STATE.mouseTransform = createMouseEventTransform(
-          e.target as HTMLCanvasElement,
-        );
-        for (const handler of handlers) {
-          try {
-            handler(e);
-          } catch (err) {
-            reportError(err);
-          }
-        }
-        GLOBAL_STATE.mouseTransform = undefined;
-      };
-
-      parentCRCInstance.events[type].add(handler);
-
+  try {
+    if (signal) {
+      const abortHandler = () => controller.dispose();
+      signal.addEventListener('abort', abortHandler, { once: true });
       mainTeardowns.add(() => {
-        parentCRCInstance.events[type].delete(handler);
+        signal.removeEventListener('abort', abortHandler);
       });
     }
-  } else {
-    // Only the parent canvas wires up events.
-    for (const [type, handlers] of Object.entries(crcInstance.events)) {
-      canvas.addEventListener(
-        type,
-        (e) => {
-          GLOBAL_STATE.mouseTransform = createMouseEventTransform(
-            canvas as HTMLCanvasElement,
-          );
-          for (const handler of handlers) {
-            try {
-              handler(e);
-            } catch (err) {
-              reportError(err);
-            }
-          }
-          GLOBAL_STATE.mouseTransform = undefined;
-        },
-        { signal },
-      );
+
+    if (parent) {
+      const parentCRCInstance = getCRCInstance(parent);
+
+      for (const [type, handlers] of typedEntries(crcInstance.events)) {
+        const bridgeHandler = (event: MouseEvent) => {
+          dispatchHandlers({
+            canvas: event.target as HTMLCanvasElement,
+            event,
+            handlers,
+          });
+        };
+
+        parentCRCInstance.events[type].add(bridgeHandler);
+
+        mainTeardowns.add(() => {
+          parentCRCInstance.events[type].delete(bridgeHandler);
+        });
+      }
+    } else {
+      const rootCanvas = canvas as HTMLCanvasElement;
+      for (const [type, handlers] of typedEntries(crcInstance.events)) {
+        const nativeHandler = (event: MouseEvent) => {
+          dispatchHandlers({ canvas: rootCanvas, event, handlers });
+        };
+
+        rootCanvas.addEventListener(type, nativeHandler);
+        mainTeardowns.add(() => {
+          rootCanvas.removeEventListener(type, nativeHandler);
+        });
+      }
     }
+
+    if (signal?.aborted) {
+      controller.dispose();
+    }
+  } catch (error) {
+    controller.dispose();
+    throw error;
   }
 
-  GLOBAL_STATE.crcInstances.set(canvas, crcInstance);
+  return controller;
+}
+
+function dispatchHandlers({
+  canvas,
+  event,
+  handlers,
+}: {
+  canvas: HTMLCanvasElement;
+  event: MouseEvent;
+  handlers: Set<(event: MouseEvent) => void>;
+}): void {
+  const previousMouseTransform = GLOBAL_STATE.mouseTransform;
+  try {
+    GLOBAL_STATE.mouseTransform = createMouseEventTransform(canvas);
+    const snapshot = Array.from(handlers);
+    for (const handler of snapshot) {
+      if (!handlers.has(handler)) {
+        continue;
+      }
+      try {
+        handler(event);
+      } catch (error) {
+        reportError(error);
+      }
+    }
+  } finally {
+    GLOBAL_STATE.mouseTransform = previousMouseTransform;
+  }
 }

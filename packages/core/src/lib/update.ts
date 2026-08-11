@@ -12,18 +12,29 @@ export function update(
   canvas: Canvas,
   rootElement?: CompEl,
   updateParents = false,
-) {
-  const crcInstance = GLOBAL_STATE.crcInstances.get(canvas)!;
+): void {
+  const crcInstance = GLOBAL_STATE.crcInstances.get(canvas);
 
   if (!crcInstance) {
     throw new Error('Canvas does not have CRC mounted.');
   }
 
-  if (crcInstance.animationFrameId) {
+  if (crcInstance.animationFrameId !== undefined) {
     cancelAnimationFrame(crcInstance.animationFrameId);
   }
 
-  crcInstance.animationFrameId = requestAnimationFrame(ts =>
-    executeRender(canvas, ts, rootElement, updateParents),
-  );
+  let frameId = 0;
+  frameId = requestAnimationFrame((timestamp) => {
+    if (
+      GLOBAL_STATE.crcInstances.get(canvas) !== crcInstance ||
+      crcInstance.mainTeardowns.closed ||
+      crcInstance.animationFrameId !== frameId
+    ) {
+      return;
+    }
+
+    crcInstance.animationFrameId = undefined;
+    executeRender(canvas, timestamp, rootElement, updateParents);
+  });
+  crcInstance.animationFrameId = frameId;
 }

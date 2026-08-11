@@ -13,7 +13,7 @@ export function executeRender(
   renderTimestamp: number,
   updatedRoot?: CompEl,
   updateParents = false,
-) {
+): void {
   if (!canvas) {
     throw new Error('No canvas element provided');
   }
@@ -24,9 +24,12 @@ export function executeRender(
     throw new Error('CRC is not mounted on this element');
   }
 
-  crcInstance.animationFrameId = 0;
-
   if (crcInstance.mainTeardowns.closed) return;
+
+  if (crcInstance.animationFrameId !== undefined) {
+    cancelAnimationFrame(crcInstance.animationFrameId);
+    crcInstance.animationFrameId = undefined;
+  }
 
   const prevCurrentCRCInstance = GLOBAL_STATE.currentCRCInstance;
   const prevCanvas = GLOBAL_STATE.canvas;
@@ -61,12 +64,10 @@ export function executeRender(
       GLOBAL_STATE.currentCRCInstance.refs.delete(id);
     }
   } finally {
-    const { parent } = GLOBAL_STATE.currentCRCInstance!;
+    const { parent } = crcInstance;
     clearTempState();
-    if (updateParents) {
-      if (parent) {
-        executeRender(parent, renderTimestamp);
-      }
+    if (updateParents && parent && GLOBAL_STATE.crcInstances.has(parent)) {
+      executeRender(parent, renderTimestamp);
     }
     GLOBAL_STATE.currentCRCInstance = prevCurrentCRCInstance;
     GLOBAL_STATE.canvas = prevCanvas;

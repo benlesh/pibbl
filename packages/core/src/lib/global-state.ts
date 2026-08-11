@@ -84,8 +84,8 @@ export function getAnonElemName(fn: any) {
  * DO NOT USE IN PROD
  */
 export function clearSharedState() {
-  for (const crcInstance of GLOBAL_STATE.crcInstances.values()) {
-    cleanupCRCInstance(crcInstance);
+  for (const crcInstance of Array.from(GLOBAL_STATE.crcInstances.values())) {
+    crcInstance.controller.dispose();
   }
   GLOBAL_STATE.crcInstances.clear();
   GLOBAL_STATE.clippingStack = [];
@@ -93,8 +93,23 @@ export function clearSharedState() {
   clearTempState();
 }
 
-export function cleanupCRCInstance(crcInstance: CRCInstance) {
+export function cleanupCRCInstance(crcInstance: CRCInstance): void {
+  const { canvas } = crcInstance;
+  if (GLOBAL_STATE.crcInstances.get(canvas) !== crcInstance) {
+    return;
+  }
+
+  if (crcInstance.animationFrameId !== undefined) {
+    cancelAnimationFrame(crcInstance.animationFrameId);
+    crcInstance.animationFrameId = undefined;
+  }
+
+  GLOBAL_STATE.crcInstances.delete(canvas);
   crcInstance.mainTeardowns.execute();
+  for (const handlers of Object.values(crcInstance.events)) {
+    handlers.clear();
+  }
+  crcInstance.refs.clear();
 }
 
 export function clearTempState() {

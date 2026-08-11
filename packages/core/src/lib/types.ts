@@ -47,6 +47,11 @@ export interface CRCEventRegistry {
   contextmenu: Set<(e: MouseEvent) => void>;
 }
 
+export interface CRCController {
+  /** Releases every resource owned by this CRC mount. Safe to call repeatedly. */
+  dispose(): void;
+}
+
 export interface CRCBasicMouseEvents {
   onClick?: (e: CRCMouseEvent) => void;
   onDblClick?: (e: CRCMouseEvent) => void;
@@ -94,9 +99,11 @@ export interface PathProps
 }
 
 export interface CRCInstance {
+  canvas: Canvas;
+  controller: CRCController;
   root: CompEl<any>;
   refs: Map<string, CompRefs<any>>;
-  animationFrameId: number;
+  animationFrameId: number | undefined;
   renderTimestamp: number;
   mainTeardowns: Teardowns;
   events: CRCEventRegistry;
