@@ -48,7 +48,7 @@
   "scripts": {
     "build": "rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts src/types.ts --bundle --format=esm --platform=neutral --target=esnext --outdir=dist --out-extension:.js=.mjs --external:@crc/types",
     "dev": "pnpm run build",
-    "prepublishOnly": "nr build",
+    "prepublishOnly": "pnpm run build",
     "test": "vitest"
   },
   "dependencies": {
