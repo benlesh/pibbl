@@ -58,6 +58,7 @@ All commands below ran on macOS with Node 24.19.0 and pnpm 11.21.0. They current
 | Evidence                      | Result                                                                              |
 | ----------------------------- | ----------------------------------------------------------------------------------- |
 | Fresh frozen-lockfile install | Pass; pnpm supply-chain policy verified 865 lock entries.                           |
+| Peer dependency check         | Pass; no peer dependency issues found.                                              |
 | ESLint without cache          | Pass.                                                                               |
 | `tsc --noEmit`                | Pass.                                                                               |
 | Package build                 | Pass for `@crc/types` and `@crc/core`.                                              |
@@ -67,5 +68,6 @@ All commands below ran on macOS with Node 24.19.0 and pnpm 11.21.0. They current
 | Committed browser suite       | 10 files; 71 passed and 4 skipped.                                                  |
 | Manual gallery path           | Pass: mount, update, coordinate click, and reset; no warning/error console entries. |
 | Visual parity                 | Exact comparison remained unchanged outside the established glyph-only masks.       |
+| Formatter ownership           | One Prettier version, 3.9.6, owned by `eslint-plugin-format`.                       |
 
 The first attempt to run two Playwright browser suites concurrently failed because both Chromium processes competed for the macOS sandbox's Mach-port registration. Sequential execution through the approved browser boundary passed; this was runner contention, not a CRC or dependency regression.
