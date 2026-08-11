@@ -19,11 +19,13 @@ export type InteractionLabFixture =
   | 'nested'
   | 'no-hit'
   | 'observer'
+  | 'observer-remove'
+  | 'observer-replace'
+  | 'observer-throwing'
   | 'overlap'
-  | 'remove-during-transition'
+  | 'remove-target-after-transition'
   | 'regions'
   | 'stroke'
-  | 'throwing'
   | 'transparent';
 
 export type InteractionLabAction =
@@ -42,6 +44,9 @@ export interface InteractionLabState {
   lastAction: InteractionLabAction;
   lastHandlerGeneration: number | null;
   leftHandlerEnabled: boolean;
+  observerGeneration: number;
+  observerMutationComplete: boolean;
+  rightVisible: boolean;
   topPaintedLast: boolean;
   topVisible: boolean;
   trace: readonly import('./event-trace').EventTraceEntry[];
@@ -167,27 +172,56 @@ function overlapRegions(state: Readonly<InteractionLabState>, record: Interactio
   return state.topPaintedLast ? [lower, top] : [top, lower];
 }
 
+interface NestedAncestorProps {
+  record: InteractionLabRecord;
+}
+
+const NestedChild = defineComp<NestedAncestorProps>(({ record }) => region(
+  'child',
+  record,
+  { x: 170, y: 88, width: 130, height: 82 },
+  { cursor: 'pointer', fillStyle: '#2563eb' },
+));
+
+const NestedInteractiveAncestor = defineComp<NestedAncestorProps>(({ record }) => {
+  const parentPath = rectanglePath(70, 52, 300, 148);
+  crcEvent(
+    'mousemove',
+    event => recordEvent(record, 'mousemove', 'ancestor', event),
+    parentPath,
+    true,
+  );
+
+  return [
+    rect({
+      key: 'ancestor-guide',
+      x: 70,
+      y: 52,
+      width: 300,
+      height: 148,
+      fillStyle: '#93c5fd',
+      strokeStyle: '#334155',
+      lineWidth: 2,
+    }),
+    NestedChild({ record }),
+  ];
+});
+
 function caseVisual(state: Readonly<InteractionLabState>, record: InteractionLabRecord) {
   const geometry = rectanglePath(90, 66, 220, 124);
   switch (state.fixture) {
     case 'regions':
-    case 'remove-during-transition':
       return basicRegions(state, record);
+    case 'remove-target-after-transition': {
+      const regions = basicRegions(state, record);
+      return state.rightVisible ? regions : regions.slice(0, 1);
+    }
     case 'overlap':
       return overlapRegions(state, record);
     case 'nested':
       return [g({
         key: 'untransformed-nested-group',
-        children: [
-          region('parent', record, { x: 70, y: 52, width: 300, height: 148 }, {
-            cursor: 'crosshair',
-            fillStyle: '#93c5fd',
-          }),
-          region('child', record, { x: 170, y: 88, width: 130, height: 82 }, {
-            cursor: 'pointer',
-            fillStyle: '#2563eb',
-          }),
-        ],
+        children: [NestedInteractiveAncestor({ record })],
       })];
     case 'fill':
       return [crcPath({
@@ -282,42 +316,47 @@ function caseVisual(state: Readonly<InteractionLabState>, record: InteractionLab
         }),
       ];
     case 'observer':
+    case 'observer-remove':
+    case 'observer-replace':
+    case 'observer-throwing':
       return [region('a', record, { x: 90, y: 66, width: 220, height: 124 }, {
         cursor: 'pointer',
         fillStyle: '#2563eb',
       })];
-    case 'throwing': {
-      const throwingHandlers = traceHandlers('left', record);
-      throwingHandlers.onMouseOut = (event) => {
-        recordEvent(record, 'mouseout', 'left', event);
-        throw new Error('Deliberate ordering-lab mouseout failure');
-      };
-      return [
-        rect({
-          key: 'throwing-left',
-          x: 28,
-          y: 54,
-          width: 184,
-          height: 108,
-          fillStyle: '#dc2626',
-          cursor: 'crosshair',
-          ...throwingHandlers,
-        }),
-        region('right', record, { x: 268, y: 54, width: 184, height: 108 }, {
-          cursor: 'pointer',
-          fillStyle: '#7c3aed',
-        }),
-      ];
-    }
   }
 }
 
 const InteractionLabScene = defineComp<InteractionLabSceneProps>(({ state, record }) => {
   crcEvent(
     'mousemove',
-    state.fixture === 'observer' ?
-      event => recordEvent(record, 'mousemove', 'canvas-observer', event) :
-      undefined,
+    state.fixture === 'observer' ? event => {
+      recordEvent(record, 'mousemove', 'canvas-observer', event);
+    } :
+    state.fixture === 'observer-remove' || state.fixture === 'observer-replace' ? event => {
+      recordEvent(record, 'mousemove', 'observer-mutator', event);
+    } :
+    state.fixture === 'observer-throwing' ? event => {
+      recordEvent(record, 'mousemove', 'observer-throws', event);
+      throw new Error('Deliberate ordering-lab observer failure');
+    } : undefined,
+  );
+  crcEvent(
+    'mousemove',
+    state.fixture === 'observer-replace' ? event => {
+      recordEvent(
+        record,
+        'mousemove',
+        `observer-generation-${state.observerGeneration}`,
+        event,
+        state.observerGeneration,
+      );
+    } :
+    state.fixture === 'observer-remove' && !state.observerMutationComplete ? event => {
+      recordEvent(record, 'mousemove', 'observer-removable', event);
+    } :
+    state.fixture === 'observer-throwing' ? event => {
+      recordEvent(record, 'mousemove', 'observer-safe', event);
+    } : undefined,
   );
 
   return [

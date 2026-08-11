@@ -9,7 +9,6 @@ import type {
   ScenarioDefinition,
   ScenarioMountContext,
 } from './types';
-import type { CRCController } from '@crc/core';
 import { crc } from '@crc/core';
 import { EventTraceRecorder } from './event-trace';
 import type { EventTraceInput, TraceEventType } from './event-trace';
@@ -35,8 +34,10 @@ const FIXTURES: readonly InteractionLabFixture[] = [
   'interaction-width',
   'no-hit',
   'observer',
-  'throwing',
-  'remove-during-transition',
+  'observer-remove',
+  'observer-replace',
+  'observer-throwing',
+  'remove-target-after-transition',
 ];
 
 export const INTERACTION_LAB_ACTION_IDS: readonly Exclude<
@@ -58,6 +59,9 @@ function initialState(lastAction: InteractionLabAction = 'mount'): InteractionLa
     lastAction,
     lastHandlerGeneration: null,
     leftHandlerEnabled: true,
+    observerGeneration: 1,
+    observerMutationComplete: false,
+    rightVisible: true,
     topPaintedLast: true,
     topVisible: true,
     trace: [],
@@ -147,7 +151,7 @@ async function mountInteractionLab(
   let disposed = false;
   let state = initialState();
   let pendingRender = Promise.resolve();
-  let runtimeController: CRCController | undefined;
+  let applyDispatchMutation: ((input: EventTraceInput) => void) | undefined;
   const recorder = new EventTraceRecorder();
 
   const publishTrace = (handlerGeneration: number | null = null) => {
@@ -161,14 +165,7 @@ async function mountInteractionLab(
   const record: InteractionLabRecord = (input, handlerGeneration) => {
     recorder.record(input);
     publishTrace(handlerGeneration ?? null);
-    if (
-      state.fixture === 'remove-during-transition' &&
-      input.type === 'mouseout' &&
-      input.target === 'left'
-    ) {
-      runtimeController?.dispose();
-      runtimeController = undefined;
-    }
+    applyDispatchMutation?.(input);
   };
   const disposeNativeReference = context.referenceHost ?
     mountNativeReference(context.referenceHost, input => record(input)) :
@@ -182,12 +179,39 @@ async function mountInteractionLab(
 
   const render = () => {
     assertActive();
-    runtimeController = crc(context.canvas, createInteractionLabScene({ state, record }), {
+    crc(context.canvas, createInteractionLabScene({ state, record }), {
       signal: abortController.signal,
     });
     context.onStateChange?.({ ...state });
     pendingRender = nextFrame();
     return pendingRender;
+  };
+
+  applyDispatchMutation = (input) => {
+    if (
+      state.fixture === 'remove-target-after-transition' &&
+      state.rightVisible &&
+      input.type === 'mouseout' &&
+      input.target === 'left'
+    ) {
+      state = { ...state, rightVisible: false };
+      void render();
+      return;
+    }
+
+    if (
+      (state.fixture === 'observer-remove' || state.fixture === 'observer-replace') &&
+      !state.observerMutationComplete &&
+      input.type === 'mousemove' &&
+      input.target === 'observer-mutator'
+    ) {
+      state = {
+        ...state,
+        observerGeneration: state.fixture === 'observer-replace' ? 2 : state.observerGeneration,
+        observerMutationComplete: true,
+      };
+      void render();
+    }
   };
 
   const transition = async (
@@ -219,6 +243,9 @@ async function mountInteractionLab(
         await transition(actionId as InteractionLabAction, {
           fixture,
           leftHandlerEnabled: true,
+          observerGeneration: 1,
+          observerMutationComplete: false,
+          rightVisible: true,
           topPaintedLast: true,
           topVisible: true,
         }, true);
@@ -273,7 +300,6 @@ async function mountInteractionLab(
       await pendingRender;
       disposed = true;
       disposeNativeReference();
-      runtimeController = undefined;
       abortController.abort();
     },
   };
