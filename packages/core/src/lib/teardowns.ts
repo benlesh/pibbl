@@ -6,11 +6,11 @@ export class Teardowns {
   private readonly _teardowns = new Set<() => void>();
   private _closed = false;
 
-  get closed() {
+  get closed(): boolean {
     return this._closed;
   }
 
-  follow(parentTeardown: Teardowns) {
+  follow(parentTeardown: Teardowns): void {
     const handler = () => {
       this.execute();
     };
@@ -18,25 +18,40 @@ export class Teardowns {
     this.add(() => parentTeardown.remove(handler));
   }
 
-  add(teardown: () => void) {
+  add(teardown: () => void): void {
     if (this._closed) {
-      teardown();
+      executeTeardown(teardown);
     } else {
       this._teardowns.add(teardown);
     }
   }
 
-  remove(teardown: () => void) {
+  remove(teardown: () => void): void {
     this._teardowns.delete(teardown);
   }
 
-  execute() {
-    if (!this._closed) {
-      this._closed = true;
-      for (const teardown of this._teardowns) {
-        teardown();
-      }
-      this._teardowns.clear();
+  execute(): void {
+    if (this._closed) {
+      return;
+    }
+
+    this._closed = true;
+    const teardowns = Array.from(this._teardowns);
+    this._teardowns.clear();
+    for (const teardown of teardowns) {
+      executeTeardown(teardown);
+    }
+  }
+}
+
+function executeTeardown(teardown: () => void): void {
+  try {
+    teardown();
+  } catch (error) {
+    try {
+      reportError(error);
+    } catch {
+      // Error reporting must not prevent the remaining resources from releasing.
     }
   }
 }
