@@ -1,5 +1,5 @@
 import { GLOBAL_STATE } from '../global-state.js';
-import { RenderingContext2D } from '../types.js';
+import { CRCClippingStackEntry, RenderingContext2D } from '../types.js';
 import { get2dContext } from './get-2d-context.js';
 
 export function isHit({
@@ -19,7 +19,7 @@ export function isHit({
   y: number;
   fill: boolean;
   lineInteractionWidth: number;
-  currentClippingStack: typeof GLOBAL_STATE.clippingStack;
+  currentClippingStack: readonly CRCClippingStackEntry[];
 }) {
   const ctx = get2dContext(canvas);
   ctx.save();
@@ -50,7 +50,7 @@ export function isHit({
 }
 
 function isInAtLeastOneClippingPath(
-  currentClippingStack: typeof GLOBAL_STATE.clippingStack,
+  currentClippingStack: readonly CRCClippingStackEntry[],
   x: number,
   y: number,
   ctx: RenderingContext2D,

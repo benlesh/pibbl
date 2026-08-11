@@ -3,6 +3,7 @@ import {
   getCRCInstance,
   GLOBAL_STATE,
 } from './global-state.js';
+import { dispatchCRCEvent } from './interaction-dispatch.js';
 import { Teardowns } from './teardowns.js';
 import {
   Canvas,
@@ -10,7 +11,6 @@ import {
   CRCController,
   CRCInstance,
 } from './types.js';
-import { createMouseEventTransform } from './util/create-mouse-event-transform.js';
 import { typedEntries } from './util/typed-entries.js';
 
 export function mountCRC<P>(
@@ -51,6 +51,17 @@ export function mountCRC<P>(
       mouseup: new Set(),
       contextmenu: new Set(),
     },
+    regions: new Set(),
+    interaction: {
+      hoveredRegion: undefined,
+      primaryDownRegion: undefined,
+      primaryUpRegion: undefined,
+      clickStreakRegion: undefined,
+      clickStreak: 0,
+      cursorRegion: undefined,
+      cursorCanvas: undefined,
+      cursorStyle: undefined,
+    },
     parent,
   };
   ownedInstance = crcInstance;
@@ -68,13 +79,14 @@ export function mountCRC<P>(
     if (parent) {
       const parentCRCInstance = getCRCInstance(parent);
 
-      for (const [type, handlers] of typedEntries(crcInstance.events)) {
+      for (const [type] of typedEntries(crcInstance.events)) {
         const bridgeHandler = (event: MouseEvent) => {
-          dispatchHandlers({
-            canvas: event.target as HTMLCanvasElement,
+          dispatchCRCEvent(
+            crcInstance,
+            type,
             event,
-            handlers,
-          });
+            event.target as HTMLCanvasElement,
+          );
         };
 
         parentCRCInstance.events[type].add(bridgeHandler);
@@ -85,9 +97,9 @@ export function mountCRC<P>(
       }
     } else {
       const rootCanvas = canvas as HTMLCanvasElement;
-      for (const [type, handlers] of typedEntries(crcInstance.events)) {
+      for (const [type] of typedEntries(crcInstance.events)) {
         const nativeHandler = (event: MouseEvent) => {
-          dispatchHandlers({ canvas: rootCanvas, event, handlers });
+          dispatchCRCEvent(crcInstance, type, event, rootCanvas);
         };
 
         rootCanvas.addEventListener(type, nativeHandler);
@@ -106,32 +118,4 @@ export function mountCRC<P>(
   }
 
   return controller;
-}
-
-function dispatchHandlers({
-  canvas,
-  event,
-  handlers,
-}: {
-  canvas: HTMLCanvasElement;
-  event: MouseEvent;
-  handlers: Set<(event: MouseEvent) => void>;
-}): void {
-  const previousMouseTransform = GLOBAL_STATE.mouseTransform;
-  try {
-    GLOBAL_STATE.mouseTransform = createMouseEventTransform(canvas);
-    const snapshot = Array.from(handlers);
-    for (const handler of snapshot) {
-      if (!handlers.has(handler)) {
-        continue;
-      }
-      try {
-        handler(event);
-      } catch (error) {
-        reportError(error);
-      }
-    }
-  } finally {
-    GLOBAL_STATE.mouseTransform = previousMouseTransform;
-  }
 }

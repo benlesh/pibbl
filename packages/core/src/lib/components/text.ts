@@ -30,8 +30,9 @@ export interface TextProps
   textAlign?: CanvasTextAlign;
 }
 
-function checkPropsForEvents(props: CRCBasicMouseEvents) {
+function checkPropsForEvents(props: CRCBasicMouseEvents & CursorStyleProps) {
   return !!(
+    props.cursor ||
     props.onClick ||
     props.onContextMenu ||
     props.onDblClick ||

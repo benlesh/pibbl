@@ -1,5 +1,4 @@
 import { defineComp } from '../define-comp.js';
-import { crcCursor } from '../hooks/crc-cursor.js';
 import { crcRectPath } from '../hooks/crc-rect-path.js';
 import { crcState } from '../hooks/crc-state.js';
 import { crcWhenChanged } from '../hooks/crc-when-changed.js';
@@ -62,13 +61,6 @@ function Img(props: ImgProps, ctx: RenderingContext2D) {
   const imagePath = crcRectPath(x, y, width, height, {
     alignToPixelGrid,
     lineWidth,
-  });
-
-  crcCursor({
-    path: imagePath,
-    style: props.cursor,
-    fill: true,
-    lineInteractionWidth: props.lineWidth,
   });
 
   if (image) {

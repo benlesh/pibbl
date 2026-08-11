@@ -47,6 +47,36 @@ export interface CRCEventRegistry {
   contextmenu: Set<(e: MouseEvent) => void>;
 }
 
+export type CRCEventType = keyof CRCEventRegistry;
+export type CRCRegionHandlers = Partial<Record<CRCEventType, CRCMouseEventListener>>;
+
+export interface CRCClippingStackEntry {
+  path: Path2D;
+  fillRule: CanvasFillRule;
+  transform: DOMMatrix;
+}
+
+export interface CRCInteractionRegion {
+  handlers: CRCRegionHandlers;
+  path: Path2D | undefined;
+  fill: boolean;
+  lineInteractionWidth: number;
+  transform: DOMMatrix;
+  clippingStack: readonly CRCClippingStackEntry[];
+  cursor: string | undefined;
+}
+
+export interface CRCInteractionState {
+  hoveredRegion: CRCInteractionRegion | undefined;
+  primaryDownRegion: CRCInteractionRegion | undefined;
+  primaryUpRegion: CRCInteractionRegion | undefined;
+  clickStreakRegion: CRCInteractionRegion | undefined;
+  clickStreak: number;
+  cursorRegion: CRCInteractionRegion | undefined;
+  cursorCanvas: HTMLCanvasElement | undefined;
+  cursorStyle: string | undefined;
+}
+
 export interface CRCController {
   /** Releases every resource owned by this CRC mount. Safe to call repeatedly. */
   dispose(): void;
@@ -107,6 +137,8 @@ export interface CRCInstance {
   renderTimestamp: number;
   mainTeardowns: Teardowns;
   events: CRCEventRegistry;
+  regions: Set<CRCInteractionRegion>;
+  interaction: CRCInteractionState;
   parent: Canvas | undefined;
 }
 

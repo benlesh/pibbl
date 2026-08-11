@@ -1,10 +1,4 @@
-import { Canvas, CompRefs, CRCInstance, RenderingContext2D } from './types.js';
-
-export interface ClippingStackEntry {
-  path: Path2D;
-  fillRule: CanvasFillRule;
-  transform: DOMMatrix;
-}
+import { Canvas, CompRefs, CRCClippingStackEntry, CRCInstance, RenderingContext2D } from './types.js';
 
 export interface GlobalState {
   crcInstances: Map<Canvas, CRCInstance>;
@@ -17,7 +11,7 @@ export interface GlobalState {
   unseenIds: Set<string> | undefined;
   seenIds: Set<string> | undefined;
   mouseTransform: DOMMatrix | undefined;
-  clippingStack: ClippingStackEntry[];
+  clippingStack: CRCClippingStackEntry[];
   anonElementNames: WeakMap<any, string>;
   anon: number;
 }
@@ -108,6 +102,25 @@ export function cleanupCRCInstance(crcInstance: CRCInstance): void {
   crcInstance.mainTeardowns.execute();
   for (const handlers of Object.values(crcInstance.events)) {
     handlers.clear();
+  }
+  crcInstance.regions?.clear();
+  const interaction = crcInstance.interaction;
+  if (interaction) {
+    if (
+      interaction.cursorCanvas &&
+      interaction.cursorStyle &&
+      interaction.cursorCanvas.style.cursor === interaction.cursorStyle
+    ) {
+      interaction.cursorCanvas.style.removeProperty('cursor');
+    }
+    interaction.hoveredRegion = undefined;
+    interaction.primaryDownRegion = undefined;
+    interaction.primaryUpRegion = undefined;
+    interaction.clickStreakRegion = undefined;
+    interaction.clickStreak = 0;
+    interaction.cursorRegion = undefined;
+    interaction.cursorCanvas = undefined;
+    interaction.cursorStyle = undefined;
   }
   crcInstance.refs.clear();
 }
