@@ -45,7 +45,6 @@
     "jsonc-parser": "catalog:",
     "picocolors": "catalog:",
     "playwright": "^1.49.0",
-    "prettier": "catalog:",
     "rimraf": "catalog:",
     "rollup": "catalog:",
     "rollup-plugin-copy": "catalog:",

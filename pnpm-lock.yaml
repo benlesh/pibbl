@@ -54,9 +54,6 @@ catalogs:
     picocolors:
       specifier: ^1.1.1
       version: 1.1.1
-    prettier:
-      specifier: ^3.3.3
-      version: 3.3.3
     rimraf:
       specifier: ^6.0.1
       version: 6.0.1
@@ -161,9 +158,6 @@ importers:
       playwright:
         specifier: ^1.49.0
         version: 1.49.0
-      prettier:
-        specifier: 'catalog:'
-        version: 3.3.3
       rimraf:
         specifier: 'catalog:'
         version: 6.0.1
