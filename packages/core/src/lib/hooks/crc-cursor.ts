@@ -1,4 +1,9 @@
 import { crcEvent } from './crc-event.js';
+import { GLOBAL_STATE } from '../global-state.js';
+
+interface CursorSlot {
+  canvas: HTMLCanvasElement | undefined;
+}
 
 /**
  * Hook: For wiring up changes to the CSS cursor style while over a corresponding path.
@@ -16,7 +21,28 @@ export function crcCursor({
   style?: string;
   fill?: boolean;
   lineInteractionWidth?: number;
-}) {
+}): void {
+  const hookIndex = GLOBAL_STATE.componentHookIndex++;
+  const componentRefs = GLOBAL_STATE.componentRefs!;
+  let slot = componentRefs.refs[hookIndex] as CursorSlot | undefined;
+
+  if (GLOBAL_STATE.componentIsMounting) {
+    slot = { canvas: undefined };
+    componentRefs.refs[hookIndex] = slot;
+    componentRefs.teardowns.add(() => {
+      slot?.canvas?.style.removeProperty('cursor');
+      if (slot) {
+        slot.canvas = undefined;
+      }
+      componentRefs.refs[hookIndex] = null;
+    });
+  } else if (!slot) {
+    throw new Error(`CRC cursor hook slot ${hookIndex} is unavailable`);
+  }
+
+  slot.canvas?.style.removeProperty('cursor');
+  slot.canvas = undefined;
+
   crcEvent(
     'mousemove',
     style ?
@@ -25,6 +51,7 @@ export function crcCursor({
           if (!canvas.style.cursor) {
             // If something has already set it, don't confuse it.
             canvas.style.cursor = style;
+            slot.canvas = canvas;
           }
         } :
       undefined,
@@ -39,6 +66,9 @@ export function crcCursor({
         (e) => {
           const canvas = e.originalEvent.target as HTMLCanvasElement;
           canvas.style.removeProperty('cursor');
+          if (slot.canvas === canvas) {
+            slot.canvas = undefined;
+          }
         } :
       undefined,
     path,
