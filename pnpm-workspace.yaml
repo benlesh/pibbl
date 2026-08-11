@@ -8,7 +8,7 @@ allowBuilds:
   esbuild: true
   msw: false
 catalog:
-  '@antfu/eslint-config': ^3.9.1
+  '@antfu/eslint-config': ^9.3.0
   '@antfu/ni': ^0.23.0
   '@iconify-json/carbon': ^1.2.4
   '@iconify-json/codicon': ^1.2.3
@@ -20,15 +20,15 @@ catalog:
   '@rollup/plugin-node-resolve': ^15.3.0
   '@rollup/plugin-replace': ^6.0.1
   '@rollup/plugin-terser': ^0.4.4
-  '@types/node': ^22.9.0
+  '@types/node': ^26.2.0
+  '@unocss/reset': ^0.64.1
   '@vitest/browser': ^2.1.8
   '@vitest/ui': ^2.1.8
-  '@unocss/reset': ^0.64.1
   '@vueuse/core': ^11.2.0
   bumpp: ^9.8.1
   diff-match-patch-es: ^0.1.1
-  eslint: ^9.14.0
-  eslint-plugin-format: ^0.1.2
+  eslint: ^10.8.1
+  eslint-plugin-format: ^2.0.1
   esno: ^4.8.0
   floating-vue: ^5.2.2
   fs-extra: ^11.2.0
@@ -46,9 +46,9 @@ catalog:
   rollup-plugin-esbuild: ^6.1.1
   rollup-plugin-typescript2: ^0.36.0
   simple-git-hooks: ^2.11.1
+  taze: ^0.18.0
   twoslash: ^0.2.12
   twoslash-vue: ^0.2.12
-  taze: ^0.18.0
   typescript: ^5.6.3
   unbuild: ^2.0.0
   unocss: ^0.64.1
