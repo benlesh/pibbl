@@ -1,6 +1,6 @@
 # CRC mouse interaction contract
 
-Status: approved for the trustworthy-features plan on 2026-08-11.
+Status: approved on 2026-08-11; the untransformed root-Canvas rules are implemented and verified by TFC-04. CSS scaling, transforms, clips, and global layer paint order remain the TFC-05 implementation boundary.
 
 This document defines the behavior TFC-03 through TFC-05 must implement. The executable source of truth for sequence examples is `MOUSE_CONTRACT_CASES` in `packages/scenarios/src/mouse-contract.ts`; the manual explorer and headless contract suite consume that same table.
 
@@ -41,7 +41,15 @@ Purely visual paths with no handler or cursor do not become synthetic targets. C
 
 The public `crcEvent` hook with no path is explicitly a Canvas-wide observer, not another geometric region. It runs once for its matching native event after any target-bound callback plan and does not affect logical target or cursor selection. Multiple no-path observers retain registration order. This preserves the existing whole-Canvas use case without turning overlap into implicit propagation.
 
+Likewise, `crcCursor` with no path is a Canvas-wide fallback rather than a geometric target. The last live default wins when no targeted region supplies a cursor. Entering a targeted cursor region temporarily overrides it; leaving or removing that region restores the current fallback. CRC clears only the exact inline style it owns, so an external style change is not overwritten. Pointer-presence state is tracked independently from CSS ownership so fallback replacement during a settled rerender reconciles immediately even when the registry is briefly empty.
+
 DOM ancestors learn about child input through a separate propagation model. CRC has no `target`, `currentTarget`, phase, or propagation-control API, so invoking every geometric hit would not be a faithful approximation. Capture, bubbling, `stopPropagation`, `preventDefault`, and pointer capture are explicit non-goals.
+
+## TFC-04 implementation boundary
+
+One stable interaction-region slot owns all eight mouse handlers and its optional cursor for a rendered path. Rerender mutates that slot in place, then refreshes its reverse-paint-order position without changing logical identity. Removing the component or its last interactive property releases the region and any hover, activation, or cursor state it owns.
+
+Pathless observers remain ordered per-type Sets outside the target registry. A public `crc()` rerender requested by a handler settles on the next animation frame, so the current dispatch plan completes before the new tree is visible. Narrow dispatcher tests separately prove the synchronous rule for direct live-registry mutation: removed callbacks/targets are skipped, newly added callbacks wait for the next native event, and a reported exception does not stop the remaining plan.
 
 ## Movement and boundary order
 
