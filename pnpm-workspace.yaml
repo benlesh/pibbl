@@ -16,12 +16,6 @@ catalog:
   "@iconify-json/codicon": ^1.2.3
   "@iconify-json/ph": ^1.2.1
   "@iconify-json/svg-spinners": ^1.2.1
-  "@rollup/plugin-alias": ^5.1.1
-  "@rollup/plugin-commonjs": ^28.0.1
-  "@rollup/plugin-json": ^6.1.0
-  "@rollup/plugin-node-resolve": ^15.3.0
-  "@rollup/plugin-replace": ^6.0.1
-  "@rollup/plugin-terser": ^0.4.4
   "@types/node": ^26.2.0
   "@unocss/reset": ^0.64.1
   "@vitest/browser": ^2.1.8
@@ -33,7 +27,6 @@ catalog:
   esbuild: ^0.28.2
   esno: ^4.8.0
   floating-vue: ^5.2.2
-  fs-extra: ^11.2.0
   globals: ^17.9.0
   fuse.js: ^7.0.0
   jiti: ^2.4.0
@@ -44,11 +37,6 @@ catalog:
   playwright: ^1.49.0
   prettier: ^3.9.6
   rimraf: ^6.0.1
-  rollup: ^4.26.0
-  rollup-plugin-copy: ^3.5.0
-  rollup-plugin-dts: ^6.1.1
-  rollup-plugin-esbuild: ^6.1.1
-  rollup-plugin-typescript2: ^0.36.0
   simple-git-hooks: ^2.11.1
   taze: ^0.18.0
   twoslash: ^0.2.12
