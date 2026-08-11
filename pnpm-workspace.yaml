@@ -8,7 +8,9 @@ allowBuilds:
   esbuild: true
   msw: false
 catalog:
-  '@antfu/eslint-config': ^9.3.0
+  '@babel/core': ^8.0.1
+  '@babel/eslint-parser': ^8.0.1
+  '@eslint/js': ^10.0.1
   '@antfu/ni': ^0.23.0
   '@iconify-json/carbon': ^1.2.4
   '@iconify-json/codicon': ^1.2.3
@@ -28,10 +30,10 @@ catalog:
   bumpp: ^9.8.1
   diff-match-patch-es: ^0.1.1
   eslint: ^10.8.1
-  eslint-plugin-format: ^2.0.1
   esno: ^4.8.0
   floating-vue: ^5.2.2
   fs-extra: ^11.2.0
+  globals: ^17.9.0
   fuse.js: ^7.0.0
   jiti: ^2.4.0
   jsonc-parser: ^3.3.1
@@ -39,6 +41,7 @@ catalog:
   picocolors: ^1.1.1
   pinia: ^2.2.6
   playwright: ^1.49.0
+  prettier: ^3.9.6
   rimraf: ^6.0.1
   rollup: ^4.26.0
   rollup-plugin-copy: ^3.5.0
