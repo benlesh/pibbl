@@ -21,8 +21,9 @@ export function Layer(props: LayerProps, ctx: RenderingContext2D) {
   const componentRefs = GLOBAL_STATE.componentRefs!;
   if (GLOBAL_STATE.componentIsMounting) {
     const offscreenCanvas = new OffscreenCanvas(width, height);
-    mountCRC(offscreenCanvas, props.render, { parent: canvas });
+    const controller = mountCRC(offscreenCanvas, props.render, { parent: canvas });
     componentRefs.refs[0] = offscreenCanvas;
+    componentRefs.teardowns.add(controller.dispose);
   }
 
   const offscreenCanvas = componentRefs.refs[0];
