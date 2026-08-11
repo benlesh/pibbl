@@ -51,6 +51,10 @@ export function getCurrentCRCInstance() {
   return GLOBAL_STATE.currentCRCInstance;
 }
 
+export function getInteractionRoot(crcInstance: CRCInstance): CRCInstance {
+  return crcInstance.interactionRoot ?? crcInstance;
+}
+
 export function getCRCInstance(canvas: Canvas) {
   const crcInstance = GLOBAL_STATE.crcInstances.get(canvas);
   if (!crcInstance) {
@@ -102,6 +106,7 @@ export function cleanupCRCInstance(crcInstance: CRCInstance): void {
     handlers.clear();
   }
   crcInstance.regions?.clear();
+  crcInstance.paintEntries?.clear();
   crcInstance.cursorDefaults?.clear();
   const interaction = crcInstance.interaction;
   if (interaction) {

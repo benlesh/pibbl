@@ -1,9 +1,11 @@
 import type {
+  CRCClippingStackEntry,
   CRCEventType,
   CRCCursorDefault,
   CRCInstance,
   CRCInteractionRegion,
 } from './types.js';
+import { getInteractionRoot } from './global-state.js';
 import { getMouseCoordinates } from './util/get-mouse-coordinates.js';
 import { isHit } from './util/is-hit.js';
 
@@ -25,7 +27,9 @@ export function removeInteractionRegion(
     return;
   }
   instance.regions.delete(region);
-  const interaction = instance.interaction;
+  instance.paintEntries.delete(region);
+  const interactionInstance = getInteractionRoot(instance);
+  const interaction = interactionInstance.interaction;
   if (interaction.hoveredRegion === region) {
     interaction.hoveredRegion = undefined;
   }
@@ -41,9 +45,9 @@ export function removeInteractionRegion(
   }
   if (interaction.cursorRegion === region) {
     const canvas = interaction.pointerCanvas;
-    releaseCursor(instance);
+    releaseCursor(interactionInstance);
     if (canvas) {
-      applyCursor(instance, undefined, canvas);
+      applyCursor(interactionInstance, undefined, canvas);
     }
   }
 }
@@ -52,11 +56,16 @@ export function refreshInteractionCursor(
   instance: CRCInstance,
   region: CRCInteractionRegion,
 ): void {
+  const interactionInstance = getInteractionRoot(instance);
   if (
-    instance.interaction.hoveredRegion === region &&
-    instance.interaction.pointerCanvas
+    interactionInstance.interaction.hoveredRegion === region &&
+    interactionInstance.interaction.pointerCanvas
   ) {
-    applyCursor(instance, region, instance.interaction.pointerCanvas);
+    applyCursor(
+      interactionInstance,
+      region,
+      interactionInstance.interaction.pointerCanvas,
+    );
   }
 }
 
@@ -64,12 +73,17 @@ export function removeCursorDefault(
   instance: CRCInstance,
   cursorDefault: CRCCursorDefault,
 ): void {
-  instance.cursorDefaults.delete(cursorDefault);
-  if (instance.interaction.cursorDefault === cursorDefault) {
-    const canvas = instance.interaction.pointerCanvas;
-    releaseCursor(instance);
+  const interactionInstance = getInteractionRoot(instance);
+  interactionInstance.cursorDefaults.delete(cursorDefault);
+  if (interactionInstance.interaction.cursorDefault === cursorDefault) {
+    const canvas = interactionInstance.interaction.pointerCanvas;
+    releaseCursor(interactionInstance);
     if (canvas) {
-      applyCursor(instance, instance.interaction.hoveredRegion, canvas);
+      applyCursor(
+        interactionInstance,
+        interactionInstance.interaction.hoveredRegion,
+        canvas,
+      );
     }
   }
 }
@@ -77,9 +91,14 @@ export function removeCursorDefault(
 export function refreshCursorDefault(
   instance: CRCInstance,
 ): void {
-  const canvas = instance.interaction.pointerCanvas;
+  const interactionInstance = getInteractionRoot(instance);
+  const canvas = interactionInstance.interaction.pointerCanvas;
   if (canvas) {
-    applyCursor(instance, instance.interaction.hoveredRegion, canvas);
+    applyCursor(
+      interactionInstance,
+      interactionInstance.interaction.hoveredRegion,
+      canvas,
+    );
   }
 }
 
@@ -136,7 +155,7 @@ function dispatchMouseMove(
 ): void {
   const interaction = instance.interaction;
   interaction.pointerCanvas = canvas;
-  const previous = liveRegion(instance, interaction.hoveredRegion);
+  const previous = liveRegion(interaction.hoveredRegion);
   const next = resolveTarget(instance, event, canvas);
 
   if (previous === next) {
@@ -153,7 +172,7 @@ function dispatchMouseMove(
   releaseCursor(instance);
   invokeRegion(instance, previous, 'mouseout', event);
 
-  const liveNext = liveRegion(instance, next);
+  const liveNext = liveRegion(next);
   if (!liveNext) {
     applyCursor(instance, undefined, canvas);
     return;
@@ -166,7 +185,7 @@ function dispatchMouseMove(
 }
 
 function dispatchRootMouseOut(instance: CRCInstance, event: MouseEvent): void {
-  const previous = liveRegion(instance, instance.interaction.hoveredRegion);
+  const previous = liveRegion(instance.interaction.hoveredRegion);
   instance.interaction.hoveredRegion = undefined;
   releaseCursor(instance);
   instance.interaction.pointerCanvas = undefined;
@@ -184,7 +203,7 @@ function dispatchClick(
     target !== undefined &&
     interaction.primaryDownRegion === target &&
     interaction.primaryUpRegion === target &&
-    liveRegion(instance, target) === target;
+    liveRegion(target) === target;
 
   interaction.primaryDownRegion = undefined;
   interaction.primaryUpRegion = undefined;
@@ -196,7 +215,7 @@ function dispatchClick(
   }
 
   invokeRegion(instance, target, 'click', event);
-  if (!liveRegion(instance, target)) {
+  if (!liveRegion(target)) {
     interaction.clickStreakRegion = undefined;
     interaction.clickStreak = 0;
     return;
@@ -230,35 +249,104 @@ function resolveTarget(
   canvas: HTMLCanvasElement,
 ): CRCInteractionRegion | undefined {
   const [x, y] = getMouseCoordinates(event);
-  const regions = Array.from(instance.regions);
-  for (let index = regions.length - 1; index >= 0; index--) {
-    const region = regions[index];
-    if (!region.path) {
-      return region;
+  return resolveInstanceTarget({
+    instance,
+    canvas,
+    x,
+    y,
+    transform: new DOMMatrix(),
+    clippingStack: [],
+  });
+}
+
+function resolveInstanceTarget({
+  instance,
+  canvas,
+  x,
+  y,
+  transform,
+  clippingStack,
+}: {
+  instance: CRCInstance;
+  canvas: HTMLCanvasElement;
+  x: number;
+  y: number;
+  transform: DOMMatrix;
+  clippingStack: readonly CRCClippingStackEntry[];
+}): CRCInteractionRegion | undefined {
+  const entries = Array.from(instance.paintEntries);
+  for (let index = entries.length - 1; index >= 0; index--) {
+    const entry = entries[index];
+    if (entry.kind === 'region') {
+      const region = liveRegion(entry);
+      if (!region) {
+        continue;
+      }
+      if (!region.path) {
+        return region;
+      }
+      if (isHit({
+        canvas,
+        path: region.path,
+        transform: transform.multiply(region.transform),
+        x,
+        y,
+        fill: region.fill,
+        lineInteractionWidth: region.lineInteractionWidth,
+        currentClippingStack: [
+          ...clippingStack,
+          ...composeClippingStack(region.clippingStack, transform),
+        ],
+      })) {
+        return region;
+      }
+      continue;
     }
-    if (isHit({
+
+    if (entry.instance.mainTeardowns.closed) {
+      continue;
+    }
+    const childTransform = transform.multiply(entry.transform);
+    const target = resolveInstanceTarget({
+      instance: entry.instance,
       canvas,
-      path: region.path,
-      transform: region.transform,
       x,
       y,
-      fill: region.fill,
-      lineInteractionWidth: region.lineInteractionWidth,
-      currentClippingStack: region.clippingStack,
-    })) {
-      return region;
+      transform: childTransform,
+      clippingStack: [
+        ...clippingStack,
+        ...composeClippingStack(entry.clippingStack, transform),
+        {
+          path: entry.bounds,
+          fillRule: 'nonzero',
+          transform: childTransform,
+        },
+      ],
+    });
+    if (target) {
+      return target;
     }
   }
   return undefined;
 }
 
+function composeClippingStack(
+  clippingStack: readonly CRCClippingStackEntry[],
+  transform: DOMMatrix,
+): CRCClippingStackEntry[] {
+  return clippingStack.map(entry => ({
+    ...entry,
+    transform: transform.multiply(entry.transform),
+  }));
+}
+
 function invokeRegion(
-  instance: CRCInstance,
+  _instance: CRCInstance,
   region: CRCInteractionRegion | undefined,
   type: CRCEventType,
   event: MouseEvent,
 ): void {
-  const live = liveRegion(instance, region);
+  const live = liveRegion(region);
   if (!live) {
     return;
   }
@@ -275,10 +363,9 @@ function invokeRegion(
 }
 
 function liveRegion(
-  instance: CRCInstance,
   region: CRCInteractionRegion | undefined,
 ): CRCInteractionRegion | undefined {
-  return region && instance.regions.has(region) ? region : undefined;
+  return region?.owner.regions.has(region) ? region : undefined;
 }
 
 function dispatchObservers(

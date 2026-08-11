@@ -45,10 +45,13 @@ function rectanglePath(x: number, y: number, width: number, height: number): Pat
 }
 
 function region(
+  owner: CRCInstance,
   path: Path2D,
   handlers: Partial<Record<'mousemove' | 'mouseover' | 'mouseout', CRCMouseEventListener>>,
 ): CRCInteractionRegion {
   return {
+    kind: 'region',
+    owner,
     handlers,
     path,
     fill: true,
@@ -73,10 +76,12 @@ describe('interaction dispatcher mutation contract', () => {
     const { canvas, instance } = mountDispatchHarness([240, 120]);
     const coordinates: number[][] = [];
     const target = region(
+      instance,
       rectanglePath(0, 0, 480, 240),
       { mousemove: event => coordinates.push([event.x, event.y]) },
     );
     instance.regions.add(target);
+    instance.paintEntries.add(target);
 
     dispatchMove(canvas, 120, 60);
     expect(coordinates).toEqual([[240, 120]]);
@@ -125,6 +130,7 @@ describe('interaction dispatcher mutation contract', () => {
     const { canvas, instance } = mountDispatchHarness();
     const calls: string[] = [];
     const right = region(
+      instance,
       rectanglePath(268, 54, 184, 108),
       {
         mouseover: () => calls.push('right-over'),
@@ -132,6 +138,7 @@ describe('interaction dispatcher mutation contract', () => {
       },
     );
     const left = region(
+      instance,
       rectanglePath(28, 54, 184, 108),
       {
         mouseout: () => {
@@ -142,6 +149,8 @@ describe('interaction dispatcher mutation contract', () => {
     );
     instance.regions.add(left);
     instance.regions.add(right);
+    instance.paintEntries.add(left);
+    instance.paintEntries.add(right);
     instance.interaction.hoveredRegion = left;
 
     dispatchMove(canvas, 300, 90);

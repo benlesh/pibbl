@@ -35,6 +35,8 @@ export function crcRegion({
 
   if (GLOBAL_STATE.componentIsMounting) {
     const region: CRCInteractionRegion = {
+      kind: 'region',
+      owner: instance,
       handlers: {},
       path: undefined,
       fill: false,
@@ -62,6 +64,7 @@ export function crcRegion({
 
   if (instance.regions.has(region)) {
     instance.regions.delete(region);
+    instance.paintEntries.delete(region);
   }
   region.handlers = { ...handlers };
   region.path = path;
@@ -72,5 +75,6 @@ export function crcRegion({
   region.cursor = cursor;
 
   instance.regions.add(region);
+  instance.paintEntries.add(region);
   refreshInteractionCursor(instance, region);
 }

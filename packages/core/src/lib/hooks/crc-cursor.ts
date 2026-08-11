@@ -1,4 +1,8 @@
-import { getCurrentCRCInstance, GLOBAL_STATE } from '../global-state.js';
+import {
+  getCurrentCRCInstance,
+  getInteractionRoot,
+  GLOBAL_STATE,
+} from '../global-state.js';
 import {
   refreshCursorDefault,
   removeCursorDefault,
@@ -42,7 +46,7 @@ export function crcCursor({
 function crcCursorDefault(style: string | undefined): void {
   const hookIndex = GLOBAL_STATE.componentHookIndex++;
   const componentRefs = GLOBAL_STATE.componentRefs!;
-  const instance = getCurrentCRCInstance();
+  const instance = getInteractionRoot(getCurrentCRCInstance());
   let slot = componentRefs.refs[hookIndex] as CRCCursorDefaultSlot | undefined;
 
   if (GLOBAL_STATE.componentIsMounting) {

@@ -57,6 +57,8 @@ export interface CRCClippingStackEntry {
 }
 
 export interface CRCInteractionRegion {
+  kind: 'region';
+  owner: CRCInstance;
   handlers: CRCRegionHandlers;
   path: Path2D | undefined;
   fill: boolean;
@@ -65,6 +67,18 @@ export interface CRCInteractionRegion {
   clippingStack: readonly CRCClippingStackEntry[];
   cursor: string | undefined;
 }
+
+export interface CRCInteractionLayer {
+  kind: 'layer';
+  instance: CRCInstance;
+  transform: DOMMatrix;
+  clippingStack: readonly CRCClippingStackEntry[];
+  bounds: Path2D;
+}
+
+export type CRCInteractionPaintEntry =
+  | CRCInteractionRegion
+  | CRCInteractionLayer;
 
 export interface CRCCursorDefault {
   style: string;
@@ -144,8 +158,10 @@ export interface CRCInstance {
   mainTeardowns: Teardowns;
   events: CRCEventRegistry;
   regions: Set<CRCInteractionRegion>;
+  paintEntries: Set<CRCInteractionPaintEntry>;
   cursorDefaults: Set<CRCCursorDefault>;
   interaction: CRCInteractionState;
+  interactionRoot: CRCInstance | undefined;
   parent: Canvas | undefined;
 }
 

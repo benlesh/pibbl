@@ -1,8 +1,4 @@
-import {
-  cleanupCRCInstance,
-  getCRCInstance,
-  GLOBAL_STATE,
-} from './global-state.js';
+import { cleanupCRCInstance, GLOBAL_STATE } from './global-state.js';
 import { dispatchCRCEvent } from './interaction-dispatch.js';
 import { Teardowns } from './teardowns.js';
 import {
@@ -52,6 +48,7 @@ export function mountCRC<P>(
       contextmenu: new Set(),
     },
     regions: new Set(),
+    paintEntries: new Set(),
     cursorDefaults: new Set(),
     interaction: {
       hoveredRegion: undefined,
@@ -65,8 +62,15 @@ export function mountCRC<P>(
       cursorCanvas: undefined,
       cursorStyle: undefined,
     },
+    interactionRoot: undefined,
     parent,
   };
+  crcInstance.interactionRoot = parent ?
+      GLOBAL_STATE.crcInstances.get(parent)?.interactionRoot :
+    crcInstance;
+  if (!crcInstance.interactionRoot) {
+    throw new Error('Parent CRC interaction root not found');
+  }
   ownedInstance = crcInstance;
   GLOBAL_STATE.crcInstances.set(canvas, crcInstance);
 
@@ -79,26 +83,7 @@ export function mountCRC<P>(
       });
     }
 
-    if (parent) {
-      const parentCRCInstance = getCRCInstance(parent);
-
-      for (const [type] of typedEntries(crcInstance.events)) {
-        const bridgeHandler = (event: MouseEvent) => {
-          dispatchCRCEvent(
-            crcInstance,
-            type,
-            event,
-            event.target as HTMLCanvasElement,
-          );
-        };
-
-        parentCRCInstance.events[type].add(bridgeHandler);
-
-        mainTeardowns.add(() => {
-          parentCRCInstance.events[type].delete(bridgeHandler);
-        });
-      }
-    } else {
+    if (!parent) {
       const rootCanvas = canvas as HTMLCanvasElement;
       for (const [type] of typedEntries(crcInstance.events)) {
         const nativeHandler = (event: MouseEvent) => {

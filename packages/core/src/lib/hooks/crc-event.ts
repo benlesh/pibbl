@@ -1,5 +1,9 @@
 import { crcRegion } from './crc-region.js';
-import { GLOBAL_STATE } from '../global-state.js';
+import {
+  getCurrentCRCInstance,
+  getInteractionRoot,
+  GLOBAL_STATE,
+} from '../global-state.js';
 import type { CRCEventRegistry, CRCMouseEventListener } from '../types.js';
 import { getMouseCoordinates } from '../util/get-mouse-coordinates.js';
 
@@ -49,7 +53,7 @@ export function crcEvent<K extends keyof CRCEventRegistry>(
     return;
   }
 
-  const observers = GLOBAL_STATE.currentCRCInstance!.events[type];
+  const observers = getInteractionRoot(getCurrentCRCInstance()).events[type];
   const observer = (event: MouseEvent) => {
     const [x, y] = getMouseCoordinates(event);
     handler({ originalEvent: event, x, y });
