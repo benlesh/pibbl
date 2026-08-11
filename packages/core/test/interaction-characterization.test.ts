@@ -66,12 +66,17 @@ function nativeContractProjection(
   if (!contractCase?.nativeTrace) {
     throw new Error(`Mouse contract case "${caseId}" has no native trace.`);
   }
-  const fixtureTarget = (target: string | null) =>
-    target === 'a' ? targets.a : target === 'b' ? targets.b : target;
-  return contractCase.nativeTrace.map(({ type, target, relatedTarget }) => ({
+  const fixtureTarget = (target: string | null) => {
+    if (target === 'a') return targets.a;
+    if (target === 'b') return targets.b;
+    if (target === 'canvas-background') return 'outside';
+    if (target === 'outside-root') return null;
+    return target;
+  };
+  return contractCase.nativeTrace.map(({ type, target, logicalRelatedTarget }) => ({
     type,
     target: fixtureTarget(target),
-    relatedTarget: fixtureTarget(relatedTarget),
+    relatedTarget: fixtureTarget(logicalRelatedTarget),
     ...point,
   }));
 }
@@ -161,7 +166,34 @@ describe('interaction trace characterization', () => {
       ...nativeContractProjection('enter-region', { x: 60, y: 90 }),
       ...nativeContractProjection('move-within-region', { x: 80, y: 100 }),
       ...nativeContractProjection('switch-regions', { x: 300, y: 90 }),
-      ...nativeContractProjection('exit-canvas', { x: 460, y: 200 }, { a: 'right', b: 'right' }),
+      ...nativeContractProjection(
+        'leave-region-to-canvas-background',
+        { x: 460, y: 200 },
+        { a: 'right', b: 'right' },
+      ),
+    ]);
+
+    await dispatchMouse(fixture, { x: 60, y: 90 }, 'mouseMoved');
+    await controller.reset();
+    await dispatchMouse(fixture, { x: 500, y: 200 }, 'mouseMoved');
+    expect(projectTrace(controller.getState().trace)).toEqual([
+      ...nativeContractProjection('exit-root-canvas', { x: 500, y: 200 }),
+    ]);
+
+    await dispatchMouse(fixture, { x: 10, y: 10 }, 'mouseMoved');
+    await dispatchMouse(fixture, { x: 60, y: 90 }, 'mouseMoved');
+    await controller.reset();
+    await dispatchMouse(fixture, { x: 60, y: 90 }, 'mousePressed');
+    await dispatchMouse(fixture, { x: 240, y: 200 }, 'mouseMoved');
+    await dispatchMouse(fixture, { x: 60, y: 90 }, 'mouseMoved');
+    await dispatchMouse(fixture, { x: 60, y: 90 }, 'mouseReleased');
+    expect(projectTrace(controller.getState().trace)).toEqual([
+      { type: 'mousedown', target: 'left', relatedTarget: null, x: 60, y: 90 },
+      { type: 'mouseout', target: 'left', relatedTarget: 'outside', x: 240, y: 200 },
+      { type: 'mouseover', target: 'left', relatedTarget: 'outside', x: 60, y: 90 },
+      { type: 'mousemove', target: 'left', relatedTarget: null, x: 60, y: 90 },
+      { type: 'mouseup', target: 'left', relatedTarget: null, x: 60, y: 90 },
+      { type: 'click', target: 'left', relatedTarget: null, x: 60, y: 90 },
     ]);
 
     await dispatchMouse(fixture, { x: 60, y: 90 }, 'mouseMoved');
