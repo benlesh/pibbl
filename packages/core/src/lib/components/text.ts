@@ -120,7 +120,7 @@ export function Text(props: TextProps, ctx: RenderingContext2D) {
         const remaining = words.join(' ');
         const lastLine =
           overflow === 'ellipsis' && maxWidth ?
-            getEllipsisText(ctx, remaining, maxWidth) :
+              getEllipsisText(ctx, remaining, maxWidth) :
             remaining;
         if (hasAnyEvents) {
           updateTextBounds(lastLine);
@@ -147,7 +147,7 @@ export function Text(props: TextProps, ctx: RenderingContext2D) {
   } else {
     const text =
       overflow === 'ellipsis' && maxWidth ?
-        getEllipsisText(ctx, inputText, maxWidth) :
+          getEllipsisText(ctx, inputText, maxWidth) :
         inputText;
 
     if (overflow === 'clip' && maxWidth) {

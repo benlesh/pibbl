@@ -16,7 +16,7 @@ export type RenderingContext2D =
 
 export type CompFn<P> = (
   props: P,
-  ctx: RenderingContext2D
+  ctx: RenderingContext2D,
 ) => CRCNode[] | CRCNode | void;
 
 export interface CompRefs<P> {

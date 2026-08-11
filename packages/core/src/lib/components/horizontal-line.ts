@@ -34,7 +34,7 @@ export function HorizontalLine(
     ...lineProps
   } = props;
   const y = alignToPixelGrid ?
-    adjustForPixelGrid(initialY, props.lineWidth, alignToPixelGrid) :
+      adjustForPixelGrid(initialY, props.lineWidth, alignToPixelGrid) :
     initialY;
   const coords: [number, number][] = [
     [left, y],
