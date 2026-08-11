@@ -1,4 +1,4 @@
-import { page } from '@vitest/browser/context';
+import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
 import { componentTest } from '../test-utils/component-test';
 import { takeScreenshot } from '../util/test-utils';
@@ -34,8 +34,10 @@ describe('text', () => {
 
     const centerX = x + width / 2;
     const centerY = y + height / 2;
-    const onBorderX = x + width + (lineWidth / 2);
-    const onBorderY = y + height + (lineWidth / 2);
+    // Stay inside the stroke instead of depending on exact corner inclusion,
+    // which differs across Chromium's Canvas implementations.
+    const onBorderX = centerX;
+    const onBorderY = y - (lineWidth / 4);
     const offTextX = x - 10;
     const offTextY = y - 10;
 
@@ -57,14 +59,18 @@ describe('text', () => {
         const centerPosition = { x: centerX, y: centerY };
         const onBorderPosition = { x: onBorderX, y: onBorderY };
         const offTextPosition = { x: offTextX, y: offTextY };
+        const triggerEvent = (position: { x: number; y: number }) =>
+          event === 'mouseDown' || event === 'mouseUp' ?
+              canvas.click({ position }) :
+            canvas[event]({ position });
 
-        await canvas[event]({ position: offTextPosition });
+        await triggerEvent(offTextPosition);
         expect(handlerFn).not.toHaveBeenCalled();
 
-        await canvas[event]({ position: centerPosition });
+        await triggerEvent(centerPosition);
         expect(handlerFn).toHaveBeenCalledTimes(1);
 
-        await canvas[event]({ position: onBorderPosition });
+        await triggerEvent(onBorderPosition);
         expect(handlerFn).toHaveBeenCalledTimes(2);
       });
     });

@@ -1,4 +1,4 @@
-import { commands, page } from '@vitest/browser/context';
+import { commands, page } from 'vitest/browser';
 
 interface IgnoreRegion {
   x: number;

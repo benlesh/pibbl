@@ -1,5 +1,5 @@
 import { crc } from '@crc/core';
-import { cdp, userEvent } from '@vitest/browser/context';
+import { cdp, userEvent } from 'vitest/browser';
 import { beforeEach } from 'vitest';
 import { CompEl } from '../types';
 
@@ -21,33 +21,30 @@ export class TestCanvas {
     await animationFrame();
   }
 
-  private getCanvasOffset() {
+  private getScreenPosition(position: { x: number; y: number }) {
     const { top, left } = this.element.getBoundingClientRect();
-    const doc = window.top?.document;
-    if (!doc) {
-      throw new Error('No document found');
+    const frame = window.frameElement;
+    if (!frame) {
+      return [left + position.x, top + position.y] as const;
     }
 
-    const iframe = doc.querySelector('[data-vitest="true"]');
-    if (!iframe) {
-      throw new Error('No iframe found');
-    }
-
-    const { top: iframeTop, left: iframeLeft } = iframe.getBoundingClientRect();
-
-    return [left + iframeLeft, top + iframeTop] as const;
+    const frameBounds = frame.getBoundingClientRect();
+    const xScale = frameBounds.width / window.innerWidth;
+    const yScale = frameBounds.height / window.innerHeight;
+    return [
+      frameBounds.left + (left + position.x) * xScale,
+      frameBounds.top + (top + position.y) * yScale,
+    ] as const;
   }
 
   async mouseDown(options: { position: { x: number; y: number }; button?: 'left' | 'right' }) {
     const session = cdp();
-
-    const [left, top] = this.getCanvasOffset();
-
+    const [x, y] = this.getScreenPosition(options.position);
     await session.send('Input.dispatchMouseEvent', {
       type: 'mousePressed',
       button: options.button === 'right' ? 'right' : 'left',
-      x: options.position.x + left,
-      y: options.position.y + top,
+      x,
+      y,
       clickCount: 1,
     });
     await animationFrame();
@@ -55,13 +52,12 @@ export class TestCanvas {
 
   async mouseUp(options: { position: { x: number; y: number }; button?: 'left' | 'right' }) {
     const session = cdp();
-    const [left, top] = this.getCanvasOffset();
-
+    const [x, y] = this.getScreenPosition(options.position);
     await session.send('Input.dispatchMouseEvent', {
       type: 'mouseReleased',
       button: options.button === 'right' ? 'right' : 'left',
-      x: options.position.x + left,
-      y: options.position.y + top,
+      x,
+      y,
       clickCount: 1,
     });
     await animationFrame();
@@ -69,11 +65,11 @@ export class TestCanvas {
 
   async mouseMove(options: { position: { x: number; y: number } }) {
     const session = cdp();
-    const [left, top] = this.getCanvasOffset();
+    const [x, y] = this.getScreenPosition(options.position);
     await session.send('Input.dispatchMouseEvent', {
       type: 'mouseMoved',
-      x: options.position.x + left,
-      y: options.position.y + top,
+      x,
+      y,
     });
     await animationFrame();
   }

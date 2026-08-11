@@ -1,4 +1,4 @@
-import type { BrowserPage } from '@vitest/browser/context';
+import type { BrowserPage } from 'vitest/browser';
 import { expect } from 'vitest';
 
 function sanitizeFileName(name: string): string {

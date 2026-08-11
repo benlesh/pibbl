@@ -1,25 +1,39 @@
-import tsconfigPaths from 'vite-tsconfig-paths';
+import { fileURLToPath } from 'node:url';
+import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  plugins: [
-    tsconfigPaths(),
-  ],
+  resolve: {
+    alias: [
+      {
+        find: '@crc/core/types',
+        replacement: fileURLToPath(new URL('./packages/core/src/types.ts', import.meta.url)),
+      },
+      {
+        find: '@crc/core',
+        replacement: fileURLToPath(new URL('./packages/core/src/index.ts', import.meta.url)),
+      },
+      {
+        find: '@crc/types',
+        replacement: fileURLToPath(new URL('./packages/types/src/index.ts', import.meta.url)),
+      },
+    ],
+  },
   test: {
     browser: {
       enabled: true,
       headless: true,
-      name: 'chromium',
-      provider: 'playwright',
-      providerOptions: {
-        launch: {
-          devtools: false,
+      instances: [
+        { browser: 'chromium' },
+      ],
+      provider: playwright({
+        launchOptions: {
           args: [
             '--force-color-profile=srgb',
             '--font-render-hinting=none',
           ],
         },
-        context: {
+        contextOptions: {
           viewport: { width: 800, height: 600 },
           deviceScaleFactor: 1,
           colorScheme: 'light',
@@ -27,7 +41,7 @@ export default defineConfig({
           locale: 'en-US',
           timezoneId: 'UTC',
         },
-      },
+      }),
     },
   },
 });

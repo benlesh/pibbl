@@ -1,4 +1,4 @@
-import { page } from '@vitest/browser/context';
+import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
 import { componentTest } from '../test-utils/component-test';
 import bartImageSmall from '../test-utils/fixtures/bart-500kb.png';
@@ -55,14 +55,18 @@ describe('img', () => {
         const centerPosition = { x: centerX, y: centerY };
         const onBorderPosition = { x: onBorderX, y: onBorderY };
         const offImagePosition = { x: offImageX, y: offImageY };
+        const triggerEvent = (position: { x: number; y: number }) =>
+          event === 'mouseDown' || event === 'mouseUp' ?
+              canvas.click({ position }) :
+            canvas[event]({ position });
 
-        await canvas[event]({ position: offImagePosition });
+        await triggerEvent(offImagePosition);
         expect(handlerFn).not.toHaveBeenCalled();
 
-        await canvas[event]({ position: centerPosition });
+        await triggerEvent(centerPosition);
         expect(handlerFn).toHaveBeenCalledTimes(1);
 
-        await canvas[event]({ position: onBorderPosition });
+        await triggerEvent(onBorderPosition);
         expect(handlerFn).toHaveBeenCalledTimes(2);
       });
     });

@@ -1,5 +1,5 @@
 import { crc, defineComp, rect } from '@crc/core';
-import { page } from '@vitest/browser/context';
+import { page } from 'vitest/browser';
 import { describe, expect, it } from 'vitest';
 import { takeScreenshot } from '../src/lib/util/test-utils';
 

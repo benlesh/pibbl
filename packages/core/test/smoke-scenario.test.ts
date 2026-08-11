@@ -9,7 +9,7 @@ import {
   smokeScenarioEntry,
   validateScenarioCatalog,
 } from '@crc/scenarios';
-import { page, userEvent } from '@vitest/browser/context';
+import { page, userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
 import smokeSource from '../../scenarios/src/smoke.example.ts?raw';
 import { expectVisualMatch } from './visual-compare';
@@ -167,10 +167,10 @@ describe('shared smoke scenario', () => {
     }
     await expectVisualMatch({
       element: visual,
-      expectedPath: 'visual-baselines/dep-01-smoke.expected.png',
-      expectedArtifactPath: '../../../test-screenshots/dep-01/smoke.expected.png',
+      expectedPath: 'packages/core/test/visual-baselines/dep-01-smoke.expected.png',
+      expectedArtifactPath: 'test-screenshots/dep-01/smoke.expected.png',
       actualPath: '../../../test-screenshots/dep-01/smoke.actual.png',
-      diffPath: '../../../test-screenshots/dep-01/smoke.diff.png',
+      diffPath: 'test-screenshots/dep-01/smoke.diff.png',
       ignoreRegions: [
         { x: 40, y: 68, width: 184, height: 78 },
         { x: 238, y: 48, width: 234, height: 104 },

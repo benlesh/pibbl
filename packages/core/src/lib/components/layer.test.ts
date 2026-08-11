@@ -1,5 +1,5 @@
 import type { RectProps } from './rect';
-import { page } from '@vitest/browser/context';
+import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
 import { defineComp } from '../define-comp';
 import { crcState } from '../hooks/crc-state';

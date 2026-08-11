@@ -11,12 +11,7 @@
       "@crc/types": ["./packages/types/src/index.ts"]
     },
     "resolveJsonModule": true,
-    "types": [
-      "vite/client",
-      "node",
-      "vitest/config",
-      "@vitest/browser/providers/playwright"
-    ],
+    "types": ["vite/client", "node", "vitest/config"],
     "allowJs": true,
     "isolatedModules": true,
     "strict": true,
