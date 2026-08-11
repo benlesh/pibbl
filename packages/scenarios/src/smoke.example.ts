@@ -44,7 +44,7 @@ const SmokeScene = defineComp<SmokeSceneProps>(({ state, onClick }) => {
       x: 48,
       y: 78,
       text: 'CRC smoke scenario',
-      font: '700 18px Arial',
+      font: '700 16px Arial',
       fillStyle: '#ffffff',
     }),
     text({

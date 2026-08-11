@@ -92,22 +92,22 @@ export const scenarioSurfaceStyles = `
     display: grid;
     grid-auto-rows: min-content;
     margin: 0;
-    padding: 28px 24px;
+    padding: 20px;
   }
 
   .scenario-runner__state-title {
     color: #94a3b8;
     font: 700 11px/1.4 Arial, sans-serif;
     letter-spacing: 0.08em;
-    margin: 0 0 20px;
+    margin: 0 0 12px;
     text-transform: uppercase;
   }
 
   .scenario-runner__state-row {
     border-top: 1px solid #334155;
     display: grid;
-    gap: 4px;
-    padding: 12px 0;
+    gap: 2px;
+    padding: 8px 0;
   }
 
   .scenario-runner__state dt {
