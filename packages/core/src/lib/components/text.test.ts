@@ -76,6 +76,18 @@ describe('text', () => {
     });
 
     describe('mouse movement', () => {
+      it('uses text bounds for a cursor-only interaction', async () => {
+        const canvas = await componentTest(text({
+          ...defaultOptions,
+          cursor: 'pointer',
+        }));
+
+        await canvas.mouseMove({ position: { x: 0, y: 0 } });
+        expect(getComputedStyle(canvas.element).cursor).not.toBe('pointer');
+        await canvas.mouseMove({ position: { x: centerX, y: centerY } });
+        expect(getComputedStyle(canvas.element).cursor).toBe('pointer');
+      });
+
       it('should handle mouse over and out events for text with a stroke', async () => {
         const onMouseOver = vi.fn();
         const onMouseOut = vi.fn();
