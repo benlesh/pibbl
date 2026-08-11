@@ -1,4 +1,5 @@
 export {
+  geometryMatrixScenarioEntry,
   getScenarioBySlug,
   interactionLabScenarioEntry,
   lifecycleLabScenarioEntry,
@@ -8,6 +9,15 @@ export {
   mouseContractScenarioEntry,
   validateScenarioCatalog,
 } from './catalog';
+export { GEOMETRY_MATRIX_CASES } from './geometry-matrix.example';
+export type {
+  GeometryMatrixAction,
+  GeometryMatrixCase,
+  GeometryMatrixCaseId,
+  GeometryMatrixPoint,
+  GeometryMatrixProbe,
+  GeometryMatrixState,
+} from './geometry-matrix.example';
 export type { SmokeScenarioAction, SmokeScenarioState } from './smoke.example';
 export { EventTraceRecorder } from './event-trace';
 export type {

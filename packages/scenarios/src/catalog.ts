@@ -1,7 +1,9 @@
 import type { SmokeScenarioState } from './smoke.example';
+import type { GeometryMatrixState } from './geometry-matrix.example';
 import type { InteractionLabState } from './interaction-lab.example';
 import type { LifecycleLabState } from './lifecycle-lab.example';
 import type { MouseContractScenarioState } from './mouse-contract.example';
+import { GEOMETRY_MATRIX_CASES } from './geometry-matrix.example';
 import { MOUSE_CONTRACT_CASES } from './mouse-contract';
 import type {
   ScenarioCatalogEntry,
@@ -367,11 +369,75 @@ export const lifecycleLabScenarioEntry: ScenarioCatalogEntry<LifecycleLabState> 
   load: async () => (await import('./lifecycle-lab')).lifecycleLabScenario,
 };
 
+const geometryMatrixMetadata: ScenarioMetadata = {
+  id: 'geometry-composition-matrix',
+  slug: 'geometry-composition-matrix',
+  title: 'Geometry composition matrix',
+  summary: 'Probe intrinsic coordinates, nested transforms and clips, global layer paint order, layer bounds, and stroke interaction geometry.',
+  category: 'Interaction contracts',
+  apiTags: ['crc', 'g', 'clip', 'layer', 'line', 'rect', 'mouse events'],
+  conceptTags: ['coordinate conversion', 'clip intersection', 'paint order', 'hit boundaries'],
+  manualSteps: [
+    {
+      action: 'Compare Root fill boundaries with CSS-scaled fill boundaries at the visible center, left edge, and just outside.',
+      expected: 'Both cases target fill at the same intrinsic points and report the same intrinsic coordinates even though the scaled Canvas is half-size.',
+    },
+    {
+      action: 'Open Nested compound transform with clip; move through the blue quadrilateral, the clipped-away target at its upper-left, and clear background.',
+      expected: 'Only the visible transformed-and-clipped geometry targets transformed, and its pointer cursor agrees with the trace.',
+    },
+    {
+      action: 'Open Nested clip intersection and evenodd hole; probe the visible intersection, each single-clip-only area, and the central hole.',
+      expected: 'Only the visible intersection targets clipped; failing either active clip or entering the evenodd hole clears the target.',
+    },
+    {
+      action: 'Open Root and sibling layer paint order; sweep left to right through x=50, 120, 260, and 350 at y=120.',
+      expected: 'The single targets are root-under, layer-one, root-middle, and layer-two, with exit before entry and cursor parity at each switch.',
+    },
+    {
+      action: 'Open Transformed custom-size nested layer; probe the nested green area, its visually cropped continuation, the orange base, and the original unshifted location.',
+      expected: 'The translated nested layer wins only inside its visible bounds; cropped content falls through to the base and the unshifted location stays inert.',
+    },
+    {
+      action: 'Open Transformed stroke interaction boundary; probe the painted center, the upper interaction boundary, and one intrinsic pixel above it.',
+      expected: 'The center and boundary target stroke while the outside point misses; the wider interaction geometry never paints extra blue pixels.',
+    },
+  ],
+  knownLimitations: [
+    'The trusted matrix currently covers Chromium mouse input at device-pixel ratio 1; broader browser and pointer/touch coverage remain outside this plan.',
+    'Rotation and skew values follow the existing degree-based DOMMatrix behavior of the public group API.',
+    'Layers compose at their existing origin; group transforms supply the parent-space placement exercised here.',
+  ],
+  visibility: 'test-laboratory',
+  visibilityReason: 'It is a dense conformance and boundary matrix rather than a beginner-facing drawing example.',
+  maturity: 'trusted',
+};
+
+export const geometryMatrixScenarioEntry: ScenarioCatalogEntry<GeometryMatrixState> = {
+  metadata: geometryMatrixMetadata,
+  canvas: { width: 480, height: 240 },
+  actions: [
+    ...GEOMETRY_MATRIX_CASES.map(matrixCase => ({
+      id: `show-${matrixCase.id}`,
+      label: matrixCase.title,
+    })),
+    { id: 'clear-trace', label: 'Clear trace' },
+  ],
+  source: {
+    id: 'geometry-composition-matrix-example',
+    language: 'ts',
+    marker: "GEOMETRY_MATRIX_SOURCE_ID = 'geometry-composition-matrix-example'",
+    path: 'packages/scenarios/src/geometry-matrix.example.ts',
+  },
+  load: async () => (await import('./geometry-matrix')).geometryMatrixScenario,
+};
+
 export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] = validateScenarioCatalog([
   smokeScenarioEntry,
   interactionLabScenarioEntry,
   mouseContractScenarioEntry,
   lifecycleLabScenarioEntry,
+  geometryMatrixScenarioEntry,
 ] as const);
 
 export function getScenarioBySlug(slug: string): AnyScenarioCatalogEntry | undefined {
