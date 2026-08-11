@@ -16,13 +16,17 @@
     "test": "pnpm test:ui",
     "test:ci": "vitest run --browser.headless",
     "test:smoke": "vitest run packages/core/test/smoke-scenario.test.ts --browser.headless --browser.ui=false",
+    "test:smoke:built": "pnpm build && vitest run packages/core/test/smoke-scenario.test.ts --mode built --browser.headless --browser.ui=false",
+    "test:package-consumer": "pnpm build && tsc -p playground/package-consumer/tsconfig.bundler.json && tsc -p playground/package-consumer/tsconfig.nodenext.json && node playground/package-consumer/runtime.mjs",
     "test:ui": "vitest --browser.headless=false",
     "test:watch": "vitest --browser.headless",
     "typecheck": "tsc --noEmit",
     "build": "pnpm -r run build",
     "dev": "pnpm -r run dev && pnpm playground",
     "playground": "pnpm -C playground run playground:dev",
+    "playground:built": "pnpm build && pnpm -C playground run playground:built",
     "playground:build": "pnpm -C playground run playground:build",
+    "playground:build:built": "pnpm build && pnpm -C playground run playground:build:built",
     "bench": "vitest bench"
   },
   "devDependencies": {

@@ -1,10 +1,12 @@
 import { fileURLToPath } from 'node:url';
 import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vitest/config';
+import { assertBuiltCore } from './tooling/assert-built-core.ts';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  plugins: mode === 'built' ? [assertBuiltCore()] : [],
   resolve: {
-    alias: [
+    alias: mode === 'built' ? [] : [
       {
         find: '@crc/core/types',
         replacement: fileURLToPath(new URL('./packages/core/src/types.ts', import.meta.url)),
@@ -44,4 +46,4 @@ export default defineConfig({
       }),
     },
   },
-});
+}));

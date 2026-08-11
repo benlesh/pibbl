@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "paths": {},
+    "skipLibCheck": false,
+    "strict": true,
+    "target": "ESNext",
+    "types": []
+  },
+  "files": ["index.ts"]
+}

@@ -3,7 +3,9 @@
   "private": true,
   "scripts": {
     "playground:dev": "vite dev",
-    "playground:build": "vite build"
+    "playground:built": "vite dev --mode built",
+    "playground:build": "vite build",
+    "playground:build:built": "vite build --mode built"
   },
   "dependencies": {
     "@crc/core": "workspace:*",

@@ -21,6 +21,7 @@ interface SmokeTestHarness {
 }
 
 let activeController: ScenarioController<SmokeScenarioState> | undefined;
+const packageMode = import.meta.env.MODE === 'built' ? 'built' : 'source';
 
 function pixelAt(canvas: HTMLCanvasElement, x: number, y: number): readonly number[] {
   const context = canvas.getContext('2d');
@@ -168,9 +169,9 @@ describe('shared smoke scenario', () => {
     await expectVisualMatch({
       element: visual,
       expectedPath: 'packages/core/test/visual-baselines/dep-01-smoke.expected.png',
-      expectedArtifactPath: 'test-screenshots/dep-01/smoke.expected.png',
-      actualPath: '../../../test-screenshots/dep-01/smoke.actual.png',
-      diffPath: 'test-screenshots/dep-01/smoke.diff.png',
+      expectedArtifactPath: `test-screenshots/dep-03/${packageMode}/smoke.expected.png`,
+      actualPath: `../../../test-screenshots/dep-03/${packageMode}/smoke.actual.png`,
+      diffPath: `test-screenshots/dep-03/${packageMode}/smoke.diff.png`,
       ignoreRegions: [
         { x: 40, y: 68, width: 184, height: 78 },
         { x: 238, y: 48, width: 234, height: 104 },
