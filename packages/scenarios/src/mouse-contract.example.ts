@@ -7,6 +7,7 @@ import {
   g,
   layer,
   line,
+  path as crcPath,
   rect,
   text,
 } from '@crc/core';
@@ -29,6 +30,11 @@ function caseVisual(
   contractCase: MouseContractCase,
   recordTarget: (target: string) => void,
 ) {
+  const rectanglePath = (x: number, y: number, width: number, height: number) => {
+    const path = new Path2D();
+    path.rect(x, y, width, height);
+    return path;
+  };
   const interactive = (target: string) => ({
     cursor: 'crosshair',
     onMouseMove: (_event: CRCMouseEvent) => recordTarget(target),
@@ -132,6 +138,18 @@ function caseVisual(
           ...interactive('a'),
         }),
         text({ x: 116, y: 136, text: 'stroke only', font: '700 15px Arial', fillStyle: '#1e3a8a' }),
+      ];
+    case 'fill-stroke-hit':
+      return [
+        crcPath({
+          key: 'fill-stroke-region-a',
+          path: rectanglePath(72, 72, 190, 112),
+          fillStyle: '#93c5fd',
+          strokeStyle: '#1d4ed8',
+          lineWidth: 6,
+          lineInteractionWidth: 6,
+          ...interactive('a'),
+        }),
       ];
     case 'transparent-fill-hit':
       return [

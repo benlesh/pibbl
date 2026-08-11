@@ -239,7 +239,7 @@ const CONTRACT_CASES = [
     targeting: targeting(['a']),
     rule: 'Combined fill and stroke geometry still emits one entry before one movement.',
     visualTarget: 'a',
-    visualProbe: { x: 120, y: 132, expectedTarget: 'a' },
+    visualProbe: { x: 73, y: 132, expectedTarget: 'a' },
   },
   {
     id: 'transparent-fill-hit',
