@@ -6,7 +6,7 @@ import { componentTest } from '../test-utils/component-test';
 import { takeScreenshot } from '../util/test-utils';
 import { g } from './g';
 import { layer } from './layer';
-import { rect } from './rect';
+import { rect, type RectProps } from './rect';
 import { text } from './text';
 
 describe('layer', () => {
@@ -112,28 +112,31 @@ describe('layer', () => {
 
     it.skip('only re-renders when props change', async () => {
       let renderCount = 0;
+      const countedRect = defineComp((props: RectProps) => {
+        renderCount++;
+        return rect(props);
+      });
 
       const wrapperComponent = defineComp(() => {
         const [fillStyle, setFillStyle] = crcState('blue');
         const [layerWidth, setLayerWidth] = crcState(200);
 
-        return rect({
-          x: 0,
-          y: 0,
-          width: 200,
-          height: 200,
-          fillStyle: 'green',
-          onClick: () => {
-            setFillStyle('red');
-            setLayerWidth(300);
-          },
+        return g({
           children: [
+            rect({
+              x: 0,
+              y: 0,
+              width: 200,
+              height: 200,
+              fillStyle: 'green',
+              onClick: () => {
+                setFillStyle('red');
+                setLayerWidth(300);
+              },
+            }),
             layer({
               width: layerWidth,
-              render: rect({
-                onRender: () => {
-                  renderCount++;
-                },
+              render: countedRect({
                 x: 0,
                 y: 0,
                 width: 200,
@@ -148,7 +151,6 @@ describe('layer', () => {
       const canvas = await componentTest(wrapperComponent({}));
       // Click to trigger state changes
       await canvas.click({ position: { x: 100, y: 100 } });
-
 
       // Should re-render due to prop changes from state updates
       expect(renderCount).toBe(2);
