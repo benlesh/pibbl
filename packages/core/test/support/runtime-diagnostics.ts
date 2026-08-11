@@ -2,6 +2,25 @@ import type { Canvas, CRCEventRegistry, CRCInstance } from '../../src/lib/types'
 import { GLOBAL_STATE } from '../../src/lib/global-state';
 
 type EventType = keyof CRCEventRegistry;
+type EventHandler = (event: MouseEvent) => void;
+
+export interface ResourceLedgerSnapshot {
+  acquired: number;
+  released: number;
+  duplicateReleases: number;
+  live: number;
+}
+
+export interface RuntimeDiagnosticLedgerSnapshot {
+  nativeListeners: ResourceLedgerSnapshot;
+  handlers: Record<EventType, ResourceLedgerSnapshot>;
+  frames: {
+    requested: number;
+    canceled: number;
+    completed: number;
+    pending: number;
+  };
+}
 
 export interface RuntimeDiagnosticSnapshot {
   instances: number;
@@ -17,6 +36,16 @@ interface ListenerRecord {
   listener: EventListenerOrEventListenerObject;
   capture: boolean;
   type: string;
+}
+
+interface RegistryRecord {
+  handlers: Set<EventHandler>;
+  originalAdd: Set<EventHandler>['add'];
+  originalDelete: Set<EventHandler>['delete'];
+  type: EventType;
+  acquired: number;
+  released: number;
+  duplicateReleases: number;
 }
 
 const EVENT_TYPES: readonly EventType[] = [
@@ -44,11 +73,18 @@ function teardownCount(teardowns: unknown): number {
  */
 export class RuntimeDiagnostics {
   private readonly listenerRecords = new Set<ListenerRecord>();
+  private readonly registryRecords = new Map<Set<EventHandler>, RegistryRecord>();
   private readonly scheduledFrameIds = new Set<number>();
   private readonly originalAddEventListener: HTMLCanvasElement['addEventListener'];
   private readonly originalRemoveEventListener: HTMLCanvasElement['removeEventListener'];
   private readonly originalRequestAnimationFrame = window.requestAnimationFrame;
   private readonly originalCancelAnimationFrame = window.cancelAnimationFrame;
+  private nativeListenerAcquired = 0;
+  private nativeListenerReleased = 0;
+  private nativeListenerDuplicateReleases = 0;
+  private frameRequested = 0;
+  private frameCanceled = 0;
+  private frameCompleted = 0;
   private restored = false;
 
   constructor(private readonly canvas: HTMLCanvasElement) {
@@ -78,9 +114,13 @@ export class RuntimeDiagnostics {
           type,
         };
         records.add(record);
+        this.nativeListenerAcquired++;
         if (typeof options === 'object' && options.signal) {
           const onAbort = () => {
-            record.active = false;
+            if (record.active) {
+              record.active = false;
+              this.nativeListenerReleased++;
+            }
           };
           options.signal.addEventListener('abort', onAbort, { once: true });
         }
@@ -94,10 +134,16 @@ export class RuntimeDiagnostics {
       options?: boolean | EventListenerOptions,
     ) => {
       const capture = captureFrom(options);
+      let released = false;
       for (const record of records) {
         if (record.active && record.type === type && record.listener === listener && record.capture === capture) {
           record.active = false;
+          released = true;
+          this.nativeListenerReleased++;
         }
+      }
+      if (!released) {
+        this.nativeListenerDuplicateReleases++;
       }
       originalRemove.call(canvas, type, listener, options);
     }) as typeof canvas.removeEventListener;
@@ -106,20 +152,26 @@ export class RuntimeDiagnostics {
     window.requestAnimationFrame = (callback) => {
       let frameId = 0;
       frameId = this.originalRequestAnimationFrame.call(window, (timestamp) => {
-        scheduledFrameIds.delete(frameId);
+        if (scheduledFrameIds.delete(frameId)) {
+          this.frameCompleted++;
+        }
         callback(timestamp);
       });
+      this.frameRequested++;
       scheduledFrameIds.add(frameId);
       return frameId;
     };
     window.cancelAnimationFrame = (frameId) => {
-      scheduledFrameIds.delete(frameId);
+      if (scheduledFrameIds.delete(frameId)) {
+        this.frameCanceled++;
+      }
       this.originalCancelAnimationFrame.call(window, frameId);
     };
   }
 
   snapshot(): RuntimeDiagnosticSnapshot {
     const instances = this.getOwnedInstances();
+    this.observeRegistries(instances);
     const handlers = Object.fromEntries(EVENT_TYPES.map(type => [type, 0])) as Record<EventType, number>;
     let componentTeardowns = 0;
     let mainTeardowns = 0;
@@ -144,6 +196,38 @@ export class RuntimeDiagnostics {
     };
   }
 
+  ledgerSnapshot(): RuntimeDiagnosticLedgerSnapshot {
+    this.observeRegistries(this.getOwnedInstances());
+    const handlers = Object.fromEntries(EVENT_TYPES.map(type => [
+      type,
+      { acquired: 0, released: 0, duplicateReleases: 0, live: 0 },
+    ])) as Record<EventType, ResourceLedgerSnapshot>;
+
+    for (const record of this.registryRecords.values()) {
+      const ledger = handlers[record.type];
+      ledger.acquired += record.acquired;
+      ledger.released += record.released;
+      ledger.duplicateReleases += record.duplicateReleases;
+      ledger.live += record.handlers.size;
+    }
+
+    return {
+      nativeListeners: {
+        acquired: this.nativeListenerAcquired,
+        released: this.nativeListenerReleased,
+        duplicateReleases: this.nativeListenerDuplicateReleases,
+        live: Array.from(this.listenerRecords).filter(record => record.active).length,
+      },
+      handlers,
+      frames: {
+        requested: this.frameRequested,
+        canceled: this.frameCanceled,
+        completed: this.frameCompleted,
+        pending: this.scheduledFrameIds.size,
+      },
+    };
+  }
+
   restore(): void {
     if (this.restored) {
       return;
@@ -151,8 +235,48 @@ export class RuntimeDiagnostics {
     this.restored = true;
     this.canvas.addEventListener = this.originalAddEventListener;
     this.canvas.removeEventListener = this.originalRemoveEventListener;
+    for (const record of this.registryRecords.values()) {
+      record.handlers.add = record.originalAdd;
+      record.handlers.delete = record.originalDelete;
+    }
+    this.registryRecords.clear();
     window.requestAnimationFrame = this.originalRequestAnimationFrame;
     window.cancelAnimationFrame = this.originalCancelAnimationFrame;
+  }
+
+  private observeRegistries(instances: readonly CRCInstance[]): void {
+    for (const instance of instances) {
+      for (const type of EVENT_TYPES) {
+        const handlers = instance.events[type] as Set<EventHandler>;
+        if (this.registryRecords.has(handlers)) {
+          continue;
+        }
+        const record: RegistryRecord = {
+          handlers,
+          originalAdd: handlers.add,
+          originalDelete: handlers.delete,
+          type,
+          acquired: handlers.size,
+          released: 0,
+          duplicateReleases: 0,
+        };
+        this.registryRecords.set(handlers, record);
+        handlers.add = ((handler: EventHandler) => {
+          if (!handlers.has(handler)) {
+            record.acquired++;
+          }
+          return record.originalAdd.call(handlers, handler);
+        }) as typeof handlers.add;
+        handlers.delete = ((handler: EventHandler) => {
+          if (handlers.has(handler)) {
+            record.released++;
+          } else {
+            record.duplicateReleases++;
+          }
+          return record.originalDelete.call(handlers, handler);
+        }) as typeof handlers.delete;
+      }
+    }
   }
 
   private getOwnedInstances(): CRCInstance[] {
