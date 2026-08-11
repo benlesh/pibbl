@@ -28,6 +28,7 @@ export interface MouseContractVisualProbe {
 export interface MouseContractCase {
   id: string;
   title: string;
+  phase: 'reference-only' | 'tfc-04' | 'tfc-05';
   gesture: string;
   nativeTrace: readonly MouseContractTraceEvent[] | null;
   crcTrace: readonly MouseContractTraceEvent[];
@@ -37,6 +38,8 @@ export interface MouseContractCase {
   visualTarget: 'a' | 'b' | 'canvas-root' | 'child' | 'layer' | 'none' | 'top';
   visualProbe: MouseContractVisualProbe;
 }
+
+type MouseContractCaseInput = Omit<MouseContractCase, 'phase'>;
 
 const FIXED_ORDERING = { kind: 'fixed' } as const;
 
@@ -225,6 +228,18 @@ const CONTRACT_CASES = [
     rule: 'A positive interaction stroke hits without requiring a fill.',
     visualTarget: 'a',
     visualProbe: { x: 75, y: 132, expectedTarget: 'a' },
+  },
+  {
+    id: 'fill-stroke-hit',
+    title: 'Combined fill and stroke hit',
+    gesture: 'Enter a path whose configured fill and stroke both contain the point.',
+    nativeTrace: null,
+    crcTrace: [event('mouseover', 'a', 'canvas-background'), event('mousemove', 'a')],
+    ordering: FIXED_ORDERING,
+    targeting: targeting(['a']),
+    rule: 'Combined fill and stroke geometry still emits one entry before one movement.',
+    visualTarget: 'a',
+    visualProbe: { x: 120, y: 132, expectedTarget: 'a' },
   },
   {
     id: 'transparent-fill-hit',
@@ -440,7 +455,7 @@ const CONTRACT_CASES = [
     visualTarget: 'a',
     visualProbe: { x: 120, y: 132, expectedTarget: 'a' },
   },
-] as const satisfies readonly MouseContractCase[];
+] as const satisfies readonly MouseContractCaseInput[];
 
 const REQUIRED_CASE_IDS = [
   'leave-region-to-canvas-background',
@@ -450,6 +465,7 @@ const REQUIRED_CASE_IDS = [
   'css-scaled-coordinates',
   'fill-hit',
   'stroke-hit',
+  'fill-stroke-hit',
   'transparent-fill-hit',
   'line-interaction-width-hit',
   'line-interaction-width-miss',
@@ -461,6 +477,29 @@ const REQUIRED_CASE_IDS = [
   'throwing-handler-continues',
 ] as const;
 
+const TFC_05_CASE_IDS = new Set<string>([
+  'nested-child',
+  'clip-intersection-miss',
+  'transformed-hit',
+  'later-layer-topmost',
+  'css-scaled-coordinates',
+]);
+
+const REFERENCE_ONLY_CASE_IDS = new Set<string>(['context-menu']);
+
+function assignContractPhases<const Cases extends readonly MouseContractCaseInput[]>(
+  cases: Cases,
+): readonly (Cases[number] & Pick<MouseContractCase, 'phase'>)[] {
+  return cases.map(contractCase => ({
+    ...contractCase,
+    phase: TFC_05_CASE_IDS.has(contractCase.id) ?
+        'tfc-05' :
+      REFERENCE_ONLY_CASE_IDS.has(contractCase.id) ?
+          'reference-only' :
+        'tfc-04',
+  }));
+}
+
 export function validateMouseContractCases<const Cases extends readonly MouseContractCase[]>(
   cases: Cases,
 ): Cases {
@@ -471,6 +510,10 @@ export function validateMouseContractCases<const Cases extends readonly MouseCon
       throw new Error(`Mouse contract case ids must be non-empty and unique: "${contractCase.id}".`);
     }
     ids.add(contractCase.id);
+
+    if (!['reference-only', 'tfc-04', 'tfc-05'].includes(contractCase.phase)) {
+      throw new Error(`Mouse contract case "${contractCase.id}" has an invalid phase.`);
+    }
 
     if (
       !contractCase.targeting.candidates.length &&
@@ -539,7 +582,7 @@ export function validateMouseContractCases<const Cases extends readonly MouseCon
   return cases;
 }
 
-export const MOUSE_CONTRACT_CASES = validateMouseContractCases(CONTRACT_CASES);
+export const MOUSE_CONTRACT_CASES = validateMouseContractCases(assignContractPhases(CONTRACT_CASES));
 
 export type MouseContractCaseId = (typeof MOUSE_CONTRACT_CASES)[number]['id'];
 

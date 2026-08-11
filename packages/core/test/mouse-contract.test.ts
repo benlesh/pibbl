@@ -52,6 +52,7 @@ describe('mouse interaction contract oracle', () => {
       'exit-root-canvas': 'mouseout(a ← outside-root)',
       'primary-click-reentry': 'mousedown(a) → mouseout(a ← canvas-background) → mouseover(a ← canvas-background) → mousemove(a) → mouseup(a) → click(a)',
       'context-menu': 'mousedown(b) → contextmenu(b) → mouseup(b)',
+      'fill-stroke-hit': 'mouseover(a ← canvas-background) → mousemove(a)',
       'remove-target-during-move-plan': 'mouseout(a ← b)',
     } as const;
     for (const [id, expected] of Object.entries(expectedTraces)) {
@@ -61,6 +62,21 @@ describe('mouse interaction contract oracle', () => {
     }
     expect(MOUSE_CONTRACT_CASES.find(candidate => candidate.id === 'context-menu')?.ordering)
       .toEqual({ kind: 'browser-dependent', referenceEnvironment: 'Chromium on macOS' });
+    expect(MOUSE_CONTRACT_CASES.filter(contractCase => contractCase.phase === 'tfc-05').map(
+      contractCase => contractCase.id,
+    )).toEqual([
+      'nested-child',
+      'clip-intersection-miss',
+      'transformed-hit',
+      'later-layer-topmost',
+      'css-scaled-coordinates',
+    ]);
+    expect(MOUSE_CONTRACT_CASES.filter(
+      contractCase => contractCase.phase === 'reference-only',
+    ).map(contractCase => contractCase.id)).toEqual(['context-menu']);
+    expect(MOUSE_CONTRACT_CASES.filter(contractCase => contractCase.phase === 'tfc-04')).toContainEqual(
+      expect.objectContaining({ id: 'fill-stroke-hit' }),
+    );
   });
 
   it('loads the shared contract explorer and renders every approved case', async () => {
@@ -100,14 +116,14 @@ describe('mouse interaction contract oracle', () => {
       ]);
       expect(pixelAt(canvas, 470, 40)).toEqual([248, 250, 252, 255]);
 
-      // Nested clip intersection is intentionally a TFC-05 conformance target.
+      // TFC-05 and reference-only cases remain oracle diagrams rather than
+      // being misreported as TFC-04 runtime conformance.
       const schematicOnly = [
-        'clip-intersection-miss',
         'line-interaction-width-miss',
         'remove-target-during-move-plan',
         'remove-target-during-press',
       ];
-      if (!schematicOnly.includes(contractCase.id)) {
+      if (contractCase.phase === 'tfc-04' && !schematicOnly.includes(contractCase.id)) {
         moveCanvas(canvas, contractCase.visualProbe.x, contractCase.visualProbe.y);
         const expectedProbe = contractCase.targeting.candidatePolicy === 'canvas-wide-observer' ?
           'canvas-wide-observer' :
