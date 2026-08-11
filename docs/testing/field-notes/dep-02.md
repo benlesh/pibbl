@@ -47,6 +47,11 @@ DEP-02 deliberately reused the DEP-01 viewport, device scale, locale, timezone, 
 - Current-version engine requirements must be checked after resolution, not only from direct package manifests.
 - Browser suites on macOS should share one runner when possible; concurrent standalone Chromium launches can fail for environmental reasons unrelated to tests.
 
+Candidate reusable test tools, deferred until another dependency batch confirms the pattern:
+
+1. a dependency-migration verifier that reports resolved engine floors, peer health, direct-versus-transitive ownership, approved build scripts, and CI/package-manager drift;
+2. a local browser-gate runner that serializes standalone Chromium suites while preserving the runner's internal test-file parallelism.
+
 ## Decisions and follow-ups
 
 - Node 24.15.0 is the supported floor; CI's `node@24` resolves a current compatible LTS patch.
