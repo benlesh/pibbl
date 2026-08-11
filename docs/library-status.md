@@ -100,13 +100,17 @@ Skipped committed tests:
 
 ### Prerequisites and first-time setup
 
-The CI configuration uses Node.js 22. The repository pins pnpm 9.13.2 in `package.json`.
+Use Node.js 24.15.0 or newer on the Node 24 LTS line. The repository pins pnpm 11.21.0 in `package.json`, and CI installs both through `pnpm/setup`.
 
 ```sh
+nvm install 24
+nvm use 24
 corepack enable
-corepack prepare pnpm@9.13.2 --activate
+pnpm --version
 pnpm install --frozen-lockfile
 ```
+
+The `pnpm --version` command reads the repository's `packageManager` field and should report `11.21.0`. If Corepack is unavailable, use one of pnpm's [official installation methods](https://pnpm.io/installation).
 
 If the browser tests report that Chromium is missing, install the Playwright browser once:
 
@@ -170,10 +174,10 @@ pnpm exec vitest run \
 pnpm typecheck
 pnpm lint
 pnpm build
-pnpm -C playground run playground:build
+pnpm playground:build
 ```
 
-`typecheck` and `lint` are currently red as described above. Use the direct playground build command; the root `pnpm playground:build` script is currently broken.
+The verification snapshot above is historical pre-plan evidence. The active project plan records subsequent fixes and current verification results.
 
 ## Existing work outside `main`
 
