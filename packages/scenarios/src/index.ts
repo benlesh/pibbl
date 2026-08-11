@@ -1,6 +1,7 @@
 export {
   getScenarioBySlug,
   interactionLabScenarioEntry,
+  lifecycleLabScenarioEntry,
   loadScenario,
   scenarioCatalog,
   smokeScenarioEntry,
@@ -19,6 +20,13 @@ export type {
   InteractionLabAction,
   InteractionLabState,
 } from './interaction-lab.example';
+export type {
+  LifecycleLabAction,
+  LifecycleLabLastAction,
+  LifecycleLabRuntime,
+  LifecycleLabState,
+  LifecycleLabTarget,
+} from './lifecycle-lab.example';
 export {
   formatContractTrace,
   formatOrderingPolicy,

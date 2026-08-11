@@ -1,5 +1,6 @@
 import type { SmokeScenarioState } from './smoke.example';
 import type { InteractionLabState } from './interaction-lab.example';
+import type { LifecycleLabState } from './lifecycle-lab.example';
 import type { MouseContractScenarioState } from './mouse-contract.example';
 import { MOUSE_CONTRACT_CASES } from './mouse-contract';
 import type {
@@ -282,10 +283,76 @@ export const mouseContractScenarioEntry: ScenarioCatalogEntry<MouseContractScena
   load: async () => (await import('./mouse-contract-scenario')).mouseContractScenario,
 };
 
+const lifecycleLabMetadata: ScenarioMetadata = {
+  id: 'event-lifecycle-lab',
+  slug: 'event-lifecycle-lab',
+  title: 'Event lifecycle laboratory',
+  summary: 'Exercise rerender, handler, subtree, layer, abort, dispose, remount, and stale-cleanup ownership flows.',
+  category: 'Diagnostics',
+  apiTags: ['crc', 'CRCController', 'rect', 'layer', 'mouse events'],
+  conceptTags: ['event ownership', 'teardown', 'dispose', 'remount'],
+  manualSteps: [
+    {
+      action: 'Choose Run 1,000 rerenders, then Replace handler and click the blue primary region.',
+      expected: 'Revision reaches 1,000; the visible handler generation changes and only the replacement records the click.',
+    },
+    {
+      action: 'Choose Remove handler and Remove subtree, then click their former regions.',
+      expected: 'The geometry/cursor state disappears or becomes inert and no ghost call is recorded.',
+    },
+    {
+      action: 'Choose Add layer, click the orange layer, then Remove layer and click its former location.',
+      expected: 'The layer records one call while mounted, then its pixels, cursor, and event behavior disappear.',
+    },
+    {
+      action: 'Choose Abort runtime or Dispose runtime, Cleanup again, Remount runtime, and Cleanup stale.',
+      expected: 'Cleanup is harmless when repeated; a stale signal/controller cannot disturb the fresh mount.',
+    },
+    {
+      action: 'Click Throws, then Safe, and finally choose Reset.',
+      expected: 'The deliberate error is reported, Safe still records input, and Reset restores the initial mounted scene.',
+    },
+  ],
+  knownLimitations: [
+    'Private listener, registry, teardown, instance, and frame ledgers remain test-only; the gallery exposes the same semantic lifecycle actions.',
+    'The Throws region deliberately reports one browser error so error isolation can be inspected.',
+    'Broader image and hook asynchronous cleanup remains assigned to TFC-07.',
+  ],
+  visibility: 'test-laboratory',
+  visibilityReason: 'It exposes lifecycle stress controls and disposal semantics rather than a beginner-facing lesson.',
+  maturity: 'trusted',
+};
+
+export const lifecycleLabScenarioEntry: ScenarioCatalogEntry<LifecycleLabState> = {
+  metadata: lifecycleLabMetadata,
+  canvas: { width: 480, height: 240 },
+  actions: [
+    { id: 'rerender-1000', label: 'Run 1,000 rerenders' },
+    { id: 'replace-handler', label: 'Replace handler' },
+    { id: 'remove-handler', label: 'Remove handler' },
+    { id: 'remove-subtree', label: 'Remove subtree' },
+    { id: 'add-layer', label: 'Add layer' },
+    { id: 'remove-layer', label: 'Remove layer' },
+    { id: 'abort-runtime', label: 'Abort runtime' },
+    { id: 'dispose-runtime', label: 'Dispose runtime' },
+    { id: 'cleanup-again', label: 'Cleanup again' },
+    { id: 'remount-runtime', label: 'Remount runtime' },
+    { id: 'cleanup-stale', label: 'Cleanup stale runtime' },
+  ],
+  source: {
+    id: 'event-lifecycle-lab-example',
+    language: 'ts',
+    marker: "LIFECYCLE_LAB_SOURCE_ID = 'event-lifecycle-lab-example'",
+    path: 'packages/scenarios/src/lifecycle-lab.example.ts',
+  },
+  load: async () => (await import('./lifecycle-lab')).lifecycleLabScenario,
+};
+
 export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] = validateScenarioCatalog([
   smokeScenarioEntry,
   interactionLabScenarioEntry,
   mouseContractScenarioEntry,
+  lifecycleLabScenarioEntry,
 ] as const);
 
 export function getScenarioBySlug(slug: string): AnyScenarioCatalogEntry | undefined {

@@ -1,6 +1,7 @@
 import type { ScenarioCatalogRecord } from '@crc/scenarios';
 import smokeSource from '../../packages/scenarios/src/smoke.example.ts?raw';
 import interactionLabSource from '../../packages/scenarios/src/interaction-lab.example.ts?raw';
+import lifecycleLabSource from '../../packages/scenarios/src/lifecycle-lab.example.ts?raw';
 import mouseContractSource from '../../packages/scenarios/src/mouse-contract.example.ts?raw';
 
 interface ScenarioSourceAdapter {
@@ -16,6 +17,10 @@ const sourceAdapters: Readonly<Record<string, ScenarioSourceAdapter>> = {
   'interaction-trace-lab-example': {
     path: 'packages/scenarios/src/interaction-lab.example.ts',
     sourceText: interactionLabSource,
+  },
+  'event-lifecycle-lab-example': {
+    path: 'packages/scenarios/src/lifecycle-lab.example.ts',
+    sourceText: lifecycleLabSource,
   },
   'mouse-interaction-contract-example': {
     path: 'packages/scenarios/src/mouse-contract.example.ts',
