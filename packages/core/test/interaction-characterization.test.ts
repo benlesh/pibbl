@@ -4,62 +4,53 @@ import type {
   ScenarioController,
 } from '@crc/scenarios';
 import {
+  getMouseContractCase,
   interactionLabScenarioEntry,
   loadScenario,
-  getMouseContractCase,
 } from '@crc/scenarios';
-import { cdp, page } from 'vitest/browser';
-import { afterEach, describe, expect, it } from 'vitest';
+import { page } from 'vitest/browser';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import interactionLabSource from '../../scenarios/src/interaction-lab.example.ts?raw';
+import {
+  clickMouse,
+  moveMouse,
+  pressMouse,
+  releaseMouse,
+} from './support/mouse-input';
+import type { MousePoint } from './support/mouse-input';
 
 const activeControllers = new Set<ScenarioController<InteractionLabState>>();
 
-interface Point {
-  x: number;
-  y: number;
+const BACKGROUND = { x: 460, y: 200 } as const;
+const LEFT = { x: 60, y: 90 } as const;
+const LEFT_WITHIN = { x: 80, y: 100 } as const;
+const RIGHT = { x: 300, y: 90 } as const;
+
+function route(trace: readonly EventTraceEntry[]) {
+  return trace.map(({ type, target }) => ({ type, target }));
 }
 
-function screenPoint(element: HTMLElement, point: Point): Point {
-  const bounds = element.getBoundingClientRect();
-  const frame = window.frameElement;
-  if (!frame) {
-    return { x: bounds.left + point.x, y: bounds.top + point.y };
+function positionedRoute(trace: readonly EventTraceEntry[]) {
+  return trace.map(({ type, target, x, y }) => ({ type, target, x, y }));
+}
+
+function expectedRoute(
+  caseId: string,
+  targets: Readonly<Record<string, string>> = { a: 'left', b: 'right' },
+) {
+  const contractCase = getMouseContractCase(caseId);
+  if (!contractCase) {
+    throw new Error(`Unknown mouse contract case "${caseId}".`);
   }
-  const frameBounds = frame.getBoundingClientRect();
-  return {
-    x: frameBounds.left + (bounds.left + point.x) * (frameBounds.width / window.innerWidth),
-    y: frameBounds.top + (bounds.top + point.y) * (frameBounds.height / window.innerHeight),
-  };
-}
-
-async function dispatchMouse(
-  element: HTMLElement,
-  point: Point,
-  type: 'mouseMoved' | 'mousePressed' | 'mouseReleased',
-): Promise<void> {
-  const position = screenPoint(element, point);
-  await cdp().send('Input.dispatchMouseEvent', {
+  return contractCase.crcTrace.map(({ type, target }) => ({
     type,
-    x: position.x,
-    y: position.y,
-    button: type === 'mouseMoved' ? 'none' : 'left',
-    clickCount: type === 'mouseMoved' ? 0 : 1,
-  });
-}
-
-function projectTrace(trace: readonly EventTraceEntry[]) {
-  return trace.map(({ type, target, relatedTarget, x, y }) => ({
-    type,
-    target,
-    relatedTarget,
-    x,
-    y,
+    target: targets[target] ?? target,
   }));
 }
 
 function nativeContractProjection(
   caseId: string,
-  point: Point,
+  point: MousePoint,
   targets: { a: string; b: string } = { a: 'left', b: 'right' },
 ) {
   const contractCase = getMouseContractCase(caseId);
@@ -81,6 +72,16 @@ function nativeContractProjection(
   }));
 }
 
+function nativeProjection(trace: readonly EventTraceEntry[]) {
+  return trace.filter(entry => entry.source === 'native').map(({
+    type,
+    target,
+    relatedTarget,
+    x,
+    y,
+  }) => ({ type, target, relatedTarget, x, y }));
+}
+
 function pixelAt(canvas: HTMLCanvasElement, x: number, y: number): readonly number[] {
   const context = canvas.getContext('2d');
   if (!context) {
@@ -89,7 +90,7 @@ function pixelAt(canvas: HTMLCanvasElement, x: number, y: number): readonly numb
   return Array.from(context.getImageData(x, y, 1, 1).data);
 }
 
-async function mountCRCLab() {
+async function mountLab() {
   const canvas = document.createElement('canvas');
   canvas.width = interactionLabScenarioEntry.canvas.width;
   canvas.height = interactionLabScenarioEntry.canvas.height;
@@ -99,7 +100,22 @@ async function mountCRCLab() {
   const definition = await loadScenario(interactionLabScenarioEntry);
   const controller = await definition.mount({ canvas, referenceHost });
   activeControllers.add(controller);
-  return { canvas, controller, referenceHost };
+  return { canvas, controller, definition, referenceHost };
+}
+
+async function clearTrace(controller: ScenarioController<InteractionLabState>): Promise<void> {
+  await controller.perform('clear-trace');
+  expect(controller.getState().trace).toEqual([]);
+}
+
+async function prepareFixture(
+  controller: ScenarioController<InteractionLabState>,
+  canvas: HTMLCanvasElement,
+  fixture: InteractionLabState['fixture'],
+): Promise<void> {
+  await controller.perform(`show-${fixture}`);
+  await moveMouse(canvas, BACKGROUND);
+  await clearTrace(controller);
 }
 
 afterEach(async () => {
@@ -107,101 +123,329 @@ afterEach(async () => {
     await controller.dispose();
   }
   activeControllers.clear();
+  vi.restoreAllMocks();
   document.body.replaceChildren();
 });
 
-describe('interaction trace characterization', () => {
-  it('freezes the current CRC enter, move, switch, exit, and click-family traces', async () => {
-    await page.viewport(800, 600);
+describe('interaction ordering and target contract', () => {
+  it('loads the trusted shared laboratory and preserves its deterministic visuals', async () => {
+    await page.viewport(900, 700);
     expect(interactionLabSource).toContain(interactionLabScenarioEntry.source.marker);
-    const { canvas, controller } = await mountCRCLab();
+    const { canvas, controller, definition } = await mountLab();
+
+    expect(controller.getState().fixture).toBe('regions');
     expect(pixelAt(canvas, 10, 10)).toEqual([248, 250, 252, 255]);
     expect(pixelAt(canvas, 60, 140)).toEqual([37, 99, 235, 255]);
     expect(pixelAt(canvas, 300, 140)).toEqual([124, 58, 237, 255]);
+    expect(definition.formatState(controller.getState())).toContainEqual({
+      label: 'Actual trace',
+      value: 'none',
+    });
 
-    await dispatchMouse(canvas, { x: 10, y: 10 }, 'mouseMoved');
+    await controller.perform('show-overlap');
+    expect(pixelAt(canvas, 100, 120)).toEqual([37, 99, 235, 255]);
+    expect(pixelAt(canvas, 220, 120)).toEqual([124, 58, 237, 255]);
     await controller.reset();
-    await dispatchMouse(canvas, { x: 60, y: 90 }, 'mouseMoved');
-    await dispatchMouse(canvas, { x: 80, y: 100 }, 'mouseMoved');
-    await dispatchMouse(canvas, { x: 300, y: 90 }, 'mouseMoved');
-    await dispatchMouse(canvas, { x: 460, y: 200 }, 'mouseMoved');
-
-    expect(projectTrace(controller.getState().trace)).toEqual([
-      { type: 'mousemove', target: 'left', relatedTarget: null, x: 60, y: 90 },
-      { type: 'mouseover', target: 'left', relatedTarget: null, x: 60, y: 90 },
-      { type: 'mousemove', target: 'left', relatedTarget: null, x: 80, y: 100 },
-      { type: 'mouseout', target: 'left', relatedTarget: null, x: 300, y: 90 },
-      { type: 'mousemove', target: 'right', relatedTarget: null, x: 300, y: 90 },
-      { type: 'mouseover', target: 'right', relatedTarget: null, x: 300, y: 90 },
-      { type: 'mouseout', target: 'right', relatedTarget: null, x: 460, y: 200 },
-    ]);
-
-    await controller.reset();
-    await dispatchMouse(canvas, { x: 60, y: 90 }, 'mouseMoved');
-    await controller.reset();
-    await dispatchMouse(canvas, { x: 60, y: 90 }, 'mousePressed');
-    await dispatchMouse(canvas, { x: 60, y: 90 }, 'mouseReleased');
-    expect(projectTrace(controller.getState().trace)).toEqual([
-      { type: 'mousedown', target: 'left', relatedTarget: null, x: 60, y: 90 },
-      { type: 'mouseup', target: 'left', relatedTarget: null, x: 60, y: 90 },
-      { type: 'click', target: 'left', relatedTarget: null, x: 60, y: 90 },
-    ]);
+    expect(controller.getState()).toMatchObject({
+      fixture: 'regions',
+      handlerGeneration: 1,
+      lastAction: 'reset',
+      trace: [],
+    });
   });
 
-  it('records the analogous native DOM traces as characterization evidence', async () => {
-    await page.viewport(800, 600);
-    const { controller, referenceHost } = await mountCRCLab();
+  it('matches the approved enter, stable, switch, background, root-exit, and re-entry routes', async () => {
+    await page.viewport(900, 700);
+    const { canvas, controller } = await mountLab();
+    await moveMouse(canvas, BACKGROUND);
+    await clearTrace(controller);
+
+    await moveMouse(canvas, LEFT);
+    expect(route(controller.getState().trace)).toEqual(expectedRoute('enter-region'));
+    expect(positionedRoute(controller.getState().trace)).toEqual([
+      { type: 'mouseover', target: 'left', ...LEFT },
+      { type: 'mousemove', target: 'left', ...LEFT },
+    ]);
+
+    await clearTrace(controller);
+    await moveMouse(canvas, LEFT_WITHIN);
+    expect(route(controller.getState().trace)).toEqual(expectedRoute('move-within-region'));
+
+    await clearTrace(controller);
+    await moveMouse(canvas, RIGHT);
+    expect(route(controller.getState().trace)).toEqual(expectedRoute('switch-regions'));
+
+    await clearTrace(controller);
+    await moveMouse(canvas, BACKGROUND);
+    expect(route(controller.getState().trace)).toEqual(expectedRoute(
+      'leave-region-to-canvas-background',
+      { a: 'right' },
+    ));
+
+    await moveMouse(canvas, LEFT);
+    await clearTrace(controller);
+    await moveMouse(canvas, { x: 500, y: 200 });
+    expect(route(controller.getState().trace)).toEqual(expectedRoute('exit-root-canvas'));
+    await moveMouse(canvas, { x: 520, y: 200 });
+    expect(route(controller.getState().trace)).toEqual(expectedRoute('exit-root-canvas'));
+
+    await clearTrace(controller);
+    await moveMouse(canvas, LEFT);
+    expect(route(controller.getState().trace)).toEqual(expectedRoute('enter-region'));
+  });
+
+  it('selects one reverse-paint-order target and keeps its cursor in agreement', async () => {
+    await page.viewport(900, 700);
+    const { canvas, controller } = await mountLab();
+    await prepareFixture(controller, canvas, 'overlap');
+
+    await moveMouse(canvas, { x: 100, y: 120 });
+    expect(route(controller.getState().trace)).toEqual(expectedRoute(
+      'enter-region',
+      { a: 'lower' },
+    ));
+    expect(canvas.style.cursor).toBe('crosshair');
+
+    await clearTrace(controller);
+    await moveMouse(canvas, { x: 220, y: 120 });
+    expect(route(controller.getState().trace)).toEqual(expectedRoute(
+      'switch-regions',
+      { a: 'lower', b: 'top' },
+    ));
+    expect(canvas.style.cursor).toBe('pointer');
+
+    await clearTrace(controller);
+    await controller.perform('reorder-overlap');
+    await moveMouse(canvas, { x: 220, y: 120 });
+    expect(route(controller.getState().trace)).toEqual(expectedRoute(
+      'switch-regions',
+      { a: 'top', b: 'lower' },
+    ));
+    expect(canvas.style.cursor).toBe('crosshair');
+
+    await controller.perform('show-overlap');
+    await moveMouse(canvas, { x: 220, y: 120 });
+    await clearTrace(controller);
+    await controller.perform('remove-top');
+    expect(canvas.style.cursor).toBe('');
+    await moveMouse(canvas, { x: 220, y: 120 });
+    expect(route(controller.getState().trace)).toEqual(expectedRoute(
+      'enter-region',
+      { a: 'lower' },
+    ));
+    expect(canvas.style.cursor).toBe('crosshair');
+  });
+
+  it('targets the painted child inside an untransformed nested group without fan-out', async () => {
+    await page.viewport(900, 700);
+    const { canvas, controller } = await mountLab();
+    await prepareFixture(controller, canvas, 'nested');
+
+    await moveMouse(canvas, { x: 100, y: 110 });
+    expect(route(controller.getState().trace)).toEqual(expectedRoute(
+      'enter-region',
+      { a: 'parent' },
+    ));
+    expect(canvas.style.cursor).toBe('crosshair');
+
+    await clearTrace(controller);
+    await moveMouse(canvas, { x: 220, y: 120 });
+    expect(route(controller.getState().trace)).toEqual(expectedRoute(
+      'switch-regions',
+      { a: 'parent', b: 'child' },
+    ));
+    expect(controller.getState().trace.filter(entry => entry.target === 'parent')).toHaveLength(1);
+    expect(canvas.style.cursor).toBe('pointer');
+  });
+
+  it.each([
+    { fixture: 'fill', caseId: 'fill-hit', hit: { x: 150, y: 120 }, miss: { x: 50, y: 210 } },
+    { fixture: 'stroke', caseId: 'stroke-hit', hit: { x: 91, y: 126 }, miss: { x: 150, y: 126 } },
+    { fixture: 'fill-stroke', caseId: 'fill-stroke-hit', hit: { x: 150, y: 120 }, miss: { x: 50, y: 210 } },
+    { fixture: 'transparent', caseId: 'transparent-fill-hit', hit: { x: 150, y: 120 }, miss: { x: 50, y: 210 } },
+    { fixture: 'interaction-width', caseId: 'line-interaction-width-hit', hit: { x: 240, y: 135 }, miss: { x: 240, y: 155 } },
+  ] as const)('emits entry before movement for $fixture geometry and rejects its miss', async ({
+    fixture,
+    caseId,
+    hit,
+    miss,
+  }) => {
+    await page.viewport(900, 700);
+    const { canvas, controller } = await mountLab();
+    await prepareFixture(controller, canvas, fixture);
+
+    await moveMouse(canvas, miss);
+    expect(controller.getState().trace, `${fixture} negative probe`).toEqual([]);
+    expect(canvas.style.cursor).toBe('');
+
+    await moveMouse(canvas, hit);
+    expect(route(controller.getState().trace), fixture).toEqual(expectedRoute(caseId, { a: 'a' }));
+    expect(canvas.style.cursor).toBe('pointer');
+    if (fixture === 'transparent') {
+      expect(pixelAt(canvas, 150, 120)).toEqual([226, 232, 240, 255]);
+    }
+  });
+
+  it('keeps a handler with no configured hit geometry inert', async () => {
+    await page.viewport(900, 700);
+    const { canvas, controller } = await mountLab();
+    await prepareFixture(controller, canvas, 'no-hit');
+    await moveMouse(canvas, { x: 150, y: 120 });
+    expect(controller.getState().trace).toEqual([]);
+    expect(canvas.style.cursor).toBe('');
+  });
+
+  it('keeps stable identity across handler replacement and removes handlers without ghosts', async () => {
+    await page.viewport(900, 700);
+    const { canvas, controller } = await mountLab();
+    await moveMouse(canvas, LEFT);
+    await clearTrace(controller);
+
+    await controller.perform('replace-handler');
+    await moveMouse(canvas, LEFT_WITHIN);
+    expect(route(controller.getState().trace)).toEqual(expectedRoute('move-within-region'));
+    expect(controller.getState().lastHandlerGeneration).toBe(2);
+
+    await clearTrace(controller);
+    await controller.perform('remove-handler');
+    expect(canvas.style.cursor).toBe('');
+    await moveMouse(canvas, LEFT);
+    await clickMouse(canvas, LEFT);
+    expect(controller.getState().trace).toEqual([]);
+  });
+
+  it('runs Canvas-wide observers after the target plan and continues after reported errors', async () => {
+    await page.viewport(900, 700);
+    const reportError = vi.spyOn(globalThis, 'reportError').mockImplementation(() => undefined);
+    const { canvas, controller } = await mountLab();
+    await prepareFixture(controller, canvas, 'observer');
+
+    await moveMouse(canvas, { x: 150, y: 120 });
+    expect(route(controller.getState().trace)).toEqual([
+      { type: 'mouseover', target: 'a' },
+      { type: 'mousemove', target: 'a' },
+      { type: 'mousemove', target: 'canvas-observer' },
+    ]);
+    await clearTrace(controller);
+    await moveMouse(canvas, BACKGROUND);
+    expect(route(controller.getState().trace)).toEqual([
+      { type: 'mouseout', target: 'a' },
+      { type: 'mousemove', target: 'canvas-observer' },
+    ]);
+
+    await prepareFixture(controller, canvas, 'throwing');
+    await moveMouse(canvas, LEFT);
+    await clearTrace(controller);
+    await moveMouse(canvas, RIGHT);
+    expect(route(controller.getState().trace)).toEqual(expectedRoute('switch-regions'));
+    expect(reportError).toHaveBeenCalledOnce();
+    expect(reportError.mock.calls[0][0]).toEqual(expect.objectContaining({
+      message: 'Deliberate ordering-lab mouseout failure',
+    }));
+  });
+
+  it('skips a planned target when the public controller removes the runtime during mouseout', async () => {
+    await page.viewport(900, 700);
+    const { canvas, controller } = await mountLab();
+    await prepareFixture(controller, canvas, 'remove-during-transition');
+    await moveMouse(canvas, LEFT);
+    await clearTrace(controller);
+    await moveMouse(canvas, RIGHT);
+    expect(route(controller.getState().trace)).toEqual(expectedRoute(
+      'remove-target-during-move-plan',
+      { a: 'left', b: 'right' },
+    ));
+    await moveMouse(canvas, LEFT);
+    expect(route(controller.getState().trace)).toEqual(expectedRoute(
+      'remove-target-during-move-plan',
+      { a: 'left', b: 'right' },
+    ));
+  });
+
+  it('enforces same-live-target primary activation and removed-target cancellation', async () => {
+    await page.viewport(900, 700);
+    const { canvas, controller } = await mountLab();
+
+    await moveMouse(canvas, LEFT);
+    await clearTrace(controller);
+    await clickMouse(canvas, LEFT);
+    expect(route(controller.getState().trace)).toEqual(expectedRoute('primary-click-same-target'));
+
+    await clearTrace(controller);
+    await pressMouse(canvas, LEFT);
+    await moveMouse(canvas, RIGHT);
+    await releaseMouse(canvas, RIGHT);
+    expect(route(controller.getState().trace)).toEqual(expectedRoute('primary-click-cross-target'));
+
+    await moveMouse(canvas, LEFT);
+    await clearTrace(controller);
+    await pressMouse(canvas, LEFT);
+    await moveMouse(canvas, BACKGROUND);
+    await moveMouse(canvas, LEFT);
+    await releaseMouse(canvas, LEFT);
+    expect(route(controller.getState().trace)).toEqual(expectedRoute('primary-click-reentry'));
+
+    await clearTrace(controller);
+    await pressMouse(canvas, LEFT);
+    await controller.perform('remove-handler');
+    await releaseMouse(canvas, LEFT);
+    expect(route(controller.getState().trace)).toEqual(expectedRoute('remove-target-during-press'));
+  });
+
+  it('delivers double click and preserves the active browser context-menu order', async () => {
+    await page.viewport(900, 700);
+    const { canvas, controller } = await mountLab();
+    await moveMouse(canvas, LEFT);
+    await clearTrace(controller);
+    await pressMouse(canvas, LEFT, { clickCount: 1 });
+    await releaseMouse(canvas, LEFT, { clickCount: 1 });
+    await pressMouse(canvas, LEFT, { clickCount: 2 });
+    await releaseMouse(canvas, LEFT, { clickCount: 2 });
+    expect(route(controller.getState().trace)).toEqual(expectedRoute('double-click'));
+
+    await moveMouse(canvas, RIGHT);
+    await clearTrace(controller);
+    const nativeOrder: string[] = [];
+    const recordNative = (event: Event) => nativeOrder.push(event.type);
+    for (const type of ['mousedown', 'contextmenu', 'mouseup']) {
+      canvas.addEventListener(type, recordNative);
+    }
+    await pressMouse(canvas, RIGHT, { button: 'right' });
+    await releaseMouse(canvas, RIGHT, { button: 'right' });
+    for (const type of ['mousedown', 'contextmenu', 'mouseup']) {
+      canvas.removeEventListener(type, recordNative);
+    }
+    expect(route(controller.getState().trace)).toEqual(nativeOrder.map(type => ({
+      type,
+      target: 'right',
+    })));
+    expect(new Set(nativeOrder)).toEqual(new Set(['mousedown', 'contextmenu', 'mouseup']));
+  });
+
+  it('cross-checks analogous movement traces against the current native Chromium fixture', async () => {
+    await page.viewport(900, 700);
+    const { controller, referenceHost } = await mountLab();
     const fixture = referenceHost.querySelector<HTMLElement>('[data-testid="native-reference-stage"]');
     if (!fixture) {
       throw new Error('The shared native reference fixture was not mounted.');
     }
-    await dispatchMouse(fixture, { x: 10, y: 10 }, 'mouseMoved');
-    await controller.reset();
-    await dispatchMouse(fixture, { x: 60, y: 90 }, 'mouseMoved');
-    await dispatchMouse(fixture, { x: 80, y: 100 }, 'mouseMoved');
-    await dispatchMouse(fixture, { x: 300, y: 90 }, 'mouseMoved');
-    await dispatchMouse(fixture, { x: 460, y: 200 }, 'mouseMoved');
 
-    expect(projectTrace(controller.getState().trace)).toEqual([
-      ...nativeContractProjection('enter-region', { x: 60, y: 90 }),
-      ...nativeContractProjection('move-within-region', { x: 80, y: 100 }),
-      ...nativeContractProjection('switch-regions', { x: 300, y: 90 }),
+    await moveMouse(fixture, { x: 10, y: 10 });
+    await clearTrace(controller);
+    await moveMouse(fixture, LEFT);
+    await moveMouse(fixture, LEFT_WITHIN);
+    await moveMouse(fixture, RIGHT);
+    await moveMouse(fixture, BACKGROUND);
+
+    expect(nativeProjection(controller.getState().trace)).toEqual([
+      ...nativeContractProjection('enter-region', LEFT),
+      ...nativeContractProjection('move-within-region', LEFT_WITHIN),
+      ...nativeContractProjection('switch-regions', RIGHT),
       ...nativeContractProjection(
         'leave-region-to-canvas-background',
-        { x: 460, y: 200 },
+        BACKGROUND,
         { a: 'right', b: 'right' },
       ),
-    ]);
-
-    await dispatchMouse(fixture, { x: 60, y: 90 }, 'mouseMoved');
-    await controller.reset();
-    await dispatchMouse(fixture, { x: 500, y: 200 }, 'mouseMoved');
-    expect(projectTrace(controller.getState().trace)).toEqual([
-      ...nativeContractProjection('exit-root-canvas', { x: 500, y: 200 }),
-    ]);
-
-    await dispatchMouse(fixture, { x: 10, y: 10 }, 'mouseMoved');
-    await dispatchMouse(fixture, { x: 60, y: 90 }, 'mouseMoved');
-    await controller.reset();
-    await dispatchMouse(fixture, { x: 60, y: 90 }, 'mousePressed');
-    await dispatchMouse(fixture, { x: 240, y: 200 }, 'mouseMoved');
-    await dispatchMouse(fixture, { x: 60, y: 90 }, 'mouseMoved');
-    await dispatchMouse(fixture, { x: 60, y: 90 }, 'mouseReleased');
-    expect(projectTrace(controller.getState().trace)).toEqual([
-      { type: 'mousedown', target: 'left', relatedTarget: null, x: 60, y: 90 },
-      { type: 'mouseout', target: 'left', relatedTarget: 'outside', x: 240, y: 200 },
-      { type: 'mouseover', target: 'left', relatedTarget: 'outside', x: 60, y: 90 },
-      { type: 'mousemove', target: 'left', relatedTarget: null, x: 60, y: 90 },
-      { type: 'mouseup', target: 'left', relatedTarget: null, x: 60, y: 90 },
-      { type: 'click', target: 'left', relatedTarget: null, x: 60, y: 90 },
-    ]);
-
-    await dispatchMouse(fixture, { x: 60, y: 90 }, 'mouseMoved');
-    await controller.reset();
-    await dispatchMouse(fixture, { x: 60, y: 90 }, 'mousePressed');
-    await dispatchMouse(fixture, { x: 60, y: 90 }, 'mouseReleased');
-    expect(projectTrace(controller.getState().trace)).toEqual([
-      ...nativeContractProjection('primary-click-same-target', { x: 60, y: 90 }),
     ]);
   });
 });
