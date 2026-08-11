@@ -6,7 +6,8 @@
     "playground:build": "vite build"
   },
   "dependencies": {
-    "@crc/core": "workspace:*"
+    "@crc/core": "workspace:*",
+    "@crc/scenarios": "workspace:*"
   },
   "devDependencies": {
     "vite": "catalog:"

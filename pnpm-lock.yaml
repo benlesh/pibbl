@@ -235,6 +235,9 @@ importers:
       '@crc/core':
         specifier: workspace:*
         version: link:../packages/core
+      '@crc/scenarios':
+        specifier: workspace:*
+        version: link:../packages/scenarios
     devDependencies:
       vite:
         specifier: 'catalog:'
