@@ -222,7 +222,7 @@ These are investigation leads from the current code, not pre-approved implementa
 | Step   | Queue state | Outcome                                                                                       |
 | ------ | ----------- | --------------------------------------------------------------------------------------------- |
 | DEP-01 | Done        | Established the shared manual/headless/visual scenario spine and pre-upgrade baseline.        |
-| DEP-02 | Next        | Upgrade package manager, language, type, lint, and formatting tooling to latest.              |
+| DEP-02 | In progress | Upgrade package manager, language, type, lint, and formatting tooling to latest.              |
 | DEP-03 | Queued      | Upgrade build, bundling, and package tooling to latest.                                       |
 | DEP-04 | Queued      | Upgrade browser-test and remaining tooling, then close dependency freshness.                  |
 | TFC-01 | Queued      | Create the interaction/lifecycle characterization harness and freeze the measurable baseline. |
@@ -295,7 +295,7 @@ Create the minimum trustworthy integration/visual test spine needed to modernize
 - Run and record `pnpm outdated -r --format json`.
 - Run install, committed baseline tests, typecheck, lint, package build, and direct playground build.
 
-## DEP-02 [NEXT] — Package manager, language, types, lint, and formatting
+## DEP-02 [IN PROGRESS] — Package manager, language, types, lint, and formatting
 
 ### Goal
 
