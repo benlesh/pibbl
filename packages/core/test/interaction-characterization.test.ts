@@ -6,6 +6,7 @@ import type {
 import {
   interactionLabScenarioEntry,
   loadScenario,
+  getMouseContractCase,
 } from '@crc/scenarios';
 import { cdp, page } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -53,6 +54,25 @@ function projectTrace(trace: readonly EventTraceEntry[]) {
     relatedTarget,
     x,
     y,
+  }));
+}
+
+function nativeContractProjection(
+  caseId: string,
+  point: Point,
+  targets: { a: string; b: string } = { a: 'left', b: 'right' },
+) {
+  const contractCase = getMouseContractCase(caseId);
+  if (!contractCase?.nativeTrace) {
+    throw new Error(`Mouse contract case "${caseId}" has no native trace.`);
+  }
+  const fixtureTarget = (target: string | null) =>
+    target === 'a' ? targets.a : target === 'b' ? targets.b : target;
+  return contractCase.nativeTrace.map(({ type, target, relatedTarget }) => ({
+    type,
+    target: fixtureTarget(target),
+    relatedTarget: fixtureTarget(relatedTarget),
+    ...point,
   }));
 }
 
@@ -138,13 +158,10 @@ describe('interaction trace characterization', () => {
     await dispatchMouse(fixture, { x: 460, y: 200 }, 'mouseMoved');
 
     expect(projectTrace(controller.getState().trace)).toEqual([
-      { type: 'mouseover', target: 'left', relatedTarget: 'outside', x: 60, y: 90 },
-      { type: 'mousemove', target: 'left', relatedTarget: null, x: 60, y: 90 },
-      { type: 'mousemove', target: 'left', relatedTarget: null, x: 80, y: 100 },
-      { type: 'mouseout', target: 'left', relatedTarget: 'right', x: 300, y: 90 },
-      { type: 'mouseover', target: 'right', relatedTarget: 'left', x: 300, y: 90 },
-      { type: 'mousemove', target: 'right', relatedTarget: null, x: 300, y: 90 },
-      { type: 'mouseout', target: 'right', relatedTarget: 'outside', x: 460, y: 200 },
+      ...nativeContractProjection('enter-region', { x: 60, y: 90 }),
+      ...nativeContractProjection('move-within-region', { x: 80, y: 100 }),
+      ...nativeContractProjection('switch-regions', { x: 300, y: 90 }),
+      ...nativeContractProjection('exit-canvas', { x: 460, y: 200 }, { a: 'right', b: 'right' }),
     ]);
 
     await dispatchMouse(fixture, { x: 60, y: 90 }, 'mouseMoved');
@@ -152,9 +169,7 @@ describe('interaction trace characterization', () => {
     await dispatchMouse(fixture, { x: 60, y: 90 }, 'mousePressed');
     await dispatchMouse(fixture, { x: 60, y: 90 }, 'mouseReleased');
     expect(projectTrace(controller.getState().trace)).toEqual([
-      { type: 'mousedown', target: 'left', relatedTarget: null, x: 60, y: 90 },
-      { type: 'mouseup', target: 'left', relatedTarget: null, x: 60, y: 90 },
-      { type: 'click', target: 'left', relatedTarget: null, x: 60, y: 90 },
+      ...nativeContractProjection('primary-click-same-target', { x: 60, y: 90 }),
     ]);
   });
 });
