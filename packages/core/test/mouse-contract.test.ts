@@ -5,6 +5,7 @@ import type {
 import {
   formatContractTrace,
   formatOrderingPolicy,
+  GEOMETRY_MATRIX_CASES,
   loadScenario,
   mouseContractScenarioEntry,
   MOUSE_CONTRACT_CASES,
@@ -71,6 +72,12 @@ describe('mouse interaction contract oracle', () => {
       'later-layer-topmost',
       'css-scaled-coordinates',
     ]);
+    const geometryContractCases = new Set<string>(
+      GEOMETRY_MATRIX_CASES.flatMap(matrixCase => matrixCase.contractCaseIds),
+    );
+    expect(MOUSE_CONTRACT_CASES.filter(contractCase => contractCase.phase === 'tfc-05').map(
+      contractCase => contractCase.id,
+    ).filter(caseId => !geometryContractCases.has(caseId))).toEqual([]);
     expect(MOUSE_CONTRACT_CASES.filter(
       contractCase => contractCase.phase === 'reference-only',
     ).map(contractCase => contractCase.id)).toEqual(['context-menu']);

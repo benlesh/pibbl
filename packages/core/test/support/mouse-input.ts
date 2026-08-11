@@ -7,6 +7,17 @@ export interface MousePoint {
 
 export type MouseInputType = 'mouseMoved' | 'mousePressed' | 'mouseReleased';
 
+export function cssPointForIntrinsic(
+  canvas: HTMLCanvasElement,
+  point: MousePoint,
+): MousePoint {
+  const bounds = canvas.getBoundingClientRect();
+  return {
+    x: point.x * bounds.width / canvas.width,
+    y: point.y * bounds.height / canvas.height,
+  };
+}
+
 function screenPoint(element: HTMLElement, point: MousePoint): MousePoint {
   const bounds = element.getBoundingClientRect();
   const frame = window.frameElement;
