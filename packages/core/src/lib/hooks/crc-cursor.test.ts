@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { rect } from '../components/rect';
+import { crc } from '../crc';
 import { defineComp } from '../define-comp';
 import { componentTest } from '../test-utils/component-test';
 import { crcCursor } from './crc-cursor';
@@ -49,4 +50,61 @@ describe('crcCursor', () => {
     await canvas.mouseMove({ position: { x: 10, y: 10 } });
     expect(getComputedStyle(canvas.element).cursor).toBe('wait');
   });
+
+  it('restores the preceding fallback immediately when the winner is removed', async () => {
+    const Scene = defineComp<{ second: boolean }>(({ second }) => {
+      crcCursor({ style: 'wait' });
+      crcCursor({ style: second ? 'help' : undefined });
+    });
+    const canvas = await componentTest(Scene({ second: true }));
+    await canvas.mouseMove({ position: { x: 80, y: 80 } });
+    expect(getComputedStyle(canvas.element).cursor).toBe('help');
+
+    crc(canvas.element, Scene({ second: false }));
+    await nextFrame();
+
+    expect(getComputedStyle(canvas.element).cursor).toBe('wait');
+  });
+
+  it('keeps the fallback applied when its cursorless hovered region is removed', async () => {
+    const Scene = defineComp<{ region: boolean }>(({ region }) => {
+      crcCursor({ style: 'wait' });
+      return region ?
+          rect({
+            x: 40,
+            y: 40,
+            width: 80,
+            height: 80,
+            fillStyle: 'red',
+            onMouseMove: () => undefined,
+          }) :
+        undefined;
+    });
+    const canvas = await componentTest(Scene({ region: true }));
+    await canvas.mouseMove({ position: { x: 80, y: 80 } });
+    expect(getComputedStyle(canvas.element).cursor).toBe('wait');
+
+    crc(canvas.element, Scene({ region: false }));
+    await nextFrame();
+
+    expect(getComputedStyle(canvas.element).cursor).toBe('wait');
+  });
+
+  it('does not clear an externally replaced cursor during fallback removal', async () => {
+    const Scene = defineComp<{ enabled: boolean }>(({ enabled }) => {
+      crcCursor({ style: enabled ? 'wait' : undefined });
+    });
+    const canvas = await componentTest(Scene({ enabled: true }));
+    await canvas.mouseMove({ position: { x: 80, y: 80 } });
+    canvas.element.style.cursor = 'progress';
+
+    crc(canvas.element, Scene({ enabled: false }));
+    await nextFrame();
+
+    expect(canvas.element.style.cursor).toBe('progress');
+  });
 });
+
+function nextFrame(): Promise<void> {
+  return new Promise(resolve => requestAnimationFrame(() => resolve()));
+}

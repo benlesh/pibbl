@@ -48,7 +48,11 @@ export function removeInteractionRegion(
     interaction.clickStreak = 0;
   }
   if (interaction.cursorRegion === region) {
+    const canvas = interaction.cursorCanvas;
     releaseCursor(instance);
+    if (canvas) {
+      applyCursor(instance, undefined, canvas);
+    }
   }
 }
 
@@ -70,7 +74,11 @@ export function removeCursorDefault(
 ): void {
   instance.cursorDefaults.delete(cursorDefault);
   if (instance.interaction.cursorDefault === cursorDefault) {
+    const canvas = instance.interaction.cursorCanvas;
     releaseCursor(instance);
+    if (canvas) {
+      applyCursor(instance, instance.interaction.hoveredRegion, canvas);
+    }
   }
 }
 
