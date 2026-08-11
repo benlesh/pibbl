@@ -42,7 +42,8 @@ export function Path(props: PathProps, ctx: RenderingContext2D) {
   }
 
   if (strokeStyle && lineWidth && lineWidth > 0) {
-    (ctx.strokeStyle = strokeStyle), (ctx.lineWidth = lineWidth);
+    ctx.strokeStyle = strokeStyle;
+    ctx.lineWidth = lineWidth;
     ctx.stroke(path);
   }
 

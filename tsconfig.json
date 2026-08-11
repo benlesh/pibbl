@@ -28,6 +28,7 @@
   },
   "include": [
     "**/*.ts",
+    "**/*.test-d.ts",
     "**/*.mjs",
     "eslint.config.mjs"
   ],
