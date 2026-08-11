@@ -41,6 +41,13 @@ export default antfu(
     },
   },
   {
+    files: ['pnpm-workspace.yaml'],
+    rules: {
+      'pnpm/yaml-enforce-settings': 'off',
+      'pnpm/yaml-no-unused-catalog-item': 'off',
+    },
+  },
+  {
     files: [
       'packages/core/**/*.ts',
     ],
