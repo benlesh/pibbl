@@ -358,18 +358,6 @@ function transformedNestedLayer(record: GeometryMatrixRecord) {
 
 function strokeBoundary(record: GeometryMatrixRecord) {
   return [
-    line({
-      key: 'upper-interaction-guide',
-      coords: [[80, 110], [400, 110]],
-      strokeStyle: '#cbd5e1',
-      lineWidth: 1,
-    }),
-    line({
-      key: 'lower-interaction-guide',
-      coords: [[80, 130], [400, 130]],
-      strokeStyle: '#cbd5e1',
-      lineWidth: 1,
-    }),
     g({
       key: 'scaled-stroke-group',
       scaleY: 2,
