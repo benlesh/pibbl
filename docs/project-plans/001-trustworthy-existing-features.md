@@ -221,7 +221,7 @@ These are investigation leads from the current code, not pre-approved implementa
 
 | Step   | Queue state | Outcome                                                                                       |
 | ------ | ----------- | --------------------------------------------------------------------------------------------- |
-| DEP-01 | Next        | Establish the shared manual/headless/visual scenario spine and freeze a pre-upgrade baseline. |
+| DEP-01 | In progress | Establish the shared manual/headless/visual scenario spine and freeze a pre-upgrade baseline. |
 | DEP-02 | Queued      | Upgrade package manager, language, type, lint, and formatting tooling to latest.              |
 | DEP-03 | Queued      | Upgrade build, bundling, and package tooling to latest.                                       |
 | DEP-04 | Queued      | Upgrade browser-test and remaining tooling, then close dependency freshness.                  |
@@ -236,7 +236,7 @@ These are investigation leads from the current code, not pre-approved implementa
 | TFC-09 | Queued      | Close confidence gaps in the existing drawing components.                                     |
 | TFC-10 | Queued      | Install the trust gate in CI and publish the supported-contract summary.                      |
 
-## DEP-01 [NEXT] — Shared scenario spine and pre-upgrade baseline
+## DEP-01 [IN PROGRESS] — Shared scenario spine and pre-upgrade baseline
 
 ### Goal
 
