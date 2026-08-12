@@ -12,6 +12,7 @@ import {
 import { page, userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
 import smokeSource from '../../scenarios/src/smoke.example.ts?raw';
+import { moveMouse, pressMouse, releaseMouse } from './support/mouse-input';
 import { expectVisualMatch } from './visual-compare';
 
 interface SmokeTestHarness {
@@ -141,6 +142,18 @@ describe('shared smoke scenario', () => {
       lastAction: 'update',
     });
     expect(pixelAt(canvas, 200, 150)).toEqual([124, 58, 237, 255]);
+
+    const background = { x: 400, y: 200 };
+    const target = { x: 100, y: 100 };
+    await moveMouse(canvas, background);
+    await pressMouse(canvas, background);
+    await releaseMouse(canvas, target);
+    await controller.settled();
+    expect(controller.getState()).toEqual({
+      revision: 1,
+      clicks: 0,
+      lastAction: 'update',
+    });
 
     await userEvent.click(canvas, { position: { x: 100, y: 100 } });
     await controller.settled();
