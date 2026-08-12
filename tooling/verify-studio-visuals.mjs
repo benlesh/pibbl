@@ -12,17 +12,17 @@ const routes = [
   {
     name: "primitive",
     hash: "#/examples/drawing/rectangle",
-    ready: ".studio-preview__frame:not(.studio-preview__frame--candidate)",
+    ready: ".studio-preview__frame",
   },
   {
     name: "mouse",
     hash: "#/examples/mouse-events/click",
-    ready: ".studio-preview__frame:not(.studio-preview__frame--candidate)",
+    ready: ".studio-preview__frame",
   },
   {
     name: "advanced",
     hash: "#/examples/advanced-interactions/transformed-clipped-layered-targets",
-    ready: ".studio-preview__frame:not(.studio-preview__frame--candidate)",
+    ready: ".studio-preview__frame",
   },
   {
     name: "test-lab",
@@ -142,6 +142,14 @@ try {
       await page
         .getByText("Live · changes run automatically")
         .waitFor({ timeout: 30_000 });
+      const frames = page.locator(".studio-preview__frame");
+      const frameCount = await frames.count();
+      const sandbox = await frames.first().getAttribute("sandbox");
+      if (frameCount !== 1 || sandbox !== "allow-scripts") {
+        throw new Error(
+          `Studio lesson must use exactly one opaque script-only preview frame; received ${frameCount} frame(s) with sandbox=${JSON.stringify(sandbox)}.`,
+        );
+      }
     }
     await page.evaluate(() => document.fonts.ready);
     await page.addStyleTag({

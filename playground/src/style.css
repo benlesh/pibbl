@@ -700,10 +700,6 @@ code {
   background: var(--paper);
 }
 
-.studio-preview__frame--candidate {
-  visibility: hidden;
-}
-
 .studio-editor {
   background: #111713;
 }

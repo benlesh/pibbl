@@ -15,7 +15,7 @@ The documentation renderer follow-up described here has been implemented as the 
 - Persistent categorized desktop navigation and an accessible narrow-screen drawer.
 - One focused page for every drawing/composition primitive and mouse event, plus four advanced interaction lessons.
 - Large live previews, type-aware editable TypeScript, diagnostics, completion and hover support, automatic debounced execution, copy/reset/share/format controls, prompts, API notes, and previous/next links.
-- Replaceable opaque sandbox frames that preserve the last successful preview when edits fail.
+- One replaceable opaque sandbox frame that remains untouched when type or syntax checks fail.
 - A visually subordinate automated-testing area with collapsed highlighted source.
 
 ## Maintained boundaries

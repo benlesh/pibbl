@@ -2,6 +2,7 @@ import runtimeSource from "virtual:crc-runtime-source";
 
 const PROTOCOL = "crc-studio";
 const VERSION = 1;
+const PREVIEW_START_TIMEOUT_MS = 10_000;
 
 type LogLevel = "log" | "info" | "warn" | "error";
 
@@ -130,8 +131,8 @@ function createFrameSource(options: {
 
 export class SandboxPreview {
   readonly #host: HTMLElement;
-  #activeFrame: HTMLIFrameElement | undefined;
-  #candidateFrame: HTMLIFrameElement | undefined;
+  #frame: HTMLIFrameElement | undefined;
+  #startTimeout: number | undefined;
   #runId = 0;
   #onEvent: ((event: PreviewEvent) => void) | undefined;
 
@@ -143,9 +144,10 @@ export class SandboxPreview {
   run(options: RunOptions): void {
     const runId = ++this.#runId;
     this.#onEvent = options.onEvent;
-    this.#disposeFrame(this.#candidateFrame);
+    this.#clearStartTimeout();
+    this.#disposeFrame(this.#frame);
     const frame = document.createElement("iframe");
-    frame.className = "studio-preview__frame studio-preview__frame--candidate";
+    frame.className = "studio-preview__frame";
     frame.dataset.runId = String(runId);
     frame.title = "Live CRC lesson preview";
     frame.sandbox.add("allow-scripts");
@@ -155,16 +157,30 @@ export class SandboxPreview {
       width: options.width,
       height: options.height,
     });
-    this.#candidateFrame = frame;
+    this.#frame = frame;
     this.#host.appendChild(frame);
+    this.#startTimeout = window.setTimeout(() => {
+      if (this.#frame !== frame || this.#runId !== runId) return;
+      this.#frame = undefined;
+      this.#disposeFrame(frame);
+      this.#onEvent?.({
+        kind: "error",
+        message:
+          "The preview did not start within 10 seconds. Reload the lesson and try again.",
+      });
+    }, PREVIEW_START_TIMEOUT_MS);
   }
 
   dispose(): void {
-    this.#disposeFrame(this.#candidateFrame);
-    this.#disposeFrame(this.#activeFrame);
-    this.#candidateFrame = undefined;
-    this.#activeFrame = undefined;
+    this.#clearStartTimeout();
+    this.#disposeFrame(this.#frame);
+    this.#frame = undefined;
     window.removeEventListener("message", this.#handleMessage);
+  }
+
+  #clearStartTimeout(): void {
+    window.clearTimeout(this.#startTimeout);
+    this.#startTimeout = undefined;
   }
 
   #disposeFrame(frame: HTMLIFrameElement | undefined): void {
@@ -180,27 +196,16 @@ export class SandboxPreview {
 
   #handleMessage = (event: MessageEvent<unknown>): void => {
     const message = event.data;
-    const candidate = this.#candidateFrame;
-    const active = this.#activeFrame;
-    const sourceFrame =
-      event.source === candidate?.contentWindow
-        ? candidate
-        : event.source === active?.contentWindow
-          ? active
-          : undefined;
+    const sourceFrame = this.#frame;
     if (
-      !sourceFrame ||
+      event.source !== sourceFrame?.contentWindow ||
       !isFrameMessage(message) ||
       message.runId !== Number(sourceFrame.dataset.runId)
     )
       return;
     if (message.kind === "mounted") {
-      if (sourceFrame !== candidate || message.runId !== this.#runId) return;
-      const oldFrame = this.#activeFrame;
-      this.#activeFrame = candidate;
-      this.#candidateFrame = undefined;
-      candidate.classList.remove("studio-preview__frame--candidate");
-      this.#disposeFrame(oldFrame);
+      if (message.runId !== this.#runId) return;
+      this.#clearStartTimeout();
       this.#onEvent?.({ kind: "mounted" });
       return;
     }
@@ -212,10 +217,7 @@ export class SandboxPreview {
       });
       return;
     }
+    this.#clearStartTimeout();
     this.#onEvent?.({ kind: "error", message: message.message });
-    if (sourceFrame === candidate) {
-      this.#candidateFrame = undefined;
-      this.#disposeFrame(candidate);
-    }
   };
 }
