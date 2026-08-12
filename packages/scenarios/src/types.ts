@@ -35,6 +35,7 @@ export interface ScenarioMetadata {
   conceptTags: readonly string[];
   manualSteps: readonly ScenarioInstruction[];
   knownLimitations: readonly string[];
+  learningOrder: number;
   visibility: ScenarioVisibility;
   visibilityReason: string;
   maturity: ScenarioMaturity;

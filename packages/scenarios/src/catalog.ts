@@ -1,5 +1,10 @@
 import type { SmokeScenarioState } from './smoke.example';
 import type { CleanupStressState } from './cleanup-stress.example';
+import type { DrawingCompositionState } from './drawing-composition.example';
+import type { DrawingImagesState } from './drawing-images.example';
+import type { DrawingLinesState } from './drawing-lines.example';
+import type { DrawingShapesState } from './drawing-shapes.example';
+import type { DrawingTextState } from './drawing-text.example';
 import type { GeometryMatrixState } from './geometry-matrix.example';
 import type { InteractionLabState } from './interaction-lab.example';
 import type { LifecycleLabState } from './lifecycle-lab.example';
@@ -34,6 +39,9 @@ function validateMetadata(metadata: ScenarioMetadata): void {
   assertNonEmpty(metadata.summary, 'summary', metadata.id);
   assertNonEmpty(metadata.category, 'category', metadata.id);
   assertNonEmpty(metadata.visibilityReason, 'visibilityReason', metadata.id);
+  if (!Number.isInteger(metadata.learningOrder) || metadata.learningOrder < 1) {
+    throw new Error(`Scenario "${metadata.id}" must use a positive learningOrder.`);
+  }
 
   if (!ID_PATTERN.test(metadata.id) || !ID_PATTERN.test(metadata.slug)) {
     throw new Error(`Scenario "${metadata.id}" must use kebab-case id and slug values.`);
@@ -71,6 +79,7 @@ export function validateScenarioCatalog<
   TCatalog extends readonly ScenarioCatalogRecord[],
 >(catalog: TCatalog): TCatalog {
   const ids = new Set<string>();
+  const learningOrders = new Set<number>();
   const slugs = new Set<string>();
 
   for (const scenario of catalog) {
@@ -102,7 +111,11 @@ export function validateScenarioCatalog<
     if (slugs.has(scenario.metadata.slug)) {
       throw new Error(`Duplicate scenario slug "${scenario.metadata.slug}".`);
     }
+    if (learningOrders.has(scenario.metadata.learningOrder)) {
+      throw new Error(`Duplicate scenario learning order "${scenario.metadata.learningOrder}".`);
+    }
     ids.add(scenario.metadata.id);
+    learningOrders.add(scenario.metadata.learningOrder);
     slugs.add(scenario.metadata.slug);
   }
 
@@ -156,6 +169,7 @@ const smokeMetadata: ScenarioMetadata = {
     'This baseline covers Chromium mouse input only; broader browser and input coverage belongs to later plan steps.',
     'The Canvas click target has no keyboard equivalent in the current public API.',
   ],
+  learningOrder: 10,
   visibility: 'documentation-candidate',
   visibilityReason: 'It is a minimal, readable public-API introduction without test-only diagnostics.',
   maturity: 'baseline',
@@ -177,6 +191,238 @@ export const smokeScenarioEntry: ScenarioCatalogEntry<SmokeScenarioState> = {
     path: 'packages/scenarios/src/smoke.example.ts',
   },
   load: async () => (await import('./smoke')).smokeScenario,
+};
+
+const drawingShapesMetadata: ScenarioMetadata = {
+  id: 'drawing-shapes',
+  slug: 'drawing-shapes',
+  title: 'Draw shapes',
+  summary: 'Build filled and stroked rectangles, custom paths, and SVG paths, then update their geometry and styles.',
+  category: 'Drawing basics',
+  apiTags: ['rect', 'path', 'svgPath'],
+  conceptTags: ['fill and stroke', 'custom geometry', 'pixel alignment', 'updates'],
+  manualSteps: [
+    {
+      action: 'Compare the initial rectangle, triangle, and diamond.',
+      expected: 'Each primitive shows an intentional fill and dark stroke on a neutral background.',
+    },
+    {
+      action: 'Choose Update shapes.',
+      expected: 'All three shapes change geometry and color together while the lower boundary examples remain stable.',
+    },
+    {
+      action: 'Inspect the lower row, then choose Reset.',
+      expected: 'Alpha-zero and transparent shapes reveal their red/green underlays, an empty path paints nothing, the negative-width rectangle extends left, and Reset restores the initial scene.',
+    },
+  ],
+  knownLimitations: [
+    'Path2D geometry follows the browser Canvas implementation; malformed SVG path diagnostics are verified by the focused component suite rather than taught here.',
+    'Canvas content has no retained DOM nodes or automatic keyboard semantics.',
+  ],
+  learningOrder: 20,
+  visibility: 'documentation-candidate',
+  visibilityReason: 'It is a concise public-API introduction to every supported shape export.',
+  maturity: 'contract',
+};
+
+export const drawingShapesScenarioEntry: ScenarioCatalogEntry<DrawingShapesState> = {
+  metadata: drawingShapesMetadata,
+  canvas: { width: 480, height: 240 },
+  actions: [{ id: 'update-shapes', label: 'Update shapes' }],
+  source: {
+    id: 'drawing-shapes-example',
+    language: 'ts',
+    marker: "DRAWING_SHAPES_SOURCE_ID = 'drawing-shapes-example'",
+    path: 'packages/scenarios/src/drawing-shapes.example.ts',
+  },
+  load: async () => (await import('./drawing-gallery')).drawingShapesScenario,
+};
+
+const drawingLinesMetadata: ScenarioMetadata = {
+  id: 'drawing-lines',
+  slug: 'drawing-lines',
+  title: 'Draw lines',
+  summary: 'Draw a multi-point line plus crisp horizontal and vertical rules with the public line helpers.',
+  category: 'Drawing basics',
+  apiTags: ['line', 'horizontalLine', 'verticalLine'],
+  conceptTags: ['polyline', 'stroke width', 'pixel alignment', 'updates'],
+  manualSteps: [
+    {
+      action: 'Inspect the blue polyline and the thin orange and green rules.',
+      expected: 'The polyline joins every coordinate while rounded pixel alignment keeps the one-pixel rules crisp.',
+    },
+    {
+      action: 'Choose Update lines.',
+      expected: 'The polyline points, color, and width change; both rules move without leaving stale pixels.',
+    },
+    {
+      action: 'Choose Reset.',
+      expected: 'The initial coordinates and colors return; the empty line remains a safe no-op.',
+    },
+  ],
+  knownLimitations: [
+    'This readable lesson uses rounded alignment; the focused component matrix covers none, round, ceil, and floor plus default full-canvas bounds.',
+    'Line interaction widths are taught in the geometry and interaction laboratories.',
+  ],
+  learningOrder: 30,
+  visibility: 'documentation-candidate',
+  visibilityReason: 'It demonstrates every supported line export with short, readable public calls.',
+  maturity: 'contract',
+};
+
+export const drawingLinesScenarioEntry: ScenarioCatalogEntry<DrawingLinesState> = {
+  metadata: drawingLinesMetadata,
+  canvas: { width: 480, height: 240 },
+  actions: [{ id: 'update-lines', label: 'Update lines' }],
+  source: {
+    id: 'drawing-lines-example',
+    language: 'ts',
+    marker: "DRAWING_LINES_SOURCE_ID = 'drawing-lines-example'",
+    path: 'packages/scenarios/src/drawing-lines.example.ts',
+  },
+  load: async () => (await import('./drawing-gallery')).drawingLinesScenario,
+};
+
+const drawingTextMetadata: ScenarioMetadata = {
+  id: 'drawing-text',
+  slug: 'drawing-text',
+  title: 'Draw text',
+  summary: 'Render aligned text and compare visible, ellipsis, squish, wrapping, clipping, and alpha behavior.',
+  category: 'Drawing basics',
+  apiTags: ['text'],
+  conceptTags: ['typography', 'overflow', 'word wrap', 'alignment', 'interaction bounds'],
+  manualSteps: [
+    {
+      action: 'Compare the heading, centered label, ellipsis, squish, wrapped, and clipped examples.',
+      expected: 'Each card demonstrates one visible text layout contract without overlapping adjacent cards.',
+    },
+    {
+      action: 'Click centered, then choose Update copy.',
+      expected: 'The centered/middle-aligned label records the click; updated heading and bounded copy replace the original pixels.',
+    },
+    {
+      action: 'Inspect the red lower card, then choose Reset.',
+      expected: 'Alpha-zero text leaves the card solid red, and Reset restores the original copy and click count.',
+    },
+  ],
+  knownLimitations: [
+    'Exact glyph rasterization is browser/font-platform dependent; semantic state, measured interaction bounds, card containment, and stable interior pixels are deterministic.',
+    'The current public API exposes Canvas text layout rather than DOM accessibility or rich-text semantics.',
+  ],
+  learningOrder: 40,
+  visibility: 'documentation-candidate',
+  visibilityReason: 'It teaches supported text layout modes with readable bounded examples.',
+  maturity: 'contract',
+};
+
+export const drawingTextScenarioEntry: ScenarioCatalogEntry<DrawingTextState> = {
+  metadata: drawingTextMetadata,
+  canvas: { width: 480, height: 240 },
+  actions: [{ id: 'update-copy', label: 'Update copy' }],
+  source: {
+    id: 'drawing-text-example',
+    language: 'ts',
+    marker: "DRAWING_TEXT_SOURCE_ID = 'drawing-text-example'",
+    path: 'packages/scenarios/src/drawing-text.example.ts',
+  },
+  load: async () => (await import('./drawing-gallery')).drawingTextScenario,
+};
+
+const drawingImagesMetadata: ScenarioMetadata = {
+  id: 'drawing-images',
+  slug: 'drawing-images',
+  title: 'Draw images',
+  summary: 'Load deterministic data images with explicit or natural dimensions, alpha, borders, source changes, failure, and removal.',
+  category: 'Drawing basics',
+  apiTags: ['img'],
+  conceptTags: ['image loading', 'natural size', 'explicit size', 'alpha', 'source lifecycle'],
+  manualSteps: [
+    {
+      action: 'Compare the featured image, natural-size image, alpha-zero red card, and half-alpha bordered strip.',
+      expected: 'The blue featured image uses explicit dimensions, the pink image uses its natural 90×60 size, alpha zero reveals solid red, and the lower image blends with its underlay.',
+    },
+    {
+      action: 'Choose Change image, Natural size, and Explicit size.',
+      expected: 'The current source changes from blue to pink; the featured image switches between intrinsic 90×60 and explicit 150×100 bounds.',
+    },
+    {
+      action: 'Choose Broken image, Remove image, Show image, then Reset.',
+      expected: 'Broken and removed sources reveal the gray placeholder, Show image restores blue, and Reset restores the initial explicit-size state.',
+    },
+  ],
+  knownLimitations: [
+    'The public image component has no load/error callback; visible source state is expressed through pixels and scenario state.',
+    'Controlled out-of-order load completion and detached late callbacks share the TFC-07 lifecycle driver rather than adding test controls to this teaching example.',
+  ],
+  learningOrder: 50,
+  visibility: 'documentation-candidate',
+  visibilityReason: 'It uses self-contained sources and readable public calls for every supported image sizing and lifecycle mode.',
+  maturity: 'contract',
+};
+
+export const drawingImagesScenarioEntry: ScenarioCatalogEntry<DrawingImagesState> = {
+  metadata: drawingImagesMetadata,
+  canvas: { width: 480, height: 240 },
+  actions: [
+    { id: 'change-image', label: 'Change image' },
+    { id: 'use-natural-size', label: 'Natural size' },
+    { id: 'use-explicit-size', label: 'Explicit size' },
+    { id: 'show-broken-image', label: 'Broken image' },
+    { id: 'remove-image', label: 'Remove image' },
+    { id: 'show-image', label: 'Show image' },
+  ],
+  source: {
+    id: 'drawing-images-example',
+    language: 'ts',
+    marker: "DRAWING_IMAGES_SOURCE_ID = 'drawing-images-example'",
+    path: 'packages/scenarios/src/drawing-images.example.ts',
+  },
+  load: async () => (await import('./drawing-gallery')).drawingImagesScenario,
+};
+
+const drawingCompositionMetadata: ScenarioMetadata = {
+  id: 'drawing-composition',
+  slug: 'drawing-composition',
+  title: 'Compose a scene',
+  summary: 'Compose transformed groups, clipped children, an even-odd hole, and cached offscreen artwork.',
+  category: 'Drawing composition',
+  apiTags: ['g', 'clip', 'layer'],
+  conceptTags: ['transforms', 'clipping', 'even-odd fill', 'offscreen layer', 'updates'],
+  manualSteps: [
+    {
+      action: 'Compare the left group, center clipping region and hole, and right layered artwork.',
+      expected: 'The group positions related shapes together, clips hide pixels beyond their paths, the even-odd center remains a hole, and the layer draws one offscreen card.',
+    },
+    {
+      action: 'Choose Update composition.',
+      expected: 'The group moves and rotates, the main clip becomes rounded, and the layer changes from a blue rectangle to a pink triangle.',
+    },
+    {
+      action: 'Choose Reset.',
+      expected: 'All composed geometry returns to its initial positions, clip, and layer artwork.',
+    },
+  ],
+  knownLimitations: [
+    'Nested clips, transformed layer bounds, paint ordering, and interaction composition have deliberately shared exhaustive coverage in the TFC-05 geometry matrix.',
+    'Layers cache drawing work in an OffscreenCanvas; they are a rendering boundary, not a DOM stacking context.',
+  ],
+  learningOrder: 60,
+  visibility: 'documentation-candidate',
+  visibilityReason: 'It teaches the three composition exports after the basic drawing lessons using a compact visual scene.',
+  maturity: 'contract',
+};
+
+export const drawingCompositionScenarioEntry: ScenarioCatalogEntry<DrawingCompositionState> = {
+  metadata: drawingCompositionMetadata,
+  canvas: { width: 480, height: 240 },
+  actions: [{ id: 'update-composition', label: 'Update composition' }],
+  source: {
+    id: 'drawing-composition-example',
+    language: 'ts',
+    marker: "DRAWING_COMPOSITION_SOURCE_ID = 'drawing-composition-example'",
+    path: 'packages/scenarios/src/drawing-composition.example.ts',
+  },
+  load: async () => (await import('./drawing-gallery')).drawingCompositionScenario,
 };
 
 const interactionLabMetadata: ScenarioMetadata = {
@@ -215,6 +461,7 @@ const interactionLabMetadata: ScenarioMetadata = {
     'Logical related targets remain diagnostic contract data because the public CRC event type exposes only the native DOM relatedTarget.',
     'The Observer throwing fixture deliberately reports one browser error; context-menu ordering follows the active browser instead of being normalized.',
   ],
+  learningOrder: 80,
   visibility: 'test-laboratory',
   visibilityReason: 'It exposes a dense conformance matrix and deliberate error path rather than a beginner-facing API lesson.',
   maturity: 'trusted',
@@ -287,6 +534,7 @@ const mouseContractMetadata: ScenarioMetadata = {
     'Pointer, touch, capture/bubble phases, stopPropagation, preventDefault, and pointer capture remain outside this plan.',
     'Context-menu event order is shown for the reference Chromium environment and is not normalized across browsers.',
   ],
+  learningOrder: 70,
   visibility: 'test-laboratory',
   visibilityReason: 'It is a design oracle and implementation guide rather than a beginner API example.',
   maturity: 'contract',
@@ -343,6 +591,7 @@ const lifecycleLabMetadata: ScenarioMetadata = {
     'The Throws region deliberately reports one browser error so error isolation can be inspected.',
     'Broader image and hook asynchronous cleanup remains assigned to TFC-07.',
   ],
+  learningOrder: 90,
   visibility: 'test-laboratory',
   visibilityReason: 'It exposes lifecycle stress controls and disposal semantics rather than a beginner-facing lesson.',
   maturity: 'trusted',
@@ -412,6 +661,7 @@ const geometryMatrixMetadata: ScenarioMetadata = {
     'Rotation and skew values follow the existing degree-based DOMMatrix behavior of the public group API.',
     'Layers compose at their existing origin; group transforms supply the parent-space placement exercised here.',
   ],
+  learningOrder: 100,
   visibility: 'test-laboratory',
   visibilityReason: 'It is a dense conformance and boundary matrix rather than a beginner-facing drawing example.',
   maturity: 'trusted',
@@ -467,6 +717,7 @@ const performanceLabMetadata: ScenarioMetadata = {
     'The structural counter set is intentionally limited to Canvas context calls, save/restore, transforms, path/stroke tests, and DOMMatrix multiplication.',
     'These workloads characterize linear target resolution; spatial indexing remains deferred until a measured threshold requires it.',
   ],
+  learningOrder: 110,
   visibility: 'test-laboratory',
   visibilityReason: 'It exposes stress loads and machine-sensitive timing diagnostics rather than beginner-facing API guidance.',
   maturity: 'trusted',
@@ -526,6 +777,7 @@ const cleanupStressMetadata: ScenarioMetadata = {
     'The 1,000-cycle control settles every render before disposal; it takes roughly one display-frame interval per cycle in an unaccelerated browser.',
     'The broken-image case has no public error callback; its contract is absence of stale pixels, scheduled work, and late updates.',
   ],
+  learningOrder: 120,
   visibility: 'test-laboratory',
   visibilityReason: 'It exposes lifecycle stress, failure sources, and ownership counters rather than a beginner-facing drawing example.',
   maturity: 'trusted',
@@ -599,6 +851,7 @@ const runtimeHooksMetadata: ScenarioMetadata = {
     'A conditional hook-count mismatch is intentionally not exposed as a gallery action because it can corrupt the diagnostic scene; focused runtime tests own that explicit misuse contract.',
     'Displayed identity numbers are deterministic laboratory labels, not public runtime identifiers.',
   ],
+  learningOrder: 130,
   visibility: 'test-laboratory',
   visibilityReason: 'It exposes hook identities, cleanup counts, keyed reconciliation, and deliberate misuse rather than beginner-facing API guidance.',
   maturity: 'trusted',
@@ -632,8 +885,13 @@ export const runtimeHooksScenarioEntry: ScenarioCatalogEntry<RuntimeHooksState> 
 
 export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] = validateScenarioCatalog([
   smokeScenarioEntry,
-  interactionLabScenarioEntry,
+  drawingShapesScenarioEntry,
+  drawingLinesScenarioEntry,
+  drawingTextScenarioEntry,
+  drawingImagesScenarioEntry,
+  drawingCompositionScenarioEntry,
   mouseContractScenarioEntry,
+  interactionLabScenarioEntry,
   lifecycleLabScenarioEntry,
   geometryMatrixScenarioEntry,
   performanceLabScenarioEntry,

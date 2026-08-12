@@ -1,5 +1,10 @@
 export {
   cleanupStressScenarioEntry,
+  drawingCompositionScenarioEntry,
+  drawingImagesScenarioEntry,
+  drawingLinesScenarioEntry,
+  drawingShapesScenarioEntry,
+  drawingTextScenarioEntry,
   geometryMatrixScenarioEntry,
   getScenarioBySlug,
   interactionLabScenarioEntry,
@@ -15,6 +20,31 @@ export {
 export {
   CLEANUP_IMAGE_SOURCES,
 } from './cleanup-stress.example';
+export type {
+  DrawingCompositionAction,
+  DrawingCompositionState,
+} from './drawing-composition.example';
+export {
+  DRAWING_IMAGE_SOURCES,
+} from './drawing-images.example';
+export type {
+  DrawingImageMode,
+  DrawingImageSizing,
+  DrawingImagesAction,
+  DrawingImagesState,
+} from './drawing-images.example';
+export type {
+  DrawingLinesAction,
+  DrawingLinesState,
+} from './drawing-lines.example';
+export type {
+  DrawingShapesAction,
+  DrawingShapesState,
+} from './drawing-shapes.example';
+export type {
+  DrawingTextAction,
+  DrawingTextState,
+} from './drawing-text.example';
 export type {
   CleanupImageMode,
   CleanupLayerMode,

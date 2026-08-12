@@ -1,5 +1,10 @@
 import type { ScenarioCatalogRecord } from '@crc/scenarios';
 import cleanupStressSource from '../../packages/scenarios/src/cleanup-stress.example.ts?raw';
+import drawingCompositionSource from '../../packages/scenarios/src/drawing-composition.example.ts?raw';
+import drawingImagesSource from '../../packages/scenarios/src/drawing-images.example.ts?raw';
+import drawingLinesSource from '../../packages/scenarios/src/drawing-lines.example.ts?raw';
+import drawingShapesSource from '../../packages/scenarios/src/drawing-shapes.example.ts?raw';
+import drawingTextSource from '../../packages/scenarios/src/drawing-text.example.ts?raw';
 import geometryMatrixSource from '../../packages/scenarios/src/geometry-matrix.example.ts?raw';
 import smokeSource from '../../packages/scenarios/src/smoke.example.ts?raw';
 import interactionLabSource from '../../packages/scenarios/src/interaction-lab.example.ts?raw';
@@ -14,6 +19,26 @@ interface ScenarioSourceAdapter {
 }
 
 const sourceAdapters: Readonly<Record<string, ScenarioSourceAdapter>> = {
+  'drawing-shapes-example': {
+    path: 'packages/scenarios/src/drawing-shapes.example.ts',
+    sourceText: drawingShapesSource,
+  },
+  'drawing-lines-example': {
+    path: 'packages/scenarios/src/drawing-lines.example.ts',
+    sourceText: drawingLinesSource,
+  },
+  'drawing-text-example': {
+    path: 'packages/scenarios/src/drawing-text.example.ts',
+    sourceText: drawingTextSource,
+  },
+  'drawing-images-example': {
+    path: 'packages/scenarios/src/drawing-images.example.ts',
+    sourceText: drawingImagesSource,
+  },
+  'drawing-composition-example': {
+    path: 'packages/scenarios/src/drawing-composition.example.ts',
+    sourceText: drawingCompositionSource,
+  },
   'runtime-cleanup-stress-example': {
     path: 'packages/scenarios/src/cleanup-stress.example.ts',
     sourceText: cleanupStressSource,
