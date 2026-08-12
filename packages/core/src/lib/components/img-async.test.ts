@@ -1,7 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { crc } from '../crc';
 import { defineComp } from '../define-comp';
-import { clearSharedState, getCRCInstance } from '../global-state';
+import {
+  clearSharedState,
+  getCRCInstance,
+  GLOBAL_STATE,
+} from '../global-state';
 import { img } from './img';
 
 class FakeImage {
@@ -109,6 +113,28 @@ describe('img async resource ownership', () => {
     expect(getCRCInstance(canvas).animationFrameId).toBeUndefined();
 
     controller.dispose();
+  });
+
+  it('releases a pending image and leaves saved callbacks inert on root disposal', async () => {
+    const canvas = createCanvas();
+    const controller = crc(canvas, imageElement('dispose-pending.png'));
+    await nextFrame();
+    const pending = FakeImage.instances[0];
+    const savedLoad = pending.onload;
+    const savedError = pending.onerror;
+    const requestFrame = vi.spyOn(globalThis, 'requestAnimationFrame');
+
+    controller.dispose();
+
+    expect(pending.onload).toBeNull();
+    expect(pending.onerror).toBeNull();
+    expect(pending.src).toBe('');
+    expect(GLOBAL_STATE.crcInstances.has(canvas)).toBe(false);
+
+    savedLoad?.();
+    savedError?.();
+    expect(requestFrame).not.toHaveBeenCalled();
+    expect(GLOBAL_STATE.crcInstances.has(canvas)).toBe(false);
   });
 });
 
