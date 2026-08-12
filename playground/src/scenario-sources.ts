@@ -1,4 +1,5 @@
 import type { ScenarioCatalogRecord } from '@crc/scenarios';
+import geometryMatrixSource from '../../packages/scenarios/src/geometry-matrix.example.ts?raw';
 import smokeSource from '../../packages/scenarios/src/smoke.example.ts?raw';
 import interactionLabSource from '../../packages/scenarios/src/interaction-lab.example.ts?raw';
 import lifecycleLabSource from '../../packages/scenarios/src/lifecycle-lab.example.ts?raw';
@@ -25,6 +26,10 @@ const sourceAdapters: Readonly<Record<string, ScenarioSourceAdapter>> = {
   'mouse-interaction-contract-example': {
     path: 'packages/scenarios/src/mouse-contract.example.ts',
     sourceText: mouseContractSource,
+  },
+  'geometry-composition-matrix-example': {
+    path: 'packages/scenarios/src/geometry-matrix.example.ts',
+    sourceText: geometryMatrixSource,
   },
 };
 
