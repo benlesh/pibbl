@@ -13,6 +13,8 @@ export type StateUpdater<T> = (update: T | ((oldValue: T) => T)) => void;
  */
 export function crcState<T>(init?: T): readonly [T, StateUpdater<T>] {
   if (GLOBAL_STATE.componentIsMounting) {
+    const crcInstance = GLOBAL_STATE.currentCRCInstance!;
+    const componentRefs = GLOBAL_STATE.componentRefs!;
     const ref = {
       type: 'state',
       value: init,
@@ -22,6 +24,13 @@ export function crcState<T>(init?: T): readonly [T, StateUpdater<T>] {
     const canvas = GLOBAL_STATE.canvas;
 
     function setter(newValueOrFactory: T | ((oldValue: T) => T)) {
+      if (
+        GLOBAL_STATE.crcInstances.get(canvas!) !== crcInstance ||
+        crcInstance.refs.get(componentRefs.id) !== componentRefs
+      ) {
+        return;
+      }
+
       ref.value =
         typeof newValueOrFactory === 'function' ?
             (newValueOrFactory as any)(ref.value) :
@@ -29,7 +38,7 @@ export function crcState<T>(init?: T): readonly [T, StateUpdater<T>] {
       update(canvas!, undefined, true);
     }
 
-    GLOBAL_STATE.componentRefs!.refs.push(ref);
+    componentRefs.refs.push(ref);
   }
 
   const ref =
