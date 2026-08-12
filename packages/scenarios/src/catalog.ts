@@ -233,7 +233,7 @@ const smokeMetadata: ScenarioMetadata = {
     },
   ],
   knownLimitations: [
-    'This baseline covers Chromium mouse input only; broader browser and input coverage belongs to later plan steps.',
+    'This baseline covers Chromium mouse input only; broader browser and input-device coverage is not part of the current trust gate.',
     'The Canvas click target has no keyboard equivalent in the current public API.',
   ],
   learningOrder: 10,
@@ -523,7 +523,7 @@ const interactionLabMetadata: ScenarioMetadata = {
     },
   ],
   knownLimitations: [
-    'TFC-04 intentionally uses an untransformed root Canvas; CSS scale, transforms, clips, and offscreen layers remain in the TFC-05 geometry matrix.',
+    'This ordering laboratory intentionally uses an untransformed root Canvas; the shared geometry matrix covers CSS scale, transforms, clips, and offscreen layers.',
     'A CRC rerender requested from a handler settles on the next animation frame; narrow dispatcher tests separately prove synchronous live-registry mutation semantics.',
     'Logical related targets remain diagnostic contract data because the public CRC event type exposes only the native DOM relatedTarget.',
     'The Observer throwing fixture deliberately reports one browser error; context-menu ordering follows the active browser instead of being normalized.',
@@ -574,7 +574,7 @@ const mouseContractMetadata: ScenarioMetadata = {
   id: 'mouse-interaction-contract',
   slug: 'mouse-interaction-contract',
   title: 'Mouse interaction contract',
-  summary: 'Explore the approved native evidence and CRC target/order rules before the dispatcher is changed.',
+  summary: 'Explore the approved native evidence and the target/order rules implemented by CRC’s dispatcher.',
   category: 'Interaction contracts',
   apiTags: ['crc', 'mouse events', 'rect', 'layer', 'clip', 'g'],
   conceptTags: ['event order', 'topmost target', 'click identity', 'coordinates'],
@@ -597,7 +597,7 @@ const mouseContractMetadata: ScenarioMetadata = {
     },
   ],
   knownLimitations: [
-    'The explorer shows the approved contract; TFC-04 and TFC-05 make the current runtime conform.',
+    'The explorer summarizes the approved contract; the ordering and geometry laboratories provide exhaustive runtime conformance evidence.',
     'Pointer, touch, capture/bubble phases, stopPropagation, preventDefault, and pointer capture remain outside this plan.',
     'Context-menu event order is shown for the reference Chromium environment and is not normalized across browsers.',
   ],
@@ -656,7 +656,7 @@ const lifecycleLabMetadata: ScenarioMetadata = {
   knownLimitations: [
     'Private listener, registry, teardown, instance, and frame ledgers remain test-only; the gallery exposes the same semantic lifecycle actions.',
     'The Throws region deliberately reports one browser error so error isolation can be inspected.',
-    'Broader image and hook asynchronous cleanup remains assigned to TFC-07.',
+    'Image races, hook cleanup, nested layers, and repeated whole-runtime disposal are covered by the separate cleanup stress laboratory.',
   ],
   learningOrder: 90,
   visibility: 'test-laboratory',
@@ -889,7 +889,7 @@ const runtimeHooksMetadata: ScenarioMetadata = {
   title: 'Runtime and hooks laboratory',
   summary: 'Exercise state, memo, ref, synchronous change cleanup, memoized paths, keyed siblings, root identity, falsy children, and public hook misuse.',
   category: 'Diagnostics',
-  apiTags: ['crc', 'crcState', 'crcMemo', 'crcRef', 'crcWhenChanged', 'crcRectPath', 'crcLinePath', 'crcSvgPath'],
+  apiTags: ['crc', 'crcState', 'crcMemo', 'crcRef', 'crcWhenChanged', 'crcRectPath', 'crcLinePath', 'crcSvgPath', 'crcCursor'],
   conceptTags: ['hook identity', 'keyed reconciliation', 'dependency cleanup', 'runtime recovery'],
   manualSteps: [
     {
@@ -914,7 +914,7 @@ const runtimeHooksMetadata: ScenarioMetadata = {
     },
   ],
   knownLimitations: [
-    'crcEvent is exercised by the TFC-04 ordering and overlap laboratory; crcCursor behavior is shared with the TFC-04/TFC-05 interaction laboratories and focused lifecycle characterization rather than duplicated here.',
+    'crcEvent is exercised by the ordering and overlap laboratory; this scenario covers crcCursor slot identity while the interaction laboratories own its geometry and lifecycle matrix.',
     'A conditional hook-count mismatch is intentionally not exposed as a gallery action because it can corrupt the diagnostic scene; focused runtime tests own that explicit misuse contract.',
     'Displayed identity numbers are deterministic laboratory labels, not public runtime identifiers.',
   ],
