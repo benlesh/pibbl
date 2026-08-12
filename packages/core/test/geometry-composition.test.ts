@@ -18,6 +18,7 @@ import {
   cssPointForIntrinsic,
   moveMouse,
 } from './support/mouse-input';
+import { expectVisualMatch } from './visual-compare';
 
 const activeControllers = new Set<ScenarioController<GeometryMatrixState>>();
 const BACKGROUND = { x: 470, y: 220 } as const;
@@ -306,4 +307,35 @@ describe('geometry interaction matrix', () => {
     expect(controller.getState().trace).toEqual([]);
     expect(pixelAt(canvas, { x: 240, y: 110 })).toEqual([248, 250, 252, 255]);
   });
+});
+
+describe('geometry visual matrix', () => {
+  it.each(GEOMETRY_MATRIX_CASES.map(matrixCase => [matrixCase.id] as const))(
+    'matches the reviewed %s rendering exactly',
+    async (caseId) => {
+      const { canvas, controller } = await mountMatrix();
+      await controller.perform(`show-${caseId}`);
+      await controller.settled();
+
+      if (
+        import.meta.env.VITE_CRC_GEOMETRY_VISUAL_DRILL === '1' &&
+        caseId === 'compound-transform-clip'
+      ) {
+        const context = canvas.getContext('2d');
+        if (!context) {
+          throw new Error('The geometry visual drill Canvas has no 2D context.');
+        }
+        context.fillStyle = '#ec4899';
+        context.fillRect(210, 20, 60, 50);
+      }
+
+      await expectVisualMatch({
+        element: canvas,
+        expectedPath: `packages/core/test/visual-baselines/tfc-05-${caseId}.expected.png`,
+        expectedArtifactPath: `test-screenshots/tfc-05/${caseId}.expected.png`,
+        actualPath: `../../../test-screenshots/tfc-05/${caseId}.actual.png`,
+        diffPath: `test-screenshots/tfc-05/${caseId}.diff.png`,
+      });
+    },
+  );
 });
