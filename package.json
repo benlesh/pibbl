@@ -19,6 +19,7 @@
     "test:smoke:built": "pnpm build && vitest run packages/core/test/smoke-scenario.test.ts --mode built --browser.headless --browser.ui=false",
     "test:package-consumer": "pnpm build && tsc -p playground/package-consumer/tsconfig.bundler.json && tsc -p playground/package-consumer/tsconfig.nodenext.json && node playground/package-consumer/runtime.mjs",
     "test:package-consumer:packed": "pnpm build && node tooling/verify-packed-consumer.mjs",
+    "test:visual-safeguard": "node tooling/verify-visual-safeguard.mjs",
     "test:ui": "vitest --browser.headless=false",
     "test:watch": "vitest --browser.headless",
     "typecheck": "tsc --noEmit",
