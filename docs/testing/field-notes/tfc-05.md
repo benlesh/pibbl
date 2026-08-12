@@ -66,7 +66,7 @@ corepack pnpm@11.21.0 exec eslint packages/core/test/geometry-composition.test.t
 # passed with no output
 ```
 
-The focused exact comparison passed before and after the deliberate failure drill. No tolerance, ignored region, baseline rewrite, retry, or snapshot-update mode was used. The completing session must append the final complete-browser-suite and repository gate totals before moving TFC-05 to done.
+The focused exact comparison passed before and after the deliberate failure drill. No tolerance, ignored region, baseline rewrite, retry, or snapshot-update mode was used. The final complete browser suite passed 19 files with 148 tests passed and 2 pre-existing Layer render-optimization skips. Full lint/format, TypeScript, package builds with source maps, Bundler and NodeNext consumer checks, and both source-mode and built-package gallery builds also passed.
 
 ## Platform evidence and decisions
 
