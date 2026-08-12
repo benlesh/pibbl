@@ -1,10 +1,20 @@
 import { crc } from '@crc/core';
 import { cdp, userEvent } from 'vitest/browser';
-import { beforeEach } from 'vitest';
-import { CompEl } from '../types';
+import { afterEach, beforeEach } from 'vitest';
+import type { CompEl, CRCController } from '../types';
+
+const activeControllers = new Set<CRCController>();
 
 export class TestCanvas {
-  constructor(public readonly element: HTMLCanvasElement) {}
+  constructor(
+    public readonly element: HTMLCanvasElement,
+    private readonly controller: CRCController,
+  ) {}
+
+  dispose(): void {
+    activeControllers.delete(this.controller);
+    this.controller.dispose();
+  }
 
   async click(options: { position: { x: number; y: number }; button?: 'left' | 'right' }) {
     await userEvent.click(this.element, options);
@@ -144,6 +154,13 @@ beforeEach(() => {
   document.body.innerHTML = '';
 });
 
+afterEach(() => {
+  for (const controller of activeControllers) {
+    controller.dispose();
+  }
+  activeControllers.clear();
+});
+
 export async function componentTest<P>(comp: CompEl<P>, options: {
   width?: number;
   height?: number;
@@ -155,10 +172,11 @@ export async function componentTest<P>(comp: CompEl<P>, options: {
   canvas.style.margin = '5px';
   document.body.appendChild(canvas);
 
-  crc(canvas, comp);
+  const controller = crc(canvas, comp);
+  activeControllers.add(controller);
   await animationFrame();
 
-  return new TestCanvas(canvas);
+  return new TestCanvas(canvas, controller);
 }
 
 function animationFrame() {

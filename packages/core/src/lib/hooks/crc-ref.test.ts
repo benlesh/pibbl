@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { rect } from '../components/rect';
 import { defineComp } from '../define-comp';
+import { GLOBAL_STATE } from '../global-state';
 import { componentTest } from '../test-utils/component-test';
 import { crcRef } from './crc-ref';
 import { crcState } from './crc-state';
@@ -54,6 +55,9 @@ describe('crcRef', () => {
 
     await canvas.click({ position: clickableCenterPoint });
     expect(onCheckRef).toHaveBeenCalledWith(myReference);
+
+    canvas.dispose();
+    expect(GLOBAL_STATE.crcInstances.has(canvas.element)).toBe(false);
   });
 
   it('does not re-render when the ref value changes', async () => {
@@ -94,6 +98,9 @@ describe('crcRef', () => {
 
     await canvas.click({ position: clickableCenterPoint });
     expect(renderCount).toBe(1);
+
+    canvas.dispose();
+    expect(GLOBAL_STATE.crcInstances.has(canvas.element)).toBe(false);
   });
 
   it('stores multiple refs', async () => {
@@ -137,5 +144,8 @@ describe('crcRef', () => {
 
     await canvas.click({ position: clickableCenterPoint });
     expect(onCheckRefs).toHaveBeenCalledWith(value1, value2);
+
+    canvas.dispose();
+    expect(GLOBAL_STATE.crcInstances.has(canvas.element)).toBe(false);
   });
 });
