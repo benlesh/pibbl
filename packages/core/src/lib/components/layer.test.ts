@@ -114,7 +114,7 @@ describe('layer', () => {
       expect(layeredRenderCount).toBe(2);
     });
 
-    it.skip('only re-renders when props change', async () => {
+    it('only re-renders when props change', async () => {
       let renderCount = 0;
       const countedRect = defineComp((props: RectProps) => {
         renderCount++;
@@ -160,34 +160,36 @@ describe('layer', () => {
       expect(renderCount).toBe(2);
     });
 
-    it.skip('re-renders when dimensions change', async () => {
+    it('re-renders when dimensions change on the same mount', async () => {
       let renderCount = 0;
+      const onRender = () => renderCount++;
+      const wrapperComponent = defineComp(() => {
+        const [size, setSize] = crcState(100);
+        return g({ children: [
+          rect({
+            x: 0,
+            y: 0,
+            width: 300,
+            height: 300,
+            fillStyle: 'green',
+            onClick: () => setSize(200),
+          }),
+          layer({
+            width: size,
+            height: size,
+            render: myComponent({
+              onRender,
+              width: size,
+              height: size,
+            }),
+          }),
+        ] });
+      });
 
-      const _canvas = await componentTest(layer({
-        width: 200,
-        height: 200,
-        render: myComponent({
-          onRender: () => renderCount++,
-          width: 200,
-          height: 200,
-        }),
-      }));
+      const canvas = await componentTest(wrapperComponent({}));
       expect(renderCount).toBe(1);
 
-      // Click to trigger potential re-render
-      await _canvas.click({ position: { x: 100, y: 100 } });
-      expect(renderCount).toBe(1);
-
-      // Change dimensions
-      await componentTest(layer({
-        width: 300,
-        height: 300,
-        render: myComponent({
-          onRender: () => renderCount++,
-          width: 300,
-          height: 300,
-        }),
-      }));
+      await canvas.click({ position: { x: 250, y: 250 } });
 
       expect(renderCount).toBe(2);
     });
