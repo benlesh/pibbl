@@ -27,6 +27,11 @@ export interface ImgProps
   alignToPixelGrid?: PixelGridAlignment;
 }
 
+interface LoadedImage {
+  src: string;
+  element: HTMLImageElement;
+}
+
 function Img(props: ImgProps, ctx: RenderingContext2D) {
   let {
     alpha,
@@ -45,14 +50,36 @@ function Img(props: ImgProps, ctx: RenderingContext2D) {
     ctx.globalAlpha = ctx.globalAlpha * alpha;
   }
 
-  const [image, setImage] = crcState<HTMLImageElement | null>(null);
+  const [loadedImage, setLoadedImage] = crcState<LoadedImage | null>(null);
+  const image = loadedImage?.src === src ? loadedImage.element : null;
 
   crcWhenChanged(() => {
-    const img = new Image();
-    img.onload = () => {
-      setImage(img);
+    let active = true;
+    const element = new Image();
+    const settle = () => {
+      active = false;
+      element.onload = null;
+      element.onerror = null;
     };
-    img.src = src;
+
+    element.onload = () => {
+      if (!active) return;
+      settle();
+      setLoadedImage({ src, element });
+    };
+    element.onerror = () => {
+      if (!active) return;
+      settle();
+      setLoadedImage(null);
+    };
+    element.src = src;
+
+    return () => {
+      active = false;
+      element.onload = null;
+      element.onerror = null;
+      element.removeAttribute('src');
+    };
   }, [src]);
 
   width = width ?? image?.width ?? 0;
