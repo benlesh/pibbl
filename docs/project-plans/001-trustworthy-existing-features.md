@@ -234,7 +234,7 @@ These are investigation leads from the current code, not pre-approved implementa
 | TFC-07 | Done        | Proved whole-runtime teardown and asynchronous resource cleanup.                            |
 | TFC-08 | Done        | Closed runtime, identity, update, hook, error-recovery, type, and package-boundary gaps.    |
 | TFC-09 | In progress | Close confidence gaps in the existing drawing components.                                   |
-| TFC-10 | Queued      | Install the trust gate in CI and publish the supported-contract summary.                    |
+| TFC-10 | Next        | Install the trust gate in CI and publish the supported-contract summary.                    |
 
 ## DEP-01 [DONE] — Shared scenario spine and pre-upgrade baseline
 
@@ -879,7 +879,7 @@ Apply the confidence bar to every existing drawing component and its supported p
 - Package and direct playground builds.
 - Built-package consumer smoke test.
 
-## TFC-10 [TODO] — Trust gate and supported-contract handoff
+## TFC-10 [NEXT] — Trust gate and supported-contract handoff
 
 ### Goal
 
