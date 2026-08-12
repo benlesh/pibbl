@@ -1,7 +1,10 @@
 import type { ScenarioCatalogRecord } from '@crc/scenarios';
 
 const rawSourceModules = import.meta.glob(
-  '../../packages/scenarios/src/**/*.example.ts',
+  [
+    '../../packages/scenarios/src/**/*.example.ts',
+    '!../../packages/scenarios/src/learning/**/*.example.ts',
+  ],
   {
     eager: true,
     import: 'default',
@@ -11,10 +14,12 @@ const rawSourceModules = import.meta.glob(
 
 const SOURCE_PREFIX = '../../';
 const sourceTextByPath = new Map(
-  Object.entries(rawSourceModules).map(([path, sourceText]) => [
-    path.startsWith(SOURCE_PREFIX) ? path.slice(SOURCE_PREFIX.length) : path,
-    sourceText,
-  ]),
+  Object.entries(rawSourceModules)
+    .filter(([path]) => !path.includes('/learning/'))
+    .map(([path, sourceText]) => [
+      path.startsWith(SOURCE_PREFIX) ? path.slice(SOURCE_PREFIX.length) : path,
+      sourceText,
+    ]),
 );
 
 export const scenarioSourcePaths = Object.freeze(

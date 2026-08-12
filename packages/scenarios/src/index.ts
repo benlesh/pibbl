@@ -21,6 +21,15 @@ export {
   validateScenarioCatalog,
 } from './catalog';
 export {
+  getLearningExampleBySlug,
+  getLearningExampleRoute,
+  getLearningExamplesBySection,
+  learningExampleCatalog,
+  learningSections,
+  loadLearningExample,
+  validateLearningExampleCatalog,
+} from './learning-catalog';
+export {
   CLEANUP_IMAGE_SOURCES,
 } from './cleanup-stress.example';
 export type {
@@ -139,3 +148,13 @@ export type {
   ScenarioStateField,
   ScenarioVisibility,
 } from './types';
+export type {
+  LearningExampleCatalogEntry,
+  LearningExampleMetadata,
+  LearningExampleModule,
+  LearningMount,
+  LearningPrompt,
+  LearningRelationships,
+  LearningSection,
+  LearningSectionId,
+} from './learning-types';

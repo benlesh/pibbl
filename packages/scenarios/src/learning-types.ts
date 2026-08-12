@@ -1,0 +1,57 @@
+import type { CRCController } from "@crc/core";
+
+export type LearningSectionId =
+  | "start"
+  | "drawing"
+  | "composition"
+  | "mouse-events"
+  | "advanced-interactions";
+
+export interface LearningSection {
+  id: LearningSectionId;
+  label: string;
+  description: string;
+  order: number;
+}
+
+export interface LearningPrompt {
+  gesture: string;
+  code: string;
+}
+
+export interface LearningRelationships {
+  previous?: string;
+  next?: string;
+  related: readonly string[];
+}
+
+export interface LearningExampleMetadata {
+  slug: string;
+  title: string;
+  shortTitle: string;
+  section: LearningSectionId;
+  order: number;
+  summary: string;
+  api: readonly string[];
+  objectives: readonly [string, string];
+  prompts: LearningPrompt;
+  apiNotes: readonly string[];
+  relationships: LearningRelationships;
+  canvas: {
+    width: number;
+    height: number;
+  };
+  source: {
+    path: string;
+  };
+}
+
+export type LearningMount = (canvas: HTMLCanvasElement) => CRCController;
+
+export interface LearningExampleModule {
+  default: LearningMount;
+}
+
+export interface LearningExampleCatalogEntry extends LearningExampleMetadata {
+  load: () => Promise<LearningExampleModule>;
+}
