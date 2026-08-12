@@ -1,5 +1,7 @@
 import type { CRCRef, StateUpdater } from '@crc/core';
 import {
+  crcCursor,
+  crcEvent,
   crcLinePath,
   crcMemo,
   crcRectPath,
@@ -278,6 +280,8 @@ export function probeRuntimeHookMisuse(): readonly RuntimeHooksMisuseError[] {
     () => crcRectPath(0, 0, 1, 1),
     () => crcLinePath([[0, 0], [1, 1]]),
     () => crcSvgPath('M 0 0 L 1 1'),
+    () => crcEvent('click', () => undefined),
+    () => crcCursor({ style: 'pointer' }),
   ];
   for (const probe of probes) {
     try {

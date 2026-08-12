@@ -591,7 +591,7 @@ const runtimeHooksMetadata: ScenarioMetadata = {
     },
     {
       action: 'Choose Probe hook misuse, verify the scene remains responsive, then Reset.',
-      expected: 'All seven hooks report the same outside-render error category, the recovery render preserves live identities, and Reset restores the exact initial counters and pixels.',
+      expected: 'All nine hooks report the same exact outside-render diagnostic, the recovery render preserves live identities, and Reset restores the exact initial counters and pixels.',
     },
   ],
   knownLimitations: [
