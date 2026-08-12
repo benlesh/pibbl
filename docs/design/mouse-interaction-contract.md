@@ -2,7 +2,7 @@
 
 Status: approved and implemented as of 2026-08-11. TFC-04 verified the root-Canvas rules; TFC-05 verified intrinsic coordinates, transforms, clip intersections, and global layer paint order.
 
-This document defines the behavior TFC-03 through TFC-05 must implement. The executable source of truth for sequence examples is `MOUSE_CONTRACT_CASES` in `packages/scenarios/src/mouse-contract.ts`; the manual explorer and headless contract suite consume that same table.
+This document defines the behavior implemented and verified by TFC-03 through TFC-05. The executable source of truth for sequence examples is `MOUSE_CONTRACT_CASES` in `packages/scenarios/src/mouse-contract.ts`; the manual explorer and headless contract suite consume that same table.
 
 ## Evidence and interpretation
 

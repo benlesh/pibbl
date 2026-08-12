@@ -63,4 +63,4 @@ Focused tests additionally prove duplicate keys, same-name functions, unkeyed oc
 - Component identity is internal and diagnostic IDs shown by the laboratory are not public runtime identifiers.
 - `crcState` does not define lazy initializer or function-as-data semantics; a function passed to the setter is an updater.
 - A thrown render fails closed and requires a later explicit render. CRC does not retain or restore a transactional snapshot of the previous Canvas tree.
-- Drawing-component property and pixel contracts are TFC-09 scope. Event and cursor behavior remains owned by the TFC-04/TFC-05 interaction contracts rather than duplicated here.
+- Drawing-component property and pixel contracts are finalized in the [drawing-component contract](./drawing-components-contract.md). Event and cursor behavior remains owned by the TFC-04/TFC-05 interaction contracts rather than duplicated here.

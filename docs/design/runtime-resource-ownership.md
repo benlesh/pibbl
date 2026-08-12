@@ -50,4 +50,4 @@ Focused unit tests additionally preserve removal-before-execution, duplicate-add
 
 - Browser fetch/decode internals are not exposed as a deterministic resource count. CRC owns and detaches its handlers, clears the element source, source-tags published state, and proves that late completion cannot schedule or draw.
 - Heap snapshots are optional diagnostics, not a pass condition.
-- Full component type/key/hook-order identity semantics remain TFC-08 scope. TFC-07 proves cleanup for an explicit key change and for replacement by two distinct root component identities.
+- TFC-08 completed the full component type/key/hook-order identity semantics. TFC-07 proves cleanup for an explicit key change and for replacement by two distinct root component identities; the runtime/hook contract proves the remaining identity matrix.
