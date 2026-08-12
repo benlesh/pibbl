@@ -72,6 +72,13 @@ const DrawingCompositionScene = defineComp<DrawingCompositionSceneProps>(({ stat
       rect({ x: 190, y: 44, width: 106, height: 104, fillStyle: '#f59e0b' }),
     ],
   }),
+  clip({
+    path: new Path2D('M 210 54 H 276 V 138 H 210 Z M 228 74 H 258 V 118 H 228 Z'),
+    fillRule: 'evenodd',
+    children: [
+      rect({ x: 210, y: 54, width: 66, height: 84, fillStyle: '#fef3c7' }),
+    ],
+  }),
   g({
     key: 'layer-position',
     x: 344,

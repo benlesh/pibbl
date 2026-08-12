@@ -2,19 +2,28 @@ import { defineComp, rect, text } from '@crc/core';
 
 export const DRAWING_TEXT_SOURCE_ID = 'drawing-text-example';
 
-export type DrawingTextAction = 'mount' | 'reset' | 'update-copy';
+export type DrawingTextAction =
+  | 'click-centered'
+  | 'mount'
+  | 'reset'
+  | 'update-copy';
 
 export interface DrawingTextState {
+  centeredClicks: number;
   lastAction: DrawingTextAction;
   revision: number;
   updated: boolean;
 }
 
 interface DrawingTextSceneProps {
+  onCenteredText?: () => void;
   state: Readonly<DrawingTextState>;
 }
 
-const DrawingTextScene = defineComp<DrawingTextSceneProps>(({ state }) => [
+const DrawingTextScene = defineComp<DrawingTextSceneProps>(({
+  onCenteredText,
+  state,
+}) => [
   rect({ x: 0, y: 0, width: 480, height: 240, fillStyle: '#f8fafc' }),
   text({
     key: 'heading',
@@ -31,7 +40,10 @@ const DrawingTextScene = defineComp<DrawingTextSceneProps>(({ state }) => [
     y: 24,
     font: '18px Arial',
     textAlign: 'center',
+    textBaseline: 'middle',
     fillStyle: '#0f766e',
+    cursor: 'pointer',
+    onClick: onCenteredText,
   }),
   rect({ x: 24, y: 68, width: 172, height: 40, fillStyle: '#e2e8f0' }),
   text({
@@ -97,6 +109,7 @@ const DrawingTextScene = defineComp<DrawingTextSceneProps>(({ state }) => [
 
 export function createDrawingTextScene(
   state: Readonly<DrawingTextState>,
+  onCenteredText?: () => void,
 ): ReturnType<typeof DrawingTextScene> {
-  return DrawingTextScene({ state });
+  return DrawingTextScene({ onCenteredText, state });
 }
