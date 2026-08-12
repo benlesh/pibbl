@@ -76,8 +76,16 @@ describe('scenario catalog trust gate', () => {
       await controller.reset();
       await controller.settled();
       expect(definition.formatState(controller.getState()).length).toBeGreaterThan(0);
+      for (const action of entry.actions) {
+        await controller.perform(action.id);
+        await controller.settled();
+        expect(definition.formatState(controller.getState()).length).toBeGreaterThan(0);
+        await controller.reset();
+        await controller.settled();
+      }
       await controller.dispose();
       controllers.splice(controllers.indexOf(controller), 1);
     },
+    60_000,
   );
 });

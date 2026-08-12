@@ -88,9 +88,9 @@ function renderIndex(): string {
 
 async function validateSources(): Promise<void> {
   validateScenarioCatalog(scenarioCatalog);
-  const discoveredPaths = (await readdir(scenarioDirectory))
+  const discoveredPaths = (await readdir(scenarioDirectory, { recursive: true }))
     .filter(name => name.endsWith('.example.ts'))
-    .map(name => `packages/scenarios/src/${name}`)
+    .map(name => `packages/scenarios/src/${name.replaceAll('\\', '/')}`)
     .sort();
   const catalogPaths = scenarioCatalog.map(entry => entry.source.path).sort();
   if (discoveredPaths.join('\n') !== catalogPaths.join('\n')) {
@@ -138,7 +138,7 @@ if (process.argv.includes('--write')) {
   );
 } else {
   const existingIndex = await readFile(indexPath, 'utf8').catch(() => '');
-  if (existingIndex !== generatedIndex) {
+  if (existingIndex.replaceAll('\r\n', '\n') !== generatedIndex) {
     throw new Error('docs/scenario-index.md is stale. Run `pnpm scenarios:write-index`.');
   }
   process.stdout.write(
