@@ -1,7 +1,11 @@
 import type { CRCBasicMouseEvents, CRCController } from '../src/lib/types';
-import { crc, crcEvent, defineComp, layer, rect } from '@crc/core';
+import { crc, crcCursor, crcEvent, defineComp, layer, rect } from '@crc/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { clearSharedState } from '../src/lib/global-state';
+import {
+  clearSharedState,
+  getCRCInstance,
+  GLOBAL_STATE,
+} from '../src/lib/global-state';
 import { RuntimeDiagnostics } from './support/runtime-diagnostics';
 
 const activeDiagnostics = new Set<RuntimeDiagnostics>();
@@ -142,6 +146,26 @@ const ObserverScene = defineComp<{ calls: string[] }>(({ calls }) => {
   crcEvent('click', () => calls.push('safe'));
   return rect({ x: 0, y: 0, width: 160, height: 120, fillStyle: '#f8fafc' });
 });
+
+const LayerGlobalResources = defineComp<{ calls: string[] }>(({ calls }) => {
+  crcEvent('mousemove', () => calls.push('observer'));
+  crcCursor({ style: 'wait' });
+  return rect({
+    x: 20,
+    y: 20,
+    width: 100,
+    height: 100,
+    fillStyle: '#7c3aed',
+    onMouseMove: () => calls.push('target'),
+  });
+});
+
+const LayerGlobalResourcesScene = defineComp<{ calls: string[]; show: boolean }>(({ calls, show }) =>
+  show ? layer({
+    key: 'global-resource-layer',
+    render: LayerGlobalResources({ calls }),
+  }) : undefined,
+);
 
 function nextFrame(): Promise<void> {
   return new Promise(resolve => requestAnimationFrame(() => resolve()));
@@ -380,7 +404,7 @@ describe('event lifecycle ownership', () => {
     expectFullyReleased(diagnostics);
   });
 
-  it('releases nested layer instances and bridges when their subtree disappears', async () => {
+  it('releases nested layer instances when their subtree disappears', async () => {
     const { canvas, diagnostics } = createHarness();
     const calls: number[] = [];
     const controller = track(crc(
@@ -400,6 +424,38 @@ describe('event lifecycle ownership', () => {
     });
     clickCanvas(canvas, 40, 40);
     expect(calls).toEqual([]);
+
+    controller.dispose();
+    expectFullyReleased(diagnostics);
+  });
+
+  it('releases layered paint entries, root observers, and root cursor defaults', async () => {
+    const { canvas, diagnostics } = createHarness();
+    const calls: string[] = [];
+    const controller = track(crc(canvas, LayerGlobalResourcesScene({ calls, show: true })));
+    await nextFrame();
+    const root = getCRCInstance(canvas);
+
+    expect(diagnostics.snapshot()).toMatchObject({ instances: 2, nativeListeners: 8 });
+    expect(root.paintEntries.size).toBe(1);
+    expect(root.events.mousemove.size).toBe(1);
+    expect(root.cursorDefaults.size).toBe(1);
+
+    canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: 40, clientY: 40 }));
+    expect(calls).toEqual(['target', 'observer']);
+    expect(canvas.style.cursor).toBe('wait');
+
+    crc(canvas, LayerGlobalResourcesScene({ calls, show: false }));
+    await nextFrame();
+    expect(GLOBAL_STATE.crcInstances.size).toBe(1);
+    expect(root.paintEntries.size).toBe(0);
+    expect(root.events.mousemove.size).toBe(0);
+    expect(root.cursorDefaults.size).toBe(0);
+    expect(root.interaction.hoveredRegion).toBeUndefined();
+    expect(canvas.style.cursor).toBe('');
+
+    canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: 40, clientY: 40 }));
+    expect(calls).toEqual(['target', 'observer']);
 
     controller.dispose();
     expectFullyReleased(diagnostics);
