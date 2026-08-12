@@ -1,12 +1,12 @@
 # CRC library status and feature inventory
 
-_Snapshot refreshed: 2026-08-11, after the TFC-09 drawing confidence sweep._
+_Snapshot refreshed: 2026-08-11, after the TFC-10 trust-gate handoff._
 
 ## At a glance
 
 CRC is a small functional component runtime over the HTML Canvas 2D API. It provides scheduled rendering, hook state, mouse-region interaction, transforms, cumulative clipping, globally ordered offscreen layers, and eleven drawing components. The project now has contract-driven browser evidence for every public export, a shared catalog of manual/headless scenarios, deterministic lifecycle ledgers, exact structural performance guards, strict package consumers, and reviewed visual comparisons.
 
-The historical pre-plan baseline was 70 browser tests with four supported-behavior skips. After TFC-09 the complete suite has 250 passing tests; all four supported skips have been replaced or enabled. The only conditional tests are two explicitly opt-in TFC-06 wall-clock timing benchmarks; their deterministic structural counterparts run normally.
+The historical pre-plan baseline was 70 browser tests with four supported-behavior skips. The final complete suite has 265 passing tests; all four supported skips have been replaced or enabled. The only conditional tests are two explicitly opt-in TFC-06 wall-clock timing benchmarks; their deterministic structural counterparts run normally.
 
 “Trusted” below means the applicable supported behavior, boundary cases, updates, errors, teardown, interaction, and visual output have deterministic evidence. It does not mean CRC adds browser capabilities that are outside its API, such as touch, keyboard focus, DOM accessibility, rich text, or image CORS control.
 
@@ -58,28 +58,30 @@ See the [runtime/hook contract](./design/runtime-hooks-contract.md), [mouse inte
 
 ### Types, packages, scenarios, and builds
 
-| Area                   | Current confidence                                                                                                                                                                                                                                  | Remaining boundary                                                                                                               |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Public TypeScript API  | **Trusted.** TypeScript 7 declarations compile under strict Bundler and NodeNext consumers. Positive inference and intentional errors cover runtime, hooks, components, events, and controller types. Private `@crc/core/lib/*` paths are rejected. | `@crc/types` remains a deliberately empty compatibility package until shared public types justify it.                            |
-| Package build          | **Trusted.** esbuild ESM/source maps plus TypeScript declarations load in Node and the browser. Source/built smoke visuals match and built gallery guards reject source leakage.                                                                    | Output is ESM-only; new formats need an explicit requirement.                                                                    |
-| Scenario catalog       | **Trusted through TFC-09.** Lazy identity-checked loaders, source markers, unique slugs/actions/learning orders, visibility/maturity, manual instructions, and source/built gallery adapters are validated.                                         | TFC-10 installs the final indexed manifest/trust gate and documentation handoff.                                                 |
-| Local gallery          | **Trusted through TFC-09.** Thirteen cataloged scenarios share exact definitions with headless tests; five drawing lessons are readable documentation candidates.                                                                                   | This is an internal gallery, not yet a published documentation site.                                                             |
-| Continuous integration | **Partial pending TFC-10.** Current PR jobs enforce browser tests, lint, and typecheck under Node 24/pnpm 11.                                                                                                                                       | TFC-10 adds package/source-built gallery/consumer/lifecycle/performance/catalog trust jobs and one documented aggregate command. |
+| Area                   | Current confidence                                                                                                                                                                                                                                  | Remaining boundary                                                                                                  |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Public TypeScript API  | **Trusted.** TypeScript 7 declarations compile under strict Bundler and NodeNext consumers. Positive inference and intentional errors cover runtime, hooks, components, events, and controller types. Private `@crc/core/lib/*` paths are rejected. | `@crc/types` remains a deliberately empty compatibility package until shared public types justify it.               |
+| Package build          | **Trusted.** esbuild ESM/source maps plus TypeScript declarations load in Node and the browser. Source/built smoke visuals match and built gallery guards reject source leakage.                                                                    | Output is ESM-only; new formats need an explicit requirement.                                                       |
+| Scenario catalog       | **Trusted.** Recursive filesystem and Vite discovery, source markers, lazy identity/action checks, unique organization metadata, all-action execution, and the generated [scenario index](./scenario-index.md) are required.                        | The six documentation candidates are ready for projection; publication remains a later adapter.                     |
+| Local gallery          | **Trusted.** Thirteen routes share exact definitions and source with headless tests, expose complete checklists and limitations, and are grouped by five stable facets.                                                                             | This is an internal gallery, not yet a published documentation site.                                                |
+| Continuous integration | **Configured.** One workflow maps static, packed-package, browser/visual, lifecycle, and performance structure to a stable aggregate `Trust gate` for PRs, pushes to `main`, and manual runs.                                                       | Hosted green status and selecting the aggregate in branch protection require pushing and repository administration. |
 
 ## Current verification snapshot
 
-Commands were run from the repository root on 2026-08-11 with Node 24.19.0 and pnpm 11.21.0 after TFC-09 implementation.
+Commands were run from the repository root on 2026-08-11 with Node 24.19.0 and pnpm 11.21.0 after TFC-10 implementation.
 
 | Check                    | Result   | Evidence                                                                                                             |
 | ------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------- |
-| Complete browser suite   | **Pass** | 33 files; 250 passed and 2 opt-in timing skips.                                                                      |
+| Complete browser suite   | **Pass** | 34 files; 265 passed and 2 opt-in timing skips.                                                                      |
 | Supported-behavior skips | **Pass** | Zero. Historical nested clip, multiple layer, layer prop, and layer dimension skips are enabled/replaced.            |
 | Typecheck                | **Pass** | TypeScript 7 `tsc --noEmit`.                                                                                         |
 | Lint/format              | **Pass** | ESLint 10 plus direct Prettier checks.                                                                               |
 | Package build            | **Pass** | ESM, declarations, and source maps for `@crc/core` and `@crc/types`.                                                 |
 | Source gallery build     | **Pass** | Vite production build with all catalog/source adapters.                                                              |
 | Built gallery build      | **Pass** | Vite built mode resolves package outputs without source leakage.                                                     |
-| Public package consumer  | **Pass** | Strict Bundler, NodeNext, runtime export, controller, and private-subpath checks.                                    |
+| Packed package consumer  | **Pass** | Real tarballs pass strict Bundler, NodeNext, runtime export, private-subpath, and no-source checks.                  |
+| Scenario manifest        | **Pass** | Thirteen recursively discovered sources load, mount, execute every action, reset, and dispose.                       |
+| Visual safeguards        | **Pass** | Deliberate mismatch, named artifacts, immutable baselines, and normal recovery are required.                         |
 | Drawing visuals          | **Pass** | Five reviewed native 480×240 baselines; deliberate 20,694-pixel/max-delta-234 drill failed and normal run recovered. |
 
 ## Running locally
@@ -103,21 +105,15 @@ If Chromium is absent, install it once with `pnpm exec playwright install chromi
 pnpm playground
 ```
 
-Open <http://localhost:5173/>. To exercise package output instead of source aliases, use `pnpm playground:built`.
+Open <http://localhost:5173/#/scenarios>. To exercise package output instead of source aliases, use `pnpm playground:built`.
 
 ### Verification commands
 
 ```sh
-pnpm test:ci
-pnpm typecheck
-pnpm lint
-pnpm build
-pnpm playground:build
-pnpm playground:build:built
-pnpm test:package-consumer
+corepack pnpm@11.21.0 trust
 ```
 
-TFC-10 consolidates these into the documented clean-checkout trust gate and CI jobs.
+See the [trust-gate guide](./testing/trust-gate.md) for clean-checkout setup, visual policy, and performance cadence.
 
 ## Accepted or deferred work
 
@@ -125,4 +121,4 @@ TFC-10 consolidates these into the documented clean-checkout trust gate and CI j
 - TFC-06 measurements do not justify a spatial index: the optimized linear resolver remains under its recorded triggers.
 - Wall-clock performance runs remain environment-controlled and opt-in; deterministic workload/counter assertions run on every normal suite.
 - `origin/jess/tests-for-utils` and richer JSX/playground branches were reviewed selectively; useful current-contract evidence was recreated without merging stale toolchain or unrelated feature work.
-- TFC-10 owns the final CI handoff, risk closure, docs-readiness index, and future documentation brief.
+- Hosted workflow confirmation and branch-protection selection remain external repository administration after this branch is pushed.
