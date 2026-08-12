@@ -42,15 +42,15 @@ The inventory totals 24 unique learning routes: one start lesson, eleven drawing
 
 ## Status board
 
-| Step   | Queue state | Outcome                                                                                                              |
-| ------ | ----------- | -------------------------------------------------------------------------------------------------------------------- |
-| IES-01 | In progress | Establish the two catalogs, route model, responsive shell, visual system, landing page, and testing-area separation. |
-| IES-02 | Queued      | Build the lazy type-aware editor, compiler bridge, sandbox protocol, and editing controls.                           |
-| IES-03 | Queued      | Replace bundled drawing material with eleven focused drawing/composition lessons.                                    |
-| IES-04 | Queued      | Add eight mouse-event lessons and four advanced interaction lessons.                                                 |
-| IES-05 | Queued      | Finish redirects, test presentation, docs, accessibility/performance hardening, visuals, and trust verification.     |
+| Step   | Queue state | Outcome                                                                                                                |
+| ------ | ----------- | ---------------------------------------------------------------------------------------------------------------------- |
+| IES-01 | Done        | Established the two catalogs, route model, responsive shell, visual system, landing page, and testing-area separation. |
+| IES-02 | Done        | Built the lazy type-aware editor, compiler bridge, sandbox protocol, and editing controls.                             |
+| IES-03 | Done        | Replaced bundled drawing material with eleven focused drawing/composition lessons.                                     |
+| IES-04 | Done        | Added eight mouse-event lessons and four advanced interaction lessons.                                                 |
+| IES-05 | Done        | Finished redirects, test presentation, docs, accessibility/performance hardening, visuals, and trust verification.     |
 
-## IES-01 [NEXT] — Catalogs, routes, and studio shell
+## IES-01 [DONE] — Catalogs, routes, and studio shell
 
 ### Goal
 
@@ -77,7 +77,7 @@ Create the learner-first information architecture and visually distinct studio w
 - Source-mode playground build.
 - Desktop and 320px manual navigation review.
 
-## IES-02 [TODO] — Type-aware editor and isolated runner
+## IES-02 [DONE] — Type-aware editor and isolated runner
 
 ### Goal
 
@@ -104,7 +104,7 @@ Make canonical lesson source genuinely editable, type-aware, safe to execute, an
 - Sandbox and lifecycle browser tests.
 - URL round-trip, malformed/oversized payload, and history tests.
 
-## IES-03 [TODO] — Drawing and composition lessons
+## IES-03 [DONE] — Drawing and composition lessons
 
 ### Goal
 
@@ -126,7 +126,7 @@ Teach each supported drawing/composition primitive through one focused and visua
 - Canonical-source type/emission/mount checks.
 - Representative visual and pixel evidence.
 
-## IES-04 [TODO] — Mouse and advanced interaction lessons
+## IES-04 [DONE] — Mouse and advanced interaction lessons
 
 ### Goal
 
@@ -149,7 +149,7 @@ Teach every existing mouse event and the composition rules needed to reason abou
 - Browser-driven canonical lesson interaction checks.
 - Representative visual baselines.
 
-## IES-05 [TODO] — Hardening, documentation, and trust gate
+## IES-05 [DONE] — Hardening, documentation, and trust gate
 
 ### Goal
 
@@ -185,3 +185,5 @@ Finish presentation and compatibility details, document the new architecture, an
 ## Session log
 
 - **2026-08-12 — Plan activated.** Archived project plan 001 after GitHub Actions run 31607284354 passed for commit `958e531470e5903a6340de562d817098551a2170`. Recorded that GitHub branch protection is unavailable for this private repository on its current tier. Established the 24-route learner inventory, isolated test-lab route family, editor/sandbox contract, five ordered delivery steps, and acceptance bars. Active slice: **IES-01 catalogs, routes, and studio shell**.
+- **2026-08-12 — IES-01 through IES-04 complete.** Split learning examples from deterministic fixtures, launched the responsive studio and test-lab routes, added all 24 canonical lesson sources, and implemented the lazy Monaco/TypeScript workbench plus opaque replaceable runner. Catalog and source checks covered every lesson; focused browser checks passed 29 assertions across catalog mounting and compressed sharing. Manual Chromium review covered desktop and 320px navigation, editor diagnostics/completion, invalid-edit retention, sandbox isolation, reruns, sharing, and the representative learning layouts. Evidence: [IES-01](../testing/field-notes/ies-01.md), [IES-02](../testing/field-notes/ies-02.md), [IES-03](../testing/field-notes/ies-03.md), and [IES-04](../testing/field-notes/ies-04.md).
+- **2026-08-12 — IES-05 complete; plan complete.** Preserved all 13 deterministic fixtures under `#/testing`, finished legacy redirects and read-only test-source presentation, updated the generated catalog and documentation, hardened drawer/focus/reduced-motion behavior, and adopted five reviewed full-page baselines. The complete `pnpm trust` gate passed 36 browser files with 294 passing tests and two intentional timing skips, source/built playground builds, packed consumers, visual safeguards, built smoke, lifecycle 9/9, performance 3/3, and the 5/5 studio visual comparison. Node 24.12 emitted the expected warning against the documented Node 24.15 minimum without failing a command. Evidence: [IES-05](../testing/field-notes/ies-05.md). No next phase is activated.

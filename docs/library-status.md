@@ -38,7 +38,7 @@ The historical pre-plan baseline was 70 browser tests with four supported-behavi
 | `clip`           | **Trusted.** `nonzero`/`evenodd`, cumulative nested intersection, transform/update/empty clip, and matching render/hit geometry.                                                             | No retained clip object is exposed publicly.                                                                                       |
 | `layer`          | **Trusted.** Persistent prop/root/dimension updates, global paint/target order, nested transforms/clips/bounds, shared root interaction state, cursor parity, and cascading cleanup.         | Requires browser `OffscreenCanvas`; render caching remains shallow-prop based.                                                     |
 
-The full component rules and evidence mapping are in the [drawing-component contract](./design/drawing-components-contract.md). Five documentation-candidate lessons cover all eleven exports in the local gallery.
+The full component rules and evidence mapping are in the [drawing-component contract](./design/drawing-components-contract.md). Eleven focused drawing and composition lessons cover all eleven exports in the local studio.
 
 ### Hooks and interaction
 
@@ -99,13 +99,13 @@ pnpm install --frozen-lockfile
 
 If Chromium is absent, install it once with `pnpm exec playwright install chromium` (`--with-deps` on a fresh Linux machine).
 
-### Open the scenario gallery
+### Open the interactive studio
 
 ```sh
 pnpm playground
 ```
 
-Open <http://localhost:5173/#/scenarios>. To exercise package output instead of source aliases, use `pnpm playground:built`.
+Open <http://localhost:5173/#/examples> for the 24 learner lessons. Deterministic browser fixtures live separately at <http://localhost:5173/#/testing>, and legacy `#/scenarios` URLs redirect there. To exercise package output instead of source aliases, use `pnpm playground:built`.
 
 ### Verification commands
 

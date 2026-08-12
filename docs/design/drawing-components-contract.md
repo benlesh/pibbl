@@ -2,7 +2,7 @@
 
 Status: implemented and verified by TFC-09 on 2026-08-11.
 
-This document defines the supported behavior of CRC's existing drawing exports. It complements the [runtime and hook contract](./runtime-hooks-contract.md), [mouse interaction contract](./mouse-interaction-contract.md), and [runtime resource ownership contract](./runtime-resource-ownership.md). The five documentation-candidate drawing lessons are the public-API integration oracle; focused component tests own exhaustive and destructive boundary cases that would make teaching examples harder to read.
+This document defines the supported behavior of CRC's existing drawing exports. It complements the [runtime and hook contract](./runtime-hooks-contract.md), [mouse interaction contract](./mouse-interaction-contract.md), and [runtime resource ownership contract](./runtime-resource-ownership.md). Eleven focused drawing and composition lessons provide readable public-API integration examples; focused component tests and the automated-test labs own exhaustive and destructive boundary cases that would make teaching examples harder to read.
 
 ## Shared paint and interaction rules
 
@@ -46,12 +46,14 @@ Pixel alignment produces one adjusted rectangle used by `drawImage`, the optiona
 
 ## Visual evidence and limitations
 
-The local gallery exposes five stable lessons at:
+The studio exposes focused learner pages and retains the five stable integration fixtures at:
 
-- `#/scenarios/drawing-shapes`
-- `#/scenarios/drawing-lines`
-- `#/scenarios/drawing-text`
-- `#/scenarios/drawing-images`
-- `#/scenarios/drawing-composition`
+- `#/examples/drawing/rectangle` through `#/examples/drawing/image`
+- `#/examples/composition/group` through `#/examples/composition/layer`
+- `#/testing/drawing-shapes`
+- `#/testing/drawing-lines`
+- `#/testing/drawing-text`
+- `#/testing/drawing-images`
+- `#/testing/drawing-composition`
 
-Each lesson is loaded through the same catalog definition and readable source adapter used by headless Chromium. Five native 480×240 baselines retain exact geometry outside tight font and decoded-SVG edge masks; exact semantic pixels and controlled Canvas-call assertions cover those masked regions. CRC does not add DOM layout, rich text, accessibility, image CORS policy, or SVG validation beyond what the existing Canvas API exposes.
+Each learner source and test fixture is loaded from its validated catalog path, and browser checks import the same modules shown by the studio. Five native 480×240 fixture baselines retain exact geometry outside tight font and decoded-SVG edge masks; exact semantic pixels and controlled Canvas-call assertions cover those masked regions. CRC does not add DOM layout, rich text, accessibility, image CORS policy, or SVG validation beyond what the existing Canvas API exposes.

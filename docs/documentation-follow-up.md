@@ -1,38 +1,31 @@
-# Documentation renderer follow-up brief
+# Interactive examples studio
 
-CRC now has documentation-ready content, but this project deliberately did not build or publish a documentation site. A future renderer should be a presentation adapter over the scenario catalog, never a second scenario implementation.
+The documentation renderer follow-up described here has been implemented as the CRC Interactive Examples Studio. It remains part of the existing Vite playground rather than a second application or publication pipeline.
 
-## Inputs
+## Current model
 
-- the validated catalog and generated scenario index;
-- `documentation-candidate` metadata only for public teaching pages;
-- lazy scenario definitions and their stable action IDs;
-- the exact exercised `*.example.ts` source resolved by source ID/path/marker;
-- stable `#/scenarios/<slug>` intent, migrated to an equivalent published URL without changing the slug;
-- drawing, runtime/hook, mouse, and ownership contract prose.
+- `learningExampleCatalog` drives the 24 learner pages under `#/examples`.
+- `scenarioCatalog` drives deterministic fixtures under `#/testing`.
+- Learning pages load their canonical TypeScript and Monaco editor only when visited.
+- Existing `#/scenarios` routes redirect to their matching automated-test routes.
+- The generated [example catalog index](./scenario-index.md) documents both catalogs.
 
-## Required projections
+## Implemented experience
 
-- navigation by learning order and category;
-- facets for API, concept, visibility, and maturity;
-- one page per candidate with summary, readable live Canvas, controls, state, manual steps, expected observations, known limitations, and exact source;
-- links from API/contract prose back to executable examples;
-- responsive presentation and keyboard-accessible documentation chrome, without pretending the current Canvas API itself has keyboard semantics.
+- Persistent categorized desktop navigation and an accessible narrow-screen drawer.
+- One focused page for every drawing/composition primitive and mouse event, plus four advanced interaction lessons.
+- Large live previews, type-aware editable TypeScript, diagnostics, completion and hover support, automatic debounced execution, copy/reset/share/format controls, prompts, API notes, and previous/next links.
+- Replaceable opaque sandbox frames that preserve the last successful preview when edits fail.
+- A visually subordinate automated-testing area with collapsed highlighted source.
 
-The initial candidate set is baseline smoke plus the five drawing lessons. Test laboratories remain visible in the internal gallery and generated complete index, but are not published as teaching pages by default.
+## Maintained boundaries
 
-## Non-negotiable boundaries
+- Canonical example code lives only in `*.example.ts` files and is loaded by its validated catalog path.
+- Playground presentation does not leak into example or scenario definitions.
+- Existing scenario IDs, slugs, actions, and source markers remain intact for headless consumers.
+- Test-only metadata and controls stay out of learner pages.
+- There is no backend, account system, server-side snippet store, analytics layer, or separate docs app.
 
-- Do not copy example code into Markdown, JSON metadata, or framework components. Render the validated source adapter output.
-- Do not import playground presentation code into scenario definitions or vice versa.
-- Do not change scenario IDs, slugs, action IDs, or source markers to satisfy a renderer preference.
-- Do not expose test-only diagnostics, private runtime state, or fixture controls as public API guidance.
-- Do not build search, versioning, analytics, publication, or a broad design system until the basic catalog projection proves maintainable.
+## Possible later work
 
-## Proposed later sequence
-
-1. Choose the renderer/navigation stack and URL mapping.
-2. Render the generated catalog index and one baseline page.
-3. Add the five drawing pages without duplicating source.
-4. Link contract prose and API reference entries.
-5. Add search/versioning/publication only after source identity and live-example isolation remain green in CI.
+Search, versioning, analytics, and publication remain independent future decisions. They should build on the two catalogs without merging learner content back into diagnostic test fixtures.

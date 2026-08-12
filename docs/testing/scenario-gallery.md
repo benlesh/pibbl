@@ -1,55 +1,52 @@
-# Shared scenario gallery
+# Interactive studio and automated test labs
 
-CRC scenarios are authored once against the public `@crc/core` API and consumed through a lazy, presentation-neutral catalog. The local gallery, browser tests, and a future documentation renderer are peers over that contract; none depends on another adapter.
+CRC now has two deliberately different example catalogs. The learner studio presents 24 focused, attractive lessons; the automated-test catalog preserves the exhaustive scenarios used by browser verification. Both are authored against the public `@crc/core` API.
 
 ## Architecture
 
 ```text
-catalog metadata + lazy loader + source identity
-                    |
-          scenario definition/controller
-             /             |            \
-     local gallery    headless driver    future docs
+learning catalog ── focused mount(canvas) source ── learner studio
+
+test catalog ─────── scenario controller ────────── test labs + headless driver
 ```
 
-- `packages/scenarios/src/catalog.ts` contains import-safe metadata, actions, source identity, validation, and lazy loaders. Importing it does not mount a scenario or import gallery/test frameworks.
-- Every `packages/scenarios/src/**/*.example.ts` file is readable public-API source. Its scenario controller owns state, actions, render settlement, reset, and disposal.
+- `packages/scenarios/src/learning-catalog.ts` contains the public lesson order, section, API tags, two objectives, prompts, relationships, Canvas dimensions, canonical source path, validation, and lazy loaders.
+- Every `packages/scenarios/src/learning/**/*.example.ts` file is a concise lesson with one contract: `export default function mount(canvas: HTMLCanvasElement): CRCController`.
+- `packages/scenarios/src/catalog.ts` retains the test-only scenario metadata, actions, source identity, visibility, maturity, validation, and lazy loaders.
+- Every non-learning `packages/scenarios/src/**/*.example.ts` file remains an exhaustive scenario controller with state, actions, render settlement, reset, and disposal.
 - `packages/scenarios/src/surface.ts` is an optional gallery surface adapter available only through the explicit `@crc/scenarios/surface` subpath. It is not exported from the package root or imported by the catalog.
-- `playground/src/scenario-sources.ts` is the only Vite-specific raw-source adapter. Its recursive glob discovers every example and verifies both path and source marker.
-- `tooling/scenario-catalog.ts` independently discovers the same files from disk, loads every definition, and checks the generated [scenario index](../scenario-index.md).
-- `packages/core/test/scenario-catalog.test.ts` mounts every entry, executes each registered action in isolation, resets it, and disposes it without importing gallery UI.
+- `playground/src/learning-sources.ts` and `playground/src/scenario-sources.ts` are the Vite-specific raw-source adapters. Learning source is route-lazy; test source becomes a collapsed read-only editor only when opened.
+- `tooling/scenario-catalog.ts` independently discovers both sets from disk, validates their source contracts, loads every definition, and checks the generated [example catalog index](../scenario-index.md).
+- Browser tests mount every lesson and every test scenario from those same modules.
 
 `loadScenario(entry)` rejects a definition whose ID, source ID, or ordered action IDs differ from its catalog entry. Catalog validation also rejects duplicate IDs/slugs/actions, empty tags/instructions/reasons, invalid dimensions, and non-TypeScript source references.
 
-## Required metadata
+## Learner studio
 
-Every entry supplies a stable ID and slug, title, summary, category, API and concept tags, manual steps with expected observations, known limitations, source identity/path, actions, Canvas dimensions, visibility, maturity, and a visibility reason.
-
-Visibility has two initial classes:
-
-- `documentation-candidate`: readable public-API teaching material that a future docs projection may publish.
-- `test-laboratory`: diagnostic, lifecycle, stress, or performance material that belongs in the complete internal gallery but is not automatically public documentation.
-
-Maturity is one of `baseline`, `characterization`, `contract`, or `trusted`. It describes evidence state, not presentation quality.
-
-## Run the indexed gallery
-
-From the repository root:
+Run the source-mode studio from the repository root:
 
 ```sh
 pnpm playground
 ```
 
-Open <http://localhost:5173/#/scenarios>. The index presents all executable scenarios by learning progression, public API, concept, category, and visibility/maturity. Each scenario retains a stable `#/scenarios/<slug>` route.
+Open <http://localhost:5173/#/examples>. Desktop navigation stays visible; narrow screens use a keyboard-accessible drawer. The landing page leads into drawing, composition, mouse-event, and advanced-interaction lessons.
 
-To exercise the baseline first, open <http://localhost:5173/#/scenarios/baseline-smoke>.
+Each lesson loads Monaco and the TypeScript worker on demand. CRC declarations provide semantic errors, completion items, and hover types. Valid edits are emitted by the worker and run in a replaceable opaque iframe with `sandbox="allow-scripts"`; invalid edits leave the last successful preview in place. Share links use a versioned compressed hash payload and fall back safely when malformed or oversized.
+
+The Canvas lessons demonstrate CRC's mouse-only contract. The surrounding navigation and controls are keyboard accessible, but the pages do not imply keyboard semantics for Canvas targets that CRC does not provide.
+
+## Automated test labs
+
+Open <http://localhost:5173/#/testing>. This area explains that its scenarios are deterministic browser fixtures and retains their exact IDs, action sets, diagnostic state, visual baselines, and headless consumers. Test-only visibility and maturity metadata are not shown on learning pages.
+
+To exercise the baseline first, open <http://localhost:5173/#/testing/baseline-smoke>.
 
 1. Confirm the initial blue rectangle reports revision `0`, clicks `0`, and last action `mount`.
 2. Choose **Update scene**. The rectangle becomes purple, revision becomes `1`, and last action becomes `update`.
 3. Click inside the colored rectangle. It becomes orange, clicks becomes `1`, and last action becomes `click`.
 4. Choose **Reset**. The blue scene returns with revision and clicks at `0` and last action `reset`.
 
-The gallery exposes source, exact instructions, expected results, live state, reset, tags, visibility, maturity, and limitations from the catalog entry. The Canvas itself has no keyboard click equivalent because CRC's current public API is mouse-only; that limitation is explicit rather than hidden by the gallery.
+Each lab exposes its Canvas, fixture controls, state, procedure, expected evidence, limitations, and a collapsed syntax-highlighted source viewer. Legacy `#/scenarios` and `#/scenarios/<slug>` URLs redirect to this area.
 
 ## Headless and visual proof
 
@@ -61,6 +58,14 @@ pnpm test:smoke
 
 The test imports the same lazy catalog entry and definition, then asserts mount, update, real browser click, reset, a post-reset click, disposal, source identity, and targeted Canvas pixels.
 
+Representative full-page studio layouts are checked with:
+
+```sh
+pnpm test:studio-visual
+```
+
+The five exact baselines cover the landing page, a drawing primitive, a mouse-event lesson, an advanced interaction lesson, and an automated test lab. To intentionally adopt a reviewed design change, run `pnpm test:studio-visual:update`, inspect every updated image, and then rerun the normal comparison. CI never updates these baselines.
+
 The approved baseline is `packages/core/test/visual-baselines/dep-01-smoke.expected.png`. Each run writes actual and diff-capable artifacts under ignored `test-screenshots/dep-01/`; the unified workflow is configured to upload that tree. The comparator is exact outside documented text masks. Text masks isolate cross-platform Arial glyph rasterization while semantic assertions and source identity protect the displayed values; structural backgrounds, borders, state rows, Canvas colors, and target pixels remain exact. A later bundled test font is preferable if text glyphs become a direct visual contract.
 
 To prove the failure path without editing source or baselines:
@@ -71,6 +76,6 @@ VITE_CRC_VISUAL_DRILL=1 pnpm test:smoke
 
 This intentionally compares the legitimate purple update state against the approved blue reset baseline. The command must fail and produce `smoke.expected.png`, `smoke.actual.png`, and `smoke.diff.png`. Run the normal command afterward and require green. Baselines are adopted only after inspecting all images; CI never updates them.
 
-## Future documentation seam
+## Catalog boundaries
 
-A future renderer should import the catalog, filter `documentation-candidate` entries, group by category/API/concept/learning order, load definitions lazily, and provide its own presentation. It may reuse the raw-source identity adapter pattern but must not copy example code into prose metadata or depend on the playground UI. Published scenario URLs should retain their catalog slugs.
+Learning sources contain no scenario IDs, marker boilerplate, fixture counters, or test-runner code. Their identity comes from the validated catalog path and content. Test scenarios retain those diagnostic contracts because they are useful verification fixtures. Changes to either catalog must regenerate [the example index](../scenario-index.md) with `pnpm scenarios:write-index`.

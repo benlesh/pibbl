@@ -44,7 +44,9 @@ corepack pnpm@11.21.0 install --frozen-lockfile
 corepack pnpm@11.21.0 playground
 ```
 
-Open <http://localhost:5173/>. The gallery includes a baseline walkthrough, five documentation-candidate drawing lessons, and trusted interaction, geometry, performance, lifecycle, and hook laboratories. Every displayed example is the same public-API source exercised by headless Chromium.
+Open <http://localhost:5173/>. The CRC Interactive Examples Studio opens at `#/examples` with 24 focused lessons: getting started, one page for every drawing and composition primitive, one page for every supported mouse event, and four advanced interaction studies. Each page pairs a large live Canvas with editable, type-aware TypeScript, inline diagnostics, automatic reruns, reset/copy/share/format controls, and focused practice prompts.
+
+The exhaustive deterministic fixtures used by browser verification remain available under the visually separate `#/testing` area. Old `#/scenarios` links redirect there. Learning examples and test labs have separate catalogs, but both continue to exercise CRC through its public API.
 
 To exercise built package output instead of source aliases:
 
