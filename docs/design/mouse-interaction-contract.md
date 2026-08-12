@@ -1,6 +1,6 @@
 # CRC mouse interaction contract
 
-Status: approved on 2026-08-11; the untransformed root-Canvas rules are implemented and verified by TFC-04. CSS scaling, transforms, clips, and global layer paint order remain the TFC-05 implementation boundary.
+Status: approved and implemented as of 2026-08-11. TFC-04 verified the root-Canvas rules; TFC-05 verified intrinsic coordinates, transforms, clip intersections, and global layer paint order.
 
 This document defines the behavior TFC-03 through TFC-05 must implement. The executable source of truth for sequence examples is `MOUSE_CONTRACT_CASES` in `packages/scenarios/src/mouse-contract.ts`; the manual explorer and headless contract suite consume that same table.
 
@@ -50,6 +50,10 @@ DOM ancestors learn about child input through a separate propagation model. CRC 
 One stable interaction-region slot owns all eight mouse handlers and its optional cursor for a rendered path. Rerender mutates that slot in place, then refreshes its reverse-paint-order position without changing logical identity. Removing the component or its last interactive property releases the region and any hover, activation, or cursor state it owns.
 
 Pathless observers remain ordered per-type Sets outside the target registry. A public `crc()` rerender requested by a handler settles on the next animation frame, so the current dispatch plan completes before the new tree is visible. Narrow dispatcher tests separately prove the synchronous rule for direct live-registry mutation: removed callbacks/targets are skipped, newly added callbacks wait for the next native event, and a reported exception does not stop the remaining plan.
+
+## TFC-05 composition boundary
+
+One root dispatcher owns interaction state across the root Canvas and every nested layer. Each Canvas instance retains local paint entries; layer entries compose their child entries into the root order at the exact `drawImage` position. Target resolution walks that composition in reverse paint order, applies every accumulated transform, clip, and layer bound, and returns the stable leaf-region identity. Layers therefore do not double-dispatch, create independent hover state, or compete for the cursor.
 
 ## Movement and boundary order
 
@@ -116,7 +120,7 @@ This follows the useful DOM principles: dispatch works from a cloned listener li
 
 ## Coordinates and geometry
 
-Public coordinates are intrinsic root-Canvas coordinates with fractional precision. The executable oracle includes a CSS-scaled case because the current implementation still reports CSS-local coordinates and TFC-05 must correct it:
+Public coordinates are intrinsic root-Canvas coordinates with fractional precision. The executable oracle verifies the CSS-scaled conversion:
 
 ```text
 x = (clientX - canvasRect.left) * canvas.width / canvasRect.width
@@ -155,9 +159,9 @@ The explorer visual target, native trace when analogous, CRC trace, gesture, and
 - Pointer/touch APIs, compatibility mouse suppression, pointer capture, keyboard activation, focus, and accessibility equivalents.
 - Public `target`, `relatedTarget`, propagation, cancellation, or event-phase APIs.
 - Cross-browser normalization of context-menu ordering.
-- Performance optimization before the contract is implemented correctly.
+- Performance optimization that weakens the verified contract; TFC-06 measures the implemented hot path before selecting any further optimization.
 
-TFC-03 owns resource and mutation safety. TFC-04 owns ordering, topmost targeting, click identity, cursor parity, and repeatability. TFC-05 owns CSS scale, transforms, clips, group/layer composition, and stroke-width geometry.
+TFC-03 established resource and mutation safety. TFC-04 established ordering, topmost targeting, click identity, cursor parity, and repeatability. TFC-05 established CSS scale, transforms, clips, group/layer composition, and stroke-width geometry.
 
 ## Primary sources
 
@@ -168,3 +172,4 @@ TFC-03 owns resource and mutation safety. TFC-04 owns ordering, topmost targetin
 - [WHATWG DOM — listener invocation, removal, and exception isolation](https://dom.spec.whatwg.org/#concept-event-listener-invoke)
 - [W3C CSSOM View — topmost-first hit-test order](https://www.w3.org/TR/cssom-view/#dom-document-elementsfrompoint)
 - [W3C CSSOM View — MouseEvent coordinate extensions](https://www.w3.org/TR/cssom-view/#extensions-to-the-mouseevent-interface)
+- [WHATWG HTML — Canvas paths, clipping, hit testing, and drawing images](https://html.spec.whatwg.org/multipage/canvas.html)
