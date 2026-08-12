@@ -5,6 +5,7 @@ import { defineComp } from '../define-comp';
 import { crcState } from '../hooks/crc-state';
 import { componentTest } from '../test-utils/component-test';
 import { takeScreenshot } from '../util/test-utils';
+import { clip } from './clip';
 import { g } from './g';
 import { layer } from './layer';
 import { rect } from './rect';
@@ -291,7 +292,7 @@ describe('layer', () => {
       expect(onClick).toHaveBeenCalledTimes(1);
     });
 
-    it.skip('handles events with multiple layers', async () => {
+    it('handles events with multiple layers', async () => {
       const onClickTop = vi.fn();
       const onClickBottom = vi.fn();
       const RED_RECT_CENTER = { x: 75, y: 75 };
@@ -331,6 +332,147 @@ describe('layer', () => {
       await canvas.click({ position: BLUE_RECT_EXCLUSIVE_AREA });
       expect(onClickTop).toHaveBeenCalledTimes(1);
       expect(onClickBottom).toHaveBeenCalledTimes(1);
+    });
+
+    it('lets root content painted after a layer win the global target', async () => {
+      const onClickLayer = vi.fn();
+      const onClickRoot = vi.fn();
+      const canvas = await componentTest(g({
+        children: [
+          layer({
+            render: rect({
+              x: 40,
+              y: 40,
+              width: 120,
+              height: 120,
+              fillStyle: 'orange',
+              onClick: onClickLayer,
+            }),
+          }),
+          rect({
+            x: 70,
+            y: 70,
+            width: 60,
+            height: 60,
+            fillStyle: 'purple',
+            onClick: onClickRoot,
+          }),
+        ],
+      }));
+
+      await canvas.click({ position: { x: 100, y: 100 } });
+      expect(onClickRoot).toHaveBeenCalledOnce();
+      expect(onClickLayer).not.toHaveBeenCalled();
+    });
+
+    it('composes the parent transform into layer hit testing', async () => {
+      const onClick = vi.fn();
+      const canvas = await componentTest(g({
+        x: 120,
+        y: 50,
+        scaleX: 1.5,
+        children: [
+          layer({
+            width: 80,
+            height: 80,
+            render: rect({
+              x: 0,
+              y: 0,
+              width: 60,
+              height: 60,
+              fillStyle: 'teal',
+              onClick,
+            }),
+          }),
+        ],
+      }));
+
+      await canvas.click({ position: { x: 225, y: 80 } });
+      expect(onClick).toHaveBeenCalledOnce();
+
+      await canvas.click({ position: { x: 30, y: 30 } });
+      expect(onClick).toHaveBeenCalledOnce();
+    });
+
+    it('clips interaction to the offscreen layer dimensions', async () => {
+      const onClick = vi.fn();
+      const canvas = await componentTest(layer({
+        width: 50,
+        height: 50,
+        render: rect({
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+          fillStyle: 'blue',
+          onClick,
+        }),
+      }));
+
+      await canvas.click({ position: { x: 25, y: 25 } });
+      expect(onClick).toHaveBeenCalledOnce();
+
+      await canvas.click({ position: { x: 75, y: 25 } });
+      expect(onClick).toHaveBeenCalledOnce();
+    });
+
+    it('recursively resolves transformed nested layers', async () => {
+      const onClick = vi.fn();
+      const canvas = await componentTest(layer({
+        width: 200,
+        height: 150,
+        render: g({
+          x: 60,
+          y: 30,
+          children: [
+            layer({
+              width: 80,
+              height: 80,
+              render: rect({
+                x: 0,
+                y: 0,
+                width: 60,
+                height: 60,
+                fillStyle: 'green',
+                onClick,
+              }),
+            }),
+          ],
+        }),
+      }));
+
+      await canvas.click({ position: { x: 90, y: 60 } });
+      expect(onClick).toHaveBeenCalledOnce();
+
+      await canvas.click({ position: { x: 30, y: 30 } });
+      expect(onClick).toHaveBeenCalledOnce();
+    });
+
+    it('applies parent clips to layered interaction geometry', async () => {
+      const clipPath = new Path2D();
+      clipPath.rect(50, 50, 80, 80);
+      const onClick = vi.fn();
+      const canvas = await componentTest(clip({
+        path: clipPath,
+        children: [
+          layer({
+            render: rect({
+              x: 0,
+              y: 0,
+              width: 180,
+              height: 180,
+              fillStyle: 'red',
+              onClick,
+            }),
+          }),
+        ],
+      }));
+
+      await canvas.click({ position: { x: 80, y: 80 } });
+      expect(onClick).toHaveBeenCalledOnce();
+
+      await canvas.click({ position: { x: 25, y: 25 } });
+      expect(onClick).toHaveBeenCalledOnce();
     });
   });
 });
