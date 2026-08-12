@@ -446,6 +446,20 @@ describe('interaction ordering and target contract', () => {
     expect(route(controller.getState().trace)).toEqual(expectedRoute('remove-target-during-press'));
   });
 
+  it('does not activate a region when the primary press starts on Canvas background', async () => {
+    await page.viewport(900, 700);
+    const { canvas, controller } = await mountLab();
+    await moveMouse(canvas, BACKGROUND);
+    await clearTrace(controller);
+
+    await pressMouse(canvas, BACKGROUND);
+    await releaseMouse(canvas, LEFT);
+
+    expect(route(controller.getState().trace)).toEqual([
+      { type: 'mouseup', target: 'left' },
+    ]);
+  });
+
   it('delivers double click and preserves the active browser context-menu order', async () => {
     await page.viewport(900, 700);
     const { canvas, controller } = await mountLab();

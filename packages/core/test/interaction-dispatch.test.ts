@@ -30,9 +30,19 @@ function mountDispatchHarness(
 }
 
 function dispatchMove(canvas: HTMLCanvasElement, x: number, y: number): void {
+  dispatchMouse(canvas, 'mousemove', x, y);
+}
+
+function dispatchMouse(
+  canvas: HTMLCanvasElement,
+  type: 'click' | 'mousedown' | 'mousemove' | 'mouseup',
+  x: number,
+  y: number,
+): void {
   const bounds = canvas.getBoundingClientRect();
-  canvas.dispatchEvent(new MouseEvent('mousemove', {
+  canvas.dispatchEvent(new MouseEvent(type, {
     bubbles: true,
+    button: 0,
     clientX: bounds.left + x,
     clientY: bounds.top + y,
   }));
@@ -47,7 +57,10 @@ function rectanglePath(x: number, y: number, width: number, height: number): Pat
 function region(
   owner: CRCInstance,
   path: Path2D,
-  handlers: Partial<Record<'mousemove' | 'mouseover' | 'mouseout', CRCMouseEventListener>>,
+  handlers: Partial<Record<
+    'click' | 'mousemove' | 'mouseover' | 'mouseout',
+    CRCMouseEventListener
+  >>,
 ): CRCInteractionRegion {
   return {
     kind: 'region',
@@ -124,6 +137,29 @@ describe('interaction dispatcher mutation contract', () => {
     dispatchMove(canvas, 10, 10);
     expect(calls).toEqual(['throws', 'safe']);
     expect(reportError).toHaveBeenCalledOnce();
+  });
+
+  it('clears activation when the press resolves to Canvas background', () => {
+    const { canvas, instance } = mountDispatchHarness();
+    const onClick = vi.fn();
+    const target = region(
+      instance,
+      rectanglePath(20, 20, 100, 100),
+      { click: onClick },
+    );
+    instance.regions.add(target);
+    instance.paintEntries.add(target);
+
+    dispatchMouse(canvas, 'mousedown', 300, 180);
+    expect(instance.interaction.primaryDownRegion).toBeUndefined();
+
+    dispatchMouse(canvas, 'mouseup', 60, 60);
+    expect(instance.interaction.primaryUpRegion).toBe(target);
+
+    dispatchMouse(canvas, 'click', 60, 60);
+    expect(onClick).not.toHaveBeenCalled();
+    expect(instance.interaction.primaryDownRegion).toBeUndefined();
+    expect(instance.interaction.primaryUpRegion).toBeUndefined();
   });
 
   it('skips planned entry and movement when mouseout synchronously removes the new target', () => {
