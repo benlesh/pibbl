@@ -1,4 +1,5 @@
 import type { ScenarioCatalogRecord } from '@crc/scenarios';
+import cleanupStressSource from '../../packages/scenarios/src/cleanup-stress.example.ts?raw';
 import geometryMatrixSource from '../../packages/scenarios/src/geometry-matrix.example.ts?raw';
 import smokeSource from '../../packages/scenarios/src/smoke.example.ts?raw';
 import interactionLabSource from '../../packages/scenarios/src/interaction-lab.example.ts?raw';
@@ -12,6 +13,10 @@ interface ScenarioSourceAdapter {
 }
 
 const sourceAdapters: Readonly<Record<string, ScenarioSourceAdapter>> = {
+  'runtime-cleanup-stress-example': {
+    path: 'packages/scenarios/src/cleanup-stress.example.ts',
+    sourceText: cleanupStressSource,
+  },
   'baseline-smoke-example': {
     path: 'packages/scenarios/src/smoke.example.ts',
     sourceText: smokeSource,

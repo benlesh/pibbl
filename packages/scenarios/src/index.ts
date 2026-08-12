@@ -1,4 +1,5 @@
 export {
+  cleanupStressScenarioEntry,
   geometryMatrixScenarioEntry,
   getScenarioBySlug,
   interactionLabScenarioEntry,
@@ -10,6 +11,18 @@ export {
   performanceLabScenarioEntry,
   validateScenarioCatalog,
 } from './catalog';
+export {
+  CLEANUP_IMAGE_SOURCES,
+} from './cleanup-stress.example';
+export type {
+  CleanupImageMode,
+  CleanupLayerMode,
+  CleanupRootVariant,
+  CleanupRuntimeStatus,
+  CleanupStressAction,
+  CleanupStressMetrics,
+  CleanupStressState,
+} from './cleanup-stress.example';
 export { GEOMETRY_MATRIX_CASES } from './geometry-matrix.example';
 export type {
   GeometryMatrixAction,

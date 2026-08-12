@@ -1,4 +1,5 @@
 import type { SmokeScenarioState } from './smoke.example';
+import type { CleanupStressState } from './cleanup-stress.example';
 import type { GeometryMatrixState } from './geometry-matrix.example';
 import type { InteractionLabState } from './interaction-lab.example';
 import type { LifecycleLabState } from './lifecycle-lab.example';
@@ -489,6 +490,79 @@ export const performanceLabScenarioEntry: ScenarioCatalogEntry<PerformanceLabSta
   load: async () => (await import('./performance-lab')).performanceLabScenario,
 };
 
+const cleanupStressMetadata: ScenarioMetadata = {
+  id: 'runtime-cleanup-stress',
+  slug: 'runtime-cleanup-stress',
+  title: 'Runtime cleanup stress laboratory',
+  summary: 'Exercise pending frames, image races, nested layers, synchronous hook cleanup, component/root identity, runtime disposal, and repeated mount cycles.',
+  category: 'Diagnostics',
+  apiTags: ['crc', 'crcWhenChanged', 'img', 'layer', 'rect'],
+  conceptTags: ['resource ownership', 'async cleanup', 'idempotent disposal', 'mount stress'],
+  manualSteps: [
+    {
+      action: 'Choose Queue frame, then Abort runtime; remount and choose Dispose with pending frame.',
+      expected: 'The pending revision never paints after cleanup, the runtime reports aborted/disposed, and repeated cleanup remains harmless.',
+    },
+    {
+      action: 'Show the primary image, change its source, try the broken source, then remove it while switching quickly.',
+      expected: 'Blue and pink data images appear for their current source; broken/removed images stay absent and late sources never repaint.',
+    },
+    {
+      action: 'Add a single layer, replace it with nested layers, then remove layers.',
+      expected: 'Orange then green content appears; removal restores the background with no stale layer pixels.',
+    },
+    {
+      action: 'Change the hook dependency, replace the component key, remove/restore the component, and replace the root.',
+      expected: 'The blue/purple probe follows the selected identity while hook acquired/cleaned counters advance exactly once per boundary.',
+    },
+    {
+      action: 'Choose Run 1,000 mount/dispose cycles, then Cleanup again and Reset.',
+      expected: 'The cycle counter reaches 1,000, one live scene remains, repeated cleanup is harmless, and Reset returns to the initial probe.',
+    },
+  ],
+  knownLimitations: [
+    'Private instance, frame, reference, image-handler, and teardown ledgers remain test-only; the gallery exposes the exact public controls and semantic state.',
+    'The 1,000-cycle control intentionally disposes before the scheduled render so it remains bounded while proving listener/frame ownership.',
+    'The broken-image case has no public error callback; its contract is absence of stale pixels, scheduled work, and late updates.',
+  ],
+  visibility: 'test-laboratory',
+  visibilityReason: 'It exposes lifecycle stress, failure sources, and ownership counters rather than a beginner-facing drawing example.',
+  maturity: 'trusted',
+};
+
+export const cleanupStressScenarioEntry: ScenarioCatalogEntry<CleanupStressState> = {
+  metadata: cleanupStressMetadata,
+  canvas: { width: 480, height: 240 },
+  actions: [
+    { id: 'queue-frame', label: 'Queue frame' },
+    { id: 'dispose-with-frame', label: 'Dispose with pending frame' },
+    { id: 'show-image', label: 'Show primary image' },
+    { id: 'change-image-source', label: 'Change image source' },
+    { id: 'show-broken-image', label: 'Show broken image' },
+    { id: 'remove-image', label: 'Remove image' },
+    { id: 'add-layer', label: 'Add layer' },
+    { id: 'add-nested-layer', label: 'Add nested layers' },
+    { id: 'remove-layers', label: 'Remove layers' },
+    { id: 'change-hook-dependency', label: 'Change hook dependency' },
+    { id: 'replace-component-key', label: 'Replace component key' },
+    { id: 'remove-component', label: 'Remove component' },
+    { id: 'restore-component', label: 'Restore component' },
+    { id: 'replace-root', label: 'Replace root' },
+    { id: 'abort-runtime', label: 'Abort runtime' },
+    { id: 'dispose-runtime', label: 'Dispose runtime' },
+    { id: 'cleanup-again', label: 'Cleanup again' },
+    { id: 'remount-runtime', label: 'Remount runtime' },
+    { id: 'cycle-runtime-1000', label: 'Run 1,000 mount/dispose cycles' },
+  ],
+  source: {
+    id: 'runtime-cleanup-stress-example',
+    language: 'ts',
+    marker: "CLEANUP_STRESS_SOURCE_ID = 'runtime-cleanup-stress-example'",
+    path: 'packages/scenarios/src/cleanup-stress.example.ts',
+  },
+  load: async () => (await import('./cleanup-stress')).cleanupStressScenario,
+};
+
 export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] = validateScenarioCatalog([
   smokeScenarioEntry,
   interactionLabScenarioEntry,
@@ -496,6 +570,7 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] = validateScena
   lifecycleLabScenarioEntry,
   geometryMatrixScenarioEntry,
   performanceLabScenarioEntry,
+  cleanupStressScenarioEntry,
 ] as const);
 
 export function getScenarioBySlug(slug: string): AnyScenarioCatalogEntry | undefined {
