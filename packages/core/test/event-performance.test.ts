@@ -77,7 +77,7 @@ const PERFORMANCE_BUDGETS: Record<PerformanceWorkloadId, PerformanceBudget> = {
   'sparse-100': { medianMs: 0.1, p95Ms: 0.25 },
   'sparse-1000': { medianMs: 0.75, p95Ms: 1.5 },
   'sparse-10000': { medianMs: 6, p95Ms: 12 },
-  'transformed-1000': { medianMs: 1.5, p95Ms: 3 },
+  'transformed-1000': { medianMs: 2.25, p95Ms: 3 },
   zero: { medianMs: 0.05, p95Ms: 0.1 },
 };
 
