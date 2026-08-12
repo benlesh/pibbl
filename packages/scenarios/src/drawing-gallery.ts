@@ -270,11 +270,11 @@ export const drawingTextScenario = createLessonDefinition<DrawingTextState>({
 
 export const DRAWING_IMAGES_ACTION_IDS = [
   'change-image',
+  'use-natural-size',
+  'use-explicit-size',
   'show-broken-image',
   'remove-image',
   'show-image',
-  'use-natural-size',
-  'use-explicit-size',
 ] as const;
 
 function initialImagesState(lastAction: DrawingImagesAction): DrawingImagesState {
