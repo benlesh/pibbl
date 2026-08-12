@@ -64,17 +64,19 @@ function initialState(lastAction: PerformanceLabAction = 'mount'): PerformanceLa
   const workload = PERFORMANCE_WORKLOADS[0];
   return {
     callbacks: 0,
+    completedRenders: 0,
     counters: emptyCounters(),
     dispatches: 0,
     lastAction,
     lastDurationMs: 0,
-    lastRenderMs: 0,
+    lastSettleLatencyMs: 0,
     lastTarget: null,
     medianMs: 0,
     p95Ms: 0,
     p99Ms: 0,
     regionCount: workload.regionCount,
     revision: 0,
+    renderedRevision: -1,
     sampleCount: 0,
     workloadId: workload.id,
   };
@@ -211,6 +213,13 @@ async function mountPerformanceLab(
     pendingTarget = target;
     state = { ...state, callbacks: state.callbacks + 1 };
   };
+  const recordRender = (revision: number) => {
+    state = {
+      ...state,
+      completedRenders: state.completedRenders + 1,
+      renderedRevision: revision,
+    };
+  };
   const afterMove = () => {
     const duration = round(performance.now() - dispatchStarted);
     samples.push(duration);
@@ -237,11 +246,15 @@ async function mountPerformanceLab(
       workloadId: state.workloadId,
       revision: state.revision,
       recordHit,
+      recordRender,
     }), { signal: abortController.signal });
     pendingRender = nextFrame();
     await pendingRender;
     assertActive();
-    state = { ...state, lastRenderMs: round(performance.now() - started) };
+    state = {
+      ...state,
+      lastSettleLatencyMs: round(performance.now() - started),
+    };
     publish();
   };
   const select = async (
@@ -334,7 +347,10 @@ export const performanceLabScenario: ScenarioDefinition<PerformanceLabState> = {
       value: `${state.lastDurationMs} ms latest · ${state.medianMs} median · ${state.p95Ms} p95 · ${state.p99Ms} p99`,
     },
     { label: 'Samples', value: `${state.sampleCount} of ${SAMPLE_WINDOW}` },
-    { label: 'Render', value: `${state.lastRenderMs} ms · revision ${state.revision}` },
+    {
+      label: 'Render settle',
+      value: `${state.lastSettleLatencyMs} ms · rendered revision ${state.renderedRevision} · ${state.completedRenders} completed`,
+    },
     { label: 'Callbacks', value: `${state.callbacks} from ${state.dispatches} moves` },
     { label: 'Last action', value: state.lastAction },
   ],

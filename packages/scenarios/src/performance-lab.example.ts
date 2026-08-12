@@ -29,6 +29,7 @@ export type PerformanceWorkloadKind =
   | 'cursor'
   | 'dense'
   | 'layered'
+  | 'miss'
   | 'sparse'
   | 'transformed'
   | 'zero';
@@ -78,12 +79,44 @@ export const PERFORMANCE_WORKLOADS = [
     expectedTarget: 'region-0',
   },
   {
+    id: 'miss-100',
+    title: 'All miss · 100 regions',
+    kind: 'miss',
+    regionCount: 100,
+    probe: { x: 470, y: 230 },
+    expectedTarget: null,
+  },
+  {
+    id: 'miss-1000',
+    title: 'All miss · 1,000 regions',
+    kind: 'miss',
+    regionCount: 1_000,
+    probe: { x: 470, y: 230 },
+    expectedTarget: null,
+  },
+  {
+    id: 'miss-10000',
+    title: 'All miss · 10,000 regions',
+    kind: 'miss',
+    regionCount: 10_000,
+    probe: { x: 470, y: 230 },
+    expectedTarget: null,
+  },
+  {
     id: 'dense-1000',
     title: 'Dense overlap · 1,000 regions',
     kind: 'dense',
     regionCount: 1_000,
     probe: { x: 240, y: 120 },
     expectedTarget: 'region-999',
+  },
+  {
+    id: 'dense-10000',
+    title: 'Dense overlap · 10,000 regions',
+    kind: 'dense',
+    regionCount: 10_000,
+    probe: { x: 240, y: 120 },
+    expectedTarget: 'region-9999',
   },
   {
     id: 'clipped-1000',
@@ -129,23 +162,26 @@ export type PerformanceLabAction =
 
 export interface PerformanceLabState {
   callbacks: number;
+  completedRenders: number;
   counters: PerformanceCounters;
   dispatches: number;
   lastAction: PerformanceLabAction;
   lastDurationMs: number;
-  lastRenderMs: number;
+  lastSettleLatencyMs: number;
   lastTarget: string | null;
   medianMs: number;
   p95Ms: number;
   p99Ms: number;
   regionCount: number;
   revision: number;
+  renderedRevision: number;
   sampleCount: number;
   workloadId: PerformanceWorkloadId;
 }
 
 export interface PerformanceSceneProps {
   recordHit: (target: string) => void;
+  recordRender: (revision: number) => void;
   revision: number;
   workloadId: PerformanceWorkloadId;
 }
@@ -230,6 +266,7 @@ function workloadNodes(
     case 'zero':
       return [];
     case 'sparse':
+    case 'miss':
       return sparseRegions({ count: workload.regionCount, recordHit });
     case 'cursor':
       return sparseRegions({
@@ -269,6 +306,7 @@ export function getPerformanceWorkload(workloadId: PerformanceWorkloadId): Perfo
 
 export const PerformanceScene = defineComp<PerformanceSceneProps>((props) => {
   const workload = getPerformanceWorkload(props.workloadId);
+  props.recordRender(props.revision);
   return [
     rect({
       key: `background-${props.revision}`,
