@@ -1,87 +1,35 @@
 import type { ScenarioCatalogRecord } from '@crc/scenarios';
-import cleanupStressSource from '../../packages/scenarios/src/cleanup-stress.example.ts?raw';
-import drawingCompositionSource from '../../packages/scenarios/src/drawing-composition.example.ts?raw';
-import drawingImagesSource from '../../packages/scenarios/src/drawing-images.example.ts?raw';
-import drawingLinesSource from '../../packages/scenarios/src/drawing-lines.example.ts?raw';
-import drawingShapesSource from '../../packages/scenarios/src/drawing-shapes.example.ts?raw';
-import drawingTextSource from '../../packages/scenarios/src/drawing-text.example.ts?raw';
-import geometryMatrixSource from '../../packages/scenarios/src/geometry-matrix.example.ts?raw';
-import smokeSource from '../../packages/scenarios/src/smoke.example.ts?raw';
-import interactionLabSource from '../../packages/scenarios/src/interaction-lab.example.ts?raw';
-import lifecycleLabSource from '../../packages/scenarios/src/lifecycle-lab.example.ts?raw';
-import mouseContractSource from '../../packages/scenarios/src/mouse-contract.example.ts?raw';
-import performanceLabSource from '../../packages/scenarios/src/performance-lab.example.ts?raw';
-import runtimeHooksSource from '../../packages/scenarios/src/runtime-hooks.example.ts?raw';
 
-interface ScenarioSourceAdapter {
-  path: string;
-  sourceText: string;
-}
+const rawSourceModules = import.meta.glob(
+  '../../packages/scenarios/src/*.example.ts',
+  {
+    eager: true,
+    import: 'default',
+    query: '?raw',
+  },
+) as Readonly<Record<string, string>>;
 
-const sourceAdapters: Readonly<Record<string, ScenarioSourceAdapter>> = {
-  'drawing-shapes-example': {
-    path: 'packages/scenarios/src/drawing-shapes.example.ts',
-    sourceText: drawingShapesSource,
-  },
-  'drawing-lines-example': {
-    path: 'packages/scenarios/src/drawing-lines.example.ts',
-    sourceText: drawingLinesSource,
-  },
-  'drawing-text-example': {
-    path: 'packages/scenarios/src/drawing-text.example.ts',
-    sourceText: drawingTextSource,
-  },
-  'drawing-images-example': {
-    path: 'packages/scenarios/src/drawing-images.example.ts',
-    sourceText: drawingImagesSource,
-  },
-  'drawing-composition-example': {
-    path: 'packages/scenarios/src/drawing-composition.example.ts',
-    sourceText: drawingCompositionSource,
-  },
-  'runtime-cleanup-stress-example': {
-    path: 'packages/scenarios/src/cleanup-stress.example.ts',
-    sourceText: cleanupStressSource,
-  },
-  'baseline-smoke-example': {
-    path: 'packages/scenarios/src/smoke.example.ts',
-    sourceText: smokeSource,
-  },
-  'interaction-trace-lab-example': {
-    path: 'packages/scenarios/src/interaction-lab.example.ts',
-    sourceText: interactionLabSource,
-  },
-  'event-lifecycle-lab-example': {
-    path: 'packages/scenarios/src/lifecycle-lab.example.ts',
-    sourceText: lifecycleLabSource,
-  },
-  'mouse-interaction-contract-example': {
-    path: 'packages/scenarios/src/mouse-contract.example.ts',
-    sourceText: mouseContractSource,
-  },
-  'geometry-composition-matrix-example': {
-    path: 'packages/scenarios/src/geometry-matrix.example.ts',
-    sourceText: geometryMatrixSource,
-  },
-  'event-performance-lab-example': {
-    path: 'packages/scenarios/src/performance-lab.example.ts',
-    sourceText: performanceLabSource,
-  },
-  'runtime-hooks-laboratory-example': {
-    path: 'packages/scenarios/src/runtime-hooks.example.ts',
-    sourceText: runtimeHooksSource,
-  },
-};
+const SOURCE_PREFIX = '../../';
+const sourceTextByPath = new Map(
+  Object.entries(rawSourceModules).map(([path, sourceText]) => [
+    path.startsWith(SOURCE_PREFIX) ? path.slice(SOURCE_PREFIX.length) : path,
+    sourceText,
+  ]),
+);
+
+export const scenarioSourcePaths = Object.freeze(
+  [...sourceTextByPath.keys()].sort(),
+);
 
 export async function loadScenarioSource(
   entry: ScenarioCatalogRecord,
 ): Promise<string> {
-  const adapter = sourceAdapters[entry.source.id];
-  if (!adapter || adapter.path !== entry.source.path) {
-    throw new Error(`No source adapter matches scenario source "${entry.source.id}".`);
+  const sourceText = sourceTextByPath.get(entry.source.path);
+  if (!sourceText) {
+    throw new Error(`No source adapter matches scenario source "${entry.source.path}".`);
   }
-  if (!adapter.sourceText.includes(entry.source.marker)) {
+  if (!sourceText.includes(entry.source.marker)) {
     throw new Error(`Displayed source does not contain marker "${entry.source.id}".`);
   }
-  return adapter.sourceText;
+  return sourceText;
 }
