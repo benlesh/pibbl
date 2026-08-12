@@ -80,6 +80,7 @@ const PERFORMANCE_BUDGETS: Record<PerformanceWorkloadId, PerformanceBudget> = {
   'transformed-1000': { medianMs: 2.25, p95Ms: 3 },
   zero: { medianMs: 0.05, p95Ms: 0.1 },
 };
+const RERENDER_BUDGET = { medianMs: 5, p95Ms: 8 } as const;
 
 const WARMUP_BATCHES = 5;
 const MEASURED_BATCHES = 101;
@@ -422,12 +423,23 @@ describe('shared event performance laboratory', () => {
       revision: 26,
     });
     expect(summarizeInstances(canvas)).toMatchObject({ regions: 1_000, paintEntries: 1_000 });
+    const renderMedianMs = percentile(renderSamples, 0.5);
+    const renderP95Ms = percentile(renderSamples, 0.95);
+
+    if (import.meta.env.VITE_CRC_PERF_GUARD === '1') {
+      expect(renderMedianMs, 'sparse-1000 rerender median').toBeLessThanOrEqual(
+        RERENDER_BUDGET.medianMs,
+      );
+      expect(renderP95Ms, 'sparse-1000 rerender p95').toBeLessThanOrEqual(
+        RERENDER_BUDGET.p95Ms,
+      );
+    }
 
     if (import.meta.env.VITE_CRC_REPORT_PERF === '1') {
       console.warn('TFC-06 render observations', JSON.stringify({
         renderCallbacks: {
-          medianMs: percentile(renderSamples, 0.5),
-          p95Ms: percentile(renderSamples, 0.95),
+          medianMs: renderMedianMs,
+          p95Ms: renderP95Ms,
           p99Ms: percentile(renderSamples, 0.99),
         },
         selectionRenderMs,
