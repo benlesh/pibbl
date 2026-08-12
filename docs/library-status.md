@@ -6,7 +6,7 @@ _Snapshot refreshed: 2026-08-11, after the TFC-09 drawing confidence sweep._
 
 CRC is a small functional component runtime over the HTML Canvas 2D API. It provides scheduled rendering, hook state, mouse-region interaction, transforms, cumulative clipping, globally ordered offscreen layers, and eleven drawing components. The project now has contract-driven browser evidence for every public export, a shared catalog of manual/headless scenarios, deterministic lifecycle ledgers, exact structural performance guards, strict package consumers, and reviewed visual comparisons.
 
-The historical pre-plan baseline was 70 browser tests with four supported-behavior skips. After TFC-09 the complete suite has more than 246 passing tests; all four supported skips have been replaced or enabled. The only conditional tests are two explicitly opt-in TFC-06 wall-clock timing benchmarks; their deterministic structural counterparts run normally.
+The historical pre-plan baseline was 70 browser tests with four supported-behavior skips. After TFC-09 the complete suite has 250 passing tests; all four supported skips have been replaced or enabled. The only conditional tests are two explicitly opt-in TFC-06 wall-clock timing benchmarks; their deterministic structural counterparts run normally.
 
 “Trusted” below means the applicable supported behavior, boundary cases, updates, errors, teardown, interaction, and visual output have deterministic evidence. It does not mean CRC adds browser capabilities that are outside its API, such as touch, keyboard focus, DOM accessibility, rich text, or image CORS control.
 
@@ -70,17 +70,17 @@ See the [runtime/hook contract](./design/runtime-hooks-contract.md), [mouse inte
 
 Commands were run from the repository root on 2026-08-11 with Node 24.19.0 and pnpm 11.21.0 after TFC-09 implementation.
 
-| Check                    | Result   | Evidence                                                                                                                                                                    |
-| ------------------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Complete browser suite   | **Pass** | 33 files; 246 passed and 2 opt-in timing skips before the final four deterministic text assertions. The final aggregate TFC-10 gate records the updated consolidated count. |
-| Supported-behavior skips | **Pass** | Zero. Historical nested clip, multiple layer, layer prop, and layer dimension skips are enabled/replaced.                                                                   |
-| Typecheck                | **Pass** | TypeScript 7 `tsc --noEmit`.                                                                                                                                                |
-| Lint/format              | **Pass** | ESLint 10 plus direct Prettier checks.                                                                                                                                      |
-| Package build            | **Pass** | ESM, declarations, and source maps for `@crc/core` and `@crc/types`.                                                                                                        |
-| Source gallery build     | **Pass** | Vite production build with all catalog/source adapters.                                                                                                                     |
-| Built gallery build      | **Pass** | Vite built mode resolves package outputs without source leakage.                                                                                                            |
-| Public package consumer  | **Pass** | Strict Bundler, NodeNext, runtime export, controller, and private-subpath checks.                                                                                           |
-| Drawing visuals          | **Pass** | Five reviewed native 480×240 baselines; deliberate 20,694-pixel/max-delta-234 drill failed and normal run recovered.                                                        |
+| Check                    | Result   | Evidence                                                                                                             |
+| ------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------- |
+| Complete browser suite   | **Pass** | 33 files; 250 passed and 2 opt-in timing skips.                                                                      |
+| Supported-behavior skips | **Pass** | Zero. Historical nested clip, multiple layer, layer prop, and layer dimension skips are enabled/replaced.            |
+| Typecheck                | **Pass** | TypeScript 7 `tsc --noEmit`.                                                                                         |
+| Lint/format              | **Pass** | ESLint 10 plus direct Prettier checks.                                                                               |
+| Package build            | **Pass** | ESM, declarations, and source maps for `@crc/core` and `@crc/types`.                                                 |
+| Source gallery build     | **Pass** | Vite production build with all catalog/source adapters.                                                              |
+| Built gallery build      | **Pass** | Vite built mode resolves package outputs without source leakage.                                                     |
+| Public package consumer  | **Pass** | Strict Bundler, NodeNext, runtime export, controller, and private-subpath checks.                                    |
+| Drawing visuals          | **Pass** | Five reviewed native 480×240 baselines; deliberate 20,694-pixel/max-delta-234 drill failed and normal run recovered. |
 
 ## Running locally
 

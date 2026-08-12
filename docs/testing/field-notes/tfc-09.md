@@ -28,14 +28,14 @@ Focused tests supplement the teaching source with all four line pixel-grid modes
 
 Independent completion verification under Node 24.19.0 and pnpm 11.21.0 produced:
 
-- 33 browser files, 246 passed and 2 intentionally skipped opt-in timing benchmarks before the final text call assertions;
+- 33 browser files, 250 passed and 2 intentionally skipped opt-in timing benchmarks after the final text call assertions;
 - 77/77 focused drawing-export tests before the final four text assertions, then 20/20 focused text tests;
 - TypeScript 7 typecheck, ESLint, and Prettier checks green;
 - package ESM/declaration build green;
 - source and built gallery production builds green;
 - strict Bundler/NodeNext and runtime package consumer green.
 
-The final trust gate reruns the complete suite after the last text assertion commit and records the consolidated count.
+The TFC-10 trust gate keeps this complete suite and its structural performance assertions in the permanent contributor and CI sequence.
 
 ## Visual strategy
 
