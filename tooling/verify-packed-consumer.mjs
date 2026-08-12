@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { cpSync, mkdtempSync, mkdirSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, mkdirSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
@@ -54,6 +54,17 @@ function assertTarballHasNoSources(tarball) {
   }
 }
 
+function findPackageRoot(packageEntry) {
+  let current = dirname(packageEntry);
+  while (current !== dirname(current)) {
+    if (existsSync(join(current, 'package.json'))) {
+      return current;
+    }
+    current = dirname(current);
+  }
+  throw new Error(`Could not find the package root for ${packageEntry}.`);
+}
+
 try {
   mkdirSync(packageDirectory, { recursive: true });
   mkdirSync(consumerDirectory, { recursive: true });
@@ -90,7 +101,7 @@ try {
     if (!packageEntry.startsWith(realpathSync(join(consumerDirectory, 'node_modules')))) {
       throw new Error(`${packageName} resolved outside the packed consumer: ${packageEntry}`);
     }
-    const installedRoot = dirname(dirname(packageEntry));
+    const installedRoot = findPackageRoot(packageEntry);
     try {
       realpathSync(join(installedRoot, 'src'));
       throw new Error(`${packageName} unexpectedly installed a src directory.`);
@@ -101,9 +112,9 @@ try {
     }
   }
 
-  const tsc = join(repositoryRoot, 'node_modules', '.bin', 'tsc');
-  run(tsc, ['-p', 'tsconfig.bundler.json'], { cwd: consumerDirectory });
-  run(tsc, ['-p', 'tsconfig.nodenext.json'], { cwd: consumerDirectory });
+  const tsc = createRequire(import.meta.url).resolve('typescript/bin/tsc');
+  run(process.execPath, [tsc, '-p', 'tsconfig.bundler.json'], { cwd: consumerDirectory });
+  run(process.execPath, [tsc, '-p', 'tsconfig.nodenext.json'], { cwd: consumerDirectory });
   run(process.execPath, ['runtime.mjs'], { cwd: consumerDirectory });
 
   process.stdout.write(

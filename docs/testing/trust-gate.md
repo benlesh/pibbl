@@ -28,7 +28,7 @@ The aggregate command checks:
 - ESLint, Prettier, and TypeScript 7;
 - package ESM/declarations/source maps;
 - source-mode and built-package gallery production builds;
-- workspace and packed-tarball Bundler/NodeNext/runtime consumers;
+- packed-tarball Bundler/NodeNext/runtime consumers;
 - a deliberate visual regression, named expected/actual/diff artifacts, unchanged baseline bytes, and normal recovery;
 - the complete headless Chromium suite, including always-on performance structure;
 - built-package smoke and the focused lifecycle/cleanup stress suite.

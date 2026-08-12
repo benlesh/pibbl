@@ -103,12 +103,12 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: browser-evidence-${{ github.run_id }}
+          name: browser-evidence-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             **/.vitest-attachments/**
             **/test-screenshots/**
           retention-days: 14
-          if-no-files-found: warn
+          if-no-files-found: error
           compression-level: 9
           include-hidden-files: true
 
@@ -141,19 +141,6 @@ jobs:
 
       - name: Run structural performance contracts
         run: pnpm test:performance
-
-      - name: Upload lifecycle evidence
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: lifecycle-evidence-${{ github.run_id }}
-          path: |
-            **/.vitest-attachments/**
-            **/test-screenshots/**
-          retention-days: 14
-          if-no-files-found: warn
-          compression-level: 9
-          include-hidden-files: true
 
   trust-gate:
     name: Trust gate
