@@ -44,18 +44,18 @@ describe('text', () => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d')!;
     ctx.font = defaultOptions.font;
+    ctx.textBaseline = 'top';
     const metrics = ctx.measureText(defaultOptions.text);
 
-    const width = metrics.width;
+    const width = metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight;
     const height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
-    const lineWidth = defaultOptions.lineWidth;
+    const boundsLeft = x - metrics.actualBoundingBoxLeft;
+    const boundsTop = y - metrics.actualBoundingBoxAscent;
 
-    const centerX = x + width / 2;
-    const centerY = y + height / 2;
-    // Stay inside the stroke instead of depending on exact corner inclusion,
-    // which differs across Chromium's Canvas implementations.
-    const onBorderX = centerX;
-    const onBorderY = y - (lineWidth / 4);
+    const centerX = boundsLeft + width / 2;
+    const centerY = boundsTop + height / 2;
+    const onBorderX = boundsLeft + width - 1;
+    const onBorderY = boundsTop + 1;
     const offTextX = x - 10;
     const offTextY = y - 10;
 
@@ -159,6 +159,96 @@ describe('text', () => {
   });
 
   describe('text specific features', () => {
+    it('renders every wrapped line, including a fitting final line', async () => {
+      const calls: Array<[string, number, number]> = [];
+      const fillText = vi
+        .spyOn(CanvasRenderingContext2D.prototype, 'fillText')
+        .mockImplementation(function (
+          this: CanvasRenderingContext2D,
+          value: string,
+          x: number,
+          y: number,
+        ) {
+          calls.push([value, x, y]);
+        });
+
+      await componentTest(text({
+        x: 10,
+        y: 20,
+        text: 'one two three',
+        fillStyle: 'black',
+        font: '20px Arial',
+        maxWidth: 82,
+        wordWrap: true,
+        lineHeight: 24,
+      }));
+
+      expect(calls).toEqual([
+        ['one two', 10, 20],
+        ['three', 10, 44],
+      ]);
+      fillText.mockRestore();
+    });
+
+    it('clips with a finite canvas height when maxHeight is omitted', async () => {
+      const clip = vi.spyOn(CanvasRenderingContext2D.prototype, 'clip');
+      const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');
+
+      await componentTest(text({
+        x: 10,
+        y: 20,
+        text: 'clipped text',
+        fillStyle: 'black',
+        maxWidth: 60,
+        overflow: 'clip',
+      }));
+
+      expect(clip).toHaveBeenCalledOnce();
+      expect(fillText).toHaveBeenCalledOnce();
+      clip.mockRestore();
+      fillText.mockRestore();
+    });
+
+    it('hits centered middle-baseline text at its painted bounds', async () => {
+      const onClick = vi.fn();
+      const canvas = await componentTest(text({
+        x: 200,
+        y: 100,
+        text: 'Centered',
+        fillStyle: 'black',
+        font: '24px Arial',
+        textAlign: 'center',
+        textBaseline: 'middle',
+        onClick,
+      }));
+
+      await canvas.click({ position: { x: 200, y: 100 } });
+      expect(onClick).toHaveBeenCalledOnce();
+
+      await canvas.click({ position: { x: 270, y: 100 } });
+      expect(onClick).toHaveBeenCalledOnce();
+    });
+
+    it('shrinks squished text interaction bounds with the painted glyphs', async () => {
+      const onClick = vi.fn();
+      const canvas = await componentTest(text({
+        x: 20,
+        y: 40,
+        text: 'A very wide label',
+        fillStyle: 'black',
+        font: '24px Arial',
+        maxWidth: 60,
+        overflow: 'squish',
+        onClick,
+      }));
+
+      await canvas.click({ position: { x: 50, y: 50 } });
+      expect(onClick).toHaveBeenCalledOnce();
+
+      await canvas.click({ position: { x: 100, y: 50 } });
+      expect(onClick).toHaveBeenCalledOnce();
+    });
+
     it('should handle text overflow with ellipsis', async () => {
       await componentTest(text({
         ...defaultOptions,

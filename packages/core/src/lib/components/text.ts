@@ -30,6 +30,11 @@ export interface TextProps
   textAlign?: CanvasTextAlign;
 }
 
+interface TextLine {
+  text: string;
+  y: number;
+}
+
 function checkPropsForEvents(props: CRCBasicMouseEvents & CursorStyleProps) {
   return !!(
     props.cursor ||
@@ -66,128 +71,135 @@ export function Text(props: TextProps, ctx: RenderingContext2D) {
     lineWidth = 0,
     fillStyle,
     x,
-    maxWidth = undefined,
+    y,
+    maxWidth,
+    maxHeight,
   } = props;
 
-  const renderText = (txt: string, y: number) => {
+  if (overflow === 'clip' && maxWidth !== undefined) {
+    const clipPath = new Path2D();
+    const clipHeight = maxHeight ?? ctx.canvas.height;
+    const left = alignedLeft(x, maxWidth, textAlign);
+    const top = baselineTop(y, clipHeight, textBaseline);
+    clipPath.rect(left, top, maxWidth, clipHeight);
+    ctx.clip(clipPath);
+  }
+
+  const lines = props.wordWrap ?
+      wrapText(ctx, props) :
+    [{ text: ellipsize(ctx, props.text, maxWidth, overflow), y }];
+  const textBounds = checkPropsForEvents(props) ? new Path2D() : undefined;
+
+  for (const line of lines) {
     const squishMaxWidth = overflow === 'squish' ? maxWidth : undefined;
 
     if (strokeStyle && lineWidth) {
       ctx.strokeStyle = strokeStyle;
       ctx.lineWidth = lineWidth;
-      ctx.strokeText(txt, x, y, squishMaxWidth);
+      ctx.strokeText(line.text, x, line.y, squishMaxWidth);
     }
 
     if (fillStyle) {
       ctx.fillStyle = fillStyle;
-      ctx.fillText(txt, x, y, squishMaxWidth);
-    }
-  };
-
-  const {
-    y,
-    wordWrap,
-    text: inputText,
-    lineHeight = 13,
-    maxHeight = Infinity,
-  } = props;
-
-  const hasAnyEvents = checkPropsForEvents(props);
-
-  let textPath: Path2D | undefined;
-
-  if (wordWrap) {
-    const words = inputText.split(' ');
-    let line = '';
-    let lineCount = 0;
-
-    let textWidth = 0;
-    let textHeight = 0;
-
-    const updateTextBounds = (line: string) => {
-      const bounds = ctx.measureText(line);
-      textWidth = Math.max(bounds.width);
-      textHeight =
-        lineCount * lineHeight +
-        bounds.actualBoundingBoxDescent -
-        bounds.actualBoundingBoxAscent;
-    };
-
-    if (overflow === 'clip' && maxWidth) {
-      const clipPath = new Path2D();
-      clipPath.rect(x, y, maxWidth, maxHeight);
-      ctx.clip(clipPath);
+      ctx.fillText(line.text, x, line.y, squishMaxWidth);
     }
 
-    while (words.length) {
-      const currentYOffset = lineCount * lineHeight;
-      const nextYOffset = currentYOffset + lineHeight;
-      if (maxHeight < nextYOffset + lineHeight) {
-        const remaining = words.join(' ');
-        const lastLine =
-          overflow === 'ellipsis' && maxWidth ?
-              getEllipsisText(ctx, remaining, maxWidth) :
-            remaining;
-        if (hasAnyEvents) {
-          updateTextBounds(lastLine);
-        }
-        renderText(lastLine, y + currentYOffset);
-        break;
-      } else {
-        if ((maxWidth ?? Infinity) < ctx.measureText(line + words[0]).width) {
-          if (hasAnyEvents) {
-            updateTextBounds(line);
-          }
-          renderText(line, y + currentYOffset);
-          line = '';
-          lineCount++;
-        }
-        line += words.shift() + ' ';
-      }
-    }
-
-    if (hasAnyEvents) {
-      textPath = new Path2D();
-      textPath.rect(x, y, textWidth, textHeight);
-    }
-  } else {
-    const text =
-      overflow === 'ellipsis' && maxWidth ?
-          getEllipsisText(ctx, inputText, maxWidth) :
-        inputText;
-
-    if (overflow === 'clip' && maxWidth) {
-      const clipPath = new Path2D();
-      const xd = textAlign === 'end' || textAlign === 'right' ?
-          -1 :
-        textAlign === 'center' ?
-          0.5 :
-          1;
-      const yd =
-        textBaseline === 'bottom' ? -1 : textBaseline === 'middle' ? 0.5 : 1;
-      const pw = maxWidth * xd;
-      const ph = maxHeight * yd;
-      clipPath.rect(x, y, pw, ph);
-      ctx.clip(clipPath);
-    }
-
-    renderText(text, y);
-
-    if (hasAnyEvents) {
-      const bounds = ctx.measureText(text);
-      const textWidth = bounds.width;
-      const textHeight =
-        bounds.actualBoundingBoxDescent - bounds.actualBoundingBoxAscent;
-
-      textPath = new Path2D();
-      textPath.rect(x, y, textWidth, textHeight);
+    if (textBounds) {
+      const metrics = ctx.measureText(line.text);
+      const horizontalScale = squishMaxWidth !== undefined && metrics.width > squishMaxWidth ?
+          Math.max(0, squishMaxWidth) / metrics.width :
+        1;
+      textBounds.rect(
+        x - metrics.actualBoundingBoxLeft * horizontalScale,
+        line.y - metrics.actualBoundingBoxAscent,
+        (metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight) * horizontalScale,
+        metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent,
+      );
     }
   }
 
-  wireCommonEvents(props, textPath, true, lineWidth);
+  wireCommonEvents(props, textBounds, true, lineWidth);
 }
 
 export const text = defineComp(Text);
+
+function wrapText(ctx: RenderingContext2D, props: TextProps): TextLine[] {
+  const {
+    text,
+    x: _x,
+    y,
+    maxWidth = Infinity,
+    maxHeight = Infinity,
+    lineHeight = 13,
+    overflow = 'visible',
+  } = props;
+  const words = text.split(' ');
+  const lines: TextLine[] = [];
+  let line = '';
+
+  for (const word of words) {
+    const candidate = line ? `${line} ${word}` : word;
+    if (line && ctx.measureText(candidate).width > maxWidth) {
+      lines.push({ text: line, y: y + lines.length * lineHeight });
+      line = word;
+    } else {
+      line = candidate;
+    }
+  }
+
+  if (line || words.length === 1) {
+    lines.push({ text: line, y: y + lines.length * lineHeight });
+  }
+
+  const maxLines = Number.isFinite(maxHeight) ?
+      Math.max(0, Math.floor(maxHeight / lineHeight)) :
+    lines.length;
+  if (lines.length <= maxLines) return lines;
+  if (maxLines === 0) return [];
+
+  const visible = lines.slice(0, maxLines);
+  if (overflow === 'ellipsis' && Number.isFinite(maxWidth)) {
+    const remaining = lines.slice(maxLines - 1).map(value => value.text).join(' ');
+    visible[maxLines - 1] = {
+      text: getEllipsisText(ctx, remaining, maxWidth),
+      y: visible[maxLines - 1].y,
+    };
+  }
+  return visible;
+}
+
+function ellipsize(
+  ctx: RenderingContext2D,
+  text: string,
+  maxWidth: number | undefined,
+  overflow: TextProps['overflow'],
+): string {
+  return overflow === 'ellipsis' && maxWidth !== undefined ?
+      getEllipsisText(ctx, text, maxWidth) :
+    text;
+}
+
+function alignedLeft(
+  x: number,
+  width: number,
+  textAlign: CanvasTextAlign,
+): number {
+  if (textAlign === 'center') return x - width / 2;
+  if (textAlign === 'right' || textAlign === 'end') return x - width;
+  return x;
+}
+
+function baselineTop(
+  y: number,
+  height: number,
+  textBaseline: CanvasTextBaseline,
+): number {
+  if (textBaseline === 'middle') return y - height / 2;
+  if (textBaseline === 'bottom' || textBaseline === 'ideographic') {
+    return y - height;
+  }
+  return y;
+}
 
 function getEllipsisText(
   renderContext: { measureText: (text: string) => TextMetrics },
@@ -196,17 +208,20 @@ function getEllipsisText(
 ) {
   const metrics = renderContext.measureText(text);
 
-  if (metrics.width < maxWidth) {
+  if (metrics.width <= maxWidth) {
     return text;
   }
+  if (maxWidth <= 0 || isTextTooWide(renderContext, '...', maxWidth)) {
+    return '';
+  }
 
-  let low = -1;
+  let low = 0;
   let high = text.length;
 
   while (1 + low < high) {
     const mid = low + ((high - low) >> 1);
     if (
-      isTextTooWide(renderContext, text.substring(0, mid) + '...', maxWidth)
+      isTextTooWide(renderContext, `${text.substring(0, mid)}...`, maxWidth)
     ) {
       high = mid;
     } else {
@@ -214,8 +229,7 @@ function getEllipsisText(
     }
   }
 
-  const properLength = high - 1;
-  return `${text.substring(0, properLength)}...`;
+  return `${text.substring(0, low)}...`;
 }
 
 function isTextTooWide(
