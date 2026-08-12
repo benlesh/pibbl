@@ -164,3 +164,7 @@ Candidate tools:
 - Treat identity composition elision as the accepted focused optimization. Further micro-optimization needs a workload-level effect.
 - Use the explicit repeated-budget trigger above before considering a spatial index.
 - TFC-07 may reuse the bounded ownership snapshot, but broader lifecycle and asynchronous cleanup remain outside this performance step.
+
+## Final verification
+
+The final supported-environment gate passed under Node 24.19.0 and pnpm 11.21.0: 20 browser files passed with 151 tests passing and 4 intentionally skipped. Lint and formatting, TypeScript 7 checking, package builds, strict Bundler/NodeNext/Node package consumers, and both source and built gallery production builds passed. The final working tree was clean before advancing the plan marker.
