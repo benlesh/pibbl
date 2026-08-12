@@ -26,6 +26,8 @@ export function crcState<T>(init?: T): readonly [T, StateUpdater<T>] {
     function setter(newValueOrFactory: T | ((oldValue: T) => T)) {
       if (
         GLOBAL_STATE.crcInstances.get(canvas!) !== crcInstance ||
+        crcInstance.mainTeardowns.closed ||
+        componentRefs.teardowns.closed ||
         crcInstance.refs.get(componentRefs.id) !== componentRefs
       ) {
         return;

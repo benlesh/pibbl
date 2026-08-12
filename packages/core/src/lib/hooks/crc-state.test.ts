@@ -3,6 +3,7 @@ import { crc } from '../crc';
 import { defineComp } from '../define-comp';
 import { clearSharedState, getCRCInstance } from '../global-state';
 import { crcState, type StateUpdater } from './crc-state';
+import { crcWhenChanged } from './crc-when-changed';
 
 interface StateProbeProps {
   onRender: (value: number, setValue: StateUpdater<number>) => void;
@@ -15,6 +16,16 @@ const StateProbe = defineComp(({ onRender }: StateProbeProps) => {
 });
 
 const Empty = defineComp(() => {});
+
+const CleanupSetterProbe = defineComp(({ onUpdater }: {
+  onUpdater: () => void;
+}) => {
+  const [, setValue] = crcState(0);
+  crcWhenChanged(() => () => setValue(value => {
+    onUpdater();
+    return value + 1;
+  }), []);
+});
 
 beforeEach(() => {
   document.body.innerHTML = '';
@@ -75,6 +86,23 @@ describe('crcState ownership', () => {
     expect(liveValues).toEqual([0, 2]);
 
     liveController.dispose();
+  });
+
+  it('ignores a setter called while its component is being removed', async () => {
+    const canvas = createCanvas();
+    let updaterCalls = 0;
+    const controller = crc(canvas, CleanupSetterProbe({
+      onUpdater: () => updaterCalls++,
+    }));
+    await nextFrame();
+
+    crc(canvas, Empty({}));
+    await nextFrame();
+
+    expect(updaterCalls).toBe(0);
+    expect(getCRCInstance(canvas).animationFrameId).toBeUndefined();
+
+    controller.dispose();
   });
 });
 
