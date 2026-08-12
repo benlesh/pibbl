@@ -47,7 +47,7 @@ describe('img async resource ownership', () => {
     const observedAlpha: number[] = [];
     const drawImage = vi
       .spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
-      .mockImplementation(function () {
+      .mockImplementation(function (this: CanvasRenderingContext2D) {
         observedAlpha.push(this.globalAlpha);
       });
     const canvas = createCanvas();

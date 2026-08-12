@@ -7,7 +7,7 @@ describe('path', () => {
     const observedAlpha: number[] = [];
     const fill = vi
       .spyOn(CanvasRenderingContext2D.prototype, 'fill')
-      .mockImplementation(function () {
+      .mockImplementation(function (this: CanvasRenderingContext2D) {
         observedAlpha.push(this.globalAlpha);
       });
     const value = new Path2D();

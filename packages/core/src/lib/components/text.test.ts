@@ -19,7 +19,7 @@ describe('text', () => {
     const observedAlpha: number[] = [];
     const fillText = vi
       .spyOn(CanvasRenderingContext2D.prototype, 'fillText')
-      .mockImplementation(function () {
+      .mockImplementation(function (this: CanvasRenderingContext2D) {
         observedAlpha.push(this.globalAlpha);
       });
 
