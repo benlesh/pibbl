@@ -139,7 +139,6 @@ function expectedCounters(workload: PerformanceWorkload): PerformanceCounters {
       return {
         ...EMPTY_COUNTERS,
         getContext: 1,
-        matrixMultiply: 1,
         pathTests: 1,
         restore: 1,
         save: 1,
@@ -148,7 +147,6 @@ function expectedCounters(workload: PerformanceWorkload): PerformanceCounters {
       return {
         ...EMPTY_COUNTERS,
         getContext: regions,
-        matrixMultiply: regions * 2,
         pathTests: regions * 2,
         restore: regions,
         save: regions,
@@ -157,7 +155,6 @@ function expectedCounters(workload: PerformanceWorkload): PerformanceCounters {
       return {
         ...EMPTY_COUNTERS,
         getContext: regions,
-        matrixMultiply: regions,
         pathTests: regions,
         restore: regions,
         save: regions,
@@ -167,7 +164,6 @@ function expectedCounters(workload: PerformanceWorkload): PerformanceCounters {
       return {
         ...EMPTY_COUNTERS,
         getContext: regions,
-        matrixMultiply: regions + 4,
         pathTests: regions * 2,
         restore: regions,
         save: regions,
@@ -178,7 +174,6 @@ function expectedCounters(workload: PerformanceWorkload): PerformanceCounters {
       return {
         ...EMPTY_COUNTERS,
         getContext: regions,
-        matrixMultiply: regions,
         pathTests: regions,
         restore: regions,
         save: regions,
