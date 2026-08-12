@@ -75,6 +75,20 @@ export interface ScenarioCatalogEntry<TState> extends ScenarioCatalogRecord {
   load: () => Promise<ScenarioDefinition<TState>>;
 }
 
+export interface ScenarioCatalogGroup {
+  key: string;
+  label: string;
+  scenarios: readonly AnyScenarioCatalogEntry[];
+}
+
+export interface ScenarioCatalogIndex {
+  learningPath: readonly AnyScenarioCatalogEntry[];
+  byApi: readonly ScenarioCatalogGroup[];
+  byConcept: readonly ScenarioCatalogGroup[];
+  byCategory: readonly ScenarioCatalogGroup[];
+  byVisibilityAndMaturity: readonly ScenarioCatalogGroup[];
+}
+
 export interface ScenarioDefinition<TState> {
   id: string;
   sourceId: string;

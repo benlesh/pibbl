@@ -15,6 +15,8 @@ import { GEOMETRY_MATRIX_CASES } from './geometry-matrix.example';
 import { MOUSE_CONTRACT_CASES } from './mouse-contract';
 import { PERFORMANCE_WORKLOADS } from './performance-lab.example';
 import type {
+  ScenarioCatalogGroup,
+  ScenarioCatalogIndex,
   ScenarioCatalogEntry,
   ScenarioCatalogRecord,
   ScenarioDefinition,
@@ -58,6 +60,9 @@ function validateMetadata(metadata: ScenarioMetadata): void {
   if (!metadata.manualSteps.length) {
     throw new Error(`Scenario "${metadata.id}" must provide manual steps.`);
   }
+  if (!metadata.knownLimitations.length) {
+    throw new Error(`Scenario "${metadata.id}" must declare known limitations.`);
+  }
 
   for (const [index, step] of metadata.manualSteps.entries()) {
     assertNonEmpty(step.action, `manualSteps[${index}].action`, metadata.id);
@@ -68,6 +73,9 @@ function validateMetadata(metadata: ScenarioMetadata): void {
   }
   for (const [index, tag] of metadata.conceptTags.entries()) {
     assertNonEmpty(tag, `conceptTags[${index}]`, metadata.id);
+  }
+  for (const [index, limitation] of metadata.knownLimitations.entries()) {
+    assertNonEmpty(limitation, `knownLimitations[${index}]`, metadata.id);
   }
 }
 
@@ -81,14 +89,16 @@ export function validateScenarioCatalog<
   const ids = new Set<string>();
   const learningOrders = new Set<number>();
   const slugs = new Set<string>();
+  const sourceIds = new Set<string>();
+  const sourcePaths = new Set<string>();
 
   for (const scenario of catalog) {
     validateMetadata(scenario.metadata);
     assertNonEmpty(scenario.source.id, 'source.id', scenario.metadata.id);
     assertNonEmpty(scenario.source.marker, 'source.marker', scenario.metadata.id);
     assertNonEmpty(scenario.source.path, 'source.path', scenario.metadata.id);
-    if (scenario.source.language !== 'ts' || !scenario.source.path.endsWith('.ts')) {
-      throw new Error(`Scenario "${scenario.metadata.id}" must reference TypeScript source.`);
+    if (scenario.source.language !== 'ts' || !scenario.source.path.endsWith('.example.ts')) {
+      throw new Error(`Scenario "${scenario.metadata.id}" must reference a TypeScript example source.`);
     }
     if (!Number.isInteger(scenario.canvas.width) || scenario.canvas.width <= 0 ||
       !Number.isInteger(scenario.canvas.height) || scenario.canvas.height <= 0) {
@@ -114,12 +124,69 @@ export function validateScenarioCatalog<
     if (learningOrders.has(scenario.metadata.learningOrder)) {
       throw new Error(`Duplicate scenario learning order "${scenario.metadata.learningOrder}".`);
     }
+    if (sourceIds.has(scenario.source.id)) {
+      throw new Error(`Duplicate scenario source id "${scenario.source.id}".`);
+    }
+    if (sourcePaths.has(scenario.source.path)) {
+      throw new Error(`Duplicate scenario source path "${scenario.source.path}".`);
+    }
     ids.add(scenario.metadata.id);
     learningOrders.add(scenario.metadata.learningOrder);
     slugs.add(scenario.metadata.slug);
+    sourceIds.add(scenario.source.id);
+    sourcePaths.add(scenario.source.path);
   }
 
   return catalog;
+}
+
+function compareText(left: string, right: string): number {
+  return left < right ? -1 : left > right ? 1 : 0;
+}
+
+function groupCatalog(
+  catalog: readonly AnyScenarioCatalogEntry[],
+  keysFor: (entry: AnyScenarioCatalogEntry) => readonly string[],
+): readonly ScenarioCatalogGroup[] {
+  const grouped = new Map<string, AnyScenarioCatalogEntry[]>();
+  for (const entry of catalog) {
+    for (const key of keysFor(entry)) {
+      const entries = grouped.get(key) ?? [];
+      entries.push(entry);
+      grouped.set(key, entries);
+    }
+  }
+  return [...grouped]
+    .sort(([left], [right]) => compareText(left, right))
+    .map(([key, entries]) => ({
+      key,
+      label: key,
+      scenarios: entries.sort(
+        (left, right) => left.metadata.learningOrder - right.metadata.learningOrder,
+      ),
+    }));
+}
+
+export function createScenarioCatalogIndex(
+  catalog: readonly AnyScenarioCatalogEntry[],
+): ScenarioCatalogIndex {
+  const learningPath = [...catalog].sort(
+    (left, right) => left.metadata.learningOrder - right.metadata.learningOrder,
+  );
+  return {
+    learningPath,
+    byApi: groupCatalog(learningPath, entry => entry.metadata.apiTags),
+    byConcept: groupCatalog(learningPath, entry => entry.metadata.conceptTags),
+    byCategory: groupCatalog(learningPath, entry => [entry.metadata.category]),
+    byVisibilityAndMaturity: groupCatalog(
+      learningPath,
+      entry => [`${entry.metadata.visibility} / ${entry.metadata.maturity}`],
+    ),
+  };
+}
+
+export function getScenarioRoute(entry: ScenarioCatalogRecord): string {
+  return `#/scenarios/${entry.metadata.slug}`;
 }
 
 export async function loadScenario<TState>(
@@ -898,6 +965,8 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] = validateScena
   cleanupStressScenarioEntry,
   runtimeHooksScenarioEntry,
 ] as const);
+
+export const scenarioCatalogIndex = createScenarioCatalogIndex(scenarioCatalog);
 
 export function getScenarioBySlug(slug: string): AnyScenarioCatalogEntry | undefined {
   return scenarioCatalog.find(scenario => scenario.metadata.slug === slug);
