@@ -33,6 +33,8 @@ export function mountCRC<P>(
     canvas,
     controller,
     root: element,
+    pendingRoot: undefined,
+    pendingUpdateParents: false,
     refs: new Map(),
     animationFrameId: undefined,
     renderTimestamp: 0,

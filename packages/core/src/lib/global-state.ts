@@ -10,6 +10,7 @@ export interface GlobalState {
   renderContext: RenderingContext2D | undefined;
   unseenIds: Set<string> | undefined;
   seenIds: Set<string> | undefined;
+  seenKeys: Set<string> | undefined;
   clippingStack: CRCClippingStackEntry[];
   anonElementNames: WeakMap<any, string>;
   anon: number;
@@ -25,6 +26,7 @@ export const GLOBAL_STATE: GlobalState = {
   renderContext: undefined,
   unseenIds: undefined,
   seenIds: undefined,
+  seenKeys: undefined,
   clippingStack: [],
   anonElementNames: new WeakMap(),
   anon: 0,
@@ -129,11 +131,14 @@ export function cleanupCRCInstance(crcInstance: CRCInstance): void {
     interaction.cursorStyle = undefined;
   }
   crcInstance.refs.clear();
+  crcInstance.pendingRoot = undefined;
+  crcInstance.pendingUpdateParents = false;
 }
 
 export function clearTempState() {
   GLOBAL_STATE.unseenIds = undefined;
   GLOBAL_STATE.seenIds = undefined;
+  GLOBAL_STATE.seenKeys = undefined;
   GLOBAL_STATE.canvas = undefined;
   GLOBAL_STATE.renderContext = undefined;
   clearComponentState();

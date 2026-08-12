@@ -19,6 +19,11 @@ export function update(
     throw new Error('Canvas does not have CRC mounted.');
   }
 
+  if (rootElement !== undefined) {
+    crcInstance.pendingRoot = rootElement;
+  }
+  crcInstance.pendingUpdateParents ||= updateParents;
+
   if (crcInstance.animationFrameId !== undefined) {
     cancelAnimationFrame(crcInstance.animationFrameId);
   }
@@ -34,7 +39,11 @@ export function update(
     }
 
     crcInstance.animationFrameId = undefined;
-    executeRender(canvas, timestamp, rootElement, updateParents);
+    const pendingRoot = crcInstance.pendingRoot;
+    const pendingUpdateParents = crcInstance.pendingUpdateParents;
+    crcInstance.pendingRoot = undefined;
+    crcInstance.pendingUpdateParents = false;
+    executeRender(canvas, timestamp, pendingRoot, pendingUpdateParents);
   });
   crcInstance.animationFrameId = frameId;
 }

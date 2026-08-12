@@ -35,6 +35,7 @@ export function executeRender(
   const prevCanvas = GLOBAL_STATE.canvas;
   const prevRenderContext = GLOBAL_STATE.renderContext;
   const prevSeenIds = GLOBAL_STATE.seenIds;
+  const prevSeenKeys = GLOBAL_STATE.seenKeys;
   const prevUnseendIds = GLOBAL_STATE.unseenIds;
   const prevComponentRefs = GLOBAL_STATE.componentRefs;
   const prevClippingStack = GLOBAL_STATE.clippingStack;
@@ -52,6 +53,7 @@ export function executeRender(
       GLOBAL_STATE.currentCRCInstance.refs.keys(),
     );
     GLOBAL_STATE.seenIds = new Set();
+    GLOBAL_STATE.seenKeys = new Set();
     const id = 'root';
     GLOBAL_STATE.unseenIds.delete(id);
     GLOBAL_STATE.seenIds.add(id);
@@ -75,6 +77,7 @@ export function executeRender(
     GLOBAL_STATE.canvas = prevCanvas;
     GLOBAL_STATE.renderContext = prevRenderContext;
     GLOBAL_STATE.seenIds = prevSeenIds;
+    GLOBAL_STATE.seenKeys = prevSeenKeys;
     GLOBAL_STATE.unseenIds = prevUnseendIds;
     GLOBAL_STATE.componentRefs = prevComponentRefs;
   }

@@ -12,7 +12,7 @@ export function render<P>(
   parent: CompRefs<any> | undefined,
 ): void {
   try {
-    const typeName = getElementTypeName(element);
+    const typeName = getElementTypeName(element, parentId);
     const id = ensureUniqueId(parentId, typeName);
     GLOBAL_STATE.unseenIds!.delete(id);
     GLOBAL_STATE.seenIds!.add(id);
@@ -71,10 +71,21 @@ export function render<P>(
   }
 }
 
-function getElementTypeName(element: CompEl): string {
-  return (
-    element.props.key || element.type.name || getAnonElemName(element.type)
-  );
+function getElementTypeName(element: CompEl, parentId: string): string {
+  const typeIdentity = getAnonElemName(element.type);
+  const typeName = element.type.name || 'Anonymous';
+  const key = (element.props as { key?: string } | null | undefined)?.key;
+  if (key === undefined) {
+    return `${typeName}:${typeIdentity}`;
+  }
+
+  const encodedKey = encodeURIComponent(key);
+  const siblingKey = `${parentId}/${encodedKey}`;
+  if (GLOBAL_STATE.seenKeys!.has(siblingKey)) {
+    throw new Error(`Duplicate CRC key "${key}" under "${parentId}"`);
+  }
+  GLOBAL_STATE.seenKeys!.add(siblingKey);
+  return `${typeName}:${typeIdentity}[${encodedKey}]`;
 }
 
 function ensureUniqueId(parentId: string, typeName: string) {

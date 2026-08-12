@@ -152,6 +152,8 @@ export interface CRCInstance {
   canvas: Canvas;
   controller: CRCController;
   root: CompEl<any>;
+  pendingRoot: CompEl<any> | undefined;
+  pendingUpdateParents: boolean;
   refs: Map<string, CompRefs<any>>;
   animationFrameId: number | undefined;
   renderTimestamp: number;
