@@ -1,0 +1,49 @@
+import {
+  crc,
+  crcState,
+  defineComp,
+  rect,
+  text,
+  type CRCController,
+} from "@crc/core";
+
+const MouseOutStudy = defineComp(function MouseOutStudy() {
+  const [departures, setDepartures] = crcState(0);
+  const [inside, setInside] = crcState(false);
+  return [
+    rect({ x: 0, y: 0, width: 720, height: 420, fillStyle: "#17211d" }),
+    rect({
+      x: 190,
+      y: 68,
+      width: 340,
+      height: 284,
+      fillStyle: inside ? "#f7c948" : "#74d3ae",
+      cursor: "crosshair",
+      onMouseOver: () => setInside(true),
+      onMouseOut: () => {
+        setInside(false);
+        setDepartures((value) => value + 1);
+      },
+    }),
+    text({
+      text: inside ? "YOU ARE IN" : "MINT PORTAL",
+      x: 360,
+      y: 166,
+      fillStyle: "#17211d",
+      font: "900 42px sans-serif",
+      textAlign: "center",
+    }),
+    text({
+      text: `DEPARTURES / ${departures}`,
+      x: 360,
+      y: 244,
+      fillStyle: "#17211d",
+      font: "700 15px monospace",
+      textAlign: "center",
+    }),
+  ];
+});
+
+export default function mount(canvas: HTMLCanvasElement): CRCController {
+  return crc(canvas, MouseOutStudy({}));
+}
