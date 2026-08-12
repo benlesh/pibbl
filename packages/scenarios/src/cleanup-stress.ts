@@ -265,11 +265,14 @@ async function mountCleanupStress(
           };
           publish();
           return;
-        case 'cleanup-again':
-          if (!currentRuntime) {
+        case 'cleanup-again': {
+          if (!currentRuntime && !staleRuntime) {
             throw new Error('The cleanup stress laboratory has no runtime to clean again.');
           }
-          cleanupRuntime(currentRuntime);
+          const cleanupTarget = staleRuntime ?? currentRuntime!;
+          if (cleanupTarget !== currentRuntime || cleanupTarget.status !== 'mounted') {
+            cleanupRuntime(cleanupTarget);
+          }
           state = {
             ...state,
             cleanupRequests: state.cleanupRequests + 1,
@@ -277,6 +280,7 @@ async function mountCleanupStress(
           };
           publish();
           return;
+        }
         case 'remount-runtime':
           if (currentRuntime) {
             cleanupRuntime(currentRuntime);

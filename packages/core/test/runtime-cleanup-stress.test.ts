@@ -569,6 +569,28 @@ describe('shared runtime cleanup stress laboratory', () => {
     });
     expectTemporaryRenderStateReleased();
 
+    await controller.perform('cleanup-again');
+    expect(controller.getState()).toMatchObject({
+      completedRenders: 1_002,
+      hookAcquisitions: 1_002,
+      hookCleanups: 1_001,
+      lastAction: 'cleanup-again',
+      runtime: 'mounted',
+    });
+    expect(diagnostics.snapshot()).toEqual(baseline);
+    expect(getCRCInstance(canvas).mainTeardowns.closed).toBe(false);
+    expect(pixelAt(canvas, 50, 60)).toEqual([124, 58, 237, 255]);
+
+    await controller.perform('change-hook-dependency');
+    expect(controller.getState()).toMatchObject({
+      completedRenders: 1_003,
+      hookAcquisitions: 1_003,
+      hookCleanups: 1_002,
+      runtime: 'mounted',
+    });
+    expect(diagnostics.snapshot()).toEqual(baseline);
+    expect(pixelAt(canvas, 50, 60)).toEqual([37, 99, 235, 255]);
+
     await controller.dispose();
     activeControllers.delete(controller);
     expectFullyReleased(diagnostics);
@@ -579,9 +601,9 @@ describe('shared runtime cleanup stress laboratory', () => {
         released: 1_002,
       },
       refs: {
-        acquired: baselineRefs * 1_002,
+        acquired: baselineRefs * 1_002 + 1,
         live: 0,
-        released: baselineRefs * 1_002,
+        released: baselineRefs * 1_002 + 1,
       },
     });
     expectTemporaryRenderStateReleased();
