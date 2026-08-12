@@ -159,6 +159,91 @@ describe('text', () => {
   });
 
   describe('text specific features', () => {
+    it('renders the exact single-line ellipsis selected by measured width', async () => {
+      const measureText = useFixedWidthTextMetrics();
+      const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');
+
+      await componentTest(text({
+        x: 10,
+        y: 20,
+        text: 'abcdefghij',
+        fillStyle: 'black',
+        maxWidth: 55,
+        overflow: 'ellipsis',
+      }));
+
+      expect(fillText).toHaveBeenCalledExactlyOnceWith('ab...', 10, 20, undefined);
+      measureText.mockRestore();
+      fillText.mockRestore();
+    });
+
+    it('ellipsizes the exact final visible wrapped line at maxHeight', async () => {
+      const measureText = useFixedWidthTextMetrics();
+      const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');
+
+      await componentTest(text({
+        x: 10,
+        y: 30,
+        text: 'one two three four',
+        fillStyle: 'black',
+        maxWidth: 75,
+        maxHeight: 40,
+        wordWrap: true,
+        lineHeight: 20,
+        overflow: 'ellipsis',
+      }));
+
+      expect(fillText.mock.calls).toEqual([
+        ['one two', 10, 30, undefined],
+        ['thre...', 10, 50, undefined],
+      ]);
+      measureText.mockRestore();
+      fillText.mockRestore();
+    });
+
+    it('passes maxWidth as the Canvas squish argument', async () => {
+      const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');
+
+      await componentTest(text({
+        x: 7,
+        y: 9,
+        text: 'wide',
+        fillStyle: 'black',
+        maxWidth: 42,
+        overflow: 'squish',
+      }));
+
+      expect(fillText).toHaveBeenCalledExactlyOnceWith('wide', 7, 9, 42);
+      fillText.mockRestore();
+    });
+
+    it('uses the exact aligned clip rectangle without moving the text anchor', async () => {
+      const rect = vi.spyOn(Path2D.prototype, 'rect');
+      const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');
+
+      await componentTest(text({
+        x: 100,
+        y: 80,
+        text: 'clip me',
+        fillStyle: 'black',
+        maxWidth: 60,
+        maxHeight: 40,
+        overflow: 'clip',
+        textAlign: 'center',
+        textBaseline: 'middle',
+      }));
+
+      expect(rect).toHaveBeenCalledExactlyOnceWith(70, 60, 60, 40);
+      expect(fillText).toHaveBeenCalledExactlyOnceWith(
+        'clip me',
+        100,
+        80,
+        undefined,
+      );
+      rect.mockRestore();
+      fillText.mockRestore();
+    });
+
     it('renders every wrapped line, including a fitting final line', async () => {
       const calls: Array<[string, number, number]> = [];
       const fillText = vi
@@ -271,3 +356,15 @@ describe('text', () => {
     });
   });
 });
+
+function useFixedWidthTextMetrics() {
+  return vi
+    .spyOn(CanvasRenderingContext2D.prototype, 'measureText')
+    .mockImplementation(value => ({
+      width: value.length * 10,
+      actualBoundingBoxAscent: 8,
+      actualBoundingBoxDescent: 2,
+      actualBoundingBoxLeft: 0,
+      actualBoundingBoxRight: value.length * 10,
+    }) as TextMetrics);
+}
