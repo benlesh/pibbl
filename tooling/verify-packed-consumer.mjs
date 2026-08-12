@@ -112,7 +112,7 @@ try {
     }
   }
 
-  const tsc = createRequire(import.meta.url).resolve('typescript/bin/tsc');
+  const tsc = join(dirname(createRequire(import.meta.url).resolve('typescript')), 'tsc.js');
   run(process.execPath, [tsc, '-p', 'tsconfig.bundler.json'], { cwd: consumerDirectory });
   run(process.execPath, [tsc, '-p', 'tsconfig.nodenext.json'], { cwd: consumerDirectory });
   run(process.execPath, ['runtime.mjs'], { cwd: consumerDirectory });
