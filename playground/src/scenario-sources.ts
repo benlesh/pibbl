@@ -4,6 +4,7 @@ import smokeSource from '../../packages/scenarios/src/smoke.example.ts?raw';
 import interactionLabSource from '../../packages/scenarios/src/interaction-lab.example.ts?raw';
 import lifecycleLabSource from '../../packages/scenarios/src/lifecycle-lab.example.ts?raw';
 import mouseContractSource from '../../packages/scenarios/src/mouse-contract.example.ts?raw';
+import performanceLabSource from '../../packages/scenarios/src/performance-lab.example.ts?raw';
 
 interface ScenarioSourceAdapter {
   path: string;
@@ -30,6 +31,10 @@ const sourceAdapters: Readonly<Record<string, ScenarioSourceAdapter>> = {
   'geometry-composition-matrix-example': {
     path: 'packages/scenarios/src/geometry-matrix.example.ts',
     sourceText: geometryMatrixSource,
+  },
+  'event-performance-lab-example': {
+    path: 'packages/scenarios/src/performance-lab.example.ts',
+    sourceText: performanceLabSource,
   },
 };
 

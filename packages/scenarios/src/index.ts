@@ -7,6 +7,7 @@ export {
   scenarioCatalog,
   smokeScenarioEntry,
   mouseContractScenarioEntry,
+  performanceLabScenarioEntry,
   validateScenarioCatalog,
 } from './catalog';
 export { GEOMETRY_MATRIX_CASES } from './geometry-matrix.example';
@@ -53,6 +54,20 @@ export type {
   MouseContractVisualProbe,
 } from './mouse-contract';
 export type { MouseContractScenarioState } from './mouse-contract.example';
+export {
+  getPerformanceWorkload,
+  PERFORMANCE_WORKLOADS,
+} from './performance-lab.example';
+export type {
+  PerformanceCounterName,
+  PerformanceCounters,
+  PerformanceLabAction,
+  PerformanceLabState,
+  PerformancePoint,
+  PerformanceWorkload,
+  PerformanceWorkloadId,
+  PerformanceWorkloadKind,
+} from './performance-lab.example';
 export type {
   AnyScenarioCatalogEntry,
   AnyScenarioDefinition,

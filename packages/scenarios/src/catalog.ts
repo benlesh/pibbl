@@ -3,8 +3,10 @@ import type { GeometryMatrixState } from './geometry-matrix.example';
 import type { InteractionLabState } from './interaction-lab.example';
 import type { LifecycleLabState } from './lifecycle-lab.example';
 import type { MouseContractScenarioState } from './mouse-contract.example';
+import type { PerformanceLabState } from './performance-lab.example';
 import { GEOMETRY_MATRIX_CASES } from './geometry-matrix.example';
 import { MOUSE_CONTRACT_CASES } from './mouse-contract';
+import { PERFORMANCE_WORKLOADS } from './performance-lab.example';
 import type {
   ScenarioCatalogEntry,
   ScenarioCatalogRecord,
@@ -432,12 +434,68 @@ export const geometryMatrixScenarioEntry: ScenarioCatalogEntry<GeometryMatrixSta
   load: async () => (await import('./geometry-matrix')).geometryMatrixScenario,
 };
 
+const performanceLabMetadata: ScenarioMetadata = {
+  id: 'event-performance-lab',
+  slug: 'event-performance-lab',
+  title: 'Event performance laboratory',
+  summary: 'Measure hit-test structure and live dispatch latency across shared zero, sparse, dense, clipped, transformed, layered, cursor, and rerender workloads.',
+  category: 'Diagnostics',
+  apiTags: ['crc', 'g', 'clip', 'layer', 'rect', 'mouse events'],
+  conceptTags: ['hit-test cost', 'dispatch latency', 'registration', 'rerender stability'],
+  manualSteps: [
+    {
+      action: 'Choose 0, 100, 1,000, and 10,000 sparse regions, then move over the green first region several times.',
+      expected: 'The first region remains the target while exact path/matrix/context counts scale linearly and live median, p95, and p99 latency samples update.',
+    },
+    {
+      action: 'Choose Dense overlap, Clipped, Transformed, Four layers, and Cursor, then move over each green probe area.',
+      expected: 'The visible green target wins, the cursor case shows a pointer, and each composition class reports its distinct exact structural work.',
+    },
+    {
+      action: 'Choose Run 25 unchanged rerenders on the 1,000- and 10,000-region scenes.',
+      expected: 'The revision advances by 25, the scene remains visually unchanged, and subsequent movement reports the same target and structural counts.',
+    },
+    {
+      action: 'Choose Reset.',
+      expected: 'The empty 0-region scene returns with cleared dispatch samples and counters.',
+    },
+  ],
+  knownLimitations: [
+    'Live timing is diagnostic and includes the laboratory counter overhead; deterministic headless guards use controlled warmup, repeated samples, and reference-environment budgets.',
+    'The structural counter set is intentionally limited to Canvas context calls, save/restore, transforms, path/stroke tests, and DOMMatrix multiplication.',
+    'These workloads characterize linear target resolution; spatial indexing remains deferred until a measured threshold requires it.',
+  ],
+  visibility: 'test-laboratory',
+  visibilityReason: 'It exposes stress loads and machine-sensitive timing diagnostics rather than beginner-facing API guidance.',
+  maturity: 'trusted',
+};
+
+export const performanceLabScenarioEntry: ScenarioCatalogEntry<PerformanceLabState> = {
+  metadata: performanceLabMetadata,
+  canvas: { width: 480, height: 240 },
+  actions: [
+    ...PERFORMANCE_WORKLOADS.map(workload => ({
+      id: `show-${workload.id}`,
+      label: workload.title,
+    })),
+    { id: 'rerender-25', label: 'Run 25 unchanged rerenders' },
+  ],
+  source: {
+    id: 'event-performance-lab-example',
+    language: 'ts',
+    marker: "PERFORMANCE_LAB_SOURCE_ID = 'event-performance-lab-example'",
+    path: 'packages/scenarios/src/performance-lab.example.ts',
+  },
+  load: async () => (await import('./performance-lab')).performanceLabScenario,
+};
+
 export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] = validateScenarioCatalog([
   smokeScenarioEntry,
   interactionLabScenarioEntry,
   mouseContractScenarioEntry,
   lifecycleLabScenarioEntry,
   geometryMatrixScenarioEntry,
+  performanceLabScenarioEntry,
 ] as const);
 
 export function getScenarioBySlug(slug: string): AnyScenarioCatalogEntry | undefined {
