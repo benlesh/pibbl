@@ -54,12 +54,14 @@ function initialModel(lastAction: RuntimeHooksAction = 'mount'): RuntimeHooksMod
 
 function initialMetrics(): RuntimeHooksMetrics {
   return {
+    falsyChildren: 0,
     hookAcquisitions: 0,
     hookCleanups: 0,
     hookOrder: '',
     memoCreates: 0,
     memoIdentity: '',
     misuseErrors: 0,
+    misuseMessage: null,
     misuseName: null,
     nextObjectIdentity: 1,
     objectIdentities: new WeakMap(),
@@ -81,7 +83,7 @@ function snapshotState(
     componentKey: model.componentKey,
     componentVisible: model.componentVisible,
     dependency: model.dependency,
-    falsyChildren: 5,
+    falsyChildren: metrics.falsyChildren,
     hookAcquisitions: metrics.hookAcquisitions,
     hookCleanups: metrics.hookCleanups,
     hookOrder: metrics.hookOrder,
@@ -89,6 +91,7 @@ function snapshotState(
     memoCreates: metrics.memoCreates,
     memoIdentity: metrics.memoIdentity,
     misuseErrors: metrics.misuseErrors,
+    misuseMessage: metrics.misuseMessage,
     misuseName: metrics.misuseName,
     pathIdentities: [...metrics.pathIdentities],
     refIdentity: metrics.refIdentity,
@@ -207,9 +210,14 @@ async function mountRuntimeHooks(
         case 'probe-hook-misuse': {
           const errors = probeRuntimeHookMisuse();
           metrics.misuseErrors += errors.length;
-          metrics.misuseName = errors.every(name => name === errors[0]) ?
-            `${errors[0]} × ${errors.length}` :
-            errors.join(', ');
+          const names = errors.map(error => error.name);
+          const messages = errors.map(error => error.message);
+          metrics.misuseName = names.every(name => name === names[0]) ?
+            `${names[0]} × ${names.length}` :
+            names.join(', ');
+          metrics.misuseMessage = messages.every(message => message === messages[0]) ?
+            messages[0] ?? null :
+            messages.join(' | ');
           await transition(action, () => undefined);
           return;
         }
@@ -274,7 +282,7 @@ export const runtimeHooksScenario: ScenarioDefinition<RuntimeHooksState> = {
     { label: 'Falsy children', value: String(state.falsyChildren) },
     {
       label: 'Misuse errors',
-      value: `${state.misuseErrors} · ${state.misuseName ?? 'none'}`,
+      value: `${state.misuseErrors} · ${state.misuseName ?? 'none'} · ${state.misuseMessage ?? 'no message'}`,
     },
     { label: 'Last action', value: state.lastAction },
   ],

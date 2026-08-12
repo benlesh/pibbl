@@ -45,6 +45,7 @@ export interface RuntimeHooksState {
   memoCreates: number;
   memoIdentity: string;
   misuseErrors: number;
+  misuseMessage: string | null;
   misuseName: string | null;
   pathIdentities: readonly [number, number, number];
   refIdentity: number;
@@ -68,12 +69,14 @@ export interface RuntimeHooksModel {
 }
 
 export interface RuntimeHooksMetrics {
+  falsyChildren: number;
   hookAcquisitions: number;
   hookCleanups: number;
   hookOrder: string;
   memoCreates: number;
   memoIdentity: string;
   misuseErrors: number;
+  misuseMessage: string | null;
   misuseName: string | null;
   nextObjectIdentity: number;
   objectIdentities: WeakMap<object, number>;
@@ -84,6 +87,11 @@ export interface RuntimeHooksMetrics {
   setState: StateUpdater<number> | undefined;
   siblingIdentities: Record<RuntimeHooksSiblingKey, number | null>;
   stateValue: number;
+}
+
+export interface RuntimeHooksMisuseError {
+  message: string;
+  name: string;
 }
 
 interface RuntimeHooksSceneProps {
@@ -227,6 +235,7 @@ function sceneNodes({ metrics, model }: RuntimeHooksSceneProps) {
   }));
 
   const falsyChildren = [false, null, undefined, '', 0] as const;
+  metrics.falsyChildren = falsyChildren.length;
   return [
     rect({
       key: 'runtime-hooks-background',
@@ -259,8 +268,8 @@ export function getRuntimeHooksSiblingOrder(
   return siblingOrder(model);
 }
 
-export function probeRuntimeHookMisuse(): readonly string[] {
-  const errors: string[] = [];
+export function probeRuntimeHookMisuse(): readonly RuntimeHooksMisuseError[] {
+  const errors: RuntimeHooksMisuseError[] = [];
   const probes = [
     () => crcState(0),
     () => crcMemo(() => 1, []),
@@ -274,7 +283,13 @@ export function probeRuntimeHookMisuse(): readonly string[] {
     try {
       probe();
     } catch (error) {
-      errors.push(error instanceof Error ? error.name : 'UnknownError');
+      errors.push(error instanceof Error ? {
+        message: error.message,
+        name: error.name,
+      } : {
+        message: String(error),
+        name: 'UnknownError',
+      });
     }
   }
   return errors;
