@@ -278,7 +278,7 @@ export async function mountScenarioSurface<TState>(
   header.className = 'scenario-detail__header';
   const eyebrow = document.createElement('p');
   eyebrow.className = 'scenario-detail__eyebrow';
-  eyebrow.textContent = `${options.entry.metadata.category} · ${options.entry.metadata.visibility} · ${options.entry.metadata.maturity}`;
+  eyebrow.textContent = `${options.entry.metadata.learningOrder}. ${options.entry.metadata.category} · ${options.entry.metadata.visibility} · ${options.entry.metadata.maturity}`;
   const title = document.createElement('h1');
   title.className = 'scenario-detail__title';
   title.textContent = options.entry.metadata.title;

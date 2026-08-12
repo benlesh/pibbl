@@ -29,11 +29,21 @@ const navigation = document.createElement('nav');
 navigation.ariaLabel = 'Scenario catalog';
 const navigationHeading = document.createElement('p');
 navigationHeading.className = 'gallery-nav__heading';
-navigationHeading.textContent = 'Getting started';
+navigationHeading.textContent = 'Learning path';
 const navigationList = document.createElement('ul');
 navigationList.className = 'gallery-nav';
 
-for (const scenario of scenarioCatalog) {
+let lastCategory = '';
+for (const scenario of [...scenarioCatalog].sort(
+  (left, right) => left.metadata.learningOrder - right.metadata.learningOrder,
+)) {
+  if (scenario.metadata.category !== lastCategory) {
+    const category = document.createElement('li');
+    category.className = 'gallery-nav__category';
+    category.textContent = scenario.metadata.category;
+    navigationList.appendChild(category);
+    lastCategory = scenario.metadata.category;
+  }
   const item = document.createElement('li');
   const link = document.createElement('a');
   link.className = 'gallery-nav__link';

@@ -72,6 +72,19 @@ a {
   padding: 0;
 }
 
+.gallery-nav__category {
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  margin: 16px 10px 4px;
+  text-transform: uppercase;
+}
+
+.gallery-nav__category:first-child {
+  margin-top: 0;
+}
+
 .gallery-nav__link {
   border-radius: 9px;
   color: #cbd5e1;
