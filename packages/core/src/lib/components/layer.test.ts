@@ -2,6 +2,8 @@ import type { RectProps } from './rect';
 import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
 import { defineComp } from '../define-comp';
+import { crcCursor } from '../hooks/crc-cursor';
+import { crcEvent } from '../hooks/crc-event';
 import { crcState } from '../hooks/crc-state';
 import { componentTest } from '../test-utils/component-test';
 import { takeScreenshot } from '../util/test-utils';
@@ -473,6 +475,74 @@ describe('layer', () => {
 
       await canvas.click({ position: { x: 25, y: 25 } });
       expect(onClick).toHaveBeenCalledOnce();
+    });
+
+    it('shares transitions, cursor targeting, and observer order with the root', async () => {
+      const calls: string[] = [];
+      const LayerTarget = defineComp(() => {
+        crcEvent('mousemove', () => calls.push('observer'));
+        return rect({
+          x: 50,
+          y: 50,
+          width: 100,
+          height: 100,
+          fillStyle: 'orange',
+          cursor: 'pointer',
+          onMouseOver: () => calls.push('layer-over'),
+          onMouseOut: () => calls.push('layer-out'),
+          onMouseMove: () => calls.push('layer-move'),
+        });
+      });
+      const canvas = await componentTest(g({
+        children: [
+          rect({
+            x: 0,
+            y: 0,
+            width: 200,
+            height: 200,
+            fillStyle: 'blue',
+            cursor: 'crosshair',
+            onMouseOver: () => calls.push('root-over'),
+            onMouseMove: () => calls.push('root-move'),
+          }),
+          layer({ render: LayerTarget({}) }),
+        ],
+      }));
+
+      await canvas.mouseMove({ position: { x: 100, y: 100 } });
+      expect(calls).toEqual(['layer-over', 'layer-move', 'observer']);
+      expect(canvas.element.style.cursor).toBe('pointer');
+
+      await canvas.mouseMove({ position: { x: 20, y: 20 } });
+      expect(calls).toEqual([
+        'layer-over',
+        'layer-move',
+        'observer',
+        'layer-out',
+        'root-over',
+        'root-move',
+        'observer',
+      ]);
+      expect(canvas.element.style.cursor).toBe('crosshair');
+    });
+
+    it('roots a pathless layer cursor as the Canvas fallback', async () => {
+      const LayerDefaultCursor = defineComp(() => {
+        crcCursor({ style: 'wait' });
+        return rect({
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+          fillStyle: 'gray',
+        });
+      });
+      const canvas = await componentTest(layer({
+        render: LayerDefaultCursor({}),
+      }));
+
+      await canvas.mouseMove({ position: { x: 50, y: 50 } });
+      expect(canvas.element.style.cursor).toBe('wait');
     });
   });
 });
