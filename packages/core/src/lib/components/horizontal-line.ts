@@ -30,12 +30,10 @@ export function HorizontalLine(
     y: initialY,
     left = 0,
     right = ctx.canvas.width,
-    alignToPixelGrid,
+    alignToPixelGrid = 'none',
     ...lineProps
   } = props;
-  const y = alignToPixelGrid ?
-      adjustForPixelGrid(initialY, props.lineWidth, alignToPixelGrid) :
-    initialY;
+  const y = adjustForPixelGrid(initialY, props.lineWidth, alignToPixelGrid);
   const coords: [number, number][] = [
     [left, y],
     [right, y],

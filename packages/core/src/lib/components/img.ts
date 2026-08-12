@@ -11,6 +11,7 @@ import {
   RenderingContext2D,
   StrokeStyleProps,
 } from '../types.js';
+import { adjustRectangleToPixelGrid } from '../util/pixel-grid-adjustments.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 
 export interface ImgProps
@@ -82,13 +83,21 @@ function Img(props: ImgProps, ctx: RenderingContext2D) {
     };
   }, [src]);
 
-  width = width ?? image?.width ?? 0;
-  height = height ?? image?.height ?? 0;
+  width = width ?? image?.naturalWidth ?? image?.width ?? 0;
+  height = height ?? image?.naturalHeight ?? image?.height ?? 0;
 
-  const imagePath = crcRectPath(x, y, width, height, {
-    alignToPixelGrid,
-    lineWidth,
-  });
+  if (alignToPixelGrid) {
+    ({ x, y, width, height } = adjustRectangleToPixelGrid(
+      lineWidth ?? 0,
+      x,
+      y,
+      width,
+      height,
+      alignToPixelGrid,
+    ));
+  }
+
+  const imagePath = crcRectPath(x, y, width, height);
 
   if (image) {
     ctx.drawImage(image, x, y, width, height);

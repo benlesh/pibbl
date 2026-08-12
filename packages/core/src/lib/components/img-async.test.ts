@@ -43,6 +43,37 @@ afterEach(() => {
 });
 
 describe('img async resource ownership', () => {
+  it.each([
+    ['none', [24.2, 20.2, 120, 80]],
+    ['round', [23.5, 19.5, 120, 80]],
+    ['ceil', [24.5, 20.5, 120, 80]],
+    ['floor', [23.5, 19.5, 120, 80]],
+  ] as const)('uses natural dimensions and one %s-aligned image rectangle', async (
+    alignToPixelGrid,
+    expectedRectangle,
+  ) => {
+    const drawImage = vi
+      .spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
+      .mockImplementation(() => {});
+    const canvas = createCanvas();
+    const controller = crc(canvas, img({
+      src: 'aligned.png',
+      x: 24.2,
+      y: 20.2,
+      strokeStyle: 'blue',
+      lineWidth: 1,
+      alignToPixelGrid,
+    }));
+    await nextFrame();
+
+    const image = FakeImage.instances[0];
+    image.onload?.();
+    await nextFrame();
+
+    expect(drawImage).toHaveBeenLastCalledWith(image, ...expectedRectangle);
+    controller.dispose();
+  });
+
   it('applies alpha zero when the image draws', async () => {
     const observedAlpha: number[] = [];
     const drawImage = vi

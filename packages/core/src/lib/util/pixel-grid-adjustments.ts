@@ -8,13 +8,17 @@ export function adjustRectangleToPixelGrid(
   height: number,
   alignment: PixelGridAlignment,
 ) {
+  if (alignment === 'none') {
+    return { x, y, width, height };
+  }
+
+  const right = x + width;
+  const bottom = y + height;
   x = adjustForPixelGrid(x, lineWidth, alignment);
   y = adjustForPixelGrid(y, lineWidth, alignment);
-  const right = x + width;
-  const adjustedRight = adjustForPixelGrid(right, lineWidth, alignment) + 1;
+  const adjustedRight = adjustForPixelGrid(right, lineWidth, alignment);
   width = adjustedRight - x;
-  const bottom = y + height;
-  const adjustedBottom = adjustForPixelGrid(bottom, lineWidth, alignment) + 1;
+  const adjustedBottom = adjustForPixelGrid(bottom, lineWidth, alignment);
   height = adjustedBottom - y;
   return { x, y, width, height };
 }
