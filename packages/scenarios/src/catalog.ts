@@ -186,7 +186,7 @@ export function createScenarioCatalogIndex(
 }
 
 export function getScenarioRoute(entry: ScenarioCatalogRecord): string {
-  return `#/scenarios/${entry.metadata.slug}`;
+  return `#/testing/${entry.metadata.slug}`;
 }
 
 export async function loadScenario<TState>(
