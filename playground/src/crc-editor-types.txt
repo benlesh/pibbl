@@ -1,0 +1,156 @@
+declare module '@crc/core' {
+  export interface CRCController {
+    dispose(): void;
+  }
+
+  export interface CRCMouseEvent {
+    x: number;
+    y: number;
+    originalEvent: MouseEvent;
+  }
+
+  export type CRCMouseEventListener = (event: CRCMouseEvent) => void;
+  export type Canvas = HTMLCanvasElement | OffscreenCanvas;
+  export type RenderingContext2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+  export type FalsyNodes = undefined | false | null | '' | 0;
+  export type CRCNode = CompEl<any> | void | FalsyNodes;
+
+  export interface CompEl<P = any> {
+    type: CompFn<P>;
+    props: P;
+  }
+
+  export type CompFn<P> = (props: P, context: RenderingContext2D) => CRCNode[] | CRCNode | void;
+  export type PixelGridAlignment = 'none' | 'round' | 'ceil' | 'floor';
+  export type FillStyle = CanvasRenderingContext2D['fillStyle'];
+  export type StrokeStyle = CanvasRenderingContext2D['strokeStyle'];
+
+  export interface CRCBasicMouseEvents {
+    onClick?: CRCMouseEventListener;
+    onDblClick?: CRCMouseEventListener;
+    onMouseMove?: CRCMouseEventListener;
+    onMouseOver?: CRCMouseEventListener;
+    onMouseOut?: CRCMouseEventListener;
+    onContextMenu?: CRCMouseEventListener;
+    onMouseDown?: CRCMouseEventListener;
+    onMouseUp?: CRCMouseEventListener;
+  }
+
+  export interface IntrinsicProps { key?: string }
+  export interface AlphaProps { alpha?: number }
+  export interface StrokeStyleProps { strokeStyle?: StrokeStyle; lineWidth?: number }
+  export interface FillStyleProps { fillStyle?: FillStyle }
+  export interface CursorStyleProps { cursor?: string }
+
+  export interface PathProps extends IntrinsicProps, CRCBasicMouseEvents, FillStyleProps, StrokeStyleProps, CursorStyleProps, AlphaProps {
+    path: Path2D;
+    lineInteractionWidth?: number;
+  }
+
+  export interface RectProps extends IntrinsicProps, CRCBasicMouseEvents, FillStyleProps, StrokeStyleProps, CursorStyleProps, AlphaProps {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    alignToPixelGrid?: PixelGridAlignment;
+  }
+
+  export interface SvgPathProps extends IntrinsicProps, CRCBasicMouseEvents, FillStyleProps, StrokeStyleProps, CursorStyleProps, AlphaProps {
+    d: string;
+  }
+
+  export interface LineProps extends IntrinsicProps, CRCBasicMouseEvents, StrokeStyleProps, CursorStyleProps {
+    coords: [number, number][];
+    lineInteractionWidth?: number;
+  }
+
+  export interface HorizontalLineProps extends IntrinsicProps, CRCBasicMouseEvents, StrokeStyleProps, CursorStyleProps {
+    y: number;
+    left?: number;
+    right?: number;
+    alignToPixelGrid?: PixelGridAlignment;
+    lineInteractionWidth?: number;
+  }
+
+  export interface VerticalLineProps extends IntrinsicProps, CRCBasicMouseEvents, StrokeStyleProps, CursorStyleProps {
+    x: number;
+    top?: number;
+    bottom?: number;
+    alignToPixelGrid?: PixelGridAlignment;
+    lineInteractionWidth?: number;
+  }
+
+  export interface TextProps extends IntrinsicProps, CRCBasicMouseEvents, FillStyleProps, StrokeStyleProps, CursorStyleProps, AlphaProps {
+    text: string;
+    x: number;
+    y: number;
+    maxWidth?: number;
+    maxHeight?: number;
+    lineHeight?: number;
+    overflow?: 'visible' | 'squish' | 'ellipsis' | 'clip';
+    wordWrap?: boolean;
+    font?: string;
+    textBaseline?: CanvasTextBaseline;
+    textAlign?: CanvasTextAlign;
+  }
+
+  export interface ImgProps extends IntrinsicProps, CRCBasicMouseEvents, AlphaProps, CursorStyleProps, StrokeStyleProps {
+    src: string;
+    x: number;
+    y: number;
+    width?: number;
+    height?: number;
+    alignToPixelGrid?: PixelGridAlignment;
+  }
+
+  export interface GProps extends IntrinsicProps {
+    children: CRCNode[];
+    scaleX?: number;
+    scaleY?: number;
+    rotate?: number;
+    rotateOrigin?: [number, number];
+    x?: number;
+    y?: number;
+    skewX?: number;
+    skewY?: number;
+  }
+
+  export interface ClipProps {
+    path: Path2D;
+    fillRule?: CanvasFillRule;
+    children: CRCNode[];
+  }
+
+  export interface LayerProps extends IntrinsicProps {
+    render: CompEl<any>;
+    width?: number;
+    height?: number;
+  }
+
+  export interface CRCRef<T> { current: T | undefined }
+  export type StateUpdater<T> = (update: T | ((oldValue: T) => T)) => void;
+
+  export function crc<P>(canvas: HTMLCanvasElement, element: CompEl<P>, config?: { signal?: AbortSignal }): CRCController;
+  export function defineComp(component: CompFn<Record<string, never>>): (props: Record<string, never>) => CompEl<Record<string, never>>;
+  export function defineComp<P>(component: CompFn<P>): (props: P) => CompEl<P>;
+  export function rect(props: RectProps): CompEl<RectProps>;
+  export function path(props: PathProps): CompEl<PathProps>;
+  export function svgPath(props: SvgPathProps): CompEl<SvgPathProps>;
+  export function line(props: LineProps): CompEl<LineProps>;
+  export function horizontalLine(props: HorizontalLineProps): CompEl<HorizontalLineProps>;
+  export function verticalLine(props: VerticalLineProps): CompEl<VerticalLineProps>;
+  export function text(props: TextProps): CompEl<TextProps>;
+  export function img(props: ImgProps): CompEl<ImgProps>;
+  export function g(props: GProps): CompEl<GProps>;
+  export function clip(props: ClipProps): CompEl<ClipProps>;
+  export function layer(props: LayerProps): CompEl<LayerProps>;
+  export function crcState<T>(initial?: T): readonly [T, StateUpdater<T>];
+  export function crcMemo<T>(create: () => T, dependencies: unknown[]): T;
+  export function crcRef<T>(initial?: T): CRCRef<T>;
+  export function crcWhenChanged(effect: () => void | (() => void), dependencies: unknown[]): void;
+  export function crcCursor(options: { style: string; path?: Path2D; fill?: boolean; lineInteractionWidth?: number }): void;
+  export function crcEvent<K extends 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseout' | 'mousedown' | 'mouseup' | 'contextmenu'>(eventName: K, listener: CRCMouseEventListener, path?: Path2D, fill?: boolean, lineInteractionWidth?: number): void;
+  export function crcLinePath(coords: [number, number][]): Path2D;
+  export function crcRectPath(x: number, y: number, width: number, height: number, alignment?: PixelGridAlignment, lineWidth?: number): Path2D;
+  export function crcSvgPath(data: string): Path2D;
+}

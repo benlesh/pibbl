@@ -8,8 +8,12 @@
     "playground:build:built": "vite build --mode built"
   },
   "dependencies": {
+    "@fontsource-variable/jetbrains-mono": "catalog:",
+    "@fontsource-variable/space-grotesk": "catalog:",
     "@crc/core": "workspace:*",
-    "@crc/scenarios": "workspace:*"
+    "@crc/scenarios": "workspace:*",
+    "lz-string": "catalog:",
+    "monaco-editor": "catalog:"
   },
   "devDependencies": {
     "vite": "catalog:"
