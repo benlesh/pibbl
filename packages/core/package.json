@@ -24,9 +24,7 @@
     "./types": {
       "types": "./dist/types.d.ts"
     },
-    "./dist/*": "./dist/*",
-    "./package.json": "./package.json",
-    "./*": "./dist/*"
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",

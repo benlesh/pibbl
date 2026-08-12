@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { crc } from './crc';
 import { defineComp } from './define-comp';
-import { clearSharedState } from './global-state';
+import { clearSharedState, getCRCInstance } from './global-state';
 import { crcRef } from './hooks/crc-ref';
 import { crcState, type StateUpdater } from './hooks/crc-state';
 
@@ -84,9 +84,41 @@ describe('crc root updates', () => {
 
     crc(canvas, ReplacementRoot({}));
     setValue?.(1);
+    expect(getCRCInstance(canvas).pendingRoot?.type).toBe(ReplacementRoot({}).type);
+    expect(getCRCInstance(canvas).pendingUpdateParents).toBe(true);
     await nextFrame();
 
     expect(renders).toEqual(['stateful:0', 'replacement']);
+    controller.dispose();
+  });
+
+  it('lets the latest explicit root win after a state update while preserving parent intent', async () => {
+    const canvas = createCanvas();
+    const renders: string[] = [];
+    let setValue: StateUpdater<number> | undefined;
+    const StatefulRoot = defineComp(() => {
+      const [value, setter] = crcState(0);
+      setValue = setter;
+      renders.push(`stateful:${value}`);
+    });
+    const FirstReplacement = defineComp(() => {
+      renders.push('first-replacement');
+    });
+    const LatestReplacement = defineComp(() => {
+      renders.push('latest-replacement');
+    });
+    const controller = crc(canvas, StatefulRoot({}));
+    await nextFrame();
+
+    setValue?.(1);
+    crc(canvas, FirstReplacement({}));
+    crc(canvas, LatestReplacement({}));
+    const instance = getCRCInstance(canvas);
+    expect(instance.pendingRoot?.type).toBe(LatestReplacement({}).type);
+    expect(instance.pendingUpdateParents).toBe(true);
+    await nextFrame();
+
+    expect(renders).toEqual(['stateful:0', 'latest-replacement']);
     controller.dispose();
   });
 });
