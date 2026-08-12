@@ -1,6 +1,6 @@
 import { PixelGridAlignment } from '../types.js';
 import { adjustRectangleToPixelGrid } from '../util/pixel-grid-adjustments.js';
-import { crcMemo } from './crc-memo.js';
+import { crcMemoSlot } from './crc-memo.js';
 
 /**
  * Creates a memoized Path2D for a rectangle. Useful when
@@ -27,7 +27,7 @@ export function crcRectPath(
     ));
   }
 
-  return crcMemo(() => {
+  return crcMemoSlot('rectPath', () => {
     const path = new Path2D();
     path.rect(x, y, width, height);
     return path;
