@@ -20,7 +20,7 @@ export class Teardowns {
 
   add(teardown: () => void): void {
     if (this._closed) {
-      executeTeardown(teardown);
+      runTeardown(teardown);
     } else {
       this._teardowns.add(teardown);
     }
@@ -39,12 +39,12 @@ export class Teardowns {
     const teardowns = Array.from(this._teardowns);
     this._teardowns.clear();
     for (const teardown of teardowns) {
-      executeTeardown(teardown);
+      runTeardown(teardown);
     }
   }
 }
 
-function executeTeardown(teardown: () => void): void {
+export function runTeardown(teardown: () => void): void {
   try {
     teardown();
   } catch (error) {

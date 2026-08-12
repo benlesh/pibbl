@@ -1,4 +1,5 @@
 import { GLOBAL_STATE } from '../global-state.js';
+import { runTeardown } from '../teardowns.js';
 import { shallowArrayEquals } from '../util/shallow-array-equals.js';
 
 /**
@@ -28,18 +29,16 @@ export function crcWhenChanged(
   const ref = GLOBAL_STATE.componentRefs!.refs[hookIndex];
   if (!ref.lastDeps || !deps || !shallowArrayEquals(deps, ref.lastDeps)) {
     const lastTeardown = ref.teardown;
-    const mainTeardowns = GLOBAL_STATE.currentCRCInstance!.mainTeardowns;
+    const componentTeardowns = GLOBAL_STATE.componentRefs!.teardowns;
     if (lastTeardown) {
-      mainTeardowns.add(lastTeardown);
-      GLOBAL_STATE.componentRefs!.teardowns.remove(lastTeardown);
-      lastTeardown();
+      componentTeardowns.remove(lastTeardown);
+      runTeardown(lastTeardown);
     }
     ref.lastDeps = deps;
     const newTeardown = callback();
+    ref.teardown = newTeardown;
     if (newTeardown) {
-      ref.teardown = newTeardown;
-      mainTeardowns.add(newTeardown);
-      GLOBAL_STATE.componentRefs!.teardowns.add(newTeardown);
+      componentTeardowns.add(newTeardown);
     }
   }
 }
