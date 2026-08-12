@@ -313,55 +313,49 @@ describe('complete public drawing gallery', () => {
     expect(pixelAt(canvas, 400, 80)).toEqual([37, 99, 235, 255]);
   });
 
-  it('keeps one approved visual for the complete documentation-candidate learning set', async () => {
-    await page.viewport(1100, 900);
-    const grid = document.createElement('div');
-    grid.style.cssText = [
-      'background:#cbd5e1',
-      'display:grid',
-      'gap:8px',
-      'grid-template-columns:repeat(2,480px)',
-      'width:968px',
-    ].join(';');
-    document.body.replaceChildren(grid);
+  it('keeps approved native-pixel visuals for the documentation-candidate learning set', async () => {
+    await page.viewport(800, 600);
+    const visuals = drawingEntries.map(entry => ({
+      entry,
+      ignoreRegions: entry === drawingTextScenarioEntry ? [
+        // Text glyph rasterization is platform-sensitive; cards stay exact.
+        { x: 18, y: 10, width: 230, height: 44 },
+        { x: 330, y: 4, width: 96, height: 46 },
+        { x: 28, y: 68, width: 164, height: 34 },
+        { x: 248, y: 68, width: 204, height: 34 },
+        { x: 30, y: 126, width: 194, height: 76 },
+        { x: 260, y: 126, width: 192, height: 42 },
+      ] : entry === drawingImagesScenarioEntry ? [
+        // Decoded/scaled SVG edges vary; their exact semantic pixels are asserted above.
+        { x: 20, y: 28, width: 158, height: 108 },
+        { x: 20, y: 168, width: 432, height: 36 },
+      ] : [],
+    }));
 
-    const mounted: Array<{
-      canvas: HTMLCanvasElement;
-      controller: ScenarioController<unknown>;
-    }> = [];
-    for (const entry of drawingEntries) {
-      const canvas = document.createElement('canvas');
-      canvas.width = entry.canvas.width;
-      canvas.height = entry.canvas.height;
-      canvas.style.cssText = 'display:block;height:240px;width:480px';
-      grid.appendChild(canvas);
-      const definition = await loadScenario(entry as AnyScenarioCatalogEntry);
-      const controller = await definition.mount({ canvas });
-      activeControllers.add(controller);
-      mounted.push({ canvas, controller });
+    for (const visual of visuals) {
+      const { canvas, controller } = await mountLesson<unknown>(visual.entry);
+      if (visual.entry === drawingImagesScenarioEntry) {
+        await waitForPixel(canvas, { x: 30, y: 40 }, [14, 165, 233, 255]);
+        await waitForPixel(canvas, { x: 230, y: 40 }, [236, 72, 153, 255]);
+        await waitForPixel(canvas, { x: 420, y: 185 }, [115, 199, 243, 255]);
+      }
+      if (
+        import.meta.env.VITE_CRC_DRAWING_VISUAL_DRILL === '1' &&
+        visual.entry === drawingShapesScenarioEntry
+      ) {
+        await controller.perform('update-shapes');
+      }
+      const slug = visual.entry.metadata.slug;
+      await expectVisualMatch({
+        element: canvas,
+        expectedPath: `packages/core/test/visual-baselines/tfc-09-${slug}.expected.png`,
+        expectedArtifactPath: `test-screenshots/tfc-09/${slug}.expected.png`,
+        actualPath: `../../../test-screenshots/tfc-09/${slug}.actual.png`,
+        diffPath: `test-screenshots/tfc-09/${slug}.diff.png`,
+        ignoreRegions: visual.ignoreRegions,
+      });
+      await controller.dispose();
+      activeControllers.delete(controller);
     }
-    await waitForPixel(mounted[3].canvas, { x: 30, y: 40 }, [14, 165, 233, 255]);
-    await waitForPixel(mounted[3].canvas, { x: 230, y: 40 }, [236, 72, 153, 255]);
-    await waitForPixel(mounted[3].canvas, { x: 420, y: 185 }, [115, 199, 243, 255]);
-
-    if (import.meta.env.VITE_CRC_DRAWING_VISUAL_DRILL === '1') {
-      await mounted[0].controller.perform('update-shapes');
-    }
-    await expectVisualMatch({
-      element: grid,
-      expectedPath: 'packages/core/test/visual-baselines/tfc-09-drawing-gallery.expected.png',
-      expectedArtifactPath: 'test-screenshots/tfc-09/drawing-gallery.expected.png',
-      actualPath: '../../../test-screenshots/tfc-09/drawing-gallery.actual.png',
-      diffPath: 'test-screenshots/tfc-09/drawing-gallery.diff.png',
-      ignoreRegions: [
-        // Text glyph rasterization is platform-sensitive; cards and geometry stay exact.
-        { x: 14, y: 206, width: 184, height: 36 },
-        { x: 264, y: 202, width: 78, height: 38 },
-        { x: 22, y: 256, width: 132, height: 28 },
-        { x: 198, y: 256, width: 164, height: 28 },
-        { x: 24, y: 302, width: 156, height: 62 },
-        { x: 208, y: 302, width: 154, height: 34 },
-      ],
-    });
   });
 });
