@@ -43,6 +43,32 @@ afterEach(() => {
 });
 
 describe('img async resource ownership', () => {
+  it('applies alpha zero when the image draws', async () => {
+    const observedAlpha: number[] = [];
+    const drawImage = vi
+      .spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
+      .mockImplementation(function () {
+        observedAlpha.push(this.globalAlpha);
+      });
+    const canvas = createCanvas();
+    const controller = crc(canvas, img({
+      src: 'transparent.png',
+      x: 10,
+      y: 20,
+      width: 30,
+      height: 40,
+      alpha: 0,
+    }));
+    await nextFrame();
+
+    FakeImage.instances[0].onload?.();
+    await nextFrame();
+
+    expect(drawImage).toHaveBeenCalledOnce();
+    expect(observedAlpha).toEqual([0]);
+    controller.dispose();
+  });
+
   it('draws only the current source when an older load callback arrives late', async () => {
     const drawImage = vi
       .spyOn(CanvasRenderingContext2D.prototype, 'drawImage')

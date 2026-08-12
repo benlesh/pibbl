@@ -32,7 +32,7 @@ export function Path(props: PathProps, ctx: RenderingContext2D) {
     lineInteractionWidth = lineWidth ?? 0,
   } = props;
 
-  if (alpha) {
+  if (alpha !== undefined) {
     ctx.globalAlpha = ctx.globalAlpha * alpha;
   }
 

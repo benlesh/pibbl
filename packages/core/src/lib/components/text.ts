@@ -46,11 +46,16 @@ function checkPropsForEvents(props: CRCBasicMouseEvents & CursorStyleProps) {
 
 export function Text(props: TextProps, ctx: RenderingContext2D) {
   const {
+    alpha,
     font = '13px sans-serif',
     textBaseline = 'top',
     textAlign = 'left',
     overflow = 'visible',
   } = props;
+
+  if (alpha !== undefined) {
+    ctx.globalAlpha = ctx.globalAlpha * alpha;
+  }
 
   ctx.font = font;
   ctx.textBaseline = textBaseline;

@@ -46,7 +46,7 @@ function Img(props: ImgProps, ctx: RenderingContext2D) {
     ...otherProps
   } = props;
 
-  if (alpha) {
+  if (alpha !== undefined) {
     ctx.globalAlpha = ctx.globalAlpha * alpha;
   }
 

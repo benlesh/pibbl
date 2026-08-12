@@ -15,6 +15,24 @@ const defaultOptions = {
 };
 
 describe('text', () => {
+  it('applies alpha zero while drawing', async () => {
+    const observedAlpha: number[] = [];
+    const fillText = vi
+      .spyOn(CanvasRenderingContext2D.prototype, 'fillText')
+      .mockImplementation(function () {
+        observedAlpha.push(this.globalAlpha);
+      });
+
+    await componentTest(text({
+      ...defaultOptions,
+      strokeStyle: undefined,
+      alpha: 0,
+    }));
+
+    expect(observedAlpha).toEqual([0]);
+    fillText.mockRestore();
+  });
+
   it('renders text in browser', async () => {
     await componentTest(text(defaultOptions));
     await takeScreenshot(page);
