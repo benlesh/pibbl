@@ -14,7 +14,6 @@ export interface GProps extends IntrinsicProps {
   skewX?: number;
   /** Vertical skew angle in degrees. */
   skewY?: number;
-  clipFillRule?: CanvasFillRule;
 }
 
 function G(props: GProps, ctx: RenderingContext2D) {
