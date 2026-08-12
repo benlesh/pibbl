@@ -34,7 +34,12 @@
     "playground:built": "pnpm build && pnpm -C playground run playground:built",
     "playground:build": "pnpm -C playground run playground:build",
     "playground:build:built": "pnpm build && pnpm -C playground run playground:build:built",
-    "bench": "vitest bench"
+    "bench": "vitest bench",
+    "trust:static": "pnpm scenarios:check && pnpm typecheck && pnpm lint && pnpm build && pnpm playground:build && pnpm playground:build:built",
+    "trust:package": "pnpm test:package-consumer:packed",
+    "trust:browser": "pnpm test:ci && pnpm test:visual-safeguard && pnpm test:smoke:built",
+    "trust:lifecycle": "pnpm test:lifecycle && pnpm test:performance",
+    "trust": "pnpm trust:static && pnpm trust:package && pnpm trust:browser && pnpm trust:lifecycle"
   },
   "devDependencies": {
     "@babel/core": "catalog:",
