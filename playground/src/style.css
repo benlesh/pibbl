@@ -116,6 +116,80 @@ a {
   padding: clamp(28px, 5vw, 72px);
 }
 
+.catalog-index {
+  display: grid;
+  gap: 24px;
+}
+
+.catalog-index h2 {
+  margin-top: 0;
+}
+
+.catalog-index__learning,
+.catalog-index__facet {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 24px;
+}
+
+.catalog-index__learning ol {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.catalog-index__learning li {
+  border-top: 1px solid #e2e8f0;
+  display: grid;
+  gap: 4px;
+  padding-top: 12px;
+}
+
+.catalog-index__learning a,
+.catalog-index__facet a {
+  color: #0369a1;
+  font-weight: 750;
+}
+
+.catalog-index__learning span {
+  color: #64748b;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.catalog-index__learning p {
+  color: #475569;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.catalog-index__facets {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.catalog-index__facet dl {
+  display: grid;
+  gap: 8px 14px;
+  grid-template-columns: minmax(110px, max-content) 1fr;
+  margin: 0;
+}
+
+.catalog-index__facet dt {
+  color: #334155;
+  font-weight: 750;
+}
+
+.catalog-index__facet dd {
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
 @media (max-width: 720px) {
   .gallery-shell {
     display: block;
