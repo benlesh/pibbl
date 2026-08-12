@@ -5,11 +5,14 @@ export interface GProps extends IntrinsicProps {
   children: CRCNode[];
   scaleX?: number;
   scaleY?: number;
+  /** Clockwise rotation in degrees. */
   rotate?: number;
   rotateOrigin?: [number, number];
   x?: number;
   y?: number;
+  /** Horizontal skew angle in degrees. */
   skewX?: number;
+  /** Vertical skew angle in degrees. */
   skewY?: number;
   clipFillRule?: CanvasFillRule;
 }

@@ -62,7 +62,7 @@ describe('g', () => {
   describe('rotation', () => {
     it('rotates around origin', async () => {
       await componentTest(g({
-        rotate: Math.PI / 4, // 45 degrees
+        rotate: 45,
         children: [
           rect(defaultRect),
         ],
@@ -72,7 +72,7 @@ describe('g', () => {
 
     it('rotates around specified point', async () => {
       await componentTest(g({
-        rotate: Math.PI / 2, // 90 degrees
+        rotate: 90,
         rotateOrigin: [25, 25], // center of rect
         children: [
           rect(defaultRect),
@@ -85,7 +85,7 @@ describe('g', () => {
   describe('skewing', () => {
     it('skews on X axis', async () => {
       await componentTest(g({
-        skewX: Math.PI / 6,
+        skewX: 30,
         children: [
           rect(defaultRect),
         ],
@@ -95,7 +95,7 @@ describe('g', () => {
 
     it('skews on Y axis', async () => {
       await componentTest(g({
-        skewY: Math.PI / 6,
+        skewY: 30,
         children: [
           rect(defaultRect),
         ],
@@ -105,8 +105,8 @@ describe('g', () => {
 
     it('skews on both axes', async () => {
       await componentTest(g({
-        skewX: Math.PI / 6,
-        skewY: Math.PI / 6,
+        skewX: 30,
+        skewY: 30,
         children: [
           rect(defaultRect),
         ],
@@ -120,7 +120,7 @@ describe('g', () => {
       await componentTest(g({
         x: 100,
         y: 100,
-        rotate: Math.PI / 4,
+        rotate: 45,
         scaleX: 2,
         scaleY: 1.5,
         children: [
@@ -134,7 +134,7 @@ describe('g', () => {
       await componentTest(g({
         x: 100,
         y: 100,
-        rotate: Math.PI / 4,
+        rotate: 45,
         children: [
           g({
             scaleX: 2,
@@ -175,7 +175,7 @@ describe('g', () => {
     it('handles mouse events on rotated elements', async () => {
       const onMouseOver = vi.fn();
       const canvas = await componentTest(g({
-        rotate: Math.PI / 4,
+        rotate: 45,
         rotateOrigin: [25, 25],
         children: [
           rect({
@@ -214,7 +214,7 @@ describe('g', () => {
       const canvas = await componentTest(g({
         x: offset.x,
         y: offset.y,
-        rotate: rotation, // degrees
+        rotate: rotation,
         scaleX: scale,
         scaleY: scale,
         skewX,
@@ -243,7 +243,7 @@ describe('g', () => {
       await componentTest(g({
         x: 100,
         y: 50,
-        rotate: Math.PI / 6,
+        rotate: 30,
         scaleX: 1.5,
         scaleY: 1.5,
         children: [
