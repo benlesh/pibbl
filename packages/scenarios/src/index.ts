@@ -9,6 +9,7 @@ export {
   smokeScenarioEntry,
   mouseContractScenarioEntry,
   performanceLabScenarioEntry,
+  runtimeHooksScenarioEntry,
   validateScenarioCatalog,
 } from './catalog';
 export {
@@ -71,6 +72,12 @@ export {
   getPerformanceWorkload,
   PERFORMANCE_WORKLOADS,
 } from './performance-lab.example';
+export type {
+  RuntimeHooksAction,
+  RuntimeHooksRootVariant,
+  RuntimeHooksSiblingKey,
+  RuntimeHooksState,
+} from './runtime-hooks.example';
 export type {
   PerformanceCounterName,
   PerformanceCounters,

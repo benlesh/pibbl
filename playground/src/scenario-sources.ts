@@ -6,6 +6,7 @@ import interactionLabSource from '../../packages/scenarios/src/interaction-lab.e
 import lifecycleLabSource from '../../packages/scenarios/src/lifecycle-lab.example.ts?raw';
 import mouseContractSource from '../../packages/scenarios/src/mouse-contract.example.ts?raw';
 import performanceLabSource from '../../packages/scenarios/src/performance-lab.example.ts?raw';
+import runtimeHooksSource from '../../packages/scenarios/src/runtime-hooks.example.ts?raw';
 
 interface ScenarioSourceAdapter {
   path: string;
@@ -40,6 +41,10 @@ const sourceAdapters: Readonly<Record<string, ScenarioSourceAdapter>> = {
   'event-performance-lab-example': {
     path: 'packages/scenarios/src/performance-lab.example.ts',
     sourceText: performanceLabSource,
+  },
+  'runtime-hooks-laboratory-example': {
+    path: 'packages/scenarios/src/runtime-hooks.example.ts',
+    sourceText: runtimeHooksSource,
   },
 };
 

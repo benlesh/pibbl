@@ -5,6 +5,7 @@ import type { InteractionLabState } from './interaction-lab.example';
 import type { LifecycleLabState } from './lifecycle-lab.example';
 import type { MouseContractScenarioState } from './mouse-contract.example';
 import type { PerformanceLabState } from './performance-lab.example';
+import type { RuntimeHooksState } from './runtime-hooks.example';
 import { GEOMETRY_MATRIX_CASES } from './geometry-matrix.example';
 import { MOUSE_CONTRACT_CASES } from './mouse-contract';
 import { PERFORMANCE_WORKLOADS } from './performance-lab.example';
@@ -563,6 +564,72 @@ export const cleanupStressScenarioEntry: ScenarioCatalogEntry<CleanupStressState
   load: async () => (await import('./cleanup-stress')).cleanupStressScenario,
 };
 
+const runtimeHooksMetadata: ScenarioMetadata = {
+  id: 'runtime-hooks-laboratory',
+  slug: 'runtime-hooks-laboratory',
+  title: 'Runtime and hooks laboratory',
+  summary: 'Exercise state, memo, ref, synchronous change cleanup, memoized paths, keyed siblings, root identity, falsy children, and public hook misuse.',
+  category: 'Diagnostics',
+  apiTags: ['crc', 'crcState', 'crcMemo', 'crcRef', 'crcWhenChanged', 'crcRectPath', 'crcLinePath', 'crcSvgPath'],
+  conceptTags: ['hook identity', 'keyed reconciliation', 'dependency cleanup', 'runtime recovery'],
+  manualSteps: [
+    {
+      action: 'Choose Increment state, Mutate ref, and Stable render.',
+      expected: 'State changes the blue probe to purple and renders; the ref value changes without rendering; stable render preserves memo, ref, and all three path identities.',
+    },
+    {
+      action: 'Choose Change dependency.',
+      expected: 'Memo and all three paths receive new identities, the triangle turns pink, and one previous change cleanup balances the new acquisition.',
+    },
+    {
+      action: 'Reorder siblings, Insert sibling, and Remove sibling.',
+      expected: 'The sky, green, and orange blocks follow the visible order while every surviving keyed sibling retains its identity.',
+    },
+    {
+      action: 'Replace component key, Remove component, Restore component, and Replace root.',
+      expected: 'Key and root replacement create fresh hook identities, removal clears the probe and runs its cleanup, and restoration mounts a fresh probe.',
+    },
+    {
+      action: 'Choose Probe hook misuse, verify the scene remains responsive, then Reset.',
+      expected: 'All seven hooks report the same outside-render error category, the recovery render preserves live identities, and Reset restores the exact initial counters and pixels.',
+    },
+  ],
+  knownLimitations: [
+    'crcEvent is exercised by the TFC-04 ordering and overlap laboratory; crcCursor behavior is shared with the TFC-04/TFC-05 interaction laboratories and focused lifecycle characterization rather than duplicated here.',
+    'A conditional hook-count mismatch is intentionally not exposed as a gallery action because it can corrupt the diagnostic scene; focused runtime tests own that explicit misuse contract.',
+    'Displayed identity numbers are deterministic laboratory labels, not public runtime identifiers.',
+  ],
+  visibility: 'test-laboratory',
+  visibilityReason: 'It exposes hook identities, cleanup counts, keyed reconciliation, and deliberate misuse rather than beginner-facing API guidance.',
+  maturity: 'trusted',
+};
+
+export const runtimeHooksScenarioEntry: ScenarioCatalogEntry<RuntimeHooksState> = {
+  metadata: runtimeHooksMetadata,
+  canvas: { width: 480, height: 240 },
+  actions: [
+    { id: 'increment-state', label: 'Increment state' },
+    { id: 'mutate-ref', label: 'Mutate ref' },
+    { id: 'render-stable', label: 'Stable render' },
+    { id: 'change-dependency', label: 'Change dependency' },
+    { id: 'reorder-siblings', label: 'Reorder siblings' },
+    { id: 'insert-sibling', label: 'Insert sibling' },
+    { id: 'remove-sibling', label: 'Remove sibling' },
+    { id: 'replace-component-key', label: 'Replace component key' },
+    { id: 'remove-component', label: 'Remove component' },
+    { id: 'restore-component', label: 'Restore component' },
+    { id: 'replace-root', label: 'Replace root' },
+    { id: 'probe-hook-misuse', label: 'Probe hook misuse' },
+  ],
+  source: {
+    id: 'runtime-hooks-laboratory-example',
+    language: 'ts',
+    marker: "RUNTIME_HOOKS_SOURCE_ID = 'runtime-hooks-laboratory-example'",
+    path: 'packages/scenarios/src/runtime-hooks.example.ts',
+  },
+  load: async () => (await import('./runtime-hooks')).runtimeHooksScenario,
+};
+
 export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] = validateScenarioCatalog([
   smokeScenarioEntry,
   interactionLabScenarioEntry,
@@ -571,6 +638,7 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] = validateScena
   geometryMatrixScenarioEntry,
   performanceLabScenarioEntry,
   cleanupStressScenarioEntry,
+  runtimeHooksScenarioEntry,
 ] as const);
 
 export function getScenarioBySlug(slug: string): AnyScenarioCatalogEntry | undefined {
