@@ -288,15 +288,15 @@ function resolveInstanceTarget({
       if (isHit({
         canvas,
         path: region.path,
-        transform: transform.multiply(region.transform),
+        transform: multiplyTransforms(transform, region.transform),
         x,
         y,
         fill: region.fill,
         lineInteractionWidth: region.lineInteractionWidth,
-        currentClippingStack: [
-          ...clippingStack,
-          ...composeClippingStack(region.clippingStack, transform),
-        ],
+        currentClippingStack: mergeClippingStacks(
+          clippingStack,
+          composeClippingStack(region.clippingStack, transform),
+        ),
       })) {
         return region;
       }
@@ -306,7 +306,7 @@ function resolveInstanceTarget({
     if (entry.instance.mainTeardowns.closed) {
       continue;
     }
-    const childTransform = transform.multiply(entry.transform);
+    const childTransform = multiplyTransforms(transform, entry.transform);
     const target = resolveInstanceTarget({
       instance: entry.instance,
       canvas,
@@ -333,11 +333,37 @@ function resolveInstanceTarget({
 function composeClippingStack(
   clippingStack: readonly CRCClippingStackEntry[],
   transform: DOMMatrix,
-): CRCClippingStackEntry[] {
+): readonly CRCClippingStackEntry[] {
+  if (clippingStack.length === 0 || transform.isIdentity) {
+    return clippingStack;
+  }
   return clippingStack.map(entry => ({
     ...entry,
-    transform: transform.multiply(entry.transform),
+    transform: multiplyTransforms(transform, entry.transform),
   }));
+}
+
+function multiplyTransforms(parent: DOMMatrix, child: DOMMatrix): DOMMatrix {
+  if (parent.isIdentity) {
+    return child;
+  }
+  if (child.isIdentity) {
+    return parent;
+  }
+  return parent.multiply(child);
+}
+
+function mergeClippingStacks(
+  parent: readonly CRCClippingStackEntry[],
+  child: readonly CRCClippingStackEntry[],
+): readonly CRCClippingStackEntry[] {
+  if (parent.length === 0) {
+    return child;
+  }
+  if (child.length === 0) {
+    return parent;
+  }
+  return [...parent, ...child];
 }
 
 function invokeRegion(
