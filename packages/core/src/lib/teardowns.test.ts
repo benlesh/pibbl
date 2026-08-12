@@ -62,4 +62,68 @@ describe('Teardowns', () => {
     expect(parent.closed).toBe(true);
     expect(child.closed).toBe(true);
   });
+
+  it('does not run a teardown removed before execution', () => {
+    const release = vi.fn();
+    const teardowns = new Teardowns();
+
+    teardowns.add(release);
+    teardowns.remove(release);
+    teardowns.execute();
+
+    expect(release).not.toHaveBeenCalled();
+  });
+
+  it('deduplicates the same teardown function', () => {
+    const release = vi.fn();
+    const teardowns = new Teardowns();
+
+    teardowns.add(release);
+    teardowns.add(release);
+    teardowns.execute();
+
+    expect(release).toHaveBeenCalledOnce();
+  });
+
+  it('detaches a child that closes before its parent', () => {
+    const release = vi.fn();
+    const parent = new Teardowns();
+    const child = new Teardowns();
+    child.follow(parent);
+    child.add(release);
+
+    child.execute();
+    parent.execute();
+
+    expect(release).toHaveBeenCalledOnce();
+    expect(child.closed).toBe(true);
+    expect(parent.closed).toBe(true);
+  });
+
+  it('immediately closes a child that follows an already-closed parent', () => {
+    const release = vi.fn();
+    const parent = new Teardowns();
+    const child = new Teardowns();
+    parent.execute();
+
+    child.follow(parent);
+    child.add(release);
+
+    expect(child.closed).toBe(true);
+    expect(release).toHaveBeenCalledOnce();
+  });
+
+  it('continues its stable snapshot when execution is reentrant', () => {
+    const calls: string[] = [];
+    const teardowns = new Teardowns();
+    teardowns.add(() => {
+      calls.push('first');
+      teardowns.execute();
+    });
+    teardowns.add(() => calls.push('second'));
+
+    teardowns.execute();
+
+    expect(calls).toEqual(['first', 'second']);
+  });
 });
