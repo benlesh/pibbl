@@ -54,6 +54,7 @@ The aggregate validates recursive catalog/source/index discovery, TypeScript 7, 
 - A portability cleanup attempted to resolve TypeScript's hidden `bin/tsc` subpath. The final trust run caught that TypeScript 7 export-map boundary; the harness now resolves the public package entry and invokes adjacent `lib/tsc.js` with Node.
 - A workspace consumer was not represented as part of the aggregate once the stronger packed consumer was installed. The trust documentation now states the exact gate instead of overclaiming.
 - Lifecycle artifact upload was removed because those focused tests do not promise their own visual artifacts; the required browser lane owns named expected/actual/diff evidence.
+- The first contributor handoff exposed a pnpm recursion boundary: an explicitly versioned outer Corepack invocation still resolved bare nested `pnpm` script commands from the shell's older pnpm installation. Root script-to-script calls now invoke `corepack pnpm@11.21.0` explicitly, so the documented gallery and trust commands cannot switch package-manager versions mid-command.
 
 ## Tooling decisions and follow-ups
 
