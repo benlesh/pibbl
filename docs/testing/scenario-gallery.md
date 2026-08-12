@@ -13,11 +13,11 @@ catalog metadata + lazy loader + source identity
 ```
 
 - `packages/scenarios/src/catalog.ts` contains import-safe metadata, actions, source identity, validation, and lazy loaders. Importing it does not mount a scenario or import gallery/test frameworks.
-- `packages/scenarios/src/smoke.example.ts` is the readable, public-API example. It is both executed by the smoke controller and loaded verbatim by Vite for the source panel.
-- `packages/scenarios/src/smoke.ts` owns state, render settling, reset, and disposal. Controller methods resolve only after CRC's scheduled animation frame.
+- Every `packages/scenarios/src/**/*.example.ts` file is readable public-API source. Its scenario controller owns state, actions, render settlement, reset, and disposal.
 - `packages/scenarios/src/surface.ts` is an optional gallery surface adapter available only through the explicit `@crc/scenarios/surface` subpath. It is not exported from the package root or imported by the catalog.
-- `playground/src/scenario-sources.ts` is the only Vite-specific raw-source adapter. It verifies both source ID and path, then checks that the displayed file contains the catalog's source marker.
-- `packages/core/test/smoke-scenario.test.ts` loads the catalog definition directly and creates its own test adapter. It does not import gallery UI.
+- `playground/src/scenario-sources.ts` is the only Vite-specific raw-source adapter. Its recursive glob discovers every example and verifies both path and source marker.
+- `tooling/scenario-catalog.ts` independently discovers the same files from disk, loads every definition, and checks the generated [scenario index](../scenario-index.md).
+- `packages/core/test/scenario-catalog.test.ts` mounts every entry, executes each registered action in isolation, resets it, and disposes it without importing gallery UI.
 
 `loadScenario(entry)` rejects a definition whose ID, source ID, or ordered action IDs differ from its catalog entry. Catalog validation also rejects duplicate IDs/slugs/actions, empty tags/instructions/reasons, invalid dimensions, and non-TypeScript source references.
 
@@ -32,7 +32,7 @@ Visibility has two initial classes:
 
 Maturity is one of `baseline`, `characterization`, `contract`, or `trusted`. It describes evidence state, not presentation quality.
 
-## Run and exercise the baseline
+## Run the indexed gallery
 
 From the repository root:
 
@@ -40,7 +40,9 @@ From the repository root:
 pnpm playground
 ```
 
-Open <http://localhost:5173/#/scenarios/baseline-smoke>.
+Open <http://localhost:5173/#/scenarios>. The index presents all executable scenarios by learning progression, public API, concept, category, and visibility/maturity. Each scenario retains a stable `#/scenarios/<slug>` route.
+
+To exercise the baseline first, open <http://localhost:5173/#/scenarios/baseline-smoke>.
 
 1. Confirm the initial blue rectangle reports revision `0`, clicks `0`, and last action `mount`.
 2. Choose **Update scene**. The rectangle becomes purple, revision becomes `1`, and last action becomes `update`.
