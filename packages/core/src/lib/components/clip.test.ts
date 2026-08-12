@@ -7,6 +7,18 @@ import { rect } from './rect';
 import { text } from './text';
 
 describe('clip', () => {
+  it('treats an empty clip as empty rendering geometry', async () => {
+    const canvas = await componentTest(clip({
+      path: new Path2D(),
+      children: [
+        rect({ x: 0, y: 0, width: 40, height: 40, fillStyle: 'red' }),
+      ],
+    }));
+
+    expect(canvas.element.getContext('2d')!.getImageData(20, 20, 1, 1).data[3])
+      .toBe(0);
+  });
+
   it('clips a rectangle with default fillRule', async () => {
     const clipPath = new Path2D();
     clipPath.rect(50, 50, 100, 100);

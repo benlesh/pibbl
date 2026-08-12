@@ -44,6 +44,35 @@ afterEach(() => {
 
 describe('img async resource ownership', () => {
   it.each([
+    ['zero', 0, 40],
+    ['negative', -30, -40],
+  ] as const)('delegates explicit %s image dimensions to Canvas', async (
+    _case,
+    width,
+    height,
+  ) => {
+    const drawImage = vi
+      .spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
+      .mockImplementation(() => {});
+    const canvas = createCanvas();
+    const controller = crc(canvas, img({
+      src: 'boundary.png',
+      x: 10,
+      y: 20,
+      width,
+      height,
+    }));
+    await nextFrame();
+
+    const image = FakeImage.instances[0];
+    image.onload?.();
+    await nextFrame();
+
+    expect(drawImage).toHaveBeenLastCalledWith(image, 10, 20, width, height);
+    controller.dispose();
+  });
+
+  it.each([
     ['none', [24.2, 20.2, 120, 80]],
     ['round', [23.5, 19.5, 120, 80]],
     ['ceil', [24.5, 20.5, 120, 80]],

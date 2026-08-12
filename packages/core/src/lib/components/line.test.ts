@@ -14,6 +14,20 @@ const defaultOptions: LineProps = {
 
 describe('line', () => {
   describe('basic rendering', () => {
+    it('leaves empty and move-only paths unpainted', async () => {
+      const canvas = await componentTest(g({ children: [
+        line({ coords: [], strokeStyle: 'red', lineWidth: 10 }),
+        line({ coords: [[20, 20]], strokeStyle: 'blue', lineWidth: 10 }),
+      ] }));
+      const pixels = canvas.element
+        .getContext('2d')!
+        .getImageData(0, 0, 40, 40)
+        .data;
+
+      expect(pixels.some((value, index) => index % 4 === 3 && value > 0))
+        .toBe(false);
+    });
+
     it('renders a simple line', async () => {
       await componentTest(line(defaultOptions));
       await takeScreenshot(page);

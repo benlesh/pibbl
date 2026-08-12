@@ -1,5 +1,6 @@
 import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
+import { defineComp } from '../define-comp';
 import { componentTest } from '../test-utils/component-test';
 import { takeScreenshot } from '../util/test-utils';
 import { g } from './g';
@@ -14,6 +15,21 @@ describe('g', () => {
     height: 50,
     fillStyle: 'blue',
   };
+
+  it('supports zero and negative scales without leaking transforms', async () => {
+    const scales: number[] = [];
+    const TransformProbe = defineComp((_props: {}, ctx) => {
+      scales.push(ctx.getTransform().a);
+    });
+
+    await componentTest(g({ children: [
+      g({ scaleX: 0, children: [TransformProbe({})] }),
+      g({ scaleX: -1, children: [TransformProbe({})] }),
+      TransformProbe({}),
+    ] }));
+
+    expect(scales).toEqual([0, -1, 1]);
+  });
 
   it('renders children without transformation', async () => {
     await componentTest(g({
