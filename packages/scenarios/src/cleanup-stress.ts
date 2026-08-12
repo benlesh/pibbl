@@ -299,6 +299,9 @@ async function mountCleanupStress(
             const controller = crc(context.canvas, scene(), {
               signal: abortController.signal,
             });
+            pendingRender = nextFrame();
+            await pendingRender;
+            assertActive();
             controller.dispose();
           }
           await mountRuntime(action);

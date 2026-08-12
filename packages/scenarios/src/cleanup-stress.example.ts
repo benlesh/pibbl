@@ -165,8 +165,8 @@ function sceneNodes({ metrics, state }: CleanupStressSceneProps) {
   ];
 }
 
-const CleanupRootA = defineComp<CleanupStressSceneProps>(sceneNodes);
-const CleanupRootB = defineComp<CleanupStressSceneProps>(sceneNodes);
+const CleanupRootA = defineComp<CleanupStressSceneProps>((props) => sceneNodes(props));
+const CleanupRootB = defineComp<CleanupStressSceneProps>((props) => sceneNodes(props));
 
 export function createCleanupStressScene(props: CleanupStressSceneProps) {
   return props.state.rootVariant === 'a' ? CleanupRootA(props) : CleanupRootB(props);

@@ -522,7 +522,7 @@ const cleanupStressMetadata: ScenarioMetadata = {
   ],
   knownLimitations: [
     'Private instance, frame, reference, image-handler, and teardown ledgers remain test-only; the gallery exposes the exact public controls and semantic state.',
-    'The 1,000-cycle control intentionally disposes before the scheduled render so it remains bounded while proving listener/frame ownership.',
+    'The 1,000-cycle control settles every render before disposal; it takes roughly one display-frame interval per cycle in an unaccelerated browser.',
     'The broken-image case has no public error callback; its contract is absence of stale pixels, scheduled work, and late updates.',
   ],
   visibility: 'test-laboratory',
