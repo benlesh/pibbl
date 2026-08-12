@@ -500,8 +500,8 @@ const cleanupStressMetadata: ScenarioMetadata = {
   conceptTags: ['resource ownership', 'async cleanup', 'idempotent disposal', 'mount stress'],
   manualSteps: [
     {
-      action: 'Choose Queue frame, then Abort runtime; remount and choose Dispose with pending frame.',
-      expected: 'The pending revision never paints after cleanup, the runtime reports aborted/disposed, and repeated cleanup remains harmless.',
+      action: 'Choose Dispose with pending frame, then Cleanup again, Remount runtime, and Queue frame.',
+      expected: 'The atomic disposal cancels its pending revision, repeated cleanup remains harmless, and the remounted queued frame settles normally.',
     },
     {
       action: 'Show the primary image, change its source, try the broken source, then remove it while switching quickly.',

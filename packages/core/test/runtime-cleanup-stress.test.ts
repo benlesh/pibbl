@@ -261,6 +261,20 @@ function expectFullyReleased(diagnostics: RuntimeDiagnostics): void {
   expect(ledger.frames.pending).toBe(0);
 }
 
+function expectTemporaryRenderStateReleased(): void {
+  expect(GLOBAL_STATE).toMatchObject({
+    canvas: undefined,
+    componentHookIndex: 0,
+    componentIsMounting: false,
+    componentRefs: undefined,
+    currentCRCInstance: undefined,
+    renderContext: undefined,
+    seenIds: undefined,
+    unseenIds: undefined,
+  });
+  expect(GLOBAL_STATE.clippingStack).toEqual([]);
+}
+
 afterEach(async () => {
   for (const controller of activeControllers) {
     await controller.dispose();
@@ -553,6 +567,7 @@ describe('shared runtime cleanup stress laboratory', () => {
         released: baselineRefs * 1_001,
       },
     });
+    expectTemporaryRenderStateReleased();
 
     await controller.dispose();
     activeControllers.delete(controller);
@@ -569,5 +584,6 @@ describe('shared runtime cleanup stress laboratory', () => {
         released: baselineRefs * 1_002,
       },
     });
+    expectTemporaryRenderStateReleased();
   }, 40_000);
 });
