@@ -1,6 +1,6 @@
 # CRC library status and feature inventory
 
-_Snapshot refreshed: 2026-08-11, after the TFC-10 trust-gate handoff._
+_Snapshot refreshed: 2026-08-11, during TFC-10 trust-gate implementation._
 
 ## At a glance
 

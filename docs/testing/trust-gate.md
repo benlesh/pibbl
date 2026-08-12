@@ -33,7 +33,7 @@ The aggregate command checks:
 - the complete headless Chromium suite, including always-on performance structure;
 - built-package smoke and the focused lifecycle/cleanup stress suite.
 
-The unified GitHub Actions workflow runs the same responsibilities as parallel static, package, browser, and lifecycle jobs, then exposes one stable required result. It uploads named test artifacts even when a behavior failure occurs. Hosted branch-protection configuration remains a repository-administration action outside local source control; the workflow is designed to be selected as that required check.
+The unified GitHub Actions workflow runs the same responsibilities as parallel static, package, browser, and lifecycle jobs, then exposes one stable aggregate result suitable for selection as a required check. It is configured to upload named test artifacts even when a behavior failure occurs. Hosted branch-protection configuration remains a repository-administration action outside local source control.
 
 ## Visual baseline policy
 

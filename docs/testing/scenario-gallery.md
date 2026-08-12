@@ -61,7 +61,7 @@ pnpm test:smoke
 
 The test imports the same lazy catalog entry and definition, then asserts mount, update, real browser click, reset, a post-reset click, disposal, source identity, and targeted Canvas pixels.
 
-The approved baseline is `packages/core/test/visual-baselines/dep-01-smoke.expected.png`. Each run writes actual and diff-capable artifacts under ignored `test-screenshots/dep-01/`; CI already uploads that tree. The comparator is exact outside documented text masks. Text masks isolate cross-platform Arial glyph rasterization while semantic assertions and source identity protect the displayed values; structural backgrounds, borders, state rows, Canvas colors, and target pixels remain exact. A later bundled test font is preferable if text glyphs become a direct visual contract.
+The approved baseline is `packages/core/test/visual-baselines/dep-01-smoke.expected.png`. Each run writes actual and diff-capable artifacts under ignored `test-screenshots/dep-01/`; the unified workflow is configured to upload that tree. The comparator is exact outside documented text masks. Text masks isolate cross-platform Arial glyph rasterization while semantic assertions and source identity protect the displayed values; structural backgrounds, borders, state rows, Canvas colors, and target pixels remain exact. A later bundled test font is preferable if text glyphs become a direct visual contract.
 
 To prove the failure path without editing source or baselines:
 
