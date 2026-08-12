@@ -26,7 +26,7 @@ corepack pnpm@11.21.0 exec playwright install chromium
 corepack pnpm@11.21.0 trust
 ```
 
-The aggregate validates recursive catalog/source/index discovery, TypeScript 7, ESLint and Prettier, both package builds, source and built gallery builds, real packed-tarball Bundler/NodeNext/runtime consumers, the complete Chromium suite, visual failure/recovery, built-package smoke, lifecycle stress, and deterministic performance structure. The final repository-root run passed all stages: 34 browser files, 265 tests passed, and only the two explicit wall-clock timing cases skipped; focused lifecycle passed 9/9 and structural performance passed 3/3. Wall-clock timing remains an explicit reference cadence, while structural counters are required on every change.
+The aggregate validates recursive catalog/source/index discovery, TypeScript 7, ESLint and Prettier, both package builds, source and built gallery builds, real packed-tarball Bundler/NodeNext/runtime consumers, the complete Chromium suite, visual failure/recovery, built-package smoke, lifecycle stress, and deterministic performance structure. The final repository-root run passed all stages: 34 browser files, 265 tests passed, and only the two explicit wall-clock timing cases skipped; focused lifecycle passed 9/9 and structural performance passed 3/3. A detached worktree at commit `3bba019`, with no inherited `node_modules` or build artifacts, then completed the exact frozen install and full trust command with the same results. Wall-clock timing remains an explicit reference cadence, while structural counters are required on every change.
 
 ## Initial risk closure
 
