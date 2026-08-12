@@ -1,0 +1,58 @@
+import { GLOBAL_STATE } from '../global-state.js';
+import { Teardowns } from '../teardowns.js';
+import type { CompRefs, CRCInstance, CRCHookSlot } from '../types.js';
+
+export const HOOK_CONTEXT_ERROR =
+  'CRC hooks can only be called while rendering a component.';
+
+export interface HookContext {
+  componentRefs: CompRefs<any>;
+  crcInstance: CRCInstance;
+}
+
+export function requireHookContext(): HookContext {
+  const componentRefs = GLOBAL_STATE.componentRefs;
+  const crcInstance = GLOBAL_STATE.currentCRCInstance;
+  if (!componentRefs || !crcInstance || !GLOBAL_STATE.canvas) {
+    throw new Error(HOOK_CONTEXT_ERROR);
+  }
+  return { componentRefs, crcInstance };
+}
+
+export function useHookSlot<T>(
+  kind: string,
+  initialize: (teardowns: Teardowns) => T,
+): CRCHookSlot<T> {
+  const { componentRefs } = requireHookContext();
+  const hookIndex = GLOBAL_STATE.componentHookIndex++;
+  let slot = componentRefs.hooks[hookIndex] as CRCHookSlot<T> | undefined;
+
+  if (GLOBAL_STATE.componentIsMounting) {
+    const teardowns = new Teardowns();
+    teardowns.follow(componentRefs.teardowns);
+    slot = { kind, value: initialize(teardowns), teardowns };
+    componentRefs.hooks[hookIndex] = slot;
+  } else if (!slot) {
+    throw new Error(
+      `Rendered more CRC hooks than the previous render at hook ${hookIndex}.`,
+    );
+  } else if (slot.kind !== kind) {
+    throw new Error(
+      `CRC hook order changed at hook ${hookIndex}: expected ${slot.kind}, received ${kind}.`,
+    );
+  }
+
+  return slot;
+}
+
+export function finalizeHookSlots(componentRefs: CompRefs<any>): void {
+  const usedHooks = GLOBAL_STATE.componentHookIndex;
+  if (usedHooks >= componentRefs.hooks.length) return;
+
+  for (const slot of componentRefs.hooks.slice(usedHooks)) {
+    slot.teardowns.execute();
+  }
+  throw new Error(
+    `Rendered fewer CRC hooks than the previous render: expected ${componentRefs.hooks.length}, received ${usedHooks}.`,
+  );
+}

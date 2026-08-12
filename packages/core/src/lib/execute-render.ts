@@ -59,7 +59,15 @@ export function executeRender(
     GLOBAL_STATE.seenIds.add(id);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    render(rootElement, id, undefined);
+    try {
+      render(rootElement, id, undefined);
+    } catch (error) {
+      for (const refs of GLOBAL_STATE.currentCRCInstance.refs.values()) {
+        refs.teardowns.execute();
+      }
+      GLOBAL_STATE.currentCRCInstance.refs.clear();
+      throw error;
+    }
 
     for (const id of GLOBAL_STATE.unseenIds) {
       // HACK: I want to be more efficient here, but this is fine for now

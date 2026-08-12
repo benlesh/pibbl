@@ -24,8 +24,15 @@ export interface CompRefs<P> {
   parent: CompRefs<any> | undefined;
   element: CompEl<P>;
   refs: any[];
+  hooks: CRCHookSlot[];
   teardowns: Teardowns;
   onAfterRender: (() => void) | undefined;
+}
+
+export interface CRCHookSlot<T = any> {
+  kind: string;
+  value: T;
+  teardowns: Teardowns;
 }
 
 export interface CRCMouseEvent {

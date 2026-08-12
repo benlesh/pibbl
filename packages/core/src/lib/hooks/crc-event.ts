@@ -1,14 +1,16 @@
-import { crcRegion } from './crc-region.js';
-import {
-  getCurrentCRCInstance,
-  getInteractionRoot,
-  GLOBAL_STATE,
-} from '../global-state.js';
-import type { CRCEventRegistry, CRCMouseEventListener } from '../types.js';
+import { getInteractionRoot } from '../global-state.js';
+import type {
+  CRCEventRegistry,
+  CRCInteractionRegion,
+  CRCMouseEventListener,
+} from '../types.js';
 import { getMouseCoordinates } from '../util/get-mouse-coordinates.js';
+import { requireHookContext, useHookSlot } from './hook-slot.js';
+import { createRegion, releaseRegion, updateRegion } from './crc-region.js';
 
 interface CRCObserverSlot {
   cleanup: (() => void) | undefined;
+  region: CRCInteractionRegion;
 }
 
 export function crcEvent<K extends keyof CRCEventRegistry>(
@@ -18,8 +20,23 @@ export function crcEvent<K extends keyof CRCEventRegistry>(
   fill = false,
   lineInteractionWidth = 0,
 ): void {
+  const { crcInstance } = requireHookContext();
+  const slot = useHookSlot<CRCObserverSlot>('event', teardowns => {
+    const region = createRegion(crcInstance);
+    const value: CRCObserverSlot = { cleanup: undefined, region };
+    teardowns.add(() => {
+      value.cleanup?.();
+      value.cleanup = undefined;
+      releaseRegion(crcInstance, region);
+    });
+    return value;
+  });
+
+  slot.value.cleanup?.();
+  slot.value.cleanup = undefined;
+
   if (path) {
-    crcRegion({
+    updateRegion(crcInstance, slot.value.region, {
       handlers: { [type]: handler },
       path,
       fill,
@@ -28,38 +45,19 @@ export function crcEvent<K extends keyof CRCEventRegistry>(
     return;
   }
 
-  const hookIndex = GLOBAL_STATE.componentHookIndex++;
-  const componentRefs = GLOBAL_STATE.componentRefs!;
-  let slot = componentRefs.refs[hookIndex] as CRCObserverSlot | undefined;
-
-  if (GLOBAL_STATE.componentIsMounting) {
-    slot = { cleanup: undefined };
-    componentRefs.refs[hookIndex] = slot;
-    componentRefs.teardowns.add(() => {
-      slot?.cleanup?.();
-      if (slot) {
-        slot.cleanup = undefined;
-      }
-      componentRefs.refs[hookIndex] = null;
-    });
-  } else if (!slot) {
-    throw new Error(`CRC observer hook slot ${hookIndex} is unavailable`);
-  }
-
-  slot.cleanup?.();
-  slot.cleanup = undefined;
+  releaseRegion(crcInstance, slot.value.region);
 
   if (!handler) {
     return;
   }
 
-  const observers = getInteractionRoot(getCurrentCRCInstance()).events[type];
+  const observers = getInteractionRoot(crcInstance).events[type];
   const observer = (event: MouseEvent) => {
     const [x, y] = getMouseCoordinates(event);
     handler({ originalEvent: event, x, y });
   };
   observers.add(observer);
-  slot.cleanup = () => {
+  slot.value.cleanup = () => {
     observers.delete(observer);
   };
 }

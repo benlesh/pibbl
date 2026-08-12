@@ -1,6 +1,6 @@
-import { GLOBAL_STATE } from '../global-state.js';
 import { runTeardown } from '../teardowns.js';
 import { shallowArrayEquals } from '../util/shallow-array-equals.js';
+import { useHookSlot } from './hook-slot.js';
 
 /**
  * Does a shallow diff check on the deps. If they've changed, it will synchronously
@@ -16,29 +16,28 @@ export function crcWhenChanged(
   callback: () => (() => void) | void,
   deps?: any[],
 ) {
-  if (GLOBAL_STATE.componentIsMounting) {
-    const ref = {
+  const slot = useHookSlot('whenChanged', teardowns => {
+    const ref: {
+      lastDeps: any[] | undefined;
+      teardown: (() => void) | undefined;
+    } = {
       lastDeps: undefined,
       teardown: undefined,
     };
-
-    GLOBAL_STATE.componentRefs!.refs.push(ref);
-  }
-
-  const hookIndex = GLOBAL_STATE.componentHookIndex++;
-  const ref = GLOBAL_STATE.componentRefs!.refs[hookIndex];
+    teardowns.add(() => {
+      ref.teardown?.();
+      ref.teardown = undefined;
+    });
+    return ref;
+  });
+  const ref = slot.value;
   if (!ref.lastDeps || !deps || !shallowArrayEquals(deps, ref.lastDeps)) {
     const lastTeardown = ref.teardown;
-    const componentTeardowns = GLOBAL_STATE.componentRefs!.teardowns;
     if (lastTeardown) {
-      componentTeardowns.remove(lastTeardown);
       runTeardown(lastTeardown);
     }
     ref.lastDeps = deps;
     const newTeardown = callback();
-    ref.teardown = newTeardown;
-    if (newTeardown) {
-      componentTeardowns.add(newTeardown);
-    }
+    ref.teardown = newTeardown || undefined;
   }
 }

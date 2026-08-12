@@ -1,5 +1,6 @@
 import { GLOBAL_STATE } from '../global-state.js';
 import { update } from '../update.js';
+import { requireHookContext, useHookSlot } from './hook-slot.js';
 
 export type StateUpdater<T> = (update: T | ((oldValue: T) => T)) => void;
 
@@ -12,20 +13,17 @@ export type StateUpdater<T> = (update: T | ((oldValue: T) => T)) => void;
  * @returns A tuple with the state, and a setter function
  */
 export function crcState<T>(init?: T): readonly [T, StateUpdater<T>] {
-  if (GLOBAL_STATE.componentIsMounting) {
-    const crcInstance = GLOBAL_STATE.currentCRCInstance!;
-    const componentRefs = GLOBAL_STATE.componentRefs!;
+  const { componentRefs, crcInstance } = requireHookContext();
+  const canvas = GLOBAL_STATE.canvas!;
+  const slot = useHookSlot('state', () => {
     const ref = {
-      type: 'state',
-      value: init,
+      value: init as T,
       setter,
     };
 
-    const canvas = GLOBAL_STATE.canvas;
-
     function setter(newValueOrFactory: T | ((oldValue: T) => T)) {
       if (
-        GLOBAL_STATE.crcInstances.get(canvas!) !== crcInstance ||
+        GLOBAL_STATE.crcInstances.get(canvas) !== crcInstance ||
         crcInstance.mainTeardowns.closed ||
         componentRefs.teardowns.closed ||
         crcInstance.refs.get(componentRefs.id) !== componentRefs
@@ -37,13 +35,12 @@ export function crcState<T>(init?: T): readonly [T, StateUpdater<T>] {
         typeof newValueOrFactory === 'function' ?
             (newValueOrFactory as any)(ref.value) :
           newValueOrFactory;
-      update(canvas!, undefined, true);
+      update(canvas, undefined, true);
     }
 
-    componentRefs.refs.push(ref);
-  }
+    return ref;
+  });
 
-  const ref =
-    GLOBAL_STATE.componentRefs!.refs[GLOBAL_STATE.componentHookIndex++];
+  const ref = slot.value;
   return [ref.value, ref.setter] as const;
 }

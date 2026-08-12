@@ -1,5 +1,6 @@
 import { GLOBAL_STATE } from '../global-state.js';
 import { shallowArrayEquals } from '../util/shallow-array-equals.js';
+import { useHookSlot } from './hook-slot.js';
 
 /**
  * Hook: creates a memoized value, similar to React's `useMemo`.
@@ -8,19 +9,20 @@ import { shallowArrayEquals } from '../util/shallow-array-equals.js';
  * @returns The memoized value
  */
 export function crcMemo<T>(create: () => T, deps: any[]): T {
-  const componentRefs = GLOBAL_STATE.componentRefs!;
-  const hookIndex = GLOBAL_STATE.componentHookIndex++;
-  const refs = componentRefs.refs;
+  return crcMemoSlot('memo', create, deps);
+}
 
-  if (GLOBAL_STATE.componentIsMounting) {
-    refs[hookIndex] = { value: create(), deps };
-  } else {
-    const { deps: lastDeps } = refs[hookIndex];
-    if (!deps || !shallowArrayEquals(deps, lastDeps)) {
-      refs[hookIndex].value = create();
-      refs[hookIndex].deps = deps;
-    }
+export function crcMemoSlot<T>(
+  kind: string,
+  create: () => T,
+  deps: any[],
+): T {
+  const mounting = GLOBAL_STATE.componentIsMounting;
+  const slot = useHookSlot(kind, () => ({ value: create(), deps }));
+  if (!mounting && !shallowArrayEquals(deps, slot.value.deps)) {
+    const value = create();
+    slot.value.value = value;
+    slot.value.deps = deps;
   }
-
-  return refs[hookIndex].value;
+  return slot.value.value;
 }

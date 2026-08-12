@@ -5,6 +5,7 @@ import {
 } from './global-state.js';
 import { Teardowns } from './teardowns.js';
 import { CompEl, CompRefs } from './types.js';
+import { finalizeHookSlots } from './hooks/hook-slot.js';
 
 export function render<P>(
   element: CompEl<P>,
@@ -26,6 +27,7 @@ export function render<P>(
         parent,
         element,
         refs: [],
+        hooks: [],
         teardowns,
         onAfterRender: undefined,
       });
@@ -38,34 +40,43 @@ export function render<P>(
 
     const ctx = GLOBAL_STATE.renderContext!;
     ctx.save();
-    const result = GLOBAL_STATE.componentRefs.element.type(
-      GLOBAL_STATE.componentRefs.element.props,
-      ctx,
-    );
+    try {
+      const result = GLOBAL_STATE.componentRefs.element.type(
+        GLOBAL_STATE.componentRefs.element.props,
+        ctx,
+      );
+      finalizeHookSlots(GLOBAL_STATE.componentRefs);
 
-    const onAfterRender = GLOBAL_STATE.componentRefs.onAfterRender;
-    GLOBAL_STATE.componentRefs.onAfterRender = undefined;
+      const onAfterRender = GLOBAL_STATE.componentRefs.onAfterRender;
+      GLOBAL_STATE.componentRefs.onAfterRender = undefined;
 
-    if (result) {
-      if (Array.isArray(result)) {
-        for (let i = 0; i < result.length; i++) {
-          const child = result[i];
-          if (child) {
-            ctx.save();
-            render(child, id, GLOBAL_STATE.componentRefs);
+      if (result) {
+        if (Array.isArray(result)) {
+          for (let i = 0; i < result.length; i++) {
+            const child = result[i];
+            if (child) {
+              ctx.save();
+              try {
+                render(child, id, GLOBAL_STATE.componentRefs);
+              } finally {
+                ctx.restore();
+              }
+            }
+          }
+        } else {
+          ctx.save();
+          try {
+            render(result, id, GLOBAL_STATE.componentRefs);
+          } finally {
             ctx.restore();
           }
         }
-      } else {
-        ctx.save();
-        render(result, id, GLOBAL_STATE.componentRefs);
-        ctx.restore();
       }
+
+      onAfterRender?.();
+    } finally {
+      ctx.restore();
     }
-
-    onAfterRender?.();
-
-    ctx.restore();
   } finally {
     clearComponentState();
   }

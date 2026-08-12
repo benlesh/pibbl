@@ -1,4 +1,4 @@
-import { GLOBAL_STATE } from '../global-state.js';
+import { useHookSlot } from './hook-slot.js';
 
 export interface CRCRef<T> {
   current: T | undefined;
@@ -10,12 +10,5 @@ export interface CRCRef<T> {
  * @returns A reference with a `current` property containing the value
  */
 export function crcRef<T>(init?: T): CRCRef<T> {
-  if (GLOBAL_STATE.componentIsMounting) {
-    GLOBAL_STATE.componentRefs!.refs.push({
-      type: 'ref',
-      current: init,
-    });
-  }
-
-  return GLOBAL_STATE.componentRefs!.refs[GLOBAL_STATE.componentHookIndex++];
+  return useHookSlot('ref', () => ({ current: init })).value;
 }

@@ -1,15 +1,14 @@
-import {
-  getCurrentCRCInstance,
-  GLOBAL_STATE,
-} from '../global-state.js';
+import { GLOBAL_STATE } from '../global-state.js';
 import {
   refreshInteractionCursor,
   removeInteractionRegion,
 } from '../interaction-dispatch.js';
 import type {
+  CRCInstance,
   CRCInteractionRegion,
   CRCRegionHandlers,
 } from '../types.js';
+import { requireHookContext, useHookSlot } from './hook-slot.js';
 
 interface CRCRegionSlot {
   region: CRCInteractionRegion;
@@ -28,34 +27,52 @@ export function crcRegion({
   lineInteractionWidth?: number;
   cursor?: string;
 }): void {
-  const hookIndex = GLOBAL_STATE.componentHookIndex++;
-  const componentRefs = GLOBAL_STATE.componentRefs!;
-  const instance = getCurrentCRCInstance();
-  let slot = componentRefs.refs[hookIndex] as CRCRegionSlot | undefined;
+  const { crcInstance: instance } = requireHookContext();
+  const slot = useHookSlot<CRCRegionSlot>('region', teardowns => {
+    const region = createRegion(instance);
+    teardowns.add(() => removeInteractionRegion(instance, region));
+    return { region };
+  });
+  updateRegion(instance, slot.value.region, {
+    handlers,
+    path,
+    fill,
+    lineInteractionWidth,
+    cursor,
+  });
+}
 
-  if (GLOBAL_STATE.componentIsMounting) {
-    const region: CRCInteractionRegion = {
-      kind: 'region',
-      owner: instance,
-      handlers: {},
-      path: undefined,
-      fill: false,
-      lineInteractionWidth: 0,
-      transform: new DOMMatrix(),
-      clippingStack: [],
-      cursor: undefined,
-    };
-    slot = { region };
-    componentRefs.refs[hookIndex] = slot;
-    componentRefs.teardowns.add(() => {
-      removeInteractionRegion(instance, region);
-      componentRefs.refs[hookIndex] = null;
-    });
-  } else if (!slot) {
-    throw new Error(`CRC region hook slot ${hookIndex} is unavailable`);
-  }
+export function createRegion(instance: CRCInstance): CRCInteractionRegion {
+  return {
+    kind: 'region',
+    owner: instance,
+    handlers: {},
+    path: undefined,
+    fill: false,
+    lineInteractionWidth: 0,
+    transform: new DOMMatrix(),
+    clippingStack: [],
+    cursor: undefined,
+  };
+}
 
-  const region = slot.region;
+export function updateRegion(
+  instance: CRCInstance,
+  region: CRCInteractionRegion,
+  {
+    handlers,
+    path,
+    fill = false,
+    lineInteractionWidth = 0,
+    cursor,
+  }: {
+    handlers: CRCRegionHandlers;
+    path?: Path2D;
+    fill?: boolean;
+    lineInteractionWidth?: number;
+    cursor?: string;
+  },
+): void {
   const interactive = Boolean(cursor) || Object.values(handlers).some(Boolean);
   if (!interactive) {
     removeInteractionRegion(instance, region);
@@ -77,4 +94,11 @@ export function crcRegion({
   instance.regions.add(region);
   instance.paintEntries.add(region);
   refreshInteractionCursor(instance, region);
+}
+
+export function releaseRegion(
+  instance: CRCInstance,
+  region: CRCInteractionRegion,
+): void {
+  removeInteractionRegion(instance, region);
 }
