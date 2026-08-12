@@ -151,6 +151,31 @@ describe('crcWhenChanged', () => {
       'cleanup:2',
     ]);
   });
+
+  it('does not repeat the previous cleanup when the next callback throws', () => {
+    const frames = new ManualFrames();
+    const canvas = createCanvas();
+    const cleanup = vi.fn();
+    const error = new Error('setup failed');
+    const Probe = defineComp(({ fail }: { fail: boolean }) => {
+      crcWhenChanged(() => {
+        if (fail) throw error;
+        return cleanup;
+      }, [fail]);
+    });
+    const controller = crc(canvas, Probe({ fail: false }));
+    frames.flush();
+
+    crc(canvas, Probe({ fail: true }));
+    expect(() => frames.flush()).toThrow(error);
+    expect(cleanup).toHaveBeenCalledOnce();
+
+    crc(canvas, Probe({ fail: false }));
+    expect(() => frames.flush()).not.toThrow();
+    controller.dispose();
+    expect(cleanup).toHaveBeenCalledTimes(2);
+    frames.restore();
+  });
 });
 
 describe('hook ordering and render errors', () => {

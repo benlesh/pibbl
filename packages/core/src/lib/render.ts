@@ -33,22 +33,23 @@ export function render<P>(
       });
     }
 
-    GLOBAL_STATE.componentRefs = GLOBAL_STATE.currentCRCInstance!.refs.get(id)!;
+    const componentRefs = GLOBAL_STATE.currentCRCInstance!.refs.get(id)!;
+    GLOBAL_STATE.componentRefs = componentRefs;
     GLOBAL_STATE.componentHookIndex = 0;
 
-    GLOBAL_STATE.componentRefs.element = element;
+    componentRefs.element = element;
 
     const ctx = GLOBAL_STATE.renderContext!;
     ctx.save();
     try {
-      const result = GLOBAL_STATE.componentRefs.element.type(
-        GLOBAL_STATE.componentRefs.element.props,
+      const result = componentRefs.element.type(
+        componentRefs.element.props,
         ctx,
       );
-      finalizeHookSlots(GLOBAL_STATE.componentRefs);
+      finalizeHookSlots(componentRefs);
 
-      const onAfterRender = GLOBAL_STATE.componentRefs.onAfterRender;
-      GLOBAL_STATE.componentRefs.onAfterRender = undefined;
+      const onAfterRender = componentRefs.onAfterRender;
+      componentRefs.onAfterRender = undefined;
 
       if (result) {
         if (Array.isArray(result)) {
@@ -57,7 +58,7 @@ export function render<P>(
             if (child) {
               ctx.save();
               try {
-                render(child, id, GLOBAL_STATE.componentRefs);
+                render(child, id, componentRefs);
               } finally {
                 ctx.restore();
               }
@@ -66,7 +67,7 @@ export function render<P>(
         } else {
           ctx.save();
           try {
-            render(result, id, GLOBAL_STATE.componentRefs);
+            render(result, id, componentRefs);
           } finally {
             ctx.restore();
           }

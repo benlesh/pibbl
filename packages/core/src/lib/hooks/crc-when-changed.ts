@@ -33,6 +33,7 @@ export function crcWhenChanged(
   const ref = slot.value;
   if (!ref.lastDeps || !deps || !shallowArrayEquals(deps, ref.lastDeps)) {
     const lastTeardown = ref.teardown;
+    ref.teardown = undefined;
     if (lastTeardown) {
       runTeardown(lastTeardown);
     }
