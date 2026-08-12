@@ -1,0 +1,174 @@
+name: Trust Gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    name: Static contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js and pnpm
+        uses: pnpm/setup@v2
+        with:
+          runtime: node@24.19.0
+          cache: true
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --strict-peer-dependencies
+
+      - name: Validate scenario catalog
+        run: pnpm scenarios:check
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint and format
+        run: pnpm lint
+
+      - name: Build packages and galleries
+        run: |
+          pnpm build
+          pnpm playground:build
+          pnpm playground:build:built
+
+  package:
+    name: Packed package
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js and pnpm
+        uses: pnpm/setup@v2
+        with:
+          runtime: node@24.19.0
+          cache: true
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --strict-peer-dependencies
+
+      - name: Verify packed consumers
+        run: pnpm test:package-consumer:packed
+
+  browser:
+    name: Browser and visual contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js and pnpm
+        uses: pnpm/setup@v2
+        with:
+          runtime: node@24.19.0
+          cache: true
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --strict-peer-dependencies
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run browser contracts
+        run: pnpm test:ci
+
+      - name: Prove visual safeguards
+        run: pnpm test:visual-safeguard
+
+      - name: Verify built gallery smoke
+        run: pnpm test:smoke:built
+
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-evidence-${{ github.run_id }}
+          path: |
+            **/.vitest-attachments/**
+            **/test-screenshots/**
+          retention-days: 14
+          if-no-files-found: warn
+          compression-level: 9
+          include-hidden-files: true
+
+  lifecycle:
+    name: Lifecycle and structural performance
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js and pnpm
+        uses: pnpm/setup@v2
+        with:
+          runtime: node@24.19.0
+          cache: true
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --strict-peer-dependencies
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run lifecycle stress contracts
+        run: pnpm test:lifecycle
+
+      - name: Run structural performance contracts
+        run: pnpm test:performance
+
+      - name: Upload lifecycle evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lifecycle-evidence-${{ github.run_id }}
+          path: |
+            **/.vitest-attachments/**
+            **/test-screenshots/**
+          retention-days: 14
+          if-no-files-found: warn
+          compression-level: 9
+          include-hidden-files: true
+
+  trust-gate:
+    name: Trust gate
+    if: always()
+    needs: [static, package, browser, lifecycle]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every trust job
+        env:
+          STATIC_RESULT: ${{ needs.static.result }}
+          PACKAGE_RESULT: ${{ needs.package.result }}
+          BROWSER_RESULT: ${{ needs.browser.result }}
+          LIFECYCLE_RESULT: ${{ needs.lifecycle.result }}
+        run: |
+          test "$STATIC_RESULT" = success
+          test "$PACKAGE_RESULT" = success
+          test "$BROWSER_RESULT" = success
+          test "$LIFECYCLE_RESULT" = success
