@@ -46,10 +46,17 @@ The architecture must preserve:
 The element descriptor gains first-class style metadata:
 
 ```ts
+type ReservedElementKey = "key" | "style";
+type ProgramProps<P> = 0 extends (1 & P)
+  ? P
+  : Extract<keyof P, ReservedElementKey> extends never
+    ? P
+    : never;
+
 interface CompEl<P, S extends SystemStyle> {
-  type: CompType<P, S>;
-  props: P;
-  style: S;
+  type: CompType<P, S, any, any>;
+  props: ProgramProps<P>;
+  style: Readonly<S>;
   key?: string;
 }
 ```
@@ -72,11 +79,22 @@ Card({
 ```
 
 `style` defaults to an empty object where a component supports complete defaults.
-Required visual inputs remain required by that component's style type.
+Required visual inputs remain required by that component's style type. The
+factory input expresses that rule structurally:
 
-The repository may keep `key` readable from legacy props during the mechanical
-migration, but the canonical descriptor owns key separately. No permanent public
-API supports visual values in both props and style.
+```ts
+type RequiredKeys<T> = {
+  [K in keyof T]-?: Pick<T, K> extends Required<Pick<T, K>> ? K : never
+}[keyof T];
+
+type StyleField<S> = [RequiredKeys<S>] extends [never]
+  ? { style?: S }
+  : { style: S };
+```
+
+`defineComp` rejects program-prop declarations containing reserved `key` or
+`style`; the descriptor owns those values and component code cannot read them
+through props. No public API supports visual values in both props and style.
 
 ### Style schemas
 
@@ -87,12 +105,14 @@ interface BoxStyle { /* size and constraint participation */ }
 interface TransformStyle { /* transform values */ }
 interface PaintStyle { /* fill, stroke, opacity */ }
 interface FlexContainerStyle { /* flex container values */ }
-interface FlexItemStyle { /* parent-consumed item values */ }
+interface LayoutItemStyle {
+  /* optional absolute, overlay, flex, and grid participation values */
+}
 
 interface RectStyle
-  extends BoxStyle, TransformStyle, PaintStyle {
-  x?: Length;
-  y?: Length;
+  extends BoxStyle, TransformStyle, PaintStyle, LayoutItemStyle {
+  x?: Exclude<Length, "auto">;
+  y?: Exclude<Length, "auto">;
   width: Length;
   height: Length;
   custom?: Record<string, unknown>;
@@ -112,7 +132,10 @@ There is no cascade or inherited-style stage.
 Normalization is owned by focused style modules. Layout-independent paint
 normalization does not depend on layout algorithms. Unknown keys are prevented
 by TypeScript and may be detected in development diagnostics when plain
-JavaScript bypasses types.
+JavaScript bypasses types. Every item-participation field is optional in the
+shared capability; the owning parent validates required fields and its accepted
+value subset, avoiding incompatible `alignSelf` declarations or Grid coordinates
+on elements outside Grid.
 
 ### Length and constraint values
 
@@ -143,8 +166,21 @@ All resolved Canvas geometry is finite. Infinity may represent an internal
 unbounded measurement constraint but never reaches a Canvas drawing call.
 
 Percentage resolution uses the containing layout component's content box. The
-root containing box is the intrinsic Canvas size unless the mount supplies an
-explicit root box.
+first release always uses the intrinsic Canvas size as the root containing box.
+
+The initial box model is deliberately explicit:
+
+- `width` and `height` specify the content box, matching CSS
+  `box-sizing: content-box`;
+- layout dimensions, min/max constraints, padding, and gaps are nonnegative;
+- `min > max` is invalid rather than silently reordered;
+- padding is numeric only and may reduce an allocation's content box to zero,
+  never below;
+- percentages are initially accepted for sizes, offsets, and tracks, not padding
+  or gaps;
+- margin is deferred;
+- signed Canvas geometry remains valid outside a layout context, but a negative
+  dimension cannot participate as a layout allocation.
 
 ### Component type capabilities
 
@@ -153,15 +189,31 @@ and render model. Optional normalization and measurement capabilities are static
 metadata on that same function object:
 
 ```ts
-type CompType<P, S extends SystemStyle> = ((
-  props: P,
-  style: Resolved<S>,
+type CompType<P, S extends SystemStyle, N = S, R = N> = ((
+  props: ProgramProps<P>,
+  style: Readonly<R>,
   ctx: RenderingContext2D,
-) => CRCNode) & {
-  normalizeStyle?(style: S): Normalized<S>;
-  measure?(input: MeasureInput<P, S>): Size;
-};
+) => CRCNode) & Readonly<{
+  normalizeStyle?: (style: Readonly<S>) => Readonly<N>;
+  resolveStyle?: (style: Readonly<N>, context: StyleResolutionContext) => Readonly<R>;
+  measure?: (input: MeasureInput<ProgramProps<P>, N>) => MeasureResult;
+}>;
+
+declare function defineComp<P, S extends SystemStyle, N = S, R = N>(
+  render: CompType<P, S, N, R>,
+  capabilities?: {
+    normalizeStyle?: (style: Readonly<S>) => Readonly<N>;
+    resolveStyle?: (style: Readonly<N>, context: StyleResolutionContext) => Readonly<R>;
+    measure?: (input: MeasureInput<ProgramProps<P>, N>) => MeasureResult;
+  },
+): CompFactory<ProgramProps<P>, S>;
 ```
+
+Capabilities are installed as non-enumerable metadata on the render function,
+not on each element. This preserves the function object used by CRC identity.
+Numeric-only styles use identity normalization and resolution. Allocation-aware
+styles are normalized, then resolved to finite render values before the component
+callback is invoked.
 
 Drawing components render. Measurable components additionally provide a pure
 measurement function. Dedicated layout components provide a layout algorithm
@@ -191,7 +243,8 @@ interface LayoutResult {
 interface ChildPlacement {
   element: CompEl<any, any>;
   box: LayoutBox;
-  clip?: LayoutBox;
+  clipInChildSpace?: LayoutBox;
+  identityHint: InternalIdentityHint;
 }
 ```
 
@@ -311,7 +364,12 @@ is not implied and remains outside this architecture.
 ## Identity and ordering
 
 Internal placement uses one stable, module-level component type. It does not
-allocate a new component function per child or render.
+allocate a new component function per child or render. Each wrapper carries a
+private identity hint derived from the original child type, canonical key, and
+same-type occurrence. The renderer uses that hint for the wrapper's identity and
+then renders the original child beneath it. This preserves current unkeyed
+`A/B/A` behavior when `B` is inserted or removed; copying only a public key would
+not.
 
 - A keyed child retains identity across reflow and supported in-parent reorder.
 - Unkeyed same-type identity remains occurrence based.
@@ -340,9 +398,15 @@ diagnostic when the size is required.
 
 Text measurement and rendering share tokenization, line-breaking, and typography
 utilities so measured and painted line boxes cannot drift. Image measurement
-uses explicit size before load and may schedule a normal CRC update when natural
-dimensions become available. Stale image completions retain existing teardown
-rules.
+initially accepts explicit dimensions only. Natural image measurement is
+unsupported until resource loading has an owner that can begin outside render
+without violating measurement purity. Ordinary non-layout image rendering
+retains its current load, stale-completion, and teardown behavior.
+
+`crcLayoutBox()` exposes the current allocation in child-local coordinates as
+`{ x: 0, y: 0, width, height }`. It is observational, does not schedule a render,
+and deliberately does not claim to provide DOM/root coordinates; callers needing
+those must combine it with their own transform observation.
 
 Caching is not required initially. If structural counters demonstrate repeated
 identical measurement, cache keys include component type, relevant props,

@@ -175,8 +175,8 @@ with future CRC properties.
 Style types are composed from focused capabilities rather than one permissive
 dictionary:
 
-- `BoxStyle`: width, height, minimum/maximum constraints, margin, position, and
-  overflow participation.
+- `BoxStyle`: width, height, minimum/maximum constraints, position, and overflow
+  participation. Margin is deferred from the first release.
 - `TransformStyle`: translation, scale, rotation, origin, and skew.
 - `PaintStyle`: fill, stroke, stroke width, opacity, and component-applicable
   Canvas paint values.
@@ -204,8 +204,9 @@ every property is valid on every component.
 - Unsupported cyclic dependencies, such as an intrinsically sized parent whose
   child percentage requires the unresolved parent size, produce a targeted
   diagnostic rather than guessed geometry.
-- A root percentage resolves against the intrinsic Canvas width or height unless
-  an explicit root containing box is supplied.
+- A root percentage resolves against the intrinsic Canvas width or height. An
+  independently supplied root containing box is deferred until its mount/update
+  contract is designed.
 
 `calc()`, viewport units, font-relative units, logical writing-mode units, and
 custom unit parsing are deferred until separately designed.
@@ -218,8 +219,9 @@ The intended family is:
   outside a layout component, CRC's existing root positioning remains absolute.
 - `flex`: a CSS-compatible subset of Flexbox. Accepted properties and values
   follow CSS behavior; unsupported intrinsic or edge cases are rejected.
-- `grid`: a CSS-compatible subset of Grid for explicit tracks and placements,
-  expanded incrementally without claiming unsupported auto-placement behavior.
+- `grid`: a CSS-compatible subset of Grid for explicit tracks and explicit item
+  placements, expanded incrementally without claiming unsupported auto-placement
+  behavior.
 - `flow`: a CRC-native sequential and optional wrapping algorithm. It uses its
   own documented behavior unless CRC later implements faithful CSS block/inline
   formatting under CSS terminology.
@@ -246,17 +248,20 @@ An opt-in measurement capability is pure with respect to CRC rendering: it may
 read props, specified style, constraints, and Canvas measurement services, but it
 may not paint, use render hooks, register interaction, or own resources.
 
-Text can measure using the same typography/wrapping utility used to paint. An
-image can use explicit dimensions immediately and natural dimensions only after
-the image resource is available. Arbitrary custom components must declare a size
-or provide their own measurement capability; CRC does not invoke them speculatively
-to discover what they draw.
+Text can measure using the same typography/wrapping utility used to paint. In
+the first release, an image participating in layout requires explicit dimensions;
+natural image sizing is deferred because loading currently starts during render
+and pure measurement may not own that resource. Arbitrary custom components must
+declare a size or provide their own measurement capability; CRC does not invoke
+them speculatively to discover what they draw.
 
 ## Rendering and interaction semantics
 
 - Layout calculation occurs before direct layout children render.
 - A layout component returns children through stable internal placement nodes
-  that apply the resolved translation, clipping, and layout box.
+  that apply the resolved translation, clipping, and layout box. Placement nodes
+  carry an opaque identity hint derived from the original child so their common
+  wrapper type does not change existing keyed or per-type occurrence identity.
 - Drawing components still paint when their component function is invoked.
 - Source child order remains paint order unless a later CSS-compatible feature
   explicitly specifies otherwise and updates interaction semantics with it.
@@ -279,16 +284,22 @@ Each CSS-compatible layout component publishes an explicit support matrix:
 - unsupported combinations;
 - paint-order and interaction consequences.
 
-For Flexbox, the initial supported subset centers on definite sizes and bases,
-grow/shrink allocation, direction, wrapping, gaps, and alignment. Intrinsic
-`auto` behavior is enabled only as measurement support becomes exact. Reordering
-features are deferred until CRC can preserve the required CSS paint-order and
-interaction semantics.
+For Flexbox, the initial supported subset centers on row/column directions,
+definite sizes and bases, measured `auto`, grow/shrink allocation, wrapping,
+numeric gaps, and start/end/center/stretch alignment. Reverse directions,
+`wrap-reverse`, reordering, baseline alignment, automatic margins, percentage
+gaps, and implicit automatic minimum sizes are deferred until CRC can preserve
+their CSS sizing, paint-order, and interaction semantics together. The supported
+wrapping subset includes CSS `align-content`; shrink/auto-basis cases require an
+explicit zero-or-greater main-axis minimum instead of guessing the deferred
+automatic content-based minimum.
 
 For Grid, the initial supported subset centers on definite and fractional tracks,
-gaps, explicit item placement, spanning, and alignment. Auto tracks,
-content-sized tracks, dense auto-placement, `subgrid`, and advanced repeat/minmax
-forms are separate increments.
+numeric gaps, one-based explicit item placement, spanning, and alignment. Every
+initial Grid child must declare its row and column, and both explicit track lists
+must be nonempty. Auto placement, auto/content
+tracks, dense placement, `subgrid`, and advanced repeat/minmax forms are separate
+increments.
 
 ## Migration policy
 

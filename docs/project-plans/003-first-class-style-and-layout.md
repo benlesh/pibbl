@@ -1,0 +1,198 @@
+# Project plan 003: First-class style and layout
+
+## Purpose
+
+Give CRC one explicit typed style language for every visual value and add
+dedicated Canvas layout components without introducing a retained display list or
+speculative render pass. The first release includes absolute, overlay, CRC-native
+flow, a documented CSS-compatible Flexbox subset, and a documented
+CSS-compatible explicit Grid subset.
+
+This plan is approved for implementation. Its detailed executable steps live in
+[`2026-08-17-style-and-layout-implementation.md`](../superpowers/plans/2026-08-17-style-and-layout-implementation.md).
+
+## Locked contract
+
+- Element descriptors own immutable specified `style` and canonical `key`
+  separately from programmatic props.
+- Style is the only public home for visual output, geometry, typography, path
+  data, image source, transforms, cursor, and interaction geometry.
+- CRC has no selectors, cascade, specificity, or implicit inheritance. Reuse is
+  ordinary TypeScript composition and object spread.
+- Only named layout components establish formatting contexts. Nested layout
+  components participate directly as items; there is no public item wrapper.
+- CSS names are used only for accepted cases that match CSS. CRC-native behavior
+  uses `flow`, `overlay`, `fit`, `rotationDegrees`, and other distinct names.
+- Layout uses declared boxes and pure opt-in measurement. It does not record all
+  Canvas operations, render children to discover size, or add a retained scene
+  graph.
+- Parent-first painting, source paint order, reverse target order, keyed and
+  per-type occurrence identity, transforms, clipping, layers, failure cleanup,
+  and deterministic ownership remain authoritative.
+- Root percentages resolve against intrinsic Canvas dimensions. The initial box
+  model is content-box, numeric padding/gaps, no margin, and nonnegative layout
+  allocations.
+- Text has shared pure measurement. Layout images require explicit dimensions.
+  Arbitrary custom components need declared size or a pure measurement
+  capability.
+- Initial Flex supports row/column, nowrap/wrap, grow/shrink with explicit main
+  minimums, numeric gaps, distribution, item alignment, and `align-content`.
+- Initial Grid requires nonempty explicit row/column tracks and explicit
+  one-based placement for every child; fixed/percentage/`fr` tracks, spans,
+  overlap, numeric gaps, and alignment are supported.
+
+## Deliberate exclusions
+
+CSS parsing, selectors, inheritance, margin, scrolling, reverse/reordered or
+baseline Flex behavior, automatic CSS minimum sizes, Grid auto placement,
+auto/content tracks, repeat/minmax, named areas, subgrid, natural image layout
+measurement, DOM overlay/accessibility APIs, pointer/touch/keyboard input, and a
+retained renderer are not part of this plan.
+
+## Rapid execution policy
+
+Each step uses a focused failing test and the smallest relevant static/browser
+checks. Broad browser, package, lifecycle, visual, and build checks run only at
+the named milestones. The aggregate `trust` gate runs during final closure, not
+after each small commit. Every task commit receives an adversarial independent
+review before the next task begins.
+
+## Status board
+
+| Step | Queue state | Outcome |
+| --- | --- | --- |
+| P003-01 | Next | First-class descriptor style/key protocol. |
+| P003-02 | Queued | Path, rectangle, and SVG path style migration. |
+| P003-03 | Queued | Line-family style migration. |
+| P003-04 | Queued | Text style and shared text layout. |
+| P003-05 | Queued | Image style migration. |
+| P003-06 | Queued | Group, clip, layer, and style-only closure. |
+| P003-07 | Queued | Length, constraint, box, and item capabilities. |
+| P003-08 | Queued | Style resolution, layout context, placement, and observation. |
+| P003-09 | Queued | Absolute and overlay layout. |
+| P003-10 | Queued | Pure measurement and CRC-native flow. |
+| P003-11 | Queued | CSS-compatible Flexbox subset. |
+| P003-12 | Queued | CSS-compatible explicit Grid subset. |
+| P003-13 | Queued | Learning examples, nested scenario, and Studio/public types. |
+| P003-14 | Queued | Composition, diagnostics, ownership, and performance hardening. |
+| P003-15 | Queued | Public contracts, evidence, and final trust closure. |
+
+## Execution steps
+
+Each step below is governed by the identically numbered task in the detailed
+implementation plan. Its file list, red/green command, milestone checks, and
+commit message are part of this plan by reference.
+
+### P003-01 [NEXT] — Element style protocol
+
+Done when specified style and canonical key are descriptor metadata, render
+props cannot declare reserved names, style-only layer changes invalidate its
+cache, key-sensitive callers are migrated, focused tests/typecheck pass, and the
+commit has a clean adversarial review.
+
+### P003-02 [TODO] — Path, rectangle, and SVG path styles
+
+Done when the three primitives and all callers use required component-specific
+styles, legacy top-level paint/geometry fails type checking, existing pixels and
+interaction remain unchanged, and the commit is reviewed.
+
+### P003-03 [TODO] — Line-family styles
+
+Done when line coordinates, paint, pixel alignment, cursor, and interaction
+width are style-only across all callers, focused behavior/type checks pass, and
+the commit is reviewed.
+
+### P003-04 [TODO] — Text styles and pure text layout
+
+Done when text uses `width`/`height`/`wrap`/CRC-native `fit`, painting and pure
+measurement share literal line layout, existing text/hit behavior is preserved,
+and the commit is reviewed.
+
+### P003-05 [TODO] — Image styles
+
+Done when image source and visual geometry are style-only, existing asynchronous
+ownership/race behavior is preserved, focused checks pass, and the commit is
+reviewed.
+
+### P003-06 [TODO] — Composition style closure
+
+Done when group transforms use CRC-native degree names, clip/layer are
+style-driven, layer comparison includes type/key/props/style, all legacy visual
+mixins are removed, the style-migration milestone passes, and the commit is
+reviewed.
+
+### P003-07 [TODO] — Lengths, constraints, and boxes
+
+Done when exact public value/box/item types and pure resolvers implement the
+locked content-box and diagnostic policies, root and boundary fixtures pass, and
+the commit is reviewed.
+
+### P003-08 [TODO] — Resolution, context, and stable placement
+
+Done when callbacks receive finite resolved style, root/nested/layer contexts
+restore on success/failure, placement preserves keyed and unkeyed identity,
+pixels/hit testing share transform/clip geometry, `crcLayoutBox` is local and
+stable, lifecycle checks pass, and the commit is reviewed.
+
+### P003-09 [TODO] — Absolute and overlay
+
+Done when both pure algorithms and public components satisfy declared/default,
+oversized-center, overflow, paint/target, resize, and nested behavior; focused
+public evidence passes; and the commit is reviewed.
+
+### P003-10 [TODO] — Measurement and flow
+
+Done when measurement never invokes render or owns resources, unsupported size
+is typed/actionable, text/custom/nested cases work, explicit-size images work,
+flow's exact wrapping/alignment contract passes its milestone, and the commit is
+reviewed.
+
+### P003-11 [TODO] — Flexbox subset
+
+Done when every accepted Flex behavior matches literal and hidden-DOM oracle
+fixtures, every deferred behavior is rejected rather than approximated, public
+integration/type checks pass, and the commit is reviewed.
+
+### P003-12 [TODO] — Explicit Grid subset
+
+Done when accepted track, `<1fr`, placement, span, overlap, gap, and alignment
+behavior matches literal and hidden-DOM oracle fixtures, deferred behavior is
+rejected, the algorithm milestone passes, and the commit is reviewed.
+
+### P003-13 [TODO] — Public examples and integration
+
+Done when four learner routes and the exhaustive nested public scenario are
+type-clean, mountable/disposable, resize and preserve identity correctly, Studio
+and packed consumers agree, generated indexes are current, and the commit is
+reviewed.
+
+### P003-14 [TODO] — Hardening
+
+Done when transforms, clips, layers, fractional offsets, failures, 1,000
+reflows, visible-window structural counts, and deterministic diagnostics have
+focused evidence; lifecycle/performance milestones pass; and the commit is
+reviewed.
+
+### P003-15 [TODO] — Contracts and final closure
+
+Done when normative public contracts and migration guidance are published,
+fresh final aggregate and controlled-reference checks pass, exact evidence is
+recorded, all acceptance criteria map to current evidence, whole-branch review
+is clean, and this plan has no active marker.
+
+## Decision log
+
+| Date | Decision | Rationale |
+| --- | --- | --- |
+| 2026-08-17 | Use one explicit local style namespace with no inheritance or cascade. | It makes visual ownership inspectable and enables layout to inspect descriptors without invoking components. |
+| 2026-08-17 | Use dedicated layout components and direct nested participation. | Formatting contexts stay visible without public item wrappers or hidden `display` behavior. |
+| 2026-08-17 | Preserve immediate-mode rendering with pure opt-in measurement. | Declared boxes solve layout without a costly scene-wide display list or double paint pass. |
+| 2026-08-17 | Use CSS names only for verified compatible subsets. | Familiar but approximate behavior would create a more dangerous API than distinct CRC-native names. |
+| 2026-08-17 | Optimize the development loop for focused checks and final holistic proof. | The implementation is broad; per-commit aggregate verification would slow feedback without improving local diagnosis. |
+
+## Session log
+
+- **2026-08-17 — Plan activated.** Approved the first-class style language,
+  immediate-mode layout architecture, exact initial Flex/Grid boundaries, pure
+  measurement policy, dependency-ordered 15-task implementation plan, focused
+  verification cadence, and per-commit adversarial review. Next: **P003-01**.
