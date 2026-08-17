@@ -23,11 +23,13 @@ interface DrawingLinesSceneProps {
 const DrawingLinesScene = defineComp<DrawingLinesSceneProps>(({ state }) => [
   rect({
     key: 'background',
-    x: 0,
-    y: 0,
-    width: 480,
-    height: 240,
-    fillStyle: '#f8fafc',
+    style: {
+      x: 0,
+      y: 0,
+      width: 480,
+      height: 240,
+      fill: '#f8fafc',
+    },
   }),
   line({
     key: 'polyline',

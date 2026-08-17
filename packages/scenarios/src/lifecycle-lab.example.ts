@@ -99,14 +99,16 @@ function region({
   return [
     rect({
       key,
-      x,
-      y,
-      width,
-      height,
-      fillStyle,
-      strokeStyle: '#0f172a',
-      lineWidth: 2,
-      cursor: interactive ? cursor : undefined,
+      style: {
+        x,
+        y,
+        width,
+        height,
+        fill: fillStyle,
+        stroke: '#0f172a',
+        strokeWidth: 2,
+        cursor: interactive ? cursor : undefined,
+      },
       onClick: interactive ? onClick : undefined,
       ...lifecycleEvents,
     }),
@@ -140,11 +142,13 @@ const LayerRegion = defineComp<Pick<LifecycleLabSceneProps, 'recordCall'>>(({ re
 const LifecycleLabScene = defineComp<LifecycleLabSceneProps>(({ state, recordCall }) => [
   rect({
     key: 'background',
-    x: 0,
-    y: 0,
-    width: 480,
-    height: 240,
-    fillStyle: state.runtime === 'mounted' ? '#f8fafc' : '#e2e8f0',
+    style: {
+      x: 0,
+      y: 0,
+      width: 480,
+      height: 240,
+      fill: state.runtime === 'mounted' ? '#f8fafc' : '#e2e8f0',
+    },
   }),
   ...region({
     key: 'primary-region',

@@ -208,12 +208,14 @@ function sparseRegions(options: RegionFactoryOptions): PerformanceNode[] {
     const target = `${keyPrefix}-${index}`;
     nodes.push(rect({
       key: target,
-      x: 20 + xOffset + (index % 100) * 4,
-      y: 20 + Math.floor(index / 100) * 2,
-      width: 3,
-      height: 2,
-      fillStyle: index === 0 ? '#16a34a' : '#2563eb',
-      cursor: options.cursor,
+      style: {
+        x: 20 + xOffset + (index % 100) * 4,
+        y: 20 + Math.floor(index / 100) * 2,
+        width: 3,
+        height: 2,
+        fill: index === 0 ? '#16a34a' : '#2563eb',
+        cursor: options.cursor,
+      },
       onMouseMove: () => options.recordHit(target),
     }));
   }
@@ -226,11 +228,13 @@ function denseRegions(options: RegionFactoryOptions): PerformanceNode[] {
     const target = `region-${index}`;
     nodes.push(rect({
       key: target,
-      x: 120,
-      y: 60,
-      width: 240,
-      height: 120,
-      fillStyle: index === options.count - 1 ? '#16a34a' : '#2563eb',
+      style: {
+        x: 120,
+        y: 60,
+        width: 240,
+        height: 120,
+        fill: index === options.count - 1 ? '#16a34a' : '#2563eb',
+      },
       onMouseMove: () => options.recordHit(target),
     }));
   }
@@ -310,11 +314,13 @@ export const PerformanceScene = defineComp<PerformanceSceneProps>((props) => {
   return [
     rect({
       key: `background-${props.revision}`,
-      x: 0,
-      y: 0,
-      width: 480,
-      height: 240,
-      fillStyle: '#f8fafc',
+      style: {
+        x: 0,
+        y: 0,
+        width: 480,
+        height: 240,
+        fill: '#f8fafc',
+      },
     }),
     ...workloadNodes(workload, props.recordHit),
   ];

@@ -11,7 +11,15 @@ describe('clip', () => {
     const canvas = await componentTest(clip({
       path: new Path2D(),
       children: [
-        rect({ x: 0, y: 0, width: 40, height: 40, fillStyle: 'red' }),
+        rect({
+          style: {
+            x: 0,
+            y: 0,
+            width: 40,
+            height: 40,
+            fill: 'red',
+          },
+        }),
       ],
     }));
 
@@ -27,11 +35,13 @@ describe('clip', () => {
       path: clipPath,
       children: [
         rect({
-          x: 0,
-          y: 0,
-          width: 200,
-          height: 200,
-          fillStyle: 'blue',
+          style: {
+            x: 0,
+            y: 0,
+            width: 200,
+            height: 200,
+            fill: 'blue',
+          },
         }),
       ],
     }));
@@ -50,11 +60,13 @@ describe('clip', () => {
       fillRule: 'evenodd',
       children: [
         rect({
-          x: 0,
-          y: 0,
-          width: 200,
-          height: 200,
-          fillStyle: 'red',
+          style: {
+            x: 0,
+            y: 0,
+            width: 200,
+            height: 200,
+            fill: 'red',
+          },
         }),
       ],
     }));
@@ -69,11 +81,13 @@ describe('clip', () => {
       path: clipPath,
       children: [
         rect({
-          x: 50,
-          y: 50,
-          width: 100,
-          height: 100,
-          fillStyle: 'green',
+          style: {
+            x: 50,
+            y: 50,
+            width: 100,
+            height: 100,
+            fill: 'green',
+          },
         }),
         text({
           x: 75,
@@ -97,21 +111,25 @@ describe('clip', () => {
       path: outerClipPath,
       children: [
         rect({
-          x: 0,
-          y: 0,
-          width: 250,
-          height: 250,
-          fillStyle: 'purple',
+          style: {
+            x: 0,
+            y: 0,
+            width: 250,
+            height: 250,
+            fill: 'purple',
+          },
         }),
         clip({
           path: innerClipPath,
           children: [
             rect({
-              x: 0,
-              y: 0,
-              width: 250,
-              height: 250,
-              fillStyle: 'orange',
+              style: {
+                x: 0,
+                y: 0,
+                width: 250,
+                height: 250,
+                fill: 'orange',
+              },
             }),
           ],
         }),
@@ -146,11 +164,13 @@ describe('clip', () => {
       path: clipPath,
       children: [
         rect({
-          x: 0,
-          y: 0,
-          width: 200,
-          height: 200,
-          fillStyle: 'yellow',
+          style: {
+            x: 0,
+            y: 0,
+            width: 200,
+            height: 200,
+            fill: 'yellow',
+          },
         }),
         text({
           x: 60,
@@ -174,11 +194,13 @@ describe('clip', () => {
         path: clipPath,
         children: [
           rect({
-            x: 0,
-            y: 0,
-            width: 200,
-            height: 200,
-            fillStyle: 'goldenrod',
+            style: {
+              x: 0,
+              y: 0,
+              width: 200,
+              height: 200,
+              fill: 'goldenrod',
+            },
             onClick,
           }),
         ],
@@ -205,13 +227,15 @@ describe('clip', () => {
         fillRule: 'evenodd',
         children: [
           rect({
-            x: 0,
-            y: 0,
-            width: 200,
-            height: 200,
-            fillStyle: 'red',
+            style: {
+              x: 0,
+              y: 0,
+              width: 200,
+              height: 200,
+              fill: 'red',
+              cursor: 'pointer',
+            },
             onMouseOver,
-            cursor: 'pointer',
           }),
         ],
       }));
@@ -243,24 +267,28 @@ describe('clip', () => {
         path: outerClipPath,
         children: [
           rect({
-            x: 0,
-            y: 0,
-            width: 200,
-            height: 200,
-            fillStyle: 'blue',
-            cursor: 'pointer',
+            style: {
+              x: 0,
+              y: 0,
+              width: 200,
+              height: 200,
+              fill: 'blue',
+              cursor: 'pointer',
+            },
             onClick: onOuterClick,
           }),
           clip({
             path: innerClipPath,
             children: [
               rect({
-                x: 0,
-                y: 0,
-                width: 200,
-                height: 200,
-                fillStyle: 'green',
-                cursor: 'crosshair',
+                style: {
+                  x: 0,
+                  y: 0,
+                  width: 200,
+                  height: 200,
+                  fill: 'green',
+                  cursor: 'crosshair',
+                },
                 onClick: onInnerClick,
               }),
             ],

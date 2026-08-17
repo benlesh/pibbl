@@ -11,11 +11,13 @@ describe('crcCursor', () => {
     const Scene = defineComp(() => {
       crcCursor({ style: 'wait' });
       return rect({
-        x: 40,
-        y: 40,
-        width: 80,
-        height: 80,
-        fillStyle: 'red',
+        style: {
+          x: 40,
+          y: 40,
+          width: 80,
+          height: 80,
+          fill: 'red',
+        },
         onMouseMove,
       });
     });
@@ -31,12 +33,14 @@ describe('crcCursor', () => {
     const Scene = defineComp(() => {
       crcCursor({ style: 'wait' });
       return rect({
-        x: 40,
-        y: 40,
-        width: 80,
-        height: 80,
-        fillStyle: 'red',
-        cursor: 'pointer',
+        style: {
+          x: 40,
+          y: 40,
+          width: 80,
+          height: 80,
+          fill: 'red',
+          cursor: 'pointer',
+        },
       });
     });
     const canvas = await componentTest(Scene({}));
@@ -101,11 +105,13 @@ describe('crcCursor', () => {
       crcCursor({ style: 'wait' });
       return region ?
           rect({
-            x: 40,
-            y: 40,
-            width: 80,
-            height: 80,
-            fillStyle: 'red',
+            style: {
+              x: 40,
+              y: 40,
+              width: 80,
+              height: 80,
+              fill: 'red',
+            },
             onMouseMove: () => undefined,
           }) :
         undefined;
@@ -122,12 +128,14 @@ describe('crcCursor', () => {
 
   it('applies a newly enabled region cursor without another movement', async () => {
     const Scene = defineComp<{ enabled: boolean }>(({ enabled }) => rect({
-      x: 40,
-      y: 40,
-      width: 80,
-      height: 80,
-      fillStyle: 'red',
-      cursor: enabled ? 'pointer' : undefined,
+      style: {
+        x: 40,
+        y: 40,
+        width: 80,
+        height: 80,
+        fill: 'red',
+        cursor: enabled ? 'pointer' : undefined,
+      },
       onMouseMove: () => undefined,
     }));
     const canvas = await componentTest(Scene({ enabled: false }));

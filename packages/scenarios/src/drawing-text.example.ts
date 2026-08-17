@@ -24,7 +24,15 @@ const DrawingTextScene = defineComp<DrawingTextSceneProps>(({
   onCenteredText,
   state,
 }) => [
-  rect({ x: 0, y: 0, width: 480, height: 240, fillStyle: '#f8fafc' }),
+  rect({
+    style: {
+      x: 0,
+      y: 0,
+      width: 480,
+      height: 240,
+      fill: '#f8fafc',
+    },
+  }),
   text({
     key: 'heading',
     text: state.updated ? 'Updated canvas text' : 'Canvas text',
@@ -45,7 +53,15 @@ const DrawingTextScene = defineComp<DrawingTextSceneProps>(({
     cursor: 'pointer',
     onClick: onCenteredText,
   }),
-  rect({ x: 24, y: 68, width: 172, height: 40, fillStyle: '#e2e8f0' }),
+  rect({
+    style: {
+      x: 24,
+      y: 68,
+      width: 172,
+      height: 40,
+      fill: '#e2e8f0',
+    },
+  }),
   text({
     key: 'ellipsis',
     text: state.updated ? 'A newly updated sentence' : 'A sentence that is too long',
@@ -56,7 +72,15 @@ const DrawingTextScene = defineComp<DrawingTextSceneProps>(({
     font: '17px Arial',
     fillStyle: '#1d4ed8',
   }),
-  rect({ x: 244, y: 68, width: 212, height: 40, fillStyle: '#e2e8f0' }),
+  rect({
+    style: {
+      x: 244,
+      y: 68,
+      width: 212,
+      height: 40,
+      fill: '#e2e8f0',
+    },
+  }),
   text({
     key: 'squish',
     text: 'This line is fitted to its card',
@@ -67,7 +91,15 @@ const DrawingTextScene = defineComp<DrawingTextSceneProps>(({
     font: '17px Arial',
     fillStyle: '#c2410c',
   }),
-  rect({ x: 24, y: 126, width: 206, height: 86, fillStyle: '#dbeafe' }),
+  rect({
+    style: {
+      x: 24,
+      y: 126,
+      width: 206,
+      height: 86,
+      fill: '#dbeafe',
+    },
+  }),
   text({
     key: 'wrapped',
     text: state.updated ?
@@ -83,7 +115,15 @@ const DrawingTextScene = defineComp<DrawingTextSceneProps>(({
     font: '16px Arial',
     fillStyle: '#1e3a8a',
   }),
-  rect({ x: 254, y: 126, width: 202, height: 48, fillStyle: '#fef3c7' }),
+  rect({
+    style: {
+      x: 254,
+      y: 126,
+      width: 202,
+      height: 48,
+      fill: '#fef3c7',
+    },
+  }),
   text({
     key: 'clipped',
     text: 'Clipped text stays inside this golden card',
@@ -95,7 +135,15 @@ const DrawingTextScene = defineComp<DrawingTextSceneProps>(({
     font: '17px Arial',
     fillStyle: '#92400e',
   }),
-  rect({ x: 254, y: 190, width: 202, height: 24, fillStyle: '#ef4444' }),
+  rect({
+    style: {
+      x: 254,
+      y: 190,
+      width: 202,
+      height: 24,
+      fill: '#ef4444',
+    },
+  }),
   text({
     key: 'zero-alpha',
     text: 'invisible at alpha zero',

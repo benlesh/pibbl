@@ -13,12 +13,14 @@ const EventSequenceStudy = defineComp(function EventSequenceStudy() {
     setEvents((current) => [...current.slice(-5), value]);
   const target = (x: number, color: string, name: string) =>
     rect({
-      x,
-      y: 86,
-      width: 250,
-      height: 210,
-      fillStyle: color,
-      cursor: "pointer",
+      style: {
+        x,
+        y: 86,
+        width: 250,
+        height: 210,
+        fill: color,
+        cursor: 'pointer',
+      },
       onMouseOver: () => record(`${name}: over`),
       onMouseOut: () => record(`${name}: out`),
       onMouseMove: () => record(`${name}: move`),
@@ -27,7 +29,15 @@ const EventSequenceStudy = defineComp(function EventSequenceStudy() {
       onClick: () => record(`${name}: click`),
     });
   return [
-    rect({ x: 0, y: 0, width: 720, height: 420, fillStyle: "#17211d" }),
+    rect({
+      style: {
+        x: 0,
+        y: 0,
+        width: 720,
+        height: 420,
+        fill: '#17211d',
+      },
+    }),
     target(70, "#1f4bd8", "A"),
     target(400, "#ff6b57", "B"),
     text({

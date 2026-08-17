@@ -147,3 +147,118 @@ commit. No production or test file changed in this closure and no checks were
 rerun; the immediately preceding fresh evidence remains clean workspace
 typecheck and 28/28 focused browser tests. The final amended task commit is sent
 for status-only re-review before P003-02 begins.
+
+## 2026-08-17 — P003-02 path, rectangle, and SVG path styles
+
+### Environment
+
+- Node: `v26.7.0`
+- pnpm: `11.21.0` selected through `corepack pnpm@11.21.0`
+- Browser: Playwright Chromium through Vitest Browser Mode
+
+### RED
+
+Command:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/path.test.ts packages/core/src/lib/components/rect.test.ts packages/core/src/lib/components/svg-path.test.ts --browser.headless --browser.ui=false
+```
+
+Result: exit 1; all 3 test files failed, with 11 failed and 3 passed tests. The
+new style-only calls did not paint or register the expected interaction
+geometry: opacity-zero fill, SVG path updates, rectangle pixels, cursor, and
+mouse targeting all failed against the legacy top-level implementation.
+
+Command:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+```
+
+Result: exit 1 with the expected missing `PathStyle`, `RectStyle`, and
+`SvgPathStyle` exports, rejected component-specific style fields, and legacy
+required visual props. The public negative assertions were unused until the
+style-only signatures existed.
+
+The first sandboxed browser attempt exited before test collection with
+`listen EPERM` on the local Vitest server. It is not counted as RED evidence;
+the command above was rerun with localhost/Chromium permission to obtain the
+actual 11-failure behavioral result.
+
+### GREEN
+
+Command:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/path.test.ts packages/core/src/lib/components/rect.test.ts packages/core/src/lib/components/svg-path.test.ts --browser.headless --browser.ui=false
+```
+
+Result: exit 0; all 3 files and all 14 tests passed. This includes explicit
+coverage for opacity zero, transparent-fill hit geometry, optional rectangle
+`x`/`y` defaulting, cursor/region behavior, and SVG path updates.
+
+Command:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+```
+
+Result: exit 0; `tsc --noEmit` reported no errors across the migrated core,
+scenario, playground, tooling, and package-consumer callers.
+
+Changed TypeScript files also passed ESLint, `git diff --check` was clean, and
+an AST audit found no remaining direct path/rectangle/SVG-path call with legacy
+top-level visual fields or legacy style names. No visual baseline changed.
+
+P003-02 remains in progress pending adversarial review. P003-03 remains TODO.
+
+### Adversarial review round 1
+
+Review found one Important issue in the shared event seam. `Path` passed
+`style.cursor`, but an absent cursor arrived as `undefined` and activated
+`wireCommonEvents`' default parameter, which read `props.cursor`. An untyped
+JavaScript path, rectangle, or SVG-path caller could therefore retain a legacy
+top-level cursor alias despite the style-only contract.
+
+Fix RED command:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/path.test.ts --browser.headless --browser.ui=false
+```
+
+Result: exit 1 with 1 failed and 2 passed tests. The new untyped-caller
+regression hovered a transparently filled path with only a top-level `cursor`
+and observed the leaked `pointer` value.
+
+`wireCommonEvents` now requires its cursor argument and never reads visual data
+from props. Path supplies its style cursor. The not-yet-migrated text and image
+components explicitly supply `props.cursor`, preserving their current public
+behavior until their scheduled migrations.
+
+Fix GREEN commands:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/path.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/path.test.ts packages/core/src/lib/components/rect.test.ts packages/core/src/lib/components/svg-path.test.ts packages/core/src/lib/components/text.test.ts packages/core/src/lib/components/img.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+```
+
+The regression command exited 0 with 3/3 tests passing. The combined focused
+browser command exited 0 with all 5 files and all 47 tests passing. Typecheck
+exited 0 with no errors. Inspection found exactly three shared-helper callers:
+Path passes style cursor, and text/image pass their current legacy cursor
+explicitly. P003-02 remains in progress pending re-review; P003-03 remains
+TODO.
+
+### Clean adversarial review closure
+
+Code re-review found the cursor-authority fix complete with no remaining
+findings and declared Task 2 ready for status-only closure. This closure marks
+P003-02 done, advances P003-03 as the sole next step, and synchronizes the plan
+board.
+
+No production or test file changed in this closure and no behavior check was
+rerun. The immediately preceding fresh evidence remains the 3/3 cursor
+regression suite, 47/47 combined focused browser tests, and clean workspace
+typecheck. The final amended Task 2 commit is sent for status-only review before
+P003-03 begins.

@@ -12,7 +12,15 @@ const VerticalStudy = defineComp(function VerticalStudy() {
   const [stripe, setStripe] = crcState(0);
   const colors = ["#1f4bd8", "#ff6b57", "#f7c948", "#74d3ae"];
   return [
-    rect({ x: 0, y: 0, width: 720, height: 420, fillStyle: "#f7f0df" }),
+    rect({
+      style: {
+        x: 0,
+        y: 0,
+        width: 720,
+        height: 420,
+        fill: '#f7f0df',
+      },
+    }),
     ...colors.map((color, index) =>
       verticalLine({
         x: 160 + index * 132,

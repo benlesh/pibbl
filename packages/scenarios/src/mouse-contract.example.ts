@@ -48,13 +48,15 @@ function caseVisual(
     fillStyle: string,
   ) => rect({
     key: `region-${target}`,
-    x,
-    y,
-    width,
-    height,
-    fillStyle,
-    strokeStyle: '#334155',
-    lineWidth: 2,
+    style: {
+      x,
+      y,
+      width,
+      height,
+      fill: fillStyle,
+      stroke: '#334155',
+      strokeWidth: 2,
+    },
     ...interactive(target),
   });
 
@@ -72,7 +74,15 @@ function caseVisual(
           x: 90,
           y: 30,
           children: [
-            rect({ x: 42, y: 45, width: 190, height: 120, fillStyle: '#dbeafe' }),
+            rect({
+              style: {
+                x: 42,
+                y: 45,
+                width: 190,
+                height: 120,
+                fill: '#dbeafe',
+              },
+            }),
             region('child', 70, 70, 100, 72, '#2563eb'),
             text({ x: 84, y: 100, text: 'child', font: '700 15px Arial', fillStyle: '#fff' }),
           ],
@@ -143,26 +153,38 @@ function caseVisual(
       return [
         crcPath({
           key: 'fill-stroke-region-a',
-          path: rectanglePath(72, 72, 190, 112),
-          fillStyle: '#93c5fd',
-          strokeStyle: '#1d4ed8',
-          lineWidth: 6,
-          lineInteractionWidth: 6,
+          style: {
+            d: rectanglePath(72, 72, 190, 112),
+            fill: '#93c5fd',
+            stroke: '#1d4ed8',
+            strokeWidth: 6,
+            lineInteractionWidth: 6,
+          },
           ...interactive('a'),
         }),
       ];
     case 'transparent-fill-hit':
       return [
-        rect({ x: 72, y: 72, width: 190, height: 112, fillStyle: '#e2e8f0' }),
+        rect({
+          style: {
+            x: 72,
+            y: 72,
+            width: 190,
+            height: 112,
+            fill: '#e2e8f0',
+          },
+        }),
         line({ coords: [[72, 72], [262, 184]], strokeStyle: '#cbd5e1', lineWidth: 1 }),
         line({ coords: [[262, 72], [72, 184]], strokeStyle: '#cbd5e1', lineWidth: 1 }),
         rect({
           key: 'transparent-fill-region-a',
-          x: 72,
-          y: 72,
-          width: 190,
-          height: 112,
-          fillStyle: 'rgba(37, 99, 235, 0)',
+          style: {
+            x: 72,
+            y: 72,
+            width: 190,
+            height: 112,
+            fill: 'rgba(37, 99, 235, 0)',
+          },
           ...interactive('a'),
         }),
         text({ x: 94, y: 136, text: 'transparent fill hit area', font: '700 14px Arial', fillStyle: '#1e3a8a' }),
@@ -190,7 +212,16 @@ function caseVisual(
     case 'remove-target-during-press':
     case 'remove-target-during-move-plan':
       return [
-        rect({ x: 72, y: 72, width: 190, height: 112, strokeStyle: '#94a3b8', lineWidth: 2 }),
+        rect({
+          style: {
+            x: 72,
+            y: 72,
+            width: 190,
+            height: 112,
+            stroke: '#94a3b8',
+            strokeWidth: 2,
+          },
+        }),
         line({ coords: [[72, 72], [262, 184]], strokeStyle: '#ef4444', lineWidth: 4 }),
         line({ coords: [[262, 72], [72, 184]], strokeStyle: '#ef4444', lineWidth: 4 }),
         text({ x: 102, y: 136, text: 'target removed', font: '700 15px Arial', fillStyle: '#991b1b' }),
@@ -219,7 +250,16 @@ const MouseContractScene = defineComp<MouseContractSceneProps>(({ contractCase, 
 
   const probe = contractCase.visualProbe;
   return [
-    rect({ key: 'background', x: 0, y: 0, width: 480, height: 240, fillStyle: '#f8fafc' }),
+    rect({
+      key: 'background',
+      style: {
+        x: 0,
+        y: 0,
+        width: 480,
+        height: 240,
+        fill: '#f8fafc',
+      },
+    }),
     text({
       key: 'title',
       x: 24,

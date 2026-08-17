@@ -110,7 +110,7 @@ function Img(props: ImgProps, _style: SystemStyle, ctx: RenderingContext2D) {
     ctx.stroke(imagePath);
   }
 
-  wireCommonEvents(otherProps, imagePath, true, lineWidth ?? 0);
+  wireCommonEvents(otherProps, imagePath, true, lineWidth ?? 0, props.cursor);
 }
 
 /**

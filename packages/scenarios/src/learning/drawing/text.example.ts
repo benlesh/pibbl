@@ -10,15 +10,25 @@ import {
 const TypeStudy = defineComp(function TypeStudy() {
   const [accent, setAccent] = crcState("#1f4bd8");
   return [
-    rect({ x: 0, y: 0, width: 720, height: 420, fillStyle: "#f7f0df" }),
     rect({
-      x: 48,
-      y: 46,
-      width: 624,
-      height: 328,
-      fillStyle: "#fffdf6",
-      strokeStyle: "#17211d",
-      lineWidth: 5,
+      style: {
+        x: 0,
+        y: 0,
+        width: 720,
+        height: 420,
+        fill: '#f7f0df',
+      },
+    }),
+    rect({
+      style: {
+        x: 48,
+        y: 46,
+        width: 624,
+        height: 328,
+        fill: '#fffdf6',
+        stroke: '#17211d',
+        strokeWidth: 5,
+      },
     }),
     text({
       text: "TYPE / CANVAS",

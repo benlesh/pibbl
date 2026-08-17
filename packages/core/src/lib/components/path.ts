@@ -1,60 +1,48 @@
 import { defineComp } from '../define-comp.js';
 import {
-  AlphaProps,
   CRCBasicMouseEvents,
-  CursorStyleProps,
-  FillStyleProps,
   IntrinsicProps,
   RenderingContext2D,
-  StrokeStyleProps,
-  SystemStyle,
 } from '../types.js';
+import { PathStyle } from '../style/types.js';
 import { isTransparent } from '../util/is-transparent.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 
 export interface PathProps
   extends IntrinsicProps,
-  CRCBasicMouseEvents,
-  FillStyleProps,
-  StrokeStyleProps,
-  CursorStyleProps,
-  AlphaProps {
-  path: Path2D;
-  lineInteractionWidth?: number;
-}
+  CRCBasicMouseEvents {}
 
 export function Path(
   props: PathProps,
-  _style: SystemStyle,
+  style: Readonly<PathStyle>,
   ctx: RenderingContext2D,
 ) {
   const {
-    alpha,
-    path,
-    fillStyle,
-    strokeStyle,
-    lineWidth,
-    lineInteractionWidth = lineWidth ?? 0,
-  } = props;
+    d,
+    fill,
+    stroke,
+    strokeWidth,
+    opacity,
+    cursor,
+    lineInteractionWidth = strokeWidth ?? 0,
+  } = style;
 
-  if (alpha !== undefined) {
-    ctx.globalAlpha = ctx.globalAlpha * alpha;
+  if (opacity !== undefined) {
+    ctx.globalAlpha = ctx.globalAlpha * opacity;
   }
 
-  if (fillStyle && !isTransparent(fillStyle)) {
-    ctx.fillStyle = fillStyle;
-    ctx.fill(path);
+  if (fill && !isTransparent(fill)) {
+    ctx.fillStyle = fill;
+    ctx.fill(d);
   }
 
-  if (strokeStyle && lineWidth && lineWidth > 0) {
-    ctx.strokeStyle = strokeStyle;
-    ctx.lineWidth = lineWidth;
-    ctx.stroke(path);
+  if (stroke && strokeWidth && strokeWidth > 0) {
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = strokeWidth;
+    ctx.stroke(d);
   }
 
-  const fill = !!fillStyle;
-
-  wireCommonEvents(props, path, fill, lineInteractionWidth);
+  wireCommonEvents(props, d, !!fill, lineInteractionWidth, cursor);
 }
 
 /**

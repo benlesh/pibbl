@@ -23,7 +23,15 @@ const HorizontalStudy = defineComp(function HorizontalStudy() {
       onMouseOut: () => setBand("none"),
     });
   return [
-    rect({ x: 0, y: 0, width: 720, height: 420, fillStyle: "#17211d" }),
+    rect({
+      style: {
+        x: 0,
+        y: 0,
+        width: 720,
+        height: 420,
+        fill: '#17211d',
+      },
+    }),
     text({
       text: "HORIZONTAL RHYTHM",
       x: 82,

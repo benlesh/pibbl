@@ -93,32 +93,38 @@ const HookProbe = defineComp<CleanupStressSceneProps>(({ metrics, state }) => {
 
   return rect({
     key: `hook-fill-${state.hookDependency}`,
-    x: 20,
-    y: 30,
-    width: 130,
-    height: 80,
-    fillStyle: state.hookDependency % 2 === 0 ? '#2563eb' : '#7c3aed',
+    style: {
+      x: 20,
+      y: 30,
+      width: 130,
+      height: 80,
+      fill: state.hookDependency % 2 === 0 ? '#2563eb' : '#7c3aed',
+    },
   });
 });
 
 const SingleLayerScene = defineComp(() => rect({
   key: 'single-layer-fill',
-  x: 170,
-  y: 30,
-  width: 130,
-  height: 80,
-  fillStyle: '#f59e0b',
+  style: {
+    x: 170,
+    y: 30,
+    width: 130,
+    height: 80,
+    fill: '#f59e0b',
+  },
 }));
 
 const NestedLayerScene = defineComp(() => layer({
   key: 'inner-cleanup-layer',
   render: rect({
     key: 'nested-layer-fill',
-    x: 320,
-    y: 30,
-    width: 130,
-    height: 80,
-    fillStyle: '#10b981',
+    style: {
+      x: 320,
+      y: 30,
+      width: 130,
+      height: 80,
+      fill: '#10b981',
+    },
   }),
 }));
 
@@ -141,11 +147,13 @@ function sceneNodes({ metrics, state }: CleanupStressSceneProps) {
   return [
     rect({
       key: 'cleanup-background',
-      x: 0,
-      y: 0,
-      width: 480,
-      height: 240,
-      fillStyle: state.rootVariant === 'a' ? '#f8fafc' : '#eef2ff',
+      style: {
+        x: 0,
+        y: 0,
+        width: 480,
+        height: 240,
+        fill: state.rootVariant === 'a' ? '#f8fafc' : '#eef2ff',
+      },
     }),
     state.componentVisible && HookProbe({
       key: `hook-probe-${state.componentKey}`,

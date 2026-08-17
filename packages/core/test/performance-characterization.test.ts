@@ -23,11 +23,13 @@ const PerformanceScene = defineComp<{ onHit: () => void; regions: number }>(({ o
   const columns = 100;
   return Array.from({ length: regions }, (_, index) => rect({
     key: `region-${index}`,
-    x: (index % columns) * 8,
-    y: Math.floor(index / columns) * 8,
-    width: 6,
-    height: 6,
-    fillStyle: '#2563eb',
+    style: {
+      x: (index % columns) * 8,
+      y: Math.floor(index / columns) * 8,
+      width: 6,
+      height: 6,
+      fill: '#2563eb',
+    },
     onMouseMove: onHit,
   }));
 });

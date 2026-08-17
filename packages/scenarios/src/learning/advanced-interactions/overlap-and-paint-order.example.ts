@@ -10,25 +10,37 @@ import {
 const PaintOrderStudy = defineComp(function PaintOrderStudy() {
   const [winner, setWinner] = crcState("none");
   return [
-    rect({ x: 0, y: 0, width: 720, height: 420, fillStyle: "#f7f0df" }),
     rect({
-      x: 118,
-      y: 92,
-      width: 320,
-      height: 238,
-      fillStyle: "#1f4bd8",
-      cursor: "pointer",
-      onClick: () => setWinner("cobalt"),
+      style: {
+        x: 0,
+        y: 0,
+        width: 720,
+        height: 420,
+        fill: '#f7f0df',
+      },
     }),
     rect({
-      x: 282,
-      y: 126,
-      width: 320,
-      height: 238,
-      fillStyle: "#ff6b57",
-      alpha: 0.94,
-      cursor: "pointer",
-      onClick: () => setWinner("coral"),
+      style: {
+        x: 118,
+        y: 92,
+        width: 320,
+        height: 238,
+        fill: '#1f4bd8',
+        cursor: 'pointer',
+      },
+      onClick: () => setWinner('cobalt'),
+    }),
+    rect({
+      style: {
+        x: 282,
+        y: 126,
+        width: 320,
+        height: 238,
+        fill: '#ff6b57',
+        opacity: 0.94,
+        cursor: 'pointer',
+      },
+      onClick: () => setWinner('coral'),
     }),
     text({
       text: "UNDER",

@@ -18,7 +18,15 @@ const HitAreaStudy = defineComp(function HitAreaStudy() {
     [640, 250],
   ];
   return [
-    rect({ x: 0, y: 0, width: 720, height: 420, fillStyle: "#f7f0df" }),
+    rect({
+      style: {
+        x: 0,
+        y: 0,
+        width: 720,
+        height: 420,
+        fill: '#f7f0df',
+      },
+    }),
     line({ coords: route, strokeStyle: "#17211d", lineWidth: 18 }),
     line({
       coords: route,

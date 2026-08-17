@@ -119,7 +119,7 @@ export function Text(props: TextProps, _style: SystemStyle, ctx: RenderingContex
     }
   }
 
-  wireCommonEvents(props, textBounds, true, lineWidth);
+  wireCommonEvents(props, textBounds, true, lineWidth, props.cursor);
 }
 
 export const text = defineComp(Text);

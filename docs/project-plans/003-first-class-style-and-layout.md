@@ -59,23 +59,23 @@ review before the next task begins.
 
 ## Status board
 
-| Step | Queue state | Outcome |
-| --- | --- | --- |
-| P003-01 | Done | First-class descriptor style/key protocol. |
-| P003-02 | Next | Path, rectangle, and SVG path style migration. |
-| P003-03 | Queued | Line-family style migration. |
-| P003-04 | Queued | Text style and shared text layout. |
-| P003-05 | Queued | Image style migration. |
-| P003-06 | Queued | Group, clip, layer, and style-only closure. |
-| P003-07 | Queued | Length, constraint, box, and item capabilities. |
-| P003-08 | Queued | Style resolution, layout context, placement, and observation. |
-| P003-09 | Queued | Absolute and overlay layout. |
-| P003-10 | Queued | Pure measurement and CRC-native flow. |
-| P003-11 | Queued | CSS-compatible Flexbox subset. |
-| P003-12 | Queued | CSS-compatible explicit Grid subset. |
-| P003-13 | Queued | Learning examples, nested scenario, and Studio/public types. |
-| P003-14 | Queued | Composition, diagnostics, ownership, and performance hardening. |
-| P003-15 | Queued | Public contracts, evidence, and final trust closure. |
+| Step    | Queue state | Outcome                                                         |
+| ------- | ----------- | --------------------------------------------------------------- |
+| P003-01 | Done        | First-class descriptor style/key protocol.                      |
+| P003-02 | Done        | Path, rectangle, and SVG path style migration.                  |
+| P003-03 | Next        | Line-family style migration.                                    |
+| P003-04 | Queued      | Text style and shared text layout.                              |
+| P003-05 | Queued      | Image style migration.                                          |
+| P003-06 | Queued      | Group, clip, layer, and style-only closure.                     |
+| P003-07 | Queued      | Length, constraint, box, and item capabilities.                 |
+| P003-08 | Queued      | Style resolution, layout context, placement, and observation.   |
+| P003-09 | Queued      | Absolute and overlay layout.                                    |
+| P003-10 | Queued      | Pure measurement and CRC-native flow.                           |
+| P003-11 | Queued      | CSS-compatible Flexbox subset.                                  |
+| P003-12 | Queued      | CSS-compatible explicit Grid subset.                            |
+| P003-13 | Queued      | Learning examples, nested scenario, and Studio/public types.    |
+| P003-14 | Queued      | Composition, diagnostics, ownership, and performance hardening. |
+| P003-15 | Queued      | Public contracts, evidence, and final trust closure.            |
 
 ## Execution steps
 
@@ -90,13 +90,13 @@ props cannot declare reserved names, style-only layer changes invalidate its
 cache, key-sensitive callers are migrated, focused tests/typecheck pass, and the
 commit has a clean adversarial review.
 
-### P003-02 [NEXT] — Path, rectangle, and SVG path styles
+### P003-02 [DONE] — Path, rectangle, and SVG path styles
 
 Done when the three primitives and all callers use required component-specific
 styles, legacy top-level paint/geometry fails type checking, existing pixels and
 interaction remain unchanged, and the commit is reviewed.
 
-### P003-03 [TODO] — Line-family styles
+### P003-03 [NEXT] — Line-family styles
 
 Done when line coordinates, paint, pixel alignment, cursor, and interaction
 width are style-only across all callers, focused behavior/type checks pass, and
@@ -182,12 +182,12 @@ is clean, and this plan has no active marker.
 
 ## Decision log
 
-| Date | Decision | Rationale |
-| --- | --- | --- |
-| 2026-08-17 | Use one explicit local style namespace with no inheritance or cascade. | It makes visual ownership inspectable and enables layout to inspect descriptors without invoking components. |
-| 2026-08-17 | Use dedicated layout components and direct nested participation. | Formatting contexts stay visible without public item wrappers or hidden `display` behavior. |
-| 2026-08-17 | Preserve immediate-mode rendering with pure opt-in measurement. | Declared boxes solve layout without a costly scene-wide display list or double paint pass. |
-| 2026-08-17 | Use CSS names only for verified compatible subsets. | Familiar but approximate behavior would create a more dangerous API than distinct CRC-native names. |
+| Date       | Decision                                                                   | Rationale                                                                                                             |
+| ---------- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| 2026-08-17 | Use one explicit local style namespace with no inheritance or cascade.     | It makes visual ownership inspectable and enables layout to inspect descriptors without invoking components.          |
+| 2026-08-17 | Use dedicated layout components and direct nested participation.           | Formatting contexts stay visible without public item wrappers or hidden `display` behavior.                           |
+| 2026-08-17 | Preserve immediate-mode rendering with pure opt-in measurement.            | Declared boxes solve layout without a costly scene-wide display list or double paint pass.                            |
+| 2026-08-17 | Use CSS names only for verified compatible subsets.                        | Familiar but approximate behavior would create a more dangerous API than distinct CRC-native names.                   |
 | 2026-08-17 | Optimize the development loop for focused checks and final holistic proof. | The implementation is broad; per-commit aggregate verification would slow feedback without improving local diagnosis. |
 
 ## Session log
@@ -216,3 +216,27 @@ is clean, and this plan has no active marker.
   re-review was clean. Focused evidence remained 28/28 browser tests plus clean
   workspace typecheck. P003-01 is done and the sole next step is **P003-02**;
   the same amended task commit receives one final status-only re-review.
+- **2026-08-17 — P003-02 implementation pending review.** Added explicit
+  paint/cursor/path/rectangle/SVG-path style capabilities, migrated the three
+  primitives and every authored caller without a legacy adapter, and preserved
+  zero-opacity and transparent-fill interaction behavior. Focused RED was 11
+  failed and 3 passed browser tests plus the expected style-type errors. GREEN
+  is 14/14 focused browser tests and clean workspace typecheck; changed-file
+  lint, legacy-call audit, and diff hygiene are also clean. P003-02 remains in
+  progress for adversarial review, and P003-03 remains TODO.
+- **2026-08-17 — P003-02 adversarial review fix round 1.** Review found one
+  Important runtime alias: an omitted style cursor allowed the shared event
+  helper to fall back to an untyped top-level cursor. A browser regression
+  reproduced the leak at 1 failed/2 passed path tests. The helper now requires
+  an explicit cursor, while not-yet-migrated text and image callers pass their
+  legacy cursor deliberately. The regression is green at 3/3; the combined
+  path/rectangle/SVG-path/text/image suite is 47/47 and workspace typecheck is
+  clean. P003-02 remains in progress pending re-review, and P003-03 remains
+  TODO.
+- **2026-08-17 — P003-02 complete after adversarial review.** Code re-review
+  found the cursor-authority fix complete with no remaining findings. This
+  status-only closure marks P003-02 done and advances P003-03 as the sole next
+  step. No production or test file changed and no behavior check was rerun;
+  the immediately preceding fresh evidence remains 47/47 focused browser tests
+  plus clean workspace typecheck. The final amended task commit is sent for
+  status-only review before P003-03 begins.

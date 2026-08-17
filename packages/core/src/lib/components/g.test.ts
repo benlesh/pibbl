@@ -8,12 +8,12 @@ import { rect } from './rect';
 import { text } from './text';
 
 describe('g', () => {
-  const defaultRect = {
+  const defaultRectStyle = {
     x: 0,
     y: 0,
     width: 50,
     height: 50,
-    fillStyle: 'blue',
+    fill: 'blue',
   };
 
   it('supports zero and negative scales without leaking transforms', async () => {
@@ -34,7 +34,7 @@ describe('g', () => {
   it('renders children without transformation', async () => {
     await componentTest(g({
       children: [
-        rect(defaultRect),
+        rect({ style: defaultRectStyle }),
       ],
     }));
     await takeScreenshot(page);
@@ -45,7 +45,7 @@ describe('g', () => {
       x: 100,
       y: 50,
       children: [
-        rect(defaultRect),
+        rect({ style: defaultRectStyle }),
       ],
     }));
     await takeScreenshot(page);
@@ -57,7 +57,7 @@ describe('g', () => {
         scaleX: 2,
         scaleY: 2,
         children: [
-          rect(defaultRect),
+          rect({ style: defaultRectStyle }),
         ],
       }));
       await takeScreenshot(page);
@@ -68,7 +68,7 @@ describe('g', () => {
         scaleX: 2,
         scaleY: 0.5,
         children: [
-          rect(defaultRect),
+          rect({ style: defaultRectStyle }),
         ],
       }));
       await takeScreenshot(page);
@@ -80,7 +80,7 @@ describe('g', () => {
       await componentTest(g({
         rotate: 45,
         children: [
-          rect(defaultRect),
+          rect({ style: defaultRectStyle }),
         ],
       }));
       await takeScreenshot(page);
@@ -91,7 +91,7 @@ describe('g', () => {
         rotate: 90,
         rotateOrigin: [25, 25], // center of rect
         children: [
-          rect(defaultRect),
+          rect({ style: defaultRectStyle }),
         ],
       }));
       await takeScreenshot(page);
@@ -103,7 +103,7 @@ describe('g', () => {
       await componentTest(g({
         skewX: 30,
         children: [
-          rect(defaultRect),
+          rect({ style: defaultRectStyle }),
         ],
       }));
       await takeScreenshot(page);
@@ -113,7 +113,7 @@ describe('g', () => {
       await componentTest(g({
         skewY: 30,
         children: [
-          rect(defaultRect),
+          rect({ style: defaultRectStyle }),
         ],
       }));
       await takeScreenshot(page);
@@ -124,7 +124,7 @@ describe('g', () => {
         skewX: 30,
         skewY: 30,
         children: [
-          rect(defaultRect),
+          rect({ style: defaultRectStyle }),
         ],
       }));
       await takeScreenshot(page);
@@ -140,7 +140,7 @@ describe('g', () => {
         scaleX: 2,
         scaleY: 1.5,
         children: [
-          rect(defaultRect),
+          rect({ style: defaultRectStyle }),
         ],
       }));
       await takeScreenshot(page);
@@ -156,7 +156,7 @@ describe('g', () => {
             scaleX: 2,
             scaleY: 2,
             children: [
-              rect(defaultRect),
+              rect({ style: defaultRectStyle }),
             ],
           }),
         ],
@@ -173,7 +173,7 @@ describe('g', () => {
         scaleY: 2,
         children: [
           rect({
-            ...defaultRect,
+            style: defaultRectStyle,
             onClick,
           }),
         ],
@@ -195,7 +195,7 @@ describe('g', () => {
         rotateOrigin: [25, 25],
         children: [
           rect({
-            ...defaultRect,
+            style: defaultRectStyle,
             onMouseOver,
           }),
         ],
@@ -237,9 +237,11 @@ describe('g', () => {
         skewY,
         children: [
           rect({
-            ...defaultRect,
             onClick,
-            cursor: 'crosshair',
+            style: {
+              ...defaultRectStyle,
+              cursor: 'crosshair',
+            },
           }),
         ],
       }));
@@ -264,8 +266,10 @@ describe('g', () => {
         scaleY: 1.5,
         children: [
           rect({
-            ...defaultRect,
-            fillStyle: 'purple',
+            style: {
+              ...defaultRectStyle,
+              fill: 'purple',
+            },
           }),
           text({
             x: 10,

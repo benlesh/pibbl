@@ -123,16 +123,16 @@ function region(
 ) {
   return rect({
     key: `region-${target}`,
-    ...geometry,
-    fillStyle: options.fillStyle,
-    strokeStyle: '#334155',
-    lineWidth: 2,
-    cursor: options.interactive === false ? undefined : options.cursor,
-    ...(options.interactive === false ? {} : traceHandlers(
-      target,
-      record,
-      options.handlerGeneration,
-    )),
+    style: {
+      ...geometry,
+      fill: options.fillStyle,
+      stroke: '#334155',
+      strokeWidth: 2,
+      cursor: options.interactive === false ? undefined : options.cursor,
+    },
+    ...(options.interactive === false
+      ? {}
+      : traceHandlers(target, record, options.handlerGeneration)),
   });
 }
 
@@ -195,13 +195,15 @@ const NestedInteractiveAncestor = defineComp<NestedAncestorProps>(({ record }) =
   return [
     rect({
       key: 'ancestor-guide',
-      x: 70,
-      y: 52,
-      width: 300,
-      height: 148,
-      fillStyle: '#93c5fd',
-      strokeStyle: '#334155',
-      lineWidth: 2,
+      style: {
+        x: 70,
+        y: 52,
+        width: 300,
+        height: 148,
+        fill: '#93c5fd',
+        stroke: '#334155',
+        strokeWidth: 2,
+      },
     }),
     NestedChild({ record }),
   ];
@@ -226,49 +228,59 @@ function caseVisual(state: Readonly<InteractionLabState>, record: InteractionLab
     case 'fill':
       return [crcPath({
         key: 'fill-region',
-        path: geometry,
-        fillStyle: '#2563eb',
-        cursor: 'pointer',
+        style: {
+          d: geometry,
+          fill: '#2563eb',
+          cursor: 'pointer',
+        },
         ...traceHandlers('a', record),
       })];
     case 'stroke':
       return [crcPath({
         key: 'stroke-region',
-        path: geometry,
-        strokeStyle: '#2563eb',
-        lineWidth: 6,
-        lineInteractionWidth: 6,
-        cursor: 'pointer',
+        style: {
+          d: geometry,
+          stroke: '#2563eb',
+          strokeWidth: 6,
+          lineInteractionWidth: 6,
+          cursor: 'pointer',
+        },
         ...traceHandlers('a', record),
       })];
     case 'fill-stroke':
       return [crcPath({
         key: 'fill-stroke-region',
-        path: geometry,
-        fillStyle: '#93c5fd',
-        strokeStyle: '#1d4ed8',
-        lineWidth: 6,
-        lineInteractionWidth: 6,
-        cursor: 'pointer',
+        style: {
+          d: geometry,
+          fill: '#93c5fd',
+          stroke: '#1d4ed8',
+          strokeWidth: 6,
+          lineInteractionWidth: 6,
+          cursor: 'pointer',
+        },
         ...traceHandlers('a', record),
       })];
     case 'transparent':
       return [
         rect({
           key: 'transparent-guide',
-          x: 90,
-          y: 66,
-          width: 220,
-          height: 124,
-          fillStyle: '#e2e8f0',
-          strokeStyle: '#94a3b8',
-          lineWidth: 2,
+          style: {
+            x: 90,
+            y: 66,
+            width: 220,
+            height: 124,
+            fill: '#e2e8f0',
+            stroke: '#94a3b8',
+            strokeWidth: 2,
+          },
         }),
         crcPath({
           key: 'transparent-region',
-          path: geometry,
-          fillStyle: 'rgba(37, 99, 235, 0)',
-          cursor: 'pointer',
+          style: {
+            d: geometry,
+            fill: 'rgba(37, 99, 235, 0)',
+            cursor: 'pointer',
+          },
           ...traceHandlers('a', record),
         }),
       ];
@@ -300,18 +312,22 @@ function caseVisual(state: Readonly<InteractionLabState>, record: InteractionLab
       return [
         rect({
           key: 'no-hit-guide',
-          x: 90,
-          y: 66,
-          width: 220,
-          height: 124,
-          strokeStyle: '#94a3b8',
-          lineWidth: 2,
+          style: {
+            x: 90,
+            y: 66,
+            width: 220,
+            height: 124,
+            stroke: '#94a3b8',
+            strokeWidth: 2,
+          },
         }),
         crcPath({
           key: 'no-hit-region',
-          path: geometry,
-          lineInteractionWidth: 0,
-          cursor: 'pointer',
+          style: {
+            d: geometry,
+            lineInteractionWidth: 0,
+            cursor: 'pointer',
+          },
           ...traceHandlers('a', record),
         }),
       ];
@@ -362,11 +378,13 @@ const InteractionLabScene = defineComp<InteractionLabSceneProps>(({ state, recor
   return [
     rect({
       key: 'background',
-      x: 0,
-      y: 0,
-      width: 480,
-      height: 240,
-      fillStyle: '#f8fafc',
+      style: {
+        x: 0,
+        y: 0,
+        width: 480,
+        height: 240,
+        fill: '#f8fafc',
+      },
     }),
     text({
       key: 'title',

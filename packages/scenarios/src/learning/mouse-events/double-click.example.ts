@@ -10,16 +10,26 @@ import {
 const DoubleClickStudy = defineComp(function DoubleClickStudy() {
   const [stamps, setStamps] = crcState(0);
   return [
-    rect({ x: 0, y: 0, width: 720, height: 420, fillStyle: "#1f4bd8" }),
     rect({
-      x: 190,
-      y: 76,
-      width: 340,
-      height: 268,
-      fillStyle: "#f7c948",
-      strokeStyle: "#17211d",
-      lineWidth: 7,
-      cursor: "copy",
+      style: {
+        x: 0,
+        y: 0,
+        width: 720,
+        height: 420,
+        fill: '#1f4bd8',
+      },
+    }),
+    rect({
+      style: {
+        x: 190,
+        y: 76,
+        width: 340,
+        height: 268,
+        fill: '#f7c948',
+        stroke: '#17211d',
+        strokeWidth: 7,
+        cursor: 'copy',
+      },
       onDblClick: () => setStamps((value) => value + 1),
     }),
     text({

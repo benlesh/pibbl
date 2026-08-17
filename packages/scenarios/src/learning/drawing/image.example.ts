@@ -20,15 +20,25 @@ const postcard = `data:image/svg+xml,${encodeURIComponent(`
 const ImageStudy = defineComp(function ImageStudy() {
   const [clicks, setClicks] = crcState(0);
   return [
-    rect({ x: 0, y: 0, width: 720, height: 420, fillStyle: "#f7c948" }),
     rect({
-      x: 108,
-      y: 46,
-      width: 504,
-      height: 328,
-      fillStyle: "#fffdf6",
-      strokeStyle: "#17211d",
-      lineWidth: 6,
+      style: {
+        x: 0,
+        y: 0,
+        width: 720,
+        height: 420,
+        fill: '#f7c948',
+      },
+    }),
+    rect({
+      style: {
+        x: 108,
+        y: 46,
+        width: 504,
+        height: 328,
+        fill: '#fffdf6',
+        stroke: '#17211d',
+        strokeWidth: 6,
+      },
     }),
     img({
       src: postcard,

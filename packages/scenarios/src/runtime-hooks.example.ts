@@ -179,19 +179,25 @@ const HookProbe = defineComp<HookProbeProps>(({ metrics, model }) => {
   return [
     path({
       key: 'memo-rect-path',
-      path: rectanglePath,
-      fillStyle: stateValue % 2 === 0 ? '#2563eb' : '#7c3aed',
+      style: {
+        d: rectanglePath,
+        fill: stateValue % 2 === 0 ? '#2563eb' : '#7c3aed',
+      },
     }),
     path({
       key: 'memo-line-path',
-      path: linePath,
-      strokeStyle: '#0f172a',
-      lineWidth: 5,
+      style: {
+        d: linePath,
+        stroke: '#0f172a',
+        strokeWidth: 5,
+      },
     }),
     path({
       key: 'memo-svg-path',
-      path: svgPath,
-      fillStyle: model.dependency % 2 === 0 ? '#f59e0b' : '#ec4899',
+      style: {
+        d: svgPath,
+        fill: model.dependency % 2 === 0 ? '#f59e0b' : '#ec4899',
+      },
     }),
   ];
 });
@@ -204,11 +210,13 @@ const Sibling = defineComp<SiblingProps>(({ color, metrics, siblingKey, slot }) 
   metrics.siblingIdentities[siblingKey] = identity.current;
   return rect({
     key: `${siblingKey}-fill`,
-    x: 190 + slot * 82,
-    y: 50,
-    width: 64,
-    height: 64,
-    fillStyle: color,
+    style: {
+      x: 190 + slot * 82,
+      y: 50,
+      width: 64,
+      height: 64,
+      fill: color,
+    },
   });
 });
 
@@ -240,11 +248,13 @@ function sceneNodes({ metrics, model }: RuntimeHooksSceneProps) {
   return [
     rect({
       key: 'runtime-hooks-background',
-      x: 0,
-      y: 0,
-      width: 480,
-      height: 240,
-      fillStyle: model.rootVariant === 'a' ? '#f8fafc' : '#eef2ff',
+      style: {
+        x: 0,
+        y: 0,
+        width: 480,
+        height: 240,
+        fill: model.rootVariant === 'a' ? '#f8fafc' : '#eef2ff',
+      },
     }),
     ...falsyChildren,
     model.componentVisible && HookProbe({

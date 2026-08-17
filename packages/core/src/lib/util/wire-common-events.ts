@@ -1,11 +1,12 @@
 import { crcRegion } from '../hooks/crc-region.js';
-import { CRCBasicMouseEvents, CursorStyleProps } from '../types.js';
+import { CRCBasicMouseEvents } from '../types.js';
 
 export function wireCommonEvents(
-  props: CRCBasicMouseEvents & CursorStyleProps,
+  props: CRCBasicMouseEvents,
   path: Path2D | undefined,
   fill: boolean,
   lineInteractionWidth: number,
+  cursor: string | undefined,
 ) {
   const {
     onClick,
@@ -30,7 +31,7 @@ export function wireCommonEvents(
       mouseout: onMouseOut,
     },
     path,
-    cursor: props.cursor,
+    cursor,
     fill,
     lineInteractionWidth,
   });

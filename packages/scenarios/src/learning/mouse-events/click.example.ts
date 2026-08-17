@@ -11,18 +11,28 @@ const ClickStudy = defineComp(function ClickStudy() {
   const [picks, setPicks] = crcState(0);
   const sleeve = (x: number, color: string, value: number) =>
     rect({
-      x,
-      y: 118,
-      width: 160,
-      height: 190,
-      fillStyle: color,
-      strokeStyle: "#17211d",
-      lineWidth: 5,
-      cursor: "pointer",
+      style: {
+        x,
+        y: 118,
+        width: 160,
+        height: 190,
+        fill: color,
+        stroke: '#17211d',
+        strokeWidth: 5,
+        cursor: 'pointer',
+      },
       onClick: () => setPicks((total) => total + value),
     });
   return [
-    rect({ x: 0, y: 0, width: 720, height: 420, fillStyle: "#f7f0df" }),
+    rect({
+      style: {
+        x: 0,
+        y: 0,
+        width: 720,
+        height: 420,
+        fill: '#f7f0df',
+      },
+    }),
     text({
       text: `RECORD PICKS / ${picks}`,
       x: 360,

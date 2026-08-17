@@ -176,17 +176,6 @@ export interface CursorStyleProps {
   cursor?: string;
 }
 
-export interface PathProps
-  extends IntrinsicProps,
-  CRCBasicMouseEvents,
-  FillStyleProps,
-  StrokeStyleProps,
-  CursorStyleProps,
-  AlphaProps {
-  path: Path2D;
-  lineInteractionWidth?: number;
-}
-
 export interface CRCInstance {
   canvas: Canvas;
   controller: CRCController;

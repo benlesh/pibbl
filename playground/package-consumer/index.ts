@@ -2,9 +2,12 @@ import type {
   CRCController,
   CRCMouseEvent,
   CRCRef,
+  PathStyle,
   RectProps,
+  RectStyle,
   RenderingContext2D,
   StateUpdater,
+  SvgPathStyle,
   SystemStyle,
 } from '@crc/core';
 import type * as CoreTypes from '@crc/core/types';
@@ -20,20 +23,49 @@ import {
   crcSvgPath,
   crcWhenChanged,
   defineComp,
+  path,
   rect,
+  svgPath,
 } from '@crc/core';
 
-const props = {
+const rectangleStyle = {
   x: 10,
   y: 10,
   width: 40,
   height: 20,
-  fillStyle: '#2563eb',
-} satisfies RectProps;
+  fill: '#2563eb',
+} satisfies RectStyle;
+const props = {} satisfies RectProps;
 
 export type PublicCoreTypes = typeof CoreTypes;
-export const scene = rect(props);
+export const scene = rect({ ...props, style: rectangleStyle });
 export const mount = crc;
+
+const pathStyle = {
+  d: new Path2D(),
+  fill: '#2563eb',
+  stroke: '#0f172a',
+  strokeWidth: 2,
+  opacity: 0.5,
+  cursor: 'pointer',
+  lineInteractionWidth: 8,
+} satisfies PathStyle;
+path({ style: pathStyle, onClick: () => undefined });
+
+const svgPathStyle = {
+  d: 'M 0 0 L 10 10',
+  stroke: '#0f172a',
+} satisfies SvgPathStyle;
+svgPath({ style: svgPathStyle });
+
+// @ts-expect-error rectangle geometry is style-only
+rect({ x: 10, y: 10, width: 40, height: 20 });
+// @ts-expect-error rectangle style requires width and height
+rect({ style: { fill: 'red' } });
+// @ts-expect-error Path2D data is style-only
+path({ d: new Path2D() });
+// @ts-expect-error SVG path data is style-only
+svgPath({ d: 'M 0 0 L 10 10' });
 
 export function disposeMount(controller: ReturnType<typeof crc>): void {
   const publicController: CRCController = controller;
@@ -47,7 +79,7 @@ const RuntimeProbe = defineComp<{ count: number; label?: string }>(
     const publicContext: RenderingContext2D = context;
     publicContext.fillRect(0, 0, count, count);
     return [
-      rect({ x: count, y: 0, width: 1, height: 1 }),
+      rect({ style: { x: count, y: 0, width: 1, height: 1 } }),
       false,
       null,
       undefined,

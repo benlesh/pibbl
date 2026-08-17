@@ -28,13 +28,23 @@ const PathStudy = defineComp(function PathStudy() {
   star.closePath();
 
   return [
-    rect({ x: 0, y: 0, width: 720, height: 420, fillStyle: "#17211d" }),
+    rect({
+      style: {
+        x: 0,
+        y: 0,
+        width: 720,
+        height: 420,
+        fill: '#17211d',
+      },
+    }),
     path({
-      path: star,
-      fillStyle: inside ? "#f7c948" : "#74d3ae",
-      strokeStyle: "#fffdf6",
-      lineWidth: 6,
-      cursor: "crosshair",
+      style: {
+        d: star,
+        fill: inside ? '#f7c948' : '#74d3ae',
+        stroke: '#fffdf6',
+        strokeWidth: 6,
+        cursor: 'crosshair',
+      },
       onMouseOver: () => setInside(true),
       onMouseOut: () => setInside(false),
     }),

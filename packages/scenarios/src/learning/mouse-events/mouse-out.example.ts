@@ -11,14 +11,24 @@ const MouseOutStudy = defineComp(function MouseOutStudy() {
   const [departures, setDepartures] = crcState(0);
   const [inside, setInside] = crcState(false);
   return [
-    rect({ x: 0, y: 0, width: 720, height: 420, fillStyle: "#17211d" }),
     rect({
-      x: 190,
-      y: 68,
-      width: 340,
-      height: 284,
-      fillStyle: inside ? "#f7c948" : "#74d3ae",
-      cursor: "crosshair",
+      style: {
+        x: 0,
+        y: 0,
+        width: 720,
+        height: 420,
+        fill: '#17211d',
+      },
+    }),
+    rect({
+      style: {
+        x: 190,
+        y: 68,
+        width: 340,
+        height: 284,
+        fill: inside ? '#f7c948' : '#74d3ae',
+        cursor: 'crosshair',
+      },
       onMouseOver: () => setInside(true),
       onMouseOut: () => {
         setInside(false);

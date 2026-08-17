@@ -10,16 +10,26 @@ import {
 const ContextMenuStudy = defineComp(function ContextMenuStudy() {
   const [opened, setOpened] = crcState(false);
   return [
-    rect({ x: 0, y: 0, width: 720, height: 420, fillStyle: "#f7f0df" }),
     rect({
-      x: 98,
-      y: 82,
-      width: 350,
-      height: 256,
-      fillStyle: "#ff6b57",
-      strokeStyle: "#17211d",
-      lineWidth: 6,
-      cursor: "context-menu",
+      style: {
+        x: 0,
+        y: 0,
+        width: 720,
+        height: 420,
+        fill: '#f7f0df',
+      },
+    }),
+    rect({
+      style: {
+        x: 98,
+        y: 82,
+        width: 350,
+        height: 256,
+        fill: '#ff6b57',
+        stroke: '#17211d',
+        strokeWidth: 6,
+        cursor: 'context-menu',
+      },
       onContextMenu: (event) => {
         event.originalEvent.preventDefault();
         setOpened(true);

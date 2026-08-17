@@ -60,17 +60,49 @@ function featuredImage(state: Readonly<DrawingImagesState>) {
 }
 
 const DrawingImagesScene = defineComp<DrawingImagesSceneProps>(({ state }) => [
-  rect({ x: 0, y: 0, width: 480, height: 240, fillStyle: '#f8fafc' }),
-  rect({ x: 16, y: 24, width: 166, height: 116, fillStyle: '#e2e8f0' }),
+  rect({
+    style: {
+      x: 0,
+      y: 0,
+      width: 480,
+      height: 240,
+      fill: '#f8fafc',
+    },
+  }),
+  rect({
+    style: {
+      x: 16,
+      y: 24,
+      width: 166,
+      height: 116,
+      fill: '#e2e8f0',
+    },
+  }),
   featuredImage(state),
-  rect({ x: 214, y: 24, width: 106, height: 76, fillStyle: '#e2e8f0' }),
+  rect({
+    style: {
+      x: 214,
+      y: 24,
+      width: 106,
+      height: 76,
+      fill: '#e2e8f0',
+    },
+  }),
   img({
     key: 'natural-image',
     src: DRAWING_IMAGE_SOURCES.secondary,
     x: 222,
     y: 32,
   }),
-  rect({ x: 350, y: 24, width: 106, height: 76, fillStyle: '#ef4444' }),
+  rect({
+    style: {
+      x: 350,
+      y: 24,
+      width: 106,
+      height: 76,
+      fill: '#ef4444',
+    },
+  }),
   img({
     key: 'zero-alpha-image',
     src: DRAWING_IMAGE_SOURCES.primary,
@@ -80,7 +112,15 @@ const DrawingImagesScene = defineComp<DrawingImagesSceneProps>(({ state }) => [
     height: 60,
     alpha: 0,
   }),
-  rect({ x: 16, y: 164, width: 440, height: 44, fillStyle: '#dbeafe' }),
+  rect({
+    style: {
+      x: 16,
+      y: 164,
+      width: 440,
+      height: 44,
+      fill: '#dbeafe',
+    },
+  }),
   img({
     key: 'half-alpha-image',
     src: DRAWING_IMAGE_SOURCES.primary,

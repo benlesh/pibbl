@@ -20,6 +20,13 @@ export {
 export { crc } from './lib/crc.js';
 
 export { defineComp } from './lib/define-comp.js';
+export type {
+  CursorStyle,
+  PaintStyle,
+  PathStyle,
+  RectStyle,
+  SvgPathStyle,
+} from './lib/style/types.js';
 // hooks
 export { crcCursor } from './lib/hooks/crc-cursor.js';
 export { crcEvent } from './lib/hooks/crc-event.js';

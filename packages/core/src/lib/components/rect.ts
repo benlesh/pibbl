@@ -1,38 +1,34 @@
 import { defineComp } from '../define-comp.js';
 import {
-  AlphaProps,
   CRCBasicMouseEvents,
-  CursorStyleProps,
-  FillStyleProps,
   IntrinsicProps,
-  PixelGridAlignment,
   RenderingContext2D,
-  StrokeStyleProps,
-  SystemStyle,
 } from '../types.js';
+import { RectStyle } from '../style/types.js';
 import { adjustRectangleToPixelGrid } from '../util/pixel-grid-adjustments.js';
 import { Path } from './path.js';
 
 export interface RectProps
   extends IntrinsicProps,
-  CRCBasicMouseEvents,
-  FillStyleProps,
-  StrokeStyleProps,
-  AlphaProps,
-  CursorStyleProps {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  alignToPixelGrid?: PixelGridAlignment;
-}
+  CRCBasicMouseEvents {}
 
-function Rect(props: RectProps, _style: SystemStyle, ctx: RenderingContext2D) {
-  let { x, y, width, height, alignToPixelGrid, ...pathProps } = props;
+function Rect(
+  props: RectProps,
+  style: Readonly<RectStyle>,
+  ctx: RenderingContext2D,
+) {
+  let {
+    x = 0,
+    y = 0,
+    width,
+    height,
+    alignToPixelGrid,
+    ...pathStyle
+  } = style;
 
   if (alignToPixelGrid) {
     ({ x, y, width, height } = adjustRectangleToPixelGrid(
-      props.lineWidth ?? 0,
+      style.strokeWidth ?? 0,
       x,
       y,
       width,
@@ -45,11 +41,11 @@ function Rect(props: RectProps, _style: SystemStyle, ctx: RenderingContext2D) {
   rectPath.rect(x, y, width, height);
 
   Path(
+    props,
     {
-      ...pathProps,
-      path: rectPath,
+      ...pathStyle,
+      d: rectPath,
     },
-    {},
     ctx,
   );
 }

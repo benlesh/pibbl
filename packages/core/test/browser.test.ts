@@ -14,13 +14,15 @@ describe('crc browser tests', () => {
 
     const SimpleRect = defineComp(() => {
       return rect({
-        x: 50,
-        y: 50,
-        width: 100,
-        height: 100,
-        fillStyle: 'red',
-        strokeStyle: 'black',
-        lineWidth: 2,
+        style: {
+          x: 50,
+          y: 50,
+          width: 100,
+          height: 100,
+          fill: 'red',
+          stroke: 'black',
+          strokeWidth: 2,
+        },
       });
     });
 

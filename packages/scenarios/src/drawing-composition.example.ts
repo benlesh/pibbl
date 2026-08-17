@@ -30,15 +30,19 @@ interface LayerArtworkProps {
 
 const LayerArtwork = defineComp<LayerArtworkProps>(({ updated }) => [
   rect({
-    x: 0,
-    y: 0,
-    width: 112,
-    height: 92,
-    fillStyle: updated ? '#fbcfe8' : '#dbeafe',
+    style: {
+      x: 0,
+      y: 0,
+      width: 112,
+      height: 92,
+      fill: updated ? '#fbcfe8' : '#dbeafe',
+    },
   }),
   svgPath({
-    d: updated ? 'M 20 72 L 56 16 L 92 72 Z' : 'M 18 18 H 94 V 74 H 18 Z',
-    fillStyle: updated ? '#ec4899' : '#2563eb',
+    style: {
+      d: updated ? 'M 20 72 L 56 16 L 92 72 Z' : 'M 18 18 H 94 V 74 H 18 Z',
+      fill: updated ? '#ec4899' : '#2563eb',
+    },
   }),
 ]);
 
@@ -53,7 +57,15 @@ function clipPath(updated: boolean): Path2D {
 }
 
 const DrawingCompositionScene = defineComp<DrawingCompositionSceneProps>(({ state }) => [
-  rect({ x: 0, y: 0, width: 480, height: 240, fillStyle: '#f8fafc' }),
+  rect({
+    style: {
+      x: 0,
+      y: 0,
+      width: 480,
+      height: 240,
+      fill: '#f8fafc',
+    },
+  }),
   g({
     key: 'transformed-group',
     x: state.updated ? 34 : 24,
@@ -61,22 +73,62 @@ const DrawingCompositionScene = defineComp<DrawingCompositionSceneProps>(({ stat
     rotate: state.updated ? 12 : 0,
     rotateOrigin: [58, 52],
     children: [
-      rect({ x: 0, y: 0, width: 116, height: 104, fillStyle: '#bfdbfe' }),
-      rect({ x: 18, y: 18, width: 80, height: 68, fillStyle: '#2563eb' }),
+      rect({
+        style: {
+          x: 0,
+          y: 0,
+          width: 116,
+          height: 104,
+          fill: '#bfdbfe',
+        },
+      }),
+      rect({
+        style: {
+          x: 18,
+          y: 18,
+          width: 80,
+          height: 68,
+          fill: '#2563eb',
+        },
+      }),
     ],
   }),
   clip({
     path: clipPath(state.updated),
     children: [
-      rect({ x: 174, y: 28, width: 138, height: 136, fillStyle: '#fef3c7' }),
-      rect({ x: 190, y: 44, width: 106, height: 104, fillStyle: '#f59e0b' }),
+      rect({
+        style: {
+          x: 174,
+          y: 28,
+          width: 138,
+          height: 136,
+          fill: '#fef3c7',
+        },
+      }),
+      rect({
+        style: {
+          x: 190,
+          y: 44,
+          width: 106,
+          height: 104,
+          fill: '#f59e0b',
+        },
+      }),
     ],
   }),
   clip({
     path: new Path2D('M 210 54 H 276 V 138 H 210 Z M 228 74 H 258 V 118 H 228 Z'),
     fillRule: 'evenodd',
     children: [
-      rect({ x: 210, y: 54, width: 66, height: 84, fillStyle: '#fef3c7' }),
+      rect({
+        style: {
+          x: 210,
+          y: 54,
+          width: 66,
+          height: 84,
+          fill: '#fef3c7',
+        },
+      }),
     ],
   }),
   g({
@@ -92,7 +144,15 @@ const DrawingCompositionScene = defineComp<DrawingCompositionSceneProps>(({ stat
       }),
     ],
   }),
-  rect({ x: 24, y: 190, width: 432, height: 20, fillStyle: '#e2e8f0' }),
+  rect({
+    style: {
+      x: 24,
+      y: 190,
+      width: 432,
+      height: 20,
+      fill: '#e2e8f0',
+    },
+  }),
 ]);
 
 export function createDrawingCompositionScene(

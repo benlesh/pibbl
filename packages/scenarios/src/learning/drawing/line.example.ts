@@ -11,7 +11,15 @@ import {
 const LineStudy = defineComp(function LineStudy() {
   const [tracking, setTracking] = crcState(false);
   return [
-    rect({ x: 0, y: 0, width: 720, height: 420, fillStyle: "#f7f0df" }),
+    rect({
+      style: {
+        x: 0,
+        y: 0,
+        width: 720,
+        height: 420,
+        fill: '#f7f0df',
+      },
+    }),
     line({
       coords: [
         [64, 338],

@@ -10,25 +10,36 @@ import {
 const Poster = defineComp(function Poster() {
   const [message, setMessage] = crcState("HELLO");
   return [
-    rect({ x: 0, y: 0, width: 720, height: 420, fillStyle: "#f7f0df" }),
     rect({
-      x: 74,
-      y: 72,
-      width: 572,
-      height: 276,
-      fillStyle: "#f7c948",
-      strokeStyle: "#17211d",
-      lineWidth: 6,
+      style: {
+        x: 0,
+        y: 0,
+        width: 720,
+        height: 420,
+        fill: '#f7f0df',
+      },
     }),
     rect({
-      x: 154,
-      y: 112,
-      width: 412,
-      height: 196,
-      fillStyle: "#1f4bd8",
-      cursor: "pointer",
-      onClick: () =>
-        setMessage((value) => (value === "HELLO" ? "CRC!" : "HELLO")),
+      style: {
+        x: 74,
+        y: 72,
+        width: 572,
+        height: 276,
+        fill: '#f7c948',
+        stroke: '#17211d',
+        strokeWidth: 6,
+      },
+    }),
+    rect({
+      style: {
+        x: 154,
+        y: 112,
+        width: 412,
+        height: 196,
+        fill: '#1f4bd8',
+        cursor: 'pointer',
+      },
+      onClick: () => setMessage((value) => (value === 'HELLO' ? 'CRC!' : 'HELLO')),
     }),
     text({
       text: message,

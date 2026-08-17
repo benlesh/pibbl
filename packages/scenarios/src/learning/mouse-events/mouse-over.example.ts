@@ -11,14 +11,16 @@ const MouseOverStudy = defineComp(function MouseOverStudy() {
   const [active, setActive] = crcState("none");
   const card = (x: number, color: string, label: string) => [
     rect({
-      x,
-      y: 108,
-      width: 176,
-      height: 210,
-      fillStyle: color,
-      strokeStyle: "#17211d",
-      lineWidth: 5,
-      cursor: "pointer",
+      style: {
+        x,
+        y: 108,
+        width: 176,
+        height: 210,
+        fill: color,
+        stroke: '#17211d',
+        strokeWidth: 5,
+        cursor: 'pointer',
+      },
       onMouseOver: () => setActive(label),
     }),
     text({
@@ -31,7 +33,15 @@ const MouseOverStudy = defineComp(function MouseOverStudy() {
     }),
   ];
   return [
-    rect({ x: 0, y: 0, width: 720, height: 420, fillStyle: "#f7f0df" }),
+    rect({
+      style: {
+        x: 0,
+        y: 0,
+        width: 720,
+        height: 420,
+        fill: '#f7f0df',
+      },
+    }),
     ...card(64, "#1f4bd8", "FORM"),
     ...card(272, "#ff6b57", "COLOR"),
     ...card(480, "#f7c948", "PLAY"),

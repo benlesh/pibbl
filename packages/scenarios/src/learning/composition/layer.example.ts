@@ -17,17 +17,27 @@ interface BadgeProps {
 const Badge = defineComp(function Badge(props: BadgeProps) {
   return [
     rect({
-      x: 0,
-      y: 0,
-      width: 344,
-      height: 214,
-      fillStyle: props.active ? "#f7c948" : "#74d3ae",
-      strokeStyle: "#17211d",
-      lineWidth: 6,
-      cursor: "pointer",
+      style: {
+        x: 0,
+        y: 0,
+        width: 344,
+        height: 214,
+        fill: props.active ? '#f7c948' : '#74d3ae',
+        stroke: '#17211d',
+        strokeWidth: 6,
+        cursor: 'pointer',
+      },
       onClick: props.onSelect,
     }),
-    rect({ x: 34, y: 34, width: 86, height: 146, fillStyle: "#1f4bd8" }),
+    rect({
+      style: {
+        x: 34,
+        y: 34,
+        width: 86,
+        height: 146,
+        fill: '#1f4bd8',
+      },
+    }),
     text({
       text: props.active ? "LAYER!" : "OFFSCREEN",
       x: 226,
@@ -50,15 +60,25 @@ const Badge = defineComp(function Badge(props: BadgeProps) {
 const LayerStudy = defineComp(function LayerStudy() {
   const [active, setActive] = crcState(false);
   return [
-    rect({ x: 0, y: 0, width: 720, height: 420, fillStyle: "#ff6b57" }),
     rect({
-      x: 132,
-      y: 82,
-      width: 456,
-      height: 256,
-      fillStyle: "#fffdf6",
-      strokeStyle: "#17211d",
-      lineWidth: 6,
+      style: {
+        x: 0,
+        y: 0,
+        width: 720,
+        height: 420,
+        fill: '#ff6b57',
+      },
+    }),
+    rect({
+      style: {
+        x: 132,
+        y: 82,
+        width: 456,
+        height: 256,
+        fill: '#fffdf6',
+        stroke: '#17211d',
+        strokeWidth: 6,
+      },
     }),
     g({
       x: 188,

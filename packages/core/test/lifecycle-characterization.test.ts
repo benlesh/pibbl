@@ -55,11 +55,13 @@ function handlers(generation: number, calls: number[]): Required<CRCBasicMouseEv
 }
 
 const ProbeScene = defineComp<ProbeSceneProps>(({ calls, enabled, generation, show }) => show ? rect({
-  x: 20,
-  y: 20,
-  width: 100,
-  height: 100,
-  fillStyle: '#2563eb',
+  style: {
+    x: 20,
+    y: 20,
+    width: 100,
+    height: 100,
+    fill: '#2563eb',
+  },
   ...(enabled ? handlers(generation, calls) : {}),
 }) : undefined);
 
@@ -70,11 +72,13 @@ const ToggleNestedLayerScene = defineComp<ProbeSceneProps>(({ calls, enabled, ge
       key: 'inner-layer',
       render: rect({
         key: 'nested-region',
-        x: 20,
-        y: 20,
-        width: 100,
-        height: 100,
-        fillStyle: '#7c3aed',
+        style: {
+          x: 20,
+          y: 20,
+          width: 100,
+          height: 100,
+          fill: '#7c3aed',
+        },
         ...(enabled ? handlers(generation, calls) : {}),
       }),
     }),
@@ -85,30 +89,36 @@ const PersistentLayerScene = defineComp<ProbeSceneProps>(({ calls, enabled, gene
   key: 'persistent-layer',
   render: rect({
     key: 'persistent-region',
-    x: 20,
-    y: 20,
-    width: 100,
-    height: 100,
-    fillStyle: '#7c3aed',
+    style: {
+      x: 20,
+      y: 20,
+      width: 100,
+      height: 100,
+      fill: '#7c3aed',
+    },
     onClick: enabled ? () => calls.push(generation) : undefined,
   }),
 }));
 
 const FirstLayerRoot = defineComp<{ calls: string[] }>(({ calls }) => rect({
-  x: 20,
-  y: 20,
-  width: 100,
-  height: 100,
-  fillStyle: '#2563eb',
+  style: {
+    x: 20,
+    y: 20,
+    width: 100,
+    height: 100,
+    fill: '#2563eb',
+  },
   onClick: () => calls.push('first'),
 }));
 
 const SecondLayerRoot = defineComp<{ calls: string[] }>(({ calls }) => rect({
-  x: 20,
-  y: 20,
-  width: 100,
-  height: 100,
-  fillStyle: '#7c3aed',
+  style: {
+    x: 20,
+    y: 20,
+    width: 100,
+    height: 100,
+    fill: '#7c3aed',
+  },
   onClick: () => calls.push('second'),
 }));
 
@@ -120,21 +130,25 @@ const SwitchingLayerScene = defineComp<{ calls: string[]; second: boolean }>(({ 
 const CursorOwnershipScene = defineComp(() => [
   rect({
     key: 'first-cursor',
-    x: 20,
-    y: 20,
-    width: 60,
-    height: 60,
-    fillStyle: '#2563eb',
-    cursor: 'pointer',
+    style: {
+      x: 20,
+      y: 20,
+      width: 60,
+      height: 60,
+      fill: '#2563eb',
+      cursor: 'pointer',
+    },
   }),
   rect({
     key: 'second-cursor',
-    x: 100,
-    y: 20,
-    width: 60,
-    height: 60,
-    fillStyle: '#7c3aed',
-    cursor: 'crosshair',
+    style: {
+      x: 100,
+      y: 20,
+      width: 60,
+      height: 60,
+      fill: '#7c3aed',
+      cursor: 'crosshair',
+    },
   }),
 ]);
 
@@ -144,18 +158,28 @@ const ObserverScene = defineComp<{ calls: string[] }>(({ calls }) => {
     throw new Error('expected lifecycle handler error');
   });
   crcEvent('click', () => calls.push('safe'));
-  return rect({ x: 0, y: 0, width: 160, height: 120, fillStyle: '#f8fafc' });
+  return rect({
+    style: {
+      x: 0,
+      y: 0,
+      width: 160,
+      height: 120,
+      fill: '#f8fafc',
+    },
+  });
 });
 
 const LayerGlobalResources = defineComp<{ calls: string[] }>(({ calls }) => {
   crcEvent('mousemove', () => calls.push('observer'));
   crcCursor({ style: 'wait' });
   return rect({
-    x: 20,
-    y: 20,
-    width: 100,
-    height: 100,
-    fillStyle: '#7c3aed',
+    style: {
+      x: 20,
+      y: 20,
+      width: 100,
+      height: 100,
+      fill: '#7c3aed',
+    },
     onMouseMove: () => calls.push('target'),
   });
 });

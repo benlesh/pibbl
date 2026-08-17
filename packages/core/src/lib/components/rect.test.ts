@@ -4,30 +4,48 @@ import { componentTest } from '../test-utils/component-test';
 import { takeScreenshot } from '../util/test-utils';
 import { rect } from './rect';
 
-const defaultOptions = {
+const defaultStyle = {
   x: 50,
   y: 50,
   width: 100,
   height: 100,
-  fillStyle: 'red',
-  strokeStyle: 'black',
-  lineWidth: 1,
+  fill: 'red',
+  stroke: 'black',
+  strokeWidth: 1,
 };
 
 describe('rect', () => {
   it('renders a rectangle in browser', async () => {
-    await componentTest(rect(defaultOptions));
+    await componentTest(rect({
+      style: defaultStyle,
+    }));
     await takeScreenshot(page);
+  });
+
+  it('defaults omitted x and y to zero', async () => {
+    const canvas = await componentTest(rect({
+      style: {
+        width: 20,
+        height: 20,
+        fill: 'red',
+      },
+    }));
+
+    expect(Array.from(
+      canvas.element.getContext('2d')!.getImageData(10, 10, 1, 1).data,
+    )).toEqual([255, 0, 0, 255]);
   });
 
   describe('other styles', () => {
     it('should change the mouse cursor to a pointer when hovering over the rect', async () => {
       const canvas = await componentTest(rect({
-        ...defaultOptions,
-        cursor: 'pointer',
+        style: {
+          ...defaultStyle,
+          cursor: 'pointer',
+        },
       }));
 
-      const { x, y, width, height } = defaultOptions;
+      const { x, y, width, height } = defaultStyle;
       const centerX = x + width / 2;
       const centerY = y + height / 2;
 
@@ -38,14 +56,14 @@ describe('rect', () => {
   });
 
   describe('mouse events', () => {
-    const { x, y, width, height, lineWidth } = defaultOptions;
+    const { x, y, width, height, strokeWidth } = defaultStyle;
 
     const centerX = x + width / 2;
     const centerY = y + height / 2;
-    const onBorderX = x + width + (lineWidth / 2);
-    const onBorderY = y + height + (lineWidth / 2);
+    const onBorderX = x + width + (strokeWidth / 2);
+    const onBorderY = y + height + (strokeWidth / 2);
     const offRectX = x - 10;
-    const offRectY = defaultOptions.y - 10;
+    const offRectY = defaultStyle.y - 10;
 
     describe.each([
       { event: 'click', handler: 'onClick' },
@@ -58,7 +76,7 @@ describe('rect', () => {
         const handlerFn = vi.fn();
 
         const canvas = await componentTest(rect({
-          ...defaultOptions,
+          style: defaultStyle,
           [handler]: handlerFn,
         }));
 
@@ -86,7 +104,7 @@ describe('rect', () => {
         const onMouseOver = vi.fn();
         const onMouseOut = vi.fn();
 
-        const { x, y, width, height } = defaultOptions;
+        const { x, y, width, height } = defaultStyle;
 
         const centerX = x + width / 2;
         const centerY = y + height / 2;
@@ -95,8 +113,10 @@ describe('rect', () => {
         const onBorderY = y - 1;
 
         const canvas = await componentTest(rect({
-          ...defaultOptions,
-          lineWidth,
+          style: {
+            ...defaultStyle,
+            strokeWidth: lineWidth,
+          },
           onMouseOver,
           onMouseOut,
         }));
@@ -131,14 +151,16 @@ describe('rect', () => {
         const onMouseOver = vi.fn();
         const onMouseOut = vi.fn();
 
-        const { x, y, width, height } = defaultOptions;
+        const { x, y, width, height } = defaultStyle;
 
         const centerX = x + width / 2;
         const centerY = y + height / 2;
 
         const canvas = await componentTest(rect({
-          ...defaultOptions,
-          lineWidth: 0,
+          style: {
+            ...defaultStyle,
+            strokeWidth: 0,
+          },
           onMouseOver,
           onMouseOut,
         }));

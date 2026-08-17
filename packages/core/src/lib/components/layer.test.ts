@@ -1,4 +1,5 @@
 import type { RectProps } from './rect';
+import type { RectStyle } from '../style/types';
 import type { SystemStyle } from '../types';
 import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
@@ -28,11 +29,13 @@ describe('layer', () => {
     const [counter, setCounter] = crcState(0);
     onRender();
     return rect({
-      x,
-      y,
-      width,
-      height,
-      fillStyle,
+      style: {
+        x,
+        y,
+        width,
+        height,
+        fill: fillStyle,
+      },
       onClick: () => setCounter(counter + 1),
     });
   };
@@ -57,11 +60,13 @@ describe('layer', () => {
       width: 200,
       height: 150,
       render: rect({
-        x: 0,
-        y: 0,
-        width: 200,
-        height: 150,
-        fillStyle: 'green',
+        style: {
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 150,
+          fill: 'green',
+        },
       }),
     }));
     await takeScreenshot(page);
@@ -117,9 +122,12 @@ describe('layer', () => {
 
     it('only re-renders when props change', async () => {
       let renderCount = 0;
-      const countedRect = defineComp((props: RectProps) => {
+      const countedRect = defineComp<RectProps, RectStyle>((props, style) => {
         renderCount++;
-        return rect(props);
+        return rect({
+          ...props,
+          style,
+        });
       });
 
       const wrapperComponent = defineComp(() => {
@@ -129,11 +137,13 @@ describe('layer', () => {
         return g({
           children: [
             rect({
-              x: 0,
-              y: 0,
-              width: 200,
-              height: 200,
-              fillStyle: 'green',
+              style: {
+                x: 0,
+                y: 0,
+                width: 200,
+                height: 200,
+                fill: 'green',
+              },
               onClick: () => {
                 setFillStyle('red');
                 setLayerWidth(300);
@@ -142,11 +152,13 @@ describe('layer', () => {
             layer({
               width: layerWidth,
               render: countedRect({
-                x: 0,
-                y: 0,
-                width: 200,
-                height: 200,
-                fillStyle,
+                style: {
+                  x: 0,
+                  y: 0,
+                  width: 200,
+                  height: 200,
+                  fill: fillStyle,
+                },
               }),
             }),
           ],
@@ -173,11 +185,13 @@ describe('layer', () => {
       >(({ onRender }) => {
         onRender();
         return rect({
-          x: 0,
-          y: 0,
-          width: 100,
-          height: 100,
-          fillStyle: 'blue',
+          style: {
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 100,
+            fill: 'blue',
+          },
         });
       });
       const wrapperComponent = defineComp(() => {
@@ -185,11 +199,13 @@ describe('layer', () => {
         return g({
           children: [
             rect({
-              x: 100,
-              y: 0,
-              width: 100,
-              height: 100,
-              fillStyle: 'green',
+              style: {
+                x: 100,
+                y: 0,
+                width: 100,
+                height: 100,
+                fill: 'green',
+              },
               onClick: () => setStyleVersion(2),
             }),
             layer({
@@ -217,11 +233,13 @@ describe('layer', () => {
         const [size, setSize] = crcState(100);
         return g({ children: [
           rect({
-            x: 0,
-            y: 0,
-            width: 300,
-            height: 300,
-            fillStyle: 'green',
+            style: {
+              x: 0,
+              y: 0,
+              width: 300,
+              height: 300,
+              fill: 'green',
+            },
             onClick: () => setSize(200),
           }),
           layer({
@@ -253,11 +271,13 @@ describe('layer', () => {
           y: 100,
           children: [
             rect({
-              x: 0,
-              y: 0,
-              width: 50,
-              height: 50,
-              fillStyle: 'purple',
+              style: {
+                x: 0,
+                y: 0,
+                width: 50,
+                height: 50,
+                fill: 'purple',
+              },
             }),
             text({
               x: 10,
@@ -277,11 +297,13 @@ describe('layer', () => {
           // Background layer
           layer({
             render: rect({
-              x: 0,
-              y: 0,
-              width: 300,
-              height: 200,
-              fillStyle: 'lightblue',
+              style: {
+                x: 0,
+                y: 0,
+                width: 300,
+                height: 200,
+                fill: 'lightblue',
+              },
             }),
           }),
           // Content layer
@@ -291,11 +313,13 @@ describe('layer', () => {
               y: 50,
               children: [
                 rect({
-                  x: 0,
-                  y: 0,
-                  width: 100,
-                  height: 100,
-                  fillStyle: 'rgba(255, 0, 0, 0.5)',
+                  style: {
+                    x: 0,
+                    y: 0,
+                    width: 100,
+                    height: 100,
+                    fill: 'rgba(255, 0, 0, 0.5)',
+                  },
                 }),
                 text({
                   x: 20,
@@ -309,11 +333,13 @@ describe('layer', () => {
           // Overlay layer
           layer({
             render: rect({
-              x: 100,
-              y: 100,
-              width: 50,
-              height: 50,
-              fillStyle: 'rgba(0, 255, 0, 0.5)',
+              style: {
+                x: 100,
+                y: 100,
+                width: 50,
+                height: 50,
+                fill: 'rgba(0, 255, 0, 0.5)',
+              },
             }),
           }),
         ],
@@ -330,11 +356,13 @@ describe('layer', () => {
 
       const canvas = await componentTest(layer({
         render: rect({
-          x: 50,
-          y: 50,
-          width: 100,
-          height: 100,
-          fillStyle: 'blue',
+          style: {
+            x: 50,
+            y: 50,
+            width: 100,
+            height: 100,
+            fill: 'blue',
+          },
           onClick,
         }),
       }));
@@ -357,22 +385,26 @@ describe('layer', () => {
           // Bottom layer
           layer({
             render: rect({
-              x: 0,
-              y: 0,
-              width: 200,
-              height: 200,
-              fillStyle: 'blue',
+              style: {
+                x: 0,
+                y: 0,
+                width: 200,
+                height: 200,
+                fill: 'blue',
+              },
               onClick: onClickBottom,
             }),
           }),
           // Top layer
           layer({
             render: rect({
-              x: 50,
-              y: 50,
-              width: 100,
-              height: 100,
-              fillStyle: 'red',
+              style: {
+                x: 50,
+                y: 50,
+                width: 100,
+                height: 100,
+                fill: 'red',
+              },
               onClick: onClickTop,
             }),
           }),
@@ -395,20 +427,24 @@ describe('layer', () => {
         children: [
           layer({
             render: rect({
-              x: 40,
-              y: 40,
-              width: 120,
-              height: 120,
-              fillStyle: 'orange',
+              style: {
+                x: 40,
+                y: 40,
+                width: 120,
+                height: 120,
+                fill: 'orange',
+              },
               onClick: onClickLayer,
             }),
           }),
           rect({
-            x: 70,
-            y: 70,
-            width: 60,
-            height: 60,
-            fillStyle: 'purple',
+            style: {
+              x: 70,
+              y: 70,
+              width: 60,
+              height: 60,
+              fill: 'purple',
+            },
             onClick: onClickRoot,
           }),
         ],
@@ -430,11 +466,13 @@ describe('layer', () => {
             width: 80,
             height: 80,
             render: rect({
-              x: 0,
-              y: 0,
-              width: 60,
-              height: 60,
-              fillStyle: 'teal',
+              style: {
+                x: 0,
+                y: 0,
+                width: 60,
+                height: 60,
+                fill: 'teal',
+              },
               onClick,
             }),
           }),
@@ -454,11 +492,13 @@ describe('layer', () => {
         width: 50,
         height: 50,
         render: rect({
-          x: 0,
-          y: 0,
-          width: 100,
-          height: 100,
-          fillStyle: 'blue',
+          style: {
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 100,
+            fill: 'blue',
+          },
           onClick,
         }),
       }));
@@ -483,11 +523,13 @@ describe('layer', () => {
               width: 80,
               height: 80,
               render: rect({
-                x: 0,
-                y: 0,
-                width: 60,
-                height: 60,
-                fillStyle: 'green',
+                style: {
+                  x: 0,
+                  y: 0,
+                  width: 60,
+                  height: 60,
+                  fill: 'green',
+                },
                 onClick,
               }),
             }),
@@ -511,11 +553,13 @@ describe('layer', () => {
         children: [
           layer({
             render: rect({
-              x: 0,
-              y: 0,
-              width: 180,
-              height: 180,
-              fillStyle: 'red',
+              style: {
+                x: 0,
+                y: 0,
+                width: 180,
+                height: 180,
+                fill: 'red',
+              },
               onClick,
             }),
           }),
@@ -534,12 +578,14 @@ describe('layer', () => {
       const LayerTarget = defineComp(() => {
         crcEvent('mousemove', () => calls.push('observer'));
         return rect({
-          x: 50,
-          y: 50,
-          width: 100,
-          height: 100,
-          fillStyle: 'orange',
-          cursor: 'pointer',
+          style: {
+            x: 50,
+            y: 50,
+            width: 100,
+            height: 100,
+            fill: 'orange',
+            cursor: 'pointer',
+          },
           onMouseOver: () => calls.push('layer-over'),
           onMouseOut: () => calls.push('layer-out'),
           onMouseMove: () => calls.push('layer-move'),
@@ -548,12 +594,14 @@ describe('layer', () => {
       const canvas = await componentTest(g({
         children: [
           rect({
-            x: 0,
-            y: 0,
-            width: 200,
-            height: 200,
-            fillStyle: 'blue',
-            cursor: 'crosshair',
+            style: {
+              x: 0,
+              y: 0,
+              width: 200,
+              height: 200,
+              fill: 'blue',
+              cursor: 'crosshair',
+            },
             onMouseOver: () => calls.push('root-over'),
             onMouseMove: () => calls.push('root-move'),
           }),
@@ -582,11 +630,13 @@ describe('layer', () => {
       const LayerDefaultCursor = defineComp(() => {
         crcCursor({ style: 'wait' });
         return rect({
-          x: 0,
-          y: 0,
-          width: 100,
-          height: 100,
-          fillStyle: 'gray',
+          style: {
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 100,
+            fill: 'gray',
+          },
         });
       });
       const canvas = await componentTest(layer({

@@ -24,20 +24,24 @@ const SmokeScene = defineComp<SmokeSceneProps>(({ state, onClick }) => {
 
   return [
     rect({
-      x: 0,
-      y: 0,
-      width: 480,
-      height: 240,
-      fillStyle: '#f8fafc',
+      style: {
+        x: 0,
+        y: 0,
+        width: 480,
+        height: 240,
+        fill: '#f8fafc',
+      },
     }),
     rect({
-      x: 28,
-      y: 48,
-      width: 188,
-      height: 120,
-      fillStyle,
-      strokeStyle: '#0f172a',
-      lineWidth: 2,
+      style: {
+        x: 28,
+        y: 48,
+        width: 188,
+        height: 120,
+        fill: fillStyle,
+        stroke: '#0f172a',
+        strokeWidth: 2,
+      },
       onClick,
     }),
     text({

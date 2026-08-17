@@ -20,15 +20,25 @@ export interface LineProps
 }
 
 export function Line(props: LineProps, _style: SystemStyle, ctx: RenderingContext2D) {
-  const { coords, ...pathProps } = props;
+  const {
+    coords,
+    cursor,
+    lineInteractionWidth,
+    lineWidth,
+    strokeStyle,
+    ...pathProps
+  } = props;
   const linePath = createLinePath(coords);
 
   return Path(
+    pathProps,
     {
-      ...pathProps,
-      path: linePath,
+      d: linePath,
+      cursor,
+      lineInteractionWidth,
+      stroke: strokeStyle,
+      strokeWidth: lineWidth,
     },
-    {},
     ctx,
   );
 }

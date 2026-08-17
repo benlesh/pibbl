@@ -194,18 +194,21 @@ function interactiveRect(
   return rect({
     ...options,
     ...traceHandlers(target, record),
+    style: options.style,
   });
 }
 
 function rootFill(record: GeometryMatrixRecord) {
   return interactiveRect('fill', record, {
     key: 'root-fill',
-    x: 160,
-    y: 80,
-    width: 160,
-    height: 80,
-    fillStyle: '#2563eb',
-    cursor: 'pointer',
+    style: {
+      x: 160,
+      y: 80,
+      width: 160,
+      height: 80,
+      fill: '#2563eb',
+      cursor: 'pointer',
+    },
   });
 }
 
@@ -228,12 +231,14 @@ function compoundTransformClip(record: GeometryMatrixRecord) {
         path: clipPath,
         children: [interactiveRect('transformed', record, {
           key: 'transformed-target',
-          x: -10,
-          y: -10,
-          width: 60,
-          height: 40,
-          fillStyle: '#2563eb',
-          cursor: 'pointer',
+          style: {
+            x: -10,
+            y: -10,
+            width: 60,
+            height: 40,
+            fill: '#2563eb',
+            cursor: 'pointer',
+          },
         })],
       })],
     })],
@@ -256,12 +261,14 @@ function nestedClipIntersection(record: GeometryMatrixRecord) {
         x: 20,
         children: [interactiveRect('clipped', record, {
           key: 'clipped-target',
-          x: 0,
-          y: 0,
-          width: 380,
-          height: 240,
-          fillStyle: '#2563eb',
-          cursor: 'pointer',
+          style: {
+            x: 0,
+            y: 0,
+            width: 380,
+            height: 240,
+            fill: '#2563eb',
+            cursor: 'pointer',
+          },
         })],
       })],
     })],
@@ -272,44 +279,52 @@ function layerPaintOrder(record: GeometryMatrixRecord) {
   return [
     interactiveRect('root-under', record, {
       key: 'root-under',
-      x: 20,
-      y: 60,
-      width: 430,
-      height: 120,
-      fillStyle: '#93c5fd',
-      cursor: 'default',
+      style: {
+        x: 20,
+        y: 60,
+        width: 430,
+        height: 120,
+        fill: '#93c5fd',
+        cursor: 'default',
+      },
     }),
     layer({
       key: 'layer-one',
       render: interactiveRect('layer-one', record, {
         key: 'layer-one-target',
-        x: 80,
-        y: 60,
-        width: 280,
-        height: 120,
-        fillStyle: '#f59e0b',
-        cursor: 'pointer',
+        style: {
+          x: 80,
+          y: 60,
+          width: 280,
+          height: 120,
+          fill: '#f59e0b',
+          cursor: 'pointer',
+        },
       }),
     }),
     interactiveRect('root-middle', record, {
       key: 'root-middle',
-      x: 230,
-      y: 60,
-      width: 160,
-      height: 120,
-      fillStyle: '#7c3aed',
-      cursor: 'crosshair',
+      style: {
+        x: 230,
+        y: 60,
+        width: 160,
+        height: 120,
+        fill: '#7c3aed',
+        cursor: 'crosshair',
+      },
     }),
     layer({
       key: 'layer-two',
       render: interactiveRect('layer-two', record, {
         key: 'layer-two-target',
-        x: 320,
-        y: 60,
-        width: 130,
-        height: 120,
-        fillStyle: '#10b981',
-        cursor: 'grab',
+        style: {
+          x: 320,
+          y: 60,
+          width: 130,
+          height: 120,
+          fill: '#10b981',
+          cursor: 'grab',
+        },
       }),
     }),
   ];
@@ -329,12 +344,14 @@ function transformedNestedLayer(record: GeometryMatrixRecord) {
         children: [
           interactiveRect('layer-base', record, {
             key: 'layer-base-target',
-            x: 0,
-            y: 0,
-            width: 160,
-            height: 120,
-            fillStyle: '#f59e0b',
-            cursor: 'crosshair',
+            style: {
+              x: 0,
+              y: 0,
+              width: 160,
+              height: 120,
+              fill: '#f59e0b',
+              cursor: 'crosshair',
+            },
           }),
           layer({
             key: 'nested-custom-layer',
@@ -342,12 +359,14 @@ function transformedNestedLayer(record: GeometryMatrixRecord) {
             height: 60,
             render: interactiveRect('nested-layer', record, {
               key: 'nested-layer-target',
-              x: 20,
-              y: 10,
-              width: 80,
-              height: 60,
-              fillStyle: '#10b981',
-              cursor: 'pointer',
+              style: {
+                x: 20,
+                y: 10,
+                width: 80,
+                height: 60,
+                fill: '#10b981',
+                cursor: 'pointer',
+              },
             }),
           }),
         ],
@@ -395,11 +414,13 @@ function caseVisual(caseId: GeometryMatrixCaseId, record: GeometryMatrixRecord) 
 const GeometryMatrixScene = defineComp<GeometryMatrixSceneProps>(({ caseId, record }) => [
   rect({
     key: 'background',
-    x: 0,
-    y: 0,
-    width: 480,
-    height: 240,
-    fillStyle: '#f8fafc',
+    style: {
+      x: 0,
+      y: 0,
+      width: 480,
+      height: 240,
+      fill: '#f8fafc',
+    },
   }),
   ...caseVisual(caseId, record),
 ]);

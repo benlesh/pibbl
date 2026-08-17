@@ -35,8 +35,10 @@ describe('crcRef', () => {
       }
 
       return rect({
-        ...clickableArea,
-        fillStyle: 'red',
+        style: {
+          ...clickableArea,
+          fill: 'red',
+        },
         onClick: () => {
           props.onCheckRef?.(ref.current);
           setCount(count + 1);
@@ -81,10 +83,14 @@ describe('crcRef', () => {
       renderCount++;
 
       return rect({
-        ...clickableArea,
-        fillStyle: 'red',
+        style: {
+          ...clickableArea,
+          fill: 'red',
+        },
         onClick: () => {
-          ref.current = { [`newRef${Math.random()}`]: Math.random() };
+          ref.current = {
+            [`newRef${Math.random()}`]: Math.random(),
+          };
         },
       });
     }
@@ -131,8 +137,10 @@ describe('crcRef', () => {
       const ref2 = crcRef<any>(props.value2);
 
       return rect({
-        ...clickableArea,
-        fillStyle: 'red',
+        style: {
+          ...clickableArea,
+          fill: 'red',
+        },
         onClick: () => {
           props.onCheckRefs?.(ref1.current, ref2.current);
         },

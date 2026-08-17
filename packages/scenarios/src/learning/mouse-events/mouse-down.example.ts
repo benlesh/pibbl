@@ -11,20 +11,30 @@ const MouseDownStudy = defineComp(function MouseDownStudy() {
   const [presses, setPresses] = crcState(0);
   const [button, setButton] = crcState("none");
   return [
-    rect({ x: 0, y: 0, width: 720, height: 420, fillStyle: "#ff6b57" }),
     rect({
-      x: 150,
-      y: 92,
-      width: 420,
-      height: 236,
-      fillStyle: "#1f4bd8",
-      strokeStyle: "#17211d",
-      lineWidth: 8,
-      cursor: "pointer",
+      style: {
+        x: 0,
+        y: 0,
+        width: 720,
+        height: 420,
+        fill: '#ff6b57',
+      },
+    }),
+    rect({
+      style: {
+        x: 150,
+        y: 92,
+        width: 420,
+        height: 236,
+        fill: '#1f4bd8',
+        stroke: '#17211d',
+        strokeWidth: 8,
+        cursor: 'pointer',
+      },
       onMouseDown: (event) => {
         setPresses((value) => value + 1);
         setButton(
-          ["primary", "middle", "secondary"][event.originalEvent.button] ??
+          ['primary', 'middle', 'secondary'][event.originalEvent.button] ??
             `button ${event.originalEvent.button}`,
         );
       },

@@ -12,15 +12,25 @@ import {
 const SvgPathStudy = defineComp(function SvgPathStudy() {
   const [active, setActive] = crcState(false);
   return [
-    rect({ x: 0, y: 0, width: 720, height: 420, fillStyle: "#f7c948" }),
     rect({
-      x: 52,
-      y: 52,
-      width: 616,
-      height: 316,
-      fillStyle: "#fffdf6",
-      strokeStyle: "#17211d",
-      lineWidth: 6,
+      style: {
+        x: 0,
+        y: 0,
+        width: 720,
+        height: 420,
+        fill: '#f7c948',
+      },
+    }),
+    rect({
+      style: {
+        x: 52,
+        y: 52,
+        width: 616,
+        height: 316,
+        fill: '#fffdf6',
+        stroke: '#17211d',
+        strokeWidth: 6,
+      },
     }),
     g({
       x: 238,
@@ -29,11 +39,13 @@ const SvgPathStudy = defineComp(function SvgPathStudy() {
       scaleY: 2.45,
       children: [
         svgPath({
-          d: "M50 88 C20 68 4 48 8 28 C12 4 42 0 50 20 C58 0 88 4 92 28 C96 48 80 68 50 88 Z",
-          fillStyle: active ? "#1f4bd8" : "#ff6b57",
-          strokeStyle: "#17211d",
-          lineWidth: 2,
-          cursor: "pointer",
+          style: {
+            d: 'M50 88 C20 68 4 48 8 28 C12 4 42 0 50 20 C58 0 88 4 92 28 C96 48 80 68 50 88 Z',
+            fill: active ? '#1f4bd8' : '#ff6b57',
+            stroke: '#17211d',
+            strokeWidth: 2,
+            cursor: 'pointer',
+          },
           onClick: () => setActive((value) => !value),
         }),
       ],

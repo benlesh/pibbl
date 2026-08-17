@@ -1,40 +1,30 @@
 import { defineComp } from '../define-comp.js';
 import { crcSvgPath } from '../hooks/crc-svg-path.js';
 import {
-  AlphaProps,
   CRCBasicMouseEvents,
-  CursorStyleProps,
-  FillStyleProps,
   IntrinsicProps,
   RenderingContext2D,
-  StrokeStyleProps,
-  SystemStyle,
 } from '../types.js';
+import { SvgPathStyle } from '../style/types.js';
 import { Path } from './path.js';
 
 export interface SvgPathProps
   extends IntrinsicProps,
-  CRCBasicMouseEvents,
-  FillStyleProps,
-  StrokeStyleProps,
-  AlphaProps,
-  CursorStyleProps {
-  d: string;
-}
+  CRCBasicMouseEvents {}
 
 function SvgPath(
   props: SvgPathProps,
-  _style: SystemStyle,
+  style: Readonly<SvgPathStyle>,
   ctx: RenderingContext2D,
 ) {
-  const { d, ...pathProps } = props;
+  const { d, ...pathStyle } = style;
   const svgPath = crcSvgPath(d);
   return Path(
+    props,
     {
-      ...pathProps,
-      path: svgPath,
+      ...pathStyle,
+      d: svgPath,
     },
-    {},
     ctx,
   );
 }
