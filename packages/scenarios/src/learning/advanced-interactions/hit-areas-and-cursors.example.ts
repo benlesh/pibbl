@@ -39,20 +39,24 @@ const HitAreaStudy = defineComp(function HitAreaStudy() {
       onClick: () => setHits((value) => value + 1),
     }),
     text({
-      text: "4 PX STROKE / 42 PX HIT AREA",
-      x: 360,
-      y: 48,
-      fillStyle: "#17211d",
-      font: "900 22px sans-serif",
-      textAlign: "center",
+      style: {
+        text: "4 PX STROKE / 42 PX HIT AREA",
+        x: 360,
+        y: 48,
+        fill: "#17211d",
+        font: "900 22px sans-serif",
+        textAlign: "center",
+      },
     }),
     text({
-      text: `CLICKS NEAR THE LINE / ${hits}`,
-      x: 360,
-      y: 354,
-      fillStyle: "#1f4bd8",
-      font: "700 14px monospace",
-      textAlign: "center",
+      style: {
+        text: `CLICKS NEAR THE LINE / ${hits}`,
+        x: 360,
+        y: 354,
+        fill: "#1f4bd8",
+        font: "700 14px monospace",
+        textAlign: "center",
+      },
     }),
   ];
 });

@@ -58,12 +58,14 @@ const ClipStudy = defineComp(function ClipStudy() {
       ],
     }),
     text({
-      text: inside ? "INSIDE THE CLIP" : "CIRCULAR WINDOW",
-      x: 360,
-      y: 190,
-      fillStyle: "#17211d",
-      font: "900 25px sans-serif",
-      textAlign: "center",
+      style: {
+        text: inside ? "INSIDE THE CLIP" : "CIRCULAR WINDOW",
+        x: 360,
+        y: 190,
+        fill: "#17211d",
+        font: "900 25px sans-serif",
+        textAlign: "center",
+      },
     }),
   ];
 });

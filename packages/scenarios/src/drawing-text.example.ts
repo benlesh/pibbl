@@ -34,23 +34,27 @@ const DrawingTextScene = defineComp<DrawingTextSceneProps>(({
     },
   }),
   text({
+    style: {
+      text: state.updated ? 'Updated canvas text' : 'Canvas text',
+      x: 24,
+      y: 18,
+      font: '700 24px Arial',
+      fill: state.updated ? '#7c3aed' : '#0f172a',
+    },
     key: 'heading',
-    text: state.updated ? 'Updated canvas text' : 'Canvas text',
-    x: 24,
-    y: 18,
-    font: '700 24px Arial',
-    fillStyle: state.updated ? '#7c3aed' : '#0f172a',
   }),
   text({
+    style: {
+      text: 'centered',
+      x: 374,
+      y: 24,
+      font: '18px Arial',
+      textAlign: 'center',
+      textBaseline: 'middle',
+      fill: '#0f766e',
+      cursor: 'pointer',
+    },
     key: 'centered',
-    text: 'centered',
-    x: 374,
-    y: 24,
-    font: '18px Arial',
-    textAlign: 'center',
-    textBaseline: 'middle',
-    fillStyle: '#0f766e',
-    cursor: 'pointer',
     onClick: onCenteredText,
   }),
   rect({
@@ -63,14 +67,16 @@ const DrawingTextScene = defineComp<DrawingTextSceneProps>(({
     },
   }),
   text({
+    style: {
+      text: state.updated ? 'A newly updated sentence' : 'A sentence that is too long',
+      x: 32,
+      y: 76,
+      width: 154,
+      fit: 'ellipsis',
+      font: '17px Arial',
+      fill: '#1d4ed8',
+    },
     key: 'ellipsis',
-    text: state.updated ? 'A newly updated sentence' : 'A sentence that is too long',
-    x: 32,
-    y: 76,
-    maxWidth: 154,
-    overflow: 'ellipsis',
-    font: '17px Arial',
-    fillStyle: '#1d4ed8',
   }),
   rect({
     style: {
@@ -82,14 +88,16 @@ const DrawingTextScene = defineComp<DrawingTextSceneProps>(({
     },
   }),
   text({
+    style: {
+      text: 'This line is fitted to its card',
+      x: 252,
+      y: 76,
+      width: 196,
+      fit: 'squish',
+      font: '17px Arial',
+      fill: '#c2410c',
+    },
     key: 'squish',
-    text: 'This line is fitted to its card',
-    x: 252,
-    y: 76,
-    maxWidth: 196,
-    overflow: 'squish',
-    font: '17px Arial',
-    fillStyle: '#c2410c',
   }),
   rect({
     style: {
@@ -101,19 +109,21 @@ const DrawingTextScene = defineComp<DrawingTextSceneProps>(({
     },
   }),
   text({
+    style: {
+      text: state.updated ?
+          'Updated words wrap across this bounded card' :
+        'Several words wrap across this bounded card',
+      x: 34,
+      y: 136,
+      width: 184,
+      height: 64,
+      lineHeight: 21,
+      fit: 'ellipsis',
+      wrap: true,
+      font: '16px Arial',
+      fill: '#1e3a8a',
+    },
     key: 'wrapped',
-    text: state.updated ?
-        'Updated words wrap across this bounded card' :
-      'Several words wrap across this bounded card',
-    x: 34,
-    y: 136,
-    maxWidth: 184,
-    maxHeight: 64,
-    lineHeight: 21,
-    overflow: 'ellipsis',
-    wordWrap: true,
-    font: '16px Arial',
-    fillStyle: '#1e3a8a',
   }),
   rect({
     style: {
@@ -125,15 +135,17 @@ const DrawingTextScene = defineComp<DrawingTextSceneProps>(({
     },
   }),
   text({
+    style: {
+      text: 'Clipped text stays inside this golden card',
+      x: 264,
+      y: 136,
+      width: 182,
+      height: 28,
+      fit: 'clip',
+      font: '17px Arial',
+      fill: '#92400e',
+    },
     key: 'clipped',
-    text: 'Clipped text stays inside this golden card',
-    x: 264,
-    y: 136,
-    maxWidth: 182,
-    maxHeight: 28,
-    overflow: 'clip',
-    font: '17px Arial',
-    fillStyle: '#92400e',
   }),
   rect({
     style: {
@@ -145,13 +157,15 @@ const DrawingTextScene = defineComp<DrawingTextSceneProps>(({
     },
   }),
   text({
+    style: {
+      text: 'invisible at alpha zero',
+      x: 264,
+      y: 193,
+      font: '16px Arial',
+      fill: '#ffffff',
+      opacity: 0,
+    },
     key: 'zero-alpha',
-    text: 'invisible at alpha zero',
-    x: 264,
-    y: 193,
-    font: '16px Arial',
-    fillStyle: '#ffffff',
-    alpha: 0,
   }),
 ]);
 

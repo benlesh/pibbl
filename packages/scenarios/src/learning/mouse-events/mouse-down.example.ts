@@ -40,20 +40,24 @@ const MouseDownStudy = defineComp(function MouseDownStudy() {
       },
     }),
     text({
-      text: "PRESS THE PAD",
-      x: 360,
-      y: 164,
-      fillStyle: "#fffdf6",
-      font: "900 40px sans-serif",
-      textAlign: "center",
+      style: {
+        text: "PRESS THE PAD",
+        x: 360,
+        y: 164,
+        fill: "#fffdf6",
+        font: "900 40px sans-serif",
+        textAlign: "center",
+      },
     }),
     text({
-      text: `DOWN / ${presses} / ${button}`,
-      x: 360,
-      y: 238,
-      fillStyle: "#fffdf6",
-      font: "700 15px monospace",
-      textAlign: "center",
+      style: {
+        text: `DOWN / ${presses} / ${button}`,
+        x: 360,
+        y: 238,
+        fill: "#fffdf6",
+        font: "700 15px monospace",
+        textAlign: "center",
+      },
     }),
   ];
 });

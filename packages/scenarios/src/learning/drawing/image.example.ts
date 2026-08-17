@@ -52,14 +52,16 @@ const ImageStudy = defineComp(function ImageStudy() {
       onClick: () => setClicks((value) => value + 1),
     }),
     text({
-      text: clicks
-        ? `POSTCARD PICKS / ${clicks}`
-        : "IMAGE / CLICK THE POSTCARD",
-      x: 360,
-      y: 336,
-      fillStyle: "#17211d",
-      font: "800 15px monospace",
-      textAlign: "center",
+      style: {
+        text: clicks ?
+            `POSTCARD PICKS / ${clicks}` :
+          "IMAGE / CLICK THE POSTCARD",
+        x: 360,
+        y: 336,
+        fill: "#17211d",
+        font: "800 15px monospace",
+        textAlign: "center",
+      },
     }),
   ];
 });

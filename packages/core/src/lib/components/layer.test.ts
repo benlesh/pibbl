@@ -280,10 +280,12 @@ describe('layer', () => {
               },
             }),
             text({
-              x: 10,
-              y: 30,
-              text: 'Layered!',
-              fillStyle: 'white',
+              style: {
+                x: 10,
+                y: 30,
+                text: 'Layered!',
+                fill: 'white',
+              },
             }),
           ],
         }),
@@ -322,10 +324,12 @@ describe('layer', () => {
                   },
                 }),
                 text({
-                  x: 20,
-                  y: 50,
-                  text: 'Multiple Layers',
-                  fillStyle: 'white',
+                  style: {
+                    x: 20,
+                    y: 50,
+                    text: 'Multiple Layers',
+                    fill: 'white',
+                  },
                 }),
               ],
             }),

@@ -51,12 +51,14 @@ const SvgPathStudy = defineComp(function SvgPathStudy() {
       ],
     }),
     text({
-      text: active ? "SVG PATH / ACTIVE" : "SVG PATH / CLICK",
-      x: 360,
-      y: 326,
-      fillStyle: "#17211d",
-      font: "800 17px sans-serif",
-      textAlign: "center",
+      style: {
+        text: active ? "SVG PATH / ACTIVE" : "SVG PATH / CLICK",
+        x: 360,
+        y: 326,
+        fill: "#17211d",
+        font: "800 17px sans-serif",
+        textAlign: "center",
+      },
     }),
   ];
 });

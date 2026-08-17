@@ -37,20 +37,24 @@ const MouseUpStudy = defineComp(function MouseUpStudy() {
       },
     }),
     text({
-      text: "RELEASE HERE",
-      x: 360,
-      y: 162,
-      fillStyle: "#17211d",
-      font: "900 40px sans-serif",
-      textAlign: "center",
+      style: {
+        text: "RELEASE HERE",
+        x: 360,
+        y: 162,
+        fill: "#17211d",
+        font: "900 40px sans-serif",
+        textAlign: "center",
+      },
     }),
     text({
-      text: `UP / ${releases} / ${position}`,
-      x: 360,
-      y: 236,
-      fillStyle: "#17211d",
-      font: "700 15px monospace",
-      textAlign: "center",
+      style: {
+        text: `UP / ${releases} / ${position}`,
+        x: 360,
+        y: 236,
+        fill: "#17211d",
+        font: "700 15px monospace",
+        textAlign: "center",
+      },
     }),
   ];
 });

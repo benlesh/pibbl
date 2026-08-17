@@ -64,8 +64,8 @@ review before the next task begins.
 | P003-01 | Done        | First-class descriptor style/key protocol.                      |
 | P003-02 | Done        | Path, rectangle, and SVG path style migration.                  |
 | P003-03 | Done        | Line-family style migration.                                    |
-| P003-04 | Next        | Text style and shared text layout.                              |
-| P003-05 | Queued      | Image style migration.                                          |
+| P003-04 | Done        | Text style and shared text layout.                              |
+| P003-05 | Next        | Image style migration.                                          |
 | P003-06 | Queued      | Group, clip, layer, and style-only closure.                     |
 | P003-07 | Queued      | Length, constraint, box, and item capabilities.                 |
 | P003-08 | Queued      | Style resolution, layout context, placement, and observation.   |
@@ -102,13 +102,13 @@ Done when line coordinates, paint, pixel alignment, cursor, and interaction
 width are style-only across all callers, focused behavior/type checks pass, and
 the commit is reviewed.
 
-### P003-04 [NEXT] — Text styles and pure text layout
+### P003-04 [DONE] — Text styles and pure text layout
 
 Done when text uses `width`/`height`/`wrap`/CRC-native `fit`, painting and pure
 measurement share literal line layout, existing text/hit behavior is preserved,
 and the commit is reviewed.
 
-### P003-05 [TODO] — Image styles
+### P003-05 [NEXT] — Image styles
 
 Done when image source and visual geometry are style-only, existing asynchronous
 ownership/race behavior is preserved, focused checks pass, and the commit is
@@ -262,3 +262,26 @@ is clean, and this plan has no active marker.
   the immediately preceding fresh evidence remains 17/17 focused browser tests
   plus clean workspace typecheck and changed-file hygiene. The final amended
   task commit is sent for status-only review before P003-04 begins.
+- **2026-08-17 — P003-04 implementation pending review.** Added the closed
+  public text style and pure shared line-layout utility, migrated every authored
+  caller to `width`/`height`/`wrap`/CRC-native `fit`, and preserved paint,
+  clipping, cursor, and measured hit geometry without a legacy adapter. Focused
+  RED captured the absent utility/style behavior. GREEN is 23/23 focused tests
+  plus clean workspace typecheck; P003-04 remains in progress for adversarial
+  review, and P003-05 remains TODO. See
+  [`p003-style-layout.md`](../testing/field-notes/p003-style-layout.md).
+- **2026-08-17 — P003-04 adversarial review fix round 1.** Review found that
+  text-local `fit: 'clip'` constrained pixels but not the measured interaction
+  region. Focused RED reproduced cursor ownership outside the clip at 1 failed
+  and 22 passed tests. Text and the existing clip component now share one
+  internal Canvas/interaction clipping seam; focused text/layout/clip/dispatch
+  GREEN is 38/38 plus clean typecheck. P003-04 remains in progress pending
+  re-review, and P003-05 remains TODO.
+- **2026-08-17 — P003-04 complete after adversarial review.** Code re-review
+  found the shared Canvas/interaction clipping seam complete with no remaining
+  findings. This status-only closure marks P003-04 done and advances P003-05 as
+  the sole next step. No production or test file changed and no behavior check
+  was rerun; the immediately preceding fresh evidence remains 38/38 focused
+  browser tests plus clean workspace typecheck and changed-file hygiene. The
+  final amended Task 4 commit is sent for status-only review before P003-05
+  begins.

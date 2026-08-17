@@ -65,7 +65,15 @@ function caseVisual(
       return [
         region('a', 88, 78, 190, 100, '#93c5fd'),
         region('top', 190, 96, 190, 100, '#7c3aed'),
-        text({ x: 214, y: 126, text: 'later-painted top', font: '700 14px Arial', fillStyle: '#fff' }),
+        text({
+          style: {
+            x: 214,
+            y: 126,
+            text: 'later-painted top',
+            font: '700 14px Arial',
+            fill: '#fff',
+          },
+        }),
       ];
     case 'nested-child':
       return [
@@ -84,7 +92,15 @@ function caseVisual(
               },
             }),
             region('child', 70, 70, 100, 72, '#2563eb'),
-            text({ x: 84, y: 100, text: 'child', font: '700 15px Arial', fillStyle: '#fff' }),
+            text({
+              style: {
+                x: 84,
+                y: 100,
+                text: 'child',
+                font: '700 15px Arial',
+                fill: '#fff',
+              },
+            }),
           ],
         }),
       ];
@@ -103,7 +119,15 @@ function caseVisual(
             }),
           ],
         }),
-        text({ x: 286, y: 132, text: '× outside inner clip', font: '700 13px Arial', fillStyle: '#b91c1c' }),
+        text({
+          style: {
+            x: 286,
+            y: 132,
+            text: '× outside inner clip',
+            font: '700 13px Arial',
+            fill: '#b91c1c',
+          },
+        }),
       ];
     }
     case 'transformed-hit':
@@ -116,7 +140,15 @@ function caseVisual(
           y: 20,
           children: [region('a', 60, 80, 104, 60, '#2563eb')],
         }),
-        text({ x: 96, y: 136, text: 'local shape', font: '13px Arial', fillStyle: '#64748b' }),
+        text({
+          style: {
+            x: 96,
+            y: 136,
+            text: 'local shape',
+            font: '13px Arial',
+            fill: '#64748b',
+          },
+        }),
         line({ style: { coords: [[158, 132], [278, 132]], stroke: '#94a3b8', strokeWidth: 1 } }),
       ];
     case 'later-layer-topmost':
@@ -126,14 +158,38 @@ function caseVisual(
           key: 'later-layer',
           render: region('layer', 198, 96, 180, 94, '#f59e0b'),
         }),
-        text({ x: 218, y: 126, text: 'later layer', font: '700 14px Arial', fillStyle: '#422006' }),
+        text({
+          style: {
+            x: 218,
+            y: 126,
+            text: 'later layer',
+            font: '700 14px Arial',
+            fill: '#422006',
+          },
+        }),
       ];
     case 'css-scaled-coordinates':
       return [
         region('a', 150, 88, 180, 88, '#2563eb'),
         line({ style: { coords: [[150, 188], [330, 188]], stroke: '#64748b', strokeWidth: 1 } }),
-        text({ x: 173, y: 122, text: 'intrinsic 180 × 88', font: '700 14px Arial', fillStyle: '#fff' }),
-        text({ x: 166, y: 207, text: 'CSS pixels → intrinsic coordinates', font: '13px Arial', fillStyle: '#475569' }),
+        text({
+          style: {
+            x: 173,
+            y: 122,
+            text: 'intrinsic 180 × 88',
+            font: '700 14px Arial',
+            fill: '#fff',
+          },
+        }),
+        text({
+          style: {
+            x: 166,
+            y: 207,
+            text: 'CSS pixels → intrinsic coordinates',
+            font: '13px Arial',
+            fill: '#475569',
+          },
+        }),
       ];
     case 'fill-hit':
       return [region('a', 72, 72, 190, 112, '#2563eb')];
@@ -149,7 +205,15 @@ function caseVisual(
           },
           ...interactive('a'),
         }),
-        text({ x: 116, y: 136, text: 'stroke only', font: '700 15px Arial', fillStyle: '#1e3a8a' }),
+        text({
+          style: {
+            x: 116,
+            y: 136,
+            text: 'stroke only',
+            font: '700 15px Arial',
+            fill: '#1e3a8a',
+          },
+        }),
       ];
     case 'fill-stroke-hit':
       return [
@@ -189,7 +253,15 @@ function caseVisual(
           },
           ...interactive('a'),
         }),
-        text({ x: 94, y: 136, text: 'transparent fill hit area', font: '700 14px Arial', fillStyle: '#1e3a8a' }),
+        text({
+          style: {
+            x: 94,
+            y: 136,
+            text: 'transparent fill hit area',
+            font: '700 14px Arial',
+            fill: '#1e3a8a',
+          },
+        }),
       ];
     case 'line-interaction-width-hit':
     case 'line-interaction-width-miss':
@@ -206,12 +278,36 @@ function caseVisual(
         }),
         line({ style: { coords: [[90, 120], [390, 120]], stroke: '#bfdbfe', strokeWidth: 1 } }),
         line({ style: { coords: [[90, 144], [390, 144]], stroke: '#bfdbfe', strokeWidth: 1 } }),
-        text({ x: 126, y: 104, text: '24px interaction stroke', font: '13px Arial', fillStyle: '#475569' }),
+        text({
+          style: {
+            x: 126,
+            y: 104,
+            text: '24px interaction stroke',
+            font: '13px Arial',
+            fill: '#475569',
+          },
+        }),
       ];
     case 'root-event-no-path':
       return [
-        text({ x: 120, y: 126, text: 'Canvas-wide observer', font: '700 20px Arial', fillStyle: '#334155' }),
-        text({ x: 94, y: 154, text: 'not a logical target or cursor region', font: '14px Arial', fillStyle: '#64748b' }),
+        text({
+          style: {
+            x: 120,
+            y: 126,
+            text: 'Canvas-wide observer',
+            font: '700 20px Arial',
+            fill: '#334155',
+          },
+        }),
+        text({
+          style: {
+            x: 94,
+            y: 154,
+            text: 'not a logical target or cursor region',
+            font: '14px Arial',
+            fill: '#64748b',
+          },
+        }),
       ];
     case 'remove-target-during-press':
     case 'remove-target-during-move-plan':
@@ -228,7 +324,15 @@ function caseVisual(
         }),
         line({ style: { coords: [[72, 72], [262, 184]], stroke: '#ef4444', strokeWidth: 4 } }),
         line({ style: { coords: [[262, 72], [72, 184]], stroke: '#ef4444', strokeWidth: 4 } }),
-        text({ x: 102, y: 136, text: 'target removed', font: '700 15px Arial', fillStyle: '#991b1b' }),
+        text({
+          style: {
+            x: 102,
+            y: 136,
+            text: 'target removed',
+            font: '700 15px Arial',
+            fill: '#991b1b',
+          },
+        }),
       ];
     default: {
       const selectedA = ['a', 'child'].includes(contractCase.visualTarget);
@@ -236,8 +340,24 @@ function caseVisual(
       return [
         region('a', 72, 68, 190, 112, selectedA ? '#2563eb' : '#93c5fd'),
         region('b', 278, 86, 118, 100, selectedB ? '#7c3aed' : '#c4b5fd'),
-        text({ x: 94, y: 100, text: 'A', font: '700 18px Arial', fillStyle: '#fff' }),
-        text({ x: 300, y: 118, text: 'B', font: '700 18px Arial', fillStyle: '#fff' }),
+        text({
+          style: {
+            x: 94,
+            y: 100,
+            text: 'A',
+            font: '700 18px Arial',
+            fill: '#fff',
+          },
+        }),
+        text({
+          style: {
+            x: 300,
+            y: 118,
+            text: 'B',
+            font: '700 18px Arial',
+            fill: '#fff',
+          },
+        }),
       ];
     }
   }
@@ -265,12 +385,14 @@ const MouseContractScene = defineComp<MouseContractSceneProps>(({ contractCase, 
       },
     }),
     text({
+      style: {
+        x: 24,
+        y: 28,
+        text: contractCase.title,
+        font: '700 17px Arial',
+        fill: '#0f172a',
+      },
       key: 'title',
-      x: 24,
-      y: 28,
-      text: contractCase.title,
-      font: '700 17px Arial',
-      fillStyle: '#0f172a',
     }),
     ...caseVisual(contractCase, record),
     line({
@@ -290,12 +412,14 @@ const MouseContractScene = defineComp<MouseContractSceneProps>(({ contractCase, 
       },
     }),
     text({
+      style: {
+        x: 24,
+        y: 224,
+        text: `approved target: ${probe.expectedTarget ?? 'none'}`,
+        font: '13px Arial',
+        fill: '#334155',
+      },
       key: 'approved-target',
-      x: 24,
-      y: 224,
-      text: `approved target: ${probe.expectedTarget ?? 'none'}`,
-      font: '13px Arial',
-      fillStyle: '#334155',
     }),
   ];
 });

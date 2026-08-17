@@ -1,6 +1,7 @@
 import { defineComp } from '../define-comp.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { CRCNode, RenderingContext2D, SystemStyle } from '../types.js';
+import { pushClippingPath } from '../util/push-clipping-path.js';
 
 export interface ClipProps {
   path: Path2D;
@@ -11,16 +12,8 @@ export interface ClipProps {
 export function Clip(props: ClipProps, _style: SystemStyle, ctx: RenderingContext2D) {
   const { path, fillRule = 'nonzero' } = props;
 
-  GLOBAL_STATE.componentRefs!.onAfterRender = () => {
-    GLOBAL_STATE.clippingStack.pop();
-  };
-
-  GLOBAL_STATE.clippingStack.push({
-    path,
-    fillRule,
-    transform: ctx.getTransform(),
-  });
-  ctx.clip(path, fillRule);
+  const releaseClip = pushClippingPath(ctx, path, fillRule);
+  GLOBAL_STATE.componentRefs!.onAfterRender = releaseClip;
 
   return props.children;
 }

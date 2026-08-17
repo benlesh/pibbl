@@ -49,12 +49,14 @@ const PathStudy = defineComp(function PathStudy() {
       onMouseOut: () => setInside(false),
     }),
     text({
-      text: inside ? "PATH2D!" : "TRACE THE STAR",
-      x: 360,
-      y: 350,
-      fillStyle: "#fffdf6",
-      font: "700 18px monospace",
-      textAlign: "center",
+      style: {
+        text: inside ? "PATH2D!" : "TRACE THE STAR",
+        x: 360,
+        y: 350,
+        fill: "#fffdf6",
+        font: "700 18px monospace",
+        textAlign: "center",
+      },
     }),
   ];
 });

@@ -53,11 +53,13 @@ const LineStudy = defineComp(function LineStudy() {
       onMouseOut: () => setTracking(false),
     }),
     text({
-      text: tracking ? "ON THE ROUTE" : "FOLLOW THE ROUTE",
-      x: 64,
-      y: 56,
-      fillStyle: "#17211d",
-      font: "800 18px monospace",
+      style: {
+        text: tracking ? "ON THE ROUTE" : "FOLLOW THE ROUTE",
+        x: 64,
+        y: 56,
+        fill: "#17211d",
+        font: "800 18px monospace",
+      },
     }),
   ];
 });

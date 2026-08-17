@@ -33,20 +33,24 @@ const DoubleClickStudy = defineComp(function DoubleClickStudy() {
       onDblClick: () => setStamps((value) => value + 1),
     }),
     text({
-      text: stamps ? `STAMPED × ${stamps}` : "DOUBLE CLICK",
-      x: 360,
-      y: 166,
-      fillStyle: "#17211d",
-      font: "900 42px sans-serif",
-      textAlign: "center",
+      style: {
+        text: stamps ? `STAMPED × ${stamps}` : "DOUBLE CLICK",
+        x: 360,
+        y: 166,
+        fill: "#17211d",
+        font: "900 42px sans-serif",
+        textAlign: "center",
+      },
     }),
     text({
-      text: "A SECONDARY GESTURE",
-      x: 360,
-      y: 236,
-      fillStyle: "#17211d",
-      font: "700 14px monospace",
-      textAlign: "center",
+      style: {
+        text: "A SECONDARY GESTURE",
+        x: 360,
+        y: 236,
+        fill: "#17211d",
+        font: "700 14px monospace",
+        textAlign: "center",
+      },
     }),
   ];
 });

@@ -113,12 +113,14 @@ function region({
       ...lifecycleEvents,
     }),
     text({
+      style: {
+        x: x + 10,
+        y: y + 18,
+        text: label,
+        font: '700 12px Arial',
+        fill: '#ffffff',
+      },
       key: `${key}-label`,
-      x: x + 10,
-      y: y + 18,
-      text: label,
-      font: '700 12px Arial',
-      fillStyle: '#ffffff',
     }),
   ];
 }
@@ -210,28 +212,34 @@ const LifecycleLabScene = defineComp<LifecycleLabSceneProps>(({ state, recordCal
       render: LayerRegion({ recordCall }),
     }),
   text({
+    style: {
+      x: 18,
+      y: 24,
+      text: `runtime ${state.runtime} · mount ${state.mountGeneration} · revision ${state.revision}`,
+      font: '700 14px Arial',
+      fill: '#0f172a',
+    },
     key: 'runtime-status',
-    x: 18,
-    y: 24,
-    text: `runtime ${state.runtime} · mount ${state.mountGeneration} · revision ${state.revision}`,
-    font: '700 14px Arial',
-    fillStyle: '#0f172a',
   }),
   text({
+    style: {
+      x: 18,
+      y: 143,
+      text: `calls ${state.calls} · last ${state.lastTarget ?? 'none'} · handler ${state.lastHandlerGeneration ?? 'none'}`,
+      font: '13px Arial',
+      fill: '#334155',
+    },
     key: 'call-status',
-    x: 18,
-    y: 143,
-    text: `calls ${state.calls} · last ${state.lastTarget ?? 'none'} · handler ${state.lastHandlerGeneration ?? 'none'}`,
-    font: '13px Arial',
-    fillStyle: '#334155',
   }),
   text({
+    style: {
+      x: 18,
+      y: 224,
+      text: `cleanup requests ${state.cleanupRequests} · ${state.lastAction}`,
+      font: '13px Arial',
+      fill: '#475569',
+    },
     key: 'cleanup-status',
-    x: 18,
-    y: 224,
-    text: `cleanup requests ${state.cleanupRequests} · ${state.lastAction}`,
-    font: '13px Arial',
-    fillStyle: '#475569',
   }),
 ]);
 

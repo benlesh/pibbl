@@ -351,20 +351,24 @@ const HeroScene = defineComp(function HeroScene(props: {
       ],
     }),
     text({
-      text: "DRAW.",
-      x: 358,
-      y: 150,
-      fillStyle: "#17211d",
-      font: "900 54px sans-serif",
-      textAlign: "center",
+      style: {
+        text: "DRAW.",
+        x: 358,
+        y: 150,
+        fill: "#17211d",
+        font: "900 54px sans-serif",
+        textAlign: "center",
+      },
     }),
     text({
-      text: "MOVE. LEARN.",
-      x: 358,
-      y: 222,
-      fillStyle: "#17211d",
-      font: "900 42px sans-serif",
-      textAlign: "center",
+      style: {
+        text: "MOVE. LEARN.",
+        x: 358,
+        y: 222,
+        fill: "#17211d",
+        font: "900 42px sans-serif",
+        textAlign: "center",
+      },
     }),
   ];
 });

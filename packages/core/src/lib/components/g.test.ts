@@ -272,10 +272,12 @@ describe('g', () => {
             },
           }),
           text({
-            x: 10,
-            y: 30,
-            text: 'Transformed!',
-            fillStyle: 'white',
+            style: {
+              x: 10,
+              y: 30,
+              text: 'Transformed!',
+              fill: 'white',
+            },
           }),
         ],
       }));

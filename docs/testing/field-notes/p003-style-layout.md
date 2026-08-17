@@ -377,3 +377,124 @@ No production or test file changed and no behavior check was rerun. The
 immediately preceding fresh evidence remains 17/17 focused browser tests, clean
 workspace typecheck, and clean changed-file hygiene. The final amended Task 3
 commit is sent for status-only review before P003-04 begins.
+
+## 2026-08-17 — P003-04 text style and pure text layout
+
+### Environment
+
+- Node: `v26.7.0`
+- pnpm: `11.21.0` selected through `corepack pnpm@11.21.0`
+- Browser: Playwright Chromium through Vitest Browser Mode
+
+### RED
+
+Command:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/text-layout.test.ts packages/core/src/lib/components/text.test.ts --browser.headless --browser.ui=false
+```
+
+Result: exit 1. The new pure suite could not import the absent text-layout
+module. The style-only component suite also recorded three expected failures
+before the browser connection closed: opacity-zero paint was absent and the new
+style geometry did not register the expected click/double-click targets.
+
+Command:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+```
+
+Result: exit 1 with the expected missing `TextStyle` and text-layout exports,
+rejected text style fields, and legacy required visual-prop signature.
+
+### GREEN pending adversarial review
+
+`TextStyle` now owns literal content, local geometry, bounds, typography, paint,
+opacity, cursor, wrapping, and CRC-native fit. `TextProps` contains only mouse
+handlers. `resolveTextLayout` is pure and returns final literal lines with their
+anchors/baselines, measured per-line bounds, aggregate bounds, and finite clip
+geometry. The painter uses those exact lines and bounds; a pure clip helper
+accepts the Canvas-height fallback needed to preserve omitted-height clipping.
+
+Command:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/text-layout.test.ts packages/core/src/lib/components/text.test.ts --browser.headless --browser.ui=false
+```
+
+Result: exit 0; both files and all 23 tests passed. Evidence includes exact
+wrapped/ellipsized literal lines, y positions and measured bounds, single-line
+ellipsis, squish width, finite clipping, centered/middle-baseline and squished
+hit bounds, zero-origin defaults, opacity zero, cursor-only interaction, and a
+runtime-bypassed legacy-prop authority check.
+
+Command:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+```
+
+Result: exit 0 across core, scenarios, playground, tooling, and the public
+package consumer. Public consumer assertions accept `TextStyle` and reject
+top-level text content/paint, omitted required style, and legacy
+`maxWidth`/`overflow` names.
+
+All 107 repository text-call expressions were audited. Every authored caller is
+style-bearing; the only top-level visual cases are intentional negative public
+type assertions and the runtime-bypass regression. No runtime adapter, alias,
+fallback, or visual baseline was added. P003-04 remains in progress pending
+adversarial review, and P003-05 remains TODO.
+
+One migration attempt coupled the range-based caller rewrite with a general
+TypeScript Prettier invocation, producing a noisy whole-file reformat. That
+owned diff was reversed before continuing. The final migration uses syntax
+ranges only for each `text(...)` object and leaves surrounding source unchanged;
+future migration tooling should keep formatting scoped the same way.
+
+### Adversarial review round 1 — text-local clip interaction
+
+Review found one Important paint/interaction mismatch. `fit: 'clip'` applied a
+raw Canvas clip, but `crcRegion` captured only CRC's shared clipping stack, so
+the measured glyph rectangles outside the visible text clip still received
+handlers and cursor ownership.
+
+Fix RED command:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/text.test.ts --browser.headless --browser.ui=false
+```
+
+Result: exit 1 with 1 failed and 22 passed tests. Moving to a measured glyph
+position outside the text clip produced `cursor: pointer`, proving the region
+ignored the paint clip before the click assertion ran.
+
+The new internal `pushClippingPath` seam applies a Canvas clip and publishes the
+same `Path2D`, fill rule, and current transform to CRC interaction state. It
+returns an idempotent release callback. Both the existing `clip` component and
+text-local clipping now use this seam; text keeps it active only through paint
+and region registration and releases it in `finally`. Nested clips remain stack
+ordered, while component save/restore continues to own Canvas state.
+
+Fix GREEN command:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/text-layout.test.ts packages/core/src/lib/components/text.test.ts packages/core/src/lib/components/clip.test.ts packages/core/test/interaction-dispatch.test.ts --browser.headless --browser.ui=false
+```
+
+Result: exit 0 with all four files and 38 tests passing. The regression proves
+the clipped-away glyph area has neither click nor cursor behavior while the
+visible clipped portion retains both. Workspace typecheck also exits 0.
+P003-04 remains in progress pending adversarial re-review; P003-05 remains TODO.
+
+### Clean adversarial review closure
+
+Code re-review found the shared Canvas/interaction clipping seam complete with
+no remaining findings and declared Task 4 ready for status-only closure. This
+closure marks P003-04 done, advances P003-05 as the sole next step, and
+synchronizes the plan board.
+
+No production or test file changed and no behavior check was rerun. The
+immediately preceding fresh evidence remains 38/38 focused browser tests, clean
+workspace typecheck, and clean changed-file hygiene. The final amended Task 4
+commit is sent for status-only review before P003-05 begins.

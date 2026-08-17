@@ -90,10 +90,12 @@ describe('clip', () => {
           },
         }),
         text({
-          x: 75,
-          y: 100,
-          text: 'Clipped Text',
-          fillStyle: 'white',
+          style: {
+            x: 75,
+            y: 100,
+            text: 'Clipped Text',
+            fill: 'white',
+          },
         }),
       ],
     }));
@@ -173,10 +175,12 @@ describe('clip', () => {
           },
         }),
         text({
-          x: 60,
-          y: 100,
-          text: 'Star Clip',
-          fillStyle: 'black',
+          style: {
+            x: 60,
+            y: 100,
+            text: 'Star Clip',
+            fill: 'black',
+          },
         }),
       ],
     }));

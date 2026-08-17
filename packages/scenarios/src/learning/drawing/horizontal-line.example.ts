@@ -35,22 +35,26 @@ const HorizontalStudy = defineComp(function HorizontalStudy() {
       },
     }),
     text({
-      text: "HORIZONTAL RHYTHM",
-      x: 82,
-      y: 54,
-      fillStyle: "#fffdf6",
-      font: "800 24px sans-serif",
+      style: {
+        text: "HORIZONTAL RHYTHM",
+        x: 82,
+        y: 54,
+        fill: "#fffdf6",
+        font: "800 24px sans-serif",
+      },
     }),
     rule(154, "#1f4bd8", "cobalt"),
     rule(230, "#ff6b57", "coral"),
     rule(306, "#f7c948", "yellow"),
     text({
-      text: band === "none" ? "SWEEP THE LINES" : band.toUpperCase(),
-      x: 638,
-      y: 344,
-      fillStyle: "#74d3ae",
-      font: "700 14px monospace",
-      textAlign: "right",
+      style: {
+        text: band === "none" ? "SWEEP THE LINES" : band.toUpperCase(),
+        x: 638,
+        y: 344,
+        fill: "#74d3ae",
+        font: "700 14px monospace",
+        textAlign: "right",
+      },
     }),
   ];
 });

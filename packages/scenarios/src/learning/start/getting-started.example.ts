@@ -42,20 +42,24 @@ const Poster = defineComp(function Poster() {
       onClick: () => setMessage((value) => (value === 'HELLO' ? 'CRC!' : 'HELLO')),
     }),
     text({
-      text: message,
-      x: 360,
-      y: 180,
-      fillStyle: "#fffdf6",
-      font: "800 64px sans-serif",
-      textAlign: "center",
+      style: {
+        text: message,
+        x: 360,
+        y: 180,
+        fill: "#fffdf6",
+        font: "800 64px sans-serif",
+        textAlign: "center",
+      },
     }),
     text({
-      text: "CLICK THE CARD",
-      x: 360,
-      y: 258,
-      fillStyle: "#fffdf6",
-      font: "700 14px monospace",
-      textAlign: "center",
+      style: {
+        text: "CLICK THE CARD",
+        x: 360,
+        y: 258,
+        fill: "#fffdf6",
+        font: "700 14px monospace",
+        textAlign: "center",
+      },
     }),
   ];
 });

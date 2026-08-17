@@ -4,13 +4,13 @@ import { componentTest } from '../test-utils/component-test';
 import { takeScreenshot } from '../util/test-utils';
 import { text } from './text';
 
-const defaultOptions = {
+const defaultStyle = {
   x: 50,
   y: 50,
   text: 'Hello World',
-  fillStyle: 'black',
-  strokeStyle: 'red',
-  lineWidth: 2,
+  fill: 'black',
+  stroke: 'red',
+  strokeWidth: 2,
   font: '24px Arial',
 };
 
@@ -24,9 +24,11 @@ describe('text', () => {
       });
 
     await componentTest(text({
-      ...defaultOptions,
-      strokeStyle: undefined,
-      alpha: 0,
+      style: {
+        ...defaultStyle,
+        stroke: undefined,
+        opacity: 0,
+      },
     }));
 
     expect(observedAlpha).toEqual([0]);
@@ -34,18 +36,18 @@ describe('text', () => {
   });
 
   it('renders text in browser', async () => {
-    await componentTest(text(defaultOptions));
+    await componentTest(text({ style: defaultStyle }));
     await takeScreenshot(page);
   });
 
   describe('mouse events', () => {
-    const { x, y } = defaultOptions;
+    const { x, y } = defaultStyle;
     // We need to measure text to get accurate dimensions for hit testing
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d')!;
-    ctx.font = defaultOptions.font;
+    ctx.font = defaultStyle.font;
     ctx.textBaseline = 'top';
-    const metrics = ctx.measureText(defaultOptions.text);
+    const metrics = ctx.measureText(defaultStyle.text);
 
     const width = metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight;
     const height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
@@ -70,7 +72,7 @@ describe('text', () => {
         const handlerFn = vi.fn();
 
         const canvas = await componentTest(text({
-          ...defaultOptions,
+          style: defaultStyle,
           [handler]: handlerFn,
         }));
 
@@ -96,8 +98,10 @@ describe('text', () => {
     describe('mouse movement', () => {
       it('uses text bounds for a cursor-only interaction', async () => {
         const canvas = await componentTest(text({
-          ...defaultOptions,
-          cursor: 'pointer',
+          style: {
+            ...defaultStyle,
+            cursor: 'pointer',
+          },
         }));
 
         await canvas.mouseMove({ position: { x: 0, y: 0 } });
@@ -111,7 +115,7 @@ describe('text', () => {
         const onMouseOut = vi.fn();
 
         const canvas = await componentTest(text({
-          ...defaultOptions,
+          style: defaultStyle,
           onMouseOver,
           onMouseOut,
         }));
@@ -137,8 +141,10 @@ describe('text', () => {
         const onMouseOut = vi.fn();
 
         const canvas = await componentTest(text({
-          ...defaultOptions,
-          lineWidth: 0,
+          style: {
+            ...defaultStyle,
+            strokeWidth: 0,
+          },
           onMouseOver,
           onMouseOut,
         }));
@@ -164,12 +170,14 @@ describe('text', () => {
       const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');
 
       await componentTest(text({
-        x: 10,
-        y: 20,
-        text: 'abcdefghij',
-        fillStyle: 'black',
-        maxWidth: 55,
-        overflow: 'ellipsis',
+        style: {
+          x: 10,
+          y: 20,
+          text: 'abcdefghij',
+          fill: 'black',
+          width: 55,
+          fit: 'ellipsis',
+        },
       }));
 
       expect(fillText).toHaveBeenCalledExactlyOnceWith('ab...', 10, 20, undefined);
@@ -182,15 +190,17 @@ describe('text', () => {
       const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');
 
       await componentTest(text({
-        x: 10,
-        y: 30,
-        text: 'one two three four',
-        fillStyle: 'black',
-        maxWidth: 75,
-        maxHeight: 40,
-        wordWrap: true,
-        lineHeight: 20,
-        overflow: 'ellipsis',
+        style: {
+          x: 10,
+          y: 30,
+          text: 'one two three four',
+          fill: 'black',
+          width: 75,
+          height: 40,
+          wrap: true,
+          lineHeight: 20,
+          fit: 'ellipsis',
+        },
       }));
 
       expect(fillText.mock.calls).toEqual([
@@ -205,12 +215,14 @@ describe('text', () => {
       const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');
 
       await componentTest(text({
-        x: 7,
-        y: 9,
-        text: 'wide',
-        fillStyle: 'black',
-        maxWidth: 42,
-        overflow: 'squish',
+        style: {
+          x: 7,
+          y: 9,
+          text: 'wide',
+          fill: 'black',
+          width: 42,
+          fit: 'squish',
+        },
       }));
 
       expect(fillText).toHaveBeenCalledExactlyOnceWith('wide', 7, 9, 42);
@@ -222,15 +234,17 @@ describe('text', () => {
       const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');
 
       await componentTest(text({
-        x: 100,
-        y: 80,
-        text: 'clip me',
-        fillStyle: 'black',
-        maxWidth: 60,
-        maxHeight: 40,
-        overflow: 'clip',
-        textAlign: 'center',
-        textBaseline: 'middle',
+        style: {
+          x: 100,
+          y: 80,
+          text: 'clip me',
+          fill: 'black',
+          width: 60,
+          height: 40,
+          fit: 'clip',
+          textAlign: 'center',
+          textBaseline: 'middle',
+        },
       }));
 
       expect(rect).toHaveBeenCalledExactlyOnceWith(70, 60, 60, 40);
@@ -258,14 +272,16 @@ describe('text', () => {
         });
 
       await componentTest(text({
-        x: 10,
-        y: 20,
-        text: 'one two three',
-        fillStyle: 'black',
-        font: '20px Arial',
-        maxWidth: 82,
-        wordWrap: true,
-        lineHeight: 24,
+        style: {
+          x: 10,
+          y: 20,
+          text: 'one two three',
+          fill: 'black',
+          font: '20px Arial',
+          width: 82,
+          wrap: true,
+          lineHeight: 24,
+        },
       }));
 
       expect(calls).toEqual([
@@ -280,12 +296,14 @@ describe('text', () => {
       const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');
 
       await componentTest(text({
-        x: 10,
-        y: 20,
-        text: 'clipped text',
-        fillStyle: 'black',
-        maxWidth: 60,
-        overflow: 'clip',
+        style: {
+          x: 10,
+          y: 20,
+          text: 'clipped text',
+          fill: 'black',
+          width: 60,
+          fit: 'clip',
+        },
       }));
 
       expect(clip).toHaveBeenCalledOnce();
@@ -297,13 +315,15 @@ describe('text', () => {
     it('hits centered middle-baseline text at its painted bounds', async () => {
       const onClick = vi.fn();
       const canvas = await componentTest(text({
-        x: 200,
-        y: 100,
-        text: 'Centered',
-        fillStyle: 'black',
-        font: '24px Arial',
-        textAlign: 'center',
-        textBaseline: 'middle',
+        style: {
+          x: 200,
+          y: 100,
+          text: 'Centered',
+          fill: 'black',
+          font: '24px Arial',
+          textAlign: 'center',
+          textBaseline: 'middle',
+        },
         onClick,
       }));
 
@@ -317,13 +337,15 @@ describe('text', () => {
     it('shrinks squished text interaction bounds with the painted glyphs', async () => {
       const onClick = vi.fn();
       const canvas = await componentTest(text({
-        x: 20,
-        y: 40,
-        text: 'A very wide label',
-        fillStyle: 'black',
-        font: '24px Arial',
-        maxWidth: 60,
-        overflow: 'squish',
+        style: {
+          x: 20,
+          y: 40,
+          text: 'A very wide label',
+          fill: 'black',
+          font: '24px Arial',
+          width: 60,
+          fit: 'squish',
+        },
         onClick,
       }));
 
@@ -334,25 +356,92 @@ describe('text', () => {
       expect(onClick).toHaveBeenCalledOnce();
     });
 
+    it('clips handlers and cursor to the visible text portion', async () => {
+      const measureText = useFixedWidthTextMetrics();
+      const onClick = vi.fn();
+      const canvas = await componentTest(text({
+        style: {
+          text: 'abcdefghij',
+          x: 20,
+          y: 20,
+          width: 40,
+          height: 20,
+          fit: 'clip',
+          fill: 'black',
+          cursor: 'pointer',
+        },
+        onClick,
+      }));
+
+      await canvas.mouseMove({ position: { x: 80, y: 21 } });
+      expect(getComputedStyle(canvas.element).cursor).not.toBe('pointer');
+      await canvas.click({ position: { x: 80, y: 21 } });
+      expect(onClick).not.toHaveBeenCalled();
+
+      await canvas.mouseMove({ position: { x: 30, y: 21 } });
+      expect(getComputedStyle(canvas.element).cursor).toBe('pointer');
+      await canvas.click({ position: { x: 30, y: 21 } });
+      expect(onClick).toHaveBeenCalledOnce();
+      measureText.mockRestore();
+    });
+
     it('should handle text overflow with ellipsis', async () => {
       await componentTest(text({
-        ...defaultOptions,
-        text: 'This is a very long text that should be truncated',
-        maxWidth: 100,
-        overflow: 'ellipsis',
+        style: {
+          ...defaultStyle,
+          text: 'This is a very long text that should be truncated',
+          width: 100,
+          fit: 'ellipsis',
+        },
       }));
       await takeScreenshot(page);
     });
 
     it('should handle word wrap', async () => {
       await componentTest(text({
-        ...defaultOptions,
-        text: 'This text should wrap to multiple lines',
-        maxWidth: 100,
-        wordWrap: true,
-        lineHeight: 24,
+        style: {
+          ...defaultStyle,
+          text: 'This text should wrap to multiple lines',
+          width: 100,
+          wrap: true,
+          lineHeight: 24,
+        },
       }));
       await takeScreenshot(page);
+    });
+
+    it('defaults omitted x and y to the zero origin', async () => {
+      const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');
+
+      await componentTest(text({ style: { text: 'origin', fill: 'black' } }));
+
+      expect(fillText).toHaveBeenCalledExactlyOnceWith(
+        'origin',
+        0,
+        0,
+        undefined,
+      );
+      fillText.mockRestore();
+    });
+
+    it('ignores legacy visual props when types are bypassed', async () => {
+      const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');
+
+      await componentTest(text({
+        style: { text: 'style only', fill: 'black' },
+        text: 'legacy',
+        x: 80,
+        y: 90,
+        fillStyle: 'red',
+      } as never));
+
+      expect(fillText).toHaveBeenCalledExactlyOnceWith(
+        'style only',
+        0,
+        0,
+        undefined,
+      );
+      fillText.mockRestore();
     });
   });
 });

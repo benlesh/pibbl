@@ -11,6 +11,7 @@ import type {
   StateUpdater,
   SvgPathStyle,
   SystemStyle,
+  TextStyle,
   VerticalLineStyle,
 } from '@crc/core';
 import type * as CoreTypes from '@crc/core/types';
@@ -31,6 +32,7 @@ import {
   path,
   rect,
   svgPath,
+  text,
   verticalLine,
 } from '@crc/core';
 
@@ -92,6 +94,24 @@ const verticalLineStyle = {
 } satisfies VerticalLineStyle;
 verticalLine({ style: verticalLineStyle });
 
+const textStyle = {
+  text: 'Hello Canvas',
+  x: 20,
+  y: 24,
+  width: 180,
+  height: 60,
+  lineHeight: 18,
+  wrap: true,
+  fit: 'ellipsis',
+  font: '16px sans-serif',
+  textAlign: 'left',
+  textBaseline: 'top',
+  fill: '#111827',
+  opacity: 0.8,
+  cursor: 'pointer',
+} satisfies TextStyle;
+text({ style: textStyle, onClick: () => undefined });
+
 // @ts-expect-error rectangle geometry is style-only
 rect({ x: 10, y: 10, width: 40, height: 20 });
 // @ts-expect-error rectangle style requires width and height
@@ -116,6 +136,14 @@ horizontalLine({ style: { stroke: 'black' } });
 verticalLine({ x: 12 });
 // @ts-expect-error vertical line requires style.x
 verticalLine({ style: { stroke: 'black' } });
+// @ts-expect-error text content is style-only
+text({ text: 'legacy' });
+// @ts-expect-error text style is required because text content is required
+text({});
+// @ts-expect-error legacy text sizing and fit names are not supported
+text({ style: { text: 'legacy', maxWidth: 40, overflow: 'ellipsis' } });
+// @ts-expect-error text does not accept visual values as program props
+text({ style: { text: 'styled' }, fillStyle: 'red' });
 
 export function disposeMount(controller: ReturnType<typeof crc>): void {
   const publicController: CRCController = controller;

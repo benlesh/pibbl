@@ -38,12 +38,14 @@ const VerticalStudy = defineComp(function VerticalStudy() {
       }),
     ),
     text({
-      text: stripe ? `STRIPE ${stripe}` : "VERTICAL FIELD",
-      x: 360,
-      y: 370,
-      fillStyle: "#17211d",
-      font: "800 17px monospace",
-      textAlign: "center",
+      style: {
+        text: stripe ? `STRIPE ${stripe}` : "VERTICAL FIELD",
+        x: 360,
+        y: 370,
+        fill: "#17211d",
+        font: "800 17px monospace",
+        textAlign: "center",
+      },
     }),
   ];
 });

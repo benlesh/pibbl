@@ -36,25 +36,29 @@ const ContextMenuStudy = defineComp(function ContextMenuStudy() {
       },
     }),
     text({
-      text: "RIGHT CLICK",
-      x: 273,
-      y: 170,
-      fillStyle: "#17211d",
-      font: "900 38px sans-serif",
-      textAlign: "center",
+      style: {
+        text: "RIGHT CLICK",
+        x: 273,
+        y: 170,
+        fill: "#17211d",
+        font: "900 38px sans-serif",
+        textAlign: "center",
+      },
     }),
     text({
-      text: opened
+      style: {
+        text: opened
         ? "Context received\nDefault menu prevented"
         : "A contextual action\ncan stay contextual.",
-      x: 560,
-      y: 154,
-      maxWidth: 130,
-      lineHeight: 26,
-      wordWrap: true,
-      fillStyle: "#17211d",
-      font: "700 17px sans-serif",
-      textAlign: "center",
+        x: 560,
+        y: 154,
+        width: 130,
+        lineHeight: 26,
+        wrap: true,
+        fill: "#17211d",
+        font: "700 17px sans-serif",
+        textAlign: "center",
+      },
     }),
   ];
 });

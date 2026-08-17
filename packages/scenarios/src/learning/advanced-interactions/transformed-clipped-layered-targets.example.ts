@@ -86,12 +86,14 @@ const ComposedTargetStudy = defineComp(function ComposedTargetStudy() {
       ],
     }),
     text({
-      text: active ? "COMPOSED TARGET!" : "CLICK THE VISIBLE MOON",
-      x: 360,
-      y: 360,
-      fillStyle: "#fffdf6",
-      font: "800 16px monospace",
-      textAlign: "center",
+      style: {
+        text: active ? "COMPOSED TARGET!" : "CLICK THE VISIBLE MOON",
+        x: 360,
+        y: 360,
+        fill: "#fffdf6",
+        font: "800 16px monospace",
+        textAlign: "center",
+      },
     }),
   ];
 });

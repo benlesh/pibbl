@@ -43,31 +43,36 @@ const PaintOrderStudy = defineComp(function PaintOrderStudy() {
       onClick: () => setWinner('coral'),
     }),
     text({
-      text: "UNDER",
-      x: 206,
-      y: 184,
-      fillStyle: "#fffdf6",
-      font: "900 32px sans-serif",
-      textAlign: "center",
+      style: {
+        text: "UNDER",
+        x: 206,
+        y: 184,
+        fill: "#fffdf6",
+        font: "900 32px sans-serif",
+        textAlign: "center",
+      },
     }),
     text({
-      text: "TOP",
-      x: 510,
-      y: 238,
-      fillStyle: "#17211d",
-      font: "900 32px sans-serif",
-      textAlign: "center",
+      style: {
+        text: "TOP",
+        x: 510,
+        y: 238,
+        fill: "#17211d",
+        font: "900 32px sans-serif",
+        textAlign: "center",
+      },
     }),
     text({
-      text:
-        winner === "none"
-          ? "CLICK THE OVERLAP"
-          : `TARGET / ${winner.toUpperCase()}`,
-      x: 360,
-      y: 54,
-      fillStyle: "#17211d",
-      font: "800 16px monospace",
-      textAlign: "center",
+      style: {
+        text: winner === "none" ?
+            "CLICK THE OVERLAP" :
+          `TARGET / ${winner.toUpperCase()}`,
+        x: 360,
+        y: 54,
+        fill: "#17211d",
+        font: "800 16px monospace",
+        textAlign: "center",
+      },
     }),
   ];
 });

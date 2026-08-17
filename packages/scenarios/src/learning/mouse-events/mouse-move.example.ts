@@ -43,14 +43,16 @@ const MouseMoveStudy = defineComp(function MouseMoveStudy() {
       }),
     ),
     text({
-      text: trail.length
+      style: {
+        text: trail.length
         ? `${Math.round(trail.at(-1)![0])}, ${Math.round(trail.at(-1)![1])}`
         : "MOVE INSIDE THE FIELD",
-      x: 360,
-      y: 368,
-      fillStyle: "#17211d",
-      font: "800 15px monospace",
-      textAlign: "center",
+        x: 360,
+        y: 368,
+        fill: "#17211d",
+        font: "800 15px monospace",
+        textAlign: "center",
+      },
     }),
   ];
 });

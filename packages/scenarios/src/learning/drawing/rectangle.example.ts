@@ -65,12 +65,14 @@ const RectangleStudy = defineComp(function RectangleStudy() {
       },
     }),
     text({
-      text: hovered ? "TARGET FOUND" : "RECTANGLE STUDY",
-      x: 406,
-      y: 324,
-      fillStyle: "#17211d",
-      font: "800 16px sans-serif",
-      textAlign: "center",
+      style: {
+        text: hovered ? "TARGET FOUND" : "RECTANGLE STUDY",
+        x: 406,
+        y: 324,
+        fill: "#17211d",
+        font: "800 16px sans-serif",
+        textAlign: "center",
+      },
     }),
   ];
 });

@@ -34,3 +34,19 @@ export interface SvgPathStyle extends SystemStyle, PaintStyle, CursorStyle {
   d: string;
   lineInteractionWidth?: number;
 }
+
+export type TextFit = 'visible' | 'squish' | 'ellipsis' | 'clip';
+
+export interface TextStyle extends SystemStyle, PaintStyle, CursorStyle {
+  text: string;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  lineHeight?: number;
+  wrap?: boolean;
+  fit?: TextFit;
+  font?: string;
+  textBaseline?: CanvasTextBaseline;
+  textAlign?: CanvasTextAlign;
+}

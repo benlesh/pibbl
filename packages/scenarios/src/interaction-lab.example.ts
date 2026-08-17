@@ -393,21 +393,25 @@ const InteractionLabScene = defineComp<InteractionLabSceneProps>(({ state, recor
       },
     }),
     text({
+      style: {
+        x: 24,
+        y: 28,
+        text: `Ordering lab · ${state.fixture}`,
+        font: '700 17px Arial',
+        fill: '#0f172a',
+      },
       key: 'title',
-      x: 24,
-      y: 28,
-      text: `Ordering lab · ${state.fixture}`,
-      font: '700 17px Arial',
-      fillStyle: '#0f172a',
     }),
     ...caseVisual(state, record),
     text({
+      style: {
+        x: 24,
+        y: 226,
+        text: `trace ${state.trace.length} · handler ${state.handlerGeneration} · ${state.lastAction}`,
+        font: '13px Arial',
+        fill: '#334155',
+      },
       key: 'status',
-      x: 24,
-      y: 226,
-      text: `trace ${state.trace.length} · handler ${state.handlerGeneration} · ${state.lastAction}`,
-      font: '13px Arial',
-      fillStyle: '#334155',
     }),
   ];
 });

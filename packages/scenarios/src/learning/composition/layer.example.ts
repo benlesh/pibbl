@@ -39,20 +39,24 @@ const Badge = defineComp(function Badge(props: BadgeProps) {
       },
     }),
     text({
-      text: props.active ? "LAYER!" : "OFFSCREEN",
-      x: 226,
-      y: 84,
-      fillStyle: "#17211d",
-      font: "900 25px sans-serif",
-      textAlign: "center",
+      style: {
+        text: props.active ? "LAYER!" : "OFFSCREEN",
+        x: 226,
+        y: 84,
+        fill: "#17211d",
+        font: "900 25px sans-serif",
+        textAlign: "center",
+      },
     }),
     text({
-      text: "CLICK THE BADGE",
-      x: 226,
-      y: 130,
-      fillStyle: "#17211d",
-      font: "700 12px monospace",
-      textAlign: "center",
+      style: {
+        text: "CLICK THE BADGE",
+        x: 226,
+        y: 130,
+        fill: "#17211d",
+        font: "700 12px monospace",
+        textAlign: "center",
+      },
     }),
   ];
 });

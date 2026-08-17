@@ -32,6 +32,7 @@ export type {
   PathStyle,
   RectStyle,
   SvgPathStyle,
+  TextStyle,
 } from './lib/style/types.js';
 // hooks
 export { crcCursor } from './lib/hooks/crc-cursor.js';

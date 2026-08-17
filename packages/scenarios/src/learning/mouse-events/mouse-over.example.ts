@@ -24,12 +24,14 @@ const MouseOverStudy = defineComp(function MouseOverStudy() {
       onMouseOver: () => setActive(label),
     }),
     text({
-      text: label,
-      x: x + 88,
-      y: 196,
-      fillStyle: "#17211d",
-      font: "900 22px sans-serif",
-      textAlign: "center",
+      style: {
+        text: label,
+        x: x + 88,
+        y: 196,
+        fill: "#17211d",
+        font: "900 22px sans-serif",
+        textAlign: "center",
+      },
     }),
   ];
   return [
@@ -46,12 +48,14 @@ const MouseOverStudy = defineComp(function MouseOverStudy() {
     ...card(272, "#ff6b57", "COLOR"),
     ...card(480, "#f7c948", "PLAY"),
     text({
-      text: active === "none" ? "ENTER A CARD" : `${active} / ENTERED`,
-      x: 360,
-      y: 352,
-      fillStyle: "#17211d",
-      font: "800 15px monospace",
-      textAlign: "center",
+      style: {
+        text: active === "none" ? "ENTER A CARD" : `${active} / ENTERED`,
+        x: 360,
+        y: 352,
+        fill: "#17211d",
+        font: "800 15px monospace",
+        textAlign: "center",
+      },
     }),
   ];
 });
