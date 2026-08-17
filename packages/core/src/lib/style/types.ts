@@ -50,3 +50,15 @@ export interface TextStyle extends SystemStyle, PaintStyle, CursorStyle {
   textBaseline?: CanvasTextBaseline;
   textAlign?: CanvasTextAlign;
 }
+
+export interface ImgStyle extends SystemStyle, CursorStyle {
+  src: string;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  stroke?: StrokeStyle;
+  strokeWidth?: number;
+  opacity?: number;
+  alignToPixelGrid?: PixelGridAlignment;
+}

@@ -51,11 +51,13 @@ function featuredImage(state: Readonly<DrawingImagesState>) {
   } : {};
   return img({
     key: 'featured-image',
-    src: DRAWING_IMAGE_SOURCES[state.mode],
-    x: 24,
-    y: 32,
-    ...dimensions,
-    alignToPixelGrid: 'round',
+    style: {
+      src: DRAWING_IMAGE_SOURCES[state.mode],
+      x: 24,
+      y: 32,
+      ...dimensions,
+      alignToPixelGrid: 'round',
+    },
   });
 }
 
@@ -90,9 +92,11 @@ const DrawingImagesScene = defineComp<DrawingImagesSceneProps>(({ state }) => [
   }),
   img({
     key: 'natural-image',
-    src: DRAWING_IMAGE_SOURCES.secondary,
-    x: 222,
-    y: 32,
+    style: {
+      src: DRAWING_IMAGE_SOURCES.secondary,
+      x: 222,
+      y: 32,
+    },
   }),
   rect({
     style: {
@@ -105,12 +109,14 @@ const DrawingImagesScene = defineComp<DrawingImagesSceneProps>(({ state }) => [
   }),
   img({
     key: 'zero-alpha-image',
-    src: DRAWING_IMAGE_SOURCES.primary,
-    x: 358,
-    y: 32,
-    width: 90,
-    height: 60,
-    alpha: 0,
+    style: {
+      src: DRAWING_IMAGE_SOURCES.primary,
+      x: 358,
+      y: 32,
+      width: 90,
+      height: 60,
+      opacity: 0,
+    },
   }),
   rect({
     style: {
@@ -123,15 +129,17 @@ const DrawingImagesScene = defineComp<DrawingImagesSceneProps>(({ state }) => [
   }),
   img({
     key: 'half-alpha-image',
-    src: DRAWING_IMAGE_SOURCES.primary,
-    x: 24.2,
-    y: 172.2,
-    width: 424,
-    height: 28,
-    alpha: 0.5,
-    alignToPixelGrid: 'round',
-    strokeStyle: '#1e3a8a',
-    lineWidth: 1,
+    style: {
+      src: DRAWING_IMAGE_SOURCES.primary,
+      x: 24.2,
+      y: 172.2,
+      width: 424,
+      height: 28,
+      opacity: 0.5,
+      alignToPixelGrid: 'round',
+      stroke: '#1e3a8a',
+      strokeWidth: 1,
+    },
   }),
 ]);
 

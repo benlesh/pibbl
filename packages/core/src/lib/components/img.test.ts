@@ -5,35 +5,35 @@ import bartImageSmall from '../test-utils/fixtures/bart-500kb.png';
 import { takeScreenshot } from '../util/test-utils';
 import { img } from './img';
 
-const defaultOptions = {
+const defaultStyle = {
   x: 50,
   y: 50,
   src: bartImageSmall,
   width: 564 / 2,
   height: 424 / 2,
-  strokeStyle: 'red',
-  lineWidth: 2,
+  stroke: 'red',
+  strokeWidth: 2,
 };
 
 describe('img', () => {
   it('renders an image in browser', async () => {
-    await componentTest(img(defaultOptions));
+    await componentTest(img({ style: defaultStyle }));
     await takeScreenshot(page);
   });
 
   it('renders an image with natural dimensions when width/height not specified', async () => {
-    const { width, height, ...options } = defaultOptions;
-    await componentTest(img(options));
+    const { width, height, ...style } = defaultStyle;
+    await componentTest(img({ style }));
     await takeScreenshot(page);
   });
 
   describe('mouse events', () => {
-    const { x, y, width, height, lineWidth } = defaultOptions;
+    const { x, y, width, height, strokeWidth } = defaultStyle;
 
     const centerX = x + width / 2;
     const centerY = y + height / 2;
-    const onBorderX = x + width + (lineWidth / 2);
-    const onBorderY = y + height + (lineWidth / 2);
+    const onBorderX = x + width + (strokeWidth / 2);
+    const onBorderY = y + height + (strokeWidth / 2);
     const offImageX = x - 10;
     const offImageY = y - 10;
 
@@ -48,7 +48,7 @@ describe('img', () => {
         const handlerFn = vi.fn();
 
         const canvas = await componentTest(img({
-          ...defaultOptions,
+          style: defaultStyle,
           [handler]: handlerFn,
         }));
 
@@ -77,7 +77,7 @@ describe('img', () => {
         const onMouseOut = vi.fn();
 
         const canvas = await componentTest(img({
-          ...defaultOptions,
+          style: defaultStyle,
           onMouseOver,
           onMouseOut,
         }));
@@ -103,8 +103,10 @@ describe('img', () => {
         const onMouseOut = vi.fn();
 
         const canvas = await componentTest(img({
-          ...defaultOptions,
-          lineWidth: 0,
+          style: {
+            ...defaultStyle,
+            strokeWidth: 0,
+          },
           onMouseOver,
           onMouseOut,
         }));
@@ -125,27 +127,65 @@ describe('img', () => {
   });
 
   describe('image specific features', () => {
-    it('should handle alpha transparency', async () => {
+    it('keeps opacity-zero image geometry interactive', async () => {
+      const onClick = vi.fn();
+      const centerX = defaultStyle.x + defaultStyle.width / 2;
+      const centerY = defaultStyle.y + defaultStyle.height / 2;
+      const canvas = await componentTest(img({
+        style: {
+          ...defaultStyle,
+          opacity: 0,
+        },
+        onClick,
+      }));
+
+      await canvas.click({ position: { x: centerX, y: centerY } });
+      expect(onClick).toHaveBeenCalledOnce();
+      expect(Array.from(
+        canvas.element.getContext('2d')!.getImageData(centerX, centerY, 1, 1).data,
+      )).toEqual([0, 0, 0, 0]);
+    });
+
+    it('ignores a legacy top-level cursor from untyped callers', async () => {
+      const centerX = defaultStyle.x + defaultStyle.width / 2;
+      const centerY = defaultStyle.y + defaultStyle.height / 2;
+      const legacyInput = {
+        style: defaultStyle,
+        cursor: 'pointer',
+      } as unknown as Parameters<typeof img>[0];
+      const canvas = await componentTest(img(legacyInput));
+
+      await canvas.mouseMove({ position: { x: centerX, y: centerY } });
+      expect(getComputedStyle(canvas.element).cursor).not.toBe('pointer');
+    });
+
+    it('should handle opacity', async () => {
       await componentTest(img({
-        ...defaultOptions,
-        alpha: 0.5,
+        style: {
+          ...defaultStyle,
+          opacity: 0.5,
+        },
       }));
       await takeScreenshot(page);
     });
 
     it('should align to pixel grid when specified', async () => {
       await componentTest(img({
-        ...defaultOptions,
-        lineWidth: 1,
-        alignToPixelGrid: 'none', // This will make the image blurry if not aligned to the pixel grid
+        style: {
+          ...defaultStyle,
+          strokeWidth: 1,
+          alignToPixelGrid: 'none', // This will make the image blurry if not aligned to the pixel grid
+        },
       }));
 
       await takeScreenshot(page, 'pixel-grid-none.png');
 
       await componentTest(img({
-        ...defaultOptions,
-        lineWidth: 1,
-        alignToPixelGrid: 'round', // This will make the image crisp if aligned to the pixel grid
+        style: {
+          ...defaultStyle,
+          strokeWidth: 1,
+          alignToPixelGrid: 'round', // This will make the image crisp if aligned to the pixel grid
+        },
       }));
 
       await takeScreenshot(page, 'pixel-grid-round.png');
@@ -153,8 +193,10 @@ describe('img', () => {
 
     it('should handle cursor styles', async () => {
       await componentTest(img({
-        ...defaultOptions,
-        cursor: 'pointer',
+        style: {
+          ...defaultStyle,
+          cursor: 'pointer',
+        },
       }));
       await takeScreenshot(page);
     });

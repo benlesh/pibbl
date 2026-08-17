@@ -65,7 +65,7 @@ review before the next task begins.
 | P003-02 | Done        | Path, rectangle, and SVG path style migration.                  |
 | P003-03 | Done        | Line-family style migration.                                    |
 | P003-04 | Done        | Text style and shared text layout.                              |
-| P003-05 | Next        | Image style migration.                                          |
+| P003-05 | In progress | Image style migration.                                          |
 | P003-06 | Queued      | Group, clip, layer, and style-only closure.                     |
 | P003-07 | Queued      | Length, constraint, box, and item capabilities.                 |
 | P003-08 | Queued      | Style resolution, layout context, placement, and observation.   |
@@ -108,7 +108,7 @@ Done when text uses `width`/`height`/`wrap`/CRC-native `fit`, painting and pure
 measurement share literal line layout, existing text/hit behavior is preserved,
 and the commit is reviewed.
 
-### P003-05 [NEXT] — Image styles
+### P003-05 [IN PROGRESS] — Image styles
 
 Done when image source and visual geometry are style-only, existing asynchronous
 ownership/race behavior is preserved, focused checks pass, and the commit is
@@ -285,3 +285,13 @@ is clean, and this plan has no active marker.
   browser tests plus clean workspace typecheck and changed-file hygiene. The
   final amended Task 4 commit is sent for status-only review before P003-05
   begins.
+- **2026-08-17 — P003-05 implementation pending review.** Added the closed
+  public image style, moved source/geometry/border/opacity/cursor/pixel alignment
+  out of program props, and migrated every authored caller without a legacy
+  adapter. Existing image-generation settlement, source-race, removal, and
+  disposal ownership remain intact. Focused RED was 20 failed and 5 passed
+  browser tests plus the expected type errors. GREEN is 27/27 focused browser
+  tests and clean workspace typecheck; changed-file lint, legacy-call audit, and
+  diff hygiene are also clean. P003-05 remains in progress for adversarial
+  review, and P003-06 remains TODO. See
+  [`p003-style-layout.md`](../testing/field-notes/p003-style-layout.md).

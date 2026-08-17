@@ -134,11 +134,13 @@ function imageNode(state: Readonly<CleanupStressState>) {
   }
   return img({
     key: 'cleanup-image',
-    src: CLEANUP_IMAGE_SOURCES[state.imageMode],
-    x: 170,
-    y: 130,
-    width: 130,
-    height: 80,
+    style: {
+      src: CLEANUP_IMAGE_SOURCES[state.imageMode],
+      x: 170,
+      y: 130,
+      width: 130,
+      height: 80,
+    },
   });
 }
 

@@ -498,3 +498,77 @@ No production or test file changed and no behavior check was rerun. The
 immediately preceding fresh evidence remains 38/38 focused browser tests, clean
 workspace typecheck, and clean changed-file hygiene. The final amended Task 4
 commit is sent for status-only review before P003-05 begins.
+
+## 2026-08-17 — P003-05 image styles
+
+### Environment
+
+- Node: `v26.7.0`
+- pnpm: `11.21.0` selected through `corepack pnpm@11.21.0`
+- Browser: Playwright Chromium through Vitest Browser Mode
+
+### RED
+
+Command:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/img.test.ts packages/core/src/lib/components/img-async.test.ts --browser.headless --browser.ui=false
+```
+
+Result: exit 1; both files failed, with 20 failed and 5 passed tests. The legacy
+renderer read source and geometry from program props, so style-only inputs did
+not create image generations or usable interaction geometry. The focused run
+also exposed the old renderer's undefined-source path during those expected
+failures.
+
+Command:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+```
+
+Result: exit 1 with the expected absent `ImgStyle` export, rejected image style
+fields, and the legacy required top-level `src`/`x`/`y` signature.
+
+### GREEN pending adversarial review
+
+`ImgStyle` now owns source, optional local geometry, border paint, opacity,
+cursor, and pixel alignment. `ImgProps` contains only mouse handlers. Each
+asynchronous image generation is keyed only by `style.src`; the existing
+settlement, source-change, removal, disposal, and saved-late-callback teardown
+paths remain intact.
+
+Explicit dimensions establish the same image/border/interaction rectangle
+before load and after failure. Omitted dimensions remain zero until the current
+source loads, then resolve independently from natural width and height. Pixel
+alignment still produces one shared adjusted rectangle, and opacity zero keeps
+the explicit transparent geometry interactive.
+
+Command:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/img.test.ts packages/core/src/lib/components/img-async.test.ts --browser.headless --browser.ui=false
+```
+
+Result: exit 0; both files and all 27 tests passed. The focused evidence includes
+success/error/race/removal/disposal ownership, explicit zero and negative
+dimensions, zero-origin defaults, natural sizing, all pixel-grid modes,
+opacity-zero paint and interaction, cursor behavior, and untyped legacy-input
+authority checks.
+
+Command:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+```
+
+Result: exit 0 across core, scenarios, playground, tooling, and the public
+package consumer. The consumer accepts `ImgStyle` and rejects top-level source
+and paint values, omitted required style, and legacy paint aliases.
+
+All 28 repository `img(...)` call expressions were inspected. Every authored
+caller is style-bearing; the remaining top-level visual inputs are deliberate
+negative type assertions or runtime-bypass regressions. No image alias/helper
+call site, compatibility adapter, runtime fallback, or visual baseline was
+introduced. P003-05 remains in progress pending adversarial review, and P003-06
+remains TODO.

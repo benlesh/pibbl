@@ -28,6 +28,7 @@ export { crc } from './lib/crc.js';
 export { defineComp } from './lib/define-comp.js';
 export type {
   CursorStyle,
+  ImgStyle,
   PaintStyle,
   PathStyle,
   RectStyle,

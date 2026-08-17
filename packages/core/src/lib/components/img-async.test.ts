@@ -56,11 +56,13 @@ describe('img async resource ownership', () => {
       .mockImplementation(() => {});
     const canvas = createCanvas();
     const controller = crc(canvas, img({
-      src: 'boundary.png',
-      x: 10,
-      y: 20,
-      width,
-      height,
+      style: {
+        src: 'boundary.png',
+        x: 10,
+        y: 20,
+        width,
+        height,
+      },
     }));
     await nextFrame();
 
@@ -86,12 +88,14 @@ describe('img async resource ownership', () => {
       .mockImplementation(() => {});
     const canvas = createCanvas();
     const controller = crc(canvas, img({
-      src: 'aligned.png',
-      x: 24.2,
-      y: 20.2,
-      strokeStyle: 'blue',
-      lineWidth: 1,
-      alignToPixelGrid,
+      style: {
+        src: 'aligned.png',
+        x: 24.2,
+        y: 20.2,
+        stroke: 'blue',
+        strokeWidth: 1,
+        alignToPixelGrid,
+      },
     }));
     await nextFrame();
 
@@ -103,7 +107,7 @@ describe('img async resource ownership', () => {
     controller.dispose();
   });
 
-  it('applies alpha zero when the image draws', async () => {
+  it('applies opacity zero when the image draws', async () => {
     const observedAlpha: number[] = [];
     const drawImage = vi
       .spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
@@ -112,12 +116,14 @@ describe('img async resource ownership', () => {
       });
     const canvas = createCanvas();
     const controller = crc(canvas, img({
-      src: 'transparent.png',
-      x: 10,
-      y: 20,
-      width: 30,
-      height: 40,
-      alpha: 0,
+      style: {
+        src: 'transparent.png',
+        x: 10,
+        y: 20,
+        width: 30,
+        height: 40,
+        opacity: 0,
+      },
     }));
     await nextFrame();
 
@@ -152,6 +158,60 @@ describe('img async resource ownership', () => {
     expect(getCRCInstance(canvas).animationFrameId).toBeUndefined();
     expect(drawImage).toHaveBeenCalledTimes(drawCount);
 
+    controller.dispose();
+  });
+
+  it('keeps image resources and geometry authoritative to style', async () => {
+    const canvas = createCanvas();
+    const onClick = vi.fn();
+    const legacyInput = {
+      style: {
+        src: 'styled.png',
+        width: 30,
+        height: 40,
+      },
+      src: 'legacy.png',
+      x: 90,
+      y: 80,
+      width: 1,
+      height: 1,
+      onClick,
+    } as unknown as Parameters<typeof img>[0];
+    const controller = crc(canvas, img(legacyInput));
+    await nextFrame();
+
+    expect(FakeImage.instances).toHaveLength(1);
+    expect(FakeImage.instances[0].src).toBe('styled.png');
+    const region = Array.from(getCRCInstance(canvas).regions)[0];
+    const context = canvas.getContext('2d')!;
+    expect(context.isPointInPath(region.path!, 15, 20)).toBe(true);
+    expect(context.isPointInPath(region.path!, 90, 80)).toBe(false);
+
+    FakeImage.instances[0].onerror?.();
+    await nextFrame();
+    const failedRegion = Array.from(getCRCInstance(canvas).regions)[0];
+    expect(context.isPointInPath(failedRegion.path!, 15, 20)).toBe(true);
+    controller.dispose();
+  });
+
+  it('uses zero natural geometry until the current source loads', async () => {
+    vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
+      .mockImplementation(() => {});
+    const canvas = createCanvas();
+    const controller = crc(canvas, img({
+      style: { src: 'natural.png' },
+      onClick: () => undefined,
+    }));
+    await nextFrame();
+
+    const context = canvas.getContext('2d')!;
+    const pendingRegion = Array.from(getCRCInstance(canvas).regions)[0];
+    expect(context.isPointInPath(pendingRegion.path!, 60, 40)).toBe(false);
+
+    FakeImage.instances[0].onload?.();
+    await nextFrame();
+    const loadedRegion = Array.from(getCRCInstance(canvas).regions)[0];
+    expect(context.isPointInPath(loadedRegion.path!, 60, 40)).toBe(true);
     controller.dispose();
   });
 
@@ -225,7 +285,9 @@ describe('img async resource ownership', () => {
 });
 
 function imageElement(src: string) {
-  return img({ src, x: 10, y: 20, width: 30, height: 40 });
+  return img({
+    style: { src, x: 10, y: 20, width: 30, height: 40 },
+  });
 }
 
 function createCanvas(): HTMLCanvasElement {

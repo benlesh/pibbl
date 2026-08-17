@@ -3,6 +3,7 @@ import type {
   CRCMouseEvent,
   CRCRef,
   HorizontalLineStyle,
+  ImgStyle,
   LineStyle,
   PathStyle,
   RectProps,
@@ -34,6 +35,7 @@ import {
   svgPath,
   text,
   verticalLine,
+  img,
 } from '@crc/core';
 
 const rectangleStyle = {
@@ -112,6 +114,18 @@ const textStyle = {
 } satisfies TextStyle;
 text({ style: textStyle, onClick: () => undefined });
 
+const imageStyle = {
+  src: 'image.png',
+  width: 80,
+  height: 60,
+  stroke: '#0f172a',
+  strokeWidth: 1,
+  opacity: 0.8,
+  alignToPixelGrid: 'round',
+  cursor: 'pointer',
+} satisfies ImgStyle;
+img({ style: imageStyle, onClick: () => undefined });
+
 // @ts-expect-error rectangle geometry is style-only
 rect({ x: 10, y: 10, width: 40, height: 20 });
 // @ts-expect-error rectangle style requires width and height
@@ -144,6 +158,14 @@ text({});
 text({ style: { text: 'legacy', maxWidth: 40, overflow: 'ellipsis' } });
 // @ts-expect-error text does not accept visual values as program props
 text({ style: { text: 'styled' }, fillStyle: 'red' });
+// @ts-expect-error image source is style-only
+img({ src: 'legacy.png' });
+// @ts-expect-error image style is required because source is required
+img({});
+// @ts-expect-error legacy image paint names are not style properties
+img({ style: { src: 'legacy.png', strokeStyle: 'red', lineWidth: 1 } });
+// @ts-expect-error image does not accept visual values as program props
+img({ style: { src: 'styled.png' }, alpha: 0.5 });
 
 export function disposeMount(controller: ReturnType<typeof crc>): void {
   const publicController: CRCController = controller;
