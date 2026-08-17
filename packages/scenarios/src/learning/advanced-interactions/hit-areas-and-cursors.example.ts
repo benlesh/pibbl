@@ -27,13 +27,15 @@ const HitAreaStudy = defineComp(function HitAreaStudy() {
         fill: '#f7f0df',
       },
     }),
-    line({ coords: route, strokeStyle: "#17211d", lineWidth: 18 }),
+    line({ style: { coords: route, stroke: "#17211d", strokeWidth: 18 } }),
     line({
-      coords: route,
-      strokeStyle: "#ff6b57",
-      lineWidth: 4,
-      lineInteractionWidth: 42,
-      cursor: "grab",
+      style: {
+        coords: route,
+        stroke: "#ff6b57",
+        strokeWidth: 4,
+        lineInteractionWidth: 42,
+        cursor: "grab",
+      },
       onClick: () => setHits((value) => value + 1),
     }),
     text({

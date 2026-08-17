@@ -1,21 +1,21 @@
 import { defineComp } from '../define-comp.js';
 import {
   CRCBasicMouseEvents,
-  CursorStyleProps,
   IntrinsicProps,
   PixelGridAlignment,
   RenderingContext2D,
-  StrokeStyleProps,
   SystemStyle,
 } from '../types.js';
 import { adjustForPixelGrid } from '../util/pixel-grid-adjustments.js';
-import { Line } from './line.js';
+import { Line, type LineStyle } from './line.js';
 
 export interface VerticalLineProps
   extends IntrinsicProps,
-  CRCBasicMouseEvents,
-  CursorStyleProps,
-  StrokeStyleProps {
+  CRCBasicMouseEvents {}
+
+export interface VerticalLineStyle
+  extends SystemStyle,
+  Omit<LineStyle, 'coords'> {
   x: number;
   top?: number;
   bottom?: number;
@@ -25,7 +25,7 @@ export interface VerticalLineProps
 
 export function VerticalLine(
   props: VerticalLineProps,
-  _style: SystemStyle,
+  style: Readonly<VerticalLineStyle>,
   ctx: RenderingContext2D,
 ) {
   const {
@@ -33,20 +33,32 @@ export function VerticalLine(
     top = 0,
     bottom = ctx.canvas.height,
     alignToPixelGrid = 'none',
-    ...lineProps
-  } = props;
-  const x = adjustForPixelGrid(initialX, props.lineWidth, alignToPixelGrid);
+    stroke,
+    strokeWidth,
+    opacity,
+    cursor,
+    lineInteractionWidth,
+  } = style;
+  const x = adjustForPixelGrid(
+    initialX,
+    strokeWidth,
+    alignToPixelGrid,
+  );
   const coords: [number, number][] = [
     [x, top],
     [x, bottom],
   ];
 
   return Line(
+    props,
     {
       coords,
-      ...lineProps,
+      stroke,
+      strokeWidth,
+      opacity,
+      cursor,
+      lineInteractionWidth,
     },
-    {},
     ctx,
   );
 }

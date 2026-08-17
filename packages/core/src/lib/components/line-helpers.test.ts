@@ -10,8 +10,8 @@ describe('horizontalLine and verticalLine', () => {
     const lineTo = vi.spyOn(Path2D.prototype, 'lineTo');
 
     await componentTest(g({ children: [
-      horizontalLine({ y: 22, strokeStyle: 'red', lineWidth: 1 }),
-      verticalLine({ x: 33, strokeStyle: 'blue', lineWidth: 1 }),
+      horizontalLine({ style: { y: 22, stroke: 'red', strokeWidth: 1 } }),
+      verticalLine({ style: { x: 33, stroke: 'blue', strokeWidth: 1 } }),
     ] }));
 
     expect(moveTo.mock.calls).toEqual([[0, 22], [33, 0]]);
@@ -34,20 +34,24 @@ describe('horizontalLine and verticalLine', () => {
 
     await componentTest(g({ children: [
       horizontalLine({
-        y: 10.2,
-        left: 2,
-        right: 20,
-        strokeStyle: 'red',
-        lineWidth: 1,
-        alignToPixelGrid,
+        style: {
+          y: 10.2,
+          left: 2,
+          right: 20,
+          stroke: 'red',
+          strokeWidth: 1,
+          alignToPixelGrid,
+        },
       }),
       verticalLine({
-        x: 10.2,
-        top: 3,
-        bottom: 30,
-        strokeStyle: 'blue',
-        lineWidth: 1,
-        alignToPixelGrid,
+        style: {
+          x: 10.2,
+          top: 3,
+          bottom: 30,
+          stroke: 'blue',
+          strokeWidth: 1,
+          alignToPixelGrid,
+        },
       }),
     ] }));
 
@@ -55,5 +59,33 @@ describe('horizontalLine and verticalLine', () => {
     expect(lineTo.mock.calls).toEqual([[20, expected], [expected, 30]]);
     moveTo.mockRestore();
     lineTo.mockRestore();
+  });
+
+  it('forwards paint, cursor, and interaction style while keeping handlers in props', async () => {
+    const onClick = vi.fn();
+    const canvas = await componentTest(horizontalLine({
+      style: {
+        y: 40,
+        left: 20,
+        right: 120,
+        stroke: 'red',
+        strokeWidth: 2,
+        opacity: 0,
+        lineInteractionWidth: 20,
+        cursor: 'crosshair',
+      },
+      onClick,
+    }));
+
+    const pixels = canvas.element
+      .getContext('2d')!
+      .getImageData(0, 0, 140, 60)
+      .data;
+    expect(pixels.some((value, index) => index % 4 === 3 && value > 0))
+      .toBe(false);
+
+    await canvas.click({ position: { x: 70, y: 48 } });
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(canvas.element.style.cursor).toBe('crosshair');
   });
 });

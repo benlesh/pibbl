@@ -262,3 +262,118 @@ rerun. The immediately preceding fresh evidence remains the 3/3 cursor
 regression suite, 47/47 combined focused browser tests, and clean workspace
 typecheck. The final amended Task 2 commit is sent for status-only review before
 P003-03 begins.
+
+## 2026-08-17 — P003-03 line-family styles
+
+### Environment
+
+- Node: `v26.7.0`
+- pnpm: `11.21.0` selected through `corepack pnpm@11.21.0`
+- Browser: Playwright Chromium through Vitest Browser Mode
+
+### RED
+
+Command:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/line.test.ts packages/core/src/lib/components/line-helpers.test.ts --browser.headless --browser.ui=false
+```
+
+Result: exit 1; both test files failed, with 10 failed and 4 passed tests plus
+9 expected render errors. Style-only line coordinates were ignored by the
+legacy renderers, helper coordinates became undefined, and mouse regions were
+not registered.
+
+Command:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+```
+
+Result: exit 1 with the expected missing public `LineStyle`,
+`HorizontalLineStyle`, and `VerticalLineStyle` exports, rejected style fields,
+legacy required visual props, and unused negative legacy-shape assertions.
+
+### GREEN
+
+Command:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/line.test.ts packages/core/src/lib/components/line-helpers.test.ts --browser.headless --browser.ui=false
+```
+
+Result: exit 0; both files and all 15 tests passed. This includes exact
+horizontal/vertical default extents and pixel alignment, widened line hit
+geometry, cursor propagation, and opacity-zero interaction without painted
+pixels.
+
+The helper-forwarding regression was mutation-checked independently: removing
+the shared line style from `horizontalLine` produced the intended 1 failed and
+5 passed result because its click region disappeared, then restoring the style
+forwarding returned the combined suite to 15/15.
+
+Command:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+```
+
+Result: exit 0; `tsc --noEmit` reported no errors across core, scenarios,
+playground, tooling, and the public package consumer.
+
+Changed TypeScript files also passed ESLint, `git diff --check` was clean, and
+the legacy-call audit found only the intentional `@ts-expect-error` package
+consumer cases. Every authored line-family caller now supplies visual geometry,
+paint, cursor, pixel alignment, and interaction width through required style.
+No visual baseline changed.
+
+P003-03 remains in progress pending adversarial review. P003-04 remains TODO.
+
+### Adversarial review round 1
+
+Review found one Important runtime style-boundary issue. `LineStyle` excluded
+`fill` statically, but `Line` used object rest to forward every runtime style
+key into `Path`. A JavaScript or `any` caller could inject `fill`, causing a
+closed polyline to paint a polygon interior and register that interior as fill
+interaction geometry. Horizontal and vertical helpers used the same permissive
+rest forwarding.
+
+Fix RED command:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/line.test.ts --browser.headless --browser.ui=false
+```
+
+Result: exit 1 with 2 failed and 9 passed tests. A runtime-bypassed closed line
+painted the injected red fill, and a click in the polygon interior invoked the
+line handler once. Workspace typecheck remained green with a new meaningful
+`@ts-expect-error` assertion proving public `LineStyle` rejects `fill`.
+
+`Line`, `HorizontalLine`, and `VerticalLine` now explicitly construct the next
+style object from only `stroke`, `strokeWidth`, `opacity`, `cursor`,
+`lineInteractionWidth`, and generated coordinates. Unknown runtime keys and
+component-owned `custom` data do not cross the internal line-to-path boundary.
+
+Fix GREEN commands:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/line.test.ts packages/core/src/lib/components/line-helpers.test.ts --browser.headless --browser.ui=false
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+```
+
+The focused browser command exited 0 with both files and all 17 tests passing.
+Typecheck exited 0 with no errors. Changed-file ESLint and `git diff --check`
+also passed. P003-03 remains in progress pending re-review; P003-04 remains
+TODO.
+
+### Clean adversarial review closure
+
+Code re-review found the explicit allowed-field construction complete with no
+remaining findings and declared Task 3 ready for status-only closure. This
+closure marks P003-03 done, advances P003-04 as the sole next step, and
+synchronizes the plan board.
+
+No production or test file changed and no behavior check was rerun. The
+immediately preceding fresh evidence remains 17/17 focused browser tests, clean
+workspace typecheck, and clean changed-file hygiene. The final amended Task 3
+commit is sent for status-only review before P003-04 begins.

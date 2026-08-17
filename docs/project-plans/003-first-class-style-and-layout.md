@@ -63,8 +63,8 @@ review before the next task begins.
 | ------- | ----------- | --------------------------------------------------------------- |
 | P003-01 | Done        | First-class descriptor style/key protocol.                      |
 | P003-02 | Done        | Path, rectangle, and SVG path style migration.                  |
-| P003-03 | Next        | Line-family style migration.                                    |
-| P003-04 | Queued      | Text style and shared text layout.                              |
+| P003-03 | Done        | Line-family style migration.                                    |
+| P003-04 | Next        | Text style and shared text layout.                              |
 | P003-05 | Queued      | Image style migration.                                          |
 | P003-06 | Queued      | Group, clip, layer, and style-only closure.                     |
 | P003-07 | Queued      | Length, constraint, box, and item capabilities.                 |
@@ -96,13 +96,13 @@ Done when the three primitives and all callers use required component-specific
 styles, legacy top-level paint/geometry fails type checking, existing pixels and
 interaction remain unchanged, and the commit is reviewed.
 
-### P003-03 [NEXT] — Line-family styles
+### P003-03 [DONE] — Line-family styles
 
 Done when line coordinates, paint, pixel alignment, cursor, and interaction
 width are style-only across all callers, focused behavior/type checks pass, and
 the commit is reviewed.
 
-### P003-04 [TODO] — Text styles and pure text layout
+### P003-04 [NEXT] — Text styles and pure text layout
 
 Done when text uses `width`/`height`/`wrap`/CRC-native `fit`, painting and pure
 measurement share literal line layout, existing text/hit behavior is preserved,
@@ -240,3 +240,25 @@ is clean, and this plan has no active marker.
   the immediately preceding fresh evidence remains 47/47 focused browser tests
   plus clean workspace typecheck. The final amended task commit is sent for
   status-only review before P003-03 begins.
+- **2026-08-17 — P003-03 implementation pending review.** Added closed public
+  styles for the line family, moved all geometry/paint/cursor/interaction values
+  into required style, reused the style-driven path renderer, and migrated every
+  authored caller without a legacy adapter. Focused RED was 10 failed and 4
+  passed tests plus the expected type errors. GREEN is 15/15 focused browser
+  tests and clean workspace typecheck; changed-file lint, legacy-call audit, and
+  diff hygiene are also clean. P003-03 remains in progress for adversarial
+  review, and P003-04 remains TODO.
+- **2026-08-17 — P003-03 adversarial review fix round 1.** Review found that
+  object-rest forwarding let an untyped runtime `fill` key cross the closed
+  line-style boundary into Path, producing polygon paint and fill-hit geometry.
+  Focused RED reproduced both failures at 2 failed/9 passed. Line and both helper
+  renderers now construct downstream styles from explicit allowed fields only;
+  focused GREEN is 17/17 plus clean typecheck and changed-file hygiene. P003-03
+  remains in progress pending re-review, and P003-04 remains TODO.
+- **2026-08-17 — P003-03 complete after adversarial review.** Code re-review
+  found the explicit runtime style boundary complete with no remaining findings.
+  This status-only closure marks P003-03 done and advances P003-04 as the sole
+  next step. No production or test file changed and no behavior check was rerun;
+  the immediately preceding fresh evidence remains 17/17 focused browser tests
+  plus clean workspace typecheck and changed-file hygiene. The final amended
+  task commit is sent for status-only review before P003-04 begins.

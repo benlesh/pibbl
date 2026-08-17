@@ -382,11 +382,13 @@ function strokeBoundary(record: GeometryMatrixRecord) {
       scaleY: 2,
       children: [line({
         key: 'stroke-target',
-        coords: [[80, 60], [400, 60]],
-        strokeStyle: '#2563eb',
-        lineWidth: 2,
-        lineInteractionWidth: 10,
-        cursor: 'pointer',
+        style: {
+          coords: [[80, 60], [400, 60]],
+          stroke: '#2563eb',
+          strokeWidth: 2,
+          lineInteractionWidth: 10,
+          cursor: 'pointer',
+        },
         ...traceHandlers('stroke', record),
       })],
     }),

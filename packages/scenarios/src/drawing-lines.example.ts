@@ -33,35 +33,43 @@ const DrawingLinesScene = defineComp<DrawingLinesSceneProps>(({ state }) => [
   }),
   line({
     key: 'polyline',
-    coords: state.updated ?
-        [[24, 92], [92, 28], [160, 102], [226, 42]] :
-      [[24, 82], [92, 34], [160, 96], [226, 26]],
-    strokeStyle: state.updated ? '#7c3aed' : '#2563eb',
-    lineWidth: state.updated ? 8 : 6,
+    style: {
+      coords: state.updated ?
+          [[24, 92], [92, 28], [160, 102], [226, 42]] :
+        [[24, 82], [92, 34], [160, 96], [226, 26]],
+      stroke: state.updated ? '#7c3aed' : '#2563eb',
+      strokeWidth: state.updated ? 8 : 6,
+    },
   }),
   horizontalLine({
     key: 'horizontal',
-    y: state.updated ? 152.2 : 142.2,
-    left: 24,
-    right: 456,
-    strokeStyle: '#f59e0b',
-    lineWidth: 1,
-    alignToPixelGrid: 'round',
+    style: {
+      y: state.updated ? 152.2 : 142.2,
+      left: 24,
+      right: 456,
+      stroke: '#f59e0b',
+      strokeWidth: 1,
+      alignToPixelGrid: 'round',
+    },
   }),
   verticalLine({
     key: 'vertical',
-    x: state.updated ? 332.2 : 312.2,
-    top: 20,
-    bottom: 218,
-    strokeStyle: '#10b981',
-    lineWidth: 1,
-    alignToPixelGrid: 'round',
+    style: {
+      x: state.updated ? 332.2 : 312.2,
+      top: 20,
+      bottom: 218,
+      stroke: '#10b981',
+      strokeWidth: 1,
+      alignToPixelGrid: 'round',
+    },
   }),
   line({
     key: 'empty-line',
-    coords: [],
-    strokeStyle: '#ef4444',
-    lineWidth: 12,
+    style: {
+      coords: [],
+      stroke: '#ef4444',
+      strokeWidth: 12,
+    },
   }),
 ]);
 

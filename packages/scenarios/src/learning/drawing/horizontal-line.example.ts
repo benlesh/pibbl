@@ -12,13 +12,15 @@ const HorizontalStudy = defineComp(function HorizontalStudy() {
   const [band, setBand] = crcState("none");
   const rule = (y: number, color: string, name: string) =>
     horizontalLine({
-      y,
-      left: 82,
-      right: 638,
-      strokeStyle: color,
-      lineWidth: band === name ? 14 : 5,
-      lineInteractionWidth: 30,
-      alignToPixelGrid: "round",
+      style: {
+        y,
+        left: 82,
+        right: 638,
+        stroke: color,
+        strokeWidth: band === name ? 14 : 5,
+        lineInteractionWidth: 30,
+        alignToPixelGrid: "round",
+      },
       onMouseOver: () => setBand(name),
       onMouseOut: () => setBand("none"),
     });

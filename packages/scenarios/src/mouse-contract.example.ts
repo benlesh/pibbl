@@ -117,7 +117,7 @@ function caseVisual(
           children: [region('a', 60, 80, 104, 60, '#2563eb')],
         }),
         text({ x: 96, y: 136, text: 'local shape', font: '13px Arial', fillStyle: '#64748b' }),
-        line({ coords: [[158, 132], [278, 132]], strokeStyle: '#94a3b8', lineWidth: 1 }),
+        line({ style: { coords: [[158, 132], [278, 132]], stroke: '#94a3b8', strokeWidth: 1 } }),
       ];
     case 'later-layer-topmost':
       return [
@@ -131,7 +131,7 @@ function caseVisual(
     case 'css-scaled-coordinates':
       return [
         region('a', 150, 88, 180, 88, '#2563eb'),
-        line({ coords: [[150, 188], [330, 188]], strokeStyle: '#64748b', lineWidth: 1 }),
+        line({ style: { coords: [[150, 188], [330, 188]], stroke: '#64748b', strokeWidth: 1 } }),
         text({ x: 173, y: 122, text: 'intrinsic 180 × 88', font: '700 14px Arial', fillStyle: '#fff' }),
         text({ x: 166, y: 207, text: 'CSS pixels → intrinsic coordinates', font: '13px Arial', fillStyle: '#475569' }),
       ];
@@ -141,10 +141,12 @@ function caseVisual(
       return [
         line({
           key: 'stroke-region-a',
-          coords: [[78, 76], [264, 76], [264, 188], [78, 188], [78, 76]],
-          strokeStyle: '#2563eb',
-          lineWidth: 6,
-          lineInteractionWidth: 12,
+          style: {
+            coords: [[78, 76], [264, 76], [264, 188], [78, 188], [78, 76]],
+            stroke: '#2563eb',
+            strokeWidth: 6,
+            lineInteractionWidth: 12,
+          },
           ...interactive('a'),
         }),
         text({ x: 116, y: 136, text: 'stroke only', font: '700 15px Arial', fillStyle: '#1e3a8a' }),
@@ -174,8 +176,8 @@ function caseVisual(
             fill: '#e2e8f0',
           },
         }),
-        line({ coords: [[72, 72], [262, 184]], strokeStyle: '#cbd5e1', lineWidth: 1 }),
-        line({ coords: [[262, 72], [72, 184]], strokeStyle: '#cbd5e1', lineWidth: 1 }),
+        line({ style: { coords: [[72, 72], [262, 184]], stroke: '#cbd5e1', strokeWidth: 1 } }),
+        line({ style: { coords: [[262, 72], [72, 184]], stroke: '#cbd5e1', strokeWidth: 1 } }),
         rect({
           key: 'transparent-fill-region-a',
           style: {
@@ -194,14 +196,16 @@ function caseVisual(
       return [
         line({
           key: 'expanded-line-a',
-          coords: [[90, 132], [390, 132]],
-          strokeStyle: '#2563eb',
-          lineWidth: 2,
-          lineInteractionWidth: 24,
+          style: {
+            coords: [[90, 132], [390, 132]],
+            stroke: '#2563eb',
+            strokeWidth: 2,
+            lineInteractionWidth: 24,
+          },
           ...interactive('a'),
         }),
-        line({ coords: [[90, 120], [390, 120]], strokeStyle: '#bfdbfe', lineWidth: 1 }),
-        line({ coords: [[90, 144], [390, 144]], strokeStyle: '#bfdbfe', lineWidth: 1 }),
+        line({ style: { coords: [[90, 120], [390, 120]], stroke: '#bfdbfe', strokeWidth: 1 } }),
+        line({ style: { coords: [[90, 144], [390, 144]], stroke: '#bfdbfe', strokeWidth: 1 } }),
         text({ x: 126, y: 104, text: '24px interaction stroke', font: '13px Arial', fillStyle: '#475569' }),
       ];
     case 'root-event-no-path':
@@ -222,8 +226,8 @@ function caseVisual(
             strokeWidth: 2,
           },
         }),
-        line({ coords: [[72, 72], [262, 184]], strokeStyle: '#ef4444', lineWidth: 4 }),
-        line({ coords: [[262, 72], [72, 184]], strokeStyle: '#ef4444', lineWidth: 4 }),
+        line({ style: { coords: [[72, 72], [262, 184]], stroke: '#ef4444', strokeWidth: 4 } }),
+        line({ style: { coords: [[262, 72], [72, 184]], stroke: '#ef4444', strokeWidth: 4 } }),
         text({ x: 102, y: 136, text: 'target removed', font: '700 15px Arial', fillStyle: '#991b1b' }),
       ];
     default: {
@@ -271,15 +275,19 @@ const MouseContractScene = defineComp<MouseContractSceneProps>(({ contractCase, 
     ...caseVisual(contractCase, record),
     line({
       key: 'probe-horizontal',
-      coords: [[probe.x - 6, probe.y], [probe.x + 6, probe.y]],
-      strokeStyle: '#dc2626',
-      lineWidth: 2,
+      style: {
+        coords: [[probe.x - 6, probe.y], [probe.x + 6, probe.y]],
+        stroke: '#dc2626',
+        strokeWidth: 2,
+      },
     }),
     line({
       key: 'probe-vertical',
-      coords: [[probe.x, probe.y - 6], [probe.x, probe.y + 6]],
-      strokeStyle: '#dc2626',
-      lineWidth: 2,
+      style: {
+        coords: [[probe.x, probe.y - 6], [probe.x, probe.y + 6]],
+        stroke: '#dc2626',
+        strokeWidth: 2,
+      },
     }),
     text({
       key: 'approved-target',

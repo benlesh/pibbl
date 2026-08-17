@@ -2,6 +2,8 @@ import type {
   CRCController,
   CRCMouseEvent,
   CRCRef,
+  HorizontalLineStyle,
+  LineStyle,
   PathStyle,
   RectProps,
   RectStyle,
@@ -9,6 +11,7 @@ import type {
   StateUpdater,
   SvgPathStyle,
   SystemStyle,
+  VerticalLineStyle,
 } from '@crc/core';
 import type * as CoreTypes from '@crc/core/types';
 import {
@@ -23,9 +26,12 @@ import {
   crcSvgPath,
   crcWhenChanged,
   defineComp,
+  horizontalLine,
+  line,
   path,
   rect,
   svgPath,
+  verticalLine,
 } from '@crc/core';
 
 const rectangleStyle = {
@@ -58,6 +64,34 @@ const svgPathStyle = {
 } satisfies SvgPathStyle;
 svgPath({ style: svgPathStyle });
 
+const lineStyle = {
+  coords: [[0, 0], [20, 10]],
+  stroke: '#2563eb',
+  strokeWidth: 2,
+  opacity: 0.5,
+  lineInteractionWidth: 8,
+  cursor: 'pointer',
+} satisfies LineStyle;
+line({ style: lineStyle, onMouseMove: () => undefined });
+
+const horizontalLineStyle = {
+  y: 12,
+  left: 4,
+  right: 40,
+  stroke: 'black',
+  alignToPixelGrid: 'round',
+} satisfies HorizontalLineStyle;
+horizontalLine({ style: horizontalLineStyle });
+
+const verticalLineStyle = {
+  x: 12,
+  top: 4,
+  bottom: 40,
+  stroke: 'black',
+  alignToPixelGrid: 'round',
+} satisfies VerticalLineStyle;
+verticalLine({ style: verticalLineStyle });
+
 // @ts-expect-error rectangle geometry is style-only
 rect({ x: 10, y: 10, width: 40, height: 20 });
 // @ts-expect-error rectangle style requires width and height
@@ -66,6 +100,22 @@ rect({ style: { fill: 'red' } });
 path({ d: new Path2D() });
 // @ts-expect-error SVG path data is style-only
 svgPath({ d: 'M 0 0 L 10 10' });
+// @ts-expect-error line coordinates are style-only
+line({ coords: [[0, 0], [20, 10]] });
+// @ts-expect-error line style is required because coordinates are required
+line({});
+// @ts-expect-error legacy line paint names are not style properties
+line({ style: { coords: [[0, 0], [20, 10]], strokeStyle: 'black', lineWidth: 1 } });
+// @ts-expect-error line is stroke-only and does not accept fill paint
+line({ style: { coords: [[0, 0], [20, 10]], fill: 'red' } });
+// @ts-expect-error horizontal-line geometry is style-only
+horizontalLine({ y: 12 });
+// @ts-expect-error horizontal line requires style.y
+horizontalLine({ style: { stroke: 'black' } });
+// @ts-expect-error vertical-line geometry is style-only
+verticalLine({ x: 12 });
+// @ts-expect-error vertical line requires style.x
+verticalLine({ style: { stroke: 'black' } });
 
 export function disposeMount(controller: ReturnType<typeof crc>): void {
   const publicController: CRCController = controller;

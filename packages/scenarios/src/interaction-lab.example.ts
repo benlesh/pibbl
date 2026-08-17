@@ -288,24 +288,30 @@ function caseVisual(state: Readonly<InteractionLabState>, record: InteractionLab
       return [
         line({
           key: 'expanded-line',
-          coords: [[90, 126], [390, 126]],
-          strokeStyle: '#2563eb',
-          lineWidth: 2,
-          lineInteractionWidth: 24,
-          cursor: 'pointer',
+          style: {
+            coords: [[90, 126], [390, 126]],
+            stroke: '#2563eb',
+            strokeWidth: 2,
+            lineInteractionWidth: 24,
+            cursor: 'pointer',
+          },
           ...traceHandlers('a', record),
         }),
         line({
           key: 'interaction-top-guide',
-          coords: [[90, 114], [390, 114]],
-          strokeStyle: '#bfdbfe',
-          lineWidth: 1,
+          style: {
+            coords: [[90, 114], [390, 114]],
+            stroke: '#bfdbfe',
+            strokeWidth: 1,
+          },
         }),
         line({
           key: 'interaction-bottom-guide',
-          coords: [[90, 138], [390, 138]],
-          strokeStyle: '#bfdbfe',
-          lineWidth: 1,
+          style: {
+            coords: [[90, 138], [390, 138]],
+            stroke: '#bfdbfe',
+            strokeWidth: 1,
+          },
         }),
       ];
     case 'no-hit':
