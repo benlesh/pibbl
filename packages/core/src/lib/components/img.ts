@@ -10,6 +10,7 @@ import {
   PixelGridAlignment,
   RenderingContext2D,
   StrokeStyleProps,
+  SystemStyle,
 } from '../types.js';
 import { adjustRectangleToPixelGrid } from '../util/pixel-grid-adjustments.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
@@ -33,7 +34,7 @@ interface LoadedImage {
   element: HTMLImageElement;
 }
 
-function Img(props: ImgProps, ctx: RenderingContext2D) {
+function Img(props: ImgProps, _style: SystemStyle, ctx: RenderingContext2D) {
   let {
     alpha,
     src,

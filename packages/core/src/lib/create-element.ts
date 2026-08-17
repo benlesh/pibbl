@@ -1,4 +1,10 @@
-import { CompEl, CompFn } from './types.js';
+import {
+  CompEl,
+  CompFn,
+  SystemStyle,
+} from './types.js';
+
+export const EMPTY_STYLE: Readonly<SystemStyle> = Object.freeze({});
 
 /**
  * Creates a simple structure representing a component to be rendered.
@@ -8,6 +14,11 @@ import { CompEl, CompFn } from './types.js';
  * @returns A structure that represents a component to be mounted or updated during render
  */
 
-export function createElement<P>(comp: CompFn<P>, props: P): CompEl<P> {
-  return { type: comp, props };
+export function createElement<P, S extends SystemStyle>(
+  comp: CompFn<P, S>,
+  props: CompEl<P, S>['props'],
+  style: CompEl<P, S>['style'] = EMPTY_STYLE as CompEl<P, S>['style'],
+  key?: string,
+): CompEl<P, S> {
+  return { type: comp, props, style, key };
 }

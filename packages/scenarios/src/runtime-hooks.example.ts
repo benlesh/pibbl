@@ -101,14 +101,12 @@ interface RuntimeHooksSceneProps {
   model: Readonly<RuntimeHooksModel>;
 }
 
-interface HookProbeProps extends RuntimeHooksSceneProps {
-  key?: string;
-}
+interface HookProbeProps extends RuntimeHooksSceneProps {}
 
 interface SiblingProps {
   color: string;
-  key: RuntimeHooksSiblingKey;
   metrics: RuntimeHooksMetrics;
+  siblingKey: RuntimeHooksSiblingKey;
   slot: number;
 }
 
@@ -198,14 +196,14 @@ const HookProbe = defineComp<HookProbeProps>(({ metrics, model }) => {
   ];
 });
 
-const Sibling = defineComp<SiblingProps>(({ color, key, metrics, slot }) => {
+const Sibling = defineComp<SiblingProps>(({ color, metrics, siblingKey, slot }) => {
   const identity = crcRef<number>();
   if (identity.current === undefined) {
     identity.current = metrics.nextObjectIdentity++;
   }
-  metrics.siblingIdentities[key] = identity.current;
+  metrics.siblingIdentities[siblingKey] = identity.current;
   return rect({
-    key: `${key}-fill`,
+    key: `${siblingKey}-fill`,
     x: 190 + slot * 82,
     y: 50,
     width: 64,
@@ -233,6 +231,7 @@ function sceneNodes({ metrics, model }: RuntimeHooksSceneProps) {
     color: key === 'a' ? '#0ea5e9' : key === 'b' ? '#10b981' : '#f97316',
     key,
     metrics,
+    siblingKey: key,
     slot,
   }));
 

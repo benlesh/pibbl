@@ -1,28 +1,62 @@
 import type { Teardowns } from './teardowns.js';
 
-export interface CompEl<P = any> {
-  type: CompFn<P>;
-  props: P;
+export interface SystemStyle {
+  custom?: unknown;
+}
+
+type ReservedElementKey = 'key' | 'style';
+
+type UnionKeys<T> = T extends unknown ? keyof T : never;
+
+type ProgramProps<P> = 0 extends (1 & P)
+  ? P
+  : Extract<UnionKeys<P>, ReservedElementKey> extends never
+    ? P
+    : never;
+
+type RequiredKeys<T> = T extends unknown
+  ? {
+      [K in keyof T]-?:
+        Pick<T, K> extends Required<Pick<T, K>> ? K : never
+    }[keyof T]
+  : never;
+
+type StyleField<S> = [RequiredKeys<S>] extends [never]
+  ? { style?: S }
+  : { style: S };
+
+export type ComponentInput<P, S extends SystemStyle = SystemStyle> =
+  ProgramProps<P> & { key?: string } & StyleField<S>;
+
+export interface CompEl<
+  P = any,
+  S extends SystemStyle = SystemStyle,
+> {
+  type: CompFn<P, S>;
+  props: ProgramProps<P>;
+  style: Readonly<S>;
+  key?: string;
 }
 
 export type FalsyNodes = undefined | false | null | '' | 0;
 
-export type CRCNode = CompEl | void | FalsyNodes;
+export type CRCNode = CompEl<any, any> | void | FalsyNodes;
 
 export type Canvas = HTMLCanvasElement | OffscreenCanvas;
 export type RenderingContext2D =
   | CanvasRenderingContext2D
   | OffscreenCanvasRenderingContext2D;
 
-export type CompFn<P> = (
-  props: P,
+export type CompFn<P, S extends SystemStyle = SystemStyle> = (
+  props: ProgramProps<P>,
+  style: Readonly<S>,
   ctx: RenderingContext2D,
 ) => CRCNode[] | CRCNode | void;
 
 export interface CompRefs<P> {
   id: string;
   parent: CompRefs<any> | undefined;
-  element: CompEl<P>;
+  element: CompEl<P, any>;
   refs: any[];
   hooks: CRCHookSlot[];
   teardowns: Teardowns;
@@ -123,9 +157,7 @@ export interface CRCBasicMouseEvents {
 export type FillStyle = CanvasRenderingContext2D['fillStyle'];
 export type StrokeStyle = CanvasRenderingContext2D['strokeStyle'];
 
-export interface IntrinsicProps {
-  key?: string;
-}
+export interface IntrinsicProps {}
 
 export interface AlphaProps {
   alpha?: number;
@@ -158,8 +190,8 @@ export interface PathProps
 export interface CRCInstance {
   canvas: Canvas;
   controller: CRCController;
-  root: CompEl<any>;
-  pendingRoot: CompEl<any> | undefined;
+  root: CompEl<any, any>;
+  pendingRoot: CompEl<any, any> | undefined;
   pendingUpdateParents: boolean;
   refs: Map<string, CompRefs<any>>;
   animationFrameId: number | undefined;

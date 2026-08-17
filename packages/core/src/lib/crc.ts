@@ -10,7 +10,7 @@ import { update } from './update.js';
  */
 export function crc<P>(
   canvas: HTMLCanvasElement,
-  element: CompEl<P>,
+  element: CompEl<P, any>,
   config?: { signal?: AbortSignal },
 ): CRCController {
   const mountedInstance = GLOBAL_STATE.crcInstances.get(canvas);

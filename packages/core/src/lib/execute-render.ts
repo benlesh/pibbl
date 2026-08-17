@@ -11,7 +11,7 @@ import { get2dContext } from './util/get-2d-context.js';
 export function executeRender(
   canvas: Canvas,
   renderTimestamp: number,
-  updatedRoot?: CompEl,
+  updatedRoot?: CompEl<any, any>,
   updateParents = false,
 ): void {
   if (!canvas) {

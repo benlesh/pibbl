@@ -1,4 +1,5 @@
 import type { RectProps } from './rect';
+import type { SystemStyle } from '../types';
 import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
 import { defineComp } from '../define-comp';
@@ -157,6 +158,55 @@ describe('layer', () => {
       await canvas.click({ position: { x: 100, y: 100 } });
 
       // Should re-render due to prop changes from state updates
+      expect(renderCount).toBe(2);
+    });
+
+    it('re-renders when only the root element style changes', async () => {
+      let renderCount = 0;
+      const renderProps = { onRender: () => renderCount++ };
+      interface CountedRectStyle extends SystemStyle {
+        version: number;
+      }
+      const countedRect = defineComp<
+        typeof renderProps,
+        CountedRectStyle
+      >(({ onRender }) => {
+        onRender();
+        return rect({
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+          fillStyle: 'blue',
+        });
+      });
+      const wrapperComponent = defineComp(() => {
+        const [styleVersion, setStyleVersion] = crcState(1);
+        return g({
+          children: [
+            rect({
+              x: 100,
+              y: 0,
+              width: 100,
+              height: 100,
+              fillStyle: 'green',
+              onClick: () => setStyleVersion(2),
+            }),
+            layer({
+              render: countedRect({
+                ...renderProps,
+                style: { version: styleVersion },
+              }),
+            }),
+          ],
+        });
+      });
+
+      const canvas = await componentTest(wrapperComponent({}));
+      expect(renderCount).toBe(1);
+
+      await canvas.click({ position: { x: 150, y: 50 } });
+
       expect(renderCount).toBe(2);
     });
 

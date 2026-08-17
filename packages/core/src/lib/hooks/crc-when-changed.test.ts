@@ -15,7 +15,6 @@ const ChangeProbe = defineComp(({ dependency, setup }: ChangeProbeProps) => {
 
 interface LifecycleProbeProps {
   events: string[];
-  key?: string;
   label: string;
 }
 

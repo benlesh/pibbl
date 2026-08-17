@@ -31,13 +31,13 @@ describe('crcState', () => {
     const canvas = createCanvas();
     const renders: Array<{ key: string; setter: StateUpdater<number>; value: number }> = [];
     interface StateProbeProps {
-      key: string;
+      label: string;
     }
     const StateProbe = defineComp((props: StateProbeProps) => {
       const [value, setter] = crcState(0);
-      renders.push({ key: props.key, setter, value });
+      renders.push({ key: props.label, setter, value });
     });
-    const controller = crc(canvas, StateProbe({ key: 'first' }));
+    const controller = crc(canvas, StateProbe({ key: 'first', label: 'first' }));
     await nextFrame();
     const setter = renders[0].setter;
 
@@ -48,7 +48,7 @@ describe('crcState', () => {
     expect(renders.at(-1)).toMatchObject({ key: 'first', value: 3 });
     expect(renders.at(-1)?.setter).toBe(setter);
 
-    crc(canvas, StateProbe({ key: 'second' }));
+    crc(canvas, StateProbe({ key: 'second', label: 'second' }));
     await nextFrame();
     expect(renders.at(-1)).toMatchObject({ key: 'second', value: 0 });
     expect(renders.at(-1)?.setter).not.toBe(setter);
@@ -106,7 +106,6 @@ describe('crcRef', () => {
     const values: number[] = [];
     interface RefProbeProps {
       initial: number;
-      key: string;
     }
     const RefProbe = defineComp(({ initial }: RefProbeProps) => {
       const ref = crcRef(initial);
@@ -237,13 +236,13 @@ describe('hook ordering and render errors', () => {
     const frames = new ManualFrames();
     const canvas = createCanvas();
     const renderError = new Error('render failed');
-    const Broken = defineComp((_props: {}, ctx: RenderingContext2D) => {
+    const Broken = defineComp((_props: {}, _style, ctx: RenderingContext2D) => {
       ctx.translate(20, 30);
       crcState(1);
       throw renderError;
     });
     const transforms: DOMMatrix[] = [];
-    const Healthy = defineComp((_props: {}, ctx: RenderingContext2D) => {
+    const Healthy = defineComp((_props: {}, _style, ctx: RenderingContext2D) => {
       transforms.push(ctx.getTransform());
       crcState(2);
     });

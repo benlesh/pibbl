@@ -4,11 +4,11 @@ import {
   GLOBAL_STATE,
 } from './global-state.js';
 import { Teardowns } from './teardowns.js';
-import { CompEl, CompRefs } from './types.js';
+import { CompEl, CompRefs, SystemStyle } from './types.js';
 import { finalizeHookSlots } from './hooks/hook-slot.js';
 
-export function render<P>(
-  element: CompEl<P>,
+export function render<P, S extends SystemStyle>(
+  element: CompEl<P, S>,
   parentId: string,
   parent: CompRefs<any> | undefined,
 ): void {
@@ -44,6 +44,7 @@ export function render<P>(
     try {
       const result = componentRefs.element.type(
         componentRefs.element.props,
+        componentRefs.element.style,
         ctx,
       );
       finalizeHookSlots(componentRefs);
@@ -83,10 +84,10 @@ export function render<P>(
   }
 }
 
-function getElementTypeName(element: CompEl, parentId: string): string {
+function getElementTypeName(element: CompEl<any, any>, parentId: string): string {
   const typeIdentity = getAnonElemName(element.type);
   const typeName = element.type.name || 'Anonymous';
-  const key = (element.props as { key?: string } | null | undefined)?.key;
+  const key = element.key;
   if (key === undefined) {
     return `${typeName}:${typeIdentity}`;
   }

@@ -1,5 +1,10 @@
 import { defineComp } from '../define-comp.js';
-import { CRCNode, IntrinsicProps, RenderingContext2D } from '../types.js';
+import {
+  CRCNode,
+  IntrinsicProps,
+  RenderingContext2D,
+  SystemStyle,
+} from '../types.js';
 
 export interface GProps extends IntrinsicProps {
   children: CRCNode[];
@@ -16,7 +21,7 @@ export interface GProps extends IntrinsicProps {
   skewY?: number;
 }
 
-function G(props: GProps, ctx: RenderingContext2D) {
+function G(props: GProps, _style: SystemStyle, ctx: RenderingContext2D) {
   let transform = ctx.getTransform();
 
   const { scaleX = 1, scaleY = 1 } = props;

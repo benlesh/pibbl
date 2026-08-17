@@ -6,6 +6,7 @@ import {
   PixelGridAlignment,
   RenderingContext2D,
   StrokeStyleProps,
+  SystemStyle,
 } from '../types.js';
 import { adjustForPixelGrid } from '../util/pixel-grid-adjustments.js';
 import { Line } from './line.js';
@@ -24,6 +25,7 @@ export interface HorizontalLineProps
 
 export function HorizontalLine(
   props: HorizontalLineProps,
+  _style: SystemStyle,
   ctx: RenderingContext2D,
 ) {
   const {
@@ -43,6 +45,7 @@ export function HorizontalLine(
       coords,
       ...lineProps,
     },
+    {},
     ctx,
   );
 }

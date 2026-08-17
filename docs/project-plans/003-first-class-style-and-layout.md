@@ -61,8 +61,8 @@ review before the next task begins.
 
 | Step | Queue state | Outcome |
 | --- | --- | --- |
-| P003-01 | Next | First-class descriptor style/key protocol. |
-| P003-02 | Queued | Path, rectangle, and SVG path style migration. |
+| P003-01 | Done | First-class descriptor style/key protocol. |
+| P003-02 | Next | Path, rectangle, and SVG path style migration. |
 | P003-03 | Queued | Line-family style migration. |
 | P003-04 | Queued | Text style and shared text layout. |
 | P003-05 | Queued | Image style migration. |
@@ -83,14 +83,14 @@ Each step below is governed by the identically numbered task in the detailed
 implementation plan. Its file list, red/green command, milestone checks, and
 commit message are part of this plan by reference.
 
-### P003-01 [NEXT] — Element style protocol
+### P003-01 [DONE] — Element style protocol
 
 Done when specified style and canonical key are descriptor metadata, render
 props cannot declare reserved names, style-only layer changes invalidate its
 cache, key-sensitive callers are migrated, focused tests/typecheck pass, and the
 commit has a clean adversarial review.
 
-### P003-02 [TODO] — Path, rectangle, and SVG path styles
+### P003-02 [NEXT] — Path, rectangle, and SVG path styles
 
 Done when the three primitives and all callers use required component-specific
 styles, legacy top-level paint/geometry fails type checking, existing pixels and
@@ -196,3 +196,23 @@ is clean, and this plan has no active marker.
   immediate-mode layout architecture, exact initial Flex/Grid boundaries, pure
   measurement policy, dependency-ordered 15-task implementation plan, focused
   verification cadence, and per-commit adversarial review. Next: **P003-01**.
+- **2026-08-17 — P003-01 implementation review.** The initial implementation
+  added descriptor-owned style/key metadata, the three-argument render
+  protocol, and style-sensitive layer invalidation. Adversarial review found
+  union-wide reserved-name and required-style gaps, a plain-props reference
+  regression, overly broad style-shape acceptance, and premature plan
+  advancement. P003-01 remains in progress while those findings are fixed and
+  re-reviewed; see
+  [`p003-style-layout.md`](../testing/field-notes/p003-style-layout.md).
+- **2026-08-17 — P003-01 review fix round 2.** Replaced the finite
+  non-plain-style blacklist with a positive requirement that every style schema
+  explicitly extend or intersect `SystemStyle`. Resource/class schemas now fail
+  structurally while declared styles retain ordinary object inputs and excess
+  checks. P003-01 remains in progress pending re-review; P003-02 is still
+  queued.
+- **2026-08-17 — P003-01 complete after adversarial review.** Initial review
+  found four Important issues plus the overly broad style-shape concern; the
+  first re-review found one remaining Important blacklist issue; the final code
+  re-review was clean. Focused evidence remained 28/28 browser tests plus clean
+  workspace typecheck. P003-01 is done and the sole next step is **P003-02**;
+  the same amended task commit receives one final status-only re-review.

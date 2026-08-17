@@ -79,7 +79,6 @@ export interface CleanupStressState {
 }
 
 export interface CleanupStressSceneProps {
-  key?: string;
   metrics: CleanupStressMetrics;
   state: Readonly<CleanupStressState>;
 }

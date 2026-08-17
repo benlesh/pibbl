@@ -32,8 +32,12 @@ export { crcSvgPath } from './lib/hooks/crc-svg-path.js';
 export { crcWhenChanged } from './lib/hooks/crc-when-changed.js';
 export type {
   Canvas,
+  CompEl,
+  CompFn,
+  ComponentInput,
   CRCController,
   CRCMouseEvent,
   CRCMouseEventListener,
   RenderingContext2D,
+  SystemStyle,
 } from './lib/types.js';

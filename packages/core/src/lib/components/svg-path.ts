@@ -8,6 +8,7 @@ import {
   IntrinsicProps,
   RenderingContext2D,
   StrokeStyleProps,
+  SystemStyle,
 } from '../types.js';
 import { Path } from './path.js';
 
@@ -21,7 +22,11 @@ export interface SvgPathProps
   d: string;
 }
 
-function SvgPath(props: SvgPathProps, ctx: RenderingContext2D) {
+function SvgPath(
+  props: SvgPathProps,
+  _style: SystemStyle,
+  ctx: RenderingContext2D,
+) {
   const { d, ...pathProps } = props;
   const svgPath = crcSvgPath(d);
   return Path(
@@ -29,6 +34,7 @@ function SvgPath(props: SvgPathProps, ctx: RenderingContext2D) {
       ...pathProps,
       path: svgPath,
     },
+    {},
     ctx,
   );
 }

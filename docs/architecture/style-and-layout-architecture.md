@@ -47,13 +47,14 @@ The element descriptor gains first-class style metadata:
 
 ```ts
 type ReservedElementKey = "key" | "style";
+type UnionKeys<T> = T extends unknown ? keyof T : never;
 type ProgramProps<P> = 0 extends (1 & P)
   ? P
-  : Extract<keyof P, ReservedElementKey> extends never
+  : Extract<UnionKeys<P>, ReservedElementKey> extends never
     ? P
     : never;
 
-interface CompEl<P, S extends SystemStyle> {
+interface CompEl<P, S extends SystemStyle = SystemStyle> {
   type: CompType<P, S, any, any>;
   props: ProgramProps<P>;
   style: Readonly<S>;
@@ -83,18 +84,35 @@ Required visual inputs remain required by that component's style type. The
 factory input expresses that rule structurally:
 
 ```ts
-type RequiredKeys<T> = {
-  [K in keyof T]-?: Pick<T, K> extends Required<Pick<T, K>> ? K : never
-}[keyof T];
+type RequiredKeys<T> = T extends unknown
+  ? {
+      [K in keyof T]-?:
+        Pick<T, K> extends Required<Pick<T, K>> ? K : never
+    }[keyof T]
+  : never;
 
 type StyleField<S> = [RequiredKeys<S>] extends [never]
   ? { style?: S }
   : { style: S };
 ```
 
+Both checks distribute over unions: one reserved prop member invalidates the
+whole program-props declaration, and one required style member makes `style`
+required. Every component-specific style type must explicitly extend
+`SystemStyle` or intersect with it. This is a positive style-schema contract,
+not a blacklist: unrelated arrays, functions, dates, URLs, errors, blobs,
+buffers, matrices, and arbitrary resource/class types fail structurally unless
+their declared type deliberately opts in. `SystemStyle` retains only optional
+`custom` and has no index signature, so declared style schemas remain closed and
+excess-property checked. Ordinary inputs do not need to spell `custom` when the
+declared target style has another matching member.
+
 `defineComp` rejects program-prop declarations containing reserved `key` or
 `style`; the descriptor owns those values and component code cannot read them
-through props. No public API supports visual values in both props and style.
+through props. Calls without an own `key` or `style` retain the exact program
+props object; calls with either metadata field take the extraction path and
+store a separate props object. No public API supports visual values in both
+props and style.
 
 ### Style schemas
 
@@ -110,7 +128,7 @@ interface LayoutItemStyle {
 }
 
 interface RectStyle
-  extends BoxStyle, TransformStyle, PaintStyle, LayoutItemStyle {
+  extends SystemStyle, BoxStyle, TransformStyle, PaintStyle, LayoutItemStyle {
   x?: Exclude<Length, "auto">;
   y?: Exclude<Length, "auto">;
   width: Length;
@@ -189,7 +207,7 @@ and render model. Optional normalization and measurement capabilities are static
 metadata on that same function object:
 
 ```ts
-type CompType<P, S extends SystemStyle, N = S, R = N> = ((
+type CompType<P, S extends SystemStyle = SystemStyle, N = S, R = N> = ((
   props: ProgramProps<P>,
   style: Readonly<R>,
   ctx: RenderingContext2D,
@@ -199,7 +217,12 @@ type CompType<P, S extends SystemStyle, N = S, R = N> = ((
   measure?: (input: MeasureInput<ProgramProps<P>, N>) => MeasureResult;
 }>;
 
-declare function defineComp<P, S extends SystemStyle, N = S, R = N>(
+declare function defineComp<
+  P,
+  S extends SystemStyle = SystemStyle,
+  N = S,
+  R = N,
+>(
   render: CompType<P, S, N, R>,
   capabilities?: {
     normalizeStyle?: (style: Readonly<S>) => Readonly<N>;

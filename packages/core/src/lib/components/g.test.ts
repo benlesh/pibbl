@@ -18,7 +18,7 @@ describe('g', () => {
 
   it('supports zero and negative scales without leaking transforms', async () => {
     const scales: number[] = [];
-    const TransformProbe = defineComp((_props: {}, ctx) => {
+    const TransformProbe = defineComp((_props: {}, _style, ctx) => {
       scales.push(ctx.getTransform().a);
     });
 

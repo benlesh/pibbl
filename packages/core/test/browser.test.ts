@@ -24,7 +24,7 @@ describe('crc browser tests', () => {
       });
     });
 
-    crc(canvas, { type: SimpleRect, props: {} });
+    crc(canvas, { type: SimpleRect, props: {}, style: {} });
 
     // Method 1: Auto-generated name based on test name + timestamp
     await takeScreenshot(page);

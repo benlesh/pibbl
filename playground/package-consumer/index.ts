@@ -5,6 +5,7 @@ import type {
   RectProps,
   RenderingContext2D,
   StateUpdater,
+  SystemStyle,
 } from '@crc/core';
 import type * as CoreTypes from '@crc/core/types';
 import {
@@ -42,7 +43,7 @@ export function disposeMount(controller: ReturnType<typeof crc>): void {
 declare const canvas: HTMLCanvasElement;
 
 const RuntimeProbe = defineComp<{ count: number; label?: string }>(
-  ({ count }, context) => {
+  ({ count }, _style, context) => {
     const publicContext: RenderingContext2D = context;
     publicContext.fillRect(0, 0, count, count);
     return [
@@ -61,6 +62,68 @@ const runtimeController: CRCController = crc(canvas, runtimeElement, {
   signal: new AbortController().signal,
 });
 runtimeController.dispose();
+
+interface RuntimeProbeStyle extends SystemStyle {
+  width: number;
+  opacity?: number;
+}
+
+const StyledRuntimeProbe = defineComp<
+  { count: number },
+  RuntimeProbeStyle
+>((props, style, context) => {
+  context.fillRect(0, 0, props.count * style.width, style.opacity ?? 1);
+});
+
+StyledRuntimeProbe({ count: 2, style: { width: 3 } });
+StyledRuntimeProbe({
+  count: 2,
+  style: { custom: { source: 'consumer' }, width: 3 },
+});
+// @ts-expect-error declared styles remain closed to excess properties
+StyledRuntimeProbe({ count: 2, style: { unknown: true, width: 3 } });
+// @ts-expect-error required style members make the style field required
+StyledRuntimeProbe({ count: 2 });
+// @ts-expect-error key is reserved descriptor metadata, not a program prop
+defineComp<{ key: string }, SystemStyle>(() => undefined);
+// @ts-expect-error style is reserved descriptor metadata, not a program prop
+defineComp<{ style: string }, SystemStyle>(() => undefined);
+
+type PartiallyReservedKeyProps =
+  | { kind: 'value'; value: number }
+  | { key: string; kind: 'reserved' };
+type PartiallyReservedStyleProps =
+  | { kind: 'value'; value: number }
+  | { kind: 'reserved'; style: string };
+
+// @ts-expect-error key is forbidden in every member of a program-props union
+defineComp<PartiallyReservedKeyProps, SystemStyle>(() => undefined);
+// @ts-expect-error style is forbidden in every member of a program-props union
+defineComp<PartiallyReservedStyleProps, SystemStyle>(() => undefined);
+
+type DisjointUnionStyle =
+  | (SystemStyle & { opacity?: number })
+  | (SystemStyle & { width: number });
+const DisjointUnionStyleProbe = defineComp<{}, DisjointUnionStyle>(
+  () => undefined,
+);
+DisjointUnionStyleProbe({ style: { opacity: 0.5 } });
+DisjointUnionStyleProbe({ style: { width: 4 } });
+// @ts-expect-error one union style member has a required field
+DisjointUnionStyleProbe({});
+
+// @ts-expect-error arrays are not plain style schemas
+defineComp<{}, string[]>(() => undefined);
+// @ts-expect-error functions are not plain style schemas
+defineComp<{}, () => void>(() => undefined);
+// @ts-expect-error dates are not plain style schemas
+defineComp<{}, Date>(() => undefined);
+// @ts-expect-error URL instances are resources, not declared style schemas
+defineComp<{}, URL>(() => undefined);
+// @ts-expect-error Error instances are resources, not declared style schemas
+defineComp<{}, Error>(() => undefined);
+// @ts-expect-error Blob instances are resources, not declared style schemas
+defineComp<{}, Blob>(() => undefined);
 
 defineComp(() => false)({});
 defineComp(() => null)({});

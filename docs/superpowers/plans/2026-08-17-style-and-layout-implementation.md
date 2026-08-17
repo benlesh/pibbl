@@ -22,8 +22,8 @@
 - Unknown, non-finite, cyclic, or required-but-unmeasurable values produce component/property/constraint-specific diagnostics and never reach Canvas calls.
 - New behavior follows TDD: observe the focused test fail for the expected missing behavior before adding production code.
 - Per-task verification is focused. Run the broader static/browser milestone commands only where named; run aggregate `pnpm trust` only during final closure, including the authoritative run on the evidence-amended final commit.
-- Preserve unrelated worktree changes. Each task creates one concise implementation commit, followed by an adversarial task review before the next task.
-- `docs/project-plans/003-first-class-style-and-layout.md` is the active execution ledger: each task marks its step in progress, then commits its `[DONE]` result, next marker, board update, and short session entry with the task files.
+- Preserve unrelated worktree changes. Each task produces one concise final commit; adversarial review fixes and completion-ledger changes amend that same commit rather than adding task-fix commits.
+- `docs/project-plans/003-first-class-style-and-layout.md` is the active execution ledger. A task remains `[IN PROGRESS]` through implementation and adversarial review. Only a clean review permits its final same-commit amendment to `[DONE]`, advances the next marker, synchronizes the board, and records the completion session entry.
 
 ## Common evidence files for every task
 
@@ -32,7 +32,7 @@ Every Task 1–15 file scope and commit includes both:
 - `docs/project-plans/003-first-class-style-and-layout.md`;
 - `docs/testing/field-notes/p003-style-layout.md` (created by Task 1, then appended).
 
-At task start, change that step from `[NEXT]` to `[IN PROGRESS]` and synchronize the board. Before committing, record the focused red/green commands and review-relevant observations in the field note, mark the step `[DONE]`, advance the sole `[NEXT]` marker, synchronize the board, and append the session log. The implementation plus those status/evidence changes form one commit and one adversarial review unit. The `git add` snippets below are minimum code scopes and implicitly include both common evidence files.
+At task start, change that step from `[NEXT]` to `[IN PROGRESS]` and synchronize the board. Before the initial implementation commit, record the focused red/green commands and review-relevant observations in the field note, but keep the step and board in progress and do not advance another `[NEXT]` marker. The implementation plus in-progress status/evidence form the adversarial review unit. Fix every review finding by amending the same commit and keep the task in progress through re-review. After a clean review, mark the task `[DONE]`, advance the sole `[NEXT]` marker, synchronize the board, append the completion session log, amend the same commit one final time, and re-review that final task commit before starting the next task. The `git add` snippets below are minimum code scopes and implicitly include both common evidence files.
 
 ## Planned file structure
 
@@ -136,21 +136,25 @@ export interface SystemStyle {
 }
 
 type ReservedElementKey = 'key' | 'style';
+type UnionKeys<T> = T extends unknown ? keyof T : never;
 type ProgramProps<P> = 0 extends (1 & P)
   ? P
-  : Extract<keyof P, ReservedElementKey> extends never
+  : Extract<UnionKeys<P>, ReservedElementKey> extends never
     ? P
     : never;
 
-type RequiredKeys<T> = {
-  [K in keyof T]-?: Pick<T, K> extends Required<Pick<T, K>> ? K : never
-}[keyof T];
+type RequiredKeys<T> = T extends unknown
+  ? {
+      [K in keyof T]-?:
+        Pick<T, K> extends Required<Pick<T, K>> ? K : never
+    }[keyof T]
+  : never;
 
 type StyleField<S> = [RequiredKeys<S>] extends [never]
   ? { style?: S }
   : { style: S };
 
-export type ComponentInput<P, S extends SystemStyle> =
+export type ComponentInput<P, S extends SystemStyle = SystemStyle> =
   ProgramProps<P> & { key?: string } & StyleField<S>;
 
 export type CompFn<P, S extends SystemStyle = SystemStyle> = (
@@ -167,7 +171,7 @@ export interface CompEl<P = any, S extends SystemStyle = SystemStyle> {
 }
 ```
 
-`defineComp` rejects any declared program-prop type containing the reserved `key` or `style` names, extracts those fields from public input, and preserves the remainder as props. Add negative type tests for both collisions. The public type permits style omission only when every style member is optional; the runtime uses one frozen empty object for omitted untyped JavaScript. During the numeric-only migration Tasks 1–6, specified and render style are the same readonly value. `render` reads `element.key` for identity and calls `element.type(element.props, element.style, ctx)`. Layer root comparison includes type, key, props, and style. Rename existing custom-component data fields called `key`.
+Every accepted style schema must explicitly extend `SystemStyle` or intersect with it. Keep `SystemStyle.custom` optional and do not add an index signature. This positive contract rejects unrelated class/resource types structurally while declared styles accept ordinary object inputs and preserve excess-property checking. `defineComp` rejects any program-prop union containing the reserved `key` or `style` names, extracts those fields from public input, and preserves the exact input reference when neither field is an own property. Add negative union type tests for both collisions, required style, and unrelated resource types. The public type permits style omission only when every style union member has only optional fields; the runtime uses one frozen empty object for omitted untyped JavaScript. During the numeric-only migration Tasks 1–6, specified and render style are the same readonly value. `render` reads `element.key` for identity and calls `element.type(element.props, element.style, ctx)`. Layer root comparison includes type, key, props, and style. Rename existing custom-component data fields called `key`.
 
 Update only callbacks that currently consume the second `ctx` parameter so they consume the third parameter. One-argument render functions require no mechanical edit.
 
@@ -607,7 +611,7 @@ type EdgeValues = number | Readonly<{
   left?: number;
 }>;
 
-interface BoxStyle {
+interface BoxStyle extends SystemStyle {
   width?: Length;
   height?: Length;
   minWidth?: Exclude<Length, 'auto'>;
@@ -1009,7 +1013,7 @@ interface GridStyle extends BoxStyle {
   columnGap?: number;
 }
 
-interface GridItemStyle {
+interface GridItemStyle extends SystemStyle {
   gridColumnStart?: number;
   gridColumnSpan?: number;
   gridRowStart?: number;

@@ -11,7 +11,7 @@ import { typedEntries } from './util/typed-entries.js';
 
 export function mountCRC<P>(
   canvas: Canvas,
-  element: CompEl<P>,
+  element: CompEl<P, any>,
   config?: { signal?: AbortSignal; parent?: Canvas },
 ): CRCController {
   const mainTeardowns = new Teardowns();

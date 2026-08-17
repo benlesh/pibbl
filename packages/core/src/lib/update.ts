@@ -10,7 +10,7 @@ import { Canvas, CompEl } from './types.js';
  */
 export function update(
   canvas: Canvas,
-  rootElement?: CompEl,
+  rootElement?: CompEl<any, any>,
   updateParents = false,
 ): void {
   const crcInstance = GLOBAL_STATE.crcInstances.get(canvas);

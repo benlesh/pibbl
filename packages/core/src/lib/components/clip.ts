@@ -1,6 +1,6 @@
 import { defineComp } from '../define-comp.js';
 import { GLOBAL_STATE } from '../global-state.js';
-import { CRCNode, RenderingContext2D } from '../types.js';
+import { CRCNode, RenderingContext2D, SystemStyle } from '../types.js';
 
 export interface ClipProps {
   path: Path2D;
@@ -8,7 +8,7 @@ export interface ClipProps {
   children: CRCNode[];
 }
 
-export function Clip(props: ClipProps, ctx: RenderingContext2D) {
+export function Clip(props: ClipProps, _style: SystemStyle, ctx: RenderingContext2D) {
   const { path, fillRule = 'nonzero' } = props;
 
   GLOBAL_STATE.componentRefs!.onAfterRender = () => {

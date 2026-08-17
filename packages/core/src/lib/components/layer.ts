@@ -11,11 +11,12 @@ import {
   CRCInteractionLayer,
   IntrinsicProps,
   RenderingContext2D,
+  SystemStyle,
 } from '../types.js';
 import { shallowEquals } from '../util/shallow-equals.js';
 
 export interface LayerProps extends IntrinsicProps {
-  render: CompEl;
+  render: CompEl<any, any>;
   width?: number;
   height?: number;
 }
@@ -25,7 +26,11 @@ interface LayerSlot {
   interactionLayer: CRCInteractionLayer;
 }
 
-export function Layer(props: LayerProps, ctx: RenderingContext2D) {
+export function Layer(
+  props: LayerProps,
+  _style: SystemStyle,
+  ctx: RenderingContext2D,
+) {
   const canvas = GLOBAL_STATE.canvas!;
   const { width = canvas.width, height = canvas.height } = props;
   const componentRefs = GLOBAL_STATE.componentRefs!;
@@ -57,8 +62,9 @@ export function Layer(props: LayerProps, ctx: RenderingContext2D) {
     GLOBAL_STATE.componentIsMounting ||
     dimensionsChanged ||
     layerCRC.root.type !== props.render.type ||
-    layerCRC.root.props.key !== props.render.props.key ||
-    !shallowEquals(layerCRC.root.props, props.render.props)
+    layerCRC.root.key !== props.render.key ||
+    !shallowEquals(layerCRC.root.props, props.render.props) ||
+    !shallowEquals(layerCRC.root.style, props.render.style)
   ) {
     offscreenCanvas.width = width;
     offscreenCanvas.height = height;

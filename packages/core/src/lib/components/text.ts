@@ -7,6 +7,7 @@ import {
   IntrinsicProps,
   RenderingContext2D,
   StrokeStyleProps,
+  SystemStyle,
 } from '../types.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 
@@ -49,7 +50,7 @@ function checkPropsForEvents(props: CRCBasicMouseEvents & CursorStyleProps) {
   );
 }
 
-export function Text(props: TextProps, ctx: RenderingContext2D) {
+export function Text(props: TextProps, _style: SystemStyle, ctx: RenderingContext2D) {
   const {
     alpha,
     font = '13px sans-serif',

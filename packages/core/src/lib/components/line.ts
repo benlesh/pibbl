@@ -5,6 +5,7 @@ import {
   IntrinsicProps,
   RenderingContext2D,
   StrokeStyleProps,
+  SystemStyle,
 } from '../types.js';
 import { createLinePath } from '../util/create-line-path.js';
 import { Path } from './path.js';
@@ -18,7 +19,7 @@ export interface LineProps
   lineInteractionWidth?: number;
 }
 
-export function Line(props: LineProps, ctx: RenderingContext2D) {
+export function Line(props: LineProps, _style: SystemStyle, ctx: RenderingContext2D) {
   const { coords, ...pathProps } = props;
   const linePath = createLinePath(coords);
 
@@ -27,6 +28,7 @@ export function Line(props: LineProps, ctx: RenderingContext2D) {
       ...pathProps,
       path: linePath,
     },
+    {},
     ctx,
   );
 }

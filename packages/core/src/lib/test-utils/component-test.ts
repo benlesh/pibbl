@@ -161,7 +161,7 @@ afterEach(() => {
   activeControllers.clear();
 });
 
-export async function componentTest<P>(comp: CompEl<P>, options: {
+export async function componentTest<P>(comp: CompEl<P, any>, options: {
   width?: number;
   height?: number;
 } = {}) {

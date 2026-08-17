@@ -4,9 +4,9 @@ import { defineComp } from './define-comp';
 import { clearSharedState, getCRCInstance } from './global-state';
 import { crcRef } from './hooks/crc-ref';
 import { crcState, type StateUpdater } from './hooks/crc-state';
+import type { SystemStyle } from './types';
 
 interface IdentityProbeProps {
-  key?: string;
   label: string;
   onRender: (label: string, identity: number) => void;
 }
@@ -47,6 +47,40 @@ describe('defineComp contract', () => {
     expect(second.type).toBe(render);
     expect(first.props).toBe(firstProps);
     expect(second.props).toBe(secondProps);
+  });
+
+  it('stores style and key separately and passes style before the Canvas context', async () => {
+    const calls: unknown[] = [];
+    interface ProbeStyle extends SystemStyle {
+      width: number;
+    }
+    const Probe = defineComp<{ value: number }, ProbeStyle>(
+      (props, style, ctx) => {
+        calls.push({ props, style, canvas: ctx.canvas });
+      },
+    );
+    const style = { width: 40 };
+    const input = { value: 7, key: 'probe', style };
+    const element = Probe(input);
+
+    expect(element).toMatchObject({
+      props: { value: 7 },
+      style,
+      key: 'probe',
+    });
+    expect(element.style).toBe(style);
+    expect(element.props).not.toBe(input);
+    expect('style' in element.props).toBe(false);
+    expect('key' in element.props).toBe(false);
+
+    const canvas = createCanvas();
+    const controller = crc(canvas, element);
+    await nextFrame();
+
+    expect(calls).toEqual([
+      { props: { value: 7 }, style, canvas },
+    ]);
+    controller.dispose();
   });
 });
 
@@ -215,13 +249,10 @@ describe('component tree identity', () => {
   it('remounts when a key is reused for a different component type', async () => {
     const canvas = createCanvas();
     const values: string[] = [];
-    interface VariantProps {
-      key?: string;
-    }
-    const First = defineComp((_props: VariantProps) => {
+    const First = defineComp((_props: {}) => {
       values.push(crcRef('first').current!);
     });
-    const Second = defineComp((_props: VariantProps) => {
+    const Second = defineComp((_props: {}) => {
       values.push(crcRef('second').current!);
     });
     const Host = defineComp(({ second }: { second: boolean }) =>

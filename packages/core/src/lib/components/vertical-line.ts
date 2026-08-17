@@ -6,6 +6,7 @@ import {
   PixelGridAlignment,
   RenderingContext2D,
   StrokeStyleProps,
+  SystemStyle,
 } from '../types.js';
 import { adjustForPixelGrid } from '../util/pixel-grid-adjustments.js';
 import { Line } from './line.js';
@@ -24,6 +25,7 @@ export interface VerticalLineProps
 
 export function VerticalLine(
   props: VerticalLineProps,
+  _style: SystemStyle,
   ctx: RenderingContext2D,
 ) {
   const {
@@ -44,6 +46,7 @@ export function VerticalLine(
       coords,
       ...lineProps,
     },
+    {},
     ctx,
   );
 }

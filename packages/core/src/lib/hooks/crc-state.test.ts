@@ -7,7 +7,6 @@ import { crcWhenChanged } from './crc-when-changed';
 
 interface StateProbeProps {
   onRender: (value: number, setValue: StateUpdater<number>) => void;
-  key?: string;
 }
 
 const StateProbe = defineComp(({ onRender }: StateProbeProps) => {

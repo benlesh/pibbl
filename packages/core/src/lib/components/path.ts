@@ -7,6 +7,7 @@ import {
   IntrinsicProps,
   RenderingContext2D,
   StrokeStyleProps,
+  SystemStyle,
 } from '../types.js';
 import { isTransparent } from '../util/is-transparent.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
@@ -22,7 +23,11 @@ export interface PathProps
   lineInteractionWidth?: number;
 }
 
-export function Path(props: PathProps, ctx: RenderingContext2D) {
+export function Path(
+  props: PathProps,
+  _style: SystemStyle,
+  ctx: RenderingContext2D,
+) {
   const {
     alpha,
     path,

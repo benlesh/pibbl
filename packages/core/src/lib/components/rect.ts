@@ -8,6 +8,7 @@ import {
   PixelGridAlignment,
   RenderingContext2D,
   StrokeStyleProps,
+  SystemStyle,
 } from '../types.js';
 import { adjustRectangleToPixelGrid } from '../util/pixel-grid-adjustments.js';
 import { Path } from './path.js';
@@ -26,7 +27,7 @@ export interface RectProps
   alignToPixelGrid?: PixelGridAlignment;
 }
 
-function Rect(props: RectProps, ctx: RenderingContext2D) {
+function Rect(props: RectProps, _style: SystemStyle, ctx: RenderingContext2D) {
   let { x, y, width, height, alignToPixelGrid, ...pathProps } = props;
 
   if (alignToPixelGrid) {
@@ -48,6 +49,7 @@ function Rect(props: RectProps, ctx: RenderingContext2D) {
       ...pathProps,
       path: rectPath,
     },
+    {},
     ctx,
   );
 }
