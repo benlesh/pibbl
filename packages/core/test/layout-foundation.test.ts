@@ -11,48 +11,48 @@ afterEach(() => {
 });
 
 describe('layout foundation public scenario', () => {
-  it('keeps source-order targeting and pixel geometry aligned across resize', async () => {
+  it('keeps nested layout, clipping, identity, and observation aligned across reflow', async () => {
     const canvas = document.createElement('canvas');
-    canvas.width = 300;
-    canvas.height = 160;
+    canvas.width = 720;
+    canvas.height = 420;
     document.body.appendChild(canvas);
     const mounted = mountLayoutFoundation(canvas);
     dispose = () => mounted.controller.dispose();
-    await nextFrame();
+    await settle();
 
-    expect(pixelAt(canvas, 120, 50)).toEqual([249, 115, 22, 255]);
-    expect(pixelAt(canvas, 60, 10)).toEqual([22, 163, 74, 255]);
-    expect(pixelAt(canvas, 90, 10)).toEqual([8, 145, 178, 255]);
-    expect(pixelAt(canvas, 160, 10)).toEqual([124, 58, 237, 255]);
-    await userEvent.click(canvas, { position: { x: 60, y: 10 } });
-    await userEvent.click(canvas, { position: { x: 90, y: 10 } });
-    await userEvent.click(canvas, { position: { x: 160, y: 10 } });
-    await userEvent.click(canvas, { position: { x: 120, y: 50 } });
-    await nextFrame();
+    expect(mounted.getState().observedBox).toEqual({
+      x: 0, y: 0, width: 432, height: 420,
+    });
+    expect(pixelAt(canvas, 420, 400)).toEqual([124, 58, 237, 255]);
+    expect(pixelAt(canvas, 450, 400)).toEqual([0, 0, 0, 0]);
+    await userEvent.click(canvas, { position: { x: 216, y: 210 } });
+    await userEvent.click(canvas, { position: { x: 20, y: 20 } });
+    await userEvent.click(canvas, { position: { x: 420, y: 400 } });
+    await userEvent.click(canvas, { position: { x: 450, y: 400 } });
+    await settle();
     expect(mounted.getState()).toEqual({
-      bottomClicks: 0,
       topClicks: 1,
-      flowClicks: 1,
-      flexClicks: 1,
-      gridClicks: 1,
+      keyedClicks: 1,
+      clippedClicks: 1,
+      observedBox: { x: 0, y: 0, width: 432, height: 420 },
     });
 
-    mounted.resize(400, 160);
-    await nextFrame();
-    expect(pixelAt(canvas, 90, 50)).toEqual([37, 99, 235, 255]);
-    expect(pixelAt(canvas, 160, 50)).toEqual([249, 115, 22, 255]);
-    expect(pixelAt(canvas, 90, 10)).toEqual([22, 163, 74, 255]);
-    expect(pixelAt(canvas, 105, 10)).toEqual([14, 116, 144, 255]);
-    await userEvent.click(canvas, { position: { x: 90, y: 10 } });
-    await userEvent.click(canvas, { position: { x: 120, y: 10 } });
-    await userEvent.click(canvas, { position: { x: 160, y: 50 } });
-    await nextFrame();
+    mounted.resize(480, 360);
+    await settle();
+    expect(mounted.getState().observedBox).toEqual({
+      x: 0, y: 0, width: 288, height: 360,
+    });
+    expect(mounted.getState().keyedClicks).toBe(1);
+    expect(pixelAt(canvas, 280, 340)).toEqual([124, 58, 237, 255]);
+    expect(pixelAt(canvas, 300, 340)).toEqual([0, 0, 0, 0]);
+    await userEvent.click(canvas, { position: { x: 144, y: 180 } });
+    await userEvent.click(canvas, { position: { x: 300, y: 340 } });
+    await settle();
     expect(mounted.getState()).toEqual({
-      bottomClicks: 0,
       topClicks: 2,
-      flowClicks: 2,
-      flexClicks: 1,
-      gridClicks: 2,
+      keyedClicks: 1,
+      clippedClicks: 1,
+      observedBox: { x: 0, y: 0, width: 288, height: 360 },
     });
   });
 });
@@ -65,6 +65,8 @@ function pixelAt(
   return Array.from(canvas.getContext('2d')!.getImageData(x, y, 1, 1).data);
 }
 
-function nextFrame(): Promise<void> {
-  return new Promise(resolve => requestAnimationFrame(() => resolve()));
+function settle(): Promise<void> {
+  return new Promise(resolve => requestAnimationFrame(() =>
+    requestAnimationFrame(() => resolve()),
+  ));
 }

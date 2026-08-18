@@ -2,11 +2,18 @@ import type {
   CRCController,
   CRCMouseEvent,
   CRCRef,
+  AbsoluteStyle,
+  BoxStyle,
   ClipStyle,
   GStyle,
+  GridItemStyle,
+  GridStyle,
   HorizontalLineStyle,
   ImgStyle,
   LayerStyle,
+  LayoutBox,
+  LayoutItemStyle,
+  Length,
   LineStyle,
   PathStyle,
   RectProps,
@@ -15,6 +22,11 @@ import type {
   StateUpdater,
   SvgPathStyle,
   SystemStyle,
+  Percentage,
+  FlexItemStyle,
+  FlexStyle,
+  FlowStyle,
+  OverlayStyle,
   TextStyle,
   VerticalLineStyle,
 } from '@crc/core';
@@ -23,6 +35,7 @@ import {
   crc,
   crcCursor,
   crcEvent,
+  crcLayoutBox,
   crcLinePath,
   crcMemo,
   crcRectPath,
@@ -42,6 +55,12 @@ import {
   verticalLine,
   img,
   layer,
+  absolute,
+  overlay,
+  flow,
+  flex,
+  grid,
+  measureElement,
 } from '@crc/core';
 
 const rectangleStyle = {
@@ -152,12 +171,68 @@ clip({ style: clipStyle, children: [rect({ style: rectangleStyle })] });
 const layerStyle = { width: 320, height: 180 } satisfies LayerStyle;
 layer({ style: layerStyle, render: rect({ style: rectangleStyle }) });
 
+const percentage = '50%' satisfies Percentage;
+const length: Length = percentage;
+const boxStyle = { width: length, height: 120, overflow: 'clip' } satisfies BoxStyle;
+const absoluteStyle = { width: '100%', height: '100%' } satisfies AbsoluteStyle;
+const overlayStyle = {
+  width: 240,
+  height: 120,
+  alignItems: 'center',
+  justifyItems: 'end',
+} satisfies OverlayStyle;
+const flowStyle = { width: 300, height: 120, gap: 8, wrap: true } satisfies FlowStyle;
+const flexStyle = { width: 300, height: 120, gap: 8, alignItems: 'center' } satisfies FlexStyle;
+const gridStyle = {
+  width: 300,
+  height: 120,
+  gridTemplateColumns: [100, '1fr'],
+  gridTemplateRows: [120],
+} satisfies GridStyle;
+const flexItem = { flexBasis: '50%', flexGrow: 1 } satisfies FlexItemStyle;
+const gridItem = { gridColumnStart: 1, gridRowStart: 1 } satisfies GridItemStyle;
+const layoutItem = { left: '25%', top: 10 } satisfies LayoutItemStyle;
+void boxStyle;
+void flexItem;
+void gridItem;
+void layoutItem;
+
+const layoutChild = rect({ style: { ...rectangleStyle, width: '50%' } });
+absolute({ style: absoluteStyle, children: [layoutChild] });
+overlay({ style: overlayStyle, children: [layoutChild] });
+flow({ style: flowStyle, children: [layoutChild] });
+flex({ style: flexStyle, children: [rect({ style: {
+  ...rectangleStyle, minWidth: 0, flexBasis: 40,
+} })] });
+grid({ style: gridStyle, children: [rect({ style: {
+  ...rectangleStyle, gridColumnStart: 1, gridRowStart: 1,
+} })] });
+
+const observedBox: Readonly<LayoutBox> = crcLayoutBox();
+void observedBox;
+measureElement(text({ style: { text: 'measure me' } }), {
+  minWidth: 0, maxWidth: 200, minHeight: 0, maxHeight: 100,
+}, { measureText: () => ({ width: 80 }) as TextMetrics });
+
+// @ts-expect-error reverse Flex directions are outside the supported subset
+flex({ style: { ...flexStyle, flexDirection: 'row-reverse' }, children: [] });
+// @ts-expect-error Grid track grammar excludes intrinsic auto tracks
+grid({ style: { ...gridStyle, gridTemplateColumns: ['auto'] }, children: [] });
+// @ts-expect-error lengths use finite numbers, decimal percentages, or auto
+const invalidLength: Length = 'wide';
+// @ts-expect-error crcLayoutBox accepts no arguments
+crcLayoutBox('parent');
+
 const subpathGroupStyle: CoreTypes.GStyle = groupStyle;
 const subpathClipStyle: CoreTypes.ClipStyle = clipStyle;
 const subpathLayerStyle: CoreTypes.LayerStyle = layerStyle;
+const subpathGridStyle: CoreTypes.GridStyle = gridStyle;
+const subpathPercentage: CoreTypes.Percentage = percentage;
 void subpathGroupStyle;
 void subpathClipStyle;
 void subpathLayerStyle;
+void subpathGridStyle;
+void subpathPercentage;
 
 // @ts-expect-error rectangle geometry is style-only
 rect({ x: 10, y: 10, width: 40, height: 20 });

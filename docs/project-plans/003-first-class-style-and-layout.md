@@ -73,8 +73,8 @@ review before the next task begins.
 | P003-10 | Done        | Pure measurement and CRC-native flow.                           |
 | P003-11 | Done        | CSS-compatible Flexbox subset.                                  |
 | P003-12 | Done        | CSS-compatible explicit Grid subset.                            |
-| P003-13 | Next        | Learning examples, nested scenario, and Studio/public types.    |
-| P003-14 | Queued      | Composition, diagnostics, ownership, and performance hardening. |
+| P003-13 | Done        | Learning examples, nested scenario, and Studio/public types.    |
+| P003-14 | Next        | Composition, diagnostics, ownership, and performance hardening. |
 | P003-15 | Queued      | Public contracts, evidence, and final trust closure.            |
 
 ## Execution steps
@@ -159,14 +159,14 @@ Done when accepted track, `<1fr`, placement, span, overlap, gap, and alignment
 behavior matches literal and hidden-DOM oracle fixtures, deferred behavior is
 rejected, the algorithm milestone passes, and the commit is reviewed.
 
-### P003-13 [NEXT] — Public examples and integration
+### P003-13 [DONE] — Public examples and integration
 
 Done when four learner routes and the exhaustive nested public scenario are
 type-clean, mountable/disposable, resize and preserve identity correctly, Studio
 and packed consumers agree, generated indexes are current, and the commit is
 reviewed.
 
-### P003-14 [TODO] — Hardening
+### P003-14 [NEXT] — Hardening
 
 Done when transforms, clips, layers, fractional offsets, failures, 1,000
 reflows, visible-window structural counts, and deterministic diagnostics have
@@ -330,3 +330,13 @@ is clean, and this plan has no active marker.
   controlled timing cases skipped. P003-07 through P003-10 are done; P003-11 is
   the sole next step. See
   [`p003-style-layout.md`](../testing/field-notes/p003-style-layout.md).
+- **2026-08-18 — P003-13 public integration complete.** Added four canonical
+  learner routes for absolute/overlay, Flow, Flex, and Grid; expanded the
+  cataloged layout laboratory to prove nested Flex→Grid→Overlay reflow,
+  clipping, topmost targeting, keyed state, pure text measurement, explicit
+  image sizing, and exact `crcLayoutBox` observations; synchronized Studio and
+  strict packed-consumer declarations with the current public API. The generated
+  index now covers 28 lessons and 14 test labs. Source and built Studio builds,
+  workspace typecheck, packed Bundler/NodeNext/runtime/no-source consumers, and
+  48 focused browser tests are clean. P003-13 is done; P003-14 is the sole next
+  step. See [`p003-style-layout.md`](../testing/field-notes/p003-style-layout.md).

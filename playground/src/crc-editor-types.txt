@@ -13,14 +13,35 @@ declare module '@crc/core' {
   export type Canvas = HTMLCanvasElement | OffscreenCanvas;
   export type RenderingContext2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
   export type FalsyNodes = undefined | false | null | '' | 0;
-  export type CRCNode = CompEl<any> | void | FalsyNodes;
+  export type CRCNode = CompEl<any, any> | void | FalsyNodes;
 
-  export interface CompEl<P = any> {
-    type: CompFn<P>;
-    props: P;
+  export interface SystemStyle { custom?: unknown }
+  type ReservedElementKey = 'key' | 'style';
+  type UnionKeys<T> = T extends unknown ? keyof T : never;
+  type ProgramProps<P> = 0 extends (1 & P) ? P : Extract<UnionKeys<P>, ReservedElementKey> extends never ? P : never;
+  type RequiredKeys<T> = T extends unknown ? { [K in keyof T]-?: Pick<T, K> extends Required<Pick<T, K>> ? K : never }[keyof T] : never;
+  type StyleField<S> = [RequiredKeys<S>] extends [never] ? { style?: S } : { style: S };
+  type AllocationValue = `${number}%` | 'auto';
+  type DeclaredStyleValue<S> = S extends unknown ? S[Exclude<keyof S, 'custom'>] : never;
+  type RequiresResolver<S> = [Extract<DeclaredStyleValue<S>, AllocationValue>] extends [never] ? false : true;
+  export type SpecifiedStyle<S extends SystemStyle> = Readonly<S>;
+  export type NormalizedStyle<S extends SystemStyle> = Readonly<S>;
+  export type ResolvedStyle<S extends SystemStyle> = Readonly<S>;
+  export interface CompEl<P = any, S extends SystemStyle = SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N> {
+    type: CompFn<P, S, N, R>;
+    props: ProgramProps<P>;
+    style: SpecifiedStyle<S>;
+    key?: string;
   }
 
-  export type CompFn<P> = (props: P, context: RenderingContext2D) => CRCNode[] | CRCNode | void;
+  export type ComponentInput<P, S extends SystemStyle = SystemStyle> = ProgramProps<P> & { key?: string } & StyleField<S>;
+  export interface ComponentCapabilities<S extends SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N, P = unknown> {
+    normalizeStyle?: (style: SpecifiedStyle<S>) => NormalizedStyle<N>;
+    resolveStyle?: (style: NormalizedStyle<N>, context: Readonly<StyleResolutionContext>) => ResolvedStyle<R>;
+    measure?: (input: MeasureInput<ProgramProps<P>, N>) => MeasureResult;
+  }
+  type CapabilityArguments<P, S extends SystemStyle, N extends SystemStyle, R extends SystemStyle> = RequiresResolver<R> extends true ? [capabilities: never] : RequiresResolver<S> extends true ? [capabilities: Readonly<ComponentCapabilities<S, N, R, P>> & { resolveStyle: NonNullable<ComponentCapabilities<S, N, R, P>['resolveStyle']> }] : [capabilities?: Readonly<ComponentCapabilities<S, N, R, P>>];
+  export type CompFn<P, S extends SystemStyle = SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N> = ((props: ProgramProps<P>, style: ResolvedStyle<R>, context: RenderingContext2D) => CRCNode[] | CRCNode | void) & Readonly<ComponentCapabilities<S, N, R, P>>;
   export type PixelGridAlignment = 'none' | 'round' | 'ceil' | 'floor';
   export type FillStyle = CanvasRenderingContext2D['fillStyle'];
   export type StrokeStyle = CanvasRenderingContext2D['strokeStyle'];
@@ -36,114 +57,107 @@ declare module '@crc/core' {
     onMouseUp?: CRCMouseEventListener;
   }
 
-  export interface IntrinsicProps { key?: string }
-  export interface AlphaProps { alpha?: number }
-  export interface StrokeStyleProps { strokeStyle?: StrokeStyle; lineWidth?: number }
-  export interface FillStyleProps { fillStyle?: FillStyle }
-  export interface CursorStyleProps { cursor?: string }
-
-  export interface PathProps extends IntrinsicProps, CRCBasicMouseEvents, FillStyleProps, StrokeStyleProps, CursorStyleProps, AlphaProps {
-    path: Path2D;
-    lineInteractionWidth?: number;
+  export type Percentage = `${number}%`;
+  export type Length = number | Percentage | 'auto';
+  export type EdgeValues = number | Readonly<{ top?: number; right?: number; bottom?: number; left?: number }>;
+  export interface Size { width: number; height: number }
+  export interface LayoutBox extends Size { x: number; y: number }
+  export interface Edges { top: number; right: number; bottom: number; left: number }
+  export interface Constraints { minWidth: number; maxWidth: number; minHeight: number; maxHeight: number }
+  export interface StyleResolutionContext { allocation: Readonly<LayoutBox>; percentageBasis: Readonly<LayoutBox>; constraints: Readonly<Constraints>; component: string; algorithm: 'render-dispatch' }
+  export interface BoxStyle extends SystemStyle {
+    width?: Length; height?: Length;
+    minWidth?: Exclude<Length, 'auto'>; maxWidth?: Exclude<Length, 'auto'>;
+    minHeight?: Exclude<Length, 'auto'>; maxHeight?: Exclude<Length, 'auto'>;
+    padding?: EdgeValues; overflow?: 'visible' | 'clip';
   }
-
-  export interface RectProps extends IntrinsicProps, CRCBasicMouseEvents, FillStyleProps, StrokeStyleProps, CursorStyleProps, AlphaProps {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    alignToPixelGrid?: PixelGridAlignment;
+  export interface ResolvedBoxStyle { borderBox: LayoutBox; contentBox: LayoutBox }
+  export interface LayoutItemStyle {
+    left?: Exclude<Length, 'auto'>; top?: Exclude<Length, 'auto'>;
+    alignSelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch' | 'flex-start' | 'flex-end';
+    justifySelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch';
+    flexBasis?: Length; flexGrow?: number; flexShrink?: number;
+    gridColumnStart?: number; gridColumnSpan?: number; gridRowStart?: number; gridRowSpan?: number;
   }
-
-  export interface SvgPathProps extends IntrinsicProps, CRCBasicMouseEvents, FillStyleProps, StrokeStyleProps, CursorStyleProps, AlphaProps {
-    d: string;
+  export type FlexItemStyle = Pick<LayoutItemStyle, 'flexBasis' | 'flexGrow' | 'flexShrink'> & { alignSelf?: 'auto' | 'stretch' | 'flex-start' | 'flex-end' | 'center' };
+  export interface GridItemStyle extends SystemStyle {
+    gridColumnStart?: number; gridColumnSpan?: number; gridRowStart?: number; gridRowSpan?: number;
+    alignSelf?: 'auto' | 'stretch' | 'start' | 'center' | 'end';
+    justifySelf?: 'auto' | 'stretch' | 'start' | 'center' | 'end';
   }
+  export interface PaintStyle extends SystemStyle { fill?: FillStyle; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number }
+  export interface CursorStyle extends SystemStyle { cursor?: string }
+  export interface PathStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { d: Path2D; lineInteractionWidth?: number }
+  export interface RectStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { x?: Exclude<Length, 'auto'>; y?: Exclude<Length, 'auto'>; width: Length; height: Length; alignToPixelGrid?: PixelGridAlignment; lineInteractionWidth?: number }
+  export interface SvgPathStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { d: string; lineInteractionWidth?: number }
+  export interface LineStyle extends SystemStyle, CursorStyle, BoxStyle, LayoutItemStyle { coords: readonly (readonly [number, number])[]; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; lineInteractionWidth?: number }
+  export interface HorizontalLineStyle extends SystemStyle, CursorStyle, BoxStyle, LayoutItemStyle { y: Exclude<Length, 'auto'>; x1?: Exclude<Length, 'auto'>; x2?: Exclude<Length, 'auto'>; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; alignToPixelGrid?: PixelGridAlignment; lineInteractionWidth?: number }
+  export interface VerticalLineStyle extends SystemStyle, CursorStyle, BoxStyle, LayoutItemStyle { x: Exclude<Length, 'auto'>; y1?: Exclude<Length, 'auto'>; y2?: Exclude<Length, 'auto'>; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; alignToPixelGrid?: PixelGridAlignment; lineInteractionWidth?: number }
+  export type TextFit = 'visible' | 'squish' | 'ellipsis' | 'clip';
+  export interface TextStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { text: string; x?: Exclude<Length, 'auto'>; y?: Exclude<Length, 'auto'>; lineHeight?: number; wrap?: boolean; fit?: TextFit; font?: string; textBaseline?: CanvasTextBaseline; textAlign?: CanvasTextAlign }
+  export interface ImgStyle extends CursorStyle, BoxStyle, LayoutItemStyle { src: string; x?: Exclude<Length, 'auto'>; y?: Exclude<Length, 'auto'>; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; alignToPixelGrid?: PixelGridAlignment }
+  export interface GStyle extends BoxStyle, LayoutItemStyle { scaleX?: number; scaleY?: number; rotationDegrees?: number; rotationOrigin?: [number, number]; translateX?: number; translateY?: number; skewX?: number; skewY?: number }
+  export interface ClipStyle extends BoxStyle, LayoutItemStyle { d: Path2D; fillRule?: CanvasFillRule }
+  export interface LayerStyle extends BoxStyle, LayoutItemStyle {}
 
-  export interface LineProps extends IntrinsicProps, CRCBasicMouseEvents, StrokeStyleProps, CursorStyleProps {
-    coords: [number, number][];
-    lineInteractionWidth?: number;
-  }
+  export interface PathProps extends CRCBasicMouseEvents {}
+  export interface RectProps extends CRCBasicMouseEvents {}
+  export interface SvgPathProps extends CRCBasicMouseEvents {}
+  export interface LineProps extends CRCBasicMouseEvents {}
+  export interface HorizontalLineProps extends CRCBasicMouseEvents {}
+  export interface VerticalLineProps extends CRCBasicMouseEvents {}
+  export interface TextProps extends CRCBasicMouseEvents {}
+  export interface ImgProps extends CRCBasicMouseEvents {}
+  export interface GProps { children: CRCNode[] }
+  export interface ClipProps { children: CRCNode[] }
+  export interface LayerProps { render: CompEl<any, any> }
 
-  export interface HorizontalLineProps extends IntrinsicProps, CRCBasicMouseEvents, StrokeStyleProps, CursorStyleProps {
-    y: number;
-    left?: number;
-    right?: number;
-    alignToPixelGrid?: PixelGridAlignment;
-    lineInteractionWidth?: number;
-  }
+  export type AbsoluteStyle = BoxStyle;
+  export interface AbsoluteProps { children: CRCNode[] }
+  export interface OverlayStyle extends BoxStyle { justifyItems?: 'stretch' | 'start' | 'center' | 'end'; alignItems?: 'stretch' | 'start' | 'center' | 'end' }
+  export interface OverlayProps { children: CRCNode[] }
+  export interface FlowStyle extends BoxStyle { direction?: 'horizontal' | 'vertical'; wrap?: boolean; gap?: number; lineGap?: number; alignItems?: 'start' | 'center' | 'end' | 'stretch' }
+  export interface FlowProps { children: CRCNode[] }
+  export interface FlexStyle extends BoxStyle { flexDirection?: 'row' | 'column'; flexWrap?: 'nowrap' | 'wrap'; justifyContent?: 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'; alignItems?: 'stretch' | 'flex-start' | 'flex-end' | 'center'; alignContent?: 'stretch' | 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'; gap?: number; rowGap?: number; columnGap?: number }
+  export interface FlexProps { children: CRCNode[] }
+  export type GridTrack = number | `${number}%` | `${number}fr`;
+  export interface GridStyle extends BoxStyle { gridTemplateColumns: readonly GridTrack[]; gridTemplateRows: readonly GridTrack[]; justifyItems?: 'stretch' | 'start' | 'center' | 'end'; alignItems?: 'stretch' | 'start' | 'center' | 'end'; gap?: number; rowGap?: number; columnGap?: number }
+  export interface GridProps { children: CRCNode[] }
 
-  export interface VerticalLineProps extends IntrinsicProps, CRCBasicMouseEvents, StrokeStyleProps, CursorStyleProps {
-    x: number;
-    top?: number;
-    bottom?: number;
-    alignToPixelGrid?: PixelGridAlignment;
-    lineInteractionWidth?: number;
-  }
-
-  export interface TextProps extends IntrinsicProps, CRCBasicMouseEvents, FillStyleProps, StrokeStyleProps, CursorStyleProps, AlphaProps {
-    text: string;
-    x: number;
-    y: number;
-    maxWidth?: number;
-    maxHeight?: number;
-    lineHeight?: number;
-    overflow?: 'visible' | 'squish' | 'ellipsis' | 'clip';
-    wordWrap?: boolean;
-    font?: string;
-    textBaseline?: CanvasTextBaseline;
-    textAlign?: CanvasTextAlign;
-  }
-
-  export interface ImgProps extends IntrinsicProps, CRCBasicMouseEvents, AlphaProps, CursorStyleProps, StrokeStyleProps {
-    src: string;
-    x: number;
-    y: number;
-    width?: number;
-    height?: number;
-    alignToPixelGrid?: PixelGridAlignment;
-  }
-
-  export interface GProps extends IntrinsicProps {
-    children: CRCNode[];
-    scaleX?: number;
-    scaleY?: number;
-    rotate?: number;
-    rotateOrigin?: [number, number];
-    x?: number;
-    y?: number;
-    skewX?: number;
-    skewY?: number;
-  }
-
-  export interface ClipProps {
-    path: Path2D;
-    fillRule?: CanvasFillRule;
-    children: CRCNode[];
-  }
-
-  export interface LayerProps extends IntrinsicProps {
-    render: CompEl<any>;
-    width?: number;
-    height?: number;
-  }
+  export interface CanvasMeasurementService { measureText(text: string, font: string): TextMetrics }
+  export type MeasureResult = { status: 'measured'; size: Readonly<Size> } | { status: 'unsupported'; reason: string };
+  export interface MeasureInput<P, S extends SystemStyle = SystemStyle> { props: Readonly<P>; style: NormalizedStyle<S>; constraints: Readonly<Constraints>; service: CanvasMeasurementService; measureElement(element: CompEl<any, any>, constraints: Readonly<Constraints>): MeasureResult }
+  export interface LayoutDiagnosticContext { component?: string; algorithm?: string; constraints?: Readonly<Constraints> }
+  export interface LayoutDiagnosticInput extends LayoutDiagnosticContext { property: string; value: unknown; reason: string }
+  export class LayoutDiagnostic extends Error { readonly component: string; readonly property: string; readonly suppliedValue: unknown; readonly algorithm: string; readonly constraints: Readonly<Constraints> | undefined }
 
   export interface CRCRef<T> { current: T | undefined }
   export type StateUpdater<T> = (update: T | ((oldValue: T) => T)) => void;
 
-  export function crc<P>(canvas: HTMLCanvasElement, element: CompEl<P>, config?: { signal?: AbortSignal }): CRCController;
-  export function defineComp(component: CompFn<Record<string, never>>): (props: Record<string, never>) => CompEl<Record<string, never>>;
-  export function defineComp<P>(component: CompFn<P>): (props: P) => CompEl<P>;
-  export function rect(props: RectProps): CompEl<RectProps>;
-  export function path(props: PathProps): CompEl<PathProps>;
-  export function svgPath(props: SvgPathProps): CompEl<SvgPathProps>;
-  export function line(props: LineProps): CompEl<LineProps>;
-  export function horizontalLine(props: HorizontalLineProps): CompEl<HorizontalLineProps>;
-  export function verticalLine(props: VerticalLineProps): CompEl<VerticalLineProps>;
-  export function text(props: TextProps): CompEl<TextProps>;
-  export function img(props: ImgProps): CompEl<ImgProps>;
-  export function g(props: GProps): CompEl<GProps>;
-  export function clip(props: ClipProps): CompEl<ClipProps>;
-  export function layer(props: LayerProps): CompEl<LayerProps>;
+  export function crc<P>(canvas: HTMLCanvasElement, element: CompEl<P, any>, config?: { signal?: AbortSignal }): CRCController;
+  export function defineComp<P, S extends SystemStyle = SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N>(component: CompFn<P, S, N, R> & (ComponentInput<P, S> extends never ? never : unknown), ...capabilityArguments: CapabilityArguments<P, S, N, R>): (input: ComponentInput<P, S>) => CompEl<P, S, N, R>;
+  export function rect(props: ComponentInput<RectProps, RectStyle>): CompEl<RectProps, RectStyle>;
+  export function path(props: ComponentInput<PathProps, PathStyle>): CompEl<PathProps, PathStyle>;
+  export function svgPath(props: ComponentInput<SvgPathProps, SvgPathStyle>): CompEl<SvgPathProps, SvgPathStyle>;
+  export function line(props: ComponentInput<LineProps, LineStyle>): CompEl<LineProps, LineStyle>;
+  export function horizontalLine(props: ComponentInput<HorizontalLineProps, HorizontalLineStyle>): CompEl<HorizontalLineProps, HorizontalLineStyle>;
+  export function verticalLine(props: ComponentInput<VerticalLineProps, VerticalLineStyle>): CompEl<VerticalLineProps, VerticalLineStyle>;
+  export function text(props: ComponentInput<TextProps, TextStyle>): CompEl<TextProps, TextStyle>;
+  export function img(props: ComponentInput<ImgProps, ImgStyle>): CompEl<ImgProps, ImgStyle>;
+  export function g(props: ComponentInput<GProps, GStyle>): CompEl<GProps, GStyle>;
+  export function clip(props: ComponentInput<ClipProps, ClipStyle>): CompEl<ClipProps, ClipStyle>;
+  export function layer(props: ComponentInput<LayerProps, LayerStyle>): CompEl<LayerProps, LayerStyle>;
+  export function absolute(props: ComponentInput<AbsoluteProps, AbsoluteStyle>): CompEl<AbsoluteProps, AbsoluteStyle>;
+  export function overlay(props: ComponentInput<OverlayProps, OverlayStyle>): CompEl<OverlayProps, OverlayStyle>;
+  export function flow(props: ComponentInput<FlowProps, FlowStyle>): CompEl<FlowProps, FlowStyle>;
+  export function flex(props: ComponentInput<FlexProps, FlexStyle>): CompEl<FlexProps, FlexStyle>;
+  export function grid(props: ComponentInput<GridProps, GridStyle>): CompEl<GridProps, GridStyle>;
+  export function measureElement(element: CompEl<any, any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService): MeasureResult;
+  export function resolveLength(value: Length | undefined, reference: number | undefined, property: string, context?: unknown): number | undefined;
+  export function normalizeEdges(value: EdgeValues | undefined, property: string, context?: unknown): Readonly<Edges>;
+  export function resolveBox(style: Readonly<BoxStyle>, constraints: Readonly<Constraints>, context?: Readonly<LayoutDiagnosticContext>): ResolvedBoxStyle;
+  export function layoutDiagnostic(input: LayoutDiagnosticInput): LayoutDiagnostic;
+  export function crcLayoutBox(): Readonly<LayoutBox>;
   export function crcState<T>(initial?: T): readonly [T, StateUpdater<T>];
   export function crcMemo<T>(create: () => T, dependencies: unknown[]): T;
   export function crcRef<T>(initial?: T): CRCRef<T>;

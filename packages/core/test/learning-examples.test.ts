@@ -18,11 +18,11 @@ afterEach(() => {
 });
 
 describe("learning example catalog", () => {
-  it("contains 24 unique, ordered, source-backed routes", () => {
+  it("contains 28 unique, ordered, source-backed routes", () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(24);
+    expect(learningExampleCatalog).toHaveLength(28);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -34,6 +34,32 @@ describe("learning example catalog", () => {
         (left, right) => left - right,
       ),
     );
+  });
+
+  it("contains exactly the four canonical layout lessons", async () => {
+    const layouts = learningExampleCatalog.filter(
+      (entry) => entry.section === "layout",
+    );
+    expect(layouts.map((entry) => entry.slug)).toEqual([
+      "absolute-and-overlay",
+      "flow",
+      "flex",
+      "grid",
+    ]);
+    expect(layouts.map(getLearningExampleRoute)).toEqual([
+      "#/examples/layout/absolute-and-overlay",
+      "#/examples/layout/flow",
+      "#/examples/layout/flex",
+      "#/examples/layout/grid",
+    ]);
+    for (const entry of layouts) {
+      expect(entry.objectives).toHaveLength(2);
+      const source = await loadLearningSource(entry);
+      expect(source.match(/from ["'][^"']+["']/g)).toEqual([
+        expect.stringMatching(/from ["']@crc\/core["']/),
+      ]);
+      expect(source).not.toMatch(/test|fixture|diagnostic/i);
+    }
   });
 
   it("covers every drawing/composition export and supported mouse event", () => {

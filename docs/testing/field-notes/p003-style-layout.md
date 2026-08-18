@@ -745,3 +745,46 @@ files and 126 tests; typecheck exited 0; structural performance passed 1 file
 and 3 tests with the 2 controlled wall-clock cases skipped by default.
 Aggregate `trust` was intentionally not run at this milestone. P003-11 and
 P003-12 are done; P003-13 is the sole next step.
+
+## 2026-08-18 — P003-13 public examples and integration
+
+- Added exactly four canonical learner routes under the new Layout section:
+  absolute/overlay, CRC-native Flow, CSS-compatible Flex, and explicit Grid.
+  Each source imports only `@crc/core`, exports the standard
+  `mount(canvas): CRCController` function, has exactly two objectives, paints a
+  visible interactive lesson, and contains no laboratory diagnostics.
+- Promoted `layout-foundation.example.ts` into the cataloged test laboratory.
+  Its public scene nests Flex→Grid→Overlay, resizes from 720 × 420 to 480 × 360,
+  proves clipped paint and hit geometry plus topmost selection, preserves keyed
+  hook state across reflow, composes measured text and an explicitly sized
+  image, and reports exact local boxes of 432 × 420 and 288 × 360 through
+  `crcLayoutBox`.
+- Replaced the Studio's obsolete visual-prop declarations with the current
+  style, length, box, layout-item, layout-component, measurement, and
+  observation surface. The strict consumer now covers positive and negative
+  style/layout usage from both main and types entrypoints, and its runtime
+  export manifest includes layout, measurement, resolution, and diagnostics.
+- Regenerated `docs/scenario-index.md` using the repository tool; it now records
+  28 learning lessons and 14 deterministic test labs.
+
+### Public integration RED and milestone
+
+RED found the expected missing four learning routes, uncataloged layout
+laboratory, absent exact observed boxes, and stale consumer runtime manifest.
+
+Environment: Node v26.7.0, pnpm 11.21.0, Playwright 1.62.1 Chromium.
+
+```sh
+node /Users/benlesh/.cache/node/corepack/v1/pnpm/11.21.0/bin/pnpm.mjs scenarios:check
+node /Users/benlesh/.cache/node/corepack/v1/pnpm/11.21.0/bin/pnpm.mjs typecheck
+node /Users/benlesh/.cache/node/corepack/v1/pnpm/11.21.0/bin/pnpm.mjs playground:build
+node /Users/benlesh/.cache/node/corepack/v1/pnpm/11.21.0/bin/pnpm.mjs playground:build:built
+node /Users/benlesh/.cache/node/corepack/v1/pnpm/11.21.0/bin/pnpm.mjs test:package-consumer:packed
+node /Users/benlesh/.cache/node/corepack/v1/pnpm/11.21.0/bin/pnpm.mjs exec vitest run packages/core/test/learning-examples.test.ts packages/core/test/scenario-catalog.test.ts packages/core/test/layout-foundation.test.ts --browser.headless --browser.ui=false
+```
+
+Results: catalog validation passed 28 lessons and 14 labs; typecheck exited 0;
+source and built Studio production builds passed; the packed consumer passed
+Bundler, NodeNext, runtime export, and no-source checks; focused public
+integration passed 3 files and 48 browser tests. P003-13 is done; P003-14 is the
+sole next step.

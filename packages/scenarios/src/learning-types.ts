@@ -4,6 +4,7 @@ export type LearningSectionId =
   | "start"
   | "drawing"
   | "composition"
+  | "layout"
   | "mouse-events"
   | "advanced-interactions";
 

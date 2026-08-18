@@ -8,6 +8,7 @@ import type { DrawingTextState } from './drawing-text.example';
 import type { GeometryMatrixState } from './geometry-matrix.example';
 import type { InteractionLabState } from './interaction-lab.example';
 import type { LifecycleLabState } from './lifecycle-lab.example';
+import type { LayoutFoundationState } from './layout-foundation.example';
 import type { MouseContractScenarioState } from './mouse-contract.example';
 import type { PerformanceLabState } from './performance-lab.example';
 import type { RuntimeHooksState } from './runtime-hooks.example';
@@ -950,6 +951,46 @@ export const runtimeHooksScenarioEntry: ScenarioCatalogEntry<RuntimeHooksState> 
   load: async () => (await import('./runtime-hooks')).runtimeHooksScenario,
 };
 
+const layoutFoundationMetadata: ScenarioMetadata = {
+  id: 'layout-foundation',
+  slug: 'layout-foundation',
+  title: 'Layout foundation laboratory',
+  summary: 'Prove nested Flex, Grid, Overlay, clipping, measurement, observation, and keyed reflow.',
+  category: 'Layout diagnostics',
+  apiTags: ['absolute', 'flex', 'grid', 'overlay', 'crcLayoutBox', 'text', 'img'],
+  conceptTags: ['nested layout', 'percentage reflow', 'clipping', 'keyed identity'],
+  manualSteps: [
+    {
+      action: 'Inspect the initial 720 × 420 composition and click its center, corner, and clipped lower edge.',
+      expected: 'The topmost orange target wins at center, the keyed teal region retains state, and purple paint and hits stop at the overlay boundary.',
+    },
+    {
+      action: 'Choose Resize layout.',
+      expected: 'The Canvas becomes 480 × 360, the observed local box changes from 432 × 420 to 288 × 360, and keyed state remains intact.',
+    },
+  ],
+  knownLimitations: [
+    'This laboratory covers the approved explicit layout subsets; scrolling, implicit Grid placement, and advanced intrinsic CSS sizing remain deferred.',
+  ],
+  learningOrder: 140,
+  visibility: 'test-laboratory',
+  visibilityReason: 'It exposes exact allocations and state counters for deterministic integration evidence.',
+  maturity: 'contract',
+};
+
+export const layoutFoundationScenarioEntry: ScenarioCatalogEntry<LayoutFoundationState> = {
+  metadata: layoutFoundationMetadata,
+  canvas: { width: 720, height: 420 },
+  actions: [{ id: 'resize', label: 'Resize layout' }],
+  source: {
+    id: 'layout-foundation-example',
+    language: 'ts',
+    marker: "LAYOUT_FOUNDATION_SOURCE_ID = 'layout-foundation-example'",
+    path: 'packages/scenarios/src/layout-foundation.example.ts',
+  },
+  load: async () => (await import('./layout-foundation.example')).default,
+};
+
 export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] = validateScenarioCatalog([
   smokeScenarioEntry,
   drawingShapesScenarioEntry,
@@ -964,6 +1005,7 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] = validateScena
   performanceLabScenarioEntry,
   cleanupStressScenarioEntry,
   runtimeHooksScenarioEntry,
+  layoutFoundationScenarioEntry,
 ] as const);
 
 export const scenarioCatalogIndex = createScenarioCatalogIndex(scenarioCatalog);
