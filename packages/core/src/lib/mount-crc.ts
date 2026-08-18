@@ -66,6 +66,12 @@ export function mountCRC<P>(
     },
     interactionRoot: undefined,
     parent,
+    rootLayoutBox: Object.freeze({
+      x: 0,
+      y: 0,
+      width: canvas.width,
+      height: canvas.height,
+    }),
   };
   crcInstance.interactionRoot = parent ?
       GLOBAL_STATE.crcInstances.get(parent)?.interactionRoot :

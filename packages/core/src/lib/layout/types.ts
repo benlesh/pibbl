@@ -15,6 +15,12 @@ export interface LayoutBox extends Size {
   y: number;
 }
 
+/** @internal Temporary render-time allocation and containing-block basis. */
+export interface LayoutContext {
+  allocation: Readonly<LayoutBox>;
+  percentageBasis: Readonly<LayoutBox>;
+}
+
 export interface Edges {
   top: number;
   right: number;

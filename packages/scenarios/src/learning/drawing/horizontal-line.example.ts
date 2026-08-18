@@ -14,8 +14,8 @@ const HorizontalStudy = defineComp(function HorizontalStudy() {
     horizontalLine({
       style: {
         y,
-        left: 82,
-        right: 638,
+        x1: 82,
+        x2: 638,
         stroke: color,
         strokeWidth: band === name ? 14 : 5,
         lineInteractionWidth: 30,

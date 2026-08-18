@@ -13,15 +13,26 @@ import {
   SystemStyle,
 } from '../types.js';
 import { shallowEquals } from '../util/shallow-equals.js';
+import {
+  resolveRequiredLength,
+  stripLayoutParticipation,
+} from '../style/resolve-built-in.js';
+import type {
+  BoxStyle,
+  LayoutItemStyle,
+  ResolvedDrawingStyle,
+} from '../style/types.js';
 
 export interface LayerProps {
   render: CompEl<any, any>;
 }
 
-export interface LayerStyle extends SystemStyle {
-  width?: number;
-  height?: number;
-}
+export interface LayerStyle extends SystemStyle, BoxStyle, LayoutItemStyle {}
+
+type ResolvedLayerStyle = ResolvedDrawingStyle<LayerStyle> & {
+  width: number;
+  height: number;
+};
 
 interface LayerSlot {
   canvas: OffscreenCanvas;
@@ -30,7 +41,7 @@ interface LayerSlot {
 
 export function Layer(
   props: LayerProps,
-  style: Readonly<LayerStyle>,
+  style: Readonly<ResolvedLayerStyle>,
   ctx: RenderingContext2D,
 ) {
   const canvas = GLOBAL_STATE.canvas!;
@@ -96,7 +107,28 @@ export function Layer(
   parentInstance.paintEntries.add(interactionLayer);
 }
 
-export const layer = defineComp(Layer);
+export const layer = defineComp<
+  LayerProps,
+  LayerStyle,
+  LayerStyle,
+  ResolvedLayerStyle
+>(Layer, {
+  resolveStyle: (style, context) => ({
+    ...stripLayoutParticipation(style),
+    width: resolveRequiredLength(
+      style.width ?? context.allocation.width,
+      context.percentageBasis.width,
+      'width',
+      context,
+    ),
+    height: resolveRequiredLength(
+      style.height ?? context.allocation.height,
+      context.percentageBasis.height,
+      'height',
+      context,
+    ),
+  }) as ResolvedLayerStyle,
+});
 
 function createBounds(width: number, height: number): Path2D {
   const bounds = new Path2D();

@@ -61,6 +61,7 @@ export type {
 export { crcCursor } from './lib/hooks/crc-cursor.js';
 export { crcEvent } from './lib/hooks/crc-event.js';
 export { crcLinePath } from './lib/hooks/crc-line-path.js';
+export { crcLayoutBox } from './lib/hooks/crc-layout-box.js';
 export { crcMemo } from './lib/hooks/crc-memo.js';
 export { crcRectPath } from './lib/hooks/crc-rect-path.js';
 export { crcRef, type CRCRef } from './lib/hooks/crc-ref.js';
@@ -71,6 +72,7 @@ export type {
   Canvas,
   CompEl,
   CompFn,
+  ComponentCapabilities,
   ComponentInput,
   CRCController,
   CRCMouseEvent,
@@ -78,7 +80,11 @@ export type {
   CRCNode,
   FillStyle,
   PixelGridAlignment,
+  NormalizedStyle,
   RenderingContext2D,
+  ResolvedStyle,
+  SpecifiedStyle,
+  StyleResolutionContext,
   StrokeStyle,
   SystemStyle,
 } from './lib/types.js';

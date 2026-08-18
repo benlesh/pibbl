@@ -4,14 +4,16 @@ import {
   CRCBasicMouseEvents,
   RenderingContext2D,
 } from '../types.js';
-import { SvgPathStyle } from '../style/types.js';
+import { stripLayoutParticipation } from '../style/resolve-built-in.js';
+import { registerOpaqueStyleProperties } from '../style/resolve-dispatch.js';
+import type { ResolvedSvgPathStyle, SvgPathStyle } from '../style/types.js';
 import { Path } from './path.js';
 
 export interface SvgPathProps extends CRCBasicMouseEvents {}
 
 function SvgPath(
   props: SvgPathProps,
-  style: Readonly<SvgPathStyle>,
+  style: Readonly<ResolvedSvgPathStyle>,
   ctx: RenderingContext2D,
 ) {
   const { d, ...pathStyle } = style;
@@ -29,4 +31,13 @@ function SvgPath(
 /**
  * Creates a renderable SvgPath component element.
  */
-export const svgPath = defineComp(SvgPath);
+export const svgPath = defineComp<
+  SvgPathProps,
+  SvgPathStyle,
+  SvgPathStyle,
+  ResolvedSvgPathStyle
+>(SvgPath, {
+  resolveStyle: style =>
+    stripLayoutParticipation(style) as ResolvedSvgPathStyle,
+});
+registerOpaqueStyleProperties(SvgPath, ['d', 'fill', 'stroke', 'cursor']);

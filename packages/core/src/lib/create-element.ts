@@ -14,11 +14,16 @@ export const EMPTY_STYLE: Readonly<SystemStyle> = Object.freeze({});
  * @returns A structure that represents a component to be mounted or updated during render
  */
 
-export function createElement<P, S extends SystemStyle>(
-  comp: CompFn<P, S>,
-  props: CompEl<P, S>['props'],
-  style: CompEl<P, S>['style'] = EMPTY_STYLE as CompEl<P, S>['style'],
+export function createElement<
+  P,
+  S extends SystemStyle,
+  N extends SystemStyle = S,
+  R extends SystemStyle = N,
+>(
+  comp: CompFn<P, S, N, R>,
+  props: CompEl<P, S, N, R>['props'],
+  style: CompEl<P, S, N, R>['style'] = EMPTY_STYLE as CompEl<P, S, N, R>['style'],
   key?: string,
-): CompEl<P, S> {
+): CompEl<P, S, N, R> {
   return { type: comp, props, style, key };
 }

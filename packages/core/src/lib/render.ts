@@ -6,6 +6,7 @@ import {
 import { Teardowns } from './teardowns.js';
 import { CompEl, CompRefs, SystemStyle } from './types.js';
 import { finalizeHookSlots } from './hooks/hook-slot.js';
+import { resolveElementStyle } from './style/resolve-dispatch.js';
 
 export function render<P, S extends SystemStyle>(
   element: CompEl<P, S>,
@@ -41,15 +42,16 @@ export function render<P, S extends SystemStyle>(
 
     const ctx = GLOBAL_STATE.renderContext!;
     ctx.save();
+    let onAfterRender: (() => void) | undefined;
     try {
       const result = componentRefs.element.type(
         componentRefs.element.props,
-        componentRefs.element.style,
+        resolveElementStyle(componentRefs.element),
         ctx,
       );
       finalizeHookSlots(componentRefs);
 
-      const onAfterRender = componentRefs.onAfterRender;
+      onAfterRender = componentRefs.onAfterRender;
       componentRefs.onAfterRender = undefined;
 
       if (result) {
@@ -74,10 +76,14 @@ export function render<P, S extends SystemStyle>(
           }
         }
       }
-
-      onAfterRender?.();
     } finally {
-      ctx.restore();
+      onAfterRender ??= componentRefs.onAfterRender;
+      componentRefs.onAfterRender = undefined;
+      try {
+        onAfterRender?.();
+      } finally {
+        ctx.restore();
+      }
     }
   } finally {
     clearComponentState();
@@ -85,11 +91,14 @@ export function render<P, S extends SystemStyle>(
 }
 
 function getElementTypeName(element: CompEl<any, any>, parentId: string): string {
-  const typeIdentity = getAnonElemName(element.type);
-  const typeName = element.type.name || 'Anonymous';
-  const key = element.key;
+  const identityHint = element.identityHint;
+  const identityType = identityHint?.type ?? element.type;
+  const typeIdentity = getAnonElemName(identityType);
+  const typeName = identityType.name || 'Anonymous';
+  const key = identityHint ? identityHint.key : element.key;
   if (key === undefined) {
-    return `${typeName}:${typeIdentity}`;
+    const occurrence = identityHint?.occurrence ?? 0;
+    return `${typeName}:${typeIdentity}${occurrence ? `_${occurrence}` : ''}`;
   }
 
   const encodedKey = encodeURIComponent(key);

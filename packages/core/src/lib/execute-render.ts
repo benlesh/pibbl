@@ -39,6 +39,7 @@ export function executeRender(
   const prevUnseendIds = GLOBAL_STATE.unseenIds;
   const prevComponentRefs = GLOBAL_STATE.componentRefs;
   const prevClippingStack = GLOBAL_STATE.clippingStack;
+  const prevLayoutStack = GLOBAL_STATE.layoutStack;
   try {
     GLOBAL_STATE.currentCRCInstance = crcInstance;
     GLOBAL_STATE.currentCRCInstance.renderTimestamp = renderTimestamp;
@@ -48,6 +49,22 @@ export function executeRender(
     const ctx = get2dContext(canvas);
     GLOBAL_STATE.renderContext = ctx;
     GLOBAL_STATE.clippingStack = [];
+    const previousRootBox = crcInstance.rootLayoutBox;
+    if (
+      previousRootBox.width !== canvas.width ||
+      previousRootBox.height !== canvas.height
+    ) {
+      crcInstance.rootLayoutBox = Object.freeze({
+        x: 0,
+        y: 0,
+        width: canvas.width,
+        height: canvas.height,
+      });
+    }
+    GLOBAL_STATE.layoutStack = [{
+      allocation: crcInstance.rootLayoutBox,
+      percentageBasis: crcInstance.rootLayoutBox,
+    }];
 
     GLOBAL_STATE.unseenIds = new Set(
       GLOBAL_STATE.currentCRCInstance.refs.keys(),
@@ -78,6 +95,7 @@ export function executeRender(
     const { parent } = crcInstance;
     clearTempState();
     GLOBAL_STATE.clippingStack = prevClippingStack;
+    GLOBAL_STATE.layoutStack = prevLayoutStack;
     if (updateParents && parent && GLOBAL_STATE.crcInstances.has(parent)) {
       executeRender(parent, renderTimestamp);
     }

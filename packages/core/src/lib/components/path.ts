@@ -3,7 +3,10 @@ import {
   CRCBasicMouseEvents,
   RenderingContext2D,
 } from '../types.js';
-import { PathStyle } from '../style/types.js';
+import { stripLayoutParticipation } from '../style/resolve-built-in.js';
+import { registerOpaqueStyleProperties } from '../style/resolve-dispatch.js';
+import type { PathStyle, ResolvedPathStyle } from '../style/types.js';
+import type { StyleResolutionContext } from '../types.js';
 import { isTransparent } from '../util/is-transparent.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 
@@ -11,7 +14,7 @@ export interface PathProps extends CRCBasicMouseEvents {}
 
 export function Path(
   props: PathProps,
-  style: Readonly<PathStyle>,
+  style: Readonly<ResolvedPathStyle>,
   ctx: RenderingContext2D,
 ) {
   const {
@@ -45,4 +48,19 @@ export function Path(
 /**
  * Creates a renderable Path component element.
  */
-export const path = defineComp(Path);
+export const path = defineComp<
+  PathProps,
+  PathStyle,
+  PathStyle,
+  ResolvedPathStyle
+>(Path, {
+  resolveStyle: resolvePathStyle,
+});
+registerOpaqueStyleProperties(Path, ['fill', 'stroke', 'cursor']);
+
+function resolvePathStyle(
+  style: Readonly<PathStyle>,
+  _context: Readonly<StyleResolutionContext>,
+): Readonly<ResolvedPathStyle> {
+  return stripLayoutParticipation(style) as ResolvedPathStyle;
+}

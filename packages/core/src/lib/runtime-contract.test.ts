@@ -82,6 +82,55 @@ describe('defineComp contract', () => {
     ]);
     controller.dispose();
   });
+
+  it('rejects unresolved allocation values before invoking a callback without a resolver', () => {
+    const originalRequestAnimationFrame = window.requestAnimationFrame;
+    let pending: FrameRequestCallback | undefined;
+    window.requestAnimationFrame = callback => {
+      pending = callback;
+      return 1;
+    };
+    const callback = vi.fn();
+    interface UnresolvedStyle extends SystemStyle {
+      radius: `${number}%`;
+    }
+    // @ts-expect-error percentage-capable declared styles require resolveStyle
+    const Unresolved = defineComp<{}, UnresolvedStyle>(callback);
+    const canvas = createCanvas();
+
+    try {
+      const controller = crc(canvas, Unresolved({ style: { radius: '50%' } }));
+      expect(() => pending?.(0)).toThrowError(/radius.*50%.*resolve/i);
+      expect(callback).not.toHaveBeenCalled();
+      controller.dispose();
+    } finally {
+      window.requestAnimationFrame = originalRequestAnimationFrame;
+    }
+  });
+
+  it('rejects allocation syntax leaked by an untyped explicit identity resolver', () => {
+    const originalRequestAnimationFrame = window.requestAnimationFrame;
+    let pending: FrameRequestCallback | undefined;
+    window.requestAnimationFrame = callback => {
+      pending = callback;
+      return 1;
+    };
+    const callback = vi.fn();
+    const UnsafeDefine = defineComp as any;
+    const Leaky = UnsafeDefine(callback, {
+      resolveStyle: (style: any) => style,
+    });
+    const canvas = createCanvas();
+
+    try {
+      const controller = crc(canvas, Leaky({ style: { radius: '50%' } }));
+      expect(() => pending?.(0)).toThrowError(/radius.*50%.*resolve/i);
+      expect(callback).not.toHaveBeenCalled();
+      controller.dispose();
+    } finally {
+      window.requestAnimationFrame = originalRequestAnimationFrame;
+    }
+  });
 });
 
 describe('crc root updates', () => {

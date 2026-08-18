@@ -25,8 +25,8 @@ const VerticalStudy = defineComp(function VerticalStudy() {
       verticalLine({
         style: {
           x: 160 + index * 132,
-          top: 74 + index * 18,
-          bottom: 346 - index * 18,
+          y1: 74 + index * 18,
+          y2: 346 - index * 18,
           stroke: color,
           strokeWidth: stripe === index + 1 ? 26 : 10,
           lineInteractionWidth: 40,

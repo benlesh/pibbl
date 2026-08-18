@@ -1,11 +1,17 @@
 import { defineComp } from '../define-comp.js';
 import { CRCNode, RenderingContext2D, SystemStyle } from '../types.js';
+import { stripLayoutParticipation } from '../style/resolve-built-in.js';
+import type {
+  BoxStyle,
+  LayoutItemStyle,
+  ResolvedDrawingStyle,
+} from '../style/types.js';
 
 export interface GProps {
   children: CRCNode[];
 }
 
-export interface GStyle extends SystemStyle {
+export interface GStyle extends SystemStyle, BoxStyle, LayoutItemStyle {
   scaleX?: number;
   scaleY?: number;
   /** Clockwise rotation in degrees. */
@@ -19,7 +25,9 @@ export interface GStyle extends SystemStyle {
   skewY?: number;
 }
 
-function G(props: GProps, style: Readonly<GStyle>, ctx: RenderingContext2D) {
+type ResolvedGStyle = ResolvedDrawingStyle<GStyle>;
+
+function G(props: GProps, style: Readonly<ResolvedGStyle>, ctx: RenderingContext2D) {
   let transform = ctx.getTransform();
 
   const { scaleX = 1, scaleY = 1 } = style;
@@ -60,4 +68,6 @@ function G(props: GProps, style: Readonly<GStyle>, ctx: RenderingContext2D) {
  * Creates a group element that can be used to define transformations on a set
  * of related CRC elements.
  */
-export const g = defineComp(G);
+export const g = defineComp<GProps, GStyle, GStyle, ResolvedGStyle>(G, {
+  resolveStyle: style => stripLayoutParticipation(style) as ResolvedGStyle,
+});

@@ -1,5 +1,12 @@
 import type { TextStyle } from '../style/types.js';
 
+type TextLayoutStyle = Omit<TextStyle, 'x' | 'y' | 'width' | 'height'> & {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+};
+
 export interface TextBounds {
   x: number;
   y: number;
@@ -26,7 +33,7 @@ export type MeasureText = (text: string) => TextMetrics;
 /** Resolves text line breaking and geometry without rendering or runtime state. */
 export function resolveTextLayout(
   measureText: MeasureText,
-  style: Readonly<TextStyle>,
+  style: Readonly<TextLayoutStyle>,
 ): TextLayout {
   const {
     text,
@@ -75,7 +82,7 @@ export function resolveTextLayout(
 
 /** Resolves finite clip geometry, with an optional pure height fallback. */
 export function resolveTextClipBounds(
-  style: Readonly<TextStyle>,
+  style: Readonly<TextLayoutStyle>,
   fallbackHeight?: number,
 ): TextBounds | undefined {
   const {

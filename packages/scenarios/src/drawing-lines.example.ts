@@ -45,8 +45,8 @@ const DrawingLinesScene = defineComp<DrawingLinesSceneProps>(({ state }) => [
     key: 'horizontal',
     style: {
       y: state.updated ? 152.2 : 142.2,
-      left: 24,
-      right: 456,
+      x1: 24,
+      x2: 456,
       stroke: '#f59e0b',
       strokeWidth: 1,
       alignToPixelGrid: 'round',
@@ -56,8 +56,8 @@ const DrawingLinesScene = defineComp<DrawingLinesSceneProps>(({ state }) => [
     key: 'vertical',
     style: {
       x: state.updated ? 332.2 : 312.2,
-      top: 20,
-      bottom: 218,
+      y1: 20,
+      y2: 218,
       stroke: '#10b981',
       strokeWidth: 1,
       alignToPixelGrid: 'round',

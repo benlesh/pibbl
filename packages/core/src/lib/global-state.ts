@@ -1,3 +1,4 @@
+import type { LayoutContext } from './layout/types.js';
 import { Canvas, CompRefs, CRCClippingStackEntry, CRCInstance, RenderingContext2D } from './types.js';
 
 export interface GlobalState {
@@ -12,6 +13,7 @@ export interface GlobalState {
   seenIds: Set<string> | undefined;
   seenKeys: Set<string> | undefined;
   clippingStack: CRCClippingStackEntry[];
+  layoutStack: LayoutContext[] | undefined;
   anonElementNames: WeakMap<any, string>;
   anon: number;
 }
@@ -28,6 +30,7 @@ export const GLOBAL_STATE: GlobalState = {
   seenIds: undefined,
   seenKeys: undefined,
   clippingStack: [],
+  layoutStack: undefined,
   anonElementNames: new WeakMap(),
   anon: 0,
 };
@@ -87,6 +90,7 @@ export function clearSharedState() {
   }
   GLOBAL_STATE.crcInstances.clear();
   GLOBAL_STATE.clippingStack = [];
+  GLOBAL_STATE.layoutStack = undefined;
   GLOBAL_STATE.anonElementNames = new WeakMap<any, string>();
   clearTempState();
 }
@@ -141,6 +145,7 @@ export function clearTempState() {
   GLOBAL_STATE.seenKeys = undefined;
   GLOBAL_STATE.canvas = undefined;
   GLOBAL_STATE.renderContext = undefined;
+  GLOBAL_STATE.layoutStack = undefined;
   clearComponentState();
 }
 

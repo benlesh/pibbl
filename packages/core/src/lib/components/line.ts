@@ -4,7 +4,15 @@ import {
   RenderingContext2D,
   SystemStyle,
 } from '../types.js';
-import type { CursorStyle, PaintStyle } from '../style/types.js';
+import { stripLayoutParticipation } from '../style/resolve-built-in.js';
+import { registerOpaqueStyleProperties } from '../style/resolve-dispatch.js';
+import type {
+  BoxStyle,
+  CursorStyle,
+  LayoutItemStyle,
+  PaintStyle,
+  ResolvedDrawingStyle,
+} from '../style/types.js';
 import { createLinePath } from '../util/create-line-path.js';
 import { Path } from './path.js';
 
@@ -12,15 +20,19 @@ export interface LineProps extends CRCBasicMouseEvents {}
 
 export interface LineStyle
   extends SystemStyle,
+  BoxStyle,
+  LayoutItemStyle,
   Omit<PaintStyle, 'fill'>,
   CursorStyle {
   coords: [number, number][];
   lineInteractionWidth?: number;
 }
 
+type ResolvedLineStyle = ResolvedDrawingStyle<LineStyle>;
+
 export function Line(
   props: LineProps,
-  style: Readonly<LineStyle>,
+  style: Readonly<ResolvedLineStyle>,
   ctx: RenderingContext2D,
 ) {
   const {
@@ -50,4 +62,13 @@ export function Line(
 /**
  * Creates a renderable Line component element.
  */
-export const line = defineComp(Line);
+export const line = defineComp<
+  LineProps,
+  LineStyle,
+  LineStyle,
+  ResolvedLineStyle
+>(Line, {
+  resolveStyle: style =>
+    stripLayoutParticipation(style) as ResolvedLineStyle,
+});
+registerOpaqueStyleProperties(Line, ['stroke', 'cursor']);

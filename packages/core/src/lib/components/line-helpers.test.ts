@@ -36,8 +36,8 @@ describe('horizontalLine and verticalLine', () => {
       horizontalLine({
         style: {
           y: 10.2,
-          left: 2,
-          right: 20,
+          x1: 2,
+          x2: 20,
           stroke: 'red',
           strokeWidth: 1,
           alignToPixelGrid,
@@ -46,8 +46,8 @@ describe('horizontalLine and verticalLine', () => {
       verticalLine({
         style: {
           x: 10.2,
-          top: 3,
-          bottom: 30,
+          y1: 3,
+          y2: 30,
           stroke: 'blue',
           strokeWidth: 1,
           alignToPixelGrid,
@@ -66,8 +66,8 @@ describe('horizontalLine and verticalLine', () => {
     const canvas = await componentTest(horizontalLine({
       style: {
         y: 40,
-        left: 20,
-        right: 120,
+        x1: 20,
+        x2: 120,
         stroke: 'red',
         strokeWidth: 2,
         opacity: 0,

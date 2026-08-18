@@ -6,7 +6,13 @@ import {
   CRCBasicMouseEvents,
   RenderingContext2D,
 } from '../types.js';
-import type { ImgStyle } from '../style/types.js';
+import {
+  resolveLocalOffset,
+  resolveOptionalLength,
+  stripLayoutParticipation,
+} from '../style/resolve-built-in.js';
+import { registerOpaqueStyleProperties } from '../style/resolve-dispatch.js';
+import type { ImgStyle, ResolvedImgStyle } from '../style/types.js';
 import { adjustRectangleToPixelGrid } from '../util/pixel-grid-adjustments.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 
@@ -19,7 +25,7 @@ interface LoadedImage {
 
 function Img(
   props: ImgProps,
-  style: Readonly<ImgStyle>,
+  style: Readonly<ResolvedImgStyle>,
   ctx: RenderingContext2D,
 ) {
   let {
@@ -104,4 +110,28 @@ function Img(
 /**
  * Creates a renderable Img component element.
  */
-export const img = defineComp(Img);
+export const img = defineComp<
+  ImgProps,
+  ImgStyle,
+  ImgStyle,
+  ResolvedImgStyle
+>(Img, {
+  resolveStyle: (style, context) => ({
+    ...stripLayoutParticipation(style),
+    x: resolveLocalOffset(style.x, context.percentageBasis.width, 'x', context),
+    y: resolveLocalOffset(style.y, context.percentageBasis.height, 'y', context),
+    width: resolveOptionalLength(
+      style.width,
+      context.percentageBasis.width,
+      'width',
+      context,
+    ),
+    height: resolveOptionalLength(
+      style.height,
+      context.percentageBasis.height,
+      'height',
+      context,
+    ),
+  }) as ResolvedImgStyle,
+});
+registerOpaqueStyleProperties(Img, ['src', 'stroke', 'cursor']);

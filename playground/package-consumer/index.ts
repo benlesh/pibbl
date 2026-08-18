@@ -86,8 +86,8 @@ line({ style: lineStyle, onMouseMove: () => undefined });
 
 const horizontalLineStyle = {
   y: 12,
-  left: 4,
-  right: 40,
+  x1: 4,
+  x2: 40,
   stroke: 'black',
   alignToPixelGrid: 'round',
 } satisfies HorizontalLineStyle;
@@ -95,8 +95,8 @@ horizontalLine({ style: horizontalLineStyle });
 
 const verticalLineStyle = {
   x: 12,
-  top: 4,
-  bottom: 40,
+  y1: 4,
+  y2: 40,
   stroke: 'black',
   alignToPixelGrid: 'round',
 } satisfies VerticalLineStyle;
@@ -179,10 +179,14 @@ line({ style: { coords: [[0, 0], [20, 10]], fill: 'red' } });
 horizontalLine({ y: 12 });
 // @ts-expect-error horizontal line requires style.y
 horizontalLine({ style: { stroke: 'black' } });
+// @ts-expect-error legacy horizontal endpoint names are not supported
+horizontalLine({ style: { y: 12, right: 40 } });
 // @ts-expect-error vertical-line geometry is style-only
 verticalLine({ x: 12 });
 // @ts-expect-error vertical line requires style.x
 verticalLine({ style: { stroke: 'black' } });
+// @ts-expect-error legacy vertical endpoint names are not supported
+verticalLine({ style: { x: 12, bottom: 40 } });
 // @ts-expect-error text content is style-only
 text({ text: 'legacy' });
 // @ts-expect-error text style is required because text content is required

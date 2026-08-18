@@ -49,6 +49,13 @@ export interface LayoutItemStyle {
   gridRowSpan?: number;
 }
 
+type LayoutParticipationKey = Exclude<
+  keyof BoxStyle | keyof LayoutItemStyle,
+  'custom'
+>;
+
+export type ResolvedDrawingStyle<S> = Omit<S, LayoutParticipationKey>;
+
 export interface PaintStyle extends SystemStyle {
   fill?: FillStyle;
   stroke?: StrokeStyle;
@@ -60,33 +67,51 @@ export interface CursorStyle extends SystemStyle {
   cursor?: string;
 }
 
-export interface PathStyle extends SystemStyle, PaintStyle, CursorStyle {
+export interface PathStyle
+  extends SystemStyle,
+    PaintStyle,
+    CursorStyle,
+    BoxStyle,
+    LayoutItemStyle {
   d: Path2D;
   lineInteractionWidth?: number;
 }
 
-export interface RectStyle extends SystemStyle, PaintStyle, CursorStyle {
-  x?: number;
-  y?: number;
-  width: number;
-  height: number;
+export interface RectStyle
+  extends SystemStyle,
+    PaintStyle,
+    CursorStyle,
+    BoxStyle,
+    LayoutItemStyle {
+  x?: Exclude<Length, 'auto'>;
+  y?: Exclude<Length, 'auto'>;
+  width: Length;
+  height: Length;
   alignToPixelGrid?: PixelGridAlignment;
   lineInteractionWidth?: number;
 }
 
-export interface SvgPathStyle extends SystemStyle, PaintStyle, CursorStyle {
+export interface SvgPathStyle
+  extends SystemStyle,
+    PaintStyle,
+    CursorStyle,
+    BoxStyle,
+    LayoutItemStyle {
   d: string;
   lineInteractionWidth?: number;
 }
 
 export type TextFit = 'visible' | 'squish' | 'ellipsis' | 'clip';
 
-export interface TextStyle extends SystemStyle, PaintStyle, CursorStyle {
+export interface TextStyle
+  extends SystemStyle,
+    PaintStyle,
+    CursorStyle,
+    BoxStyle,
+    LayoutItemStyle {
   text: string;
-  x?: number;
-  y?: number;
-  width?: number;
-  height?: number;
+  x?: Exclude<Length, 'auto'>;
+  y?: Exclude<Length, 'auto'>;
   lineHeight?: number;
   wrap?: boolean;
   fit?: TextFit;
@@ -95,14 +120,37 @@ export interface TextStyle extends SystemStyle, PaintStyle, CursorStyle {
   textAlign?: CanvasTextAlign;
 }
 
-export interface ImgStyle extends SystemStyle, CursorStyle {
+export interface ImgStyle
+  extends SystemStyle,
+    CursorStyle,
+    BoxStyle,
+    LayoutItemStyle {
   src: string;
-  x?: number;
-  y?: number;
-  width?: number;
-  height?: number;
+  x?: Exclude<Length, 'auto'>;
+  y?: Exclude<Length, 'auto'>;
   stroke?: StrokeStyle;
   strokeWidth?: number;
   opacity?: number;
   alignToPixelGrid?: PixelGridAlignment;
 }
+
+export type ResolvedPathStyle = ResolvedDrawingStyle<PathStyle>;
+export type ResolvedRectStyle = ResolvedDrawingStyle<RectStyle> & {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+export type ResolvedSvgPathStyle = ResolvedDrawingStyle<SvgPathStyle>;
+export type ResolvedTextStyle = ResolvedDrawingStyle<TextStyle> & {
+  x: number;
+  y: number;
+  width?: number;
+  height?: number;
+};
+export type ResolvedImgStyle = ResolvedDrawingStyle<ImgStyle> & {
+  x: number;
+  y: number;
+  width?: number;
+  height?: number;
+};

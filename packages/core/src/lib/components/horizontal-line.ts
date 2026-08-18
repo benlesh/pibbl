@@ -6,29 +6,49 @@ import {
   SystemStyle,
 } from '../types.js';
 import { adjustForPixelGrid } from '../util/pixel-grid-adjustments.js';
+import {
+  resolveLocalOffset,
+  resolveRequiredLength,
+  stripLayoutParticipation,
+} from '../style/resolve-built-in.js';
+import { registerOpaqueStyleProperties } from '../style/resolve-dispatch.js';
+import type {
+  BoxStyle,
+  LayoutItemStyle,
+  Length,
+  ResolvedDrawingStyle,
+} from '../style/types.js';
 import { Line, type LineStyle } from './line.js';
 
 export interface HorizontalLineProps extends CRCBasicMouseEvents {}
 
 export interface HorizontalLineStyle
   extends SystemStyle,
+  BoxStyle,
+  LayoutItemStyle,
   Omit<LineStyle, 'coords'> {
-  y: number;
-  left?: number;
-  right?: number;
+  y: Exclude<Length, 'auto'>;
+  x1?: Exclude<Length, 'auto'>;
+  x2?: Exclude<Length, 'auto'>;
   alignToPixelGrid?: PixelGridAlignment;
   lineInteractionWidth?: number;
 }
 
+type ResolvedHorizontalLineStyle = ResolvedDrawingStyle<HorizontalLineStyle> & {
+  y: number;
+  x1: number;
+  x2: number;
+};
+
 export function HorizontalLine(
   props: HorizontalLineProps,
-  style: Readonly<HorizontalLineStyle>,
+  style: Readonly<ResolvedHorizontalLineStyle>,
   ctx: RenderingContext2D,
 ) {
   const {
     y: initialY,
-    left = 0,
-    right = ctx.canvas.width,
+    x1 = 0,
+    x2 = ctx.canvas.width,
     alignToPixelGrid = 'none',
     stroke,
     strokeWidth,
@@ -42,8 +62,8 @@ export function HorizontalLine(
     alignToPixelGrid,
   );
   const coords: [number, number][] = [
-    [left, y],
-    [right, y],
+    [x1, y],
+    [x2, y],
   ];
   return Line(
     props,
@@ -62,4 +82,32 @@ export function HorizontalLine(
 /**
  * Creates a renderable HorizontalLine component element
  */
-export const horizontalLine = defineComp(HorizontalLine);
+export const horizontalLine = defineComp<
+  HorizontalLineProps,
+  HorizontalLineStyle,
+  HorizontalLineStyle,
+  ResolvedHorizontalLineStyle
+>(HorizontalLine, {
+  resolveStyle: (style, context) => ({
+    ...stripLayoutParticipation(style),
+    y: resolveRequiredLength(
+      style.y,
+      context.percentageBasis.height,
+      'y',
+      context,
+    ),
+    x1: resolveLocalOffset(
+      style.x1,
+      context.percentageBasis.width,
+      'x1',
+      context,
+    ),
+    x2: resolveRequiredLength(
+      style.x2 ?? context.allocation.width,
+      context.percentageBasis.width,
+      'x2',
+      context,
+    ),
+  }) as ResolvedHorizontalLineStyle,
+});
+registerOpaqueStyleProperties(HorizontalLine, ['stroke', 'cursor']);

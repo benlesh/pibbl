@@ -1,5 +1,11 @@
 import { defineComp } from '../define-comp.js';
-import type { TextStyle } from '../style/types.js';
+import {
+  resolveLocalOffset,
+  resolveOptionalLength,
+  stripLayoutParticipation,
+} from '../style/resolve-built-in.js';
+import { registerOpaqueStyleProperties } from '../style/resolve-dispatch.js';
+import type { ResolvedTextStyle, TextStyle } from '../style/types.js';
 import {
   CRCBasicMouseEvents,
   RenderingContext2D,
@@ -29,7 +35,7 @@ function checkPropsForEvents(
 
 export function Text(
   props: TextProps,
-  style: Readonly<TextStyle>,
+  style: Readonly<ResolvedTextStyle>,
   ctx: RenderingContext2D,
 ) {
   const {
@@ -97,4 +103,37 @@ export function Text(
   }
 }
 
-export const text = defineComp(Text);
+export const text = defineComp<
+  TextProps,
+  TextStyle,
+  TextStyle,
+  ResolvedTextStyle
+>(Text, {
+  resolveStyle: (style, context) => ({
+    ...stripLayoutParticipation(style),
+    x: resolveLocalOffset(style.x, context.percentageBasis.width, 'x', context),
+    y: resolveLocalOffset(style.y, context.percentageBasis.height, 'y', context),
+    width: resolveOptionalLength(
+      style.width,
+      context.percentageBasis.width,
+      'width',
+      context,
+    ),
+    height: resolveOptionalLength(
+      style.height,
+      context.percentageBasis.height,
+      'height',
+      context,
+    ),
+  }) as ResolvedTextStyle,
+});
+registerOpaqueStyleProperties(Text, [
+  'text',
+  'font',
+  'fill',
+  'stroke',
+  'cursor',
+  'fit',
+  'textBaseline',
+  'textAlign',
+]);

@@ -1,4 +1,5 @@
 import type { Teardowns } from './teardowns.js';
+import type { Constraints, LayoutBox } from './layout/types.js';
 
 export interface SystemStyle {
   custom?: unknown;
@@ -31,11 +32,15 @@ export type ComponentInput<P, S extends SystemStyle = SystemStyle> =
 export interface CompEl<
   P = any,
   S extends SystemStyle = SystemStyle,
+  N extends SystemStyle = S,
+  R extends SystemStyle = N,
 > {
-  type: CompFn<P, S>;
+  type: CompFn<P, S, N, R>;
   props: ProgramProps<P>;
-  style: Readonly<S>;
+  style: SpecifiedStyle<S>;
   key?: string;
+  /** @internal */
+  identityHint?: InternalIdentityHint;
 }
 
 export type FalsyNodes = undefined | false | null | '' | 0;
@@ -47,11 +52,46 @@ export type RenderingContext2D =
   | CanvasRenderingContext2D
   | OffscreenCanvasRenderingContext2D;
 
-export type CompFn<P, S extends SystemStyle = SystemStyle> = (
+export type SpecifiedStyle<S extends SystemStyle> = Readonly<S>;
+export type NormalizedStyle<N extends SystemStyle> = Readonly<N>;
+export type ResolvedStyle<R extends SystemStyle> = Readonly<R>;
+
+export interface StyleResolutionContext {
+  allocation: Readonly<LayoutBox>;
+  percentageBasis: Readonly<LayoutBox>;
+  constraints: Readonly<Constraints>;
+  component: string;
+  algorithm: 'render-dispatch';
+}
+
+export interface ComponentCapabilities<
+  S extends SystemStyle,
+  N extends SystemStyle = S,
+  R extends SystemStyle = N,
+> {
+  normalizeStyle?: (style: SpecifiedStyle<S>) => NormalizedStyle<N>;
+  resolveStyle?: (
+    style: NormalizedStyle<N>,
+    context: Readonly<StyleResolutionContext>,
+  ) => ResolvedStyle<R>;
+}
+
+export type CompFn<
+  P,
+  S extends SystemStyle = SystemStyle,
+  N extends SystemStyle = S,
+  R extends SystemStyle = N,
+> = ((
   props: ProgramProps<P>,
-  style: Readonly<S>,
+  style: ResolvedStyle<R>,
   ctx: RenderingContext2D,
-) => CRCNode[] | CRCNode | void;
+) => CRCNode[] | CRCNode | void) & Readonly<ComponentCapabilities<S, N, R>>;
+
+export interface InternalIdentityHint {
+  type: CompFn<any, any, any, any>;
+  key: string | undefined;
+  occurrence: number;
+}
 
 export interface CompRefs<P> {
   id: string;
@@ -174,6 +214,7 @@ export interface CRCInstance {
   interaction: CRCInteractionState;
   interactionRoot: CRCInstance | undefined;
   parent: Canvas | undefined;
+  rootLayoutBox: Readonly<LayoutBox>;
 }
 
 export type PixelGridAlignment = 'none' | 'round' | 'ceil' | 'floor';
