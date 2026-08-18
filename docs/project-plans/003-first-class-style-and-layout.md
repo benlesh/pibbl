@@ -71,9 +71,9 @@ review before the next task begins.
 | P003-08 | Done        | Style resolution, layout context, placement, and observation.   |
 | P003-09 | Done        | Absolute and overlay layout.                                    |
 | P003-10 | Done        | Pure measurement and CRC-native flow.                           |
-| P003-11 | Next        | CSS-compatible Flexbox subset.                                  |
-| P003-12 | Queued      | CSS-compatible explicit Grid subset.                            |
-| P003-13 | Queued      | Learning examples, nested scenario, and Studio/public types.    |
+| P003-11 | Done        | CSS-compatible Flexbox subset.                                  |
+| P003-12 | Done        | CSS-compatible explicit Grid subset.                            |
+| P003-13 | Next        | Learning examples, nested scenario, and Studio/public types.    |
 | P003-14 | Queued      | Composition, diagnostics, ownership, and performance hardening. |
 | P003-15 | Queued      | Public contracts, evidence, and final trust closure.            |
 
@@ -147,19 +147,19 @@ is typed/actionable, text/custom/nested cases work, explicit-size images work,
 flow's exact wrapping/alignment contract passes its milestone, and the commit is
 reviewed.
 
-### P003-11 [NEXT] — Flexbox subset
+### P003-11 [DONE] — Flexbox subset
 
 Done when every accepted Flex behavior matches literal and hidden-DOM oracle
 fixtures, every deferred behavior is rejected rather than approximated, public
 integration/type checks pass, and the commit is reviewed.
 
-### P003-12 [TODO] — Explicit Grid subset
+### P003-12 [DONE] — Explicit Grid subset
 
 Done when accepted track, `<1fr`, placement, span, overlap, gap, and alignment
 behavior matches literal and hidden-DOM oracle fixtures, deferred behavior is
 rejected, the algorithm milestone passes, and the commit is reviewed.
 
-### P003-13 [TODO] — Public examples and integration
+### P003-13 [NEXT] — Public examples and integration
 
 Done when four learner routes and the exhaustive nested public scenario are
 type-clean, mountable/disposable, resize and preserve identity correctly, Studio
@@ -306,6 +306,18 @@ is clean, and this plan has no active marker.
   tests with 2 skips across 37 files, and the packed consumer passed Bundler,
   NodeNext, runtime, and no-source checks. P003-05 and P003-06 are done; P003-07
   is the sole next step. See
+  [`p003-style-layout.md`](../testing/field-notes/p003-style-layout.md).
+- **2026-08-18 — P003-11 and P003-12 CSS algorithm phase complete.** Added the
+  approved CSS-compatible Flex and explicit Grid subsets with hand-derived
+  fixtures and independent Chromium DOM oracles. Flex includes the accepted
+  grow/shrink, wrapping, gap, alignment, and restricted intrinsic matrix; Grid
+  includes fixed, percentage, fractional, span, overlap, gap, and alignment
+  behavior without implicit placement or tracks. Task 11's adversarial review
+  is clean. Task 12 focused GREEN is 21/21 after review regressions. The planned
+  algorithm milestone
+  passed 126 tests across 13 files, workspace typecheck exited 0, and structural
+  performance passed 3 tests with 2 controlled timing cases skipped. P003-11
+  and P003-12 are done; P003-13 is the sole next step. See
   [`p003-style-layout.md`](../testing/field-notes/p003-style-layout.md).
 - **2026-08-18 — P003-07 through P003-10 layout foundation complete.** Added
   finite length/box resolution, allocation-aware resolved styles, stable local

@@ -699,3 +699,49 @@ lifecycle passed 2 files and 9 tests; structural performance passed 1 file and
 3 tests with the 2 controlled wall-clock cases skipped by default. Aggregate
 `trust` was intentionally not run at this milestone. P003-07 through P003-10
 are done; P003-11 is the sole next step.
+
+## 2026-08-18 — P003-11 and P003-12 CSS layout algorithms
+
+- P003-11 added the public CSS-compatible Flex subset. Its pure algorithm covers
+  row/column, nowrap/wrap, iterative grow/shrink freezing, numeric gaps, main and
+  cross alignment, and explicit min/max constraints. Reverse/reordered behavior,
+  baseline, auto margins, percentage gaps, and allocation-dependent intrinsic
+  cases reject with diagnostics instead of approximating CSS. Hand-derived and
+  Chromium-oracle evidence passed 3 files and 30 tests, workspace typecheck was
+  clean, and the final adversarial review accepted commit `6c341bb`.
+- P003-12 added public `grid`, `GridStyle`, `GridTrack`, and `GridItemStyle` for
+  the explicit-only Grid subset. Tracks parse exact finite numeric, decimal
+  percentage, and decimal `fr` values; fractional free space uses
+  `remaining / max(1, totalFr)` after fixed tracks, percentages, and gaps.
+  Explicit one-based placement, spans, source-order overlap, container/item
+  alignment, clipping, stable identity, normalize-once placement, and used-size
+  rendering share the existing layout foundation. Implicit placement/tracks and
+  advanced CSS track syntax reject with contextual diagnostics.
+
+### Task 12 RED and focused GREEN
+
+RED failed at the absent Grid module and public export boundary. Focused GREEN:
+
+```sh
+node /Users/benlesh/.cache/node/corepack/v1/pnpm/11.21.0/bin/pnpm.mjs exec vitest run src/lib/layout/grid.test.ts test/grid-css-compatibility.test.ts test/layout-foundation.test.ts --browser.headless --browser.ui=false
+```
+
+Result after review regressions: exit 0; 3 files and 21 tests passed. The added
+cases cover public percentage/fractional dispatch, validation on definite
+measurement paths, and independent start/span diagnostics.
+
+### Planned CSS algorithm milestone
+
+Environment: Node v26.7.0, pnpm 11.21.0, Playwright 1.62.1 Chromium.
+
+```sh
+node /Users/benlesh/.cache/node/corepack/v1/pnpm/11.21.0/bin/pnpm.mjs exec vitest run packages/core/src/lib/layout packages/core/test/flex-css-compatibility.test.ts packages/core/test/grid-css-compatibility.test.ts packages/core/test/layout-foundation.test.ts packages/core/test/geometry-composition.test.ts packages/core/test/interaction-dispatch.test.ts --browser.headless --browser.ui=false
+node /Users/benlesh/.cache/node/corepack/v1/pnpm/11.21.0/bin/pnpm.mjs typecheck
+node /Users/benlesh/.cache/node/corepack/v1/pnpm/11.21.0/bin/pnpm.mjs test:performance
+```
+
+Results: the layout/oracle/scenario/geometry/interaction milestone passed 13
+files and 126 tests; typecheck exited 0; structural performance passed 1 file
+and 3 tests with the 2 controlled wall-clock cases skipped by default.
+Aggregate `trust` was intentionally not run at this milestone. P003-11 and
+P003-12 are done; P003-13 is the sole next step.

@@ -44,6 +44,12 @@ export {
   type FlexProps,
   type FlexStyle,
 } from './lib/layout/flex.js';
+export {
+  grid,
+  type GridProps,
+  type GridStyle,
+  type GridTrack,
+} from './lib/layout/grid.js';
 export { measureElement } from './lib/layout/measure.js';
 
 export { defineComp } from './lib/define-comp.js';
@@ -52,6 +58,7 @@ export type {
   CursorStyle,
   EdgeValues,
   FlexItemStyle,
+  GridItemStyle,
   ImgStyle,
   LayoutItemStyle,
   Length,

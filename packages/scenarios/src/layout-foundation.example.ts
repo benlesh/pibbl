@@ -3,6 +3,7 @@ import {
   crc,
   flex,
   flow,
+  grid,
   overlay,
   rect,
   text,
@@ -14,6 +15,7 @@ export interface LayoutFoundationState {
   topClicks: number;
   flowClicks: number;
   flexClicks: number;
+  gridClicks: number;
 }
 
 export interface LayoutFoundationMount {
@@ -30,6 +32,7 @@ export function mountLayoutFoundation(
     topClicks: 0,
     flowClicks: 0,
     flexClicks: 0,
+    gridClicks: 0,
   };
   const createScene = () => absolute({
     style: { width: '100%', height: '100%' },
@@ -65,28 +68,68 @@ export function mountLayoutFoundation(
         ],
       }),
       flex({
-        style: { width: 100, height: 20 },
+        style: { width: 180, height: 20 },
         children: [
           rect({
             style: {
-              width: 50,
+              width: 90,
               height: 20,
               minWidth: 0,
-              flexBasis: 50,
+              flexBasis: 90,
               flexShrink: 0,
               fill: '#dc2626',
             },
           }),
           rect({
             style: {
-              width: 50,
+              width: 90,
               height: 20,
               minWidth: 0,
-              flexBasis: 50,
+              flexBasis: 90,
               flexShrink: 0,
               fill: '#7c3aed',
             },
             onClick: () => state.flexClicks++,
+          }),
+        ],
+      }),
+      grid({
+        style: {
+          width: 150,
+          height: 20,
+          gridTemplateColumns: [50, '1fr', 50],
+          gridTemplateRows: [20],
+        },
+        children: [
+          rect({
+            style: {
+              width: 'auto',
+              height: 'auto',
+              gridColumnStart: 1,
+              gridRowStart: 1,
+              fill: '#0e7490',
+            },
+            onClick: () => state.gridClicks++,
+          }),
+          rect({
+            style: {
+              width: 'auto',
+              height: 'auto',
+              gridColumnStart: 2,
+              gridRowStart: 1,
+              fill: '#0891b2',
+            },
+            onClick: () => state.gridClicks++,
+          }),
+          rect({
+            style: {
+              width: 'auto',
+              height: 'auto',
+              gridColumnStart: 3,
+              gridRowStart: 1,
+              fill: '#0e7490',
+            },
+            onClick: () => state.gridClicks++,
           }),
         ],
       }),

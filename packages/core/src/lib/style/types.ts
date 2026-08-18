@@ -56,6 +56,15 @@ export type FlexItemStyle = Pick<
   alignSelf?: 'auto' | 'stretch' | 'flex-start' | 'flex-end' | 'center';
 };
 
+export interface GridItemStyle extends SystemStyle {
+  gridColumnStart?: number;
+  gridColumnSpan?: number;
+  gridRowStart?: number;
+  gridRowSpan?: number;
+  alignSelf?: 'auto' | 'stretch' | 'start' | 'center' | 'end';
+  justifySelf?: 'auto' | 'stretch' | 'start' | 'center' | 'end';
+}
+
 type LayoutParticipationKey = Exclude<
   keyof BoxStyle | keyof LayoutItemStyle,
   'custom'
