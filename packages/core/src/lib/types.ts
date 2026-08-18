@@ -1,5 +1,5 @@
 import type { Teardowns } from './teardowns.js';
-import type { Constraints, LayoutBox } from './layout/types.js';
+import type { Constraints, LayoutBox, Size } from './layout/types.js';
 
 export interface SystemStyle {
   custom?: unknown;
@@ -64,16 +64,42 @@ export interface StyleResolutionContext {
   algorithm: 'render-dispatch';
 }
 
+export interface CanvasMeasurementService {
+  measureText(text: string, font: string): TextMetrics;
+}
+
+export type MeasureResult =
+  | { status: 'measured'; size: Readonly<Size> }
+  | { status: 'unsupported'; reason: string };
+
+export interface MeasureInput<
+  P,
+  S extends SystemStyle = SystemStyle,
+> {
+  props: Readonly<P>;
+  style: NormalizedStyle<S>;
+  constraints: Readonly<Constraints>;
+  service: CanvasMeasurementService;
+  measureElement(
+    element: CompEl<any, any>,
+    constraints: Readonly<Constraints>,
+  ): MeasureResult;
+}
+
 export interface ComponentCapabilities<
   S extends SystemStyle,
   N extends SystemStyle = S,
   R extends SystemStyle = N,
+  P = unknown,
 > {
   normalizeStyle?: (style: SpecifiedStyle<S>) => NormalizedStyle<N>;
   resolveStyle?: (
     style: NormalizedStyle<N>,
     context: Readonly<StyleResolutionContext>,
   ) => ResolvedStyle<R>;
+  measure?: (
+    input: MeasureInput<ProgramProps<P>, N>,
+  ) => MeasureResult;
 }
 
 export type CompFn<
@@ -85,7 +111,7 @@ export type CompFn<
   props: ProgramProps<P>,
   style: ResolvedStyle<R>,
   ctx: RenderingContext2D,
-) => CRCNode[] | CRCNode | void) & Readonly<ComponentCapabilities<S, N, R>>;
+) => CRCNode[] | CRCNode | void) & Readonly<ComponentCapabilities<S, N, R, P>>;
 
 export interface InternalIdentityHint {
   type: CompFn<any, any, any, any>;

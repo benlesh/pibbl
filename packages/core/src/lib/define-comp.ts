@@ -15,15 +15,16 @@ type RequiresResolver<S> = [
   Extract<DeclaredStyleValue<S>, AllocationValue>,
 ] extends [never] ? false : true;
 type CapabilityArguments<
+  P,
   S extends SystemStyle,
   N extends SystemStyle,
   R extends SystemStyle,
 > = RequiresResolver<R> extends true ? [capabilities: never] :
   RequiresResolver<S> extends true ? [
-    capabilities: Readonly<ComponentCapabilities<S, N, R>> & {
-      resolveStyle: NonNullable<ComponentCapabilities<S, N, R>['resolveStyle']>;
+    capabilities: Readonly<ComponentCapabilities<S, N, R, P>> & {
+      resolveStyle: NonNullable<ComponentCapabilities<S, N, R, P>['resolveStyle']>;
     },
-  ] : [capabilities?: Readonly<ComponentCapabilities<S, N, R>>];
+  ] : [capabilities?: Readonly<ComponentCapabilities<S, N, R, P>>];
 
 /**
  * Used to convert a component render function to a function that will return a component element.
@@ -40,7 +41,7 @@ export function defineComp<
   compFn: CompFn<P, S, N, R> & (
     ComponentInput<P, S> extends never ? never : unknown
   ),
-  ...capabilityArguments: CapabilityArguments<S, N, R>
+  ...capabilityArguments: CapabilityArguments<P, S, N, R>
 ): (input: ComponentInput<P, S>) => CompEl<P, S, N, R> {
   const capabilities = capabilityArguments[0] ?? {};
   if (capabilities.normalizeStyle) {
@@ -56,6 +57,14 @@ export function defineComp<
       configurable: false,
       enumerable: false,
       value: capabilities.resolveStyle,
+      writable: false,
+    });
+  }
+  if (capabilities.measure) {
+    Object.defineProperty(compFn, 'measure', {
+      configurable: false,
+      enumerable: false,
+      value: capabilities.measure,
       writable: false,
     });
   }

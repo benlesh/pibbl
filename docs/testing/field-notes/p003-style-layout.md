@@ -643,3 +643,59 @@ Results: typecheck and full ESLint exited 0. Browser mode passed 37 files and 31
 tests with 2 skips. The packed `@crc/core` consumer passed Bundler, NodeNext,
 runtime, and no-source checks. Aggregate `trust` was intentionally not run at
 this milestone. P003-05 and P003-06 are done; P003-07 is the sole next step.
+
+## 2026-08-18 — P003-07 through P003-10 layout-foundation phase
+
+### Delivered contracts
+
+- P003-07 added finite numbers, decimal percentages, `auto`, constraints,
+  normalized numeric edges, content-box resolution, min/max validation, and
+  contextual overflow-safe diagnostics. The final Task 7 review was clean.
+- P003-08 added specified/normalized/resolved style capabilities, intrinsic-root
+  and nested containing contexts, stable placement identity hints,
+  `crcLayoutBox`, and finite dispatch before Canvas callbacks. Review fixes
+  covered percentage basis, line endpoint vocabulary, and conservative resolved
+  schema/runtime validation; the final review was clean.
+- P003-09 added public absolute and overlay contexts with normalized direct-child
+  inspection, unkeyed-only occurrence counting, source-order placement,
+  mathematical alignment, and shared paint/interaction overflow clips. The
+  final review was clean.
+- P003-10 added non-enumerable pure measurement capabilities, isolated and
+  cycle-safe recursive `measureElement`, shared text measurement, explicit-only
+  image measurement, and CRC-native horizontal/vertical flow with finite
+  wrapping, gaps, line sizing, alignment, definite-box bypass, recursive nested
+  measurement, and exactly-once required measurement. Measurement reports
+  intrinsic content size; auto measured sizes are reused by placement and render
+  through a one-shot internal normalized-style seam. The shared layout-foundation scenario now
+  includes measurable text plus resize-sensitive flow paint and interaction.
+
+### Task 10 RED and focused GREEN
+
+RED failed because the measurement/flow modules, public exports, and component
+measurement capability did not exist; workspace typecheck reported the same
+missing surface.
+
+Focused GREEN:
+
+```sh
+node /Users/benlesh/.cache/node/corepack/v1/pnpm/11.21.0/bin/pnpm.mjs exec vitest run packages/core/src/lib/layout/measure.test.ts packages/core/src/lib/layout/flow.test.ts packages/core/test/layout-foundation.test.ts --browser.headless --browser.ui=false
+```
+
+Result: exit 0; 3 files and 13 tests passed.
+
+### Planned layout-foundation milestone
+
+Environment: Node v26.7.0, pnpm 11.21.0, Playwright 1.62.1 Chromium.
+
+```sh
+node /Users/benlesh/.cache/node/corepack/v1/pnpm/11.21.0/bin/pnpm.mjs exec vitest run packages/core/src/lib/layout packages/core/test/layout-foundation.test.ts --browser.headless --browser.ui=false
+node /Users/benlesh/.cache/node/corepack/v1/pnpm/11.21.0/bin/pnpm.mjs typecheck
+node /Users/benlesh/.cache/node/corepack/v1/pnpm/11.21.0/bin/pnpm.mjs test:lifecycle
+node /Users/benlesh/.cache/node/corepack/v1/pnpm/11.21.0/bin/pnpm.mjs test:performance
+```
+
+Results: layout/scenario passed 7 files and 62 tests; typecheck exited 0;
+lifecycle passed 2 files and 9 tests; structural performance passed 1 file and
+3 tests with the 2 controlled wall-clock cases skipped by default. Aggregate
+`trust` was intentionally not run at this milestone. P003-07 through P003-10
+are done; P003-11 is the sole next step.

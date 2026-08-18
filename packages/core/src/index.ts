@@ -34,6 +34,12 @@ export {
   type OverlayProps,
   type OverlayStyle,
 } from './lib/layout/overlay.js';
+export {
+  flow,
+  type FlowProps,
+  type FlowStyle,
+} from './lib/layout/flow.js';
+export { measureElement } from './lib/layout/measure.js';
 
 export { defineComp } from './lib/define-comp.js';
 export type {
@@ -80,6 +86,7 @@ export { crcSvgPath } from './lib/hooks/crc-svg-path.js';
 export { crcWhenChanged } from './lib/hooks/crc-when-changed.js';
 export type {
   Canvas,
+  CanvasMeasurementService,
   CompEl,
   CompFn,
   ComponentCapabilities,
@@ -89,6 +96,8 @@ export type {
   CRCMouseEventListener,
   CRCNode,
   FillStyle,
+  MeasureInput,
+  MeasureResult,
   PixelGridAlignment,
   NormalizedStyle,
   RenderingContext2D,

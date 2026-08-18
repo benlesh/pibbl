@@ -4,8 +4,10 @@ import { crcState } from '../hooks/crc-state.js';
 import { crcWhenChanged } from '../hooks/crc-when-changed.js';
 import {
   CRCBasicMouseEvents,
+  MeasureResult,
   RenderingContext2D,
 } from '../types.js';
+import { resolveLength } from '../style/resolve-length.js';
 import {
   resolveLocalOffset,
   resolveOptionalLength,
@@ -133,5 +135,38 @@ export const img = defineComp<
       context,
     ),
   }) as ResolvedImgStyle,
+  measure: ({ style, constraints }): MeasureResult => {
+    if (
+      style.width === undefined || style.width === 'auto' ||
+      style.height === undefined || style.height === 'auto'
+    ) {
+      return {
+        status: 'unsupported',
+        reason: 'Image natural dimensions are unavailable during pure measurement',
+      };
+    }
+    const context = {
+      component: 'Img',
+      algorithm: 'measurement',
+      constraints,
+    };
+    return {
+      status: 'measured',
+      size: {
+        width: resolveLength(
+          style.width,
+          constraints.maxWidth,
+          'width',
+          context,
+        )!,
+        height: resolveLength(
+          style.height,
+          constraints.maxHeight,
+          'height',
+          context,
+        )!,
+      },
+    };
+  },
 });
 registerOpaqueStyleProperties(Img, ['src', 'stroke', 'cursor']);

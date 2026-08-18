@@ -8,6 +8,28 @@ import type {
 import { layoutDiagnostic } from './diagnostics.js';
 
 const opaqueStyleProperties = new WeakMap<Function, ReadonlySet<string>>();
+const preNormalizedStyles = new WeakMap<
+  CompEl<any, any>,
+  { style: Readonly<SystemStyle>; source: CompEl<any, any> }
+>();
+
+/** @internal Carries one normalized style through an internal placement descriptor. */
+export function setPreNormalizedStyle(
+  element: CompEl<any, any>,
+  style: Readonly<SystemStyle>,
+  source: CompEl<any, any> = element,
+): void {
+  preNormalizedStyles.set(element, { style, source });
+}
+
+/** @internal Consumes an internal normalized-style override exactly once. */
+export function takePreNormalizedStyle(
+  element: CompEl<any, any>,
+): { style: Readonly<SystemStyle>; source: CompEl<any, any> } | undefined {
+  const value = preNormalizedStyles.get(element);
+  preNormalizedStyles.delete(element);
+  return value;
+}
 
 /** @internal Registers strings that are data, paint, or enums, not allocation syntax. */
 export function registerOpaqueStyleProperties(
@@ -38,9 +60,12 @@ export function resolveElementStyle<
     component,
     algorithm: 'render-dispatch',
   };
-  const normalized = type.normalizeStyle ?
-      type.normalizeStyle(element.style) :
-      element.style as unknown as Readonly<N>;
+  const preNormalized = takePreNormalizedStyle(element);
+  const normalized = preNormalized ?
+      preNormalized.style as Readonly<N> :
+    type.normalizeStyle ?
+        type.normalizeStyle(element.style) :
+        element.style as unknown as Readonly<N>;
   const resolved = type.resolveStyle ?
       type.resolveStyle(normalized, context) :
       normalized as unknown as ResolvedStyle<R>;

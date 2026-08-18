@@ -67,11 +67,11 @@ review before the next task begins.
 | P003-04 | Done        | Text style and shared text layout.                              |
 | P003-05 | Done        | Image style migration.                                          |
 | P003-06 | Done        | Group, clip, layer, and style-only closure.                     |
-| P003-07 | Next        | Length, constraint, box, and item capabilities.                 |
-| P003-08 | Queued      | Style resolution, layout context, placement, and observation.   |
-| P003-09 | Queued      | Absolute and overlay layout.                                    |
-| P003-10 | Queued      | Pure measurement and CRC-native flow.                           |
-| P003-11 | Queued      | CSS-compatible Flexbox subset.                                  |
+| P003-07 | Done        | Length, constraint, box, and item capabilities.                 |
+| P003-08 | Done        | Style resolution, layout context, placement, and observation.   |
+| P003-09 | Done        | Absolute and overlay layout.                                    |
+| P003-10 | Done        | Pure measurement and CRC-native flow.                           |
+| P003-11 | Next        | CSS-compatible Flexbox subset.                                  |
 | P003-12 | Queued      | CSS-compatible explicit Grid subset.                            |
 | P003-13 | Queued      | Learning examples, nested scenario, and Studio/public types.    |
 | P003-14 | Queued      | Composition, diagnostics, ownership, and performance hardening. |
@@ -121,33 +121,33 @@ style-driven, layer comparison includes type/key/props/style, all legacy visual
 mixins are removed, the style-migration milestone passes, and the commit is
 reviewed.
 
-### P003-07 [NEXT] — Lengths, constraints, and boxes
+### P003-07 [DONE] — Lengths, constraints, and boxes
 
 Done when exact public value/box/item types and pure resolvers implement the
 locked content-box and diagnostic policies, root and boundary fixtures pass, and
 the commit is reviewed.
 
-### P003-08 [TODO] — Resolution, context, and stable placement
+### P003-08 [DONE] — Resolution, context, and stable placement
 
 Done when callbacks receive finite resolved style, root/nested/layer contexts
 restore on success/failure, placement preserves keyed and unkeyed identity,
 pixels/hit testing share transform/clip geometry, `crcLayoutBox` is local and
 stable, lifecycle checks pass, and the commit is reviewed.
 
-### P003-09 [TODO] — Absolute and overlay
+### P003-09 [DONE] — Absolute and overlay
 
 Done when both pure algorithms and public components satisfy declared/default,
 oversized-center, overflow, paint/target, resize, and nested behavior; focused
 public evidence passes; and the commit is reviewed.
 
-### P003-10 [TODO] — Measurement and flow
+### P003-10 [DONE] — Measurement and flow
 
 Done when measurement never invokes render or owns resources, unsupported size
 is typed/actionable, text/custom/nested cases work, explicit-size images work,
 flow's exact wrapping/alignment contract passes its milestone, and the commit is
 reviewed.
 
-### P003-11 [TODO] — Flexbox subset
+### P003-11 [NEXT] — Flexbox subset
 
 Done when every accepted Flex behavior matches literal and hidden-DOM oracle
 fixtures, every deferred behavior is rejected rather than approximated, public
@@ -306,4 +306,15 @@ is clean, and this plan has no active marker.
   tests with 2 skips across 37 files, and the packed consumer passed Bundler,
   NodeNext, runtime, and no-source checks. P003-05 and P003-06 are done; P003-07
   is the sole next step. See
+  [`p003-style-layout.md`](../testing/field-notes/p003-style-layout.md).
+- **2026-08-18 — P003-07 through P003-10 layout foundation complete.** Added
+  finite length/box resolution, allocation-aware resolved styles, stable local
+  placement and observation, public absolute/overlay contexts, pure opt-in
+  measurement, and CRC-native flow without a retained display list or
+  speculative render. Adversarial reviews for Tasks 7-9 are clean; Task 10's
+  implementation and batched phase evidence form its review unit. The planned
+  milestone passed 62 layout/scenario tests across 7 files, clean typecheck,
+  9 lifecycle tests across 2 files, and 3 structural performance tests with 2
+  controlled timing cases skipped. P003-07 through P003-10 are done; P003-11 is
+  the sole next step. See
   [`p003-style-layout.md`](../testing/field-notes/p003-style-layout.md).

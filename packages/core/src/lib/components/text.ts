@@ -7,9 +7,13 @@ import {
 import { registerOpaqueStyleProperties } from '../style/resolve-dispatch.js';
 import type { ResolvedTextStyle, TextStyle } from '../style/types.js';
 import {
+  CanvasMeasurementService,
   CRCBasicMouseEvents,
+  MeasureResult,
   RenderingContext2D,
 } from '../types.js';
+import type { Constraints } from '../layout/types.js';
+import { resolveLength } from '../style/resolve-length.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 import { pushClippingPath } from '../util/push-clipping-path.js';
 import { resolveTextClipBounds, resolveTextLayout } from './text-layout.js';
@@ -126,6 +130,8 @@ export const text = defineComp<
       context,
     ),
   }) as ResolvedTextStyle,
+  measure: ({ style, constraints, service }) =>
+    measureTextStyle(style, constraints, service),
 });
 registerOpaqueStyleProperties(Text, [
   'text',
@@ -137,3 +143,46 @@ registerOpaqueStyleProperties(Text, [
   'textBaseline',
   'textAlign',
 ]);
+
+function measureTextStyle(
+  style: Readonly<TextStyle>,
+  constraints: Readonly<Constraints>,
+  service: CanvasMeasurementService,
+): MeasureResult {
+  const context = {
+    component: 'Text',
+    algorithm: 'measurement',
+    constraints,
+  };
+  const specifiedWidth = style.width === undefined ? undefined :
+    resolveLength(style.width, constraints.maxWidth, 'width', context);
+  const specifiedHeight = style.height === undefined ? undefined :
+    resolveLength(style.height, constraints.maxHeight, 'height', context);
+  const layoutWidth = specifiedWidth ?? (
+    style.wrap && Number.isFinite(constraints.maxWidth) ?
+      constraints.maxWidth :
+      undefined
+  );
+  const font = style.font ?? '13px sans-serif';
+  const layout = resolveTextLayout(
+    value => service.measureText(value, font),
+    {
+      ...style,
+      x: 0,
+      y: 0,
+      width: layoutWidth,
+      height: specifiedHeight,
+    },
+  );
+  return {
+    status: 'measured',
+    size: {
+      width: specifiedWidth ?? (style.wrap && layoutWidth !== undefined ?
+        layoutWidth :
+        layout.bounds?.width ?? 0),
+      height: specifiedHeight ?? (style.wrap ?
+        layout.lines.length * (style.lineHeight ?? 13) :
+        layout.bounds?.height ?? 0),
+    },
+  };
+}

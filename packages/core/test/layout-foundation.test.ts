@@ -21,17 +21,30 @@ describe('layout foundation public scenario', () => {
     await nextFrame();
 
     expect(pixelAt(canvas, 120, 50)).toEqual([249, 115, 22, 255]);
+    expect(pixelAt(canvas, 60, 10)).toEqual([22, 163, 74, 255]);
+    expect(pixelAt(canvas, 90, 10)).toEqual([37, 99, 235, 255]);
+    await userEvent.click(canvas, { position: { x: 60, y: 10 } });
     await userEvent.click(canvas, { position: { x: 120, y: 50 } });
     await nextFrame();
-    expect(mounted.getState()).toEqual({ bottomClicks: 0, topClicks: 1 });
+    expect(mounted.getState()).toEqual({
+      bottomClicks: 0,
+      topClicks: 1,
+      flowClicks: 1,
+    });
 
     mounted.resize(400, 160);
     await nextFrame();
     expect(pixelAt(canvas, 90, 50)).toEqual([37, 99, 235, 255]);
     expect(pixelAt(canvas, 160, 50)).toEqual([249, 115, 22, 255]);
+    expect(pixelAt(canvas, 90, 10)).toEqual([22, 163, 74, 255]);
+    await userEvent.click(canvas, { position: { x: 90, y: 10 } });
     await userEvent.click(canvas, { position: { x: 160, y: 50 } });
     await nextFrame();
-    expect(mounted.getState()).toEqual({ bottomClicks: 0, topClicks: 2 });
+    expect(mounted.getState()).toEqual({
+      bottomClicks: 0,
+      topClicks: 2,
+      flowClicks: 2,
+    });
   });
 });
 

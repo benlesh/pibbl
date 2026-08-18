@@ -139,7 +139,10 @@ export function normalizeDirectChildStyle(
 export function placeDirectChildren(
   children: readonly CRCNode[],
   contentBox: Readonly<LayoutBox>,
-  place: (child: CompEl<any, any>) => LayoutBox,
+  place: (child: CompEl<any, any>) => LayoutBox | {
+    box: LayoutBox;
+    element: CompEl<any, any>;
+  },
   overflow: 'visible' | 'clip',
 ): CompEl<any, any>[] {
   const occurrences = new Map<Function, number>();
@@ -153,9 +156,11 @@ export function placeDirectChildren(
     if (child.key === undefined) {
       occurrences.set(child.type, occurrence + 1);
     }
-    const box = place(child);
+    const placement = place(child);
+    const box = 'box' in placement ? placement.box : placement;
+    const element = 'box' in placement ? placement.element : child;
     placed.push(placeChild({
-      element: child,
+      element,
       box,
       clipInChildSpace: overflow === 'clip' ? {
         x: contentBox.x - box.x,
