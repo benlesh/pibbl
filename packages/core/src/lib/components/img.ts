@@ -4,16 +4,13 @@ import { crcState } from '../hooks/crc-state.js';
 import { crcWhenChanged } from '../hooks/crc-when-changed.js';
 import {
   CRCBasicMouseEvents,
-  IntrinsicProps,
   RenderingContext2D,
 } from '../types.js';
 import type { ImgStyle } from '../style/types.js';
 import { adjustRectangleToPixelGrid } from '../util/pixel-grid-adjustments.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 
-export interface ImgProps
-  extends IntrinsicProps,
-  CRCBasicMouseEvents {}
+export interface ImgProps extends CRCBasicMouseEvents {}
 
 interface LoadedImage {
   src: string;

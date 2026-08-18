@@ -157,25 +157,6 @@ export interface CRCBasicMouseEvents {
 export type FillStyle = CanvasRenderingContext2D['fillStyle'];
 export type StrokeStyle = CanvasRenderingContext2D['strokeStyle'];
 
-export interface IntrinsicProps {}
-
-export interface AlphaProps {
-  alpha?: number;
-}
-
-export interface StrokeStyleProps {
-  strokeStyle?: StrokeStyle;
-  lineWidth?: number;
-}
-
-export interface FillStyleProps {
-  fillStyle?: FillStyle;
-}
-
-export interface CursorStyleProps {
-  cursor?: string;
-}
-
 export interface CRCInstance {
   canvas: Canvas;
   controller: CRCController;

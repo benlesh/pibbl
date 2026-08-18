@@ -78,30 +78,28 @@ function caseVisual(
     case 'nested-child':
       return [
         g({
+          style: {
+            translateX: 90,
+            translateY: 30
+          },
           key: 'translated-group',
-          x: 90,
-          y: 30,
-          children: [
-            rect({
-              style: {
-                x: 42,
-                y: 45,
-                width: 190,
-                height: 120,
-                fill: '#dbeafe',
-              },
-            }),
-            region('child', 70, 70, 100, 72, '#2563eb'),
-            text({
-              style: {
-                x: 84,
-                y: 100,
-                text: 'child',
-                font: '700 15px Arial',
-                fill: '#fff',
-              },
-            }),
-          ],
+          children: [rect({
+            style: {
+              x: 42,
+              y: 45,
+              width: 190,
+              height: 120,
+              fill: '#dbeafe'
+            }
+          }), region('child', 70, 70, 100, 72, '#2563eb'), text({
+            style: {
+              x: 84,
+              y: 100,
+              text: 'child',
+              font: '700 15px Arial',
+              fill: '#fff'
+            }
+          })]
         }),
       ];
     case 'clip-intersection-miss': {
@@ -111,13 +109,15 @@ function caseVisual(
       innerClip.rect(178, 94, 92, 76);
       return [
         clip({
-          path: outerClip,
-          children: [
-            clip({
-              path: innerClip,
-              children: [region('a', 132, 62, 220, 138, '#2563eb')],
-            }),
-          ],
+          style: {
+            d: outerClip
+          },
+          children: [clip({
+            style: {
+              d: innerClip
+            },
+            children: [region('a', 132, 62, 220, 138, '#2563eb')]
+          })]
         }),
         text({
           style: {
@@ -133,12 +133,14 @@ function caseVisual(
     case 'transformed-hit':
       return [
         g({
+          style: {
+            scaleX: 1.2,
+            scaleY: 1.1,
+            translateX: 180,
+            translateY: 20
+          },
           key: 'scaled-translated-group',
-          scaleX: 1.2,
-          scaleY: 1.1,
-          x: 180,
-          y: 20,
-          children: [region('a', 60, 80, 104, 60, '#2563eb')],
+          children: [region('a', 60, 80, 104, 60, '#2563eb')]
         }),
         text({
           style: {

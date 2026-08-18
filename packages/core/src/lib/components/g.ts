@@ -1,54 +1,52 @@
 import { defineComp } from '../define-comp.js';
-import {
-  CRCNode,
-  IntrinsicProps,
-  RenderingContext2D,
-  SystemStyle,
-} from '../types.js';
+import { CRCNode, RenderingContext2D, SystemStyle } from '../types.js';
 
-export interface GProps extends IntrinsicProps {
+export interface GProps {
   children: CRCNode[];
+}
+
+export interface GStyle extends SystemStyle {
   scaleX?: number;
   scaleY?: number;
   /** Clockwise rotation in degrees. */
-  rotate?: number;
-  rotateOrigin?: [number, number];
-  x?: number;
-  y?: number;
+  rotationDegrees?: number;
+  rotationOrigin?: [number, number];
+  translateX?: number;
+  translateY?: number;
   /** Horizontal skew angle in degrees. */
   skewX?: number;
   /** Vertical skew angle in degrees. */
   skewY?: number;
 }
 
-function G(props: GProps, _style: SystemStyle, ctx: RenderingContext2D) {
+function G(props: GProps, style: Readonly<GStyle>, ctx: RenderingContext2D) {
   let transform = ctx.getTransform();
 
-  const { scaleX = 1, scaleY = 1 } = props;
+  const { scaleX = 1, scaleY = 1 } = style;
   if (scaleX !== 1 || scaleY !== 1) {
     transform = transform.scale(scaleX, scaleY);
   }
 
-  const { rotate } = props;
-  if (rotate) {
-    const [rox, roy] = props.rotateOrigin ?? [0, 0];
+  const { rotationDegrees } = style;
+  if (rotationDegrees) {
+    const [rox, roy] = style.rotationOrigin ?? [0, 0];
     transform = transform
       .translate(rox, roy)
-      .rotate(rotate)
+      .rotate(rotationDegrees)
       .translate(-rox, -roy);
   }
 
-  const { x = 0, y = 0 } = props;
-  if (x !== 0 || y !== 0) {
-    transform = transform.translate(x, y);
+  const { translateX = 0, translateY = 0 } = style;
+  if (translateX !== 0 || translateY !== 0) {
+    transform = transform.translate(translateX, translateY);
   }
 
-  const { skewX } = props;
+  const { skewX } = style;
   if (skewX) {
     transform = transform.skewX(skewX);
   }
 
-  const { skewY } = props;
+  const { skewY } = style;
   if (skewY) {
     transform = transform.skewY(skewY);
   }

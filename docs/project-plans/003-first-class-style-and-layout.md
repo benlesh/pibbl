@@ -65,9 +65,9 @@ review before the next task begins.
 | P003-02 | Done        | Path, rectangle, and SVG path style migration.                  |
 | P003-03 | Done        | Line-family style migration.                                    |
 | P003-04 | Done        | Text style and shared text layout.                              |
-| P003-05 | In progress | Image style migration.                                          |
-| P003-06 | Queued      | Group, clip, layer, and style-only closure.                     |
-| P003-07 | Queued      | Length, constraint, box, and item capabilities.                 |
+| P003-05 | Done        | Image style migration.                                          |
+| P003-06 | Done        | Group, clip, layer, and style-only closure.                     |
+| P003-07 | Next        | Length, constraint, box, and item capabilities.                 |
 | P003-08 | Queued      | Style resolution, layout context, placement, and observation.   |
 | P003-09 | Queued      | Absolute and overlay layout.                                    |
 | P003-10 | Queued      | Pure measurement and CRC-native flow.                           |
@@ -108,20 +108,20 @@ Done when text uses `width`/`height`/`wrap`/CRC-native `fit`, painting and pure
 measurement share literal line layout, existing text/hit behavior is preserved,
 and the commit is reviewed.
 
-### P003-05 [IN PROGRESS] — Image styles
+### P003-05 [DONE] — Image styles
 
 Done when image source and visual geometry are style-only, existing asynchronous
 ownership/race behavior is preserved, focused checks pass, and the commit is
 reviewed.
 
-### P003-06 [TODO] — Composition style closure
+### P003-06 [DONE] — Composition style closure
 
 Done when group transforms use CRC-native degree names, clip/layer are
 style-driven, layer comparison includes type/key/props/style, all legacy visual
 mixins are removed, the style-migration milestone passes, and the commit is
 reviewed.
 
-### P003-07 [TODO] — Lengths, constraints, and boxes
+### P003-07 [NEXT] — Lengths, constraints, and boxes
 
 Done when exact public value/box/item types and pure resolvers implement the
 locked content-box and diagnostic policies, root and boundary fixtures pass, and
@@ -294,4 +294,16 @@ is clean, and this plan has no active marker.
   tests and clean workspace typecheck; changed-file lint, legacy-call audit, and
   diff hygiene are also clean. P003-05 remains in progress for adversarial
   review, and P003-06 remains TODO. See
+  [`p003-style-layout.md`](../testing/field-notes/p003-style-layout.md).
+- **2026-08-17 — P003-05 and P003-06 style-only phase complete.** Task 5's
+  independent adversarial code review was clean. Task 6 moved group transforms,
+  clipping geometry, and layer dimensions into closed public styles, removed the
+  obsolete visual-prop mixins, migrated all authored callers, and exported the
+  complete style type surface from both public type entrypoints. Focused Task 6
+  RED was 3 failed and 42 passed browser tests plus the expected missing-type
+  errors; focused GREEN is 46/46. The planned style-migration milestone is clean:
+  workspace typecheck and full ESLint exited 0, the browser suite passed 315
+  tests with 2 skips across 37 files, and the packed consumer passed Bundler,
+  NodeNext, runtime, and no-source checks. P003-05 and P003-06 are done; P003-07
+  is the sole next step. See
   [`p003-style-layout.md`](../testing/field-notes/p003-style-layout.md).

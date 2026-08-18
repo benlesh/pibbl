@@ -1,6 +1,6 @@
 // components
-export { clip, type ClipProps } from './lib/components/clip.js';
-export { g, type GProps } from './lib/components/g.js';
+export { clip, type ClipProps, type ClipStyle } from './lib/components/clip.js';
+export { g, type GProps, type GStyle } from './lib/components/g.js';
 export {
   horizontalLine,
   type HorizontalLineProps,
@@ -8,12 +8,12 @@ export {
 } from './lib/components/horizontal-line.js';
 
 export { img, type ImgProps } from './lib/components/img.js';
-export { layer, type LayerProps } from './lib/components/layer.js';
 export {
-  line,
-  type LineProps,
-  type LineStyle,
-} from './lib/components/line.js';
+  layer,
+  type LayerProps,
+  type LayerStyle,
+} from './lib/components/layer.js';
+export { line, type LineProps, type LineStyle } from './lib/components/line.js';
 export { path, type PathProps } from './lib/components/path.js';
 export { rect, type RectProps } from './lib/components/rect.js';
 export { svgPath, type SvgPathProps } from './lib/components/svg-path.js';
@@ -33,6 +33,7 @@ export type {
   PathStyle,
   RectStyle,
   SvgPathStyle,
+  TextFit,
   TextStyle,
 } from './lib/style/types.js';
 // hooks
@@ -53,6 +54,10 @@ export type {
   CRCController,
   CRCMouseEvent,
   CRCMouseEventListener,
+  CRCNode,
+  FillStyle,
+  PixelGridAlignment,
   RenderingContext2D,
+  StrokeStyle,
   SystemStyle,
 } from './lib/types.js';

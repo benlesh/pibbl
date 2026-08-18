@@ -7,20 +7,48 @@ import { rect } from './rect';
 import { text } from './text';
 
 describe('clip', () => {
-  it('treats an empty clip as empty rendering geometry', async () => {
-    const canvas = await componentTest(clip({
-      path: new Path2D(),
+  it('uses style as the sole clipping-path authority', async () => {
+    const styledPath = new Path2D();
+    styledPath.rect(0, 0, 20, 20);
+    const legacyPath = new Path2D();
+    legacyPath.rect(30, 0, 20, 20);
+    const legacyInput = {
+      style: { d: styledPath },
+      path: legacyPath,
       children: [
         rect({
           style: {
             x: 0,
             y: 0,
-            width: 40,
-            height: 40,
+            width: 60,
+            height: 20,
             fill: 'red',
           },
         }),
       ],
+    } as any;
+
+    const canvas = await componentTest(clip(legacyInput));
+    const context = canvas.element.getContext('2d')!;
+
+    expect(context.getImageData(10, 10, 1, 1).data[3]).toBe(255);
+    expect(context.getImageData(40, 10, 1, 1).data[3]).toBe(0);
+  });
+
+  it('treats an empty clip as empty rendering geometry', async () => {
+    const canvas = await componentTest(clip({
+      style: {
+        d: new Path2D()
+      },
+      children: [rect({
+        style: {
+          x: 0,
+          y: 0,
+          width: 40,
+          height: 40,
+          fill: 'red'
+        }
+      })]
     }));
 
     expect(canvas.element.getContext('2d')!.getImageData(20, 20, 1, 1).data[3])
@@ -32,18 +60,18 @@ describe('clip', () => {
     clipPath.rect(50, 50, 100, 100);
 
     await componentTest(clip({
-      path: clipPath,
-      children: [
-        rect({
-          style: {
-            x: 0,
-            y: 0,
-            width: 200,
-            height: 200,
-            fill: 'blue',
-          },
-        }),
-      ],
+      style: {
+        d: clipPath
+      },
+      children: [rect({
+        style: {
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 200,
+          fill: 'blue'
+        }
+      })]
     }));
     await takeScreenshot(page);
   });
@@ -56,19 +84,19 @@ describe('clip', () => {
     clipPath.rect(75, 75, 50, 50);
 
     await componentTest(clip({
-      path: clipPath,
-      fillRule: 'evenodd',
-      children: [
-        rect({
-          style: {
-            x: 0,
-            y: 0,
-            width: 200,
-            height: 200,
-            fill: 'red',
-          },
-        }),
-      ],
+      style: {
+        d: clipPath,
+        fillRule: 'evenodd'
+      },
+      children: [rect({
+        style: {
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 200,
+          fill: 'red'
+        }
+      })]
     }));
     await takeScreenshot(page);
   });
@@ -78,26 +106,25 @@ describe('clip', () => {
     clipPath.arc(100, 100, 50, 0, Math.PI * 2);
 
     await componentTest(clip({
-      path: clipPath,
-      children: [
-        rect({
-          style: {
-            x: 50,
-            y: 50,
-            width: 100,
-            height: 100,
-            fill: 'green',
-          },
-        }),
-        text({
-          style: {
-            x: 75,
-            y: 100,
-            text: 'Clipped Text',
-            fill: 'white',
-          },
-        }),
-      ],
+      style: {
+        d: clipPath
+      },
+      children: [rect({
+        style: {
+          x: 50,
+          y: 50,
+          width: 100,
+          height: 100,
+          fill: 'green'
+        }
+      }), text({
+        style: {
+          x: 75,
+          y: 100,
+          text: 'Clipped Text',
+          fill: 'white'
+        }
+      })]
     }));
     await takeScreenshot(page);
   });
@@ -110,32 +137,31 @@ describe('clip', () => {
     innerClipPath.arc(125, 125, 50, 0, Math.PI * 2);
 
     await componentTest(clip({
-      path: outerClipPath,
-      children: [
-        rect({
+      style: {
+        d: outerClipPath
+      },
+      children: [rect({
+        style: {
+          x: 0,
+          y: 0,
+          width: 250,
+          height: 250,
+          fill: 'purple'
+        }
+      }), clip({
+        style: {
+          d: innerClipPath
+        },
+        children: [rect({
           style: {
             x: 0,
             y: 0,
             width: 250,
             height: 250,
-            fill: 'purple',
-          },
-        }),
-        clip({
-          path: innerClipPath,
-          children: [
-            rect({
-              style: {
-                x: 0,
-                y: 0,
-                width: 250,
-                height: 250,
-                fill: 'orange',
-              },
-            }),
-          ],
-        }),
-      ],
+            fill: 'orange'
+          }
+        })]
+      })]
     }));
     await takeScreenshot(page);
   });
@@ -163,26 +189,25 @@ describe('clip', () => {
     clipPath.closePath();
 
     await componentTest(clip({
-      path: clipPath,
-      children: [
-        rect({
-          style: {
-            x: 0,
-            y: 0,
-            width: 200,
-            height: 200,
-            fill: 'yellow',
-          },
-        }),
-        text({
-          style: {
-            x: 60,
-            y: 100,
-            text: 'Star Clip',
-            fill: 'black',
-          },
-        }),
-      ],
+      style: {
+        d: clipPath
+      },
+      children: [rect({
+        style: {
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 200,
+          fill: 'yellow'
+        }
+      }), text({
+        style: {
+          x: 60,
+          y: 100,
+          text: 'Star Clip',
+          fill: 'black'
+        }
+      })]
     }));
     await takeScreenshot(page);
   });
@@ -195,19 +220,19 @@ describe('clip', () => {
       const onClick = vi.fn();
 
       const canvas = await componentTest(clip({
-        path: clipPath,
-        children: [
-          rect({
-            style: {
-              x: 0,
-              y: 0,
-              width: 200,
-              height: 200,
-              fill: 'goldenrod',
-            },
-            onClick,
-          }),
-        ],
+        style: {
+          d: clipPath
+        },
+        children: [rect({
+          style: {
+            x: 0,
+            y: 0,
+            width: 200,
+            height: 200,
+            fill: 'goldenrod'
+          },
+          onClick
+        })]
       }));
 
       // Click inside the clipped rectangle (should trigger)
@@ -227,21 +252,21 @@ describe('clip', () => {
       const onMouseOver = vi.fn();
 
       const canvas = await componentTest(clip({
-        path: clipPath,
-        fillRule: 'evenodd',
-        children: [
-          rect({
-            style: {
-              x: 0,
-              y: 0,
-              width: 200,
-              height: 200,
-              fill: 'red',
-              cursor: 'pointer',
-            },
-            onMouseOver,
-          }),
-        ],
+        style: {
+          d: clipPath,
+          fillRule: 'evenodd'
+        },
+        children: [rect({
+          style: {
+            x: 0,
+            y: 0,
+            width: 200,
+            height: 200,
+            fill: 'red',
+            cursor: 'pointer'
+          },
+          onMouseOver
+        })]
       }));
 
       // Move to outer rectangle (should trigger)
@@ -268,36 +293,35 @@ describe('clip', () => {
       const onInnerClick = vi.fn();
 
       const canvas = await componentTest(clip({
-        path: outerClipPath,
-        children: [
-          rect({
+        style: {
+          d: outerClipPath
+        },
+        children: [rect({
+          style: {
+            x: 0,
+            y: 0,
+            width: 200,
+            height: 200,
+            fill: 'blue',
+            cursor: 'pointer'
+          },
+          onClick: onOuterClick
+        }), clip({
+          style: {
+            d: innerClipPath
+          },
+          children: [rect({
             style: {
               x: 0,
               y: 0,
               width: 200,
               height: 200,
-              fill: 'blue',
-              cursor: 'pointer',
+              fill: 'green',
+              cursor: 'crosshair'
             },
-            onClick: onOuterClick,
-          }),
-          clip({
-            path: innerClipPath,
-            children: [
-              rect({
-                style: {
-                  x: 0,
-                  y: 0,
-                  width: 200,
-                  height: 200,
-                  fill: 'green',
-                  cursor: 'crosshair',
-                },
-                onClick: onInnerClick,
-              }),
-            ],
-          }),
-        ],
+            onClick: onInnerClick
+          })]
+        })]
       }));
 
       // Click in outer rect but outside circle (should trigger once)

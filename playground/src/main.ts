@@ -306,49 +306,47 @@ const HeroScene = defineComp(function HeroScene(props: {
       },
     }),
     g({
-      x: 76,
-      y: 60,
-      rotate: angle,
-      rotateOrigin: [284, 150],
-      children: [
-        rect({
-          style: {
-            x: 46,
-            y: 22,
-            width: 222,
-            height: 252,
-            fill: '#1f4bd8',
-            cursor: 'pointer',
-          },
-          onClick: props.onActivate,
-        }),
-        rect({
-          style: {
-            x: 238,
-            y: 84,
-            width: 252,
-            height: 152,
-            fill: props.phase % 2 ? '#74d3ae' : '#ff6b57',
-            stroke: '#17211d',
-            strokeWidth: 6,
-            cursor: 'pointer',
-          },
-          onClick: props.onActivate,
-        }),
-        rect({
-          style: {
-            x: 456,
-            y: 18,
-            width: 92,
-            height: 92,
-            fill: '#f7c948',
-            stroke: '#17211d',
-            strokeWidth: 5,
-            cursor: 'pointer',
-          },
-          onClick: props.onActivate,
-        }),
-      ],
+      style: {
+        translateX: 76,
+        translateY: 60,
+        rotationDegrees: angle,
+        rotationOrigin: [284, 150]
+      },
+      children: [rect({
+        style: {
+          x: 46,
+          y: 22,
+          width: 222,
+          height: 252,
+          fill: '#1f4bd8',
+          cursor: 'pointer'
+        },
+        onClick: props.onActivate
+      }), rect({
+        style: {
+          x: 238,
+          y: 84,
+          width: 252,
+          height: 152,
+          fill: props.phase % 2 ? '#74d3ae' : '#ff6b57',
+          stroke: '#17211d',
+          strokeWidth: 6,
+          cursor: 'pointer'
+        },
+        onClick: props.onActivate
+      }), rect({
+        style: {
+          x: 456,
+          y: 18,
+          width: 92,
+          height: 92,
+          fill: '#f7c948',
+          stroke: '#17211d',
+          strokeWidth: 5,
+          cursor: 'pointer'
+        },
+        onClick: props.onActivate
+      })]
     }),
     text({
       style: {

@@ -9,14 +9,16 @@ import { mountCRC } from '../mount-crc.js';
 import {
   CompEl,
   CRCInteractionLayer,
-  IntrinsicProps,
   RenderingContext2D,
   SystemStyle,
 } from '../types.js';
 import { shallowEquals } from '../util/shallow-equals.js';
 
-export interface LayerProps extends IntrinsicProps {
+export interface LayerProps {
   render: CompEl<any, any>;
+}
+
+export interface LayerStyle extends SystemStyle {
   width?: number;
   height?: number;
 }
@@ -28,16 +30,18 @@ interface LayerSlot {
 
 export function Layer(
   props: LayerProps,
-  _style: SystemStyle,
+  style: Readonly<LayerStyle>,
   ctx: RenderingContext2D,
 ) {
   const canvas = GLOBAL_STATE.canvas!;
-  const { width = canvas.width, height = canvas.height } = props;
+  const { width = canvas.width, height = canvas.height } = style;
   const componentRefs = GLOBAL_STATE.componentRefs!;
   const parentInstance = getCurrentCRCInstance();
   if (GLOBAL_STATE.componentIsMounting) {
     const offscreenCanvas = new OffscreenCanvas(width, height);
-    const controller = mountCRC(offscreenCanvas, props.render, { parent: canvas });
+    const controller = mountCRC(offscreenCanvas, props.render, {
+      parent: canvas,
+    });
     const interactionLayer: CRCInteractionLayer = {
       kind: 'layer',
       instance: getCRCInstance(offscreenCanvas),
@@ -45,7 +49,10 @@ export function Layer(
       clippingStack: [],
       bounds: createBounds(width, height),
     };
-    componentRefs.refs[0] = { canvas: offscreenCanvas, interactionLayer } satisfies LayerSlot;
+    componentRefs.refs[0] = {
+      canvas: offscreenCanvas,
+      interactionLayer,
+    } satisfies LayerSlot;
     componentRefs.teardowns.add(() => {
       parentInstance.paintEntries.delete(interactionLayer);
       controller.dispose();

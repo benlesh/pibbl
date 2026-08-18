@@ -1,7 +1,6 @@
 import { defineComp } from '../define-comp.js';
 import {
   CRCBasicMouseEvents,
-  IntrinsicProps,
   RenderingContext2D,
   SystemStyle,
 } from '../types.js';
@@ -9,9 +8,7 @@ import type { CursorStyle, PaintStyle } from '../style/types.js';
 import { createLinePath } from '../util/create-line-path.js';
 import { Path } from './path.js';
 
-export interface LineProps
-  extends IntrinsicProps,
-  CRCBasicMouseEvents {}
+export interface LineProps extends CRCBasicMouseEvents {}
 
 export interface LineStyle
   extends SystemStyle,

@@ -42,6 +42,27 @@ describe('layer', () => {
 
   const myComponent = defineComp(MyComponent);
 
+  it('uses style as the sole offscreen-dimension authority', async () => {
+    const drawImage = vi.spyOn(
+      CanvasRenderingContext2D.prototype,
+      'drawImage',
+    );
+    const legacyInput = {
+      style: { width: 123, height: 87 },
+      width: 500,
+      height: 400,
+      render: rect({
+        style: { x: 0, y: 0, width: 10, height: 10, fill: 'red' },
+      }),
+    } as any;
+
+    await componentTest(layer(legacyInput));
+
+    const offscreen = drawImage.mock.lastCall![0] as OffscreenCanvas;
+    expect([offscreen.width, offscreen.height]).toEqual([123, 87]);
+    drawImage.mockRestore();
+  });
+
   it('renders basic content to offscreen canvas', async () => {
     await componentTest(layer({
       render: myComponent({
@@ -57,17 +78,19 @@ describe('layer', () => {
 
   it('respects custom dimensions', async () => {
     await componentTest(layer({
-      width: 200,
-      height: 150,
+      style: {
+        width: 200,
+        height: 150
+      },
       render: rect({
         style: {
           x: 0,
           y: 0,
           width: 200,
           height: 150,
-          fill: 'green',
-        },
-      }),
+          fill: 'green'
+        }
+      })
     }));
     await takeScreenshot(page);
   });
@@ -150,16 +173,18 @@ describe('layer', () => {
               },
             }),
             layer({
-              width: layerWidth,
+              style: {
+                width: layerWidth
+              },
               render: countedRect({
                 style: {
                   x: 0,
                   y: 0,
                   width: 200,
                   height: 200,
-                  fill: fillStyle,
-                },
-              }),
+                  fill: fillStyle
+                }
+              })
             }),
           ],
         });
@@ -226,6 +251,55 @@ describe('layer', () => {
       expect(renderCount).toBe(2);
     });
 
+    it('re-renders when only the root element props change', async () => {
+      let renderCount = 0;
+      const countedRect = defineComp<{
+        version: number;
+        onRender: () => void;
+      }>(({ onRender }) => {
+        onRender();
+        return rect({
+          style: {
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 100,
+            fill: 'blue',
+          },
+        });
+      });
+      const wrapperComponent = defineComp(() => {
+        const [version, setVersion] = crcState(1);
+        return g({
+          children: [
+            rect({
+              style: {
+                x: 100,
+                y: 0,
+                width: 100,
+                height: 100,
+                fill: 'green',
+              },
+              onClick: () => setVersion(2),
+            }),
+            layer({
+              render: countedRect({
+                version,
+                onRender: () => renderCount++,
+              }),
+            }),
+          ],
+        });
+      });
+
+      const canvas = await componentTest(wrapperComponent({}));
+      expect(renderCount).toBe(1);
+
+      await canvas.click({ position: { x: 150, y: 50 } });
+
+      expect(renderCount).toBe(2);
+    });
+
     it('re-renders when dimensions change on the same mount', async () => {
       let renderCount = 0;
       const onRender = () => renderCount++;
@@ -243,13 +317,15 @@ describe('layer', () => {
             onClick: () => setSize(200),
           }),
           layer({
-            width: size,
-            height: size,
+            style: {
+              width: size,
+              height: size
+            },
             render: myComponent({
               onRender,
               width: size,
-              height: size,
-            }),
+              height: size
+            })
           }),
         ] });
       });
@@ -267,27 +343,26 @@ describe('layer', () => {
     it('handles nested components', async () => {
       await componentTest(layer({
         render: g({
-          x: 100,
-          y: 100,
-          children: [
-            rect({
-              style: {
-                x: 0,
-                y: 0,
-                width: 50,
-                height: 50,
-                fill: 'purple',
-              },
-            }),
-            text({
-              style: {
-                x: 10,
-                y: 30,
-                text: 'Layered!',
-                fill: 'white',
-              },
-            }),
-          ],
+          style: {
+            translateX: 100,
+            translateY: 100
+          },
+          children: [rect({
+            style: {
+              x: 0,
+              y: 0,
+              width: 50,
+              height: 50,
+              fill: 'purple'
+            }
+          }), text({
+            style: {
+              x: 10,
+              y: 30,
+              text: 'Layered!',
+              fill: 'white'
+            }
+          })]
         }),
       }));
       await takeScreenshot(page);
@@ -311,27 +386,26 @@ describe('layer', () => {
           // Content layer
           layer({
             render: g({
-              x: 50,
-              y: 50,
-              children: [
-                rect({
-                  style: {
-                    x: 0,
-                    y: 0,
-                    width: 100,
-                    height: 100,
-                    fill: 'rgba(255, 0, 0, 0.5)',
-                  },
-                }),
-                text({
-                  style: {
-                    x: 20,
-                    y: 50,
-                    text: 'Multiple Layers',
-                    fill: 'white',
-                  },
-                }),
-              ],
+              style: {
+                translateX: 50,
+                translateY: 50
+              },
+              children: [rect({
+                style: {
+                  x: 0,
+                  y: 0,
+                  width: 100,
+                  height: 100,
+                  fill: 'rgba(255, 0, 0, 0.5)'
+                }
+              }), text({
+                style: {
+                  x: 20,
+                  y: 50,
+                  text: 'Multiple Layers',
+                  fill: 'white'
+                }
+              })]
             }),
           }),
           // Overlay layer
@@ -462,25 +536,27 @@ describe('layer', () => {
     it('composes the parent transform into layer hit testing', async () => {
       const onClick = vi.fn();
       const canvas = await componentTest(g({
-        x: 120,
-        y: 50,
-        scaleX: 1.5,
-        children: [
-          layer({
+        style: {
+          translateX: 120,
+          translateY: 50,
+          scaleX: 1.5
+        },
+        children: [layer({
+          style: {
             width: 80,
-            height: 80,
-            render: rect({
-              style: {
-                x: 0,
-                y: 0,
-                width: 60,
-                height: 60,
-                fill: 'teal',
-              },
-              onClick,
-            }),
-          }),
-        ],
+            height: 80
+          },
+          render: rect({
+            style: {
+              x: 0,
+              y: 0,
+              width: 60,
+              height: 60,
+              fill: 'teal'
+            },
+            onClick
+          })
+        })]
       }));
 
       await canvas.click({ position: { x: 225, y: 80 } });
@@ -493,18 +569,20 @@ describe('layer', () => {
     it('clips interaction to the offscreen layer dimensions', async () => {
       const onClick = vi.fn();
       const canvas = await componentTest(layer({
-        width: 50,
-        height: 50,
+        style: {
+          width: 50,
+          height: 50
+        },
         render: rect({
           style: {
             x: 0,
             y: 0,
             width: 100,
             height: 100,
-            fill: 'blue',
+            fill: 'blue'
           },
-          onClick,
-        }),
+          onClick
+        })
       }));
 
       await canvas.click({ position: { x: 25, y: 25 } });
@@ -517,28 +595,32 @@ describe('layer', () => {
     it('recursively resolves transformed nested layers', async () => {
       const onClick = vi.fn();
       const canvas = await componentTest(layer({
-        width: 200,
-        height: 150,
+        style: {
+          width: 200,
+          height: 150
+        },
         render: g({
-          x: 60,
-          y: 30,
-          children: [
-            layer({
+          style: {
+            translateX: 60,
+            translateY: 30
+          },
+          children: [layer({
+            style: {
               width: 80,
-              height: 80,
-              render: rect({
-                style: {
-                  x: 0,
-                  y: 0,
-                  width: 60,
-                  height: 60,
-                  fill: 'green',
-                },
-                onClick,
-              }),
-            }),
-          ],
-        }),
+              height: 80
+            },
+            render: rect({
+              style: {
+                x: 0,
+                y: 0,
+                width: 60,
+                height: 60,
+                fill: 'green'
+              },
+              onClick
+            })
+          })]
+        })
       }));
 
       await canvas.click({ position: { x: 90, y: 60 } });
@@ -553,21 +635,21 @@ describe('layer', () => {
       clipPath.rect(50, 50, 80, 80);
       const onClick = vi.fn();
       const canvas = await componentTest(clip({
-        path: clipPath,
-        children: [
-          layer({
-            render: rect({
-              style: {
-                x: 0,
-                y: 0,
-                width: 180,
-                height: 180,
-                fill: 'red',
-              },
-              onClick,
-            }),
-          }),
-        ],
+        style: {
+          d: clipPath
+        },
+        children: [layer({
+          render: rect({
+            style: {
+              x: 0,
+              y: 0,
+              width: 180,
+              height: 180,
+              fill: 'red'
+            },
+            onClick
+          })
+        })]
       }));
 
       await canvas.click({ position: { x: 80, y: 80 } });

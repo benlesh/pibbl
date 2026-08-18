@@ -2,14 +2,13 @@ import { defineComp } from '../define-comp.js';
 import type { TextStyle } from '../style/types.js';
 import {
   CRCBasicMouseEvents,
-  IntrinsicProps,
   RenderingContext2D,
 } from '../types.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 import { pushClippingPath } from '../util/push-clipping-path.js';
 import { resolveTextClipBounds, resolveTextLayout } from './text-layout.js';
 
-export interface TextProps extends IntrinsicProps, CRCBasicMouseEvents {}
+export interface TextProps extends CRCBasicMouseEvents {}
 
 function checkPropsForEvents(
   props: CRCBasicMouseEvents,

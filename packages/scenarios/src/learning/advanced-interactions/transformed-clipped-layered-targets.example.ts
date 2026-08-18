@@ -65,25 +65,27 @@ const ComposedTargetStudy = defineComp(function ComposedTargetStudy() {
       },
     }),
     g({
-      x: 210,
-      y: 74,
-      rotate: 8,
-      rotateOrigin: [150, 130],
-      children: [
-        clip({
-          path: crop,
-          children: [
-            layer({
-              width: 300,
-              height: 260,
-              render: Moon({
-                active,
-                onSelect: () => setActive((value) => !value),
-              }),
-            }),
-          ],
-        }),
-      ],
+      style: {
+        translateX: 210,
+        translateY: 74,
+        rotationDegrees: 8,
+        rotationOrigin: [150, 130]
+      },
+      children: [clip({
+        style: {
+          d: crop
+        },
+        children: [layer({
+          style: {
+            width: 300,
+            height: 260
+          },
+          render: Moon({
+            active,
+            onSelect: () => setActive(value => !value)
+          })
+        })]
+      })]
     }),
     text({
       style: {

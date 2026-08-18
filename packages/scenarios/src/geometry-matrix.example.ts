@@ -216,19 +216,25 @@ function compoundTransformClip(record: GeometryMatrixRecord) {
   const clipPath = new Path2D();
   clipPath.rect(0, 0, 40, 20);
   return g({
+    style: {
+      scaleX: 2,
+      scaleY: 1,
+      translateX: 80,
+      translateY: 20
+    },
     key: 'outer-transform',
-    scaleX: 2,
-    scaleY: 1,
-    x: 80,
-    y: 20,
     children: [g({
+      style: {
+        rotationDegrees: 90,
+        translateX: 20,
+        translateY: 10,
+        skewX: 45
+      },
       key: 'inner-transform',
-      rotate: 90,
-      x: 20,
-      y: 10,
-      skewX: 45,
       children: [clip({
-        path: clipPath,
+        style: {
+          d: clipPath
+        },
         children: [interactiveRect('transformed', record, {
           key: 'transformed-target',
           style: {
@@ -237,11 +243,11 @@ function compoundTransformClip(record: GeometryMatrixRecord) {
             width: 60,
             height: 40,
             fill: '#2563eb',
-            cursor: 'pointer',
-          },
-        })],
-      })],
-    })],
+            cursor: 'pointer'
+          }
+        })]
+      })]
+    })]
   });
 }
 
@@ -252,13 +258,19 @@ function nestedClipIntersection(record: GeometryMatrixRecord) {
   innerClip.rect(120, 70, 260, 110);
   innerClip.rect(190, 95, 80, 60);
   return clip({
-    path: outerClip,
+    style: {
+      d: outerClip
+    },
     children: [clip({
-      path: innerClip,
-      fillRule: 'evenodd',
+      style: {
+        d: innerClip,
+        fillRule: 'evenodd'
+      },
       children: [g({
+        style: {
+          translateX: 20
+        },
         key: 'group-inside-clips',
-        x: 20,
         children: [interactiveRect('clipped', record, {
           key: 'clipped-target',
           style: {
@@ -267,11 +279,11 @@ function nestedClipIntersection(record: GeometryMatrixRecord) {
             width: 380,
             height: 240,
             fill: '#2563eb',
-            cursor: 'pointer',
-          },
-        })],
-      })],
-    })],
+            cursor: 'pointer'
+          }
+        })]
+      })]
+    })]
   });
 }
 
@@ -332,54 +344,59 @@ function layerPaintOrder(record: GeometryMatrixRecord) {
 
 function transformedNestedLayer(record: GeometryMatrixRecord) {
   return g({
+    style: {
+      translateX: 100,
+      translateY: 30
+    },
     key: 'translated-layer-group',
-    x: 100,
-    y: 30,
     children: [layer({
+      style: {
+        width: 160,
+        height: 120
+      },
       key: 'outer-custom-layer',
-      width: 160,
-      height: 120,
       render: g({
         key: 'outer-layer-content',
-        children: [
-          interactiveRect('layer-base', record, {
-            key: 'layer-base-target',
-            style: {
-              x: 0,
-              y: 0,
-              width: 160,
-              height: 120,
-              fill: '#f59e0b',
-              cursor: 'crosshair',
-            },
-          }),
-          layer({
-            key: 'nested-custom-layer',
+        children: [interactiveRect('layer-base', record, {
+          key: 'layer-base-target',
+          style: {
+            x: 0,
+            y: 0,
+            width: 160,
+            height: 120,
+            fill: '#f59e0b',
+            cursor: 'crosshair'
+          }
+        }), layer({
+          style: {
             width: 80,
-            height: 60,
-            render: interactiveRect('nested-layer', record, {
-              key: 'nested-layer-target',
-              style: {
-                x: 20,
-                y: 10,
-                width: 80,
-                height: 60,
-                fill: '#10b981',
-                cursor: 'pointer',
-              },
-            }),
-          }),
-        ],
-      }),
-    })],
+            height: 60
+          },
+          key: 'nested-custom-layer',
+          render: interactiveRect('nested-layer', record, {
+            key: 'nested-layer-target',
+            style: {
+              x: 20,
+              y: 10,
+              width: 80,
+              height: 60,
+              fill: '#10b981',
+              cursor: 'pointer'
+            }
+          })
+        })]
+      })
+    })]
   });
 }
 
 function strokeBoundary(record: GeometryMatrixRecord) {
   return [
     g({
+      style: {
+        scaleY: 2
+      },
       key: 'scaled-stroke-group',
-      scaleY: 2,
       children: [line({
         key: 'stroke-target',
         style: {
@@ -387,10 +404,10 @@ function strokeBoundary(record: GeometryMatrixRecord) {
           stroke: '#2563eb',
           strokeWidth: 2,
           lineInteractionWidth: 10,
-          cursor: 'pointer',
+          cursor: 'pointer'
         },
-        ...traceHandlers('stroke', record),
-      })],
+        ...traceHandlers('stroke', record)
+      })]
     }),
   ];
 }

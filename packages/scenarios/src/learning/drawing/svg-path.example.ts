@@ -33,22 +33,22 @@ const SvgPathStudy = defineComp(function SvgPathStudy() {
       },
     }),
     g({
-      x: 238,
-      y: 70,
-      scaleX: 2.45,
-      scaleY: 2.45,
-      children: [
-        svgPath({
-          style: {
-            d: 'M50 88 C20 68 4 48 8 28 C12 4 42 0 50 20 C58 0 88 4 92 28 C96 48 80 68 50 88 Z',
-            fill: active ? '#1f4bd8' : '#ff6b57',
-            stroke: '#17211d',
-            strokeWidth: 2,
-            cursor: 'pointer',
-          },
-          onClick: () => setActive((value) => !value),
-        }),
-      ],
+      style: {
+        translateX: 238,
+        translateY: 70,
+        scaleX: 2.45,
+        scaleY: 2.45
+      },
+      children: [svgPath({
+        style: {
+          d: 'M50 88 C20 68 4 48 8 28 C12 4 42 0 50 20 C58 0 88 4 92 28 C96 48 80 68 50 88 Z',
+          fill: active ? '#1f4bd8' : '#ff6b57',
+          stroke: '#17211d',
+          strokeWidth: 2,
+          cursor: 'pointer'
+        },
+        onClick: () => setActive(value => !value)
+      })]
     }),
     text({
       style: {

@@ -1,16 +1,13 @@
 import { defineComp } from '../define-comp.js';
 import {
   CRCBasicMouseEvents,
-  IntrinsicProps,
   RenderingContext2D,
 } from '../types.js';
 import { PathStyle } from '../style/types.js';
 import { isTransparent } from '../util/is-transparent.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 
-export interface PathProps
-  extends IntrinsicProps,
-  CRCBasicMouseEvents {}
+export interface PathProps extends CRCBasicMouseEvents {}
 
 export function Path(
   props: PathProps,

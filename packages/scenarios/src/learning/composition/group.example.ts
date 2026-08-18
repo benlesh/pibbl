@@ -11,63 +11,59 @@ import {
 const GroupStudy = defineComp(function GroupStudy() {
   const [selected, setSelected] = crcState(false);
   const ticket = g({
-    x: 172,
-    y: 72,
-    rotate: -8,
-    rotateOrigin: [188, 128],
-    children: [
-      rect({
-        style: {
-          x: 0,
-          y: 0,
-          width: 376,
-          height: 256,
-          fill: selected ? '#74d3ae' : '#ff6b57',
-          stroke: '#17211d',
-          strokeWidth: 6,
-          cursor: 'pointer',
-        },
-        onClick: () => setSelected((value) => !value),
-      }),
-      rect({
-        style: {
-          x: 28,
-          y: 30,
-          width: 74,
-          height: 74,
-          fill: '#f7c948',
-        },
-      }),
-      rect({
-        style: {
-          x: 274,
-          y: 152,
-          width: 74,
-          height: 74,
-          fill: '#1f4bd8',
-        },
-      }),
-      text({
-        style: {
-          text: selected ? "GROUPED!" : "ONE GROUP",
-          x: 188,
-          y: 112,
-          fill: "#17211d",
-          font: "900 34px sans-serif",
-          textAlign: "center",
-        },
-      }),
-      text({
-        style: {
-          text: "MOVE · ROTATE · SCALE",
-          x: 188,
-          y: 162,
-          fill: "#17211d",
-          font: "700 13px monospace",
-          textAlign: "center",
-        },
-      }),
-    ],
+    style: {
+      translateX: 172,
+      translateY: 72,
+      rotationDegrees: -8,
+      rotationOrigin: [188, 128]
+    },
+    children: [rect({
+      style: {
+        x: 0,
+        y: 0,
+        width: 376,
+        height: 256,
+        fill: selected ? '#74d3ae' : '#ff6b57',
+        stroke: '#17211d',
+        strokeWidth: 6,
+        cursor: 'pointer'
+      },
+      onClick: () => setSelected(value => !value)
+    }), rect({
+      style: {
+        x: 28,
+        y: 30,
+        width: 74,
+        height: 74,
+        fill: '#f7c948'
+      }
+    }), rect({
+      style: {
+        x: 274,
+        y: 152,
+        width: 74,
+        height: 74,
+        fill: '#1f4bd8'
+      }
+    }), text({
+      style: {
+        text: selected ? "GROUPED!" : "ONE GROUP",
+        x: 188,
+        y: 112,
+        fill: "#17211d",
+        font: "900 34px sans-serif",
+        textAlign: "center"
+      }
+    }), text({
+      style: {
+        text: "MOVE · ROTATE · SCALE",
+        x: 188,
+        y: 162,
+        fill: "#17211d",
+        font: "700 13px monospace",
+        textAlign: "center"
+      }
+    })]
   });
   return [
     rect({

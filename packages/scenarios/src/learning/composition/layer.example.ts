@@ -85,18 +85,20 @@ const LayerStudy = defineComp(function LayerStudy() {
       },
     }),
     g({
-      x: 188,
-      y: 103,
-      children: [
-        layer({
+      style: {
+        translateX: 188,
+        translateY: 103
+      },
+      children: [layer({
+        style: {
           width: 344,
-          height: 214,
-          render: Badge({
-            active,
-            onSelect: () => setActive((value) => !value),
-          }),
-        }),
-      ],
+          height: 214
+        },
+        render: Badge({
+          active,
+          onSelect: () => setActive(value => !value)
+        })
+      })]
     }),
   ];
 });

@@ -284,16 +284,26 @@ function workloadNodes(
       const clipPath = new Path2D();
       clipPath.rect(0, 0, 440, 230);
       return [clip({
-        path: clipPath,
-        children: sparseRegions({ count: workload.regionCount, recordHit }),
+        style: {
+          d: clipPath
+        },
+        children: sparseRegions({
+          count: workload.regionCount,
+          recordHit
+        })
       })];
     }
     case 'transformed':
       return [g({
+        style: {
+          translateX: 12,
+          translateY: 8
+        },
         key: 'performance-transform',
-        x: 12,
-        y: 8,
-        children: sparseRegions({ count: workload.regionCount, recordHit }),
+        children: sparseRegions({
+          count: workload.regionCount,
+          recordHit
+        })
       })];
     case 'layered':
       return layeredRegions({ count: workload.regionCount, recordHit });

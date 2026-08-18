@@ -572,3 +572,74 @@ negative type assertions or runtime-bypass regressions. No image alias/helper
 call site, compatibility adapter, runtime fallback, or visual baseline was
 introduced. P003-05 remains in progress pending adversarial review, and P003-06
 remains TODO.
+
+### Batched clean review closure
+
+Task 5's independent adversarial code review found no remaining issues. Under
+the phase-batched workflow, its status advances together with Task 6 rather than
+through a status-only amendment. The 27/27 focused browser and clean typecheck
+evidence above remains authoritative; no Task 5 production or test file changed
+after that clean review.
+
+## 2026-08-17 — P003-06 composition styles and style-only milestone
+
+### RED
+
+Command:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/g.test.ts packages/core/src/lib/components/clip.test.ts packages/core/src/lib/components/layer.test.ts --browser.headless --browser.ui=false
+```
+
+Result: exit 1; all 3 files failed, with 3 failed and 42 passed tests. Descriptor
+style was ignored while legacy top-level group transforms, clipping paths, and
+layer dimensions remained authoritative.
+
+Command:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+```
+
+Result: exit 1 with missing `GStyle`, `ClipStyle`, and `LayerStyle` exports, the
+legacy required top-level clip path, and unused negative assertions for the
+still-accepted visual props.
+
+### GREEN
+
+`GStyle` uses CRC-native `rotationDegrees` and `rotationOrigin`, preserving the
+existing scale, origin-relative rotation, translation, and skew order. Clip path
+data and fill rule are style-only; layer dimensions are style-only while the
+child descriptor remains a structural prop. Untyped top-level visual values are
+ignored. Layer invalidation independently compares child type, key, props, and
+style. Obsolete visual-prop mixins were removed after their usage reached zero.
+
+The migration inspected 123 `g(...)`, `clip(...)`, and `layer(...)` call
+expressions. Every authored visual value is style-bearing; the only direct
+top-level visual names are deliberate public negative assertions. No alias,
+top-level spread, compatibility adapter, or visual baseline was introduced.
+
+Focused command:
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/components/g.test.ts packages/core/src/lib/components/clip.test.ts packages/core/src/lib/components/layer.test.ts --browser.headless --browser.ui=false
+```
+
+Result: exit 0; all 3 files and all 46 tests passed. Exact transform order,
+paint/interaction clipping, layer dimensions, child-props/style invalidation,
+global target order, nested transforms/layers, and cursor/ownership behavior are
+covered.
+
+### Planned style-migration milestone
+
+```sh
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 typecheck
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 lint:code
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 test:ci
+PATH=/private/tmp/crc-toolchain/node_modules/.bin:$PATH corepack pnpm@11.21.0 test:package-consumer:packed
+```
+
+Results: typecheck and full ESLint exited 0. Browser mode passed 37 files and 315
+tests with 2 skips. The packed `@crc/core` consumer passed Bundler, NodeNext,
+runtime, and no-source checks. Aggregate `trust` was intentionally not run at
+this milestone. P003-05 and P003-06 are done; P003-07 is the sole next step.

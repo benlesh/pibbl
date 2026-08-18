@@ -2,8 +2,11 @@ import type {
   CRCController,
   CRCMouseEvent,
   CRCRef,
+  ClipStyle,
+  GStyle,
   HorizontalLineStyle,
   ImgStyle,
+  LayerStyle,
   LineStyle,
   PathStyle,
   RectProps,
@@ -27,7 +30,9 @@ import {
   crcState,
   crcSvgPath,
   crcWhenChanged,
+  clip,
   defineComp,
+  g,
   horizontalLine,
   line,
   path,
@@ -36,6 +41,7 @@ import {
   text,
   verticalLine,
   img,
+  layer,
 } from '@crc/core';
 
 const rectangleStyle = {
@@ -126,6 +132,33 @@ const imageStyle = {
 } satisfies ImgStyle;
 img({ style: imageStyle, onClick: () => undefined });
 
+const groupStyle = {
+  scaleX: 1.5,
+  rotationDegrees: 15,
+  rotationOrigin: [10, 10],
+  translateX: 20,
+  translateY: 30,
+  skewX: 5,
+  skewY: 3,
+} satisfies GStyle;
+g({ style: groupStyle, children: [rect({ style: rectangleStyle })] });
+
+const clipStyle = {
+  d: new Path2D(),
+  fillRule: 'evenodd',
+} satisfies ClipStyle;
+clip({ style: clipStyle, children: [rect({ style: rectangleStyle })] });
+
+const layerStyle = { width: 320, height: 180 } satisfies LayerStyle;
+layer({ style: layerStyle, render: rect({ style: rectangleStyle }) });
+
+const subpathGroupStyle: CoreTypes.GStyle = groupStyle;
+const subpathClipStyle: CoreTypes.ClipStyle = clipStyle;
+const subpathLayerStyle: CoreTypes.LayerStyle = layerStyle;
+void subpathGroupStyle;
+void subpathClipStyle;
+void subpathLayerStyle;
+
 // @ts-expect-error rectangle geometry is style-only
 rect({ x: 10, y: 10, width: 40, height: 20 });
 // @ts-expect-error rectangle style requires width and height
@@ -166,6 +199,16 @@ img({});
 img({ style: { src: 'legacy.png', strokeStyle: 'red', lineWidth: 1 } });
 // @ts-expect-error image does not accept visual values as program props
 img({ style: { src: 'styled.png' }, alpha: 0.5 });
+// @ts-expect-error group translation is style-only
+g({ x: 10, children: [] });
+// @ts-expect-error CRC-native transform names replace the legacy aliases
+g({ style: { rotate: 45, rotateOrigin: [0, 0] }, children: [] });
+// @ts-expect-error clipping geometry is style-only
+clip({ path: new Path2D(), children: [] });
+// @ts-expect-error clip style requires path data
+clip({ style: {}, children: [] });
+// @ts-expect-error layer dimensions are style-only
+layer({ width: 100, height: 100, render: rect({ style: rectangleStyle }) });
 
 export function disposeMount(controller: ReturnType<typeof crc>): void {
   const publicController: CRCController = controller;

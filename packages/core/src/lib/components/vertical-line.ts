@@ -1,7 +1,6 @@
 import { defineComp } from '../define-comp.js';
 import {
   CRCBasicMouseEvents,
-  IntrinsicProps,
   PixelGridAlignment,
   RenderingContext2D,
   SystemStyle,
@@ -9,9 +8,7 @@ import {
 import { adjustForPixelGrid } from '../util/pixel-grid-adjustments.js';
 import { Line, type LineStyle } from './line.js';
 
-export interface VerticalLineProps
-  extends IntrinsicProps,
-  CRCBasicMouseEvents {}
+export interface VerticalLineProps extends CRCBasicMouseEvents {}
 
 export interface VerticalLineStyle
   extends SystemStyle,

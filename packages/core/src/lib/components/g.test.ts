@@ -16,6 +16,44 @@ describe('g', () => {
     fill: 'blue',
   };
 
+  it('uses style as the sole transform authority in the documented order', async () => {
+    const transforms: DOMMatrix[] = [];
+    const TransformProbe = defineComp((_props: {}, _style, ctx) => {
+      transforms.push(ctx.getTransform());
+    });
+    const style = {
+      scaleX: 2,
+      scaleY: 3,
+      rotationDegrees: 30,
+      rotationOrigin: [4, 5] as [number, number],
+      translateX: 7,
+      translateY: 11,
+      skewX: 13,
+      skewY: 17,
+    };
+    const legacyInput = {
+      style,
+      x: 1000,
+      y: 2000,
+      rotate: 180,
+      rotateOrigin: [50, 60],
+      children: [TransformProbe({})],
+    } as any;
+
+    await componentTest(g(legacyInput));
+
+    const expected = new DOMMatrix()
+      .scale(style.scaleX, style.scaleY)
+      .translate(...style.rotationOrigin)
+      .rotate(style.rotationDegrees)
+      .translate(-style.rotationOrigin[0], -style.rotationOrigin[1])
+      .translate(style.translateX, style.translateY)
+      .skewX(style.skewX)
+      .skewY(style.skewY);
+    expect(Array.from(transforms[0].toFloat32Array()))
+      .toEqual(Array.from(expected.toFloat32Array()));
+  });
+
   it('supports zero and negative scales without leaking transforms', async () => {
     const scales: number[] = [];
     const TransformProbe = defineComp((_props: {}, _style, ctx) => {
@@ -23,8 +61,18 @@ describe('g', () => {
     });
 
     await componentTest(g({ children: [
-      g({ scaleX: 0, children: [TransformProbe({})] }),
-      g({ scaleX: -1, children: [TransformProbe({})] }),
+      g({
+        style: {
+          scaleX: 0
+        },
+        children: [TransformProbe({})]
+      }),
+      g({
+        style: {
+          scaleX: -1
+        },
+        children: [TransformProbe({})]
+      }),
       TransformProbe({}),
     ] }));
 
@@ -42,11 +90,13 @@ describe('g', () => {
 
   it('translates children', async () => {
     await componentTest(g({
-      x: 100,
-      y: 50,
-      children: [
-        rect({ style: defaultRectStyle }),
-      ],
+      style: {
+        translateX: 100,
+        translateY: 50
+      },
+      children: [rect({
+        style: defaultRectStyle
+      })]
     }));
     await takeScreenshot(page);
   });
@@ -54,22 +104,26 @@ describe('g', () => {
   describe('scaling', () => {
     it('scales uniformly', async () => {
       await componentTest(g({
-        scaleX: 2,
-        scaleY: 2,
-        children: [
-          rect({ style: defaultRectStyle }),
-        ],
+        style: {
+          scaleX: 2,
+          scaleY: 2
+        },
+        children: [rect({
+          style: defaultRectStyle
+        })]
       }));
       await takeScreenshot(page);
     });
 
     it('scales non-uniformly', async () => {
       await componentTest(g({
-        scaleX: 2,
-        scaleY: 0.5,
-        children: [
-          rect({ style: defaultRectStyle }),
-        ],
+        style: {
+          scaleX: 2,
+          scaleY: 0.5
+        },
+        children: [rect({
+          style: defaultRectStyle
+        })]
       }));
       await takeScreenshot(page);
     });
@@ -78,21 +132,26 @@ describe('g', () => {
   describe('rotation', () => {
     it('rotates around origin', async () => {
       await componentTest(g({
-        rotate: 45,
-        children: [
-          rect({ style: defaultRectStyle }),
-        ],
+        style: {
+          rotationDegrees: 45
+        },
+        children: [rect({
+          style: defaultRectStyle
+        })]
       }));
       await takeScreenshot(page);
     });
 
     it('rotates around specified point', async () => {
       await componentTest(g({
-        rotate: 90,
-        rotateOrigin: [25, 25], // center of rect
-        children: [
-          rect({ style: defaultRectStyle }),
-        ],
+        style: {
+          rotationDegrees: 90,
+          rotationOrigin: [25, 25]
+        },
+        // center of rect
+        children: [rect({
+          style: defaultRectStyle
+        })]
       }));
       await takeScreenshot(page);
     });
@@ -101,31 +160,37 @@ describe('g', () => {
   describe('skewing', () => {
     it('skews on X axis', async () => {
       await componentTest(g({
-        skewX: 30,
-        children: [
-          rect({ style: defaultRectStyle }),
-        ],
+        style: {
+          skewX: 30
+        },
+        children: [rect({
+          style: defaultRectStyle
+        })]
       }));
       await takeScreenshot(page);
     });
 
     it('skews on Y axis', async () => {
       await componentTest(g({
-        skewY: 30,
-        children: [
-          rect({ style: defaultRectStyle }),
-        ],
+        style: {
+          skewY: 30
+        },
+        children: [rect({
+          style: defaultRectStyle
+        })]
       }));
       await takeScreenshot(page);
     });
 
     it('skews on both axes', async () => {
       await componentTest(g({
-        skewX: 30,
-        skewY: 30,
-        children: [
-          rect({ style: defaultRectStyle }),
-        ],
+        style: {
+          skewX: 30,
+          skewY: 30
+        },
+        children: [rect({
+          style: defaultRectStyle
+        })]
       }));
       await takeScreenshot(page);
     });
@@ -134,32 +199,36 @@ describe('g', () => {
   describe('compound transformations', () => {
     it('combines multiple transformations in correct order', async () => {
       await componentTest(g({
-        x: 100,
-        y: 100,
-        rotate: 45,
-        scaleX: 2,
-        scaleY: 1.5,
-        children: [
-          rect({ style: defaultRectStyle }),
-        ],
+        style: {
+          translateX: 100,
+          translateY: 100,
+          rotationDegrees: 45,
+          scaleX: 2,
+          scaleY: 1.5
+        },
+        children: [rect({
+          style: defaultRectStyle
+        })]
       }));
       await takeScreenshot(page);
     });
 
     it('handles nested groups with transformations', async () => {
       await componentTest(g({
-        x: 100,
-        y: 100,
-        rotate: 45,
-        children: [
-          g({
+        style: {
+          translateX: 100,
+          translateY: 100,
+          rotationDegrees: 45
+        },
+        children: [g({
+          style: {
             scaleX: 2,
-            scaleY: 2,
-            children: [
-              rect({ style: defaultRectStyle }),
-            ],
-          }),
-        ],
+            scaleY: 2
+          },
+          children: [rect({
+            style: defaultRectStyle
+          })]
+        })]
       }));
       await takeScreenshot(page);
     });
@@ -169,14 +238,14 @@ describe('g', () => {
     it('handles mouse events on scaled elements', async () => {
       const onClick = vi.fn();
       const canvas = await componentTest(g({
-        scaleX: 2,
-        scaleY: 2,
-        children: [
-          rect({
-            style: defaultRectStyle,
-            onClick,
-          }),
-        ],
+        style: {
+          scaleX: 2,
+          scaleY: 2
+        },
+        children: [rect({
+          style: defaultRectStyle,
+          onClick
+        })]
       }));
 
       // Click in the center of the scaled rect
@@ -191,14 +260,14 @@ describe('g', () => {
     it('handles mouse events on rotated elements', async () => {
       const onMouseOver = vi.fn();
       const canvas = await componentTest(g({
-        rotate: 45,
-        rotateOrigin: [25, 25],
-        children: [
-          rect({
-            style: defaultRectStyle,
-            onMouseOver,
-          }),
-        ],
+        style: {
+          rotationDegrees: 45,
+          rotationOrigin: [25, 25]
+        },
+        children: [rect({
+          style: defaultRectStyle,
+          onMouseOver
+        })]
       }));
 
       // Move to center of rotated rect
@@ -228,22 +297,22 @@ describe('g', () => {
       const transformedPoint = matrix.transformPoint(new DOMPoint(rectCenter.x, rectCenter.y));
 
       const canvas = await componentTest(g({
-        x: offset.x,
-        y: offset.y,
-        rotate: rotation,
-        scaleX: scale,
-        scaleY: scale,
-        skewX,
-        skewY,
-        children: [
-          rect({
-            onClick,
-            style: {
-              ...defaultRectStyle,
-              cursor: 'crosshair',
-            },
-          }),
-        ],
+        style: {
+          translateX: offset.x,
+          translateY: offset.y,
+          rotationDegrees: rotation,
+          scaleX: scale,
+          scaleY: scale,
+          skewX,
+          skewY
+        },
+        children: [rect({
+          onClick,
+          style: {
+            ...defaultRectStyle,
+            cursor: 'crosshair'
+          }
+        })]
       }));
 
       // Click off of the transformed position (should miss)
@@ -259,27 +328,26 @@ describe('g', () => {
   describe('mixed content', () => {
     it('transforms both shapes and text', async () => {
       await componentTest(g({
-        x: 100,
-        y: 50,
-        rotate: 30,
-        scaleX: 1.5,
-        scaleY: 1.5,
-        children: [
-          rect({
-            style: {
-              ...defaultRectStyle,
-              fill: 'purple',
-            },
-          }),
-          text({
-            style: {
-              x: 10,
-              y: 30,
-              text: 'Transformed!',
-              fill: 'white',
-            },
-          }),
-        ],
+        style: {
+          translateX: 100,
+          translateY: 50,
+          rotationDegrees: 30,
+          scaleX: 1.5,
+          scaleY: 1.5
+        },
+        children: [rect({
+          style: {
+            ...defaultRectStyle,
+            fill: 'purple'
+          }
+        }), text({
+          style: {
+            x: 10,
+            y: 30,
+            text: 'Transformed!',
+            fill: 'white'
+          }
+        })]
       }));
       await takeScreenshot(page);
     });

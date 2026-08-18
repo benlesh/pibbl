@@ -2,15 +2,12 @@ import { defineComp } from '../define-comp.js';
 import { crcSvgPath } from '../hooks/crc-svg-path.js';
 import {
   CRCBasicMouseEvents,
-  IntrinsicProps,
   RenderingContext2D,
 } from '../types.js';
 import { SvgPathStyle } from '../style/types.js';
 import { Path } from './path.js';
 
-export interface SvgPathProps
-  extends IntrinsicProps,
-  CRCBasicMouseEvents {}
+export interface SvgPathProps extends CRCBasicMouseEvents {}
 
 function SvgPath(
   props: SvgPathProps,
