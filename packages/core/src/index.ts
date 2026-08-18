@@ -27,15 +27,36 @@ export { crc } from './lib/crc.js';
 
 export { defineComp } from './lib/define-comp.js';
 export type {
+  BoxStyle,
   CursorStyle,
+  EdgeValues,
   ImgStyle,
+  LayoutItemStyle,
+  Length,
   PaintStyle,
   PathStyle,
   RectStyle,
+  ResolvedBoxStyle,
   SvgPathStyle,
   TextFit,
   TextStyle,
+  Percentage,
 } from './lib/style/types.js';
+export {
+  LayoutDiagnostic,
+  layoutDiagnostic,
+  type LayoutDiagnosticContext,
+  type LayoutDiagnosticInput,
+} from './lib/style/diagnostics.js';
+export { normalizeEdges } from './lib/style/normalize.js';
+export { resolveLength } from './lib/style/resolve-length.js';
+export { resolveBox } from './lib/layout/box.js';
+export type {
+  Constraints,
+  Edges,
+  LayoutBox,
+  Size,
+} from './lib/layout/types.js';
 // hooks
 export { crcCursor } from './lib/hooks/crc-cursor.js';
 export { crcEvent } from './lib/hooks/crc-event.js';

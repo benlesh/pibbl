@@ -4,6 +4,50 @@ import type {
   StrokeStyle,
   SystemStyle,
 } from '../types.js';
+import type { LayoutBox } from '../layout/types.js';
+
+export type Percentage = `${number}%`;
+export type Length = number | Percentage | 'auto';
+
+export type EdgeValues =
+  | number
+  | Readonly<{
+      top?: number;
+      right?: number;
+      bottom?: number;
+      left?: number;
+    }>;
+
+export interface BoxStyle extends SystemStyle {
+  width?: Length;
+  height?: Length;
+  minWidth?: Exclude<Length, 'auto'>;
+  maxWidth?: Exclude<Length, 'auto'>;
+  minHeight?: Exclude<Length, 'auto'>;
+  maxHeight?: Exclude<Length, 'auto'>;
+  padding?: EdgeValues;
+  overflow?: 'visible' | 'clip';
+}
+
+export interface ResolvedBoxStyle {
+  borderBox: LayoutBox;
+  contentBox: LayoutBox;
+}
+
+export interface LayoutItemStyle {
+  left?: Exclude<Length, 'auto'>;
+  top?: Exclude<Length, 'auto'>;
+  alignSelf?:
+    'auto' | 'start' | 'end' | 'center' | 'stretch' | 'flex-start' | 'flex-end';
+  justifySelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch';
+  flexBasis?: Length;
+  flexGrow?: number;
+  flexShrink?: number;
+  gridColumnStart?: number;
+  gridColumnSpan?: number;
+  gridRowStart?: number;
+  gridRowSpan?: number;
+}
 
 export interface PaintStyle extends SystemStyle {
   fill?: FillStyle;
