@@ -40,7 +40,7 @@ type MainAlignment =
   | 'space-evenly';
 type CrossAlignment = 'stretch' | 'flex-start' | 'flex-end' | 'center';
 
-export interface FlexStyle extends BoxStyle {
+export interface FlexStyle extends BoxStyle, LayoutItemStyle {
   flexDirection?: FlexDirection;
   flexWrap?: FlexWrap;
   justifyContent?: MainAlignment;

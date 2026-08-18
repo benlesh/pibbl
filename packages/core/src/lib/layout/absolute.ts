@@ -2,6 +2,7 @@ import { defineComp } from '../define-comp.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { normalizeEdges } from '../style/normalize.js';
 import { resolveLength } from '../style/resolve-length.js';
+import { setPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import type {
   BoxStyle,
   LayoutItemStyle,
@@ -24,7 +25,7 @@ import {
 } from './place-child.js';
 import type { LayoutBox } from './types.js';
 
-export type AbsoluteStyle = BoxStyle;
+export type AbsoluteStyle = BoxStyle & LayoutItemStyle;
 
 export interface AbsoluteProps {
   children: CRCNode[];
@@ -55,7 +56,7 @@ function Absolute(
   return placeDirectChildren(
     props.children,
     localContent,
-    child => placeAbsoluteChild(localContent, child),
+    child => resolveAbsoluteChildPlacement(localContent, child),
     style.overflow,
   );
 }
@@ -86,19 +87,51 @@ export function placeAbsoluteChild(
   container: Readonly<LayoutBox>,
   child: CompEl<any, any>,
 ): LayoutBox {
+  return resolveAbsoluteChildPlacement(container, child).box;
+}
+
+function resolveAbsoluteChildPlacement(
+  container: Readonly<LayoutBox>,
+  child: CompEl<any, any>,
+): { box: LayoutBox; element: CompEl<any, any> } {
   const style = normalizeDirectChildStyle(child) as Readonly<
     BoxStyle & LayoutItemStyle
   >;
-  const box = resolveDirectChildBox(container, child, 'absolute', style);
+  const resolved = resolveDirectChildBox(container, child, 'absolute', style);
   const context = childDiagnosticContext(child, container, 'absolute');
   const left = resolveLength(style.left ?? 0, container.width, 'left', context)!;
   const top = resolveLength(style.top ?? 0, container.height, 'top', context)!;
-  return {
+  const box = {
     x: finitePlacement(container.x + left, 'left', left, context),
     y: finitePlacement(container.y + top, 'top', top, context),
-    width: box.borderBox.width,
-    height: box.borderBox.height,
+    width: resolved.borderBox.width,
+    height: resolved.borderBox.height,
   };
+  return {
+    box,
+    element: childWithUsedSize(
+      child,
+      style,
+      resolved.contentBox.width,
+      resolved.contentBox.height,
+    ),
+  };
+}
+
+/** @internal Carries normalized finite content size into the eventual render. */
+export function childWithUsedSize(
+  child: CompEl<any, any>,
+  style: Readonly<SystemStyle>,
+  width: number,
+  height: number,
+): CompEl<any, any> {
+  const renderedChild = { ...child };
+  setPreNormalizedStyle(renderedChild, Object.freeze({
+    ...style,
+    width,
+    height,
+  }), child);
+  return renderedChild;
 }
 
 /** @internal Shared by the initial direct-child layout algorithms. */

@@ -1,6 +1,6 @@
 # Interactive studio and automated test labs
 
-CRC now has two deliberately different example catalogs. The learner studio presents 24 focused, attractive lessons; the automated-test catalog preserves the exhaustive scenarios used by browser verification. Both are authored against the public `@crc/core` API.
+CRC now has two deliberately different example catalogs. The learner studio presents 28 focused, attractive lessons; the automated-test catalog preserves the exhaustive scenarios used by browser verification. Both are authored against the public `@crc/core` API.
 
 ## Architecture
 

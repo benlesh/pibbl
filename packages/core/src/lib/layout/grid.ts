@@ -37,7 +37,7 @@ type ParsedGridTrack =
   | Readonly<{ kind: 'percentage'; factor: number }>
   | Readonly<{ kind: 'fraction'; factor: number }>;
 
-export interface GridStyle extends BoxStyle {
+export interface GridStyle extends BoxStyle, LayoutItemStyle {
   gridTemplateColumns: readonly GridTrack[];
   gridTemplateRows: readonly GridTrack[];
   justifyItems?: GridAlignment;

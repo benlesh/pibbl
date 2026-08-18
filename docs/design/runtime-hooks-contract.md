@@ -1,12 +1,19 @@
 # CRC runtime and hook contract
 
-Status: implemented and verified by TFC-08 on 2026-08-11.
+Status: implemented through Project Plan 003 on 2026-08-18.
 
 This document defines the supported identity, update, hook, and recovery behavior of the existing CRC runtime. It complements the [runtime resource ownership contract](./runtime-resource-ownership.md) and the [mouse interaction contract](./mouse-interaction-contract.md). The shared `runtime-hooks-laboratory` scenario is the public-API integration oracle; focused tests cover misuse that would make an interactive gallery scene unsafe.
 
 ## Component and tree identity
 
-`defineComp(render)` creates a component factory. Each call to that factory creates a new element containing the same render-function identity and the exact supplied props. Calling `crc(canvas, element)` mounts the first element and returns a stable controller; later calls for that mounted Canvas queue an update and return the same controller.
+`defineComp(render, capabilities?)` creates a component factory. Each call
+creates an element with the same component-function identity, exact program
+props, and specified style. A caller may omit `style` only when every member of
+the component's style schema is optional. Capabilities may normalize style,
+resolve allocation-dependent style to finite render input, and purely measure
+intrinsic content. Calling `crc(canvas, element)` mounts the first element and
+returns a stable controller; later calls queue an update and return the same
+controller.
 
 Component identity is resolved within its parent:
 
@@ -44,8 +51,26 @@ Each component owns an ordered array of typed hook slots. Every successful updat
 | `crcSvgPath(data)`                | Memoizes exact SVG path data. Parsing is delegated to the platform `Path2D`; malformed data propagates the platform error and participates in normal render recovery.                                                                                                                                                                                                                                            | `crc-path-hooks.test.ts`, shared laboratory                             |
 | `crcEvent(...)`                   | Owns a typed event hook slot and follows the target/observer and lifecycle rules in the mouse and ownership contracts. Switching path/global modes keeps hook order valid.                                                                                                                                                                                                                                       | `hook-contract.test.ts`, TFC-04/TFC-05 laboratories                     |
 | `crcCursor(...)`                  | Owns a typed cursor hook slot and follows the target/fallback ownership rules in the mouse and event ownership contracts. Switching path/global modes keeps hook order valid.                                                                                                                                                                                                                                    | `hook-contract.test.ts`, TFC-04/TFC-05 laboratories                     |
+| `crcLayoutBox()`                  | Returns the current component's stable readonly local allocation `{ x: 0, y: 0, width, height }`. Equal allocation preserves object identity. Reading does not schedule work. Unlike ordinary hooks, calling it outside a live layout context—including during pure measurement—throws `No CRC layout context is available`, not the shared outside-render hook diagnostic.                                      | Layout foundation and measurement-isolation suites                      |
 
 The three memoized path helpers are distinct hook kinds. Reordering them is a hook-order error even when their values would all be `Path2D` instances.
+
+## Pure measurement boundary
+
+`measureElement` and a component's optional `measure` capability are not render
+passes. Measurement normalizes style and may recursively measure children, but
+cannot invoke render callbacks, hooks, `crcLayoutBox`, interaction registration,
+paint, image loading, or other runtime ownership. CRC snapshots, clears, and
+restores temporary render globals in `finally`, so attempted hook use during an
+active render cannot consume the parent's hook slots. Direct and indirect
+measurement cycles throw a contextual cyclic-measurement diagnostic; later
+valid measurement remains usable.
+
+Resolved styles delivered to a render callback contain finite component
+geometry. Allocation syntax requires an explicit resolver unless it belongs to
+a documented opaque style-language field such as text, image source, paint, or
+an enum. Normalization happens once when a parent inspects and later places a
+direct child.
 
 ## Public package boundary
 
@@ -63,4 +88,8 @@ Focused tests additionally prove duplicate keys, same-name functions, unkeyed oc
 - Component identity is internal and diagnostic IDs shown by the laboratory are not public runtime identifiers.
 - `crcState` does not define lazy initializer or function-as-data semantics; a function passed to the setter is an updater.
 - A thrown render fails closed and requires a later explicit render. CRC does not retain or restore a transactional snapshot of the previous Canvas tree.
-- Drawing-component property and pixel contracts are finalized in the [drawing-component contract](./drawing-components-contract.md). Event and cursor behavior remains owned by the TFC-04/TFC-05 interaction contracts rather than duplicated here.
+- Drawing-component style and pixel contracts are finalized in the
+  [drawing-component contract](./drawing-components-contract.md). Allocation,
+  placement, and measurement are finalized in the [layout-system
+  contract](./layout-system-contract.md). Event and cursor behavior remains
+  owned by the interaction contracts rather than duplicated here.

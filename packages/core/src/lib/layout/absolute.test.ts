@@ -3,10 +3,12 @@ import { rect } from '../components/rect';
 import { crc } from '../crc';
 import { defineComp } from '../define-comp';
 import { crcState } from '../hooks/crc-state';
+import { crcLayoutBox } from '../hooks/crc-layout-box';
 import { componentTest } from '../test-utils/component-test';
 import type { CRCNode, SystemStyle } from '../types';
 import { overlay, placeOverlayChild } from './overlay';
 import { absolute, placeAbsoluteChild } from './absolute';
+import { flow } from './flow';
 
 describe('absolute layout', () => {
   it('places from parent-owned left/top while primitive x/y stay local', () => {
@@ -137,6 +139,59 @@ describe('absolute layout', () => {
       .toEqual({ x: 160, y: 40, width: 40, height: 20 });
     expect(normalizeStyle).toHaveBeenCalledTimes(2);
   });
+
+  it.each([
+    ['absolute', (child: CRCNode) => absolute({
+      style: { width: 100, height: 50 },
+      children: [child],
+    })],
+    ['overlay', (child: CRCNode) => overlay({
+      style: {
+        width: 100,
+        height: 50,
+        alignItems: 'start',
+        justifyItems: 'start',
+      },
+      children: [child],
+    })],
+    ['flow', (child: CRCNode) => flow({
+      style: { width: 100, height: 50 },
+      children: [child],
+    })],
+  ] as const)(
+    'normalizes a definite custom child exactly once per %s frame',
+    async (_name, createContainer) => {
+      interface SpecifiedStyle extends SystemStyle {
+        token: 'specified';
+      }
+      interface NormalizedStyle extends SystemStyle {
+        token: 'normalized';
+        width: number;
+        height: number;
+      }
+      const normalizeStyle = vi.fn((): NormalizedStyle => ({
+        token: 'normalized',
+        width: 20,
+        height: 10,
+      }));
+      const render = vi.fn(() => {
+        expect(crcLayoutBox()).toEqual({ x: 0, y: 0, width: 20, height: 10 });
+      });
+      const Child = defineComp<
+        {},
+        SpecifiedStyle,
+        NormalizedStyle,
+        NormalizedStyle
+      >(render, { normalizeStyle });
+
+      await componentTest(createContainer(Child({
+        style: Object.freeze({ token: 'specified' }),
+      })));
+
+      expect(normalizeStyle).toHaveBeenCalledOnce();
+      expect(render).toHaveBeenCalledOnce();
+    },
+  );
 
   // @ts-expect-error absolute has no overlay alignment vocabulary
   void absolute({ style: { alignItems: 'center' }, children: [] });

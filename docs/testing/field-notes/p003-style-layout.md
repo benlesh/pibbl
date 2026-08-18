@@ -788,3 +788,110 @@ source and built Studio production builds passed; the packed consumer passed
 Bundler, NodeNext, runtime export, and no-source checks; focused public
 integration passed 3 files and 48 browser tests. P003-13 is done; P003-14 is the
 sole next step.
+
+## 2026-08-18 — P003-14 hardening
+
+Task 14 added public hardening evidence without changing the style/layout API:
+
+- translated/scaled groups, layout inside clips and layers, and fractional plus
+  negative local offsets keep paint and mouse geometry identical;
+- duplicate-key and render failure release every acquired handler and region
+  exactly once, with no live owners or duplicate releases;
+- 1,000 resize/reflow cycles retain stable ownership counts;
+- an application-owned 100,000-record dataset mounts only the visible window
+  plus fixed overscan, with overscan outside the clipped viewport;
+- invalid percentages, non-finite values, unresolved automatic sizes, and Grid
+  placement errors report complete contextual diagnostics; and
+- internal diagnostic counters pin dispatch, placement, reset/snapshot, and
+  nested recursive measurement boundaries without exposing a behavioral API.
+
+The planned six-file browser milestone, lifecycle suites, structural
+performance suite, typecheck, and changed-file hygiene passed. The final
+review-adjusted commit is `c42bedd`; adversarial review was clean. P003-14 is
+done and P003-15 is the sole next step.
+
+## 2026-08-18 — P003-15 public contracts and final verification
+
+Published the normative style and layout contracts and reconciled the drawing,
+mouse, runtime/hooks, root/core READMEs, library status, project indexes,
+documentation follow-up, and deferred-work list. The contracts cover every
+built-in's style-only migration; no cascade/inheritance and explicit spread
+reuse; exact length/box rules; accepted and rejected Absolute, Overlay, Flow,
+Flex, and Grid matrices; declared allocation versus visible paint overflow;
+pure measurement; identity/order/composition; ownership/failure; and explicit
+exclusions.
+
+Pre-commit consistency:
+
+- `scenarios:check` passed 28 learner lessons and 14 test labs;
+- `lint:format` initially found pre-existing formatting drift in the style/layout
+  architecture and implementation plan plus repository-local `.beads` metadata.
+  The two feature documents were formatted, `.beads/` was added to the existing
+  root ignore file without modifying those metadata files, and the rerun passed;
+- `git diff --check` passed; and
+- legacy searches found only deliberate compile-failure assertions in the
+  strict consumer and historical implementation plan, not supported examples.
+
+### Environment
+
+- Node v26.7.0 (the documented release policy remains Node 24.15+ on Node 24
+  LTS, so this is a recorded verification-environment deviation)
+- pnpm 11.21.0
+- Playwright 1.62.1
+- Google Chrome for Testing 151.0.7922.34 on macOS
+
+### Aggregate trust
+
+The first aggregate attempt passed static, package, and the 49-file browser
+suite (457 passed, 2 documented opt-in skips), then correctly rejected a stale
+Studio landing capture by 2,178 pixels. Inspection showed the intended new
+Layout navigation; the remaining lesson captures also intentionally changed to
+show style-only source. Landing, primitive, mouse, advanced, and test-lab
+actuals were all inspected, exactly those five baselines were updated, and the
+focused comparison matched 5/5. No unrelated baseline changed.
+
+The complete rerun of `corepack pnpm@11.21.0 trust` exited zero:
+
+- catalog 28/14, typecheck, ESLint/Prettier, package builds, Studio declaration
+  verification, source and built Studio builds passed;
+- packed `@crc/core`/`@crc/types` consumers passed Bundler, NodeNext, runtime
+  export, private/no-source boundary checks;
+- browser suite passed 49 files, 457 tests, with only the two opt-in timing tests
+  skipped;
+- visual safeguard passed and five inspected Studio baselines matched;
+- built-package smoke passed 1 file/1 test;
+- lifecycle passed 2 files/11 tests; and
+- structural performance passed 1 file/5 tests with the two controlled timing
+  tests skipped by default.
+
+Vite emitted the known ineffective dynamic-import warning because the layout
+laboratory is also a public static export, plus chunk-size advisories for large
+Monaco/editor bundles. These are accepted build observations, not test failures.
+
+### Controlled reference performance
+
+`VITE_CRC_REPORT_PERF=1 corepack pnpm@11.21.0
+test:performance:reference` passed 1 file/7 tests in 5.40 seconds. Render callback
+median/p95/p99 was 2.2/2.4/4.0 ms; selection render was 2.3 ms and settle latency
+8.5 ms. Dispatch observations (median/p95/p99 milliseconds) were:
+
+| Workload    | Regions | Median |   p95 |   p99 |
+| ----------- | ------: | -----: | ----: | ----: |
+| zero        |       0 |  0.005 | 0.006 | 0.007 |
+| sparse      |     100 |  0.044 | 0.074 | 0.098 |
+| sparse      |   1,000 |   0.24 |  0.37 |  0.42 |
+| sparse      |  10,000 |    2.4 |   3.5 |   5.2 |
+| miss        |     100 |  0.042 | 0.048 | 0.086 |
+| miss        |   1,000 |   0.24 |  0.31 |  0.40 |
+| miss        |  10,000 |    2.4 |   3.7 |   5.7 |
+| dense       |   1,000 |  0.008 | 0.012 | 0.013 |
+| dense       |  10,000 |  0.024 | 0.026 | 0.040 |
+| clipped     |   1,000 |   0.30 |  0.38 |  0.62 |
+| transformed |   1,000 |   1.15 |  1.31 |  1.49 |
+| layered     |   1,000 |   0.30 |  0.36 |  0.56 |
+| cursor      |   1,000 |   0.25 |  0.34 |  0.41 |
+
+This one reference run is finite and below the documented 10,000-region
+spatial-index trigger, but timing remains environment-sensitive and does not
+become a default gate. P003-15 is done; all fifteen steps are done and Plan 003
+has no active marker.

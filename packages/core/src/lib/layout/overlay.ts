@@ -9,6 +9,7 @@ import type {
   SystemStyle,
 } from '../types.js';
 import {
+  childWithUsedSize,
   normalizeDirectChildStyle,
   placeDirectChildren,
   resolveContainerBox,
@@ -20,7 +21,7 @@ import type { LayoutBox } from './types.js';
 
 type OverlayAlignment = 'start' | 'center' | 'end' | 'stretch';
 
-export interface OverlayStyle extends BoxStyle {
+export interface OverlayStyle extends BoxStyle, LayoutItemStyle {
   alignItems?: OverlayAlignment;
   justifyItems?: OverlayAlignment;
 }
@@ -56,7 +57,7 @@ function Overlay(
   return placeDirectChildren(
     props.children,
     localContent,
-    child => placeOverlayChild(localContent, child, style),
+    child => resolveOverlayChildPlacement(localContent, child, style),
     style.overflow,
   );
 }
@@ -80,15 +81,24 @@ export function placeOverlayChild(
   child: CompEl<any, any>,
   alignment: Readonly<Pick<OverlayStyle, 'alignItems' | 'justifyItems'>> = {},
 ): LayoutBox {
+  return resolveOverlayChildPlacement(container, child, alignment).box;
+}
+
+function resolveOverlayChildPlacement(
+  container: Readonly<LayoutBox>,
+  child: CompEl<any, any>,
+  alignment: Readonly<Pick<OverlayStyle, 'alignItems' | 'justifyItems'>> = {},
+): { box: LayoutBox; element: CompEl<any, any> } {
   const item = normalizeDirectChildStyle(child) as Readonly<
     BoxStyle & LayoutItemStyle
   >;
-  const box = resolveDirectChildBox(
+  const resolved = resolveDirectChildBox(
     container,
     child,
     'overlay',
     item,
-  ).borderBox;
+  );
+  const declaredBox = resolved.borderBox;
   const horizontal = resolveItemAlignment(
     item.justifySelf,
     alignment.justifyItems ?? 'stretch',
@@ -103,13 +113,38 @@ export function placeOverlayChild(
     container,
     'alignSelf',
   );
-  const x = alignAxis(container.x, container.width, box.width, horizontal);
-  const y = alignAxis(container.y, container.height, box.height, vertical);
-  return {
+  const x = alignAxis(
+    container.x,
+    container.width,
+    declaredBox.width,
+    horizontal,
+  );
+  const y = alignAxis(
+    container.y,
+    container.height,
+    declaredBox.height,
+    vertical,
+  );
+  const box = {
     x,
     y,
-    width: horizontal === 'stretch' ? Math.max(0, container.width) : box.width,
-    height: vertical === 'stretch' ? Math.max(0, container.height) : box.height,
+    width: horizontal === 'stretch' ?
+        Math.max(0, container.width) :
+        declaredBox.width,
+    height: vertical === 'stretch' ?
+        Math.max(0, container.height) :
+        declaredBox.height,
+  };
+  const horizontalPadding = declaredBox.width - resolved.contentBox.width;
+  const verticalPadding = declaredBox.height - resolved.contentBox.height;
+  return {
+    box,
+    element: childWithUsedSize(
+      child,
+      item,
+      Math.max(0, box.width - horizontalPadding),
+      Math.max(0, box.height - verticalPadding),
+    ),
   };
 }
 

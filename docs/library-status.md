@@ -1,12 +1,21 @@
 # CRC library status and feature inventory
 
-_Snapshot refreshed: 2026-08-11, during TFC-10 trust-gate implementation._
+_Snapshot refreshed: 2026-08-18, during Project Plan 003 closure._
 
 ## At a glance
 
-CRC is a small functional component runtime over the HTML Canvas 2D API. It provides scheduled rendering, hook state, mouse-region interaction, transforms, cumulative clipping, globally ordered offscreen layers, and eleven drawing components. The project now has contract-driven browser evidence for every public export, a shared catalog of manual/headless scenarios, deterministic lifecycle ledgers, exact structural performance guards, strict package consumers, and reviewed visual comparisons.
+CRC is a small functional component runtime over the HTML Canvas 2D API. It
+provides scheduled rendering, hook state, mouse-region interaction, eleven
+style-only drawing/composition components, transforms, cumulative clipping,
+globally ordered offscreen layers, and five dedicated layout contexts. The
+project has contract-driven browser evidence for public exports, shared
+manual/headless scenarios, deterministic lifecycle ledgers, structural
+performance guards, strict package consumers, and reviewed visual comparisons.
 
-The historical pre-plan baseline was 70 browser tests with four supported-behavior skips. The final complete suite has 265 passing tests; all four supported skips have been replaced or enabled. The only conditional tests are two explicitly opt-in TFC-06 wall-clock timing benchmarks; their deterministic structural counterparts run normally.
+Historical test totals in completed plans are dated evidence rather than the
+current result. The fresh final verification snapshot below is authoritative for
+this revision. Controlled wall-clock timing remains opt-in; deterministic
+structural counterparts run normally.
 
 “Trusted” below means the applicable supported behavior, boundary cases, updates, errors, teardown, interaction, and visual output have deterministic evidence. It does not mean CRC adds browser capabilities that are outside its API, such as touch, keyboard focus, DOM accessibility, rich text, or image CORS control.
 
@@ -17,28 +26,42 @@ The historical pre-plan baseline was 70 browser tests with four supported-behavi
 | Feature / API                 | Supported behavior and evidence                                                                                                                                                                                                                       | Known boundary                                                                                                                                |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | `crc(canvas, root, options?)` | **Trusted.** Mount/update coalescing, latest-root retention, controller identity, mount-only signal, queued-frame safety, explicit/idempotent disposal, stale controller protection, 1,000-cycle release, and built-package use are direct contracts. | One Canvas owns one live mount. Updating with another signal does not replace the original lifetime.                                          |
-| `defineComp`                  | **Trusted.** Public type/runtime contracts cover element creation, function identity, same-name functions, keyed and unkeyed siblings, falsy children, duplicate keys, removal, and root replacement.                                                 | Unkeyed same-type identity follows occurrence order; use a key for semantic identity.                                                         |
+| `defineComp`                  | **Trusted.** Public type/runtime contracts cover specified/normalized/resolved styles, optional pure measurement, function identity, keyed and unkeyed siblings, falsy children, duplicate keys, removal, and root replacement.                       | Unkeyed same-type identity follows occurrence order; use a key for semantic identity. Allocation syntax requires a finite resolver.           |
 | Tree and hook sequencing      | **Trusted.** Function-plus-key identity, keyed reorder/insert/remove, hook-kind/count diagnostics, failed-render cleanup, Canvas/global restoration, and valid retry are direct.                                                                      | Conditional/reordered hooks are rejected. A failed render resets resources but does not roll back pixels already drawn earlier in that frame. |
 | Scheduled updates             | **Trusted.** State/root permutations, frame cancellation, already-dequeued no-ops, parent update intent, and settle helpers are deterministic.                                                                                                        | Rendering remains `requestAnimationFrame` scheduled.                                                                                          |
 | Teardown/resource model       | **Trusted.** Every native listener, registry entry, cursor token, component follower, layer instance, frame, image callback, hook cleanup, and mount map entry has one owner and exact release evidence.                                              | Garbage-collection timing is deliberately not a required oracle.                                                                              |
 
 ### Drawing components
 
-| Public export    | Confidence and supported behavior                                                                                                                                                            | Known boundary                                                                                                                     |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `rect`           | **Trusted.** Fill/stroke/alpha, signed geometry, all pixel-grid modes, updates, cursor, common mouse events, transforms/clips/layers, and exact pixels.                                      | Canvas owns signed/degenerate path semantics.                                                                                      |
-| `path`           | **Trusted.** Fill/stroke/combined/transparent paint, alpha zero, replacement, empty paths, line hit width, targeting, and exact pixels.                                                      | A `Path2D` is browser-owned geometry.                                                                                              |
-| `line`           | **Trusted.** Multipoint styling/updates, empty and single-point no-pixel behavior, transforms/clips, line hit width, and exact pixels.                                                       | A single `moveTo` does not paint a point.                                                                                          |
-| `horizontalLine` | **Trusted.** Full-Canvas/default and custom bounds, every pixel-grid mode, updates, and interaction parity with `line`.                                                                      | Pixel snapping follows effective stroke offset.                                                                                    |
-| `verticalLine`   | **Trusted.** Same matrix as `horizontalLine`, including symmetric defaults and modes.                                                                                                        | Same as horizontal line.                                                                                                           |
-| `svgPath`        | **Trusted.** Valid/empty/malformed browser delegation, fill/stroke/alpha, updates, interactions, transforms, and public example.                                                             | CRC does not add an SVG parser; Chromium can accept malformed data as empty or partial geometry.                                   |
-| `text`           | **Trusted.** Fill/stroke/alpha, font/alignment/baseline, visible/ellipsis/squish/clip, wrapping/height truncation, exact Canvas calls, measured multiline hits, updates, and public example. | Glyph rasterization and text metrics depend on browser/font platform; no DOM rich text or accessibility semantics are synthesized. |
-| `img`            | **Trusted.** Success/error/source race/removal, inert late callbacks, natural/explicit dimensions, alpha, border, pixel modes, aligned draw/hit geometry, updates, and exact stable pixels.  | Decode/CORS/taint behavior belongs to the browser. Explicit dimensions keep a geometry region before load and after failure.       |
-| `g`              | **Trusted.** Nested translate/scale/rotate/origin/skew, zero/negative scale, update, sibling isolation, transformed targeting, and composition pixels.                                       | This is Canvas transformation, not layout.                                                                                         |
-| `clip`           | **Trusted.** `nonzero`/`evenodd`, cumulative nested intersection, transform/update/empty clip, and matching render/hit geometry.                                                             | No retained clip object is exposed publicly.                                                                                       |
-| `layer`          | **Trusted.** Persistent prop/root/dimension updates, global paint/target order, nested transforms/clips/bounds, shared root interaction state, cursor parity, and cascading cleanup.         | Requires browser `OffscreenCanvas`; render caching remains shallow-prop based.                                                     |
+| Public export    | Confidence and supported behavior                                                                                                                                                    | Known boundary                                                                                                                     |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `rect`           | **Trusted.** Style-only paint/opacity, signed local geometry, length resolution, pixel-grid modes, cursor, mouse events, transforms/clips/layers/layout, and exact pixels.           | Canvas owns signed/degenerate primitive semantics; layout allocation is nonnegative.                                               |
+| `path`           | **Trusted.** Style-only path/paint/opacity, replacement, empty paths, line hit width, targeting, and exact pixels.                                                                   | A `Path2D` is browser-owned geometry.                                                                                              |
+| `line`           | **Trusted.** Multipoint styling/updates, empty and single-point no-pixel behavior, transforms/clips, line hit width, and exact pixels.                                               | A single `moveTo` does not paint a point.                                                                                          |
+| `horizontalLine` | **Trusted.** Full-Canvas/default and custom bounds, every pixel-grid mode, updates, and interaction parity with `line`.                                                              | Pixel snapping follows effective stroke offset.                                                                                    |
+| `verticalLine`   | **Trusted.** Same matrix as `horizontalLine`, including symmetric defaults and modes.                                                                                                | Same as horizontal line.                                                                                                           |
+| `svgPath`        | **Trusted.** Style-only data/paint, valid/empty/malformed browser delegation, updates, interactions, transforms, and public example.                                                 | CRC does not add an SVG parser; Chromium can accept malformed data as empty or partial geometry.                                   |
+| `text`           | **Trusted.** Style-only content/paint/font/alignment/baseline, fit/wrap behavior, exact Canvas calls, shared pure measurement, multiline hits, updates, and public example.          | Glyph rasterization and text metrics depend on browser/font platform; no DOM rich text or accessibility semantics are synthesized. |
+| `img`            | **Trusted.** Style-owned source/geometry, success/error/source race/removal, inert late callbacks, natural/explicit dimensions, opacity, border, alignment, and exact stable pixels. | Decode/CORS/taint behavior belongs to the browser. Layout measurement requires explicit dimensions.                                |
+| `g`              | **Trusted.** Nested translate/scale/rotate/origin/skew, zero/negative scale, update, sibling isolation, transformed targeting, and composition pixels.                               | This is Canvas transformation, not layout.                                                                                         |
+| `clip`           | **Trusted.** `nonzero`/`evenodd`, cumulative nested intersection, transform/update/empty clip, and matching render/hit geometry.                                                     | No retained clip object is exposed publicly.                                                                                       |
+| `layer`          | **Trusted.** Persistent prop/root/dimension updates, global paint/target order, nested transforms/clips/bounds, shared root interaction state, cursor parity, and cascading cleanup. | Requires browser `OffscreenCanvas`; render caching remains shallow-prop based.                                                     |
 
-The full component rules and evidence mapping are in the [drawing-component contract](./design/drawing-components-contract.md). Eleven focused drawing and composition lessons cover all eleven exports in the local studio.
+The full rules are in the [style](./design/style-system-contract.md) and
+[drawing](./design/drawing-components-contract.md) contracts. Eleven focused
+drawing/composition lessons cover all eleven exports in the Studio.
+
+### Style and layout
+
+| Public API                        | Confidence and supported behavior                                                                                                                                                        | Known boundary                                                                           |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Style protocol and box resolution | **Trusted.** Required closed component styles, no legacy runtime aliases, number/percentage/auto parsing, finite diagnostics, content-box resolution, and local spread reuse are direct. | No cascade, inheritance, margin, selectors, or complete CSS parser.                      |
+| `absolute`                        | **Trusted.** Definite direct-child size, number/percentage left/top, padding, clipping, source order, nested percentage resolution, and identity across reflow.                          | No right/bottom anchors, automatic size, or normal-flow participation.                   |
+| `overlay`                         | **Trusted.** Shared allocation, start/center/end/stretch alignment, self overrides, oversized alignment, clipping, and source-order overlap.                                             | Definite child size is required; no z-index.                                             |
+| `flow`                            | **Trusted.** Horizontal/vertical sequential placement, optional wrapping, numeric gaps, line cross sizing, alignment, pure measurement, and used-size rendering.                         | CRC-native, not CSS inline layout; no baseline, reverse, or justification.               |
+| `flex`                            | **Trusted.** Row/column, nowrap/wrap, grow/shrink with explicit main minimums, numeric gaps, distribution, item alignment, align-content, and DOM-oracle parity for the accepted matrix. | Reverse/order/baseline/auto margins/percentage gaps and advanced intrinsic cases reject. |
+| `grid`                            | **Trusted.** Explicit fixed/percentage/fractional tracks, one-based starts/spans, overlap, numeric gaps, alignment, clipping, and DOM-oracle parity.                                     | No implicit/automatic placement, content tracks, repeat/minmax, named areas, or subgrid. |
+| `measureElement` / `crcLayoutBox` | **Trusted.** Isolated pure measurement, cycle diagnostics, text and custom measurement, explicit image sizing, stable local observation, and no scheduling/ownership.                    | Natural image measurement and ambiguous intrinsic layout report unsupported diagnostics. |
 
 ### Hooks and interaction
 
@@ -53,36 +76,49 @@ The full component rules and evidence mapping are in the [drawing-component cont
 | `crcRectPath`    | **Trusted.** Effective geometry and pixel-grid dependencies preserve/replace memo identity correctly.                                                                                                          | Uses the same hook-order rules as other hooks.                                                        |
 | `crcLinePath`    | **Trusted.** Every coordinate and `closePath` participates in identity and construction.                                                                                                                       | Empty/single-point Canvas semantics are preserved.                                                    |
 | `crcSvgPath`     | **Trusted.** Exact data identity and platform parse/error delegation.                                                                                                                                          | No CRC-side validation or normalization.                                                              |
+| `crcLayoutBox`   | **Trusted.** Stable readonly local allocation, exact resize/reflow values, and context diagnostics.                                                                                                            | Observation is render-only and does not itself schedule an update.                                    |
 
 See the [runtime/hook contract](./design/runtime-hooks-contract.md), [mouse interaction contract](./design/mouse-interaction-contract.md), and ownership documents for exact rules.
 
 ### Types, packages, scenarios, and builds
 
-| Area                   | Current confidence                                                                                                                                                                                                                                  | Remaining boundary                                                                                                  |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Public TypeScript API  | **Trusted.** TypeScript 7 declarations compile under strict Bundler and NodeNext consumers. Positive inference and intentional errors cover runtime, hooks, components, events, and controller types. Private `@crc/core/lib/*` paths are rejected. | `@crc/types` remains a deliberately empty compatibility package until shared public types justify it.               |
-| Package build          | **Trusted.** esbuild ESM/source maps plus TypeScript declarations load in Node and the browser. Source/built smoke visuals match and built gallery guards reject source leakage.                                                                    | Output is ESM-only; new formats need an explicit requirement.                                                       |
-| Scenario catalog       | **Trusted.** Recursive filesystem and Vite discovery, source markers, lazy identity/action checks, unique organization metadata, all-action execution, and the generated [scenario index](./scenario-index.md) are required.                        | The six documentation candidates are ready for projection; publication remains a later adapter.                     |
-| Local gallery          | **Trusted.** Thirteen routes share exact definitions and source with headless tests, expose complete checklists and limitations, and are grouped by five stable facets.                                                                             | This is an internal gallery, not yet a published documentation site.                                                |
-| Continuous integration | **Configured.** One workflow maps static, packed-package, browser/visual, lifecycle, and performance structure to a stable aggregate `Trust gate` for PRs, pushes to `main`, and manual runs.                                                       | Hosted green status and selecting the aggregate in branch protection require pushing and repository administration. |
+| Area                   | Current confidence                                                                                                                                                                                                                    | Remaining boundary                                                                                                  |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Public TypeScript API  | **Trusted.** Declarations compile under strict Bundler and NodeNext consumers. Positives/negatives cover style schemas, lengths, layouts, measurement, observation, runtime, hooks, events, and controllers. Private subpaths reject. | `@crc/types` remains a deliberately empty compatibility package until a concrete need justifies it.                 |
+| Package build          | **Trusted.** esbuild ESM/source maps plus TypeScript declarations load in Node and the browser. Source/built smoke visuals match and built gallery guards reject source leakage.                                                      | Output is ESM-only; new formats need an explicit requirement.                                                       |
+| Scenario catalog       | **Trusted.** Recursive filesystem/Vite discovery, source markers, identity/action checks, unique metadata, and the generated [scenario index](./scenario-index.md) are required.                                                      | Publication remains a later adapter.                                                                                |
+| Local Studio           | **Trusted.** Twenty-eight learner routes and fourteen deterministic laboratories share canonical public source with headless tests, including four layout lessons.                                                                    | This is an internal Studio, not yet a published documentation site.                                                 |
+| Continuous integration | **Configured.** One workflow maps static, packed-package, browser/visual, lifecycle, and performance structure to a stable aggregate `Trust gate` for PRs, pushes to `main`, and manual runs.                                         | Hosted green status and selecting the aggregate in branch protection require pushing and repository administration. |
 
 ## Current verification snapshot
 
-Commands were run from the repository root on 2026-08-11 with Node 24.19.0 and pnpm 11.21.0 after TFC-10 implementation.
+The provisional final revision was verified on 2026-08-18 with Node v26.7.0,
+pnpm 11.21.0, Playwright 1.62.1, and Chrome for Testing 151.0.7922.34. The
+documented release environment remains Node 24.15+ on the Node 24 LTS line; the
+Node 26 run is recorded honestly and does not replace that support policy.
 
-| Check                    | Result   | Evidence                                                                                                             |
-| ------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------- |
-| Complete browser suite   | **Pass** | 34 files; 265 passed and 2 opt-in timing skips.                                                                      |
-| Supported-behavior skips | **Pass** | Zero. Historical nested clip, multiple layer, layer prop, and layer dimension skips are enabled/replaced.            |
-| Typecheck                | **Pass** | TypeScript 7 `tsc --noEmit`.                                                                                         |
-| Lint/format              | **Pass** | ESLint 10 plus direct Prettier checks.                                                                               |
-| Package build            | **Pass** | ESM, declarations, and source maps for `@crc/core` and `@crc/types`.                                                 |
-| Source gallery build     | **Pass** | Vite production build with all catalog/source adapters.                                                              |
-| Built gallery build      | **Pass** | Vite built mode resolves package outputs without source leakage.                                                     |
-| Packed package consumer  | **Pass** | Real tarballs pass strict Bundler, NodeNext, runtime export, private-subpath, and no-source checks.                  |
-| Scenario manifest        | **Pass** | Thirteen recursively discovered sources load, mount, execute every action, reset, and dispose.                       |
-| Visual safeguards        | **Pass** | Deliberate mismatch, named artifacts, immutable baselines, and normal recovery are required.                         |
-| Drawing visuals          | **Pass** | Five reviewed native 480×240 baselines; deliberate 20,694-pixel/max-delta-234 drill failed and normal run recovered. |
+| Check                            | Fresh result                                                                                                                                                       |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Aggregate browser suite          | 49 files; 457 passed and 2 documented opt-in timing skips                                                                                                          |
+| Static and package               | Catalog 28 lessons/14 labs, typecheck, ESLint/Prettier, package builds, source/built Studio, strict packed Bundler/NodeNext/runtime/no-source consumers all passed |
+| Visual and built smoke           | Visual safeguard passed; five inspected full-page Studio baselines matched; built-package smoke passed 1/1                                                         |
+| Lifecycle                        | 2 files and 11 tests passed                                                                                                                                        |
+| Default structural performance   | 1 file; 5 passed and 2 controlled timing cases skipped                                                                                                             |
+| Controlled reference performance | 1 file and all 7 tests passed with finite reported measurements                                                                                                    |
+
+The Studio visual baselines intentionally changed because every full-page view
+now includes the four-route Layout navigation and lesson captures show the
+style-only source. The first aggregate run caught this stale evidence; all five
+actuals were inspected before updating, and the normal comparison then matched
+5/5. Vite reported the known shared static/dynamic import warning for the layout
+laboratory and chunk-size advisories for Monaco/editor bundles. Neither warning
+changed runtime or verification behavior.
+
+In the single controlled reference run, sparse/miss 10,000-region dispatch was
+2.4 ms median and 3.5/3.7 ms p95 respectively, below the documented spatial-index
+trigger. Environment-sensitive timing remains observation, not a default
+correctness budget. Exact remaining metrics are preserved in the Plan 003 field
+note.
 
 ## Running locally
 
@@ -105,7 +141,11 @@ If Chromium is absent, install it once with `pnpm exec playwright install chromi
 pnpm playground
 ```
 
-Open <http://localhost:5173/#/examples> for the 24 learner lessons. Deterministic browser fixtures live separately at <http://localhost:5173/#/testing>, and legacy `#/scenarios` URLs redirect there. To exercise package output instead of source aliases, use `pnpm playground:built`.
+Open <http://localhost:5173/#/examples> for the 28 learner lessons.
+Deterministic browser fixtures live separately at
+<http://localhost:5173/#/testing>, and legacy `#/scenarios` URLs redirect there.
+To exercise package output instead of source aliases, use
+`pnpm playground:built`.
 
 ### Verification commands
 
@@ -117,7 +157,9 @@ See the [trust-gate guide](./testing/trust-gate.md) for clean-checkout setup, vi
 
 ## Accepted or deferred work
 
-- Pointer/touch, keyboard/focus, accessibility, drag/wheel, JSX, new primitives, layout, publication, and a polished docs renderer were outside this confidence phase.
+- Pointer/touch, keyboard/focus, accessibility, drag/wheel, JSX, new drawing
+  primitives, advanced/deferred layout features, publication, and a polished
+  docs renderer remain outside the current contract.
 - TFC-06 measurements do not justify a spatial index: the optimized linear resolver remains under its recorded triggers.
 - Wall-clock performance runs remain environment-controlled and opt-in; deterministic workload/counter assertions run on every normal suite.
 - `origin/jess/tests-for-utils` and richer JSX/playground branches were reviewed selectively; useful current-contract evidence was recreated without merging stale toolchain or unrelated feature work.

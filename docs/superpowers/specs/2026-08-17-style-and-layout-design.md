@@ -1,6 +1,6 @@
 # CRC first-class style and layout design
 
-Status: approved conversational design, awaiting written-spec review
+Status: implemented by Project Plan 003 on 2026-08-18
 
 Date: 2026-08-17
 

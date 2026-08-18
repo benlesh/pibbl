@@ -15,8 +15,12 @@ const tsc = join(dirname(require.resolve('typescript')), 'tsc.js');
 
 const consumer = `
 import {
+  absolute,
   crc,
   defineComp,
+  flex,
+  flow,
+  grid,
   overlay,
   type OverlayStyle,
   type Percentage,
@@ -67,6 +71,48 @@ const overlayStyle = {
   justifyItems: 'end',
 } satisfies OverlayStyle;
 overlay({ style: overlayStyle, children: [] });
+
+absolute({
+  style: {
+    left: 4, top: '10%', alignSelf: 'center', justifySelf: 'end',
+    flexBasis: 24, flexGrow: 1, flexShrink: 0,
+    gridColumnStart: 1, gridColumnSpan: 2, gridRowStart: 1, gridRowSpan: 1,
+  },
+  children: [],
+});
+overlay({
+  style: {
+    left: 4, top: '10%', alignSelf: 'center', justifySelf: 'end',
+    flexBasis: 24, flexGrow: 1, flexShrink: 0,
+    gridColumnStart: 1, gridColumnSpan: 2, gridRowStart: 1, gridRowSpan: 1,
+  },
+  children: [],
+});
+flow({
+  style: {
+    left: 4, top: '10%', alignSelf: 'center', justifySelf: 'end',
+    flexBasis: 24, flexGrow: 1, flexShrink: 0,
+    gridColumnStart: 1, gridColumnSpan: 2, gridRowStart: 1, gridRowSpan: 1,
+  },
+  children: [],
+});
+flex({
+  style: {
+    left: 4, top: '10%', alignSelf: 'center', justifySelf: 'end',
+    flexBasis: 24, flexGrow: 1, flexShrink: 0,
+    gridColumnStart: 1, gridColumnSpan: 2, gridRowStart: 1, gridRowSpan: 1,
+  },
+  children: [],
+});
+grid({
+  style: {
+    left: 4, top: '10%', alignSelf: 'center', justifySelf: 'end',
+    flexBasis: 24, flexGrow: 1, flexShrink: 0,
+    gridColumnStart: 1, gridColumnSpan: 2, gridRowStart: 1, gridRowSpan: 1,
+    gridTemplateColumns: [100], gridTemplateRows: [50],
+  },
+  children: [],
+});
 
 declare const canvas: HTMLCanvasElement;
 crc(canvas, RadiusProbe({ style: { radius: '50%' } }));

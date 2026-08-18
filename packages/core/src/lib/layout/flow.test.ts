@@ -4,6 +4,7 @@ import { text } from '../components/text';
 import { crc } from '../crc';
 import { defineComp } from '../define-comp';
 import { crcState } from '../hooks/crc-state';
+import { crcLayoutBox } from '../hooks/crc-layout-box';
 import type { Length } from '../style/types';
 import type { RectStyle } from '../style/types';
 import { componentTest } from '../test-utils/component-test';
@@ -64,6 +65,43 @@ describe('CRC-native flow geometry', () => {
       { x: 0, y: 35, width: 30, height: 35 },
       { x: 40, y: 0, width: 40, height: 20 },
     ]);
+  });
+
+  it('forwards cross-axis stretch size to paint, hit testing, and observation', async () => {
+    interface ProbeStyle extends SystemStyle {
+      width: number;
+      height: number;
+      alignSelf?: 'stretch';
+    }
+    const onClick = vi.fn();
+    let observed: Readonly<{ x: number; y: number; width: number; height: number }>;
+    const Probe = defineComp<{ onClick: () => void }, ProbeStyle>((props, style) => {
+      observed = crcLayoutBox();
+      return rect({
+        style: {
+          width: style.width,
+          height: style.height,
+          fill: 'red',
+        },
+        onClick: props.onClick,
+      });
+    });
+    const canvas = await componentTest(flow({
+      style: { width: 100, height: 50 },
+      children: [
+        Probe({
+          style: { width: 10, height: 10, alignSelf: 'stretch' },
+          onClick,
+        }),
+        rect({ style: { width: 10, height: 20 } }),
+      ],
+    }), { width: 120, height: 70 });
+
+    expect(observed!).toEqual({ x: 0, y: 0, width: 10, height: 20 });
+    expect(canvas.element.getContext('2d')!
+      .getImageData(5, 15, 1, 1).data[3]).toBe(255);
+    await canvas.click({ position: { x: 5, y: 15 } });
+    expect(onClick).toHaveBeenCalledOnce();
   });
 
   it('measures an auto-sized child exactly once', () => {

@@ -1,6 +1,6 @@
 # CRC style and layout architecture
 
-Status: proposed architecture for written-spec review
+Status: implemented by Project Plan 003 on 2026-08-18
 
 Date: 2026-08-17
 
@@ -48,7 +48,7 @@ The element descriptor gains first-class style metadata:
 ```ts
 type ReservedElementKey = "key" | "style";
 type UnionKeys<T> = T extends unknown ? keyof T : never;
-type ProgramProps<P> = 0 extends (1 & P)
+type ProgramProps<P> = 0 extends 1 & P
   ? P
   : Extract<UnionKeys<P>, ReservedElementKey> extends never
     ? P
@@ -86,8 +86,7 @@ factory input expresses that rule structurally:
 ```ts
 type RequiredKeys<T> = T extends unknown
   ? {
-      [K in keyof T]-?:
-        Pick<T, K> extends Required<Pick<T, K>> ? K : never
+      [K in keyof T]-?: Pick<T, K> extends Required<Pick<T, K>> ? K : never;
     }[keyof T]
   : never;
 
@@ -119,10 +118,18 @@ props and style.
 Style types are capability intersections, not a global index signature:
 
 ```ts
-interface BoxStyle { /* size and constraint participation */ }
-interface TransformStyle { /* transform values */ }
-interface PaintStyle { /* fill, stroke, opacity */ }
-interface FlexContainerStyle { /* flex container values */ }
+interface BoxStyle {
+  /* size and constraint participation */
+}
+interface TransformStyle {
+  /* transform values */
+}
+interface PaintStyle {
+  /* fill, stroke, opacity */
+}
+interface FlexContainerStyle {
+  /* flex container values */
+}
 interface LayoutItemStyle {
   /* optional absolute, overlay, flex, and grid participation values */
 }
@@ -211,11 +218,15 @@ type CompType<P, S extends SystemStyle = SystemStyle, N = S, R = N> = ((
   props: ProgramProps<P>,
   style: Readonly<R>,
   ctx: RenderingContext2D,
-) => CRCNode) & Readonly<{
-  normalizeStyle?: (style: Readonly<S>) => Readonly<N>;
-  resolveStyle?: (style: Readonly<N>, context: StyleResolutionContext) => Readonly<R>;
-  measure?: (input: MeasureInput<ProgramProps<P>, N>) => MeasureResult;
-}>;
+) => CRCNode) &
+  Readonly<{
+    normalizeStyle?: (style: Readonly<S>) => Readonly<N>;
+    resolveStyle?: (
+      style: Readonly<N>,
+      context: StyleResolutionContext,
+    ) => Readonly<R>;
+    measure?: (input: MeasureInput<ProgramProps<P>, N>) => MeasureResult;
+  }>;
 
 declare function defineComp<
   P,
@@ -226,7 +237,10 @@ declare function defineComp<
   render: CompType<P, S, N, R>,
   capabilities?: {
     normalizeStyle?: (style: Readonly<S>) => Readonly<N>;
-    resolveStyle?: (style: Readonly<N>, context: StyleResolutionContext) => Readonly<R>;
+    resolveStyle?: (
+      style: Readonly<N>,
+      context: StyleResolutionContext,
+    ) => Readonly<R>;
     measure?: (input: MeasureInput<ProgramProps<P>, N>) => MeasureResult;
   },
 ): CompFactory<ProgramProps<P>, S>;

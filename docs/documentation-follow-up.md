@@ -4,7 +4,7 @@ The documentation renderer follow-up described here has been implemented as the 
 
 ## Current model
 
-- `learningExampleCatalog` drives the 24 learner pages under `#/examples`.
+- `learningExampleCatalog` drives the 28 learner pages under `#/examples`.
 - `scenarioCatalog` drives deterministic fixtures under `#/testing`.
 - Learning pages load their canonical TypeScript and Monaco editor only when visited.
 - Existing `#/scenarios` routes redirect to their matching automated-test routes.
@@ -13,7 +13,9 @@ The documentation renderer follow-up described here has been implemented as the 
 ## Implemented experience
 
 - Persistent categorized desktop navigation and an accessible narrow-screen drawer.
-- One focused page for every drawing/composition primitive and mouse event, plus four advanced interaction lessons.
+- One focused page for every drawing/composition primitive and mouse event,
+  four advanced interaction lessons, and four layout lessons for
+  absolute/overlay, Flow, Flex, and Grid.
 - Large live previews, type-aware editable TypeScript, diagnostics, completion and hover support, automatic debounced execution, copy/reset/share/format controls, prompts, API notes, and previous/next links.
 - One replaceable opaque sandbox frame that remains untouched when type or syntax checks fail.
 - A visually subordinate automated-testing area with collapsed highlighted source.

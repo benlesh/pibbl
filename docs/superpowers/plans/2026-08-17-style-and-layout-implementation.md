@@ -64,6 +64,7 @@ Component-specific style interfaces remain beside their components. Shared pure 
 ### Task 1: First-class style-bearing element protocol
 
 **Files:**
+
 - Modify: `packages/core/src/lib/types.ts`
 - Modify: `packages/core/src/lib/create-element.ts`
 - Modify: `packages/core/src/lib/define-comp.ts`
@@ -79,6 +80,7 @@ Component-specific style interfaces remain beside their components. Shared pure 
 - Test: `playground/package-consumer/index.ts`
 
 **Interfaces:**
+
 - Produces: `SystemStyle`, `ComponentInput<P, S>`, `CompFn<P, S>`, `CompEl<P, S>`.
 - Produces: `defineComp<P, S>(render)` factory that accepts programmatic props plus reserved `style` and `key`, stores them separately, and invokes render as `(props, style, ctx)`.
 - Preserves: component function identity and keyed/unkeyed identity semantics.
@@ -88,24 +90,24 @@ Component-specific style interfaces remain beside their components. Shared pure 
 Add a runtime contract proving style/key are descriptor metadata and are not present in render props:
 
 ```ts
-it('stores style and key separately and passes style before the Canvas context', async () => {
+it("stores style and key separately and passes style before the Canvas context", async () => {
   const calls: unknown[] = [];
   const Probe = defineComp<{ value: number }, { width: number }>(
     (props, style, ctx) => {
       calls.push({ props, style, canvas: ctx.canvas });
     },
   );
-  const element = Probe({ value: 7, key: 'probe', style: { width: 40 } });
+  const element = Probe({ value: 7, key: "probe", style: { width: 40 } });
 
   expect(element).toMatchObject({
     props: { value: 7 },
     style: { width: 40 },
-    key: 'probe',
+    key: "probe",
   });
-  expect('style' in element.props).toBe(false);
-  expect('key' in element.props).toBe(false);
+  expect("style" in element.props).toBe(false);
+  expect("key" in element.props).toBe(false);
 
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   crc(canvas, element);
   await nextFrame();
   expect(calls).toEqual([
@@ -135,9 +137,9 @@ export interface SystemStyle {
   custom?: unknown;
 }
 
-type ReservedElementKey = 'key' | 'style';
+type ReservedElementKey = "key" | "style";
 type UnionKeys<T> = T extends unknown ? keyof T : never;
-type ProgramProps<P> = 0 extends (1 & P)
+type ProgramProps<P> = 0 extends 1 & P
   ? P
   : Extract<UnionKeys<P>, ReservedElementKey> extends never
     ? P
@@ -145,8 +147,7 @@ type ProgramProps<P> = 0 extends (1 & P)
 
 type RequiredKeys<T> = T extends unknown
   ? {
-      [K in keyof T]-?:
-        Pick<T, K> extends Required<Pick<T, K>> ? K : never
+      [K in keyof T]-?: Pick<T, K> extends Required<Pick<T, K>> ? K : never;
     }[keyof T]
   : never;
 
@@ -154,8 +155,10 @@ type StyleField<S> = [RequiredKeys<S>] extends [never]
   ? { style?: S }
   : { style: S };
 
-export type ComponentInput<P, S extends SystemStyle = SystemStyle> =
-  ProgramProps<P> & { key?: string } & StyleField<S>;
+export type ComponentInput<
+  P,
+  S extends SystemStyle = SystemStyle,
+> = ProgramProps<P> & { key?: string } & StyleField<S>;
 
 export type CompFn<P, S extends SystemStyle = SystemStyle> = (
   props: ProgramProps<P>,
@@ -196,6 +199,7 @@ git commit -m "refactor(core): add first-class element styles"
 ### Task 2: Style capability types and path/rectangle/SVG migration
 
 **Files:**
+
 - Create: `packages/core/src/lib/style/types.ts`
 - Modify: `packages/core/src/lib/types.ts`
 - Modify: `packages/core/src/lib/components/path.ts`
@@ -208,6 +212,7 @@ git commit -m "refactor(core): add first-class element styles"
 - Test: `playground/package-consumer/index.ts`
 
 **Interfaces:**
+
 - Consumes: Task 1 element protocol.
 - Produces: `PaintStyle`, `CursorStyle`, `PathStyle`, `RectStyle`, and `SvgPathStyle`.
 - Produces: style-only public calls using `fill`, `stroke`, `strokeWidth`, `opacity`, `cursor`, and `d`.
@@ -223,11 +228,11 @@ const element = rect({
     y: 12,
     width: 40,
     height: 20,
-    fill: '#2563eb',
-    stroke: '#0f172a',
+    fill: "#2563eb",
+    stroke: "#0f172a",
     strokeWidth: 2,
     opacity: 0.5,
-    alignToPixelGrid: 'round',
+    alignToPixelGrid: "round",
   },
   onClick,
 });
@@ -267,7 +272,7 @@ export interface PathStyle extends SystemStyle, PaintStyle, CursorStyle {
   lineInteractionWidth?: number;
 }
 
-export interface RectStyle extends Omit<PathStyle, 'd'> {
+export interface RectStyle extends Omit<PathStyle, "d"> {
   x?: number;
   y?: number;
   width: number;
@@ -275,7 +280,7 @@ export interface RectStyle extends Omit<PathStyle, 'd'> {
   alignToPixelGrid?: PixelGridAlignment;
 }
 
-export interface SvgPathStyle extends Omit<PathStyle, 'd'> {
+export interface SvgPathStyle extends Omit<PathStyle, "d"> {
   d: string;
 }
 ```
@@ -303,6 +308,7 @@ git commit -m "refactor(components): move paths and rectangles to style"
 ### Task 3: Line-family style migration
 
 **Files:**
+
 - Modify: `packages/core/src/lib/components/line.ts`
 - Modify: `packages/core/src/lib/components/horizontal-line.ts`
 - Modify: `packages/core/src/lib/components/vertical-line.ts`
@@ -312,6 +318,7 @@ git commit -m "refactor(components): move paths and rectangles to style"
 - Test: `playground/package-consumer/index.ts`
 
 **Interfaces:**
+
 - Consumes: `PaintStyle` and `CursorStyle` from Task 2.
 - Produces: `LineStyle`, `HorizontalLineStyle`, and `VerticalLineStyle`.
 
@@ -320,17 +327,20 @@ git commit -m "refactor(components): move paths and rectangles to style"
 ```ts
 line({
   style: {
-    coords: [[0, 0], [20, 10]],
-    stroke: '#2563eb',
+    coords: [
+      [0, 0],
+      [20, 10],
+    ],
+    stroke: "#2563eb",
     strokeWidth: 2,
     lineInteractionWidth: 8,
-    cursor: 'pointer',
+    cursor: "pointer",
   },
   onMouseMove,
 });
 
-horizontalLine({ style: { y: 12, left: 4, right: 40, stroke: 'black' } });
-verticalLine({ style: { x: 12, top: 4, bottom: 40, stroke: 'black' } });
+horizontalLine({ style: { y: 12, x1: 4, x2: 40, stroke: "black" } });
+verticalLine({ style: { x: 12, y1: 4, y2: 40, stroke: "black" } });
 ```
 
 - [ ] **Step 2: Observe focused RED**
@@ -343,7 +353,7 @@ Expected: line-family styles and renamed paint properties do not exist.
 
 - [ ] **Step 3: Implement and mechanically migrate all line calls**
 
-`LineStyle.coords`, horizontal `y/left/right`, vertical `x/top/bottom`, pixel alignment, paint, cursor, and interaction width are visual style. Event handlers remain props. Reuse the Task 2 internal `Path` renderer with separate props/style arguments rather than reconstructing legacy prop objects.
+`LineStyle.coords`, horizontal `y/x1/x2`, vertical `x/y1/y2`, pixel alignment, paint, cursor, and interaction width are visual style. `x1` and `y1` default to zero; `x2` and `y2` default to the current allocation width and height. Event handlers remain props. Reuse the Task 2 internal `Path` renderer with separate props/style arguments rather than reconstructing legacy prop objects.
 
 - [ ] **Step 4: Run focused tests and typecheck**
 
@@ -364,6 +374,7 @@ git commit -m "refactor(components): move lines to style"
 ### Task 4: Text style migration and shared text-layout utility
 
 **Files:**
+
 - Create: `packages/core/src/lib/components/text-layout.ts`
 - Test: `packages/core/src/lib/components/text-layout.test.ts`
 - Modify: `packages/core/src/lib/components/text.ts`
@@ -371,6 +382,7 @@ git commit -m "refactor(components): move lines to style"
 - Test: `packages/core/src/lib/components/text.test.ts`
 
 **Interfaces:**
+
 - Produces: `TextStyle`.
 - Produces: pure `resolveTextLayout(measureText, style)` returning literal line text, baselines, and measured bounds shared by paint and later measurement.
 
@@ -381,18 +393,18 @@ Use this public style shape:
 ```ts
 text({
   style: {
-    text: 'Hello Canvas',
+    text: "Hello Canvas",
     x: 20,
     y: 24,
     width: 180,
     height: 60,
     lineHeight: 18,
     wrap: true,
-    fit: 'ellipsis',
-    font: '16px sans-serif',
-    textAlign: 'left',
-    textBaseline: 'top',
-    fill: '#111827',
+    fit: "ellipsis",
+    font: "16px sans-serif",
+    textAlign: "left",
+    textBaseline: "top",
+    fill: "#111827",
   },
   onClick,
 });
@@ -429,12 +441,14 @@ git commit -m "refactor(text): make text rendering style-driven"
 ### Task 5: Image style migration
 
 **Files:**
+
 - Modify: `packages/core/src/lib/components/img.ts`
 - Modify: all image call sites under `packages/`, `playground/`, and `tooling/`
 - Test: `packages/core/src/lib/components/img.test.ts`
 - Test: `packages/core/src/lib/components/img-async.test.ts`
 
 **Interfaces:**
+
 - Produces: `ImgStyle` with `src`, geometry, paint-border, opacity, cursor, and pixel alignment.
 - Preserves: image load/error/source-race/removal ownership and explicit-dimension behavior.
 
@@ -449,10 +463,10 @@ img({
     width: 80,
     height: 60,
     opacity: 0.8,
-    stroke: '#0f172a',
+    stroke: "#0f172a",
     strokeWidth: 1,
-    alignToPixelGrid: 'round',
-    cursor: 'pointer',
+    alignToPixelGrid: "round",
+    cursor: "pointer",
   },
   onClick,
 });
@@ -487,6 +501,7 @@ git commit -m "refactor(image): move image rendering to style"
 ### Task 6: Transform, clip, layer migration and style-protocol closure
 
 **Files:**
+
 - Modify: `packages/core/src/lib/components/g.ts`
 - Modify: `packages/core/src/lib/components/clip.ts`
 - Modify: `packages/core/src/lib/components/layer.ts`
@@ -500,6 +515,7 @@ git commit -m "refactor(image): move image rendering to style"
 - Test: `playground/package-consumer/index.ts`
 
 **Interfaces:**
+
 - Produces: `GStyle`, `ClipStyle`, `LayerStyle` and final public style exports.
 - Removes: visual `IntrinsicProps`, `AlphaProps`, `FillStyleProps`, `StrokeStyleProps`, and `CursorStyleProps` legacy mixins.
 
@@ -520,7 +536,7 @@ g({
   children: [rect({ style: { x: 0, y: 0, width: 10, height: 10 } })],
 });
 
-clip({ style: { d: path, fillRule: 'evenodd' }, children: [child] });
+clip({ style: { d: path, fillRule: "evenodd" }, children: [child] });
 layer({ style: { width: 200, height: 100 }, render: child });
 ```
 
@@ -557,6 +573,7 @@ git commit -m "refactor(core): complete style-only component API"
 ### Task 7: Lengths, constraints, edges, and box resolution
 
 **Files:**
+
 - Create: `packages/core/src/lib/style/resolve-length.ts`
 - Create: `packages/core/src/lib/style/resolve-length.test.ts`
 - Create: `packages/core/src/lib/style/normalize.ts`
@@ -568,6 +585,7 @@ git commit -m "refactor(core): complete style-only component API"
 - Modify: `packages/core/src/index.ts`
 
 **Interfaces:**
+
 - Produces: `Length = number | Percentage | 'auto'`, `Size`, `Constraints`, `LayoutBox`, `Edges`, `BoxStyle`, `ResolvedBoxStyle`, and optional `LayoutItemStyle`.
 - Produces: `resolveLength`, `normalizeEdges`, `resolveBox`.
 
@@ -576,16 +594,18 @@ git commit -m "refactor(core): complete style-only component API"
 Use hand-derived literal cases:
 
 ```ts
-expect(resolveLength(24, 300, 'width')).toBe(24);
-expect(resolveLength('25%', 300, 'width')).toBe(75);
-expect(resolveLength('auto', 300, 'width')).toBeUndefined();
-expect(() => resolveLength(Number.NaN, 300, 'width')).toThrow(/width.*finite/);
-expect(() => resolveLength('12px', 300, 'width')).toThrow(/unsupported.*12px/);
+expect(resolveLength(24, 300, "width")).toBe(24);
+expect(resolveLength("25%", 300, "width")).toBe(75);
+expect(resolveLength("auto", 300, "width")).toBeUndefined();
+expect(() => resolveLength(Number.NaN, 300, "width")).toThrow(/width.*finite/);
+expect(() => resolveLength("12px", 300, "width")).toThrow(/unsupported.*12px/);
 
-expect(resolveBox(
-  { width: '50%', height: 40, minWidth: 180, padding: 10 },
-  { minWidth: 0, maxWidth: 320, minHeight: 0, maxHeight: 200 },
-)).toEqual({
+expect(
+  resolveBox(
+    { width: "50%", height: 40, minWidth: 180, padding: 10 },
+    { minWidth: 0, maxWidth: 320, minHeight: 0, maxHeight: 200 },
+  ),
+).toEqual({
   borderBox: { x: 0, y: 0, width: 200, height: 60 },
   contentBox: { x: 10, y: 10, width: 180, height: 40 },
 });
@@ -603,30 +623,33 @@ Use these exact public participation shapes:
 
 ```ts
 type Percentage = `${number}%`;
-type Length = number | Percentage | 'auto';
-type EdgeValues = number | Readonly<{
-  top?: number;
-  right?: number;
-  bottom?: number;
-  left?: number;
-}>;
+type Length = number | Percentage | "auto";
+type EdgeValues =
+  | number
+  | Readonly<{
+      top?: number;
+      right?: number;
+      bottom?: number;
+      left?: number;
+    }>;
 
 interface BoxStyle extends SystemStyle {
   width?: Length;
   height?: Length;
-  minWidth?: Exclude<Length, 'auto'>;
-  maxWidth?: Exclude<Length, 'auto'>;
-  minHeight?: Exclude<Length, 'auto'>;
-  maxHeight?: Exclude<Length, 'auto'>;
+  minWidth?: Exclude<Length, "auto">;
+  maxWidth?: Exclude<Length, "auto">;
+  minHeight?: Exclude<Length, "auto">;
+  maxHeight?: Exclude<Length, "auto">;
   padding?: EdgeValues;
-  overflow?: 'visible' | 'clip';
+  overflow?: "visible" | "clip";
 }
 
 interface LayoutItemStyle {
-  left?: Exclude<Length, 'auto'>;
-  top?: Exclude<Length, 'auto'>;
-  alignSelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch' | 'flex-start' | 'flex-end';
-  justifySelf?: 'auto' | 'start' | 'end' | 'center' | 'stretch';
+  left?: Exclude<Length, "auto">;
+  top?: Exclude<Length, "auto">;
+  alignSelf?:
+    "auto" | "start" | "end" | "center" | "stretch" | "flex-start" | "flex-end";
+  justifySelf?: "auto" | "start" | "end" | "center" | "stretch";
   flexBasis?: Length;
   flexGrow?: number;
   flexShrink?: number;
@@ -662,6 +685,7 @@ git commit -m "feat(layout): resolve lengths and boxes"
 ### Task 8: Layout context, resolved styles, placement, and geometry observation
 
 **Files:**
+
 - Create: `packages/core/src/lib/layout/context.ts`
 - Create: `packages/core/src/lib/layout/place-child.ts`
 - Create: `packages/core/src/lib/layout/place-child.test.ts`
@@ -677,6 +701,7 @@ git commit -m "feat(layout): resolve lengths and boxes"
 - Test: `packages/core/src/lib/runtime-contract.test.ts`
 
 **Interfaces:**
+
 - Produces: private `PlacedChild` component with `{ element, box, clipInChildSpace, identityHint }` props.
 - Produces: `crcLayoutBox(): Readonly<LayoutBox>` returning the current allocation in child-local coordinates.
 - Produces: root layout context from intrinsic Canvas dimensions.
@@ -729,6 +754,7 @@ git commit -m "feat(layout): add layout context and placement"
 ### Task 9: Absolute and overlay formatting contexts
 
 **Files:**
+
 - Create: `packages/core/src/lib/layout/absolute.ts`
 - Create: `packages/core/src/lib/layout/absolute.test.ts`
 - Create: `packages/core/src/lib/layout/overlay.ts`
@@ -739,6 +765,7 @@ git commit -m "feat(layout): add layout context and placement"
 - Test: `packages/core/test/layout-foundation.test.ts`
 
 **Interfaces:**
+
 - Produces: public `absolute`, `AbsoluteStyle`, `overlay`, `OverlayStyle`.
 - Produces: shared public scenario `mountLayoutFoundation(canvas)` for subsequent layout tasks.
 
@@ -750,8 +777,8 @@ Use these exact container contracts:
 type AbsoluteStyle = BoxStyle;
 
 interface OverlayStyle extends BoxStyle {
-  alignItems?: 'start' | 'center' | 'end' | 'stretch';
-  justifyItems?: 'start' | 'center' | 'end' | 'stretch';
+  alignItems?: "start" | "center" | "end" | "stretch";
+  justifyItems?: "start" | "center" | "end" | "stretch";
 }
 ```
 
@@ -801,6 +828,7 @@ git commit -m "feat(layout): add absolute and overlay contexts"
 ### Task 10: Pure measurement protocol and CRC-native flow
 
 **Files:**
+
 - Create: `packages/core/src/lib/layout/measure.ts`
 - Create: `packages/core/src/lib/layout/measure.test.ts`
 - Create: `packages/core/src/lib/layout/flow.ts`
@@ -815,6 +843,7 @@ git commit -m "feat(layout): add absolute and overlay contexts"
 - Test: `packages/core/test/layout-foundation.test.ts`
 
 **Interfaces:**
+
 - Produces: `MeasureInput<P, S>`, `MeasureResult`, optional component-type `measure` capability, `measureElement`.
 - Produces: public `flow` and `FlowStyle`.
 
@@ -825,16 +854,18 @@ Measurement must not invoke render:
 ```ts
 let renders = 0;
 const Measured = defineComp(
-  () => { renders++; },
+  () => {
+    renders++;
+  },
   {
     measure: () => ({
-      status: 'measured',
+      status: "measured",
       size: { width: 40, height: 20 },
     }),
   },
 );
 expect(measureElement(Measured({}), constraints, service)).toEqual({
-  status: 'measured',
+  status: "measured",
   size: { width: 40, height: 20 },
 });
 expect(renders).toBe(0);
@@ -844,11 +875,11 @@ Define CRC-native flow exactly:
 
 ```ts
 interface FlowStyle extends BoxStyle {
-  direction?: 'horizontal' | 'vertical';
+  direction?: "horizontal" | "vertical";
   wrap?: boolean;
   gap?: number;
   lineGap?: number;
-  alignItems?: 'start' | 'center' | 'end' | 'stretch';
+  alignItems?: "start" | "center" | "end" | "stretch";
 }
 ```
 
@@ -905,6 +936,7 @@ git commit -m "feat(layout): add measurement and flow"
 ### Task 11: CSS-compatible flex subset
 
 **Files:**
+
 - Create: `packages/core/src/lib/layout/flex.ts`
 - Create: `packages/core/src/lib/layout/flex.test.ts`
 - Create: `packages/core/test/flex-css-compatibility.test.ts`
@@ -914,6 +946,7 @@ git commit -m "feat(layout): add measurement and flow"
 - Test: `packages/core/test/layout-foundation.test.ts`
 
 **Interfaces:**
+
 - Produces: public `flex`, `FlexStyle`, and `FlexItemStyle` capability fields on child styles.
 
 - [ ] **Step 1: Write failing hand-derived Flexbox fixtures**
@@ -922,11 +955,24 @@ Support this exact initial matrix:
 
 ```ts
 interface FlexStyle extends BoxStyle {
-  flexDirection?: 'row' | 'column';
-  flexWrap?: 'nowrap' | 'wrap';
-  justifyContent?: 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly';
-  alignItems?: 'stretch' | 'flex-start' | 'flex-end' | 'center';
-  alignContent?: 'stretch' | 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly';
+  flexDirection?: "row" | "column";
+  flexWrap?: "nowrap" | "wrap";
+  justifyContent?:
+    | "flex-start"
+    | "flex-end"
+    | "center"
+    | "space-between"
+    | "space-around"
+    | "space-evenly";
+  alignItems?: "stretch" | "flex-start" | "flex-end" | "center";
+  alignContent?:
+    | "stretch"
+    | "flex-start"
+    | "flex-end"
+    | "center"
+    | "space-between"
+    | "space-around"
+    | "space-evenly";
   gap?: number;
   rowGap?: number;
   columnGap?: number;
@@ -934,9 +980,9 @@ interface FlexStyle extends BoxStyle {
 
 type FlexItemStyle = Pick<
   LayoutItemStyle,
-  'flexBasis' | 'flexGrow' | 'flexShrink'
+  "flexBasis" | "flexGrow" | "flexShrink"
 > & {
-  alignSelf?: 'auto' | 'stretch' | 'flex-start' | 'flex-end' | 'center';
+  alignSelf?: "auto" | "stretch" | "flex-start" | "flex-end" | "center";
 };
 ```
 
@@ -986,6 +1032,7 @@ git commit -m "feat(layout): add CSS-compatible flex"
 ### Task 12: CSS-compatible explicit grid subset
 
 **Files:**
+
 - Create: `packages/core/src/lib/layout/grid.ts`
 - Create: `packages/core/src/lib/layout/grid.test.ts`
 - Create: `packages/core/test/grid-css-compatibility.test.ts`
@@ -995,6 +1042,7 @@ git commit -m "feat(layout): add CSS-compatible flex"
 - Test: `packages/core/test/layout-foundation.test.ts`
 
 **Interfaces:**
+
 - Produces: public `grid`, `GridStyle`, `GridTrack`, and child grid-placement style fields.
 
 - [ ] **Step 1: Write failing explicit-grid fixtures**
@@ -1006,8 +1054,8 @@ type GridTrack = number | `${number}%` | `${number}fr`;
 interface GridStyle extends BoxStyle {
   gridTemplateColumns: readonly GridTrack[];
   gridTemplateRows: readonly GridTrack[];
-  justifyItems?: 'stretch' | 'start' | 'center' | 'end';
-  alignItems?: 'stretch' | 'start' | 'center' | 'end';
+  justifyItems?: "stretch" | "start" | "center" | "end";
+  alignItems?: "stretch" | "start" | "center" | "end";
   gap?: number;
   rowGap?: number;
   columnGap?: number;
@@ -1018,8 +1066,8 @@ interface GridItemStyle extends SystemStyle {
   gridColumnSpan?: number;
   gridRowStart?: number;
   gridRowSpan?: number;
-  alignSelf?: 'auto' | 'stretch' | 'start' | 'center' | 'end';
-  justifySelf?: 'auto' | 'stretch' | 'start' | 'center' | 'end';
+  alignSelf?: "auto" | "stretch" | "start" | "center" | "end";
+  justifySelf?: "auto" | "stretch" | "start" | "center" | "end";
 }
 ```
 
@@ -1064,6 +1112,7 @@ git commit -m "feat(layout): add CSS-compatible grid"
 ### Task 13: Public learning examples, nested proving scenarios, and Studio types
 
 **Files:**
+
 - Create: `packages/scenarios/src/learning/layout/absolute-and-overlay.example.ts`
 - Create: `packages/scenarios/src/learning/layout/flow.example.ts`
 - Create: `packages/scenarios/src/learning/layout/flex.example.ts`
@@ -1079,6 +1128,7 @@ git commit -m "feat(layout): add CSS-compatible grid"
 - Test: `packages/core/test/layout-foundation.test.ts`
 
 **Interfaces:**
+
 - Consumes: all public style/layout exports.
 - Produces: four canonical learner routes and one exhaustive nested test laboratory.
 
@@ -1129,6 +1179,7 @@ git commit -m "feat(examples): teach and prove CRC layout"
 ### Task 14: Composition, diagnostics, ownership, and structural performance hardening
 
 **Files:**
+
 - Modify: `packages/core/test/geometry-composition.test.ts`
 - Modify: `packages/core/test/interaction-dispatch.test.ts`
 - Modify: `packages/core/test/lifecycle-ownership.test.ts`
@@ -1138,6 +1189,7 @@ git commit -m "feat(examples): teach and prove CRC layout"
 - Modify: relevant `packages/core/src/lib/layout/*.ts` files only when a new failing hardening test exposes a defect
 
 **Interfaces:**
+
 - Produces: deterministic evidence that layout composes with transforms, clips, layers, failures, interaction, and cleanup.
 - Produces: structural layout/measurement/placement counters used only by diagnostics and tests, not wall-clock correctness.
 
@@ -1187,6 +1239,7 @@ git commit -m "test(layout): harden composition and ownership"
 ### Task 15: Public contracts, migration documentation, and final trust closure
 
 **Files:**
+
 - Create: `docs/design/style-system-contract.md`
 - Create: `docs/design/layout-system-contract.md`
 - Modify: `docs/testing/field-notes/p003-style-layout.md`
@@ -1202,6 +1255,7 @@ git commit -m "test(layout): harden composition and ownership"
 - Modify: `docs/documentation-follow-up.md`
 
 **Interfaces:**
+
 - Produces: normative supported-property matrices, migration guide, honest boundaries, and recorded verification evidence.
 - Completes: Plan 003 only after fresh aggregate verification succeeds.
 

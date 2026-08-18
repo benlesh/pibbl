@@ -14,6 +14,7 @@ import type {
   SystemStyle,
 } from '../types.js';
 import {
+  childWithUsedSize,
   normalizeDirectChildStyle,
   placeDirectChildren,
   resolveContainerBox,
@@ -27,7 +28,7 @@ import type { Constraints, LayoutBox } from './types.js';
 type FlowDirection = 'horizontal' | 'vertical';
 type FlowAlignment = 'start' | 'center' | 'end' | 'stretch';
 
-export interface FlowStyle extends BoxStyle {
+export interface FlowStyle extends BoxStyle, LayoutItemStyle {
   direction?: FlowDirection;
   wrap?: boolean;
   gap?: number;
@@ -50,9 +51,12 @@ interface ResolvedFlowStyle extends SystemStyle {
 }
 
 interface FlowItem {
-  renderedChild: CompEl<any, any>;
+  child: CompEl<any, any>;
+  normalized: Readonly<SystemStyle>;
   width: number;
   height: number;
+  horizontalPadding: number;
+  verticalPadding: number;
   alignment: FlowAlignment;
 }
 
@@ -187,24 +191,20 @@ function resolveFlowPlacements(
       width: needsWidth ? measuredWidth : normalized.width,
       height: needsHeight ? measuredHeight : normalized.height,
     };
-    const renderedChild = needsWidth || needsHeight ? { ...child } : child;
-    if (renderedChild !== child) {
-      setPreNormalizedStyle(
-        renderedChild,
-        Object.freeze(resolvedStyle),
-        child,
-      );
-    }
-    const box = resolveDirectChildBox(
+    const resolved = resolveDirectChildBox(
       container,
       child,
       'flow',
       resolvedStyle,
-    ).borderBox;
+    );
+    const box = resolved.borderBox;
     items.push({
-      renderedChild,
+      child,
+      normalized: Object.freeze(resolvedStyle),
       width: box.width,
       height: box.height,
+      horizontalPadding: box.width - resolved.contentBox.width,
+      verticalPadding: box.height - resolved.contentBox.height,
       alignment: resolveItemAlignment(
         normalized.alignSelf,
         options.alignItems,
@@ -217,7 +217,12 @@ function resolveFlowPlacements(
   const boxes = arrangeFlowItems(container, items, options);
   return boxes.map((box, index) => ({
     box,
-    element: items[index].renderedChild,
+    element: childWithUsedSize(
+      items[index].child,
+      items[index].normalized,
+      Math.max(0, box.width - items[index].horizontalPadding),
+      Math.max(0, box.height - items[index].verticalPadding),
+    ),
   }));
 }
 

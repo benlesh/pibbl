@@ -1,6 +1,8 @@
 # CRC mouse interaction contract
 
-Status: approved and implemented as of 2026-08-11. TFC-04 verified the root-Canvas rules; TFC-05 verified intrinsic coordinates, transforms, clip intersections, and global layer paint order.
+Status: implemented through Project Plan 003 on 2026-08-18. The original
+root-Canvas, transform, clip, and global-layer rules now also cover layout
+placement and overflow clips.
 
 This document defines the behavior implemented and verified by TFC-03 through TFC-05. The executable source of truth for sequence examples is `MOUSE_CONTRACT_CASES` in `packages/scenarios/src/mouse-contract.ts`; the manual explorer and headless contract suite consume that same table.
 
@@ -37,7 +39,11 @@ CRC resolves exactly one logical target for each native event. Region identity i
 6. Nested groups do not create implicit event ancestors. The deepest painted interactive child is the target.
 7. Cursor selection uses this same target. It must not run a separate “first cursor handler to write” policy.
 
-Purely visual paths with no handler or cursor do not become synthetic targets. Conversely, hit eligibility follows the configured interaction geometry rather than rendered opacity: a configured transparent fill is still a fill hit area, and `alpha: 0` does not disable an interaction. A path with neither a fill hit area nor a positive stroke interaction width is not hittable. `lineInteractionWidth` changes only stroke geometry, never candidate priority.
+Purely visual paths with no handler or cursor do not become synthetic targets.
+Conversely, hit eligibility follows configured interaction geometry rather than
+rendered opacity: a configured transparent fill is still a fill hit area, and
+zero opacity does not disable interaction. A path with neither a fill hit area
+nor a positive stroke interaction width is not hittable.
 
 The public `crcEvent` hook with no path is explicitly a Canvas-wide observer, not another geometric region. It runs once for its matching native event after any target-bound callback plan and does not affect logical target or cursor selection. Multiple no-path observers retain registration order. This preserves the existing whole-Canvas use case without turning overlap into implicit propagation.
 
@@ -54,6 +60,19 @@ Pathless observers remain ordered per-type Sets outside the target registry. A p
 ## TFC-05 composition boundary
 
 One root dispatcher owns interaction state across the root Canvas and every nested layer. Each Canvas instance retains local paint entries; layer entries compose their child entries into the root order at the exact `drawImage` position. Target resolution walks that composition in reverse paint order, applies every accumulated transform, clip, and layer bound, and returns the stable leaf-region identity. Layers therefore do not double-dispatch, create independent hover state, or compete for the cursor.
+
+Layout placement is another transform in that same composition. A region inside
+Absolute, Overlay, Flow, Flex, or Grid is hit at ancestor transform × placement
+× child transform × local geometry. Fractional and negative offsets retain
+fractional precision. Layout `overflow: "clip"` contributes the content-box clip
+to the same clip stack used for paint and hit testing; visible overflow adds no
+clip. Layout inside explicit `clip` or `layer`, and explicit clips/layers inside
+layout, therefore share identical pixel and mouse geometry.
+
+Layout never creates an implicit interaction ancestor or z-index. Direct
+children remain in source paint order, including overlapping Grid and Overlay
+items; reverse source order selects the topmost target. Reflow updates geometry
+while preserving keyed region identity and exact resource ownership.
 
 ## Movement and boundary order
 
@@ -127,9 +146,16 @@ x = (clientX - canvasRect.left) * canvas.width / canvasRect.width
 y = (clientY - canvasRect.top)  * canvas.height / canvasRect.height
 ```
 
-`originalEvent.clientX/Y` remain CSS viewport coordinates. CSS scaling affects this conversion. CRC render transforms affect hit testing, not the public root-coordinate values. Nested Canvas layers convert the root point through their composition transform before testing layer-local geometry.
+`originalEvent.clientX/Y` remain CSS viewport coordinates. CSS scaling affects
+this conversion. CRC render transforms and layout placements affect hit
+testing, not public root-coordinate values. Nested Canvas layers convert the
+root point through their composition transform before testing layer-local
+geometry.
 
-Clips form an intersection: the point must be inside every active clip and the target path. `lineInteractionWidth` expands only that candidate's stroke hit geometry and never changes z-order. A transformed or clipped region is interactive exactly where its visible painted contract says it is.
+Clips form an intersection: the point must be inside every active clip and the
+target path. `lineInteractionWidth` expands only that candidate's stroke hit
+geometry and never changes z-order. A transformed, placed, or clipped region is
+interactive exactly where its visible painted contract says it is.
 
 ## Approved explorer cases
 

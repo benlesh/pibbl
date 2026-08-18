@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import { rect } from '../components/rect';
 import { crc } from '../crc';
+import { defineComp } from '../define-comp';
+import { crcLayoutBox } from '../hooks/crc-layout-box';
 import { componentTest } from '../test-utils/component-test';
+import type { SystemStyle } from '../types';
 import { overlay, placeOverlayChild } from './overlay';
 
 describe('overlay layout', () => {
@@ -44,6 +47,41 @@ describe('overlay layout', () => {
       { x: 0, y: 0, width: 0, height: 0 },
       child,
     )).toEqual({ x: 0, y: 0, width: 0, height: 0 });
+  });
+
+  it('forwards default stretch size to paint, hit testing, and observation', async () => {
+    interface ProbeStyle extends SystemStyle {
+      width: number;
+      height: number;
+    }
+    const onClick = vi.fn();
+    let observed: Readonly<{ x: number; y: number; width: number; height: number }>;
+    const Probe = defineComp<{ onClick: () => void }, ProbeStyle>((props, style) => {
+      observed = crcLayoutBox();
+      return rect({
+        style: {
+          x: 0,
+          y: 0,
+          width: style.width,
+          height: style.height,
+          fill: 'red',
+        },
+        onClick: props.onClick,
+      });
+    });
+    const canvas = await componentTest(overlay({
+      style: { width: 100, height: 50 },
+      children: [Probe({
+        style: { width: 10, height: 10 },
+        onClick,
+      })],
+    }), { width: 120, height: 70 });
+
+    expect(observed!).toEqual({ x: 0, y: 0, width: 100, height: 50 });
+    expect(canvas.element.getContext('2d')!
+      .getImageData(80, 40, 1, 1).data[3]).toBe(255);
+    await canvas.click({ position: { x: 80, y: 40 } });
+    expect(onClick).toHaveBeenCalledOnce();
   });
 
   it('clips both paint and interaction to the content box', async () => {

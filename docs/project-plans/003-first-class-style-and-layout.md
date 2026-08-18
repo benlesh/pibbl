@@ -74,8 +74,8 @@ review before the next task begins.
 | P003-11 | Done        | CSS-compatible Flexbox subset.                                  |
 | P003-12 | Done        | CSS-compatible explicit Grid subset.                            |
 | P003-13 | Done        | Learning examples, nested scenario, and Studio/public types.    |
-| P003-14 | Next        | Composition, diagnostics, ownership, and performance hardening. |
-| P003-15 | Queued      | Public contracts, evidence, and final trust closure.            |
+| P003-14 | Done        | Composition, diagnostics, ownership, and performance hardening. |
+| P003-15 | Done        | Public contracts, evidence, and final trust closure.            |
 
 ## Execution steps
 
@@ -166,14 +166,14 @@ type-clean, mountable/disposable, resize and preserve identity correctly, Studio
 and packed consumers agree, generated indexes are current, and the commit is
 reviewed.
 
-### P003-14 [NEXT] — Hardening
+### P003-14 [DONE] — Hardening
 
 Done when transforms, clips, layers, fractional offsets, failures, 1,000
 reflows, visible-window structural counts, and deterministic diagnostics have
 focused evidence; lifecycle/performance milestones pass; and the commit is
 reviewed.
 
-### P003-15 [TODO] — Contracts and final closure
+### P003-15 [DONE] — Contracts and final closure
 
 Done when normative public contracts and migration guidance are published,
 fresh final aggregate and controlled-reference checks pass, exact evidence is
@@ -340,3 +340,42 @@ is clean, and this plan has no active marker.
   workspace typecheck, packed Bundler/NodeNext/runtime/no-source consumers, and
   48 focused browser tests are clean. P003-13 is done; P003-14 is the sole next
   step. See [`p003-style-layout.md`](../testing/field-notes/p003-style-layout.md).
+- **2026-08-18 — P003-14 hardening complete.** Added focused composition,
+  failure, diagnostics, large-window, repeated-reflow, and structural-counter
+  evidence. The hardening milestone passed its six browser files plus lifecycle
+  and structural performance checks. Review fixes strengthened first-frame
+  duplicate-key ownership accounting, genuinely fractional/negative hit
+  boundaries, clipped overscan geometry, and recursive measurement counters.
+  Final adversarial review was clean. P003-14 is done; P003-15 is the sole next
+  step. See
+  [`p003-style-layout.md`](../testing/field-notes/p003-style-layout.md).
+- **2026-08-18 — P003-15 final closure.** Published normative style, layout,
+  drawing, runtime/hook, and mouse contracts plus current migration guidance,
+  status pages, and exclusions. The first aggregate run exposed intentionally
+  stale Studio captures from the four new Layout routes and style-only learner
+  source. All five full-page actuals were inspected, the five affected
+  baselines were updated for that reason, and the focused visual check matched
+  5/5. Aggregate trust then passed 49 browser files with 457 passing tests and
+  two documented opt-in timing skips, plus all static, package, source/built
+  Studio, packed-consumer, visual, built-smoke, lifecycle, and structural
+  performance checks. The controlled reference run passed all seven tests with
+  finite output. P003-15 is done and this plan has no active marker. Exact
+  environment, results, warnings, and limitations are in the field note below.
+
+## Completion audit
+
+| Acceptance criterion                                        | Current code/test/document evidence                                                                                                                              |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| One explicit style namespace and style-only built-ins       | Descriptor/style protocol, closed built-in style types, public negative consumer assertions, style-system and drawing contracts                                  |
+| No cascade or inheritance; explicit reuse                   | Local immutable style implementation, spread examples, style-system contract                                                                                     |
+| Finite number/percentage/automatic box resolution           | Length/box resolver suites, public type tests, contextual diagnostic hardening, style and layout contracts                                                       |
+| Immediate-mode placement without a retained display list    | Layout context/PlacedChild/dispatch implementation, identity and foundation suites, architecture and layout contract                                             |
+| Absolute, Overlay, and CRC-native Flow matrices             | Pure algorithm and public component suites, nested layout laboratory, four learner routes, layout contract                                                       |
+| CSS-compatible bounded Flex subset                          | Hand-derived literals, independent Chromium DOM oracle, public scenario and package declarations, exact support/rejection matrix                                 |
+| CSS-compatible explicit Grid subset                         | Hand-derived literals, independent Chromium DOM oracle, public scenario and package declarations, exact track/placement/rejection matrix                         |
+| Pure opt-in measurement and local observation               | Measurement isolation/cycle/recursive suites, text/custom/explicit-image cases, `crcLayoutBox` identity tests, runtime/hooks and layout contracts                |
+| Identity, paint/target order, transforms, clips, and layers | Foundation, geometry-composition, interaction-dispatch, Flex/Grid overlap, and Task 14 fractional composition evidence; mouse/layout contracts                   |
+| Failure and resource ownership remain exact                 | Duplicate-key/render-failure ledgers, 1,000 reflows, lifecycle suites, resource-ownership and runtime/hooks contracts                                            |
+| Public package, Studio, examples, and documentation agree   | Strict Bundler/NodeNext/packed consumers, Studio declaration verifier, 28/14 catalog check, source/built builds, five inspected visuals, README/status/contracts |
+| Structural scale and honest exclusions                      | 100,000-record bounded-window fixture, deterministic layout counters, reference performance output, layout contract and follow-up backlog                        |
+| Fresh holistic verification                                 | Final Task 15 trust runs, controlled reference run, consistency reruns, and recorded field-note evidence                                                         |

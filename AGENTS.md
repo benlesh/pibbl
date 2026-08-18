@@ -10,22 +10,23 @@ CRC is a small functional component runtime over the HTML Canvas 2D API. It
 provides scheduled rendering, hook state, mouse-region interaction, transforms,
 clipping, offscreen layers, and composable drawing primitives without JSX.
 
-- Project Plans 001 and 002 are complete.
-- Project Plan 003, First-Class Style and Layout, is active. Its sole `[NEXT]`
-  marker and status board control implementation order.
+- Project Plans 001, 002, and 003 are complete. Plan 003 shipped first-class
+  local style, declared-box layout, pure measurement, and the Absolute,
+  Overlay, Flow, Flex, and explicit Grid components.
 - The local `_bmad-output/` directory remains discovery input, not normative
-  behavior. Plan 003's approved design, architecture, and implementation plan
-  supersede its earlier layout proposals where they differ.
+  behavior. Plan 003's implemented design, architecture, contracts, and
+  implementation record supersede its earlier layout proposals where they
+  differ.
 
 ## Source-of-truth order
 
 When sources disagree, use this order and call out material drift:
 
 1. Current public code, package manifests, and executable tests for shipped behavior.
-2. Active Plan 003 plus its approved design and architecture for new work.
-3. Implemented design contracts under `docs/design/` and the trust-gate rules.
+2. Implemented design contracts under `docs/design/` and the trust-gate rules.
+3. Plan 003's implemented design and architecture for exact style/layout intent.
 4. Completed numbered plans and their dated field notes as historical evidence.
-5. The draft Plan 003 PRD, extraction files, and memlogs as discovery evidence,
+5. Draft PRDs, extraction files, `_bmad-output/`, and memlogs as discovery evidence,
    not normative behavior.
 
 Test totals in documentation are dated snapshots. In particular, the 265-test
@@ -69,6 +70,12 @@ either as the current result unless a fresh run reproduces it.
   the same transform/clip geometry, so paint and hit testing must stay aligned.
 - Offscreen `layer` instances share the root interaction state and participate in
   global paint/target order. They require browser `OffscreenCanvas` support.
+- Layout parents inspect normalized direct-child style before render, resolve
+  finite allocations, and place one child descriptor without retaining drawing
+  commands. Pure opt-in measurement cannot render or acquire runtime resources.
+- Styles are local and closed: no cascade or inheritance. Allocation syntax is
+  resolved before Canvas callbacks; parent placement uses `left`/`top`, while
+  drawing primitives keep local `x`/`y` geometry.
 - Runtime resources have one explicit owner and exact teardown semantics. Prefer
   deterministic ownership counters to heap or garbage-collection timing.
 
@@ -76,21 +83,25 @@ either as the current result unless a fresh run reproduces it.
 
 Public runtime/components: `crc`, `defineComp`, `rect`, `path`, `line`,
 `horizontalLine`, `verticalLine`, `svgPath`, `text`, `img`, `g`, `clip`, and
-`layer`.
+`layer`; layout components `absolute`, `overlay`, `flow`, `flex`, and `grid`;
+and pure `measureElement` plus the public style, length, box, constraint, and
+measurement types.
 
 Public hooks: `crcState`, `crcMemo`, `crcRef`, `crcWhenChanged`, `crcRectPath`,
-`crcLinePath`, `crcSvgPath`, `crcEvent`, and `crcCursor`.
+`crcLinePath`, `crcSvgPath`, `crcEvent`, `crcCursor`, and `crcLayoutBox`.
 
 Current interaction is mouse-only. CRC does not currently promise pointer/touch,
-keyboard/focus, DOM accessibility, JSX, layout, rich text, image CORS policy,
-CSS compatibility, scrolling, WebGL, or a retained scene graph. Browser behavior
-remains authoritative for Canvas/`Path2D`, font rasterization and measurement,
-decoded-image behavior, and `OffscreenCanvas` availability.
+keyboard/focus, DOM accessibility, JSX, rich text, image CORS policy, complete
+CSS compatibility, scrolling, WebGL, or a retained scene graph. Browser
+behavior remains authoritative for Canvas/`Path2D`, font rasterization and
+measurement, decoded-image behavior, and `OffscreenCanvas` availability.
 
 Read the exact contracts before changing these areas:
 
 - `docs/design/runtime-hooks-contract.md`
 - `docs/design/drawing-components-contract.md`
+- `docs/design/style-system-contract.md`
+- `docs/design/layout-system-contract.md`
 - `docs/design/mouse-interaction-contract.md`
 - `docs/design/event-resource-ownership.md`
 - `docs/design/runtime-resource-ownership.md`
@@ -136,21 +147,22 @@ wall-clock performance guards are opt-in and are not a default correctness gate.
 Do not claim a verification result from documentation alone. Report the command,
 environment, and fresh output, or label older evidence with its date.
 
-## Active Plan 003: approved direction, not shipped behavior
+## Shipped Plan 003: first-class style and layout
 
-Plan 003 replaces visual props with one typed local style language and adds
+Plan 003 replaced visual props with one typed local style language and added
 dedicated absolute, overlay, flow, Flexbox-subset, and Grid-subset layout
 components. It preserves immediate-mode rendering and uses declared boxes plus
 pure opt-in measurement rather than a retained display list.
 
-The proposal preserves the immediate-mode Canvas2D renderer, existing `g`, source
+The implementation preserves the immediate-mode Canvas2D renderer, existing `g`, source
 paint order, identity/lifecycle rules, and public package boundary. A parent-local
 anchored native color input and a 100,000-record windowed list are proving
 scenarios only; they do not authorize public popover or virtualization APIs.
 
 Auto-placement Grid, advanced intrinsic CSS sizing, reverse/reordered Flexbox,
 margin, scrolling, DOM overlays/accessibility, broader input, workers/WebGL, and
-a retained scene graph remain deferred. Exact approved contracts live in:
+a retained scene graph remain deferred. Exact implemented contracts and records
+live in:
 
 - `docs/superpowers/specs/2026-08-17-style-and-layout-design.md`
 - `docs/architecture/style-and-layout-architecture.md`

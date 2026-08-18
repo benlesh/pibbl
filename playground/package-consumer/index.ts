@@ -208,6 +208,59 @@ grid({ style: gridStyle, children: [rect({ style: {
   ...rectangleStyle, gridColumnStart: 1, gridRowStart: 1,
 } })] });
 
+absolute({
+  style: {
+    width: 100, height: 50, left: 5, top: '10%',
+    alignSelf: 'center', justifySelf: 'end',
+    flexBasis: 40, flexGrow: 1, flexShrink: 0,
+    gridColumnStart: 1, gridColumnSpan: 1,
+    gridRowStart: 1, gridRowSpan: 1,
+  },
+  children: [],
+});
+overlay({
+  style: {
+    width: 100, height: 50, left: 5, top: '10%',
+    alignSelf: 'center', justifySelf: 'end',
+    flexBasis: 40, flexGrow: 1, flexShrink: 0,
+    gridColumnStart: 1, gridColumnSpan: 1,
+    gridRowStart: 1, gridRowSpan: 1,
+  },
+  children: [],
+});
+flow({
+  style: {
+    width: 100, height: 50, left: 5, top: '10%',
+    alignSelf: 'center', justifySelf: 'end',
+    flexBasis: 40, flexGrow: 1, flexShrink: 0,
+    gridColumnStart: 1, gridColumnSpan: 1,
+    gridRowStart: 1, gridRowSpan: 1,
+  },
+  children: [],
+});
+flex({
+  style: {
+    width: 100, height: 50, minWidth: 0, left: 5, top: '10%',
+    alignSelf: 'center', justifySelf: 'end',
+    flexBasis: 40, flexGrow: 1, flexShrink: 0,
+    gridColumnStart: 1, gridColumnSpan: 1,
+    gridRowStart: 1, gridRowSpan: 1,
+  },
+  children: [],
+});
+grid({
+  style: {
+    width: 100, height: 50, left: 5, top: '10%',
+    alignSelf: 'center', justifySelf: 'end',
+    flexBasis: 40, flexGrow: 1, flexShrink: 0,
+    gridColumnStart: 1, gridColumnSpan: 1,
+    gridRowStart: 1, gridRowSpan: 1,
+    gridTemplateColumns: [100],
+    gridTemplateRows: [50],
+  },
+  children: [],
+});
+
 const observedBox: Readonly<LayoutBox> = crcLayoutBox();
 void observedBox;
 measureElement(text({ style: { text: 'measure me' } }), {

@@ -112,16 +112,16 @@ declare module '@crc/core' {
   export interface ClipProps { children: CRCNode[] }
   export interface LayerProps { render: CompEl<any, any> }
 
-  export type AbsoluteStyle = BoxStyle;
+  export type AbsoluteStyle = BoxStyle & LayoutItemStyle;
   export interface AbsoluteProps { children: CRCNode[] }
-  export interface OverlayStyle extends BoxStyle { justifyItems?: 'stretch' | 'start' | 'center' | 'end'; alignItems?: 'stretch' | 'start' | 'center' | 'end' }
+  export interface OverlayStyle extends BoxStyle, LayoutItemStyle { justifyItems?: 'stretch' | 'start' | 'center' | 'end'; alignItems?: 'stretch' | 'start' | 'center' | 'end' }
   export interface OverlayProps { children: CRCNode[] }
-  export interface FlowStyle extends BoxStyle { direction?: 'horizontal' | 'vertical'; wrap?: boolean; gap?: number; lineGap?: number; alignItems?: 'start' | 'center' | 'end' | 'stretch' }
+  export interface FlowStyle extends BoxStyle, LayoutItemStyle { direction?: 'horizontal' | 'vertical'; wrap?: boolean; gap?: number; lineGap?: number; alignItems?: 'start' | 'center' | 'end' | 'stretch' }
   export interface FlowProps { children: CRCNode[] }
-  export interface FlexStyle extends BoxStyle { flexDirection?: 'row' | 'column'; flexWrap?: 'nowrap' | 'wrap'; justifyContent?: 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'; alignItems?: 'stretch' | 'flex-start' | 'flex-end' | 'center'; alignContent?: 'stretch' | 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'; gap?: number; rowGap?: number; columnGap?: number }
+  export interface FlexStyle extends BoxStyle, LayoutItemStyle { flexDirection?: 'row' | 'column'; flexWrap?: 'nowrap' | 'wrap'; justifyContent?: 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'; alignItems?: 'stretch' | 'flex-start' | 'flex-end' | 'center'; alignContent?: 'stretch' | 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'; gap?: number; rowGap?: number; columnGap?: number }
   export interface FlexProps { children: CRCNode[] }
   export type GridTrack = number | `${number}%` | `${number}fr`;
-  export interface GridStyle extends BoxStyle { gridTemplateColumns: readonly GridTrack[]; gridTemplateRows: readonly GridTrack[]; justifyItems?: 'stretch' | 'start' | 'center' | 'end'; alignItems?: 'stretch' | 'start' | 'center' | 'end'; gap?: number; rowGap?: number; columnGap?: number }
+  export interface GridStyle extends BoxStyle, LayoutItemStyle { gridTemplateColumns: readonly GridTrack[]; gridTemplateRows: readonly GridTrack[]; justifyItems?: 'stretch' | 'start' | 'center' | 'end'; alignItems?: 'stretch' | 'start' | 'center' | 'end'; gap?: number; rowGap?: number; columnGap?: number }
   export interface GridProps { children: CRCNode[] }
 
   export interface CanvasMeasurementService { measureText(text: string, font: string): TextMetrics }
