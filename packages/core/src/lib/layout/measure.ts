@@ -1,6 +1,7 @@
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { takePreNormalizedStyle } from '../style/resolve-dispatch.js';
+import { recordLayoutMeasurement } from './diagnostics.js';
 import type {
   CanvasMeasurementService,
   CompEl,
@@ -39,6 +40,7 @@ function measureElementInternal(
   service: CanvasMeasurementService,
   context: MeasurementContext,
 ): MeasureResult {
+  recordLayoutMeasurement();
   const type = element.type;
   const component = type.name || 'Anonymous';
   const preNormalized = takePreNormalizedStyle(element);

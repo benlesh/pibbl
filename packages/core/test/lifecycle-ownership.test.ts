@@ -8,10 +8,15 @@ import {
 } from '@crc/scenarios';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import lifecycleLabSource from '../../scenarios/src/lifecycle-lab.example.ts?raw';
+import { absolute, rect, type CRCController } from '../src/index';
+import { executeRender } from '../src/lib/execute-render';
+import { GLOBAL_STATE, getCRCInstance } from '../src/lib/global-state';
+import { mountCRC } from '../src/lib/mount-crc';
 import { RuntimeDiagnostics } from './support/runtime-diagnostics';
 
 const activeControllers = new Set<ScenarioController<LifecycleLabState>>();
 const activeDiagnostics = new Set<RuntimeDiagnostics>();
+const activeRuntimeControllers = new Set<CRCController>();
 
 const BASELINE_HANDLERS = {
   click: 4,
@@ -101,6 +106,10 @@ afterEach(async () => {
     await controller.dispose();
   }
   activeControllers.clear();
+  for (const controller of activeRuntimeControllers) {
+    controller.dispose();
+  }
+  activeRuntimeControllers.clear();
   for (const diagnostics of activeDiagnostics) {
     diagnostics.restore();
   }
@@ -110,6 +119,68 @@ afterEach(async () => {
 });
 
 describe('shared event lifecycle laboratory', () => {
+  it('fails closed and releases partial layout ownership after duplicate keys', () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 200;
+    canvas.height = 120;
+    document.body.replaceChildren(canvas);
+    const diagnostics = new RuntimeDiagnostics(canvas);
+    activeDiagnostics.add(diagnostics);
+    const scene = absolute({
+      style: { width: 200, height: 120 },
+      children: [
+        rect({
+          key: 'duplicate',
+          style: { width: 80, height: 60, fill: '#2563eb' },
+          onClick: () => undefined,
+        }),
+        rect({
+          key: 'duplicate',
+          style: { left: 90, width: 80, height: 60, fill: '#7c3aed' },
+          onClick: () => undefined,
+        }),
+      ],
+    });
+    const controller = mountCRC(canvas, scene);
+    activeRuntimeControllers.add(controller);
+    diagnostics.snapshot();
+    diagnostics.ledgerSnapshot();
+
+    expect(() => executeRender(canvas, 1)).toThrowError(/duplicate.*key/i);
+    const instance = getCRCInstance(canvas);
+    expect(instance.refs.size).toBe(0);
+    expect(instance.regions.size).toBe(0);
+    expect(instance.paintEntries.size).toBe(0);
+    expect(diagnostics.snapshot()).toMatchObject({
+      componentTeardowns: 0,
+      handlers: EMPTY_HANDLERS,
+      instances: 1,
+      nativeListeners: 8,
+      scheduledFrames: 0,
+    });
+    expect(diagnostics.ledgerSnapshot().handlers.click).toEqual({
+      acquired: 1,
+      released: 1,
+      duplicateReleases: 0,
+      live: 0,
+    });
+    expect(GLOBAL_STATE).toMatchObject({
+      canvas: undefined,
+      componentRefs: undefined,
+      currentCRCInstance: undefined,
+      layoutStack: undefined,
+      renderContext: undefined,
+      seenIds: undefined,
+      seenKeys: undefined,
+      unseenIds: undefined,
+    });
+    expect(GLOBAL_STATE.clippingStack).toEqual([]);
+
+    controller.dispose();
+    activeRuntimeControllers.delete(controller);
+    expectFullyReleased(diagnostics);
+  });
+
   it('keeps resources stable through rerender, replacement, removal, and layer flows', async () => {
     expect(lifecycleLabSource).toContain(lifecycleLabScenarioEntry.source.marker);
     const { canvas, controller, diagnostics } = await mountLifecycleLab();

@@ -14,6 +14,15 @@ import { page } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
 import geometryMatrixSource from '../../scenarios/src/geometry-matrix.example.ts?raw';
 import {
+  absolute,
+  clip,
+  crc,
+  g,
+  layer,
+  rect,
+  type CRCController,
+} from '../src/index';
+import {
   clickMouse,
   cssPointForIntrinsic,
   moveMouse,
@@ -21,6 +30,7 @@ import {
 import { expectVisualMatch } from './visual-compare';
 
 const activeControllers = new Set<ScenarioController<GeometryMatrixState>>();
+const activeRuntimeControllers = new Set<CRCController>();
 const BACKGROUND = { x: 470, y: 220 } as const;
 
 function route(trace: readonly EventTraceEntry[]) {
@@ -94,10 +104,115 @@ afterEach(async () => {
     await controller.dispose();
   }
   activeControllers.clear();
+  for (const controller of activeRuntimeControllers) {
+    controller.dispose();
+  }
+  activeRuntimeControllers.clear();
   document.body.replaceChildren();
 });
 
 describe('geometry interaction matrix', () => {
+  it('composes translated and scaled groups with fractional negative layout offsets', async () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 200;
+    canvas.height = 120;
+    document.body.replaceChildren(canvas);
+    const moves: string[] = [];
+    const controller = crc(canvas, g({
+      style: {
+        scaleX: 1.5,
+        scaleY: 1.25,
+        translateX: 20,
+        translateY: 10,
+      },
+      children: [absolute({
+        style: { width: 80, height: 60 },
+        children: [rect({
+          style: {
+            left: -5.25,
+            top: 4.5,
+            x: 0.5,
+            y: -1.25,
+            width: 20.5,
+            height: 10.5,
+            fill: '#16a34a',
+          },
+          onMouseMove: () => moves.push('fractional-layout'),
+        })],
+      })],
+    }));
+    activeRuntimeControllers.add(controller);
+    await settleFrames();
+
+    expect(pixelAt(canvas, { x: 21, y: 20 })).toEqual([0, 0, 0, 0]);
+    expect(pixelAt(canvas, { x: 23, y: 20 })).toEqual([22, 163, 74, 255]);
+    expect(pixelAt(canvas, { x: 54, y: 20 })).toEqual([0, 0, 0, 0]);
+    expect(pixelAt(canvas, { x: 30, y: 15 })).toEqual([0, 0, 0, 0]);
+    expect(pixelAt(canvas, { x: 30, y: 30 })).toEqual([0, 0, 0, 0]);
+    expect(pixelAt(canvas, { x: 22, y: 20 })[3]).toBeGreaterThan(0);
+    expect(pixelAt(canvas, { x: 22, y: 20 })[3]).toBeLessThan(255);
+    expect(pixelAt(canvas, { x: 53, y: 20 })[3]).toBeGreaterThan(0);
+    expect(pixelAt(canvas, { x: 53, y: 20 })[3]).toBeLessThan(255);
+    expect(pixelAt(canvas, { x: 30, y: 16 })[3]).toBeGreaterThan(0);
+    expect(pixelAt(canvas, { x: 30, y: 16 })[3]).toBeLessThan(255);
+    expect(pixelAt(canvas, { x: 30, y: 29 })[3]).toBeGreaterThan(0);
+    expect(pixelAt(canvas, { x: 30, y: 29 })[3]).toBeLessThan(255);
+
+    dispatchMove(canvas, 22.8, 20);
+    dispatchMove(canvas, 22.9, 20);
+    dispatchMove(canvas, 53.6, 20);
+    dispatchMove(canvas, 53.7, 20);
+    dispatchMove(canvas, 30, 16.5);
+    dispatchMove(canvas, 30, 16.6);
+    dispatchMove(canvas, 30, 29.6);
+    dispatchMove(canvas, 30, 29.8);
+    expect(moves).toEqual([
+      'fractional-layout',
+      'fractional-layout',
+      'fractional-layout',
+      'fractional-layout',
+    ]);
+  });
+
+  it('keeps nested layout paint and hit geometry inside the same clip and layer', async () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 160;
+    canvas.height = 100;
+    document.body.replaceChildren(canvas);
+    const clippingPath = new Path2D();
+    clippingPath.rect(30, 20, 40, 40);
+    const moves: string[] = [];
+    const controller = crc(canvas, clip({
+      style: { d: clippingPath },
+      children: [layer({
+        style: { width: 120, height: 90 },
+        render: absolute({
+          style: { width: 120, height: 90 },
+          children: [rect({
+            style: {
+              left: 20,
+              top: 10,
+              width: 60,
+              height: 60,
+              fill: '#7c3aed',
+            },
+            onMouseMove: () => moves.push('layer-layout'),
+          })],
+        }),
+      })],
+    }));
+    activeRuntimeControllers.add(controller);
+    await settleFrames();
+
+    expect(pixelAt(canvas, { x: 40, y: 30 })).toEqual([124, 58, 237, 255]);
+    expect(pixelAt(canvas, { x: 25, y: 15 })).toEqual([0, 0, 0, 0]);
+    expect(pixelAt(canvas, { x: 75, y: 50 })).toEqual([0, 0, 0, 0]);
+    dispatchMove(canvas, 40, 30);
+    dispatchMove(canvas, 25, 15);
+    dispatchMove(canvas, 75, 50);
+    expect(moves).toEqual(['layer-layout']);
+  });
+
   it('loads the trusted public scenario, exact probes, and reset state', async () => {
     expect(geometryMatrixSource).toContain(geometryMatrixScenarioEntry.source.marker);
     expect(geometryMatrixScenarioEntry.actions.map(action => action.id)).toEqual([
@@ -308,6 +423,21 @@ describe('geometry interaction matrix', () => {
     expect(pixelAt(canvas, { x: 240, y: 110 })).toEqual([248, 250, 252, 255]);
   });
 });
+
+function dispatchMove(canvas: HTMLCanvasElement, x: number, y: number): void {
+  const bounds = canvas.getBoundingClientRect();
+  canvas.dispatchEvent(new MouseEvent('mousemove', {
+    bubbles: true,
+    clientX: bounds.left + x,
+    clientY: bounds.top + y,
+  }));
+}
+
+function settleFrames(): Promise<void> {
+  return new Promise(resolve => requestAnimationFrame(() =>
+    requestAnimationFrame(() => resolve()),
+  ));
+}
 
 describe('geometry visual matrix', () => {
   it.each(GEOMETRY_MATRIX_CASES.map(matrixCase => [matrixCase.id] as const))(

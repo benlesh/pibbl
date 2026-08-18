@@ -12,7 +12,19 @@ import {
 } from '@crc/scenarios';
 import { afterEach, describe, expect, it } from 'vitest';
 import performanceLabSource from '../../scenarios/src/performance-lab.example.ts?raw';
+import {
+  absolute,
+  crc,
+  flow,
+  rect,
+  text,
+  type CRCController,
+} from '../src/index';
 import { GLOBAL_STATE, getCRCInstance } from '../src/lib/global-state';
+import {
+  resetLayoutDiagnostics,
+  snapshotLayoutDiagnostics,
+} from '../src/lib/layout/diagnostics';
 import type { Canvas, CRCInstance } from '../src/lib/types';
 import { RuntimeDiagnostics } from './support/runtime-diagnostics';
 import { expectVisualMatch } from './visual-compare';
@@ -90,6 +102,7 @@ const RUN_TIMING =
 const activeControllers = new Set<ScenarioController<PerformanceLabState>>();
 const activeDiagnostics = new Set<RuntimeDiagnostics>();
 const activeFrameDiagnostics = new Set<FrameCallbackDiagnostics>();
+const activeRuntimeControllers = new Set<CRCController>();
 
 class FrameCallbackDiagnostics {
   readonly samples: number[] = [];
@@ -296,6 +309,10 @@ afterEach(async () => {
     await controller.dispose();
   }
   activeControllers.clear();
+  for (const controller of activeRuntimeControllers) {
+    controller.dispose();
+  }
+  activeRuntimeControllers.clear();
   for (const diagnostics of activeDiagnostics) {
     diagnostics.restore();
   }
@@ -308,6 +325,109 @@ afterEach(async () => {
 });
 
 describe('shared event performance laboratory', () => {
+  it('counts nested measurement boundaries and snapshots independently of reset', async () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 200;
+    canvas.height = 100;
+    document.body.replaceChildren(canvas);
+    resetLayoutDiagnostics();
+    const mounted = crc(canvas, flow({
+      style: { width: 200, height: 100 },
+      children: [flow({
+        children: [text({
+          style: {
+            text: 'nested measurement',
+            font: '12px sans-serif',
+            fill: '#000000',
+          },
+        })],
+      })],
+    }));
+    activeRuntimeControllers.add(mounted);
+    await settleFrames();
+
+    const completed = snapshotLayoutDiagnostics();
+    expect(completed).toEqual({
+      layoutEvaluations: 2,
+      measurements: 3,
+      placements: 2,
+    });
+    resetLayoutDiagnostics();
+    expect(snapshotLayoutDiagnostics()).toEqual({
+      layoutEvaluations: 0,
+      measurements: 0,
+      placements: 0,
+    });
+    expect(completed).toEqual({
+      layoutEvaluations: 2,
+      measurements: 3,
+      placements: 2,
+    });
+    mounted.dispose();
+    activeRuntimeControllers.delete(mounted);
+  });
+
+  it('keeps a 100,000-record application window bounded to visible rows plus overscan', async () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 320;
+    canvas.height = 400;
+    document.body.replaceChildren(canvas);
+    const records = Array.from({ length: 100_000 }, (_, id) => id);
+    const firstVisible = 50_000;
+    const visibleCount = 20;
+    const overscan = 2;
+    const windowRecords = records.slice(
+      firstVisible - overscan,
+      firstVisible + visibleCount + overscan,
+    );
+    let target: number | undefined;
+
+    resetLayoutDiagnostics();
+    const mounted = crc(canvas, absolute({
+      style: { width: 320, height: 400, overflow: 'clip' },
+      children: windowRecords.map(id => rect({
+        key: `row-${id}`,
+        style: {
+          left: 0,
+          top: (id - firstVisible) * 20,
+          width: 160,
+          height: 20,
+          fill: '#16a34a',
+        },
+        onMouseMove: () => { target = id; },
+      })),
+    }));
+    activeRuntimeControllers.add(mounted);
+    await settleFrames();
+
+    expect(records).toHaveLength(100_000);
+    expect(windowRecords).toHaveLength(visibleCount + overscan * 2);
+    expect(summarizeInstances(canvas)).toEqual({
+      componentRefs: 49,
+      instances: 1,
+      paintEntries: 24,
+      regions: 24,
+    });
+    expect(snapshotLayoutDiagnostics()).toEqual({
+      layoutEvaluations: 1,
+      measurements: 0,
+      placements: 24,
+    });
+    expect(pixelAtPoint(canvas, 10, 0)).toEqual([22, 163, 74, 255]);
+    expect(pixelAtPoint(canvas, 10, 399)).toEqual([22, 163, 74, 255]);
+
+    dispatchIntrinsicMove(canvas, 10, 10);
+    expect(target).toBe(firstVisible);
+    dispatchIntrinsicMove(canvas, 10, 390);
+    expect(target).toBe(firstVisible + visibleCount - 1);
+    target = undefined;
+    dispatchIntrinsicMove(canvas, 10, -10);
+    dispatchIntrinsicMove(canvas, 10, 410);
+    expect(target).toBeUndefined();
+    mounted.dispose();
+    activeRuntimeControllers.delete(mounted);
+  });
+
   it('loads through the catalog/source adapter and matches one exact text-free correctness image', async () => {
     expect(performanceLabSource).toContain(performanceLabScenarioEntry.source.marker);
     expect(performanceLabScenarioEntry.actions.map(action => action.id)).toEqual([
@@ -529,3 +649,30 @@ describe('shared event performance laboratory', () => {
     }
   }, 60_000);
 });
+
+function settleFrames(): Promise<void> {
+  return new Promise(resolve => requestAnimationFrame(() =>
+    requestAnimationFrame(() => resolve()),
+  ));
+}
+
+function dispatchIntrinsicMove(
+  canvas: HTMLCanvasElement,
+  x: number,
+  y: number,
+): void {
+  const bounds = canvas.getBoundingClientRect();
+  canvas.dispatchEvent(new MouseEvent('mousemove', {
+    bubbles: true,
+    clientX: bounds.left + x * bounds.width / canvas.width,
+    clientY: bounds.top + y * bounds.height / canvas.height,
+  }));
+}
+
+function pixelAtPoint(
+  canvas: HTMLCanvasElement,
+  x: number,
+  y: number,
+): readonly number[] {
+  return Array.from(canvas.getContext('2d')!.getImageData(x, y, 1, 1).data);
+}

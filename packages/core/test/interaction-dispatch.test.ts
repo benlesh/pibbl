@@ -5,9 +5,11 @@ import type {
 } from '../src/lib/types';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { defineComp } from '../src/lib/define-comp';
+import { executeRender } from '../src/lib/execute-render';
 import { GLOBAL_STATE } from '../src/lib/global-state';
 import { removeInteractionRegion } from '../src/lib/interaction-dispatch';
 import { mountCRC } from '../src/lib/mount-crc';
+import { overlay, rect } from '../src/index';
 
 const activeInstances = new Set<CRCInstance>();
 const EmptyScene = defineComp<Record<string, never>>(() => undefined);
@@ -85,6 +87,46 @@ afterEach(() => {
 });
 
 describe('interaction dispatcher mutation contract', () => {
+  it('selects the topmost laid-out child and rejects clipped paint overflow', () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 160;
+    canvas.height = 100;
+    document.body.replaceChildren(canvas);
+    const clicks: string[] = [];
+    mountCRC(canvas, overlay({
+      style: {
+        width: 100,
+        height: 60,
+        overflow: 'clip',
+        alignItems: 'center',
+        justifyItems: 'center',
+      },
+      children: [
+        rect({
+          style: { width: 120, height: 60, fill: '#2563eb' },
+          onClick: () => clicks.push('under'),
+        }),
+        rect({
+          style: { width: 40, height: 40, fill: '#f97316' },
+          onClick: () => clicks.push('top'),
+        }),
+      ],
+    }));
+    const instance = GLOBAL_STATE.crcInstances.get(canvas)!;
+    activeInstances.add(instance);
+    executeRender(canvas, 1);
+
+    dispatchMouse(canvas, 'mousedown', 50, 30);
+    dispatchMouse(canvas, 'mouseup', 50, 30);
+    dispatchMouse(canvas, 'click', 50, 30);
+    expect(clicks).toEqual(['top']);
+
+    dispatchMouse(canvas, 'mousedown', 110, 30);
+    dispatchMouse(canvas, 'mouseup', 110, 30);
+    dispatchMouse(canvas, 'click', 110, 30);
+    expect(clicks).toEqual(['top']);
+  });
+
   it('reports intrinsic coordinates for a CSS-scaled Canvas', () => {
     const { canvas, instance } = mountDispatchHarness([240, 120]);
     const coordinates: number[][] = [];

@@ -25,6 +25,7 @@ import {
   resolveContainerBox,
 } from './absolute.js';
 import { pushLayoutBox } from './context.js';
+import { recordLayoutEvaluation } from './diagnostics.js';
 import { measureElement } from './measure.js';
 import type { Constraints, LayoutBox } from './types.js';
 
@@ -109,6 +110,7 @@ function Flex(
   style: Readonly<ResolvedFlexStyle>,
   ctx: RenderingContext2D,
 ) {
+  recordLayoutEvaluation();
   const content = style.box.contentBox;
   ctx.translate(content.x, content.y);
   const localContent = Object.freeze({

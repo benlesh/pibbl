@@ -7,6 +7,7 @@ import type {
 } from '../types.js';
 import { pushClippingPath } from '../util/push-clipping-path.js';
 import { pushLayoutBox } from './context.js';
+import { recordLayoutPlacement } from './diagnostics.js';
 import type { LayoutBox } from './types.js';
 
 interface PlacedChildProps {
@@ -21,6 +22,7 @@ function PlacedChild(
   _style: Readonly<{}>,
   ctx: RenderingContext2D,
 ) {
+  recordLayoutPlacement();
   assertFiniteBox(props.box, 'placement');
   if (props.clipInChildSpace) {
     assertFiniteBox(props.clipInChildSpace, 'placement clip');

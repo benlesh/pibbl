@@ -15,6 +15,7 @@ import {
   resolveDirectChildBox,
 } from './absolute.js';
 import { pushLayoutBox } from './context.js';
+import { recordLayoutEvaluation } from './diagnostics.js';
 import type { LayoutBox } from './types.js';
 
 type OverlayAlignment = 'start' | 'center' | 'end' | 'stretch';
@@ -40,6 +41,7 @@ function Overlay(
   style: Readonly<ResolvedOverlayStyle>,
   ctx: RenderingContext2D,
 ) {
+  recordLayoutEvaluation();
   const content = style.box.contentBox;
   ctx.translate(content.x, content.y);
   const localContent = Object.freeze({

@@ -16,6 +16,7 @@ import type {
 } from '../types.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import { pushLayoutBox } from './context.js';
+import { recordLayoutEvaluation } from './diagnostics.js';
 import { resolveBox } from './box.js';
 import {
   createPlacementIdentityHint,
@@ -39,6 +40,7 @@ function Absolute(
   style: Readonly<ResolvedAbsoluteStyle>,
   ctx: RenderingContext2D,
 ) {
+  recordLayoutEvaluation();
   const content = style.box.contentBox;
   ctx.translate(content.x, content.y);
   const localContent = Object.freeze({

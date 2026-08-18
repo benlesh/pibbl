@@ -1,6 +1,14 @@
 import { mountLayoutFoundation } from '@crc/scenarios';
 import { userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
+import { rect } from '../src/index';
+import {
+  placeAbsoluteChild,
+  resolveContainerBox,
+} from '../src/lib/layout/absolute';
+import { layoutGrid } from '../src/lib/layout/grid';
+import type { LayoutBox } from '../src/lib/layout/types';
+import { LayoutDiagnostic } from '../src/lib/style/diagnostics';
 
 let dispose: (() => void) | undefined;
 
@@ -56,6 +64,166 @@ describe('layout foundation public scenario', () => {
     });
   });
 });
+
+describe('layout diagnostic hardening', () => {
+  const container: Readonly<LayoutBox> = {
+    x: 0,
+    y: 0,
+    width: 200,
+    height: 100,
+  };
+  const constraints = {
+    minWidth: 0,
+    maxWidth: 200,
+    minHeight: 0,
+    maxHeight: 100,
+  } as const;
+  const context = {
+    allocation: container,
+    percentageBasis: container,
+    constraints,
+    component: 'DiagnosticBox',
+    algorithm: 'render-dispatch' as const,
+  };
+  const measurement = {
+    service: {
+      measureText: () => ({ width: 0 }) as TextMetrics,
+    },
+    measureElement: () => ({
+      status: 'unsupported' as const,
+      reason: 'not needed for definite diagnostic fixtures',
+    }),
+  };
+
+  it('reports malformed percentages with complete resolution context', () => {
+    expectDiagnostic(
+      () => resolveContainerBox(
+        { width: '1e2%' as never, height: 20 },
+        context,
+        'DiagnosticBox',
+        'diagnostic-layout',
+      ),
+      {
+        component: 'DiagnosticBox',
+        property: 'width',
+        suppliedValue: '1e2%',
+        algorithm: 'diagnostic-layout',
+        constraints,
+      },
+    );
+  });
+
+  it('reports non-finite allocation values with complete resolution context', () => {
+    expectDiagnostic(
+      () => resolveContainerBox(
+        { width: Number.POSITIVE_INFINITY, height: 20 },
+        context,
+        'DiagnosticBox',
+        'diagnostic-layout',
+      ),
+      {
+        component: 'DiagnosticBox',
+        property: 'width',
+        suppliedValue: Number.POSITIVE_INFINITY,
+        algorithm: 'diagnostic-layout',
+        constraints,
+      },
+    );
+  });
+
+  it('reports unresolved auto child dimensions with complete layout context', () => {
+    expectDiagnostic(
+      () => placeAbsoluteChild(container, rect({
+        style: { width: 'auto', height: 20, fill: '#000000' },
+      })),
+      {
+        component: 'Rect',
+        property: 'width',
+        suppliedValue: 'auto',
+        algorithm: 'absolute',
+        constraints,
+      },
+    );
+  });
+
+  it('reports invalid Grid starts and overflowing spans with area context', () => {
+    expectDiagnostic(
+      () => layoutGrid(container, [rect({
+        style: {
+          width: 20,
+          height: 20,
+          fill: '#000000',
+          gridColumnStart: 3,
+          gridRowStart: 1,
+        },
+      })], {
+        gridTemplateColumns: [100, 100],
+        gridTemplateRows: [100],
+      }, measurement),
+      {
+        component: 'Rect',
+        property: 'gridColumnStart',
+        suppliedValue: 3,
+        algorithm: 'grid',
+        constraints,
+      },
+    );
+    const spanError = expectDiagnostic(
+      () => layoutGrid(container, [rect({
+        style: {
+          width: 20,
+          height: 20,
+          fill: '#000000',
+          gridColumnStart: 2,
+          gridColumnSpan: 2,
+          gridRowStart: 1,
+        },
+      })], {
+        gridTemplateColumns: [100, 100],
+        gridTemplateRows: [100],
+      }, measurement),
+      {
+        component: 'Rect',
+        property: 'gridColumnSpan',
+        suppliedValue: 2,
+        algorithm: 'grid',
+        constraints,
+      },
+    );
+    expect(spanError.message).toContain('start 2 plus span 2');
+  });
+});
+
+function expectDiagnostic(
+  action: () => unknown,
+  expected: Readonly<{
+    component: string;
+    property: string;
+    suppliedValue: unknown;
+    algorithm: string;
+    constraints: Readonly<{
+      minWidth: number;
+      maxWidth: number;
+      minHeight: number;
+      maxHeight: number;
+    }>;
+  }>,
+): LayoutDiagnostic {
+  try {
+    action();
+  } catch (error) {
+    expect(error).toBeInstanceOf(LayoutDiagnostic);
+    expect(error).toMatchObject(expected);
+    const diagnostic = error as LayoutDiagnostic;
+    expect(diagnostic.message).toContain(expected.component);
+    expect(diagnostic.message).toContain(expected.property);
+    expect(diagnostic.message).toContain(expected.algorithm);
+    expect(diagnostic.message).toContain(String(expected.constraints.maxWidth));
+    expect(diagnostic.message).toContain(String(expected.constraints.maxHeight));
+    return diagnostic;
+  }
+  throw new Error('Expected a LayoutDiagnostic.');
+}
 
 function pixelAt(
   canvas: HTMLCanvasElement,

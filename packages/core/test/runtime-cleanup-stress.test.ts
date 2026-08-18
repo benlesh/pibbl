@@ -9,7 +9,14 @@ import {
 } from '@crc/scenarios';
 import { afterEach, describe, expect, it } from 'vitest';
 import cleanupStressSource from '../../scenarios/src/cleanup-stress.example.ts?raw';
+import { absolute, rect, type CRCController } from '../src/index';
+import { executeRender } from '../src/lib/execute-render';
 import { GLOBAL_STATE, getCRCInstance } from '../src/lib/global-state';
+import {
+  resetLayoutDiagnostics,
+  snapshotLayoutDiagnostics,
+} from '../src/lib/layout/diagnostics';
+import { mountCRC } from '../src/lib/mount-crc';
 import type { Canvas, CRCInstance } from '../src/lib/types';
 import { RuntimeDiagnostics } from './support/runtime-diagnostics';
 
@@ -190,6 +197,7 @@ const activeControllers = new Set<ScenarioController<CleanupStressState>>();
 const activeDiagnostics = new Set<RuntimeDiagnostics>();
 const activeImages = new Set<ControlledImages>();
 const activeStructureDiagnostics = new Set<StructureDiagnostics>();
+const activeRuntimeControllers = new Set<CRCController>();
 
 function pixelAt(canvas: HTMLCanvasElement, x: number, y: number): readonly number[] {
   const context = canvas.getContext('2d');
@@ -280,6 +288,10 @@ afterEach(async () => {
     await controller.dispose();
   }
   activeControllers.clear();
+  for (const controller of activeRuntimeControllers) {
+    controller.dispose();
+  }
+  activeRuntimeControllers.clear();
   for (const diagnostics of activeDiagnostics) {
     diagnostics.restore();
   }
@@ -296,6 +308,71 @@ afterEach(async () => {
 });
 
 describe('shared runtime cleanup stress laboratory', () => {
+  it('keeps exact ownership stable through 1,000 live layout reflows', () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 320;
+    canvas.height = 240;
+    document.body.replaceChildren(canvas);
+    const diagnostics = new RuntimeDiagnostics(canvas);
+    activeDiagnostics.add(diagnostics);
+    const structureDiagnostics = new StructureDiagnostics();
+    activeStructureDiagnostics.add(structureDiagnostics);
+    const createScene = () => absolute({
+      style: { width: '100%', height: '100%' },
+      children: [rect({
+        key: 'stable-half',
+        style: { width: '50%', height: '50%', fill: '#16a34a' },
+        onMouseMove: () => undefined,
+      })],
+    });
+    resetLayoutDiagnostics();
+    const controller = mountCRC(canvas, createScene());
+    activeRuntimeControllers.add(controller);
+    executeRender(canvas, 0);
+    const resourceBaseline = diagnostics.snapshot();
+    const structureBaseline = structureDiagnostics.snapshot();
+    expect(resourceBaseline).toMatchObject({
+      handlers: { ...EMPTY_HANDLERS, mousemove: 1 },
+      instances: 1,
+      nativeListeners: 8,
+      scheduledFrames: 0,
+    });
+    expect(snapshotLayoutDiagnostics()).toEqual({
+      layoutEvaluations: 1,
+      measurements: 0,
+      placements: 1,
+    });
+
+    for (let index = 0; index < 1_000; index++) {
+      canvas.width = index % 2 === 0 ? 320 : 400;
+      canvas.height = index % 2 === 0 ? 240 : 300;
+      executeRender(canvas, index + 1, createScene());
+    }
+
+    expect(diagnostics.snapshot()).toEqual(resourceBaseline);
+    expect(structureDiagnostics.snapshot()).toEqual(structureBaseline);
+    expect(snapshotLayoutDiagnostics()).toEqual({
+      layoutEvaluations: 1_001,
+      measurements: 0,
+      placements: 1_001,
+    });
+    expect(pixelAt(canvas, 199, 149)).toEqual([22, 163, 74, 255]);
+    expect(pixelAt(canvas, 201, 151)).toEqual([0, 0, 0, 0]);
+    expectTemporaryRenderStateReleased();
+
+    controller.dispose();
+    activeRuntimeControllers.delete(controller);
+    expectFullyReleased(diagnostics);
+    expect(structureDiagnostics.snapshot()).toEqual({
+      instances: { acquired: 1, live: 0, released: 1 },
+      refs: {
+        acquired: structureBaseline.refs.acquired,
+        live: 0,
+        released: structureBaseline.refs.acquired,
+      },
+    });
+  });
+
   it('loads through the catalog/source adapter with deterministic initial and reset state', async () => {
     expect(cleanupStressSource).toContain(cleanupStressScenarioEntry.source.marker);
     expect(cleanupStressScenarioEntry.actions.map(action => action.id)).toEqual([
