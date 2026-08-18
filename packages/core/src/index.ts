@@ -24,6 +24,16 @@ export {
   type VerticalLineStyle,
 } from './lib/components/vertical-line.js';
 export { crc } from './lib/crc.js';
+export {
+  absolute,
+  type AbsoluteProps,
+  type AbsoluteStyle,
+} from './lib/layout/absolute.js';
+export {
+  overlay,
+  type OverlayProps,
+  type OverlayStyle,
+} from './lib/layout/overlay.js';
 
 export { defineComp } from './lib/define-comp.js';
 export type {

@@ -95,6 +95,11 @@ export type {
   LifecycleLabTarget,
 } from './lifecycle-lab.example';
 export {
+  mountLayoutFoundation,
+  type LayoutFoundationMount,
+  type LayoutFoundationState,
+} from './layout-foundation.example';
+export {
   formatContractTrace,
   formatOrderingPolicy,
   getMouseContractCase,
