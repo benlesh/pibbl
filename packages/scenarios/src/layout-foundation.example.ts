@@ -1,6 +1,7 @@
 import {
   absolute,
   crc,
+  flex,
   flow,
   overlay,
   rect,
@@ -12,6 +13,7 @@ export interface LayoutFoundationState {
   bottomClicks: number;
   topClicks: number;
   flowClicks: number;
+  flexClicks: number;
 }
 
 export interface LayoutFoundationMount {
@@ -27,6 +29,7 @@ export function mountLayoutFoundation(
     bottomClicks: 0,
     topClicks: 0,
     flowClicks: 0,
+    flexClicks: 0,
   };
   const createScene = () => absolute({
     style: { width: '100%', height: '100%' },
@@ -58,6 +61,32 @@ export function mountLayoutFoundation(
               justifySelf: 'center',
             },
             onClick: () => state.topClicks++,
+          }),
+        ],
+      }),
+      flex({
+        style: { width: 100, height: 20 },
+        children: [
+          rect({
+            style: {
+              width: 50,
+              height: 20,
+              minWidth: 0,
+              flexBasis: 50,
+              flexShrink: 0,
+              fill: '#dc2626',
+            },
+          }),
+          rect({
+            style: {
+              width: 50,
+              height: 20,
+              minWidth: 0,
+              flexBasis: 50,
+              flexShrink: 0,
+              fill: '#7c3aed',
+            },
+            onClick: () => state.flexClicks++,
           }),
         ],
       }),

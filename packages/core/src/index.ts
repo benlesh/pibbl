@@ -39,6 +39,11 @@ export {
   type FlowProps,
   type FlowStyle,
 } from './lib/layout/flow.js';
+export {
+  flex,
+  type FlexProps,
+  type FlexStyle,
+} from './lib/layout/flex.js';
 export { measureElement } from './lib/layout/measure.js';
 
 export { defineComp } from './lib/define-comp.js';
@@ -46,6 +51,7 @@ export type {
   BoxStyle,
   CursorStyle,
   EdgeValues,
+  FlexItemStyle,
   ImgStyle,
   LayoutItemStyle,
   Length,

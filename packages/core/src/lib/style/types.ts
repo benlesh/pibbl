@@ -49,6 +49,13 @@ export interface LayoutItemStyle {
   gridRowSpan?: number;
 }
 
+export type FlexItemStyle = Pick<
+  LayoutItemStyle,
+  'flexBasis' | 'flexGrow' | 'flexShrink'
+> & {
+  alignSelf?: 'auto' | 'stretch' | 'flex-start' | 'flex-end' | 'center';
+};
+
 type LayoutParticipationKey = Exclude<
   keyof BoxStyle | keyof LayoutItemStyle,
   'custom'

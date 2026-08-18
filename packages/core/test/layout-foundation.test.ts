@@ -22,14 +22,16 @@ describe('layout foundation public scenario', () => {
 
     expect(pixelAt(canvas, 120, 50)).toEqual([249, 115, 22, 255]);
     expect(pixelAt(canvas, 60, 10)).toEqual([22, 163, 74, 255]);
-    expect(pixelAt(canvas, 90, 10)).toEqual([37, 99, 235, 255]);
+    expect(pixelAt(canvas, 90, 10)).toEqual([124, 58, 237, 255]);
     await userEvent.click(canvas, { position: { x: 60, y: 10 } });
+    await userEvent.click(canvas, { position: { x: 90, y: 10 } });
     await userEvent.click(canvas, { position: { x: 120, y: 50 } });
     await nextFrame();
     expect(mounted.getState()).toEqual({
       bottomClicks: 0,
       topClicks: 1,
       flowClicks: 1,
+      flexClicks: 1,
     });
 
     mounted.resize(400, 160);
@@ -44,6 +46,7 @@ describe('layout foundation public scenario', () => {
       bottomClicks: 0,
       topClicks: 2,
       flowClicks: 2,
+      flexClicks: 1,
     });
   });
 });
