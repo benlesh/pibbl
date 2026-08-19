@@ -1,4 +1,5 @@
 export {
+  canvasSurfaceScenarioEntry,
   cleanupStressScenarioEntry,
   createScenarioCatalogIndex,
   drawingCompositionScenarioEntry,
@@ -20,6 +21,11 @@ export {
   runtimeHooksScenarioEntry,
   validateScenarioCatalog,
 } from './catalog';
+export type {
+  CanvasSurfaceAction,
+  CanvasSurfaceMode,
+  CanvasSurfaceState,
+} from './canvas-surface.example';
 export {
   getLearningExampleBySlug,
   getLearningExampleRoute,

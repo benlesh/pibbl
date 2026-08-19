@@ -12,6 +12,7 @@ import type { LayoutFoundationState } from './layout-foundation.example';
 import type { MouseContractScenarioState } from './mouse-contract.example';
 import type { PerformanceLabState } from './performance-lab.example';
 import type { RuntimeHooksState } from './runtime-hooks.example';
+import type { CanvasSurfaceState } from './canvas-surface.example';
 import { GEOMETRY_MATRIX_CASES } from './geometry-matrix.example';
 import { MOUSE_CONTRACT_CASES } from './mouse-contract';
 import { PERFORMANCE_WORKLOADS } from './performance-lab.example';
@@ -991,6 +992,55 @@ export const layoutFoundationScenarioEntry: ScenarioCatalogEntry<LayoutFoundatio
   load: async () => (await import('./layout-foundation.example')).default,
 };
 
+const canvasSurfaceMetadata: ScenarioMetadata = {
+  id: 'canvas-surface',
+  slug: 'canvas-surface',
+  title: 'Canvas surface laboratory',
+  summary: 'Verify fixed fitting, responsive logical reflow, high-density backing stores, and logical mouse coordinates.',
+  category: 'Rendering',
+  apiTags: ['crc', 'crcLayoutBox', 'rect', 'text', 'mouse events'],
+  conceptTags: ['device pixel ratio', 'responsive Canvas', 'logical viewport', 'fit projection'],
+  manualSteps: [
+    {
+      action: 'Choose Resize fixed.',
+      expected: 'The Canvas grows to 720 × 360 CSS and 1440 × 720 backing pixels while the logical viewport and component identity remain 480 × 240.',
+    },
+    {
+      action: 'Choose Show responsive, then Resize responsive.',
+      expected: 'The logical viewport follows the CSS content box, the backing remains 2×, and identity survives the responsive resize.',
+    },
+    {
+      action: 'Move over the Canvas center.',
+      expected: 'The reported coordinates use logical units rather than physical backing pixels.',
+    },
+  ],
+  knownLimitations: [
+    'Projection alignment is centered and not configurable in this release.',
+    'The laboratory uses numeric pixel ratio 2 for deterministic evidence; default mounts use the live device ratio.',
+  ],
+  learningOrder: 150,
+  visibility: 'test-laboratory',
+  visibilityReason: 'It exposes exact surface geometry and density state for deterministic integration evidence.',
+  maturity: 'contract',
+};
+
+export const canvasSurfaceScenarioEntry: ScenarioCatalogEntry<CanvasSurfaceState> = {
+  metadata: canvasSurfaceMetadata,
+  canvas: { width: 480, height: 240 },
+  actions: [
+    { id: 'resize-fixed', label: 'Resize fixed' },
+    { id: 'show-responsive', label: 'Show responsive' },
+    { id: 'resize-responsive', label: 'Resize responsive' },
+  ],
+  source: {
+    id: 'canvas-surface-example',
+    language: 'ts',
+    marker: "CANVAS_SURFACE_SOURCE_ID = 'canvas-surface-example'",
+    path: 'packages/scenarios/src/canvas-surface.example.ts',
+  },
+  load: async () => (await import('./canvas-surface')).canvasSurfaceScenario,
+};
+
 export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] = validateScenarioCatalog([
   smokeScenarioEntry,
   drawingShapesScenarioEntry,
@@ -1006,6 +1056,7 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] = validateScena
   cleanupStressScenarioEntry,
   runtimeHooksScenarioEntry,
   layoutFoundationScenarioEntry,
+  canvasSurfaceScenarioEntry,
 ] as const);
 
 export const scenarioCatalogIndex = createScenarioCatalogIndex(scenarioCatalog);
