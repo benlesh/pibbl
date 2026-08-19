@@ -2,6 +2,7 @@ import { clearTempState, GLOBAL_STATE } from './global-state.js';
 import { render } from './render.js';
 import { Canvas, CompEl } from './types.js';
 import { get2dContext } from './util/get-2d-context.js';
+import { prepareSurface } from './surface/root-surface.js';
 
 /**
  * Gets the root element for a canvas and renders it. This is the
@@ -40,25 +41,29 @@ export function executeRender(
   const prevComponentRefs = GLOBAL_STATE.componentRefs;
   const prevClippingStack = GLOBAL_STATE.clippingStack;
   const prevLayoutStack = GLOBAL_STATE.layoutStack;
+  let renderContext: ReturnType<typeof get2dContext> | undefined;
   try {
     GLOBAL_STATE.currentCRCInstance = crcInstance;
     GLOBAL_STATE.currentCRCInstance.renderTimestamp = renderTimestamp;
     GLOBAL_STATE.canvas = canvas;
     const rootElement = updatedRoot ?? GLOBAL_STATE.currentCRCInstance.root;
     GLOBAL_STATE.currentCRCInstance.root = rootElement;
+    const surface = prepareSurface(crcInstance);
+    if (!surface) return;
     const ctx = get2dContext(canvas);
+    renderContext = ctx;
     GLOBAL_STATE.renderContext = ctx;
     GLOBAL_STATE.clippingStack = [];
     const previousRootBox = crcInstance.rootLayoutBox;
     if (
-      previousRootBox.width !== canvas.width ||
-      previousRootBox.height !== canvas.height
+      previousRootBox.width !== surface.logicalWidth ||
+      previousRootBox.height !== surface.logicalHeight
     ) {
       crcInstance.rootLayoutBox = Object.freeze({
         x: 0,
         y: 0,
-        width: canvas.width,
-        height: canvas.height,
+        width: surface.logicalWidth,
+        height: surface.logicalHeight,
       });
     }
     GLOBAL_STATE.layoutStack = [{
@@ -74,7 +79,9 @@ export function executeRender(
     const id = 'root';
     GLOBAL_STATE.unseenIds.delete(id);
     GLOBAL_STATE.seenIds.add(id);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, surface.backingWidth, surface.backingHeight);
+    ctx.setTransform(surface.renderTransform);
 
     try {
       render(rootElement, id, undefined);
@@ -92,6 +99,7 @@ export function executeRender(
       GLOBAL_STATE.currentCRCInstance.refs.delete(id);
     }
   } finally {
+    renderContext?.setTransform(1, 0, 0, 1, 0, 0);
     const { parent } = crcInstance;
     clearTempState();
     GLOBAL_STATE.clippingStack = prevClippingStack;

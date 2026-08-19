@@ -61,3 +61,26 @@ export interface CRCSurfaceSnapshot {
   renderTransform: DOMMatrix;
   inverseRenderTransform: DOMMatrix;
 }
+
+export interface RootSurfaceState {
+  kind: 'root';
+  config: ResolvedSurfaceConfig;
+  display: SurfaceDisplaySize;
+  pixelRatio: number;
+  snapshot: CRCSurfaceSnapshot | undefined;
+  ownedWidth: OwnedInlineSize | undefined;
+  ownedHeight: OwnedInlineSize | undefined;
+}
+
+export interface LayerSurfaceState {
+  kind: 'layer';
+  managed: boolean;
+  snapshot: CRCSurfaceSnapshot;
+}
+
+export type CRCSurfaceState = RootSurfaceState | LayerSurfaceState;
+
+export interface OwnedInlineSize {
+  previous: string;
+  owned: string;
+}

@@ -8,11 +8,22 @@ import {
   CRCInstance,
 } from './types.js';
 import { typedEntries } from './util/typed-entries.js';
+import type { CRCConfig, CRCSurfaceSnapshot } from './surface/types.js';
+import {
+  createLegacyLayerSurfaceState,
+  createRootSurfaceState,
+  mountRootSurface,
+} from './surface/root-surface.js';
+
+type MountCRCConfig = CRCConfig & {
+  parent?: Canvas;
+  surface?: CRCSurfaceSnapshot;
+};
 
 export function mountCRC<P>(
   canvas: Canvas,
   element: CompEl<P, any>,
-  config?: { signal?: AbortSignal; parent?: Canvas },
+  config?: MountCRCConfig,
 ): CRCController {
   const mainTeardowns = new Teardowns();
   const signal = config?.signal;
@@ -28,6 +39,11 @@ export function mountCRC<P>(
     },
   };
   const parent = config?.parent;
+  const surface = parent ?
+    config?.surface ?
+      { kind: 'layer' as const, managed: true, snapshot: config.surface } :
+      createLegacyLayerSurfaceState(canvas.width, canvas.height) :
+    createRootSurfaceState(canvas as HTMLCanvasElement, config);
 
   const crcInstance: CRCInstance = {
     canvas,
@@ -69,9 +85,16 @@ export function mountCRC<P>(
     rootLayoutBox: Object.freeze({
       x: 0,
       y: 0,
-      width: canvas.width,
-      height: canvas.height,
+      width: surface.snapshot?.logicalWidth ??
+        (surface.kind === 'root' && surface.config.mode === 'fixed' ?
+          surface.config.width :
+          surface.kind === 'root' ? surface.display.width : canvas.width),
+      height: surface.snapshot?.logicalHeight ??
+        (surface.kind === 'root' && surface.config.mode === 'fixed' ?
+          surface.config.height :
+          surface.kind === 'root' ? surface.display.height : canvas.height),
     }),
+    surface,
   };
   crcInstance.interactionRoot = parent ?
       GLOBAL_STATE.crcInstances.get(parent)?.interactionRoot :
@@ -83,6 +106,9 @@ export function mountCRC<P>(
   GLOBAL_STATE.crcInstances.set(canvas, crcInstance);
 
   try {
+    if (!parent) {
+      mountRootSurface(crcInstance, canvas as HTMLCanvasElement);
+    }
     if (signal) {
       const abortHandler = () => controller.dispose();
       signal.addEventListener('abort', abortHandler, { once: true });

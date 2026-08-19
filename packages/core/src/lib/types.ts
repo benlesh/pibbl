@@ -1,4 +1,5 @@
 import type { Teardowns } from './teardowns.js';
+import type { CRCSurfaceState } from './surface/types.js';
 import type { Constraints, LayoutBox, Size } from './layout/types.js';
 
 export interface SystemStyle {
@@ -241,6 +242,7 @@ export interface CRCInstance {
   interactionRoot: CRCInstance | undefined;
   parent: Canvas | undefined;
   rootLayoutBox: Readonly<LayoutBox>;
+  surface: CRCSurfaceState;
 }
 
 export type PixelGridAlignment = 'none' | 'round' | 'ceil' | 'floor';
