@@ -26,6 +26,7 @@ import {
   getSurfaceSnapshot,
   toLogicalTransform,
 } from '../surface/transform.js';
+import { createLayerSurface } from '../surface/resolve-surface.js';
 
 export interface LayerProps {
   render: CompEl<any, any>;
@@ -41,6 +42,8 @@ type ResolvedLayerStyle = ResolvedDrawingStyle<LayerStyle> & {
 interface LayerSlot {
   canvas: OffscreenCanvas;
   interactionLayer: CRCInteractionLayer;
+  logicalWidth: number;
+  logicalHeight: number;
 }
 
 export function Layer(
@@ -52,10 +55,21 @@ export function Layer(
   const { width = canvas.width, height = canvas.height } = style;
   const componentRefs = GLOBAL_STATE.componentRefs!;
   const parentInstance = getCurrentCRCInstance();
+  const parentSurface = getSurfaceSnapshot(parentInstance);
+  const layerSurface = createLayerSurface(
+    width,
+    height,
+    parentSurface.backingPixelsPerLogicalUnitX,
+    parentSurface.backingPixelsPerLogicalUnitY,
+  );
   if (GLOBAL_STATE.componentIsMounting) {
-    const offscreenCanvas = new OffscreenCanvas(width, height);
+    const offscreenCanvas = new OffscreenCanvas(
+      layerSurface.backingWidth,
+      layerSurface.backingHeight,
+    );
     const controller = mountCRC(offscreenCanvas, props.render, {
       parent: canvas,
+      surface: layerSurface,
     });
     const interactionLayer: CRCInteractionLayer = {
       kind: 'layer',
@@ -67,6 +81,8 @@ export function Layer(
     componentRefs.refs[0] = {
       canvas: offscreenCanvas,
       interactionLayer,
+      logicalWidth: width,
+      logicalHeight: height,
     } satisfies LayerSlot;
     componentRefs.teardowns.add(() => {
       parentInstance.paintEntries.delete(interactionLayer);
@@ -77,19 +93,30 @@ export function Layer(
   const slot = componentRefs.refs[0] as LayerSlot;
   const offscreenCanvas = slot.canvas;
   const layerCRC = getCRCInstance(offscreenCanvas);
-  const dimensionsChanged =
-    offscreenCanvas.width !== width || offscreenCanvas.height !== height;
+  const dimensionsChanged = slot.logicalWidth !== width ||
+    slot.logicalHeight !== height;
+  const surfaceChanged =
+    offscreenCanvas.width !== layerSurface.backingWidth ||
+    offscreenCanvas.height !== layerSurface.backingHeight;
 
   if (
     GLOBAL_STATE.componentIsMounting ||
     dimensionsChanged ||
+    surfaceChanged ||
     layerCRC.root.type !== props.render.type ||
     layerCRC.root.key !== props.render.key ||
     !shallowEquals(layerCRC.root.props, props.render.props) ||
     !shallowEquals(layerCRC.root.style, props.render.style)
   ) {
-    offscreenCanvas.width = width;
-    offscreenCanvas.height = height;
+    if (layerCRC.surface.kind !== 'layer') {
+      throw new Error('CRC layer mounted without a derived surface.');
+    }
+    layerCRC.surface.snapshot = layerSurface;
+    layerCRC.surface.managed = true;
+    offscreenCanvas.width = layerSurface.backingWidth;
+    offscreenCanvas.height = layerSurface.backingHeight;
+    slot.logicalWidth = width;
+    slot.logicalHeight = height;
 
     executeRender(
       offscreenCanvas,
@@ -99,7 +126,17 @@ export function Layer(
     );
   }
 
-  ctx.drawImage(offscreenCanvas, 0, 0);
+  ctx.drawImage(
+    offscreenCanvas,
+    0,
+    0,
+    offscreenCanvas.width,
+    offscreenCanvas.height,
+    0,
+    0,
+    width,
+    height,
+  );
 
   const { interactionLayer } = slot;
   parentInstance.paintEntries.delete(interactionLayer);

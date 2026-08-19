@@ -4,6 +4,7 @@ import type { SystemStyle } from '../types';
 import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
 import { defineComp } from '../define-comp';
+import { crc } from '../crc';
 import { crcCursor } from '../hooks/crc-cursor';
 import { crcEvent } from '../hooks/crc-event';
 import { crcState } from '../hooks/crc-state';
@@ -60,6 +61,59 @@ describe('layer', () => {
 
     const offscreen = drawImage.mock.lastCall![0] as OffscreenCanvas;
     expect([offscreen.width, offscreen.height]).toEqual([123, 87]);
+    drawImage.mockRestore();
+  });
+
+  it('allocates and composites an offscreen backing at root logical density', async () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 200;
+    canvas.height = 100;
+    canvas.style.cssText = 'display:block; width:300px; height:300px';
+    document.body.appendChild(canvas);
+    const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
+    const controller = crc(canvas, layer({
+      style: { width: 200, height: 100 },
+      render: rect({
+        style: { width: 200, height: 100, fill: '#2563eb' },
+      }),
+    }), { pixelRatio: 2 });
+
+    await settleSurface();
+
+    const call = drawImage.mock.lastCall!;
+    const offscreen = call[0] as OffscreenCanvas;
+    expect([offscreen.width, offscreen.height]).toEqual([600, 300]);
+    expect(call.slice(1)).toEqual([0, 0, 600, 300, 0, 0, 200, 100]);
+    controller.dispose();
+    drawImage.mockRestore();
+  });
+
+  it('rerenders an unchanged layer when root logical density changes', async () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 200;
+    canvas.height = 100;
+    canvas.style.cssText = 'display:block; width:200px; height:100px';
+    document.body.appendChild(canvas);
+    let renders = 0;
+    const Counted = defineComp(() => {
+      renders++;
+      return rect({ style: { width: 200, height: 100, fill: '#2563eb' } });
+    });
+    const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
+    const controller = crc(canvas, layer({
+      style: { width: 200, height: 100 },
+      render: Counted({}),
+    }), { pixelRatio: 2 });
+    await settleSurface();
+
+    canvas.style.width = '300px';
+    canvas.style.height = '150px';
+    await settleSurface();
+
+    const offscreen = drawImage.mock.lastCall![0] as OffscreenCanvas;
+    expect([offscreen.width, offscreen.height]).toEqual([600, 300]);
+    expect(renders).toBe(2);
+    controller.dispose();
     drawImage.mockRestore();
   });
 
@@ -734,3 +788,13 @@ describe('layer', () => {
     });
   });
 });
+
+async function settleSurface(): Promise<void> {
+  await nextFrame();
+  await nextFrame();
+  await nextFrame();
+}
+
+function nextFrame(): Promise<void> {
+  return new Promise(resolve => requestAnimationFrame(() => resolve()));
+}
