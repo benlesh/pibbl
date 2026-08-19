@@ -67,11 +67,12 @@ const RectangleStudy = defineComp(function RectangleStudy() {
     text({
       style: {
         text: hovered ? "TARGET FOUND" : "RECTANGLE STUDY",
-        x: 406,
-        y: 324,
+        x: 536,
+        y: 330,
         fill: "#17211d",
         font: "800 16px sans-serif",
         textAlign: "center",
+        textBaseline: "middle",
       },
     }),
   ];

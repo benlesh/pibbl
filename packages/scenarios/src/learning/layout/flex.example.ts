@@ -15,8 +15,8 @@ const FlexStudy = defineComp(function FlexStudy() {
     flex({
       style: {
         width: 560,
-        height: 250,
-        padding: 18,
+        height: 260,
+        padding: 80,
         gap: 18,
         alignItems: "center",
       },

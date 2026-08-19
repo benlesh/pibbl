@@ -43,9 +43,12 @@ const AbsoluteOverlayStudy = defineComp(function AbsoluteOverlayStudy() {
           text({
             style: {
               text: active ? "OVERLAY ACTIVE" : "CLICK THE OVERLAY",
+              x: 130,
+              y: 14,
               fill: "#17211d",
               font: "800 22px sans-serif",
               textAlign: "center",
+              textBaseline: "middle",
               width: 260,
               height: 28,
               alignSelf: "center",

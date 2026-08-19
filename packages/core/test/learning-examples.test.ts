@@ -12,6 +12,51 @@ import {
 
 const mountedControllers: Array<{ dispose: () => void }> = [];
 
+interface TextPaint {
+  readonly text: string;
+  readonly x: number;
+  readonly y: number;
+}
+
+async function renderLearningExample(slug: string): Promise<{
+  readonly canvas: HTMLCanvasElement;
+  readonly controller: { dispose: () => void };
+  readonly textPaints: readonly TextPaint[];
+}> {
+  const entry = learningExampleCatalog.find((candidate) => candidate.slug === slug);
+  if (!entry) throw new Error(`Missing learning example ${slug}.`);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = entry.canvas.width;
+  canvas.height = entry.canvas.height;
+  document.body.appendChild(canvas);
+
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error(`Learning example ${slug} has no 2D context.`);
+
+  const textPaints: TextPaint[] = [];
+  const fillText = context.fillText;
+  context.fillText = function (...args) {
+    const [text, x, y] = args;
+    const point = new DOMPoint(x, y).matrixTransform(this.getTransform());
+    textPaints.push({ text, x: point.x, y: point.y });
+    fillText.apply(this, args);
+  };
+
+  const module = await loadLearningExample(entry);
+  const controller = module.default(canvas);
+  mountedControllers.push(controller);
+  await new Promise<void>((resolve) =>
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+  );
+
+  return { canvas, controller, textPaints };
+}
+
+function pixelAt(canvas: HTMLCanvasElement, x: number, y: number): readonly number[] {
+  return Array.from(canvas.getContext("2d")!.getImageData(x, y, 1, 1).data);
+}
+
 afterEach(() => {
   for (const controller of mountedControllers.splice(0)) controller.dispose();
   document.body.replaceChildren();
@@ -62,6 +107,51 @@ describe("learning example catalog", () => {
     }
   });
 
+  it.each([
+    { slug: "rectangle", label: "RECTANGLE STUDY", x: 536, y: 330 },
+    {
+      slug: "absolute-and-overlay",
+      label: "CLICK THE OVERLAY",
+      x: 360,
+      y: 210,
+    },
+  ])("centers the $slug label on its intended box", async ({ slug, label, x, y }) => {
+    const { textPaints } = await renderLearningExample(slug);
+
+    expect(textPaints.find((paint) => paint.text === label)).toEqual({
+      text: label,
+      x,
+      y,
+    });
+  });
+
+  it.each([
+    {
+      slug: "flex",
+      clearPoint: [360, 80] as const,
+      contentPoint: [620, 200] as const,
+      contentColor: [255, 107, 87, 255],
+    },
+    {
+      slug: "grid",
+      clearPoint: [360, 76] as const,
+      contentPoint: [620, 220] as const,
+      contentColor: [116, 211, 174, 255],
+    },
+  ])(
+    "keeps the $slug headline above horizontally centered content",
+    async ({ slug, clearPoint, contentPoint, contentColor }) => {
+      const { canvas } = await renderLearningExample(slug);
+
+      expect(pixelAt(canvas, clearPoint[0], clearPoint[1])).toEqual([
+        247, 240, 223, 255,
+      ]);
+      expect(pixelAt(canvas, contentPoint[0], contentPoint[1])).toEqual(
+        contentColor,
+      );
+    },
+  );
+
   it("covers every drawing/composition export and supported mouse event", () => {
     const drawingAndComposition = learningExampleCatalog
       .filter(
@@ -110,17 +200,7 @@ describe("learning example catalog", () => {
         "export default function mount(canvas: HTMLCanvasElement): CRCController",
       );
 
-      const module = await loadLearningExample(entry);
-      const canvas = document.createElement("canvas");
-      canvas.width = entry.canvas.width;
-      canvas.height = entry.canvas.height;
-      document.body.appendChild(canvas);
-      const controller = module.default(canvas);
-      mountedControllers.push(controller);
-
-      await new Promise<void>((resolve) =>
-        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-      );
+      const { canvas, controller } = await renderLearningExample(entry.slug);
       const pixels = canvas
         .getContext("2d")
         ?.getImageData(0, 0, canvas.width, canvas.height).data;

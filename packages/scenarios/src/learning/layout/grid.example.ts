@@ -15,7 +15,8 @@ const GridStudy = defineComp(function GridStudy() {
     grid({
       style: {
         width: 560,
-        height: 280,
+        height: 260,
+        padding: 80,
         gridTemplateColumns: [150, "25%", "1fr"],
         gridTemplateRows: [100, "1fr"],
         gap: 14,
