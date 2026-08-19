@@ -59,7 +59,9 @@ non-finite result are rejected.
 
 - Percentages for sizes and parent-placement offsets resolve against the
   containing content allocation exactly once. At the root, that allocation is
-  the Canvas's intrinsic width and height.
+  the mounted logical viewport: fixed viewport dimensions or the current
+  responsive CSS content box. Physical backing pixels never participate in
+  style resolution.
 - Padding and gaps are finite nonnegative numbers, never percentages.
 - Allocation sizes, minimums, maximums, padding, gaps, and growth factors are
   nonnegative. A minimum greater than its maximum is an error.

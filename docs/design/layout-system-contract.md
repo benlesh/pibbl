@@ -35,9 +35,11 @@ slots. A placed child's `crcLayoutBox` is the stable, readonly local box
 `{ x: 0, y: 0, width, height }`; reading it never schedules an update.
 
 Percentages resolve once against the containing content allocation, not again
-against the child's final local allocation. The Canvas intrinsic size is the
-root containing allocation. All resolved coordinates and dimensions delivered
-to Canvas are finite.
+against the child's final local allocation. The mounted logical viewport from
+the [Canvas surface contract](./canvas-surface-contract.md) is the root
+containing allocation. Fixed viewports are independent of backing density;
+responsive viewports use the current CSS content-box dimensions. All resolved
+coordinates and dimensions delivered to Canvas are finite.
 
 Declared boxes control allocation and interaction geometry; drawing may still
 paint outside its declared box when overflow is visible. A container does not

@@ -1,8 +1,8 @@
 # CRC mouse interaction contract
 
-Status: implemented through Project Plan 003 on 2026-08-18. The original
-root-Canvas, transform, clip, and global-layer rules now also cover layout
-placement and overflow clips.
+Status: implemented through the Canvas surface contract on 2026-08-19. The
+root-Canvas, transform, clip, global-layer, layout-placement, and overflow rules
+operate in one logical coordinate space across fitting and device density.
 
 This document defines the behavior implemented and verified by TFC-03 through TFC-05. The executable source of truth for sequence examples is `MOUSE_CONTRACT_CASES` in `packages/scenarios/src/mouse-contract.ts`; the manual explorer and headless contract suite consume that same table.
 
@@ -24,7 +24,7 @@ The platform evidence is consistent on the important shape: mouse events target 
 - **Logical target:** the one interactive region selected for a native mouse event.
 - **Paint order:** the order in which CRC composites interactive paths, including layers. Later paint is visually above earlier paint.
 - **Live target:** a region still owned by the current rendered tree with the handler generation selected for dispatch.
-- **Root coordinates:** coordinates in the intrinsic Canvas width/height space exposed as `CRCMouseEvent.x/y`.
+- **Root coordinates:** coordinates in the mounted logical viewport exposed as `CRCMouseEvent.x/y`.
 - **Boundary transition:** logical `mouseover` or `mouseout` between CRC regions. These names do not imply DOM bubbling.
 
 ## Target selection
@@ -139,18 +139,22 @@ This follows the useful DOM principles: dispatch works from a cloned listener li
 
 ## Coordinates and geometry
 
-Public coordinates are intrinsic root-Canvas coordinates with fractional precision. The executable oracle verifies the CSS-scaled conversion:
+Public coordinates are root-logical coordinates with fractional precision.
+CRC measures the point inside the CSS content box, converts through backing
+space, and applies the inverse root surface transform:
 
 ```text
-x = (clientX - canvasRect.left) * canvas.width / canvasRect.width
-y = (clientY - canvasRect.top)  * canvas.height / canvasRect.height
+display point -> backing point -> inverse root render transform -> logical point
 ```
 
-`originalEvent.clientX/Y` remain CSS viewport coordinates. CSS scaling affects
-this conversion. CRC render transforms and layout placements affect hit
-testing, not public root-coordinate values. Nested Canvas layers convert the
-root point through their composition transform before testing layer-local
-geometry.
+This mapping excludes borders and padding and remains correct for every fixed
+fit, responsive layout, rounded backing size, and device density.
+`originalEvent.clientX/Y` remain CSS viewport coordinates; the native event is
+not rewritten. Component transforms and layout placements affect hit testing,
+not public root-coordinate values. Nested Canvas layers convert the root point
+through their composition transform before testing layer-local geometry. See
+the [Canvas surface contract](./canvas-surface-contract.md) for the complete
+projection model.
 
 Clips form an intersection: the point must be inside every active clip and the
 target path. `lineInteractionWidth` expands only that candidate's stroke hit

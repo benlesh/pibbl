@@ -6,7 +6,7 @@ This contract assigns every event-related resource to one owner and one idempote
 
 ## Public lifetime
 
-`crc(canvas, scene, options)` returns a stable `CRCController` for the active mount:
+`crc(canvas, scene, config)` returns a stable `CRCController` for the active mount:
 
 ```ts
 interface CRCController {
@@ -15,9 +15,9 @@ interface CRCController {
 ```
 
 - Updating an already-mounted Canvas returns the same controller.
-- `options.signal` is a mount option: only the signal supplied when the Canvas is first mounted owns that lifetime. A signal supplied on an update is ignored.
+- `config.signal` is a mount option: only the signal supplied when the Canvas is first mounted owns that lifetime. A signal supplied on an update is ignored. Viewport, fit, and pixel ratio follow the same mount-only rule.
 - `dispose()` is synchronous and idempotent.
-- `options.signal` and `dispose()` enter the same central disposal path.
+- `config.signal` and `dispose()` enter the same central disposal path.
 - A controller or signal from an old mount cannot dispose a newer mount on the same Canvas.
 - An already-aborted signal produces an immediately disposed controller and schedules no render.
 - Omitting `signal` is supported; the controller still owns and removes all native listeners.

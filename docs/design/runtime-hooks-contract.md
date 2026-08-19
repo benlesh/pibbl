@@ -1,6 +1,6 @@
 # CRC runtime and hook contract
 
-Status: implemented through Project Plan 003 on 2026-08-18.
+Status: implemented through the Canvas surface contract on 2026-08-19.
 
 This document defines the supported identity, update, hook, and recovery behavior of the existing CRC runtime. It complements the [runtime resource ownership contract](./runtime-resource-ownership.md) and the [mouse interaction contract](./mouse-interaction-contract.md). The shared `runtime-hooks-laboratory` scenario is the public-API integration oracle; focused tests cover misuse that would make an interactive gallery scene unsafe.
 
@@ -13,7 +13,9 @@ the component's style schema is optional. Capabilities may normalize style,
 resolve allocation-dependent style to finite render input, and purely measure
 intrinsic content. Calling `crc(canvas, element)` mounts the first element and
 returns a stable controller; later calls queue an update and return the same
-controller.
+controller. The first mount also owns the surface configuration documented in
+the [Canvas surface contract](./canvas-surface-contract.md); later calls cannot
+change its viewport, fit, pixel ratio, or signal.
 
 Component identity is resolved within its parent:
 
@@ -26,7 +28,7 @@ Component identity is resolved within its parent:
 
 Explicit keys must be unique under one parent for a render. A duplicate throws `Duplicate CRC key "<key>" under "<parent>"`. Removing a component, changing its key or type, replacing its root type, or disposing the instance releases that identity and every hook resource it owns.
 
-Root updates are frame-coalesced. If several explicit roots are queued, the latest root wins. A state update cannot erase a pending explicit root, and the request to update parent layers is OR-preserved across all work coalesced into that frame. The `signal` option belongs to the initial mount; update calls keep the mounted lifetime and controller.
+Root updates are frame-coalesced. If several explicit roots are queued, the latest root wins. A state update cannot erase a pending explicit root, and the request to update parent layers is OR-preserved across all work coalesced into that frame. Resize and density notifications join that same pending frame without canceling and rescheduling it. The complete configuration, including `signal`, belongs to the initial mount; update calls keep the mounted lifetime, surface, and controller.
 
 ## Hook sequence invariant
 
@@ -74,7 +76,7 @@ direct child.
 
 ## Public package boundary
 
-The built package exposes the runtime, controller type, components, hooks, hook value types, and `@crc/core/types` declarations through explicit export-map entries. Strict Bundler and NodeNext consumers compile the public runtime/hook matrix. Internal `@crc/core/lib/*` paths are not package exports, and the runtime export test prevents type-only names from becoming accidental JavaScript exports.
+The built package exposes the runtime, controller and surface configuration types, components, hooks, hook value types, and `@crc/core/types` declarations through explicit export-map entries. Strict Bundler and NodeNext consumers compile the public runtime/hook/surface matrix. Internal `@crc/core/lib/*` paths are not package exports, and the runtime export test prevents type-only names from becoming accidental JavaScript exports.
 
 ## Deterministic evidence
 

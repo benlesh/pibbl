@@ -1,6 +1,6 @@
 # CRC drawing-component contract
 
-Status: implemented through Project Plan 003 on 2026-08-18.
+Status: implemented through the Canvas surface contract on 2026-08-19.
 
 This document defines CRC's drawing and composition exports. Rendered values
 use the required local language in the [style-system
@@ -37,7 +37,14 @@ style. Runtime legacy aliases and top-level visual props are unsupported.
 | `img`            | Required `src`; detachable source generations; success/error/race/removal; natural or explicit dimensions; border stroke, opacity, pixel-grid modes, and stable explicit geometry before/after load.               | Direct async/component suites, image lesson, cleanup laboratory       |
 | `g`              | Nested scale, rotation/origin, translation, skew, zero/negative scale, updates, and sibling transform isolation.                                                                                                   | Direct group suite, composition lesson, geometry matrix               |
 | `clip`           | `nonzero` and `evenodd` fill rules, cumulative intersections, transforms, updates, empty clips, and identical render/hit clipping.                                                                                 | Direct clip suite, composition lesson, geometry matrix                |
-| `layer`          | Same-mount root/prop/dimension updates, nested and transformed offscreen composition, global paint order, interaction bounds, and cascading cleanup.                                                               | Direct layer suite, composition lesson, geometry and cleanup matrices |
+| `layer`          | Same-mount root/prop/dimension updates, root-density backing stores, nested and transformed offscreen composition, global paint order, interaction bounds, and cascading cleanup.                                  | Direct layer suite, composition lesson, geometry and cleanup matrices |
+
+Root and layer paint use logical units defined by the
+[Canvas surface contract](./canvas-surface-contract.md). Pixel-grid alignment
+therefore operates in logical geometry before the root or inherited layer
+density transform rasterizes it. Managed layers inherit both root backing
+densities and composite their complete physical source into the declared
+logical destination.
 
 ## Text layout details
 

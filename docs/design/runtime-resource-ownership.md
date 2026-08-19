@@ -1,6 +1,6 @@
 # CRC runtime resource ownership
 
-Status: implemented by TFC-07 on 2026-08-11.
+Status: implemented through the Canvas surface contract on 2026-08-19.
 
 This contract extends the [event resource ownership contract](./event-resource-ownership.md) to every current non-event runtime resource. It defines deterministic ownership and release conditions; garbage collection is supporting evidence only and is never the cleanup oracle.
 
@@ -18,6 +18,8 @@ This contract extends the [event resource ownership contract](./event-resource-o
 | Image load/error handlers      | Current `img` source generation               | That image hook generation                   | Load, error, source change, component removal, or disposal  | Both handlers detach, the request source is released, and late callbacks cannot publish state.                              |
 | Loaded image state             | Current `img` component refs                  | Source-tagged state slot                     | Source change, component removal, or disposal               | Only an image tagged with the currently rendered source can draw.                                                           |
 | Layer instance and paint entry | `Layer` mount/render slot                     | Layer component refs                         | Layer, ancestor, or root removal                            | Parent paint entry, child refs/frames, and nested layer instances release recursively.                                      |
+| Root surface observers         | First root mount                              | Root instance main teardown                  | Abort, controller disposal, or failed mount                 | Resize, window-resize, and resolution-query listeners are detached; stale notifications cannot schedule the replacement.    |
+| Intrinsic-size stabilization   | Backing resize that changes CSS size          | Root surface state                           | Root disposal while CRC still owns the inline value         | The prior inline width/height is restored without overwriting a later external style change.                                |
 | Temporary render globals       | `executeRender()` entry                       | Current synchronous render                   | `finally` on success or failure                             | Canvas, refs, instance, contexts, seen/unseen sets, hook index, mounting flag, and clip stack return to the prior baseline. |
 
 ## Collection semantics

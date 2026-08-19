@@ -1,7 +1,12 @@
 import type {
+  CRCConfig,
   CRCController,
+  CRCFit,
+  CRCFixedViewportConfig,
   CRCMouseEvent,
+  CRCPixelRatio,
   CRCRef,
+  CRCResponsiveViewportConfig,
   AbsoluteStyle,
   BoxStyle,
   ClipStyle,
@@ -370,6 +375,21 @@ const runtimeController: CRCController = crc(canvas, runtimeElement, {
 });
 runtimeController.dispose();
 
+const surfaceFit: CRCFit = 'scale-down';
+const surfacePixelRatio: CRCPixelRatio = 2;
+const fixedSurfaceConfig: CRCFixedViewportConfig = {
+  viewport: { width: 720, height: 420 },
+  fit: surfaceFit,
+  pixelRatio: surfacePixelRatio,
+};
+const responsiveSurfaceConfig: CRCResponsiveViewportConfig = {
+  viewport: 'responsive',
+  pixelRatio: 'device',
+};
+const publicSurfaceConfig: CRCConfig = fixedSurfaceConfig;
+crc(canvas, runtimeElement, publicSurfaceConfig);
+crc(canvas, runtimeElement, responsiveSurfaceConfig);
+
 interface RuntimeProbeStyle extends SystemStyle {
   width: number;
   opacity?: number;
@@ -448,6 +468,12 @@ crc(document.createElement('div'), runtimeElement);
 crc(canvas, RuntimeProbe);
 // @ts-expect-error crc signal must be an AbortSignal
 crc(canvas, runtimeElement, { signal: 'abort' });
+// @ts-expect-error responsive viewports do not accept a fit
+crc(canvas, runtimeElement, { viewport: 'responsive', fit: 'contain' });
+// @ts-expect-error fixed viewport dimensions must be numeric
+crc(canvas, runtimeElement, { viewport: { width: '720', height: 420 } });
+// @ts-expect-error pixelRatio accepts only device or a number
+crc(canvas, runtimeElement, { pixelRatio: 'retina' });
 
 const [state, setState] = crcState({ count: 0 });
 const stateCount: number = state.count;

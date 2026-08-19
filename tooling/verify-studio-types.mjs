@@ -22,6 +22,9 @@ import {
   flow,
   grid,
   overlay,
+  type CRCConfig,
+  type CRCFit,
+  type CRCPixelRatio,
   type OverlayStyle,
   type Percentage,
   type SystemStyle,
@@ -116,6 +119,23 @@ grid({
 
 declare const canvas: HTMLCanvasElement;
 crc(canvas, RadiusProbe({ style: { radius: '50%' } }));
+const fit: CRCFit = 'cover';
+const pixelRatio: CRCPixelRatio = 2;
+const fixedSurface: CRCConfig = {
+  viewport: { width: 720, height: 420 },
+  fit,
+  pixelRatio,
+};
+crc(canvas, RadiusProbe({ style: { radius: '50%' } }), fixedSurface);
+crc(canvas, RadiusProbe({ style: { radius: '50%' } }), {
+  viewport: 'responsive',
+  pixelRatio: 'device',
+});
+crc(canvas, RadiusProbe({ style: { radius: '50%' } }), {
+  viewport: 'responsive',
+  // @ts-expect-error responsive viewports do not accept fit
+  fit: 'contain',
+});
 `;
 
 try {
@@ -141,7 +161,7 @@ try {
     process.stderr.write(result.stderr);
     throw new Error('CRC Studio declarations failed their strict consumer.');
   }
-  process.stdout.write('CRC Studio declarations passed strict generic and layout checks.\n');
+  process.stdout.write('CRC Studio declarations passed strict generic, layout, and surface checks.\n');
 } finally {
   await rm(directory, { recursive: true, force: true });
 }

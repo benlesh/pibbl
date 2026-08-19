@@ -3,6 +3,21 @@ declare module '@crc/core' {
     dispose(): void;
   }
 
+  export type CRCFit = 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
+  export type CRCPixelRatio = 'device' | number;
+  export interface CRCFixedViewportConfig {
+    signal?: AbortSignal;
+    viewport?: Readonly<{ width: number; height: number }>;
+    fit?: CRCFit;
+    pixelRatio?: CRCPixelRatio;
+  }
+  export interface CRCResponsiveViewportConfig {
+    signal?: AbortSignal;
+    viewport: 'responsive';
+    pixelRatio?: CRCPixelRatio;
+  }
+  export type CRCConfig = CRCFixedViewportConfig | CRCResponsiveViewportConfig;
+
   export interface CRCMouseEvent {
     x: number;
     y: number;
@@ -134,7 +149,7 @@ declare module '@crc/core' {
   export interface CRCRef<T> { current: T | undefined }
   export type StateUpdater<T> = (update: T | ((oldValue: T) => T)) => void;
 
-  export function crc<P>(canvas: HTMLCanvasElement, element: CompEl<P, any>, config?: { signal?: AbortSignal }): CRCController;
+  export function crc<P>(canvas: HTMLCanvasElement, element: CompEl<P, any>, config?: CRCConfig): CRCController;
   export function defineComp<P, S extends SystemStyle = SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N>(component: CompFn<P, S, N, R> & (ComponentInput<P, S> extends never ? never : unknown), ...capabilityArguments: CapabilityArguments<P, S, N, R>): (input: ComponentInput<P, S>) => CompEl<P, S, N, R>;
   export function rect(props: ComponentInput<RectProps, RectStyle>): CompEl<RectProps, RectStyle>;
   export function path(props: ComponentInput<PathProps, PathStyle>): CompEl<PathProps, PathStyle>;

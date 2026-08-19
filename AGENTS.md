@@ -50,8 +50,12 @@ either as the current result unless a fresh run reproduces it.
 
 ## Current runtime model
 
-- `crc(canvas, root, options?)` owns at most one live mount per Canvas and
+- `crc(canvas, root, config?)` owns at most one live mount per Canvas and
   returns a stable controller with idempotent `dispose()`.
+- Root surfaces separate logical, CSS content-box, and physical backing spaces.
+  The default captures the initial Canvas attributes as a fixed logical
+  viewport, uses centered `contain`, and follows device density;
+  `viewport: 'responsive'` makes CSS content-box pixels the logical root.
 - Updates are coalesced and rendered on `requestAnimationFrame`. A normal render
   clears the Canvas and synchronously traverses the full component tree.
 - Components are ordinary TypeScript functions created through `defineComp`.
@@ -85,7 +89,8 @@ Public runtime/components: `crc`, `defineComp`, `rect`, `path`, `line`,
 `horizontalLine`, `verticalLine`, `svgPath`, `text`, `img`, `g`, `clip`, and
 `layer`; layout components `absolute`, `overlay`, `flow`, `flex`, and `grid`;
 and pure `measureElement` plus the public style, length, box, constraint, and
-measurement types.
+measurement types. Surface configuration is public through `CRCConfig`,
+`CRCFit`, `CRCPixelRatio`, and the fixed/responsive configuration types.
 
 Public hooks: `crcState`, `crcMemo`, `crcRef`, `crcWhenChanged`, `crcRectPath`,
 `crcLinePath`, `crcSvgPath`, `crcEvent`, `crcCursor`, and `crcLayoutBox`.
@@ -98,6 +103,7 @@ measurement, decoded-image behavior, and `OffscreenCanvas` availability.
 
 Read the exact contracts before changing these areas:
 
+- `docs/design/canvas-surface-contract.md`
 - `docs/design/runtime-hooks-contract.md`
 - `docs/design/drawing-components-contract.md`
 - `docs/design/style-system-contract.md`
@@ -124,7 +130,7 @@ Read the exact contracts before changing these areas:
 - New public capabilities must agree across runtime exports, declarations,
   Bundler and NodeNext consumers, packed output, source/built browser modes, and
   the Studio's editor declarations.
-- Preserve `g` semantics, source paint order, root-intrinsic mouse coordinates,
+- Preserve `g` semantics, source paint order, root-logical mouse coordinates,
   scheduled updates, identity rules, and teardown ownership unless an approved
   plan explicitly changes a contract and supplies migration evidence.
 
