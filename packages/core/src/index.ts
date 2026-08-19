@@ -24,6 +24,13 @@ export {
   type VerticalLineStyle,
 } from './lib/components/vertical-line.js';
 export { crc } from './lib/crc.js';
+export type {
+  CRCConfig,
+  CRCFit,
+  CRCFixedViewportConfig,
+  CRCPixelRatio,
+  CRCResponsiveViewportConfig,
+} from './lib/surface/types.js';
 export {
   absolute,
   type AbsoluteProps,

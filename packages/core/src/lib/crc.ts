@@ -2,6 +2,7 @@ import { GLOBAL_STATE } from './global-state.js';
 import { mountCRC } from './mount-crc.js';
 import { CompEl, CRCController } from './types.js';
 import { update } from './update.js';
+import type { CRCConfig } from './surface/types.js';
 
 /**
  * Mounts or updates a canvas render component on a given HTMLCanvasElement
@@ -11,7 +12,7 @@ import { update } from './update.js';
 export function crc<P>(
   canvas: HTMLCanvasElement,
   element: CompEl<P, any>,
-  config?: { signal?: AbortSignal },
+  config?: CRCConfig,
 ): CRCController {
   const mountedInstance = GLOBAL_STATE.crcInstances.get(canvas);
   if (mountedInstance) {
