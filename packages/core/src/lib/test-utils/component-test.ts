@@ -1,6 +1,7 @@
 import { crc } from '@crc/core';
 import { cdp, userEvent } from 'vitest/browser';
 import { afterEach, beforeEach } from 'vitest';
+import { getCRCInstance } from '../global-state';
 import type { CompEl, CRCController } from '../types';
 
 const activeControllers = new Set<CRCController>();
@@ -17,21 +18,31 @@ export class TestCanvas {
   }
 
   async click(options: { position: { x: number; y: number }; button?: 'left' | 'right' }) {
-    await userEvent.click(this.element, options);
+    await userEvent.click(this.element, {
+      ...options,
+      position: this.getElementPosition(options.position),
+    });
     await animationFrame();
   }
 
   async dblClick(options: { position: { x: number; y: number }; button?: 'left' | 'right' }) {
-    await userEvent.dblClick(this.element, options);
+    await userEvent.dblClick(this.element, {
+      ...options,
+      position: this.getElementPosition(options.position),
+    });
     await animationFrame();
   }
 
   async contextMenu(options: { position: { x: number; y: number } }) {
-    await userEvent.click(this.element, { ...options, button: 'right' });
+    await userEvent.click(this.element, {
+      position: this.getElementPosition(options.position),
+      button: 'right',
+    });
     await animationFrame();
   }
 
   private getScreenPosition(position: { x: number; y: number }) {
+    position = this.getElementPosition(position);
     const { top, left } = this.element.getBoundingClientRect();
     const frame = window.frameElement;
     if (!frame) {
@@ -45,6 +56,23 @@ export class TestCanvas {
       frameBounds.left + (left + position.x) * xScale,
       frameBounds.top + (top + position.y) * yScale,
     ] as const;
+  }
+
+  private getElementPosition(position: { x: number; y: number }) {
+    const surface = getCRCInstance(this.element).surface.snapshot;
+    if (!surface) {
+      throw new Error('The CRC test surface is not visible.');
+    }
+    const backing = surface.renderTransform.transformPoint(
+      new DOMPoint(position.x, position.y),
+    );
+    const style = getComputedStyle(this.element);
+    return {
+      x: px(style.borderLeftWidth) + px(style.paddingLeft) +
+        backing.x / surface.backingPixelsPerCssPixelX,
+      y: px(style.borderTopWidth) + px(style.paddingTop) +
+        backing.y / surface.backingPixelsPerCssPixelY,
+    };
   }
 
   async mouseDown(options: { position: { x: number; y: number }; button?: 'left' | 'right' }) {
@@ -181,4 +209,8 @@ export async function componentTest<P>(comp: CompEl<P, any>, options: {
 
 function animationFrame() {
   return new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+}
+
+function px(value: string): number {
+  return Number.parseFloat(value) || 0;
 }

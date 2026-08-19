@@ -136,6 +136,7 @@ describe('overlay layout', () => {
         return 1;
       };
       const canvas = document.createElement('canvas');
+      document.body.appendChild(canvas);
       const UnsafeOverlay = overlay as any;
 
       try {

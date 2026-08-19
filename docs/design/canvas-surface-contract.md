@@ -117,8 +117,9 @@ Letterboxed points can be outside the fixed logical viewport; only registered
 logical paths that actually contain the mapped point can become targets.
 
 Every captured interaction transform and clip omits the already-applied root
-surface transform. Hit testing installs the logical-to-backing transform once,
-so paint and targeting do not double-apply density or fit.
+surface transform. Hit testing maps the native point back to logical space and
+installs each captured logical transform on its isolated test context, so paint
+and targeting do not double-apply density or fit.
 
 Managed `layer` backing stores inherit the root's current backing pixels per
 logical unit on both axes. A density or projection change rerenders a layer at

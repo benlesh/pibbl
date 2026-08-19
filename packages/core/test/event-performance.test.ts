@@ -156,14 +156,16 @@ function expectedCounters(workload: PerformanceWorkload): PerformanceCounters {
         pathTests: 1,
         restore: 1,
         save: 1,
+        setTransform: 1,
       };
     case 'clipped':
       return {
         ...EMPTY_COUNTERS,
         getContext: regions,
         pathTests: regions * 2,
-        restore: regions,
-        save: regions,
+        restore: regions * 2,
+        save: regions * 2,
+        setTransform: regions * 2,
       };
     case 'transformed':
       return {
@@ -179,8 +181,9 @@ function expectedCounters(workload: PerformanceWorkload): PerformanceCounters {
         ...EMPTY_COUNTERS,
         getContext: regions,
         pathTests: regions * 2,
-        restore: regions,
-        save: regions,
+        restore: regions * 2,
+        save: regions * 2,
+        setTransform: regions * 2,
       };
     case 'cursor':
     case 'miss':
@@ -191,6 +194,7 @@ function expectedCounters(workload: PerformanceWorkload): PerformanceCounters {
         pathTests: regions,
         restore: regions,
         save: regions,
+        setTransform: regions,
       };
   }
 }

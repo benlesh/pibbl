@@ -281,7 +281,7 @@ describe('g', () => {
 
     it('handles mouse events with compound transformations', async () => {
       const onClick = vi.fn();
-      const rectCenter = { x: 50, y: 50 };
+      const rectCenter = { x: 25, y: 25 };
       const rotation = 45;
       const scale = 1.5;
       const offset = { x: 100, y: 10 };

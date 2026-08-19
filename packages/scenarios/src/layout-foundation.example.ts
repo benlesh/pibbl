@@ -168,14 +168,14 @@ export function mountLayoutFoundation(
       })],
     })],
   });
-  const controller = crc(canvas, createScene());
+  const controller = crc(canvas, createScene(), { viewport: 'responsive' });
 
   return {
     controller,
     getState: () => ({ ...state }),
     resize(width, height) {
-      canvas.width = width;
-      canvas.height = height;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
       crc(canvas, createScene());
     },
   };
@@ -206,8 +206,8 @@ const layoutFoundationScenario: ScenarioDefinition<LayoutFoundationState> = {
       },
       async reset() {
         mounted.controller.dispose();
-        canvas.width = 720;
-        canvas.height = 420;
+        canvas.style.width = '720px';
+        canvas.style.height = '420px';
         mounted = mountLayoutFoundation(canvas);
         await settled();
         notify();
