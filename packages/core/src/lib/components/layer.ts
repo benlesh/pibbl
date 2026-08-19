@@ -22,6 +22,10 @@ import type {
   LayoutItemStyle,
   ResolvedDrawingStyle,
 } from '../style/types.js';
+import {
+  getSurfaceSnapshot,
+  toLogicalTransform,
+} from '../surface/transform.js';
 
 export interface LayerProps {
   render: CompEl<any, any>;
@@ -99,7 +103,10 @@ export function Layer(
 
   const { interactionLayer } = slot;
   parentInstance.paintEntries.delete(interactionLayer);
-  interactionLayer.transform = ctx.getTransform();
+  interactionLayer.transform = toLogicalTransform(
+    getSurfaceSnapshot(parentInstance),
+    ctx.getTransform(),
+  );
   interactionLayer.clippingStack = Array.from(GLOBAL_STATE.clippingStack);
   if (dimensionsChanged) {
     interactionLayer.bounds = createBounds(width, height);

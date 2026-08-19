@@ -1,14 +1,38 @@
-const recentCoords = new WeakMap<MouseEvent, readonly [number, number]>();
+import type { CRCInstance } from '../types.js';
+import { getSurfaceSnapshot } from '../surface/transform.js';
 
-export function getMouseCoordinates(event: MouseEvent): readonly [number, number] {
-  if (recentCoords.has(event)) {
-    return recentCoords.get(event)!;
+const recentCoords = new WeakMap<
+  MouseEvent,
+  WeakMap<CRCInstance, readonly [number, number]>
+>();
+
+export function getMouseCoordinates(
+  event: MouseEvent,
+  instance: CRCInstance,
+): readonly [number, number] {
+  const eventCoords = recentCoords.get(event);
+  const cached = eventCoords?.get(instance);
+  if (cached) {
+    return cached;
   }
   const target = event.target as HTMLCanvasElement;
   const bounds = target.getBoundingClientRect();
-  const x = (event.clientX - bounds.left) * target.width / bounds.width;
-  const y = (event.clientY - bounds.top) * target.height / bounds.height;
-  const result = [x, y] as const;
-  recentCoords.set(event, result);
+  const style = getComputedStyle(target);
+  const contentLeft = bounds.left + px(style.borderLeftWidth) + px(style.paddingLeft);
+  const contentTop = bounds.top + px(style.borderTopWidth) + px(style.paddingTop);
+  const surface = getSurfaceSnapshot(instance);
+  const backingPoint = new DOMPoint(
+    (event.clientX - contentLeft) * surface.backingPixelsPerCssPixelX,
+    (event.clientY - contentTop) * surface.backingPixelsPerCssPixelY,
+  );
+  const logicalPoint = surface.inverseRenderTransform.transformPoint(backingPoint);
+  const result = [logicalPoint.x, logicalPoint.y] as const;
+  const cache = eventCoords ?? new WeakMap();
+  cache.set(instance, result);
+  recentCoords.set(event, cache);
   return result;
+}
+
+function px(value: string): number {
+  return Number.parseFloat(value) || 0;
 }

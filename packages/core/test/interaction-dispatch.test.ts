@@ -28,6 +28,7 @@ function mountDispatchHarness(
     throw new Error('Dispatch harness failed to mount a CRC instance.');
   }
   activeInstances.add(instance);
+  executeRender(canvas, 1);
   return { canvas, instance };
 }
 

@@ -1,5 +1,9 @@
-import { GLOBAL_STATE } from '../global-state.js';
+import { getCurrentCRCInstance, GLOBAL_STATE } from '../global-state.js';
 import type { RenderingContext2D } from '../types.js';
+import {
+  getSurfaceSnapshot,
+  toLogicalTransform,
+} from '../surface/transform.js';
 
 /**
  * Applies one Canvas clip and publishes the same geometry to interaction state.
@@ -13,7 +17,10 @@ export function pushClippingPath(
   GLOBAL_STATE.clippingStack.push({
     path,
     fillRule,
-    transform: ctx.getTransform(),
+    transform: toLogicalTransform(
+      getSurfaceSnapshot(getCurrentCRCInstance()),
+      ctx.getTransform(),
+    ),
   });
 
   try {

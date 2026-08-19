@@ -1,4 +1,5 @@
 import { cdp } from 'vitest/browser';
+import { getCRCInstance } from '../../src/lib/global-state';
 
 export interface MousePoint {
   x: number;
@@ -11,11 +12,28 @@ export function cssPointForIntrinsic(
   canvas: HTMLCanvasElement,
   point: MousePoint,
 ): MousePoint {
-  const bounds = canvas.getBoundingClientRect();
+  const surface = getCRCInstance(canvas).surface.snapshot;
+  if (!surface) {
+    throw new Error('The CRC surface is not visible.');
+  }
+  const backing = surface.renderTransform.transformPoint(
+    new DOMPoint(point.x, point.y),
+  );
   return {
-    x: point.x * bounds.width / canvas.width,
-    y: point.y * bounds.height / canvas.height,
+    x: backing.x / surface.backingPixelsPerCssPixelX,
+    y: backing.y / surface.backingPixelsPerCssPixelY,
   };
+}
+
+export function backingPointForLogical(
+  canvas: HTMLCanvasElement,
+  point: MousePoint,
+): MousePoint {
+  const surface = getCRCInstance(canvas).surface.snapshot;
+  if (!surface) {
+    throw new Error('The CRC surface is not visible.');
+  }
+  return surface.renderTransform.transformPoint(new DOMPoint(point.x, point.y));
 }
 
 function screenPoint(element: HTMLElement, point: MousePoint): MousePoint {

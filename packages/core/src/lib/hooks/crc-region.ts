@@ -9,6 +9,10 @@ import type {
   CRCRegionHandlers,
 } from '../types.js';
 import { requireHookContext, useHookSlot } from './hook-slot.js';
+import {
+  getSurfaceSnapshot,
+  toLogicalTransform,
+} from '../surface/transform.js';
 
 interface CRCRegionSlot {
   region: CRCInteractionRegion;
@@ -87,7 +91,10 @@ export function updateRegion(
   region.path = path;
   region.fill = fill;
   region.lineInteractionWidth = lineInteractionWidth;
-  region.transform = GLOBAL_STATE.renderContext!.getTransform();
+  region.transform = toLogicalTransform(
+    getSurfaceSnapshot(instance),
+    GLOBAL_STATE.renderContext!.getTransform(),
+  );
   region.clippingStack = Array.from(GLOBAL_STATE.clippingStack);
   region.cursor = cursor;
 

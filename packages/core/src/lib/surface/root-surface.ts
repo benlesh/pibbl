@@ -48,10 +48,8 @@ export function mountRootSurface(
     throw new Error('CRC requires ResizeObserver for Canvas surface sizing.');
   }
 
-  const resizeObserver = new ResizeObserver(entries => {
-    const entry = entries.find(candidate => candidate.target === canvas);
-    const display = entry ? readResizeObserverSize(entry) :
-      readCanvasContentBox(canvas);
+  const resizeObserver = new ResizeObserver(() => {
+    const display = readCanvasContentBox(canvas);
     if (setDisplaySize(state, display)) {
       update(canvas);
     }
@@ -142,18 +140,6 @@ export function readCanvasContentBox(
   return {
     width: Math.max(0, rect.width - boxInsets(style, 'width')),
     height: Math.max(0, rect.height - boxInsets(style, 'height')),
-  };
-}
-
-function readResizeObserverSize(entry: ResizeObserverEntry): SurfaceDisplaySize {
-  const size = entry.contentBoxSize;
-  const first = Array.isArray(size) ? size[0] : size;
-  if (first) {
-    return { width: first.inlineSize, height: first.blockSize };
-  }
-  return {
-    width: entry.contentRect.width,
-    height: entry.contentRect.height,
   };
 }
 

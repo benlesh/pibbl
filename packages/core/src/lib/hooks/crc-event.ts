@@ -51,9 +51,11 @@ export function crcEvent<K extends keyof CRCEventRegistry>(
     return;
   }
 
-  const observers = getInteractionRoot(crcInstance).events[type];
+  const interactionRoot = getInteractionRoot(crcInstance);
+  const observers = interactionRoot.events[type];
   const observer = (event: MouseEvent) => {
-    const [x, y] = getMouseCoordinates(event);
+    if (!interactionRoot.surface.snapshot) return;
+    const [x, y] = getMouseCoordinates(event, interactionRoot);
     handler({ originalEvent: event, x, y });
   };
   observers.add(observer);

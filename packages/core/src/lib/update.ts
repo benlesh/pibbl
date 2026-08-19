@@ -25,7 +25,7 @@ export function update(
   crcInstance.pendingUpdateParents ||= updateParents;
 
   if (crcInstance.animationFrameId !== undefined) {
-    cancelAnimationFrame(crcInstance.animationFrameId);
+    return;
   }
 
   let frameId = 0;

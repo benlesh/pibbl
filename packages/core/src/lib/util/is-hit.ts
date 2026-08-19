@@ -24,9 +24,7 @@ export function isHit({
   ctx.save();
   try {
     if (isInEveryClippingPath(currentClippingStack, x, y, ctx)) {
-      if (!transform.isIdentity) {
-        ctx.setTransform(transform);
-      }
+      ctx.setTransform(transform);
 
       if (fill && ctx.isPointInPath(path, x, y)) {
         return true;
@@ -55,18 +53,14 @@ function isInEveryClippingPath(
   }
 
   for (const { path, fillRule, transform } of currentClippingStack) {
-    if (!transform.isIdentity) {
-      ctx.save();
-      ctx.setTransform(transform);
-    }
+    ctx.save();
+    ctx.setTransform(transform);
     try {
       if (!ctx.isPointInPath(path, x, y, fillRule)) {
         return false;
       }
     } finally {
-      if (!transform.isIdentity) {
-        ctx.restore();
-      }
+      ctx.restore();
     }
   }
 

@@ -24,6 +24,7 @@ import {
 } from '../src/index';
 import {
   clickMouse,
+  backingPointForLogical,
   cssPointForIntrinsic,
   moveMouse,
 } from './support/mouse-input';
@@ -46,7 +47,13 @@ function pixelAt(canvas: HTMLCanvasElement, point: GeometryMatrixPoint): readonl
   if (!context) {
     throw new Error('The geometry matrix Canvas has no 2D context.');
   }
-  return Array.from(context.getImageData(point.x, point.y, 1, 1).data);
+  const backing = backingPointForLogical(canvas, point);
+  return Array.from(context.getImageData(
+    Math.floor(backing.x),
+    Math.floor(backing.y),
+    1,
+    1,
+  ).data);
 }
 
 function getMatrixCase(caseId: GeometryMatrixCaseId) {

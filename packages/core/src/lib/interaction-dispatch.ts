@@ -248,7 +248,8 @@ function resolveTarget(
   event: MouseEvent,
   canvas: HTMLCanvasElement,
 ): CRCInteractionRegion | undefined {
-  const [x, y] = getMouseCoordinates(event);
+  if (!instance.surface.snapshot) return undefined;
+  const [x, y] = getMouseCoordinates(event, instance);
   return resolveInstanceTarget({
     instance,
     canvas,
@@ -367,7 +368,7 @@ function mergeClippingStacks(
 }
 
 function invokeRegion(
-  _instance: CRCInstance,
+  instance: CRCInstance,
   region: CRCInteractionRegion | undefined,
   type: CRCEventType,
   event: MouseEvent,
@@ -380,7 +381,8 @@ function invokeRegion(
   if (!handler) {
     return;
   }
-  const [x, y] = getMouseCoordinates(event);
+  if (!instance.surface.snapshot) return;
+  const [x, y] = getMouseCoordinates(event, instance);
   try {
     handler({ originalEvent: event, x, y });
   } catch (error) {
