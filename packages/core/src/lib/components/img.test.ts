@@ -28,12 +28,12 @@ describe('img', () => {
   });
 
   describe('mouse events', () => {
-    const { x, y, width, height, strokeWidth } = defaultStyle;
+    const { x, y, width, height } = defaultStyle;
 
     const centerX = x + width / 2;
     const centerY = y + height / 2;
-    const onBorderX = x + width + (strokeWidth / 2);
-    const onBorderY = y + height + (strokeWidth / 2);
+    const nearEdgeX = x + width - 1;
+    const nearEdgeY = y + height / 2;
     const offImageX = x - 10;
     const offImageY = y - 10;
 
@@ -53,7 +53,7 @@ describe('img', () => {
         }));
 
         const centerPosition = { x: centerX, y: centerY };
-        const onBorderPosition = { x: onBorderX, y: onBorderY };
+        const nearEdgePosition = { x: nearEdgeX, y: nearEdgeY };
         const offImagePosition = { x: offImageX, y: offImageY };
         const triggerEvent = (position: { x: number; y: number }) =>
           event === 'mouseDown' || event === 'mouseUp' ?
@@ -66,7 +66,7 @@ describe('img', () => {
         await triggerEvent(centerPosition);
         expect(handlerFn).toHaveBeenCalledTimes(1);
 
-        await triggerEvent(onBorderPosition);
+        await triggerEvent(nearEdgePosition);
         expect(handlerFn).toHaveBeenCalledTimes(2);
       });
     });
