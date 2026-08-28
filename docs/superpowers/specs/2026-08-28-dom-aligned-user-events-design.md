@@ -371,6 +371,7 @@ event.cancelable;
 event.defaultPrevented;
 event.timeStamp;
 event.originalEvent;
+event.sourceEvent;
 event.composedPath();
 
 event.preventDefault();
@@ -389,7 +390,9 @@ native fields, such as pointer identity and pressure, mouse buttons and
 modifiers, keyboard key/code/repeat/composition state, wheel deltas, touch
 lists, input data, clipboard data, and drag `dataTransfer`.
 `originalEvent` remains authoritative for browser-specific or uncommon native
-fields.
+fields. `sourceEvent` is normally absent; a higher-level policy may set it when
+one logical event is synthesized from another input event, while preserving the
+logical event family's `originalEvent` type.
 
 `preventDefault()` updates the logical facade and forwards to the native event
 when it is cancelable. `stopPropagation()` and

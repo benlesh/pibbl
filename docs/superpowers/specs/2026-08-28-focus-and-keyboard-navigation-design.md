@@ -251,9 +251,10 @@ activation:
 - CRC does not synthesize an extra click when the browser has already supplied
   the logical activation.
 
-The logical click records the originating keyboard event as `originalEvent` and
-uses non-pointer activation defaults. Applications needing different semantics
-handle the key event and call `preventDefault()`.
+The logical click uses a synthetic `MouseEvent` with `detail: 0` as
+`originalEvent`, preserving the public click-handler contract, and records the
+originating `KeyboardEvent` as `sourceEvent`. Applications needing different
+semantics handle the key event and call `preventDefault()`.
 
 ## Directional navigation
 
@@ -263,8 +264,10 @@ It is named directional because the children need not form a grid.
 
 Targets use their rendered root-logical navigation rectangles. Built-in
 targets provide bounds from their known geometry or allocated box. A custom
-event target supplies `keyboardNavigationBounds` when its arbitrary `Path2D`
-does not have a reliable native bounding-box API. A focusable target without
+event target supplies `keyboardNavigationBounds` in its component-local
+coordinate space when its arbitrary `Path2D` does not have a reliable native
+bounding-box API; CRC captures the current transform and converts all four
+corners to a root-logical axis-aligned envelope. A focusable target without
 bounds remains in Tab order but is not an arrow-navigation candidate.
 
 For Left, Right, Up, and Down:
