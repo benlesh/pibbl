@@ -136,12 +136,6 @@ export interface CRCHookSlot<T = any> {
   teardowns: Teardowns;
 }
 
-export interface CRCMouseEvent {
-  x: number;
-  y: number;
-  originalEvent: MouseEvent;
-}
-
 export type CRCMouseEventListener = (e: CRCMouseEvent) => void;
 
 export interface CRCEventRegistry {
