@@ -24,7 +24,9 @@ export function buildEventPath(
     );
     if (!listeners) continue;
     for (const listener of listeners) {
-      if (listener.live) path.push(listener);
+      if (listener.live && listener.component === component) {
+        path.push(listener);
+      }
     }
   }
   path.push(target);

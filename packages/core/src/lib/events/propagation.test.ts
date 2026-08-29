@@ -84,6 +84,37 @@ describe('event propagation', () => {
     ]);
   });
 
+  it('excludes listeners from another owner whose component IDs collide', () => {
+    const eventRoot = createEventRoot();
+    const fixture = createFixture(eventRoot);
+    const collidingFixture = createFixture(eventRoot);
+    const trace: string[] = [];
+    const foreign = collidingFixture.listener(collidingFixture.parent, {
+      clickCapture: () => trace.push('foreign-capture'),
+      click: () => trace.push('foreign-bubble'),
+    });
+    const own = fixture.listener(fixture.parent, {
+      clickCapture: () => trace.push('own-capture'),
+      click: () => trace.push('own-bubble'),
+    });
+    const target = fixture.target({ click: () => trace.push('target') });
+
+    const event = dispatchEventPath({
+      type: 'click',
+      target,
+      originalEvent: clickEvent(),
+    });
+
+    expect(foreign.component.id).toBe(own.component.id);
+    expect(foreign.component).not.toBe(own.component);
+    expect(foreign.owner).not.toBe(own.owner);
+    expect(trace).toEqual(['own-capture', 'target', 'own-bubble']);
+    expect(event.composedPath()).toEqual([
+      own.publicTarget,
+      target.publicTarget,
+    ]);
+  });
+
   it('captures and targets focus without bubbling it', () => {
     const fixture = createFixture();
     const trace: string[] = [];
@@ -418,16 +449,10 @@ type HandlerMap = Record<
   ((event: CRCEvent & Record<string, unknown>) => void) | undefined
 >;
 
-function createFixture(): Fixture {
+function createFixture(eventRoot = createEventRoot()): Fixture {
   const root = component('root');
   const parent = component('parent', root);
   const targetComponent = component('target', parent);
-  const eventRoot = {
-    listenersByComponent: new Map(),
-    pointerCaptures: new Map(),
-    targets: new Set(),
-    observers: new Map(),
-  } as unknown as CRCEventRoot;
   const owner = { eventRoot } as CRCInstance;
   let slot = 0;
 
@@ -475,6 +500,15 @@ function createFixture(): Fixture {
       return target;
     },
   };
+}
+
+function createEventRoot(): CRCEventRoot {
+  return {
+    listenersByComponent: new Map(),
+    pointerCaptures: new Map(),
+    targets: new Set(),
+    observers: new Map(),
+  } as unknown as CRCEventRoot;
 }
 
 function handlers(handlerMap: HandlerMap): CRCNormalizedHandlers {
