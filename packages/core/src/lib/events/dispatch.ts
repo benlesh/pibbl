@@ -1,6 +1,7 @@
 import { getInteractionRoot } from '../global-state.js';
 import type {
   CRCCursorDefault,
+  CRCEventRoot,
   CRCInstance,
   CRCInteractionActivation,
   CRCInteractionRegion,
@@ -10,10 +11,25 @@ import {
   isNativeMouseEventType,
   type CRCAdaptedMouseEvent,
 } from './adapters/mouse.js';
+import {
+  adaptPointerEvent,
+  isNativePointerEventType,
+  type CRCAdaptedPointerEvent,
+} from './adapters/pointer.js';
+import {
+  adaptWheelEvent,
+  isNativeWheelEventType,
+  type CRCAdaptedWheelEvent,
+} from './adapters/wheel.js';
 import { planBoundaryTransitions } from './boundary-transitions.js';
 import { buildEventPath } from './event-path.js';
 import { resolveCoordinateTarget } from './hit-test.js';
 import { dispatchEventPath } from './propagation.js';
+import {
+  cancelLogicalPointerCapture,
+  consumeLogicalPointerCaptureLoss,
+  getLogicalPointerCapture,
+} from './pointer-capture.js';
 import {
   releaseTarget,
   type CRCEventNode,
@@ -30,6 +46,10 @@ const cursorDefaultOwnership = new WeakMap<
   CRCCursorDefault,
   CursorDefaultOwnership
 >();
+const pointerHoverTargets = new WeakMap<
+  CRCEventRoot,
+  Map<number, CRCEventNode>
+>();
 
 export function dispatchNativeEvent(
   instance: CRCInstance,
@@ -37,9 +57,15 @@ export function dispatchNativeEvent(
   nativeEvent: Event,
 ): void {
   const root = getInteractionRoot(instance);
-  if (isNativeMouseEventType(type)) {
+  if (isNativePointerEventType(type)) {
+    const input = adaptPointerEvent(root, type, nativeEvent);
+    if (input) dispatchPointerEvent(root, input);
+  } else if (isNativeMouseEventType(type)) {
     const input = adaptMouseEvent(root, type, nativeEvent);
     if (input) dispatchMouseEvent(root, input);
+  } else if (isNativeWheelEventType(type)) {
+    const input = adaptWheelEvent(root, nativeEvent);
+    if (input) dispatchWheelEvent(root, input);
   }
   dispatchObservers(root.eventRoot.observers.get(type), nativeEvent);
 }
@@ -50,6 +76,7 @@ export function releaseEventNodeState(
   node: CRCEventNode,
 ): void {
   const root = getInteractionRoot(instance);
+  releasePointerHoverTarget(root.eventRoot, node);
   const interaction = root.interaction;
   if (node.kind === 'target' && interaction.hoveredRegion === node) {
     const canvas = interaction.pointerCanvas;
@@ -124,6 +151,245 @@ export function refreshCursorDefault(instance: CRCInstance): void {
   const root = getInteractionRoot(instance);
   const canvas = root.interaction.pointerCanvas;
   if (canvas) applyCursor(root, root.interaction.hoveredRegion, canvas);
+}
+
+function dispatchPointerEvent(
+  root: CRCInstance,
+  input: CRCAdaptedPointerEvent,
+): void {
+  switch (input.type) {
+    case 'pointerover':
+      dispatchPointerBoundaryEntry(root, input);
+      return;
+    case 'pointermove':
+      dispatchPointerMove(root, input);
+      return;
+    case 'pointerout':
+      dispatchRootPointerOut(root, input);
+      return;
+    case 'pointerdown':
+    case 'pointerup':
+    case 'pointerrawupdate':
+      dispatchPointerCoordinateEvent(root, input);
+      return;
+    case 'pointercancel':
+      dispatchPointerCancel(root, input);
+      return;
+    case 'gotpointercapture':
+      dispatchGotPointerCapture(root, input);
+      return;
+    case 'lostpointercapture':
+      dispatchLostPointerCapture(root, input);
+      return;
+    case 'pointerenter':
+    case 'pointerleave':
+      // Logical boundary events are derived from pointer-specific paths.
+      return;
+  }
+}
+
+function dispatchPointerBoundaryEntry(
+  root: CRCInstance,
+  input: CRCAdaptedPointerEvent,
+): void {
+  const pointerId = input.originalEvent.pointerId;
+  const previous = livePointerHover(root, pointerId);
+  const next = resolvePointerTarget(root, input);
+  if (previous === next) return;
+  dispatchPointerTransition(root, previous, next, input, false);
+}
+
+function dispatchPointerMove(
+  root: CRCInstance,
+  input: CRCAdaptedPointerEvent,
+): void {
+  const pointerId = input.originalEvent.pointerId;
+  const previous = livePointerHover(root, pointerId);
+  const next = resolvePointerTarget(root, input);
+  if (previous === next) {
+    if (next) dispatchPointerNode('pointermove', next, input);
+    return;
+  }
+  dispatchPointerTransition(root, previous, next, input, true);
+}
+
+function dispatchRootPointerOut(
+  root: CRCInstance,
+  input: CRCAdaptedPointerEvent,
+): void {
+  const pointerId = input.originalEvent.pointerId;
+  const previous = livePointerHover(root, pointerId);
+  dispatchPointerTransition(root, previous, undefined, input, false);
+}
+
+function dispatchPointerTransition(
+  root: CRCInstance,
+  previous: CRCEventNode | undefined,
+  next: CRCEventNode | undefined,
+  input: CRCAdaptedPointerEvent,
+  dispatchMove: boolean,
+): void {
+  const pointerId = input.originalEvent.pointerId;
+  const oldPath = previous ? buildEventPath(previous) : [];
+  const newPath = next ? buildEventPath(next) : [];
+  const plan = planBoundaryTransitions(oldPath, newPath);
+  const oldLeaf = oldPath.at(-1);
+  const newLeaf = newPath.at(-1);
+
+  deletePointerHover(root.eventRoot, pointerId);
+  if (oldLeaf?.live) {
+    dispatchPointerNode('pointerout', oldLeaf, input, newLeaf ?? null);
+  }
+  for (const node of plan.exited) {
+    if (node.live) {
+      dispatchPointerNode('pointerleave', node, input, newLeaf ?? null);
+    }
+  }
+
+  const liveNext = next && isLiveNode(root, next) ? next : undefined;
+  if (!liveNext) return;
+
+  setPointerHover(root.eventRoot, pointerId, liveNext);
+  dispatchPointerNode('pointerover', liveNext, input, oldLeaf ?? null);
+  if (!isLiveNode(root, liveNext)) return;
+  for (const node of plan.entered) {
+    if (!isLiveNode(root, liveNext)) return;
+    if (node.live) {
+      dispatchPointerNode('pointerenter', node, input, oldLeaf ?? null);
+    }
+  }
+  if (dispatchMove && isLiveNode(root, liveNext)) {
+    dispatchPointerNode('pointermove', liveNext, input);
+  }
+}
+
+function dispatchPointerCoordinateEvent(
+  root: CRCInstance,
+  input: CRCAdaptedPointerEvent,
+): void {
+  const target = resolvePointerTarget(root, input);
+  if (target) dispatchPointerNode(input.type, target, input);
+}
+
+function dispatchPointerCancel(
+  root: CRCInstance,
+  input: CRCAdaptedPointerEvent,
+): void {
+  dispatchPointerCoordinateEvent(root, input);
+  cancelLogicalPointerCapture(
+    root.eventRoot,
+    input.originalEvent.pointerId,
+  );
+}
+
+function dispatchGotPointerCapture(
+  root: CRCInstance,
+  input: CRCAdaptedPointerEvent,
+): void {
+  const target = getLogicalPointerCapture(
+    root.eventRoot,
+    input.originalEvent.pointerId,
+  );
+  if (target) dispatchPointerNode('gotpointercapture', target, input);
+}
+
+function dispatchLostPointerCapture(
+  root: CRCInstance,
+  input: CRCAdaptedPointerEvent,
+): void {
+  const target = consumeLogicalPointerCaptureLoss(
+    root.eventRoot,
+    input.originalEvent.pointerId,
+  );
+  if (target) dispatchPointerNode('lostpointercapture', target, input);
+}
+
+function resolvePointerTarget(
+  root: CRCInstance,
+  input: CRCAdaptedPointerEvent,
+): CRCEventNode | undefined {
+  return getLogicalPointerCapture(
+    root.eventRoot,
+    input.originalEvent.pointerId,
+  ) ?? resolveCoordinateTarget(root.eventRoot, input);
+}
+
+function dispatchPointerNode(
+  type: CRCAdaptedPointerEvent['type'],
+  target: CRCEventNode,
+  input: CRCAdaptedPointerEvent,
+  relatedTarget: CRCEventNode | null = null,
+): void {
+  if (!target.live) return;
+  dispatchEventPath({
+    type,
+    target,
+    relatedTarget,
+    originalEvent: input.originalEvent,
+    x: input.x,
+    y: input.y,
+  });
+}
+
+function livePointerHover(
+  root: CRCInstance,
+  pointerId: number,
+): CRCEventNode | undefined {
+  const targets = pointerHoverTargets.get(root.eventRoot);
+  const target = targets?.get(pointerId);
+  if (!target || isLiveNode(root, target)) return target;
+  targets?.delete(pointerId);
+  if (targets?.size === 0) pointerHoverTargets.delete(root.eventRoot);
+  return undefined;
+}
+
+function setPointerHover(
+  eventRoot: CRCEventRoot,
+  pointerId: number,
+  target: CRCEventNode,
+): void {
+  let targets = pointerHoverTargets.get(eventRoot);
+  if (!targets) {
+    targets = new Map();
+    pointerHoverTargets.set(eventRoot, targets);
+  }
+  targets.set(pointerId, target);
+}
+
+function deletePointerHover(
+  eventRoot: CRCEventRoot,
+  pointerId: number,
+): void {
+  const targets = pointerHoverTargets.get(eventRoot);
+  targets?.delete(pointerId);
+  if (targets?.size === 0) pointerHoverTargets.delete(eventRoot);
+}
+
+function releasePointerHoverTarget(
+  eventRoot: CRCEventRoot,
+  target: CRCEventNode,
+): void {
+  const targets = pointerHoverTargets.get(eventRoot);
+  if (!targets) return;
+  for (const [pointerId, hovered] of targets) {
+    if (hovered === target) targets.delete(pointerId);
+  }
+  if (targets.size === 0) pointerHoverTargets.delete(eventRoot);
+}
+
+function dispatchWheelEvent(
+  root: CRCInstance,
+  input: CRCAdaptedWheelEvent,
+): void {
+  const target = resolveCoordinateTarget(root.eventRoot, input);
+  if (!target) return;
+  dispatchEventPath({
+    type: 'wheel',
+    target,
+    originalEvent: input.originalEvent,
+    x: input.x,
+    y: input.y,
+  });
 }
 
 function dispatchMouseEvent(

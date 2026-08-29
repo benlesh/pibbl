@@ -18,6 +18,12 @@ import type {
   CRCInstance,
   CRCRegionHandlers,
 } from '../types.js';
+import {
+  clearPointerCapturesForTarget,
+  hasLogicalPointerCapture,
+  releaseLogicalPointerCapture,
+  setLogicalPointerCapture,
+} from './pointer-capture.js';
 
 type CRCNormalizedCaptureKey = `${CRCEventType}Capture`;
 
@@ -78,7 +84,7 @@ export function createTarget(
   slot: number,
 ): CRCEventTargetRegistration {
   const target = {} as CRCEventTargetRegistration;
-  const publicTarget = createPublicTarget(owner, () => target);
+  const publicTarget = createPublicTarget(() => target);
   Object.assign(target, {
     kind: 'target' as const,
     owner,
@@ -203,7 +209,7 @@ function updateTargetRegistration(
     }
     target.owner.regions.delete(target);
     target.live = false;
-    releasePointerCaptures(target);
+    clearPointerCapturesForTarget(target);
     releaseNativeOwnership(target);
     return;
   }
@@ -225,7 +231,7 @@ export function releaseTarget(target: CRCEventTargetRegistration): void {
   }
   target.owner.regions.delete(target);
   target.live = false;
-  releasePointerCaptures(target);
+  clearPointerCapturesForTarget(target);
   releaseNativeOwnership(target);
   legacyHitGeometry.delete(target);
 }
@@ -236,7 +242,7 @@ export function createListener(
   slot: number,
 ): CRCEventListenerRegistration {
   const listener = {} as CRCEventListenerRegistration;
-  const publicTarget = createPublicTarget(owner, () => listener);
+  const publicTarget = createPublicTarget(() => listener);
   Object.assign(listener, {
     kind: 'listener',
     owner,
@@ -271,7 +277,7 @@ export function updateListener(
     }
     if (listener.live) listener.owner.eventRoot.onNodeRelease?.(listener);
     listener.live = false;
-    releasePointerCaptures(listener);
+    clearPointerCapturesForTarget(listener);
     releaseNativeOwnership(listener);
     return;
   }
@@ -300,7 +306,7 @@ export function releaseListener(listener: CRCEventListenerRegistration): void {
     listener.owner.eventRoot.onNodeRelease?.(listener);
   }
   listener.live = false;
-  releasePointerCaptures(listener);
+  clearPointerCapturesForTarget(listener);
   releaseNativeOwnership(listener);
 }
 
@@ -353,6 +359,17 @@ function requiredNativeTypes(
   hasCursor: boolean,
 ): ReadonlySet<CRCEventType> {
   const nativeTypes = new Set(types);
+  const hasPointerBoundary = types.has('pointerover') ||
+    types.has('pointerenter') ||
+    types.has('pointerout') ||
+    types.has('pointerleave');
+  if (hasPointerBoundary || types.has('pointermove')) {
+    nativeTypes.delete('pointerenter');
+    nativeTypes.delete('pointerleave');
+    nativeTypes.add('pointermove');
+    nativeTypes.add('pointerout');
+    if (hasPointerBoundary) nativeTypes.add('pointerover');
+  }
   if (
     hasCursor ||
     types.has('mouseover') ||
@@ -414,31 +431,17 @@ function releaseNativeOwnership(
 }
 
 function createPublicTarget(
-  owner: CRCInstance,
   getRegistration: () => CRCEventNode,
 ): CRCEventTarget {
   return {
     setPointerCapture(pointerId) {
-      const registration = getRegistration();
-      if (registration.live) {
-        owner.eventRoot.pointerCaptures.set(pointerId, registration);
-      }
+      setLogicalPointerCapture(getRegistration(), pointerId);
     },
     hasPointerCapture(pointerId) {
-      return owner.eventRoot.pointerCaptures.get(pointerId) === getRegistration();
+      return hasLogicalPointerCapture(getRegistration(), pointerId);
     },
     releasePointerCapture(pointerId) {
-      if (owner.eventRoot.pointerCaptures.get(pointerId) === getRegistration()) {
-        owner.eventRoot.pointerCaptures.delete(pointerId);
-      }
+      releaseLogicalPointerCapture(getRegistration(), pointerId);
     },
   };
-}
-
-function releasePointerCaptures(registration: CRCEventNode): void {
-  for (const [pointerId, captured] of registration.owner.eventRoot.pointerCaptures) {
-    if (captured === registration) {
-      registration.owner.eventRoot.pointerCaptures.delete(pointerId);
-    }
-  }
 }
