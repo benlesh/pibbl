@@ -283,7 +283,7 @@ function dispatchActivation(
     interaction.auxiliaryUp.delete(button);
   }
 
-  if (!target) {
+  if (!target || !coordinatePathIncludes(root, input, target)) {
     if (type === 'click') resetClickStreak(root);
     return;
   }
@@ -314,11 +314,19 @@ function dispatchDoubleClick(
   ) {
     return;
   }
-  const coordinateTarget = resolveCoordinateTarget(root.eventRoot, input);
-  if (!coordinateTarget || !buildEventPath(coordinateTarget).includes(target)) {
-    return;
-  }
+  if (!coordinatePathIncludes(root, input, target)) return;
   dispatchMouseNode('dblclick', target, input);
+}
+
+function coordinatePathIncludes(
+  root: CRCInstance,
+  input: CRCAdaptedMouseEvent,
+  node: CRCEventNode,
+): boolean {
+  const coordinateTarget = resolveCoordinateTarget(root.eventRoot, input);
+  return Boolean(
+    coordinateTarget && buildEventPath(coordinateTarget).includes(node),
+  );
 }
 
 function dispatchCoordinateEvent(

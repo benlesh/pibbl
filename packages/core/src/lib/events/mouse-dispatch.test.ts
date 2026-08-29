@@ -11,6 +11,11 @@ import type {
   CRCMouseEvent,
 } from './types';
 
+const ACTIVATION_CASES = [
+  { button: 0, label: 'click', type: 'click' },
+  { button: 2, label: 'auxclick', type: 'auxclick' },
+] as const;
+
 afterEach(() => {
   clearSharedState();
   vi.restoreAllMocks();
@@ -152,6 +157,106 @@ describe('DOM-aligned mouse dispatch', () => {
       'root:3',
     ]);
   });
+
+  it.each(ACTIVATION_CASES)(
+    'rejects $label when browser activation coordinates move to a sibling target',
+    async ({ button, type }) => {
+      const trace: string[] = [];
+      const Target = defineComp<{
+        label: string;
+        x: number;
+      }>(({ label, x }) => {
+        crcEventTarget({
+          onClick: () => trace.push(`${label}-click`),
+          onAuxClick: () => trace.push(`${label}-auxclick`),
+        }, {
+          path: rectanglePath(x, 0, 50, 50),
+          fill: true,
+        });
+      });
+      const Root = defineComp(() => [
+        Target({ label: 'a', x: 0 }),
+        Target({ label: 'b', x: 50 }),
+      ]);
+      const canvas = createCanvas();
+      crc(canvas, Root({}));
+      await nextFrame();
+
+      dispatchMouse(canvas, 'mousedown', 25, 25, button);
+      dispatchMouse(canvas, 'mouseup', 25, 25, button);
+      dispatchMouse(canvas, type, 75, 25, button);
+
+      expect(trace).toEqual([]);
+    },
+  );
+
+  it.each(ACTIVATION_CASES)(
+    'rejects common-listener $label when browser activation lands on Canvas background',
+    async ({ button, type }) => {
+      const trace: string[] = [];
+      const Target = defineComp<{ x: number }>(({ x }) => {
+        crcEventTarget({
+          onClick: () => trace.push('target-click'),
+          onAuxClick: () => trace.push('target-auxclick'),
+        }, {
+          path: rectanglePath(x, 0, 50, 50),
+          fill: true,
+        });
+      });
+      const Parent = defineComp(() => {
+        crcEventListener({
+          onClick: () => trace.push('parent-click'),
+          onAuxClick: () => trace.push('parent-auxclick'),
+        });
+        return [Target({ x: 0 }), Target({ x: 50 })];
+      });
+      const canvas = createCanvas();
+      crc(canvas, Parent({}));
+      await nextFrame();
+
+      dispatchMouse(canvas, 'mousedown', 25, 25, button);
+      dispatchMouse(canvas, 'mouseup', 75, 25, button);
+      dispatchMouse(canvas, type, 25, 75, button);
+
+      expect(trace).toEqual([]);
+    },
+  );
+
+  it.each(ACTIVATION_CASES)(
+    'retains $label eligibility after leaving and re-entering the pressed target',
+    async ({ button, label, type }) => {
+      const trace: string[] = [];
+      const Target = defineComp<{
+        targetLabel: string;
+        x: number;
+      }>(({ targetLabel, x }) => {
+        crcEventTarget({
+          onClick: () => trace.push(`${targetLabel}-click`),
+          onAuxClick: () => trace.push(`${targetLabel}-auxclick`),
+          onMouseMove: () => undefined,
+        }, {
+          path: rectanglePath(x, 0, 50, 50),
+          fill: true,
+        });
+      });
+      const Root = defineComp(() => [
+        Target({ targetLabel: 'a', x: 0 }),
+        Target({ targetLabel: 'b', x: 50 }),
+      ]);
+      const canvas = createCanvas();
+      crc(canvas, Root({}));
+      await nextFrame();
+
+      dispatchMouse(canvas, 'mousemove', 25, 25);
+      dispatchMouse(canvas, 'mousedown', 25, 25, button);
+      dispatchMouse(canvas, 'mousemove', 75, 25);
+      dispatchMouse(canvas, 'mousemove', 25, 25);
+      dispatchMouse(canvas, 'mouseup', 25, 25, button);
+      dispatchMouse(canvas, type, 25, 25, button);
+
+      expect(trace).toEqual([`a-${label}`]);
+    },
+  );
 
   it('keeps auxiliary activation history from replacing an in-progress primary activation', async () => {
     const trace: string[] = [];
