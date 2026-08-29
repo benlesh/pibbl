@@ -11,7 +11,7 @@ import type {
   CRCEventType,
 } from './types.js';
 
-type CRCOriginalEvent<K extends CRCEventType> =
+export type CRCOriginalEvent<K extends CRCEventType> =
   CRCEventMap[K] extends CRCEvent<infer TOriginal> ? TOriginal : Event;
 
 export interface CreateCRCEventInput<K extends CRCEventType> {

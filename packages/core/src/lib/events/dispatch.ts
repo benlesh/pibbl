@@ -7,6 +7,23 @@ import type {
   CRCInteractionRegion,
 } from '../types.js';
 import {
+  adaptClipboardEvent,
+  isNativeClipboardEventType,
+} from './adapters/clipboard.js';
+import {
+  adaptDragEvent,
+  isNativeDragEventType,
+  type CRCAdaptedDragEvent,
+} from './adapters/drag.js';
+import {
+  adaptEditingEvent,
+  isNativeEditingEventType,
+} from './adapters/editing.js';
+import {
+  adaptKeyboardFocusEvent,
+  isNativeKeyboardFocusEventType,
+} from './adapters/keyboard-focus.js';
+import {
   adaptMouseEvent,
   isNativeMouseEventType,
   type CRCAdaptedMouseEvent,
@@ -17,11 +34,18 @@ import {
   type CRCAdaptedPointerEvent,
 } from './adapters/pointer.js';
 import {
+  adaptTouchEvent,
+  isNativeTouchEventType,
+  type CRCAdaptedTouchContact,
+  type CRCAdaptedTouchEvent,
+} from './adapters/touch.js';
+import {
   adaptWheelEvent,
   isNativeWheelEventType,
   type CRCAdaptedWheelEvent,
 } from './adapters/wheel.js';
 import { planBoundaryTransitions } from './boundary-transitions.js';
+import type { CRCOriginalEvent } from './event-facade.js';
 import { buildEventPath } from './event-path.js';
 import { resolveCoordinateTarget } from './hit-test.js';
 import { dispatchEventPath } from './propagation.js';
@@ -36,7 +60,7 @@ import {
   type CRCEventNode,
   type CRCEventTargetRegistration,
 } from './registrations.js';
-import type { CRCEventType } from './types.js';
+import type { CRCEventMap, CRCEventType } from './types.js';
 
 interface CursorDefaultOwnership {
   readonly root: CRCInstance;
@@ -51,6 +75,21 @@ const pointerHoverTargets = new WeakMap<
   CRCEventRoot,
   Map<number, CRCEventNode>
 >();
+const touchTargets = new WeakMap<
+  CRCEventRoot,
+  Map<number, CRCEventNode>
+>();
+const dragHoverTargets = new WeakMap<CRCEventRoot, CRCEventNode>();
+
+export type CRCNativeEventRoute =
+  | 'clipboard'
+  | 'drag'
+  | 'editing'
+  | 'keyboard-focus'
+  | 'mouse'
+  | 'pointer'
+  | 'touch'
+  | 'wheel';
 
 export function dispatchNativeEvent(
   instance: CRCInstance,
@@ -58,17 +97,169 @@ export function dispatchNativeEvent(
   nativeEvent: Event,
 ): void {
   const root = getInteractionRoot(instance);
-  if (isNativePointerEventType(type)) {
-    const input = adaptPointerEvent(root, type, nativeEvent);
-    if (input) dispatchPointerEvent(root, input);
-  } else if (isNativeMouseEventType(type)) {
-    const input = adaptMouseEvent(root, type, nativeEvent);
-    if (input) dispatchMouseEvent(root, input);
-  } else if (isNativeWheelEventType(type)) {
-    const input = adaptWheelEvent(root, nativeEvent);
-    if (input) dispatchWheelEvent(root, input);
-  }
+  dispatchClassifiedNativeEvent(root, type, nativeEvent);
   dispatchObservers(root.eventRoot.observers.get(type), nativeEvent);
+}
+
+export function dispatchToLogicalTarget<K extends CRCEventType>(
+  type: K,
+  target: CRCEventNode,
+  originalEvent: CRCOriginalEvent<K>,
+  relatedTarget: CRCEventNode | null = null,
+): CRCEventMap[K] | undefined {
+  if (!target.live) return undefined;
+  return dispatchEventPath({
+    type,
+    target,
+    relatedTarget,
+    originalEvent,
+  });
+}
+
+export function classifyNativeEventType(
+  type: CRCEventType,
+): CRCNativeEventRoute {
+  switch (type) {
+    case 'pointerover':
+    case 'pointerenter':
+    case 'pointerdown':
+    case 'pointermove':
+    case 'pointerrawupdate':
+    case 'pointerup':
+    case 'pointercancel':
+    case 'pointerout':
+    case 'pointerleave':
+    case 'gotpointercapture':
+    case 'lostpointercapture':
+      return 'pointer';
+    case 'click':
+    case 'dblclick':
+    case 'auxclick':
+    case 'contextmenu':
+    case 'mouseover':
+    case 'mouseenter':
+    case 'mousedown':
+    case 'mousemove':
+    case 'mouseup':
+    case 'mouseout':
+    case 'mouseleave':
+      return 'mouse';
+    case 'touchstart':
+    case 'touchmove':
+    case 'touchend':
+    case 'touchcancel':
+      return 'touch';
+    case 'wheel':
+      return 'wheel';
+    case 'keydown':
+    case 'keyup':
+    case 'focus':
+    case 'blur':
+    case 'focusin':
+    case 'focusout':
+      return 'keyboard-focus';
+    case 'beforeinput':
+    case 'input':
+    case 'change':
+    case 'compositionstart':
+    case 'compositionupdate':
+    case 'compositionend':
+    case 'select':
+    case 'selectionchange':
+      return 'editing';
+    case 'copy':
+    case 'cut':
+    case 'paste':
+      return 'clipboard';
+    case 'dragstart':
+    case 'drag':
+    case 'dragend':
+    case 'dragenter':
+    case 'dragleave':
+    case 'dragover':
+    case 'drop':
+      return 'drag';
+  }
+  return assertNever(type);
+}
+
+function dispatchClassifiedNativeEvent(
+  root: CRCInstance,
+  type: CRCEventType,
+  nativeEvent: Event,
+): void {
+  const route = classifyNativeEventType(type);
+  switch (route) {
+    case 'pointer': {
+      if (!isNativePointerEventType(type)) {
+        throw nativeRouteMismatch(type, route);
+      }
+      const input = adaptPointerEvent(root, type, nativeEvent);
+      if (input) dispatchPointerEvent(root, input);
+      return;
+    }
+    case 'mouse': {
+      if (!isNativeMouseEventType(type)) {
+        throw nativeRouteMismatch(type, route);
+      }
+      const input = adaptMouseEvent(root, type, nativeEvent);
+      if (input) dispatchMouseEvent(root, input);
+      return;
+    }
+    case 'touch': {
+      if (!isNativeTouchEventType(type)) {
+        throw nativeRouteMismatch(type, route);
+      }
+      const input = adaptTouchEvent(root, type, nativeEvent);
+      if (input) dispatchTouchEvent(root, input);
+      return;
+    }
+    case 'wheel': {
+      if (!isNativeWheelEventType(type)) {
+        throw nativeRouteMismatch(type, route);
+      }
+      const input = adaptWheelEvent(root, nativeEvent);
+      if (input) dispatchWheelEvent(root, input);
+      return;
+    }
+    case 'keyboard-focus':
+      if (!isNativeKeyboardFocusEventType(type)) {
+        throw nativeRouteMismatch(type, route);
+      }
+      // A native Canvas event has no logical descendant until a focus policy
+      // supplies one. Adapting here validates the family before observers run.
+      adaptKeyboardFocusEvent(type, nativeEvent);
+      return;
+    case 'editing':
+      if (!isNativeEditingEventType(type)) {
+        throw nativeRouteMismatch(type, route);
+      }
+      // Editing transport remains targetless without an explicit input policy.
+      adaptEditingEvent(type, nativeEvent);
+      return;
+    case 'clipboard':
+      if (!isNativeClipboardEventType(type)) {
+        throw nativeRouteMismatch(type, route);
+      }
+      adaptClipboardEvent(type, nativeEvent);
+      return;
+    case 'drag': {
+      if (!isNativeDragEventType(type)) {
+        throw nativeRouteMismatch(type, route);
+      }
+      const input = adaptDragEvent(root, type, nativeEvent);
+      if (input) dispatchDragEvent(root, input);
+      return;
+    }
+  }
+  return assertNever(route);
+}
+
+function nativeRouteMismatch(
+  type: CRCEventType,
+  route: CRCNativeEventRoute,
+): Error {
+  return new Error(`CRC event ${type} is not valid for the ${route} route.`);
 }
 
 /** Clears dispatch-owned references before a logical node becomes dead. */
@@ -78,6 +269,8 @@ export function releaseEventNodeState(
 ): void {
   const root = getInteractionRoot(instance);
   releasePointerHoverTarget(root.eventRoot, node);
+  releaseTouchTarget(root.eventRoot, node);
+  releaseDragHoverTarget(root.eventRoot, node);
   const interaction = root.interaction;
   if (node.kind === 'target' && interaction.hoveredRegion === node) {
     const canvas = interaction.pointerCanvas;
@@ -378,6 +571,89 @@ function releasePointerHoverTarget(
   if (targets.size === 0) pointerHoverTargets.delete(eventRoot);
 }
 
+function dispatchTouchEvent(
+  root: CRCInstance,
+  input: CRCAdaptedTouchEvent,
+): void {
+  const groups = new Map<CRCEventNode, CRCAdaptedTouchContact[]>();
+  for (const contact of input.changedContacts) {
+    const identifier = contact.touch.identifier;
+    let target: CRCEventNode | undefined;
+    if (input.type === 'touchstart') {
+      target = resolveCoordinateTarget(root.eventRoot, contact);
+      if (target) setTouchTarget(root.eventRoot, identifier, target);
+      else deleteTouchTarget(root.eventRoot, identifier);
+    } else {
+      target = liveTouchTarget(root, identifier);
+    }
+
+    if (target) {
+      const contacts = groups.get(target);
+      if (contacts) contacts.push(contact);
+      else groups.set(target, [contact]);
+    }
+    if (input.type === 'touchend' || input.type === 'touchcancel') {
+      deleteTouchTarget(root.eventRoot, identifier);
+    }
+  }
+
+  for (const [target, contacts] of groups) {
+    if (!isLiveNode(root, target)) continue;
+    const first = contacts[0];
+    dispatchEventPath({
+      type: input.type,
+      target,
+      originalEvent: input.originalEvent,
+      x: first.x,
+      y: first.y,
+    });
+  }
+}
+
+function liveTouchTarget(
+  root: CRCInstance,
+  identifier: number,
+): CRCEventNode | undefined {
+  const target = touchTargets.get(root.eventRoot)?.get(identifier);
+  if (!target || isLiveNode(root, target)) return target;
+  deleteTouchTarget(root.eventRoot, identifier);
+  return undefined;
+}
+
+function setTouchTarget(
+  eventRoot: CRCEventRoot,
+  identifier: number,
+  target: CRCEventNode,
+): void {
+  let targets = touchTargets.get(eventRoot);
+  if (!targets) {
+    targets = new Map();
+    touchTargets.set(eventRoot, targets);
+  }
+  targets.set(identifier, target);
+}
+
+function deleteTouchTarget(
+  eventRoot: CRCEventRoot,
+  identifier: number,
+): void {
+  const targets = touchTargets.get(eventRoot);
+  targets?.delete(identifier);
+  if (targets?.size === 0) touchTargets.delete(eventRoot);
+}
+
+function releaseTouchTarget(
+  eventRoot: CRCEventRoot,
+  target: CRCEventNode,
+): void {
+  const targets = touchTargets.get(eventRoot);
+  if (!targets) return;
+  for (const [identifier, owner] of targets) {
+    if (owner === target) targets.delete(identifier);
+  }
+  if (targets.size === 0) touchTargets.delete(eventRoot);
+}
+
 function dispatchWheelEvent(
   root: CRCInstance,
   input: CRCAdaptedWheelEvent,
@@ -391,6 +667,130 @@ function dispatchWheelEvent(
     x: input.x,
     y: input.y,
   });
+}
+
+function dispatchDragEvent(
+  root: CRCInstance,
+  input: CRCAdaptedDragEvent,
+): void {
+  switch (input.type) {
+    case 'dragenter':
+      reconcileDragTarget(root, input);
+      return;
+    case 'dragover': {
+      const target = reconcileDragTarget(root, input);
+      if (target) dispatchDragNode('dragover', target, input);
+      return;
+    }
+    case 'dragleave':
+      dispatchDragTransition(
+        root,
+        liveDragHover(root),
+        undefined,
+        input,
+      );
+      return;
+    case 'drop': {
+      const target = reconcileDragTarget(root, input);
+      if (target) dispatchDragNode('drop', target, input);
+      dragHoverTargets.delete(root.eventRoot);
+      return;
+    }
+    case 'dragend':
+      dispatchDragCoordinateEvent(root, input);
+      dragHoverTargets.delete(root.eventRoot);
+      return;
+    case 'dragstart':
+    case 'drag':
+      dispatchDragCoordinateEvent(root, input);
+      return;
+  }
+  return assertNever(input.type);
+}
+
+function reconcileDragTarget(
+  root: CRCInstance,
+  input: CRCAdaptedDragEvent,
+): CRCEventNode | undefined {
+  const previous = liveDragHover(root);
+  const next = resolveCoordinateTarget(root.eventRoot, input);
+  if (previous === next) return next;
+  return dispatchDragTransition(root, previous, next, input);
+}
+
+function dispatchDragTransition(
+  root: CRCInstance,
+  previous: CRCEventNode | undefined,
+  next: CRCEventNode | undefined,
+  input: CRCAdaptedDragEvent,
+): CRCEventNode | undefined {
+  const oldPath = previous ? buildEventPath(previous) : [];
+  const newPath = next ? buildEventPath(next) : [];
+  const plan = planBoundaryTransitions(oldPath, newPath);
+  const oldLeaf = oldPath.at(-1);
+  const newLeaf = newPath.at(-1);
+
+  dragHoverTargets.delete(root.eventRoot);
+  for (const node of plan.exited) {
+    if (node.live) {
+      dispatchDragNode('dragleave', node, input, newLeaf ?? null);
+    }
+  }
+
+  const liveNext = next && isLiveNode(root, next) ? next : undefined;
+  if (!liveNext) return undefined;
+  dragHoverTargets.set(root.eventRoot, liveNext);
+  for (const node of plan.entered) {
+    if (!isLiveNode(root, liveNext)) {
+      dragHoverTargets.delete(root.eventRoot);
+      return undefined;
+    }
+    if (node.live) {
+      dispatchDragNode('dragenter', node, input, oldLeaf ?? null);
+    }
+  }
+  return isLiveNode(root, liveNext) ? liveNext : undefined;
+}
+
+function dispatchDragCoordinateEvent(
+  root: CRCInstance,
+  input: CRCAdaptedDragEvent,
+): void {
+  const target = resolveCoordinateTarget(root.eventRoot, input);
+  if (target) dispatchDragNode(input.type, target, input);
+}
+
+function dispatchDragNode(
+  type: CRCAdaptedDragEvent['type'],
+  target: CRCEventNode,
+  input: CRCAdaptedDragEvent,
+  relatedTarget: CRCEventNode | null = null,
+): void {
+  if (!target.live) return;
+  dispatchEventPath({
+    type,
+    target,
+    relatedTarget,
+    originalEvent: input.originalEvent,
+    x: input.x,
+    y: input.y,
+  });
+}
+
+function liveDragHover(root: CRCInstance): CRCEventNode | undefined {
+  const target = dragHoverTargets.get(root.eventRoot);
+  if (!target || isLiveNode(root, target)) return target;
+  dragHoverTargets.delete(root.eventRoot);
+  return undefined;
+}
+
+function releaseDragHoverTarget(
+  eventRoot: CRCEventRoot,
+  target: CRCEventNode,
+): void {
+  if (dragHoverTargets.get(eventRoot) === target) {
+    dragHoverTargets.delete(eventRoot);
+  }
 }
 
 function dispatchMouseEvent(
@@ -766,4 +1166,8 @@ function releaseCursor(instance: CRCInstance): void {
   interaction.cursorDefault = undefined;
   interaction.cursorCanvas = undefined;
   interaction.cursorStyle = undefined;
+}
+
+function assertNever(value: never): never {
+  throw new Error(`Unhandled CRC event route: ${String(value)}`);
 }
