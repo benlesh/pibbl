@@ -5,7 +5,7 @@ export interface CRCEvent<TOriginal extends Event = Event> {
   readonly target: CRCEventTarget;
   readonly currentTarget: CRCEventTarget;
   readonly relatedTarget: CRCEventTarget | null;
-  readonly eventPhase: 1 | 2 | 3;
+  readonly eventPhase: CRCEventPhase;
   readonly bubbles: boolean;
   readonly cancelable: boolean;
   readonly defaultPrevented: boolean;
@@ -17,6 +17,8 @@ export interface CRCEvent<TOriginal extends Event = Event> {
   stopPropagation(): void;
   stopImmediatePropagation(): void;
 }
+
+export type CRCEventPhase = 1 | 2 | 3;
 
 export interface CRCEventTarget {
   setPointerCapture(pointerId: number): void;
