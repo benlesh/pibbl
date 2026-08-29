@@ -26,6 +26,7 @@ import { buildEventPath } from './event-path.js';
 import { resolveCoordinateTarget } from './hit-test.js';
 import { dispatchEventPath } from './propagation.js';
 import {
+  activateLogicalPointerCapture,
   cancelLogicalPointerCapture,
   consumeLogicalPointerCaptureLoss,
   getLogicalPointerCapture,
@@ -286,7 +287,7 @@ function dispatchGotPointerCapture(
   root: CRCInstance,
   input: CRCAdaptedPointerEvent,
 ): void {
-  const target = getLogicalPointerCapture(
+  const target = activateLogicalPointerCapture(
     root.eventRoot,
     input.originalEvent.pointerId,
   );
