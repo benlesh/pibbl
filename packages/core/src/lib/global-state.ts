@@ -119,6 +119,9 @@ export function cleanupCRCInstance(crcInstance: CRCInstance): void {
     }
     crcInstance.eventRoot.listenersByComponent.clear();
     crcInstance.eventRoot.pointerCaptures.clear();
+    crcInstance.eventRoot.onNodeRelease = undefined;
+    crcInstance.eventRoot.onTargetUpdate = undefined;
+    crcInstance.eventRoot.rootInstance = undefined;
   }
   crcInstance.regions?.clear();
   crcInstance.paintEntries?.clear();
@@ -133,9 +136,11 @@ export function cleanupCRCInstance(crcInstance: CRCInstance): void {
       interaction.cursorCanvas.style.removeProperty('cursor');
     }
     interaction.hoveredRegion = undefined;
-    interaction.primaryDownRegion = undefined;
-    interaction.primaryUpRegion = undefined;
-    interaction.clickStreakRegion = undefined;
+    interaction.primaryDown = undefined;
+    interaction.primaryUp = undefined;
+    interaction.auxiliaryDown.clear();
+    interaction.auxiliaryUp.clear();
+    interaction.clickStreakTarget = undefined;
     interaction.clickStreak = 0;
     interaction.cursorRegion = undefined;
     interaction.cursorDefault = undefined;

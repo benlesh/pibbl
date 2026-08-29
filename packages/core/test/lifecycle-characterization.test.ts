@@ -6,23 +6,18 @@ import {
   getCRCInstance,
   GLOBAL_STATE,
 } from '../src/lib/global-state';
+import { CRC_EVENT_TYPES } from '../src/lib/events/event-definitions';
 import { RuntimeDiagnostics } from './support/runtime-diagnostics';
 
 const activeDiagnostics = new Set<RuntimeDiagnostics>();
 const activeControllers = new Set<CRCController>();
 
-const EMPTY_HANDLERS = {
-  click: 0,
-  contextmenu: 0,
-  dblclick: 0,
-  mousedown: 0,
-  mousemove: 0,
-  mouseout: 0,
-  mouseover: 0,
-  mouseup: 0,
-};
+const EMPTY_HANDLERS = Object.fromEntries(
+  CRC_EVENT_TYPES.map(type => [type, 0]),
+);
 
 const ONE_REGION_HANDLERS = {
+  ...EMPTY_HANDLERS,
   click: 1,
   contextmenu: 1,
   dblclick: 1,
@@ -270,7 +265,7 @@ describe('event lifecycle ownership', () => {
     const baseline = diagnostics.snapshot();
     expect(baseline).toMatchObject({
       instances: 1,
-      nativeListeners: 8,
+      nativeListeners: 7,
       handlers: ONE_REGION_HANDLERS,
       scheduledFrames: 0,
     });
@@ -442,7 +437,7 @@ describe('event lifecycle ownership', () => {
     await nextFrame();
     expect(diagnostics.snapshot()).toMatchObject({
       instances: 1,
-      nativeListeners: 8,
+      nativeListeners: 0,
       handlers: EMPTY_HANDLERS,
       scheduledFrames: 0,
     });
@@ -460,9 +455,9 @@ describe('event lifecycle ownership', () => {
     await nextFrame();
     const root = getCRCInstance(canvas);
 
-    expect(diagnostics.snapshot()).toMatchObject({ instances: 2, nativeListeners: 8 });
+    expect(diagnostics.snapshot()).toMatchObject({ instances: 2, nativeListeners: 2 });
     expect(root.paintEntries.size).toBe(1);
-    expect(root.events.mousemove.size).toBe(1);
+    expect(root.eventRoot.observers.get('mousemove')?.size).toBe(1);
     expect(root.cursorDefaults.size).toBe(1);
 
     canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: 40, clientY: 40 }));
@@ -473,7 +468,7 @@ describe('event lifecycle ownership', () => {
     await nextFrame();
     expect(GLOBAL_STATE.crcInstances.size).toBe(1);
     expect(root.paintEntries.size).toBe(0);
-    expect(root.events.mousemove.size).toBe(0);
+    expect(root.eventRoot.observers.get('mousemove')?.size).toBe(0);
     expect(root.cursorDefaults.size).toBe(0);
     expect(root.interaction.hoveredRegion).toBeUndefined();
     expect(canvas.style.cursor).toBe('');

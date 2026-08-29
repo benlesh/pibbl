@@ -1,8 +1,8 @@
 import { getInteractionRoot } from '../global-state.js';
-import { updateLegacyNativeListenerOwnership } from '../events/legacy-native-listener-bridge.js';
 import {
   refreshCursorDefault,
   removeCursorDefault,
+  updateCursorDefault,
 } from '../interaction-dispatch.js';
 import type {
   CRCCursorDefault,
@@ -65,10 +65,6 @@ export function crcCursor({
 
   cursorDefault.style = style;
   interactionRoot.cursorDefaults.add(cursorDefault);
-  updateLegacyNativeListenerOwnership(
-    interactionRoot,
-    cursorDefault,
-    new Set(['mousemove', 'mouseout']),
-  );
+  updateCursorDefault(interactionRoot, cursorDefault);
   refreshCursorDefault(interactionRoot);
 }

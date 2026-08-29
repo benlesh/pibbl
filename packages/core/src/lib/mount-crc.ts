@@ -1,6 +1,10 @@
 import { cleanupCRCInstance, GLOBAL_STATE } from './global-state.js';
-import { dispatchCRCEvent } from './interaction-dispatch.js';
 import { CRC_EVENT_TYPES } from './events/event-definitions.js';
+import {
+  dispatchNativeEvent,
+  refreshInteractionCursor,
+  releaseEventNodeState,
+} from './events/dispatch.js';
 import { createNativeListenerHub } from './events/native-listener-hub.js';
 import type { CRCEventType as DOMCRCEventType } from './events/types.js';
 import { Teardowns } from './teardowns.js';
@@ -8,7 +12,6 @@ import {
   Canvas,
   CompEl,
   CRCController,
-  CRCEventRegistry,
   CRCEventRoot,
   CRCInstance,
   CRCNativeObserver,
@@ -61,12 +64,9 @@ export function mountCRC<P>(
     rootCanvas,
     mainTeardowns,
     (type, event) => {
-      if (isLegacyMouseEventType(type) && event instanceof MouseEvent) {
-        dispatchCRCEvent(crcInstance, type, event, rootCanvas!);
-      }
+      dispatchNativeEvent(crcInstance, type, event);
     },
   );
-  const events = createLegacyEventRegistry(eventRoot);
 
   crcInstance = {
     canvas,
@@ -79,15 +79,16 @@ export function mountCRC<P>(
     renderTimestamp: 0,
     mainTeardowns,
     eventRoot,
-    events,
     regions: new Set(),
     paintEntries: new Set(),
     cursorDefaults: new Set(),
     interaction: {
       hoveredRegion: undefined,
-      primaryDownRegion: undefined,
-      primaryUpRegion: undefined,
-      clickStreakRegion: undefined,
+      primaryDown: undefined,
+      primaryUp: undefined,
+      auxiliaryDown: new Map(),
+      auxiliaryUp: new Map(),
+      clickStreakTarget: undefined,
       clickStreak: 0,
       cursorRegion: undefined,
       cursorDefault: undefined,
@@ -115,6 +116,12 @@ export function mountCRC<P>(
       GLOBAL_STATE.crcInstances.get(parent)?.interactionRoot :
     crcInstance;
   if (!crcInstance.interactionRoot) throw new Error('Parent CRC interaction root not found');
+  if (!parent) {
+    eventRoot.rootInstance = crcInstance;
+    eventRoot.onNodeRelease = node => releaseEventNodeState(crcInstance, node);
+    eventRoot.onTargetUpdate = target =>
+      refreshInteractionCursor(crcInstance, target);
+  }
   ownedInstance = crcInstance;
   GLOBAL_STATE.crcInstances.set(canvas, crcInstance);
 
@@ -158,12 +165,15 @@ function createEventRoot(
     ]),
   );
   return {
+    rootInstance: undefined,
     canvas,
     nativeListeners,
     targets: new Set(),
     listenersByComponent: new Map(),
     observers,
     pointerCaptures: new Map(),
+    onNodeRelease: undefined,
+    onTargetUpdate: undefined,
   };
 }
 
@@ -205,30 +215,4 @@ function createNativeObserverSet(
 
 function isHTMLCanvas(canvas: Canvas): canvas is HTMLCanvasElement {
   return typeof HTMLCanvasElement !== 'undefined' && canvas instanceof HTMLCanvasElement;
-}
-
-function isLegacyMouseEventType(
-  type: DOMCRCEventType,
-): type is keyof CRCEventRegistry {
-  return type === 'click' ||
-    type === 'dblclick' ||
-    type === 'mousemove' ||
-    type === 'mouseover' ||
-    type === 'mouseout' ||
-    type === 'mousedown' ||
-    type === 'mouseup' ||
-    type === 'contextmenu';
-}
-
-function createLegacyEventRegistry(eventRoot: CRCEventRoot): CRCEventRegistry {
-  return {
-    click: eventRoot.observers.get('click') as CRCEventRegistry['click'],
-    dblclick: eventRoot.observers.get('dblclick') as CRCEventRegistry['dblclick'],
-    mousemove: eventRoot.observers.get('mousemove') as CRCEventRegistry['mousemove'],
-    mouseover: eventRoot.observers.get('mouseover') as CRCEventRegistry['mouseover'],
-    mouseout: eventRoot.observers.get('mouseout') as CRCEventRegistry['mouseout'],
-    mousedown: eventRoot.observers.get('mousedown') as CRCEventRegistry['mousedown'],
-    mouseup: eventRoot.observers.get('mouseup') as CRCEventRegistry['mouseup'],
-    contextmenu: eventRoot.observers.get('contextmenu') as CRCEventRegistry['contextmenu'],
-  };
 }

@@ -166,7 +166,7 @@ export interface CRCClippingStackEntry {
   transform: DOMMatrix;
 }
 
-/** @internal Temporary name retained until the Task 5 dispatcher migration. */
+/** @internal Legacy mouse-hook name retained until Task 8 cleanup. */
 export type CRCInteractionRegion = CRCEventTargetRegistration;
 
 export interface CRCInteractionLayer {
@@ -184,11 +184,18 @@ export interface CRCCursorDefault {
   style: string;
 }
 
+export interface CRCInteractionActivation {
+  readonly button: number;
+  readonly path: readonly CRCEventNode[];
+}
+
 export interface CRCInteractionState {
   hoveredRegion: CRCInteractionRegion | undefined;
-  primaryDownRegion: CRCInteractionRegion | undefined;
-  primaryUpRegion: CRCInteractionRegion | undefined;
-  clickStreakRegion: CRCInteractionRegion | undefined;
+  primaryDown: CRCInteractionActivation | undefined;
+  primaryUp: CRCInteractionActivation | undefined;
+  auxiliaryDown: Map<number, CRCInteractionActivation>;
+  auxiliaryUp: Map<number, CRCInteractionActivation>;
+  clickStreakTarget: CRCEventNode | undefined;
   clickStreak: number;
   cursorRegion: CRCInteractionRegion | undefined;
   cursorDefault: CRCCursorDefault | undefined;
@@ -200,12 +207,16 @@ export interface CRCInteractionState {
 export type CRCNativeObserver = (event: Event) => void;
 
 export interface CRCEventRoot {
+  rootInstance: CRCInstance | undefined;
   readonly canvas: HTMLCanvasElement | undefined;
   readonly nativeListeners: NativeListenerHub | undefined;
   readonly targets: Set<CRCEventTargetRegistration>;
   readonly listenersByComponent: Map<string, Set<CRCEventListenerRegistration>>;
   readonly observers: Map<DOMCRCEventType, Set<CRCNativeObserver>>;
   readonly pointerCaptures: Map<number, CRCEventNode>;
+  onNodeRelease: ((node: CRCEventNode) => void) | undefined;
+  onTargetUpdate:
+    ((target: CRCEventTargetRegistration) => void) | undefined;
   focusPolicy?: CRCFocusPolicyBridge;
 }
 
@@ -245,8 +256,6 @@ export interface CRCInstance {
   renderTimestamp: number;
   mainTeardowns: Teardowns;
   eventRoot: CRCEventRoot;
-  /** @internal Temporary compatibility alias removed by the shared dispatcher migration. */
-  events: CRCEventRegistry;
   regions: Set<CRCInteractionRegion>;
   paintEntries: Set<CRCInteractionPaintEntry>;
   cursorDefaults: Set<CRCCursorDefault>;

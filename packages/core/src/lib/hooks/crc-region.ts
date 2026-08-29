@@ -4,10 +4,7 @@ import {
   updateLegacyTarget,
   type CRCEventTargetRegistration,
 } from '../events/registrations.js';
-import {
-  refreshInteractionCursor,
-  removeInteractionRegion,
-} from '../interaction-dispatch.js';
+import { removeInteractionRegion } from '../interaction-dispatch.js';
 import type {
   CRCInstance,
   CRCRegionHandlers,
@@ -79,8 +76,6 @@ export function updateRegion(
     handlers,
     { path, fill, lineInteractionWidth, cursor },
   );
-
-  refreshInteractionCursor(instance, region);
 }
 
 export function releaseRegion(

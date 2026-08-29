@@ -336,19 +336,19 @@ describe('hook ordering and render errors', () => {
     const controller = crc(canvas, Probe({ local: false }));
     await nextFrame();
     const instance = getCRCInstance(canvas);
-    expect(instance.events.click.size).toBe(1);
+    expect(instance.eventRoot.observers.get('click')?.size).toBe(1);
     expect(instance.regions.size).toBe(0);
     expect(instance.cursorDefaults.size).toBe(1);
 
     crc(canvas, Probe({ local: true }));
     await nextFrame();
-    expect(instance.events.click.size).toBe(0);
+    expect(instance.eventRoot.observers.get('click')?.size).toBe(0);
     expect(instance.regions.size).toBe(2);
     expect(instance.cursorDefaults.size).toBe(0);
 
     crc(canvas, Probe({ local: false }));
     await nextFrame();
-    expect(instance.events.click.size).toBe(1);
+    expect(instance.eventRoot.observers.get('click')?.size).toBe(1);
     expect(instance.regions.size).toBe(0);
     expect(instance.cursorDefaults.size).toBe(1);
     controller.dispose();

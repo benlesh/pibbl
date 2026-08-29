@@ -18,7 +18,6 @@ import type {
   CRCInstance,
   CRCRegionHandlers,
 } from '../types.js';
-import { requiredLegacyRegionTypes } from './legacy-native-listener-bridge.js';
 
 type CRCNormalizedCaptureKey = `${CRCEventType}Capture`;
 
@@ -60,8 +59,7 @@ export type CRCEventNode =
   | CRCEventTargetRegistration
   | CRCEventListenerRegistration;
 
-export interface CRCLegacyTargetAdapter {
-  readonly handlers: CRCRegionHandlers;
+export interface CRCLegacyHitGeometry {
   readonly path: Path2D | undefined;
 }
 
@@ -69,9 +67,9 @@ const nativeReleases = new WeakMap<
   CRCEventTargetRegistration | CRCEventListenerRegistration,
   Map<CRCEventType, () => void>
 >();
-const legacyTargetAdapters = new WeakMap<
+const legacyHitGeometry = new WeakMap<
   CRCEventTargetRegistration,
-  CRCLegacyTargetAdapter
+  CRCLegacyHitGeometry
 >();
 
 export function createTarget(
@@ -108,12 +106,12 @@ export function updateTarget(
 ): void {
   const normalizedHandlers = normalizeHandlers(handlers);
   const types = handledTypes(normalizedHandlers);
-  legacyTargetAdapters.delete(target);
+  legacyHitGeometry.delete(target);
   updateTargetRegistration(
     target,
     normalizedHandlers,
     options,
-    typesWithCursor(types, options.cursor),
+    requiredNativeTypes(types, Boolean(options.cursor)),
   );
 }
 
@@ -133,35 +131,35 @@ export function updateLegacyTarget(
     cursor?: string;
   },
 ): void {
-  configureLegacyTargetAdapter(target, handlers, path);
+  const normalizedHandlers = normalizeLegacyHandlers(handlers);
+  configureLegacyHitGeometry(target, path);
   updateTargetRegistration(
     target,
-    normalizeLegacyHandlers(handlers),
+    normalizedHandlers,
     {
       path: path ?? target.path,
       fill,
       lineInteractionWidth,
       cursor,
     },
-    requiredLegacyRegionTypes(handlers, Boolean(cursor)),
+    requiredNativeTypes(handledTypes(normalizedHandlers), Boolean(cursor)),
   );
   if (target.live) target.owner.regions.add(target);
 }
 
-/** @internal Used by the temporary dispatcher and its direct unit harness. */
-function configureLegacyTargetAdapter(
+/** @internal Retained only for pathless legacy hit geometry until Task 8. */
+function configureLegacyHitGeometry(
   target: CRCEventTargetRegistration,
-  handlers: CRCRegionHandlers,
   path: Path2D | undefined,
 ): void {
-  legacyTargetAdapters.set(target, { handlers, path });
+  legacyHitGeometry.set(target, { path });
 }
 
-/** @internal Removed with the legacy dispatcher migration. */
-export function getLegacyTargetAdapter(
+/** @internal Retained only for pathless legacy hit geometry until Task 8. */
+export function getLegacyHitGeometry(
   target: CRCEventTargetRegistration,
-): CRCLegacyTargetAdapter | undefined {
-  return legacyTargetAdapters.get(target);
+): CRCLegacyHitGeometry | undefined {
+  return legacyHitGeometry.get(target);
 }
 
 function updateTargetRegistration(
@@ -201,7 +199,9 @@ function updateTargetRegistration(
   ) {
     if (target.live) {
       target.owner.eventRoot.focusPolicy?.removeTarget?.(target);
+      target.owner.eventRoot.onNodeRelease?.(target);
     }
+    target.owner.regions.delete(target);
     target.live = false;
     releasePointerCaptures(target);
     releaseNativeOwnership(target);
@@ -213,6 +213,7 @@ function updateTargetRegistration(
   target.owner.eventRoot.targets.add(target);
   updateNativeOwnership(target, nativeTypes);
   target.owner.eventRoot.focusPolicy?.observeTarget?.(target);
+  target.owner.eventRoot.onTargetUpdate?.(target);
 }
 
 export function releaseTarget(target: CRCEventTargetRegistration): void {
@@ -220,11 +221,13 @@ export function releaseTarget(target: CRCEventTargetRegistration): void {
     target.owner.paintEntries.delete(target);
     target.owner.eventRoot.targets.delete(target);
     target.owner.eventRoot.focusPolicy?.removeTarget?.(target);
+    target.owner.eventRoot.onNodeRelease?.(target);
   }
+  target.owner.regions.delete(target);
   target.live = false;
   releasePointerCaptures(target);
   releaseNativeOwnership(target);
-  legacyTargetAdapters.delete(target);
+  legacyHitGeometry.delete(target);
 }
 
 export function createListener(
@@ -266,6 +269,7 @@ export function updateListener(
     if (registrations?.size === 0) {
       listener.owner.eventRoot.listenersByComponent.delete(listener.component.id);
     }
+    if (listener.live) listener.owner.eventRoot.onNodeRelease?.(listener);
     listener.live = false;
     releasePointerCaptures(listener);
     releaseNativeOwnership(listener);
@@ -281,7 +285,7 @@ export function updateListener(
   }
   registrations.add(listener);
   listener.live = true;
-  updateNativeOwnership(listener, types);
+  updateNativeOwnership(listener, requiredNativeTypes(types, false));
 }
 
 export function releaseListener(listener: CRCEventListenerRegistration): void {
@@ -293,6 +297,7 @@ export function releaseListener(listener: CRCEventListenerRegistration): void {
     if (registrations?.size === 0) {
       listener.owner.eventRoot.listenersByComponent.delete(listener.component.id);
     }
+    listener.owner.eventRoot.onNodeRelease?.(listener);
   }
   listener.live = false;
   releasePointerCaptures(listener);
@@ -343,12 +348,31 @@ function handledTypes(handlers: CRCNormalizedHandlers): Set<CRCEventType> {
   return types;
 }
 
-function typesWithCursor(
+function requiredNativeTypes(
   types: ReadonlySet<CRCEventType>,
-  cursor: string | undefined,
+  hasCursor: boolean,
 ): ReadonlySet<CRCEventType> {
-  if (!cursor) return types;
-  return new Set<CRCEventType>([...types, 'mousemove', 'mouseout']);
+  const nativeTypes = new Set(types);
+  if (
+    hasCursor ||
+    types.has('mouseover') ||
+    types.has('mouseenter') ||
+    types.has('mousemove') ||
+    types.has('mouseout') ||
+    types.has('mouseleave')
+  ) {
+    nativeTypes.delete('mouseover');
+    nativeTypes.delete('mouseenter');
+    nativeTypes.delete('mouseleave');
+    nativeTypes.add('mousemove');
+    nativeTypes.add('mouseout');
+  }
+  if (types.has('click') || types.has('dblclick') || types.has('auxclick')) {
+    nativeTypes.add('mousedown');
+    nativeTypes.add('mouseup');
+  }
+  if (types.has('dblclick')) nativeTypes.add('click');
+  return nativeTypes;
 }
 
 function updateNativeOwnership(

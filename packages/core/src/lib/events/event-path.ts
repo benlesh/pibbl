@@ -1,11 +1,10 @@
 import type {
   CRCEventNode,
-  CRCEventTargetRegistration,
 } from './registrations.js';
 
 /** Builds one immutable root-to-target snapshot for a logical dispatch. */
 export function buildEventPath(
-  target: CRCEventTargetRegistration,
+  target: CRCEventNode,
 ): readonly CRCEventNode[] {
   const components = [];
   for (
@@ -22,13 +21,21 @@ export function buildEventPath(
     const listeners = target.owner.eventRoot.listenersByComponent.get(
       component.id,
     );
-    if (!listeners) continue;
-    for (const listener of listeners) {
-      if (listener.live && listener.component === component) {
-        path.push(listener);
+    if (listeners) {
+      for (const listener of listeners) {
+        if (listener.live && listener.component === component) {
+          path.push(listener);
+          if (listener === target) return Object.freeze(path);
+        }
       }
     }
+    if (target.kind === 'target' && component === target.component) {
+      path.push(target);
+      return Object.freeze(path);
+    }
   }
-  path.push(target);
+  // A live listener normally appears in its component bucket. Retaining it as
+  // the leaf keeps an already-validated dispatch snapshot structurally whole.
+  if (target.kind === 'listener') path.push(target);
   return Object.freeze(path);
 }

@@ -9,7 +9,6 @@ import {
 import { buildEventPath } from './event-path.js';
 import type {
   CRCEventNode,
-  CRCEventTargetRegistration,
   CRCNormalizedHandlers,
 } from './registrations.js';
 import type {
@@ -21,7 +20,7 @@ import type {
 
 export interface DispatchEventPathInput<K extends CRCEventType>
   extends Omit<CreateCRCEventInput<K>, 'path'> {
-  readonly target: CRCEventTargetRegistration;
+  readonly target: CRCEventNode;
 }
 
 type CRCNormalizedCaptureKey = `${CRCEventType}Capture`;

@@ -145,18 +145,19 @@ describe('interaction dispatcher mutation contract', () => {
     const { canvas, instance } = mountDispatchHarness();
     const calls: string[] = [];
     let mutated = false;
+    const observers = instance.eventRoot.observers.get('mousemove')!;
     const replacement = () => calls.push('replacement');
     const stale = () => calls.push('stale');
     const mutator = () => {
       calls.push('mutator');
       if (!mutated) {
         mutated = true;
-        instance.events.mousemove.delete(stale);
-        instance.events.mousemove.add(replacement);
+        observers.delete(stale);
+        observers.add(replacement);
       }
     };
-    instance.events.mousemove.add(mutator);
-    instance.events.mousemove.add(stale);
+    observers.add(mutator);
+    observers.add(stale);
 
     dispatchMove(canvas, 10, 10);
     expect(calls).toEqual(['mutator']);
@@ -169,11 +170,12 @@ describe('interaction dispatcher mutation contract', () => {
     const reportError = vi.spyOn(globalThis, 'reportError').mockImplementation(() => undefined);
     const { canvas, instance } = mountDispatchHarness();
     const calls: string[] = [];
-    instance.events.mousemove.add(() => {
+    const observers = instance.eventRoot.observers.get('mousemove')!;
+    observers.add(() => {
       calls.push('throws');
       throw new Error('expected observer failure');
     });
-    instance.events.mousemove.add(() => calls.push('safe'));
+    observers.add(() => calls.push('safe'));
 
     dispatchMove(canvas, 10, 10);
     expect(calls).toEqual(['throws', 'safe']);
@@ -192,15 +194,15 @@ describe('interaction dispatcher mutation contract', () => {
     instance.paintEntries.add(target);
 
     dispatchMouse(canvas, 'mousedown', 300, 180);
-    expect(instance.interaction.primaryDownRegion).toBeUndefined();
+    expect(instance.interaction.primaryDown).toBeUndefined();
 
     dispatchMouse(canvas, 'mouseup', 60, 60);
-    expect(instance.interaction.primaryUpRegion).toBe(target);
+    expect(instance.interaction.primaryUp?.path.at(-1)).toBe(target);
 
     dispatchMouse(canvas, 'click', 60, 60);
     expect(onClick).not.toHaveBeenCalled();
-    expect(instance.interaction.primaryDownRegion).toBeUndefined();
-    expect(instance.interaction.primaryUpRegion).toBeUndefined();
+    expect(instance.interaction.primaryDown).toBeUndefined();
+    expect(instance.interaction.primaryUp).toBeUndefined();
   });
 
   it('skips planned entry and movement when mouseout synchronously removes the new target', () => {
