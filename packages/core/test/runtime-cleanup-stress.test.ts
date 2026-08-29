@@ -19,17 +19,11 @@ import {
 import { mountCRC } from '../src/lib/mount-crc';
 import type { Canvas, CRCInstance } from '../src/lib/types';
 import { RuntimeDiagnostics } from './support/runtime-diagnostics';
+import { CRC_EVENT_TYPES } from '../src/lib/events/event-definitions';
 
-const EMPTY_HANDLERS = {
-  click: 0,
-  contextmenu: 0,
-  dblclick: 0,
-  mousedown: 0,
-  mousemove: 0,
-  mouseout: 0,
-  mouseover: 0,
-  mouseup: 0,
-};
+const EMPTY_HANDLERS = Object.fromEntries(
+  CRC_EVENT_TYPES.map(type => [type, 0]),
+);
 
 interface ControlledImageRecord {
   element: HTMLImageElement;
@@ -334,7 +328,7 @@ describe('shared runtime cleanup stress laboratory', () => {
     expect(resourceBaseline).toMatchObject({
       handlers: { ...EMPTY_HANDLERS, mousemove: 1 },
       instances: 1,
-      nativeListeners: 8,
+      nativeListeners: 2,
       scheduledFrames: 0,
     });
     expect(snapshotLayoutDiagnostics()).toEqual({
@@ -418,7 +412,7 @@ describe('shared runtime cleanup stress laboratory', () => {
     expect(diagnostics.snapshot()).toMatchObject({
       handlers: EMPTY_HANDLERS,
       instances: 1,
-      nativeListeners: 8,
+      nativeListeners: 0,
       scheduledFrames: 0,
     });
     expect(pixelAt(canvas, 10, 10)).toEqual([248, 250, 252, 255]);
@@ -621,10 +615,10 @@ describe('shared runtime cleanup stress laboratory', () => {
     expect(diagnostics.snapshot()).toEqual(baseline);
     const ledger = diagnostics.ledgerSnapshot();
     expect(ledger.nativeListeners).toEqual({
-      acquired: 8_016,
+      acquired: 0,
       duplicateReleases: 0,
-      live: 8,
-      released: 8_008,
+      live: 0,
+      released: 0,
     });
     expect(ledger.frames).toEqual({
       canceled: 0,

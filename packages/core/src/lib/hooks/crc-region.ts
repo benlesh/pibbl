@@ -1,5 +1,9 @@
 import { GLOBAL_STATE } from '../global-state.js';
 import {
+  requiredLegacyRegionTypes,
+  updateLegacyNativeListenerOwnership,
+} from '../events/legacy-native-listener-bridge.js';
+import {
   refreshInteractionCursor,
   removeInteractionRegion,
 } from '../interaction-dispatch.js';
@@ -84,9 +88,14 @@ export function updateRegion(
   }
 
   if (instance.regions.has(region)) {
-    instance.regions.delete(region);
     instance.paintEntries.delete(region);
+    instance.eventRoot.targets.delete(region);
   }
+  updateLegacyNativeListenerOwnership(
+    instance,
+    region,
+    requiredLegacyRegionTypes(handlers, Boolean(cursor)),
+  );
   region.handlers = { ...handlers };
   region.path = path;
   region.fill = fill;
@@ -100,6 +109,7 @@ export function updateRegion(
 
   instance.regions.add(region);
   instance.paintEntries.add(region);
+  instance.eventRoot.targets.add(region);
   refreshInteractionCursor(instance, region);
 }
 

@@ -1,6 +1,8 @@
 import type { Teardowns } from './teardowns.js';
 import type { CRCSurfaceState } from './surface/types.js';
 import type { Constraints, LayoutBox, Size } from './layout/types.js';
+import type { NativeListenerHub } from './events/native-listener-hub.js';
+import type { CRCEventType as DOMCRCEventType } from './events/types.js';
 
 export interface SystemStyle {
   custom?: unknown;
@@ -199,6 +201,17 @@ export interface CRCInteractionState {
   cursorStyle: string | undefined;
 }
 
+export type CRCNativeObserver = (event: Event) => void;
+
+export interface CRCEventRoot {
+  readonly canvas: HTMLCanvasElement | undefined;
+  readonly nativeListeners: NativeListenerHub | undefined;
+  readonly targets: Set<CRCInteractionRegion>;
+  readonly listenersByComponent: Map<string, Set<object>>;
+  readonly observers: Map<DOMCRCEventType, Set<CRCNativeObserver>>;
+  readonly pointerCaptures: Map<number, CRCInteractionRegion>;
+}
+
 export interface CRCController {
   /** Releases every resource owned by this CRC mount. Safe to call repeatedly. */
   dispose(): void;
@@ -228,6 +241,8 @@ export interface CRCInstance {
   animationFrameId: number | undefined;
   renderTimestamp: number;
   mainTeardowns: Teardowns;
+  eventRoot: CRCEventRoot;
+  /** @internal Temporary compatibility alias removed by the shared dispatcher migration. */
   events: CRCEventRegistry;
   regions: Set<CRCInteractionRegion>;
   paintEntries: Set<CRCInteractionPaintEntry>;

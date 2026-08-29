@@ -12,13 +12,19 @@ import { absolute, rect, type CRCController } from '../src/index';
 import { executeRender } from '../src/lib/execute-render';
 import { GLOBAL_STATE, getCRCInstance } from '../src/lib/global-state';
 import { mountCRC } from '../src/lib/mount-crc';
+import { CRC_EVENT_TYPES } from '../src/lib/events/event-definitions';
 import { RuntimeDiagnostics } from './support/runtime-diagnostics';
 
 const activeControllers = new Set<ScenarioController<LifecycleLabState>>();
 const activeDiagnostics = new Set<RuntimeDiagnostics>();
 const activeRuntimeControllers = new Set<CRCController>();
 
+const EMPTY_HANDLERS = Object.fromEntries(
+  CRC_EVENT_TYPES.map(type => [type, 0]),
+);
+
 const BASELINE_HANDLERS = {
+  ...EMPTY_HANDLERS,
   click: 4,
   contextmenu: 1,
   dblclick: 1,
@@ -27,17 +33,6 @@ const BASELINE_HANDLERS = {
   mouseout: 1,
   mouseover: 1,
   mouseup: 1,
-};
-
-const EMPTY_HANDLERS = {
-  click: 0,
-  contextmenu: 0,
-  dblclick: 0,
-  mousedown: 0,
-  mousemove: 0,
-  mouseout: 0,
-  mouseover: 0,
-  mouseup: 0,
 };
 
 function pixelAt(canvas: HTMLCanvasElement, x: number, y: number): readonly number[] {
@@ -155,7 +150,7 @@ describe('shared event lifecycle laboratory', () => {
       componentTeardowns: 0,
       handlers: EMPTY_HANDLERS,
       instances: 1,
-      nativeListeners: 8,
+      nativeListeners: 0,
       scheduledFrames: 0,
     });
     expect(diagnostics.ledgerSnapshot().handlers.click).toEqual({
@@ -201,7 +196,7 @@ describe('shared event lifecycle laboratory', () => {
     const baseline = diagnostics.snapshot();
     expect(baseline).toMatchObject({
       instances: 1,
-      nativeListeners: 8,
+      nativeListeners: 7,
       handlers: BASELINE_HANDLERS,
       scheduledFrames: 0,
     });
@@ -262,7 +257,7 @@ describe('shared event lifecycle laboratory', () => {
 
     const beforeLayer = diagnostics.snapshot();
     await controller.perform('add-layer');
-    expect(diagnostics.snapshot()).toMatchObject({ instances: 2, nativeListeners: 8 });
+    expect(diagnostics.snapshot()).toMatchObject({ instances: 2, nativeListeners: 5 });
     expect(pixelAt(canvas, 290, 190)).toEqual([217, 119, 6, 255]);
     dispatchMouse(canvas, 'click', 200, 170);
     expect(controller.getState().targetCalls.layer).toBe(1);
@@ -293,7 +288,7 @@ describe('shared event lifecycle laboratory', () => {
     expect(diagnostics.snapshot().instances).toBe(0);
     await controller.perform('remount-runtime');
     const afterAbortRemount = diagnostics.snapshot();
-    expect(afterAbortRemount).toMatchObject({ instances: 1, nativeListeners: 8 });
+    expect(afterAbortRemount).toMatchObject({ instances: 1, nativeListeners: 7 });
     await controller.perform('cleanup-stale');
     expect(diagnostics.snapshot()).toEqual(afterAbortRemount);
 

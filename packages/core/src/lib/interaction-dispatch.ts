@@ -8,6 +8,7 @@ import type {
 import { getInteractionRoot } from './global-state.js';
 import { getMouseCoordinates } from './util/get-mouse-coordinates.js';
 import { isHit } from './util/is-hit.js';
+import { releaseLegacyNativeListenerOwnership } from './events/legacy-native-listener-bridge.js';
 
 export function dispatchCRCEvent(
   instance: CRCInstance,
@@ -16,7 +17,8 @@ export function dispatchCRCEvent(
   canvas: HTMLCanvasElement,
 ): void {
   dispatchTargetEvent(instance, type, event, canvas);
-  dispatchObservers(instance.events[type], event);
+  const observers = instance.eventRoot.observers.get(type);
+  if (observers) dispatchObservers(observers, event);
 }
 
 export function removeInteractionRegion(
@@ -73,6 +75,7 @@ export function removeCursorDefault(
   instance: CRCInstance,
   cursorDefault: CRCCursorDefault,
 ): void {
+  releaseLegacyNativeListenerOwnership(cursorDefault);
   const interactionInstance = getInteractionRoot(instance);
   interactionInstance.cursorDefaults.delete(cursorDefault);
   if (interactionInstance.interaction.cursorDefault === cursorDefault) {
@@ -397,7 +400,7 @@ function liveRegion(
 }
 
 function dispatchObservers(
-  handlers: Set<(event: MouseEvent) => void>,
+  handlers: Set<(event: Event) => void>,
   event: MouseEvent,
 ): void {
   for (const handler of Array.from(handlers)) {

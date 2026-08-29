@@ -1,13 +1,14 @@
 import type {
   Canvas,
-  CRCEventRegistry,
   CRCInstance,
   CRCInteractionRegion,
 } from '../../src/lib/types';
 import { GLOBAL_STATE } from '../../src/lib/global-state';
+import { CRC_EVENT_TYPES } from '../../src/lib/events/event-definitions';
+import type { CRCEventType } from '../../src/lib/events/types';
 
-type EventType = keyof CRCEventRegistry;
-type EventHandler = (event: MouseEvent) => void;
+type EventType = CRCEventType;
+type EventHandler = (event: Event) => void;
 
 export interface ResourceLedgerSnapshot {
   acquired: number;
@@ -62,16 +63,7 @@ interface RegionRegistryRecord {
   duplicateReleases: Record<EventType, number>;
 }
 
-const EVENT_TYPES: readonly EventType[] = [
-  'click',
-  'contextmenu',
-  'dblclick',
-  'mousedown',
-  'mousemove',
-  'mouseout',
-  'mouseover',
-  'mouseup',
-];
+const EVENT_TYPES: readonly EventType[] = CRC_EVENT_TYPES;
 
 function captureFrom(options?: boolean | AddEventListenerOptions): boolean {
   return typeof options === 'boolean' ? options : options?.capture ?? false;
@@ -191,12 +183,15 @@ export class RuntimeDiagnostics {
     let componentTeardowns = 0;
     let mainTeardowns = 0;
 
-    for (const instance of instances) {
+    const eventRoots = new Set(instances.map(instance => instance.eventRoot));
+    for (const eventRoot of eventRoots) {
       for (const type of EVENT_TYPES) {
-        handlers[type] += instance.events[type].size;
-        handlers[type] += Array.from(instance.regions)
-          .filter(region => Boolean(region.handlers[type])).length;
+        handlers[type] += eventRoot.observers.get(type)?.size ?? 0;
+        handlers[type] += Array.from(eventRoot.targets)
+          .filter(region => regionHasHandler(region, type)).length;
       }
+    }
+    for (const instance of instances) {
       mainTeardowns += teardownCount(instance.mainTeardowns);
       for (const refs of instance.refs.values()) {
         componentTeardowns += teardownCount(refs.teardowns);
@@ -234,7 +229,7 @@ export class RuntimeDiagnostics {
         ledger.released += record.released[type];
         ledger.duplicateReleases += record.duplicateReleases[type];
         ledger.live += Array.from(record.regions)
-          .filter(region => Boolean(region.handlers[type])).length;
+          .filter(region => regionHasHandler(region, type)).length;
       }
     }
 
@@ -277,9 +272,10 @@ export class RuntimeDiagnostics {
   }
 
   private observeRegistries(instances: readonly CRCInstance[]): void {
-    for (const instance of instances) {
+    const eventRoots = new Set(instances.map(instance => instance.eventRoot));
+    for (const eventRoot of eventRoots) {
       for (const type of EVENT_TYPES) {
-        const handlers = instance.events[type] as Set<EventHandler>;
+        const handlers = eventRoot.observers.get(type) as Set<EventHandler>;
         if (this.registryRecords.has(handlers)) {
           continue;
         }
@@ -309,7 +305,7 @@ export class RuntimeDiagnostics {
         }) as typeof handlers.delete;
       }
 
-      const regions = instance.regions;
+      const regions = eventRoot.targets;
       if (!this.regionRegistryRecords.has(regions)) {
         const emptyCounts = () => Object.fromEntries(
           EVENT_TYPES.map(type => [type, 0]),
@@ -324,7 +320,7 @@ export class RuntimeDiagnostics {
         };
         for (const region of regions) {
           for (const type of EVENT_TYPES) {
-            if (region.handlers[type]) {
+            if (regionHasHandler(region, type)) {
               record.acquired[type]++;
             }
           }
@@ -333,7 +329,7 @@ export class RuntimeDiagnostics {
         regions.add = ((region: CRCInteractionRegion) => {
           if (!regions.has(region)) {
             for (const type of EVENT_TYPES) {
-              if (region.handlers[type]) {
+              if (regionHasHandler(region, type)) {
                 record.acquired[type]++;
               }
             }
@@ -343,13 +339,13 @@ export class RuntimeDiagnostics {
         regions.delete = ((region: CRCInteractionRegion) => {
           if (regions.has(region)) {
             for (const type of EVENT_TYPES) {
-              if (region.handlers[type]) {
+              if (regionHasHandler(region, type)) {
                 record.released[type]++;
               }
             }
           } else {
             for (const type of EVENT_TYPES) {
-              if (region.handlers[type]) {
+              if (regionHasHandler(region, type)) {
                 record.duplicateReleases[type]++;
               }
             }
@@ -376,4 +372,11 @@ export class RuntimeDiagnostics {
       .map(canvas => GLOBAL_STATE.crcInstances.get(canvas))
       .filter((instance): instance is CRCInstance => Boolean(instance));
   }
+}
+
+function regionHasHandler(
+  region: CRCInteractionRegion,
+  type: EventType,
+): boolean {
+  return Boolean((region.handlers as Partial<Record<EventType, unknown>>)[type]);
 }
