@@ -166,26 +166,8 @@ export interface CRCClippingStackEntry {
   transform: DOMMatrix;
 }
 
-export interface CRCInteractionRegion {
-  kind: 'region';
-  owner: CRCInstance;
-  handlers: CRCRegionHandlers;
-  path: Path2D | undefined;
-  fill: boolean;
-  lineInteractionWidth: number;
-  transform: DOMMatrix;
-  clippingStack: readonly CRCClippingStackEntry[];
-  cursor: string | undefined;
-  /** @internal Temporary compatibility fields removed by the dispatcher migration. */
-  component?: CompRefs<any>;
-  /** @internal Temporary compatibility fields removed by the dispatcher migration. */
-  slot?: number;
-  /** @internal Temporary compatibility fields removed by the dispatcher migration. */
-  live?: boolean;
-}
-
-/** @internal Temporary alias retained until the Task 5 dispatcher migration. */
-export type CRCLegacyEventTargetRegistration = CRCInteractionRegion;
+/** @internal Temporary name retained until the Task 5 dispatcher migration. */
+export type CRCInteractionRegion = CRCEventTargetRegistration;
 
 export interface CRCInteractionLayer {
   kind: 'layer';
@@ -195,9 +177,7 @@ export interface CRCInteractionLayer {
   bounds: Path2D;
 }
 
-export type CRCInteractionPaintEntry =
-  | CRCInteractionRegion
-  | CRCEventTargetRegistration
+export type CRCInteractionPaintEntry = CRCEventTargetRegistration
   | CRCInteractionLayer;
 
 export interface CRCCursorDefault {
@@ -222,7 +202,7 @@ export type CRCNativeObserver = (event: Event) => void;
 export interface CRCEventRoot {
   readonly canvas: HTMLCanvasElement | undefined;
   readonly nativeListeners: NativeListenerHub | undefined;
-  readonly targets: Set<CRCInteractionRegion | CRCEventTargetRegistration>;
+  readonly targets: Set<CRCEventTargetRegistration>;
   readonly listenersByComponent: Map<string, Set<CRCEventListenerRegistration>>;
   readonly observers: Map<DOMCRCEventType, Set<CRCNativeObserver>>;
   readonly pointerCaptures: Map<number, CRCEventNode>;

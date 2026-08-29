@@ -2,7 +2,6 @@ import { cleanupCRCInstance, GLOBAL_STATE } from './global-state.js';
 import { dispatchCRCEvent } from './interaction-dispatch.js';
 import { CRC_EVENT_TYPES } from './events/event-definitions.js';
 import { createNativeListenerHub } from './events/native-listener-hub.js';
-import { installLegacyRegionOwnership } from './events/legacy-native-listener-bridge.js';
 import type { CRCEventType as DOMCRCEventType } from './events/types.js';
 import { Teardowns } from './teardowns.js';
 import {
@@ -116,7 +115,6 @@ export function mountCRC<P>(
       GLOBAL_STATE.crcInstances.get(parent)?.interactionRoot :
     crcInstance;
   if (!crcInstance.interactionRoot) throw new Error('Parent CRC interaction root not found');
-  installLegacyRegionOwnership(crcInstance);
   ownedInstance = crcInstance;
   GLOBAL_STATE.crcInstances.set(canvas, crcInstance);
 

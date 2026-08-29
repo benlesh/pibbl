@@ -1,7 +1,6 @@
 import type {
   Canvas,
   CRCInstance,
-  CRCInteractionRegion,
 } from '../../src/lib/types';
 import type {
   CRCEventListenerRegistration,
@@ -59,7 +58,6 @@ interface RegistryRecord {
 }
 
 type DiagnosticRegistration =
-  | CRCInteractionRegion
   | CRCEventTargetRegistration
   | CRCEventListenerRegistration;
 

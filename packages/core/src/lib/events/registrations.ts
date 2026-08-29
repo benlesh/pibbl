@@ -16,7 +16,9 @@ import type {
   CompRefs,
   CRCClippingStackEntry,
   CRCInstance,
+  CRCRegionHandlers,
 } from '../types.js';
+import { requiredLegacyRegionTypes } from './legacy-native-listener-bridge.js';
 
 type CRCNormalizedCaptureKey = `${CRCEventType}Capture`;
 
@@ -58,9 +60,18 @@ export type CRCEventNode =
   | CRCEventTargetRegistration
   | CRCEventListenerRegistration;
 
+export interface CRCLegacyTargetAdapter {
+  readonly handlers: CRCRegionHandlers;
+  readonly path: Path2D | undefined;
+}
+
 const nativeReleases = new WeakMap<
   CRCEventTargetRegistration | CRCEventListenerRegistration,
   Map<CRCEventType, () => void>
+>();
+const legacyTargetAdapters = new WeakMap<
+  CRCEventTargetRegistration,
+  CRCLegacyTargetAdapter
 >();
 
 export function createTarget(
@@ -97,6 +108,69 @@ export function updateTarget(
 ): void {
   const normalizedHandlers = normalizeHandlers(handlers);
   const types = handledTypes(normalizedHandlers);
+  legacyTargetAdapters.delete(target);
+  updateTargetRegistration(
+    target,
+    normalizedHandlers,
+    options,
+    typesWithCursor(types, options.cursor),
+  );
+}
+
+/** @internal Temporary adapter for shipped mouse-region semantics. */
+export function updateLegacyTarget(
+  target: CRCEventTargetRegistration,
+  handlers: CRCRegionHandlers,
+  {
+    path,
+    fill = false,
+    lineInteractionWidth = 0,
+    cursor,
+  }: {
+    path?: Path2D;
+    fill?: boolean;
+    lineInteractionWidth?: number;
+    cursor?: string;
+  },
+): void {
+  configureLegacyTargetAdapter(target, handlers, path);
+  updateTargetRegistration(
+    target,
+    normalizeLegacyHandlers(handlers),
+    {
+      path: path ?? target.path,
+      fill,
+      lineInteractionWidth,
+      cursor,
+    },
+    requiredLegacyRegionTypes(handlers, Boolean(cursor)),
+  );
+  if (target.live) target.owner.regions.add(target);
+}
+
+/** @internal Used by the temporary dispatcher and its direct unit harness. */
+function configureLegacyTargetAdapter(
+  target: CRCEventTargetRegistration,
+  handlers: CRCRegionHandlers,
+  path: Path2D | undefined,
+): void {
+  legacyTargetAdapters.set(target, { handlers, path });
+}
+
+/** @internal Removed with the legacy dispatcher migration. */
+export function getLegacyTargetAdapter(
+  target: CRCEventTargetRegistration,
+): CRCLegacyTargetAdapter | undefined {
+  return legacyTargetAdapters.get(target);
+}
+
+function updateTargetRegistration(
+  target: CRCEventTargetRegistration,
+  normalizedHandlers: CRCNormalizedHandlers,
+  options: CRCEventTargetOptions,
+  nativeTypes: ReadonlySet<CRCEventType>,
+): void {
+  const types = handledTypes(normalizedHandlers);
 
   if (target.live) {
     // Remove while the previous handler map is still current so ownership
@@ -109,11 +183,13 @@ export function updateTarget(
   target.path = options.path;
   target.fill = options.fill ?? false;
   target.lineInteractionWidth = options.lineInteractionWidth ?? 0;
-  target.transform = toLogicalTransform(
-    getSurfaceSnapshot(target.owner),
-    GLOBAL_STATE.renderContext!.getTransform(),
-  );
-  target.clippingStack = Array.from(GLOBAL_STATE.clippingStack);
+  if (GLOBAL_STATE.renderContext) {
+    target.transform = toLogicalTransform(
+      getSurfaceSnapshot(target.owner),
+      GLOBAL_STATE.renderContext.getTransform(),
+    );
+    target.clippingStack = Array.from(GLOBAL_STATE.clippingStack);
+  }
   target.cursor = options.cursor;
   target.keyboardFocusable = options.keyboardFocusable;
   target.keyboardNavigationBounds = options.keyboardNavigationBounds;
@@ -135,7 +211,7 @@ export function updateTarget(
   target.live = true;
   target.owner.paintEntries.add(target);
   target.owner.eventRoot.targets.add(target);
-  updateNativeOwnership(target, typesWithCursor(types, target.cursor));
+  updateNativeOwnership(target, nativeTypes);
   target.owner.eventRoot.focusPolicy?.observeTarget?.(target);
 }
 
@@ -148,6 +224,7 @@ export function releaseTarget(target: CRCEventTargetRegistration): void {
   target.live = false;
   releasePointerCaptures(target);
   releaseNativeOwnership(target);
+  legacyTargetAdapters.delete(target);
 }
 
 export function createListener(
@@ -236,6 +313,18 @@ export function normalizeHandlers(
       Object.assign(normalized, {
         [`${definition.type}Capture`]: capture,
       });
+    }
+  }
+  return normalized;
+}
+
+function normalizeLegacyHandlers(
+  handlers: CRCRegionHandlers,
+): CRCNormalizedHandlers {
+  const normalized: CRCNormalizedHandlers = {};
+  for (const [type, handler] of Object.entries(handlers)) {
+    if (handler) {
+      Object.assign(normalized, { [type]: handler });
     }
   }
   return normalized;

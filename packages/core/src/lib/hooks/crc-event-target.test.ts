@@ -11,9 +11,9 @@ import {
   clearSharedState,
   getCRCInstance,
 } from '../global-state';
-import type { CRCInteractionRegion } from '../types';
 import { crcEventListener } from './crc-event-listener';
 import { crcEventTarget } from './crc-event-target';
+import { crcRegion } from './crc-region';
 
 beforeEach(() => {
   document.body.innerHTML = '';
@@ -25,6 +25,34 @@ afterEach(() => {
 });
 
 describe('crcEventTarget', () => {
+  it('adapts crcRegion to the same grouped target record contract', async () => {
+    const onClick = vi.fn();
+    const Probe = defineComp(() => {
+      crcRegion({ handlers: { click: onClick } });
+    });
+    const canvas = createCanvas();
+    const controller = crc(canvas, Probe({}));
+    await nextFrame();
+    const instance = getCRCInstance(canvas);
+    const target = onlyTarget(instance.eventRoot.targets);
+
+    expect(target).toMatchObject({
+      kind: 'target',
+      owner: instance,
+      slot: 0,
+      live: true,
+    });
+    expect(target.component.hooks[0]?.value).toBe(target);
+    expect(target.handlers.click).toBe(onClick);
+    expect(target.publicTarget.hasPointerCapture(1)).toBe(false);
+    expect(instance.regions.has(target)).toBe(true);
+    expect(Array.from(instance.paintEntries)).toEqual([target]);
+    expect(instance.eventRoot.nativeListeners?.count('click')).toBe(1);
+    expect(instance.eventRoot.nativeListeners?.count('mousedown')).toBe(1);
+    expect(instance.eventRoot.nativeListeners?.count('mouseup')).toBe(1);
+    controller.dispose();
+  });
+
   it('requires an explicit path and reports the no-policy focus snapshot', async () => {
     expectTypeOf<CRCEventTargetOptions>()
       .toMatchTypeOf<{ readonly path: Path2D }>();
@@ -176,7 +204,7 @@ describe('crcEventListener', () => {
 });
 
 function onlyTarget(
-  targets: ReadonlySet<CRCEventTargetRegistration | CRCInteractionRegion>,
+  targets: ReadonlySet<CRCEventTargetRegistration>,
 ): CRCEventTargetRegistration {
   expect(targets.size).toBe(1);
   const target = Array.from(targets)[0];

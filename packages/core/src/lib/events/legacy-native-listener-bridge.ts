@@ -4,8 +4,8 @@ import type { CRCEventType } from './types.js';
 const releasesByOwner = new WeakMap<object, Map<CRCEventType, () => void>>();
 
 /**
- * Temporary Task 2 bridge for the shipped mouse hooks. Task 5 replaces this
- * with native ownership derived from DOM-aligned target registrations.
+ * Temporary ownership bridge for pathless cursor defaults. Region targets now
+ * use grouped registration ownership; Task 5 removes this remaining bridge.
  */
 export function updateLegacyNativeListenerOwnership(
   instance: CRCInstance,
@@ -42,40 +42,6 @@ export function releaseLegacyNativeListenerOwnership(owner: object): void {
     release();
   }
   releases.clear();
-}
-
-export function installLegacyRegionOwnership(instance: CRCInstance): void {
-  const regions = instance.regions;
-  const originalAdd = regions.add;
-  const originalDelete = regions.delete;
-  const originalClear = regions.clear;
-
-  regions.add = ((region) => {
-    if (!regions.has(region)) {
-      originalAdd.call(regions, region);
-      instance.eventRoot.targets.add(region);
-      updateLegacyNativeListenerOwnership(
-        instance,
-        region,
-        requiredLegacyRegionTypes(region.handlers, Boolean(region.cursor)),
-      );
-    }
-    return regions;
-  }) as typeof regions.add;
-
-  regions.delete = ((region) => {
-    if (!regions.has(region)) return false;
-    instance.eventRoot.targets.delete(region);
-    releaseLegacyNativeListenerOwnership(region);
-    return originalDelete.call(regions, region);
-  }) as typeof regions.delete;
-
-  regions.clear = (() => {
-    for (const region of Array.from(regions)) {
-      regions.delete(region);
-    }
-    originalClear.call(regions);
-  }) as typeof regions.clear;
 }
 
 export function requiredLegacyRegionTypes(

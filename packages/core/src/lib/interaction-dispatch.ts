@@ -9,6 +9,10 @@ import { getInteractionRoot } from './global-state.js';
 import { getMouseCoordinates } from './util/get-mouse-coordinates.js';
 import { isHit } from './util/is-hit.js';
 import { releaseLegacyNativeListenerOwnership } from './events/legacy-native-listener-bridge.js';
+import {
+  getLegacyTargetAdapter,
+  releaseTarget,
+} from './events/registrations.js';
 
 export function dispatchCRCEvent(
   instance: CRCInstance,
@@ -25,12 +29,12 @@ export function removeInteractionRegion(
   instance: CRCInstance,
   region: CRCInteractionRegion,
 ): void {
-  region.live = false;
   if (!instance.regions.has(region)) {
+    releaseTarget(region);
     return;
   }
   instance.regions.delete(region);
-  instance.paintEntries.delete(region);
+  releaseTarget(region);
   const interactionInstance = getInteractionRoot(instance);
   const interaction = interactionInstance.interaction;
   if (interaction.hoveredRegion === region) {
@@ -282,23 +286,22 @@ function resolveInstanceTarget({
   const entries = Array.from(instance.paintEntries);
   for (let index = entries.length - 1; index >= 0; index--) {
     const entry = entries[index];
-    // Explicit DOM-aligned targets enter the shared paint ledger in Task 3.
-    // Task 5 migrates hit testing and dispatch to consume them; until then the
-    // shipped mouse dispatcher continues to resolve only legacy regions.
     if (entry.kind === 'target') {
-      continue;
-    }
-    if (entry.kind === 'region') {
       const region = liveRegion(entry);
       if (!region) {
         continue;
       }
-      if (!region.path) {
+      const legacy = getLegacyTargetAdapter(region);
+      if (!legacy) {
+        // The propagation-aware dispatcher consumes explicit targets in Task 5.
+        continue;
+      }
+      if (!legacy.path) {
         return region;
       }
       if (isHit({
         canvas,
-        path: region.path,
+        path: legacy.path,
         transform: multiplyTransforms(transform, region.transform),
         x,
         y,
@@ -387,7 +390,7 @@ function invokeRegion(
   if (!live) {
     return;
   }
-  const handler = live.handlers[type];
+  const handler = getLegacyTargetAdapter(live)?.handlers[type];
   if (!handler) {
     return;
   }
@@ -403,7 +406,7 @@ function invokeRegion(
 function liveRegion(
   region: CRCInteractionRegion | undefined,
 ): CRCInteractionRegion | undefined {
-  return region?.owner.regions.has(region) ? region : undefined;
+  return region?.live && region.owner.regions.has(region) ? region : undefined;
 }
 
 function dispatchObservers(

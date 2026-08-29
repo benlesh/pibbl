@@ -1,26 +1,18 @@
 import { GLOBAL_STATE } from '../global-state.js';
 import {
-  requiredLegacyRegionTypes,
-  updateLegacyNativeListenerOwnership,
-} from '../events/legacy-native-listener-bridge.js';
+  createTarget,
+  updateLegacyTarget,
+  type CRCEventTargetRegistration,
+} from '../events/registrations.js';
 import {
   refreshInteractionCursor,
   removeInteractionRegion,
 } from '../interaction-dispatch.js';
 import type {
   CRCInstance,
-  CRCLegacyEventTargetRegistration,
   CRCRegionHandlers,
 } from '../types.js';
 import { requireHookContext, useHookSlot } from './hook-slot.js';
-import {
-  getSurfaceSnapshot,
-  toLogicalTransform,
-} from '../surface/transform.js';
-
-interface CRCRegionSlot {
-  region: CRCLegacyEventTargetRegistration;
-}
 
 export function crcRegion({
   handlers,
@@ -37,12 +29,12 @@ export function crcRegion({
 }): void {
   const { componentRefs, crcInstance: instance } = requireHookContext();
   const hookIndex = GLOBAL_STATE.componentHookIndex;
-  const slot = useHookSlot<CRCRegionSlot>('region', teardowns => {
-    const region = createRegion(instance, componentRefs, hookIndex);
-    teardowns.add(() => releaseRegion(instance, region));
-    return { region };
+  const slot = useHookSlot<CRCEventTargetRegistration>('region', teardowns => {
+    const target = createRegion(instance, componentRefs, hookIndex);
+    teardowns.add(() => releaseRegion(instance, target));
+    return target;
   });
-  updateRegion(instance, slot.value.region, {
+  updateRegion(instance, slot.value, {
     handlers,
     path,
     fill,
@@ -55,26 +47,13 @@ export function createRegion(
   instance: CRCInstance,
   component = requireHookContext().componentRefs,
   slot = Math.max(0, GLOBAL_STATE.componentHookIndex - 1),
-): CRCLegacyEventTargetRegistration {
-  return {
-    kind: 'region',
-    owner: instance,
-    handlers: {},
-    path: undefined,
-    fill: false,
-    lineInteractionWidth: 0,
-    transform: new DOMMatrix(),
-    clippingStack: [],
-    cursor: undefined,
-    component,
-    slot,
-    live: false,
-  };
+): CRCEventTargetRegistration {
+  return createTarget(instance, component, slot);
 }
 
 export function updateRegion(
   instance: CRCInstance,
-  region: CRCLegacyEventTargetRegistration,
+  region: CRCEventTargetRegistration,
   {
     handlers,
     path,
@@ -91,42 +70,22 @@ export function updateRegion(
 ): void {
   const interactive = Boolean(cursor) || Object.values(handlers).some(Boolean);
   if (!interactive) {
-    region.live = false;
     removeInteractionRegion(instance, region);
     return;
   }
 
-  if (instance.regions.has(region)) {
-    instance.paintEntries.delete(region);
-    instance.eventRoot.targets.delete(region);
-  }
-  updateLegacyNativeListenerOwnership(
-    instance,
+  updateLegacyTarget(
     region,
-    requiredLegacyRegionTypes(handlers, Boolean(cursor)),
+    handlers,
+    { path, fill, lineInteractionWidth, cursor },
   );
-  region.handlers = { ...handlers };
-  region.path = path;
-  region.fill = fill;
-  region.lineInteractionWidth = lineInteractionWidth;
-  region.transform = toLogicalTransform(
-    getSurfaceSnapshot(instance),
-    GLOBAL_STATE.renderContext!.getTransform(),
-  );
-  region.clippingStack = Array.from(GLOBAL_STATE.clippingStack);
-  region.cursor = cursor;
-  region.live = true;
 
-  instance.regions.add(region);
-  instance.paintEntries.add(region);
-  instance.eventRoot.targets.add(region);
   refreshInteractionCursor(instance, region);
 }
 
 export function releaseRegion(
   instance: CRCInstance,
-  region: CRCLegacyEventTargetRegistration,
+  region: CRCEventTargetRegistration,
 ): void {
-  region.live = false;
   removeInteractionRegion(instance, region);
 }

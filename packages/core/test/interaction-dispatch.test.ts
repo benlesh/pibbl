@@ -9,6 +9,10 @@ import { executeRender } from '../src/lib/execute-render';
 import { GLOBAL_STATE } from '../src/lib/global-state';
 import { removeInteractionRegion } from '../src/lib/interaction-dispatch';
 import { mountCRC } from '../src/lib/mount-crc';
+import {
+  createTarget,
+  updateLegacyTarget,
+} from '../src/lib/events/registrations';
 import { overlay, rect } from '../src/index';
 
 const activeInstances = new Set<CRCInstance>();
@@ -65,17 +69,11 @@ function region(
     CRCMouseEventListener
   >>,
 ): CRCInteractionRegion {
-  return {
-    kind: 'region',
-    owner,
-    handlers,
-    path,
-    fill: true,
-    lineInteractionWidth: 0,
-    transform: new DOMMatrix(),
-    clippingStack: [],
-    cursor: undefined,
-  };
+  const component = Array.from(owner.refs.values())[0];
+  if (!component) throw new Error('Dispatch harness root component is missing.');
+  const target = createTarget(owner, component, 0);
+  updateLegacyTarget(target, handlers, { path, fill: true });
+  return target;
 }
 
 afterEach(() => {
