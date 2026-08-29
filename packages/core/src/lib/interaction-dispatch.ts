@@ -25,6 +25,7 @@ export function removeInteractionRegion(
   instance: CRCInstance,
   region: CRCInteractionRegion,
 ): void {
+  region.live = false;
   if (!instance.regions.has(region)) {
     return;
   }
@@ -281,6 +282,12 @@ function resolveInstanceTarget({
   const entries = Array.from(instance.paintEntries);
   for (let index = entries.length - 1; index >= 0; index--) {
     const entry = entries[index];
+    // Explicit DOM-aligned targets enter the shared paint ledger in Task 3.
+    // Task 5 migrates hit testing and dispatch to consume them; until then the
+    // shipped mouse dispatcher continues to resolve only legacy regions.
+    if (entry.kind === 'target') {
+      continue;
+    }
     if (entry.kind === 'region') {
       const region = liveRegion(entry);
       if (!region) {

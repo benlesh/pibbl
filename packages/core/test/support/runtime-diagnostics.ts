@@ -3,6 +3,10 @@ import type {
   CRCInstance,
   CRCInteractionRegion,
 } from '../../src/lib/types';
+import type {
+  CRCEventListenerRegistration,
+  CRCEventTargetRegistration,
+} from '../../src/lib/events/registrations';
 import { GLOBAL_STATE } from '../../src/lib/global-state';
 import { CRC_EVENT_TYPES } from '../../src/lib/events/event-definitions';
 import type { CRCEventType } from '../../src/lib/events/types';
@@ -54,10 +58,15 @@ interface RegistryRecord {
   duplicateReleases: number;
 }
 
+type DiagnosticRegistration =
+  | CRCInteractionRegion
+  | CRCEventTargetRegistration
+  | CRCEventListenerRegistration;
+
 interface RegionRegistryRecord {
-  regions: Set<CRCInteractionRegion>;
-  originalAdd: Set<CRCInteractionRegion>['add'];
-  originalDelete: Set<CRCInteractionRegion>['delete'];
+  regions: Set<DiagnosticRegistration>;
+  originalAdd: Set<DiagnosticRegistration>['add'];
+  originalDelete: Set<DiagnosticRegistration>['delete'];
   acquired: Record<EventType, number>;
   released: Record<EventType, number>;
   duplicateReleases: Record<EventType, number>;
@@ -80,7 +89,7 @@ function teardownCount(teardowns: unknown): number {
 export class RuntimeDiagnostics {
   private readonly listenerRecords = new Set<ListenerRecord>();
   private readonly registryRecords = new Map<Set<EventHandler>, RegistryRecord>();
-  private readonly regionRegistryRecords = new Map<Set<CRCInteractionRegion>, RegionRegistryRecord>();
+  private readonly regionRegistryRecords = new Map<Set<DiagnosticRegistration>, RegionRegistryRecord>();
   private readonly scheduledFrameIds = new Set<number>();
   private readonly originalAddEventListener: HTMLCanvasElement['addEventListener'];
   private readonly originalRemoveEventListener: HTMLCanvasElement['removeEventListener'];
@@ -189,6 +198,10 @@ export class RuntimeDiagnostics {
         handlers[type] += eventRoot.observers.get(type)?.size ?? 0;
         handlers[type] += Array.from(eventRoot.targets)
           .filter(region => regionHasHandler(region, type)).length;
+        for (const listeners of eventRoot.listenersByComponent.values()) {
+          handlers[type] += Array.from(listeners)
+            .filter(listener => regionHasHandler(listener, type)).length;
+        }
       }
     }
     for (const instance of instances) {
@@ -305,54 +318,62 @@ export class RuntimeDiagnostics {
         }) as typeof handlers.delete;
       }
 
-      const regions = eventRoot.targets;
-      if (!this.regionRegistryRecords.has(regions)) {
-        const emptyCounts = () => Object.fromEntries(
-          EVENT_TYPES.map(type => [type, 0]),
-        ) as Record<EventType, number>;
-        const record: RegionRegistryRecord = {
-          regions,
-          originalAdd: regions.add,
-          originalDelete: regions.delete,
-          acquired: emptyCounts(),
-          released: emptyCounts(),
-          duplicateReleases: emptyCounts(),
-        };
-        for (const region of regions) {
+      this.observeRegistrationSet(eventRoot.targets);
+      for (const listeners of eventRoot.listenersByComponent.values()) {
+        this.observeRegistrationSet(listeners);
+      }
+    }
+  }
+
+  private observeRegistrationSet(
+    regions: Set<DiagnosticRegistration>,
+  ): void {
+    if (!this.regionRegistryRecords.has(regions)) {
+      const emptyCounts = () => Object.fromEntries(
+        EVENT_TYPES.map(type => [type, 0]),
+      ) as Record<EventType, number>;
+      const record: RegionRegistryRecord = {
+        regions,
+        originalAdd: regions.add,
+        originalDelete: regions.delete,
+        acquired: emptyCounts(),
+        released: emptyCounts(),
+        duplicateReleases: emptyCounts(),
+      };
+      for (const region of regions) {
+        for (const type of EVENT_TYPES) {
+          if (regionHasHandler(region, type)) {
+            record.acquired[type]++;
+          }
+        }
+      }
+      this.regionRegistryRecords.set(regions, record);
+      regions.add = ((region: DiagnosticRegistration) => {
+        if (!regions.has(region)) {
           for (const type of EVENT_TYPES) {
             if (regionHasHandler(region, type)) {
               record.acquired[type]++;
             }
           }
         }
-        this.regionRegistryRecords.set(regions, record);
-        regions.add = ((region: CRCInteractionRegion) => {
-          if (!regions.has(region)) {
-            for (const type of EVENT_TYPES) {
-              if (regionHasHandler(region, type)) {
-                record.acquired[type]++;
-              }
+        return record.originalAdd.call(regions, region);
+      }) as typeof regions.add;
+      regions.delete = ((region: DiagnosticRegistration) => {
+        if (regions.has(region)) {
+          for (const type of EVENT_TYPES) {
+            if (regionHasHandler(region, type)) {
+              record.released[type]++;
             }
           }
-          return record.originalAdd.call(regions, region);
-        }) as typeof regions.add;
-        regions.delete = ((region: CRCInteractionRegion) => {
-          if (regions.has(region)) {
-            for (const type of EVENT_TYPES) {
-              if (regionHasHandler(region, type)) {
-                record.released[type]++;
-              }
-            }
-          } else {
-            for (const type of EVENT_TYPES) {
-              if (regionHasHandler(region, type)) {
-                record.duplicateReleases[type]++;
-              }
+        } else {
+          for (const type of EVENT_TYPES) {
+            if (regionHasHandler(region, type)) {
+              record.duplicateReleases[type]++;
             }
           }
-          return record.originalDelete.call(regions, region);
-        }) as typeof regions.delete;
-      }
+        }
+        return record.originalDelete.call(regions, region);
+      }) as typeof regions.delete;
     }
   }
 
@@ -375,8 +396,9 @@ export class RuntimeDiagnostics {
 }
 
 function regionHasHandler(
-  region: CRCInteractionRegion,
+  region: DiagnosticRegistration,
   type: EventType,
 ): boolean {
-  return Boolean((region.handlers as Partial<Record<EventType, unknown>>)[type]);
+  const handlers = region.handlers as Partial<Record<string, unknown>>;
+  return Boolean(handlers[type] || handlers[`${type}Capture`]);
 }

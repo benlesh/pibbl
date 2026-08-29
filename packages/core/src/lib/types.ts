@@ -3,6 +3,12 @@ import type { CRCSurfaceState } from './surface/types.js';
 import type { Constraints, LayoutBox, Size } from './layout/types.js';
 import type { NativeListenerHub } from './events/native-listener-hub.js';
 import type { CRCEventType as DOMCRCEventType } from './events/types.js';
+import type { CRCEventTargetSnapshot } from './events/types.js';
+import type {
+  CRCEventNode,
+  CRCEventListenerRegistration,
+  CRCEventTargetRegistration,
+} from './events/registrations.js';
 
 export interface SystemStyle {
   custom?: unknown;
@@ -170,7 +176,16 @@ export interface CRCInteractionRegion {
   transform: DOMMatrix;
   clippingStack: readonly CRCClippingStackEntry[];
   cursor: string | undefined;
+  /** @internal Temporary compatibility fields removed by the dispatcher migration. */
+  component?: CompRefs<any>;
+  /** @internal Temporary compatibility fields removed by the dispatcher migration. */
+  slot?: number;
+  /** @internal Temporary compatibility fields removed by the dispatcher migration. */
+  live?: boolean;
 }
+
+/** @internal Temporary alias retained until the Task 5 dispatcher migration. */
+export type CRCLegacyEventTargetRegistration = CRCInteractionRegion;
 
 export interface CRCInteractionLayer {
   kind: 'layer';
@@ -182,6 +197,7 @@ export interface CRCInteractionLayer {
 
 export type CRCInteractionPaintEntry =
   | CRCInteractionRegion
+  | CRCEventTargetRegistration
   | CRCInteractionLayer;
 
 export interface CRCCursorDefault {
@@ -206,10 +222,17 @@ export type CRCNativeObserver = (event: Event) => void;
 export interface CRCEventRoot {
   readonly canvas: HTMLCanvasElement | undefined;
   readonly nativeListeners: NativeListenerHub | undefined;
-  readonly targets: Set<CRCInteractionRegion>;
-  readonly listenersByComponent: Map<string, Set<object>>;
+  readonly targets: Set<CRCInteractionRegion | CRCEventTargetRegistration>;
+  readonly listenersByComponent: Map<string, Set<CRCEventListenerRegistration>>;
   readonly observers: Map<DOMCRCEventType, Set<CRCNativeObserver>>;
-  readonly pointerCaptures: Map<number, CRCInteractionRegion>;
+  readonly pointerCaptures: Map<number, CRCEventNode>;
+  focusPolicy?: CRCFocusPolicyBridge;
+}
+
+export interface CRCFocusPolicyBridge {
+  snapshot(target: CRCEventTargetRegistration): CRCEventTargetSnapshot;
+  observeTarget?(target: CRCEventTargetRegistration): void;
+  removeTarget?(target: CRCEventTargetRegistration): void;
 }
 
 export interface CRCController {

@@ -9,7 +9,7 @@ import {
 } from '../interaction-dispatch.js';
 import type {
   CRCInstance,
-  CRCInteractionRegion,
+  CRCLegacyEventTargetRegistration,
   CRCRegionHandlers,
 } from '../types.js';
 import { requireHookContext, useHookSlot } from './hook-slot.js';
@@ -19,7 +19,7 @@ import {
 } from '../surface/transform.js';
 
 interface CRCRegionSlot {
-  region: CRCInteractionRegion;
+  region: CRCLegacyEventTargetRegistration;
 }
 
 export function crcRegion({
@@ -35,10 +35,11 @@ export function crcRegion({
   lineInteractionWidth?: number;
   cursor?: string;
 }): void {
-  const { crcInstance: instance } = requireHookContext();
+  const { componentRefs, crcInstance: instance } = requireHookContext();
+  const hookIndex = GLOBAL_STATE.componentHookIndex;
   const slot = useHookSlot<CRCRegionSlot>('region', teardowns => {
-    const region = createRegion(instance);
-    teardowns.add(() => removeInteractionRegion(instance, region));
+    const region = createRegion(instance, componentRefs, hookIndex);
+    teardowns.add(() => releaseRegion(instance, region));
     return { region };
   });
   updateRegion(instance, slot.value.region, {
@@ -50,7 +51,11 @@ export function crcRegion({
   });
 }
 
-export function createRegion(instance: CRCInstance): CRCInteractionRegion {
+export function createRegion(
+  instance: CRCInstance,
+  component = requireHookContext().componentRefs,
+  slot = Math.max(0, GLOBAL_STATE.componentHookIndex - 1),
+): CRCLegacyEventTargetRegistration {
   return {
     kind: 'region',
     owner: instance,
@@ -61,12 +66,15 @@ export function createRegion(instance: CRCInstance): CRCInteractionRegion {
     transform: new DOMMatrix(),
     clippingStack: [],
     cursor: undefined,
+    component,
+    slot,
+    live: false,
   };
 }
 
 export function updateRegion(
   instance: CRCInstance,
-  region: CRCInteractionRegion,
+  region: CRCLegacyEventTargetRegistration,
   {
     handlers,
     path,
@@ -83,6 +91,7 @@ export function updateRegion(
 ): void {
   const interactive = Boolean(cursor) || Object.values(handlers).some(Boolean);
   if (!interactive) {
+    region.live = false;
     removeInteractionRegion(instance, region);
     return;
   }
@@ -106,6 +115,7 @@ export function updateRegion(
   );
   region.clippingStack = Array.from(GLOBAL_STATE.clippingStack);
   region.cursor = cursor;
+  region.live = true;
 
   instance.regions.add(region);
   instance.paintEntries.add(region);
@@ -115,7 +125,8 @@ export function updateRegion(
 
 export function releaseRegion(
   instance: CRCInstance,
-  region: CRCInteractionRegion,
+  region: CRCLegacyEventTargetRegistration,
 ): void {
+  region.live = false;
   removeInteractionRegion(instance, region);
 }

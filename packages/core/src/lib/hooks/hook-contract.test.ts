@@ -9,6 +9,8 @@ import {
 import type { RenderingContext2D } from '../types';
 import { crcCursor } from './crc-cursor';
 import { crcEvent } from './crc-event';
+import { crcEventListener } from './crc-event-listener';
+import { crcEventTarget } from './crc-event-target';
 import { crcLinePath } from './crc-line-path';
 import { crcMemo } from './crc-memo';
 import { crcRectPath } from './crc-rect-path';
@@ -280,6 +282,11 @@ describe('hook ordering and render errors', () => {
       () => crcLinePath([[0, 0], [1, 1]]),
       () => crcSvgPath('M0 0'),
       () => crcEvent('click', () => {}),
+      () => crcEventListener({ onClick: () => {} }),
+      () => crcEventTarget(
+        { onClick: () => {} },
+        { path: new Path2D() },
+      ),
       () => crcCursor({ style: 'pointer' }),
     ];
 
@@ -288,6 +295,34 @@ describe('hook ordering and render errors', () => {
         'CRC hooks can only be called while rendering a component.',
       );
     }
+  });
+
+  it('reports changed order for grouped event target and listener hooks', () => {
+    const frames = new ManualFrames();
+    const canvas = createCanvas();
+    const path = new Path2D();
+    path.rect(0, 0, 20, 20);
+    const Probe = defineComp(({ swapped }: { swapped: boolean }) => {
+      if (swapped) {
+        crcEventListener({ onClick: () => undefined });
+        crcEventTarget({ onClick: () => undefined }, { path });
+      } else {
+        crcEventTarget({ onClick: () => undefined }, { path });
+        crcEventListener({ onClick: () => undefined });
+      }
+    });
+    const controller = crc(canvas, Probe({ swapped: false }));
+    frames.flush();
+
+    crc(canvas, Probe({ swapped: true }));
+    expect(() => frames.flush()).toThrowError(/hook order changed/i);
+    expect(getCRCInstance(canvas).eventRoot.targets.size).toBe(0);
+    expect(getCRCInstance(canvas).eventRoot.listenersByComponent.size).toBe(0);
+
+    crc(canvas, Probe({ swapped: true }));
+    expect(() => frames.flush()).not.toThrow();
+    controller.dispose();
+    frames.restore();
   });
 
   it('keeps event and cursor slots stable when switching between global and path modes', async () => {
