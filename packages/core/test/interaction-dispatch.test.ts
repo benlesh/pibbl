@@ -125,7 +125,7 @@ async function mountEventFixture(fixture: string) {
   activeScenarioControllers.add(controller);
   await controller.perform(`show-${fixture}`);
   await controller.settled();
-  return { canvas, controller };
+  return { canvas, controller, definition };
 }
 
 function dispatchPointer(
@@ -625,5 +625,42 @@ describe('shared public user-event laboratory', () => {
         relatedTarget: null, canceled: false, fields: { text: 'CRC drag' },
       },
     ]);
+  });
+
+  it('rejects a third object reusing a bound drag fixture label', async () => {
+    const { canvas } = await mountEventFixture('drag-drop');
+    const reportError = vi.spyOn(globalThis, 'reportError').mockImplementation(
+      () => undefined,
+    );
+    const instance = GLOBAL_STATE.crcInstances.get(canvas)!;
+    const [targetA] = Array.from(instance.eventRoot.targets);
+    if (!targetA) {
+      throw new Error('Drag fixture target A is missing.');
+    }
+    const unexpectedRelatedTarget = createTarget(
+      instance,
+      targetA.component,
+      999,
+    );
+    const dragData = new DataTransfer();
+
+    dispatchDrag(canvas, 'dragover', 120, 120, dragData);
+    dispatchDrag(canvas, 'dragover', 360, 120, dragData);
+
+    dispatchToLogicalTarget(
+      'dragleave',
+      targetA,
+      new DragEvent('dragleave', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: dragData,
+      }),
+      unexpectedRelatedTarget,
+    );
+
+    expect(reportError).toHaveBeenCalledOnce();
+    expect(reportError).toHaveBeenCalledWith(expect.objectContaining({
+      message: 'Unexpected drag related target: every fixture label is already bound.',
+    }));
   });
 });

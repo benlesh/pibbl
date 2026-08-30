@@ -554,22 +554,65 @@ function clipboard(record: InteractionLabRecord) {
 }
 
 function dragDrop(record: InteractionLabRecord) {
-  const region = (target: 'drag-a' | 'drag-b', x: number, fill: string) => {
+  type DragTargetLabel = 'drag-a' | 'drag-b';
+  const labels: readonly DragTargetLabel[] = ['drag-a', 'drag-b'];
+  const labelsByTarget = new WeakMap<CRCEvent['target'], DragTargetLabel>();
+  const targetsByLabel = new Map<DragTargetLabel, CRCEvent['target']>();
+  const bindTarget = (
+    eventTarget: CRCEvent['target'],
+    label: DragTargetLabel,
+  ): DragTargetLabel => {
+    const existingLabel = labelsByTarget.get(eventTarget);
+    if (existingLabel && existingLabel !== label) {
+      throw new Error(
+        `Drag target changed identity from "${existingLabel}" to "${label}".`,
+      );
+    }
+    const existingTarget = targetsByLabel.get(label);
+    if (existingTarget && existingTarget !== eventTarget) {
+      throw new Error(
+        `Drag label "${label}" is already bound to another target.`,
+      );
+    }
+    labelsByTarget.set(eventTarget, label);
+    targetsByLabel.set(label, eventTarget);
+    return label;
+  };
+  const resolveRelatedTarget = (
+    eventTarget: CRCEvent['target'],
+  ): DragTargetLabel => {
+    const existingLabel = labelsByTarget.get(eventTarget);
+    if (existingLabel) {
+      return existingLabel;
+    }
+    const availableLabels = labels.filter(label => !targetsByLabel.has(label));
+    if (availableLabels.length !== 1) {
+      throw new Error(
+        'Unexpected drag related target: every fixture label is already bound.',
+      );
+    }
+    return bindTarget(eventTarget, availableLabels[0]!);
+  };
+  const region = (target: DragTargetLabel, x: number, fill: string) => {
     const trace = (
       type: 'dragenter' | 'dragleave' | 'dragover' | 'drop',
-    ) => (event: CRCDragEvent) => recordLogicalEvent(
-      record,
-      type,
-      event,
-      {
-        currentTarget: target,
-        relatedTarget: event.relatedTarget ?
-          target === 'drag-a' ? 'drag-b' : 'drag-a' :
-          null,
-        target,
-      },
-      { text: event.dataTransfer?.getData('text/plain') ?? '' },
-    );
+    ) => (event: CRCDragEvent) => {
+      bindTarget(event.target, target);
+      bindTarget(event.currentTarget, target);
+      recordLogicalEvent(
+        record,
+        type,
+        event,
+        {
+          currentTarget: target,
+          relatedTarget: event.relatedTarget ?
+            resolveRelatedTarget(event.relatedTarget) :
+            null,
+          target,
+        },
+        { text: event.dataTransfer?.getData('text/plain') ?? '' },
+      );
+    };
     return rect({
       key: target,
       style: {
