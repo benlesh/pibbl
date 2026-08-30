@@ -1,6 +1,7 @@
 import type { CRCEventTargetRegistration } from '../events/registrations.js';
 import { GLOBAL_STATE } from '../global-state.js';
-import type { CRCEvent } from '../events/types.js';
+import type { CRCEvent, CRCKeyboardEvent } from '../events/types.js';
+import { Teardowns } from '../teardowns.js';
 import type {
   CRCEventRoot,
   CRCFocusPolicyBridge,
@@ -8,6 +9,11 @@ import type {
   CRCRenderTransaction,
 } from '../types.js';
 import { resolveTargetRootBounds } from './geometry.js';
+import {
+  mountDOMFocusHost,
+  type CRCMountedDOMFocusHost,
+} from './dom-focus-host.js';
+import { applyTabDefault, moveTab } from './keyboard-defaults.js';
 import type {
   CRCDirectionalBoundary,
   CRCFocusCandidate,
@@ -108,6 +114,10 @@ class FocusManagerCoordinator {
     this.eventRoot.focusPolicy = manager;
   }
 
+  isActive(manager: CRCFocusManager): boolean {
+    return this.active === manager;
+  }
+
   claimRetainedManagers(instance: CRCInstance): readonly CRCFocusManager[] {
     const retained = Array.from(this.managers).filter(manager => {
       const owner = managerOwners.get(manager);
@@ -182,6 +192,7 @@ class FocusManagerCoordinator {
           this.destroy(manager);
         }
       }
+      this.active?.activateDOMHost();
       return;
     }
 
@@ -197,6 +208,7 @@ class FocusManagerCoordinator {
     for (const manager of Array.from(this.managers)) {
       if (manager !== restored) this.destroy(manager);
     }
+    restored?.activateDOMHost();
   }
 
   private destroy(manager: CRCFocusManager): void {
@@ -223,11 +235,40 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   private destroyed = false;
   private ownerReleased = false;
   private readonly coordinator: FocusManagerCoordinator;
+  private readonly teardowns = new Teardowns();
+  private readonly domFocusHost: CRCMountedDOMFocusHost;
 
   constructor(eventRoot: CRCEventRoot, owner: CRCInstance) {
+    const canvas = eventRoot.canvas;
+    if (!canvas) {
+      throw new Error(
+        'withFocusManagement requires an HTMLCanvasElement root; an OffscreenCanvas has no DOM focus host.',
+      );
+    }
+    this.domFocusHost = mountDOMFocusHost(this, canvas, this.teardowns);
+    const keydownObservers = eventRoot.observers.get('keydown');
+    if (!keydownObservers) {
+      this.teardowns.execute();
+      throw new Error('CRC keydown observer registry is unavailable.');
+    }
+    keydownObservers.add(this.onNativeKeyDown);
+    this.teardowns.add(() => keydownObservers.delete(this.onNativeKeyDown));
+    const blurObservers = eventRoot.observers.get('blur');
+    if (!blurObservers) {
+      this.teardowns.execute();
+      throw new Error('CRC blur observer registry is unavailable.');
+    }
+    blurObservers.add(this.onNativeBlur);
+    this.teardowns.add(() => blurObservers.delete(this.onNativeBlur));
     managerOwners.set(this, owner);
     this.coordinator = getCoordinator(eventRoot);
-    this.coordinator.add(this);
+    try {
+      this.coordinator.add(this);
+    } catch (error) {
+      managerOwners.delete(this);
+      this.teardowns.execute();
+      throw error;
+    }
   }
 
   get candidates(): readonly CRCFocusCandidate[] {
@@ -325,7 +366,29 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   }
 
   afterDispatch(_event: CRCEvent): void {
-    // Task 2 installs the structural hook only. Defaults begin in Task 3.
+    if (_event.type === 'keydown') {
+      applyTabDefault(this, _event as CRCKeyboardEvent);
+    }
+  }
+
+  enterDOMFocus(backwards: boolean): void {
+    if (this.destroyed) return;
+    const candidate = backwards ?
+      this.committedCandidates.at(-1) :
+      this.committedCandidates[0];
+    this.setFocusState(candidate?.target, Boolean(candidate));
+  }
+
+  leaveDOMFocus(): void {
+    if (!this.destroyed) this.clearFocusState();
+  }
+
+  activateDOMHost(): void {
+    if (!this.destroyed && this.coordinator.isActive(this)) {
+      this.domFocusHost.syncCandidateAvailability(
+        this.committedCandidates.length > 0,
+      );
+    }
   }
 
   replayRetainedSubtree(instance: CRCInstance): void {
@@ -418,6 +481,7 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     this.committedBoundaries.clear();
     this.committedCandidates = Object.freeze([]);
     this.clearFocusState();
+    this.teardowns.execute();
   }
 
   private recordPendingTarget(
@@ -468,6 +532,7 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     ) {
       this.clearFocusState();
     }
+    this.activateDOMHost();
   }
 
   private commitRemovedTarget(target: CRCEventTargetRegistration): void {
@@ -488,6 +553,23 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   private assertLive(): void {
     if (this.destroyed) throw new Error('CRC focus manager is disposed.');
   }
+
+  private readonly onNativeKeyDown = (event: Event): void => {
+    if (
+      this.destroyed ||
+      !(event instanceof KeyboardEvent) ||
+      event.key !== 'Tab' ||
+      event.defaultPrevented ||
+      this.resolveKeyboardTarget()
+    ) {
+      return;
+    }
+    if (moveTab(this, event.shiftKey) === 'moved') event.preventDefault();
+  };
+
+  private readonly onNativeBlur = (): void => {
+    this.leaveDOMFocus();
+  };
 }
 
 export function createFocusManager(

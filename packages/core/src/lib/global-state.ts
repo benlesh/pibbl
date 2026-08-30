@@ -122,6 +122,8 @@ export function cleanupCRCInstance(crcInstance: CRCInstance): void {
     crcInstance.eventRoot.pointerCaptures.clear();
     crcInstance.eventRoot.onNodeRelease = undefined;
     crcInstance.eventRoot.onTargetUpdate = undefined;
+    crcInstance.eventRoot.focusPolicy = undefined;
+    crcInstance.eventRoot.renderTransaction = undefined;
     crcInstance.eventRoot.rootInstance = undefined;
   }
   crcInstance.regions?.clear();

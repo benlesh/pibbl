@@ -9,6 +9,7 @@ import type {
 import {
   adaptClipboardEvent,
   isNativeClipboardEventType,
+  type CRCAdaptedClipboardEvent,
 } from './adapters/clipboard.js';
 import {
   adaptDragEvent,
@@ -18,10 +19,12 @@ import {
 import {
   adaptEditingEvent,
   isNativeEditingEventType,
+  type CRCAdaptedEditingEvent,
 } from './adapters/editing.js';
 import {
   adaptKeyboardFocusEvent,
   isNativeKeyboardFocusEventType,
+  type CRCAdaptedKeyboardFocusEvent,
 } from './adapters/keyboard-focus.js';
 import {
   adaptMouseEvent,
@@ -223,27 +226,30 @@ function dispatchClassifiedNativeEvent(
       if (input) dispatchWheelEvent(root, input);
       return;
     }
-    case 'keyboard-focus':
+    case 'keyboard-focus': {
       if (!isNativeKeyboardFocusEventType(type)) {
         throw nativeRouteMismatch(type, route);
       }
-      // A native Canvas event has no logical descendant until a focus policy
-      // supplies one. Adapting here validates the family before observers run.
-      adaptKeyboardFocusEvent(type, nativeEvent);
+      const input = adaptKeyboardFocusEvent(type, nativeEvent);
+      if (input) dispatchFocusedNativeEvent(root, input);
       return;
-    case 'editing':
+    }
+    case 'editing': {
       if (!isNativeEditingEventType(type)) {
         throw nativeRouteMismatch(type, route);
       }
-      // Editing transport remains targetless without an explicit input policy.
-      adaptEditingEvent(type, nativeEvent);
+      const input = adaptEditingEvent(type, nativeEvent);
+      if (input) dispatchFocusedNativeEvent(root, input);
       return;
-    case 'clipboard':
+    }
+    case 'clipboard': {
       if (!isNativeClipboardEventType(type)) {
         throw nativeRouteMismatch(type, route);
       }
-      adaptClipboardEvent(type, nativeEvent);
+      const input = adaptClipboardEvent(type, nativeEvent);
+      if (input) dispatchFocusedNativeEvent(root, input);
       return;
+    }
     case 'drag': {
       if (!isNativeDragEventType(type)) {
         throw nativeRouteMismatch(type, route);
@@ -254,6 +260,34 @@ function dispatchClassifiedNativeEvent(
     }
   }
   return assertNever(route);
+}
+
+type CRCAdaptedFocusedEvent =
+  | CRCAdaptedClipboardEvent
+  | CRCAdaptedEditingEvent
+  | CRCAdaptedKeyboardFocusEvent;
+
+function dispatchFocusedNativeEvent(
+  root: CRCInstance,
+  input: CRCAdaptedFocusedEvent,
+): void {
+  const policy = root.eventRoot.focusPolicy;
+  const target = policy?.resolveKeyboardTarget();
+  if (!policy || !target || !isLiveNode(root, target)) return;
+
+  const event = dispatchToLogicalTarget(
+    input.type,
+    target,
+    input.originalEvent as CRCOriginalEvent<typeof input.type>,
+  );
+  if (
+    input.type === 'keydown' &&
+    event &&
+    isLiveNode(root, target) &&
+    root.eventRoot.focusPolicy === policy
+  ) {
+    policy.afterDispatch(event);
+  }
 }
 
 function nativeRouteMismatch(
