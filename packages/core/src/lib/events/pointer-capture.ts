@@ -355,8 +355,19 @@ export function processPendingLogicalPointerCapture(
     const transfer = state.pendingTransfers.get(pointerId);
     const previous = transfer?.from;
     const pending = livePendingOwner(eventRoot, pointerId);
-    if (previous && previous !== pending && isLiveNode(previous)) {
-      dispatchLost(previous);
+    if (previous && previous !== pending) {
+      state.pendingLossOwners.delete(pointerId);
+      if (pending) {
+        state.activeCaptures.set(pointerId, {
+          owner: pending,
+          activated: false,
+        });
+        state.pendingTransfers.set(pointerId, { from: undefined });
+      } else {
+        state.activeCaptures.delete(pointerId);
+        state.pendingTransfers.delete(pointerId);
+      }
+      if (isLiveNode(previous)) dispatchLost(previous);
     }
 
     const currentTransfer = state.pendingTransfers.get(pointerId);
