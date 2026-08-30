@@ -394,23 +394,25 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     this.pending = undefined;
     if (!pending || !success || this.destroyed) return;
 
-    const candidates = Object.freeze(pending.targets.map((observed, sourceIndex) => {
-      if (observed.directionalBoundary) {
-        retainedDirectionalBoundaries.set(
-          observed.target,
-          observed.directionalBoundary,
-        );
-      } else {
-        retainedDirectionalBoundaries.delete(observed.target);
-      }
-      return Object.freeze({
+    const candidates = Object.freeze(pending.targets.map((observed, sourceIndex) =>
+      Object.freeze({
         target: observed.target,
         sourceIndex,
         directionalBoundary: observed.directionalBoundary,
         rootBounds: resolveTargetRootBounds(observed.target),
-      }) satisfies CRCFocusCandidate;
-    }));
+      }) satisfies CRCFocusCandidate
+    ));
     this.commitCandidates(candidates, pending.boundaries);
+    for (const candidate of candidates) {
+      if (candidate.directionalBoundary) {
+        retainedDirectionalBoundaries.set(
+          candidate.target,
+          asDirectionalBoundary(candidate.directionalBoundary),
+        );
+      } else {
+        retainedDirectionalBoundaries.delete(candidate.target);
+      }
+    }
   }
 
   observeTarget(target: CRCEventTargetRegistration): void {
@@ -424,7 +426,7 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
       return;
     }
     pending.ineligibleTargets.delete(target);
-    this.recordPendingTarget(target, this.directionalStack.at(-1));
+    this.recordPendingTarget(target, this.currentDirectionalBoundary());
   }
 
   removeTarget(target: CRCEventTargetRegistration): void {
@@ -570,7 +572,7 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
         const retainedBoundary = retainedDirectionalBoundaries.get(target);
         const directionalBoundary = retainedBoundary &&
             isInstanceWithin(retainedBoundary.owner, instance) ?
-          retainedBoundary : this.directionalStack.at(-1);
+          retainedBoundary : this.currentDirectionalBoundary();
         if (directionalBoundary) {
           this.pending.boundaries.add(directionalBoundary);
         }
@@ -636,6 +638,10 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     this.directionalStack.pop();
   }
 
+  private currentDirectionalBoundary(): DirectionalBoundary | undefined {
+    return this.directionalStack.at(-1);
+  }
+
   dispose(): void {
     if (this.ownerReleased || this.destroyed) return;
     this.coordinator.release(this);
@@ -693,21 +699,36 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     candidates: readonly CRCFocusCandidate[],
     boundaries: ReadonlySet<DirectionalBoundary>,
   ): void {
-    const byBoundary = new Map<DirectionalBoundary, CRCFocusCandidate[]>();
-    for (const boundary of boundaries) byBoundary.set(boundary, []);
+    const pendingByBoundary = new Map<
+      DirectionalBoundary,
+      CRCFocusCandidate[]
+    >();
+    for (const boundary of boundaries) pendingByBoundary.set(boundary, []);
     for (const candidate of candidates) {
       if (candidate.directionalBoundary instanceof DirectionalBoundary) {
-        byBoundary.get(candidate.directionalBoundary)?.push(candidate);
+        pendingByBoundary.get(candidate.directionalBoundary)?.push(candidate);
       }
     }
 
+    // Freeze every replacement before exposing any one of them. Candidate
+    // collection failures therefore leave every committed direct list intact.
+    const committedByBoundary = new Map<
+      DirectionalBoundary,
+      readonly CRCFocusCandidate[]
+    >();
+    for (const [boundary, directCandidates] of pendingByBoundary) {
+      committedByBoundary.set(boundary, Object.freeze(directCandidates));
+    }
+
     for (const boundary of this.committedBoundaries) {
-      if (!byBoundary.has(boundary)) boundary.commit(Object.freeze([]));
+      if (!committedByBoundary.has(boundary)) {
+        boundary.commit(Object.freeze([]));
+      }
     }
-    for (const [boundary, directCandidates] of byBoundary) {
-      boundary.commit(Object.freeze(directCandidates));
+    for (const [boundary, directCandidates] of committedByBoundary) {
+      boundary.commit(directCandidates);
     }
-    this.committedBoundaries = new Set(byBoundary.keys());
+    this.committedBoundaries = new Set(committedByBoundary.keys());
     this.committedCandidates = candidates;
     if (
       this.focusedTarget &&

@@ -25,8 +25,11 @@ const keyboardNavigationDescriptor: CRCElementEnhancerDescriptor = {
         manager.enterDirectionalBoundary(boundary);
       },
       exit: () => {
-        manager?.exitDirectionalBoundary(boundary);
-        manager = undefined;
+        try {
+          manager?.exitDirectionalBoundary(boundary);
+        } finally {
+          manager = undefined;
+        }
       },
       dispose: () => undefined,
     };

@@ -37,6 +37,17 @@ export function findDirectionalCandidate(
   return winner;
 }
 
+/** Resolves only within the candidate's nearest committed boundary. */
+export function findNearestDirectionalCandidate(
+  current: CRCFocusCandidate,
+  direction: CRCDirection,
+): CRCFocusCandidate | undefined {
+  const boundary = current.directionalBoundary;
+  return boundary ?
+    findDirectionalCandidate(current, boundary.candidates, direction) :
+    undefined;
+}
+
 export function scoreDirectionalCandidate(
   current: CRCFocusCandidate,
   candidate: CRCFocusCandidate,

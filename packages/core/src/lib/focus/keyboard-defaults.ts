@@ -4,7 +4,7 @@ import type { CRCKeyboardEvent } from '../events/types.js';
 import type { CRCFocusManager } from './focus-manager.js';
 import { transitionLogicalFocus } from './focus-events.js';
 import {
-  findDirectionalCandidate,
+  findNearestDirectionalCandidate,
   type CRCDirection,
 } from './directional-navigation.js';
 
@@ -103,14 +103,11 @@ export function applyDirectionalNavigationDefault(
   const current = target && manager.candidates.find(candidate =>
     candidate.target === target
   );
-  const boundary = current?.directionalBoundary;
-  if (!current || !boundary) return;
+  if (!current) return;
 
-  const winner = findDirectionalCandidate(
-    current,
-    boundary.candidates,
-    direction,
-  );
+  // The nearest boundary owns the key completely. A miss is terminal and must
+  // never be retried against an ancestor boundary.
+  const winner = findNearestDirectionalCandidate(current, direction);
   const liveWinner = manager.liveFocusCandidate(winner?.target);
   if (!liveWinner) return;
 
