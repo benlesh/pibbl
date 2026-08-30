@@ -152,7 +152,9 @@ export function Layer(
   } else {
     parentInstance.eventRoot.focusPolicy?.replayRetainedSubtree(layerCRC);
   }
-  slot.focusRenderRevision = focusRenderRevision;
+  const renderedFocusPolicy = parentInstance.eventRoot.focusPolicy;
+  slot.focusRenderRevision =
+    renderedFocusPolicy?.layerFocusRenderRevision?.(layerCRC);
 
   ctx.drawImage(
     offscreenCanvas,

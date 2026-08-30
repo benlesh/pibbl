@@ -143,6 +143,56 @@ describe("focus snapshots in cached layers", () => {
       getCRCInstance(mounted.canvas).eventRoot.focusPolicy,
     ).toBeUndefined();
   });
+
+  it("repaints the first focus transition after a layer replaces its focus manager", async () => {
+    let layerRenders = 0;
+    let replaceTarget!: () => void;
+    const FocusTarget = defineComp(({ version }: { version: number }) => {
+      layerRenders++;
+      const snapshot = crcEventTarget(
+        { onClick: () => undefined },
+        { path: rectanglePath(0, 0, 80, 80), fill: true },
+      );
+      return rect({
+        style: {
+          width: 80,
+          height: 80,
+          fill: snapshot.isFocusVisible ? "#00ff00" : "#0000ff",
+        },
+      });
+    });
+    const Root = defineComp(() => {
+      const [version, setVersion] = crcState(0);
+      replaceTarget = () => setVersion(version + 1);
+      return layer({
+        style: { width: 80, height: 80 },
+        render: withFocusManagement(FocusTarget({
+          key: `target-${version}`,
+          version,
+        })),
+      });
+    });
+    const mounted = mount(Root({}));
+    await nextFrame();
+
+    mounted.before.focus();
+    await userEvent.tab();
+    await nextFrame();
+    expect(layerRenders).toBe(2);
+    expect(pixel(mounted.canvas)).toEqual([0, 255, 0, 255]);
+
+    replaceTarget();
+    await nextFrame();
+    expect(document.activeElement).toBe(mounted.canvas);
+    expect(layerRenders).toBe(3);
+    expect(pixel(mounted.canvas)).toEqual([0, 0, 255, 255]);
+
+    await userEvent.tab();
+    await nextFrame();
+    expect(document.activeElement).toBe(mounted.canvas);
+    expect(layerRenders).toBe(4);
+    expect(pixel(mounted.canvas)).toEqual([0, 255, 0, 255]);
+  });
 });
 
 function mount(element: CompEl<any, any>) {
