@@ -113,6 +113,7 @@ export function dispatchToLogicalTarget<K extends CRCEventType>(
   target: CRCEventNode,
   originalEvent: CRCOriginalEvent<K>,
   relatedTarget: CRCEventNode | null = null,
+  sourceEvent?: Event,
 ): CRCEventMap[K] | undefined {
   if (!target.live) return undefined;
   return dispatchEventPath({
@@ -120,6 +121,7 @@ export function dispatchToLogicalTarget<K extends CRCEventType>(
     target,
     relatedTarget,
     originalEvent,
+    sourceEvent,
   });
 }
 
@@ -287,7 +289,7 @@ function dispatchFocusedNativeEvent(
     input.originalEvent as CRCOriginalEvent<typeof input.type>,
   );
   if (
-    input.type === 'keydown' &&
+    (input.type === 'keydown' || input.type === 'keyup') &&
     event &&
     isLiveNode(root, target) &&
     root.eventRoot.focusPolicy === policy &&

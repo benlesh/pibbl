@@ -20,7 +20,10 @@ import {
   mountDOMFocusHost,
   type CRCMountedDOMFocusHost,
 } from './dom-focus-host.js';
-import { applyTabDefault } from './keyboard-defaults.js';
+import {
+  applyKeyboardActivationDefault,
+  applyTabDefault,
+} from './keyboard-defaults.js';
 import { transitionLogicalFocus } from './focus-events.js';
 import type {
   CRCDirectionalBoundary,
@@ -309,6 +312,7 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   private directionalStack: DirectionalBoundary[] = [];
   private focusedTarget: CRCEventTargetRegistration | undefined;
   private focusVisible = false;
+  private pendingSpaceTarget: CRCEventTargetRegistration | undefined;
   private pendingPressFocus:
     { readonly target: CRCEventTargetRegistration | undefined } | undefined;
   private readonly representedPointerPresses = new Map<
@@ -411,6 +415,9 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   observeTarget(target: CRCEventTargetRegistration): void {
     const pending = this.pending;
     if (!pending) return;
+    if (this.pendingSpaceTarget === target && !target.handlers.click) {
+      this.cancelSpaceActivation();
+    }
     if (!isKeyboardFocusable(target)) {
       this.markPendingIneligible(target);
       return;
@@ -420,6 +427,7 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   }
 
   removeTarget(target: CRCEventTargetRegistration): void {
+    if (this.pendingSpaceTarget === target) this.cancelSpaceActivation();
     if (this.pending) {
       this.markPendingIneligible(target);
       return;
@@ -452,9 +460,12 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     ) ? target : undefined;
   }
 
-  afterDispatch(_event: CRCEvent): void {
-    if (_event.type === 'keydown') {
-      applyTabDefault(this, _event as CRCKeyboardEvent);
+  afterDispatch(event: CRCEvent): void {
+    if (event.type === 'keydown') {
+      applyTabDefault(this, event as CRCKeyboardEvent);
+    }
+    if (event.type === 'keydown' || event.type === 'keyup') {
+      applyKeyboardActivationDefault(this, event as CRCKeyboardEvent);
     }
   }
 
@@ -602,6 +613,7 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     target: CRCEventTargetRegistration | undefined,
     focusVisible: boolean,
   ): void {
+    if (this.focusedTarget !== target) this.cancelSpaceActivation();
     this.focusedTarget = target;
     this.focusVisible = Boolean(target && focusVisible);
   }
@@ -636,6 +648,7 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     this.pending = undefined;
     this.directionalStack = [];
     this.pendingPressFocus = undefined;
+    this.cancelSpaceActivation();
     this.representedPointerPresses.clear();
     this.representedTouchContacts.clear();
     this.activeTouchIdentifiers.clear();
@@ -712,6 +725,7 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   }
 
   private clearFocusState(): void {
+    this.cancelSpaceActivation();
     this.focusedTarget = undefined;
     this.focusVisible = false;
   }
@@ -736,6 +750,26 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     } finally {
       if (this.pendingPressFocus === pending) this.pendingPressFocus = undefined;
     }
+  }
+
+  beginSpaceActivation(target: CRCEventTargetRegistration): void {
+    this.pendingSpaceTarget = target;
+  }
+
+  hasPendingSpaceActivation(
+    target: CRCEventTargetRegistration | undefined,
+  ): boolean {
+    return Boolean(target && this.pendingSpaceTarget === target);
+  }
+
+  consumeSpaceActivation(): CRCEventTargetRegistration | undefined {
+    const target = this.pendingSpaceTarget;
+    this.pendingSpaceTarget = undefined;
+    return target;
+  }
+
+  cancelSpaceActivation(): void {
+    this.pendingSpaceTarget = undefined;
   }
 
   private recordPointerPress(input: CRCFocusPressDefaultInput): void {
