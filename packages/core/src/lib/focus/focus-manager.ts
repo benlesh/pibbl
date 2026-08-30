@@ -564,7 +564,8 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   }
 
   layerFocusRenderRevision(instance: CRCInstance): number | undefined {
-    return this.layerFocusRenderRevisions.get(instance);
+    return this.ownerReleased ?
+      undefined : this.layerFocusRenderRevisions.get(instance);
   }
 
   private replayRetainedTargets(instance: CRCInstance): void {
