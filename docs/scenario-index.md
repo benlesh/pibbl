@@ -43,32 +43,36 @@ Learning sources use one clean `mount(canvas)` contract and are both displayed a
 
 These fixtures are deterministic evidence for browser verification. Their visibility, maturity, action IDs, diagnostics, and manual procedures are intentionally test-oriented.
 
-| Order | Scenario                                                                                                                                                                                                                         | Category              | Visibility / maturity              | Lab route                               | Executable source                                                                                                   |
-| ----: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | ---------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-|    10 | <a id="baseline-smoke"></a>**Baseline smoke**<br>Mount, render, update, click, and reset one public-API CRC scene.                                                                                                               | Getting started       | documentation-candidate / baseline | `#/testing/baseline-smoke`              | [`packages/scenarios/src/smoke.example.ts`](../packages/scenarios/src/smoke.example.ts)                             |
-|    20 | <a id="drawing-shapes"></a>**Draw shapes**<br>Build filled and stroked rectangles, custom paths, and SVG paths, then update their geometry and styles.                                                                           | Drawing basics        | documentation-candidate / contract | `#/testing/drawing-shapes`              | [`packages/scenarios/src/drawing-shapes.example.ts`](../packages/scenarios/src/drawing-shapes.example.ts)           |
-|    30 | <a id="drawing-lines"></a>**Draw lines**<br>Draw a multi-point line plus crisp horizontal and vertical rules with the public line helpers.                                                                                       | Drawing basics        | documentation-candidate / contract | `#/testing/drawing-lines`               | [`packages/scenarios/src/drawing-lines.example.ts`](../packages/scenarios/src/drawing-lines.example.ts)             |
-|    40 | <a id="drawing-text"></a>**Draw text**<br>Render aligned text and compare visible, ellipsis, squish, wrapping, clipping, and alpha behavior.                                                                                     | Drawing basics        | documentation-candidate / contract | `#/testing/drawing-text`                | [`packages/scenarios/src/drawing-text.example.ts`](../packages/scenarios/src/drawing-text.example.ts)               |
-|    50 | <a id="drawing-images"></a>**Draw images**<br>Load deterministic data images with explicit or natural dimensions, alpha, borders, source changes, failure, and removal.                                                          | Drawing basics        | documentation-candidate / contract | `#/testing/drawing-images`              | [`packages/scenarios/src/drawing-images.example.ts`](../packages/scenarios/src/drawing-images.example.ts)           |
-|    60 | <a id="drawing-composition"></a>**Compose a scene**<br>Compose transformed groups, clipped children, an even-odd hole, and cached offscreen artwork.                                                                             | Drawing composition   | documentation-candidate / contract | `#/testing/drawing-composition`         | [`packages/scenarios/src/drawing-composition.example.ts`](../packages/scenarios/src/drawing-composition.example.ts) |
-|    70 | <a id="mouse-interaction-contract"></a>**Mouse interaction contract**<br>Explore the approved native evidence and the target/order rules implemented by CRC’s dispatcher.                                                        | Interaction contracts | test-laboratory / contract         | `#/testing/mouse-interaction-contract`  | [`packages/scenarios/src/mouse-contract.example.ts`](../packages/scenarios/src/mouse-contract.example.ts)           |
-|    80 | <a id="interaction-trace-lab"></a>**Ordering and overlap laboratory**<br>Drive the approved CRC order, target, cursor, geometry, mutation, and activation rules against shared public-API fixtures.                              | Interaction contracts | test-laboratory / trusted          | `#/testing/interaction-trace-lab`       | [`packages/scenarios/src/interaction-lab.example.ts`](../packages/scenarios/src/interaction-lab.example.ts)         |
-|    90 | <a id="event-lifecycle-lab"></a>**Event lifecycle laboratory**<br>Exercise rerender, handler, subtree, layer, abort, dispose, remount, and stale-cleanup ownership flows.                                                        | Diagnostics           | test-laboratory / trusted          | `#/testing/event-lifecycle-lab`         | [`packages/scenarios/src/lifecycle-lab.example.ts`](../packages/scenarios/src/lifecycle-lab.example.ts)             |
-|   100 | <a id="geometry-composition-matrix"></a>**Geometry composition matrix**<br>Probe intrinsic coordinates, nested transforms and clips, global layer paint order, layer bounds, and stroke interaction geometry.                    | Interaction contracts | test-laboratory / trusted          | `#/testing/geometry-composition-matrix` | [`packages/scenarios/src/geometry-matrix.example.ts`](../packages/scenarios/src/geometry-matrix.example.ts)         |
-|   110 | <a id="event-performance-lab"></a>**Event performance laboratory**<br>Measure hit-test structure and live dispatch latency across shared zero, sparse, dense, clipped, transformed, layered, cursor, and rerender workloads.     | Diagnostics           | test-laboratory / trusted          | `#/testing/event-performance-lab`       | [`packages/scenarios/src/performance-lab.example.ts`](../packages/scenarios/src/performance-lab.example.ts)         |
-|   120 | <a id="runtime-cleanup-stress"></a>**Runtime cleanup stress laboratory**<br>Exercise pending frames, image races, nested layers, synchronous hook cleanup, component/root identity, runtime disposal, and repeated mount cycles. | Diagnostics           | test-laboratory / trusted          | `#/testing/runtime-cleanup-stress`      | [`packages/scenarios/src/cleanup-stress.example.ts`](../packages/scenarios/src/cleanup-stress.example.ts)           |
-|   130 | <a id="runtime-hooks-laboratory"></a>**Runtime and hooks laboratory**<br>Exercise state, memo, ref, synchronous change cleanup, memoized paths, keyed siblings, root identity, falsy children, and public hook misuse.           | Diagnostics           | test-laboratory / trusted          | `#/testing/runtime-hooks-laboratory`    | [`packages/scenarios/src/runtime-hooks.example.ts`](../packages/scenarios/src/runtime-hooks.example.ts)             |
-|   140 | <a id="layout-foundation"></a>**Layout foundation laboratory**<br>Prove nested Flex, Grid, Overlay, clipping, measurement, observation, and keyed reflow.                                                                        | Layout diagnostics    | test-laboratory / contract         | `#/testing/layout-foundation`           | [`packages/scenarios/src/layout-foundation.example.ts`](../packages/scenarios/src/layout-foundation.example.ts)     |
-|   150 | <a id="canvas-surface"></a>**Canvas surface laboratory**<br>Verify fixed fitting, responsive logical reflow, high-density backing stores, and logical mouse coordinates.                                                         | Rendering             | test-laboratory / contract         | `#/testing/canvas-surface`              | [`packages/scenarios/src/canvas-surface.example.ts`](../packages/scenarios/src/canvas-surface.example.ts)           |
+| Order | Scenario                                                                                                                                                                                                                                   | Category              | Visibility / maturity              | Lab route                               | Executable source                                                                                                   |
+| ----: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------- | ---------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+|    10 | <a id="baseline-smoke"></a>**Baseline smoke**<br>Mount, render, update, click, and reset one public-API CRC scene.                                                                                                                         | Getting started       | documentation-candidate / baseline | `#/testing/baseline-smoke`              | [`packages/scenarios/src/smoke.example.ts`](../packages/scenarios/src/smoke.example.ts)                             |
+|    20 | <a id="drawing-shapes"></a>**Draw shapes**<br>Build filled and stroked rectangles, custom paths, and SVG paths, then update their geometry and styles.                                                                                     | Drawing basics        | documentation-candidate / contract | `#/testing/drawing-shapes`              | [`packages/scenarios/src/drawing-shapes.example.ts`](../packages/scenarios/src/drawing-shapes.example.ts)           |
+|    30 | <a id="drawing-lines"></a>**Draw lines**<br>Draw a multi-point line plus crisp horizontal and vertical rules with the public line helpers.                                                                                                 | Drawing basics        | documentation-candidate / contract | `#/testing/drawing-lines`               | [`packages/scenarios/src/drawing-lines.example.ts`](../packages/scenarios/src/drawing-lines.example.ts)             |
+|    40 | <a id="drawing-text"></a>**Draw text**<br>Render aligned text and compare visible, ellipsis, squish, wrapping, clipping, and alpha behavior.                                                                                               | Drawing basics        | documentation-candidate / contract | `#/testing/drawing-text`                | [`packages/scenarios/src/drawing-text.example.ts`](../packages/scenarios/src/drawing-text.example.ts)               |
+|    50 | <a id="drawing-images"></a>**Draw images**<br>Load deterministic data images with explicit or natural dimensions, alpha, borders, source changes, failure, and removal.                                                                    | Drawing basics        | documentation-candidate / contract | `#/testing/drawing-images`              | [`packages/scenarios/src/drawing-images.example.ts`](../packages/scenarios/src/drawing-images.example.ts)           |
+|    60 | <a id="drawing-composition"></a>**Compose a scene**<br>Compose transformed groups, clipped children, an even-odd hole, and cached offscreen artwork.                                                                                       | Drawing composition   | documentation-candidate / contract | `#/testing/drawing-composition`         | [`packages/scenarios/src/drawing-composition.example.ts`](../packages/scenarios/src/drawing-composition.example.ts) |
+|    70 | <a id="mouse-interaction-contract"></a>**Mouse interaction contract**<br>Explore the approved native evidence and the target/order rules implemented by CRC’s dispatcher.                                                                  | Interaction contracts | test-laboratory / contract         | `#/testing/mouse-interaction-contract`  | [`packages/scenarios/src/mouse-contract.example.ts`](../packages/scenarios/src/mouse-contract.example.ts)           |
+|    80 | <a id="interaction-trace-lab"></a>**User-event contract laboratory**<br>Drive propagation, capture, touch retention, cancellation, keyboard, composition, clipboard, drag/drop, and legacy mouse rules through shared public-API fixtures. | Interaction contracts | test-laboratory / trusted          | `#/testing/interaction-trace-lab`       | [`packages/scenarios/src/interaction-lab.example.ts`](../packages/scenarios/src/interaction-lab.example.ts)         |
+|    90 | <a id="event-lifecycle-lab"></a>**Event lifecycle laboratory**<br>Exercise rerender, handler, subtree, layer, abort, dispose, remount, and stale-cleanup ownership flows.                                                                  | Diagnostics           | test-laboratory / trusted          | `#/testing/event-lifecycle-lab`         | [`packages/scenarios/src/lifecycle-lab.example.ts`](../packages/scenarios/src/lifecycle-lab.example.ts)             |
+|   100 | <a id="geometry-composition-matrix"></a>**Geometry composition matrix**<br>Probe intrinsic coordinates, nested transforms and clips, global layer paint order, layer bounds, and stroke interaction geometry.                              | Interaction contracts | test-laboratory / trusted          | `#/testing/geometry-composition-matrix` | [`packages/scenarios/src/geometry-matrix.example.ts`](../packages/scenarios/src/geometry-matrix.example.ts)         |
+|   110 | <a id="event-performance-lab"></a>**Event performance laboratory**<br>Measure hit-test structure and live dispatch latency across shared zero, sparse, dense, clipped, transformed, layered, cursor, and rerender workloads.               | Diagnostics           | test-laboratory / trusted          | `#/testing/event-performance-lab`       | [`packages/scenarios/src/performance-lab.example.ts`](../packages/scenarios/src/performance-lab.example.ts)         |
+|   120 | <a id="runtime-cleanup-stress"></a>**Runtime cleanup stress laboratory**<br>Exercise pending frames, image races, nested layers, synchronous hook cleanup, component/root identity, runtime disposal, and repeated mount cycles.           | Diagnostics           | test-laboratory / trusted          | `#/testing/runtime-cleanup-stress`      | [`packages/scenarios/src/cleanup-stress.example.ts`](../packages/scenarios/src/cleanup-stress.example.ts)           |
+|   130 | <a id="runtime-hooks-laboratory"></a>**Runtime and hooks laboratory**<br>Exercise state, memo, ref, synchronous change cleanup, memoized paths, keyed siblings, root identity, falsy children, and public hook misuse.                     | Diagnostics           | test-laboratory / trusted          | `#/testing/runtime-hooks-laboratory`    | [`packages/scenarios/src/runtime-hooks.example.ts`](../packages/scenarios/src/runtime-hooks.example.ts)             |
+|   140 | <a id="layout-foundation"></a>**Layout foundation laboratory**<br>Prove nested Flex, Grid, Overlay, clipping, measurement, observation, and keyed reflow.                                                                                  | Layout diagnostics    | test-laboratory / contract         | `#/testing/layout-foundation`           | [`packages/scenarios/src/layout-foundation.example.ts`](../packages/scenarios/src/layout-foundation.example.ts)     |
+|   150 | <a id="canvas-surface"></a>**Canvas surface laboratory**<br>Verify fixed fitting, responsive logical reflow, high-density backing stores, and logical mouse coordinates.                                                                   | Rendering             | test-laboratory / contract         | `#/testing/canvas-surface`              | [`packages/scenarios/src/canvas-surface.example.ts`](../packages/scenarios/src/canvas-surface.example.ts)           |
 
 ## Test labs by public API
 
 - **CRCController:** [Event lifecycle laboratory](#event-lifecycle-lab)
 - **absolute:** [Layout foundation laboratory](#layout-foundation)
 - **clip:** [Compose a scene](#drawing-composition), [Mouse interaction contract](#mouse-interaction-contract), [Geometry composition matrix](#geometry-composition-matrix), [Event performance laboratory](#event-performance-lab)
-- **crc:** [Baseline smoke](#baseline-smoke), [Mouse interaction contract](#mouse-interaction-contract), [Ordering and overlap laboratory](#interaction-trace-lab), [Event lifecycle laboratory](#event-lifecycle-lab), [Geometry composition matrix](#geometry-composition-matrix), [Event performance laboratory](#event-performance-lab), [Runtime cleanup stress laboratory](#runtime-cleanup-stress), [Runtime and hooks laboratory](#runtime-hooks-laboratory), [Canvas surface laboratory](#canvas-surface)
+- **clipboard events:** [User-event contract laboratory](#interaction-trace-lab)
+- **composition events:** [User-event contract laboratory](#interaction-trace-lab)
+- **crc:** [Baseline smoke](#baseline-smoke), [Mouse interaction contract](#mouse-interaction-contract), [User-event contract laboratory](#interaction-trace-lab), [Event lifecycle laboratory](#event-lifecycle-lab), [Geometry composition matrix](#geometry-composition-matrix), [Event performance laboratory](#event-performance-lab), [Runtime cleanup stress laboratory](#runtime-cleanup-stress), [Runtime and hooks laboratory](#runtime-hooks-laboratory), [Canvas surface laboratory](#canvas-surface)
 - **crcCursor:** [Runtime and hooks laboratory](#runtime-hooks-laboratory)
-- **crcEvent:** [Ordering and overlap laboratory](#interaction-trace-lab)
+- **crcEvent:** [User-event contract laboratory](#interaction-trace-lab)
+- **crcEventListener:** [User-event contract laboratory](#interaction-trace-lab)
+- **crcEventTarget:** [User-event contract laboratory](#interaction-trace-lab)
 - **crcLayoutBox:** [Layout foundation laboratory](#layout-foundation), [Canvas surface laboratory](#canvas-surface)
 - **crcLinePath:** [Runtime and hooks laboratory](#runtime-hooks-laboratory)
 - **crcMemo:** [Runtime and hooks laboratory](#runtime-hooks-laboratory)
@@ -78,40 +82,46 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 - **crcSvgPath:** [Runtime and hooks laboratory](#runtime-hooks-laboratory)
 - **crcWhenChanged:** [Runtime cleanup stress laboratory](#runtime-cleanup-stress), [Runtime and hooks laboratory](#runtime-hooks-laboratory)
 - **defineComp:** [Baseline smoke](#baseline-smoke)
+- **drag events:** [User-event contract laboratory](#interaction-trace-lab)
 - **flex:** [Layout foundation laboratory](#layout-foundation)
 - **g:** [Compose a scene](#drawing-composition), [Mouse interaction contract](#mouse-interaction-contract), [Geometry composition matrix](#geometry-composition-matrix), [Event performance laboratory](#event-performance-lab)
 - **grid:** [Layout foundation laboratory](#layout-foundation)
 - **horizontalLine:** [Draw lines](#drawing-lines)
 - **img:** [Draw images](#drawing-images), [Runtime cleanup stress laboratory](#runtime-cleanup-stress), [Layout foundation laboratory](#layout-foundation)
+- **keyboard events:** [User-event contract laboratory](#interaction-trace-lab)
 - **layer:** [Compose a scene](#drawing-composition), [Mouse interaction contract](#mouse-interaction-contract), [Event lifecycle laboratory](#event-lifecycle-lab), [Geometry composition matrix](#geometry-composition-matrix), [Event performance laboratory](#event-performance-lab), [Runtime cleanup stress laboratory](#runtime-cleanup-stress)
-- **line:** [Draw lines](#drawing-lines), [Ordering and overlap laboratory](#interaction-trace-lab), [Geometry composition matrix](#geometry-composition-matrix)
-- **mouse events:** [Mouse interaction contract](#mouse-interaction-contract), [Ordering and overlap laboratory](#interaction-trace-lab), [Event lifecycle laboratory](#event-lifecycle-lab), [Geometry composition matrix](#geometry-composition-matrix), [Event performance laboratory](#event-performance-lab), [Canvas surface laboratory](#canvas-surface)
+- **line:** [Draw lines](#drawing-lines), [User-event contract laboratory](#interaction-trace-lab), [Geometry composition matrix](#geometry-composition-matrix)
+- **mouse events:** [Mouse interaction contract](#mouse-interaction-contract), [User-event contract laboratory](#interaction-trace-lab), [Event lifecycle laboratory](#event-lifecycle-lab), [Geometry composition matrix](#geometry-composition-matrix), [Event performance laboratory](#event-performance-lab), [Canvas surface laboratory](#canvas-surface)
 - **overlay:** [Layout foundation laboratory](#layout-foundation)
-- **path:** [Draw shapes](#drawing-shapes), [Ordering and overlap laboratory](#interaction-trace-lab)
-- **rect:** [Baseline smoke](#baseline-smoke), [Draw shapes](#drawing-shapes), [Mouse interaction contract](#mouse-interaction-contract), [Ordering and overlap laboratory](#interaction-trace-lab), [Event lifecycle laboratory](#event-lifecycle-lab), [Geometry composition matrix](#geometry-composition-matrix), [Event performance laboratory](#event-performance-lab), [Runtime cleanup stress laboratory](#runtime-cleanup-stress), [Canvas surface laboratory](#canvas-surface)
+- **path:** [Draw shapes](#drawing-shapes), [User-event contract laboratory](#interaction-trace-lab)
+- **pointer events:** [User-event contract laboratory](#interaction-trace-lab)
+- **rect:** [Baseline smoke](#baseline-smoke), [Draw shapes](#drawing-shapes), [Mouse interaction contract](#mouse-interaction-contract), [User-event contract laboratory](#interaction-trace-lab), [Event lifecycle laboratory](#event-lifecycle-lab), [Geometry composition matrix](#geometry-composition-matrix), [Event performance laboratory](#event-performance-lab), [Runtime cleanup stress laboratory](#runtime-cleanup-stress), [Canvas surface laboratory](#canvas-surface)
 - **svgPath:** [Draw shapes](#drawing-shapes)
 - **text:** [Baseline smoke](#baseline-smoke), [Draw text](#drawing-text), [Layout foundation laboratory](#layout-foundation), [Canvas surface laboratory](#canvas-surface)
+- **touch events:** [User-event contract laboratory](#interaction-trace-lab)
 - **verticalLine:** [Draw lines](#drawing-lines)
+- **wheel events:** [User-event contract laboratory](#interaction-trace-lab)
 
 ## By concept
 
-- **activation identity:** [Ordering and overlap laboratory](#interaction-trace-lab)
+- **activation identity:** [User-event contract laboratory](#interaction-trace-lab)
 - **alignment:** [Draw text](#drawing-text)
 - **alpha:** [Draw images](#drawing-images)
 - **async cleanup:** [Runtime cleanup stress laboratory](#runtime-cleanup-stress)
+- **cancellation:** [User-event contract laboratory](#interaction-trace-lab)
 - **click identity:** [Mouse interaction contract](#mouse-interaction-contract)
 - **clip intersection:** [Geometry composition matrix](#geometry-composition-matrix)
 - **clipping:** [Compose a scene](#drawing-composition), [Layout foundation laboratory](#layout-foundation)
 - **coordinate conversion:** [Geometry composition matrix](#geometry-composition-matrix)
 - **coordinates:** [Mouse interaction contract](#mouse-interaction-contract)
-- **cursor parity:** [Ordering and overlap laboratory](#interaction-trace-lab)
+- **cursor parity:** [User-event contract laboratory](#interaction-trace-lab)
 - **custom geometry:** [Draw shapes](#drawing-shapes)
 - **dependency cleanup:** [Runtime and hooks laboratory](#runtime-hooks-laboratory)
 - **device pixel ratio:** [Canvas surface laboratory](#canvas-surface)
 - **dispatch latency:** [Event performance laboratory](#event-performance-lab)
 - **dispose:** [Event lifecycle laboratory](#event-lifecycle-lab)
 - **even-odd fill:** [Compose a scene](#drawing-composition)
-- **event order:** [Mouse interaction contract](#mouse-interaction-contract), [Ordering and overlap laboratory](#interaction-trace-lab)
+- **event order:** [Mouse interaction contract](#mouse-interaction-contract), [User-event contract laboratory](#interaction-trace-lab)
 - **event ownership:** [Event lifecycle laboratory](#event-lifecycle-lab)
 - **explicit size:** [Draw images](#drawing-images)
 - **fill and stroke:** [Draw shapes](#drawing-shapes)
@@ -135,8 +145,11 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 - **paint order:** [Geometry composition matrix](#geometry-composition-matrix)
 - **percentage reflow:** [Layout foundation laboratory](#layout-foundation)
 - **pixel alignment:** [Draw shapes](#drawing-shapes), [Draw lines](#drawing-lines)
+- **pointer capture:** [User-event contract laboratory](#interaction-trace-lab)
 - **polyline:** [Draw lines](#drawing-lines)
+- **propagation:** [User-event contract laboratory](#interaction-trace-lab)
 - **registration:** [Event performance laboratory](#event-performance-lab)
+- **related targets:** [User-event contract laboratory](#interaction-trace-lab)
 - **remount:** [Event lifecycle laboratory](#event-lifecycle-lab)
 - **render:** [Baseline smoke](#baseline-smoke)
 - **rerender stability:** [Event performance laboratory](#event-performance-lab)
@@ -146,8 +159,9 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 - **source lifecycle:** [Draw images](#drawing-images)
 - **state update:** [Baseline smoke](#baseline-smoke)
 - **stroke width:** [Draw lines](#drawing-lines)
+- **target retention:** [User-event contract laboratory](#interaction-trace-lab)
 - **teardown:** [Event lifecycle laboratory](#event-lifecycle-lab)
-- **topmost target:** [Mouse interaction contract](#mouse-interaction-contract), [Ordering and overlap laboratory](#interaction-trace-lab)
+- **topmost target:** [Mouse interaction contract](#mouse-interaction-contract), [User-event contract laboratory](#interaction-trace-lab)
 - **transforms:** [Compose a scene](#drawing-composition)
 - **typography:** [Draw text](#drawing-text)
 - **updates:** [Draw shapes](#drawing-shapes), [Draw lines](#drawing-lines), [Compose a scene](#drawing-composition)
@@ -159,7 +173,7 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 - **Drawing basics:** [Draw shapes](#drawing-shapes), [Draw lines](#drawing-lines), [Draw text](#drawing-text), [Draw images](#drawing-images)
 - **Drawing composition:** [Compose a scene](#drawing-composition)
 - **Getting started:** [Baseline smoke](#baseline-smoke)
-- **Interaction contracts:** [Mouse interaction contract](#mouse-interaction-contract), [Ordering and overlap laboratory](#interaction-trace-lab), [Geometry composition matrix](#geometry-composition-matrix)
+- **Interaction contracts:** [Mouse interaction contract](#mouse-interaction-contract), [User-event contract laboratory](#interaction-trace-lab), [Geometry composition matrix](#geometry-composition-matrix)
 - **Layout diagnostics:** [Layout foundation laboratory](#layout-foundation)
 - **Rendering:** [Canvas surface laboratory](#canvas-surface)
 
@@ -168,4 +182,4 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 - **documentation-candidate / baseline:** [Baseline smoke](#baseline-smoke)
 - **documentation-candidate / contract:** [Draw shapes](#drawing-shapes), [Draw lines](#drawing-lines), [Draw text](#drawing-text), [Draw images](#drawing-images), [Compose a scene](#drawing-composition)
 - **test-laboratory / contract:** [Mouse interaction contract](#mouse-interaction-contract), [Layout foundation laboratory](#layout-foundation), [Canvas surface laboratory](#canvas-surface)
-- **test-laboratory / trusted:** [Ordering and overlap laboratory](#interaction-trace-lab), [Event lifecycle laboratory](#event-lifecycle-lab), [Geometry composition matrix](#geometry-composition-matrix), [Event performance laboratory](#event-performance-lab), [Runtime cleanup stress laboratory](#runtime-cleanup-stress), [Runtime and hooks laboratory](#runtime-hooks-laboratory)
+- **test-laboratory / trusted:** [User-event contract laboratory](#interaction-trace-lab), [Event lifecycle laboratory](#event-lifecycle-lab), [Geometry composition matrix](#geometry-composition-matrix), [Event performance laboratory](#event-performance-lab), [Runtime cleanup stress laboratory](#runtime-cleanup-stress), [Runtime and hooks laboratory](#runtime-hooks-laboratory)

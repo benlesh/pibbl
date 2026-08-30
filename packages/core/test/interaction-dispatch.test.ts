@@ -3,6 +3,15 @@ import type {
   CRCInteractionRegion,
   CRCMouseEventListener,
 } from '../src/lib/types';
+import type {
+  EventTraceEntry,
+  InteractionLabState,
+  ScenarioController,
+} from '@crc/scenarios';
+import {
+  interactionLabScenarioEntry,
+  loadScenario,
+} from '@crc/scenarios';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { defineComp } from '../src/lib/define-comp';
 import { executeRender } from '../src/lib/execute-render';
@@ -13,9 +22,13 @@ import {
   createTarget,
   updateLegacyTarget,
 } from '../src/lib/events/registrations';
+import { dispatchToLogicalTarget } from '../src/lib/events/dispatch';
 import { overlay, rect } from '../src/index';
 
 const activeInstances = new Set<CRCInstance>();
+const activeScenarioControllers = new Set<
+  ScenarioController<InteractionLabState>
+>();
 const EmptyScene = defineComp<Record<string, never>>(() => undefined);
 
 function mountDispatchHarness(
@@ -76,14 +89,111 @@ function region(
   return target;
 }
 
-afterEach(() => {
+afterEach(async () => {
   for (const instance of activeInstances) {
     instance.controller.dispose();
   }
   activeInstances.clear();
+  await Promise.all(
+    Array.from(activeScenarioControllers, controller => controller.dispose()),
+  );
+  activeScenarioControllers.clear();
   vi.restoreAllMocks();
   document.body.replaceChildren();
 });
+
+function semanticTrace(trace: readonly EventTraceEntry[]) {
+  return trace.map(entry => ({
+    type: entry.type,
+    target: entry.target,
+    phase: entry.phase,
+    relatedTarget: entry.relatedTarget,
+    canceled: entry.canceled,
+    fields: entry.fields,
+  }));
+}
+
+async function mountEventFixture(fixture: string) {
+  const canvas = document.createElement('canvas');
+  canvas.width = interactionLabScenarioEntry.canvas.width;
+  canvas.height = interactionLabScenarioEntry.canvas.height;
+  canvas.style.cssText = 'display:block; width:480px; height:240px';
+  document.body.replaceChildren(canvas);
+  const definition = await loadScenario(interactionLabScenarioEntry);
+  const controller = await definition.mount({ canvas });
+  activeScenarioControllers.add(controller);
+  await controller.perform(`show-${fixture}`);
+  await controller.settled();
+  return { canvas, controller };
+}
+
+function dispatchPointer(
+  canvas: HTMLCanvasElement,
+  type: string,
+  x: number,
+  y: number,
+  init: PointerEventInit = {},
+): PointerEvent {
+  const bounds = canvas.getBoundingClientRect();
+  const event = new PointerEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    clientX: bounds.left + x,
+    clientY: bounds.top + y,
+    pointerId: 31,
+    pointerType: 'pen',
+    ...init,
+  });
+  canvas.dispatchEvent(event);
+  return event;
+}
+
+function createTouch(
+  canvas: HTMLCanvasElement,
+  identifier: number,
+  x: number,
+  y: number,
+): Touch {
+  const bounds = canvas.getBoundingClientRect();
+  return new Touch({
+    identifier,
+    target: canvas,
+    clientX: bounds.left + x,
+    clientY: bounds.top + y,
+  });
+}
+
+function dispatchTouch(
+  canvas: HTMLCanvasElement,
+  type: 'touchend' | 'touchmove' | 'touchstart',
+  touches: Touch[],
+  changedTouches: Touch[],
+): void {
+  canvas.dispatchEvent(new TouchEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    touches,
+    targetTouches: touches,
+    changedTouches,
+  }));
+}
+
+function dispatchDrag(
+  canvas: HTMLCanvasElement,
+  type: 'dragover' | 'drop',
+  x: number,
+  y: number,
+  dataTransfer: DataTransfer,
+): void {
+  const bounds = canvas.getBoundingClientRect();
+  canvas.dispatchEvent(new DragEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    clientX: bounds.left + x,
+    clientY: bounds.top + y,
+    dataTransfer,
+  }));
+}
 
 describe('interaction dispatcher mutation contract', () => {
   it('selects the topmost laid-out child and rejects clipped paint overflow', () => {
@@ -236,5 +346,259 @@ describe('interaction dispatcher mutation contract', () => {
     expect(calls).toEqual(['left-out']);
     expect(instance.regions).toEqual(new Set([left]));
     expect(GLOBAL_STATE.crcInstances.get(canvas)).toBe(instance);
+  });
+});
+
+describe('shared public user-event laboratory', () => {
+  it('freezes listener capture, target, and bubble order with phases', async () => {
+    const { canvas, controller } = await mountEventFixture('propagation');
+
+    dispatchPointer(canvas, 'pointerdown', 150, 120);
+
+    expect(semanticTrace(controller.getState().trace)).toEqual([
+      {
+        type: 'pointerdown',
+        target: 'parent-capture',
+        phase: 1,
+        relatedTarget: null,
+        canceled: false,
+        fields: { pointerId: 31, pointerType: 'pen' },
+      },
+      {
+        type: 'pointerdown',
+        target: 'target-capture',
+        phase: 2,
+        relatedTarget: null,
+        canceled: false,
+        fields: { pointerId: 31, pointerType: 'pen' },
+      },
+      {
+        type: 'pointerdown',
+        target: 'target',
+        phase: 2,
+        relatedTarget: null,
+        canceled: false,
+        fields: { pointerId: 31, pointerType: 'pen' },
+      },
+      {
+        type: 'pointerdown',
+        target: 'parent-bubble',
+        phase: 3,
+        relatedTarget: null,
+        canceled: false,
+        fields: { pointerId: 31, pointerType: 'pen' },
+      },
+    ]);
+  });
+
+  it('routes captured pointer movement outside custom target geometry', async () => {
+    const { canvas, controller } = await mountEventFixture('pointer-capture');
+    const active = new Set<number>();
+    vi.spyOn(canvas, 'setPointerCapture').mockImplementation(pointerId => {
+      active.add(pointerId);
+    });
+    vi.spyOn(canvas, 'hasPointerCapture').mockImplementation(pointerId =>
+      active.has(pointerId));
+    vi.spyOn(canvas, 'releasePointerCapture').mockImplementation(pointerId => {
+      active.delete(pointerId);
+    });
+
+    dispatchPointer(canvas, 'pointerdown', 150, 120);
+    dispatchPointer(canvas, 'gotpointercapture', 150, 120);
+    dispatchPointer(canvas, 'pointermove', 430, 210);
+    dispatchPointer(canvas, 'pointerup', 430, 210);
+    dispatchPointer(canvas, 'lostpointercapture', 430, 210);
+
+    expect(semanticTrace(controller.getState().trace)).toEqual([
+      {
+        type: 'pointerdown', target: 'custom-capture', phase: 2,
+        relatedTarget: null, canceled: false,
+        fields: { captured: true, pointerId: 31, x: 150, y: 120 },
+      },
+      {
+        type: 'gotpointercapture', target: 'custom-capture', phase: 2,
+        relatedTarget: null, canceled: false,
+        fields: { captured: true, pointerId: 31, x: 150, y: 120 },
+      },
+      {
+        type: 'pointermove', target: 'custom-capture', phase: 2,
+        relatedTarget: null, canceled: false,
+        fields: { captured: true, pointerId: 31, x: 430, y: 210 },
+      },
+      {
+        type: 'pointerup', target: 'custom-capture', phase: 2,
+        relatedTarget: null, canceled: false,
+        fields: { captured: false, pointerId: 31, x: 430, y: 210 },
+      },
+      {
+        type: 'lostpointercapture', target: 'custom-capture', phase: 2,
+        relatedTarget: null, canceled: false,
+        fields: { captured: false, pointerId: 31, x: 430, y: 210 },
+      },
+    ]);
+  });
+
+  it('retains a touch contact target through movement outside geometry', async () => {
+    const { canvas, controller } = await mountEventFixture('touch-retention');
+    const start = createTouch(canvas, 7, 150, 120);
+    const moved = createTouch(canvas, 7, 430, 210);
+
+    dispatchTouch(canvas, 'touchstart', [start], [start]);
+    dispatchTouch(canvas, 'touchmove', [moved], [moved]);
+    dispatchTouch(canvas, 'touchend', [], [moved]);
+
+    expect(semanticTrace(controller.getState().trace)).toEqual([
+      {
+        type: 'touchstart', target: 'touch-owner', phase: 2,
+        relatedTarget: null, canceled: false,
+        fields: { changed: '7', touches: '7', x: 150, y: 120 },
+      },
+      {
+        type: 'touchmove', target: 'touch-owner', phase: 2,
+        relatedTarget: null, canceled: false,
+        fields: { changed: '7', touches: '7', x: 430, y: 210 },
+      },
+      {
+        type: 'touchend', target: 'touch-owner', phase: 2,
+        relatedTarget: null, canceled: false,
+        fields: { changed: '7', touches: '', x: 430, y: 210 },
+      },
+    ]);
+  });
+
+  it('projects wheel deltas and forwards logical cancellation to native input', async () => {
+    const { canvas, controller } = await mountEventFixture('wheel-cancellation');
+    const bounds = canvas.getBoundingClientRect();
+    const event = new WheelEvent('wheel', {
+      bubbles: true,
+      cancelable: true,
+      clientX: bounds.left + 150,
+      clientY: bounds.top + 120,
+      deltaX: 4,
+      deltaY: 18,
+      deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+    });
+
+    const accepted = canvas.dispatchEvent(event);
+
+    expect(accepted).toBe(false);
+    expect(event.defaultPrevented).toBe(true);
+    expect(semanticTrace(controller.getState().trace)).toEqual([
+      {
+        type: 'wheel', target: 'wheel-target', phase: 2,
+        relatedTarget: null, canceled: true,
+        fields: { deltaMode: 0, deltaX: 4, deltaY: 18 },
+      },
+    ]);
+  });
+
+  it('projects keyboard and composition fields through explicit logical transport', async () => {
+    const { canvas, controller } = await mountEventFixture('keyboard-fields');
+    const instance = GLOBAL_STATE.crcInstances.get(canvas)!;
+    const target = Array.from(instance.eventRoot.targets)[0]!;
+
+    dispatchToLogicalTarget('keydown', target, new KeyboardEvent('keydown', {
+      bubbles: true,
+      cancelable: true,
+      code: 'KeyK',
+      isComposing: true,
+      key: 'k',
+      repeat: true,
+      shiftKey: true,
+    }));
+    expect(semanticTrace(controller.getState().trace)).toEqual([
+      {
+        type: 'keydown', target: 'keyboard-target', phase: 2,
+        relatedTarget: null, canceled: false,
+        fields: {
+          code: 'KeyK', isComposing: true, key: 'k', repeat: true,
+          shiftKey: true,
+        },
+      },
+    ]);
+
+    await controller.perform('show-composition');
+    const compositionTarget = Array.from(instance.eventRoot.targets)[0]!;
+    for (const [type, data] of [
+      ['compositionstart', 'に'],
+      ['compositionupdate', '日本'],
+      ['compositionend', '日本語'],
+    ] as const) {
+      dispatchToLogicalTarget(
+        type,
+        compositionTarget,
+        new CompositionEvent(type, { bubbles: true, data }),
+      );
+    }
+    expect(semanticTrace(controller.getState().trace)).toEqual([
+      {
+        type: 'compositionstart', target: 'composition-target', phase: 2,
+        relatedTarget: null, canceled: false, fields: { data: 'に' },
+      },
+      {
+        type: 'compositionupdate', target: 'composition-target', phase: 2,
+        relatedTarget: null, canceled: false, fields: { data: '日本' },
+      },
+      {
+        type: 'compositionend', target: 'composition-target', phase: 2,
+        relatedTarget: null, canceled: false, fields: { data: '日本語' },
+      },
+    ]);
+  });
+
+  it('projects clipboard payload and drag/drop boundary relationships', async () => {
+    const { canvas, controller } = await mountEventFixture('clipboard');
+    const instance = GLOBAL_STATE.crcInstances.get(canvas)!;
+    const clipboardTarget = Array.from(instance.eventRoot.targets)[0]!;
+    const clipboardData = new DataTransfer();
+    clipboardData.setData('text/plain', 'CRC clipboard');
+
+    dispatchToLogicalTarget('paste', clipboardTarget, new ClipboardEvent('paste', {
+      bubbles: true,
+      cancelable: true,
+      clipboardData,
+    }));
+    expect(semanticTrace(controller.getState().trace)).toEqual([
+      {
+        type: 'paste', target: 'clipboard-target', phase: 2,
+        relatedTarget: null, canceled: false,
+        fields: { text: 'CRC clipboard' },
+      },
+    ]);
+
+    await controller.perform('show-drag-drop');
+    const dragData = new DataTransfer();
+    dragData.setData('text/plain', 'CRC drag');
+    dispatchDrag(canvas, 'dragover', 120, 120, dragData);
+    dispatchDrag(canvas, 'dragover', 360, 120, dragData);
+    dispatchDrag(canvas, 'drop', 360, 120, dragData);
+    expect(semanticTrace(controller.getState().trace)).toEqual([
+      {
+        type: 'dragenter', target: 'drag-a', phase: 2,
+        relatedTarget: null, canceled: false, fields: { text: 'CRC drag' },
+      },
+      {
+        type: 'dragover', target: 'drag-a', phase: 2,
+        relatedTarget: null, canceled: false, fields: { text: 'CRC drag' },
+      },
+      {
+        type: 'dragleave', target: 'drag-a', phase: 2,
+        relatedTarget: 'other', canceled: false,
+        fields: { text: 'CRC drag' },
+      },
+      {
+        type: 'dragenter', target: 'drag-b', phase: 2,
+        relatedTarget: 'other', canceled: false,
+        fields: { text: 'CRC drag' },
+      },
+      {
+        type: 'dragover', target: 'drag-b', phase: 2,
+        relatedTarget: null, canceled: false, fields: { text: 'CRC drag' },
+      },
+      {
+        type: 'drop', target: 'drag-b', phase: 2,
+        relatedTarget: null, canceled: false, fields: { text: 'CRC drag' },
+      },
+    ]);
   });
 });

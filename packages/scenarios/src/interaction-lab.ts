@@ -24,6 +24,14 @@ export type {
 } from './interaction-lab.example';
 
 const FIXTURES: readonly InteractionLabFixture[] = [
+  'propagation',
+  'pointer-capture',
+  'touch-retention',
+  'wheel-cancellation',
+  'keyboard-fields',
+  'composition',
+  'clipboard',
+  'drag-drop',
   'regions',
   'overlap',
   'nested',
@@ -309,7 +317,14 @@ function formatTrace(state: Readonly<InteractionLabState>): string {
   if (!state.trace.length) {
     return 'none';
   }
-  return state.trace.map(entry => `${entry.type}(${entry.target})`).join(' → ');
+  return state.trace.map(entry => {
+    const phase = entry.phase ? `:${entry.phase}` : '';
+    const canceled = entry.canceled ? ':canceled' : '';
+    const fields = Object.entries(entry.fields)
+      .map(([key, value]) => `${key}=${String(value)}`)
+      .join(',');
+    return `${entry.type}(${entry.target}${phase}${canceled}${fields ? `;${fields}` : ''})`;
+  }).join(' → ');
 }
 
 export const interactionLabScenario: ScenarioDefinition<InteractionLabState> = {

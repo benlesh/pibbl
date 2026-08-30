@@ -1,7 +1,19 @@
-import type { CRCLogicalMouseEvent, CRCMouseEvent } from '@crc/core';
+import type {
+  CRCClipboardEvent,
+  CRCCompositionEvent,
+  CRCDragEvent,
+  CRCEvent,
+  CRCKeyboardEvent,
+  CRCLogicalMouseEvent,
+  CRCMouseEvent,
+  CRCPointerEvent,
+  CRCTouchEvent,
+} from '@crc/core';
 import type { EventTraceInput, TraceEventType } from './event-trace';
 import {
   crcEvent,
+  crcEventListener,
+  crcEventTarget,
   defineComp,
   g,
   line,
@@ -13,9 +25,13 @@ import {
 export const INTERACTION_LAB_SOURCE_ID = 'interaction-trace-lab-example';
 
 export type InteractionLabFixture =
+  | 'clipboard'
+  | 'composition'
+  | 'drag-drop'
   | 'fill'
   | 'fill-stroke'
   | 'interaction-width'
+  | 'keyboard-fields'
   | 'nested'
   | 'no-hit'
   | 'observer'
@@ -23,10 +39,14 @@ export type InteractionLabFixture =
   | 'observer-replace'
   | 'observer-throwing'
   | 'overlap'
+  | 'pointer-capture'
+  | 'propagation'
   | 'remove-target-after-transition'
   | 'regions'
   | 'stroke'
-  | 'transparent';
+  | 'touch-retention'
+  | 'transparent'
+  | 'wheel-cancellation';
 
 export type InteractionLabAction =
   | 'clear-trace'
@@ -93,6 +113,59 @@ function recordEvent(
     event: event.originalEvent,
     relatedTarget: null,
   }, handlerGeneration);
+}
+
+type TraceLogicalEvent = Pick<
+  CRCEvent,
+  'defaultPrevented' | 'eventPhase' | 'originalEvent' | 'relatedTarget'
+> & Partial<Pick<CRCLogicalMouseEvent, 'x' | 'y'>>;
+
+function recordLogicalEvent(
+  record: InteractionLabRecord,
+  type: TraceEventType,
+  target: string,
+  event: TraceLogicalEvent,
+  fields: EventTraceInput['fields'],
+): void {
+  record({
+    source: 'crc',
+    type,
+    target,
+    x: Math.round(event.x ?? 0),
+    y: Math.round(event.y ?? 0),
+    event: event.originalEvent instanceof MouseEvent ? event.originalEvent : undefined,
+    relatedTarget: event.relatedTarget ? 'other' : null,
+    phase: event.eventPhase,
+    canceled: event.defaultPrevented,
+    fields,
+  });
+}
+
+function pointerFields(event: CRCPointerEvent) {
+  return {
+    pointerId: event.pointerId,
+    pointerType: event.pointerType,
+  } as const;
+}
+
+function captureFields(event: CRCPointerEvent) {
+  return {
+    captured: event.currentTarget.hasPointerCapture(event.pointerId),
+    pointerId: event.pointerId,
+    x: Math.round(event.x),
+    y: Math.round(event.y),
+  } as const;
+}
+
+function touchFields(event: CRCTouchEvent) {
+  const identifiers = (touches: TouchList) =>
+    Array.from(touches, touch => touch.identifier).join(',');
+  return {
+    changed: identifiers(event.changedTouches),
+    touches: identifiers(event.touches),
+    x: Math.round(event.x),
+    y: Math.round(event.y),
+  } as const;
 }
 
 function traceHandlers(
@@ -216,9 +289,267 @@ const NestedInteractiveAncestor = defineComp<NestedAncestorProps>(({ record }) =
   ];
 });
 
+const PropagationTarget = defineComp<NestedAncestorProps>(({ record }) => rect({
+  key: 'propagation-target',
+  style: {
+    x: 120,
+    y: 72,
+    width: 240,
+    height: 112,
+    fill: '#2563eb',
+    stroke: '#1e3a8a',
+    strokeWidth: 2,
+    cursor: 'pointer',
+  },
+  onPointerDownCapture: event => recordLogicalEvent(
+    record,
+    'pointerdown',
+    'target-capture',
+    event,
+    pointerFields(event),
+  ),
+  onPointerDown: event => recordLogicalEvent(
+    record,
+    'pointerdown',
+    'target',
+    event,
+    pointerFields(event),
+  ),
+}));
+
+const PropagationFixture = defineComp<NestedAncestorProps>(({ record }) => {
+  crcEventListener({
+    onPointerDownCapture: event => recordLogicalEvent(
+      record,
+      'pointerdown',
+      'parent-capture',
+      event,
+      pointerFields(event),
+    ),
+    onPointerDown: event => recordLogicalEvent(
+      record,
+      'pointerdown',
+      'parent-bubble',
+      event,
+      pointerFields(event),
+    ),
+  });
+  return PropagationTarget({ record });
+});
+
+const CustomPointerCapture = defineComp<NestedAncestorProps>(({ record }) => {
+  const geometry = rectanglePath(120, 72, 240, 112);
+  const trace = (
+    type: 'gotpointercapture' | 'lostpointercapture' | 'pointerdown' | 'pointermove' | 'pointerup',
+  ) => (event: CRCPointerEvent) => {
+    if (type === 'pointerdown') {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } else if (type === 'pointerup') {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    recordLogicalEvent(record, type, 'custom-capture', event, captureFields(event));
+  };
+  crcEventTarget({
+    onGotPointerCapture: trace('gotpointercapture'),
+    onLostPointerCapture: trace('lostpointercapture'),
+    onPointerDown: trace('pointerdown'),
+    onPointerMove: trace('pointermove'),
+    onPointerUp: trace('pointerup'),
+  }, {
+    path: geometry,
+    fill: true,
+    cursor: 'grab',
+  });
+  return crcPath({
+    key: 'custom-capture-art',
+    style: {
+      d: geometry,
+      fill: '#0f766e',
+      stroke: '#134e4a',
+      strokeWidth: 2,
+    },
+  });
+});
+
+function touchRetention(record: InteractionLabRecord) {
+  const trace = (type: 'touchend' | 'touchmove' | 'touchstart') =>
+    (event: CRCTouchEvent) => recordLogicalEvent(
+      record,
+      type,
+      'touch-owner',
+      event,
+      touchFields(event),
+    );
+  return rect({
+    key: 'touch-owner',
+    style: {
+      x: 120,
+      y: 72,
+      width: 240,
+      height: 112,
+      fill: '#7c3aed',
+      stroke: '#581c87',
+      strokeWidth: 2,
+    },
+    onTouchStart: trace('touchstart'),
+    onTouchMove: trace('touchmove'),
+    onTouchEnd: trace('touchend'),
+  });
+}
+
+function wheelCancellation(record: InteractionLabRecord) {
+  return rect({
+    key: 'wheel-target',
+    style: {
+      x: 120,
+      y: 72,
+      width: 240,
+      height: 112,
+      fill: '#c2410c',
+      stroke: '#7c2d12',
+      strokeWidth: 2,
+    },
+    onWheel: event => {
+      event.preventDefault();
+      recordLogicalEvent(record, 'wheel', 'wheel-target', event, {
+        deltaMode: event.deltaMode,
+        deltaX: event.deltaX,
+        deltaY: event.deltaY,
+      });
+    },
+  });
+}
+
+function keyboardFields(record: InteractionLabRecord) {
+  return rect({
+    key: 'keyboard-target',
+    style: {
+      x: 120,
+      y: 72,
+      width: 240,
+      height: 112,
+      fill: '#0369a1',
+      stroke: '#0c4a6e',
+      strokeWidth: 2,
+    },
+    onKeyDown: (event: CRCKeyboardEvent) => recordLogicalEvent(
+      record,
+      'keydown',
+      'keyboard-target',
+      event,
+      {
+        code: event.code,
+        isComposing: event.isComposing,
+        key: event.key,
+        repeat: event.repeat,
+        shiftKey: event.shiftKey,
+      },
+    ),
+  });
+}
+
+function composition(record: InteractionLabRecord) {
+  const trace = (
+    type: 'compositionend' | 'compositionstart' | 'compositionupdate',
+  ) => (event: CRCCompositionEvent) => recordLogicalEvent(
+    record,
+    type,
+    'composition-target',
+    event,
+    { data: event.data },
+  );
+  return rect({
+    key: 'composition-target',
+    style: {
+      x: 120,
+      y: 72,
+      width: 240,
+      height: 112,
+      fill: '#be185d',
+      stroke: '#831843',
+      strokeWidth: 2,
+    },
+    onCompositionStart: trace('compositionstart'),
+    onCompositionUpdate: trace('compositionupdate'),
+    onCompositionEnd: trace('compositionend'),
+  });
+}
+
+function clipboard(record: InteractionLabRecord) {
+  return rect({
+    key: 'clipboard-target',
+    style: {
+      x: 120,
+      y: 72,
+      width: 240,
+      height: 112,
+      fill: '#4f46e5',
+      stroke: '#312e81',
+      strokeWidth: 2,
+    },
+    onPaste: (event: CRCClipboardEvent) => recordLogicalEvent(
+      record,
+      'paste',
+      'clipboard-target',
+      event,
+      { text: event.clipboardData?.getData('text/plain') ?? '' },
+    ),
+  });
+}
+
+function dragDrop(record: InteractionLabRecord) {
+  const region = (target: 'drag-a' | 'drag-b', x: number, fill: string) => {
+    const trace = (
+      type: 'dragenter' | 'dragleave' | 'dragover' | 'drop',
+    ) => (event: CRCDragEvent) => recordLogicalEvent(
+      record,
+      type,
+      target,
+      event,
+      { text: event.dataTransfer?.getData('text/plain') ?? '' },
+    );
+    return rect({
+      key: target,
+      style: {
+        x,
+        y: 72,
+        width: 180,
+        height: 112,
+        fill,
+        stroke: '#334155',
+        strokeWidth: 2,
+      },
+      onDragEnter: trace('dragenter'),
+      onDragLeave: trace('dragleave'),
+      onDragOver: trace('dragover'),
+      onDrop: trace('drop'),
+    });
+  };
+  return [
+    region('drag-a', 38, '#2563eb'),
+    region('drag-b', 262, '#7c3aed'),
+  ];
+}
+
 function caseVisual(state: Readonly<InteractionLabState>, record: InteractionLabRecord) {
   const geometry = rectanglePath(90, 66, 220, 124);
   switch (state.fixture) {
+    case 'propagation':
+      return [PropagationFixture({ record })];
+    case 'pointer-capture':
+      return [CustomPointerCapture({ record })];
+    case 'touch-retention':
+      return [touchRetention(record)];
+    case 'wheel-cancellation':
+      return [wheelCancellation(record)];
+    case 'keyboard-fields':
+      return [keyboardFields(record)];
+    case 'composition':
+      return [composition(record)];
+    case 'clipboard':
+      return [clipboard(record)];
+    case 'drag-drop':
+      return dragDrop(record);
     case 'regions':
       return basicRegions(state, record);
     case 'remove-target-after-transition': {

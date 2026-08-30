@@ -1,8 +1,13 @@
 # CRC event resource ownership
 
-Status: implemented by TFC-03 on 2026-08-11.
+Status: implemented by TFC-03 and extended by the DOM-aligned user-event
+delivery on 2026-08-29.
 
-This contract assigns every event-related resource to one owner and one idempotent release path. It supplements the [mouse interaction contract](./mouse-interaction-contract.md): this document governs lifetime and failure isolation, while TFC-04 and TFC-05 govern final target order and geometry.
+This contract assigns every event-related resource to one owner and one
+idempotent release path. It supplements the [user-event
+contract](./user-events-contract.md) and [mouse interaction
+contract](./mouse-interaction-contract.md): this document governs lifetime and
+failure isolation, while those documents govern dispatch and geometry.
 
 ## Public lifetime
 
@@ -30,7 +35,12 @@ Existing callers may ignore the additive return value. Retaining a controller do
 | ----------------------------- | -------------------------------------- | -------------------------------------- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | Root instance-map entry       | Mount/controller identity              | First `crc()` for a Canvas             | Matching signal/controller disposal                           | The entry is absent; a newer identity is untouched.                                       |
 | Abort subscription            | Root instance main teardown            | Mount with a signal                    | Any disposal path                                             | The abort listener is detached and later abort is harmless.                               |
-| Eight native Canvas listeners | Root instance main teardown            | Root mount                             | Any disposal path                                             | Every listener is explicitly removed once, even without a signal.                         |
+| Per-type native Canvas listener | Root event hub                       | First live requester for that type     | Last requester release or root disposal                       | At most one native listener exists for the type; removal uses the matching capture option. |
+| Grouped event target             | Built-in slot or `crcEventTarget` hook | Render with handlers/cursor/focus metadata | Last active property removed, component removal, or disposal | Target, paint entry, native requests, captures, contacts, drag hover, and cursor references are absent. |
+| Propagation listener             | One `crcEventListener` hook slot     | Render with at least one handler       | Last handler removed, component removal, or disposal          | The exact component bucket member and native requests are absent.                         |
+| Logical pointer capture          | Capturing live event node and root capture state | Successful native `setPointerCapture` request | Release, cancel, native loss, node removal, or disposal | Per-pointer active/provisional/pending-loss records and prerequisite native requests settle to zero. |
+| Retained touch contact           | Root dispatcher, keyed by identifier | Hit-resolved `touchstart`              | `touchend`, `touchcancel`, target removal, or disposal         | No identifier refers to a dead logical target.                                            |
+| Drag hover target                | Root dispatcher                     | Drag boundary reconciliation           | Root leave, drop, drag end, target removal, or disposal        | No drag boundary state refers to a dead logical target.                                   |
 | Pending animation frame       | CRC instance                           | Each update                            | Replacement, callback completion, or disposal                 | The exact frame identity is canceled/completed; a stale callback is a no-op.              |
 | Component/main follower       | Mounted component                      | First component render                 | Component removal or instance disposal                        | Component teardown closes once and detaches from its parent.                              |
 | Interaction region            | One persistent component path slot     | Render with a handler or cursor        | Last interactive prop removed, component removal, or disposal | The owner-local region and paint entry are absent; root state no longer references it.    |
@@ -48,16 +58,44 @@ The controller first verifies that the global Canvas entry is the exact instance
 1. cancels the currently owned animation frame, including the legal frame id `0`;
 2. removes the global instance entry;
 3. executes the instance's stable main-teardown snapshot;
-4. lets component teardown cascade through event bindings and nested layers;
-5. clears registries and component refs as a final unreachable-state guarantee.
+4. lets component teardown cascade through grouped targets, propagation
+   listeners, legacy observers, pointer captures, and nested layers;
+5. disposes the root native-listener hub and clears pointer, touch, drag,
+   activation, hover, cursor, registry, and component references as a final
+   unreachable-state guarantee.
 
 The identity check makes stale controllers harmless. Frame callbacks also check instance identity, open teardown state, and their exact frame id before rendering, so a callback already dequeued by the browser cannot resurrect a disposed mount.
 
 ## Replacement, removal, and errors
 
-Every rendered interaction path owns one persistent region slot containing all current mouse handlers and its optional cursor. Rerender updates that region in place and refreshes its local paint position without changing logical identity. If the last interactive prop disappears, component teardown removes its owner-local region and paint entry and clears any root hover, activation, or cursor state that still references it.
+Every rendered built-in or `crcEventTarget` path owns one persistent grouped
+target slot containing all current event handlers and its optional cursor/focus
+metadata. Rerender updates that target in place and refreshes its local paint
+position without changing logical identity. `crcEventListener` similarly owns
+one stable non-geometric registration. If the last active property disappears,
+teardown removes the exact registration and clears native requests, pointer
+capture, retained touch contacts, drag hover, mouse hover/activation, and cursor
+state that still references it.
 
-The one root dispatcher snapshots each planned callback set, verifies that its intended leaf region remains live before calling it, and isolates each error with `reportError`. Removal during dispatch therefore remains effective, additions wait for the next native event, and one thrown handler cannot prevent later handlers or final cleanup. Layer target bridges no longer exist: root resolution recursively composes owner-local paint entries, transforms, clips, and layer bounds while preserving the stable leaf identity.
+The root dispatcher snapshots one temporary ancestry route, then re-reads each
+node's liveness and current handler before invocation. Removal during dispatch
+therefore remains effective, route additions wait for the next event, and one
+thrown handler cannot prevent later handlers or final cleanup. Layers share the
+root event state and use one explicit parent-component bridge solely while
+constructing temporary paths; teardown clears that bridge before recursively
+disposing the child instance.
+
+Native acquisition includes logical prerequisites: boundary handlers own the
+movement/root-exit inputs that derive their events; click/double-click own
+down/up history; touch handlers own start and terminal inputs needed to retain
+and release contacts; drag boundary handlers own establishment, movement, and
+terminal inputs; active pointer capture owns got/lost notifications. Cancellable
+touch and wheel listeners are non-passive. Reference counts still collapse all
+requesters to one actual Canvas listener per type.
+
+A root `OffscreenCanvas` has an event root but no native DOM listener hub.
+Managed offscreen layers under an HTML Canvas share that root's listeners and
+state. Root disposal clears both forms without relying on garbage collection.
 
 `Teardowns.execute()` closes before invoking a stable snapshot. Every entry is attempted once; an exception is reported without stopping the remaining releases. Repeated execution and resources added after closure are safe.
 
@@ -78,6 +116,11 @@ The TFC-03 suites prove:
 - an update-time signal cannot dispose the existing mount, while its original mount signal still can.
 
 TFC-04 and TFC-05 additionally prove that removing a live layer returns parent paint entries, root observers, root cursor defaults, hover/cursor state, and offscreen instances to their exact pre-layer ledgers with no ghost calls.
+
+The DOM-aligned event suites additionally prove lazy per-type acquisition,
+grouped target/listener replacement, prerequisite ownership, pointer-capture
+transactions, retained touch and drag cleanup, cross-layer propagation,
+pathless legacy observer ordering, and exact zero state after disposal.
 
 ## Deliberate boundary
 

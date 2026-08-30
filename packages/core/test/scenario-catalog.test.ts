@@ -1,5 +1,6 @@
 import type { ScenarioCatalogRecord } from '@crc/scenarios';
 import {
+  interactionLabScenarioEntry,
   loadScenario,
   scenarioCatalog,
   scenarioCatalogIndex,
@@ -19,6 +20,34 @@ afterEach(async () => {
 });
 
 describe('scenario catalog trust gate', () => {
+  it('publishes the complete shared user-event laboratory action surface', () => {
+    expect(interactionLabScenarioEntry.actions.map(action => action.id)).toEqual(
+      expect.arrayContaining([
+        'show-propagation',
+        'show-pointer-capture',
+        'show-touch-retention',
+        'show-wheel-cancellation',
+        'show-keyboard-fields',
+        'show-composition',
+        'show-clipboard',
+        'show-drag-drop',
+      ]),
+    );
+    expect(interactionLabScenarioEntry.metadata.apiTags).toEqual(
+      expect.arrayContaining([
+        'crcEventListener',
+        'crcEventTarget',
+        'pointer events',
+        'touch events',
+        'wheel events',
+        'keyboard events',
+        'composition events',
+        'clipboard events',
+        'drag events',
+      ]),
+    );
+  });
+
   it('discovers exactly one catalog entry for every executable example', () => {
     expect(validateScenarioCatalog(scenarioCatalog)).toBe(scenarioCatalog);
     expect(scenarioCatalog.map(entry => entry.source.path).sort()).toEqual(

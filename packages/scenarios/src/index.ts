@@ -84,6 +84,8 @@ export type {
 export type { SmokeScenarioAction, SmokeScenarioState } from './smoke.example';
 export { EventTraceRecorder } from './event-trace';
 export type {
+  EventTraceField,
+  EventTraceFields,
   EventTraceEntry,
   EventTraceInput,
   TraceEventType,
@@ -91,8 +93,10 @@ export type {
 } from './event-trace';
 export type {
   InteractionLabAction,
+  InteractionLabFixture,
   InteractionLabState,
 } from './interaction-lab.example';
+export { INTERACTION_LAB_ACTION_IDS } from './interaction-lab';
 export type {
   LifecycleLabAction,
   LifecycleLabLastAction,

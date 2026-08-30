@@ -1,8 +1,12 @@
 # CRC mouse interaction contract
 
-Status: implemented through the Canvas surface contract on 2026-08-19. The
-root-Canvas, transform, clip, global-layer, layout-placement, and overflow rules
-operate in one logical coordinate space across fitting and device density.
+Status: geometry, coordinates, cursor, and legacy-observer clauses remain
+implemented. The DOM-aligned [user-event contract](./user-events-contract.md)
+superseded this document's mouse-only non-propagation, hidden related-target,
+no-cancellation, no-capture, and sibling no-activation clauses on 2026-08-29.
+The root-Canvas, transform, clip, global-layer, layout-placement, and overflow
+rules continue to operate in one logical coordinate space across fitting and
+device density.
 
 This document defines the behavior implemented and verified by TFC-03 through TFC-05. The executable source of truth for sequence examples is `MOUSE_CONTRACT_CASES` in `packages/scenarios/src/mouse-contract.ts`; the manual explorer and headless contract suite consume that same table.
 
@@ -25,7 +29,8 @@ The platform evidence is consistent on the important shape: mouse events target 
 - **Paint order:** the order in which CRC composites interactive paths, including layers. Later paint is visually above earlier paint.
 - **Live target:** a region still owned by the current rendered tree with the handler generation selected for dispatch.
 - **Root coordinates:** coordinates in the mounted logical viewport exposed as `CRCMouseEvent.x/y`.
-- **Boundary transition:** logical `mouseover` or `mouseout` between CRC regions. These names do not imply DOM bubbling.
+- **Boundary transition:** logical over/out and enter/leave events derived from
+  movement between CRC targets. Over/out bubble; enter/leave do not.
 
 ## Target selection
 
@@ -36,7 +41,9 @@ CRC resolves exactly one logical target for each native event. Region identity i
 3. A filled path hits through `isPointInPath`; a stroked path hits through its configured `lineInteractionWidth`.
 4. The first hit wins. Earlier overlapping siblings do not receive the event.
 5. A later layer participates in the same paint order and may win over root or earlier-layer content.
-6. Nested groups do not create implicit event ancestors. The deepest painted interactive child is the target.
+6. Nested groups do not create implicit geometric targets. Explicit listener
+   registrations on mounted ancestors can participate in propagation while the
+   deepest painted interactive child remains the hit target.
 7. Cursor selection uses this same target. It must not run a separate “first cursor handler to write” policy.
 
 Purely visual paths with no handler or cursor do not become synthetic targets.
@@ -49,7 +56,11 @@ The public `crcEvent` hook with no path is explicitly a Canvas-wide observer, no
 
 Likewise, `crcCursor` with no path is a Canvas-wide fallback rather than a geometric target. The last live default wins when no targeted region supplies a cursor. Entering a targeted cursor region temporarily overrides it; leaving or removing that region restores the current fallback. CRC clears only the exact inline style it owns, so an external style change is not overwritten. Pointer-presence state is tracked independently from CSS ownership so fallback replacement during a settled rerender reconciles immediately even when the registry is briefly empty.
 
-DOM ancestors learn about child input through a separate propagation model. CRC has no `target`, `currentTarget`, phase, or propagation-control API, so invoking every geometric hit would not be a faithful approximation. Capture, bubbling, `stopPropagation`, `preventDefault`, and pointer capture are explicit non-goals.
+DOM ancestors learn about child input only through explicit
+`crcEventListener` registrations. The current facade exposes logical `target`,
+`currentTarget`, `relatedTarget`, phases, cancellation, and pointer capture as
+defined by the user-event contract; CRC still never invokes every overlapping
+geometric hit or infers an ancestor from paint.
 
 ## TFC-04 implementation boundary
 
@@ -89,7 +100,11 @@ One native `mousemove` performs one target resolution, compares it with the prev
 
 Exit always precedes entry, and every boundary transition precedes movement. Moving between overlapping shapes still targets only the topmost winner.
 
-`CRCMouseEvent.originalEvent.relatedTarget` is the DOM Canvas relationship and cannot represent intra-Canvas regions. The oracle records `logicalRelatedTarget` as diagnostic route metadata, but approved public CRC traces leave related target unobservable. This plan does not expand the public event type; public related-target support remains a future API decision.
+`CRCLogicalMouseEvent.relatedTarget` is the opposite opaque logical CRC target,
+or `null` for Canvas background/outside-root relationships. The native
+`originalEvent.relatedTarget` remains the DOM Canvas relationship. The shipped
+narrow `CRCMouseEvent` used by pathless legacy observers intentionally retains
+only `{ x, y, originalEvent }`.
 
 ### Decision on the four disputed ordering expectations
 
@@ -109,7 +124,7 @@ A trusted native click invokes a CRC region's `onClick` only when:
 - the corresponding primary up resolved to the same still-live region; and
 - the click event still resolves to that region.
 
-The browser determines normal click hysteresis. In the executable reference Chromium fixture, leaving A for Canvas background and re-entering A before release still produces `click(A)` when down, up, and the generated click all resolve to that same live target. CRC preserves that measured behavior; it does not make every intermediate `mouseout` an independent cancellation signal. Down on A/up on sibling B still produces no CRC region click. Native DOM may click the siblings' nearest common ancestor, but CRC has no region-propagation ancestor to receive it.
+The browser determines normal click hysteresis. In the executable reference Chromium fixture, leaving A for Canvas background and re-entering A before release still produces `click(A)` when down, up, and the generated click all resolve to that same live target. CRC preserves that measured behavior; it does not make every intermediate `mouseout` an independent cancellation signal. Down on A/up on sibling B can activate their deepest shared still-live `crcEventListener` when it also lies on the browser click's current coordinate path. Without an explicit shared listener, no sibling-region click is emitted.
 
 If the down target is removed, up targets whatever is now topmost and no click is delivered to the removed region. Programmatic or keyboard-dispatched Canvas clicks without the trusted down/up sequence are not a supported region-activation path in this plan.
 
@@ -135,7 +150,10 @@ For each native event, CRC resolves the geometric target and builds the ordered 
 - Removing the currently hovered region clears its hover ownership. It receives no later ghost `mouseout`; the newly exposed target is reconciled no later than the next explicit movement.
 - A thrown user handler is reported through the platform error channel and does not suppress the remaining planned transition/move callbacks.
 
-This follows the useful DOM principles: dispatch works from a cloned listener list, removal remains effective, and exceptions are reported while dispatch continues. CRC does not promise DOM capture/bubble phases.
+This follows the useful DOM principles: the route is snapshotted, current
+handlers and liveness are re-read before invocation, removal remains effective,
+and exceptions are reported while dispatch continues. Capture, target, and
+bubble phases now follow the user-event contract.
 
 ## Coordinates and geometry
 
@@ -175,19 +193,21 @@ The shared oracle covers:
 
 The explorer visual target, native trace when analogous, CRC trace, gesture, and rule all come from the same data consumed by the headless suite. Canvas-specific cases are labeled instead of inventing a native comparison.
 
-## Intentional differences from DOM
+## Retained differences from DOM
 
-- CRC exposes one synthetic region target, not an event path.
-- It does not synthesize capture/bubble phases or invoke all overlapping hits.
-- A sibling down/up sequence has no CRC common-ancestor click.
-- Logical related targets are diagnostic-only in this plan.
+- CRC exposes opaque logical targets and a temporary explicit-registration
+  path, not DOM nodes or a retained event tree.
+- It never invokes all overlapping hits or infers interaction from paint.
+- A sibling down/up sequence reaches a common ancestor only when that ancestor
+  explicitly registered a matching listener.
 - Boundary-removal timing is normalized to stable postconditions rather than browser layout-task timing.
 - No-path `crcEvent` handlers are Canvas-wide observers and run after target-bound callbacks rather than introducing a synthetic propagation phase.
 
-## Non-goals and follow-ups
+## Mouse-specific non-goals and follow-ups
 
-- Pointer/touch APIs, compatibility mouse suppression, pointer capture, keyboard activation, focus, and accessibility equivalents.
-- Public `target`, `relatedTarget`, propagation, cancellation, or event-phase APIs.
+- Keyboard activation, built-in focus policy, and accessibility equivalents.
+- Compatibility mouse suppression: CRC forwards the native pointer and mouse
+  sequences the browser supplies without duplicate synthesis.
 - Cross-browser normalization of context-menu ordering.
 - Performance optimization that weakens the verified contract; TFC-06 measures the implemented hot path before selecting any further optimization.
 

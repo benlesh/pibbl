@@ -1,14 +1,46 @@
 export type TraceEventType =
   | 'click'
+  | 'compositionend'
+  | 'compositionstart'
+  | 'compositionupdate'
   | 'contextmenu'
   | 'dblclick'
+  | 'dragenter'
+  | 'dragleave'
+  | 'dragover'
+  | 'drop'
+  | 'gotpointercapture'
+  | 'keydown'
+  | 'lostpointercapture'
   | 'mousedown'
   | 'mousemove'
   | 'mouseout'
   | 'mouseover'
-  | 'mouseup';
+  | 'mouseup'
+  | 'paste'
+  | 'pointerdown'
+  | 'pointermove'
+  | 'pointerup'
+  | 'touchend'
+  | 'touchmove'
+  | 'touchstart'
+  | 'wheel';
 
-export type TraceTransition = 'activate' | 'enter' | 'leave' | 'move' | 'press' | 'release';
+export type TraceTransition =
+  | 'activate'
+  | 'capture'
+  | 'compose'
+  | 'drop'
+  | 'enter'
+  | 'key'
+  | 'leave'
+  | 'move'
+  | 'observe'
+  | 'press'
+  | 'release';
+
+export type EventTraceField = boolean | number | string | null;
+export type EventTraceFields = Readonly<Record<string, EventTraceField>>;
 
 export interface EventTraceEntry {
   order: number;
@@ -19,24 +51,51 @@ export interface EventTraceEntry {
   y: number;
   button: number;
   buttons: number;
+  canceled: boolean;
+  fields: EventTraceFields;
+  phase: 1 | 2 | 3 | null;
   transition: TraceTransition;
   relatedTarget: string | null;
 }
 
-export interface EventTraceInput extends Omit<EventTraceEntry, 'button' | 'buttons' | 'order' | 'transition'> {
-  event: Pick<MouseEvent, 'button' | 'buttons'>;
+export interface EventTraceInput extends Omit<
+  EventTraceEntry,
+  'button' | 'buttons' | 'canceled' | 'fields' | 'order' | 'phase' | 'transition'
+> {
+  canceled?: boolean;
+  event?: Partial<Pick<MouseEvent, 'button' | 'buttons'>>;
+  fields?: EventTraceFields;
+  phase?: 1 | 2 | 3;
   transition?: TraceTransition;
 }
 
-const TRANSITIONS: Readonly<Record<TraceEventType, TraceTransition>> = {
+const TRANSITIONS: Readonly<Partial<Record<TraceEventType, TraceTransition>>> = {
   click: 'activate',
+  compositionend: 'compose',
+  compositionstart: 'compose',
+  compositionupdate: 'compose',
   contextmenu: 'activate',
   dblclick: 'activate',
+  dragenter: 'enter',
+  dragleave: 'leave',
+  dragover: 'move',
+  drop: 'drop',
+  gotpointercapture: 'capture',
+  keydown: 'key',
+  lostpointercapture: 'release',
   mousedown: 'press',
   mousemove: 'move',
   mouseout: 'leave',
   mouseover: 'enter',
   mouseup: 'release',
+  paste: 'observe',
+  pointerdown: 'press',
+  pointermove: 'move',
+  pointerup: 'release',
+  touchend: 'release',
+  touchmove: 'move',
+  touchstart: 'press',
+  wheel: 'move',
 };
 
 export class EventTraceRecorder {
@@ -52,9 +111,12 @@ export class EventTraceRecorder {
       target: input.target,
       x: input.x,
       y: input.y,
-      button: input.event.button,
-      buttons: input.event.buttons,
-      transition: input.transition ?? TRANSITIONS[input.type],
+      button: input.event?.button ?? 0,
+      buttons: input.event?.buttons ?? 0,
+      canceled: input.canceled ?? false,
+      fields: { ...input.fields },
+      phase: input.phase ?? null,
+      transition: input.transition ?? TRANSITIONS[input.type] ?? 'observe',
       relatedTarget: input.relatedTarget,
     };
     this.entries.push(entry);
@@ -63,7 +125,10 @@ export class EventTraceRecorder {
   }
 
   getEntries(): readonly EventTraceEntry[] {
-    return this.entries.map(entry => ({ ...entry }));
+    return this.entries.map(entry => ({
+      ...entry,
+      fields: { ...entry.fields },
+    }));
   }
 
   reset(): void {
