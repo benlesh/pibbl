@@ -147,7 +147,7 @@ describe("focus snapshots in cached layers", () => {
   it("repaints the first focus transition after a layer replaces its focus manager", async () => {
     let layerRenders = 0;
     let replaceTarget!: () => void;
-    const FocusTarget = defineComp(({ version }: { version: number }) => {
+    const FocusTarget = defineComp(() => {
       layerRenders++;
       const snapshot = crcEventTarget(
         { onClick: () => undefined },
@@ -168,7 +168,6 @@ describe("focus snapshots in cached layers", () => {
         style: { width: 80, height: 80 },
         render: withFocusManagement(FocusTarget({
           key: `target-${version}`,
-          version,
         })),
       });
     });
