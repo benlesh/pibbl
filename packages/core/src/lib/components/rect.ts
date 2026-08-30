@@ -1,8 +1,6 @@
 import { defineComp } from '../define-comp.js';
-import {
-  CRCBasicMouseEvents,
-  RenderingContext2D,
-} from '../types.js';
+import type { CRCEventHandlers } from '../events/types.js';
+import { RenderingContext2D } from '../types.js';
 import {
   resolveLocalOffset,
   resolveRequiredLength,
@@ -13,7 +11,7 @@ import { registerOpaqueStyleProperties } from '../style/resolve-dispatch.js';
 import { adjustRectangleToPixelGrid } from '../util/pixel-grid-adjustments.js';
 import { Path } from './path.js';
 
-export interface RectProps extends CRCBasicMouseEvents {}
+export interface RectProps extends CRCEventHandlers {}
 
 function Rect(
   props: RectProps,

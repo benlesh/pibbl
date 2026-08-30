@@ -71,9 +71,11 @@ export function Layer(
       parent: canvas,
       surface: layerSurface,
     });
+    const childInstance = getCRCInstance(offscreenCanvas);
+    childInstance.eventParent = componentRefs;
     const interactionLayer: CRCInteractionLayer = {
       kind: 'layer',
-      instance: getCRCInstance(offscreenCanvas),
+      instance: childInstance,
       transform: new DOMMatrix(),
       clippingStack: [],
       bounds: createBounds(width, height),
@@ -85,6 +87,7 @@ export function Layer(
       logicalHeight: height,
     } satisfies LayerSlot;
     componentRefs.teardowns.add(() => {
+      childInstance.eventParent = undefined;
       parentInstance.paintEntries.delete(interactionLayer);
       controller.dispose();
     });

@@ -61,6 +61,11 @@ interface InteractionLabSceneProps {
   record: InteractionLabRecord;
 }
 
+type TraceMouseCoordinates = Pick<
+  CRCMouseEvent,
+  'x' | 'y' | 'originalEvent'
+>;
+
 type TraceHandlers = {
   onClick: (event: CRCMouseEvent) => void;
   onContextMenu: (event: CRCMouseEvent) => void;
@@ -76,7 +81,7 @@ function recordEvent(
   record: InteractionLabRecord,
   type: TraceEventType,
   target: string,
-  event: CRCMouseEvent,
+  event: TraceMouseCoordinates,
   handlerGeneration?: number,
 ): void {
   record({

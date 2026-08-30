@@ -144,7 +144,7 @@ export interface CRCHookSlot<T = any> {
   teardowns: Teardowns;
 }
 
-export type CRCMouseEventListener = (e: CRCMouseEvent) => void;
+export type CRCMouseEventListener = (e: CRCLegacyMouseEvent) => void;
 
 export interface CRCEventRegistry {
   click: Set<(e: MouseEvent) => void>;
@@ -231,17 +231,6 @@ export interface CRCController {
   dispose(): void;
 }
 
-export interface CRCBasicMouseEvents {
-  onClick?: (e: CRCMouseEvent) => void;
-  onDblClick?: (e: CRCMouseEvent) => void;
-  onMouseMove?: (e: CRCMouseEvent) => void;
-  onMouseOver?: (e: CRCMouseEvent) => void;
-  onMouseOut?: (e: CRCMouseEvent) => void;
-  onContextMenu?: (e: CRCMouseEvent) => void;
-  onMouseDown?: (e: CRCMouseEvent) => void;
-  onMouseUp?: (e: CRCMouseEvent) => void;
-}
-
 export type FillStyle = CanvasRenderingContext2D['fillStyle'];
 export type StrokeStyle = CanvasRenderingContext2D['strokeStyle'];
 
@@ -262,13 +251,15 @@ export interface CRCInstance {
   interaction: CRCInteractionState;
   interactionRoot: CRCInstance | undefined;
   parent: Canvas | undefined;
+  /** Parent layer component used only for temporary cross-instance event paths. */
+  eventParent: CompRefs<any> | undefined;
   rootLayoutBox: Readonly<LayoutBox>;
   surface: CRCSurfaceState;
 }
 
 export type PixelGridAlignment = 'none' | 'round' | 'ceil' | 'floor';
 
-export interface CRCMouseEvent {
+interface CRCLegacyMouseEvent {
   x: number;
   y: number;
   originalEvent: MouseEvent;

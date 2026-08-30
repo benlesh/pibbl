@@ -7,6 +7,8 @@ const expected = [
   'crc',
   'crcCursor',
   'crcEvent',
+  'crcEventListener',
+  'crcEventTarget',
   'crcLayoutBox',
   'crcLinePath',
   'crcMemo',

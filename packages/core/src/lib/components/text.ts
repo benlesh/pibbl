@@ -1,4 +1,5 @@
 import { defineComp } from '../define-comp.js';
+import type { CRCEventHandlers } from '../events/types.js';
 import {
   resolveLocalOffset,
   resolveOptionalLength,
@@ -8,7 +9,6 @@ import { registerOpaqueStyleProperties } from '../style/resolve-dispatch.js';
 import type { ResolvedTextStyle, TextStyle } from '../style/types.js';
 import {
   CanvasMeasurementService,
-  CRCBasicMouseEvents,
   MeasureResult,
   RenderingContext2D,
 } from '../types.js';
@@ -18,22 +18,14 @@ import { wireCommonEvents } from '../util/wire-common-events.js';
 import { pushClippingPath } from '../util/push-clipping-path.js';
 import { resolveTextClipBounds, resolveTextLayout } from './text-layout.js';
 
-export interface TextProps extends CRCBasicMouseEvents {}
+export interface TextProps extends CRCEventHandlers {}
 
 function checkPropsForEvents(
-  props: CRCBasicMouseEvents,
+  props: CRCEventHandlers,
   cursor: string | undefined,
 ) {
-  return !!(
-    cursor ||
-    props.onClick ||
-    props.onContextMenu ||
-    props.onDblClick ||
-    props.onMouseDown ||
-    props.onMouseMove ||
-    props.onMouseOut ||
-    props.onMouseOver ||
-    props.onMouseUp
+  return Boolean(
+    cursor || Object.values(props).some(value => typeof value === 'function'),
   );
 }
 

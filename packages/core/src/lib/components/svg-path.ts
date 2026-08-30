@@ -1,15 +1,13 @@
 import { defineComp } from '../define-comp.js';
+import type { CRCEventHandlers } from '../events/types.js';
 import { crcSvgPath } from '../hooks/crc-svg-path.js';
-import {
-  CRCBasicMouseEvents,
-  RenderingContext2D,
-} from '../types.js';
+import { RenderingContext2D } from '../types.js';
 import { stripLayoutParticipation } from '../style/resolve-built-in.js';
 import { registerOpaqueStyleProperties } from '../style/resolve-dispatch.js';
 import type { ResolvedSvgPathStyle, SvgPathStyle } from '../style/types.js';
 import { Path } from './path.js';
 
-export interface SvgPathProps extends CRCBasicMouseEvents {}
+export interface SvgPathProps extends CRCEventHandlers {}
 
 function SvgPath(
   props: SvgPathProps,

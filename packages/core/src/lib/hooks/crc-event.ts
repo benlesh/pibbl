@@ -1,5 +1,9 @@
 import { getInteractionRoot } from '../global-state.js';
 import type {
+  CRCEventHandler,
+  CRCEventType as DOMCRCEventType,
+} from '../events/types.js';
+import type {
   CRCEventRegistry,
   CRCInteractionRegion,
   CRCMouseEventListener,
@@ -13,9 +17,27 @@ interface CRCObserverSlot {
   region: CRCInteractionRegion;
 }
 
+export function crcEvent<
+  K extends keyof CRCEventRegistry & DOMCRCEventType,
+>(
+  type: K,
+  handler: CRCEventHandler<K> | undefined,
+  path: Path2D,
+  fill?: boolean,
+  lineInteractionWidth?: number,
+): void;
 export function crcEvent<K extends keyof CRCEventRegistry>(
   type: K,
   handler?: CRCMouseEventListener,
+  path?: Path2D,
+  fill?: boolean,
+  lineInteractionWidth?: number,
+): void;
+export function crcEvent<
+  K extends keyof CRCEventRegistry & DOMCRCEventType,
+>(
+  type: K,
+  handler?: CRCMouseEventListener | CRCEventHandler<K>,
   path?: Path2D,
   fill = false,
   lineInteractionWidth = 0,
@@ -37,7 +59,7 @@ export function crcEvent<K extends keyof CRCEventRegistry>(
 
   if (path) {
     updateRegion(crcInstance, slot.value.region, {
-      handlers: { [type]: handler },
+      handlers: { [type]: handler as CRCMouseEventListener | undefined },
       path,
       fill,
       lineInteractionWidth,
@@ -57,7 +79,7 @@ export function crcEvent<K extends keyof CRCEventRegistry>(
     if (!(event instanceof MouseEvent)) return;
     if (!interactionRoot.surface.snapshot) return;
     const [x, y] = getMouseCoordinates(event, interactionRoot);
-    handler({ originalEvent: event, x, y });
+    (handler as CRCMouseEventListener)({ originalEvent: event, x, y });
   };
   observers.add(observer);
   slot.value.cleanup = () => {

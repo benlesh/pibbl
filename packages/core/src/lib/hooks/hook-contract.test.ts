@@ -6,7 +6,7 @@ import {
   getCRCInstance,
   GLOBAL_STATE,
 } from '../global-state';
-import type { RenderingContext2D } from '../types';
+import type { CRCMouseEventListener, RenderingContext2D } from '../types';
 import { crcCursor } from './crc-cursor';
 import { crcEvent } from './crc-event';
 import { crcEventListener } from './crc-event-listener';
@@ -353,6 +353,90 @@ describe('hook ordering and render errors', () => {
     expect(instance.cursorDefaults.size).toBe(1);
     controller.dispose();
   });
+
+  it('keeps one legacy target slot while replacing and removing a path-bound crcEvent handler', async () => {
+    const canvas = createCanvas();
+    const path = new Path2D();
+    path.rect(0, 0, 20, 20);
+    const trace: string[] = [];
+    const Probe = defineComp(({
+      handler,
+    }: {
+      handler: CRCMouseEventListener | undefined;
+    }) => {
+      crcEvent('mousemove', handler, path, true);
+    });
+    const firstHandler = () => trace.push('first');
+    const controller = crc(canvas, Probe({ handler: firstHandler }));
+    await nextFrame();
+    const instance = getCRCInstance(canvas);
+    const firstTarget = Array.from(instance.eventRoot.targets)[0];
+
+    expect(instance.eventRoot.targets.size).toBe(1);
+    expect(instance.regions.size).toBe(1);
+
+    const replacementHandler = () => trace.push('replacement');
+    crc(canvas, Probe({ handler: replacementHandler }));
+    await nextFrame();
+
+    expect(instance.eventRoot.targets.size).toBe(1);
+    expect(Array.from(instance.eventRoot.targets)[0]).toBe(firstTarget);
+    dispatchMouseMove(canvas, 10, 10);
+    expect(trace).toEqual(['replacement']);
+
+    crc(canvas, Probe({ handler: undefined }));
+    await nextFrame();
+    expect(instance.eventRoot.targets.size).toBe(0);
+    expect(instance.regions.size).toBe(0);
+    controller.dispose();
+  });
+
+  it('orders no-path crcEvent observers after targets and isolates replacement, removal, and throws', async () => {
+    const reportError = vi.spyOn(globalThis, 'reportError').mockImplementation(
+      () => undefined,
+    );
+    const canvas = createCanvas();
+    const path = new Path2D();
+    path.rect(0, 0, 20, 20);
+    const trace: string[] = [];
+    const Probe = defineComp(({
+      first,
+      generation,
+    }: {
+      first: boolean;
+      generation: string;
+    }) => {
+      crcEventTarget({
+        onMouseMove: () => trace.push('target'),
+      }, { path, fill: true });
+      crcEvent('mousemove', first ? () => {
+        trace.push(`first-${generation}`);
+        if (generation === 'throw') {
+          throw new Error('expected observer failure');
+        }
+      } : undefined);
+      crcEvent('mousemove', () => trace.push('second'));
+    });
+    const controller = crc(canvas, Probe({ first: true, generation: 'throw' }));
+    await nextFrame();
+
+    dispatchMouseMove(canvas, 10, 10);
+    expect(trace).toEqual(['target', 'first-throw', 'second']);
+    expect(reportError).toHaveBeenCalledOnce();
+
+    trace.length = 0;
+    crc(canvas, Probe({ first: true, generation: 'replacement' }));
+    await nextFrame();
+    dispatchMouseMove(canvas, 10, 10);
+    expect(trace).toEqual(['target', 'first-replacement', 'second']);
+
+    trace.length = 0;
+    crc(canvas, Probe({ first: false, generation: 'removed' }));
+    await nextFrame();
+    dispatchMouseMove(canvas, 10, 10);
+    expect(trace).toEqual(['target', 'second']);
+    controller.dispose();
+  });
 });
 
 class ManualFrames {
@@ -393,4 +477,16 @@ function createCanvas(): HTMLCanvasElement {
 
 function nextFrame(): Promise<void> {
   return new Promise(resolve => requestAnimationFrame(() => resolve()));
+}
+
+function dispatchMouseMove(
+  canvas: HTMLCanvasElement,
+  clientX: number,
+  clientY: number,
+): void {
+  canvas.dispatchEvent(new MouseEvent('mousemove', {
+    bubbles: true,
+    clientX,
+    clientY,
+  }));
 }

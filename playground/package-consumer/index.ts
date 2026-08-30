@@ -1,12 +1,32 @@
 import type {
   CRCConfig,
+  CRCClipboardEvent,
+  CRCCompositionEvent,
   CRCController,
+  CRCDragEvent,
+  CRCEvent,
+  CRCEventCapturePropName,
+  CRCEventHandler,
+  CRCEventHandlers,
+  CRCEventMap,
+  CRCEventPhase,
+  CRCEventPropName,
+  CRCEventTarget,
+  CRCEventTargetOptions,
+  CRCEventTargetSnapshot,
+  CRCEventType,
   CRCFit,
   CRCFixedViewportConfig,
+  CRCFocusEvent,
+  CRCInputEvent,
+  CRCKeyboardEvent,
   CRCMouseEvent,
   CRCPixelRatio,
+  CRCPointerEvent,
   CRCRef,
   CRCResponsiveViewportConfig,
+  CRCTouchEvent,
+  CRCWheelEvent,
   AbsoluteStyle,
   BoxStyle,
   ClipStyle,
@@ -40,6 +60,8 @@ import {
   crc,
   crcCursor,
   crcEvent,
+  crcEventListener,
+  crcEventTarget,
   crcLayoutBox,
   crcLinePath,
   crcMemo,
@@ -68,6 +90,73 @@ import {
   measureElement,
 } from '@crc/core';
 
+export type PublicEventTypes = {
+  base: CRCEvent;
+  clipboard: CRCClipboardEvent;
+  composition: CRCCompositionEvent;
+  drag: CRCDragEvent;
+  focus: CRCFocusEvent;
+  input: CRCInputEvent;
+  keyboard: CRCKeyboardEvent;
+  mouse: CRCMouseEvent;
+  pointer: CRCPointerEvent;
+  touch: CRCTouchEvent;
+  wheel: CRCWheelEvent;
+  eventMap: CRCEventMap;
+  eventType: CRCEventType;
+  eventPhase: CRCEventPhase;
+  eventProp: CRCEventPropName;
+  eventCaptureProp: CRCEventCapturePropName;
+  eventTarget: CRCEventTarget;
+  eventTargetOptions: CRCEventTargetOptions;
+  eventTargetSnapshot: CRCEventTargetSnapshot;
+};
+
+const pointerHandler: CRCEventHandler<'pointerdown'> = event => {
+  const pressure: number = event.pressure;
+  void pressure;
+};
+const eventHandlers = {
+  onPointerDown: pointerHandler,
+  onTouchStart: event => {
+    const changedTouches: TouchList = event.changedTouches;
+    void changedTouches;
+  },
+  onKeyDownCapture: event => {
+    const key: string = event.key;
+    void key;
+  },
+  onFocus: event => {
+    const original: FocusEvent = event.originalEvent;
+    void original;
+  },
+  onCopyCapture: event => {
+    const clipboardData: DataTransfer | null = event.clipboardData;
+    void clipboardData;
+  },
+  onDragStart: event => {
+    const dataTransfer: DataTransfer | null = event.dataTransfer;
+    void dataTransfer;
+  },
+} satisfies CRCEventHandlers;
+
+const PublicEventProbe = defineComp(() => {
+  const options = {
+    path: new Path2D(),
+    fill: true,
+    keyboardFocusable: true,
+    keyboardNavigationBounds: { x: 0, y: 0, width: 20, height: 20 },
+  } satisfies CRCEventTargetOptions;
+  const snapshot: CRCEventTargetSnapshot = crcEventTarget(
+    eventHandlers,
+    options,
+  );
+  crcEventListener({ onPointerDownCapture: pointerHandler });
+  const focused: boolean = snapshot.isFocused;
+  void focused;
+});
+PublicEventProbe({});
+
 const rectangleStyle = {
   x: 10,
   y: 10,
@@ -78,6 +167,11 @@ const rectangleStyle = {
 const props = {} satisfies RectProps;
 
 export type PublicCoreTypes = typeof CoreTypes;
+export type PublicCoreEventTypes = [
+  CoreTypes.CRCEventHandlers,
+  CoreTypes.CRCPointerEvent,
+  CoreTypes.CRCTouchEvent,
+];
 export const scene = rect({ ...props, style: rectangleStyle });
 export const mount = crc;
 
@@ -91,6 +185,7 @@ const pathStyle = {
   lineInteractionWidth: 8,
 } satisfies PathStyle;
 path({ style: pathStyle, onClick: () => undefined });
+path({ style: pathStyle, ...eventHandlers });
 
 const svgPathStyle = {
   d: 'M 0 0 L 10 10',
@@ -529,6 +624,12 @@ crcEvent('click', (event: CRCMouseEvent) => {
   void original;
 }, rectanglePath, true, 8);
 crcEvent('mousemove', undefined);
+crcEvent('mousemove', event => {
+  const x: number = event.x;
+  void x;
+  // @ts-expect-error pathless crcEvent observers retain the legacy payload
+  event.preventDefault();
+});
 // @ts-expect-error event names are limited to the public CRC event registry
 crcEvent('pointerdown', () => undefined);
 // @ts-expect-error CRC handlers receive CRCMouseEvent rather than PointerEvent

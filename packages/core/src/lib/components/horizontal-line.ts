@@ -1,6 +1,6 @@
 import { defineComp } from '../define-comp.js';
+import type { CRCEventHandlers } from '../events/types.js';
 import {
-  CRCBasicMouseEvents,
   PixelGridAlignment,
   RenderingContext2D,
   SystemStyle,
@@ -20,7 +20,7 @@ import type {
 } from '../style/types.js';
 import { Line, type LineStyle } from './line.js';
 
-export interface HorizontalLineProps extends CRCBasicMouseEvents {}
+export interface HorizontalLineProps extends CRCEventHandlers {}
 
 export interface HorizontalLineStyle
   extends SystemStyle,

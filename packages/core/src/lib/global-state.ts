@@ -107,6 +107,7 @@ export function cleanupCRCInstance(crcInstance: CRCInstance): void {
   }
 
   GLOBAL_STATE.crcInstances.delete(canvas);
+  crcInstance.eventParent = undefined;
   crcInstance.mainTeardowns.execute();
   if (!crcInstance.parent) {
     for (const observers of crcInstance.eventRoot.observers.values()) {

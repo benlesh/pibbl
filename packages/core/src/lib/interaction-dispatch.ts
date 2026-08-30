@@ -1,6 +1,5 @@
 /**
- * Narrow compatibility surface for hooks that predate the shared event
- * dispatcher. Task 8 migrates the remaining call sites.
+ * Narrow compatibility surface for legacy region and cursor hooks.
  */
 export {
   refreshCursorDefault,

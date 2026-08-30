@@ -96,6 +96,8 @@ export type {
 // hooks
 export { crcCursor } from './lib/hooks/crc-cursor.js';
 export { crcEvent } from './lib/hooks/crc-event.js';
+export { crcEventListener } from './lib/hooks/crc-event-listener.js';
+export { crcEventTarget } from './lib/hooks/crc-event-target.js';
 export { crcLinePath } from './lib/hooks/crc-line-path.js';
 export { crcLayoutBox } from './lib/hooks/crc-layout-box.js';
 export { crcMemo } from './lib/hooks/crc-memo.js';
@@ -112,7 +114,6 @@ export type {
   ComponentCapabilities,
   ComponentInput,
   CRCController,
-  CRCMouseEvent,
   CRCMouseEventListener,
   CRCNode,
   FillStyle,
@@ -127,3 +128,26 @@ export type {
   StrokeStyle,
   SystemStyle,
 } from './lib/types.js';
+export type {
+  CRCClipboardEvent,
+  CRCCompositionEvent,
+  CRCDragEvent,
+  CRCEvent,
+  CRCEventCapturePropName,
+  CRCEventHandler,
+  CRCEventHandlers,
+  CRCEventMap,
+  CRCEventPhase,
+  CRCEventPropName,
+  CRCEventTarget,
+  CRCEventTargetOptions,
+  CRCEventTargetSnapshot,
+  CRCEventType,
+  CRCFocusEvent,
+  CRCInputEvent,
+  CRCKeyboardEvent,
+  CRCMouseEvent,
+  CRCPointerEvent,
+  CRCTouchEvent,
+  CRCWheelEvent,
+} from './lib/events/types.js';

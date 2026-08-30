@@ -119,6 +119,7 @@ export function updateTarget(
     options,
     requiredNativeTypes(types, Boolean(options.cursor)),
   );
+  if (target.live) target.owner.regions.add(target);
 }
 
 /** @internal Temporary adapter for shipped mouse-region semantics. */

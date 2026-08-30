@@ -1,36 +1,15 @@
-import { crcRegion } from '../hooks/crc-region.js';
-import { CRCBasicMouseEvents } from '../types.js';
+import type { CRCEventHandlers } from '../events/types.js';
+import { crcEventTarget } from '../hooks/crc-event-target.js';
 
 export function wireCommonEvents(
-  props: CRCBasicMouseEvents,
+  props: CRCEventHandlers,
   path: Path2D | undefined,
   fill: boolean,
   lineInteractionWidth: number,
   cursor: string | undefined,
-) {
-  const {
-    onClick,
-    onContextMenu,
-    onDblClick,
-    onMouseMove,
-    onMouseOut,
-    onMouseOver,
-    onMouseDown,
-    onMouseUp,
-  } = props;
-
-  crcRegion({
-    handlers: {
-      click: onClick,
-      contextmenu: onContextMenu,
-      dblclick: onDblClick,
-      mousemove: onMouseMove,
-      mousedown: onMouseDown,
-      mouseup: onMouseUp,
-      mouseover: onMouseOver,
-      mouseout: onMouseOut,
-    },
-    path,
+): void {
+  crcEventTarget(props, {
+    path: path ?? new Path2D(),
     cursor,
     fill,
     lineInteractionWidth,

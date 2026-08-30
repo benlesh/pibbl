@@ -1,8 +1,6 @@
 import { defineComp } from '../define-comp.js';
-import {
-  CRCBasicMouseEvents,
-  RenderingContext2D,
-} from '../types.js';
+import type { CRCEventHandlers } from '../events/types.js';
+import { RenderingContext2D } from '../types.js';
 import { stripLayoutParticipation } from '../style/resolve-built-in.js';
 import { registerOpaqueStyleProperties } from '../style/resolve-dispatch.js';
 import type { PathStyle, ResolvedPathStyle } from '../style/types.js';
@@ -10,7 +8,7 @@ import type { StyleResolutionContext } from '../types.js';
 import { isTransparent } from '../util/is-transparent.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 
-export interface PathProps extends CRCBasicMouseEvents {}
+export interface PathProps extends CRCEventHandlers {}
 
 export function Path(
   props: PathProps,

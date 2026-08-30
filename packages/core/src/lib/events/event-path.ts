@@ -1,24 +1,41 @@
 import type {
   CRCEventNode,
 } from './registrations.js';
+import { GLOBAL_STATE } from '../global-state.js';
+import type { CompRefs, CRCInstance } from '../types.js';
+
+interface CRCEventPathComponent {
+  readonly component: CompRefs<any>;
+  readonly owner: CRCInstance;
+}
 
 /** Builds one immutable root-to-target snapshot for a logical dispatch. */
 export function buildEventPath(
   target: CRCEventNode,
 ): readonly CRCEventNode[] {
-  const components = [];
-  for (
-    let component: typeof target.component | undefined = target.component;
-    component;
-    component = component.parent
-  ) {
-    components.push(component);
+  const components: CRCEventPathComponent[] = [];
+  let owner = target.owner;
+  let component: CompRefs<any> | undefined = target.component;
+  while (component) {
+    components.push({ component, owner });
+    if (component.parent) {
+      component = component.parent;
+      continue;
+    }
+
+    const eventParent = owner.eventParent;
+    const parentOwner = owner.parent ?
+      GLOBAL_STATE.crcInstances.get(owner.parent) :
+      undefined;
+    if (!eventParent || !parentOwner) break;
+    component = eventParent;
+    owner = parentOwner;
   }
   components.reverse();
 
   const path: CRCEventNode[] = [];
-  for (const component of components) {
-    const listeners = target.owner.eventRoot.listenersByComponent.get(
+  for (const { component, owner } of components) {
+    const listeners = owner.eventRoot.listenersByComponent.get(
       component.id,
     );
     if (listeners) {

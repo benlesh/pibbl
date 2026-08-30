@@ -1,4 +1,5 @@
-import type { CRCBasicMouseEvents, CRCController } from '../src/lib/types';
+import type { CRCEventHandlers } from '../src/lib/events/types';
+import type { CRCController } from '../src/lib/types';
 import { crc, crcCursor, crcEvent, defineComp, layer, rect } from '@crc/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -35,7 +36,22 @@ interface ProbeSceneProps {
   show: boolean;
 }
 
-function handlers(generation: number, calls: number[]): Required<CRCBasicMouseEvents> {
+type ShippedMouseHandlers = Required<Pick<
+  CRCEventHandlers,
+  | 'onClick'
+  | 'onContextMenu'
+  | 'onDblClick'
+  | 'onMouseDown'
+  | 'onMouseMove'
+  | 'onMouseOut'
+  | 'onMouseOver'
+  | 'onMouseUp'
+>>;
+
+function handlers(
+  generation: number,
+  calls: number[],
+): ShippedMouseHandlers {
   const noop = () => undefined;
   return {
     onClick: () => calls.push(generation),

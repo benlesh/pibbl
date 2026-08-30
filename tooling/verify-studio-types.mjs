@@ -17,18 +17,50 @@ const consumer = `
 import {
   absolute,
   crc,
+  crcEventListener,
+  crcEventTarget,
   defineComp,
   flex,
   flow,
   grid,
   overlay,
+  rect,
   type CRCConfig,
+  type CRCEventHandlers,
   type CRCFit,
   type CRCPixelRatio,
+  type CRCPointerEvent,
+  type CRCEventTargetSnapshot,
   type OverlayStyle,
   type Percentage,
   type SystemStyle,
 } from '@crc/core';
+
+const eventHandlers = {
+  onPointerDown: (event: CRCPointerEvent) => {
+    const pressure: number = event.pressure;
+    void pressure;
+  },
+  onTouchStart: event => void event.changedTouches,
+  onKeyDownCapture: event => void event.key,
+  onFocus: event => void event.originalEvent,
+  onCopyCapture: event => void event.clipboardData,
+  onDragStart: event => void event.dataTransfer,
+} satisfies CRCEventHandlers;
+
+const EventProbe = defineComp(() => {
+  const snapshot: CRCEventTargetSnapshot = crcEventTarget(eventHandlers, {
+    path: new Path2D(),
+    fill: true,
+  });
+  crcEventListener({ onPointerDownCapture: eventHandlers.onPointerDown });
+  void snapshot.isFocused;
+  return rect({
+    ...eventHandlers,
+    style: { width: 20, height: 20, fill: 'black' },
+  });
+});
+EventProbe({});
 
 type UnionStyle =
   | (SystemStyle & { opacity?: number })
