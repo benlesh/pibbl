@@ -7,7 +7,7 @@ when a task needs exact behavior or historical evidence.
 ## Product and current state
 
 CRC is a small functional component runtime over the HTML Canvas 2D API. It
-provides scheduled rendering, hook state, mouse-region interaction, transforms,
+provides scheduled rendering, hook state, DOM-aligned user events, transforms,
 clipping, offscreen layers, and composable drawing primitives without JSX.
 
 - Project Plans 001, 002, and 003 are complete. Plan 003 shipped first-class
@@ -68,8 +68,8 @@ either as the current result unless a fresh run reproduces it.
 - Canvas state is isolated with save/restore around component traversal. Render
   failure tears down runtime-owned resources and clears component refs; pixels
   already painted earlier in the failing frame are not rolled back.
-- Source traversal is paint order. Mouse targeting walks the shared paint ledger
-  in reverse and selects one topmost logical region.
+- Source traversal is paint order. Coordinate-event targeting walks the shared
+  paint ledger in reverse and selects one topmost logical target.
 - `g` composes Canvas transforms. Interaction regions, clips, and layers capture
   the same transform/clip geometry, so paint and hit testing must stay aligned.
 - Offscreen `layer` instances share the root interaction state and participate in
@@ -93,13 +93,20 @@ measurement types. Surface configuration is public through `CRCConfig`,
 `CRCFit`, `CRCPixelRatio`, and the fixed/responsive configuration types.
 
 Public hooks: `crcState`, `crcMemo`, `crcRef`, `crcWhenChanged`, `crcRectPath`,
-`crcLinePath`, `crcSvgPath`, `crcEvent`, `crcCursor`, and `crcLayoutBox`.
+`crcLinePath`, `crcSvgPath`, `crcEvent`, `crcEventTarget`,
+`crcEventListener`, `crcCursor`, and `crcLayoutBox`.
 
-Current interaction is mouse-only. CRC does not currently promise pointer/touch,
-keyboard/focus, DOM accessibility, JSX, rich text, image CORS policy, complete
-CSS compatibility, scrolling, WebGL, or a retained scene graph. Browser
-behavior remains authoritative for Canvas/`Path2D`, font rasterization and
-measurement, decoded-image behavior, and `OffscreenCanvas` availability.
+Current interaction supports DOM-aligned pointer, mouse, touch, wheel,
+keyboard/focus, editing/composition, clipboard, and drag/drop event facades,
+explicit geometric targets, propagation listeners, cancellation, logical
+related targets, and pointer capture. A plain Canvas has no logical target for
+native non-coordinate input without future/optional focus/input integration;
+no public input adapter, built-in focus policy, hidden editable DOM, or
+accessibility layer exists. CRC also does not promise JSX, rich text, image
+CORS policy, complete CSS compatibility, scrolling, WebGL, or a retained scene
+graph. Browser behavior remains authoritative for Canvas/`Path2D`, font
+rasterization and measurement, decoded-image behavior, and `OffscreenCanvas`
+availability.
 
 Read the exact contracts before changing these areas:
 
@@ -108,6 +115,7 @@ Read the exact contracts before changing these areas:
 - `docs/design/drawing-components-contract.md`
 - `docs/design/style-system-contract.md`
 - `docs/design/layout-system-contract.md`
+- `docs/design/user-events-contract.md`
 - `docs/design/mouse-interaction-contract.md`
 - `docs/design/event-resource-ownership.md`
 - `docs/design/runtime-resource-ownership.md`
@@ -166,9 +174,9 @@ anchored native color input and a 100,000-record windowed list are proving
 scenarios only; they do not authorize public popover or virtualization APIs.
 
 Auto-placement Grid, advanced intrinsic CSS sizing, reverse/reordered Flexbox,
-margin, scrolling, DOM overlays/accessibility, broader input, workers/WebGL, and
-a retained scene graph remain deferred. Exact implemented contracts and records
-live in:
+margin, scrolling, focus/input policy, DOM overlays/accessibility,
+workers/WebGL, and a retained scene graph remain deferred. Exact implemented
+contracts and records live in:
 
 - `docs/superpowers/specs/2026-08-17-style-and-layout-design.md`
 - `docs/architecture/style-and-layout-architecture.md`

@@ -117,24 +117,66 @@ function recordEvent(
 
 type TraceLogicalEvent = Pick<
   CRCEvent,
-  'defaultPrevented' | 'eventPhase' | 'originalEvent' | 'relatedTarget'
+  'currentTarget' | 'defaultPrevented' | 'eventPhase' | 'originalEvent' | 'relatedTarget' | 'target'
 > & Partial<Pick<CRCLogicalMouseEvent, 'x' | 'y'>>;
+
+interface TraceTargetLabels {
+  currentTarget: string;
+  relatedTarget: string | null;
+  target: string;
+}
+
+const logicalTargetLabels = new WeakMap<CRCEvent['target'], string>();
+
+function stableTargetLabel(
+  target: CRCEvent['target'] | null,
+  label: string | null,
+): string | null {
+  if (!target) {
+    if (label !== null) {
+      throw new Error(`Missing logical event target for "${label}".`);
+    }
+    return null;
+  }
+  if (label === null) {
+    throw new Error('A logical event target is present without a symbolic label.');
+  }
+  const existing = logicalTargetLabels.get(target);
+  if (existing && existing !== label) {
+    throw new Error(
+      `Logical event target changed identity from "${existing}" to "${label}".`,
+    );
+  }
+  logicalTargetLabels.set(target, label);
+  return label;
+}
+
+function selfTargetLabels(target: string): TraceTargetLabels {
+  return { currentTarget: target, relatedTarget: null, target };
+}
 
 function recordLogicalEvent(
   record: InteractionLabRecord,
   type: TraceEventType,
-  target: string,
   event: TraceLogicalEvent,
+  labels: TraceTargetLabels,
   fields: EventTraceInput['fields'],
 ): void {
   record({
     source: 'crc',
     type,
-    target,
+    target: stableTargetLabel(event.target, labels.target)!,
+    currentTarget: stableTargetLabel(
+      event.currentTarget,
+      labels.currentTarget,
+    )!,
     x: Math.round(event.x ?? 0),
     y: Math.round(event.y ?? 0),
     event: event.originalEvent instanceof MouseEvent ? event.originalEvent : undefined,
-    relatedTarget: event.relatedTarget ? 'other' : null,
+    relatedTarget: stableTargetLabel(
+      event.relatedTarget,
+      labels.relatedTarget,
+    ),
     phase: event.eventPhase,
     canceled: event.defaultPrevented,
     fields,
@@ -304,16 +346,16 @@ const PropagationTarget = defineComp<NestedAncestorProps>(({ record }) => rect({
   onPointerDownCapture: event => recordLogicalEvent(
     record,
     'pointerdown',
-    'target-capture',
     event,
-    pointerFields(event),
+    selfTargetLabels('propagation-target'),
+    { handler: 'target-capture', ...pointerFields(event) },
   ),
   onPointerDown: event => recordLogicalEvent(
     record,
     'pointerdown',
-    'target',
     event,
-    pointerFields(event),
+    selfTargetLabels('propagation-target'),
+    { handler: 'target', ...pointerFields(event) },
   ),
 }));
 
@@ -322,16 +364,24 @@ const PropagationFixture = defineComp<NestedAncestorProps>(({ record }) => {
     onPointerDownCapture: event => recordLogicalEvent(
       record,
       'pointerdown',
-      'parent-capture',
       event,
-      pointerFields(event),
+      {
+        currentTarget: 'propagation-parent',
+        relatedTarget: null,
+        target: 'propagation-target',
+      },
+      { handler: 'capture', ...pointerFields(event) },
     ),
     onPointerDown: event => recordLogicalEvent(
       record,
       'pointerdown',
-      'parent-bubble',
       event,
-      pointerFields(event),
+      {
+        currentTarget: 'propagation-parent',
+        relatedTarget: null,
+        target: 'propagation-target',
+      },
+      { handler: 'bubble', ...pointerFields(event) },
     ),
   });
   return PropagationTarget({ record });
@@ -347,7 +397,13 @@ const CustomPointerCapture = defineComp<NestedAncestorProps>(({ record }) => {
     } else if (type === 'pointerup') {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
-    recordLogicalEvent(record, type, 'custom-capture', event, captureFields(event));
+    recordLogicalEvent(
+      record,
+      type,
+      event,
+      selfTargetLabels('custom-capture'),
+      captureFields(event),
+    );
   };
   crcEventTarget({
     onGotPointerCapture: trace('gotpointercapture'),
@@ -376,8 +432,8 @@ function touchRetention(record: InteractionLabRecord) {
     (event: CRCTouchEvent) => recordLogicalEvent(
       record,
       type,
-      'touch-owner',
       event,
+      selfTargetLabels('touch-owner'),
       touchFields(event),
     );
   return rect({
@@ -411,7 +467,7 @@ function wheelCancellation(record: InteractionLabRecord) {
     },
     onWheel: event => {
       event.preventDefault();
-      recordLogicalEvent(record, 'wheel', 'wheel-target', event, {
+      recordLogicalEvent(record, 'wheel', event, selfTargetLabels('wheel-target'), {
         deltaMode: event.deltaMode,
         deltaX: event.deltaX,
         deltaY: event.deltaY,
@@ -435,8 +491,8 @@ function keyboardFields(record: InteractionLabRecord) {
     onKeyDown: (event: CRCKeyboardEvent) => recordLogicalEvent(
       record,
       'keydown',
-      'keyboard-target',
       event,
+      selfTargetLabels('keyboard-target'),
       {
         code: event.code,
         isComposing: event.isComposing,
@@ -454,8 +510,8 @@ function composition(record: InteractionLabRecord) {
   ) => (event: CRCCompositionEvent) => recordLogicalEvent(
     record,
     type,
-    'composition-target',
     event,
+    selfTargetLabels('composition-target'),
     { data: event.data },
   );
   return rect({
@@ -490,8 +546,8 @@ function clipboard(record: InteractionLabRecord) {
     onPaste: (event: CRCClipboardEvent) => recordLogicalEvent(
       record,
       'paste',
-      'clipboard-target',
       event,
+      selfTargetLabels('clipboard-target'),
       { text: event.clipboardData?.getData('text/plain') ?? '' },
     ),
   });
@@ -504,8 +560,14 @@ function dragDrop(record: InteractionLabRecord) {
     ) => (event: CRCDragEvent) => recordLogicalEvent(
       record,
       type,
-      target,
       event,
+      {
+        currentTarget: target,
+        relatedTarget: event.relatedTarget ?
+          target === 'drag-a' ? 'drag-b' : 'drag-a' :
+          null,
+        target,
+      },
       { text: event.dataTransfer?.getData('text/plain') ?? '' },
     );
     return rect({

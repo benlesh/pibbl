@@ -318,12 +318,17 @@ function formatTrace(state: Readonly<InteractionLabState>): string {
     return 'none';
   }
   return state.trace.map(entry => {
-    const phase = entry.phase ? `:${entry.phase}` : '';
-    const canceled = entry.canceled ? ':canceled' : '';
+    const identity = [
+      `target=${entry.target}`,
+      `current=${entry.currentTarget}`,
+      `related=${entry.relatedTarget ?? 'none'}`,
+    ].join(';');
+    const phase = entry.phase ? `;phase=${entry.phase}` : '';
+    const canceled = entry.canceled ? ';canceled' : '';
     const fields = Object.entries(entry.fields)
       .map(([key, value]) => `${key}=${String(value)}`)
       .join(',');
-    return `${entry.type}(${entry.target}${phase}${canceled}${fields ? `;${fields}` : ''})`;
+    return `${entry.type}(${identity}${phase}${canceled}${fields ? `;${fields}` : ''})`;
   }).join(' → ');
 }
 

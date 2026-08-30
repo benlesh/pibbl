@@ -151,11 +151,13 @@ target removal, or disposal.
 ## Non-coordinate transport
 
 Keyboard, logical focus, editing, composition, and clipboard facades preserve
-their family fields. An explicit logical input adapter can transport them to a
-known target through the shared dispatcher. A plain Canvas supplies no logical
-descendant for native non-coordinate input by itself. Without an installed
-focus/input policy, native Canvas events in these families reach only explicit
-Canvas-wide observers; target handlers do not run.
+their family fields. CRC's internal dispatcher can transport them to a known
+target, which is how focused contract tests exercise the facades. A plain
+Canvas supplies no logical descendant for native non-coordinate input by
+itself. No public input adapter exists in this delivery. Future/optional
+focus/input integration would have to choose a target and dispatch explicitly;
+without such integration, native Canvas events in these families are
+targetless and target handlers do not run.
 
 CRC does not install `tabindex`, a hidden input, editable DOM, focus policy, or
 keyboard activation as a side effect of registering these handlers. The
@@ -234,8 +236,10 @@ Stale controllers and repeated releases cannot affect a newer mount.
 
 The shared public laboratory teaches one direct built-in propagation target,
 one `crcEventListener` ancestor, one `crcEventTarget` custom path, touch
-retention, wheel cancellation, keyboard fields, composition, clipboard, and
-drag/drop. Exhaustive event vocabulary, multi-pointer/contact, mutation,
+retention, wheel cancellation, and drag/drop. Its keyboard, composition, and
+clipboard scenes are headless contract fixtures driven by internal test
+transport; they do not claim a public adapter or manually reachable target on
+a plain Canvas. Exhaustive event vocabulary, multi-pointer/contact, mutation,
 failure, geometry, layer, and ownership matrices remain in focused tests so
 the learning fixture stays readable.
 

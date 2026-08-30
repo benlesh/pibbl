@@ -538,8 +538,8 @@ const interactionLabMetadata: ScenarioMetadata = {
       expected: 'Touch move/end retain the start target and identifier; wheel reports deltas and default cancellation.',
     },
     {
-      action: 'Inspect Keyboard fields, Composition, and Clipboard while using an explicit input adapter or the headless contract driver.',
-      expected: 'The handlers preserve key/code/repeat/composition state, composition data, and clipboard payload without CRC creating hidden editable DOM.',
+      action: 'Inspect the Keyboard fields, Composition, and Clipboard headless contract fixtures; their automated cases use internal headless contract transport.',
+      expected: 'The internal tests preserve key/code/repeat/composition state, composition data, and clipboard payload without claiming a public adapter or CRC creating hidden editable DOM.',
     },
     {
       action: 'Open Drag/drop and move one drag payload from the blue region to the purple region before dropping.',
@@ -567,7 +567,7 @@ const interactionLabMetadata: ScenarioMetadata = {
     },
   ],
   knownLimitations: [
-    'A plain Canvas has no logical keyboard, editing, or clipboard target without an explicit focus/input adapter; CRC does not create hidden editable DOM.',
+    'A plain Canvas has no logical keyboard, editing, or clipboard target; no public input adapter exists, and CRC does not create hidden editable DOM.',
     'This ordering laboratory intentionally uses an untransformed root Canvas; the shared geometry matrix covers CSS scale, transforms, clips, and offscreen layers.',
     'A CRC rerender requested from a handler settles on the next animation frame; narrow dispatcher tests separately prove synchronous live-registry mutation semantics.',
     'New logical event facades expose opaque related targets; the retained legacy mouse fixtures still present readable target labels rather than public target identities.',

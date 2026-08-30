@@ -1,11 +1,12 @@
 # CRC library status and feature inventory
 
-_Snapshot refreshed: 2026-08-18, during Project Plan 003 closure._
+_Feature inventory refreshed: 2026-08-29, after the DOM-aligned user-event
+delivery. Verification totals below remain explicitly dated evidence._
 
 ## At a glance
 
 CRC is a small functional component runtime over the HTML Canvas 2D API. It
-provides scheduled rendering, hook state, mouse-region interaction, eleven
+provides scheduled rendering, hook state, DOM-aligned user events, eleven
 style-only drawing/composition components, transforms, cumulative clipping,
 globally ordered offscreen layers, and five dedicated layout contexts. The
 project has contract-driven browser evidence for public exports, shared
@@ -13,11 +14,15 @@ manual/headless scenarios, deterministic lifecycle ledgers, structural
 performance guards, strict package consumers, and reviewed visual comparisons.
 
 Historical test totals in completed plans are dated evidence rather than the
-current result. The fresh final verification snapshot below is authoritative for
-this revision. Controlled wall-clock timing remains opt-in; deterministic
-structural counterparts run normally.
+current result. The verification snapshot below is authoritative only for its
+named Plan 003 closure revision and does not verify later user-event work.
+Controlled wall-clock timing remains opt-in; deterministic structural
+counterparts run normally.
 
-“Trusted” below means the applicable supported behavior, boundary cases, updates, errors, teardown, interaction, and visual output have deterministic evidence. It does not mean CRC adds browser capabilities that are outside its API, such as touch, keyboard focus, DOM accessibility, rich text, or image CORS control.
+“Trusted” below means the applicable supported behavior, boundary cases,
+updates, errors, teardown, interaction, and visual output have deterministic
+evidence. It does not mean CRC adds a focus/input policy, public input adapter,
+hidden editable DOM, DOM accessibility, rich text, or image CORS control.
 
 ## Public feature inventory
 
@@ -33,19 +38,19 @@ structural counterparts run normally.
 
 ### Drawing components
 
-| Public export    | Confidence and supported behavior                                                                                                                                                    | Known boundary                                                                                                                     |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `rect`           | **Trusted.** Style-only paint/opacity, signed local geometry, length resolution, pixel-grid modes, cursor, mouse events, transforms/clips/layers/layout, and exact pixels.           | Canvas owns signed/degenerate primitive semantics; layout allocation is nonnegative.                                               |
-| `path`           | **Trusted.** Style-only path/paint/opacity, replacement, empty paths, line hit width, targeting, and exact pixels.                                                                   | A `Path2D` is browser-owned geometry.                                                                                              |
-| `line`           | **Trusted.** Multipoint styling/updates, empty and single-point no-pixel behavior, transforms/clips, line hit width, and exact pixels.                                               | A single `moveTo` does not paint a point.                                                                                          |
-| `horizontalLine` | **Trusted.** Full-Canvas/default and custom bounds, every pixel-grid mode, updates, and interaction parity with `line`.                                                              | Pixel snapping follows effective stroke offset.                                                                                    |
-| `verticalLine`   | **Trusted.** Same matrix as `horizontalLine`, including symmetric defaults and modes.                                                                                                | Same as horizontal line.                                                                                                           |
-| `svgPath`        | **Trusted.** Style-only data/paint, valid/empty/malformed browser delegation, updates, interactions, transforms, and public example.                                                 | CRC does not add an SVG parser; Chromium can accept malformed data as empty or partial geometry.                                   |
-| `text`           | **Trusted.** Style-only content/paint/font/alignment/baseline, fit/wrap behavior, exact Canvas calls, shared pure measurement, multiline hits, updates, and public example.          | Glyph rasterization and text metrics depend on browser/font platform; no DOM rich text or accessibility semantics are synthesized. |
-| `img`            | **Trusted.** Style-owned source/geometry, success/error/source race/removal, inert late callbacks, natural/explicit dimensions, opacity, border, alignment, and exact stable pixels. | Decode/CORS/taint behavior belongs to the browser. Layout measurement requires explicit dimensions.                                |
-| `g`              | **Trusted.** Nested translate/scale/rotate/origin/skew, zero/negative scale, update, sibling isolation, transformed targeting, and composition pixels.                               | This is Canvas transformation, not layout.                                                                                         |
-| `clip`           | **Trusted.** `nonzero`/`evenodd`, cumulative nested intersection, transform/update/empty clip, and matching render/hit geometry.                                                     | No retained clip object is exposed publicly.                                                                                       |
-| `layer`          | **Trusted.** Persistent prop/root/dimension updates, global paint/target order, nested transforms/clips/bounds, shared root interaction state, cursor parity, and cascading cleanup. | Requires browser `OffscreenCanvas`; render caching remains shallow-prop based.                                                     |
+| Public export    | Confidence and supported behavior                                                                                                                                                      | Known boundary                                                                                                                     |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `rect`           | **Trusted.** Style-only paint/opacity, signed local geometry, length resolution, pixel-grid modes, cursor, grouped user-event props, transforms/clips/layers/layout, and exact pixels. | Canvas owns signed/degenerate primitive semantics; layout allocation is nonnegative.                                               |
+| `path`           | **Trusted.** Style-only path/paint/opacity, replacement, empty paths, line hit width, targeting, and exact pixels.                                                                     | A `Path2D` is browser-owned geometry.                                                                                              |
+| `line`           | **Trusted.** Multipoint styling/updates, empty and single-point no-pixel behavior, transforms/clips, line hit width, and exact pixels.                                                 | A single `moveTo` does not paint a point.                                                                                          |
+| `horizontalLine` | **Trusted.** Full-Canvas/default and custom bounds, every pixel-grid mode, updates, and interaction parity with `line`.                                                                | Pixel snapping follows effective stroke offset.                                                                                    |
+| `verticalLine`   | **Trusted.** Same matrix as `horizontalLine`, including symmetric defaults and modes.                                                                                                  | Same as horizontal line.                                                                                                           |
+| `svgPath`        | **Trusted.** Style-only data/paint, valid/empty/malformed browser delegation, updates, interactions, transforms, and public example.                                                   | CRC does not add an SVG parser; Chromium can accept malformed data as empty or partial geometry.                                   |
+| `text`           | **Trusted.** Style-only content/paint/font/alignment/baseline, fit/wrap behavior, exact Canvas calls, shared pure measurement, multiline hits, updates, and public example.            | Glyph rasterization and text metrics depend on browser/font platform; no DOM rich text or accessibility semantics are synthesized. |
+| `img`            | **Trusted.** Style-owned source/geometry, success/error/source race/removal, inert late callbacks, natural/explicit dimensions, opacity, border, alignment, and exact stable pixels.   | Decode/CORS/taint behavior belongs to the browser. Layout measurement requires explicit dimensions.                                |
+| `g`              | **Trusted.** Nested translate/scale/rotate/origin/skew, zero/negative scale, update, sibling isolation, transformed targeting, and composition pixels.                                 | This is Canvas transformation, not layout.                                                                                         |
+| `clip`           | **Trusted.** `nonzero`/`evenodd`, cumulative nested intersection, transform/update/empty clip, and matching render/hit geometry.                                                       | No retained clip object is exposed publicly.                                                                                       |
+| `layer`          | **Trusted.** Persistent prop/root/dimension updates, global paint/target order, nested transforms/clips/bounds, shared root interaction state, cursor parity, and cascading cleanup.   | Requires browser `OffscreenCanvas`; render caching remains shallow-prop based.                                                     |
 
 The full rules are in the [style](./design/style-system-contract.md) and
 [drawing](./design/drawing-components-contract.md) contracts. Eleven focused
@@ -65,20 +70,26 @@ drawing/composition lessons cover all eleven exports in the Studio.
 
 ### Hooks and interaction
 
-| Public API       | Confidence and supported behavior                                                                                                                                                                              | Known boundary                                                                                        |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `crcEvent`       | **Trusted.** Eight mouse event types, one reverse-paint-order logical target, transition-before-move, topmost overlap, accumulated geometry, pathless Canvas observers, mutation/error isolation, and cleanup. | Mouse-only. No capture/bubble phase, synthetic ancestor propagation, or public related-target object. |
-| `crcCursor`      | **Trusted.** Target cursor, Canvas-wide defaults, multiple-default precedence, rerender/removal fallback, external style takeover, layer parity, and exact owned cleanup.                                      | Cursor style is inline Canvas state; it is not an accessibility substitute.                           |
-| `crcState`       | **Trusted.** Stable slot/setter, value and functional updates, coalescing, identity reset, parent updates, and inert stale/dead setters.                                                                       | Functions passed to the setter are updaters, not function-valued state.                               |
-| `crcMemo`        | **Trusted.** Strict shallow dependency identity, length/value change, factory errors, and hook-order rules.                                                                                                    | `NaN` recomputes; `+0` and `-0` compare equal under strict `!==`.                                     |
-| `crcRef`         | **Trusted.** Stable mutable object, initializer-on-mount, no render on mutation, multiple slots, and remount boundaries.                                                                                       | Refs are runtime values, not DOM refs.                                                                |
-| `crcWhenChanged` | **Trusted.** Mount/change/every-render setup, cleanup-before-next, throwing/void replacement, exactly-once removal/root cleanup, and setter-during-cleanup safety.                                             | It is synchronous during render, not a deferred effect.                                               |
-| `crcRectPath`    | **Trusted.** Effective geometry and pixel-grid dependencies preserve/replace memo identity correctly.                                                                                                          | Uses the same hook-order rules as other hooks.                                                        |
-| `crcLinePath`    | **Trusted.** Every coordinate and `closePath` participates in identity and construction.                                                                                                                       | Empty/single-point Canvas semantics are preserved.                                                    |
-| `crcSvgPath`     | **Trusted.** Exact data identity and platform parse/error delegation.                                                                                                                                          | No CRC-side validation or normalization.                                                              |
-| `crcLayoutBox`   | **Trusted.** Stable readonly local allocation, exact resize/reflow values, and context diagnostics.                                                                                                            | Observation is render-only and does not itself schedule an update.                                    |
+| Public API           | Confidence and supported behavior                                                                                                                                                                                                                                               | Known boundary                                                                                                                |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Built-in event props | **Trusted.** Pointer, mouse, touch, wheel, keyboard/focus, editing/composition, clipboard, and drag/drop handlers share topmost geometry, temporary capture/target/bubble paths, cancellation, logical related targets, pointer capture, mutation isolation, and exact cleanup. | Native non-coordinate Canvas input has no logical target without future/optional focus/input integration.                     |
+| `crcEventTarget`     | **Trusted.** One grouped custom target owns explicit `Path2D` geometry, handlers, cursor/focus metadata, captured transforms/clips, paint order, stable rerender identity, pointer capture, and exact teardown.                                                                 | Geometry is required and never inferred from returned descendants; focus metadata is inert without an optional future policy. |
+| `crcEventListener`   | **Trusted.** One non-geometric component registration participates in capture/bubble traversal and common-ancestor activation without becoming a hit target.                                                                                                                    | It owns no drawing or implicit geometry.                                                                                      |
+| `crcEvent`           | **Trusted.** Path-bound calls retain stable legacy mouse targets; pathless calls retain ordered mouse-only Canvas observers after logical propagation with mutation/error isolation and cleanup.                                                                                | The pathless observer payload remains the narrow shipped `{ x, y, originalEvent }` shape.                                     |
+| `crcCursor`          | **Trusted.** Target cursor, Canvas-wide defaults, multiple-default precedence, rerender/removal fallback, external style takeover, layer parity, and exact owned cleanup.                                                                                                       | Cursor style is inline Canvas state; it is not an accessibility substitute.                                                   |
+| `crcState`           | **Trusted.** Stable slot/setter, value and functional updates, coalescing, identity reset, parent updates, and inert stale/dead setters.                                                                                                                                        | Functions passed to the setter are updaters, not function-valued state.                                                       |
+| `crcMemo`            | **Trusted.** Strict shallow dependency identity, length/value change, factory errors, and hook-order rules.                                                                                                                                                                     | `NaN` recomputes; `+0` and `-0` compare equal under strict `!==`.                                                             |
+| `crcRef`             | **Trusted.** Stable mutable object, initializer-on-mount, no render on mutation, multiple slots, and remount boundaries.                                                                                                                                                        | Refs are runtime values, not DOM refs.                                                                                        |
+| `crcWhenChanged`     | **Trusted.** Mount/change/every-render setup, cleanup-before-next, throwing/void replacement, exactly-once removal/root cleanup, and setter-during-cleanup safety.                                                                                                              | It is synchronous during render, not a deferred effect.                                                                       |
+| `crcRectPath`        | **Trusted.** Effective geometry and pixel-grid dependencies preserve/replace memo identity correctly.                                                                                                                                                                           | Uses the same hook-order rules as other hooks.                                                                                |
+| `crcLinePath`        | **Trusted.** Every coordinate and `closePath` participates in identity and construction.                                                                                                                                                                                        | Empty/single-point Canvas semantics are preserved.                                                                            |
+| `crcSvgPath`         | **Trusted.** Exact data identity and platform parse/error delegation.                                                                                                                                                                                                           | No CRC-side validation or normalization.                                                                                      |
+| `crcLayoutBox`       | **Trusted.** Stable readonly local allocation, exact resize/reflow values, and context diagnostics.                                                                                                                                                                             | Observation is render-only and does not itself schedule an update.                                                            |
 
-See the [runtime/hook contract](./design/runtime-hooks-contract.md), [mouse interaction contract](./design/mouse-interaction-contract.md), and ownership documents for exact rules.
+See the [runtime/hook contract](./design/runtime-hooks-contract.md),
+[user-event contract](./design/user-events-contract.md), retained [mouse
+geometry/legacy contract](./design/mouse-interaction-contract.md), and ownership
+documents for exact rules.
 
 ### Types, packages, scenarios, and builds
 
@@ -87,17 +98,18 @@ See the [runtime/hook contract](./design/runtime-hooks-contract.md), [mouse inte
 | Public TypeScript API  | **Trusted.** Declarations compile under strict Bundler and NodeNext consumers. Positives/negatives cover style schemas, lengths, layouts, measurement, observation, runtime, hooks, events, and controllers. Private subpaths reject. | `@crc/types` remains a deliberately empty compatibility package until a concrete need justifies it.                 |
 | Package build          | **Trusted.** esbuild ESM/source maps plus TypeScript declarations load in Node and the browser. Source/built smoke visuals match and built gallery guards reject source leakage.                                                      | Output is ESM-only; new formats need an explicit requirement.                                                       |
 | Scenario catalog       | **Trusted.** Recursive filesystem/Vite discovery, source markers, identity/action checks, unique metadata, and the generated [scenario index](./scenario-index.md) are required.                                                      | Publication remains a later adapter.                                                                                |
-| Local Studio           | **Trusted.** Twenty-eight learner routes and fourteen deterministic laboratories share canonical public source with headless tests, including four layout lessons.                                                                    | This is an internal Studio, not yet a published documentation site.                                                 |
+| Local Studio           | **Trusted.** Twenty-eight learner routes and fifteen deterministic laboratories share canonical public source with headless tests, including four layout lessons and the user-event contract laboratory.                              | This is an internal Studio, not yet a published documentation site.                                                 |
 | Continuous integration | **Configured.** One workflow maps static, packed-package, browser/visual, lifecycle, and performance structure to a stable aggregate `Trust gate` for PRs, pushes to `main`, and manual runs.                                         | Hosted green status and selecting the aggregate in branch protection require pushing and repository administration. |
 
-## Current verification snapshot
+## Historical Plan 003 verification snapshot
 
-The provisional final revision was verified on 2026-08-18 with Node v26.7.0,
+The Plan 003 closure revision was verified on 2026-08-18 with Node v26.7.0,
 pnpm 11.21.0, Playwright 1.62.1, and Chrome for Testing 151.0.7922.34. The
 documented release environment remains Node 24.15+ on the Node 24 LTS line; the
-Node 26 run is recorded honestly and does not replace that support policy.
+Node 26 run is recorded honestly and does not replace that support policy or
+claim to verify later user-event work.
 
-| Check                            | Fresh result                                                                                                                                                       |
+| Check                            | Recorded result                                                                                                                                                    |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Aggregate browser suite          | 49 files; 457 passed and 2 documented opt-in timing skips                                                                                                          |
 | Static and package               | Catalog 28 lessons/14 labs, typecheck, ESLint/Prettier, package builds, source/built Studio, strict packed Bundler/NodeNext/runtime/no-source consumers all passed |
@@ -157,9 +169,10 @@ See the [trust-gate guide](./testing/trust-gate.md) for clean-checkout setup, vi
 
 ## Accepted or deferred work
 
-- Pointer/touch, keyboard/focus, accessibility, drag/wheel, JSX, new drawing
-  primitives, advanced/deferred layout features, publication, and a polished
-  docs renderer remain outside the current contract.
+- Built-in focus/input policy, a public input adapter, keyboard navigation,
+  accessibility, hidden editable DOM, JSX, new drawing primitives,
+  advanced/deferred layout features, publication, and a polished docs renderer
+  remain outside the current contract.
 - TFC-06 measurements do not justify a spatial index: the optimized linear resolver remains under its recorded triggers.
 - Wall-clock performance runs remain environment-controlled and opt-in; deterministic workload/counter assertions run on every normal suite.
 - `origin/jess/tests-for-utils` and richer JSX/playground branches were reviewed selectively; useful current-contract evidence was recreated without merging stale toolchain or unrelated feature work.

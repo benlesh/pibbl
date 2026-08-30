@@ -47,6 +47,7 @@ export interface EventTraceEntry {
   source: 'crc' | 'native';
   type: TraceEventType;
   target: string;
+  currentTarget: string;
   x: number;
   y: number;
   button: number;
@@ -60,9 +61,10 @@ export interface EventTraceEntry {
 
 export interface EventTraceInput extends Omit<
   EventTraceEntry,
-  'button' | 'buttons' | 'canceled' | 'fields' | 'order' | 'phase' | 'transition'
+  'button' | 'buttons' | 'canceled' | 'currentTarget' | 'fields' | 'order' | 'phase' | 'transition'
 > {
   canceled?: boolean;
+  currentTarget?: string;
   event?: Partial<Pick<MouseEvent, 'button' | 'buttons'>>;
   fields?: EventTraceFields;
   phase?: 1 | 2 | 3;
@@ -109,6 +111,7 @@ export class EventTraceRecorder {
       source: input.source,
       type: input.type,
       target: input.target,
+      currentTarget: input.currentTarget ?? input.target,
       x: input.x,
       y: input.y,
       button: input.event?.button ?? 0,

@@ -46,6 +46,11 @@ describe('scenario catalog trust gate', () => {
         'drag events',
       ]),
     );
+    const instructions = interactionLabScenarioEntry.metadata.manualSteps
+      .map(step => `${step.action} ${step.expected}`)
+      .join(' ');
+    expect(instructions).not.toContain('explicit input adapter');
+    expect(instructions).toContain('internal headless contract transport');
   });
 
   it('discovers exactly one catalog entry for every executable example', () => {

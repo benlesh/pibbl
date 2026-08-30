@@ -106,6 +106,7 @@ function semanticTrace(trace: readonly EventTraceEntry[]) {
   return trace.map(entry => ({
     type: entry.type,
     target: entry.target,
+    currentTarget: entry.currentTarget,
     phase: entry.phase,
     relatedTarget: entry.relatedTarget,
     canceled: entry.canceled,
@@ -351,44 +352,53 @@ describe('interaction dispatcher mutation contract', () => {
 
 describe('shared public user-event laboratory', () => {
   it('freezes listener capture, target, and bubble order with phases', async () => {
-    const { canvas, controller } = await mountEventFixture('propagation');
+    const { canvas, controller, definition } = await mountEventFixture('propagation');
 
     dispatchPointer(canvas, 'pointerdown', 150, 120);
 
     expect(semanticTrace(controller.getState().trace)).toEqual([
       {
         type: 'pointerdown',
-        target: 'parent-capture',
+        target: 'propagation-target',
+        currentTarget: 'propagation-parent',
         phase: 1,
         relatedTarget: null,
         canceled: false,
-        fields: { pointerId: 31, pointerType: 'pen' },
+        fields: { handler: 'capture', pointerId: 31, pointerType: 'pen' },
       },
       {
         type: 'pointerdown',
-        target: 'target-capture',
+        target: 'propagation-target',
+        currentTarget: 'propagation-target',
         phase: 2,
         relatedTarget: null,
         canceled: false,
-        fields: { pointerId: 31, pointerType: 'pen' },
+        fields: { handler: 'target-capture', pointerId: 31, pointerType: 'pen' },
       },
       {
         type: 'pointerdown',
-        target: 'target',
+        target: 'propagation-target',
+        currentTarget: 'propagation-target',
         phase: 2,
         relatedTarget: null,
         canceled: false,
-        fields: { pointerId: 31, pointerType: 'pen' },
+        fields: { handler: 'target', pointerId: 31, pointerType: 'pen' },
       },
       {
         type: 'pointerdown',
-        target: 'parent-bubble',
+        target: 'propagation-target',
+        currentTarget: 'propagation-parent',
         phase: 3,
         relatedTarget: null,
         canceled: false,
-        fields: { pointerId: 31, pointerType: 'pen' },
+        fields: { handler: 'bubble', pointerId: 31, pointerType: 'pen' },
       },
     ]);
+    const formatted = definition.formatState(controller.getState())
+      .find(field => field.label === 'Actual trace')?.value ?? '';
+    expect(formatted).toContain('target=propagation-target');
+    expect(formatted).toContain('current=propagation-parent');
+    expect(formatted).toContain('related=none');
   });
 
   it('routes captured pointer movement outside custom target geometry', async () => {
@@ -411,27 +421,27 @@ describe('shared public user-event laboratory', () => {
 
     expect(semanticTrace(controller.getState().trace)).toEqual([
       {
-        type: 'pointerdown', target: 'custom-capture', phase: 2,
+        type: 'pointerdown', target: 'custom-capture', currentTarget: 'custom-capture', phase: 2,
         relatedTarget: null, canceled: false,
         fields: { captured: true, pointerId: 31, x: 150, y: 120 },
       },
       {
-        type: 'gotpointercapture', target: 'custom-capture', phase: 2,
+        type: 'gotpointercapture', target: 'custom-capture', currentTarget: 'custom-capture', phase: 2,
         relatedTarget: null, canceled: false,
         fields: { captured: true, pointerId: 31, x: 150, y: 120 },
       },
       {
-        type: 'pointermove', target: 'custom-capture', phase: 2,
+        type: 'pointermove', target: 'custom-capture', currentTarget: 'custom-capture', phase: 2,
         relatedTarget: null, canceled: false,
         fields: { captured: true, pointerId: 31, x: 430, y: 210 },
       },
       {
-        type: 'pointerup', target: 'custom-capture', phase: 2,
+        type: 'pointerup', target: 'custom-capture', currentTarget: 'custom-capture', phase: 2,
         relatedTarget: null, canceled: false,
         fields: { captured: false, pointerId: 31, x: 430, y: 210 },
       },
       {
-        type: 'lostpointercapture', target: 'custom-capture', phase: 2,
+        type: 'lostpointercapture', target: 'custom-capture', currentTarget: 'custom-capture', phase: 2,
         relatedTarget: null, canceled: false,
         fields: { captured: false, pointerId: 31, x: 430, y: 210 },
       },
@@ -449,17 +459,17 @@ describe('shared public user-event laboratory', () => {
 
     expect(semanticTrace(controller.getState().trace)).toEqual([
       {
-        type: 'touchstart', target: 'touch-owner', phase: 2,
+        type: 'touchstart', target: 'touch-owner', currentTarget: 'touch-owner', phase: 2,
         relatedTarget: null, canceled: false,
         fields: { changed: '7', touches: '7', x: 150, y: 120 },
       },
       {
-        type: 'touchmove', target: 'touch-owner', phase: 2,
+        type: 'touchmove', target: 'touch-owner', currentTarget: 'touch-owner', phase: 2,
         relatedTarget: null, canceled: false,
         fields: { changed: '7', touches: '7', x: 430, y: 210 },
       },
       {
-        type: 'touchend', target: 'touch-owner', phase: 2,
+        type: 'touchend', target: 'touch-owner', currentTarget: 'touch-owner', phase: 2,
         relatedTarget: null, canceled: false,
         fields: { changed: '7', touches: '', x: 430, y: 210 },
       },
@@ -485,14 +495,14 @@ describe('shared public user-event laboratory', () => {
     expect(event.defaultPrevented).toBe(true);
     expect(semanticTrace(controller.getState().trace)).toEqual([
       {
-        type: 'wheel', target: 'wheel-target', phase: 2,
+        type: 'wheel', target: 'wheel-target', currentTarget: 'wheel-target', phase: 2,
         relatedTarget: null, canceled: true,
         fields: { deltaMode: 0, deltaX: 4, deltaY: 18 },
       },
     ]);
   });
 
-  it('projects keyboard and composition fields through explicit logical transport', async () => {
+  it('projects keyboard and composition fields through internal logical transport', async () => {
     const { canvas, controller } = await mountEventFixture('keyboard-fields');
     const instance = GLOBAL_STATE.crcInstances.get(canvas)!;
     const target = Array.from(instance.eventRoot.targets)[0]!;
@@ -508,7 +518,7 @@ describe('shared public user-event laboratory', () => {
     }));
     expect(semanticTrace(controller.getState().trace)).toEqual([
       {
-        type: 'keydown', target: 'keyboard-target', phase: 2,
+        type: 'keydown', target: 'keyboard-target', currentTarget: 'keyboard-target', phase: 2,
         relatedTarget: null, canceled: false,
         fields: {
           code: 'KeyK', isComposing: true, key: 'k', repeat: true,
@@ -532,15 +542,15 @@ describe('shared public user-event laboratory', () => {
     }
     expect(semanticTrace(controller.getState().trace)).toEqual([
       {
-        type: 'compositionstart', target: 'composition-target', phase: 2,
+        type: 'compositionstart', target: 'composition-target', currentTarget: 'composition-target', phase: 2,
         relatedTarget: null, canceled: false, fields: { data: 'に' },
       },
       {
-        type: 'compositionupdate', target: 'composition-target', phase: 2,
+        type: 'compositionupdate', target: 'composition-target', currentTarget: 'composition-target', phase: 2,
         relatedTarget: null, canceled: false, fields: { data: '日本' },
       },
       {
-        type: 'compositionend', target: 'composition-target', phase: 2,
+        type: 'compositionend', target: 'composition-target', currentTarget: 'composition-target', phase: 2,
         relatedTarget: null, canceled: false, fields: { data: '日本語' },
       },
     ]);
@@ -560,7 +570,7 @@ describe('shared public user-event laboratory', () => {
     }));
     expect(semanticTrace(controller.getState().trace)).toEqual([
       {
-        type: 'paste', target: 'clipboard-target', phase: 2,
+        type: 'paste', target: 'clipboard-target', currentTarget: 'clipboard-target', phase: 2,
         relatedTarget: null, canceled: false,
         fields: { text: 'CRC clipboard' },
       },
@@ -571,32 +581,47 @@ describe('shared public user-event laboratory', () => {
     dragData.setData('text/plain', 'CRC drag');
     dispatchDrag(canvas, 'dragover', 120, 120, dragData);
     dispatchDrag(canvas, 'dragover', 360, 120, dragData);
-    dispatchDrag(canvas, 'drop', 360, 120, dragData);
+    dispatchDrag(canvas, 'dragover', 120, 120, dragData);
+    dispatchDrag(canvas, 'drop', 120, 120, dragData);
     expect(semanticTrace(controller.getState().trace)).toEqual([
       {
-        type: 'dragenter', target: 'drag-a', phase: 2,
+        type: 'dragenter', target: 'drag-a', currentTarget: 'drag-a', phase: 2,
         relatedTarget: null, canceled: false, fields: { text: 'CRC drag' },
       },
       {
-        type: 'dragover', target: 'drag-a', phase: 2,
+        type: 'dragover', target: 'drag-a', currentTarget: 'drag-a', phase: 2,
         relatedTarget: null, canceled: false, fields: { text: 'CRC drag' },
       },
       {
-        type: 'dragleave', target: 'drag-a', phase: 2,
-        relatedTarget: 'other', canceled: false,
+        type: 'dragleave', target: 'drag-a', currentTarget: 'drag-a', phase: 2,
+        relatedTarget: 'drag-b', canceled: false,
         fields: { text: 'CRC drag' },
       },
       {
-        type: 'dragenter', target: 'drag-b', phase: 2,
-        relatedTarget: 'other', canceled: false,
+        type: 'dragenter', target: 'drag-b', currentTarget: 'drag-b', phase: 2,
+        relatedTarget: 'drag-a', canceled: false,
         fields: { text: 'CRC drag' },
       },
       {
-        type: 'dragover', target: 'drag-b', phase: 2,
+        type: 'dragover', target: 'drag-b', currentTarget: 'drag-b', phase: 2,
         relatedTarget: null, canceled: false, fields: { text: 'CRC drag' },
       },
       {
-        type: 'drop', target: 'drag-b', phase: 2,
+        type: 'dragleave', target: 'drag-b', currentTarget: 'drag-b', phase: 2,
+        relatedTarget: 'drag-a', canceled: false,
+        fields: { text: 'CRC drag' },
+      },
+      {
+        type: 'dragenter', target: 'drag-a', currentTarget: 'drag-a', phase: 2,
+        relatedTarget: 'drag-b', canceled: false,
+        fields: { text: 'CRC drag' },
+      },
+      {
+        type: 'dragover', target: 'drag-a', currentTarget: 'drag-a', phase: 2,
+        relatedTarget: null, canceled: false, fields: { text: 'CRC drag' },
+      },
+      {
+        type: 'drop', target: 'drag-a', currentTarget: 'drag-a', phase: 2,
         relatedTarget: null, canceled: false, fields: { text: 'CRC drag' },
       },
     ]);
