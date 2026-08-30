@@ -9,7 +9,7 @@ import type {
   ScenarioDefinition,
   ScenarioMountContext,
 } from './types';
-import { crc } from '@crc/core';
+import { crc, type CRCLogicalMouseEvent } from '@crc/core';
 import {
   createPerformanceScene,
   getPerformanceWorkload,
@@ -92,6 +92,7 @@ function nextFrame(): Promise<void> {
 
 class PerformanceInstrumentation {
   private counters = emptyCounters();
+  private readonly counterStack: PerformanceCounters[] = [];
   private readonly context: CanvasRenderingContext2D;
   private readonly originalGetContext: HTMLCanvasElement['getContext'];
   private readonly originalIsPointInPath: CanvasRenderingContext2D['isPointInPath'];
@@ -161,12 +162,25 @@ class PerformanceInstrumentation {
     DOMMatrix.prototype.multiply = this.wrappedMatrixMultiply;
   }
 
-  reset(): void {
-    this.counters = emptyCounters();
+  beginDispatch(): PerformanceCounters {
+    const counters = emptyCounters();
+    this.counterStack.push(counters);
+    this.counters = counters;
+    return counters;
   }
 
-  snapshot(): PerformanceCounters {
-    return { ...this.counters };
+  completeDispatch(counters: PerformanceCounters): PerformanceCounters {
+    const index = this.counterStack.lastIndexOf(counters);
+    if (index >= 0) {
+      this.counterStack.splice(index, 1);
+    }
+    this.counters = this.counterStack.at(-1) ?? emptyCounters();
+    return { ...counters };
+  }
+
+  clearDispatches(): void {
+    this.counterStack.length = 0;
+    this.counters = emptyCounters();
   }
 
   restore(): void {
@@ -193,11 +207,11 @@ async function mountPerformanceLab(
   const instrumentation = new PerformanceInstrumentation(context.canvas);
   const samples: number[] = [];
   let disposed = false;
-  let pendingDispatch: {
-    event: MouseEvent;
+  const pendingDispatches = new Map<MouseEvent, {
+    counters: PerformanceCounters;
     started: number;
     target: string | null;
-  } | undefined;
+  }>();
   let pendingRender = Promise.resolve();
   let state = initialState();
 
@@ -208,14 +222,14 @@ async function mountPerformanceLab(
   };
   const publish = () => context.onStateChange?.(snapshotState(state));
   const beforeMove = (event: MouseEvent) => {
-    instrumentation.reset();
-    pendingDispatch = {
-      event,
+    pendingDispatches.set(event, {
+      counters: instrumentation.beginDispatch(),
       started: performance.now(),
       target: null,
-    };
+    });
   };
-  const recordHit = (target: string) => {
+  const recordHit = (target: string, event: CRCLogicalMouseEvent) => {
+    const pendingDispatch = pendingDispatches.get(event.originalEvent);
     if (pendingDispatch) {
       pendingDispatch.target = target;
     }
@@ -229,11 +243,11 @@ async function mountPerformanceLab(
     };
   };
   const afterMove = (event: MouseEvent) => {
-    if (pendingDispatch?.event !== event) {
+    const completedDispatch = pendingDispatches.get(event);
+    if (!completedDispatch) {
       return;
     }
-    const completedDispatch = pendingDispatch;
-    pendingDispatch = undefined;
+    pendingDispatches.delete(event);
     const duration = round(performance.now() - completedDispatch.started);
     samples.push(duration);
     if (samples.length > SAMPLE_WINDOW) {
@@ -241,7 +255,7 @@ async function mountPerformanceLab(
     }
     state = {
       ...state,
-      counters: instrumentation.snapshot(),
+      counters: instrumentation.completeDispatch(completedDispatch.counters),
       dispatches: state.dispatches + 1,
       lastDurationMs: duration,
       lastTarget: completedDispatch.target,
@@ -327,11 +341,12 @@ async function mountPerformanceLab(
       if (disposed) {
         return;
       }
-      await pendingRender;
       disposed = true;
-      pendingDispatch = undefined;
+      pendingDispatches.clear();
+      instrumentation.clearDispatches();
       abortController.abort();
       instrumentation.restore();
+      await pendingRender;
     },
   };
 }

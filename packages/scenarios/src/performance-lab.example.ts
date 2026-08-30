@@ -4,6 +4,7 @@ import {
   g,
   layer,
   rect,
+  type CRCLogicalMouseEvent,
 } from '@crc/core';
 
 export const PERFORMANCE_LAB_SOURCE_ID = 'event-performance-lab-example';
@@ -180,7 +181,7 @@ export interface PerformanceLabState {
 }
 
 export interface PerformanceSceneProps {
-  recordHit: (target: string) => void;
+  recordHit: (target: string, event: CRCLogicalMouseEvent) => void;
   recordRender: (revision: number) => void;
   revision: number;
   workloadId: PerformanceWorkloadId;
@@ -196,7 +197,7 @@ interface RegionFactoryOptions {
   count: number;
   cursor?: string;
   keyPrefix?: string;
-  recordHit: (target: string) => void;
+  recordHit: (target: string, event: CRCLogicalMouseEvent) => void;
   xOffset?: number;
 }
 
@@ -216,7 +217,7 @@ function sparseRegions(options: RegionFactoryOptions): PerformanceNode[] {
         fill: index === 0 ? '#16a34a' : '#2563eb',
         cursor: options.cursor,
       },
-      onMouseMove: () => options.recordHit(target),
+      onMouseMove: event => options.recordHit(target, event),
     }));
   }
   return nodes;
@@ -235,7 +236,7 @@ function denseRegions(options: RegionFactoryOptions): PerformanceNode[] {
         height: 120,
         fill: index === options.count - 1 ? '#16a34a' : '#2563eb',
       },
-      onMouseMove: () => options.recordHit(target),
+      onMouseMove: event => options.recordHit(target, event),
     }));
   }
   return nodes;
@@ -264,7 +265,7 @@ function layeredRegions(options: RegionFactoryOptions): PerformanceNode[] {
 
 function workloadNodes(
   workload: PerformanceWorkload,
-  recordHit: (target: string) => void,
+  recordHit: (target: string, event: CRCLogicalMouseEvent) => void,
 ): PerformanceNode[] {
   switch (workload.kind) {
     case 'zero':

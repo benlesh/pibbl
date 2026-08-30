@@ -58,7 +58,7 @@ Canvas completion observer could run before CRC. Moving only that private
 completion observer to the bubbling `window` boundary restores measurement
 ordering without changing `@crc/core` runtime behavior.
 
-Focused GREEN results:
+Initial Task 10 GREEN results represented by commit `3d38c70`:
 
 - `corepack pnpm@11.21.0 test:performance`: 1 file passed; 7 passed and 2
   opt-in timing tests skipped; duration 1.32 seconds.
@@ -84,7 +84,7 @@ two grouped registration hooks under strict TypeScript settings.
 Every command below used the configured Node `v24.19.0` runtime and Corepack
 pnpm `11.21.0`.
 
-Focused gates passed:
+Initial Task 10 focused gates represented by commit `3d38c70` passed:
 
 - `corepack pnpm@11.21.0 typecheck`: exit 0 with no diagnostics.
 - `corepack pnpm@11.21.0 lint`: exit 0; ESLint passed and Prettier reported
@@ -110,17 +110,31 @@ loopback port 4174. That process was not disturbed. The evidence harness now
 accepts a validated `CRC_STUDIO_PREVIEW_PORT` integer from 1 through 65535 and
 retains 4174 as its default.
 
-The one post-fix aggregate run was:
+The one post-fix aggregate run for the initial Task 10 delivery was:
 
 ```text
 CRC_STUDIO_PREVIEW_PORT=4274 corepack pnpm@11.21.0 trust
 ```
 
-It exited 0 in a measured 46.8 seconds. Fresh component totals were 28 lessons,
-15 test labs, 61 browser files with 599 passed and 2 skipped tests out of 601
-(21.12 seconds), 5 exact Studio baselines, 1 built smoke test (652
-milliseconds), 12 lifecycle tests (9.69 seconds), and 7 passed plus 2 skipped
-structural-performance tests out of 9 (1.37 seconds). The catalog, typecheck,
-ESLint/Prettier, source and built package/Studio builds, packed Bundler and
-NodeNext consumers, visual safeguard, and all cleanup ownership ledgers also
-passed. No visual baseline or wall-clock performance budget changed.
+It exited 0 in a measured 46.8 seconds on the tree committed as `3d38c70`,
+before the follow-up performance-laboratory regressions below were added. Fresh
+component totals for that aggregate were 28 lessons, 15 test labs, 61 browser
+files with 599 passed and 2 skipped tests out of 601 (21.12 seconds), 5 exact
+Studio baselines, 1 built smoke test (652 milliseconds), 12 lifecycle tests
+(9.69 seconds), and 7 passed plus 2 skipped structural-performance tests out of
+9 (1.37 seconds). The catalog, typecheck, ESLint/Prettier, source and built
+package/Studio builds, packed Bundler and NodeNext consumers, visual safeguard,
+and all cleanup ownership ledgers also passed. No visual baseline or wall-clock
+performance budget changed.
+
+## Post-delivery focused fixes
+
+The aggregate gate was not rerun for these private instrumentation-only fixes:
+
+- Fix round 1 (`c364eab`) added unrelated-DOM origin/pairing coverage. Its final
+  focused performance run reported 8 passed and 2 opt-in skips out of 10 in
+  1.36 seconds.
+- Fix round 2 adds same-Canvas reentrancy coverage and per-event counter/target
+  ownership. Its current focused performance run reports 9 passed and 2 opt-in
+  skips out of 11 in 1.39 seconds. This focused total is newer than, and must
+  not be attributed to, the `3d38c70` aggregate above.

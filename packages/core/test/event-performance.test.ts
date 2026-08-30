@@ -286,7 +286,10 @@ function summarizeInstances(canvas: HTMLCanvasElement): InstanceSummary {
   return { componentRefs, instances: instances.length, paintEntries, regions };
 }
 
-async function mountLab(options: { diagnostics?: boolean } = {}) {
+async function mountLab(options: {
+  diagnostics?: boolean;
+  onStateChange?: (state: Readonly<PerformanceLabState>) => void;
+} = {}) {
   if (activeControllers.size > 0) {
     throw new Error('Performance instrumentation requires one isolated laboratory controller.');
   }
@@ -300,7 +303,10 @@ async function mountLab(options: { diagnostics?: boolean } = {}) {
     activeDiagnostics.add(diagnostics);
   }
   const definition = await loadScenario(performanceLabScenarioEntry);
-  const controller = await definition.mount({ canvas });
+  const controller = await definition.mount({
+    canvas,
+    onStateChange: options.onStateChange,
+  });
   activeControllers.add(controller);
   return { canvas, controller, definition, diagnostics };
 }
@@ -469,6 +475,94 @@ describe('shared event performance laboratory', () => {
     const disposedState = controller.getState();
     otherElement.dispatchEvent(new MouseEvent('mousemove', { bubbles: true }));
     expect(controller.getState()).toEqual(disposedState);
+  });
+
+  it('finalizes nested same-Canvas moves with separate targets and counters', async () => {
+    const publishedMoves: PerformanceLabState[] = [];
+    const { canvas, controller } = await mountLab({
+      onStateChange: state => {
+        if (state.dispatches > 0) {
+          publishedMoves.push({ ...state, counters: { ...state.counters } });
+        }
+      },
+    });
+    const workload = PERFORMANCE_WORKLOADS[1];
+    await controller.perform(`show-${workload.id}`);
+    const context = canvas.getContext('2d');
+    if (!context) {
+      throw new Error('The reentrant performance Canvas has no 2D context.');
+    }
+    const measuredIsPointInPath = context.isPointInPath;
+    const outerMove = new MouseEvent('mousemove', {
+      ...clientPoint(canvas, workload),
+      bubbles: true,
+    });
+    const nestedMiss = new MouseEvent('mousemove', {
+      ...clientPoint(canvas, PERFORMANCE_WORKLOADS[4]),
+      bubbles: true,
+    });
+    let nested = false;
+    context.isPointInPath = ((
+      ...args: Parameters<CanvasRenderingContext2D['isPointInPath']>
+    ) => {
+      if (!nested) {
+        nested = true;
+        canvas.dispatchEvent(nestedMiss);
+      }
+      return measuredIsPointInPath.apply(context, args);
+    }) as CanvasRenderingContext2D['isPointInPath'];
+    try {
+      canvas.dispatchEvent(outerMove);
+    } finally {
+      context.isPointInPath = measuredIsPointInPath;
+    }
+
+    expect(publishedMoves).toHaveLength(2);
+    expect(publishedMoves[0]).toMatchObject({
+      callbacks: 0,
+      counters: expectedCounters(workload),
+      dispatches: 1,
+      lastTarget: null,
+      sampleCount: 1,
+    });
+    expect(publishedMoves[1]).toMatchObject({
+      callbacks: 1,
+      counters: expectedCounters(workload),
+      dispatches: 2,
+      lastTarget: workload.expectedTarget,
+      sampleCount: 2,
+    });
+    expect(publishedMoves.every(move =>
+      Number.isFinite(move.lastDurationMs) && move.lastDurationMs >= 0,
+    )).toBe(true);
+
+    const completedState = controller.getState();
+    const otherElement = document.createElement('button');
+    document.body.append(otherElement);
+    otherElement.dispatchEvent(nestedMiss);
+    otherElement.dispatchEvent(outerMove);
+    expect(controller.getState()).toEqual(completedState);
+
+    const blockedMove = new MouseEvent('mousemove', {
+      ...clientPoint(canvas, workload),
+      bubbles: true,
+    });
+    canvas.addEventListener('mousemove', event => {
+      event.stopPropagation();
+    }, { once: true });
+    canvas.dispatchEvent(blockedMove);
+    const pendingState = controller.getState();
+    expect(pendingState).toMatchObject({
+      callbacks: 2,
+      dispatches: 2,
+      sampleCount: 2,
+    });
+
+    const disposal = controller.dispose();
+    activeControllers.delete(controller);
+    otherElement.dispatchEvent(blockedMove);
+    expect(controller.getState()).toEqual(pendingState);
+    await disposal;
   });
 
   it('counts nested measurement boundaries and snapshots independently of reset', async () => {
