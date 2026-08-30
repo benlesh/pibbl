@@ -43,12 +43,22 @@ const actual = Object.keys(core).sort();
 if (JSON.stringify(actual) !== JSON.stringify(expected)) {
   throw new Error(`Unexpected @crc/core exports: ${actual.join(', ')}`);
 }
+for (const exportName of expected) {
+  if (typeof core[exportName] !== 'function') {
+    throw new Error(`Expected @crc/core ${exportName} to be a runtime function.`);
+  }
+}
 
-try {
-  await import('@crc/core/lib/crc');
-  throw new Error('Expected @crc/core/lib/* to be blocked by the export map');
-} catch (error) {
-  if (error?.code !== 'ERR_PACKAGE_PATH_NOT_EXPORTED') {
-    throw error;
+for (const specifier of [
+  '@crc/core/lib/crc',
+  '@crc/core/src/index',
+]) {
+  try {
+    await import(specifier);
+    throw new Error(`Expected ${specifier} to be blocked by the export map`);
+  } catch (error) {
+    if (error?.code !== 'ERR_PACKAGE_PATH_NOT_EXPORTED') {
+      throw error;
+    }
   }
 }

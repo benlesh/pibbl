@@ -8,7 +8,14 @@ import {
 } from '@crc/scenarios';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import lifecycleLabSource from '../../scenarios/src/lifecycle-lab.example.ts?raw';
-import { absolute, rect, type CRCController } from '../src/index';
+import {
+  absolute,
+  crc,
+  defineComp,
+  layer,
+  rect,
+  type CRCController,
+} from '../src/index';
 import { executeRender } from '../src/lib/execute-render';
 import { GLOBAL_STATE, getCRCInstance } from '../src/lib/global-state';
 import { mountCRC } from '../src/lib/mount-crc';
@@ -73,11 +80,14 @@ async function mountLifecycleLab() {
 
 function expectFullyReleased(diagnostics: RuntimeDiagnostics): void {
   expect(diagnostics.snapshot()).toEqual({
+    eventTargets: 0,
     instances: 0,
     nativeListeners: 0,
     handlers: EMPTY_HANDLERS,
     componentTeardowns: 0,
     mainTeardowns: 0,
+    pointerCaptures: 0,
+    propagationListeners: 0,
     scheduledFrames: 0,
   });
   const ledger = diagnostics.ledgerSnapshot();
@@ -114,6 +124,88 @@ afterEach(async () => {
 });
 
 describe('shared event lifecycle laboratory', () => {
+  it('releases a layered target and its active pointer capture to the exact root baseline', async () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 100;
+    canvas.height = 100;
+    canvas.style.cssText = 'display:block; width:100px; height:100px';
+    document.body.replaceChildren(canvas);
+    const diagnostics = new RuntimeDiagnostics(canvas);
+    activeDiagnostics.add(diagnostics);
+    const activeNativeCaptures = new Set<number>();
+    vi.spyOn(canvas, 'setPointerCapture').mockImplementation(pointerId => {
+      activeNativeCaptures.add(pointerId);
+    });
+    vi.spyOn(canvas, 'hasPointerCapture').mockImplementation(pointerId =>
+      activeNativeCaptures.has(pointerId),
+    );
+    vi.spyOn(canvas, 'releasePointerCapture').mockImplementation(pointerId => {
+      activeNativeCaptures.delete(pointerId);
+    });
+    let ghostLossCalls = 0;
+    const CaptureLayerScene = defineComp<{ show: boolean }>(({ show }) =>
+      show ? layer({
+        render: rect({
+          style: { x: 0, y: 0, width: 50, height: 50, fill: '#2563eb' },
+          onPointerDown: event => {
+            event.currentTarget.setPointerCapture(event.pointerId);
+          },
+          onLostPointerCapture: () => { ghostLossCalls++; },
+        }),
+      }) : undefined,
+    );
+    const controller = crc(canvas, CaptureLayerScene({ show: true }));
+    activeRuntimeControllers.add(controller);
+    await settleFrames();
+
+    expect(diagnostics.snapshot()).toMatchObject({
+      eventTargets: 1,
+      instances: 2,
+      nativeListeners: 2,
+      pointerCaptures: 0,
+      propagationListeners: 0,
+      scheduledFrames: 0,
+    });
+
+    dispatchPointerDown(canvas, 25, 25, 71);
+    expect(activeNativeCaptures).toEqual(new Set([71]));
+    expect(diagnostics.snapshot()).toMatchObject({
+      eventTargets: 1,
+      instances: 2,
+      nativeListeners: 4,
+      pointerCaptures: 1,
+      propagationListeners: 0,
+    });
+
+    crc(canvas, CaptureLayerScene({ show: false }));
+    await settleFrames();
+    expect(activeNativeCaptures).toEqual(new Set());
+    expect(diagnostics.snapshot()).toMatchObject({
+      eventTargets: 0,
+      instances: 1,
+      nativeListeners: 0,
+      pointerCaptures: 0,
+      propagationListeners: 0,
+      scheduledFrames: 0,
+    });
+    canvas.dispatchEvent(new PointerEvent('lostpointercapture', {
+      bubbles: true,
+      pointerId: 71,
+      pointerType: 'touch',
+    }));
+    expect(ghostLossCalls).toBe(0);
+    expect(diagnostics.ledgerSnapshot().nativeListeners).toMatchObject({
+      acquired: 4,
+      duplicateReleases: 0,
+      live: 0,
+      released: 4,
+    });
+
+    controller.dispose();
+    activeRuntimeControllers.delete(controller);
+    expectFullyReleased(diagnostics);
+  });
+
   it('fails closed and releases partial layout ownership after duplicate keys', () => {
     const canvas = document.createElement('canvas');
     canvas.width = 200;
@@ -148,9 +240,12 @@ describe('shared event lifecycle laboratory', () => {
     expect(instance.paintEntries.size).toBe(0);
     expect(diagnostics.snapshot()).toMatchObject({
       componentTeardowns: 0,
+      eventTargets: 0,
       handlers: EMPTY_HANDLERS,
       instances: 1,
       nativeListeners: 0,
+      pointerCaptures: 0,
+      propagationListeners: 0,
       scheduledFrames: 0,
     });
     expect(diagnostics.ledgerSnapshot().handlers.click).toEqual({
@@ -195,9 +290,12 @@ describe('shared event lifecycle laboratory', () => {
 
     const baseline = diagnostics.snapshot();
     expect(baseline).toMatchObject({
+      eventTargets: 4,
       instances: 1,
       nativeListeners: 7,
       handlers: BASELINE_HANDLERS,
+      pointerCaptures: 0,
+      propagationListeners: 0,
       scheduledFrames: 0,
     });
     expect(pixelAt(canvas, 50, 80)).toEqual([37, 99, 235, 255]);
@@ -228,16 +326,19 @@ describe('shared event lifecycle laboratory', () => {
     });
 
     await controller.perform('remove-handler');
-    expect(diagnostics.snapshot().handlers).toEqual({
-      ...BASELINE_HANDLERS,
-      click: 3,
-      contextmenu: 0,
-      dblclick: 0,
-      mousedown: 0,
-      mousemove: 0,
-      mouseout: 0,
-      mouseover: 0,
-      mouseup: 0,
+    expect(diagnostics.snapshot()).toMatchObject({
+      eventTargets: 3,
+      handlers: {
+        ...BASELINE_HANDLERS,
+        click: 3,
+        contextmenu: 0,
+        dblclick: 0,
+        mousedown: 0,
+        mousemove: 0,
+        mouseout: 0,
+        mouseover: 0,
+        mouseup: 0,
+      },
     });
     expect(pixelAt(canvas, 50, 80)).toEqual([100, 116, 139, 255]);
     dispatchMouse(canvas, 'click', 50, 80);
@@ -248,16 +349,25 @@ describe('shared event lifecycle laboratory', () => {
     await controller.perform('remove-subtree');
     expect(canvas.style.cursor).toBe('');
     expect(pixelAt(canvas, 180, 80)).toEqual([248, 250, 252, 255]);
-    expect(diagnostics.snapshot().handlers).toEqual({
-      ...EMPTY_HANDLERS,
-      click: 2,
+    expect(diagnostics.snapshot()).toMatchObject({
+      eventTargets: 2,
+      handlers: {
+        ...EMPTY_HANDLERS,
+        click: 2,
+      },
     });
     dispatchMouse(canvas, 'click', 180, 80);
     expect(controller.getState().calls).toBe(2);
 
     const beforeLayer = diagnostics.snapshot();
     await controller.perform('add-layer');
-    expect(diagnostics.snapshot()).toMatchObject({ instances: 2, nativeListeners: 5 });
+    expect(diagnostics.snapshot()).toMatchObject({
+      eventTargets: 3,
+      instances: 2,
+      nativeListeners: 5,
+      pointerCaptures: 0,
+      propagationListeners: 0,
+    });
     expect(pixelAt(canvas, 290, 190)).toEqual([217, 119, 6, 255]);
     dispatchMouse(canvas, 'click', 200, 170);
     expect(controller.getState().targetCalls.layer).toBe(1);
@@ -319,3 +429,26 @@ describe('shared event lifecycle laboratory', () => {
     expectFullyReleased(diagnostics);
   });
 });
+
+function settleFrames(): Promise<void> {
+  return new Promise(resolve => requestAnimationFrame(() =>
+    requestAnimationFrame(() => resolve()),
+  ));
+}
+
+function dispatchPointerDown(
+  canvas: HTMLCanvasElement,
+  x: number,
+  y: number,
+  pointerId: number,
+): void {
+  const bounds = canvas.getBoundingClientRect();
+  canvas.dispatchEvent(new PointerEvent('pointerdown', {
+    bubbles: true,
+    cancelable: true,
+    clientX: bounds.left + x,
+    clientY: bounds.top + y,
+    pointerId,
+    pointerType: 'touch',
+  }));
+}

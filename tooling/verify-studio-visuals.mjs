@@ -6,7 +6,13 @@ import { chromium } from "playwright";
 
 const workspaceRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const update = process.argv.includes("--update");
-const origin = "http://127.0.0.1:4174";
+const previewPort = process.env.CRC_STUDIO_PREVIEW_PORT ?? "4174";
+if (!/^[1-9]\d{0,4}$/.test(previewPort) || Number(previewPort) > 65_535) {
+  throw new Error(
+    `CRC_STUDIO_PREVIEW_PORT must be an integer from 1 through 65535; received ${JSON.stringify(previewPort)}.`,
+  );
+}
+const origin = `http://127.0.0.1:${previewPort}`;
 const routes = [
   { name: "landing", hash: "#/examples", ready: ".studio-hero-canvas canvas" },
   {
@@ -103,7 +109,7 @@ const server = spawn(
     "--host",
     "127.0.0.1",
     "--port",
-    "4174",
+    previewPort,
     "--strictPort",
   ],
   {

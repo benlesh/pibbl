@@ -91,6 +91,13 @@ import {
   measureElement,
 } from '@crc/core';
 
+// @ts-expect-error internal library modules are outside the public export map
+import type { CRCEventRoot } from '@crc/core/lib/types';
+// @ts-expect-error package source modules are outside the public export map
+import type { CRCEventDefinition } from '@crc/core/src/lib/events/event-definitions';
+void (undefined as unknown as CRCEventRoot);
+void (undefined as unknown as CRCEventDefinition);
+
 export type PublicEventTypes = {
   base: CRCEvent;
   clipboard: CRCClipboardEvent;
@@ -120,9 +127,17 @@ const pointerHandler: CRCEventHandler<'pointerdown'> = event => {
 };
 const eventHandlers = {
   onPointerDown: pointerHandler,
+  onMouseDown: event => {
+    const detail: number = event.detail;
+    void detail;
+  },
   onTouchStart: event => {
     const changedTouches: TouchList = event.changedTouches;
     void changedTouches;
+  },
+  onWheel: event => {
+    const deltaMode: number = event.deltaMode;
+    void deltaMode;
   },
   onKeyDownCapture: event => {
     const key: string = event.key;
@@ -131,6 +146,18 @@ const eventHandlers = {
   onFocus: event => {
     const original: FocusEvent = event.originalEvent;
     void original;
+  },
+  onBeforeInput: event => {
+    const inputType: string = event.inputType;
+    void inputType;
+  },
+  onChange: event => {
+    const original: Event = event.originalEvent;
+    void original;
+  },
+  onCompositionUpdate: event => {
+    const data: string = event.data;
+    void data;
   },
   onCopyCapture: event => {
     const clipboardData: DataTransfer | null = event.clipboardData;
@@ -170,11 +197,22 @@ const props = {} satisfies RectProps;
 
 export type PublicCoreTypes = typeof CoreTypes;
 export type PublicCoreEventTypes = [
+  CoreTypes.CRCClipboardEvent,
+  CoreTypes.CRCCompositionEvent,
+  CoreTypes.CRCDragEvent,
+  CoreTypes.CRCEvent,
   CoreTypes.CRCEventHandlers,
+  CoreTypes.CRCEventTarget,
+  CoreTypes.CRCEventTargetOptions,
+  CoreTypes.CRCEventTargetSnapshot,
+  CoreTypes.CRCFocusEvent,
+  CoreTypes.CRCInputEvent,
+  CoreTypes.CRCKeyboardEvent,
   CoreTypes.CRCLogicalMouseEvent,
   CoreTypes.CRCMouseEvent,
   CoreTypes.CRCPointerEvent,
   CoreTypes.CRCTouchEvent,
+  CoreTypes.CRCWheelEvent,
 ];
 export const scene = rect({ ...props, style: rectangleStyle });
 export const mount = crc;

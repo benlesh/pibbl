@@ -27,13 +27,22 @@ import {
   overlay,
   rect,
   type CRCConfig,
+  type CRCClipboardEvent,
+  type CRCCompositionEvent,
+  type CRCDragEvent,
+  type CRCEvent,
   type CRCEventHandlers,
+  type CRCFocusEvent,
   type CRCFit,
+  type CRCInputEvent,
+  type CRCKeyboardEvent,
   type CRCLogicalMouseEvent,
   type CRCMouseEvent,
   type CRCPixelRatio,
   type CRCPointerEvent,
   type CRCEventTargetSnapshot,
+  type CRCTouchEvent,
+  type CRCWheelEvent,
   type OverlayStyle,
   type Percentage,
   type SystemStyle,
@@ -44,11 +53,16 @@ const eventHandlers = {
     const pressure: number = event.pressure;
     void pressure;
   },
-  onTouchStart: event => void event.changedTouches,
-  onKeyDownCapture: event => void event.key,
-  onFocus: event => void event.originalEvent,
-  onCopyCapture: event => void event.clipboardData,
-  onDragStart: event => void event.dataTransfer,
+  onMouseDown: (event: CRCLogicalMouseEvent) => void event.detail,
+  onTouchStart: (event: CRCTouchEvent) => void event.changedTouches,
+  onWheel: (event: CRCWheelEvent) => void event.deltaMode,
+  onKeyDownCapture: (event: CRCKeyboardEvent) => void event.key,
+  onFocus: (event: CRCFocusEvent) => void event.originalEvent,
+  onBeforeInput: (event: CRCInputEvent) => void event.inputType,
+  onChange: (event: CRCEvent) => void event.originalEvent,
+  onCompositionUpdate: (event: CRCCompositionEvent) => void event.data,
+  onCopyCapture: (event: CRCClipboardEvent) => void event.clipboardData,
+  onDragStart: (event: CRCDragEvent) => void event.dataTransfer,
 } satisfies CRCEventHandlers;
 
 const EventProbe = defineComp(() => {
@@ -207,7 +221,7 @@ try {
     process.stderr.write(result.stderr);
     throw new Error('CRC Studio declarations failed their strict consumer.');
   }
-  process.stdout.write('CRC Studio declarations passed strict generic, layout, and surface checks.\n');
+  process.stdout.write('CRC Studio declarations passed strict event-family, generic, layout, and surface checks.\n');
 } finally {
   await rm(directory, { recursive: true, force: true });
 }

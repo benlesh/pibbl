@@ -118,7 +118,7 @@ try {
   run(process.execPath, ['runtime.mjs'], { cwd: consumerDirectory });
 
   process.stdout.write(
-    'Packed @crc/core consumer passed Bundler, NodeNext, runtime, and no-src checks.\n',
+    'Packed @crc/core consumer passed Bundler, NodeNext, all event-family declarations, runtime exports, blocked deep imports, and no-src checks.\n',
   );
 } finally {
   rmSync(temporaryRoot, { force: true, recursive: true });

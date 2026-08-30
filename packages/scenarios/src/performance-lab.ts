@@ -276,7 +276,7 @@ async function mountPerformanceLab(
     signal: abortController.signal,
   });
   await render();
-  context.canvas.addEventListener('mousemove', afterMove, {
+  window.addEventListener('mousemove', afterMove, {
     signal: abortController.signal,
   });
 

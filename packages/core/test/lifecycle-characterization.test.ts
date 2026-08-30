@@ -231,11 +231,14 @@ function track(controller: CRCController): CRCController {
 
 function expectFullyReleased(diagnostics: RuntimeDiagnostics): void {
   expect(diagnostics.snapshot()).toEqual({
+    eventTargets: 0,
     instances: 0,
     nativeListeners: 0,
     handlers: EMPTY_HANDLERS,
     componentTeardowns: 0,
     mainTeardowns: 0,
+    pointerCaptures: 0,
+    propagationListeners: 0,
     scheduledFrames: 0,
   });
   const ledger = diagnostics.ledgerSnapshot();

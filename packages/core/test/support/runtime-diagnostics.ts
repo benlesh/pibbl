@@ -32,11 +32,14 @@ export interface RuntimeDiagnosticLedgerSnapshot {
 }
 
 export interface RuntimeDiagnosticSnapshot {
+  eventTargets: number;
   instances: number;
   nativeListeners: number;
   handlers: Record<EventType, number>;
   componentTeardowns: number;
   mainTeardowns: number;
+  pointerCaptures: number;
+  propagationListeners: number;
   scheduledFrames: number;
 }
 
@@ -188,10 +191,15 @@ export class RuntimeDiagnostics {
     this.observeRegistries(instances);
     const handlers = Object.fromEntries(EVENT_TYPES.map(type => [type, 0])) as Record<EventType, number>;
     let componentTeardowns = 0;
+    let eventTargets = 0;
     let mainTeardowns = 0;
+    let pointerCaptures = 0;
+    let propagationListeners = 0;
 
     const eventRoots = new Set(instances.map(instance => instance.eventRoot));
     for (const eventRoot of eventRoots) {
+      eventTargets += eventRoot.targets.size;
+      pointerCaptures += eventRoot.pointerCaptures.size;
       for (const type of EVENT_TYPES) {
         handlers[type] += eventRoot.observers.get(type)?.size ?? 0;
         handlers[type] += Array.from(eventRoot.targets)
@@ -200,6 +208,9 @@ export class RuntimeDiagnostics {
           handlers[type] += Array.from(listeners)
             .filter(listener => regionHasHandler(listener, type)).length;
         }
+      }
+      for (const listeners of eventRoot.listenersByComponent.values()) {
+        propagationListeners += listeners.size;
       }
     }
     for (const instance of instances) {
@@ -210,11 +221,14 @@ export class RuntimeDiagnostics {
     }
 
     return {
+      eventTargets,
       instances: instances.length,
       nativeListeners: Array.from(this.listenerRecords).filter(record => record.active).length,
       handlers,
       componentTeardowns,
       mainTeardowns,
+      pointerCaptures,
+      propagationListeners,
       scheduledFrames: this.scheduledFrameIds.size,
     };
   }

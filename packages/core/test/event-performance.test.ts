@@ -15,6 +15,8 @@ import performanceLabSource from '../../scenarios/src/performance-lab.example.ts
 import {
   absolute,
   crc,
+  crcEventListener,
+  defineComp,
   flow,
   rect,
   text,
@@ -103,6 +105,27 @@ const activeControllers = new Set<ScenarioController<PerformanceLabState>>();
 const activeDiagnostics = new Set<RuntimeDiagnostics>();
 const activeFrameDiagnostics = new Set<FrameCallbackDiagnostics>();
 const activeRuntimeControllers = new Set<CRCController>();
+
+const EmptyPerformanceScene = defineComp(() => undefined);
+
+const StructuralEventScene = defineComp<{
+  count: number;
+  recordAncestor: () => void;
+  recordTarget: (index: number) => void;
+}>(({ count, recordAncestor, recordTarget }) => {
+  crcEventListener({ onPointerDownCapture: recordAncestor });
+  return Array.from({ length: count }, (_, index) => rect({
+    key: `structural-target-${index}`,
+    style: {
+      x: 0,
+      y: 0,
+      width: 20,
+      height: 20,
+      fill: '#2563eb',
+    },
+    onPointerDown: () => recordTarget(index),
+  }));
+});
 
 class FrameCallbackDiagnostics {
   readonly samples: number[] = [];
@@ -329,6 +352,75 @@ afterEach(async () => {
 });
 
 describe('shared event performance laboratory', () => {
+  it('keeps an empty root free of native UI listeners and logical targets', async () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 100;
+    canvas.height = 100;
+    canvas.style.cssText = 'display:block; width:100px; height:100px';
+    document.body.replaceChildren(canvas);
+    const diagnostics = new RuntimeDiagnostics(canvas);
+    activeDiagnostics.add(diagnostics);
+    const mounted = crc(canvas, EmptyPerformanceScene({}));
+    activeRuntimeControllers.add(mounted);
+    await settleFrames();
+
+    expect(diagnostics.snapshot()).toMatchObject({
+      eventTargets: 0,
+      nativeListeners: 0,
+      pointerCaptures: 0,
+      propagationListeners: 0,
+      scheduledFrames: 0,
+    });
+  });
+
+  it('shares one native listener, stops at the topmost hit, and tests every live miss candidate without retaining dispatch state', async () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 100;
+    canvas.height = 100;
+    canvas.style.cssText = 'display:block; width:100px; height:100px';
+    document.body.replaceChildren(canvas);
+    const diagnostics = new RuntimeDiagnostics(canvas);
+    activeDiagnostics.add(diagnostics);
+    const targets: number[] = [];
+    let ancestorCalls = 0;
+    const targetCount = 100;
+    const mounted = crc(canvas, StructuralEventScene({
+      count: targetCount,
+      recordAncestor: () => { ancestorCalls++; },
+      recordTarget: index => targets.push(index),
+    }));
+    activeRuntimeControllers.add(mounted);
+    await settleFrames();
+
+    const baseline = diagnostics.snapshot();
+    expect(baseline).toMatchObject({
+      eventTargets: targetCount,
+      handlers: { pointerdown: targetCount + 1 },
+      nativeListeners: 1,
+      pointerCaptures: 0,
+      propagationListeners: 1,
+      scheduledFrames: 0,
+    });
+
+    const topmostPathTests = countPathTests(canvas, () => {
+      dispatchPointerDown(canvas, 10, 10);
+    });
+    expect(topmostPathTests).toBe(1);
+    expect(targets).toEqual([targetCount - 1]);
+    expect(ancestorCalls).toBe(1);
+    expect(diagnostics.snapshot()).toEqual(baseline);
+
+    targets.length = 0;
+    ancestorCalls = 0;
+    const missPathTests = countPathTests(canvas, () => {
+      dispatchPointerDown(canvas, 90, 90);
+    });
+    expect(missPathTests).toBe(targetCount);
+    expect(targets).toEqual([]);
+    expect(ancestorCalls).toBe(0);
+    expect(diagnostics.snapshot()).toEqual(baseline);
+  });
+
   it('counts nested measurement boundaries and snapshots independently of reset', async () => {
     const canvas = document.createElement('canvas');
     canvas.width = 200;
@@ -679,4 +771,44 @@ function pixelAtPoint(
   y: number,
 ): readonly number[] {
   return Array.from(canvas.getContext('2d')!.getImageData(x, y, 1, 1).data);
+}
+
+function dispatchPointerDown(
+  canvas: HTMLCanvasElement,
+  x: number,
+  y: number,
+): void {
+  const bounds = canvas.getBoundingClientRect();
+  canvas.dispatchEvent(new PointerEvent('pointerdown', {
+    bubbles: true,
+    cancelable: true,
+    clientX: bounds.left + x,
+    clientY: bounds.top + y,
+    pointerId: 1,
+    pointerType: 'mouse',
+  }));
+}
+
+function countPathTests(
+  canvas: HTMLCanvasElement,
+  dispatch: () => void,
+): number {
+  const context = canvas.getContext('2d');
+  if (!context) {
+    throw new Error('The structural event Canvas has no 2D context.');
+  }
+  const original = context.isPointInPath;
+  let pathTests = 0;
+  context.isPointInPath = ((
+    ...args: Parameters<CanvasRenderingContext2D['isPointInPath']>
+  ) => {
+    pathTests++;
+    return original.apply(context, args);
+  }) as CanvasRenderingContext2D['isPointInPath'];
+  try {
+    dispatch();
+  } finally {
+    context.isPointInPath = original;
+  }
+  return pathTests;
 }

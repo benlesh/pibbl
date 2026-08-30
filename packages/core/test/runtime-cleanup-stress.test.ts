@@ -248,10 +248,13 @@ async function mountLab(options: {
 function expectFullyReleased(diagnostics: RuntimeDiagnostics): void {
   expect(diagnostics.snapshot()).toEqual({
     componentTeardowns: 0,
+    eventTargets: 0,
     handlers: EMPTY_HANDLERS,
     instances: 0,
     mainTeardowns: 0,
     nativeListeners: 0,
+    pointerCaptures: 0,
+    propagationListeners: 0,
     scheduledFrames: 0,
   });
   const ledger = diagnostics.ledgerSnapshot();
@@ -326,9 +329,12 @@ describe('shared runtime cleanup stress laboratory', () => {
     const resourceBaseline = diagnostics.snapshot();
     const structureBaseline = structureDiagnostics.snapshot();
     expect(resourceBaseline).toMatchObject({
+      eventTargets: 1,
       handlers: { ...EMPTY_HANDLERS, mousemove: 1 },
       instances: 1,
       nativeListeners: 2,
+      pointerCaptures: 0,
+      propagationListeners: 0,
       scheduledFrames: 0,
     });
     expect(snapshotLayoutDiagnostics()).toEqual({
@@ -410,9 +416,12 @@ describe('shared runtime cleanup stress laboratory', () => {
       value: '1 acquired · 0 cleaned',
     });
     expect(diagnostics.snapshot()).toMatchObject({
+      eventTargets: 0,
       handlers: EMPTY_HANDLERS,
       instances: 1,
       nativeListeners: 0,
+      pointerCaptures: 0,
+      propagationListeners: 0,
       scheduledFrames: 0,
     });
     expect(pixelAt(canvas, 10, 10)).toEqual([248, 250, 252, 255]);
