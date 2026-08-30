@@ -107,6 +107,89 @@ describe('Canvas DOM focus host', () => {
   });
 
   it.each([
+    ['target', (target: HTMLElement) => target],
+    ['document', () => document],
+    ['window', () => window],
+  ] as const)(
+    'ignores reverse Tab canceled by a later %s listener',
+    async (_label, preventerTarget) => {
+      const mounted = mountBetweenNativeControls(managed(['first', 'last']));
+      const target = preventerTarget(mounted.after);
+      const preventReverse = (event: Event) => {
+        if (
+          event instanceof KeyboardEvent &&
+          event.key === 'Tab' &&
+          event.shiftKey
+        ) {
+          event.preventDefault();
+        }
+      };
+      target.addEventListener('keydown', preventReverse);
+      mounted.after.focus();
+
+      const reverse = new KeyboardEvent('keydown', {
+        key: 'Tab',
+        shiftKey: true,
+        bubbles: true,
+        cancelable: true,
+      });
+      mounted.after.dispatchEvent(reverse);
+      await Promise.resolve();
+      mounted.canvas.focus({ preventScroll: true });
+
+      expect(reverse.defaultPrevented).toBe(true);
+      expect(focusedLabel(mounted.manager)).toBe('first');
+      target.removeEventListener('keydown', preventReverse);
+    },
+  );
+
+  it('expires an unrelated reverse Tab before later-task programmatic Canvas focus', async () => {
+    const mounted = mountBetweenNativeControls(managed(['first', 'last']));
+    mounted.after.focus();
+    mounted.after.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'Tab',
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    }));
+
+    await new Promise(resolve => setTimeout(resolve, 0));
+    mounted.canvas.focus({ preventScroll: true });
+
+    expect(focusedLabel(mounted.manager)).toBe('first');
+  });
+
+  it('consumes one reverse Tab entry without reusing it', async () => {
+    const mounted = mountBetweenNativeControls(managed(['first', 'last']));
+    mounted.after.focus();
+
+    await userEvent.tab({ shift: true });
+    expect(focusedLabel(mounted.manager)).toBe('last');
+    mounted.canvas.blur();
+    mounted.canvas.focus({ preventScroll: true });
+
+    expect(focusedLabel(mounted.manager)).toBe('first');
+  });
+
+  it('uses forward entry when a Tab handler programmatically focuses the Canvas', () => {
+    const mounted = mountBetweenNativeControls(managed(['first', 'last']));
+    const focusCanvas = () => mounted.canvas.focus({ preventScroll: true });
+    mounted.after.addEventListener('keydown', focusCanvas);
+    mounted.after.focus();
+
+    mounted.after.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'Tab',
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    }));
+
+    expect(document.activeElement).toBe(mounted.canvas);
+    expect(focusedLabel(mounted.manager)).toBe('first');
+    mounted.after.removeEventListener('keydown', focusCanvas);
+  });
+
+  it.each([
     ['an absent attribute', undefined, '0', null],
     ['an exact negative value', '-1', '0', '-1'],
     ['an existing positive Tab stop', '7', '7', '7'],
@@ -159,9 +242,16 @@ describe('Canvas DOM focus host', () => {
     const add = vi.spyOn(document, 'addEventListener');
     const remove = vi.spyOn(document, 'removeEventListener');
     const canvas = createCanvas();
+    const canvasAdd = vi.spyOn(canvas, 'addEventListener');
+    const canvasRemove = vi.spyOn(canvas, 'removeEventListener');
     const mounted = mountAndRender(canvas, managed(['only']));
+    const eventRoot = getCRCInstance(canvas).eventRoot;
     const firstAdds = documentKeydownCaptureCalls(add.mock.calls);
     expect(firstAdds).toHaveLength(1);
+    for (const type of ['focus', 'blur', 'keydown'] as const) {
+      expect(eventRoot.nativeListeners?.count(type)).toBe(1);
+      expect(canvasEventCalls(canvasAdd.mock.calls, type)).toHaveLength(1);
+    }
 
     executeRender(canvas, 2, managed(['only']));
     executeRender(canvas, 3, managed([]));
@@ -173,6 +263,14 @@ describe('Canvas DOM focus host', () => {
     expect(removals).toHaveLength(1);
     expect(removals[0][1]).toBe(firstAdds[0][1]);
     expect(canvas.hasAttribute('tabindex')).toBe(false);
+    for (const type of ['focus', 'blur', 'keydown'] as const) {
+      expect(eventRoot.nativeListeners?.count(type)).toBe(0);
+      const adds = canvasEventCalls(canvasAdd.mock.calls, type);
+      const removes = canvasEventCalls(canvasRemove.mock.calls, type);
+      expect(adds).toHaveLength(1);
+      expect(removes).toHaveLength(1);
+      expect(removes[0][1]).toBe(adds[0][1]);
+    }
 
     mounted.controller.dispose();
     mounted.controller.dispose();
@@ -180,7 +278,12 @@ describe('Canvas DOM focus host', () => {
     expect(documentKeydownCaptureCalls(remove.mock.calls)).toHaveLength(1);
   });
 
-  it('transfers the focus host across manager replacement without losing the Tab stop', () => {
+  it.each([
+    ['old manager is visited before its replacement', false],
+    ['replacement is visited before the old manager', true],
+  ] as const)(
+    'reuses one focus host when %s',
+    (_label, reverseSlots) => {
     const add = vi.spyOn(document, 'addEventListener');
     const remove = vi.spyOn(document, 'removeEventListener');
     const OldHost = defineComp(() => withFocusManagement(Target({
@@ -191,12 +294,23 @@ describe('Canvas DOM focus host', () => {
       label: 'new',
       handlers: { onClick: noop },
     })));
-    const Root = defineComp(({ replacement }: { replacement: boolean }) =>
-      replacement ? NewHost({ key: 'new' }) : OldHost({ key: 'old' })
-    );
+    const Root = defineComp(({ replacement }: { replacement: boolean }) => {
+      const oldSlot = replacement ? undefined : OldHost({ key: 'old' });
+      const newSlot = replacement ? NewHost({ key: 'new' }) : undefined;
+      return reverseSlots ? [newSlot, oldSlot] : [oldSlot, newSlot];
+    });
     const canvas = createCanvas();
+    const canvasAdd = vi.spyOn(canvas, 'addEventListener');
+    const canvasRemove = vi.spyOn(canvas, 'removeEventListener');
     const mounted = mountAndRender(canvas, Root({ replacement: false }));
     const priorManager = mounted.manager;
+    const eventRoot = getCRCInstance(canvas).eventRoot;
+    const originalNativeListeners = new Map(
+      (['focus', 'blur', 'keydown'] as const).map(type => [
+        type,
+        canvasEventCalls(canvasAdd.mock.calls, type)[0][1],
+      ]),
+    );
     expect(canvas.getAttribute('tabindex')).toBe('0');
 
     executeRender(canvas, 2, Root({ replacement: true }));
@@ -204,14 +318,25 @@ describe('Canvas DOM focus host', () => {
     expect(replacement).not.toBe(priorManager);
     expect(candidateLabels(replacement)).toEqual(['new']);
     expect(canvas.getAttribute('tabindex')).toBe('0');
-    expect(documentKeydownCaptureCalls(add.mock.calls)).toHaveLength(2);
-    expect(documentKeydownCaptureCalls(remove.mock.calls)).toHaveLength(1);
+    expect(documentKeydownCaptureCalls(add.mock.calls)).toHaveLength(1);
+    expect(documentKeydownCaptureCalls(remove.mock.calls)).toHaveLength(0);
+    for (const type of ['focus', 'blur', 'keydown'] as const) {
+      expect(eventRoot.nativeListeners?.count(type)).toBe(1);
+      const calls = canvasEventCalls(canvasAdd.mock.calls, type);
+      expect(calls).toHaveLength(1);
+      expect(calls[0][1]).toBe(originalNativeListeners.get(type));
+      expect(canvasEventCalls(canvasRemove.mock.calls, type)).toHaveLength(0);
+    }
 
     mounted.controller.dispose();
     activeControllers.delete(mounted.controller);
     expect(canvas.hasAttribute('tabindex')).toBe(false);
-    expect(documentKeydownCaptureCalls(remove.mock.calls)).toHaveLength(2);
-  });
+    expect(documentKeydownCaptureCalls(remove.mock.calls)).toHaveLength(1);
+    for (const type of ['focus', 'blur', 'keydown'] as const) {
+      expect(canvasEventCalls(canvasRemove.mock.calls, type)).toHaveLength(1);
+    }
+    },
+  );
 
   it('enters logical focus before native focus routing after manager replacement', () => {
     const trace: string[] = [];
@@ -236,6 +361,48 @@ describe('Canvas DOM focus host', () => {
     expect(focusedLabel(focusManager(canvas))).toBe('new');
   });
 
+  it('keeps the committed host owner during a reentrant replacement render', () => {
+    const trace: string[] = [];
+    const documentAdd = vi.spyOn(document, 'addEventListener');
+    let canvas: HTMLCanvasElement;
+    let documentListenersDuringReplacement = 0;
+    const OldHost = defineComp(() => Target({
+      label: 'old',
+      handlers: { onClick: noop, onFocus: () => trace.push('old-focus') },
+    }));
+    const NewHost = defineComp(() => {
+      documentListenersDuringReplacement = documentKeydownCaptureCalls(
+        documentAdd.mock.calls,
+      ).length;
+      canvas.focus({ preventScroll: true });
+      return Target({
+        label: 'new',
+        handlers: { onClick: noop, onFocus: () => trace.push('new-focus') },
+      });
+    });
+    const Root = defineComp(({ replacement }: { replacement: boolean }) =>
+      replacement ?
+        withFocusManagement(NewHost({ key: 'new' })) :
+        withFocusManagement(OldHost({ key: 'old' }))
+    );
+    canvas = createCanvas();
+    const canvasAdd = vi.spyOn(canvas, 'addEventListener');
+    mountAndRender(canvas, Root({ replacement: false }));
+
+    executeRender(canvas, 2, Root({ replacement: true }));
+
+    expect(documentListenersDuringReplacement).toBe(1);
+    expect(trace).toEqual(['old-focus']);
+    for (const type of ['focus', 'blur', 'keydown'] as const) {
+      expect(canvasEventCalls(canvasAdd.mock.calls, type)).toHaveLength(1);
+    }
+
+    canvas.blur();
+    canvas.focus({ preventScroll: true });
+    expect(trace).toEqual(['old-focus', 'new-focus']);
+    expect(focusedLabel(focusManager(canvas))).toBe('new');
+  });
+
   it('retains one host and listener when a cached layer replays its manager', () => {
     const add = vi.spyOn(document, 'addEventListener');
     const remove = vi.spyOn(document, 'removeEventListener');
@@ -255,8 +422,11 @@ describe('Canvas DOM focus host', () => {
       })
     );
     const canvas = createCanvas();
+    const canvasAdd = vi.spyOn(canvas, 'addEventListener');
+    const canvasRemove = vi.spyOn(canvas, 'removeEventListener');
     const mounted = mountAndRender(canvas, Root({ generation: 1 }));
     const manager = mounted.manager;
+    const eventRoot = getCRCInstance(canvas).eventRoot;
 
     executeRender(canvas, 2, Root({ generation: 2 }));
 
@@ -266,6 +436,70 @@ describe('Canvas DOM focus host', () => {
     expect(canvas.getAttribute('tabindex')).toBe('0');
     expect(documentKeydownCaptureCalls(add.mock.calls)).toHaveLength(1);
     expect(documentKeydownCaptureCalls(remove.mock.calls)).toHaveLength(0);
+    for (const type of ['focus', 'blur', 'keydown'] as const) {
+      expect(eventRoot.nativeListeners?.count(type)).toBe(1);
+      expect(canvasEventCalls(canvasAdd.mock.calls, type)).toHaveLength(1);
+      expect(canvasEventCalls(canvasRemove.mock.calls, type)).toHaveLength(0);
+    }
+  });
+
+  it('releases the complete focus host after failed replacement and reacquires fresh on recovery', () => {
+    const Throwing = defineComp(() => {
+      throw new Error('expected focus-host replacement failure');
+    });
+    const OldHost = defineComp(() => Target({
+      label: 'old',
+      handlers: { onClick: noop },
+    }));
+    const BrokenHost = defineComp(() => [
+      Target({ label: 'broken', handlers: { onClick: noop } }),
+      Throwing({}),
+    ]);
+    const Root = defineComp(({ replacement }: { replacement: boolean }) =>
+      replacement ?
+        withFocusManagement(BrokenHost({ key: 'broken' })) :
+        withFocusManagement(OldHost({ key: 'old' }))
+    );
+    const documentAdd = vi.spyOn(document, 'addEventListener');
+    const documentRemove = vi.spyOn(document, 'removeEventListener');
+    const canvas = createCanvas();
+    canvas.setAttribute('tabindex', '-1');
+    const canvasAdd = vi.spyOn(canvas, 'addEventListener');
+    const canvasRemove = vi.spyOn(canvas, 'removeEventListener');
+    const mounted = mountAndRender(canvas, Root({ replacement: false }));
+    const eventRoot = getCRCInstance(canvas).eventRoot;
+    const prior = mounted.manager;
+    expect(canvas.getAttribute('tabindex')).toBe('0');
+
+    expect(() => executeRender(
+      canvas,
+      2,
+      Root({ replacement: true }),
+    )).toThrowError('expected focus-host replacement failure');
+
+    expect(eventRoot.focusPolicy).toBeUndefined();
+    expect(prior.isDestroyed).toBe(true);
+    expect(prior.candidates).toEqual([]);
+    expect(canvas.getAttribute('tabindex')).toBe('-1');
+    expect(documentKeydownCaptureCalls(documentAdd.mock.calls)).toHaveLength(1);
+    expect(documentKeydownCaptureCalls(documentRemove.mock.calls)).toHaveLength(1);
+    for (const type of ['focus', 'blur', 'keydown'] as const) {
+      expect(eventRoot.nativeListeners?.count(type)).toBe(0);
+      expect(canvasEventCalls(canvasRemove.mock.calls, type)).toHaveLength(1);
+    }
+
+    executeRender(canvas, 3, Root({ replacement: false }));
+    const recovered = focusManager(canvas);
+    expect(recovered).not.toBe(prior);
+    expect(candidateLabels(recovered)).toEqual(['old']);
+    expect(canvas.getAttribute('tabindex')).toBe('0');
+    expect(documentKeydownCaptureCalls(documentAdd.mock.calls)).toHaveLength(2);
+    expect(documentKeydownCaptureCalls(documentRemove.mock.calls)).toHaveLength(1);
+    for (const type of ['focus', 'blur', 'keydown'] as const) {
+      expect(eventRoot.nativeListeners?.count(type)).toBe(1);
+      expect(canvasEventCalls(canvasAdd.mock.calls, type)).toHaveLength(2);
+      expect(canvasEventCalls(canvasRemove.mock.calls, type)).toHaveLength(1);
+    }
   });
 
   it('rejects a root OffscreenCanvas before acquiring a DOM focus host', () => {
@@ -380,6 +614,13 @@ function documentKeydownCaptureCalls(
       call[2] !== null &&
       (call[2] as AddEventListenerOptions).capture === true)
   );
+}
+
+function canvasEventCalls(
+  calls: readonly (readonly unknown[])[],
+  type: 'blur' | 'focus' | 'keydown',
+): (readonly unknown[])[] {
+  return calls.filter(call => call[0] === type);
 }
 
 function rectanglePath(

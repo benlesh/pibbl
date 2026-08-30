@@ -1,5 +1,8 @@
 import type { Teardowns } from '../teardowns.js';
+import type { CRCEventRoot } from '../types.js';
+import type { CRCEventType } from '../events/types.js';
 import type { CRCFocusManager } from './focus-manager.js';
+import { moveTab } from './keyboard-defaults.js';
 
 interface TabIndexSnapshot {
   readonly existed: boolean;
@@ -11,19 +14,29 @@ interface TabIndexOwnership {
   readonly ownedValue: string | undefined;
 }
 
+interface PendingTabEntry {
+  readonly event: KeyboardEvent;
+  propagationComplete: boolean;
+}
+
 export interface CRCMountedDOMFocusHost {
+  beforeNativeDispatch(type: CRCEventType, event: Event): void;
+  setManager(manager: CRCFocusManager | undefined): void;
   syncCandidateAvailability(hasCandidates: boolean): void;
 }
 
 export function mountDOMFocusHost(
-  manager: CRCFocusManager,
   canvas: HTMLCanvasElement,
+  eventRoot: CRCEventRoot,
   teardowns: Teardowns,
 ): CRCMountedDOMFocusHost {
   let tabIndexOwnership: TabIndexOwnership | undefined;
   let candidateCycleActive = false;
-  let backwardsEntry: boolean | undefined;
+  let pendingTabEntry: PendingTabEntry | undefined;
+  let pendingTabExpiry: ReturnType<typeof setTimeout> | undefined;
+  let manager: CRCFocusManager | undefined;
   let disposed = false;
+  const keydownsWithTarget = new WeakSet<KeyboardEvent>();
 
   const restoreTabIndex = () => {
     const ownership = tabIndexOwnership;
@@ -64,33 +77,113 @@ export function mountDOMFocusHost(
     tabIndexOwnership = { snapshot, ownedValue: '0' };
   };
 
-  const onDocumentKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Tab' && !event.defaultPrevented) {
-      backwardsEntry = event.shiftKey;
-    }
-  };
-  const onCanvasFocus = () => {
-    const backwards = backwardsEntry ?? false;
-    backwardsEntry = undefined;
-    manager.enterDOMFocus(backwards);
-  };
-  const onCanvasBlur = () => {
-    backwardsEntry = undefined;
+  const setManager = (nextManager: CRCFocusManager | undefined) => {
+    if (disposed) return;
+    manager = nextManager;
+    syncCandidateAvailability(Boolean(nextManager?.candidates.length));
   };
 
+  const clearPendingTabEntry = () => {
+    pendingTabEntry = undefined;
+    if (pendingTabExpiry !== undefined) clearTimeout(pendingTabExpiry);
+    pendingTabExpiry = undefined;
+  };
+
+  const onDocumentKeyDown = (event: KeyboardEvent) => {
+    if (event.key !== 'Tab') return;
+    clearPendingTabEntry();
+    const entry: PendingTabEntry = {
+      event,
+      propagationComplete: false,
+    };
+    pendingTabEntry = entry;
+    queueMicrotask(() => {
+      entry.propagationComplete = true;
+    });
+    const expiry = setTimeout(() => {
+      if (pendingTabEntry === entry) pendingTabEntry = undefined;
+      if (pendingTabExpiry === expiry) pendingTabExpiry = undefined;
+    }, 0);
+    pendingTabExpiry = expiry;
+  };
+
+  const beforeNativeDispatch = (type: CRCEventType, event: Event) => {
+    const activeManager = manager;
+    if (!activeManager) return;
+    if (type === 'focus') {
+      const entry = pendingTabEntry;
+      clearPendingTabEntry();
+      activeManager.enterDOMFocus(Boolean(
+        entry?.propagationComplete &&
+        !entry.event.defaultPrevented &&
+        entry.event.shiftKey
+      ));
+      return;
+    }
+    if (
+      type === 'keydown' &&
+      event instanceof KeyboardEvent &&
+      activeManager.resolveKeyboardTarget()
+    ) {
+      keydownsWithTarget.add(event);
+    }
+  };
+
+  const onNativeFocus = () => undefined;
+  const onNativeBlur = () => {
+    clearPendingTabEntry();
+    manager?.leaveDOMFocus();
+  };
+  const onNativeKeyDown = (event: Event) => {
+    if (!(event instanceof KeyboardEvent) || event.key !== 'Tab') return;
+    if (keydownsWithTarget.delete(event)) return;
+    const activeManager = manager;
+    if (
+      !activeManager ||
+      event.defaultPrevented ||
+      activeManager.resolveKeyboardTarget()
+    ) {
+      return;
+    }
+    if (moveTab(activeManager, event.shiftKey) === 'moved') {
+      event.preventDefault();
+    }
+  };
+
+  const focusObservers = requireObservers(eventRoot, 'focus');
+  const blurObservers = requireObservers(eventRoot, 'blur');
+  const keydownObservers = requireObservers(eventRoot, 'keydown');
+  focusObservers.add(onNativeFocus);
+  blurObservers.add(onNativeBlur);
+  keydownObservers.add(onNativeKeyDown);
   canvas.ownerDocument.addEventListener('keydown', onDocumentKeyDown, true);
-  canvas.addEventListener('focus', onCanvasFocus, true);
-  canvas.addEventListener('blur', onCanvasBlur);
 
   teardowns.add(() => {
     if (disposed) return;
     disposed = true;
+    manager = undefined;
+    clearPendingTabEntry();
     restoreTabIndex();
-    backwardsEntry = undefined;
+    focusObservers.delete(onNativeFocus);
+    blurObservers.delete(onNativeBlur);
+    keydownObservers.delete(onNativeKeyDown);
     canvas.ownerDocument.removeEventListener('keydown', onDocumentKeyDown, true);
-    canvas.removeEventListener('focus', onCanvasFocus, true);
-    canvas.removeEventListener('blur', onCanvasBlur);
   });
 
-  return { syncCandidateAvailability };
+  return {
+    beforeNativeDispatch,
+    setManager,
+    syncCandidateAvailability,
+  };
+}
+
+function requireObservers(
+  eventRoot: CRCEventRoot,
+  type: 'blur' | 'focus' | 'keydown',
+): Set<(event: Event) => void> {
+  const observers = eventRoot.observers.get(type);
+  if (!observers) {
+    throw new Error(`CRC ${type} observer registry is unavailable.`);
+  }
+  return observers;
 }

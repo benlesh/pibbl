@@ -219,25 +219,74 @@ describe('focus-policy native event routing', () => {
       visible = false;
       executeRender(canvas, ++renders, withFocusManagement(Root({})));
     });
-    const Root = defineComp(() => visible ? Target({
-      label: 'removing',
-      handlers: { onKeyDown: handler },
-    }) : undefined);
+    const Root = defineComp(() => [
+      visible ? Target({
+        key: 'removing',
+        label: 'removing',
+        handlers: { onKeyDown: handler },
+      }) : undefined,
+      Target({
+        key: 'remaining',
+        label: 'remaining',
+        handlers: { onClick: noop },
+      }),
+    ]);
     canvas = createCanvas();
     const mounted = mountAndRender(withFocusManagement(Root({})), canvas);
     canvas.focus({ preventScroll: true });
     const afterDispatch = vi.spyOn(mounted.manager, 'afterDispatch');
+    const event = tabEvent(false);
 
-    canvas.dispatchEvent(new KeyboardEvent('keydown', {
-      key: 'a',
-      bubbles: true,
-      cancelable: true,
-    }));
+    canvas.dispatchEvent(event);
 
     expect(handler).toHaveBeenCalledOnce();
     expect(afterDispatch).not.toHaveBeenCalled();
+    expect(event.defaultPrevented).toBe(false);
     expect(mounted.manager.resolveKeyboardTarget()).toBeUndefined();
   });
+
+  it.each([
+    ['Canvas blur', (
+      canvas: HTMLCanvasElement,
+      _manager: CRCFocusManager,
+    ) => canvas.blur()],
+    ['logical focus clear', (
+      _canvas: HTMLCanvasElement,
+      manager: CRCFocusManager,
+    ) => manager.setFocusState(undefined, false)],
+  ] as const)(
+    'suppresses the Tab default after a handler performs %s',
+    (_label, clearFocus) => {
+      let action: () => void = () => undefined;
+      const Root = defineComp(() => [
+        Target({
+          key: 'first',
+          label: 'first',
+          handlers: {
+            onKeyDown: event => {
+              if (event.key === 'Tab') action();
+            },
+          },
+        }),
+        Target({
+          key: 'remaining',
+          label: 'remaining',
+          handlers: { onClick: noop },
+        }),
+      ]);
+      const mounted = mountAndRender(withFocusManagement(Root({})));
+      mounted.canvas.focus({ preventScroll: true });
+      action = () => clearFocus(mounted.canvas, mounted.manager);
+      const afterDispatch = vi.spyOn(mounted.manager, 'afterDispatch');
+      const event = tabEvent(false);
+
+      mounted.canvas.dispatchEvent(event);
+
+      expect(afterDispatch).not.toHaveBeenCalled();
+      expect(event.defaultPrevented).toBe(false);
+      expect(mounted.manager.resolveKeyboardTarget()).toBeUndefined();
+    },
+  );
 });
 
 interface TargetProps {

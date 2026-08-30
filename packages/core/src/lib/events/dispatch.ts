@@ -271,7 +271,10 @@ function dispatchFocusedNativeEvent(
   root: CRCInstance,
   input: CRCAdaptedFocusedEvent,
 ): void {
-  const policy = root.eventRoot.focusPolicy;
+  const installedPolicy = root.eventRoot.focusPolicy;
+  const policy = installedPolicy?.beforeNativeDispatch ?
+    installedPolicy.beforeNativeDispatch(input.type, input.originalEvent) :
+    installedPolicy;
   const target = policy?.resolveKeyboardTarget();
   if (!policy || !target || !isLiveNode(root, target)) return;
 
@@ -284,7 +287,8 @@ function dispatchFocusedNativeEvent(
     input.type === 'keydown' &&
     event &&
     isLiveNode(root, target) &&
-    root.eventRoot.focusPolicy === policy
+    root.eventRoot.focusPolicy === policy &&
+    policy.resolveKeyboardTarget() === target
   ) {
     policy.afterDispatch(event);
   }

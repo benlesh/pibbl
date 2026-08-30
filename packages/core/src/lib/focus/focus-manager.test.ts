@@ -40,6 +40,7 @@ interface ObservedDirectionalBoundary {
 
 interface ObservedFocusManager extends CRCFocusPolicyBridge {
   readonly candidates: readonly ObservedCandidate[];
+  readonly isDestroyed: boolean;
   setFocusState(
     target: CRCEventTargetRegistration | undefined,
     focusVisible: boolean,
@@ -382,7 +383,7 @@ describe('candidate identity and atomic render collection', () => {
     expect(candidateLabels(replacement)).toEqual(['stable']);
   });
 
-  it('rolls a failed manager replacement back to the prior root owner', () => {
+  it('tears down every manager after a failed replacement and remounts fresh', () => {
     const Throwing = defineComp(() => {
       throw new Error('expected replacement failure');
     });
@@ -406,7 +407,8 @@ describe('candidate identity and atomic render collection', () => {
       Root({ replacement: true }),
     )).toThrowError('expected replacement failure');
 
-    expect(getCRCInstance(mounted.canvas).eventRoot.focusPolicy).toBe(prior);
+    expect(getCRCInstance(mounted.canvas).eventRoot.focusPolicy).toBeUndefined();
+    expect(prior.isDestroyed).toBe(true);
     expect(prior.candidates).toEqual([]);
 
     executeRender(mounted.canvas, 3, Root({ replacement: false }));
@@ -471,12 +473,14 @@ describe('candidate identity and atomic render collection', () => {
     );
 
     expect(innerRenders).toBe(1);
-    expect(eventRoot.focusPolicy).toBe(priorInner);
+    expect(eventRoot.focusPolicy).toBeUndefined();
+    expect(priorInner.isDestroyed).toBe(true);
     expect(priorInner.candidates).toEqual([]);
 
     executeRender(mounted.canvas, 3, Root({ outer: false }));
     const recoveredInner = eventRoot.focusPolicy as ObservedFocusManager;
     expect(recoveredInner).toBeDefined();
+    expect(recoveredInner).not.toBe(priorInner);
     expect(candidateLabels(recoveredInner)).toEqual(['inner']);
     expect(innerRenders).toBe(2);
 

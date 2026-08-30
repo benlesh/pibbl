@@ -1,6 +1,10 @@
 import type { CRCEventTargetRegistration } from '../events/registrations.js';
 import { GLOBAL_STATE } from '../global-state.js';
-import type { CRCEvent, CRCKeyboardEvent } from '../events/types.js';
+import type {
+  CRCEvent,
+  CRCEventType,
+  CRCKeyboardEvent,
+} from '../events/types.js';
 import { Teardowns } from '../teardowns.js';
 import type {
   CRCEventRoot,
@@ -13,7 +17,7 @@ import {
   mountDOMFocusHost,
   type CRCMountedDOMFocusHost,
 } from './dom-focus-host.js';
-import { applyTabDefault, moveTab } from './keyboard-defaults.js';
+import { applyTabDefault } from './keyboard-defaults.js';
 import type {
   CRCDirectionalBoundary,
   CRCFocusCandidate,
@@ -73,6 +77,8 @@ class FocusManagerCoordinator {
     FocusTransactionState
   >();
   private active: CRCFocusManager | undefined;
+  private domFocusHost: CRCMountedDOMFocusHost | undefined;
+  private domFocusHostTeardowns: Teardowns | undefined;
   private disposed = false;
 
   constructor(private readonly eventRoot: CRCEventRoot) {
@@ -83,6 +89,7 @@ class FocusManagerCoordinator {
     if (this.disposed) {
       throw new Error('CRC focus manager root is disposed.');
     }
+    this.ensureDOMFocusHost();
     this.managers.add(manager);
     const transaction = this.eventRoot.renderTransaction;
     if (transaction) {
@@ -101,8 +108,7 @@ class FocusManagerCoordinator {
       if (this.active && this.active !== manager) {
         throw duplicateManagerError();
       }
-      this.active = manager;
-      this.eventRoot.focusPolicy = manager;
+      this.setActive(manager);
       return;
     }
 
@@ -114,8 +120,21 @@ class FocusManagerCoordinator {
     this.eventRoot.focusPolicy = manager;
   }
 
-  isActive(manager: CRCFocusManager): boolean {
-    return this.active === manager;
+  beforeNativeDispatch(
+    type: CRCEventType,
+    event: Event,
+  ): CRCFocusManager | undefined {
+    const manager = this.active;
+    this.domFocusHost?.beforeNativeDispatch(type, event);
+    return manager && !manager.isDestroyed ? manager : undefined;
+  }
+
+  syncDOMFocusHost(manager: CRCFocusManager): void {
+    if (this.active === manager) {
+      this.domFocusHost?.syncCandidateAvailability(
+        manager.candidates.length > 0,
+      );
+    }
   }
 
   claimRetainedManagers(instance: CRCInstance): readonly CRCFocusManager[] {
@@ -147,13 +166,10 @@ class FocusManagerCoordinator {
     const transaction = this.eventRoot.renderTransaction;
     if (transaction) {
       const state = this.stateFor(transaction);
-      if (!state.finished || state.restored === manager) return;
+      if (!state.finished) return;
     }
     if (this.active === manager) {
-      this.active = undefined;
-      if (this.eventRoot.focusPolicy === manager) {
-        this.eventRoot.focusPolicy = undefined;
-      }
+      this.setActive(undefined);
     }
     this.destroy(manager);
   }
@@ -192,7 +208,7 @@ class FocusManagerCoordinator {
           this.destroy(manager);
         }
       }
-      this.active?.activateDOMHost();
+      this.domFocusHost?.setManager(this.active);
       return;
     }
 
@@ -208,12 +224,47 @@ class FocusManagerCoordinator {
     for (const manager of Array.from(this.managers)) {
       if (manager !== restored) this.destroy(manager);
     }
-    restored?.activateDOMHost();
+    this.domFocusHost?.setManager(restored);
   }
 
   private destroy(manager: CRCFocusManager): void {
     this.managers.delete(manager);
     manager.destroyFromCoordinator();
+    if (this.managers.size === 0) this.disposeDOMFocusHost();
+  }
+
+  private ensureDOMFocusHost(): void {
+    if (this.domFocusHost) return;
+    const canvas = this.eventRoot.canvas;
+    if (!canvas) {
+      throw new Error(
+        'withFocusManagement requires an HTMLCanvasElement root; an OffscreenCanvas has no DOM focus host.',
+      );
+    }
+    const teardowns = new Teardowns();
+    try {
+      this.domFocusHost = mountDOMFocusHost(
+        canvas,
+        this.eventRoot,
+        teardowns,
+      );
+      this.domFocusHostTeardowns = teardowns;
+    } catch (error) {
+      teardowns.execute();
+      throw error;
+    }
+  }
+
+  private disposeDOMFocusHost(): void {
+    this.domFocusHost = undefined;
+    this.domFocusHostTeardowns?.execute();
+    this.domFocusHostTeardowns = undefined;
+  }
+
+  private setActive(manager: CRCFocusManager | undefined): void {
+    this.active = manager;
+    this.eventRoot.focusPolicy = manager;
+    this.domFocusHost?.setManager(manager);
   }
 
   private dispose(): void {
@@ -222,6 +273,7 @@ class FocusManagerCoordinator {
     this.active = undefined;
     this.eventRoot.focusPolicy = undefined;
     for (const manager of Array.from(this.managers)) this.destroy(manager);
+    this.disposeDOMFocusHost();
   }
 }
 
@@ -235,8 +287,6 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   private destroyed = false;
   private ownerReleased = false;
   private readonly coordinator: FocusManagerCoordinator;
-  private readonly teardowns = new Teardowns();
-  private readonly domFocusHost: CRCMountedDOMFocusHost;
 
   constructor(eventRoot: CRCEventRoot, owner: CRCInstance) {
     const canvas = eventRoot.canvas;
@@ -245,28 +295,12 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
         'withFocusManagement requires an HTMLCanvasElement root; an OffscreenCanvas has no DOM focus host.',
       );
     }
-    this.domFocusHost = mountDOMFocusHost(this, canvas, this.teardowns);
-    const keydownObservers = eventRoot.observers.get('keydown');
-    if (!keydownObservers) {
-      this.teardowns.execute();
-      throw new Error('CRC keydown observer registry is unavailable.');
-    }
-    keydownObservers.add(this.onNativeKeyDown);
-    this.teardowns.add(() => keydownObservers.delete(this.onNativeKeyDown));
-    const blurObservers = eventRoot.observers.get('blur');
-    if (!blurObservers) {
-      this.teardowns.execute();
-      throw new Error('CRC blur observer registry is unavailable.');
-    }
-    blurObservers.add(this.onNativeBlur);
-    this.teardowns.add(() => blurObservers.delete(this.onNativeBlur));
     managerOwners.set(this, owner);
     this.coordinator = getCoordinator(eventRoot);
     try {
       this.coordinator.add(this);
     } catch (error) {
       managerOwners.delete(this);
-      this.teardowns.execute();
       throw error;
     }
   }
@@ -371,6 +405,13 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     }
   }
 
+  beforeNativeDispatch(
+    type: CRCEventType,
+    event: Event,
+  ): CRCFocusManager | undefined {
+    return this.coordinator.beforeNativeDispatch(type, event);
+  }
+
   enterDOMFocus(backwards: boolean): void {
     if (this.destroyed) return;
     const candidate = backwards ?
@@ -384,11 +425,7 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   }
 
   activateDOMHost(): void {
-    if (!this.destroyed && this.coordinator.isActive(this)) {
-      this.domFocusHost.syncCandidateAvailability(
-        this.committedCandidates.length > 0,
-      );
-    }
+    if (!this.destroyed) this.coordinator.syncDOMFocusHost(this);
   }
 
   replayRetainedSubtree(instance: CRCInstance): void {
@@ -481,7 +518,6 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     this.committedBoundaries.clear();
     this.committedCandidates = Object.freeze([]);
     this.clearFocusState();
-    this.teardowns.execute();
   }
 
   private recordPendingTarget(
@@ -554,22 +590,6 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     if (this.destroyed) throw new Error('CRC focus manager is disposed.');
   }
 
-  private readonly onNativeKeyDown = (event: Event): void => {
-    if (
-      this.destroyed ||
-      !(event instanceof KeyboardEvent) ||
-      event.key !== 'Tab' ||
-      event.defaultPrevented ||
-      this.resolveKeyboardTarget()
-    ) {
-      return;
-    }
-    if (moveTab(this, event.shiftKey) === 'moved') event.preventDefault();
-  };
-
-  private readonly onNativeBlur = (): void => {
-    this.leaveDOMFocus();
-  };
 }
 
 export function createFocusManager(

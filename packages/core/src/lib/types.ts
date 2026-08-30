@@ -232,6 +232,10 @@ export interface CRCFocusPolicyBridge {
   snapshot(target: CRCEventTargetRegistration): CRCEventTargetSnapshot;
   observeTarget(target: CRCEventTargetRegistration): void;
   removeTarget(target: CRCEventTargetRegistration): void;
+  beforeNativeDispatch?(
+    type: DOMCRCEventType,
+    event: Event,
+  ): CRCFocusPolicyBridge | undefined;
   resolveKeyboardTarget(): CRCEventTargetRegistration | undefined;
   afterDispatch(event: CRCEvent): void;
   /** @internal Replays cached layer metadata without executing its components. */
