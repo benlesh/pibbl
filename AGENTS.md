@@ -13,6 +13,9 @@ clipping, offscreen layers, and composable drawing primitives without JSX.
 - Project Plans 001, 002, and 003 are complete. Plan 003 shipped first-class
   local style, declared-box layout, pure measurement, and the Absolute,
   Overlay, Flow, Flex, and explicit Grid components.
+- DOM-aligned user events and optional logical focus/keyboard navigation are
+  implemented. The Canvas remains the only native focus host and gains no
+  generated semantic DOM or accessibility tree.
 - The local `_bmad-output/` directory remains discovery input, not normative
   behavior. Plan 003's implemented design, architecture, contracts, and
   implementation record supersede its earlier layout proposals where they
@@ -88,9 +91,11 @@ either as the current result unless a fresh run reproduces it.
 Public runtime/components: `crc`, `defineComp`, `rect`, `path`, `line`,
 `horizontalLine`, `verticalLine`, `svgPath`, `text`, `img`, `g`, `clip`, and
 `layer`; layout components `absolute`, `overlay`, `flow`, `flex`, and `grid`;
+focus enhancers `withFocusManagement` and `withKeyboardNavigation`;
 and pure `measureElement` plus the public style, length, box, constraint, and
 measurement types. Surface configuration is public through `CRCConfig`,
 `CRCFit`, `CRCPixelRatio`, and the fixed/responsive configuration types.
+Directional configuration is public through `CRCKeyboardNavigationOptions`.
 
 Public hooks: `crcState`, `crcMemo`, `crcRef`, `crcWhenChanged`, `crcRectPath`,
 `crcLinePath`, `crcSvgPath`, `crcEvent`, `crcEventTarget`,
@@ -99,11 +104,14 @@ Public hooks: `crcState`, `crcMemo`, `crcRef`, `crcWhenChanged`, `crcRectPath`,
 Current interaction supports DOM-aligned pointer, mouse, touch, wheel,
 keyboard/focus, editing/composition, clipboard, and drag/drop event facades,
 explicit geometric targets, propagation listeners, cancellation, logical
-related targets, and pointer capture. A plain Canvas has no logical target for
-native non-coordinate input without future/optional focus/input integration;
-no public input adapter, built-in focus policy, hidden editable DOM, or
-accessibility layer exists. CRC also does not promise JSX, rich text, image
-CORS policy, complete CSS compatibility, scrolling, WebGL, or a retained scene
+related targets, and pointer capture. Opt-in focus management adds one Canvas
+DOM focus host, logical focus events and render snapshots, source-order Tab,
+press focus, Enter/Space activation, and focus-visible modality; opt-in nested
+keyboard navigation adds deterministic arrow movement. Without the enhancer,
+native non-coordinate input on a plain Canvas has no logical target. No public
+input-injection adapter, hidden editable DOM, semantic control mirror, or
+accessibility layer exists. CRC also does not promise JSX, rich text, image CORS
+policy, complete CSS compatibility, scrolling, WebGL, or a retained scene
 graph. Browser behavior remains authoritative for Canvas/`Path2D`, font
 rasterization and measurement, decoded-image behavior, and `OffscreenCanvas`
 availability.
@@ -116,6 +124,8 @@ Read the exact contracts before changing these areas:
 - `docs/design/style-system-contract.md`
 - `docs/design/layout-system-contract.md`
 - `docs/design/user-events-contract.md`
+- `docs/design/focus-and-keyboard-navigation-contract.md`
+- `docs/design/canvas-accessibility-guidance.md`
 - `docs/design/mouse-interaction-contract.md`
 - `docs/design/event-resource-ownership.md`
 - `docs/design/runtime-resource-ownership.md`
@@ -174,9 +184,9 @@ anchored native color input and a 100,000-record windowed list are proving
 scenarios only; they do not authorize public popover or virtualization APIs.
 
 Auto-placement Grid, advanced intrinsic CSS sizing, reverse/reordered Flexbox,
-margin, scrolling, focus/input policy, DOM overlays/accessibility,
-workers/WebGL, and a retained scene graph remain deferred. Exact implemented
-contracts and records live in:
+margin, scrolling, focus pseudo-styles, editable input adapters, semantic DOM
+overlays/accessibility, workers/WebGL, and a retained scene graph remain
+deferred. Exact implemented contracts and records live in:
 
 - `docs/superpowers/specs/2026-08-17-style-and-layout-design.md`
 - `docs/architecture/style-and-layout-architecture.md`

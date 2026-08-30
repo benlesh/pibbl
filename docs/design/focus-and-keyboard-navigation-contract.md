@@ -153,6 +153,11 @@ Applications may use `isFocused` for always-visible treatment and
 pseudo-style syntax. Focus visuals are ordinary Canvas drawing and should be
 high contrast and not depend on color alone.
 
+When such a snapshot is painted inside an offscreen layer, a logical focus
+transition invalidates only cached layer instances containing the previous or
+next target, including their nested layer ancestors. Unrelated layers and
+layers rendered without focus management retain their ordinary cache behavior.
+
 ## Optionality, lifecycle, and failures
 
 The base renderer and event dispatcher do not import focus implementation

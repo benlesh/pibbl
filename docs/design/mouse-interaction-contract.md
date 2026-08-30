@@ -4,6 +4,8 @@ Status: geometry, coordinates, cursor, and legacy-observer clauses remain
 implemented. The DOM-aligned [user-event contract](./user-events-contract.md)
 superseded this document's mouse-only non-propagation, hidden related-target,
 no-cancellation, no-capture, and sibling no-activation clauses on 2026-08-29.
+Optional press focus and keyboard activation now defer to the implemented
+[focus and keyboard-navigation contract](./focus-and-keyboard-navigation-contract.md).
 The root-Canvas, transform, clip, global-layer, layout-placement, and overflow
 rules continue to operate in one logical coordinate space across fitting and
 device density.
@@ -126,7 +128,11 @@ A trusted native click invokes a CRC region's `onClick` only when:
 
 The browser determines normal click hysteresis. In the executable reference Chromium fixture, leaving A for Canvas background and re-entering A before release still produces `click(A)` when down, up, and the generated click all resolve to that same live target. CRC preserves that measured behavior; it does not make every intermediate `mouseout` an independent cancellation signal. Down on A/up on sibling B can activate their deepest shared still-live `crcEventListener` when it also lies on the browser click's current coordinate path. Without an explicit shared listener, no sibling-region click is emitted.
 
-If the down target is removed, up targets whatever is now topmost and no click is delivered to the removed region. Programmatic or keyboard-dispatched Canvas clicks without the trusted down/up sequence are not a supported region-activation path in this plan.
+If the down target is removed, up targets whatever is now topmost and no click
+is delivered to the removed region. Keyboard-generated logical clicks do not
+use this trusted pointer sequence; their target, cancellation, provenance, and
+Enter/Space ordering follow the
+[focus and keyboard-navigation contract](./focus-and-keyboard-navigation-contract.md).
 
 ### Double click
 
@@ -205,9 +211,12 @@ The explorer visual target, native trace when analogous, CRC trace, gesture, and
 
 ## Mouse-specific non-goals and follow-ups
 
-- Keyboard activation, built-in focus policy, and accessibility equivalents.
 - Compatibility mouse suppression: CRC forwards the native pointer and mouse
-  sequences the browser supplies without duplicate synthesis.
+  event sequences the browser supplies without duplicate synthesis. The
+  optional focus policy separately deduplicates the focus default for a
+  represented pointer press.
+- Semantic DOM controls and accessibility equivalents remain application-owned;
+  optional Canvas logical focus does not create them.
 - Cross-browser normalization of context-menu ordering.
 - Performance optimization that weakens the verified contract; TFC-06 measures the implemented hot path before selecting any further optimization.
 

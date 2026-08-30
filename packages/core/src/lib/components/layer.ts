@@ -45,6 +45,7 @@ interface LayerSlot {
   interactionLayer: CRCInteractionLayer;
   logicalWidth: number;
   logicalHeight: number;
+  focusRenderRevision: number | undefined;
 }
 
 export function Layer(
@@ -86,6 +87,7 @@ export function Layer(
       interactionLayer,
       logicalWidth: width,
       logicalHeight: height,
+      focusRenderRevision: undefined,
     } satisfies LayerSlot;
     componentRefs.teardowns.add(() => {
       childInstance.eventParent = undefined;
@@ -117,6 +119,9 @@ export function Layer(
   // collected by the child must never see the previous frame's transform.
   parentInstance.paintEntries.add(interactionLayer);
 
+  const focusPolicy = parentInstance.eventRoot.focusPolicy;
+  const focusRenderRevision = focusPolicy?.layerFocusRenderRevision?.(layerCRC);
+
   const shouldRender =
     GLOBAL_STATE.componentIsMounting ||
     dimensionsChanged ||
@@ -125,7 +130,8 @@ export function Layer(
     layerCRC.root.key !== props.render.key ||
     !shallowEquals(layerCRC.root.props, props.render.props) ||
     !shallowEquals(layerCRC.root.style, props.render.style) ||
-    !haveSameElementEnhancers(layerCRC.root, props.render);
+    !haveSameElementEnhancers(layerCRC.root, props.render) ||
+    slot.focusRenderRevision !== focusRenderRevision;
   if (shouldRender) {
     if (layerCRC.surface.kind !== 'layer') {
       throw new Error('CRC layer mounted without a derived surface.');
@@ -146,6 +152,7 @@ export function Layer(
   } else {
     parentInstance.eventRoot.focusPolicy?.replayRetainedSubtree(layerCRC);
   }
+  slot.focusRenderRevision = focusRenderRevision;
 
   ctx.drawImage(
     offscreenCanvas,

@@ -1,6 +1,8 @@
 # CRC user-event contract
 
 Status: implemented on 2026-08-29 by the DOM-aligned user-event delivery.
+Focus integration was added on 2026-08-30 and is governed by the implemented
+[focus and keyboard-navigation contract](./focus-and-keyboard-navigation-contract.md).
 
 This document defines the public event behavior shared by built-in drawing
 components, `crcEventTarget`, `crcEventListener`, and the legacy `crcEvent`
@@ -161,19 +163,23 @@ drag-source target.
 ## Non-coordinate transport
 
 Keyboard, logical focus, editing, composition, and clipboard facades preserve
-their family fields. CRC's internal dispatcher can transport them to a known
-target, which is how focused contract tests exercise the facades. A plain
-Canvas supplies no logical descendant for native non-coordinate input by
-itself. No public input adapter exists in this delivery. Future/optional
-focus/input integration would have to choose a target and dispatch explicitly;
-without such integration, native Canvas events in these families are
-targetless and target handlers do not run.
+their family fields. CRC's internal dispatcher transports them to a known
+target. A plain Canvas supplies no logical descendant for native
+non-coordinate input by itself. When an application installs
+`withFocusManagement`, the optional focus policy chooses the current explicit
+target and supplies the implemented keyboard, focus, activation, and navigation
+behavior defined by the
+[focus and keyboard-navigation contract](./focus-and-keyboard-navigation-contract.md).
+Without that enhancer, native Canvas events in these families remain targetless
+and target handlers do not run. CRC exposes no separate public event-injection
+adapter or hidden editable DOM.
 
-CRC does not install `tabindex`, a hidden input, editable DOM, focus policy, or
-keyboard activation as a side effect of registering these handlers. The
-`keyboardFocusable` and `keyboardNavigationBounds` target options are inert
-metadata without an optional focus policy, and `crcEventTarget` snapshots
-report `isFocused: false` and `isFocusVisible: false`.
+Registering handlers alone does not install `tabindex`, focus policy, or
+keyboard activation. The `keyboardFocusable` and `keyboardNavigationBounds`
+target options remain inert without the optional focus enhancer, and
+`crcEventTarget` snapshots then report `isFocused: false` and
+`isFocusVisible: false`. Exact focus ownership, traversal, defaults, snapshots,
+layer invalidation, and teardown defer to the focus contract.
 
 ## Event facade and cancellation
 
@@ -247,16 +253,19 @@ Stale controllers and repeated releases cannot affect a newer mount.
 
 ## Evidence boundary
 
-The shared public laboratory teaches one direct built-in propagation target,
-one `crcEventListener` ancestor, one `crcEventTarget` custom path, touch
-retention, wheel cancellation, and drag/drop. Its keyboard, composition, and
-clipboard scenes are headless contract fixtures driven by internal test
-transport; they do not claim a public adapter or manually reachable target on
-a plain Canvas. Exhaustive event vocabulary, multi-pointer/contact, mutation,
-failure, geometry, layer, and ownership matrices remain in focused tests so
-the learning fixture stays readable.
+The shared `interaction-trace-lab` laboratory teaches one direct built-in
+propagation target, one `crcEventListener` ancestor, one `crcEventTarget` custom
+path, touch retention, wheel cancellation, and drag/drop. Its keyboard,
+composition, and clipboard scenes are headless contract fixtures driven by
+internal test transport; they do not claim a public adapter or manually
+reachable target on a plain Canvas. The separate public focus scenario
+demonstrates the opt-in keyboard path described by the focus contract.
+Exhaustive event vocabulary, multi-pointer/contact, mutation, failure, geometry,
+layer, and ownership matrices remain in focused tests so the learning fixture
+stays readable.
 
 CRC still does not provide semantic controls, DOM accessibility, a retained
-scene graph, a built-in focus manager, hidden editable DOM, pointer/touch
-gesture recognition, or cross-browser normalization beyond the stated logical
-contracts.
+scene graph, hidden editable DOM, pointer/touch gesture recognition, or
+cross-browser normalization beyond the stated logical contracts. Optional
+logical focus does not create screen-reader semantics or generated DOM
+descendants.

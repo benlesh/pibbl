@@ -325,6 +325,8 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   private primaryTouchIdentifier: number | undefined;
   private touchSequenceActive = false;
   private touchMouseCompatibility: RepresentedPress | undefined;
+  private focusRenderRevision = 0;
+  private readonly layerFocusRenderRevisions = new WeakMap<CRCInstance, number>();
   private destroyed = false;
   private ownerReleased = false;
   private readonly coordinator: FocusManagerCoordinator;
@@ -560,6 +562,10 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     replayManager.replayRetainedTargets(instance);
   }
 
+  layerFocusRenderRevision(instance: CRCInstance): number | undefined {
+    return this.layerFocusRenderRevisions.get(instance);
+  }
+
   private replayRetainedTargets(instance: CRCInstance): void {
     const targets: CRCEventTargetRegistration[] = [];
     collectRetainedTargets(instance, targets, new Set());
@@ -619,9 +625,20 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     target: CRCEventTargetRegistration | undefined,
     focusVisible: boolean,
   ): void {
+    const nextFocusVisible = Boolean(target && focusVisible);
+    if (
+      target === this.focusedTarget &&
+      nextFocusVisible === this.focusVisible
+    ) {
+      return;
+    }
+    const previous = this.focusedTarget;
     if (this.focusedTarget !== target) this.cancelSpaceActivation();
     this.focusedTarget = target;
-    this.focusVisible = Boolean(target && focusVisible);
+    this.focusVisible = nextFocusVisible;
+    const revision = ++this.focusRenderRevision;
+    this.markFocusRenderLayers(previous, revision);
+    this.markFocusRenderLayers(target, revision);
   }
 
   enterDirectionalBoundary(boundary: CRCDirectionalBoundary): void {
@@ -640,6 +657,18 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
 
   private currentDirectionalBoundary(): DirectionalBoundary | undefined {
     return this.directionalStack.at(-1);
+  }
+
+  private markFocusRenderLayers(
+    target: CRCEventTargetRegistration | undefined,
+    revision: number,
+  ): void {
+    let instance = target?.owner;
+    while (instance && instance !== this.eventRoot.rootInstance) {
+      this.layerFocusRenderRevisions.set(instance, revision);
+      instance = instance.parent ?
+        GLOBAL_STATE.crcInstances.get(instance.parent) : undefined;
+    }
   }
 
   dispose(): void {

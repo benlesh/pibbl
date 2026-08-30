@@ -240,6 +240,8 @@ export interface CRCFocusPolicyBridge {
   afterDispatch(event: CRCEvent): void;
   afterPressDispatch?(input: CRCFocusPressDefaultInput): void;
   afterTouchDispatch?(input: CRCFocusTouchDefaultInput): void;
+  /** @internal Returns the last focus change affecting one cached layer subtree. */
+  layerFocusRenderRevision?(instance: CRCInstance): number | undefined;
   /** @internal Replays cached layer metadata without executing its components. */
   replayRetainedSubtree(instance: CRCInstance): void;
 }
