@@ -8,7 +8,6 @@ import { CompEl, CompRefs, SystemStyle } from './types.js';
 import { finalizeHookSlots } from './hooks/hook-slot.js';
 import { resolveElementStyle } from './style/resolve-dispatch.js';
 import {
-  disposeElementEnhancers,
   enterElementEnhancers,
   exitElementEnhancers,
   reconcileElementEnhancers,
@@ -38,7 +37,6 @@ export function render<P, S extends SystemStyle>(
         teardowns,
         onAfterRender: undefined,
       };
-      teardowns.add(() => disposeElementEnhancers(componentRefs));
       GLOBAL_STATE.currentCRCInstance!.refs.set(id, componentRefs);
     }
 

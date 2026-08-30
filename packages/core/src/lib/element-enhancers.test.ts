@@ -261,6 +261,62 @@ describe('identity-transparent element enhancers', () => {
     expect(trace).toEqual(['dispose:first']);
   });
 
+  it('creates enhancer teardown ownership lazily once across removal and re-add', () => {
+    const trace: string[] = [];
+    const enhancerKey = Symbol('lazy-owner');
+    const Component = defineComp(() => {
+      trace.push('render:component');
+    });
+    const plainElement = () => Component({ key: 'stable' });
+    const enhancedElement = (generation: number) => annotate(plainElement(), [
+      createDescriptor('lazy-owner', enhancerKey, generation, trace),
+    ]);
+    const canvas = createCanvas();
+    const controller = mountCRC(canvas, plainElement());
+    activeControllers.add(controller);
+
+    executeRender(canvas, 1);
+    const instance = getCRCInstance(canvas);
+    const component = Array.from(instance.refs.values())[0];
+    expect(instance.refs.size).toBe(1);
+    expect(teardownCount(component.teardowns)).toBe(1);
+    expect(trace).toEqual(['render:component']);
+
+    trace.length = 0;
+    executeRender(canvas, 2, enhancedElement(1));
+    expect(Array.from(instance.refs.values())[0]).toBe(component);
+    expect(teardownCount(component.teardowns)).toBe(2);
+    expect(trace).toEqual([
+      'mount:lazy-owner',
+      'update:lazy-owner:1',
+      'enter:lazy-owner',
+      'render:component',
+      'exit:lazy-owner:true',
+    ]);
+
+    trace.length = 0;
+    executeRender(canvas, 3, plainElement());
+    expect(teardownCount(component.teardowns)).toBe(2);
+    expect(trace).toEqual(['dispose:lazy-owner', 'render:component']);
+
+    trace.length = 0;
+    executeRender(canvas, 4, enhancedElement(2));
+    expect(teardownCount(component.teardowns)).toBe(2);
+    expect(trace).toEqual([
+      'mount:lazy-owner',
+      'update:lazy-owner:2',
+      'enter:lazy-owner',
+      'render:component',
+      'exit:lazy-owner:true',
+    ]);
+
+    trace.length = 0;
+    controller.dispose();
+    controller.dispose();
+    expect(trace).toEqual(['dispose:lazy-owner']);
+    expect(teardownCount(component.teardowns)).toBe(0);
+  });
+
   it('exits an enhanced parent after its throwing descendant with success false', () => {
     const trace: string[] = [];
     const Throwing = defineComp(() => {
@@ -616,6 +672,10 @@ function createCanvas(): HTMLCanvasElement {
   canvas.height = 80;
   document.body.appendChild(canvas);
   return canvas;
+}
+
+function teardownCount(teardowns: unknown): number {
+  return (Reflect.get(teardowns as object, '_teardowns') as Set<unknown>).size;
 }
 
 function pixelAt(canvas: HTMLCanvasElement, x: number, y: number): readonly number[] {

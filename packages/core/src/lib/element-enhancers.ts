@@ -71,6 +71,7 @@ export function reconcileElementEnhancers(
   const descriptors = elementEnhancers.get(component.element) ?? [];
   assertUniqueDescriptorKeys(descriptors);
 
+  const hasOwnership = mountedElementEnhancers.has(component);
   const previous = mountedElementEnhancers.get(component) ?? [];
   const previousByKey = new Map(previous.map(entry => [entry.key, entry]));
   const next: CRCMountedElementEnhancerEntry[] = [];
@@ -96,7 +97,12 @@ export function reconcileElementEnhancers(
 
   const nextKeys = new Set(next.map(entry => entry.key));
   const removed = previous.filter(entry => !nextKeys.has(entry.key));
-  mountedElementEnhancers.set(component, next);
+  if (hasOwnership || next.length > 0) {
+    mountedElementEnhancers.set(component, next);
+    if (!hasOwnership) {
+      component.teardowns.add(() => disposeElementEnhancers(component));
+    }
+  }
   disposeEntries(removed);
 }
 
