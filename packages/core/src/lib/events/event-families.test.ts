@@ -9,11 +9,13 @@ import {
   dispatchToLogicalTarget,
 } from './dispatch';
 import { CRC_EVENT_TYPES } from './event-definitions';
+import type { NativeListenerHub } from './native-listener-hub';
 import type { CRCEventNode } from './registrations';
 import type {
   CRCClipboardEvent,
   CRCCompositionEvent,
   CRCDragEvent,
+  CRCEventHandlers,
   CRCEventTarget,
   CRCEventType,
   CRCFocusEvent,
@@ -48,6 +50,111 @@ afterEach(() => {
 });
 
 describe('touch event dispatch', () => {
+  it('gives an onTouchStart-only target terminal cleanup ownership', async () => {
+    const trace: string[] = [];
+    const { canvas, controller, nativeListeners } = await mountIsolatedTouchTarget({
+      onTouchStart: event => trace.push(event.type),
+    });
+
+    expect(touchListenerCounts(nativeListeners)).toEqual({
+      touchstart: 1,
+      touchmove: 0,
+      touchend: 1,
+      touchcancel: 1,
+    });
+    const touch = createTouch(canvas, 1, 20, 20);
+    dispatchTouch(canvas, 'touchstart', [touch], [touch]);
+    dispatchTouch(canvas, 'touchend', [], [touch]);
+    expect(trace).toEqual(['touchstart']);
+
+    controller.dispose();
+    expect(touchListenerCounts(nativeListeners)).toEqual({
+      touchstart: 0,
+      touchmove: 0,
+      touchend: 0,
+      touchcancel: 0,
+    });
+  });
+
+  it('gives an onTouchMove-only target start and terminal prerequisites', async () => {
+    const trace: string[] = [];
+    const { canvas, controller, nativeListeners } = await mountIsolatedTouchTarget({
+      onTouchMove: event => trace.push(`${event.type}:${event.x}`),
+    });
+
+    expect(touchListenerCounts(nativeListeners)).toEqual({
+      touchstart: 1,
+      touchmove: 1,
+      touchend: 1,
+      touchcancel: 1,
+    });
+    const start = createTouch(canvas, 2, 20, 20);
+    dispatchTouch(canvas, 'touchstart', [start], [start]);
+    const moved = createTouch(canvas, 2, 80, 20);
+    dispatchTouch(canvas, 'touchmove', [moved], [moved]);
+    dispatchTouch(canvas, 'touchend', [], [moved]);
+    dispatchTouch(canvas, 'touchmove', [moved], [moved]);
+    expect(trace).toEqual(['touchmove:80']);
+
+    controller.dispose();
+    expect(touchListenerCounts(nativeListeners)).toEqual({
+      touchstart: 0,
+      touchmove: 0,
+      touchend: 0,
+      touchcancel: 0,
+    });
+  });
+
+  it('gives an onTouchEnd-only target start and cancel prerequisites', async () => {
+    const trace: string[] = [];
+    const { canvas, nativeListeners } = await mountIsolatedTouchTarget({
+      onTouchEnd: event => trace.push(`${event.type}:${event.x}`),
+    });
+
+    expect(touchListenerCounts(nativeListeners)).toEqual({
+      touchstart: 1,
+      touchmove: 0,
+      touchend: 1,
+      touchcancel: 1,
+    });
+    const first = createTouch(canvas, 3, 20, 20);
+    dispatchTouch(canvas, 'touchstart', [first], [first]);
+    const ended = createTouch(canvas, 3, 80, 20);
+    dispatchTouch(canvas, 'touchend', [], [ended]);
+    const second = createTouch(canvas, 4, 20, 20);
+    dispatchTouch(canvas, 'touchstart', [second], [second]);
+    const canceled = createTouch(canvas, 4, 80, 20);
+    dispatchTouch(canvas, 'touchcancel', [], [canceled]);
+    dispatchTouch(canvas, 'touchend', [], [canceled]);
+
+    expect(trace).toEqual(['touchend:80']);
+  });
+
+  it('gives an onTouchCancel-only target start and end prerequisites', async () => {
+    const trace: string[] = [];
+    const { canvas, nativeListeners } = await mountIsolatedTouchTarget({
+      onTouchCancel: event => trace.push(`${event.type}:${event.x}`),
+    });
+
+    expect(touchListenerCounts(nativeListeners)).toEqual({
+      touchstart: 1,
+      touchmove: 0,
+      touchend: 1,
+      touchcancel: 1,
+    });
+    const first = createTouch(canvas, 5, 20, 20);
+    dispatchTouch(canvas, 'touchstart', [first], [first]);
+    const canceled = createTouch(canvas, 5, 80, 20);
+    dispatchTouch(canvas, 'touchcancel', [], [canceled]);
+    const second = createTouch(canvas, 6, 20, 20);
+    dispatchTouch(canvas, 'touchstart', [second], [second]);
+    const ended = createTouch(canvas, 6, 80, 20);
+    dispatchTouch(canvas, 'touchend', [], [ended]);
+    dispatchTouch(canvas, 'touchcancel', [], [ended]);
+
+    expect(trace).toEqual(['touchcancel:80']);
+  });
+
   it('retains each contact target through move and end and releases it on end or cancel', async () => {
     const trace: string[] = [];
     const Target = defineComp<{ label: string; x: number }>(({ label, x }) => {
@@ -388,6 +495,91 @@ describe('non-coordinate logical transport', () => {
 });
 
 describe('drag event dispatch', () => {
+  it('gives an onDragEnter-only target complete boundary and terminal ownership', async () => {
+    const trace: string[] = [];
+    const { canvas, controller, nativeListeners } =
+      await mountIsolatedDragTarget({
+        onDragEnter: event => trace.push(`${event.type}:${event.x}`),
+      });
+
+    expect(dragListenerCounts(nativeListeners)).toEqual({
+      dragstart: 0,
+      drag: 0,
+      dragend: 1,
+      dragenter: 1,
+      dragleave: 1,
+      dragover: 1,
+      drop: 1,
+    });
+    dispatchDrag(canvas, 'dragenter', 25, 25);
+    dispatchDrag(canvas, 'dragleave', 125, 25);
+    dispatchDrag(canvas, 'dragenter', 25, 25);
+    dispatchDrag(canvas, 'drop', 25, 25);
+    dispatchDrag(canvas, 'dragenter', 25, 25);
+    dispatchDrag(canvas, 'dragend', 25, 25);
+    dispatchDrag(canvas, 'dragenter', 25, 25);
+    expect(trace).toEqual([
+      'dragenter:25',
+      'dragenter:25',
+      'dragenter:25',
+      'dragenter:25',
+    ]);
+
+    controller.dispose();
+    expect(dragListenerCounts(nativeListeners)).toEqual({
+      dragstart: 0,
+      drag: 0,
+      dragend: 0,
+      dragenter: 0,
+      dragleave: 0,
+      dragover: 0,
+      drop: 0,
+    });
+  });
+
+  it('gives an onDragLeave-only target establishment and movement prerequisites', async () => {
+    const trace: string[] = [];
+    const { canvas, nativeListeners } = await mountIsolatedDragTarget({
+      onDragLeave: event => trace.push(`${event.type}:${event.x}`),
+    });
+
+    expect(dragListenerCounts(nativeListeners)).toEqual({
+      dragstart: 0,
+      drag: 0,
+      dragend: 1,
+      dragenter: 1,
+      dragleave: 1,
+      dragover: 1,
+      drop: 1,
+    });
+    dispatchDrag(canvas, 'dragenter', 25, 25);
+    dispatchDrag(canvas, 'dragover', 75, 25);
+    dispatchDrag(canvas, 'dragenter', 25, 25);
+    dispatchDrag(canvas, 'dragleave', 125, 25);
+    expect(trace).toEqual(['dragleave:75', 'dragleave:125']);
+  });
+
+  it('gives an onDragOver-only target terminal cleanup without native enter ownership', async () => {
+    const trace: string[] = [];
+    const { canvas, nativeListeners } = await mountIsolatedDragTarget({
+      onDragOver: event => trace.push(`${event.type}:${event.x}`),
+    });
+
+    expect(dragListenerCounts(nativeListeners)).toEqual({
+      dragstart: 0,
+      drag: 0,
+      dragend: 1,
+      dragenter: 0,
+      dragleave: 1,
+      dragover: 1,
+      drop: 1,
+    });
+    dispatchDrag(canvas, 'dragover', 25, 25);
+    dispatchDrag(canvas, 'dragleave', 125, 25);
+    dispatchDrag(canvas, 'dragover', 25, 25);
+    expect(trace).toEqual(['dragover:25', 'dragover:25']);
+  });
+
   it('projects coordinate, modifier, and data-transfer fields unchanged', async () => {
     let received: CRCDragEvent | undefined;
     const Target = defineComp(() => {
@@ -544,6 +736,86 @@ async function mountExplicitTarget(
   return {
     canvas,
     target: Array.from(getCRCInstance(canvas).eventRoot.targets)[0],
+  };
+}
+
+async function mountIsolatedTouchTarget(
+  handlers: CRCEventHandlers,
+): Promise<{
+  canvas: HTMLCanvasElement;
+  controller: ReturnType<typeof crc>;
+  nativeListeners: NativeListenerHub;
+}> {
+  const Target = defineComp(() => {
+    crcEventTarget(handlers, {
+      path: rectanglePath(0, 0, 50, 50),
+      fill: true,
+    });
+  });
+  const canvas = createCanvas();
+  const controller = crc(canvas, Target({}));
+  await nextFrame();
+  return {
+    canvas,
+    controller,
+    nativeListeners: getCRCInstance(canvas).eventRoot.nativeListeners!,
+  };
+}
+
+async function mountIsolatedDragTarget(
+  handlers: CRCEventHandlers,
+): Promise<{
+  canvas: HTMLCanvasElement;
+  controller: ReturnType<typeof crc>;
+  nativeListeners: NativeListenerHub;
+}> {
+  const Target = defineComp(() => {
+    crcEventTarget(handlers, {
+      path: rectanglePath(0, 0, 50, 50),
+      fill: true,
+    });
+  });
+  const canvas = createCanvas();
+  const controller = crc(canvas, Target({}));
+  await nextFrame();
+  return {
+    canvas,
+    controller,
+    nativeListeners: getCRCInstance(canvas).eventRoot.nativeListeners!,
+  };
+}
+
+function touchListenerCounts(hub: NativeListenerHub): {
+  touchstart: number;
+  touchmove: number;
+  touchend: number;
+  touchcancel: number;
+} {
+  return {
+    touchstart: hub.count('touchstart'),
+    touchmove: hub.count('touchmove'),
+    touchend: hub.count('touchend'),
+    touchcancel: hub.count('touchcancel'),
+  };
+}
+
+function dragListenerCounts(hub: NativeListenerHub): {
+  dragstart: number;
+  drag: number;
+  dragend: number;
+  dragenter: number;
+  dragleave: number;
+  dragover: number;
+  drop: number;
+} {
+  return {
+    dragstart: hub.count('dragstart'),
+    drag: hub.count('drag'),
+    dragend: hub.count('dragend'),
+    dragenter: hub.count('dragenter'),
+    dragleave: hub.count('dragleave'),
+    dragover: hub.count('dragover'),
+    drop: hub.count('drop'),
   };
 }
 

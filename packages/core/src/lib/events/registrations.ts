@@ -389,6 +389,24 @@ function requiredNativeTypes(
     nativeTypes.add('mouseup');
   }
   if (types.has('dblclick')) nativeTypes.add('click');
+  if (
+    types.has('touchstart') ||
+    types.has('touchmove') ||
+    types.has('touchend') ||
+    types.has('touchcancel')
+  ) {
+    nativeTypes.add('touchstart');
+    nativeTypes.add('touchend');
+    nativeTypes.add('touchcancel');
+  }
+  const hasDragBoundary = types.has('dragenter') || types.has('dragleave');
+  if (hasDragBoundary) nativeTypes.add('dragenter');
+  if (hasDragBoundary || types.has('dragover')) {
+    nativeTypes.add('dragover');
+    nativeTypes.add('dragleave');
+    nativeTypes.add('drop');
+    nativeTypes.add('dragend');
+  }
   return nativeTypes;
 }
 
