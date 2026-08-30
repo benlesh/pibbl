@@ -520,7 +520,10 @@ liveness immediately before each phase.
 - [ ] **Step 4: Implement one mutable facade per logical dispatch**
 
 The facade keeps internal propagation flags while exposing read-only getters.
-`preventDefault` forwards only when `originalEvent.cancelable`.
+`cancelable` is true only when both the logical event definition and
+`originalEvent.cancelable` allow cancellation. `preventDefault` forwards only
+under that same conjunction; a non-cancelable synthesized boundary event must
+not cancel its cancelable movement source.
 `stopPropagation` and `stopImmediatePropagation` update logical flags and call
 the corresponding native method. Project root-logical coordinates and the
 common family fields from `originalEvent`; do not use a Proxy or subclass native
@@ -677,7 +680,11 @@ Map `pointerId -> live CRC event node`. Call native
 `canvas.setPointerCapture(pointerId)` and `releasePointerCapture(pointerId)`;
 route later pointer events to the logical owner before geometric hit testing.
 Release one pointer without disturbing others. Target teardown clears its
-entries before any later callback can run.
+entries before any later callback can run. When capture moves between two CRC
+owners on the same Canvas, retain distinct active and pending logical owners
+and process exactly one old-owner loss followed by one new-owner gain before
+the next non-capture pointer event; the shared native Canvas capture itself
+does not transfer between DOM elements.
 
 - [ ] **Step 4: Implement pointer boundary and primary dispatch**
 
@@ -736,8 +743,9 @@ keyboard key/code/repeat/modifiers, focus related targets, beforeinput/input
 data and inputType, composition data, clipboardData, and drag `dataTransfer`
 reach the facade unchanged.
 
-Use explicit target dispatch for editing events that a Canvas cannot natively
-originate; do not create hidden DOM controls in the test or implementation.
+Use the internal explicit-target transport in focused tests for editing events
+that a Canvas cannot natively originate; this is not a public dispatch API.
+Do not create hidden DOM controls in the test or implementation.
 
 - [ ] **Step 2: Run the focused tests and verify failure**
 
@@ -757,15 +765,19 @@ for facade `x`/`y` while preserving all native lists.
 - [ ] **Step 4: Implement keyboard/focus and editing/composition adapters**
 
 Without an installed focus policy, native keyboard/focus events have no
-geometric descendant target and therefore reach only Canvas observers or an
-explicit target supplied to `dispatchToLogicalTarget`. Keep this transport
-neutral so the next implementation plan can provide logical focus.
+geometric descendant target and therefore remain targetless. The public
+pathless `crcEvent` observer is mouse-only; only internal focused tests may
+supply an explicit target to `dispatchToLogicalTarget` until focus/input
+integration provides a supported route. Keep this transport neutral so the
+next implementation plan can provide logical focus.
 
 - [ ] **Step 5: Implement clipboard and drag adapters**
 
 Clipboard adapters preserve `clipboardData`. Drag adapters use coordinate hit
 testing, path-difference enter/leave handling, shared propagation, and preserve
-`dataTransfer` and modifiers.
+`dataTransfer` and modifiers. Deliberately, Canvas `drag` and `dragend` also use
+current coordinate hit testing rather than retaining the DOM drag source; this
+delivery does not add drag-source state.
 
 - [ ] **Step 6: Prove every definition has exactly one adapter route**
 
@@ -843,9 +855,10 @@ registration with the primitive's explicit path. Keep cursor-only targets.
 - [ ] **Step 4: Preserve singular `crcEvent` compatibility**
 
 Path-bound calls register one legacy target slot with the requested event.
-No-path calls remain Canvas-wide observers that run after target propagation in
-registration order. Handler replacement/removal and thrown-observer isolation
-retain the shipped contract.
+No-path calls remain mouse-only Canvas-wide observers that run after target
+propagation in registration order. They do not publicly dispatch keyboard,
+focus, editing, composition, or clipboard families. Handler
+replacement/removal and thrown-observer isolation retain the shipped contract.
 
 - [ ] **Step 5: Bridge layer ancestry**
 

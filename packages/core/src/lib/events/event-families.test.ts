@@ -495,6 +495,55 @@ describe('non-coordinate logical transport', () => {
 });
 
 describe('drag event dispatch', () => {
+  it('keeps synthetic dragleave non-cancelable while dragover can cancel its source', async () => {
+    const observed: Array<{
+      type: string;
+      cancelable: boolean;
+      defaultPrevented: boolean;
+    }> = [];
+    const { canvas } = await mountIsolatedDragTarget({
+      onDragLeave: event => {
+        event.preventDefault();
+        observed.push({
+          type: event.type,
+          cancelable: event.cancelable,
+          defaultPrevented: event.defaultPrevented,
+        });
+      },
+      onDragOver: event => {
+        event.preventDefault();
+        observed.push({
+          type: event.type,
+          cancelable: event.cancelable,
+          defaultPrevented: event.defaultPrevented,
+        });
+      },
+    });
+
+    dispatchDrag(canvas, 'dragenter', 25, 25);
+    const leavingSource = dispatchDragWithResult(
+      canvas,
+      'dragover',
+      125,
+      25,
+    );
+    expect(observed[0]).toEqual({
+      type: 'dragleave',
+      cancelable: false,
+      defaultPrevented: false,
+    });
+    expect(leavingSource.event.defaultPrevented).toBe(false);
+    expect(leavingSource.dispatchResult).toBe(true);
+
+    observed.length = 0;
+    const overSource = dispatchDragWithResult(canvas, 'dragover', 25, 25);
+    expect(observed).toEqual([
+      { type: 'dragover', cancelable: true, defaultPrevented: true },
+    ]);
+    expect(overSource.event.defaultPrevented).toBe(true);
+    expect(overSource.dispatchResult).toBe(false);
+  });
+
   it('gives an onDragEnter-only target complete boundary and terminal ownership', async () => {
     const trace: string[] = [];
     const { canvas, controller, nativeListeners } =
@@ -903,6 +952,23 @@ function dispatchDrag(
   });
   canvas.dispatchEvent(event);
   return event;
+}
+
+function dispatchDragWithResult(
+  canvas: HTMLCanvasElement,
+  type: 'dragover',
+  x: number,
+  y: number,
+): { readonly dispatchResult: boolean; readonly event: DragEvent } {
+  const bounds = canvas.getBoundingClientRect();
+  const event = new DragEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    clientX: bounds.left + x,
+    clientY: bounds.top + y,
+  });
+  const dispatchResult = canvas.dispatchEvent(event);
+  return { dispatchResult, event };
 }
 
 function touchIdentifiers(touches: TouchList): number[] {

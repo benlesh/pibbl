@@ -263,11 +263,12 @@ capture and bubble traversal. It has no geometry and cannot become a focus
 candidate.
 
 The existing singular `crcEvent` hook remains supported with its shipped
-Canvas-observer and path-bound behavior. New components with several handlers
-should prefer one grouped `crcEventTarget`, preventing several event hooks from
-accidentally representing several conceptual targets. Migration may implement
-the old hook through the same dispatcher, but must retain its documented public
-behavior.
+mouse-only Canvas-observer and path-bound behavior. A pathless `crcEvent` is not
+a public injection or observer surface for non-coordinate families. New
+components with several handlers should prefer one grouped `crcEventTarget`,
+preventing several event hooks from accidentally representing several
+conceptual targets. Migration may implement the old hook through the same
+dispatcher, but must retain its documented public behavior.
 
 All public functions and types are exported from `@crc/core`. Supported code
 does not use deep imports.
@@ -308,7 +309,14 @@ Pointer capture overrides coordinate hit testing for the captured pointer.
 Touch contacts retain the target chosen at `touchstart`, matching the DOM Touch
 Events target model. Keyboard, composition, editing, clipboard, and logical
 focus events use the current logical focus target when the focus manager is
-installed; otherwise only explicit Canvas-wide observers can receive them.
+installed. Without focus/input integration they are targetless: the only
+explicit-target transport is internal, and the public pathless `crcEvent`
+observer remains mouse-only.
+
+Drag/drop uses current coordinate hit testing and path-difference boundaries.
+As a deliberate Canvas divergence, `drag` and `dragend` also resolve the current
+coordinate target rather than retaining the DOM drag source. This delivery does
+not introduce retained drag-source state.
 
 ## Temporary propagation path
 
@@ -394,8 +402,11 @@ fields. `sourceEvent` is normally absent; a higher-level policy may set it when
 one logical event is synthesized from another input event, while preserving the
 logical event family's `originalEvent` type.
 
-`preventDefault()` updates the logical facade and forwards to the native event
-when it is cancelable. `stopPropagation()` and
+The facade is cancelable only when both its logical event definition and the
+source native event are cancelable. `preventDefault()` updates the logical
+facade and forwards to the native event only under that conjunction, so a
+non-cancelable synthesized boundary never cancels its movement source.
+`stopPropagation()` and
 `stopImmediatePropagation()` stop the CRC path and forward to the native event
 so later DOM bubbling beyond the Canvas is stopped when the browser still
 permits it.
@@ -414,6 +425,15 @@ CRC calls native pointer capture on the root Canvas and records the logical
 target for that pointer ID. Subsequent pointer events target that logical owner
 until release, cancellation, unmount, or native capture loss. Capture is per
 pointer, not global.
+
+When a pointer's logical owner changes from A to B on the same root Canvas, CRC
+keeps the active and pending logical owners distinct. Before the next pointer
+event other than native got/lost notification, it exposes pending ownership to
+`hasPointerCapture`, dispatches one `lostpointercapture` to A with ownership
+already cleared, then one `gotpointercapture` to B with ownership already set.
+The native Canvas capture remains on the same DOM element. A later native loss
+therefore routes to B, and a second pending request before processing replaces
+the first rather than inheriting A's activated state.
 
 Unmount and root disposal clear logical and native capture exactly. An
 unmounted target receives no ghost `lostpointercapture` callback.
@@ -470,7 +490,7 @@ phase, rather than once for an entire native-event sequence.
 Until this design is implemented, the current mouse contracts remain
 authoritative. The new dispatcher preserves topmost targeting, transformed and
 clipped geometry, layer-wide paint order, root-logical coordinates, exact
-resource cleanup, and Canvas-wide `crcEvent` observers.
+resource cleanup, and mouse-only Canvas-wide `crcEvent` observers.
 
 DOM alignment intentionally corrects two limitations of the shipped
 mouse-only model:

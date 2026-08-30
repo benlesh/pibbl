@@ -152,6 +152,56 @@ describe('DOM-aligned pointer dispatch', () => {
     ]);
   });
 
+  it('keeps synthetic pointerenter non-cancelable while pointermove can cancel its source', async () => {
+    const observed: Array<{
+      type: string;
+      cancelable: boolean;
+      defaultPrevented: boolean;
+    }> = [];
+    const Target = defineComp(() => {
+      crcEventTarget({
+        onPointerEnter: event => {
+          event.preventDefault();
+          observed.push({
+            type: event.type,
+            cancelable: event.cancelable,
+            defaultPrevented: event.defaultPrevented,
+          });
+        },
+        onPointerMove: event => {
+          event.preventDefault();
+          observed.push({
+            type: event.type,
+            cancelable: event.cancelable,
+            defaultPrevented: event.defaultPrevented,
+          });
+        },
+      }, {
+        path: rectanglePath(0, 0, 50, 50),
+        fill: true,
+      });
+    });
+    const canvas = createCanvas();
+    crc(canvas, Target({}));
+    await nextFrame();
+
+    const entry = dispatchPointer(canvas, 'pointerover', 25, 25, {
+      pointerId: 101,
+    });
+    const move = dispatchPointer(canvas, 'pointermove', 25, 25, {
+      pointerId: 101,
+    });
+
+    expect(observed).toEqual([
+      { type: 'pointerenter', cancelable: false, defaultPrevented: false },
+      { type: 'pointermove', cancelable: true, defaultPrevented: true },
+    ]);
+    expect(entry.event.defaultPrevented).toBe(false);
+    expect(entry.dispatchResult).toBe(true);
+    expect(move.event.defaultPrevented).toBe(true);
+    expect(move.dispatchResult).toBe(false);
+  });
+
   it('routes captured movement before geometry and resumes boundary planning after release', async () => {
     const trace: string[] = [];
     let capturedTarget: CRCEventTarget | undefined;
@@ -718,6 +768,284 @@ describe('DOM-aligned pointer dispatch', () => {
 });
 
 describe('pointer capture ownership', () => {
+  it('transfers one active pointer between logical owners before the next pointer event', async () => {
+    const trace: string[] = [];
+    const targets = new Map<string, CRCEventTarget>();
+    const captureState = (pointerId: number) =>
+      `a=${targets.get('a')?.hasPointerCapture(pointerId)},` +
+      `b=${targets.get('b')?.hasPointerCapture(pointerId)}`;
+    const Target = defineComp<{ label: string; x: number }>(
+      ({ label, x }) => {
+        crcEventTarget({
+          onPointerDown: event => {
+            targets.set(label, event.currentTarget);
+            if (label === 'a' && event.pointerId === 51) {
+              event.currentTarget.setPointerCapture(event.pointerId);
+            }
+          },
+          onGotPointerCapture: event => trace.push(
+            `${label}-got:${event.pointerId}:${captureState(event.pointerId)}`,
+          ),
+          onLostPointerCapture: event => trace.push(
+            `${label}-lost:${event.pointerId}:${captureState(event.pointerId)}`,
+          ),
+          onPointerMove: event => trace.push(
+            `${label}-move:${event.pointerId}`,
+          ),
+        }, {
+          path: rectanglePath(x, 0, 50, 50),
+          fill: true,
+        });
+      },
+    );
+    const Root = defineComp(() => [
+      Target({ label: 'a', x: 0 }),
+      Target({ label: 'b', x: 50 }),
+    ]);
+    const canvas = createCanvas();
+    const native = installNativePointerCapture(canvas);
+    crc(canvas, Root({}));
+    await nextFrame();
+    const eventRoot = getCRCInstance(canvas).eventRoot;
+    const hub = eventRoot.nativeListeners!;
+
+    dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 51 });
+    dispatchPointer(canvas, 'pointerdown', 75, 25, { pointerId: 999 });
+    dispatchPointer(canvas, 'gotpointercapture', 25, 25, { pointerId: 51 });
+    targets.get('a')!.setPointerCapture(52);
+    dispatchPointer(canvas, 'gotpointercapture', 25, 25, { pointerId: 52 });
+    trace.length = 0;
+
+    targets.get('b')!.setPointerCapture(51);
+    expect(targets.get('a')!.hasPointerCapture(51)).toBe(false);
+    expect(targets.get('b')!.hasPointerCapture(51)).toBe(true);
+    expect(native.active).toEqual(new Set([51, 52]));
+    expect(getPointerCaptureStateCounts(eventRoot)).toMatchObject({
+      activated: 2,
+      nativeListenerRequests: 3,
+      pendingLoss: 0,
+      provisional: 0,
+      releaseTransactions: 0,
+    });
+    expect(hub.count('pointercancel')).toBe(1);
+    expect(hub.count('gotpointercapture')).toBe(3);
+    expect(hub.count('lostpointercapture')).toBe(3);
+
+    dispatchPointer(canvas, 'pointermove', 150, 150, { pointerId: 51 });
+    dispatchPointer(canvas, 'pointermove', 150, 150, { pointerId: 52 });
+    expect(trace).toEqual([
+      'a-lost:51:a=false,b=true',
+      'b-got:51:a=false,b=true',
+      'b-move:51',
+      'a-move:52',
+    ]);
+
+    dispatchPointer(canvas, 'pointercancel', 150, 150, { pointerId: 51 });
+    expect(targets.get('b')!.hasPointerCapture(51)).toBe(false);
+    native.active.delete(51);
+    dispatchPointer(canvas, 'lostpointercapture', 150, 150, { pointerId: 51 });
+    expect(trace).toEqual([
+      'a-lost:51:a=false,b=true',
+      'b-got:51:a=false,b=true',
+      'b-move:51',
+      'a-move:52',
+      'b-lost:51:a=false,b=false',
+    ]);
+    expect(targets.get('a')!.hasPointerCapture(52)).toBe(true);
+
+    targets.get('a')!.releasePointerCapture(52);
+    dispatchPointer(canvas, 'lostpointercapture', 150, 150, { pointerId: 52 });
+    expect(eventRoot.pointerCaptures.size).toBe(0);
+    expect(getPointerCaptureStateCounts(eventRoot)).toMatchObject({
+      activated: 0,
+      nativeListenerRequests: 0,
+      pendingLoss: 0,
+      provisional: 0,
+      releaseTransactions: 0,
+    });
+    expect(hub.count('pointercancel')).toBe(0);
+    expect(hub.count('gotpointercapture')).toBe(2);
+    expect(hub.count('lostpointercapture')).toBe(2);
+  });
+
+  it('coalesces a transfer back before processing without capture notifications', async () => {
+    const trace: string[] = [];
+    const targets = new Map<string, CRCEventTarget>();
+    const Target = defineComp<{ label: string; x: number }>(
+      ({ label, x }) => {
+        crcEventTarget({
+          onPointerDown: event => targets.set(label, event.currentTarget),
+          onGotPointerCapture: () => trace.push(`${label}-got`),
+          onLostPointerCapture: () => trace.push(`${label}-lost`),
+          onPointerMove: () => trace.push(`${label}-move`),
+        }, {
+          path: rectanglePath(x, 0, 50, 50),
+          fill: true,
+        });
+      },
+    );
+    const canvas = createCanvas();
+    installNativePointerCapture(canvas);
+    crc(canvas, defineComp(() => [
+      Target({ label: 'a', x: 0 }),
+      Target({ label: 'b', x: 50 }),
+    ])({}));
+    await nextFrame();
+
+    dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 61 });
+    dispatchPointer(canvas, 'pointerdown', 75, 25, { pointerId: 999 });
+    targets.get('a')!.setPointerCapture(61);
+    dispatchPointer(canvas, 'gotpointercapture', 25, 25, { pointerId: 61 });
+    trace.length = 0;
+
+    targets.get('b')!.setPointerCapture(61);
+    targets.get('a')!.setPointerCapture(61);
+    dispatchPointer(canvas, 'pointermove', 150, 150, { pointerId: 61 });
+
+    expect(trace).toEqual(['a-move']);
+    expect(targets.get('a')!.hasPointerCapture(61)).toBe(true);
+    expect(targets.get('b')!.hasPointerCapture(61)).toBe(false);
+
+    trace.length = 0;
+    targets.get('b')!.setPointerCapture(61);
+    targets.get('b')!.releasePointerCapture(61);
+    dispatchPointer(canvas, 'lostpointercapture', 150, 150, { pointerId: 61 });
+    expect(trace).toEqual(['a-lost']);
+    expect(targets.get('a')!.hasPointerCapture(61)).toBe(false);
+    expect(targets.get('b')!.hasPointerCapture(61)).toBe(false);
+  });
+
+  it('ignores a reentrant native got during transfer and routes synchronous native loss to the active owner', async () => {
+    const trace: string[] = [];
+    const targets = new Map<string, CRCEventTarget>();
+    const Target = defineComp<{ label: string; x: number }>(
+      ({ label, x }) => {
+        crcEventTarget({
+          onPointerDown: event => targets.set(label, event.currentTarget),
+          onGotPointerCapture: () => trace.push(`${label}-got`),
+          onLostPointerCapture: () => trace.push(`${label}-lost`),
+          onPointerMove: () => trace.push(`${label}-move`),
+        }, {
+          path: rectanglePath(x, 0, 50, 50),
+          fill: true,
+        });
+      },
+    );
+    const canvas = createCanvas();
+    const native = installNativePointerCapture(canvas);
+    crc(canvas, defineComp(() => [
+      Target({ label: 'a', x: 0 }),
+      Target({ label: 'b', x: 50 }),
+    ])({}));
+    await nextFrame();
+
+    dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 71 });
+    dispatchPointer(canvas, 'pointerdown', 75, 25, { pointerId: 999 });
+    targets.get('a')!.setPointerCapture(71);
+    dispatchPointer(canvas, 'gotpointercapture', 25, 25, { pointerId: 71 });
+    trace.length = 0;
+    vi.mocked(canvas.setPointerCapture).mockImplementation(pointerId => {
+      native.active.add(pointerId);
+      dispatchPointer(canvas, 'gotpointercapture', 75, 25, { pointerId });
+    });
+
+    targets.get('b')!.setPointerCapture(71);
+    expect(trace).toEqual([]);
+    dispatchPointer(canvas, 'pointermove', 150, 150, { pointerId: 71 });
+    expect(trace).toEqual(['a-lost', 'b-got', 'b-move']);
+
+    trace.length = 0;
+    vi.mocked(canvas.setPointerCapture).mockImplementation(pointerId => {
+      native.active.delete(pointerId);
+      dispatchPointer(canvas, 'lostpointercapture', 75, 25, { pointerId });
+    });
+    targets.get('a')!.setPointerCapture(71);
+
+    expect(trace).toEqual(['b-lost']);
+    expect(targets.get('a')!.hasPointerCapture(71)).toBe(false);
+    expect(targets.get('b')!.hasPointerCapture(71)).toBe(false);
+    dispatchPointer(canvas, 'lostpointercapture', 75, 25, { pointerId: 71 });
+    expect(trace).toEqual(['b-lost']);
+  });
+
+  it('settles transfer ownership when either owner unmounts and during root disposal', async () => {
+    const trace: string[] = [];
+    const targets = new Map<string, CRCEventTarget>();
+    const Target = defineComp<{ label: string; x: number }>(
+      ({ label, x }) => {
+        crcEventTarget({
+          onPointerDown: event => targets.set(label, event.currentTarget),
+          onGotPointerCapture: () => trace.push(`${label}-got`),
+          onLostPointerCapture: () => trace.push(`${label}-lost`),
+          onPointerMove: () => trace.push(`${label}-move`),
+        }, {
+          path: rectanglePath(x, 0, 50, 50),
+          fill: true,
+        });
+      },
+    );
+    const Scene = defineComp<{ showA: boolean; showB: boolean }>(
+      ({ showA, showB }) => [
+        showA ? Target({ key: 'a', label: 'a', x: 0 }) : undefined,
+        showB ? Target({ key: 'b', label: 'b', x: 50 }) : undefined,
+      ],
+    );
+    const canvas = createCanvas();
+    const native = installNativePointerCapture(canvas);
+    const controller = crc(canvas, Scene({ showA: true, showB: true }));
+    await nextFrame();
+    const eventRoot = getCRCInstance(canvas).eventRoot;
+
+    dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 81 });
+    dispatchPointer(canvas, 'pointerdown', 75, 25, { pointerId: 999 });
+    const oldA = targets.get('a')!;
+    const b = targets.get('b')!;
+    oldA.setPointerCapture(81);
+    dispatchPointer(canvas, 'gotpointercapture', 25, 25, { pointerId: 81 });
+    trace.length = 0;
+
+    b.setPointerCapture(81);
+    crc(canvas, Scene({ showA: false, showB: true }));
+    await nextFrame();
+    dispatchPointer(canvas, 'pointermove', 150, 150, { pointerId: 81 });
+    expect(trace).toEqual(['b-got', 'b-move']);
+    expect(oldA.hasPointerCapture(81)).toBe(false);
+    expect(b.hasPointerCapture(81)).toBe(true);
+
+    crc(canvas, Scene({ showA: true, showB: true }));
+    await nextFrame();
+    dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 998 });
+    const newA = targets.get('a')!;
+    trace.length = 0;
+    newA.setPointerCapture(81);
+    crc(canvas, Scene({ showA: false, showB: true }));
+    await nextFrame();
+    dispatchPointer(canvas, 'lostpointercapture', 75, 25, { pointerId: 81 });
+    expect(trace).toEqual(['b-lost']);
+    expect(newA.hasPointerCapture(81)).toBe(false);
+    expect(b.hasPointerCapture(81)).toBe(false);
+
+    b.setPointerCapture(82);
+    dispatchPointer(canvas, 'gotpointercapture', 75, 25, { pointerId: 82 });
+    crc(canvas, Scene({ showA: true, showB: true }));
+    await nextFrame();
+    dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 997 });
+    targets.get('a')!.setPointerCapture(82);
+    trace.length = 0;
+    controller.dispose();
+
+    expect(trace).toEqual([]);
+    expect(native.active.size).toBe(0);
+    expect(eventRoot.pointerCaptures.size).toBe(0);
+    expect(getPointerCaptureStateCounts(eventRoot)).toMatchObject({
+      activated: 0,
+      nativeListenerRequests: 0,
+      pendingLoss: 0,
+      provisional: 0,
+      releaseTransactions: 0,
+    });
+  });
+
   it('owns cancel and native loss while capture is active without subscribers', async () => {
     const Target = defineComp(() => {
       crcEventTarget({
@@ -1029,12 +1357,13 @@ function dispatchPointer(
     | 'pointercancel'
     | 'pointerdown'
     | 'pointermove'
+    | 'pointerover'
     | 'pointerrawupdate'
     | 'pointerup',
   x: number,
   y: number,
   init: PointerEventInit & { pointerId: number },
-): PointerEvent {
+): { readonly dispatchResult: boolean; readonly event: PointerEvent } {
   const bounds = canvas.getBoundingClientRect();
   const event = new PointerEvent(type, {
     bubbles: true,
@@ -1051,8 +1380,8 @@ function dispatchPointer(
     clientY: bounds.top + y,
     ...init,
   });
-  canvas.dispatchEvent(event);
-  return event;
+  const dispatchResult = canvas.dispatchEvent(event);
+  return { dispatchResult, event };
 }
 
 function dispatchMouse(

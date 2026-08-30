@@ -42,13 +42,14 @@ export function createCRCEvent<K extends CRCEventType>(
 ): CRCEventMap[K] {
   const definition = requiredDefinition(input.type);
   const originalEvent = input.originalEvent;
+  const cancelable = definition.cancelable && originalEvent.cancelable;
   const publicPath = Object.freeze(
     input.path.map(node => node.publicTarget),
   );
   const state: CRCEventFacadeState = {
     currentTarget: input.target.publicTarget,
     eventPhase: 2,
-    defaultPrevented: originalEvent.defaultPrevented,
+    defaultPrevented: cancelable && originalEvent.defaultPrevented,
     propagationStopped: false,
     immediatePropagationStopped: false,
   };
@@ -57,7 +58,7 @@ export function createCRCEvent<K extends CRCEventType>(
     target: input.target.publicTarget,
     relatedTarget: input.relatedTarget?.publicTarget ?? null,
     bubbles: definition.bubbles,
-    cancelable: originalEvent.cancelable,
+    cancelable,
     timeStamp: originalEvent.timeStamp,
     originalEvent,
     sourceEvent: input.sourceEvent,
@@ -74,7 +75,7 @@ export function createCRCEvent<K extends CRCEventType>(
       return publicPath;
     },
     preventDefault() {
-      if (!originalEvent.cancelable) return;
+      if (!cancelable) return;
       state.defaultPrevented = true;
       originalEvent.preventDefault();
     },

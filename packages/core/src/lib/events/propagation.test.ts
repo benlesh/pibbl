@@ -218,10 +218,42 @@ describe('event propagation', () => {
     });
 
     expect(seen).toEqual([true, false]);
+    expect(prevented.cancelable).toBe(true);
+    expect(notPrevented.cancelable).toBe(false);
     expect(prevented.defaultPrevented).toBe(true);
     expect(notPrevented.defaultPrevented).toBe(false);
     expect(cancelablePreventDefault).toHaveBeenCalledOnce();
     expect(uncancelablePreventDefault).not.toHaveBeenCalled();
+  });
+
+  it('keeps an explicitly dispatched non-cancelable logical type non-cancelable', () => {
+    const fixture = createFixture();
+    const originalEvent = new FocusEvent('focus', { cancelable: true });
+    const preventDefault = vi.spyOn(originalEvent, 'preventDefault');
+    let observed: { cancelable: boolean; defaultPrevented: boolean } | undefined;
+    const target = fixture.target({
+      focus: event => {
+        event.preventDefault();
+        observed = {
+          cancelable: event.cancelable,
+          defaultPrevented: event.defaultPrevented,
+        };
+      },
+    });
+
+    const event = dispatchEventPath({
+      type: 'focus',
+      target,
+      originalEvent,
+    });
+
+    expect(observed).toEqual({ cancelable: false, defaultPrevented: false });
+    expect(event).toMatchObject({
+      cancelable: false,
+      defaultPrevented: false,
+    });
+    expect(preventDefault).not.toHaveBeenCalled();
+    expect(originalEvent.defaultPrevented).toBe(false);
   });
 
   it('projects an immutable opaque path, related target, source event, and mouse fields', () => {

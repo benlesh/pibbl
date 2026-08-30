@@ -132,6 +132,14 @@ root disposal. `gotpointercapture` observes active ownership;
 the minimal pending owner needed to route a native loss notification. An
 unmounted target receives no ghost loss callback.
 
+Changing one pointer's logical capture from A to B on the same Canvas records a
+pending logical transfer without changing the native DOM capture element.
+Immediately before the next non-capture pointer event, A receives exactly one
+`lostpointercapture`, then B receives exactly one `gotpointercapture`; public
+capture state already identifies B during both callbacks. A later native loss
+routes to B. A second successful request before processing replaces the pending
+owner, and transfer state remains isolated per pointer ID.
+
 Each changed touch identifier resolves a target at `touchstart` and retains
 that target through move and terminal events even when coordinates leave its
 geometry. Multi-contact native lists remain the original `TouchList` objects;
@@ -146,7 +154,9 @@ listeners are installed with non-passive options.
 
 Drag/drop preserves root-logical coordinates, modifiers, and the native
 `dataTransfer`. Root-local drag hover is cleared by root leave, drop, drag end,
-target removal, or disposal.
+target removal, or disposal. As a deliberate Canvas divergence, `drag` and
+`dragend` resolve the current coordinate target rather than retaining a DOM
+drag-source target.
 
 ## Non-coordinate transport
 
@@ -176,8 +186,11 @@ documented pointer, mouse, touch, wheel, keyboard, input, composition,
 clipboard, and drag fields. `originalEvent` remains authoritative for uncommon
 browser fields.
 
-`preventDefault()` sets the logical flag and forwards only when the original
-event is cancelable. `stopPropagation()` completes the remaining handlers on
+The facade is cancelable only when both its logical definition and source event
+are cancelable. `preventDefault()` sets the logical flag and forwards only under
+that same conjunction; calling it on synthesized `pointerenter`/`pointerleave`,
+`mouseenter`/`mouseleave`, or `dragleave` is a no-op and does not cancel the
+movement source. `stopPropagation()` completes the remaining handlers on
 the current node, suppresses later nodes/phases, and forwards to the native
 event. `stopImmediatePropagation()` also suppresses the remaining handler on
 the current target/phase and forwards natively. A native listener outside CRC

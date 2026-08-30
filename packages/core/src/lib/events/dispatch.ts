@@ -54,6 +54,7 @@ import {
   cancelLogicalPointerCapture,
   consumeLogicalPointerCaptureLoss,
   getLogicalPointerCapture,
+  processPendingLogicalPointerCapture,
 } from './pointer-capture.js';
 import {
   releaseTarget,
@@ -351,6 +352,17 @@ function dispatchPointerEvent(
   root: CRCInstance,
   input: CRCAdaptedPointerEvent,
 ): void {
+  if (
+    input.type !== 'gotpointercapture' &&
+    input.type !== 'lostpointercapture'
+  ) {
+    processPendingLogicalPointerCapture(
+      root.eventRoot,
+      input.originalEvent.pointerId,
+      target => dispatchPointerNode('lostpointercapture', target, input),
+      target => dispatchPointerNode('gotpointercapture', target, input),
+    );
+  }
   switch (input.type) {
     case 'pointerover':
       dispatchPointerBoundaryEntry(root, input);

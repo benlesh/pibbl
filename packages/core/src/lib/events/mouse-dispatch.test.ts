@@ -108,6 +108,60 @@ describe('DOM-aligned mouse dispatch', () => {
     expect(enterRelated).toBe(aTarget);
   });
 
+  it('keeps synthetic mouseenter non-cancelable while mousemove can cancel its source', async () => {
+    let cancelMove = false;
+    const observed: Array<{
+      type: string;
+      cancelable: boolean;
+      defaultPrevented: boolean;
+    }> = [];
+    const Target = defineComp(() => {
+      crcEventTarget({
+        onMouseEnter: event => {
+          event.preventDefault();
+          observed.push({
+            type: event.type,
+            cancelable: event.cancelable,
+            defaultPrevented: event.defaultPrevented,
+          });
+        },
+        onMouseMove: event => {
+          if (!cancelMove) return;
+          event.preventDefault();
+          observed.push({
+            type: event.type,
+            cancelable: event.cancelable,
+            defaultPrevented: event.defaultPrevented,
+          });
+        },
+      }, {
+        path: rectanglePath(0, 0, 50, 50),
+        fill: true,
+      });
+    });
+    const canvas = createCanvas();
+    crc(canvas, Target({}));
+    await nextFrame();
+
+    const entry = dispatchMouse(canvas, 'mousemove', 25, 25);
+    expect(observed[0]).toEqual({
+      type: 'mouseenter',
+      cancelable: false,
+      defaultPrevented: false,
+    });
+    expect(entry.event.defaultPrevented).toBe(false);
+    expect(entry.dispatchResult).toBe(true);
+
+    observed.length = 0;
+    cancelMove = true;
+    const move = dispatchMouse(canvas, 'mousemove', 25, 25);
+    expect(observed).toEqual([
+      { type: 'mousemove', cancelable: true, defaultPrevented: true },
+    ]);
+    expect(move.event.defaultPrevented).toBe(true);
+    expect(move.dispatchResult).toBe(false);
+  });
+
   it('targets the deepest common live listener after down and up resolve to siblings', async () => {
     const trace: string[] = [];
     let activationTarget: CRCEventTarget | undefined;
@@ -451,14 +505,17 @@ function dispatchMouse(
   x: number,
   y: number,
   button = 0,
-): void {
+): { readonly dispatchResult: boolean; readonly event: MouseEvent } {
   const bounds = canvas.getBoundingClientRect();
-  canvas.dispatchEvent(new MouseEvent(type, {
+  const event = new MouseEvent(type, {
     bubbles: true,
+    cancelable: true,
     button,
     clientX: bounds.left + x,
     clientY: bounds.top + y,
-  }));
+  });
+  const dispatchResult = canvas.dispatchEvent(event);
+  return { dispatchResult, event };
 }
 
 function rectanglePath(x: number, y: number, width: number, height: number): Path2D {
