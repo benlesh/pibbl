@@ -1,5 +1,6 @@
 import type { ScenarioCatalogRecord } from '@crc/scenarios';
 import {
+  focusNavigationScenarioEntry,
   interactionLabScenarioEntry,
   loadScenario,
   scenarioCatalog,
@@ -20,6 +21,19 @@ afterEach(async () => {
 });
 
 describe('scenario catalog trust gate', () => {
+  it('publishes the shared focus-navigation demonstration contract', () => {
+    expect(focusNavigationScenarioEntry.metadata.id)
+      .toBe('focus-and-keyboard-navigation');
+    expect(focusNavigationScenarioEntry.metadata.apiTags).toEqual(
+      expect.arrayContaining([
+        'crcEventTarget',
+        'withFocusManagement',
+        'withKeyboardNavigation',
+      ]),
+    );
+    expect(focusNavigationScenarioEntry.metadata.manualSteps).toHaveLength(5);
+  });
+
   it('publishes the complete shared user-event laboratory action surface', () => {
     expect(interactionLabScenarioEntry.actions.map(action => action.id)).toEqual(
       expect.arrayContaining([

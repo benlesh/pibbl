@@ -7,6 +7,7 @@ export {
   drawingLinesScenarioEntry,
   drawingShapesScenarioEntry,
   drawingTextScenarioEntry,
+  focusNavigationScenarioEntry,
   geometryMatrixScenarioEntry,
   getScenarioBySlug,
   getScenarioRoute,
@@ -21,6 +22,13 @@ export {
   runtimeHooksScenarioEntry,
   validateScenarioCatalog,
 } from './catalog';
+export type {
+  FocusNavigationAction,
+  FocusNavigationActivationSource,
+  FocusNavigationModality,
+  FocusNavigationState,
+  FocusNavigationTarget,
+} from './focus-navigation.example';
 export type {
   CanvasSurfaceAction,
   CanvasSurfaceMode,

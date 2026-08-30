@@ -6,6 +6,10 @@ import type { DrawingLinesState } from './drawing-lines.example';
 import type { DrawingShapesState } from './drawing-shapes.example';
 import type { DrawingTextState } from './drawing-text.example';
 import type { GeometryMatrixState } from './geometry-matrix.example';
+import {
+  FOCUS_NAVIGATION_SOURCE_ID,
+  type FocusNavigationState,
+} from './focus-navigation.example';
 import type { InteractionLabState } from './interaction-lab.example';
 import type { LifecycleLabState } from './lifecycle-lab.example';
 import type { LayoutFoundationState } from './layout-foundation.example';
@@ -492,6 +496,75 @@ export const drawingCompositionScenarioEntry: ScenarioCatalogEntry<DrawingCompos
     path: 'packages/scenarios/src/drawing-composition.example.ts',
   },
   load: async () => (await import('./drawing-gallery')).drawingCompositionScenario,
+};
+
+const focusNavigationMetadata: ScenarioMetadata = {
+  id: 'focus-and-keyboard-navigation',
+  slug: 'focus-and-keyboard-navigation',
+  title: 'Focus and keyboard navigation',
+  summary: 'Cross one Canvas focus host, traverse explicit logical controls, and use contained directional navigation.',
+  category: 'Keyboard interaction',
+  apiTags: [
+    'crcEventTarget',
+    'withFocusManagement',
+    'withKeyboardNavigation',
+    'keyboard events',
+    'pointer events',
+  ],
+  conceptTags: [
+    'logical focus',
+    'source-order Tab',
+    'directional navigation',
+    'keyboard activation',
+    'focus-visible',
+  ],
+  manualSteps: [
+    {
+      action: 'Focus the native control before the Canvas and press Tab through the scene.',
+      expected: 'One order crosses two top controls, squares 1–12 row by row, two bottom controls, and the native control after the Canvas.',
+    },
+    {
+      action: 'Enter the Canvas in reverse with Shift+Tab.',
+      expected: 'Focus starts on the last Canvas control and traverses every logical target in reverse before returning to native DOM.',
+    },
+    {
+      action: 'Use arrow keys in the square collection and on the form-like top control.',
+      expected: 'Squares move only to the nearest in-boundary neighbor without wrapping; the form-like control keeps its own horizontal arrows.',
+    },
+    {
+      action: 'Activate controls with a pointer, Enter, and Space, then press an empty Canvas area.',
+      expected: 'The state panel reports activation source and count; empty background keeps DOM focus on the Canvas while clearing logical focus.',
+    },
+    {
+      action: 'Choose Reorder squares, Remove current square, and Restore squares.',
+      expected: 'A keyed surviving target keeps focus through reorder, removing it clears focus, and restoration returns the row-major declaration.',
+    },
+  ],
+  knownLimitations: [
+    'CRC logical Canvas focus is keyboard interaction, not screen-reader semantics; applications must provide and synchronize an equivalent semantic DOM experience.',
+    'Directional navigation does not wrap or escape from the nearest boundary, and positive numeric tabindex ordering is not supported.',
+  ],
+  learningOrder: 65,
+  visibility: 'documentation-candidate',
+  visibilityReason: 'It is one readable public-API example shared by manual and headless keyboard verification.',
+  maturity: 'contract',
+};
+
+export const focusNavigationScenarioEntry: ScenarioCatalogEntry<FocusNavigationState> = {
+  metadata: focusNavigationMetadata,
+  canvas: { width: 560, height: 420 },
+  actions: [
+    { id: 'reorder-squares', label: 'Reorder squares' },
+    { id: 'remove-current-square', label: 'Remove current square' },
+    { id: 'restore-squares', label: 'Restore squares' },
+  ],
+  source: {
+    id: FOCUS_NAVIGATION_SOURCE_ID,
+    language: 'ts',
+    marker: "'focus-and-keyboard-navigation-example'",
+    path: 'packages/scenarios/src/focus-navigation.example.ts',
+  },
+  load: async () => (await import('./focus-navigation')).focusNavigationScenario,
 };
 
 const interactionLabMetadata: ScenarioMetadata = {
@@ -1099,6 +1172,7 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] = validateScena
   drawingTextScenarioEntry,
   drawingImagesScenarioEntry,
   drawingCompositionScenarioEntry,
+  focusNavigationScenarioEntry,
   mouseContractScenarioEntry,
   interactionLabScenarioEntry,
   lifecycleLabScenarioEntry,
