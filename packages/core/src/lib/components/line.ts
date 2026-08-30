@@ -1,5 +1,8 @@
 import { defineComp } from '../define-comp.js';
-import type { CRCEventHandlers } from '../events/types.js';
+import type {
+  CRCEventFocusOptions,
+  CRCEventHandlers,
+} from '../events/types.js';
 import {
   RenderingContext2D,
   SystemStyle,
@@ -16,7 +19,7 @@ import type {
 import { createLinePath } from '../util/create-line-path.js';
 import { Path } from './path.js';
 
-export interface LineProps extends CRCEventHandlers {}
+export interface LineProps extends CRCEventHandlers, CRCEventFocusOptions {}
 
 export interface LineStyle
   extends SystemStyle,
@@ -44,16 +47,21 @@ export function Line(
     lineInteractionWidth,
   } = style;
   const linePath = createLinePath(coords);
+  const interactionWidth = lineInteractionWidth ?? strokeWidth ?? 0;
 
   return Path(
-    props,
+    {
+      ...props,
+      keyboardNavigationBounds: props.keyboardNavigationBounds ??
+        lineBounds(coords, interactionWidth),
+    },
     {
       d: linePath,
       stroke,
       strokeWidth,
       opacity,
       cursor,
-      lineInteractionWidth,
+      lineInteractionWidth: interactionWidth,
     },
     ctx,
   );
@@ -72,3 +80,23 @@ export const line = defineComp<
     stripLayoutParticipation(style) as ResolvedLineStyle,
 });
 registerOpaqueStyleProperties(Line, ['stroke', 'cursor']);
+
+function lineBounds(
+  coords: readonly [number, number][],
+  interactionWidth: number,
+) {
+  if (coords.length === 0) return undefined;
+  const halfWidth = interactionWidth / 2;
+  const xs = coords.map(([x]) => x);
+  const ys = coords.map(([, y]) => y);
+  const left = Math.min(...xs) - halfWidth;
+  const right = Math.max(...xs) + halfWidth;
+  const top = Math.min(...ys) - halfWidth;
+  const bottom = Math.max(...ys) + halfWidth;
+  return {
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top,
+  };
+}

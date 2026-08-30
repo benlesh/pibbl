@@ -31,13 +31,16 @@ export interface CRCEventTargetSnapshot {
   readonly isFocusVisible: boolean;
 }
 
-export interface CRCEventTargetOptions {
+export interface CRCEventFocusOptions {
+  readonly keyboardFocusable?: boolean;
+  readonly keyboardNavigationBounds?: Readonly<LayoutBox>;
+}
+
+export interface CRCEventTargetOptions extends CRCEventFocusOptions {
   readonly path: Path2D;
   readonly fill?: boolean;
   readonly lineInteractionWidth?: number;
   readonly cursor?: string;
-  readonly keyboardFocusable?: boolean;
-  readonly keyboardNavigationBounds?: Readonly<LayoutBox>;
 }
 
 interface CRCModifierEvent<TOriginal extends Event> extends CRCEvent<TOriginal> {

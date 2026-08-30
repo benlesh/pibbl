@@ -4,17 +4,21 @@ import {
   type CRCElementEnhancerDescriptor,
 } from '../element-enhancers.js';
 import type { CompEl, SystemStyle } from '../types.js';
+import { createFocusManager } from './focus-manager.js';
 
 const FOCUS_MANAGEMENT_ENHANCER_KEY = Symbol('CRC focus management');
 
 const focusManagementDescriptor: CRCElementEnhancerDescriptor = {
   key: FOCUS_MANAGEMENT_ENHANCER_KEY,
-  mount: () => ({
-    update: () => undefined,
-    enter: () => undefined,
-    exit: () => undefined,
-    dispose: () => undefined,
-  }),
+  mount: ({ instance }) => {
+    const manager = createFocusManager(instance.eventRoot);
+    return {
+      update: () => undefined,
+      enter: () => manager.beginCollection(),
+      exit: success => manager.finishCollection(success),
+      dispose: () => manager.dispose(),
+    };
+  },
 };
 
 export function withFocusManagement<

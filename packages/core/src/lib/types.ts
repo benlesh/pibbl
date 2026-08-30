@@ -4,6 +4,7 @@ import type { Constraints, LayoutBox, Size } from './layout/types.js';
 import type { NativeListenerHub } from './events/native-listener-hub.js';
 import type { CRCEventType as DOMCRCEventType } from './events/types.js';
 import type { CRCEventTargetSnapshot } from './events/types.js';
+import type { CRCEvent } from './events/types.js';
 import type {
   CRCEventNode,
   CRCEventListenerRegistration,
@@ -222,8 +223,10 @@ export interface CRCEventRoot {
 
 export interface CRCFocusPolicyBridge {
   snapshot(target: CRCEventTargetRegistration): CRCEventTargetSnapshot;
-  observeTarget?(target: CRCEventTargetRegistration): void;
-  removeTarget?(target: CRCEventTargetRegistration): void;
+  observeTarget(target: CRCEventTargetRegistration): void;
+  removeTarget(target: CRCEventTargetRegistration): void;
+  resolveKeyboardTarget(): CRCEventTargetRegistration | undefined;
+  afterDispatch(event: CRCEvent): void;
 }
 
 export interface CRCController {

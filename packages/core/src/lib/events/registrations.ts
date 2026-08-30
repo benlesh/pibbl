@@ -205,7 +205,7 @@ function updateTargetRegistration(
     target.keyboardFocusable !== true
   ) {
     if (target.live) {
-      target.owner.eventRoot.focusPolicy?.removeTarget?.(target);
+      target.owner.eventRoot.focusPolicy?.removeTarget(target);
       target.owner.eventRoot.onNodeRelease?.(target);
     }
     target.owner.regions.delete(target);
@@ -219,7 +219,7 @@ function updateTargetRegistration(
   target.owner.paintEntries.add(target);
   target.owner.eventRoot.targets.add(target);
   updateNativeOwnership(target, nativeTypes);
-  target.owner.eventRoot.focusPolicy?.observeTarget?.(target);
+  target.owner.eventRoot.focusPolicy?.observeTarget(target);
   target.owner.eventRoot.onTargetUpdate?.(target);
 }
 
@@ -227,7 +227,7 @@ export function releaseTarget(target: CRCEventTargetRegistration): void {
   if (target.live) {
     target.owner.paintEntries.delete(target);
     target.owner.eventRoot.targets.delete(target);
-    target.owner.eventRoot.focusPolicy?.removeTarget?.(target);
+    target.owner.eventRoot.focusPolicy?.removeTarget(target);
     target.owner.eventRoot.onNodeRelease?.(target);
   }
   target.owner.regions.delete(target);

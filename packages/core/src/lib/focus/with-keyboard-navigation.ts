@@ -5,17 +5,32 @@ import {
 } from '../element-enhancers.js';
 import type { CompEl, SystemStyle } from '../types.js';
 import type { CRCKeyboardNavigationOptions } from './types.js';
+import {
+  createDirectionalBoundary,
+  requireFocusManager,
+  type CRCFocusManager,
+} from './focus-manager.js';
 
 const KEYBOARD_NAVIGATION_ENHANCER_KEY = Symbol('CRC keyboard navigation');
 
 const keyboardNavigationDescriptor: CRCElementEnhancerDescriptor = {
   key: KEYBOARD_NAVIGATION_ENHANCER_KEY,
-  mount: () => ({
-    update: () => undefined,
-    enter: () => undefined,
-    exit: () => undefined,
-    dispose: () => undefined,
-  }),
+  mount: ({ instance }) => {
+    const boundary = createDirectionalBoundary();
+    let manager: CRCFocusManager | undefined;
+    return {
+      update: () => undefined,
+      enter: () => {
+        manager = requireFocusManager(instance.eventRoot);
+        manager.enterDirectionalBoundary(boundary);
+      },
+      exit: () => {
+        manager?.exitDirectionalBoundary(boundary);
+        manager = undefined;
+      },
+      dispose: () => undefined,
+    };
+  },
 };
 
 export function withKeyboardNavigation<

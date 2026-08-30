@@ -1,5 +1,8 @@
 import { defineComp } from '../define-comp.js';
-import type { CRCEventHandlers } from '../events/types.js';
+import type {
+  CRCEventFocusOptions,
+  CRCEventHandlers,
+} from '../events/types.js';
 import {
   resolveLocalOffset,
   resolveOptionalLength,
@@ -18,7 +21,7 @@ import { wireCommonEvents } from '../util/wire-common-events.js';
 import { pushClippingPath } from '../util/push-clipping-path.js';
 import { resolveTextClipBounds, resolveTextLayout } from './text-layout.js';
 
-export interface TextProps extends CRCEventHandlers {}
+export interface TextProps extends CRCEventHandlers, CRCEventFocusOptions {}
 
 function checkPropsForEvents(
   props: CRCEventHandlers,
@@ -93,7 +96,14 @@ export function Text(
       );
     }
 
-    wireCommonEvents(props, textBounds, true, strokeWidth, cursor);
+    wireCommonEvents(
+      props,
+      textBounds,
+      true,
+      strokeWidth,
+      cursor,
+      layout.bounds,
+    );
   } finally {
     releaseClip?.();
   }

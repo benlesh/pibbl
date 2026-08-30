@@ -1,5 +1,8 @@
 import { defineComp } from '../define-comp.js';
-import type { CRCEventHandlers } from '../events/types.js';
+import type {
+  CRCEventFocusOptions,
+  CRCEventHandlers,
+} from '../events/types.js';
 import { RenderingContext2D } from '../types.js';
 import {
   resolveLocalOffset,
@@ -11,7 +14,7 @@ import { registerOpaqueStyleProperties } from '../style/resolve-dispatch.js';
 import { adjustRectangleToPixelGrid } from '../util/pixel-grid-adjustments.js';
 import { Path } from './path.js';
 
-export interface RectProps extends CRCEventHandlers {}
+export interface RectProps extends CRCEventHandlers, CRCEventFocusOptions {}
 
 function Rect(
   props: RectProps,
@@ -42,7 +45,15 @@ function Rect(
   rectPath.rect(x, y, width, height);
 
   Path(
-    props,
+    {
+      ...props,
+      keyboardNavigationBounds: props.keyboardNavigationBounds ?? {
+        x,
+        y,
+        width,
+        height,
+      },
+    },
     {
       ...pathStyle,
       d: rectPath,

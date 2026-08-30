@@ -104,6 +104,10 @@ export function Layer(
 
   if (
     GLOBAL_STATE.componentIsMounting ||
+    // Optional policies collect traversal-scoped target metadata. Re-enter an
+    // otherwise cached offscreen subtree so its live targets retain their
+    // exact source-order position and enhancer-boundary membership.
+    Boolean(parentInstance.eventRoot.focusPolicy) ||
     dimensionsChanged ||
     surfaceChanged ||
     layerCRC.root.type !== props.render.type ||

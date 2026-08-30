@@ -1,5 +1,8 @@
 import { defineComp } from '../define-comp.js';
-import type { CRCEventHandlers } from '../events/types.js';
+import type {
+  CRCEventFocusOptions,
+  CRCEventHandlers,
+} from '../events/types.js';
 import { crcRectPath } from '../hooks/crc-rect-path.js';
 import { crcState } from '../hooks/crc-state.js';
 import { crcWhenChanged } from '../hooks/crc-when-changed.js';
@@ -15,7 +18,7 @@ import type { ImgStyle, ResolvedImgStyle } from '../style/types.js';
 import { adjustRectangleToPixelGrid } from '../util/pixel-grid-adjustments.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 
-export interface ImgProps extends CRCEventHandlers {}
+export interface ImgProps extends CRCEventHandlers, CRCEventFocusOptions {}
 
 interface LoadedImage {
   src: string;
@@ -103,7 +106,14 @@ function Img(
     ctx.stroke(imagePath);
   }
 
-  wireCommonEvents(props, imagePath, true, strokeWidth ?? 0, cursor);
+  wireCommonEvents(
+    props,
+    imagePath,
+    true,
+    strokeWidth ?? 0,
+    cursor,
+    { x, y, width, height },
+  );
 }
 
 /**

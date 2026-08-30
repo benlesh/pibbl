@@ -1,5 +1,8 @@
 import { defineComp } from '../define-comp.js';
-import type { CRCEventHandlers } from '../events/types.js';
+import type {
+  CRCEventFocusOptions,
+  CRCEventHandlers,
+} from '../events/types.js';
 import {
   PixelGridAlignment,
   RenderingContext2D,
@@ -20,7 +23,8 @@ import type {
 } from '../style/types.js';
 import { Line, type LineStyle } from './line.js';
 
-export interface VerticalLineProps extends CRCEventHandlers {}
+export interface VerticalLineProps
+  extends CRCEventHandlers, CRCEventFocusOptions {}
 
 export interface VerticalLineStyle
   extends SystemStyle,
