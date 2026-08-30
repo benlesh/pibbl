@@ -30,6 +30,7 @@ import type {
   CRCWheelEvent,
   AbsoluteStyle,
   BoxStyle,
+  CompEl,
   ClipStyle,
   GStyle,
   GridItemStyle,
@@ -507,6 +508,15 @@ const RuntimeProbe = defineComp<{ count: number; label?: string }>(
 );
 
 const runtimeElement = RuntimeProbe({ count: 1, label: 'typed' });
+type PublicCompElHasEnhancers = 'enhancers' extends keyof CompEl ? true : false;
+const publicCompElHasEnhancers: PublicCompElHasEnhancers = false;
+const unsupportedEnhancerElement: CompEl = {
+  ...runtimeElement,
+  // @ts-expect-error arbitrary enhancer metadata is not part of public CompEl
+  enhancers: [],
+};
+void publicCompElHasEnhancers;
+void unsupportedEnhancerElement;
 const runtimeController: CRCController = crc(canvas, runtimeElement, {
   signal: new AbortController().signal,
 });

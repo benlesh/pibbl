@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { absolute } from './layout/absolute';
 import { crc } from './crc';
 import { defineComp } from './define-comp';
+import { appendElementEnhancer } from './element-enhancers';
 import { executeRender } from './execute-render';
 import {
   clearSharedState,
@@ -22,6 +23,7 @@ import type {
   MeasureResult,
   SystemStyle,
 } from './types';
+import type { CompEl as PublicCompEl } from '../index';
 
 interface TestMountedEnhancer {
   update(next: TestEnhancerDescriptor): void;
@@ -37,6 +39,14 @@ interface TestEnhancerDescriptor {
     readonly component: CompRefs<any>;
     readonly instance: CRCInstance;
   }): TestMountedEnhancer;
+}
+
+interface TestDescriptorFailures {
+  mount?: boolean;
+  update?: boolean;
+  enter?: boolean;
+  exit?: boolean;
+  dispose?: boolean;
 }
 
 const activeControllers = new Set<{ dispose(): void }>();
@@ -251,18 +261,22 @@ describe('identity-transparent element enhancers', () => {
     expect(trace).toEqual(['dispose:first']);
   });
 
-  it('exits and disposes in exact reverse order after a descendant render failure', () => {
+  it('exits an enhanced parent after its throwing descendant with success false', () => {
     const trace: string[] = [];
     const Throwing = defineComp(() => {
       trace.push('render:throwing');
       throw new Error('expected descendant failure');
     });
-    const Parent = defineComp(() => annotate(Throwing({}), [
+    const Parent = defineComp(() => {
+      trace.push('render:parent');
+      return Throwing({});
+    });
+    const enhancedParent = annotate(Parent({}), [
       createDescriptor('first', Symbol('first'), 1, trace),
       createDescriptor('second', Symbol('second'), 1, trace),
-    ]));
+    ]);
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, Parent({}));
+    const controller = mountCRC(canvas, enhancedParent);
     activeControllers.add(controller);
 
     expect(() => executeRender(canvas, 1)).toThrowError('expected descendant failure');
@@ -273,6 +287,7 @@ describe('identity-transparent element enhancers', () => {
       'update:second:1',
       'enter:first',
       'enter:second',
+      'render:parent',
       'render:throwing',
       'exit:second:false',
       'exit:first:false',
@@ -281,9 +296,191 @@ describe('identity-transparent element enhancers', () => {
     ]);
     expect(getCRCInstance(canvas).refs.size).toBe(0);
 
+    const afterFailure = [...trace];
     controller.dispose();
     controller.dispose();
-    expect(trace.at(-1)).toBe('dispose:first');
+    expect(trace).toEqual(afterFailure);
+  });
+
+  it('releases newly acquired entries before preserving existing ownership through a mount failure', () => {
+    const trace: string[] = [];
+    const existingKey = Symbol('existing');
+    const acquiredKey = Symbol('acquired');
+    const Leaf = defineComp(() => undefined);
+    const Root = defineComp(({ failing }: { failing: boolean }) => annotate(
+      Leaf({ key: 'stable' }),
+      failing ? [
+        createDescriptor('existing', existingKey, 2, trace),
+        createDescriptor('acquired', acquiredKey, 2, trace),
+        createDescriptor('mount-failure', Symbol('mount-failure'), 2, trace, {
+          mount: true,
+        }),
+      ] : [createDescriptor('existing', existingKey, 1, trace)],
+    ));
+    const canvas = createCanvas();
+    const controller = mountCRC(canvas, Root({ failing: false }));
+    activeControllers.add(controller);
+    executeRender(canvas, 1);
+    trace.length = 0;
+
+    expect(() => executeRender(canvas, 2, Root({ failing: true })))
+      .toThrowError('mount:mount-failure:failed');
+    expect(trace).toEqual([
+      'update:existing:2',
+      'mount:acquired',
+      'update:acquired:2',
+      'mount:mount-failure',
+      'dispose:acquired',
+      'dispose:existing',
+    ]);
+    expect(getCRCInstance(canvas).refs.size).toBe(0);
+
+    const afterFailure = [...trace];
+    controller.dispose();
+    controller.dispose();
+    expect(trace).toEqual(afterFailure);
+  });
+
+  it('releases all newly acquired entries in reverse before existing ownership after an update failure', () => {
+    const trace: string[] = [];
+    const existingKey = Symbol('existing');
+    const Leaf = defineComp(() => undefined);
+    const Root = defineComp(({ failing }: { failing: boolean }) => annotate(
+      Leaf({ key: 'stable' }),
+      failing ? [
+        createDescriptor('existing', existingKey, 2, trace),
+        createDescriptor('acquired', Symbol('acquired'), 2, trace),
+        createDescriptor('update-failure', Symbol('update-failure'), 2, trace, {
+          update: true,
+        }),
+      ] : [createDescriptor('existing', existingKey, 1, trace)],
+    ));
+    const canvas = createCanvas();
+    const controller = mountCRC(canvas, Root({ failing: false }));
+    activeControllers.add(controller);
+    executeRender(canvas, 1);
+    trace.length = 0;
+
+    expect(() => executeRender(canvas, 2, Root({ failing: true })))
+      .toThrowError('update:update-failure:failed');
+    expect(trace).toEqual([
+      'update:existing:2',
+      'mount:acquired',
+      'update:acquired:2',
+      'mount:update-failure',
+      'update:update-failure:2',
+      'dispose:update-failure',
+      'dispose:acquired',
+      'dispose:existing',
+    ]);
+    expect(getCRCInstance(canvas).refs.size).toBe(0);
+
+    const afterFailure = [...trace];
+    controller.dispose();
+    controller.dispose();
+    expect(trace).toEqual(afterFailure);
+  });
+
+  it('unwinds already-entered scopes and disposes every mounted entry after a later enter fails', () => {
+    const trace: string[] = [];
+    const Root = defineComp(() => undefined);
+    const enhanced = annotate(Root({}), [
+      createDescriptor('first', Symbol('first'), 1, trace),
+      createDescriptor('enter-failure', Symbol('enter-failure'), 1, trace, {
+        enter: true,
+      }),
+      createDescriptor('never-entered', Symbol('never-entered'), 1, trace),
+    ]);
+    const canvas = createCanvas();
+    const controller = mountCRC(canvas, enhanced);
+    activeControllers.add(controller);
+
+    expect(() => executeRender(canvas, 1)).toThrowError('enter:enter-failure:failed');
+    expect(trace).toEqual([
+      'mount:first',
+      'update:first:1',
+      'mount:enter-failure',
+      'update:enter-failure:1',
+      'mount:never-entered',
+      'update:never-entered:1',
+      'enter:first',
+      'enter:enter-failure',
+      'exit:first:false',
+      'dispose:never-entered',
+      'dispose:enter-failure',
+      'dispose:first',
+    ]);
+
+    const afterFailure = [...trace];
+    controller.dispose();
+    controller.dispose();
+    expect(trace).toEqual(afterFailure);
+  });
+
+  it('marks outer exits unsuccessful and runs every exit after the inner exit throws', () => {
+    const trace: string[] = [];
+    const Root = defineComp(() => {
+      trace.push('render:root');
+    });
+    const enhanced = annotate(Root({}), [
+      createDescriptor('outer', Symbol('outer'), 1, trace),
+      createDescriptor('middle', Symbol('middle'), 1, trace),
+      createDescriptor('inner', Symbol('inner'), 1, trace, { exit: true }),
+    ]);
+    const canvas = createCanvas();
+    const controller = mountCRC(canvas, enhanced);
+    activeControllers.add(controller);
+
+    expect(() => executeRender(canvas, 1)).toThrowError('exit:inner:failed');
+    expect(trace).toEqual([
+      'mount:outer',
+      'update:outer:1',
+      'mount:middle',
+      'update:middle:1',
+      'mount:inner',
+      'update:inner:1',
+      'enter:outer',
+      'enter:middle',
+      'enter:inner',
+      'render:root',
+      'exit:inner:true',
+      'exit:middle:false',
+      'exit:outer:false',
+      'dispose:inner',
+      'dispose:middle',
+      'dispose:outer',
+    ]);
+
+    const afterFailure = [...trace];
+    controller.dispose();
+    controller.dispose();
+    expect(trace).toEqual(afterFailure);
+  });
+
+  it('continues reverse disposal after an inner disposer throws and never disposes twice', () => {
+    const trace: string[] = [];
+    const reportError = vi.spyOn(globalThis, 'reportError').mockImplementation(() => {});
+    const Root = defineComp(() => undefined);
+    const enhanced = annotate(Root({}), [
+      createDescriptor('outer', Symbol('outer'), 1, trace),
+      createDescriptor('throwing', Symbol('throwing'), 1, trace, { dispose: true }),
+      createDescriptor('inner', Symbol('inner'), 1, trace),
+    ]);
+    const canvas = createCanvas();
+    const controller = mountCRC(canvas, enhanced);
+    activeControllers.add(controller);
+    executeRender(canvas, 1);
+    trace.length = 0;
+
+    controller.dispose();
+    controller.dispose();
+
+    expect(trace).toEqual([
+      'dispose:inner',
+      'dispose:throwing',
+      'dispose:outer',
+    ]);
+    expect(reportError).toHaveBeenCalledOnce();
   });
 });
 
@@ -307,8 +504,14 @@ describe('built-in enhancer constructors', () => {
     expect(enhanced.style).toBe(element.style);
     expect(enhanced.key).toBe('stable');
     expect(enhanced.identityHint).toBe(identityHint);
-    expect(readEnhancers(enhanced)).toHaveLength(2);
-    expect(readEnhancers(enhanced)[0].key).not.toBe(readEnhancers(enhanced)[1].key);
+    expect('enhancers' in enhanced).toBe(false);
+    expect(Object.keys(enhanced)).toEqual([
+      'type',
+      'props',
+      'style',
+      'key',
+      'identityHint',
+    ]);
   });
 
   it('rejects duplicate focus and directional enhancers with targeted errors', () => {
@@ -332,13 +535,44 @@ describe('built-in enhancer constructors', () => {
     expect(() => withKeyboardNavigation(Component({}), { mode: 'linear' } as never))
       .toThrowError(/mode.*directional/i);
   });
+
+  it('ignores arbitrary string metadata and keeps it out of the public element type', async () => {
+    type PublicElementHasEnhancers = 'enhancers' extends keyof PublicCompEl
+      ? true
+      : false;
+    const publicElementHasEnhancers: PublicElementHasEnhancers = false;
+    const mount = vi.fn(() => ({
+      update: () => undefined,
+      enter: () => undefined,
+      exit: () => undefined,
+      dispose: () => undefined,
+    }));
+    const Component = defineComp(() => undefined);
+    const descriptor = { key: Symbol('unsupported'), mount };
+    const element = Component({});
+    const unsupported: PublicCompEl = {
+      ...element,
+      // @ts-expect-error arbitrary enhancer metadata is not public CRC element input
+      enhancers: [descriptor],
+    };
+    const canvas = createCanvas();
+    const controller = crc(canvas, unsupported);
+    activeControllers.add(controller);
+    await nextFrame();
+
+    expect(publicElementHasEnhancers).toBe(false);
+    expect(mount).not.toHaveBeenCalled();
+  });
 });
 
 function annotate<P>(
   element: CompEl<P, any>,
   enhancers: readonly TestEnhancerDescriptor[],
 ): CompEl<P, any> {
-  return { ...element, enhancers } as CompEl<P, any>;
+  return enhancers.reduce(
+    (enhanced, descriptor) => appendElementEnhancer(enhanced, descriptor),
+    element,
+  );
 }
 
 function createDescriptor(
@@ -346,34 +580,34 @@ function createDescriptor(
   key: symbol,
   generation: number,
   trace: string[],
+  failures: Readonly<TestDescriptorFailures> = {},
 ): TestEnhancerDescriptor {
   return {
     key,
     generation,
     mount() {
       trace.push(`mount:${name}`);
+      if (failures.mount) throw new Error(`mount:${name}:failed`);
       return {
         update(next) {
           trace.push(`update:${name}:${next.generation}`);
+          if (failures.update) throw new Error(`update:${name}:failed`);
         },
         enter() {
           trace.push(`enter:${name}`);
+          if (failures.enter) throw new Error(`enter:${name}:failed`);
         },
         exit(success) {
           trace.push(`exit:${name}:${success}`);
+          if (failures.exit) throw new Error(`exit:${name}:failed`);
         },
         dispose() {
           trace.push(`dispose:${name}`);
+          if (failures.dispose) throw new Error(`dispose:${name}:failed`);
         },
       };
     },
   };
-}
-
-function readEnhancers(element: CompEl<any, any>): readonly TestEnhancerDescriptor[] {
-  return (element as CompEl<any, any> & {
-    enhancers: readonly TestEnhancerDescriptor[];
-  }).enhancers;
 }
 
 function createCanvas(): HTMLCanvasElement {

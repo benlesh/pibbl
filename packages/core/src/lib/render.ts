@@ -35,7 +35,6 @@ export function render<P, S extends SystemStyle>(
         element,
         refs: [],
         hooks: [],
-        mountedEnhancers: [],
         teardowns,
         onAfterRender: undefined,
       };

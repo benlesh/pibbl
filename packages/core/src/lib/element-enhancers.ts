@@ -21,10 +21,19 @@ export interface CRCMountedElementEnhancer {
   dispose(): void;
 }
 
-export interface CRCMountedElementEnhancerEntry {
+interface CRCMountedElementEnhancerEntry {
   readonly key: symbol;
   readonly mounted: CRCMountedElementEnhancer;
 }
+
+const elementEnhancers = new WeakMap<
+  CompEl<any, any>,
+  readonly CRCElementEnhancerDescriptor[]
+>();
+const mountedElementEnhancers = new WeakMap<
+  CompRefs<any>,
+  CRCMountedElementEnhancerEntry[]
+>();
 
 /** @internal Adds private metadata without introducing a component boundary. */
 export function appendElementEnhancer<
@@ -36,10 +45,12 @@ export function appendElementEnhancer<
   element: CompEl<P, S, N, R>,
   descriptor: CRCElementEnhancerDescriptor,
 ): CompEl<P, S, N, R> {
-  return {
-    ...element,
-    enhancers: [...(element.enhancers ?? []), descriptor],
-  };
+  const enhanced = { ...element };
+  elementEnhancers.set(enhanced, [
+    ...(elementEnhancers.get(element) ?? []),
+    descriptor,
+  ]);
+  return enhanced;
 }
 
 /** @internal */
@@ -47,7 +58,9 @@ export function hasElementEnhancer(
   element: CompEl<any, any>,
   key: symbol,
 ): boolean {
-  return element.enhancers?.some(descriptor => descriptor.key === key) ?? false;
+  return elementEnhancers.get(element)?.some(descriptor =>
+    descriptor.key === key
+  ) ?? false;
 }
 
 /** @internal */
@@ -55,10 +68,10 @@ export function reconcileElementEnhancers(
   component: CompRefs<any>,
   instance: CRCInstance,
 ): void {
-  const descriptors = component.element.enhancers ?? [];
+  const descriptors = elementEnhancers.get(component.element) ?? [];
   assertUniqueDescriptorKeys(descriptors);
 
-  const previous = component.mountedEnhancers;
+  const previous = mountedElementEnhancers.get(component) ?? [];
   const previousByKey = new Map(previous.map(entry => [entry.key, entry]));
   const next: CRCMountedElementEnhancerEntry[] = [];
   const acquired: CRCMountedElementEnhancerEntry[] = [];
@@ -83,7 +96,7 @@ export function reconcileElementEnhancers(
 
   const nextKeys = new Set(next.map(entry => entry.key));
   const removed = previous.filter(entry => !nextKeys.has(entry.key));
-  component.mountedEnhancers = next;
+  mountedElementEnhancers.set(component, next);
   disposeEntries(removed);
 }
 
@@ -93,7 +106,7 @@ export function enterElementEnhancers(
 ): readonly CRCMountedElementEnhancerEntry[] {
   const entered: CRCMountedElementEnhancerEntry[] = [];
   try {
-    for (const entry of component.mountedEnhancers) {
+    for (const entry of mountedElementEnhancers.get(component) ?? []) {
       entry.mounted.enter();
       entered.push(entry);
     }
@@ -127,8 +140,8 @@ export function exitElementEnhancers(
 
 /** @internal */
 export function disposeElementEnhancers(component: CompRefs<any>): void {
-  const entries = component.mountedEnhancers;
-  component.mountedEnhancers = [];
+  const entries = mountedElementEnhancers.get(component) ?? [];
+  mountedElementEnhancers.delete(component);
   disposeEntries(entries);
 }
 
