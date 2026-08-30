@@ -318,6 +318,35 @@ describe('Canvas DOM focus host', () => {
     expect(canvas.hasAttribute('tabindex')).toBe(false);
   });
 
+  it.each([
+    ['a different negative value', '-2', '0', '-2'],
+    ['a nonnegative value', '9', '9', '9'],
+    ['an absent attribute', undefined, '0', null],
+  ] as const)(
+    'rebases press-only non-writing ownership after the application sets %s',
+    (_label, applicationValue, active, restored) => {
+      const canvas = createCanvas();
+      canvas.setAttribute('tabindex', '-1');
+      const mounted = mountAndRender(canvas, managed([]));
+
+      dispatchBackgroundPress(canvas);
+      expect(document.activeElement).toBe(canvas);
+      expect(canvas.getAttribute('tabindex')).toBe('-1');
+
+      setTabIndexAttribute(canvas, applicationValue);
+      executeRender(canvas, 2, managed(['only']));
+      expect(canvas.getAttribute('tabindex')).toBe(active);
+
+      canvas.blur();
+      executeRender(canvas, 3, managed([]));
+      expect(canvas.getAttribute('tabindex')).toBe(restored);
+
+      mounted.controller.dispose();
+      activeControllers.delete(mounted.controller);
+      expect(canvas.getAttribute('tabindex')).toBe(restored);
+    },
+  );
+
   it('keeps the press reason when candidates disappear and restores the base on disposal', () => {
     const canvas = createCanvas();
     const mounted = mountAndRender(canvas, managed(['only']));

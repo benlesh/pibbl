@@ -205,6 +205,59 @@ describe('press-to-focus defaults', () => {
     expect(focusedLabel(mounted.manager)).toBe('focusable');
   });
 
+  it('reconciles unseen external contacts from each full touch set before choosing a new primary', () => {
+    const mounted = mountScene();
+    const focus = vi.spyOn(mounted.canvas, 'focus');
+    const external = document.createElement('div');
+    document.body.appendChild(external);
+
+    dispatchTouchSequence(
+      mounted.canvas,
+      'touchstart',
+      [{ identifier: 1, x: 10 }],
+      [{ identifier: 1, x: 10 }],
+    );
+    mounted.canvas.blur();
+    dispatchTouchSequence(
+      mounted.canvas,
+      'touchend',
+      [{ identifier: 1, x: 10 }],
+      [{ identifier: 2, x: 60, target: external }],
+    );
+
+    dispatchTouchSequence(
+      mounted.canvas,
+      'touchstart',
+      [{ identifier: 3, x: 10 }],
+      [
+        { identifier: 2, x: 60, target: external },
+        { identifier: 3, x: 10 },
+      ],
+    );
+    dispatchTouchSequence(
+      mounted.canvas,
+      'touchcancel',
+      [{ identifier: 3, x: 10 }],
+      [{ identifier: 2, x: 60, target: external }],
+    );
+
+    expect(focus).toHaveBeenCalledTimes(1);
+    expect(document.activeElement).not.toBe(mounted.canvas);
+
+    // The external contact's terminal event never reaches this Canvas. The
+    // next full touch set is authoritative and reveals that the old sequence
+    // has ended before this new contact begins.
+    dispatchTouchSequence(
+      mounted.canvas,
+      'touchstart',
+      [{ identifier: 4, x: 10 }],
+      [{ identifier: 4, x: 10 }],
+    );
+
+    expect(focus).toHaveBeenCalledTimes(2);
+    expect(focusedLabel(mounted.manager)).toBe('focusable');
+  });
+
   it('uses only the first simultaneous contact and honors prevention from a later target group', () => {
     let preventSecondary = false;
     const Root = defineComp(() => [
@@ -388,6 +441,7 @@ function dispatchTouch(canvas: HTMLCanvasElement, identifier: number, x: number)
 
 interface TouchPoint {
   readonly identifier: number;
+  readonly target?: EventTarget;
   readonly x: number;
 }
 
@@ -398,19 +452,20 @@ function dispatchTouchSequence(
   active: readonly TouchPoint[],
 ): TouchEvent {
   const bounds = canvas.getBoundingClientRect();
-  const createTouch = ({ identifier, x }: TouchPoint) => new Touch({
+  const createTouch = ({ identifier, target, x }: TouchPoint) => new Touch({
     identifier,
-    target: canvas,
+    target: target ?? canvas,
     clientX: bounds.left + x,
     clientY: bounds.top + 10,
   });
   const changedTouches = changed.map(createTouch);
   const touches = active.map(createTouch);
+  const targetTouches = touches.filter(touch => touch.target === canvas);
   const event = new TouchEvent(type, {
     bubbles: true,
     cancelable: true,
     changedTouches,
-    targetTouches: touches,
+    targetTouches,
     touches,
   });
   canvas.dispatchEvent(event);

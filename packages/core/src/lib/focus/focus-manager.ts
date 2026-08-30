@@ -481,6 +481,7 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   afterTouchDispatch(input: CRCFocusTouchDefaultInput): void {
     if (this.destroyed) return;
     this.purgeExpiredPresses(input.originalEvent.timeStamp);
+    this.reconcileTouchContacts(input);
     if (input.type === 'touchstart') {
       const primary = this.recordTouchStarts(input);
       if (!primary) return;
@@ -792,16 +793,6 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   private recordTouchStarts(
     input: CRCFocusTouchDefaultInput,
   ): CRCFocusTouchDefaultContact | undefined {
-    const changedIdentifiers = new Set(
-      input.changedContacts.map(contact => contact.identifier),
-    );
-    for (const identifier of input.activeIdentifiers) {
-      if (!changedIdentifiers.has(identifier)) {
-        this.activeTouchIdentifiers.add(identifier);
-        this.touchSequenceActive = true;
-      }
-    }
-
     let primary: CRCFocusTouchDefaultContact | undefined;
     for (const contact of input.changedContacts) {
       if (this.activeTouchIdentifiers.has(contact.identifier)) continue;
@@ -815,12 +806,37 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     return primary;
   }
 
+  private reconcileTouchContacts(input: CRCFocusTouchDefaultInput): void {
+    const activeIdentifiers = new Set(input.activeIdentifiers);
+    for (const identifier of this.activeTouchIdentifiers) {
+      if (activeIdentifiers.has(identifier)) continue;
+      this.activeTouchIdentifiers.delete(identifier);
+      this.representedTouchContacts.delete(identifier);
+    }
+
+    const startingIdentifiers = input.type === 'touchstart' ? new Set(
+      input.changedContacts.map(contact => contact.identifier),
+    ) : undefined;
+    for (const identifier of activeIdentifiers) {
+      if (!startingIdentifiers?.has(identifier)) {
+        this.activeTouchIdentifiers.add(identifier);
+      }
+    }
+
+    if (this.activeTouchIdentifiers.size > 0) {
+      this.touchSequenceActive = true;
+      return;
+    }
+    this.touchSequenceActive = false;
+    this.primaryTouchIdentifier = undefined;
+    this.representedTouchContacts.clear();
+  }
+
   private recordTouchTerminals(input: CRCFocusTouchDefaultInput): void {
     for (const contact of input.changedContacts) {
       this.activeTouchIdentifiers.delete(contact.identifier);
       this.representedTouchContacts.delete(contact.identifier);
     }
-    this.activeTouchIdentifiers = new Set(input.activeIdentifiers);
     if (this.activeTouchIdentifiers.size > 0) return;
     this.touchSequenceActive = false;
     this.primaryTouchIdentifier = undefined;

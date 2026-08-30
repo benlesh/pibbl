@@ -10,8 +10,8 @@ interface TabIndexSnapshot {
 }
 
 interface TabIndexOwnership {
-  readonly snapshot: TabIndexSnapshot;
-  readonly baseTabIndex: number;
+  snapshot: TabIndexSnapshot;
+  baseTabIndex: number;
   ownedValue: string | undefined;
   lost: boolean;
 }
@@ -51,14 +51,20 @@ export function mountDOMFocusHost(
     }
   };
 
+  const snapshotTabIndex = (): TabIndexSnapshot => ({
+    existed: canvas.hasAttribute('tabindex'),
+    value: canvas.getAttribute('tabindex'),
+  });
+
+  const matchesSnapshot = (snapshot: TabIndexSnapshot): boolean =>
+    canvas.hasAttribute('tabindex') === snapshot.existed &&
+    canvas.getAttribute('tabindex') === snapshot.value;
+
   const syncTabIndex = () => {
     const hasReason = candidateReason || pressReason;
     if (!tabIndexOwnership && hasReason) {
       tabIndexOwnership = {
-        snapshot: {
-          existed: canvas.hasAttribute('tabindex'),
-          value: canvas.getAttribute('tabindex'),
-        },
+        snapshot: snapshotTabIndex(),
         baseTabIndex: canvas.tabIndex,
         ownedValue: undefined,
         lost: false,
@@ -75,6 +81,15 @@ export function mountDOMFocusHost(
     ) {
       ownership.lost = true;
       ownership.ownedValue = undefined;
+    }
+
+    if (
+      !ownership.lost &&
+      ownership.ownedValue === undefined &&
+      !matchesSnapshot(ownership.snapshot)
+    ) {
+      ownership.snapshot = snapshotTabIndex();
+      ownership.baseTabIndex = canvas.tabIndex;
     }
 
     if (!hasReason) {
