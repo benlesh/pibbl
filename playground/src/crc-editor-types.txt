@@ -18,13 +18,13 @@ declare module '@crc/core' {
   }
   export type CRCConfig = CRCFixedViewportConfig | CRCResponsiveViewportConfig;
 
-  interface CRCLegacyMouseEvent {
+  export interface CRCMouseEvent {
     x: number;
     y: number;
     originalEvent: MouseEvent;
   }
 
-  export type CRCMouseEventListener = (event: CRCLegacyMouseEvent) => void;
+  export type CRCMouseEventListener = (event: CRCMouseEvent) => void;
   export type Canvas = HTMLCanvasElement | OffscreenCanvas;
   export type RenderingContext2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
   export type FalsyNodes = undefined | false | null | '' | 0;
@@ -68,14 +68,14 @@ declare module '@crc/core' {
     readonly metaKey: boolean;
     readonly shiftKey: boolean;
   }
-  export interface CRCMouseEvent<TOriginal extends MouseEvent = MouseEvent> extends CRCModifierEvent<TOriginal> {
+  export interface CRCLogicalMouseEvent<TOriginal extends MouseEvent = MouseEvent> extends CRCModifierEvent<TOriginal> {
     readonly x: number; readonly y: number;
     readonly clientX: number; readonly clientY: number;
     readonly screenX: number; readonly screenY: number;
     readonly movementX: number; readonly movementY: number;
     readonly button: number; readonly buttons: number; readonly detail: number;
   }
-  export interface CRCPointerEvent extends CRCMouseEvent<PointerEvent> {
+  export interface CRCPointerEvent extends CRCLogicalMouseEvent<PointerEvent> {
     readonly pointerId: number; readonly width: number; readonly height: number;
     readonly pressure: number; readonly tangentialPressure: number;
     readonly tiltX: number; readonly tiltY: number; readonly twist: number;
@@ -85,7 +85,7 @@ declare module '@crc/core' {
     readonly x: number; readonly y: number;
     readonly touches: TouchList; readonly targetTouches: TouchList; readonly changedTouches: TouchList;
   }
-  export interface CRCWheelEvent extends CRCMouseEvent<WheelEvent> {
+  export interface CRCWheelEvent extends CRCLogicalMouseEvent<WheelEvent> {
     readonly deltaX: number; readonly deltaY: number; readonly deltaZ: number; readonly deltaMode: number;
   }
   export interface CRCKeyboardEvent extends CRCModifierEvent<KeyboardEvent> {
@@ -99,15 +99,15 @@ declare module '@crc/core' {
   }
   export interface CRCCompositionEvent extends CRCEvent<CompositionEvent> { readonly data: string }
   export interface CRCClipboardEvent extends CRCEvent<ClipboardEvent> { readonly clipboardData: DataTransfer | null }
-  export interface CRCDragEvent extends CRCMouseEvent<DragEvent> { readonly dataTransfer: DataTransfer | null }
+  export interface CRCDragEvent extends CRCLogicalMouseEvent<DragEvent> { readonly dataTransfer: DataTransfer | null }
   export interface CRCEventMap {
     pointerover: CRCPointerEvent; pointerenter: CRCPointerEvent; pointerdown: CRCPointerEvent;
     pointermove: CRCPointerEvent; pointerrawupdate: CRCPointerEvent; pointerup: CRCPointerEvent;
     pointercancel: CRCPointerEvent; pointerout: CRCPointerEvent; pointerleave: CRCPointerEvent;
     gotpointercapture: CRCPointerEvent; lostpointercapture: CRCPointerEvent;
-    click: CRCMouseEvent; dblclick: CRCMouseEvent; auxclick: CRCMouseEvent; contextmenu: CRCMouseEvent;
-    mouseover: CRCMouseEvent; mouseenter: CRCMouseEvent; mousedown: CRCMouseEvent;
-    mousemove: CRCMouseEvent; mouseup: CRCMouseEvent; mouseout: CRCMouseEvent; mouseleave: CRCMouseEvent;
+    click: CRCLogicalMouseEvent; dblclick: CRCLogicalMouseEvent; auxclick: CRCLogicalMouseEvent; contextmenu: CRCLogicalMouseEvent;
+    mouseover: CRCLogicalMouseEvent; mouseenter: CRCLogicalMouseEvent; mousedown: CRCLogicalMouseEvent;
+    mousemove: CRCLogicalMouseEvent; mouseup: CRCLogicalMouseEvent; mouseout: CRCLogicalMouseEvent; mouseleave: CRCLogicalMouseEvent;
     touchstart: CRCTouchEvent; touchmove: CRCTouchEvent; touchend: CRCTouchEvent; touchcancel: CRCTouchEvent;
     wheel: CRCWheelEvent; keydown: CRCKeyboardEvent; keyup: CRCKeyboardEvent;
     focus: CRCFocusEvent; blur: CRCFocusEvent; focusin: CRCFocusEvent; focusout: CRCFocusEvent;

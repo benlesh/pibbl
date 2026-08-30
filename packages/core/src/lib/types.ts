@@ -144,7 +144,7 @@ export interface CRCHookSlot<T = any> {
   teardowns: Teardowns;
 }
 
-export type CRCMouseEventListener = (e: CRCLegacyMouseEvent) => void;
+export type CRCMouseEventListener = (e: CRCMouseEvent) => void;
 
 export interface CRCEventRegistry {
   click: Set<(e: MouseEvent) => void>;
@@ -259,7 +259,8 @@ export interface CRCInstance {
 
 export type PixelGridAlignment = 'none' | 'round' | 'ceil' | 'floor';
 
-interface CRCLegacyMouseEvent {
+/** Shipped payload for the singular `crcEvent` Canvas observer hook. */
+export interface CRCMouseEvent {
   x: number;
   y: number;
   originalEvent: MouseEvent;

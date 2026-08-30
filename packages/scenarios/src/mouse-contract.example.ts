@@ -1,4 +1,4 @@
-import type { CRCMouseEvent } from '@crc/core';
+import type { CRCLogicalMouseEvent } from '@crc/core';
 import type { MouseContractCase } from './mouse-contract';
 import {
   clip,
@@ -37,7 +37,7 @@ function caseVisual(
   };
   const interactive = (target: string) => ({
     cursor: 'crosshair',
-    onMouseMove: (_event: CRCMouseEvent) => recordTarget(target),
+    onMouseMove: (_event: CRCLogicalMouseEvent) => recordTarget(target),
   });
   const region = (
     target: string,

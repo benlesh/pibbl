@@ -20,6 +20,7 @@ import type {
   CRCFocusEvent,
   CRCInputEvent,
   CRCKeyboardEvent,
+  CRCLogicalMouseEvent,
   CRCMouseEvent,
   CRCPixelRatio,
   CRCPointerEvent,
@@ -98,7 +99,8 @@ export type PublicEventTypes = {
   focus: CRCFocusEvent;
   input: CRCInputEvent;
   keyboard: CRCKeyboardEvent;
-  mouse: CRCMouseEvent;
+  logicalMouse: CRCLogicalMouseEvent;
+  canvasObserverMouse: CRCMouseEvent;
   pointer: CRCPointerEvent;
   touch: CRCTouchEvent;
   wheel: CRCWheelEvent;
@@ -169,6 +171,8 @@ const props = {} satisfies RectProps;
 export type PublicCoreTypes = typeof CoreTypes;
 export type PublicCoreEventTypes = [
   CoreTypes.CRCEventHandlers,
+  CoreTypes.CRCLogicalMouseEvent,
+  CoreTypes.CRCMouseEvent,
   CoreTypes.CRCPointerEvent,
   CoreTypes.CRCTouchEvent,
 ];
@@ -617,12 +621,19 @@ crcLinePath([['0', 0]]);
 // @ts-expect-error SVG path input is a string
 crcSvgPath(123);
 
-crcEvent('click', (event: CRCMouseEvent) => {
+crcEvent('click', (event: CRCLogicalMouseEvent) => {
   const x: number = event.x;
   const original: MouseEvent = event.originalEvent;
   void x;
   void original;
 }, rectanglePath, true, 8);
+const observer = (event: CRCMouseEvent) => {
+  const x: number = event.x;
+  const original: MouseEvent = event.originalEvent;
+  void x;
+  void original;
+};
+crcEvent('mousemove', observer);
 crcEvent('mousemove', undefined);
 crcEvent('mousemove', event => {
   const x: number = event.x;
@@ -632,7 +643,7 @@ crcEvent('mousemove', event => {
 });
 // @ts-expect-error event names are limited to the public CRC event registry
 crcEvent('pointerdown', () => undefined);
-// @ts-expect-error CRC handlers receive CRCMouseEvent rather than PointerEvent
+// @ts-expect-error CRC handlers receive a logical mouse facade, not PointerEvent
 crcEvent('click', (_event: PointerEvent) => undefined);
 
 crcCursor({ style: 'crosshair' });

@@ -17,6 +17,7 @@ const consumer = `
 import {
   absolute,
   crc,
+  crcEvent,
   crcEventListener,
   crcEventTarget,
   defineComp,
@@ -28,6 +29,8 @@ import {
   type CRCConfig,
   type CRCEventHandlers,
   type CRCFit,
+  type CRCLogicalMouseEvent,
+  type CRCMouseEvent,
   type CRCPixelRatio,
   type CRCPointerEvent,
   type CRCEventTargetSnapshot,
@@ -61,6 +64,17 @@ const EventProbe = defineComp(() => {
   });
 });
 EventProbe({});
+
+const logicalMouseHandler = (event: CRCLogicalMouseEvent) => {
+  event.preventDefault();
+};
+crcEvent('click', logicalMouseHandler, new Path2D());
+const canvasObserver = (event: CRCMouseEvent) => void event.x;
+crcEvent('mousemove', canvasObserver);
+crcEvent('mousemove', event => {
+  // @ts-expect-error Canvas observers retain the shipped legacy payload
+  event.preventDefault();
+});
 
 type UnionStyle =
   | (SystemStyle & { opacity?: number })

@@ -1,4 +1,4 @@
-import type { CRCMouseEvent } from '@crc/core';
+import type { CRCLogicalMouseEvent, CRCMouseEvent } from '@crc/core';
 import type { EventTraceInput, TraceEventType } from './event-trace';
 import {
   crcEvent,
@@ -67,14 +67,14 @@ type TraceMouseCoordinates = Pick<
 >;
 
 type TraceHandlers = {
-  onClick: (event: CRCMouseEvent) => void;
-  onContextMenu: (event: CRCMouseEvent) => void;
-  onDblClick: (event: CRCMouseEvent) => void;
-  onMouseDown: (event: CRCMouseEvent) => void;
-  onMouseMove: (event: CRCMouseEvent) => void;
-  onMouseOut: (event: CRCMouseEvent) => void;
-  onMouseOver: (event: CRCMouseEvent) => void;
-  onMouseUp: (event: CRCMouseEvent) => void;
+  onClick: (event: CRCLogicalMouseEvent) => void;
+  onContextMenu: (event: CRCLogicalMouseEvent) => void;
+  onDblClick: (event: CRCLogicalMouseEvent) => void;
+  onMouseDown: (event: CRCLogicalMouseEvent) => void;
+  onMouseMove: (event: CRCLogicalMouseEvent) => void;
+  onMouseOut: (event: CRCLogicalMouseEvent) => void;
+  onMouseOver: (event: CRCLogicalMouseEvent) => void;
+  onMouseUp: (event: CRCLogicalMouseEvent) => void;
 };
 
 function recordEvent(
@@ -100,7 +100,9 @@ function traceHandlers(
   record: InteractionLabRecord,
   handlerGeneration?: number,
 ): TraceHandlers {
-  const handler = (type: TraceEventType) => (event: CRCMouseEvent) => {
+  const handler = (type: TraceEventType) => (
+    event: CRCLogicalMouseEvent,
+  ) => {
     recordEvent(record, type, target, event, handlerGeneration);
   };
   return {

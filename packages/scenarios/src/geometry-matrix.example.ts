@@ -1,4 +1,4 @@
-import type { CRCMouseEvent } from '@crc/core';
+import type { CRCLogicalMouseEvent } from '@crc/core';
 import type { EventTraceInput, TraceEventType } from './event-trace';
 import {
   clip,
@@ -152,18 +152,20 @@ interface GeometryMatrixSceneProps {
 }
 
 type TraceHandlers = {
-  onClick: (event: CRCMouseEvent) => void;
-  onContextMenu: (event: CRCMouseEvent) => void;
-  onDblClick: (event: CRCMouseEvent) => void;
-  onMouseDown: (event: CRCMouseEvent) => void;
-  onMouseMove: (event: CRCMouseEvent) => void;
-  onMouseOut: (event: CRCMouseEvent) => void;
-  onMouseOver: (event: CRCMouseEvent) => void;
-  onMouseUp: (event: CRCMouseEvent) => void;
+  onClick: (event: CRCLogicalMouseEvent) => void;
+  onContextMenu: (event: CRCLogicalMouseEvent) => void;
+  onDblClick: (event: CRCLogicalMouseEvent) => void;
+  onMouseDown: (event: CRCLogicalMouseEvent) => void;
+  onMouseMove: (event: CRCLogicalMouseEvent) => void;
+  onMouseOut: (event: CRCLogicalMouseEvent) => void;
+  onMouseOver: (event: CRCLogicalMouseEvent) => void;
+  onMouseUp: (event: CRCLogicalMouseEvent) => void;
 };
 
 function traceHandlers(target: string, record: GeometryMatrixRecord): TraceHandlers {
-  const handler = (type: TraceEventType) => (event: CRCMouseEvent) => {
+  const handler = (type: TraceEventType) => (
+    event: CRCLogicalMouseEvent,
+  ) => {
     record({
       source: 'crc',
       type,

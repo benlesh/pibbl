@@ -47,7 +47,9 @@ interface CRCModifierEvent<TOriginal extends Event> extends CRCEvent<TOriginal> 
   readonly shiftKey: boolean;
 }
 
-export interface CRCMouseEvent<TOriginal extends MouseEvent = MouseEvent>
+export interface CRCLogicalMouseEvent<
+  TOriginal extends MouseEvent = MouseEvent,
+>
   extends CRCModifierEvent<TOriginal> {
   /** Root-logical canvas coordinates. */
   readonly x: number;
@@ -64,7 +66,7 @@ export interface CRCMouseEvent<TOriginal extends MouseEvent = MouseEvent>
   readonly detail: number;
 }
 
-export interface CRCPointerEvent extends CRCMouseEvent<PointerEvent> {
+export interface CRCPointerEvent extends CRCLogicalMouseEvent<PointerEvent> {
   readonly pointerId: number;
   readonly width: number;
   readonly height: number;
@@ -87,7 +89,7 @@ export interface CRCTouchEvent extends CRCModifierEvent<TouchEvent> {
   readonly changedTouches: TouchList;
 }
 
-export interface CRCWheelEvent extends CRCMouseEvent<WheelEvent> {
+export interface CRCWheelEvent extends CRCLogicalMouseEvent<WheelEvent> {
   readonly deltaX: number;
   readonly deltaY: number;
   readonly deltaZ: number;
@@ -119,7 +121,7 @@ export interface CRCClipboardEvent extends CRCEvent<ClipboardEvent> {
   readonly clipboardData: DataTransfer | null;
 }
 
-export interface CRCDragEvent extends CRCMouseEvent<DragEvent> {
+export interface CRCDragEvent extends CRCLogicalMouseEvent<DragEvent> {
   readonly dataTransfer: DataTransfer | null;
 }
 
@@ -135,17 +137,17 @@ export interface CRCEventMap {
   pointerleave: CRCPointerEvent;
   gotpointercapture: CRCPointerEvent;
   lostpointercapture: CRCPointerEvent;
-  click: CRCMouseEvent;
-  dblclick: CRCMouseEvent;
-  auxclick: CRCMouseEvent;
-  contextmenu: CRCMouseEvent;
-  mouseover: CRCMouseEvent;
-  mouseenter: CRCMouseEvent;
-  mousedown: CRCMouseEvent;
-  mousemove: CRCMouseEvent;
-  mouseup: CRCMouseEvent;
-  mouseout: CRCMouseEvent;
-  mouseleave: CRCMouseEvent;
+  click: CRCLogicalMouseEvent;
+  dblclick: CRCLogicalMouseEvent;
+  auxclick: CRCLogicalMouseEvent;
+  contextmenu: CRCLogicalMouseEvent;
+  mouseover: CRCLogicalMouseEvent;
+  mouseenter: CRCLogicalMouseEvent;
+  mousedown: CRCLogicalMouseEvent;
+  mousemove: CRCLogicalMouseEvent;
+  mouseup: CRCLogicalMouseEvent;
+  mouseout: CRCLogicalMouseEvent;
+  mouseleave: CRCLogicalMouseEvent;
   touchstart: CRCTouchEvent;
   touchmove: CRCTouchEvent;
   touchend: CRCTouchEvent;

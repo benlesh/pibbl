@@ -8,7 +8,7 @@ import { crcEventTarget } from '../hooks/crc-event-target';
 import type {
   CRCEventHandlers,
   CRCEventTarget,
-  CRCMouseEvent,
+  CRCLogicalMouseEvent,
 } from './types';
 
 const ACTIVATION_CASES = [
@@ -381,12 +381,12 @@ describe('DOM-aligned mouse dispatch', () => {
 });
 
 interface BoundaryHooks {
-  readonly onATarget?: (event: CRCMouseEvent) => void;
-  readonly onBTarget?: (event: CRCMouseEvent) => void;
-  readonly onOut?: (event: CRCMouseEvent) => void;
-  readonly onLeave?: (event: CRCMouseEvent) => void;
-  readonly onOver?: (event: CRCMouseEvent) => void;
-  readonly onEnter?: (event: CRCMouseEvent) => void;
+  readonly onATarget?: (event: CRCLogicalMouseEvent) => void;
+  readonly onBTarget?: (event: CRCLogicalMouseEvent) => void;
+  readonly onOut?: (event: CRCLogicalMouseEvent) => void;
+  readonly onLeave?: (event: CRCLogicalMouseEvent) => void;
+  readonly onOver?: (event: CRCLogicalMouseEvent) => void;
+  readonly onEnter?: (event: CRCLogicalMouseEvent) => void;
 }
 
 function boundaryScene(
