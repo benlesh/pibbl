@@ -38,7 +38,7 @@ export interface RuntimeDiagnosticSnapshot {
   eventTargets: number;
   focusCandidates: number;
   focusManagers: number;
-  focusedTarget: string | null;
+  focusedTarget: FocusTargetIdentity | null;
   focusedTargets: number;
   instances: number;
   nativeListeners: number;
@@ -55,6 +55,11 @@ export interface RuntimeDiagnosticSnapshot {
     original: TabIndexSnapshot;
     owned: boolean;
   };
+}
+
+export interface FocusTargetIdentity {
+  componentId: string;
+  slot: number;
 }
 
 interface TabIndexSnapshot {
@@ -286,7 +291,7 @@ export class RuntimeDiagnostics {
     let enhancers = 0;
     let focusCandidates = 0;
     let focusManagers = 0;
-    let focusedTarget: string | null = null;
+    let focusedTarget: FocusTargetIdentity | null = null;
     let navigationBoundaries = 0;
     let pendingActivations = 0;
 
@@ -562,7 +567,7 @@ function isOwnedTabIndex(
 function focusDiagnosticState(policy: unknown): {
   boundaries: number;
   candidates: number;
-  focusedTarget: string | null;
+  focusedTarget: FocusTargetIdentity | null;
   managers: number;
   pendingActivations: number;
 } {
@@ -593,7 +598,10 @@ function focusDiagnosticState(policy: unknown): {
       candidateBoundaries.size,
     ),
     candidates: manager.candidates?.length ?? 0,
-    focusedTarget: manager.logicalFocusTarget?.component.id ?? null,
+    focusedTarget: manager.logicalFocusTarget ? {
+      componentId: manager.logicalFocusTarget.component.id,
+      slot: manager.logicalFocusTarget.slot,
+    } : null,
     managers: manager.coordinator?.managers?.size ?? 1,
     pendingActivations: manager.pendingSpaceTarget ? 1 : 0,
   };

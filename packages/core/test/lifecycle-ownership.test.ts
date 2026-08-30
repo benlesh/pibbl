@@ -11,6 +11,7 @@ import lifecycleLabSource from '../../scenarios/src/lifecycle-lab.example.ts?raw
 import {
   absolute,
   crc,
+  crcEventTarget,
   defineComp,
   layer,
   rect,
@@ -126,6 +127,58 @@ function expectFullyReleased(diagnostics: RuntimeDiagnostics): void {
   expect(ledger.frames.pending).toBe(0);
 }
 
+function expectFocusFullyReleased(
+  diagnostics: RuntimeDiagnostics,
+  tabIndex: {
+    current: string;
+    original: string;
+  },
+): void {
+  expect(diagnostics.snapshot()).toEqual({
+    componentTeardowns: 0,
+    documentListeners: 0,
+    enhancers: 0,
+    eventTargets: 0,
+    focusCandidates: 0,
+    focusManagers: 0,
+    focusedTarget: null,
+    focusedTargets: 0,
+    handlers: EMPTY_HANDLERS,
+    instances: 0,
+    mainTeardowns: 0,
+    nativeListeners: 0,
+    navigationBoundaries: 0,
+    pendingActivations: 0,
+    pointerCaptures: 0,
+    propagationListeners: 0,
+    scheduledFrames: 0,
+    tabIndex: {
+      current: { existed: true, value: tabIndex.current },
+      original: { existed: true, value: tabIndex.original },
+      owned: false,
+    },
+  });
+  const ledger = diagnostics.ledgerSnapshot();
+  expect(ledger.documentListeners).toMatchObject({
+    duplicateReleases: 0,
+    live: 0,
+    released: ledger.documentListeners.acquired,
+  });
+  expect(ledger.nativeListeners).toMatchObject({
+    duplicateReleases: 0,
+    live: 0,
+    released: ledger.nativeListeners.acquired,
+  });
+  for (const eventLedger of Object.values(ledger.handlers)) {
+    expect(eventLedger).toMatchObject({
+      duplicateReleases: 0,
+      live: 0,
+      released: eventLedger.acquired,
+    });
+  }
+  expect(ledger.frames.pending).toBe(0);
+}
+
 afterEach(async () => {
   for (const controller of activeControllers) {
     await controller.dispose();
@@ -144,6 +197,49 @@ afterEach(async () => {
 });
 
 describe('shared event lifecycle laboratory', () => {
+  it('distinguishes focused target slots owned by the same component', async () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 120;
+    canvas.height = 60;
+    canvas.style.cssText = 'display:block; width:120px; height:60px';
+    document.body.replaceChildren(canvas);
+    const diagnostics = new RuntimeDiagnostics(canvas);
+    activeDiagnostics.add(diagnostics);
+    const SlotTargets = defineComp(() => {
+      const first = new Path2D();
+      first.rect(0, 0, 50, 50);
+      crcEventTarget({ onClick: () => undefined }, { fill: true, path: first });
+      const second = new Path2D();
+      second.rect(60, 0, 50, 50);
+      crcEventTarget({ onClick: () => undefined }, { fill: true, path: second });
+    });
+    const controller = mountCRC(
+      canvas,
+      withFocusManagement(SlotTargets({})),
+    );
+    activeRuntimeControllers.add(controller);
+    executeRender(canvas, 0);
+
+    dispatchPointerDown(canvas, 10, 10, 81);
+    await settleFrames();
+    const firstTarget = diagnostics.snapshot().focusedTarget;
+    expect(firstTarget).toEqual({
+      componentId: expect.any(String),
+      slot: 0,
+    });
+
+    dispatchPointerDown(canvas, 70, 10, 82);
+    await settleFrames();
+    expect(diagnostics.snapshot().focusedTarget).toEqual({
+      componentId: firstTarget!.componentId,
+      slot: 1,
+    });
+
+    controller.dispose();
+    activeRuntimeControllers.delete(controller);
+    expectFullyReleased(diagnostics);
+  });
+
   it('keeps focus and navigation ownership exact through mutation, abort, disposal, and remount', async () => {
     const canvas = document.createElement('canvas');
     canvas.width = 240;
@@ -242,6 +338,10 @@ describe('shared event lifecycle laboratory', () => {
       pointerCaptures: 1,
       scheduledFrames: 0,
     });
+    expect(active.focusedTarget).toEqual({
+      componentId: expect.any(String),
+      slot: 0,
+    });
     expect(canvas.ownerDocument.activeElement).toBe(canvas);
     expect(activeNativeCaptures).toEqual(new Set([91]));
 
@@ -315,22 +415,9 @@ describe('shared event lifecycle laboratory', () => {
     controller.dispose();
     activeRuntimeControllers.delete(controller);
     expect(activeNativeCaptures).toEqual(new Set());
-    expect(diagnostics.snapshot()).toMatchObject({
-      documentListeners: 0,
-      enhancers: 0,
-      focusCandidates: 0,
-      focusManagers: 0,
-      focusedTargets: 0,
-      instances: 0,
-      navigationBoundaries: 0,
-      pendingActivations: 0,
-      pointerCaptures: 0,
-      scheduledFrames: 0,
-      tabIndex: {
-        current: { existed: true, value: '-2' },
-        original: { existed: true, value: '-2' },
-        owned: false,
-      },
+    expectFocusFullyReleased(diagnostics, {
+      current: '-2',
+      original: '-2',
     });
 
     const remounted = mountCRC(canvas, createScene());
@@ -358,22 +445,9 @@ describe('shared event lifecycle laboratory', () => {
     remounted.dispose();
     remounted.dispose();
     activeRuntimeControllers.delete(remounted);
-    expect(diagnostics.snapshot()).toMatchObject({
-      documentListeners: 0,
-      enhancers: 0,
-      focusCandidates: 0,
-      focusManagers: 0,
-      focusedTargets: 0,
-      instances: 0,
-      navigationBoundaries: 0,
-      pendingActivations: 0,
-      pointerCaptures: 0,
-      scheduledFrames: 0,
-      tabIndex: {
-        current: { existed: true, value: '7' },
-        original: { existed: true, value: '-2' },
-        owned: false,
-      },
+    expectFocusFullyReleased(diagnostics, {
+      current: '7',
+      original: '-2',
     });
     expect(diagnostics.ledgerSnapshot().documentListeners).toEqual({
       acquired: 2,

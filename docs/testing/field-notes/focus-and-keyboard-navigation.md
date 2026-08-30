@@ -104,3 +104,46 @@ Visual inspection produced no intentional product diff. The safeguard rejected
 its deliberate mismatch, preserved every baseline byte, and recovered green;
 the Studio verifier matched all five full-page baselines. No visual baseline
 was added or rewritten.
+
+## 2026-08-30 lifecycle evidence tightening
+
+This test-only follow-up closes two review gaps without changing production
+runtime or package-entry code. Final abort/double-dispose and remount/dispose
+checks now compare the complete runtime diagnostic snapshot, including native
+and document listeners, event targets, handlers, component and main teardowns,
+propagation listeners, focus resources, frames, and exact application
+`tabindex` ownership/restoration. The associated listener and handler ledgers
+must also balance with zero live or duplicate releases.
+
+Focused-target diagnostics now preserve the full logical identity as
+`{ componentId, slot }`. A dedicated mounted lifecycle case moves focus between
+two slots owned by the same component and proves the diagnostic changes from
+slot 0 to slot 1 while retaining the component identity.
+
+The strict RED command was:
+
+```sh
+fnm exec --using 24.15.0 -- corepack pnpm@11.21.0 test:lifecycle
+```
+
+It exited 1 with 1 failed and 12 passed tests out of 13 in 9.67 seconds: the
+new structured target assertion expected component ID plus slot 0, while the
+observer still returned only the component ID string. After the minimal
+test-observer update and the two-slot control, the same command passed 2 files
+and all 14 tests in 9.67 seconds.
+
+Fresh proportional verification on Node `v24.15.0`, pnpm `11.21.0`, and
+Playwright Chromium `151.0.7922.34` also passed:
+
+- `test:performance`: 1 file, 9 passed and 2 opt-in skips out of 11, 1.40
+  seconds.
+- `typecheck`: exit 0 with no TypeScript diagnostics.
+- `lint`: exit 0; ESLint and Prettier clean.
+- `test:package-consumer:packed`: exit 0; the no-focus bundle omitted
+  `CRC_FOCUS_MANAGEMENT_V1` at 102,986 bytes and the focus bundle retained it
+  at 125,760 bytes.
+
+The aggregate `trust` gate and visual suite were not rerun for this test-only
+follow-up. The 51.70-second aggregate and five-baseline result above belong to
+the preceding `b02cc27` delivery and are not claimed as fresh evidence for this
+round. No visual baseline changed.
