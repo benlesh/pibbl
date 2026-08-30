@@ -40,11 +40,12 @@ dead target.
 ## Native Canvas host and logical focus events
 
 When the committed index is nonempty, CRC makes the HTML Canvas a native Tab
-stop. It snapshots the preexisting `tabindex` attribute and restores that exact
-state when the index becomes empty, the enhancer is removed, rendering fails,
-or the root is disposed. Focus management on a root `OffscreenCanvas` is an
-error because no DOM focus host exists; offscreen layers beneath an HTML Canvas
-share that Canvas's manager.
+stop. While CRC still owns a `tabindex` mutation, it restores the exact prior
+state when that ownership ends. If the application changes `tabindex` while CRC
+is active, CRC relinquishes mutation ownership and preserves the application's
+new value. Focus management on a root `OffscreenCanvas` is an error because no
+DOM focus host exists; offscreen layers beneath an HTML Canvas share that
+Canvas's manager.
 
 One logical transition dispatches events in this order:
 
@@ -163,9 +164,10 @@ proves unused focus implementation is eliminated.
 The focus manager owns its Canvas mutation, document and Canvas listeners,
 committed candidates, directional memberships, current target, and pending
 Space state. Enhancer removal, render failure, root abort, and `dispose()`
-release those resources. Disposal is idempotent and restores application-owned
-Canvas focusability exactly. Application handler errors remain isolated by the
-shared event dispatcher.
+release those resources. Disposal is idempotent. It restores the prior Canvas
+focusability only while CRC still owns its mutation; an application `tabindex`
+change is preserved. Application handler errors remain isolated by the shared
+event dispatcher.
 
 The shared `focus-and-keyboard-navigation` scenario demonstrates native DOM
 controls before and after the Canvas, two explicit top targets, twelve keyed
