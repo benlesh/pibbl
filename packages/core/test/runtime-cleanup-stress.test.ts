@@ -25,6 +25,22 @@ const EMPTY_HANDLERS = Object.fromEntries(
   CRC_EVENT_TYPES.map(type => [type, 0]),
 );
 
+const EMPTY_FOCUS_DIAGNOSTICS = {
+  documentListeners: 0,
+  enhancers: 0,
+  focusCandidates: 0,
+  focusManagers: 0,
+  focusedTarget: null,
+  focusedTargets: 0,
+  navigationBoundaries: 0,
+  pendingActivations: 0,
+  tabIndex: {
+    current: { existed: false, value: null },
+    original: { existed: false, value: null },
+    owned: false,
+  },
+} as const;
+
 interface ControlledImageRecord {
   element: HTMLImageElement;
   getSource: () => string;
@@ -247,6 +263,7 @@ async function mountLab(options: {
 
 function expectFullyReleased(diagnostics: RuntimeDiagnostics): void {
   expect(diagnostics.snapshot()).toEqual({
+    ...EMPTY_FOCUS_DIAGNOSTICS,
     componentTeardowns: 0,
     eventTargets: 0,
     handlers: EMPTY_HANDLERS,

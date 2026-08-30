@@ -14,7 +14,10 @@ import {
   defineComp,
   layer,
   rect,
+  type CompEl,
   type CRCController,
+  withFocusManagement,
+  withKeyboardNavigation,
 } from '../src/index';
 import { executeRender } from '../src/lib/execute-render';
 import { GLOBAL_STATE, getCRCInstance } from '../src/lib/global-state';
@@ -41,6 +44,22 @@ const BASELINE_HANDLERS = {
   mouseover: 1,
   mouseup: 1,
 };
+
+const EMPTY_FOCUS_DIAGNOSTICS = {
+  documentListeners: 0,
+  enhancers: 0,
+  focusCandidates: 0,
+  focusManagers: 0,
+  focusedTarget: null,
+  focusedTargets: 0,
+  navigationBoundaries: 0,
+  pendingActivations: 0,
+  tabIndex: {
+    current: { existed: false, value: null },
+    original: { existed: false, value: null },
+    owned: false,
+  },
+} as const;
 
 function pixelAt(canvas: HTMLCanvasElement, x: number, y: number): readonly number[] {
   const context = canvas.getContext('2d');
@@ -80,6 +99,7 @@ async function mountLifecycleLab() {
 
 function expectFullyReleased(diagnostics: RuntimeDiagnostics): void {
   expect(diagnostics.snapshot()).toEqual({
+    ...EMPTY_FOCUS_DIAGNOSTICS,
     eventTargets: 0,
     instances: 0,
     nativeListeners: 0,
@@ -124,6 +144,245 @@ afterEach(async () => {
 });
 
 describe('shared event lifecycle laboratory', () => {
+  it('keeps focus and navigation ownership exact through mutation, abort, disposal, and remount', async () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 240;
+    canvas.height = 100;
+    canvas.style.cssText = 'display:block; width:240px; height:100px';
+    canvas.setAttribute('tabindex', '-2');
+    const outside = document.createElement('button');
+    document.body.replaceChildren(canvas, outside);
+    const diagnostics = new RuntimeDiagnostics(canvas);
+    activeDiagnostics.add(diagnostics);
+    const activeNativeCaptures = new Set<number>();
+    vi.spyOn(canvas, 'setPointerCapture').mockImplementation(pointerId => {
+      activeNativeCaptures.add(pointerId);
+    });
+    vi.spyOn(canvas, 'hasPointerCapture').mockImplementation(pointerId =>
+      activeNativeCaptures.has(pointerId),
+    );
+    vi.spyOn(canvas, 'releasePointerCapture').mockImplementation(pointerId => {
+      activeNativeCaptures.delete(pointerId);
+    });
+
+    let includeBoundary = true;
+    let includeMiddle = true;
+    let firstHandler: (() => void) | undefined = () => undefined;
+    let order: readonly ('first' | 'middle' | 'last')[] = [
+      'first',
+      'middle',
+      'last',
+    ];
+    const Host = defineComp<{ children: CompEl<any, any>[] }>(
+      ({ children }) => children,
+    );
+    const createTarget = (label: 'first' | 'middle' | 'last') => rect({
+      key: label,
+      style: {
+        x: label === 'first' ? 0 : label === 'middle' ? 80 : 160,
+        y: 0,
+        width: 60,
+        height: 60,
+        fill: '#2563eb',
+      },
+      onClick: label === 'first' ? firstHandler : () => undefined,
+      onPointerDown: label === 'first' ? event => {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      } : undefined,
+    });
+    const createScene = () => {
+      const children = order
+        .filter(label => label !== 'middle' || includeMiddle)
+        .map(createTarget);
+      const navigation = Host({
+        key: 'stable-navigation-boundary',
+        children,
+      });
+      return withFocusManagement(Host({
+        key: 'stable-focus-boundary',
+        children: [includeBoundary ? withKeyboardNavigation(
+          navigation,
+          { mode: 'directional' },
+        ) : navigation],
+      }));
+    };
+
+    const abort = new AbortController();
+    const controller = mountCRC(canvas, createScene(), { signal: abort.signal });
+    activeRuntimeControllers.add(controller);
+    executeRender(canvas, 0);
+    const baseline = diagnostics.snapshot();
+    expect(baseline).toMatchObject({
+      documentListeners: 1,
+      enhancers: 2,
+      focusCandidates: 3,
+      focusManagers: 1,
+      focusedTargets: 0,
+      navigationBoundaries: 1,
+      pendingActivations: 0,
+      tabIndex: {
+        current: { existed: true, value: '0' },
+        original: { existed: true, value: '-2' },
+        owned: true,
+      },
+    });
+
+    dispatchPointerDown(canvas, 20, 20, 91);
+    await settleFrames();
+    dispatchKeyboard(canvas, 'keydown', ' ');
+    const active = diagnostics.snapshot();
+    expect(active).toMatchObject({
+      documentListeners: 1,
+      enhancers: 2,
+      focusCandidates: 3,
+      focusManagers: 1,
+      focusedTargets: 1,
+      navigationBoundaries: 1,
+      pendingActivations: 1,
+      pointerCaptures: 1,
+      scheduledFrames: 0,
+    });
+    expect(canvas.ownerDocument.activeElement).toBe(canvas);
+    expect(activeNativeCaptures).toEqual(new Set([91]));
+
+    for (let index = 0; index < 1_000; index++) {
+      executeRender(canvas, index + 1, createScene());
+    }
+    expect(diagnostics.snapshot()).toEqual(active);
+
+    firstHandler = () => undefined;
+    executeRender(canvas, 1_001, createScene());
+    expect(diagnostics.snapshot()).toEqual(active);
+
+    firstHandler = undefined;
+    executeRender(canvas, 1_002, createScene());
+    expect(diagnostics.snapshot()).toMatchObject({
+      documentListeners: 1,
+      enhancers: 2,
+      focusCandidates: 2,
+      focusManagers: 1,
+      focusedTargets: 0,
+      navigationBoundaries: 1,
+      pendingActivations: 0,
+      pointerCaptures: 1,
+    });
+
+    order = ['last', 'middle', 'first'];
+    executeRender(canvas, 1_003, createScene());
+    expect(diagnostics.snapshot()).toMatchObject({
+      focusCandidates: 2,
+      navigationBoundaries: 1,
+    });
+    includeMiddle = false;
+    executeRender(canvas, 1_004, createScene());
+    expect(diagnostics.snapshot()).toMatchObject({
+      focusCandidates: 1,
+      navigationBoundaries: 1,
+    });
+
+    includeBoundary = false;
+    executeRender(canvas, 1_005, createScene());
+    expect(diagnostics.snapshot()).toMatchObject({
+      enhancers: 1,
+      focusCandidates: 1,
+      navigationBoundaries: 0,
+    });
+    includeBoundary = true;
+    executeRender(canvas, 1_006, createScene());
+    expect(diagnostics.snapshot()).toMatchObject({
+      enhancers: 2,
+      focusCandidates: 1,
+      navigationBoundaries: 1,
+    });
+
+    dispatchPointerDown(canvas, 180, 20, 92);
+    await settleFrames();
+    expect(diagnostics.snapshot().focusedTargets).toBe(1);
+    outside.focus();
+    await settleFrames();
+    expect(diagnostics.snapshot()).toMatchObject({
+      focusedTargets: 0,
+      pendingActivations: 0,
+      scheduledFrames: 0,
+    });
+    canvas.focus();
+    await settleFrames();
+    dispatchKeyboard(canvas, 'keydown', ' ');
+    expect(diagnostics.snapshot().pendingActivations).toBe(1);
+
+    abort.abort();
+    controller.dispose();
+    controller.dispose();
+    activeRuntimeControllers.delete(controller);
+    expect(activeNativeCaptures).toEqual(new Set());
+    expect(diagnostics.snapshot()).toMatchObject({
+      documentListeners: 0,
+      enhancers: 0,
+      focusCandidates: 0,
+      focusManagers: 0,
+      focusedTargets: 0,
+      instances: 0,
+      navigationBoundaries: 0,
+      pendingActivations: 0,
+      pointerCaptures: 0,
+      scheduledFrames: 0,
+      tabIndex: {
+        current: { existed: true, value: '-2' },
+        original: { existed: true, value: '-2' },
+        owned: false,
+      },
+    });
+
+    const remounted = mountCRC(canvas, createScene());
+    activeRuntimeControllers.add(remounted);
+    executeRender(canvas, 2_000);
+    expect(diagnostics.snapshot()).toMatchObject({
+      documentListeners: 1,
+      enhancers: 2,
+      focusCandidates: 1,
+      focusManagers: 1,
+      navigationBoundaries: 1,
+      tabIndex: {
+        current: { existed: true, value: '0' },
+        original: { existed: true, value: '-2' },
+        owned: true,
+      },
+    });
+    canvas.setAttribute('tabindex', '7');
+    executeRender(canvas, 2_001, createScene());
+    expect(diagnostics.snapshot().tabIndex).toEqual({
+      current: { existed: true, value: '7' },
+      original: { existed: true, value: '-2' },
+      owned: false,
+    });
+    remounted.dispose();
+    remounted.dispose();
+    activeRuntimeControllers.delete(remounted);
+    expect(diagnostics.snapshot()).toMatchObject({
+      documentListeners: 0,
+      enhancers: 0,
+      focusCandidates: 0,
+      focusManagers: 0,
+      focusedTargets: 0,
+      instances: 0,
+      navigationBoundaries: 0,
+      pendingActivations: 0,
+      pointerCaptures: 0,
+      scheduledFrames: 0,
+      tabIndex: {
+        current: { existed: true, value: '7' },
+        original: { existed: true, value: '-2' },
+        owned: false,
+      },
+    });
+    expect(diagnostics.ledgerSnapshot().documentListeners).toEqual({
+      acquired: 2,
+      duplicateReleases: 0,
+      live: 0,
+      released: 2,
+    });
+  }, 40_000);
+
   it('releases a layered target and its active pointer capture to the exact root baseline', async () => {
     const canvas = document.createElement('canvas');
     canvas.width = 100;
@@ -445,10 +704,26 @@ function dispatchPointerDown(
   const bounds = canvas.getBoundingClientRect();
   canvas.dispatchEvent(new PointerEvent('pointerdown', {
     bubbles: true,
+    button: 0,
+    buttons: 1,
     cancelable: true,
     clientX: bounds.left + x,
     clientY: bounds.top + y,
+    isPrimary: true,
     pointerId,
     pointerType: 'touch',
+  }));
+}
+
+function dispatchKeyboard(
+  canvas: HTMLCanvasElement,
+  type: 'keydown' | 'keyup',
+  key: string,
+): void {
+  canvas.dispatchEvent(new KeyboardEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    code: key === ' ' ? 'Space' : key,
+    key,
   }));
 }

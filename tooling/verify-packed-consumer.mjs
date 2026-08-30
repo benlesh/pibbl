@@ -153,9 +153,16 @@ try {
   if (!withFocusBundle.includes(focusImplementationMarker)) {
     throw new Error('Optimized with-focus bundle omitted the focus implementation marker.');
   }
+  const noFocusBytes = Buffer.byteLength(noFocusBundle);
+  const withFocusBytes = Buffer.byteLength(withFocusBundle);
+  if (noFocusBytes >= withFocusBytes) {
+    throw new Error(
+      `Optimized no-focus bundle (${noFocusBytes} bytes) was not smaller than the with-focus bundle (${withFocusBytes} bytes).`,
+    );
+  }
 
   process.stdout.write(
-    'Packed @crc/core consumer passed Bundler, NodeNext, declarations, runtime exports, blocked deep imports, no-src checks, and optimized focus elimination (marker absent without focus; present with focus).\n',
+    `Packed @crc/core consumer passed Bundler, NodeNext, declarations, runtime exports, blocked deep imports, no-src checks, and optimized focus elimination (marker absent without focus; present with focus; ${noFocusBytes} no-focus bytes vs ${withFocusBytes} with-focus bytes).\n`,
   );
 } finally {
   rmSync(temporaryRoot, { force: true, recursive: true });

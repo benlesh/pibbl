@@ -371,8 +371,15 @@ describe('shared event performance laboratory', () => {
     await settleFrames();
 
     expect(diagnostics.snapshot()).toMatchObject({
+      documentListeners: 0,
+      enhancers: 0,
       eventTargets: 0,
+      focusCandidates: 0,
+      focusManagers: 0,
+      focusedTargets: 0,
       nativeListeners: 0,
+      navigationBoundaries: 0,
+      pendingActivations: 0,
       pointerCaptures: 0,
       propagationListeners: 0,
       scheduledFrames: 0,
@@ -400,9 +407,16 @@ describe('shared event performance laboratory', () => {
 
     const baseline = diagnostics.snapshot();
     expect(baseline).toMatchObject({
+      documentListeners: 0,
+      enhancers: 0,
       eventTargets: targetCount,
+      focusCandidates: 0,
+      focusManagers: 0,
+      focusedTargets: 0,
       handlers: { pointerdown: targetCount + 1 },
       nativeListeners: 1,
+      navigationBoundaries: 0,
+      pendingActivations: 0,
       pointerCaptures: 0,
       propagationListeners: 1,
       scheduledFrames: 0,
