@@ -21,6 +21,7 @@ import {
   type CRCMountedDOMFocusHost,
 } from './dom-focus-host.js';
 import {
+  applyDirectionalNavigationDefault,
   applyKeyboardActivationDefault,
   applyTabDefault,
 } from './keyboard-defaults.js';
@@ -466,6 +467,9 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     }
     if (event.type === 'keydown' || event.type === 'keyup') {
       applyKeyboardActivationDefault(this, event as CRCKeyboardEvent);
+    }
+    if (event.type === 'keydown') {
+      applyDirectionalNavigationDefault(this, event as CRCKeyboardEvent);
     }
   }
 

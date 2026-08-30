@@ -3,6 +3,10 @@ import type { CRCEventTargetRegistration } from '../events/registrations.js';
 import type { CRCKeyboardEvent } from '../events/types.js';
 import type { CRCFocusManager } from './focus-manager.js';
 import { transitionLogicalFocus } from './focus-events.js';
+import {
+  findDirectionalCandidate,
+  type CRCDirection,
+} from './directional-navigation.js';
 
 export type CRCTabMoveResult = 'moved' | 'exit';
 
@@ -87,6 +91,33 @@ export function applyKeyboardActivationDefault(
   activateClick(pending, event.originalEvent);
 }
 
+export function applyDirectionalNavigationDefault(
+  manager: CRCFocusManager,
+  event: CRCKeyboardEvent,
+): void {
+  if (event.type !== 'keydown' || event.defaultPrevented) return;
+  const direction = directionForKey(event.key);
+  if (!direction) return;
+
+  const target = manager.resolveKeyboardTarget();
+  const current = target && manager.candidates.find(candidate =>
+    candidate.target === target
+  );
+  const boundary = current?.directionalBoundary;
+  if (!current || !boundary) return;
+
+  const winner = findDirectionalCandidate(
+    current,
+    boundary.candidates,
+    direction,
+  );
+  const liveWinner = manager.liveFocusCandidate(winner?.target);
+  if (!liveWinner) return;
+
+  transitionLogicalFocus(manager, liveWinner, 'keyboard');
+  event.preventDefault();
+}
+
 function activateClick(
   target: CRCEventTargetRegistration | undefined,
   sourceEvent: KeyboardEvent,
@@ -103,4 +134,14 @@ function activateClick(
     null,
     sourceEvent,
   );
+}
+
+function directionForKey(key: string): CRCDirection | undefined {
+  switch (key) {
+    case 'ArrowLeft': return 'left';
+    case 'ArrowRight': return 'right';
+    case 'ArrowUp': return 'up';
+    case 'ArrowDown': return 'down';
+    default: return undefined;
+  }
 }

@@ -30,6 +30,42 @@ afterEach(() => {
 });
 
 describe('source-order Tab defaults', () => {
+  it('keeps a geometry-scrambled directional boundary in declaration order', () => {
+    const Boundary = defineComp(() => [
+      BoundedTarget({ key: 'declared-first', label: 'declared-first', x: 200, y: 100 }),
+      BoundedTarget({ key: 'declared-second', label: 'declared-second', x: 0, y: 0 }),
+      BoundedTarget({ key: 'declared-third', label: 'declared-third', x: 100, y: 50 }),
+    ]);
+    const mounted = mountAndRender(withFocusManagement(
+      withKeyboardNavigation(Boundary({}), { mode: 'directional' }),
+    ));
+    mounted.canvas.focus({ preventScroll: true });
+
+    expect(focusedLabel(mounted.manager)).toBe('declared-first');
+    for (const expected of ['declared-second', 'declared-third']) {
+      mounted.canvas.dispatchEvent(tabEvent(false));
+      expect(focusedLabel(mounted.manager)).toBe(expected);
+    }
+  });
+
+  it('tabs left-to-right then top-to-bottom when declarations are row-major', () => {
+    const Boundary = defineComp(() => [
+      BoundedTarget({ key: 'top-left', label: 'top-left', x: 0, y: 0 }),
+      BoundedTarget({ key: 'top-right', label: 'top-right', x: 50, y: 0 }),
+      BoundedTarget({ key: 'bottom-left', label: 'bottom-left', x: 0, y: 50 }),
+      BoundedTarget({ key: 'bottom-right', label: 'bottom-right', x: 50, y: 50 }),
+    ]);
+    const mounted = mountAndRender(withFocusManagement(
+      withKeyboardNavigation(Boundary({}), { mode: 'directional' }),
+    ));
+    mounted.canvas.focus({ preventScroll: true });
+
+    for (const expected of ['top-left', 'top-right', 'bottom-left', 'bottom-right']) {
+      expect(focusedLabel(mounted.manager)).toBe(expected);
+      if (expected !== 'bottom-right') mounted.canvas.dispatchEvent(tabEvent(false));
+    }
+  });
+
   it('moves only within the global source list and prevents default only when moved', () => {
     const Boundary = defineComp(() => [
       Target({ key: 'inner-b', label: 'inner-b', handlers: { onClick: noop } }),
@@ -290,6 +326,18 @@ const Target = defineComp<TargetProps>(({ handlers }) => {
   crcEventTarget(handlers, {
     path: rectanglePath(0, 0, 10, 10),
     keyboardFocusable: true,
+  });
+});
+
+const BoundedTarget = defineComp<{
+  readonly label: string;
+  readonly x: number;
+  readonly y: number;
+}>(({ x, y }, _style, context) => {
+  context.translate(x, y);
+  crcEventTarget({ onClick: noop }, {
+    path: rectanglePath(0, 0, 10, 10),
+    keyboardNavigationBounds: { x: 0, y: 0, width: 10, height: 10 },
   });
 });
 
