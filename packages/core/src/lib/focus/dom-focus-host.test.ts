@@ -23,6 +23,7 @@ const DOM_FOCUS_HOST_EVENT_TYPES = [
   'blur',
   'focusout',
   'keydown',
+  'keyup',
   'pointerdown',
   'touchstart',
   'touchend',

@@ -202,6 +202,7 @@ export function mountDOMFocusHost(
   };
 
   const onNativeFocus = () => undefined;
+  const onNativeKeyUp = () => undefined;
   const onNativePress = () => undefined;
   const onNativeExit = () => {
     pressReason = false;
@@ -228,6 +229,7 @@ export function mountDOMFocusHost(
   const blurObservers = requireObservers(eventRoot, 'blur');
   const focusoutObservers = requireObservers(eventRoot, 'focusout');
   const keydownObservers = requireObservers(eventRoot, 'keydown');
+  const keyupObservers = requireObservers(eventRoot, 'keyup');
   const pointerdownObservers = requireObservers(eventRoot, 'pointerdown');
   const mousedownObservers = requireObservers(eventRoot, 'mousedown');
   const touchstartObservers = requireObservers(eventRoot, 'touchstart');
@@ -238,6 +240,7 @@ export function mountDOMFocusHost(
   blurObservers.add(onNativeExit);
   focusoutObservers.add(onNativeExit);
   keydownObservers.add(onNativeKeyDown);
+  keyupObservers.add(onNativeKeyUp);
   pointerdownObservers.add(onNativePress);
   mousedownObservers.add(onNativePress);
   touchstartObservers.add(onNativePress);
@@ -258,6 +261,7 @@ export function mountDOMFocusHost(
     blurObservers.delete(onNativeExit);
     focusoutObservers.delete(onNativeExit);
     keydownObservers.delete(onNativeKeyDown);
+    keyupObservers.delete(onNativeKeyUp);
     pointerdownObservers.delete(onNativePress);
     mousedownObservers.delete(onNativePress);
     touchstartObservers.delete(onNativePress);
@@ -285,7 +289,8 @@ function isFocusEventForCanvas(
 function requireObservers(
   eventRoot: CRCEventRoot,
   type: 'blur' | 'focus' | 'focusin' | 'focusout' | 'keydown' |
-    'mousedown' | 'pointerdown' | 'touchcancel' | 'touchend' | 'touchstart',
+    'keyup' | 'mousedown' | 'pointerdown' | 'touchcancel' | 'touchend' |
+    'touchstart',
 ): Set<(event: Event) => void> {
   const observers = eventRoot.observers.get(type);
   if (!observers) {

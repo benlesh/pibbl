@@ -124,6 +124,25 @@ describe('Enter keyboard activation', () => {
 });
 
 describe('Space keyboard activation', () => {
+  it('activates an onClick-only target from Space keydown and keyup', () => {
+    let clickEvent: CRCLogicalMouseEvent | undefined;
+    const Target = targetComponent();
+    const mounted = mountAndRender(withFocusManagement(Target({
+      label: 'target',
+      handlers: { onClick: event => clickEvent = event },
+    })));
+    mounted.canvas.focus({ preventScroll: true });
+    const keydown = keyEvent('keydown', ' ', 'Space');
+    const keyup = keyEvent('keyup', ' ', 'Space');
+
+    mounted.canvas.dispatchEvent(keydown);
+    mounted.canvas.dispatchEvent(keyup);
+
+    expect(keydown.defaultPrevented).toBe(true);
+    expect(clickEvent?.sourceEvent).toBe(keyup);
+    expect(clickEvent?.originalEvent).toMatchObject({ detail: 0 });
+  });
+
   it('prevents scrolling on keydown and activates once after matching keyup propagation', () => {
     const trace: string[] = [];
     let clickEvent: CRCLogicalMouseEvent | undefined;
