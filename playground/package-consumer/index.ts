@@ -20,6 +20,7 @@ import type {
   CRCFocusEvent,
   CRCInputEvent,
   CRCKeyboardEvent,
+  CRCKeyboardNavigationOptions,
   CRCLogicalMouseEvent,
   CRCMouseEvent,
   CRCPixelRatio,
@@ -90,6 +91,8 @@ import {
   flex,
   grid,
   measureElement,
+  withFocusManagement,
+  withKeyboardNavigation,
 } from '@crc/core';
 
 // @ts-expect-error internal library modules are outside the public export map
@@ -215,7 +218,15 @@ export type PublicCoreEventTypes = [
   CoreTypes.CRCTouchEvent,
   CoreTypes.CRCWheelEvent,
 ];
-export const scene = rect({ ...props, style: rectangleStyle });
+const keyboardNavigationOptions = {
+  mode: 'directional',
+} satisfies CRCKeyboardNavigationOptions;
+export const scene = withFocusManagement(
+  withKeyboardNavigation(
+    rect({ ...props, key: 'packed-focus-probe', style: rectangleStyle }),
+    keyboardNavigationOptions,
+  ),
+);
 export const mount = crc;
 
 const pathStyle = {
@@ -424,11 +435,14 @@ const subpathClipStyle: CoreTypes.ClipStyle = clipStyle;
 const subpathLayerStyle: CoreTypes.LayerStyle = layerStyle;
 const subpathGridStyle: CoreTypes.GridStyle = gridStyle;
 const subpathPercentage: CoreTypes.Percentage = percentage;
+const subpathKeyboardNavigationOptions: CoreTypes.CRCKeyboardNavigationOptions =
+  keyboardNavigationOptions;
 void subpathGroupStyle;
 void subpathClipStyle;
 void subpathLayerStyle;
 void subpathGridStyle;
 void subpathPercentage;
+void subpathKeyboardNavigationOptions;
 
 // @ts-expect-error rectangle geometry is style-only
 rect({ x: 10, y: 10, width: 40, height: 20 });

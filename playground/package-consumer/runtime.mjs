@@ -37,6 +37,8 @@ const expected = [
   'svgPath',
   'text',
   'verticalLine',
+  'withFocusManagement',
+  'withKeyboardNavigation',
 ];
 
 const actual = Object.keys(core).sort();
@@ -47,6 +49,20 @@ for (const exportName of expected) {
   if (typeof core[exportName] !== 'function') {
     throw new Error(`Expected @crc/core ${exportName} to be a runtime function.`);
   }
+}
+
+const style = { width: 1, height: 1 };
+const element = core.rect({ key: 'runtime-focus-probe', style });
+const enhanced = core.withFocusManagement(
+  core.withKeyboardNavigation(element, { mode: 'directional' }),
+);
+if (
+  enhanced.type !== element.type ||
+  enhanced.props !== element.props ||
+  enhanced.style !== style ||
+  enhanced.key !== element.key
+) {
+  throw new Error('Focus enhancers changed CRC element identity fields.');
 }
 
 for (const specifier of [

@@ -26,6 +26,8 @@ import {
   grid,
   overlay,
   rect,
+  withFocusManagement,
+  withKeyboardNavigation,
   type CRCConfig,
   type CRCClipboardEvent,
   type CRCCompositionEvent,
@@ -36,6 +38,7 @@ import {
   type CRCFit,
   type CRCInputEvent,
   type CRCKeyboardEvent,
+  type CRCKeyboardNavigationOptions,
   type CRCLogicalMouseEvent,
   type CRCMouseEvent,
   type CRCPixelRatio,
@@ -78,6 +81,16 @@ const EventProbe = defineComp(() => {
   });
 });
 EventProbe({});
+
+const keyboardNavigationOptions = {
+  mode: 'directional',
+} satisfies CRCKeyboardNavigationOptions;
+withFocusManagement(
+  withKeyboardNavigation(
+    EventProbe({ key: 'studio-focus-probe' }),
+    keyboardNavigationOptions,
+  ),
+);
 
 const logicalMouseHandler = (event: CRCLogicalMouseEvent) => {
   event.preventDefault();

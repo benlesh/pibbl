@@ -4,6 +4,9 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
+import { build } from 'esbuild';
+
+const focusImplementationMarker = 'CRC_FOCUS_MANAGEMENT_V1';
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const temporaryRoot = mkdtempSync(join(tmpdir(), 'crc-packed-consumer-'));
@@ -65,6 +68,24 @@ function findPackageRoot(packageEntry) {
   throw new Error(`Could not find the package root for ${packageEntry}.`);
 }
 
+async function bundleConsumerEntry(source) {
+  const result = await build({
+    absWorkingDir: consumerDirectory,
+    bundle: true,
+    format: 'esm',
+    minify: true,
+    platform: 'browser',
+    stdin: {
+      contents: source,
+      loader: 'js',
+      resolveDir: consumerDirectory,
+    },
+    treeShaking: true,
+    write: false,
+  });
+  return result.outputFiles.map(file => file.text).join('\n');
+}
+
 try {
   mkdirSync(packageDirectory, { recursive: true });
   mkdirSync(consumerDirectory, { recursive: true });
@@ -117,8 +138,24 @@ try {
   run(process.execPath, [tsc, '-p', 'tsconfig.nodenext.json'], { cwd: consumerDirectory });
   run(process.execPath, ['runtime.mjs'], { cwd: consumerDirectory });
 
+  const noFocusBundle = await bundleConsumerEntry(`
+    import { rect } from '@crc/core';
+    console.log(rect({ style: { width: 1, height: 1 } }));
+  `);
+  if (noFocusBundle.includes(focusImplementationMarker)) {
+    throw new Error('Optimized no-focus bundle retained focus implementation code.');
+  }
+
+  const withFocusBundle = await bundleConsumerEntry(`
+    import { rect, withFocusManagement } from '@crc/core';
+    console.log(withFocusManagement(rect({ style: { width: 1, height: 1 } })));
+  `);
+  if (!withFocusBundle.includes(focusImplementationMarker)) {
+    throw new Error('Optimized with-focus bundle omitted the focus implementation marker.');
+  }
+
   process.stdout.write(
-    'Packed @crc/core consumer passed Bundler, NodeNext, all event-family declarations, runtime exports, blocked deep imports, and no-src checks.\n',
+    'Packed @crc/core consumer passed Bundler, NodeNext, declarations, runtime exports, blocked deep imports, no-src checks, and optimized focus elimination (marker absent without focus; present with focus).\n',
   );
 } finally {
   rmSync(temporaryRoot, { force: true, recursive: true });
