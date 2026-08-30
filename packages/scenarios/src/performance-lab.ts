@@ -193,8 +193,11 @@ async function mountPerformanceLab(
   const instrumentation = new PerformanceInstrumentation(context.canvas);
   const samples: number[] = [];
   let disposed = false;
-  let dispatchStarted = 0;
-  let pendingTarget: string | null = null;
+  let pendingDispatch: {
+    event: MouseEvent;
+    started: number;
+    target: string | null;
+  } | undefined;
   let pendingRender = Promise.resolve();
   let state = initialState();
 
@@ -204,13 +207,18 @@ async function mountPerformanceLab(
     }
   };
   const publish = () => context.onStateChange?.(snapshotState(state));
-  const beforeMove = () => {
+  const beforeMove = (event: MouseEvent) => {
     instrumentation.reset();
-    pendingTarget = null;
-    dispatchStarted = performance.now();
+    pendingDispatch = {
+      event,
+      started: performance.now(),
+      target: null,
+    };
   };
   const recordHit = (target: string) => {
-    pendingTarget = target;
+    if (pendingDispatch) {
+      pendingDispatch.target = target;
+    }
     state = { ...state, callbacks: state.callbacks + 1 };
   };
   const recordRender = (revision: number) => {
@@ -220,8 +228,13 @@ async function mountPerformanceLab(
       renderedRevision: revision,
     };
   };
-  const afterMove = () => {
-    const duration = round(performance.now() - dispatchStarted);
+  const afterMove = (event: MouseEvent) => {
+    if (pendingDispatch?.event !== event) {
+      return;
+    }
+    const completedDispatch = pendingDispatch;
+    pendingDispatch = undefined;
+    const duration = round(performance.now() - completedDispatch.started);
     samples.push(duration);
     if (samples.length > SAMPLE_WINDOW) {
       samples.shift();
@@ -231,7 +244,7 @@ async function mountPerformanceLab(
       counters: instrumentation.snapshot(),
       dispatches: state.dispatches + 1,
       lastDurationMs: duration,
-      lastTarget: pendingTarget,
+      lastTarget: completedDispatch.target,
       medianMs: percentile(samples, 0.5),
       p95Ms: percentile(samples, 0.95),
       p99Ms: percentile(samples, 0.99),
@@ -316,6 +329,7 @@ async function mountPerformanceLab(
       }
       await pendingRender;
       disposed = true;
+      pendingDispatch = undefined;
       abortController.abort();
       instrumentation.restore();
     },

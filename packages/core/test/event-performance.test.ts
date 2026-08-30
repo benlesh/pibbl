@@ -421,6 +421,56 @@ describe('shared event performance laboratory', () => {
     expect(diagnostics.snapshot()).toEqual(baseline);
   });
 
+  it('ignores unrelated bubbling moves and finalizes only the matching Canvas dispatch once', async () => {
+    const { canvas, controller } = await mountLab();
+    const workload = PERFORMANCE_WORKLOADS[1];
+    await controller.perform(`show-${workload.id}`);
+    const otherElement = document.createElement('button');
+    otherElement.textContent = 'Unrelated Studio control';
+    document.body.append(otherElement);
+
+    const beforeUnrelatedMove = controller.getState();
+    otherElement.dispatchEvent(new MouseEvent('mousemove', {
+      bubbles: true,
+      clientX: 4,
+      clientY: 6,
+    }));
+    expect.soft(controller.getState()).toEqual(beforeUnrelatedMove);
+
+    await controller.perform(`show-${workload.id}`);
+    const nestedUnrelatedMove = new MouseEvent('mousemove', {
+      bubbles: true,
+      clientX: 8,
+      clientY: 10,
+    });
+    canvas.addEventListener('mousemove', () => {
+      otherElement.dispatchEvent(nestedUnrelatedMove);
+    }, { once: true });
+    const matchingCanvasMove = new MouseEvent('mousemove', {
+      ...clientPoint(canvas, workload),
+      bubbles: true,
+    });
+    canvas.dispatchEvent(matchingCanvasMove);
+
+    const completedMove = controller.getState();
+    expect.soft(completedMove).toMatchObject({
+      callbacks: 1,
+      counters: expectedCounters(workload),
+      dispatches: 1,
+      lastTarget: workload.expectedTarget,
+      sampleCount: 1,
+    });
+
+    otherElement.dispatchEvent(matchingCanvasMove);
+    expect.soft(controller.getState()).toEqual(completedMove);
+
+    await controller.dispose();
+    activeControllers.delete(controller);
+    const disposedState = controller.getState();
+    otherElement.dispatchEvent(new MouseEvent('mousemove', { bubbles: true }));
+    expect(controller.getState()).toEqual(disposedState);
+  });
+
   it('counts nested measurement boundaries and snapshots independently of reset', async () => {
     const canvas = document.createElement('canvas');
     canvas.width = 200;

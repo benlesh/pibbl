@@ -71,9 +71,10 @@ The strict consumer now exercises `crcEventTarget`, `crcEventListener`, and
 pointer, mouse, touch, wheel, keyboard, focus, input/editing, composition,
 clipboard, and drag declarations from both `@crc/core` and
 `@crc/core/types`. The same source is compiled under Bundler and NodeNext
-resolution against the packed tarball. Runtime verification checks every root
-value, including both event hooks, is callable; unsupported `lib/` and `src/`
-imports are rejected; and installed tarballs contain no `src` directory.
+resolution against the packed tarball. Runtime verification loads the exact
+root export set and checks every value is function-valued, including both event
+hooks and the `LayoutDiagnostic` class constructor; unsupported `lib/` and
+`src/` imports are rejected; and installed tarballs contain no `src` directory.
 
 The Studio declaration consumer exercises the same ten event families and the
 two grouped registration hooks under strict TypeScript settings.
