@@ -20,6 +20,7 @@ import { executeRender } from '../execute-render';
 import { clearSharedState, getCRCInstance } from '../global-state';
 import { crcEventListener } from '../hooks/crc-event-listener';
 import { crcEventTarget } from '../hooks/crc-event-target';
+import { crcRef } from '../hooks/crc-ref';
 import type { LayoutBox } from '../layout/types';
 import { mountCRC } from '../mount-crc';
 import type { CompEl, CRCController, CRCFocusPolicyBridge } from '../types';
@@ -290,6 +291,163 @@ describe('candidate identity and atomic render collection', () => {
       /withFocusManagement.*one.*root|one.*focus manager.*root/i,
     );
   });
+
+  it.each([
+    ['old-before-new', false],
+    ['new-before-old', true],
+  ] as const)('reconciles a sole replacement manager after unseen refs (%s)', (
+    _label,
+    reverseSlots,
+  ) => {
+    const OldHost = defineComp(() => withFocusManagement(Target({
+      label: 'old',
+      handlers: { onClick: clickHandler },
+    })));
+    const NewHost = defineComp(() => withFocusManagement(Target({
+      label: 'new',
+      handlers: { onClick: clickHandler },
+    })));
+    const Root = defineComp(({ replacement }: { replacement: boolean }) => {
+      const oldSlot = replacement ? undefined : OldHost({ key: 'old-host' });
+      const newSlot = replacement ? NewHost({ key: 'new-host' }) : undefined;
+      return reverseSlots ? [newSlot, oldSlot] : [oldSlot, newSlot];
+    });
+    const mounted = mountAndRender(Root({ replacement: false }));
+    const oldManager = mounted.manager;
+
+    expect(() => executeRender(
+      mounted.canvas,
+      2,
+      Root({ replacement: true }),
+    )).not.toThrow();
+
+    const newManager = getCRCInstance(mounted.canvas).eventRoot.focusPolicy as
+      ObservedFocusManager;
+    expect(newManager).not.toBe(oldManager);
+    expect(candidateLabels(newManager)).toEqual(['new']);
+  });
+
+  it.each([
+    ['old enhancer exits before the new one enters', false],
+    ['new enhancer enters before the old one exits', true],
+  ] as const)('reconciles a live sole-boundary move when %s', (
+    _label,
+    reverse,
+  ) => {
+    const Host = defineComp(({
+      label,
+      managed,
+    }: {
+      label: string;
+      managed: boolean;
+    }) => {
+      const target = Target({ label, handlers: { onClick: clickHandler } });
+      return managed ? withFocusManagement(target) : target;
+    });
+    const Root = defineComp(({ second }: { second: boolean }) => {
+      const first = Host({ key: 'first', label: 'first', managed: !second });
+      const next = Host({ key: 'second', label: 'second', managed: second });
+      return reverse ? [next, first] : [first, next];
+    });
+    const mounted = mountAndRender(Root({ second: false }));
+    const prior = mounted.manager;
+
+    executeRender(mounted.canvas, 2, Root({ second: true }));
+
+    const replacement = getCRCInstance(mounted.canvas).eventRoot.focusPolicy as
+      ObservedFocusManager;
+    expect(replacement).not.toBe(prior);
+    expect(candidateLabels(replacement)).toEqual(['second']);
+  });
+
+  it('reconciles a keyed sole manager after reparenting its enhanced element', () => {
+    const Left = defineComp(({ child }: { child: CompEl<any, any> }) => child);
+    const Right = defineComp(({ child }: { child: CompEl<any, any> }) => child);
+    const Root = defineComp(({ right }: { right: boolean }) => {
+      const boundary = withFocusManagement(Target({
+        key: 'stable-boundary',
+        label: 'stable',
+        handlers: { onClick: clickHandler },
+      }));
+      return right ? Right({ child: boundary }) : Left({ child: boundary });
+    });
+    const mounted = mountAndRender(Root({ right: false }));
+    const prior = mounted.manager;
+
+    executeRender(mounted.canvas, 2, Root({ right: true }));
+
+    const replacement = getCRCInstance(mounted.canvas).eventRoot.focusPolicy as
+      ObservedFocusManager;
+    expect(replacement).not.toBe(prior);
+    expect(candidateLabels(replacement)).toEqual(['stable']);
+  });
+
+  it('rolls a failed manager replacement back to the prior root owner', () => {
+    const Throwing = defineComp(() => {
+      throw new Error('expected replacement failure');
+    });
+    const OldHost = defineComp(() => withFocusManagement(Target({
+      label: 'old',
+      handlers: { onClick: clickHandler },
+    })));
+    const NewHost = defineComp(() => withFocusManagement(defineComp(() => [
+      Target({ label: 'new', handlers: { onClick: clickHandler } }),
+      Throwing({}),
+    ])({})));
+    const Root = defineComp(({ replacement }: { replacement: boolean }) =>
+      replacement ? NewHost({ key: 'new' }) : OldHost({ key: 'old' })
+    );
+    const mounted = mountAndRender(Root({ replacement: false }));
+    const prior = mounted.manager;
+
+    expect(() => executeRender(
+      mounted.canvas,
+      2,
+      Root({ replacement: true }),
+    )).toThrowError('expected replacement failure');
+
+    expect(getCRCInstance(mounted.canvas).eventRoot.focusPolicy).toBe(prior);
+    expect(prior.candidates).toEqual([]);
+
+    executeRender(mounted.canvas, 3, Root({ replacement: false }));
+    const recovered = getCRCInstance(mounted.canvas).eventRoot.focusPolicy as
+      ObservedFocusManager;
+    expect(recovered).not.toBe(prior);
+    expect(candidateLabels(recovered)).toEqual(['old']);
+
+    const eventRoot = getCRCInstance(mounted.canvas).eventRoot;
+    mounted.controller.dispose();
+    activeControllers.delete(mounted.controller);
+    expect(eventRoot.focusPolicy).toBeUndefined();
+  });
+
+  it('reports an ineligible focused target as unfocused during that render', () => {
+    const snapshots: CRCEventTargetSnapshot[] = [];
+    const Root = defineComp(({ eligible }: { eligible: boolean }) => {
+      snapshots.push(crcEventTarget(
+        eligible ? { onClick: clickHandler } : {},
+        {
+          path: rectanglePath(0, 0, 10, 10),
+          keyboardFocusable: eligible,
+        },
+      ));
+    });
+    const mounted = mountAndRender(withFocusManagement(Root({ eligible: true })));
+    const target = mounted.manager.candidates[0].target;
+    mounted.manager.setFocusState(target, true);
+
+    executeRender(
+      mounted.canvas,
+      2,
+      withFocusManagement(Root({ eligible: false })),
+    );
+
+    expect(snapshots.at(-1)).toEqual({
+      isFocused: false,
+      isFocusVisible: false,
+    });
+    expect(mounted.manager.resolveKeyboardTarget()).toBeUndefined();
+  });
 });
 
 describe('directional boundaries and root-logical bounds', () => {
@@ -373,10 +531,16 @@ describe('directional boundaries and root-logical bounds', () => {
   });
 
   it('replays unchanged offscreen subtrees in source order on an ordinary parent rerender', () => {
-    const Inner = defineComp(() => Target({
-      label: 'inside-layer',
-      handlers: { onClick: clickHandler },
-    }));
+    let renders = 0;
+    const hookValues: object[] = [];
+    const Inner = defineComp(() => {
+      renders++;
+      hookValues.push(crcRef({}).current!);
+      return Target({
+        label: 'inside-layer',
+        handlers: { onClick: clickHandler },
+      });
+    });
     const Root = defineComp(({ generation: _generation }: { generation: number }) => [
       Target({
         key: 'before',
@@ -396,6 +560,7 @@ describe('directional boundaries and root-logical bounds', () => {
     ]);
     const mounted = mountAndRender(withFocusManagement(Root({ generation: 1 })));
     const inside = mounted.manager.candidates[1];
+    expect(renders).toBe(1);
 
     executeRender(
       mounted.canvas,
@@ -411,6 +576,105 @@ describe('directional boundaries and root-logical bounds', () => {
     expect(mounted.manager.candidates[1].target).toBe(inside.target);
     expect(mounted.manager.candidates[1].directionalBoundary)
       .toBe(inside.directionalBoundary);
+    expect(renders).toBe(1);
+    expect(hookValues).toHaveLength(1);
+  });
+
+  it('replays a cached nested directional boundary without enrolling it in the outer direct set', () => {
+    let renders = 0;
+    const Inner = defineComp(() => {
+      renders++;
+      return Target({
+        label: 'inner',
+        handlers: { onClick: clickHandler },
+      });
+    });
+    const Host = defineComp(({ generation: _generation }: { generation: number }) => [
+      Target({ key: 'before', label: 'before', handlers: { onClick: clickHandler } }),
+      layer({
+        key: 'layer',
+        style: { width: 40, height: 40 },
+        render: withKeyboardNavigation(Inner({}), { mode: 'directional' }),
+      }),
+      Target({ key: 'after', label: 'after', handlers: { onClick: clickHandler } }),
+    ]);
+    const element = (generation: number) => withFocusManagement(
+      withKeyboardNavigation(Host({ generation }), { mode: 'directional' }),
+    );
+    const mounted = mountAndRender(element(1));
+    const innerBoundary = mounted.manager.candidates[1].directionalBoundary!;
+    const outerBoundary = mounted.manager.candidates[0].directionalBoundary!;
+
+    executeRender(mounted.canvas, 2, element(2));
+
+    expect(candidateLabels(mounted.manager)).toEqual(['before', 'inner', 'after']);
+    expect(renders).toBe(1);
+    expect(innerBoundary.candidates.map(candidateLabel)).toEqual(['inner']);
+    expect(outerBoundary.candidates.map(candidateLabel)).toEqual(['before', 'after']);
+  });
+
+  it('uses the current layer bridge for an inner manager on first render and cached movement', () => {
+    let renders = 0;
+    const Inner = defineComp(() => {
+      renders++;
+      return Target({
+        label: 'inside',
+        handlers: { onClick: clickHandler },
+        options: {
+          keyboardNavigationBounds: { x: 2, y: 3, width: 4, height: 5 },
+        },
+      });
+    });
+    const Root = defineComp(({ x }: { x: number }) => g({
+      style: { translateX: x, translateY: 10 },
+      children: [layer({
+        style: { width: 40, height: 40 },
+        render: withFocusManagement(
+          withKeyboardNavigation(Inner({}), { mode: 'directional' }),
+        ),
+      })],
+    }));
+    const mounted = mountAndRender(Root({ x: 20 }));
+
+    expect(mounted.manager.candidates[0].rootBounds).toEqual({
+      x: 22,
+      y: 13,
+      width: 4,
+      height: 5,
+    });
+    expect(mounted.manager.candidates[0].directionalBoundary).toBeDefined();
+
+    executeRender(mounted.canvas, 2, Root({ x: 50 }));
+
+    expect(renders).toBe(1);
+    expect(mounted.manager.candidates[0].rootBounds).toEqual({
+      x: 52,
+      y: 13,
+      width: 4,
+      height: 5,
+    });
+  });
+
+  it.each([
+    ['focus outside', (element: CompEl<any, any>) => withFocusManagement(
+      withKeyboardNavigation(element, { mode: 'directional' }),
+    )],
+    ['directional outside', (element: CompEl<any, any>) => withKeyboardNavigation(
+      withFocusManagement(element),
+      { mode: 'directional' },
+    )],
+  ] as const)('composes both built-in enhancers on one exact element: %s', (
+    _label,
+    enhance,
+  ) => {
+    const element = Target({ label: 'same', handlers: { onClick: clickHandler } });
+    const enhanced = enhance(element);
+    const mounted = mountAndRender(enhanced);
+
+    expect(enhanced.type).toBe(element.type);
+    expect(enhanced.key).toBe(element.key);
+    expect(mounted.manager.candidates).toHaveLength(1);
+    expect(mounted.manager.candidates[0].directionalBoundary).toBeDefined();
   });
 
   it('supplies known built-in rectangles and leaves arbitrary paths Tab-only without caller bounds', () => {

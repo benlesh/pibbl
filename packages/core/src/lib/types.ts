@@ -219,6 +219,13 @@ export interface CRCEventRoot {
   onTargetUpdate:
     ((target: CRCEventTargetRegistration) => void) | undefined;
   focusPolicy?: CRCFocusPolicyBridge;
+  /** @internal Shared by nested layer renders; consumers register only erased callbacks. */
+  renderTransaction?: CRCRenderTransaction;
+}
+
+/** @internal Root-wide render completion seam for optional policies. */
+export interface CRCRenderTransaction {
+  onFinish(callback: (success: boolean) => void): void;
 }
 
 export interface CRCFocusPolicyBridge {
@@ -227,6 +234,8 @@ export interface CRCFocusPolicyBridge {
   removeTarget(target: CRCEventTargetRegistration): void;
   resolveKeyboardTarget(): CRCEventTargetRegistration | undefined;
   afterDispatch(event: CRCEvent): void;
+  /** @internal Replays cached layer metadata without executing its components. */
+  replayRetainedSubtree(instance: CRCInstance): void;
 }
 
 export interface CRCController {

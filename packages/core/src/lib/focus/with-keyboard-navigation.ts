@@ -16,7 +16,7 @@ const KEYBOARD_NAVIGATION_ENHANCER_KEY = Symbol('CRC keyboard navigation');
 const keyboardNavigationDescriptor: CRCElementEnhancerDescriptor = {
   key: KEYBOARD_NAVIGATION_ENHANCER_KEY,
   mount: ({ instance }) => {
-    const boundary = createDirectionalBoundary();
+    const boundary = createDirectionalBoundary(instance);
     let manager: CRCFocusManager | undefined;
     return {
       update: () => undefined,

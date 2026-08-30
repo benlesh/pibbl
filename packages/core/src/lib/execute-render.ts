@@ -1,6 +1,6 @@
 import { clearTempState, GLOBAL_STATE } from './global-state.js';
 import { render } from './render.js';
-import { Canvas, CompEl } from './types.js';
+import { Canvas, CompEl, type CRCRenderTransaction } from './types.js';
 import { get2dContext } from './util/get-2d-context.js';
 import { prepareSurface } from './surface/root-surface.js';
 
@@ -27,6 +27,19 @@ export function executeRender(
 
   if (crcInstance.mainTeardowns.closed) return;
 
+  const inheritedTransaction = crcInstance.eventRoot.renderTransaction;
+  const renderTransaction = inheritedTransaction ?? new RootRenderTransaction();
+  const ownsRenderTransaction = !inheritedTransaction;
+  if (ownsRenderTransaction) {
+    crcInstance.eventRoot.renderTransaction = renderTransaction;
+  }
+  let transactionFinished = false;
+  const finishTransaction = (success: boolean) => {
+    if (!ownsRenderTransaction || transactionFinished) return;
+    transactionFinished = true;
+    (renderTransaction as RootRenderTransaction).finish(success);
+  };
+
   if (crcInstance.animationFrameId !== undefined) {
     cancelAnimationFrame(crcInstance.animationFrameId);
     crcInstance.animationFrameId = undefined;
@@ -49,7 +62,10 @@ export function executeRender(
     const rootElement = updatedRoot ?? GLOBAL_STATE.currentCRCInstance.root;
     GLOBAL_STATE.currentCRCInstance.root = rootElement;
     const surface = prepareSurface(crcInstance);
-    if (!surface) return;
+    if (!surface) {
+      finishTransaction(true);
+      return;
+    }
     const ctx = get2dContext(canvas);
     renderContext = ctx;
     GLOBAL_STATE.renderContext = ctx;
@@ -86,6 +102,7 @@ export function executeRender(
     try {
       render(rootElement, id, undefined);
     } catch (error) {
+      finishTransaction(false);
       for (const refs of GLOBAL_STATE.currentCRCInstance.refs.values()) {
         refs.teardowns.execute();
       }
@@ -98,12 +115,22 @@ export function executeRender(
       GLOBAL_STATE.currentCRCInstance.refs.get(id)?.teardowns.execute();
       GLOBAL_STATE.currentCRCInstance.refs.delete(id);
     }
+    finishTransaction(true);
+  } catch (error) {
+    finishTransaction(false);
+    throw error;
   } finally {
     renderContext?.setTransform(1, 0, 0, 1, 0, 0);
     const { parent } = crcInstance;
     clearTempState();
     GLOBAL_STATE.clippingStack = prevClippingStack;
     GLOBAL_STATE.layoutStack = prevLayoutStack;
+    if (ownsRenderTransaction) {
+      finishTransaction(false);
+      if (crcInstance.eventRoot.renderTransaction === renderTransaction) {
+        crcInstance.eventRoot.renderTransaction = undefined;
+      }
+    }
     if (updateParents && parent && GLOBAL_STATE.crcInstances.has(parent)) {
       executeRender(parent, renderTimestamp);
     }
@@ -114,5 +141,26 @@ export function executeRender(
     GLOBAL_STATE.seenKeys = prevSeenKeys;
     GLOBAL_STATE.unseenIds = prevUnseendIds;
     GLOBAL_STATE.componentRefs = prevComponentRefs;
+  }
+}
+
+class RootRenderTransaction implements CRCRenderTransaction {
+  private callbacks = new Set<(success: boolean) => void>();
+  private result: boolean | undefined;
+
+  onFinish(callback: (success: boolean) => void): void {
+    if (this.result !== undefined) {
+      callback(this.result);
+      return;
+    }
+    this.callbacks.add(callback);
+  }
+
+  finish(success: boolean): void {
+    if (this.result !== undefined) return;
+    this.result = success;
+    const callbacks = Array.from(this.callbacks);
+    this.callbacks.clear();
+    for (const callback of callbacks) callback(success);
   }
 }

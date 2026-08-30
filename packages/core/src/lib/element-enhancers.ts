@@ -53,6 +53,19 @@ export function appendElementEnhancer<
   return enhanced;
 }
 
+/** @internal Layer cache key for otherwise field-identical enhanced elements. */
+export function haveSameElementEnhancers(
+  left: CompEl<any, any>,
+  right: CompEl<any, any>,
+): boolean {
+  const leftDescriptors = elementEnhancers.get(left) ?? [];
+  const rightDescriptors = elementEnhancers.get(right) ?? [];
+  return leftDescriptors.length === rightDescriptors.length &&
+    leftDescriptors.every((descriptor, index) =>
+      descriptor === rightDescriptors[index]
+    );
+}
+
 /** @internal */
 export function hasElementEnhancer(
   element: CompEl<any, any>,

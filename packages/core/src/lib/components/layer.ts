@@ -13,6 +13,7 @@ import {
   SystemStyle,
 } from '../types.js';
 import { shallowEquals } from '../util/shallow-equals.js';
+import { haveSameElementEnhancers } from '../element-enhancers.js';
 import {
   resolveRequiredLength,
   stripLayoutParticipation,
@@ -102,19 +103,30 @@ export function Layer(
     offscreenCanvas.width !== layerSurface.backingWidth ||
     offscreenCanvas.height !== layerSurface.backingHeight;
 
-  if (
+  const { interactionLayer } = slot;
+  parentInstance.paintEntries.delete(interactionLayer);
+  interactionLayer.transform = toLogicalTransform(
+    getSurfaceSnapshot(parentInstance),
+    ctx.getTransform(),
+  );
+  interactionLayer.clippingStack = Array.from(GLOBAL_STATE.clippingStack);
+  if (dimensionsChanged) {
+    interactionLayer.bounds = createBounds(width, height);
+  }
+  // Install the current bridge before entering the child render. Focus bounds
+  // collected by the child must never see the previous frame's transform.
+  parentInstance.paintEntries.add(interactionLayer);
+
+  const shouldRender =
     GLOBAL_STATE.componentIsMounting ||
-    // Optional policies collect traversal-scoped target metadata. Re-enter an
-    // otherwise cached offscreen subtree so its live targets retain their
-    // exact source-order position and enhancer-boundary membership.
-    Boolean(parentInstance.eventRoot.focusPolicy) ||
     dimensionsChanged ||
     surfaceChanged ||
     layerCRC.root.type !== props.render.type ||
     layerCRC.root.key !== props.render.key ||
     !shallowEquals(layerCRC.root.props, props.render.props) ||
-    !shallowEquals(layerCRC.root.style, props.render.style)
-  ) {
+    !shallowEquals(layerCRC.root.style, props.render.style) ||
+    !haveSameElementEnhancers(layerCRC.root, props.render);
+  if (shouldRender) {
     if (layerCRC.surface.kind !== 'layer') {
       throw new Error('CRC layer mounted without a derived surface.');
     }
@@ -131,6 +143,8 @@ export function Layer(
       props.render,
       false,
     );
+  } else {
+    parentInstance.eventRoot.focusPolicy?.replayRetainedSubtree(layerCRC);
   }
 
   ctx.drawImage(
@@ -145,17 +159,6 @@ export function Layer(
     height,
   );
 
-  const { interactionLayer } = slot;
-  parentInstance.paintEntries.delete(interactionLayer);
-  interactionLayer.transform = toLogicalTransform(
-    getSurfaceSnapshot(parentInstance),
-    ctx.getTransform(),
-  );
-  interactionLayer.clippingStack = Array.from(GLOBAL_STATE.clippingStack);
-  if (dimensionsChanged) {
-    interactionLayer.bounds = createBounds(width, height);
-  }
-  parentInstance.paintEntries.add(interactionLayer);
 }
 
 export const layer = defineComp<
