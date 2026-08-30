@@ -6,8 +6,10 @@ import type {
   CRCKeyboardEvent,
 } from '../events/types.js';
 import { Teardowns } from '../teardowns.js';
+import { update } from '../update.js';
 import type {
   CRCEventRoot,
+  CRCFocusPressDefaultInput,
   CRCFocusPolicyBridge,
   CRCInstance,
   CRCRenderTransaction,
@@ -18,6 +20,7 @@ import {
   type CRCMountedDOMFocusHost,
 } from './dom-focus-host.js';
 import { applyTabDefault } from './keyboard-defaults.js';
+import { transitionLogicalFocus } from './focus-events.js';
 import type {
   CRCDirectionalBoundary,
   CRCFocusCandidate,
@@ -46,6 +49,19 @@ interface PendingFrame {
   readonly ineligibleTargets: Set<CRCEventTargetRegistration>;
   readonly boundaries: Set<DirectionalBoundary>;
 }
+
+interface RepresentedPress {
+  readonly x: number;
+  readonly y: number;
+  readonly timeStamp: number;
+}
+
+interface RepresentedPointerPress extends RepresentedPress {
+  suppressMouse: boolean;
+  suppressTouch: boolean;
+}
+
+const COMPATIBILITY_PRESS_WINDOW_MS = 1_500;
 
 class DirectionalBoundary implements CRCDirectionalBoundary {
   private committedCandidates: readonly CRCFocusCandidate[] = Object.freeze([]);
@@ -135,6 +151,10 @@ class FocusManagerCoordinator {
         manager.candidates.length > 0,
       );
     }
+  }
+
+  focusCanvasFromPress(manager: CRCFocusManager): void {
+    if (this.active === manager) this.domFocusHost?.focusFromPress();
   }
 
   claimRetainedManagers(instance: CRCInstance): readonly CRCFocusManager[] {
@@ -284,11 +304,22 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   private directionalStack: DirectionalBoundary[] = [];
   private focusedTarget: CRCEventTargetRegistration | undefined;
   private focusVisible = false;
+  private pendingPressFocus:
+    { readonly target: CRCEventTargetRegistration | undefined } | undefined;
+  private readonly representedPointerPresses = new Map<
+    number,
+    RepresentedPointerPress
+  >();
+  private readonly representedTouchContacts = new Map<number, RepresentedPress>();
+  private touchMouseCompatibility: RepresentedPress | undefined;
   private destroyed = false;
   private ownerReleased = false;
   private readonly coordinator: FocusManagerCoordinator;
 
-  constructor(eventRoot: CRCEventRoot, owner: CRCInstance) {
+  constructor(
+    private readonly eventRoot: CRCEventRoot,
+    owner: CRCInstance,
+  ) {
     const canvas = eventRoot.canvas;
     if (!canvas) {
       throw new Error(
@@ -315,6 +346,20 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
 
   get ownerWasReleased(): boolean {
     return this.ownerReleased;
+  }
+
+  get canvas(): HTMLCanvasElement {
+    const canvas = this.eventRoot.canvas;
+    if (!canvas) throw new Error('CRC focus manager has no DOM Canvas host.');
+    return canvas;
+  }
+
+  get logicalFocusTarget(): CRCEventTargetRegistration | undefined {
+    return this.focusedTarget;
+  }
+
+  get logicalFocusVisible(): boolean {
+    return this.focusVisible;
   }
 
   beginCollection(): void {
@@ -405,6 +450,26 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     }
   }
 
+  afterPressDispatch(input: CRCFocusPressDefaultInput): void {
+    if (this.destroyed) return;
+    this.purgeExpiredPresses(input.originalEvent.timeStamp);
+    switch (input.source) {
+      case 'pointer':
+        this.recordPointerPress(input);
+        if (!pressWasPrevented(input)) this.applyPressFocus(input.target);
+        return;
+      case 'mouse':
+        if (this.consumeRepresentedMousePress(input)) return;
+        if (!pressWasPrevented(input)) this.applyPressFocus(input.target);
+        return;
+      case 'touch':
+        if (this.consumeRepresentedTouchPress(input)) return;
+        this.recordTouchFallback(input);
+        if (!pressWasPrevented(input)) this.applyPressFocus(input.target);
+        return;
+    }
+  }
+
   beforeNativeDispatch(
     type: CRCEventType,
     event: Event,
@@ -414,14 +479,28 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
 
   enterDOMFocus(backwards: boolean): void {
     if (this.destroyed) return;
+    const pendingPress = this.pendingPressFocus;
+    if (pendingPress) {
+      this.pendingPressFocus = undefined;
+      this.commitLogicalFocus(
+        this.liveFocusCandidate(pendingPress.target),
+        false,
+      );
+      update(this.canvas);
+      return;
+    }
     const candidate = backwards ?
       this.committedCandidates.at(-1) :
       this.committedCandidates[0];
-    this.setFocusState(candidate?.target, Boolean(candidate));
+    this.commitLogicalFocus(candidate?.target, Boolean(candidate));
+    update(this.canvas);
   }
 
   leaveDOMFocus(): void {
-    if (!this.destroyed) this.clearFocusState();
+    if (this.destroyed) return;
+    this.pendingPressFocus = undefined;
+    this.clearFocusState();
+    update(this.canvas);
   }
 
   activateDOMHost(): void {
@@ -479,6 +558,21 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     ) {
       throw new Error('CRC logical focus target is not a live focus candidate.');
     }
+    this.commitLogicalFocus(target, focusVisible);
+  }
+
+  liveFocusCandidate(
+    target: CRCEventTargetRegistration | undefined,
+  ): CRCEventTargetRegistration | undefined {
+    return target?.live && target.owner.eventRoot === this.eventRoot &&
+        this.committedCandidates.some(candidate => candidate.target === target) ?
+      target : undefined;
+  }
+
+  commitLogicalFocus(
+    target: CRCEventTargetRegistration | undefined,
+    focusVisible: boolean,
+  ): void {
     this.focusedTarget = target;
     this.focusVisible = Boolean(target && focusVisible);
   }
@@ -512,6 +606,10 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     managerOwners.delete(this);
     this.pending = undefined;
     this.directionalStack = [];
+    this.pendingPressFocus = undefined;
+    this.representedPointerPresses.clear();
+    this.representedTouchContacts.clear();
+    this.touchMouseCompatibility = undefined;
     for (const boundary of this.committedBoundaries) {
       boundary.commit(Object.freeze([]));
     }
@@ -586,10 +684,129 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     this.focusVisible = false;
   }
 
+  private applyPressFocus(
+    requestedTarget: CRCEventTargetRegistration | undefined,
+  ): void {
+    const target = this.liveFocusCandidate(requestedTarget);
+    const pending = { target };
+    this.pendingPressFocus = pending;
+    try {
+      this.coordinator.focusCanvasFromPress(this);
+      if (
+        this.pendingPressFocus !== pending ||
+        this.destroyed ||
+        this.canvas.ownerDocument.activeElement !== this.canvas
+      ) {
+        return;
+      }
+      this.pendingPressFocus = undefined;
+      transitionLogicalFocus(this, this.liveFocusCandidate(target), 'pointer');
+    } finally {
+      if (this.pendingPressFocus === pending) this.pendingPressFocus = undefined;
+    }
+  }
+
+  private recordPointerPress(input: CRCFocusPressDefaultInput): void {
+    if (input.pointerId === undefined) return;
+    this.representedPointerPresses.set(input.pointerId, {
+      x: input.x,
+      y: input.y,
+      timeStamp: input.originalEvent.timeStamp,
+      suppressMouse: true,
+      suppressTouch: input.pointerType === 'touch',
+    });
+  }
+
+  private consumeRepresentedMousePress(
+    input: CRCFocusPressDefaultInput,
+  ): boolean {
+    for (const [pointerId, press] of this.representedPointerPresses) {
+      if (!press.suppressMouse || !samePress(press, input)) continue;
+      press.suppressMouse = false;
+      if (!press.suppressTouch) this.representedPointerPresses.delete(pointerId);
+      return true;
+    }
+    if (
+      this.touchMouseCompatibility &&
+      samePress(this.touchMouseCompatibility, input)
+    ) {
+      this.touchMouseCompatibility = undefined;
+      return true;
+    }
+    return false;
+  }
+
+  private consumeRepresentedTouchPress(
+    input: CRCFocusPressDefaultInput,
+  ): boolean {
+    const identifier = input.touchIdentifier;
+    if (identifier === undefined) return false;
+    const existing = this.representedTouchContacts.get(identifier);
+    if (existing && samePress(existing, input)) return true;
+    this.representedTouchContacts.set(identifier, pressRecord(input));
+
+    for (const [pointerId, press] of this.representedPointerPresses) {
+      if (!press.suppressTouch || !samePress(press, input)) continue;
+      press.suppressTouch = false;
+      if (!press.suppressMouse) this.representedPointerPresses.delete(pointerId);
+      return true;
+    }
+    return false;
+  }
+
+  private recordTouchFallback(input: CRCFocusPressDefaultInput): void {
+    this.touchMouseCompatibility = pressRecord(input);
+  }
+
+  private purgeExpiredPresses(timeStamp: number): void {
+    for (const [pointerId, press] of this.representedPointerPresses) {
+      if (!recentPress(press, timeStamp)) {
+        this.representedPointerPresses.delete(pointerId);
+      }
+    }
+    for (const [identifier, press] of this.representedTouchContacts) {
+      if (!recentPress(press, timeStamp)) {
+        this.representedTouchContacts.delete(identifier);
+      }
+    }
+    if (
+      this.touchMouseCompatibility &&
+      !recentPress(this.touchMouseCompatibility, timeStamp)
+    ) {
+      this.touchMouseCompatibility = undefined;
+    }
+  }
+
   private assertLive(): void {
     if (this.destroyed) throw new Error('CRC focus manager is disposed.');
   }
 
+}
+
+function pressWasPrevented(input: CRCFocusPressDefaultInput): boolean {
+  return input.event?.defaultPrevented ?? input.originalEvent.defaultPrevented;
+}
+
+function pressRecord(input: CRCFocusPressDefaultInput): RepresentedPress {
+  return {
+    x: input.x,
+    y: input.y,
+    timeStamp: input.originalEvent.timeStamp,
+  };
+}
+
+function samePress(
+  press: RepresentedPress,
+  input: CRCFocusPressDefaultInput,
+): boolean {
+  return recentPress(press, input.originalEvent.timeStamp) &&
+    Math.abs(press.x - input.x) <= 1 &&
+    Math.abs(press.y - input.y) <= 1;
+}
+
+function recentPress(press: RepresentedPress, timeStamp: number): boolean {
+  const elapsed = timeStamp - press.timeStamp;
+  return elapsed >= 0 && elapsed <= COMPATIBILITY_PRESS_WINDOW_MS;
 }
 
 export function createFocusManager(

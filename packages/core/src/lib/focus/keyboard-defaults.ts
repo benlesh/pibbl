@@ -1,5 +1,6 @@
 import type { CRCKeyboardEvent } from '../events/types.js';
 import type { CRCFocusManager } from './focus-manager.js';
+import { transitionLogicalFocus } from './focus-events.js';
 
 export type CRCTabMoveResult = 'moved' | 'exit';
 
@@ -13,7 +14,7 @@ export function moveTab(
   const current = manager.resolveKeyboardTarget();
   if (!current) {
     const endpoint = backwards ? candidates.at(-1) : candidates[0];
-    manager.setFocusState(endpoint?.target, true);
+    transitionLogicalFocus(manager, endpoint?.target, 'keyboard');
     return endpoint ? 'moved' : 'exit';
   }
 
@@ -25,7 +26,7 @@ export function moveTab(
     return 'exit';
   }
 
-  manager.setFocusState(candidates[nextIndex].target, true);
+  transitionLogicalFocus(manager, candidates[nextIndex].target, 'keyboard');
   return 'moved';
 }
 

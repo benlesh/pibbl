@@ -2,6 +2,7 @@ import { getInteractionRoot } from '../global-state.js';
 import type {
   CRCCursorDefault,
   CRCEventRoot,
+  CRCFocusPressDefaultInput,
   CRCInstance,
   CRCInteractionActivation,
   CRCInteractionRegion,
@@ -64,7 +65,7 @@ import {
   type CRCEventNode,
   type CRCEventTargetRegistration,
 } from './registrations.js';
-import type { CRCEventMap, CRCEventType } from './types.js';
+import type { CRCEvent, CRCEventMap, CRCEventType } from './types.js';
 
 interface CursorDefaultOwnership {
   readonly root: CRCInstance;
@@ -511,8 +512,25 @@ function dispatchPointerCoordinateEvent(
   root: CRCInstance,
   input: CRCAdaptedPointerEvent,
 ): void {
-  const target = resolvePointerTarget(root, input);
-  if (target) dispatchPointerNode(input.type, target, input);
+  const policy = root.eventRoot.focusPolicy;
+  const coordinateTarget = resolveCoordinateTarget(root.eventRoot, input);
+  const target = getLogicalPointerCapture(
+    root.eventRoot,
+    input.originalEvent.pointerId,
+  ) ?? coordinateTarget;
+  const event = target ? dispatchPointerNode(input.type, target, input) : undefined;
+  if (input.press) {
+    dispatchPressDefault(root, policy, {
+      source: 'pointer',
+      target: coordinateTarget,
+      event,
+      originalEvent: input.originalEvent,
+      x: input.press.x,
+      y: input.press.y,
+      pointerId: input.press.pointerId,
+      pointerType: input.press.pointerType,
+    });
+  }
 }
 
 function dispatchPointerCancel(
@@ -563,9 +581,9 @@ function dispatchPointerNode(
   target: CRCEventNode,
   input: CRCAdaptedPointerEvent,
   relatedTarget: CRCEventNode | null = null,
-): void {
-  if (!target.live) return;
-  dispatchEventPath({
+): CRCEvent | undefined {
+  if (!target.live) return undefined;
+  return dispatchEventPath({
     type,
     target,
     relatedTarget,
@@ -625,12 +643,15 @@ function dispatchTouchEvent(
   root: CRCInstance,
   input: CRCAdaptedTouchEvent,
 ): void {
+  const policy = root.eventRoot.focusPolicy;
   const groups = new Map<CRCEventNode, CRCAdaptedTouchContact[]>();
+  let primaryTarget: CRCEventTargetRegistration | undefined;
   for (const contact of input.changedContacts) {
     const identifier = contact.touch.identifier;
     let target: CRCEventNode | undefined;
     if (input.type === 'touchstart') {
       target = resolveCoordinateTarget(root.eventRoot, contact);
+      if (contact === input.primaryPress) primaryTarget = target;
       if (target) setTouchTarget(root.eventRoot, identifier, target);
       else deleteTouchTarget(root.eventRoot, identifier);
     } else {
@@ -647,15 +668,29 @@ function dispatchTouchEvent(
     }
   }
 
+  let primaryEvent: CRCEvent | undefined;
   for (const [target, contacts] of groups) {
     if (!isLiveNode(root, target)) continue;
     const first = contacts[0];
-    dispatchEventPath({
+    const event = dispatchEventPath({
       type: input.type,
       target,
       originalEvent: input.originalEvent,
       x: first.x,
       y: first.y,
+    });
+    if (contacts.includes(input.primaryPress!)) primaryEvent = event;
+  }
+
+  if (input.primaryPress) {
+    dispatchPressDefault(root, policy, {
+      source: 'touch',
+      target: primaryTarget,
+      event: primaryEvent,
+      originalEvent: input.originalEvent,
+      x: input.primaryPress.x,
+      y: input.primaryPress.y,
+      touchIdentifier: input.primaryPress.touch.identifier,
     });
   }
 }
@@ -947,6 +982,7 @@ function dispatchMouseButton(
   root: CRCInstance,
   input: CRCAdaptedMouseEvent,
 ): void {
+  const policy = root.eventRoot.focusPolicy;
   const target = resolveCoordinateTarget(root.eventRoot, input);
   const path = target ? buildEventPath(target) : undefined;
   const activation = path ? Object.freeze({
@@ -969,7 +1005,17 @@ function dispatchMouseButton(
       updateActivationMap(root.interaction.auxiliaryUp, button, activation);
     }
   }
-  if (target) dispatchMouseNode(input.type, target, input);
+  const event = target ? dispatchMouseNode(input.type, target, input) : undefined;
+  if (input.press) {
+    dispatchPressDefault(root, policy, {
+      source: 'mouse',
+      target,
+      event,
+      originalEvent: input.originalEvent,
+      x: input.press.x,
+      y: input.press.y,
+    });
+  }
 }
 
 function dispatchActivation(
@@ -1059,9 +1105,9 @@ function dispatchMouseNode(
   target: CRCEventNode,
   input: CRCAdaptedMouseEvent,
   relatedTarget: CRCEventNode | null = null,
-): void {
-  if (!target.live) return;
-  dispatchEventPath({
+): CRCEvent | undefined {
+  if (!target.live) return undefined;
+  return dispatchEventPath({
     type,
     target,
     relatedTarget,
@@ -1069,6 +1115,20 @@ function dispatchMouseNode(
     x: input.x,
     y: input.y,
   });
+}
+
+function dispatchPressDefault(
+  root: CRCInstance,
+  policy: CRCEventRoot['focusPolicy'],
+  input: CRCFocusPressDefaultInput,
+): void {
+  if (
+    policy &&
+    root.eventRoot.focusPolicy === policy &&
+    policy.afterPressDispatch
+  ) {
+    policy.afterPressDispatch(input);
+  }
 }
 
 function activationTarget(

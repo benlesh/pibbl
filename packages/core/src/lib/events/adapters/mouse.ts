@@ -28,6 +28,12 @@ export interface CRCAdaptedMouseEvent {
   readonly originalEvent: MouseEvent;
   readonly x: number;
   readonly y: number;
+  readonly press: CRCAdaptedMousePress | undefined;
+}
+
+export interface CRCAdaptedMousePress {
+  readonly x: number;
+  readonly y: number;
 }
 
 export function isNativeMouseEventType(
@@ -43,5 +49,6 @@ export function adaptMouseEvent(
 ): CRCAdaptedMouseEvent | undefined {
   if (!(event instanceof MouseEvent) || !root.surface.snapshot) return undefined;
   const [x, y] = getMouseCoordinates(event, root);
-  return { type, originalEvent: event, x, y };
+  const press = type === 'mousedown' && event.button === 0 ? { x, y } : undefined;
+  return { type, originalEvent: event, x, y, press };
 }

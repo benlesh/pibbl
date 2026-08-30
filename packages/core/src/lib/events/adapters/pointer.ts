@@ -28,6 +28,14 @@ export interface CRCAdaptedPointerEvent {
   readonly originalEvent: PointerEvent;
   readonly x: number;
   readonly y: number;
+  readonly press: CRCAdaptedPointerPress | undefined;
+}
+
+export interface CRCAdaptedPointerPress {
+  readonly pointerId: number;
+  readonly pointerType: 'mouse' | 'pen' | 'touch';
+  readonly x: number;
+  readonly y: number;
 }
 
 export function isNativePointerEventType(
@@ -49,5 +57,16 @@ export function adaptPointerEvent(
     return undefined;
   }
   const [x, y] = getMouseCoordinates(event, root);
-  return { type, originalEvent: event, x, y };
+  const pointerType = event.pointerType;
+  const press: CRCAdaptedPointerPress | undefined = type === 'pointerdown' &&
+      event.isPrimary &&
+      event.button === 0 &&
+      (pointerType === 'mouse' || pointerType === 'pen' || pointerType === 'touch') ?
+    {
+      pointerId: event.pointerId,
+      pointerType: pointerType as CRCAdaptedPointerPress['pointerType'],
+      x,
+      y,
+    } : undefined;
+  return { type, originalEvent: event, x, y, press };
 }

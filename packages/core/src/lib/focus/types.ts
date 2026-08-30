@@ -1,6 +1,8 @@
 import type { CRCEventTargetRegistration } from '../events/registrations.js';
 import type { LayoutBox } from '../layout/types.js';
 
+export type CRCFocusModality = 'keyboard' | 'pointer';
+
 export interface CRCKeyboardNavigationOptions {
   readonly mode: 'directional';
 }

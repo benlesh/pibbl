@@ -26,6 +26,7 @@ export interface CRCAdaptedTouchEvent {
   readonly type: CRCNativeTouchEventType;
   readonly originalEvent: TouchEvent;
   readonly changedContacts: readonly CRCAdaptedTouchContact[];
+  readonly primaryPress: CRCAdaptedTouchContact | undefined;
 }
 
 export function isNativeTouchEventType(
@@ -57,5 +58,6 @@ export function adaptTouchEvent(
     type,
     originalEvent: event,
     changedContacts: Object.freeze(changedContacts),
+    primaryPress: type === 'touchstart' ? changedContacts[0] : undefined,
   };
 }

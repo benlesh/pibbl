@@ -21,6 +21,7 @@ interface PendingTabEntry {
 
 export interface CRCMountedDOMFocusHost {
   beforeNativeDispatch(type: CRCEventType, event: Event): void;
+  focusFromPress(): void;
   setManager(manager: CRCFocusManager | undefined): void;
   syncCandidateAvailability(hasCandidates: boolean): void;
 }
@@ -31,6 +32,7 @@ export function mountDOMFocusHost(
   teardowns: Teardowns,
 ): CRCMountedDOMFocusHost {
   let tabIndexOwnership: TabIndexOwnership | undefined;
+  let pressFocusOwnership: TabIndexOwnership | undefined;
   let candidateCycleActive = false;
   let pendingTabEntry: PendingTabEntry | undefined;
   let pendingTabExpiry: ReturnType<typeof setTimeout> | undefined;
@@ -54,6 +56,35 @@ export function mountDOMFocusHost(
     } else {
       canvas.removeAttribute('tabindex');
     }
+  };
+
+  const restorePressFocusability = () => {
+    const ownership = pressFocusOwnership;
+    pressFocusOwnership = undefined;
+    if (
+      !ownership?.ownedValue ||
+      !canvas.hasAttribute('tabindex') ||
+      canvas.getAttribute('tabindex') !== ownership.ownedValue
+    ) {
+      return;
+    }
+    if (ownership.snapshot.existed) {
+      canvas.setAttribute('tabindex', ownership.snapshot.value ?? '');
+    } else {
+      canvas.removeAttribute('tabindex');
+    }
+  };
+
+  const focusFromPress = () => {
+    if (disposed) return;
+    if (!canvas.hasAttribute('tabindex')) {
+      canvas.setAttribute('tabindex', '-1');
+      pressFocusOwnership = {
+        snapshot: { existed: false, value: null },
+        ownedValue: '-1',
+      };
+    }
+    canvas.focus({ preventScroll: true });
   };
 
   const syncCandidateAvailability = (hasCandidates: boolean) => {
@@ -131,9 +162,11 @@ export function mountDOMFocusHost(
   };
 
   const onNativeFocus = () => undefined;
+  const onNativePress = () => undefined;
   const onNativeBlur = () => {
     clearPendingTabEntry();
     manager?.leaveDOMFocus();
+    restorePressFocusability();
   };
   const onNativeKeyDown = (event: Event) => {
     if (!(event instanceof KeyboardEvent) || event.key !== 'Tab') return;
@@ -154,9 +187,15 @@ export function mountDOMFocusHost(
   const focusObservers = requireObservers(eventRoot, 'focus');
   const blurObservers = requireObservers(eventRoot, 'blur');
   const keydownObservers = requireObservers(eventRoot, 'keydown');
+  const pointerdownObservers = requireObservers(eventRoot, 'pointerdown');
+  const mousedownObservers = requireObservers(eventRoot, 'mousedown');
+  const touchstartObservers = requireObservers(eventRoot, 'touchstart');
   focusObservers.add(onNativeFocus);
   blurObservers.add(onNativeBlur);
   keydownObservers.add(onNativeKeyDown);
+  pointerdownObservers.add(onNativePress);
+  mousedownObservers.add(onNativePress);
+  touchstartObservers.add(onNativePress);
   canvas.ownerDocument.addEventListener('keydown', onDocumentKeyDown, true);
 
   teardowns.add(() => {
@@ -165,14 +204,19 @@ export function mountDOMFocusHost(
     manager = undefined;
     clearPendingTabEntry();
     restoreTabIndex();
+    restorePressFocusability();
     focusObservers.delete(onNativeFocus);
     blurObservers.delete(onNativeBlur);
     keydownObservers.delete(onNativeKeyDown);
+    pointerdownObservers.delete(onNativePress);
+    mousedownObservers.delete(onNativePress);
+    touchstartObservers.delete(onNativePress);
     canvas.ownerDocument.removeEventListener('keydown', onDocumentKeyDown, true);
   });
 
   return {
     beforeNativeDispatch,
+    focusFromPress,
     setManager,
     syncCandidateAvailability,
   };
@@ -188,7 +232,7 @@ function isFocusEventForCanvas(
 
 function requireObservers(
   eventRoot: CRCEventRoot,
-  type: 'blur' | 'focus' | 'keydown',
+  type: 'blur' | 'focus' | 'keydown' | 'mousedown' | 'pointerdown' | 'touchstart',
 ): Set<(event: Event) => void> {
   const observers = eventRoot.observers.get(type);
   if (!observers) {
