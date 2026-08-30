@@ -6,10 +6,11 @@ import type {
   CRCKeyboardEvent,
 } from '../events/types.js';
 import { Teardowns } from '../teardowns.js';
-import { update } from '../update.js';
 import type {
   CRCEventRoot,
   CRCFocusPressDefaultInput,
+  CRCFocusTouchDefaultContact,
+  CRCFocusTouchDefaultInput,
   CRCFocusPolicyBridge,
   CRCInstance,
   CRCRenderTransaction,
@@ -141,8 +142,12 @@ class FocusManagerCoordinator {
     event: Event,
   ): CRCFocusManager | undefined {
     const manager = this.active;
-    this.domFocusHost?.beforeNativeDispatch(type, event);
-    return manager && !manager.isDestroyed ? manager : undefined;
+    const routeLogicalEvent = this.domFocusHost?.beforeNativeDispatch(
+      type,
+      event,
+    ) ?? true;
+    return routeLogicalEvent && manager && !manager.isDestroyed ?
+      manager : undefined;
   }
 
   syncDOMFocusHost(manager: CRCFocusManager): void {
@@ -311,6 +316,9 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     RepresentedPointerPress
   >();
   private readonly representedTouchContacts = new Map<number, RepresentedPress>();
+  private activeTouchIdentifiers = new Set<number>();
+  private primaryTouchIdentifier: number | undefined;
+  private touchSequenceActive = false;
   private touchMouseCompatibility: RepresentedPress | undefined;
   private destroyed = false;
   private ownerReleased = false;
@@ -470,6 +478,28 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     }
   }
 
+  afterTouchDispatch(input: CRCFocusTouchDefaultInput): void {
+    if (this.destroyed) return;
+    this.purgeExpiredPresses(input.originalEvent.timeStamp);
+    if (input.type === 'touchstart') {
+      const primary = this.recordTouchStarts(input);
+      if (!primary) return;
+      this.afterPressDispatch({
+        source: 'touch',
+        target: primary.target,
+        event: undefined,
+        originalEvent: input.originalEvent,
+        x: primary.x,
+        y: primary.y,
+        touchIdentifier: primary.identifier,
+      });
+      return;
+    }
+    if (input.type === 'touchend' || input.type === 'touchcancel') {
+      this.recordTouchTerminals(input);
+    }
+  }
+
   beforeNativeDispatch(
     type: CRCEventType,
     event: Event,
@@ -482,25 +512,23 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     const pendingPress = this.pendingPressFocus;
     if (pendingPress) {
       this.pendingPressFocus = undefined;
-      this.commitLogicalFocus(
+      transitionLogicalFocus(
+        this,
         this.liveFocusCandidate(pendingPress.target),
-        false,
+        'pointer',
       );
-      update(this.canvas);
       return;
     }
     const candidate = backwards ?
       this.committedCandidates.at(-1) :
       this.committedCandidates[0];
-    this.commitLogicalFocus(candidate?.target, Boolean(candidate));
-    update(this.canvas);
+    transitionLogicalFocus(this, candidate?.target, 'keyboard');
   }
 
   leaveDOMFocus(): void {
     if (this.destroyed) return;
     this.pendingPressFocus = undefined;
-    this.clearFocusState();
-    update(this.canvas);
+    transitionLogicalFocus(this, undefined, 'keyboard');
   }
 
   activateDOMHost(): void {
@@ -609,6 +637,9 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     this.pendingPressFocus = undefined;
     this.representedPointerPresses.clear();
     this.representedTouchContacts.clear();
+    this.activeTouchIdentifiers.clear();
+    this.primaryTouchIdentifier = undefined;
+    this.touchSequenceActive = false;
     this.touchMouseCompatibility = undefined;
     for (const boundary of this.committedBoundaries) {
       boundary.commit(Object.freeze([]));
@@ -756,6 +787,44 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
 
   private recordTouchFallback(input: CRCFocusPressDefaultInput): void {
     this.touchMouseCompatibility = pressRecord(input);
+  }
+
+  private recordTouchStarts(
+    input: CRCFocusTouchDefaultInput,
+  ): CRCFocusTouchDefaultContact | undefined {
+    const changedIdentifiers = new Set(
+      input.changedContacts.map(contact => contact.identifier),
+    );
+    for (const identifier of input.activeIdentifiers) {
+      if (!changedIdentifiers.has(identifier)) {
+        this.activeTouchIdentifiers.add(identifier);
+        this.touchSequenceActive = true;
+      }
+    }
+
+    let primary: CRCFocusTouchDefaultContact | undefined;
+    for (const contact of input.changedContacts) {
+      if (this.activeTouchIdentifiers.has(contact.identifier)) continue;
+      if (!this.touchSequenceActive) {
+        this.touchSequenceActive = true;
+        this.primaryTouchIdentifier = contact.identifier;
+      }
+      if (contact.identifier === this.primaryTouchIdentifier) primary = contact;
+      this.activeTouchIdentifiers.add(contact.identifier);
+    }
+    return primary;
+  }
+
+  private recordTouchTerminals(input: CRCFocusTouchDefaultInput): void {
+    for (const contact of input.changedContacts) {
+      this.activeTouchIdentifiers.delete(contact.identifier);
+      this.representedTouchContacts.delete(contact.identifier);
+    }
+    this.activeTouchIdentifiers = new Set(input.activeIdentifiers);
+    if (this.activeTouchIdentifiers.size > 0) return;
+    this.touchSequenceActive = false;
+    this.primaryTouchIdentifier = undefined;
+    this.representedTouchContacts.clear();
   }
 
   private purgeExpiredPresses(timeStamp: number): void {

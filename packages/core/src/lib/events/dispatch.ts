@@ -3,6 +3,8 @@ import type {
   CRCCursorDefault,
   CRCEventRoot,
   CRCFocusPressDefaultInput,
+  CRCFocusTouchDefaultContact,
+  CRCFocusTouchDefaultInput,
   CRCInstance,
   CRCInteractionActivation,
   CRCInteractionRegion,
@@ -645,18 +647,23 @@ function dispatchTouchEvent(
 ): void {
   const policy = root.eventRoot.focusPolicy;
   const groups = new Map<CRCEventNode, CRCAdaptedTouchContact[]>();
-  let primaryTarget: CRCEventTargetRegistration | undefined;
+  const defaultContacts: CRCFocusTouchDefaultContact[] = [];
   for (const contact of input.changedContacts) {
     const identifier = contact.touch.identifier;
     let target: CRCEventNode | undefined;
     if (input.type === 'touchstart') {
       target = resolveCoordinateTarget(root.eventRoot, contact);
-      if (contact === input.primaryPress) primaryTarget = target;
       if (target) setTouchTarget(root.eventRoot, identifier, target);
       else deleteTouchTarget(root.eventRoot, identifier);
     } else {
       target = liveTouchTarget(root, identifier);
     }
+    defaultContacts.push({
+      identifier,
+      target: target?.kind === 'target' ? target : undefined,
+      x: contact.x,
+      y: contact.y,
+    });
 
     if (target) {
       const contacts = groups.get(target);
@@ -668,31 +675,26 @@ function dispatchTouchEvent(
     }
   }
 
-  let primaryEvent: CRCEvent | undefined;
   for (const [target, contacts] of groups) {
     if (!isLiveNode(root, target)) continue;
     const first = contacts[0];
-    const event = dispatchEventPath({
+    dispatchEventPath({
       type: input.type,
       target,
       originalEvent: input.originalEvent,
       x: first.x,
       y: first.y,
     });
-    if (contacts.includes(input.primaryPress!)) primaryEvent = event;
   }
 
-  if (input.primaryPress) {
-    dispatchPressDefault(root, policy, {
-      source: 'touch',
-      target: primaryTarget,
-      event: primaryEvent,
-      originalEvent: input.originalEvent,
-      x: input.primaryPress.x,
-      y: input.primaryPress.y,
-      touchIdentifier: input.primaryPress.touch.identifier,
-    });
-  }
+  dispatchTouchDefault(root, policy, {
+    type: input.type,
+    changedContacts: Object.freeze(defaultContacts),
+    activeIdentifiers: Object.freeze(
+      Array.from(input.originalEvent.touches, touch => touch.identifier),
+    ),
+    originalEvent: input.originalEvent,
+  });
 }
 
 function liveTouchTarget(
@@ -1128,6 +1130,20 @@ function dispatchPressDefault(
     policy.afterPressDispatch
   ) {
     policy.afterPressDispatch(input);
+  }
+}
+
+function dispatchTouchDefault(
+  root: CRCInstance,
+  policy: CRCEventRoot['focusPolicy'],
+  input: CRCFocusTouchDefaultInput,
+): void {
+  if (
+    policy &&
+    root.eventRoot.focusPolicy === policy &&
+    policy.afterTouchDispatch
+  ) {
+    policy.afterTouchDispatch(input);
   }
 }
 

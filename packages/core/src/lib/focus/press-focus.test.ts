@@ -110,6 +110,12 @@ describe('press-to-focus defaults', () => {
     dispatchPointer(mounted.canvas, 31, 10, 'touch');
     dispatchTouch(mounted.canvas, 31, 10);
     dispatchMouse(mounted.canvas, 10, 0);
+    dispatchTouchSequence(
+      mounted.canvas,
+      'touchend',
+      [{ identifier: 31, x: 10 }],
+      [],
+    );
     expect(focus).toHaveBeenCalledTimes(1);
     expect(focusedLabel(mounted.manager)).toBe('focusable');
 
@@ -123,6 +129,126 @@ describe('press-to-focus defaults', () => {
     dispatchTouch(mounted.canvas, 44, 10);
     expect(focus).toHaveBeenCalledTimes(3);
     expect(focusedLabel(mounted.manager)).toBe('focusable');
+  });
+
+  it('keeps the first touch primary until every contact ends and permits its identifier in a later sequence', () => {
+    const mounted = mountScene();
+    const focus = vi.spyOn(mounted.canvas, 'focus');
+
+    dispatchTouchSequence(
+      mounted.canvas,
+      'touchstart',
+      [{ identifier: 1, x: 10 }],
+      [{ identifier: 1, x: 10 }],
+    );
+    mounted.canvas.blur();
+    dispatchTouchSequence(
+      mounted.canvas,
+      'touchstart',
+      [{ identifier: 2, x: 60 }],
+      [{ identifier: 1, x: 10 }, { identifier: 2, x: 60 }],
+    );
+    dispatchTouchSequence(
+      mounted.canvas,
+      'touchend',
+      [{ identifier: 1, x: 10 }],
+      [{ identifier: 2, x: 60 }],
+    );
+    dispatchTouchSequence(
+      mounted.canvas,
+      'touchstart',
+      [{ identifier: 3, x: 10 }],
+      [{ identifier: 2, x: 60 }, { identifier: 3, x: 10 }],
+    );
+    dispatchTouchSequence(
+      mounted.canvas,
+      'touchend',
+      [{ identifier: 2, x: 60 }, { identifier: 3, x: 10 }],
+      [],
+    );
+    dispatchTouchSequence(
+      mounted.canvas,
+      'touchstart',
+      [{ identifier: 1, x: 10 }],
+      [{ identifier: 1, x: 10 }],
+    );
+
+    expect(focus).toHaveBeenCalledTimes(2);
+    expect(focusedLabel(mounted.manager)).toBe('focusable');
+  });
+
+  it('clears a canceled primary contact so the same identifier starts a new sequence', () => {
+    const mounted = mountScene();
+    const focus = vi.spyOn(mounted.canvas, 'focus');
+    dispatchTouchSequence(
+      mounted.canvas,
+      'touchstart',
+      [{ identifier: 9, x: 10 }],
+      [{ identifier: 9, x: 10 }],
+    );
+    mounted.canvas.blur();
+
+    dispatchTouchSequence(
+      mounted.canvas,
+      'touchcancel',
+      [{ identifier: 9, x: 10 }],
+      [],
+    );
+    dispatchTouchSequence(
+      mounted.canvas,
+      'touchstart',
+      [{ identifier: 9, x: 10 }],
+      [{ identifier: 9, x: 10 }],
+    );
+
+    expect(focus).toHaveBeenCalledTimes(2);
+    expect(focusedLabel(mounted.manager)).toBe('focusable');
+  });
+
+  it('uses only the first simultaneous contact and honors prevention from a later target group', () => {
+    let preventSecondary = false;
+    const Root = defineComp(() => [
+      Target({
+        key: 'first', label: 'first', x: 0, keyboardFocusable: true,
+        handlers: { onTouchStart: () => undefined },
+      }),
+      Target({
+        key: 'second', label: 'second', x: 50, keyboardFocusable: true,
+        handlers: {
+          onTouchStart: event => {
+            if (preventSecondary) event.preventDefault();
+          },
+        },
+      }),
+    ]);
+    const mounted = mountAndRender(withFocusManagement(Root({})));
+    const first = dispatchTouchSequence(
+      mounted.canvas,
+      'touchstart',
+      [{ identifier: 20, x: 10 }, { identifier: 21, x: 60 }],
+      [{ identifier: 20, x: 10 }, { identifier: 21, x: 60 }],
+    );
+    expect(first.defaultPrevented).toBe(false);
+    expect(focusedLabel(mounted.manager)).toBe('first');
+    dispatchTouchSequence(
+      mounted.canvas,
+      'touchend',
+      [{ identifier: 20, x: 10 }, { identifier: 21, x: 60 }],
+      [],
+    );
+    mounted.canvas.blur();
+    preventSecondary = true;
+
+    const prevented = dispatchTouchSequence(
+      mounted.canvas,
+      'touchstart',
+      [{ identifier: 22, x: 10 }, { identifier: 23, x: 60 }],
+      [{ identifier: 22, x: 10 }, { identifier: 23, x: 60 }],
+    );
+
+    expect(prevented.defaultPrevented).toBe(true);
+    expect(document.activeElement).not.toBe(mounted.canvas);
+    expect(mounted.manager.resolveKeyboardTarget()).toBeUndefined();
   });
 
   it('ignores non-primary presses and never uses pointer-capture routing as the focus target', () => {
@@ -252,19 +378,40 @@ function dispatchMouse(canvas: HTMLCanvasElement, x: number, button: number): Mo
 }
 
 function dispatchTouch(canvas: HTMLCanvasElement, identifier: number, x: number): TouchEvent {
+  return dispatchTouchSequence(
+    canvas,
+    'touchstart',
+    [{ identifier, x }],
+    [{ identifier, x }],
+  );
+}
+
+interface TouchPoint {
+  readonly identifier: number;
+  readonly x: number;
+}
+
+function dispatchTouchSequence(
+  canvas: HTMLCanvasElement,
+  type: 'touchcancel' | 'touchend' | 'touchstart',
+  changed: readonly TouchPoint[],
+  active: readonly TouchPoint[],
+): TouchEvent {
   const bounds = canvas.getBoundingClientRect();
-  const touch = new Touch({
+  const createTouch = ({ identifier, x }: TouchPoint) => new Touch({
     identifier,
     target: canvas,
     clientX: bounds.left + x,
     clientY: bounds.top + 10,
   });
-  const event = new TouchEvent('touchstart', {
+  const changedTouches = changed.map(createTouch);
+  const touches = active.map(createTouch);
+  const event = new TouchEvent(type, {
     bubbles: true,
     cancelable: true,
-    changedTouches: [touch],
-    targetTouches: [touch],
-    touches: [touch],
+    changedTouches,
+    targetTouches: touches,
+    touches,
   });
   canvas.dispatchEvent(event);
   return event;

@@ -17,6 +17,17 @@ import { withFocusManagement } from './with-focus-management';
 
 const activeControllers = new Set<CRCController>();
 const noop = () => undefined;
+const DOM_FOCUS_HOST_EVENT_TYPES = [
+  'focus',
+  'focusin',
+  'blur',
+  'focusout',
+  'keydown',
+  'pointerdown',
+  'touchstart',
+  'touchend',
+  'touchcancel',
+] as const;
 
 beforeEach(() => {
   document.body.replaceChildren();
@@ -285,6 +296,43 @@ describe('Canvas DOM focus host', () => {
     expect(canvas.hasAttribute('tabindex')).toBe(false);
   });
 
+  it('keeps one base tabindex snapshot when press focus precedes live candidates', () => {
+    const canvas = createCanvas();
+    const mounted = mountAndRender(canvas, managed([]));
+
+    dispatchBackgroundPress(canvas);
+    expect(document.activeElement).toBe(canvas);
+    expect(canvas.getAttribute('tabindex')).toBe('-1');
+
+    executeRender(canvas, 2, managed(['only']));
+    expect(canvas.getAttribute('tabindex')).toBe('0');
+
+    canvas.blur();
+    expect(canvas.getAttribute('tabindex')).toBe('0');
+
+    executeRender(canvas, 3, managed([]));
+    expect(canvas.hasAttribute('tabindex')).toBe(false);
+
+    mounted.controller.dispose();
+    activeControllers.delete(mounted.controller);
+    expect(canvas.hasAttribute('tabindex')).toBe(false);
+  });
+
+  it('keeps the press reason when candidates disappear and restores the base on disposal', () => {
+    const canvas = createCanvas();
+    const mounted = mountAndRender(canvas, managed(['only']));
+    expect(canvas.getAttribute('tabindex')).toBe('0');
+
+    dispatchBackgroundPress(canvas);
+    executeRender(canvas, 2, managed([]));
+    expect(document.activeElement).toBe(canvas);
+    expect(canvas.getAttribute('tabindex')).toBe('-1');
+
+    mounted.controller.dispose();
+    activeControllers.delete(mounted.controller);
+    expect(canvas.hasAttribute('tabindex')).toBe(false);
+  });
+
   it('keeps exactly one document capture listener across rerenders and releases it on enhancer removal', () => {
     const add = vi.spyOn(document, 'addEventListener');
     const remove = vi.spyOn(document, 'removeEventListener');
@@ -295,8 +343,8 @@ describe('Canvas DOM focus host', () => {
     const eventRoot = getCRCInstance(canvas).eventRoot;
     const firstAdds = documentKeydownCaptureCalls(add.mock.calls);
     expect(firstAdds).toHaveLength(1);
-    for (const type of ['focus', 'blur', 'keydown'] as const) {
-      expect(eventRoot.nativeListeners?.count(type)).toBe(1);
+    for (const type of DOM_FOCUS_HOST_EVENT_TYPES) {
+      expect(eventRoot.nativeListeners?.count(type), type).toBe(1);
       expect(canvasEventCalls(canvasAdd.mock.calls, type)).toHaveLength(1);
     }
 
@@ -310,7 +358,7 @@ describe('Canvas DOM focus host', () => {
     expect(removals).toHaveLength(1);
     expect(removals[0][1]).toBe(firstAdds[0][1]);
     expect(canvas.hasAttribute('tabindex')).toBe(false);
-    for (const type of ['focus', 'blur', 'keydown'] as const) {
+    for (const type of DOM_FOCUS_HOST_EVENT_TYPES) {
       expect(eventRoot.nativeListeners?.count(type)).toBe(0);
       const adds = canvasEventCalls(canvasAdd.mock.calls, type);
       const removes = canvasEventCalls(canvasRemove.mock.calls, type);
@@ -353,7 +401,7 @@ describe('Canvas DOM focus host', () => {
     const priorManager = mounted.manager;
     const eventRoot = getCRCInstance(canvas).eventRoot;
     const originalNativeListeners = new Map(
-      (['focus', 'blur', 'keydown'] as const).map(type => [
+      DOM_FOCUS_HOST_EVENT_TYPES.map(type => [
         type,
         canvasEventCalls(canvasAdd.mock.calls, type)[0][1],
       ]),
@@ -367,7 +415,7 @@ describe('Canvas DOM focus host', () => {
     expect(canvas.getAttribute('tabindex')).toBe('0');
     expect(documentKeydownCaptureCalls(add.mock.calls)).toHaveLength(1);
     expect(documentKeydownCaptureCalls(remove.mock.calls)).toHaveLength(0);
-    for (const type of ['focus', 'blur', 'keydown'] as const) {
+    for (const type of DOM_FOCUS_HOST_EVENT_TYPES) {
       expect(eventRoot.nativeListeners?.count(type)).toBe(1);
       const calls = canvasEventCalls(canvasAdd.mock.calls, type);
       expect(calls).toHaveLength(1);
@@ -379,7 +427,7 @@ describe('Canvas DOM focus host', () => {
     activeControllers.delete(mounted.controller);
     expect(canvas.hasAttribute('tabindex')).toBe(false);
     expect(documentKeydownCaptureCalls(remove.mock.calls)).toHaveLength(1);
-    for (const type of ['focus', 'blur', 'keydown'] as const) {
+    for (const type of DOM_FOCUS_HOST_EVENT_TYPES) {
       expect(canvasEventCalls(canvasRemove.mock.calls, type)).toHaveLength(1);
     }
     },
@@ -440,7 +488,7 @@ describe('Canvas DOM focus host', () => {
 
     expect(documentListenersDuringReplacement).toBe(1);
     expect(trace).toEqual(['old-focus']);
-    for (const type of ['focus', 'blur', 'keydown'] as const) {
+    for (const type of DOM_FOCUS_HOST_EVENT_TYPES) {
       expect(canvasEventCalls(canvasAdd.mock.calls, type)).toHaveLength(1);
     }
 
@@ -483,7 +531,7 @@ describe('Canvas DOM focus host', () => {
     expect(canvas.getAttribute('tabindex')).toBe('0');
     expect(documentKeydownCaptureCalls(add.mock.calls)).toHaveLength(1);
     expect(documentKeydownCaptureCalls(remove.mock.calls)).toHaveLength(0);
-    for (const type of ['focus', 'blur', 'keydown'] as const) {
+    for (const type of DOM_FOCUS_HOST_EVENT_TYPES) {
       expect(eventRoot.nativeListeners?.count(type)).toBe(1);
       expect(canvasEventCalls(canvasAdd.mock.calls, type)).toHaveLength(1);
       expect(canvasEventCalls(canvasRemove.mock.calls, type)).toHaveLength(0);
@@ -530,7 +578,7 @@ describe('Canvas DOM focus host', () => {
     expect(canvas.getAttribute('tabindex')).toBe('-1');
     expect(documentKeydownCaptureCalls(documentAdd.mock.calls)).toHaveLength(1);
     expect(documentKeydownCaptureCalls(documentRemove.mock.calls)).toHaveLength(1);
-    for (const type of ['focus', 'blur', 'keydown'] as const) {
+    for (const type of DOM_FOCUS_HOST_EVENT_TYPES) {
       expect(eventRoot.nativeListeners?.count(type)).toBe(0);
       expect(canvasEventCalls(canvasRemove.mock.calls, type)).toHaveLength(1);
     }
@@ -542,7 +590,7 @@ describe('Canvas DOM focus host', () => {
     expect(canvas.getAttribute('tabindex')).toBe('0');
     expect(documentKeydownCaptureCalls(documentAdd.mock.calls)).toHaveLength(2);
     expect(documentKeydownCaptureCalls(documentRemove.mock.calls)).toHaveLength(1);
-    for (const type of ['focus', 'blur', 'keydown'] as const) {
+    for (const type of DOM_FOCUS_HOST_EVENT_TYPES) {
       expect(eventRoot.nativeListeners?.count(type)).toBe(1);
       expect(canvasEventCalls(canvasAdd.mock.calls, type)).toHaveLength(2);
       expect(canvasEventCalls(canvasRemove.mock.calls, type)).toHaveLength(1);
@@ -651,6 +699,19 @@ function setTabIndexAttribute(
   else canvas.setAttribute('tabindex', value);
 }
 
+function dispatchBackgroundPress(canvas: HTMLCanvasElement): MouseEvent {
+  const bounds = canvas.getBoundingClientRect();
+  const event = new MouseEvent('mousedown', {
+    bubbles: true,
+    cancelable: true,
+    button: 0,
+    clientX: bounds.left + 250,
+    clientY: bounds.top + 100,
+  });
+  canvas.dispatchEvent(event);
+  return event;
+}
+
 function documentKeydownCaptureCalls(
   calls: readonly (readonly unknown[])[],
 ): (readonly unknown[])[] {
@@ -665,7 +726,7 @@ function documentKeydownCaptureCalls(
 
 function canvasEventCalls(
   calls: readonly (readonly unknown[])[],
-  type: 'blur' | 'focus' | 'keydown',
+  type: (typeof DOM_FOCUS_HOST_EVENT_TYPES)[number],
 ): (readonly unknown[])[] {
   return calls.filter(call => call[0] === type);
 }

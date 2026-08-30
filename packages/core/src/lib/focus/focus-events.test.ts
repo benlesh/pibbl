@@ -27,6 +27,64 @@ afterEach(() => {
 });
 
 describe('logical focus transitions', () => {
+  it('canonicalizes real Canvas entry and exit without routing companion native focus events twice', () => {
+    const trace: string[] = [];
+    let manager!: CRCFocusManager;
+    const record = (scope: string, event: CRCEvent) => {
+      const target = manager.candidates[0].target;
+      trace.push(
+        `${scope}:${event.type}:` +
+        `${event.relatedTarget === null ? 'null' : 'logical'}:` +
+        `${manager.snapshot(target).isFocused ? 'focused' : 'unfocused'}`,
+      );
+    };
+    const Root = defineComp(() => {
+      crcEventListener({
+        onFocusInCapture: event => record('root-capture', event),
+        onFocusIn: event => record('root-bubble', event),
+        onFocusCapture: event => record('root-capture', event),
+        onFocusOutCapture: event => record('root-capture', event),
+        onFocusOut: event => record('root-bubble', event),
+        onBlurCapture: event => record('root-capture', event),
+      });
+      return Target({
+        label: 'only',
+        x: 0,
+        handlers: {
+          onFocusIn: event => record('target', event),
+          onFocus: event => record('target', event),
+          onFocusOut: event => record('target', event),
+          onBlur: event => record('target', event),
+        },
+      });
+    });
+    const mounted = mountAndRender(withFocusManagement(Root({})));
+    manager = mounted.manager;
+    const before = document.createElement('button');
+    const after = document.createElement('button');
+    document.body.insertBefore(before, mounted.canvas);
+    document.body.append(after);
+    before.focus();
+
+    mounted.canvas.focus({ preventScroll: true });
+    after.focus();
+
+    expect(trace).toEqual([
+      'root-capture:focusin:null:focused',
+      'target:focusin:null:focused',
+      'root-bubble:focusin:null:focused',
+      'root-capture:focus:null:focused',
+      'target:focus:null:focused',
+      'root-capture:focusout:null:focused',
+      'target:focusout:null:focused',
+      'root-bubble:focusout:null:focused',
+      'root-capture:blur:null:focused',
+      'target:blur:null:focused',
+    ]);
+    expect(manager.resolveKeyboardTarget()).toBeUndefined();
+    expect(document.activeElement).toBe(after);
+  });
+
   it('dispatches A -> B in canonical order with logical related targets and state boundaries', async () => {
     const trace: string[] = [];
     let manager!: CRCFocusManager;
@@ -76,6 +134,177 @@ describe('logical focus transitions', () => {
       'root-capture:focus',
       'focus:B->A:B',
     ]);
+  });
+
+  it('queues a nested request from an outgoing handler after the current transition completes', async () => {
+    const trace: string[] = [];
+    let manager!: CRCFocusManager;
+    let targets!: readonly CRCEventTargetRegistration[];
+    let requested = false;
+    const label = (target: CRCEventTarget | null) => {
+      const index = targets.findIndex(candidate => candidate.publicTarget === target);
+      return index < 0 ? 'none' : ['A', 'B', 'C'][index];
+    };
+    const record = (event: CRCEvent) => {
+      trace.push(`${event.type}:${label(event.target)}->${label(event.relatedTarget)}`);
+    };
+    const Root = defineComp(() => [
+      Target({
+        key: 'A', label: 'A', x: 0,
+        handlers: {
+          onFocusOut: event => {
+            record(event);
+            if (!requested) {
+              requested = true;
+              transitionLogicalFocus(manager, targets[2], 'pointer');
+            }
+          },
+          onBlur: record,
+        },
+      }),
+      Target({
+        key: 'B', label: 'B', x: 35,
+        handlers: { onFocusIn: record, onFocus: record, onFocusOut: record, onBlur: record },
+      }),
+      Target({
+        key: 'C', label: 'C', x: 70,
+        handlers: { onFocusIn: record, onFocus: record },
+      }),
+    ]);
+    const mounted = mountAndRender(withFocusManagement(Root({})));
+    manager = mounted.manager;
+    targets = manager.candidates.map(candidate => candidate.target);
+    transitionLogicalFocus(manager, targets[0], 'keyboard');
+    await nextFrame();
+    trace.length = 0;
+
+    transitionLogicalFocus(manager, targets[1], 'keyboard');
+
+    expect(trace).toEqual([
+      'focusout:A->B',
+      'blur:A->B',
+      'focusin:B->A',
+      'focus:B->A',
+      'focusout:B->C',
+      'blur:B->C',
+      'focusin:C->B',
+      'focus:C->B',
+    ]);
+    expect(manager.resolveKeyboardTarget()).toBe(targets[2]);
+    expect(manager.snapshot(targets[2])).toEqual({
+      isFocused: true,
+      isFocusVisible: false,
+    });
+  });
+
+  it('queues the latest nested request from incoming handlers without interrupting their transition', async () => {
+    const trace: string[] = [];
+    let manager!: CRCFocusManager;
+    let targets!: readonly CRCEventTargetRegistration[];
+    let requestedFromFocusIn = false;
+    let requestedFromFocus = false;
+    const label = (target: CRCEventTarget | null) => {
+      const index = targets.findIndex(candidate => candidate.publicTarget === target);
+      return index < 0 ? 'none' : ['A', 'B', 'C'][index];
+    };
+    const record = (event: CRCEvent) => {
+      trace.push(`${event.type}:${label(event.target)}->${label(event.relatedTarget)}`);
+    };
+    const Root = defineComp(() => [
+      Target({
+        key: 'A', label: 'A', x: 0,
+        handlers: {
+          onFocusIn: record,
+          onFocus: record,
+          onFocusOut: record,
+          onBlur: record,
+        },
+      }),
+      Target({
+        key: 'B', label: 'B', x: 35,
+        handlers: {
+          onFocusIn: event => {
+            record(event);
+            if (!requestedFromFocusIn) {
+              requestedFromFocusIn = true;
+              transitionLogicalFocus(manager, targets[2], 'keyboard');
+            }
+          },
+          onFocus: event => {
+            record(event);
+            if (!requestedFromFocus) {
+              requestedFromFocus = true;
+              transitionLogicalFocus(manager, targets[0], 'pointer');
+            }
+          },
+          onFocusOut: record,
+          onBlur: record,
+        },
+      }),
+      Target({
+        key: 'C', label: 'C', x: 70,
+        handlers: { onFocusIn: record, onFocus: record },
+      }),
+    ]);
+    const mounted = mountAndRender(withFocusManagement(Root({})));
+    manager = mounted.manager;
+    targets = manager.candidates.map(candidate => candidate.target);
+    transitionLogicalFocus(manager, targets[0], 'keyboard');
+    await nextFrame();
+    trace.length = 0;
+
+    transitionLogicalFocus(manager, targets[1], 'keyboard');
+
+    expect(trace).toEqual([
+      'focusout:A->B',
+      'blur:A->B',
+      'focusin:B->A',
+      'focus:B->A',
+      'focusout:B->A',
+      'blur:B->A',
+      'focusin:A->B',
+      'focus:A->B',
+    ]);
+    expect(manager.resolveKeyboardTarget()).toBe(targets[0]);
+    expect(manager.snapshot(targets[0])).toEqual({
+      isFocused: true,
+      isFocusVisible: false,
+    });
+  });
+
+  it('honors synchronous Canvas refocus requested from the canonical blur handler', () => {
+    const trace: string[] = [];
+    let manager!: CRCFocusManager;
+    let canvas!: HTMLCanvasElement;
+    const Root = defineComp(() => Target({
+      label: 'only',
+      x: 0,
+      handlers: {
+        onFocusIn: event => trace.push(`${event.type}:${manager.snapshot(manager.candidates[0].target).isFocused}`),
+        onFocus: event => trace.push(`${event.type}:${manager.snapshot(manager.candidates[0].target).isFocused}`),
+        onFocusOut: event => trace.push(`${event.type}:${manager.snapshot(manager.candidates[0].target).isFocused}`),
+        onBlur: event => {
+          trace.push(`${event.type}:${manager.snapshot(manager.candidates[0].target).isFocused}`);
+          canvas.focus({ preventScroll: true });
+        },
+      },
+    }));
+    const mounted = mountAndRender(withFocusManagement(Root({})));
+    manager = mounted.manager;
+    canvas = mounted.canvas;
+    canvas.focus({ preventScroll: true });
+    trace.length = 0;
+
+    canvas.blur();
+
+    expect(trace).toEqual([
+      'focusout:true',
+      'blur:true',
+      'focusin:true',
+      'focus:true',
+    ]);
+    expect(document.activeElement).toBe(canvas);
+    expect(manager.resolveKeyboardTarget()).toBe(manager.candidates[0].target);
   });
 
   it('uses live dispatcher mutation, removal, and error isolation throughout a transition', async () => {

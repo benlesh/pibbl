@@ -132,16 +132,12 @@ describe('source-order Tab defaults', () => {
 });
 
 describe('focus-policy native event routing', () => {
-  it('routes keyboard, focus, editing, composition, and clipboard families to the current target', () => {
+  it('routes keyboard, editing, composition, and clipboard families to the current target', () => {
     const trace: string[] = [];
     const record = (event: { type: string }) => trace.push(event.type);
     const handlers: CRCEventHandlers = {
       onKeyDown: record,
       onKeyUp: record,
-      onFocus: record,
-      onBlur: record,
-      onFocusIn: record,
-      onFocusOut: record,
       onBeforeInput: record,
       onInput: record,
       onChange: record,
@@ -163,10 +159,6 @@ describe('focus-policy native event routing', () => {
     const inputs: readonly [CRCEventType, Event][] = [
       ['keydown', new KeyboardEvent('keydown', { key: 'a', bubbles: true })],
       ['keyup', new KeyboardEvent('keyup', { key: 'a', bubbles: true })],
-      ['focus', new FocusEvent('focus')],
-      ['blur', new FocusEvent('blur')],
-      ['focusin', new FocusEvent('focusin', { bubbles: true })],
-      ['focusout', new FocusEvent('focusout', { bubbles: true })],
       ['beforeinput', new InputEvent('beforeinput', { data: 'a', bubbles: true })],
       ['input', new InputEvent('input', { data: 'a', bubbles: true })],
       ['change', new Event('change', { bubbles: true })],

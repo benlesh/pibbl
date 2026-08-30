@@ -239,6 +239,7 @@ export interface CRCFocusPolicyBridge {
   resolveKeyboardTarget(): CRCEventTargetRegistration | undefined;
   afterDispatch(event: CRCEvent): void;
   afterPressDispatch?(input: CRCFocusPressDefaultInput): void;
+  afterTouchDispatch?(input: CRCFocusTouchDefaultInput): void;
   /** @internal Replays cached layer metadata without executing its components. */
   replayRetainedSubtree(instance: CRCInstance): void;
 }
@@ -253,6 +254,20 @@ export interface CRCFocusPressDefaultInput {
   readonly pointerId?: number;
   readonly pointerType?: string;
   readonly touchIdentifier?: number;
+}
+
+export interface CRCFocusTouchDefaultContact {
+  readonly identifier: number;
+  readonly target: CRCEventTargetRegistration | undefined;
+  readonly x: number;
+  readonly y: number;
+}
+
+export interface CRCFocusTouchDefaultInput {
+  readonly type: 'touchcancel' | 'touchend' | 'touchmove' | 'touchstart';
+  readonly changedContacts: readonly CRCFocusTouchDefaultContact[];
+  readonly activeIdentifiers: readonly number[];
+  readonly originalEvent: TouchEvent;
 }
 
 export interface CRCController {
