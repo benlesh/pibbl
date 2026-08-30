@@ -115,29 +115,41 @@ describe('Canvas DOM focus host', () => {
     async (_label, preventerTarget) => {
       const mounted = mountBetweenNativeControls(managed(['first', 'last']));
       const target = preventerTarget(mounted.after);
+      let trusted = false;
       const preventReverse = (event: Event) => {
         if (
           event instanceof KeyboardEvent &&
           event.key === 'Tab' &&
           event.shiftKey
         ) {
+          trusted = event.isTrusted;
           event.preventDefault();
         }
       };
       target.addEventListener('keydown', preventReverse);
+      let activeBeforeProgrammaticFocus: Element | null = null;
+      let resolveFocusTask: () => void = () => undefined;
+      const focusTask = new Promise<void>(resolve => {
+        resolveFocusTask = resolve;
+      });
+      const queueCanvasFocus = (event: KeyboardEvent) => {
+        if (event.key !== 'Tab' || !event.shiftKey) return;
+        window.removeEventListener('keydown', queueCanvasFocus, true);
+        setTimeout(() => {
+          activeBeforeProgrammaticFocus = document.activeElement;
+          mounted.canvas.focus({ preventScroll: true });
+          resolveFocusTask();
+        }, 0);
+      };
+      window.addEventListener('keydown', queueCanvasFocus, true);
       mounted.after.focus();
 
-      const reverse = new KeyboardEvent('keydown', {
-        key: 'Tab',
-        shiftKey: true,
-        bubbles: true,
-        cancelable: true,
-      });
-      mounted.after.dispatchEvent(reverse);
-      await Promise.resolve();
-      mounted.canvas.focus({ preventScroll: true });
+      await userEvent.tab({ shift: true });
+      await focusTask;
 
-      expect(reverse.defaultPrevented).toBe(true);
+      expect(trusted).toBe(true);
+      expect(activeBeforeProgrammaticFocus).toBe(mounted.after);
+      expect(document.activeElement).toBe(mounted.canvas);
       expect(focusedLabel(mounted.manager)).toBe('first');
       target.removeEventListener('keydown', preventReverse);
     },
@@ -171,22 +183,57 @@ describe('Canvas DOM focus host', () => {
     expect(focusedLabel(mounted.manager)).toBe('first');
   });
 
-  it('uses forward entry when a Tab handler programmatically focuses the Canvas', () => {
+  it('uses forward entry when a trusted Tab handler programmatically focuses the Canvas', async () => {
     const mounted = mountBetweenNativeControls(managed(['first', 'last']));
-    const focusCanvas = () => mounted.canvas.focus({ preventScroll: true });
+    let trusted = false;
+    const focusCanvas = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab' || !event.shiftKey) return;
+      trusted = event.isTrusted;
+      mounted.canvas.focus({ preventScroll: true });
+      event.preventDefault();
+    };
     mounted.after.addEventListener('keydown', focusCanvas);
     mounted.after.focus();
 
-    mounted.after.dispatchEvent(new KeyboardEvent('keydown', {
-      key: 'Tab',
-      shiftKey: true,
-      bubbles: true,
-      cancelable: true,
-    }));
+    await userEvent.tab({ shift: true });
 
+    expect(trusted).toBe(true);
     expect(document.activeElement).toBe(mounted.canvas);
     expect(focusedLabel(mounted.manager)).toBe('first');
     mounted.after.removeEventListener('keydown', focusCanvas);
+  });
+
+  it('ignores reverse entry when an earlier queued task focuses the Canvas after Tab moves elsewhere', async () => {
+    const mounted = mountBetweenNativeControls(managed(['first', 'last']));
+    const origin = document.createElement('button');
+    origin.textContent = 'origin';
+    document.body.append(origin);
+    let trusted = false;
+    let activeBeforeProgrammaticFocus: Element | null = null;
+    let resolveFocusTask: () => void = () => undefined;
+    const focusTask = new Promise<void>(resolve => {
+      resolveFocusTask = resolve;
+    });
+    const queueCanvasFocus = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab' || !event.shiftKey) return;
+      trusted = event.isTrusted;
+      window.removeEventListener('keydown', queueCanvasFocus, true);
+      setTimeout(() => {
+        activeBeforeProgrammaticFocus = document.activeElement;
+        mounted.canvas.focus({ preventScroll: true });
+        resolveFocusTask();
+      }, 0);
+    };
+    window.addEventListener('keydown', queueCanvasFocus, true);
+    origin.focus();
+
+    await userEvent.tab({ shift: true });
+    await focusTask;
+
+    expect(trusted).toBe(true);
+    expect(activeBeforeProgrammaticFocus).toBe(mounted.after);
+    expect(document.activeElement).toBe(mounted.canvas);
+    expect(focusedLabel(mounted.manager)).toBe('first');
   });
 
   it.each([

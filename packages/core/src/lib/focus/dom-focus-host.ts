@@ -16,7 +16,7 @@ interface TabIndexOwnership {
 
 interface PendingTabEntry {
   readonly event: KeyboardEvent;
-  propagationComplete: boolean;
+  readonly origin: Element | null;
 }
 
 export interface CRCMountedDOMFocusHost {
@@ -94,12 +94,9 @@ export function mountDOMFocusHost(
     clearPendingTabEntry();
     const entry: PendingTabEntry = {
       event,
-      propagationComplete: false,
+      origin: canvas.ownerDocument.activeElement,
     };
     pendingTabEntry = entry;
-    queueMicrotask(() => {
-      entry.propagationComplete = true;
-    });
     const expiry = setTimeout(() => {
       if (pendingTabEntry === entry) pendingTabEntry = undefined;
       if (pendingTabExpiry === expiry) pendingTabExpiry = undefined;
@@ -114,8 +111,12 @@ export function mountDOMFocusHost(
       const entry = pendingTabEntry;
       clearPendingTabEntry();
       activeManager.enterDOMFocus(Boolean(
-        entry?.propagationComplete &&
+        entry &&
+        entry.event.eventPhase === Event.NONE &&
         !entry.event.defaultPrevented &&
+        entry.origin?.ownerDocument === canvas.ownerDocument &&
+        isFocusEventForCanvas(event, canvas) &&
+        event.relatedTarget === entry.origin &&
         entry.event.shiftKey
       ));
       return;
@@ -175,6 +176,14 @@ export function mountDOMFocusHost(
     setManager,
     syncCandidateAvailability,
   };
+}
+
+function isFocusEventForCanvas(
+  event: Event,
+  canvas: HTMLCanvasElement,
+): event is FocusEvent {
+  const FocusEventClass = canvas.ownerDocument.defaultView?.FocusEvent;
+  return Boolean(FocusEventClass && event instanceof FocusEventClass);
 }
 
 function requireObservers(
