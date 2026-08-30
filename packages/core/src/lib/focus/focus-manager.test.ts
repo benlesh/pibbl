@@ -421,6 +421,70 @@ describe('candidate identity and atomic render collection', () => {
     expect(eventRoot.focusPolicy).toBeUndefined();
   });
 
+  it.each([
+    ['cached layer before outer manager', false, false],
+    ['outer manager before cached layer', true, false],
+    ['nested cached layer before outer manager', false, true],
+  ] as const)('replays a retained inner manager claim: %s', (
+    _label,
+    outerFirst,
+    nested,
+  ) => {
+    let innerRenders = 0;
+    const Inner = defineComp(() => {
+      innerRenders++;
+      return Target({
+        label: 'inner',
+        handlers: { onClick: clickHandler },
+      });
+    });
+    const innerBoundary = () => withFocusManagement(Inner({}));
+    const cachedRender = () => nested ? layer({
+      style: { width: 30, height: 30 },
+      render: innerBoundary(),
+    }) : innerBoundary();
+    const Root = defineComp(({ outer }: { outer: boolean }) => {
+      const cached = layer({
+        key: 'cached',
+        style: { width: 40, height: 40 },
+        render: cachedRender(),
+      });
+      const nextOuter = outer ? withFocusManagement(Target({
+        key: 'outer',
+        label: 'outer',
+        handlers: { onClick: clickHandler },
+      })) : undefined;
+      return outerFirst ? [nextOuter, cached] : [cached, nextOuter];
+    });
+    const mounted = mountAndRender(Root({ outer: false }));
+    const eventRoot = getCRCInstance(mounted.canvas).eventRoot;
+    const priorInner = mounted.manager;
+    expect(candidateLabels(priorInner)).toEqual(['inner']);
+    expect(innerRenders).toBe(1);
+
+    expect(() => executeRender(
+      mounted.canvas,
+      2,
+      Root({ outer: true }),
+    )).toThrowError(
+      /withFocusManagement.*one.*root|one.*focus manager.*root/i,
+    );
+
+    expect(innerRenders).toBe(1);
+    expect(eventRoot.focusPolicy).toBe(priorInner);
+    expect(priorInner.candidates).toEqual([]);
+
+    executeRender(mounted.canvas, 3, Root({ outer: false }));
+    const recoveredInner = eventRoot.focusPolicy as ObservedFocusManager;
+    expect(recoveredInner).toBeDefined();
+    expect(candidateLabels(recoveredInner)).toEqual(['inner']);
+    expect(innerRenders).toBe(2);
+
+    mounted.controller.dispose();
+    activeControllers.delete(mounted.controller);
+    expect(eventRoot.focusPolicy).toBeUndefined();
+  });
+
   it('reports an ineligible focused target as unfocused during that render', () => {
     const snapshots: CRCEventTargetSnapshot[] = [];
     const Root = defineComp(({ eligible }: { eligible: boolean }) => {

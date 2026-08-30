@@ -11,7 +11,7 @@ const FOCUS_MANAGEMENT_ENHANCER_KEY = Symbol('CRC focus management');
 const focusManagementDescriptor: CRCElementEnhancerDescriptor = {
   key: FOCUS_MANAGEMENT_ENHANCER_KEY,
   mount: ({ instance }) => {
-    const manager = createFocusManager(instance.eventRoot);
+    const manager = createFocusManager(instance.eventRoot, instance);
     return {
       update: () => undefined,
       enter: () => manager.beginCollection(),

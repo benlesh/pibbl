@@ -23,6 +23,7 @@ const retainedDirectionalBoundaries = new WeakMap<
   DirectionalBoundary
 >();
 const coordinators = new WeakMap<CRCEventRoot, FocusManagerCoordinator>();
+const managerOwners = new WeakMap<CRCFocusManager, CRCInstance>();
 
 interface PendingCandidate {
   readonly target: CRCEventTargetRegistration;
@@ -52,6 +53,7 @@ class DirectionalBoundary implements CRCDirectionalBoundary {
 
 interface FocusTransactionState {
   readonly prior: CRCFocusManager | undefined;
+  readonly replayedManagers: Set<CRCFocusManager>;
   prepared: CRCFocusManager | undefined;
   claimed: CRCFocusManager | undefined;
   finished: boolean;
@@ -106,6 +108,29 @@ class FocusManagerCoordinator {
     this.eventRoot.focusPolicy = manager;
   }
 
+  claimRetainedManagers(instance: CRCInstance): readonly CRCFocusManager[] {
+    const retained = Array.from(this.managers).filter(manager => {
+      const owner = managerOwners.get(manager);
+      return !manager.isDestroyed &&
+        !manager.ownerWasReleased &&
+        owner !== undefined &&
+        isInstanceWithin(owner, instance);
+    });
+    const transaction = this.eventRoot.renderTransaction;
+    if (!transaction) {
+      for (const manager of retained) this.claim(manager);
+      return retained;
+    }
+
+    const state = this.stateFor(transaction);
+    for (const manager of retained) {
+      if (state.replayedManagers.has(manager)) continue;
+      state.replayedManagers.add(manager);
+      this.claim(manager);
+    }
+    return retained;
+  }
+
   release(manager: CRCFocusManager): void {
     if (manager.isDestroyed) return;
     manager.markOwnerReleased();
@@ -128,6 +153,7 @@ class FocusManagerCoordinator {
     if (existing) return existing;
     const state: FocusTransactionState = {
       prior: this.active,
+      replayedManagers: new Set(),
       prepared: undefined,
       claimed: undefined,
       finished: false,
@@ -198,7 +224,8 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   private ownerReleased = false;
   private readonly coordinator: FocusManagerCoordinator;
 
-  constructor(eventRoot: CRCEventRoot) {
+  constructor(eventRoot: CRCEventRoot, owner: CRCInstance) {
+    managerOwners.set(this, owner);
     this.coordinator = getCoordinator(eventRoot);
     this.coordinator.add(this);
   }
@@ -302,6 +329,13 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   }
 
   replayRetainedSubtree(instance: CRCInstance): void {
+    const retainedManagers = this.coordinator.claimRetainedManagers(instance);
+    const replayManager = retainedManagers.length === 1 ?
+      retainedManagers[0] : this;
+    replayManager.replayRetainedTargets(instance);
+  }
+
+  private replayRetainedTargets(instance: CRCInstance): void {
     const targets: CRCEventTargetRegistration[] = [];
     collectRetainedTargets(instance, targets, new Set());
     if (this.pending) {
@@ -375,6 +409,7 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   destroyFromCoordinator(): void {
     if (this.destroyed) return;
     this.destroyed = true;
+    managerOwners.delete(this);
     this.pending = undefined;
     this.directionalStack = [];
     for (const boundary of this.committedBoundaries) {
@@ -455,8 +490,11 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   }
 }
 
-export function createFocusManager(eventRoot: CRCEventRoot): CRCFocusManager {
-  return new CRCFocusManager(eventRoot);
+export function createFocusManager(
+  eventRoot: CRCEventRoot,
+  owner: CRCInstance,
+): CRCFocusManager {
+  return new CRCFocusManager(eventRoot, owner);
 }
 
 export function requireFocusManager(eventRoot: CRCEventRoot): CRCFocusManager {
