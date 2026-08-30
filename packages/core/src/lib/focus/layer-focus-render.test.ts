@@ -194,6 +194,57 @@ describe("focus snapshots in cached layers", () => {
   });
 });
 
+describe("focus snapshots during manager removal", () => {
+  it("paints and exposes an unfocused snapshot in the removal render", async () => {
+    let removeManager!: () => void;
+    const snapshots: Array<{
+      readonly isFocused: boolean;
+      readonly isFocusVisible: boolean;
+    }> = [];
+    const FocusTarget = defineComp(() => {
+      const snapshot = crcEventTarget(
+        { onClick: () => undefined },
+        { path: rectanglePath(0, 0, 80, 80), fill: true },
+      );
+      snapshots.push(snapshot);
+      return rect({
+        style: {
+          width: 80,
+          height: 80,
+          fill: snapshot.isFocusVisible ? "#00ff00" : "#0000ff",
+        },
+      });
+    });
+    const Root = defineComp(() => {
+      const [managed, setManaged] = crcState(true);
+      removeManager = () => setManaged(false);
+      const target = FocusTarget({});
+      return managed ? withFocusManagement(target) : target;
+    });
+    const mounted = mount(Root({}));
+    await nextFrame();
+
+    mounted.before.focus();
+    await userEvent.tab();
+    await nextFrame();
+    expect(snapshots.at(-1)).toEqual({
+      isFocused: true,
+      isFocusVisible: true,
+    });
+    expect(pixel(mounted.canvas)).toEqual([0, 255, 0, 255]);
+
+    removeManager();
+    await nextFrame();
+
+    expect(snapshots.at(-1)).toEqual({
+      isFocused: false,
+      isFocusVisible: false,
+    });
+    expect(pixel(mounted.canvas)).toEqual([0, 0, 255, 255]);
+    expect(getCRCInstance(mounted.canvas).eventRoot.focusPolicy).toBeUndefined();
+  });
+});
+
 function mount(element: CompEl<any, any>) {
   const before = document.createElement("button");
   before.textContent = "before";

@@ -446,6 +446,7 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
 
   snapshot(target: CRCEventTargetRegistration) {
     if (
+      this.ownerReleased ||
       this.pending?.ineligibleTargets.has(target) ||
       target !== this.focusedTarget
     ) {
