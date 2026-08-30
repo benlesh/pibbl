@@ -5,6 +5,10 @@ import type { NativeListenerHub } from './events/native-listener-hub.js';
 import type { CRCEventType as DOMCRCEventType } from './events/types.js';
 import type { CRCEventTargetSnapshot } from './events/types.js';
 import type {
+  CRCElementEnhancerDescriptor,
+  CRCMountedElementEnhancerEntry,
+} from './element-enhancers.js';
+import type {
   CRCEventNode,
   CRCEventListenerRegistration,
   CRCEventTargetRegistration,
@@ -50,6 +54,8 @@ export interface CompEl<
   key?: string;
   /** @internal */
   identityHint?: InternalIdentityHint;
+  /** @internal */
+  enhancers?: readonly CRCElementEnhancerDescriptor[];
 }
 
 export type FalsyNodes = undefined | false | null | '' | 0;
@@ -134,6 +140,7 @@ export interface CompRefs<P> {
   element: CompEl<P, any>;
   refs: any[];
   hooks: CRCHookSlot[];
+  mountedEnhancers: CRCMountedElementEnhancerEntry[];
   teardowns: Teardowns;
   onAfterRender: (() => void) | undefined;
 }

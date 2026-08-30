@@ -7,6 +7,12 @@ import { Teardowns } from './teardowns.js';
 import { CompEl, CompRefs, SystemStyle } from './types.js';
 import { finalizeHookSlots } from './hooks/hook-slot.js';
 import { resolveElementStyle } from './style/resolve-dispatch.js';
+import {
+  disposeElementEnhancers,
+  enterElementEnhancers,
+  exitElementEnhancers,
+  reconcileElementEnhancers,
+} from './element-enhancers.js';
 
 export function render<P, S extends SystemStyle>(
   element: CompEl<P, S>,
@@ -23,15 +29,18 @@ export function render<P, S extends SystemStyle>(
     if (GLOBAL_STATE.componentIsMounting) {
       const teardowns = new Teardowns();
       teardowns.follow(GLOBAL_STATE.currentCRCInstance!.mainTeardowns);
-      GLOBAL_STATE.currentCRCInstance!.refs.set(id, {
+      const componentRefs: CompRefs<P> = {
         id,
         parent,
         element,
         refs: [],
         hooks: [],
+        mountedEnhancers: [],
         teardowns,
         onAfterRender: undefined,
-      });
+      };
+      teardowns.add(() => disposeElementEnhancers(componentRefs));
+      GLOBAL_STATE.currentCRCInstance!.refs.set(id, componentRefs);
     }
 
     const componentRefs = GLOBAL_STATE.currentCRCInstance!.refs.get(id)!;
@@ -40,50 +49,62 @@ export function render<P, S extends SystemStyle>(
 
     componentRefs.element = element;
 
+    reconcileElementEnhancers(
+      componentRefs,
+      GLOBAL_STATE.currentCRCInstance!,
+    );
+    const enteredEnhancers = enterElementEnhancers(componentRefs);
+    let enhancerSuccess = false;
+
     const ctx = GLOBAL_STATE.renderContext!;
-    ctx.save();
-    let onAfterRender: (() => void) | undefined;
     try {
-      const result = componentRefs.element.type(
-        componentRefs.element.props,
-        resolveElementStyle(componentRefs.element),
-        ctx,
-      );
-      finalizeHookSlots(componentRefs);
+      ctx.save();
+      let onAfterRender: (() => void) | undefined;
+      try {
+        const result = componentRefs.element.type(
+          componentRefs.element.props,
+          resolveElementStyle(componentRefs.element),
+          ctx,
+        );
+        finalizeHookSlots(componentRefs);
 
-      onAfterRender = componentRefs.onAfterRender;
-      componentRefs.onAfterRender = undefined;
+        onAfterRender = componentRefs.onAfterRender;
+        componentRefs.onAfterRender = undefined;
 
-      if (result) {
-        if (Array.isArray(result)) {
-          for (let i = 0; i < result.length; i++) {
-            const child = result[i];
-            if (child) {
-              ctx.save();
-              try {
-                render(child, id, componentRefs);
-              } finally {
-                ctx.restore();
+        if (result) {
+          if (Array.isArray(result)) {
+            for (let i = 0; i < result.length; i++) {
+              const child = result[i];
+              if (child) {
+                ctx.save();
+                try {
+                  render(child, id, componentRefs);
+                } finally {
+                  ctx.restore();
+                }
               }
             }
-          }
-        } else {
-          ctx.save();
-          try {
-            render(result, id, componentRefs);
-          } finally {
-            ctx.restore();
+          } else {
+            ctx.save();
+            try {
+              render(result, id, componentRefs);
+            } finally {
+              ctx.restore();
+            }
           }
         }
-      }
-    } finally {
-      onAfterRender ??= componentRefs.onAfterRender;
-      componentRefs.onAfterRender = undefined;
-      try {
-        onAfterRender?.();
       } finally {
-        ctx.restore();
+        onAfterRender ??= componentRefs.onAfterRender;
+        componentRefs.onAfterRender = undefined;
+        try {
+          onAfterRender?.();
+        } finally {
+          ctx.restore();
+        }
       }
+      enhancerSuccess = true;
+    } finally {
+      exitElementEnhancers(enteredEnhancers, enhancerSuccess);
     }
   } finally {
     clearComponentState();
