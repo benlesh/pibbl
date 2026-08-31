@@ -1,14 +1,16 @@
 # CRC library status and feature inventory
 
-_Feature inventory refreshed: 2026-08-29, after the DOM-aligned user-event
-delivery. Verification totals below remain explicitly dated evidence._
+_Feature inventory refreshed: 2026-08-31, after the DOM-aligned user-event and
+optional focus/keyboard-navigation deliveries. Verification totals below remain
+explicitly dated evidence._
 
 ## At a glance
 
 CRC is a small functional component runtime over the HTML Canvas 2D API. It
 provides scheduled rendering, hook state, DOM-aligned user events, eleven
 style-only drawing/composition components, transforms, cumulative clipping,
-globally ordered offscreen layers, and five dedicated layout contexts. The
+globally ordered offscreen layers, five dedicated layout contexts, and
+tree-shakable logical focus/keyboard navigation. The
 project has contract-driven browser evidence for public exports, shared
 manual/headless scenarios, deterministic lifecycle ledgers, structural
 performance guards, strict package consumers, and reviewed visual comparisons.
@@ -21,8 +23,8 @@ counterparts run normally.
 
 “Trusted” below means the applicable supported behavior, boundary cases,
 updates, errors, teardown, interaction, and visual output have deterministic
-evidence. It does not mean CRC adds a focus/input policy, public input adapter,
-hidden editable DOM, DOM accessibility, rich text, or image CORS control.
+evidence. It does not mean CRC adds a public editable-input adapter, hidden
+editable DOM, DOM accessibility, rich text, or image CORS control.
 
 ## Public feature inventory
 
@@ -70,21 +72,23 @@ drawing/composition lessons cover all eleven exports in the Studio.
 
 ### Hooks and interaction
 
-| Public API           | Confidence and supported behavior                                                                                                                                                                                                                                               | Known boundary                                                                                                                |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Built-in event props | **Trusted.** Pointer, mouse, touch, wheel, keyboard/focus, editing/composition, clipboard, and drag/drop handlers share topmost geometry, temporary capture/target/bubble paths, cancellation, logical related targets, pointer capture, mutation isolation, and exact cleanup. | Native non-coordinate Canvas input has no logical target without future/optional focus/input integration.                     |
-| `crcEventTarget`     | **Trusted.** One grouped custom target owns explicit `Path2D` geometry, handlers, cursor/focus metadata, captured transforms/clips, paint order, stable rerender identity, pointer capture, and exact teardown.                                                                 | Geometry is required and never inferred from returned descendants; focus metadata is inert without an optional future policy. |
-| `crcEventListener`   | **Trusted.** One non-geometric component registration participates in capture/bubble traversal and common-ancestor activation without becoming a hit target.                                                                                                                    | It owns no drawing or implicit geometry.                                                                                      |
-| `crcEvent`           | **Trusted.** Path-bound calls retain stable legacy mouse targets; pathless calls retain ordered mouse-only Canvas observers after logical propagation with mutation/error isolation and cleanup.                                                                                | The pathless observer payload remains the narrow shipped `{ x, y, originalEvent }` shape.                                     |
-| `crcCursor`          | **Trusted.** Target cursor, Canvas-wide defaults, multiple-default precedence, rerender/removal fallback, external style takeover, layer parity, and exact owned cleanup.                                                                                                       | Cursor style is inline Canvas state; it is not an accessibility substitute.                                                   |
-| `crcState`           | **Trusted.** Stable slot/setter, value and functional updates, coalescing, identity reset, parent updates, and inert stale/dead setters.                                                                                                                                        | Functions passed to the setter are updaters, not function-valued state.                                                       |
-| `crcMemo`            | **Trusted.** Strict shallow dependency identity, length/value change, factory errors, and hook-order rules.                                                                                                                                                                     | `NaN` recomputes; `+0` and `-0` compare equal under strict `!==`.                                                             |
-| `crcRef`             | **Trusted.** Stable mutable object, initializer-on-mount, no render on mutation, multiple slots, and remount boundaries.                                                                                                                                                        | Refs are runtime values, not DOM refs.                                                                                        |
-| `crcWhenChanged`     | **Trusted.** Mount/change/every-render setup, cleanup-before-next, throwing/void replacement, exactly-once removal/root cleanup, and setter-during-cleanup safety.                                                                                                              | It is synchronous during render, not a deferred effect.                                                                       |
-| `crcRectPath`        | **Trusted.** Effective geometry and pixel-grid dependencies preserve/replace memo identity correctly.                                                                                                                                                                           | Uses the same hook-order rules as other hooks.                                                                                |
-| `crcLinePath`        | **Trusted.** Every coordinate and `closePath` participates in identity and construction.                                                                                                                                                                                        | Empty/single-point Canvas semantics are preserved.                                                                            |
-| `crcSvgPath`         | **Trusted.** Exact data identity and platform parse/error delegation.                                                                                                                                                                                                           | No CRC-side validation or normalization.                                                                                      |
-| `crcLayoutBox`       | **Trusted.** Stable readonly local allocation, exact resize/reflow values, and context diagnostics.                                                                                                                                                                             | Observation is render-only and does not itself schedule an update.                                                            |
+| Public API               | Confidence and supported behavior                                                                                                                                                                                                                                               | Known boundary                                                                                                               |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Built-in event props     | **Trusted.** Pointer, mouse, touch, wheel, keyboard/focus, editing/composition, clipboard, and drag/drop handlers share topmost geometry, temporary capture/target/bubble paths, cancellation, logical related targets, pointer capture, mutation isolation, and exact cleanup. | Native non-coordinate Canvas input has no logical target without opt-in focus management or a future explicit input adapter. |
+| `crcEventTarget`         | **Trusted.** One grouped custom target owns explicit `Path2D` geometry, handlers, cursor/focus metadata, captured transforms/clips, paint order, stable rerender identity, pointer capture, and exact teardown.                                                                 | Geometry is required and never inferred from returned descendants; focus metadata is inert without `withFocusManagement`.    |
+| `crcEventListener`       | **Trusted.** One non-geometric component registration participates in capture/bubble traversal and common-ancestor activation without becoming a hit target.                                                                                                                    | It owns no drawing or implicit geometry.                                                                                     |
+| `crcEvent`               | **Trusted.** Path-bound calls retain stable legacy mouse targets; pathless calls retain ordered mouse-only Canvas observers after logical propagation with mutation/error isolation and cleanup.                                                                                | The pathless observer payload remains the narrow shipped `{ x, y, originalEvent }` shape.                                    |
+| `crcCursor`              | **Trusted.** Target cursor, Canvas-wide defaults, multiple-default precedence, rerender/removal fallback, external style takeover, layer parity, and exact owned cleanup.                                                                                                       | Cursor style is inline Canvas state; it is not an accessibility substitute.                                                  |
+| `withFocusManagement`    | **Trusted.** One opt-in Canvas focus host owns candidate enrollment, logical focus events/snapshots, source-order Tab entry/traversal/exit, pointer focus, focus-visible modality, Enter/Space activation, layer invalidation, and exact teardown.                              | Logical focus is keyboard interaction only; it does not generate semantic DOM or a screen-reader accessibility tree.         |
+| `withKeyboardNavigation` | **Trusted.** Nested directional boundaries rank finite target bounds deterministically, keep Tab global and source-ordered, honor prevented keys, contain inner edges, and release all policy state exactly.                                                                    | The current `directional` mode does not wrap or delegate an inner boundary edge to an outer boundary.                        |
+| `crcState`               | **Trusted.** Stable slot/setter, value and functional updates, coalescing, identity reset, parent updates, and inert stale/dead setters.                                                                                                                                        | Functions passed to the setter are updaters, not function-valued state.                                                      |
+| `crcMemo`                | **Trusted.** Strict shallow dependency identity, length/value change, factory errors, and hook-order rules.                                                                                                                                                                     | `NaN` recomputes; `+0` and `-0` compare equal under strict `!==`.                                                            |
+| `crcRef`                 | **Trusted.** Stable mutable object, initializer-on-mount, no render on mutation, multiple slots, and remount boundaries.                                                                                                                                                        | Refs are runtime values, not DOM refs.                                                                                       |
+| `crcWhenChanged`         | **Trusted.** Mount/change/every-render setup, cleanup-before-next, throwing/void replacement, exactly-once removal/root cleanup, and setter-during-cleanup safety.                                                                                                              | It is synchronous during render, not a deferred effect.                                                                      |
+| `crcRectPath`            | **Trusted.** Effective geometry and pixel-grid dependencies preserve/replace memo identity correctly.                                                                                                                                                                           | Uses the same hook-order rules as other hooks.                                                                               |
+| `crcLinePath`            | **Trusted.** Every coordinate and `closePath` participates in identity and construction.                                                                                                                                                                                        | Empty/single-point Canvas semantics are preserved.                                                                           |
+| `crcSvgPath`             | **Trusted.** Exact data identity and platform parse/error delegation.                                                                                                                                                                                                           | No CRC-side validation or normalization.                                                                                     |
+| `crcLayoutBox`           | **Trusted.** Stable readonly local allocation, exact resize/reflow values, and context diagnostics.                                                                                                                                                                             | Observation is render-only and does not itself schedule an update.                                                           |
 
 See the [runtime/hook contract](./design/runtime-hooks-contract.md),
 [user-event contract](./design/user-events-contract.md), retained [mouse
@@ -98,7 +102,7 @@ documents for exact rules.
 | Public TypeScript API  | **Trusted.** Declarations compile under strict Bundler and NodeNext consumers. Positives/negatives cover style schemas, lengths, layouts, measurement, observation, runtime, hooks, events, and controllers. Private subpaths reject. | `@crc/types` remains a deliberately empty compatibility package until a concrete need justifies it.                 |
 | Package build          | **Trusted.** esbuild ESM/source maps plus TypeScript declarations load in Node and the browser. Source/built smoke visuals match and built gallery guards reject source leakage.                                                      | Output is ESM-only; new formats need an explicit requirement.                                                       |
 | Scenario catalog       | **Trusted.** Recursive filesystem/Vite discovery, source markers, identity/action checks, unique metadata, and the generated [scenario index](./scenario-index.md) are required.                                                      | Publication remains a later adapter.                                                                                |
-| Local Studio           | **Trusted.** Twenty-eight learner routes and fifteen deterministic laboratories share canonical public source with headless tests, including four layout lessons and the user-event contract laboratory.                              | This is an internal Studio, not yet a published documentation site.                                                 |
+| Local Studio           | **Trusted.** Forty-one learner routes and sixteen deterministic laboratories share canonical public source, including complete user-event-family, logical-focus, keyboard-activation, and navigation lessons.                         | This is an internal Studio, not yet a published documentation site.                                                 |
 | Continuous integration | **Configured.** One workflow maps static, packed-package, browser/visual, lifecycle, and performance structure to a stable aggregate `Trust gate` for PRs, pushes to `main`, and manual runs.                                         | Hosted green status and selecting the aggregate in branch protection require pushing and repository administration. |
 
 ## Historical Plan 003 verification snapshot
@@ -153,7 +157,7 @@ If Chromium is absent, install it once with `pnpm exec playwright install chromi
 pnpm playground
 ```
 
-Open <http://localhost:5173/#/examples> for the 28 learner lessons.
+Open <http://localhost:5173/#/examples> for the 41 learner lessons.
 Deterministic browser fixtures live separately at
 <http://localhost:5173/#/testing>, and legacy `#/scenarios` URLs redirect there.
 To exercise package output instead of source aliases, use
@@ -169,8 +173,8 @@ See the [trust-gate guide](./testing/trust-gate.md) for clean-checkout setup, vi
 
 ## Accepted or deferred work
 
-- Built-in focus/input policy, a public input adapter, keyboard navigation,
-  accessibility, hidden editable DOM, JSX, new drawing primitives,
+- A public editable-input adapter, semantic DOM/accessibility generation,
+  hidden editable DOM, focus pseudo-styles, JSX, new drawing primitives,
   advanced/deferred layout features, publication, and a polished docs renderer
   remain outside the current contract.
 - TFC-06 measurements do not justify a spatial index: the optimized linear resolver remains under its recorded triggers.

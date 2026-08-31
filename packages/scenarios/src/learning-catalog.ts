@@ -39,10 +39,24 @@ export const learningSections = [
     order: 5,
   },
   {
+    id: "user-events",
+    label: "User events",
+    description:
+      "Handle pointer, touch, wheel, propagation, custom targets, and drag/drop.",
+    order: 6,
+  },
+  {
+    id: "keyboard-focus",
+    label: "Keyboard and focus",
+    description:
+      "Add logical focus, keyboard activation, and directional navigation.",
+    order: 7,
+  },
+  {
     id: "advanced-interactions",
     label: "Advanced interactions",
     description: "Reason about ordering, hit geometry, and composed targets.",
-    order: 6,
+    order: 8,
   },
 ] as const satisfies readonly LearningSection[];
 
@@ -472,7 +486,7 @@ const drafts = [
     },
     apiNotes: [
       "A click resolves to one topmost live target.",
-      "CRC is currently mouse-only; Canvas regions do not gain native button semantics.",
+      "With focus management, an enrolled click target also receives familiar Enter and Space activation; Canvas regions still do not gain native button semantics.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["mouse-down", "mouse-up", "overlap-and-paint-order"],
@@ -597,7 +611,7 @@ const drafts = [
     },
     apiNotes: [
       "Out fires when another logical region wins or the root Canvas is exited.",
-      "Logical related targets are not exposed in the public event type.",
+      "`relatedTarget` is the opposite opaque CRC target; `originalEvent.relatedTarget` retains the browser's native value.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["mouse-over", "mouse-move", "event-sequences"],
@@ -655,11 +669,408 @@ const drafts = [
     load: () => import("./learning/mouse-events/mouse-up.example"),
   },
   {
+    slug: "pointer-events",
+    title: "Pointer events",
+    shortTitle: "Pointer events",
+    section: "user-events",
+    order: 210,
+    summary:
+      "Handle one DOM-shaped stream across mouse, pen, and touch pointers while keeping Canvas targeting explicit.",
+    api: [
+      "onPointerOver",
+      "onPointerEnter",
+      "onPointerDown",
+      "onPointerMove",
+      "onPointerRawUpdate",
+      "onPointerUp",
+      "onPointerCancel",
+      "onPointerOut",
+      "onPointerLeave",
+    ],
+    objectives: [
+      "Read logical coordinates and device-specific pointer fields from one event facade.",
+      "Distinguish bubbling over/out transitions from exclusive enter/leave boundaries.",
+    ],
+    prompts: {
+      gesture:
+        "Move, press, and release with a mouse, pen, or touch contact; compare the trace and pointer fields.",
+      code: "Use `pressure` or `pointerType` to vary the marker size.",
+    },
+    apiNotes: [
+      "Pointer events preserve browser `pointerType`, pressure, tilt, dimensions, buttons, and root-logical coordinates.",
+      "`pointerrawupdate` and `pointercancel` depend on browser/device behavior, so the handlers remain useful even when a mouse cannot produce them on demand.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["pointer-capture", "touch-events", "mouse-boundaries-and-auxiliary-click"],
+    load: () => import("./learning/user-events/pointer-events.example"),
+  },
+  {
+    slug: "pointer-capture",
+    title: "Pointer capture",
+    shortTitle: "Pointer capture",
+    section: "user-events",
+    order: 220,
+    summary:
+      "Keep a drag routed to its original logical target after the pointer leaves the painted geometry.",
+    api: [
+      "setPointerCapture",
+      "hasPointerCapture",
+      "releasePointerCapture",
+      "onGotPointerCapture",
+      "onLostPointerCapture",
+    ],
+    objectives: [
+      "Acquire and release capture through the opaque logical event target.",
+      "Observe capture ownership and lifecycle events without retaining a scene graph.",
+    ],
+    prompts: {
+      gesture:
+        "Press the handle, drag outside it, then release; repeat with the explicit release control.",
+      code: "Release capture after a distance threshold instead of on pointer up.",
+    },
+    apiNotes: [
+      "Capture is isolated per `pointerId` and uses the root HTML Canvas for native ownership.",
+      "Target removal, pointer cancellation, native loss, and disposal clear capture exactly.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["pointer-events", "propagation-and-cancellation"],
+    load: () => import("./learning/user-events/pointer-capture.example"),
+  },
+  {
+    slug: "touch-events",
+    title: "Touch events",
+    shortTitle: "Touch events",
+    section: "user-events",
+    order: 230,
+    summary:
+      "Track multi-contact Touch Events and keep each changed contact owned by its starting logical target.",
+    api: ["onTouchStart", "onTouchMove", "onTouchEnd", "onTouchCancel"],
+    objectives: [
+      "Inspect touches, targetTouches, changedTouches, and logical coordinates.",
+      "Understand retained per-contact targeting across movement and terminal events.",
+    ],
+    prompts: {
+      gesture:
+        "Use one or two fingers on a touch device, move outside the starting pad, and lift each contact.",
+      code: "Draw one marker per item in `changedTouches`.",
+    },
+    apiNotes: [
+      "CRC preserves the native `TouchList` objects while grouping changed contacts by retained logical owner.",
+      "Pointer Events are preferred for unified device input; Touch Events remain valuable for native multi-touch lists.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["pointer-events", "pointer-capture", "wheel"],
+    load: () => import("./learning/user-events/touch-events.example"),
+  },
+  {
+    slug: "wheel",
+    title: "Wheel input",
+    shortTitle: "Wheel",
+    section: "user-events",
+    order: 240,
+    summary:
+      "Read wheel deltas over a targeted region and deliberately decide whether the page should keep scrolling.",
+    api: ["onWheel", "preventDefault"],
+    objectives: [
+      "Read delta axes, mode, modifiers, and root-logical coordinates.",
+      "Cancel native wheel behavior only while an in-canvas interaction owns it.",
+    ],
+    prompts: {
+      gesture:
+        "Wheel over the cobalt dial, then wheel over the surrounding page and compare the behavior.",
+      code: "Switch from vertical `deltaY` to a two-axis pan using `deltaX` too.",
+    },
+    apiNotes: [
+      "Logical `preventDefault()` forwards to the native cancelable WheelEvent.",
+      "Wheel listeners are installed non-passively only while a live registration requires them.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["touch-events", "propagation-and-cancellation"],
+    load: () => import("./learning/user-events/wheel.example"),
+  },
+  {
+    slug: "mouse-boundaries-and-auxiliary-click",
+    title: "Mouse boundaries and auxiliary click",
+    shortTitle: "Mouse boundaries + aux",
+    section: "user-events",
+    order: 250,
+    summary:
+      "Complete the mouse family with exclusive enter/leave boundaries and non-primary-button activation.",
+    api: ["onMouseEnter", "onMouseLeave", "onAuxClick"],
+    objectives: [
+      "Compare non-bubbling enter/leave with bubbling over/out transitions.",
+      "Handle auxiliary-button activation separately from primary click.",
+    ],
+    prompts: {
+      gesture:
+        "Cross the nested boundaries, then middle-click or use another auxiliary mouse button on the card.",
+      code: "Show `button` and `buttons` beside each auxiliary activation.",
+    },
+    apiNotes: [
+      "Enter and leave run capture and target phases but do not bubble.",
+      "Auxiliary click keeps an activation history independent of the primary click sequence.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["mouse-over", "mouse-out", "event-sequences"],
+    load: () =>
+      import("./learning/user-events/mouse-boundaries-and-auxiliary-click.example"),
+  },
+  {
+    slug: "propagation-and-cancellation",
+    title: "Propagation and cancellation",
+    shortTitle: "Propagation + cancellation",
+    section: "user-events",
+    order: 260,
+    summary:
+      "Trace CRC capture, target, and bubble phases and choose where logical and native defaults stop.",
+    api: [
+      "crcEventListener",
+      "onClickCapture",
+      "composedPath",
+      "preventDefault",
+      "stopPropagation",
+      "stopImmediatePropagation",
+    ],
+    objectives: [
+      "Read target, currentTarget, relatedTarget, phase, and the temporary composed path.",
+      "Compare default cancellation, propagation stopping, and immediate stopping.",
+    ],
+    prompts: {
+      gesture:
+        "Click each cancellation mode and compare which capture, target, and bubble entries remain in the trace.",
+      code: "Move a stop call from the target to an ancestor capture handler.",
+    },
+    apiNotes: [
+      "`crcEventListener` observes events on component ancestry without creating hit geometry or a focus candidate.",
+      "The logical path is snapshotted for one dispatch; event targets are opaque CRC values, not DOM nodes.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["custom-event-targets", "pointer-capture", "event-sequences"],
+    load: () =>
+      import("./learning/user-events/propagation-and-cancellation.example"),
+  },
+  {
+    slug: "custom-event-targets",
+    title: "Custom event targets",
+    shortTitle: "Custom targets",
+    section: "user-events",
+    order: 270,
+    summary:
+      "Give one conceptual custom component an explicit Path2D target without hoisting child geometry.",
+    api: ["crcEventTarget", "CRCEventTargetOptions", "Path2D"],
+    objectives: [
+      "Register grouped handlers and an explicit fill or stroke interaction path.",
+      "Keep custom target ownership separate from the visual children it returns.",
+    ],
+    prompts: {
+      gesture:
+        "Move around the star and its wide stroked orbit, including transparent areas inside the component's box.",
+      code: "Change `lineInteractionWidth` without changing the painted stroke width.",
+    },
+    apiNotes: [
+      "CRC never infers or aggregates a custom component's target from returned descendants.",
+      "The target captures the current transforms, clips, cursor, hit options, and component identity.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["propagation-and-cancellation", "hit-areas-and-cursors"],
+    load: () => import("./learning/user-events/custom-event-targets.example"),
+  },
+  {
+    slug: "drag-and-drop",
+    title: "Drag and drop",
+    shortTitle: "Drag and drop",
+    section: "user-events",
+    order: 280,
+    summary:
+      "Route browser drag sources and drops through logical Canvas targets with data and root-local coordinates intact.",
+    api: [
+      "onDragStart",
+      "onDrag",
+      "onDragEnd",
+      "onDragEnter",
+      "onDragLeave",
+      "onDragOver",
+      "onDrop",
+    ],
+    objectives: [
+      "Handle source, boundary, hover, terminal, and drop phases.",
+      "Use dataTransfer and cancel drag-over when a region accepts a drop.",
+    ],
+    prompts: {
+      gesture:
+        "Drag the ticket between the two drop zones, or drag a file from the desktop onto a zone.",
+      code: "Accept only one `dataTransfer.types` value in `onDragOver`.",
+    },
+    apiNotes: [
+      "`dragenter` and `dragleave` follow logical ancestry changes and expose the opposite logical target.",
+      "CRC deliberately resolves `drag` and `dragend` at the current coordinate instead of retaining a DOM-like source target.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["pointer-capture", "propagation-and-cancellation"],
+    load: () => import("./learning/user-events/drag-and-drop.example"),
+  },
+  {
+    slug: "focus-management",
+    title: "Focus management",
+    shortTitle: "Focus management",
+    section: "keyboard-focus",
+    order: 290,
+    summary:
+      "Opt one Canvas subtree into logical focus, natural Tab traversal, focus events, and render-time focus visuals.",
+    api: [
+      "withFocusManagement",
+      "keyboardFocusable",
+      "isFocused",
+      "isFocusVisible",
+      "onFocus",
+      "onBlur",
+      "onFocusIn",
+      "onFocusOut",
+    ],
+    objectives: [
+      "Understand automatic and explicit focus-candidate enrollment.",
+      "Render high-contrast focus and focus-visible states while Tab crosses surrounding DOM controls.",
+    ],
+    prompts: {
+      gesture:
+        "Tab into and through the Canvas, Shift+Tab back out, then click the explicit and excluded targets.",
+      code: "Switch a target between automatic, explicit-true, and explicit-false enrollment.",
+    },
+    apiNotes: [
+      "`withFocusManagement` is additive; without it, focus metadata is inert and no tabindex or document listener is installed.",
+      "Logical Canvas focus is keyboard interaction, not screen-reader semantics; provide an equivalent semantic DOM experience separately.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["keyboard-events-and-activation", "directional-navigation"],
+    load: () =>
+      import("./learning/keyboard-focus/focus-management.example"),
+  },
+  {
+    slug: "keyboard-events-and-activation",
+    title: "Keyboard events and activation",
+    shortTitle: "Keyboard + activation",
+    section: "keyboard-focus",
+    order: 300,
+    summary:
+      "Deliver key events to the focused logical target and reuse click handlers for familiar Enter and Space activation.",
+    api: ["onKeyDown", "onKeyUp", "onClick", "sourceEvent"],
+    objectives: [
+      "Read key, code, modifiers, repeat, location, and composition state.",
+      "Compare Enter keydown and Space keyup activation with prevented custom keys.",
+    ],
+    prompts: {
+      gesture:
+        "Focus a control, press Enter, press and release Space, then try the custom prevented key.",
+      code: "Handle another key and call `preventDefault()` before CRC's activation policy runs.",
+    },
+    apiNotes: [
+      "Keyboard-generated clicks use `detail: 0` and expose the originating KeyboardEvent as `sourceEvent`.",
+      "Pending Space activation is canceled by focus movement, blur, unmount, handler removal, or disposal.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["focus-management", "directional-navigation"],
+    load: () =>
+      import("./learning/keyboard-focus/keyboard-events-and-activation.example"),
+  },
+  {
+    slug: "directional-navigation",
+    title: "Directional navigation",
+    shortTitle: "Directional navigation",
+    section: "keyboard-focus",
+    order: 310,
+    summary:
+      "Move through arbitrary spatial targets with arrows while Tab remains left-to-right and top-to-bottom by source order.",
+    api: ["withKeyboardNavigation", "keyboardNavigationBounds"],
+    objectives: [
+      "Add a directional boundary without requiring a Grid component.",
+      "Keep source-order Tab traversal independent from geometry-ranked arrow navigation.",
+    ],
+    prompts: {
+      gesture:
+        "Tab from the top actions into the squares, use all four arrows, then Tab to the bottom actions.",
+      code: "Move one square's navigation bounds to make an irregular spatial layout.",
+    },
+    apiNotes: [
+      "Arrow selection prefers perpendicular overlap, then forward distance, perpendicular distance, and source order.",
+      "Directional movement does not wrap; with no candidate, focus and native default prevention remain unchanged.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["focus-management", "nested-directional-navigation"],
+    load: () =>
+      import("./learning/keyboard-focus/directional-navigation.example"),
+  },
+  {
+    slug: "nested-directional-navigation",
+    title: "Nested directional navigation",
+    shortTitle: "Nested navigation",
+    section: "keyboard-focus",
+    order: 320,
+    summary:
+      "Compose nested arrow boundaries and form-like controls without letting inner edge keys leak into an outer layout.",
+    api: ["withFocusManagement", "withKeyboardNavigation", "preventDefault"],
+    objectives: [
+      "Keep the nearest directional boundary in exclusive control of its descendants.",
+      "Let a focused form-like target consume arrow keys before navigation defaults run.",
+    ],
+    prompts: {
+      gesture:
+        "Arrow through the outer cards, enter the inner group, test its edges, then Tab through the full global order.",
+      code: "Remove the form-like target's `preventDefault()` and observe the nearest boundary take over.",
+    },
+    apiNotes: [
+      "Targets inside a nested boundary are excluded from the outer boundary's direct arrow candidates.",
+      "Tab ignores directional boundaries and follows the single committed source-order focus list.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["directional-navigation", "keyboard-events-and-activation"],
+    load: () =>
+      import("./learning/keyboard-focus/nested-directional-navigation.example"),
+  },
+  {
+    slug: "editing-composition-and-clipboard",
+    title: "Editing, composition, and clipboard transport",
+    shortTitle: "Editing + clipboard",
+    section: "keyboard-focus",
+    order: 330,
+    summary:
+      "Observe DOM-shaped editing and clipboard event facades while keeping real text editing and semantics in application-owned DOM.",
+    api: [
+      "onBeforeInput",
+      "onInput",
+      "onChange",
+      "onCompositionStart",
+      "onCompositionUpdate",
+      "onCompositionEnd",
+      "onSelect",
+      "onSelectionChange",
+      "onCopy",
+      "onCut",
+      "onPaste",
+    ],
+    objectives: [
+      "Inspect input, composition, selection, and clipboard family fields on a focused logical target.",
+      "Keep CRC transport separate from editable controls and accessible semantics.",
+    ],
+    prompts: {
+      gesture:
+        "Focus the Canvas target, trigger its editing sequence, then try the copy, cut, and paste shortcuts.",
+      code: "Record `inputType`, `data`, `isComposing`, or clipboard types in the visible trace.",
+    },
+    apiNotes: [
+      "A plain Canvas is not an editing host; the lesson emits native editing events only to demonstrate CRC transport.",
+      "Applications own editable DOM, selection, semantic roles, announcements, and synchronization with Canvas visuals.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["focus-management", "keyboard-events-and-activation"],
+    load: () =>
+      import("./learning/keyboard-focus/editing-composition-and-clipboard.example"),
+  },
+  {
     slug: "event-sequences",
     title: "Event sequences",
     shortTitle: "Event sequences",
     section: "advanced-interactions",
-    order: 210,
+    order: 340,
     summary:
       "Watch CRC’s logical target transitions and activation phases arrive in a stable order.",
     api: [
@@ -680,7 +1091,7 @@ const drafts = [
     },
     apiNotes: [
       "CRC resolves one topmost logical target for each event.",
-      "Handlers do not bubble through a synthetic DOM ancestry.",
+      "Direct handlers participate in CRC's temporary capture/target/bubble path through mounted component ancestry.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["mouse-over", "mouse-out", "overlap-and-paint-order"],
@@ -692,7 +1103,7 @@ const drafts = [
     title: "Hit areas and cursors",
     shortTitle: "Hit areas & cursors",
     section: "advanced-interactions",
-    order: 220,
+    order: 350,
     summary:
       "Make precise art comfortable to target without changing what is painted.",
     api: ["lineInteractionWidth", "cursor"],
@@ -719,7 +1130,7 @@ const drafts = [
     title: "Overlap and paint order",
     shortTitle: "Overlap & paint order",
     section: "advanced-interactions",
-    order: 230,
+    order: 360,
     summary:
       "See why the last visible mark under the pointer becomes the one logical target.",
     api: ["rect", "onClick"],
@@ -745,7 +1156,7 @@ const drafts = [
     title: "Transformed, clipped, and layered targets",
     shortTitle: "Composed targets",
     section: "advanced-interactions",
-    order: 240,
+    order: 370,
     summary:
       "Combine transforms, clips, and offscreen layers while keeping visible paint and mouse targeting aligned.",
     api: ["g", "clip", "layer", "onClick"],

@@ -6,6 +6,8 @@ export type LearningSectionId =
   | "composition"
   | "layout"
   | "mouse-events"
+  | "user-events"
+  | "keyboard-focus"
   | "advanced-interactions";
 
 export interface LearningSection {

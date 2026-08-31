@@ -63,11 +63,11 @@ afterEach(() => {
 });
 
 describe("learning example catalog", () => {
-  it("contains 28 unique, ordered, source-backed routes", () => {
+  it("contains 41 unique, ordered, source-backed routes", () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(28);
+    expect(learningExampleCatalog).toHaveLength(41);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);

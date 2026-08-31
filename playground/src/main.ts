@@ -554,7 +554,7 @@ async function renderLesson(
   const limitation = document.createElement("p");
   limitation.className = "lesson-limitation";
   limitation.innerHTML =
-    "<strong>Canvas input note:</strong> CRC currently exposes mouse interactions only. The studio navigation and controls are keyboard-accessible, but painted Canvas targets do not create DOM semantics or keyboard controls.";
+    "<strong>Canvas accessibility note:</strong> CRC supports DOM-aligned user events and optional logical focus and keyboard navigation. Painted targets still do not create DOM semantics or an accessibility tree; applications must provide an equivalent semantic experience.";
 
   const pagination = document.createElement("nav");
   pagination.className = "lesson-pagination";

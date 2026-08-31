@@ -92,3 +92,6 @@ Before shipping a focus-managed Canvas experience, verify that:
 The [focus and keyboard-navigation contract](./focus-and-keyboard-navigation-contract.md)
 defines CRC's logical interaction behavior. Accessibility remains a product
 responsibility shared by application design, semantics, content, and testing.
+The Studio focus and editing-transport lessons make this boundary visible in
+their code and Canvas copy; they are interaction examples, not substitutes for
+application-specific semantic alternatives or assistive-technology testing.

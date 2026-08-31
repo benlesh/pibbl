@@ -253,6 +253,12 @@ Stale controllers and repeated releases cannot affect a newer mount.
 
 ## Evidence boundary
 
+The Studio's **User events** section provides focused public-API lessons for
+pointer events, pointer capture, Touch Events, wheel input, mouse boundaries
+and auxiliary clicks, propagation/cancellation, custom event targets, and
+drag/drop. Together with the existing mouse lessons, every declared coordinate
+event name is present in readable example source and documentation metadata.
+
 The shared `interaction-trace-lab` laboratory teaches one direct built-in
 propagation target, one `crcEventListener` ancestor, one `crcEventTarget` custom
 path, touch retention, wheel cancellation, and drag/drop. Its keyboard,
