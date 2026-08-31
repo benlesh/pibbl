@@ -182,10 +182,10 @@ own visual children. They are example composition, not exported CRC widgets.
 
 The Studio's **Keyboard and focus** section separates that contract into five
 editable lessons: focus enrollment/events/visuals, keyboard delivery and
-Enter/Space activation, directional navigation, nested boundaries with a
-form-like arrow owner, and editing/composition/clipboard transport. The last
-lesson deliberately documents that event transport does not make Canvas an
-editable or semantic DOM control.
+Enter/Space activation, directional navigation, a visibly instrumented
+directional grid nested inside another directional grid, and
+editing/composition/clipboard transport. The last lesson deliberately documents
+that event transport does not make Canvas an editable or semantic DOM control.
 
 See [Canvas accessibility guidance](./canvas-accessibility-guidance.md) for the
 separate semantic responsibility.

@@ -1006,22 +1006,26 @@ const drafts = [
     section: "keyboard-focus",
     order: 320,
     summary:
-      "Compose nested arrow boundaries and form-like controls without letting inner edge keys leak into an outer layout.",
-    api: ["withFocusManagement", "withKeyboardNavigation", "preventDefault"],
+      "Compose a directional grid inside another directional grid while keeping arrow ownership visible and local.",
+    api: [
+      "withFocusManagement",
+      "withKeyboardNavigation",
+      "keyboardNavigationBounds",
+    ],
     objectives: [
       "Keep the nearest directional boundary in exclusive control of its descendants.",
-      "Let a focused form-like target consume arrow keys before navigation defaults run.",
+      "Compare boundary-local arrow movement with one global source-order Tab sequence.",
     ],
     prompts: {
       gesture:
-        "Arrow through the outer cards, enter the inner group, test its edges, then Tab through the full global order.",
-      code: "Remove the form-like target's `preventDefault()` and observe the nearest boundary take over.",
+        "Arrow from the outer-left card through the inner-grid entry to outer-right, then Tab into the inner rectangles and test every edge.",
+      code: "Move an inner rectangle's `keyboardNavigationBounds` and observe how only the inner arrow route changes.",
     },
     apiNotes: [
       "Targets inside a nested boundary are excluded from the outer boundary's direct arrow candidates.",
       "Tab ignores directional boundaries and follows the single committed source-order focus list.",
     ],
-    canvas: { width: 720, height: 420 },
+    canvas: { width: 720, height: 520 },
     related: ["directional-navigation", "keyboard-events-and-activation"],
     load: () =>
       import("./learning/keyboard-focus/nested-directional-navigation.example"),

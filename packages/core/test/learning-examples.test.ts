@@ -9,6 +9,7 @@ import {
   learningSourcePaths,
   loadLearningSource,
 } from "../../../playground/src/learning-sources";
+import { clickLogicalPoint, pressKey } from "./support/user-input";
 
 const mountedControllers: Array<{ dispose: () => void }> = [];
 
@@ -55,6 +56,12 @@ async function renderLearningExample(slug: string): Promise<{
 
 function pixelAt(canvas: HTMLCanvasElement, x: number, y: number): readonly number[] {
   return Array.from(canvas.getContext("2d")!.getImageData(x, y, 1, 1).data);
+}
+
+async function nextPaint(): Promise<void> {
+  await new Promise<void>((resolve) =>
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+  );
 }
 
 afterEach(() => {
@@ -190,6 +197,22 @@ describe("learning example catalog", () => {
         "onMouseUp",
       ]),
     );
+  });
+
+  it("keeps arrow focus at a nested-grid edge and renders its active ownership", async () => {
+    const { canvas, textPaints } = await renderLearningExample(
+      "nested-directional-navigation",
+    );
+
+    await clickLogicalPoint(canvas, { x: 296, y: 229 });
+    await pressKey("ArrowRight");
+    await pressKey("ArrowRight");
+    await nextPaint();
+
+    const latestPaints = textPaints.slice(-12).map((paint) => paint.text);
+    expect(latestPaints).toContain("FOCUSED: INNER 2");
+    expect(latestPaints).toContain("ACTIVE BOUNDARY: INNER");
+    expect(latestPaints).toContain("LAST INPUT: ArrowRight");
   });
 
   it.each(learningExampleCatalog)(
