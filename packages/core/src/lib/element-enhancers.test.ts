@@ -590,7 +590,7 @@ describe('built-in enhancer constructors', () => {
       .toThrowError(/mode.*directional/i);
   });
 
-  it('ignores arbitrary string metadata and keeps it out of the public element type', async () => {
+  it('rejects unbranded descriptor copies with arbitrary string metadata', () => {
     type PublicElementHasEnhancers = 'enhancers' extends keyof PublicCompEl
       ? true
       : false;
@@ -610,11 +610,12 @@ describe('built-in enhancer constructors', () => {
       enhancers: [descriptor],
     };
     const canvas = createCanvas();
-    const controller = crc(canvas, unsupported);
+    const controller = mountCRC(canvas, unsupported);
     activeControllers.add(controller);
-    await nextFrame();
 
     expect(publicElementHasEnhancers).toBe(false);
+    expect(() => executeRender(canvas, 1))
+      .toThrowError(/CRC root.*unsupported object/i);
     expect(mount).not.toHaveBeenCalled();
   });
 });

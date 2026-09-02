@@ -13,39 +13,83 @@ import {
   reconcileElementEnhancers,
 } from './element-enhancers.js';
 import { getLegacyProgramProps } from './element/metadata.js';
+import { materializeContainerChildren } from './element/children.js';
+import { isFragmentElement } from './element/fragment.js';
+import type { CRCElement, CRCNode } from './element/types.js';
 
-export function render<P, S extends SystemStyle>(
+export function render(
+  node: CRCNode,
+  parentId: string,
+  parent: CompRefs<any> | undefined,
+): void {
+  const elements = materializeContainerChildren(node, 'CRC root');
+  renderPreparedChildren(elements, parentId, parent, false);
+}
+
+function renderPreparedChildren(
+  elements: readonly CRCElement<any>[],
+  parentId: string,
+  parent: CompRefs<any> | undefined,
+  isolate: boolean,
+): void {
+  const ctx = GLOBAL_STATE.renderContext!;
+  for (const element of elements) {
+    if (!isolate) {
+      renderPreparedElement(element, parentId, parent);
+      continue;
+    }
+    ctx.save();
+    try {
+      renderPreparedElement(element, parentId, parent);
+    } finally {
+      ctx.restore();
+    }
+  }
+}
+
+function renderPreparedElement(
+  element: CRCElement<any>,
+  parentId: string,
+  parent: CompRefs<any> | undefined,
+): void {
+  if (isFragmentElement(element)) {
+    renderKeyedFragment(element, parentId, parent);
+    return;
+  }
+  renderComponentElement(element as CompEl<any, any>, parentId, parent);
+}
+
+function renderKeyedFragment(
+  element: CRCElement<any>,
+  parentId: string,
+  parent: CompRefs<any> | undefined,
+): void {
+  try {
+    const componentRefs = prepareComponentScope(
+      element as CompEl<any, any>,
+      parentId,
+      parent,
+    );
+    const children = materializeContainerChildren(
+      (element.props as { children?: CRCNode }).children,
+      element,
+    );
+    renderPreparedChildren(children, componentRefs.id, componentRefs, true);
+  } finally {
+    clearComponentState();
+  }
+}
+
+function renderComponentElement<P, S extends SystemStyle>(
   element: CompEl<P, S>,
   parentId: string,
   parent: CompRefs<any> | undefined,
 ): void {
   try {
-    const typeName = getElementTypeName(element, parentId);
-    const id = ensureUniqueId(parentId, typeName);
-    GLOBAL_STATE.unseenIds!.delete(id);
-    GLOBAL_STATE.seenIds!.add(id);
-    GLOBAL_STATE.componentIsMounting =
-      !GLOBAL_STATE.currentCRCInstance!.refs.has(id);
-    if (GLOBAL_STATE.componentIsMounting) {
-      const teardowns = new Teardowns();
-      teardowns.follow(GLOBAL_STATE.currentCRCInstance!.mainTeardowns);
-      const componentRefs: CompRefs<P> = {
-        id,
-        parent,
-        element,
-        refs: [],
-        hooks: [],
-        teardowns,
-        onAfterRender: undefined,
-      };
-      GLOBAL_STATE.currentCRCInstance!.refs.set(id, componentRefs);
-    }
-
-    const componentRefs = GLOBAL_STATE.currentCRCInstance!.refs.get(id)!;
+    const componentRefs = prepareComponentScope(element, parentId, parent);
+    const id = componentRefs.id;
     GLOBAL_STATE.componentRefs = componentRefs;
     GLOBAL_STATE.componentHookIndex = 0;
-
-    componentRefs.element = element;
 
     reconcileElementEnhancers(
       componentRefs,
@@ -60,7 +104,8 @@ export function render<P, S extends SystemStyle>(
       let onAfterRender: (() => void) | undefined;
       try {
         const result = componentRefs.element.type(
-          getLegacyProgramProps(componentRefs.element) ?? componentRefs.element.props,
+          (getLegacyProgramProps(componentRefs.element) ??
+            componentRefs.element.props) as any,
           resolveElementStyle(componentRefs.element),
           ctx,
         );
@@ -69,28 +114,11 @@ export function render<P, S extends SystemStyle>(
         onAfterRender = componentRefs.onAfterRender;
         componentRefs.onAfterRender = undefined;
 
-        if (result) {
-          if (Array.isArray(result)) {
-            for (let i = 0; i < result.length; i++) {
-              const child = result[i];
-              if (child) {
-                ctx.save();
-                try {
-                  render(child as CompEl<any, any>, id, componentRefs);
-                } finally {
-                  ctx.restore();
-                }
-              }
-            }
-          } else {
-            ctx.save();
-            try {
-              render(result as CompEl<any, any>, id, componentRefs);
-            } finally {
-              ctx.restore();
-            }
-          }
-        }
+        const children = materializeContainerChildren(
+          result as CRCNode,
+          componentRefs.element,
+        );
+        renderPreparedChildren(children, id, componentRefs, true);
       } finally {
         onAfterRender ??= componentRefs.onAfterRender;
         componentRefs.onAfterRender = undefined;
@@ -107,6 +135,38 @@ export function render<P, S extends SystemStyle>(
   } finally {
     clearComponentState();
   }
+}
+
+function prepareComponentScope<P>(
+  element: CompEl<P, any>,
+  parentId: string,
+  parent: CompRefs<any> | undefined,
+): CompRefs<P> {
+  const typeName = getElementTypeName(element, parentId);
+  const id = ensureUniqueId(parentId, typeName);
+  GLOBAL_STATE.unseenIds!.delete(id);
+  GLOBAL_STATE.seenIds!.add(id);
+  GLOBAL_STATE.componentIsMounting =
+    !GLOBAL_STATE.currentCRCInstance!.refs.has(id);
+  if (GLOBAL_STATE.componentIsMounting) {
+    const teardowns = new Teardowns();
+    teardowns.follow(GLOBAL_STATE.currentCRCInstance!.mainTeardowns);
+    const componentRefs: CompRefs<P> = {
+      id,
+      parent,
+      element,
+      refs: [],
+      hooks: [],
+      teardowns,
+      onAfterRender: undefined,
+    };
+    GLOBAL_STATE.currentCRCInstance!.refs.set(id, componentRefs);
+  }
+
+  const componentRefs = GLOBAL_STATE.currentCRCInstance!.refs.get(id)!;
+  componentRefs.parent = parent;
+  componentRefs.element = element;
+  return componentRefs;
 }
 
 function getElementTypeName(element: CompEl<any, any>, parentId: string): string {

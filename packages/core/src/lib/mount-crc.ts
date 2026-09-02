@@ -1,4 +1,8 @@
-import { cleanupCRCInstance, GLOBAL_STATE } from './global-state.js';
+import {
+  cleanupCRCInstance,
+  GLOBAL_STATE,
+  NO_PENDING_ROOT,
+} from './global-state.js';
 import { CRC_EVENT_TYPES } from './events/event-definitions.js';
 import {
   dispatchNativeEvent,
@@ -10,11 +14,11 @@ import type { CRCEventType as DOMCRCEventType } from './events/types.js';
 import { Teardowns } from './teardowns.js';
 import {
   Canvas,
-  CompEl,
   CRCController,
   CRCEventRoot,
   CRCInstance,
   CRCNativeObserver,
+  type CRCNode,
 } from './types.js';
 import type { CRCConfig, CRCSurfaceSnapshot } from './surface/types.js';
 import {
@@ -28,9 +32,9 @@ type MountCRCConfig = CRCConfig & {
   surface?: CRCSurfaceSnapshot;
 };
 
-export function mountCRC<P>(
+export function mountCRC(
   canvas: Canvas,
-  element: CompEl<P, any>,
+  element: CRCNode,
   config?: MountCRCConfig,
 ): CRCController {
   const mainTeardowns = new Teardowns();
@@ -72,7 +76,7 @@ export function mountCRC<P>(
     canvas,
     controller,
     root: element,
-    pendingRoot: undefined,
+    pendingRoot: NO_PENDING_ROOT,
     pendingUpdateParents: false,
     refs: new Map(),
     animationFrameId: undefined,

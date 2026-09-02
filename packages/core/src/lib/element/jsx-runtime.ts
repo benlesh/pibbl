@@ -1,20 +1,11 @@
 import { createCRCElement } from './create-element.js';
+export { Fragment } from './fragment.js';
 import type { CRCElementSource } from './metadata.js';
 import type {
   CRCElement,
   CRCElementType,
   CRCKey,
-  CRCNode,
 } from './types.js';
-
-interface FragmentProps {
-  children?: CRCNode;
-}
-
-/** Compiler-visible fragment component. */
-export function Fragment(props: FragmentProps): CRCNode {
-  return props.children;
-}
 
 /** @internal Automatic JSX production constructor. */
 export function jsx<P>(

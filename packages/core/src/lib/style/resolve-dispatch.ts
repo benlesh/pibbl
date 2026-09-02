@@ -22,6 +22,11 @@ export function setPreNormalizedStyle(
   preNormalizedStyles.set(element, { style, source });
 }
 
+/** @internal Temporary recognition seam for legacy layout descriptor clones. */
+export function isPreNormalizedElement(element: object): boolean {
+  return preNormalizedStyles.has(element as CompEl<any, any>);
+}
+
 /** @internal Consumes an internal normalized-style override exactly once. */
 export function takePreNormalizedStyle(
   element: CompEl<any, any>,

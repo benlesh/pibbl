@@ -28,6 +28,7 @@ import {
   toLogicalTransform,
 } from '../surface/transform.js';
 import { createLayerSurface } from '../surface/resolve-surface.js';
+import { isCRCElement } from '../element/create-element.js';
 
 export interface LayerProps {
   render: CompEl<any, any>;
@@ -122,15 +123,19 @@ export function Layer(
   const focusPolicy = parentInstance.eventRoot.focusPolicy;
   const focusRenderRevision = focusPolicy?.layerFocusRenderRevision?.(layerCRC);
 
+  const previousRender = isCRCElement(layerCRC.root) ?
+    layerCRC.root as CompEl<any, any> :
+    undefined;
   const shouldRender =
     GLOBAL_STATE.componentIsMounting ||
     dimensionsChanged ||
     surfaceChanged ||
-    layerCRC.root.type !== props.render.type ||
-    layerCRC.root.key !== props.render.key ||
-    !shallowEquals(layerCRC.root.props, props.render.props) ||
-    !shallowEquals(layerCRC.root.style, props.render.style) ||
-    !haveSameElementEnhancers(layerCRC.root, props.render) ||
+    !previousRender ||
+    previousRender.type !== props.render.type ||
+    previousRender.key !== props.render.key ||
+    !shallowEquals(previousRender.props, props.render.props) ||
+    !shallowEquals(previousRender.style, props.render.style) ||
+    !haveSameElementEnhancers(previousRender, props.render) ||
     slot.focusRenderRevision !== focusRenderRevision;
   if (shouldRender) {
     if (layerCRC.surface.kind !== 'layer') {

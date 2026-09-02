@@ -1,6 +1,9 @@
 import { executeRender } from './execute-render.js';
-import { GLOBAL_STATE } from './global-state.js';
-import { Canvas, CompEl } from './types.js';
+import {
+  GLOBAL_STATE,
+  NO_PENDING_ROOT,
+} from './global-state.js';
+import { Canvas, type CRCNode } from './types.js';
 
 /**
  *
@@ -10,7 +13,7 @@ import { Canvas, CompEl } from './types.js';
  */
 export function update(
   canvas: Canvas,
-  rootElement?: CompEl<any, any>,
+  rootElement?: CRCNode,
   updateParents = false,
 ): void {
   const crcInstance = GLOBAL_STATE.crcInstances.get(canvas);
@@ -19,7 +22,10 @@ export function update(
     throw new Error('Canvas does not have CRC mounted.');
   }
 
-  if (rootElement !== undefined) {
+  const hasExplicitRoot = arguments.length >= 2 && !(
+    rootElement === undefined && updateParents
+  );
+  if (hasExplicitRoot) {
     crcInstance.pendingRoot = rootElement;
   }
   crcInstance.pendingUpdateParents ||= updateParents;
@@ -41,7 +47,7 @@ export function update(
     crcInstance.animationFrameId = undefined;
     const pendingRoot = crcInstance.pendingRoot;
     const pendingUpdateParents = crcInstance.pendingUpdateParents;
-    crcInstance.pendingRoot = undefined;
+    crcInstance.pendingRoot = NO_PENDING_ROOT;
     crcInstance.pendingUpdateParents = false;
     executeRender(canvas, timestamp, pendingRoot, pendingUpdateParents);
   });

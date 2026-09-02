@@ -1,6 +1,6 @@
 import { GLOBAL_STATE } from './global-state.js';
 import { mountCRC } from './mount-crc.js';
-import { CompEl, CRCController } from './types.js';
+import { CRCController, type CRCNode } from './types.js';
 import { update } from './update.js';
 import type { CRCConfig } from './surface/types.js';
 
@@ -12,9 +12,9 @@ import type { CRCConfig } from './surface/types.js';
  * @param element The CRC element to render
  * @param config The mount lifetime, logical viewport, fit, and pixel density
  */
-export function crc<P>(
+export function crc(
   canvas: HTMLCanvasElement,
-  element: CompEl<P, any>,
+  element: CRCNode,
   config?: CRCConfig,
 ): CRCController {
   const mountedInstance = GLOBAL_STATE.crcInstances.get(canvas);
@@ -23,7 +23,7 @@ export function crc<P>(
     return mountedInstance.controller;
   }
 
-  const controller = mountCRC<P>(canvas, element, config);
+  const controller = mountCRC(canvas, element, config);
   if (GLOBAL_STATE.crcInstances.has(canvas)) {
     update(canvas, element);
   }

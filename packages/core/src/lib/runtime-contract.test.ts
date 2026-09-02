@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { crc } from './crc';
 import { defineComp } from './define-comp';
+import { isCRCElement } from './element/create-element';
 import { clearSharedState, getCRCInstance } from './global-state';
 import { crcRef } from './hooks/crc-ref';
 import { crcState, type StateUpdater } from './hooks/crc-state';
@@ -169,7 +170,9 @@ describe('crc root updates', () => {
 
     crc(canvas, ReplacementRoot({}));
     setValue?.(1);
-    expect(getCRCInstance(canvas).pendingRoot?.type).toBe(ReplacementRoot({}).type);
+    const pendingRoot = getCRCInstance(canvas).pendingRoot;
+    expect(isCRCElement(pendingRoot) && pendingRoot.type)
+      .toBe(ReplacementRoot({}).type);
     expect(getCRCInstance(canvas).pendingUpdateParents).toBe(true);
     await nextFrame();
 
@@ -199,7 +202,8 @@ describe('crc root updates', () => {
     crc(canvas, FirstReplacement({}));
     crc(canvas, LatestReplacement({}));
     const instance = getCRCInstance(canvas);
-    expect(instance.pendingRoot?.type).toBe(LatestReplacement({}).type);
+    expect(isCRCElement(instance.pendingRoot) && instance.pendingRoot.type)
+      .toBe(LatestReplacement({}).type);
     expect(instance.pendingUpdateParents).toBe(true);
     await nextFrame();
 

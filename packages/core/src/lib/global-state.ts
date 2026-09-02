@@ -1,5 +1,15 @@
 import type { LayoutContext } from './layout/types.js';
-import { Canvas, CompRefs, CRCClippingStackEntry, CRCInstance, RenderingContext2D } from './types.js';
+import type { CRCNode } from './element/types.js';
+import type {
+  Canvas,
+  CompRefs,
+  CRCClippingStackEntry,
+  CRCInstance,
+  RenderingContext2D,
+} from './types.js';
+
+export const NO_PENDING_ROOT = Symbol('CRC_NO_PENDING_ROOT');
+export type PendingRoot = CRCNode | typeof NO_PENDING_ROOT;
 
 export interface GlobalState {
   crcInstances: Map<Canvas, CRCInstance>;
@@ -152,7 +162,7 @@ export function cleanupCRCInstance(crcInstance: CRCInstance): void {
     interaction.cursorStyle = undefined;
   }
   crcInstance.refs.clear();
-  crcInstance.pendingRoot = undefined;
+  crcInstance.pendingRoot = NO_PENDING_ROOT;
   crcInstance.pendingUpdateParents = false;
 }
 

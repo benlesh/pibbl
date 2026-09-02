@@ -1,6 +1,14 @@
-import { clearTempState, GLOBAL_STATE } from './global-state.js';
+import {
+  clearTempState,
+  GLOBAL_STATE,
+  NO_PENDING_ROOT,
+} from './global-state.js';
 import { render } from './render.js';
-import { Canvas, CompEl, type CRCRenderTransaction } from './types.js';
+import {
+  Canvas,
+  type CRCNode,
+  type CRCRenderTransaction,
+} from './types.js';
 import { get2dContext } from './util/get-2d-context.js';
 import { prepareSurface } from './surface/root-surface.js';
 
@@ -12,7 +20,7 @@ import { prepareSurface } from './surface/root-surface.js';
 export function executeRender(
   canvas: Canvas,
   renderTimestamp: number,
-  updatedRoot?: CompEl<any, any>,
+  updatedRoot?: CRCNode | typeof NO_PENDING_ROOT,
   updateParents = false,
 ): void {
   if (!canvas) {
@@ -59,8 +67,10 @@ export function executeRender(
     GLOBAL_STATE.currentCRCInstance = crcInstance;
     GLOBAL_STATE.currentCRCInstance.renderTimestamp = renderTimestamp;
     GLOBAL_STATE.canvas = canvas;
-    const rootElement = updatedRoot ?? GLOBAL_STATE.currentCRCInstance.root;
-    GLOBAL_STATE.currentCRCInstance.root = rootElement;
+    const rootNode = arguments.length >= 3 && updatedRoot !== NO_PENDING_ROOT ?
+      updatedRoot :
+      GLOBAL_STATE.currentCRCInstance.root;
+    GLOBAL_STATE.currentCRCInstance.root = rootNode;
     const surface = prepareSurface(crcInstance);
     if (!surface) {
       finishTransaction(true);
@@ -100,7 +110,7 @@ export function executeRender(
     ctx.setTransform(surface.renderTransform);
 
     try {
-      render(rootElement, id, undefined);
+      render(rootNode, id, undefined);
     } catch (error) {
       finishTransaction(false);
       for (const refs of GLOBAL_STATE.currentCRCInstance.refs.values()) {

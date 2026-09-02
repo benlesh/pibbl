@@ -11,6 +11,7 @@ import type {
   CRCEventTargetRegistration,
 } from './events/registrations.js';
 import type { CRCElement, CRCKey, CRCNode } from './element/types.js';
+import type { PendingRoot } from './global-state.js';
 export type {
   CRCComponent,
   CRCContainerChild,
@@ -295,8 +296,8 @@ export type StrokeStyle = CanvasRenderingContext2D['strokeStyle'];
 export interface CRCInstance {
   canvas: Canvas;
   controller: CRCController;
-  root: CompEl<any, any>;
-  pendingRoot: CompEl<any, any> | undefined;
+  root: CRCNode;
+  pendingRoot: PendingRoot;
   pendingUpdateParents: boolean;
   refs: Map<string, CompRefs<any>>;
   animationFrameId: number | undefined;
