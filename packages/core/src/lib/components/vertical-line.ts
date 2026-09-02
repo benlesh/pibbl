@@ -1,4 +1,5 @@
 import { defineComp } from '../define-comp.js';
+import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,
   CRCEventHandlers,
@@ -21,7 +22,7 @@ import type {
   Length,
   ResolvedDrawingStyle,
 } from '../style/types.js';
-import { Line, type LineStyle } from './line.js';
+import { renderLine, type LineStyle } from './line.js';
 
 export interface VerticalLineProps
   extends CRCEventHandlers, CRCEventFocusOptions {}
@@ -44,7 +45,7 @@ type ResolvedVerticalLineStyle = ResolvedDrawingStyle<VerticalLineStyle> & {
   y2: number;
 };
 
-export function VerticalLine(
+function renderVerticalLine(
   props: VerticalLineProps,
   style: Readonly<ResolvedVerticalLineStyle>,
   ctx: RenderingContext2D,
@@ -70,7 +71,7 @@ export function VerticalLine(
     [x, y2],
   ];
 
-  return Line(
+  return renderLine(
     props,
     {
       coords,
@@ -85,14 +86,14 @@ export function VerticalLine(
 }
 
 /**
- * Creates a renderable VerticalLine component element.
+ * Describes a vertical-line primitive for JSX or createElement authoring.
  */
-export const verticalLine = defineComp<
+export const VerticalLine = definePrimitive<
   VerticalLineProps,
   VerticalLineStyle,
   VerticalLineStyle,
   ResolvedVerticalLineStyle
->(VerticalLine, {
+>(renderVerticalLine, {
   resolveStyle: (style, context) => ({
     ...stripLayoutParticipation(style),
     x: resolveRequiredLength(
@@ -116,3 +117,45 @@ export const verticalLine = defineComp<
   }) as ResolvedVerticalLineStyle,
 });
 registerOpaqueStyleProperties(VerticalLine, ['stroke', 'cursor']);
+
+const renderLegacyVerticalLine = function VerticalLine(
+  props: VerticalLineProps,
+  style: Readonly<ResolvedVerticalLineStyle>,
+  ctx: RenderingContext2D,
+) {
+  return renderVerticalLine(props, style, ctx);
+};
+
+/** @internal Temporary lowercase authoring adapter retained until Task 12. */
+export const verticalLine = defineComp<
+  VerticalLineProps,
+  VerticalLineStyle,
+  VerticalLineStyle,
+  ResolvedVerticalLineStyle
+>(renderLegacyVerticalLine, {
+  resolveStyle: (style, context) => ({
+    ...stripLayoutParticipation(style),
+    x: resolveRequiredLength(
+      style.x,
+      context.percentageBasis.width,
+      'x',
+      context,
+    ),
+    y1: resolveLocalOffset(
+      style.y1,
+      context.percentageBasis.height,
+      'y1',
+      context,
+    ),
+    y2: resolveRequiredLength(
+      style.y2 ?? context.allocation.height,
+      context.percentageBasis.height,
+      'y2',
+      context,
+    ),
+  }) as ResolvedVerticalLineStyle,
+});
+registerOpaqueStyleProperties(renderLegacyVerticalLine, [
+  'stroke',
+  'cursor',
+]);

@@ -1,4 +1,5 @@
 import { defineComp } from '../define-comp.js';
+import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,
   CRCEventHandlers,
@@ -17,7 +18,7 @@ import type {
   ResolvedDrawingStyle,
 } from '../style/types.js';
 import { createLinePath } from '../util/create-line-path.js';
-import { Path } from './path.js';
+import { renderPath } from './path.js';
 
 export interface LineProps extends CRCEventHandlers, CRCEventFocusOptions {}
 
@@ -33,7 +34,7 @@ export interface LineStyle
 
 type ResolvedLineStyle = ResolvedDrawingStyle<LineStyle>;
 
-export function Line(
+export function renderLine(
   props: LineProps,
   style: Readonly<ResolvedLineStyle>,
   ctx: RenderingContext2D,
@@ -49,7 +50,7 @@ export function Line(
   const linePath = createLinePath(coords);
   const interactionWidth = lineInteractionWidth ?? strokeWidth ?? 0;
 
-  return Path(
+  return renderPath(
     {
       ...props,
       keyboardNavigationBounds: props.keyboardNavigationBounds ??
@@ -68,18 +69,38 @@ export function Line(
 }
 
 /**
- * Creates a renderable Line component element.
+ * Describes a polyline primitive for JSX or createElement authoring.
  */
+export const Line = definePrimitive<
+  LineProps,
+  LineStyle,
+  LineStyle,
+  ResolvedLineStyle
+>(renderLine, {
+  resolveStyle: style =>
+    stripLayoutParticipation(style) as ResolvedLineStyle,
+});
+registerOpaqueStyleProperties(Line, ['stroke', 'cursor']);
+
+const renderLegacyLine = function Line(
+  props: LineProps,
+  style: Readonly<ResolvedLineStyle>,
+  ctx: RenderingContext2D,
+) {
+  return renderLine(props, style, ctx);
+};
+
+/** @internal Temporary lowercase authoring adapter retained until Task 12. */
 export const line = defineComp<
   LineProps,
   LineStyle,
   LineStyle,
   ResolvedLineStyle
->(Line, {
+>(renderLegacyLine, {
   resolveStyle: style =>
     stripLayoutParticipation(style) as ResolvedLineStyle,
 });
-registerOpaqueStyleProperties(Line, ['stroke', 'cursor']);
+registerOpaqueStyleProperties(renderLegacyLine, ['stroke', 'cursor']);
 
 function lineBounds(
   coords: readonly [number, number][],

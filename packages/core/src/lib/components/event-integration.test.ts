@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { defineComp } from '../define-comp';
+import { createElement } from '../element/create-element';
 import type { CRCEventHandlers } from '../events/types';
 import { getCRCInstance } from '../global-state';
 import { crcEventListener } from '../hooks/crc-event-listener';
@@ -8,10 +9,10 @@ import { componentTest } from '../test-utils/component-test';
 import type { CompEl } from '../types';
 import { horizontalLine } from './horizontal-line';
 import { img } from './img';
-import { layer } from './layer';
+import { Layer } from './layer';
 import { line } from './line';
 import { path } from './path';
-import { rect } from './rect';
+import { rect, Rectangle } from './rect';
 import { svgPath } from './svg-path';
 import { text } from './text';
 import { verticalLine } from './vertical-line';
@@ -199,8 +200,8 @@ describe('layer event ancestry', () => {
         onClickCapture: () => trace.push('parent-capture'),
         onClick: () => trace.push('parent-bubble'),
       });
-      return layer({
-        render: rect({
+      return createElement(Layer, {
+        children: createElement(Rectangle, {
           style: { width: 40, height: 40, fill: 'red' },
           onClick: () => trace.push('layer-target'),
         }),
@@ -222,12 +223,13 @@ describe('layer event ancestry', () => {
       CanvasRenderingContext2D.prototype,
       'drawImage',
     );
-    const canvas = await componentTest(layer({
-      render: rect({
+    const Host = defineComp(() => createElement(Layer, {
+      children: createElement(Rectangle, {
         style: { width: 20, height: 20, fill: 'red' },
         onClick: () => undefined,
       }),
     }));
+    const canvas = await componentTest(Host({}));
     const childCanvas = drawImage.mock.calls
       .map(call => call[0])
       .find(source => source instanceof OffscreenCanvas) as OffscreenCanvas;

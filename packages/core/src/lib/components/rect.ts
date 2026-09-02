@@ -13,7 +13,7 @@ import {
 import type { RectStyle, ResolvedRectStyle } from '../style/types.js';
 import { registerOpaqueStyleProperties } from '../style/resolve-dispatch.js';
 import { adjustRectangleToPixelGrid } from '../util/pixel-grid-adjustments.js';
-import { Path } from './path.js';
+import { renderPath } from './path.js';
 
 export interface RectangleProps extends CRCEventHandlers, CRCEventFocusOptions {}
 
@@ -48,7 +48,7 @@ function renderRectangle(
   const rectPath = new Path2D();
   rectPath.rect(x, y, width, height);
 
-  Path(
+  renderPath(
     {
       ...props,
       keyboardNavigationBounds: props.keyboardNavigationBounds ?? {

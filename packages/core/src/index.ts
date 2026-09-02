@@ -1,5 +1,10 @@
 // components
-export { clip, type ClipProps, type ClipStyle } from './lib/components/clip.js';
+export {
+  clip,
+  Clip,
+  type ClipProps,
+  type ClipStyle,
+} from './lib/components/clip.js';
 export {
   g,
   Group,
@@ -9,28 +14,45 @@ export {
 } from './lib/components/g.js';
 export {
   horizontalLine,
+  HorizontalLine,
   type HorizontalLineProps,
   type HorizontalLineStyle,
 } from './lib/components/horizontal-line.js';
 
-export { img, type ImgProps } from './lib/components/img.js';
+export {
+  img,
+  Image,
+  type ImageProps,
+  type ImgProps,
+} from './lib/components/img.js';
 export {
   layer,
+  Layer,
   type LayerProps,
   type LayerStyle,
 } from './lib/components/layer.js';
-export { line, type LineProps, type LineStyle } from './lib/components/line.js';
-export { path, type PathProps } from './lib/components/path.js';
+export {
+  line,
+  Line,
+  type LineProps,
+  type LineStyle,
+} from './lib/components/line.js';
+export { path, Path, type PathProps } from './lib/components/path.js';
 export {
   rect,
   Rectangle,
   type RectProps,
   type RectangleProps,
 } from './lib/components/rect.js';
-export { svgPath, type SvgPathProps } from './lib/components/svg-path.js';
+export {
+  svgPath,
+  SvgPath,
+  type SvgPathProps,
+} from './lib/components/svg-path.js';
 export { text, Text, type TextProps } from './lib/components/text.js';
 export {
   verticalLine,
+  VerticalLine,
   type VerticalLineProps,
   type VerticalLineStyle,
 } from './lib/components/vertical-line.js';

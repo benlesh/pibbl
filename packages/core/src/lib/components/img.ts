@@ -1,4 +1,5 @@
 import { defineComp } from '../define-comp.js';
+import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,
   CRCEventHandlers,
@@ -6,7 +7,12 @@ import type {
 import { crcRectPath } from '../hooks/crc-rect-path.js';
 import { crcState } from '../hooks/crc-state.js';
 import { crcWhenChanged } from '../hooks/crc-when-changed.js';
-import { MeasureResult, RenderingContext2D } from '../types.js';
+import type {
+  MeasureInput,
+  MeasureResult,
+  RenderingContext2D,
+  StyleResolutionContext,
+} from '../types.js';
 import { resolveLength } from '../style/resolve-length.js';
 import {
   resolveLocalOffset,
@@ -18,15 +24,18 @@ import type { ImgStyle, ResolvedImgStyle } from '../style/types.js';
 import { adjustRectangleToPixelGrid } from '../util/pixel-grid-adjustments.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 
-export interface ImgProps extends CRCEventHandlers, CRCEventFocusOptions {}
+export interface ImageProps extends CRCEventHandlers, CRCEventFocusOptions {}
+
+/** @internal Temporary lowercase-adapter program props. */
+export type ImgProps = ImageProps;
 
 interface LoadedImage {
   src: string;
   element: HTMLImageElement;
 }
 
-function Img(
-  props: ImgProps,
+function renderImage(
+  props: ImageProps,
   style: Readonly<ResolvedImgStyle>,
   ctx: RenderingContext2D,
 ) {
@@ -53,7 +62,8 @@ function Img(
 
   crcWhenChanged(() => {
     let active = true;
-    const element = new Image();
+    const BrowserImage = globalThis.Image;
+    const element = new BrowserImage();
     const settle = () => {
       active = false;
       element.onload = null;
@@ -117,15 +127,44 @@ function Img(
 }
 
 /**
- * Creates a renderable Img component element.
+ * Describes a Canvas image primitive for JSX or createElement authoring.
  */
+export const Image = definePrimitive<
+  ImageProps,
+  ImgStyle,
+  ImgStyle,
+  ResolvedImgStyle
+>(renderImage, {
+  resolveStyle: resolveImageStyle,
+  measure: measureImage,
+});
+registerOpaqueStyleProperties(Image, ['src', 'stroke', 'cursor']);
+
+const renderLegacyImage = function Img(
+  props: ImgProps,
+  style: Readonly<ResolvedImgStyle>,
+  ctx: RenderingContext2D,
+) {
+  renderImage(props, style, ctx);
+};
+
+/** @internal Temporary lowercase authoring adapter retained until Task 12. */
 export const img = defineComp<
   ImgProps,
   ImgStyle,
   ImgStyle,
   ResolvedImgStyle
->(Img, {
-  resolveStyle: (style, context) => ({
+>(renderLegacyImage, {
+  resolveStyle: resolveImageStyle,
+  measure: measureImage,
+});
+registerOpaqueStyleProperties(renderLegacyImage, ['src', 'stroke', 'cursor']);
+
+function resolveImageStyle(
+  style: Readonly<ImgStyle>,
+  context: Readonly<StyleResolutionContext>,
+): ResolvedImgStyle {
+  return {
     ...stripLayoutParticipation(style),
     x: resolveLocalOffset(style.x, context.percentageBasis.width, 'x', context),
     y: resolveLocalOffset(style.y, context.percentageBasis.height, 'y', context),
@@ -141,39 +180,42 @@ export const img = defineComp<
       'height',
       context,
     ),
-  }) as ResolvedImgStyle,
-  measure: ({ style, constraints }): MeasureResult => {
-    if (
-      style.width === undefined || style.width === 'auto' ||
-      style.height === undefined || style.height === 'auto'
-    ) {
-      return {
-        status: 'unsupported',
-        reason: 'Image natural dimensions are unavailable during pure measurement',
-      };
-    }
-    const context = {
-      component: 'Img',
-      algorithm: 'measurement',
-      constraints,
-    };
+  } as ResolvedImgStyle;
+}
+
+function measureImage({
+  style,
+  constraints,
+}: MeasureInput<ImageProps, ImgStyle>): MeasureResult {
+  if (
+    style.width === undefined || style.width === 'auto' ||
+    style.height === undefined || style.height === 'auto'
+  ) {
     return {
-      status: 'measured',
-      size: {
-        width: resolveLength(
-          style.width,
-          constraints.maxWidth,
-          'width',
-          context,
-        )!,
-        height: resolveLength(
-          style.height,
-          constraints.maxHeight,
-          'height',
-          context,
-        )!,
-      },
+      status: 'unsupported',
+      reason: 'Image natural dimensions are unavailable during pure measurement',
     };
-  },
-});
-registerOpaqueStyleProperties(Img, ['src', 'stroke', 'cursor']);
+  }
+  const context = {
+    component: 'Image',
+    algorithm: 'measurement' as const,
+    constraints,
+  };
+  return {
+    status: 'measured',
+    size: {
+      width: resolveLength(
+        style.width,
+        constraints.maxWidth,
+        'width',
+        context,
+      )!,
+      height: resolveLength(
+        style.height,
+        constraints.maxHeight,
+        'height',
+        context,
+      )!,
+    },
+  };
+}

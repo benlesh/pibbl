@@ -1,4 +1,5 @@
 import { defineComp } from '../define-comp.js';
+import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,
   CRCEventHandlers,
@@ -13,7 +14,7 @@ import { wireCommonEvents } from '../util/wire-common-events.js';
 
 export interface PathProps extends CRCEventHandlers, CRCEventFocusOptions {}
 
-export function Path(
+export function renderPath(
   props: PathProps,
   style: Readonly<ResolvedPathStyle>,
   ctx: RenderingContext2D,
@@ -47,17 +48,36 @@ export function Path(
 }
 
 /**
- * Creates a renderable Path component element.
+ * Describes a Canvas path primitive for JSX or createElement authoring.
  */
+export const Path = definePrimitive<
+  PathProps,
+  PathStyle,
+  PathStyle,
+  ResolvedPathStyle
+>(renderPath, {
+  resolveStyle: resolvePathStyle,
+});
+registerOpaqueStyleProperties(Path, ['fill', 'stroke', 'cursor']);
+
+const renderLegacyPath = function Path(
+  props: PathProps,
+  style: Readonly<ResolvedPathStyle>,
+  ctx: RenderingContext2D,
+) {
+  renderPath(props, style, ctx);
+};
+
+/** @internal Temporary lowercase authoring adapter retained until Task 12. */
 export const path = defineComp<
   PathProps,
   PathStyle,
   PathStyle,
   ResolvedPathStyle
->(Path, {
+>(renderLegacyPath, {
   resolveStyle: resolvePathStyle,
 });
-registerOpaqueStyleProperties(Path, ['fill', 'stroke', 'cursor']);
+registerOpaqueStyleProperties(renderLegacyPath, ['fill', 'stroke', 'cursor']);
 
 function resolvePathStyle(
   style: Readonly<PathStyle>,

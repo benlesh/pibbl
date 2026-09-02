@@ -1,11 +1,19 @@
 import * as core from '@crc/core';
 
 const expected = [
+  'Clip',
   'Fragment',
   'Group',
+  'HorizontalLine',
+  'Image',
+  'Layer',
   'LayoutDiagnostic',
+  'Line',
+  'Path',
   'Rectangle',
+  'SvgPath',
   'Text',
+  'VerticalLine',
   'absolute',
   'clip',
   'crc',

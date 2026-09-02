@@ -1,10 +1,18 @@
 import {
+  Clip,
   createElement,
   crc,
   crcState,
   Group,
+  HorizontalLine,
+  Image,
+  Layer,
+  Line,
+  Path,
   Rectangle,
+  SvgPath,
   Text,
+  VerticalLine,
   type CRCController,
   type CRCNode,
   type TextStyle,
@@ -29,6 +37,7 @@ beforeEach(() => {
 afterEach(() => {
   for (const controller of controllers) controller.dispose();
   controllers.clear();
+  vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
 
@@ -90,6 +99,219 @@ describe('public JSX component authoring', () => {
 
     expect(legacyStyle).toEqual({ text: 'legacy' });
     expect([rectangleWithChild, textWithElement]).toHaveLength(2);
+  });
+
+  it('renders Path style and geometry and dispatches through its event path', async () => {
+    const value = new Path2D();
+    value.rect(10, 12, 24, 18);
+    const onClick = vi.fn();
+    const canvas = createCanvas();
+    controllers.add(crc(canvas, (
+      <Path style={{ d: value, fill: '#7c3aed' }} onClick={onClick} />
+    )));
+
+    await nextFrame();
+    expect(pixel(canvas, 20, 20)).toEqual([124, 58, 237, 255]);
+
+    dispatchCanvasClick(canvas, 20, 20);
+    dispatchCanvasClick(canvas, 60, 60);
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it('renders SvgPath data and updates its browser-parsed geometry', async () => {
+    const canvas = createCanvas();
+    const controller = crc(canvas, (
+      <SvgPath
+        style={{ d: 'M 10 10 H 30 V 30 H 10 Z', fill: '#ef4444' }}
+      />
+    ));
+    controllers.add(controller);
+    await nextFrame();
+
+    crc(canvas, (
+      <SvgPath
+        style={{ d: 'M 40 10 H 60 V 30 H 40 Z', fill: '#2563eb' }}
+      />
+    ));
+    await nextFrame();
+
+    expect(pixel(canvas, 20, 20)).toEqual([0, 0, 0, 0]);
+    expect(pixel(canvas, 50, 20)).toEqual([37, 99, 235, 255]);
+  });
+
+  it('renders Line coordinates and uses its expanded interaction geometry', async () => {
+    const moveTo = vi.spyOn(Path2D.prototype, 'moveTo');
+    const lineTo = vi.spyOn(Path2D.prototype, 'lineTo');
+    const onClick = vi.fn();
+    const canvas = createCanvas();
+    controllers.add(crc(canvas, (
+      <Line
+        style={{
+          coords: [[10, 20], [80, 20]],
+          stroke: '#111827',
+          strokeWidth: 2,
+          lineInteractionWidth: 20,
+        }}
+        onClick={onClick}
+      />
+    )));
+    await nextFrame();
+
+    expect(moveTo).toHaveBeenLastCalledWith(10, 20);
+    expect(lineTo).toHaveBeenLastCalledWith(80, 20);
+    dispatchCanvasClick(canvas, 40, 28);
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it('resolves HorizontalLine geometry against the root allocation', async () => {
+    const moveTo = vi.spyOn(Path2D.prototype, 'moveTo');
+    const lineTo = vi.spyOn(Path2D.prototype, 'lineTo');
+    const canvas = createCanvas();
+    controllers.add(crc(canvas, (
+      <HorizontalLine
+        style={{ y: 25, x1: 5, stroke: '#dc2626', strokeWidth: 1 }}
+      />
+    )));
+    await nextFrame();
+
+    expect(moveTo).toHaveBeenLastCalledWith(5, 25);
+    expect(lineTo).toHaveBeenLastCalledWith(240, 25);
+  });
+
+  it('resolves VerticalLine geometry against the root allocation', async () => {
+    const moveTo = vi.spyOn(Path2D.prototype, 'moveTo');
+    const lineTo = vi.spyOn(Path2D.prototype, 'lineTo');
+    const canvas = createCanvas();
+    controllers.add(crc(canvas, (
+      <VerticalLine
+        style={{ x: 35, y1: 7, stroke: '#2563eb', strokeWidth: 1 }}
+      />
+    )));
+    await nextFrame();
+
+    expect(moveTo).toHaveBeenLastCalledWith(35, 7);
+    expect(lineTo).toHaveBeenLastCalledWith(35, 120);
+  });
+
+  it('invalidates Image generations without confusing the browser constructor', () => {
+    class FakeBrowserImage {
+      static instances: FakeBrowserImage[] = [];
+      readonly naturalWidth = 30;
+      readonly naturalHeight = 20;
+      readonly width = 30;
+      readonly height = 20;
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      src = '';
+
+      constructor() {
+        FakeBrowserImage.instances.push(this);
+      }
+
+      removeAttribute(name: string): void {
+        if (name === 'src') this.src = '';
+      }
+    }
+    vi.stubGlobal('Image', FakeBrowserImage);
+    const drawImage = vi.spyOn(
+      CanvasRenderingContext2D.prototype,
+      'drawImage',
+    ).mockImplementation(() => {});
+    const frames = useManualAnimationFrames();
+    const canvas = createCanvas();
+    const controller = crc(canvas, (
+      <Image style={{ src: 'first.png', x: 4, y: 6 }} />
+    ));
+    controllers.add(controller);
+    frames.flushNext();
+    const first = FakeBrowserImage.instances[0];
+    const savedFirstLoad = first.onload;
+
+    crc(canvas, <Image style={{ src: 'second.png', x: 4, y: 6 }} />);
+    frames.flushNext();
+    const second = FakeBrowserImage.instances[1];
+    second.onload?.();
+    frames.flushNext();
+
+    expect(drawImage).toHaveBeenCalledOnce();
+    expect(drawImage).toHaveBeenLastCalledWith(second, 4, 6, 30, 20);
+    savedFirstLoad?.();
+    expect(frames.pendingCount()).toBe(0);
+    expect(drawImage).toHaveBeenCalledOnce();
+  });
+
+  it('clips multiple Clip children with the declared path and fill rule', async () => {
+    const clippingPath = new Path2D();
+    clippingPath.rect(10, 10, 40, 30);
+    const canvas = createCanvas();
+    controllers.add(crc(canvas, (
+      <Clip style={{ d: clippingPath, fillRule: 'evenodd' }}>
+        <Rectangle style={{ width: 30, height: 50, fill: '#f97316' }} />
+        <Rectangle
+          style={{ x: 30, width: 30, height: 50, fill: '#0ea5e9' }}
+        />
+      </Clip>
+    )));
+    await nextFrame();
+
+    expect(pixel(canvas, 5, 20)).toEqual([0, 0, 0, 0]);
+    expect(pixel(canvas, 20, 20)).toEqual([249, 115, 22, 255]);
+    expect(pixel(canvas, 40, 20)).toEqual([14, 165, 233, 255]);
+    expect(pixel(canvas, 55, 20)).toEqual([0, 0, 0, 0]);
+  });
+
+  it('composites Layer children in source order under parent transforms', async () => {
+    const onClick = vi.fn();
+    const canvas = createCanvas();
+    controllers.add(crc(canvas, (
+      <Group style={{ translateX: 25, translateY: 15 }}>
+        <Layer style={{ width: 80, height: 60 }}>
+          <Rectangle style={{ width: 60, height: 40, fill: '#2563eb' }} />
+          <Rectangle
+            style={{ x: 20, y: 10, width: 40, height: 30, fill: '#ef4444' }}
+            onClick={onClick}
+          />
+        </Layer>
+      </Group>
+    )));
+    await nextFrame();
+
+    expect(pixel(canvas, 30, 20)).toEqual([37, 99, 235, 255]);
+    expect(pixel(canvas, 55, 35)).toEqual([239, 68, 68, 255]);
+    dispatchCanvasClick(canvas, 55, 35);
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it('types drawing leaves as childless and Clip and Layer as CRCNode containers', () => {
+    const iterable: Iterable<CRCNode> = [
+      <Rectangle key="a" style={{ width: 1, height: 1 }} />,
+    ];
+    const clipContainer = <Clip style={{ d: new Path2D() }}>{iterable}</Clip>;
+    const layerContainer = <Layer>{[iterable, false, null]}</Layer>;
+
+    // @ts-expect-error Path is a drawing leaf and rejects children
+    const pathWithChild = <Path style={{ d: new Path2D() }}>bad</Path>;
+    // @ts-expect-error SvgPath is a drawing leaf and rejects children
+    const svgPathWithChild = <SvgPath style={{ d: '' }}>bad</SvgPath>;
+    // @ts-expect-error Line is a drawing leaf and rejects children
+    const lineWithChild = <Line style={{ coords: [] }}>bad</Line>;
+    // @ts-expect-error HorizontalLine is a drawing leaf and rejects children
+    const horizontalLineWithChild = <HorizontalLine style={{ y: 0 }}>bad</HorizontalLine>;
+    // @ts-expect-error VerticalLine is a drawing leaf and rejects children
+    const verticalLineWithChild = <VerticalLine style={{ x: 0 }}>bad</VerticalLine>;
+    // @ts-expect-error Image is a drawing leaf and rejects children
+    const imageWithChild = <Image style={{ src: 'image.png' }}>bad</Image>;
+
+    expect([
+      clipContainer,
+      layerContainer,
+      pathWithChild,
+      svgPathWithChild,
+      lineWithChild,
+      horizontalLineWithChild,
+      verticalLineWithChild,
+      imageWithChild,
+    ]).toHaveLength(8);
   });
 });
 
@@ -224,6 +446,18 @@ function dispatchCanvasClick(
       clientY: bounds.top + y,
     }));
   }
+}
+
+function nextFrame(): Promise<void> {
+  return new Promise(resolve => requestAnimationFrame(() => resolve()));
+}
+
+function pixel(
+  canvas: HTMLCanvasElement,
+  x: number,
+  y: number,
+): number[] {
+  return Array.from(canvas.getContext('2d')!.getImageData(x, y, 1, 1).data);
 }
 
 function useManualAnimationFrames() {

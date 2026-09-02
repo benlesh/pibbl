@@ -5,16 +5,322 @@ import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
 import { defineComp } from '../define-comp';
 import { crc } from '../crc';
+import { createElement } from '../element/create-element';
+import { executeRender } from '../execute-render';
+import { getCRCInstance, GLOBAL_STATE } from '../global-state';
 import { crcCursor } from '../hooks/crc-cursor';
 import { crcEvent } from '../hooks/crc-event';
+import { crcEventTarget } from '../hooks/crc-event-target';
+import { crcRef } from '../hooks/crc-ref';
 import { crcState } from '../hooks/crc-state';
+import { crcWhenChanged } from '../hooks/crc-when-changed';
+import { withFocusManagement } from '../focus/with-focus-management';
 import { componentTest } from '../test-utils/component-test';
+import type { CRCController, CRCNode } from '../types';
 import { takeScreenshot } from '../util/test-utils';
 import { clip } from './clip';
-import { g } from './g';
-import { layer } from './layer';
-import { rect } from './rect';
+import { g, Group } from './g';
+import { layer, Layer } from './layer';
+import { rect, Rectangle } from './rect';
 import { text } from './text';
+
+describe('Layer children and retained subtree contract', () => {
+  it('materializes arrays and iterables once per Layer traversal and paints every child in source order', () => {
+    let iterations = 0;
+    let childRenders = 0;
+    function CountedChild(): CRCNode {
+      childRenders++;
+      return createElement(Rectangle, {
+        style: { x: 20, y: 10, width: 40, height: 30, fill: '#ef4444' },
+      });
+    }
+    const iterable: Iterable<CRCNode> = {
+      *[Symbol.iterator]() {
+        iterations++;
+        yield createElement(CountedChild, {});
+      },
+    };
+    const scene = () => createElement(Layer, {
+      style: { width: 80, height: 60 },
+      children: [
+        createElement(Rectangle, {
+          style: { width: 60, height: 40, fill: '#2563eb' },
+        }),
+        iterable,
+      ],
+    });
+    const mounted = mountNow(scene());
+
+    expect(iterations).toBe(1);
+    expect(childRenders).toBe(1);
+    expect(pixel(mounted.canvas, 5, 5)).toEqual([37, 99, 235, 255]);
+    expect(pixel(mounted.canvas, 30, 20)).toEqual([239, 68, 68, 255]);
+
+    renderNow(mounted.canvas, scene());
+    expect(iterations).toBe(2);
+    expect(childRenders).toBe(1);
+    mounted.controller.dispose();
+  });
+
+  it('accepts empty Layer content without child resources or painted pixels', () => {
+    const drawImage = vi.spyOn(
+      CanvasRenderingContext2D.prototype,
+      'drawImage',
+    );
+    const mounted = mountNow(createElement(Layer, {
+      style: { width: 40, height: 30 },
+      children: [],
+    }));
+    const offscreen = layerCanvasFrom(drawImage);
+    const child = getCRCInstance(offscreen);
+
+    expect(pixel(mounted.canvas, 10, 10)).toEqual([0, 0, 0, 0]);
+    expect(child.paintEntries.size).toBe(0);
+    expect(child.regions.size).toBe(0);
+    mounted.controller.dispose();
+  });
+
+  it('preserves keyed child state while invalidating the cache for child reorder', () => {
+    let mounts = 0;
+    const trace: string[] = [];
+    function Stateful({ label }: { label: string }): CRCNode {
+      const identity = crcRef<number>();
+      identity.current ??= ++mounts;
+      trace.push(`${label}:${identity.current}`);
+      return createElement(Rectangle, {
+        style: { width: 10, height: 10 },
+      });
+    }
+    const child = (label: string) => createElement(Stateful, {
+      key: label,
+      label,
+    });
+    const scene = (labels: readonly string[]) => createElement(Layer, {
+      children: labels.map(child),
+    });
+    const mounted = mountNow(scene(['a', 'b']));
+    expect(trace).toEqual(['a:1', 'b:2']);
+
+    renderNow(mounted.canvas, scene(['b', 'a']));
+
+    expect(trace).toEqual(['a:1', 'b:2', 'b:2', 'a:1']);
+    expect(mounts).toBe(2);
+    mounted.controller.dispose();
+  });
+
+  it('compares retained trees recursively and invalidates for prop, style, and child-sequence changes', () => {
+    let renders = 0;
+    function Counted(props: {
+      version: number;
+      style: { tone: string };
+    }): CRCNode {
+      renders++;
+      return createElement(Rectangle, {
+        style: {
+          width: 20,
+          height: 20,
+          fill: props.style.tone,
+        },
+      });
+    }
+    const scene = (
+      version: number,
+      tone: string,
+      extraChild: boolean,
+    ) => createElement(Layer, {
+      children: createElement(Group, {
+        children: [
+          createElement(Counted, { version, style: { tone } }),
+          extraChild ? createElement(Rectangle, {
+            key: 'extra',
+            style: { x: 30, width: 10, height: 10 },
+          }) : false,
+        ],
+      }),
+    });
+    const mounted = mountNow(scene(1, '#ef4444', false));
+    expect(renders).toBe(1);
+
+    renderNow(mounted.canvas, scene(1, '#ef4444', false));
+    expect(renders).toBe(1);
+
+    renderNow(mounted.canvas, scene(2, '#ef4444', false));
+    expect(renders).toBe(2);
+
+    renderNow(mounted.canvas, scene(2, '#2563eb', false));
+    expect(renders).toBe(3);
+
+    renderNow(mounted.canvas, scene(2, '#2563eb', true));
+    expect(renders).toBe(4);
+    mounted.controller.dispose();
+  });
+
+  it('includes transparent policy metadata in retained-tree equality', () => {
+    let renders = 0;
+    const Counted = defineComp(() => {
+      renders++;
+      return rect({ style: { width: 20, height: 20 } });
+    });
+    const managedScene = () => createElement(Layer, {
+      children: withFocusManagement(Counted({})),
+    });
+    const mounted = mountNow(managedScene());
+    expect(renders).toBe(1);
+
+    renderNow(mounted.canvas, managedScene());
+    expect(renders).toBe(1);
+
+    renderNow(mounted.canvas, createElement(Layer, {
+      children: Counted({}),
+    }));
+    expect(renders).toBe(2);
+    expect(getCRCInstance(mounted.canvas).eventRoot.focusPolicy).toBeUndefined();
+    mounted.controller.dispose();
+  });
+
+  it('replays retained focus metadata on a cache hit without executing child components', () => {
+    let renders = 0;
+    const FocusTarget = defineComp<{ label: string }>(({ label }) => {
+      renders++;
+      crcEventTarget(
+        { onClick: () => undefined },
+        { path: rectanglePath(0, 0, 30, 30), fill: true },
+      );
+      return rect({ style: { width: 30, height: 30 }, key: label });
+    });
+    const scene = () => createElement(Layer, {
+      children: withFocusManagement(FocusTarget({ label: 'cached' })),
+    });
+    const mounted = mountNow(scene());
+    const policy = getCRCInstance(mounted.canvas).eventRoot.focusPolicy as unknown as
+      { readonly candidates: readonly { readonly target: unknown }[] };
+    const target = policy.candidates[0].target;
+    expect(renders).toBe(1);
+
+    renderNow(mounted.canvas, scene());
+
+    const replayedPolicy = getCRCInstance(mounted.canvas).eventRoot.focusPolicy as unknown as
+      { readonly candidates: readonly { readonly target: unknown }[] };
+    expect(renders).toBe(1);
+    expect(replayedPolicy).toBe(policy);
+    expect(replayedPolicy.candidates).toHaveLength(1);
+    expect(replayedPolicy.candidates[0].target).toBe(target);
+    mounted.controller.dispose();
+  });
+
+  it('updates transformed Layer hit testing for multiple child targets', () => {
+    const bottomClick = vi.fn();
+    const topClick = vi.fn();
+    const mounted = mountNow(createElement(Group, {
+      style: { translateX: 40, translateY: 20, scaleX: 1.5 },
+      children: createElement(Layer, {
+        style: { width: 80, height: 60 },
+        children: [
+          createElement(Rectangle, {
+            style: { width: 70, height: 50, fill: '#2563eb' },
+            onClick: bottomClick,
+          }),
+          createElement(Rectangle, {
+            style: { x: 20, y: 10, width: 30, height: 30, fill: '#ef4444' },
+            onClick: topClick,
+          }),
+        ],
+      }),
+    }));
+
+    dispatchClick(mounted.canvas, 105, 40);
+    expect(topClick).toHaveBeenCalledOnce();
+    expect(bottomClick).not.toHaveBeenCalled();
+    dispatchClick(mounted.canvas, 68, 25);
+    expect(bottomClick).toHaveBeenCalledOnce();
+    mounted.controller.dispose();
+  });
+
+  it('resizes the retained offscreen surface and rerenders its children', () => {
+    let renders = 0;
+    function Counted(): CRCNode {
+      renders++;
+      return createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: '#2563eb' },
+      });
+    }
+    const drawImage = vi.spyOn(
+      CanvasRenderingContext2D.prototype,
+      'drawImage',
+    );
+    const scene = (width: number, height: number) => createElement(Layer, {
+      style: { width, height },
+      children: createElement(Counted, {}),
+    });
+    const mounted = mountNow(scene(80, 60));
+    expect(renders).toBe(1);
+
+    renderNow(mounted.canvas, scene(120, 70));
+
+    const call = drawImage.mock.lastCall!;
+    const offscreen = call[0] as OffscreenCanvas;
+    expect([offscreen.width, offscreen.height]).toEqual([120, 70]);
+    expect(call.slice(1)).toEqual([0, 0, 120, 70, 0, 0, 120, 70]);
+    expect(renders).toBe(2);
+    mounted.controller.dispose();
+  });
+
+  it('fails closed and releases the child controller when a Layer child throws', () => {
+    let cleanups = 0;
+    function Child({ fail }: { fail: boolean }): CRCNode {
+      crcWhenChanged(() => () => cleanups++, []);
+      if (fail) throw new Error('layer child failed');
+      return createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: '#ef4444' },
+      });
+    }
+    const scene = (fail: boolean) => createElement(Layer, {
+      children: createElement(Child, { fail }),
+    });
+    const drawImage = vi.spyOn(
+      CanvasRenderingContext2D.prototype,
+      'drawImage',
+    );
+    const mounted = mountNow(scene(false));
+    const offscreen = layerCanvasFrom(drawImage);
+
+    expect(() => renderNow(mounted.canvas, scene(true)))
+      .toThrowError('layer child failed');
+    expect(cleanups).toBe(1);
+    expect(GLOBAL_STATE.crcInstances.has(offscreen)).toBe(false);
+    expect(getCRCInstance(mounted.canvas).refs.size).toBe(0);
+    expect(getCRCInstance(mounted.canvas).paintEntries.size).toBe(0);
+    mounted.controller.dispose();
+  });
+
+  it('disposes one child controller and its resources exactly once', () => {
+    let cleanups = 0;
+    function Child(): CRCNode {
+      crcWhenChanged(() => () => cleanups++, []);
+      return createElement(Rectangle, {
+        style: { width: 20, height: 20 },
+        onClick: () => undefined,
+      });
+    }
+    const drawImage = vi.spyOn(
+      CanvasRenderingContext2D.prototype,
+      'drawImage',
+    );
+    const mounted = mountNow(createElement(Layer, {
+      children: createElement(Child, {}),
+    }));
+    const parent = getCRCInstance(mounted.canvas);
+    const offscreen = layerCanvasFrom(drawImage);
+
+    mounted.controller.dispose();
+    mounted.controller.dispose();
+
+    expect(cleanups).toBe(1);
+    expect(parent.paintEntries.size).toBe(0);
+    expect(GLOBAL_STATE.crcInstances.has(mounted.canvas)).toBe(false);
+    expect(GLOBAL_STATE.crcInstances.has(offscreen)).toBe(false);
+  });
+});
 
 describe('layer', () => {
   interface MyComponentProps {
@@ -788,6 +1094,69 @@ describe('layer', () => {
     });
   });
 });
+
+function mountNow(root: CRCNode): {
+  canvas: HTMLCanvasElement;
+  controller: CRCController;
+} {
+  const canvas = document.createElement('canvas');
+  canvas.width = 200;
+  canvas.height = 100;
+  canvas.style.cssText = 'display:block;width:200px;height:100px';
+  document.body.appendChild(canvas);
+  const controller = crc(canvas, root, { pixelRatio: 1 });
+  executeRender(canvas, performance.now(), root, false);
+  return { canvas, controller };
+}
+
+function renderNow(canvas: HTMLCanvasElement, root: CRCNode): void {
+  executeRender(canvas, performance.now(), root, false);
+}
+
+function pixel(
+  canvas: HTMLCanvasElement,
+  x: number,
+  y: number,
+): number[] {
+  return Array.from(canvas.getContext('2d')!.getImageData(x, y, 1, 1).data);
+}
+
+function dispatchClick(canvas: HTMLCanvasElement, x: number, y: number): void {
+  const bounds = canvas.getBoundingClientRect();
+  for (const type of ['mousedown', 'mouseup', 'click']) {
+    canvas.dispatchEvent(new MouseEvent(type, {
+      bubbles: true,
+      button: 0,
+      buttons: type === 'mousedown' ? 1 : 0,
+      cancelable: true,
+      clientX: bounds.left + x,
+      clientY: bounds.top + y,
+    }));
+  }
+}
+
+function rectanglePath(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+): Path2D {
+  const path = new Path2D();
+  path.rect(x, y, width, height);
+  return path;
+}
+
+function layerCanvasFrom(drawImage: {
+  readonly mock: { readonly calls: readonly (readonly unknown[])[] };
+}): OffscreenCanvas {
+  const canvas = drawImage.mock.calls
+    .map(call => call[0])
+    .find(value => value instanceof OffscreenCanvas);
+  if (!(canvas instanceof OffscreenCanvas)) {
+    throw new Error('Expected Layer to composite an OffscreenCanvas.');
+  }
+  return canvas;
+}
 
 async function settleSurface(): Promise<void> {
   await nextFrame();

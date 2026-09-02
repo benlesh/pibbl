@@ -1,4 +1,8 @@
 import { defineComp } from '../define-comp.js';
+import { definePrimitive } from '../define-primitive.js';
+import { materializeContainerChildren } from '../element/children.js';
+import { createElement } from '../element/create-element.js';
+import { Fragment, type FragmentProps } from '../element/fragment.js';
 import { executeRender } from '../execute-render.js';
 import {
   getCRCInstance,
@@ -8,12 +12,11 @@ import {
 import { mountCRC } from '../mount-crc.js';
 import {
   CompEl,
+  CRCNode,
   CRCInteractionLayer,
   RenderingContext2D,
   SystemStyle,
 } from '../types.js';
-import { shallowEquals } from '../util/shallow-equals.js';
-import { haveSameElementEnhancers } from '../element-enhancers.js';
 import {
   resolveRequiredLength,
   stripLayoutParticipation,
@@ -28,9 +31,14 @@ import {
   toLogicalTransform,
 } from '../surface/transform.js';
 import { createLayerSurface } from '../surface/resolve-surface.js';
-import { isCRCElement } from '../element/create-element.js';
+import type { CRCElement } from '../element/types.js';
+import { haveSameLayerNodeTree } from './layer-node-equality.js';
 
 export interface LayerProps {
+  children: CRCNode;
+}
+
+interface LegacyLayerProps {
   render: CompEl<any, any>;
 }
 
@@ -49,11 +57,16 @@ interface LayerSlot {
   focusRenderRevision: number | undefined;
 }
 
-export function Layer(
+function renderLayer(
   props: LayerProps,
   style: Readonly<ResolvedLayerStyle>,
   ctx: RenderingContext2D,
 ) {
+  const materializedChildren = materializeContainerChildren(
+    props.children,
+    'Layer',
+  );
+  const nextRoot = createPrivateLayerRoot(materializedChildren);
   const canvas = GLOBAL_STATE.canvas!;
   const { width = canvas.width, height = canvas.height } = style;
   const componentRefs = GLOBAL_STATE.componentRefs!;
@@ -70,7 +83,7 @@ export function Layer(
       layerSurface.backingWidth,
       layerSurface.backingHeight,
     );
-    const controller = mountCRC(offscreenCanvas, props.render, {
+    const controller = mountCRC(offscreenCanvas, nextRoot, {
       parent: canvas,
       surface: layerSurface,
     });
@@ -123,19 +136,11 @@ export function Layer(
   const focusPolicy = parentInstance.eventRoot.focusPolicy;
   const focusRenderRevision = focusPolicy?.layerFocusRenderRevision?.(layerCRC);
 
-  const previousRender = isCRCElement(layerCRC.root) ?
-    layerCRC.root as CompEl<any, any> :
-    undefined;
   const shouldRender =
     GLOBAL_STATE.componentIsMounting ||
     dimensionsChanged ||
     surfaceChanged ||
-    !previousRender ||
-    previousRender.type !== props.render.type ||
-    previousRender.key !== props.render.key ||
-    !shallowEquals(previousRender.props, props.render.props) ||
-    !shallowEquals(previousRender.style, props.render.style) ||
-    !haveSameElementEnhancers(previousRender, props.render) ||
+    !haveSameLayerNodeTree(layerCRC.root, nextRoot) ||
     slot.focusRenderRevision !== focusRenderRevision;
   if (shouldRender) {
     if (layerCRC.surface.kind !== 'layer') {
@@ -151,7 +156,7 @@ export function Layer(
     executeRender(
       offscreenCanvas,
       getCurrentCRCInstance().renderTimestamp,
-      props.render,
+      nextRoot,
       false,
     );
   } else {
@@ -175,13 +180,46 @@ export function Layer(
 
 }
 
-export const layer = defineComp<
+/** Describes a retained offscreen composition layer. */
+export const Layer = definePrimitive<
   LayerProps,
   LayerStyle,
   LayerStyle,
   ResolvedLayerStyle
->(Layer, {
-  resolveStyle: (style, context) => ({
+>(renderLayer, {
+  resolveStyle: resolveLayerStyle,
+});
+
+const renderLegacyLayer = function Layer(
+  props: LegacyLayerProps,
+  style: Readonly<ResolvedLayerStyle>,
+  ctx: RenderingContext2D,
+) {
+  renderLayer({ children: props.render }, style, ctx);
+};
+
+/** @internal Temporary lowercase authoring adapter retained until Task 12. */
+export const layer = defineComp<
+  LegacyLayerProps,
+  LayerStyle,
+  LayerStyle,
+  ResolvedLayerStyle
+>(renderLegacyLayer, {
+  resolveStyle: resolveLayerStyle,
+});
+
+function resolveLayerStyle(
+  style: Readonly<LayerStyle>,
+  context: Parameters<NonNullable<
+    import('../types.js').PrimitiveCapabilities<
+      LayerProps,
+      LayerStyle,
+      LayerStyle,
+      ResolvedLayerStyle
+    >['resolveStyle']
+  >>[1],
+): ResolvedLayerStyle {
+  return {
     ...stripLayoutParticipation(style),
     width: resolveRequiredLength(
       style.width ?? context.allocation.width,
@@ -195,8 +233,17 @@ export const layer = defineComp<
       'height',
       context,
     ),
-  }) as ResolvedLayerStyle,
-});
+  } as ResolvedLayerStyle;
+}
+
+function createPrivateLayerRoot(
+  children: readonly CRCElement<any>[],
+): CRCElement<FragmentProps> {
+  return createElement(Fragment, {
+    key: 'crc-layer-root',
+    children,
+  });
+}
 
 function createBounds(width: number, height: number): Path2D {
   const bounds = new Path2D();

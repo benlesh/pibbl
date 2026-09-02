@@ -1,4 +1,5 @@
 import { defineComp } from '../define-comp.js';
+import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,
   CRCEventHandlers,
@@ -21,7 +22,7 @@ import type {
   Length,
   ResolvedDrawingStyle,
 } from '../style/types.js';
-import { Line, type LineStyle } from './line.js';
+import { renderLine, type LineStyle } from './line.js';
 
 export interface HorizontalLineProps
   extends CRCEventHandlers, CRCEventFocusOptions {}
@@ -44,7 +45,7 @@ type ResolvedHorizontalLineStyle = ResolvedDrawingStyle<HorizontalLineStyle> & {
   x2: number;
 };
 
-export function HorizontalLine(
+function renderHorizontalLine(
   props: HorizontalLineProps,
   style: Readonly<ResolvedHorizontalLineStyle>,
   ctx: RenderingContext2D,
@@ -69,7 +70,7 @@ export function HorizontalLine(
     [x1, y],
     [x2, y],
   ];
-  return Line(
+  return renderLine(
     props,
     {
       coords,
@@ -84,14 +85,14 @@ export function HorizontalLine(
 }
 
 /**
- * Creates a renderable HorizontalLine component element
+ * Describes a horizontal-line primitive for JSX or createElement authoring.
  */
-export const horizontalLine = defineComp<
+export const HorizontalLine = definePrimitive<
   HorizontalLineProps,
   HorizontalLineStyle,
   HorizontalLineStyle,
   ResolvedHorizontalLineStyle
->(HorizontalLine, {
+>(renderHorizontalLine, {
   resolveStyle: (style, context) => ({
     ...stripLayoutParticipation(style),
     y: resolveRequiredLength(
@@ -115,3 +116,45 @@ export const horizontalLine = defineComp<
   }) as ResolvedHorizontalLineStyle,
 });
 registerOpaqueStyleProperties(HorizontalLine, ['stroke', 'cursor']);
+
+const renderLegacyHorizontalLine = function HorizontalLine(
+  props: HorizontalLineProps,
+  style: Readonly<ResolvedHorizontalLineStyle>,
+  ctx: RenderingContext2D,
+) {
+  return renderHorizontalLine(props, style, ctx);
+};
+
+/** @internal Temporary lowercase authoring adapter retained until Task 12. */
+export const horizontalLine = defineComp<
+  HorizontalLineProps,
+  HorizontalLineStyle,
+  HorizontalLineStyle,
+  ResolvedHorizontalLineStyle
+>(renderLegacyHorizontalLine, {
+  resolveStyle: (style, context) => ({
+    ...stripLayoutParticipation(style),
+    y: resolveRequiredLength(
+      style.y,
+      context.percentageBasis.height,
+      'y',
+      context,
+    ),
+    x1: resolveLocalOffset(
+      style.x1,
+      context.percentageBasis.width,
+      'x1',
+      context,
+    ),
+    x2: resolveRequiredLength(
+      style.x2 ?? context.allocation.width,
+      context.percentageBasis.width,
+      'x2',
+      context,
+    ),
+  }) as ResolvedHorizontalLineStyle,
+});
+registerOpaqueStyleProperties(renderLegacyHorizontalLine, [
+  'stroke',
+  'cursor',
+]);
