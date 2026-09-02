@@ -19,6 +19,7 @@ interface SourceInspection {
   readonly hasDirectComponentCall: boolean;
   readonly hasDynamicImport: boolean;
   readonly hasForbiddenModuleSyntax: boolean;
+  readonly hasInvalidCreateElementCallForm: boolean;
   readonly hasJsx: boolean;
   readonly hasLegacyAuthoring: boolean;
   readonly hasLegacyLayerRender: boolean;
@@ -135,15 +136,28 @@ function identifierName(value: unknown): string | undefined {
 }
 
 function propertyName(value: unknown): string | undefined {
-  if (!isNode(value)) return undefined;
+  const node = unwrapTransparentExpression(value);
+  if (!node) return undefined;
   if (
-    (value.type === "Identifier" || value.type === "JSXIdentifier") &&
-    typeof value.name === "string"
+    (node.type === "Identifier" || node.type === "JSXIdentifier") &&
+    typeof node.name === "string"
   ) {
-    return value.name;
+    return node.name;
   }
-  if (value.type === "StringLiteral" && typeof value.value === "string") {
-    return value.value;
+  if (node.type === "StringLiteral" && typeof node.value === "string") {
+    return node.value;
+  }
+  if (node.type === "TemplateLiteral" && nodes(node.expressions).length === 0) {
+    const quasis = nodes(node.quasis);
+    const quasiValue = quasis.length === 1 ? quasis[0]?.value : undefined;
+    if (
+      quasiValue !== null &&
+      typeof quasiValue === "object" &&
+      "cooked" in quasiValue &&
+      typeof quasiValue.cooked === "string"
+    ) {
+      return quasiValue.cooked;
+    }
   }
   return undefined;
 }
@@ -402,6 +416,24 @@ function unwrapTransparentExpression(value: unknown): SyntaxNode | undefined {
   return node;
 }
 
+function staticMemberName(node: SyntaxNode): string | undefined {
+  if (
+    node.type !== "MemberExpression" &&
+    node.type !== "OptionalMemberExpression"
+  ) {
+    return undefined;
+  }
+  if (node.computed !== true) return propertyName(node.property);
+  const property = unwrapTransparentExpression(node.property);
+  if (
+    property?.type !== "StringLiteral" &&
+    property?.type !== "TemplateLiteral"
+  ) {
+    return undefined;
+  }
+  return propertyName(property);
+}
+
 function knownGlobalAccessPath(value: unknown): readonly string[] | undefined {
   const node = unwrapTransparentExpression(value);
   if (!node) return undefined;
@@ -416,7 +448,7 @@ function knownGlobalAccessPath(value: unknown): readonly string[] | undefined {
   }
 
   const objectPath = knownGlobalAccessPath(node.object);
-  const memberName = propertyName(node.property);
+  const memberName = staticMemberName(node);
   return objectPath && memberName ? [...objectPath, memberName] : undefined;
 }
 
@@ -426,6 +458,13 @@ function isCommonJsGlobalAccess(node: SyntaxNode): boolean {
     node.type !== "OptionalMemberExpression"
   ) {
     return false;
+  }
+  if (
+    node.computed === true &&
+    knownGlobalAccessPath(node.object) !== undefined &&
+    staticMemberName(node) === undefined
+  ) {
+    return true;
   }
   const path = knownGlobalAccessPath(node);
   return (
@@ -450,12 +489,18 @@ function isApprovedCoreReference(
     return true;
   }
   if (
-    parent.type === "CallExpression" &&
+    (parent.type === "CallExpression" ||
+      parent.type === "OptionalCallExpression" ||
+      parent.type === "NewExpression") &&
     identifierName(parent.callee) !== undefined &&
     valueImports.get(identifierName(parent.callee) ?? "") === "createElement" &&
     nodes(parent.arguments)[0] === node
   ) {
     return true;
+  }
+  if (parent.type === "TaggedTemplateExpression" && parent.tag === node) {
+    const name = identifierName(node);
+    return name !== undefined && valueImports.get(name) === "createElement";
   }
   if (isNonComputedPropertyName(node, parent)) return true;
   return false;
@@ -571,6 +616,7 @@ function inspectSource(source: string, label: string): SourceInspection {
   let hasCommonJsSyntax = false;
   let hasDirectComponentCall = false;
   let hasDynamicImport = false;
+  let hasInvalidCreateElementCallForm = false;
   let hasJsx = false;
   let hasLegacyLayerRender = false;
   let hasLegacyTextStyle = false;
@@ -578,22 +624,64 @@ function inspectSource(source: string, label: string): SourceInspection {
   let hasUninspectableProps = false;
   const importedValueNames = new Set(valueImports.keys());
 
+  const inspectCreateElementArguments = (argumentsValue: unknown): void => {
+    const args = nodes(argumentsValue);
+    const componentLocalName = identifierName(args[0]);
+    const componentName =
+      (componentLocalName ? valueImports.get(componentLocalName) : undefined) ??
+      resolvedMemberName(args[0], namespaceBindings);
+    const props = args[1];
+    if (
+      !props ||
+      (props.type !== "NullLiteral" && !isInspectableObject(props))
+    ) {
+      hasUninspectableProps = true;
+    }
+    if (isInspectableObject(props)) {
+      const style = objectPropertyValue(props, "style");
+      if (style !== undefined && !isInspectableObject(style)) {
+        hasUninspectableProps = true;
+      }
+    }
+    if (componentName === "Text") {
+      hasLegacyTextStyle =
+        hasLegacyTextStyle ||
+        objectHasProperty(props, "text") ||
+        objectHasProperty(objectPropertyValue(props, "style"), "text");
+    }
+    if (componentName === "Layer") {
+      hasLegacyLayerRender =
+        hasLegacyLayerRender || objectHasProperty(props, "render");
+    }
+  };
+
   walk(file, (node) => {
     if (node.type === "JSXElement" || node.type === "JSXFragment") hasJsx = true;
+    const invocationTarget =
+      node.type === "TaggedTemplateExpression"
+        ? node.tag
+        : node.type === "CallExpression" ||
+            node.type === "OptionalCallExpression" ||
+            node.type === "NewExpression"
+          ? node.callee
+          : undefined;
+    const invocationLocalName = identifierName(invocationTarget);
+    const invokedCoreName = invocationLocalName
+      ? valueImports.get(invocationLocalName)
+      : undefined;
     if (
-      node.type === "CallExpression" ||
-      node.type === "OptionalCallExpression" ||
-      node.type === "NewExpression"
+      invokedCoreName !== undefined &&
+      DESCRIPTIVE_COMPONENT_EXPORTS.has(invokedCoreName)
     ) {
-      const calleeName = identifierName(node.callee);
-      const importedCallee = calleeName
-        ? valueImports.get(calleeName)
-        : undefined;
-      if (
-        importedCallee !== undefined &&
-        DESCRIPTIVE_COMPONENT_EXPORTS.has(importedCallee)
-      ) {
-        hasDirectComponentCall = true;
+      hasDirectComponentCall = true;
+    }
+    if (invokedCoreName === "createElement") {
+      hasCreateElementCall = true;
+      if (node.type !== "CallExpression") {
+        hasInvalidCreateElementCallForm = true;
+      }
+      if (node.type !== "TaggedTemplateExpression") {
+        inspectCreateElementArguments(node.arguments);
       }
     }
     if (
@@ -681,36 +769,6 @@ function inspectSource(source: string, label: string): SourceInspection {
     if (memberCallee && LEGACY_AUTHORING_NAMES.has(memberCallee)) {
       hasLegacyAuthoring = true;
     }
-    if (importedCallee !== "createElement") return;
-    hasCreateElementCall = true;
-    const args = nodes(node.arguments);
-    const componentLocalName = identifierName(args[0]);
-    const componentName =
-      (componentLocalName ? valueImports.get(componentLocalName) : undefined) ??
-      resolvedMemberName(args[0], namespaceBindings);
-    const props = args[1];
-    if (
-      !props ||
-      (props.type !== "NullLiteral" && !isInspectableObject(props))
-    ) {
-      hasUninspectableProps = true;
-    }
-    if (isInspectableObject(props)) {
-      const style = objectPropertyValue(props, "style");
-      if (style !== undefined && !isInspectableObject(style)) {
-        hasUninspectableProps = true;
-      }
-    }
-    if (componentName === "Text") {
-      hasLegacyTextStyle =
-        hasLegacyTextStyle ||
-        objectHasProperty(props, "text") ||
-        objectHasProperty(objectPropertyValue(props, "style"), "text");
-    }
-    if (componentName === "Layer") {
-      hasLegacyLayerRender =
-        hasLegacyLayerRender || objectHasProperty(props, "render");
-    }
   });
 
   walkWithParent(file, undefined, (node, parent) => {
@@ -741,6 +799,7 @@ function inspectSource(source: string, label: string): SourceInspection {
     hasDirectComponentCall,
     hasDynamicImport,
     hasForbiddenModuleSyntax,
+    hasInvalidCreateElementCallForm,
     hasJsx,
     hasLegacyAuthoring,
     hasLegacyLayerRender,
@@ -824,5 +883,11 @@ export function validateLearningSourceText(
     }
   } else {
     throw invalid(label, "must select a supported authoring mode.");
+  }
+  if (inspection.hasInvalidCreateElementCallForm) {
+    throw invalid(
+      label,
+      "must invoke imported createElement with a normal CallExpression.",
+    );
   }
 }

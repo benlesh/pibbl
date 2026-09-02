@@ -788,3 +788,156 @@ server permission; this was an environment restriction, not a product failure.
   `loader.require` or `loader.module.exports` as CommonJS.
 - Fresh evidence is Node 26.7.0 with pnpm 11.21.0. Node 24 LTS remains
   unverified under R8.
+
+## Fix Round 5 — invocation forms and computed-template paths
+
+Review of `10aeb6e2637815e02bb8eaf191fc024b118b0804` found the final two
+P2 gaps in the shared learning-source validator. Imported `createElement`
+optional and constructor calls were outside the normal-call inspection, and
+computed no-substitution template keys were outside static global-path
+resolution. This round closes both without changing a learning source, catalog
+entry, runtime source, generated index, test-lab fixture, or visual baseline.
+
+### Structural enforcement changes
+
+- Invocation inspection now classifies direct imported values across
+  `CallExpression`, `OptionalCallExpression`, `NewExpression`, and
+  `TaggedTemplateExpression`. Every imported `createElement` invocation counts
+  toward authoring-mode exclusivity, but only a normal `CallExpression` is
+  permitted in the sole non-JSX lesson.
+- Optional and constructor `createElement` argument lists use the same inline
+  props/style inspection as normal calls, so an invalid call form cannot hide
+  indirect props, indirect style, `Text` legacy content, or a `Layer` render
+  prop. Imported component arguments in those forms remain direct core
+  references long enough for the specific inspection to run.
+- Direct descriptive components remain invalid across normal, optional,
+  constructor, tagged-template, and TypeScript-wrapped call shapes. The tagged
+  reference exception is deliberately limited to imported `createElement`;
+  other CRC values remain rejected as tags under the direct-binding policy.
+- `propertyName` now unwraps transparent expression wrappers and returns the
+  cooked value of a no-substitution `TemplateLiteral`, in addition to ordinary
+  identifiers and string literals. Computed member resolution separately
+  distinguishes statically known string/template keys from dynamic expressions.
+- Static no-substitution template paths rooted at `globalThis`, `window`,
+  `self`, or `global` now recognize exact `require`, `module`, and `exports`
+  segments through nested, optional, escaped, and TypeScript-wrapped access.
+  Dynamic computed segments on those known roots fail closed. The rule remains
+  root-sensitive: template, expression-template, tagged-template, and dynamic
+  keys on unrelated objects remain valid, as do static unrelated global keys.
+
+### Fix-round TDD evidence
+
+All requested regression fixtures preceded the validator change. The final
+initial RED run was:
+
+```text
+Test Files  1 failed (1)
+Tests       20 failed | 149 passed (169)
+```
+
+The failures covered JSX and non-JSX optional/constructor/tagged
+`createElement` use, optional-call props/style inspection, static and dynamic
+template keys, optional and TypeScript-wrapped paths, tagged/dynamic computed
+keys on known globals, and cooked escaped template content. Neighboring direct
+component and unrelated-object cases were already green during RED.
+
+The first GREEN run passed 169 tests. Bounded self-review then found that the
+initial tagged-callee exception was too broad and could admit tagged use of
+another CRC value. An additional regression fixture failed alone while the
+other 169 tests stayed green:
+
+```text
+Test Files  1 failed (1)
+Tests       1 failed | 169 passed (170)
+```
+
+After limiting that exception to imported `createElement`, the final focused
+result was:
+
+```text
+Test Files  1 passed (1)
+Tests       170 passed (170)
+```
+
+### Fix-round verification
+
+All final evidence ran after the self-review correction on Node `v26.7.0` with
+pnpm `11.21.0`.
+
+```sh
+corepack pnpm@11.21.0 scenarios:check
+corepack pnpm@11.21.0 typecheck
+corepack pnpm@11.21.0 lint
+```
+
+```text
+Catalog: 42 lessons, 16 test labs, and docs/scenario-index.md validated
+tsc --noEmit: passed
+ESLint and Prettier: passed
+```
+
+```sh
+corepack pnpm@11.21.0 test:ci
+```
+
+```text
+Test Files  83 passed (83)
+Tests       1042 passed | 2 skipped (1044)
+Duration    21.42s
+```
+
+```sh
+corepack pnpm@11.21.0 playground:build
+corepack pnpm@11.21.0 playground:build:built
+```
+
+```text
+Studio declaration/runtime verifier: passed in both commands
+Source mode: 1308 modules transformed; built in 868ms
+Built mode: 1209 modules transformed; built in 857ms
+```
+
+Both builds retained only the pre-existing ineffective-dynamic-import and
+large-chunk warnings.
+
+```sh
+corepack pnpm@11.21.0 test:package-consumer
+corepack pnpm@11.21.0 test:package-consumer:packed
+corepack pnpm@11.21.0 test:smoke:built
+git diff --check
+```
+
+```text
+Workspace Bundler, NodeNext, and runtime consumer: passed
+Packed declarations, exports, deep-import, no-source, and optimized focus
+consumer: passed (113966 no-focus bytes; 137630 with-focus bytes)
+Built browser smoke: 1 file and 1 test passed
+git diff --check: no output
+```
+
+The sandboxed focused-test and catalog commands could not create their local
+listen/IPC sockets (`EPERM`). The same commands passed with the required local
+server permission; these were environment restrictions, not product failures.
+
+### Fix-round self-review and concerns
+
+- The configured Babel parser emits direct optional syntax as
+  `OptionalCallExpression`/`OptionalMemberExpression`; normal calls,
+  constructors, and tags use their corresponding explicit node families.
+  Transparent-wrapper traversal also retains `ChainExpression` compatibility
+  if that representation is supplied in a future parser mode.
+- Normal imported `createElement` calls still use the exact existing props,
+  legacy-property, and authoring checks. Optional and constructor calls now
+  share those checks before their call-form diagnostic; tagged use has no
+  argument list and is rejected explicitly.
+- No-substitution template keys use cooked values, so escaped static spellings
+  cannot bypass exact segment matching. Template expressions, identifier keys,
+  and tagged-template computed keys are dynamic and fail closed only after a
+  statically known global root.
+- Unrelated-object template keys and static unrelated global keys remain valid,
+  bounding false positives. Static object props remain subject to the existing
+  no-computed-key/no-spread inspectability policy.
+- The code and test diff remains confined to the shared validator and focused
+  browser fixtures; this report is the only record change.
+- Fresh evidence remains Node 26.7.0 rather than the canonical Node 24 LTS line
+  recorded by R8.
