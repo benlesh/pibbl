@@ -10,6 +10,7 @@
   "dependencies": {
     "@fontsource-variable/jetbrains-mono": "catalog:",
     "@fontsource-variable/space-grotesk": "catalog:",
+    "@babel/parser": "catalog:",
     "@crc/core": "workspace:*",
     "@crc/scenarios": "workspace:*",
     "lz-string": "catalog:",

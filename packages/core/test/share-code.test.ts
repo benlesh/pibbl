@@ -56,43 +56,121 @@ describe("learning example share URLs", () => {
 });
 
 describe("learning example sandbox modules", () => {
-  it("combines root and automatic-runtime aliases into one CRC_CORE binding", () => {
-    const runnable = toRunnableScript(`
-import { jsx as _jsx, jsxs as _jsxs } from "@crc/core/jsx-runtime";
-import { crc, Rectangle, Text } from "@crc/core";
-function Lesson() {
-  return _jsxs(Text, { children: ["CRC ", _jsx(Rectangle, { style: { width: 2, height: 2 } })] });
-}
-export default function mount(canvas) {
-  return crc(canvas, _jsx(Lesson, {}));
-}
-`);
+  function executeSandbox(
+    emittedCode: string,
+    runtime: Readonly<Record<string, unknown>>,
+    canvasElement: unknown,
+  ): unknown {
+    const sandboxGlobal = { CRC_CORE: runtime } as {
+      CRC_CORE: Readonly<Record<string, unknown>>;
+      __CRC_EXAMPLE_MOUNT__?: (canvas: unknown) => unknown;
+    };
+    const execute = new Function(
+      "globalThis",
+      "canvasElement",
+      `let controller;
+       try {
+         ${toRunnableScript(emittedCode)}
+         const canvas = canvasElement;
+         controller = globalThis.__CRC_EXAMPLE_MOUNT__(canvas);
+       } finally {}
+       return controller;`,
+    ) as (globalValue: typeof sandboxGlobal, canvas: unknown) => unknown;
+    return execute(sandboxGlobal, canvasElement);
+  }
 
-    expect(runnable).toContain(
-      "const { jsx: _jsx, jsxs: _jsxs, crc, Rectangle, Text } = CRC_CORE;",
-    );
+  it("executes multiline root and runtime imports with aliases and comments", () => {
+    const canvasElement = { id: "preview" };
+    const runtime = {
+      crc: (canvas: unknown, node: unknown) => ({ canvas, node }),
+      jsx: (type: unknown, props: unknown) => ({ type, props }),
+      Text: "text-component",
+    };
+
+    const emittedCode = `
+import {
+  crc /* root alias */ as CRC_CORE,
+  Text as controller,
+} from "@crc/core";
+import {
+  jsx as /* compiler alias */ __crcStudioRuntime,
+} from "@crc/core/jsx-runtime";
+import { Fragment as canvas } from "@crc/core/jsx-dev-runtime";
+const literal = "import this and preserve export {}";
+const template = \`export \${"import"} text\`;
+export default function mount(/* before */ canvas /* after */) {
+  return CRC_CORE(canvas, __crcStudioRuntime(controller, { children: [literal, template] }));
+}
+export /* empty module sentinel */ {};
+`;
+    const runnable = toRunnableScript(emittedCode);
+    expect(runnable).toContain("/* root alias */");
+    expect(runnable).toContain("/* compiler alias */");
+    expect(runnable).toContain("/* empty module sentinel */");
+
+    const result = executeSandbox(emittedCode, runtime, canvasElement);
+
+    expect(result).toEqual({
+      canvas: canvasElement,
+      node: {
+        type: "text-component",
+        props: {
+          children: [
+            "import this and preserve export {}",
+            "export import text",
+          ],
+        },
+      },
+    });
   });
 
-  it("accepts development-runtime aliases without exposing another global", () => {
-    const runnable = toRunnableScript(`
+  it("executes combined automatic and development runtime aliases", () => {
+    const result = executeSandbox(
+      `
+import { jsx as _jsx, jsxs as _jsxs } from "@crc/core/jsx-runtime";
 import { jsxDEV as _jsxDEV } from "@crc/core/jsx-dev-runtime";
-import { crc, Rectangle } from "@crc/core";
+import { crc, Rectangle, Text } from "@crc/core";
 export default function mount(canvas) {
-  return crc(canvas, _jsxDEV(Rectangle, { style: { width: 2, height: 2 } }, undefined, false, undefined, this));
+  return crc(canvas, [
+    _jsx(Rectangle, { style: { width: 2, height: 2 } }),
+    _jsxs(Text, { children: ["CRC ", 1] }),
+    _jsxDEV(Rectangle, { style: { width: 4, height: 4 } }, undefined, false, undefined, undefined),
+  ]);
 }
-`);
-
-    expect(runnable).toContain(
-      "const { jsxDEV: _jsxDEV, crc, Rectangle } = CRC_CORE;",
+`,
+      {
+        crc: (_canvas: unknown, node: unknown) => node,
+        jsx: (type: unknown, props: unknown) => ({ kind: "jsx", type, props }),
+        jsxs: (type: unknown, props: unknown) => ({
+          kind: "jsxs",
+          type,
+          props,
+        }),
+        jsxDEV: (type: unknown, props: unknown) => ({
+          kind: "jsxDEV",
+          type,
+          props,
+        }),
+        Rectangle: "rectangle-component",
+        Text: "text-component",
+      },
+      {},
     );
+
+    expect(result).toMatchObject([
+      { kind: "jsx", type: "rectangle-component" },
+      { kind: "jsxs", type: "text-component" },
+      { kind: "jsxDEV", type: "rectangle-component" },
+    ]);
   });
 
   it.each([
     'import external from "external";',
     'import * as CRC from "@crc/core";',
     'import CRC from "@crc/core";',
-    'const runtime = import("@crc/core/jsx-runtime");',
     'import { jsx } from "@crc/core/private-runtime";',
+    'import "@crc/core";',
+    'import type { CRCNode } from "@crc/core";',
   ])("rejects unsupported emitted module syntax: %s", (statement) => {
     expect(() =>
       toRunnableScript(
@@ -102,13 +180,71 @@ export default function mount(canvas) {
   });
 
   it.each([
+    'const runtime = import("@crc/core/jsx-runtime");',
+    'async function load() { return import("@crc/core"); }',
+  ])("rejects dynamic imports in any lexical context: %s", (statement) => {
+    expect(() =>
+      toRunnableScript(
+        `import { crc } from "@crc/core";\n${statement}\nexport default function mount(canvas) { return canvas; }`,
+      ),
+    ).toThrow();
+  });
+
+  it.each([
+    'export { crc };',
+    'export * from "@crc/core";',
+    'export const extra = 1;',
+    'export default canvas => canvas;',
+    'export default function mount(canvas) { return canvas; }\nexport {};\nexport {};',
+  ])("rejects malformed or extra exports: %s", (exportSource) => {
+    expect(() =>
+      toRunnableScript(
+        `import { crc } from "@crc/core";\n${exportSource}`,
+      ),
+    ).toThrow(/default mount\(canvas\)/u);
+  });
+
+  it.each([
+    'import { crc } from "@crc/core";\nimport { jsx as crc } from "@crc/core/jsx-runtime";',
+    'import { crc, crc } from "@crc/core";',
+  ])("rejects duplicate local import bindings: %s", (imports) => {
+    expect(() =>
+      toRunnableScript(
+        `${imports}\nexport default function mount(canvas) { return canvas; }`,
+      ),
+    ).toThrow();
+  });
+
+  it.each([
     "function mount(canvas) { return canvas; }",
     "export default function mount(target) { return target; }",
     "export default function other(canvas) { return canvas; }",
+    "export default async function mount(canvas) { return canvas; }",
+    "export default function* mount(canvas) { yield canvas; }",
     "export default function mount(canvas) { return canvas; }\nexport default function mount(canvas) { return canvas; }",
   ])("requires exactly one default mount(canvas) export", (mountSource) => {
     expect(() =>
       toRunnableScript(`import { crc } from "@crc/core";\n${mountSource}`),
     ).toThrow(/default mount\(canvas\)/u);
+  });
+
+  it("does not reinterpret module-looking text in strings, templates, or comments", () => {
+    const emittedCode = `
+import { crc } from "@crc/core";
+// import external from "external"; export const nope = true;
+const stringValue = "import this; export {};";
+const templateValue = \`dynamic import("external") and export default\`;
+export default function mount(canvas /* retained comment */) {
+  return crc(canvas, { stringValue, templateValue });
+}
+`;
+    const runnable = toRunnableScript(emittedCode);
+
+    expect(runnable).toContain('// import external from "external"; export const nope = true;');
+    expect(runnable).toContain('"import this; export {};"');
+    expect(runnable).toContain(
+      '`dynamic import("external") and export default`',
+    );
+    expect(runnable).toContain("canvas /* retained comment */");
   });
 });
