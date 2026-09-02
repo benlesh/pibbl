@@ -11,5 +11,5 @@
     "target": "ESNext",
     "types": []
   },
-  "files": ["index.ts"]
+  "files": ["index.ts", "jsx.tsx"]
 }

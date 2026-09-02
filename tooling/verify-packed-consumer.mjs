@@ -108,7 +108,13 @@ try {
     join(consumerDirectory, 'pnpm-workspace.yaml'),
     `packages:\n  - .\noverrides:\n  '@crc/types': file:${typesTarball}\n`,
   );
-  for (const file of ['index.ts', 'runtime.mjs', 'tsconfig.bundler.json', 'tsconfig.nodenext.json']) {
+  for (const file of [
+    'index.ts',
+    'jsx.tsx',
+    'runtime.mjs',
+    'tsconfig.bundler.json',
+    'tsconfig.nodenext.json',
+  ]) {
     cpSync(join(repositoryRoot, 'playground/package-consumer', file), join(consumerDirectory, file));
   }
 
