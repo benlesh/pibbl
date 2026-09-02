@@ -13,8 +13,10 @@ interface SyntaxNode {
 }
 
 interface SourceInspection {
+  readonly hasBindingViolation: boolean;
   readonly hasCreateElementCall: boolean;
   readonly hasDynamicImport: boolean;
+  readonly hasForbiddenModuleSyntax: boolean;
   readonly hasJsx: boolean;
   readonly hasLegacyAuthoring: boolean;
   readonly hasLegacyLayerRender: boolean;
@@ -23,6 +25,7 @@ interface SourceInspection {
   readonly hasOnlyApprovedImports: boolean;
   readonly hasCanonicalMount: boolean;
   readonly hasTestScaffolding: boolean;
+  readonly hasUninspectableProps: boolean;
 }
 
 const LEGACY_AUTHORING_NAMES = new Set([
@@ -106,6 +109,24 @@ function walk(node: SyntaxNode, visit: (node: SyntaxNode) => void): void {
   }
 }
 
+function walkWithParent(
+  node: SyntaxNode,
+  parent: SyntaxNode | undefined,
+  visit: (node: SyntaxNode, parent: SyntaxNode | undefined) => void,
+): void {
+  visit(node, parent);
+  for (const [key, value] of Object.entries(node)) {
+    if (SKIPPED_AST_KEYS.has(key)) continue;
+    if (isNode(value)) {
+      walkWithParent(value, node, visit);
+    } else if (Array.isArray(value)) {
+      for (const child of value) {
+        if (isNode(child)) walkWithParent(child, node, visit);
+      }
+    }
+  }
+}
+
 function parseSource(source: string, label: string): SyntaxNode {
   try {
     return parse(source, {
@@ -173,6 +194,125 @@ function objectPropertyValue(object: unknown, name: string): unknown {
   return property?.value;
 }
 
+function isInspectableObject(value: unknown): value is SyntaxNode {
+  if (!isNode(value) || value.type !== "ObjectExpression") return false;
+  return nodes(value.properties).every(
+    (property) =>
+      (property.type === "ObjectProperty" || property.type === "ObjectMethod") &&
+      property.computed !== true &&
+      propertyName(property.key) !== undefined,
+  );
+}
+
+function bindingNames(pattern: unknown): readonly string[] {
+  if (!isNode(pattern)) return [];
+  if (pattern.type === "Identifier") {
+    return typeof pattern.name === "string" ? [pattern.name] : [];
+  }
+  if (pattern.type === "RestElement") return bindingNames(pattern.argument);
+  if (pattern.type === "AssignmentPattern") return bindingNames(pattern.left);
+  if (pattern.type === "TSParameterProperty") {
+    return bindingNames(pattern.parameter);
+  }
+  if (pattern.type === "ArrayPattern") {
+    return nodes(pattern.elements).flatMap(bindingNames);
+  }
+  if (pattern.type === "ObjectPattern") {
+    return nodes(pattern.properties).flatMap((property) => {
+      if (property.type === "RestElement") return bindingNames(property.argument);
+      return bindingNames(property.value);
+    });
+  }
+  return [];
+}
+
+function declaresBindingNamed(
+  node: SyntaxNode,
+  importedNames: ReadonlySet<string>,
+): boolean {
+  const matches = (patterns: readonly unknown[]) =>
+    patterns.some((pattern) =>
+      bindingNames(pattern).some((name) => importedNames.has(name)),
+    );
+
+  switch (node.type) {
+    case "VariableDeclarator":
+      return matches([node.id]);
+    case "FunctionDeclaration":
+    case "FunctionExpression":
+    case "ArrowFunctionExpression":
+      return matches([node.id, ...nodes(node.params)]);
+    case "ClassDeclaration":
+    case "ClassExpression":
+      return matches([node.id]);
+    case "CatchClause":
+      return matches([node.param]);
+    default:
+      return false;
+  }
+}
+
+function assignsBindingNamed(
+  node: SyntaxNode,
+  importedNames: ReadonlySet<string>,
+): boolean {
+  if (node.type === "AssignmentExpression") {
+    return bindingNames(node.left).some((name) => importedNames.has(name));
+  }
+  return (
+    node.type === "UpdateExpression" &&
+    bindingNames(node.argument).some((name) => importedNames.has(name))
+  );
+}
+
+function isApprovedCoreReference(
+  node: SyntaxNode,
+  parent: SyntaxNode | undefined,
+  valueImports: ReadonlyMap<string, string>,
+): boolean {
+  if (!parent) return false;
+  if (
+    parent.type === "ImportSpecifier" ||
+    parent.type === "ImportDefaultSpecifier" ||
+    parent.type === "ImportNamespaceSpecifier"
+  ) {
+    return true;
+  }
+  if (
+    (parent.type === "CallExpression" ||
+      parent.type === "OptionalCallExpression" ||
+      parent.type === "NewExpression") &&
+    parent.callee === node
+  ) {
+    return true;
+  }
+  if (
+    parent.type === "CallExpression" &&
+    identifierName(parent.callee) !== undefined &&
+    valueImports.get(identifierName(parent.callee) ?? "") === "createElement" &&
+    nodes(parent.arguments)[0] === node
+  ) {
+    return true;
+  }
+  if (
+    (parent.type === "ObjectProperty" || parent.type === "ObjectMethod") &&
+    parent.computed !== true &&
+    parent.shorthand !== true &&
+    parent.key === node
+  ) {
+    return true;
+  }
+  if (
+    (parent.type === "MemberExpression" ||
+      parent.type === "OptionalMemberExpression") &&
+    parent.computed !== true &&
+    parent.property === node
+  ) {
+    return true;
+  }
+  return false;
+}
+
 function jsxAttribute(
   openingElement: SyntaxNode,
   name: string,
@@ -216,10 +356,22 @@ function inspectSource(source: string, label: string): SourceInspection {
   const namespaceBindings = new Set<string>();
   let hasNamedValueCoreImport = false;
   let hasOnlyApprovedImports = true;
+  let hasForbiddenModuleSyntax = false;
   let hasLegacyAuthoring = false;
 
   for (const statement of programBody) {
-    if (statement.type !== "ImportDeclaration") continue;
+    if (statement.type !== "ImportDeclaration") {
+      if (
+        statement.type === "ExportNamedDeclaration" ||
+        statement.type === "ExportAllDeclaration" ||
+        statement.type === "TSExportAssignment" ||
+        statement.type === "TSNamespaceExportDeclaration" ||
+        statement.type === "TSImportEqualsDeclaration"
+      ) {
+        hasForbiddenModuleSyntax = true;
+      }
+      continue;
+    }
     const sourceNode = isNode(statement.source) ? statement.source : undefined;
     const moduleName =
       sourceNode?.type === "StringLiteral" && typeof sourceNode.value === "string"
@@ -239,7 +391,9 @@ function inspectSource(source: string, label: string): SourceInspection {
     for (const specifier of specifiers) {
       const localName = identifierName(specifier.local);
       if (specifier.type === "ImportNamespaceSpecifier") {
-        if (localName) namespaceBindings.add(localName);
+        if (localName && moduleName === "@crc/core") {
+          namespaceBindings.add(localName);
+        }
         hasOnlyApprovedImports = false;
         continue;
       }
@@ -252,30 +406,45 @@ function inspectSource(source: string, label: string): SourceInspection {
         hasOnlyApprovedImports = false;
         continue;
       }
+      if (localName !== importedName) hasOnlyApprovedImports = false;
       if (specifier.importKind === "type") continue;
-      hasNamedValueCoreImport = moduleName === "@crc/core";
+      if (moduleName !== "@crc/core") continue;
+      hasNamedValueCoreImport = true;
       if (valueImports.has(localName)) hasOnlyApprovedImports = false;
       valueImports.set(localName, importedName);
-      if (
-        LEGACY_AUTHORING_NAMES.has(importedName) ||
-        LEGACY_AUTHORING_NAMES.has(localName)
-      ) {
+      if (LEGACY_AUTHORING_NAMES.has(importedName)) {
         hasLegacyAuthoring = true;
       }
     }
   }
 
   let hasCreateElementCall = false;
+  let hasBindingViolation = false;
   let hasDynamicImport = false;
   let hasJsx = false;
   let hasLegacyLayerRender = false;
   let hasLegacyTextStyle = false;
   let hasTestScaffolding = false;
+  let hasUninspectableProps = false;
+  const importedValueNames = new Set(valueImports.keys());
 
   walk(file, (node) => {
     if (node.type === "JSXElement" || node.type === "JSXFragment") hasJsx = true;
+    if (
+      declaresBindingNamed(node, importedValueNames) ||
+      assignsBindingNamed(node, importedValueNames)
+    ) {
+      hasBindingViolation = true;
+    }
     if (node.type === "ImportExpression" || node.type === "TSImportType") {
       hasDynamicImport = true;
+    }
+    if (
+      node.type === "MetaProperty" &&
+      identifierName(node.meta) === "import" &&
+      identifierName(node.property) === "meta"
+    ) {
+      hasForbiddenModuleSyntax = true;
     }
     if (
       node.type === "CallExpression" &&
@@ -296,12 +465,27 @@ function inspectSource(source: string, label: string): SourceInspection {
     if (node.type === "JSXElement") {
       const opening = isNode(node.openingElement) ? node.openingElement : undefined;
       if (!opening) return;
+      if (
+        nodes(opening.attributes).some(
+          (attribute) => attribute.type === "JSXSpreadAttribute",
+        )
+      ) {
+        hasUninspectableProps = true;
+      }
       const localName = propertyName(opening.name);
       const componentName =
         (localName ? valueImports.get(localName) : undefined) ??
         resolvedMemberName(opening.name, namespaceBindings);
+      const styleAttribute = jsxAttribute(opening, "style");
+      const style = jsxAttributeExpression(styleAttribute);
+      if (
+        componentName !== undefined &&
+        styleAttribute !== undefined &&
+        !isInspectableObject(style)
+      ) {
+        hasUninspectableProps = true;
+      }
       if (componentName === "Text") {
-        const style = jsxAttributeExpression(jsxAttribute(opening, "style"));
         hasLegacyTextStyle =
           hasLegacyTextStyle ||
           jsxAttribute(opening, "text") !== undefined ||
@@ -339,6 +523,18 @@ function inspectSource(source: string, label: string): SourceInspection {
       (componentLocalName ? valueImports.get(componentLocalName) : undefined) ??
       resolvedMemberName(args[0], namespaceBindings);
     const props = args[1];
+    if (
+      !props ||
+      (props.type !== "NullLiteral" && !isInspectableObject(props))
+    ) {
+      hasUninspectableProps = true;
+    }
+    if (isInspectableObject(props)) {
+      const style = objectPropertyValue(props, "style");
+      if (style !== undefined && !isInspectableObject(style)) {
+        hasUninspectableProps = true;
+      }
+    }
     if (componentName === "Text") {
       hasLegacyTextStyle =
         hasLegacyTextStyle ||
@@ -351,10 +547,26 @@ function inspectSource(source: string, label: string): SourceInspection {
     }
   });
 
+  walkWithParent(file, undefined, (node, parent) => {
+    const name = identifierName(node);
+    // Learning sources keep core bindings visibly direct. Rejecting every other
+    // value position also rejects aliases and every lexical shadow without
+    // guessing which same-named identifier a later call intended to use.
+    if (
+      name !== undefined &&
+      importedValueNames.has(name) &&
+      !isApprovedCoreReference(node, parent, valueImports)
+    ) {
+      hasBindingViolation = true;
+    }
+  });
+
   return {
+    hasBindingViolation,
     hasCanonicalMount: isCanonicalMount(programBody),
     hasCreateElementCall,
     hasDynamicImport,
+    hasForbiddenModuleSyntax,
     hasJsx,
     hasLegacyAuthoring,
     hasLegacyLayerRender,
@@ -362,6 +574,7 @@ function inspectSource(source: string, label: string): SourceInspection {
     hasNamedValueCoreImport,
     hasOnlyApprovedImports,
     hasTestScaffolding,
+    hasUninspectableProps,
   };
 }
 
@@ -377,16 +590,27 @@ export function validateLearningSourceText(
   const inspection = inspectSource(source, label);
   if (
     !inspection.hasNamedValueCoreImport ||
-    !inspection.hasOnlyApprovedImports ||
-    inspection.hasDynamicImport
+    !inspection.hasOnlyApprovedImports
   ) {
     throw invalid(
       label,
-      "must use static named imports only from @crc/core, including at least one value import.",
+      "must use direct, unaliased static named imports only from @crc/core, including at least one value import.",
+    );
+  }
+  if (inspection.hasDynamicImport || inspection.hasForbiddenModuleSyntax) {
+    throw invalid(
+      label,
+      "must not use dynamic imports, import.meta, import-equals, or named re-exports.",
     );
   }
   if (!inspection.hasCanonicalMount) {
     throw invalid(label, "must export the canonical mount(canvas) contract.");
+  }
+  if (inspection.hasBindingViolation) {
+    throw invalid(
+      label,
+      "must use direct @crc/core bindings without aliases, reassignment, or shadowing.",
+    );
   }
   if (inspection.hasTestScaffolding) {
     throw invalid(label, "contains test or source-marker scaffolding.");
@@ -399,6 +623,12 @@ export function validateLearningSourceText(
   }
   if (inspection.hasLegacyLayerRender) {
     throw invalid(label, "uses the legacy Layer render prop.");
+  }
+  if (inspection.hasUninspectableProps) {
+    throw invalid(
+      label,
+      "must use inline object props and inline style objects without spreads.",
+    );
   }
 
   if (authoring === "createElement") {

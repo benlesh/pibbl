@@ -60,7 +60,7 @@ function PropagationAncestor(props: PropagationProps) {
       );
     },
   });
-  return <PropagationLeaf {...props} />;
+  return <PropagationLeaf mode={props.mode} record={props.record} />;
 }
 function PropagationAndCancellationStudy() {
   const [mode, setMode] = crcState<CancellationMode>("none");

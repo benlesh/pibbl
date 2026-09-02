@@ -411,3 +411,131 @@ git diff --check: no output
   round.
 - Fresh evidence remains Node 26.7.0 rather than the canonical Node 24 LTS line
   recorded by R8.
+
+## Fix Round 2 — scope, props, and module-graph enforcement
+
+Review of `8d278e5805a29233be8c3e43b0d43073d7683ebe` found three
+remaining structural bypass classes: copied or shadowed core bindings,
+indirect/spread props, and module declarations other than the canonical mount
+export. This round closes those bypasses in the shared AST validator.
+
+### Strict learning-source readability contract
+
+Learning examples now use a deliberately narrow syntax that a reader and the
+catalog checker can inspect locally:
+
+- `@crc/core` value and type specifiers must retain their exported names. A
+  core value cannot be copied to an alias, reassigned, or shadowed by a local
+  declaration or parameter. The validator resolves identifiers from the
+  parsed core import map and checks their AST binding and value positions; it
+  does not infer bindings from matching source text.
+- A direct core binding is valid as a direct call target, JSX component, or the
+  first argument of the dedicated lesson's direct `createElement` call. Other
+  value positions are rejected, which structurally prevents variable,
+  destructuring, conditional, and object-held component aliases.
+- JSX spread attributes are rejected. A `style` prop on a directly imported
+  CRC JSX component must be an inline object with static keys and no spreads.
+- Every direct `createElement` call must provide either `null` or an inline,
+  static-key props object. Its `style`, when present, must also be an inline,
+  spread-free object. This keeps legacy `Text` content and `Layer` render props
+  visible to the existing component-specific checks.
+- The sole permitted export is the already-required canonical default
+  `mount(canvas)` function. Named exports, local or source-backed re-exports,
+  star re-exports, TypeScript import-equals/export forms, dynamic imports, and
+  `import.meta` are rejected.
+
+One existing learning helper forwarded `<PropagationLeaf {...props} />`. It now
+spells the same `mode` and `record` values explicitly. This is a source-level
+readability change only: the scene, canvas, handlers, event order, feedback,
+and catalog metadata are unchanged. No test-lab source or catalog entry changed.
+
+### Fix-round TDD evidence
+
+The 15 adversarial fixtures were added before validator changes. The RED run
+reported exactly the intended failures while every pre-existing assertion
+remained green:
+
+```text
+Test Files  1 failed (1)
+Tests       15 failed | 79 passed (94)
+```
+
+The failing cases covered local and destructured component aliases, a shadowed
+and reassigned `createElement`, JSX style variables and spreads, indirect and
+spread `createElement` props, source-backed/local/star exports, `import.meta`,
+and TypeScript import-equals. The final focused run is:
+
+```text
+Test Files  1 passed (1)
+Tests       94 passed (94)
+```
+
+### Fix-round verification
+
+```sh
+corepack pnpm@11.21.0 scenarios:check
+corepack pnpm@11.21.0 typecheck
+corepack pnpm@11.21.0 lint
+```
+
+```text
+Catalog: 42 lessons, 16 test labs, and docs/scenario-index.md validated
+tsc --noEmit: passed
+ESLint and Prettier: passed
+```
+
+```sh
+corepack pnpm@11.21.0 test:ci
+```
+
+```text
+Test Files  83 passed (83)
+Tests       966 passed | 2 skipped (968)
+Duration    21.47s
+```
+
+```sh
+corepack pnpm@11.21.0 playground:build
+corepack pnpm@11.21.0 playground:build:built
+```
+
+```text
+Studio declaration/runtime verifier: passed in both commands
+Source mode: 1308 modules transformed; built in 868ms
+Built mode: 1209 modules transformed; built in 873ms
+```
+
+```sh
+corepack pnpm@11.21.0 test:package-consumer
+corepack pnpm@11.21.0 test:package-consumer:packed
+corepack pnpm@11.21.0 test:smoke:built
+git diff --check
+```
+
+```text
+Workspace Bundler, NodeNext, and runtime consumer: passed
+Packed declarations, exports, deep-import, no-source, and optimized focus
+consumer: passed (113966 no-focus bytes; 137630 with-focus bytes)
+Built browser smoke: 1 file and 1 test passed
+git diff --check: no output
+```
+
+### Fix-round self-review and concerns
+
+- The strict binding rule intentionally rejects even harmless core aliases and
+  shadows. This is a learning-catalog readability policy, not a restriction on
+  the public runtime or ordinary consumer code.
+- Parent-aware AST inspection allows a core name used only as an object or
+  member key, while rejecting the same identifier in a value position. The
+  legal TypeScript generics, assertions, and comparison fixture remains green.
+- Props are inspected only from parsed object and JSX nodes. Strings, comments,
+  similarly named type properties, and unrelated local object keys do not
+  trigger legacy-authoring findings.
+- The browser suite and catalog tool still share the same validator. No
+  duplicate browser-only parser logic or regular-expression fallback was added.
+- The single explicit-prop learning edit preserves behavior, and the 94-test
+  focused suite remounts every lesson. Test-lab separation, reserved-tag
+  exclusivity, catalog ordering, canvas sizes, actions, relationships, and the
+  generated scenario index remain unchanged.
+- Fresh evidence is Node 26.7.0 with pnpm 11.21.0. Node 24 LTS remains
+  unverified under R8.

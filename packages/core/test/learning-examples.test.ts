@@ -35,6 +35,18 @@ function expectInvalidNonJsxSource(source: string): void {
   ).toThrow();
 }
 
+function expectInvalidLearningSource(
+  source: string,
+  authoring: "jsx" | "createElement",
+): void {
+  expect(() =>
+    validateLearningSourceText(source, {
+      authoring,
+      label: "fixture",
+    }),
+  ).toThrow();
+}
+
 interface TextPaint {
   readonly text: string;
   readonly x: number;
@@ -292,9 +304,153 @@ describe("learning example catalog", () => {
       `,
     ],
   ])("rejects %s through resolved component aliases", (_name, authoring, source) => {
-    expect(() =>
-      validateLearningSourceText(source, { authoring, label: "fixture" }),
-    ).toThrow();
+    expectInvalidLearningSource(source, authoring);
+  });
+
+  it.each([
+    [
+      "a local component alias",
+      "jsx" as const,
+      `
+        import { crc, Text, type CRCController } from "@crc/core";
+        const Label = Text;
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, <Label style={{ text: "legacy" }}>Legacy</Label>);
+        }
+      `,
+    ],
+    [
+      "a destructured component alias",
+      "jsx" as const,
+      `
+        import { crc, Layer, Rectangle, type CRCController } from "@crc/core";
+        const { Layer: Surface } = { Layer };
+        const props = { render: <Rectangle style={{ width: 10, height: 10 }} /> };
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, <Surface {...props} />);
+        }
+      `,
+    ],
+    [
+      "a shadowed createElement binding",
+      "createElement" as const,
+      `
+        import { crc, createElement, type CRCController } from "@crc/core";
+        function Scene(createElement: () => never): never {
+          return createElement();
+        }
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, Scene(() => { throw new Error("fixture"); }));
+        }
+      `,
+    ],
+    [
+      "a reassigned createElement binding",
+      "createElement" as const,
+      `
+        import { crc, createElement, Group, type CRCController } from "@crc/core";
+        function localCreateElement(): never { throw new Error("fixture"); }
+        createElement = localCreateElement;
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, createElement(Group, null));
+        }
+      `,
+    ],
+  ])("rejects %s structurally", (_name, authoring, source) => {
+    expectInvalidLearningSource(source, authoring);
+  });
+
+  it.each([
+    [
+      "a JSX style variable",
+      "jsx" as const,
+      `
+        import { crc, Text, type CRCController } from "@crc/core";
+        const style = { text: "legacy" };
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, <Text style={style}>Visible</Text>);
+        }
+      `,
+    ],
+    [
+      "a JSX props spread",
+      "jsx" as const,
+      `
+        import { crc, Text, type CRCController } from "@crc/core";
+        const props = { style: { text: "legacy" } };
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, <Text {...props}>Visible</Text>);
+        }
+      `,
+    ],
+    [
+      "a JSX style object spread",
+      "jsx" as const,
+      `
+        import { crc, Rectangle, type CRCController } from "@crc/core";
+        const box = { width: 10, height: 10 };
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, <Rectangle style={{ ...box }} />);
+        }
+      `,
+    ],
+    [
+      "an indirect createElement style",
+      "createElement" as const,
+      `
+        import { crc, createElement, Text, type CRCController } from "@crc/core";
+        const style = { text: "legacy" };
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, createElement(Text, { style }, "Visible"));
+        }
+      `,
+    ],
+    [
+      "indirect createElement props",
+      "createElement" as const,
+      `
+        import { crc, createElement, Layer, Group, type CRCController } from "@crc/core";
+        const props = { render: createElement(Group, null) };
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, createElement(Layer, props));
+        }
+      `,
+    ],
+    [
+      "a createElement props object spread",
+      "createElement" as const,
+      `
+        import { crc, createElement, Text, type CRCController } from "@crc/core";
+        const props = { style: { text: "legacy" } };
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, createElement(Text, { ...props }, "Visible"));
+        }
+      `,
+    ],
+  ])("rejects %s so props remain directly inspectable", (_name, authoring, source) => {
+    expectInvalidLearningSource(source, authoring);
+  });
+
+  it.each([
+    [
+      "a source-backed named re-export",
+      `export { helper } from "./helper";`,
+    ],
+    ["a star re-export", `export * from "./helper";`],
+    ["a local named export", `export const helper = 1;`],
+    ["an import.meta expression", `const helperUrl = import.meta.url;`],
+    [
+      "a TypeScript import-equals declaration",
+      `import helper = require("./helper");`,
+    ],
+  ])("rejects %s", (_name, extraModuleSyntax) => {
+    expectInvalidNonJsxSource(`
+      import { crc, createElement, Group, type CRCController } from "@crc/core";
+      ${extraModuleSyntax}
+      export default function mount(canvas: HTMLCanvasElement): CRCController {
+        return crc(canvas, createElement(Group, null));
+      }
+    `);
   });
 
   it("rejects learning sources that are not TSX", () => {
