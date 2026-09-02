@@ -1,9 +1,33 @@
-import { crc, defineComp, rect } from '@crc/core';
+import * as CRC_ROOT from '@crc/core';
+import { crc, defineComp, rect, Rectangle } from '@crc/core';
+import { jsx, jsxs } from '@crc/core/jsx-runtime';
+import { jsxDEV } from '@crc/core/jsx-dev-runtime';
 import { page } from 'vitest/browser';
 import { describe, expect, it } from 'vitest';
 import { takeScreenshot } from '../src/lib/util/test-utils';
 
 describe('crc browser tests', () => {
+  it('keeps compiler constructors on their runtime entry points', () => {
+    expect(CRC_ROOT).not.toHaveProperty('jsx');
+    expect(CRC_ROOT).not.toHaveProperty('jsxs');
+    expect(CRC_ROOT).not.toHaveProperty('jsxDEV');
+
+    expect(jsx(Rectangle, { style: { width: 2, height: 2 } }).type)
+      .toBe(Rectangle);
+    expect(jsxs(Rectangle, { style: { width: 2, height: 2 } }).type)
+      .toBe(Rectangle);
+    expect(
+      jsxDEV(
+        Rectangle,
+        { style: { width: 2, height: 2 } },
+        undefined,
+        false,
+        undefined,
+        undefined,
+      ).type,
+    ).toBe(Rectangle);
+  });
+
   it('renders a rectangle in browser', async () => {
     const canvas = document.createElement('canvas');
     canvas.width = 400;

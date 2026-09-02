@@ -109,7 +109,7 @@ async function validateSources(): Promise<void> {
   validateScenarioCatalog(scenarioCatalog);
   validateLearningExampleCatalog(learningExampleCatalog);
   const discoveredPaths = (await readdir(scenarioDirectory, { recursive: true }))
-    .filter(name => name.endsWith('.example.ts'))
+    .filter(name => /\.example\.tsx?$/u.test(name))
     .map(name => `packages/scenarios/src/${name.replaceAll('\\', '/')}`)
     .sort();
   const learningPaths = discoveredPaths.filter(path => path.includes('/learning/'));

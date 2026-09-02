@@ -1,4 +1,5 @@
 import runtimeSource from "virtual:crc-runtime-source";
+import { toRunnableScript } from "./sandbox-module";
 
 const PROTOCOL = "crc-studio";
 const VERSION = 1;
@@ -55,26 +56,6 @@ function isFrameMessage(value: unknown): value is FrameMessage {
 
 function escapeScript(source: string): string {
   return source.replaceAll("</script", "<\\/script");
-}
-
-function toRunnableScript(emittedCode: string): string {
-  const imports: string[] = [];
-  let runnable = emittedCode.replace(
-    /import\s*\{([\s\S]*?)\}\s*from\s*['"]@crc\/core['"];?/gu,
-    (_statement, names: string) => {
-      imports.push(names);
-      return "";
-    },
-  );
-  runnable = runnable
-    .replace(/export\s+default\s+function\s+mount/gu, "function mount")
-    .replace(/export\s*\{\s*\};?/gu, "");
-  if (/\b(?:import|export)\b/gu.test(runnable) || imports.length !== 1) {
-    throw new Error(
-      "Lessons may contain one named import from @crc/core and one default mount export.",
-    );
-  }
-  return `const { ${imports[0]} } = CRC_CORE;\n${runnable}\nglobalThis.__CRC_EXAMPLE_MOUNT__ = mount;`;
 }
 
 function createFrameSource(options: {

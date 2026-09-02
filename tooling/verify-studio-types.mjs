@@ -1,11 +1,13 @@
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
+import { runInNewContext } from 'node:vm';
+import { crcRuntimeSource } from './crc-runtime-source.ts';
 
 const repositoryRoot = resolve(import.meta.dirname, '..');
-const declarations = await readFile(
+const declarationBundle = await readFile(
   join(repositoryRoot, 'playground/src/crc-editor-types.txt'),
   'utf8',
 );
@@ -13,7 +15,35 @@ const directory = await mkdtemp(join(tmpdir(), 'crc-studio-types-'));
 const require = createRequire(import.meta.url);
 const tsc = join(dirname(require.resolve('typescript')), 'tsc.js');
 
+const modulePaths = new Map([
+  ['@crc/core', 'node_modules/@crc/core/index.d.ts'],
+  ['@crc/core/jsx-runtime', 'node_modules/@crc/core/jsx-runtime.d.ts'],
+  ['@crc/core/jsx-dev-runtime', 'node_modules/@crc/core/jsx-dev-runtime.d.ts'],
+]);
+
+function readDeclarationModules(bundle) {
+  const markers = [...bundle.matchAll(/^\/\* @crc-studio-module (.+) \*\/$/gmu)];
+  const modules = markers.map((marker, index) => ({
+    moduleName: marker[1],
+    content: bundle.slice(
+      marker.index + marker[0].length,
+      markers[index + 1]?.index ?? bundle.length,
+    ).trimStart(),
+  }));
+  if (
+    modules.length !== modulePaths.size ||
+    new Set(modules.map(({ moduleName }) => moduleName)).size !== modulePaths.size ||
+    modules.some(({ moduleName }) => !modulePaths.has(moduleName))
+  ) {
+    throw new Error('CRC Studio declarations must define the three package entry points exactly once.');
+  }
+  return modules;
+}
+
+const declarationModules = readDeclarationModules(declarationBundle);
+
 const consumer = `
+import * as CRC_CORE_ROOT from '@crc/core';
 import {
   absolute,
   crc,
@@ -28,7 +58,10 @@ import {
   KeyboardNavigation,
   overlay,
   rect,
+  Rectangle,
+  Text,
   type CRCConfig,
+  type CRCController,
   type CRCClipboardEvent,
   type CRCCompositionEvent,
   type CRCDragEvent,
@@ -53,6 +86,54 @@ import {
   type Percentage,
   type SystemStyle,
 } from '@crc/core';
+import { jsx, jsxs } from '@crc/core/jsx-runtime';
+import { jsxDEV } from '@crc/core/jsx-dev-runtime';
+
+// @ts-expect-error compiler constructors stay off the root package
+void CRC_CORE_ROOT.jsx;
+void jsx(Rectangle, { style: { width: 1, height: 1 } });
+void jsxs(Text, { children: ['CRC ', 1] });
+void jsxDEV(Rectangle, { style: { width: 1, height: 1 } }, undefined, false, {
+  fileName: 'studio.crc.tsx', lineNumber: 1, columnNumber: 1,
+}, undefined);
+
+interface StudioCardProps {
+  label: string;
+  active: boolean;
+}
+
+function StudioCard({ label, active }: StudioCardProps): CRCNode {
+  return (
+    <>
+      <Rectangle
+        style={{
+          x: 16,
+          y: active ? 16 : 48,
+          width: 180,
+          height: 28,
+          fill: active ? '#1f4bd8' : '#74d3ae',
+        }}
+        onClick={() => console.log(label)}
+      />
+      <Text style={{ x: 24, y: active ? 22 : 54, fill: '#fff' }}>
+        {label} — {active ? 'active' : 'waiting'}
+      </Text>
+    </>
+  );
+}
+
+function StudioLesson(): CRCNode {
+  const labels = ['one', 'two'];
+  const showFooter = true;
+  return (
+    <>
+      {labels.map((label, index) => (
+        <StudioCard key={label} label={label} active={index === 0} />
+      ))}
+      {showFooter && <Text style={{ x: 16, y: 92 }}>Ready: {labels.length}</Text>}
+    </>
+  );
+}
 
 const eventHandlers = {
   onPointerDown: (event: CRCPointerEvent) => {
@@ -219,13 +300,63 @@ crc(canvas, RadiusProbe({ style: { radius: '50%' } }), {
   // @ts-expect-error responsive viewports do not accept fit
   fit: 'contain',
 });
+
+export default function mount(canvas: HTMLCanvasElement): CRCController {
+  return crc(canvas, <StudioLesson />);
+}
 `;
 
+const foreignRuntimeDeclarations = `
+declare const foreignElementBrand: unique symbol;
+export interface ForeignElement { readonly [foreignElementBrand]: true }
+export const Fragment: (props: { children?: unknown }) => ForeignElement;
+export function jsx(type: unknown, props: unknown, key?: string | number): ForeignElement;
+export const jsxs: typeof jsx;
+export namespace JSX {
+  export type Element = ForeignElement;
+  export type ElementType = (props: any) => ForeignElement;
+  export interface ElementChildrenAttribute { children: unknown }
+  export interface IntrinsicAttributes { key?: string | number }
+  export interface IntrinsicElements {}
+}
+`;
+
+const foreignRuntimeConsumer = `
+/** @jsxImportSource ./foreign-runtime */
+import { crc } from '@crc/core';
+
+function ForeignScene() {
+  return <></>;
+}
+
+declare const canvas: HTMLCanvasElement;
+crc(canvas, <ForeignScene />);
+`;
+
+async function studioRuntimeExports(mode) {
+  const plugin = crcRuntimeSource(mode);
+  const resolvedId = plugin.resolveId('virtual:crc-runtime-source');
+  const loaded = await plugin.load(resolvedId);
+  const serializedRuntime = /^export default ([\s\S]+);$/u.exec(loaded)?.[1];
+  if (!serializedRuntime) {
+    throw new Error(`CRC Studio ${mode} runtime did not expose an IIFE module.`);
+  }
+  const context = {};
+  runInNewContext(JSON.parse(serializedRuntime), context);
+  return Object.keys(context.CRC_CORE ?? {}).sort();
+}
+
 try {
-  await writeFile(join(directory, 'index.d.ts'), declarations);
-  await writeFile(join(directory, 'consumer.ts'), consumer);
+  for (const { moduleName, content } of declarationModules) {
+    const declarationPath = join(directory, modulePaths.get(moduleName));
+    await mkdir(dirname(declarationPath), { recursive: true });
+    await writeFile(declarationPath, content);
+  }
+  await writeFile(join(directory, 'consumer.tsx'), consumer);
   await writeFile(join(directory, 'tsconfig.json'), JSON.stringify({
     compilerOptions: {
+      jsx: 'react-jsx',
+      jsxImportSource: '@crc/core',
       lib: ['ESNext', 'DOM'],
       module: 'ESNext',
       moduleResolution: 'Bundler',
@@ -234,7 +365,7 @@ try {
       strict: true,
       target: 'ESNext',
     },
-    files: ['index.d.ts', 'consumer.ts'],
+    files: ['consumer.tsx'],
   }));
   const result = spawnSync(process.execPath, [tsc, '-p', directory], {
     encoding: 'utf8',
@@ -244,7 +375,69 @@ try {
     process.stderr.write(result.stderr);
     throw new Error('CRC Studio declarations failed their strict consumer.');
   }
-  process.stdout.write('CRC Studio declarations passed strict event-family, generic, layout, and surface checks.\n');
+  const foreignRuntimeDirectory = join(directory, 'foreign-runtime');
+  await mkdir(foreignRuntimeDirectory, { recursive: true });
+  await writeFile(
+    join(foreignRuntimeDirectory, 'jsx-runtime.d.ts'),
+    foreignRuntimeDeclarations,
+  );
+  await writeFile(
+    join(directory, 'foreign-runtime-consumer.tsx'),
+    foreignRuntimeConsumer,
+  );
+  await writeFile(
+    join(directory, 'tsconfig.foreign-runtime.json'),
+    JSON.stringify({
+      compilerOptions: {
+        jsx: 'react-jsx',
+        jsxImportSource: '@crc/core',
+        lib: ['ESNext', 'DOM'],
+        module: 'ESNext',
+        moduleResolution: 'Bundler',
+        noEmit: true,
+        skipLibCheck: false,
+        strict: true,
+        target: 'ESNext',
+      },
+      files: ['foreign-runtime-consumer.tsx'],
+    }),
+  );
+  const foreignRuntimeResult = spawnSync(
+    process.execPath,
+    [tsc, '-p', join(directory, 'tsconfig.foreign-runtime.json')],
+    { encoding: 'utf8' },
+  );
+  const foreignRuntimeOutput =
+    foreignRuntimeResult.stdout + foreignRuntimeResult.stderr;
+  if (
+    foreignRuntimeResult.status === 0 ||
+    !foreignRuntimeOutput.includes("not assignable to parameter of type 'CRCNode'")
+  ) {
+    process.stderr.write(foreignRuntimeOutput);
+    throw new Error(
+      'CRC Studio declarations did not diagnose a foreign JSX runtime at crc().',
+    );
+  }
+  const sourceRuntimeExports = await studioRuntimeExports('source');
+  const builtRuntimeExports = await studioRuntimeExports('built');
+  for (const runtimeExport of [
+    'crc',
+    'Rectangle',
+    'Text',
+    'jsx',
+    'jsxs',
+    'jsxDEV',
+  ]) {
+    if (!sourceRuntimeExports.includes(runtimeExport)) {
+      throw new Error(
+        `CRC Studio source runtime is missing export "${runtimeExport}".`,
+      );
+    }
+  }
+  if (sourceRuntimeExports.join('\n') !== builtRuntimeExports.join('\n')) {
+    throw new Error('CRC Studio source and built runtime surfaces differ.');
+  }
+  process.stdout.write('CRC Studio declarations passed strict TSX, compiler-runtime, event-family, generic, layout, and surface checks.\n');
 } finally {
   await rm(directory, { recursive: true, force: true });
 }

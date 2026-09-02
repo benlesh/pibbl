@@ -103,7 +103,10 @@ export function validateScenarioCatalog<
     assertNonEmpty(scenario.source.id, 'source.id', scenario.metadata.id);
     assertNonEmpty(scenario.source.marker, 'source.marker', scenario.metadata.id);
     assertNonEmpty(scenario.source.path, 'source.path', scenario.metadata.id);
-    if (scenario.source.language !== 'ts' || !scenario.source.path.endsWith('.example.ts')) {
+    if (
+      scenario.source.language !== 'ts' ||
+      !/\.example\.tsx?$/u.test(scenario.source.path)
+    ) {
       throw new Error(`Scenario "${scenario.metadata.id}" must reference a TypeScript example source.`);
     }
     if (!Number.isInteger(scenario.canvas.width) || scenario.canvas.width <= 0 ||

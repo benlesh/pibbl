@@ -1,4 +1,4 @@
-declare module '@crc/core' {
+/* @crc-studio-module @crc/core */
   export interface CRCController {
     dispose(): void;
   }
@@ -27,8 +27,27 @@ declare module '@crc/core' {
   export type CRCMouseEventListener = (event: CRCMouseEvent) => void;
   export type Canvas = HTMLCanvasElement | OffscreenCanvas;
   export type RenderingContext2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
-  export type FalsyNodes = undefined | false | null | '' | 0;
-  export type CRCNode = CompEl<any, any> | void | FalsyNodes;
+  declare const crcElementTypeBrand: unique symbol;
+  declare const crcPrimitiveComponentBrand: unique symbol;
+  export type CRCKey = string | number;
+  export type FalsyNodes = undefined | false | true | null | '' | 0;
+  export type CRCEmptyNode = FalsyNodes;
+  export interface CRCElement<P = unknown> {
+    readonly [crcElementTypeBrand]: true;
+    readonly type: CRCElementType<P>;
+    readonly props: Readonly<P>;
+    readonly key?: string;
+  }
+  export type CRCNode = CRCElement<any> | CRCEmptyNode | readonly CRCNode[] | Iterable<CRCNode>;
+  export type CRCContainerChild = CRCNode;
+  export type CRCTextChild = string | number | boolean | null | undefined | readonly CRCTextChild[] | Iterable<CRCTextChild>;
+  export type CRCRenderResult = CRCNode | void;
+  export type CRCComponent<P = Record<string, never>> = (props: P) => CRCRenderResult;
+  export type CRCElementType<P = any> = CRCComponent<P>;
+  export type CRCPrimitiveComponent<P = Record<string, never>, I = P> = CRCComponent<I> & {
+    readonly [crcPrimitiveComponentBrand]: { readonly input: I; readonly programProps: P };
+  };
+  export type PrimitiveInputOf<C> = C extends CRCPrimitiveComponent<any, infer I> ? I : never;
 
   export type CRCEventPhase = 1 | 2 | 3;
   export interface CRCEventTarget {
@@ -55,7 +74,7 @@ declare module '@crc/core' {
   }
   export interface CRCEventTargetSnapshot { readonly isFocused: boolean; readonly isFocusVisible: boolean }
   export interface CRCKeyboardNavigationOptions { readonly mode: 'directional' }
-  type CRCPolicyChild = CRCNode | true | readonly CRCPolicyChild[] | (Iterable<CRCPolicyChild> & { readonly charAt?: never });
+  type CRCPolicyChild = CRCElement<any> | CRCEmptyNode | readonly CRCPolicyChild[] | (Iterable<CRCPolicyChild> & { readonly charAt?: never });
   export interface FocusManagementProps { readonly children: CRCPolicyChild }
   export interface KeyboardNavigationProps extends CRCKeyboardNavigationOptions { readonly children: CRCPolicyChild }
   export interface CRCEventTargetOptions {
@@ -162,14 +181,14 @@ declare module '@crc/core' {
   export type SpecifiedStyle<S extends SystemStyle> = Readonly<S>;
   export type NormalizedStyle<S extends SystemStyle> = Readonly<S>;
   export type ResolvedStyle<S extends SystemStyle> = Readonly<S>;
-  export interface CompEl<P = any, S extends SystemStyle = SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N> {
-    type: CompFn<P, S, N, R>;
-    props: ProgramProps<P>;
-    style: SpecifiedStyle<S>;
-    key?: string;
-  }
+  export type CompEl<P = any, S extends SystemStyle = SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N> = CRCElement<ProgramProps<P> & { style: SpecifiedStyle<S> }> & {
+    readonly type: CompFn<P, S, N, R>;
+    readonly props: Readonly<ProgramProps<P> & { style: SpecifiedStyle<S> }>;
+    readonly style: SpecifiedStyle<S>;
+  };
 
   export type ComponentInput<P, S extends SystemStyle = SystemStyle> = ProgramProps<P> & { key?: string } & StyleField<S>;
+  export type PrimitiveInput<P, S extends SystemStyle = SystemStyle> = ProgramProps<P> & StyleField<Readonly<S>>;
   export interface ComponentCapabilities<S extends SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N, P = unknown> {
     normalizeStyle?: (style: SpecifiedStyle<S>) => NormalizedStyle<N>;
     resolveStyle?: (style: NormalizedStyle<N>, context: Readonly<StyleResolutionContext>) => ResolvedStyle<R>;
@@ -218,39 +237,42 @@ declare module '@crc/core' {
   export interface HorizontalLineStyle extends SystemStyle, CursorStyle, BoxStyle, LayoutItemStyle { y: Exclude<Length, 'auto'>; x1?: Exclude<Length, 'auto'>; x2?: Exclude<Length, 'auto'>; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; alignToPixelGrid?: PixelGridAlignment; lineInteractionWidth?: number }
   export interface VerticalLineStyle extends SystemStyle, CursorStyle, BoxStyle, LayoutItemStyle { x: Exclude<Length, 'auto'>; y1?: Exclude<Length, 'auto'>; y2?: Exclude<Length, 'auto'>; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; alignToPixelGrid?: PixelGridAlignment; lineInteractionWidth?: number }
   export type TextFit = 'visible' | 'squish' | 'ellipsis' | 'clip';
-  export interface TextStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { text: string; x?: Exclude<Length, 'auto'>; y?: Exclude<Length, 'auto'>; lineHeight?: number; wrap?: boolean; fit?: TextFit; font?: string; textBaseline?: CanvasTextBaseline; textAlign?: CanvasTextAlign }
+  export interface TextStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { x?: Exclude<Length, 'auto'>; y?: Exclude<Length, 'auto'>; lineHeight?: number; wrap?: boolean; fit?: TextFit; font?: string; textBaseline?: CanvasTextBaseline; textAlign?: CanvasTextAlign }
   export interface ImgStyle extends CursorStyle, BoxStyle, LayoutItemStyle { src: string; x?: Exclude<Length, 'auto'>; y?: Exclude<Length, 'auto'>; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; alignToPixelGrid?: PixelGridAlignment }
   export interface GStyle extends BoxStyle, LayoutItemStyle { scaleX?: number; scaleY?: number; rotationDegrees?: number; rotationOrigin?: [number, number]; translateX?: number; translateY?: number; skewX?: number; skewY?: number }
   export interface ClipStyle extends BoxStyle, LayoutItemStyle { d: Path2D; fillRule?: CanvasFillRule }
   export interface LayerStyle extends BoxStyle, LayoutItemStyle {}
 
   export interface PathProps extends CRCEventHandlers {}
-  export interface RectProps extends CRCEventHandlers {}
+  export interface RectangleProps extends CRCEventHandlers {}
+  export type RectProps = RectangleProps;
   export interface SvgPathProps extends CRCEventHandlers {}
   export interface LineProps extends CRCEventHandlers {}
   export interface HorizontalLineProps extends CRCEventHandlers {}
   export interface VerticalLineProps extends CRCEventHandlers {}
-  export interface TextProps extends CRCEventHandlers {}
-  export interface ImgProps extends CRCEventHandlers {}
+  export interface TextProps extends CRCEventHandlers { children?: CRCTextChild }
+  export interface ImageProps extends CRCEventHandlers {}
+  export type ImgProps = ImageProps;
+  export interface GroupProps { children: CRCNode }
   export interface GProps { children: CRCNode[] }
-  export interface ClipProps { children: CRCNode[] }
-  export interface LayerProps { render: CompEl<any, any> }
+  export interface ClipProps { children: CRCNode }
+  export interface LayerProps { children: CRCNode }
 
   export type AbsoluteStyle = BoxStyle & LayoutItemStyle;
-  export interface AbsoluteProps { children: CRCNode[] }
+  export interface AbsoluteProps { children: CRCNode }
   export interface OverlayStyle extends BoxStyle, LayoutItemStyle { justifyItems?: 'stretch' | 'start' | 'center' | 'end'; alignItems?: 'stretch' | 'start' | 'center' | 'end' }
-  export interface OverlayProps { children: CRCNode[] }
+  export interface OverlayProps { children: CRCNode }
   export interface FlowStyle extends BoxStyle, LayoutItemStyle { direction?: 'horizontal' | 'vertical'; wrap?: boolean; gap?: number; lineGap?: number; alignItems?: 'start' | 'center' | 'end' | 'stretch' }
-  export interface FlowProps { children: CRCNode[] }
+  export interface FlowProps { children: CRCNode }
   export interface FlexStyle extends BoxStyle, LayoutItemStyle { flexDirection?: 'row' | 'column'; flexWrap?: 'nowrap' | 'wrap'; justifyContent?: 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'; alignItems?: 'stretch' | 'flex-start' | 'flex-end' | 'center'; alignContent?: 'stretch' | 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'; gap?: number; rowGap?: number; columnGap?: number }
-  export interface FlexProps { children: CRCNode[] }
+  export interface FlexProps { children: CRCNode }
   export type GridTrack = number | `${number}%` | `${number}fr`;
   export interface GridStyle extends BoxStyle, LayoutItemStyle { gridTemplateColumns: readonly GridTrack[]; gridTemplateRows: readonly GridTrack[]; justifyItems?: 'stretch' | 'start' | 'center' | 'end'; alignItems?: 'stretch' | 'start' | 'center' | 'end'; gap?: number; rowGap?: number; columnGap?: number }
-  export interface GridProps { children: CRCNode[] }
+  export interface GridProps { children: CRCNode }
 
   export interface CanvasMeasurementService { measureText(text: string, font: string): TextMetrics }
   export type MeasureResult = { status: 'measured'; size: Readonly<Size> } | { status: 'unsupported'; reason: string };
-  export interface MeasureInput<P, S extends SystemStyle = SystemStyle> { props: Readonly<P>; style: NormalizedStyle<S>; constraints: Readonly<Constraints>; service: CanvasMeasurementService; measureElement(element: CompEl<any, any>, constraints: Readonly<Constraints>): MeasureResult }
+  export interface MeasureInput<P, S extends SystemStyle = SystemStyle> { props: Readonly<P>; style: NormalizedStyle<S>; constraints: Readonly<Constraints>; service: CanvasMeasurementService; measureElement(element: CRCElement<any>, constraints: Readonly<Constraints>): MeasureResult }
   export interface LayoutDiagnosticContext { component?: string; algorithm?: string; constraints?: Readonly<Constraints> }
   export interface LayoutDiagnosticInput extends LayoutDiagnosticContext { property: string; value: unknown; reason: string }
   export class LayoutDiagnostic extends Error { readonly component: string; readonly property: string; readonly suppliedValue: unknown; readonly algorithm: string; readonly constraints: Readonly<Constraints> | undefined }
@@ -258,7 +280,9 @@ declare module '@crc/core' {
   export interface CRCRef<T> { current: T | undefined }
   export type StateUpdater<T> = (update: T | ((oldValue: T) => T)) => void;
 
-  export function crc<P>(canvas: HTMLCanvasElement, element: CompEl<P, any>, config?: CRCConfig): CRCController;
+  export function crc(canvas: HTMLCanvasElement, element: CRCNode, config?: CRCConfig): CRCController;
+  export function createElement<P>(type: CRCElementType<P>, props: (P & { key?: CRCKey }) | null, ...children: CRCNode[]): CRCElement<P>;
+  export const Fragment: CRCComponent<{ children?: CRCNode }>;
   export function defineComp<P, S extends SystemStyle = SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N>(component: CompFn<P, S, N, R> & (ComponentInput<P, S> extends never ? never : unknown), ...capabilityArguments: CapabilityArguments<P, S, N, R>): (input: ComponentInput<P, S>) => CompEl<P, S, N, R>;
   export function rect(props: ComponentInput<RectProps, RectStyle>): CompEl<RectProps, RectStyle>;
   export function path(props: ComponentInput<PathProps, PathStyle>): CompEl<PathProps, PathStyle>;
@@ -266,7 +290,7 @@ declare module '@crc/core' {
   export function line(props: ComponentInput<LineProps, LineStyle>): CompEl<LineProps, LineStyle>;
   export function horizontalLine(props: ComponentInput<HorizontalLineProps, HorizontalLineStyle>): CompEl<HorizontalLineProps, HorizontalLineStyle>;
   export function verticalLine(props: ComponentInput<VerticalLineProps, VerticalLineStyle>): CompEl<VerticalLineProps, VerticalLineStyle>;
-  export function text(props: ComponentInput<TextProps, TextStyle>): CompEl<TextProps, TextStyle>;
+  export function text(props: ComponentInput<TextProps, TextStyle & { text: string }>): CompEl<TextProps, TextStyle & { text: string }>;
   export function img(props: ComponentInput<ImgProps, ImgStyle>): CompEl<ImgProps, ImgStyle>;
   export function g(props: ComponentInput<GProps, GStyle>): CompEl<GProps, GStyle>;
   export function clip(props: ComponentInput<ClipProps, ClipStyle>): CompEl<ClipProps, ClipStyle>;
@@ -276,7 +300,23 @@ declare module '@crc/core' {
   export function flow(props: ComponentInput<FlowProps, FlowStyle>): CompEl<FlowProps, FlowStyle>;
   export function flex(props: ComponentInput<FlexProps, FlexStyle>): CompEl<FlexProps, FlexStyle>;
   export function grid(props: ComponentInput<GridProps, GridStyle>): CompEl<GridProps, GridStyle>;
-  export function measureElement(element: CompEl<any, any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService): MeasureResult;
+  export const Rectangle: CRCPrimitiveComponent<RectangleProps, PrimitiveInput<RectangleProps, RectStyle>>;
+  export const Path: CRCPrimitiveComponent<PathProps, PrimitiveInput<PathProps, PathStyle>>;
+  export const SvgPath: CRCPrimitiveComponent<SvgPathProps, PrimitiveInput<SvgPathProps, SvgPathStyle>>;
+  export const Line: CRCPrimitiveComponent<LineProps, PrimitiveInput<LineProps, LineStyle>>;
+  export const HorizontalLine: CRCPrimitiveComponent<HorizontalLineProps, PrimitiveInput<HorizontalLineProps, HorizontalLineStyle>>;
+  export const VerticalLine: CRCPrimitiveComponent<VerticalLineProps, PrimitiveInput<VerticalLineProps, VerticalLineStyle>>;
+  export const Text: CRCPrimitiveComponent<TextProps, PrimitiveInput<TextProps, TextStyle>>;
+  export const Image: CRCPrimitiveComponent<ImageProps, PrimitiveInput<ImageProps, ImgStyle>>;
+  export const Group: CRCPrimitiveComponent<GroupProps, PrimitiveInput<GroupProps, GStyle>>;
+  export const Clip: CRCPrimitiveComponent<ClipProps, PrimitiveInput<ClipProps, ClipStyle>>;
+  export const Layer: CRCPrimitiveComponent<LayerProps, PrimitiveInput<LayerProps, LayerStyle>>;
+  export const Absolute: CRCPrimitiveComponent<AbsoluteProps, PrimitiveInput<AbsoluteProps, AbsoluteStyle>>;
+  export const Overlay: CRCPrimitiveComponent<OverlayProps, PrimitiveInput<OverlayProps, OverlayStyle>>;
+  export const Flow: CRCPrimitiveComponent<FlowProps, PrimitiveInput<FlowProps, FlowStyle>>;
+  export const Flex: CRCPrimitiveComponent<FlexProps, PrimitiveInput<FlexProps, FlexStyle>>;
+  export const Grid: CRCPrimitiveComponent<GridProps, PrimitiveInput<GridProps, GridStyle>>;
+  export function measureElement(element: CRCElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService): MeasureResult;
   export const FocusManagement: (props: FocusManagementProps) => CRCNode;
   export const KeyboardNavigation: (props: KeyboardNavigationProps) => CRCNode;
   export function resolveLength(value: Length | undefined, reference: number | undefined, property: string, context?: unknown): number | undefined;
@@ -284,6 +324,7 @@ declare module '@crc/core' {
   export function resolveBox(style: Readonly<BoxStyle>, constraints: Readonly<Constraints>, context?: Readonly<LayoutDiagnosticContext>): ResolvedBoxStyle;
   export function layoutDiagnostic(input: LayoutDiagnosticInput): LayoutDiagnostic;
   export function crcLayoutBox(): Readonly<LayoutBox>;
+  export function crcCanvasContext(): RenderingContext2D;
   export function crcState<T>(initial?: T): readonly [T, StateUpdater<T>];
   export function crcMemo<T>(create: () => T, dependencies: unknown[]): T;
   export function crcRef<T>(initial?: T): CRCRef<T>;
@@ -296,4 +337,30 @@ declare module '@crc/core' {
   export function crcLinePath(coords: [number, number][]): Path2D;
   export function crcRectPath(x: number, y: number, width: number, height: number, alignment?: PixelGridAlignment, lineWidth?: number): Path2D;
   export function crcSvgPath(data: string): Path2D;
-}
+
+/* @crc-studio-module @crc/core/jsx-runtime */
+  import type { CRCElement, CRCElementType, CRCKey, CRCPrimitiveComponent, PrimitiveInputOf } from '@crc/core';
+  export { Fragment } from '@crc/core';
+  export function jsx<P>(type: CRCElementType<P>, props: P, key?: CRCKey): CRCElement<P>;
+  export const jsxs: typeof jsx;
+  export namespace JSX {
+    export type Element = CRCElement;
+    export type ElementType = CRCElementType;
+    export interface ElementChildrenAttribute { children: unknown }
+    export interface IntrinsicAttributes { key?: CRCKey }
+    export interface IntrinsicElements {}
+    export type LibraryManagedAttributes<C, P> = C extends CRCPrimitiveComponent<any, any> ? PrimitiveInputOf<C> : 'key' extends keyof P ? never : P;
+  }
+
+/* @crc-studio-module @crc/core/jsx-dev-runtime */
+  import type { CRCElement, CRCElementType, CRCKey, CRCPrimitiveComponent, PrimitiveInputOf } from '@crc/core';
+  export { Fragment } from '@crc/core';
+  export function jsxDEV<P>(type: CRCElementType<P>, props: P, key: CRCKey | undefined, isStaticChildren: boolean, source: { readonly fileName: string; readonly lineNumber: number; readonly columnNumber: number } | undefined, self: unknown): CRCElement<P>;
+  export namespace JSX {
+    export type Element = CRCElement;
+    export type ElementType = CRCElementType;
+    export interface ElementChildrenAttribute { children: unknown }
+    export interface IntrinsicAttributes { key?: CRCKey }
+    export interface IntrinsicElements {}
+    export type LibraryManagedAttributes<C, P> = C extends CRCPrimitiveComponent<any, any> ? PrimitiveInputOf<C> : 'key' extends keyof P ? never : P;
+  }

@@ -21,6 +21,23 @@ afterEach(async () => {
 });
 
 describe('scenario catalog trust gate', () => {
+  it('temporarily accepts both TypeScript and TSX source paths', () => {
+    const [first, ...rest] = scenarioCatalog;
+    if (!first) throw new Error('The scenario catalog must not be empty.');
+    const mixedCatalog = [
+      {
+        ...first,
+        source: {
+          ...first.source,
+          path: first.source.path.replace(/\.ts$/u, '.tsx'),
+        },
+      },
+      ...rest,
+    ];
+
+    expect(validateScenarioCatalog(mixedCatalog)).toBe(mixedCatalog);
+  });
+
   it('publishes the shared focus-navigation demonstration contract', () => {
     expect(focusNavigationScenarioEntry.metadata.id)
       .toBe('focus-and-keyboard-navigation');

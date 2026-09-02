@@ -24,6 +24,7 @@ import "monaco-editor/languages/definitions/typescript/register";
 import "monaco-editor/language/typescript/monaco.contribution";
 import {
   getTypeScriptWorker,
+  JsxEmit,
   ModuleKind,
   ModuleResolutionKind,
   ScriptTarget,
@@ -32,7 +33,7 @@ import {
 import { setupTypeScript } from "monaco-editor/languages/features/typescript/tsMode";
 import EditorWorker from "monaco-editor/editor/editor.worker?worker";
 import TypeScriptWorker from "monaco-editor/language/typescript/ts.worker?worker";
-import crcDeclarations from "./crc-editor-types.txt?raw";
+import crcDeclarationBundle from "./crc-editor-types.txt?raw";
 import { replaceCodeRoute } from "./share-code";
 import { SandboxPreview, type PreviewEvent } from "./sandbox-runner";
 
@@ -81,6 +82,53 @@ export interface MountedEditor {
 
 let monacoConfigured = false;
 
+const declarationModulePaths = new Map([
+  ["@crc/core", "file:///node_modules/@crc/core/index.d.ts"],
+  [
+    "@crc/core/jsx-runtime",
+    "file:///node_modules/@crc/core/jsx-runtime.d.ts",
+  ],
+  [
+    "@crc/core/jsx-dev-runtime",
+    "file:///node_modules/@crc/core/jsx-dev-runtime.d.ts",
+  ],
+]);
+
+function declarationLibraries(): Array<{
+  content: string;
+  filePath: string;
+}> {
+  const markers = [
+    ...crcDeclarationBundle.matchAll(
+      /^\/\* @crc-studio-module (.+) \*\/$/gmu,
+    ),
+  ];
+  const libraries = markers.map((marker, index) => {
+    const moduleName = marker[1];
+    const filePath = moduleName && declarationModulePaths.get(moduleName);
+    if (!filePath) throw new Error("Unknown CRC Studio declaration module.");
+    return {
+      content: crcDeclarationBundle
+        .slice(
+          marker.index + marker[0].length,
+          markers[index + 1]?.index ?? crcDeclarationBundle.length,
+        )
+        .trimStart(),
+      filePath,
+    };
+  });
+  if (
+    libraries.length !== declarationModulePaths.size ||
+    new Set(markers.map((marker) => marker[1])).size !==
+      declarationModulePaths.size
+  ) {
+    throw new Error(
+      "CRC Studio declarations must define all three package entry points.",
+    );
+  }
+  return libraries;
+}
+
 function configureMonaco(): void {
   if (monacoConfigured) return;
   monacoConfigured = true;
@@ -94,6 +142,8 @@ function configureMonaco(): void {
     target: ScriptTarget.ESNext,
     module: ModuleKind.ESNext,
     moduleResolution: ModuleResolutionKind.NodeJs,
+    jsx: JsxEmit.ReactJSX,
+    jsxImportSource: "@crc/core",
     strict: true,
     allowNonTsExtensions: true,
     noEmitOnError: false,
@@ -104,12 +154,7 @@ function configureMonaco(): void {
     noSyntaxValidation: false,
     onlyVisible: false,
   });
-  typescriptDefaults.setExtraLibs([
-    {
-      content: crcDeclarations,
-      filePath: "file:///node_modules/@crc/core/index.d.ts",
-    },
-  ]);
+  typescriptDefaults.setExtraLibs(declarationLibraries());
   typescriptDefaults.setEagerModelSync(true);
   setupTypeScript(typescriptDefaults);
   monaco.editor.defineTheme("crc-studio", {
@@ -281,7 +326,7 @@ export async function mountEditorWorkbench(
   const model = monaco.editor.createModel(
     options.initialSource,
     "typescript",
-    monaco.Uri.parse(`file:///lessons/${options.entry.slug}.ts`),
+    monaco.Uri.parse(`file:///lessons/${options.entry.slug}.tsx`),
   );
   const editor = monaco.editor.create(editorHost, {
     model,
@@ -495,7 +540,7 @@ export function mountReadOnlySource(
   const model = monaco.editor.createModel(
     source,
     "typescript",
-    monaco.Uri.parse(`file:///testing/${slug}.ts`),
+    monaco.Uri.parse(`file:///testing/${slug}.tsx`),
   );
   const editor = monaco.editor.create(container, {
     model,

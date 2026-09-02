@@ -5,6 +5,7 @@ import {
   readSharedCode,
   replaceCodeRoute,
 } from "../../../playground/src/share-code";
+import { toRunnableScript } from "../../../playground/src/sandbox-module";
 
 const route = "#/examples/drawing/rectangle";
 const canonical = "export default function mount() {}\n";
@@ -51,5 +52,63 @@ describe("learning example share URLs", () => {
 
     expect(result.tooLong).toBe(true);
     expect(window.location.hash).toBe(originalHash);
+  });
+});
+
+describe("learning example sandbox modules", () => {
+  it("combines root and automatic-runtime aliases into one CRC_CORE binding", () => {
+    const runnable = toRunnableScript(`
+import { jsx as _jsx, jsxs as _jsxs } from "@crc/core/jsx-runtime";
+import { crc, Rectangle, Text } from "@crc/core";
+function Lesson() {
+  return _jsxs(Text, { children: ["CRC ", _jsx(Rectangle, { style: { width: 2, height: 2 } })] });
+}
+export default function mount(canvas) {
+  return crc(canvas, _jsx(Lesson, {}));
+}
+`);
+
+    expect(runnable).toContain(
+      "const { jsx: _jsx, jsxs: _jsxs, crc, Rectangle, Text } = CRC_CORE;",
+    );
+  });
+
+  it("accepts development-runtime aliases without exposing another global", () => {
+    const runnable = toRunnableScript(`
+import { jsxDEV as _jsxDEV } from "@crc/core/jsx-dev-runtime";
+import { crc, Rectangle } from "@crc/core";
+export default function mount(canvas) {
+  return crc(canvas, _jsxDEV(Rectangle, { style: { width: 2, height: 2 } }, undefined, false, undefined, this));
+}
+`);
+
+    expect(runnable).toContain(
+      "const { jsxDEV: _jsxDEV, crc, Rectangle } = CRC_CORE;",
+    );
+  });
+
+  it.each([
+    'import external from "external";',
+    'import * as CRC from "@crc/core";',
+    'import CRC from "@crc/core";',
+    'const runtime = import("@crc/core/jsx-runtime");',
+    'import { jsx } from "@crc/core/private-runtime";',
+  ])("rejects unsupported emitted module syntax: %s", (statement) => {
+    expect(() =>
+      toRunnableScript(
+        `${statement}\nexport default function mount(canvas) { return canvas; }`,
+      ),
+    ).toThrow();
+  });
+
+  it.each([
+    "function mount(canvas) { return canvas; }",
+    "export default function mount(target) { return target; }",
+    "export default function other(canvas) { return canvas; }",
+    "export default function mount(canvas) { return canvas; }\nexport default function mount(canvas) { return canvas; }",
+  ])("requires exactly one default mount(canvas) export", (mountSource) => {
+    expect(() =>
+      toRunnableScript(`import { crc } from "@crc/core";\n${mountSource}`),
+    ).toThrow(/default mount\(canvas\)/u);
   });
 });

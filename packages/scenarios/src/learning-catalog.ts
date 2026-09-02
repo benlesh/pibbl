@@ -68,8 +68,23 @@ interface LearningDraft extends Omit<
   load: () => Promise<unknown>;
 }
 
-function sourcePath(section: LearningSectionId, slug: string): string {
-  return `packages/scenarios/src/learning/${section}/${slug}.example.ts`;
+function sourcePath(
+  section: LearningSectionId,
+  slug: string,
+  extension: "ts" | "tsx" = "ts",
+): string {
+  return `packages/scenarios/src/learning/${section}/${slug}.example.${extension}`;
+}
+
+function isLearningSourcePath(
+  path: string,
+  section: LearningSectionId,
+  slug: string,
+): boolean {
+  return (
+    path === sourcePath(section, slug, "ts") ||
+    path === sourcePath(section, slug, "tsx")
+  );
 }
 
 const drafts = [
@@ -1221,7 +1236,7 @@ export function validateLearningExampleCatalog(
     }
     if (
       paths.has(entry.source.path) ||
-      entry.source.path !== sourcePath(entry.section, entry.slug)
+      !isLearningSourcePath(entry.source.path, entry.section, entry.slug)
     ) {
       throw new Error(
         `Learning example "${entry.slug}" has an invalid or duplicate source path.`,

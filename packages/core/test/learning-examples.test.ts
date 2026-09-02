@@ -70,6 +70,20 @@ afterEach(() => {
 });
 
 describe("learning example catalog", () => {
+  it("temporarily accepts both TypeScript and TSX source paths", () => {
+    const [first, ...rest] = learningExampleCatalog;
+    if (!first) throw new Error("The learning catalog must not be empty.");
+    const mixedCatalog = [
+      {
+        ...first,
+        source: { path: first.source.path.replace(/\.ts$/u, ".tsx") },
+      },
+      ...rest,
+    ];
+
+    expect(validateLearningExampleCatalog(mixedCatalog)).toBe(mixedCatalog);
+  });
+
   it("contains 41 unique, ordered, source-backed routes", () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
