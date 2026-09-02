@@ -663,3 +663,128 @@ git diff --check: no output
   by a positive fixture to bound false positives.
 - Fresh evidence is Node 26.7.0 with pnpm 11.21.0. Node 24 LTS remains
   unverified under R8.
+
+## Fix Round 4 — authoring exclusivity, method scopes, and global CommonJS
+
+Review of `c2f199bed9a8cb4bb4d72c1222ffcd6c64724488` identified three
+remaining P2 validator gaps: JSX lessons could mix a direct imported
+`createElement` call, object and class method parameters could shadow that
+import, and CommonJS access through known global objects was not recognized.
+This round closes those gaps without changing any learning source, catalog
+entry, test-lab fixture, generated index, runtime package, or visual baseline.
+
+### Structural enforcement changes
+
+- Authoring modes are now exclusive in both directions. A JSX lesson must
+  contain JSX and no direct call resolving to the imported `@crc/core`
+  `createElement`; the dedicated non-JSX lesson must contain no JSX and at
+  least one such call.
+- The strict no-shadowing scan now uses one function-like binding list for
+  function declarations/expressions, arrow functions, object methods, public
+  class methods, private class methods, and TypeScript declare functions.
+  Object, class, and private method parameters therefore follow the same
+  binding rule. Unrelated method parameter names remain legal.
+- CommonJS member access is resolved as a static path rooted at
+  `globalThis`, `window`, `self`, or `global`. The resolver unwraps
+  TypeScript assertions and other transparent expression wrappers, follows
+  ordinary, computed-string, nested, and optional member chains, and rejects
+  exact `require`, `module`, or `exports` segments.
+- The global-path rule is deliberately root-sensitive: ordinary objects may
+  still expose properties or methods named `require`, `module`, and `exports`.
+  The existing bare-identifier CommonJS rule remains unchanged.
+
+### Fix-round TDD evidence
+
+All focused fixtures were added before changing the validator. After correcting
+the object/class fixtures so their fake calls used otherwise-valid inline
+`createElement(Group, null)` arguments, the final RED run was:
+
+```text
+Test Files  1 failed (1)
+Tests       11 failed | 134 passed (145)
+```
+
+The failures were the JSX/createElement mixture, object and public class method
+parameter shadows, and eight global-object CommonJS forms. The private-method
+fixture was already rejected incidentally by the old parent classifier; this
+round makes that result explicit through the shared function-like binding
+list. Positive unrelated-method and unrelated-object-property fixtures were
+green during RED and bound the false-positive surface.
+
+After the validator change, the focused result was:
+
+```text
+Test Files  1 passed (1)
+Tests       145 passed (145)
+```
+
+### Fix-round verification
+
+```sh
+corepack pnpm@11.21.0 scenarios:check
+corepack pnpm@11.21.0 typecheck
+corepack pnpm@11.21.0 lint
+```
+
+```text
+Catalog: 42 lessons, 16 test labs, and docs/scenario-index.md validated
+tsc --noEmit: passed
+ESLint and Prettier: passed
+```
+
+```sh
+corepack pnpm@11.21.0 test:ci
+```
+
+```text
+Test Files  83 passed (83)
+Tests       1017 passed | 2 skipped (1019)
+Duration    21.44s
+```
+
+```sh
+corepack pnpm@11.21.0 playground:build
+corepack pnpm@11.21.0 playground:build:built
+```
+
+```text
+Studio declaration/runtime verifier: passed in both commands
+Source mode: 1308 modules transformed; built in 874ms
+Built mode: 1209 modules transformed; built in 870ms
+```
+
+Both Studio builds retained only the pre-existing ineffective-dynamic-import
+and large-chunk warnings.
+
+```sh
+corepack pnpm@11.21.0 test:package-consumer
+corepack pnpm@11.21.0 test:package-consumer:packed
+corepack pnpm@11.21.0 test:smoke:built
+git diff --check
+```
+
+```text
+Workspace Bundler, NodeNext, and runtime consumer: passed
+Packed declarations, exports, deep-import, no-source, and optimized focus
+consumer: passed (113966 no-focus bytes; 137630 with-focus bytes)
+Built browser smoke: 1 file and 1 test passed
+git diff --check: no output
+```
+
+The initial sandboxed focused-test and catalog commands could not create their
+local listen socket (`EPERM`). The same commands passed with the required local
+server permission; this was an environment restriction, not a product failure.
+
+### Fix-round self-review and concerns
+
+- The code and test changes remain confined to the shared validator and its
+  focused browser fixtures. All 42 real lesson sources still pass the shared
+  contract, and no lesson, catalog, runtime, index, or baseline file changed.
+- The authoring check consumes the resolved core import map rather than source
+  spelling. Because accepted learning sources forbid every lexical shadow of a
+  core import, a counted `createElement` call is the imported CRC function.
+- Global CommonJS detection is exact-segment and known-root based. It covers
+  asserted, computed, nested, and optional chains without treating
+  `loader.require` or `loader.module.exports` as CommonJS.
+- Fresh evidence is Node 26.7.0 with pnpm 11.21.0. Node 24 LTS remains
+  unverified under R8.

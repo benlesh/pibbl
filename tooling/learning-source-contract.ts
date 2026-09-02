@@ -75,6 +75,31 @@ const DESCRIPTIVE_COMPONENT_EXPORTS = new Set([
   "VerticalLine",
 ]);
 const COMMONJS_BINDING_NAMES = new Set(["exports", "module", "require"]);
+const COMMONJS_GLOBAL_NAMES = new Set([
+  "global",
+  "globalThis",
+  "self",
+  "window",
+]);
+const FUNCTION_LIKE_BINDING_TYPES = new Set([
+  "ArrowFunctionExpression",
+  "ClassMethod",
+  "ClassPrivateMethod",
+  "FunctionDeclaration",
+  "FunctionExpression",
+  "ObjectMethod",
+  "TSDeclareFunction",
+]);
+const TRANSPARENT_EXPRESSION_TYPES = new Set([
+  "ChainExpression",
+  "ParenthesizedExpression",
+  "TSAsExpression",
+  "TSInstantiationExpression",
+  "TSNonNullExpression",
+  "TSSatisfiesExpression",
+  "TSTypeAssertion",
+  "TypeCastExpression",
+]);
 const SKIPPED_AST_KEYS = new Set([
   "comments",
   "errors",
@@ -261,13 +286,13 @@ function declaresBindingNamed(
       bindingNames(pattern).some((name) => importedNames.has(name)),
     );
 
+  if (FUNCTION_LIKE_BINDING_TYPES.has(node.type)) {
+    return matches([node.id, ...nodes(node.params)]);
+  }
+
   switch (node.type) {
     case "VariableDeclarator":
       return matches([node.id]);
-    case "FunctionDeclaration":
-    case "FunctionExpression":
-    case "ArrowFunctionExpression":
-      return matches([node.id, ...nodes(node.params)]);
     case "ClassDeclaration":
     case "ClassExpression":
       return matches([node.id]);
@@ -330,14 +355,7 @@ function isDirectBindingDeclaration(
     return true;
   }
   if (parent.type === "VariableDeclarator") return parent.id === node;
-  if (
-    parent.type === "FunctionDeclaration" ||
-    parent.type === "FunctionExpression" ||
-    parent.type === "ArrowFunctionExpression" ||
-    parent.type === "ObjectMethod" ||
-    parent.type === "ClassMethod" ||
-    parent.type === "TSDeclareFunction"
-  ) {
+  if (FUNCTION_LIKE_BINDING_TYPES.has(parent.type)) {
     return parent.id === node || nodes(parent.params).includes(node);
   }
   if (
@@ -374,6 +392,46 @@ function isCommonJsExecutableReference(
     return false;
   }
   return true;
+}
+
+function unwrapTransparentExpression(value: unknown): SyntaxNode | undefined {
+  let node = isNode(value) ? value : undefined;
+  while (node && TRANSPARENT_EXPRESSION_TYPES.has(node.type)) {
+    node = isNode(node.expression) ? node.expression : undefined;
+  }
+  return node;
+}
+
+function knownGlobalAccessPath(value: unknown): readonly string[] | undefined {
+  const node = unwrapTransparentExpression(value);
+  if (!node) return undefined;
+
+  const rootName = identifierName(node);
+  if (rootName && COMMONJS_GLOBAL_NAMES.has(rootName)) return [rootName];
+  if (
+    node.type !== "MemberExpression" &&
+    node.type !== "OptionalMemberExpression"
+  ) {
+    return undefined;
+  }
+
+  const objectPath = knownGlobalAccessPath(node.object);
+  const memberName = propertyName(node.property);
+  return objectPath && memberName ? [...objectPath, memberName] : undefined;
+}
+
+function isCommonJsGlobalAccess(node: SyntaxNode): boolean {
+  if (
+    node.type !== "MemberExpression" &&
+    node.type !== "OptionalMemberExpression"
+  ) {
+    return false;
+  }
+  const path = knownGlobalAccessPath(node);
+  return (
+    path !== undefined &&
+    path.slice(1).some((name) => COMMONJS_BINDING_NAMES.has(name))
+  );
 }
 
 function isApprovedCoreReference(
@@ -667,7 +725,10 @@ function inspectSource(source: string, label: string): SourceInspection {
     ) {
       hasBindingViolation = true;
     }
-    if (isCommonJsExecutableReference(node, parent)) {
+    if (
+      isCommonJsExecutableReference(node, parent) ||
+      isCommonJsGlobalAccess(node)
+    ) {
       hasCommonJsSyntax = true;
     }
   });
@@ -757,7 +818,11 @@ export function validateLearningSourceText(
     if (!inspection.hasCreateElementCall || inspection.hasJsx) {
       throw invalid(label, "must use only createElement without JSX.");
     }
-  } else if (authoring !== "jsx" || !inspection.hasJsx) {
-    throw invalid(label, "must contain descriptive JSX.");
+  } else if (authoring === "jsx") {
+    if (!inspection.hasJsx || inspection.hasCreateElementCall) {
+      throw invalid(label, "must use only JSX without createElement.");
+    }
+  } else {
+    throw invalid(label, "must select a supported authoring mode.");
   }
 }

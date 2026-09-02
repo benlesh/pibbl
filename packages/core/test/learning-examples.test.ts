@@ -156,6 +156,29 @@ describe("learning example catalog", () => {
     expectValidNonJsxSource(source);
   });
 
+  it("rejects an imported createElement call mixed into a JSX lesson", () => {
+    const source = `
+      import { crc, createElement, Group, Rectangle, type CRCController } from "@crc/core";
+      function Scene() {
+        return (
+          <Group>
+            {createElement(Rectangle, { style: { width: 10, height: 10 } })}
+          </Group>
+        );
+      }
+      export default function mount(canvas: HTMLCanvasElement): CRCController {
+        return crc(canvas, <Scene />);
+      }
+    `;
+
+    expect(() =>
+      validateLearningSourceText(source, {
+        authoring: "jsx",
+        label: "fixture",
+      }),
+    ).toThrow(/only JSX without createElement/u);
+  });
+
   it.each([
     [
       "namespace legacy member",
@@ -379,6 +402,84 @@ describe("learning example catalog", () => {
     ],
   ])("rejects %s structurally", (_name, authoring, source) => {
     expectInvalidLearningSource(source, authoring);
+  });
+
+  it.each([
+    [
+      "object method",
+      `
+        const builder = {
+          build(createElement: (type: unknown, props: null) => unknown): unknown {
+            return createElement(Group, null);
+          },
+        };
+        const scene = builder.build(() => null);
+      `,
+    ],
+    [
+      "class method",
+      `
+        class Builder {
+          build(createElement: (type: unknown, props: null) => unknown): unknown {
+            return createElement(Group, null);
+          }
+        }
+        const scene = new Builder().build(() => null);
+      `,
+    ],
+    [
+      "private class method",
+      `
+        class Builder {
+          build(): unknown {
+            return this.#build(() => null);
+          }
+          #build(createElement: (type: unknown, props: null) => unknown): unknown {
+            return createElement(Group, null);
+          }
+        }
+        const scene = new Builder().build();
+      `,
+    ],
+  ])("rejects a createElement binding shadowed by an %s parameter", (_name, setup) => {
+    const source = `
+      import { crc, createElement, Group, type CRCController } from "@crc/core";
+      ${setup}
+      export default function mount(canvas: HTMLCanvasElement): CRCController {
+        return crc(canvas, scene as never);
+      }
+    `;
+
+    expect(() =>
+      validateLearningSourceText(source, {
+        authoring: "createElement",
+        label: "fixture",
+      }),
+    ).toThrow(/without aliases, reassignment, or shadowing/u);
+  });
+
+  it("allows unrelated object, class, and private method parameters", () => {
+    expectValidNonJsxSource(`
+      import { crc, createElement, Group, type CRCController } from "@crc/core";
+      const objectBuilder = {
+        build(factory: () => unknown): unknown {
+          return factory();
+        },
+      };
+      class Builder {
+        build(factory: () => unknown): unknown {
+          return this.#build(factory);
+        }
+        #build(factory: () => unknown): unknown {
+          return factory();
+        }
+      }
+      void objectBuilder;
+      void Builder;
+      export default function mount(canvas: HTMLCanvasElement): CRCController {
+        return crc(canvas, createElement(Group, null));
+      }
+    `);
   });
 
   it.each([
@@ -664,6 +765,63 @@ describe("learning example catalog", () => {
       declare const module: { exports: unknown };
       declare const exports: Record<string, unknown>;
       ${commonJsSyntax}
+      export default function mount(canvas: HTMLCanvasElement): CRCController {
+        return crc(canvas, createElement(Group, null));
+      }
+    `);
+  });
+
+  it.each([
+    [
+      "globalThis require through a TypeScript assertion",
+      `(globalThis as any).require("./helper");`,
+    ],
+    [
+      "globalThis module.exports chain",
+      `(globalThis as any).module.exports = {};`,
+    ],
+    [
+      "computed globalThis module exports chain",
+      `(globalThis as any)["module"]["exports"] = {};`,
+    ],
+    ["window computed require", `(window as any)["require"]("./helper");`],
+    ["self exports property", `(self as any).exports.helper = {};`],
+    ["global optional require", `(global as any)?.require?.("./helper");`],
+    [
+      "optional globalThis module exports chain",
+      `void (globalThis as any)?.["module"]?.["exports"];`,
+    ],
+    [
+      "nested known-global chain",
+      `(globalThis as any).window.self["require"]("./helper");`,
+    ],
+  ])("rejects CommonJS access through %s", (_name, commonJsSyntax) => {
+    expect(() =>
+      validateLearningSourceText(
+        `
+          import { crc, createElement, Group, type CRCController } from "@crc/core";
+          ${commonJsSyntax}
+          export default function mount(canvas: HTMLCanvasElement): CRCController {
+            return crc(canvas, createElement(Group, null));
+          }
+        `,
+        { authoring: "createElement", label: "fixture" },
+      ),
+    ).toThrow(/CommonJS module loading or exports/u);
+  });
+
+  it("allows CommonJS property names on unrelated objects", () => {
+    expectValidNonJsxSource(`
+      import { crc, createElement, Group, type CRCController } from "@crc/core";
+      const loader = {
+        require(id: string): string { return id; },
+        module: { exports: {} },
+        exports: { helper: false },
+      };
+      void loader.require("./helper");
+      void loader?.["require"]?.("./helper");
+      loader.module.exports = {};
+      loader["exports"].helper = true;
       export default function mount(canvas: HTMLCanvasElement): CRCController {
         return crc(canvas, createElement(Group, null));
       }
