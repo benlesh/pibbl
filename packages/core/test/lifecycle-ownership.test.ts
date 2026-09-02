@@ -17,9 +17,11 @@ import {
   rect,
   type CompEl,
   type CRCController,
-  withFocusManagement,
-  withKeyboardNavigation,
 } from '../src/index';
+import {
+  directionalPolicy,
+  focusManaged,
+} from '../src/lib/focus/policy-test-support';
 import { executeRender } from '../src/lib/execute-render';
 import { GLOBAL_STATE, getCRCInstance } from '../src/lib/global-state';
 import { mountCRC } from '../src/lib/mount-crc';
@@ -215,7 +217,7 @@ describe('shared event lifecycle laboratory', () => {
     });
     const controller = mountCRC(
       canvas,
-      withFocusManagement(SlotTargets({})),
+      focusManaged(SlotTargets({})),
     );
     activeRuntimeControllers.add(controller);
     executeRender(canvas, 0);
@@ -294,9 +296,9 @@ describe('shared event lifecycle laboratory', () => {
         key: 'stable-navigation-boundary',
         children,
       });
-      return withFocusManagement(Host({
+      return focusManaged(Host({
         key: 'stable-focus-boundary',
-        children: [includeBoundary ? withKeyboardNavigation(
+        children: [includeBoundary ? directionalPolicy(
           navigation,
           { mode: 'directional' },
         ) : navigation],

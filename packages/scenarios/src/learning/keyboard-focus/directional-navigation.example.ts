@@ -2,11 +2,12 @@ import {
   crc,
   crcEventTarget,
   crcState,
+  createElement,
   defineComp,
+  FocusManagement,
+  KeyboardNavigation,
   rect,
   text,
-  withFocusManagement,
-  withKeyboardNavigation,
   type CRCController,
 } from '@crc/core';
 
@@ -70,7 +71,10 @@ const DirectionalNavigationLesson = defineComp(function DirectionalNavigationLes
     rect({ style: { width: 720, height: 420, fill: '#eff6ff' } }),
     text({ style: { x: 360, y: 30, text: 'DIRECTIONAL KEYBOARD NAVIGATION', textAlign: 'center', fill: '#172554', font: '800 21px Arial' } }),
     PlainButton({ label: 'Above the square boundary', record, x: 258, y: 50 }),
-    withKeyboardNavigation(DirectionalGrid({ record }), { mode: 'directional' }),
+    createElement(KeyboardNavigation, {
+      mode: 'directional',
+      children: DirectionalGrid({ record }),
+    }),
     PlainButton({ label: 'Below the square boundary', record, x: 258, y: 278 }),
     text({ style: { x: 360, y: 334, text: 'Arrow keys use each custom target’s declared keyboardNavigationBounds.', textAlign: 'center', fill: '#1e3a8a', font: '13px Arial' } }),
     text({ style: { x: 360, y: 356, text: 'At an edge nothing wraps; with no candidate, focus and the browser default remain unchanged.', textAlign: 'center', fill: '#1e3a8a', font: '12px Arial' } }),
@@ -80,5 +84,7 @@ const DirectionalNavigationLesson = defineComp(function DirectionalNavigationLes
 });
 
 export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, withFocusManagement(DirectionalNavigationLesson({})));
+  return crc(canvas, createElement(FocusManagement, {
+    children: DirectionalNavigationLesson({}),
+  }));
 }

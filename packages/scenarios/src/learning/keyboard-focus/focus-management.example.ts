@@ -3,10 +3,11 @@ import {
   crcEventListener,
   crcEventTarget,
   crcState,
+  createElement,
   defineComp,
+  FocusManagement,
   rect,
   text,
-  withFocusManagement,
   type CRCController,
   type CRCEvent,
 } from '@crc/core';
@@ -122,5 +123,7 @@ const FocusManagementLesson = defineComp(function FocusManagementLesson() {
 });
 
 export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, withFocusManagement(FocusManagementLesson({})));
+  return crc(canvas, createElement(FocusManagement, {
+    children: FocusManagementLesson({}),
+  }));
 }

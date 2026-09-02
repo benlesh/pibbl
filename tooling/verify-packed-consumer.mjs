@@ -153,8 +153,10 @@ try {
   }
 
   const withFocusBundle = await bundleConsumerEntry(`
-    import { rect, withFocusManagement } from '@crc/core';
-    console.log(withFocusManagement(rect({ style: { width: 1, height: 1 } })));
+    import { FocusManagement, createElement, rect } from '@crc/core';
+    console.log(createElement(FocusManagement, {
+      children: rect({ style: { width: 1, height: 1 } })
+    }));
   `);
   if (!withFocusBundle.includes(focusImplementationMarker)) {
     throw new Error('Optimized with-focus bundle omitted the focus implementation marker.');

@@ -1,13 +1,15 @@
 import {
+  FocusManagement,
+  KeyboardNavigation,
+  createElement,
   crcEventTarget,
   defineComp,
   rect,
   text,
-  withFocusManagement,
-  withKeyboardNavigation,
   type CRCEventTargetSnapshot,
   type CRCKeyboardEvent,
   type CRCLogicalMouseEvent,
+  type CRCNode,
 } from '@crc/core';
 
 export const FOCUS_NAVIGATION_SOURCE_ID =
@@ -186,7 +188,7 @@ const FocusNavigationScene = defineComp<FocusNavigationSceneProps>(function Focu
     }),
     CanvasControl({ ...props, fill: '#0f766e', height: 44, label: 'Top action', target: 'top-primary', width: 150, x: 40, y: 48 }),
     CanvasControl({ ...props, fill: '#7c3aed', height: 44, label: 'Owns ← →', ownsHorizontalArrows: true, target: 'top-form-like', width: 150, x: 210, y: 48 }),
-    withKeyboardNavigation(DirectionalSquares(props), { mode: 'directional' }),
+    directionalPolicy(DirectionalSquares(props)),
     CanvasControl({ ...props, fill: '#b45309', height: 42, label: 'Bottom action', target: 'bottom-primary', width: 150, x: 40, y: 350 }),
     CanvasControl({ ...props, fill: '#be123c', height: 42, label: 'Last action', target: 'bottom-secondary', width: 150, x: 210, y: 350 }),
     text({ style: { x: 390, y: 356, text: `focused: ${props.state.currentTarget}`, font: '13px Arial', fill: '#334155' } }),
@@ -196,6 +198,19 @@ const FocusNavigationScene = defineComp<FocusNavigationSceneProps>(function Focu
 
 export function createFocusNavigationScene(
   props: FocusNavigationSceneProps,
-): ReturnType<typeof FocusNavigationScene> {
-  return withFocusManagement(FocusNavigationScene(props));
+): CRCNode {
+  return focusManaged(FocusNavigationScene(props));
+}
+
+function focusManaged(child: CRCNode): CRCNode {
+  return createElement(FocusManagement, {
+    children: child as Parameters<typeof FocusManagement>[0]['children'],
+  });
+}
+
+function directionalPolicy(child: CRCNode): CRCNode {
+  return createElement(KeyboardNavigation, {
+    mode: 'directional',
+    children: child as Parameters<typeof KeyboardNavigation>[0]['children'],
+  });
 }

@@ -23,11 +23,11 @@ import {
   defineComp,
   flex,
   flow,
+  FocusManagement,
   grid,
+  KeyboardNavigation,
   overlay,
   rect,
-  withFocusManagement,
-  withKeyboardNavigation,
   type CRCConfig,
   type CRCClipboardEvent,
   type CRCCompositionEvent,
@@ -41,11 +41,14 @@ import {
   type CRCKeyboardNavigationOptions,
   type CRCLogicalMouseEvent,
   type CRCMouseEvent,
+  type CRCNode,
   type CRCPixelRatio,
   type CRCPointerEvent,
   type CRCEventTargetSnapshot,
   type CRCTouchEvent,
   type CRCWheelEvent,
+  type FocusManagementProps,
+  type KeyboardNavigationProps,
   type OverlayStyle,
   type Percentage,
   type SystemStyle,
@@ -85,12 +88,19 @@ EventProbe({});
 const keyboardNavigationOptions = {
   mode: 'directional',
 } satisfies CRCKeyboardNavigationOptions;
-withFocusManagement(
-  withKeyboardNavigation(
-    EventProbe({ key: 'studio-focus-probe' }),
-    keyboardNavigationOptions,
-  ),
-);
+declare function policyElement<P>(
+  type: (props: P) => CRCNode,
+  props: P,
+): CRCNode;
+policyElement(FocusManagement, {
+  children: policyElement(KeyboardNavigation, {
+    ...keyboardNavigationOptions,
+    children: EventProbe({ key: 'studio-focus-probe' }),
+  } satisfies KeyboardNavigationProps),
+} satisfies FocusManagementProps);
+// @ts-expect-error focus policies reject raw container text
+const invalidFocusPolicy = { children: 'raw text' } satisfies FocusManagementProps;
+void invalidFocusPolicy;
 
 const logicalMouseHandler = (event: CRCLogicalMouseEvent) => {
   event.preventDefault();

@@ -11,8 +11,8 @@ import { crcEventTarget } from '../hooks/crc-event-target';
 import { mountCRC } from '../mount-crc';
 import type { CompEl, CRCController } from '../types';
 import type { CRCFocusManager } from './focus-manager';
-import { withFocusManagement } from './with-focus-management';
-import { withKeyboardNavigation } from './with-keyboard-navigation';
+import { focusManaged } from './policy-test-support';
+import { directionalPolicy } from './policy-test-support';
 
 const activeControllers = new Set<CRCController>();
 const noop = () => undefined;
@@ -36,8 +36,8 @@ describe('source-order Tab defaults', () => {
       BoundedTarget({ key: 'declared-second', label: 'declared-second', x: 0, y: 0 }),
       BoundedTarget({ key: 'declared-third', label: 'declared-third', x: 100, y: 50 }),
     ]);
-    const mounted = mountAndRender(withFocusManagement(
-      withKeyboardNavigation(Boundary({}), { mode: 'directional' }),
+    const mounted = mountAndRender(focusManaged(
+      directionalPolicy(Boundary({}), { mode: 'directional' }),
     ));
     mounted.canvas.focus({ preventScroll: true });
 
@@ -55,8 +55,8 @@ describe('source-order Tab defaults', () => {
       BoundedTarget({ key: 'bottom-left', label: 'bottom-left', x: 0, y: 50 }),
       BoundedTarget({ key: 'bottom-right', label: 'bottom-right', x: 50, y: 50 }),
     ]);
-    const mounted = mountAndRender(withFocusManagement(
-      withKeyboardNavigation(Boundary({}), { mode: 'directional' }),
+    const mounted = mountAndRender(focusManaged(
+      directionalPolicy(Boundary({}), { mode: 'directional' }),
     ));
     mounted.canvas.focus({ preventScroll: true });
 
@@ -73,10 +73,10 @@ describe('source-order Tab defaults', () => {
     ]);
     const Root = defineComp(() => [
       Target({ key: 'outside-first', label: 'outside-first', handlers: { onClick: noop } }),
-      withKeyboardNavigation(Boundary({}), { mode: 'directional' }),
+      directionalPolicy(Boundary({}), { mode: 'directional' }),
       Target({ key: 'outside-last', label: 'outside-last', handlers: { onClick: noop } }),
     ]);
-    const mounted = mountAndRender(withFocusManagement(Root({})));
+    const mounted = mountAndRender(focusManaged(Root({})));
     mounted.canvas.focus({ preventScroll: true });
     expect(focusedLabel(mounted.manager)).toBe('outside-first');
 
@@ -136,7 +136,7 @@ describe('source-order Tab defaults', () => {
       }),
       Target({ key: 'second', label: 'second', handlers: { onClick: noop } }),
     ]);
-    const mounted = mountAndRender(withFocusManagement(Root({})));
+    const mounted = mountAndRender(focusManaged(Root({})));
     mounted.canvas.focus({ preventScroll: true });
 
     const event = tabEvent(false);
@@ -187,7 +187,7 @@ describe('focus-policy native event routing', () => {
       onPaste: record,
     };
     const Root = defineComp(() => Target({ label: 'target', handlers }));
-    const mounted = mountAndRender(withFocusManagement(Root({})));
+    const mounted = mountAndRender(focusManaged(Root({})));
     const target = mounted.manager.candidates[0].target;
     mounted.manager.setFocusState(target, true);
     const instance = getCRCInstance(mounted.canvas);
@@ -222,7 +222,7 @@ describe('focus-policy native event routing', () => {
       label: 'target',
       handlers: { onKeyDown: () => trace.push('handler') },
     }));
-    const mounted = mountAndRender(withFocusManagement(Root({})));
+    const mounted = mountAndRender(focusManaged(Root({})));
     mounted.canvas.focus({ preventScroll: true });
     const afterDispatch = vi.spyOn(mounted.manager, 'afterDispatch')
       .mockImplementation(event => {
@@ -245,7 +245,7 @@ describe('focus-policy native event routing', () => {
     let renders = 1;
     const handler = vi.fn(() => {
       visible = false;
-      executeRender(canvas, ++renders, withFocusManagement(Root({})));
+      executeRender(canvas, ++renders, focusManaged(Root({})));
     });
     const Root = defineComp(() => [
       visible ? Target({
@@ -260,7 +260,7 @@ describe('focus-policy native event routing', () => {
       }),
     ]);
     canvas = createCanvas();
-    const mounted = mountAndRender(withFocusManagement(Root({})), canvas);
+    const mounted = mountAndRender(focusManaged(Root({})), canvas);
     canvas.focus({ preventScroll: true });
     const afterDispatch = vi.spyOn(mounted.manager, 'afterDispatch');
     const event = tabEvent(false);
@@ -302,7 +302,7 @@ describe('focus-policy native event routing', () => {
           handlers: { onClick: noop },
         }),
       ]);
-      const mounted = mountAndRender(withFocusManagement(Root({})));
+      const mounted = mountAndRender(focusManaged(Root({})));
       mounted.canvas.focus({ preventScroll: true });
       action = () => clearFocus(mounted.canvas, mounted.manager);
       const afterDispatch = vi.spyOn(mounted.manager, 'afterDispatch');
@@ -350,7 +350,7 @@ const Scene = defineComp(({ labels }: { labels: readonly string[] }) =>
 );
 
 function managed(labels: readonly string[]): CompEl<any, any> {
-  return withFocusManagement(Scene({ labels }));
+  return focusManaged(Scene({ labels }));
 }
 
 function mountAndRender(

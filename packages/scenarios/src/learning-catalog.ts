@@ -918,7 +918,7 @@ const drafts = [
     summary:
       "Opt one Canvas subtree into logical focus, natural Tab traversal, focus events, and render-time focus visuals.",
     api: [
-      "withFocusManagement",
+      "FocusManagement",
       "keyboardFocusable",
       "isFocused",
       "isFocusVisible",
@@ -937,7 +937,7 @@ const drafts = [
       code: "Switch a target between automatic, explicit-true, and explicit-false enrollment.",
     },
     apiNotes: [
-      "`withFocusManagement` is additive; without it, focus metadata is inert and no tabindex or document listener is installed.",
+      "`FocusManagement` is additive; without it, focus metadata is inert and no tabindex or document listener is installed.",
       "Logical Canvas focus is keyboard interaction, not screen-reader semantics; provide an equivalent semantic DOM experience separately.",
     ],
     canvas: { width: 720, height: 420 },
@@ -980,7 +980,7 @@ const drafts = [
     order: 310,
     summary:
       "Move through arbitrary spatial targets with arrows while Tab remains left-to-right and top-to-bottom by source order.",
-    api: ["withKeyboardNavigation", "keyboardNavigationBounds"],
+    api: ["KeyboardNavigation", "keyboardNavigationBounds"],
     objectives: [
       "Add a directional boundary without requiring a Grid component.",
       "Keep source-order Tab traversal independent from geometry-ranked arrow navigation.",
@@ -1008,8 +1008,8 @@ const drafts = [
     summary:
       "Compose a directional grid inside another directional grid while keeping arrow ownership visible and local.",
     api: [
-      "withFocusManagement",
-      "withKeyboardNavigation",
+      "FocusManagement",
+      "KeyboardNavigation",
       "keyboardNavigationBounds",
     ],
     objectives: [

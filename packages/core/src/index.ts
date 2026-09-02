@@ -97,8 +97,12 @@ export {
 } from './lib/layout/grid.js';
 export { measureElement } from './lib/layout/measure.js';
 
-export { withFocusManagement } from './lib/focus/with-focus-management.js';
-export { withKeyboardNavigation } from './lib/focus/with-keyboard-navigation.js';
+export {
+  FocusManagement,
+  KeyboardNavigation,
+  type FocusManagementProps,
+  type KeyboardNavigationProps,
+} from './lib/focus/policy-components.js';
 export type { CRCKeyboardNavigationOptions } from './lib/focus/types.js';
 
 export { defineComp } from './lib/define-comp.js';

@@ -2,11 +2,12 @@ import {
   crc,
   crcEventTarget,
   crcState,
+  createElement,
   defineComp,
+  FocusManagement,
+  KeyboardNavigation,
   rect,
   text,
-  withFocusManagement,
-  withKeyboardNavigation,
   type CRCController,
   type CRCKeyboardEvent,
 } from '@crc/core';
@@ -200,8 +201,9 @@ const OuterGrid = defineComp<BoundaryProps>(function OuterGrid({
         font: '800 10px monospace',
       },
     }),
-    withKeyboardNavigation(InnerGrid({ onFocusTarget, onInput }), {
+    createElement(KeyboardNavigation, {
       mode: 'directional',
+      children: InnerGrid({ onFocusTarget, onInput }),
     }),
     NavigationTarget({
       boundary: 'OUTER',
@@ -257,8 +259,9 @@ const NestedDirectionalNavigationLesson = defineComp(
           font: '13px Arial',
         },
       }),
-      withKeyboardNavigation(OuterGrid({ onFocusTarget, onInput }), {
+      createElement(KeyboardNavigation, {
         mode: 'directional',
+        children: OuterGrid({ onFocusTarget, onInput }),
       }),
       rect({
         style: {
@@ -306,6 +309,8 @@ const NestedDirectionalNavigationLesson = defineComp(
 export default function mount(canvas: HTMLCanvasElement): CRCController {
   return crc(
     canvas,
-    withFocusManagement(NestedDirectionalNavigationLesson({})),
+    createElement(FocusManagement, {
+      children: NestedDirectionalNavigationLesson({}),
+    }),
   );
 }

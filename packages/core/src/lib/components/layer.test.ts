@@ -14,7 +14,7 @@ import { crcEventTarget } from '../hooks/crc-event-target';
 import { crcRef } from '../hooks/crc-ref';
 import { crcState } from '../hooks/crc-state';
 import { crcWhenChanged } from '../hooks/crc-when-changed';
-import { withFocusManagement } from '../focus/with-focus-management';
+import { focusManaged } from '../focus/policy-test-support';
 import { componentTest } from '../test-utils/component-test';
 import type { CRCController, CRCNode } from '../types';
 import { takeScreenshot } from '../util/test-utils';
@@ -306,7 +306,7 @@ describe('Layer children and retained subtree contract', () => {
       return rect({ style: { width: 20, height: 20 } });
     });
     const managedScene = () => createElement(Layer, {
-      children: withFocusManagement(Counted({})),
+      children: focusManaged(Counted({})),
     });
     const mounted = mountNow(managedScene());
     expect(renders).toBe(1);
@@ -333,7 +333,7 @@ describe('Layer children and retained subtree contract', () => {
       return rect({ style: { width: 30, height: 30 }, key: label });
     });
     const scene = () => createElement(Layer, {
-      children: withFocusManagement(FocusTarget({ label: 'cached' })),
+      children: focusManaged(FocusTarget({ label: 'cached' })),
     });
     const mounted = mountNow(scene());
     const policy = getCRCInstance(mounted.canvas).eventRoot.focusPolicy as unknown as

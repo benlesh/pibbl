@@ -73,6 +73,7 @@ import {
   crcState,
   crcSvgPath,
   crcWhenChanged,
+  createElement,
   clip,
   defineComp,
   g,
@@ -91,8 +92,8 @@ import {
   flex,
   grid,
   measureElement,
-  withFocusManagement,
-  withKeyboardNavigation,
+  FocusManagement,
+  KeyboardNavigation,
 } from '@crc/core';
 
 // @ts-expect-error internal library modules are outside the public export map
@@ -221,12 +222,16 @@ export type PublicCoreEventTypes = [
 const keyboardNavigationOptions = {
   mode: 'directional',
 } satisfies CRCKeyboardNavigationOptions;
-export const scene = withFocusManagement(
-  withKeyboardNavigation(
-    rect({ ...props, key: 'packed-focus-probe', style: rectangleStyle }),
-    keyboardNavigationOptions,
-  ),
-);
+export const scene = createElement(FocusManagement, {
+  children: createElement(KeyboardNavigation, {
+    ...keyboardNavigationOptions,
+    children: rect({
+      ...props,
+      key: 'packed-focus-probe',
+      style: rectangleStyle,
+    }),
+  }),
+});
 export const mount = crc;
 
 const pathStyle = {

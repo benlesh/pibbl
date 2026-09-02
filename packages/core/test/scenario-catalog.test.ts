@@ -27,8 +27,8 @@ describe('scenario catalog trust gate', () => {
     expect(focusNavigationScenarioEntry.metadata.apiTags).toEqual(
       expect.arrayContaining([
         'crcEventTarget',
-        'withFocusManagement',
-        'withKeyboardNavigation',
+        'FocusManagement',
+        'KeyboardNavigation',
       ]),
     );
     expect(focusNavigationScenarioEntry.metadata.manualSteps).toHaveLength(5);

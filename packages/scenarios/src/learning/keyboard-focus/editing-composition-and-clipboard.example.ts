@@ -2,10 +2,11 @@ import {
   crc,
   crcEventTarget,
   crcState,
+  createElement,
   defineComp,
+  FocusManagement,
   rect,
   text,
-  withFocusManagement,
   type CRCClipboardEvent,
   type CRCCompositionEvent,
   type CRCController,
@@ -67,5 +68,7 @@ const EditingCompositionClipboardLesson = defineComp<{ readonly canvas: HTMLCanv
 );
 
 export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, withFocusManagement(EditingCompositionClipboardLesson({ canvas })));
+  return crc(canvas, createElement(FocusManagement, {
+    children: EditingCompositionClipboardLesson({ canvas }),
+  }));
 }

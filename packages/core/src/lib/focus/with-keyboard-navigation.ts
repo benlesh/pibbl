@@ -3,6 +3,7 @@ import {
   hasElementEnhancer,
   type CRCElementEnhancerDescriptor,
 } from '../element-enhancers.js';
+import type { CRCElement } from '../element/types.js';
 import type { CompEl, SystemStyle } from '../types.js';
 import type { CRCKeyboardNavigationOptions } from './types.js';
 import {
@@ -35,6 +36,22 @@ const keyboardNavigationDescriptor: CRCElementEnhancerDescriptor = {
     };
   },
 };
+
+/** @internal Applies an outer JSX navigation policy without adding identity. */
+export function prepareKeyboardNavigationPolicy<P>(
+  element: CRCElement<P>,
+  options: CRCKeyboardNavigationOptions,
+): CRCElement<P> {
+  if (options.mode !== 'directional') {
+    throw new Error('KeyboardNavigation mode must be "directional".');
+  }
+  if (hasElementEnhancer(element, KEYBOARD_NAVIGATION_ENHANCER_KEY)) {
+    throw new Error(
+      'KeyboardNavigation cannot be applied more than once to the same CRC element.',
+    );
+  }
+  return appendElementEnhancer(element, keyboardNavigationDescriptor);
+}
 
 export function withKeyboardNavigation<
   P,

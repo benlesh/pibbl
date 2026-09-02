@@ -9,7 +9,7 @@ import { layer } from "../components/layer";
 import { rect } from "../components/rect";
 import { g } from "../components/g";
 import type { CompEl, CRCController } from "../types";
-import { withFocusManagement } from "./with-focus-management";
+import { focusManaged } from "./policy-test-support";
 
 const activeControllers = new Set<CRCController>();
 
@@ -71,7 +71,7 @@ describe("focus snapshots in cached layers", () => {
         }),
       ];
     });
-    const mounted = mount(withFocusManagement(Root({})));
+    const mounted = mount(focusManaged(Root({})));
     await nextFrame();
 
     expect(layerRenders).toBe(1);
@@ -166,7 +166,7 @@ describe("focus snapshots in cached layers", () => {
       replaceTarget = () => setVersion(version + 1);
       return layer({
         style: { width: 80, height: 80 },
-        render: withFocusManagement(FocusTarget({
+        render: focusManaged(FocusTarget({
           key: `target-${version}`,
         })),
       });
@@ -219,7 +219,7 @@ describe("focus snapshots during manager removal", () => {
       const [managed, setManaged] = crcState(true);
       removeManager = () => setManaged(false);
       const target = FocusTarget({});
-      return managed ? withFocusManagement(target) : target;
+      return managed ? focusManaged(target) : target;
     });
     const mounted = mount(Root({}));
     await nextFrame();
@@ -274,7 +274,7 @@ describe("focus snapshots during manager removal", () => {
       const [managed, setManaged] = crcState(true);
       removeManager = () => setManaged(false);
       const host = LayerHost({});
-      return managed ? withFocusManagement(host) : host;
+      return managed ? focusManaged(host) : host;
     });
     const mounted = mount(Root({}));
     await nextFrame();

@@ -5,11 +5,13 @@ const expected = [
   'Clip',
   'Flex',
   'Flow',
+  'FocusManagement',
   'Fragment',
   'Grid',
   'Group',
   'HorizontalLine',
   'Image',
+  'KeyboardNavigation',
   'Layer',
   'LayoutDiagnostic',
   'Line',
@@ -57,8 +59,6 @@ const expected = [
   'svgPath',
   'text',
   'verticalLine',
-  'withFocusManagement',
-  'withKeyboardNavigation',
 ];
 
 const actual = Object.keys(core).sort();
@@ -73,16 +73,18 @@ for (const exportName of expected) {
 
 const style = { width: 1, height: 1 };
 const element = core.rect({ key: 'runtime-focus-probe', style });
-const enhanced = core.withFocusManagement(
-  core.withKeyboardNavigation(element, { mode: 'directional' }),
-);
+const enhanced = core.createElement(core.FocusManagement, {
+  children: core.createElement(core.KeyboardNavigation, {
+    mode: 'directional',
+    children: element,
+  }),
+});
 if (
-  enhanced.type !== element.type ||
-  enhanced.props !== element.props ||
-  enhanced.style !== style ||
-  enhanced.key !== element.key
+  enhanced.type !== core.FocusManagement ||
+  enhanced.props.children.type !== core.KeyboardNavigation ||
+  enhanced.props.children.props.children !== element
 ) {
-  throw new Error('Focus enhancers changed CRC element identity fields.');
+  throw new Error('Focus policy descriptors did not retain their exact child.');
 }
 
 for (const specifier of [

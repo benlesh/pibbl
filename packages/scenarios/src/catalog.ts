@@ -506,8 +506,8 @@ const focusNavigationMetadata: ScenarioMetadata = {
   category: 'Keyboard interaction',
   apiTags: [
     'crcEventTarget',
-    'withFocusManagement',
-    'withKeyboardNavigation',
+    'FocusManagement',
+    'KeyboardNavigation',
     'keyboard events',
     'pointer events',
   ],

@@ -1,6 +1,9 @@
 import { isCRCElement } from './create-element.js';
 import { isFragmentElement } from './fragment.js';
-import { getElementSource } from './metadata.js';
+import {
+  getElementPolicyDefinition,
+  getElementSource,
+} from './metadata.js';
 import type {
   CRCElement,
   CRCNode,
@@ -43,6 +46,8 @@ function visitContainerNode(
   node: unknown,
   receiver: ChildReceiver,
   elements: CRCElement<any>[],
+  pendingPolicies: readonly CRCElement<any>[] = [],
+  preservePolicies = false,
 ): void {
   if (
     node === false ||
@@ -57,11 +62,49 @@ function visitContainerNode(
   }
 
   if (isCRCElement(node)) {
-    if (isFragmentElement(node) && node.key === undefined) {
-      visitContainerNode(node.props.children, node, elements);
+    const policy = getElementPolicyDefinition(node.type);
+    if (policy) {
+      if (preservePolicies) {
+        elements.push(node);
+        return;
+      }
+      const policyChildren = materializeUnpreparedPolicyChildren(
+        (node.props as { readonly children?: CRCNode }).children,
+        node,
+      );
+      if (policyChildren.length !== 1) {
+        throw new Error(
+          `${describeReceiver(node)} requires exactly one CRC element child ` +
+          `after empty values are removed; received ${policyChildren.length}.`,
+        );
+      }
+      visitContainerNode(
+        policyChildren[0],
+        node,
+        elements,
+        [...pendingPolicies, node],
+      );
       return;
     }
-    elements.push(node);
+    if (isFragmentElement(node) && node.key === undefined) {
+      visitContainerNode(
+        node.props.children,
+        node,
+        elements,
+        pendingPolicies,
+        preservePolicies,
+      );
+      return;
+    }
+    let prepared = node;
+    for (const pendingPolicy of pendingPolicies) {
+      const definition = getElementPolicyDefinition(pendingPolicy.type);
+      if (!definition) {
+        throw new Error('CRC policy preparation metadata was lost.');
+      }
+      prepared = definition.prepare(pendingPolicy, prepared);
+    }
+    elements.push(prepared);
     return;
   }
 
@@ -91,15 +134,41 @@ function visitContainerNode(
     throw invalidChild(receiver, 'an async iterable');
   }
   if (Array.isArray(node)) {
-    for (const child of node) visitContainerNode(child, receiver, elements);
+    for (const child of node) {
+      visitContainerNode(
+        child,
+        receiver,
+        elements,
+        pendingPolicies,
+        preservePolicies,
+      );
+    }
     return;
   }
   if (isIterable(node)) {
-    for (const child of node) visitContainerNode(child, receiver, elements);
+    for (const child of node) {
+      visitContainerNode(
+        child,
+        receiver,
+        elements,
+        pendingPolicies,
+        preservePolicies,
+      );
+    }
     return;
   }
 
   throw invalidChild(receiver, 'an unsupported object');
+}
+
+function materializeUnpreparedPolicyChildren(
+  node: CRCNode,
+  receiver: CRCElement<any>,
+): readonly CRCElement<any>[] {
+  const elements: CRCElement<any>[] = [];
+  visitContainerNode(node, receiver, elements, [], true);
+  assertUniqueKeys(elements, receiver);
+  return Object.freeze(elements);
 }
 
 function visitTextNode(

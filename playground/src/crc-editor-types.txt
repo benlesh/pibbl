@@ -55,6 +55,9 @@ declare module '@crc/core' {
   }
   export interface CRCEventTargetSnapshot { readonly isFocused: boolean; readonly isFocusVisible: boolean }
   export interface CRCKeyboardNavigationOptions { readonly mode: 'directional' }
+  type CRCPolicyChild = CRCNode | true | readonly CRCPolicyChild[] | (Iterable<CRCPolicyChild> & { readonly charAt?: never });
+  export interface FocusManagementProps { readonly children: CRCPolicyChild }
+  export interface KeyboardNavigationProps extends CRCKeyboardNavigationOptions { readonly children: CRCPolicyChild }
   export interface CRCEventTargetOptions {
     readonly path: Path2D;
     readonly fill?: boolean;
@@ -274,8 +277,8 @@ declare module '@crc/core' {
   export function flex(props: ComponentInput<FlexProps, FlexStyle>): CompEl<FlexProps, FlexStyle>;
   export function grid(props: ComponentInput<GridProps, GridStyle>): CompEl<GridProps, GridStyle>;
   export function measureElement(element: CompEl<any, any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService): MeasureResult;
-  export function withFocusManagement<P, S extends SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N>(element: CompEl<P, S, N, R>): CompEl<P, S, N, R>;
-  export function withKeyboardNavigation<P, S extends SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N>(element: CompEl<P, S, N, R>, options: CRCKeyboardNavigationOptions): CompEl<P, S, N, R>;
+  export const FocusManagement: (props: FocusManagementProps) => CRCNode;
+  export const KeyboardNavigation: (props: KeyboardNavigationProps) => CRCNode;
   export function resolveLength(value: Length | undefined, reference: number | undefined, property: string, context?: unknown): number | undefined;
   export function normalizeEdges(value: EdgeValues | undefined, property: string, context?: unknown): Readonly<Edges>;
   export function resolveBox(style: Readonly<BoxStyle>, constraints: Readonly<Constraints>, context?: Readonly<LayoutDiagnosticContext>): ResolvedBoxStyle;

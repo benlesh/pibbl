@@ -15,8 +15,8 @@ import {
 } from './directional-navigation';
 import type { CRCFocusManager } from './focus-manager';
 import type { CRCFocusCandidate } from './types';
-import { withFocusManagement } from './with-focus-management';
-import { withKeyboardNavigation } from './with-keyboard-navigation';
+import { focusManaged } from './policy-test-support';
+import { directionalPolicy } from './policy-test-support';
 
 const activeControllers = new Set<CRCController>();
 const noop = () => undefined;
@@ -147,7 +147,7 @@ describe('directional candidate scoring', () => {
 describe('directional keyboard defaults', () => {
   it('runs after propagation, follows transformed root bounds, and transitions through focus events', () => {
     const trace: string[] = [];
-    const Root = defineComp(() => withKeyboardNavigation(
+    const Root = defineComp(() => directionalPolicy(
       Scene({
         definitions: [
           {
@@ -174,7 +174,7 @@ describe('directional keyboard defaults', () => {
       }),
       { mode: 'directional' },
     ));
-    const mounted = mountAndRender(withFocusManagement(Root({})));
+    const mounted = mountAndRender(focusManaged(Root({})));
     mounted.canvas.focus({ preventScroll: true });
     trace.length = 0;
 
@@ -201,10 +201,10 @@ describe('directional keyboard defaults', () => {
       ],
     }));
     const Root = defineComp(() => [
-      withKeyboardNavigation(Inner({}), { mode: 'directional' }),
+      directionalPolicy(Inner({}), { mode: 'directional' }),
       Target({ label: 'outside-close', x: 20, y: 0 }),
     ]);
-    const mounted = mountAndRender(withFocusManagement(Root({})));
+    const mounted = mountAndRender(focusManaged(Root({})));
     mounted.canvas.focus({ preventScroll: true });
 
     const event = arrowEvent('ArrowRight');
@@ -215,7 +215,7 @@ describe('directional keyboard defaults', () => {
   });
 
   it('does nothing when propagation prevents the arrow or no winner exists', () => {
-    const Root = defineComp(() => withKeyboardNavigation(Scene({
+    const Root = defineComp(() => directionalPolicy(Scene({
       definitions: [
         {
           label: 'left',
@@ -230,7 +230,7 @@ describe('directional keyboard defaults', () => {
         { label: 'right', x: 50, y: 0 },
       ],
     }), { mode: 'directional' }));
-    const mounted = mountAndRender(withFocusManagement(Root({})));
+    const mounted = mountAndRender(focusManaged(Root({})));
     mounted.canvas.focus({ preventScroll: true });
 
     const prevented = arrowEvent('ArrowRight');
@@ -246,13 +246,13 @@ describe('directional keyboard defaults', () => {
   });
 
   it('leaves a focused Tab-only target unchanged', () => {
-    const Root = defineComp(() => withKeyboardNavigation(Scene({
+    const Root = defineComp(() => directionalPolicy(Scene({
       definitions: [
         { label: 'missing', bounds: null, x: 0, y: 0 },
         { label: 'right', x: 50, y: 0 },
       ],
     }), { mode: 'directional' }));
-    const mounted = mountAndRender(withFocusManagement(Root({})));
+    const mounted = mountAndRender(focusManaged(Root({})));
     mounted.canvas.focus({ preventScroll: true });
 
     const event = arrowEvent('ArrowRight');

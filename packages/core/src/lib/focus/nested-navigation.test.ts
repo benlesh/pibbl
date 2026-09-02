@@ -9,8 +9,8 @@ import type { CompEl, CRCController } from '../types';
 import type { CRCDirection } from './directional-navigation';
 import type { CRCFocusManager } from './focus-manager';
 import type { CRCDirectionalBoundary, CRCFocusCandidate } from './types';
-import { withFocusManagement } from './with-focus-management';
-import { withKeyboardNavigation } from './with-keyboard-navigation';
+import { focusManaged } from './policy-test-support';
+import { directionalPolicy } from './policy-test-support';
 
 const activeControllers = new Set<CRCController>();
 const noop = () => undefined;
@@ -49,15 +49,15 @@ describe('nested directional navigation', () => {
       }),
       Target({ key: 'inner-right', label: 'inner-right', x: 80, y: 0 }),
     ]);
-    const Outer = defineComp(() => withKeyboardNavigation(
+    const Outer = defineComp(() => directionalPolicy(
       defineComp(() => [
         Target({ key: 'outer-left', label: 'outer-left', x: 0, y: 0 }),
-        withKeyboardNavigation(Inner({ key: 'inner' }), { mode: 'directional' }),
+        directionalPolicy(Inner({ key: 'inner' }), { mode: 'directional' }),
         Target({ key: 'outer-right', label: 'outer-right', x: 120, y: 0 }),
       ])({}),
       { mode: 'directional' },
     ));
-    const mounted = mountAndRender(withFocusManagement(Outer({})));
+    const mounted = mountAndRender(focusManaged(Outer({})));
     mounted.canvas.focus({ preventScroll: true });
 
     const [outerLeft, innerLeft, form, innerRight, outerRight] =
@@ -128,17 +128,17 @@ describe('nested directional navigation', () => {
       order: readonly string[];
     }) => {
       const inner = Inner({ key: 'stable-inner', order });
-      return withKeyboardNavigation(
+      return directionalPolicy(
         OuterHost({ children: [
           Target({ key: 'before', label: 'before', x: 0, y: 0 }),
-          nested ? withKeyboardNavigation(inner, { mode: 'directional' }) : inner,
+          nested ? directionalPolicy(inner, { mode: 'directional' }) : inner,
           Target({ key: 'after', label: 'after', x: 100, y: 0 }),
         ] }),
         { mode: 'directional' },
       );
     });
     const element = (nested: boolean, order: readonly string[]) =>
-      withFocusManagement(Root({ nested, order }));
+      focusManaged(Root({ nested, order }));
     const mounted = mountAndRender(element(true, ['a', 'b']));
     const initialTargets = new Map(
       mounted.manager.candidates.map(candidate => [
@@ -190,15 +190,15 @@ describe('nested directional navigation', () => {
       partial ? Throwing({}) : undefined,
     ]);
     const Root = defineComp(({ partial }: { partial: boolean }) =>
-      withKeyboardNavigation(defineComp(() => [
+      directionalPolicy(defineComp(() => [
         Target({ key: 'outer-a', label: 'outer-a', x: 0, y: 0 }),
-        withKeyboardNavigation(Inner({ key: 'inner', partial }), {
+        directionalPolicy(Inner({ key: 'inner', partial }), {
           mode: 'directional',
         }),
         Target({ key: 'outer-b', label: 'outer-b', x: 100, y: 0 }),
       ])({}), { mode: 'directional' })
     );
-    const element = (partial: boolean) => withFocusManagement(Root({ partial }));
+    const element = (partial: boolean) => focusManaged(Root({ partial }));
     const mounted = mountAndRender(element(false));
     const manager = mounted.manager;
     committedOuter = manager.candidates[0].directionalBoundary!;

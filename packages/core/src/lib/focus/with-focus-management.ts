@@ -3,6 +3,7 @@ import {
   hasElementEnhancer,
   type CRCElementEnhancerDescriptor,
 } from '../element-enhancers.js';
+import type { CRCElement } from '../element/types.js';
 import type { CompEl, SystemStyle } from '../types.js';
 import { createFocusManager } from './focus-manager.js';
 
@@ -21,6 +22,19 @@ const focusManagementDescriptor: CRCElementEnhancerDescriptor = {
     };
   },
 };
+
+/** @internal Applies an outer JSX focus policy without adding identity. */
+export function prepareFocusManagementPolicy<P>(
+  element: CRCElement<P>,
+): CRCElement<P> {
+  if (hasElementEnhancer(element, FOCUS_MANAGEMENT_ENHANCER_KEY)) {
+    throw new Error(
+      `${FOCUS_IMPLEMENTATION_MARKER}: FocusManagement cannot be applied more ` +
+      'than once to the same CRC element.',
+    );
+  }
+  return appendElementEnhancer(element, focusManagementDescriptor);
+}
 
 export function withFocusManagement<
   P,

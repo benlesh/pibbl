@@ -32,6 +32,7 @@ const elementCloneMetadataHandlers = new Set<(
   clone: CRCElement<any>,
 ) => void>();
 const primitiveDefinitions = new WeakMap<Function, PrimitiveDefinition>();
+const policyDefinitions = new WeakMap<Function, ElementPolicyDefinition>();
 const childPrimitiveReceiverTransactions = new WeakMap<
   CRCRenderTransaction,
   WeakMap<object, Map<number, object>>
@@ -60,6 +61,13 @@ export interface PrimitiveDefinition<
   ) => MeasureResult;
 }
 
+export interface ElementPolicyDefinition {
+  readonly prepare: (
+    policy: CRCElement<any>,
+    child: CRCElement<any>,
+  ) => CRCElement<any>;
+}
+
 /** @internal Registers the platform behavior for one component value. */
 export function setPrimitiveDefinition<
   P,
@@ -78,6 +86,21 @@ export function getPrimitiveDefinition(
   type: Function,
 ): PrimitiveDefinition | undefined {
   return primitiveDefinitions.get(type);
+}
+
+/** @internal Registers an identity-transparent element preparation policy. */
+export function setElementPolicyDefinition(
+  type: Function,
+  definition: ElementPolicyDefinition,
+): void {
+  policyDefinitions.set(type, definition);
+}
+
+/** @internal Reads a policy before ordinary component identity is assigned. */
+export function getElementPolicyDefinition(
+  type: Function,
+): ElementPolicyDefinition | undefined {
+  return policyDefinitions.get(type);
 }
 
 /** @internal */

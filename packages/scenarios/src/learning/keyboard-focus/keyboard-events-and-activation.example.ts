@@ -2,10 +2,11 @@ import {
   crc,
   crcEventTarget,
   crcState,
+  createElement,
   defineComp,
+  FocusManagement,
   rect,
   text,
-  withFocusManagement,
   type CRCController,
   type CRCEventTargetSnapshot,
   type CRCKeyboardEvent,
@@ -63,5 +64,7 @@ const KeyboardActivationLesson = defineComp(function KeyboardActivationLesson() 
 });
 
 export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, withFocusManagement(KeyboardActivationLesson({})));
+  return crc(canvas, createElement(FocusManagement, {
+    children: KeyboardActivationLesson({}),
+  }));
 }

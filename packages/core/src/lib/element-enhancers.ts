@@ -54,8 +54,16 @@ export function appendElementEnhancer<
 >(
   element: CompEl<P, S, N, R>,
   descriptor: CRCElementEnhancerDescriptor,
-): CompEl<P, S, N, R> {
-  const enhanced = cloneCRCElement(element as CRCElement<any>) as CompEl<P, S, N, R>;
+): CompEl<P, S, N, R>;
+export function appendElementEnhancer<P>(
+  element: CRCElement<P>,
+  descriptor: CRCElementEnhancerDescriptor,
+): CRCElement<P>;
+export function appendElementEnhancer(
+  element: CRCElement<any>,
+  descriptor: CRCElementEnhancerDescriptor,
+): CRCElement<any> {
+  const enhanced = cloneCRCElement(element);
   elementEnhancers.set(enhanced, Object.freeze([
     ...(elementEnhancers.get(element) ?? []),
     descriptor,

@@ -13,7 +13,7 @@ import type {
   CRCFocusPolicyBridge,
 } from '../types';
 import type { CRCFocusManager } from './focus-manager';
-import { withFocusManagement } from './with-focus-management';
+import { focusManaged } from './policy-test-support';
 
 const activeControllers = new Set<CRCController>();
 const noop = () => undefined;
@@ -93,7 +93,7 @@ describe('Canvas DOM focus host', () => {
         onBlur: event => trace.push(event.type),
       },
     }));
-    const mounted = mountBetweenNativeControls(withFocusManagement(Root({})));
+    const mounted = mountBetweenNativeControls(focusManaged(Root({})));
 
     mounted.canvas.focus({ preventScroll: true });
     mounted.canvas.blur();
@@ -411,11 +411,11 @@ describe('Canvas DOM focus host', () => {
     (_label, reverseSlots) => {
     const add = vi.spyOn(document, 'addEventListener');
     const remove = vi.spyOn(document, 'removeEventListener');
-    const OldHost = defineComp(() => withFocusManagement(Target({
+    const OldHost = defineComp(() => focusManaged(Target({
       label: 'old',
       handlers: { onClick: noop },
     })));
-    const NewHost = defineComp(() => withFocusManagement(Target({
+    const NewHost = defineComp(() => focusManaged(Target({
       label: 'new',
       handlers: { onClick: noop },
     })));
@@ -465,11 +465,11 @@ describe('Canvas DOM focus host', () => {
 
   it('enters logical focus before native focus routing after manager replacement', () => {
     const trace: string[] = [];
-    const OldHost = defineComp(() => withFocusManagement(Target({
+    const OldHost = defineComp(() => focusManaged(Target({
       label: 'old',
       handlers: { onClick: noop, onFocus: () => trace.push('old-focus') },
     })));
-    const NewHost = defineComp(() => withFocusManagement(Target({
+    const NewHost = defineComp(() => focusManaged(Target({
       label: 'new',
       handlers: { onClick: noop, onFocus: () => trace.push('new-focus') },
     })));
@@ -507,8 +507,8 @@ describe('Canvas DOM focus host', () => {
     });
     const Root = defineComp(({ replacement }: { replacement: boolean }) =>
       replacement ?
-        withFocusManagement(NewHost({ key: 'new' })) :
-        withFocusManagement(OldHost({ key: 'old' }))
+        focusManaged(NewHost({ key: 'new' })) :
+        focusManaged(OldHost({ key: 'old' }))
     );
     canvas = createCanvas();
     const canvasAdd = vi.spyOn(canvas, 'addEventListener');
@@ -534,7 +534,7 @@ describe('Canvas DOM focus host', () => {
     let renders = 0;
     const Inner = defineComp(() => {
       renders++;
-      return withFocusManagement(Target({
+      return focusManaged(Target({
         label: 'cached',
         handlers: { onClick: noop },
       }));
@@ -582,8 +582,8 @@ describe('Canvas DOM focus host', () => {
     ]);
     const Root = defineComp(({ replacement }: { replacement: boolean }) =>
       replacement ?
-        withFocusManagement(BrokenHost({ key: 'broken' })) :
-        withFocusManagement(OldHost({ key: 'old' }))
+        focusManaged(BrokenHost({ key: 'broken' })) :
+        focusManaged(OldHost({ key: 'old' }))
     );
     const documentAdd = vi.spyOn(document, 'addEventListener');
     const documentRemove = vi.spyOn(document, 'removeEventListener');
@@ -633,7 +633,7 @@ describe('Canvas DOM focus host', () => {
     activeControllers.add(controller);
 
     expect(() => executeRender(canvas, 1)).toThrowError(
-      /withFocusManagement.*HTMLCanvasElement.*root|OffscreenCanvas.*focus host/i,
+      /FocusManagement.*HTMLCanvasElement.*root|OffscreenCanvas.*focus host/i,
     );
     expect(getCRCInstance(canvas).eventRoot.focusPolicy).toBeUndefined();
   });
@@ -673,7 +673,7 @@ const Scene = defineComp(({ labels }: { labels: readonly string[] }) =>
 );
 
 function managed(labels: readonly string[]): CompEl<any, any> {
-  return withFocusManagement(Scene({ labels }));
+  return focusManaged(Scene({ labels }));
 }
 
 function mountBetweenNativeControls(element: CompEl<any, any>) {

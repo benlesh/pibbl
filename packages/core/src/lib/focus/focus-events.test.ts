@@ -11,7 +11,7 @@ import { mountCRC } from '../mount-crc';
 import type { CompEl, CRCController } from '../types';
 import type { CRCFocusManager } from './focus-manager';
 import { transitionLogicalFocus } from './focus-events';
-import { withFocusManagement } from './with-focus-management';
+import { focusManaged } from './policy-test-support';
 
 const activeControllers = new Set<CRCController>();
 beforeEach(() => {
@@ -58,7 +58,7 @@ describe('logical focus transitions', () => {
         },
       });
     });
-    const mounted = mountAndRender(withFocusManagement(Root({})));
+    const mounted = mountAndRender(focusManaged(Root({})));
     manager = mounted.manager;
     const before = document.createElement('button');
     const after = document.createElement('button');
@@ -112,7 +112,7 @@ describe('logical focus transitions', () => {
       },
       targetHandlers: { onFocusOut: record, onBlur: record, onFocusIn: record, onFocus: record },
     });
-    const mounted = mountAndRender(withFocusManagement(Root));
+    const mounted = mountAndRender(focusManaged(Root));
     manager = mounted.manager;
     targets = manager.candidates.map(candidate => candidate.target) as unknown as
       readonly [CRCEventTargetRegistration, CRCEventTargetRegistration];
@@ -171,7 +171,7 @@ describe('logical focus transitions', () => {
         handlers: { onFocusIn: record, onFocus: record },
       }),
     ]);
-    const mounted = mountAndRender(withFocusManagement(Root({})));
+    const mounted = mountAndRender(focusManaged(Root({})));
     manager = mounted.manager;
     targets = manager.candidates.map(candidate => candidate.target);
     transitionLogicalFocus(manager, targets[0], 'keyboard');
@@ -246,7 +246,7 @@ describe('logical focus transitions', () => {
         handlers: { onFocusIn: record, onFocus: record },
       }),
     ]);
-    const mounted = mountAndRender(withFocusManagement(Root({})));
+    const mounted = mountAndRender(focusManaged(Root({})));
     manager = mounted.manager;
     targets = manager.candidates.map(candidate => candidate.target);
     transitionLogicalFocus(manager, targets[0], 'keyboard');
@@ -289,7 +289,7 @@ describe('logical focus transitions', () => {
         },
       },
     }));
-    const mounted = mountAndRender(withFocusManagement(Root({})));
+    const mounted = mountAndRender(focusManaged(Root({})));
     manager = mounted.manager;
     canvas = mounted.canvas;
     canvas.focus({ preventScroll: true });
@@ -319,7 +319,7 @@ describe('logical focus transitions', () => {
         onFocusOut: () => {
           trace.push('ancestor-focusout');
           generation = 1;
-          executeRender(canvas, 2, withFocusManagement(Root({})));
+          executeRender(canvas, 2, focusManaged(Root({})));
           throw new Error('expected focusout failure');
         },
         onBlur: () => trace.push('ancestor-blur'),
@@ -338,7 +338,7 @@ describe('logical focus transitions', () => {
       ];
     });
     canvas = createCanvas();
-    const mounted = mountAndRender(withFocusManagement(Root({})), canvas);
+    const mounted = mountAndRender(focusManaged(Root({})), canvas);
     const [a, b] = mounted.manager.candidates.map(candidate => candidate.target);
     transitionLogicalFocus(mounted.manager, a, 'keyboard');
     await nextFrame();
@@ -366,7 +366,7 @@ describe('logical focus transitions', () => {
         onFocus: event => trace.push(event.relatedTarget),
       },
     });
-    const mounted = mountAndRender(withFocusManagement(Root));
+    const mounted = mountAndRender(focusManaged(Root));
     const [a, b] = mounted.manager.candidates.map(candidate => candidate.target);
     transitionLogicalFocus(mounted.manager, a, 'keyboard');
     await nextFrame();
@@ -393,7 +393,7 @@ describe('logical focus transitions', () => {
         Target({ key: 'B', label: 'B', x: 50, handlers: {} }),
       ];
     });
-    const mounted = mountAndRender(withFocusManagement(Root({})));
+    const mounted = mountAndRender(focusManaged(Root({})));
     const [a, b] = mounted.manager.candidates.map(candidate => candidate.target);
     transitionLogicalFocus(mounted.manager, a, 'keyboard');
     await nextFrame();

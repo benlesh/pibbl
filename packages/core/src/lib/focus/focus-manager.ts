@@ -267,7 +267,7 @@ class FocusManagerCoordinator {
     const canvas = this.eventRoot.canvas;
     if (!canvas) {
       throw new Error(
-        'withFocusManagement requires an HTMLCanvasElement root; an OffscreenCanvas has no DOM focus host.',
+        'FocusManagement requires an HTMLCanvasElement root; an OffscreenCanvas has no DOM focus host.',
       );
     }
     const teardowns = new Teardowns();
@@ -338,7 +338,7 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
     const canvas = eventRoot.canvas;
     if (!canvas) {
       throw new Error(
-        'withFocusManagement requires an HTMLCanvasElement root; an OffscreenCanvas has no DOM focus host.',
+        'FocusManagement requires an HTMLCanvasElement root; an OffscreenCanvas has no DOM focus host.',
       );
     }
     managerOwners.set(this, owner);
@@ -380,7 +380,7 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
   beginCollection(): void {
     this.assertLive();
     if (this.pending) {
-      throw new Error('withFocusManagement cannot enter twice on one CRC root.');
+      throw new Error('FocusManagement cannot enter twice on one CRC root.');
     }
     this.coordinator.claim(this);
     this.pending = {
@@ -995,7 +995,7 @@ export function requireFocusManager(eventRoot: CRCEventRoot): CRCFocusManager {
   const manager = eventRoot.focusPolicy;
   if (!(manager instanceof CRCFocusManager)) {
     throw new Error(
-      'withKeyboardNavigation requires an active withFocusManagement focus manager.',
+      'KeyboardNavigation requires an active FocusManagement focus manager.',
     );
   }
   return manager;
@@ -1018,7 +1018,7 @@ function getCoordinator(eventRoot: CRCEventRoot): FocusManagerCoordinator {
 
 function duplicateManagerError(): Error {
   return new Error(
-    'withFocusManagement allows only one focus manager per CRC root.',
+    'FocusManagement allows only one focus manager per CRC root.',
   );
 }
 

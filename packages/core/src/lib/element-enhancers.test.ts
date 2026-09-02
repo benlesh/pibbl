@@ -4,6 +4,8 @@ import {
   createElement,
   isCRCElement,
 } from './element/create-element';
+import { materializeContainerChildren } from './element/children';
+import { getLegacyIdentityHint } from './element/metadata';
 import { Absolute, absolute } from './layout/absolute';
 import { Flow } from './layout/flow';
 import { Flex } from './layout/flex';
@@ -21,12 +23,15 @@ import {
   getCRCInstance,
 } from './global-state';
 import { crcLayoutBox } from './hooks/crc-layout-box';
+import { crcEventListener } from './hooks/crc-event-listener';
 import { crcEventTarget } from './hooks/crc-event-target';
 import { crcState, type StateUpdater } from './hooks/crc-state';
 import { measureElement } from './layout/measure';
 import { mountCRC } from './mount-crc';
-import { withFocusManagement } from './focus/with-focus-management';
-import { withKeyboardNavigation } from './focus/with-keyboard-navigation';
+import {
+  directionalPolicy,
+  focusManaged,
+} from './focus/policy-test-support';
 import type { CRCKeyboardNavigationOptions } from './focus/types';
 import type { BoxStyle, LayoutItemStyle } from './style/types';
 import type {
@@ -86,8 +91,9 @@ afterEach(() => {
 });
 
 describe('identity-transparent element enhancers', () => {
-  it('preserves keyed state, component path, parent, layout, measurement, and paint order', async () => {
+  it('keeps focus policies transparent to keyed state, component path, parent, layout, measurement, and paint order', async () => {
     const lifecycle: string[] = [];
+    const eventPaths: Array<readonly unknown[]> = [];
     const observations: Array<{
       box: Readonly<{ x: number; y: number; width: number; height: number }>;
       id: string;
@@ -111,6 +117,11 @@ describe('identity-transparent element enhancers', () => {
         parentId: refs.parent?.id,
         state,
       });
+      const eventPath = new Path2D();
+      eventPath.rect(0, 0, style.width, style.height);
+      crcEventTarget({
+        onClick: event => eventPaths.push(event.composedPath()),
+      }, { path: eventPath, fill: true });
       lifecycle.push('paint:child');
       context.fillStyle = '#ef4444';
       context.fillRect(0, 0, style.width, style.height);
@@ -136,6 +147,7 @@ describe('identity-transparent element enhancers', () => {
       lifecycle,
     );
     const Host = defineComp(({ enhanced }: { enhanced: boolean }) => {
+      crcEventListener({ onClick: () => undefined });
       const child = Child({ key: 'stable', style: { width: 30, height: 20 } });
       return absolute({
         style: { width: 80, height: 60 },
@@ -145,7 +157,9 @@ describe('identity-transparent element enhancers', () => {
             fill: '#2563eb',
             style: { width: 30, height: 20 },
           }),
-          enhanced ? annotate(child, [descriptor()]) : child,
+          enhanced ? focusManaged(directionalPolicy(
+            annotate(child, [descriptor()]),
+          )) : child,
           Paint({
             label: 'after',
             fill: '#22c55e',
@@ -156,7 +170,11 @@ describe('identity-transparent element enhancers', () => {
     });
 
     const measurable = Child({ key: 'stable', style: { width: 30, height: 20 } });
-    expect(measureElement(annotate(measurable, [descriptor()]), {
+    const [preparedMeasurable] = materializeContainerChildren(
+      focusManaged(directionalPolicy(annotate(measurable, [descriptor()]))),
+      'measurement test',
+    );
+    expect(measureElement(preparedMeasurable, {
       minWidth: 0,
       maxWidth: 100,
       minHeight: 0,
@@ -178,6 +196,9 @@ describe('identity-transparent element enhancers', () => {
       'paint:after',
     ]);
     expect(pixelAt(canvas, 10, 10)).toEqual([34, 197, 94, 255]);
+    dispatchClick(canvas, 10, 10);
+    expect(eventPaths).toHaveLength(1);
+    expect(eventPaths[0]).toHaveLength(2);
 
     lifecycle.length = 0;
     setState?.(1);
@@ -195,6 +216,8 @@ describe('identity-transparent element enhancers', () => {
       'paint:child',
       'paint:after',
     ]);
+    dispatchClick(canvas, 10, 10);
+    expect(eventPaths[1]).toEqual(eventPaths[0]);
   });
 
   it('mounts once, updates every render, scopes in declaration order, and disposes missing metadata before render', async () => {
@@ -562,8 +585,8 @@ describe('identity-transparent element enhancers', () => {
   });
 });
 
-describe('built-in enhancer constructors', () => {
-  it('preserves exact element fields while appending focus and directional descriptors', () => {
+describe('built-in transparent policies', () => {
+  it('preserves exact element fields while preparing focus and directional descriptors', () => {
     interface ConstructorStyle extends SystemStyle {
       width: number;
     }
@@ -572,16 +595,17 @@ describe('built-in enhancer constructors', () => {
     const identityHint = { type: element.type, key: element.key, occurrence: 3 };
     element.identityHint = identityHint;
 
-    const enhanced = withFocusManagement(
-      withKeyboardNavigation(element, { mode: 'directional' }),
+    const policyTree = focusManaged(
+      directionalPolicy(element, { mode: 'directional' }),
     );
+    const [enhanced] = materializeContainerChildren(policyTree, 'policy test');
 
     expect(enhanced).not.toBe(element);
     expect(enhanced.type).toBe(element.type);
     expect(enhanced.props).toBe(element.props);
-    expect(enhanced.style).toBe(element.style);
+    expect(enhanced.props.style).toBe(element.style);
     expect(enhanced.key).toBe('stable');
-    expect(enhanced.identityHint).toBe(identityHint);
+    expect(getLegacyIdentityHint(enhanced)).toBe(identityHint);
     expect('enhancers' in enhanced).toBe(false);
     expect(Object.keys(enhanced)).toEqual([
       'type',
@@ -596,7 +620,7 @@ describe('built-in enhancer constructors', () => {
     expect(cloned.type).toBe(element.type);
     expect(cloned.props).toBe(element.props);
     expect(cloned.key).toBe('stable');
-    expect(cloned.identityHint).toBe(identityHint);
+    expect(getLegacyIdentityHint(cloned)).toBe(identityHint);
     expect(Object.isFrozen(cloned)).toBe(import.meta.env.DEV);
     expect(Object.isFrozen(cloned.props)).toBe(import.meta.env.DEV);
     expect('enhancers' in cloned).toBe(false);
@@ -606,8 +630,10 @@ describe('built-in enhancer constructors', () => {
     expect(clonedDescriptors).not.toBe(sourceDescriptors);
     expect(Object.isFrozen(sourceDescriptors)).toBe(true);
     expect(Object.isFrozen(clonedDescriptors)).toBe(true);
-    expect(() => withFocusManagement(cloned as typeof enhanced))
-      .toThrowError(/withFocusManagement.*same.*element/i);
+    expect(() => materializeContainerChildren(
+      focusManaged(cloned as typeof enhanced),
+      'policy test',
+    )).toThrowError(/FocusManagement.*same.*element/i);
   });
 
   it.each([
@@ -773,8 +799,8 @@ describe('built-in enhancer constructors', () => {
         justifyItems: 'start',
         alignItems: 'start',
       },
-      children: withKeyboardNavigation(
-        withFocusManagement(Target({
+      children: directionalPolicy(
+        focusManaged(Target({
           key: 'managed',
           style: {
             width: 'auto',
@@ -811,26 +837,35 @@ describe('built-in enhancer constructors', () => {
     expect(policy.candidates[0].directionalBoundary).toBeDefined();
   });
 
-  it('rejects duplicate focus and directional enhancers with targeted errors', () => {
+  it('rejects duplicate focus and directional policies with targeted errors', () => {
     const Component = defineComp(() => undefined);
 
-    const focused = withFocusManagement(Component({}));
-    expect(() => withFocusManagement(focused)).toThrowError(/withFocusManagement.*same.*element/i);
+    const focused = focusManaged(Component({}));
+    expect(() => materializeContainerChildren(
+      focusManaged(focused),
+      'policy test',
+    )).toThrowError(/FocusManagement.*same.*element/i);
 
-    const directional = withKeyboardNavigation(Component({}), { mode: 'directional' });
-    expect(() => withKeyboardNavigation(directional, { mode: 'directional' }))
-      .toThrowError(/withKeyboardNavigation.*same.*element/i);
+    const directional = directionalPolicy(Component({}), { mode: 'directional' });
+    expect(() => materializeContainerChildren(
+      directionalPolicy(directional, { mode: 'directional' }),
+      'policy test',
+    )).toThrowError(/KeyboardNavigation.*same.*element/i);
   });
 
   it('accepts only directional keyboard-navigation mode', () => {
     const Component = defineComp(() => undefined);
     const options: CRCKeyboardNavigationOptions = { mode: 'directional' };
 
-    expect(withKeyboardNavigation(Component({}), options).type)
-      .toBe(Component({}).type);
+    expect(materializeContainerChildren(
+      directionalPolicy(Component({}), options),
+      'policy test',
+    )[0].type).toBe(Component({}).type);
 
-    expect(() => withKeyboardNavigation(Component({}), { mode: 'linear' } as never))
-      .toThrowError(/mode.*directional/i);
+    expect(() => materializeContainerChildren(
+      directionalPolicy(Component({}), { mode: 'linear' } as never),
+      'policy test',
+    )).toThrowError(/mode.*directional/i);
   });
 
   it('rejects unbranded descriptor copies with arbitrary string metadata', () => {
@@ -914,6 +949,20 @@ function createCanvas(): HTMLCanvasElement {
   canvas.height = 80;
   document.body.appendChild(canvas);
   return canvas;
+}
+
+function dispatchClick(canvas: HTMLCanvasElement, x: number, y: number): void {
+  const bounds = canvas.getBoundingClientRect();
+  for (const type of ['mousedown', 'mouseup', 'click']) {
+    canvas.dispatchEvent(new MouseEvent(type, {
+      bubbles: true,
+      button: 0,
+      buttons: type === 'mousedown' ? 1 : 0,
+      cancelable: true,
+      clientX: bounds.left + x,
+      clientY: bounds.top + y,
+    }));
+  }
 }
 
 function teardownCount(teardowns: unknown): number {
