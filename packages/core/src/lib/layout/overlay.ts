@@ -11,7 +11,7 @@ import type {
 import type { CRCElement } from '../element/types.js';
 import {
   childWithUsedSize,
-  materializeLayoutChildren,
+  prepareLayoutChildren,
   normalizeDirectChildStyle,
   placeDirectChildren,
   resolveContainerBox,
@@ -44,7 +44,7 @@ function renderOverlay(
   style: Readonly<ResolvedOverlayStyle>,
   ctx: RenderingContext2D,
 ) {
-  const children = materializeLayoutChildren(props.children, 'Overlay');
+  const children = prepareLayoutChildren(props.children, 'Overlay');
   recordLayoutEvaluation();
   const content = style.box.contentBox;
   ctx.translate(content.x, content.y);

@@ -19,6 +19,7 @@ import type {
 } from '../style/types.js';
 import type {
   CRCNode,
+  CRCRenderTransaction,
   RenderingContext2D,
   StyleResolutionContext,
   SystemStyle,
@@ -44,12 +45,19 @@ interface ResolvedAbsoluteStyle extends SystemStyle {
   overflow: 'visible' | 'clip';
 }
 
+type LayoutReceiver = 'Absolute' | 'Overlay' | 'Flow' | 'Flex' | 'Grid';
+
+const preparedLayoutTransactions = new WeakMap<
+  CRCRenderTransaction,
+  WeakMap<object, readonly CRCElement<any>[]>
+>();
+
 function renderAbsolute(
   props: AbsoluteProps,
   style: Readonly<ResolvedAbsoluteStyle>,
   ctx: RenderingContext2D,
 ) {
-  const children = materializeLayoutChildren(props.children, 'Absolute');
+  const children = prepareLayoutChildren(props.children, 'Absolute');
   recordLayoutEvaluation();
   const content = style.box.contentBox;
   ctx.translate(content.x, content.y);
@@ -244,13 +252,36 @@ export function placeDirectChildren(
 /** @internal Prepares one finite direct-child sequence for a layout boundary. */
 export function materializeLayoutChildren(
   children: CRCNode,
-  receiver: 'Absolute' | 'Overlay' | 'Flow' | 'Flex' | 'Grid',
+  receiver: LayoutReceiver,
 ): readonly CRCElement<any>[] {
   // Placement identity owns layout sibling keys. Deferring its check preserves
   // fail-closed teardown when a later duplicate follows an acquired child.
   return materializeContainerChildren(children, receiver, {
     validateKeys: false,
   });
+}
+
+/** @internal Shares one direct sequence between an occurrence's measurement and paint. */
+export function prepareLayoutChildren(
+  children: CRCNode,
+  receiver: LayoutReceiver,
+): readonly CRCElement<any>[] {
+  const transaction = GLOBAL_STATE.renderTransaction;
+  const receiverToken = GLOBAL_STATE.primitiveReceiverToken;
+  if (!transaction || !receiverToken) {
+    return materializeLayoutChildren(children, receiver);
+  }
+
+  let receivers = preparedLayoutTransactions.get(transaction);
+  if (!receivers) {
+    receivers = new WeakMap();
+    preparedLayoutTransactions.set(transaction, receivers);
+  }
+  const prepared = receivers.get(receiverToken);
+  if (prepared) return prepared;
+  const materialized = materializeLayoutChildren(children, receiver);
+  receivers.set(receiverToken, materialized);
+  return materialized;
 }
 
 function resolveLayoutBox(

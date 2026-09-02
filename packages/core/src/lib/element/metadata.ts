@@ -27,6 +27,10 @@ export interface InternalElementMetadata {
 }
 
 const elementMetadata = new WeakMap<CRCElement<any>, InternalElementMetadata>();
+const elementCloneMetadataHandlers = new Set<(
+  source: CRCElement<any>,
+  clone: CRCElement<any>,
+) => void>();
 const primitiveDefinitions = new WeakMap<Function, PrimitiveDefinition>();
 const childPrimitiveReceiverTransactions = new WeakMap<
   CRCRenderTransaction,
@@ -89,6 +93,21 @@ export function getElementMetadata(
   element: CRCElement<any>,
 ): InternalElementMetadata | undefined {
   return elementMetadata.get(element);
+}
+
+/** @internal Registers private WeakMap-backed annotations for immutable clones. */
+export function registerElementCloneMetadataHandler(
+  handler: (source: CRCElement<any>, clone: CRCElement<any>) => void,
+): void {
+  elementCloneMetadataHandlers.add(handler);
+}
+
+/** @internal Copies every registered private annotation to a finalized clone. */
+export function copyElementCloneMetadata(
+  source: CRCElement<any>,
+  clone: CRCElement<any>,
+): void {
+  for (const handler of elementCloneMetadataHandlers) handler(source, clone);
 }
 
 /** @internal */

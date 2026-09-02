@@ -26,6 +26,7 @@ import {
   normalizeDirectChildStyle,
   materializeLayoutChildren,
   placeDirectChildren,
+  prepareLayoutChildren,
   resolveContainerBox,
   resolveDirectChildBox,
 } from './absolute.js';
@@ -84,7 +85,7 @@ function renderGrid(
   style: Readonly<ResolvedGridStyle>,
   ctx: RenderingContext2D,
 ) {
-  const children = materializeLayoutChildren(props.children, 'Grid');
+  const children = prepareLayoutChildren(props.children, 'Grid');
   recordLayoutEvaluation();
   const content = style.box.contentBox;
   ctx.translate(content.x, content.y);
@@ -464,7 +465,7 @@ function parseGridTracks(
 }
 
 function measureGrid(input: MeasureInput<GridProps, GridStyle>): MeasureResult {
-  materializeLayoutChildren(input.props.children, 'Grid');
+  prepareLayoutChildren(input.props.children, 'Grid');
   const diagnosticBox = {
     x: 0,
     y: 0,

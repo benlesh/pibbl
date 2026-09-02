@@ -373,6 +373,45 @@ interface MeasurementCapture {
   box?: Readonly<LayoutBox>;
 }
 
+interface NestedLayoutCase {
+  readonly name: 'Flow' | 'Flex' | 'Grid';
+  readonly expectedChildMeasurements: number;
+  build(children: CRCNode): CRCNode;
+}
+
+const nestedLayoutCases: readonly NestedLayoutCase[] = [
+  {
+    name: 'Flow',
+    expectedChildMeasurements: 2,
+    build: children => (
+      <Flow style={{ width: 'auto', height: 'auto' }}>{children}</Flow>
+    ),
+  },
+  {
+    name: 'Flex',
+    expectedChildMeasurements: 0,
+    build: children => (
+      <Flex style={{ width: 'auto', height: 'auto' }}>{children}</Flex>
+    ),
+  },
+  {
+    name: 'Grid',
+    expectedChildMeasurements: 0,
+    build: children => (
+      <Grid
+        style={{
+          width: 'auto',
+          height: 'auto',
+          gridTemplateColumns: [18],
+          gridTemplateRows: [12],
+        }}
+      >
+        {children}
+      </Grid>
+    ),
+  },
+];
+
 interface MeasuredProbeProps {
   readonly capture: MeasurementCapture;
 }
@@ -513,6 +552,100 @@ describe('JSX layout boundaries', () => {
     expect(capture.renders).toBe(1);
     expect(capture.box).toEqual({ x: 0, y: 0, width: 18, height: 12 });
   });
+
+  it.each(nestedLayoutCases)(
+    '$name shares a one-shot child sequence between nested measurement and paint',
+    async layoutCase => {
+      const capture: MeasurementCapture = { measurements: 0, renders: 0 };
+      let generatorRuns = 0;
+      function* children(): Generator<CRCNode> {
+        generatorRuns++;
+        yield nestedMeasuredProbe(layoutCase.name, capture);
+      }
+      const nested = layoutCase.build(children());
+      const canvas = createCanvas();
+      controllers.add(crc(canvas, outerMeasuringFlow(nested)));
+      await nextFrame();
+
+      expect(generatorRuns).toBe(1);
+      expect(capture.renders).toBe(1);
+      expect(capture.measurements).toBe(
+        layoutCase.expectedChildMeasurements,
+      );
+      expect(capture.box).toEqual({ x: 0, y: 0, width: 18, height: 12 });
+    },
+  );
+
+  it.each(nestedLayoutCases)(
+    '$name isolates a shared descriptor by occurrence while reusing each prepared sequence',
+    async layoutCase => {
+      const captures = Array.from({ length: 4 }, () => ({
+        measurements: 0,
+        renders: 0,
+      } satisfies MeasurementCapture));
+      let iterations = 0;
+      const children: Iterable<CRCNode> = {
+        [Symbol.iterator]() {
+          const capture = captures[iterations++];
+          return [nestedMeasuredProbe(layoutCase.name, capture)][Symbol.iterator]();
+        },
+      };
+      const shared = layoutCase.build(children);
+      const canvas = createCanvas();
+      controllers.add(crc(canvas, outerMeasuringFlow([shared, shared])));
+      await nextFrame();
+
+      expect(iterations).toBe(2);
+      expect(captures.slice(0, 2).map(capture => capture.renders)).toEqual([1, 1]);
+      expect(captures.slice(0, 2).map(capture => capture.measurements)).toEqual([
+        layoutCase.expectedChildMeasurements,
+        layoutCase.expectedChildMeasurements,
+      ]);
+    },
+  );
+
+  it.each(nestedLayoutCases)(
+    '$name revalidates a reusable child sequence on later renders and standalone measurements',
+    async layoutCase => {
+      const captures = Array.from({ length: 6 }, () => ({
+        measurements: 0,
+        renders: 0,
+      } satisfies MeasurementCapture));
+      let iterations = 0;
+      const children: Iterable<CRCNode> = {
+        [Symbol.iterator]() {
+          const capture = captures[iterations++];
+          return [nestedMeasuredProbe(layoutCase.name, capture)][Symbol.iterator]();
+        },
+      };
+      const shared = layoutCase.build(children);
+      const canvas = createCanvas();
+      controllers.add(crc(canvas, outerMeasuringFlow(shared)));
+      await nextFrame();
+      crc(canvas, outerMeasuringFlow(shared));
+      await nextFrame();
+
+      expect(iterations).toBe(2);
+      expect(captures.slice(0, 2).map(capture => capture.renders)).toEqual([1, 1]);
+
+      const constraints = {
+        minWidth: 0,
+        maxWidth: 100,
+        minHeight: 0,
+        maxHeight: 100,
+      };
+      const service = {
+        measureText: () => ({ width: 0 }) as TextMetrics,
+      };
+      expect(measureElement(shared as never, constraints, service).status)
+        .toBe('measured');
+      expect(measureElement(shared as never, constraints, service).status)
+        .toBe('measured');
+
+      expect(iterations).toBe(4);
+      expect(captures.slice(2, 4).map(capture => capture.renders)).toEqual([0, 0]);
+    },
+  );
 
   it.each([
     {
@@ -657,6 +790,36 @@ function expectObservations(
       y: expected[name].y,
     });
   }
+}
+
+function nestedMeasuredProbe(
+  layout: NestedLayoutCase['name'],
+  capture: MeasurementCapture,
+): CRCNode {
+  return (
+    <MeasuredProbe
+      capture={capture}
+      style={layout === 'Flow' ? {
+        width: 'auto',
+        height: 'auto',
+      } : {
+        width: 18,
+        height: 12,
+        minWidth: layout === 'Flex' ? 0 : undefined,
+        flexShrink: layout === 'Flex' ? 0 : undefined,
+        gridColumnStart: layout === 'Grid' ? 1 : undefined,
+        gridRowStart: layout === 'Grid' ? 1 : undefined,
+      }}
+    />
+  );
+}
+
+function outerMeasuringFlow(children: CRCNode): CRCNode {
+  return (
+    <Flow style={{ width: 200, height: 40, alignItems: 'start' }}>
+      {children}
+    </Flow>
+  );
 }
 
 function createCanvas(): HTMLCanvasElement {

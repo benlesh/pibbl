@@ -271,3 +271,142 @@ reported `112770` no-focus bytes versus `136083` with-focus bytes.
 The only open variance is R8: verification is fresh on Node 26.7.0 rather than
 the documented Node 24 LTS line. No Node-24-specific evidence was available in
 this workspace.
+
+---
+
+## Fix round 1 — nested preparation reuse and clone-safe policies
+
+### Result
+
+Both review blockers are resolved.
+
+- A measured nested Flow, Flex, or Grid occurrence now shares one exact frozen
+  direct-element array with its later paint in the same render transaction.
+  The cache is scoped by both render transaction and Task 5's per-occurrence
+  primitive receiver token.
+- Repeated occurrences of one descriptor remain isolated, a later render uses
+  a new transaction and revalidates its iterable, and standalone
+  `measureElement` calls materialize independently. Direct `layoutFlow`,
+  `layoutFlex`, and `layoutGrid` calls remain uncached and retain their existing
+  one-call semantics.
+- `cloneCRCElement` now copies registered private WeakMap-backed annotations.
+  Enhancer/policy descriptor arrays are stored frozen and each clone receives a
+  distinct frozen array containing the same readonly descriptor identities.
+  Mounted enhancer ownership is deliberately not copied.
+- Layout measurement clones remain pure; enhancer mount/update/enter/exit only
+  occur for the final painted element. Absolute, Flow, Flex, and Grid placement
+  clones retain custom enhancers. A measured and placed Grid child retains the
+  existing `withFocusManagement` plus `withKeyboardNavigation` semantics,
+  component identity, CRC brand, development freeze, and private-only metadata.
+- No public element field or forgeable object exception was introduced. The
+  existing focus functions and lowercase layout adapters remain unchanged for
+  Tasks 8 and 12 respectively.
+
+### TDD evidence
+
+The corrected focused RED was run before production edits:
+
+```sh
+corepack pnpm@11.21.0 exec vitest run --config vitest.config.ts packages/core/src/lib/layout/layout-jsx.test.tsx packages/core/src/lib/element-enhancers.test.ts
+```
+
+```text
+Test Files  2 failed (2)
+Tests       15 failed | 25 passed (40)
+Duration    1.13s
+```
+
+The failures matched the reported defects: one-shot nested children painted
+zero descendants, reusable nested iterables ran four times instead of twice,
+cloned descriptor lists were empty, custom layout-child enhancers did not
+mount, and the measured Grid child installed no focus policy. An earlier RED
+attempt used the uppercase primitive values as ordinary functions in the
+internal `.ts` test; those four test-construction errors were corrected to use
+`createElement` before recording the behavioral RED above.
+
+After the minimal production changes and test-oracle corrections, the focused
+suite passed:
+
+```text
+Test Files  2 passed (2)
+Tests       40 passed (40)
+Duration    812ms
+```
+
+The new layout evidence includes Flow/Flex/Grid one-shot generators, reusable
+iterables that yield different descriptors, the exact same nested descriptor
+used twice, a later root render, and repeated standalone measurements. The new
+enhancer evidence includes direct immutable clone assertions, every layout
+placement clone that performs this work, pure measurement, focus/directional
+policy collection, and stable keyed identity on rerender.
+
+### Verification
+
+All commands below ran on Node `v26.7.0` with pnpm `11.21.0` after the final
+production changes.
+
+Required Task 7 Step 6 gate:
+
+```text
+Test Files  13 passed (13)
+Tests       154 passed (154)
+Duration    1.89s
+```
+
+Focused enhancer, focus/keyboard, Layer, and lifecycle gate:
+
+```text
+Test Files  14 passed (14)
+Tests       188 passed (188)
+Duration    10.52s
+```
+
+Full core browser suite (`corepack pnpm@11.21.0 test:ci`):
+
+```text
+Test Files  82 passed (82)
+Tests       880 passed | 2 skipped (882)
+Duration    21.57s
+```
+
+Visual safeguard:
+
+```text
+Visual safeguard rejected the drill, preserved every baseline byte, and recovered green.
+```
+
+Static, build, and package evidence:
+
+- `corepack pnpm@11.21.0 typecheck`: passed.
+- `corepack pnpm@11.21.0 lint`: ESLint passed and Prettier reported all
+  matched files conforming.
+- `corepack pnpm@11.21.0 -C packages/core build`: declarations, ESM bundles,
+  JSX runtime entries, and source maps passed; `dist/index.mjs` was 300.1kb.
+- `corepack pnpm@11.21.0 test:package-consumer`: workspace build, Bundler,
+  NodeNext, runtime exports, and source consumer passed.
+- `corepack pnpm@11.21.0 test:package-consumer:packed`: declarations,
+  Bundler, NodeNext, runtime exports, blocked deep imports, no-source checks,
+  and optimized focus elimination passed; `113146` no-focus bytes versus
+  `136474` with-focus bytes.
+- `git diff --check`: no output.
+
+### Self-review and remaining concern
+
+- Confirmed only primitive measure/render paths use transaction reuse; public
+  direct algorithms still call the uncached materializer.
+- Confirmed the cache cannot cross occurrences or renders because the first key
+  is the root render transaction and the second is the occurrence receiver
+  token. Standalone measurement has no transaction and cannot enter the cache.
+- Confirmed `materializeContainerChildren` remains the sole traversal and
+  freezes every prepared direct-element array; key-diagnostic timing remains
+  placement-owned.
+- Confirmed clone handlers operate only on finalized branded elements and use
+  WeakMaps, so no public field or structural-copy admission was restored.
+- Confirmed descriptor arrays do not alias, remain frozen, preserve descriptor
+  identity for Layer equality and enhancer reconciliation, and do not copy
+  mounted resource ownership.
+- Inspected the complete production diff and found no remaining correctness
+  concern in the fix scope.
+
+The sole remaining variance is still R8: Node 26.7.0 is available here instead
+of the documented Node 24 LTS line. No baseline was rewritten.

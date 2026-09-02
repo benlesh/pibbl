@@ -1,4 +1,5 @@
 import {
+  copyElementCloneMetadata,
   getElementMetadata,
   getLegacyIdentityHint,
   getSpecifiedStyle,
@@ -111,10 +112,12 @@ export function isCRCElement(value: unknown): value is CRCElement<any> {
 /** @internal Creates another immutable descriptor while retaining private annotations. */
 export function cloneCRCElement<P>(element: CRCElement<P>): CRCElement<P> {
   const metadata = getElementMetadata(element);
-  return finalizeCRCElement(
+  const clone = finalizeCRCElement(
     element.type,
     element.props,
     element.key,
     metadata ? { ...metadata } : {},
   );
+  copyElementCloneMetadata(element, clone);
+  return clone;
 }

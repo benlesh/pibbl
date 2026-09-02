@@ -26,6 +26,7 @@ import {
   normalizeDirectChildStyle,
   materializeLayoutChildren,
   placeDirectChildren,
+  prepareLayoutChildren,
   resolveContainerBox,
 } from './absolute.js';
 import { pushLayoutBox } from './context.js';
@@ -114,7 +115,7 @@ function renderFlex(
   style: Readonly<ResolvedFlexStyle>,
   ctx: RenderingContext2D,
 ) {
-  const children = materializeLayoutChildren(props.children, 'Flex');
+  const children = prepareLayoutChildren(props.children, 'Flex');
   recordLayoutEvaluation();
   const content = style.box.contentBox;
   ctx.translate(content.x, content.y);
@@ -197,7 +198,7 @@ export const flex = defineComp<
 function measureFlex(
   input: MeasureInput<FlexProps, FlexStyle>,
 ): MeasureResult {
-  const children = materializeLayoutChildren(input.props.children, 'Flex');
+  const children = prepareLayoutChildren(input.props.children, 'Flex');
   const widthDefinite = input.style.width !== undefined &&
     input.style.width !== 'auto';
   const heightDefinite = input.style.height !== undefined &&

@@ -21,6 +21,7 @@ import {
   materializeLayoutChildren,
   normalizeDirectChildStyle,
   placeDirectChildren,
+  prepareLayoutChildren,
   resolveContainerBox,
   resolveDirectChildBox,
 } from './absolute.js';
@@ -83,7 +84,7 @@ function renderFlow(
   style: Readonly<ResolvedFlowStyle>,
   ctx: RenderingContext2D,
 ) {
-  const children = materializeLayoutChildren(props.children, 'Flow');
+  const children = prepareLayoutChildren(props.children, 'Flow');
   recordLayoutEvaluation();
   const content = style.box.contentBox;
   ctx.translate(content.x, content.y);
@@ -270,7 +271,7 @@ function resolveFlowPlacements(
 function measureFlow(
   input: MeasureInput<FlowProps, FlowStyle>,
 ): MeasureResult {
-  const children = materializeLayoutChildren(input.props.children, 'Flow');
+  const children = prepareLayoutChildren(input.props.children, 'Flow');
   const widthDefinite = input.style.width !== undefined &&
     input.style.width !== 'auto';
   const heightDefinite = input.style.height !== undefined &&

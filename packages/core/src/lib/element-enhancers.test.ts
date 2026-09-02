@@ -1,8 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { absolute } from './layout/absolute';
+import {
+  cloneCRCElement,
+  createElement,
+  isCRCElement,
+} from './element/create-element';
+import { Absolute, absolute } from './layout/absolute';
+import { Flow } from './layout/flow';
+import { Flex } from './layout/flex';
+import { Grid } from './layout/grid';
 import { crc } from './crc';
 import { defineComp } from './define-comp';
-import { appendElementEnhancer } from './element-enhancers';
+import {
+  appendElementEnhancer,
+  getElementEnhancerDescriptors,
+} from './element-enhancers';
 import { executeRender } from './execute-render';
 import {
   clearSharedState,
@@ -10,15 +21,19 @@ import {
   getCRCInstance,
 } from './global-state';
 import { crcLayoutBox } from './hooks/crc-layout-box';
+import { crcEventTarget } from './hooks/crc-event-target';
 import { crcState, type StateUpdater } from './hooks/crc-state';
 import { measureElement } from './layout/measure';
 import { mountCRC } from './mount-crc';
 import { withFocusManagement } from './focus/with-focus-management';
 import { withKeyboardNavigation } from './focus/with-keyboard-navigation';
 import type { CRCKeyboardNavigationOptions } from './focus/types';
+import type { BoxStyle, LayoutItemStyle } from './style/types';
 import type {
   CompEl,
   CompRefs,
+  CRCElement,
+  CRCNode,
   CRCInstance,
   MeasureResult,
   SystemStyle,
@@ -47,6 +62,13 @@ interface TestDescriptorFailures {
   enter?: boolean;
   exit?: boolean;
   dispose?: boolean;
+}
+
+interface EnhancerLayoutStyle extends BoxStyle, LayoutItemStyle {}
+
+interface ResolvedEnhancerLayoutStyle extends SystemStyle {
+  readonly width: number;
+  readonly height: number;
 }
 
 const activeControllers = new Set<{ dispose(): void }>();
@@ -566,6 +588,227 @@ describe('built-in enhancer constructors', () => {
       'props',
       'key',
     ]);
+
+    const cloned = cloneCRCElement(
+      enhanced as CRCElement<any>,
+    ) as typeof enhanced;
+    expect(isCRCElement(cloned)).toBe(true);
+    expect(cloned.type).toBe(element.type);
+    expect(cloned.props).toBe(element.props);
+    expect(cloned.key).toBe('stable');
+    expect(cloned.identityHint).toBe(identityHint);
+    expect(Object.isFrozen(cloned)).toBe(import.meta.env.DEV);
+    expect(Object.isFrozen(cloned.props)).toBe(import.meta.env.DEV);
+    expect('enhancers' in cloned).toBe(false);
+    const sourceDescriptors = getElementEnhancerDescriptors(enhanced);
+    const clonedDescriptors = getElementEnhancerDescriptors(cloned);
+    expect(clonedDescriptors).toEqual(sourceDescriptors);
+    expect(clonedDescriptors).not.toBe(sourceDescriptors);
+    expect(Object.isFrozen(sourceDescriptors)).toBe(true);
+    expect(Object.isFrozen(clonedDescriptors)).toBe(true);
+    expect(() => withFocusManagement(cloned as typeof enhanced))
+      .toThrowError(/withFocusManagement.*same.*element/i);
+  });
+
+  it.each([
+    {
+      name: 'Absolute',
+      build: (child: CRCNode) => createElement(Absolute, {
+        style: { width: 100, height: 60 },
+        children: child,
+      }),
+      childStyle: { width: 30, height: 20 },
+      measurements: 0,
+    },
+    {
+      name: 'Flow',
+      build: (child: CRCNode) => createElement(Flow, {
+        style: { width: 100, height: 60, alignItems: 'start' },
+        children: child,
+      }),
+      childStyle: { width: 'auto', height: 'auto' },
+      measurements: 1,
+    },
+    {
+      name: 'Flex',
+      build: (child: CRCNode) => createElement(Flex, {
+        style: { width: 100, height: 60, alignItems: 'flex-start' },
+        children: child,
+      }),
+      childStyle: {
+        width: 'auto',
+        height: 'auto',
+        minWidth: 0,
+        flexShrink: 0,
+        alignSelf: 'flex-start',
+      },
+      measurements: 1,
+    },
+    {
+      name: 'Grid',
+      build: (child: CRCNode) => createElement(Grid, {
+        style: {
+          width: 100,
+          height: 60,
+          gridTemplateColumns: [100],
+          gridTemplateRows: [60],
+          justifyItems: 'start',
+          alignItems: 'start',
+        },
+        children: child,
+      }),
+      childStyle: {
+        width: 'auto',
+        height: 'auto',
+        gridColumnStart: 1,
+        gridRowStart: 1,
+        justifySelf: 'start',
+        alignSelf: 'start',
+      },
+      measurements: 1,
+    },
+  ] as const)(
+    '$name preserves a private enhancer through measurement, placement, and paint',
+    ({ build, childStyle, measurements }) => {
+      const trace: string[] = [];
+      const renders: Array<{ id: string; element: CompEl<any, any> }> = [];
+      let measurementCount = 0;
+      const Child = defineComp<
+        {},
+        EnhancerLayoutStyle,
+        EnhancerLayoutStyle,
+        ResolvedEnhancerLayoutStyle
+      >(() => {
+        const refs = getComponentRefs();
+        renders.push({
+          id: refs.id,
+          element: refs.element as CompEl<any, any>,
+        });
+        trace.push('paint');
+      }, {
+        resolveStyle: (_style, context) => ({
+          width: context.allocation.width,
+          height: context.allocation.height,
+        }),
+        measure: () => {
+          measurementCount++;
+          return { status: 'measured', size: { width: 30, height: 20 } };
+        },
+      });
+      const descriptor = createDescriptor(
+        'layout',
+        Symbol('layout'),
+        1,
+        trace,
+      );
+      const enhanced = appendElementEnhancer(
+        Child({ key: 'stable', style: childStyle }),
+        descriptor,
+      );
+      const canvas = createCanvas();
+      const controller = mountCRC(canvas, build(enhanced));
+      activeControllers.add(controller);
+
+      executeRender(canvas, 1);
+
+      expect(measurementCount).toBe(measurements);
+      expect(trace).toEqual([
+        'mount:layout',
+        'update:layout:1',
+        'enter:layout',
+        'paint',
+        'exit:layout:true',
+      ]);
+      expect(renders).toHaveLength(1);
+      expect(renders[0].element.key).toBe('stable');
+      expect(isCRCElement(renders[0].element)).toBe(true);
+      expect(Object.isFrozen(renders[0].element)).toBe(import.meta.env.DEV);
+      expect('enhancers' in renders[0].element).toBe(false);
+
+      const firstId = renders[0].id;
+      trace.length = 0;
+      executeRender(canvas, 2, build(enhanced));
+      expect(renders.at(-1)!.id).toBe(firstId);
+      expect(trace).toEqual([
+        'update:layout:1',
+        'enter:layout',
+        'paint',
+        'exit:layout:true',
+      ]);
+    },
+  );
+
+  it('preserves focus and directional policy on a measured and placed Grid child', () => {
+    const rendered: Array<{ id: string; element: CompEl<any, any> }> = [];
+    const Target = defineComp<
+      {},
+      EnhancerLayoutStyle,
+      EnhancerLayoutStyle,
+      ResolvedEnhancerLayoutStyle
+    >(() => {
+      const refs = getComponentRefs();
+      rendered.push({ id: refs.id, element: refs.element as CompEl<any, any> });
+      const path = new Path2D();
+      path.rect(0, 0, 30, 20);
+      crcEventTarget({ onClick: () => undefined }, {
+        path,
+        keyboardNavigationBounds: { x: 0, y: 0, width: 30, height: 20 },
+      });
+    }, {
+      resolveStyle: (_style, context) => ({
+        width: context.allocation.width,
+        height: context.allocation.height,
+      }),
+      measure: () => ({
+        status: 'measured',
+        size: { width: 30, height: 20 },
+      }),
+    });
+    const build = () => createElement(Grid, {
+      style: {
+        width: 100,
+        height: 60,
+        gridTemplateColumns: [100],
+        gridTemplateRows: [60],
+        justifyItems: 'start',
+        alignItems: 'start',
+      },
+      children: withKeyboardNavigation(
+        withFocusManagement(Target({
+          key: 'managed',
+          style: {
+            width: 'auto',
+            height: 'auto',
+            gridColumnStart: 1,
+            gridRowStart: 1,
+            justifySelf: 'start',
+            alignSelf: 'start',
+          },
+        })),
+        { mode: 'directional' },
+      ),
+    });
+    const canvas = createCanvas();
+    const controller = mountCRC(canvas, build());
+    activeControllers.add(controller);
+
+    executeRender(canvas, 1);
+
+    const policy = getCRCInstance(canvas).eventRoot.focusPolicy as unknown as {
+      readonly candidates: readonly [{ readonly directionalBoundary?: object }];
+    };
+    expect(policy).toBeDefined();
+    expect(policy.candidates).toHaveLength(1);
+    expect(policy.candidates[0].directionalBoundary).toBeDefined();
+    expect(rendered[0].element.key).toBe('managed');
+    expect(isCRCElement(rendered[0].element)).toBe(true);
+    expect(Object.isFrozen(rendered[0].element)).toBe(import.meta.env.DEV);
+    expect('enhancers' in rendered[0].element).toBe(false);
+
+    executeRender(canvas, 2, build());
+    expect(rendered[1].id).toBe(rendered[0].id);
+    expect(policy.candidates).toHaveLength(1);
+    expect(policy.candidates[0].directionalBoundary).toBeDefined();
   });
 
   it('rejects duplicate focus and directional enhancers with targeted errors', () => {

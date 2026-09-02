@@ -1,5 +1,6 @@
 import { runTeardown } from './teardowns.js';
 import { cloneCRCElement } from './element/create-element.js';
+import { registerElementCloneMetadataHandler } from './element/metadata.js';
 import type {
   CRCElement,
   CompEl,
@@ -37,6 +38,13 @@ const mountedElementEnhancers = new WeakMap<
   CRCMountedElementEnhancerEntry[]
 >();
 
+registerElementCloneMetadataHandler((source, clone) => {
+  const descriptors = elementEnhancers.get(source);
+  if (descriptors) {
+    elementEnhancers.set(clone, Object.freeze([...descriptors]));
+  }
+});
+
 /** @internal Adds private metadata without introducing a component boundary. */
 export function appendElementEnhancer<
   P,
@@ -48,10 +56,10 @@ export function appendElementEnhancer<
   descriptor: CRCElementEnhancerDescriptor,
 ): CompEl<P, S, N, R> {
   const enhanced = cloneCRCElement(element as CRCElement<any>) as CompEl<P, S, N, R>;
-  elementEnhancers.set(enhanced, [
+  elementEnhancers.set(enhanced, Object.freeze([
     ...(elementEnhancers.get(element) ?? []),
     descriptor,
-  ]);
+  ]));
   return enhanced;
 }
 
