@@ -10,7 +10,7 @@ import type {
   CRCEventListenerRegistration,
   CRCEventTargetRegistration,
 } from './events/registrations.js';
-import type { CRCElement, CRCNode } from './element/types.js';
+import type { CRCElement, CRCKey, CRCNode } from './element/types.js';
 export type {
   CRCComponent,
   CRCContainerChild,
@@ -49,7 +49,7 @@ type StyleField<S> = [RequiredKeys<S>] extends [never]
   : { style: S };
 
 export type ComponentInput<P, S extends SystemStyle = SystemStyle> =
-  ProgramProps<P> & { key?: string } & StyleField<S>;
+  ProgramProps<P> & { key?: CRCKey } & StyleField<S>;
 
 export type CompEl<
   P = any,

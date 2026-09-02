@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   createElement,
+  defineComp,
   type CRCNode,
 } from '../../index';
 
@@ -9,6 +10,24 @@ function Card(props: { title?: string; children?: CRCNode }): CRCNode {
 }
 
 describe('createElement', () => {
+  it('reserves numeric keys and omits them from delivered prop types', () => {
+    const element = createElement(Card, { key: 42, title: 'CRC' });
+    const LegacyCard = defineComp(() => undefined);
+    const legacy = LegacyCard({ key: 7 });
+
+    // @ts-expect-error keys are construction metadata, not component props
+    void element.props.key;
+    // @ts-expect-error key accepts only string and number values
+    createElement(Card, { key: true, title: 'CRC' });
+    // @ts-expect-error legacy factories accept the same key domain
+    LegacyCard({ key: {} });
+
+    expect(element.key).toBe('42');
+    expect(legacy.key).toBe('7');
+    expect('key' in element.props).toBe(false);
+    expect('key' in legacy.props).toBe(false);
+  });
+
   it('creates a branded immutable descriptor with a normalized key', () => {
     const element = createElement(Card, { key: 42, title: 'CRC' }, 'child');
 

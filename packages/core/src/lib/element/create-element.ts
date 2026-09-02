@@ -16,11 +16,15 @@ import type {
 const CRC_ELEMENT_TYPE = Symbol.for('@crc/core.element');
 
 type ElementProps = Record<PropertyKey, unknown>;
+type ElementInput<P> = 0 extends (1 & P) ?
+  P & { key?: CRCKey } :
+  'key' extends keyof P ? never :
+  P & { key?: CRCKey };
 
 /** Public constructor used by direct element authoring. */
 export function createElement<P>(
   type: CRCElementType<P>,
-  props: P | null,
+  props: ElementInput<P> | null,
   ...children: CRCNode[]
 ): CRCElement<P> {
   const withChildren = children.length === 0 ? props : {

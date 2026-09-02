@@ -1,6 +1,7 @@
 import {
   CompEl,
   CompFn,
+  CRCKey,
   SystemStyle,
 } from './types.js';
 import { createCRCElement } from './element/create-element.js';
@@ -25,7 +26,7 @@ export function createElement<
   comp: CompFn<P, S, N, R>,
   props: CompEl<P, S, N, R>['props'],
   style: CompEl<P, S, N, R>['style'] = EMPTY_STYLE as CompEl<P, S, N, R>['style'],
-  key?: string,
+  key?: CRCKey,
 ): CompEl<P, S, N, R> {
   const element = createCRCElement(
     comp as any,
