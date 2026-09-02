@@ -1,5 +1,8 @@
 import { defineComp } from '../define-comp.js';
+import { definePrimitive } from '../define-primitive.js';
 import { EMPTY_STYLE } from '../create-element.js';
+import { materializeContainerChildren } from '../element/children.js';
+import { cloneCRCElement } from '../element/create-element.js';
 import {
   getPrimitiveDefinition,
   getSpecifiedStyle,
@@ -15,7 +18,6 @@ import type {
   ResolvedBoxStyle,
 } from '../style/types.js';
 import type {
-  CompEl,
   CRCNode,
   RenderingContext2D,
   StyleResolutionContext,
@@ -34,7 +36,7 @@ import type { LayoutBox } from './types.js';
 export type AbsoluteStyle = BoxStyle & LayoutItemStyle;
 
 export interface AbsoluteProps {
-  children: CRCNode[];
+  children: CRCNode;
 }
 
 interface ResolvedAbsoluteStyle extends SystemStyle {
@@ -42,11 +44,12 @@ interface ResolvedAbsoluteStyle extends SystemStyle {
   overflow: 'visible' | 'clip';
 }
 
-function Absolute(
+function renderAbsolute(
   props: AbsoluteProps,
   style: Readonly<ResolvedAbsoluteStyle>,
   ctx: RenderingContext2D,
 ) {
+  const children = materializeLayoutChildren(props.children, 'Absolute');
   recordLayoutEvaluation();
   const content = style.box.contentBox;
   ctx.translate(content.x, content.y);
@@ -60,19 +63,41 @@ function Absolute(
   GLOBAL_STATE.componentRefs!.onAfterRender = releaseLayout;
 
   return placeDirectChildren(
-    props.children,
+    children,
     localContent,
     child => resolveAbsoluteChildPlacement(localContent, child),
     style.overflow,
   );
 }
 
+/** Describes absolute layout for JSX or createElement authoring. */
+export const Absolute = definePrimitive<
+  AbsoluteProps,
+  AbsoluteStyle,
+  AbsoluteStyle,
+  ResolvedAbsoluteStyle
+>(renderAbsolute, {
+  resolveStyle: (style, context) => ({
+    box: resolveContainerBox(style, context, 'Absolute', 'absolute'),
+    overflow: style.overflow ?? 'visible',
+  }),
+});
+
+const renderLegacyAbsolute = function Absolute(
+  props: AbsoluteProps,
+  style: Readonly<ResolvedAbsoluteStyle>,
+  ctx: RenderingContext2D,
+) {
+  return renderAbsolute(props, style, ctx);
+};
+
+/** @internal Temporary lowercase authoring adapter retained until Task 12. */
 export const absolute = defineComp<
   AbsoluteProps,
   AbsoluteStyle,
   AbsoluteStyle,
   ResolvedAbsoluteStyle
->(Absolute, {
+>(renderLegacyAbsolute, {
   resolveStyle: (style, context) => ({
     box: resolveContainerBox(style, context, 'Absolute', 'absolute'),
     overflow: style.overflow ?? 'visible',
@@ -131,14 +156,14 @@ export function childWithUsedSize(
   width: number,
   height: number,
   receiverToken?: object,
-): CompEl<any, any> {
-  const renderedChild = { ...child } as CRCElement<any>;
+): CRCElement<any> {
+  const renderedChild = cloneCRCElement(child);
   setPreNormalizedStyle(renderedChild, Object.freeze({
     ...style,
     width,
     height,
   }), child, receiverToken);
-  return renderedChild as CompEl<any, any>;
+  return renderedChild;
 }
 
 /** @internal Shared by the initial direct-child layout algorithms. */
@@ -181,7 +206,7 @@ export function normalizeDirectChildStyle(
 
 /** @internal Converts source-order descriptors to stable placed children. */
 export function placeDirectChildren(
-  children: readonly CRCNode[],
+  children: readonly CRCElement<any>[],
   contentBox: Readonly<LayoutBox>,
   place: (child: CRCElement<any>) => LayoutBox | {
     box: LayoutBox;
@@ -191,9 +216,7 @@ export function placeDirectChildren(
 ): CRCElement<any>[] {
   const occurrences = new Map<Function, number>();
   const placed: CRCElement<any>[] = [];
-  for (const node of children) {
-    if (!node || typeof node !== 'object' || !('type' in node)) continue;
-    const child = node as CRCElement<any>;
+  for (const child of children) {
     const occurrence = child.key === undefined ?
       occurrences.get(child.type) ?? 0 :
       0;
@@ -216,6 +239,18 @@ export function placeDirectChildren(
     }));
   }
   return placed;
+}
+
+/** @internal Prepares one finite direct-child sequence for a layout boundary. */
+export function materializeLayoutChildren(
+  children: CRCNode,
+  receiver: 'Absolute' | 'Overlay' | 'Flow' | 'Flex' | 'Grid',
+): readonly CRCElement<any>[] {
+  // Placement identity owns layout sibling keys. Deferring its check preserves
+  // fail-closed teardown when a later duplicate follows an acquired child.
+  return materializeContainerChildren(children, receiver, {
+    validateKeys: false,
+  });
 }
 
 function resolveLayoutBox(

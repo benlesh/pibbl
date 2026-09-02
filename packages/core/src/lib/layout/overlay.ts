@@ -1,4 +1,5 @@
 import { defineComp } from '../define-comp.js';
+import { definePrimitive } from '../define-primitive.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import type { BoxStyle, LayoutItemStyle, ResolvedBoxStyle } from '../style/types.js';
@@ -10,6 +11,7 @@ import type {
 import type { CRCElement } from '../element/types.js';
 import {
   childWithUsedSize,
+  materializeLayoutChildren,
   normalizeDirectChildStyle,
   placeDirectChildren,
   resolveContainerBox,
@@ -27,7 +29,7 @@ export interface OverlayStyle extends BoxStyle, LayoutItemStyle {
 }
 
 export interface OverlayProps {
-  children: CRCNode[];
+  children: CRCNode;
 }
 
 interface ResolvedOverlayStyle extends SystemStyle {
@@ -37,11 +39,12 @@ interface ResolvedOverlayStyle extends SystemStyle {
   justifyItems: OverlayAlignment;
 }
 
-function Overlay(
+function renderOverlay(
   props: OverlayProps,
   style: Readonly<ResolvedOverlayStyle>,
   ctx: RenderingContext2D,
 ) {
+  const children = materializeLayoutChildren(props.children, 'Overlay');
   recordLayoutEvaluation();
   const content = style.box.contentBox;
   ctx.translate(content.x, content.y);
@@ -55,19 +58,43 @@ function Overlay(
   GLOBAL_STATE.componentRefs!.onAfterRender = releaseLayout;
 
   return placeDirectChildren(
-    props.children,
+    children,
     localContent,
     child => resolveOverlayChildPlacement(localContent, child, style),
     style.overflow,
   );
 }
 
+/** Describes overlay layout for JSX or createElement authoring. */
+export const Overlay = definePrimitive<
+  OverlayProps,
+  OverlayStyle,
+  OverlayStyle,
+  ResolvedOverlayStyle
+>(renderOverlay, {
+  resolveStyle: (style, context) => ({
+    box: resolveContainerBox(style, context, 'Overlay', 'overlay'),
+    overflow: style.overflow ?? 'visible',
+    alignItems: style.alignItems ?? 'stretch',
+    justifyItems: style.justifyItems ?? 'stretch',
+  }),
+});
+
+const renderLegacyOverlay = function Overlay(
+  props: OverlayProps,
+  style: Readonly<ResolvedOverlayStyle>,
+  ctx: RenderingContext2D,
+) {
+  return renderOverlay(props, style, ctx);
+};
+
+/** @internal Temporary lowercase authoring adapter retained until Task 12. */
 export const overlay = defineComp<
   OverlayProps,
   OverlayStyle,
   OverlayStyle,
   ResolvedOverlayStyle
->(Overlay, {
+>(renderLegacyOverlay, {
   resolveStyle: (style, context) => ({
     box: resolveContainerBox(style, context, 'Overlay', 'overlay'),
     overflow: style.overflow ?? 'visible',

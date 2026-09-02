@@ -1,5 +1,8 @@
 import { defineComp } from '../define-comp.js';
+import { definePrimitive } from '../define-primitive.js';
+import { cloneCRCElement } from '../element/create-element.js';
 import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
+import type { CRCElement } from '../element/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import { normalizeEdges } from '../style/normalize.js';
@@ -7,7 +10,6 @@ import { setPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import type { BoxStyle, LayoutItemStyle, ResolvedBoxStyle } from '../style/types.js';
 import type {
   CanvasMeasurementService,
-  CompEl,
   CRCNode,
   MeasureInput,
   MeasureResult,
@@ -16,6 +18,7 @@ import type {
 } from '../types.js';
 import {
   childWithUsedSize,
+  materializeLayoutChildren,
   normalizeDirectChildStyle,
   placeDirectChildren,
   resolveContainerBox,
@@ -38,7 +41,7 @@ export interface FlowStyle extends BoxStyle, LayoutItemStyle {
 }
 
 export interface FlowProps {
-  children: CRCNode[];
+  children: CRCNode;
 }
 
 interface ResolvedFlowStyle extends SystemStyle {
@@ -52,7 +55,7 @@ interface ResolvedFlowStyle extends SystemStyle {
 }
 
 interface FlowItem {
-  child: CompEl<any, any>;
+  child: CRCElement<any>;
   normalized: Readonly<SystemStyle>;
   width: number;
   height: number;
@@ -65,21 +68,22 @@ interface FlowItem {
 export interface FlowMeasurementInput {
   service: CanvasMeasurementService;
   measureElement(
-    element: CompEl<any, any>,
+    element: CRCElement<any>,
     constraints: Readonly<Constraints>,
   ): MeasureResult;
 }
 
 interface FlowPlacement {
   box: LayoutBox;
-  element: CompEl<any, any>;
+  element: CRCElement<any>;
 }
 
-function Flow(
+function renderFlow(
   props: FlowProps,
   style: Readonly<ResolvedFlowStyle>,
   ctx: RenderingContext2D,
 ) {
+  const children = materializeLayoutChildren(props.children, 'Flow');
   recordLayoutEvaluation();
   const content = style.box.contentBox;
   ctx.translate(content.x, content.y);
@@ -104,7 +108,7 @@ function Flow(
   };
   const placements = resolveFlowPlacements(
     localContent,
-    props.children,
+    children,
     style,
     {
       service,
@@ -114,19 +118,43 @@ function Flow(
   );
   let index = 0;
   return placeDirectChildren(
-    props.children,
+    children,
     localContent,
     () => placements[index++],
     style.overflow,
   );
 }
 
+/** Describes sequential flow layout for JSX or createElement authoring. */
+export const Flow = definePrimitive<
+  FlowProps,
+  FlowStyle,
+  FlowStyle,
+  ResolvedFlowStyle
+>(renderFlow, {
+  resolveStyle: (style, context) => ({
+    box: resolveContainerBox(style, context, 'Flow', 'flow'),
+    overflow: style.overflow ?? 'visible',
+    ...normalizeFlowOptions(style, context.allocation),
+  }),
+  measure: input => measureFlow(input),
+});
+
+const renderLegacyFlow = function Flow(
+  props: FlowProps,
+  style: Readonly<ResolvedFlowStyle>,
+  ctx: RenderingContext2D,
+) {
+  return renderFlow(props, style, ctx);
+};
+
+/** @internal Temporary lowercase authoring adapter retained until Task 12. */
 export const flow = defineComp<
   FlowProps,
   FlowStyle,
   FlowStyle,
   ResolvedFlowStyle
->(Flow, {
+>(renderLegacyFlow, {
   resolveStyle: (style, context) => ({
     box: resolveContainerBox(style, context, 'Flow', 'flow'),
     overflow: style.overflow ?? 'visible',
@@ -137,26 +165,25 @@ export const flow = defineComp<
 
 export function layoutFlow(
   container: Readonly<LayoutBox>,
-  children: readonly CRCNode[],
+  children: CRCNode,
   style: Readonly<FlowStyle>,
   measurement: FlowMeasurementInput,
 ): LayoutBox[] {
-  return resolveFlowPlacements(container, children, style, measurement)
+  const prepared = materializeLayoutChildren(children, 'Flow');
+  return resolveFlowPlacements(container, prepared, style, measurement)
     .map(placement => placement.box);
 }
 
 function resolveFlowPlacements(
   container: Readonly<LayoutBox>,
-  children: readonly CRCNode[],
+  children: readonly CRCElement<any>[],
   style: Readonly<FlowStyle>,
   measurement: FlowMeasurementInput,
 ): FlowPlacement[] {
   assertFiniteContainer(container);
   const options = normalizeFlowOptions(style, container);
   const items: FlowItem[] = [];
-  for (const node of children) {
-    if (!node || typeof node !== 'object' || !('type' in node)) continue;
-    const child = node as CompEl<any, any>;
+  for (const child of children) {
     const receiverToken = getChildPrimitiveReceiverToken(
       GLOBAL_STATE.renderTransaction,
       GLOBAL_STATE.primitiveReceiverToken,
@@ -176,7 +203,7 @@ function resolveFlowPlacements(
         minHeight: 0,
         maxHeight: container.height,
       };
-      const measurementChild = { ...child };
+      const measurementChild = cloneCRCElement(child);
       setPreNormalizedStyle(
         measurementChild,
         normalized,
@@ -243,6 +270,7 @@ function resolveFlowPlacements(
 function measureFlow(
   input: MeasureInput<FlowProps, FlowStyle>,
 ): MeasureResult {
+  const children = materializeLayoutChildren(input.props.children, 'Flow');
   const widthDefinite = input.style.width !== undefined &&
     input.style.width !== 'auto';
   const heightDefinite = input.style.height !== undefined &&
@@ -257,7 +285,7 @@ function measureFlow(
 
   const placements = resolveFlowPlacements(
     provisional.content,
-    input.props.children,
+    children,
     input.style,
     input,
   );
@@ -471,7 +499,7 @@ function nonnegativeOption(
 function resolveItemAlignment(
   value: LayoutItemStyle['alignSelf'],
   fallback: FlowAlignment,
-  child: CompEl<any, any>,
+  child: CRCElement<any>,
   container: Readonly<LayoutBox>,
 ): FlowAlignment {
   if (value === undefined || value === 'auto') return fallback;

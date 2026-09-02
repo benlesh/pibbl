@@ -1,7 +1,6 @@
 import { isCRCElement } from './create-element.js';
 import { isFragmentElement } from './fragment.js';
 import { getElementSource } from './metadata.js';
-import { isPreNormalizedElement } from '../style/resolve-dispatch.js';
 import type {
   CRCElement,
   CRCNode,
@@ -22,10 +21,11 @@ const REACT_TRANSITIONAL_ELEMENT_TYPE = Symbol.for(
 export function materializeContainerChildren(
   node: CRCNode,
   receiver: ChildReceiver,
+  options: Readonly<{ validateKeys?: boolean }> = {},
 ): readonly CRCElement<any>[] {
   const elements: CRCElement<any>[] = [];
   visitContainerNode(node, receiver, elements);
-  assertUniqueKeys(elements, receiver);
+  if (options.validateKeys !== false) assertUniqueKeys(elements, receiver);
   return Object.freeze(elements);
 }
 
@@ -79,13 +79,6 @@ function visitContainerNode(
   }
   if (typeof node !== 'object') {
     throw invalidChild(receiver, `an unsupported ${typeof node} value`);
-  }
-
-  // Task 8 replaces layout's private structural clones with branded elements.
-  // Until then, accept only descriptors authenticated by layout's WeakMap.
-  if (isPreNormalizedElement(node)) {
-    elements.push(node as CRCElement<any>);
-    return;
   }
 
   if (isReactElement(node)) {

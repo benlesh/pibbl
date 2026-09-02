@@ -32,11 +32,6 @@ export function setPreNormalizedStyle(
   if (receiverToken) setPrimitiveReceiverToken(element, receiverToken);
 }
 
-/** @internal Temporary recognition seam for legacy layout descriptor clones. */
-export function isPreNormalizedElement(element: object): boolean {
-  return preNormalizedStyles.has(element as CRCElement<any>);
-}
-
 /** @internal Consumes an internal normalized-style override exactly once. */
 export function takePreNormalizedStyle(
   element: CRCElement<any>,

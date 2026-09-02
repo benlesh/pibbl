@@ -1,5 +1,8 @@
 import { defineComp } from '../define-comp.js';
+import { definePrimitive } from '../define-primitive.js';
+import { cloneCRCElement } from '../element/create-element.js';
 import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
+import type { CRCElement } from '../element/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import { normalizeEdges } from '../style/normalize.js';
@@ -13,7 +16,6 @@ import type {
 } from '../style/types.js';
 import type {
   CanvasMeasurementService,
-  CompEl,
   CRCNode,
   MeasureInput,
   MeasureResult,
@@ -22,6 +24,7 @@ import type {
 } from '../types.js';
 import {
   normalizeDirectChildStyle,
+  materializeLayoutChildren,
   placeDirectChildren,
   resolveContainerBox,
   resolveDirectChildBox,
@@ -49,13 +52,13 @@ export interface GridStyle extends BoxStyle, LayoutItemStyle {
 }
 
 export interface GridProps {
-  children: CRCNode[];
+  children: CRCNode;
 }
 
 export interface GridMeasurementInput {
   service: CanvasMeasurementService;
   measureElement(
-    element: CompEl<any, any>,
+    element: CRCElement<any>,
     constraints: Readonly<Constraints>,
   ): MeasureResult;
 }
@@ -73,14 +76,15 @@ interface ResolvedGridStyle extends SystemStyle {
 
 interface GridPlacement {
   box: LayoutBox;
-  element: CompEl<any, any>;
+  element: CRCElement<any>;
 }
 
-function Grid(
+function renderGrid(
   props: GridProps,
   style: Readonly<ResolvedGridStyle>,
   ctx: RenderingContext2D,
 ) {
+  const children = materializeLayoutChildren(props.children, 'Grid');
   recordLayoutEvaluation();
   const content = style.box.contentBox;
   ctx.translate(content.x, content.y);
@@ -105,7 +109,7 @@ function Grid(
   };
   const placements = resolveGridPlacements(
     localContent,
-    props.children,
+    children,
     style,
     {
       service,
@@ -115,19 +119,20 @@ function Grid(
   );
   let index = 0;
   return placeDirectChildren(
-    props.children,
+    children,
     localContent,
     () => placements[index++],
     style.overflow,
   );
 }
 
-export const grid = defineComp<
+/** Describes explicit Grid layout for JSX or createElement authoring. */
+export const Grid = definePrimitive<
   GridProps,
   GridStyle,
   GridStyle,
   ResolvedGridStyle
->(Grid, {
+>(renderGrid, {
   resolveStyle: (style, context) => ({
     box: resolveContainerBox(style, context, 'Grid', 'grid'),
     overflow: style.overflow ?? 'visible',
@@ -136,20 +141,44 @@ export const grid = defineComp<
   measure: (input) => measureGrid(input),
 });
 
+const renderLegacyGrid = function Grid(
+  props: GridProps,
+  style: Readonly<ResolvedGridStyle>,
+  ctx: RenderingContext2D,
+) {
+  return renderGrid(props, style, ctx);
+};
+
+/** @internal Temporary lowercase authoring adapter retained until Task 12. */
+export const grid = defineComp<
+  GridProps,
+  GridStyle,
+  GridStyle,
+  ResolvedGridStyle
+>(renderLegacyGrid, {
+  resolveStyle: (style, context) => ({
+    box: resolveContainerBox(style, context, 'Grid', 'grid'),
+    overflow: style.overflow ?? 'visible',
+    ...normalizeGridOptions(style, context.allocation),
+  }),
+  measure: input => measureGrid(input),
+});
+
 export function layoutGrid(
   container: Readonly<LayoutBox>,
-  children: readonly CRCNode[],
+  children: CRCNode,
   style: Readonly<GridStyle>,
   measurement: GridMeasurementInput,
 ): LayoutBox[] {
+  const prepared = materializeLayoutChildren(children, 'Grid');
   const options = normalizeGridOptions(style, container);
-  return resolveGridPlacements(container, children, options, measurement)
+  return resolveGridPlacements(container, prepared, options, measurement)
     .map((placement) => placement.box);
 }
 
 function resolveGridPlacements(
   container: Readonly<LayoutBox>,
-  children: readonly CRCNode[],
+  children: readonly CRCElement<any>[],
   options: Readonly<ReturnType<typeof normalizeGridOptions>>,
   measurement: GridMeasurementInput,
 ): GridPlacement[] {
@@ -170,9 +199,7 @@ function resolveGridPlacements(
   );
   const placements: GridPlacement[] = [];
 
-  for (const node of children) {
-    if (!node || typeof node !== 'object' || !('type' in node)) continue;
-    const child = node as CompEl<any, any>;
+  for (const child of children) {
     const receiverToken = getChildPrimitiveReceiverToken(
       GLOBAL_STATE.renderTransaction,
       GLOBAL_STATE.primitiveReceiverToken,
@@ -269,7 +296,7 @@ function resolveGridPlacements(
       (widthAuto && justify !== 'stretch') ||
       (heightAuto && align !== 'stretch')
     ) {
-      const measurementChild = { ...child };
+      const measurementChild = cloneCRCElement(child);
       setPreNormalizedStyle(
         measurementChild,
         normalized,
@@ -327,7 +354,7 @@ function resolveGridPlacements(
       width: resolved.contentBox.width,
       height: resolved.contentBox.height,
     });
-    const renderedChild = { ...child };
+    const renderedChild = cloneCRCElement(child);
     setPreNormalizedStyle(
       renderedChild,
       renderedStyle,
@@ -437,6 +464,7 @@ function parseGridTracks(
 }
 
 function measureGrid(input: MeasureInput<GridProps, GridStyle>): MeasureResult {
+  materializeLayoutChildren(input.props.children, 'Grid');
   const diagnosticBox = {
     x: 0,
     y: 0,
@@ -614,7 +642,7 @@ function itemAlignment(
   value: unknown,
   fallback: GridAlignment,
   property: string,
-  child: CompEl<any, any>,
+  child: CRCElement<any>,
   container: Readonly<LayoutBox>,
 ): GridAlignment {
   if (value === undefined || value === 'auto') return fallback;
@@ -637,7 +665,7 @@ function itemAlignment(
 function placementInteger(
   value: unknown,
   property: string,
-  child: CompEl<any, any>,
+  child: CRCElement<any>,
   container: Readonly<LayoutBox>,
   required: boolean,
 ): number {
@@ -667,7 +695,7 @@ function validateSpan(
   span: number,
   trackCount: number,
   property: string,
-  child: CompEl<any, any>,
+  child: CRCElement<any>,
   container: Readonly<LayoutBox>,
 ): void {
   if (start - 1 + span > trackCount) {
@@ -685,7 +713,7 @@ function validateStart(
   start: number,
   trackCount: number,
   property: string,
-  child: CompEl<any, any>,
+  child: CRCElement<any>,
   container: Readonly<LayoutBox>,
 ): void {
   if (start > trackCount) {
@@ -765,7 +793,7 @@ function assertFiniteContainer(container: Readonly<LayoutBox>): void {
 }
 
 function rejectUnsupportedItemFields(
-  child: CompEl<any, any>,
+  child: CRCElement<any>,
   style: Readonly<Record<string, unknown>>,
   container: Readonly<LayoutBox>,
 ): void {
@@ -812,7 +840,7 @@ function optionDiagnostic(
 }
 
 function childDiagnostic(
-  child: CompEl<any, any>,
+  child: CRCElement<any>,
   property: string,
   value: unknown,
   container: Readonly<LayoutBox>,
@@ -828,7 +856,7 @@ function childDiagnostic(
   });
 }
 
-function childContext(child: CompEl<any, any>, container: Readonly<LayoutBox>) {
+function childContext(child: CRCElement<any>, container: Readonly<LayoutBox>) {
   return {
     component: child.type.name || 'Anonymous',
     algorithm: 'grid',

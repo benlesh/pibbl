@@ -1,5 +1,8 @@
 import { defineComp } from '../define-comp.js';
+import { definePrimitive } from '../define-primitive.js';
+import { cloneCRCElement } from '../element/create-element.js';
 import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
+import type { CRCElement } from '../element/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import { normalizeEdges } from '../style/normalize.js';
@@ -13,7 +16,6 @@ import type {
 } from '../style/types.js';
 import type {
   CanvasMeasurementService,
-  CompEl,
   CRCNode,
   MeasureInput,
   MeasureResult,
@@ -22,6 +24,7 @@ import type {
 } from '../types.js';
 import {
   normalizeDirectChildStyle,
+  materializeLayoutChildren,
   placeDirectChildren,
   resolveContainerBox,
 } from './absolute.js';
@@ -53,13 +56,13 @@ export interface FlexStyle extends BoxStyle, LayoutItemStyle {
 }
 
 export interface FlexProps {
-  children: CRCNode[];
+  children: CRCNode;
 }
 
 export interface FlexMeasurementInput {
   service: CanvasMeasurementService;
   measureElement(
-    element: CompEl<any, any>,
+    element: CRCElement<any>,
     constraints: Readonly<Constraints>,
   ): MeasureResult;
 }
@@ -77,7 +80,7 @@ interface ResolvedFlexStyle extends SystemStyle {
 }
 
 interface FlexItem {
-  child: CompEl<any, any>;
+  child: CRCElement<any>;
   normalized: Readonly<BoxStyle & FlexItemStyle & LayoutItemStyle>;
   baseMain: number;
   targetMain: number;
@@ -92,7 +95,6 @@ interface FlexItem {
   shrink: number;
   crossAuto: boolean;
   alignSelf: CrossAlignment | 'auto';
-  renderedChild: CompEl<any, any>;
   receiverToken: object;
 }
 
@@ -104,14 +106,15 @@ interface FlexLine {
 
 interface FlexPlacement {
   box: LayoutBox;
-  element: CompEl<any, any>;
+  element: CRCElement<any>;
 }
 
-function Flex(
+function renderFlex(
   props: FlexProps,
   style: Readonly<ResolvedFlexStyle>,
   ctx: RenderingContext2D,
 ) {
+  const children = materializeLayoutChildren(props.children, 'Flex');
   recordLayoutEvaluation();
   const content = style.box.contentBox;
   ctx.translate(content.x, content.y);
@@ -136,7 +139,7 @@ function Flex(
   };
   const placements = resolveFlexPlacements(
     localContent,
-    props.children,
+    children,
     style,
     {
       service,
@@ -146,19 +149,43 @@ function Flex(
   );
   let index = 0;
   return placeDirectChildren(
-    props.children,
+    children,
     localContent,
     () => placements[index++],
     style.overflow,
   );
 }
 
+/** Describes the supported Flexbox subset for JSX or createElement authoring. */
+export const Flex = definePrimitive<
+  FlexProps,
+  FlexStyle,
+  FlexStyle,
+  ResolvedFlexStyle
+>(renderFlex, {
+  resolveStyle: (style, context) => ({
+    box: resolveContainerBox(style, context, 'Flex', 'flex'),
+    overflow: style.overflow ?? 'visible',
+    ...normalizeFlexOptions(style, context.allocation),
+  }),
+  measure: input => measureFlex(input),
+});
+
+const renderLegacyFlex = function Flex(
+  props: FlexProps,
+  style: Readonly<ResolvedFlexStyle>,
+  ctx: RenderingContext2D,
+) {
+  return renderFlex(props, style, ctx);
+};
+
+/** @internal Temporary lowercase authoring adapter retained until Task 12. */
 export const flex = defineComp<
   FlexProps,
   FlexStyle,
   FlexStyle,
   ResolvedFlexStyle
->(Flex, {
+>(renderLegacyFlex, {
   resolveStyle: (style, context) => ({
     box: resolveContainerBox(style, context, 'Flex', 'flex'),
     overflow: style.overflow ?? 'visible',
@@ -170,6 +197,7 @@ export const flex = defineComp<
 function measureFlex(
   input: MeasureInput<FlexProps, FlexStyle>,
 ): MeasureResult {
+  const children = materializeLayoutChildren(input.props.children, 'Flex');
   const widthDefinite = input.style.width !== undefined &&
     input.style.width !== 'auto';
   const heightDefinite = input.style.height !== undefined &&
@@ -207,9 +235,7 @@ function measureFlex(
   let intrinsicMain = 0;
   let intrinsicCross = 0;
   let count = 0;
-  for (const node of input.props.children) {
-    if (!node || typeof node !== 'object' || !('type' in node)) continue;
-    const child = node as CompEl<any, any>;
+  for (const child of children) {
     const style = normalizeDirectChildStyle(child) as Readonly<
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
@@ -374,17 +400,18 @@ function unsupportedIntrinsic(reason: string): MeasureResult {
 
 export function layoutFlex(
   container: Readonly<LayoutBox>,
-  children: readonly CRCNode[],
+  children: CRCNode,
   style: Readonly<FlexStyle>,
   measurement: FlexMeasurementInput,
 ): LayoutBox[] {
-  return resolveFlexPlacements(container, children, style, measurement)
+  const prepared = materializeLayoutChildren(children, 'Flex');
+  return resolveFlexPlacements(container, prepared, style, measurement)
     .map(placement => placement.box);
 }
 
 function resolveFlexPlacements(
   container: Readonly<LayoutBox>,
-  children: readonly CRCNode[],
+  children: readonly CRCElement<any>[],
   style: Readonly<FlexStyle>,
   measurement: FlexMeasurementInput,
 ): FlexPlacement[] {
@@ -397,9 +424,7 @@ function resolveFlexPlacements(
   const crossGap = row ? options.rowGap : options.columnGap;
   const items: FlexItem[] = [];
 
-  for (const node of children) {
-    if (!node || typeof node !== 'object' || !('type' in node)) continue;
-    const child = node as CompEl<any, any>;
+  for (const child of children) {
     const receiverToken = getChildPrimitiveReceiverToken(
       GLOBAL_STATE.renderTransaction,
       GLOBAL_STATE.primitiveReceiverToken,
@@ -448,7 +473,7 @@ function resolveFlexPlacements(
         minHeight: 0,
         maxHeight: container.height,
       };
-      const measurementChild = { ...child };
+      const measurementChild = cloneCRCElement(child);
       setPreNormalizedStyle(
         measurementChild,
         normalized,
@@ -562,7 +587,6 @@ function resolveFlexPlacements(
       shrink,
       crossAuto,
       alignSelf: alignment,
-      renderedChild: child,
       receiverToken,
     });
   }
@@ -621,7 +645,7 @@ function resolveFlexPlacements(
         width: row ? item.targetMain : Math.max(0, outerCross - item.paddingCross),
         height: row ? Math.max(0, outerCross - item.paddingCross) : item.targetMain,
       };
-      const renderedChild = { ...item.child };
+      const renderedChild = cloneCRCElement(item.child);
       setPreNormalizedStyle(
         renderedChild,
         Object.freeze(usedStyle),
@@ -874,7 +898,7 @@ function nonnegativeGap(
 function nonnegativeFactor(
   value: number,
   property: string,
-  child: CompEl<any, any>,
+  child: CRCElement<any>,
   container: Readonly<LayoutBox>,
 ): number {
   if (!Number.isFinite(value) || value < 0) {
@@ -895,7 +919,7 @@ function resolveBasis(
   measuredMain: number | undefined,
   reference: number,
   property: 'width' | 'height',
-  child: CompEl<any, any>,
+  child: CRCElement<any>,
   container: Readonly<LayoutBox>,
 ): number {
   const value = basis === 'auto' || basis === undefined ? specifiedMain : basis;
@@ -918,7 +942,7 @@ function resolveItemLength(
   value: Exclude<BoxStyle['width'], undefined>,
   reference: number,
   property: string,
-  child: CompEl<any, any>,
+  child: CRCElement<any>,
   container: Readonly<LayoutBox>,
 ): number {
   const resolved = resolveLength(value, reference, property, childContext(child, container));
@@ -939,7 +963,7 @@ function resolveOptionalBound(
   reference: number,
   property: string,
   fallback: number,
-  child: CompEl<any, any>,
+  child: CRCElement<any>,
   container: Readonly<LayoutBox>,
 ): number {
   if (value === undefined) return fallback;
@@ -948,7 +972,7 @@ function resolveOptionalBound(
 
 function normalizeItemAlignment(
   value: LayoutItemStyle['alignSelf'],
-  child: CompEl<any, any>,
+  child: CRCElement<any>,
   container: Readonly<LayoutBox>,
 ): CrossAlignment | 'auto' {
   if (value === undefined || value === 'auto') return 'auto';
@@ -981,7 +1005,7 @@ function alignmentOffset(
 }
 
 function rejectUnsupportedItemFields(
-  child: CompEl<any, any>,
+  child: CRCElement<any>,
   style: Readonly<Record<string, unknown>>,
   container: Readonly<LayoutBox>,
 ): void {
@@ -1027,7 +1051,7 @@ function optionDiagnostic(
 }
 
 function childDiagnostic(
-  child: CompEl<any, any>,
+  child: CRCElement<any>,
   property: string,
   value: unknown,
   container: Readonly<LayoutBox>,
@@ -1044,7 +1068,7 @@ function childDiagnostic(
 }
 
 function childContext(
-  child: CompEl<any, any>,
+  child: CRCElement<any>,
   container: Readonly<LayoutBox>,
 ) {
   return {

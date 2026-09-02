@@ -4,6 +4,14 @@ import type {
   CRCTextChild,
 } from '@crc/core';
 import {
+  Absolute,
+  Flex,
+  Flow,
+  Grid,
+  Overlay,
+  Rectangle,
+} from '@crc/core';
+import {
   Fragment as DevelopmentFragment,
   jsxDEV,
   type JSX as DevelopmentJSX,
@@ -37,3 +45,26 @@ export const developmentElement = jsxDEV(
 
 export const developmentFragment: DevelopmentJSX.ElementType =
   DevelopmentFragment;
+
+function* layoutChildren(): Generator<CRCNode> {
+  yield [[
+    <Rectangle key="child" style={{ width: 10, height: 10 }} />,
+  ], false];
+}
+
+export const layoutElements: readonly CRCElement[] = [
+  <Absolute style={{ width: 100, height: 50 }}>{layoutChildren()}</Absolute>,
+  <Overlay style={{ width: 100, height: 50 }}>{layoutChildren()}</Overlay>,
+  <Flow style={{ width: 100, height: 50 }}>{layoutChildren()}</Flow>,
+  <Flex style={{ width: 100, height: 50 }}>{layoutChildren()}</Flex>,
+  <Grid
+    style={{
+      width: 100,
+      height: 50,
+      gridTemplateColumns: [100],
+      gridTemplateRows: [50],
+    }}
+  >
+    {layoutChildren()}
+  </Grid>,
+];

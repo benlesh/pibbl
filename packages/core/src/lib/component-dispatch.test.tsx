@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Fragment } from '../index.js';
 import { crc } from './crc.js';
 import { definePrimitive } from './define-primitive.js';
+import { materializeContainerChildren } from './element/children.js';
 import { executeRender } from './execute-render.js';
 import { clearSharedState, getCRCInstance } from './global-state.js';
 import { crcCursor } from './hooks/crc-cursor.js';
@@ -50,7 +51,9 @@ const PlacementProbe = definePrimitive<{
 }>(function renderPlacementProbe({ children }) {
   const container = crcLayoutBox();
   return placeDirectChildren(
-    [children],
+    materializeContainerChildren(children, 'PlacementProbe', {
+      validateKeys: false,
+    }),
     container,
     child => placeAbsoluteChild(container, child),
     'visible',

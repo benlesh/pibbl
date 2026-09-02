@@ -66,26 +66,31 @@ export type {
 } from './lib/surface/types.js';
 export {
   absolute,
+  Absolute,
   type AbsoluteProps,
   type AbsoluteStyle,
 } from './lib/layout/absolute.js';
 export {
   overlay,
+  Overlay,
   type OverlayProps,
   type OverlayStyle,
 } from './lib/layout/overlay.js';
 export {
   flow,
+  Flow,
   type FlowProps,
   type FlowStyle,
 } from './lib/layout/flow.js';
 export {
   flex,
+  Flex,
   type FlexProps,
   type FlexStyle,
 } from './lib/layout/flex.js';
 export {
   grid,
+  Grid,
   type GridProps,
   type GridStyle,
   type GridTrack,
