@@ -9,9 +9,14 @@ function Card(props: { title?: string; children?: CRCNode }): CRCNode {
   return props.children;
 }
 
+function KeyedCard(props: { key: string }): CRCNode {
+  return props.key;
+}
+
 describe('createElement', () => {
   it('reserves numeric keys and omits them from delivered prop types', () => {
     const element = createElement(Card, { key: 42, title: 'CRC' });
+    const nullProps = createElement(Card, null);
     const LegacyCard = defineComp(() => undefined);
     const legacy = LegacyCard({ key: 7 });
 
@@ -21,8 +26,11 @@ describe('createElement', () => {
     createElement(Card, { key: true, title: 'CRC' });
     // @ts-expect-error legacy factories accept the same key domain
     LegacyCard({ key: {} });
+    // @ts-expect-error component props may not declare the reserved key field
+    createElement(KeyedCard, null);
 
     expect(element.key).toBe('42');
+    expect(nullProps.props).toEqual({});
     expect(legacy.key).toBe('7');
     expect('key' in element.props).toBe(false);
     expect('key' in legacy.props).toBe(false);

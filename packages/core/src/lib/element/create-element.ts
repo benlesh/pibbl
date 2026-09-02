@@ -20,11 +20,14 @@ type ElementInput<P> = 0 extends (1 & P) ?
   P & { key?: CRCKey } :
   'key' extends keyof P ? never :
   P & { key?: CRCKey };
+type ElementInputOrNull<P> = [ElementInput<P>] extends [never] ?
+  never :
+  ElementInput<P> | null;
 
 /** Public constructor used by direct element authoring. */
 export function createElement<P>(
   type: CRCElementType<P>,
-  props: ElementInput<P> | null,
+  props: ElementInputOrNull<P>,
   ...children: CRCNode[]
 ): CRCElement<P> {
   const withChildren = children.length === 0 ? props : {
