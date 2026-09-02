@@ -2,9 +2,11 @@ import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
 import { crc } from '../crc.js';
 import { createElement } from '../element/create-element.js';
+import { flow } from '../layout/flow.js';
 import { measureElement } from '../layout/measure.js';
 import { componentTest } from '../test-utils/component-test';
 import { takeScreenshot } from '../util/test-utils';
+import { Rectangle } from './rect.js';
 import { Text, text } from './text';
 
 const defaultStyle = {
@@ -18,7 +20,66 @@ const defaultStyle = {
 };
 
 describe('text', () => {
-  it('materializes recursive children once for pure measurement and paint', async () => {
+  it('rematerializes a mutated recursive container on a later render', async () => {
+    const children: Array<string> = ['first'];
+    const element = createElement(Text, {
+      children,
+      style: { fill: 'black' },
+    });
+    const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');
+    const canvas = document.createElement('canvas');
+    document.body.appendChild(canvas);
+    const controller = crc(canvas, element);
+
+    try {
+      await nextFrame();
+      children[0] = 'second';
+      crc(canvas, element);
+      await nextFrame();
+
+      expect(fillText.mock.calls.map(([value]) => value)).toEqual([
+        'first',
+        'second',
+      ]);
+    } finally {
+      controller.dispose();
+      fillText.mockRestore();
+    }
+  });
+
+  it('materializes a shared mutable container separately for each receiver', () => {
+    const children: Array<string> = ['first'];
+    const first = createElement(Text, { children });
+    const second = createElement(Text, { children });
+    const measuredValues: string[] = [];
+    const service = measurementService(measuredValues);
+
+    measureElement(first, measurementConstraints, service);
+    children[0] = 'second';
+    measureElement(second, measurementConstraints, service);
+
+    expect(measuredValues).toEqual(['first', 'second']);
+  });
+
+  it('revalidates mutated content after a prior successful measurement', () => {
+    const children: Array<unknown> = ['valid'];
+    const element = createElement(Text, { children: children as never });
+    measureElement(element, measurementConstraints, measurementService([]));
+
+    children.push(createElement(Rectangle, {
+      style: { width: 10, height: 10 },
+    }));
+
+    expect(() => measureElement(
+      element,
+      measurementConstraints,
+      measurementService([]),
+    )).toThrowError(
+      'Text received a CRC element inside textual content as a CRC child.',
+    );
+  });
+
+  it('materializes one-shot children once for layout measurement and paint', async () => {
     let iterableReads = 0;
     function* oneShotContent() {
       iterableReads++;
@@ -38,35 +99,33 @@ describe('text', () => {
     });
     const measuredValues: string[] = [];
     const expected = '  leading 0nested iterable -2 trailing  ';
-
-    expect(measureElement(element, {
-      minWidth: 0,
-      maxWidth: 500,
-      minHeight: 0,
-      maxHeight: 100,
-    }, {
-      measureText(value) {
+    const measureText = vi
+      .spyOn(CanvasRenderingContext2D.prototype, 'measureText')
+      .mockImplementation(value => {
         measuredValues.push(value);
         return fixedMetrics(value);
-      },
-    })).toEqual({
-      status: 'measured',
-      size: { width: expected.length * 10, height: 10 },
-    });
-
+      });
     const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');
-    const canvas = document.createElement('canvas');
-    canvas.width = 500;
-    canvas.height = 100;
-    document.body.appendChild(canvas);
-    const controller = crc(canvas, element);
-    await nextFrame();
 
-    expect(iterableReads).toBe(1);
-    expect(measuredValues).toEqual([expected]);
-    expect(fillText).toHaveBeenCalledExactlyOnceWith(expected, 0, 0, undefined);
-    controller.dispose();
-    fillText.mockRestore();
+    try {
+      const canvas = await componentTest(flow({
+        style: { width: 500, height: 100 },
+        children: [element],
+      }), { width: 500, height: 100 });
+
+      expect(iterableReads).toBe(1);
+      expect(measuredValues).toEqual([expected, expected]);
+      expect(fillText).toHaveBeenCalledExactlyOnceWith(
+        expected,
+        0,
+        0,
+        undefined,
+      );
+      canvas.dispose();
+    } finally {
+      measureText.mockRestore();
+      fillText.mockRestore();
+    }
   });
 
   it('applies alpha zero while drawing', async () => {
@@ -520,6 +579,22 @@ function fixedMetrics(value: string): TextMetrics {
     actualBoundingBoxLeft: 0,
     actualBoundingBoxRight: value.length * 10,
   } as TextMetrics;
+}
+
+const measurementConstraints = {
+  minWidth: 0,
+  maxWidth: 500,
+  minHeight: 0,
+  maxHeight: 100,
+};
+
+function measurementService(values: string[]) {
+  return {
+    measureText(value: string) {
+      values.push(value);
+      return fixedMetrics(value);
+    },
+  };
 }
 
 function nextFrame(): Promise<void> {

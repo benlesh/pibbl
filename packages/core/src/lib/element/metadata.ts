@@ -26,6 +26,7 @@ export interface InternalElementMetadata {
 
 const elementMetadata = new WeakMap<CRCElement<any>, InternalElementMetadata>();
 const primitiveDefinitions = new WeakMap<Function, PrimitiveDefinition>();
+const primitiveProgramProps = new WeakMap<object, unknown>();
 
 export interface PrimitiveDefinition<
   P = any,
@@ -114,10 +115,14 @@ export function setLegacyProgramProps<P>(element: CRCElement<any>, props: P): vo
 export function getPrimitiveProgramProps<P>(element: CRCElement<any>): P {
   const legacy = getLegacyProgramProps<P>(element);
   if (legacy !== undefined) return legacy;
+  const props = element.props as object;
+  const cached = primitiveProgramProps.get(props);
+  if (cached !== undefined) return cached as P;
   const { style: _style, ...programProps } = element.props as {
     readonly style?: unknown;
     readonly [key: PropertyKey]: unknown;
   };
+  primitiveProgramProps.set(props, programProps);
   return programProps as P;
 }
 

@@ -5,6 +5,7 @@ import type {
   CompRefs,
   CRCClippingStackEntry,
   CRCInstance,
+  CRCRenderTransaction,
   RenderingContext2D,
 } from './types.js';
 
@@ -19,6 +20,7 @@ export interface GlobalState {
   componentIsMounting: boolean;
   componentHookIndex: number;
   renderContext: RenderingContext2D | undefined;
+  renderTransaction: CRCRenderTransaction | undefined;
   unseenIds: Set<string> | undefined;
   seenIds: Set<string> | undefined;
   seenKeys: Set<string> | undefined;
@@ -36,6 +38,7 @@ export const GLOBAL_STATE: GlobalState = {
   componentIsMounting: false,
   componentHookIndex: 0,
   renderContext: undefined,
+  renderTransaction: undefined,
   unseenIds: undefined,
   seenIds: undefined,
   seenKeys: undefined,
@@ -172,6 +175,7 @@ export function clearTempState() {
   GLOBAL_STATE.seenKeys = undefined;
   GLOBAL_STATE.canvas = undefined;
   GLOBAL_STATE.renderContext = undefined;
+  GLOBAL_STATE.renderTransaction = undefined;
   GLOBAL_STATE.layoutStack = undefined;
   clearComponentState();
 }

@@ -56,6 +56,7 @@ export function executeRender(
   const prevCurrentCRCInstance = GLOBAL_STATE.currentCRCInstance;
   const prevCanvas = GLOBAL_STATE.canvas;
   const prevRenderContext = GLOBAL_STATE.renderContext;
+  const prevRenderTransaction = GLOBAL_STATE.renderTransaction;
   const prevSeenIds = GLOBAL_STATE.seenIds;
   const prevSeenKeys = GLOBAL_STATE.seenKeys;
   const prevUnseendIds = GLOBAL_STATE.unseenIds;
@@ -65,6 +66,7 @@ export function executeRender(
   let renderContext: ReturnType<typeof get2dContext> | undefined;
   try {
     GLOBAL_STATE.currentCRCInstance = crcInstance;
+    GLOBAL_STATE.renderTransaction = renderTransaction;
     GLOBAL_STATE.currentCRCInstance.renderTimestamp = renderTimestamp;
     GLOBAL_STATE.canvas = canvas;
     const rootNode = arguments.length >= 3 && updatedRoot !== NO_PENDING_ROOT ?
@@ -147,6 +149,7 @@ export function executeRender(
     GLOBAL_STATE.currentCRCInstance = prevCurrentCRCInstance;
     GLOBAL_STATE.canvas = prevCanvas;
     GLOBAL_STATE.renderContext = prevRenderContext;
+    GLOBAL_STATE.renderTransaction = prevRenderTransaction;
     GLOBAL_STATE.seenIds = prevSeenIds;
     GLOBAL_STATE.seenKeys = prevSeenKeys;
     GLOBAL_STATE.unseenIds = prevUnseendIds;

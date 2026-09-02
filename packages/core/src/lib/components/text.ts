@@ -1,6 +1,7 @@
 import { defineComp } from '../define-comp.js';
 import { definePrimitive } from '../define-primitive.js';
 import { materializeTextChildren } from '../element/children.js';
+import { GLOBAL_STATE } from '../global-state.js';
 import type {
   CRCEventFocusOptions,
   CRCEventHandlers,
@@ -18,7 +19,7 @@ import {
   RenderingContext2D,
 } from '../types.js';
 import type { Constraints } from '../layout/types.js';
-import type { CRCTextChild } from '../types.js';
+import type { CRCRenderTransaction, CRCTextChild } from '../types.js';
 import { resolveLength } from '../style/resolve-length.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 import { pushClippingPath } from '../util/push-clipping-path.js';
@@ -34,7 +35,10 @@ interface LegacyTextStyle extends TextStyle {
 
 type ResolvedLegacyTextStyle = ResolvedTextStyle & { text: string };
 
-const materializedTextObjects = new WeakMap<object, string>();
+const materializedTextTransactions = new WeakMap<
+  CRCRenderTransaction,
+  WeakMap<object, string>
+>();
 
 function checkPropsForEvents(
   props: CRCEventHandlers,
@@ -50,7 +54,7 @@ function renderText(
   style: Readonly<ResolvedTextStyle>,
   ctx: RenderingContext2D,
 ) {
-  const text = materializeTextContent(props.children);
+  const text = materializeTextContent(props);
   const {
     font = '13px sans-serif',
     textBaseline = 'top',
@@ -152,7 +156,7 @@ export const Text = definePrimitive<
   }) as ResolvedTextStyle,
   measure: ({ props, style, constraints, service }) =>
     measureTextStyle(
-      materializeTextContent(props.children),
+      materializeTextContent(props),
       style,
       constraints,
       service,
@@ -213,15 +217,23 @@ function measureTextStyle(
   };
 }
 
-function materializeTextContent(children: CRCTextChild): string {
-  if (children !== null && typeof children === 'object') {
-    const cached = materializedTextObjects.get(children);
-    if (cached !== undefined) return cached;
-    const materialized = materializeTextChildren(children, 'Text');
-    materializedTextObjects.set(children, materialized);
-    return materialized;
+function materializeTextContent(props: Readonly<TextProps>): string {
+  const transaction = GLOBAL_STATE.renderTransaction;
+  if (!transaction) {
+    return materializeTextChildren(props.children, 'Text');
   }
-  return materializeTextChildren(children, 'Text');
+
+  let receivers = materializedTextTransactions.get(transaction);
+  if (!receivers) {
+    receivers = new WeakMap();
+    materializedTextTransactions.set(transaction, receivers);
+  }
+  const receiver = props as object;
+  const cached = receivers.get(receiver);
+  if (cached !== undefined) return cached;
+  const materialized = materializeTextChildren(props.children, 'Text');
+  receivers.set(receiver, materialized);
+  return materialized;
 }
 
 function renderLegacyText(
