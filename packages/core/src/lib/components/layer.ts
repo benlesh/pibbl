@@ -32,7 +32,11 @@ import {
 } from '../surface/transform.js';
 import { createLayerSurface } from '../surface/resolve-surface.js';
 import type { CRCElement } from '../element/types.js';
-import { haveSameLayerNodeTree } from './layer-node-equality.js';
+import {
+  haveSameLayerNodeTree,
+  snapshotLayerNodeTree,
+  type LayerNodeSnapshot,
+} from './layer-node-equality.js';
 
 export interface LayerProps {
   children: CRCNode;
@@ -55,6 +59,7 @@ interface LayerSlot {
   logicalWidth: number;
   logicalHeight: number;
   focusRenderRevision: number | undefined;
+  retainedTree: LayerNodeSnapshot | undefined;
 }
 
 function renderLayer(
@@ -102,6 +107,7 @@ function renderLayer(
       logicalWidth: width,
       logicalHeight: height,
       focusRenderRevision: undefined,
+      retainedTree: undefined,
     } satisfies LayerSlot;
     componentRefs.teardowns.add(() => {
       childInstance.eventParent = undefined;
@@ -140,7 +146,7 @@ function renderLayer(
     GLOBAL_STATE.componentIsMounting ||
     dimensionsChanged ||
     surfaceChanged ||
-    !haveSameLayerNodeTree(layerCRC.root, nextRoot) ||
+    !haveSameLayerNodeTree(slot.retainedTree, nextRoot) ||
     slot.focusRenderRevision !== focusRenderRevision;
   if (shouldRender) {
     if (layerCRC.surface.kind !== 'layer') {
@@ -159,6 +165,7 @@ function renderLayer(
       nextRoot,
       false,
     );
+    slot.retainedTree = snapshotLayerNodeTree(nextRoot);
   } else {
     parentInstance.eventRoot.focusPolicy?.replayRetainedSubtree(layerCRC);
   }

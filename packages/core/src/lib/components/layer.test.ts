@@ -155,6 +155,150 @@ describe('Layer children and retained subtree contract', () => {
     mounted.controller.dispose();
   });
 
+  it('invalidates and repaints when a reused mutable style object changes', () => {
+    const sharedStyle = {
+      width: 20,
+      height: 20,
+      fill: '#ef4444',
+    };
+    const scene = () => createElement(Layer, {
+      children: createElement(Rectangle, { style: sharedStyle }),
+    });
+    const mounted = mountNow(scene());
+    expect(pixel(mounted.canvas, 10, 10)).toEqual([239, 68, 68, 255]);
+
+    sharedStyle.fill = '#2563eb';
+    renderNow(mounted.canvas, scene());
+
+    expect(pixel(mounted.canvas, 10, 10)).toEqual([37, 99, 235, 255]);
+    mounted.controller.dispose();
+  });
+
+  it('invalidates when a reused descendant element mutable child array changes', () => {
+    const children: CRCNode[] = [
+      createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: '#ef4444' },
+      }),
+    ];
+    const descendant = createElement(Group, { children });
+    const scene = () => createElement(Layer, { children: descendant });
+    const mounted = mountNow(scene());
+    expect(pixel(mounted.canvas, 10, 10)).toEqual([239, 68, 68, 255]);
+
+    children.push(createElement(Rectangle, {
+      style: { width: 20, height: 20, fill: '#2563eb' },
+    }));
+    renderNow(mounted.canvas, scene());
+
+    expect(pixel(mounted.canvas, 10, 10)).toEqual([37, 99, 235, 255]);
+    mounted.controller.dispose();
+  });
+
+  it('invalidates when an enumerable symbol-keyed prop changes', () => {
+    const tone = Symbol('tone');
+    let renders = 0;
+    const Counted = defineComp<{ [tone]: string }>((props) => {
+      renders++;
+      return rect({
+        style: { width: 20, height: 20, fill: props[tone] },
+      });
+    });
+    const scene = (fill: string) => createElement(Layer, {
+      children: Counted({ [tone]: fill }),
+    });
+    const mounted = mountNow(scene('#ef4444'));
+    expect(renders).toBe(1);
+
+    renderNow(mounted.canvas, scene('#2563eb'));
+
+    expect(renders).toBe(2);
+    expect(pixel(mounted.canvas, 10, 10)).toEqual([37, 99, 235, 255]);
+    mounted.controller.dispose();
+  });
+
+  it('cache-hits for unchanged fresh structural trees', () => {
+    let renders = 0;
+    const Counted = defineComp<{ tone: string }>(({ tone }) => {
+      renders++;
+      return rect({ style: { width: 20, height: 20, fill: tone } });
+    });
+    const scene = () => createElement(Layer, {
+      children: createElement(Group, {
+        style: { translateX: 5 },
+        children: Counted({ tone: '#ef4444' }),
+      }),
+    });
+    const mounted = mountNow(scene());
+
+    renderNow(mounted.canvas, scene());
+
+    expect(renders).toBe(1);
+    mounted.controller.dispose();
+  });
+
+  it('does not execute an unchanged opaque nested iterable during equality', () => {
+    let iterations = 0;
+    let renders = 0;
+    const Counted = defineComp(() => {
+      renders++;
+      return rect({ style: { width: 20, height: 20, fill: '#ef4444' } });
+    });
+    const nestedIterable: Iterable<CRCNode> = {
+      *[Symbol.iterator]() {
+        iterations++;
+        yield Counted({});
+      },
+    };
+    const scene = () => createElement(Layer, {
+      children: createElement(Group, { children: nestedIterable }),
+    });
+    const mounted = mountNow(scene());
+    expect([iterations, renders]).toEqual([1, 1]);
+
+    renderNow(mounted.canvas, scene());
+
+    expect([iterations, renders]).toEqual([1, 1]);
+    mounted.controller.dispose();
+  });
+
+  it('commits snapshots after successful child renders and discards failed attempts', () => {
+    interface RevisionStyle extends SystemStyle {
+      revision: number;
+    }
+    const sharedStyle: RevisionStyle = { revision: 1 };
+    let shouldFail = false;
+    let renders = 0;
+    const Child = defineComp<{}, RevisionStyle>(() => {
+      renders++;
+      if (shouldFail) {
+        sharedStyle.revision = 4;
+        throw new Error('snapshot candidate failed');
+      }
+      sharedStyle.revision = 2;
+      return rect({ style: { width: 20, height: 20, fill: '#2563eb' } });
+    });
+    const scene = () => createElement(Layer, {
+      children: Child({ style: sharedStyle }),
+    });
+    const mounted = mountNow(scene());
+
+    renderNow(mounted.canvas, scene());
+    expect(renders).toBe(1);
+
+    sharedStyle.revision = 3;
+    shouldFail = true;
+    expect(() => renderNow(mounted.canvas, scene()))
+      .toThrowError('snapshot candidate failed');
+
+    shouldFail = false;
+    renderNow(mounted.canvas, scene());
+    renderNow(mounted.canvas, scene());
+
+    expect(renders).toBe(3);
+    expect(pixel(mounted.canvas, 10, 10)).toEqual([37, 99, 235, 255]);
+    mounted.controller.dispose();
+  });
+
   it('includes transparent policy metadata in retained-tree equality', () => {
     let renders = 0;
     const Counted = defineComp(() => {

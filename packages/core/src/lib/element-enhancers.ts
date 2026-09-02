@@ -68,6 +68,13 @@ export function haveSameElementEnhancers(
     );
 }
 
+/** @internal Reads identity-transparent policy descriptors for snapshots. */
+export function getElementEnhancerDescriptors(
+  element: CRCElement<any>,
+): readonly CRCElementEnhancerDescriptor[] {
+  return elementEnhancers.get(element) ?? [];
+}
+
 /** @internal */
 export function hasElementEnhancer(
   element: CRCElement<any>,
