@@ -9,9 +9,31 @@ import {
   learningSourcePaths,
   loadLearningSource,
 } from "../../../playground/src/learning-sources";
+import {
+  learningSourceContainsJsx,
+  validateLearningSourceText,
+} from "../../../tooling/learning-source-contract";
 import { clickLogicalPoint, pressKey } from "./support/user-input";
 
 const mountedControllers: Array<{ dispose: () => void }> = [];
+
+function expectValidNonJsxSource(source: string): void {
+  expect(() =>
+    validateLearningSourceText(source, {
+      authoring: "createElement",
+      label: "fixture",
+    }),
+  ).not.toThrow();
+}
+
+function expectInvalidNonJsxSource(source: string): void {
+  expect(() =>
+    validateLearningSourceText(source, {
+      authoring: "createElement",
+      label: "fixture",
+    }),
+  ).toThrow();
+}
 
 interface TextPaint {
   readonly text: string;
@@ -76,6 +98,205 @@ afterEach(() => {
 });
 
 describe("learning example catalog", () => {
+  it.each([
+    ["fragment", "<>fragment</>"],
+    ["member expression", "<CRC.Rectangle />"],
+    ["namespaced name", "<crc:Rectangle />"],
+  ])("detects JSX %s syntax structurally", (_name, source) => {
+    expect(learningSourceContainsJsx(source)).toBe(true);
+  });
+
+  it("does not confuse legal TypeScript with JSX", () => {
+    const source = `
+      import { crc, createElement, Group, type CRCController } from "@crc/core";
+      interface Widget { value: number }
+      function identity<T>(value: T): T { return value; }
+      export default function mount(canvas: HTMLCanvasElement): CRCController {
+        const widget = identity<Widget>({ value: 1 });
+        const asserted = widget as Widget;
+        const compared = asserted.value < 2 && asserted.value > 0;
+        return crc(canvas, createElement(Group, { key: compared ? "yes" : "no" }));
+      }
+    `;
+
+    expect(learningSourceContainsJsx(source)).toBe(false);
+    expectValidNonJsxSource(source);
+  });
+
+  it.each([
+    [
+      "namespace legacy member",
+      `
+        import * as CRC from "@crc/core";
+        type CRCController = CRC.CRCController;
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return CRC.crc(canvas, CRC.createElement(CRC.rect, { width: 10, height: 10 }));
+        }
+      `,
+    ],
+    [
+      "default import",
+      `
+        import CRC, { createElement, Group, type CRCController } from "@crc/core";
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return CRC.crc(canvas, createElement(Group, null));
+        }
+      `,
+    ],
+    [
+      "side-effect import",
+      `
+        import "./helper";
+        import { crc, createElement, Group, type CRCController } from "@crc/core";
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, createElement(Group, null));
+        }
+      `,
+    ],
+    [
+      "named helper import",
+      `
+        import { helper } from "./helper";
+        import { crc, createElement, Group, type CRCController } from "@crc/core";
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          helper();
+          return crc(canvas, createElement(Group, null));
+        }
+      `,
+    ],
+    [
+      "dynamic import",
+      `
+        import { crc, createElement, Group, type CRCController } from "@crc/core";
+        void import("./helper");
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, createElement(Group, null));
+        }
+      `,
+    ],
+    [
+      "aliased legacy import",
+      `
+        import { crc, createElement, rect as Draw, type CRCController } from "@crc/core";
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, createElement(Draw, { width: 10, height: 10 }));
+        }
+      `,
+    ],
+    [
+      "aliased legacy focus import",
+      `
+        import { crc, createElement, Group, withFocusManagement as FocusPolicy, type CRCController } from "@crc/core";
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, FocusPolicy(createElement(Group, null)));
+        }
+      `,
+    ],
+    [
+      "legacy local alias",
+      `
+        import { crc, createElement, Rectangle as rect, type CRCController } from "@crc/core";
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, createElement(rect, { width: 10, height: 10 }));
+        }
+      `,
+    ],
+    [
+      "type-only core import",
+      `
+        import type { CRCController } from "@crc/core";
+        function createElement(): never { throw new Error("unused"); }
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          void canvas;
+          return createElement();
+        }
+      `,
+    ],
+    [
+      "source-marker scaffolding",
+      `
+        import { crc, createElement, Group, type CRCController } from "@crc/core";
+        const SOURCE_ID = "fixture";
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, createElement(Group, { key: SOURCE_ID }));
+        }
+      `,
+    ],
+    [
+      "test-call scaffolding",
+      `
+        import { crc, createElement, Group, type CRCController } from "@crc/core";
+        function test(): void {}
+        test();
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, createElement(Group, null));
+        }
+      `,
+    ],
+  ])("rejects the %s module shape", (_name, source) => {
+    expectInvalidNonJsxSource(source);
+  });
+
+  it("ignores legacy-looking words outside resolved CRC authoring", () => {
+    const source = `
+      import { crc, createElement, Group, type CRCController } from "@crc/core";
+      interface Notes { text: string; render: string }
+      export default function mount(canvas: HTMLCanvasElement): CRCController {
+        const notes: Notes = { text: "defineComp", render: "withFocusManagement" };
+        return crc(canvas, createElement(Group, { key: notes.text }));
+      }
+    `;
+
+    expectValidNonJsxSource(source);
+  });
+
+  it.each([
+    [
+      "aliased Text style.text",
+      "jsx" as const,
+      `
+        import { crc, Text as Label, type CRCController } from "@crc/core";
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, <Label style={{ text: "legacy" }} />);
+        }
+      `,
+    ],
+    [
+      "aliased Layer render prop",
+      "jsx" as const,
+      `
+        import { crc, Layer as Surface, Rectangle, type CRCController } from "@crc/core";
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, <Surface render={<Rectangle style={{ width: 10, height: 10 }} />} />);
+        }
+      `,
+    ],
+    [
+      "createElement Text style.text",
+      "createElement" as const,
+      `
+        import { crc, createElement, Text as Label, type CRCController } from "@crc/core";
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, createElement(Label, { style: { text: "legacy" } }));
+        }
+      `,
+    ],
+    [
+      "createElement Layer render prop",
+      "createElement" as const,
+      `
+        import { crc, createElement, Group, Layer as Surface, type CRCController } from "@crc/core";
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, createElement(Surface, { render: createElement(Group, null) }));
+        }
+      `,
+    ],
+  ])("rejects %s through resolved component aliases", (_name, authoring, source) => {
+    expect(() =>
+      validateLearningSourceText(source, { authoring, label: "fixture" }),
+    ).toThrow();
+  });
+
   it("rejects learning sources that are not TSX", () => {
     const [first, ...rest] = learningExampleCatalog;
     if (!first) throw new Error("The learning catalog must not be empty.");
@@ -135,59 +356,52 @@ describe("learning example catalog", () => {
     ).toBe(true);
 
     const source = await loadLearningSource(nonJsx!);
+    expect(() =>
+      validateLearningSourceText(source, {
+        authoring: "createElement",
+        label: nonJsx!.slug,
+      }),
+    ).not.toThrow();
     expect(source).toContain("createElement(");
     expect(source).toMatch(/crc\(canvas,\s*createElement\(/u);
-    expect(source).not.toMatch(/<[A-Z][A-Za-z0-9]*(?:\s|\/>|>)/u);
-    expect(source).not.toMatch(/<>|<\/>/u);
   });
 
-  it("uses canonical component authoring throughout every learning source", async () => {
-    const forbiddenPublicNames = [
-      "defineComp",
-      "rect",
-      "path",
-      "svgPath",
-      "line",
-      "horizontalLine",
-      "verticalLine",
-      "text",
-      "img",
-      "g",
-      "clip",
-      "layer",
-      "absolute",
-      "overlay",
-      "flow",
-      "flex",
-      "grid",
-      "withFocusManagement",
-      "withKeyboardNavigation",
-    ];
+  it.each([
+    ["createElement on JSX", "getting-started", "createElement"],
+    ["non-jsx on JSX", "getting-started", "non-jsx"],
+    ["duplicate reserved tag", "create-element-authoring", "createElement"],
+    ["duplicate ordinary tag", "rectangle", "Rectangle"],
+  ])("rejects %s", (_name, slug, tag) => {
+    const invalidCatalog = learningExampleCatalog.map((entry) =>
+      entry.slug === slug ? { ...entry, api: [...entry.api, tag] } : entry,
+    );
 
+    expect(() => validateLearningExampleCatalog(invalidCatalog)).toThrow();
+  });
+
+  it.each(["createElement", "non-jsx"])(
+    "requires the non-JSX lesson to keep its %s tag",
+    (tag) => {
+      const invalidCatalog = learningExampleCatalog.map((entry) =>
+        entry.slug === "create-element-authoring"
+          ? { ...entry, api: entry.api.filter((value) => value !== tag) }
+          : entry,
+      );
+
+      expect(() => validateLearningExampleCatalog(invalidCatalog)).toThrow();
+    },
+  );
+
+  it("uses canonical component authoring throughout every learning source", async () => {
     for (const entry of learningExampleCatalog) {
       expect(entry.source.path, entry.slug).toMatch(/\.example\.tsx$/u);
       const source = await loadLearningSource(entry);
-      expect(source, entry.slug).toContain('from "@crc/core"');
-      expect(source, entry.slug).not.toMatch(
-        /\b(?:defineComp|withFocusManagement|withKeyboardNavigation)\b/u,
-      );
-      expect(source, entry.slug).not.toMatch(/\btext\s*:/u);
-      expect(source, entry.slug).not.toMatch(/\brender\s*:/u);
-
-      for (const name of forbiddenPublicNames) {
-        const directCall = new RegExp(`(?<![.\\w])${name}\\s*\\(`, "u");
-        const importedName = new RegExp(`\\b${name}\\b(?=[\\s,}])`, "u");
-        const coreImport =
-          source.match(/import[\s\S]*?from ["']@crc\/core["'];/u)?.[0] ?? "";
-        expect(coreImport, `${entry.slug} imports ${name}`).not.toMatch(
-          importedName,
-        );
-        expect(source, `${entry.slug} calls ${name}`).not.toMatch(directCall);
-      }
-
-      if ((entry as { authoring?: string }).authoring === "jsx") {
-        expect(source, entry.slug).toMatch(/<[A-Z][A-Za-z0-9]*(?:\s|\/>|>)/u);
-      }
+      expect(() =>
+        validateLearningSourceText(source, {
+          authoring: entry.authoring,
+          label: entry.slug,
+        }),
+      ).not.toThrow();
     }
   });
 

@@ -46,6 +46,7 @@
   "devDependencies": {
     "@babel/core": "catalog:",
     "@babel/eslint-parser": "catalog:",
+    "@babel/parser": "catalog:",
     "@eslint/js": "catalog:",
     "@crc/scenarios": "workspace:*",
     "@types/node": "catalog:",

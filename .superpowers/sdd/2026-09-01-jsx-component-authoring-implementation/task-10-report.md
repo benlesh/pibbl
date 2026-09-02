@@ -261,3 +261,153 @@ visual baseline was rewritten.
   screenshots. Baselines were not updated. Source and built live editing were
   instead verified semantically with fresh preview mounts and diagnostics.
 - Fresh evidence is Node 26.7.0 only. Node 24 LTS remains unverified under R8.
+
+## Fix Round 1 — syntax-aware catalog enforcement
+
+Review of `d1ae6cb2c34d7214794a8677a96b01429d98922a` did not approve the
+catalog enforcement. The migrated lesson sources were clean, but the guard used
+regular expressions for JSX and imports, and reserved authoring tags were not
+exclusive. This round replaces those guards without changing any lesson source,
+scene, test-lab fixture, or generated index content.
+
+### Shared AST source contract
+
+`tooling/learning-source-contract.ts` is now the single source-text validator
+used by both `tooling/scenario-catalog.ts` and the executable browser tests. It
+uses the existing cataloged Babel parser with TypeScript and JSX plugins. Babel
+is a root development dependency for the tool/test boundary; the validator is
+not imported by the Studio or scenario runtime, so it adds no production
+catalog bundle path.
+
+The validator now:
+
+- detects every `JSXElement` and `JSXFragment`, including fragment, member, and
+  namespaced element names;
+- parses legal TypeScript generics, `as` assertions, and comparisons without
+  treating angle brackets as JSX;
+- accepts only static `ImportDeclaration` nodes from `@crc/core`, with named
+  specifiers and at least one value import; inline named type specifiers remain
+  valid;
+- rejects namespace, default, side-effect, external/helper, dynamic, and
+  type-only module shapes;
+- resolves imported and local binding names so aliased legacy factories and
+  focus enhancers remain forbidden;
+- follows namespace member syntax before rejecting the namespace import shape,
+  including `CRC.rect`;
+- recognizes `createElement` calls through the resolved core import rather than
+  arbitrary text;
+- detects legacy `Text` `style.text` and `Layer` `render` only when the JSX or
+  `createElement` component resolves to those core imports, including aliases;
+- validates the canonical default `mount(canvas)` signature structurally; and
+- preserves learning/test-lab separation through AST-level `SOURCE_ID` and
+  test-runner call detection while ignoring those words in strings or ordinary
+  type/object properties.
+
+Catalog metadata validation now rejects duplicate API tags globally. It also
+requires the sole `authoring: "createElement"` entry to contain each reserved
+`createElement` and `non-jsx` tag exactly once, and rejects either reserved tag
+on every JSX entry.
+
+### Fix-round TDD evidence
+
+A behavior-preserving centralization was green before adding the new fixtures:
+
+```text
+Focused learning suite: 53 passed
+Catalog: 42 lessons and 16 test labs validated
+```
+
+The first adversarial RED run then exercised fragments, JSX member/namespaced
+names, legal TypeScript generics/assertions/comparisons, namespace/default/
+side-effect/helper/dynamic/type-only imports, legacy aliases, non-syntax legacy
+words, extra reserved tags, and duplicate tags:
+
+```text
+Test Files  1 failed (1)
+Tests       14 failed | 58 passed (72)
+```
+
+After the initial AST implementation, a second RED preserved a requirement
+that had existed in the old tooling guard but was not yet centralized:
+
+```text
+Test Files  1 failed (1)
+Tests       2 failed | 77 passed (79)
+```
+
+Those two failures were the `SOURCE_ID` marker and a test-runner call fixture.
+The AST implementation now rejects both without scanning strings. The final
+focused result, including binding-aware `Text`, `Layer`, factory, and focus
+alias fixtures, is:
+
+```text
+Test Files  1 passed (1)
+Tests       79 passed (79)
+```
+
+### Fix-round verification
+
+```sh
+corepack pnpm@11.21.0 scenarios:check
+corepack pnpm@11.21.0 typecheck
+corepack pnpm@11.21.0 lint
+```
+
+```text
+Catalog: 42 lessons, 16 test labs, and docs/scenario-index.md validated
+tsc --noEmit: passed
+ESLint and Prettier: passed
+```
+
+```sh
+corepack pnpm@11.21.0 test:ci
+```
+
+```text
+Test Files  83 passed (83)
+Tests       951 passed | 2 skipped (953)
+Duration    21.56s
+```
+
+```sh
+corepack pnpm@11.21.0 playground:build
+corepack pnpm@11.21.0 playground:build:built
+```
+
+```text
+Studio declaration/runtime verifier: passed in both commands
+Source mode: 1308 modules transformed; built in 867ms
+Built mode: 1209 modules transformed; built in 876ms
+```
+
+```sh
+corepack pnpm@11.21.0 test:package-consumer
+corepack pnpm@11.21.0 test:package-consumer:packed
+corepack pnpm@11.21.0 test:smoke:built
+git diff --check
+```
+
+```text
+Workspace Bundler, NodeNext, and runtime consumer: passed
+Packed declarations, exports, deep-import, no-source, and optimized focus
+consumer: passed (113966 no-focus bytes; 137630 with-focus bytes)
+Built browser smoke: 1 file and 1 test passed
+git diff --check: no output
+```
+
+### Fix-round self-review and concerns
+
+- The browser suite and catalog tool call the same exported validator; no JSX,
+  import, alias, or legacy-property regular expression remains duplicated.
+- Parser traversal ignores locations, comments, tokens, and parser metadata.
+  Legacy decisions use AST node kinds and resolved bindings, not source words.
+- Inline `type` specifiers on an approved named value import remain supported,
+  matching all 42 real lessons. Standalone type-only imports are rejected
+  because a lesson must import at least one executable CRC value.
+- Reserved tags are checked per entry before the global one-authoring-lesson and
+  adjacency rule, so an extra JSX tag cannot be hidden by a valid non-JSX entry.
+- No migrated lesson, test-lab source, catalog prose, relationship, canvas size,
+  generated documentation, runtime package, or visual baseline changed in this
+  round.
+- Fresh evidence remains Node 26.7.0 rather than the canonical Node 24 LTS line
+  recorded by R8.

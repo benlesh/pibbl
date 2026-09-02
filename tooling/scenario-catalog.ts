@@ -13,6 +13,7 @@ import {
 import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { relative, resolve } from 'node:path';
 import { format } from 'prettier';
+import { validateLearningSourceText } from './learning-source-contract';
 
 const workspaceRoot = process.cwd();
 const scenarioDirectory = resolve(workspaceRoot, 'packages/scenarios/src');
@@ -105,10 +106,6 @@ function renderIndex(): string {
   return `${lines.join('\n')}\n`;
 }
 
-const LEGACY_LEARNING_AUTHORING =
-  /\b(?:defineComp|rect|path|svgPath|line|horizontalLine|verticalLine|text|img|g|clip|layer|absolute|overlay|flow|flex|grid|withFocusManagement|withKeyboardNavigation)\b/u;
-const JSX_ELEMENT_SYNTAX = /<[A-Z][A-Za-z0-9]*(?:\s|\/>|>)/u;
-
 async function validateSources(): Promise<void> {
   validateScenarioCatalog(scenarioCatalog);
   validateLearningExampleCatalog(learningExampleCatalog);
@@ -170,30 +167,10 @@ async function validateSources(): Promise<void> {
     if (!entry.source.path.endsWith('.example.tsx')) {
       throw new Error(`Learning example "${entry.slug}" must use a .example.tsx source path.`);
     }
-    const imports = [...sourceText.matchAll(/from\s+['"]([^'"]+)['"]/gu)].map(match => match[1]);
-    if (!imports.length || imports.some(moduleName => moduleName !== '@crc/core')) {
-      throw new Error(`Learning example "${entry.slug}" may import only from @crc/core.`);
-    }
-    if (!/export\s+default\s+function\s+mount\s*\(canvas:\s*HTMLCanvasElement\)\s*:\s*CRCController/gu.test(sourceText)) {
-      throw new Error(`Learning example "${entry.slug}" must export the canonical mount(canvas) contract.`);
-    }
-    if (/SOURCE_ID|\b(?:describe|expect|it|test)\s*\(|vitest/gu.test(sourceText)) {
-      throw new Error(`Learning example "${entry.slug}" contains test or source-marker scaffolding.`);
-    }
-    const coreImport = sourceText.match(/import[\s\S]*?from ['"]@crc\/core['"];/u)?.[0] ?? '';
-    if (LEGACY_LEARNING_AUTHORING.test(coreImport)) {
-      throw new Error(`Learning example "${entry.slug}" imports legacy component authoring.`);
-    }
-    if (/\b(?:defineComp|withFocusManagement|withKeyboardNavigation)\b|\btext\s*:|\brender\s*:/u.test(sourceText)) {
-      throw new Error(`Learning example "${entry.slug}" contains legacy component authoring.`);
-    }
-    if (entry.authoring === 'createElement') {
-      if (!sourceText.includes('createElement(') || JSX_ELEMENT_SYNTAX.test(sourceText)) {
-        throw new Error(`Non-JSX learning example "${entry.slug}" must use only createElement.`);
-      }
-    } else if (entry.authoring !== 'jsx' || !JSX_ELEMENT_SYNTAX.test(sourceText)) {
-      throw new Error(`JSX learning example "${entry.slug}" must contain descriptive JSX.`);
-    }
+    validateLearningSourceText(sourceText, {
+      authoring: entry.authoring,
+      label: `Learning example "${entry.slug}"`,
+    });
     await loadLearningExample(entry);
   }
 }

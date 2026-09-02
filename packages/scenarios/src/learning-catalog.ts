@@ -1282,6 +1282,22 @@ export function validateLearningExampleCatalog(
         `Learning example "${entry.slug}" has incomplete teaching metadata.`,
       );
     }
+    if (new Set(entry.api).size !== entry.api.length) {
+      throw new Error(
+        `Learning example "${entry.slug}" has duplicate public API tags.`,
+      );
+    }
+    const hasCreateElementTag = entry.api.includes("createElement");
+    const hasNonJsxTag = entry.api.includes("non-jsx");
+    if (
+      entry.authoring === "createElement"
+        ? !hasCreateElementTag || !hasNonJsxTag
+        : hasCreateElementTag || hasNonJsxTag
+    ) {
+      throw new Error(
+        `Learning example "${entry.slug}" has reserved authoring tags that disagree with its authoring mode.`,
+      );
+    }
     if (entry.canvas.width <= 0 || entry.canvas.height <= 0) {
       throw new Error(
         `Learning example "${entry.slug}" has invalid Canvas dimensions.`,
@@ -1300,9 +1316,7 @@ export function validateLearningExampleCatalog(
   );
   if (
     createElementEntries.length !== 1 ||
-    catalog[gettingStartedIndex + 1] !== createElementEntries[0] ||
-    !createElementEntries[0]?.api.includes("createElement") ||
-    !createElementEntries[0]?.api.includes("non-jsx")
+    catalog[gettingStartedIndex + 1] !== createElementEntries[0]
   ) {
     throw new Error(
       "The learning catalog must place exactly one createElement/non-jsx lesson immediately after getting started.",
