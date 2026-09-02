@@ -24,7 +24,9 @@ async function renderLearningExample(slug: string): Promise<{
   readonly controller: { dispose: () => void };
   readonly textPaints: readonly TextPaint[];
 }> {
-  const entry = learningExampleCatalog.find((candidate) => candidate.slug === slug);
+  const entry = learningExampleCatalog.find(
+    (candidate) => candidate.slug === slug,
+  );
   if (!entry) throw new Error(`Missing learning example ${slug}.`);
 
   const canvas = document.createElement("canvas");
@@ -54,7 +56,11 @@ async function renderLearningExample(slug: string): Promise<{
   return { canvas, controller, textPaints };
 }
 
-function pixelAt(canvas: HTMLCanvasElement, x: number, y: number): readonly number[] {
+function pixelAt(
+  canvas: HTMLCanvasElement,
+  x: number,
+  y: number,
+): readonly number[] {
   return Array.from(canvas.getContext("2d")!.getImageData(x, y, 1, 1).data);
 }
 
@@ -70,25 +76,27 @@ afterEach(() => {
 });
 
 describe("learning example catalog", () => {
-  it("temporarily accepts both TypeScript and TSX source paths", () => {
+  it("rejects learning sources that are not TSX", () => {
     const [first, ...rest] = learningExampleCatalog;
     if (!first) throw new Error("The learning catalog must not be empty.");
-    const mixedCatalog = [
+    const invalidCatalog = [
       {
         ...first,
-        source: { path: first.source.path.replace(/\.ts$/u, ".tsx") },
+        source: { path: first.source.path.replace(/\.tsx$/u, ".ts") },
       },
       ...rest,
     ];
 
-    expect(validateLearningExampleCatalog(mixedCatalog)).toBe(mixedCatalog);
+    expect(() => validateLearningExampleCatalog(invalidCatalog)).toThrow(
+      /\.example\.tsx/u,
+    );
   });
 
-  it("contains 41 unique, ordered, source-backed routes", () => {
+  it("contains 42 unique, ordered, source-backed routes", () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(41);
+    expect(learningExampleCatalog).toHaveLength(42);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -100,6 +108,87 @@ describe("learning example catalog", () => {
         (left, right) => left - right,
       ),
     );
+  });
+
+  it("teaches one complete createElement scene immediately after getting started", async () => {
+    const authoringEntries =
+      learningExampleCatalog as readonly ((typeof learningExampleCatalog)[number] & {
+        readonly authoring?: "jsx" | "createElement";
+      })[];
+    const nonJsxEntries = authoringEntries.filter(
+      (entry) => entry.authoring === "createElement",
+    );
+
+    expect(nonJsxEntries).toHaveLength(1);
+    const [nonJsx] = nonJsxEntries;
+    expect(nonJsx).toBeDefined();
+    expect(nonJsx?.api).toEqual(
+      expect.arrayContaining(["createElement", "non-jsx"]),
+    );
+    expect(
+      learningExampleCatalog.map((entry) => entry.slug).slice(0, 2),
+    ).toEqual(["getting-started", nonJsx?.slug]);
+    expect(
+      authoringEntries
+        .filter((entry) => entry !== nonJsx)
+        .every((entry) => entry.authoring === "jsx"),
+    ).toBe(true);
+
+    const source = await loadLearningSource(nonJsx!);
+    expect(source).toContain("createElement(");
+    expect(source).toMatch(/crc\(canvas,\s*createElement\(/u);
+    expect(source).not.toMatch(/<[A-Z][A-Za-z0-9]*(?:\s|\/>|>)/u);
+    expect(source).not.toMatch(/<>|<\/>/u);
+  });
+
+  it("uses canonical component authoring throughout every learning source", async () => {
+    const forbiddenPublicNames = [
+      "defineComp",
+      "rect",
+      "path",
+      "svgPath",
+      "line",
+      "horizontalLine",
+      "verticalLine",
+      "text",
+      "img",
+      "g",
+      "clip",
+      "layer",
+      "absolute",
+      "overlay",
+      "flow",
+      "flex",
+      "grid",
+      "withFocusManagement",
+      "withKeyboardNavigation",
+    ];
+
+    for (const entry of learningExampleCatalog) {
+      expect(entry.source.path, entry.slug).toMatch(/\.example\.tsx$/u);
+      const source = await loadLearningSource(entry);
+      expect(source, entry.slug).toContain('from "@crc/core"');
+      expect(source, entry.slug).not.toMatch(
+        /\b(?:defineComp|withFocusManagement|withKeyboardNavigation)\b/u,
+      );
+      expect(source, entry.slug).not.toMatch(/\btext\s*:/u);
+      expect(source, entry.slug).not.toMatch(/\brender\s*:/u);
+
+      for (const name of forbiddenPublicNames) {
+        const directCall = new RegExp(`(?<![.\\w])${name}\\s*\\(`, "u");
+        const importedName = new RegExp(`\\b${name}\\b(?=[\\s,}])`, "u");
+        const coreImport =
+          source.match(/import[\s\S]*?from ["']@crc\/core["'];/u)?.[0] ?? "";
+        expect(coreImport, `${entry.slug} imports ${name}`).not.toMatch(
+          importedName,
+        );
+        expect(source, `${entry.slug} calls ${name}`).not.toMatch(directCall);
+      }
+
+      if ((entry as { authoring?: string }).authoring === "jsx") {
+        expect(source, entry.slug).toMatch(/<[A-Z][A-Za-z0-9]*(?:\s|\/>|>)/u);
+      }
+    }
   });
 
   it("contains exactly the four canonical layout lessons", async () => {
@@ -136,15 +225,18 @@ describe("learning example catalog", () => {
       x: 360,
       y: 210,
     },
-  ])("centers the $slug label on its intended box", async ({ slug, label, x, y }) => {
-    const { textPaints } = await renderLearningExample(slug);
+  ])(
+    "centers the $slug label on its intended box",
+    async ({ slug, label, x, y }) => {
+      const { textPaints } = await renderLearningExample(slug);
 
-    expect(textPaints.find((paint) => paint.text === label)).toEqual({
-      text: label,
-      x,
-      y,
-    });
-  });
+      expect(textPaints.find((paint) => paint.text === label)).toEqual({
+        text: label,
+        x,
+        y,
+      });
+    },
+  );
 
   it.each([
     {
@@ -182,17 +274,17 @@ describe("learning example catalog", () => {
       .flatMap((entry) => entry.api);
     expect(new Set(drawingAndComposition)).toEqual(
       new Set([
-        "rect",
-        "path",
-        "svgPath",
-        "line",
-        "horizontalLine",
-        "verticalLine",
-        "text",
-        "img",
-        "g",
-        "clip",
-        "layer",
+        "Rectangle",
+        "Path",
+        "SvgPath",
+        "Line",
+        "HorizontalLine",
+        "VerticalLine",
+        "Text",
+        "Image",
+        "Group",
+        "Clip",
+        "Layer",
       ]),
     );
 

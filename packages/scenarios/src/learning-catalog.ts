@@ -17,19 +17,22 @@ export const learningSections = [
   {
     id: "drawing",
     label: "Drawing",
-    description: "Build pictures from focused Canvas primitives.",
+    description:
+      "Build pictures with descriptive primitives and explicit local style objects.",
     order: 2,
   },
   {
     id: "composition",
     label: "Composition",
-    description: "Transform, crop, and cache groups of marks.",
+    description:
+      "Pass normal children through groups, clips, and offscreen layers.",
     order: 3,
   },
   {
     id: "layout",
     label: "Layout",
-    description: "Arrange reusable Canvas components with declared boxes.",
+    description:
+      "Arrange declared boxes and distinguish specified style from crcLayoutBox allocation.",
     order: 4,
   },
   {
@@ -49,7 +52,7 @@ export const learningSections = [
     id: "keyboard-focus",
     label: "Keyboard and focus",
     description:
-      "Add logical focus, keyboard activation, and directional navigation.",
+      "Add logical focus and navigation while the Canvas remains the only native focus host.",
     order: 7,
   },
   {
@@ -62,18 +65,15 @@ export const learningSections = [
 
 interface LearningDraft extends Omit<
   LearningExampleMetadata,
-  "relationships" | "source"
+  "authoring" | "relationships" | "source"
 > {
+  authoring?: "jsx" | "createElement";
   related?: readonly string[];
   load: () => Promise<unknown>;
 }
 
-function sourcePath(
-  section: LearningSectionId,
-  slug: string,
-  extension: "ts" | "tsx" = "ts",
-): string {
-  return `packages/scenarios/src/learning/${section}/${slug}.example.${extension}`;
+function sourcePath(section: LearningSectionId, slug: string): string {
+  return `packages/scenarios/src/learning/${section}/${slug}.example.tsx`;
 }
 
 function isLearningSourcePath(
@@ -81,10 +81,7 @@ function isLearningSourcePath(
   section: LearningSectionId,
   slug: string,
 ): boolean {
-  return (
-    path === sourcePath(section, slug, "ts") ||
-    path === sourcePath(section, slug, "tsx")
-  );
+  return path === sourcePath(section, slug);
 }
 
 const drafts = [
@@ -96,22 +93,48 @@ const drafts = [
     order: 10,
     summary:
       "Mount a tiny poster, then see how CRC turns component functions into one disposable Canvas scene.",
-    api: ["crc", "defineComp", "rect", "text"],
+    api: ["crc", "Rectangle", "Text"],
     objectives: [
-      "Create a component with defineComp and return drawing elements.",
-      "Mount the component with crc and keep its controller for cleanup.",
+      "Write an ordinary named function that returns descriptive CRC JSX.",
+      "Add stateful click feedback, then mount the component with crc and retain its controller for cleanup.",
     ],
     prompts: {
       gesture: "Click the cobalt card to change its message.",
       code: "Change the card color or replace “HELLO” with your own title.",
     },
     apiNotes: [
-      "`defineComp` turns a render function into an element factory.",
+      "A CRC component is a plain synchronous function; no wrapper or registration call is required.",
       "`crc` owns one Canvas mount and returns an idempotent controller with `dispose()`.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["rectangle", "text", "click"],
     load: () => import("./learning/start/getting-started.example"),
+  },
+  {
+    slug: "create-element-authoring",
+    title: "Authoring without JSX",
+    shortTitle: "Without JSX",
+    section: "start",
+    order: 15,
+    authoring: "createElement",
+    summary:
+      "Build the same kind of interactive CRC tree with the explicit createElement API and no JSX syntax.",
+    api: ["createElement", "non-jsx", "Group", "Rectangle", "Text"],
+    objectives: [
+      "Use createElement(type, props, ...children) for components, composition, and text content.",
+      "Mount a complete non-JSX scene that shares CRC's state, event, identity, and disposal semantics.",
+    ],
+    prompts: {
+      gesture: "Click the gold card to toggle its non-JSX message.",
+      code: "Add another Text child with createElement, or change one style object.",
+    },
+    apiNotes: [
+      "`createElement` is the complete non-JSX alternative and produces the same CRC element protocol as JSX.",
+      "Pass dynamic lists as one array child; multiple variadic children remain in source order.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["getting-started", "group", "text"],
+    load: () => import("./learning/start/create-element-authoring.example"),
   },
   {
     slug: "rectangle",
@@ -121,9 +144,9 @@ const drafts = [
     order: 20,
     summary:
       "Use rectangles as bold blocks of color, outlined frames, and precise layout anchors.",
-    api: ["rect"],
+    api: ["Rectangle"],
     objectives: [
-      "Position and size a rectangle.",
+      "Declare rectangle geometry and paint inside one explicit style object.",
       "Combine fill, stroke, alpha, and pixel-grid alignment.",
     ],
     prompts: {
@@ -132,7 +155,7 @@ const drafts = [
     },
     apiNotes: [
       "A rectangle can be fill-only, stroke-only, or both.",
-      "`alignToPixelGrid` helps thin borders land crisply.",
+      "Visual and layout values stay local under `style`; event handlers remain separate props.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["path", "click", "overlap-and-paint-order"],
@@ -146,7 +169,7 @@ const drafts = [
     order: 30,
     summary:
       "Draw custom geometry with the browser’s Path2D vocabulary and let CRC paint it.",
-    api: ["path"],
+    api: ["Path"],
     objectives: [
       "Construct a reusable Path2D.",
       "Paint and target custom filled or stroked geometry.",
@@ -170,7 +193,7 @@ const drafts = [
     section: "drawing",
     order: 40,
     summary: "Bring compact SVG path data straight into a Canvas composition.",
-    api: ["svgPath"],
+    api: ["SvgPath"],
     objectives: [
       "Render an SVG `d` string without an SVG element.",
       "Style the resulting shape with Canvas fill and stroke properties.",
@@ -195,7 +218,7 @@ const drafts = [
     order: 50,
     summary:
       "Connect a sequence of coordinates into expressive polylines and diagrams.",
-    api: ["line"],
+    api: ["Line"],
     objectives: [
       "Draw a multi-segment line from coordinate pairs.",
       "Separate visible stroke width from a forgiving mouse hit width.",
@@ -220,7 +243,7 @@ const drafts = [
     order: 60,
     summary:
       "Place crisp horizontal rules without repeating endpoint coordinates.",
-    api: ["horizontalLine"],
+    api: ["HorizontalLine"],
     objectives: [
       "Draw a rule from left to right.",
       "Align narrow strokes to the Canvas pixel grid.",
@@ -244,7 +267,7 @@ const drafts = [
     section: "drawing",
     order: 70,
     summary: "Build dividers, ticks, and rhythm with a one-axis line helper.",
-    api: ["verticalLine"],
+    api: ["VerticalLine"],
     objectives: [
       "Draw a rule from top to bottom.",
       "Use optional bounds and pixel-grid alignment.",
@@ -255,7 +278,7 @@ const drafts = [
     },
     apiNotes: [
       "Omitted `top` or `bottom` values use the Canvas bounds.",
-      "Event props and cursor styling work the same way as on `line`.",
+      "Event props and cursor styling work the same way as on `Line`.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["line", "horizontal-line"],
@@ -269,17 +292,17 @@ const drafts = [
     order: 80,
     summary:
       "Set type directly on Canvas with wrapping, alignment, clipping, and overflow choices.",
-    api: ["text"],
+    api: ["Text"],
     objectives: [
       "Control font, alignment, baseline, and paint.",
-      "Constrain copy with width, height, wrapping, and overflow.",
+      "Provide copy as Text child content, then constrain it with width, height, wrapping, and overflow style.",
     ],
     prompts: {
       gesture: "Click the headline to cycle its accent.",
       code: "Change the body copy and compare `ellipsis` with `clip`.",
     },
     apiNotes: [
-      "Fonts follow the Canvas `font` shorthand.",
+      "Text concatenates synchronous child content while fonts follow the Canvas `font` shorthand.",
       "Wrapped text uses `lineHeight`; constrained overflow can be visible, squished, ellipsized, or clipped.",
     ],
     canvas: { width: 720, height: 420 },
@@ -294,7 +317,7 @@ const drafts = [
     order: 90,
     summary:
       "Load an image source into the scene and frame it with intentional geometry.",
-    api: ["img"],
+    api: ["Image"],
     objectives: [
       "Render an image from a URL or data URL.",
       "Choose explicit dimensions, alpha, border, and interaction props.",
@@ -318,7 +341,7 @@ const drafts = [
     section: "composition",
     order: 100,
     summary: "Move, rotate, scale, or skew related marks as one visual unit.",
-    api: ["g"],
+    api: ["Group"],
     objectives: [
       "Apply one transform to a set of children.",
       "Understand transform order and rotation origins.",
@@ -329,7 +352,7 @@ const drafts = [
     },
     apiNotes: [
       "Groups affect drawing and hit testing together.",
-      "Transforms are composed in scale, rotation, translation, then skew order.",
+      "Group receives normal JSX children in source paint order; transforms compose as scale, rotation, translation, then skew.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["svg-path", "clip", "transformed-clipped-layered-targets"],
@@ -343,7 +366,7 @@ const drafts = [
     order: 110,
     summary:
       "Crop children to a reusable path while keeping interaction geometry honest.",
-    api: ["clip"],
+    api: ["Clip"],
     objectives: [
       "Limit a group of children to a Path2D boundary.",
       "Use nonzero or even-odd fill rules for cutouts.",
@@ -355,7 +378,7 @@ const drafts = [
     },
     apiNotes: [
       "Nested clips intersect, matching Canvas clipping behavior.",
-      "Paint and mouse targeting are both constrained by active clips.",
+      "Clip receives children directly, and both paint and targeting are constrained by its active path.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["group", "layer", "transformed-clipped-layered-targets"],
@@ -369,7 +392,7 @@ const drafts = [
     order: 120,
     summary:
       "Render a subtree on an offscreen Canvas, then compose it into the main scene.",
-    api: ["layer"],
+    api: ["Layer"],
     objectives: [
       "Cache a component subtree in an offscreen layer.",
       "Control layer dimensions and preserve child interaction.",
@@ -379,7 +402,7 @@ const drafts = [
       code: "Change the layer size and move the badge within its bounds.",
     },
     apiNotes: [
-      "A layer receives one component element through `render`.",
+      "Layer receives normal children and caches their offscreen result without retaining drawing commands.",
       "Layer children still participate in the root scene’s global paint and target order.",
     ],
     canvas: { width: 720, height: 420 },
@@ -392,8 +415,9 @@ const drafts = [
     shortTitle: "Absolute + overlay",
     section: "layout",
     order: 121,
-    summary: "Place one panel explicitly, then align reusable children inside its overlay.",
-    api: ["absolute", "overlay"],
+    summary:
+      "Place one panel explicitly, then align reusable children inside its overlay.",
+    api: ["Absolute", "Overlay"],
     objectives: [
       "Position a child with `left` and `top` inside an absolute layout.",
       "Align overlapping children with overlay container and item styles.",
@@ -416,8 +440,9 @@ const drafts = [
     shortTitle: "Flow",
     section: "layout",
     order: 122,
-    summary: "Arrange declared and measured items in a compact wrapping Canvas flow.",
-    api: ["flow", "text"],
+    summary:
+      "Arrange declared and measured items in a compact wrapping Canvas flow.",
+    api: ["Flow", "Text"],
     objectives: [
       "Choose horizontal flow, gaps, and wrapping.",
       "Mix declared boxes with text measured by CRC.",
@@ -440,19 +465,20 @@ const drafts = [
     shortTitle: "Flex",
     section: "layout",
     order: 123,
-    summary: "Distribute positive and negative free space with CRC's CSS-compatible Flex subset.",
-    api: ["flex"],
+    summary:
+      "Distribute positive and negative free space with CRC's CSS-compatible Flex subset.",
+    api: ["Flex", "crcLayoutBox"],
     objectives: [
       "Distribute main-axis space with flex basis, grow, and shrink.",
-      "Align cards across the cross axis with familiar Flex values.",
+      "Let a plain child expose specified style to Flex, then read its finite local allocation with crcLayoutBox.",
     ],
     prompts: {
       gesture: "Click either card to swap its emphasis.",
       code: "Change the grow factors or center the row with `justifyContent`.",
     },
     apiNotes: [
-      "Supported Flex values intentionally follow their CSS meaning.",
-      "Reverse order, baseline, auto margins, and percentage gaps remain deferred.",
+      "The parent consumes each child's specified style; the plain child still receives that author value unchanged.",
+      "`crcLayoutBox()` reports the allocated local box for drawing, while reverse order, baseline, auto margins, and percentage gaps remain deferred.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["flow", "grid", "absolute-and-overlay"],
@@ -464,8 +490,9 @@ const drafts = [
     shortTitle: "Grid",
     section: "layout",
     order: 124,
-    summary: "Build an explicit responsive grid from fixed, percentage, and fractional tracks.",
-    api: ["grid"],
+    summary:
+      "Build an explicit responsive grid from fixed, percentage, and fractional tracks.",
+    api: ["Grid"],
     objectives: [
       "Declare explicit rows and columns with fixed, percentage, and `fr` tracks.",
       "Place and span every child with one-based grid coordinates.",
@@ -716,7 +743,11 @@ const drafts = [
       "`pointerrawupdate` and `pointercancel` depend on browser/device behavior, so the handlers remain useful even when a mouse cannot produce them on demand.",
     ],
     canvas: { width: 720, height: 420 },
-    related: ["pointer-capture", "touch-events", "mouse-boundaries-and-auxiliary-click"],
+    related: [
+      "pointer-capture",
+      "touch-events",
+      "mouse-boundaries-and-auxiliary-click",
+    ],
     load: () => import("./learning/user-events/pointer-events.example"),
   },
   {
@@ -953,12 +984,11 @@ const drafts = [
     },
     apiNotes: [
       "`FocusManagement` is additive; without it, focus metadata is inert and no tabindex or document listener is installed.",
-      "Logical Canvas focus is keyboard interaction, not screen-reader semantics; provide an equivalent semantic DOM experience separately.",
+      "The Canvas remains the single native focus host; logical targets create no DOM semantics or accessibility tree, so provide an equivalent semantic DOM experience separately.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["keyboard-events-and-activation", "directional-navigation"],
-    load: () =>
-      import("./learning/keyboard-focus/focus-management.example"),
+    load: () => import("./learning/keyboard-focus/focus-management.example"),
   },
   {
     slug: "keyboard-events-and-activation",
@@ -980,7 +1010,7 @@ const drafts = [
     },
     apiNotes: [
       "Keyboard-generated clicks use `detail: 0` and expose the originating KeyboardEvent as `sourceEvent`.",
-      "Pending Space activation is canceled by focus movement, blur, unmount, handler removal, or disposal.",
+      "Pending Space activation is canceled by focus movement, blur, unmount, handler removal, or disposal; the single Canvas focus host still creates no semantic control.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["focus-management", "directional-navigation"],
@@ -1007,7 +1037,7 @@ const drafts = [
     },
     apiNotes: [
       "Arrow selection prefers perpendicular overlap, then forward distance, perpendicular distance, and source order.",
-      "Directional movement does not wrap; with no candidate, focus and native default prevention remain unchanged.",
+      "Directional movement does not wrap; it moves logical focus inside one native Canvas host and does not create DOM semantics.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["focus-management", "nested-directional-navigation"],
@@ -1022,11 +1052,7 @@ const drafts = [
     order: 320,
     summary:
       "Compose a directional grid inside another directional grid while keeping arrow ownership visible and local.",
-    api: [
-      "FocusManagement",
-      "KeyboardNavigation",
-      "keyboardNavigationBounds",
-    ],
+    api: ["FocusManagement", "KeyboardNavigation", "keyboardNavigationBounds"],
     objectives: [
       "Keep the nearest directional boundary in exclusive control of its descendants.",
       "Compare boundary-local arrow movement with one global source-order Tab sequence.",
@@ -1038,7 +1064,7 @@ const drafts = [
     },
     apiNotes: [
       "Targets inside a nested boundary are excluded from the outer boundary's direct arrow candidates.",
-      "Tab ignores directional boundaries and follows the single committed source-order focus list.",
+      "Tab ignores directional boundaries and follows one logical list on the single Canvas focus host, without generating an accessibility tree.",
     ],
     canvas: { width: 720, height: 520 },
     related: ["directional-navigation", "keyboard-events-and-activation"],
@@ -1077,7 +1103,7 @@ const drafts = [
     },
     apiNotes: [
       "A plain Canvas is not an editing host; the lesson emits native editing events only to demonstrate CRC transport.",
-      "Applications own editable DOM, selection, semantic roles, announcements, and synchronization with Canvas visuals.",
+      "The Canvas stays the only native focus host; applications own editable DOM, selection, semantic roles, announcements, and synchronization with Canvas visuals.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["focus-management", "keyboard-events-and-activation"],
@@ -1152,7 +1178,7 @@ const drafts = [
     order: 360,
     summary:
       "See why the last visible mark under the pointer becomes the one logical target.",
-    api: ["rect", "onClick"],
+    api: ["Rectangle", "onClick"],
     objectives: [
       "Predict target selection from global paint order.",
       "Reorder elements to change both appearance and interaction.",
@@ -1178,7 +1204,7 @@ const drafts = [
     order: 370,
     summary:
       "Combine transforms, clips, and offscreen layers while keeping visible paint and mouse targeting aligned.",
-    api: ["g", "clip", "layer", "onClick"],
+    api: ["Group", "Clip", "Layer", "onClick"],
     objectives: [
       "Compose interaction geometry through transforms and clip stacks.",
       "Understand how nested layer targets map back to the root Canvas.",
@@ -1239,7 +1265,12 @@ export function validateLearningExampleCatalog(
       !isLearningSourcePath(entry.source.path, entry.section, entry.slug)
     ) {
       throw new Error(
-        `Learning example "${entry.slug}" has an invalid or duplicate source path.`,
+        `Learning example "${entry.slug}" must have one unique .example.tsx source path.`,
+      );
+    }
+    if (entry.authoring !== "jsx" && entry.authoring !== "createElement") {
+      throw new Error(
+        `Learning example "${entry.slug}" has an invalid authoring mode.`,
       );
     }
     if (
@@ -1259,6 +1290,23 @@ export function validateLearningExampleCatalog(
     slugs.add(entry.slug);
     orders.add(entry.order);
     paths.add(entry.source.path);
+  }
+
+  const createElementEntries = catalog.filter(
+    (entry) => entry.authoring === "createElement",
+  );
+  const gettingStartedIndex = catalog.findIndex(
+    (entry) => entry.slug === "getting-started",
+  );
+  if (
+    createElementEntries.length !== 1 ||
+    catalog[gettingStartedIndex + 1] !== createElementEntries[0] ||
+    !createElementEntries[0]?.api.includes("createElement") ||
+    !createElementEntries[0]?.api.includes("non-jsx")
+  ) {
+    throw new Error(
+      "The learning catalog must place exactly one createElement/non-jsx lesson immediately after getting started.",
+    );
   }
 
   for (const entry of catalog) {
@@ -1285,6 +1333,7 @@ const orderedDrafts = [...drafts].sort(
 export const learningExampleCatalog = validateLearningExampleCatalog(
   orderedDrafts.map((draft, index): LearningExampleCatalogEntry => ({
     ...draft,
+    authoring: "authoring" in draft ? draft.authoring : "jsx",
     source: { path: sourcePath(draft.section, draft.slug) },
     relationships: {
       previous: orderedDrafts[index - 1]?.slug,

@@ -1,10 +1,7 @@
 import type { LearningExampleCatalogEntry } from "@crc/scenarios";
 
 const rawSourceModules = import.meta.glob(
-  [
-    "../../packages/scenarios/src/learning/**/*.example.ts",
-    "../../packages/scenarios/src/learning/**/*.example.tsx",
-  ],
+  "../../packages/scenarios/src/learning/**/*.example.tsx",
   { import: "default", query: "?raw" },
 ) as Readonly<Record<string, () => Promise<string>>>;
 

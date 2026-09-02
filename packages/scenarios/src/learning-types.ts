@@ -10,6 +10,8 @@ export type LearningSectionId =
   | "keyboard-focus"
   | "advanced-interactions";
 
+export type LearningAuthoring = "jsx" | "createElement";
+
 export interface LearningSection {
   id: LearningSectionId;
   label: string;
@@ -29,6 +31,7 @@ export interface LearningRelationships {
 }
 
 export interface LearningExampleMetadata {
+  authoring: LearningAuthoring;
   slug: string;
   title: string;
   shortTitle: string;

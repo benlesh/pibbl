@@ -172,6 +172,7 @@ export type {
   ScenarioVisibility,
 } from './types';
 export type {
+  LearningAuthoring,
   LearningExampleCatalogEntry,
   LearningExampleMetadata,
   LearningExampleModule,

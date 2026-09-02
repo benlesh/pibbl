@@ -105,6 +105,10 @@ function renderIndex(): string {
   return `${lines.join('\n')}\n`;
 }
 
+const LEGACY_LEARNING_AUTHORING =
+  /\b(?:defineComp|rect|path|svgPath|line|horizontalLine|verticalLine|text|img|g|clip|layer|absolute|overlay|flow|flex|grid|withFocusManagement|withKeyboardNavigation)\b/u;
+const JSX_ELEMENT_SYNTAX = /<[A-Z][A-Za-z0-9]*(?:\s|\/>|>)/u;
+
 async function validateSources(): Promise<void> {
   validateScenarioCatalog(scenarioCatalog);
   validateLearningExampleCatalog(learningExampleCatalog);
@@ -163,6 +167,9 @@ async function validateSources(): Promise<void> {
 
   for (const entry of learningExampleCatalog) {
     const sourceText = await readFile(resolve(workspaceRoot, entry.source.path), 'utf8');
+    if (!entry.source.path.endsWith('.example.tsx')) {
+      throw new Error(`Learning example "${entry.slug}" must use a .example.tsx source path.`);
+    }
     const imports = [...sourceText.matchAll(/from\s+['"]([^'"]+)['"]/gu)].map(match => match[1]);
     if (!imports.length || imports.some(moduleName => moduleName !== '@crc/core')) {
       throw new Error(`Learning example "${entry.slug}" may import only from @crc/core.`);
@@ -172,6 +179,20 @@ async function validateSources(): Promise<void> {
     }
     if (/SOURCE_ID|\b(?:describe|expect|it|test)\s*\(|vitest/gu.test(sourceText)) {
       throw new Error(`Learning example "${entry.slug}" contains test or source-marker scaffolding.`);
+    }
+    const coreImport = sourceText.match(/import[\s\S]*?from ['"]@crc\/core['"];/u)?.[0] ?? '';
+    if (LEGACY_LEARNING_AUTHORING.test(coreImport)) {
+      throw new Error(`Learning example "${entry.slug}" imports legacy component authoring.`);
+    }
+    if (/\b(?:defineComp|withFocusManagement|withKeyboardNavigation)\b|\btext\s*:|\brender\s*:/u.test(sourceText)) {
+      throw new Error(`Learning example "${entry.slug}" contains legacy component authoring.`);
+    }
+    if (entry.authoring === 'createElement') {
+      if (!sourceText.includes('createElement(') || JSX_ELEMENT_SYNTAX.test(sourceText)) {
+        throw new Error(`Non-JSX learning example "${entry.slug}" must use only createElement.`);
+      }
+    } else if (entry.authoring !== 'jsx' || !JSX_ELEMENT_SYNTAX.test(sourceText)) {
+      throw new Error(`JSX learning example "${entry.slug}" must contain descriptive JSX.`);
     }
     await loadLearningExample(entry);
   }
