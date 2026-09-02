@@ -1,4 +1,6 @@
 import { defineComp } from '../define-comp.js';
+import { setLegacyIdentityHint } from '../element/metadata.js';
+import type { CRCElement } from '../element/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import type {
   CompEl,
@@ -11,7 +13,7 @@ import { recordLayoutPlacement } from './diagnostics.js';
 import type { LayoutBox } from './types.js';
 
 interface PlacedChildProps {
-  element: CompEl<any, any>;
+  element: CRCElement<any>;
   box: Readonly<LayoutBox>;
   clipInChildSpace?: Readonly<LayoutBox>;
   identityHint: InternalIdentityHint;
@@ -70,12 +72,12 @@ const placedChild = defineComp<PlacedChildProps>(PlacedChild);
 
 export function placeChild(props: PlacedChildProps): CompEl<any, any> {
   const element = placedChild(props);
-  element.identityHint = props.identityHint;
+  setLegacyIdentityHint(element, props.identityHint);
   return element;
 }
 
 export function createPlacementIdentityHint(
-  element: CompEl<any, any>,
+  element: CRCElement<any>,
   occurrence: number,
 ): InternalIdentityHint {
   if (!Number.isInteger(occurrence) || occurrence < 0) {

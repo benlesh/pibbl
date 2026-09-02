@@ -10,7 +10,12 @@ import type {
   CRCEventListenerRegistration,
   CRCEventTargetRegistration,
 } from './events/registrations.js';
-import type { CRCElement, CRCKey, CRCNode } from './element/types.js';
+import type {
+  CRCElement,
+  CRCElementType,
+  CRCKey,
+  CRCNode,
+} from './element/types.js';
 import type { PendingRoot } from './global-state.js';
 export type {
   CRCComponent,
@@ -34,7 +39,7 @@ type ReservedElementKey = 'key' | 'style';
 
 type UnionKeys<T> = T extends unknown ? keyof T : never;
 
-type ProgramProps<P> = 0 extends (1 & P)
+export type PrimitiveProgramProps<P> = 0 extends (1 & P)
   ? P
   : Extract<UnionKeys<P>, ReservedElementKey> extends never
     ? P
@@ -52,16 +57,21 @@ type StyleField<S> = [RequiredKeys<S>] extends [never]
   : { style: S };
 
 export type ComponentInput<P, S extends SystemStyle = SystemStyle> =
-  ProgramProps<P> & { key?: CRCKey } & StyleField<S>;
+  PrimitiveProgramProps<P> & { key?: CRCKey } & StyleField<S>;
+
+export type PrimitiveInput<P, S extends SystemStyle = SystemStyle> =
+  PrimitiveProgramProps<P> & StyleField<SpecifiedStyle<S>>;
 
 export type CompEl<
   P = any,
   S extends SystemStyle = SystemStyle,
   N extends SystemStyle = S,
   R extends SystemStyle = N,
-> = CRCElement<ProgramProps<P> & { style: SpecifiedStyle<S> }> & {
+> = CRCElement<PrimitiveProgramProps<P> & { style: SpecifiedStyle<S> }> & {
   readonly type: CompFn<P, S, N, R>;
-  readonly props: Readonly<ProgramProps<P> & { style: SpecifiedStyle<S> }>;
+  readonly props: Readonly<
+    PrimitiveProgramProps<P> & { style: SpecifiedStyle<S> }
+  >;
   /** @deprecated Temporary compatibility alias; use element.props.style. */
   readonly style: SpecifiedStyle<S>;
   /** @internal */
@@ -104,9 +114,34 @@ export interface MeasureInput<
   constraints: Readonly<Constraints>;
   service: CanvasMeasurementService;
   measureElement(
-    element: CompEl<any, any>,
+    element: CRCElement<any>,
     constraints: Readonly<Constraints>,
   ): MeasureResult;
+}
+
+export type PrimitiveRender<
+  P,
+  R extends SystemStyle = SystemStyle,
+> = (
+  props: Readonly<PrimitiveProgramProps<P>>,
+  style: ResolvedStyle<R>,
+  context: RenderingContext2D,
+) => CRCNode[] | CRCNode | void;
+
+export interface PrimitiveCapabilities<
+  P,
+  S extends SystemStyle = SystemStyle,
+  N extends SystemStyle = S,
+  R extends SystemStyle = N,
+> {
+  normalizeStyle?: (style: SpecifiedStyle<S>) => NormalizedStyle<N>;
+  resolveStyle?: (
+    style: NormalizedStyle<N>,
+    context: Readonly<StyleResolutionContext>,
+  ) => ResolvedStyle<R>;
+  measure?: (
+    input: MeasureInput<PrimitiveProgramProps<P>, N>,
+  ) => MeasureResult;
 }
 
 export interface ComponentCapabilities<
@@ -121,7 +156,7 @@ export interface ComponentCapabilities<
     context: Readonly<StyleResolutionContext>,
   ) => ResolvedStyle<R>;
   measure?: (
-    input: MeasureInput<ProgramProps<P>, N>,
+    input: MeasureInput<PrimitiveProgramProps<P>, N>,
   ) => MeasureResult;
 }
 
@@ -131,13 +166,13 @@ export type CompFn<
   N extends SystemStyle = S,
   R extends SystemStyle = N,
 > = ((
-  props: ProgramProps<P>,
+  props: PrimitiveProgramProps<P>,
   style: ResolvedStyle<R>,
   ctx: RenderingContext2D,
 ) => CRCNode[] | CRCNode | void) & Readonly<ComponentCapabilities<S, N, R, P>>;
 
 export interface InternalIdentityHint {
-  type: CompFn<any, any, any, any>;
+  type: CRCElementType<any>;
   key: string | undefined;
   occurrence: number;
 }
@@ -145,7 +180,7 @@ export interface InternalIdentityHint {
 export interface CompRefs<P> {
   id: string;
   parent: CompRefs<any> | undefined;
-  element: CompEl<P, any>;
+  element: CRCElement<P>;
   refs: any[];
   hooks: CRCHookSlot[];
   teardowns: Teardowns;

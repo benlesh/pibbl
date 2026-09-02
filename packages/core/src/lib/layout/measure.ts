@@ -1,13 +1,18 @@
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import { GLOBAL_STATE } from '../global-state.js';
+import { EMPTY_STYLE } from '../create-element.js';
 import { takePreNormalizedStyle } from '../style/resolve-dispatch.js';
-import { getLegacyProgramProps } from '../element/metadata.js';
+import {
+  getPrimitiveDefinition,
+  getPrimitiveProgramProps,
+  getSpecifiedStyle,
+} from '../element/metadata.js';
 import { recordLayoutMeasurement } from './diagnostics.js';
 import type {
   CanvasMeasurementService,
-  CompEl,
   MeasureResult,
 } from '../types.js';
+import type { CRCElement } from '../element/types.js';
 import type { Constraints } from './types.js';
 
 export type {
@@ -17,7 +22,7 @@ export type {
 } from '../types.js';
 
 export function measureElement(
-  element: CompEl<any, any, any, any>,
+  element: CRCElement<any>,
   constraints: Readonly<Constraints>,
   service: CanvasMeasurementService,
 ): MeasureResult {
@@ -31,18 +36,19 @@ export function measureElement(
 }
 
 interface MeasurementContext {
-  active: Set<CompEl<any, any, any, any>>;
-  stack: CompEl<any, any, any, any>[];
+  active: Set<CRCElement<any>>;
+  stack: CRCElement<any>[];
 }
 
 function measureElementInternal(
-  element: CompEl<any, any, any, any>,
+  element: CRCElement<any>,
   constraints: Readonly<Constraints>,
   service: CanvasMeasurementService,
   context: MeasurementContext,
 ): MeasureResult {
   recordLayoutMeasurement();
   const type = element.type;
+  const definition = getPrimitiveDefinition(type);
   const component = type.name || 'Anonymous';
   const preNormalized = takePreNormalizedStyle(element);
   const source = preNormalized?.source ?? element;
@@ -56,7 +62,7 @@ function measureElementInternal(
       reason: 'cyclic measurement dependency is not supported',
     });
   }
-  if (!type.measure) {
+  if (!definition?.measure) {
     return {
       status: 'unsupported',
       reason: `${component} does not provide measurement`,
@@ -66,11 +72,12 @@ function measureElementInternal(
   context.active.add(source);
   context.stack.push(element);
   try {
-    const normalized = preNormalized?.style ?? (type.normalizeStyle ?
-        type.normalizeStyle(element.style) :
-        element.style);
-    const result = type.measure({
-      props: getLegacyProgramProps(element) ?? element.props,
+    const specifiedStyle = getSpecifiedStyle(element) ?? EMPTY_STYLE;
+    const normalized = preNormalized?.style ?? (definition.normalizeStyle ?
+        definition.normalizeStyle(specifiedStyle) :
+        specifiedStyle);
+    const result = definition.measure({
+      props: getPrimitiveProgramProps(element),
       style: normalized,
       constraints,
       service,

@@ -1,5 +1,9 @@
 import { createElement, EMPTY_STYLE } from './create-element.js';
 import {
+  setPrimitiveDefinition,
+  type PrimitiveDefinition,
+} from './element/metadata.js';
+import {
   CompEl,
   CompFn,
   ComponentCapabilities,
@@ -44,30 +48,12 @@ export function defineComp<
   ...capabilityArguments: CapabilityArguments<P, S, N, R>
 ): (input: ComponentInput<P, S>) => CompEl<P, S, N, R> {
   const capabilities = capabilityArguments[0] ?? {};
-  if (capabilities.normalizeStyle) {
-    Object.defineProperty(compFn, 'normalizeStyle', {
-      configurable: false,
-      enumerable: false,
-      value: capabilities.normalizeStyle,
-      writable: false,
-    });
-  }
-  if (capabilities.resolveStyle) {
-    Object.defineProperty(compFn, 'resolveStyle', {
-      configurable: false,
-      enumerable: false,
-      value: capabilities.resolveStyle,
-      writable: false,
-    });
-  }
-  if (capabilities.measure) {
-    Object.defineProperty(compFn, 'measure', {
-      configurable: false,
-      enumerable: false,
-      value: capabilities.measure,
-      writable: false,
-    });
-  }
+  setPrimitiveDefinition(compFn, {
+    render: compFn as unknown as PrimitiveDefinition<P, S, N, R>['render'],
+    normalizeStyle: capabilities.normalizeStyle,
+    resolveStyle: capabilities.resolveStyle,
+    measure: capabilities.measure,
+  });
 
   return (input) => {
     const hasKey = Object.prototype.hasOwnProperty.call(input, 'key');

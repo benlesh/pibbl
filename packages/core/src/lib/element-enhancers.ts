@@ -29,7 +29,7 @@ interface CRCMountedElementEnhancerEntry {
 }
 
 const elementEnhancers = new WeakMap<
-  CompEl<any, any>,
+  CRCElement<any>,
   readonly CRCElementEnhancerDescriptor[]
 >();
 const mountedElementEnhancers = new WeakMap<
@@ -57,8 +57,8 @@ export function appendElementEnhancer<
 
 /** @internal Layer cache key for otherwise field-identical enhanced elements. */
 export function haveSameElementEnhancers(
-  left: CompEl<any, any>,
-  right: CompEl<any, any>,
+  left: CRCElement<any>,
+  right: CRCElement<any>,
 ): boolean {
   const leftDescriptors = elementEnhancers.get(left) ?? [];
   const rightDescriptors = elementEnhancers.get(right) ?? [];
@@ -70,7 +70,7 @@ export function haveSameElementEnhancers(
 
 /** @internal */
 export function hasElementEnhancer(
-  element: CompEl<any, any>,
+  element: CRCElement<any>,
   key: symbol,
 ): boolean {
   return elementEnhancers.get(element)?.some(descriptor =>

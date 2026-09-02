@@ -33,8 +33,11 @@ export type CRCComponent<P = Record<string, never>> = (
 export type CRCPrimitiveComponent<
   P = Record<string, never>,
   I = P,
-> = CRCComponent<P> & {
-  readonly [crcPrimitiveComponentBrand]: I;
+> = CRCComponent<I> & {
+  readonly [crcPrimitiveComponentBrand]: {
+    readonly input: I;
+    readonly programProps: P;
+  };
 };
 export type PrimitiveInputOf<C> =
   C extends CRCPrimitiveComponent<any, infer I> ? I : never;

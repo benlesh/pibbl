@@ -1,4 +1,10 @@
 import { defineComp } from '../define-comp.js';
+import { EMPTY_STYLE } from '../create-element.js';
+import {
+  getPrimitiveDefinition,
+  getSpecifiedStyle,
+} from '../element/metadata.js';
+import type { CRCElement } from '../element/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { normalizeEdges } from '../style/normalize.js';
 import { resolveLength } from '../style/resolve-length.js';
@@ -85,15 +91,15 @@ export function resolveContainerBox(
 
 export function placeAbsoluteChild(
   container: Readonly<LayoutBox>,
-  child: CompEl<any, any>,
+  child: CRCElement<any>,
 ): LayoutBox {
   return resolveAbsoluteChildPlacement(container, child).box;
 }
 
 function resolveAbsoluteChildPlacement(
   container: Readonly<LayoutBox>,
-  child: CompEl<any, any>,
-): { box: LayoutBox; element: CompEl<any, any> } {
+  child: CRCElement<any>,
+): { box: LayoutBox; element: CRCElement<any> } {
   const style = normalizeDirectChildStyle(child) as Readonly<
     BoxStyle & LayoutItemStyle
   >;
@@ -120,24 +126,24 @@ function resolveAbsoluteChildPlacement(
 
 /** @internal Carries normalized finite content size into the eventual render. */
 export function childWithUsedSize(
-  child: CompEl<any, any>,
+  child: CRCElement<any>,
   style: Readonly<SystemStyle>,
   width: number,
   height: number,
 ): CompEl<any, any> {
-  const renderedChild = { ...child };
+  const renderedChild = { ...child } as CRCElement<any>;
   setPreNormalizedStyle(renderedChild, Object.freeze({
     ...style,
     width,
     height,
   }), child);
-  return renderedChild;
+  return renderedChild as CompEl<any, any>;
 }
 
 /** @internal Shared by the initial direct-child layout algorithms. */
 export function resolveDirectChildBox(
   container: Readonly<LayoutBox>,
-  child: CompEl<any, any>,
+  child: CRCElement<any>,
   algorithm: string,
   style: Readonly<SystemStyle> = normalizeDirectChildStyle(child),
 ): ResolvedBoxStyle {
@@ -163,28 +169,30 @@ export function resolveDirectChildBox(
 
 /** @internal Normalizes a descriptor without resolving or invoking its callback. */
 export function normalizeDirectChildStyle(
-  child: CompEl<any, any>,
+  child: CRCElement<any>,
 ): Readonly<SystemStyle> {
-  return child.type.normalizeStyle ?
-      child.type.normalizeStyle(child.style) :
-      child.style;
+  const definition = getPrimitiveDefinition(child.type);
+  const style = getSpecifiedStyle(child) ?? EMPTY_STYLE;
+  return definition?.normalizeStyle ?
+      definition.normalizeStyle(style) :
+      style;
 }
 
 /** @internal Converts source-order descriptors to stable placed children. */
 export function placeDirectChildren(
   children: readonly CRCNode[],
   contentBox: Readonly<LayoutBox>,
-  place: (child: CompEl<any, any>) => LayoutBox | {
+  place: (child: CRCElement<any>) => LayoutBox | {
     box: LayoutBox;
-    element: CompEl<any, any>;
+    element: CRCElement<any>;
   },
   overflow: 'visible' | 'clip',
-): CompEl<any, any>[] {
+): CRCElement<any>[] {
   const occurrences = new Map<Function, number>();
-  const placed: CompEl<any, any>[] = [];
+  const placed: CRCElement<any>[] = [];
   for (const node of children) {
     if (!node || typeof node !== 'object' || !('type' in node)) continue;
-    const child = node as CompEl<any, any>;
+    const child = node as CRCElement<any>;
     const occurrence = child.key === undefined ?
       occurrences.get(child.type) ?? 0 :
       0;
@@ -346,7 +354,7 @@ function requiredDimension(
 }
 
 function childDiagnosticContext(
-  child: CompEl<any, any>,
+  child: CRCElement<any>,
   container: Readonly<LayoutBox>,
   algorithm: string,
 ) {

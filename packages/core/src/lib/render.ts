@@ -4,7 +4,7 @@ import {
   GLOBAL_STATE,
 } from './global-state.js';
 import { Teardowns } from './teardowns.js';
-import { CompEl, CompRefs, SystemStyle } from './types.js';
+import { CompRefs } from './types.js';
 import { finalizeHookSlots } from './hooks/hook-slot.js';
 import { resolveElementStyle } from './style/resolve-dispatch.js';
 import {
@@ -12,7 +12,11 @@ import {
   exitElementEnhancers,
   reconcileElementEnhancers,
 } from './element-enhancers.js';
-import { getLegacyProgramProps } from './element/metadata.js';
+import {
+  getLegacyIdentityHint,
+  getPrimitiveDefinition,
+  getPrimitiveProgramProps,
+} from './element/metadata.js';
 import { materializeContainerChildren } from './element/children.js';
 import { isFragmentElement } from './element/fragment.js';
 import type { CRCElement, CRCNode } from './element/types.js';
@@ -56,7 +60,7 @@ function renderPreparedElement(
     renderKeyedFragment(element, parentId, parent);
     return;
   }
-  renderComponentElement(element as CompEl<any, any>, parentId, parent);
+  renderComponentElement(element, parentId, parent);
 }
 
 function renderKeyedFragment(
@@ -66,7 +70,7 @@ function renderKeyedFragment(
 ): void {
   try {
     const componentRefs = prepareComponentScope(
-      element as CompEl<any, any>,
+      element,
       parentId,
       parent,
     );
@@ -80,8 +84,8 @@ function renderKeyedFragment(
   }
 }
 
-function renderComponentElement<P, S extends SystemStyle>(
-  element: CompEl<P, S>,
+function renderComponentElement<P>(
+  element: CRCElement<P>,
   parentId: string,
   parent: CompRefs<any> | undefined,
 ): void {
@@ -103,12 +107,12 @@ function renderComponentElement<P, S extends SystemStyle>(
       ctx.save();
       let onAfterRender: (() => void) | undefined;
       try {
-        const result = componentRefs.element.type(
-          (getLegacyProgramProps(componentRefs.element) ??
-            componentRefs.element.props) as any,
+        const definition = getPrimitiveDefinition(componentRefs.element.type);
+        const result = definition ? definition.render(
+          getPrimitiveProgramProps(componentRefs.element),
           resolveElementStyle(componentRefs.element),
           ctx,
-        );
+        ) : componentRefs.element.type(componentRefs.element.props);
         finalizeHookSlots(componentRefs);
 
         onAfterRender = componentRefs.onAfterRender;
@@ -138,7 +142,7 @@ function renderComponentElement<P, S extends SystemStyle>(
 }
 
 function prepareComponentScope<P>(
-  element: CompEl<P, any>,
+  element: CRCElement<P>,
   parentId: string,
   parent: CompRefs<any> | undefined,
 ): CompRefs<P> {
@@ -169,8 +173,12 @@ function prepareComponentScope<P>(
   return componentRefs;
 }
 
-function getElementTypeName(element: CompEl<any, any>, parentId: string): string {
-  const identityHint = element.identityHint;
+function getElementTypeName(element: CRCElement<any>, parentId: string): string {
+  const identityHint = getLegacyIdentityHint<{
+    type: CRCElement<any>['type'];
+    key: string | undefined;
+    occurrence: number;
+  }>(element);
   const identityType = identityHint?.type ?? element.type;
   const typeIdentity = getAnonElemName(identityType);
   const typeName = identityType.name || 'Anonymous';

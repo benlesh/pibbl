@@ -64,6 +64,7 @@ export { withKeyboardNavigation } from './lib/focus/with-keyboard-navigation.js'
 export type { CRCKeyboardNavigationOptions } from './lib/focus/types.js';
 
 export { defineComp } from './lib/define-comp.js';
+export { definePrimitive } from './lib/define-primitive.js';
 export { createElement } from './lib/element/create-element.js';
 export { Fragment } from './lib/element/jsx-runtime.js';
 export type {
@@ -101,6 +102,7 @@ export type {
 } from './lib/layout/types.js';
 // hooks
 export { crcCursor } from './lib/hooks/crc-cursor.js';
+export { crcCanvasContext } from './lib/hooks/crc-canvas-context.js';
 export { crcEvent } from './lib/hooks/crc-event.js';
 export { crcEventListener } from './lib/hooks/crc-event-listener.js';
 export { crcEventTarget } from './lib/hooks/crc-event-target.js';
@@ -133,6 +135,10 @@ export type {
   CRCTextChild,
   CRCRenderResult,
   PrimitiveInputOf,
+  PrimitiveCapabilities,
+  PrimitiveInput,
+  PrimitiveProgramProps,
+  PrimitiveRender,
   FillStyle,
   MeasureInput,
   MeasureResult,

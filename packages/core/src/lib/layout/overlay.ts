@@ -3,11 +3,11 @@ import { GLOBAL_STATE } from '../global-state.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import type { BoxStyle, LayoutItemStyle, ResolvedBoxStyle } from '../style/types.js';
 import type {
-  CompEl,
   CRCNode,
   RenderingContext2D,
   SystemStyle,
 } from '../types.js';
+import type { CRCElement } from '../element/types.js';
 import {
   childWithUsedSize,
   normalizeDirectChildStyle,
@@ -78,7 +78,7 @@ export const overlay = defineComp<
 
 export function placeOverlayChild(
   container: Readonly<LayoutBox>,
-  child: CompEl<any, any>,
+  child: CRCElement<any>,
   alignment: Readonly<Pick<OverlayStyle, 'alignItems' | 'justifyItems'>> = {},
 ): LayoutBox {
   return resolveOverlayChildPlacement(container, child, alignment).box;
@@ -86,9 +86,9 @@ export function placeOverlayChild(
 
 function resolveOverlayChildPlacement(
   container: Readonly<LayoutBox>,
-  child: CompEl<any, any>,
+  child: CRCElement<any>,
   alignment: Readonly<Pick<OverlayStyle, 'alignItems' | 'justifyItems'>> = {},
-): { box: LayoutBox; element: CompEl<any, any> } {
+): { box: LayoutBox; element: CRCElement<any> } {
   const item = normalizeDirectChildStyle(child) as Readonly<
     BoxStyle & LayoutItemStyle
   >;
@@ -151,7 +151,7 @@ function resolveOverlayChildPlacement(
 function resolveItemAlignment(
   item: LayoutItemStyle['alignSelf'] | LayoutItemStyle['justifySelf'],
   fallback: OverlayAlignment,
-  child: CompEl<any, any>,
+  child: CRCElement<any>,
   container: Readonly<LayoutBox>,
   property: 'alignSelf' | 'justifySelf',
 ): OverlayAlignment {

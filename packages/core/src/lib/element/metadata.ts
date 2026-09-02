@@ -1,4 +1,14 @@
-import type { SystemStyle } from '../types.js';
+import type {
+  MeasureInput,
+  MeasureResult,
+  NormalizedStyle,
+  PrimitiveProgramProps,
+  RenderingContext2D,
+  ResolvedStyle,
+  SpecifiedStyle,
+  StyleResolutionContext,
+  SystemStyle,
+} from '../types.js';
 import type { CRCElement } from './types.js';
 
 export interface CRCElementSource {
@@ -15,6 +25,50 @@ export interface InternalElementMetadata {
 }
 
 const elementMetadata = new WeakMap<CRCElement<any>, InternalElementMetadata>();
+const primitiveDefinitions = new WeakMap<Function, PrimitiveDefinition>();
+
+export interface PrimitiveDefinition<
+  P = any,
+  S extends SystemStyle = SystemStyle,
+  N extends SystemStyle = S,
+  R extends SystemStyle = N,
+> {
+  readonly render: (
+    props: Readonly<PrimitiveProgramProps<P>>,
+    style: ResolvedStyle<R>,
+    context: RenderingContext2D,
+  ) => import('./types.js').CRCNode[] | import('./types.js').CRCNode | void;
+  readonly normalizeStyle?: (
+    style: SpecifiedStyle<S>,
+  ) => NormalizedStyle<N>;
+  readonly resolveStyle?: (
+    style: NormalizedStyle<N>,
+    context: Readonly<StyleResolutionContext>,
+  ) => ResolvedStyle<R>;
+  readonly measure?: (
+    input: MeasureInput<PrimitiveProgramProps<P>, N>,
+  ) => MeasureResult;
+}
+
+/** @internal Registers the platform behavior for one component value. */
+export function setPrimitiveDefinition<
+  P,
+  S extends SystemStyle,
+  N extends SystemStyle,
+  R extends SystemStyle,
+>(
+  type: Function,
+  definition: PrimitiveDefinition<P, S, N, R>,
+): void {
+  primitiveDefinitions.set(type, definition as PrimitiveDefinition);
+}
+
+/** @internal Reads platform behavior without attaching fields to a function. */
+export function getPrimitiveDefinition(
+  type: Function,
+): PrimitiveDefinition | undefined {
+  return primitiveDefinitions.get(type);
+}
 
 /** @internal */
 export function setElementMetadata(
@@ -54,6 +108,17 @@ export function getLegacyProgramProps<P>(element: CRCElement<any>): P | undefine
 export function setLegacyProgramProps<P>(element: CRCElement<any>, props: P): void {
   const current = elementMetadata.get(element) ?? {};
   elementMetadata.set(element, { ...current, legacyProgramProps: props });
+}
+
+/** @internal Returns program props with primitive-owned style removed. */
+export function getPrimitiveProgramProps<P>(element: CRCElement<any>): P {
+  const legacy = getLegacyProgramProps<P>(element);
+  if (legacy !== undefined) return legacy;
+  const { style: _style, ...programProps } = element.props as {
+    readonly style?: unknown;
+    readonly [key: PropertyKey]: unknown;
+  };
+  return programProps as P;
 }
 
 /** @internal Temporary bridge for the legacy placement identity field. */

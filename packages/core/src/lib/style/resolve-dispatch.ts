@@ -1,7 +1,14 @@
 import { getLayoutBox, getPercentageBasis } from '../layout/context.js';
+import { EMPTY_STYLE } from '../create-element.js';
+import {
+  getPrimitiveDefinition,
+  getSpecifiedStyle,
+  type PrimitiveDefinition,
+} from '../element/metadata.js';
+import type { CRCElement } from '../element/types.js';
 import type {
-  CompEl,
   ResolvedStyle,
+  SpecifiedStyle,
   StyleResolutionContext,
   SystemStyle,
 } from '../types.js';
@@ -9,28 +16,28 @@ import { layoutDiagnostic } from './diagnostics.js';
 
 const opaqueStyleProperties = new WeakMap<Function, ReadonlySet<string>>();
 const preNormalizedStyles = new WeakMap<
-  CompEl<any, any>,
-  { style: Readonly<SystemStyle>; source: CompEl<any, any> }
+  CRCElement<any>,
+  { style: Readonly<SystemStyle>; source: CRCElement<any> }
 >();
 
 /** @internal Carries one normalized style through an internal placement descriptor. */
 export function setPreNormalizedStyle(
-  element: CompEl<any, any>,
+  element: CRCElement<any>,
   style: Readonly<SystemStyle>,
-  source: CompEl<any, any> = element,
+  source: CRCElement<any> = element,
 ): void {
   preNormalizedStyles.set(element, { style, source });
 }
 
 /** @internal Temporary recognition seam for legacy layout descriptor clones. */
 export function isPreNormalizedElement(element: object): boolean {
-  return preNormalizedStyles.has(element as CompEl<any, any>);
+  return preNormalizedStyles.has(element as CRCElement<any>);
 }
 
 /** @internal Consumes an internal normalized-style override exactly once. */
 export function takePreNormalizedStyle(
-  element: CompEl<any, any>,
-): { style: Readonly<SystemStyle>; source: CompEl<any, any> } | undefined {
+  element: CRCElement<any>,
+): { style: Readonly<SystemStyle>; source: CRCElement<any> } | undefined {
   const value = preNormalizedStyles.get(element);
   preNormalizedStyles.delete(element);
   return value;
@@ -48,10 +55,17 @@ export function resolveElementStyle<
   S extends SystemStyle,
   N extends SystemStyle,
   R extends SystemStyle,
->(element: CompEl<any, S, N, R>): ResolvedStyle<R> {
+>(element: CRCElement<any>): ResolvedStyle<R> {
   const allocation = getLayoutBox();
   const percentageBasis = getPercentageBasis();
   const type = element.type;
+  const definition = getPrimitiveDefinition(type) as
+    PrimitiveDefinition<any, S, N, R> | undefined;
+  if (!definition) {
+    throw new Error(
+      `${type.name || 'Anonymous'} does not have CRC primitive metadata`,
+    );
+  }
   const component = type.name || 'Anonymous';
   const context: StyleResolutionContext = {
     allocation,
@@ -66,13 +80,15 @@ export function resolveElementStyle<
     algorithm: 'render-dispatch',
   };
   const preNormalized = takePreNormalizedStyle(element);
+  const specified = (getSpecifiedStyle(element) ?? EMPTY_STYLE) as
+    SpecifiedStyle<S>;
   const normalized = preNormalized ?
       preNormalized.style as Readonly<N> :
-    type.normalizeStyle ?
-        type.normalizeStyle(element.style) :
-        element.style as unknown as Readonly<N>;
-  const resolved = type.resolveStyle ?
-      type.resolveStyle(normalized, context) :
+    definition.normalizeStyle ?
+        definition.normalizeStyle(specified) :
+        specified as unknown as Readonly<N>;
+  const resolved = definition.resolveStyle ?
+      definition.resolveStyle(normalized, context) :
       normalized as unknown as ResolvedStyle<R>;
   assertResolvedValue(
     resolved,
