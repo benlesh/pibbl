@@ -16,9 +16,10 @@ import type {
 const CRC_ELEMENT_TYPE = Symbol.for('@crc/core.element');
 
 type ElementProps = Record<PropertyKey, unknown>;
+type UnionKeys<T> = T extends unknown ? keyof T : never;
 type ElementInput<P> = 0 extends (1 & P) ?
   P & { key?: CRCKey } :
-  'key' extends keyof P ? never :
+  'key' extends UnionKeys<P> ? never :
   P & { key?: CRCKey };
 type ElementInputOrNull<P> = [ElementInput<P>] extends [never] ?
   never :

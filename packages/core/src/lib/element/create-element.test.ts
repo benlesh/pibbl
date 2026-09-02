@@ -13,10 +13,24 @@ function KeyedCard(props: { key: string }): CRCNode {
   return props.key;
 }
 
+type MixedKeyProps =
+  | { kind: 'plain' }
+  | { kind: 'keyed'; key: string };
+type ValidUnionProps = { kind: 'first' } | { kind: 'second'; title?: string };
+
+function MixedKeyCard(_props: MixedKeyProps): CRCNode {
+  return undefined;
+}
+function ValidUnionCard(_props: ValidUnionProps): CRCNode {
+  return undefined;
+}
+
 describe('createElement', () => {
   it('reserves numeric keys and omits them from delivered prop types', () => {
     const element = createElement(Card, { key: 42, title: 'CRC' });
     const nullProps = createElement(Card, null);
+    const validUnionNull = createElement(ValidUnionCard, null);
+    const validUnionBranch = createElement(ValidUnionCard, { kind: 'second' });
     const LegacyCard = defineComp(() => undefined);
     const legacy = LegacyCard({ key: 7 });
 
@@ -28,9 +42,13 @@ describe('createElement', () => {
     LegacyCard({ key: {} });
     // @ts-expect-error component props may not declare the reserved key field
     createElement(KeyedCard, null);
+    // @ts-expect-error a key in any union member remains reserved
+    createElement(MixedKeyCard, null);
 
     expect(element.key).toBe('42');
     expect(nullProps.props).toEqual({});
+    expect(validUnionNull.props).toEqual({});
+    expect(validUnionBranch.props).toEqual({ kind: 'second' });
     expect(legacy.key).toBe('7');
     expect('key' in element.props).toBe(false);
     expect('key' in legacy.props).toBe(false);
