@@ -276,7 +276,6 @@ const verticalLineStyle = {
 verticalLine({ style: verticalLineStyle });
 
 const textStyle = {
-  text: 'Hello Canvas',
   x: 20,
   y: 24,
   width: 180,
@@ -291,7 +290,10 @@ const textStyle = {
   opacity: 0.8,
   cursor: 'pointer',
 } satisfies TextStyle;
-text({ style: textStyle, onClick: () => undefined });
+text({
+  style: { ...textStyle, text: 'Hello Canvas' },
+  onClick: () => undefined,
+});
 
 const imageStyle = {
   src: 'image.png',

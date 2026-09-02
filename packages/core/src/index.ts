@@ -1,6 +1,12 @@
 // components
 export { clip, type ClipProps, type ClipStyle } from './lib/components/clip.js';
-export { g, type GProps, type GStyle } from './lib/components/g.js';
+export {
+  g,
+  Group,
+  type GProps,
+  type GroupProps,
+  type GStyle,
+} from './lib/components/g.js';
 export {
   horizontalLine,
   type HorizontalLineProps,
@@ -15,9 +21,14 @@ export {
 } from './lib/components/layer.js';
 export { line, type LineProps, type LineStyle } from './lib/components/line.js';
 export { path, type PathProps } from './lib/components/path.js';
-export { rect, type RectProps } from './lib/components/rect.js';
+export {
+  rect,
+  Rectangle,
+  type RectProps,
+  type RectangleProps,
+} from './lib/components/rect.js';
 export { svgPath, type SvgPathProps } from './lib/components/svg-path.js';
-export { text, type TextProps } from './lib/components/text.js';
+export { text, Text, type TextProps } from './lib/components/text.js';
 export {
   verticalLine,
   type VerticalLineProps,

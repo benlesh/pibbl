@@ -122,9 +122,11 @@ describe('pure element measurement', () => {
       size: { width: 50, height: 12 },
     });
     if (result.status !== 'measured') throw new Error('expected measurement');
+    const { text: content, ...layoutStyle } = style;
     expect(resolveTextLayout(
       value => wrappingService.measureText(value, style.font),
-      { ...style, width: result.size.width },
+      content,
+      { ...layoutStyle, width: result.size.width },
     ).lines).toHaveLength(1);
   });
 

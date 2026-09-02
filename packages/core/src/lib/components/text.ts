@@ -1,4 +1,6 @@
 import { defineComp } from '../define-comp.js';
+import { definePrimitive } from '../define-primitive.js';
+import { materializeTextChildren } from '../element/children.js';
 import type {
   CRCEventFocusOptions,
   CRCEventHandlers,
@@ -16,12 +18,23 @@ import {
   RenderingContext2D,
 } from '../types.js';
 import type { Constraints } from '../layout/types.js';
+import type { CRCTextChild } from '../types.js';
 import { resolveLength } from '../style/resolve-length.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 import { pushClippingPath } from '../util/push-clipping-path.js';
 import { resolveTextClipBounds, resolveTextLayout } from './text-layout.js';
 
-export interface TextProps extends CRCEventHandlers, CRCEventFocusOptions {}
+export interface TextProps extends CRCEventHandlers, CRCEventFocusOptions {
+  children?: CRCTextChild;
+}
+
+interface LegacyTextStyle extends TextStyle {
+  text: string;
+}
+
+type ResolvedLegacyTextStyle = ResolvedTextStyle & { text: string };
+
+const materializedTextObjects = new WeakMap<object, string>();
 
 function checkPropsForEvents(
   props: CRCEventHandlers,
@@ -32,11 +45,12 @@ function checkPropsForEvents(
   );
 }
 
-export function Text(
+function renderText(
   props: TextProps,
   style: Readonly<ResolvedTextStyle>,
   ctx: RenderingContext2D,
 ) {
+  const text = materializeTextContent(props.children);
   const {
     font = '13px sans-serif',
     textBaseline = 'top',
@@ -56,7 +70,11 @@ export function Text(
   ctx.textBaseline = textBaseline;
   ctx.textAlign = textAlign;
 
-  const layout = resolveTextLayout(value => ctx.measureText(value), style);
+  const layout = resolveTextLayout(
+    value => ctx.measureText(value),
+    text,
+    style,
+  );
   const clipBounds =
     layout.clipBounds ?? resolveTextClipBounds(style, ctx.canvas.height);
 
@@ -109,12 +127,12 @@ export function Text(
   }
 }
 
-export const text = defineComp<
+export const Text = definePrimitive<
   TextProps,
   TextStyle,
   TextStyle,
   ResolvedTextStyle
->(Text, {
+>(renderText, {
   resolveStyle: (style, context) => ({
     ...stripLayoutParticipation(style),
     x: resolveLocalOffset(style.x, context.percentageBasis.width, 'x', context),
@@ -132,11 +150,15 @@ export const text = defineComp<
       context,
     ),
   }) as ResolvedTextStyle,
-  measure: ({ style, constraints, service }) =>
-    measureTextStyle(style, constraints, service),
+  measure: ({ props, style, constraints, service }) =>
+    measureTextStyle(
+      materializeTextContent(props.children),
+      style,
+      constraints,
+      service,
+    ),
 });
 registerOpaqueStyleProperties(Text, [
-  'text',
   'font',
   'fill',
   'stroke',
@@ -147,6 +169,7 @@ registerOpaqueStyleProperties(Text, [
 ]);
 
 function measureTextStyle(
+  text: string,
   style: Readonly<TextStyle>,
   constraints: Readonly<Constraints>,
   service: CanvasMeasurementService,
@@ -168,6 +191,7 @@ function measureTextStyle(
   const font = style.font ?? '13px sans-serif';
   const layout = resolveTextLayout(
     value => service.measureText(value, font),
+    text,
     {
       ...style,
       x: 0,
@@ -188,3 +212,65 @@ function measureTextStyle(
     },
   };
 }
+
+function materializeTextContent(children: CRCTextChild): string {
+  if (children !== null && typeof children === 'object') {
+    const cached = materializedTextObjects.get(children);
+    if (cached !== undefined) return cached;
+    const materialized = materializeTextChildren(children, 'Text');
+    materializedTextObjects.set(children, materialized);
+    return materialized;
+  }
+  return materializeTextChildren(children, 'Text');
+}
+
+function renderLegacyText(
+  props: TextProps,
+  style: Readonly<ResolvedLegacyTextStyle>,
+  ctx: RenderingContext2D,
+) {
+  const { text, ...resolvedStyle } = style;
+  renderText(
+    { ...props, children: text },
+    resolvedStyle as Readonly<ResolvedTextStyle>,
+    ctx,
+  );
+}
+
+/** @internal Temporary lowercase authoring adapter retained until Task 12. */
+export const text = defineComp<
+  TextProps,
+  LegacyTextStyle,
+  LegacyTextStyle,
+  ResolvedLegacyTextStyle
+>(renderLegacyText, {
+  resolveStyle: (style, context) => ({
+    ...stripLayoutParticipation(style),
+    x: resolveLocalOffset(style.x, context.percentageBasis.width, 'x', context),
+    y: resolveLocalOffset(style.y, context.percentageBasis.height, 'y', context),
+    width: resolveOptionalLength(
+      style.width,
+      context.percentageBasis.width,
+      'width',
+      context,
+    ),
+    height: resolveOptionalLength(
+      style.height,
+      context.percentageBasis.height,
+      'height',
+      context,
+    ),
+  }) as ResolvedLegacyTextStyle,
+  measure: ({ style, constraints, service }) =>
+    measureTextStyle(style.text, style, constraints, service),
+});
+registerOpaqueStyleProperties(renderLegacyText, [
+  'text',
+  'font',
+  'fill',
+  'stroke',
+  'cursor',
+  'fit',
+  'textBaseline',
+  'textAlign',
+]);

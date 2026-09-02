@@ -1,8 +1,11 @@
 import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
+import { crc } from '../crc.js';
+import { createElement } from '../element/create-element.js';
+import { measureElement } from '../layout/measure.js';
 import { componentTest } from '../test-utils/component-test';
 import { takeScreenshot } from '../util/test-utils';
-import { text } from './text';
+import { Text, text } from './text';
 
 const defaultStyle = {
   x: 50,
@@ -15,6 +18,57 @@ const defaultStyle = {
 };
 
 describe('text', () => {
+  it('materializes recursive children once for pure measurement and paint', async () => {
+    let iterableReads = 0;
+    function* oneShotContent() {
+      iterableReads++;
+      yield ' iterable ';
+      yield -2;
+    }
+    const children = [
+      '  leading ',
+      0,
+      [false, true, null, undefined, 'nested'],
+      oneShotContent(),
+      ' trailing  ',
+    ] as const;
+    const element = createElement(Text, {
+      children,
+      style: { fill: 'black' },
+    });
+    const measuredValues: string[] = [];
+    const expected = '  leading 0nested iterable -2 trailing  ';
+
+    expect(measureElement(element, {
+      minWidth: 0,
+      maxWidth: 500,
+      minHeight: 0,
+      maxHeight: 100,
+    }, {
+      measureText(value) {
+        measuredValues.push(value);
+        return fixedMetrics(value);
+      },
+    })).toEqual({
+      status: 'measured',
+      size: { width: expected.length * 10, height: 10 },
+    });
+
+    const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');
+    const canvas = document.createElement('canvas');
+    canvas.width = 500;
+    canvas.height = 100;
+    document.body.appendChild(canvas);
+    const controller = crc(canvas, element);
+    await nextFrame();
+
+    expect(iterableReads).toBe(1);
+    expect(measuredValues).toEqual([expected]);
+    expect(fillText).toHaveBeenCalledExactlyOnceWith(expected, 0, 0, undefined);
+    controller.dispose();
+    fillText.mockRestore();
+  });
+
   it('applies alpha zero while drawing', async () => {
     const observedAlpha: number[] = [];
     const fillText = vi
@@ -456,4 +510,18 @@ function useFixedWidthTextMetrics() {
       actualBoundingBoxLeft: 0,
       actualBoundingBoxRight: value.length * 10,
     }) as TextMetrics);
+}
+
+function fixedMetrics(value: string): TextMetrics {
+  return {
+    width: value.length * 10,
+    actualBoundingBoxAscent: 8,
+    actualBoundingBoxDescent: 2,
+    actualBoundingBoxLeft: 0,
+    actualBoundingBoxRight: value.length * 10,
+  } as TextMetrics;
+}
+
+function nextFrame(): Promise<void> {
+  return new Promise(resolve => requestAnimationFrame(() => resolve()));
 }

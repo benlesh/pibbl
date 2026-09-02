@@ -2,10 +2,14 @@ import * as core from '@crc/core';
 
 const expected = [
   'Fragment',
+  'Group',
   'LayoutDiagnostic',
+  'Rectangle',
+  'Text',
   'absolute',
   'clip',
   'crc',
+  'crcCanvasContext',
   'crcCursor',
   'crcEvent',
   'crcEventListener',
@@ -20,6 +24,7 @@ const expected = [
   'crcWhenChanged',
   'createElement',
   'defineComp',
+  'definePrimitive',
   'flex',
   'flow',
   'g',

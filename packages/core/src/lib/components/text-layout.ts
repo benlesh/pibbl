@@ -33,10 +33,10 @@ export type MeasureText = (text: string) => TextMetrics;
 /** Resolves text line breaking and geometry without rendering or runtime state. */
 export function resolveTextLayout(
   measureText: MeasureText,
+  text: string,
   style: Readonly<TextLayoutStyle>,
 ): TextLayout {
   const {
-    text,
     x = 0,
     y = 0,
     width,

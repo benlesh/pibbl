@@ -1,4 +1,5 @@
 import { defineComp } from '../define-comp.js';
+import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,
   CRCEventHandlers,
@@ -14,10 +15,13 @@ import { registerOpaqueStyleProperties } from '../style/resolve-dispatch.js';
 import { adjustRectangleToPixelGrid } from '../util/pixel-grid-adjustments.js';
 import { Path } from './path.js';
 
-export interface RectProps extends CRCEventHandlers, CRCEventFocusOptions {}
+export interface RectangleProps extends CRCEventHandlers, CRCEventFocusOptions {}
 
-function Rect(
-  props: RectProps,
+/** @internal Temporary lowercase-adapter program props. */
+export type RectProps = RectangleProps;
+
+function renderRectangle(
+  props: RectangleProps,
   style: Readonly<ResolvedRectStyle>,
   ctx: RenderingContext2D,
 ) {
@@ -63,14 +67,14 @@ function Rect(
 }
 
 /**
- * Creates a renderable Rect component element.
+ * Describes a rectangle primitive for JSX or createElement authoring.
  */
-export const rect = defineComp<
-  RectProps,
+export const Rectangle = definePrimitive<
+  RectangleProps,
   RectStyle,
   RectStyle,
   ResolvedRectStyle
->(Rect, {
+>(renderRectangle, {
   resolveStyle: (style, context) => ({
     ...stripLayoutParticipation(style),
     x: resolveLocalOffset(style.x, context.percentageBasis.width, 'x', context),
@@ -89,4 +93,43 @@ export const rect = defineComp<
     ),
   }) as ResolvedRectStyle,
 });
-registerOpaqueStyleProperties(Rect, ['fill', 'stroke', 'cursor']);
+registerOpaqueStyleProperties(Rectangle, ['fill', 'stroke', 'cursor']);
+
+const renderLegacyRectangle = function Rect(
+  props: RectProps,
+  style: Readonly<ResolvedRectStyle>,
+  ctx: RenderingContext2D,
+) {
+  renderRectangle(props, style, ctx);
+};
+
+/** @internal Temporary lowercase authoring adapter retained until Task 12. */
+export const rect = defineComp<
+  RectProps,
+  RectStyle,
+  RectStyle,
+  ResolvedRectStyle
+>(renderLegacyRectangle, {
+  resolveStyle: (style, context) => ({
+    ...stripLayoutParticipation(style),
+    x: resolveLocalOffset(style.x, context.percentageBasis.width, 'x', context),
+    y: resolveLocalOffset(style.y, context.percentageBasis.height, 'y', context),
+    width: resolveRequiredLength(
+      style.width,
+      context.percentageBasis.width,
+      'width',
+      context,
+    ),
+    height: resolveRequiredLength(
+      style.height,
+      context.percentageBasis.height,
+      'height',
+      context,
+    ),
+  }) as ResolvedRectStyle,
+});
+registerOpaqueStyleProperties(renderLegacyRectangle, [
+  'fill',
+  'stroke',
+  'cursor',
+]);

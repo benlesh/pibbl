@@ -24,8 +24,8 @@ describe('resolveTextLayout', () => {
         actualBoundingBoxLeft: 0,
         actualBoundingBoxRight: widths[value] ?? value.length * 10,
       }) as TextMetrics;
+    const text = 'one two three four';
     const style = {
-      text: 'one two three four',
       x: 10,
       y: 30,
       width: 75,
@@ -39,7 +39,7 @@ describe('resolveTextLayout', () => {
       fill: '#111827',
     } satisfies TextStyle;
 
-    expect(resolveTextLayout(measureText, style)).toEqual({
+    expect(resolveTextLayout(measureText, text, style)).toEqual({
       lines: [
         {
           text: 'one two',

@@ -125,7 +125,6 @@ export interface TextStyle
     CursorStyle,
     BoxStyle,
     LayoutItemStyle {
-  text: string;
   x?: Exclude<Length, 'auto'>;
   y?: Exclude<Length, 'auto'>;
   lineHeight?: number;

@@ -1,4 +1,5 @@
 import { defineComp } from '../define-comp.js';
+import { definePrimitive } from '../define-primitive.js';
 import { CRCNode, RenderingContext2D, SystemStyle } from '../types.js';
 import { stripLayoutParticipation } from '../style/resolve-built-in.js';
 import type {
@@ -7,6 +8,11 @@ import type {
   ResolvedDrawingStyle,
 } from '../style/types.js';
 
+export interface GroupProps {
+  children: CRCNode;
+}
+
+/** @internal Temporary lowercase-adapter program props. */
 export interface GProps {
   children: CRCNode[];
 }
@@ -27,7 +33,11 @@ export interface GStyle extends SystemStyle, BoxStyle, LayoutItemStyle {
 
 type ResolvedGStyle = ResolvedDrawingStyle<GStyle>;
 
-function G(props: GProps, style: Readonly<ResolvedGStyle>, ctx: RenderingContext2D) {
+function renderGroup(
+  props: GroupProps,
+  style: Readonly<ResolvedGStyle>,
+  ctx: RenderingContext2D,
+) {
   let transform = ctx.getTransform();
 
   const { scaleX = 1, scaleY = 1 } = style;
@@ -65,9 +75,29 @@ function G(props: GProps, style: Readonly<ResolvedGStyle>, ctx: RenderingContext
 }
 
 /**
- * Creates a group element that can be used to define transformations on a set
- * of related CRC elements.
+ * Describes a transformation group for JSX or createElement authoring.
  */
-export const g = defineComp<GProps, GStyle, GStyle, ResolvedGStyle>(G, {
+export const Group = definePrimitive<
+  GroupProps,
+  GStyle,
+  GStyle,
+  ResolvedGStyle
+>(renderGroup, {
   resolveStyle: style => stripLayoutParticipation(style) as ResolvedGStyle,
 });
+
+function renderLegacyGroup(
+  props: GProps,
+  style: Readonly<ResolvedGStyle>,
+  ctx: RenderingContext2D,
+) {
+  return renderGroup(props, style, ctx);
+}
+
+/** @internal Temporary lowercase authoring adapter retained until Task 12. */
+export const g = defineComp<GProps, GStyle, GStyle, ResolvedGStyle>(
+  renderLegacyGroup,
+  {
+    resolveStyle: style => stripLayoutParticipation(style) as ResolvedGStyle,
+  },
+);
