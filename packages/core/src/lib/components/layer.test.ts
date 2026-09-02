@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComp } from '../define-comp';
 import { crc } from '../crc';
 import { createElement } from '../element/create-element';
+import { Fragment } from '../element/fragment';
 import { executeRender } from '../execute-render';
 import { getCRCInstance, GLOBAL_STATE } from '../global-state';
 import { crcCursor } from '../hooks/crc-cursor';
@@ -333,7 +334,10 @@ describe('Layer children and retained subtree contract', () => {
       return rect({ style: { width: 30, height: 30 }, key: label });
     });
     const scene = () => createElement(Layer, {
-      children: focusManaged(FocusTarget({ label: 'cached' })),
+      children: focusManaged(createElement(Fragment, {
+        key: 'cached-policy-scope',
+        children: FocusTarget({ label: 'cached' }),
+      })),
     });
     const mounted = mountNow(scene());
     const policy = getCRCInstance(mounted.canvas).eventRoot.focusPolicy as unknown as

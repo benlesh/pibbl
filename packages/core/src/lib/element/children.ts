@@ -2,7 +2,9 @@ import { isCRCElement } from './create-element.js';
 import { isFragmentElement } from './fragment.js';
 import {
   getElementPolicyDefinition,
+  getPolicyPreparationSource,
   getElementSource,
+  setPolicyPreparationSource,
 } from './metadata.js';
 import type {
   CRCElement,
@@ -30,6 +32,16 @@ export function materializeContainerChildren(
   visitContainerNode(node, receiver, elements);
   if (options.validateKeys !== false) assertUniqueKeys(elements, receiver);
   return Object.freeze(elements);
+}
+
+/** Prepares a policy descriptor for APIs that receive one element directly. */
+export function prepareElementPolicies(
+  element: CRCElement<any>,
+  receiver: string,
+): CRCElement<any> {
+  if (!getElementPolicyDefinition(element.type)) return element;
+  const [prepared] = materializeContainerChildren(element, receiver);
+  return prepared;
 }
 
 /** Materializes Text's recursive scalar content into one reusable string. */
@@ -97,12 +109,16 @@ function visitContainerNode(
       return;
     }
     let prepared = node;
+    const preparationSource = getPolicyPreparationSource(node) ?? node;
     for (const pendingPolicy of pendingPolicies) {
       const definition = getElementPolicyDefinition(pendingPolicy.type);
       if (!definition) {
         throw new Error('CRC policy preparation metadata was lost.');
       }
       prepared = definition.prepare(pendingPolicy, prepared);
+    }
+    if (prepared !== node) {
+      setPolicyPreparationSource(prepared, preparationSource);
     }
     elements.push(prepared);
     return;

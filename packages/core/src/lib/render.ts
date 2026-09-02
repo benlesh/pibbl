@@ -75,11 +75,22 @@ function renderKeyedFragment(
       parentId,
       parent,
     );
-    const children = materializeContainerChildren(
-      (element.props as { children?: CRCNode }).children,
-      element,
+    reconcileElementEnhancers(
+      componentRefs,
+      GLOBAL_STATE.currentCRCInstance!,
     );
-    renderPreparedChildren(children, componentRefs.id, componentRefs, true);
+    const enteredEnhancers = enterElementEnhancers(componentRefs);
+    let enhancerSuccess = false;
+    try {
+      const children = materializeContainerChildren(
+        (element.props as { children?: CRCNode }).children,
+        element,
+      );
+      renderPreparedChildren(children, componentRefs.id, componentRefs, true);
+      enhancerSuccess = true;
+    } finally {
+      exitElementEnhancers(enteredEnhancers, enhancerSuccess);
+    }
   } finally {
     clearComponentState();
   }

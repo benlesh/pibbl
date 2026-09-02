@@ -225,3 +225,144 @@ No expected image or visual baseline changed.
 - The top-level registration shape was specifically checked for tree-shaking;
   policy imports retain registration and rect-only imports eliminate focus.
 - Fresh evidence is Node 26.7.0 only. Node 24 LTS remains unverified under R8.
+
+## Fix Round 1 — keyed Fragment ownership and direct measurement
+
+Review of `ba45a0064f70f30befdbaf2b6f97fce6e13e13c6` found two
+preparation-dispatch gaps. A policy attached its descriptors to a keyed
+`Fragment`, but the Fragment-specific renderer did not run enhancer ownership
+or entry/exit. Separately, public `measureElement` selected measurement support
+before preparing a directly received policy descriptor.
+
+### TDD RED
+
+The new direct policy suite first failed with the production code unchanged:
+
+```sh
+corepack pnpm@11.21.0 exec vitest run \
+  packages/core/src/lib/focus/policy-components.test.tsx \
+  packages/core/src/lib/layout/measure.test.ts \
+  packages/core/src/lib/components/layer.test.ts \
+  --browser.headless --browser.ui=false
+```
+
+```text
+Test Files  2 failed | 1 passed (3)
+Tests       7 failed | 51 passed (58)
+```
+
+The failures independently demonstrated missing keyed-Fragment focus
+ownership, missing keyed-Fragment lifecycle entry/exit, bypassed
+keyboard-without-focus validation, three unsupported policy measurements, and
+missing policy state during Layer replay.
+
+### Implementation and regression coverage
+
+- The keyed-Fragment renderer now reconciles, enters, and exits descriptors on
+  its existing keyed identity scope. It still never invokes `Fragment`, opens
+  hook or paint state, or creates an additional policy identity.
+- Direct `measureElement(policy)` prepares that policy once before dispatch and
+  measures the resulting child without reconciling or acquiring enhancers.
+- Private preparation-source metadata preserves the original active
+  measurement identity through policy clones. This prevents a cyclic
+  measurement from evading cycle detection by manufacturing a fresh clone on
+  each recursive call.
+- Direct tests cover nested finite iterables executing exactly once, nested
+  policy declaration order, keyed-Fragment focus and keyboard validation,
+  duplicate managers, mount/update/enter/exit/dispose and failure cleanup,
+  stable target state and parent identity, no Fragment hook slots, policy
+  removal without remount, and Layer cache replay.
+- Public measurement tests cover primitive and measurable-component parity,
+  unsupported plain-component parity, invalid-child source metadata, nested
+  iterable execution count, keyed-Fragment behavior, cycle detection, and no
+  focus-manager DOM listener acquisition.
+
+### Final Fix Round 1 evidence
+
+All evidence below ran after the final implementation and cycle-identity
+regression.
+
+```sh
+corepack pnpm@11.21.0 exec vitest run \
+  packages/core/src/lib/focus/policy-components.test.tsx \
+  packages/core/src/lib/layout/measure.test.ts \
+  --browser.headless --browser.ui=false
+```
+
+```text
+Test Files  2 passed (2)
+Tests       22 passed (22)
+```
+
+```sh
+corepack pnpm@11.21.0 exec vitest run \
+  packages/core/src/lib/focus \
+  packages/core/src/lib/element-enhancers.test.ts \
+  packages/core/src/lib/components/layer.test.ts \
+  packages/core/test/focus-navigation.test.ts \
+  packages/core/test/interaction-dispatch.test.ts \
+  --browser.headless --browser.ui=false
+```
+
+```text
+Test Files  15 passed (15)
+Tests       208 passed (208)
+Duration    2.74s
+```
+
+```sh
+corepack pnpm@11.21.0 exec vitest run \
+  packages/core/src/lib/layout \
+  packages/core/src/lib/focus \
+  packages/core/src/lib/components/layer.test.ts \
+  packages/core/src/lib/element-enhancers.test.ts \
+  packages/core/test/lifecycle-ownership.test.ts \
+  packages/core/test/runtime-cleanup-stress.test.ts \
+  --browser.headless --browser.ui=false
+```
+
+```text
+Test Files  24 passed (24)
+Tests       329 passed (329)
+Duration    10.49s
+```
+
+```sh
+corepack pnpm@11.21.0 exec vitest run packages/core \
+  --browser.headless --browser.ui=false
+```
+
+```text
+Test Files  83 passed (83)
+Tests       895 passed | 2 skipped (897)
+Duration    21.43s
+```
+
+The following gates also passed:
+
+```sh
+corepack pnpm@11.21.0 typecheck
+corepack pnpm@11.21.0 lint
+corepack pnpm@11.21.0 scenarios:check
+corepack pnpm@11.21.0 playground:build
+corepack pnpm@11.21.0 test:package-consumer
+corepack pnpm@11.21.0 test:package-consumer:packed
+corepack pnpm@11.21.0 test:visual-safeguard
+```
+
+The packed tree-shaking check again found the focus marker absent without the
+policy import and present with it: `113966` no-focus bytes versus `137630`
+with-focus bytes. The visual safeguard preserved every baseline byte. The
+playground build retained only the previously recorded warnings.
+
+### Fix Round 1 self-review and concerns
+
+- Enhancer ordering and validation use the same descriptor reconciliation as
+  ordinary components; the keyed Fragment adds no second ownership boundary.
+- Measurement preparation is direct-policy-only, so an unwrapped keyed
+  Fragment retains its established unsupported-measurement diagnostic.
+- Measurement performs preparation per public call and never invokes enhancer
+  mount/update/enter/exit or attaches focus listeners.
+- No public exports, declarations, scenario catalogs, or visual baselines
+  changed in this fix. No Task 10–11 scenario work was pulled forward.
+- Fresh evidence remains Node 26.7.0 with pnpm 11.21.0 under the R8 variance.

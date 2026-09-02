@@ -7,6 +7,7 @@ import {
   getPrimitiveDefinition,
   getPrimitiveProgramProps,
   getPrimitiveReceiverToken,
+  getPolicyPreparationSource,
   getSpecifiedStyle,
 } from '../element/metadata.js';
 import { recordLayoutMeasurement } from './diagnostics.js';
@@ -15,6 +16,7 @@ import type {
   MeasureResult,
 } from '../types.js';
 import type { CRCElement } from '../element/types.js';
+import { prepareElementPolicies } from '../element/children.js';
 import type { Constraints } from './types.js';
 
 export type {
@@ -48,12 +50,15 @@ function measureElementInternal(
   service: CanvasMeasurementService,
   context: MeasurementContext,
 ): MeasureResult {
+  element = prepareElementPolicies(element, 'measureElement');
   recordLayoutMeasurement();
   const type = element.type;
   const definition = getPrimitiveDefinition(type);
   const component = type.name || 'Anonymous';
   const preNormalized = takePreNormalizedStyle(element);
-  const source = preNormalized?.source ?? element;
+  const source = getPolicyPreparationSource(element) ??
+    preNormalized?.source ??
+    element;
   if (context.active.has(source)) {
     throw layoutDiagnostic({
       component,

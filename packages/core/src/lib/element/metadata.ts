@@ -23,6 +23,7 @@ export interface InternalElementMetadata {
   readonly specifiedStyle?: Readonly<SystemStyle>;
   readonly legacyProgramProps?: unknown;
   readonly primitiveReceiverToken?: object;
+  readonly policyPreparationSource?: CRCElement<any>;
   identityHint?: unknown;
 }
 
@@ -116,6 +117,24 @@ export function getElementMetadata(
   element: CRCElement<any>,
 ): InternalElementMetadata | undefined {
   return elementMetadata.get(element);
+}
+
+/** @internal Retains the original measurable identity behind policy clones. */
+export function setPolicyPreparationSource(
+  element: CRCElement<any>,
+  source: CRCElement<any>,
+): void {
+  elementMetadata.set(element, {
+    ...elementMetadata.get(element),
+    policyPreparationSource: source,
+  });
+}
+
+/** @internal Reads the original measurable identity behind policy clones. */
+export function getPolicyPreparationSource(
+  element: CRCElement<any>,
+): CRCElement<any> | undefined {
+  return elementMetadata.get(element)?.policyPreparationSource;
 }
 
 /** @internal Registers private WeakMap-backed annotations for immutable clones. */
