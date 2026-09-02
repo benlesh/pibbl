@@ -12,6 +12,7 @@ import {
   exitElementEnhancers,
   reconcileElementEnhancers,
 } from './element-enhancers.js';
+import { getLegacyProgramProps } from './element/metadata.js';
 
 export function render<P, S extends SystemStyle>(
   element: CompEl<P, S>,
@@ -59,7 +60,7 @@ export function render<P, S extends SystemStyle>(
       let onAfterRender: (() => void) | undefined;
       try {
         const result = componentRefs.element.type(
-          componentRefs.element.props,
+          getLegacyProgramProps(componentRefs.element) ?? componentRefs.element.props,
           resolveElementStyle(componentRefs.element),
           ctx,
         );
@@ -75,7 +76,7 @@ export function render<P, S extends SystemStyle>(
               if (child) {
                 ctx.save();
                 try {
-                  render(child, id, componentRefs);
+                  render(child as CompEl<any, any>, id, componentRefs);
                 } finally {
                   ctx.restore();
                 }
@@ -84,7 +85,7 @@ export function render<P, S extends SystemStyle>(
           } else {
             ctx.save();
             try {
-              render(result, id, componentRefs);
+              render(result as CompEl<any, any>, id, componentRefs);
             } finally {
               ctx.restore();
             }

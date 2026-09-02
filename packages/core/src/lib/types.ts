@@ -10,6 +10,18 @@ import type {
   CRCEventListenerRegistration,
   CRCEventTargetRegistration,
 } from './events/registrations.js';
+import type { CRCElement, CRCNode } from './element/types.js';
+export type {
+  CRCComponent,
+  CRCContainerChild,
+  CRCElement,
+  CRCElementType,
+  CRCEmptyNode,
+  CRCKey,
+  CRCNode,
+  CRCTextChild,
+  CRCRenderResult,
+} from './element/types.js';
 
 export interface SystemStyle {
   custom?: unknown;
@@ -39,23 +51,21 @@ type StyleField<S> = [RequiredKeys<S>] extends [never]
 export type ComponentInput<P, S extends SystemStyle = SystemStyle> =
   ProgramProps<P> & { key?: string } & StyleField<S>;
 
-export interface CompEl<
+export type CompEl<
   P = any,
   S extends SystemStyle = SystemStyle,
   N extends SystemStyle = S,
   R extends SystemStyle = N,
-> {
-  type: CompFn<P, S, N, R>;
-  props: ProgramProps<P>;
-  style: SpecifiedStyle<S>;
-  key?: string;
+> = CRCElement<ProgramProps<P> & { style: SpecifiedStyle<S> }> & {
+  readonly type: CompFn<P, S, N, R>;
+  readonly props: Readonly<ProgramProps<P> & { style: SpecifiedStyle<S> }>;
+  /** @deprecated Temporary compatibility alias; use element.props.style. */
+  readonly style: SpecifiedStyle<S>;
   /** @internal */
   identityHint?: InternalIdentityHint;
-}
+};
 
-export type FalsyNodes = undefined | false | null | '' | 0;
-
-export type CRCNode = CompEl<any, any> | void | FalsyNodes;
+export type FalsyNodes = import('./element/types.js').CRCEmptyNode;
 
 export type Canvas = HTMLCanvasElement | OffscreenCanvas;
 export type RenderingContext2D =

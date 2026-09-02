@@ -33,7 +33,7 @@ afterEach(() => {
 });
 
 describe('defineComp contract', () => {
-  it('creates fresh elements with stable component type and exact props', () => {
+  it('creates fresh elements with stable component type and copied descriptor props', () => {
     const render = vi.fn();
     const Component = defineComp(render);
     const firstProps = { value: 1 };
@@ -45,11 +45,13 @@ describe('defineComp contract', () => {
     expect(first).not.toBe(second);
     expect(first.type).toBe(render);
     expect(second.type).toBe(render);
-    expect(first.props).toBe(firstProps);
-    expect(second.props).toBe(secondProps);
+    expect(first.props).toEqual({ value: 1, style: {} });
+    expect(second.props).toEqual({ value: 2, style: {} });
+    expect(first.props).not.toBe(firstProps);
+    expect(second.props).not.toBe(secondProps);
   });
 
-  it('stores style and key separately and passes style before the Canvas context', async () => {
+  it('stores style on props while preserving legacy callback arguments', async () => {
     const calls: unknown[] = [];
     interface ProbeStyle extends SystemStyle {
       width: number;
@@ -70,7 +72,7 @@ describe('defineComp contract', () => {
     });
     expect(element.style).toBe(style);
     expect(element.props).not.toBe(input);
-    expect('style' in element.props).toBe(false);
+    expect(element.props.style).toBe(style);
     expect('key' in element.props).toBe(false);
 
     const canvas = createCanvas();

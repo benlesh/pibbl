@@ -1,6 +1,7 @@
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { takePreNormalizedStyle } from '../style/resolve-dispatch.js';
+import { getLegacyProgramProps } from '../element/metadata.js';
 import { recordLayoutMeasurement } from './diagnostics.js';
 import type {
   CanvasMeasurementService,
@@ -69,7 +70,7 @@ function measureElementInternal(
         type.normalizeStyle(element.style) :
         element.style);
     const result = type.measure({
-      props: element.props,
+      props: getLegacyProgramProps(element) ?? element.props,
       style: normalized,
       constraints,
       service,

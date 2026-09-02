@@ -564,9 +564,7 @@ describe('built-in enhancer constructors', () => {
     expect(Object.keys(enhanced)).toEqual([
       'type',
       'props',
-      'style',
       'key',
-      'identityHint',
     ]);
   });
 

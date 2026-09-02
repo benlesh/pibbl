@@ -3,6 +3,8 @@ import {
   CompFn,
   SystemStyle,
 } from './types.js';
+import { createCRCElement } from './element/create-element.js';
+import { setLegacyProgramProps } from './element/metadata.js';
 
 export const EMPTY_STYLE: Readonly<SystemStyle> = Object.freeze({});
 
@@ -25,5 +27,12 @@ export function createElement<
   style: CompEl<P, S, N, R>['style'] = EMPTY_STYLE as CompEl<P, S, N, R>['style'],
   key?: string,
 ): CompEl<P, S, N, R> {
-  return { type: comp, props, style, key };
+  const element = createCRCElement(
+    comp as any,
+    { ...props, style },
+    key,
+    undefined,
+  );
+  setLegacyProgramProps(element, props);
+  return element as unknown as CompEl<P, S, N, R>;
 }

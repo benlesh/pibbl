@@ -1,5 +1,7 @@
 import { runTeardown } from './teardowns.js';
+import { cloneCRCElement } from './element/create-element.js';
 import type {
+  CRCElement,
   CompEl,
   CompRefs,
   CRCInstance,
@@ -45,7 +47,7 @@ export function appendElementEnhancer<
   element: CompEl<P, S, N, R>,
   descriptor: CRCElementEnhancerDescriptor,
 ): CompEl<P, S, N, R> {
-  const enhanced = { ...element };
+  const enhanced = cloneCRCElement(element as CRCElement<any>) as CompEl<P, S, N, R>;
   elementEnhancers.set(enhanced, [
     ...(elementEnhancers.get(element) ?? []),
     descriptor,
