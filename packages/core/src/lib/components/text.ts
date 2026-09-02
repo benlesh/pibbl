@@ -219,7 +219,8 @@ function measureTextStyle(
 
 function materializeTextContent(props: Readonly<TextProps>): string {
   const transaction = GLOBAL_STATE.renderTransaction;
-  if (!transaction) {
+  const receiver = GLOBAL_STATE.primitiveReceiverToken;
+  if (!transaction || !receiver) {
     return materializeTextChildren(props.children, 'Text');
   }
 
@@ -228,7 +229,6 @@ function materializeTextContent(props: Readonly<TextProps>): string {
     receivers = new WeakMap();
     materializedTextTransactions.set(transaction, receivers);
   }
-  const receiver = props as object;
   const cached = receivers.get(receiver);
   if (cached !== undefined) return cached;
   const materialized = materializeTextChildren(props.children, 'Text');

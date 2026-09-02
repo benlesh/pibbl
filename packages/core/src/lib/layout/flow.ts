@@ -1,4 +1,5 @@
 import { defineComp } from '../define-comp.js';
+import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import { normalizeEdges } from '../style/normalize.js';
@@ -58,6 +59,7 @@ interface FlowItem {
   horizontalPadding: number;
   verticalPadding: number;
   alignment: FlowAlignment;
+  receiverToken: object;
 }
 
 export interface FlowMeasurementInput {
@@ -155,6 +157,11 @@ function resolveFlowPlacements(
   for (const node of children) {
     if (!node || typeof node !== 'object' || !('type' in node)) continue;
     const child = node as CompEl<any, any>;
+    const receiverToken = getChildPrimitiveReceiverToken(
+      GLOBAL_STATE.renderTransaction,
+      GLOBAL_STATE.primitiveReceiverToken,
+      items.length,
+    );
     const normalized = normalizeDirectChildStyle(child) as Readonly<
       BoxStyle & LayoutItemStyle
     >;
@@ -170,7 +177,12 @@ function resolveFlowPlacements(
         maxHeight: container.height,
       };
       const measurementChild = { ...child };
-      setPreNormalizedStyle(measurementChild, normalized, child);
+      setPreNormalizedStyle(
+        measurementChild,
+        normalized,
+        child,
+        receiverToken,
+      );
       const result = measurement.measureElement(measurementChild, constraints);
       if (result.status === 'unsupported') {
         const axis = needsWidth ? 'width' : 'height';
@@ -211,6 +223,7 @@ function resolveFlowPlacements(
         child,
         container,
       ),
+      receiverToken,
     });
   }
 
@@ -222,6 +235,7 @@ function resolveFlowPlacements(
       items[index].normalized,
       Math.max(0, box.width - items[index].horizontalPadding),
       Math.max(0, box.height - items[index].verticalPadding),
+      items[index].receiverToken,
     ),
   }));
 }

@@ -57,6 +57,7 @@ export function executeRender(
   const prevCanvas = GLOBAL_STATE.canvas;
   const prevRenderContext = GLOBAL_STATE.renderContext;
   const prevRenderTransaction = GLOBAL_STATE.renderTransaction;
+  const prevPrimitiveReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
   const prevSeenIds = GLOBAL_STATE.seenIds;
   const prevSeenKeys = GLOBAL_STATE.seenKeys;
   const prevUnseendIds = GLOBAL_STATE.unseenIds;
@@ -150,6 +151,7 @@ export function executeRender(
     GLOBAL_STATE.canvas = prevCanvas;
     GLOBAL_STATE.renderContext = prevRenderContext;
     GLOBAL_STATE.renderTransaction = prevRenderTransaction;
+    GLOBAL_STATE.primitiveReceiverToken = prevPrimitiveReceiverToken;
     GLOBAL_STATE.seenIds = prevSeenIds;
     GLOBAL_STATE.seenKeys = prevSeenKeys;
     GLOBAL_STATE.unseenIds = prevUnseendIds;

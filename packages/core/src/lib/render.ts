@@ -16,6 +16,7 @@ import {
   getLegacyIdentityHint,
   getPrimitiveDefinition,
   getPrimitiveProgramProps,
+  getPrimitiveReceiverToken,
 } from './element/metadata.js';
 import { materializeContainerChildren } from './element/children.js';
 import { isFragmentElement } from './element/fragment.js';
@@ -108,11 +109,23 @@ function renderComponentElement<P>(
       let onAfterRender: (() => void) | undefined;
       try {
         const definition = getPrimitiveDefinition(componentRefs.element.type);
-        const result = definition ? definition.render(
-          getPrimitiveProgramProps(componentRefs.element),
-          resolveElementStyle(componentRefs.element),
-          ctx,
-        ) : componentRefs.element.type(componentRefs.element.props);
+        let result: CRCNode | void;
+        if (definition) {
+          const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
+          GLOBAL_STATE.primitiveReceiverToken =
+            getPrimitiveReceiverToken(componentRefs.element) ?? componentRefs;
+          try {
+            result = definition.render(
+              getPrimitiveProgramProps(componentRefs.element),
+              resolveElementStyle(componentRefs.element),
+              ctx,
+            ) as CRCNode;
+          } finally {
+            GLOBAL_STATE.primitiveReceiverToken = previousReceiverToken;
+          }
+        } else {
+          result = componentRefs.element.type(componentRefs.element.props);
+        }
         finalizeHookSlots(componentRefs);
 
         onAfterRender = componentRefs.onAfterRender;

@@ -1,4 +1,5 @@
 import { defineComp } from '../define-comp.js';
+import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import { normalizeEdges } from '../style/normalize.js';
@@ -172,6 +173,11 @@ function resolveGridPlacements(
   for (const node of children) {
     if (!node || typeof node !== 'object' || !('type' in node)) continue;
     const child = node as CompEl<any, any>;
+    const receiverToken = getChildPrimitiveReceiverToken(
+      GLOBAL_STATE.renderTransaction,
+      GLOBAL_STATE.primitiveReceiverToken,
+      placements.length,
+    );
     const normalized = normalizeDirectChildStyle(child) as Readonly<
       BoxStyle & GridItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
@@ -264,7 +270,12 @@ function resolveGridPlacements(
       (heightAuto && align !== 'stretch')
     ) {
       const measurementChild = { ...child };
-      setPreNormalizedStyle(measurementChild, normalized, child);
+      setPreNormalizedStyle(
+        measurementChild,
+        normalized,
+        child,
+        receiverToken,
+      );
       measured = measurement.measureElement(measurementChild, {
         minWidth: 0,
         maxWidth: area.width,
@@ -317,7 +328,12 @@ function resolveGridPlacements(
       height: resolved.contentBox.height,
     });
     const renderedChild = { ...child };
-    setPreNormalizedStyle(renderedChild, renderedStyle, child);
+    setPreNormalizedStyle(
+      renderedChild,
+      renderedStyle,
+      child,
+      receiverToken,
+    );
     placements.push({ box, element: renderedChild });
   }
   return placements;

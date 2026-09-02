@@ -130,13 +130,14 @@ export function childWithUsedSize(
   style: Readonly<SystemStyle>,
   width: number,
   height: number,
+  receiverToken?: object,
 ): CompEl<any, any> {
   const renderedChild = { ...child } as CRCElement<any>;
   setPreNormalizedStyle(renderedChild, Object.freeze({
     ...style,
     width,
     height,
-  }), child);
+  }), child, receiverToken);
   return renderedChild as CompEl<any, any>;
 }
 

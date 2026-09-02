@@ -6,6 +6,7 @@ import { flow } from '../layout/flow.js';
 import { measureElement } from '../layout/measure.js';
 import { componentTest } from '../test-utils/component-test';
 import { takeScreenshot } from '../util/test-utils';
+import { Group } from './g.js';
 import { Rectangle } from './rect.js';
 import { Text, text } from './text';
 
@@ -124,6 +125,108 @@ describe('text', () => {
       canvas.dispose();
     } finally {
       measureText.mockRestore();
+      fillText.mockRestore();
+    }
+  });
+
+  it('materializes a reused descriptor once per layout sibling occurrence', async () => {
+    let iterableReads = 0;
+    const children = {
+      *[Symbol.iterator]() {
+        iterableReads++;
+        yield `value-${iterableReads}`;
+      },
+    };
+    const element = createElement(Text, {
+      children,
+      style: { fill: 'black' },
+    });
+    const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');
+
+    try {
+      const canvas = await componentTest(flow({
+        style: { width: 500, height: 100 },
+        children: [element, element],
+      }), { width: 500, height: 100 });
+
+      expect(iterableReads).toBe(2);
+      expect(fillText.mock.calls.map(([value]) => value)).toEqual([
+        'value-1',
+        'value-2',
+      ]);
+      canvas.dispose();
+    } finally {
+      fillText.mockRestore();
+    }
+  });
+
+  it('validates a reused descriptor separately at each layout occurrence', () => {
+    let iterableReads = 0;
+    const children = {
+      *[Symbol.iterator]() {
+        iterableReads++;
+        yield iterableReads === 1 ? 'valid' : createElement(Rectangle, {
+          style: { width: 10, height: 10 },
+        });
+      },
+    };
+    const element = createElement(Text, {
+      children: children as never,
+      style: { fill: 'black' },
+    });
+    const scene = flow({
+      style: { width: 500, height: 100 },
+      children: [element, element],
+    });
+    let pendingFrame: FrameRequestCallback | undefined;
+    const requestAnimationFrame = vi
+      .spyOn(window, 'requestAnimationFrame')
+      .mockImplementation(callback => {
+        pendingFrame = callback;
+        return 1;
+      });
+    const canvas = document.createElement('canvas');
+    document.body.appendChild(canvas);
+    const controller = crc(canvas, scene);
+
+    try {
+      expect(() => pendingFrame?.(0)).toThrowError(
+        'Text received a CRC element inside textual content as a CRC child.',
+      );
+      expect(iterableReads).toBe(2);
+    } finally {
+      controller.dispose();
+      requestAnimationFrame.mockRestore();
+    }
+  });
+
+  it('materializes a reused descriptor separately for direct sibling paints', async () => {
+    let iterableReads = 0;
+    const children = {
+      *[Symbol.iterator]() {
+        iterableReads++;
+        yield `value-${iterableReads}`;
+      },
+    };
+    const element = createElement(Text, {
+      children,
+      style: { fill: 'black' },
+    });
+    const scene = createElement(Group, null, [element, element]);
+    const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');
+    const canvas = document.createElement('canvas');
+    document.body.appendChild(canvas);
+    const controller = crc(canvas, scene);
+
+    try {
+      await nextFrame();
+      expect(iterableReads).toBe(2);
+      expect(fillText.mock.calls.map(([value]) => value)).toEqual([
+        'value-1',
+        'value-2',
+      ]);
+    } finally {
+      controller.dispose();
       fillText.mockRestore();
     }
   });

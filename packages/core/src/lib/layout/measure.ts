@@ -3,8 +3,10 @@ import { GLOBAL_STATE } from '../global-state.js';
 import { EMPTY_STYLE } from '../create-element.js';
 import { takePreNormalizedStyle } from '../style/resolve-dispatch.js';
 import {
+  createPrimitiveReceiverToken,
   getPrimitiveDefinition,
   getPrimitiveProgramProps,
+  getPrimitiveReceiverToken,
   getSpecifiedStyle,
 } from '../element/metadata.js';
 import { recordLayoutMeasurement } from './diagnostics.js';
@@ -76,14 +78,22 @@ function measureElementInternal(
     const normalized = preNormalized?.style ?? (definition.normalizeStyle ?
         definition.normalizeStyle(specifiedStyle) :
         specifiedStyle);
-    const result = definition.measure({
-      props: getPrimitiveProgramProps(element),
-      style: normalized,
-      constraints,
-      service,
-      measureElement: (child, childConstraints) =>
-        measureElementInternal(child, childConstraints, service, context),
-    });
+    const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
+    GLOBAL_STATE.primitiveReceiverToken =
+      getPrimitiveReceiverToken(element) ?? createPrimitiveReceiverToken();
+    let result: MeasureResult;
+    try {
+      result = definition.measure({
+        props: getPrimitiveProgramProps(element),
+        style: normalized,
+        constraints,
+        service,
+        measureElement: (child, childConstraints) =>
+          measureElementInternal(child, childConstraints, service, context),
+      });
+    } finally {
+      GLOBAL_STATE.primitiveReceiverToken = previousReceiverToken;
+    }
     if (result.status === 'unsupported') return result;
     validateMeasuredSize(result.size.width, 'width', component, constraints);
     validateMeasuredSize(result.size.height, 'height', component, constraints);
@@ -102,6 +112,7 @@ function withIsolatedRenderState<T>(work: () => T): T {
     componentIsMounting: GLOBAL_STATE.componentIsMounting,
     componentHookIndex: GLOBAL_STATE.componentHookIndex,
     renderContext: GLOBAL_STATE.renderContext,
+    primitiveReceiverToken: GLOBAL_STATE.primitiveReceiverToken,
     unseenIds: GLOBAL_STATE.unseenIds,
     seenIds: GLOBAL_STATE.seenIds,
     seenKeys: GLOBAL_STATE.seenKeys,
@@ -114,6 +125,7 @@ function withIsolatedRenderState<T>(work: () => T): T {
   GLOBAL_STATE.componentIsMounting = false;
   GLOBAL_STATE.componentHookIndex = 0;
   GLOBAL_STATE.renderContext = undefined;
+  GLOBAL_STATE.primitiveReceiverToken = undefined;
   GLOBAL_STATE.unseenIds = undefined;
   GLOBAL_STATE.seenIds = undefined;
   GLOBAL_STATE.seenKeys = undefined;

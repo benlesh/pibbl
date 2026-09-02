@@ -3,6 +3,7 @@ import { EMPTY_STYLE } from '../create-element.js';
 import {
   getPrimitiveDefinition,
   getSpecifiedStyle,
+  setPrimitiveReceiverToken,
   type PrimitiveDefinition,
 } from '../element/metadata.js';
 import type { CRCElement } from '../element/types.js';
@@ -25,8 +26,10 @@ export function setPreNormalizedStyle(
   element: CRCElement<any>,
   style: Readonly<SystemStyle>,
   source: CRCElement<any> = element,
+  receiverToken?: object,
 ): void {
   preNormalizedStyles.set(element, { style, source });
+  if (receiverToken) setPrimitiveReceiverToken(element, receiverToken);
 }
 
 /** @internal Temporary recognition seam for legacy layout descriptor clones. */

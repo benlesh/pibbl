@@ -3,6 +3,7 @@ import type {
   MeasureResult,
   NormalizedStyle,
   PrimitiveProgramProps,
+  CRCRenderTransaction,
   RenderingContext2D,
   ResolvedStyle,
   SpecifiedStyle,
@@ -21,12 +22,16 @@ export interface InternalElementMetadata {
   readonly source?: CRCElementSource;
   readonly specifiedStyle?: Readonly<SystemStyle>;
   readonly legacyProgramProps?: unknown;
+  readonly primitiveReceiverToken?: object;
   identityHint?: unknown;
 }
 
 const elementMetadata = new WeakMap<CRCElement<any>, InternalElementMetadata>();
 const primitiveDefinitions = new WeakMap<Function, PrimitiveDefinition>();
-const primitiveProgramProps = new WeakMap<object, unknown>();
+const childPrimitiveReceiverTransactions = new WeakMap<
+  CRCRenderTransaction,
+  WeakMap<object, Map<number, object>>
+>();
 
 export interface PrimitiveDefinition<
   P = any,
@@ -115,15 +120,57 @@ export function setLegacyProgramProps<P>(element: CRCElement<any>, props: P): vo
 export function getPrimitiveProgramProps<P>(element: CRCElement<any>): P {
   const legacy = getLegacyProgramProps<P>(element);
   if (legacy !== undefined) return legacy;
-  const props = element.props as object;
-  const cached = primitiveProgramProps.get(props);
-  if (cached !== undefined) return cached as P;
   const { style: _style, ...programProps } = element.props as {
     readonly style?: unknown;
     readonly [key: PropertyKey]: unknown;
   };
-  primitiveProgramProps.set(props, programProps);
   return programProps as P;
+}
+
+/** @internal Associates measurement and paint clones for one occurrence. */
+export function setPrimitiveReceiverToken(
+  element: CRCElement<any>,
+  token: object,
+): void {
+  const current = elementMetadata.get(element) ?? {};
+  elementMetadata.set(element, { ...current, primitiveReceiverToken: token });
+}
+
+/** @internal Reads the occurrence token carried by an internal clone. */
+export function getPrimitiveReceiverToken(
+  element: CRCElement<any>,
+): object | undefined {
+  return elementMetadata.get(element)?.primitiveReceiverToken;
+}
+
+/** @internal Creates one receiver identity for a standalone measurement. */
+export function createPrimitiveReceiverToken(): object {
+  return {};
+}
+
+/** @internal Reuses a direct-child occurrence across layout measurement and paint. */
+export function getChildPrimitiveReceiverToken(
+  transaction: CRCRenderTransaction | undefined,
+  parent: object | undefined,
+  occurrence: number,
+): object {
+  if (!transaction || !parent) return createPrimitiveReceiverToken();
+  let parents = childPrimitiveReceiverTransactions.get(transaction);
+  if (!parents) {
+    parents = new WeakMap();
+    childPrimitiveReceiverTransactions.set(transaction, parents);
+  }
+  let children = parents.get(parent);
+  if (!children) {
+    children = new Map();
+    parents.set(parent, children);
+  }
+  let token = children.get(occurrence);
+  if (!token) {
+    token = createPrimitiveReceiverToken();
+    children.set(occurrence, token);
+  }
+  return token;
 }
 
 /** @internal Temporary bridge for the legacy placement identity field. */

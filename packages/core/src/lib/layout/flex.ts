@@ -1,4 +1,5 @@
 import { defineComp } from '../define-comp.js';
+import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import { normalizeEdges } from '../style/normalize.js';
@@ -92,6 +93,7 @@ interface FlexItem {
   crossAuto: boolean;
   alignSelf: CrossAlignment | 'auto';
   renderedChild: CompEl<any, any>;
+  receiverToken: object;
 }
 
 interface FlexLine {
@@ -398,6 +400,11 @@ function resolveFlexPlacements(
   for (const node of children) {
     if (!node || typeof node !== 'object' || !('type' in node)) continue;
     const child = node as CompEl<any, any>;
+    const receiverToken = getChildPrimitiveReceiverToken(
+      GLOBAL_STATE.renderTransaction,
+      GLOBAL_STATE.primitiveReceiverToken,
+      items.length,
+    );
     const normalized = normalizeDirectChildStyle(child) as Readonly<
       BoxStyle & FlexItemStyle & LayoutItemStyle & Record<string, unknown>
     >;
@@ -442,7 +449,12 @@ function resolveFlexPlacements(
         maxHeight: container.height,
       };
       const measurementChild = { ...child };
-      setPreNormalizedStyle(measurementChild, normalized, child);
+      setPreNormalizedStyle(
+        measurementChild,
+        normalized,
+        child,
+        receiverToken,
+      );
       const result = measurement.measureElement(measurementChild, constraints);
       if (result.status === 'measured') {
         measured = result.size;
@@ -551,6 +563,7 @@ function resolveFlexPlacements(
       crossAuto,
       alignSelf: alignment,
       renderedChild: child,
+      receiverToken,
     });
   }
 
@@ -609,7 +622,12 @@ function resolveFlexPlacements(
         height: row ? Math.max(0, outerCross - item.paddingCross) : item.targetMain,
       };
       const renderedChild = { ...item.child };
-      setPreNormalizedStyle(renderedChild, Object.freeze(usedStyle), item.child);
+      setPreNormalizedStyle(
+        renderedChild,
+        Object.freeze(usedStyle),
+        item.child,
+        item.receiverToken,
+      );
       placements.push({ box, element: renderedChild });
       mainCursor += outerMain + mainGap + distribution.between;
     }

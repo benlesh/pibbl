@@ -21,6 +21,7 @@ export interface GlobalState {
   componentHookIndex: number;
   renderContext: RenderingContext2D | undefined;
   renderTransaction: CRCRenderTransaction | undefined;
+  primitiveReceiverToken: object | undefined;
   unseenIds: Set<string> | undefined;
   seenIds: Set<string> | undefined;
   seenKeys: Set<string> | undefined;
@@ -39,6 +40,7 @@ export const GLOBAL_STATE: GlobalState = {
   componentHookIndex: 0,
   renderContext: undefined,
   renderTransaction: undefined,
+  primitiveReceiverToken: undefined,
   unseenIds: undefined,
   seenIds: undefined,
   seenKeys: undefined,
@@ -176,6 +178,7 @@ export function clearTempState() {
   GLOBAL_STATE.canvas = undefined;
   GLOBAL_STATE.renderContext = undefined;
   GLOBAL_STATE.renderTransaction = undefined;
+  GLOBAL_STATE.primitiveReceiverToken = undefined;
   GLOBAL_STATE.layoutStack = undefined;
   clearComponentState();
 }
