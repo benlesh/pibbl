@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Fragment } from '../../index.js';
 import { crc } from '../crc.js';
 import { defineComp } from '../define-comp.js';
-import { clearSharedState } from '../global-state.js';
+import { clearSharedState, getCRCInstance } from '../global-state.js';
 import { crcRef } from '../hooks/crc-ref.js';
 
 interface IdentityProbeProps {
@@ -62,6 +62,20 @@ describe('Fragment identity', () => {
     const controller = crc(canvas, scoped('initial'));
     await nextFrame();
     const initial = observations.get('initial');
+    const refs = Array.from(getCRCInstance(canvas).refs.values());
+    const fragmentScopes = refs.filter(ref => ref.element.type === Fragment);
+    const childScopes = refs.filter(ref => ref.element.key === 'child');
+
+    expect(refs).toHaveLength(2);
+    expect(fragmentScopes).toHaveLength(1);
+    expect(fragmentScopes[0]).toMatchObject({
+      parent: undefined,
+      hooks: [],
+      refs: [],
+      onAfterRender: undefined,
+    });
+    expect(childScopes).toHaveLength(1);
+    expect(childScopes[0].parent).toBe(fragmentScopes[0]);
 
     crc(canvas, scoped('same-scope'));
     await nextFrame();

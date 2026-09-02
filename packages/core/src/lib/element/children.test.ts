@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { crc } from '../crc.js';
-import { defineComp } from '../define-comp.js';
 import { executeRender } from '../execute-render.js';
 import { clearSharedState, getCRCInstance } from '../global-state.js';
 import { mountCRC } from '../mount-crc.js';
@@ -16,9 +15,14 @@ interface ProbeProps {
   rendered: string[];
 }
 
-const Probe = defineComp(({ value, rendered }: ProbeProps) => {
+function Probe({ value, rendered }: ProbeProps): void {
   rendered.push(value);
-});
+}
+
+function probe(input: ProbeProps & { key?: string }) {
+  const { key, ...props } = input;
+  return jsx(Probe, props, key);
+}
 
 beforeEach(() => {
   document.body.innerHTML = '';
@@ -30,13 +34,21 @@ afterEach(() => {
 });
 
 describe('recursive CRC container children', () => {
+  it('constructs the shared traversal probe as a plain function element', () => {
+    const rendered: string[] = [];
+    const element = probe({ value: 'not-rendered', rendered });
+
+    expect(element.type).toBe(Probe);
+    expect(rendered).toEqual([]);
+  });
+
   it('returns one frozen direct-element sequence from recursive container input', () => {
     const rendered: string[] = [];
     let executions = 0;
     function* children(): Iterable<CRCNode> {
       executions++;
-      yield Probe({ key: 'a', value: 'A', rendered });
-      yield [null, Probe({ key: 'b', value: 'B', rendered })];
+      yield probe({ key: 'a', value: 'A', rendered });
+      yield [null, probe({ key: 'b', value: 'B', rendered })];
     }
 
     const prepared = materializeContainerChildren(children(), 'Group');
@@ -57,7 +69,7 @@ describe('recursive CRC container children', () => {
     expect(materializeTextChildren(content(), 'Text')).toBe('Hello 0!');
     expect(executions).toBe(1);
     expect(() => materializeTextChildren(
-      Probe({ value: 'invalid', rendered: [] }) as never,
+      probe({ value: 'invalid', rendered: [] }) as never,
       'Text',
     )).toThrowError(/Text.*CRC element/i);
   });
@@ -70,8 +82,8 @@ describe('recursive CRC container children', () => {
 
     function* rows(): Iterable<CRCNode> {
       generatorExecutions++;
-      yield Probe({ key: 'a', value: 'A', rendered });
-      yield [false, Probe({ key: 'b', value: 'B', rendered })];
+      yield probe({ key: 'a', value: 'A', rendered });
+      yield [false, probe({ key: 'b', value: 'B', rendered })];
     }
 
     const recursiveIterable: Iterable<CRCNode> = {
@@ -83,7 +95,7 @@ describe('recursive CRC container children', () => {
           undefined,
           '',
           0,
-          [Probe({ key: 'c', value: 'C', rendered })],
+          [probe({ key: 'c', value: 'C', rendered })],
         ];
       },
     };
@@ -92,7 +104,7 @@ describe('recursive CRC container children', () => {
       children: [
         rows(),
         jsx(Fragment, { children: recursiveIterable }),
-        Probe({ key: 'footer', value: 'footer', rendered }),
+        probe({ key: 'footer', value: 'footer', rendered }),
       ],
     }));
     await nextFrame();
@@ -111,7 +123,7 @@ describe('recursive CRC container children', () => {
 
     expect(getCRCInstance(canvas).root).toBeUndefined();
 
-    crc(canvas, Probe({ value: 'mounted', rendered }));
+    crc(canvas, probe({ value: 'mounted', rendered }));
     await nextFrame();
     expect(rendered).toEqual(['mounted']);
 
@@ -126,9 +138,9 @@ describe('recursive CRC container children', () => {
     const rendered: string[] = [];
     const root = jsx(Fragment, {
       children: [
-        [Probe({ key: 'duplicate', value: 'first', rendered })],
+        [probe({ key: 'duplicate', value: 'first', rendered })],
         jsx(Fragment, {
-          children: Probe({ key: 'duplicate', value: 'second', rendered }),
+          children: probe({ key: 'duplicate', value: 'second', rendered }),
         }),
       ],
     });
