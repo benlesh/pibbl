@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { crc } from '../crc';
-import { defineComp } from '../define-comp';
 import { clearSharedState, getCRCInstance } from '../global-state';
 import { crcEventListener } from '../hooks/crc-event-listener';
 import { crcEventTarget } from '../hooks/crc-event-target';
@@ -23,6 +22,7 @@ import type {
   CRCKeyboardEvent,
   CRCTouchEvent,
 } from './types';
+import { createElement } from '../element/create-element';
 
 type ExplicitDispatch = (
   type: CRCEventType,
@@ -157,7 +157,7 @@ describe('touch event dispatch', () => {
 
   it('retains each contact target through move and end and releases it on end or cancel', async () => {
     const trace: string[] = [];
-    const Target = defineComp<{ label: string; x: number }>(({ label, x }) => {
+    const Target = ({ label, x }: { label: string; x: number }) => {
       const record = (event: CRCTouchEvent) => {
         trace.push(
           `${label}:${event.type}:${touchIdentifiers(event.changedTouches).join(',')}:${event.x},${event.y}`,
@@ -172,13 +172,13 @@ describe('touch event dispatch', () => {
         path: rectanglePath(x, 0, 50, 50),
         fill: true,
       });
-    });
-    const Root = defineComp(() => [
-      Target({ label: 'a', x: 0 }),
-      Target({ label: 'b', x: 50 }),
-    ]);
+    };
+    const Root = (_props: {}) => [
+      createElement(Target, { label: 'a', x: 0 }),
+      createElement(Target, { label: 'b', x: 50 }),
+    ];
     const canvas = createCanvas();
-    crc(canvas, Root({}));
+    crc(canvas, createElement(Root, {}));
     await nextFrame();
 
     const startOne = createTouch(canvas, 1, 20, 20);
@@ -211,7 +211,7 @@ describe('touch event dispatch', () => {
       targetTouches: TouchList;
       touches: TouchList;
     }> = [];
-    const Target = defineComp<{ label: string; x: number }>(({ label, x }) => {
+    const Target = ({ label, x }: { label: string; x: number }) => {
       const record = (event: CRCTouchEvent) => groups.push({
         label,
         x: event.x,
@@ -226,13 +226,13 @@ describe('touch event dispatch', () => {
         path: rectanglePath(x, 0, 50, 50),
         fill: true,
       });
-    });
-    const Root = defineComp(() => [
-      Target({ label: 'a', x: 0 }),
-      Target({ label: 'b', x: 50 }),
-    ]);
+    };
+    const Root = (_props: {}) => [
+      createElement(Target, { label: 'a', x: 0 }),
+      createElement(Target, { label: 'b', x: 50 }),
+    ];
     const canvas = createCanvas();
-    crc(canvas, Root({}));
+    crc(canvas, createElement(Root, {}));
     await nextFrame();
 
     const observer = vi.fn();
@@ -317,20 +317,20 @@ describe('non-coordinate logical transport', () => {
 
   it('preserves a logical related target for explicit focus dispatch', async () => {
     let received: CRCFocusEvent | undefined;
-    const Target = defineComp<{ label: string }>(({ label }) => {
+    const Target = ({ label }: { label: string }) => {
       crcEventTarget({
         onFocusOut: label === 'a' ? event => received = event : () => undefined,
       }, {
         path: rectanglePath(label === 'a' ? 0 : 50, 0, 50, 50),
         fill: true,
       });
-    });
-    const Root = defineComp(() => [
-      Target({ label: 'a' }),
-      Target({ label: 'b' }),
-    ]);
+    };
+    const Root = (_props: {}) => [
+      createElement(Target, { label: 'a' }),
+      createElement(Target, { label: 'b' }),
+    ];
     const canvas = createCanvas();
-    crc(canvas, Root({}));
+    crc(canvas, createElement(Root, {}));
     await nextFrame();
     const [targetA, targetB] = Array.from(
       getCRCInstance(canvas).eventRoot.targets,
@@ -452,7 +452,7 @@ describe('non-coordinate logical transport', () => {
 
   it('routes native keyboard, focus, editing, and clipboard input only to Canvas observers without focus policy', async () => {
     const logical: string[] = [];
-    const Target = defineComp(() => {
+    const Target = (_props: {}) => {
       crcEventTarget({
         onKeyDown: event => logical.push(event.type),
         onFocus: event => logical.push(event.type),
@@ -463,9 +463,9 @@ describe('non-coordinate logical transport', () => {
         path: rectanglePath(0, 0, 100, 100),
         fill: true,
       });
-    });
+    };
     const canvas = createCanvas();
-    crc(canvas, Target({}));
+    crc(canvas, createElement(Target, {}));
     await nextFrame();
     const observed: string[] = [];
     const eventRoot = getCRCInstance(canvas).eventRoot;
@@ -631,14 +631,14 @@ describe('drag event dispatch', () => {
 
   it('projects coordinate, modifier, and data-transfer fields unchanged', async () => {
     let received: CRCDragEvent | undefined;
-    const Target = defineComp(() => {
+    const Target = (_props: {}) => {
       crcEventTarget({ onDragStart: event => received = event }, {
         path: rectanglePath(0, 0, 100, 100),
         fill: true,
       });
-    });
+    };
     const canvas = createCanvas(200);
-    crc(canvas, Target({}));
+    crc(canvas, createElement(Target, {}));
     await nextFrame();
     const dataTransfer = createDataTransfer('drag payload');
     const originalEvent = dispatchDrag(canvas, 'dragstart', 50, 70, {
@@ -669,7 +669,7 @@ describe('drag event dispatch', () => {
     const relatedLabel = (event: CRCDragEvent) =>
       event.relatedTarget === targetA ? 'a' :
         event.relatedTarget === targetB ? 'b' : 'none';
-    const Target = defineComp<{ label: string; x: number }>(({ label, x }) => {
+    const Target = ({ label, x }: { label: string; x: number }) => {
       crcEventTarget({
         onDragEnter: event => trace.push(
           `${label}-enter:${event.eventPhase}:${relatedLabel(event)}`,
@@ -684,8 +684,8 @@ describe('drag event dispatch', () => {
         path: rectanglePath(x, 0, 50, 50),
         fill: true,
       });
-    });
-    const Parent = defineComp(() => {
+    };
+    const Parent = (_props: {}) => {
       crcEventListener({
         onDragEnter: event => trace.push(
           `parent-enter:${event.eventPhase}:${relatedLabel(event)}`,
@@ -696,12 +696,12 @@ describe('drag event dispatch', () => {
         onDragOver: event => trace.push(`parent-over:${event.eventPhase}`),
       });
       return [
-        Target({ label: 'a', x: 0 }),
-        Target({ label: 'b', x: 50 }),
+        createElement(Target, { label: 'a', x: 0 }),
+        createElement(Target, { label: 'b', x: 50 }),
       ];
-    });
+    };
     const canvas = createCanvas();
-    crc(canvas, Parent({}));
+    crc(canvas, createElement(Parent, {}));
     await nextFrame();
     [targetA, targetB] = Array.from(getCRCInstance(canvas).eventRoot.targets)
       .map(target => target.publicTarget);
@@ -773,14 +773,14 @@ describe('native event route exhaustiveness', () => {
 async function mountExplicitTarget(
   handlers: Parameters<typeof crcEventTarget>[0],
 ): Promise<{ canvas: HTMLCanvasElement; target: CRCEventNode }> {
-  const Target = defineComp(() => {
+  const Target = (_props: {}) => {
     crcEventTarget(handlers, {
       path: rectanglePath(0, 0, 100, 100),
       fill: true,
     });
-  });
+  };
   const canvas = createCanvas();
-  crc(canvas, Target({}));
+  crc(canvas, createElement(Target, {}));
   await nextFrame();
   return {
     canvas,
@@ -795,14 +795,14 @@ async function mountIsolatedTouchTarget(
   controller: ReturnType<typeof crc>;
   nativeListeners: NativeListenerHub;
 }> {
-  const Target = defineComp(() => {
+  const Target = (_props: {}) => {
     crcEventTarget(handlers, {
       path: rectanglePath(0, 0, 50, 50),
       fill: true,
     });
-  });
+  };
   const canvas = createCanvas();
-  const controller = crc(canvas, Target({}));
+  const controller = crc(canvas, createElement(Target, {}));
   await nextFrame();
   return {
     canvas,
@@ -818,14 +818,14 @@ async function mountIsolatedDragTarget(
   controller: ReturnType<typeof crc>;
   nativeListeners: NativeListenerHub;
 }> {
-  const Target = defineComp(() => {
+  const Target = (_props: {}) => {
     crcEventTarget(handlers, {
       path: rectanglePath(0, 0, 50, 50),
       fill: true,
     });
-  });
+  };
   const canvas = createCanvas();
-  const controller = crc(canvas, Target({}));
+  const controller = crc(canvas, createElement(Target, {}));
   await nextFrame();
   return {
     canvas,

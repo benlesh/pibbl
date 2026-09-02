@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { rect } from '../components/rect';
+import { Rectangle } from '../components/rect';
 import { componentTest } from '../test-utils/component-test';
-import type { CompEl } from '../types';
-import { grid, layoutGrid, resolveGridTracks } from './grid';
+import type { CRCElement } from '../types';
+import { Grid, layoutGrid, resolveGridTracks } from './grid';
 import { measureElement } from './measure';
+import { createElement } from '../element/create-element';
 
 const service = {
   measureText: (value: string) => ({ width: value.length * 10 }) as TextMetrics,
@@ -11,7 +12,7 @@ const service = {
 const measurement = {
   service,
   measureElement: (
-    element: CompEl,
+    element: CRCElement<any>,
     constraints: {
       minWidth: number;
       maxWidth: number;
@@ -22,7 +23,7 @@ const measurement = {
 };
 
 function child(style: Record<string, unknown>) {
-  return rect({
+  return createElement(Rectangle, {
     style: {
       width: 'auto',
       height: 'auto',
@@ -96,7 +97,7 @@ describe('CSS-compatible explicit grid geometry', () => {
       layoutGrid(
         { x: 0, y: 0, width: 100, height: 50 },
         [
-          rect({
+          createElement(Rectangle, {
             style: {
               width: 20,
               height: 10,
@@ -120,7 +121,7 @@ describe('CSS-compatible explicit grid geometry', () => {
     const bottom = vi.fn();
     const top = vi.fn();
     const canvas = await componentTest(
-      grid({
+      createElement(Grid, {
         style: {
           width: 50,
           height: 30,
@@ -128,7 +129,7 @@ describe('CSS-compatible explicit grid geometry', () => {
           gridTemplateRows: [30],
         },
         children: [
-          rect({
+          createElement(Rectangle, {
             style: {
               width: 'auto',
               height: 'auto',
@@ -138,7 +139,7 @@ describe('CSS-compatible explicit grid geometry', () => {
             },
             onClick: bottom,
           }),
-          rect({
+          createElement(Rectangle, {
             style: {
               width: 20,
               height: 10,
@@ -166,7 +167,7 @@ describe('CSS-compatible explicit grid geometry', () => {
 
   it('renders percentage and fractional tracks through public dispatch', async () => {
     const canvas = await componentTest(
-      grid({
+      createElement(Grid, {
         style: {
           width: 200,
           height: 20,
@@ -174,14 +175,14 @@ describe('CSS-compatible explicit grid geometry', () => {
           gridTemplateRows: [20],
         },
         children: [
-          rect({ style: {
+          createElement(Rectangle, { style: {
             width: 'auto',
             height: 'auto',
             gridColumnStart: 1,
             gridRowStart: 1,
             fill: 'red',
           } }),
-          rect({ style: {
+          createElement(Rectangle, { style: {
             width: 'auto',
             height: 'auto',
             gridColumnStart: 2,
@@ -201,7 +202,7 @@ describe('CSS-compatible explicit grid geometry', () => {
   it('measures only exact fixed-track intrinsic grids', () => {
     expect(
       measureElement(
-        grid({
+        createElement(Grid, {
           style: {
             width: 'auto',
             height: 'auto',
@@ -225,7 +226,7 @@ describe('CSS-compatible explicit grid geometry', () => {
     });
     expect(
       measureElement(
-        grid({
+        createElement(Grid, {
           style: {
             width: 'auto',
             height: 'auto',
@@ -254,7 +255,7 @@ describe('CSS-compatible explicit grid geometry', () => {
     { gridTemplateColumns: ['1e2%'], gridTemplateRows: [10] },
     { gridTemplateColumns: [10], gridTemplateRows: [Number.POSITIVE_INFINITY] },
   ])('validates every track before definite measurement %#', style => {
-    expect(() => measureElement(grid({
+    expect(() => measureElement(createElement(Grid, {
       style: { width: 100, height: 50, ...style } as any,
       children: [],
     }), {
@@ -291,7 +292,7 @@ describe('CSS-compatible explicit grid geometry', () => {
     expect(() =>
       layoutGrid(
         { x: 0, y: 0, width: 50, height: 50 },
-        [rect({ style: { width: 10, height: 10 } })],
+        [createElement(Rectangle, { style: { width: 10, height: 10 } })],
         base,
         measurement,
       ),
@@ -333,5 +334,5 @@ describe('CSS-compatible explicit grid geometry', () => {
   });
 
   // @ts-expect-error Grid requires explicit track lists
-  void grid({ style: {}, children: [] });
+  void createElement(Grid, { style: {}, children: [] });
 });

@@ -1,19 +1,20 @@
 import { describe, expect, it, vi } from 'vitest';
 import { crc } from '../crc';
-import { img } from '../components/img';
-import { text } from '../components/text';
+import { Image } from '../components/img';
+import { Text } from '../components/text';
 import { resolveTextLayout } from '../components/text-layout';
-import { defineComp } from '../define-comp';
 import { crcLayoutBox } from '../hooks/crc-layout-box';
 import { crcRef } from '../hooks/crc-ref';
 import { crcState } from '../hooks/crc-state';
 import { LayoutDiagnostic } from '../style/diagnostics';
 import { componentTest } from '../test-utils/component-test';
-import type { CompEl, MeasureResult, SystemStyle } from '../types';
+import type { CRCElement, MeasureResult, SystemStyle } from '../types';
 import {
   measureElement,
   type CanvasMeasurementService,
 } from './measure';
+import { createElement } from '../element/create-element';
+import { definePrimitive } from '../define-primitive';
 
 const constraints = {
   minWidth: 0,
@@ -53,7 +54,7 @@ describe('pure element measurement', () => {
         size: { width: 40, height: 20 },
       };
     });
-    const Measured = defineComp<
+    const Measured = definePrimitive<
       { value: number },
       ProbeStyle,
       NormalizedProbeStyle,
@@ -64,7 +65,7 @@ describe('pure element measurement', () => {
       normalizeStyle: () => ({ label: 'normalized' }),
       measure,
     });
-    const element = Measured({ value: 7 });
+    const element = createElement(Measured, { value: 7 });
 
     expect(measureElement(element, constraints, service)).toEqual({
       status: 'measured',
@@ -77,18 +78,18 @@ describe('pure element measurement', () => {
 
   it('returns a typed unsupported result without a measurement capability', () => {
     function UnmeasuredComponent() {}
-    const Unmeasured = defineComp(UnmeasuredComponent);
+    const Unmeasured = UnmeasuredComponent;
 
-    expect(measureElement(Unmeasured({}), constraints, service)).toEqual({
+    expect(measureElement(createElement(Unmeasured, {}), constraints, service)).toEqual({
       status: 'unsupported',
       reason: 'UnmeasuredComponent does not provide measurement',
     });
   });
 
   it('measures text through the shared text layout utility', () => {
-    expect(measureElement(text({
-      style: { text: 'hello', font: '12px sans-serif' },
-    }), constraints, service)).toEqual({
+    expect(measureElement(createElement(Text, {
+      style: { font: '12px sans-serif' },
+    }, 'hello'), constraints, service)).toEqual({
       status: 'measured',
       size: { width: 50, height: 12 },
     });
@@ -112,7 +113,7 @@ describe('pure element measurement', () => {
       lineHeight: 12,
       font: '12px sans-serif',
     } as const;
-    const result = measureElement(text({ style }), {
+    const result = measureElement(createElement(Text, { style }), {
       ...constraints,
       maxWidth: 50,
     }, wrappingService);
@@ -133,13 +134,13 @@ describe('pure element measurement', () => {
   it('measures only explicitly sized images without creating a resource', () => {
     const ImageConstructor = vi.spyOn(window, 'Image');
 
-    expect(measureElement(img({
+    expect(measureElement(createElement(Image, {
       style: { src: 'image.png', width: 30, height: 20 },
     }), constraints, service)).toEqual({
       status: 'measured',
       size: { width: 30, height: 20 },
     });
-    expect(measureElement(img({
+    expect(measureElement(createElement(Image, {
       style: { src: 'image.png' },
     }), constraints, service)).toEqual({
       status: 'unsupported',
@@ -155,55 +156,55 @@ describe('pure element measurement', () => {
       () => crcRef(),
       () => crcLayoutBox(),
     ];
-    const Probe = defineComp(() => undefined, {
+    const Probe = definePrimitive<{}>(() => undefined, {
       measure: () => {
         probes.shift()!();
         return { status: 'measured' as const, size: { width: 1, height: 1 } };
       },
     });
-    const Host = defineComp(({ revision }: { revision: number }) => {
+    const Host = ({ revision }: { revision: number }) => {
       crcState(revision);
       for (let index = 0; index < 3; index++) {
         try {
-          measureElement(Probe({}), constraints, service);
+          measureElement(createElement(Probe, {}), constraints, service);
         } catch (error) {
           errors.push(String(error));
         }
       }
       crcRef(revision);
-    });
-    const canvas = await componentTest(Host({ revision: 1 }));
+    };
+    const canvas = await componentTest(createElement(Host, { revision: 1 }));
 
     expect(errors).toHaveLength(3);
     expect(errors[0]).toMatch(/hooks?.*component|component.*hooks?/i);
     expect(errors[1]).toMatch(/hooks?.*component|component.*hooks?/i);
     expect(errors[2]).toMatch(/layout context/i);
 
-    crc(canvas.element, Host({ revision: 2 }));
+    crc(canvas.element, createElement(Host, { revision: 2 }));
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
     expect(errors).toHaveLength(6);
   });
 
   it('rejects direct and indirect cyclic measurement and cleans up afterward', () => {
-    let directElement: CompEl;
-    const Direct = defineComp(() => undefined, {
+    let directElement: CRCElement<any>;
+    const Direct = definePrimitive<{}>(() => undefined, {
       measure: (input): MeasureResult =>
         input.measureElement(directElement, constraints),
     });
-    directElement = Direct({});
+    directElement = createElement(Direct, {});
 
-    let aElement: CompEl;
-    let bElement: CompEl;
-    const A = defineComp(() => undefined, {
+    let aElement: CRCElement<any>;
+    let bElement: CRCElement<any>;
+    const A = definePrimitive<{}>(() => undefined, {
       measure: (input): MeasureResult =>
         input.measureElement(bElement, constraints),
     });
-    const B = defineComp(() => undefined, {
+    const B = definePrimitive<{}>(() => undefined, {
       measure: (input): MeasureResult =>
         input.measureElement(aElement, constraints),
     });
-    aElement = A({});
-    bElement = B({});
+    aElement = createElement(A, {});
+    bElement = createElement(B, {});
 
     for (const element of [directElement, aElement]) {
       expect(() => measureElement(element, constraints, service))
@@ -211,7 +212,7 @@ describe('pure element measurement', () => {
       expect(() => measureElement(element, constraints, service))
         .toThrowError(/cyclic measurement/i);
     }
-    expect(measureElement(text({ style: { text: 'ok' } }), constraints, service))
+    expect(measureElement(createElement(Text, { style: {  } }, 'ok'), constraints, service))
       .toEqual({ status: 'measured', size: { width: 20, height: 12 } });
   });
 });

@@ -3,7 +3,7 @@ import { crc } from '../crc.js';
 import { executeRender } from '../execute-render.js';
 import { clearSharedState, getCRCInstance } from '../global-state.js';
 import { mountCRC } from '../mount-crc.js';
-import type { CompFn, CRCNode } from '../types.js';
+import type { CRCComponent, CRCNode } from '../types.js';
 import {
   materializeContainerChildren,
   materializeTextChildren,
@@ -162,7 +162,7 @@ describe('recursive CRC container children', () => {
     ['a symbol', Symbol('child'), /Receiver.*symbol/i],
     ['a plain object', { child: true }, /Receiver.*object/i],
   ])('rejects %s with receiver and jsxDEV source context', (_label, child, message) => {
-    const Receiver = ((_props: {}, _style, _ctx) => child) as CompFn<{}>;
+    const Receiver = (() => child) as CRCComponent<any>;
     const receiver = jsxDEV(
       Receiver as any,
       { style: {} },
@@ -188,7 +188,7 @@ describe('recursive CRC container children', () => {
       $$typeof: reactBrand,
       type: 'div',
       props: {},
-    })) as unknown as CompFn<{}>;
+    })) as unknown as CRCComponent<any>;
     const receiver = jsxDEV(
       Receiver as any,
       { style: {} },

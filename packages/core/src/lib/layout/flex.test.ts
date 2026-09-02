@@ -1,17 +1,18 @@
 import { describe, expect, it, vi } from 'vitest';
-import { rect } from '../components/rect';
-import { defineComp } from '../define-comp';
+import { Rectangle } from '../components/rect';
 import type { Length } from '../style/types';
-import type { CompEl, SystemStyle } from '../types';
-import { flex, layoutFlex } from './flex';
+import type { CRCElement, SystemStyle } from '../types';
+import { Flex, layoutFlex } from './flex';
 import { measureElement, type CanvasMeasurementService } from './measure';
+import { createElement } from '../element/create-element';
+import { definePrimitive } from '../define-primitive';
 
 const service: CanvasMeasurementService = {
   measureText: value => ({ width: value.length * 10 } as TextMetrics),
 };
 const measurement = {
   service,
-  measureElement: (element: CompEl, constraints: {
+  measureElement: (element: CRCElement<any>, constraints: {
     minWidth: number;
     maxWidth: number;
     minHeight: number;
@@ -20,7 +21,7 @@ const measurement = {
 };
 
 function item(style: Record<string, unknown>) {
-  return rect({ style: {
+  return createElement(Rectangle, { style: {
     width: 1,
     height: 10,
     minWidth: 0,
@@ -31,7 +32,7 @@ function item(style: Record<string, unknown>) {
 
 describe('CSS-compatible flex geometry', () => {
   it('measures nested auto flex content without rendering children', () => {
-    const nested = flex({
+    const nested = createElement(Flex, {
       style: { width: 'auto', height: 'auto', columnGap: 5 },
       children: [
         item({ flexBasis: 20, flexShrink: 0 }),
@@ -239,7 +240,7 @@ describe('CSS-compatible flex geometry', () => {
       width: number;
       height: number;
     }
-    const Auto = defineComp<{}, AutoStyle, AutoStyle, ResolvedAutoStyle>(
+    const Auto = definePrimitive<{}, AutoStyle, AutoStyle, ResolvedAutoStyle>(
       () => undefined,
       {
         resolveStyle: style => ({
@@ -253,12 +254,12 @@ describe('CSS-compatible flex geometry', () => {
       },
     );
     const children = [
-      Auto({ style: {
+      createElement(Auto, { style: {
         minWidth: 0,
         flexBasis: 20,
         flexShrink: 0,
       } }),
-      Auto({ style: {
+      createElement(Auto, { style: {
         minWidth: 0,
         flexBasis: 20,
         flexShrink: 0,
@@ -334,7 +335,7 @@ describe('CSS-compatible flex geometry', () => {
   it('requires explicit main-axis minimums and rejects unsupported values', () => {
     expect(() => layoutFlex(
       { x: 0, y: 0, width: 100, height: 20 },
-      [rect({ style: { width: 20, height: 10, flexBasis: 'auto' } })],
+      [createElement(Rectangle, { style: { width: 20, height: 10, flexBasis: 'auto' } })],
       {},
       measurement,
     )).toThrowError(/minWidth.*explicit/i);
@@ -365,7 +366,7 @@ describe('CSS-compatible flex geometry', () => {
       reason.source.includes('percentage') ?
         { flexBasis: '50%', flexShrink: 0 } :
         { flexBasis: 20, flexShrink: 0 };
-    expect(measureElement(flex({
+    expect(measureElement(createElement(Flex, {
       style: { width: 'auto', height: 'auto', ...flexStyle } as any,
       children: [item(childStyle)],
     }), {
@@ -380,5 +381,5 @@ describe('CSS-compatible flex geometry', () => {
   });
 
   // @ts-expect-error reverse directions are outside the supported matrix
-  void flex({ style: { flexDirection: 'row-reverse' }, children: [] });
+  void createElement(Flex, { style: { flexDirection: 'row-reverse' }, children: [] });
 });

@@ -2,7 +2,7 @@ import { crc } from '@crc/core';
 import { cdp, userEvent } from 'vitest/browser';
 import { afterEach, beforeEach } from 'vitest';
 import { getCRCInstance } from '../global-state';
-import type { CompEl, CRCController } from '../types';
+import type { CRCElement, CRCController } from '../types';
 
 const activeControllers = new Set<CRCController>();
 
@@ -189,7 +189,7 @@ afterEach(() => {
   activeControllers.clear();
 });
 
-export async function componentTest<P>(comp: CompEl<P, any>, options: {
+export async function componentTest(comp: CRCElement<any>, options: {
   width?: number;
   height?: number;
 } = {}) {

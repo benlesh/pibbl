@@ -1,45 +1,45 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { crc } from '../crc';
-import { defineComp } from '../define-comp';
 import { clearSharedState } from '../global-state';
 import { crcWhenChanged } from './crc-when-changed';
+import { createElement } from '../element/create-element';
 
 interface ChangeProbeProps {
   dependency: number;
   setup: (dependency: number) => (() => void) | void;
 }
 
-const ChangeProbe = defineComp(({ dependency, setup }: ChangeProbeProps) => {
+const ChangeProbe = ({ dependency, setup }: ChangeProbeProps) => {
   crcWhenChanged(() => setup(dependency), [dependency]);
-});
+};
 
 interface LifecycleProbeProps {
   events: string[];
   label: string;
 }
 
-const LifecycleProbe = defineComp(({ events, label }: LifecycleProbeProps) => {
+const LifecycleProbe = ({ events, label }: LifecycleProbeProps) => {
   crcWhenChanged(() => {
     events.push(`setup:${label}`);
     return () => events.push(`cleanup:${label}`);
   }, []);
-});
+};
 
 interface ChildHostProps {
   childLabel?: string;
   events: string[];
 }
 
-const ChildHost = defineComp(({ childLabel, events }: ChildHostProps) => {
+const ChildHost = ({ childLabel, events }: ChildHostProps) => {
   events.push(`render:host:${childLabel ?? 'empty'}`);
   return childLabel ?
-      LifecycleProbe({ events, key: childLabel, label: childLabel }) :
+      createElement(LifecycleProbe, { events, key: childLabel, label: childLabel }) :
     undefined;
-});
+};
 
-const ReplacementRoot = defineComp(({ events }: { events: string[] }) => {
+const ReplacementRoot = ({ events }: { events: string[] }) => {
   events.push('render:replacement');
-});
+};
 
 beforeEach(() => {
   document.body.innerHTML = '';
@@ -59,10 +59,10 @@ describe('crcWhenChanged cleanup ownership', () => {
       return () => events.push(`cleanup:${dependency}`);
     };
 
-    const controller = crc(canvas, ChangeProbe({ dependency: 1, setup }));
+    const controller = crc(canvas, createElement(ChangeProbe, { dependency: 1, setup }));
     await nextFrame();
 
-    crc(canvas, ChangeProbe({ dependency: 2, setup }));
+    crc(canvas, createElement(ChangeProbe, { dependency: 2, setup }));
     await nextFrame();
     expect(events).toEqual(['setup:1', 'cleanup:1', 'setup:2']);
 
@@ -85,11 +85,11 @@ describe('crcWhenChanged cleanup ownership', () => {
       }
     };
 
-    const controller = crc(canvas, ChangeProbe({ dependency: 1, setup }));
+    const controller = crc(canvas, createElement(ChangeProbe, { dependency: 1, setup }));
     await nextFrame();
-    crc(canvas, ChangeProbe({ dependency: 2, setup }));
+    crc(canvas, createElement(ChangeProbe, { dependency: 2, setup }));
     await nextFrame();
-    crc(canvas, ChangeProbe({ dependency: 3, setup }));
+    crc(canvas, createElement(ChangeProbe, { dependency: 3, setup }));
     await nextFrame();
     controller.dispose();
 
@@ -105,10 +105,10 @@ describe('crcWhenChanged cleanup ownership', () => {
     const canvas = createCanvas();
     const cleanup = vi.fn();
     const setup = vi.fn(() => cleanup);
-    const controller = crc(canvas, ChangeProbe({ dependency: 1, setup }));
+    const controller = crc(canvas, createElement(ChangeProbe, { dependency: 1, setup }));
     await nextFrame();
 
-    crc(canvas, ChangeProbe({ dependency: 1, setup }));
+    crc(canvas, createElement(ChangeProbe, { dependency: 1, setup }));
     await nextFrame();
 
     expect(setup).toHaveBeenCalledOnce();
@@ -131,10 +131,10 @@ describe('crcWhenChanged cleanup ownership', () => {
         if (dependency === 1) throw error;
       };
     };
-    const controller = crc(canvas, ChangeProbe({ dependency: 1, setup }));
+    const controller = crc(canvas, createElement(ChangeProbe, { dependency: 1, setup }));
     await nextFrame();
 
-    crc(canvas, ChangeProbe({ dependency: 2, setup }));
+    crc(canvas, createElement(ChangeProbe, { dependency: 2, setup }));
     await nextFrame();
 
     expect(events).toEqual(['setup:1', 'cleanup:1', 'setup:2']);
@@ -151,11 +151,11 @@ describe('crcWhenChanged cleanup ownership', () => {
   it('cleans up a removed child after the replacement tree renders', async () => {
     const canvas = createCanvas();
     const events: string[] = [];
-    const controller = crc(canvas, ChildHost({ childLabel: 'child', events }));
+    const controller = crc(canvas, createElement(ChildHost, { childLabel: 'child', events }));
     await nextFrame();
     events.length = 0;
 
-    crc(canvas, ChildHost({ events }));
+    crc(canvas, createElement(ChildHost, { events }));
     await nextFrame();
 
     expect(events).toEqual(['render:host:empty', 'cleanup:child']);
@@ -165,11 +165,11 @@ describe('crcWhenChanged cleanup ownership', () => {
   it('cleans up the old key after the replacement key mounts', async () => {
     const canvas = createCanvas();
     const events: string[] = [];
-    const controller = crc(canvas, ChildHost({ childLabel: 'old', events }));
+    const controller = crc(canvas, createElement(ChildHost, { childLabel: 'old', events }));
     await nextFrame();
     events.length = 0;
 
-    crc(canvas, ChildHost({ childLabel: 'new', events }));
+    crc(canvas, createElement(ChildHost, { childLabel: 'new', events }));
     await nextFrame();
 
     expect(events).toEqual([
@@ -183,14 +183,14 @@ describe('crcWhenChanged cleanup ownership', () => {
   it('cleans up the old root after the replacement root renders', async () => {
     const canvas = createCanvas();
     const events: string[] = [];
-    const controller = crc(canvas, LifecycleProbe({
+    const controller = crc(canvas, createElement(LifecycleProbe, {
       events,
       label: 'old-root',
     }));
     await nextFrame();
     events.length = 0;
 
-    crc(canvas, ReplacementRoot({ events }));
+    crc(canvas, createElement(ReplacementRoot, { events }));
     await nextFrame();
 
     expect(events).toEqual(['render:replacement', 'cleanup:old-root']);

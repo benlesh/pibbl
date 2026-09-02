@@ -8,8 +8,8 @@ import {
   loadScenario,
 } from '@crc/scenarios';
 import { afterEach, describe, expect, it } from 'vitest';
-import cleanupStressSource from '../../scenarios/src/cleanup-stress.example.ts?raw';
-import { absolute, rect, type CRCController } from '../src/index';
+import cleanupStressSource from '../../scenarios/src/cleanup-stress.example.tsx?raw';
+import { Absolute, Rectangle, type CRCController } from '../src/index';
 import { executeRender } from '../src/lib/execute-render';
 import { GLOBAL_STATE, getCRCInstance } from '../src/lib/global-state';
 import {
@@ -20,6 +20,7 @@ import { mountCRC } from '../src/lib/mount-crc';
 import type { Canvas, CRCInstance } from '../src/lib/types';
 import { RuntimeDiagnostics } from './support/runtime-diagnostics';
 import { CRC_EVENT_TYPES } from '../src/lib/events/event-definitions';
+import { createElement } from '../src/lib/element/create-element';
 
 const EMPTY_HANDLERS = Object.fromEntries(
   CRC_EVENT_TYPES.map(type => [type, 0]),
@@ -331,9 +332,9 @@ describe('shared runtime cleanup stress laboratory', () => {
     activeDiagnostics.add(diagnostics);
     const structureDiagnostics = new StructureDiagnostics();
     activeStructureDiagnostics.add(structureDiagnostics);
-    const createScene = () => absolute({
+    const createScene = () => createElement(Absolute, {
       style: { width: '100%', height: '100%' },
-      children: [rect({
+      children: [createElement(Rectangle, {
         key: 'stable-half',
         style: { width: '50%', height: '50%', fill: '#16a34a' },
         onMouseMove: () => undefined,

@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { defineComp } from '../define-comp';
 import type {
   CRCEventHandlers,
   CRCLogicalMouseEvent,
@@ -9,9 +8,10 @@ import { clearSharedState, getCRCInstance } from '../global-state';
 import { crcEventListener } from '../hooks/crc-event-listener';
 import { crcEventTarget } from '../hooks/crc-event-target';
 import { mountCRC } from '../mount-crc';
-import type { CompEl, CRCController } from '../types';
+import type { CRCElement, CRCController } from '../types';
 import type { CRCFocusManager } from './focus-manager';
 import { focusManaged } from './policy-test-support';
+import { createElement } from '../element/create-element';
 
 const activeControllers = new Set<CRCController>();
 const noop = () => undefined;
@@ -33,12 +33,12 @@ describe('Enter keyboard activation', () => {
     const trace: string[] = [];
     let clickEvent: CRCLogicalMouseEvent | undefined;
     const Target = targetComponent();
-    const Root = defineComp(() => {
+    const Root = (_props: {}) => {
       crcEventListener({
         onKeyDown: () => trace.push('ancestor-keydown'),
         onClick: () => trace.push('ancestor-click'),
       });
-      return Target({
+      return createElement(Target, {
         label: 'target',
         handlers: {
           onKeyDown: () => trace.push('target-keydown'),
@@ -48,8 +48,8 @@ describe('Enter keyboard activation', () => {
           },
         },
       });
-    });
-    const mounted = mountAndRender(focusManaged(Root({})));
+    };
+    const mounted = mountAndRender(focusManaged(createElement(Root, {})));
     mounted.canvas.focus({ preventScroll: true });
     const sourceEvent = keyEvent('keydown', 'Enter', 'Enter');
 
@@ -79,13 +79,13 @@ describe('Enter keyboard activation', () => {
     preventionSite => {
       const click = vi.fn();
       const Target = targetComponent();
-      const Root = defineComp(() => {
+      const Root = (_props: {}) => {
         crcEventListener({
           onKeyDown: event => {
             if (preventionSite === 'ancestor') event.preventDefault();
           },
         });
-        return Target({
+        return createElement(Target, {
           label: 'target',
           handlers: {
             onKeyDown: event => {
@@ -94,8 +94,8 @@ describe('Enter keyboard activation', () => {
             onClick: click,
           },
         });
-      });
-      const mounted = mountAndRender(focusManaged(Root({})));
+      };
+      const mounted = mountAndRender(focusManaged(createElement(Root, {})));
       mounted.canvas.focus({ preventScroll: true });
       const event = keyEvent('keydown', 'Enter', 'Enter');
 
@@ -109,7 +109,7 @@ describe('Enter keyboard activation', () => {
   it('leaves native click provenance undefined', () => {
     let clickEvent: CRCLogicalMouseEvent | undefined;
     const Target = targetComponent();
-    const mounted = mountAndRender(focusManaged(Target({
+    const mounted = mountAndRender(focusManaged(createElement(Target, {
       label: 'target',
       handlers: { onClick: event => clickEvent = event },
     })));
@@ -127,7 +127,7 @@ describe('Space keyboard activation', () => {
   it('activates an onClick-only target from Space keydown and keyup', () => {
     let clickEvent: CRCLogicalMouseEvent | undefined;
     const Target = targetComponent();
-    const mounted = mountAndRender(focusManaged(Target({
+    const mounted = mountAndRender(focusManaged(createElement(Target, {
       label: 'target',
       handlers: { onClick: event => clickEvent = event },
     })));
@@ -147,7 +147,7 @@ describe('Space keyboard activation', () => {
     const trace: string[] = [];
     let clickEvent: CRCLogicalMouseEvent | undefined;
     const Target = targetComponent();
-    const mounted = mountAndRender(focusManaged(Target({
+    const mounted = mountAndRender(focusManaged(createElement(Target, {
       label: 'target',
       handlers: {
         onKeyDown: () => trace.push('keydown'),
@@ -180,13 +180,13 @@ describe('Space keyboard activation', () => {
       let prevent = true;
       const click = vi.fn();
       const Target = targetComponent();
-      const Root = defineComp(() => {
+      const Root = (_props: {}) => {
         crcEventListener({
           onKeyUp: event => {
             if (prevent && preventionSite === 'ancestor') event.preventDefault();
           },
         });
-        return Target({
+        return createElement(Target, {
           label: 'target',
           handlers: {
             onKeyUp: event => {
@@ -195,8 +195,8 @@ describe('Space keyboard activation', () => {
             onClick: click,
           },
         });
-      });
-      const mounted = mountAndRender(focusManaged(Root({})));
+      };
+      const mounted = mountAndRender(focusManaged(createElement(Root, {})));
       mounted.canvas.focus({ preventScroll: true });
 
       mounted.canvas.dispatchEvent(keyEvent('keydown', ' ', 'Space'));
@@ -217,11 +217,11 @@ describe('Space keyboard activation', () => {
   it('cancels on focus movement and Canvas blur', () => {
     const clicks: string[] = [];
     const Target = targetComponent();
-    const Root = defineComp(() => [
-      Target({ key: 'a', label: 'a', handlers: { onClick: () => clicks.push('a') } }),
-      Target({ key: 'b', label: 'b', handlers: { onClick: () => clicks.push('b') } }),
-    ]);
-    const mounted = mountAndRender(focusManaged(Root({})));
+    const Root = (_props: {}) => [
+      createElement(Target, { key: 'a', label: 'a', handlers: { onClick: () => clicks.push('a') } }),
+      createElement(Target, { key: 'b', label: 'b', handlers: { onClick: () => clicks.push('b') } }),
+    ];
+    const mounted = mountAndRender(focusManaged(createElement(Root, {})));
     mounted.canvas.focus({ preventScroll: true });
     const [a, b] = mounted.manager.candidates.map(candidate => candidate.target);
 
@@ -243,7 +243,7 @@ describe('Space keyboard activation', () => {
     let clickEnabled = true;
     const click = vi.fn();
     const Target = targetComponent();
-    const Root = defineComp(() => visible ? Target({
+    const Root = (_props: {}) => visible ? createElement(Target, {
       key: 'target',
       label: 'target',
       handlers: {
@@ -251,23 +251,23 @@ describe('Space keyboard activation', () => {
         onKeyUp: noop,
         ...(clickEnabled ? { onClick: click } : {}),
       },
-    }) : undefined);
+    }) : undefined;
     const canvas = createCanvas();
-    const mounted = mountAndRender(focusManaged(Root({})), canvas);
+    const mounted = mountAndRender(focusManaged(createElement(Root, {})), canvas);
     canvas.focus({ preventScroll: true });
 
     canvas.dispatchEvent(keyEvent('keydown', ' ', 'Space'));
     clickEnabled = false;
-    executeRender(canvas, 2, focusManaged(Root({})));
+    executeRender(canvas, 2, focusManaged(createElement(Root, {})));
     clickEnabled = true;
-    executeRender(canvas, 3, focusManaged(Root({})));
+    executeRender(canvas, 3, focusManaged(createElement(Root, {})));
     canvas.dispatchEvent(keyEvent('keyup', ' ', 'Space'));
 
     canvas.dispatchEvent(keyEvent('keydown', ' ', 'Space'));
     visible = false;
-    executeRender(canvas, 4, focusManaged(Root({})));
+    executeRender(canvas, 4, focusManaged(createElement(Root, {})));
     visible = true;
-    executeRender(canvas, 5, focusManaged(Root({})));
+    executeRender(canvas, 5, focusManaged(createElement(Root, {})));
     mounted.manager.setFocusState(mounted.manager.candidates[0].target, true);
     canvas.dispatchEvent(keyEvent('keyup', ' ', 'Space'));
 
@@ -277,15 +277,15 @@ describe('Space keyboard activation', () => {
   it('does not carry pending activation across manager replacement or disposal', () => {
     const click = vi.fn();
     const Target = targetComponent();
-    const First = defineComp(() => Target({ label: 'first', handlers: { onClick: click } }));
-    const Second = defineComp(() => Target({ label: 'second', handlers: { onClick: click } }));
+    const First = (_props: {}) => createElement(Target, { label: 'first', handlers: { onClick: click } });
+    const Second = (_props: {}) => createElement(Target, { label: 'second', handlers: { onClick: click } });
     const canvas = createCanvas();
-    const mounted = mountAndRender(focusManaged(First({})), canvas);
+    const mounted = mountAndRender(focusManaged(createElement(First, {})), canvas);
     canvas.focus({ preventScroll: true });
     canvas.dispatchEvent(keyEvent('keydown', ' ', 'Space'));
     const firstManager = mounted.manager;
 
-    executeRender(canvas, 2, focusManaged(Second({})));
+    executeRender(canvas, 2, focusManaged(createElement(Second, {})));
     const secondManager = getCRCInstance(canvas).eventRoot.focusPolicy as CRCFocusManager;
     secondManager.setFocusState(secondManager.candidates[0].target, true);
     canvas.dispatchEvent(keyEvent('keyup', ' ', 'Space'));
@@ -305,17 +305,17 @@ interface TargetProps {
 }
 
 function targetComponent() {
-  return defineComp<TargetProps>(({ handlers }) => {
+  return ({ handlers }: TargetProps) => {
     crcEventTarget(handlers, {
       path: rectanglePath(0, 0, 40, 40),
       fill: true,
       keyboardFocusable: true,
     });
-  });
+  };
 }
 
 function mountAndRender(
-  element: CompEl<any, any>,
+  element: CRCElement<any>,
   canvas = createCanvas(),
 ): {
   readonly canvas: HTMLCanvasElement;

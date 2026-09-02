@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Fragment } from '../../index.js';
 import { crc } from '../crc.js';
-import { defineComp } from '../define-comp.js';
 import { clearSharedState, getCRCInstance } from '../global-state.js';
 import { crcRef } from '../hooks/crc-ref.js';
+import { createElement } from './create-element';
 
 interface IdentityProbeProps {
   label: string;
@@ -12,14 +12,14 @@ interface IdentityProbeProps {
 
 let nextIdentity = 0;
 
-const IdentityProbe = defineComp(({
+const IdentityProbe = ({
   label,
   observations,
 }: IdentityProbeProps) => {
   const identity = crcRef<number>();
   identity.current ??= ++nextIdentity;
   observations.set(label, identity.current);
-});
+};
 
 beforeEach(() => {
   document.body.innerHTML = '';
@@ -37,13 +37,13 @@ describe('Fragment identity', () => {
     const observations = new Map<string, number>();
     const controller = crc(
       canvas,
-      IdentityProbe({ key: 'stable', label: 'initial', observations }),
+      createElement(IdentityProbe, { key: 'stable', label: 'initial', observations }),
     );
     await nextFrame();
     const initial = observations.get('initial');
 
     crc(canvas, [[
-      <>{IdentityProbe({ key: 'stable', label: 'nested', observations })}</>,
+      <>{createElement(IdentityProbe, { key: 'stable', label: 'nested', observations })}</>,
     ]]);
     await nextFrame();
 
@@ -56,7 +56,7 @@ describe('Fragment identity', () => {
     const observations = new Map<string, number>();
     const scoped = (label: string) => (
       <Fragment key="scope">
-        {IdentityProbe({ key: 'child', label, observations })}
+        {createElement(IdentityProbe, { key: 'child', label, observations })}
       </Fragment>
     );
     const controller = crc(canvas, scoped('initial'));
@@ -81,7 +81,7 @@ describe('Fragment identity', () => {
     await nextFrame();
     expect(observations.get('same-scope')).toBe(initial);
 
-    crc(canvas, IdentityProbe({
+    crc(canvas, createElement(IdentityProbe, {
       key: 'child',
       label: 'without-scope',
       observations,
@@ -94,7 +94,7 @@ describe('Fragment identity', () => {
   it('preserves keyed sibling state through reorder after flattening', async () => {
     const canvas = createCanvas();
     const observations = new Map<string, number>();
-    const keyed = (label: string) => IdentityProbe({
+    const keyed = (label: string) => createElement(IdentityProbe, {
       key: label,
       label,
       observations,
@@ -115,7 +115,7 @@ describe('Fragment identity', () => {
   it('assigns unkeyed same-type state by flattened occurrence order', async () => {
     const canvas = createCanvas();
     const observations = new Map<string, number>();
-    const unkeyed = (label: string) => IdentityProbe({ label, observations });
+    const unkeyed = (label: string) => createElement(IdentityProbe, { label, observations });
     const controller = crc(canvas, [unkeyed('a'), [<>{unkeyed('b')}</>]]);
     await nextFrame();
     const firstSlot = observations.get('a');
@@ -140,10 +140,10 @@ describe('Fragment identity', () => {
     const observations = new Map<string, number>();
     const tree = (right: boolean, label: string) => [
       <Fragment key="left">
-        {right ? null : IdentityProbe({ key: 'child', label, observations })}
+        {right ? null : createElement(IdentityProbe, { key: 'child', label, observations })}
       </Fragment>,
       <Fragment key="right">
-        {right ? IdentityProbe({ key: 'child', label, observations }) : null}
+        {right ? createElement(IdentityProbe, { key: 'child', label, observations }) : null}
       </Fragment>,
     ];
     const controller = crc(canvas, tree(false, 'left'));

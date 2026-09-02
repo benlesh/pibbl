@@ -1,19 +1,15 @@
 import { userEvent } from 'vitest/browser';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { layer } from '../components/layer';
-import { defineComp } from '../define-comp';
+import { Layer } from '../components/layer';
 import type { CRCEventHandlers } from '../events/types';
 import { executeRender } from '../execute-render';
 import { clearSharedState, getCRCInstance } from '../global-state';
 import { crcEventTarget } from '../hooks/crc-event-target';
 import { mountCRC } from '../mount-crc';
-import type {
-  CompEl,
-  CRCController,
-  CRCFocusPolicyBridge,
-} from '../types';
+import type { CRCElement, CRCController, CRCFocusPolicyBridge } from '../types';
 import type { CRCFocusManager } from './focus-manager';
 import { focusManaged } from './policy-test-support';
+import { createElement } from '../element/create-element';
 
 const activeControllers = new Set<CRCController>();
 const noop = () => undefined;
@@ -85,15 +81,15 @@ describe('Canvas DOM focus host', () => {
 
   it('routes native Canvas focus and blur before blur clears logical state', () => {
     const trace: string[] = [];
-    const Root = defineComp(() => Target({
+    const Root = (_props: {}) => createElement(Target, {
       label: 'only',
       handlers: {
         onClick: noop,
         onFocus: event => trace.push(event.type),
         onBlur: event => trace.push(event.type),
       },
-    }));
-    const mounted = mountBetweenNativeControls(focusManaged(Root({})));
+    });
+    const mounted = mountBetweenNativeControls(focusManaged(createElement(Root, {})));
 
     mounted.canvas.focus({ preventScroll: true });
     mounted.canvas.blur();
@@ -383,7 +379,7 @@ describe('Canvas DOM focus host', () => {
     expect(documentKeydownCaptureCalls(add.mock.calls)).toHaveLength(1);
     expect(documentKeydownCaptureCalls(remove.mock.calls)).toHaveLength(0);
 
-    executeRender(canvas, 4, Scene({ labels: ['only'] }));
+    executeRender(canvas, 4, createElement(Scene, { labels: ['only'] }));
     const removals = documentKeydownCaptureCalls(remove.mock.calls);
     expect(removals).toHaveLength(1);
     expect(removals[0][1]).toBe(firstAdds[0][1]);
@@ -411,23 +407,23 @@ describe('Canvas DOM focus host', () => {
     (_label, reverseSlots) => {
     const add = vi.spyOn(document, 'addEventListener');
     const remove = vi.spyOn(document, 'removeEventListener');
-    const OldHost = defineComp(() => focusManaged(Target({
+    const OldHost = (_props: {}) => focusManaged(createElement(Target, {
       label: 'old',
       handlers: { onClick: noop },
-    })));
-    const NewHost = defineComp(() => focusManaged(Target({
+    }));
+    const NewHost = (_props: {}) => focusManaged(createElement(Target, {
       label: 'new',
       handlers: { onClick: noop },
-    })));
-    const Root = defineComp(({ replacement }: { replacement: boolean }) => {
-      const oldSlot = replacement ? undefined : OldHost({ key: 'old' });
-      const newSlot = replacement ? NewHost({ key: 'new' }) : undefined;
+    }));
+    const Root = ({ replacement }: { replacement: boolean }) => {
+      const oldSlot = replacement ? undefined : createElement(OldHost, { key: 'old' });
+      const newSlot = replacement ? createElement(NewHost, { key: 'new' }) : undefined;
       return reverseSlots ? [newSlot, oldSlot] : [oldSlot, newSlot];
-    });
+    };
     const canvas = createCanvas();
     const canvasAdd = vi.spyOn(canvas, 'addEventListener');
     const canvasRemove = vi.spyOn(canvas, 'removeEventListener');
-    const mounted = mountAndRender(canvas, Root({ replacement: false }));
+    const mounted = mountAndRender(canvas, createElement(Root, { replacement: false }));
     const priorManager = mounted.manager;
     const eventRoot = getCRCInstance(canvas).eventRoot;
     const originalNativeListeners = new Map(
@@ -438,7 +434,7 @@ describe('Canvas DOM focus host', () => {
     );
     expect(canvas.getAttribute('tabindex')).toBe('0');
 
-    executeRender(canvas, 2, Root({ replacement: true }));
+    executeRender(canvas, 2, createElement(Root, { replacement: true }));
     const replacement = focusManager(canvas);
     expect(replacement).not.toBe(priorManager);
     expect(candidateLabels(replacement)).toEqual(['new']);
@@ -465,21 +461,20 @@ describe('Canvas DOM focus host', () => {
 
   it('enters logical focus before native focus routing after manager replacement', () => {
     const trace: string[] = [];
-    const OldHost = defineComp(() => focusManaged(Target({
+    const OldHost = (_props: {}) => focusManaged(createElement(Target, {
       label: 'old',
       handlers: { onClick: noop, onFocus: () => trace.push('old-focus') },
-    })));
-    const NewHost = defineComp(() => focusManaged(Target({
+    }));
+    const NewHost = (_props: {}) => focusManaged(createElement(Target, {
       label: 'new',
       handlers: { onClick: noop, onFocus: () => trace.push('new-focus') },
-    })));
-    const Root = defineComp(({ replacement }: { replacement: boolean }) =>
-      replacement ? NewHost({ key: 'new' }) : OldHost({ key: 'old' })
-    );
+    }));
+    const Root = ({ replacement }: { replacement: boolean }) =>
+      replacement ? createElement(NewHost, { key: 'new' }) : createElement(OldHost, { key: 'old' });
     const canvas = createCanvas();
-    mountAndRender(canvas, Root({ replacement: false }));
+    mountAndRender(canvas, createElement(Root, { replacement: false }));
 
-    executeRender(canvas, 2, Root({ replacement: true }));
+    executeRender(canvas, 2, createElement(Root, { replacement: true }));
     canvas.focus({ preventScroll: true });
 
     expect(trace).toEqual(['new-focus']);
@@ -491,30 +486,29 @@ describe('Canvas DOM focus host', () => {
     const documentAdd = vi.spyOn(document, 'addEventListener');
     let canvas: HTMLCanvasElement;
     let documentListenersDuringReplacement = 0;
-    const OldHost = defineComp(() => Target({
+    const OldHost = (_props: {}) => createElement(Target, {
       label: 'old',
       handlers: { onClick: noop, onFocus: () => trace.push('old-focus') },
-    }));
-    const NewHost = defineComp(() => {
+    });
+    const NewHost = (_props: {}) => {
       documentListenersDuringReplacement = documentKeydownCaptureCalls(
         documentAdd.mock.calls,
       ).length;
       canvas.focus({ preventScroll: true });
-      return Target({
+      return createElement(Target, {
         label: 'new',
         handlers: { onClick: noop, onFocus: () => trace.push('new-focus') },
       });
-    });
-    const Root = defineComp(({ replacement }: { replacement: boolean }) =>
+    };
+    const Root = ({ replacement }: { replacement: boolean }) =>
       replacement ?
-        focusManaged(NewHost({ key: 'new' })) :
-        focusManaged(OldHost({ key: 'old' }))
-    );
+        focusManaged(createElement(NewHost, { key: 'new' })) :
+        focusManaged(createElement(OldHost, { key: 'old' }));
     canvas = createCanvas();
     const canvasAdd = vi.spyOn(canvas, 'addEventListener');
-    mountAndRender(canvas, Root({ replacement: false }));
+    mountAndRender(canvas, createElement(Root, { replacement: false }));
 
-    executeRender(canvas, 2, Root({ replacement: true }));
+    executeRender(canvas, 2, createElement(Root, { replacement: true }));
 
     expect(documentListenersDuringReplacement).toBe(1);
     expect(trace).toEqual(['old-focus']);
@@ -532,28 +526,27 @@ describe('Canvas DOM focus host', () => {
     const add = vi.spyOn(document, 'addEventListener');
     const remove = vi.spyOn(document, 'removeEventListener');
     let renders = 0;
-    const Inner = defineComp(() => {
+    const Inner = (_props: {}) => {
       renders++;
-      return focusManaged(Target({
+      return focusManaged(createElement(Target, {
         label: 'cached',
         handlers: { onClick: noop },
       }));
-    });
-    const Root = defineComp(({ generation: _generation }: { generation: number }) =>
-      layer({
+    };
+    const Root = ({ generation: _generation }: { generation: number }) =>
+      createElement(Layer, {
         key: 'cached-layer',
         style: { width: 30, height: 30 },
-        render: Inner({}),
-      })
-    );
+        children: createElement(Inner, {}),
+      });
     const canvas = createCanvas();
     const canvasAdd = vi.spyOn(canvas, 'addEventListener');
     const canvasRemove = vi.spyOn(canvas, 'removeEventListener');
-    const mounted = mountAndRender(canvas, Root({ generation: 1 }));
+    const mounted = mountAndRender(canvas, createElement(Root, { generation: 1 }));
     const manager = mounted.manager;
     const eventRoot = getCRCInstance(canvas).eventRoot;
 
-    executeRender(canvas, 2, Root({ generation: 2 }));
+    executeRender(canvas, 2, createElement(Root, { generation: 2 }));
 
     expect(focusManager(canvas)).toBe(manager);
     expect(candidateLabels(manager)).toEqual(['cached']);
@@ -569,29 +562,28 @@ describe('Canvas DOM focus host', () => {
   });
 
   it('releases the complete focus host after failed replacement and reacquires fresh on recovery', () => {
-    const Throwing = defineComp(() => {
+    const Throwing = (_props: {}) => {
       throw new Error('expected focus-host replacement failure');
-    });
-    const OldHost = defineComp(() => Target({
+    };
+    const OldHost = (_props: {}) => createElement(Target, {
       label: 'old',
       handlers: { onClick: noop },
-    }));
-    const BrokenHost = defineComp(() => [
-      Target({ label: 'broken', handlers: { onClick: noop } }),
-      Throwing({}),
-    ]);
-    const Root = defineComp(({ replacement }: { replacement: boolean }) =>
+    });
+    const BrokenHost = (_props: {}) => [
+      createElement(Target, { label: 'broken', handlers: { onClick: noop } }),
+      createElement(Throwing, {}),
+    ];
+    const Root = ({ replacement }: { replacement: boolean }) =>
       replacement ?
-        focusManaged(BrokenHost({ key: 'broken' })) :
-        focusManaged(OldHost({ key: 'old' }))
-    );
+        focusManaged(createElement(BrokenHost, { key: 'broken' })) :
+        focusManaged(createElement(OldHost, { key: 'old' }));
     const documentAdd = vi.spyOn(document, 'addEventListener');
     const documentRemove = vi.spyOn(document, 'removeEventListener');
     const canvas = createCanvas();
     canvas.setAttribute('tabindex', '-1');
     const canvasAdd = vi.spyOn(canvas, 'addEventListener');
     const canvasRemove = vi.spyOn(canvas, 'removeEventListener');
-    const mounted = mountAndRender(canvas, Root({ replacement: false }));
+    const mounted = mountAndRender(canvas, createElement(Root, { replacement: false }));
     const eventRoot = getCRCInstance(canvas).eventRoot;
     const prior = mounted.manager;
     expect(canvas.getAttribute('tabindex')).toBe('0');
@@ -599,7 +591,7 @@ describe('Canvas DOM focus host', () => {
     expect(() => executeRender(
       canvas,
       2,
-      Root({ replacement: true }),
+      createElement(Root, { replacement: true }),
     )).toThrowError('expected focus-host replacement failure');
 
     expect(eventRoot.focusPolicy).toBeUndefined();
@@ -613,7 +605,7 @@ describe('Canvas DOM focus host', () => {
       expect(canvasEventCalls(canvasRemove.mock.calls, type)).toHaveLength(1);
     }
 
-    executeRender(canvas, 3, Root({ replacement: false }));
+    executeRender(canvas, 3, createElement(Root, { replacement: false }));
     const recovered = focusManager(canvas);
     expect(recovered).not.toBe(prior);
     expect(candidateLabels(recovered)).toEqual(['old']);
@@ -640,7 +632,7 @@ describe('Canvas DOM focus host', () => {
 
   it('clears the optional structural policy as a final root cleanup guarantee', () => {
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, Scene({ labels: [] }));
+    const controller = mountCRC(canvas, createElement(Scene, { labels: [] }));
     activeControllers.add(controller);
     executeRender(canvas, 1);
     const eventRoot = getCRCInstance(canvas).eventRoot;
@@ -658,25 +650,24 @@ interface TargetProps {
   readonly handlers: CRCEventHandlers;
 }
 
-const Target = defineComp<TargetProps>(({ handlers }) => {
+const Target = ({ handlers }: TargetProps) => {
   crcEventTarget(handlers, {
     path: rectanglePath(0, 0, 10, 10),
   });
-});
+};
 
-const Scene = defineComp(({ labels }: { labels: readonly string[] }) =>
-  labels.map(label => Target({
+const Scene = ({ labels }: { labels: readonly string[] }) =>
+  labels.map(label => createElement(Target, {
     key: label,
     label,
     handlers: { onClick: noop },
-  }))
-);
+  }));
 
-function managed(labels: readonly string[]): CompEl<any, any> {
-  return focusManaged(Scene({ labels }));
+function managed(labels: readonly string[]): CRCElement<any> {
+  return focusManaged(createElement(Scene, { labels }));
 }
 
-function mountBetweenNativeControls(element: CompEl<any, any>) {
+function mountBetweenNativeControls(element: CRCElement<any>) {
   const before = document.createElement('button');
   before.textContent = 'before';
   const canvas = createCanvas(false);
@@ -687,7 +678,7 @@ function mountBetweenNativeControls(element: CompEl<any, any>) {
   return { ...mounted, before, after };
 }
 
-function mountAndRender(canvas: HTMLCanvasElement, element: CompEl<any, any>) {
+function mountAndRender(canvas: HTMLCanvasElement, element: CRCElement<any>) {
   const controller = mountCRC(canvas, element);
   activeControllers.add(controller);
   executeRender(canvas, 1);

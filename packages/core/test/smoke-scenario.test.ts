@@ -11,7 +11,7 @@ import {
 } from '@crc/scenarios';
 import { page, userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
-import smokeSource from '../../scenarios/src/smoke.example.ts?raw';
+import smokeSource from '../../scenarios/src/smoke.example.tsx?raw';
 import { moveMouse, pressMouse, releaseMouse } from './support/mouse-input';
 import { expectVisualMatch } from './visual-compare';
 
@@ -122,7 +122,7 @@ describe('shared smoke scenario', () => {
   it('loads the catalog source and drives mount, update, click, reset, and disposal', async () => {
     expect(validateScenarioCatalog(scenarioCatalog)).toBe(scenarioCatalog);
     expect(smokeSource).toContain(`SMOKE_SOURCE_ID = '${smokeScenarioEntry.source.id}'`);
-    expect(smokeScenarioEntry.source.path).toBe('packages/scenarios/src/smoke.example.ts');
+    expect(smokeScenarioEntry.source.path).toBe('packages/scenarios/src/smoke.example.tsx');
 
     const definition = await loadScenario(smokeScenarioEntry);
     const { canvas, controller } = await mountSmokeHarness(definition);

@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { crc } from '../crc.js';
-import { defineComp } from '../define-comp.js';
 import { clearSharedState } from '../global-state.js';
 import { crcLayoutBox } from '../hooks/crc-layout-box.js';
 import { crcRef } from '../hooks/crc-ref.js';
+import { createElement } from '../element/create-element';
+import { definePrimitive } from '../define-primitive';
 
 beforeEach(() => {
   document.body.innerHTML = '';
@@ -20,14 +21,14 @@ describe('root Canvas surface', () => {
       box: ReturnType<typeof crcLayoutBox>;
       transform: DOMMatrix;
     }> = [];
-    const Probe = defineComp((_props: {}, _style, ctx) => {
+    const Probe = definePrimitive<{}>((_props: {}, _style, ctx) => {
       observations.push({
         box: crcLayoutBox(),
         transform: ctx.getTransform(),
       });
     });
 
-    const controller = crc(canvas, Probe({}), { pixelRatio: 2 });
+    const controller = crc(canvas, createElement(Probe, {}), { pixelRatio: 2 });
     await settleSurface();
 
     expect(canvas.width).toBe(600);
@@ -51,14 +52,14 @@ describe('root Canvas surface', () => {
       box: ReturnType<typeof crcLayoutBox>;
       identity: object;
     }> = [];
-    const Probe = defineComp(() => {
+    const Probe = (_props: {}) => {
       observations.push({
         box: crcLayoutBox(),
         identity: crcRef({}).current!,
       });
-    });
+    };
 
-    const controller = crc(canvas, Probe({}), {
+    const controller = crc(canvas, createElement(Probe, {}), {
       viewport: 'responsive',
       pixelRatio: 2,
     });
@@ -84,9 +85,9 @@ describe('root Canvas surface', () => {
     canvas.height = 100;
     canvas.style.display = 'block';
     document.body.appendChild(canvas);
-    const Probe = defineComp(() => {});
+    const Probe = (_props: {}) => {};
 
-    const controller = crc(canvas, Probe({}), { pixelRatio: 2 });
+    const controller = crc(canvas, createElement(Probe, {}), { pixelRatio: 2 });
     await settleSurface();
 
     expect(canvas.width).toBe(400);
@@ -105,10 +106,10 @@ describe('root Canvas surface', () => {
   it('defers a zero-sized responsive surface and renders when it becomes visible', async () => {
     const canvas = createCanvas(200, 100, 0, 100);
     let renders = 0;
-    const Probe = defineComp(() => {
+    const Probe = (_props: {}) => {
       renders++;
-    });
-    const controller = crc(canvas, Probe({}), {
+    };
+    const controller = crc(canvas, createElement(Probe, {}), {
       viewport: 'responsive',
       pixelRatio: 2,
     });
@@ -127,8 +128,8 @@ describe('root Canvas surface', () => {
 
   it('uses the current device ratio by default', async () => {
     const canvas = createCanvas(200, 100, 240, 120);
-    const Probe = defineComp(() => {});
-    const controller = crc(canvas, Probe({}));
+    const Probe = (_props: {}) => {};
+    const controller = crc(canvas, createElement(Probe, {}));
     await settleSurface();
 
     expect(canvas.width).toBe(Math.round(240 * window.devicePixelRatio));
@@ -200,10 +201,10 @@ describe('root Canvas surface', () => {
 
       const canvas = createCanvas(200, 100, 200, 100);
       let renders = 0;
-      const Probe = defineComp(() => {
+      const Probe = (_props: {}) => {
         renders++;
-      });
-      controller = crc(canvas, Probe({}));
+      };
+      controller = crc(canvas, createElement(Probe, {}));
 
       expect(observe).toHaveBeenCalledOnce();
       expect(observe).toHaveBeenCalledWith(canvas);

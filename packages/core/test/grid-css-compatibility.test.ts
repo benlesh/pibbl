@@ -1,12 +1,13 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { rect } from '../src/lib/components/rect';
+import { Rectangle } from '../src/lib/components/rect';
 import {
   layoutGrid,
   type GridStyle,
   type GridTrack,
 } from '../src/lib/layout/grid';
 import { measureElement } from '../src/lib/layout/measure';
-import type { CompEl } from '../src/lib/types';
+import type { CRCElement } from '../src/lib/types';
+import { createElement } from '../src/lib/element/create-element';
 
 const service = {
   measureText: (value: string) => ({ width: value.length * 10 }) as TextMetrics,
@@ -14,7 +15,7 @@ const service = {
 const measurement = {
   service,
   measureElement: (
-    element: CompEl,
+    element: CRCElement<any>,
     constraints: {
       minWidth: number;
       maxWidth: number;
@@ -87,7 +88,7 @@ describe('Grid Chromium compatibility oracle', () => {
     },
   ] as const)('matches Chromium for $name', (fixture) => {
     const children = fixture.items.map((item) =>
-      rect({
+      createElement(Rectangle, {
         style: {
           width: 'width' in item ? item.width : 'auto',
           height: 'height' in item ? item.height : 'auto',

@@ -5,13 +5,15 @@ import {
   isCRCElement,
 } from './element/create-element';
 import { materializeContainerChildren } from './element/children';
-import { getLegacyIdentityHint } from './element/metadata';
-import { Absolute, absolute } from './layout/absolute';
+import {
+  getLegacyIdentityHint,
+  setLegacyIdentityHint,
+} from './element/metadata';
+import { Absolute } from './layout/absolute';
 import { Flow } from './layout/flow';
 import { Flex } from './layout/flex';
 import { Grid } from './layout/grid';
 import { crc } from './crc';
-import { defineComp } from './define-comp';
 import {
   appendElementEnhancer,
   getElementEnhancerDescriptors,
@@ -34,16 +36,9 @@ import {
 } from './focus/policy-test-support';
 import type { CRCKeyboardNavigationOptions } from './focus/types';
 import type { BoxStyle, LayoutItemStyle } from './style/types';
-import type {
-  CompEl,
-  CompRefs,
-  CRCElement,
-  CRCNode,
-  CRCInstance,
-  MeasureResult,
-  SystemStyle,
-} from './types';
-import type { CompEl as PublicCompEl } from '../index';
+import type { CompRefs, CRCElement, CRCNode, CRCInstance, MeasureResult, SystemStyle } from './types';
+import type { CRCElement as PublicCRCElement } from '../index';
+import { definePrimitive } from './define-primitive';
 
 interface TestMountedEnhancer {
   update(next: TestEnhancerDescriptor): void;
@@ -107,7 +102,7 @@ describe('identity-transparent element enhancers', () => {
       width: number;
       height: number;
     }
-    const Child = defineComp<{}, ChildStyle>((_props, style, context) => {
+    const Child = definePrimitive<{}, ChildStyle>((_props, style, context) => {
       const refs = getComponentRefs();
       const [state, updateState] = crcState(0);
       setState = updateState;
@@ -131,7 +126,7 @@ describe('identity-transparent element enhancers', () => {
         size: { width: 30, height: 20 },
       }),
     });
-    const Paint = defineComp<{
+    const Paint = definePrimitive<{
       label: string;
       fill: string;
     }, ChildStyle>(({ label, fill }, _style, context) => {
@@ -146,13 +141,13 @@ describe('identity-transparent element enhancers', () => {
       ++descriptorGeneration,
       lifecycle,
     );
-    const Host = defineComp(({ enhanced }: { enhanced: boolean }) => {
+    const Host = ({ enhanced }: { enhanced: boolean }) => {
       crcEventListener({ onClick: () => undefined });
-      const child = Child({ key: 'stable', style: { width: 30, height: 20 } });
-      return absolute({
+      const child = createElement(Child, { key: 'stable', style: { width: 30, height: 20 } });
+      return createElement(Absolute, {
         style: { width: 80, height: 60 },
         children: [
-          Paint({
+          createElement(Paint, {
             label: 'before',
             fill: '#2563eb',
             style: { width: 30, height: 20 },
@@ -160,16 +155,16 @@ describe('identity-transparent element enhancers', () => {
           enhanced ? focusManaged(directionalPolicy(
             annotate(child, [descriptor()]),
           )) : child,
-          Paint({
+          createElement(Paint, {
             label: 'after',
             fill: '#22c55e',
             style: { width: 30, height: 20 },
           }),
         ],
       });
-    });
+    };
 
-    const measurable = Child({ key: 'stable', style: { width: 30, height: 20 } });
+    const measurable = createElement(Child, { key: 'stable', style: { width: 30, height: 20 } });
     const [preparedMeasurable] = materializeContainerChildren(
       focusManaged(directionalPolicy(annotate(measurable, [descriptor()]))),
       'measurement test',
@@ -185,7 +180,7 @@ describe('identity-transparent element enhancers', () => {
     expect(lifecycle).toEqual([]);
 
     const canvas = createCanvas();
-    const controller = crc(canvas, Host({ enhanced: true }));
+    const controller = crc(canvas, createElement(Host, { enhanced: true }));
     activeControllers.add(controller);
     await nextFrame();
     const first = observations[0];
@@ -203,7 +198,7 @@ describe('identity-transparent element enhancers', () => {
     lifecycle.length = 0;
     setState?.(1);
     await nextFrame();
-    crc(canvas, Host({ enhanced: false }));
+    crc(canvas, createElement(Host, { enhanced: false }));
     await nextFrame();
     const last = observations.at(-1)!;
 
@@ -224,10 +219,10 @@ describe('identity-transparent element enhancers', () => {
     const trace: string[] = [];
     const firstKey = Symbol('first');
     const secondKey = Symbol('second');
-    const Child = defineComp(() => {
+    const Child = (_props: {}) => {
       trace.push('render:child');
-    });
-    const Root = defineComp(({
+    };
+    const Root = ({
       firstGeneration,
       order,
       showSecond,
@@ -242,10 +237,10 @@ describe('identity-transparent element enhancers', () => {
         ...(showSecond ? [createDescriptor('second', secondKey, firstGeneration, trace)] : []),
       ];
       if (order === 'reverse') descriptors.reverse();
-      return annotate(Child({ key: 'stable' }), descriptors);
-    });
+      return annotate(createElement(Child, { key: 'stable' }), descriptors);
+    };
     const canvas = createCanvas();
-    const controller = crc(canvas, Root({
+    const controller = crc(canvas, createElement(Root, {
       firstGeneration: 1,
       order: 'forward',
       showSecond: true,
@@ -267,7 +262,7 @@ describe('identity-transparent element enhancers', () => {
     ]);
 
     trace.length = 0;
-    crc(canvas, Root({
+    crc(canvas, createElement(Root, {
       firstGeneration: 2,
       order: 'reverse',
       showSecond: true,
@@ -285,7 +280,7 @@ describe('identity-transparent element enhancers', () => {
     ]);
 
     trace.length = 0;
-    crc(canvas, Root({
+    crc(canvas, createElement(Root, {
       firstGeneration: 3,
       order: 'forward',
       showSecond: false,
@@ -309,10 +304,10 @@ describe('identity-transparent element enhancers', () => {
   it('creates enhancer teardown ownership lazily once across removal and re-add', () => {
     const trace: string[] = [];
     const enhancerKey = Symbol('lazy-owner');
-    const Component = defineComp(() => {
+    const Component = (_props: {}) => {
       trace.push('render:component');
-    });
-    const plainElement = () => Component({ key: 'stable' });
+    };
+    const plainElement = () => createElement(Component, { key: 'stable' });
     const enhancedElement = (generation: number) => annotate(plainElement(), [
       createDescriptor('lazy-owner', enhancerKey, generation, trace),
     ]);
@@ -364,15 +359,15 @@ describe('identity-transparent element enhancers', () => {
 
   it('exits an enhanced parent after its throwing descendant with success false', () => {
     const trace: string[] = [];
-    const Throwing = defineComp(() => {
+    const Throwing = (_props: {}) => {
       trace.push('render:throwing');
       throw new Error('expected descendant failure');
-    });
-    const Parent = defineComp(() => {
+    };
+    const Parent = (_props: {}) => {
       trace.push('render:parent');
-      return Throwing({});
-    });
-    const enhancedParent = annotate(Parent({}), [
+      return createElement(Throwing, {});
+    };
+    const enhancedParent = annotate(createElement(Parent, {}), [
       createDescriptor('first', Symbol('first'), 1, trace),
       createDescriptor('second', Symbol('second'), 1, trace),
     ]);
@@ -407,9 +402,9 @@ describe('identity-transparent element enhancers', () => {
     const trace: string[] = [];
     const existingKey = Symbol('existing');
     const acquiredKey = Symbol('acquired');
-    const Leaf = defineComp(() => undefined);
-    const Root = defineComp(({ failing }: { failing: boolean }) => annotate(
-      Leaf({ key: 'stable' }),
+    const Leaf = (_props: {}) => undefined;
+    const Root = ({ failing }: { failing: boolean }) => annotate(
+      createElement(Leaf, { key: 'stable' }),
       failing ? [
         createDescriptor('existing', existingKey, 2, trace),
         createDescriptor('acquired', acquiredKey, 2, trace),
@@ -417,14 +412,14 @@ describe('identity-transparent element enhancers', () => {
           mount: true,
         }),
       ] : [createDescriptor('existing', existingKey, 1, trace)],
-    ));
+    );
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, Root({ failing: false }));
+    const controller = mountCRC(canvas, createElement(Root, { failing: false }));
     activeControllers.add(controller);
     executeRender(canvas, 1);
     trace.length = 0;
 
-    expect(() => executeRender(canvas, 2, Root({ failing: true })))
+    expect(() => executeRender(canvas, 2, createElement(Root, { failing: true })))
       .toThrowError('mount:mount-failure:failed');
     expect(trace).toEqual([
       'update:existing:2',
@@ -445,9 +440,9 @@ describe('identity-transparent element enhancers', () => {
   it('releases all newly acquired entries in reverse before existing ownership after an update failure', () => {
     const trace: string[] = [];
     const existingKey = Symbol('existing');
-    const Leaf = defineComp(() => undefined);
-    const Root = defineComp(({ failing }: { failing: boolean }) => annotate(
-      Leaf({ key: 'stable' }),
+    const Leaf = (_props: {}) => undefined;
+    const Root = ({ failing }: { failing: boolean }) => annotate(
+      createElement(Leaf, { key: 'stable' }),
       failing ? [
         createDescriptor('existing', existingKey, 2, trace),
         createDescriptor('acquired', Symbol('acquired'), 2, trace),
@@ -455,14 +450,14 @@ describe('identity-transparent element enhancers', () => {
           update: true,
         }),
       ] : [createDescriptor('existing', existingKey, 1, trace)],
-    ));
+    );
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, Root({ failing: false }));
+    const controller = mountCRC(canvas, createElement(Root, { failing: false }));
     activeControllers.add(controller);
     executeRender(canvas, 1);
     trace.length = 0;
 
-    expect(() => executeRender(canvas, 2, Root({ failing: true })))
+    expect(() => executeRender(canvas, 2, createElement(Root, { failing: true })))
       .toThrowError('update:update-failure:failed');
     expect(trace).toEqual([
       'update:existing:2',
@@ -484,8 +479,8 @@ describe('identity-transparent element enhancers', () => {
 
   it('unwinds already-entered scopes and disposes every mounted entry after a later enter fails', () => {
     const trace: string[] = [];
-    const Root = defineComp(() => undefined);
-    const enhanced = annotate(Root({}), [
+    const Root = (_props: {}) => undefined;
+    const enhanced = annotate(createElement(Root, {}), [
       createDescriptor('first', Symbol('first'), 1, trace),
       createDescriptor('enter-failure', Symbol('enter-failure'), 1, trace, {
         enter: true,
@@ -520,10 +515,10 @@ describe('identity-transparent element enhancers', () => {
 
   it('marks outer exits unsuccessful and runs every exit after the inner exit throws', () => {
     const trace: string[] = [];
-    const Root = defineComp(() => {
+    const Root = (_props: {}) => {
       trace.push('render:root');
-    });
-    const enhanced = annotate(Root({}), [
+    };
+    const enhanced = annotate(createElement(Root, {}), [
       createDescriptor('outer', Symbol('outer'), 1, trace),
       createDescriptor('middle', Symbol('middle'), 1, trace),
       createDescriptor('inner', Symbol('inner'), 1, trace, { exit: true }),
@@ -561,8 +556,8 @@ describe('identity-transparent element enhancers', () => {
   it('continues reverse disposal after an inner disposer throws and never disposes twice', () => {
     const trace: string[] = [];
     const reportError = vi.spyOn(globalThis, 'reportError').mockImplementation(() => {});
-    const Root = defineComp(() => undefined);
-    const enhanced = annotate(Root({}), [
+    const Root = (_props: {}) => undefined;
+    const enhanced = annotate(createElement(Root, {}), [
       createDescriptor('outer', Symbol('outer'), 1, trace),
       createDescriptor('throwing', Symbol('throwing'), 1, trace, { dispose: true }),
       createDescriptor('inner', Symbol('inner'), 1, trace),
@@ -590,10 +585,10 @@ describe('built-in transparent policies', () => {
     interface ConstructorStyle extends SystemStyle {
       width: number;
     }
-    const Component = defineComp<{ value: number }, ConstructorStyle>(() => undefined);
-    const element = Component({ key: 'stable', value: 7, style: { width: 20 } });
+    const Component = (_props: { value: number } & { style: Readonly<ConstructorStyle> }) => undefined;
+    const element = createElement(Component, { key: 'stable', value: 7, style: { width: 20 } });
     const identityHint = { type: element.type, key: element.key, occurrence: 3 };
-    element.identityHint = identityHint;
+    setLegacyIdentityHint(element, identityHint);
 
     const policyTree = focusManaged(
       directionalPolicy(element, { mode: 'directional' }),
@@ -603,7 +598,7 @@ describe('built-in transparent policies', () => {
     expect(enhanced).not.toBe(element);
     expect(enhanced.type).toBe(element.type);
     expect(enhanced.props).toBe(element.props);
-    expect(enhanced.props.style).toBe(element.style);
+    expect(enhanced.props.style).toBe(element.props.style);
     expect(enhanced.key).toBe('stable');
     expect(getLegacyIdentityHint(enhanced)).toBe(identityHint);
     expect('enhancers' in enhanced).toBe(false);
@@ -697,9 +692,9 @@ describe('built-in transparent policies', () => {
     '$name preserves a private enhancer through measurement, placement, and paint',
     ({ build, childStyle, measurements }) => {
       const trace: string[] = [];
-      const renders: Array<{ id: string; element: CompEl<any, any> }> = [];
+      const renders: Array<{ id: string; element: CRCElement<any> }> = [];
       let measurementCount = 0;
-      const Child = defineComp<
+      const Child = definePrimitive<
         {},
         EnhancerLayoutStyle,
         EnhancerLayoutStyle,
@@ -708,7 +703,7 @@ describe('built-in transparent policies', () => {
         const refs = getComponentRefs();
         renders.push({
           id: refs.id,
-          element: refs.element as CompEl<any, any>,
+          element: refs.element as CRCElement<any>,
         });
         trace.push('paint');
       }, {
@@ -728,7 +723,7 @@ describe('built-in transparent policies', () => {
         trace,
       );
       const enhanced = appendElementEnhancer(
-        Child({ key: 'stable', style: childStyle }),
+        createElement(Child, { key: 'stable', style: childStyle }),
         descriptor,
       );
       const canvas = createCanvas();
@@ -765,15 +760,15 @@ describe('built-in transparent policies', () => {
   );
 
   it('preserves focus and directional policy on a measured and placed Grid child', () => {
-    const rendered: Array<{ id: string; element: CompEl<any, any> }> = [];
-    const Target = defineComp<
+    const rendered: Array<{ id: string; element: CRCElement<any> }> = [];
+    const Target = definePrimitive<
       {},
       EnhancerLayoutStyle,
       EnhancerLayoutStyle,
       ResolvedEnhancerLayoutStyle
     >(() => {
       const refs = getComponentRefs();
-      rendered.push({ id: refs.id, element: refs.element as CompEl<any, any> });
+      rendered.push({ id: refs.id, element: refs.element as CRCElement<any> });
       const path = new Path2D();
       path.rect(0, 0, 30, 20);
       crcEventTarget({ onClick: () => undefined }, {
@@ -800,7 +795,7 @@ describe('built-in transparent policies', () => {
         alignItems: 'start',
       },
       children: directionalPolicy(
-        focusManaged(Target({
+        focusManaged(createElement(Target, {
           key: 'managed',
           style: {
             width: 'auto',
@@ -838,15 +833,15 @@ describe('built-in transparent policies', () => {
   });
 
   it('rejects duplicate focus and directional policies with targeted errors', () => {
-    const Component = defineComp(() => undefined);
+    const Component = (_props: {}) => undefined;
 
-    const focused = focusManaged(Component({}));
+    const focused = focusManaged(createElement(Component, {}));
     expect(() => materializeContainerChildren(
       focusManaged(focused),
       'policy test',
     )).toThrowError(/FocusManagement.*same.*element/i);
 
-    const directional = directionalPolicy(Component({}), { mode: 'directional' });
+    const directional = directionalPolicy(createElement(Component, {}), { mode: 'directional' });
     expect(() => materializeContainerChildren(
       directionalPolicy(directional, { mode: 'directional' }),
       'policy test',
@@ -854,22 +849,22 @@ describe('built-in transparent policies', () => {
   });
 
   it('accepts only directional keyboard-navigation mode', () => {
-    const Component = defineComp(() => undefined);
+    const Component = (_props: {}) => undefined;
     const options: CRCKeyboardNavigationOptions = { mode: 'directional' };
 
     expect(materializeContainerChildren(
-      directionalPolicy(Component({}), options),
+      directionalPolicy(createElement(Component, {}), options),
       'policy test',
-    )[0].type).toBe(Component({}).type);
+    )[0].type).toBe(createElement(Component, {}).type);
 
     expect(() => materializeContainerChildren(
-      directionalPolicy(Component({}), { mode: 'linear' } as never),
+      directionalPolicy(createElement(Component, {}), { mode: 'linear' } as never),
       'policy test',
     )).toThrowError(/mode.*directional/i);
   });
 
   it('rejects unbranded descriptor copies with arbitrary string metadata', () => {
-    type PublicElementHasEnhancers = 'enhancers' extends keyof PublicCompEl
+    type PublicElementHasEnhancers = 'enhancers' extends keyof PublicCRCElement<any>
       ? true
       : false;
     const publicElementHasEnhancers: PublicElementHasEnhancers = false;
@@ -879,10 +874,10 @@ describe('built-in transparent policies', () => {
       exit: () => undefined,
       dispose: () => undefined,
     }));
-    const Component = defineComp(() => undefined);
+    const Component = (_props: {}) => undefined;
     const descriptor = { key: Symbol('unsupported'), mount };
-    const element = Component({});
-    const unsupported: PublicCompEl = {
+    const element = createElement(Component, {});
+    const unsupported: PublicCRCElement = {
       ...element,
       // @ts-expect-error arbitrary enhancer metadata is not public CRC element input
       enhancers: [descriptor],
@@ -898,10 +893,10 @@ describe('built-in transparent policies', () => {
   });
 });
 
-function annotate<P>(
-  element: CompEl<P, any>,
+function annotate(
+  element: CRCElement<any>,
   enhancers: readonly TestEnhancerDescriptor[],
-): CompEl<P, any> {
+): CRCElement<any> {
   return enhancers.reduce(
     (enhanced, descriptor) => appendElementEnhancer(enhanced, descriptor),
     element,

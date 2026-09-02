@@ -1,24 +1,14 @@
-import {
-  defineComp,
-  path,
-  rect,
-  svgPath,
-} from '@crc/core';
-
+import { Path, Rectangle, SvgPath } from '@crc/core';
 export const DRAWING_SHAPES_SOURCE_ID = 'drawing-shapes-example';
-
 export type DrawingShapesAction = 'mount' | 'reset' | 'update-shapes';
-
 export interface DrawingShapesState {
   lastAction: DrawingShapesAction;
   revision: number;
   updated: boolean;
 }
-
 interface DrawingShapesSceneProps {
   state: Readonly<DrawingShapesState>;
 }
-
 function trianglePath(updated: boolean): Path2D {
   const triangle = new Path2D();
   triangle.moveTo(205, updated ? 105 : 98);
@@ -27,25 +17,23 @@ function trianglePath(updated: boolean): Path2D {
   triangle.closePath();
   return triangle;
 }
-
 function emptyPath(): Path2D {
   return new Path2D();
 }
-
-const DrawingShapesScene = defineComp<DrawingShapesSceneProps>(({ state }) => [
-  rect({
-    key: 'background',
-    style: {
+const DrawingShapesScene = ({ state }: DrawingShapesSceneProps) => [
+  <Rectangle
+    key="background"
+    style={{
       x: 0,
       y: 0,
       width: 480,
       height: 240,
       fill: '#f8fafc',
-    },
-  }),
-  rect({
-    key: 'rectangle',
-    style: {
+    }}
+  />,
+  <Rectangle
+    key="rectangle"
+    style={{
       x: state.updated ? 28 : 20,
       y: state.updated ? 26 : 20,
       width: state.updated ? 132 : 120,
@@ -54,92 +42,87 @@ const DrawingShapesScene = defineComp<DrawingShapesSceneProps>(({ state }) => [
       stroke: '#0f172a',
       strokeWidth: 3,
       alignToPixelGrid: 'round',
-    },
-  }),
-  path({
-    key: 'triangle',
-    style: {
+    }}
+  />,
+  <Path
+    key="triangle"
+    style={{
       d: trianglePath(state.updated),
       fill: state.updated ? '#ec4899' : '#f59e0b',
       stroke: '#0f172a',
       strokeWidth: 3,
-    },
-  }),
-  svgPath({
-    key: 'svg-diamond',
-    style: {
+    }}
+  />,
+  <SvgPath
+    key="svg-diamond"
+    style={{
       d: state.updated
         ? 'M 346 62 L 396 18 L 446 62 L 396 106 Z'
         : 'M 350 62 L 396 24 L 442 62 L 396 100 Z',
       fill: state.updated ? '#14b8a6' : '#10b981',
       stroke: '#0f172a',
       strokeWidth: 3,
-    },
-  }),
-
-  // These underlays make invisible and boundary behavior easy to inspect.
-  rect({
-    style: {
+    }}
+  />, // These underlays make invisible and boundary behavior easy to inspect.
+  <Rectangle
+    style={{
       x: 20,
       y: 142,
       width: 72,
       height: 62,
       fill: '#ef4444',
-    },
-  }),
-  rect({
-    style: {
+    }}
+  />,
+  <Rectangle
+    style={{
       x: 20,
       y: 142,
       width: 72,
       height: 62,
       fill: '#2563eb',
       opacity: 0,
-    },
-  }),
-  rect({
-    style: {
+    }}
+  />,
+  <Rectangle
+    style={{
       x: 120,
       y: 142,
       width: 72,
       height: 62,
       fill: '#22c55e',
-    },
-  }),
-  path({
-    style: {
+    }}
+  />,
+  <Path
+    style={{
       d: new Path2D('M 120 142 H 192 V 204 H 120 Z'),
       fill: 'transparent',
-    },
-  }),
-  rect({
-    style: {
+    }}
+  />,
+  <Rectangle
+    style={{
       x: 294,
       y: 142,
       width: 72,
       height: 62,
       fill: '#e2e8f0',
-    },
-  }),
-  path({
-    style: {
+    }}
+  />,
+  <Path
+    style={{
       d: emptyPath(),
       fill: '#0f172a',
-    },
-  }),
-  rect({
-    style: {
+    }}
+  />,
+  <Rectangle
+    style={{
       x: 454,
       y: 142,
       width: -62,
       height: 62,
       fill: '#6366f1',
-    },
-  }),
-]);
-
-export function createDrawingShapesScene(
-  state: Readonly<DrawingShapesState>,
-): ReturnType<typeof DrawingShapesScene> {
-  return DrawingShapesScene({ state });
+    }}
+  />,
+];
+export function createDrawingShapesScene(state: Readonly<DrawingShapesState>) {
+  return <DrawingShapesScene state={state} />;
 }

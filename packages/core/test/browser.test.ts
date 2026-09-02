@@ -1,10 +1,11 @@
 import * as CRC_ROOT from '@crc/core';
-import { crc, defineComp, rect, Rectangle } from '@crc/core';
+import { crc, Rectangle } from '@crc/core';
 import { jsx, jsxs } from '@crc/core/jsx-runtime';
 import { jsxDEV } from '@crc/core/jsx-dev-runtime';
 import { page } from 'vitest/browser';
 import { describe, expect, it } from 'vitest';
 import { takeScreenshot } from '../src/lib/util/test-utils';
+import { createElement } from '@crc/core';
 
 describe('crc browser tests', () => {
   it('keeps compiler constructors on their runtime entry points', () => {
@@ -36,8 +37,8 @@ describe('crc browser tests', () => {
     canvas.style.margin = '5px';
     document.body.appendChild(canvas);
 
-    const SimpleRect = defineComp(() => {
-      return rect({
+    const SimpleRect = (_props: {}) => {
+      return createElement(Rectangle, {
         style: {
           x: 50,
           y: 50,
@@ -48,9 +49,9 @@ describe('crc browser tests', () => {
           strokeWidth: 2,
         },
       });
-    });
+    };
 
-    crc(canvas, SimpleRect({}));
+    crc(canvas, createElement(SimpleRect, {}));
 
     // Method 1: Auto-generated name based on test name + timestamp
     await takeScreenshot(page);

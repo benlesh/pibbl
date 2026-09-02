@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { defineComp } from '../define-comp';
 import type { CRCEventHandlers } from '../events/types';
 import { executeRender } from '../execute-render';
 import { clearSharedState, getCRCInstance } from '../global-state';
@@ -8,6 +7,7 @@ import { mountCRC } from '../mount-crc';
 import type { CRCController } from '../types';
 import type { CRCFocusManager } from './focus-manager';
 import { focusManaged } from './policy-test-support';
+import { createElement } from '../element/create-element';
 
 const activeControllers = new Set<CRCController>();
 
@@ -41,11 +41,11 @@ describe('press-to-focus defaults', () => {
   );
 
   it('publishes the intended target before synchronous Canvas focus dispatch', () => {
-    const Root = defineComp(() => [
-      Target({ key: 'first', label: 'first', x: 0, keyboardFocusable: true, handlers: {} }),
-      Target({ key: 'pressed', label: 'pressed', x: 50, keyboardFocusable: true, handlers: {} }),
-    ]);
-    const mounted = mountAndRender(focusManaged(Root({})));
+    const Root = (_props: {}) => [
+      createElement(Target, { key: 'first', label: 'first', x: 0, keyboardFocusable: true, handlers: {} }),
+      createElement(Target, { key: 'pressed', label: 'pressed', x: 50, keyboardFocusable: true, handlers: {} }),
+    ];
+    const mounted = mountAndRender(focusManaged(createElement(Root, {})));
 
     dispatchPointer(mounted.canvas, 7, 60, 'mouse');
 
@@ -60,21 +60,21 @@ describe('press-to-focus defaults', () => {
     let remove = false;
     let visible = true;
     let canvas!: HTMLCanvasElement;
-    const Root = defineComp(() => visible ? Target({
+    const Root = (_props: {}) => visible ? createElement(Target, {
       label: 'focusable', x: 0, keyboardFocusable: true,
       handlers: {
         onPointerDown: event => {
           if (remove) {
             visible = false;
-            executeRender(canvas, 2, focusManaged(Root({})));
+            executeRender(canvas, 2, focusManaged(createElement(Root, {})));
           }
           if (prevent) event.preventDefault();
           throw new Error('expected pointer handler failure');
         },
       },
-    }) : undefined);
+    }) : undefined;
     canvas = createCanvas();
-    const mounted = mountAndRender(focusManaged(Root({})), canvas);
+    const mounted = mountAndRender(focusManaged(createElement(Root, {})), canvas);
 
     const prevented = dispatchPointer(canvas, 1, 10, 'mouse');
     expect(prevented.defaultPrevented).toBe(true);
@@ -260,12 +260,12 @@ describe('press-to-focus defaults', () => {
 
   it('uses only the first simultaneous contact and honors prevention from a later target group', () => {
     let preventSecondary = false;
-    const Root = defineComp(() => [
-      Target({
+    const Root = (_props: {}) => [
+      createElement(Target, {
         key: 'first', label: 'first', x: 0, keyboardFocusable: true,
         handlers: { onTouchStart: () => undefined },
       }),
-      Target({
+      createElement(Target, {
         key: 'second', label: 'second', x: 50, keyboardFocusable: true,
         handlers: {
           onTouchStart: event => {
@@ -273,8 +273,8 @@ describe('press-to-focus defaults', () => {
           },
         },
       }),
-    ]);
-    const mounted = mountAndRender(focusManaged(Root({})));
+    ];
+    const mounted = mountAndRender(focusManaged(createElement(Root, {})));
     const first = dispatchTouchSequence(
       mounted.canvas,
       'touchstart',
@@ -321,13 +321,13 @@ describe('press-to-focus defaults', () => {
   it('clears logical state only after the native Canvas blur reaches its target', () => {
     const snapshots: boolean[] = [];
     let manager!: CRCFocusManager;
-    const Root = defineComp(() => Target({
+    const Root = (_props: {}) => createElement(Target, {
       label: 'focusable', x: 0, keyboardFocusable: true,
       handlers: {
         onBlur: () => snapshots.push(Boolean(manager.resolveKeyboardTarget())),
       },
-    }));
-    const mounted = mountAndRender(focusManaged(Root({})));
+    });
+    const mounted = mountAndRender(focusManaged(createElement(Root, {})));
     manager = mounted.manager;
     mounted.canvas.focus({ preventScroll: true });
 
@@ -345,27 +345,27 @@ interface TargetProps {
   readonly handlers: CRCEventHandlers;
 }
 
-const Target = defineComp<TargetProps>(({
+const Target = ({
   x,
   keyboardFocusable,
   handlers,
-}) => {
+}: TargetProps) => {
   crcEventTarget(handlers, {
     path: rectanglePath(x, 0, 40, 40),
     fill: true,
     keyboardFocusable,
   });
-});
+};
 
 function mountScene() {
-  const Root = defineComp(() => [
-    Target({ key: 'focusable', label: 'focusable', x: 0, keyboardFocusable: true, handlers: {} }),
-    Target({
+  const Root = (_props: {}) => [
+    createElement(Target, { key: 'focusable', label: 'focusable', x: 0, keyboardFocusable: true, handlers: {} }),
+    createElement(Target, {
       key: 'captured', label: 'captured', x: 50, keyboardFocusable: false,
       handlers: { onPointerDown: () => undefined, onMouseDown: () => undefined },
     }),
-  ]);
-  return mountAndRender(focusManaged(Root({})));
+  ];
+  return mountAndRender(focusManaged(createElement(Root, {})));
 }
 
 function mountAndRender(element: ReturnType<typeof focusManaged>, canvas = createCanvas()) {

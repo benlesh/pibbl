@@ -815,6 +815,34 @@ export function learningSourceContainsJsx(source: string): boolean {
   return inspectSource(source, "Learning source").hasJsx;
 }
 
+export function validateScenarioSourceText(
+  source: string,
+  label: string,
+): void {
+  const inspection = inspectSource(source, label);
+  if (!inspection.hasNamedValueCoreImport) {
+    throw invalid(label, "must import public values from @crc/core.");
+  }
+  if (inspection.hasLegacyAuthoring) {
+    throw invalid(label, "imports or calls legacy component authoring.");
+  }
+  if (inspection.hasDirectComponentCall) {
+    throw invalid(
+      label,
+      "must construct descriptive CRC components with JSX or createElement, not direct calls.",
+    );
+  }
+  if (inspection.hasLegacyTextStyle) {
+    throw invalid(label, "uses the legacy Text style.text contract.");
+  }
+  if (inspection.hasLegacyLayerRender) {
+    throw invalid(label, "uses the legacy Layer render prop.");
+  }
+  if (!inspection.hasJsx) {
+    throw invalid(label, "must use descriptive JSX.");
+  }
+}
+
 export function validateLearningSourceText(
   source: string,
   contract: LearningSourceContract,

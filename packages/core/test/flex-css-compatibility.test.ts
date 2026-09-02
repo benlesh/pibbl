@@ -1,18 +1,19 @@
-import { rect } from '../src/lib/components/rect';
+import { Rectangle } from '../src/lib/components/rect';
 import {
   layoutFlex,
   type FlexStyle,
 } from '../src/lib/layout/flex';
 import { measureElement } from '../src/lib/layout/measure';
-import type { CompEl } from '../src/lib/types';
+import type { CRCElement } from '../src/lib/types';
 import { afterEach, describe, expect, it } from 'vitest';
+import { createElement } from '../src/lib/element/create-element';
 
 const service = {
   measureText: (value: string) => ({ width: value.length * 10 } as TextMetrics),
 };
 const measurement = {
   service,
-  measureElement: (element: CompEl, constraints: {
+  measureElement: (element: CRCElement<any>, constraints: {
     minWidth: number;
     maxWidth: number;
     minHeight: number;
@@ -101,7 +102,7 @@ describe('Flexbox Chromium compatibility oracle', () => {
   ] as const)('matches Chromium for $name', fixture => {
     const children = fixture.items.map(value => {
       const maxWidth = 'maxWidth' in value ? value.maxWidth : undefined;
-      return rect({ style: {
+      return createElement(Rectangle, { style: {
         width: value.width,
         height: value.height,
         minWidth: 0,

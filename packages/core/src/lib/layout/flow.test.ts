@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { rect } from '../components/rect';
-import { text } from '../components/text';
+import { Rectangle } from '../components/rect';
+import { Text } from '../components/text';
 import { crc } from '../crc';
-import { defineComp } from '../define-comp';
 import { crcState } from '../hooks/crc-state';
 import { crcLayoutBox } from '../hooks/crc-layout-box';
 import type { Length } from '../style/types';
@@ -11,7 +10,9 @@ import { componentTest } from '../test-utils/component-test';
 import type { SystemStyle } from '../types';
 import type { CanvasMeasurementService } from './measure';
 import { measureElement } from './measure';
-import { flow, layoutFlow } from './flow';
+import { Flow, layoutFlow } from './flow';
+import { createElement } from '../element/create-element';
+import { definePrimitive } from '../define-primitive';
 
 const service: CanvasMeasurementService = {
   measureText: value => ({ width: value.length * 10 } as TextMetrics),
@@ -31,9 +32,9 @@ const measurement = {
 describe('CRC-native flow geometry', () => {
   it('places literal horizontal wrapped lines in source order', () => {
     const children = [
-      rect({ style: { width: 40, height: 20 } }),
-      rect({ style: { width: 50, height: 30 } }),
-      rect({ style: { width: 30, height: 10 } }),
+      createElement(Rectangle, { style: { width: 40, height: 20 } }),
+      createElement(Rectangle, { style: { width: 50, height: 30 } }),
+      createElement(Rectangle, { style: { width: 30, height: 10 } }),
     ];
 
     expect(layoutFlow(
@@ -50,9 +51,9 @@ describe('CRC-native flow geometry', () => {
 
   it('places literal vertical wrapped lines in source order', () => {
     const children = [
-      rect({ style: { width: 20, height: 30 } }),
-      rect({ style: { width: 30, height: 35 } }),
-      rect({ style: { width: 40, height: 20 } }),
+      createElement(Rectangle, { style: { width: 20, height: 30 } }),
+      createElement(Rectangle, { style: { width: 30, height: 35 } }),
+      createElement(Rectangle, { style: { width: 40, height: 20 } }),
     ];
 
     expect(layoutFlow(
@@ -75,9 +76,9 @@ describe('CRC-native flow geometry', () => {
     }
     const onClick = vi.fn();
     let observed: Readonly<{ x: number; y: number; width: number; height: number }>;
-    const Probe = defineComp<{ onClick: () => void }, ProbeStyle>((props, style) => {
+    const Probe = definePrimitive<{ onClick: () => void }, ProbeStyle>((props, style) => {
       observed = crcLayoutBox();
-      return rect({
+      return createElement(Rectangle, {
         style: {
           width: style.width,
           height: style.height,
@@ -86,14 +87,14 @@ describe('CRC-native flow geometry', () => {
         onClick: props.onClick,
       });
     });
-    const canvas = await componentTest(flow({
+    const canvas = await componentTest(createElement(Flow, {
       style: { width: 100, height: 50 },
       children: [
-        Probe({
+        createElement(Probe, {
           style: { width: 10, height: 10, alignSelf: 'stretch' },
           onClick,
         }),
-        rect({ style: { width: 10, height: 20 } }),
+        createElement(Rectangle, { style: { width: 10, height: 20 } }),
       ],
     }), { width: 120, height: 70 });
 
@@ -117,7 +118,7 @@ describe('CRC-native flow geometry', () => {
       status: 'measured' as const,
       size: { width: 30, height: 10 },
     }));
-    const Measured = defineComp<
+    const Measured = definePrimitive<
       {},
       AutoStyle,
       AutoStyle,
@@ -129,7 +130,7 @@ describe('CRC-native flow geometry', () => {
 
     expect(layoutFlow(
       { x: 0, y: 0, width: 100, height: 50 },
-      [Measured({ style: { width: 'auto', height: 'auto' } })],
+      [createElement(Measured, { style: { width: 'auto', height: 'auto' } })],
       {},
       measurement,
     )).toEqual([{ x: 0, y: 0, width: 30, height: 10 }]);
@@ -138,7 +139,7 @@ describe('CRC-native flow geometry', () => {
 
   it('measures nested auto flows recursively without rendering', () => {
     let renders = 0;
-    const Leaf = defineComp<
+    const Leaf = definePrimitive<
       {},
       SystemStyle & { width?: Length; height?: Length },
       SystemStyle & { width?: Length; height?: Length },
@@ -153,11 +154,11 @@ describe('CRC-native flow geometry', () => {
         }),
       },
     );
-    const nested = flow({
+    const nested = createElement(Flow, {
       style: { width: 'auto', height: 'auto', gap: 5 },
       children: [
-        Leaf({ style: { width: 'auto', height: 'auto' } }),
-        Leaf({ style: { width: 'auto', height: 'auto' } }),
+        createElement(Leaf, { style: { width: 'auto', height: 'auto' } }),
+        createElement(Leaf, { style: { width: 'auto', height: 'auto' } }),
       ],
     });
 
@@ -173,15 +174,15 @@ describe('CRC-native flow geometry', () => {
       status: 'measured' as const,
       size: { width: 1, height: 1 },
     }));
-    const Child = defineComp<
+    const Child = definePrimitive<
       {},
       SystemStyle & { width?: Length; height?: Length },
       SystemStyle & { width?: Length; height?: Length },
       SystemStyle & { width?: number; height?: number }
     >(() => undefined, { resolveStyle: () => ({}), measure });
-    const definite = flow({
+    const definite = createElement(Flow, {
       style: { width: 40, height: 20, padding: 5 },
-      children: [Child({ style: { width: 'auto', height: 'auto' } })],
+      children: [createElement(Child, { style: { width: 'auto', height: 'auto' } })],
     });
 
     expect(measureElement(definite, {
@@ -199,9 +200,9 @@ describe('CRC-native flow geometry', () => {
   it.each([200, Number.POSITIVE_INFINITY])(
     'keeps nested auto flow measurement as content under max %s',
     maxWidth => {
-      const nested = flow({
+      const nested = createElement(Flow, {
         style: { width: 'auto', height: 'auto', padding: 5 },
-        children: [rect({ style: { width: 30, height: 10 } })],
+        children: [createElement(Rectangle, { style: { width: 30, height: 10 } })],
       });
       const result = measureElement(nested, {
         minWidth: 0,
@@ -249,7 +250,7 @@ describe('CRC-native flow geometry', () => {
         height: 10,
       });
     });
-    const Probe = defineComp<
+    const Probe = definePrimitive<
       {},
       SpecifiedProbeStyle,
       NormalizedProbeStyle,
@@ -267,48 +268,46 @@ describe('CRC-native flow geometry', () => {
       }),
     });
     const specified = Object.freeze({ token: 'specified' as const });
-    const child = Probe({ style: specified });
+    const child = createElement(Probe, { style: specified });
 
-    await componentTest(flow({
+    await componentTest(createElement(Flow, {
       style: { width: 100, height: 50 },
       children: [child],
     }));
 
     expect(normalizeStyle).toHaveBeenCalledOnce();
     expect(render).toHaveBeenCalledOnce();
-    expect(child.style).toBe(specified);
+    expect(child.props.style).toBe(specified);
   });
 
   it('uses measured auto dimensions for both placement and child rendering', async () => {
     const onClick = vi.fn();
-    const canvas = await componentTest(flow({
+    const canvas = await componentTest(createElement(Flow, {
       style: { width: 30, height: 50 },
-      children: [text({
+      children: [createElement(Text, {
         style: {
-          text: 'aaaa bbbb',
           font: '10px sans-serif',
           lineHeight: 12,
           wrap: true,
           fill: 'red',
         },
         onClick,
-      })],
+      }, 'aaaa bbbb')],
     }), { width: 30, height: 50 });
     const context = canvas.element.getContext('2d')!;
     const fillText = vi.spyOn(context, 'fillText');
 
-    crc(canvas.element, flow({
+    crc(canvas.element, createElement(Flow, {
       style: { width: 30, height: 50 },
-      children: [text({
+      children: [createElement(Text, {
         style: {
-          text: 'aaaa bbbb',
           font: '10px sans-serif',
           lineHeight: 12,
           wrap: true,
           fill: 'red',
         },
         onClick,
-      })],
+      }, 'aaaa bbbb')],
     }));
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
@@ -326,8 +325,8 @@ describe('CRC-native flow geometry', () => {
     const placements = layoutFlow(
       { x: 0, y: 0, width: 100, height: 50 },
       [
-        rect({ style: { width: 10, height: 10 } }),
-        rect({ style: { width: 10, height: 20 } }),
+        createElement(Rectangle, { style: { width: 10, height: 10 } }),
+        createElement(Rectangle, { style: { width: 10, height: 20 } }),
       ],
       { alignItems },
       measurement,
@@ -345,8 +344,8 @@ describe('CRC-native flow geometry', () => {
     expect(layoutFlow(
       { x: 0, y: 0, width: 50, height: 50 },
       [
-        rect({ style: { width: 80, height: 10 } }),
-        rect({ style: { width: 10, height: 10 } }),
+        createElement(Rectangle, { style: { width: 80, height: 10 } }),
+        createElement(Rectangle, { style: { width: 10, height: 10 } }),
       ],
       { wrap: true, lineGap: 4 },
       measurement,
@@ -358,9 +357,9 @@ describe('CRC-native flow geometry', () => {
 
   it('clips paint and hit testing to the flow content box', async () => {
     const onClick = vi.fn();
-    const canvas = await componentTest(flow({
+    const canvas = await componentTest(createElement(Flow, {
       style: { width: 100, height: 30, overflow: 'clip' },
-      children: [rect({
+      children: [createElement(Rectangle, {
         style: { width: 160, height: 20, fill: 'red' },
         onClick,
       })],
@@ -378,33 +377,30 @@ describe('CRC-native flow geometry', () => {
   it('preserves unkeyed child identity across keyed reflow siblings', async () => {
     let nextIdentity = 0;
     const observations = new Map<string, number>();
-    const Item = defineComp<
-      { label: string },
-      SystemStyle & { width: number; height: number }
-    >(({ label }) => {
+    const Item = ({ label }: { label: string } & { style: Readonly<SystemStyle & { width: number; height: number }> }) => {
       const [identity] = crcState(++nextIdentity);
       observations.set(label, identity);
-    });
-    const Host = defineComp(({ keyed }: { keyed: boolean }) => flow({
+    };
+    const Host = ({ keyed }: { keyed: boolean }) => createElement(Flow, {
       style: { width: 100, height: 30 },
       children: [
-        keyed && Item({
+        keyed && createElement(Item, {
           key: 'keyed',
           label: 'keyed',
           style: { width: 20, height: 10 },
         }),
-        Item({
+        createElement(Item, {
           label: 'unkeyed',
           style: { width: 20, height: 10 },
         }),
       ],
-    }));
-    const canvas = await componentTest(Host({ keyed: false }));
+    });
+    const canvas = await componentTest(createElement(Host, { keyed: false }));
     const identity = observations.get('unkeyed');
 
-    crc(canvas.element, Host({ keyed: true }));
+    crc(canvas.element, createElement(Host, { keyed: true }));
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
-    crc(canvas.element, Host({ keyed: false }));
+    crc(canvas.element, createElement(Host, { keyed: false }));
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
     expect(observations.get('unkeyed')).toBe(identity);
   });
@@ -418,7 +414,7 @@ describe('CRC-native flow geometry', () => {
       width: number;
       height: number;
     }
-    const MeasuredRect = defineComp<
+    const MeasuredRect = definePrimitive<
       {},
       RectStyle,
       RectStyle,
@@ -430,7 +426,7 @@ describe('CRC-native flow geometry', () => {
 
     expect(layoutFlow(
       { x: 0, y: 0, width: 200, height: 100 },
-      [MeasuredRect({ style: { width: '25%', height: 20 } })],
+      [createElement(MeasuredRect, { style: { width: '25%', height: 20 } })],
       {},
       measurement,
     )).toEqual([{ x: 0, y: 0, width: 50, height: 20 }]);
@@ -444,7 +440,7 @@ describe('CRC-native flow geometry', () => {
     }
     interface ResolvedAutoStyle extends SystemStyle {}
     function UnsupportedComponent() {}
-    const Unsupported = defineComp<
+    const Unsupported = definePrimitive<
       {},
       AutoStyle,
       AutoStyle,
@@ -453,7 +449,7 @@ describe('CRC-native flow geometry', () => {
 
     expect(() => layoutFlow(
       { x: 0, y: 0, width: 100, height: 50 },
-      [Unsupported({ style: { width: 'auto', height: 20 } })],
+      [createElement(Unsupported, { style: { width: 'auto', height: 20 } })],
       {},
       measurement,
     )).toThrowError(/UnsupportedComponent.*width.*measurement/i);
@@ -473,5 +469,5 @@ describe('CRC-native flow geometry', () => {
   });
 
   // @ts-expect-error flow direction uses CRC-native values
-  void flow({ style: { direction: 'row' }, children: [] });
+  void createElement(Flow, { style: { direction: 'row' }, children: [] });
 });

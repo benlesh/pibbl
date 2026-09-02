@@ -1,11 +1,12 @@
 import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
-import { defineComp } from '../define-comp';
 import { componentTest } from '../test-utils/component-test';
 import { takeScreenshot } from '../util/test-utils';
-import { g } from './g';
-import { rect } from './rect';
-import { text } from './text';
+import { Group } from './g';
+import { Rectangle } from './rect';
+import { Text } from './text';
+import { createElement } from '../element/create-element';
+import { definePrimitive } from '../define-primitive';
 
 describe('g', () => {
   const defaultRectStyle = {
@@ -18,7 +19,7 @@ describe('g', () => {
 
   it('uses style as the sole transform authority in the documented order', async () => {
     const transforms: DOMMatrix[] = [];
-    const TransformProbe = defineComp((_props: {}, _style, ctx) => {
+    const TransformProbe = definePrimitive<{}>((_props: {}, _style, ctx) => {
       transforms.push(ctx.getTransform());
     });
     const style = {
@@ -37,10 +38,10 @@ describe('g', () => {
       y: 2000,
       rotate: 180,
       rotateOrigin: [50, 60],
-      children: [TransformProbe({})],
+      children: [createElement(TransformProbe, {})],
     } as any;
 
-    await componentTest(g(legacyInput));
+    await componentTest(createElement(Group, legacyInput));
 
     const expected = new DOMMatrix()
       .scale(style.scaleX, style.scaleY)
@@ -56,45 +57,45 @@ describe('g', () => {
 
   it('supports zero and negative scales without leaking transforms', async () => {
     const scales: number[] = [];
-    const TransformProbe = defineComp((_props: {}, _style, ctx) => {
+    const TransformProbe = definePrimitive<{}>((_props: {}, _style, ctx) => {
       scales.push(ctx.getTransform().a);
     });
 
-    await componentTest(g({ children: [
-      g({
+    await componentTest(createElement(Group, { children: [
+      createElement(Group, {
         style: {
           scaleX: 0
         },
-        children: [TransformProbe({})]
+        children: [createElement(TransformProbe, {})]
       }),
-      g({
+      createElement(Group, {
         style: {
           scaleX: -1
         },
-        children: [TransformProbe({})]
+        children: [createElement(TransformProbe, {})]
       }),
-      TransformProbe({}),
+      createElement(TransformProbe, {}),
     ] }));
 
     expect(scales).toEqual([0, -1, 1]);
   });
 
   it('renders children without transformation', async () => {
-    await componentTest(g({
+    await componentTest(createElement(Group, {
       children: [
-        rect({ style: defaultRectStyle }),
+        createElement(Rectangle, { style: defaultRectStyle }),
       ],
     }));
     await takeScreenshot(page);
   });
 
   it('translates children', async () => {
-    await componentTest(g({
+    await componentTest(createElement(Group, {
       style: {
         translateX: 100,
         translateY: 50
       },
-      children: [rect({
+      children: [createElement(Rectangle, {
         style: defaultRectStyle
       })]
     }));
@@ -103,12 +104,12 @@ describe('g', () => {
 
   describe('scaling', () => {
     it('scales uniformly', async () => {
-      await componentTest(g({
+      await componentTest(createElement(Group, {
         style: {
           scaleX: 2,
           scaleY: 2
         },
-        children: [rect({
+        children: [createElement(Rectangle, {
           style: defaultRectStyle
         })]
       }));
@@ -116,12 +117,12 @@ describe('g', () => {
     });
 
     it('scales non-uniformly', async () => {
-      await componentTest(g({
+      await componentTest(createElement(Group, {
         style: {
           scaleX: 2,
           scaleY: 0.5
         },
-        children: [rect({
+        children: [createElement(Rectangle, {
           style: defaultRectStyle
         })]
       }));
@@ -131,11 +132,11 @@ describe('g', () => {
 
   describe('rotation', () => {
     it('rotates around origin', async () => {
-      await componentTest(g({
+      await componentTest(createElement(Group, {
         style: {
           rotationDegrees: 45
         },
-        children: [rect({
+        children: [createElement(Rectangle, {
           style: defaultRectStyle
         })]
       }));
@@ -143,13 +144,13 @@ describe('g', () => {
     });
 
     it('rotates around specified point', async () => {
-      await componentTest(g({
+      await componentTest(createElement(Group, {
         style: {
           rotationDegrees: 90,
           rotationOrigin: [25, 25]
         },
         // center of rect
-        children: [rect({
+        children: [createElement(Rectangle, {
           style: defaultRectStyle
         })]
       }));
@@ -159,11 +160,11 @@ describe('g', () => {
 
   describe('skewing', () => {
     it('skews on X axis', async () => {
-      await componentTest(g({
+      await componentTest(createElement(Group, {
         style: {
           skewX: 30
         },
-        children: [rect({
+        children: [createElement(Rectangle, {
           style: defaultRectStyle
         })]
       }));
@@ -171,11 +172,11 @@ describe('g', () => {
     });
 
     it('skews on Y axis', async () => {
-      await componentTest(g({
+      await componentTest(createElement(Group, {
         style: {
           skewY: 30
         },
-        children: [rect({
+        children: [createElement(Rectangle, {
           style: defaultRectStyle
         })]
       }));
@@ -183,12 +184,12 @@ describe('g', () => {
     });
 
     it('skews on both axes', async () => {
-      await componentTest(g({
+      await componentTest(createElement(Group, {
         style: {
           skewX: 30,
           skewY: 30
         },
-        children: [rect({
+        children: [createElement(Rectangle, {
           style: defaultRectStyle
         })]
       }));
@@ -198,7 +199,7 @@ describe('g', () => {
 
   describe('compound transformations', () => {
     it('combines multiple transformations in correct order', async () => {
-      await componentTest(g({
+      await componentTest(createElement(Group, {
         style: {
           translateX: 100,
           translateY: 100,
@@ -206,7 +207,7 @@ describe('g', () => {
           scaleX: 2,
           scaleY: 1.5
         },
-        children: [rect({
+        children: [createElement(Rectangle, {
           style: defaultRectStyle
         })]
       }));
@@ -214,18 +215,18 @@ describe('g', () => {
     });
 
     it('handles nested groups with transformations', async () => {
-      await componentTest(g({
+      await componentTest(createElement(Group, {
         style: {
           translateX: 100,
           translateY: 100,
           rotationDegrees: 45
         },
-        children: [g({
+        children: [createElement(Group, {
           style: {
             scaleX: 2,
             scaleY: 2
           },
-          children: [rect({
+          children: [createElement(Rectangle, {
             style: defaultRectStyle
           })]
         })]
@@ -237,12 +238,12 @@ describe('g', () => {
   describe('interaction with transformed elements', () => {
     it('handles mouse events on scaled elements', async () => {
       const onClick = vi.fn();
-      const canvas = await componentTest(g({
+      const canvas = await componentTest(createElement(Group, {
         style: {
           scaleX: 2,
           scaleY: 2
         },
-        children: [rect({
+        children: [createElement(Rectangle, {
           style: defaultRectStyle,
           onClick
         })]
@@ -259,12 +260,12 @@ describe('g', () => {
 
     it('handles mouse events on rotated elements', async () => {
       const onMouseOver = vi.fn();
-      const canvas = await componentTest(g({
+      const canvas = await componentTest(createElement(Group, {
         style: {
           rotationDegrees: 45,
           rotationOrigin: [25, 25]
         },
-        children: [rect({
+        children: [createElement(Rectangle, {
           style: defaultRectStyle,
           onMouseOver
         })]
@@ -296,7 +297,7 @@ describe('g', () => {
       matrix.skewYSelf(skewY);
       const transformedPoint = matrix.transformPoint(new DOMPoint(rectCenter.x, rectCenter.y));
 
-      const canvas = await componentTest(g({
+      const canvas = await componentTest(createElement(Group, {
         style: {
           translateX: offset.x,
           translateY: offset.y,
@@ -306,7 +307,7 @@ describe('g', () => {
           skewX,
           skewY
         },
-        children: [rect({
+        children: [createElement(Rectangle, {
           onClick,
           style: {
             ...defaultRectStyle,
@@ -327,7 +328,7 @@ describe('g', () => {
 
   describe('mixed content', () => {
     it('transforms both shapes and text', async () => {
-      await componentTest(g({
+      await componentTest(createElement(Group, {
         style: {
           translateX: 100,
           translateY: 50,
@@ -335,19 +336,18 @@ describe('g', () => {
           scaleX: 1.5,
           scaleY: 1.5
         },
-        children: [rect({
+        children: [createElement(Rectangle, {
           style: {
             ...defaultRectStyle,
             fill: 'purple'
           }
-        }), text({
+        }), createElement(Text, {
           style: {
             x: 10,
             y: 30,
-            text: 'Transformed!',
             fill: 'white'
           }
-        })]
+        }, 'Transformed!')]
       }));
       await takeScreenshot(page);
     });

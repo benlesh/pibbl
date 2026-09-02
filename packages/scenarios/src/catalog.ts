@@ -103,11 +103,11 @@ export function validateScenarioCatalog<
     assertNonEmpty(scenario.source.id, 'source.id', scenario.metadata.id);
     assertNonEmpty(scenario.source.marker, 'source.marker', scenario.metadata.id);
     assertNonEmpty(scenario.source.path, 'source.path', scenario.metadata.id);
-    if (
-      scenario.source.language !== 'ts' ||
-      !/\.example\.tsx?$/u.test(scenario.source.path)
-    ) {
-      throw new Error(`Scenario "${scenario.metadata.id}" must reference a TypeScript example source.`);
+    if (scenario.source.language !== 'tsx') {
+      throw new Error(`Scenario "${scenario.metadata.id}" must use TSX source metadata.`);
+    }
+    if (!scenario.source.path.endsWith('.example.tsx')) {
+      throw new Error(`Scenario "${scenario.metadata.id}" must reference a TSX example source.`);
     }
     if (!Number.isInteger(scenario.canvas.width) || scenario.canvas.width <= 0 ||
       !Number.isInteger(scenario.canvas.height) || scenario.canvas.height <= 0) {
@@ -221,7 +221,7 @@ const smokeMetadata: ScenarioMetadata = {
   title: 'Baseline smoke',
   summary: 'Mount, render, update, click, and reset one public-API CRC scene.',
   category: 'Getting started',
-  apiTags: ['crc', 'defineComp', 'rect', 'text'],
+  apiTags: ['crc', 'Rectangle', 'Text'],
   conceptTags: ['mount', 'render', 'state update', 'mouse click'],
   manualSteps: [
     {
@@ -262,9 +262,9 @@ export const smokeScenarioEntry: ScenarioCatalogEntry<SmokeScenarioState> = {
   ],
   source: {
     id: 'baseline-smoke-example',
-    language: 'ts',
+    language: 'tsx',
     marker: "SMOKE_SOURCE_ID = 'baseline-smoke-example'",
-    path: 'packages/scenarios/src/smoke.example.ts',
+    path: 'packages/scenarios/src/smoke.example.tsx',
   },
   load: async () => (await import('./smoke')).smokeScenario,
 };
@@ -275,7 +275,7 @@ const drawingShapesMetadata: ScenarioMetadata = {
   title: 'Draw shapes',
   summary: 'Build filled and stroked rectangles, custom paths, and SVG paths, then update their geometry and styles.',
   category: 'Drawing basics',
-  apiTags: ['rect', 'path', 'svgPath'],
+  apiTags: ['Rectangle', 'Path', 'SvgPath'],
   conceptTags: ['fill and stroke', 'custom geometry', 'pixel alignment', 'updates'],
   manualSteps: [
     {
@@ -307,9 +307,9 @@ export const drawingShapesScenarioEntry: ScenarioCatalogEntry<DrawingShapesState
   actions: [{ id: 'update-shapes', label: 'Update shapes' }],
   source: {
     id: 'drawing-shapes-example',
-    language: 'ts',
+    language: 'tsx',
     marker: "DRAWING_SHAPES_SOURCE_ID = 'drawing-shapes-example'",
-    path: 'packages/scenarios/src/drawing-shapes.example.ts',
+    path: 'packages/scenarios/src/drawing-shapes.example.tsx',
   },
   load: async () => (await import('./drawing-gallery')).drawingShapesScenario,
 };
@@ -320,7 +320,7 @@ const drawingLinesMetadata: ScenarioMetadata = {
   title: 'Draw lines',
   summary: 'Draw a multi-point line plus crisp horizontal and vertical rules with the public line helpers.',
   category: 'Drawing basics',
-  apiTags: ['line', 'horizontalLine', 'verticalLine'],
+  apiTags: ['Line', 'HorizontalLine', 'VerticalLine'],
   conceptTags: ['polyline', 'stroke width', 'pixel alignment', 'updates'],
   manualSteps: [
     {
@@ -352,9 +352,9 @@ export const drawingLinesScenarioEntry: ScenarioCatalogEntry<DrawingLinesState> 
   actions: [{ id: 'update-lines', label: 'Update lines' }],
   source: {
     id: 'drawing-lines-example',
-    language: 'ts',
+    language: 'tsx',
     marker: "DRAWING_LINES_SOURCE_ID = 'drawing-lines-example'",
-    path: 'packages/scenarios/src/drawing-lines.example.ts',
+    path: 'packages/scenarios/src/drawing-lines.example.tsx',
   },
   load: async () => (await import('./drawing-gallery')).drawingLinesScenario,
 };
@@ -365,7 +365,7 @@ const drawingTextMetadata: ScenarioMetadata = {
   title: 'Draw text',
   summary: 'Render aligned text and compare visible, ellipsis, squish, wrapping, clipping, and alpha behavior.',
   category: 'Drawing basics',
-  apiTags: ['text'],
+  apiTags: ['Text'],
   conceptTags: ['typography', 'overflow', 'word wrap', 'alignment', 'interaction bounds'],
   manualSteps: [
     {
@@ -397,9 +397,9 @@ export const drawingTextScenarioEntry: ScenarioCatalogEntry<DrawingTextState> = 
   actions: [{ id: 'update-copy', label: 'Update copy' }],
   source: {
     id: 'drawing-text-example',
-    language: 'ts',
+    language: 'tsx',
     marker: "DRAWING_TEXT_SOURCE_ID = 'drawing-text-example'",
-    path: 'packages/scenarios/src/drawing-text.example.ts',
+    path: 'packages/scenarios/src/drawing-text.example.tsx',
   },
   load: async () => (await import('./drawing-gallery')).drawingTextScenario,
 };
@@ -410,7 +410,7 @@ const drawingImagesMetadata: ScenarioMetadata = {
   title: 'Draw images',
   summary: 'Load deterministic data images with explicit or natural dimensions, alpha, borders, source changes, failure, and removal.',
   category: 'Drawing basics',
-  apiTags: ['img'],
+  apiTags: ['Image'],
   conceptTags: ['image loading', 'natural size', 'explicit size', 'alpha', 'source lifecycle'],
   manualSteps: [
     {
@@ -449,9 +449,9 @@ export const drawingImagesScenarioEntry: ScenarioCatalogEntry<DrawingImagesState
   ],
   source: {
     id: 'drawing-images-example',
-    language: 'ts',
+    language: 'tsx',
     marker: "DRAWING_IMAGES_SOURCE_ID = 'drawing-images-example'",
-    path: 'packages/scenarios/src/drawing-images.example.ts',
+    path: 'packages/scenarios/src/drawing-images.example.tsx',
   },
   load: async () => (await import('./drawing-gallery')).drawingImagesScenario,
 };
@@ -462,7 +462,7 @@ const drawingCompositionMetadata: ScenarioMetadata = {
   title: 'Compose a scene',
   summary: 'Compose transformed groups, clipped children, an even-odd hole, and cached offscreen artwork.',
   category: 'Drawing composition',
-  apiTags: ['g', 'clip', 'layer'],
+  apiTags: ['Group', 'Clip', 'Layer'],
   conceptTags: ['transforms', 'clipping', 'even-odd fill', 'offscreen layer', 'updates'],
   manualSteps: [
     {
@@ -494,9 +494,9 @@ export const drawingCompositionScenarioEntry: ScenarioCatalogEntry<DrawingCompos
   actions: [{ id: 'update-composition', label: 'Update composition' }],
   source: {
     id: 'drawing-composition-example',
-    language: 'ts',
+    language: 'tsx',
     marker: "DRAWING_COMPOSITION_SOURCE_ID = 'drawing-composition-example'",
-    path: 'packages/scenarios/src/drawing-composition.example.ts',
+    path: 'packages/scenarios/src/drawing-composition.example.tsx',
   },
   load: async () => (await import('./drawing-gallery')).drawingCompositionScenario,
 };
@@ -563,9 +563,9 @@ export const focusNavigationScenarioEntry: ScenarioCatalogEntry<FocusNavigationS
   ],
   source: {
     id: FOCUS_NAVIGATION_SOURCE_ID,
-    language: 'ts',
+    language: 'tsx',
     marker: "'focus-and-keyboard-navigation-example'",
-    path: 'packages/scenarios/src/focus-navigation.example.ts',
+    path: 'packages/scenarios/src/focus-navigation.example.tsx',
   },
   load: async () => (await import('./focus-navigation')).focusNavigationScenario,
 };
@@ -581,9 +581,9 @@ const interactionLabMetadata: ScenarioMetadata = {
     'crcEvent',
     'crcEventListener',
     'crcEventTarget',
-    'path',
-    'line',
-    'rect',
+    'Path',
+    'Line',
+    'Rectangle',
     'mouse events',
     'pointer events',
     'touch events',
@@ -692,9 +692,9 @@ export const interactionLabScenarioEntry: ScenarioCatalogEntry<InteractionLabSta
   ],
   source: {
     id: 'interaction-trace-lab-example',
-    language: 'ts',
+    language: 'tsx',
     marker: "INTERACTION_LAB_SOURCE_ID = 'interaction-trace-lab-example'",
-    path: 'packages/scenarios/src/interaction-lab.example.ts',
+    path: 'packages/scenarios/src/interaction-lab.example.tsx',
   },
   load: async () => (await import('./interaction-lab')).interactionLabScenario,
 };
@@ -705,7 +705,7 @@ const mouseContractMetadata: ScenarioMetadata = {
   title: 'Mouse interaction contract',
   summary: 'Explore the approved native evidence and the target/order rules implemented by CRC’s dispatcher.',
   category: 'Interaction contracts',
-  apiTags: ['crc', 'mouse events', 'rect', 'layer', 'clip', 'g'],
+  apiTags: ['crc', 'mouse events', 'Rectangle', 'Layer', 'Clip', 'Group'],
   conceptTags: ['event order', 'topmost target', 'click identity', 'coordinates'],
   manualSteps: [
     {
@@ -745,9 +745,9 @@ export const mouseContractScenarioEntry: ScenarioCatalogEntry<MouseContractScena
   })),
   source: {
     id: 'mouse-interaction-contract-example',
-    language: 'ts',
+    language: 'tsx',
     marker: "MOUSE_CONTRACT_SOURCE_ID = 'mouse-interaction-contract-example'",
-    path: 'packages/scenarios/src/mouse-contract.example.ts',
+    path: 'packages/scenarios/src/mouse-contract.example.tsx',
   },
   load: async () => (await import('./mouse-contract-scenario')).mouseContractScenario,
 };
@@ -758,7 +758,7 @@ const lifecycleLabMetadata: ScenarioMetadata = {
   title: 'Event lifecycle laboratory',
   summary: 'Exercise rerender, handler, subtree, layer, abort, dispose, remount, and stale-cleanup ownership flows.',
   category: 'Diagnostics',
-  apiTags: ['crc', 'CRCController', 'rect', 'layer', 'mouse events'],
+  apiTags: ['crc', 'CRCController', 'Rectangle', 'Layer', 'mouse events'],
   conceptTags: ['event ownership', 'teardown', 'dispose', 'remount'],
   manualSteps: [
     {
@@ -811,9 +811,9 @@ export const lifecycleLabScenarioEntry: ScenarioCatalogEntry<LifecycleLabState> 
   ],
   source: {
     id: 'event-lifecycle-lab-example',
-    language: 'ts',
+    language: 'tsx',
     marker: "LIFECYCLE_LAB_SOURCE_ID = 'event-lifecycle-lab-example'",
-    path: 'packages/scenarios/src/lifecycle-lab.example.ts',
+    path: 'packages/scenarios/src/lifecycle-lab.example.tsx',
   },
   load: async () => (await import('./lifecycle-lab')).lifecycleLabScenario,
 };
@@ -824,7 +824,7 @@ const geometryMatrixMetadata: ScenarioMetadata = {
   title: 'Geometry composition matrix',
   summary: 'Probe intrinsic coordinates, nested transforms and clips, global layer paint order, layer bounds, and stroke interaction geometry.',
   category: 'Interaction contracts',
-  apiTags: ['crc', 'g', 'clip', 'layer', 'line', 'rect', 'mouse events'],
+  apiTags: ['crc', 'Group', 'Clip', 'Layer', 'Line', 'Rectangle', 'mouse events'],
   conceptTags: ['coordinate conversion', 'clip intersection', 'paint order', 'hit boundaries'],
   manualSteps: [
     {
@@ -875,9 +875,9 @@ export const geometryMatrixScenarioEntry: ScenarioCatalogEntry<GeometryMatrixSta
   ],
   source: {
     id: 'geometry-composition-matrix-example',
-    language: 'ts',
+    language: 'tsx',
     marker: "GEOMETRY_MATRIX_SOURCE_ID = 'geometry-composition-matrix-example'",
-    path: 'packages/scenarios/src/geometry-matrix.example.ts',
+    path: 'packages/scenarios/src/geometry-matrix.example.tsx',
   },
   load: async () => (await import('./geometry-matrix')).geometryMatrixScenario,
 };
@@ -888,7 +888,7 @@ const performanceLabMetadata: ScenarioMetadata = {
   title: 'Event performance laboratory',
   summary: 'Measure hit-test structure and live dispatch latency across shared zero, sparse, dense, clipped, transformed, layered, cursor, and rerender workloads.',
   category: 'Diagnostics',
-  apiTags: ['crc', 'g', 'clip', 'layer', 'rect', 'mouse events'],
+  apiTags: ['crc', 'Group', 'Clip', 'Layer', 'Rectangle', 'mouse events'],
   conceptTags: ['hit-test cost', 'dispatch latency', 'registration', 'rerender stability'],
   manualSteps: [
     {
@@ -931,9 +931,9 @@ export const performanceLabScenarioEntry: ScenarioCatalogEntry<PerformanceLabSta
   ],
   source: {
     id: 'event-performance-lab-example',
-    language: 'ts',
+    language: 'tsx',
     marker: "PERFORMANCE_LAB_SOURCE_ID = 'event-performance-lab-example'",
-    path: 'packages/scenarios/src/performance-lab.example.ts',
+    path: 'packages/scenarios/src/performance-lab.example.tsx',
   },
   load: async () => (await import('./performance-lab')).performanceLabScenario,
 };
@@ -944,7 +944,7 @@ const cleanupStressMetadata: ScenarioMetadata = {
   title: 'Runtime cleanup stress laboratory',
   summary: 'Exercise pending frames, image races, nested layers, synchronous hook cleanup, component/root identity, runtime disposal, and repeated mount cycles.',
   category: 'Diagnostics',
-  apiTags: ['crc', 'crcWhenChanged', 'img', 'layer', 'rect'],
+  apiTags: ['crc', 'crcWhenChanged', 'Image', 'Layer', 'Rectangle'],
   conceptTags: ['resource ownership', 'async cleanup', 'idempotent disposal', 'mount stress'],
   manualSteps: [
     {
@@ -1005,9 +1005,9 @@ export const cleanupStressScenarioEntry: ScenarioCatalogEntry<CleanupStressState
   ],
   source: {
     id: 'runtime-cleanup-stress-example',
-    language: 'ts',
+    language: 'tsx',
     marker: "CLEANUP_STRESS_SOURCE_ID = 'runtime-cleanup-stress-example'",
-    path: 'packages/scenarios/src/cleanup-stress.example.ts',
+    path: 'packages/scenarios/src/cleanup-stress.example.tsx',
   },
   load: async () => (await import('./cleanup-stress')).cleanupStressScenario,
 };
@@ -1072,9 +1072,9 @@ export const runtimeHooksScenarioEntry: ScenarioCatalogEntry<RuntimeHooksState> 
   ],
   source: {
     id: 'runtime-hooks-laboratory-example',
-    language: 'ts',
+    language: 'tsx',
     marker: "RUNTIME_HOOKS_SOURCE_ID = 'runtime-hooks-laboratory-example'",
-    path: 'packages/scenarios/src/runtime-hooks.example.ts',
+    path: 'packages/scenarios/src/runtime-hooks.example.tsx',
   },
   load: async () => (await import('./runtime-hooks')).runtimeHooksScenario,
 };
@@ -1085,7 +1085,7 @@ const layoutFoundationMetadata: ScenarioMetadata = {
   title: 'Layout foundation laboratory',
   summary: 'Prove nested Flex, Grid, Overlay, clipping, measurement, observation, and keyed reflow.',
   category: 'Layout diagnostics',
-  apiTags: ['absolute', 'flex', 'grid', 'overlay', 'crcLayoutBox', 'text', 'img'],
+  apiTags: ['Absolute', 'Flex', 'Grid', 'Overlay', 'crcLayoutBox', 'Text', 'Image'],
   conceptTags: ['nested layout', 'percentage reflow', 'clipping', 'keyed identity'],
   manualSteps: [
     {
@@ -1112,9 +1112,9 @@ export const layoutFoundationScenarioEntry: ScenarioCatalogEntry<LayoutFoundatio
   actions: [{ id: 'resize', label: 'Resize layout' }],
   source: {
     id: 'layout-foundation-example',
-    language: 'ts',
+    language: 'tsx',
     marker: "LAYOUT_FOUNDATION_SOURCE_ID = 'layout-foundation-example'",
-    path: 'packages/scenarios/src/layout-foundation.example.ts',
+    path: 'packages/scenarios/src/layout-foundation.example.tsx',
   },
   load: async () => (await import('./layout-foundation.example')).default,
 };
@@ -1125,7 +1125,7 @@ const canvasSurfaceMetadata: ScenarioMetadata = {
   title: 'Canvas surface laboratory',
   summary: 'Verify fixed fitting, responsive logical reflow, high-density backing stores, and logical mouse coordinates.',
   category: 'Rendering',
-  apiTags: ['crc', 'crcLayoutBox', 'rect', 'text', 'mouse events'],
+  apiTags: ['crc', 'crcLayoutBox', 'Rectangle', 'Text', 'mouse events'],
   conceptTags: ['device pixel ratio', 'responsive Canvas', 'logical viewport', 'fit projection'],
   manualSteps: [
     {
@@ -1161,9 +1161,9 @@ export const canvasSurfaceScenarioEntry: ScenarioCatalogEntry<CanvasSurfaceState
   ],
   source: {
     id: 'canvas-surface-example',
-    language: 'ts',
+    language: 'tsx',
     marker: "CANVAS_SURFACE_SOURCE_ID = 'canvas-surface-example'",
-    path: 'packages/scenarios/src/canvas-surface.example.ts',
+    path: 'packages/scenarios/src/canvas-surface.example.tsx',
   },
   load: async () => (await import('./canvas-surface')).canvasSurfaceScenario,
 };

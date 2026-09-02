@@ -1,16 +1,12 @@
 import {
   crcLayoutBox,
   crcRef,
-  defineComp,
-  rect,
-  text,
+  Rectangle,
+  Text,
   type LayoutBox,
 } from '@crc/core';
-
 export const CANVAS_SURFACE_SOURCE_ID = 'canvas-surface-example';
-
 export type CanvasSurfaceMode = 'fixed' | 'responsive';
-
 export type CanvasSurfaceAction =
   | 'mount'
   | 'resize-fixed'
@@ -18,7 +14,6 @@ export type CanvasSurfaceAction =
   | 'resize-responsive'
   | 'mousemove'
   | 'reset';
-
 export interface CanvasSurfaceState {
   mode: CanvasSurfaceMode;
   cssWidth: number;
@@ -33,35 +28,32 @@ export interface CanvasSurfaceState {
   lastCoordinates: readonly [number, number] | null;
   lastAction: CanvasSurfaceAction;
 }
-
 interface CanvasSurfaceSceneProps {
   mode: CanvasSurfaceMode;
   onMouseMove: (x: number, y: number) => void;
   onRender: (box: Readonly<LayoutBox>, identity: number) => void;
 }
-
 let nextIdentity = 0;
-
-const CanvasSurfaceScene = defineComp<CanvasSurfaceSceneProps>(({
+const CanvasSurfaceScene = ({
   mode,
   onMouseMove,
   onRender,
-}) => {
+}: CanvasSurfaceSceneProps) => {
   const identity = crcRef<number>();
   identity.current ??= ++nextIdentity;
   const box = crcLayoutBox();
   onRender(box, identity.current);
   return [
-    rect({
-      style: {
+    <Rectangle
+      style={{
         width: box.width,
         height: box.height,
         fill: '#f8fafc',
-      },
-      onMouseMove: event => onMouseMove(event.x, event.y),
-    }),
-    rect({
-      style: {
+      }}
+      onMouseMove={(event) => onMouseMove(event.x, event.y)}
+    />,
+    <Rectangle
+      style={{
         x: box.width / 4,
         y: box.height / 4,
         width: box.width / 2,
@@ -69,24 +61,20 @@ const CanvasSurfaceScene = defineComp<CanvasSurfaceSceneProps>(({
         fill: mode === 'fixed' ? '#2563eb' : '#10b981',
         stroke: '#0f172a',
         strokeWidth: 2,
-      },
-    }),
-    text({
-      style: {
+      }}
+    />,
+    <Text
+      style={{
         x: box.width / 2,
         y: box.height / 2,
-        text: `${mode} · ${Math.round(box.width)} × ${Math.round(box.height)}`,
         textAlign: 'center',
         textBaseline: 'middle',
         font: '700 16px Arial',
         fill: '#ffffff',
-      },
-    }),
+      }}
+    >{`${mode} · ${Math.round(box.width)} × ${Math.round(box.height)}`}</Text>,
   ];
-});
-
-export function createCanvasSurfaceScene(
-  props: CanvasSurfaceSceneProps,
-): ReturnType<typeof CanvasSurfaceScene> {
-  return CanvasSurfaceScene(props);
+};
+export function createCanvasSurfaceScene(props: CanvasSurfaceSceneProps) {
+  return <CanvasSurfaceScene {...props} />;
 }

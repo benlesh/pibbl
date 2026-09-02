@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { rect } from '../components/rect';
-import { defineComp } from '../define-comp';
+import { Rectangle } from '../components/rect';
 import { GLOBAL_STATE } from '../global-state';
 import { componentTest } from '../test-utils/component-test';
 import { crcRef } from './crc-ref';
 import { crcState } from './crc-state';
+import { createElement } from '../element/create-element';
 
 describe('crcRef', () => {
   it('keeps the reference between renders', async () => {
@@ -34,7 +34,7 @@ describe('crcRef', () => {
         ref.current = props.value;
       }
 
-      return rect({
+      return createElement(Rectangle, {
         style: {
           ...clickableArea,
           fill: 'red',
@@ -46,11 +46,11 @@ describe('crcRef', () => {
       });
     }
 
-    const testComp = defineComp(TestComponent);
+    const testComp = TestComponent;
 
     const myReference = { a: 1 };
     const onCheckRef = vi.fn();
-    const canvas = await componentTest(testComp({ value: myReference, onCheckRef }));
+    const canvas = await componentTest(createElement(testComp, { value: myReference, onCheckRef }));
 
     await canvas.click({ position: clickableCenterPoint });
     expect(onCheckRef).toHaveBeenCalledWith(myReference);
@@ -77,12 +77,12 @@ describe('crcRef', () => {
 
     let renderCount = 0;
 
-    function TestComponent(_props: Record<string, never>) {
+    function TestComponent(_props: {}) {
       const ref = crcRef<Record<string, number>>({});
 
       renderCount++;
 
-      return rect({
+      return createElement(Rectangle, {
         style: {
           ...clickableArea,
           fill: 'red',
@@ -95,8 +95,8 @@ describe('crcRef', () => {
       });
     }
 
-    const testComp = defineComp(TestComponent);
-    const canvas = await componentTest(testComp({}));
+    const testComp = TestComponent;
+    const canvas = await componentTest(createElement(testComp, {}));
     expect(renderCount).toBe(1);
 
     await canvas.click({ position: clickableCenterPoint });
@@ -136,7 +136,7 @@ describe('crcRef', () => {
       const ref1 = crcRef<any>(props.value1);
       const ref2 = crcRef<any>(props.value2);
 
-      return rect({
+      return createElement(Rectangle, {
         style: {
           ...clickableArea,
           fill: 'red',
@@ -147,8 +147,8 @@ describe('crcRef', () => {
       });
     }
 
-    const testComp = defineComp(TestComponent);
-    const canvas = await componentTest(testComp({ value1, value2, onCheckRefs }));
+    const testComp = TestComponent;
+    const canvas = await componentTest(createElement(testComp, { value1, value2, onCheckRefs }));
 
     await canvas.click({ position: clickableCenterPoint });
     expect(onCheckRefs).toHaveBeenCalledWith(value1, value2);

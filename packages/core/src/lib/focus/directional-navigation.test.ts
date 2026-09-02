@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { defineComp } from '../define-comp';
 import type { CRCEventTargetRegistration } from '../events/registrations';
 import type { CRCEventHandlers } from '../events/types';
 import { executeRender } from '../execute-render';
@@ -7,7 +6,7 @@ import { clearSharedState, getCRCInstance } from '../global-state';
 import { crcEventTarget } from '../hooks/crc-event-target';
 import type { LayoutBox } from '../layout/types';
 import { mountCRC } from '../mount-crc';
-import type { CompEl, CRCController } from '../types';
+import type { CRCElement, CRCController } from '../types';
 import {
   findDirectionalCandidate,
   scoreDirectionalCandidate,
@@ -17,6 +16,8 @@ import type { CRCFocusManager } from './focus-manager';
 import type { CRCFocusCandidate } from './types';
 import { focusManaged } from './policy-test-support';
 import { directionalPolicy } from './policy-test-support';
+import { createElement } from '../element/create-element';
+import { definePrimitive } from '../define-primitive';
 
 const activeControllers = new Set<CRCController>();
 const noop = () => undefined;
@@ -147,8 +148,8 @@ describe('directional candidate scoring', () => {
 describe('directional keyboard defaults', () => {
   it('runs after propagation, follows transformed root bounds, and transitions through focus events', () => {
     const trace: string[] = [];
-    const Root = defineComp(() => directionalPolicy(
-      Scene({
+    const Root = (_props: {}) => directionalPolicy(
+      createElement(Scene, {
         definitions: [
           {
             label: 'current',
@@ -173,8 +174,8 @@ describe('directional keyboard defaults', () => {
         ],
       }),
       { mode: 'directional' },
-    ));
-    const mounted = mountAndRender(focusManaged(Root({})));
+    );
+    const mounted = mountAndRender(focusManaged(createElement(Root, {})));
     mounted.canvas.focus({ preventScroll: true });
     trace.length = 0;
 
@@ -194,17 +195,17 @@ describe('directional keyboard defaults', () => {
   });
 
   it('scores only direct members of the focused target boundary', () => {
-    const Inner = defineComp(() => Scene({
+    const Inner = (_props: {}) => createElement(Scene, {
       definitions: [
         { label: 'current', x: 0, y: 0 },
         { label: 'direct-far', x: 100, y: 0 },
       ],
-    }));
-    const Root = defineComp(() => [
-      directionalPolicy(Inner({}), { mode: 'directional' }),
-      Target({ label: 'outside-close', x: 20, y: 0 }),
-    ]);
-    const mounted = mountAndRender(focusManaged(Root({})));
+    });
+    const Root = (_props: {}) => [
+      directionalPolicy(createElement(Inner, {}), { mode: 'directional' }),
+      createElement(Target, { label: 'outside-close', x: 20, y: 0 }),
+    ];
+    const mounted = mountAndRender(focusManaged(createElement(Root, {})));
     mounted.canvas.focus({ preventScroll: true });
 
     const event = arrowEvent('ArrowRight');
@@ -215,7 +216,7 @@ describe('directional keyboard defaults', () => {
   });
 
   it('does nothing when propagation prevents the arrow or no winner exists', () => {
-    const Root = defineComp(() => directionalPolicy(Scene({
+    const Root = (_props: {}) => directionalPolicy(createElement(Scene, {
       definitions: [
         {
           label: 'left',
@@ -229,8 +230,8 @@ describe('directional keyboard defaults', () => {
         },
         { label: 'right', x: 50, y: 0 },
       ],
-    }), { mode: 'directional' }));
-    const mounted = mountAndRender(focusManaged(Root({})));
+    }), { mode: 'directional' });
+    const mounted = mountAndRender(focusManaged(createElement(Root, {})));
     mounted.canvas.focus({ preventScroll: true });
 
     const prevented = arrowEvent('ArrowRight');
@@ -246,13 +247,13 @@ describe('directional keyboard defaults', () => {
   });
 
   it('leaves a focused Tab-only target unchanged', () => {
-    const Root = defineComp(() => directionalPolicy(Scene({
+    const Root = (_props: {}) => directionalPolicy(createElement(Scene, {
       definitions: [
         { label: 'missing', bounds: null, x: 0, y: 0 },
         { label: 'right', x: 50, y: 0 },
       ],
-    }), { mode: 'directional' }));
-    const mounted = mountAndRender(focusManaged(Root({})));
+    }), { mode: 'directional' });
+    const mounted = mountAndRender(focusManaged(createElement(Root, {})));
     mounted.canvas.focus({ preventScroll: true });
 
     const event = arrowEvent('ArrowRight');
@@ -271,7 +272,7 @@ interface TargetDefinition {
   readonly handlers?: CRCEventHandlers;
 }
 
-const Target = defineComp<TargetDefinition>(({
+const Target = definePrimitive<TargetDefinition>(({
   x,
   y,
   bounds = { x: 0, y: 0, width: 10, height: 10 },
@@ -285,12 +286,12 @@ const Target = defineComp<TargetDefinition>(({
   });
 });
 
-const Scene = defineComp<{
+const Scene = ({ definitions }: {
   readonly definitions: readonly TargetDefinition[];
-}>(({ definitions }) => definitions.map(definition => Target({
+}) => definitions.map(definition => createElement(Target, {
   key: definition.label,
   ...definition,
-})));
+}));
 
 function candidate(
   sourceIndex: number,
@@ -320,7 +321,7 @@ function focusTrace(
 }
 
 function mountAndRender(
-  element: CompEl<any, any>,
+  element: CRCElement<any>,
 ): {
   readonly canvas: HTMLCanvasElement;
   readonly manager: CRCFocusManager;

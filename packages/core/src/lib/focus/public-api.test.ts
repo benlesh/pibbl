@@ -1,11 +1,4 @@
-import {
-  FocusManagement,
-  KeyboardNavigation,
-  createElement,
-  defineComp,
-  type CRCKeyboardNavigationOptions,
-  type SystemStyle,
-} from '@crc/core';
+import { FocusManagement, KeyboardNavigation, createElement, type CRCKeyboardNavigationOptions, type SystemStyle } from '@crc/core';
 import { describe, expect, it } from 'vitest';
 import { materializeContainerChildren } from '../element/children';
 
@@ -14,9 +7,9 @@ describe('public focus API', () => {
     interface ProbeStyle extends SystemStyle {
       width: number;
     }
-    const Probe = defineComp<{}, ProbeStyle>(() => undefined);
+    const Probe = (_props: {} & { style: Readonly<ProbeStyle> }) => undefined;
     const style = { width: 24 };
-    const element = Probe({ key: 'stable', style });
+    const element = createElement(Probe, { key: 'stable', style });
     const options: CRCKeyboardNavigationOptions = { mode: 'directional' };
 
     const policyTree = createElement(FocusManagement, {

@@ -1,15 +1,15 @@
 import { userEvent } from "vitest/browser";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { crc } from "../crc";
-import { defineComp } from "../define-comp";
 import { getCRCInstance } from "../global-state";
 import { crcEventTarget } from "../hooks/crc-event-target";
 import { crcState } from "../hooks/crc-state";
-import { layer } from "../components/layer";
-import { rect } from "../components/rect";
-import { g } from "../components/g";
-import type { CompEl, CRCController } from "../types";
+import { Layer } from "../components/layer";
+import { Rectangle } from "../components/rect";
+import { Group } from "../components/g";
+import type { CRCElement, CRCController } from "../types";
 import { focusManaged } from "./policy-test-support";
+import { createElement } from '../element/create-element';
 
 const activeControllers = new Set<CRCController>();
 
@@ -28,13 +28,13 @@ describe("focus snapshots in cached layers", () => {
     let layerRenders = 0;
     let unrelatedLayerRenders = 0;
     let updateUnrelated!: () => void;
-    const FocusTarget = defineComp(() => {
+    const FocusTarget = (_props: {}) => {
       layerRenders++;
       const snapshot = crcEventTarget(
         { onClick: () => undefined },
         { path: rectanglePath(0, 0, 80, 80), fill: true },
       );
-      return rect({
+      return createElement(Rectangle, {
         style: {
           width: 80,
           height: 80,
@@ -45,33 +45,33 @@ describe("focus snapshots in cached layers", () => {
               : "#0000ff",
         },
       });
-    });
-    const UnrelatedLayer = defineComp(() => {
+    };
+    const UnrelatedLayer = (_props: {}) => {
       unrelatedLayerRenders++;
-      return rect({
+      return createElement(Rectangle, {
         style: { width: 80, height: 80, fill: "#ffff00" },
       });
-    });
-    const Root = defineComp(() => {
+    };
+    const Root = (_props: {}) => {
       const [version, setVersion] = crcState(0);
       updateUnrelated = () => setVersion(version + 1);
       return [
-        layer({
+        createElement(Layer, {
           style: { width: 80, height: 80 },
-          render: FocusTarget({}),
+          children: createElement(FocusTarget, {}),
         }),
-        g({
+        createElement(Group, {
           style: { translateX: 100 },
           children: [
-            layer({
+            createElement(Layer, {
               style: { width: 80, height: 80 },
-              render: UnrelatedLayer({}),
+              children: createElement(UnrelatedLayer, {}),
             }),
           ],
         }),
       ];
-    });
-    const mounted = mount(focusManaged(Root({})));
+    };
+    const mounted = mount(focusManaged(createElement(Root, {})));
     await nextFrame();
 
     expect(layerRenders).toBe(1);
@@ -109,29 +109,29 @@ describe("focus snapshots in cached layers", () => {
   it("keeps inert focus snapshots cached when focus management is absent", async () => {
     let layerRenders = 0;
     let updateUnrelated!: () => void;
-    const InertTarget = defineComp(() => {
+    const InertTarget = (_props: {}) => {
       layerRenders++;
       const snapshot = crcEventTarget(
         { onClick: () => undefined },
         { path: rectanglePath(0, 0, 80, 80), fill: true },
       );
-      return rect({
+      return createElement(Rectangle, {
         style: {
           width: 80,
           height: 80,
           fill: snapshot.isFocused ? "#ff0000" : "#0000ff",
         },
       });
-    });
-    const Root = defineComp(() => {
+    };
+    const Root = (_props: {}) => {
       const [version, setVersion] = crcState(0);
       updateUnrelated = () => setVersion(version + 1);
-      return layer({
+      return createElement(Layer, {
         style: { width: 100, height: 100 },
-        render: InertTarget({}),
+        children: createElement(InertTarget, {}),
       });
-    });
-    const mounted = mount(Root({}));
+    };
+    const mounted = mount(createElement(Root, {}));
     await nextFrame();
 
     updateUnrelated();
@@ -147,31 +147,31 @@ describe("focus snapshots in cached layers", () => {
   it("repaints the first focus transition after a layer replaces its focus manager", async () => {
     let layerRenders = 0;
     let replaceTarget!: () => void;
-    const FocusTarget = defineComp(() => {
+    const FocusTarget = (_props: {}) => {
       layerRenders++;
       const snapshot = crcEventTarget(
         { onClick: () => undefined },
         { path: rectanglePath(0, 0, 80, 80), fill: true },
       );
-      return rect({
+      return createElement(Rectangle, {
         style: {
           width: 80,
           height: 80,
           fill: snapshot.isFocusVisible ? "#00ff00" : "#0000ff",
         },
       });
-    });
-    const Root = defineComp(() => {
+    };
+    const Root = (_props: {}) => {
       const [version, setVersion] = crcState(0);
       replaceTarget = () => setVersion(version + 1);
-      return layer({
+      return createElement(Layer, {
         style: { width: 80, height: 80 },
-        render: focusManaged(FocusTarget({
+        children: focusManaged(createElement(FocusTarget, {
           key: `target-${version}`,
         })),
       });
-    });
-    const mounted = mount(Root({}));
+    };
+    const mounted = mount(createElement(Root, {}));
     await nextFrame();
 
     mounted.before.focus();
@@ -201,27 +201,27 @@ describe("focus snapshots during manager removal", () => {
       readonly isFocused: boolean;
       readonly isFocusVisible: boolean;
     }> = [];
-    const FocusTarget = defineComp(() => {
+    const FocusTarget = (_props: {}) => {
       const snapshot = crcEventTarget(
         { onClick: () => undefined },
         { path: rectanglePath(0, 0, 80, 80), fill: true },
       );
       snapshots.push(snapshot);
-      return rect({
+      return createElement(Rectangle, {
         style: {
           width: 80,
           height: 80,
           fill: snapshot.isFocusVisible ? "#00ff00" : "#0000ff",
         },
       });
-    });
-    const Root = defineComp(() => {
+    };
+    const Root = (_props: {}) => {
       const [managed, setManaged] = crcState(true);
       removeManager = () => setManaged(false);
-      const target = FocusTarget({});
+      const target = createElement(FocusTarget, {});
       return managed ? focusManaged(target) : target;
-    });
-    const mounted = mount(Root({}));
+    };
+    const mounted = mount(createElement(Root, {}));
     await nextFrame();
 
     mounted.before.focus();
@@ -251,32 +251,32 @@ describe("focus snapshots during manager removal", () => {
       readonly isFocused: boolean;
       readonly isFocusVisible: boolean;
     }> = [];
-    const FocusTarget = defineComp(() => {
+    const FocusTarget = (_props: {}) => {
       layerRenders++;
       const snapshot = crcEventTarget(
         { onClick: () => undefined },
         { path: rectanglePath(0, 0, 80, 80), fill: true },
       );
       snapshots.push(snapshot);
-      return rect({
+      return createElement(Rectangle, {
         style: {
           width: 80,
           height: 80,
           fill: snapshot.isFocusVisible ? "#00ff00" : "#0000ff",
         },
       });
-    });
-    const LayerHost = defineComp(() => layer({
+    };
+    const LayerHost = (_props: {}) => createElement(Layer, {
       style: { width: 80, height: 80 },
-      render: FocusTarget({}),
-    }));
-    const Root = defineComp(() => {
+      children: createElement(FocusTarget, {}),
+    });
+    const Root = (_props: {}) => {
       const [managed, setManaged] = crcState(true);
       removeManager = () => setManaged(false);
-      const host = LayerHost({});
+      const host = createElement(LayerHost, {});
       return managed ? focusManaged(host) : host;
-    });
-    const mounted = mount(Root({}));
+    };
+    const mounted = mount(createElement(Root, {}));
     await nextFrame();
 
     mounted.before.focus();
@@ -298,7 +298,7 @@ describe("focus snapshots during manager removal", () => {
   });
 });
 
-function mount(element: CompEl<any, any>) {
+function mount(element: CRCElement<any>) {
   const before = document.createElement("button");
   before.textContent = "before";
   const canvas = document.createElement("canvas");

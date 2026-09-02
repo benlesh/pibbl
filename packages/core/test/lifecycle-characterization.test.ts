@@ -1,6 +1,6 @@
 import type { CRCEventHandlers } from '../src/lib/events/types';
 import type { CRCController } from '../src/lib/types';
-import { crc, crcCursor, crcEvent, defineComp, layer, rect } from '@crc/core';
+import { crc, crcCursor, crcEvent, Layer, Rectangle } from '@crc/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   clearSharedState,
@@ -9,6 +9,7 @@ import {
 } from '../src/lib/global-state';
 import { CRC_EVENT_TYPES } from '../src/lib/events/event-definitions';
 import { RuntimeDiagnostics } from './support/runtime-diagnostics';
+import { createElement } from '@crc/core';
 
 const activeDiagnostics = new Set<RuntimeDiagnostics>();
 const activeControllers = new Set<CRCController>();
@@ -81,7 +82,7 @@ function handlers(
   };
 }
 
-const ProbeScene = defineComp<ProbeSceneProps>(({ calls, enabled, generation, show }) => show ? rect({
+const ProbeScene = ({ calls, enabled, generation, show }: ProbeSceneProps) => show ? createElement(Rectangle, {
   style: {
     x: 20,
     y: 20,
@@ -90,14 +91,14 @@ const ProbeScene = defineComp<ProbeSceneProps>(({ calls, enabled, generation, sh
     fill: '#2563eb',
   },
   ...(enabled ? handlers(generation, calls) : {}),
-}) : undefined);
+}) : undefined;
 
-const ToggleNestedLayerScene = defineComp<ProbeSceneProps>(({ calls, enabled, generation, show }) =>
-  show ? layer({
+const ToggleNestedLayerScene = ({ calls, enabled, generation, show }: ProbeSceneProps) =>
+  show ? createElement(Layer, {
     key: 'outer-layer',
-    render: layer({
+    children: createElement(Layer, {
       key: 'inner-layer',
-      render: rect({
+      children: createElement(Rectangle, {
         key: 'nested-region',
         style: {
           x: 20,
@@ -109,12 +110,11 @@ const ToggleNestedLayerScene = defineComp<ProbeSceneProps>(({ calls, enabled, ge
         ...(enabled ? handlers(generation, calls) : {}),
       }),
     }),
-  }) : undefined,
-);
+  }) : undefined;
 
-const PersistentLayerScene = defineComp<ProbeSceneProps>(({ calls, enabled, generation }) => layer({
+const PersistentLayerScene = ({ calls, enabled, generation }: ProbeSceneProps) => createElement(Layer, {
   key: 'persistent-layer',
-  render: rect({
+  children: createElement(Rectangle, {
     key: 'persistent-region',
     style: {
       x: 20,
@@ -125,9 +125,9 @@ const PersistentLayerScene = defineComp<ProbeSceneProps>(({ calls, enabled, gene
     },
     onClick: enabled ? () => calls.push(generation) : undefined,
   }),
-}));
+});
 
-const FirstLayerRoot = defineComp<{ calls: string[] }>(({ calls }) => rect({
+const FirstLayerRoot = ({ calls }: { calls: string[] }) => createElement(Rectangle, {
   style: {
     x: 20,
     y: 20,
@@ -136,9 +136,9 @@ const FirstLayerRoot = defineComp<{ calls: string[] }>(({ calls }) => rect({
     fill: '#2563eb',
   },
   onClick: () => calls.push('first'),
-}));
+});
 
-const SecondLayerRoot = defineComp<{ calls: string[] }>(({ calls }) => rect({
+const SecondLayerRoot = ({ calls }: { calls: string[] }) => createElement(Rectangle, {
   style: {
     x: 20,
     y: 20,
@@ -147,15 +147,15 @@ const SecondLayerRoot = defineComp<{ calls: string[] }>(({ calls }) => rect({
     fill: '#7c3aed',
   },
   onClick: () => calls.push('second'),
-}));
+});
 
-const SwitchingLayerScene = defineComp<{ calls: string[]; second: boolean }>(({ calls, second }) => layer({
+const SwitchingLayerScene = ({ calls, second }: { calls: string[]; second: boolean }) => createElement(Layer, {
   key: 'switching-layer',
-  render: second ? SecondLayerRoot({ calls }) : FirstLayerRoot({ calls }),
-}));
+  children: second ? createElement(SecondLayerRoot, { calls }) : createElement(FirstLayerRoot, { calls }),
+});
 
-const CursorOwnershipScene = defineComp(() => [
-  rect({
+const CursorOwnershipScene = (_props: {}) => [
+  createElement(Rectangle, {
     key: 'first-cursor',
     style: {
       x: 20,
@@ -166,7 +166,7 @@ const CursorOwnershipScene = defineComp(() => [
       cursor: 'pointer',
     },
   }),
-  rect({
+  createElement(Rectangle, {
     key: 'second-cursor',
     style: {
       x: 100,
@@ -177,15 +177,15 @@ const CursorOwnershipScene = defineComp(() => [
       cursor: 'crosshair',
     },
   }),
-]);
+];
 
-const ObserverScene = defineComp<{ calls: string[] }>(({ calls }) => {
+const ObserverScene = ({ calls }: { calls: string[] }) => {
   crcEvent('click', () => {
     calls.push('throws');
     throw new Error('expected lifecycle handler error');
   });
   crcEvent('click', () => calls.push('safe'));
-  return rect({
+  return createElement(Rectangle, {
     style: {
       x: 0,
       y: 0,
@@ -194,12 +194,12 @@ const ObserverScene = defineComp<{ calls: string[] }>(({ calls }) => {
       fill: '#f8fafc',
     },
   });
-});
+};
 
-const LayerGlobalResources = defineComp<{ calls: string[] }>(({ calls }) => {
+const LayerGlobalResources = ({ calls }: { calls: string[] }) => {
   crcEvent('mousemove', () => calls.push('observer'));
   crcCursor({ style: 'wait' });
-  return rect({
+  return createElement(Rectangle, {
     style: {
       x: 20,
       y: 20,
@@ -209,14 +209,13 @@ const LayerGlobalResources = defineComp<{ calls: string[] }>(({ calls }) => {
     },
     onMouseMove: () => calls.push('target'),
   });
-});
+};
 
-const LayerGlobalResourcesScene = defineComp<{ calls: string[]; show: boolean }>(({ calls, show }) =>
-  show ? layer({
+const LayerGlobalResourcesScene = ({ calls, show }: { calls: string[]; show: boolean }) =>
+  show ? createElement(Layer, {
     key: 'global-resource-layer',
-    render: LayerGlobalResources({ calls }),
-  }) : undefined,
-);
+    children: createElement(LayerGlobalResources, { calls }),
+  }) : undefined;
 
 function nextFrame(): Promise<void> {
   return new Promise(resolve => requestAnimationFrame(() => resolve()));
@@ -293,7 +292,7 @@ describe('event lifecycle ownership', () => {
     const { canvas, diagnostics } = createHarness();
     const calls: number[] = [];
     const abortController = new AbortController();
-    track(crc(canvas, ProbeScene({ calls, enabled: true, generation: 0, show: true }), {
+    track(crc(canvas, createElement(ProbeScene, { calls, enabled: true, generation: 0, show: true }), {
       signal: abortController.signal,
     }));
     await nextFrame();
@@ -307,7 +306,7 @@ describe('event lifecycle ownership', () => {
     });
 
     for (let generation = 1; generation <= 1_000; generation++) {
-      crc(canvas, ProbeScene({ calls, enabled: true, generation, show: true }));
+      crc(canvas, createElement(ProbeScene, { calls, enabled: true, generation, show: true }));
       await nextFrame();
     }
     expect(diagnostics.snapshot()).toEqual(baseline);
@@ -326,26 +325,26 @@ describe('event lifecycle ownership', () => {
     const calls: number[] = [];
     const controller = track(crc(
       canvas,
-      ProbeScene({ calls, enabled: true, generation: 1, show: true }),
+      createElement(ProbeScene, { calls, enabled: true, generation: 1, show: true }),
     ));
     await nextFrame();
     const baseline = diagnostics.snapshot();
 
-    crc(canvas, ProbeScene({ calls, enabled: true, generation: 2, show: true }));
+    crc(canvas, createElement(ProbeScene, { calls, enabled: true, generation: 2, show: true }));
     await nextFrame();
     expect(diagnostics.snapshot()).toEqual(baseline);
     clickCanvas(canvas, 40, 40);
     expect(calls).toEqual([2]);
 
-    crc(canvas, ProbeScene({ calls, enabled: false, generation: 2, show: true }));
+    crc(canvas, createElement(ProbeScene, { calls, enabled: false, generation: 2, show: true }));
     await nextFrame();
     expect(diagnostics.snapshot().handlers).toEqual(EMPTY_HANDLERS);
     clickCanvas(canvas, 40, 40);
     expect(calls).toEqual([2]);
 
-    crc(canvas, ProbeScene({ calls, enabled: true, generation: 3, show: true }));
+    crc(canvas, createElement(ProbeScene, { calls, enabled: true, generation: 3, show: true }));
     await nextFrame();
-    crc(canvas, ProbeScene({ calls, enabled: true, generation: 3, show: false }));
+    crc(canvas, createElement(ProbeScene, { calls, enabled: true, generation: 3, show: false }));
     await nextFrame();
     expect(diagnostics.snapshot().handlers).toEqual(EMPTY_HANDLERS);
     clickCanvas(canvas, 40, 40);
@@ -359,7 +358,7 @@ describe('event lifecycle ownership', () => {
     const { canvas, diagnostics } = createHarness();
     const controller = track(crc(
       canvas,
-      ProbeScene({ calls: [], enabled: true, generation: 1, show: true }),
+      createElement(ProbeScene, { calls: [], enabled: true, generation: 1, show: true }),
     ));
     expect(diagnostics.snapshot().scheduledFrames).toBe(1);
 
@@ -389,7 +388,7 @@ describe('event lifecycle ownership', () => {
       const canvas = document.createElement('canvas');
       const controller = track(crc(
         canvas,
-        ProbeScene({ calls: [], enabled: true, generation: 1, show: true }),
+        createElement(ProbeScene, { calls: [], enabled: true, generation: 1, show: true }),
       ));
       controller.dispose();
 
@@ -407,7 +406,7 @@ describe('event lifecycle ownership', () => {
     const staleAbort = new AbortController();
     const staleController = track(crc(
       canvas,
-      ProbeScene({ calls, enabled: true, generation: 1, show: true }),
+      createElement(ProbeScene, { calls, enabled: true, generation: 1, show: true }),
       { signal: staleAbort.signal },
     ));
     await nextFrame();
@@ -415,7 +414,7 @@ describe('event lifecycle ownership', () => {
 
     const liveController = track(crc(
       canvas,
-      ProbeScene({ calls, enabled: true, generation: 2, show: true }),
+      createElement(ProbeScene, { calls, enabled: true, generation: 2, show: true }),
     ));
     await nextFrame();
     const remounted = diagnostics.snapshot();
@@ -437,14 +436,14 @@ describe('event lifecycle ownership', () => {
     const updateAbort = new AbortController();
     const controller = track(crc(
       canvas,
-      ProbeScene({ calls, enabled: true, generation: 1, show: true }),
+      createElement(ProbeScene, { calls, enabled: true, generation: 1, show: true }),
       { signal: mountAbort.signal },
     ));
     await nextFrame();
 
     const updatedController = crc(
       canvas,
-      ProbeScene({ calls, enabled: true, generation: 2, show: true }),
+      createElement(ProbeScene, { calls, enabled: true, generation: 2, show: true }),
       { signal: updateAbort.signal },
     );
     expect(updatedController).toBe(controller);
@@ -464,12 +463,12 @@ describe('event lifecycle ownership', () => {
     const calls: number[] = [];
     const controller = track(crc(
       canvas,
-      ToggleNestedLayerScene({ calls, enabled: true, generation: 1, show: true }),
+      createElement(ToggleNestedLayerScene, { calls, enabled: true, generation: 1, show: true }),
     ));
     await nextFrame();
     expect(diagnostics.snapshot().instances).toBe(3);
 
-    crc(canvas, ToggleNestedLayerScene({ calls, enabled: true, generation: 1, show: false }));
+    crc(canvas, createElement(ToggleNestedLayerScene, { calls, enabled: true, generation: 1, show: false }));
     await nextFrame();
     expect(diagnostics.snapshot()).toMatchObject({
       instances: 1,
@@ -487,7 +486,7 @@ describe('event lifecycle ownership', () => {
   it('releases layered paint entries, root observers, and root cursor defaults', async () => {
     const { canvas, diagnostics } = createHarness();
     const calls: string[] = [];
-    const controller = track(crc(canvas, LayerGlobalResourcesScene({ calls, show: true })));
+    const controller = track(crc(canvas, createElement(LayerGlobalResourcesScene, { calls, show: true })));
     await nextFrame();
     const root = getCRCInstance(canvas);
 
@@ -500,7 +499,7 @@ describe('event lifecycle ownership', () => {
     expect(calls).toEqual(['target', 'observer']);
     expect(canvas.style.cursor).toBe('wait');
 
-    crc(canvas, LayerGlobalResourcesScene({ calls, show: false }));
+    crc(canvas, createElement(LayerGlobalResourcesScene, { calls, show: false }));
     await nextFrame();
     expect(GLOBAL_STATE.crcInstances.size).toBe(1);
     expect(root.paintEntries.size).toBe(0);
@@ -521,19 +520,19 @@ describe('event lifecycle ownership', () => {
     const calls: number[] = [];
     const controller = track(crc(
       canvas,
-      PersistentLayerScene({ calls, enabled: true, generation: 1, show: true }),
+      createElement(PersistentLayerScene, { calls, enabled: true, generation: 1, show: true }),
     ));
     await nextFrame();
 
     clickCanvas(canvas, 40, 40);
     expect(calls).toEqual([1]);
 
-    crc(canvas, PersistentLayerScene({ calls, enabled: true, generation: 2, show: true }));
+    crc(canvas, createElement(PersistentLayerScene, { calls, enabled: true, generation: 2, show: true }));
     await nextFrame();
     clickCanvas(canvas, 40, 40);
     expect(calls).toEqual([1, 2]);
 
-    crc(canvas, PersistentLayerScene({ calls, enabled: false, generation: 2, show: true }));
+    crc(canvas, createElement(PersistentLayerScene, { calls, enabled: false, generation: 2, show: true }));
     await nextFrame();
     clickCanvas(canvas, 40, 40);
     expect(calls).toEqual([1, 2]);
@@ -545,11 +544,11 @@ describe('event lifecycle ownership', () => {
   it('replaces a persistent layer root when its component type changes', async () => {
     const { canvas, diagnostics } = createHarness();
     const calls: string[] = [];
-    const controller = track(crc(canvas, SwitchingLayerScene({ calls, second: false })));
+    const controller = track(crc(canvas, createElement(SwitchingLayerScene, { calls, second: false })));
     await nextFrame();
     clickCanvas(canvas, 40, 40);
 
-    crc(canvas, SwitchingLayerScene({ calls, second: true }));
+    crc(canvas, createElement(SwitchingLayerScene, { calls, second: true }));
     await nextFrame();
     clickCanvas(canvas, 40, 40);
     expect(calls).toEqual(['first', 'second']);
@@ -560,7 +559,7 @@ describe('event lifecycle ownership', () => {
 
   it('does not clear a cursor value replaced by another owner', async () => {
     const { canvas, diagnostics } = createHarness();
-    const controller = track(crc(canvas, CursorOwnershipScene({})));
+    const controller = track(crc(canvas, createElement(CursorOwnershipScene, {})));
     await nextFrame();
 
     canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: 40, clientY: 40 }));
@@ -580,7 +579,7 @@ describe('event lifecycle ownership', () => {
     const { canvas, diagnostics } = createHarness();
     const calls: string[] = [];
     const expectedError = vi.spyOn(globalThis, 'reportError').mockImplementation(() => {});
-    const controller = track(crc(canvas, ObserverScene({ calls })));
+    const controller = track(crc(canvas, createElement(ObserverScene, { calls })));
     await nextFrame();
     diagnostics.snapshot();
 

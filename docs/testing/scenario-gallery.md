@@ -11,9 +11,9 @@ test catalog ─────── scenario controller ────────�
 ```
 
 - `packages/scenarios/src/learning-catalog.ts` contains the public lesson order, section, API tags, two objectives, prompts, relationships, Canvas dimensions, canonical source path, validation, and lazy loaders.
-- Every `packages/scenarios/src/learning/**/*.example.ts` file is a concise lesson with one contract: `export default function mount(canvas: HTMLCanvasElement): CRCController`.
+- Every `packages/scenarios/src/learning/**/*.example.tsx` file is a concise lesson with one contract: `export default function mount(canvas: HTMLCanvasElement): CRCController`.
 - `packages/scenarios/src/catalog.ts` retains the test-only scenario metadata, actions, source identity, visibility, maturity, validation, and lazy loaders.
-- Every non-learning `packages/scenarios/src/**/*.example.ts` file remains an exhaustive scenario controller with state, actions, render settlement, reset, and disposal.
+- Every non-learning `packages/scenarios/src/**/*.example.tsx` file remains an exhaustive scenario controller with state, actions, render settlement, reset, and disposal.
 - `packages/scenarios/src/surface.ts` is an optional gallery surface adapter available only through the explicit `@crc/scenarios/surface` subpath. It is not exported from the package root or imported by the catalog.
 - `playground/src/learning-sources.ts` and `playground/src/scenario-sources.ts` are the Vite-specific raw-source adapters. Learning source is route-lazy; test source becomes a collapsed read-only editor only when opened.
 - `tooling/scenario-catalog.ts` independently discovers both sets from disk, validates their source contracts, loads every definition, and checks the generated [example catalog index](../scenario-index.md).

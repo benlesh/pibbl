@@ -1,19 +1,16 @@
 import {
-  clip,
-  defineComp,
-  g,
-  layer,
-  rect,
+  Clip,
+  Group,
+  Layer,
+  Rectangle,
+  type CRCElement,
   type CRCLogicalMouseEvent,
 } from '@crc/core';
-
 export const PERFORMANCE_LAB_SOURCE_ID = 'event-performance-lab-example';
-
 export interface PerformancePoint {
   x: number;
   y: number;
 }
-
 export type PerformanceCounterName =
   | 'getContext'
   | 'matrixMultiply'
@@ -22,9 +19,7 @@ export type PerformanceCounterName =
   | 'save'
   | 'setTransform'
   | 'strokeTests';
-
 export type PerformanceCounters = Record<PerformanceCounterName, number>;
-
 export type PerformanceWorkloadKind =
   | 'clipped'
   | 'cursor'
@@ -34,7 +29,6 @@ export type PerformanceWorkloadKind =
   | 'sparse'
   | 'transformed'
   | 'zero';
-
 export interface PerformanceWorkload {
   id: string;
   title: string;
@@ -43,16 +37,20 @@ export interface PerformanceWorkload {
   probe: PerformancePoint;
   expectedTarget: string | null;
 }
-
-const SPARSE_PROBE = { x: 21.5, y: 21 } as const;
-
+const SPARSE_PROBE = {
+  x: 21.5,
+  y: 21,
+} as const;
 export const PERFORMANCE_WORKLOADS = [
   {
     id: 'zero',
     title: '0 regions',
     kind: 'zero',
     regionCount: 0,
-    probe: { x: 240, y: 120 },
+    probe: {
+      x: 240,
+      y: 120,
+    },
     expectedTarget: null,
   },
   {
@@ -84,7 +82,10 @@ export const PERFORMANCE_WORKLOADS = [
     title: 'All miss · 100 regions',
     kind: 'miss',
     regionCount: 100,
-    probe: { x: 470, y: 230 },
+    probe: {
+      x: 470,
+      y: 230,
+    },
     expectedTarget: null,
   },
   {
@@ -92,7 +93,10 @@ export const PERFORMANCE_WORKLOADS = [
     title: 'All miss · 1,000 regions',
     kind: 'miss',
     regionCount: 1_000,
-    probe: { x: 470, y: 230 },
+    probe: {
+      x: 470,
+      y: 230,
+    },
     expectedTarget: null,
   },
   {
@@ -100,7 +104,10 @@ export const PERFORMANCE_WORKLOADS = [
     title: 'All miss · 10,000 regions',
     kind: 'miss',
     regionCount: 10_000,
-    probe: { x: 470, y: 230 },
+    probe: {
+      x: 470,
+      y: 230,
+    },
     expectedTarget: null,
   },
   {
@@ -108,7 +115,10 @@ export const PERFORMANCE_WORKLOADS = [
     title: 'Dense overlap · 1,000 regions',
     kind: 'dense',
     regionCount: 1_000,
-    probe: { x: 240, y: 120 },
+    probe: {
+      x: 240,
+      y: 120,
+    },
     expectedTarget: 'region-999',
   },
   {
@@ -116,7 +126,10 @@ export const PERFORMANCE_WORKLOADS = [
     title: 'Dense overlap · 10,000 regions',
     kind: 'dense',
     regionCount: 10_000,
-    probe: { x: 240, y: 120 },
+    probe: {
+      x: 240,
+      y: 120,
+    },
     expectedTarget: 'region-9999',
   },
   {
@@ -132,7 +145,10 @@ export const PERFORMANCE_WORKLOADS = [
     title: 'Transformed sparse hit · 1,000 regions',
     kind: 'transformed',
     regionCount: 1_000,
-    probe: { x: 33.5, y: 29 },
+    probe: {
+      x: 33.5,
+      y: 29,
+    },
     expectedTarget: 'region-0',
   },
   {
@@ -152,15 +168,10 @@ export const PERFORMANCE_WORKLOADS = [
     expectedTarget: 'region-0',
   },
 ] as const satisfies readonly PerformanceWorkload[];
-
-export type PerformanceWorkloadId = (typeof PERFORMANCE_WORKLOADS)[number]['id'];
-
+export type PerformanceWorkloadId =
+  (typeof PERFORMANCE_WORKLOADS)[number]['id'];
 export type PerformanceLabAction =
-  | 'mount'
-  | 'reset'
-  | 'rerender-25'
-  | `show-${PerformanceWorkloadId}`;
-
+  'mount' | 'reset' | 'rerender-25' | `show-${PerformanceWorkloadId}`;
 export interface PerformanceLabState {
   callbacks: number;
   completedRenders: number;
@@ -179,20 +190,13 @@ export interface PerformanceLabState {
   sampleCount: number;
   workloadId: PerformanceWorkloadId;
 }
-
 export interface PerformanceSceneProps {
   recordHit: (target: string, event: CRCLogicalMouseEvent) => void;
   recordRender: (revision: number) => void;
   revision: number;
   workloadId: PerformanceWorkloadId;
 }
-
-type PerformanceNode =
-  | ReturnType<typeof clip>
-  | ReturnType<typeof g>
-  | ReturnType<typeof layer>
-  | ReturnType<typeof rect>;
-
+type PerformanceNode = CRCElement;
 interface RegionFactoryOptions {
   count: number;
   cursor?: string;
@@ -200,69 +204,69 @@ interface RegionFactoryOptions {
   recordHit: (target: string, event: CRCLogicalMouseEvent) => void;
   xOffset?: number;
 }
-
 function sparseRegions(options: RegionFactoryOptions): PerformanceNode[] {
   const nodes: PerformanceNode[] = [];
   const keyPrefix = options.keyPrefix ?? 'region';
   const xOffset = options.xOffset ?? 0;
   for (let index = 0; index < options.count; index++) {
     const target = `${keyPrefix}-${index}`;
-    nodes.push(rect({
-      key: target,
-      style: {
-        x: 20 + xOffset + (index % 100) * 4,
-        y: 20 + Math.floor(index / 100) * 2,
-        width: 3,
-        height: 2,
-        fill: index === 0 ? '#16a34a' : '#2563eb',
-        cursor: options.cursor,
-      },
-      onMouseMove: event => options.recordHit(target, event),
-    }));
+    nodes.push(
+      <Rectangle
+        key={target}
+        style={{
+          x: 20 + xOffset + (index % 100) * 4,
+          y: 20 + Math.floor(index / 100) * 2,
+          width: 3,
+          height: 2,
+          fill: index === 0 ? '#16a34a' : '#2563eb',
+          cursor: options.cursor,
+        }}
+        onMouseMove={(event) => options.recordHit(target, event)}
+      />,
+    );
   }
   return nodes;
 }
-
 function denseRegions(options: RegionFactoryOptions): PerformanceNode[] {
   const nodes: PerformanceNode[] = [];
   for (let index = 0; index < options.count; index++) {
     const target = `region-${index}`;
-    nodes.push(rect({
-      key: target,
-      style: {
-        x: 120,
-        y: 60,
-        width: 240,
-        height: 120,
-        fill: index === options.count - 1 ? '#16a34a' : '#2563eb',
-      },
-      onMouseMove: event => options.recordHit(target, event),
-    }));
+    nodes.push(
+      <Rectangle
+        key={target}
+        style={{
+          x: 120,
+          y: 60,
+          width: 240,
+          height: 120,
+          fill: index === options.count - 1 ? '#16a34a' : '#2563eb',
+        }}
+        onMouseMove={(event) => options.recordHit(target, event)}
+      />,
+    );
   }
   return nodes;
 }
-
-const PerformanceLayerScene = defineComp<RegionFactoryOptions>((props) =>
-  sparseRegions(props));
-
+const PerformanceLayerScene = (props: RegionFactoryOptions) =>
+  sparseRegions(props);
 function layeredRegions(options: RegionFactoryOptions): PerformanceNode[] {
   const nodes: PerformanceNode[] = [];
   const layerCount = 4;
   const regionsPerLayer = options.count / layerCount;
   for (let layerIndex = 0; layerIndex < layerCount; layerIndex++) {
-    nodes.push(layer({
-      key: `layer-${layerIndex}`,
-      render: PerformanceLayerScene({
-        count: regionsPerLayer,
-        keyPrefix: `layer-${layerIndex}-region`,
-        recordHit: options.recordHit,
-        xOffset: layerIndex * 40,
-      }),
-    }));
+    nodes.push(
+      <Layer key={`layer-${layerIndex}`}>
+        <PerformanceLayerScene
+          count={regionsPerLayer}
+          keyPrefix={`layer-${layerIndex}-region`}
+          recordHit={options.recordHit}
+          xOffset={layerIndex * 40}
+        />
+      </Layer>,
+    );
   }
   return nodes;
 }
-
 function workloadNodes(
   workload: PerformanceWorkload,
   recordHit: (target: string, event: CRCLogicalMouseEvent) => void,
@@ -272,7 +276,10 @@ function workloadNodes(
       return [];
     case 'sparse':
     case 'miss':
-      return sparseRegions({ count: workload.regionCount, recordHit });
+      return sparseRegions({
+        count: workload.regionCount,
+        recordHit,
+      });
     case 'cursor':
       return sparseRegions({
         count: workload.regionCount,
@@ -280,63 +287,76 @@ function workloadNodes(
         recordHit,
       });
     case 'dense':
-      return denseRegions({ count: workload.regionCount, recordHit });
+      return denseRegions({
+        count: workload.regionCount,
+        recordHit,
+      });
     case 'clipped': {
       const clipPath = new Path2D();
       clipPath.rect(0, 0, 440, 230);
-      return [clip({
-        style: {
-          d: clipPath
-        },
-        children: sparseRegions({
-          count: workload.regionCount,
-          recordHit
-        })
-      })];
+      return [
+        <Clip
+          style={{
+            d: clipPath,
+          }}
+        >
+          {sparseRegions({
+            count: workload.regionCount,
+            recordHit,
+          })}
+        </Clip>,
+      ];
     }
     case 'transformed':
-      return [g({
-        style: {
-          translateX: 12,
-          translateY: 8
-        },
-        key: 'performance-transform',
-        children: sparseRegions({
-          count: workload.regionCount,
-          recordHit
-        })
-      })];
+      return [
+        <Group
+          style={{
+            translateX: 12,
+            translateY: 8,
+          }}
+          key="performance-transform"
+        >
+          {sparseRegions({
+            count: workload.regionCount,
+            recordHit,
+          })}
+        </Group>,
+      ];
     case 'layered':
-      return layeredRegions({ count: workload.regionCount, recordHit });
+      return layeredRegions({
+        count: workload.regionCount,
+        recordHit,
+      });
   }
 }
-
-export function getPerformanceWorkload(workloadId: PerformanceWorkloadId): PerformanceWorkload {
-  const workload = PERFORMANCE_WORKLOADS.find(candidate => candidate.id === workloadId);
+export function getPerformanceWorkload(
+  workloadId: PerformanceWorkloadId,
+): PerformanceWorkload {
+  const workload = PERFORMANCE_WORKLOADS.find(
+    (candidate) => candidate.id === workloadId,
+  );
   if (!workload) {
     throw new Error(`Unknown performance workload "${workloadId}".`);
   }
   return workload;
 }
-
-export const PerformanceScene = defineComp<PerformanceSceneProps>((props) => {
+export const PerformanceScene = (props: PerformanceSceneProps) => {
   const workload = getPerformanceWorkload(props.workloadId);
   props.recordRender(props.revision);
   return [
-    rect({
-      key: `background-${props.revision}`,
-      style: {
+    <Rectangle
+      key={`background-${props.revision}`}
+      style={{
         x: 0,
         y: 0,
         width: 480,
         height: 240,
         fill: '#f8fafc',
-      },
-    }),
+      }}
+    />,
     ...workloadNodes(workload, props.recordHit),
   ];
-});
-
+};
 export function createPerformanceScene(props: PerformanceSceneProps) {
-  return PerformanceScene(props);
+  return <PerformanceScene {...props} />;
 }

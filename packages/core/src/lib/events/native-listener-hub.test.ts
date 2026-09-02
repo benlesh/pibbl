@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { defineComp } from '../define-comp';
 import { clearSharedState, getCRCInstance } from '../global-state';
 import { mountCRC } from '../mount-crc';
 import { Teardowns } from '../teardowns';
 import { RuntimeDiagnostics } from '../../../test/support/runtime-diagnostics';
 import { createNativeListenerHub } from './native-listener-hub';
+import { createElement } from '../element/create-element';
 
 const activeDiagnostics = new Set<RuntimeDiagnostics>();
 
@@ -23,9 +23,9 @@ describe('native listener hub', () => {
     const canvas = document.createElement('canvas');
     const diagnostics = new RuntimeDiagnostics(canvas);
     activeDiagnostics.add(diagnostics);
-    const Empty = defineComp(() => undefined);
+    const Empty = (_props: {}) => undefined;
 
-    const controller = mountCRC(canvas, Empty({}));
+    const controller = mountCRC(canvas, createElement(Empty, {}));
 
     expect(diagnostics.snapshot().nativeListeners).toBe(0);
     controller.dispose();
@@ -39,10 +39,10 @@ describe('native listener hub', () => {
 
   it('shares the HTML event root with layers and omits a hub for an Offscreen root', () => {
     const canvas = document.createElement('canvas');
-    const Empty = defineComp(() => undefined);
-    const rootController = mountCRC(canvas, Empty({}));
+    const Empty = (_props: {}) => undefined;
+    const rootController = mountCRC(canvas, createElement(Empty, {}));
     const layerCanvas = new OffscreenCanvas(20, 10);
-    const layerController = mountCRC(layerCanvas, Empty({}), { parent: canvas });
+    const layerController = mountCRC(layerCanvas, createElement(Empty, {}), { parent: canvas });
 
     expect(getCRCInstance(layerCanvas).eventRoot)
       .toBe(getCRCInstance(canvas).eventRoot);
@@ -52,7 +52,7 @@ describe('native listener hub', () => {
     rootController.dispose();
 
     const offscreen = new OffscreenCanvas(20, 10);
-    const offscreenController = mountCRC(offscreen, Empty({}));
+    const offscreenController = mountCRC(offscreen, createElement(Empty, {}));
     expect(getCRCInstance(offscreen).eventRoot).toMatchObject({
       canvas: undefined,
       nativeListeners: undefined,

@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { crc } from '../crc';
-import { defineComp } from '../define-comp';
 import {
   clearSharedState,
   getCRCInstance,
@@ -18,6 +17,8 @@ import { crcRef } from './crc-ref';
 import { crcState, type StateUpdater } from './crc-state';
 import { crcSvgPath } from './crc-svg-path';
 import { crcWhenChanged } from './crc-when-changed';
+import { createElement } from '../element/create-element';
+import { definePrimitive } from '../define-primitive';
 
 beforeEach(() => {
   document.body.innerHTML = '';
@@ -35,11 +36,11 @@ describe('crcState', () => {
     interface StateProbeProps {
       label: string;
     }
-    const StateProbe = defineComp((props: StateProbeProps) => {
+    const StateProbe = (props: StateProbeProps) => {
       const [value, setter] = crcState(0);
       renders.push({ key: props.label, setter, value });
-    });
-    const controller = crc(canvas, StateProbe({ key: 'first', label: 'first' }));
+    };
+    const controller = crc(canvas, createElement(StateProbe, { key: 'first', label: 'first' }));
     await nextFrame();
     const setter = renders[0].setter;
 
@@ -50,7 +51,7 @@ describe('crcState', () => {
     expect(renders.at(-1)).toMatchObject({ key: 'first', value: 3 });
     expect(renders.at(-1)?.setter).toBe(setter);
 
-    crc(canvas, StateProbe({ key: 'second', label: 'second' }));
+    crc(canvas, createElement(StateProbe, { key: 'second', label: 'second' }));
     await nextFrame();
     expect(renders.at(-1)).toMatchObject({ key: 'second', value: 0 });
     expect(renders.at(-1)?.setter).not.toBe(setter);
@@ -63,19 +64,19 @@ describe('crcMemo', () => {
     const canvas = createCanvas();
     const factory = vi.fn(() => ({ call: factory.mock.calls.length }));
     const values: object[] = [];
-    const Probe = defineComp(({ deps }: { deps: unknown[] }) => {
+    const Probe = ({ deps }: { deps: unknown[] }) => {
       values.push(crcMemo(factory, deps));
-    });
-    const controller = crc(canvas, Probe({ deps: [] }));
+    };
+    const controller = crc(canvas, createElement(Probe, { deps: [] }));
     await nextFrame();
-    crc(canvas, Probe({ deps: [] }));
+    crc(canvas, createElement(Probe, { deps: [] }));
     await nextFrame();
     expect(factory).toHaveBeenCalledOnce();
     expect(values[1]).toBe(values[0]);
 
-    crc(canvas, Probe({ deps: [1] }));
+    crc(canvas, createElement(Probe, { deps: [1] }));
     await nextFrame();
-    crc(canvas, Probe({ deps: [1, 2] }));
+    crc(canvas, createElement(Probe, { deps: [1, 2] }));
     await nextFrame();
     expect(factory).toHaveBeenCalledTimes(3);
     controller.dispose();
@@ -84,16 +85,16 @@ describe('crcMemo', () => {
   it('uses strict-equality dependency semantics', async () => {
     const canvas = createCanvas();
     const factory = vi.fn(() => factory.mock.calls.length);
-    const Probe = defineComp(({ dependency }: { dependency: number }) => {
+    const Probe = ({ dependency }: { dependency: number }) => {
       crcMemo(factory, [dependency]);
-    });
-    const controller = crc(canvas, Probe({ dependency: Number.NaN }));
+    };
+    const controller = crc(canvas, createElement(Probe, { dependency: Number.NaN }));
     await nextFrame();
-    crc(canvas, Probe({ dependency: Number.NaN }));
+    crc(canvas, createElement(Probe, { dependency: Number.NaN }));
     await nextFrame();
-    crc(canvas, Probe({ dependency: 0 }));
+    crc(canvas, createElement(Probe, { dependency: 0 }));
     await nextFrame();
-    crc(canvas, Probe({ dependency: -0 }));
+    crc(canvas, createElement(Probe, { dependency: -0 }));
     await nextFrame();
 
     expect(factory).toHaveBeenCalledTimes(3);
@@ -109,16 +110,16 @@ describe('crcRef', () => {
     interface RefProbeProps {
       initial: number;
     }
-    const RefProbe = defineComp(({ initial }: RefProbeProps) => {
+    const RefProbe = ({ initial }: RefProbeProps) => {
       const ref = crcRef(initial);
       refs.push(ref);
       values.push(ref.current!);
-    });
-    const controller = crc(canvas, RefProbe({ initial: 1, key: 'first' }));
+    };
+    const controller = crc(canvas, createElement(RefProbe, { initial: 1, key: 'first' }));
     await nextFrame();
-    crc(canvas, RefProbe({ initial: 2, key: 'first' }));
+    crc(canvas, createElement(RefProbe, { initial: 2, key: 'first' }));
     await nextFrame();
-    crc(canvas, RefProbe({ initial: 3, key: 'second' }));
+    crc(canvas, createElement(RefProbe, { initial: 3, key: 'second' }));
     await nextFrame();
 
     expect(values).toEqual([1, 1, 3]);
@@ -132,15 +133,15 @@ describe('crcWhenChanged', () => {
   it('runs without dependencies on every render and cleans up first', async () => {
     const canvas = createCanvas();
     const events: string[] = [];
-    const Probe = defineComp(({ render }: { render: number }) => {
+    const Probe = ({ render }: { render: number }) => {
       crcWhenChanged(() => {
         events.push(`setup:${render}`);
         return () => events.push(`cleanup:${render}`);
       });
-    });
-    const controller = crc(canvas, Probe({ render: 1 }));
+    };
+    const controller = crc(canvas, createElement(Probe, { render: 1 }));
     await nextFrame();
-    crc(canvas, Probe({ render: 2 }));
+    crc(canvas, createElement(Probe, { render: 2 }));
     await nextFrame();
 
     expect(events).toEqual(['setup:1', 'cleanup:1', 'setup:2']);
@@ -158,20 +159,20 @@ describe('crcWhenChanged', () => {
     const canvas = createCanvas();
     const cleanup = vi.fn();
     const error = new Error('setup failed');
-    const Probe = defineComp(({ fail }: { fail: boolean }) => {
+    const Probe = ({ fail }: { fail: boolean }) => {
       crcWhenChanged(() => {
         if (fail) throw error;
         return cleanup;
       }, [fail]);
-    });
-    const controller = crc(canvas, Probe({ fail: false }));
+    };
+    const controller = crc(canvas, createElement(Probe, { fail: false }));
     frames.flush();
 
-    crc(canvas, Probe({ fail: true }));
+    crc(canvas, createElement(Probe, { fail: true }));
     expect(() => frames.flush()).toThrow(error);
     expect(cleanup).toHaveBeenCalledOnce();
 
-    crc(canvas, Probe({ fail: false }));
+    crc(canvas, createElement(Probe, { fail: false }));
     expect(() => frames.flush()).not.toThrow();
     controller.dispose();
     expect(cleanup).toHaveBeenCalledTimes(2);
@@ -184,18 +185,18 @@ describe('hook ordering and render errors', () => {
     const frames = new ManualFrames();
     const canvas = createCanvas();
     const cleanup = vi.fn();
-    const Probe = defineComp(({ include }: { include: boolean }) => {
+    const Probe = ({ include }: { include: boolean }) => {
       crcState(0);
       if (include) crcWhenChanged(() => cleanup, []);
-    });
-    const controller = crc(canvas, Probe({ include: true }));
+    };
+    const controller = crc(canvas, createElement(Probe, { include: true }));
     frames.flush();
 
-    crc(canvas, Probe({ include: false }));
+    crc(canvas, createElement(Probe, { include: false }));
     expect(() => frames.flush()).toThrowError(/fewer CRC hooks/i);
     expect(cleanup).toHaveBeenCalledOnce();
 
-    crc(canvas, Probe({ include: false }));
+    crc(canvas, createElement(Probe, { include: false }));
     expect(() => frames.flush()).not.toThrow();
     controller.dispose();
     frames.restore();
@@ -204,18 +205,18 @@ describe('hook ordering and render errors', () => {
   it('reports more hooks and changed hook order, with valid retries', () => {
     const frames = new ManualFrames();
     const canvas = createCanvas();
-    const MoreProbe = defineComp(({ more }: { more: boolean }) => {
+    const MoreProbe = ({ more }: { more: boolean }) => {
       crcState(0);
       if (more) crcRef(0);
-    });
-    const controller = crc(canvas, MoreProbe({ more: false }));
+    };
+    const controller = crc(canvas, createElement(MoreProbe, { more: false }));
     frames.flush();
-    crc(canvas, MoreProbe({ more: true }));
+    crc(canvas, createElement(MoreProbe, { more: true }));
     expect(() => frames.flush()).toThrowError(/more CRC hooks/i);
-    crc(canvas, MoreProbe({ more: true }));
+    crc(canvas, createElement(MoreProbe, { more: true }));
     expect(() => frames.flush()).not.toThrow();
 
-    const OrderProbe = defineComp(({ swapped }: { swapped: boolean }) => {
+    const OrderProbe = ({ swapped }: { swapped: boolean }) => {
       if (swapped) {
         crcRef(0);
         crcState(0);
@@ -223,12 +224,12 @@ describe('hook ordering and render errors', () => {
         crcState(0);
         crcRef(0);
       }
-    });
-    crc(canvas, OrderProbe({ swapped: false }));
+    };
+    crc(canvas, createElement(OrderProbe, { swapped: false }));
     frames.flush();
-    crc(canvas, OrderProbe({ swapped: true }));
+    crc(canvas, createElement(OrderProbe, { swapped: true }));
     expect(() => frames.flush()).toThrowError(/hook order changed/i);
-    crc(canvas, OrderProbe({ swapped: true }));
+    crc(canvas, createElement(OrderProbe, { swapped: true }));
     expect(() => frames.flush()).not.toThrow();
     controller.dispose();
     frames.restore();
@@ -238,35 +239,35 @@ describe('hook ordering and render errors', () => {
     const frames = new ManualFrames();
     const canvas = createCanvas();
     const renderError = new Error('render failed');
-    const Broken = defineComp((_props: {}, _style, ctx: RenderingContext2D) => {
+    const Broken = definePrimitive<{}>((_props: {}, _style, ctx: RenderingContext2D) => {
       ctx.translate(20, 30);
       crcState(1);
       throw renderError;
     });
     const transforms: DOMMatrix[] = [];
-    const Healthy = defineComp((_props: {}, _style, ctx: RenderingContext2D) => {
+    const Healthy = definePrimitive<{}>((_props: {}, _style, ctx: RenderingContext2D) => {
       transforms.push(ctx.getTransform());
       crcState(2);
     });
-    const controller = crc(canvas, Broken({}));
+    const controller = crc(canvas, createElement(Broken, {}));
     expect(() => frames.flush()).toThrow(renderError);
     expect(GLOBAL_STATE.currentCRCInstance).toBeUndefined();
     expect(GLOBAL_STATE.componentRefs).toBeUndefined();
 
-    crc(canvas, Healthy({}));
+    crc(canvas, createElement(Healthy, {}));
     expect(() => frames.flush()).not.toThrow();
     expect(transforms[0].isIdentity).toBe(true);
 
     const memoError = new Error('memo failed');
-    const MemoProbe = defineComp(({ fail }: { fail: boolean }) => {
+    const MemoProbe = ({ fail }: { fail: boolean }) => {
       crcMemo(() => {
         if (fail) throw memoError;
         return 'ok';
       }, [fail]);
-    });
-    crc(canvas, MemoProbe({ fail: true }));
+    };
+    crc(canvas, createElement(MemoProbe, { fail: true }));
     expect(() => frames.flush()).toThrow(memoError);
-    crc(canvas, MemoProbe({ fail: false }));
+    crc(canvas, createElement(MemoProbe, { fail: false }));
     expect(() => frames.flush()).not.toThrow();
     controller.dispose();
     frames.restore();
@@ -302,7 +303,7 @@ describe('hook ordering and render errors', () => {
     const canvas = createCanvas();
     const path = new Path2D();
     path.rect(0, 0, 20, 20);
-    const Probe = defineComp(({ swapped }: { swapped: boolean }) => {
+    const Probe = ({ swapped }: { swapped: boolean }) => {
       if (swapped) {
         crcEventListener({ onClick: () => undefined });
         crcEventTarget({ onClick: () => undefined }, { path });
@@ -310,16 +311,16 @@ describe('hook ordering and render errors', () => {
         crcEventTarget({ onClick: () => undefined }, { path });
         crcEventListener({ onClick: () => undefined });
       }
-    });
-    const controller = crc(canvas, Probe({ swapped: false }));
+    };
+    const controller = crc(canvas, createElement(Probe, { swapped: false }));
     frames.flush();
 
-    crc(canvas, Probe({ swapped: true }));
+    crc(canvas, createElement(Probe, { swapped: true }));
     expect(() => frames.flush()).toThrowError(/hook order changed/i);
     expect(getCRCInstance(canvas).eventRoot.targets.size).toBe(0);
     expect(getCRCInstance(canvas).eventRoot.listenersByComponent.size).toBe(0);
 
-    crc(canvas, Probe({ swapped: true }));
+    crc(canvas, createElement(Probe, { swapped: true }));
     expect(() => frames.flush()).not.toThrow();
     controller.dispose();
     frames.restore();
@@ -329,24 +330,24 @@ describe('hook ordering and render errors', () => {
     const canvas = createCanvas();
     const path = new Path2D();
     path.rect(0, 0, 20, 20);
-    const Probe = defineComp(({ local }: { local: boolean }) => {
+    const Probe = ({ local }: { local: boolean }) => {
       crcEvent('click', () => {}, local ? path : undefined, true);
       crcCursor({ path: local ? path : undefined, style: 'pointer', fill: true });
-    });
-    const controller = crc(canvas, Probe({ local: false }));
+    };
+    const controller = crc(canvas, createElement(Probe, { local: false }));
     await nextFrame();
     const instance = getCRCInstance(canvas);
     expect(instance.eventRoot.observers.get('click')?.size).toBe(1);
     expect(instance.regions.size).toBe(0);
     expect(instance.cursorDefaults.size).toBe(1);
 
-    crc(canvas, Probe({ local: true }));
+    crc(canvas, createElement(Probe, { local: true }));
     await nextFrame();
     expect(instance.eventRoot.observers.get('click')?.size).toBe(0);
     expect(instance.regions.size).toBe(2);
     expect(instance.cursorDefaults.size).toBe(0);
 
-    crc(canvas, Probe({ local: false }));
+    crc(canvas, createElement(Probe, { local: false }));
     await nextFrame();
     expect(instance.eventRoot.observers.get('click')?.size).toBe(1);
     expect(instance.regions.size).toBe(0);
@@ -359,15 +360,15 @@ describe('hook ordering and render errors', () => {
     const path = new Path2D();
     path.rect(0, 0, 20, 20);
     const trace: string[] = [];
-    const Probe = defineComp(({
+    const Probe = ({
       handler,
     }: {
       handler: CRCMouseEventListener | undefined;
     }) => {
       crcEvent('mousemove', handler, path, true);
-    });
+    };
     const firstHandler = () => trace.push('first');
-    const controller = crc(canvas, Probe({ handler: firstHandler }));
+    const controller = crc(canvas, createElement(Probe, { handler: firstHandler }));
     await nextFrame();
     const instance = getCRCInstance(canvas);
     const firstTarget = Array.from(instance.eventRoot.targets)[0];
@@ -376,7 +377,7 @@ describe('hook ordering and render errors', () => {
     expect(instance.regions.size).toBe(1);
 
     const replacementHandler = () => trace.push('replacement');
-    crc(canvas, Probe({ handler: replacementHandler }));
+    crc(canvas, createElement(Probe, { handler: replacementHandler }));
     await nextFrame();
 
     expect(instance.eventRoot.targets.size).toBe(1);
@@ -384,7 +385,7 @@ describe('hook ordering and render errors', () => {
     dispatchMouseMove(canvas, 10, 10);
     expect(trace).toEqual(['replacement']);
 
-    crc(canvas, Probe({ handler: undefined }));
+    crc(canvas, createElement(Probe, { handler: undefined }));
     await nextFrame();
     expect(instance.eventRoot.targets.size).toBe(0);
     expect(instance.regions.size).toBe(0);
@@ -399,7 +400,7 @@ describe('hook ordering and render errors', () => {
     const path = new Path2D();
     path.rect(0, 0, 20, 20);
     const trace: string[] = [];
-    const Probe = defineComp(({
+    const Probe = ({
       first,
       generation,
     }: {
@@ -416,8 +417,8 @@ describe('hook ordering and render errors', () => {
         }
       } : undefined);
       crcEvent('mousemove', () => trace.push('second'));
-    });
-    const controller = crc(canvas, Probe({ first: true, generation: 'throw' }));
+    };
+    const controller = crc(canvas, createElement(Probe, { first: true, generation: 'throw' }));
     await nextFrame();
 
     dispatchMouseMove(canvas, 10, 10);
@@ -425,13 +426,13 @@ describe('hook ordering and render errors', () => {
     expect(reportError).toHaveBeenCalledOnce();
 
     trace.length = 0;
-    crc(canvas, Probe({ first: true, generation: 'replacement' }));
+    crc(canvas, createElement(Probe, { first: true, generation: 'replacement' }));
     await nextFrame();
     dispatchMouseMove(canvas, 10, 10);
     expect(trace).toEqual(['target', 'first-replacement', 'second']);
 
     trace.length = 0;
-    crc(canvas, Probe({ first: false, generation: 'removed' }));
+    crc(canvas, createElement(Probe, { first: false, generation: 'removed' }));
     await nextFrame();
     dispatchMouseMove(canvas, 10, 10);
     expect(trace).toEqual(['target', 'second']);

@@ -13,7 +13,6 @@ import {
   loadScenario,
 } from '@crc/scenarios';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { defineComp } from '../src/lib/define-comp';
 import { executeRender } from '../src/lib/execute-render';
 import { GLOBAL_STATE } from '../src/lib/global-state';
 import { removeInteractionRegion } from '../src/lib/interaction-dispatch';
@@ -23,13 +22,14 @@ import {
   updateLegacyTarget,
 } from '../src/lib/events/registrations';
 import { dispatchToLogicalTarget } from '../src/lib/events/dispatch';
-import { overlay, rect } from '../src/index';
+import { Overlay, Rectangle } from '../src/index';
+import { createElement } from '../src/lib/element/create-element';
 
 const activeInstances = new Set<CRCInstance>();
 const activeScenarioControllers = new Set<
   ScenarioController<InteractionLabState>
 >();
-const EmptyScene = defineComp<Record<string, never>>(() => undefined);
+const EmptyScene = (_props: {}) => undefined;
 
 function mountDispatchHarness(
   cssSize: readonly [number, number] = [480, 240],
@@ -39,7 +39,7 @@ function mountDispatchHarness(
   canvas.height = 240;
   canvas.style.cssText = `display:block; width:${cssSize[0]}px; height:${cssSize[1]}px`;
   document.body.replaceChildren(canvas);
-  mountCRC(canvas, EmptyScene({}));
+  mountCRC(canvas, createElement(EmptyScene, {}));
   const instance = GLOBAL_STATE.crcInstances.get(canvas);
   if (!instance) {
     throw new Error('Dispatch harness failed to mount a CRC instance.');
@@ -203,7 +203,7 @@ describe('interaction dispatcher mutation contract', () => {
     canvas.height = 100;
     document.body.replaceChildren(canvas);
     const clicks: string[] = [];
-    mountCRC(canvas, overlay({
+    mountCRC(canvas, createElement(Overlay, {
       style: {
         width: 100,
         height: 60,
@@ -212,11 +212,11 @@ describe('interaction dispatcher mutation contract', () => {
         justifyItems: 'center',
       },
       children: [
-        rect({
+        createElement(Rectangle, {
           style: { width: 120, height: 60, fill: '#2563eb' },
           onClick: () => clicks.push('under'),
         }),
-        rect({
+        createElement(Rectangle, {
           style: { width: 40, height: 40, fill: '#f97316' },
           onClick: () => clicks.push('top'),
         }),

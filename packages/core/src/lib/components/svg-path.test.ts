@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { crc } from '../crc';
 import { componentTest } from '../test-utils/component-test';
-import { svgPath } from './svg-path';
+import { SvgPath } from './svg-path';
+import { createElement } from '../element/create-element';
 
 describe('svgPath', () => {
   it('renders and updates SVG path data through the public component', async () => {
-    const canvas = await componentTest(svgPath({
+    const canvas = await componentTest(createElement(SvgPath, {
       style: {
         d: 'M 10 10 H 30 V 30 H 10 Z',
         fill: '#ff0000',
@@ -13,7 +14,7 @@ describe('svgPath', () => {
     }));
     expect(pixel(canvas.element, 20, 20)).toEqual([255, 0, 0, 255]);
 
-    crc(canvas.element, svgPath({
+    crc(canvas.element, createElement(SvgPath, {
       style: {
         d: 'M 40 10 H 60 V 30 H 40 Z',
         fill: '#0000ff',
@@ -26,7 +27,7 @@ describe('svgPath', () => {
   });
 
   it('delegates malformed data handling to the platform Path2D parser', async () => {
-    const canvas = await componentTest(svgPath({
+    const canvas = await componentTest(createElement(SvgPath, {
       style: {
         d: 'this is not svg path data',
         fill: 'red',

@@ -2,9 +2,7 @@ import type { ScenarioCatalogRecord } from '@crc/scenarios';
 
 const rawSourceModules = import.meta.glob(
   [
-    '../../packages/scenarios/src/**/*.example.ts',
     '../../packages/scenarios/src/**/*.example.tsx',
-    '!../../packages/scenarios/src/learning/**/*.example.ts',
     '!../../packages/scenarios/src/learning/**/*.example.tsx',
   ],
   {

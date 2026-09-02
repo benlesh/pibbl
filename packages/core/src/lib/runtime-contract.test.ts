@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { crc } from './crc';
-import { defineComp } from './define-comp';
-import { isCRCElement } from './element/create-element';
+import { definePrimitive } from './define-primitive';
+import { createElement, isCRCElement } from './element/create-element';
 import { clearSharedState, getCRCInstance } from './global-state';
 import { crcRef } from './hooks/crc-ref';
 import { crcState, type StateUpdater } from './hooks/crc-state';
-import type { SystemStyle } from './types';
+import type { CRCNode, SystemStyle } from './types';
 
 interface IdentityProbeProps {
   label: string;
@@ -14,14 +14,14 @@ interface IdentityProbeProps {
 
 let nextIdentity = 0;
 
-const IdentityProbe = defineComp(({
+const IdentityProbe = ({
   label,
   onRender,
 }: IdentityProbeProps) => {
   const identity = crcRef<number>();
   identity.current ??= ++nextIdentity;
   onRender(label, identity.current);
-});
+};
 
 beforeEach(() => {
   document.body.innerHTML = '';
@@ -33,45 +33,42 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('defineComp contract', () => {
+describe('element and primitive contract', () => {
   it('creates fresh elements with stable component type and copied descriptor props', () => {
-    const render = vi.fn();
-    const Component = defineComp(render);
+    const Component = vi.fn((_props: { value: number }) => undefined);
     const firstProps = { value: 1 };
     const secondProps = { value: 2 };
 
-    const first = Component(firstProps);
-    const second = Component(secondProps);
+    const first = createElement(Component, firstProps);
+    const second = createElement(Component, secondProps);
 
     expect(first).not.toBe(second);
-    expect(first.type).toBe(render);
-    expect(second.type).toBe(render);
-    expect(first.props).toEqual({ value: 1, style: {} });
-    expect(second.props).toEqual({ value: 2, style: {} });
+    expect(first.type).toBe(Component);
+    expect(second.type).toBe(Component);
+    expect(first.props).toEqual({ value: 1 });
+    expect(second.props).toEqual({ value: 2 });
     expect(first.props).not.toBe(firstProps);
     expect(second.props).not.toBe(secondProps);
   });
 
-  it('stores style on props while preserving legacy callback arguments', async () => {
+  it('stores specified style on props while delivering resolved primitive arguments', async () => {
     const calls: unknown[] = [];
     interface ProbeStyle extends SystemStyle {
       width: number;
     }
-    const Probe = defineComp<{ value: number }, ProbeStyle>(
+    const Probe = definePrimitive<{ value: number }, ProbeStyle>(
       (props, style, ctx) => {
         calls.push({ props, style, canvas: ctx.canvas });
       },
     );
     const style = { width: 40 };
     const input = { value: 7, key: 'probe', style };
-    const element = Probe(input);
+    const element = createElement(Probe, input);
 
     expect(element).toMatchObject({
-      props: { value: 7 },
-      style,
+      props: { value: 7, style },
       key: 'probe',
     });
-    expect(element.style).toBe(style);
     expect(element.props).not.toBe(input);
     expect(element.props.style).toBe(style);
     expect('key' in element.props).toBe(false);
@@ -86,7 +83,7 @@ describe('defineComp contract', () => {
     controller.dispose();
   });
 
-  it('rejects unresolved allocation values before invoking a callback without a resolver', () => {
+  it('rejects unresolved allocation values before invoking a primitive without a resolver', () => {
     const originalRequestAnimationFrame = window.requestAnimationFrame;
     let pending: FrameRequestCallback | undefined;
     window.requestAnimationFrame = callback => {
@@ -98,11 +95,13 @@ describe('defineComp contract', () => {
       radius: `${number}%`;
     }
     // @ts-expect-error percentage-capable declared styles require resolveStyle
-    const Unresolved = defineComp<{}, UnresolvedStyle>(callback);
+    const Unresolved = definePrimitive<{}, UnresolvedStyle>(callback);
     const canvas = createCanvas();
 
     try {
-      const controller = crc(canvas, Unresolved({ style: { radius: '50%' } }));
+      const controller = crc(canvas, createElement(Unresolved, {
+        style: { radius: '50%' },
+      }));
       expect(() => pending?.(0)).toThrowError(/radius.*50%.*resolve/i);
       expect(callback).not.toHaveBeenCalled();
       controller.dispose();
@@ -119,14 +118,16 @@ describe('defineComp contract', () => {
       return 1;
     };
     const callback = vi.fn();
-    const UnsafeDefine = defineComp as any;
+    const UnsafeDefine = definePrimitive as any;
     const Leaky = UnsafeDefine(callback, {
       resolveStyle: (style: any) => style,
     });
     const canvas = createCanvas();
 
     try {
-      const controller = crc(canvas, Leaky({ style: { radius: '50%' } }));
+      const controller = crc(canvas, createElement(Leaky, {
+        style: { radius: '50%' },
+      }));
       expect(() => pending?.(0)).toThrowError(/radius.*50%.*resolve/i);
       expect(callback).not.toHaveBeenCalled();
       controller.dispose();
@@ -140,13 +141,13 @@ describe('crc root updates', () => {
   it('returns one controller and commits only the latest queued root', async () => {
     const canvas = createCanvas();
     const renders: number[] = [];
-    const Root = defineComp(({ value }: { value: number }) => {
+    const Root = ({ value }: { value: number }) => {
       renders.push(value);
-    });
+    };
 
-    const controller = crc(canvas, Root({ value: 1 }));
-    expect(crc(canvas, Root({ value: 2 }))).toBe(controller);
-    expect(crc(canvas, Root({ value: 3 }))).toBe(controller);
+    const controller = crc(canvas, createElement(Root, { value: 1 }));
+    expect(crc(canvas, createElement(Root, { value: 2 }))).toBe(controller);
+    expect(crc(canvas, createElement(Root, { value: 3 }))).toBe(controller);
     await nextFrame();
 
     expect(renders).toEqual([3]);
@@ -157,22 +158,22 @@ describe('crc root updates', () => {
     const canvas = createCanvas();
     const renders: string[] = [];
     let setValue: StateUpdater<number> | undefined;
-    const StatefulRoot = defineComp(() => {
+    const StatefulRoot = (_props: {}) => {
       const [value, setter] = crcState(0);
       setValue = setter;
       renders.push(`stateful:${value}`);
-    });
-    const ReplacementRoot = defineComp(() => {
+    };
+    const ReplacementRoot = (_props: {}) => {
       renders.push('replacement');
-    });
-    const controller = crc(canvas, StatefulRoot({}));
+    };
+    const controller = crc(canvas, createElement(StatefulRoot, {}));
     await nextFrame();
 
-    crc(canvas, ReplacementRoot({}));
+    crc(canvas, createElement(ReplacementRoot, {}));
     setValue?.(1);
     const pendingRoot = getCRCInstance(canvas).pendingRoot;
     expect(isCRCElement(pendingRoot) && pendingRoot.type)
-      .toBe(ReplacementRoot({}).type);
+      .toBe(createElement(ReplacementRoot, {}).type);
     expect(getCRCInstance(canvas).pendingUpdateParents).toBe(true);
     await nextFrame();
 
@@ -184,26 +185,26 @@ describe('crc root updates', () => {
     const canvas = createCanvas();
     const renders: string[] = [];
     let setValue: StateUpdater<number> | undefined;
-    const StatefulRoot = defineComp(() => {
+    const StatefulRoot = (_props: {}) => {
       const [value, setter] = crcState(0);
       setValue = setter;
       renders.push(`stateful:${value}`);
-    });
-    const FirstReplacement = defineComp(() => {
+    };
+    const FirstReplacement = (_props: {}) => {
       renders.push('first-replacement');
-    });
-    const LatestReplacement = defineComp(() => {
+    };
+    const LatestReplacement = (_props: {}) => {
       renders.push('latest-replacement');
-    });
-    const controller = crc(canvas, StatefulRoot({}));
+    };
+    const controller = crc(canvas, createElement(StatefulRoot, {}));
     await nextFrame();
 
     setValue?.(1);
-    crc(canvas, FirstReplacement({}));
-    crc(canvas, LatestReplacement({}));
+    crc(canvas, createElement(FirstReplacement, {}));
+    crc(canvas, createElement(LatestReplacement, {}));
     const instance = getCRCInstance(canvas);
     expect(isCRCElement(instance.pendingRoot) && instance.pendingRoot.type)
-      .toBe(LatestReplacement({}).type);
+      .toBe(createElement(LatestReplacement, {}).type);
     expect(instance.pendingUpdateParents).toBe(true);
     await nextFrame();
 
@@ -219,28 +220,27 @@ describe('component tree identity', () => {
     const onRender = (label: string, identity: number) => {
       observations.set(label, identity);
     };
-    const Host = defineComp(({ expanded }: { expanded: boolean }) =>
+    const Host = ({ expanded }: { expanded: boolean }): CRCNode =>
       expanded ?
         [
           null,
-          IdentityProbe({ label: 'a', onRender }),
+          createElement(IdentityProbe, { label: 'a', onRender }),
           false,
           '',
           0,
-          IdentityProbe({ label: 'b', onRender }),
+          createElement(IdentityProbe, { label: 'b', onRender }),
           undefined,
         ] :
         [
-          IdentityProbe({ label: 'a', onRender }),
+          createElement(IdentityProbe, { label: 'a', onRender }),
           false,
-          IdentityProbe({ label: 'b', onRender }),
-        ],
-    );
-    const controller = crc(canvas, Host({ expanded: false }));
+          createElement(IdentityProbe, { label: 'b', onRender }),
+        ];
+    const controller = crc(canvas, createElement(Host, { expanded: false }));
     await nextFrame();
     const initial = new Map(observations);
 
-    crc(canvas, Host({ expanded: true }));
+    crc(canvas, createElement(Host, { expanded: true }));
     await nextFrame();
 
     expect(observations).toEqual(initial);
@@ -253,24 +253,23 @@ describe('component tree identity', () => {
     const onRender = (label: string, identity: number) => {
       observations.set(label, identity);
     };
-    const Host = defineComp(({ labels }: { labels: string[] }) =>
-      labels.map(label => IdentityProbe({ key: label, label, onRender })),
-    );
-    const controller = crc(canvas, Host({ labels: ['a', 'b'] }));
+    const Host = ({ labels }: { labels: string[] }) =>
+      labels.map(label => createElement(IdentityProbe, { key: label, label, onRender }));
+    const controller = crc(canvas, createElement(Host, { labels: ['a', 'b'] }));
     await nextFrame();
     const a = observations.get('a');
     const b = observations.get('b');
 
-    crc(canvas, Host({ labels: ['b', 'c', 'a'] }));
+    crc(canvas, createElement(Host, { labels: ['b', 'c', 'a'] }));
     await nextFrame();
     expect(observations.get('a')).toBe(a);
     expect(observations.get('b')).toBe(b);
     expect(observations.get('c')).not.toBe(a);
     expect(observations.get('c')).not.toBe(b);
 
-    crc(canvas, Host({ labels: ['b', 'c'] }));
+    crc(canvas, createElement(Host, { labels: ['b', 'c'] }));
     await nextFrame();
-    crc(canvas, Host({ labels: ['a', 'b', 'c'] }));
+    crc(canvas, createElement(Host, { labels: ['a', 'b', 'c'] }));
     await nextFrame();
     expect(observations.get('a')).not.toBe(a);
 
@@ -283,15 +282,14 @@ describe('component tree identity', () => {
     const onRender = (label: string, identity: number) => {
       observations.set(label, identity);
     };
-    const Host = defineComp(({ labels }: { labels: string[] }) =>
-      labels.map(label => IdentityProbe({ label, onRender })),
-    );
-    const controller = crc(canvas, Host({ labels: ['a', 'b'] }));
+    const Host = ({ labels }: { labels: string[] }) =>
+      labels.map(label => createElement(IdentityProbe, { label, onRender }));
+    const controller = crc(canvas, createElement(Host, { labels: ['a', 'b'] }));
     await nextFrame();
     const firstSlot = observations.get('a');
     const secondSlot = observations.get('b');
 
-    crc(canvas, Host({ labels: ['inserted', 'a', 'b'] }));
+    crc(canvas, createElement(Host, { labels: ['inserted', 'a', 'b'] }));
     await nextFrame();
 
     expect(observations.get('inserted')).toBe(firstSlot);
@@ -304,19 +302,18 @@ describe('component tree identity', () => {
   it('remounts when a key is reused for a different component type', async () => {
     const canvas = createCanvas();
     const values: string[] = [];
-    const First = defineComp((_props: {}) => {
+    const First = (_props: {}) => {
       values.push(crcRef('first').current!);
-    });
-    const Second = defineComp((_props: {}) => {
+    };
+    const Second = (_props: {}) => {
       values.push(crcRef('second').current!);
-    });
-    const Host = defineComp(({ second }: { second: boolean }) =>
-      second ? Second({ key: 'shared' }) : First({ key: 'shared' }),
-    );
-    const controller = crc(canvas, Host({ second: false }));
+    };
+    const Host = ({ second }: { second: boolean }) =>
+      second ? createElement(Second, { key: 'shared' }) : createElement(First, { key: 'shared' });
+    const controller = crc(canvas, createElement(Host, { second: false }));
     await nextFrame();
 
-    crc(canvas, Host({ second: true }));
+    crc(canvas, createElement(Host, { second: true }));
     await nextFrame();
 
     expect(values).toEqual(['first', 'second']);
@@ -326,16 +323,16 @@ describe('component tree identity', () => {
   it('uses function identity when distinct component types have the same name', async () => {
     const canvas = createCanvas();
     const values: string[] = [];
-    const First = defineComp(function SameName() {
+    const First = function SameName(_props: {}) {
       values.push(crcRef('first').current!);
-    });
-    const Second = defineComp(function SameName() {
+    };
+    const Second = function SameName(_props: {}) {
       values.push(crcRef('second').current!);
-    });
-    const controller = crc(canvas, First({}));
+    };
+    const controller = crc(canvas, createElement(First, {}));
     await nextFrame();
 
-    crc(canvas, Second({}));
+    crc(canvas, createElement(Second, {}));
     await nextFrame();
 
     expect(values).toEqual(['first', 'second']);
@@ -350,13 +347,13 @@ describe('component tree identity', () => {
       return 1;
     };
     const canvas = createCanvas();
-    const Host = defineComp(() => [
-      IdentityProbe({ key: 'duplicate', label: 'a', onRender: () => {} }),
-      IdentityProbe({ key: 'duplicate', label: 'b', onRender: () => {} }),
-    ]);
+    const Host = (_props: {}) => [
+      createElement(IdentityProbe, { key: 'duplicate', label: 'a', onRender: () => {} }),
+      createElement(IdentityProbe, { key: 'duplicate', label: 'b', onRender: () => {} }),
+    ];
 
     try {
-      const controller = crc(canvas, Host({}));
+      const controller = crc(canvas, createElement(Host, {}));
       expect(() => pending?.(0)).toThrowError(/duplicate.*key/i);
       controller.dispose();
     } finally {

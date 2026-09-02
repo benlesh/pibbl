@@ -2,8 +2,9 @@ import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
 import { componentTest } from '../test-utils/component-test';
 import { takeScreenshot } from '../util/test-utils';
-import { g } from './g';
-import { line, type LineStyle } from './line';
+import { Group } from './g';
+import { Line, type LineStyle } from './line';
+import { createElement } from '../element/create-element';
 
 // Default test configuration for a diagonal line
 const defaultStyle = {
@@ -15,9 +16,9 @@ const defaultStyle = {
 describe('line', () => {
   describe('basic rendering', () => {
     it('leaves empty and move-only paths unpainted', async () => {
-      const canvas = await componentTest(g({ children: [
-        line({ style: { coords: [], stroke: 'red', strokeWidth: 10 } }),
-        line({ style: { coords: [[20, 20]], stroke: 'blue', strokeWidth: 10 } }),
+      const canvas = await componentTest(createElement(Group, { children: [
+        createElement(Line, { style: { coords: [], stroke: 'red', strokeWidth: 10 } }),
+        createElement(Line, { style: { coords: [[20, 20]], stroke: 'blue', strokeWidth: 10 } }),
       ] }));
       const pixels = canvas.element
         .getContext('2d')!
@@ -29,15 +30,15 @@ describe('line', () => {
     });
 
     it('renders a simple line', async () => {
-      await componentTest(line({ style: defaultStyle }));
+      await componentTest(createElement(Line, { style: defaultStyle }));
       await takeScreenshot(page);
     });
 
     // Tests different line styles and configurations
     it('renders lines with different styles', async () => {
-      await componentTest(g({ children: [
+      await componentTest(createElement(Group, { children: [
         // Red line with increased width
-        line({
+        createElement(Line, {
           style: {
             ...defaultStyle,
             stroke: 'red',
@@ -45,7 +46,7 @@ describe('line', () => {
           },
         }),
         // Blue line offset to the right
-        line({
+        createElement(Line, {
           style: {
             ...defaultStyle,
             coords: [[200, 50], [300, 150]],
@@ -54,7 +55,7 @@ describe('line', () => {
           },
         }),
         // Green line with large interaction area
-        line({
+        createElement(Line, {
           style: {
             ...defaultStyle,
             coords: [[50, 150], [150, 250]],
@@ -69,13 +70,16 @@ describe('line', () => {
 
     // Demonstrates complex line rendering capabilities
     it('renders a multi-point line, like a sine wave', async () => {
-      await componentTest(line({
+      await componentTest(createElement(Line, {
         style: {
           ...defaultStyle,
           stroke: 'lime',
           strokeWidth: 3,
           // Generate 100 points following a sine wave pattern
-          coords: Array.from({ length: 100 }, (_, i) => [i * 4, Math.sin(i * 0.1) * 100 + 150]),
+          coords: Array.from(
+            { length: 100 },
+            (_, i): [number, number] => [i * 4, Math.sin(i * 0.1) * 100 + 150],
+          ),
         },
       }));
       await takeScreenshot(page);
@@ -88,7 +92,7 @@ describe('line', () => {
     const onDblClick = vi.fn();
     const onContextMenu = vi.fn();
 
-    const canvas = await componentTest(line({
+    const canvas = await componentTest(createElement(Line, {
       style: defaultStyle,
       onClick,
       onDblClick,
@@ -111,7 +115,7 @@ describe('line', () => {
     const onDblClick = vi.fn();
     const onContextMenu = vi.fn();
 
-    const canvas = await componentTest(line({
+    const canvas = await componentTest(createElement(Line, {
       style: {
         ...defaultStyle,
         lineInteractionWidth: 20,
@@ -137,7 +141,7 @@ describe('line', () => {
     const onMouseOut = vi.fn();
     const onMouseMove = vi.fn();
 
-    const canvas = await componentTest(line({
+    const canvas = await componentTest(createElement(Line, {
       style: defaultStyle,
       onMouseOver,
       onMouseOut,
@@ -166,7 +170,7 @@ describe('line', () => {
     const onMouseOut = vi.fn();
     const onMouseMove = vi.fn();
 
-    const canvas = await componentTest(line({
+    const canvas = await componentTest(createElement(Line, {
       style: {
         ...defaultStyle,
         lineInteractionWidth: 20,
@@ -194,7 +198,7 @@ describe('line', () => {
 
   it('keeps an opacity-zero stroke interactive without painting it', async () => {
     const onClick = vi.fn();
-    const canvas = await componentTest(line({
+    const canvas = await componentTest(createElement(Line, {
       style: {
         coords: [[50, 50], [150, 150]],
         stroke: 'red',
@@ -219,12 +223,12 @@ describe('line', () => {
   });
 
   it('does not paint an injected fill for a closed line', async () => {
-    const canvas = await componentTest((line as (input: any) => ReturnType<typeof line>)({
+    const canvas = await componentTest(createElement(Line, {
       style: {
         coords: [[40, 40], [160, 40], [100, 160], [40, 40]],
         fill: 'red',
       },
-    }));
+    } as any));
 
     const interior = canvas.element
       .getContext('2d')!
@@ -235,13 +239,13 @@ describe('line', () => {
 
   it('does not create fill interaction from an injected line style key', async () => {
     const onClick = vi.fn();
-    const canvas = await componentTest((line as (input: any) => ReturnType<typeof line>)({
+    const canvas = await componentTest(createElement(Line, {
       style: {
         coords: [[40, 40], [160, 40], [100, 160], [40, 40]],
         fill: 'red',
       },
       onClick,
-    }));
+    } as any));
 
     await canvas.click({ position: { x: 100, y: 80 } });
     expect(onClick).not.toHaveBeenCalled();

@@ -7,17 +7,8 @@ import {
   loadScenario,
 } from '@crc/scenarios';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import lifecycleLabSource from '../../scenarios/src/lifecycle-lab.example.ts?raw';
-import {
-  absolute,
-  crc,
-  crcEventTarget,
-  defineComp,
-  layer,
-  rect,
-  type CompEl,
-  type CRCController,
-} from '../src/index';
+import lifecycleLabSource from '../../scenarios/src/lifecycle-lab.example.tsx?raw';
+import { Absolute, crc, crcEventTarget, Layer, Rectangle, type CRCElement, type CRCController } from '../src/index';
 import {
   directionalPolicy,
   focusManaged,
@@ -27,6 +18,7 @@ import { GLOBAL_STATE, getCRCInstance } from '../src/lib/global-state';
 import { mountCRC } from '../src/lib/mount-crc';
 import { CRC_EVENT_TYPES } from '../src/lib/events/event-definitions';
 import { RuntimeDiagnostics } from './support/runtime-diagnostics';
+import { createElement } from '../src/lib/element/create-element';
 
 const activeControllers = new Set<ScenarioController<LifecycleLabState>>();
 const activeDiagnostics = new Set<RuntimeDiagnostics>();
@@ -207,17 +199,17 @@ describe('shared event lifecycle laboratory', () => {
     document.body.replaceChildren(canvas);
     const diagnostics = new RuntimeDiagnostics(canvas);
     activeDiagnostics.add(diagnostics);
-    const SlotTargets = defineComp(() => {
+    const SlotTargets = (_props: {}) => {
       const first = new Path2D();
       first.rect(0, 0, 50, 50);
       crcEventTarget({ onClick: () => undefined }, { fill: true, path: first });
       const second = new Path2D();
       second.rect(60, 0, 50, 50);
       crcEventTarget({ onClick: () => undefined }, { fill: true, path: second });
-    });
+    };
     const controller = mountCRC(
       canvas,
-      focusManaged(SlotTargets({})),
+      focusManaged(createElement(SlotTargets, {})),
     );
     activeRuntimeControllers.add(controller);
     executeRender(canvas, 0);
@@ -271,10 +263,8 @@ describe('shared event lifecycle laboratory', () => {
       'middle',
       'last',
     ];
-    const Host = defineComp<{ children: CompEl<any, any>[] }>(
-      ({ children }) => children,
-    );
-    const createTarget = (label: 'first' | 'middle' | 'last') => rect({
+    const Host = ({ children }: { children: CRCElement<any>[] }) => children;
+    const createTarget = (label: 'first' | 'middle' | 'last') => createElement(Rectangle, {
       key: label,
       style: {
         x: label === 'first' ? 0 : label === 'middle' ? 80 : 160,
@@ -292,11 +282,11 @@ describe('shared event lifecycle laboratory', () => {
       const children = order
         .filter(label => label !== 'middle' || includeMiddle)
         .map(createTarget);
-      const navigation = Host({
+      const navigation = createElement(Host, {
         key: 'stable-navigation-boundary',
         children,
       });
-      return focusManaged(Host({
+      return focusManaged(createElement(Host, {
         key: 'stable-focus-boundary',
         children: [includeBoundary ? directionalPolicy(
           navigation,
@@ -478,18 +468,17 @@ describe('shared event lifecycle laboratory', () => {
       activeNativeCaptures.delete(pointerId);
     });
     let ghostLossCalls = 0;
-    const CaptureLayerScene = defineComp<{ show: boolean }>(({ show }) =>
-      show ? layer({
-        render: rect({
+    const CaptureLayerScene = ({ show }: { show: boolean }) =>
+      show ? createElement(Layer, {
+        children: createElement(Rectangle, {
           style: { x: 0, y: 0, width: 50, height: 50, fill: '#2563eb' },
           onPointerDown: event => {
             event.currentTarget.setPointerCapture(event.pointerId);
           },
           onLostPointerCapture: () => { ghostLossCalls++; },
         }),
-      }) : undefined,
-    );
-    const controller = crc(canvas, CaptureLayerScene({ show: true }));
+      }) : undefined;
+    const controller = crc(canvas, createElement(CaptureLayerScene, { show: true }));
     activeRuntimeControllers.add(controller);
     await settleFrames();
 
@@ -512,7 +501,7 @@ describe('shared event lifecycle laboratory', () => {
       propagationListeners: 0,
     });
 
-    crc(canvas, CaptureLayerScene({ show: false }));
+    crc(canvas, createElement(CaptureLayerScene, { show: false }));
     await settleFrames();
     expect(activeNativeCaptures).toEqual(new Set());
     expect(diagnostics.snapshot()).toMatchObject({
@@ -548,15 +537,15 @@ describe('shared event lifecycle laboratory', () => {
     document.body.replaceChildren(canvas);
     const diagnostics = new RuntimeDiagnostics(canvas);
     activeDiagnostics.add(diagnostics);
-    const scene = absolute({
+    const scene = createElement(Absolute, {
       style: { width: 200, height: 120 },
       children: [
-        rect({
+        createElement(Rectangle, {
           key: 'duplicate',
           style: { width: 80, height: 60, fill: '#2563eb' },
           onClick: () => undefined,
         }),
-        rect({
+        createElement(Rectangle, {
           key: 'duplicate',
           style: { left: 90, width: 80, height: 60, fill: '#7c3aed' },
           onClick: () => undefined,

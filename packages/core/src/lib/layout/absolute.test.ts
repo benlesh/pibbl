@@ -1,18 +1,19 @@
 import { describe, expect, it, vi } from 'vitest';
-import { rect } from '../components/rect';
+import { Rectangle } from '../components/rect';
 import { crc } from '../crc';
-import { defineComp } from '../define-comp';
 import { crcState } from '../hooks/crc-state';
 import { crcLayoutBox } from '../hooks/crc-layout-box';
 import { componentTest } from '../test-utils/component-test';
 import type { CRCNode, SystemStyle } from '../types';
-import { overlay, placeOverlayChild } from './overlay';
-import { absolute, placeAbsoluteChild } from './absolute';
-import { flow } from './flow';
+import { Overlay, placeOverlayChild } from './overlay';
+import { Absolute, placeAbsoluteChild } from './absolute';
+import { Flow } from './flow';
+import { createElement } from '../element/create-element';
+import { definePrimitive } from '../define-primitive';
 
 describe('absolute layout', () => {
   it('places from parent-owned left/top while primitive x/y stay local', () => {
-    const child = rect({
+    const child = createElement(Rectangle, {
       style: {
         left: '25%',
         top: 12,
@@ -30,7 +31,7 @@ describe('absolute layout', () => {
   });
 
   it('requires direct children to provide definite dimensions', () => {
-    const child = absolute({ children: [] });
+    const child = createElement(Absolute, { children: [] });
 
     expect(() => placeAbsoluteChild(
       { x: 0, y: 0, width: 200, height: 100 },
@@ -40,9 +41,9 @@ describe('absolute layout', () => {
 
   it('uses the current allocation when container dimensions are omitted', async () => {
     const onClick = vi.fn();
-    const canvas = await componentTest(absolute({
+    const canvas = await componentTest(createElement(Absolute, {
       style: { padding: 10 },
-      children: [rect({
+      children: [createElement(Rectangle, {
         style: { width: '100%', height: 30, fill: 'red' },
         onClick,
       })],
@@ -57,8 +58,8 @@ describe('absolute layout', () => {
   });
 
   it.each([
-    ['absolute', (children: CRCNode[]) => absolute({ children })],
-    ['overlay', (children: CRCNode[]) => overlay({ children })],
+    ['absolute', (children: CRCNode[]) => createElement(Absolute, { children })],
+    ['overlay', (children: CRCNode[]) => createElement(Overlay, { children })],
   ])('does not count keyed children in unkeyed %s occurrence identity', async (
     _name,
     createContainer,
@@ -69,33 +70,33 @@ describe('absolute layout', () => {
     }
     let nextIdentity = 0;
     const observations = new Map<string, number>();
-    const A = defineComp<{ label: string }, ItemStyle>(({ label }) => {
+    const A = ({ label }: { label: string } & { style: Readonly<ItemStyle> }) => {
       const [identity] = crcState(++nextIdentity);
       observations.set(label, identity);
-    });
-    const Host = defineComp(({ keyed }: { keyed: boolean }) => {
+    };
+    const Host = ({ keyed }: { keyed: boolean }) => {
       const children: CRCNode[] = [];
       if (keyed) {
-        children.push(A({
+        children.push(createElement(A, {
           key: 'keyed',
           label: 'keyed',
           style: { width: 10, height: 10 },
         }));
       }
-      children.push(A({
+      children.push(createElement(A, {
         label: 'unkeyed',
         style: { width: 10, height: 10 },
       }));
       return createContainer(children);
-    });
-    const canvas = await componentTest(Host({ keyed: false }));
+    };
+    const canvas = await componentTest(createElement(Host, { keyed: false }));
     const originalIdentity = observations.get('unkeyed');
 
-    crc(canvas.element, Host({ keyed: true }));
+    crc(canvas.element, createElement(Host, { keyed: true }));
     await nextFrame();
     expect(observations.get('unkeyed')).toBe(originalIdentity);
 
-    crc(canvas.element, Host({ keyed: false }));
+    crc(canvas.element, createElement(Host, { keyed: false }));
     await nextFrame();
     expect(observations.get('unkeyed')).toBe(originalIdentity);
   });
@@ -123,14 +124,14 @@ describe('absolute layout', () => {
         justifySelf: 'end',
       };
     });
-    const Normalized = defineComp<
+    const Normalized = definePrimitive<
       {},
       DeclaredStyle,
       NormalizedStyle,
       NormalizedStyle
     >(() => undefined, { normalizeStyle });
     const specified = Object.freeze({});
-    const child = Normalized({ style: specified });
+    const child = createElement(Normalized, { style: specified });
     const container = { x: 0, y: 0, width: 200, height: 100 };
 
     expect(placeAbsoluteChild(container, child))
@@ -141,11 +142,11 @@ describe('absolute layout', () => {
   });
 
   it.each([
-    ['absolute', (child: CRCNode) => absolute({
+    ['absolute', (child: CRCNode) => createElement(Absolute, {
       style: { width: 100, height: 50 },
       children: [child],
     })],
-    ['overlay', (child: CRCNode) => overlay({
+    ['overlay', (child: CRCNode) => createElement(Overlay, {
       style: {
         width: 100,
         height: 50,
@@ -154,7 +155,7 @@ describe('absolute layout', () => {
       },
       children: [child],
     })],
-    ['flow', (child: CRCNode) => flow({
+    ['flow', (child: CRCNode) => createElement(Flow, {
       style: { width: 100, height: 50 },
       children: [child],
     })],
@@ -177,14 +178,14 @@ describe('absolute layout', () => {
       const render = vi.fn(() => {
         expect(crcLayoutBox()).toEqual({ x: 0, y: 0, width: 20, height: 10 });
       });
-      const Child = defineComp<
+      const Child = definePrimitive<
         {},
         SpecifiedStyle,
         NormalizedStyle,
         NormalizedStyle
       >(render, { normalizeStyle });
 
-      await componentTest(createContainer(Child({
+      await componentTest(createContainer(createElement(Child, {
         style: Object.freeze({ token: 'specified' }),
       })));
 
@@ -194,7 +195,7 @@ describe('absolute layout', () => {
   );
 
   // @ts-expect-error absolute has no overlay alignment vocabulary
-  void absolute({ style: { alignItems: 'center' }, children: [] });
+  void createElement(Absolute, { style: { alignItems: 'center' }, children: [] });
 });
 
 function nextFrame(): Promise<void> {

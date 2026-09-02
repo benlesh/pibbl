@@ -1,15 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { g } from '../components/g';
-import { horizontalLine } from '../components/horizontal-line';
-import { img } from '../components/img';
-import { layer } from '../components/layer';
-import { line } from '../components/line';
-import { path } from '../components/path';
-import { rect } from '../components/rect';
-import { svgPath } from '../components/svg-path';
-import { text } from '../components/text';
-import { verticalLine } from '../components/vertical-line';
-import { defineComp } from '../define-comp';
+import { Group } from '../components/g';
+import { HorizontalLine } from '../components/horizontal-line';
+import { Image } from '../components/img';
+import { Layer } from '../components/layer';
+import { Line } from '../components/line';
+import { Path } from '../components/path';
+import { Rectangle } from '../components/rect';
+import { SvgPath } from '../components/svg-path';
+import { Text } from '../components/text';
+import { VerticalLine } from '../components/vertical-line';
 import { materializeContainerChildren } from '../element/children';
 import type { CRCEventTargetRegistration } from '../events/registrations';
 import type {
@@ -24,9 +23,11 @@ import { crcEventTarget } from '../hooks/crc-event-target';
 import { crcRef } from '../hooks/crc-ref';
 import type { LayoutBox } from '../layout/types';
 import { mountCRC } from '../mount-crc';
-import type { CompEl, CRCController, CRCFocusPolicyBridge } from '../types';
+import type { CRCElement, CRCController, CRCFocusPolicyBridge } from '../types';
 import { focusManaged } from './policy-test-support';
 import { directionalPolicy } from './policy-test-support';
+import { createElement } from '../element/create-element';
+import { definePrimitive } from '../define-primitive';
 
 interface ObservedCandidate {
   readonly target: CRCEventTargetRegistration;
@@ -93,17 +94,17 @@ describe('focus candidate enrollment', () => {
         options: { keyboardFocusable: false },
       },
     ];
-    const Listener = defineComp(() => {
+    const Listener = (_props: {}) => {
       crcEventListener({ onClick: clickHandler, onKeyDown: clickHandler });
-    });
-    const Root = defineComp(() => [
-      ...definitions.map(definition => Target({
+    };
+    const Root = (_props: {}) => [
+      ...definitions.map(definition => createElement(Target, {
         key: definition.label,
         ...definition,
       })),
-      Listener({}),
-    ]);
-    const { manager } = mountAndRender(focusManaged(Root({})));
+      createElement(Listener, {}),
+    ];
+    const { manager } = mountAndRender(focusManaged(createElement(Root, {})));
 
     expect(candidateLabels(manager)).toEqual([
       'click',
@@ -118,13 +119,13 @@ describe('focus candidate enrollment', () => {
 
   it('keeps no focus manager, candidates, DOM mutation, or imperative snapshot API without the enhancer', () => {
     const snapshots: CRCEventTargetSnapshot[] = [];
-    const Root = defineComp(() => {
+    const Root = (_props: {}) => {
       snapshots.push(crcEventTarget(
         { onClick: clickHandler },
         { path: rectanglePath(0, 0, 10, 10) },
       ));
-    });
-    const { canvas } = mountAndRender(Root({}), false);
+    };
+    const { canvas } = mountAndRender(createElement(Root, {}), false);
 
     expect(getCRCInstance(canvas).eventRoot.focusPolicy).toBeUndefined();
     expect(snapshots).toEqual([{ isFocused: false, isFocusVisible: false }]);
@@ -134,13 +135,13 @@ describe('focus candidate enrollment', () => {
 
   it('installs the complete structural bridge and reports manager-backed render snapshots', () => {
     const snapshots: CRCEventTargetSnapshot[] = [];
-    const Root = defineComp(() => {
+    const Root = (_props: {}) => {
       snapshots.push(crcEventTarget(
         { onClick: clickHandler },
         { path: rectanglePath(0, 0, 10, 10) },
       ));
-    });
-    const mounted = mountAndRender(focusManaged(Root({})));
+    };
+    const mounted = mountAndRender(focusManaged(createElement(Root, {})));
     const { manager } = mounted;
 
     expect(manager).toMatchObject({
@@ -154,7 +155,7 @@ describe('focus candidate enrollment', () => {
 
     const target = manager.candidates[0].target;
     manager.setFocusState(target, true);
-    executeRender(mounted.canvas, 2, focusManaged(Root({})));
+    executeRender(mounted.canvas, 2, focusManaged(createElement(Root, {})));
 
     expect(manager.resolveKeyboardTarget()).toBe(target);
     expect(snapshots.at(-1)).toEqual({
@@ -167,14 +168,13 @@ describe('focus candidate enrollment', () => {
 
 describe('candidate identity and atomic render collection', () => {
   it('preserves exact registrations across ordinary rerenders and keyed source-order changes', () => {
-    const Root = defineComp(({ labels }: { labels: readonly string[] }) =>
-      labels.map(label => Target({
+    const Root = ({ labels }: { labels: readonly string[] }) =>
+      labels.map(label => createElement(Target, {
         key: label,
         label,
         handlers: { onClick: clickHandler },
-      }))
-    );
-    const mounted = mountAndRender(focusManaged(Root({ labels: ['a', 'b'] })));
+      }));
+    const mounted = mountAndRender(focusManaged(createElement(Root, { labels: ['a', 'b'] })));
     const firstTargets = new Map(
       mounted.manager.candidates.map(candidate => [
         candidateLabel(candidate),
@@ -185,7 +185,7 @@ describe('candidate identity and atomic render collection', () => {
     executeRender(
       mounted.canvas,
       2,
-      focusManaged(Root({ labels: ['a', 'b'] })),
+      focusManaged(createElement(Root, { labels: ['a', 'b'] })),
     );
     expect(candidateLabels(mounted.manager)).toEqual(['a', 'b']);
     expect(mounted.manager.candidates[0].target).toBe(firstTargets.get('a'));
@@ -194,7 +194,7 @@ describe('candidate identity and atomic render collection', () => {
     executeRender(
       mounted.canvas,
       3,
-      focusManaged(Root({ labels: ['b', 'a'] })),
+      focusManaged(createElement(Root, { labels: ['b', 'a'] })),
     );
     expect(candidateLabels(mounted.manager)).toEqual(['b', 'a']);
     expect(mounted.manager.candidates[0].target).toBe(firstTargets.get('b'));
@@ -202,8 +202,8 @@ describe('candidate identity and atomic render collection', () => {
   });
 
   it('uses exact remounted registrations after reparenting and clears removed focus silently', () => {
-    const Wrapper = defineComp(({ child }: { child: CompEl<any, any> }) => child);
-    const Root = defineComp(({
+    const Wrapper = ({ child }: { child: CRCElement<any> }) => child;
+    const Root = ({
       reparented,
       visible,
     }: {
@@ -211,21 +211,21 @@ describe('candidate identity and atomic render collection', () => {
       visible: boolean;
     }) => {
       if (!visible) return;
-      const target = Target({
+      const target = createElement(Target, {
         key: 'stable',
         label: 'stable',
         handlers: { onClick: clickHandler },
       });
-      return reparented ? Wrapper({ child: target }) : target;
-    });
-    const mounted = mountAndRender(focusManaged(Root({
+      return reparented ? createElement(Wrapper, { child: target }) : target;
+    };
+    const mounted = mountAndRender(focusManaged(createElement(Root, {
       reparented: false,
       visible: true,
     })));
     const original = mounted.manager.candidates[0].target;
     mounted.manager.setFocusState(original, true);
 
-    executeRender(mounted.canvas, 2, focusManaged(Root({
+    executeRender(mounted.canvas, 2, focusManaged(createElement(Root, {
       reparented: true,
       visible: true,
     })));
@@ -238,7 +238,7 @@ describe('candidate identity and atomic render collection', () => {
     });
 
     mounted.manager.setFocusState(reparented, true);
-    expect(() => executeRender(mounted.canvas, 3, focusManaged(Root({
+    expect(() => executeRender(mounted.canvas, 3, focusManaged(createElement(Root, {
       reparented: true,
       visible: false,
     })))).not.toThrow();
@@ -247,18 +247,18 @@ describe('candidate identity and atomic render collection', () => {
   });
 
   it('never exposes a partially collected failed render', () => {
-    const Throwing = defineComp(() => {
+    const Throwing = (_props: {}) => {
       throw new Error('expected focus render failure');
-    });
-    const Root = defineComp(({ fail }: { fail: boolean }) => [
-      Target({
+    };
+    const Root = ({ fail }: { fail: boolean }) => [
+      createElement(Target, {
         key: fail ? 'partial' : 'committed',
         label: fail ? 'partial' : 'committed',
         handlers: { onClick: clickHandler },
       }),
-      fail ? Throwing({}) : undefined,
-    ]);
-    const mounted = mountAndRender(focusManaged(Root({ fail: false })));
+      fail ? createElement(Throwing, {}) : undefined,
+    ];
+    const mounted = mountAndRender(focusManaged(createElement(Root, { fail: false })));
     const manager = mounted.manager;
     const committedTarget = manager.candidates[0].target;
     manager.setFocusState(committedTarget, true);
@@ -266,7 +266,7 @@ describe('candidate identity and atomic render collection', () => {
     expect(() => executeRender(
       mounted.canvas,
       2,
-      focusManaged(Root({ fail: true })),
+      focusManaged(createElement(Root, { fail: true })),
     )).toThrowError('expected focus render failure');
 
     expect(candidateLabels(manager)).not.toContain('partial');
@@ -275,18 +275,18 @@ describe('candidate identity and atomic render collection', () => {
   });
 
   it('rejects a second manager on one event root with a targeted error', () => {
-    const Root = defineComp(() => [
-      focusManaged(Target({
+    const Root = (_props: {}) => [
+      focusManaged(createElement(Target, {
         label: 'first',
         handlers: { onClick: clickHandler },
       })),
-      focusManaged(Target({
+      focusManaged(createElement(Target, {
         label: 'second',
         handlers: { onClick: clickHandler },
       })),
-    ]);
+    ];
     const canvas = createCanvas();
-    const controller = mountCRC(canvas, Root({}));
+    const controller = mountCRC(canvas, createElement(Root, {}));
     activeControllers.add(controller);
 
     expect(() => executeRender(canvas, 1)).toThrowError(
@@ -301,26 +301,26 @@ describe('candidate identity and atomic render collection', () => {
     _label,
     reverseSlots,
   ) => {
-    const OldHost = defineComp(() => focusManaged(Target({
+    const OldHost = (_props: {}) => focusManaged(createElement(Target, {
       label: 'old',
       handlers: { onClick: clickHandler },
-    })));
-    const NewHost = defineComp(() => focusManaged(Target({
+    }));
+    const NewHost = (_props: {}) => focusManaged(createElement(Target, {
       label: 'new',
       handlers: { onClick: clickHandler },
-    })));
-    const Root = defineComp(({ replacement }: { replacement: boolean }) => {
-      const oldSlot = replacement ? undefined : OldHost({ key: 'old-host' });
-      const newSlot = replacement ? NewHost({ key: 'new-host' }) : undefined;
+    }));
+    const Root = ({ replacement }: { replacement: boolean }) => {
+      const oldSlot = replacement ? undefined : createElement(OldHost, { key: 'old-host' });
+      const newSlot = replacement ? createElement(NewHost, { key: 'new-host' }) : undefined;
       return reverseSlots ? [newSlot, oldSlot] : [oldSlot, newSlot];
-    });
-    const mounted = mountAndRender(Root({ replacement: false }));
+    };
+    const mounted = mountAndRender(createElement(Root, { replacement: false }));
     const oldManager = mounted.manager;
 
     expect(() => executeRender(
       mounted.canvas,
       2,
-      Root({ replacement: true }),
+      createElement(Root, { replacement: true }),
     )).not.toThrow();
 
     const newManager = getCRCInstance(mounted.canvas).eventRoot.focusPolicy as
@@ -336,25 +336,25 @@ describe('candidate identity and atomic render collection', () => {
     _label,
     reverse,
   ) => {
-    const Host = defineComp(({
+    const Host = ({
       label,
       managed,
     }: {
       label: string;
       managed: boolean;
     }) => {
-      const target = Target({ label, handlers: { onClick: clickHandler } });
+      const target = createElement(Target, { label, handlers: { onClick: clickHandler } });
       return managed ? focusManaged(target) : target;
-    });
-    const Root = defineComp(({ second }: { second: boolean }) => {
-      const first = Host({ key: 'first', label: 'first', managed: !second });
-      const next = Host({ key: 'second', label: 'second', managed: second });
+    };
+    const Root = ({ second }: { second: boolean }) => {
+      const first = createElement(Host, { key: 'first', label: 'first', managed: !second });
+      const next = createElement(Host, { key: 'second', label: 'second', managed: second });
       return reverse ? [next, first] : [first, next];
-    });
-    const mounted = mountAndRender(Root({ second: false }));
+    };
+    const mounted = mountAndRender(createElement(Root, { second: false }));
     const prior = mounted.manager;
 
-    executeRender(mounted.canvas, 2, Root({ second: true }));
+    executeRender(mounted.canvas, 2, createElement(Root, { second: true }));
 
     const replacement = getCRCInstance(mounted.canvas).eventRoot.focusPolicy as
       ObservedFocusManager;
@@ -363,20 +363,20 @@ describe('candidate identity and atomic render collection', () => {
   });
 
   it('reconciles a keyed sole manager after reparenting its enhanced element', () => {
-    const Left = defineComp(({ child }: { child: CompEl<any, any> }) => child);
-    const Right = defineComp(({ child }: { child: CompEl<any, any> }) => child);
-    const Root = defineComp(({ right }: { right: boolean }) => {
-      const boundary = focusManaged(Target({
+    const Left = ({ child }: { child: CRCElement<any> }) => child;
+    const Right = ({ child }: { child: CRCElement<any> }) => child;
+    const Root = ({ right }: { right: boolean }) => {
+      const boundary = focusManaged(createElement(Target, {
         key: 'stable-boundary',
         label: 'stable',
         handlers: { onClick: clickHandler },
       }));
-      return right ? Right({ child: boundary }) : Left({ child: boundary });
-    });
-    const mounted = mountAndRender(Root({ right: false }));
+      return right ? createElement(Right, { child: boundary }) : createElement(Left, { child: boundary });
+    };
+    const mounted = mountAndRender(createElement(Root, { right: false }));
     const prior = mounted.manager;
 
-    executeRender(mounted.canvas, 2, Root({ right: true }));
+    executeRender(mounted.canvas, 2, createElement(Root, { right: true }));
 
     const replacement = getCRCInstance(mounted.canvas).eventRoot.focusPolicy as
       ObservedFocusManager;
@@ -385,34 +385,33 @@ describe('candidate identity and atomic render collection', () => {
   });
 
   it('tears down every manager after a failed replacement and remounts fresh', () => {
-    const Throwing = defineComp(() => {
+    const Throwing = (_props: {}) => {
       throw new Error('expected replacement failure');
-    });
-    const OldHost = defineComp(() => focusManaged(Target({
+    };
+    const OldHost = (_props: {}) => focusManaged(createElement(Target, {
       label: 'old',
       handlers: { onClick: clickHandler },
-    })));
-    const NewHost = defineComp(() => focusManaged(defineComp(() => [
-      Target({ label: 'new', handlers: { onClick: clickHandler } }),
-      Throwing({}),
-    ])({})));
-    const Root = defineComp(({ replacement }: { replacement: boolean }) =>
-      replacement ? NewHost({ key: 'new' }) : OldHost({ key: 'old' })
-    );
-    const mounted = mountAndRender(Root({ replacement: false }));
+    }));
+    const NewHost = (_props: {}) => focusManaged(createElement((_props: {}) => [
+      createElement(Target, { label: 'new', handlers: { onClick: clickHandler } }),
+      createElement(Throwing, {}),
+    ], {}));
+    const Root = ({ replacement }: { replacement: boolean }) =>
+      replacement ? createElement(NewHost, { key: 'new' }) : createElement(OldHost, { key: 'old' });
+    const mounted = mountAndRender(createElement(Root, { replacement: false }));
     const prior = mounted.manager;
 
     expect(() => executeRender(
       mounted.canvas,
       2,
-      Root({ replacement: true }),
+      createElement(Root, { replacement: true }),
     )).toThrowError('expected replacement failure');
 
     expect(getCRCInstance(mounted.canvas).eventRoot.focusPolicy).toBeUndefined();
     expect(prior.isDestroyed).toBe(true);
     expect(prior.candidates).toEqual([]);
 
-    executeRender(mounted.canvas, 3, Root({ replacement: false }));
+    executeRender(mounted.canvas, 3, createElement(Root, { replacement: false }));
     const recovered = getCRCInstance(mounted.canvas).eventRoot.focusPolicy as
       ObservedFocusManager;
     expect(recovered).not.toBe(prior);
@@ -434,32 +433,32 @@ describe('candidate identity and atomic render collection', () => {
     nested,
   ) => {
     let innerRenders = 0;
-    const Inner = defineComp(() => {
+    const Inner = (_props: {}) => {
       innerRenders++;
-      return Target({
+      return createElement(Target, {
         label: 'inner',
         handlers: { onClick: clickHandler },
       });
-    });
-    const innerBoundary = () => focusManaged(Inner({}));
-    const cachedRender = () => nested ? layer({
+    };
+    const innerBoundary = () => focusManaged(createElement(Inner, {}));
+    const cachedRender = () => nested ? createElement(Layer, {
       style: { width: 30, height: 30 },
-      render: innerBoundary(),
+      children: innerBoundary(),
     }) : innerBoundary();
-    const Root = defineComp(({ outer }: { outer: boolean }) => {
-      const cached = layer({
+    const Root = ({ outer }: { outer: boolean }) => {
+      const cached = createElement(Layer, {
         key: 'cached',
         style: { width: 40, height: 40 },
-        render: cachedRender(),
+        children: cachedRender(),
       });
-      const nextOuter = outer ? focusManaged(Target({
+      const nextOuter = outer ? focusManaged(createElement(Target, {
         key: 'outer',
         label: 'outer',
         handlers: { onClick: clickHandler },
       })) : undefined;
       return outerFirst ? [nextOuter, cached] : [cached, nextOuter];
-    });
-    const mounted = mountAndRender(Root({ outer: false }));
+    };
+    const mounted = mountAndRender(createElement(Root, { outer: false }));
     const eventRoot = getCRCInstance(mounted.canvas).eventRoot;
     const priorInner = mounted.manager;
     expect(candidateLabels(priorInner)).toEqual(['inner']);
@@ -468,7 +467,7 @@ describe('candidate identity and atomic render collection', () => {
     expect(() => executeRender(
       mounted.canvas,
       2,
-      Root({ outer: true }),
+      createElement(Root, { outer: true }),
     )).toThrowError(
       /FocusManagement.*one.*root|one.*focus manager.*root/i,
     );
@@ -478,7 +477,7 @@ describe('candidate identity and atomic render collection', () => {
     expect(priorInner.isDestroyed).toBe(true);
     expect(priorInner.candidates).toEqual([]);
 
-    executeRender(mounted.canvas, 3, Root({ outer: false }));
+    executeRender(mounted.canvas, 3, createElement(Root, { outer: false }));
     const recoveredInner = eventRoot.focusPolicy as ObservedFocusManager;
     expect(recoveredInner).toBeDefined();
     expect(recoveredInner).not.toBe(priorInner);
@@ -492,7 +491,7 @@ describe('candidate identity and atomic render collection', () => {
 
   it('reports an ineligible focused target as unfocused during that render', () => {
     const snapshots: CRCEventTargetSnapshot[] = [];
-    const Root = defineComp(({ eligible }: { eligible: boolean }) => {
+    const Root = ({ eligible }: { eligible: boolean }) => {
       snapshots.push(crcEventTarget(
         eligible ? { onClick: clickHandler } : {},
         {
@@ -500,15 +499,15 @@ describe('candidate identity and atomic render collection', () => {
           keyboardFocusable: eligible,
         },
       ));
-    });
-    const mounted = mountAndRender(focusManaged(Root({ eligible: true })));
+    };
+    const mounted = mountAndRender(focusManaged(createElement(Root, { eligible: true })));
     const target = mounted.manager.candidates[0].target;
     mounted.manager.setFocusState(target, true);
 
     executeRender(
       mounted.canvas,
       2,
-      focusManaged(Root({ eligible: false })),
+      focusManaged(createElement(Root, { eligible: false })),
     );
 
     expect(snapshots.at(-1)).toEqual({
@@ -521,12 +520,12 @@ describe('candidate identity and atomic render collection', () => {
 
 describe('directional boundaries and root-logical bounds', () => {
   it('requires a focus manager and records the nearest active directional boundary', () => {
-    const BoundaryHost = defineComp(() => [
-      Target({ key: 'inside-a', label: 'inside-a', handlers: { onClick: clickHandler } }),
-      Target({ key: 'inside-b', label: 'inside-b', handlers: { onClick: clickHandler } }),
-    ]);
+    const BoundaryHost = (_props: {}) => [
+      createElement(Target, { key: 'inside-a', label: 'inside-a', handlers: { onClick: clickHandler } }),
+      createElement(Target, { key: 'inside-b', label: 'inside-b', handlers: { onClick: clickHandler } }),
+    ];
     const WithoutManager = directionalPolicy(
-      BoundaryHost({}),
+      createElement(BoundaryHost, {}),
       { mode: 'directional' },
     );
     const canvas = createCanvas();
@@ -538,11 +537,11 @@ describe('directional boundaries and root-logical bounds', () => {
 
     controller.dispose();
     activeControllers.delete(controller);
-    const Root = defineComp(() => [
-      Target({ key: 'outside', label: 'outside', handlers: { onClick: clickHandler } }),
-      directionalPolicy(BoundaryHost({}), { mode: 'directional' }),
-    ]);
-    const mounted = mountAndRender(focusManaged(Root({})));
+    const Root = (_props: {}) => [
+      createElement(Target, { key: 'outside', label: 'outside', handlers: { onClick: clickHandler } }),
+      directionalPolicy(createElement(BoundaryHost, {}), { mode: 'directional' }),
+    ];
+    const mounted = mountAndRender(focusManaged(createElement(Root, {})));
     const [outside, insideA, insideB] = mounted.manager.candidates;
 
     expect(outside.directionalBoundary).toBeUndefined();
@@ -552,7 +551,7 @@ describe('directional boundaries and root-logical bounds', () => {
   });
 
   it('transforms all four local bounds corners into one root-logical AABB', () => {
-    const BoundsTarget = defineComp((_props: {}, _style, ctx) => {
+    const BoundsTarget = definePrimitive<{}>((_props: {}, _style, ctx) => {
       ctx.transform(0, 2, -3, 0, 100, 50);
       crcEventTarget(
         { onClick: clickHandler },
@@ -562,7 +561,7 @@ describe('directional boundaries and root-logical bounds', () => {
         },
       );
     });
-    const { manager } = mountAndRender(focusManaged(BoundsTarget({})));
+    const { manager } = mountAndRender(focusManaged(createElement(BoundsTarget, {})));
 
     expect(manager.candidates[0].rootBounds).toEqual({
       x: 79,
@@ -573,7 +572,7 @@ describe('directional boundaries and root-logical bounds', () => {
   });
 
   it('composes offscreen layer bridges into root-logical bounds', () => {
-    const Inner = defineComp(() => {
+    const Inner = (_props: {}) => {
       crcEventTarget(
         { onClick: clickHandler },
         {
@@ -581,15 +580,15 @@ describe('directional boundaries and root-logical bounds', () => {
           keyboardNavigationBounds: { x: 2, y: 3, width: 4, height: 5 },
         },
       );
-    });
-    const Root = defineComp(() => g({
+    };
+    const Root = (_props: {}) => createElement(Group, {
       style: { translateX: 40, translateY: 30 },
-      children: [layer({
+      children: [createElement(Layer, {
         style: { width: 100, height: 80 },
-        render: Inner({}),
+        children: createElement(Inner, {}),
       })],
-    }));
-    const { manager } = mountAndRender(focusManaged(Root({})));
+    });
+    const { manager } = mountAndRender(focusManaged(createElement(Root, {})));
 
     expect(manager.candidates[0].rootBounds).toEqual({
       x: 42,
@@ -602,39 +601,39 @@ describe('directional boundaries and root-logical bounds', () => {
   it('replays unchanged offscreen subtrees in source order on an ordinary parent rerender', () => {
     let renders = 0;
     const hookValues: object[] = [];
-    const Inner = defineComp(() => {
+    const Inner = (_props: {}) => {
       renders++;
       hookValues.push(crcRef({}).current!);
-      return Target({
+      return createElement(Target, {
         label: 'inside-layer',
         handlers: { onClick: clickHandler },
       });
-    });
-    const Root = defineComp(({ generation: _generation }: { generation: number }) => [
-      Target({
+    };
+    const Root = ({ generation: _generation }: { generation: number }) => [
+      createElement(Target, {
         key: 'before',
         label: 'before',
         handlers: { onClick: clickHandler },
       }),
-      layer({
+      createElement(Layer, {
         key: 'layer',
         style: { width: 100, height: 80 },
-        render: directionalPolicy(Inner({}), { mode: 'directional' }),
+        children: directionalPolicy(createElement(Inner, {}), { mode: 'directional' }),
       }),
-      Target({
+      createElement(Target, {
         key: 'after',
         label: 'after',
         handlers: { onClick: clickHandler },
       }),
-    ]);
-    const mounted = mountAndRender(focusManaged(Root({ generation: 1 })));
+    ];
+    const mounted = mountAndRender(focusManaged(createElement(Root, { generation: 1 })));
     const inside = mounted.manager.candidates[1];
     expect(renders).toBe(1);
 
     executeRender(
       mounted.canvas,
       2,
-      focusManaged(Root({ generation: 2 })),
+      focusManaged(createElement(Root, { generation: 2 })),
     );
 
     expect(candidateLabels(mounted.manager)).toEqual([
@@ -651,24 +650,24 @@ describe('directional boundaries and root-logical bounds', () => {
 
   it('replays a cached nested directional boundary without enrolling it in the outer direct set', () => {
     let renders = 0;
-    const Inner = defineComp(() => {
+    const Inner = (_props: {}) => {
       renders++;
-      return Target({
+      return createElement(Target, {
         label: 'inner',
         handlers: { onClick: clickHandler },
       });
-    });
-    const Host = defineComp(({ generation: _generation }: { generation: number }) => [
-      Target({ key: 'before', label: 'before', handlers: { onClick: clickHandler } }),
-      layer({
+    };
+    const Host = ({ generation: _generation }: { generation: number }) => [
+      createElement(Target, { key: 'before', label: 'before', handlers: { onClick: clickHandler } }),
+      createElement(Layer, {
         key: 'layer',
         style: { width: 40, height: 40 },
-        render: directionalPolicy(Inner({}), { mode: 'directional' }),
+        children: directionalPolicy(createElement(Inner, {}), { mode: 'directional' }),
       }),
-      Target({ key: 'after', label: 'after', handlers: { onClick: clickHandler } }),
-    ]);
+      createElement(Target, { key: 'after', label: 'after', handlers: { onClick: clickHandler } }),
+    ];
     const element = (generation: number) => focusManaged(
-      directionalPolicy(Host({ generation }), { mode: 'directional' }),
+      directionalPolicy(createElement(Host, { generation }), { mode: 'directional' }),
     );
     const mounted = mountAndRender(element(1));
     const innerBoundary = mounted.manager.candidates[1].directionalBoundary!;
@@ -684,26 +683,26 @@ describe('directional boundaries and root-logical bounds', () => {
 
   it('uses the current layer bridge for an inner manager on first render and cached movement', () => {
     let renders = 0;
-    const Inner = defineComp(() => {
+    const Inner = (_props: {}) => {
       renders++;
-      return Target({
+      return createElement(Target, {
         label: 'inside',
         handlers: { onClick: clickHandler },
         options: {
           keyboardNavigationBounds: { x: 2, y: 3, width: 4, height: 5 },
         },
       });
-    });
-    const Root = defineComp(({ x }: { x: number }) => g({
+    };
+    const Root = ({ x }: { x: number }) => createElement(Group, {
       style: { translateX: x, translateY: 10 },
-      children: [layer({
+      children: [createElement(Layer, {
         style: { width: 40, height: 40 },
-        render: focusManaged(
-          directionalPolicy(Inner({}), { mode: 'directional' }),
+        children: focusManaged(
+          directionalPolicy(createElement(Inner, {}), { mode: 'directional' }),
         ),
       })],
-    }));
-    const mounted = mountAndRender(Root({ x: 20 }));
+    });
+    const mounted = mountAndRender(createElement(Root, { x: 20 }));
 
     expect(mounted.manager.candidates[0].rootBounds).toEqual({
       x: 22,
@@ -713,7 +712,7 @@ describe('directional boundaries and root-logical bounds', () => {
     });
     expect(mounted.manager.candidates[0].directionalBoundary).toBeDefined();
 
-    executeRender(mounted.canvas, 2, Root({ x: 50 }));
+    executeRender(mounted.canvas, 2, createElement(Root, { x: 50 }));
 
     expect(renders).toBe(1);
     expect(mounted.manager.candidates[0].rootBounds).toEqual({
@@ -725,10 +724,10 @@ describe('directional boundaries and root-logical bounds', () => {
   });
 
   it.each([
-    ['focus outside', (element: CompEl<any, any>) => focusManaged(
+    ['focus outside', (element: CRCElement<any>) => focusManaged(
       directionalPolicy(element, { mode: 'directional' }),
     )],
-    ['directional outside', (element: CompEl<any, any>) => directionalPolicy(
+    ['directional outside', (element: CRCElement<any>) => directionalPolicy(
       focusManaged(element),
       { mode: 'directional' },
     )],
@@ -736,7 +735,7 @@ describe('directional boundaries and root-logical bounds', () => {
     _label,
     enhance,
   ) => {
-    const element = Target({ label: 'same', handlers: { onClick: clickHandler } });
+    const element = createElement(Target, { label: 'same', handlers: { onClick: clickHandler } });
     const enhanced = enhance(element);
     const mounted = mountAndRender(enhanced);
     const [prepared] = materializeContainerChildren(enhanced, 'focus test');
@@ -758,23 +757,23 @@ describe('directional boundaries and root-logical bounds', () => {
         actualBoundingBoxRight: value.length * 10,
       }) as TextMetrics);
     const arbitrary = new Path2D('M 0 0 L 20 20');
-    const Root = defineComp(() => [
-      rect({
+    const Root = (_props: {}) => [
+      createElement(Rectangle, {
         key: 'rect',
         onClick: clickHandler,
         style: { x: 10, y: 20, width: 30, height: 40 },
       }),
-      img({
+      createElement(Image, {
         key: 'img',
         onClick: clickHandler,
         style: { src: '', x: 2, y: 3, width: 20, height: 10 },
       }),
-      text({
+      createElement(Text, {
         key: 'text',
         onClick: clickHandler,
-        style: { text: 'abc', x: 10, y: 20 },
-      }),
-      line({
+        style: { x: 10, y: 20 },
+      }, 'abc'),
+      createElement(Line, {
         key: 'line',
         onClick: clickHandler,
         style: {
@@ -782,34 +781,34 @@ describe('directional boundaries and root-logical bounds', () => {
           lineInteractionWidth: 10,
         },
       }),
-      horizontalLine({
+      createElement(HorizontalLine, {
         key: 'horizontal',
         onClick: clickHandler,
         style: { y: 10, x1: 5, x2: 25, lineInteractionWidth: 4 },
       }),
-      verticalLine({
+      createElement(VerticalLine, {
         key: 'vertical',
         onClick: clickHandler,
         style: { x: 10, y1: 5, y2: 25, lineInteractionWidth: 4 },
       }),
-      path({
+      createElement(Path, {
         key: 'path-missing',
         onClick: clickHandler,
         style: { d: arbitrary },
       }),
-      path({
+      createElement(Path, {
         key: 'path-supplied',
         onClick: clickHandler,
         keyboardNavigationBounds: { x: 7, y: 8, width: 9, height: 10 },
         style: { d: arbitrary },
       }),
-      svgPath({
+      createElement(SvgPath, {
         key: 'svg-missing',
         onClick: clickHandler,
         style: { d: 'M 0 0 L 20 20' },
       }),
-    ]);
-    const { manager } = mountAndRender(focusManaged(Root({})));
+    ];
+    const { manager } = mountAndRender(focusManaged(createElement(Root, {})));
 
     expect(manager.candidates.map(candidate => candidate.rootBounds)).toEqual([
       { x: 10, y: 20, width: 30, height: 40 },
@@ -832,18 +831,18 @@ interface TargetDefinition {
   readonly options?: Omit<CRCEventTargetOptions, 'path'>;
 }
 
-const Target = defineComp<TargetDefinition>(({
+const Target = ({
   handlers,
   options,
-}) => {
+}: TargetDefinition) => {
   crcEventTarget(handlers, {
     path: rectanglePath(0, 0, 10, 10),
     ...options,
   });
-});
+};
 
 function mountAndRender(
-  element: CompEl<any, any>,
+  element: CRCElement<any>,
   expectManager = true,
 ): {
   canvas: HTMLCanvasElement;

@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { crc } from '../crc';
-import { defineComp } from '../define-comp';
 import {
   clearSharedState,
   getCRCInstance,
   GLOBAL_STATE,
 } from '../global-state';
-import { img } from './img';
+import { Image } from './img';
+import { createElement } from '../element/create-element';
 
 class FakeImage {
   static instances: FakeImage[] = [];
@@ -28,7 +28,7 @@ class FakeImage {
   }
 }
 
-const Empty = defineComp(() => {});
+const Empty = (_props: {}) => {};
 
 beforeEach(() => {
   document.body.innerHTML = '';
@@ -55,7 +55,7 @@ describe('img async resource ownership', () => {
       .spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
       .mockImplementation(() => {});
     const canvas = createCanvas();
-    const controller = crc(canvas, img({
+    const controller = crc(canvas, createElement(Image, {
       style: {
         src: 'boundary.png',
         x: 10,
@@ -87,7 +87,7 @@ describe('img async resource ownership', () => {
       .spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
       .mockImplementation(() => {});
     const canvas = createCanvas();
-    const controller = crc(canvas, img({
+    const controller = crc(canvas, createElement(Image, {
       style: {
         src: 'aligned.png',
         x: 24.2,
@@ -115,7 +115,7 @@ describe('img async resource ownership', () => {
         observedAlpha.push(this.globalAlpha);
       });
     const canvas = createCanvas();
-    const controller = crc(canvas, img({
+    const controller = crc(canvas, createElement(Image, {
       style: {
         src: 'transparent.png',
         x: 10,
@@ -176,8 +176,8 @@ describe('img async resource ownership', () => {
       width: 1,
       height: 1,
       onClick,
-    } as unknown as Parameters<typeof img>[0];
-    const controller = crc(canvas, img(legacyInput));
+    } as unknown as Parameters<typeof Image>[0];
+    const controller = crc(canvas, createElement(Image, legacyInput));
     await nextFrame();
 
     expect(FakeImage.instances).toHaveLength(1);
@@ -198,7 +198,7 @@ describe('img async resource ownership', () => {
     vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
       .mockImplementation(() => {});
     const canvas = createCanvas();
-    const controller = crc(canvas, img({
+    const controller = crc(canvas, createElement(Image, {
       style: { src: 'natural.png' },
       onClick: () => undefined,
     }));
@@ -247,7 +247,7 @@ describe('img async resource ownership', () => {
     const savedLoad = pending.onload;
     const savedError = pending.onerror;
 
-    crc(canvas, Empty({}));
+    crc(canvas, createElement(Empty, {}));
     await nextFrame();
 
     expect(pending.onload).toBeNull();
@@ -285,7 +285,7 @@ describe('img async resource ownership', () => {
 });
 
 function imageElement(src: string) {
-  return img({
+  return createElement(Image, {
     style: { src, x: 10, y: 20, width: 30, height: 40 },
   });
 }

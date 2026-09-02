@@ -12,7 +12,7 @@ import {
   validateMouseContractCases,
 } from '@crc/scenarios';
 import { afterEach, describe, expect, it } from 'vitest';
-import mouseContractSource from '../../scenarios/src/mouse-contract.example.ts?raw';
+import mouseContractSource from '../../scenarios/src/mouse-contract.example.tsx?raw';
 
 let activeController: ScenarioController<MouseContractScenarioState> | undefined;
 

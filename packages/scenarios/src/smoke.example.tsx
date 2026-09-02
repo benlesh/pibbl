@@ -1,39 +1,34 @@
-import { defineComp, rect, text } from '@crc/core';
-
+import { Rectangle, Text } from '@crc/core';
 export const SMOKE_SOURCE_ID = 'baseline-smoke-example';
-
 export type SmokeScenarioAction = 'mount' | 'update' | 'click' | 'reset';
-
 export interface SmokeScenarioState {
   revision: number;
   clicks: number;
   lastAction: SmokeScenarioAction;
 }
-
 interface SmokeSceneProps {
   state: Readonly<SmokeScenarioState>;
   onClick: () => void;
 }
-
-const SmokeScene = defineComp<SmokeSceneProps>(({ state, onClick }) => {
-  const fillStyle = state.lastAction === 'click' ?
-    '#ea580c' :
-    state.revision > 0 ?
-      '#7c3aed' :
-      '#2563eb';
-
+const SmokeScene = ({ state, onClick }: SmokeSceneProps) => {
+  const fillStyle =
+    state.lastAction === 'click'
+      ? '#ea580c'
+      : state.revision > 0
+        ? '#7c3aed'
+        : '#2563eb';
   return [
-    rect({
-      style: {
+    <Rectangle
+      style={{
         x: 0,
         y: 0,
         width: 480,
         height: 240,
         fill: '#f8fafc',
-      },
-    }),
-    rect({
-      style: {
+      }}
+    />,
+    <Rectangle
+      style={{
         x: 28,
         y: 48,
         width: 188,
@@ -41,57 +36,57 @@ const SmokeScene = defineComp<SmokeSceneProps>(({ state, onClick }) => {
         fill: fillStyle,
         stroke: '#0f172a',
         strokeWidth: 2,
-      },
-      onClick,
-    }),
-    text({
-      style: {
+      }}
+      onClick={onClick}
+    />,
+    <Text
+      style={{
         x: 48,
         y: 78,
-        text: 'CRC smoke scenario',
         font: '700 16px Arial',
         fill: '#ffffff',
-      },
-    }),
-    text({
-      style: {
+      }}
+    >
+      {'CRC smoke scenario'}
+    </Text>,
+    <Text
+      style={{
         x: 48,
         y: 116,
-        text: `revision ${state.revision} · clicks ${state.clicks}`,
         font: '14px Arial',
         fill: '#ffffff',
-      },
-    }),
-    text({
-      style: {
+      }}
+    >{`revision ${state.revision} · clicks ${state.clicks}`}</Text>,
+    <Text
+      style={{
         x: 248,
         y: 62,
-        text: 'Public API smoke',
         font: '700 16px Arial',
         fill: '#0f172a',
-      },
-    }),
-    text({
-      style: {
+      }}
+    >
+      {'Public API smoke'}
+    </Text>,
+    <Text
+      style={{
         x: 248,
         y: 94,
-        text: `last action: ${state.lastAction}`,
         font: '14px Arial',
         fill: '#334155',
-      },
-    }),
-    text({
-      style: {
+      }}
+    >{`last action: ${state.lastAction}`}</Text>,
+    <Text
+      style={{
         x: 248,
         y: 122,
-        text: 'update · click · reset',
         font: '14px Arial',
         fill: '#475569',
-      },
-    }),
+      }}
+    >
+      {'update · click · reset'}
+    </Text>,
   ];
-});
-
-export function createSmokeScene(props: SmokeSceneProps): ReturnType<typeof SmokeScene> {
-  return SmokeScene(props);
+};
+export function createSmokeScene(props: SmokeSceneProps) {
+  return <SmokeScene {...props} />;
 }

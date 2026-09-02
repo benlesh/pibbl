@@ -1,17 +1,18 @@
 import { describe, expect, it, vi } from 'vitest';
 import { componentTest } from '../test-utils/component-test';
-import { g } from './g';
-import { horizontalLine } from './horizontal-line';
-import { verticalLine } from './vertical-line';
+import { Group } from './g';
+import { HorizontalLine } from './horizontal-line';
+import { VerticalLine } from './vertical-line';
+import { createElement } from '../element/create-element';
 
 describe('horizontalLine and verticalLine', () => {
   it('default to the full Canvas dimensions', async () => {
     const moveTo = vi.spyOn(Path2D.prototype, 'moveTo');
     const lineTo = vi.spyOn(Path2D.prototype, 'lineTo');
 
-    await componentTest(g({ children: [
-      horizontalLine({ style: { y: 22, stroke: 'red', strokeWidth: 1 } }),
-      verticalLine({ style: { x: 33, stroke: 'blue', strokeWidth: 1 } }),
+    await componentTest(createElement(Group, { children: [
+      createElement(HorizontalLine, { style: { y: 22, stroke: 'red', strokeWidth: 1 } }),
+      createElement(VerticalLine, { style: { x: 33, stroke: 'blue', strokeWidth: 1 } }),
     ] }));
 
     expect(moveTo.mock.calls).toEqual([[0, 22], [33, 0]]);
@@ -32,8 +33,8 @@ describe('horizontalLine and verticalLine', () => {
     const moveTo = vi.spyOn(Path2D.prototype, 'moveTo');
     const lineTo = vi.spyOn(Path2D.prototype, 'lineTo');
 
-    await componentTest(g({ children: [
-      horizontalLine({
+    await componentTest(createElement(Group, { children: [
+      createElement(HorizontalLine, {
         style: {
           y: 10.2,
           x1: 2,
@@ -43,7 +44,7 @@ describe('horizontalLine and verticalLine', () => {
           alignToPixelGrid,
         },
       }),
-      verticalLine({
+      createElement(VerticalLine, {
         style: {
           x: 10.2,
           y1: 3,
@@ -63,7 +64,7 @@ describe('horizontalLine and verticalLine', () => {
 
   it('forwards paint, cursor, and interaction style while keeping handlers in props', async () => {
     const onClick = vi.fn();
-    const canvas = await componentTest(horizontalLine({
+    const canvas = await componentTest(createElement(HorizontalLine, {
       style: {
         y: 40,
         x1: 20,

@@ -1,6 +1,7 @@
-import { crc, defineComp, rect } from '@crc/core';
+import { crc, Rectangle } from '@crc/core';
 import { afterEach, describe, expect, it } from 'vitest';
 import { clearSharedState, getCRCInstance } from '../src/lib/global-state';
+import { createElement } from '@crc/core';
 
 interface PerformanceObservation {
   regions: number;
@@ -19,9 +20,9 @@ const WORKLOADS = [
 const WARMUP_BATCHES = 5;
 const MEASURED_BATCHES = 41;
 
-const PerformanceScene = defineComp<{ onHit: () => void; regions: number }>(({ onHit, regions }) => {
+const PerformanceScene = ({ onHit, regions }: { onHit: () => void; regions: number }) => {
   const columns = 100;
-  return Array.from({ length: regions }, (_, index) => rect({
+  return Array.from({ length: regions }, (_, index) => createElement(Rectangle, {
     key: `region-${index}`,
     style: {
       x: (index % columns) * 8,
@@ -32,7 +33,7 @@ const PerformanceScene = defineComp<{ onHit: () => void; regions: number }>(({ o
     },
     onMouseMove: onHit,
   }));
-});
+};
 
 function nextFrame(): Promise<void> {
   return new Promise(resolve => requestAnimationFrame(() => resolve()));
@@ -60,7 +61,7 @@ async function observeWorkload(
   const abortController = new AbortController();
   let callbacks = 0;
   try {
-    crc(canvas, PerformanceScene({
+    crc(canvas, createElement(PerformanceScene, {
       regions,
       onHit: () => callbacks++,
     }), { signal: abortController.signal });

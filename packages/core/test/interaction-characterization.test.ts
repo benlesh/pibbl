@@ -10,7 +10,7 @@ import {
 } from '@crc/scenarios';
 import { page } from 'vitest/browser';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import interactionLabSource from '../../scenarios/src/interaction-lab.example.ts?raw';
+import interactionLabSource from '../../scenarios/src/interaction-lab.example.tsx?raw';
 import {
   clickMouse,
   moveMouse,

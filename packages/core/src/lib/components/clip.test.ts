@@ -2,9 +2,10 @@ import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
 import { componentTest } from '../test-utils/component-test';
 import { takeScreenshot } from '../util/test-utils';
-import { clip } from './clip';
-import { rect } from './rect';
-import { text } from './text';
+import { Clip } from './clip';
+import { Rectangle } from './rect';
+import { Text } from './text';
+import { createElement } from '../element/create-element';
 
 describe('clip', () => {
   it('uses style as the sole clipping-path authority', async () => {
@@ -16,7 +17,7 @@ describe('clip', () => {
       style: { d: styledPath },
       path: legacyPath,
       children: [
-        rect({
+        createElement(Rectangle, {
           style: {
             x: 0,
             y: 0,
@@ -28,7 +29,7 @@ describe('clip', () => {
       ],
     } as any;
 
-    const canvas = await componentTest(clip(legacyInput));
+    const canvas = await componentTest(createElement(Clip, legacyInput));
     const context = canvas.element.getContext('2d')!;
 
     expect(context.getImageData(10, 10, 1, 1).data[3]).toBe(255);
@@ -36,11 +37,11 @@ describe('clip', () => {
   });
 
   it('treats an empty clip as empty rendering geometry', async () => {
-    const canvas = await componentTest(clip({
+    const canvas = await componentTest(createElement(Clip, {
       style: {
         d: new Path2D()
       },
-      children: [rect({
+      children: [createElement(Rectangle, {
         style: {
           x: 0,
           y: 0,
@@ -59,11 +60,11 @@ describe('clip', () => {
     const clipPath = new Path2D();
     clipPath.rect(50, 50, 100, 100);
 
-    await componentTest(clip({
+    await componentTest(createElement(Clip, {
       style: {
         d: clipPath
       },
-      children: [rect({
+      children: [createElement(Rectangle, {
         style: {
           x: 0,
           y: 0,
@@ -83,12 +84,12 @@ describe('clip', () => {
     // Inner rectangle (creates a hole with evenodd rule)
     clipPath.rect(75, 75, 50, 50);
 
-    await componentTest(clip({
+    await componentTest(createElement(Clip, {
       style: {
         d: clipPath,
         fillRule: 'evenodd'
       },
-      children: [rect({
+      children: [createElement(Rectangle, {
         style: {
           x: 0,
           y: 0,
@@ -105,11 +106,11 @@ describe('clip', () => {
     const clipPath = new Path2D();
     clipPath.arc(100, 100, 50, 0, Math.PI * 2);
 
-    await componentTest(clip({
+    await componentTest(createElement(Clip, {
       style: {
         d: clipPath
       },
-      children: [rect({
+      children: [createElement(Rectangle, {
         style: {
           x: 50,
           y: 50,
@@ -117,14 +118,13 @@ describe('clip', () => {
           height: 100,
           fill: 'green'
         }
-      }), text({
+      }), createElement(Text, {
         style: {
           x: 75,
           y: 100,
-          text: 'Clipped Text',
           fill: 'white'
         }
-      })]
+      }, 'Clipped Text')]
     }));
     await takeScreenshot(page);
   });
@@ -136,11 +136,11 @@ describe('clip', () => {
     const innerClipPath = new Path2D();
     innerClipPath.arc(125, 125, 50, 0, Math.PI * 2);
 
-    await componentTest(clip({
+    await componentTest(createElement(Clip, {
       style: {
         d: outerClipPath
       },
-      children: [rect({
+      children: [createElement(Rectangle, {
         style: {
           x: 0,
           y: 0,
@@ -148,11 +148,11 @@ describe('clip', () => {
           height: 250,
           fill: 'purple'
         }
-      }), clip({
+      }), createElement(Clip, {
         style: {
           d: innerClipPath
         },
-        children: [rect({
+        children: [createElement(Rectangle, {
           style: {
             x: 0,
             y: 0,
@@ -188,11 +188,11 @@ describe('clip', () => {
     }
     clipPath.closePath();
 
-    await componentTest(clip({
+    await componentTest(createElement(Clip, {
       style: {
         d: clipPath
       },
-      children: [rect({
+      children: [createElement(Rectangle, {
         style: {
           x: 0,
           y: 0,
@@ -200,14 +200,13 @@ describe('clip', () => {
           height: 200,
           fill: 'yellow'
         }
-      }), text({
+      }), createElement(Text, {
         style: {
           x: 60,
           y: 100,
-          text: 'Star Clip',
           fill: 'black'
         }
-      })]
+      }, 'Star Clip')]
     }));
     await takeScreenshot(page);
   });
@@ -219,11 +218,11 @@ describe('clip', () => {
 
       const onClick = vi.fn();
 
-      const canvas = await componentTest(clip({
+      const canvas = await componentTest(createElement(Clip, {
         style: {
           d: clipPath
         },
-        children: [rect({
+        children: [createElement(Rectangle, {
           style: {
             x: 0,
             y: 0,
@@ -251,12 +250,12 @@ describe('clip', () => {
 
       const onMouseOver = vi.fn();
 
-      const canvas = await componentTest(clip({
+      const canvas = await componentTest(createElement(Clip, {
         style: {
           d: clipPath,
           fillRule: 'evenodd'
         },
-        children: [rect({
+        children: [createElement(Rectangle, {
           style: {
             x: 0,
             y: 0,
@@ -292,11 +291,11 @@ describe('clip', () => {
       const onOuterClick = vi.fn();
       const onInnerClick = vi.fn();
 
-      const canvas = await componentTest(clip({
+      const canvas = await componentTest(createElement(Clip, {
         style: {
           d: outerClipPath
         },
-        children: [rect({
+        children: [createElement(Rectangle, {
           style: {
             x: 0,
             y: 0,
@@ -306,11 +305,11 @@ describe('clip', () => {
             cursor: 'pointer'
           },
           onClick: onOuterClick
-        }), clip({
+        }), createElement(Clip, {
           style: {
             d: innerClipPath
           },
-          children: [rect({
+          children: [createElement(Rectangle, {
             style: {
               x: 0,
               y: 0,

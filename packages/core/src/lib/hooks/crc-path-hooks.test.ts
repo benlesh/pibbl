@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { crc } from '../crc';
-import { defineComp } from '../define-comp';
 import { clearSharedState } from '../global-state';
 import { crcLinePath } from './crc-line-path';
 import { crcMemo } from './crc-memo';
 import { crcRectPath } from './crc-rect-path';
 import { crcSvgPath } from './crc-svg-path';
+import { createElement } from '../element/create-element';
 
 class FakePath2D {
   readonly commands: string[] = [];
@@ -48,17 +48,17 @@ describe('memoized path hooks', () => {
       lineWidth?: number;
       width: number;
     }
-    const Probe = defineComp(({ lineWidth, width }: RectProbeProps) => {
+    const Probe = ({ lineWidth, width }: RectProbeProps) => {
       paths.push(crcRectPath(1, 2, width, 4, {
         alignToPixelGrid: 'round',
         lineWidth,
       }));
-    });
-    const controller = crc(canvas, Probe({ width: 3, lineWidth: 1 }));
+    };
+    const controller = crc(canvas, createElement(Probe, { width: 3, lineWidth: 1 }));
     await nextFrame();
-    crc(canvas, Probe({ width: 3, lineWidth: 1 }));
+    crc(canvas, createElement(Probe, { width: 3, lineWidth: 1 }));
     await nextFrame();
-    crc(canvas, Probe({ width: 5, lineWidth: 1 }));
+    crc(canvas, createElement(Probe, { width: 5, lineWidth: 1 }));
     await nextFrame();
 
     expect(paths[1]).toBe(paths[0]);
@@ -73,25 +73,25 @@ describe('memoized path hooks', () => {
       closePath: boolean;
       coords: [number, number][];
     }
-    const Probe = defineComp(({ closePath, coords }: LineProbeProps) => {
+    const Probe = ({ closePath, coords }: LineProbeProps) => {
       paths.push(crcLinePath(coords, { closePath }) as unknown as FakePath2D);
-    });
-    const controller = crc(canvas, Probe({
+    };
+    const controller = crc(canvas, createElement(Probe, {
       coords: [[0, 0], [10, 10]],
       closePath: false,
     }));
     await nextFrame();
-    crc(canvas, Probe({
+    crc(canvas, createElement(Probe, {
       coords: [[0, 0], [10, 10]],
       closePath: false,
     }));
     await nextFrame();
-    crc(canvas, Probe({
+    crc(canvas, createElement(Probe, {
       coords: [[0, 0], [10, 10]],
       closePath: true,
     }));
     await nextFrame();
-    crc(canvas, Probe({
+    crc(canvas, createElement(Probe, {
       coords: [[0, 0], [20, 10]],
       closePath: true,
     }));
@@ -107,14 +107,14 @@ describe('memoized path hooks', () => {
   it('memoizes SVG data exactly and delegates parsing to Path2D', async () => {
     const canvas = createCanvas();
     const paths: FakePath2D[] = [];
-    const Probe = defineComp(({ data }: { data: string }) => {
+    const Probe = ({ data }: { data: string }) => {
       paths.push(crcSvgPath(data) as unknown as FakePath2D);
-    });
-    const controller = crc(canvas, Probe({ data: 'M0 0L10 10' }));
+    };
+    const controller = crc(canvas, createElement(Probe, { data: 'M0 0L10 10' }));
     await nextFrame();
-    crc(canvas, Probe({ data: 'M0 0L10 10' }));
+    crc(canvas, createElement(Probe, { data: 'M0 0L10 10' }));
     await nextFrame();
-    crc(canvas, Probe({ data: 'not-crc-validated' }));
+    crc(canvas, createElement(Probe, { data: 'not-crc-validated' }));
     await nextFrame();
 
     expect(paths[1]).toBe(paths[0]);
@@ -133,13 +133,13 @@ describe('memoized path hooks', () => {
     vi.stubGlobal('Path2D', ParsingPath2D);
     const frames = new ManualFrames();
     const canvas = createCanvas();
-    const Probe = defineComp(({ data }: { data: string }) => {
+    const Probe = ({ data }: { data: string }) => {
       crcSvgPath(data);
-    });
-    const controller = crc(canvas, Probe({ data: 'bad' }));
+    };
+    const controller = crc(canvas, createElement(Probe, { data: 'bad' }));
     expect(() => frames.flush()).toThrowError('invalid SVG path');
 
-    crc(canvas, Probe({ data: 'M0 0' }));
+    crc(canvas, createElement(Probe, { data: 'M0 0' }));
     expect(() => frames.flush()).not.toThrow();
     controller.dispose();
     frames.restore();
@@ -148,13 +148,13 @@ describe('memoized path hooks', () => {
   it('treats each public memoized path hook as a distinct hook kind', () => {
     const frames = new ManualFrames();
     const canvas = createCanvas();
-    const Probe = defineComp(({ path }: { path: boolean }) => {
+    const Probe = ({ path }: { path: boolean }) => {
       if (path) crcRectPath(0, 0, 1, 1);
       else crcMemo(() => new Path2D(), []);
-    });
-    const controller = crc(canvas, Probe({ path: false }));
+    };
+    const controller = crc(canvas, createElement(Probe, { path: false }));
     frames.flush();
-    crc(canvas, Probe({ path: true }));
+    crc(canvas, createElement(Probe, { path: true }));
     expect(() => frames.flush()).toThrowError(/hook order changed/i);
     controller.dispose();
     frames.restore();

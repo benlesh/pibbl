@@ -5,7 +5,7 @@ import {
   type ScenarioController,
 } from '@crc/scenarios';
 import { afterEach, describe, expect, it } from 'vitest';
-import canvasSurfaceSource from '../../scenarios/src/canvas-surface.example.ts?raw';
+import canvasSurfaceSource from '../../scenarios/src/canvas-surface.example.tsx?raw';
 
 let activeController: ScenarioController<CanvasSurfaceState> | undefined;
 

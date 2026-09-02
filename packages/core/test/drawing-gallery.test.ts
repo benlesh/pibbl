@@ -20,11 +20,11 @@ import {
 } from '@crc/scenarios';
 import { page, userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
-import drawingCompositionSource from '../../scenarios/src/drawing-composition.example.ts?raw';
-import drawingImagesSource from '../../scenarios/src/drawing-images.example.ts?raw';
-import drawingLinesSource from '../../scenarios/src/drawing-lines.example.ts?raw';
-import drawingShapesSource from '../../scenarios/src/drawing-shapes.example.ts?raw';
-import drawingTextSource from '../../scenarios/src/drawing-text.example.ts?raw';
+import drawingCompositionSource from '../../scenarios/src/drawing-composition.example.tsx?raw';
+import drawingImagesSource from '../../scenarios/src/drawing-images.example.tsx?raw';
+import drawingLinesSource from '../../scenarios/src/drawing-lines.example.tsx?raw';
+import drawingShapesSource from '../../scenarios/src/drawing-shapes.example.tsx?raw';
+import drawingTextSource from '../../scenarios/src/drawing-text.example.tsx?raw';
 import { loadScenarioSource } from '../../../playground/src/scenario-sources';
 import { expectVisualMatch } from './visual-compare';
 
@@ -123,17 +123,17 @@ describe('complete public drawing gallery', () => {
     }
 
     expect(drawingEntries.flatMap(entry => entry.metadata.apiTags)).toEqual([
-      'rect',
-      'path',
-      'svgPath',
-      'line',
-      'horizontalLine',
-      'verticalLine',
-      'text',
-      'img',
-      'g',
-      'clip',
-      'layer',
+      'Rectangle',
+      'Path',
+      'SvgPath',
+      'Line',
+      'HorizontalLine',
+      'VerticalLine',
+      'Text',
+      'Image',
+      'Group',
+      'Clip',
+      'Layer',
     ]);
   });
 

@@ -8,6 +8,7 @@ import {
   validateScenarioCatalog,
 } from '@crc/scenarios';
 import { afterEach, describe, expect, it } from 'vitest';
+import { validateScenarioSourceText } from '../../../tooling/learning-source-contract';
 import {
   loadScenarioSource,
   scenarioSourcePaths,
@@ -21,21 +22,85 @@ afterEach(async () => {
 });
 
 describe('scenario catalog trust gate', () => {
-  it('temporarily accepts both TypeScript and TSX source paths', () => {
+  it('requires TSX source metadata for every deterministic scenario', () => {
     const [first, ...rest] = scenarioCatalog;
     if (!first) throw new Error('The scenario catalog must not be empty.');
-    const mixedCatalog = [
+    expect(first.source.path).toMatch(/\.example\.tsx$/u);
+    expect(first.source.language).toBe('tsx');
+
+    const oldPath = [
       {
         ...first,
         source: {
           ...first.source,
-          path: first.source.path.replace(/\.ts$/u, '.tsx'),
+          path: first.source.path.replace(/\.tsx$/u, '.ts'),
         },
       },
       ...rest,
     ];
+    expect(() => validateScenarioCatalog(oldPath)).toThrow(
+      /must reference a TSX example source/i,
+    );
 
-    expect(validateScenarioCatalog(mixedCatalog)).toBe(mixedCatalog);
+    const oldLanguage = [
+      {
+        ...first,
+        source: {
+          ...first.source,
+          language: 'ts' as never,
+        },
+      },
+      ...rest,
+    ];
+    expect(() => validateScenarioCatalog(oldLanguage)).toThrow(
+      /must use TSX source metadata/i,
+    );
+  });
+
+  it('uses syntax-aware authoring checks without confusing Canvas methods for CRC factories', () => {
+    expect(() =>
+      validateScenarioSourceText(
+        `
+          import { crc, rect, Rectangle } from '@crc/core';
+          const canvasPath = new Path2D();
+          canvasPath.rect(0, 0, 10, 10);
+          export const Scene = () => <Rectangle style={{ width: 10, height: 10 }} />;
+        `,
+        'legacy scenario',
+      ),
+    ).toThrow(/legacy component authoring/i);
+
+    expect(() =>
+      validateScenarioSourceText(
+        `
+          import { crc, Rectangle } from '@crc/core';
+          export const Scene = () => Rectangle({ style: { width: 10, height: 10 } });
+        `,
+        'direct-call scenario',
+      ),
+    ).toThrow(/not direct calls/i);
+
+    expect(() =>
+      validateScenarioSourceText(
+        `
+          import { crc, createElement, Rectangle } from '@crc/core';
+          export const Scene = () => createElement(Rectangle, { style: { width: 10, height: 10 } });
+        `,
+        'non-JSX scenario',
+      ),
+    ).toThrow(/must use descriptive JSX/i);
+
+    expect(() =>
+      validateScenarioSourceText(
+        `
+          import { crc, Rectangle } from '@crc/core';
+          const canvasPath = new Path2D();
+          canvasPath.rect(0, 0, 10, 10);
+          export const Scene = () => <Rectangle style={{ width: 10, height: 10 }} />;
+        `,
+        'valid scenario',
+      ),
+    ).not.toThrow();
   });
 
   it('publishes the shared focus-navigation demonstration contract', () => {

@@ -1,16 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { defineComp } from '../define-comp';
 import type { CRCEventHandlers } from '../events/types';
 import { executeRender } from '../execute-render';
 import { clearSharedState, getCRCInstance } from '../global-state';
 import { crcEventTarget } from '../hooks/crc-event-target';
 import { mountCRC } from '../mount-crc';
-import type { CompEl, CRCController } from '../types';
+import type { CRCElement, CRCController } from '../types';
 import type { CRCDirection } from './directional-navigation';
 import type { CRCFocusManager } from './focus-manager';
 import type { CRCDirectionalBoundary, CRCFocusCandidate } from './types';
 import { focusManaged } from './policy-test-support';
 import { directionalPolicy } from './policy-test-support';
+import { createElement } from '../element/create-element';
+import { definePrimitive } from '../define-primitive';
 
 const activeControllers = new Set<CRCController>();
 const noop = () => undefined;
@@ -30,9 +31,9 @@ afterEach(() => {
 describe('nested directional navigation', () => {
   it('gives arrows to the nearest boundary, contains its edge, and keeps one global Tab order', () => {
     const formKeys: string[] = [];
-    const Inner = defineComp(() => [
-      Target({ key: 'inner-left', label: 'inner-left', x: 40, y: 0 }),
-      Target({
+    const Inner = (_props: {}) => [
+      createElement(Target, { key: 'inner-left', label: 'inner-left', x: 40, y: 0 }),
+      createElement(Target, {
         key: 'form',
         label: 'form',
         x: 60,
@@ -47,17 +48,17 @@ describe('nested directional navigation', () => {
           },
         },
       }),
-      Target({ key: 'inner-right', label: 'inner-right', x: 80, y: 0 }),
-    ]);
-    const Outer = defineComp(() => directionalPolicy(
-      defineComp(() => [
-        Target({ key: 'outer-left', label: 'outer-left', x: 0, y: 0 }),
-        directionalPolicy(Inner({ key: 'inner' }), { mode: 'directional' }),
-        Target({ key: 'outer-right', label: 'outer-right', x: 120, y: 0 }),
-      ])({}),
+      createElement(Target, { key: 'inner-right', label: 'inner-right', x: 80, y: 0 }),
+    ];
+    const Outer = (_props: {}) => directionalPolicy(
+      createElement((_props: {}) => [
+        createElement(Target, { key: 'outer-left', label: 'outer-left', x: 0, y: 0 }),
+        directionalPolicy(createElement(Inner, { key: 'inner' }), { mode: 'directional' }),
+        createElement(Target, { key: 'outer-right', label: 'outer-right', x: 120, y: 0 }),
+      ], {}),
       { mode: 'directional' },
-    ));
-    const mounted = mountAndRender(focusManaged(Outer({})));
+    );
+    const mounted = mountAndRender(focusManaged(createElement(Outer, {})));
     mounted.canvas.focus({ preventScroll: true });
 
     const [outerLeft, innerLeft, form, innerRight, outerRight] =
@@ -109,36 +110,35 @@ describe('nested directional navigation', () => {
   });
 
   it('atomically refreshes direct membership when a nested boundary is removed, restored, and reordered without remounting targets', () => {
-    const Inner = defineComp(({ order }: { order: readonly string[] }) =>
-      order.map((label, index) => Target({
+    const Inner = ({ order }: { order: readonly string[] }) =>
+      order.map((label, index) => createElement(Target, {
         key: label,
         label,
         x: 30 + index * 20,
         y: 0,
-      }))
-    );
-    const OuterHost = defineComp(({ children }: {
-      children: CompEl<any, any>[];
-    }) => children);
-    const Root = defineComp(({
+      }));
+    const OuterHost = ({ children }: {
+      children: CRCElement<any>[];
+    }) => children;
+    const Root = ({
       nested,
       order,
     }: {
       nested: boolean;
       order: readonly string[];
     }) => {
-      const inner = Inner({ key: 'stable-inner', order });
+      const inner = createElement(Inner, { key: 'stable-inner', order });
       return directionalPolicy(
-        OuterHost({ children: [
-          Target({ key: 'before', label: 'before', x: 0, y: 0 }),
+        createElement(OuterHost, { children: [
+          createElement(Target, { key: 'before', label: 'before', x: 0, y: 0 }),
           nested ? directionalPolicy(inner, { mode: 'directional' }) : inner,
-          Target({ key: 'after', label: 'after', x: 100, y: 0 }),
+          createElement(Target, { key: 'after', label: 'after', x: 100, y: 0 }),
         ] }),
         { mode: 'directional' },
       );
-    });
+    };
     const element = (nested: boolean, order: readonly string[]) =>
-      focusManaged(Root({ nested, order }));
+      focusManaged(createElement(Root, { nested, order }));
     const mounted = mountAndRender(element(true, ['a', 'b']));
     const initialTargets = new Map(
       mounted.manager.candidates.map(candidate => [
@@ -177,28 +177,27 @@ describe('nested directional navigation', () => {
       { readonly outer: string[]; readonly inner: string[] } | undefined;
     let committedOuter: CRCDirectionalBoundary | undefined;
     let committedInner: CRCDirectionalBoundary | undefined;
-    const Throwing = defineComp(() => {
+    const Throwing = (_props: {}) => {
       capturedDuringFailure = {
         outer: labels(committedOuter?.candidates ?? []),
         inner: labels(committedInner?.candidates ?? []),
       };
       throw new Error('expected nested render failure');
-    });
-    const Inner = defineComp(({ partial }: { partial: boolean }) => [
-      Target({ key: 'inner-a', label: partial ? 'partial-a' : 'inner-a', x: 30, y: 0 }),
-      Target({ key: 'inner-b', label: 'inner-b', x: 50, y: 0 }),
-      partial ? Throwing({}) : undefined,
-    ]);
-    const Root = defineComp(({ partial }: { partial: boolean }) =>
-      directionalPolicy(defineComp(() => [
-        Target({ key: 'outer-a', label: 'outer-a', x: 0, y: 0 }),
-        directionalPolicy(Inner({ key: 'inner', partial }), {
+    };
+    const Inner = ({ partial }: { partial: boolean }) => [
+      createElement(Target, { key: 'inner-a', label: partial ? 'partial-a' : 'inner-a', x: 30, y: 0 }),
+      createElement(Target, { key: 'inner-b', label: 'inner-b', x: 50, y: 0 }),
+      partial ? createElement(Throwing, {}) : undefined,
+    ];
+    const Root = ({ partial }: { partial: boolean }) =>
+      directionalPolicy(createElement((_props: {}) => [
+        createElement(Target, { key: 'outer-a', label: 'outer-a', x: 0, y: 0 }),
+        directionalPolicy(createElement(Inner, { key: 'inner', partial }), {
           mode: 'directional',
         }),
-        Target({ key: 'outer-b', label: 'outer-b', x: 100, y: 0 }),
-      ])({}), { mode: 'directional' })
-    );
-    const element = (partial: boolean) => focusManaged(Root({ partial }));
+        createElement(Target, { key: 'outer-b', label: 'outer-b', x: 100, y: 0 }),
+      ], {}), { mode: 'directional' });
+    const element = (partial: boolean) => focusManaged(createElement(Root, { partial }));
     const mounted = mountAndRender(element(false));
     const manager = mounted.manager;
     committedOuter = manager.candidates[0].directionalBoundary!;
@@ -233,7 +232,7 @@ interface TargetProps {
   readonly handlers?: CRCEventHandlers;
 }
 
-const Target = defineComp<TargetProps>(({
+const Target = definePrimitive<TargetProps>(({
   x,
   y,
   handlers = { onClick: noop },
@@ -246,7 +245,7 @@ const Target = defineComp<TargetProps>(({
   });
 });
 
-function mountAndRender(element: CompEl<any, any>): {
+function mountAndRender(element: CRCElement<any>): {
   readonly canvas: HTMLCanvasElement;
   readonly controller: CRCController;
   readonly manager: CRCFocusManager;

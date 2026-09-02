@@ -1,5 +1,6 @@
 import { createElement } from '../element/create-element.js';
 import type {
+  CRCElement,
   CRCNode,
 } from '../element/types.js';
 import {
@@ -9,22 +10,21 @@ import {
   type KeyboardNavigationProps,
 } from './policy-components.js';
 import type { CRCKeyboardNavigationOptions } from './types.js';
-import type { CompEl } from '../types.js';
 
 /** Test-only non-JSX construction of the public focus policy descriptor. */
-export function focusManaged(child: CRCNode): CompEl<any, any> {
+export function focusManaged(child: CRCNode): CRCElement<any> {
   return createElement(FocusManagement, {
     children: child as FocusManagementProps['children'],
-  }) as unknown as CompEl<any, any>;
+  });
 }
 
 /** Test-only non-JSX construction of the public directional policy descriptor. */
 export function directionalPolicy(
   child: CRCNode,
   options: CRCKeyboardNavigationOptions = { mode: 'directional' },
-): CompEl<any, any> {
+): CRCElement<any> {
   return createElement(KeyboardNavigation, {
     ...options,
     children: child as KeyboardNavigationProps['children'],
-  }) as unknown as CompEl<any, any>;
+  });
 }

@@ -7,7 +7,7 @@ import {
   runtimeHooksScenarioEntry,
 } from '@crc/scenarios';
 import { afterEach, describe, expect, it } from 'vitest';
-import runtimeHooksSource from '../../scenarios/src/runtime-hooks.example.ts?raw';
+import runtimeHooksSource from '../../scenarios/src/runtime-hooks.example.tsx?raw';
 import { loadScenarioSource } from '../../../playground/src/scenario-sources';
 import { GLOBAL_STATE } from '../src/lib/global-state';
 
@@ -63,7 +63,7 @@ describe('shared runtime and hooks laboratory', () => {
       runtimeHooksSource,
     );
     expect(runtimeHooksScenarioEntry.source.path).toBe(
-      'packages/scenarios/src/runtime-hooks.example.ts',
+      'packages/scenarios/src/runtime-hooks.example.tsx',
     );
     expect(runtimeHooksScenarioEntry.metadata.knownLimitations.join(' ')).toContain(
       'crcEvent',

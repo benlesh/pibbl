@@ -1,19 +1,4 @@
-import {
-  Fragment,
-  FocusManagement,
-  KeyboardNavigation,
-  LayoutDiagnostic,
-  Rectangle,
-  Text,
-  createElement,
-  crcEventTarget,
-  crcState,
-  defineComp,
-  measureElement,
-  type CanvasMeasurementService,
-  type CRCElement,
-  type CRCNode,
-} from '@crc/core';
+import { Fragment, FocusManagement, KeyboardNavigation, LayoutDiagnostic, Rectangle, Text, createElement, crcEventTarget, crcState, measureElement, type CanvasMeasurementService, type CRCElement, type CRCNode } from '@crc/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   appendElementEnhancer,
@@ -30,6 +15,7 @@ import {
 } from '../global-state';
 import { mountCRC } from '../mount-crc';
 import type { CRCController } from '../types';
+import { definePrimitive } from '@crc/core';
 
 const activeControllers = new Set<CRCController>();
 
@@ -464,10 +450,10 @@ describe('transparent focus policy measurement', () => {
       status: 'measured' as const,
       size: { width: 31, height: 17 },
     }));
-    const Measurable = defineComp(() => {
+    const Measurable = definePrimitive<{}>(() => {
       renders++;
     }, { measure });
-    const measurable = Measurable({});
+    const measurable = createElement(Measurable, {});
     const measurablePolicy = <FocusManagement>{measurable}</FocusManagement>;
     expect(measureElement(measurablePolicy, constraints, service)).toEqual(
       measureElement(measurable, constraints, service),
@@ -533,13 +519,13 @@ describe('transparent focus policy measurement', () => {
 
   it('preserves cyclic measurement identity through policy clones', () => {
     let wrapped: CRCElement<any>;
-    const Direct = defineComp(() => undefined, {
+    const Direct = definePrimitive<{}>(() => undefined, {
       measure: (input) => input.measureElement(
         wrapped,
         constraints,
       ),
     });
-    wrapped = <FocusManagement>{Direct({})}</FocusManagement>;
+    wrapped = <FocusManagement>{createElement(Direct, {})}</FocusManagement>;
 
     expect(() => measureElement(wrapped, constraints, service))
       .toThrowError(LayoutDiagnostic);

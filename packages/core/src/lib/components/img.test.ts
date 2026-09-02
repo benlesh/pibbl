@@ -3,7 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { componentTest } from '../test-utils/component-test';
 import bartImageSmall from '../test-utils/fixtures/bart-500kb.png';
 import { takeScreenshot } from '../util/test-utils';
-import { img } from './img';
+import { Image } from './img';
+import { createElement } from '../element/create-element';
 
 const defaultStyle = {
   x: 50,
@@ -17,13 +18,13 @@ const defaultStyle = {
 
 describe('img', () => {
   it('renders an image in browser', async () => {
-    await componentTest(img({ style: defaultStyle }));
+    await componentTest(createElement(Image, { style: defaultStyle }));
     await takeScreenshot(page);
   });
 
   it('renders an image with natural dimensions when width/height not specified', async () => {
     const { width, height, ...style } = defaultStyle;
-    await componentTest(img({ style }));
+    await componentTest(createElement(Image, { style }));
     await takeScreenshot(page);
   });
 
@@ -47,7 +48,7 @@ describe('img', () => {
       it(`should handle ${event} events`, async () => {
         const handlerFn = vi.fn();
 
-        const canvas = await componentTest(img({
+        const canvas = await componentTest(createElement(Image, {
           style: defaultStyle,
           [handler]: handlerFn,
         }));
@@ -76,7 +77,7 @@ describe('img', () => {
         const onMouseOver = vi.fn();
         const onMouseOut = vi.fn();
 
-        const canvas = await componentTest(img({
+        const canvas = await componentTest(createElement(Image, {
           style: defaultStyle,
           onMouseOver,
           onMouseOut,
@@ -102,7 +103,7 @@ describe('img', () => {
         const onMouseOver = vi.fn();
         const onMouseOut = vi.fn();
 
-        const canvas = await componentTest(img({
+        const canvas = await componentTest(createElement(Image, {
           style: {
             ...defaultStyle,
             strokeWidth: 0,
@@ -131,7 +132,7 @@ describe('img', () => {
       const onClick = vi.fn();
       const centerX = defaultStyle.x + defaultStyle.width / 2;
       const centerY = defaultStyle.y + defaultStyle.height / 2;
-      const canvas = await componentTest(img({
+      const canvas = await componentTest(createElement(Image, {
         style: {
           ...defaultStyle,
           opacity: 0,
@@ -152,15 +153,15 @@ describe('img', () => {
       const legacyInput = {
         style: defaultStyle,
         cursor: 'pointer',
-      } as unknown as Parameters<typeof img>[0];
-      const canvas = await componentTest(img(legacyInput));
+      } as unknown as Parameters<typeof Image>[0];
+      const canvas = await componentTest(createElement(Image, legacyInput));
 
       await canvas.mouseMove({ position: { x: centerX, y: centerY } });
       expect(getComputedStyle(canvas.element).cursor).not.toBe('pointer');
     });
 
     it('should handle opacity', async () => {
-      await componentTest(img({
+      await componentTest(createElement(Image, {
         style: {
           ...defaultStyle,
           opacity: 0.5,
@@ -170,7 +171,7 @@ describe('img', () => {
     });
 
     it('should align to pixel grid when specified', async () => {
-      await componentTest(img({
+      await componentTest(createElement(Image, {
         style: {
           ...defaultStyle,
           strokeWidth: 1,
@@ -180,7 +181,7 @@ describe('img', () => {
 
       await takeScreenshot(page, 'pixel-grid-none.png');
 
-      await componentTest(img({
+      await componentTest(createElement(Image, {
         style: {
           ...defaultStyle,
           strokeWidth: 1,
@@ -192,7 +193,7 @@ describe('img', () => {
     });
 
     it('should handle cursor styles', async () => {
-      await componentTest(img({
+      await componentTest(createElement(Image, {
         style: {
           ...defaultStyle,
           cursor: 'pointer',

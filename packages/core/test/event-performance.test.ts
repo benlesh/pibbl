@@ -11,17 +11,8 @@ import {
   performanceLabScenarioEntry,
 } from '@crc/scenarios';
 import { afterEach, describe, expect, it } from 'vitest';
-import performanceLabSource from '../../scenarios/src/performance-lab.example.ts?raw';
-import {
-  absolute,
-  crc,
-  crcEventListener,
-  defineComp,
-  flow,
-  rect,
-  text,
-  type CRCController,
-} from '../src/index';
+import performanceLabSource from '../../scenarios/src/performance-lab.example.tsx?raw';
+import { Absolute, crc, crcEventListener, Flow, Rectangle, Text, type CRCController } from '../src/index';
 import { GLOBAL_STATE, getCRCInstance } from '../src/lib/global-state';
 import {
   resetLayoutDiagnostics,
@@ -30,6 +21,7 @@ import {
 import type { Canvas, CRCInstance } from '../src/lib/types';
 import { RuntimeDiagnostics } from './support/runtime-diagnostics';
 import { expectVisualMatch } from './visual-compare';
+import { createElement } from '../src/lib/element/create-element';
 
 interface PerformanceObservation {
   dispatchesPerSample: number;
@@ -106,15 +98,15 @@ const activeDiagnostics = new Set<RuntimeDiagnostics>();
 const activeFrameDiagnostics = new Set<FrameCallbackDiagnostics>();
 const activeRuntimeControllers = new Set<CRCController>();
 
-const EmptyPerformanceScene = defineComp(() => undefined);
+const EmptyPerformanceScene = (_props: {}) => undefined;
 
-const StructuralEventScene = defineComp<{
+const StructuralEventScene = ({ count, recordAncestor, recordTarget }: {
   count: number;
   recordAncestor: () => void;
   recordTarget: (index: number) => void;
-}>(({ count, recordAncestor, recordTarget }) => {
+}) => {
   crcEventListener({ onPointerDownCapture: recordAncestor });
-  return Array.from({ length: count }, (_, index) => rect({
+  return Array.from({ length: count }, (_, index) => createElement(Rectangle, {
     key: `structural-target-${index}`,
     style: {
       x: 0,
@@ -125,7 +117,7 @@ const StructuralEventScene = defineComp<{
     },
     onPointerDown: () => recordTarget(index),
   }));
-});
+};
 
 class FrameCallbackDiagnostics {
   readonly samples: number[] = [];
@@ -366,7 +358,7 @@ describe('shared event performance laboratory', () => {
     document.body.replaceChildren(canvas);
     const diagnostics = new RuntimeDiagnostics(canvas);
     activeDiagnostics.add(diagnostics);
-    const mounted = crc(canvas, EmptyPerformanceScene({}));
+    const mounted = crc(canvas, createElement(EmptyPerformanceScene, {}));
     activeRuntimeControllers.add(mounted);
     await settleFrames();
 
@@ -397,7 +389,7 @@ describe('shared event performance laboratory', () => {
     const targets: number[] = [];
     let ancestorCalls = 0;
     const targetCount = 100;
-    const mounted = crc(canvas, StructuralEventScene({
+    const mounted = crc(canvas, createElement(StructuralEventScene, {
       count: targetCount,
       recordAncestor: () => { ancestorCalls++; },
       recordTarget: index => targets.push(index),
@@ -585,16 +577,15 @@ describe('shared event performance laboratory', () => {
     canvas.height = 100;
     document.body.replaceChildren(canvas);
     resetLayoutDiagnostics();
-    const mounted = crc(canvas, flow({
+    const mounted = crc(canvas, createElement(Flow, {
       style: { width: 200, height: 100 },
-      children: [flow({
-        children: [text({
+      children: [createElement(Flow, {
+        children: [createElement(Text, {
           style: {
-            text: 'nested measurement',
             font: '12px sans-serif',
             fill: '#000000',
           },
-        })],
+        }, 'nested measurement')],
       })],
     }));
     activeRuntimeControllers.add(mounted);
@@ -637,9 +628,9 @@ describe('shared event performance laboratory', () => {
     let target: number | undefined;
 
     resetLayoutDiagnostics();
-    const mounted = crc(canvas, absolute({
+    const mounted = crc(canvas, createElement(Absolute, {
       style: { width: 320, height: 400, overflow: 'clip' },
-      children: windowRecords.map(id => rect({
+      children: windowRecords.map(id => createElement(Rectangle, {
         key: `row-${id}`,
         style: {
           left: 0,

@@ -20,7 +20,7 @@ export interface ScenarioAction {
 
 export interface ScenarioSourceReference {
   id: string;
-  language: 'ts';
+  language: 'tsx';
   marker: string;
   path: string;
 }

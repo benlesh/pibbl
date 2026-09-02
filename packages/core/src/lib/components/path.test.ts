@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { componentTest } from '../test-utils/component-test';
-import { path } from './path';
+import { Path } from './path';
+import { createElement } from '../element/create-element';
 
 describe('path', () => {
   it('applies opacity zero while filling', async () => {
@@ -13,7 +14,7 @@ describe('path', () => {
     const value = new Path2D();
     value.rect(10, 10, 20, 20);
 
-    await componentTest(path({
+    await componentTest(createElement(Path, {
       style: {
         d: value,
         fill: 'red',
@@ -30,7 +31,7 @@ describe('path', () => {
     const value = new Path2D();
     value.rect(10, 10, 20, 20);
 
-    const canvas = await componentTest(path({
+    const canvas = await componentTest(createElement(Path, {
       style: {
         d: value,
         fill: 'transparent',
@@ -54,9 +55,9 @@ describe('path', () => {
         fill: 'transparent',
       },
       cursor: 'pointer',
-    } as unknown as Parameters<typeof path>[0];
+    } as unknown as Parameters<typeof Path>[0];
 
-    const canvas = await componentTest(path(legacyInput));
+    const canvas = await componentTest(createElement(Path, legacyInput));
     await canvas.mouseMove({ position: { x: 20, y: 20 } });
 
     expect(getComputedStyle(canvas.element).cursor).not.toBe('pointer');

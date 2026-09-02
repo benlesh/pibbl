@@ -1,22 +1,22 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { crc } from '../crc';
-import { defineComp } from '../define-comp';
 import { clearSharedState, getCRCInstance } from '../global-state';
 import { crcState, type StateUpdater } from './crc-state';
 import { crcWhenChanged } from './crc-when-changed';
+import { createElement } from '../element/create-element';
 
 interface StateProbeProps {
   onRender: (value: number, setValue: StateUpdater<number>) => void;
 }
 
-const StateProbe = defineComp(({ onRender }: StateProbeProps) => {
+const StateProbe = ({ onRender }: StateProbeProps) => {
   const [value, setValue] = crcState(0);
   onRender(value, setValue);
-});
+};
 
-const Empty = defineComp(() => {});
+const Empty = (_props: {}) => {};
 
-const CleanupSetterProbe = defineComp(({ onUpdater }: {
+const CleanupSetterProbe = ({ onUpdater }: {
   onUpdater: () => void;
 }) => {
   const [, setValue] = crcState(0);
@@ -24,7 +24,7 @@ const CleanupSetterProbe = defineComp(({ onUpdater }: {
     onUpdater();
     return value + 1;
   }), []);
-});
+};
 
 beforeEach(() => {
   document.body.innerHTML = '';
@@ -38,14 +38,14 @@ describe('crcState ownership', () => {
   it('ignores a stale setter after its component is removed', async () => {
     const canvas = createCanvas();
     let staleSetter: StateUpdater<number> | undefined;
-    const controller = crc(canvas, StateProbe({
+    const controller = crc(canvas, createElement(StateProbe, {
       onRender: (_value, setValue) => {
         staleSetter ??= setValue;
       },
     }));
     await nextFrame();
 
-    crc(canvas, Empty({}));
+    crc(canvas, createElement(Empty, {}));
     await nextFrame();
     expect(getCRCInstance(canvas).animationFrameId).toBeUndefined();
 
@@ -58,7 +58,7 @@ describe('crcState ownership', () => {
   it('cannot let a disposed mount setter update a replacement mount', async () => {
     const canvas = createCanvas();
     let staleSetter: StateUpdater<number> | undefined;
-    const staleController = crc(canvas, StateProbe({
+    const staleController = crc(canvas, createElement(StateProbe, {
       onRender: (_value, setValue) => {
         staleSetter ??= setValue;
       },
@@ -68,7 +68,7 @@ describe('crcState ownership', () => {
 
     const liveValues: number[] = [];
     let liveSetter: StateUpdater<number> | undefined;
-    const liveController = crc(canvas, StateProbe({
+    const liveController = crc(canvas, createElement(StateProbe, {
       onRender: (value, setValue) => {
         liveValues.push(value);
         liveSetter = setValue;
@@ -90,12 +90,12 @@ describe('crcState ownership', () => {
   it('ignores a setter called while its component is being removed', async () => {
     const canvas = createCanvas();
     let updaterCalls = 0;
-    const controller = crc(canvas, CleanupSetterProbe({
+    const controller = crc(canvas, createElement(CleanupSetterProbe, {
       onUpdater: () => updaterCalls++,
     }));
     await nextFrame();
 
-    crc(canvas, Empty({}));
+    crc(canvas, createElement(Empty, {}));
     await nextFrame();
 
     expect(updaterCalls).toBe(0);

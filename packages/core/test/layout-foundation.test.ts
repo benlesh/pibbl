@@ -1,7 +1,7 @@
 import { mountLayoutFoundation } from '@crc/scenarios';
 import { userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
-import { rect } from '../src/index';
+import { Rectangle } from '../src/index';
 import {
   placeAbsoluteChild,
   resolveContainerBox,
@@ -9,6 +9,7 @@ import {
 import { layoutGrid } from '../src/lib/layout/grid';
 import type { LayoutBox } from '../src/lib/layout/types';
 import { LayoutDiagnostic } from '../src/lib/style/diagnostics';
+import { createElement } from '../src/lib/element/create-element';
 
 let dispose: (() => void) | undefined;
 
@@ -133,11 +134,11 @@ describe('layout diagnostic hardening', () => {
 
   it('reports unresolved auto child dimensions with complete layout context', () => {
     expectDiagnostic(
-      () => placeAbsoluteChild(container, rect({
+      () => placeAbsoluteChild(container, createElement(Rectangle, {
         style: { width: 'auto', height: 20, fill: '#000000' },
       })),
       {
-        component: 'Rect',
+        component: 'Rectangle',
         property: 'width',
         suppliedValue: 'auto',
         algorithm: 'absolute',
@@ -148,7 +149,7 @@ describe('layout diagnostic hardening', () => {
 
   it('reports invalid Grid starts and overflowing spans with area context', () => {
     expectDiagnostic(
-      () => layoutGrid(container, [rect({
+      () => layoutGrid(container, [createElement(Rectangle, {
         style: {
           width: 20,
           height: 20,
@@ -161,7 +162,7 @@ describe('layout diagnostic hardening', () => {
         gridTemplateRows: [100],
       }, measurement),
       {
-        component: 'Rect',
+        component: 'Rectangle',
         property: 'gridColumnStart',
         suppliedValue: 3,
         algorithm: 'grid',
@@ -169,7 +170,7 @@ describe('layout diagnostic hardening', () => {
       },
     );
     const spanError = expectDiagnostic(
-      () => layoutGrid(container, [rect({
+      () => layoutGrid(container, [createElement(Rectangle, {
         style: {
           width: 20,
           height: 20,
@@ -183,7 +184,7 @@ describe('layout diagnostic hardening', () => {
         gridTemplateRows: [100],
       }, measurement),
       {
-        component: 'Rect',
+        component: 'Rectangle',
         property: 'gridColumnSpan',
         suppliedValue: 2,
         algorithm: 'grid',

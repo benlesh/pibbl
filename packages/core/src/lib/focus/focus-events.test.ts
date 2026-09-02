@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { defineComp } from '../define-comp';
 import type { CRCEventTargetRegistration } from '../events/registrations';
 import type { CRCEvent, CRCEventHandlers, CRCEventTarget } from '../events/types';
 import { executeRender } from '../execute-render';
@@ -8,10 +7,11 @@ import { crcEventListener } from '../hooks/crc-event-listener';
 import { crcEventTarget } from '../hooks/crc-event-target';
 import { crcState, type StateUpdater } from '../hooks/crc-state';
 import { mountCRC } from '../mount-crc';
-import type { CompEl, CRCController } from '../types';
+import type { CRCElement, CRCController } from '../types';
 import type { CRCFocusManager } from './focus-manager';
 import { transitionLogicalFocus } from './focus-events';
 import { focusManaged } from './policy-test-support';
+import { createElement } from '../element/create-element';
 
 const activeControllers = new Set<CRCController>();
 beforeEach(() => {
@@ -38,7 +38,7 @@ describe('logical focus transitions', () => {
         `${manager.snapshot(target).isFocused ? 'focused' : 'unfocused'}`,
       );
     };
-    const Root = defineComp(() => {
+    const Root = (_props: {}) => {
       crcEventListener({
         onFocusInCapture: event => record('root-capture', event),
         onFocusIn: event => record('root-bubble', event),
@@ -47,7 +47,7 @@ describe('logical focus transitions', () => {
         onFocusOut: event => record('root-bubble', event),
         onBlurCapture: event => record('root-capture', event),
       });
-      return Target({
+      return createElement(Target, {
         label: 'only',
         x: 0,
         handlers: {
@@ -57,8 +57,8 @@ describe('logical focus transitions', () => {
           onBlur: event => record('target', event),
         },
       });
-    });
-    const mounted = mountAndRender(focusManaged(Root({})));
+    };
+    const mounted = mountAndRender(focusManaged(createElement(Root, {})));
     manager = mounted.manager;
     const before = document.createElement('button');
     const after = document.createElement('button');
@@ -148,8 +148,8 @@ describe('logical focus transitions', () => {
     const record = (event: CRCEvent) => {
       trace.push(`${event.type}:${label(event.target)}->${label(event.relatedTarget)}`);
     };
-    const Root = defineComp(() => [
-      Target({
+    const Root = (_props: {}) => [
+      createElement(Target, {
         key: 'A', label: 'A', x: 0,
         handlers: {
           onFocusOut: event => {
@@ -162,16 +162,16 @@ describe('logical focus transitions', () => {
           onBlur: record,
         },
       }),
-      Target({
+      createElement(Target, {
         key: 'B', label: 'B', x: 35,
         handlers: { onFocusIn: record, onFocus: record, onFocusOut: record, onBlur: record },
       }),
-      Target({
+      createElement(Target, {
         key: 'C', label: 'C', x: 70,
         handlers: { onFocusIn: record, onFocus: record },
       }),
-    ]);
-    const mounted = mountAndRender(focusManaged(Root({})));
+    ];
+    const mounted = mountAndRender(focusManaged(createElement(Root, {})));
     manager = mounted.manager;
     targets = manager.candidates.map(candidate => candidate.target);
     transitionLogicalFocus(manager, targets[0], 'keyboard');
@@ -210,8 +210,8 @@ describe('logical focus transitions', () => {
     const record = (event: CRCEvent) => {
       trace.push(`${event.type}:${label(event.target)}->${label(event.relatedTarget)}`);
     };
-    const Root = defineComp(() => [
-      Target({
+    const Root = (_props: {}) => [
+      createElement(Target, {
         key: 'A', label: 'A', x: 0,
         handlers: {
           onFocusIn: record,
@@ -220,7 +220,7 @@ describe('logical focus transitions', () => {
           onBlur: record,
         },
       }),
-      Target({
+      createElement(Target, {
         key: 'B', label: 'B', x: 35,
         handlers: {
           onFocusIn: event => {
@@ -241,12 +241,12 @@ describe('logical focus transitions', () => {
           onBlur: record,
         },
       }),
-      Target({
+      createElement(Target, {
         key: 'C', label: 'C', x: 70,
         handlers: { onFocusIn: record, onFocus: record },
       }),
-    ]);
-    const mounted = mountAndRender(focusManaged(Root({})));
+    ];
+    const mounted = mountAndRender(focusManaged(createElement(Root, {})));
     manager = mounted.manager;
     targets = manager.candidates.map(candidate => candidate.target);
     transitionLogicalFocus(manager, targets[0], 'keyboard');
@@ -276,7 +276,7 @@ describe('logical focus transitions', () => {
     const trace: string[] = [];
     let manager!: CRCFocusManager;
     let canvas!: HTMLCanvasElement;
-    const Root = defineComp(() => Target({
+    const Root = (_props: {}) => createElement(Target, {
       label: 'only',
       x: 0,
       handlers: {
@@ -288,8 +288,8 @@ describe('logical focus transitions', () => {
           canvas.focus({ preventScroll: true });
         },
       },
-    }));
-    const mounted = mountAndRender(focusManaged(Root({})));
+    });
+    const mounted = mountAndRender(focusManaged(createElement(Root, {})));
     manager = mounted.manager;
     canvas = mounted.canvas;
     canvas.focus({ preventScroll: true });
@@ -313,32 +313,32 @@ describe('logical focus transitions', () => {
     vi.spyOn(globalThis, 'reportError').mockImplementation(error => reported.push(error));
     let generation = 0;
     let canvas!: HTMLCanvasElement;
-    const Root = defineComp(() => {
+    const Root = (_props: {}) => {
       const current = generation;
       crcEventListener({
         onFocusOut: () => {
           trace.push('ancestor-focusout');
           generation = 1;
-          executeRender(canvas, 2, focusManaged(Root({})));
+          executeRender(canvas, 2, focusManaged(createElement(Root, {})));
           throw new Error('expected focusout failure');
         },
         onBlur: () => trace.push('ancestor-blur'),
       });
       return [
-        current === 0 ? Target({
+        current === 0 ? createElement(Target, {
           key: 'A', label: 'A', x: 0,
           handlers: { onFocusOut: () => trace.push('old-focusout') },
         }) : undefined,
-        Target({
+        createElement(Target, {
           key: 'B', label: 'B', x: 50,
           handlers: current === 0 ?
             { onFocusIn: () => trace.push('old-focusin') } :
             { onFocusIn: () => trace.push('new-focusin'), onFocus: () => trace.push('new-focus') },
         }),
       ];
-    });
+    };
     canvas = createCanvas();
-    const mounted = mountAndRender(focusManaged(Root({})), canvas);
+    const mounted = mountAndRender(focusManaged(createElement(Root, {})), canvas);
     const [a, b] = mounted.manager.candidates.map(candidate => candidate.target);
     transitionLogicalFocus(mounted.manager, a, 'keyboard');
     await nextFrame();
@@ -381,19 +381,19 @@ describe('logical focus transitions', () => {
   it('coalesces focus-handler state and transition updates into one ordinary render', async () => {
     let renders = 0;
     let setValue!: StateUpdater<number>;
-    const Root = defineComp(() => {
+    const Root = (_props: {}) => {
       renders++;
       const [, setState] = crcState(0);
       setValue = setState;
       return [
-        Target({
+        createElement(Target, {
           key: 'A', label: 'A', x: 0,
           handlers: { onFocusOut: () => setValue(value => value + 1) },
         }),
-        Target({ key: 'B', label: 'B', x: 50, handlers: {} }),
+        createElement(Target, { key: 'B', label: 'B', x: 50, handlers: {} }),
       ];
-    });
-    const mounted = mountAndRender(focusManaged(Root({})));
+    };
+    const mounted = mountAndRender(focusManaged(createElement(Root, {})));
     const [a, b] = mounted.manager.candidates.map(candidate => candidate.target);
     transitionLogicalFocus(mounted.manager, a, 'keyboard');
     await nextFrame();
@@ -412,12 +412,12 @@ interface TargetProps {
   readonly handlers: CRCEventHandlers;
 }
 
-const Target = defineComp<TargetProps>(({ handlers, x }) => {
+const Target = ({ handlers, x }: TargetProps) => {
   crcEventTarget(handlers, {
     path: rectanglePath(x, 0, 40, 40),
     keyboardFocusable: true,
   });
-});
+};
 
 function focusScene({
   listenerHandlers = {},
@@ -425,19 +425,19 @@ function focusScene({
 }: {
   readonly listenerHandlers?: CRCEventHandlers;
   readonly targetHandlers?: CRCEventHandlers;
-}): CompEl<any, any> {
-  const Root = defineComp(() => {
+}): CRCElement<any> {
+  const Root = (_props: {}) => {
     crcEventListener(listenerHandlers);
     return [
-      Target({ key: 'A', label: 'A', x: 0, handlers: targetHandlers }),
-      Target({ key: 'B', label: 'B', x: 50, handlers: targetHandlers }),
+      createElement(Target, { key: 'A', label: 'A', x: 0, handlers: targetHandlers }),
+      createElement(Target, { key: 'B', label: 'B', x: 50, handlers: targetHandlers }),
     ];
-  });
-  return Root({});
+  };
+  return createElement(Root, {});
 }
 
 function mountAndRender(
-  element: CompEl<any, any>,
+  element: CRCElement<any>,
   canvas = createCanvas(),
 ) {
   const controller = mountCRC(canvas, element);

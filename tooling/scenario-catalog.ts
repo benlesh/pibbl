@@ -13,7 +13,10 @@ import {
 import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { relative, resolve } from 'node:path';
 import { format } from 'prettier';
-import { validateLearningSourceText } from './learning-source-contract';
+import {
+  validateLearningSourceText,
+  validateScenarioSourceText,
+} from './learning-source-contract';
 
 const workspaceRoot = process.cwd();
 const scenarioDirectory = resolve(workspaceRoot, 'packages/scenarios/src');
@@ -110,7 +113,7 @@ async function validateSources(): Promise<void> {
   validateScenarioCatalog(scenarioCatalog);
   validateLearningExampleCatalog(learningExampleCatalog);
   const discoveredPaths = (await readdir(scenarioDirectory, { recursive: true }))
-    .filter(name => /\.example\.tsx?$/u.test(name))
+    .filter(name => name.endsWith('.example.tsx'))
     .map(name => `packages/scenarios/src/${name.replaceAll('\\', '/')}`)
     .sort();
   const learningPaths = discoveredPaths.filter(path => path.includes('/learning/'));
@@ -139,6 +142,10 @@ async function validateSources(): Promise<void> {
 
   for (const entry of scenarioCatalog) {
     const sourceText = await readFile(resolve(workspaceRoot, entry.source.path), 'utf8');
+    if (!entry.source.path.endsWith('.example.tsx')) {
+      throw new Error(`Scenario "${entry.metadata.id}" must use a .example.tsx source path.`);
+    }
+    validateScenarioSourceText(sourceText, `Scenario "${entry.metadata.id}"`);
     if (!sourceText.includes(entry.source.marker)) {
       throw new Error(
         `Scenario "${entry.metadata.id}" source is missing marker "${entry.source.marker}".`,

@@ -3,7 +3,6 @@ import type { RectStyle } from '../style/types';
 import type { SystemStyle } from '../types';
 import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
-import { defineComp } from '../define-comp';
 import { crc } from '../crc';
 import { createElement } from '../element/create-element';
 import { Fragment } from '../element/fragment';
@@ -19,11 +18,12 @@ import { focusManaged } from '../focus/policy-test-support';
 import { componentTest } from '../test-utils/component-test';
 import type { CRCController, CRCNode } from '../types';
 import { takeScreenshot } from '../util/test-utils';
-import { clip } from './clip';
-import { g, Group } from './g';
-import { layer, Layer } from './layer';
-import { rect, Rectangle } from './rect';
-import { text } from './text';
+import { Clip } from './clip';
+import { Group } from './g';
+import { Layer } from './layer';
+import { Rectangle } from './rect';
+import { Text } from './text';
+import { definePrimitive } from '../define-primitive';
 
 describe('Layer children and retained subtree contract', () => {
   it('materializes arrays and iterables once per Layer traversal and paints every child in source order', () => {
@@ -198,14 +198,14 @@ describe('Layer children and retained subtree contract', () => {
   it('invalidates when an enumerable symbol-keyed prop changes', () => {
     const tone = Symbol('tone');
     let renders = 0;
-    const Counted = defineComp<{ [tone]: string }>((props) => {
+    const Counted = (props: { [tone]: string }) => {
       renders++;
-      return rect({
+      return createElement(Rectangle, {
         style: { width: 20, height: 20, fill: props[tone] },
       });
-    });
+    };
     const scene = (fill: string) => createElement(Layer, {
-      children: Counted({ [tone]: fill }),
+      children: createElement(Counted, { [tone]: fill }),
     });
     const mounted = mountNow(scene('#ef4444'));
     expect(renders).toBe(1);
@@ -219,14 +219,14 @@ describe('Layer children and retained subtree contract', () => {
 
   it('cache-hits for unchanged fresh structural trees', () => {
     let renders = 0;
-    const Counted = defineComp<{ tone: string }>(({ tone }) => {
+    const Counted = ({ tone }: { tone: string }) => {
       renders++;
-      return rect({ style: { width: 20, height: 20, fill: tone } });
-    });
+      return createElement(Rectangle, { style: { width: 20, height: 20, fill: tone } });
+    };
     const scene = () => createElement(Layer, {
       children: createElement(Group, {
         style: { translateX: 5 },
-        children: Counted({ tone: '#ef4444' }),
+        children: createElement(Counted, { tone: '#ef4444' }),
       }),
     });
     const mounted = mountNow(scene());
@@ -240,14 +240,14 @@ describe('Layer children and retained subtree contract', () => {
   it('does not execute an unchanged opaque nested iterable during equality', () => {
     let iterations = 0;
     let renders = 0;
-    const Counted = defineComp(() => {
+    const Counted = (_props: {}) => {
       renders++;
-      return rect({ style: { width: 20, height: 20, fill: '#ef4444' } });
-    });
+      return createElement(Rectangle, { style: { width: 20, height: 20, fill: '#ef4444' } });
+    };
     const nestedIterable: Iterable<CRCNode> = {
       *[Symbol.iterator]() {
         iterations++;
-        yield Counted({});
+        yield createElement(Counted, {});
       },
     };
     const scene = () => createElement(Layer, {
@@ -269,17 +269,17 @@ describe('Layer children and retained subtree contract', () => {
     const sharedStyle: RevisionStyle = { revision: 1 };
     let shouldFail = false;
     let renders = 0;
-    const Child = defineComp<{}, RevisionStyle>(() => {
+    const Child = (_props: {} & { style: Readonly<RevisionStyle> }) => {
       renders++;
       if (shouldFail) {
         sharedStyle.revision = 4;
         throw new Error('snapshot candidate failed');
       }
       sharedStyle.revision = 2;
-      return rect({ style: { width: 20, height: 20, fill: '#2563eb' } });
-    });
+      return createElement(Rectangle, { style: { width: 20, height: 20, fill: '#2563eb' } });
+    };
     const scene = () => createElement(Layer, {
-      children: Child({ style: sharedStyle }),
+      children: createElement(Child, { style: sharedStyle }),
     });
     const mounted = mountNow(scene());
 
@@ -302,12 +302,12 @@ describe('Layer children and retained subtree contract', () => {
 
   it('includes transparent policy metadata in retained-tree equality', () => {
     let renders = 0;
-    const Counted = defineComp(() => {
+    const Counted = (_props: {}) => {
       renders++;
-      return rect({ style: { width: 20, height: 20 } });
-    });
+      return createElement(Rectangle, { style: { width: 20, height: 20 } });
+    };
     const managedScene = () => createElement(Layer, {
-      children: focusManaged(Counted({})),
+      children: focusManaged(createElement(Counted, {})),
     });
     const mounted = mountNow(managedScene());
     expect(renders).toBe(1);
@@ -316,7 +316,7 @@ describe('Layer children and retained subtree contract', () => {
     expect(renders).toBe(1);
 
     renderNow(mounted.canvas, createElement(Layer, {
-      children: Counted({}),
+      children: createElement(Counted, {}),
     }));
     expect(renders).toBe(2);
     expect(getCRCInstance(mounted.canvas).eventRoot.focusPolicy).toBeUndefined();
@@ -325,18 +325,18 @@ describe('Layer children and retained subtree contract', () => {
 
   it('replays retained focus metadata on a cache hit without executing child components', () => {
     let renders = 0;
-    const FocusTarget = defineComp<{ label: string }>(({ label }) => {
+    const FocusTarget = ({ label }: { label: string }) => {
       renders++;
       crcEventTarget(
         { onClick: () => undefined },
         { path: rectanglePath(0, 0, 30, 30), fill: true },
       );
-      return rect({ style: { width: 30, height: 30 }, key: label });
-    });
+      return createElement(Rectangle, { style: { width: 30, height: 30 }, key: label });
+    };
     const scene = () => createElement(Layer, {
       children: focusManaged(createElement(Fragment, {
         key: 'cached-policy-scope',
-        children: FocusTarget({ label: 'cached' }),
+        children: createElement(FocusTarget, { label: 'cached' }),
       })),
     });
     const mounted = mountNow(scene());
@@ -483,7 +483,7 @@ describe('layer', () => {
   const MyComponent = ({ onRender, x = 0, y = 0, width = 100, height = 100, fillStyle = 'blue' }: MyComponentProps) => {
     const [counter, setCounter] = crcState(0);
     onRender();
-    return rect({
+    return createElement(Rectangle, {
       style: {
         x,
         y,
@@ -495,7 +495,7 @@ describe('layer', () => {
     });
   };
 
-  const myComponent = defineComp(MyComponent);
+  const myComponent = MyComponent;
 
   it('uses style as the sole offscreen-dimension authority', async () => {
     const drawImage = vi.spyOn(
@@ -506,12 +506,12 @@ describe('layer', () => {
       style: { width: 123, height: 87 },
       width: 500,
       height: 400,
-      render: rect({
+      render: createElement(Rectangle, {
         style: { x: 0, y: 0, width: 10, height: 10, fill: 'red' },
       }),
     } as any;
 
-    await componentTest(layer(legacyInput));
+    await componentTest(createElement(Layer, legacyInput));
 
     const offscreen = drawImage.mock.lastCall![0] as OffscreenCanvas;
     expect([offscreen.width, offscreen.height]).toEqual([123, 87]);
@@ -525,9 +525,9 @@ describe('layer', () => {
     canvas.style.cssText = 'display:block; width:300px; height:300px';
     document.body.appendChild(canvas);
     const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
-    const controller = crc(canvas, layer({
+    const controller = crc(canvas, createElement(Layer, {
       style: { width: 200, height: 100 },
-      render: rect({
+      children: createElement(Rectangle, {
         style: { width: 200, height: 100, fill: '#2563eb' },
       }),
     }), { pixelRatio: 2 });
@@ -549,14 +549,14 @@ describe('layer', () => {
     canvas.style.cssText = 'display:block; width:200px; height:100px';
     document.body.appendChild(canvas);
     let renders = 0;
-    const Counted = defineComp(() => {
+    const Counted = (_props: {}) => {
       renders++;
-      return rect({ style: { width: 200, height: 100, fill: '#2563eb' } });
-    });
+      return createElement(Rectangle, { style: { width: 200, height: 100, fill: '#2563eb' } });
+    };
     const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
-    const controller = crc(canvas, layer({
+    const controller = crc(canvas, createElement(Layer, {
       style: { width: 200, height: 100 },
-      render: Counted({}),
+      children: createElement(Counted, {}),
     }), { pixelRatio: 2 });
     await settleSurface();
 
@@ -572,8 +572,8 @@ describe('layer', () => {
   });
 
   it('renders basic content to offscreen canvas', async () => {
-    await componentTest(layer({
-      render: myComponent({
+    await componentTest(createElement(Layer, {
+      children: createElement(myComponent, {
         onRender: () => {},
         x: 50,
         y: 50,
@@ -585,12 +585,12 @@ describe('layer', () => {
   });
 
   it('respects custom dimensions', async () => {
-    await componentTest(layer({
+    await componentTest(createElement(Layer, {
       style: {
         width: 200,
         height: 150
       },
-      render: rect({
+      children: createElement(Rectangle, {
         style: {
           x: 0,
           y: 0,
@@ -611,10 +611,10 @@ describe('layer', () => {
       const NORMAL_RECT_CENTER = { x: 50, y: 50 };
       const LAYERED_RECT_CENTER = { x: 150, y: 50 };
 
-      const _canvas = await componentTest(g({
+      const _canvas = await componentTest(createElement(Group, {
         children: [
           // Non-layered component
-          myComponent({
+          createElement(myComponent, {
             onRender: () => normalRenderCount++,
             x: 0,
             y: 0,
@@ -623,8 +623,8 @@ describe('layer', () => {
             fillStyle: 'blue',
           }),
           // Same component inside a layer
-          layer({
-            render: myComponent({
+          createElement(Layer, {
+            children: createElement(myComponent, {
               onRender: () => layeredRenderCount++,
               x: 100,
               y: 0,
@@ -653,21 +653,21 @@ describe('layer', () => {
 
     it('only re-renders when props change', async () => {
       let renderCount = 0;
-      const countedRect = defineComp<RectProps, RectStyle>((props, style) => {
+      const countedRect = definePrimitive<RectProps, RectStyle>((props, style) => {
         renderCount++;
-        return rect({
+        return createElement(Rectangle, {
           ...props,
           style,
         });
       });
 
-      const wrapperComponent = defineComp(() => {
+      const wrapperComponent = (_props: {}) => {
         const [fillStyle, setFillStyle] = crcState('blue');
         const [layerWidth, setLayerWidth] = crcState(200);
 
-        return g({
+        return createElement(Group, {
           children: [
-            rect({
+            createElement(Rectangle, {
               style: {
                 x: 0,
                 y: 0,
@@ -680,11 +680,11 @@ describe('layer', () => {
                 setLayerWidth(300);
               },
             }),
-            layer({
+            createElement(Layer, {
               style: {
                 width: layerWidth
               },
-              render: countedRect({
+              children: createElement(countedRect, {
                 style: {
                   x: 0,
                   y: 0,
@@ -696,9 +696,9 @@ describe('layer', () => {
             }),
           ],
         });
-      });
+      };
 
-      const canvas = await componentTest(wrapperComponent({}));
+      const canvas = await componentTest(createElement(wrapperComponent, {}));
       // Click to trigger state changes
       await canvas.click({ position: { x: 100, y: 100 } });
 
@@ -712,12 +712,9 @@ describe('layer', () => {
       interface CountedRectStyle extends SystemStyle {
         version: number;
       }
-      const countedRect = defineComp<
-        typeof renderProps,
-        CountedRectStyle
-      >(({ onRender }) => {
+      const countedRect = ({ onRender }: typeof renderProps & { style: Readonly<CountedRectStyle> }) => {
         onRender();
-        return rect({
+        return createElement(Rectangle, {
           style: {
             x: 0,
             y: 0,
@@ -726,12 +723,12 @@ describe('layer', () => {
             fill: 'blue',
           },
         });
-      });
-      const wrapperComponent = defineComp(() => {
+      };
+      const wrapperComponent = (_props: {}) => {
         const [styleVersion, setStyleVersion] = crcState(1);
-        return g({
+        return createElement(Group, {
           children: [
-            rect({
+            createElement(Rectangle, {
               style: {
                 x: 100,
                 y: 0,
@@ -741,17 +738,17 @@ describe('layer', () => {
               },
               onClick: () => setStyleVersion(2),
             }),
-            layer({
-              render: countedRect({
+            createElement(Layer, {
+              children: createElement(countedRect, {
                 ...renderProps,
                 style: { version: styleVersion },
               }),
             }),
           ],
         });
-      });
+      };
 
-      const canvas = await componentTest(wrapperComponent({}));
+      const canvas = await componentTest(createElement(wrapperComponent, {}));
       expect(renderCount).toBe(1);
 
       await canvas.click({ position: { x: 150, y: 50 } });
@@ -761,12 +758,12 @@ describe('layer', () => {
 
     it('re-renders when only the root element props change', async () => {
       let renderCount = 0;
-      const countedRect = defineComp<{
+      const countedRect = ({ onRender }: {
         version: number;
         onRender: () => void;
-      }>(({ onRender }) => {
+      }) => {
         onRender();
-        return rect({
+        return createElement(Rectangle, {
           style: {
             x: 0,
             y: 0,
@@ -775,12 +772,12 @@ describe('layer', () => {
             fill: 'blue',
           },
         });
-      });
-      const wrapperComponent = defineComp(() => {
+      };
+      const wrapperComponent = (_props: {}) => {
         const [version, setVersion] = crcState(1);
-        return g({
+        return createElement(Group, {
           children: [
-            rect({
+            createElement(Rectangle, {
               style: {
                 x: 100,
                 y: 0,
@@ -790,17 +787,17 @@ describe('layer', () => {
               },
               onClick: () => setVersion(2),
             }),
-            layer({
-              render: countedRect({
+            createElement(Layer, {
+              children: createElement(countedRect, {
                 version,
                 onRender: () => renderCount++,
               }),
             }),
           ],
         });
-      });
+      };
 
-      const canvas = await componentTest(wrapperComponent({}));
+      const canvas = await componentTest(createElement(wrapperComponent, {}));
       expect(renderCount).toBe(1);
 
       await canvas.click({ position: { x: 150, y: 50 } });
@@ -811,10 +808,10 @@ describe('layer', () => {
     it('re-renders when dimensions change on the same mount', async () => {
       let renderCount = 0;
       const onRender = () => renderCount++;
-      const wrapperComponent = defineComp(() => {
+      const wrapperComponent = (_props: {}) => {
         const [size, setSize] = crcState(100);
-        return g({ children: [
-          rect({
+        return createElement(Group, { children: [
+          createElement(Rectangle, {
             style: {
               x: 0,
               y: 0,
@@ -824,21 +821,21 @@ describe('layer', () => {
             },
             onClick: () => setSize(200),
           }),
-          layer({
+          createElement(Layer, {
             style: {
               width: size,
               height: size
             },
-            render: myComponent({
+            children: createElement(myComponent, {
               onRender,
               width: size,
               height: size
             })
           }),
         ] });
-      });
+      };
 
-      const canvas = await componentTest(wrapperComponent({}));
+      const canvas = await componentTest(createElement(wrapperComponent, {}));
       expect(renderCount).toBe(1);
 
       await canvas.click({ position: { x: 250, y: 250 } });
@@ -849,13 +846,13 @@ describe('layer', () => {
 
   describe('complex rendering', () => {
     it('handles nested components', async () => {
-      await componentTest(layer({
-        render: g({
+      await componentTest(createElement(Layer, {
+        children: createElement(Group, {
           style: {
             translateX: 100,
             translateY: 100
           },
-          children: [rect({
+          children: [createElement(Rectangle, {
             style: {
               x: 0,
               y: 0,
@@ -863,25 +860,24 @@ describe('layer', () => {
               height: 50,
               fill: 'purple'
             }
-          }), text({
+          }), createElement(Text, {
             style: {
               x: 10,
               y: 30,
-              text: 'Layered!',
               fill: 'white'
             }
-          })]
+          }, 'Layered!')]
         }),
       }));
       await takeScreenshot(page);
     });
 
     it('handles multiple layers', async () => {
-      await componentTest(g({
+      await componentTest(createElement(Group, {
         children: [
           // Background layer
-          layer({
-            render: rect({
+          createElement(Layer, {
+            children: createElement(Rectangle, {
               style: {
                 x: 0,
                 y: 0,
@@ -892,13 +888,13 @@ describe('layer', () => {
             }),
           }),
           // Content layer
-          layer({
-            render: g({
+          createElement(Layer, {
+            children: createElement(Group, {
               style: {
                 translateX: 50,
                 translateY: 50
               },
-              children: [rect({
+              children: [createElement(Rectangle, {
                 style: {
                   x: 0,
                   y: 0,
@@ -906,19 +902,18 @@ describe('layer', () => {
                   height: 100,
                   fill: 'rgba(255, 0, 0, 0.5)'
                 }
-              }), text({
+              }), createElement(Text, {
                 style: {
                   x: 20,
                   y: 50,
-                  text: 'Multiple Layers',
                   fill: 'white'
                 }
-              })]
+              }, 'Multiple Layers')]
             }),
           }),
           // Overlay layer
-          layer({
-            render: rect({
+          createElement(Layer, {
+            children: createElement(Rectangle, {
               style: {
                 x: 100,
                 y: 100,
@@ -940,8 +935,8 @@ describe('layer', () => {
       const BLUE_RECT_CENTER = { x: 75, y: 75 };
       const EMPTY_SPACE_POSITION = { x: 25, y: 25 };
 
-      const canvas = await componentTest(layer({
-        render: rect({
+      const canvas = await componentTest(createElement(Layer, {
+        children: createElement(Rectangle, {
           style: {
             x: 50,
             y: 50,
@@ -966,11 +961,11 @@ describe('layer', () => {
       const RED_RECT_CENTER = { x: 75, y: 75 };
       const BLUE_RECT_EXCLUSIVE_AREA = { x: 25, y: 25 };
 
-      const canvas = await componentTest(g({
+      const canvas = await componentTest(createElement(Group, {
         children: [
           // Bottom layer
-          layer({
-            render: rect({
+          createElement(Layer, {
+            children: createElement(Rectangle, {
               style: {
                 x: 0,
                 y: 0,
@@ -982,8 +977,8 @@ describe('layer', () => {
             }),
           }),
           // Top layer
-          layer({
-            render: rect({
+          createElement(Layer, {
+            children: createElement(Rectangle, {
               style: {
                 x: 50,
                 y: 50,
@@ -1009,10 +1004,10 @@ describe('layer', () => {
     it('lets root content painted after a layer win the global target', async () => {
       const onClickLayer = vi.fn();
       const onClickRoot = vi.fn();
-      const canvas = await componentTest(g({
+      const canvas = await componentTest(createElement(Group, {
         children: [
-          layer({
-            render: rect({
+          createElement(Layer, {
+            children: createElement(Rectangle, {
               style: {
                 x: 40,
                 y: 40,
@@ -1023,7 +1018,7 @@ describe('layer', () => {
               onClick: onClickLayer,
             }),
           }),
-          rect({
+          createElement(Rectangle, {
             style: {
               x: 70,
               y: 70,
@@ -1043,18 +1038,18 @@ describe('layer', () => {
 
     it('composes the parent transform into layer hit testing', async () => {
       const onClick = vi.fn();
-      const canvas = await componentTest(g({
+      const canvas = await componentTest(createElement(Group, {
         style: {
           translateX: 120,
           translateY: 50,
           scaleX: 1.5
         },
-        children: [layer({
+        children: [createElement(Layer, {
           style: {
             width: 80,
             height: 80
           },
-          render: rect({
+          children: createElement(Rectangle, {
             style: {
               x: 0,
               y: 0,
@@ -1076,12 +1071,12 @@ describe('layer', () => {
 
     it('clips interaction to the offscreen layer dimensions', async () => {
       const onClick = vi.fn();
-      const canvas = await componentTest(layer({
+      const canvas = await componentTest(createElement(Layer, {
         style: {
           width: 50,
           height: 50
         },
-        render: rect({
+        children: createElement(Rectangle, {
           style: {
             x: 0,
             y: 0,
@@ -1102,22 +1097,22 @@ describe('layer', () => {
 
     it('recursively resolves transformed nested layers', async () => {
       const onClick = vi.fn();
-      const canvas = await componentTest(layer({
+      const canvas = await componentTest(createElement(Layer, {
         style: {
           width: 200,
           height: 150
         },
-        render: g({
+        children: createElement(Group, {
           style: {
             translateX: 60,
             translateY: 30
           },
-          children: [layer({
+          children: [createElement(Layer, {
             style: {
               width: 80,
               height: 80
             },
-            render: rect({
+            children: createElement(Rectangle, {
               style: {
                 x: 0,
                 y: 0,
@@ -1142,12 +1137,12 @@ describe('layer', () => {
       const clipPath = new Path2D();
       clipPath.rect(50, 50, 80, 80);
       const onClick = vi.fn();
-      const canvas = await componentTest(clip({
+      const canvas = await componentTest(createElement(Clip, {
         style: {
           d: clipPath
         },
-        children: [layer({
-          render: rect({
+        children: [createElement(Layer, {
+          children: createElement(Rectangle, {
             style: {
               x: 0,
               y: 0,
@@ -1169,9 +1164,9 @@ describe('layer', () => {
 
     it('shares transitions, cursor targeting, and observer order with the root', async () => {
       const calls: string[] = [];
-      const LayerTarget = defineComp(() => {
+      const LayerTarget = (_props: {}) => {
         crcEvent('mousemove', () => calls.push('observer'));
-        return rect({
+        return createElement(Rectangle, {
           style: {
             x: 50,
             y: 50,
@@ -1184,10 +1179,10 @@ describe('layer', () => {
           onMouseOut: () => calls.push('layer-out'),
           onMouseMove: () => calls.push('layer-move'),
         });
-      });
-      const canvas = await componentTest(g({
+      };
+      const canvas = await componentTest(createElement(Group, {
         children: [
-          rect({
+          createElement(Rectangle, {
             style: {
               x: 0,
               y: 0,
@@ -1199,7 +1194,7 @@ describe('layer', () => {
             onMouseOver: () => calls.push('root-over'),
             onMouseMove: () => calls.push('root-move'),
           }),
-          layer({ render: LayerTarget({}) }),
+          createElement(Layer, { children: createElement(LayerTarget, {}) }),
         ],
       }));
 
@@ -1221,9 +1216,9 @@ describe('layer', () => {
     });
 
     it('roots a pathless layer cursor as the Canvas fallback', async () => {
-      const LayerDefaultCursor = defineComp(() => {
+      const LayerDefaultCursor = (_props: {}) => {
         crcCursor({ style: 'wait' });
-        return rect({
+        return createElement(Rectangle, {
           style: {
             x: 0,
             y: 0,
@@ -1232,9 +1227,9 @@ describe('layer', () => {
             fill: 'gray',
           },
         });
-      });
-      const canvas = await componentTest(layer({
-        render: LayerDefaultCursor({}),
+      };
+      const canvas = await componentTest(createElement(Layer, {
+        children: createElement(LayerDefaultCursor, {}),
       }));
 
       await canvas.mouseMove({ position: { x: 50, y: 50 } });

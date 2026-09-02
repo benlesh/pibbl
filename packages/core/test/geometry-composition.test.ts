@@ -12,16 +12,8 @@ import {
 } from '@crc/scenarios';
 import { page } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
-import geometryMatrixSource from '../../scenarios/src/geometry-matrix.example.ts?raw';
-import {
-  absolute,
-  clip,
-  crc,
-  g,
-  layer,
-  rect,
-  type CRCController,
-} from '../src/index';
+import geometryMatrixSource from '../../scenarios/src/geometry-matrix.example.tsx?raw';
+import { Absolute, Clip, crc, Group, Layer, Rectangle, type CRCController } from '../src/index';
 import {
   clickMouse,
   backingPointForLogical,
@@ -29,6 +21,7 @@ import {
   moveMouse,
 } from './support/mouse-input';
 import { expectVisualMatch } from './visual-compare';
+import { createElement } from '../src/lib/element/create-element';
 
 const activeControllers = new Set<ScenarioController<GeometryMatrixState>>();
 const activeRuntimeControllers = new Set<CRCController>();
@@ -125,16 +118,16 @@ describe('geometry interaction matrix', () => {
     canvas.height = 120;
     document.body.replaceChildren(canvas);
     const moves: string[] = [];
-    const controller = crc(canvas, g({
+    const controller = crc(canvas, createElement(Group, {
       style: {
         scaleX: 1.5,
         scaleY: 1.25,
         translateX: 20,
         translateY: 10,
       },
-      children: [absolute({
+      children: [createElement(Absolute, {
         style: { width: 80, height: 60 },
-        children: [rect({
+        children: [createElement(Rectangle, {
           style: {
             left: -5.25,
             top: 4.5,
@@ -189,13 +182,13 @@ describe('geometry interaction matrix', () => {
     const clippingPath = new Path2D();
     clippingPath.rect(30, 20, 40, 40);
     const moves: string[] = [];
-    const controller = crc(canvas, clip({
+    const controller = crc(canvas, createElement(Clip, {
       style: { d: clippingPath },
-      children: [layer({
+      children: [createElement(Layer, {
         style: { width: 120, height: 90 },
-        render: absolute({
+        children: createElement(Absolute, {
           style: { width: 120, height: 90 },
-          children: [rect({
+          children: [createElement(Rectangle, {
             style: {
               left: 20,
               top: 10,

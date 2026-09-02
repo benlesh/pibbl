@@ -2,7 +2,8 @@ import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
 import { componentTest } from '../test-utils/component-test';
 import { takeScreenshot } from '../util/test-utils';
-import { rect } from './rect';
+import { Rectangle } from './rect';
+import { createElement } from '../element/create-element';
 
 const defaultStyle = {
   x: 50,
@@ -16,14 +17,14 @@ const defaultStyle = {
 
 describe('rect', () => {
   it('renders a rectangle in browser', async () => {
-    await componentTest(rect({
+    await componentTest(createElement(Rectangle, {
       style: defaultStyle,
     }));
     await takeScreenshot(page);
   });
 
   it('defaults omitted x and y to zero', async () => {
-    const canvas = await componentTest(rect({
+    const canvas = await componentTest(createElement(Rectangle, {
       style: {
         width: 20,
         height: 20,
@@ -38,7 +39,7 @@ describe('rect', () => {
 
   describe('other styles', () => {
     it('should change the mouse cursor to a pointer when hovering over the rect', async () => {
-      const canvas = await componentTest(rect({
+      const canvas = await componentTest(createElement(Rectangle, {
         style: {
           ...defaultStyle,
           cursor: 'pointer',
@@ -75,7 +76,7 @@ describe('rect', () => {
       it(`should handle ${event} events`, async () => {
         const handlerFn = vi.fn();
 
-        const canvas = await componentTest(rect({
+        const canvas = await componentTest(createElement(Rectangle, {
           style: defaultStyle,
           [handler]: handlerFn,
         }));
@@ -112,7 +113,7 @@ describe('rect', () => {
         const onBorderX = x - 1;
         const onBorderY = y - 1;
 
-        const canvas = await componentTest(rect({
+        const canvas = await componentTest(createElement(Rectangle, {
           style: {
             ...defaultStyle,
             strokeWidth: lineWidth,
@@ -156,7 +157,7 @@ describe('rect', () => {
         const centerX = x + width / 2;
         const centerY = y + height / 2;
 
-        const canvas = await componentTest(rect({
+        const canvas = await componentTest(createElement(Rectangle, {
           style: {
             ...defaultStyle,
             strokeWidth: 0,

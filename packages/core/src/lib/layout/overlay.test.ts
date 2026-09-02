@@ -1,15 +1,16 @@
 import { describe, expect, it, vi } from 'vitest';
-import { rect } from '../components/rect';
+import { Rectangle } from '../components/rect';
 import { crc } from '../crc';
-import { defineComp } from '../define-comp';
 import { crcLayoutBox } from '../hooks/crc-layout-box';
 import { componentTest } from '../test-utils/component-test';
 import type { SystemStyle } from '../types';
-import { overlay, placeOverlayChild } from './overlay';
+import { Overlay, placeOverlayChild } from './overlay';
+import { createElement } from '../element/create-element';
+import { definePrimitive } from '../define-primitive';
 
 describe('overlay layout', () => {
   it('centers a definite child in the shared content box', () => {
-    const child = rect({
+    const child = createElement(Rectangle, {
       style: {
         width: 40,
         height: 20,
@@ -25,7 +26,7 @@ describe('overlay layout', () => {
   });
 
   it('keeps mathematical centering for oversized children', () => {
-    const child = rect({
+    const child = createElement(Rectangle, {
       style: {
         width: 300,
         height: 120,
@@ -41,7 +42,7 @@ describe('overlay layout', () => {
   });
 
   it('clamps stretched axes at zero', () => {
-    const child = rect({ style: { width: 40, height: 20 } });
+    const child = createElement(Rectangle, { style: { width: 40, height: 20 } });
 
     expect(placeOverlayChild(
       { x: 0, y: 0, width: 0, height: 0 },
@@ -56,9 +57,9 @@ describe('overlay layout', () => {
     }
     const onClick = vi.fn();
     let observed: Readonly<{ x: number; y: number; width: number; height: number }>;
-    const Probe = defineComp<{ onClick: () => void }, ProbeStyle>((props, style) => {
+    const Probe = definePrimitive<{ onClick: () => void }, ProbeStyle>((props, style) => {
       observed = crcLayoutBox();
-      return rect({
+      return createElement(Rectangle, {
         style: {
           x: 0,
           y: 0,
@@ -69,9 +70,9 @@ describe('overlay layout', () => {
         onClick: props.onClick,
       });
     });
-    const canvas = await componentTest(overlay({
+    const canvas = await componentTest(createElement(Overlay, {
       style: { width: 100, height: 50 },
-      children: [Probe({
+      children: [createElement(Probe, {
         style: { width: 10, height: 10 },
         onClick,
       })],
@@ -86,7 +87,7 @@ describe('overlay layout', () => {
 
   it('clips both paint and interaction to the content box', async () => {
     const clippedClick = vi.fn();
-    const clipped = await componentTest(overlay({
+    const clipped = await componentTest(createElement(Overlay, {
       style: {
         width: 100,
         height: 50,
@@ -94,7 +95,7 @@ describe('overlay layout', () => {
         alignItems: 'center',
         justifyItems: 'center',
       },
-      children: [rect({
+      children: [createElement(Rectangle, {
         style: { width: 200, height: 20, fill: 'red' },
         onClick: clippedClick,
       })],
@@ -107,7 +108,7 @@ describe('overlay layout', () => {
     expect(clippedClick).toHaveBeenCalledOnce();
 
     const visibleClick = vi.fn();
-    const visible = await componentTest(overlay({
+    const visible = await componentTest(createElement(Overlay, {
       style: {
         width: 100,
         height: 50,
@@ -115,7 +116,7 @@ describe('overlay layout', () => {
         alignItems: 'center',
         justifyItems: 'center',
       },
-      children: [rect({
+      children: [createElement(Rectangle, {
         style: { width: 200, height: 20, fill: 'red' },
         onClick: visibleClick,
       })],
@@ -137,13 +138,11 @@ describe('overlay layout', () => {
       };
       const canvas = document.createElement('canvas');
       document.body.appendChild(canvas);
-      const UnsafeOverlay = overlay as any;
-
       try {
-        const controller = crc(canvas, UnsafeOverlay({
+        const controller = crc(canvas, createElement(Overlay, {
           style: { width: value, height: 20 },
           children: [],
-        }));
+        } as any));
         expect(() => pending?.(0)).toThrowError(/width.*unsupported/i);
         controller.dispose();
       } finally {
@@ -153,5 +152,5 @@ describe('overlay layout', () => {
   );
 
   // @ts-expect-error overlay container alignment uses CRC-native values
-  void overlay({ style: { alignItems: 'flex-start' }, children: [] });
+  void createElement(Overlay, { style: { alignItems: 'flex-start' }, children: [] });
 });

@@ -1,21 +1,21 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { defineComp } from '../define-comp';
 import { createElement } from '../element/create-element';
 import type { CRCEventHandlers } from '../events/types';
 import { getCRCInstance } from '../global-state';
 import { crcEventListener } from '../hooks/crc-event-listener';
 import { crcEventTarget } from '../hooks/crc-event-target';
 import { componentTest } from '../test-utils/component-test';
-import type { CompEl } from '../types';
-import { horizontalLine } from './horizontal-line';
-import { img } from './img';
+import type { CRCElement } from '../types';
+import { HorizontalLine } from './horizontal-line';
+import { Image } from './img';
 import { Layer } from './layer';
-import { line } from './line';
-import { path } from './path';
-import { rect, Rectangle } from './rect';
-import { svgPath } from './svg-path';
-import { text } from './text';
-import { verticalLine } from './vertical-line';
+import { Line } from './line';
+import { Path } from './path';
+import { Rectangle } from './rect';
+import { SvgPath } from './svg-path';
+import { Text } from './text';
+import { VerticalLine } from './vertical-line';
+import { definePrimitive } from '../define-primitive';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -24,11 +24,11 @@ afterEach(() => {
 describe('built-in DOM-aligned event integration', () => {
   const builtIns: readonly {
     name: string;
-    create: (handlers: CRCEventHandlers) => CompEl<any, any>;
+    create: (handlers: CRCEventHandlers) => CRCElement<any>;
   }[] = [
     {
       name: 'path',
-      create: handlers => path({
+      create: handlers => createElement(Path, {
         ...handlers,
         style: {
           d: rectanglePath(0, 0, 20, 20),
@@ -38,21 +38,21 @@ describe('built-in DOM-aligned event integration', () => {
     },
     {
       name: 'rect',
-      create: handlers => rect({
+      create: handlers => createElement(Rectangle, {
         ...handlers,
         style: { width: 20, height: 20, fill: 'red' },
       }),
     },
     {
       name: 'text',
-      create: handlers => text({
+      create: handlers => createElement(Text, {
         ...handlers,
-        style: { text: 'target', fill: 'black' },
-      }),
+        style: { fill: 'black' },
+      }, 'target'),
     },
     {
       name: 'img',
-      create: handlers => img({
+      create: handlers => createElement(Image, {
         ...handlers,
         style: {
           src: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==',
@@ -63,7 +63,7 @@ describe('built-in DOM-aligned event integration', () => {
     },
     {
       name: 'line',
-      create: handlers => line({
+      create: handlers => createElement(Line, {
         ...handlers,
         style: {
           coords: [[0, 0], [20, 20]],
@@ -75,7 +75,7 @@ describe('built-in DOM-aligned event integration', () => {
     },
     {
       name: 'horizontalLine',
-      create: handlers => horizontalLine({
+      create: handlers => createElement(HorizontalLine, {
         ...handlers,
         style: {
           y: 10,
@@ -88,7 +88,7 @@ describe('built-in DOM-aligned event integration', () => {
     },
     {
       name: 'verticalLine',
-      create: handlers => verticalLine({
+      create: handlers => createElement(VerticalLine, {
         ...handlers,
         style: {
           x: 10,
@@ -101,7 +101,7 @@ describe('built-in DOM-aligned event integration', () => {
     },
     {
       name: 'svgPath',
-      create: handlers => svgPath({
+      create: handlers => createElement(SvgPath, {
         ...handlers,
         style: {
           d: 'M 0 0 L 20 20',
@@ -142,7 +142,7 @@ describe('built-in DOM-aligned event integration', () => {
   );
 
   it('keeps a cursor-only built-in as one geometric target', async () => {
-    const canvas = await componentTest(rect({
+    const canvas = await componentTest(createElement(Rectangle, {
       style: {
         width: 20,
         height: 20,
@@ -165,25 +165,25 @@ describe('built-in DOM-aligned event integration', () => {
   ] as const)(
     'gives a $mode custom component only its explicit event participation',
     async ({ mode, expectedTargets }) => {
-      const Silent = defineComp<CRCEventHandlers>((_props, _style, ctx) => {
+      const Silent = definePrimitive<CRCEventHandlers>((_props, _style, ctx) => {
         ctx.fillRect(0, 0, 20, 20);
       });
-      const Forwarding = defineComp<CRCEventHandlers>(props => rect({
+      const Forwarding = (props: CRCEventHandlers) => createElement(Rectangle, {
         ...props,
         style: { width: 20, height: 20, fill: 'red' },
-      }));
-      const ExplicitTarget = defineComp<CRCEventHandlers>(props => {
+      });
+      const ExplicitTarget = (props: CRCEventHandlers) => {
         crcEventTarget(props, {
           path: rectanglePath(0, 0, 20, 20),
           fill: true,
         });
-      });
+      };
       const handlers: CRCEventHandlers = {
         onPointerDown: () => undefined,
       };
-      const element = mode === 'non-forwarding' ? Silent(handlers) :
-        mode === 'forwarding' ? Forwarding(handlers) :
-        ExplicitTarget(handlers);
+      const element = mode === 'non-forwarding' ? createElement(Silent, handlers) :
+        mode === 'forwarding' ? createElement(Forwarding, handlers) :
+        createElement(ExplicitTarget, handlers);
       const canvas = await componentTest(element);
 
       expect(getCRCInstance(canvas.element).eventRoot.targets.size)
@@ -195,7 +195,7 @@ describe('built-in DOM-aligned event integration', () => {
 describe('layer event ancestry', () => {
   it('captures above a layer, targets inside it, and bubbles back out', async () => {
     const trace: string[] = [];
-    const Parent = defineComp(() => {
+    const Parent = (_props: {}) => {
       crcEventListener({
         onClickCapture: () => trace.push('parent-capture'),
         onClick: () => trace.push('parent-bubble'),
@@ -206,8 +206,8 @@ describe('layer event ancestry', () => {
           onClick: () => trace.push('layer-target'),
         }),
       });
-    });
-    const canvas = await componentTest(Parent({}));
+    };
+    const canvas = await componentTest(createElement(Parent, {}));
 
     await canvas.click({ position: { x: 20, y: 20 } });
 
@@ -223,13 +223,13 @@ describe('layer event ancestry', () => {
       CanvasRenderingContext2D.prototype,
       'drawImage',
     );
-    const Host = defineComp(() => createElement(Layer, {
+    const Host = (_props: {}) => createElement(Layer, {
       children: createElement(Rectangle, {
         style: { width: 20, height: 20, fill: 'red' },
         onClick: () => undefined,
       }),
-    }));
-    const canvas = await componentTest(Host({}));
+    });
+    const canvas = await componentTest(createElement(Host, {}));
     const childCanvas = drawImage.mock.calls
       .map(call => call[0])
       .find(source => source instanceof OffscreenCanvas) as OffscreenCanvas;

@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 import { crc } from '../crc';
-import { defineComp } from '../define-comp';
 import { getCRCInstance } from '../global-state';
 import { crcLayoutBox } from '../hooks/crc-layout-box';
 import { crcRef } from '../hooks/crc-ref';
@@ -8,32 +7,34 @@ import { crcState } from '../hooks/crc-state';
 import { crcWhenChanged } from '../hooks/crc-when-changed';
 import { componentTest } from '../test-utils/component-test';
 import type { Length } from '../style/types';
-import { rect } from '../components/rect';
-import { horizontalLine } from '../components/horizontal-line';
-import { img } from '../components/img';
-import { layer } from '../components/layer';
-import { text } from '../components/text';
-import { verticalLine } from '../components/vertical-line';
-import type { SystemStyle } from '../types';
+import { Rectangle } from '../components/rect';
+import { HorizontalLine } from '../components/horizontal-line';
+import { Image } from '../components/img';
+import { Layer } from '../components/layer';
+import { Text } from '../components/text';
+import { VerticalLine } from '../components/vertical-line';
+import type { CRCElement, SystemStyle } from '../types';
 import {
   createPlacementIdentityHint,
   placeChild,
 } from './place-child';
+import { createElement } from '../element/create-element';
+import { definePrimitive } from '../define-primitive';
 
 describe('layout placement', () => {
   it('publishes a stable local allocation and composes placement into paint and interaction', async () => {
     const boxes: Readonly<{ x: number; y: number; width: number; height: number }>[] = [];
     const transforms: DOMMatrix[] = [];
     const onClick = vi.fn();
-    const Probe = defineComp((_props: {}, _style, context) => {
+    const Probe = definePrimitive<{}>((_props: {}, _style, context) => {
       boxes.push(crcLayoutBox());
       transforms.push(context.getTransform());
-      return rect({
+      return createElement(Rectangle, {
         style: { width: 80, height: 20, fill: 'red' },
         onClick,
       });
     });
-    const child = Probe({ key: 'probe' });
+    const child = createElement(Probe, { key: 'probe' });
     const element = placeChild({
       element: child,
       box: { x: 40, y: 30, width: 80, height: 20 },
@@ -54,7 +55,7 @@ describe('layout placement', () => {
 
   it('applies an optional child-space clip to paint and hit testing', async () => {
     const onClick = vi.fn();
-    const child = rect({
+    const child = createElement(Rectangle, {
       style: { width: 100, height: 40, fill: 'red' },
       onClick,
     });
@@ -73,16 +74,16 @@ describe('layout placement', () => {
 
   it('preserves keyed state across reflow', async () => {
     const values: number[] = [];
-    const Stateful = defineComp(() => {
+    const Stateful = (_props: {}) => {
       const [value, setValue] = crcState(0);
       values.push(value);
-      return rect({
+      return createElement(Rectangle, {
         style: { width: 40, height: 20, fill: 'blue' },
         onClick: () => setValue(old => old + 1),
       });
-    });
+    };
     const renderAt = (x: number) => {
-      const child = Stateful({ key: 'stable' });
+      const child = createElement(Stateful, { key: 'stable' });
       return placeChild({
         element: child,
         box: { x, y: 10, width: 40, height: 20 },
@@ -101,16 +102,16 @@ describe('layout placement', () => {
   it('keeps unkeyed A/B/A identities when B is inserted or removed', async () => {
     const observations = new Map<string, number>();
     let nextIdentity = 0;
-    const A = defineComp(({ label }: { label: string }) => {
+    const A = ({ label }: { label: string }) => {
       const identity = crcRef<number>();
       identity.current ??= ++nextIdentity;
       observations.set(label, identity.current);
-    });
-    const B = defineComp(() => undefined);
-    const Host = defineComp(({ includeB }: { includeB: boolean }) => {
-      const first = A({ label: 'first' });
-      const middle = B({});
-      const second = A({ label: 'second' });
+    };
+    const B = (_props: {}) => undefined;
+    const Host = ({ includeB }: { includeB: boolean }) => {
+      const first = createElement(A, { label: 'first' });
+      const middle = createElement(B, {});
+      const second = createElement(A, { label: 'second' });
       const children = [
         placeChild({
           element: first,
@@ -129,42 +130,42 @@ describe('layout placement', () => {
         }),
       ];
       return children;
-    });
-    const canvas = await componentTest(Host({ includeB: false }));
+    };
+    const canvas = await componentTest(createElement(Host, { includeB: false }));
     const initial = new Map(observations);
 
-    crc(canvas.element, Host({ includeB: true }));
+    crc(canvas.element, createElement(Host, { includeB: true }));
     await nextFrame();
     expect(observations).toEqual(initial);
 
-    crc(canvas.element, Host({ includeB: false }));
+    crc(canvas.element, createElement(Host, { includeB: false }));
     await nextFrame();
     expect(observations).toEqual(initial);
   });
 
   it('cleans removed observation ownership and interaction exactly once', async () => {
     const cleanup = vi.fn();
-    const Child = defineComp(() => {
+    const Child = (_props: {}) => {
       crcLayoutBox();
       crcWhenChanged(() => cleanup, []);
-      return rect({
+      return createElement(Rectangle, {
         style: { width: 20, height: 20, fill: 'red' },
         onClick: () => undefined,
       });
-    });
-    const Host = defineComp(({ show }: { show: boolean }) => {
+    };
+    const Host = ({ show }: { show: boolean }) => {
       if (!show) return;
-      const child = Child({ key: 'owned' });
+      const child = createElement(Child, { key: 'owned' });
       return placeChild({
         element: child,
         box: { x: 0, y: 0, width: 20, height: 20 },
         identityHint: createPlacementIdentityHint(child, 0),
       });
-    });
-    const canvas = await componentTest(Host({ show: true }));
+    };
+    const canvas = await componentTest(createElement(Host, { show: true }));
     expect(getCRCInstance(canvas.element).regions.size).toBe(1);
 
-    crc(canvas.element, Host({ show: false }));
+    crc(canvas.element, createElement(Host, { show: false }));
     await nextFrame();
 
     expect(cleanup).toHaveBeenCalledOnce();
@@ -175,12 +176,12 @@ describe('layout placement', () => {
 describe('resolved built-in styles', () => {
   it('resolves percentages once against the containing allocation after placement', async () => {
     const observedBoxes: Readonly<{ x: number; y: number; width: number; height: number }>[] = [];
-    const Observe = defineComp(({ element }: { element: ReturnType<typeof rect> }) => {
+    const Observe = ({ element }: { element: CRCElement<any> }) => {
       observedBoxes.push(crcLayoutBox());
       return element;
-    });
-    const observedRect = Observe({
-      element: rect({
+    };
+    const observedRect = createElement(Observe, {
+      element: createElement(Rectangle, {
         style: { width: '50%', height: 20, fill: 'red' },
       }),
     });
@@ -194,15 +195,14 @@ describe('resolved built-in styles', () => {
       .toBe(255);
 
     const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');
-    const textElement = text({
+    const textElement = createElement(Text, {
       style: {
-        text: 'a very wide line of text',
         width: '50%',
         height: 20,
         fit: 'squish',
         fill: 'black',
       },
-    });
+    }, 'a very wide line of text');
     await componentTest(placeChild({
       element: textElement,
       box: { x: 0, y: 0, width: 100, height: 20 },
@@ -211,7 +211,7 @@ describe('resolved built-in styles', () => {
     expect(fillText.mock.lastCall?.[3]).toBe(100);
 
     const onImageClick = vi.fn();
-    const imageElement = img({
+    const imageElement = createElement(Image, {
       style: { src: 'image.png', width: '50%', height: 20 },
       onClick: onImageClick,
     });
@@ -224,9 +224,9 @@ describe('resolved built-in styles', () => {
     expect(onImageClick).toHaveBeenCalledOnce();
 
     const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
-    const layerElement = layer({
+    const layerElement = createElement(Layer, {
       style: { width: '50%', height: 20 },
-      render: rect({ style: { width: 10, height: 10, fill: 'blue' } }),
+      children: createElement(Rectangle, { style: { width: 10, height: 10, fill: 'blue' } }),
     });
     await componentTest(placeChild({
       element: layerElement,
@@ -239,7 +239,7 @@ describe('resolved built-in styles', () => {
 
   it('keeps parent left/top participation separate from line endpoints', async () => {
     const onHorizontalClick = vi.fn();
-    const horizontal = horizontalLine({
+    const horizontal = createElement(HorizontalLine, {
       style: {
         left: 80,
         top: 30,
@@ -261,7 +261,7 @@ describe('resolved built-in styles', () => {
     expect(onHorizontalClick).toHaveBeenCalledOnce();
 
     const onVerticalClick = vi.fn();
-    const vertical = verticalLine({
+    const vertical = createElement(VerticalLine, {
       style: {
         left: 70,
         top: 60,
@@ -284,7 +284,7 @@ describe('resolved built-in styles', () => {
   });
 
   it('resolves root percentages against intrinsic Canvas allocation', async () => {
-    const canvas = await componentTest(rect({
+    const canvas = await componentTest(createElement(Rectangle, {
       style: {
         x: '10%',
         width: '50%',
@@ -310,7 +310,7 @@ describe('resolved built-in styles', () => {
       width: number;
     }
     const widths: number[] = [];
-    const Probe = defineComp<
+    const Probe = definePrimitive<
       {},
       ProbeStyle,
       NormalizedProbeStyle,
@@ -325,9 +325,9 @@ describe('resolved built-in styles', () => {
       }),
     });
 
-    expect(Object.keys(Probe({ style: { width: '50%' } }).type))
+    expect(Object.keys(createElement(Probe, { style: { width: '50%' } }).type))
       .not.toContain('resolveStyle');
-    await componentTest(Probe({ style: { width: '50%' } }), { width: 300 });
+    await componentTest(createElement(Probe, { style: { width: '50%' } }), { width: 300 });
     expect(widths).toEqual([150]);
   });
 
@@ -339,13 +339,13 @@ describe('resolved built-in styles', () => {
       radius: number;
     }
 
-    void defineComp<{}, PercentageStyle, PercentageStyle, PercentageStyle>(
+    void definePrimitive<{}, PercentageStyle, PercentageStyle, PercentageStyle>(
       () => undefined,
       // @ts-expect-error the resolved schema still contains allocation syntax
       { resolveStyle: (style: PercentageStyle) => style },
     );
     type UnionResolvedStyle = NumericStyle | PercentageStyle;
-    void defineComp<
+    void definePrimitive<
       {},
       PercentageStyle,
       PercentageStyle,
@@ -355,7 +355,7 @@ describe('resolved built-in styles', () => {
       // @ts-expect-error one resolved union member still contains allocation syntax
       { resolveStyle: (style: PercentageStyle) => style },
     );
-    const Resolved = defineComp<
+    const Resolved = definePrimitive<
       {},
       PercentageStyle,
       PercentageStyle,
@@ -369,41 +369,40 @@ describe('resolved built-in styles', () => {
       }),
     });
 
-    expect(Resolved({ style: { radius: '50%' } }).style.radius).toBe('50%');
+    expect(createElement(Resolved, { style: { radius: '50%' } }).props.style.radius).toBe('50%');
   });
 
   it('preserves explicit opaque built-in style-language strings', async () => {
-    const Host = defineComp(() => [
-      text({
+    const Host = (_props: {}) => [
+      createElement(Text, {
         style: {
-          text: '50%',
           width: 100,
           height: 20,
           fill: 'hsl(0 50% 50%)',
         },
-      }),
-      img({
+      }, '50%'),
+      createElement(Image, {
         style: {
           src: 'data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22/%3E',
           width: 10,
           height: 10,
         },
       }),
-      rect({
+      createElement(Rectangle, {
         style: {
           width: 10,
           height: 10,
           alignSelf: 'auto',
         },
       }),
-    ]);
-    const canvas = await componentTest(Host({}));
+    ];
+    const canvas = await componentTest(createElement(Host, {}));
 
     expect(canvas.element).toBeInstanceOf(HTMLCanvasElement);
   });
 
   // @ts-expect-error local paint offsets do not accept auto
-  void rect({ style: { x: 'auto', width: 20, height: 20 } });
+  void createElement(Rectangle, { style: { x: 'auto', width: 20, height: 20 } });
 });
 
 function nextFrame(): Promise<void> {

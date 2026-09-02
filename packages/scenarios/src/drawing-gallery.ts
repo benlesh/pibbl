@@ -206,7 +206,7 @@ export const drawingShapesScenario = createLessonDefinition<DrawingShapesState>(
     state,
     actionId as DrawingShapesAction,
   ),
-  formatState: state => formatToggleState(state, 'rect · path · svgPath'),
+  formatState: state => formatToggleState(state, 'Rectangle · Path · SvgPath'),
 });
 
 export const DRAWING_LINES_ACTION_IDS = ['update-lines'] as const;
@@ -229,7 +229,7 @@ export const drawingLinesScenario = createLessonDefinition<DrawingLinesState>({
   ),
   formatState: state => formatToggleState(
     state,
-    'line · horizontalLine · verticalLine',
+    'Line · HorizontalLine · VerticalLine',
   ),
 });
 
@@ -262,7 +262,7 @@ export const drawingTextScenario = createLessonDefinition<DrawingTextState>({
   formatState: state => [
     ...formatToggleState(
       state,
-      'text · ellipsis · squish · wrap · clip',
+      'Text · ellipsis · squish · wrap · clip',
     ),
     { label: 'Centered clicks', value: String(state.centeredClicks) },
   ],
@@ -353,5 +353,5 @@ export const drawingCompositionScenario =
       state,
       actionId as DrawingCompositionAction,
     ),
-    formatState: state => formatToggleState(state, 'g · clip · layer'),
+    formatState: state => formatToggleState(state, 'Group · Clip · Layer'),
   });

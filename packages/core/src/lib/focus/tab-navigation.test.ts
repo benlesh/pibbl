@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { defineComp } from '../define-comp';
 import { dispatchNativeEvent } from '../events/dispatch';
 import type {
   CRCEventHandlers,
@@ -9,10 +8,12 @@ import { executeRender } from '../execute-render';
 import { clearSharedState, getCRCInstance } from '../global-state';
 import { crcEventTarget } from '../hooks/crc-event-target';
 import { mountCRC } from '../mount-crc';
-import type { CompEl, CRCController } from '../types';
+import type { CRCElement, CRCController } from '../types';
 import type { CRCFocusManager } from './focus-manager';
 import { focusManaged } from './policy-test-support';
 import { directionalPolicy } from './policy-test-support';
+import { createElement } from '../element/create-element';
+import { definePrimitive } from '../define-primitive';
 
 const activeControllers = new Set<CRCController>();
 const noop = () => undefined;
@@ -31,13 +32,13 @@ afterEach(() => {
 
 describe('source-order Tab defaults', () => {
   it('keeps a geometry-scrambled directional boundary in declaration order', () => {
-    const Boundary = defineComp(() => [
-      BoundedTarget({ key: 'declared-first', label: 'declared-first', x: 200, y: 100 }),
-      BoundedTarget({ key: 'declared-second', label: 'declared-second', x: 0, y: 0 }),
-      BoundedTarget({ key: 'declared-third', label: 'declared-third', x: 100, y: 50 }),
-    ]);
+    const Boundary = (_props: {}) => [
+      createElement(BoundedTarget, { key: 'declared-first', label: 'declared-first', x: 200, y: 100 }),
+      createElement(BoundedTarget, { key: 'declared-second', label: 'declared-second', x: 0, y: 0 }),
+      createElement(BoundedTarget, { key: 'declared-third', label: 'declared-third', x: 100, y: 50 }),
+    ];
     const mounted = mountAndRender(focusManaged(
-      directionalPolicy(Boundary({}), { mode: 'directional' }),
+      directionalPolicy(createElement(Boundary, {}), { mode: 'directional' }),
     ));
     mounted.canvas.focus({ preventScroll: true });
 
@@ -49,14 +50,14 @@ describe('source-order Tab defaults', () => {
   });
 
   it('tabs left-to-right then top-to-bottom when declarations are row-major', () => {
-    const Boundary = defineComp(() => [
-      BoundedTarget({ key: 'top-left', label: 'top-left', x: 0, y: 0 }),
-      BoundedTarget({ key: 'top-right', label: 'top-right', x: 50, y: 0 }),
-      BoundedTarget({ key: 'bottom-left', label: 'bottom-left', x: 0, y: 50 }),
-      BoundedTarget({ key: 'bottom-right', label: 'bottom-right', x: 50, y: 50 }),
-    ]);
+    const Boundary = (_props: {}) => [
+      createElement(BoundedTarget, { key: 'top-left', label: 'top-left', x: 0, y: 0 }),
+      createElement(BoundedTarget, { key: 'top-right', label: 'top-right', x: 50, y: 0 }),
+      createElement(BoundedTarget, { key: 'bottom-left', label: 'bottom-left', x: 0, y: 50 }),
+      createElement(BoundedTarget, { key: 'bottom-right', label: 'bottom-right', x: 50, y: 50 }),
+    ];
     const mounted = mountAndRender(focusManaged(
-      directionalPolicy(Boundary({}), { mode: 'directional' }),
+      directionalPolicy(createElement(Boundary, {}), { mode: 'directional' }),
     ));
     mounted.canvas.focus({ preventScroll: true });
 
@@ -67,16 +68,16 @@ describe('source-order Tab defaults', () => {
   });
 
   it('moves only within the global source list and prevents default only when moved', () => {
-    const Boundary = defineComp(() => [
-      Target({ key: 'inner-b', label: 'inner-b', handlers: { onClick: noop } }),
-      Target({ key: 'inner-a', label: 'inner-a', handlers: { onClick: noop } }),
-    ]);
-    const Root = defineComp(() => [
-      Target({ key: 'outside-first', label: 'outside-first', handlers: { onClick: noop } }),
-      directionalPolicy(Boundary({}), { mode: 'directional' }),
-      Target({ key: 'outside-last', label: 'outside-last', handlers: { onClick: noop } }),
-    ]);
-    const mounted = mountAndRender(focusManaged(Root({})));
+    const Boundary = (_props: {}) => [
+      createElement(Target, { key: 'inner-b', label: 'inner-b', handlers: { onClick: noop } }),
+      createElement(Target, { key: 'inner-a', label: 'inner-a', handlers: { onClick: noop } }),
+    ];
+    const Root = (_props: {}) => [
+      createElement(Target, { key: 'outside-first', label: 'outside-first', handlers: { onClick: noop } }),
+      directionalPolicy(createElement(Boundary, {}), { mode: 'directional' }),
+      createElement(Target, { key: 'outside-last', label: 'outside-last', handlers: { onClick: noop } }),
+    ];
+    const mounted = mountAndRender(focusManaged(createElement(Root, {})));
     mounted.canvas.focus({ preventScroll: true });
     expect(focusedLabel(mounted.manager)).toBe('outside-first');
 
@@ -123,8 +124,8 @@ describe('source-order Tab defaults', () => {
   });
 
   it('does not run the Tab default after a logical handler prevents it', () => {
-    const Root = defineComp(() => [
-      Target({
+    const Root = (_props: {}) => [
+      createElement(Target, {
         key: 'first',
         label: 'first',
         handlers: {
@@ -134,9 +135,9 @@ describe('source-order Tab defaults', () => {
           },
         },
       }),
-      Target({ key: 'second', label: 'second', handlers: { onClick: noop } }),
-    ]);
-    const mounted = mountAndRender(focusManaged(Root({})));
+      createElement(Target, { key: 'second', label: 'second', handlers: { onClick: noop } }),
+    ];
+    const mounted = mountAndRender(focusManaged(createElement(Root, {})));
     mounted.canvas.focus({ preventScroll: true });
 
     const event = tabEvent(false);
@@ -186,8 +187,8 @@ describe('focus-policy native event routing', () => {
       onCut: record,
       onPaste: record,
     };
-    const Root = defineComp(() => Target({ label: 'target', handlers }));
-    const mounted = mountAndRender(focusManaged(Root({})));
+    const Root = (_props: {}) => createElement(Target, { label: 'target', handlers });
+    const mounted = mountAndRender(focusManaged(createElement(Root, {})));
     const target = mounted.manager.candidates[0].target;
     mounted.manager.setFocusState(target, true);
     const instance = getCRCInstance(mounted.canvas);
@@ -218,11 +219,11 @@ describe('focus-policy native event routing', () => {
 
   it('runs the post-keydown policy after target dispatch while the target remains live', () => {
     const trace: string[] = [];
-    const Root = defineComp(() => Target({
+    const Root = (_props: {}) => createElement(Target, {
       label: 'target',
       handlers: { onKeyDown: () => trace.push('handler') },
-    }));
-    const mounted = mountAndRender(focusManaged(Root({})));
+    });
+    const mounted = mountAndRender(focusManaged(createElement(Root, {})));
     mounted.canvas.focus({ preventScroll: true });
     const afterDispatch = vi.spyOn(mounted.manager, 'afterDispatch')
       .mockImplementation(event => {
@@ -245,22 +246,22 @@ describe('focus-policy native event routing', () => {
     let renders = 1;
     const handler = vi.fn(() => {
       visible = false;
-      executeRender(canvas, ++renders, focusManaged(Root({})));
+      executeRender(canvas, ++renders, focusManaged(createElement(Root, {})));
     });
-    const Root = defineComp(() => [
-      visible ? Target({
+    const Root = (_props: {}) => [
+      visible ? createElement(Target, {
         key: 'removing',
         label: 'removing',
         handlers: { onKeyDown: handler },
       }) : undefined,
-      Target({
+      createElement(Target, {
         key: 'remaining',
         label: 'remaining',
         handlers: { onClick: noop },
       }),
-    ]);
+    ];
     canvas = createCanvas();
-    const mounted = mountAndRender(focusManaged(Root({})), canvas);
+    const mounted = mountAndRender(focusManaged(createElement(Root, {})), canvas);
     canvas.focus({ preventScroll: true });
     const afterDispatch = vi.spyOn(mounted.manager, 'afterDispatch');
     const event = tabEvent(false);
@@ -286,8 +287,8 @@ describe('focus-policy native event routing', () => {
     'suppresses the Tab default after a handler performs %s',
     (_label, clearFocus) => {
       let action: () => void = () => undefined;
-      const Root = defineComp(() => [
-        Target({
+      const Root = (_props: {}) => [
+        createElement(Target, {
           key: 'first',
           label: 'first',
           handlers: {
@@ -296,13 +297,13 @@ describe('focus-policy native event routing', () => {
             },
           },
         }),
-        Target({
+        createElement(Target, {
           key: 'remaining',
           label: 'remaining',
           handlers: { onClick: noop },
         }),
-      ]);
-      const mounted = mountAndRender(focusManaged(Root({})));
+      ];
+      const mounted = mountAndRender(focusManaged(createElement(Root, {})));
       mounted.canvas.focus({ preventScroll: true });
       action = () => clearFocus(mounted.canvas, mounted.manager);
       const afterDispatch = vi.spyOn(mounted.manager, 'afterDispatch');
@@ -322,14 +323,14 @@ interface TargetProps {
   readonly handlers: CRCEventHandlers;
 }
 
-const Target = defineComp<TargetProps>(({ handlers }) => {
+const Target = ({ handlers }: TargetProps) => {
   crcEventTarget(handlers, {
     path: rectanglePath(0, 0, 10, 10),
     keyboardFocusable: true,
   });
-});
+};
 
-const BoundedTarget = defineComp<{
+const BoundedTarget = definePrimitive<{
   readonly label: string;
   readonly x: number;
   readonly y: number;
@@ -341,20 +342,19 @@ const BoundedTarget = defineComp<{
   });
 });
 
-const Scene = defineComp(({ labels }: { labels: readonly string[] }) =>
-  labels.map(label => Target({
+const Scene = ({ labels }: { labels: readonly string[] }) =>
+  labels.map(label => createElement(Target, {
     key: label,
     label,
     handlers: { onClick: noop },
-  }))
-);
+  }));
 
-function managed(labels: readonly string[]): CompEl<any, any> {
-  return focusManaged(Scene({ labels }));
+function managed(labels: readonly string[]): CRCElement<any> {
+  return focusManaged(createElement(Scene, { labels }));
 }
 
 function mountAndRender(
-  element: CompEl<any, any>,
+  element: CRCElement<any>,
   canvas = createCanvas(),
 ): {
   readonly canvas: HTMLCanvasElement;
