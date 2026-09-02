@@ -91,7 +91,10 @@ function finalizeCRCElement<P>(
     },
   });
 
-  if (import.meta.env.DEV) {
+  const isDevelopment = (
+    import.meta as ImportMeta & { env?: { readonly DEV?: boolean } }
+  ).env?.DEV ?? false;
+  if (isDevelopment) {
     Object.freeze(props);
     Object.freeze(element);
   }

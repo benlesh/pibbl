@@ -1,4 +1,5 @@
 declare const crcElementTypeBrand: unique symbol;
+declare const crcPrimitiveComponentBrand: unique symbol;
 
 export type CRCKey = string | number;
 export type CRCEmptyNode = false | true | null | undefined | '' | 0;
@@ -29,4 +30,12 @@ export type CRCRenderResult = CRCNode | void;
 export type CRCComponent<P = Record<string, never>> = (
   props: P,
 ) => CRCRenderResult;
+export type CRCPrimitiveComponent<
+  P = Record<string, never>,
+  I = P,
+> = CRCComponent<P> & {
+  readonly [crcPrimitiveComponentBrand]: I;
+};
+export type PrimitiveInputOf<C> =
+  C extends CRCPrimitiveComponent<any, infer I> ? I : never;
 export type CRCElementType<P = any> = CRCComponent<P>;

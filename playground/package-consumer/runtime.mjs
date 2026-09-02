@@ -1,6 +1,7 @@
 import * as core from '@crc/core';
 
 const expected = [
+  'Fragment',
   'LayoutDiagnostic',
   'absolute',
   'clip',
@@ -17,6 +18,7 @@ const expected = [
   'crcState',
   'crcSvgPath',
   'crcWhenChanged',
+  'createElement',
   'defineComp',
   'flex',
   'flow',

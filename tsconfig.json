@@ -6,6 +6,8 @@
     "module": "esnext",
     "moduleResolution": "Bundler",
     "paths": {
+      "@crc/core/jsx-dev-runtime": ["./packages/core/src/jsx-dev-runtime.ts"],
+      "@crc/core/jsx-runtime": ["./packages/core/src/jsx-runtime.ts"],
       "@crc/core/types": ["./packages/core/src/types.ts"],
       "@crc/core": ["./packages/core/src/index.ts"],
       "@crc/types": ["./packages/types/src/index.ts"]
@@ -15,6 +17,8 @@
     "allowJs": true,
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "@crc/core",
     "strict": true,
     "strictNullChecks": true,
     "noUnusedLocals": true,
@@ -24,7 +28,7 @@
     "skipDefaultLibCheck": true,
     "skipLibCheck": true
   },
-  "include": ["**/*.ts", "**/*.mjs", "eslint.config.mjs"],
+  "include": ["**/*.ts", "**/*.tsx", "**/*.mjs", "eslint.config.mjs"],
   "exclude": [
     "**/vendor/**",
     "**/node_modules/**",

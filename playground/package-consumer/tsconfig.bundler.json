@@ -3,6 +3,8 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "noEmit": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "@crc/core",
     "paths": {},
     "skipLibCheck": false,
     "strict": true,

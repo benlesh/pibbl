@@ -65,6 +65,7 @@ export type { CRCKeyboardNavigationOptions } from './lib/focus/types.js';
 
 export { defineComp } from './lib/define-comp.js';
 export { createElement } from './lib/element/create-element.js';
+export { Fragment } from './lib/element/jsx-runtime.js';
 export type {
   BoxStyle,
   CursorStyle,
@@ -128,8 +129,10 @@ export type {
   CRCMouseEvent,
   CRCMouseEventListener,
   CRCNode,
+  CRCPrimitiveComponent,
   CRCTextChild,
   CRCRenderResult,
+  PrimitiveInputOf,
   FillStyle,
   MeasureInput,
   MeasureResult,

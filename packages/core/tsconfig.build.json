@@ -12,6 +12,11 @@
     "rootDir": "./src",
     "types": []
   },
-  "files": ["src/index.ts", "src/types.ts"],
+  "files": [
+    "src/index.ts",
+    "src/types.ts",
+    "src/jsx-runtime.ts",
+    "src/jsx-dev-runtime.ts"
+  ],
   "include": []
 }

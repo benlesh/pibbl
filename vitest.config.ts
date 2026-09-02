@@ -8,11 +8,19 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: mode === 'built' ? [] : [
       {
+        find: /^@crc\/core\/jsx-dev-runtime$/,
+        replacement: fileURLToPath(new URL('./packages/core/src/jsx-dev-runtime.ts', import.meta.url)),
+      },
+      {
+        find: /^@crc\/core\/jsx-runtime$/,
+        replacement: fileURLToPath(new URL('./packages/core/src/jsx-runtime.ts', import.meta.url)),
+      },
+      {
         find: '@crc/core/types',
         replacement: fileURLToPath(new URL('./packages/core/src/types.ts', import.meta.url)),
       },
       {
-        find: '@crc/core',
+        find: /^@crc\/core$/,
         replacement: fileURLToPath(new URL('./packages/core/src/index.ts', import.meta.url)),
       },
       {

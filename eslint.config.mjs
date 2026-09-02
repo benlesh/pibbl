@@ -68,7 +68,7 @@ export default defineConfig([
     rules: codeRules,
   },
   {
-    files: ['**/*.{ts,mts,cts}'],
+    files: ['**/*.{ts,tsx,mts,cts}'],
     languageOptions: {
       ecmaVersion: 'latest',
       globals: { ...globals.browser, ...globals.node },
@@ -79,7 +79,7 @@ export default defineConfig([
           babelrc: false,
           configFile: false,
           parserOpts: {
-            plugins: ['typescript'],
+            plugins: ['typescript', 'jsx'],
           },
         },
       },

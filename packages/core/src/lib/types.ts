@@ -19,8 +19,10 @@ export type {
   CRCEmptyNode,
   CRCKey,
   CRCNode,
+  CRCPrimitiveComponent,
   CRCTextChild,
   CRCRenderResult,
+  PrimitiveInputOf,
 } from './element/types.js';
 
 export interface SystemStyle {

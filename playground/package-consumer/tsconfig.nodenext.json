@@ -3,6 +3,8 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "noEmit": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "@crc/core",
     "paths": {},
     "skipLibCheck": false,
     "strict": true,
