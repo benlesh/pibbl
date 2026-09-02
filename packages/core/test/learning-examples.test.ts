@@ -47,6 +47,27 @@ function expectInvalidLearningSource(
   ).toThrow();
 }
 
+function expectValidLearningSource(
+  source: string,
+  authoring: "jsx" | "createElement",
+): void {
+  expect(() =>
+    validateLearningSourceText(source, {
+      authoring,
+      label: "fixture",
+    }),
+  ).not.toThrow();
+}
+
+function expectUninspectableNonJsxSource(source: string): void {
+  expect(() =>
+    validateLearningSourceText(source, {
+      authoring: "createElement",
+      label: "fixture",
+    }),
+  ).toThrow(/inline object props/u);
+}
+
 interface TextPaint {
   readonly text: string;
   readonly x: number;
@@ -447,6 +468,218 @@ describe("learning example catalog", () => {
     expectInvalidNonJsxSource(`
       import { crc, createElement, Group, type CRCController } from "@crc/core";
       ${extraModuleSyntax}
+      export default function mount(canvas: HTMLCanvasElement): CRCController {
+        return crc(canvas, createElement(Group, null));
+      }
+    `);
+  });
+
+  it.each([
+    "Absolute",
+    "Clip",
+    "Flex",
+    "Flow",
+    "FocusManagement",
+    "Fragment",
+    "Grid",
+    "Group",
+    "HorizontalLine",
+    "Image",
+    "KeyboardNavigation",
+    "Layer",
+    "Line",
+    "Overlay",
+    "Path",
+    "Rectangle",
+    "SvgPath",
+    "Text",
+    "VerticalLine",
+  ])("rejects direct invocation of the %s component", (componentName) => {
+    expectInvalidLearningSource(
+      `
+        import { crc, ${componentName}, type CRCController } from "@crc/core";
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, <>{${componentName}({})}</>);
+        }
+      `,
+      "jsx",
+    );
+  });
+
+  it("rejects a component call mixed into the createElement lesson", () => {
+    expectInvalidNonJsxSource(`
+      import { crc, createElement, Group, Rectangle, type CRCController } from "@crc/core";
+      export default function mount(canvas: HTMLCanvasElement): CRCController {
+        return crc(canvas, createElement(Group, null, Rectangle({})));
+      }
+    `);
+  });
+
+  it("allows direct calls to CRC runtime functions and hooks", () => {
+    expectValidLearningSource(
+      `
+        import {
+          crc,
+          crcMemo,
+          crcState,
+          measureElement,
+          resolveLength,
+          Text,
+          type CRCController,
+        } from "@crc/core";
+        function RuntimeFunctionStudy() {
+          const [count] = crcState(1);
+          const doubled = crcMemo(() => count * 2, [count]);
+          const length = resolveLength("50%", 200, "width") ?? 0;
+          const measurement = measureElement(
+            {} as never,
+            {} as never,
+            {} as never,
+          );
+          const y = measurement.status === "measured" ? measurement.size.height : 20;
+          return <Text style={{ x: length, y }}>{doubled}</Text>;
+        }
+        export default function mount(canvas: HTMLCanvasElement): CRCController {
+          return crc(canvas, <RuntimeFunctionStudy />);
+        }
+      `,
+      "jsx",
+    );
+  });
+
+  it.each([
+    [
+      "a Text style getter",
+      `createElement(Text, { get style() { return { text: "legacy" }; } }, "Visible")`,
+      "Text",
+    ],
+    [
+      "a Layer render getter",
+      `createElement(Layer, { get render() { return createElement(Group, null); } })`,
+      "Layer, Group",
+    ],
+    [
+      "a nested style method",
+      `createElement(Rectangle, { style: { width() { return 10; }, height: 10 } })`,
+      "Rectangle",
+    ],
+  ])("rejects %s as an uninspectable props object", (_name, scene, imports) => {
+    expectUninspectableNonJsxSource(`
+      import { crc, createElement, ${imports}, type CRCController } from "@crc/core";
+      export default function mount(canvas: HTMLCanvasElement): CRCController {
+        return crc(canvas, ${scene});
+      }
+    `);
+  });
+
+  it.each([
+    [
+      "TypeScript property and method signatures",
+      `
+        interface Vocabulary {
+          readonly Text: string;
+          Rectangle(): string;
+          FocusManagement?: string;
+        }
+      `,
+    ],
+    [
+      "class property, method, and accessor keys",
+      `
+        class Vocabulary {
+          Text = "text";
+          Rectangle(): string { return "rectangle"; }
+          get FocusManagement(): string { return "focus"; }
+        }
+        void new Vocabulary().Text;
+      `,
+    ],
+    [
+      "enum member keys",
+      `
+        enum Vocabulary { Text, Rectangle, FocusManagement }
+        void Vocabulary.Text;
+      `,
+    ],
+    [
+      "object and member keys",
+      `
+        const vocabulary = {
+          Text: "text",
+          Rectangle: "rectangle",
+          FocusManagement: "focus",
+        };
+        void vocabulary.Text;
+      `,
+    ],
+  ])("allows imported component spellings in non-value %s", (_name, declarations) => {
+    expectValidNonJsxSource(`
+      import {
+        crc,
+        createElement,
+        Group,
+        Text,
+        Rectangle,
+        FocusManagement,
+        type CRCController,
+      } from "@crc/core";
+      ${declarations}
+      export default function mount(canvas: HTMLCanvasElement): CRCController {
+        return crc(canvas, createElement(Group, null));
+      }
+    `);
+  });
+
+  it("still treats a computed key as a component value reference", () => {
+    expectInvalidNonJsxSource(`
+      import { crc, createElement, Group, Text, type CRCController } from "@crc/core";
+      const vocabulary = { [Text]: "text" };
+      export default function mount(canvas: HTMLCanvasElement): CRCController {
+        return crc(canvas, createElement(Group, { key: String(vocabulary) }));
+      }
+    `);
+  });
+
+  it.each([
+    ["require call", `const helper = require("./helper");`],
+    ["require.resolve call", `const path = require.resolve("./helper");`],
+    ["module.exports assignment", `module.exports = {};`],
+    ["computed module exports assignment", `module["exports"] = {};`],
+    ["exports property assignment", `exports.helper = {};`],
+    [
+      "exports passed to a helper",
+      `Object.defineProperty(exports, "helper", { value: true });`,
+    ],
+    [
+      "shadowed require call",
+      `function load(require: (id: string) => unknown) { return require("./helper"); }`,
+    ],
+  ])("rejects CommonJS %s", (_name, commonJsSyntax) => {
+    expectInvalidNonJsxSource(`
+      import { crc, createElement, Group, type CRCController } from "@crc/core";
+      declare const require: {
+        (id: string): unknown;
+        resolve(id: string): string;
+      };
+      declare const module: { exports: unknown };
+      declare const exports: Record<string, unknown>;
+      ${commonJsSyntax}
+      export default function mount(canvas: HTMLCanvasElement): CRCController {
+        return crc(canvas, createElement(Group, null));
+      }
+    `);
+  });
+
+  it("allows CommonJS spellings that are only declarations or static keys", () => {
+    expectValidNonJsxSource(`
+      import { crc, createElement, Group, type CRCController } from "@crc/core";
+      interface Vocabulary { require: string; module(): string; exports: string }
+      class Labels { require = "require"; module(): string { return "module"; } }
+      function label(require: string): string { return "static"; }
+      const vocabulary = { require: "require", module: "module", exports: "exports" };
+      void vocabulary.require;
+      void new Labels().module();
+      void label("require");
       export default function mount(canvas: HTMLCanvasElement): CRCController {
         return crc(canvas, createElement(Group, null));
       }

@@ -539,3 +539,127 @@ git diff --check: no output
   generated scenario index remain unchanged.
 - Fresh evidence is Node 26.7.0 with pnpm 11.21.0. Node 24 LTS remains
   unverified under R8.
+
+## Fix Round 3 — component calls, literal props, identifier contexts, and CommonJS
+
+Review of `ac053a18fd60a8cccb0e24ef2129c2d43791b109` identified four
+remaining P2 cases in the shared learning-source validator. This round closes
+them without changing any learning source, catalog entry, test-lab fixture,
+generated index, runtime package, or visual baseline.
+
+### Structural enforcement changes
+
+- The validator now keeps an explicit export-name allowlist for all 19
+  descriptive component values in the current public surface: drawing,
+  composition, layout, focus-policy, and `Fragment` element types. Direct
+  invocation of any of these imports is rejected in JSX and non-JSX lessons;
+  construction must use JSX or `createElement`.
+- Direct calls to non-component public values remain valid. Executable fixtures
+  cover `crc`, `crcState`, `crcMemo`, `resolveLength`, and `measureElement`,
+  while the catalog continues to exercise direct `createElement` calls in the
+  sole non-JSX lesson.
+- Inspectable props and styles now contain only static `ObjectProperty` nodes.
+  Object methods, getters, setters, computed properties, and spreads are all
+  rejected. A method-shaped property can no longer conceal `Text` style or a
+  `Layer` render value.
+- Parent-aware identifier classification now distinguishes static property
+  names from value references. Imported component spellings are permitted as
+  TypeScript property/method signatures, class property/method/accessor keys,
+  enum member names, object keys, and noncomputed member names. Computed keys
+  remain value uses and are rejected.
+- Executable references named `require`, `module`, or `exports` are forbidden,
+  covering direct and shadowed `require` calls, `require.resolve`, dot and
+  computed `module.exports`, property writes through `exports`, and passing
+  `exports` to helpers. Declarations and static keys with the same spelling are
+  intentionally ignored because they do not load or export a module.
+
+### Fix-round TDD evidence
+
+All behavioral fixtures were written before the validator change. The final
+RED run distinguished the `Layer` getter's required uninspectable-object error
+from its incidental legacy-render rejection:
+
+```text
+Test Files  1 failed (1)
+Tests       33 failed | 97 passed (130)
+```
+
+The 33 failures were the 19 public component exports, one mixed non-JSX direct
+component call, three getter/method props cases, three false-positive static-key
+contexts, and seven CommonJS forms. Positive fixtures for runtime/hook calls,
+ordinary object/member keys, and computed value references already behaved as
+intended. A final positive CommonJS-spelling fixture brought the green focused
+total to:
+
+```text
+Test Files  1 passed (1)
+Tests       131 passed (131)
+```
+
+### Fix-round verification
+
+```sh
+corepack pnpm@11.21.0 scenarios:check
+corepack pnpm@11.21.0 typecheck
+corepack pnpm@11.21.0 lint
+```
+
+```text
+Catalog: 42 lessons, 16 test labs, and docs/scenario-index.md validated
+tsc --noEmit: passed
+ESLint and Prettier: passed
+```
+
+```sh
+corepack pnpm@11.21.0 test:ci
+```
+
+```text
+Test Files  83 passed (83)
+Tests       1003 passed | 2 skipped (1005)
+Duration    21.42s
+```
+
+```sh
+corepack pnpm@11.21.0 playground:build
+corepack pnpm@11.21.0 playground:build:built
+```
+
+```text
+Studio declaration/runtime verifier: passed in both commands
+Source mode: 1308 modules transformed; built in 874ms
+Built mode: 1209 modules transformed; built in 869ms
+```
+
+```sh
+corepack pnpm@11.21.0 test:package-consumer
+corepack pnpm@11.21.0 test:package-consumer:packed
+corepack pnpm@11.21.0 test:smoke:built
+git diff --check
+```
+
+```text
+Workspace Bundler, NodeNext, and runtime consumer: passed
+Packed declarations, exports, deep-import, no-source, and optimized focus
+consumer: passed (113966 no-focus bytes; 137630 with-focus bytes)
+Built browser smoke: 1 file and 1 test passed
+git diff --check: no output
+```
+
+### Fix-round self-review and concerns
+
+- The component allowlist matches every uppercase element type currently
+  exported from `packages/core/src/index.ts` and deliberately excludes
+  uppercase non-component values such as `LayoutDiagnostic`. A future public
+  component export must update this catalog-policy list and its table fixture.
+- Static-key recognition checks AST node relationships and the `computed` flag;
+  it does not exempt matching identifier text in value positions. Existing
+  alias, destructuring, reassignment, and shadowing fixtures remain green.
+- Object getters and methods are rejected before legacy-property reporting, so
+  their failure records the general inspectability contract rather than relying
+  on a component-specific side effect.
+- CommonJS rejection is intentionally a learning-source module policy, not a
+  runtime or consumer restriction. Non-value declarations and keys are covered
+  by a positive fixture to bound false positives.
+- Fresh evidence is Node 26.7.0 with pnpm 11.21.0. Node 24 LTS remains
+  unverified under R8.

@@ -14,7 +14,9 @@ interface SyntaxNode {
 
 interface SourceInspection {
   readonly hasBindingViolation: boolean;
+  readonly hasCommonJsSyntax: boolean;
   readonly hasCreateElementCall: boolean;
+  readonly hasDirectComponentCall: boolean;
   readonly hasDynamicImport: boolean;
   readonly hasForbiddenModuleSyntax: boolean;
   readonly hasJsx: boolean;
@@ -49,6 +51,30 @@ const LEGACY_AUTHORING_NAMES = new Set([
   "withFocusManagement",
   "withKeyboardNavigation",
 ]);
+// Uppercase element types exported from packages/core/src/index.ts. They are
+// values so direct calls parse, but lessons must construct them declaratively.
+const DESCRIPTIVE_COMPONENT_EXPORTS = new Set([
+  "Absolute",
+  "Clip",
+  "Flex",
+  "Flow",
+  "FocusManagement",
+  "Fragment",
+  "Grid",
+  "Group",
+  "HorizontalLine",
+  "Image",
+  "KeyboardNavigation",
+  "Layer",
+  "Line",
+  "Overlay",
+  "Path",
+  "Rectangle",
+  "SvgPath",
+  "Text",
+  "VerticalLine",
+]);
+const COMMONJS_BINDING_NAMES = new Set(["exports", "module", "require"]);
 const SKIPPED_AST_KEYS = new Set([
   "comments",
   "errors",
@@ -180,7 +206,7 @@ function objectHasProperty(object: unknown, name: string): boolean {
   if (!isNode(object) || object.type !== "ObjectExpression") return false;
   return nodes(object.properties).some(
     (property) =>
-      (property.type === "ObjectProperty" || property.type === "ObjectMethod") &&
+      property.type === "ObjectProperty" &&
       propertyName(property.key) === name,
   );
 }
@@ -198,7 +224,7 @@ function isInspectableObject(value: unknown): value is SyntaxNode {
   if (!isNode(value) || value.type !== "ObjectExpression") return false;
   return nodes(value.properties).every(
     (property) =>
-      (property.type === "ObjectProperty" || property.type === "ObjectMethod") &&
+      property.type === "ObjectProperty" &&
       property.computed !== true &&
       propertyName(property.key) !== undefined,
   );
@@ -265,12 +291,37 @@ function assignsBindingNamed(
   );
 }
 
-function isApprovedCoreReference(
+function isNonComputedPropertyName(
   node: SyntaxNode,
-  parent: SyntaxNode | undefined,
-  valueImports: ReadonlyMap<string, string>,
+  parent: SyntaxNode,
 ): boolean {
-  if (!parent) return false;
+  if (parent.computed === true) return false;
+  if (
+    parent.type === "ObjectProperty" ||
+    parent.type === "ObjectMethod" ||
+    parent.type === "ClassProperty" ||
+    parent.type === "ClassMethod" ||
+    parent.type === "ClassAccessorProperty" ||
+    parent.type === "TSPropertySignature" ||
+    parent.type === "TSMethodSignature"
+  ) {
+    return parent.shorthand !== true && parent.key === node;
+  }
+  if (parent.type === "TSEnumMember") return parent.id === node;
+  if (parent.type === "TSQualifiedName") return parent.right === node;
+  if (
+    parent.type === "MemberExpression" ||
+    parent.type === "OptionalMemberExpression"
+  ) {
+    return parent.property === node;
+  }
+  return false;
+}
+
+function isDirectBindingDeclaration(
+  node: SyntaxNode,
+  parent: SyntaxNode,
+): boolean {
   if (
     parent.type === "ImportSpecifier" ||
     parent.type === "ImportDefaultSpecifier" ||
@@ -278,6 +329,60 @@ function isApprovedCoreReference(
   ) {
     return true;
   }
+  if (parent.type === "VariableDeclarator") return parent.id === node;
+  if (
+    parent.type === "FunctionDeclaration" ||
+    parent.type === "FunctionExpression" ||
+    parent.type === "ArrowFunctionExpression" ||
+    parent.type === "ObjectMethod" ||
+    parent.type === "ClassMethod" ||
+    parent.type === "TSDeclareFunction"
+  ) {
+    return parent.id === node || nodes(parent.params).includes(node);
+  }
+  if (
+    parent.type === "ClassDeclaration" ||
+    parent.type === "ClassExpression" ||
+    parent.type === "TSTypeAliasDeclaration" ||
+    parent.type === "TSInterfaceDeclaration" ||
+    parent.type === "TSModuleDeclaration"
+  ) {
+    return parent.id === node;
+  }
+  if (parent.type === "CatchClause") return parent.param === node;
+  return false;
+}
+
+function isCommonJsExecutableReference(
+  node: SyntaxNode,
+  parent: SyntaxNode | undefined,
+): boolean {
+  const name = identifierName(node);
+  if (!name || !COMMONJS_BINDING_NAMES.has(name) || !parent) return false;
+  if (
+    isDirectBindingDeclaration(node, parent) ||
+    isNonComputedPropertyName(node, parent)
+  ) {
+    return false;
+  }
+  if (
+    (parent.type === "LabeledStatement" ||
+      parent.type === "BreakStatement" ||
+      parent.type === "ContinueStatement") &&
+    parent.label === node
+  ) {
+    return false;
+  }
+  return true;
+}
+
+function isApprovedCoreReference(
+  node: SyntaxNode,
+  parent: SyntaxNode | undefined,
+  valueImports: ReadonlyMap<string, string>,
+): boolean {
+  if (!parent) return false;
+  if (isDirectBindingDeclaration(node, parent)) return true;
   if (
     (parent.type === "CallExpression" ||
       parent.type === "OptionalCallExpression" ||
@@ -294,22 +399,7 @@ function isApprovedCoreReference(
   ) {
     return true;
   }
-  if (
-    (parent.type === "ObjectProperty" || parent.type === "ObjectMethod") &&
-    parent.computed !== true &&
-    parent.shorthand !== true &&
-    parent.key === node
-  ) {
-    return true;
-  }
-  if (
-    (parent.type === "MemberExpression" ||
-      parent.type === "OptionalMemberExpression") &&
-    parent.computed !== true &&
-    parent.property === node
-  ) {
-    return true;
-  }
+  if (isNonComputedPropertyName(node, parent)) return true;
   return false;
 }
 
@@ -420,6 +510,8 @@ function inspectSource(source: string, label: string): SourceInspection {
 
   let hasCreateElementCall = false;
   let hasBindingViolation = false;
+  let hasCommonJsSyntax = false;
+  let hasDirectComponentCall = false;
   let hasDynamicImport = false;
   let hasJsx = false;
   let hasLegacyLayerRender = false;
@@ -430,6 +522,22 @@ function inspectSource(source: string, label: string): SourceInspection {
 
   walk(file, (node) => {
     if (node.type === "JSXElement" || node.type === "JSXFragment") hasJsx = true;
+    if (
+      node.type === "CallExpression" ||
+      node.type === "OptionalCallExpression" ||
+      node.type === "NewExpression"
+    ) {
+      const calleeName = identifierName(node.callee);
+      const importedCallee = calleeName
+        ? valueImports.get(calleeName)
+        : undefined;
+      if (
+        importedCallee !== undefined &&
+        DESCRIPTIVE_COMPONENT_EXPORTS.has(importedCallee)
+      ) {
+        hasDirectComponentCall = true;
+      }
+    }
     if (
       declaresBindingNamed(node, importedValueNames) ||
       assignsBindingNamed(node, importedValueNames)
@@ -559,12 +667,17 @@ function inspectSource(source: string, label: string): SourceInspection {
     ) {
       hasBindingViolation = true;
     }
+    if (isCommonJsExecutableReference(node, parent)) {
+      hasCommonJsSyntax = true;
+    }
   });
 
   return {
     hasBindingViolation,
     hasCanonicalMount: isCanonicalMount(programBody),
+    hasCommonJsSyntax,
     hasCreateElementCall,
+    hasDirectComponentCall,
     hasDynamicImport,
     hasForbiddenModuleSyntax,
     hasJsx,
@@ -603,6 +716,9 @@ export function validateLearningSourceText(
       "must not use dynamic imports, import.meta, import-equals, or named re-exports.",
     );
   }
+  if (inspection.hasCommonJsSyntax) {
+    throw invalid(label, "must not use CommonJS module loading or exports.");
+  }
   if (!inspection.hasCanonicalMount) {
     throw invalid(label, "must export the canonical mount(canvas) contract.");
   }
@@ -617,6 +733,12 @@ export function validateLearningSourceText(
   }
   if (inspection.hasLegacyAuthoring) {
     throw invalid(label, "imports or calls legacy component authoring.");
+  }
+  if (inspection.hasDirectComponentCall) {
+    throw invalid(
+      label,
+      "must construct descriptive CRC components with JSX or createElement, not direct calls.",
+    );
   }
   if (inspection.hasLegacyTextStyle) {
     throw invalid(label, "uses the legacy Text style.text contract.");
