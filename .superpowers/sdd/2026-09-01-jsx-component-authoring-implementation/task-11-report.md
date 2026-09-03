@@ -251,6 +251,71 @@ No screenshot or visual-baseline file is modified. Baselines were not rewritten.
 
 ## Self-review and concerns
 
+### Fix Round 5 — multiline legacy import assertions
+
+The final independent review found that the legacy import-assertion parse-error
+fallback recognized only single-line import declarations. Its raw-text guard
+excluded line breaks before `from`, so valid legacy forms such as a multiline
+named import received the generic invalid-TSX diagnostic instead of the exact
+import-attributes-or-assertions diagnostic.
+
+The fallback remains limited to Babel's `MissingSemicolon` failure. It now
+accepts whitespace and comments before the reported `assert` token, parses the
+source prefix with the normal TypeScript/JSX module parser, and requires the
+last parsed statement to be a static `ImportDeclaration`. This recognizes
+multiline named and default-plus-named declarations without treating dynamic
+imports or unrelated assertion-like syntax failures as static import
+assertions. The dotted-namespace fix from Round 4 is unchanged.
+
+The focused test adds named, default-plus-named, and commented multiline legacy
+assertion cases. Two negative lookalikes require the generic TSX parse
+diagnostic for a dynamic import and an unrelated expression.
+
+Focused RED evidence before the validator change:
+
+```sh
+corepack pnpm@11.21.0 exec vitest run \
+  packages/core/test/scenario-catalog.test.ts \
+  --browser.headless --browser.ui=false
+```
+
+```text
+Test Files  1 failed (1)
+Tests       3 failed | 117 passed (120)
+```
+
+The three failures were exactly the new multiline static-import cases; both
+lookalike guards were already green. The same focused command after the narrow
+fallback change passed:
+
+```text
+Test Files  1 passed (1)
+Tests       120 passed (120)
+```
+
+Fresh proportional verification under Node `v26.7.0` and pnpm `11.21.0`:
+
+```sh
+corepack pnpm@11.21.0 scenarios:check
+corepack pnpm@11.21.0 typecheck
+corepack pnpm@11.21.0 lint
+git diff --check
+```
+
+```text
+Scenario discovery rejected legacy and uncataloged example fixtures.
+Catalog validation: 42 lessons and 16 test labs passed.
+TypeScript: passed.
+ESLint and Prettier: passed.
+git diff --check: no output.
+```
+
+The sandboxed scenario-check attempt was blocked before validation by the
+`tsx` local IPC socket (`EPERM`); the identical permitted rerun passed. The
+existing Node 26 versus documented Node 24 LTS variance remains unchanged. No
+runtime, scenario source, catalog/index, screenshot, or visual-baseline file is
+modified by this fix.
+
 ### Fix Round 4 — dotted namespace self-bindings and legacy assertions
 
 This follow-up fixes two AST-gate edge cases without changing the supported

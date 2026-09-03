@@ -352,6 +352,38 @@ describe('scenario catalog trust gate', () => {
         /^invalid deterministic module must not use import attributes or assertions\.$/u,
       ],
       [
+        'a multiline named legacy import assertion',
+        `import {
+          Rectangle as AssertedRectangle,
+        } from '@crc/core' assert { type: 'json' }; void AssertedRectangle;`,
+        /^invalid deterministic module must not use import attributes or assertions\.$/u,
+      ],
+      [
+        'a multiline default-plus-named legacy import assertion',
+        `import fixture, {
+          helper,
+        } from './x.json' assert { type: 'json' }; void fixture; void helper;`,
+        /^invalid deterministic module must not use import attributes or assertions\.$/u,
+      ],
+      [
+        'a commented multiline legacy import assertion',
+        `import {
+          Rectangle as AssertedRectangle, // multiline binding
+        } from '@crc/core' /* legacy clause */ assert { type: 'json' };
+        void AssertedRectangle;`,
+        /^invalid deterministic module must not use import attributes or assertions\.$/u,
+      ],
+      [
+        'a dynamic-import assertion lookalike',
+        `const fixture = import('./x.json') assert { type: 'json' }; void fixture;`,
+        /^invalid deterministic module must be valid TSX module syntax\.$/u,
+      ],
+      [
+        'an unrelated assertion-like syntax error',
+        `const fixture = true assert { type: 'json' }; void fixture;`,
+        /^invalid deterministic module must be valid TSX module syntax\.$/u,
+      ],
+      [
         'a relative runtime named import',
         `import { helper } from './helper'; void helper;`,
         /supported static imports/i,

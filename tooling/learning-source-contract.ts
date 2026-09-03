@@ -221,15 +221,29 @@ function isLegacyImportAssertionSyntaxError(
     readonly reasonCode?: unknown;
   };
   const position = failure.pos;
-  return (
-    failure.code === "BABEL_PARSER_SYNTAX_ERROR" &&
-    failure.reasonCode === "MissingSemicolon" &&
-    typeof position === "number" &&
-    /^\s*assert\s*\{/u.test(source.slice(position)) &&
-    /(?:^|[;{}\n\r])\s*import\s+(?:(?:type\s+)?(?:[^;\r\n]*?)\s+from\s+)?(?:'[^'\r\n]*'|"[^"\r\n]*")\s+assert\s*\{/u.test(
-      source,
+  if (
+    failure.code !== "BABEL_PARSER_SYNTAX_ERROR" ||
+    failure.reasonCode !== "MissingSemicolon" ||
+    typeof position !== "number" ||
+    !/^(?:\s|\/\*[\s\S]*?\*\/|\/\/[^\r\n]*(?:\r?\n|$))*assert\s*\{/u.test(
+      source.slice(position),
     )
-  );
+  ) {
+    return false;
+  }
+
+  try {
+    const prefixFile = parse(source.slice(0, position), {
+      createImportExpressions: true,
+      plugins: ["typescript", "jsx"],
+      sourceType: "module",
+    }) as unknown as SyntaxNode;
+    const program = isNode(prefixFile.program) ? prefixFile.program : undefined;
+    const statements = nodes(program?.body);
+    return statements[statements.length - 1]?.type === "ImportDeclaration";
+  } catch {
+    return false;
+  }
 }
 
 function parseSource(source: string, label: string): SyntaxNode {
