@@ -90,6 +90,16 @@ function explicitExportNames(source, surfaceLabel) {
       throw new Error(`CRC ${surfaceLabel} declaration rejects global augmentation.`);
     }
 
+    if (
+      statement.type === 'TSModuleDeclaration' &&
+      statement.kind === 'module' &&
+      statement.id.type === 'StringLiteral'
+    ) {
+      throw new Error(
+        `CRC ${surfaceLabel} declaration rejects ambient external module: ${statement.id.value}.`,
+      );
+    }
+
     if (statement.type === 'TSNamespaceExportDeclaration') {
       throw new Error(
         `CRC ${surfaceLabel} declaration rejects global namespace export: ${statement.id.name}.`,
@@ -188,6 +198,38 @@ declare global {
     /rejects global augmentation/u,
     'The declaration surface comparator must reject declare global, including nested namespaces.',
   );
+
+  const ambientModuleMutations = [
+    ['@crc/core', '@crc/core'],
+    ['@crc/core/jsx-runtime', '@crc/core/jsx-runtime'],
+    ['@crc/core/jsx-dev-runtime', '@crc/core/jsx-dev-runtime'],
+    ['@crc/core', '@third-party/runtime'],
+  ];
+  for (const [surfaceModuleName, ambientModuleName] of ambientModuleMutations) {
+    const studioAmbientModuleMutationFixture = `
+export namespace JSX {}
+declare module "${ambientModuleName}" {
+  export const UnexpectedAugmentedExport: unique symbol;
+}
+`;
+    assert.throws(
+      () =>
+        assertExactDeclarationSurface(
+          surfaceModuleName,
+          'source package fixture',
+          packageFixture,
+          'Studio ambient-module mutation fixture',
+          studioAmbientModuleMutationFixture,
+        ),
+      {
+        message:
+          `CRC Studio ambient-module mutation fixture ${surfaceModuleName} declaration ` +
+          `rejects ambient external module: ${ambientModuleName}.`,
+      },
+      `The declaration surface comparator must reject ambient module "${ambientModuleName}" ` +
+        `while verifying ${surfaceModuleName}.`,
+    );
+  }
 
   const studioInternalNamespaceFixture = `
 declare namespace CRCInternal {
