@@ -13,7 +13,7 @@ import {
   toLogicalTransform,
 } from '../surface/transform.js';
 import type {
-  CompRefs,
+  CRCComponentRefs,
   CRCClippingStackEntry,
   CRCInstance,
   CRCRegionHandlers,
@@ -36,7 +36,7 @@ export type CRCNormalizedHandlers = Partial<{
 export interface CRCEventTargetRegistration {
   readonly kind: 'target';
   readonly owner: CRCInstance;
-  readonly component: CompRefs<any>;
+  readonly component: CRCComponentRefs<any>;
   readonly slot: number;
   readonly publicTarget: CRCEventTarget;
   handlers: CRCNormalizedHandlers;
@@ -54,7 +54,7 @@ export interface CRCEventTargetRegistration {
 export interface CRCEventListenerRegistration {
   readonly kind: 'listener';
   readonly owner: CRCInstance;
-  readonly component: CompRefs<any>;
+  readonly component: CRCComponentRefs<any>;
   readonly slot: number;
   readonly publicTarget: CRCEventTarget;
   handlers: CRCNormalizedHandlers;
@@ -80,7 +80,7 @@ const legacyHitGeometry = new WeakMap<
 
 export function createTarget(
   owner: CRCInstance,
-  component: CompRefs<any>,
+  component: CRCComponentRefs<any>,
   slot: number,
 ): CRCEventTargetRegistration {
   const target = {} as CRCEventTargetRegistration;
@@ -239,7 +239,7 @@ export function releaseTarget(target: CRCEventTargetRegistration): void {
 
 export function createListener(
   owner: CRCInstance,
-  component: CompRefs<any>,
+  component: CRCComponentRefs<any>,
   slot: number,
 ): CRCEventListenerRegistration {
   const listener = {} as CRCEventListenerRegistration;

@@ -1,4 +1,3 @@
-import { defineComp } from '../define-comp.js';
 import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,
@@ -59,25 +58,6 @@ export const Path = definePrimitive<
   resolveStyle: resolvePathStyle,
 });
 registerOpaqueStyleProperties(Path, ['fill', 'stroke', 'cursor']);
-
-const renderLegacyPath = function Path(
-  props: PathProps,
-  style: Readonly<ResolvedPathStyle>,
-  ctx: RenderingContext2D,
-) {
-  renderPath(props, style, ctx);
-};
-
-/** @internal Temporary lowercase authoring adapter retained until Task 12. */
-export const path = defineComp<
-  PathProps,
-  PathStyle,
-  PathStyle,
-  ResolvedPathStyle
->(renderLegacyPath, {
-  resolveStyle: resolvePathStyle,
-});
-registerOpaqueStyleProperties(renderLegacyPath, ['fill', 'stroke', 'cursor']);
 
 function resolvePathStyle(
   style: Readonly<PathStyle>,

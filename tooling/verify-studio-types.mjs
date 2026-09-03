@@ -42,22 +42,36 @@ function readDeclarationModules(bundle) {
 
 const declarationModules = readDeclarationModules(declarationBundle);
 
+const removedTypeImports = [
+  [['define', 'Comp'], 'RemovedDefinitionWrapper'],
+  [['Comp', 'El'], 'RemovedElementType'],
+  [['Comp', 'Fn'], 'RemovedRenderType'],
+  [['Component', 'Input'], 'RemovedInputType'],
+  [['Component', 'Capabilities'], 'RemovedCapabilityType'],
+  [['Falsy', 'Nodes'], 'RemovedEmptyNodeType'],
+].map(([parts, alias]) =>
+  '// @ts-expect-error removed authoring type\n' +
+  `import type { ${parts.join('')} as ${alias} } from '@crc/core';`,
+).join('\n');
+
 const consumer = `
+${removedTypeImports}
 import * as CRC_CORE_ROOT from '@crc/core';
 import {
-  absolute,
+  Absolute,
   crc,
+  crcCanvasContext,
   crcEvent,
   crcEventListener,
   crcEventTarget,
-  defineComp,
-  flex,
-  flow,
+  createElement,
+  definePrimitive,
+  Flex,
+  Flow,
   FocusManagement,
-  grid,
+  Grid,
   KeyboardNavigation,
-  overlay,
-  rect,
+  Overlay,
   Rectangle,
   Text,
   type CRCConfig,
@@ -84,6 +98,11 @@ import {
   type KeyboardNavigationProps,
   type OverlayStyle,
   type Percentage,
+  type PrimitiveCapabilities,
+  type PrimitiveInput,
+  type PrimitiveProgramProps,
+  type PrimitiveRender,
+  type RenderingContext2D,
   type SystemStyle,
 } from '@crc/core';
 import { jsx, jsxs } from '@crc/core/jsx-runtime';
@@ -152,33 +171,33 @@ const eventHandlers = {
   onDragStart: (event: CRCDragEvent) => void event.dataTransfer,
 } satisfies CRCEventHandlers;
 
-const EventProbe = defineComp(() => {
+function EventProbe(): CRCNode {
   const snapshot: CRCEventTargetSnapshot = crcEventTarget(eventHandlers, {
     path: new Path2D(),
     fill: true,
   });
   crcEventListener({ onPointerDownCapture: eventHandlers.onPointerDown });
   void snapshot.isFocused;
-  return rect({
-    ...eventHandlers,
-    style: { width: 20, height: 20, fill: 'black' },
-  });
-});
-EventProbe({});
+  const context: RenderingContext2D = crcCanvasContext();
+  void context;
+  return <Rectangle
+    {...eventHandlers}
+    style={{ width: 20, height: 20, fill: 'black' }}
+  />;
+}
+createElement(EventProbe, {});
 
 const keyboardNavigationOptions = {
   mode: 'directional',
 } satisfies CRCKeyboardNavigationOptions;
-declare function policyElement<P>(
-  type: (props: P) => CRCNode,
-  props: P,
-): CRCNode;
-policyElement(FocusManagement, {
-  children: policyElement(KeyboardNavigation, {
-    ...keyboardNavigationOptions,
-    children: EventProbe({ key: 'studio-focus-probe' }),
-  } satisfies KeyboardNavigationProps),
-} satisfies FocusManagementProps);
+const policyTree = (
+  <FocusManagement>
+    <KeyboardNavigation {...keyboardNavigationOptions}>
+      <EventProbe key="studio-focus-probe" />
+    </KeyboardNavigation>
+  </FocusManagement>
+);
+void policyTree;
 // @ts-expect-error focus policies reject raw container text
 const invalidFocusPolicy = { children: 'raw text' } satisfies FocusManagementProps;
 void invalidFocusPolicy;
@@ -197,24 +216,24 @@ crcEvent('mousemove', event => {
 type UnionStyle =
   | (SystemStyle & { opacity?: number })
   | (SystemStyle & { width: number });
-const UnionProbe = defineComp<{}, UnionStyle>(() => undefined);
-UnionProbe({ style: { opacity: 0.5 } });
-UnionProbe({ style: { width: 4 } });
+const UnionProbe = definePrimitive<{}, UnionStyle>(() => undefined);
+createElement(UnionProbe, { style: { opacity: 0.5 } });
+createElement(UnionProbe, { style: { width: 4 } });
 // @ts-expect-error one union member makes style required
-UnionProbe({});
+createElement(UnionProbe, {});
 
 // @ts-expect-error key is reserved descriptor metadata
-defineComp<{ key: string }, SystemStyle>(() => undefined);
+definePrimitive<{ key: string }, SystemStyle>(() => undefined);
 // @ts-expect-error style is reserved descriptor metadata
-defineComp<{ style: string }, SystemStyle>(() => undefined);
+definePrimitive<{ style: string }, SystemStyle>(() => undefined);
 
 interface PercentageStyle extends SystemStyle { radius: Percentage }
 interface ResolvedRadiusStyle extends SystemStyle { radius: number }
 // @ts-expect-error allocation-dependent declared styles require a resolver
-defineComp<{}, PercentageStyle>(() => undefined);
+definePrimitive<{}, PercentageStyle>(() => undefined);
 // @ts-expect-error resolved styles must be allocation-free
-defineComp<{}, PercentageStyle, PercentageStyle, PercentageStyle>(() => undefined, { resolveStyle: (style: PercentageStyle) => style });
-const RadiusProbe = defineComp<
+definePrimitive<{}, PercentageStyle, PercentageStyle, PercentageStyle>(() => undefined, { resolveStyle: (style: PercentageStyle) => style });
+const RadiusProbe = definePrimitive<
   {},
   PercentageStyle,
   PercentageStyle,
@@ -230,6 +249,13 @@ const RadiusProbe = defineComp<
     }),
   },
 );
+type StudioPrimitiveTypes = [
+  PrimitiveProgramProps<{ label: string }>,
+  PrimitiveInput<{ label: string }, PercentageStyle>,
+  PrimitiveRender<{ label: string }, ResolvedRadiusStyle>,
+  PrimitiveCapabilities<{ label: string }, PercentageStyle>,
+];
+void (null as unknown as StudioPrimitiveTypes);
 
 const overlayStyle = {
   width: 240,
@@ -237,9 +263,51 @@ const overlayStyle = {
   alignItems: 'center',
   justifyItems: 'end',
 } satisfies OverlayStyle;
-overlay({ style: overlayStyle, children: [] });
+createElement(Overlay, { style: overlayStyle, children: [] });
 
-absolute({
+const layoutPolicies = (
+  <>
+    <Absolute
+      style={{
+        left: 4, top: '10%', alignSelf: 'center', justifySelf: 'end',
+        flexBasis: 24, flexGrow: 1, flexShrink: 0,
+        gridColumnStart: 1, gridColumnSpan: 2, gridRowStart: 1, gridRowSpan: 1,
+      }}
+    >{false}</Absolute>
+    <Overlay
+      style={{
+        left: 4, top: '10%', alignSelf: 'center', justifySelf: 'end',
+        flexBasis: 24, flexGrow: 1, flexShrink: 0,
+        gridColumnStart: 1, gridColumnSpan: 2, gridRowStart: 1, gridRowSpan: 1,
+      }}
+    >{false}</Overlay>
+    <Flow
+      style={{
+        left: 4, top: '10%', alignSelf: 'center', justifySelf: 'end',
+        flexBasis: 24, flexGrow: 1, flexShrink: 0,
+        gridColumnStart: 1, gridColumnSpan: 2, gridRowStart: 1, gridRowSpan: 1,
+      }}
+    >{false}</Flow>
+    <Flex
+      style={{
+        left: 4, top: '10%', alignSelf: 'center', justifySelf: 'end',
+        flexBasis: 24, flexGrow: 1, flexShrink: 0,
+        gridColumnStart: 1, gridColumnSpan: 2, gridRowStart: 1, gridRowSpan: 1,
+      }}
+    >{false}</Flex>
+    <Grid
+      style={{
+        left: 4, top: '10%', alignSelf: 'center', justifySelf: 'end',
+        flexBasis: 24, flexGrow: 1, flexShrink: 0,
+        gridColumnStart: 1, gridColumnSpan: 2, gridRowStart: 1, gridRowSpan: 1,
+        gridTemplateColumns: [100], gridTemplateRows: [50],
+      }}
+    >{false}</Grid>
+  </>
+);
+void layoutPolicies;
+
+createElement(Absolute, {
   style: {
     left: 4, top: '10%', alignSelf: 'center', justifySelf: 'end',
     flexBasis: 24, flexGrow: 1, flexShrink: 0,
@@ -247,7 +315,7 @@ absolute({
   },
   children: [],
 });
-overlay({
+createElement(Overlay, {
   style: {
     left: 4, top: '10%', alignSelf: 'center', justifySelf: 'end',
     flexBasis: 24, flexGrow: 1, flexShrink: 0,
@@ -255,7 +323,7 @@ overlay({
   },
   children: [],
 });
-flow({
+createElement(Flow, {
   style: {
     left: 4, top: '10%', alignSelf: 'center', justifySelf: 'end',
     flexBasis: 24, flexGrow: 1, flexShrink: 0,
@@ -263,7 +331,7 @@ flow({
   },
   children: [],
 });
-flex({
+createElement(Flex, {
   style: {
     left: 4, top: '10%', alignSelf: 'center', justifySelf: 'end',
     flexBasis: 24, flexGrow: 1, flexShrink: 0,
@@ -271,7 +339,7 @@ flex({
   },
   children: [],
 });
-grid({
+createElement(Grid, {
   style: {
     left: 4, top: '10%', alignSelf: 'center', justifySelf: 'end',
     flexBasis: 24, flexGrow: 1, flexShrink: 0,
@@ -282,7 +350,7 @@ grid({
 });
 
 declare const canvas: HTMLCanvasElement;
-crc(canvas, RadiusProbe({ style: { radius: '50%' } }));
+crc(canvas, createElement(RadiusProbe, { style: { radius: '50%' } }));
 const fit: CRCFit = 'cover';
 const pixelRatio: CRCPixelRatio = 2;
 const fixedSurface: CRCConfig = {
@@ -290,12 +358,12 @@ const fixedSurface: CRCConfig = {
   fit,
   pixelRatio,
 };
-crc(canvas, RadiusProbe({ style: { radius: '50%' } }), fixedSurface);
-crc(canvas, RadiusProbe({ style: { radius: '50%' } }), {
+crc(canvas, createElement(RadiusProbe, { style: { radius: '50%' } }), fixedSurface);
+crc(canvas, createElement(RadiusProbe, { style: { radius: '50%' } }), {
   viewport: 'responsive',
   pixelRatio: 'device',
 });
-crc(canvas, RadiusProbe({ style: { radius: '50%' } }), {
+crc(canvas, createElement(RadiusProbe, { style: { radius: '50%' } }), {
   viewport: 'responsive',
   // @ts-expect-error responsive viewports do not accept fit
   fit: 'contain',
@@ -420,19 +488,56 @@ try {
   }
   const sourceRuntimeExports = await studioRuntimeExports('source');
   const builtRuntimeExports = await studioRuntimeExports('built');
-  for (const runtimeExport of [
-    'crc',
+  const expectedStudioRuntimeExports = [
+    'Absolute',
+    'Clip',
+    'Flex',
+    'Flow',
+    'FocusManagement',
+    'Fragment',
+    'Grid',
+    'Group',
+    'HorizontalLine',
+    'Image',
+    'KeyboardNavigation',
+    'Layer',
+    'LayoutDiagnostic',
+    'Line',
+    'Overlay',
+    'Path',
     'Rectangle',
+    'SvgPath',
     'Text',
+    'VerticalLine',
+    'crc',
+    'crcCanvasContext',
+    'crcCursor',
+    'crcEvent',
+    'crcEventListener',
+    'crcEventTarget',
+    'crcLayoutBox',
+    'crcLinePath',
+    'crcMemo',
+    'crcRectPath',
+    'crcRef',
+    'crcState',
+    'crcSvgPath',
+    'crcWhenChanged',
+    'createElement',
+    'definePrimitive',
     'jsx',
-    'jsxs',
     'jsxDEV',
-  ]) {
-    if (!sourceRuntimeExports.includes(runtimeExport)) {
-      throw new Error(
-        `CRC Studio source runtime is missing export "${runtimeExport}".`,
-      );
-    }
+    'jsxs',
+    'layoutDiagnostic',
+    'measureElement',
+    'normalizeEdges',
+    'resolveBox',
+    'resolveLength',
+  ].sort();
+  if (sourceRuntimeExports.join('\n') !== expectedStudioRuntimeExports.join('\n')) {
+    throw new Error(
+      `CRC Studio source runtime has unexpected exports: ${sourceRuntimeExports.join(', ')}.`,
+    );
   }
   if (sourceRuntimeExports.join('\n') !== builtRuntimeExports.join('\n')) {
     throw new Error('CRC Studio source and built runtime surfaces differ.');

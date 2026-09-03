@@ -1,4 +1,3 @@
-import { defineComp } from '../define-comp.js';
 import { definePrimitive } from '../define-primitive.js';
 import { materializeContainerChildren } from '../element/children.js';
 import { createElement } from '../element/create-element.js';
@@ -11,7 +10,6 @@ import {
 } from '../global-state.js';
 import { mountCRC } from '../mount-crc.js';
 import {
-  CompEl,
   CRCNode,
   CRCInteractionLayer,
   RenderingContext2D,
@@ -40,10 +38,6 @@ import {
 
 export interface LayerProps {
   children: CRCNode;
-}
-
-interface LegacyLayerProps {
-  render: CompEl<any, any>;
 }
 
 export interface LayerStyle extends SystemStyle, BoxStyle, LayoutItemStyle {}
@@ -194,24 +188,6 @@ export const Layer = definePrimitive<
   LayerStyle,
   ResolvedLayerStyle
 >(renderLayer, {
-  resolveStyle: resolveLayerStyle,
-});
-
-const renderLegacyLayer = function Layer(
-  props: LegacyLayerProps,
-  style: Readonly<ResolvedLayerStyle>,
-  ctx: RenderingContext2D,
-) {
-  renderLayer({ children: props.render }, style, ctx);
-};
-
-/** @internal Temporary lowercase authoring adapter retained until Task 12. */
-export const layer = defineComp<
-  LegacyLayerProps,
-  LayerStyle,
-  LayerStyle,
-  ResolvedLayerStyle
->(renderLegacyLayer, {
   resolveStyle: resolveLayerStyle,
 });
 

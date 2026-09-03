@@ -1,4 +1,3 @@
-import { defineComp } from '../define-comp.js';
 import { definePrimitive } from '../define-primitive.js';
 import { materializeTextChildren } from '../element/children.js';
 import { GLOBAL_STATE } from '../global-state.js';
@@ -28,12 +27,6 @@ import { resolveTextClipBounds, resolveTextLayout } from './text-layout.js';
 export interface TextProps extends CRCEventHandlers, CRCEventFocusOptions {
   children?: CRCTextChild;
 }
-
-interface LegacyTextStyle extends TextStyle {
-  text: string;
-}
-
-type ResolvedLegacyTextStyle = ResolvedTextStyle & { text: string };
 
 const materializedTextTransactions = new WeakMap<
   CRCRenderTransaction,
@@ -235,54 +228,3 @@ function materializeTextContent(props: Readonly<TextProps>): string {
   receivers.set(receiver, materialized);
   return materialized;
 }
-
-function renderLegacyText(
-  props: TextProps,
-  style: Readonly<ResolvedLegacyTextStyle>,
-  ctx: RenderingContext2D,
-) {
-  const { text, ...resolvedStyle } = style;
-  renderText(
-    { ...props, children: text },
-    resolvedStyle as Readonly<ResolvedTextStyle>,
-    ctx,
-  );
-}
-
-/** @internal Temporary lowercase authoring adapter retained until Task 12. */
-export const text = defineComp<
-  TextProps,
-  LegacyTextStyle,
-  LegacyTextStyle,
-  ResolvedLegacyTextStyle
->(renderLegacyText, {
-  resolveStyle: (style, context) => ({
-    ...stripLayoutParticipation(style),
-    x: resolveLocalOffset(style.x, context.percentageBasis.width, 'x', context),
-    y: resolveLocalOffset(style.y, context.percentageBasis.height, 'y', context),
-    width: resolveOptionalLength(
-      style.width,
-      context.percentageBasis.width,
-      'width',
-      context,
-    ),
-    height: resolveOptionalLength(
-      style.height,
-      context.percentageBasis.height,
-      'height',
-      context,
-    ),
-  }) as ResolvedLegacyTextStyle,
-  measure: ({ style, constraints, service }) =>
-    measureTextStyle(style.text, style, constraints, service),
-});
-registerOpaqueStyleProperties(renderLegacyText, [
-  'text',
-  'font',
-  'fill',
-  'stroke',
-  'cursor',
-  'fit',
-  'textBaseline',
-  'textAlign',
-]);

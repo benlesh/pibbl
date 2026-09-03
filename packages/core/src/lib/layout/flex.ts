@@ -1,4 +1,3 @@
-import { defineComp } from '../define-comp.js';
 import { definePrimitive } from '../define-primitive.js';
 import { cloneCRCElement } from '../element/create-element.js';
 import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
@@ -164,29 +163,6 @@ export const Flex = definePrimitive<
   FlexStyle,
   ResolvedFlexStyle
 >(renderFlex, {
-  resolveStyle: (style, context) => ({
-    box: resolveContainerBox(style, context, 'Flex', 'flex'),
-    overflow: style.overflow ?? 'visible',
-    ...normalizeFlexOptions(style, context.allocation),
-  }),
-  measure: input => measureFlex(input),
-});
-
-const renderLegacyFlex = function Flex(
-  props: FlexProps,
-  style: Readonly<ResolvedFlexStyle>,
-  ctx: RenderingContext2D,
-) {
-  return renderFlex(props, style, ctx);
-};
-
-/** @internal Temporary lowercase authoring adapter retained until Task 12. */
-export const flex = defineComp<
-  FlexProps,
-  FlexStyle,
-  FlexStyle,
-  ResolvedFlexStyle
->(renderLegacyFlex, {
   resolveStyle: (style, context) => ({
     box: resolveContainerBox(style, context, 'Flex', 'flex'),
     overflow: style.overflow ?? 'visible',

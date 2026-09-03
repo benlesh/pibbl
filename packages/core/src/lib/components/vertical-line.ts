@@ -1,4 +1,3 @@
-import { defineComp } from '../define-comp.js';
 import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,
@@ -117,45 +116,3 @@ export const VerticalLine = definePrimitive<
   }) as ResolvedVerticalLineStyle,
 });
 registerOpaqueStyleProperties(VerticalLine, ['stroke', 'cursor']);
-
-const renderLegacyVerticalLine = function VerticalLine(
-  props: VerticalLineProps,
-  style: Readonly<ResolvedVerticalLineStyle>,
-  ctx: RenderingContext2D,
-) {
-  return renderVerticalLine(props, style, ctx);
-};
-
-/** @internal Temporary lowercase authoring adapter retained until Task 12. */
-export const verticalLine = defineComp<
-  VerticalLineProps,
-  VerticalLineStyle,
-  VerticalLineStyle,
-  ResolvedVerticalLineStyle
->(renderLegacyVerticalLine, {
-  resolveStyle: (style, context) => ({
-    ...stripLayoutParticipation(style),
-    x: resolveRequiredLength(
-      style.x,
-      context.percentageBasis.width,
-      'x',
-      context,
-    ),
-    y1: resolveLocalOffset(
-      style.y1,
-      context.percentageBasis.height,
-      'y1',
-      context,
-    ),
-    y2: resolveRequiredLength(
-      style.y2 ?? context.allocation.height,
-      context.percentageBasis.height,
-      'y2',
-      context,
-    ),
-  }) as ResolvedVerticalLineStyle,
-});
-registerOpaqueStyleProperties(renderLegacyVerticalLine, [
-  'stroke',
-  'cursor',
-]);

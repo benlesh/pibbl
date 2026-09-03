@@ -13,7 +13,6 @@ import type {
 import type {
   CRCElement,
   CRCElementType,
-  CRCKey,
   CRCNode,
 } from './element/types.js';
 import type { PendingRoot } from './global-state.js';
@@ -35,13 +34,13 @@ export interface SystemStyle {
   custom?: unknown;
 }
 
-type ReservedElementKey = 'key' | 'style';
+type PrimitiveReservedKey = 'key' | 'style';
 
 type UnionKeys<T> = T extends unknown ? keyof T : never;
 
 export type PrimitiveProgramProps<P> = 0 extends (1 & P)
   ? P
-  : Extract<UnionKeys<P>, ReservedElementKey> extends never
+  : Extract<UnionKeys<P>, PrimitiveReservedKey> extends never
     ? P
     : never;
 
@@ -56,29 +55,8 @@ type StyleField<S> = [RequiredKeys<S>] extends [never]
   ? { style?: S }
   : { style: S };
 
-export type ComponentInput<P, S extends SystemStyle = SystemStyle> =
-  PrimitiveProgramProps<P> & { key?: CRCKey } & StyleField<S>;
-
 export type PrimitiveInput<P, S extends SystemStyle = SystemStyle> =
   PrimitiveProgramProps<P> & StyleField<SpecifiedStyle<S>>;
-
-export type CompEl<
-  P = any,
-  S extends SystemStyle = SystemStyle,
-  N extends SystemStyle = S,
-  R extends SystemStyle = N,
-> = CRCElement<PrimitiveProgramProps<P> & { style: SpecifiedStyle<S> }> & {
-  readonly type: CompFn<P, S, N, R>;
-  readonly props: Readonly<
-    PrimitiveProgramProps<P> & { style: SpecifiedStyle<S> }
-  >;
-  /** @deprecated Temporary compatibility alias; use element.props.style. */
-  readonly style: SpecifiedStyle<S>;
-  /** @internal */
-  identityHint?: InternalIdentityHint;
-};
-
-export type FalsyNodes = import('./element/types.js').CRCEmptyNode;
 
 export type Canvas = HTMLCanvasElement | OffscreenCanvas;
 export type RenderingContext2D =
@@ -144,42 +122,15 @@ export interface PrimitiveCapabilities<
   ) => MeasureResult;
 }
 
-export interface ComponentCapabilities<
-  S extends SystemStyle,
-  N extends SystemStyle = S,
-  R extends SystemStyle = N,
-  P = unknown,
-> {
-  normalizeStyle?: (style: SpecifiedStyle<S>) => NormalizedStyle<N>;
-  resolveStyle?: (
-    style: NormalizedStyle<N>,
-    context: Readonly<StyleResolutionContext>,
-  ) => ResolvedStyle<R>;
-  measure?: (
-    input: MeasureInput<PrimitiveProgramProps<P>, N>,
-  ) => MeasureResult;
-}
-
-export type CompFn<
-  P,
-  S extends SystemStyle = SystemStyle,
-  N extends SystemStyle = S,
-  R extends SystemStyle = N,
-> = ((
-  props: PrimitiveProgramProps<P>,
-  style: ResolvedStyle<R>,
-  ctx: RenderingContext2D,
-) => CRCNode[] | CRCNode | void) & Readonly<ComponentCapabilities<S, N, R, P>>;
-
 export interface InternalIdentityHint {
   type: CRCElementType<any>;
   key: string | undefined;
   occurrence: number;
 }
 
-export interface CompRefs<P> {
+export interface CRCComponentRefs<P> {
   id: string;
-  parent: CompRefs<any> | undefined;
+  parent: CRCComponentRefs<any> | undefined;
   element: CRCElement<P>;
   refs: any[];
   hooks: CRCHookSlot[];
@@ -334,7 +285,7 @@ export interface CRCInstance {
   root: CRCNode;
   pendingRoot: PendingRoot;
   pendingUpdateParents: boolean;
-  refs: Map<string, CompRefs<any>>;
+  refs: Map<string, CRCComponentRefs<any>>;
   animationFrameId: number | undefined;
   renderTimestamp: number;
   mainTeardowns: Teardowns;
@@ -346,7 +297,7 @@ export interface CRCInstance {
   interactionRoot: CRCInstance | undefined;
   parent: Canvas | undefined;
   /** Parent layer component used only for temporary cross-instance event paths. */
-  eventParent: CompRefs<any> | undefined;
+  eventParent: CRCComponentRefs<any> | undefined;
   rootLayoutBox: Readonly<LayoutBox>;
   surface: CRCSurfaceState;
 }

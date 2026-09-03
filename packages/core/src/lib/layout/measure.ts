@@ -1,6 +1,6 @@
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import { GLOBAL_STATE } from '../global-state.js';
-import { EMPTY_STYLE } from '../create-element.js';
+import { EMPTY_STYLE } from '../style/empty-style.js';
 import { takePreNormalizedStyle } from '../style/resolve-dispatch.js';
 import {
   createPrimitiveReceiverToken,

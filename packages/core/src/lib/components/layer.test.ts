@@ -1,4 +1,4 @@
-import type { RectProps } from './rect';
+import type { RectangleProps } from './rect';
 import type { RectStyle } from '../style/types';
 import type { SystemStyle } from '../types';
 import { page } from 'vitest/browser';
@@ -653,7 +653,7 @@ describe('layer', () => {
 
     it('only re-renders when props change', async () => {
       let renderCount = 0;
-      const countedRect = definePrimitive<RectProps, RectStyle>((props, style) => {
+      const countedRect = definePrimitive<RectangleProps, RectStyle>((props, style) => {
         renderCount++;
         return createElement(Rectangle, {
           ...props,

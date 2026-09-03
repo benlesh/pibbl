@@ -21,8 +21,6 @@ const expected = [
   'SvgPath',
   'Text',
   'VerticalLine',
-  'absolute',
-  'clip',
   'crc',
   'crcCanvasContext',
   'crcCursor',
@@ -38,27 +36,12 @@ const expected = [
   'crcSvgPath',
   'crcWhenChanged',
   'createElement',
-  'defineComp',
   'definePrimitive',
-  'flex',
-  'flow',
-  'g',
-  'grid',
-  'horizontalLine',
-  'img',
-  'layer',
   'layoutDiagnostic',
-  'line',
   'measureElement',
   'normalizeEdges',
-  'overlay',
-  'path',
-  'rect',
   'resolveBox',
   'resolveLength',
-  'svgPath',
-  'text',
-  'verticalLine',
 ];
 
 const actual = Object.keys(core).sort();
@@ -72,7 +55,10 @@ for (const exportName of expected) {
 }
 
 const style = { width: 1, height: 1 };
-const element = core.rect({ key: 'runtime-focus-probe', style });
+const element = core.createElement(core.Rectangle, {
+  key: 'runtime-focus-probe',
+  style,
+});
 const enhanced = core.createElement(core.FocusManagement, {
   children: core.createElement(core.KeyboardNavigation, {
     mode: 'directional',

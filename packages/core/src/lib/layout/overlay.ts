@@ -1,4 +1,3 @@
-import { defineComp } from '../define-comp.js';
 import { definePrimitive } from '../define-primitive.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
@@ -72,29 +71,6 @@ export const Overlay = definePrimitive<
   OverlayStyle,
   ResolvedOverlayStyle
 >(renderOverlay, {
-  resolveStyle: (style, context) => ({
-    box: resolveContainerBox(style, context, 'Overlay', 'overlay'),
-    overflow: style.overflow ?? 'visible',
-    alignItems: style.alignItems ?? 'stretch',
-    justifyItems: style.justifyItems ?? 'stretch',
-  }),
-});
-
-const renderLegacyOverlay = function Overlay(
-  props: OverlayProps,
-  style: Readonly<ResolvedOverlayStyle>,
-  ctx: RenderingContext2D,
-) {
-  return renderOverlay(props, style, ctx);
-};
-
-/** @internal Temporary lowercase authoring adapter retained until Task 12. */
-export const overlay = defineComp<
-  OverlayProps,
-  OverlayStyle,
-  OverlayStyle,
-  ResolvedOverlayStyle
->(renderLegacyOverlay, {
   resolveStyle: (style, context) => ({
     box: resolveContainerBox(style, context, 'Overlay', 'overlay'),
     overflow: style.overflow ?? 'visible',

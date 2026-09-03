@@ -1,4 +1,3 @@
-import { defineComp } from '../define-comp.js';
 import { definePrimitive } from '../define-primitive.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { CRCNode, RenderingContext2D, SystemStyle } from '../types.js';
@@ -41,23 +40,5 @@ export const Clip = definePrimitive<
   ClipStyle,
   ResolvedClipStyle
 >(renderClip, {
-  resolveStyle: style => stripLayoutParticipation(style) as ResolvedClipStyle,
-});
-
-const renderLegacyClip = function Clip(
-  props: ClipProps,
-  style: Readonly<ResolvedClipStyle>,
-  ctx: RenderingContext2D,
-) {
-  return renderClip(props, style, ctx);
-};
-
-/** @internal Temporary lowercase authoring adapter retained until Task 12. */
-export const clip = defineComp<
-  ClipProps,
-  ClipStyle,
-  ClipStyle,
-  ResolvedClipStyle
->(renderLegacyClip, {
   resolveStyle: style => stripLayoutParticipation(style) as ResolvedClipStyle,
 });

@@ -4,7 +4,7 @@ import {
   GLOBAL_STATE,
 } from './global-state.js';
 import { Teardowns } from './teardowns.js';
-import { CompRefs } from './types.js';
+import { CRCComponentRefs } from './types.js';
 import { finalizeHookSlots } from './hooks/hook-slot.js';
 import { resolveElementStyle } from './style/resolve-dispatch.js';
 import {
@@ -13,7 +13,7 @@ import {
   reconcileElementEnhancers,
 } from './element-enhancers.js';
 import {
-  getLegacyIdentityHint,
+  getPlacementIdentityHint,
   getPrimitiveDefinition,
   getPrimitiveProgramProps,
   getPrimitiveReceiverToken,
@@ -25,7 +25,7 @@ import type { CRCElement, CRCNode } from './element/types.js';
 export function render(
   node: CRCNode,
   parentId: string,
-  parent: CompRefs<any> | undefined,
+  parent: CRCComponentRefs<any> | undefined,
 ): void {
   const elements = materializeContainerChildren(node, 'CRC root');
   renderPreparedChildren(elements, parentId, parent, false);
@@ -34,7 +34,7 @@ export function render(
 function renderPreparedChildren(
   elements: readonly CRCElement<any>[],
   parentId: string,
-  parent: CompRefs<any> | undefined,
+  parent: CRCComponentRefs<any> | undefined,
   isolate: boolean,
 ): void {
   const ctx = GLOBAL_STATE.renderContext!;
@@ -55,7 +55,7 @@ function renderPreparedChildren(
 function renderPreparedElement(
   element: CRCElement<any>,
   parentId: string,
-  parent: CompRefs<any> | undefined,
+  parent: CRCComponentRefs<any> | undefined,
 ): void {
   if (isFragmentElement(element)) {
     renderKeyedFragment(element, parentId, parent);
@@ -67,7 +67,7 @@ function renderPreparedElement(
 function renderKeyedFragment(
   element: CRCElement<any>,
   parentId: string,
-  parent: CompRefs<any> | undefined,
+  parent: CRCComponentRefs<any> | undefined,
 ): void {
   try {
     const componentRefs = prepareComponentScope(
@@ -99,7 +99,7 @@ function renderKeyedFragment(
 function renderComponentElement<P>(
   element: CRCElement<P>,
   parentId: string,
-  parent: CompRefs<any> | undefined,
+  parent: CRCComponentRefs<any> | undefined,
 ): void {
   try {
     const componentRefs = prepareComponentScope(element, parentId, parent);
@@ -168,8 +168,8 @@ function renderComponentElement<P>(
 function prepareComponentScope<P>(
   element: CRCElement<P>,
   parentId: string,
-  parent: CompRefs<any> | undefined,
-): CompRefs<P> {
+  parent: CRCComponentRefs<any> | undefined,
+): CRCComponentRefs<P> {
   const typeName = getElementTypeName(element, parentId);
   const id = ensureUniqueId(parentId, typeName);
   GLOBAL_STATE.unseenIds!.delete(id);
@@ -179,7 +179,7 @@ function prepareComponentScope<P>(
   if (GLOBAL_STATE.componentIsMounting) {
     const teardowns = new Teardowns();
     teardowns.follow(GLOBAL_STATE.currentCRCInstance!.mainTeardowns);
-    const componentRefs: CompRefs<P> = {
+    const componentRefs: CRCComponentRefs<P> = {
       id,
       parent,
       element,
@@ -198,7 +198,7 @@ function prepareComponentScope<P>(
 }
 
 function getElementTypeName(element: CRCElement<any>, parentId: string): string {
-  const identityHint = getLegacyIdentityHint<{
+  const identityHint = getPlacementIdentityHint<{
     type: CRCElement<any>['type'];
     key: string | undefined;
     occurrence: number;

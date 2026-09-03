@@ -2,7 +2,7 @@ import type { LayoutContext } from './layout/types.js';
 import type { CRCNode } from './element/types.js';
 import type {
   Canvas,
-  CompRefs,
+  CRCComponentRefs,
   CRCClippingStackEntry,
   CRCInstance,
   CRCRenderTransaction,
@@ -15,7 +15,7 @@ export type PendingRoot = CRCNode | typeof NO_PENDING_ROOT;
 export interface GlobalState {
   crcInstances: Map<Canvas, CRCInstance>;
   currentCRCInstance: CRCInstance | undefined;
-  componentRefs: CompRefs<any> | undefined;
+  componentRefs: CRCComponentRefs<any> | undefined;
   canvas: Canvas | undefined;
   componentIsMounting: boolean;
   componentHookIndex: number;

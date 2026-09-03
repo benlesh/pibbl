@@ -145,17 +145,17 @@ try {
   run(process.execPath, ['runtime.mjs'], { cwd: consumerDirectory });
 
   const noFocusBundle = await bundleConsumerEntry(`
-    import { rect } from '@crc/core';
-    console.log(rect({ style: { width: 1, height: 1 } }));
+    import { createElement, Rectangle } from '@crc/core';
+    console.log(createElement(Rectangle, { style: { width: 1, height: 1 } }));
   `);
   if (noFocusBundle.includes(focusImplementationMarker)) {
     throw new Error('Optimized no-focus bundle retained focus implementation code.');
   }
 
   const withFocusBundle = await bundleConsumerEntry(`
-    import { FocusManagement, createElement, rect } from '@crc/core';
+    import { FocusManagement, createElement, Rectangle } from '@crc/core';
     console.log(createElement(FocusManagement, {
-      children: rect({ style: { width: 1, height: 1 } })
+      children: createElement(Rectangle, { style: { width: 1, height: 1 } })
     }));
   `);
   if (!withFocusBundle.includes(focusImplementationMarker)) {

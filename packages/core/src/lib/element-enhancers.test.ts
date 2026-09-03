@@ -6,8 +6,8 @@ import {
 } from './element/create-element';
 import { materializeContainerChildren } from './element/children';
 import {
-  getLegacyIdentityHint,
-  setLegacyIdentityHint,
+  getPlacementIdentityHint,
+  setPlacementIdentityHint,
 } from './element/metadata';
 import { Absolute } from './layout/absolute';
 import { Flow } from './layout/flow';
@@ -36,7 +36,7 @@ import {
 } from './focus/policy-test-support';
 import type { CRCKeyboardNavigationOptions } from './focus/types';
 import type { BoxStyle, LayoutItemStyle } from './style/types';
-import type { CompRefs, CRCElement, CRCNode, CRCInstance, MeasureResult, SystemStyle } from './types';
+import type { CRCComponentRefs, CRCElement, CRCNode, CRCInstance, MeasureResult, SystemStyle } from './types';
 import type { CRCElement as PublicCRCElement } from '../index';
 import { definePrimitive } from './define-primitive';
 
@@ -51,7 +51,7 @@ interface TestEnhancerDescriptor {
   readonly key: symbol;
   readonly generation: number;
   mount(context: {
-    readonly component: CompRefs<any>;
+    readonly component: CRCComponentRefs<any>;
     readonly instance: CRCInstance;
   }): TestMountedEnhancer;
 }
@@ -588,7 +588,7 @@ describe('built-in transparent policies', () => {
     const Component = (_props: { value: number } & { style: Readonly<ConstructorStyle> }) => undefined;
     const element = createElement(Component, { key: 'stable', value: 7, style: { width: 20 } });
     const identityHint = { type: element.type, key: element.key, occurrence: 3 };
-    setLegacyIdentityHint(element, identityHint);
+    setPlacementIdentityHint(element, identityHint);
 
     const policyTree = focusManaged(
       directionalPolicy(element, { mode: 'directional' }),
@@ -600,7 +600,7 @@ describe('built-in transparent policies', () => {
     expect(enhanced.props).toBe(element.props);
     expect(enhanced.props.style).toBe(element.props.style);
     expect(enhanced.key).toBe('stable');
-    expect(getLegacyIdentityHint(enhanced)).toBe(identityHint);
+    expect(getPlacementIdentityHint(enhanced)).toBe(identityHint);
     expect('enhancers' in enhanced).toBe(false);
     expect(Object.keys(enhanced)).toEqual([
       'type',
@@ -615,7 +615,7 @@ describe('built-in transparent policies', () => {
     expect(cloned.type).toBe(element.type);
     expect(cloned.props).toBe(element.props);
     expect(cloned.key).toBe('stable');
-    expect(getLegacyIdentityHint(cloned)).toBe(identityHint);
+    expect(getPlacementIdentityHint(cloned)).toBe(identityHint);
     expect(Object.isFrozen(cloned)).toBe(import.meta.env.DEV);
     expect(Object.isFrozen(cloned.props)).toBe(import.meta.env.DEV);
     expect('enhancers' in cloned).toBe(false);

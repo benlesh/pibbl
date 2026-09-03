@@ -1,12 +1,9 @@
-import { defineComp } from '../define-comp.js';
-import { setLegacyIdentityHint } from '../element/metadata.js';
+import { definePrimitive } from '../define-primitive.js';
+import { createElement } from '../element/create-element.js';
+import { setPlacementIdentityHint } from '../element/metadata.js';
 import type { CRCElement } from '../element/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
-import type {
-  CompEl,
-  InternalIdentityHint,
-  RenderingContext2D,
-} from '../types.js';
+import type { InternalIdentityHint, RenderingContext2D } from '../types.js';
 import { pushClippingPath } from '../util/push-clipping-path.js';
 import { pushLayoutBox } from './context.js';
 import { recordLayoutPlacement } from './diagnostics.js';
@@ -68,11 +65,11 @@ function PlacedChild(
   return props.element;
 }
 
-const placedChild = defineComp<PlacedChildProps>(PlacedChild);
+const PlacedChildPrimitive = definePrimitive<PlacedChildProps>(PlacedChild);
 
-export function placeChild(props: PlacedChildProps): CompEl<any, any> {
-  const element = placedChild(props);
-  setLegacyIdentityHint(element, props.identityHint);
+export function placeChild(props: PlacedChildProps): CRCElement<any> {
+  const element = createElement(PlacedChildPrimitive, props);
+  setPlacementIdentityHint(element, props.identityHint);
   return element;
 }
 

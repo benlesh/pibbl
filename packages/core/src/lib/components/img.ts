@@ -1,4 +1,3 @@
-import { defineComp } from '../define-comp.js';
 import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,
@@ -25,9 +24,6 @@ import { adjustRectangleToPixelGrid } from '../util/pixel-grid-adjustments.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 
 export interface ImageProps extends CRCEventHandlers, CRCEventFocusOptions {}
-
-/** @internal Temporary lowercase-adapter program props. */
-export type ImgProps = ImageProps;
 
 interface LoadedImage {
   src: string;
@@ -139,26 +135,6 @@ export const Image = definePrimitive<
   measure: measureImage,
 });
 registerOpaqueStyleProperties(Image, ['src', 'stroke', 'cursor']);
-
-const renderLegacyImage = function Img(
-  props: ImgProps,
-  style: Readonly<ResolvedImgStyle>,
-  ctx: RenderingContext2D,
-) {
-  renderImage(props, style, ctx);
-};
-
-/** @internal Temporary lowercase authoring adapter retained until Task 12. */
-export const img = defineComp<
-  ImgProps,
-  ImgStyle,
-  ImgStyle,
-  ResolvedImgStyle
->(renderLegacyImage, {
-  resolveStyle: resolveImageStyle,
-  measure: measureImage,
-});
-registerOpaqueStyleProperties(renderLegacyImage, ['src', 'stroke', 'cursor']);
 
 function resolveImageStyle(
   style: Readonly<ImgStyle>,

@@ -1,57 +1,41 @@
 // components
+export { Clip, type ClipProps, type ClipStyle } from './lib/components/clip.js';
 export {
-  clip,
-  Clip,
-  type ClipProps,
-  type ClipStyle,
-} from './lib/components/clip.js';
-export {
-  g,
   Group,
-  type GProps,
   type GroupProps,
   type GStyle,
 } from './lib/components/g.js';
 export {
-  horizontalLine,
   HorizontalLine,
   type HorizontalLineProps,
   type HorizontalLineStyle,
 } from './lib/components/horizontal-line.js';
 
 export {
-  img,
   Image,
   type ImageProps,
-  type ImgProps,
 } from './lib/components/img.js';
 export {
-  layer,
   Layer,
   type LayerProps,
   type LayerStyle,
 } from './lib/components/layer.js';
 export {
-  line,
   Line,
   type LineProps,
   type LineStyle,
 } from './lib/components/line.js';
-export { path, Path, type PathProps } from './lib/components/path.js';
+export { Path, type PathProps } from './lib/components/path.js';
 export {
-  rect,
   Rectangle,
-  type RectProps,
   type RectangleProps,
 } from './lib/components/rect.js';
 export {
-  svgPath,
   SvgPath,
   type SvgPathProps,
 } from './lib/components/svg-path.js';
-export { text, Text, type TextProps } from './lib/components/text.js';
+export { Text, type TextProps } from './lib/components/text.js';
 export {
-  verticalLine,
   VerticalLine,
   type VerticalLineProps,
   type VerticalLineStyle,
@@ -65,31 +49,26 @@ export type {
   CRCResponsiveViewportConfig,
 } from './lib/surface/types.js';
 export {
-  absolute,
   Absolute,
   type AbsoluteProps,
   type AbsoluteStyle,
 } from './lib/layout/absolute.js';
 export {
-  overlay,
   Overlay,
   type OverlayProps,
   type OverlayStyle,
 } from './lib/layout/overlay.js';
 export {
-  flow,
   Flow,
   type FlowProps,
   type FlowStyle,
 } from './lib/layout/flow.js';
 export {
-  flex,
   Flex,
   type FlexProps,
   type FlexStyle,
 } from './lib/layout/flex.js';
 export {
-  grid,
   Grid,
   type GridProps,
   type GridStyle,
@@ -105,7 +84,6 @@ export {
 } from './lib/focus/policy-components.js';
 export type { CRCKeyboardNavigationOptions } from './lib/focus/types.js';
 
-export { defineComp } from './lib/define-comp.js';
 export { definePrimitive } from './lib/define-primitive.js';
 export { createElement } from './lib/element/create-element.js';
 export { Fragment } from './lib/element/jsx-runtime.js';
@@ -159,10 +137,6 @@ export { crcWhenChanged } from './lib/hooks/crc-when-changed.js';
 export type {
   Canvas,
   CanvasMeasurementService,
-  CompEl,
-  CompFn,
-  ComponentCapabilities,
-  ComponentInput,
   CRCController,
   CRCComponent,
   CRCContainerChild,

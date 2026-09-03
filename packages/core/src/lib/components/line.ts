@@ -1,4 +1,3 @@
-import { defineComp } from '../define-comp.js';
 import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,
@@ -81,26 +80,6 @@ export const Line = definePrimitive<
     stripLayoutParticipation(style) as ResolvedLineStyle,
 });
 registerOpaqueStyleProperties(Line, ['stroke', 'cursor']);
-
-const renderLegacyLine = function Line(
-  props: LineProps,
-  style: Readonly<ResolvedLineStyle>,
-  ctx: RenderingContext2D,
-) {
-  return renderLine(props, style, ctx);
-};
-
-/** @internal Temporary lowercase authoring adapter retained until Task 12. */
-export const line = defineComp<
-  LineProps,
-  LineStyle,
-  LineStyle,
-  ResolvedLineStyle
->(renderLegacyLine, {
-  resolveStyle: style =>
-    stripLayoutParticipation(style) as ResolvedLineStyle,
-});
-registerOpaqueStyleProperties(renderLegacyLine, ['stroke', 'cursor']);
 
 function lineBounds(
   coords: readonly [number, number][],

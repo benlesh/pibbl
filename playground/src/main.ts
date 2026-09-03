@@ -1,6 +1,13 @@
 import "@fontsource-variable/space-grotesk";
 import "@fontsource-variable/jetbrains-mono";
-import { crc, defineComp, g, rect, text, type CRCController } from "@crc/core";
+import {
+  crc,
+  createElement,
+  Group,
+  Rectangle,
+  Text,
+  type CRCController,
+} from "@crc/core";
 import type { ScenarioSurface } from "@crc/scenarios/surface";
 import {
   getLearningExampleBySlug,
@@ -279,13 +286,13 @@ function heading(title: string): HTMLHeadingElement {
   return element;
 }
 
-const HeroScene = defineComp(function HeroScene(props: {
+function HeroScene(props: {
   phase: number;
   onActivate: () => void;
 }) {
   const angle = props.phase % 2 ? 11 : -7;
   return [
-    rect({
+    createElement(Rectangle, {
       style: {
         x: 0,
         y: 0,
@@ -294,7 +301,7 @@ const HeroScene = defineComp(function HeroScene(props: {
         fill: '#f7c948',
       },
     }),
-    rect({
+    createElement(Rectangle, {
       style: {
         x: 38,
         y: 38,
@@ -305,14 +312,14 @@ const HeroScene = defineComp(function HeroScene(props: {
         strokeWidth: 6,
       },
     }),
-    g({
+    createElement(Group, {
       style: {
         translateX: 76,
         translateY: 60,
         rotationDegrees: angle,
         rotationOrigin: [284, 150]
       },
-      children: [rect({
+      children: [createElement(Rectangle, {
         style: {
           x: 46,
           y: 22,
@@ -322,7 +329,8 @@ const HeroScene = defineComp(function HeroScene(props: {
           cursor: 'pointer'
         },
         onClick: props.onActivate
-      }), rect({
+      }),
+      createElement(Rectangle, {
         style: {
           x: 238,
           y: 84,
@@ -334,7 +342,8 @@ const HeroScene = defineComp(function HeroScene(props: {
           cursor: 'pointer'
         },
         onClick: props.onActivate
-      }), rect({
+      }),
+      createElement(Rectangle, {
         style: {
           x: 456,
           y: 18,
@@ -346,30 +355,28 @@ const HeroScene = defineComp(function HeroScene(props: {
           cursor: 'pointer'
         },
         onClick: props.onActivate
-      })]
+      })],
     }),
-    text({
+    createElement(Text, {
       style: {
-        text: "DRAW.",
         x: 358,
         y: 150,
         fill: "#17211d",
         font: "900 54px sans-serif",
         textAlign: "center",
       },
-    }),
-    text({
+    }, "DRAW."),
+    createElement(Text, {
       style: {
-        text: "MOVE. LEARN.",
         x: 358,
         y: 222,
         fill: "#17211d",
         font: "900 42px sans-serif",
         textAlign: "center",
       },
-    }),
+    }, "MOVE. LEARN."),
   ];
-});
+}
 
 function categoryCard(options: {
   eyebrow: string;
@@ -418,7 +425,7 @@ function renderLanding(): void {
   const renderHero = () => {
     controller = crc(
       canvas,
-      HeroScene({
+      createElement(HeroScene, {
         phase,
         onActivate: () => {
           phase++;

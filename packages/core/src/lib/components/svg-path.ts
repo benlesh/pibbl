@@ -1,4 +1,3 @@
-import { defineComp } from '../define-comp.js';
 import { definePrimitive } from '../define-primitive.js';
 import { crcSvgPath } from '../hooks/crc-svg-path.js';
 import { RenderingContext2D } from '../types.js';
@@ -40,28 +39,3 @@ export const SvgPath = definePrimitive<
     stripLayoutParticipation(style) as ResolvedSvgPathStyle,
 });
 registerOpaqueStyleProperties(SvgPath, ['d', 'fill', 'stroke', 'cursor']);
-
-const renderLegacySvgPath = function SvgPath(
-  props: SvgPathProps,
-  style: Readonly<ResolvedSvgPathStyle>,
-  ctx: RenderingContext2D,
-) {
-  return renderSvgPath(props, style, ctx);
-};
-
-/** @internal Temporary lowercase authoring adapter retained until Task 12. */
-export const svgPath = defineComp<
-  SvgPathProps,
-  SvgPathStyle,
-  SvgPathStyle,
-  ResolvedSvgPathStyle
->(renderLegacySvgPath, {
-  resolveStyle: style =>
-    stripLayoutParticipation(style) as ResolvedSvgPathStyle,
-});
-registerOpaqueStyleProperties(renderLegacySvgPath, [
-  'd',
-  'fill',
-  'stroke',
-  'cursor',
-]);

@@ -28,10 +28,9 @@ try {
     sourceDirectory,
     fixtureRoot,
   );
-  assert.deepEqual(withLegacy, [catalogedPath, legacyPath]);
-  assert.throws(
-    () => assertExampleSourceDiscovery(withLegacy, [catalogedPath], []),
-    /legacy \.example\.ts.*orphan\.example\.ts/iu,
+  assert.deepEqual(withLegacy, [catalogedPath]);
+  assert.doesNotThrow(() =>
+    assertExampleSourceDiscovery(withLegacy, [catalogedPath], []),
   );
 
   await unlink(join(fixtureRoot, legacyPath));
@@ -56,5 +55,5 @@ try {
 }
 
 process.stdout.write(
-  'Scenario discovery fixture rejected legacy and uncataloged example sources.\n',
+  'Scenario discovery fixture ignored non-TSX and rejected uncataloged example sources.\n',
 );

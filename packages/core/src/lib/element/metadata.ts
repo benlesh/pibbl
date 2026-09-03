@@ -21,7 +21,6 @@ export interface CRCElementSource {
 export interface InternalElementMetadata {
   readonly source?: CRCElementSource;
   readonly specifiedStyle?: Readonly<SystemStyle>;
-  readonly legacyProgramProps?: unknown;
   readonly primitiveReceiverToken?: object;
   readonly policyPreparationSource?: CRCElement<any>;
   identityHint?: unknown;
@@ -166,21 +165,8 @@ export function getSpecifiedStyle<S extends SystemStyle>(
   return element.props.style;
 }
 
-/** @internal Temporary bridge while defineComp still strips style from callbacks. */
-export function getLegacyProgramProps<P>(element: CRCElement<any>): P | undefined {
-  return elementMetadata.get(element)?.legacyProgramProps as P | undefined;
-}
-
-/** @internal Temporary bridge while defineComp still strips style from callbacks. */
-export function setLegacyProgramProps<P>(element: CRCElement<any>, props: P): void {
-  const current = elementMetadata.get(element) ?? {};
-  elementMetadata.set(element, { ...current, legacyProgramProps: props });
-}
-
 /** @internal Returns program props with primitive-owned style removed. */
 export function getPrimitiveProgramProps<P>(element: CRCElement<any>): P {
-  const legacy = getLegacyProgramProps<P>(element);
-  if (legacy !== undefined) return legacy;
   const { style: _style, ...programProps } = element.props as {
     readonly style?: unknown;
     readonly [key: PropertyKey]: unknown;
@@ -234,13 +220,13 @@ export function getChildPrimitiveReceiverToken(
   return token;
 }
 
-/** @internal Temporary bridge for the legacy placement identity field. */
-export function getLegacyIdentityHint<T>(element: CRCElement<any>): T | undefined {
+/** @internal Reads the private identity override for a placed element. */
+export function getPlacementIdentityHint<T>(element: CRCElement<any>): T | undefined {
   return elementMetadata.get(element)?.identityHint as T | undefined;
 }
 
-/** @internal Temporary bridge for the legacy placement identity field. */
-export function setLegacyIdentityHint<T>(element: CRCElement<any>, value: T): void {
+/** @internal Stores the private identity override for a placed element. */
+export function setPlacementIdentityHint<T>(element: CRCElement<any>, value: T): void {
   const current = elementMetadata.get(element) ?? {};
   elementMetadata.set(element, { ...current, identityHint: value });
 }

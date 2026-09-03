@@ -1,10 +1,7 @@
 import {
   copyElementCloneMetadata,
   getElementMetadata,
-  getLegacyIdentityHint,
-  getSpecifiedStyle,
   setElementMetadata,
-  setLegacyIdentityHint,
   type CRCElementSource,
 } from './metadata.js';
 import type {
@@ -75,20 +72,6 @@ function finalizeCRCElement<P>(
       enumerable: false,
       value: CRC_ELEMENT_TYPE,
       writable: false,
-    },
-    // Task 1 keeps legacy runtime reads working while Task 12 removes the alias.
-    style: {
-      configurable: false,
-      enumerable: false,
-      get: () => getSpecifiedStyle(
-        element as unknown as CRCElement<{ style?: any }>,
-      ),
-    },
-    identityHint: {
-      configurable: false,
-      enumerable: false,
-      get: () => getLegacyIdentityHint(element),
-      set: value => setLegacyIdentityHint(element, value),
     },
   });
 

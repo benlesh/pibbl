@@ -1,6 +1,5 @@
-import { defineComp } from '../define-comp.js';
 import { definePrimitive } from '../define-primitive.js';
-import { EMPTY_STYLE } from '../create-element.js';
+import { EMPTY_STYLE } from '../style/empty-style.js';
 import { materializeContainerChildren } from '../element/children.js';
 import { cloneCRCElement } from '../element/create-element.js';
 import {
@@ -85,27 +84,6 @@ export const Absolute = definePrimitive<
   AbsoluteStyle,
   ResolvedAbsoluteStyle
 >(renderAbsolute, {
-  resolveStyle: (style, context) => ({
-    box: resolveContainerBox(style, context, 'Absolute', 'absolute'),
-    overflow: style.overflow ?? 'visible',
-  }),
-});
-
-const renderLegacyAbsolute = function Absolute(
-  props: AbsoluteProps,
-  style: Readonly<ResolvedAbsoluteStyle>,
-  ctx: RenderingContext2D,
-) {
-  return renderAbsolute(props, style, ctx);
-};
-
-/** @internal Temporary lowercase authoring adapter retained until Task 12. */
-export const absolute = defineComp<
-  AbsoluteProps,
-  AbsoluteStyle,
-  AbsoluteStyle,
-  ResolvedAbsoluteStyle
->(renderLegacyAbsolute, {
   resolveStyle: (style, context) => ({
     box: resolveContainerBox(style, context, 'Absolute', 'absolute'),
     overflow: style.overflow ?? 'visible',

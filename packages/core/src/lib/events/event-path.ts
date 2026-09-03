@@ -2,10 +2,10 @@ import type {
   CRCEventNode,
 } from './registrations.js';
 import { GLOBAL_STATE } from '../global-state.js';
-import type { CompRefs, CRCInstance } from '../types.js';
+import type { CRCComponentRefs, CRCInstance } from '../types.js';
 
 interface CRCEventPathComponent {
-  readonly component: CompRefs<any>;
+  readonly component: CRCComponentRefs<any>;
   readonly owner: CRCInstance;
 }
 
@@ -15,7 +15,7 @@ export function buildEventPath(
 ): readonly CRCEventNode[] {
   const components: CRCEventPathComponent[] = [];
   let owner = target.owner;
-  let component: CompRefs<any> | undefined = target.component;
+  let component: CRCComponentRefs<any> | undefined = target.component;
   while (component) {
     components.push({ component, owner });
     if (component.parent) {

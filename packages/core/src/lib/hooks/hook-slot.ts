@@ -1,12 +1,12 @@
 import { GLOBAL_STATE } from '../global-state.js';
 import { Teardowns } from '../teardowns.js';
-import type { CompRefs, CRCInstance, CRCHookSlot } from '../types.js';
+import type { CRCComponentRefs, CRCInstance, CRCHookSlot } from '../types.js';
 
 export const HOOK_CONTEXT_ERROR =
   'CRC hooks can only be called while rendering a component.';
 
 export interface HookContext {
-  componentRefs: CompRefs<any>;
+  componentRefs: CRCComponentRefs<any>;
   crcInstance: CRCInstance;
 }
 
@@ -45,7 +45,7 @@ export function useHookSlot<T>(
   return slot;
 }
 
-export function finalizeHookSlots(componentRefs: CompRefs<any>): void {
+export function finalizeHookSlots(componentRefs: CRCComponentRefs<any>): void {
   const usedHooks = GLOBAL_STATE.componentHookIndex;
   if (usedHooks >= componentRefs.hooks.length) return;
 

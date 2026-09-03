@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { CompRefs, CRCEventRoot, CRCInstance } from '../types';
+import type { CRCComponentRefs, CRCEventRoot, CRCInstance } from '../types';
 import { buildEventPath } from './event-path';
 import { dispatchEventPath } from './propagation';
 import type {
@@ -463,16 +463,16 @@ describe('event propagation', () => {
 });
 
 interface Fixture {
-  readonly root: CompRefs<unknown>;
-  readonly parent: CompRefs<unknown>;
-  readonly targetComponent: CompRefs<unknown>;
+  readonly root: CRCComponentRefs<unknown>;
+  readonly parent: CRCComponentRefs<unknown>;
+  readonly targetComponent: CRCComponentRefs<unknown>;
   listener(
-    component: CompRefs<unknown>,
+    component: CRCComponentRefs<unknown>,
     handlerMap: HandlerMap,
   ): CRCEventListenerRegistration;
   target(
     handlerMap: HandlerMap,
-    component?: CompRefs<unknown>,
+    component?: CRCComponentRefs<unknown>,
   ): CRCEventTargetRegistration;
 }
 
@@ -549,9 +549,9 @@ function handlers(handlerMap: HandlerMap): CRCNormalizedHandlers {
 
 function component(
   id: string,
-  parent?: CompRefs<unknown>,
-): CompRefs<unknown> {
-  return { id, parent } as CompRefs<unknown>;
+  parent?: CRCComponentRefs<unknown>,
+): CRCComponentRefs<unknown> {
+  return { id, parent } as CRCComponentRefs<unknown>;
 }
 
 function publicTarget(): CRCEventTarget {

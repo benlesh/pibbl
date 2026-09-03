@@ -29,7 +29,7 @@ export async function discoverExampleSourcePaths(
   workspaceRoot: string,
 ): Promise<string[]> {
   return (await readdir(scenarioDirectory, { recursive: true }))
-    .filter(name => /\.example\.tsx?$/u.test(name))
+    .filter(name => name.endsWith('.example.tsx'))
     .map(name => relative(
       workspaceRoot,
       resolve(scenarioDirectory, name),
@@ -42,13 +42,6 @@ export function assertExampleSourceDiscovery(
   scenarioCatalogPaths: readonly string[],
   learningCatalogPaths: readonly string[],
 ): void {
-  const legacyPaths = discoveredPaths.filter(path => path.endsWith('.example.ts'));
-  if (legacyPaths.length > 0) {
-    throw new Error(
-      `Legacy .example.ts sources are forbidden: ${displayList(legacyPaths)}.`,
-    );
-  }
-
   const learningPaths = discoveredPaths.filter(path => path.includes('/learning/'));
   const testPaths = discoveredPaths.filter(path => !path.includes('/learning/'));
   assertPathSetMatches('Scenario', testPaths, scenarioCatalogPaths);

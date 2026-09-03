@@ -3,6 +3,7 @@ import type {
   CRCClipboardEvent,
   CRCCompositionEvent,
   CRCController,
+  CRCElement,
   CRCDragEvent,
   CRCEvent,
   CRCEventCapturePropName,
@@ -23,6 +24,7 @@ import type {
   CRCKeyboardNavigationOptions,
   CRCLogicalMouseEvent,
   CRCMouseEvent,
+  CRCNode,
   CRCPixelRatio,
   CRCPointerEvent,
   CRCRef,
@@ -31,7 +33,6 @@ import type {
   CRCWheelEvent,
   AbsoluteStyle,
   BoxStyle,
-  CompEl,
   ClipStyle,
   GStyle,
   GridItemStyle,
@@ -44,7 +45,7 @@ import type {
   Length,
   LineStyle,
   PathStyle,
-  RectProps,
+  RectangleProps,
   RectStyle,
   RenderingContext2D,
   StateUpdater,
@@ -74,26 +75,27 @@ import {
   crcSvgPath,
   crcWhenChanged,
   createElement,
-  clip,
-  defineComp,
-  g,
-  horizontalLine,
-  line,
-  path,
-  rect,
-  svgPath,
-  text,
-  verticalLine,
-  img,
-  layer,
-  absolute,
-  overlay,
-  flow,
-  flex,
-  grid,
+  definePrimitive,
+  Absolute,
+  Clip,
+  Flex,
+  Flow,
+  Grid,
+  Group,
+  HorizontalLine,
+  Image,
+  Layer,
+  Line,
+  Overlay,
+  Path,
+  Rectangle,
+  SvgPath,
+  Text,
+  VerticalLine,
   measureElement,
   FocusManagement,
   KeyboardNavigation,
+  crcCanvasContext,
 } from '@crc/core';
 
 // @ts-expect-error internal library modules are outside the public export map
@@ -174,7 +176,7 @@ const eventHandlers = {
   },
 } satisfies CRCEventHandlers;
 
-const PublicEventProbe = defineComp(() => {
+function PublicEventProbe(): CRCNode {
   const options = {
     path: new Path2D(),
     fill: true,
@@ -188,8 +190,9 @@ const PublicEventProbe = defineComp(() => {
   crcEventListener({ onPointerDownCapture: pointerHandler });
   const focused: boolean = snapshot.isFocused;
   void focused;
-});
-PublicEventProbe({});
+  return undefined;
+}
+createElement(PublicEventProbe, {});
 
 const rectangleStyle = {
   x: 10,
@@ -198,7 +201,7 @@ const rectangleStyle = {
   height: 20,
   fill: '#2563eb',
 } satisfies RectStyle;
-const props = {} satisfies RectProps;
+const rectangleProps = {} satisfies RectangleProps;
 
 export type PublicCoreTypes = typeof CoreTypes;
 export type PublicCoreEventTypes = [
@@ -225,8 +228,8 @@ const keyboardNavigationOptions = {
 export const scene = createElement(FocusManagement, {
   children: createElement(KeyboardNavigation, {
     ...keyboardNavigationOptions,
-    children: rect({
-      ...props,
+    children: createElement(Rectangle, {
+      ...rectangleProps,
       key: 'packed-focus-probe',
       style: rectangleStyle,
     }),
@@ -243,14 +246,14 @@ const pathStyle = {
   cursor: 'pointer',
   lineInteractionWidth: 8,
 } satisfies PathStyle;
-path({ style: pathStyle, onClick: () => undefined });
-path({ style: pathStyle, ...eventHandlers });
+createElement(Path, { style: pathStyle, onClick: () => undefined });
+createElement(Path, { style: pathStyle, ...eventHandlers });
 
 const svgPathStyle = {
   d: 'M 0 0 L 10 10',
   stroke: '#0f172a',
 } satisfies SvgPathStyle;
-svgPath({ style: svgPathStyle });
+createElement(SvgPath, { style: svgPathStyle });
 
 const lineStyle = {
   coords: [[0, 0], [20, 10]],
@@ -260,7 +263,7 @@ const lineStyle = {
   lineInteractionWidth: 8,
   cursor: 'pointer',
 } satisfies LineStyle;
-line({ style: lineStyle, onMouseMove: () => undefined });
+createElement(Line, { style: lineStyle, onMouseMove: () => undefined });
 
 const horizontalLineStyle = {
   y: 12,
@@ -269,7 +272,7 @@ const horizontalLineStyle = {
   stroke: 'black',
   alignToPixelGrid: 'round',
 } satisfies HorizontalLineStyle;
-horizontalLine({ style: horizontalLineStyle });
+createElement(HorizontalLine, { style: horizontalLineStyle });
 
 const verticalLineStyle = {
   x: 12,
@@ -278,7 +281,7 @@ const verticalLineStyle = {
   stroke: 'black',
   alignToPixelGrid: 'round',
 } satisfies VerticalLineStyle;
-verticalLine({ style: verticalLineStyle });
+createElement(VerticalLine, { style: verticalLineStyle });
 
 const textStyle = {
   x: 20,
@@ -295,10 +298,10 @@ const textStyle = {
   opacity: 0.8,
   cursor: 'pointer',
 } satisfies TextStyle;
-text({
-  style: { ...textStyle, text: 'Hello Canvas' },
+createElement(Text, {
+  style: textStyle,
   onClick: () => undefined,
-});
+}, 'Hello Canvas');
 
 const imageStyle = {
   src: 'image.png',
@@ -310,7 +313,7 @@ const imageStyle = {
   alignToPixelGrid: 'round',
   cursor: 'pointer',
 } satisfies ImgStyle;
-img({ style: imageStyle, onClick: () => undefined });
+createElement(Image, { style: imageStyle, onClick: () => undefined });
 
 const groupStyle = {
   scaleX: 1.5,
@@ -321,16 +324,25 @@ const groupStyle = {
   skewX: 5,
   skewY: 3,
 } satisfies GStyle;
-g({ style: groupStyle, children: [rect({ style: rectangleStyle })] });
+createElement(Group, {
+  style: groupStyle,
+  children: createElement(Rectangle, { style: rectangleStyle }),
+});
 
 const clipStyle = {
   d: new Path2D(),
   fillRule: 'evenodd',
 } satisfies ClipStyle;
-clip({ style: clipStyle, children: [rect({ style: rectangleStyle })] });
+createElement(Clip, {
+  style: clipStyle,
+  children: createElement(Rectangle, { style: rectangleStyle }),
+});
 
 const layerStyle = { width: 320, height: 180 } satisfies LayerStyle;
-layer({ style: layerStyle, render: rect({ style: rectangleStyle }) });
+createElement(Layer, {
+  style: layerStyle,
+  children: createElement(Rectangle, { style: rectangleStyle }),
+});
 
 const percentage = '50%' satisfies Percentage;
 const length: Length = percentage;
@@ -358,18 +370,26 @@ void flexItem;
 void gridItem;
 void layoutItem;
 
-const layoutChild = rect({ style: { ...rectangleStyle, width: '50%' } });
-absolute({ style: absoluteStyle, children: [layoutChild] });
-overlay({ style: overlayStyle, children: [layoutChild] });
-flow({ style: flowStyle, children: [layoutChild] });
-flex({ style: flexStyle, children: [rect({ style: {
-  ...rectangleStyle, minWidth: 0, flexBasis: 40,
-} })] });
-grid({ style: gridStyle, children: [rect({ style: {
-  ...rectangleStyle, gridColumnStart: 1, gridRowStart: 1,
-} })] });
+const layoutChild = createElement(Rectangle, {
+  style: { ...rectangleStyle, width: '50%' },
+});
+createElement(Absolute, { style: absoluteStyle, children: layoutChild });
+createElement(Overlay, { style: overlayStyle, children: layoutChild });
+createElement(Flow, { style: flowStyle, children: layoutChild });
+createElement(Flex, {
+  style: flexStyle,
+  children: createElement(Rectangle, { style: {
+    ...rectangleStyle, minWidth: 0, flexBasis: 40,
+  } }),
+});
+createElement(Grid, {
+  style: gridStyle,
+  children: createElement(Rectangle, { style: {
+    ...rectangleStyle, gridColumnStart: 1, gridRowStart: 1,
+  } }),
+});
 
-absolute({
+createElement(Absolute, {
   style: {
     width: 100, height: 50, left: 5, top: '10%',
     alignSelf: 'center', justifySelf: 'end',
@@ -379,7 +399,7 @@ absolute({
   },
   children: [],
 });
-overlay({
+createElement(Overlay, {
   style: {
     width: 100, height: 50, left: 5, top: '10%',
     alignSelf: 'center', justifySelf: 'end',
@@ -389,7 +409,7 @@ overlay({
   },
   children: [],
 });
-flow({
+createElement(Flow, {
   style: {
     width: 100, height: 50, left: 5, top: '10%',
     alignSelf: 'center', justifySelf: 'end',
@@ -399,7 +419,7 @@ flow({
   },
   children: [],
 });
-flex({
+createElement(Flex, {
   style: {
     width: 100, height: 50, minWidth: 0, left: 5, top: '10%',
     alignSelf: 'center', justifySelf: 'end',
@@ -409,7 +429,7 @@ flex({
   },
   children: [],
 });
-grid({
+createElement(Grid, {
   style: {
     width: 100, height: 50, left: 5, top: '10%',
     alignSelf: 'center', justifySelf: 'end',
@@ -424,14 +444,14 @@ grid({
 
 const observedBox: Readonly<LayoutBox> = crcLayoutBox();
 void observedBox;
-measureElement(text({ style: { text: 'measure me' } }), {
+measureElement(createElement(Text, null, 'measure me'), {
   minWidth: 0, maxWidth: 200, minHeight: 0, maxHeight: 100,
 }, { measureText: () => ({ width: 80 }) as TextMetrics });
 
 // @ts-expect-error reverse Flex directions are outside the supported subset
-flex({ style: { ...flexStyle, flexDirection: 'row-reverse' }, children: [] });
+createElement(Flex, { style: { ...flexStyle, flexDirection: 'row-reverse' } }, []);
 // @ts-expect-error Grid track grammar excludes intrinsic auto tracks
-grid({ style: { ...gridStyle, gridTemplateColumns: ['auto'] }, children: [] });
+createElement(Grid, { style: { ...gridStyle, gridTemplateColumns: ['auto'] } }, []);
 // @ts-expect-error lengths use finite numbers, decimal percentages, or auto
 const invalidLength: Length = 'wide';
 // @ts-expect-error crcLayoutBox accepts no arguments
@@ -452,59 +472,60 @@ void subpathPercentage;
 void subpathKeyboardNavigationOptions;
 
 // @ts-expect-error rectangle geometry is style-only
-rect({ x: 10, y: 10, width: 40, height: 20 });
+createElement(Rectangle, { x: 10, y: 10, width: 40, height: 20 });
 // @ts-expect-error rectangle style requires width and height
-rect({ style: { fill: 'red' } });
+createElement(Rectangle, { style: { fill: 'red' } });
 // @ts-expect-error Path2D data is style-only
-path({ d: new Path2D() });
+createElement(Path, { d: new Path2D() });
 // @ts-expect-error SVG path data is style-only
-svgPath({ d: 'M 0 0 L 10 10' });
+createElement(SvgPath, { d: 'M 0 0 L 10 10' });
 // @ts-expect-error line coordinates are style-only
-line({ coords: [[0, 0], [20, 10]] });
+createElement(Line, { coords: [[0, 0], [20, 10]] });
 // @ts-expect-error line style is required because coordinates are required
-line({});
+createElement(Line, {});
 // @ts-expect-error legacy line paint names are not style properties
-line({ style: { coords: [[0, 0], [20, 10]], strokeStyle: 'black', lineWidth: 1 } });
+createElement(Line, { style: { coords: [[0, 0], [20, 10]], strokeStyle: 'black', lineWidth: 1 } });
 // @ts-expect-error line is stroke-only and does not accept fill paint
-line({ style: { coords: [[0, 0], [20, 10]], fill: 'red' } });
+createElement(Line, { style: { coords: [[0, 0], [20, 10]], fill: 'red' } });
 // @ts-expect-error horizontal-line geometry is style-only
-horizontalLine({ y: 12 });
+createElement(HorizontalLine, { y: 12 });
 // @ts-expect-error horizontal line requires style.y
-horizontalLine({ style: { stroke: 'black' } });
+createElement(HorizontalLine, { style: { stroke: 'black' } });
 // @ts-expect-error legacy horizontal endpoint names are not supported
-horizontalLine({ style: { y: 12, right: 40 } });
+createElement(HorizontalLine, { style: { y: 12, right: 40 } });
 // @ts-expect-error vertical-line geometry is style-only
-verticalLine({ x: 12 });
+createElement(VerticalLine, { x: 12 });
 // @ts-expect-error vertical line requires style.x
-verticalLine({ style: { stroke: 'black' } });
+createElement(VerticalLine, { style: { stroke: 'black' } });
 // @ts-expect-error legacy vertical endpoint names are not supported
-verticalLine({ style: { x: 12, bottom: 40 } });
-// @ts-expect-error text content is style-only
-text({ text: 'legacy' });
-// @ts-expect-error text style is required because text content is required
-text({});
-// @ts-expect-error legacy text sizing and fit names are not supported
-text({ style: { text: 'legacy', maxWidth: 40, overflow: 'ellipsis' } });
+createElement(VerticalLine, { style: { x: 12, bottom: 40 } });
+// @ts-expect-error text content is supplied through children, not a program prop
+createElement(Text, { text: 'legacy' });
+// @ts-expect-error text is not a style property
+createElement(Text, { style: { text: 'legacy' } });
+// @ts-expect-error legacy text sizing names are not supported
+createElement(Text, { style: { overflow: 'ellipsis' } }, 'legacy');
 // @ts-expect-error text does not accept visual values as program props
-text({ style: { text: 'styled' }, fillStyle: 'red' });
+createElement(Text, { fillStyle: 'red' }, 'styled');
 // @ts-expect-error image source is style-only
-img({ src: 'legacy.png' });
+createElement(Image, { src: 'legacy.png' });
 // @ts-expect-error image style is required because source is required
-img({});
+createElement(Image, {});
 // @ts-expect-error legacy image paint names are not style properties
-img({ style: { src: 'legacy.png', strokeStyle: 'red', lineWidth: 1 } });
+createElement(Image, { style: { src: 'legacy.png', strokeStyle: 'red', lineWidth: 1 } });
 // @ts-expect-error image does not accept visual values as program props
-img({ style: { src: 'styled.png' }, alpha: 0.5 });
+createElement(Image, { style: { src: 'styled.png' }, alpha: 0.5 });
 // @ts-expect-error group translation is style-only
-g({ x: 10, children: [] });
+createElement(Group, { x: 10 }, []);
 // @ts-expect-error CRC-native transform names replace the legacy aliases
-g({ style: { rotate: 45, rotateOrigin: [0, 0] }, children: [] });
+createElement(Group, { style: { rotate: 45, rotateOrigin: [0, 0] } }, []);
 // @ts-expect-error clipping geometry is style-only
-clip({ path: new Path2D(), children: [] });
+createElement(Clip, { path: new Path2D() }, []);
 // @ts-expect-error clip style requires path data
-clip({ style: {}, children: [] });
+createElement(Clip, { style: {} }, []);
 // @ts-expect-error layer dimensions are style-only
-layer({ width: 100, height: 100, render: rect({ style: rectangleStyle }) });
+createElement(Layer, { width: 100, height: 100 },
+  createElement(Rectangle, { style: rectangleStyle }));
 
 export function disposeMount(controller: ReturnType<typeof crc>): void {
   const publicController: CRCController = controller;
@@ -513,30 +534,28 @@ export function disposeMount(controller: ReturnType<typeof crc>): void {
 
 declare const canvas: HTMLCanvasElement;
 
-const RuntimeProbe = defineComp<{ count: number; label?: string }>(
-  ({ count }, _style, context) => {
-    const publicContext: RenderingContext2D = context;
-    publicContext.fillRect(0, 0, count, count);
-    return [
-      rect({ style: { x: count, y: 0, width: 1, height: 1 } }),
-      false,
-      null,
-      undefined,
-      '',
-      0,
-    ];
-  },
-);
+function RuntimeProbe({ count }: { count: number; label?: string }): CRCNode {
+  const publicContext: RenderingContext2D = crcCanvasContext();
+  publicContext.fillRect(0, 0, count, count);
+  return [
+    createElement(Rectangle, { style: { x: count, y: 0, width: 1, height: 1 } }),
+    false,
+    null,
+    undefined,
+    '',
+    0,
+  ];
+}
 
-const runtimeElement = RuntimeProbe({ count: 1, label: 'typed' });
-type PublicCompElHasEnhancers = 'enhancers' extends keyof CompEl ? true : false;
-const publicCompElHasEnhancers: PublicCompElHasEnhancers = false;
-const unsupportedEnhancerElement: CompEl = {
+const runtimeElement = createElement(RuntimeProbe, { count: 1, label: 'typed' });
+type PublicElementHasEnhancers = 'enhancers' extends keyof CRCElement ? true : false;
+const publicElementHasEnhancers: PublicElementHasEnhancers = false;
+const unsupportedEnhancerElement: CRCElement = {
   ...runtimeElement,
-  // @ts-expect-error arbitrary enhancer metadata is not part of public CompEl
+  // @ts-expect-error arbitrary enhancer metadata is not part of public CRC elements
   enhancers: [],
 };
-void publicCompElHasEnhancers;
+void publicElementHasEnhancers;
 void unsupportedEnhancerElement;
 const runtimeController: CRCController = crc(canvas, runtimeElement, {
   signal: new AbortController().signal,
@@ -563,26 +582,26 @@ interface RuntimeProbeStyle extends SystemStyle {
   opacity?: number;
 }
 
-const StyledRuntimeProbe = defineComp<
+const StyledRuntimeProbe = definePrimitive<
   { count: number },
   RuntimeProbeStyle
 >((props, style, context) => {
   context.fillRect(0, 0, props.count * style.width, style.opacity ?? 1);
 });
 
-StyledRuntimeProbe({ count: 2, style: { width: 3 } });
-StyledRuntimeProbe({
+createElement(StyledRuntimeProbe, { count: 2, style: { width: 3 } });
+createElement(StyledRuntimeProbe, {
   count: 2,
   style: { custom: { source: 'consumer' }, width: 3 },
 });
 // @ts-expect-error declared styles remain closed to excess properties
-StyledRuntimeProbe({ count: 2, style: { unknown: true, width: 3 } });
+createElement(StyledRuntimeProbe, { count: 2, style: { unknown: true, width: 3 } });
 // @ts-expect-error required style members make the style field required
-StyledRuntimeProbe({ count: 2 });
+createElement(StyledRuntimeProbe, { count: 2 });
 // @ts-expect-error key is reserved descriptor metadata, not a program prop
-defineComp<{ key: string }, SystemStyle>(() => undefined);
+definePrimitive<{ key: string }, SystemStyle>(() => undefined);
 // @ts-expect-error style is reserved descriptor metadata, not a program prop
-defineComp<{ style: string }, SystemStyle>(() => undefined);
+definePrimitive<{ style: string }, SystemStyle>(() => undefined);
 
 type PartiallyReservedKeyProps =
   | { kind: 'value'; value: number }
@@ -592,44 +611,44 @@ type PartiallyReservedStyleProps =
   | { kind: 'reserved'; style: string };
 
 // @ts-expect-error key is forbidden in every member of a program-props union
-defineComp<PartiallyReservedKeyProps, SystemStyle>(() => undefined);
+definePrimitive<PartiallyReservedKeyProps, SystemStyle>(() => undefined);
 // @ts-expect-error style is forbidden in every member of a program-props union
-defineComp<PartiallyReservedStyleProps, SystemStyle>(() => undefined);
+definePrimitive<PartiallyReservedStyleProps, SystemStyle>(() => undefined);
 
 type DisjointUnionStyle =
   | (SystemStyle & { opacity?: number })
   | (SystemStyle & { width: number });
-const DisjointUnionStyleProbe = defineComp<{}, DisjointUnionStyle>(
+const DisjointUnionStyleProbe = definePrimitive<{}, DisjointUnionStyle>(
   () => undefined,
 );
-DisjointUnionStyleProbe({ style: { opacity: 0.5 } });
-DisjointUnionStyleProbe({ style: { width: 4 } });
+createElement(DisjointUnionStyleProbe, { style: { opacity: 0.5 } });
+createElement(DisjointUnionStyleProbe, { style: { width: 4 } });
 // @ts-expect-error one union style member has a required field
-DisjointUnionStyleProbe({});
+createElement(DisjointUnionStyleProbe, {});
 
 // @ts-expect-error arrays are not plain style schemas
-defineComp<{}, string[]>(() => undefined);
+definePrimitive<{}, string[]>(() => undefined);
 // @ts-expect-error functions are not plain style schemas
-defineComp<{}, () => void>(() => undefined);
+definePrimitive<{}, () => void>(() => undefined);
 // @ts-expect-error dates are not plain style schemas
-defineComp<{}, Date>(() => undefined);
+definePrimitive<{}, Date>(() => undefined);
 // @ts-expect-error URL instances are resources, not declared style schemas
-defineComp<{}, URL>(() => undefined);
+definePrimitive<{}, URL>(() => undefined);
 // @ts-expect-error Error instances are resources, not declared style schemas
-defineComp<{}, Error>(() => undefined);
+definePrimitive<{}, Error>(() => undefined);
 // @ts-expect-error Blob instances are resources, not declared style schemas
-defineComp<{}, Blob>(() => undefined);
+definePrimitive<{}, Blob>(() => undefined);
 
-defineComp(() => false)({});
-defineComp(() => null)({});
-defineComp(() => undefined)({});
-defineComp(() => '')({});
-defineComp(() => 0)({});
+createElement((_props: object) => false, {});
+createElement((_props: object) => null, {});
+createElement((_props: object) => undefined, {});
+createElement((_props: object) => '', {});
+createElement((_props: object) => 0, {});
 
 // @ts-expect-error required component props stay required
-RuntimeProbe({});
+createElement(RuntimeProbe, {});
 // @ts-expect-error excess component props are rejected
-RuntimeProbe({ count: 1, unknown: true });
+createElement(RuntimeProbe, { count: 1, unknown: true });
 // @ts-expect-error crc requires an HTML Canvas
 crc(document.createElement('div'), runtimeElement);
 // @ts-expect-error crc requires a component element, not a component factory

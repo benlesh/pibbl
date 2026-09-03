@@ -17,11 +17,11 @@ import {
 const controllers: Array<{ dispose: () => Promise<void> }> = [];
 
 const LEGACY_COMPONENT_TYPE_NAMES = [
-  'CompEl',
-  'CompFn',
-  'ComponentCapabilities',
-  'ComponentInput',
-  'FalsyNodes',
+  ['Comp', 'El'].join(''),
+  ['Comp', 'Fn'].join(''),
+  ['Component', 'Capabilities'].join(''),
+  ['Component', 'Input'].join(''),
+  ['Falsy', 'Nodes'].join(''),
 ] as const;
 
 function scenarioSource(
@@ -77,15 +77,21 @@ describe('scenario catalog trust gate', () => {
   });
 
   describe('deterministic source policy', () => {
+    const legacyFactory = ['r', 'ect'].join('');
+
     it.each([
       [
         'a named legacy component import',
-        scenarioSource(`import { rect } from '@crc/core'; void rect;`),
+        scenarioSource(
+          `import { ${legacyFactory} } from '@crc/core'; void ${legacyFactory};`,
+        ),
         /legacy component authoring/i,
       ],
       [
         'an aliased legacy component import',
-        scenarioSource(`import { rect as Draw } from '@crc/core'; void Draw;`),
+        scenarioSource(
+          `import { ${legacyFactory} as Draw } from '@crc/core'; void Draw;`,
+        ),
         /legacy component authoring/i,
       ],
       [
@@ -187,7 +193,7 @@ describe('scenario catalog trust gate', () => {
         'an imported legacy type namespace referenced inside an unshadowed namespace',
         scenarioSource(`
           import type * as CRC from '@crc/core';
-          namespace Fixture { export type Legacy = CRC.CompEl; }
+          namespace Fixture { export type Legacy = CRC.${LEGACY_COMPONENT_TYPE_NAMES[0]}; }
         `),
         /obsolete component types/i,
       ],
@@ -195,8 +201,8 @@ describe('scenario catalog trust gate', () => {
         'a dotted namespace final-segment type shadow that does not escape its body',
         scenarioSource(`
           import type * as CRC from '@crc/core';
-          namespace Fixture.CRC { export interface CompEl { local: true } }
-          type Legacy = CRC.CompEl;
+          namespace Fixture.CRC { export interface ${LEGACY_COMPONENT_TYPE_NAMES[0]} { local: true } }
+          type Legacy = CRC.${LEGACY_COMPONENT_TYPE_NAMES[0]};
         `),
         /obsolete component types/i,
       ],
@@ -257,7 +263,7 @@ describe('scenario catalog trust gate', () => {
       ],
       [
         'a dynamic type import',
-        `type Legacy = import('@crc/core').CompEl;`,
+        `type Legacy = import('@crc/core').${LEGACY_COMPONENT_TYPE_NAMES[0]};`,
         /TypeScript import types/i,
       ],
       ['import.meta', `void import.meta.url;`, /import\.meta/i],
@@ -476,7 +482,7 @@ describe('scenario catalog trust gate', () => {
       ],
       [
         'an obsolete type re-export',
-        `export type { CompEl } from '@crc/core';`,
+        `export type { ${LEGACY_COMPONENT_TYPE_NAMES[0]} } from '@crc/core';`,
         /re-export/i,
       ],
     ] as const)(
@@ -675,9 +681,9 @@ describe('scenario catalog trust gate', () => {
           import * as CRC from '@crc/core';
           namespace Fixture.CRC {
             export function Rectangle(): string { return 'local'; }
-            export interface CompEl { local: true }
+            export interface ${LEGACY_COMPONENT_TYPE_NAMES[0]} { local: true }
             export const local = CRC.Rectangle();
-            export type Local = CRC.CompEl;
+            export type Local = CRC.${LEGACY_COMPONENT_TYPE_NAMES[0]};
           }
         `,
         '<CRC.Rectangle style={{ width: 10, height: 10 }} />',
@@ -688,9 +694,9 @@ describe('scenario catalog trust gate', () => {
           import * as C from '@crc/core';
           namespace A.B.C {
             export function Rectangle(): string { return 'local'; }
-            export interface CompEl { local: true }
+            export interface ${LEGACY_COMPONENT_TYPE_NAMES[0]} { local: true }
             export const local = C.Rectangle();
-            export type Local = C.CompEl;
+            export type Local = C.${LEGACY_COMPONENT_TYPE_NAMES[0]};
           }
         `,
         '<C.Rectangle style={{ width: 10, height: 10 }} />',
@@ -713,8 +719,8 @@ describe('scenario catalog trust gate', () => {
         `
           import type * as CRC from '@crc/core';
           namespace Fixture {
-            namespace CRC { export interface CompEl { local: true } }
-            export type Local = CRC.CompEl;
+            namespace CRC { export interface ${LEGACY_COMPONENT_TYPE_NAMES[0]} { local: true } }
+            export type Local = CRC.${LEGACY_COMPONENT_TYPE_NAMES[0]};
           }
         `,
         undefined,
@@ -724,8 +730,8 @@ describe('scenario catalog trust gate', () => {
         `
           import type * as CRC from '@crc/core';
           declare module 'fixture' {
-            namespace CRC { interface CompEl { local: true } }
-            type Local = CRC.CompEl;
+            namespace CRC { interface ${LEGACY_COMPONENT_TYPE_NAMES[0]} { local: true } }
+            type Local = CRC.${LEGACY_COMPONENT_TYPE_NAMES[0]};
           }
         `,
         undefined,

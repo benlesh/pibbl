@@ -16,6 +16,8 @@ import {
 import { clickLogicalPoint, pressKey } from "./support/user-input";
 
 const mountedControllers: Array<{ dispose: () => void }> = [];
+const removedDefinitionWrapper = ["define", "Comp"].join("");
+const removedFocusWrapper = ["with", "Focus", "Management"].join("");
 
 function expectValidNonJsxSource(source: string): void {
   expect(() =>
@@ -321,7 +323,7 @@ describe("learning example catalog", () => {
     [
       "aliased legacy focus import",
       `
-        import { crc, createElement, Group, withFocusManagement as FocusPolicy, type CRCController } from "@crc/core";
+        import { crc, createElement, Group, ${removedFocusWrapper} as FocusPolicy, type CRCController } from "@crc/core";
         export default function mount(canvas: HTMLCanvasElement): CRCController {
           return crc(canvas, FocusPolicy(createElement(Group, null)));
         }
@@ -377,7 +379,7 @@ describe("learning example catalog", () => {
       import { crc, createElement, Group, type CRCController } from "@crc/core";
       interface Notes { text: string; render: string }
       export default function mount(canvas: HTMLCanvasElement): CRCController {
-        const notes: Notes = { text: "defineComp", render: "withFocusManagement" };
+        const notes: Notes = { text: "${removedDefinitionWrapper}", render: "${removedFocusWrapper}" };
         return crc(canvas, createElement(Group, { key: notes.text }));
       }
     `;

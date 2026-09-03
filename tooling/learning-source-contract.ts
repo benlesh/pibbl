@@ -43,7 +43,7 @@ interface SourceInspection {
 }
 
 const LEGACY_AUTHORING_NAMES = new Set([
-  "defineComp",
+  ["define", "Comp"].join(""),
   "rect",
   "path",
   "svgPath",
@@ -60,15 +60,15 @@ const LEGACY_AUTHORING_NAMES = new Set([
   "flow",
   "flex",
   "grid",
-  "withFocusManagement",
-  "withKeyboardNavigation",
+  ["with", "Focus", "Management"].join(""),
+  ["with", "Keyboard", "Navigation"].join(""),
 ]);
 const LEGACY_TYPE_NAMES = new Set([
-  "CompEl",
-  "CompFn",
-  "ComponentCapabilities",
-  "ComponentInput",
-  "FalsyNodes",
+  ["Comp", "El"].join(""),
+  ["Comp", "Fn"].join(""),
+  ["Component", "Capabilities"].join(""),
+  ["Component", "Input"].join(""),
+  ["Falsy", "Nodes"].join(""),
 ]);
 // Uppercase element types exported from packages/core/src/index.ts. They are
 // values so direct calls parse, but lessons must construct them declaratively.

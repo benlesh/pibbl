@@ -1,4 +1,3 @@
-import { defineComp } from '../define-comp.js';
 import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,
@@ -16,9 +15,6 @@ import { adjustRectangleToPixelGrid } from '../util/pixel-grid-adjustments.js';
 import { renderPath } from './path.js';
 
 export interface RectangleProps extends CRCEventHandlers, CRCEventFocusOptions {}
-
-/** @internal Temporary lowercase-adapter program props. */
-export type RectProps = RectangleProps;
 
 function renderRectangle(
   props: RectangleProps,
@@ -94,42 +90,3 @@ export const Rectangle = definePrimitive<
   }) as ResolvedRectStyle,
 });
 registerOpaqueStyleProperties(Rectangle, ['fill', 'stroke', 'cursor']);
-
-const renderLegacyRectangle = function Rect(
-  props: RectProps,
-  style: Readonly<ResolvedRectStyle>,
-  ctx: RenderingContext2D,
-) {
-  renderRectangle(props, style, ctx);
-};
-
-/** @internal Temporary lowercase authoring adapter retained until Task 12. */
-export const rect = defineComp<
-  RectProps,
-  RectStyle,
-  RectStyle,
-  ResolvedRectStyle
->(renderLegacyRectangle, {
-  resolveStyle: (style, context) => ({
-    ...stripLayoutParticipation(style),
-    x: resolveLocalOffset(style.x, context.percentageBasis.width, 'x', context),
-    y: resolveLocalOffset(style.y, context.percentageBasis.height, 'y', context),
-    width: resolveRequiredLength(
-      style.width,
-      context.percentageBasis.width,
-      'width',
-      context,
-    ),
-    height: resolveRequiredLength(
-      style.height,
-      context.percentageBasis.height,
-      'height',
-      context,
-    ),
-  }) as ResolvedRectStyle,
-});
-registerOpaqueStyleProperties(renderLegacyRectangle, [
-  'fill',
-  'stroke',
-  'cursor',
-]);

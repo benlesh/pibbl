@@ -1,4 +1,3 @@
-import { defineComp } from '../define-comp.js';
 import { definePrimitive } from '../define-primitive.js';
 import { cloneCRCElement } from '../element/create-element.js';
 import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
@@ -133,29 +132,6 @@ export const Flow = definePrimitive<
   FlowStyle,
   ResolvedFlowStyle
 >(renderFlow, {
-  resolveStyle: (style, context) => ({
-    box: resolveContainerBox(style, context, 'Flow', 'flow'),
-    overflow: style.overflow ?? 'visible',
-    ...normalizeFlowOptions(style, context.allocation),
-  }),
-  measure: input => measureFlow(input),
-});
-
-const renderLegacyFlow = function Flow(
-  props: FlowProps,
-  style: Readonly<ResolvedFlowStyle>,
-  ctx: RenderingContext2D,
-) {
-  return renderFlow(props, style, ctx);
-};
-
-/** @internal Temporary lowercase authoring adapter retained until Task 12. */
-export const flow = defineComp<
-  FlowProps,
-  FlowStyle,
-  FlowStyle,
-  ResolvedFlowStyle
->(renderLegacyFlow, {
   resolveStyle: (style, context) => ({
     box: resolveContainerBox(style, context, 'Flow', 'flow'),
     overflow: style.overflow ?? 'visible',

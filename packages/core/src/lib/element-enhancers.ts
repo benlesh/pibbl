@@ -2,17 +2,15 @@ import { runTeardown } from './teardowns.js';
 import { cloneCRCElement } from './element/create-element.js';
 import { registerElementCloneMetadataHandler } from './element/metadata.js';
 import type {
+  CRCComponentRefs,
   CRCElement,
-  CompEl,
-  CompRefs,
   CRCInstance,
-  SystemStyle,
 } from './types.js';
 
 export interface CRCElementEnhancerDescriptor {
   readonly key: symbol;
   mount(context: {
-    readonly component: CompRefs<any>;
+    readonly component: CRCComponentRefs<any>;
     readonly instance: CRCInstance;
   }): CRCMountedElementEnhancer;
 }
@@ -34,7 +32,7 @@ const elementEnhancers = new WeakMap<
   readonly CRCElementEnhancerDescriptor[]
 >();
 const mountedElementEnhancers = new WeakMap<
-  CompRefs<any>,
+  CRCComponentRefs<any>,
   CRCMountedElementEnhancerEntry[]
 >();
 
@@ -46,15 +44,6 @@ registerElementCloneMetadataHandler((source, clone) => {
 });
 
 /** @internal Adds private metadata without introducing a component boundary. */
-export function appendElementEnhancer<
-  P,
-  S extends SystemStyle,
-  N extends SystemStyle = S,
-  R extends SystemStyle = N,
->(
-  element: CompEl<P, S, N, R>,
-  descriptor: CRCElementEnhancerDescriptor,
-): CompEl<P, S, N, R>;
 export function appendElementEnhancer<P>(
   element: CRCElement<P>,
   descriptor: CRCElementEnhancerDescriptor,
@@ -103,7 +92,7 @@ export function hasElementEnhancer(
 
 /** @internal */
 export function reconcileElementEnhancers(
-  component: CompRefs<any>,
+  component: CRCComponentRefs<any>,
   instance: CRCInstance,
 ): void {
   const descriptors = elementEnhancers.get(component.element) ?? [];
@@ -146,7 +135,7 @@ export function reconcileElementEnhancers(
 
 /** @internal */
 export function enterElementEnhancers(
-  component: CompRefs<any>,
+  component: CRCComponentRefs<any>,
 ): readonly CRCMountedElementEnhancerEntry[] {
   const entered: CRCMountedElementEnhancerEntry[] = [];
   try {
@@ -183,7 +172,7 @@ export function exitElementEnhancers(
 }
 
 /** @internal */
-export function disposeElementEnhancers(component: CompRefs<any>): void {
+export function disposeElementEnhancers(component: CRCComponentRefs<any>): void {
   const entries = mountedElementEnhancers.get(component) ?? [];
   mountedElementEnhancers.delete(component);
   disposeEntries(entries);

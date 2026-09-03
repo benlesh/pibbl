@@ -1,5 +1,5 @@
 import { getLayoutBox, getPercentageBasis } from '../layout/context.js';
-import { EMPTY_STYLE } from '../create-element.js';
+import { EMPTY_STYLE } from './empty-style.js';
 import {
   getPrimitiveDefinition,
   getSpecifiedStyle,

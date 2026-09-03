@@ -1,4 +1,3 @@
-import { defineComp } from '../define-comp.js';
 import { definePrimitive } from '../define-primitive.js';
 import { cloneCRCElement } from '../element/create-element.js';
 import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
@@ -140,29 +139,6 @@ export const Grid = definePrimitive<
     ...normalizeGridOptions(style, context.allocation),
   }),
   measure: (input) => measureGrid(input),
-});
-
-const renderLegacyGrid = function Grid(
-  props: GridProps,
-  style: Readonly<ResolvedGridStyle>,
-  ctx: RenderingContext2D,
-) {
-  return renderGrid(props, style, ctx);
-};
-
-/** @internal Temporary lowercase authoring adapter retained until Task 12. */
-export const grid = defineComp<
-  GridProps,
-  GridStyle,
-  GridStyle,
-  ResolvedGridStyle
->(renderLegacyGrid, {
-  resolveStyle: (style, context) => ({
-    box: resolveContainerBox(style, context, 'Grid', 'grid'),
-    overflow: style.overflow ?? 'visible',
-    ...normalizeGridOptions(style, context.allocation),
-  }),
-  measure: input => measureGrid(input),
 });
 
 export function layoutGrid(

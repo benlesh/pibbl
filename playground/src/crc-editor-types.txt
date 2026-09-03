@@ -30,8 +30,7 @@
   declare const crcElementTypeBrand: unique symbol;
   declare const crcPrimitiveComponentBrand: unique symbol;
   export type CRCKey = string | number;
-  export type FalsyNodes = undefined | false | true | null | '' | 0;
-  export type CRCEmptyNode = FalsyNodes;
+  export type CRCEmptyNode = undefined | false | true | null | '' | 0;
   export interface CRCElement<P = unknown> {
     readonly [crcElementTypeBrand]: true;
     readonly type: CRCElementType<P>;
@@ -170,9 +169,9 @@
   }>;
 
   export interface SystemStyle { custom?: unknown }
-  type ReservedElementKey = 'key' | 'style';
+  type PrimitiveReservedKey = 'key' | 'style';
   type UnionKeys<T> = T extends unknown ? keyof T : never;
-  type ProgramProps<P> = 0 extends (1 & P) ? P : Extract<UnionKeys<P>, ReservedElementKey> extends never ? P : never;
+  export type PrimitiveProgramProps<P> = 0 extends (1 & P) ? P : Extract<UnionKeys<P>, PrimitiveReservedKey> extends never ? P : never;
   type RequiredKeys<T> = T extends unknown ? { [K in keyof T]-?: Pick<T, K> extends Required<Pick<T, K>> ? K : never }[keyof T] : never;
   type StyleField<S> = [RequiredKeys<S>] extends [never] ? { style?: S } : { style: S };
   type AllocationValue = `${number}%` | 'auto';
@@ -181,21 +180,14 @@
   export type SpecifiedStyle<S extends SystemStyle> = Readonly<S>;
   export type NormalizedStyle<S extends SystemStyle> = Readonly<S>;
   export type ResolvedStyle<S extends SystemStyle> = Readonly<S>;
-  export type CompEl<P = any, S extends SystemStyle = SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N> = CRCElement<ProgramProps<P> & { style: SpecifiedStyle<S> }> & {
-    readonly type: CompFn<P, S, N, R>;
-    readonly props: Readonly<ProgramProps<P> & { style: SpecifiedStyle<S> }>;
-    readonly style: SpecifiedStyle<S>;
-  };
-
-  export type ComponentInput<P, S extends SystemStyle = SystemStyle> = ProgramProps<P> & { key?: string } & StyleField<S>;
-  export type PrimitiveInput<P, S extends SystemStyle = SystemStyle> = ProgramProps<P> & StyleField<Readonly<S>>;
-  export interface ComponentCapabilities<S extends SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N, P = unknown> {
+  export type PrimitiveInput<P, S extends SystemStyle = SystemStyle> = PrimitiveProgramProps<P> & StyleField<SpecifiedStyle<S>>;
+  export type PrimitiveRender<P, R extends SystemStyle = SystemStyle> = (props: Readonly<PrimitiveProgramProps<P>>, style: ResolvedStyle<R>, context: RenderingContext2D) => CRCNode[] | CRCNode | void;
+  export interface PrimitiveCapabilities<P, S extends SystemStyle = SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N> {
     normalizeStyle?: (style: SpecifiedStyle<S>) => NormalizedStyle<N>;
     resolveStyle?: (style: NormalizedStyle<N>, context: Readonly<StyleResolutionContext>) => ResolvedStyle<R>;
-    measure?: (input: MeasureInput<ProgramProps<P>, N>) => MeasureResult;
+    measure?: (input: MeasureInput<PrimitiveProgramProps<P>, N>) => MeasureResult;
   }
-  type CapabilityArguments<P, S extends SystemStyle, N extends SystemStyle, R extends SystemStyle> = RequiresResolver<R> extends true ? [capabilities: never] : RequiresResolver<S> extends true ? [capabilities: Readonly<ComponentCapabilities<S, N, R, P>> & { resolveStyle: NonNullable<ComponentCapabilities<S, N, R, P>['resolveStyle']> }] : [capabilities?: Readonly<ComponentCapabilities<S, N, R, P>>];
-  export type CompFn<P, S extends SystemStyle = SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N> = ((props: ProgramProps<P>, style: ResolvedStyle<R>, context: RenderingContext2D) => CRCNode[] | CRCNode | void) & Readonly<ComponentCapabilities<S, N, R, P>>;
+  type PrimitiveCapabilityArguments<P, S extends SystemStyle, N extends SystemStyle, R extends SystemStyle> = RequiresResolver<R> extends true ? [capabilities: never] : RequiresResolver<S> extends true ? [capabilities: Readonly<PrimitiveCapabilities<P, S, N, R>> & { resolveStyle: NonNullable<PrimitiveCapabilities<P, S, N, R>['resolveStyle']> }] : [capabilities?: Readonly<PrimitiveCapabilities<P, S, N, R>>];
   export type PixelGridAlignment = 'none' | 'round' | 'ceil' | 'floor';
   export type FillStyle = CanvasRenderingContext2D['fillStyle'];
   export type StrokeStyle = CanvasRenderingContext2D['strokeStyle'];
@@ -245,16 +237,13 @@
 
   export interface PathProps extends CRCEventHandlers {}
   export interface RectangleProps extends CRCEventHandlers {}
-  export type RectProps = RectangleProps;
   export interface SvgPathProps extends CRCEventHandlers {}
   export interface LineProps extends CRCEventHandlers {}
   export interface HorizontalLineProps extends CRCEventHandlers {}
   export interface VerticalLineProps extends CRCEventHandlers {}
   export interface TextProps extends CRCEventHandlers { children?: CRCTextChild }
   export interface ImageProps extends CRCEventHandlers {}
-  export type ImgProps = ImageProps;
   export interface GroupProps { children: CRCNode }
-  export interface GProps { children: CRCNode[] }
   export interface ClipProps { children: CRCNode }
   export interface LayerProps { children: CRCNode }
 
@@ -283,23 +272,7 @@
   export function crc(canvas: HTMLCanvasElement, element: CRCNode, config?: CRCConfig): CRCController;
   export function createElement<P>(type: CRCElementType<P>, props: (P & { key?: CRCKey }) | null, ...children: CRCNode[]): CRCElement<P>;
   export const Fragment: CRCComponent<{ children?: CRCNode }>;
-  export function defineComp<P, S extends SystemStyle = SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N>(component: CompFn<P, S, N, R> & (ComponentInput<P, S> extends never ? never : unknown), ...capabilityArguments: CapabilityArguments<P, S, N, R>): (input: ComponentInput<P, S>) => CompEl<P, S, N, R>;
-  export function rect(props: ComponentInput<RectProps, RectStyle>): CompEl<RectProps, RectStyle>;
-  export function path(props: ComponentInput<PathProps, PathStyle>): CompEl<PathProps, PathStyle>;
-  export function svgPath(props: ComponentInput<SvgPathProps, SvgPathStyle>): CompEl<SvgPathProps, SvgPathStyle>;
-  export function line(props: ComponentInput<LineProps, LineStyle>): CompEl<LineProps, LineStyle>;
-  export function horizontalLine(props: ComponentInput<HorizontalLineProps, HorizontalLineStyle>): CompEl<HorizontalLineProps, HorizontalLineStyle>;
-  export function verticalLine(props: ComponentInput<VerticalLineProps, VerticalLineStyle>): CompEl<VerticalLineProps, VerticalLineStyle>;
-  export function text(props: ComponentInput<TextProps, TextStyle & { text: string }>): CompEl<TextProps, TextStyle & { text: string }>;
-  export function img(props: ComponentInput<ImgProps, ImgStyle>): CompEl<ImgProps, ImgStyle>;
-  export function g(props: ComponentInput<GProps, GStyle>): CompEl<GProps, GStyle>;
-  export function clip(props: ComponentInput<ClipProps, ClipStyle>): CompEl<ClipProps, ClipStyle>;
-  export function layer(props: ComponentInput<LayerProps, LayerStyle>): CompEl<LayerProps, LayerStyle>;
-  export function absolute(props: ComponentInput<AbsoluteProps, AbsoluteStyle>): CompEl<AbsoluteProps, AbsoluteStyle>;
-  export function overlay(props: ComponentInput<OverlayProps, OverlayStyle>): CompEl<OverlayProps, OverlayStyle>;
-  export function flow(props: ComponentInput<FlowProps, FlowStyle>): CompEl<FlowProps, FlowStyle>;
-  export function flex(props: ComponentInput<FlexProps, FlexStyle>): CompEl<FlexProps, FlexStyle>;
-  export function grid(props: ComponentInput<GridProps, GridStyle>): CompEl<GridProps, GridStyle>;
+  export function definePrimitive<P = Record<string, never>, S extends SystemStyle = SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N>(render: PrimitiveRender<P, R> & (PrimitiveInput<P, S> extends never ? never : unknown), ...capabilityArguments: PrimitiveCapabilityArguments<P, S, N, R>): CRCPrimitiveComponent<PrimitiveProgramProps<P>, PrimitiveInput<P, S>>;
   export const Rectangle: CRCPrimitiveComponent<RectangleProps, PrimitiveInput<RectangleProps, RectStyle>>;
   export const Path: CRCPrimitiveComponent<PathProps, PrimitiveInput<PathProps, PathStyle>>;
   export const SvgPath: CRCPrimitiveComponent<SvgPathProps, PrimitiveInput<SvgPathProps, SvgPathStyle>>;

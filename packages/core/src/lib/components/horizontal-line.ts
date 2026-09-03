@@ -1,4 +1,3 @@
-import { defineComp } from '../define-comp.js';
 import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,
@@ -116,45 +115,3 @@ export const HorizontalLine = definePrimitive<
   }) as ResolvedHorizontalLineStyle,
 });
 registerOpaqueStyleProperties(HorizontalLine, ['stroke', 'cursor']);
-
-const renderLegacyHorizontalLine = function HorizontalLine(
-  props: HorizontalLineProps,
-  style: Readonly<ResolvedHorizontalLineStyle>,
-  ctx: RenderingContext2D,
-) {
-  return renderHorizontalLine(props, style, ctx);
-};
-
-/** @internal Temporary lowercase authoring adapter retained until Task 12. */
-export const horizontalLine = defineComp<
-  HorizontalLineProps,
-  HorizontalLineStyle,
-  HorizontalLineStyle,
-  ResolvedHorizontalLineStyle
->(renderLegacyHorizontalLine, {
-  resolveStyle: (style, context) => ({
-    ...stripLayoutParticipation(style),
-    y: resolveRequiredLength(
-      style.y,
-      context.percentageBasis.height,
-      'y',
-      context,
-    ),
-    x1: resolveLocalOffset(
-      style.x1,
-      context.percentageBasis.width,
-      'x1',
-      context,
-    ),
-    x2: resolveRequiredLength(
-      style.x2 ?? context.allocation.width,
-      context.percentageBasis.width,
-      'x2',
-      context,
-    ),
-  }) as ResolvedHorizontalLineStyle,
-});
-registerOpaqueStyleProperties(renderLegacyHorizontalLine, [
-  'stroke',
-  'cursor',
-]);
