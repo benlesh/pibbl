@@ -1,4 +1,13 @@
 import * as core from '@crc/core';
+import {
+  Fragment as ProductionFragment,
+  jsx,
+  jsxs,
+} from '@crc/core/jsx-runtime';
+import {
+  Fragment as DevelopmentFragment,
+  jsxDEV,
+} from '@crc/core/jsx-dev-runtime';
 
 const expected = [
   'Absolute',
@@ -47,6 +56,22 @@ const expected = [
 const actual = Object.keys(core).sort();
 if (JSON.stringify(actual) !== JSON.stringify(expected)) {
   throw new Error(`Unexpected @crc/core exports: ${actual.join(', ')}`);
+}
+
+for (const [exportName, value] of Object.entries({
+  jsx,
+  jsxs,
+  jsxDEV,
+})) {
+  if (typeof value !== 'function') {
+    throw new Error(`Expected @crc/core compiler export ${exportName}.`);
+  }
+}
+if (
+  ProductionFragment !== core.Fragment ||
+  DevelopmentFragment !== core.Fragment
+) {
+  throw new Error('Compiler subpaths did not share the public Fragment value.');
 }
 for (const exportName of expected) {
   if (typeof core[exportName] !== 'function') {

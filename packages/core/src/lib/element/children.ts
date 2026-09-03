@@ -19,6 +19,21 @@ const REACT_TRANSITIONAL_ELEMENT_TYPE = Symbol.for(
   'react.transitional.element',
 );
 
+/** Rejects a directly supplied foreign JSX root before CRC acquires resources. */
+export function assertCompatibleRootNode(node: unknown): void {
+  if (!node || typeof node !== 'object' || isCRCElement(node)) return;
+  if (isReactElement(node)) throw reactElementError('CRC root');
+  if (
+    !isPromiseLike(node) &&
+    !isAsyncIterable(node) &&
+    !Array.isArray(node) &&
+    !isIterable(node) &&
+    isForeignElementLike(node)
+  ) {
+    throw foreignElementError('CRC root');
+  }
+}
+
 /**
  * Materializes one receiver's recursive container input into direct elements.
  * Arrays and unkeyed Fragments are transparent; keyed Fragments remain entries.
@@ -173,6 +188,9 @@ function visitContainerNode(
     }
     return;
   }
+  if (isForeignElementLike(node)) {
+    throw foreignElementError(receiver);
+  }
 
   throw invalidChild(receiver, 'an unsupported object');
 }
@@ -233,6 +251,9 @@ function visitTextNode(
     for (const child of node) visitTextNode(child, receiver, parts);
     return;
   }
+  if (isForeignElementLike(node)) {
+    throw foreignElementError(receiver);
+  }
   throw invalidChild(receiver, 'an unsupported object');
 }
 
@@ -266,6 +287,14 @@ function reactElementError(receiver: ChildReceiver): Error {
   );
 }
 
+function foreignElementError(receiver: ChildReceiver): Error {
+  return new Error(
+    `${describeReceiver(receiver)} received an element-like object that was ` +
+    'not created by @crc/core as a CRC child.\n' +
+    'Check this file\'s JSX runtime and set jsxImportSource to "@crc/core".',
+  );
+}
+
 function describeReceiver(receiver: ChildReceiver): string {
   if (typeof receiver === 'string') return receiver;
   const name = receiver.type.name || 'Anonymous';
@@ -279,6 +308,27 @@ function isReactElement(value: object): boolean {
   const brand = (value as { $$typeof?: unknown }).$$typeof;
   return brand === REACT_ELEMENT_TYPE ||
     brand === REACT_TRANSITIONAL_ELEMENT_TYPE;
+}
+
+function isForeignElementLike(value: object): boolean {
+  if (
+    !Object.prototype.hasOwnProperty.call(value, 'type') ||
+    !Object.prototype.hasOwnProperty.call(value, 'props')
+  ) {
+    return false;
+  }
+  try {
+    const type = (value as { type?: unknown }).type;
+    const props = (value as { props?: unknown }).props;
+    return (
+      (typeof type === 'function' ||
+        typeof type === 'string' ||
+        typeof type === 'symbol') &&
+      (props === null || typeof props === 'object')
+    );
+  } catch {
+    return false;
+  }
 }
 
 function isPromiseLike(value: object): boolean {

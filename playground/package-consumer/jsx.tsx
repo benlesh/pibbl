@@ -1,4 +1,5 @@
 import type {
+  CRCController,
   CRCElement,
   CRCNode,
   CRCTextChild,
@@ -10,6 +11,8 @@ import {
   Grid,
   Overlay,
   Rectangle,
+  Text,
+  crc,
 } from '@crc/core';
 import {
   Fragment as DevelopmentFragment,
@@ -45,6 +48,56 @@ export const developmentElement = jsxDEV(
 
 export const developmentFragment: DevelopmentJSX.ElementType =
   DevelopmentFragment;
+
+interface PosterProps {
+  readonly labels: readonly string[];
+  readonly showTitle: boolean;
+}
+
+function Poster({ labels, showTitle }: PosterProps): CRCNode {
+  return (
+    <Grid
+      style={{
+        width: 240,
+        height: 120,
+        gridTemplateColumns: [120, 120],
+        gridTemplateRows: [60, 60],
+      }}
+    >
+      {labels.map((label, index) => (
+        <Rectangle
+          key={label}
+          style={{
+            width: 120,
+            height: 60,
+            fill: index % 2 === 0 ? '#2563eb' : '#7c3aed',
+            gridColumnStart: index + 1,
+            gridRowStart: 1,
+          }}
+        />
+      ))}
+      {showTitle && (
+        <Text
+          style={{
+            x: 12,
+            y: 24,
+            gridColumnStart: 1,
+            gridColumnSpan: 2,
+            gridRowStart: 2,
+          }}
+        >
+          {labels.join(', ')}
+        </Text>
+      )}
+    </Grid>
+  );
+}
+
+export function mountAutomaticJSXConsumer(
+  canvas: HTMLCanvasElement,
+): CRCController {
+  return crc(canvas, <Poster labels={['Bundler', 'NodeNext']} showTitle />);
+}
 
 function* layoutChildren(): Generator<CRCNode> {
   yield [[

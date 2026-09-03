@@ -888,7 +888,9 @@ describe('built-in transparent policies', () => {
 
     expect(publicElementHasEnhancers).toBe(false);
     expect(() => executeRender(canvas, 1))
-      .toThrowError(/CRC root.*unsupported object/i);
+      .toThrowError(
+        /CRC root.*element-like object.*not created by @crc\/core[\s\S]*jsxImportSource/i,
+      );
     expect(mount).not.toHaveBeenCalled();
   });
 });

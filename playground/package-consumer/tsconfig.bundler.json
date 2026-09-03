@@ -11,5 +11,12 @@
     "target": "ESNext",
     "types": []
   },
-  "files": ["index.ts", "jsx.tsx"]
+  "files": [
+    "index.ts",
+    "jsx.tsx",
+    "wrong-runtime.ts",
+    "mixed-runtime/crc-scene.crc.tsx",
+    "mixed-runtime/react-host.tsx",
+    "mixed-runtime/react-stub/jsx-runtime.d.ts"
+  ]
 }

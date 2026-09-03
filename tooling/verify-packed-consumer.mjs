@@ -48,12 +48,24 @@ function assertTarballHasNoSources(tarball) {
   const entries = execFileSync('tar', ['-tzf', tarball], { encoding: 'utf8' })
     .trim()
     .split('\n');
-  const sourceEntries = entries.filter(entry => entry.includes('/src/'));
+  const sourceEntries = entries.filter(entry =>
+    entry.includes('/src/') ||
+    (/\.(?:[cm]?ts|tsx)$/.test(entry) && !/\.d\.(?:[cm]?ts|tsx)$/.test(entry))
+  );
   if (sourceEntries.length > 0) {
     throw new Error(`Packed source files are not allowed: ${sourceEntries.join(', ')}`);
   }
   if (!entries.some(entry => entry.startsWith('package/dist/'))) {
     throw new Error(`Packed package ${tarball} does not contain dist output.`);
+  }
+  return entries;
+}
+
+function assertRequiredEntries(entries, requiredEntries) {
+  const installedEntries = new Set(entries);
+  const missing = requiredEntries.filter(entry => !installedEntries.has(entry));
+  if (missing.length > 0) {
+    throw new Error(`Packed package omitted required files: ${missing.join(', ')}`);
   }
 }
 
@@ -77,9 +89,11 @@ async function bundleConsumerEntry(source) {
     platform: 'browser',
     stdin: {
       contents: source,
-      loader: 'js',
+      loader: 'tsx',
       resolveDir: consumerDirectory,
     },
+    jsx: 'automatic',
+    jsxImportSource: '@crc/core',
     treeShaking: true,
     write: false,
   });
@@ -93,7 +107,18 @@ try {
   const typesTarball = pack('packages/types');
   const coreTarball = pack('packages/core');
   assertTarballHasNoSources(typesTarball);
-  assertTarballHasNoSources(coreTarball);
+  const coreEntries = assertTarballHasNoSources(coreTarball);
+  assertRequiredEntries(coreEntries, [
+    'package/dist/index.d.ts',
+    'package/dist/index.mjs',
+    'package/dist/jsx-dev-runtime.d.ts',
+    'package/dist/jsx-dev-runtime.mjs',
+    'package/dist/jsx-dev-runtime.mjs.map',
+    'package/dist/jsx-runtime.d.ts',
+    'package/dist/jsx-runtime.mjs',
+    'package/dist/jsx-runtime.mjs.map',
+    'package/dist/types.d.ts',
+  ]);
 
   writeFileSync(join(consumerDirectory, 'package.json'), `${JSON.stringify({
     name: 'crc-packed-consumer',
@@ -114,9 +139,15 @@ try {
     'runtime.mjs',
     'tsconfig.bundler.json',
     'tsconfig.nodenext.json',
+    'wrong-runtime.ts',
   ]) {
     cpSync(join(repositoryRoot, 'playground/package-consumer', file), join(consumerDirectory, file));
   }
+  cpSync(
+    join(repositoryRoot, 'playground/package-consumer/mixed-runtime'),
+    join(consumerDirectory, 'mixed-runtime'),
+    { recursive: true },
+  );
 
   pnpm(['install', '--offline', '--ignore-scripts', '--strict-peer-dependencies'], {
     cwd: consumerDirectory,
@@ -145,18 +176,26 @@ try {
   run(process.execPath, ['runtime.mjs'], { cwd: consumerDirectory });
 
   const noFocusBundle = await bundleConsumerEntry(`
-    import { createElement, Rectangle } from '@crc/core';
-    console.log(createElement(Rectangle, { style: { width: 1, height: 1 } }));
+    import { Rectangle } from '@crc/core';
+    function Scene() {
+      return <Rectangle style={{ width: 1, height: 1 }} />;
+    }
+    console.log(<Scene />);
   `);
   if (noFocusBundle.includes(focusImplementationMarker)) {
     throw new Error('Optimized no-focus bundle retained focus implementation code.');
   }
 
   const withFocusBundle = await bundleConsumerEntry(`
-    import { FocusManagement, createElement, Rectangle } from '@crc/core';
-    console.log(createElement(FocusManagement, {
-      children: createElement(Rectangle, { style: { width: 1, height: 1 } })
-    }));
+    import { FocusManagement, Rectangle } from '@crc/core';
+    function Scene() {
+      return (
+        <FocusManagement>
+          <Rectangle style={{ width: 1, height: 1 }} />
+        </FocusManagement>
+      );
+    }
+    console.log(<Scene />);
   `);
   if (!withFocusBundle.includes(focusImplementationMarker)) {
     throw new Error('Optimized with-focus bundle omitted the focus implementation marker.');

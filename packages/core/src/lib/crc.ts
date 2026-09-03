@@ -1,5 +1,6 @@
 import { GLOBAL_STATE } from './global-state.js';
 import { mountCRC } from './mount-crc.js';
+import { assertCompatibleRootNode } from './element/children.js';
 import { CRCController, type CRCNode } from './types.js';
 import { update } from './update.js';
 import type { CRCConfig } from './surface/types.js';
@@ -17,6 +18,7 @@ export function crc(
   element: CRCNode,
   config?: CRCConfig,
 ): CRCController {
+  assertCompatibleRootNode(element);
   const mountedInstance = GLOBAL_STATE.crcInstances.get(canvas);
   if (mountedInstance) {
     update(canvas, element);
