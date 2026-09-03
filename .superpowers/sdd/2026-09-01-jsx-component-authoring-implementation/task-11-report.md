@@ -260,16 +260,19 @@ named import received the generic invalid-TSX diagnostic instead of the exact
 import-attributes-or-assertions diagnostic.
 
 The fallback remains limited to Babel's `MissingSemicolon` failure. It now
-accepts whitespace and comments before the reported `assert` token, parses the
-source prefix with the normal TypeScript/JSX module parser, and requires the
-last parsed statement to be a static `ImportDeclaration`. This recognizes
-multiline named and default-plus-named declarations without treating dynamic
-imports or unrelated assertion-like syntax failures as static import
-assertions. The dotted-namespace fix from Round 4 is unchanged.
+accepts whitespace and comments before the reported `assert` token and between
+`assert` and `{`, parses the source prefix with the normal TypeScript/JSX module
+parser, and requires the last parsed statement to be a static
+`ImportDeclaration`. This recognizes multiline named and default-plus-named
+declarations without treating dynamic imports or unrelated assertion-like
+syntax failures as static import assertions. The dotted-namespace fix from
+Round 4 is unchanged.
 
 The focused test adds named, default-plus-named, and commented multiline legacy
-assertion cases. Two negative lookalikes require the generic TSX parse
-diagnostic for a dynamic import and an unrelated expression.
+assertion cases, plus block-comment and line-comment separators between
+`assert` and its attribute block. Negative lookalikes require the generic TSX
+parse diagnostic for a dynamic import, an unrelated expression, and an
+arbitrary token between `assert` and `{`.
 
 Focused RED evidence before the validator change:
 
@@ -291,6 +294,23 @@ fallback change passed:
 ```text
 Test Files  1 passed (1)
 Tests       120 passed (120)
+```
+
+A final lexical-separator review then exposed the same diagnostic gap when a
+comment appeared between `assert` and `{`. Before extending the trivia matcher,
+the two valid comment forms failed while the arbitrary-token guard passed:
+
+```text
+Test Files  1 failed (1)
+Tests       2 failed | 121 passed (123)
+```
+
+After allowing only whitespace, block comments, and line comments in that
+position, the focused command passed all 123 cases:
+
+```text
+Test Files  1 passed (1)
+Tests       123 passed (123)
 ```
 
 Fresh proportional verification under Node `v26.7.0` and pnpm `11.21.0`:

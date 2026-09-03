@@ -374,6 +374,17 @@ describe('scenario catalog trust gate', () => {
         /^invalid deterministic module must not use import attributes or assertions\.$/u,
       ],
       [
+        'a block comment between legacy assert and its attributes',
+        `import fixture from './x.json' assert /* legacy */ { type: 'json' }; void fixture;`,
+        /^invalid deterministic module must not use import attributes or assertions\.$/u,
+      ],
+      [
+        'a line comment between legacy assert and its attributes',
+        `import fixture from './x.json' assert // legacy
+        { type: 'json' }; void fixture;`,
+        /^invalid deterministic module must not use import attributes or assertions\.$/u,
+      ],
+      [
         'a dynamic-import assertion lookalike',
         `const fixture = import('./x.json') assert { type: 'json' }; void fixture;`,
         /^invalid deterministic module must be valid TSX module syntax\.$/u,
@@ -381,6 +392,11 @@ describe('scenario catalog trust gate', () => {
       [
         'an unrelated assertion-like syntax error',
         `const fixture = true assert { type: 'json' }; void fixture;`,
+        /^invalid deterministic module must be valid TSX module syntax\.$/u,
+      ],
+      [
+        'an unrelated token between assert and an object',
+        `import fixture from './x.json' assert marker { type: 'json' }; void fixture;`,
         /^invalid deterministic module must be valid TSX module syntax\.$/u,
       ],
       [

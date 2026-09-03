@@ -225,7 +225,7 @@ function isLegacyImportAssertionSyntaxError(
     failure.code !== "BABEL_PARSER_SYNTAX_ERROR" ||
     failure.reasonCode !== "MissingSemicolon" ||
     typeof position !== "number" ||
-    !/^(?:\s|\/\*[\s\S]*?\*\/|\/\/[^\r\n]*(?:\r?\n|$))*assert\s*\{/u.test(
+    !/^(?:\s|\/\*[\s\S]*?\*\/|\/\/[^\r\n]*(?:\r?\n|$))*assert(?:\s|\/\*[\s\S]*?\*\/|\/\/[^\r\n]*(?:\r?\n|$))*\{/u.test(
       source.slice(position),
     )
   ) {
