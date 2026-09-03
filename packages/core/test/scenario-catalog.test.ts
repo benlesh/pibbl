@@ -16,6 +16,25 @@ import {
 
 const controllers: Array<{ dispose: () => Promise<void> }> = [];
 
+const LEGACY_COMPONENT_TYPE_NAMES = [
+  'CompEl',
+  'CompFn',
+  'ComponentCapabilities',
+  'ComponentInput',
+  'FalsyNodes',
+] as const;
+
+function scenarioSource(
+  extraModuleSyntax = '',
+  scene = '<Rectangle style={{ width: 10, height: 10 }} />',
+): string {
+  return `
+    import { Rectangle } from '@crc/core';
+    ${extraModuleSyntax}
+    export const Scene = () => (${scene});
+  `;
+}
+
 afterEach(async () => {
   await Promise.all(controllers.splice(0).map(controller => controller.dispose()));
   document.body.replaceChildren();
@@ -57,177 +76,358 @@ describe('scenario catalog trust gate', () => {
     );
   });
 
-  it('uses syntax-aware authoring checks without confusing Canvas methods for CRC factories', () => {
-    expect(() =>
-      validateScenarioSourceText(
-        `
-          import { crc, rect, Rectangle } from '@crc/core';
-          const canvasPath = new Path2D();
-          canvasPath.rect(0, 0, 10, 10);
-          export const Scene = () => <Rectangle style={{ width: 10, height: 10 }} />;
-        `,
-        'legacy scenario',
-      ),
-    ).toThrow(/legacy component authoring/i);
+  describe('deterministic source policy', () => {
+    it.each([
+      [
+        'a named legacy component import',
+        scenarioSource(`import { rect } from '@crc/core'; void rect;`),
+        /legacy component authoring/i,
+      ],
+      [
+        'an aliased legacy component import',
+        scenarioSource(`import { rect as Draw } from '@crc/core'; void Draw;`),
+        /legacy component authoring/i,
+      ],
+      [
+        'a direct descriptive component call',
+        scenarioSource('', `Rectangle({ style: { width: 10, height: 10 } })`),
+        /not direct calls/i,
+      ],
+      [
+        'an aliased descriptive component call',
+        scenarioSource(
+          `import { Rectangle as Draw } from '@crc/core';`,
+          `<>{Draw({ style: { width: 10, height: 10 } })}</>`,
+        ),
+        /not direct calls/i,
+      ],
+      [
+        'a namespace descriptive component call',
+        scenarioSource(
+          `import * as CRC from '@crc/core';`,
+          `<CRC.Group>{CRC.Rectangle({ style: { width: 10, height: 10 } })}</CRC.Group>`,
+        ),
+        /not direct calls/i,
+      ],
+      [
+        'a namespace legacy component call',
+        scenarioSource(
+          `import * as CRC from '@crc/core';`,
+          `<CRC.Group>{CRC.rect({ style: { width: 10, height: 10 } })}</CRC.Group>`,
+        ),
+        /legacy component authoring/i,
+      ],
+      [
+        'createElement-only authoring',
+        scenarioSource(
+          `import { createElement } from '@crc/core';`,
+          `createElement(Rectangle, { style: { width: 10, height: 10 } })`,
+        ),
+        /must use descriptive JSX/i,
+      ],
+      [
+        'an inline legacy Text style',
+        scenarioSource(
+          `import { Text } from '@crc/core';`,
+          `<Text style={{ text: 'legacy', x: 10, y: 10 }}>current</Text>`,
+        ),
+        /legacy Text style\.text/i,
+      ],
+      [
+        'an external Text style',
+        scenarioSource(
+          `import { Text } from '@crc/core'; const style = { text: 'legacy' };`,
+          `<Text style={style}>current</Text>`,
+        ),
+        /inspectable Text style/i,
+      ],
+      [
+        'an inline legacy Layer render prop',
+        scenarioSource(
+          `import { Layer } from '@crc/core';`,
+          `<Layer render={<Rectangle style={{ width: 10, height: 10 }} />} />`,
+        ),
+        /legacy Layer render prop/i,
+      ],
+      [
+        'a Layer props spread',
+        scenarioSource(
+          `import { Layer } from '@crc/core'; const props = { render: <Rectangle style={{ width: 10, height: 10 }} /> };`,
+          `<Layer {...props}><Rectangle style={{ width: 10, height: 10 }} /></Layer>`,
+        ),
+        /inspectable Layer props/i,
+      ],
+    ] as const)(
+      'rejects %s',
+      (_name, source, diagnostic) => {
+        expect(() =>
+          validateScenarioSourceText(source, 'invalid deterministic authoring'),
+        ).toThrow(diagnostic);
+      },
+    );
 
-    expect(() =>
-      validateScenarioSourceText(
-        `
-          import { crc, Rectangle } from '@crc/core';
-          export const Scene = () => Rectangle({ style: { width: 10, height: 10 } });
-        `,
-        'direct-call scenario',
-      ),
-    ).toThrow(/not direct calls/i);
+    it.each([
+      [
+        'a dynamic legacy import',
+        `export async function loadLegacy() { const { rect } = await import('@crc/core'); return rect({}); }`,
+        /static imports/i,
+      ],
+      [
+        'a dynamic type import',
+        `type Legacy = import('@crc/core').CompEl;`,
+        /static imports/i,
+      ],
+      ['import.meta', `void import.meta.url;`, /static imports/i],
+      ['a bare require call', `void require('@crc/core');`, /static imports/i],
+      ['a bare require.resolve call', `void require.resolve('@crc/core');`, /static imports/i],
+      ['bare module.exports', `module.exports = {};`, /static imports/i],
+      ['a bare exports reference', `void exports.fixture;`, /static imports/i],
+      [
+        'a globalThis require call',
+        `void (globalThis as any).require('@crc/core');`,
+        /static imports/i,
+      ],
+      [
+        'a computed global module.exports path',
+        `(globalThis as any)['module']['exports'] = {};`,
+        /static imports/i,
+      ],
+      [
+        'an optional nested global require path',
+        `void (globalThis as any)?.window?.self?.['require']?.('@crc/core');`,
+        /static imports/i,
+      ],
+      [
+        'a window require path',
+        `void (window as any)['require']('@crc/core');`,
+        /static imports/i,
+      ],
+      [
+        'a self exports path',
+        `void (self as any).exports.fixture;`,
+        /static imports/i,
+      ],
+      [
+        'a global module.exports path',
+        `(global as any).module.exports = {};`,
+        /static imports/i,
+      ],
+      [
+        'a top-level import-equals declaration',
+        `import Legacy = require('@crc/core'); void Legacy;`,
+        /static imports/i,
+      ],
+      [
+        'a nested import-equals declaration',
+        `namespace Fixture { import Legacy = Other.Core; }`,
+        /static imports/i,
+      ],
+      [
+        'a TypeScript export assignment',
+        `export = Rectangle;`,
+        /static imports/i,
+      ],
+      [
+        'a TypeScript namespace export',
+        `export as namespace Fixture;`,
+        /static imports/i,
+      ],
+      [
+        'a default core import',
+        `import Core from '@crc/core'; void Core;`,
+        /supported static imports/i,
+      ],
+      [
+        'a side-effect core import',
+        `import '@crc/core';`,
+        /supported static imports/i,
+      ],
+      [
+        'a core import with attributes',
+        `import { Rectangle as AttributedRectangle } from '@crc/core' with { type: 'json' }; void AttributedRectangle;`,
+        /supported static imports/i,
+      ],
+      [
+        'a relative runtime named import',
+        `import { helper } from './helper'; void helper;`,
+        /supported static imports/i,
+      ],
+      [
+        'a relative runtime default import',
+        `import helper from './helper'; void helper;`,
+        /supported static imports/i,
+      ],
+      [
+        'a relative runtime namespace import',
+        `import * as helper from './helper'; void helper;`,
+        /supported static imports/i,
+      ],
+      [
+        'a relative side-effect import',
+        `import './helper';`,
+        /supported static imports/i,
+      ],
+      [
+        'an external runtime import',
+        `import { helper } from 'fixture-package'; void helper;`,
+        /supported static imports/i,
+      ],
+      [
+        'an external type-only import',
+        `import type External from 'fixture-package'; type Local = External;`,
+        /supported static imports/i,
+      ],
+      [
+        'an @crc/core legacy re-export',
+        `export { rect } from '@crc/core';`,
+        /re-export/i,
+      ],
+      [
+        'a relative named re-export',
+        `export { helper } from './helper';`,
+        /re-export/i,
+      ],
+      [
+        'an external named re-export',
+        `export { helper } from 'fixture-package';`,
+        /re-export/i,
+      ],
+      [
+        'a relative star re-export',
+        `export * from './helper';`,
+        /re-export/i,
+      ],
+      [
+        'an external namespace re-export',
+        `export * as helper from 'fixture-package';`,
+        /re-export/i,
+      ],
+      [
+        'an obsolete type re-export',
+        `export type { CompEl } from '@crc/core';`,
+        /re-export/i,
+      ],
+    ] as const)(
+      'rejects %s',
+      (_name, extraModuleSyntax, diagnostic) => {
+        expect(() =>
+          validateScenarioSourceText(
+            scenarioSource(extraModuleSyntax),
+            'invalid deterministic module',
+          ),
+        ).toThrow(diagnostic);
+      },
+    );
 
-    expect(() =>
-      validateScenarioSourceText(
-        `
-          import { crc, createElement, Rectangle } from '@crc/core';
-          export const Scene = () => createElement(Rectangle, { style: { width: 10, height: 10 } });
-        `,
-        'non-JSX scenario',
-      ),
-    ).toThrow(/must use descriptive JSX/i);
+    it.each(LEGACY_COMPONENT_TYPE_NAMES)(
+      'rejects aliased legacy type import %s',
+      typeName => {
+        expect(() =>
+          validateScenarioSourceText(
+            scenarioSource(`
+              import type { ${typeName} as LegacyType } from '@crc/core';
+              type Local = LegacyType;
+            `),
+            'aliased legacy type module',
+          ),
+        ).toThrow(/obsolete component types/i);
+      },
+    );
 
-    expect(() =>
-      validateScenarioSourceText(
-        `
-          import { crc, Rectangle } from '@crc/core';
-          const canvasPath = new Path2D();
-          canvasPath.rect(0, 0, 10, 10);
-          export const Scene = () => <Rectangle style={{ width: 10, height: 10 }} />;
-        `,
-        'valid scenario',
-      ),
-    ).not.toThrow();
-  });
+    it.each(LEGACY_COMPONENT_TYPE_NAMES)(
+      'rejects namespace-qualified legacy type %s',
+      typeName => {
+        expect(() =>
+          validateScenarioSourceText(
+            scenarioSource(`
+              import type * as CoreTypes from '@crc/core';
+              type Local = CoreTypes.${typeName};
+            `),
+            'namespace legacy type module',
+          ),
+        ).toThrow(/obsolete component types/i);
+      },
+    );
 
-  it('rejects namespace component calls while respecting lexical shadows', () => {
-    expect(() =>
-      validateScenarioSourceText(
+    it.each([
+      [
+        'default relative type-only import',
+        `import type Shared from './shared-types'; type Local = Shared;`,
+        undefined,
+      ],
+      [
+        'named relative type-only import',
+        `import type { Shared } from '../shared-types'; type Local = Shared;`,
+        undefined,
+      ],
+      [
+        'namespace relative type-only import',
+        `import type * as Shared from './shared-types'; type Local = Shared.Entry;`,
+        undefined,
+      ],
+      [
+        'inline relative type-only specifier',
+        `import { type Shared } from './shared-types'; type Local = Shared;`,
+        undefined,
+      ],
+      [
+        'inline relative default type-only specifier',
+        `import { type default as Shared } from './shared-types'; type Local = Shared;`,
+        undefined,
+      ],
+      [
+        'multiple named relative type-only imports',
+        `import type { Shared, Entry } from './shared-types'; type Local = Shared | Entry;`,
+        undefined,
+      ],
+      [
+        'namespace core JSX',
+        `import * as CRC from '@crc/core';`,
+        '<CRC.Rectangle style={{ width: 10, height: 10 }} />',
+      ],
+      [
+        'local named and default exports',
+        `const helper = 1; export { helper }; export default function mount() { return helper; }`,
+        undefined,
+      ],
+      [
+        'a lexically shadowed component call',
+        `function invoke(Rectangle: () => string): string { return Rectangle(); } void invoke;`,
+        undefined,
+      ],
+      [
+        'a lexically shadowed namespace component call',
         `
           import * as CRC from '@crc/core';
-          export const Scene = () => (
-            <CRC.Group>
-              {CRC.Rectangle({ style: { width: 10, height: 10 } })}
-            </CRC.Group>
-          );
-        `,
-        'namespace direct-call scenario',
-      ),
-    ).toThrow(/not direct calls/i);
-
-    expect(() =>
-      validateScenarioSourceText(
-        `
-          import * as CRC from '@crc/core';
-          export const Scene = () => (
-            <CRC.Group>
-              {CRC.rect({ style: { width: 10, height: 10 } })}
-            </CRC.Group>
-          );
-        `,
-        'namespace legacy-call scenario',
-      ),
-    ).toThrow(/legacy component authoring/i);
-
-    expect(() =>
-      validateScenarioSourceText(
-        `
-          import { Rectangle } from '@crc/core';
-          function invoke(Rectangle: () => string): string {
-            return Rectangle();
+          function invoke(CRC: { Rectangle: () => string }): string {
+            return CRC.Rectangle();
           }
           void invoke;
-          export const Scene = () => (
-            <Rectangle style={{ width: 10, height: 10 }} />
-          );
         `,
-        'lexically shadowed local-call scenario',
-      ),
-    ).not.toThrow();
-  });
-
-  it('rejects dynamic, external, and obsolete type imports', () => {
-    expect(() =>
-      validateScenarioSourceText(
+        undefined,
+      ],
+      [
+        'native Canvas and unrelated CommonJS property names',
         `
-          import { Rectangle } from '@crc/core';
-          export async function loadLegacy() {
-            const { rect } = await import('@crc/core');
-            return rect({ style: { width: 10, height: 10 } });
-          }
-          export const Scene = () => (
-            <Rectangle style={{ width: 10, height: 10 }} />
-          );
+          const path = new Path2D();
+          path.rect(0, 0, 10, 10);
+          const loader = { require: () => 'local', module: { exports: {} } };
+          void loader.require();
+          void loader.module.exports;
         `,
-        'dynamic legacy-import scenario',
-      ),
-    ).toThrow(/static imports/i);
-
-    expect(() =>
-      validateScenarioSourceText(
-        `
-          import { Rectangle } from '@crc/core';
-          import { helper } from './external-helper';
-          void helper;
-          export const Scene = () => (
-            <Rectangle style={{ width: 10, height: 10 }} />
-          );
-        `,
-        'external-import scenario',
-      ),
-    ).toThrow(/only from @crc\/core/i);
-
-    expect(() =>
-      validateScenarioSourceText(
-        `
-          import { Rectangle, type CompEl as LegacyElement } from '@crc/core';
-          import type { CompFn, ComponentCapabilities } from '@crc/core';
-          declare const element: LegacyElement;
-          declare const component: CompFn;
-          declare const capabilities: ComponentCapabilities;
-          void element;
-          void component;
-          void capabilities;
-          export const Scene = () => (
-            <Rectangle style={{ width: 10, height: 10 }} />
-          );
-        `,
-        'obsolete type-import scenario',
-      ),
-    ).toThrow(/obsolete component types/i);
-  });
-
-  it('rejects uninspectable Text styles and Layer spreads that can hide obsolete props', () => {
-    expect(() =>
-      validateScenarioSourceText(
-        `
-          import { Text } from '@crc/core';
-          const style = { text: 'legacy', x: 10, y: 10 };
-          export const Scene = () => <Text style={style}>current</Text>;
-        `,
-        'external Text-style scenario',
-      ),
-    ).toThrow(/inspectable Text style/i);
-
-    expect(() =>
-      validateScenarioSourceText(
-        `
-          import { Layer, Rectangle } from '@crc/core';
-          const layerProps = {
-            render: <Rectangle style={{ width: 10, height: 10 }} />,
-          };
-          export const Scene = () => (
-            <Layer {...layerProps}>
-              <Rectangle style={{ width: 10, height: 10 }} />
-            </Layer>
-          );
-        `,
-        'spread Layer-render scenario',
-      ),
-    ).toThrow(/inspectable Layer props/i);
+        undefined,
+      ],
+    ] as const)(
+      'accepts %s',
+      (_name, extraModuleSyntax, scene) => {
+        expect(() =>
+          validateScenarioSourceText(
+            scenarioSource(extraModuleSyntax, scene),
+            'valid deterministic module',
+          ),
+        ).not.toThrow();
+      },
+    );
   });
 
   it('publishes the shared focus-navigation demonstration contract', () => {

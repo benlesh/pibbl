@@ -398,3 +398,136 @@ of this fix.
   `scenarios:check` is the owning aggregate boundary.
 - Verification used Node 26.7.0 and pnpm 11.21.0. The existing R8 variance from
   the documented Node 24 LTS line remains unchanged.
+
+## Fix Round 2 — deterministic module-policy matrix
+
+The second review found that the deterministic validator still relied on a
+learning-specific module flag that did not express the complete test-lab
+policy. Source-backed re-exports were therefore accepted, nested TypeScript
+import-equals declarations escaped the top-level scan, and the promise to
+accept relative type-only imports did not consistently cover default imports.
+
+### Final deterministic module policy
+
+The shared inspection result now gives learning and deterministic sources
+separately named module-policy facts. This preserves the deliberate catalog
+boundary instead of applying the learning catalog's stricter canonical-export
+rule to test labs.
+
+- Deterministic sources may use named or namespace imports from `@crc/core`.
+  Core default imports, side-effect imports, import attributes/assertions, and
+  every external runtime import are rejected.
+- A relative import is accepted only when the entire declaration is type-only.
+  Default, named, namespace, inline named-type, and inline default-type forms
+  are covered. Relative default/named/namespace runtime imports and relative
+  side-effect imports are rejected. Non-relative external type imports are
+  also rejected.
+- Dynamic value imports, TypeScript import types, `import.meta`, bare CommonJS,
+  known-global CommonJS paths, TypeScript export assignments, namespace
+  exports, and import-equals declarations are rejected.
+- The import-equals and export checks walk the complete parsed AST. A nested
+  import-equals declaration inside a TypeScript namespace can no longer bypass
+  the policy.
+- Every source-backed named, star, namespace, value, or type re-export is
+  rejected regardless of whether its source is `@crc/core`, relative, or an
+  external package. This also prevents obsolete component authoring values and
+  legacy types from escaping through a re-export.
+- Local named declarations/exports and a local default export remain allowed.
+  The 16 deterministic scenario modules intentionally expose source markers,
+  state/action/controller types, scene functions, and in one case a default
+  scenario definition; forbidding those would break the approved Task 11
+  contract rather than strengthen module isolation.
+
+All earlier authoring rules remain in the same matrix: named, aliased, and
+namespace legacy component calls/imports; direct descriptive component calls;
+JSX-only structure; legacy and uninspectable `Text`/`Layer` props; every one of
+the five obsolete component types in aliased and namespace-qualified form; and
+positive lexical-shadow, namespace JSX, native Canvas, and unrelated property
+name cases.
+
+### TDD evidence
+
+The initial consolidated matrix produced the intended RED result before the
+validator changed:
+
+```text
+packages/core/test/scenario-catalog.test.ts
+Test Files  1 failed (1)
+Tests       8 failed | 61 passed (69)
+```
+
+The eight failures were six source-backed re-export shapes, one nested
+import-equals declaration, and the valid relative default type-only import.
+One initially drafted combined default-plus-named `import type` fixture was
+removed before implementation because TypeScript itself forbids that syntax;
+the corrected RED run above contains only valid TSX inputs. All temporary RED
+failure screenshots were removed.
+
+Once the behavior was green, nine negative import cases were changed to demand
+an accurate diagnostic and went RED because the old message incorrectly said
+that imports were allowed only from `@crc/core`. The final message now names
+both supported categories—core named/namespace imports and relative type-only
+imports—and the same nine cases returned green.
+
+After implementation and consolidation, the final 64-case deterministic
+policy matrix passed as part of the complete focused file:
+
+```text
+Test Files  1 passed (1)
+Tests       85 passed (85)
+```
+
+### Final Fix Round 2 verification
+
+```sh
+node --import tsx tooling/scenario-source-discovery.check.ts
+corepack pnpm@11.21.0 scenarios:check
+corepack pnpm@11.21.0 exec vitest run \
+  packages/core/test/smoke-scenario.test.ts \
+  packages/core/test/drawing-gallery.test.ts \
+  packages/core/test/layout-foundation.test.ts \
+  packages/core/test/runtime-hooks-laboratory.test.ts \
+  packages/core/test/focus-navigation.test.ts \
+  --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 exec vitest run \
+  packages/core/src/lib/runtime-contract.test.ts \
+  --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 test:ci
+```
+
+```text
+Discovery: rejected legacy and uncataloged example fixtures.
+Catalog: validated 42 lessons, 16 test labs, and docs/scenario-index.md.
+Representative scenarios: 5 files, 22 passed.
+Runtime contract: 1 file, 13 passed.
+Complete browser suite: 83 files, 1106 passed, 2 skipped.
+```
+
+```sh
+corepack pnpm@11.21.0 typecheck
+corepack pnpm@11.21.0 lint
+corepack pnpm@11.21.0 playground:build
+corepack pnpm@11.21.0 playground:build:built
+corepack pnpm@11.21.0 test:package-consumer
+corepack pnpm@11.21.0 test:package-consumer:packed
+corepack pnpm@11.21.0 test:smoke:built
+corepack pnpm@11.21.0 test:visual-safeguard
+git diff --check
+```
+
+```text
+TypeScript, ESLint, and Prettier: passed.
+Studio source mode: declarations passed; 1308 modules transformed.
+Studio built mode: declarations and package build passed; 1209 modules transformed.
+Workspace and packed Bundler/NodeNext/runtime consumers: passed.
+Built smoke: 1 file, 1 passed.
+Visual safeguard: rejected the drill, recovered green, and preserved every
+baseline byte.
+git diff --check: no output.
+```
+
+The fix changes only the shared static inspector, its consolidated browser
+evidence, this report, and the ignored local progress ledger. Runtime code,
+deterministic scenarios, catalogs/index output, and visual baselines are
+unchanged. Verification remains on Node 26.7.0 with pnpm 11.21.0, retaining the
+already documented Node 24 LTS R8 variance.

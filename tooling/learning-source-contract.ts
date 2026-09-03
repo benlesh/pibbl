@@ -19,7 +19,7 @@ interface SourceInspection {
   readonly hasCreateElementCall: boolean;
   readonly hasDirectComponentCall: boolean;
   readonly hasDynamicImport: boolean;
-  readonly hasForbiddenModuleSyntax: boolean;
+  readonly hasForbiddenLearningModuleSyntax: boolean;
   readonly hasInvalidCreateElementCallForm: boolean;
   readonly hasJsx: boolean;
   readonly hasLegacyAuthoring: boolean;
@@ -29,6 +29,7 @@ interface SourceInspection {
   readonly hasNamedValueCoreImport: boolean;
   readonly hasOnlyApprovedImports: boolean;
   readonly hasOnlyScenarioImports: boolean;
+  readonly hasScenarioReExport: boolean;
   readonly hasCanonicalMount: boolean;
   readonly hasTestScaffolding: boolean;
   readonly hasUninspectableProps: boolean;
@@ -546,6 +547,11 @@ function declarationValue(statement: SyntaxNode): SyntaxNode {
   return statement;
 }
 
+function isRelativeModuleName(moduleName: string | undefined): boolean {
+  return moduleName?.startsWith('./') === true ||
+    moduleName?.startsWith('../') === true;
+}
+
 function directLexicalBindings(scope: SyntaxNode): readonly string[] {
   const statements =
     scope.type === "Program" ||
@@ -720,9 +726,10 @@ function inspectSource(source: string, label: string): SourceInspection {
   let hasNamedValueCoreImport = false;
   let hasOnlyApprovedImports = true;
   let hasOnlyScenarioImports = true;
-  let hasForbiddenModuleSyntax = false;
+  let hasForbiddenLearningModuleSyntax = false;
   let hasLegacyAuthoring = false;
   let hasLegacyTypes = false;
+  let hasScenarioReExport = false;
   let hasUnsupportedScenarioModuleSyntax = false;
 
   for (const statement of programBody) {
@@ -734,7 +741,7 @@ function inspectSource(source: string, label: string): SourceInspection {
         statement.type === "TSNamespaceExportDeclaration" ||
         statement.type === "TSImportEqualsDeclaration"
       ) {
-        hasForbiddenModuleSyntax = true;
+        hasForbiddenLearningModuleSyntax = true;
       }
       if (
         statement.type === "TSExportAssignment" ||
@@ -757,7 +764,7 @@ function inspectSource(source: string, label: string): SourceInspection {
         specifier.importKind === "type"
       ));
     const isLocalTypeOnlyImport =
-      moduleName?.startsWith(".") === true && isTypeOnlyDeclaration;
+      isRelativeModuleName(moduleName) && isTypeOnlyDeclaration;
     if (
       moduleName !== "@crc/core" ||
       statement.importKind === "type" ||
@@ -767,15 +774,17 @@ function inspectSource(source: string, label: string): SourceInspection {
     ) {
       hasOnlyApprovedImports = false;
     }
+    const hasOnlyAllowedScenarioSpecifiers = specifiers.every((specifier) =>
+      specifier.type === "ImportSpecifier" ||
+      specifier.type === "ImportNamespaceSpecifier" ||
+      (isLocalTypeOnlyImport && specifier.type === "ImportDefaultSpecifier")
+    );
     if (
       (moduleName !== "@crc/core" && !isLocalTypeOnlyImport) ||
       specifiers.length === 0 ||
       nodes(statement.attributes).length > 0 ||
       nodes(statement.assertions).length > 0 ||
-      specifiers.some((specifier) =>
-        specifier.type !== "ImportSpecifier" &&
-        specifier.type !== "ImportNamespaceSpecifier"
-      )
+      !hasOnlyAllowedScenarioSpecifiers
     ) {
       hasOnlyScenarioImports = false;
     }
@@ -881,6 +890,19 @@ function inspectSource(source: string, label: string): SourceInspection {
   };
 
   walk(file, (node) => {
+    if (
+      node.type === "ExportAllDeclaration" ||
+      (node.type === "ExportNamedDeclaration" && isNode(node.source))
+    ) {
+      hasScenarioReExport = true;
+    }
+    if (
+      node.type === "TSExportAssignment" ||
+      node.type === "TSImportEqualsDeclaration" ||
+      node.type === "TSNamespaceExportDeclaration"
+    ) {
+      hasUnsupportedScenarioModuleSyntax = true;
+    }
     if (node.type === "JSXElement" || node.type === "JSXFragment") hasJsx = true;
     const invocationTarget =
       node.type === "TaggedTemplateExpression"
@@ -920,7 +942,7 @@ function inspectSource(source: string, label: string): SourceInspection {
       identifierName(node.meta) === "import" &&
       identifierName(node.property) === "meta"
     ) {
-      hasForbiddenModuleSyntax = true;
+      hasForbiddenLearningModuleSyntax = true;
       hasUnsupportedScenarioModuleSyntax = true;
     }
     if (
@@ -1041,7 +1063,7 @@ function inspectSource(source: string, label: string): SourceInspection {
     hasCreateElementCall,
     hasDirectComponentCall,
     hasDynamicImport,
-    hasForbiddenModuleSyntax,
+    hasForbiddenLearningModuleSyntax,
     hasInvalidCreateElementCallForm,
     hasJsx,
     hasLegacyAuthoring,
@@ -1051,6 +1073,7 @@ function inspectSource(source: string, label: string): SourceInspection {
     hasNamedValueCoreImport,
     hasOnlyApprovedImports,
     hasOnlyScenarioImports,
+    hasScenarioReExport,
     hasTestScaffolding,
     hasUninspectableProps,
     hasUninspectableLegacySensitiveProps,
@@ -1073,7 +1096,7 @@ export function validateScenarioSourceText(
   ) {
     throw invalid(
       label,
-      "must use static imports only from @crc/core, including at least one public value.",
+      "must use supported static imports: named or namespace imports from @crc/core, relative type-only imports, and at least one public @crc/core value.",
     );
   }
   if (
@@ -1085,6 +1108,9 @@ export function validateScenarioSourceText(
       label,
       "must use static imports instead of dynamic, CommonJS, or import-meta module access.",
     );
+  }
+  if (inspection.hasScenarioReExport) {
+    throw invalid(label, "must not re-export local, external, or @crc/core modules.");
   }
   if (inspection.hasLegacyTypes) {
     throw invalid(label, "imports obsolete component types.");
@@ -1130,7 +1156,10 @@ export function validateLearningSourceText(
       "must use direct, unaliased static named imports only from @crc/core, including at least one value import.",
     );
   }
-  if (inspection.hasDynamicImport || inspection.hasForbiddenModuleSyntax) {
+  if (
+    inspection.hasDynamicImport ||
+    inspection.hasForbiddenLearningModuleSyntax
+  ) {
     throw invalid(
       label,
       "must not use dynamic imports, import.meta, import-equals, or named re-exports.",
