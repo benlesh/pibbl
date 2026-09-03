@@ -271,3 +271,130 @@ No screenshot or visual-baseline file is modified. Baselines were not rewritten.
   the bind failures occurred before tests launched.
 - Fresh evidence remains Node 26.7.0 rather than the canonical Node 24 LTS line
   recorded by R8.
+
+## Fix Round 1 — deterministic migration gate completeness
+
+The first review accepted the migration semantics but found three holes in the
+deterministic-source gate, one discovery omission, and a stale documentation
+count. This round closes those findings without changing runtime behavior,
+scenario actions, geometry, or Canvas output.
+
+### Executable policy
+
+- Deterministic source inspection now resolves named and namespace
+  `@crc/core` value bindings through lexical scopes. It rejects direct calls
+  such as `CRC.Rectangle(...)`, computed namespace equivalents, and namespace
+  legacy calls such as `CRC.rect(...)`, while allowing a genuinely local
+  parameter that shadows an imported component name.
+- Obsolete `CompEl`, `CompFn`, `ComponentInput`,
+  `ComponentCapabilities`, and `FalsyNodes` type imports are rejected,
+  including aliases and namespace-qualified uses. Dynamic imports, CommonJS,
+  `import.meta`, import-equals syntax, default imports, side-effect imports,
+  import attributes, and external runtime imports are also rejected.
+- Deterministic scenarios use static public imports from `@crc/core`. Their
+  existing relative imports are permitted only when type-only, so shared
+  scenario event-trace contracts remain single-sourced without creating a
+  runtime dependency. The two inline `import('./event-trace')` type queries
+  were changed to ordinary static type imports.
+- `Text` and `Layer` receive conservative legacy-sensitive inspection. Inline
+  object props and styles are checked for `style.text` and `render`; external
+  style expressions or spreads that could hide those fields are rejected.
+  This is intentionally narrower than the learning catalog's overall inline
+  readability policy.
+- Source discovery now scans both `.example.ts` and `.example.tsx`. It first
+  rejects every legacy `.example.ts`, including an orphan outside the catalog,
+  then checks exact learning and deterministic catalog completeness. A
+  temporary-directory Node check proves legacy-orphan rejection, uncataloged
+  TSX rejection, and the matching-catalog success case.
+- The gallery documentation now reports the actual 42 learning lessons. The
+  generated index remains 42 lessons and 16 deterministic test labs.
+
+The first version of the discovery check used a conventional `.test.ts`
+suffix. The complete browser run correctly exposed that Vitest would collect
+the Node-only fixture and fail on `node:fs/promises`. Renaming it to
+`scenario-source-discovery.check.ts` keeps the check in `scenarios:check` and
+outside browser test discovery. The post-rename aggregate run is green.
+
+### RED and GREEN evidence
+
+The controller captured the browser RED before the validator change:
+
+```text
+packages/core/test/scenario-catalog.test.ts
+Test Files  1 failed (1)
+Tests       3 failed | 22 passed (25)
+```
+
+The failures were the intended gaps: the namespace direct call produced only
+the generic import diagnostic, the dynamic legacy import was accepted, and an
+external `Text` style was accepted (with the `Layer` spread covered in the
+same case). The independent discovery fixture also failed before its production
+discovery module existed. Temporary failure screenshots from these RED runs
+were removed.
+
+After implementation, the focused browser gate passed all 25 tests, and the
+Node discovery fixture reported:
+
+```text
+Scenario discovery fixture rejected legacy and uncataloged example sources.
+```
+
+After the fixture rename, the controller ran the exact package gate and the
+complete browser suite:
+
+```sh
+corepack pnpm@11.21.0 scenarios:check
+corepack pnpm@11.21.0 test:ci
+```
+
+```text
+Scenario discovery fixture rejected legacy and uncataloged example sources.
+Validated 42 lessons, 16 test labs, and docs/scenario-index.md.
+Test Files  83 passed (83)
+Tests       1046 passed | 2 skipped (1048)
+```
+
+That aggregate includes the five-file Task 11 representative slice and the
+runtime-contract coverage. Their earlier exact focused runs remained green at
+22/22 and 13/13 respectively; the only subsequent change was the tooling-only
+discovery-check filename.
+
+Final local static checks were also fresh after the rename:
+
+```sh
+node --import tsx tooling/scenario-source-discovery.check.ts
+node --import tsx tooling/scenario-catalog.ts
+corepack pnpm@11.21.0 typecheck
+corepack pnpm@11.21.0 lint
+git diff --check
+```
+
+```text
+Discovery check: passed.
+Catalog: validated 42 lessons, 16 test labs, and docs/scenario-index.md.
+TypeScript: passed.
+ESLint and Prettier: passed.
+git diff --check: no output.
+```
+
+The Studio source build, Studio built-package build, workspace package
+consumer, and packed-package consumer all passed with the strengthened gate.
+The controller's post-fix built smoke rebuilt the packages and passed 1 file / 1
+test. The post-fix visual safeguard rejected its drill, recovered green, and
+preserved every baseline byte. No screenshot or visual-baseline file is part
+of this fix.
+
+### Fix-round self-review
+
+- Scope resolution is based on parsed bindings rather than identifier text, so
+  native Canvas methods and unrelated local words remain outside the policy.
+- Deterministic imports are deliberately less restrictive than learning-source
+  style: namespace JSX and aliases remain legal, but any imported descriptive
+  component binding is still rejected when directly called.
+- The `Text`/`Layer` rule rejects uninspectable legacy-sensitive expressions
+  instead of guessing their values. All 16 current deterministic sources stay
+  readable and pass the shared validator.
+- Discovery behavior is exercised as a Node check rather than a browser test;
+  `scenarios:check` is the owning aggregate boundary.
+- Verification used Node 26.7.0 and pnpm 11.21.0. The existing R8 variance from
+  the documented Node 24 LTS line remains unchanged.

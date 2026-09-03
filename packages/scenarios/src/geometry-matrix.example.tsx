@@ -1,5 +1,9 @@
 import type { CRCKey, CRCLogicalMouseEvent } from '@crc/core';
-import type { EventTraceInput, TraceEventType } from './event-trace';
+import type {
+  EventTraceEntry,
+  EventTraceInput,
+  TraceEventType,
+} from './event-trace';
 import { Clip, Group, Layer, Line, Rectangle } from '@crc/core';
 export const GEOMETRY_MATRIX_SOURCE_ID = 'geometry-composition-matrix-example';
 const BACKGROUND = [248, 250, 252, 255] as const;
@@ -333,7 +337,7 @@ export interface GeometryMatrixState {
   lastAction: GeometryMatrixAction;
   lastCoordinates: readonly [number, number] | null;
   lastTarget: string | null;
-  trace: readonly import('./event-trace').EventTraceEntry[];
+  trace: readonly EventTraceEntry[];
 }
 export interface GeometryMatrixRecord {
   (input: EventTraceInput): void;

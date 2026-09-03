@@ -10,21 +10,21 @@ import {
   validateLearningExampleCatalog,
   validateScenarioCatalog,
 } from '@crc/scenarios';
-import { readFile, readdir, writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { relative, resolve } from 'node:path';
 import { format } from 'prettier';
 import {
   validateLearningSourceText,
   validateScenarioSourceText,
 } from './learning-source-contract';
+import {
+  assertExampleSourceDiscovery,
+  discoverExampleSourcePaths,
+} from './scenario-source-discovery';
 
 const workspaceRoot = process.cwd();
 const scenarioDirectory = resolve(workspaceRoot, 'packages/scenarios/src');
 const indexPath = resolve(workspaceRoot, 'docs/scenario-index.md');
-
-function displayList(values: readonly string[]): string {
-  return values.length ? values.join(', ') : '(none)';
-}
 
 function escapeCell(value: string): string {
   return value.replaceAll('|', '\\|');
@@ -112,33 +112,17 @@ function renderIndex(): string {
 async function validateSources(): Promise<void> {
   validateScenarioCatalog(scenarioCatalog);
   validateLearningExampleCatalog(learningExampleCatalog);
-  const discoveredPaths = (await readdir(scenarioDirectory, { recursive: true }))
-    .filter(name => name.endsWith('.example.tsx'))
-    .map(name => `packages/scenarios/src/${name.replaceAll('\\', '/')}`)
-    .sort();
-  const learningPaths = discoveredPaths.filter(path => path.includes('/learning/'));
-  const testPaths = discoveredPaths.filter(path => !path.includes('/learning/'));
+  const discoveredPaths = await discoverExampleSourcePaths(
+    scenarioDirectory,
+    workspaceRoot,
+  );
   const catalogPaths = scenarioCatalog.map(entry => entry.source.path).sort();
-  if (testPaths.join('\n') !== catalogPaths.join('\n')) {
-    const catalogSet = new Set(catalogPaths);
-    const discoveredSet = new Set(testPaths);
-    const omitted = testPaths.filter(path => !catalogSet.has(path));
-    const missing = catalogPaths.filter(path => !discoveredSet.has(path));
-    throw new Error(
-      `Scenario source discovery disagrees with the catalog. Omitted: ${displayList(omitted)}. Missing: ${displayList(missing)}.`,
-    );
-  }
-
   const learningCatalogPaths = learningExampleCatalog.map(entry => entry.source.path).sort();
-  if (learningPaths.join('\n') !== learningCatalogPaths.join('\n')) {
-    const catalogSet = new Set(learningCatalogPaths);
-    const discoveredSet = new Set(learningPaths);
-    const omitted = learningPaths.filter(path => !catalogSet.has(path));
-    const missing = learningCatalogPaths.filter(path => !discoveredSet.has(path));
-    throw new Error(
-      `Learning source discovery disagrees with the catalog. Omitted: ${displayList(omitted)}. Missing: ${displayList(missing)}.`,
-    );
-  }
+  assertExampleSourceDiscovery(
+    discoveredPaths,
+    catalogPaths,
+    learningCatalogPaths,
+  );
 
   for (const entry of scenarioCatalog) {
     const sourceText = await readFile(resolve(workspaceRoot, entry.source.path), 'utf8');

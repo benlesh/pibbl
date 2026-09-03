@@ -103,6 +103,133 @@ describe('scenario catalog trust gate', () => {
     ).not.toThrow();
   });
 
+  it('rejects namespace component calls while respecting lexical shadows', () => {
+    expect(() =>
+      validateScenarioSourceText(
+        `
+          import * as CRC from '@crc/core';
+          export const Scene = () => (
+            <CRC.Group>
+              {CRC.Rectangle({ style: { width: 10, height: 10 } })}
+            </CRC.Group>
+          );
+        `,
+        'namespace direct-call scenario',
+      ),
+    ).toThrow(/not direct calls/i);
+
+    expect(() =>
+      validateScenarioSourceText(
+        `
+          import * as CRC from '@crc/core';
+          export const Scene = () => (
+            <CRC.Group>
+              {CRC.rect({ style: { width: 10, height: 10 } })}
+            </CRC.Group>
+          );
+        `,
+        'namespace legacy-call scenario',
+      ),
+    ).toThrow(/legacy component authoring/i);
+
+    expect(() =>
+      validateScenarioSourceText(
+        `
+          import { Rectangle } from '@crc/core';
+          function invoke(Rectangle: () => string): string {
+            return Rectangle();
+          }
+          void invoke;
+          export const Scene = () => (
+            <Rectangle style={{ width: 10, height: 10 }} />
+          );
+        `,
+        'lexically shadowed local-call scenario',
+      ),
+    ).not.toThrow();
+  });
+
+  it('rejects dynamic, external, and obsolete type imports', () => {
+    expect(() =>
+      validateScenarioSourceText(
+        `
+          import { Rectangle } from '@crc/core';
+          export async function loadLegacy() {
+            const { rect } = await import('@crc/core');
+            return rect({ style: { width: 10, height: 10 } });
+          }
+          export const Scene = () => (
+            <Rectangle style={{ width: 10, height: 10 }} />
+          );
+        `,
+        'dynamic legacy-import scenario',
+      ),
+    ).toThrow(/static imports/i);
+
+    expect(() =>
+      validateScenarioSourceText(
+        `
+          import { Rectangle } from '@crc/core';
+          import { helper } from './external-helper';
+          void helper;
+          export const Scene = () => (
+            <Rectangle style={{ width: 10, height: 10 }} />
+          );
+        `,
+        'external-import scenario',
+      ),
+    ).toThrow(/only from @crc\/core/i);
+
+    expect(() =>
+      validateScenarioSourceText(
+        `
+          import { Rectangle, type CompEl as LegacyElement } from '@crc/core';
+          import type { CompFn, ComponentCapabilities } from '@crc/core';
+          declare const element: LegacyElement;
+          declare const component: CompFn;
+          declare const capabilities: ComponentCapabilities;
+          void element;
+          void component;
+          void capabilities;
+          export const Scene = () => (
+            <Rectangle style={{ width: 10, height: 10 }} />
+          );
+        `,
+        'obsolete type-import scenario',
+      ),
+    ).toThrow(/obsolete component types/i);
+  });
+
+  it('rejects uninspectable Text styles and Layer spreads that can hide obsolete props', () => {
+    expect(() =>
+      validateScenarioSourceText(
+        `
+          import { Text } from '@crc/core';
+          const style = { text: 'legacy', x: 10, y: 10 };
+          export const Scene = () => <Text style={style}>current</Text>;
+        `,
+        'external Text-style scenario',
+      ),
+    ).toThrow(/inspectable Text style/i);
+
+    expect(() =>
+      validateScenarioSourceText(
+        `
+          import { Layer, Rectangle } from '@crc/core';
+          const layerProps = {
+            render: <Rectangle style={{ width: 10, height: 10 }} />,
+          };
+          export const Scene = () => (
+            <Layer {...layerProps}>
+              <Rectangle style={{ width: 10, height: 10 }} />
+            </Layer>
+          );
+        `,
+        'spread Layer-render scenario',
+      ),
+    ).toThrow(/inspectable Layer props/i);
+  });
+
   it('publishes the shared focus-navigation demonstration contract', () => {
     expect(focusNavigationScenarioEntry.metadata.id)
       .toBe('focus-and-keyboard-navigation');

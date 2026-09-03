@@ -25,7 +25,7 @@
     "test:lifecycle": "vitest run packages/core/test/lifecycle-ownership.test.ts packages/core/test/runtime-cleanup-stress.test.ts --browser.headless --browser.ui=false",
     "test:performance": "vitest run packages/core/test/event-performance.test.ts --browser.headless --browser.ui=false",
     "test:performance:reference": "VITE_CRC_PERF_GUARD=1 VITE_CRC_REPORT_PERF=1 vitest run packages/core/test/event-performance.test.ts --browser.headless --browser.ui=false",
-    "scenarios:check": "tsx tooling/scenario-catalog.ts",
+    "scenarios:check": "tsx tooling/scenario-source-discovery.check.ts && tsx tooling/scenario-catalog.ts",
     "scenarios:write-index": "tsx tooling/scenario-catalog.ts --write",
     "test:ui": "vitest --browser.headless=false",
     "test:watch": "vitest --browser.headless",

@@ -9,7 +9,11 @@ import type {
   CRCPointerEvent,
   CRCTouchEvent,
 } from '@crc/core';
-import type { EventTraceInput, TraceEventType } from './event-trace';
+import type {
+  EventTraceEntry,
+  EventTraceInput,
+  TraceEventType,
+} from './event-trace';
 import {
   crcEvent,
   crcEventListener,
@@ -64,7 +68,7 @@ export interface InteractionLabState {
   rightVisible: boolean;
   topPaintedLast: boolean;
   topVisible: boolean;
-  trace: readonly import('./event-trace').EventTraceEntry[];
+  trace: readonly EventTraceEntry[];
 }
 export interface InteractionLabRecord {
   (input: EventTraceInput, handlerGeneration?: number): void;
