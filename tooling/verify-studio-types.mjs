@@ -4,6 +4,7 @@ import { dirname, join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import { runInNewContext } from 'node:vm';
+import { parse } from '@babel/parser';
 import { crcRuntimeSource } from './crc-runtime-source.ts';
 
 const repositoryRoot = resolve(import.meta.dirname, '..');
@@ -42,17 +43,125 @@ function readDeclarationModules(bundle) {
 
 const declarationModules = readDeclarationModules(declarationBundle);
 
-const removedTypeImports = [
+const removedAuthoringImports = [
   [['define', 'Comp'], 'RemovedDefinitionWrapper'],
+  [['r', 'ect'], 'RemovedRectangleFactory'],
+  [['p', 'ath'], 'RemovedPathFactory'],
+  [['svg', 'Path'], 'RemovedSvgPathFactory'],
+  [['l', 'ine'], 'RemovedLineFactory'],
+  [['horizontal', 'Line'], 'RemovedHorizontalLineFactory'],
+  [['vertical', 'Line'], 'RemovedVerticalLineFactory'],
+  [['t', 'ext'], 'RemovedTextFactory'],
+  [['i', 'mg'], 'RemovedImageFactory'],
+  [['g'], 'RemovedGroupFactory'],
+  [['c', 'lip'], 'RemovedClipFactory'],
+  [['l', 'ayer'], 'RemovedLayerFactory'],
+  [['a', 'bsolute'], 'RemovedAbsoluteFactory'],
+  [['o', 'verlay'], 'RemovedOverlayFactory'],
+  [['f', 'low'], 'RemovedFlowFactory'],
+  [['f', 'lex'], 'RemovedFlexFactory'],
+  [['g', 'rid'], 'RemovedGridFactory'],
+  [['with', 'Focus', 'Management'], 'RemovedFocusEnhancer'],
+  [['with', 'Keyboard', 'Navigation'], 'RemovedKeyboardEnhancer'],
   [['Comp', 'El'], 'RemovedElementType'],
   [['Comp', 'Fn'], 'RemovedRenderType'],
   [['Component', 'Input'], 'RemovedInputType'],
   [['Component', 'Capabilities'], 'RemovedCapabilityType'],
   [['Falsy', 'Nodes'], 'RemovedEmptyNodeType'],
+  [['Rect', 'Props'], 'RemovedRectangleFactoryProps'],
+  [['Img', 'Props'], 'RemovedImageFactoryProps'],
+  [['G', 'Props'], 'RemovedGroupFactoryProps'],
+  [['Comp', 'Refs'], 'RemovedComponentRefsType'],
 ].map(([parts, alias]) =>
-  '// @ts-expect-error removed authoring type\n' +
+  '// @ts-expect-error removed authoring export\n' +
   `import type { ${parts.join('')} as ${alias} } from '@crc/core';`,
 ).join('\n');
+
+function explicitExportNames(source) {
+  const sourceFile = parse(source, {
+    sourceType: 'module',
+    plugins: [['typescript', { dts: true }]],
+  });
+  const names = new Set();
+
+  for (const statement of sourceFile.program.body) {
+    if (statement.type !== 'ExportNamedDeclaration') {
+      if (
+        statement.type === 'ExportAllDeclaration' ||
+        statement.type === 'ExportDefaultDeclaration' ||
+        statement.type === 'TSExportAssignment'
+      ) {
+        throw new Error(
+          `CRC Studio surface verifier found an unsupported export syntax: ${statement.type}`,
+        );
+      }
+      continue;
+    }
+
+    if (statement.declaration === null) {
+      for (const specifier of statement.specifiers) {
+        if (specifier.type !== 'ExportSpecifier' || specifier.exported.type !== 'Identifier') {
+          throw new Error('CRC Studio surface verifier found an unsupported re-export.');
+        }
+        names.add(specifier.exported.name);
+      }
+      continue;
+    }
+
+    if (statement.declaration.type === 'VariableDeclaration') {
+      for (const declaration of statement.declaration.declarations) {
+        if (declaration.id.type !== 'Identifier') {
+          throw new Error('CRC Studio surface verifier does not support binding exports.');
+        }
+        names.add(declaration.id.name);
+      }
+      continue;
+    }
+
+    if ('id' in statement.declaration && statement.declaration.id?.type === 'Identifier') {
+      names.add(statement.declaration.id.name);
+      continue;
+    }
+
+    throw new Error(
+      `CRC Studio surface verifier found an unsupported export syntax: ${statement.declaration.type}`,
+    );
+  }
+
+  return [...names].sort();
+}
+
+function assertExactDeclarationSurface(moduleName, packageSource, studioSource) {
+  const packageNames = explicitExportNames(packageSource);
+  const studioNames = explicitExportNames(studioSource);
+  if (packageNames.join('\n') === studioNames.join('\n')) return;
+
+  const packageNameSet = new Set(packageNames);
+  const studioNameSet = new Set(studioNames);
+  const missing = packageNames.filter((name) => !studioNameSet.has(name));
+  const extra = studioNames.filter((name) => !packageNameSet.has(name));
+  throw new Error(
+    `CRC Studio declaration surface differs for ${moduleName}.\n` +
+    `Missing: ${missing.join(', ') || '(none)'}.\n` +
+    `Extra: ${extra.join(', ') || '(none)'}.`,
+  );
+}
+
+const packageDeclarationSources = new Map([
+  ['@crc/core', await readFile(join(repositoryRoot, 'packages/core/src/index.ts'), 'utf8')],
+  [
+    '@crc/core/jsx-runtime',
+    await readFile(join(repositoryRoot, 'packages/core/src/jsx-runtime.ts'), 'utf8'),
+  ],
+  [
+    '@crc/core/jsx-dev-runtime',
+    await readFile(join(repositoryRoot, 'packages/core/src/jsx-dev-runtime.ts'), 'utf8'),
+  ],
+]);
+
+for (const { moduleName, content } of declarationModules) {
+  assertExactDeclarationSurface(moduleName, packageDeclarationSources.get(moduleName), content);
+}
 
 const publicTypeExports = [
   'AbsoluteProps',
@@ -169,10 +278,7 @@ const publicTypeExports = [
   'VerticalLineStyle',
 ].sort();
 
-const packageIndexSource = await readFile(
-  join(repositoryRoot, 'packages/core/src/index.ts'),
-  'utf8',
-);
+const packageIndexSource = packageDeclarationSources.get('@crc/core');
 const packageTypeExports = [];
 for (const match of packageIndexSource.matchAll(
   /export\s+(type\s+)?\{([\s\S]*?)\}\s+from\s+['"][^'"]+['"]/gu,
@@ -203,7 +309,7 @@ import type {
 `;
 
 const consumer = `
-${removedTypeImports}
+${removedAuthoringImports}
 import * as CRC_CORE_ROOT from '@crc/core';
 import {
   Absolute,
@@ -239,6 +345,7 @@ import {
   Text,
   VerticalLine,
   type CRCConfig,
+  type CRCComponent,
   type CRCController,
   type CRCClipboardEvent,
   type CRCCompositionEvent,
@@ -287,7 +394,10 @@ type Assert<T extends true> = T;
 
 type StudioSignatureParity = [
   Assert<Equal<typeof Fragment, (props: { children?: CRCNode }) => CRCNode>>,
+  Assert<Equal<typeof FocusManagement, CRCComponent<FocusManagementProps>>>,
+  Assert<Equal<typeof KeyboardNavigation, CRCComponent<KeyboardNavigationProps>>>,
   Assert<Equal<LineStyle['coords'], [number, number][]>>,
+  Assert<Equal<typeof crcMemo, <T>(create: () => T, deps: any[]) => T>>,
   Assert<Equal<
     typeof crcWhenChanged,
     (callback: () => (() => void) | void, deps?: any[]) => void
@@ -934,8 +1044,9 @@ try {
     throw new Error('CRC Studio source and built runtime surfaces differ.');
   }
   process.stdout.write(
-    'CRC Studio declarations passed source/built package parity, strict TSX, ' +
-    'compiler-runtime, event-family, generic, layout, and surface checks.\n',
+    'CRC Studio declarations passed exact export-name parity, 112-type structural ' +
+    'coverage, selected signature parity, strict TSX, compiler-runtime, event-family, ' +
+    'generic, and layout checks against source and built packages.\n',
   );
 } finally {
   await rm(directory, { recursive: true, force: true });

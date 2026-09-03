@@ -294,8 +294,8 @@
   export const Flex: CRCPrimitiveComponent<FlexProps, PrimitiveInput<FlexProps, FlexStyle>>;
   export const Grid: CRCPrimitiveComponent<GridProps, PrimitiveInput<GridProps, GridStyle>>;
   export function measureElement(element: CRCElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService): MeasureResult;
-  export const FocusManagement: (props: FocusManagementProps) => CRCNode;
-  export const KeyboardNavigation: (props: KeyboardNavigationProps) => CRCNode;
+  export const FocusManagement: CRCComponent<FocusManagementProps>;
+  export const KeyboardNavigation: CRCComponent<KeyboardNavigationProps>;
   export function resolveLength(value: Length, reference: number | undefined, property: string, context?: Readonly<LayoutDiagnosticContext>): number | undefined;
   export function normalizeEdges(value: EdgeValues | undefined, property: string, context?: Readonly<LayoutDiagnosticContext>): Edges;
   export function resolveBox(style: Readonly<BoxStyle>, constraints: Readonly<Constraints>, context?: Readonly<LayoutDiagnosticContext>): ResolvedBoxStyle;
