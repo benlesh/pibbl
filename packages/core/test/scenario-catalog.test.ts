@@ -118,6 +118,68 @@ describe('scenario catalog trust gate', () => {
         /legacy component authoring/i,
       ],
       [
+        'an imported namespace component call inside a namespace without a shadow',
+        scenarioSource(`
+          import * as CRC from '@crc/core';
+          namespace Fixture {
+            export const invalid = CRC.Rectangle({});
+          }
+        `),
+        /not direct calls/i,
+      ],
+      [
+        'an imported namespace component call inside nested namespaces without a shadow',
+        scenarioSource(`
+          import * as CRC from '@crc/core';
+          namespace Outer {
+            namespace Inner {
+              export const invalid = CRC.Rectangle({});
+            }
+          }
+        `),
+        /not direct calls/i,
+      ],
+      [
+        'an imported namespace component call inside a dotted namespace without a shadow',
+        scenarioSource(`
+          import * as CRC from '@crc/core';
+          namespace Outer.Inner {
+            export const invalid = CRC.Rectangle({});
+          }
+        `),
+        /not direct calls/i,
+      ],
+      [
+        'a string-literal module name that does not shadow an imported namespace',
+        scenarioSource(`
+          import * as CRC from '@crc/core';
+          declare module 'CRC' { interface Marker {} }
+          void CRC.Rectangle({});
+        `),
+        /not direct calls/i,
+      ],
+      [
+        'a namespace-local shadow that does not escape its module block',
+        scenarioSource(`
+          import * as CRC from '@crc/core';
+          namespace Fixture {
+            namespace CRC {
+              export function Rectangle(): string { return 'local'; }
+            }
+          }
+          void CRC.Rectangle({});
+        `),
+        /not direct calls/i,
+      ],
+      [
+        'an imported legacy type namespace referenced inside an unshadowed namespace',
+        scenarioSource(`
+          import type * as CRC from '@crc/core';
+          namespace Fixture { export type Legacy = CRC.CompEl; }
+        `),
+        /obsolete component types/i,
+      ],
+      [
         'createElement-only authoring',
         scenarioSource(
           `import { createElement } from '@crc/core';`,
@@ -170,67 +232,83 @@ describe('scenario catalog trust gate', () => {
       [
         'a dynamic legacy import',
         `export async function loadLegacy() { const { rect } = await import('@crc/core'); return rect({}); }`,
-        /static imports/i,
+        /dynamic import expressions/i,
       ],
       [
         'a dynamic type import',
         `type Legacy = import('@crc/core').CompEl;`,
-        /static imports/i,
+        /TypeScript import types/i,
       ],
-      ['import.meta', `void import.meta.url;`, /static imports/i],
-      ['a bare require call', `void require('@crc/core');`, /static imports/i],
-      ['a bare require.resolve call', `void require.resolve('@crc/core');`, /static imports/i],
-      ['bare module.exports', `module.exports = {};`, /static imports/i],
-      ['a bare exports reference', `void exports.fixture;`, /static imports/i],
+      ['import.meta', `void import.meta.url;`, /import\.meta/i],
+      [
+        'a bare require call',
+        `void require('@crc/core');`,
+        /must not use CommonJS module loading or exports/i,
+      ],
+      [
+        'a bare require.resolve call',
+        `void require.resolve('@crc/core');`,
+        /must not use CommonJS module loading or exports/i,
+      ],
+      [
+        'bare module.exports',
+        `module.exports = {};`,
+        /must not use CommonJS module loading or exports/i,
+      ],
+      [
+        'a bare exports reference',
+        `void exports.fixture;`,
+        /must not use CommonJS module loading or exports/i,
+      ],
       [
         'a globalThis require call',
         `void (globalThis as any).require('@crc/core');`,
-        /static imports/i,
+        /must not use CommonJS module loading or exports/i,
       ],
       [
         'a computed global module.exports path',
         `(globalThis as any)['module']['exports'] = {};`,
-        /static imports/i,
+        /must not use CommonJS module loading or exports/i,
       ],
       [
         'an optional nested global require path',
         `void (globalThis as any)?.window?.self?.['require']?.('@crc/core');`,
-        /static imports/i,
+        /must not use CommonJS module loading or exports/i,
       ],
       [
         'a window require path',
         `void (window as any)['require']('@crc/core');`,
-        /static imports/i,
+        /must not use CommonJS module loading or exports/i,
       ],
       [
         'a self exports path',
         `void (self as any).exports.fixture;`,
-        /static imports/i,
+        /must not use CommonJS module loading or exports/i,
       ],
       [
         'a global module.exports path',
         `(global as any).module.exports = {};`,
-        /static imports/i,
+        /must not use CommonJS module loading or exports/i,
       ],
       [
         'a top-level import-equals declaration',
         `import Legacy = require('@crc/core'); void Legacy;`,
-        /static imports/i,
+        /TypeScript import-equals/i,
       ],
       [
         'a nested import-equals declaration',
         `namespace Fixture { import Legacy = Other.Core; }`,
-        /static imports/i,
+        /TypeScript import-equals/i,
       ],
       [
         'a TypeScript export assignment',
         `export = Rectangle;`,
-        /static imports/i,
+        /TypeScript export assignment/i,
       ],
       [
         'a TypeScript namespace export',
         `export as namespace Fixture;`,
-        /static imports/i,
+        /export as namespace/i,
       ],
       [
         'a default core import',
@@ -245,7 +323,7 @@ describe('scenario catalog trust gate', () => {
       [
         'a core import with attributes',
         `import { Rectangle as AttributedRectangle } from '@crc/core' with { type: 'json' }; void AttributedRectangle;`,
-        /supported static imports/i,
+        /import attributes or assertions/i,
       ],
       [
         'a relative runtime named import',
@@ -265,6 +343,26 @@ describe('scenario catalog trust gate', () => {
       [
         'a relative side-effect import',
         `import './helper';`,
+        /supported static imports/i,
+      ],
+      [
+        'a bare-dot runtime default import',
+        `import helper from '.'; void helper;`,
+        /supported static imports/i,
+      ],
+      [
+        'a bare-dot-dot runtime named import',
+        `import { helper } from '..'; void helper;`,
+        /supported static imports/i,
+      ],
+      [
+        'a bare-dot runtime namespace import',
+        `import * as helper from '.'; void helper;`,
+        /supported static imports/i,
+      ],
+      [
+        'a bare-dot-dot side-effect import',
+        `import '..';`,
         /supported static imports/i,
       ],
       [
@@ -381,6 +479,46 @@ describe('scenario catalog trust gate', () => {
         undefined,
       ],
       [
+        'bare-dot default type-only import',
+        `import type Shared from '.'; type Local = Shared;`,
+        undefined,
+      ],
+      [
+        'bare-dot-dot default type-only import',
+        `import type Shared from '..'; type Local = Shared;`,
+        undefined,
+      ],
+      [
+        'bare-dot named type-only import',
+        `import type { Shared } from '.'; type Local = Shared;`,
+        undefined,
+      ],
+      [
+        'bare-dot-dot named type-only import',
+        `import type { Shared } from '..'; type Local = Shared;`,
+        undefined,
+      ],
+      [
+        'bare-dot namespace type-only import',
+        `import type * as Shared from '.'; type Local = Shared.Entry;`,
+        undefined,
+      ],
+      [
+        'bare-dot-dot namespace type-only import',
+        `import type * as Shared from '..'; type Local = Shared.Entry;`,
+        undefined,
+      ],
+      [
+        'bare-dot inline type-only specifier',
+        `import { type Shared } from '.'; type Local = Shared;`,
+        undefined,
+      ],
+      [
+        'bare-dot-dot inline default type-only specifier',
+        `import { type default as Shared } from '..'; type Local = Shared;`,
+        undefined,
+      ],
+      [
         'namespace core JSX',
         `import * as CRC from '@crc/core';`,
         '<CRC.Rectangle style={{ width: 10, height: 10 }} />',
@@ -403,6 +541,92 @@ describe('scenario catalog trust gate', () => {
             return CRC.Rectangle();
           }
           void invoke;
+        `,
+        undefined,
+      ],
+      [
+        'a namespace-local namespace component shadow',
+        `
+          import * as CRC from '@crc/core';
+          namespace Fixture {
+            namespace CRC {
+              export function Rectangle(): string { return 'local'; }
+            }
+            export const local = CRC.Rectangle();
+          }
+        `,
+        '<CRC.Rectangle style={{ width: 10, height: 10 }} />',
+      ],
+      [
+        'a namespace-local named component shadow',
+        `
+          namespace Fixture {
+            function Rectangle(): string { return 'local'; }
+            export const local = Rectangle();
+          }
+        `,
+        undefined,
+      ],
+      [
+        'a nested namespace-local component shadow',
+        `
+          import * as CRC from '@crc/core';
+          namespace Outer {
+            namespace Inner {
+              namespace CRC {
+                export function Rectangle(): string { return 'local'; }
+              }
+              export const local = CRC.Rectangle();
+            }
+          }
+        `,
+        '<CRC.Rectangle style={{ width: 10, height: 10 }} />',
+      ],
+      [
+        'a dotted namespace-local component shadow',
+        `
+          import * as CRC from '@crc/core';
+          namespace Outer.Inner {
+            namespace CRC {
+              export function Rectangle(): string { return 'local'; }
+            }
+            export const local = CRC.Rectangle();
+          }
+        `,
+        '<CRC.Rectangle style={{ width: 10, height: 10 }} />',
+      ],
+      [
+        'a dotted local namespace binding that uses a legacy CRC member name',
+        `
+          import * as CRC from '@crc/core';
+          namespace Fixture {
+            namespace CRC.rect {
+              export function invoke(): string { return 'local'; }
+            }
+            export const local = CRC.rect.invoke();
+          }
+        `,
+        '<CRC.Rectangle style={{ width: 10, height: 10 }} />',
+      ],
+      [
+        'a namespace-local legacy type-name shadow',
+        `
+          import type * as CRC from '@crc/core';
+          namespace Fixture {
+            namespace CRC { export interface CompEl { local: true } }
+            export type Local = CRC.CompEl;
+          }
+        `,
+        undefined,
+      ],
+      [
+        'a string-module-local legacy type-name shadow',
+        `
+          import type * as CRC from '@crc/core';
+          declare module 'fixture' {
+            namespace CRC { interface CompEl { local: true } }
+            type Local = CRC.CompEl;
+          }
         `,
         undefined,
       ],

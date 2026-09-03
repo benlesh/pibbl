@@ -18,8 +18,12 @@ interface SourceInspection {
   readonly hasCoreValueImport: boolean;
   readonly hasCreateElementCall: boolean;
   readonly hasDirectComponentCall: boolean;
-  readonly hasDynamicImport: boolean;
+  readonly hasDynamicImportExpression: boolean;
+  readonly hasExportAssignment: boolean;
   readonly hasForbiddenLearningModuleSyntax: boolean;
+  readonly hasImportAttributes: boolean;
+  readonly hasImportEquals: boolean;
+  readonly hasImportMeta: boolean;
   readonly hasInvalidCreateElementCallForm: boolean;
   readonly hasJsx: boolean;
   readonly hasLegacyAuthoring: boolean;
@@ -27,6 +31,7 @@ interface SourceInspection {
   readonly hasLegacyTextStyle: boolean;
   readonly hasLegacyTypes: boolean;
   readonly hasNamedValueCoreImport: boolean;
+  readonly hasNamespaceExport: boolean;
   readonly hasOnlyApprovedImports: boolean;
   readonly hasOnlyScenarioImports: boolean;
   readonly hasScenarioReExport: boolean;
@@ -34,7 +39,7 @@ interface SourceInspection {
   readonly hasTestScaffolding: boolean;
   readonly hasUninspectableProps: boolean;
   readonly hasUninspectableLegacySensitiveProps: boolean;
-  readonly hasUnsupportedScenarioModuleSyntax: boolean;
+  readonly hasTypeImport: boolean;
 }
 
 const LEGACY_AUTHORING_NAMES = new Set([
@@ -548,15 +553,31 @@ function declarationValue(statement: SyntaxNode): SyntaxNode {
 }
 
 function isRelativeModuleName(moduleName: string | undefined): boolean {
-  return moduleName?.startsWith('./') === true ||
-    moduleName?.startsWith('../') === true;
+  return (
+    moduleName === "." ||
+    moduleName === ".." ||
+    moduleName?.startsWith("./") === true ||
+    moduleName?.startsWith("../") === true
+  );
+}
+
+function moduleDeclarationBindingNames(id: unknown): readonly string[] {
+  if (!isNode(id)) return [];
+  if (id.type === "Identifier") return bindingNames(id);
+  if (id.type === "TSQualifiedName") {
+    return moduleDeclarationBindingNames(id.left);
+  }
+  // Ambient string-literal modules do not introduce a lexical binding with
+  // their quoted name in the enclosing scope.
+  return [];
 }
 
 function directLexicalBindings(scope: SyntaxNode): readonly string[] {
   const statements =
     scope.type === "Program" ||
     scope.type === "BlockStatement" ||
-    scope.type === "StaticBlock"
+    scope.type === "StaticBlock" ||
+    scope.type === "TSModuleBlock"
       ? nodes(scope.body)
       : scope.type === "SwitchStatement"
         ? nodes(scope.cases).flatMap((switchCase) => nodes(switchCase.consequent))
@@ -574,6 +595,9 @@ function directLexicalBindings(scope: SyntaxNode): readonly string[] {
       statement.type === "TSEnumDeclaration"
     ) {
       return bindingNames(statement.id);
+    }
+    if (statement.type === "TSModuleDeclaration") {
+      return moduleDeclarationBindingNames(statement.id);
     }
     return [];
   });
@@ -707,12 +731,15 @@ function resolvedCoreValueName(
 function resolvedCoreNamespaceTypeName(
   value: unknown,
   namespaceBindings: ReadonlySet<string>,
+  bindingShadows: WeakMap<object, ReadonlySet<string>>,
 ): string | undefined {
   if (!isNode(value) || value.type !== "TSQualifiedName") return undefined;
   const namespaceName = identifierName(value.left);
-  return namespaceName && namespaceBindings.has(namespaceName) ?
-    propertyName(value.right) :
-    undefined;
+  return namespaceName &&
+    namespaceBindings.has(namespaceName) &&
+    !bindingShadows.get(value)?.has(namespaceName)
+    ? propertyName(value.right)
+    : undefined;
 }
 
 function inspectSource(source: string, label: string): SourceInspection {
@@ -730,7 +757,7 @@ function inspectSource(source: string, label: string): SourceInspection {
   let hasLegacyAuthoring = false;
   let hasLegacyTypes = false;
   let hasScenarioReExport = false;
-  let hasUnsupportedScenarioModuleSyntax = false;
+  let hasImportAttributes = false;
 
   for (const statement of programBody) {
     if (statement.type !== "ImportDeclaration") {
@@ -742,12 +769,6 @@ function inspectSource(source: string, label: string): SourceInspection {
         statement.type === "TSImportEqualsDeclaration"
       ) {
         hasForbiddenLearningModuleSyntax = true;
-      }
-      if (
-        statement.type === "TSExportAssignment" ||
-        statement.type === "TSImportEqualsDeclaration"
-      ) {
-        hasUnsupportedScenarioModuleSyntax = true;
       }
       continue;
     }
@@ -765,6 +786,12 @@ function inspectSource(source: string, label: string): SourceInspection {
       ));
     const isLocalTypeOnlyImport =
       isRelativeModuleName(moduleName) && isTypeOnlyDeclaration;
+    if (
+      nodes(statement.attributes).length > 0 ||
+      nodes(statement.assertions).length > 0
+    ) {
+      hasImportAttributes = true;
+    }
     if (
       moduleName !== "@crc/core" ||
       statement.importKind === "type" ||
@@ -831,18 +858,23 @@ function inspectSource(source: string, label: string): SourceInspection {
   let hasBindingViolation = false;
   let hasCommonJsSyntax = false;
   let hasDirectComponentCall = false;
-  let hasDynamicImport = false;
+  let hasDynamicImportExpression = false;
+  let hasExportAssignment = false;
+  let hasImportEquals = false;
+  let hasImportMeta = false;
   let hasInvalidCreateElementCallForm = false;
   let hasJsx = false;
   let hasLegacyLayerRender = false;
   let hasLegacyTextStyle = false;
+  let hasNamespaceExport = false;
   let hasTestScaffolding = false;
   let hasUninspectableProps = false;
   let hasUninspectableLegacySensitiveProps = false;
+  let hasTypeImport = false;
   const importedValueNames = new Set(valueImports.keys());
   const bindingShadows = collectBindingShadows(
     file,
-    new Set([...importedValueNames, ...valueNamespaceBindings]),
+    new Set([...importedValueNames, ...namespaceBindings]),
   );
   const resolveCoreValue = (value: unknown) => resolvedCoreValueName(
     value,
@@ -896,12 +928,17 @@ function inspectSource(source: string, label: string): SourceInspection {
     ) {
       hasScenarioReExport = true;
     }
-    if (
-      node.type === "TSExportAssignment" ||
-      node.type === "TSImportEqualsDeclaration" ||
-      node.type === "TSNamespaceExportDeclaration"
-    ) {
-      hasUnsupportedScenarioModuleSyntax = true;
+    if (node.type === "TSExportAssignment") {
+      hasExportAssignment = true;
+      hasForbiddenLearningModuleSyntax = true;
+    }
+    if (node.type === "TSImportEqualsDeclaration") {
+      hasImportEquals = true;
+      hasForbiddenLearningModuleSyntax = true;
+    }
+    if (node.type === "TSNamespaceExportDeclaration") {
+      hasNamespaceExport = true;
+      hasForbiddenLearningModuleSyntax = true;
     }
     if (node.type === "JSXElement" || node.type === "JSXFragment") hasJsx = true;
     const invocationTarget =
@@ -934,8 +971,11 @@ function inspectSource(source: string, label: string): SourceInspection {
     ) {
       hasBindingViolation = true;
     }
-    if (node.type === "ImportExpression" || node.type === "TSImportType") {
-      hasDynamicImport = true;
+    if (node.type === "ImportExpression") {
+      hasDynamicImportExpression = true;
+    }
+    if (node.type === "TSImportType") {
+      hasTypeImport = true;
     }
     if (
       node.type === "MetaProperty" &&
@@ -943,14 +983,14 @@ function inspectSource(source: string, label: string): SourceInspection {
       identifierName(node.property) === "meta"
     ) {
       hasForbiddenLearningModuleSyntax = true;
-      hasUnsupportedScenarioModuleSyntax = true;
+      hasImportMeta = true;
     }
     if (
       node.type === "CallExpression" &&
       isNode(node.callee) &&
       node.callee.type === "Import"
     ) {
-      hasDynamicImport = true;
+      hasDynamicImportExpression = true;
     }
 
     const memberName = resolveCoreValue(node);
@@ -960,6 +1000,7 @@ function inspectSource(source: string, label: string): SourceInspection {
     const namespaceTypeName = resolvedCoreNamespaceTypeName(
       node,
       namespaceBindings,
+      bindingShadows,
     );
     if (namespaceTypeName && LEGACY_TYPE_NAMES.has(namespaceTypeName)) {
       hasLegacyTypes = true;
@@ -1062,8 +1103,12 @@ function inspectSource(source: string, label: string): SourceInspection {
     hasCoreValueImport,
     hasCreateElementCall,
     hasDirectComponentCall,
-    hasDynamicImport,
+    hasDynamicImportExpression,
+    hasExportAssignment,
     hasForbiddenLearningModuleSyntax,
+    hasImportAttributes,
+    hasImportEquals,
+    hasImportMeta,
     hasInvalidCreateElementCallForm,
     hasJsx,
     hasLegacyAuthoring,
@@ -1071,13 +1116,14 @@ function inspectSource(source: string, label: string): SourceInspection {
     hasLegacyTextStyle,
     hasLegacyTypes,
     hasNamedValueCoreImport,
+    hasNamespaceExport,
     hasOnlyApprovedImports,
     hasOnlyScenarioImports,
     hasScenarioReExport,
     hasTestScaffolding,
     hasUninspectableProps,
     hasUninspectableLegacySensitiveProps,
-    hasUnsupportedScenarioModuleSyntax,
+    hasTypeImport,
   };
 }
 
@@ -1090,27 +1136,50 @@ export function validateScenarioSourceText(
   label: string,
 ): void {
   const inspection = inspectSource(source, label);
-  if (
-    !inspection.hasCoreValueImport ||
-    !inspection.hasOnlyScenarioImports
-  ) {
+  if (inspection.hasImportAttributes) {
+    throw invalid(label, "must not use import attributes or assertions.");
+  }
+  if (inspection.hasDynamicImportExpression) {
+    throw invalid(
+      label,
+      "must not use dynamic import expressions; use supported static imports.",
+    );
+  }
+  if (inspection.hasTypeImport) {
+    throw invalid(
+      label,
+      "must not use TypeScript import types; use static type-only imports.",
+    );
+  }
+  if (inspection.hasImportMeta) {
+    throw invalid(label, "must not use import.meta module access.");
+  }
+  if (inspection.hasImportEquals) {
+    throw invalid(
+      label,
+      "must not use TypeScript import-equals declarations; use supported static imports.",
+    );
+  }
+  if (inspection.hasExportAssignment) {
+    throw invalid(label, "must not use TypeScript export assignments.");
+  }
+  if (inspection.hasNamespaceExport) {
+    throw invalid(
+      label,
+      "must not use TypeScript export as namespace declarations.",
+    );
+  }
+  if (inspection.hasCommonJsSyntax) {
+    throw invalid(label, "must not use CommonJS module loading or exports.");
+  }
+  if (inspection.hasScenarioReExport) {
+    throw invalid(label, "must not re-export local, external, or @crc/core modules.");
+  }
+  if (!inspection.hasCoreValueImport || !inspection.hasOnlyScenarioImports) {
     throw invalid(
       label,
       "must use supported static imports: named or namespace imports from @crc/core, relative type-only imports, and at least one public @crc/core value.",
     );
-  }
-  if (
-    inspection.hasDynamicImport ||
-    inspection.hasCommonJsSyntax ||
-    inspection.hasUnsupportedScenarioModuleSyntax
-  ) {
-    throw invalid(
-      label,
-      "must use static imports instead of dynamic, CommonJS, or import-meta module access.",
-    );
-  }
-  if (inspection.hasScenarioReExport) {
-    throw invalid(label, "must not re-export local, external, or @crc/core modules.");
   }
   if (inspection.hasLegacyTypes) {
     throw invalid(label, "imports obsolete component types.");
@@ -1157,7 +1226,8 @@ export function validateLearningSourceText(
     );
   }
   if (
-    inspection.hasDynamicImport ||
+    inspection.hasDynamicImportExpression ||
+    inspection.hasTypeImport ||
     inspection.hasForbiddenLearningModuleSyntax
   ) {
     throw invalid(

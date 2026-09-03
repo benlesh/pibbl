@@ -531,3 +531,136 @@ evidence, this report, and the ignored local progress ledger. Runtime code,
 deterministic scenarios, catalogs/index output, and visual baselines are
 unchanged. Verification remains on Node 26.7.0 with pnpm 11.21.0, retaining the
 already documented Node 24 LTS R8 variance.
+
+## Fix Round 3 — namespace scope and precise module diagnostics
+
+The third review identified two remaining policy edges and one diagnostic
+quality issue in the shared deterministic-source validator. This round keeps
+the runtime, scenario sources, catalog/index, and visual baselines unchanged.
+
+### Scope and import-policy corrections
+
+- `TSModuleBlock` now participates in lexical-scope collection. Local
+  functions, classes, variables, enums, and TypeScript namespace declarations
+  therefore shadow an imported component or namespace only inside the owning
+  module block.
+- `TSModuleDeclaration` bindings are derived from identifier names and the root
+  of dotted namespace names. String-literal ambient-module names deliberately
+  do not create an outer lexical binding. Nested namespaces, dotted namespaces,
+  local namespace member names that overlap legacy CRC names, and
+  string-module-local namespace shadows have positive coverage. Matching
+  negative cases prove that an unshadowed imported CRC namespace still resolves
+  inside plain, nested, and dotted namespaces and that a local namespace shadow
+  does not leak outside its module block.
+- Type-only namespace imports now use the same shadow map as value namespace
+  imports, preventing a local `CRC.CompEl` declaration from being mistaken for
+  the imported obsolete type while retaining rejection of genuinely imported
+  `CRC.CompEl` references.
+- Bare `.` and `..` directory-index specifiers are classified as relative.
+  Default, named, namespace, inline named-type, and inline default-type positive
+  forms are represented across both directory-index spellings. Runtime default,
+  named, namespace, and side-effect counterparts remain rejected.
+
+### Precise module facts and diagnostics
+
+The previous combined dynamic/unsupported-module booleans were replaced with
+separate inspection facts for dynamic import expressions, TypeScript import
+types, `import.meta`, import attributes/assertions, TypeScript import-equals,
+TypeScript export assignments, and export-as-namespace declarations. CommonJS
+and source-backed re-exports retain their own facts. The deterministic
+validator checks those facts before the generic static-import policy, producing
+an actionable diagnostic for the construct actually found. The learning
+validator preserves its stricter module contract by combining the same precise
+facts at its existing boundary.
+
+The adversarial matrix now requires exact diagnostic families for import
+attributes/assertions, top-level and nested import-equals, export assignment,
+export as namespace, dynamic value imports, TypeScript import types,
+`import.meta`, and ten bare/known-global CommonJS forms. Existing source-backed
+namespace re-export coverage continues to require the re-export diagnostic.
+
+### TDD evidence
+
+Before changing the validator, the consolidated focused file produced the
+intended RED result:
+
+```text
+Test Files  1 failed (1)
+Tests       33 failed | 77 passed (110)
+```
+
+The failures were seven valid namespace-shadow cases, eight valid bare `.`/`..`
+type-only imports, and eighteen precise-diagnostic expectations. The new
+unshadowed namespace cases and bare directory-index runtime imports were already
+green, demonstrating that the RED was limited to the requested gaps. After the
+implementation, the recovered focused matrix passed:
+
+```text
+Test Files  1 passed (1)
+Tests       110 passed (110)
+```
+
+Temporary failure screenshots from the RED runs were removed. No screenshot or
+baseline file is part of the commit.
+
+### Final Fix Round 3 verification
+
+```sh
+corepack pnpm@11.21.0 scenarios:check
+corepack pnpm@11.21.0 exec vitest run \
+  packages/core/test/smoke-scenario.test.ts \
+  packages/core/test/drawing-gallery.test.ts \
+  packages/core/test/layout-foundation.test.ts \
+  packages/core/test/runtime-hooks-laboratory.test.ts \
+  packages/core/test/focus-navigation.test.ts \
+  --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 exec vitest run \
+  packages/core/src/lib/runtime-contract.test.ts \
+  --browser.headless --browser.ui=false
+corepack pnpm@11.21.0 test:ci
+```
+
+```text
+Discovery: rejected legacy and uncataloged example fixtures.
+Catalog: validated 42 lessons, 16 test labs, and docs/scenario-index.md.
+Representative scenarios: 5 files, 22 passed.
+Runtime contract: 1 file, 13 passed.
+Complete browser suite: 83 files, 1131 passed, 2 skipped.
+```
+
+```sh
+corepack pnpm@11.21.0 typecheck
+corepack pnpm@11.21.0 lint
+corepack pnpm@11.21.0 playground:build
+corepack pnpm@11.21.0 playground:build:built
+corepack pnpm@11.21.0 test:package-consumer
+corepack pnpm@11.21.0 test:package-consumer:packed
+corepack pnpm@11.21.0 test:smoke:built
+corepack pnpm@11.21.0 test:visual-safeguard
+git diff --check
+```
+
+```text
+TypeScript, ESLint, and Prettier: passed.
+Studio source mode: declarations passed; 1308 modules transformed.
+Studio built mode: declarations and package build passed; 1209 modules transformed.
+Workspace and packed Bundler/NodeNext/runtime consumers: passed.
+Built smoke: 1 file, 1 passed.
+Visual safeguard: rejected the drill, recovered green, and preserved every
+baseline byte.
+git diff --check: no output.
+```
+
+### Fix-round self-review
+
+- The scope change is narrowly additive: ordinary block/function shadowing is
+  untouched, while TypeScript module blocks gain the same lexical treatment.
+- Dotted namespace declarations bind their root name; quoted ambient module
+  names do not. Tests cover both sides so an imported CRC reference is not
+  accidentally hidden.
+- Construct-specific diagnostic priority precedes generic import rejection, but
+  legacy authoring/type and JSX structure diagnostics keep their existing order
+  once module syntax is valid.
+- Verification used Node 26.7.0 and pnpm 11.21.0. The documented R8 variance
+  from Node 24 LTS remains unchanged. No unresolved concern remains for this
+  focused validator fix.
