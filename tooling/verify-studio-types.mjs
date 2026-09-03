@@ -77,7 +77,7 @@ const removedAuthoringImports = [
   `import type { ${parts.join('')} as ${alias} } from '@crc/core';`,
 ).join('\n');
 
-function explicitExportNames(source) {
+function explicitExportNames(source, surfaceLabel) {
   const sourceFile = parse(source, {
     sourceType: 'module',
     plugins: [['typescript', { dts: true }]],
@@ -85,6 +85,12 @@ function explicitExportNames(source) {
   const names = new Set();
 
   for (const statement of sourceFile.program.body) {
+    if (statement.type === 'TSNamespaceExportDeclaration') {
+      throw new Error(
+        `CRC ${surfaceLabel} declaration rejects global namespace export: ${statement.id.name}.`,
+      );
+    }
+
     if (statement.type !== 'ExportNamedDeclaration') {
       if (
         statement.type === 'ExportAllDeclaration' ||
@@ -131,17 +137,23 @@ function explicitExportNames(source) {
   return [...names].sort();
 }
 
-function assertExactDeclarationSurface(moduleName, packageSource, studioSource) {
-  const packageNames = explicitExportNames(packageSource);
-  const studioNames = explicitExportNames(studioSource);
-  if (packageNames.join('\n') === studioNames.join('\n')) return;
+function assertExactDeclarationSurface(
+  moduleName,
+  expectedLabel,
+  expectedSource,
+  actualLabel,
+  actualSource,
+) {
+  const expectedNames = explicitExportNames(expectedSource, `${expectedLabel} ${moduleName}`);
+  const actualNames = explicitExportNames(actualSource, `${actualLabel} ${moduleName}`);
+  if (expectedNames.join('\n') === actualNames.join('\n')) return;
 
-  const packageNameSet = new Set(packageNames);
-  const studioNameSet = new Set(studioNames);
-  const missing = packageNames.filter((name) => !studioNameSet.has(name));
-  const extra = studioNames.filter((name) => !packageNameSet.has(name));
+  const expectedNameSet = new Set(expectedNames);
+  const actualNameSet = new Set(actualNames);
+  const missing = expectedNames.filter((name) => !actualNameSet.has(name));
+  const extra = actualNames.filter((name) => !expectedNameSet.has(name));
   throw new Error(
-    `CRC Studio declaration surface differs for ${moduleName}.\n` +
+    `CRC ${actualLabel} declaration surface differs from ${expectedLabel} for ${moduleName}.\n` +
     `Missing: ${missing.join(', ') || '(none)'}.\n` +
     `Extra: ${extra.join(', ') || '(none)'}.`,
   );
@@ -159,8 +171,34 @@ const packageDeclarationSources = new Map([
   ],
 ]);
 
+const builtPackageDeclarationSources = new Map([
+  ['@crc/core', await readFile(join(repositoryRoot, 'packages/core/dist/index.d.ts'), 'utf8')],
+  [
+    '@crc/core/jsx-runtime',
+    await readFile(join(repositoryRoot, 'packages/core/dist/jsx-runtime.d.ts'), 'utf8'),
+  ],
+  [
+    '@crc/core/jsx-dev-runtime',
+    await readFile(join(repositoryRoot, 'packages/core/dist/jsx-dev-runtime.d.ts'), 'utf8'),
+  ],
+]);
+
 for (const { moduleName, content } of declarationModules) {
-  assertExactDeclarationSurface(moduleName, packageDeclarationSources.get(moduleName), content);
+  const packageSource = packageDeclarationSources.get(moduleName);
+  assertExactDeclarationSurface(
+    moduleName,
+    'source package',
+    packageSource,
+    'built package',
+    builtPackageDeclarationSources.get(moduleName),
+  );
+  assertExactDeclarationSurface(
+    moduleName,
+    'source package',
+    packageSource,
+    'Studio',
+    content,
+  );
 }
 
 const publicTypeExports = [
