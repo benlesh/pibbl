@@ -251,6 +251,46 @@ No screenshot or visual-baseline file is modified. Baselines were not rewritten.
 
 ## Self-review and concerns
 
+### Fix Round 4 — dotted namespace self-bindings and legacy assertions
+
+This follow-up fixes two AST-gate edge cases without changing the supported
+authoring surface.
+
+- A `TSModuleBlock` now receives the final segment of its own namespace or
+  dotted module name as a local binding. This applies in both value and type
+  positions only within that exact body. Thus `Fixture.CRC` and `A.B.C` may
+  refer to their local `CRC`/`C` members, while the imported namespace remains
+  visible and rejected outside the block.
+- Babel 8 no longer accepts its removed `importAssertions` plugin. Its precise
+  legacy-assertion parser failure is recognized only when the error points at a
+  static `import ... assert { ... }` declaration, and is reported through the
+  existing dedicated import-attributes-or-assertions diagnostic. Other syntax
+  failures keep the generic TSX diagnostic.
+
+Focused RED evidence (before implementation):
+
+```text
+scenario-catalog.test.ts: 3 failed, 112 passed
+```
+
+The failures were the new legacy JSON assertion diagnostic and the two dotted
+namespace final-segment self-binding cases. Focused GREEN evidence after the
+fix:
+
+```text
+scenario-catalog.test.ts: 115 passed (115)
+```
+
+Additional fresh validation for this fix, under Node `v26.7.0` and pnpm
+`11.21.0`:
+
+```text
+scenarios:check: validated 42 lessons, 16 test labs, and docs/scenario-index.md
+typecheck: passed
+lint: passed
+git diff --check: no output
+```
+
 - All 16 test-lab paths are direct `.ts` to `.tsx` renames. Because four of the
   largest scenes changed more than half their lines while becoming JSX, the
   final staged review used `--find-renames=20%`; all 16 are recognized as

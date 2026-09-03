@@ -172,10 +172,31 @@ describe('scenario catalog trust gate', () => {
         /not direct calls/i,
       ],
       [
+        'a dotted namespace final-segment value shadow that does not escape its body',
+        scenarioSource(`
+          import * as CRC from '@crc/core';
+          namespace Fixture.CRC {
+            export function Rectangle(): string { return 'local'; }
+            export const local = CRC.Rectangle();
+          }
+          void CRC.Rectangle({});
+        `),
+        /not direct calls/i,
+      ],
+      [
         'an imported legacy type namespace referenced inside an unshadowed namespace',
         scenarioSource(`
           import type * as CRC from '@crc/core';
           namespace Fixture { export type Legacy = CRC.CompEl; }
+        `),
+        /obsolete component types/i,
+      ],
+      [
+        'a dotted namespace final-segment type shadow that does not escape its body',
+        scenarioSource(`
+          import type * as CRC from '@crc/core';
+          namespace Fixture.CRC { export interface CompEl { local: true } }
+          type Legacy = CRC.CompEl;
         `),
         /obsolete component types/i,
       ],
@@ -324,6 +345,11 @@ describe('scenario catalog trust gate', () => {
         'a core import with attributes',
         `import { Rectangle as AttributedRectangle } from '@crc/core' with { type: 'json' }; void AttributedRectangle;`,
         /import attributes or assertions/i,
+      ],
+      [
+        'a legacy JSON import assertion',
+        `import fixture from './x.json' assert { type: 'json' }; void fixture;`,
+        /^invalid deterministic module must not use import attributes or assertions\.$/u,
       ],
       [
         'a relative runtime named import',
@@ -594,6 +620,32 @@ describe('scenario catalog trust gate', () => {
           }
         `,
         '<CRC.Rectangle style={{ width: 10, height: 10 }} />',
+      ],
+      [
+        'a dotted namespace final-segment value and type self-binding',
+        `
+          import * as CRC from '@crc/core';
+          namespace Fixture.CRC {
+            export function Rectangle(): string { return 'local'; }
+            export interface CompEl { local: true }
+            export const local = CRC.Rectangle();
+            export type Local = CRC.CompEl;
+          }
+        `,
+        '<CRC.Rectangle style={{ width: 10, height: 10 }} />',
+      ],
+      [
+        'a deeply dotted namespace final-segment value and type self-binding',
+        `
+          import * as C from '@crc/core';
+          namespace A.B.C {
+            export function Rectangle(): string { return 'local'; }
+            export interface CompEl { local: true }
+            export const local = C.Rectangle();
+            export type Local = C.CompEl;
+          }
+        `,
+        '<C.Rectangle style={{ width: 10, height: 10 }} />',
       ],
       [
         'a dotted local namespace binding that uses a legacy CRC member name',

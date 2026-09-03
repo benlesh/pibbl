@@ -210,6 +210,28 @@ function walkWithParent(
   }
 }
 
+function isLegacyImportAssertionSyntaxError(
+  source: string,
+  error: unknown,
+): boolean {
+  if (!error || typeof error !== "object") return false;
+  const failure = error as {
+    readonly code?: unknown;
+    readonly pos?: unknown;
+    readonly reasonCode?: unknown;
+  };
+  const position = failure.pos;
+  return (
+    failure.code === "BABEL_PARSER_SYNTAX_ERROR" &&
+    failure.reasonCode === "MissingSemicolon" &&
+    typeof position === "number" &&
+    /^\s*assert\s*\{/u.test(source.slice(position)) &&
+    /(?:^|[;{}\n\r])\s*import\s+(?:(?:type\s+)?(?:[^;\r\n]*?)\s+from\s+)?(?:'[^'\r\n]*'|"[^"\r\n]*")\s+assert\s*\{/u.test(
+      source,
+    )
+  );
+}
+
 function parseSource(source: string, label: string): SyntaxNode {
   try {
     return parse(source, {
@@ -217,7 +239,10 @@ function parseSource(source: string, label: string): SyntaxNode {
       plugins: ["typescript", "jsx"],
       sourceType: "module",
     }) as unknown as SyntaxNode;
-  } catch {
+  } catch (error) {
+    if (isLegacyImportAssertionSyntaxError(source, error)) {
+      throw invalid(label, "must not use import attributes or assertions.");
+    }
     throw invalid(label, "must be valid TSX module syntax.");
   }
 }
@@ -572,6 +597,24 @@ function moduleDeclarationBindingNames(id: unknown): readonly string[] {
   return [];
 }
 
+function moduleDeclarationFinalBindingNames(id: unknown): readonly string[] {
+  if (!isNode(id)) return [];
+  if (id.type === "Identifier") return bindingNames(id);
+  if (id.type === "TSQualifiedName") {
+    return moduleDeclarationFinalBindingNames(id.right);
+  }
+  return [];
+}
+
+function moduleBlockSelfBindings(
+  node: SyntaxNode,
+  parent: SyntaxNode | undefined,
+): readonly string[] {
+  return node.type === "TSModuleBlock" && parent?.type === "TSModuleDeclaration"
+    ? moduleDeclarationFinalBindingNames(parent.id)
+    : [];
+}
+
 function directLexicalBindings(scope: SyntaxNode): readonly string[] {
   const statements =
     scope.type === "Program" ||
@@ -665,8 +708,12 @@ function collectBindingShadows(
   const visit = (
     node: SyntaxNode,
     inherited: ReadonlySet<string>,
+    parent?: SyntaxNode,
   ): void => {
-    const local = localScopeBindings(node)
+    const local = [
+      ...localScopeBindings(node),
+      ...moduleBlockSelfBindings(node, parent),
+    ]
       .filter((name) => importedNames.has(name));
     const current = local.length > 0 ?
       new Set([...inherited, ...local]) :
@@ -675,9 +722,11 @@ function collectBindingShadows(
     for (const [key, value] of Object.entries(node)) {
       if (SKIPPED_AST_KEYS.has(key)) continue;
       if (isNode(value)) {
-        visit(value, current);
+        visit(value, current, node);
       } else if (Array.isArray(value)) {
-        for (const child of value) if (isNode(child)) visit(child, current);
+        for (const child of value) {
+          if (isNode(child)) visit(child, current, node);
+        }
       }
     }
   };
