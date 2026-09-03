@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -85,6 +86,10 @@ function explicitExportNames(source, surfaceLabel) {
   const names = new Set();
 
   for (const statement of sourceFile.program.body) {
+    if (statement.type === 'TSModuleDeclaration' && statement.kind === 'global') {
+      throw new Error(`CRC ${surfaceLabel} declaration rejects global augmentation.`);
+    }
+
     if (statement.type === 'TSNamespaceExportDeclaration') {
       throw new Error(
         `CRC ${surfaceLabel} declaration rejects global namespace export: ${statement.id.name}.`,
@@ -158,6 +163,52 @@ function assertExactDeclarationSurface(
     `Extra: ${extra.join(', ') || '(none)'}.`,
   );
 }
+
+function verifyDeclarationSurfaceComparator() {
+  const packageFixture = `
+export namespace JSX {}
+`;
+  const studioGlobalMutationFixture = `
+export namespace JSX {}
+declare global {
+  namespace CRCMutation {
+    namespace Nested {}
+  }
+}
+`;
+  assert.throws(
+    () =>
+      assertExactDeclarationSurface(
+        '@crc/core',
+        'source package fixture',
+        packageFixture,
+        'Studio global-mutation fixture',
+        studioGlobalMutationFixture,
+      ),
+    /rejects global augmentation/u,
+    'The declaration surface comparator must reject declare global, including nested namespaces.',
+  );
+
+  const studioInternalNamespaceFixture = `
+declare namespace CRCInternal {
+  namespace Nested {}
+}
+export namespace JSX {}
+`;
+  assert.doesNotThrow(
+    () =>
+      assertExactDeclarationSurface(
+        '@crc/core',
+        'source package fixture',
+        packageFixture,
+        'Studio internal-namespace fixture',
+        studioInternalNamespaceFixture,
+      ),
+    'The declaration surface comparator must permit module-local namespaces.',
+  );
+}
+
+verifyDeclarationSurfaceComparator();
 
 const packageDeclarationSources = new Map([
   ['@crc/core', await readFile(join(repositoryRoot, 'packages/core/src/index.ts'), 'utf8')],
