@@ -54,6 +54,154 @@ const removedTypeImports = [
   `import type { ${parts.join('')} as ${alias} } from '@crc/core';`,
 ).join('\n');
 
+const publicTypeExports = [
+  'AbsoluteProps',
+  'AbsoluteStyle',
+  'BoxStyle',
+  'Canvas',
+  'CanvasMeasurementService',
+  'ClipProps',
+  'ClipStyle',
+  'Constraints',
+  'CRCClipboardEvent',
+  'CRCComponent',
+  'CRCCompositionEvent',
+  'CRCConfig',
+  'CRCContainerChild',
+  'CRCController',
+  'CRCDragEvent',
+  'CRCElement',
+  'CRCElementType',
+  'CRCEmptyNode',
+  'CRCEvent',
+  'CRCEventCapturePropName',
+  'CRCEventHandler',
+  'CRCEventHandlers',
+  'CRCEventMap',
+  'CRCEventPhase',
+  'CRCEventPropName',
+  'CRCEventTarget',
+  'CRCEventTargetOptions',
+  'CRCEventTargetSnapshot',
+  'CRCEventType',
+  'CRCFit',
+  'CRCFixedViewportConfig',
+  'CRCFocusEvent',
+  'CRCInputEvent',
+  'CRCKeyboardEvent',
+  'CRCKeyboardNavigationOptions',
+  'CRCKey',
+  'CRCLogicalMouseEvent',
+  'CRCMouseEvent',
+  'CRCMouseEventListener',
+  'CRCNode',
+  'CRCPixelRatio',
+  'CRCPointerEvent',
+  'CRCPrimitiveComponent',
+  'CRCResponsiveViewportConfig',
+  'CRCRef',
+  'CRCRenderResult',
+  'CRCTextChild',
+  'CRCTouchEvent',
+  'CRCWheelEvent',
+  'CursorStyle',
+  'EdgeValues',
+  'Edges',
+  'FillStyle',
+  'FlexItemStyle',
+  'FlexProps',
+  'FlexStyle',
+  'FlowProps',
+  'FlowStyle',
+  'FocusManagementProps',
+  'GStyle',
+  'GridItemStyle',
+  'GridProps',
+  'GridStyle',
+  'GridTrack',
+  'GroupProps',
+  'HorizontalLineProps',
+  'HorizontalLineStyle',
+  'ImageProps',
+  'ImgStyle',
+  'KeyboardNavigationProps',
+  'LayerProps',
+  'LayerStyle',
+  'LayoutBox',
+  'LayoutDiagnosticContext',
+  'LayoutDiagnosticInput',
+  'LayoutItemStyle',
+  'Length',
+  'LineProps',
+  'LineStyle',
+  'MeasureInput',
+  'MeasureResult',
+  'NormalizedStyle',
+  'OverlayProps',
+  'OverlayStyle',
+  'PaintStyle',
+  'PathProps',
+  'PathStyle',
+  'Percentage',
+  'PixelGridAlignment',
+  'PrimitiveCapabilities',
+  'PrimitiveInput',
+  'PrimitiveInputOf',
+  'PrimitiveProgramProps',
+  'PrimitiveRender',
+  'RectangleProps',
+  'RectStyle',
+  'RenderingContext2D',
+  'ResolvedBoxStyle',
+  'ResolvedStyle',
+  'Size',
+  'SpecifiedStyle',
+  'StateUpdater',
+  'StrokeStyle',
+  'StyleResolutionContext',
+  'SvgPathProps',
+  'SvgPathStyle',
+  'SystemStyle',
+  'TextFit',
+  'TextProps',
+  'TextStyle',
+  'VerticalLineProps',
+  'VerticalLineStyle',
+].sort();
+
+const packageIndexSource = await readFile(
+  join(repositoryRoot, 'packages/core/src/index.ts'),
+  'utf8',
+);
+const packageTypeExports = [];
+for (const match of packageIndexSource.matchAll(
+  /export\s+(type\s+)?\{([\s\S]*?)\}\s+from\s+['"][^'"]+['"]/gu,
+)) {
+  const wholeBlockIsTypes = match[1] !== undefined;
+  for (const rawExport of match[2].split(',')) {
+    const exported = rawExport.trim();
+    if (!exported) continue;
+    if (!wholeBlockIsTypes && !exported.startsWith('type ')) continue;
+    packageTypeExports.push(
+      exported.replace(/^type\s+/u, '').split(/\s+as\s+/u)[0],
+    );
+  }
+}
+packageTypeExports.sort();
+if (packageTypeExports.join('\n') !== publicTypeExports.join('\n')) {
+  throw new Error(
+    'CRC Studio public type manifest differs from packages/core/src/index.ts.\n' +
+    `Package: ${packageTypeExports.join(', ')}.\n` +
+    `Studio verifier: ${publicTypeExports.join(', ')}.`,
+  );
+}
+
+const publicTypeSurfaceConsumer = `
+import type {
+  ${publicTypeExports.join(',\n  ')}
+} from '@crc/core';
+`;
+
 const consumer = `
 ${removedTypeImports}
 import * as CRC_CORE_ROOT from '@crc/core';
@@ -61,19 +209,35 @@ import {
   Absolute,
   crc,
   crcCanvasContext,
+  crcCursor,
   crcEvent,
   crcEventListener,
   crcEventTarget,
+  crcLinePath,
+  crcMemo,
+  crcRectPath,
+  crcWhenChanged,
   createElement,
   definePrimitive,
   Flex,
   Flow,
   FocusManagement,
+  Fragment,
   Grid,
+  HorizontalLine,
+  Image,
   KeyboardNavigation,
+  LayoutDiagnostic,
+  Line,
+  normalizeEdges,
   Overlay,
+  Path,
   Rectangle,
+  resolveBox,
+  resolveLength,
+  SvgPath,
   Text,
+  VerticalLine,
   type CRCConfig,
   type CRCController,
   type CRCClipboardEvent,
@@ -94,8 +258,15 @@ import {
   type CRCEventTargetSnapshot,
   type CRCTouchEvent,
   type CRCWheelEvent,
+  type EdgeValues,
+  type Edges,
   type FocusManagementProps,
   type KeyboardNavigationProps,
+  type LayoutBox,
+  type LayoutDiagnosticContext,
+  type LayoutDiagnosticInput,
+  type Length,
+  type LineStyle,
   type OverlayStyle,
   type Percentage,
   type PrimitiveCapabilities,
@@ -103,10 +274,83 @@ import {
   type PrimitiveProgramProps,
   type PrimitiveRender,
   type RenderingContext2D,
+  type ResolvedBoxStyle,
   type SystemStyle,
 } from '@crc/core';
 import { jsx, jsxs } from '@crc/core/jsx-runtime';
 import { jsxDEV } from '@crc/core/jsx-dev-runtime';
+
+type Equal<A, B> =
+  (<T>() => T extends A ? 1 : 2) extends
+  (<T>() => T extends B ? 1 : 2) ? true : false;
+type Assert<T extends true> = T;
+
+type StudioSignatureParity = [
+  Assert<Equal<typeof Fragment, (props: { children?: CRCNode }) => CRCNode>>,
+  Assert<Equal<LineStyle['coords'], [number, number][]>>,
+  Assert<Equal<
+    typeof crcWhenChanged,
+    (callback: () => (() => void) | void, deps?: any[]) => void
+  >>,
+  Assert<Equal<
+    typeof crcCursor,
+    (options: {
+      path?: Path2D;
+      style?: string;
+      fill?: boolean;
+      lineInteractionWidth?: number;
+    }) => void
+  >>,
+  Assert<Equal<
+    typeof crcLinePath,
+    (
+      coords: [number, number][],
+      config?: { closePath?: boolean },
+    ) => Path2D
+  >>,
+  Assert<Equal<
+    typeof crcRectPath,
+    (
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+      config?: {
+        alignToPixelGrid?: 'none' | 'round' | 'ceil' | 'floor';
+        lineWidth?: number;
+      },
+    ) => Path2D
+  >>,
+  Assert<Equal<
+    typeof resolveLength,
+    (
+      value: Length,
+      reference: number | undefined,
+      property: string,
+      context?: Readonly<LayoutDiagnosticContext>,
+    ) => number | undefined
+  >>,
+  Assert<Equal<
+    typeof normalizeEdges,
+    (
+      value: EdgeValues | undefined,
+      property: string,
+      context?: Readonly<LayoutDiagnosticContext>,
+    ) => Edges
+  >>,
+  Assert<Equal<
+    typeof resolveBox,
+    (
+      style: Readonly<import('@crc/core').BoxStyle>,
+      constraints: Readonly<import('@crc/core').Constraints>,
+      context?: Readonly<LayoutDiagnosticContext>,
+    ) => ResolvedBoxStyle
+  >>,
+];
+void (null as unknown as StudioSignatureParity);
+
+const fragmentResult: CRCNode = Fragment({ children: false });
+void fragmentResult;
 
 // @ts-expect-error compiler constructors stay off the root package
 void CRC_CORE_ROOT.jsx;
@@ -186,6 +430,98 @@ function EventProbe(): CRCNode {
   />;
 }
 createElement(EventProbe, {});
+
+const navigationBounds = {
+  x: 0,
+  y: 0,
+  width: 40,
+  height: 20,
+} satisfies LayoutBox;
+const mutableLineCoordinates: [number, number][] = [[0, 0], [40, 20]];
+const focusableBuiltIns = (
+  <>
+    <Rectangle keyboardFocusable keyboardNavigationBounds={navigationBounds} style={{ width: 40, height: 20 }} />
+    <Path keyboardFocusable keyboardNavigationBounds={navigationBounds} style={{ d: new Path2D() }} />
+    <SvgPath keyboardFocusable keyboardNavigationBounds={navigationBounds} style={{ d: 'M 0 0 L 40 20' }} />
+    <Line keyboardFocusable keyboardNavigationBounds={navigationBounds} style={{ coords: mutableLineCoordinates }} />
+    <HorizontalLine keyboardFocusable keyboardNavigationBounds={navigationBounds} style={{ y: 10 }} />
+    <VerticalLine keyboardFocusable keyboardNavigationBounds={navigationBounds} style={{ x: 10 }} />
+    <Text keyboardFocusable keyboardNavigationBounds={navigationBounds}>Focusable text</Text>
+    <Image keyboardFocusable keyboardNavigationBounds={navigationBounds} style={{ src: 'focusable.png' }} />
+  </>
+);
+void focusableBuiltIns;
+
+const readonlyLineCoordinates = [[0, 0], [40, 20]] as const;
+// @ts-expect-error LineStyle coordinates are mutable tuples in the package contract
+const readonlyLineStyle: LineStyle = { coords: readonlyLineCoordinates };
+void readonlyLineStyle;
+
+crcWhenChanged(() => undefined);
+crcCursor({});
+crcLinePath(mutableLineCoordinates, { closePath: true });
+// @ts-expect-error line-path configuration is an object, not a boolean flag
+crcLinePath(mutableLineCoordinates, true);
+crcRectPath(0, 0, 40, 20, {
+  alignToPixelGrid: 'round',
+  lineWidth: 2,
+});
+// @ts-expect-error rectangle alignment and line width belong to the config object
+crcRectPath(0, 0, 40, 20, 'round', 2);
+
+function ValidDirectComponent(props: { label: string }): CRCNode {
+  return <Text>{props.label}</Text>;
+}
+createElement(ValidDirectComponent, { label: 'valid', key: 'descriptor-key' });
+
+function ReservedKeyComponent(_props: { key: string }): CRCNode {
+  return undefined;
+}
+// @ts-expect-error key is descriptor metadata and cannot be a component prop
+createElement(ReservedKeyComponent, { key: 'program-key' });
+
+const diagnosticContext = {
+  component: 'StudioParityProbe',
+  algorithm: 'declaration-parity',
+} satisfies LayoutDiagnosticContext;
+const diagnosticInput = {
+  ...diagnosticContext,
+  property: 'width',
+  value: 'wide',
+  reason: 'must be a supported length',
+} satisfies LayoutDiagnosticInput;
+const diagnostic: LayoutDiagnostic = new LayoutDiagnostic(diagnosticInput);
+void diagnostic;
+
+const resolvedLength: number | undefined = resolveLength(
+  '50%',
+  200,
+  'width',
+  diagnosticContext,
+);
+void resolvedLength;
+// @ts-expect-error resolveLength requires a declared Length value
+resolveLength(undefined, 200, 'width');
+// @ts-expect-error diagnostic context must use the public context shape
+resolveLength(20, 200, 'width', 'not-a-context');
+
+const normalizedEdges = normalizeEdges(
+  { top: 1, right: 2, bottom: 3, left: 4 },
+  'padding',
+  diagnosticContext,
+);
+normalizedEdges.top = 5;
+// @ts-expect-error diagnostic context must use the public context shape
+normalizeEdges(1, 'padding', 'not-a-context');
+
+const resolvedBox: ResolvedBoxStyle = resolveBox(
+  { width: 100, height: 50, padding: 2 },
+  { minWidth: 0, maxWidth: 200, minHeight: 0, maxHeight: 100 },
+  diagnosticContext,
+);
+resolvedBox.contentBox.x = 3;
+// @ts-expect-error resolveBox requires finite allocation constraints
+resolveBox({ width: 100 }, diagnosticContext);
 
 const keyboardNavigationOptions = {
   mode: 'directional',
@@ -421,6 +757,10 @@ try {
     await writeFile(declarationPath, content);
   }
   await writeFile(join(directory, 'consumer.tsx'), consumer);
+  await writeFile(
+    join(directory, 'public-type-surface.ts'),
+    publicTypeSurfaceConsumer,
+  );
   await writeFile(join(directory, 'tsconfig.json'), JSON.stringify({
     compilerOptions: {
       jsx: 'react-jsx',
@@ -433,8 +773,59 @@ try {
       strict: true,
       target: 'ESNext',
     },
-    files: ['consumer.tsx'],
+    files: ['consumer.tsx', 'public-type-surface.ts'],
   }));
+  const packageEntrySets = [
+    {
+      label: 'source',
+      root: join(repositoryRoot, 'packages/core/src/index.ts'),
+      jsxRuntime: join(repositoryRoot, 'packages/core/src/jsx-runtime.ts'),
+      jsxDevRuntime: join(repositoryRoot, 'packages/core/src/jsx-dev-runtime.ts'),
+    },
+    {
+      label: 'built',
+      root: join(repositoryRoot, 'packages/core/dist/index.d.ts'),
+      jsxRuntime: join(repositoryRoot, 'packages/core/dist/jsx-runtime.d.ts'),
+      jsxDevRuntime: join(repositoryRoot, 'packages/core/dist/jsx-dev-runtime.d.ts'),
+    },
+  ];
+  for (const entries of packageEntrySets) {
+    const packageTsconfigPath = join(
+      directory,
+      `tsconfig.package-${entries.label}.json`,
+    );
+    await writeFile(packageTsconfigPath, JSON.stringify({
+      compilerOptions: {
+        jsx: 'react-jsx',
+        jsxImportSource: '@crc/core',
+        lib: ['ESNext', 'DOM'],
+        module: 'ESNext',
+        moduleResolution: 'Bundler',
+        noEmit: true,
+        paths: {
+          '@crc/core': [entries.root],
+          '@crc/core/jsx-runtime': [entries.jsxRuntime],
+          '@crc/core/jsx-dev-runtime': [entries.jsxDevRuntime],
+        },
+        skipLibCheck: false,
+        strict: true,
+        target: 'ESNext',
+      },
+      files: ['consumer.tsx', 'public-type-surface.ts'],
+    }));
+    const packageResult = spawnSync(
+      process.execPath,
+      [tsc, '-p', packageTsconfigPath],
+      { encoding: 'utf8' },
+    );
+    if (packageResult.status !== 0) {
+      process.stderr.write(packageResult.stdout);
+      process.stderr.write(packageResult.stderr);
+      throw new Error(
+        `CRC ${entries.label} package declarations failed the Studio parity fixture.`,
+      );
+    }
+  }
   const result = spawnSync(process.execPath, [tsc, '-p', directory], {
     encoding: 'utf8',
   });
@@ -542,7 +933,10 @@ try {
   if (sourceRuntimeExports.join('\n') !== builtRuntimeExports.join('\n')) {
     throw new Error('CRC Studio source and built runtime surfaces differ.');
   }
-  process.stdout.write('CRC Studio declarations passed strict TSX, compiler-runtime, event-family, generic, layout, and surface checks.\n');
+  process.stdout.write(
+    'CRC Studio declarations passed source/built package parity, strict TSX, ' +
+    'compiler-runtime, event-family, generic, layout, and surface checks.\n',
+  );
 } finally {
   await rm(directory, { recursive: true, force: true });
 }

@@ -76,13 +76,15 @@
   type CRCPolicyChild = CRCElement<any> | CRCEmptyNode | readonly CRCPolicyChild[] | (Iterable<CRCPolicyChild> & { readonly charAt?: never });
   export interface FocusManagementProps { readonly children: CRCPolicyChild }
   export interface KeyboardNavigationProps extends CRCKeyboardNavigationOptions { readonly children: CRCPolicyChild }
-  export interface CRCEventTargetOptions {
+  interface CRCEventFocusOptions {
+    readonly keyboardFocusable?: boolean;
+    readonly keyboardNavigationBounds?: Readonly<LayoutBox>;
+  }
+  export interface CRCEventTargetOptions extends CRCEventFocusOptions {
     readonly path: Path2D;
     readonly fill?: boolean;
     readonly lineInteractionWidth?: number;
     readonly cursor?: string;
-    readonly keyboardFocusable?: boolean;
-    readonly keyboardNavigationBounds?: Readonly<LayoutBox>;
   }
   interface CRCModifierEvent<TOriginal extends Event> extends CRCEvent<TOriginal> {
     readonly altKey: boolean;
@@ -225,7 +227,7 @@
   export interface PathStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { d: Path2D; lineInteractionWidth?: number }
   export interface RectStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { x?: Exclude<Length, 'auto'>; y?: Exclude<Length, 'auto'>; width: Length; height: Length; alignToPixelGrid?: PixelGridAlignment; lineInteractionWidth?: number }
   export interface SvgPathStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { d: string; lineInteractionWidth?: number }
-  export interface LineStyle extends SystemStyle, CursorStyle, BoxStyle, LayoutItemStyle { coords: readonly (readonly [number, number])[]; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; lineInteractionWidth?: number }
+  export interface LineStyle extends SystemStyle, CursorStyle, BoxStyle, LayoutItemStyle { coords: [number, number][]; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; lineInteractionWidth?: number }
   export interface HorizontalLineStyle extends SystemStyle, CursorStyle, BoxStyle, LayoutItemStyle { y: Exclude<Length, 'auto'>; x1?: Exclude<Length, 'auto'>; x2?: Exclude<Length, 'auto'>; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; alignToPixelGrid?: PixelGridAlignment; lineInteractionWidth?: number }
   export interface VerticalLineStyle extends SystemStyle, CursorStyle, BoxStyle, LayoutItemStyle { x: Exclude<Length, 'auto'>; y1?: Exclude<Length, 'auto'>; y2?: Exclude<Length, 'auto'>; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; alignToPixelGrid?: PixelGridAlignment; lineInteractionWidth?: number }
   export type TextFit = 'visible' | 'squish' | 'ellipsis' | 'clip';
@@ -235,14 +237,14 @@
   export interface ClipStyle extends BoxStyle, LayoutItemStyle { d: Path2D; fillRule?: CanvasFillRule }
   export interface LayerStyle extends BoxStyle, LayoutItemStyle {}
 
-  export interface PathProps extends CRCEventHandlers {}
-  export interface RectangleProps extends CRCEventHandlers {}
-  export interface SvgPathProps extends CRCEventHandlers {}
-  export interface LineProps extends CRCEventHandlers {}
-  export interface HorizontalLineProps extends CRCEventHandlers {}
-  export interface VerticalLineProps extends CRCEventHandlers {}
-  export interface TextProps extends CRCEventHandlers { children?: CRCTextChild }
-  export interface ImageProps extends CRCEventHandlers {}
+  export interface PathProps extends CRCEventHandlers, CRCEventFocusOptions {}
+  export interface RectangleProps extends CRCEventHandlers, CRCEventFocusOptions {}
+  export interface SvgPathProps extends PathProps {}
+  export interface LineProps extends CRCEventHandlers, CRCEventFocusOptions {}
+  export interface HorizontalLineProps extends CRCEventHandlers, CRCEventFocusOptions {}
+  export interface VerticalLineProps extends CRCEventHandlers, CRCEventFocusOptions {}
+  export interface TextProps extends CRCEventHandlers, CRCEventFocusOptions { children?: CRCTextChild }
+  export interface ImageProps extends CRCEventHandlers, CRCEventFocusOptions {}
   export interface GroupProps { children: CRCNode }
   export interface ClipProps { children: CRCNode }
   export interface LayerProps { children: CRCNode }
@@ -264,14 +266,16 @@
   export interface MeasureInput<P, S extends SystemStyle = SystemStyle> { props: Readonly<P>; style: NormalizedStyle<S>; constraints: Readonly<Constraints>; service: CanvasMeasurementService; measureElement(element: CRCElement<any>, constraints: Readonly<Constraints>): MeasureResult }
   export interface LayoutDiagnosticContext { component?: string; algorithm?: string; constraints?: Readonly<Constraints> }
   export interface LayoutDiagnosticInput extends LayoutDiagnosticContext { property: string; value: unknown; reason: string }
-  export class LayoutDiagnostic extends Error { readonly component: string; readonly property: string; readonly suppliedValue: unknown; readonly algorithm: string; readonly constraints: Readonly<Constraints> | undefined }
+  export class LayoutDiagnostic extends Error { readonly component: string; readonly property: string; readonly suppliedValue: unknown; readonly algorithm: string; readonly constraints: Readonly<Constraints> | undefined; constructor(input: LayoutDiagnosticInput) }
 
   export interface CRCRef<T> { current: T | undefined }
   export type StateUpdater<T> = (update: T | ((oldValue: T) => T)) => void;
 
   export function crc(canvas: HTMLCanvasElement, element: CRCNode, config?: CRCConfig): CRCController;
-  export function createElement<P>(type: CRCElementType<P>, props: (P & { key?: CRCKey }) | null, ...children: CRCNode[]): CRCElement<P>;
-  export const Fragment: CRCComponent<{ children?: CRCNode }>;
+  type ElementInput<P> = 0 extends (1 & P) ? P & { key?: CRCKey } : 'key' extends UnionKeys<P> ? never : P & { key?: CRCKey };
+  type ElementInputOrNull<P> = [ElementInput<P>] extends [never] ? never : ElementInput<P> | null;
+  export function createElement<P>(type: CRCElementType<P>, props: ElementInputOrNull<P>, ...children: CRCNode[]): CRCElement<P>;
+  export function Fragment(props: { children?: CRCNode }): CRCNode;
   export function definePrimitive<P = Record<string, never>, S extends SystemStyle = SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N>(render: PrimitiveRender<P, R> & (PrimitiveInput<P, S> extends never ? never : unknown), ...capabilityArguments: PrimitiveCapabilityArguments<P, S, N, R>): CRCPrimitiveComponent<PrimitiveProgramProps<P>, PrimitiveInput<P, S>>;
   export const Rectangle: CRCPrimitiveComponent<RectangleProps, PrimitiveInput<RectangleProps, RectStyle>>;
   export const Path: CRCPrimitiveComponent<PathProps, PrimitiveInput<PathProps, PathStyle>>;
@@ -292,23 +296,23 @@
   export function measureElement(element: CRCElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService): MeasureResult;
   export const FocusManagement: (props: FocusManagementProps) => CRCNode;
   export const KeyboardNavigation: (props: KeyboardNavigationProps) => CRCNode;
-  export function resolveLength(value: Length | undefined, reference: number | undefined, property: string, context?: unknown): number | undefined;
-  export function normalizeEdges(value: EdgeValues | undefined, property: string, context?: unknown): Readonly<Edges>;
+  export function resolveLength(value: Length, reference: number | undefined, property: string, context?: Readonly<LayoutDiagnosticContext>): number | undefined;
+  export function normalizeEdges(value: EdgeValues | undefined, property: string, context?: Readonly<LayoutDiagnosticContext>): Edges;
   export function resolveBox(style: Readonly<BoxStyle>, constraints: Readonly<Constraints>, context?: Readonly<LayoutDiagnosticContext>): ResolvedBoxStyle;
   export function layoutDiagnostic(input: LayoutDiagnosticInput): LayoutDiagnostic;
   export function crcLayoutBox(): Readonly<LayoutBox>;
   export function crcCanvasContext(): RenderingContext2D;
   export function crcState<T>(initial?: T): readonly [T, StateUpdater<T>];
-  export function crcMemo<T>(create: () => T, dependencies: unknown[]): T;
+  export function crcMemo<T>(create: () => T, dependencies: any[]): T;
   export function crcRef<T>(initial?: T): CRCRef<T>;
-  export function crcWhenChanged(effect: () => void | (() => void), dependencies: unknown[]): void;
-  export function crcCursor(options: { style: string; path?: Path2D; fill?: boolean; lineInteractionWidth?: number }): void;
+  export function crcWhenChanged(effect: () => void | (() => void), dependencies?: any[]): void;
+  export function crcCursor(options: { style?: string; path?: Path2D; fill?: boolean; lineInteractionWidth?: number }): void;
   export function crcEvent<K extends Extract<CRCEventType, 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseout' | 'mousedown' | 'mouseup' | 'contextmenu'>>(eventName: K, listener: CRCEventHandler<K> | undefined, path: Path2D, fill?: boolean, lineInteractionWidth?: number): void;
   export function crcEvent<K extends 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseout' | 'mousedown' | 'mouseup' | 'contextmenu'>(eventName: K, listener?: CRCMouseEventListener, path?: Path2D, fill?: boolean, lineInteractionWidth?: number): void;
   export function crcEventListener(handlers: CRCEventHandlers): void;
   export function crcEventTarget(handlers: CRCEventHandlers, options: CRCEventTargetOptions): CRCEventTargetSnapshot;
-  export function crcLinePath(coords: [number, number][]): Path2D;
-  export function crcRectPath(x: number, y: number, width: number, height: number, alignment?: PixelGridAlignment, lineWidth?: number): Path2D;
+  export function crcLinePath(coords: [number, number][], config?: { closePath?: boolean }): Path2D;
+  export function crcRectPath(x: number, y: number, width: number, height: number, config?: { alignToPixelGrid?: PixelGridAlignment; lineWidth?: number }): Path2D;
   export function crcSvgPath(data: string): Path2D;
 
 /* @crc-studio-module @crc/core/jsx-runtime */
