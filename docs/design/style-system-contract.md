@@ -56,6 +56,8 @@ Normalization, resolution, and measurement do not render children or acquire
 runtime resources. Diagnostics name the component, property, supplied value,
 algorithm, constraints, and reason. A declared percentage or `auto` requires an
 explicit resolver; a resolved style type cannot retain allocation syntax.
+Unresolved percentages, unresolved `auto`, non-finite numeric geometry, and
+malformed allocation syntax reject before a primitive render callback runs.
 
 ## Length and box rules
 
@@ -73,13 +75,13 @@ scientific notation, malformed strings, and non-finite results reject.
 - `width` and `height` specify a content box. Min/max clamp content before
   numeric padding is added. Padding can reduce content to zero, not below.
 - There is no margin. Parent placement uses `left`/`top`; drawing-local geometry
-  uses `x`/`y` and line-helper endpoints.
+  uses `x`/`y` (`x1`/`x2` or `y1`/`y2` for line helpers).
 - Primitive rectangle/image geometry retains signed Canvas semantics outside
   nonnegative layout allocation.
 - `"auto"` is accepted only on documented measurement paths. Local offsets,
   parent offsets, and Grid tracks reject it.
 
-## Built-in style ownership
+## Style-only built-in migration
 
 | Component                        | Required/local style                                                       | Structural/program props                        |
 | -------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------- |
@@ -95,16 +97,18 @@ scientific notation, malformed strings, and non-finite results reject.
 | `Layer`                          | optional dimensions/layout participation                                   | recursive `children`                            |
 | Layout values                    | container box plus algorithm options                                       | recursive direct children                       |
 
-There is no runtime adapter for top-level visual fields, content in
-`TextStyle`, or callback-owned layer content. JavaScript receives the same
-strict resolution and child diagnostics as TypeScript.
+There is no runtime compatibility adapter, alias, or fallback for top-level
+visual fields, content in `TextStyle`, or callback-owned layer content.
+JavaScript receives the same strict resolution and child diagnostics as
+TypeScript.
 
 `opacity: 0` suppresses paint without removing separately registered target
-geometry. Image generations remain keyed by `style.src` with exact lifecycle
-ownership. Explicit image dimensions establish geometry before load and after
-failure, while each omitted natural dimension remains zero until a successful
-load supplies it. Group transforms retain the order documented in the drawing
-contract.
+geometry. Image generations remain keyed by `style.src`; source races,
+load/error settlement, source replacement, removal, and disposal retain exact
+resource ownership. Explicit image dimensions establish geometry before load
+and after failure, while each omitted natural dimension remains zero until a
+successful load supplies it. `Group` transforms retain the order documented in
+the drawing contract.
 
 ## Deliberate exclusions
 

@@ -428,9 +428,12 @@ describe("learning example catalog", () => {
         }
       `,
     ],
-  ])("rejects %s through resolved component aliases", (_name, authoring, source) => {
-    expectInvalidLearningSource(source, authoring);
-  });
+  ])(
+    "rejects %s through resolved component aliases",
+    (_name, authoring, source) => {
+      expectInvalidLearningSource(source, authoring);
+    },
+  );
 
   it.each([
     [
@@ -522,8 +525,10 @@ describe("learning example catalog", () => {
         const scene = new Builder().build();
       `,
     ],
-  ])("rejects a createElement binding shadowed by an %s parameter", (_name, setup) => {
-    const source = `
+  ])(
+    "rejects a createElement binding shadowed by an %s parameter",
+    (_name, setup) => {
+      const source = `
       import { crc, createElement, Group, type CRCController } from "@crc/core";
       ${setup}
       export default function mount(canvas: HTMLCanvasElement): CRCController {
@@ -531,13 +536,14 @@ describe("learning example catalog", () => {
       }
     `;
 
-    expect(() =>
-      validateLearningSourceText(source, {
-        authoring: "createElement",
-        label: "fixture",
-      }),
-    ).toThrow(/without aliases, reassignment, or shadowing/u);
-  });
+      expect(() =>
+        validateLearningSourceText(source, {
+          authoring: "createElement",
+          label: "fixture",
+        }),
+      ).toThrow(/without aliases, reassignment, or shadowing/u);
+    },
+  );
 
   it("allows unrelated object, class, and private method parameters", () => {
     expectValidNonJsxSource(`
@@ -630,15 +636,15 @@ describe("learning example catalog", () => {
         }
       `,
     ],
-  ])("rejects %s so props remain directly inspectable", (_name, authoring, source) => {
-    expectInvalidLearningSource(source, authoring);
-  });
+  ])(
+    "rejects %s so props remain directly inspectable",
+    (_name, authoring, source) => {
+      expectInvalidLearningSource(source, authoring);
+    },
+  );
 
   it.each([
-    [
-      "a source-backed named re-export",
-      `export { helper } from "./helper";`,
-    ],
+    ["a source-backed named re-export", `export { helper } from "./helper";`],
     ["a star re-export", `export * from "./helper";`],
     ["a local named export", `export const helper = 1;`],
     ["an import.meta expression", `const helperUrl = import.meta.url;`],
@@ -825,8 +831,10 @@ describe("learning example catalog", () => {
         void vocabulary.Text;
       `,
     ],
-  ])("allows imported component spellings in non-value %s", (_name, declarations) => {
-    expectValidNonJsxSource(`
+  ])(
+    "allows imported component spellings in non-value %s",
+    (_name, declarations) => {
+      expectValidNonJsxSource(`
       import {
         crc,
         createElement,
@@ -841,7 +849,8 @@ describe("learning example catalog", () => {
         return crc(canvas, createElement(Group, null));
       }
     `);
-  });
+    },
+  );
 
   it("still treats a computed key as a component value reference", () => {
     expectInvalidNonJsxSource(`
@@ -1093,7 +1102,58 @@ describe("learning example catalog", () => {
       }),
     ).not.toThrow();
     expect(source).toContain("createElement(");
-    expect(source).toMatch(/crc\(canvas,\s*createElement\(/u);
+    expect(source).toMatch(/crc\(\s*canvas,\s*createElement\(/u);
+  });
+
+  it("mounts and drives fragments, keyed dynamic children, text zero, focus policies, and lifecycle without JSX", async () => {
+    const { canvas, controller, textPaints } = await renderLearningExample(
+      "create-element-authoring",
+    );
+
+    expect(textPaints.map((paint) => paint.text)).toEqual(
+      expect.arrayContaining([
+        "SELECTED NONE · COUNT 0",
+        "LIFECYCLE 1",
+        "CHOICE A",
+        "CHOICE B",
+      ]),
+    );
+    expect(textPaints.map((paint) => paint.text)).not.toContain("CHOICE C");
+
+    await clickLogicalPoint(canvas, { x: 198, y: 238 });
+    await nextPaint();
+    expect(textPaints.slice(-12).map((paint) => paint.text)).toEqual(
+      expect.arrayContaining([
+        "SELECTED A · COUNT 1",
+        "LIFECYCLE 1",
+        "CHOICE C",
+      ]),
+    );
+
+    await pressKey("ArrowRight");
+    await pressKey("Enter");
+    await nextPaint();
+    expect(textPaints.slice(-12).map((paint) => paint.text)).toContain(
+      "SELECTED B · COUNT 2",
+    );
+
+    controller.dispose();
+    controller.dispose();
+    mountedControllers.splice(mountedControllers.indexOf(controller), 1);
+  });
+
+  it("renders numeric zero and updates state interpolation in Text children", async () => {
+    const { canvas, textPaints } = await renderLearningExample("text");
+
+    expect(textPaints.map((paint) => paint.text)).toContain(
+      "CLICK THE HEADLINE · ZERO 0 · #1f4bd8",
+    );
+
+    await clickLogicalPoint(canvas, { x: 360, y: 100 });
+    await nextPaint();
+    expect(textPaints.slice(-8).map((paint) => paint.text)).toContain(
+      "CLICK THE HEADLINE · ZERO 0 · #ff6b57",
+    );
   });
 
   it.each([

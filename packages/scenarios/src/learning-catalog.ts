@@ -118,15 +118,27 @@ const drafts = [
     order: 15,
     authoring: "createElement",
     summary:
-      "Build the same kind of interactive CRC tree with the explicit createElement API and no JSX syntax.",
-    api: ["createElement", "non-jsx", "Group", "Rectangle", "Text"],
+      "Build a complete interactive CRC tree with createElement, recursive children, focus policies, hooks, and no JSX syntax.",
+    api: [
+      "createElement",
+      "non-jsx",
+      "Fragment",
+      "Group",
+      "Rectangle",
+      "Text",
+      "FocusManagement",
+      "KeyboardNavigation",
+      "crcState",
+      "crcWhenChanged",
+    ],
     objectives: [
-      "Use createElement(type, props, ...children) for components, composition, and text content.",
-      "Mount a complete non-JSX scene that shares CRC's state, event, identity, and disposal semantics.",
+      "Use createElement(type, props, ...children) for fragments, keyed dynamic lists, components, and textual zero/state interpolation.",
+      "Mount and dispose a non-JSX scene with hook lifecycle, focus management, directional navigation, and keyboard activation.",
     ],
     prompts: {
-      gesture: "Click the gold card to toggle its non-JSX message.",
-      code: "Add another Text child with createElement, or change one style object.",
+      gesture:
+        "Click choice A, then press ArrowRight and Enter to activate choice B from the keyboard.",
+      code: "Add another keyed choice or another dynamic Text child with createElement.",
     },
     apiNotes: [
       "`createElement` is the complete non-JSX alternative and produces the same CRC element protocol as JSX.",
@@ -295,7 +307,7 @@ const drafts = [
     api: ["Text"],
     objectives: [
       "Control font, alignment, baseline, and paint.",
-      "Provide copy as Text child content, then constrain it with width, height, wrapping, and overflow style.",
+      "Provide literal, numeric-zero, and state-interpolated Text children, then constrain copy with width, height, wrapping, and overflow style.",
     ],
     prompts: {
       gesture: "Click the headline to cycle its accent.",
@@ -394,7 +406,7 @@ const drafts = [
       "Render a subtree on an offscreen Canvas, then compose it into the main scene.",
     api: ["Layer"],
     objectives: [
-      "Cache a component subtree in an offscreen layer.",
+      "Pass multiple direct children into one cached offscreen layer.",
       "Control layer dimensions and preserve child interaction.",
     ],
     prompts: {

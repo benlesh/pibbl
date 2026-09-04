@@ -1,6 +1,6 @@
 # JSX component authoring design
 
-> **Implementation status: CURRENT IMPLEMENTED DESIGN RECORD.** Approved wording is preserved; current usage lives in `docs/guides/` and normative contracts in `docs/design/`.
+> **Historical status: IMPLEMENTED DESIGN RECORD.** Approved wording is preserved; current usage lives in `docs/guides/` and normative contracts in `docs/design/`. Task 15 final aggregate verification remains pending.
 
 Status: approved on 2026-09-01 and implemented on 2026-09-03. This file
 preserves the approved design wording; current usage lives in `docs/guides/`,

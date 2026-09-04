@@ -8,7 +8,7 @@ hooks, recovery, and disposal. The [resource ownership
 contract](./runtime-resource-ownership.md) defines exact release rules and the
 [Canvas surface contract](./canvas-surface-contract.md) defines root geometry.
 
-## Element and component protocol
+## Component and tree identity
 
 `CRCElement` is an opaque immutable description branded at runtime with
 `Symbol.for("@crc/core.element")` and nominally in TypeScript. It contains a
@@ -47,6 +47,10 @@ and returns a stable controller. Later calls queue root replacement on that
 same mount and return the controller. Later calls cannot change the initial
 viewport, fit, pixel ratio, or abort signal.
 
+The controller return is additive: callers may ignore it and retain the same
+mounted behavior. Retaining it enables explicit idempotent disposal without
+keeping a disposed scene instance alive.
+
 ## Traversal and identity
 
 On a scheduled frame CRC:
@@ -78,6 +82,9 @@ Identity is resolved within one parent scope:
 Keys must be unique after transparent flattening in their sibling scope.
 Reparenting or adding a component/keyed-fragment wrapper creates a different
 scope; a key does not preserve identity across parents.
+Duplicates report `Duplicate CRC key "<key>" under "<parent>"`. Removing a
+component, changing its key or type, replacing its root type, or disposing the
+instance releases that identity and every hook resource it owns.
 
 Source traversal is paint order. Coordinate targeting searches the shared
 paint ledger in reverse. Policy values `FocusManagement` and
@@ -104,7 +111,8 @@ CRC hooks can only be called while rendering a component.
 
 Each component owns ordered, typed slots. Every successful update must call
 the same number and kinds in the same order. CRC reports a changed kind, added
-slot, or omitted slot deterministically and releases abandoned ownership. A
+slot, or omitted slot deterministically. Before reporting an omitted slot, CRC
+releases the abandoned slot's owned resources. A
 failed render closes the instance's component refs, clears the partial tree,
 and restores temporary globals. This is a fail-closed reset, not pixel rollback;
 a later explicit render remounts cleanly.
@@ -130,14 +138,17 @@ a later explicit render remounts cleanly.
 The three memoized path helpers are distinct slot kinds. Reordering them is a
 hook-order error even though all return `Path2D`.
 
-## Pure measurement
+## Pure measurement boundary
 
 `measureElement` and a `definePrimitive` `measure` capability are not render
 passes. They normalize style and may recursively measure elements, but cannot
 invoke render callbacks, hooks, `crcLayoutBox`, `crcCanvasContext`, paint,
 register interaction, load images, or acquire resources. CRC clears and
-restores temporary render state in `finally`. Direct or indirect cycles report
-a contextual `LayoutDiagnostic`; a later valid measurement remains usable.
+restores temporary render state in `finally`. When measurement is nested during
+an active render, that isolation prevents attempted measurement hooks from
+consuming or reordering the parent component's hook slots. Direct or indirect
+cycles report a contextual `LayoutDiagnostic`; a later valid measurement
+remains usable.
 
 Plain components do not expose intrinsic measurement. Allocation-dependent
 primitive style requires an explicit resolver and must become finite before the
@@ -151,7 +162,7 @@ already painted earlier in the frame remain. The controller's `dispose()` is
 idempotent, cancels the exact pending frame, releases every owned resource, and
 cannot affect a replacement mount. Abort uses the same guarded path.
 
-## Package boundary and evidence
+## Public package boundary
 
 The package exports the runtime, controller and surface types, components,
 hooks, hook values, and compiler-only
@@ -160,6 +171,8 @@ NodeNext, built, and packed consumers verify those entries, the CRC/React type
 boundary, and blocked private subpaths. The `runtime-hooks-laboratory`, JSX
 authoring tests, lifecycle stress suite, and cleanup ledgers cover traversal,
 identity, hook order, recovery, and disposal through public elements.
+
+## Deterministic evidence
 
 The presentation-neutral `runtime-hooks-laboratory` is loaded through the same
 catalog entry by the Studio and headless Chromium. It proves exact render

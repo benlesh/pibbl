@@ -104,10 +104,12 @@ Mounts or updates a `CRCNode` on an `HTMLCanvasElement` or `OffscreenCanvas`.
 The first mount owns the configuration and returns a stable `CRCController`
 with idempotent `dispose()`. A later call for the same Canvas queues the latest
 root and returns that controller. A root may be one element, a fragment/list,
-an iterable, or an empty node.
+a finite synchronous iterable, or an empty node. Infinite iterables are
+unsupported; CRC does not promise to detect them.
 
-`CRCConfig` is either a fixed logical viewport with optional `fit` and
-`pixelRatio`, or `{ viewport: "responsive", pixelRatio?, signal? }`. Fixed
+`CRCConfig` is either a fixed logical viewport with optional `fit`,
+`pixelRatio`, and `signal`, or
+`{ viewport: "responsive", pixelRatio?, signal? }`. Fixed
 defaults capture the initial Canvas attributes, center with `contain`, and use
 device density. See the [surface contract](./design/canvas-surface-contract.md).
 

@@ -63,7 +63,10 @@ function TypeStudy() {
         textAlign: "center",
       }}
     >
-      {"CLICK THE HEADLINE"}
+      {"CLICK THE HEADLINE · ZERO "}
+      {0}
+      {" · "}
+      {accent}
     </Text>,
   ];
 }

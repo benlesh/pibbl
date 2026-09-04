@@ -7,58 +7,6 @@ import {
   Text,
   type CRCController,
 } from "@crc/core";
-interface BadgeProps {
-  active: boolean;
-  onSelect: () => void;
-}
-function Badge(props: BadgeProps) {
-  return [
-    <Rectangle
-      style={{
-        x: 0,
-        y: 0,
-        width: 344,
-        height: 214,
-        fill: props.active ? "#f7c948" : "#74d3ae",
-        stroke: "#17211d",
-        strokeWidth: 6,
-        cursor: "pointer",
-      }}
-      onClick={props.onSelect}
-    />,
-    <Rectangle
-      style={{
-        x: 34,
-        y: 34,
-        width: 86,
-        height: 146,
-        fill: "#1f4bd8",
-      }}
-    />,
-    <Text
-      style={{
-        x: 226,
-        y: 84,
-        fill: "#17211d",
-        font: "900 25px sans-serif",
-        textAlign: "center",
-      }}
-    >
-      {props.active ? "LAYER!" : "OFFSCREEN"}
-    </Text>,
-    <Text
-      style={{
-        x: 226,
-        y: 130,
-        fill: "#17211d",
-        font: "700 12px monospace",
-        textAlign: "center",
-      }}
-    >
-      {"CLICK THE BADGE"}
-    </Text>,
-  ];
-}
 function LayerStudy() {
   const [active, setActive] = crcState(false);
   return [
@@ -94,7 +42,50 @@ function LayerStudy() {
           height: 214,
         }}
       >
-        <Badge active={active} onSelect={() => setActive((value) => !value)} />
+        <Rectangle
+          style={{
+            x: 0,
+            y: 0,
+            width: 344,
+            height: 214,
+            fill: active ? "#f7c948" : "#74d3ae",
+            stroke: "#17211d",
+            strokeWidth: 6,
+            cursor: "pointer",
+          }}
+          onClick={() => setActive((value) => !value)}
+        />
+        <Rectangle
+          style={{
+            x: 34,
+            y: 34,
+            width: 86,
+            height: 146,
+            fill: "#1f4bd8",
+          }}
+        />
+        <Text
+          style={{
+            x: 226,
+            y: 84,
+            fill: "#17211d",
+            font: "900 25px sans-serif",
+            textAlign: "center",
+          }}
+        >
+          {active ? "LAYER!" : "OFFSCREEN"}
+        </Text>
+        <Text
+          style={{
+            x: 226,
+            y: 130,
+            fill: "#17211d",
+            font: "700 12px monospace",
+            textAlign: "center",
+          }}
+        >
+          {"CLICK THE BADGE"}
+        </Text>
       </Layer>
     </Group>,
   ];

@@ -62,7 +62,8 @@ function Results({ items, showFooter }: ResultsProps): CRCNode {
 
 Iterables must be finite. CRC materializes a receiving iterable once per render
 or measurement operation so a generator is not consumed separately for layout
-and paint. Arrays are the clearest reusable list form.
+and paint. Infinite iterables are unsupported and CRC does not promise to detect
+them. Arrays are the clearest reusable list form.
 
 ## Empty values and invalid container children
 

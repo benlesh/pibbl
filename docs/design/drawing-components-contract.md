@@ -28,7 +28,7 @@ children, and composition values accept recursive `CRCNode` children.
 - Platform-defined parsing, glyph rasterization, image decoding, CORS/taint,
   and antialiasing remain platform-defined.
 
-## Drawing values
+## Component matrix
 
 | Export           | Style/content contract                                                                                                                                                                                           | Evidence                                                            |
 | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
@@ -45,7 +45,7 @@ Every drawing value accepts the supported DOM-aligned event/focus props through
 its props type. It creates a logical target only when interactive metadata
 requires one. Purely painted content does not occlude a registered target.
 
-## Text children and layout
+## Text layout details
 
 `Text` concatenates strings and numbers, including zero, from recursive arrays
 or finite synchronous iterables. Booleans and nullish values add nothing. It
@@ -71,13 +71,17 @@ supplied; omitted height uses the Canvas allocation. Interaction paths union
 actual metrics for every rendered line. Paint and pure measurement share this
 resolver, so measured wrapping and eventual rendering agree.
 
+Exact Canvas calls are tested with controlled text metrics. Image comparison
+masks only glyph rasterization; surrounding cards, clipping, layout, state, and
+interaction bounds remain exact.
+
 ## Composition values
 
-| Export  | Contract                                                                                                                                                                  |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Group` | Applies nested scale, rotation/origin, translation, and skew to all recursive children. Zero/negative scale and sibling isolation retain Canvas semantics.                |
-| `Clip`  | Applies required `Path2D` `d` and optional `nonzero`/`evenodd` rule to all children. Nested clips intersect and paint/hit geometry agree.                                 |
-| `Layer` | Renders multiple children into one persistent offscreen CRC instance, caches retained content, follows root density, and participates in global paint/target/focus order. |
+| Export  | Contract                                                                                                                                                                   |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Group` | Applies nested scale, rotation/origin, translation, and skew to all recursive children. Updates, zero/negative scale, and sibling isolation retain Canvas semantics.       |
+| `Clip`  | Applies required `Path2D` `d` and optional `nonzero`/`evenodd` rule to all children. Nested intersections, transforms, updates, empty clips, and paint/hit geometry agree. |
+| `Layer` | Renders multiple children into one persistent offscreen CRC instance, caches retained content, follows root density, and participates in global paint/target/focus order.  |
 
 `Layer` uses children, not a render callback. It installs a stable private keyed
 fragment as the offscreen root. Direct child iterables are materialized once;
@@ -85,12 +89,19 @@ retained comparisons do not consume opaque nested iterables. Cache hits replay
 focus metadata without executing child components. Removal recursively
 disposes its controller, targets, frames, images, and nested layers.
 
+On one persistent mount, a `Layer` invalidates and rerenders when its retained
+child root type/key, child props (including enumerable symbol keys), specified
+style, direct-child sequence, or layer dimensions change.
+Same-mount root, prop, and dimension updates replace the prior offscreen content; an
+unchanged retained tree reuses the cached backing store. Root density changes
+independently resize and rerender that backing store.
+
 Managed layers require `OffscreenCanvas`. Their backing stores inherit both
 root densities and composite the complete physical source into the declared
 logical destination. Transforms, clips, layout overflow, events, and focus use
 the same geometry as paint.
 
-## Image ownership
+## Image lifetime and geometry
 
 Each `style.src` creates a source-tagged image generation. Load/error handlers
 detach on settlement, source replacement, component removal, or disposal.
@@ -105,15 +116,17 @@ Pixel alignment produces one adjusted rectangle used by `drawImage`, the
 optional border, and the interaction path. It does not stretch the image by an
 extra pixel.
 
-## Examples and boundaries
+## Visual evidence and limitations
 
 The Studio exposes one lesson for each drawing/composition value under
-`#/examples/drawing/*` and `#/examples/composition/*`, backed by `.example.tsx`
-files also mounted headlessly. The five stable 480×240 deterministic drawing
-fixtures retain semantic, Canvas-call, geometry, interaction, and inspected
-pixel evidence. Image comparison masks only glyph rasterization and decoded SVG
-edges where documented; surrounding cards, clipping, layout, state, and
-interaction bounds remain exact.
+`#/examples/drawing/rectangle` through `#/examples/drawing/image` and
+`#/examples/composition/group` through `#/examples/composition/layer`. It also
+retains the five stable `#/testing/drawing-*` integration fixtures. Their
+`.example.tsx` modules are loaded by both Studio and browser tests. The stable
+480×240 baselines retain semantic, Canvas-call, geometry, interaction, and
+inspected-pixel evidence. Image comparison masks only glyph rasterization and
+decoded-SVG edges where documented; surrounding cards, clipping, layout,
+state, and interaction bounds remain exact.
 
 CRC adds no rich text, semantic DOM, accessibility tree, image CORS policy, SVG
 validator, retained scene graph, or complete CSS formatting engine. See the

@@ -3,13 +3,15 @@
 Status: current architecture. Project Plan 003 established style/layout on
 2026-08-18; the JSX authoring pivot updated the element boundary on 2026-09-03.
 
+## Purpose
+
 This document describes how branded elements, local style, pure measurement,
 and declared-box layout preserve CRC's scheduled immediate-mode Canvas model.
 The completed Plan 003 design and implementation documents remain dated
 historical evidence for the original style/layout delivery; this document is
 the current authoring and runtime architecture.
 
-## Invariants
+## Existing constraints
 
 CRC preserves:
 
@@ -25,7 +27,9 @@ CRC preserves:
 There is no DOM renderer, virtual DOM reconciliation, retained display list,
 style cascade, or speculative child render.
 
-## Branded element protocol
+## Architectural units
+
+### Element protocol
 
 JSX and `createElement(type, props, ...children)` create the same lightweight
 descriptor:
@@ -51,7 +55,7 @@ The descriptor is an ephemeral description, not a retained render node.
 Calling a component directly does not construct one. Platform component values
 report a targeted error when invoked outside the renderer.
 
-## Recursive nodes and preparation
+### Recursive nodes and preparation
 
 ```ts
 type CRCNode =
@@ -76,7 +80,7 @@ foreign elements, and unsupported objects reject contextually. `Text` uses a
 separate scalar algebra that concatenates strings/numbers (including zero) and
 empty values while rejecting elements and async/unsupported input.
 
-## Component dispatch
+### Component type capabilities
 
 The runtime stores private metadata keyed by component function:
 
@@ -108,7 +112,7 @@ Transparent `FocusManagement` and `KeyboardNavigation` values attach private
 lifecycle descriptors to their one prepared child. They do not paint, lay out,
 own hooks, or add identity.
 
-## Local style pipeline
+### Style schemas
 
 Visual and layout inputs are always inside `props.style` on the descriptor.
 Component-specific schemas positively opt into `SystemStyle` and remain closed.
@@ -129,7 +133,7 @@ Plain components continue to receive their exact specified style. A parent may
 inspect it for allocation, but the finite child-local allocation is exposed
 separately through `crcLayoutBox()`.
 
-### Type-level schema enforcement
+#### Type-level schema enforcement
 
 Style schemas are capability intersections, not a global property bag.
 `BoxStyle`, `LayoutItemStyle`, paint/cursor types, and component-specific
@@ -156,7 +160,7 @@ The descriptor keeps one `props` object, including specified `style` and
 receives reserved metadata apart from its ordinary program props. Plain
 functions receive their author props normally.
 
-### Lengths, boxes, and constraints
+### Length and constraint values
 
 The common allocation vocabulary remains deliberately finite:
 
@@ -199,7 +203,7 @@ units.
 Margin, scrolling, implicit Grid placement, reverse/reordered Flexbox, and
 advanced intrinsic CSS sizing stay outside this architecture.
 
-## Algorithm boundary
+### Layout algorithms
 
 Each dedicated layout component delegates placement to an isolated algorithm
 with no Canvas-paint responsibility. Conceptually it consumes normalized
@@ -233,7 +237,7 @@ their documented behavior; divergent algorithms retain CRC-specific names.
 
 ## Render pipeline
 
-### Drawing or composition element
+### Normal drawing element
 
 For a platform drawing/composition element the runtime:
 
@@ -285,7 +289,7 @@ capability about its already-declared children. Normal traversal later performs
 the actual inner layout and paint. A plain component that hides a layout
 subtree is opaque to its parent and therefore needs a definite outer size.
 
-## Layout preparation and placement
+## Identity and ordering
 
 Each layout component prepares one immutable direct-element array before
 algorithm work. It normalizes direct child style without invoking child
@@ -318,7 +322,7 @@ placement descriptor never becomes a public wrapper or author-visible node.
 CSS ordering features remain disabled until allocation, paint/interaction
 order, and identity are implemented and documented together.
 
-## Pure measurement boundary
+## Measurement architecture
 
 Measurement receives program props, normalized style, constraints, an explicit
 Canvas text service, and a recursive `measureElement`. It returns measured
@@ -341,12 +345,17 @@ DOM coordinates. Measurement caching is not required; if introduced after
 structural evidence, a cache key must include component type, relevant props,
 normalized style, constraints, and environment inputs such as font metrics.
 
-## Geometry and composition
+## Geometry semantics
+
+### Allocation and local paint coordinates
 
 Layout owns the child's allocation origin and available size. Placement
 translates into child-local coordinates. Primitive `x`/`y` remain local paint
-offsets; parent `left`/`top` remain allocation offsets. The complete equation
-is:
+offsets; parent `left`/`top` remain allocation offsets.
+
+### Transforms
+
+The complete composition equation is:
 
 ```text
 root surface × ancestor Group × layout placement × child Group × local geometry
@@ -368,11 +377,14 @@ composite position.
 
 Layout placement applies before a child's own transform. Pixel-grid adjustment
 runs in the component's local paint space after resolved dimensions are known.
+
+### Clipping and overflow
+
 Visible overflow creates no layout clip. Clipped overflow adds a CRC-managed
 content-box clip whose intersection is shared by paint and hit testing; it does
 not imply scrolling.
 
-## Explicit style composition
+## Style composition and custom components
 
 Reusable styles remain ordinary immutable values and object composition:
 
@@ -395,7 +407,7 @@ CRC never merges parent style into a child. A component forwards or derives
 the style fields it intentionally owns. System normalization ignores
 application-owned `custom` data.
 
-## Error ownership
+## Errors and failure containment
 
 Diagnostics are raised by the closest responsible boundary: invalid style
 syntax or unknown value, non-finite resolution, unsupported/cyclic or
@@ -475,7 +487,7 @@ full package/browser/visual cost while a local slice is changing.
 10. Focus policies decorate exactly one element without becoming identity or
     layout boundaries.
 
-## Historical lineage
+## Incremental delivery seams
 
 Plan 003 delivered the architecture in six reviewable seams: element/style
 metadata; box/constraint/root allocation; stable placement with

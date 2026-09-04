@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import {
   access,
   mkdtemp,
@@ -18,6 +19,19 @@ import { transform } from "esbuild";
 
 const repositoryRoot = resolve(import.meta.dirname, "..");
 const require = createRequire(import.meta.url);
+
+function trackedRepositoryFiles(pathspecs) {
+  const listing = spawnSync("git", ["ls-files", "--", ...pathspecs], {
+    cwd: repositoryRoot,
+    encoding: "utf8",
+  });
+  assert.equal(
+    listing.status,
+    0,
+    `Could not inventory tracked repository files:\n${listing.stderr}`,
+  );
+  return listing.stdout.split("\n").filter(Boolean).sort();
+}
 const guidePaths = [
   "docs/guides/children-text-lists-and-keys.md",
   "docs/guides/components-props-and-style.md",
@@ -70,19 +84,27 @@ const migrationMarkdownPaths = new Set([
   "docs/migrations/jsx-authoring-pivot.md",
 ]);
 const operationalMarkdownPaths = new Set([".beads/README.md"]);
-const presentationSourcePaths = [
-  "packages/scenarios/src/catalog.ts",
-  "packages/scenarios/src/learning-catalog.ts",
-  "playground/index.html",
-  "playground/src/crc-editor-types.txt",
-  "playground/src/editor-workbench.ts",
-  "playground/src/learning-sources.ts",
+const presentationSourcePaths = trackedRepositoryFiles([
+  "packages/scenarios/src",
+  "playground",
+]).filter((path) => /\.(?:html|mjs|ts|tsx|txt)$/u.test(path));
+const exampleSourcePaths = trackedRepositoryFiles(["*.example.tsx"]);
+for (const path of exampleSourcePaths) {
+  assert.ok(
+    presentationSourcePaths.includes(path),
+    `Active example source escaped the presentation vocabulary gate: ${path}`,
+  );
+}
+for (const representative of [
+  "packages/scenarios/src/learning/start/getting-started.example.tsx",
+  "packages/scenarios/src/mouse-contract.ts",
   "playground/src/main.ts",
-  "playground/src/sandbox-module.ts",
-  "playground/src/sandbox-runner.ts",
-  "playground/src/scenario-sources.ts",
-  "playground/src/share-code.ts",
-];
+]) {
+  assert.ok(
+    presentationSourcePaths.includes(representative),
+    `Presentation source discovery omitted ${representative}`,
+  );
+}
 const historicalMarkdownPatterns = [
   /^\.superpowers\/sdd\//u,
   /^docs\/design\/tfc-01-characterization-baseline\.md$/u,
@@ -101,6 +123,66 @@ function parseModule(source, filename) {
   });
 }
 
+const compilerRuntimeEntryPaths = new Set([
+  "packages/core/src/jsx-dev-runtime.ts",
+  "packages/core/src/jsx-runtime.ts",
+]);
+
+function compilerJsxNamespaceMembers(declaration, filename) {
+  assert.ok(
+    compilerRuntimeEntryPaths.has(filename),
+    `${filename} uses unsupported exported namespace ${declaration.id?.name ?? "<unknown>"}`,
+  );
+  assert.equal(
+    declaration.id?.type,
+    "Identifier",
+    `${filename} uses an unsupported exported module name`,
+  );
+  assert.equal(
+    declaration.id.name,
+    "JSX",
+    `${filename} uses unsupported exported namespace ${declaration.id.name}`,
+  );
+  assert.equal(
+    declaration.body?.type,
+    "TSModuleBlock",
+    `${filename} must define JSX with an inline namespace block`,
+  );
+
+  const names = new Set();
+  for (const rawMember of declaration.body.body) {
+    assert.equal(
+      rawMember.type,
+      "ExportNamedDeclaration",
+      `${filename} JSX namespace uses unsupported member ${rawMember.type}`,
+    );
+    assert.equal(
+      rawMember.source,
+      null,
+      `${filename} JSX namespace must not re-export another module`,
+    );
+    assert.equal(
+      rawMember.specifiers.length,
+      0,
+      `${filename} JSX namespace uses unsupported export specifiers`,
+    );
+    const member = rawMember.declaration;
+    assert.ok(member, `${filename} JSX namespace has an empty export`);
+    assert.ok(
+      member.type === "TSTypeAliasDeclaration" ||
+        member.type === "TSInterfaceDeclaration",
+      `${filename} JSX namespace uses unsupported runtime member ${member.type}`,
+    );
+    assert.equal(
+      member.id.type,
+      "Identifier",
+      `${filename} JSX namespace member must have an identifier`,
+    );
+    names.add(member.id.name);
+  }
+  return names;
+}
+
 export function exportedSpecifiers(source, filename) {
   const values = new Set();
   const types = new Set();
@@ -116,6 +198,15 @@ export function exportedSpecifiers(source, filename) {
       "ExportDefaultDeclaration",
       `${filename} uses an unsupported default export`,
     );
+    if (
+      statement.type === "TSExportAssignment" ||
+      statement.type === "TSNamespaceExportDeclaration" ||
+      (statement.type === "TSImportEqualsDeclaration" && statement.isExport)
+    ) {
+      assert.fail(
+        `${filename} uses unsupported top-level export ${statement.type}`,
+      );
+    }
     if (statement.type !== "ExportNamedDeclaration") continue;
 
     if (statement.declaration) {
@@ -142,14 +233,17 @@ export function exportedSpecifiers(source, filename) {
           types.add(declaration.id.name);
       } else if (
         declaration.type === "TSTypeAliasDeclaration" ||
-        declaration.type === "TSInterfaceDeclaration" ||
-        declaration.type === "TSDeclareFunction"
+        declaration.type === "TSInterfaceDeclaration"
       ) {
         types.add(declaration.id.name);
+      } else if (declaration.type === "TSDeclareFunction") {
+        values.add(declaration.id.name);
       } else if (declaration.type === "TSEnumDeclaration") {
         values.add(declaration.id.name);
         types.add(declaration.id.name);
-      } else if (declaration.type !== "TSModuleDeclaration") {
+      } else if (declaration.type === "TSModuleDeclaration") {
+        compilerJsxNamespaceMembers(declaration, filename);
+      } else {
         assert.fail(
           `${filename} uses unsupported direct export ${declaration.type}`,
         );
@@ -174,7 +268,7 @@ export function exportedSpecifiers(source, filename) {
 }
 
 function jsxNamespaceMembers(source, filename) {
-  const names = new Set();
+  let names;
   for (const statement of parseModule(source, filename).program.body) {
     const declaration =
       statement.type === "ExportNamedDeclaration"
@@ -188,14 +282,10 @@ function jsxNamespaceMembers(source, filename) {
     ) {
       continue;
     }
-    for (const member of declaration.body.body) {
-      const exported =
-        member.type === "ExportNamedDeclaration" ? member.declaration : member;
-      if (exported && "id" in exported && exported.id?.type === "Identifier") {
-        names.add(exported.id.name);
-      }
-    }
+    assert.equal(names, undefined, `${filename} exports JSX more than once`);
+    names = compilerJsxNamespaceMembers(declaration, filename);
   }
+  assert.ok(names, `${filename} is missing its exported JSX namespace`);
   return names;
 }
 
@@ -473,6 +563,374 @@ export function assertNonJsxCoverage(source) {
   }
 }
 
+function walkSyntax(value, visit) {
+  if (Array.isArray(value)) {
+    for (const item of value) walkSyntax(item, visit);
+    return;
+  }
+  if (!value || typeof value !== "object" || typeof value.type !== "string") {
+    return;
+  }
+  visit(value);
+  for (const [key, child] of Object.entries(value)) {
+    if (["comments", "loc", "start", "end", "extra"].includes(key)) continue;
+    walkSyntax(child, visit);
+  }
+}
+
+function identifierName(node) {
+  return node?.type === "Identifier" ? node.name : undefined;
+}
+
+function memberName(node) {
+  if (node?.type !== "MemberExpression" || node.computed) return undefined;
+  return identifierName(node.property);
+}
+
+function jsxName(node) {
+  return node?.type === "JSXIdentifier" ? node.name : undefined;
+}
+
+function callName(node) {
+  return node?.type === "CallExpression"
+    ? identifierName(node.callee)
+    : undefined;
+}
+
+function stateBindings(program) {
+  const bindings = new Map();
+  walkSyntax(program, (node) => {
+    if (
+      node.type !== "VariableDeclarator" ||
+      node.id?.type !== "ArrayPattern" ||
+      callName(node.init) !== "crcState"
+    ) {
+      return;
+    }
+    const valueName = identifierName(node.id.elements[0]);
+    if (valueName) bindings.set(valueName, node.init.arguments[0]);
+  });
+  return bindings;
+}
+
+function assertLayerEvidence(source) {
+  const program = parseModule(source, "multi-child Layer evidence").program;
+  const layers = [];
+  walkSyntax(program, (node) => {
+    if (
+      node.type === "JSXElement" &&
+      jsxName(node.openingElement?.name) === "Layer"
+    ) {
+      layers.push(node);
+    }
+  });
+  assert.ok(layers.length > 0, "Layer evidence must render a Layer element");
+  assert.ok(
+    layers.some(
+      (layer) =>
+        layer.children.filter(
+          (child) =>
+            child.type === "JSXElement" || child.type === "JSXFragment",
+        ).length >= 2,
+    ),
+    "Layer evidence must exercise a multi-child Layer with direct children",
+  );
+}
+
+function assertNamedJsxEvidence(source, component) {
+  const program = parseModule(
+    source,
+    `${component} composition evidence`,
+  ).program;
+  let found = false;
+  walkSyntax(program, (node) => {
+    if (
+      node.type === "JSXElement" &&
+      jsxName(node.openingElement?.name) === component
+    ) {
+      found = true;
+    }
+  });
+  assert.ok(found, `${component} example must render a ${component} element`);
+}
+
+function assertTextEvidence(source) {
+  const program = parseModule(source, "Text interpolation evidence").program;
+  const stateNames = new Set(stateBindings(program).keys());
+  let hasZero = false;
+  let hasState = false;
+  walkSyntax(program, (node) => {
+    if (
+      node.type !== "JSXElement" ||
+      jsxName(node.openingElement?.name) !== "Text"
+    ) {
+      return;
+    }
+    for (const child of node.children) {
+      if (child.type !== "JSXExpressionContainer") continue;
+      if (
+        child.expression?.type === "NumericLiteral" &&
+        child.expression.value === 0
+      ) {
+        hasZero = true;
+      }
+      walkSyntax(child.expression, (expression) => {
+        if (
+          expression.type === "Identifier" &&
+          stateNames.has(expression.name)
+        ) {
+          hasState = true;
+        }
+      });
+    }
+  });
+  assert.ok(hasZero, "Text evidence must render numeric zero as a child");
+  assert.ok(
+    hasState,
+    "Text evidence must render state interpolation as a child",
+  );
+}
+
+function objectProperty(object, name) {
+  if (object?.type !== "ObjectExpression") return undefined;
+  const property = object.properties.find(
+    (candidate) =>
+      candidate.type === "ObjectProperty" &&
+      !candidate.computed &&
+      identifierName(candidate.key) === name,
+  );
+  return property?.value;
+}
+
+function assertNonJsxEvidence(source) {
+  const program = parseModule(source, "complete non-JSX evidence").program;
+  const bindings = stateBindings(program);
+  const zeroStateNames = new Set(
+    [...bindings]
+      .filter(
+        ([, initial]) =>
+          initial?.type === "NumericLiteral" && initial.value === 0,
+      )
+      .map(([name]) => name),
+  );
+  const constructed = new Set();
+  let hasJsx = false;
+  let hasKey = false;
+  let hasConditionalList = false;
+  let hasDirectionalPolicy = false;
+  let hasLifecycle = false;
+  let hasMount = false;
+  let textUsesZeroState = false;
+  let textUsesDynamicState = false;
+
+  walkSyntax(program, (node) => {
+    if (node.type === "JSXElement" || node.type === "JSXFragment")
+      hasJsx = true;
+    if (callName(node) === "crcWhenChanged") hasLifecycle = true;
+    if (callName(node) === "crc") hasMount = true;
+    if (
+      node.type === "CallExpression" &&
+      memberName(node.callee) === "map" &&
+      node.callee.object?.type === "ConditionalExpression"
+    ) {
+      hasConditionalList = true;
+    }
+    if (callName(node) !== "createElement") return;
+    const typeName = identifierName(node.arguments[0]);
+    if (typeName) constructed.add(typeName);
+    const props = node.arguments[1];
+    if (objectProperty(props, "key")) hasKey = true;
+    if (
+      typeName === "KeyboardNavigation" &&
+      objectProperty(props, "mode")?.type === "StringLiteral" &&
+      objectProperty(props, "mode").value === "directional"
+    ) {
+      hasDirectionalPolicy = true;
+    }
+    if (typeName !== "Text") return;
+    const textChildren = [
+      ...node.arguments.slice(2),
+      objectProperty(props, "children"),
+    ].filter(Boolean);
+    for (const child of textChildren) {
+      walkSyntax(child, (expression) => {
+        if (expression.type !== "Identifier") return;
+        if (zeroStateNames.has(expression.name)) textUsesZeroState = true;
+        if (bindings.has(expression.name)) textUsesDynamicState = true;
+      });
+    }
+  });
+
+  assert.equal(hasJsx, false, "Complete non-JSX evidence must contain no JSX");
+  assert.ok(
+    constructed.has("Fragment"),
+    "Complete non-JSX evidence lacks Fragment construction",
+  );
+  assert.ok(
+    hasConditionalList,
+    "Complete non-JSX evidence lacks dynamic list children",
+  );
+  assert.ok(hasKey, "Complete non-JSX evidence lacks explicit keys");
+  assert.ok(
+    textUsesZeroState,
+    "Complete non-JSX evidence lacks Text numeric zero",
+  );
+  assert.ok(
+    textUsesDynamicState,
+    "Complete non-JSX evidence lacks dynamic Text children",
+  );
+  assert.ok(
+    constructed.has("FocusManagement"),
+    "Complete non-JSX evidence lacks FocusManagement",
+  );
+  assert.ok(
+    constructed.has("KeyboardNavigation") && hasDirectionalPolicy,
+    "Complete non-JSX evidence lacks directional KeyboardNavigation",
+  );
+  assert.ok(hasLifecycle, "Complete non-JSX evidence lacks hook lifecycle");
+  assert.ok(hasMount, "Complete non-JSX evidence lacks root mounting");
+}
+
+function assertMountedNonJsxEvidence(source) {
+  const program = parseModule(source, "mounted non-JSX evidence").program;
+  let targetTest;
+  walkSyntax(program, (node) => {
+    if (
+      node.type === "CallExpression" &&
+      identifierName(node.callee) === "it" &&
+      node.arguments[0]?.type === "StringLiteral" &&
+      node.arguments[0].value.startsWith("mounts and drives fragments")
+    ) {
+      targetTest = node.arguments[1];
+    }
+  });
+  assert.ok(
+    targetTest,
+    "Mounted non-JSX evidence lacks its focused executable test",
+  );
+  const calls = [];
+  const literals = new Set();
+  let disposes = 0;
+  walkSyntax(targetTest, (node) => {
+    if (node.type === "StringLiteral") literals.add(node.value);
+    if (node.type !== "CallExpression") return;
+    const name = identifierName(node.callee);
+    if (name) calls.push([name, node.arguments[0]?.value]);
+    if (
+      node.callee?.type === "MemberExpression" &&
+      identifierName(node.callee.object) === "controller" &&
+      memberName(node.callee) === "dispose"
+    ) {
+      disposes += 1;
+    }
+  });
+  assert.ok(
+    calls.some(
+      ([name, argument]) =>
+        name === "renderLearningExample" &&
+        argument === "create-element-authoring",
+    ),
+    "Mounted non-JSX evidence must mount the dedicated learning example",
+  );
+  assert.ok(
+    calls.some(([name]) => name === "clickLogicalPoint"),
+    "Mounted non-JSX evidence must drive pointer activation",
+  );
+  assert.ok(
+    calls.some(
+      ([name, argument]) => name === "pressKey" && argument === "ArrowRight",
+    ) &&
+      calls.some(
+        ([name, argument]) => name === "pressKey" && argument === "Enter",
+      ),
+    "Mounted non-JSX evidence must drive directional focus and keyboard activation",
+  );
+  for (const value of [
+    "SELECTED NONE · COUNT 0",
+    "SELECTED A · COUNT 1",
+    "SELECTED B · COUNT 2",
+    "CHOICE C",
+    "LIFECYCLE 1",
+  ]) {
+    assert.ok(
+      literals.has(value),
+      `Mounted non-JSX evidence must assert ${value}`,
+    );
+  }
+  assert.ok(
+    disposes >= 2,
+    "Mounted non-JSX evidence must prove idempotent disposal",
+  );
+}
+
+function assertDirectionalEvidence(source) {
+  const program = parseModule(
+    source,
+    "directional-navigation evidence",
+  ).program;
+  let focus = false;
+  let directional = false;
+  walkSyntax(program, (node) => {
+    if (node.type !== "JSXElement") return;
+    const name = jsxName(node.openingElement?.name);
+    if (name === "FocusManagement") focus = true;
+    if (name !== "KeyboardNavigation") return;
+    directional = node.openingElement.attributes.some(
+      (attribute) =>
+        attribute.type === "JSXAttribute" &&
+        jsxName(attribute.name) === "mode" &&
+        ((attribute.value?.type === "StringLiteral" &&
+          attribute.value.value === "directional") ||
+          (attribute.value?.type === "JSXExpressionContainer" &&
+            attribute.value.expression?.type === "StringLiteral" &&
+            attribute.value.expression.value === "directional")),
+    );
+  });
+  assert.ok(
+    focus && directional,
+    "directional-navigation evidence must mount both focus and directional policies",
+  );
+}
+
+export function assertExecutableEvidence(sources) {
+  const required = (path) => {
+    const source = sources.get(path);
+    assert.equal(
+      typeof source,
+      "string",
+      `Missing executable evidence ${path}`,
+    );
+    return source;
+  };
+  assertNamedJsxEvidence(
+    required("packages/scenarios/src/learning/composition/group.example.tsx"),
+    "Group",
+  );
+  assertNamedJsxEvidence(
+    required("packages/scenarios/src/learning/composition/clip.example.tsx"),
+    "Clip",
+  );
+  assertLayerEvidence(
+    required("packages/scenarios/src/learning/composition/layer.example.tsx"),
+  );
+  assertTextEvidence(
+    required("packages/scenarios/src/learning/drawing/text.example.tsx"),
+  );
+  assertNonJsxEvidence(
+    required(
+      "packages/scenarios/src/learning/start/create-element-authoring.example.tsx",
+    ),
+  );
+  assertMountedNonJsxEvidence(
+    required("packages/core/test/learning-examples.test.ts"),
+  );
+  assertDirectionalEvidence(
+    required(
+      "packages/scenarios/src/learning/keyboard-focus/directional-navigation.example.tsx",
+    ),
+  );
+}
+
 function babelOptionsFromGuide(source) {
   const section = source.match(
     /## Babel automatic runtime[\s\S]*?```json\n([\s\S]*?)^```$/mu,
@@ -581,8 +1039,13 @@ export function assertHistoricalBanner(path, source) {
   const opening = source.split("\n").slice(0, 10).join("\n");
   assert.match(
     opening,
-    /^> \*\*(?:Historical|Implementation) status: (?:COMPLETED|IMPLEMENTED|CURRENT|CHARACTERIZATION)[^*]*\.\*\*/mu,
-    `${path} must visibly identify its historical or implementation-record status near the title`,
+    /^> \*\*Historical status: [A-Z][^*]*\.\*\*/mu,
+    `${path} must use a visible Historical status banner near the title`,
+  );
+  assert.doesNotMatch(
+    opening,
+    /^> \*\*Historical status: [^*\n]*\bCURRENT\b/mu,
+    `${path} is classified as historical and must not claim CURRENT status`,
   );
 }
 
@@ -890,6 +1353,7 @@ const contractPrecisionRequirements = new Map([
       "finite nonnegative numeric `gap`, `rowGap`, `columnGap`; no percentages",
       "max(0, remaining) / max(1, totalFr)",
       "paint outside its declared box when overflow is visible",
+      "infinite iterables are unsupported",
     ],
   ],
   [
@@ -904,7 +1368,20 @@ const contractPrecisionRequirements = new Map([
       "omitted height uses the Canvas allocation",
       "`naturalWidth` and `naturalHeight` independently",
       "one adjusted rectangle used by `drawImage`",
+      "Same-mount root, prop, and dimension updates",
     ],
+  ],
+  [
+    "docs/design/runtime-hooks-contract.md",
+    [
+      "callers may ignore it",
+      "measurement is nested during\nan active render",
+      "consuming or reordering the parent component's hook slots",
+    ],
+  ],
+  [
+    "docs/design/event-resource-ownership.md",
+    ["ignore the additive controller return value"],
   ],
   [
     "docs/design/style-system-contract.md",
@@ -927,6 +1404,114 @@ export function assertContractPrecision(sources) {
 
 assertContractPrecision(currentSources);
 
+export function assertContractSectionBaseline(
+  manifest,
+  sources,
+  trackedEvidencePaths,
+) {
+  assert.equal(
+    manifest.sourceCommit,
+    "0040d65cc4007aefc2ae61ef0c5b833166c38441",
+    "Contract-section baseline must identify the reviewed pre-Task-14 source commit",
+  );
+  assert.ok(
+    Array.isArray(manifest.contracts),
+    "Contract-section baseline must contain a contracts array",
+  );
+  const sectionDigest = createHash("sha256")
+    .update(
+      JSON.stringify(
+        manifest.contracts.map(({ path, sections }) => ({ path, sections })),
+      ),
+    )
+    .digest("hex");
+  assert.equal(
+    sectionDigest,
+    "8e9674708846a2516b069f27b0f8cd6cb7624fea56fea2b75de47720e55eb003",
+    "Contract-section manifest must exactly match the pre-refactor source headings",
+  );
+
+  const expectedPaths = [
+    "docs/architecture/style-and-layout-architecture.md",
+    ...currentMarkdownPaths.filter(
+      (path) =>
+        path.startsWith("docs/design/") &&
+        path !== "docs/design/tfc-01-characterization-baseline.md",
+    ),
+  ].sort();
+  const actualPaths = manifest.contracts.map((entry) => entry.path).sort();
+  assert.deepEqual(
+    actualPaths,
+    expectedPaths,
+    "Contract-section baseline must cover every current normative contract exactly once",
+  );
+
+  for (const entry of manifest.contracts) {
+    const source = sources.get(entry.path);
+    assert.equal(
+      typeof source,
+      "string",
+      `Contract-section baseline references missing contract ${entry.path}`,
+    );
+    assert.ok(
+      Array.isArray(entry.sections) && entry.sections.length > 0,
+      `${entry.path} has no pre-refactor baseline sections`,
+    );
+    assert.equal(
+      new Set(entry.sections).size,
+      entry.sections.length,
+      `${entry.path} repeats a pre-refactor baseline section`,
+    );
+    const headings = new Set(
+      [...source.matchAll(/^#{2,4}\s+(.+?)\s*#*$/gmu)].map((match) => match[1]),
+    );
+    for (const section of entry.sections) {
+      assert.ok(
+        headings.has(section),
+        `${entry.path} lost pre-refactor baseline section “${section}”`,
+      );
+    }
+
+    assert.ok(
+      Array.isArray(entry.evidence) && entry.evidence.length >= 2,
+      `${entry.path} must map its baseline to implementation and executable test evidence`,
+    );
+    assert.ok(
+      entry.evidence.some(
+        (path) =>
+          path.startsWith("packages/core/src/") &&
+          !/\.test\.[cm]?[jt]sx?$/u.test(path),
+      ),
+      `${entry.path} baseline lacks implementation-source evidence`,
+    );
+    assert.ok(
+      entry.evidence.some((path) => /\.test\.[cm]?[jt]sx?$/u.test(path)),
+      `${entry.path} baseline lacks executable-test evidence`,
+    );
+    for (const path of entry.evidence) {
+      assert.ok(
+        trackedEvidencePaths.has(path),
+        `${entry.path} baseline references missing evidence ${path}`,
+      );
+    }
+  }
+}
+
+const contractSectionBaseline = JSON.parse(
+  await readFile(
+    join(repositoryRoot, "tooling/docs-contract-section-baseline.json"),
+    "utf8",
+  ),
+);
+const trackedContractEvidencePaths = new Set(
+  trackedRepositoryFiles(["packages/core/src", "packages/core/test"]),
+);
+assertContractSectionBaseline(
+  contractSectionBaseline,
+  currentSources,
+  trackedContractEvidencePaths,
+);
+
 const readme = currentSources.get("README.md");
 const advancedStart = readme.indexOf("## Learn the API");
 assert.ok(readme.indexOf("## Quick start") >= 0, "README needs a quick start.");
@@ -934,6 +1519,14 @@ assert.ok(
   advancedStart > readme.indexOf("## Quick start"),
   "README quick start must precede advanced material.",
 );
+export function assertFixedConfigSignal(source) {
+  assert.match(
+    source,
+    /fixed logical viewport with optional `fit`,\s*`pixelRatio`, and `signal`/u,
+    "API reference must document signal for fixed CRCConfig as well as responsive CRCConfig",
+  );
+}
+assertFixedConfigSignal(apiReference);
 assert.ok(
   readme.indexOf("docs/guides/without-jsx.md") < advancedStart,
   "README must link the standalone non-JSX path before advanced material.",
@@ -992,7 +1585,7 @@ const matrixRequirements = [
       "guides/children-text-lists-and-keys.md",
       "design/drawing-components-contract.md",
     ],
-    evidence: ["text.example.tsx"],
+    evidence: ["text.example.tsx", "learning-examples.test.ts"],
   },
   {
     topic: /Layout and specified style/u,
@@ -1034,7 +1627,10 @@ const matrixRequirements = [
   {
     topic: /Complete non-JSX API/u,
     guides: ["guides/without-jsx.md"],
-    evidence: ["verify-docs.mjs", "create-element-authoring.example.tsx"],
+    evidence: [
+      "create-element-authoring.example.tsx",
+      "learning-examples.test.ts",
+    ],
   },
   {
     topic: /One runtime per file/u,
@@ -1052,7 +1648,7 @@ const matrixRequirements = [
       "guides/focus-keyboard-and-accessibility.md",
       "design/focus-and-keyboard-navigation-contract.md",
     ],
-    evidence: ["focus-management.example.tsx"],
+    evidence: ["directional-navigation.example.tsx"],
   },
   {
     topic: /Accessibility limitations/u,
@@ -1145,6 +1741,25 @@ for (const guide of guidePaths) {
   );
 }
 
+const executableEvidencePaths = [
+  "packages/core/test/learning-examples.test.ts",
+  "packages/scenarios/src/learning/composition/clip.example.tsx",
+  "packages/scenarios/src/learning/composition/group.example.tsx",
+  "packages/scenarios/src/learning/composition/layer.example.tsx",
+  "packages/scenarios/src/learning/drawing/text.example.tsx",
+  "packages/scenarios/src/learning/keyboard-focus/directional-navigation.example.tsx",
+  "packages/scenarios/src/learning/start/create-element-authoring.example.tsx",
+];
+const executableEvidenceSources = new Map(
+  await Promise.all(
+    executableEvidencePaths.map(async (path) => [
+      path,
+      await readFile(join(repositoryRoot, path), "utf8"),
+    ]),
+  ),
+);
+assertExecutableEvidence(executableEvidenceSources);
+
 const completeSnippets = extractCompleteSnippets(currentSources);
 assertSameNames(
   new Set(completeSnippets.keys()),
@@ -1183,10 +1798,11 @@ export async function verifyMutationProbes() {
   };
 
   const direct = exportedSpecifiers(
-    "export const directValue = 1; export interface DirectType {}",
+    "export const directValue = 1; export declare function declaredValue(): void; export interface DirectType {}",
     "direct-export-red-probe.ts",
   );
   assert.ok(direct.values.has("directValue"));
+  assert.ok(direct.values.has("declaredValue"));
   assert.ok(direct.types.has("DirectType"));
   probes += 1;
   throws(
@@ -1197,6 +1813,29 @@ export async function verifyMutationProbes() {
       ),
     /fail closed/u,
   );
+  for (const [source, form] of [
+    [
+      "export namespace Added { export const runtimeValue = 1 }",
+      "namespace declaration",
+    ],
+    ["export = runtimeValue", "export assignment"],
+    ["export as namespace Added", "namespace export"],
+    ['export import Added = require("./added.js")', "exported import-equals"],
+    ['export * as Added from "./added.js"', "namespace re-export specifier"],
+  ]) {
+    throws(
+      () => exportedSpecifiers(source, `${form}-red-probe.ts`),
+      /unsupported|fail closed/u,
+    );
+  }
+  throws(
+    () =>
+      exportedSpecifiers(
+        "export namespace JSX { export const runtimeValue = 1 }",
+        "packages/core/src/jsx-runtime.ts",
+      ),
+    /unsupported runtime member/u,
+  );
 
   throws(
     () =>
@@ -1204,11 +1843,27 @@ export async function verifyMutationProbes() {
         "history.md",
         "# History\n\nInstructions continue.",
       ),
-    /visibly identify/u,
+    /Historical status/u,
+  );
+  throws(
+    () =>
+      assertHistoricalBanner(
+        "history.md",
+        "# History\n\n> **Implementation status: CURRENT RECORD.** Work continues.",
+      ),
+    /Historical status/u,
   );
   throws(
     () => assertCurrentVocabulary("current.md", "Use the `clip` value."),
     /removed lowercase/u,
+  );
+  throws(
+    () =>
+      assertCurrentVocabulary(
+        "packages/scenarios/src/learning/start/mutated.example.tsx",
+        "const scene = rect({ width: 10, height: 10 });",
+      ),
+    /component-call vocabulary/u,
   );
   await rejects(
     () =>
@@ -1217,6 +1872,13 @@ export async function verifyMutationProbes() {
         "# Existing\n\n[missing](#not-an-anchor)",
       ),
     /Broken local anchor/u,
+  );
+  throws(
+    () =>
+      assertFixedConfigSignal(
+        apiReference.replace("`pixelRatio`, and `signal`", "`pixelRatio`"),
+      ),
+    /fixed CRCConfig/u,
   );
 
   throws(
@@ -1229,10 +1891,88 @@ export async function verifyMutationProbes() {
   throws(
     () =>
       assertAcceptanceMatrix(
-        matrix.replace("verify-docs.mjs) compiles", "missing.mjs) compiles"),
+        matrix.replaceAll(
+          "directional-navigation.example.tsx",
+          "missing-directional.example.tsx",
+        ),
       ),
-    /verify-docs\.mjs/u,
+    /directional-navigation\.example\.tsx/u,
   );
+
+  for (const [label, path, mutate, pattern] of [
+    [
+      "Group composition",
+      "packages/scenarios/src/learning/composition/group.example.tsx",
+      (source) =>
+        source
+          .replaceAll("<Group", "<MissingGroup")
+          .replaceAll("</Group>", "</MissingGroup>"),
+      /Group example/u,
+    ],
+    [
+      "Clip composition",
+      "packages/scenarios/src/learning/composition/clip.example.tsx",
+      (source) =>
+        source
+          .replaceAll("<Clip", "<MissingClip")
+          .replaceAll("</Clip>", "</MissingClip>"),
+      /Clip example/u,
+    ],
+    [
+      "multi-child Layer",
+      "packages/scenarios/src/learning/composition/layer.example.tsx",
+      () =>
+        "const Scene = () => <Layer><Rectangle style={{ width: 1, height: 1 }} /></Layer>;",
+      /multi-child Layer/u,
+    ],
+    [
+      "Text zero",
+      "packages/scenarios/src/learning/drawing/text.example.tsx",
+      (source) => source.replace("{0}", '{"zero"}'),
+      /numeric zero/u,
+    ],
+    [
+      "Text state interpolation",
+      "packages/scenarios/src/learning/drawing/text.example.tsx",
+      (source) => source.replace("{accent}", '{"static"}'),
+      /state interpolation/u,
+    ],
+    [
+      "complete non-JSX Fragment",
+      "packages/scenarios/src/learning/start/create-element-authoring.example.tsx",
+      (source) =>
+        source
+          .replaceAll(
+            "createElement(\n        Fragment,",
+            "createElement(\n        Group,",
+          )
+          .replace(
+            "createElement(\n    Fragment,",
+            "createElement(\n    Group,",
+          ),
+      /Fragment/u,
+    ],
+    [
+      "mounted non-JSX directional drive",
+      "packages/core/test/learning-examples.test.ts",
+      (source) => source.replace('await pressKey("ArrowRight");', ""),
+      /Mounted.*directional/u,
+    ],
+    [
+      "directional policy evidence",
+      "packages/scenarios/src/learning/keyboard-focus/directional-navigation.example.tsx",
+      (source) =>
+        source.replace('mode={"directional"}', 'mode={"unsupported"}'),
+      /directional-navigation/u,
+    ],
+  ]) {
+    const mutated = new Map(executableEvidenceSources);
+    const original = executableEvidenceSources.get(path);
+    const changed = mutate(original);
+    assert.notEqual(changed, original, `${label} RED mutation must alter source`);
+    mutated.set(path, changed);
+    throws(() => assertExecutableEvidence(mutated), pattern);
+  }
 
   for (const [path, markers] of contractPrecisionRequirements) {
     for (const marker of markers) {
@@ -1241,6 +1981,63 @@ export async function verifyMutationProbes() {
       throws(() => assertContractPrecision(mutatedSources), /exact shipped/u);
     }
   }
+
+  {
+    const path = "docs/design/drawing-components-contract.md";
+    const mutatedSources = new Map(currentSources);
+    mutatedSources.set(
+      path,
+      currentSources.get(path).replace("## Component matrix", "## Summary"),
+    );
+    throws(
+      () =>
+        assertContractSectionBaseline(
+          contractSectionBaseline,
+          mutatedSources,
+          trackedContractEvidencePaths,
+        ),
+      /baseline section/u,
+    );
+  }
+  throws(
+    () =>
+      assertContractSectionBaseline(
+        { ...contractSectionBaseline, sourceCommit: "0".repeat(40) },
+        currentSources,
+        trackedContractEvidencePaths,
+      ),
+    /pre-Task-14 source commit/u,
+  );
+  throws(
+    () =>
+      assertContractSectionBaseline(
+        {
+          ...contractSectionBaseline,
+          contracts: contractSectionBaseline.contracts.map((entry, index) =>
+            index === 0 ? { ...entry, sections: entry.sections.slice(1) } : entry,
+          ),
+        },
+        currentSources,
+        trackedContractEvidencePaths,
+      ),
+    /must exactly match the pre-refactor source/u,
+  );
+  throws(
+    () =>
+      assertContractSectionBaseline(
+        {
+          ...contractSectionBaseline,
+          contracts: contractSectionBaseline.contracts.map((entry, index) =>
+            index === 0
+              ? { ...entry, evidence: ["missing-source.ts", ...entry.evidence] }
+              : entry,
+          ),
+        },
+        currentSources,
+        trackedContractEvidencePaths,
+      ),
+    /missing evidence/u,
+  );
 
   const nonJsx = completeSnippets.get("without-jsx").source;
   const nonJsxMutations = [
@@ -1330,5 +2127,7 @@ process.stdout.write(
     `${rootExports.values.size} values, ${rootExports.types.size} types, ` +
     `${matrixRows.length} acceptance rows, ${parsedSnippetCount} parsed ` +
     `code snippets, ${compiledSnippetCount} extracted TypeScript programs, ` +
-    `and the extracted JavaScript program through Babel and esbuild.\n`,
+    `${contractSectionBaseline.contracts.length} preserved contract baselines, ` +
+    `${presentationSourcePaths.length} discovered presentation sources, and ` +
+    `the extracted JavaScript program through Babel and esbuild.\n`,
 );

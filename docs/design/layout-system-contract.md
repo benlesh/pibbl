@@ -11,8 +11,10 @@ child to discover its size.
 
 Each layout component accepts recursive `CRCNode` children. Arrays, finite
 synchronous iterables, and unkeyed fragments flatten at the receiving layout
-boundary; keyed fragments remain direct identity items. Unsupported values,
-non-finite iterables, and duplicate sibling keys fail with contextual errors.
+boundary; keyed fragments remain direct identity items. Iterables are required
+to be finite; infinite iterables are unsupported and CRC does not promise to
+detect them. Unsupported child values and duplicate sibling keys fail with
+contextual errors.
 
 Every layout component is itself a normal component: it can be nested inside
 another layout, transformed by `Group`, clipped by `Clip`, or rendered through
@@ -178,10 +180,11 @@ render work. Measurement:
 Definite dimensions bypass measurement. Built-in `Text` measurement shares the
 same wrapping/layout calculation used to paint. `Image` measurement supports
 only explicit dimensions; natural image measurement is intentionally
-unavailable because it would acquire asynchronous resources. Plain functions
-and primitives used in an automatic sizing path must provide a pure `measure`
-capability or receive an actionable unsupported diagnostic naming the axis and
-child.
+unavailable because it would acquire asynchronous resources. A custom
+`definePrimitive` value used in an automatic sizing path must provide a pure
+`measure` capability or receive an actionable unsupported diagnostic naming the
+axis and child. Plain function components expose no intrinsic measurement
+capability and therefore need a definite allocation on that path.
 
 ## Composition, failure, and ownership
 
@@ -201,7 +204,7 @@ Offscreen layers share the root interaction ledger, so nested layout still
 participates in one global source paint/target order. `Clip` and layout overflow
 constraints apply identically to pixels and coordinate geometry.
 
-## Deliberate exclusions and evidence
+## Deliberate exclusions
 
 CRC layout does not promise a complete CSS formatting engine. Deferred features
 include margin, scrolling, auto-placement Grid, implicit tracks, advanced CSS

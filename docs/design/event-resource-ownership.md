@@ -28,9 +28,10 @@ interface CRCController {
 - An already-aborted signal produces an immediately disposed controller and schedules no render.
 - Omitting `signal` is supported; the controller still owns and removes all native listeners.
 
-JSX and `createElement` produce the same descriptors. Retaining a controller
-does not keep its disposed scene instance alive; its closure releases that
-ownership after the first cleanup request.
+JSX and `createElement` produce the same descriptors. Existing callers may
+ignore the additive controller return value. Retaining a controller does not
+keep its disposed scene instance alive; its closure releases that ownership
+after the first cleanup request.
 
 ## Ownership table
 

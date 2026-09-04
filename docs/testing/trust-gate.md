@@ -34,17 +34,24 @@ contention observed during earlier upgrade and visual work.
 - the required JSX/non-JSX guide set and all active local documentation files,
   links, and heading/explicit anchors;
 - exact API-reference parity with every root value/type export and both
-  automatic-runtime entries, including their module-scoped JSX namespace;
-- current `.example.tsx` references and absence of removed authoring vocabulary
-  from active documentation and Studio-facing explanatory sources;
+  automatic-runtime entries, including their explicitly handled module-scoped
+  JSX namespace; every other export declaration/namespace/star form fails
+  closed;
+- Git-discovered `.example.tsx` files, all deterministic scenario source, and
+  Playground code/copy, plus the active-document inventory, contain no removed
+  authoring vocabulary;
 - required Vite/esbuild, Babel, JavaScript, mixed-runtime, lifecycle, primitive,
   text/children, layout, focus, and accessibility coverage markers;
 - every explicitly marked complete TypeScript/TSX program extracted directly
   from its guide, plus the marked JavaScript program transformed independently
   by esbuild and the real Babel automatic-runtime plugin;
-- fail-closed export discovery, semantic acceptance-matrix mappings, complete
-  non-JSX feature coverage, visible historical-record banners, and targeted
-  RED mutations proving each check rejects stale or incomplete evidence;
+- the section manifest derived from pre-Task-14 commit `0040d65` preserves every
+  normative contract section and maps each contract to implementation source
+  plus executable tests;
+- fail-closed export discovery, source-inspected acceptance-matrix evidence,
+  mounted/driven non-JSX behavior, literal `Historical status` banners, and
+  targeted RED mutations proving each check rejects stale or incomplete
+  evidence;
 - TypeScript, ESLint, Prettier, package output, and source/built Studio builds.
 
 `trust:package` builds real tarballs and installs them into strict Bundler and
@@ -84,15 +91,19 @@ replacement. Completed numbered plans, approved dated designs, implementation
 plans, characterization baselines, dependency upgrade notes, dated field
 notes, task reports, and `_bmad-output/` remain historical/discovery evidence;
 their old vocabulary and point-in-time totals are not current instructions.
-Repository historical records must say so visibly near their title; their path
-alone is not evidence of historical status.
+Repository historical records must use the literal `Historical status` phrase
+near their title and cannot claim `CURRENT`; their path alone is not evidence
+of historical status.
 
 Documentation success proves consistency, not runtime behavior by itself. The
 acceptance matrix in [library status](../library-status.md) maps each authoring
 topic to its required current guide/contract and specific executable example or
-test. The checker validates those semantic mappings rather than accepting any
-arbitrary link. Typecheck, catalog, package, browser, lifecycle, and Studio
-gates execute those contracts.
+test. The checker validates those mappings and inspects the cited Layer, Text,
+directional-navigation, and non-JSX sources for the claimed behavior rather
+than accepting filenames. The non-JSX browser case mounts the dedicated lesson,
+drives pointer and directional/keyboard activation, observes keyed dynamic
+children and Text zero/state changes, and disposes twice. Typecheck, catalog,
+package, browser, lifecycle, and Studio gates execute the remaining contracts.
 
 When reporting verification, name the command, runtime/browser environment,
 and fresh result. A dated field note or old test count is evidence only for its

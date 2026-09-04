@@ -1,0 +1,221 @@
+{
+  "sourceCommit": "0040d65cc4007aefc2ae61ef0c5b833166c38441",
+  "contracts": [
+    {
+      "path": "docs/architecture/style-and-layout-architecture.md",
+      "sections": [
+        "Purpose",
+        "Existing constraints",
+        "Architectural units",
+        "Element protocol",
+        "Style schemas",
+        "Length and constraint values",
+        "Component type capabilities",
+        "Layout algorithms",
+        "Render pipeline",
+        "Normal drawing element",
+        "Layout element",
+        "Nested layout",
+        "Geometry semantics",
+        "Allocation and local paint coordinates",
+        "Transforms",
+        "Clipping and overflow",
+        "Identity and ordering",
+        "Measurement architecture",
+        "Style composition and custom components",
+        "Errors and failure containment",
+        "Module boundaries",
+        "Incremental delivery seams",
+        "Verification architecture",
+        "Architectural decisions"
+      ],
+      "evidence": [
+        "packages/core/src/lib/element/create-element.ts",
+        "packages/core/src/lib/layout/measure.test.ts"
+      ]
+    },
+    {
+      "path": "docs/design/canvas-accessibility-guidance.md",
+      "sections": [
+        "What the application owns",
+        "Synchronize one product state",
+        "Avoid duplicate keyboard paths",
+        "Prefer equivalent operations over a DOM mirror",
+        "Practical review checklist"
+      ],
+      "evidence": [
+        "packages/core/src/lib/focus/policy-components.ts",
+        "packages/core/test/focus-navigation.test.ts"
+      ]
+    },
+    {
+      "path": "docs/design/canvas-surface-contract.md",
+      "sections": [
+        "Public configuration",
+        "Three coordinate spaces",
+        "Fixed viewport fitting",
+        "Responsive viewport behavior",
+        "Interaction and composition",
+        "Scheduling and lifetime",
+        "Evidence"
+      ],
+      "evidence": [
+        "packages/core/src/lib/surface/types.ts",
+        "packages/core/test/canvas-surface.test.ts"
+      ]
+    },
+    {
+      "path": "docs/design/drawing-components-contract.md",
+      "sections": [
+        "Shared paint and interaction rules",
+        "Component matrix",
+        "Text layout details",
+        "Image lifetime and geometry",
+        "Visual evidence and limitations"
+      ],
+      "evidence": [
+        "packages/core/src/lib/components/text-layout.ts",
+        "packages/core/src/lib/components/layer.test.ts"
+      ]
+    },
+    {
+      "path": "docs/design/event-resource-ownership.md",
+      "sections": [
+        "Public lifetime",
+        "Ownership table",
+        "Central disposal sequence",
+        "Replacement, removal, and errors",
+        "Deterministic evidence",
+        "Deliberate boundary"
+      ],
+      "evidence": [
+        "packages/core/src/lib/events/native-listener-hub.ts",
+        "packages/core/test/runtime-cleanup-stress.test.ts"
+      ]
+    },
+    {
+      "path": "docs/design/focus-and-keyboard-navigation-contract.md",
+      "sections": [
+        "Enrollment and committed order",
+        "Native Canvas host and logical focus events",
+        "Tab entry, traversal, and exit",
+        "Pointer, mouse, pen, and touch focus",
+        "Dispatch precedence and activation",
+        "Directional boundaries",
+        "Render snapshots and modality",
+        "Optionality, lifecycle, and failures"
+      ],
+      "evidence": [
+        "packages/core/src/lib/focus/focus-manager.ts",
+        "packages/core/src/lib/focus/directional-navigation.test.ts"
+      ]
+    },
+    {
+      "path": "docs/design/layout-system-contract.md",
+      "sections": [
+        "Shared box, placement, and overflow rules",
+        "Absolute",
+        "Overlay",
+        "Flow",
+        "Flex",
+        "Grid",
+        "Pure measurement",
+        "Composition, failure, and ownership",
+        "Deliberate exclusions"
+      ],
+      "evidence": [
+        "packages/core/src/lib/layout/flex.ts",
+        "packages/core/src/lib/layout/grid.test.ts"
+      ]
+    },
+    {
+      "path": "docs/design/mouse-interaction-contract.md",
+      "sections": [
+        "Evidence and interpretation",
+        "Terms",
+        "Target selection",
+        "TFC-04 implementation boundary",
+        "TFC-05 composition boundary",
+        "Movement and boundary order",
+        "Decision on the four disputed ordering expectations",
+        "Buttons and activation",
+        "Down and up",
+        "Primary click",
+        "Double click",
+        "Secondary/context menu",
+        "Mutation and errors during dispatch",
+        "Coordinates and geometry",
+        "Approved explorer cases",
+        "Retained differences from DOM",
+        "Mouse-specific non-goals and follow-ups",
+        "Primary sources"
+      ],
+      "evidence": [
+        "packages/core/src/lib/events/adapters/mouse.ts",
+        "packages/core/test/mouse-contract.test.ts"
+      ]
+    },
+    {
+      "path": "docs/design/runtime-hooks-contract.md",
+      "sections": [
+        "Component and tree identity",
+        "Hook sequence invariant",
+        "Public hook contracts",
+        "Pure measurement boundary",
+        "Public package boundary",
+        "Deterministic evidence",
+        "Deliberate boundaries"
+      ],
+      "evidence": [
+        "packages/core/src/lib/render.ts",
+        "packages/core/src/lib/hooks/hook-contract.test.ts"
+      ]
+    },
+    {
+      "path": "docs/design/runtime-resource-ownership.md",
+      "sections": [
+        "Ownership table",
+        "Collection semantics",
+        "Async capability rules",
+        "Deterministic evidence",
+        "Deliberate boundaries"
+      ],
+      "evidence": [
+        "packages/core/src/lib/teardowns.ts",
+        "packages/core/test/runtime-cleanup-stress.test.ts"
+      ]
+    },
+    {
+      "path": "docs/design/style-system-contract.md",
+      "sections": [
+        "Public style model",
+        "Length and box rules",
+        "Style-only built-in migration",
+        "Deliberate exclusions"
+      ],
+      "evidence": [
+        "packages/core/src/lib/style/resolve-length.ts",
+        "packages/core/src/lib/style/resolve-length.test.ts"
+      ]
+    },
+    {
+      "path": "docs/design/user-events-contract.md",
+      "sections": [
+        "Public registration model",
+        "Event vocabulary",
+        "Target resolution and temporary path",
+        "Boundaries, related targets, and activation",
+        "Pointer capture, touch, wheel, and drag ownership",
+        "Non-coordinate transport",
+        "Event facade and cancellation",
+        "Mutation, errors, and scheduling",
+        "Native listeners, layers, legacy observers, and disposal",
+        "Evidence boundary"
+      ],
+      "evidence": [
+        "packages/core/src/lib/events/dispatch.ts",
+        "packages/core/src/lib/events/propagation.test.ts"
+      ]
+    }
+  ]
+}
