@@ -128,6 +128,12 @@ and fresh result. A dated field note or old test count is evidence only for its
 named revision. In particular, do not present the historical 265-test or
 294-test totals as current unless a fresh run reproduces one.
 
+The [2026-09-04 JSX authoring field note](./field-notes/jsx-component-authoring.md)
+is the final local closure record for that pivot. It reports the exact
+environment, commands, wall times, inspected visuals, reviewed Studio baseline
+changes, automated acceptance, and accepted verifier-hardening residuals. Its
+Node 26 result is additive evidence; Node 24 LTS remains canonical.
+
 ## Visual baseline policy
 
 Visual baselines are check-only in normal tests and CI. Never rewrite a

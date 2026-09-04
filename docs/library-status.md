@@ -1,8 +1,8 @@
 # CRC library status and feature inventory
 
-_Current feature inventory refreshed 2026-09-03 after the JSX component
-authoring pivot. Historical totals remain evidence only for their named dated
-revision; run the trust gate for current results._
+_Current feature inventory refreshed 2026-09-04 after the JSX component
+authoring pivot and final trust closure. Historical totals remain evidence only
+for their named dated revision; run the trust gate for current results._
 
 ## At a glance
 
@@ -18,6 +18,11 @@ NodeNext declarations, both compiler entries, mixed CRC/React type boundaries,
 assertions, browser behavior, lifecycle ownership, Studio builds, and guarded
 visual baselines. Controlled wall-clock budgets remain opt-in; deterministic
 workload structure is always checked.
+
+The [2026-09-04 JSX authoring field note](./testing/field-notes/jsx-component-authoring.md)
+records the final local source, built, packed, Studio, browser, visual,
+lifecycle, and structural-performance evidence, including its noncanonical
+Node 26 environment and accepted verifier-hardening residuals.
 
 “Trusted” below means the supported behavior, boundaries, errors, updates, and
 teardown have executable evidence. It does not mean CRC supplies semantic DOM,
@@ -82,7 +87,7 @@ complete CSS.
 | Public declarations | **Trusted.** Exact source/built/Studio export-name parity, 112 root type imports, compiler namespaces, strict positive/negative TSX, and mixed-runtime barriers.                                                                                                                                                                                                                                                                                                                          | `@crc/types` remains a deliberately minimal compatibility package.     |
 | Package output      | **Trusted.** ESM runtime/declarations/maps, shared compiler chunks, packed no-source consumers, blocked private imports, and focus tree shaking.                                                                                                                                                                                                                                                                                                                                          | ESM-only; another format needs an explicit requirement.                |
 | Studio              | **Trusted.** TSX automatic runtime, source/built execution, exact declaration bundle, 42 lessons and 16 labs, editing diagnostics, and catalog/source identity.                                                                                                                                                                                                                                                                                                                           | Internal Studio, not a hosted documentation product.                   |
-| Documentation       | **Checked.** Required guides, link anchors, fail-closed API inventory, an exhaustive 667-unit pre-Task-14 / 651-unit current semantic snapshot across all 12 normative contracts, an explicit JSX translation/addition allowlist, 48 unique direct source/test mappings, source-inspected acceptance evidence, extracted complete snippets, real Babel/esbuild transforms, historical banners, adversarial RED mutations, and Git-discovered active-vocabulary scans run in `docs:check`. | Prose cannot replace browser/runtime evidence.                         |
+| Documentation       | **Checked.** Required guides, link anchors, fail-closed API inventory, an exhaustive 667-unit pre-Task-14 / 654-unit current semantic snapshot across all 12 normative contracts, an explicit JSX translation/addition allowlist, 48 unique direct source/test mappings, source-inspected acceptance evidence, extracted complete snippets, real Babel/esbuild transforms, historical banners, adversarial RED mutations, and Git-discovered active-vocabulary scans run in `docs:check`. | Prose cannot replace browser/runtime evidence.                         |
 | CI                  | **Configured.** Static/docs, packed package, browser/visual, lifecycle, and structural performance jobs feed one aggregate trust result.                                                                                                                                                                                                                                                                                                                                                  | Hosted status and branch protection require repository administration. |
 
 ## Documentation acceptance matrix
