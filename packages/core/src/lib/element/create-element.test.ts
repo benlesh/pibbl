@@ -37,6 +37,12 @@ function CustomChildCard(_props: { children?: CustomChild }): CRCNode {
   return undefined;
 }
 
+function CustomScalarChild(
+  _props: { children?: { readonly label: string } },
+): CRCNode {
+  return undefined;
+}
+
 describe('createElement', () => {
   it('types variadic children from the target component contract', () => {
     const count = 1;
@@ -59,6 +65,12 @@ describe('createElement', () => {
       ['nested'],
       new Set([{ label: 'iterable' }]),
     );
+    const firstScalarChild = { label: 'first' };
+    const scalar = createElement(
+      CustomScalarChild,
+      null,
+      firstScalarChild,
+    );
 
     // @ts-expect-error containers reject nonzero raw numbers
     createElement(Group, null, 1);
@@ -68,6 +80,8 @@ describe('createElement', () => {
     createElement(Rectangle, { style: { width: 10, height: 10 } }, child);
     // @ts-expect-error custom components retain their declared child restriction
     createElement(CustomChildCard, null, 1);
+    // @ts-expect-error multiple children become an array that scalar child props reject
+    createElement(CustomScalarChild, null, firstScalarChild, { label: 'second' });
 
     expect(text.props.children).toEqual([
       'Count: ',
@@ -81,6 +95,7 @@ describe('createElement', () => {
       ['nested'],
       new Set([{ label: 'iterable' }]),
     ]);
+    expect(scalar.props.children).toBe(firstScalarChild);
   });
 
   it('reserves numeric keys and omits them from delivered prop types', () => {

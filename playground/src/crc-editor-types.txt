@@ -274,8 +274,10 @@
   export function crc(canvas: HTMLCanvasElement, element: CRCNode, config?: CRCConfig): CRCController;
   type ElementInput<P> = 0 extends (1 & P) ? P & { key?: CRCKey } : 'key' extends UnionKeys<P> ? never : P & { key?: CRCKey };
   type ElementInputOrNull<P> = [ElementInput<P>] extends [never] ? never : ElementInput<P> | null;
-  type ElementChild<P> = P extends unknown ? 'children' extends keyof P ? P['children'] : never : never;
-  export function createElement<P>(type: CRCElementType<P>, props: ElementInputOrNull<P>, ...children: ElementChild<P>[]): CRCElement<P>;
+  type ChildrenForProps<P> = P extends unknown ? 'children' extends keyof P ? P['children'] : never : never;
+  type MultipleChildren<C> = C extends unknown ? C extends readonly (infer Child)[] ? Child[] extends C ? [Child, Child, ...Child[]] : never : C extends Iterable<infer Child> ? Child[] extends C ? [Child, Child, ...Child[]] : never : never : never;
+  type ChildrenArguments<P> = P extends unknown ? 'children' extends keyof P ? [] | [ChildrenForProps<P>] | MultipleChildren<ChildrenForProps<P>> : [] : never;
+  export function createElement<P>(type: CRCElementType<P>, props: ElementInputOrNull<P>, ...children: ChildrenArguments<P>): CRCElement<P>;
   export function Fragment(props: { children?: CRCNode }): CRCNode;
   export function definePrimitive<P = Record<string, never>, S extends SystemStyle = SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N>(render: PrimitiveRender<P, R> & (PrimitiveInput<P, S> extends never ? never : unknown), ...capabilityArguments: PrimitiveCapabilityArguments<P, S, N, R>): CRCPrimitiveComponent<PrimitiveProgramProps<P>, PrimitiveInput<P, S>>;
   export const Rectangle: CRCPrimitiveComponent<RectangleProps, PrimitiveInput<RectangleProps, RectStyle>>;

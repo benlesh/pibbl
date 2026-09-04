@@ -21,15 +21,29 @@ type ElementInput<P> = 0 extends (1 & P) ?
 type ElementInputOrNull<P> = [ElementInput<P>] extends [never] ?
   never :
   ElementInput<P> | null;
-type ElementChild<P> = P extends unknown ?
+type ChildrenForProps<P> = P extends unknown ?
   'children' extends keyof P ? P['children'] : never :
+  never;
+type MultipleChildren<C> = C extends unknown ?
+  C extends readonly (infer Child)[] ?
+    Child[] extends C ? [Child, Child, ...Child[]] : never :
+  C extends Iterable<infer Child> ?
+    Child[] extends C ? [Child, Child, ...Child[]] : never :
+  never :
+  never;
+type ChildrenArguments<P> = P extends unknown ?
+  'children' extends keyof P ?
+    | []
+    | [ChildrenForProps<P>]
+    | MultipleChildren<ChildrenForProps<P>> :
+  [] :
   never;
 
 /** Public constructor used by direct element authoring. */
 export function createElement<P>(
   type: CRCElementType<P>,
   props: ElementInputOrNull<P>,
-  ...children: ElementChild<P>[]
+  ...children: ChildrenArguments<P>
 ): CRCElement<P> {
   const withChildren = children.length === 0 ? props : {
     ...(props as object | null),

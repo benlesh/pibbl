@@ -724,6 +724,11 @@ type DirectChild =
 function DirectChildComponent(_props: { children?: DirectChild }): CRCNode {
   return undefined;
 }
+function DirectScalarChild(
+  _props: { children?: { readonly label: string } },
+): CRCNode {
+  return undefined;
+}
 const directChild = createElement(Rectangle, {
   style: { width: 10, height: 10 },
 });
@@ -736,6 +741,8 @@ createElement(
   ['nested'],
   new Set([{ label: 'iterable' }]),
 );
+const firstScalarChild = { label: 'first' };
+createElement(DirectScalarChild, null, firstScalarChild);
 // @ts-expect-error containers reject nonzero raw numbers
 createElement(Group, null, 1);
 // @ts-expect-error Text rejects CRC element children
@@ -744,6 +751,8 @@ createElement(Text, null, directChild);
 createElement(Rectangle, { style: { width: 10, height: 10 } }, directChild);
 // @ts-expect-error custom components retain their declared child restriction
 createElement(DirectChildComponent, null, 1);
+// @ts-expect-error multiple children become an array that scalar child props reject
+createElement(DirectScalarChild, null, firstScalarChild, { label: 'second' });
 
 function ReservedKeyComponent(_props: { key: string }): CRCNode {
   return undefined;

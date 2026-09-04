@@ -74,6 +74,19 @@ built smoke test in 646 ms; 14 lifecycle tests in 9.69 seconds; and 9
 structural-performance passes plus 2 opt-in skips in 1.47 seconds. The expected
 Vite chunk-size and ineffective-dynamic-import warnings remained unchanged.
 
+Review then found that repeating a custom scalar child remained unsound because
+the runtime delivers multiple variadic children as an array. Starting from
+clean commit `5d4e178c8272689e5f54dc9f84fab0729f376dbb`, the signature was
+tightened to distinguish zero, one, and multiple child arguments and the Studio
+declaration/parity fixture was updated with the same rule. Focused public tests
+again passed 2 files and 19 tests; root typecheck and Studio parity exited 0.
+The single follow-up aggregate command exited 0 in 53.67 seconds: 84 browser
+files passed with 1,176 passed and 2 skipped tests of 1,178 in 21.48 seconds;
+the visual safeguard and 5 Studio baselines matched; 1 built smoke test passed
+in 638 ms; 14 lifecycle tests passed in 9.68 seconds; and 9 structural-
+performance tests passed with 2 opt-in skips in 1.47 seconds. Runtime code and
+the expected Vite warnings remained unchanged.
+
 ## Automated acceptance
 
 A narrow production-Studio Playwright probe exited 0 in 10.339 seconds. Each
