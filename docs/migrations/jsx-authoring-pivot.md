@@ -46,6 +46,100 @@ Imported built-in values are now descriptive and uppercase. A direct call such
 as the removed factory shape is not supported; platform values intentionally
 throw when invoked outside the renderer.
 
+## Field-level style and structure replacements
+
+This is the complete field-level migration from the former top-level visual
+and structural inputs to the final JSX-era API. Each removed value and its
+replacement share one row; there is no runtime alias or fallback.
+
+| Former component | Removed field/form     | Final replacement                             | Final behavior/default                                     |
+| ---------------- | ---------------------- | --------------------------------------------- | ---------------------------------------------------------- |
+| `rect`           | `x`                    | `Rectangle` `style.x`                         | Optional; defaults to `0`                                  |
+| `rect`           | `y`                    | `Rectangle` `style.y`                         | Optional; defaults to `0`                                  |
+| `rect`           | `width`                | `Rectangle` `style.width`                     | Required                                                   |
+| `rect`           | `height`               | `Rectangle` `style.height`                    | Required                                                   |
+| `rect`           | `fillStyle`            | `Rectangle` `style.fill`                      | Same fill value                                            |
+| `rect`           | `strokeStyle`          | `Rectangle` `style.stroke`                    | Same stroke value                                          |
+| `rect`           | `lineWidth`            | `Rectangle` `style.strokeWidth`               | Same stroke width                                          |
+| `rect`           | `alpha`                | `Rectangle` `style.opacity`                   | Multiplies the current Canvas alpha                        |
+| `rect`           | `cursor`               | `Rectangle` `style.cursor`                    | Same cursor value                                          |
+| `rect`           | `alignToPixelGrid`     | `Rectangle` `style.alignToPixelGrid`          | Omission preserves exact input geometry                    |
+| `path`           | `path`                 | `Path` `style.d`                              | Required `Path2D`                                          |
+| `path`           | `fillStyle`            | `Path` `style.fill`                           | Same fill value                                            |
+| `path`           | `strokeStyle`          | `Path` `style.stroke`                         | Same stroke value                                          |
+| `path`           | `lineWidth`            | `Path` `style.strokeWidth`                    | Same stroke width                                          |
+| `path`           | `alpha`                | `Path` `style.opacity`                        | Multiplies the current Canvas alpha                        |
+| `path`           | `cursor`               | `Path` `style.cursor`                         | Same cursor value                                          |
+| `path`           | `lineInteractionWidth` | `Path` `style.lineInteractionWidth`           | Defaults to `style.strokeWidth`, then `0`                  |
+| `line`           | `coords`               | `Line` `style.coords`                         | Required ordered polyline coordinates                      |
+| `line`           | `strokeStyle`          | `Line` `style.stroke`                         | Same stroke value                                          |
+| `line`           | `lineWidth`            | `Line` `style.strokeWidth`                    | Same stroke width                                          |
+| `line`           | `cursor`               | `Line` `style.cursor`                         | Same cursor value                                          |
+| `line`           | `lineInteractionWidth` | `Line` `style.lineInteractionWidth`           | Defaults to `style.strokeWidth`, then `0`                  |
+| `horizontalLine` | `y`                    | `HorizontalLine` `style.y`                    | Required                                                   |
+| `horizontalLine` | `left`                 | `HorizontalLine` `style.x1`                   | Optional; defaults to `0`                                  |
+| `horizontalLine` | `right`                | `HorizontalLine` `style.x2`                   | Optional; defaults to the allocation width                 |
+| `horizontalLine` | `strokeStyle`          | `HorizontalLine` `style.stroke`               | Same stroke value                                          |
+| `horizontalLine` | `lineWidth`            | `HorizontalLine` `style.strokeWidth`          | Same stroke width                                          |
+| `horizontalLine` | `cursor`               | `HorizontalLine` `style.cursor`               | Same cursor value                                          |
+| `horizontalLine` | `alignToPixelGrid`     | `HorizontalLine` `style.alignToPixelGrid`     | Omission preserves exact input geometry                    |
+| `horizontalLine` | `lineInteractionWidth` | `HorizontalLine` `style.lineInteractionWidth` | Defaults to `style.strokeWidth`, then `0`                  |
+| `verticalLine`   | `x`                    | `VerticalLine` `style.x`                      | Required                                                   |
+| `verticalLine`   | `top`                  | `VerticalLine` `style.y1`                     | Optional; defaults to `0`                                  |
+| `verticalLine`   | `bottom`               | `VerticalLine` `style.y2`                     | Optional; defaults to the allocation height                |
+| `verticalLine`   | `strokeStyle`          | `VerticalLine` `style.stroke`                 | Same stroke value                                          |
+| `verticalLine`   | `lineWidth`            | `VerticalLine` `style.strokeWidth`            | Same stroke width                                          |
+| `verticalLine`   | `cursor`               | `VerticalLine` `style.cursor`                 | Same cursor value                                          |
+| `verticalLine`   | `alignToPixelGrid`     | `VerticalLine` `style.alignToPixelGrid`       | Omission preserves exact input geometry                    |
+| `verticalLine`   | `lineInteractionWidth` | `VerticalLine` `style.lineInteractionWidth`   | Defaults to `style.strokeWidth`, then `0`                  |
+| `svgPath`        | `d`                    | `SvgPath` `style.d`                           | Required string path data                                  |
+| `svgPath`        | `fillStyle`            | `SvgPath` `style.fill`                        | Same fill value                                            |
+| `svgPath`        | `strokeStyle`          | `SvgPath` `style.stroke`                      | Same stroke value                                          |
+| `svgPath`        | `lineWidth`            | `SvgPath` `style.strokeWidth`                 | Same stroke width                                          |
+| `svgPath`        | `alpha`                | `SvgPath` `style.opacity`                     | Multiplies the current Canvas alpha                        |
+| `svgPath`        | `cursor`               | `SvgPath` `style.cursor`                      | Same cursor value                                          |
+| `text`           | `text`                 | `Text` recursive textual `children`           | Numeric zero remains visible; empty values add no content  |
+| `text`           | `x`                    | `Text` `style.x`                              | Optional; defaults to `0`                                  |
+| `text`           | `y`                    | `Text` `style.y`                              | Optional; defaults to `0`                                  |
+| `text`           | `maxWidth`             | `Text` `style.width`                          | Optional text box width                                    |
+| `text`           | `maxHeight`            | `Text` `style.height`                         | Optional text box height                                   |
+| `text`           | `lineHeight`           | `Text` `style.lineHeight`                     | Defaults to `13`                                           |
+| `text`           | `wordWrap`             | `Text` `style.wrap`                           | Defaults to `false`                                        |
+| `text`           | `overflow`             | `Text` `style.fit`                            | Defaults to `"visible"`                                    |
+| `text`           | `font`                 | `Text` `style.font`                           | Defaults to `"13px sans-serif"`                            |
+| `text`           | `textBaseline`         | `Text` `style.textBaseline`                   | Defaults to `"top"`                                        |
+| `text`           | `textAlign`            | `Text` `style.textAlign`                      | Defaults to `"left"`                                       |
+| `text`           | `fillStyle`            | `Text` `style.fill`                           | Same fill value                                            |
+| `text`           | `strokeStyle`          | `Text` `style.stroke`                         | Same stroke value                                          |
+| `text`           | `lineWidth`            | `Text` `style.strokeWidth`                    | Defaults to `0` when omitted                               |
+| `text`           | `alpha`                | `Text` `style.opacity`                        | Multiplies the current Canvas alpha                        |
+| `text`           | `cursor`               | `Text` `style.cursor`                         | Same cursor value                                          |
+| `img`            | `src`                  | `Image` `style.src`                           | Required                                                   |
+| `img`            | `x`                    | `Image` `style.x`                             | Optional; defaults to `0`                                  |
+| `img`            | `y`                    | `Image` `style.y`                             | Optional; defaults to `0`                                  |
+| `img`            | `width`                | `Image` `style.width`                         | Omission uses loaded natural width, otherwise `0`          |
+| `img`            | `height`               | `Image` `style.height`                        | Omission uses loaded natural height, otherwise `0`         |
+| `img`            | `strokeStyle`          | `Image` `style.stroke`                        | Same border stroke value                                   |
+| `img`            | `lineWidth`            | `Image` `style.strokeWidth`                   | Same border width                                          |
+| `img`            | `alpha`                | `Image` `style.opacity`                       | Multiplies the current Canvas alpha                        |
+| `img`            | `cursor`               | `Image` `style.cursor`                        | Same cursor value                                          |
+| `img`            | `alignToPixelGrid`     | `Image` `style.alignToPixelGrid`              | Omission preserves exact input geometry                    |
+| `g`              | `scaleX`               | `Group` `style.scaleX`                        | Defaults to `1`                                            |
+| `g`              | `scaleY`               | `Group` `style.scaleY`                        | Defaults to `1`                                            |
+| `g`              | `rotate`               | `Group` `style.rotationDegrees`               | Clockwise degrees; transform order is unchanged            |
+| `g`              | `rotateOrigin`         | `Group` `style.rotationOrigin`                | Defaults to `[0, 0]`                                       |
+| `g`              | `x`                    | `Group` `style.translateX`                    | Defaults to `0`                                            |
+| `g`              | `y`                    | `Group` `style.translateY`                    | Defaults to `0`                                            |
+| `g`              | `skewX`                | `Group` `style.skewX`                         | Defaults to `0`                                            |
+| `g`              | `skewY`                | `Group` `style.skewY`                         | Defaults to `0`                                            |
+| `g`              | structural `children`  | `Group` recursive `children`                  | Transform order remains scale, rotation, translation, skew |
+| `clip`           | `path`                 | `Clip` `style.d`                              | Required `Path2D`                                          |
+| `clip`           | `fillRule`             | `Clip` `style.fillRule`                       | Defaults to `"nonzero"`                                    |
+| `clip`           | structural `children`  | `Clip` recursive `children`                   | Children retain source order                               |
+| `layer`          | `width`                | `Layer` `style.width`                         | Omission uses the current logical Canvas allocation        |
+| `layer`          | `height`               | `Layer` `style.height`                        | Omission uses the current logical Canvas allocation        |
+| `layer`          | structural `render`    | `Layer` recursive `children`                  | The callback form is removed; direct children are retained |
+
 ## Current component definitions
 
 ```tsx

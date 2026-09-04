@@ -173,7 +173,8 @@ render work. Measurement:
   own padding;
 - may recursively measure children through the supplied service;
 - cannot call hooks, context accessors, observe a layout box, paint, register
-  interaction targets, create image generations, or acquire runtime resources;
+  interaction targets, or acquire runtime resources;
+- cannot create image generations;
 - detects direct and indirect cycles and restores all temporary runtime state
   after success or failure.
 

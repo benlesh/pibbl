@@ -116,8 +116,8 @@ CRC hooks can only be called while rendering a component.
 
 Each component owns ordered, typed slots. Every successful update must call
 the same number and kinds in the same order. CRC reports a changed kind, added
-slot, or omitted slot deterministically. Before reporting an omitted slot, CRC
-releases the abandoned slot's owned resources. A
+slot, or fewer hooks deterministically. Before reporting fewer hooks, CRC
+releases the abandoned slots' owned resources. A
 failed render closes the instance's component refs, clears the partial tree,
 and restores temporary globals. This is a fail-closed reset, not pixel rollback;
 a later explicit render remounts cleanly.

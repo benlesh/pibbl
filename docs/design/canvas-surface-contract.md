@@ -33,9 +33,10 @@ type CRCConfig =
 
 JSX and `createElement` create the same opaque branded elements; fragments,
 arrays, finite synchronous iterables, and empty nodes are also valid roots.
-The configuration belongs to the first live mount. Later `crc()` calls update
-the root node but do not replace the surface configuration or mount signal.
-Dispose and remount to select a different surface mode.
+The surface configuration belongs to the first live mount. Later `crc()` calls
+update the root node but do not replace it. `config.signal` likewise belongs to
+the first live mount and is not replaced by later `crc()` calls. Dispose and
+remount to select a different surface mode or signal.
 
 The defaults are:
 

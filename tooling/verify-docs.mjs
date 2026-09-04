@@ -20,7 +20,9 @@ import {
   CONTRACT_BASELINE_COMMIT,
   CONTRACT_TRANSLATION_RECORD,
   replaceContractUnit,
+  sha256,
 } from "./docs-contract-preservation.mjs";
+import { assertFieldMigrationCompleteness } from "./docs-field-migration.mjs";
 
 const repositoryRoot = resolve(import.meta.dirname, "..");
 const require = createRequire(import.meta.url);
@@ -1436,6 +1438,20 @@ const contractPreservationBaseline = JSON.parse(
     "utf8",
   ),
 );
+const baselineStyleUnits = contractPreservationBaseline.contracts.find(
+  ({ path }) => path === "docs/design/style-system-contract.md",
+)?.baselineUnits;
+assert.ok(
+  baselineStyleUnits,
+  "Contract baseline lacks the style-system contract",
+);
+const fieldMigrationResult = assertFieldMigrationCompleteness({
+  baselineStyleUnits,
+  currentStyleSource: currentSources.get(
+    "docs/design/style-system-contract.md",
+  ),
+  migrationSource,
+});
 const trackedContractEvidencePaths = new Set(
   trackedRepositoryFiles(["packages/core/src", "packages/core/test"]),
 );
@@ -1471,7 +1487,8 @@ function sourceAtCommit(commit, path) {
 
 const provenanceRequirement = process.env.CRC_VERIFY_CONTRACT_PROVENANCE;
 assert.ok(
-  provenanceRequirement === undefined || provenanceRequirement === "0" ||
+  provenanceRequirement === undefined ||
+    provenanceRequirement === "0" ||
     provenanceRequirement === "1",
   "CRC_VERIFY_CONTRACT_PROVENANCE must be 0, 1, or unset.",
 );
@@ -1489,21 +1506,23 @@ if (provenanceRequirement === "1" && !baselineHistoryAvailable) {
       "digest-locked semantic baseline.",
   );
 }
-const verifyBaselineProvenance = baselineHistoryAvailable &&
-  provenanceRequirement !== "0";
-const baselineContractSources = verifyBaselineProvenance ? new Map(
-  normativeContractPaths.map((path) => [
-    path,
-    sourceAtCommit(CONTRACT_BASELINE_COMMIT, path),
-  ]),
-) : undefined;
+const verifyBaselineProvenance =
+  baselineHistoryAvailable && provenanceRequirement !== "0";
+const baselineContractSources = verifyBaselineProvenance
+  ? new Map(
+      normativeContractPaths.map((path) => [
+        path,
+        sourceAtCommit(CONTRACT_BASELINE_COMMIT, path),
+      ]),
+    )
+  : undefined;
 const translationRecordSource = await readFile(
   join(repositoryRoot, CONTRACT_TRANSLATION_RECORD),
   "utf8",
 );
-const translationRecordBaselineSource = verifyBaselineProvenance ?
-  sourceAtCommit(CONTRACT_BASELINE_COMMIT, CONTRACT_TRANSLATION_RECORD) :
-  undefined;
+const translationRecordBaselineSource = verifyBaselineProvenance
+  ? sourceAtCommit(CONTRACT_BASELINE_COMMIT, CONTRACT_TRANSLATION_RECORD)
+  : undefined;
 const contractPreservationResult = assertContractPreservationBaseline({
   manifest: contractPreservationBaseline,
   expectedContractPaths: normativeContractPaths,
@@ -1808,6 +1827,26 @@ export async function verifyMutationProbes() {
   assert.ok(direct.values.has("declaredValue"));
   assert.ok(direct.types.has("DirectType"));
   probes += 1;
+  const wrongFieldMigration = migrationSource.replace(
+    "`HorizontalLine` `style.x2`",
+    "`HorizontalLine` `style.x1`",
+  );
+  assert.notEqual(
+    wrongFieldMigration,
+    migrationSource,
+    "Field-level migration mutation fixture did not change",
+  );
+  throws(
+    () =>
+      assertFieldMigrationCompleteness({
+        baselineStyleUnits,
+        currentStyleSource: currentSources.get(
+          "docs/design/style-system-contract.md",
+        ),
+        migrationSource: wrongFieldMigration,
+      }),
+    /field-level migration.*wrong final replacement/iu,
+  );
   throws(
     () =>
       exportedSpecifiers(
@@ -1984,7 +2023,11 @@ export async function verifyMutationProbes() {
     const mutated = new Map(executableEvidenceSources);
     const original = executableEvidenceSources.get(path);
     const changed = mutate(original);
-    assert.notEqual(changed, original, `${label} RED mutation must alter source`);
+    assert.notEqual(
+      changed,
+      original,
+      `${label} RED mutation must alter source`,
+    );
     mutated.set(path, changed);
     throws(() => assertExecutableEvidence(mutated), pattern);
   }
@@ -2005,18 +2048,23 @@ export async function verifyMutationProbes() {
     embeddedOnly = false,
     evidenceSources = contractEvidenceSources,
     evidencePaths = trackedContractEvidencePaths,
-  } = {}) => assertContractPreservationBaseline({
-    manifest,
-    expectedContractPaths: normativeContractPaths,
-    baselineSources: embeddedOnly ? undefined :
-      baselineSources ?? baselineContractSources,
-    currentSources: sources,
-    translationRecordSource,
-    translationRecordBaselineSource: embeddedOnly ? undefined :
-      baselineTranslation ?? translationRecordBaselineSource,
-    evidenceSources,
-    trackedEvidencePaths: evidencePaths,
-  });
+    reviewedManifestSha256,
+  } = {}) =>
+    assertContractPreservationBaseline({
+      manifest,
+      expectedContractPaths: normativeContractPaths,
+      baselineSources: embeddedOnly
+        ? undefined
+        : (baselineSources ?? baselineContractSources),
+      currentSources: sources,
+      translationRecordSource,
+      translationRecordBaselineSource: embeddedOnly
+        ? undefined
+        : (baselineTranslation ?? translationRecordBaselineSource),
+      evidenceSources,
+      trackedEvidencePaths: evidencePaths,
+      reviewedManifestSha256,
+    });
 
   // The embedded snapshot remains a complete gate in shallow clones even when
   // the optional provenance commit is unavailable.
@@ -2040,12 +2088,13 @@ export async function verifyMutationProbes() {
   );
 
   throws(
-    () => assertPreservation({
-      manifest: {
-        ...contractPreservationBaseline,
-        sourceCommit: "0".repeat(40),
-      },
-    }),
+    () =>
+      assertPreservation({
+        manifest: {
+          ...contractPreservationBaseline,
+          sourceCommit: "0".repeat(40),
+        },
+      }),
     /reviewed pre-Task-14 commit/u,
   );
 
@@ -2065,7 +2114,11 @@ export async function verifyMutationProbes() {
     const mutatedSources = new Map(currentSources);
     const original = currentSources.get(path);
     const changed = original.replace(before, after);
-    assert.notEqual(changed, original, `${label} mutation must alter contract prose`);
+    assert.notEqual(
+      changed,
+      original,
+      `${label} mutation must alter contract prose`,
+    );
     mutatedSources.set(path, changed);
     throws(
       () => assertPreservation({ sources: mutatedSources }),
@@ -2077,7 +2130,7 @@ export async function verifyMutationProbes() {
     ({ path }) => path === "docs/design/event-resource-ownership.md",
   );
   const sharedListenerUnit = eventContract.currentUnits.find(({ text }) =>
-    text.includes("Reference counts still collapse")
+    text.includes("Reference counts still collapse"),
   );
   assert.ok(sharedListenerUnit, "Shared-listener mutation unit is missing");
   for (const [label, replacement] of [
@@ -2106,13 +2159,14 @@ export async function verifyMutationProbes() {
     ({ path }) => path === "docs/design/canvas-surface-contract.md",
   );
   const unmappedParagraph = canvasContract.currentUnits.find(({ text }) =>
-    text.startsWith("Centering offsets may be fractional.")
+    text.startsWith("Centering offsets may be fractional."),
   );
   assert.ok(unmappedParagraph, "Unmapped paragraph mutation unit is missing");
   assert.equal(
-    contractPreservationBaseline.evidenceMappings.some((mapping) =>
-      mapping.contract === canvasContract.path &&
-      unmappedParagraph.text.includes(mapping.claim.text)
+    contractPreservationBaseline.evidenceMappings.some(
+      (mapping) =>
+        mapping.contract === canvasContract.path &&
+        unmappedParagraph.text.includes(mapping.claim.text),
     ),
     false,
     "Unmapped paragraph probe accidentally selected an evidence marker",
@@ -2135,7 +2189,7 @@ export async function verifyMutationProbes() {
   }
 
   const zeroSizeUnit = canvasContract.currentUnits.find(({ text }) =>
-    text.startsWith("A zero-sized display axis")
+    text.startsWith("A zero-sized display axis"),
   );
   assert.ok(zeroSizeUnit, "Zero-size suppression mutation unit is missing");
   {
@@ -2183,7 +2237,8 @@ export async function verifyMutationProbes() {
     ({ path }) => path === "docs/design/runtime-hooks-contract.md",
   );
   const memoRow = hooksContract.currentUnits.find(
-    ({ kind, text }) => kind === "table" && text.includes("crcMemo(create, deps)"),
+    ({ kind, text }) =>
+      kind === "table" && text.includes("crcMemo(create, deps)"),
   );
   assert.ok(memoRow, "Hook-specific table mutation unit is missing");
   {
@@ -2226,10 +2281,11 @@ export async function verifyMutationProbes() {
   const digestTamper = structuredClone(contractPreservationBaseline);
   digestTamper.contracts[0].sourceSha256 = "0".repeat(64);
   throws(
-    () => assertPreservation({
-      manifest: digestTamper,
-      embeddedOnly: true,
-    }),
+    () =>
+      assertPreservation({
+        manifest: digestTamper,
+        embeddedOnly: true,
+      }),
     /fixed reviewed snapshot/u,
   );
 
@@ -2254,37 +2310,49 @@ export async function verifyMutationProbes() {
     samePathTranslations.length >= 2,
     "Translation relevance mutation needs two mappings in one contract",
   );
-  [
-    samePathTranslations[0].currentIds,
-    samePathTranslations[1].currentIds,
-  ] = [
+  [samePathTranslations[0].currentIds, samePathTranslations[1].currentIds] = [
     samePathTranslations[1].currentIds,
     samePathTranslations[0].currentIds,
   ];
+  const irrelevantTranslationDigest = sha256(
+    JSON.stringify(irrelevantTranslation),
+  );
   throws(
-    () => assertPreservation({ manifest: irrelevantTranslation }),
-    /fixed reviewed snapshot/u,
+    () =>
+      assertPreservation({
+        manifest: irrelevantTranslation,
+        reviewedManifestSha256: irrelevantTranslationDigest,
+      }),
+    /translation.*(?:transform|replacement|relevance)/iu,
   );
 
   const irrelevantEvidence = structuredClone(contractPreservationBaseline);
   const evidencePairs = irrelevantEvidence.evidenceMappings.map(
     ({ source, test }) => ({ source, test }),
   );
-  for (const [index, mapping] of irrelevantEvidence.evidenceMappings.entries()) {
+  for (const [
+    index,
+    mapping,
+  ] of irrelevantEvidence.evidenceMappings.entries()) {
     const replacement = evidencePairs[(index + 1) % evidencePairs.length];
     mapping.source = replacement.source;
     mapping.test = replacement.test;
   }
+  const irrelevantEvidenceDigest = sha256(JSON.stringify(irrelevantEvidence));
   throws(
-    () => assertPreservation({ manifest: irrelevantEvidence }),
-    /fixed reviewed snapshot/u,
+    () =>
+      assertPreservation({
+        manifest: irrelevantEvidence,
+        reviewedManifestSha256: irrelevantEvidenceDigest,
+      }),
+    /evidence.*(?:anchor|context|relevance)/iu,
   );
 
   const repeatedEvidence = structuredClone(contractPreservationBaseline);
-  repeatedEvidence.evidenceMappings[1].source =
-    repeatedEvidence.evidenceMappings[0].source;
-  repeatedEvidence.evidenceMappings[1].test =
-    repeatedEvidence.evidenceMappings[0].test;
+  repeatedEvidence.evidenceMappings[26].source =
+    repeatedEvidence.evidenceMappings[25].source;
+  repeatedEvidence.evidenceMappings[26].test =
+    repeatedEvidence.evidenceMappings[25].test;
   throws(
     () => assertPreservation({ manifest: repeatedEvidence }),
     /reuses identical generic/u,
@@ -2390,6 +2458,7 @@ process.stdout.write(
     `${contractPreservationResult.currentUnitCount} current semantic units across ` +
     `${contractPreservationBaseline.contracts.length} normative contracts, ` +
     `${contractPreservationResult.evidenceMappingCount} direct evidence mappings, ` +
+    `${fieldMigrationResult.fieldMigrationCount} baseline-derived field migrations, ` +
     `baseline provenance ${contractPreservationResult.provenanceVerified ? "verified" : "embedded/digest-locked"}, ` +
     `${presentationSourcePaths.length} discovered presentation sources, and ` +
     `the extracted JavaScript program through Babel and esbuild.\n`,

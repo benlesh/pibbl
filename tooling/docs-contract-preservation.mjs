@@ -9,7 +9,7 @@ export const CONTRACT_TRANSLATION_RECORD =
 // Updated only after the complete baseline, translation allowlist, additions,
 // and evidence map receive review together.
 const REVIEWED_MANIFEST_SHA256 =
-  "e583d0f47a2c5d69a7a2869a5a9bb3457be4a20cc6c17c9ab5ae1a6799f883fa";
+  "5e4a49dff4880c41513f78b80c7a9343f49dd28a607091515947f361fe49ced4";
 
 export function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
@@ -36,9 +36,7 @@ function isTableRow(line) {
 }
 
 function isTableSeparator(line) {
-  return /^\s*\|?(?:\s*:?-{3,}:?\s*\|)+(?:\s*:?-{3,}:?\s*)?$/u.test(
-    line,
-  );
+  return /^\s*\|?(?:\s*:?-{3,}:?\s*\|)+(?:\s*:?-{3,}:?\s*)?$/u.test(line);
 }
 
 function isHorizontalRule(line) {
@@ -74,7 +72,7 @@ function contractUnitRecords(source, prefix) {
     });
   };
 
-  for (let cursor = 0; cursor < lines.length; ) {
+  for (let cursor = 0; cursor < lines.length;) {
     const startLine = cursor;
     const line = lines[cursor];
     const heading = isHeading(line);
@@ -103,7 +101,11 @@ function contractUnitRecords(source, prefix) {
       add("code", `${language}\n${body.join("\n")}`, startLine, cursor);
       continue;
     }
-    if (line.trim() === "" || isHorizontalRule(line) || isTableSeparator(line)) {
+    if (
+      line.trim() === "" ||
+      isHorizontalRule(line) ||
+      isTableSeparator(line)
+    ) {
       cursor += 1;
       continue;
     }
@@ -208,6 +210,66 @@ function exactTextInKind(units, kind, text) {
   );
 }
 
+function semanticTokens(value) {
+  return new Set(
+    normalizeContractText(value)
+      .toLocaleLowerCase("en-US")
+      .match(/[\p{Letter}\p{Number}][\p{Letter}\p{Number}-]{2,}/gu) ?? [],
+  );
+}
+
+function semanticSimilarity(left, right) {
+  const leftTokens = semanticTokens(left);
+  const rightTokens = semanticTokens(right);
+  const union = new Set([...leftTokens, ...rightTokens]);
+  if (union.size === 0) return 0;
+  let intersection = 0;
+  for (const token of leftTokens) {
+    if (rightTokens.has(token)) intersection += 1;
+  }
+  return intersection / union.size;
+}
+
+function joinedUnitText(units) {
+  return normalizeContractText(units.map(({ text }) => text).join(" "));
+}
+
+function assertAnchors(text, anchors, label) {
+  assert.ok(
+    Array.isArray(anchors) && anchors.length > 0 && anchors.length <= 3,
+    `${label} must declare one to three relevance anchors`,
+  );
+  const normalizedText = normalizeContractText(text).toLocaleLowerCase("en-US");
+  const normalizedAnchors = new Set();
+  for (const anchor of anchors) {
+    assert.ok(
+      typeof anchor === "string" && normalizeContractText(anchor) !== "",
+      `${label} has an empty relevance anchor`,
+    );
+    const normalizedAnchor =
+      normalizeContractText(anchor).toLocaleLowerCase("en-US");
+    assert.ok(
+      normalizedAnchor.length >= 3 && !normalizedAnchors.has(normalizedAnchor),
+      `${label} has a duplicate or non-specific relevance anchor`,
+    );
+    normalizedAnchors.add(normalizedAnchor);
+    assert.ok(
+      normalizedText.includes(normalizedAnchor),
+      `${label} relevance anchor ${JSON.stringify(anchor)} is absent`,
+    );
+  }
+}
+
+function evidenceContext(source, marker) {
+  const markerIndex = source.indexOf(marker);
+  assert.notEqual(markerIndex, -1, "Evidence marker is absent from its source");
+  const radius = 1_000;
+  return source.slice(
+    Math.max(0, markerIndex - radius),
+    Math.min(source.length, markerIndex + marker.length + radius),
+  );
+}
+
 function assertExactObjectKeys(value, expected, label) {
   assert.deepEqual(
     Object.keys(value).sort(),
@@ -287,7 +349,11 @@ export function assertContractPreservationBaseline({
   const assertSnapshotUnits = (units, prefix, label) => {
     assert.ok(Array.isArray(units) && units.length > 0, `${label} is empty`);
     for (const [index, unit] of units.entries()) {
-      assertExactObjectKeys(unit, ["id", "kind", "section", "text"], `${label} unit`);
+      assertExactObjectKeys(
+        unit,
+        ["id", "kind", "section", "text"],
+        `${label} unit`,
+      );
       assert.equal(
         unit.id,
         semanticUnitId(prefix, index),
@@ -315,7 +381,10 @@ export function assertContractPreservationBaseline({
       ["path", "sourceSha256", "baselineUnits", "currentUnits"],
       `Contract snapshot ${contract.path ?? "<unknown>"}`,
     );
-    assert.ok(!contractsByPath.has(contract.path), `Duplicate contract ${contract.path}`);
+    assert.ok(
+      !contractsByPath.has(contract.path),
+      `Duplicate contract ${contract.path}`,
+    );
     const baselineSource = baselineSources?.get(contract.path);
     const currentSource = currentSources.get(contract.path);
     assert.equal(
@@ -328,8 +397,16 @@ export function assertContractPreservationBaseline({
       /^[a-f0-9]{64}$/u,
       `${contract.path} baseline source digest is malformed`,
     );
-    assertSnapshotUnits(contract.baselineUnits, "b", `${contract.path} baseline snapshot`);
-    assertSnapshotUnits(contract.currentUnits, "c", `${contract.path} current snapshot`);
+    assertSnapshotUnits(
+      contract.baselineUnits,
+      "b",
+      `${contract.path} baseline snapshot`,
+    );
+    assertSnapshotUnits(
+      contract.currentUnits,
+      "c",
+      `${contract.path} current snapshot`,
+    );
     if (baselineSources !== undefined) {
       assert.equal(
         typeof baselineSource,
@@ -380,19 +457,40 @@ export function assertContractPreservationBaseline({
   const translatedBaseline = new Set();
   const translatedCurrent = new Set();
   const addedCurrent = new Set();
+  const translationReasons = new Set();
+  const approvalUses = new Map();
   const approvals = extractContractUnits(translationRecordSource, "a");
   const assertApproval = (entry, label) => {
-    assertExactObjectKeys(entry.approval ?? {}, ["kind", "text"], `${label} approval`);
+    assertExactObjectKeys(
+      entry.approval ?? {},
+      ["id", "kind", "text"],
+      `${label} approval`,
+    );
+    assert.match(
+      entry.approval.id,
+      /^a\d{4}$/u,
+      `${label} approval has an invalid design-record unit id`,
+    );
+    const approval = approvals.find(({ id }) => id === entry.approval.id);
+    const approvalText = normalizeContractText(entry.approval.text);
     assert.ok(
-      ["prose", "list", "table"].includes(entry.approval.kind) &&
-        exactTextInKind(approvals, entry.approval.kind, entry.approval.text),
-      `${label} lacks exact prose/list/table approval in the JSX design record`,
+      approval &&
+        ["prose", "list", "table"].includes(entry.approval.kind) &&
+        approval.kind === entry.approval.kind &&
+        approvalText.length >= 12 &&
+        approval.text.includes(approvalText),
+      `${label} lacks an exact unit-scoped prose/list/table approval in the JSX design record`,
+    );
+    assert.ok(
+      entry.reason.includes(entry.approval.id),
+      `${label} reason must identify its exact approved-design unit`,
     );
   };
   const resolveUnit = (path, side, id, label) => {
     const contract = contractsByPath.get(path);
     assert.ok(contract, `${label} references unknown contract ${path}`);
-    const units = side === "baseline" ? contract.baselineUnits : contract.currentUnits;
+    const units =
+      side === "baseline" ? contract.baselineUnits : contract.currentUnits;
     const unit = units.find((candidate) => candidate.id === id);
     assert.ok(unit, `${label} references unknown ${side} unit ${path}#${id}`);
     return unit;
@@ -402,7 +500,15 @@ export function assertContractPreservationBaseline({
     const label = `Translation ${translation.id ?? "<unknown>"}`;
     assertExactObjectKeys(
       translation,
-      ["id", "path", "baselineIds", "currentIds", "reason", "approval"],
+      [
+        "id",
+        "path",
+        "baselineIds",
+        "currentIds",
+        "reason",
+        "approval",
+        "sharedAnchors",
+      ],
       label,
     );
     assert.match(translation.id, /^[a-z0-9-]+$/u, `${label} has an invalid id`);
@@ -410,27 +516,92 @@ export function assertContractPreservationBaseline({
       typeof translation.reason === "string" && translation.reason.length >= 24,
       `${label} needs a specific human-readable reason`,
     );
+    assert.doesNotMatch(
+      translation.reason,
+      /Preserves the pre-Task-14 .* clauses while translating this section/u,
+      `${label} uses the rejected blanket translation reason`,
+    );
     assert.ok(
-      Array.isArray(translation.baselineIds) && translation.baselineIds.length > 0,
+      !translationReasons.has(translation.reason),
+      `${label} repeats another translation reason`,
+    );
+    translationReasons.add(translation.reason);
+    assert.ok(
+      Array.isArray(translation.baselineIds) &&
+        translation.baselineIds.length > 0,
       `${label} must map at least one changed baseline unit`,
     );
     assert.ok(
-      Array.isArray(translation.currentIds) && translation.currentIds.length > 0,
+      Array.isArray(translation.currentIds) &&
+        translation.currentIds.length > 0,
       `${label} must map to exact current prose/table/list/code`,
     );
     assertApproval(translation, label);
+    const approvalIdentity = `${translation.approval.id}\0${translation.approval.kind}\0${normalizeContractText(translation.approval.text)}`;
+    approvalUses.set(
+      approvalIdentity,
+      (approvalUses.get(approvalIdentity) ?? 0) + 1,
+    );
+    const baselineUnits = translation.baselineIds.map((id) =>
+      resolveUnit(translation.path, "baseline", id, label),
+    );
+    const currentUnits = translation.currentIds.map((id) =>
+      resolveUnit(translation.path, "current", id, label),
+    );
+    const baselineText = joinedUnitText(baselineUnits);
+    const currentText = joinedUnitText(currentUnits);
+    assertAnchors(
+      baselineText,
+      translation.sharedAnchors,
+      `${label} baseline transformation`,
+    );
+    assertAnchors(
+      currentText,
+      translation.sharedAnchors,
+      `${label} current transformation`,
+    );
+    assert.ok(
+      semanticSimilarity(baselineText, currentText) >= 0.1,
+      `${label} transformation lacks substantive content similarity`,
+    );
+    for (const id of [...translation.baselineIds, ...translation.currentIds]) {
+      assert.ok(
+        translation.reason.includes(id),
+        `${label} reason must identify exact mapped unit ${id}`,
+      );
+    }
+    for (const anchor of translation.sharedAnchors) {
+      assert.ok(
+        translation.reason
+          .toLocaleLowerCase("en-US")
+          .includes(normalizeContractText(anchor).toLocaleLowerCase("en-US")),
+        `${label} reason must explain relevance anchor ${JSON.stringify(anchor)}`,
+      );
+    }
     for (const id of translation.baselineIds) {
       resolveUnit(translation.path, "baseline", id, label);
       const identity = `${translation.path}\0${id}`;
-      assert.ok(!translatedBaseline.has(identity), `${label} repeats baseline unit ${id}`);
+      assert.ok(
+        !translatedBaseline.has(identity),
+        `${label} repeats baseline unit ${id}`,
+      );
       translatedBaseline.add(identity);
     }
     for (const id of translation.currentIds) {
       resolveUnit(translation.path, "current", id, label);
       const identity = `${translation.path}\0${id}`;
-      assert.ok(!translatedCurrent.has(identity), `${label} repeats current unit ${id}`);
+      assert.ok(
+        !translatedCurrent.has(identity),
+        `${label} repeats current unit ${id}`,
+      );
       translatedCurrent.add(identity);
     }
+  }
+  for (const [approvalIdentity, uses] of approvalUses) {
+    assert.ok(
+      uses <= 6,
+      `Translation approval ${JSON.stringify(approvalIdentity.split("\0")[2])} is reused as a blanket authorization by ${uses} groups`,
+    );
   }
 
   for (const addition of manifest.additions) {
@@ -491,13 +662,20 @@ export function assertContractPreservationBaseline({
     const label = `Evidence ${mapping.id ?? "<unknown>"}`;
     assertExactObjectKeys(
       mapping,
-      ["id", "contract", "claim", "source", "test"],
+      ["id", "contract", "claim", "source", "test", "relevance"],
       label,
     );
     assert.match(mapping.id, /^[a-z0-9-]+$/u, `${label} has an invalid id`);
     const contract = contractsByPath.get(mapping.contract);
-    assert.ok(contract, `${label} references unknown contract ${mapping.contract}`);
-    assertExactObjectKeys(mapping.claim ?? {}, ["kind", "text"], `${label} claim`);
+    assert.ok(
+      contract,
+      `${label} references unknown contract ${mapping.contract}`,
+    );
+    assertExactObjectKeys(
+      mapping.claim ?? {},
+      ["kind", "text"],
+      `${label} claim`,
+    );
     assert.ok(
       ["prose", "list", "table"].includes(mapping.claim.kind) &&
         exactTextInKind(
@@ -508,12 +686,28 @@ export function assertContractPreservationBaseline({
       `${label} claim is not exact contiguous current contract prose`,
     );
     const claimIdentity = `${mapping.contract}\0${mapping.claim.kind}\0${normalizeContractText(mapping.claim.text)}`;
-    assert.ok(!mappedClaims.has(claimIdentity), `${label} repeats another evidence claim`);
+    assert.ok(
+      !mappedClaims.has(claimIdentity),
+      `${label} repeats another evidence claim`,
+    );
     mappedClaims.add(claimIdentity);
-
+    assertExactObjectKeys(
+      mapping.relevance ?? {},
+      ["sharedAnchors"],
+      `${label} relevance`,
+    );
+    assertAnchors(
+      mapping.claim.text,
+      mapping.relevance.sharedAnchors,
+      `${label} claim relevance`,
+    );
     for (const role of ["source", "test"]) {
       const evidence = mapping[role];
-      assertExactObjectKeys(evidence ?? {}, ["path", "marker"], `${label} ${role}`);
+      assertExactObjectKeys(
+        evidence ?? {},
+        ["path", "marker"],
+        `${label} ${role}`,
+      );
       if (role === "source") {
         assert.match(
           evidence.path,
@@ -543,8 +737,14 @@ export function assertContractPreservationBaseline({
         `${label} could not read ${role} evidence ${evidence.path}`,
       );
       assert.ok(
-        evidence.marker.length >= 12 && evidenceSource.includes(evidence.marker),
+        evidence.marker.length >= 12 &&
+          evidenceSource.includes(evidence.marker),
         `${label} ${role} evidence lacks its exact reviewed marker`,
+      );
+      assertAnchors(
+        evidenceContext(evidenceSource, evidence.marker),
+        mapping.relevance.sharedAnchors,
+        `${label} ${role} evidence relevance`,
       );
       const identity = `${evidence.path}\0${evidence.marker}`;
       const seen = role === "source" ? sourceEvidence : testEvidence;

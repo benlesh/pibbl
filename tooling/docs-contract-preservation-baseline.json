@@ -1427,7 +1427,7 @@
           "id": "c0078",
           "kind": "prose",
           "section": "Identity and ordering",
-          "text": "Nested layout is ordinary composition. The outer algorithm sizes the inner layout value; the inner value establishes a formatting context for its own prepared direct children during normal traversal. A plain component therefore needs a definite allocation when it hides that subtree from its parent. Custom platform normalization, resolution, or pure measurement requires a value made with `definePrimitive`; those capabilities never attach to an ordinary plain component."
+          "text": "Nested layout is ordinary composition. The outer algorithm sizes the inner layout value; the inner value establishes a formatting context for its own prepared direct children during normal traversal. A plain component exposes no intrinsic measurement capability and therefore needs a definite allocation when it hides that subtree from its parent. Custom platform normalization, resolution, or pure measurement requires a value made with `definePrimitive`; those capabilities never attach to an ordinary plain component."
         },
         {
           "id": "c0079",
@@ -1439,7 +1439,7 @@
           "id": "c0080",
           "kind": "prose",
           "section": "Measurement architecture",
-          "text": "Measurement receives program props, normalized style, constraints, an explicit Canvas text service, and a recursive `measureElement`. It returns measured content size or an unsupported reason. It cannot paint, invoke hooks, `crcCanvasContext`, `crcLayoutBox`, create targets/images/layers, schedule work, or acquire runtime resources. Temporary globals are cleared/restored in `finally`, and cycles are diagnosed."
+          "text": "Measurement receives program props, normalized style, constraints, an explicit Canvas text service, and a recursive `measureElement`. It returns measured content size or an unsupported reason. It cannot paint, invoke hooks, `crcCanvasContext`, `crcLayoutBox`, create targets or layers, schedule work, or acquire runtime resources. Pure measurement cannot create image generations. Temporary globals are cleared/restored in `finally`, and cycles are diagnosed. Pure measurement isolates itself from active render hooks and layout context."
         },
         {
           "id": "c0081",
@@ -2247,7 +2247,7 @@
           "id": "c0005",
           "kind": "prose",
           "section": "Public configuration",
-          "text": "JSX and `createElement` create the same opaque branded elements; fragments, arrays, finite synchronous iterables, and empty nodes are also valid roots. The configuration belongs to the first live mount. Later `crc()` calls update the root node but do not replace the surface configuration or mount signal. Dispose and remount to select a different surface mode."
+          "text": "JSX and `createElement` create the same opaque branded elements; fragments, arrays, finite synchronous iterables, and empty nodes are also valid roots. The surface configuration belongs to the first live mount. Later `crc()` calls update the root node but do not replace it. `config.signal` likewise belongs to the first live mount and is not replaced by later `crc()` calls. Dispose and remount to select a different surface mode or signal."
         },
         {
           "id": "c0006",
@@ -4841,46 +4841,52 @@
           "id": "c0059",
           "kind": "list",
           "section": "Pure measurement",
-          "text": "- cannot call hooks, context accessors, observe a layout box, paint, register interaction targets, create image generations, or acquire runtime resources;"
+          "text": "- cannot call hooks, context accessors, observe a layout box, paint, register interaction targets, or acquire runtime resources;"
         },
         {
           "id": "c0060",
           "kind": "list",
           "section": "Pure measurement",
-          "text": "- detects direct and indirect cycles and restores all temporary runtime state after success or failure."
+          "text": "- cannot create image generations;"
         },
         {
           "id": "c0061",
+          "kind": "list",
+          "section": "Pure measurement",
+          "text": "- detects direct and indirect cycles and restores all temporary runtime state after success or failure."
+        },
+        {
+          "id": "c0062",
           "kind": "prose",
           "section": "Pure measurement",
           "text": "Definite dimensions bypass measurement. Built-in `Text` measurement shares the same wrapping/layout calculation used to paint. `Image` measurement supports only explicit dimensions; natural image measurement is intentionally unavailable because it would acquire asynchronous resources. A custom `definePrimitive` value used in an automatic sizing path must provide a pure `measure` capability or receive an actionable unsupported diagnostic naming the axis and child. Plain function components expose no intrinsic measurement capability and therefore need a definite allocation on that path."
         },
         {
-          "id": "c0062",
+          "id": "c0063",
           "kind": "prose",
           "section": "Composition, failure, and ownership",
           "text": "The geometry equation is ancestor Canvas transform × layout placement × child transform × local geometry. Paint paths, clipping, layers, and coordinate regions use that same composition, including fractional and negative local offsets."
         },
         {
-          "id": "c0063",
+          "id": "c0064",
           "kind": "prose",
           "section": "Composition, failure, and ownership",
           "text": "Layout inspection normalizes only direct child style and never invokes render, hooks, or ownership. Child style is normalized once; measured used sizes are passed to the eventual render without renormalizing the original specified style. A thrown render or duplicate-key failure releases targets, handlers, cursors, image generations, offscreen layers, and component refs exactly once. Repeated reflow does not accumulate owners."
         },
         {
-          "id": "c0064",
+          "id": "c0065",
           "kind": "prose",
           "section": "Composition, failure, and ownership",
           "text": "Offscreen layers share the root interaction ledger, so nested layout still participates in one global source paint/target order. `Clip` and layout overflow constraints apply identically to pixels and coordinate geometry."
         },
         {
-          "id": "c0065",
+          "id": "c0066",
           "kind": "prose",
           "section": "Deliberate exclusions",
           "text": "CRC layout does not promise a complete CSS formatting engine. Deferred features include margin, scrolling, auto-placement Grid, implicit tracks, advanced CSS intrinsic sizing, reverse/reordered Flexbox, baseline alignment, percentage gaps, auto margins, DOM overlays/accessibility, a retained scene graph, workers, WebGL, and a public virtualization API. Applications can window large datasets and pass the visible descriptors to CRC; the library does not own the records or scroll model."
         },
         {
-          "id": "c0066",
+          "id": "c0067",
           "kind": "prose",
           "section": "Deliberate exclusions",
           "text": "Public JSX layout evidence lives in `packages/core/src/lib/layout/layout-jsx.test.tsx`, the five Studio layout lessons, DOM-oracle compatibility suites, and deterministic layout laboratory. See the [style contract](./style-system-contract.md), [user-event contract](./user-events-contract.md), and [runtime resource ownership contract](./runtime-resource-ownership.md)."
@@ -6411,7 +6417,7 @@
           "id": "c0034",
           "kind": "prose",
           "section": "Hook sequence invariant",
-          "text": "Each component owns ordered, typed slots. Every successful update must call the same number and kinds in the same order. CRC reports a changed kind, added slot, or omitted slot deterministically. Before reporting an omitted slot, CRC releases the abandoned slot's owned resources. A failed render closes the instance's component refs, clears the partial tree, and restores temporary globals. This is a fail-closed reset, not pixel rollback; a later explicit render remounts cleanly."
+          "text": "Each component owns ordered, typed slots. Every successful update must call the same number and kinds in the same order. CRC reports a changed kind, added slot, or fewer hooks deterministically. Before reporting fewer hooks, CRC releases the abandoned slots' owned resources. A failed render closes the instance's component refs, clears the partial tree, and restores temporary globals. This is a fail-closed reset, not pixel rollback; a later explicit render remounts cleanly."
         },
         {
           "id": "c0035",
@@ -7319,96 +7325,108 @@
         },
         {
           "id": "c0021",
-          "kind": "table",
+          "kind": "prose",
           "section": "Style-only built-in migration",
-          "text": "| Component | Required/local style | Structural/program props |"
+          "text": "This table is the exact final field/default reference. Every drawing or composition style also accepts the documented compatible `BoxStyle` and `LayoutItemStyle` fields; the required fields below override optional inherited box declarations. See the direct [old-to-final migration matrix](../migrations/jsx-authoring-pivot.md#field-level-style-and-structure-replacements) for every removed field and structural form."
         },
         {
           "id": "c0022",
           "kind": "table",
           "section": "Style-only built-in migration",
-          "text": "| `Rectangle` | `width`, `height`; optional local geometry, paint, cursor, pixel alignment | Event/focus handlers/options |"
+          "text": "| Component | Final component-specific local style fields | Defaults and required fields | Structural/program props |"
         },
         {
           "id": "c0023",
           "kind": "table",
           "section": "Style-only built-in migration",
-          "text": "| `Path` | `d: Path2D`; paint/cursor/interaction width | Event/focus props |"
+          "text": "| `Rectangle` | `style.width`, `style.height`, `style.x`, `style.y`, `style.fill`, `style.stroke`, `style.strokeWidth`, `style.opacity`, `style.cursor`, `style.alignToPixelGrid`, `style.lineInteractionWidth` | `style.width` and `style.height` required; `style.x = 0`, `style.y = 0`; omitted pixel alignment preserves input | Event/focus handlers/options |"
         },
         {
           "id": "c0024",
           "kind": "table",
           "section": "Style-only built-in migration",
-          "text": "| `Line` | `coords`; stroke/opacity/cursor | Event/focus props |"
+          "text": "| `Path` | `style.d: Path2D`, `style.fill`, `style.stroke`, `style.strokeWidth`, `style.opacity`, `style.cursor`, `style.lineInteractionWidth` | `style.d` required; interaction width uses `style.strokeWidth`, then `0`, when omitted | Event/focus props |"
         },
         {
           "id": "c0025",
           "kind": "table",
           "section": "Style-only built-in migration",
-          "text": "| `HorizontalLine`, `VerticalLine` | axis position, optional endpoints, shared line style | Event/focus props |"
+          "text": "| `Line` | `style.coords`, `style.stroke`, `style.strokeWidth`, `style.opacity`, `style.cursor`, `style.lineInteractionWidth` | `style.coords` required; interaction width uses `style.strokeWidth`, then `0`, when omitted | Event/focus props |"
         },
         {
           "id": "c0026",
           "kind": "table",
           "section": "Style-only built-in migration",
-          "text": "| `SvgPath` | `d: string`; paint/cursor/interaction width | Event/focus props |"
+          "text": "| `HorizontalLine` | `style.y`, `style.x1`, `style.x2`, `style.stroke`, `style.strokeWidth`, `style.opacity`, `style.cursor`, `style.alignToPixelGrid`, `style.lineInteractionWidth` | `style.y` required; `style.x1 = 0`, `style.x2 = allocation width`; omitted pixel alignment preserves input | Event/focus props |"
         },
         {
           "id": "c0027",
           "kind": "table",
           "section": "Style-only built-in migration",
-          "text": "| `Text` | position, box, font, paint, wrap, fit | recursive textual `children`, event/focus props |"
+          "text": "| `VerticalLine` | `style.x`, `style.y1`, `style.y2`, `style.stroke`, `style.strokeWidth`, `style.opacity`, `style.cursor`, `style.alignToPixelGrid`, `style.lineInteractionWidth` | `style.x` required; `style.y1 = 0`, `style.y2 = allocation height`; omitted pixel alignment preserves input | Event/focus props |"
         },
         {
           "id": "c0028",
           "kind": "table",
           "section": "Style-only built-in migration",
-          "text": "| `Image` | `src`; geometry, border, opacity, cursor | event/focus props |"
+          "text": "| `SvgPath` | `style.d: string`, `style.fill`, `style.stroke`, `style.strokeWidth`, `style.opacity`, `style.cursor`, `style.lineInteractionWidth` | `style.d` required; interaction width uses `style.strokeWidth`, then `0`, when omitted | Event/focus props |"
         },
         {
           "id": "c0029",
           "kind": "table",
           "section": "Style-only built-in migration",
-          "text": "| `Group` | transform | recursive `children` |"
+          "text": "| `Text` | `style.x`, `style.y`, `style.width`, `style.height`, `style.lineHeight`, `style.wrap`, `style.fit`, `style.font`, `style.textBaseline`, `style.textAlign`, `style.fill`, `style.stroke`, `style.strokeWidth`, `style.opacity`, `style.cursor` | `style.x = 0`, `style.y = 0`, `style.lineHeight = 13`, `style.wrap = false`, `style.fit = \"visible\"`, `style.font = \"13px sans-serif\"`, `style.textBaseline = \"top\"`, `style.textAlign = \"left\"`, `style.strokeWidth = 0` | Recursive textual `children`, event/focus props |"
         },
         {
           "id": "c0030",
           "kind": "table",
           "section": "Style-only built-in migration",
-          "text": "| `Clip` | `d`, optional fill rule | recursive `children` |"
+          "text": "| `Image` | `style.src`, `style.x`, `style.y`, `style.width`, `style.height`, `style.stroke`, `style.strokeWidth`, `style.opacity`, `style.cursor`, `style.alignToPixelGrid` | `style.src` required; `style.x = 0`, `style.y = 0`; omitted dimensions use loaded natural size, otherwise `0`; omitted pixel alignment preserves input | Event/focus props |"
         },
         {
           "id": "c0031",
           "kind": "table",
           "section": "Style-only built-in migration",
-          "text": "| `Layer` | optional dimensions/layout participation | recursive `children` |"
+          "text": "| `Group` | `style.scaleX`, `style.scaleY`, `style.rotationDegrees`, `style.rotationOrigin`, `style.translateX`, `style.translateY`, `style.skewX`, `style.skewY` | scales default `1`; rotation, translation, and skew default `0`; rotation origin defaults `[0, 0]` | Recursive `children` |"
         },
         {
           "id": "c0032",
           "kind": "table",
           "section": "Style-only built-in migration",
-          "text": "| Layout values | container box plus algorithm options | recursive direct children |"
+          "text": "| `Clip` | `style.d: Path2D`, `style.fillRule` | `style.d` required; `style.fillRule = \"nonzero\"` | Recursive `children` |"
         },
         {
           "id": "c0033",
+          "kind": "table",
+          "section": "Style-only built-in migration",
+          "text": "| `Layer` | `style.width`, `style.height` | Each omitted dimension uses the current logical Canvas allocation | Recursive `children` |"
+        },
+        {
+          "id": "c0034",
+          "kind": "table",
+          "section": "Style-only built-in migration",
+          "text": "| Layout values | Container box fields plus the contract-specific algorithm fields | See the layout contract's exact defaults | Recursive direct children |"
+        },
+        {
+          "id": "c0035",
           "kind": "prose",
           "section": "Style-only built-in migration",
           "text": "There is no runtime compatibility adapter, alias, or fallback for top-level visual fields, content in `TextStyle`, or callback-owned layer content. JavaScript receives the same strict resolution and child diagnostics as TypeScript."
         },
         {
-          "id": "c0034",
+          "id": "c0036",
           "kind": "prose",
           "section": "Style-only built-in migration",
           "text": "`opacity: 0` suppresses paint without removing separately registered target geometry. Image generations remain keyed by `style.src`; source races, load/error settlement, source replacement, removal, and disposal retain exact resource ownership. Explicit image dimensions establish geometry before load and after failure, while each omitted natural dimension remains zero until a successful load supplies it. `Group` transforms retain the order documented in the drawing contract."
         },
         {
-          "id": "c0035",
+          "id": "c0037",
           "kind": "prose",
           "section": "Deliberate exclusions",
           "text": "CRC does not implement cascade, inheritance, selectors, specificity, stylesheets, CSS variables, computed DOM style, margin, scrolling, or a complete CSS parser. CSS names are used only where behavior matches the documented subset; CRC-native behavior uses names such as `rotationDegrees`, `fit`, and `Flow`."
         },
         {
-          "id": "c0036",
+          "id": "c0038",
           "kind": "prose",
           "section": "Deliberate exclusions",
           "text": "See the [layout contract](./layout-system-contract.md), [drawing contract](./drawing-components-contract.md), and [custom primitive guide](../guides/custom-components-and-primitives.md)."
@@ -8018,22 +8036,26 @@
       "path": "docs/architecture/style-and-layout-architecture.md",
       "baselineIds": ["b0001", "b0002"],
       "currentIds": ["c0001"],
-      "reason": "Preserves the pre-Task-14 CRC style and layout architecture clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping collapses the historical Plan 003 heading into the implemented architecture title without changing its status; b0001, b0002 → c0001 is the exact unit boundary, and `2026-08-18`, `project`, `plan` remain shared semantic anchors. Approved-design unit a0177 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0177",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "Earlier completed plans remain historical evidence."
+      },
+      "sharedAnchors": ["2026-08-18", "project", "plan"]
     },
     {
       "id": "architecture-style-and-layout-architecture-md-purpose",
       "path": "docs/architecture/style-and-layout-architecture.md",
       "baselineIds": ["b0003"],
       "currentIds": ["c0002"],
-      "reason": "Preserves the pre-Task-14 Purpose clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping recasts the purpose from delivery-plan language to the current immediate-mode implementation; b0003 → c0002 is the exact unit boundary, and `immediate-mode`, `architecture`, `implementation` remain shared semantic anchors. Approved-design unit a0006 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0006",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "JSX changes how a CRC tree is described, not how CRC renders it."
+      },
+      "sharedAnchors": ["immediate-mode", "architecture", "implementation"]
     },
     {
       "id": "architecture-style-and-layout-architecture-md-existing-constraints",
@@ -8067,11 +8089,13 @@
         "c0011",
         "c0012"
       ],
-      "reason": "Preserves the pre-Task-14 Existing constraints clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping consolidates renderer constraints while retaining scheduling, Canvas isolation, identity, events, and resource limits; b0004, b0005, b0006, b0007, b0008, b0009, b0010, b0011, b0012, b0013, b0014, b0015, b0016, b0017, b0018 → c0003, c0004, c0005, c0006, c0007, c0008, c0009, c0010, c0011, c0012 is the exact unit boundary, and `coalescing`, `restore`, `save` remain shared semantic anchors. Approved-design unit a0006 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0006",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership."
+      },
+      "sharedAnchors": ["coalescing", "restore", "save"]
     },
     {
       "id": "architecture-style-and-layout-architecture-md-element-protocol",
@@ -8095,11 +8119,13 @@
         "c0018",
         "c0019"
       ],
-      "reason": "Preserves the pre-Task-14 Element protocol clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping replaces factory-era element metadata terminology with the opaque CRC element and primitive metadata model; b0019, b0020, b0021, b0022, b0023, b0024, b0025, b0026 → c0013, c0014, c0015, c0016, c0017, c0018, c0019 is the exact unit boundary, and `descriptor`, `metadata`, `interface` remain shared semantic anchors. Approved-design unit a0044 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0044",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "`CRCElement` replaces `CompEl`. It is an immutable, opaque description with:"
+      },
+      "sharedAnchors": ["descriptor", "metadata", "interface"]
     },
     {
       "id": "architecture-style-and-layout-architecture-md-style-schemas",
@@ -8126,11 +8152,13 @@
         "c0036",
         "c0037"
       ],
-      "reason": "Preserves the pre-Task-14 Style schemas clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping reorders style-schema internals around primitive metadata without changing closed schemas or resolution stages; b0027, b0028, b0029, b0030, b0031, b0032, b0033, b0034 → c0028, c0029, c0030, c0031, c0032, c0033, c0034, c0035, c0036, c0037 is the exact unit boundary, and `item-participation`, `layoutitemstyle`, `development` remain shared semantic anchors. Approved-design unit a0079 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0079",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "Style schemas stay local, typed, closed, and non-inheriting."
+      },
+      "sharedAnchors": ["item-participation", "layoutitemstyle", "development"]
     },
     {
       "id": "architecture-style-and-layout-architecture-md-length-and-constraint-values",
@@ -8151,11 +8179,13 @@
         "b0047"
       ],
       "currentIds": ["c0038", "c0039", "c0040", "c0041", "c0042"],
-      "reason": "Preserves the pre-Task-14 Length and constraint values clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping consolidates the length grammar and constraints without changing parsing, defaults, or finite allocation rules; b0035, b0036, b0037, b0038, b0039, b0040, b0041, b0042, b0043, b0044, b0045, b0046, b0047 → c0038, c0039, c0040, c0041, c0042 is the exact unit boundary, and `separately`, `shorthands`, `maxheight` remain shared semantic anchors. Approved-design unit a0079 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0079",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "The current specified, normalized, and resolved stages remain authoritative for platform primitives."
+      },
+      "sharedAnchors": ["separately", "shorthands", "maxheight"]
     },
     {
       "id": "architecture-style-and-layout-architecture-md-component-type-capabilities",
@@ -8171,11 +8201,13 @@
         "c0026",
         "c0027"
       ],
-      "reason": "Preserves the pre-Task-14 Component type capabilities clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping renames the capability-bearing definition mechanism from `defineComp` metadata to `definePrimitive`; b0048, b0049, b0050, b0051, b0052 → c0020, c0021, c0022, c0023, c0024, c0025, c0026, c0027 is the exact unit boundary, and `normalizestyle`, `programprops`, `resolvestyle` remain shared semantic anchors. Approved-design unit a0089 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0089",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "`definePrimitive` supports custom normalization, allocation-dependent style resolution, pure measurement, and custom layout algorithms."
+      },
+      "sharedAnchors": ["normalizestyle", "programprops", "resolvestyle"]
     },
     {
       "id": "architecture-style-and-layout-architecture-md-layout-algorithms",
@@ -8201,11 +8233,17 @@
         "c0049",
         "c0050"
       ],
-      "reason": "Preserves the pre-Task-14 Layout algorithms clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping expresses layout callbacks through JSX-era primitive definitions while retaining placement, clip, and identity rules; b0053, b0054, b0055, b0056, b0057, b0058, b0059, b0060, b0061 → c0043, c0044, c0045, c0046, c0047, c0048, c0049, c0050 is the exact unit boundary, and `internalidentityhint`, `clipinchildspace`, `childplacement` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0132",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "declared-box layout"
+      },
+      "sharedAnchors": [
+        "internalidentityhint",
+        "clipinchildspace",
+        "childplacement"
+      ]
     },
     {
       "id": "architecture-style-and-layout-architecture-md-normal-drawing-element",
@@ -8229,11 +8267,13 @@
         "c0057",
         "c0058"
       ],
-      "reason": "Preserves the pre-Task-14 Normal drawing element clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping expresses the drawing pipeline through primitive rendering and returned-child traversal; b0062, b0063, b0064, b0065, b0066, b0067, b0068 → c0051, c0052, c0053, c0054, c0055, c0056, c0057, c0058 is the exact unit boundary, and `allocation-dependent`, `traverses`, `leaves` remain shared semantic anchors. Approved-design unit a0197 authorizes that bounded JSX-era change.",
       "approval": {
-        "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "id": "a0197",
+        "kind": "list",
+        "text": "JSX versions of every drawing and layout component preserve semantic state and geometry."
+      },
+      "sharedAnchors": ["allocation-dependent", "traverses", "leaves"]
     },
     {
       "id": "architecture-style-and-layout-architecture-md-layout-element",
@@ -8265,33 +8305,39 @@
         "c0065",
         "c0066"
       ],
-      "reason": "Preserves the pre-Task-14 Layout element clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping expresses the layout pipeline through JSX child materialization and primitive allocation; b0069, b0070, b0071, b0072, b0073, b0074, b0075, b0076, b0077, b0078, b0079, b0080, b0081, b0082, b0083 → c0059, c0060, c0061, c0062, c0063, c0064, c0065, c0066 is the exact unit boundary, and `descriptors`, `speculative`, `allocated` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0132",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "style resolution, declared-box layout"
+      },
+      "sharedAnchors": ["descriptors", "speculative", "allocated"]
     },
     {
       "id": "architecture-style-and-layout-architecture-md-nested-layout",
       "path": "docs/architecture/style-and-layout-architecture.md",
       "baselineIds": ["b0084", "b0085", "b0086", "b0087"],
       "currentIds": ["c0067", "c0068", "c0069"],
-      "reason": "Preserves the pre-Task-14 Nested layout clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping uses JSX tree vocabulary for nested layout while retaining the hidden-allocation limitation; b0084, b0085, b0086, b0087 → c0067, c0068, c0069 is the exact unit boundary, and `already-declared`, `subtree`, `hides` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0132",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "declared-box layout, pure measurement"
+      },
+      "sharedAnchors": ["already-declared", "subtree", "hides"]
     },
     {
       "id": "architecture-style-and-layout-architecture-md-allocation-and-local-paint-coordinates",
       "path": "docs/architecture/style-and-layout-architecture.md",
       "baselineIds": ["b0088", "b0089", "b0090", "b0091", "b0092", "b0093"],
       "currentIds": ["c0083"],
-      "reason": "Preserves the pre-Task-14 Allocation and local paint coordinates clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping consolidates local coordinate prose under the final drawing and layout pipeline; b0088, b0089, b0090, b0091, b0092, b0093 → c0083 is the exact unit boundary, and `translates`, `available`, `origin` remain shared semantic anchors. Approved-design unit a0197 authorizes that bounded JSX-era change.",
       "approval": {
-        "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "id": "a0197",
+        "kind": "list",
+        "text": "JSX versions of every drawing and layout component preserve semantic state and geometry."
+      },
+      "sharedAnchors": ["translates", "available", "origin"]
     },
     {
       "id": "architecture-style-and-layout-architecture-md-transforms",
@@ -8308,22 +8354,26 @@
         "c0091",
         "c0092"
       ],
-      "reason": "Preserves the pre-Task-14 Transforms clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping names final `Group` transform behavior while retaining pixel-grid and interaction geometry; b0094, b0095, b0096 → c0084, c0085, c0086, c0087, c0088, c0089, c0090, c0091, c0092 is the exact unit boundary, and `adjustment`, `pixel-grid`, `known` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0132",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "transform and clip capture"
+      },
+      "sharedAnchors": ["adjustment", "pixel-grid", "known"]
     },
     {
       "id": "architecture-style-and-layout-architecture-md-clipping-and-overflow",
       "path": "docs/architecture/style-and-layout-architecture.md",
       "baselineIds": ["b0097"],
       "currentIds": ["c0093"],
-      "reason": "Preserves the pre-Task-14 Clipping and overflow clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping uses final `Clip` vocabulary while retaining intersection and no-scrolling semantics; b0097 → c0093 is the exact unit boundary, and `intersection`, `crc-managed`, `scrolling` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0132",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "transform and clip capture, interaction paint order"
+      },
+      "sharedAnchors": ["intersection", "crc-managed", "scrolling"]
     },
     {
       "id": "architecture-style-and-layout-architecture-md-identity-and-ordering",
@@ -8349,11 +8399,13 @@
         "c0078",
         "c0079"
       ],
-      "reason": "Preserves the pre-Task-14 Identity and ordering clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping integrates fragments and plain functions into the existing key, occurrence, and ordering model; b0098, b0099, b0100, b0101, b0102, b0103, b0104 → c0070, c0071, c0072, c0073, c0074, c0075, c0076, c0077, c0078, c0079 is the exact unit boundary, and `author-visible`, `module-level`, `features` remain shared semantic anchors. Approved-design unit a0076 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0076",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "These rules preserve current identity behavior while making nested list and fragment syntax predictable."
+      },
+      "sharedAnchors": ["author-visible", "module-level", "features"]
     },
     {
       "id": "architecture-style-and-layout-architecture-md-measurement-architecture",
@@ -8371,22 +8423,26 @@
         "b0114"
       ],
       "currentIds": ["c0080", "c0081", "c0082"],
-      "reason": "Preserves the pre-Task-14 Measurement architecture clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping compacts measurement architecture around primitive measurement and unsupported plain-component measurement; b0105, b0106, b0107, b0108, b0109, b0110, b0111, b0112, b0113, b0114 → c0080, c0081, c0082 is the exact unit boundary, and `observational`, `tokenization`, `child-local` remain shared semantic anchors. Approved-design unit a0089 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0089",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "measurement isolation follow the current implemented contracts."
+      },
+      "sharedAnchors": ["observational", "tokenization", "child-local"]
     },
     {
       "id": "architecture-style-and-layout-architecture-md-style-composition-and-custom-components",
       "path": "docs/architecture/style-and-layout-architecture.md",
       "baselineIds": ["b0115", "b0116", "b0117"],
       "currentIds": ["c0094", "c0095", "c0096"],
-      "reason": "Preserves the pre-Task-14 Style composition and custom components clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping moves custom component examples from wrappers to plain functions and `crcLayoutBox()`; b0115, b0116, b0117 → c0094, c0095, c0096 is the exact unit boundary, and `comfortable`, `metriccard`, `immutable` remain shared semantic anchors. Approved-design unit a0057 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0057",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "Plain components receive their author props unchanged apart from special key removal and compiler-supplied children."
+      },
+      "sharedAnchors": ["comfortable", "metriccard", "immutable"]
     },
     {
       "id": "architecture-style-and-layout-architecture-md-errors-and-failure-containment",
@@ -8403,22 +8459,26 @@
         "b0126"
       ],
       "currentIds": ["c0097", "c0098", "c0099", "c0100"],
-      "reason": "Preserves the pre-Task-14 Errors and failure containment clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping retains fail-closed rendering while updating component vocabulary; b0118, b0119, b0120, b0121, b0122, b0123, b0124, b0125, b0126 → c0097, c0098, c0099, c0100 is the exact unit boundary, and `underdetermined`, `no-rollback`, `invariant` remain shared semantic anchors. Approved-design unit a0133 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0133",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "A component throw still fails closed, releases runtime-owned state, clears component refs, and requires a later explicit render."
+      },
+      "sharedAnchors": ["underdetermined", "no-rollback", "invariant"]
     },
     {
       "id": "architecture-style-and-layout-architecture-md-module-boundaries",
       "path": "docs/architecture/style-and-layout-architecture.md",
       "baselineIds": ["b0127", "b0128", "b0129"],
       "currentIds": ["c0101", "c0102", "c0103"],
-      "reason": "Preserves the pre-Task-14 Module boundaries clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping updates internal module seams for the final element, style, measurement, and placement architecture; b0127, b0128, b0129 → c0101, c0102, c0103 is the exact unit boundary, and `resolve-length`, `place-child`, `conceptual` remain shared semantic anchors. Approved-design unit a0203 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0203",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "The implementation will affect the public element types, renderer dispatch, style lookup, layout child normalization, built-in exports, package entry points, TypeScript configuration, scenarios, tests, Studio compilation, editor declarations, package consumers, and documentation."
+      },
+      "sharedAnchors": ["resolve-length", "place-child", "conceptual"]
     },
     {
       "id": "architecture-style-and-layout-architecture-md-incremental-delivery-seams",
@@ -8434,11 +8494,13 @@
         "b0137"
       ],
       "currentIds": ["c0115", "c0116"],
-      "reason": "Preserves the pre-Task-14 Incremental delivery seams clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping moves delivery-seam detail into the implemented JSX program while keeping the architecture boundary explicit; b0130, b0131, b0132, b0133, b0134, b0135, b0136, b0137 → c0115, c0116 is the exact unit boundary, and `documentation`, `holistic`, `architecture` remain shared semantic anchors. Approved-design unit a0203 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0203",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "This is one architectural program but should be planned as incremental vertical slices that keep executable evidence at each boundary."
+      },
+      "sharedAnchors": ["documentation", "holistic", "architecture"]
     },
     {
       "id": "architecture-style-and-layout-architecture-md-verification-architecture",
@@ -8457,11 +8519,13 @@
         "b0148"
       ],
       "currentIds": ["c0104"],
-      "reason": "Preserves the pre-Task-14 Verification architecture clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping consolidates verification architecture into the current observable-contract gate; b0138, b0139, b0140, b0141, b0142, b0143, b0144, b0145, b0146, b0147, b0148 → c0104 is the exact unit boundary, and `render-integration`, `correctness`, `non-browser` remain shared semantic anchors. Approved-design unit a0178 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0178",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "Observable contracts are written as failing tests before production changes. Focused checks run during implementation; the fresh aggregate trust gate runs before completion."
+      },
+      "sharedAnchors": ["render-integration", "correctness", "non-browser"]
     },
     {
       "id": "architecture-style-and-layout-architecture-md-architectural-decisions",
@@ -8490,77 +8554,91 @@
         "c0113",
         "c0114"
       ],
-      "reason": "Preserves the pre-Task-14 Architectural decisions clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping records Plan 003 decisions as final JSX-era architectural consequences; b0149, b0150, b0151, b0152, b0153, b0154, b0155, b0156, b0157, b0158 → c0105, c0106, c0107, c0108, c0109, c0110, c0111, c0112, c0113, c0114 is the exact unit boundary, and `layout-item`, `contexts`, `inferred` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0132",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "Component and hook identity, Canvas isolation, style resolution, declared-box layout, pure measurement, transform and clip capture, interaction paint order, pointer capture, focus state, layer invalidation, and teardown ownership retain their current implemented contracts unless this design explicitly changes the authoring shape."
+      },
+      "sharedAnchors": ["layout-item", "contexts", "inferred"]
     },
     {
       "id": "design-canvas-accessibility-guidance-md-canvas-accessibility-guidance",
       "path": "docs/design/canvas-accessibility-guidance.md",
       "baselineIds": ["b0001"],
       "currentIds": ["c0001", "c0002"],
-      "reason": "Preserves the pre-Task-14 Canvas accessibility guidance clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping splits historical status from the unchanged Canvas accessibility limitation; b0001 → c0001, c0002 is the exact unit boundary, and `announcements`, `relationships`, `screen-reader` remain shared semantic anchors. Approved-design unit a0019 authorizes that bounded JSX-era change.",
       "approval": {
-        "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "id": "a0019",
+        "kind": "list",
+        "text": "DOM generation, semantic DOM mirroring, or an accessibility tree."
+      },
+      "sharedAnchors": ["announcements", "relationships", "screen-reader"]
     },
     {
       "id": "design-canvas-surface-contract-md-crc-canvas-surface-contract",
       "path": "docs/design/canvas-surface-contract.md",
       "baselineIds": ["b0001"],
       "currentIds": ["c0001"],
-      "reason": "Preserves the pre-Task-14 CRC canvas surface contract clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping updates only the Canvas-surface contract status heading for the JSX-era documentation set; b0001 → c0001 is the exact unit boundary, and `status`, `implemented` remain shared semantic anchors. Approved-design unit a0177 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0177",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "Existing design contracts are updated together"
+      },
+      "sharedAnchors": ["status", "implemented"]
     },
     {
       "id": "design-canvas-surface-contract-md-public-configuration",
       "path": "docs/design/canvas-surface-contract.md",
       "baselineIds": ["b0003", "b0005"],
       "currentIds": ["c0003", "c0005"],
-      "reason": "Preserves the pre-Task-14 Public configuration clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping widens the authored root from one factory element to `CRCNode` while keeping first-mount configuration semantics; b0003, b0005 → c0003, c0005 is the exact unit boundary, and `mount-time`, `accepts`, `belongs` remain shared semantic anchors. Approved-design unit a0054 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0054",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "`crc(canvas, root, config?)` accepts a complete `CRCNode`"
+      },
+      "sharedAnchors": ["mount-time", "accepts", "belongs"]
     },
     {
       "id": "design-canvas-surface-contract-md-interaction-and-composition",
       "path": "docs/design/canvas-surface-contract.md",
       "baselineIds": ["b0031", "b0033"],
       "currentIds": ["c0031", "c0033"],
-      "reason": "Preserves the pre-Task-14 Interaction and composition clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping renames composition built-ins while preserving root-logical interaction geometry; b0031, b0033 → c0031, c0033 is the exact unit boundary, and `layer-local`, `letterboxed`, `composites` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0132",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "transform and clip capture, interaction paint order, pointer capture"
+      },
+      "sharedAnchors": ["layer-local", "letterboxed", "composites"]
     },
     {
       "id": "design-drawing-components-contract-md-crc-drawing-component-contract",
       "path": "docs/design/drawing-components-contract.md",
       "baselineIds": ["b0001", "b0002"],
       "currentIds": ["c0001", "c0002"],
-      "reason": "Preserves the pre-Task-14 CRC drawing-component contract clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping updates the drawing-contract title and exports to descriptive component names; b0001, b0002 → c0001, c0002 is the exact unit boundary, and `participation`, `exports`, `events` remain shared semantic anchors. Approved-design unit a0030 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0030",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "The public built-in vocabulary becomes:"
+      },
+      "sharedAnchors": ["participation", "exports", "events"]
     },
     {
       "id": "design-drawing-components-contract-md-shared-paint-and-interaction-rules",
       "path": "docs/design/drawing-components-contract.md",
       "baselineIds": ["b0003", "b0004", "b0005", "b0007", "b0009"],
       "currentIds": ["c0003", "c0004", "c0005", "c0007", "c0009"],
-      "reason": "Preserves the pre-Task-14 Shared paint and interaction rules clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping renames drawing leaves without changing paint or interaction rules; b0003, b0004, b0005, b0007, b0009 → c0003, c0004, c0005, c0007, c0009 is the exact unit boundary, and `antialiasing`, `zero-length`, `multiplies` remain shared semantic anchors. Approved-design unit a0197 authorizes that bounded JSX-era change.",
       "approval": {
-        "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "id": "a0197",
+        "kind": "list",
+        "text": "JSX versions of every drawing and layout component preserve semantic state and geometry."
+      },
+      "sharedAnchors": ["antialiasing", "zero-length", "multiplies"]
     },
     {
       "id": "design-drawing-components-contract-md-component-matrix",
@@ -8599,33 +8677,39 @@
         "c0030",
         "c0031"
       ],
-      "reason": "Preserves the pre-Task-14 Component matrix clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping rewrites the component matrix for final names, styles, and children while retaining each component's geometry; b0010, b0011, b0012, b0013, b0014, b0015, b0016, b0017, b0018, b0019, b0020, b0021, b0022 → c0010, c0011, c0012, c0013, c0014, c0015, c0016, c0017, c0018, c0019, c0025, c0026, c0027, c0028, c0029, c0030, c0031 is the exact unit boundary, and `interactions`, `translation`, `delegation` remain shared semantic anchors. Approved-design unit a0030 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0030",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "The public built-in vocabulary becomes:"
+      },
+      "sharedAnchors": ["interactions", "translation", "delegation"]
     },
     {
       "id": "design-drawing-components-contract-md-text-layout-details",
       "path": "docs/design/drawing-components-contract.md",
       "baselineIds": ["b0023", "b0025"],
       "currentIds": ["c0020", "c0021", "c0022", "c0024"],
-      "reason": "Preserves the pre-Task-14 Text layout details clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping moves `Text` content from style to textual children while retaining layout and interaction behavior; b0023, b0025 → c0020, c0021, c0022, c0024 is the exact unit boundary, and `surrounding`, `comparison`, `controlled` remain shared semantic anchors. Approved-design unit a0136 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0136",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "Text measurement, wrapping, fit, clipping, paint, and interaction use the concatenated value."
+      },
+      "sharedAnchors": ["surrounding", "comparison", "controlled"]
     },
     {
       "id": "design-drawing-components-contract-md-image-lifetime-and-geometry",
       "path": "docs/design/drawing-components-contract.md",
       "baselineIds": ["b0026"],
       "currentIds": ["c0032"],
-      "reason": "Preserves the pre-Task-14 Image lifetime and geometry clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping renames the image primitive without changing its lifetime or natural-size geometry; b0026 → c0032 is the exact unit boundary, and `transparent-region`, `geometry-first`, `naturalheight` remain shared semantic anchors. Approved-design unit a0032 authorizes that bounded JSX-era change.",
       "approval": {
-        "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "id": "a0032",
+        "kind": "list",
+        "text": "`Text`, `Image`"
+      },
+      "sharedAnchors": ["transparent-region", "geometry-first", "naturalheight"]
     },
     {
       "id": "design-drawing-components-contract-md-visual-evidence-and-limitations",
@@ -8642,220 +8726,264 @@
         "b0036"
       ],
       "currentIds": ["c0034", "c0035"],
-      "reason": "Preserves the pre-Task-14 Visual evidence and limitations clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping updates visual-evidence prose for converted public scenarios without weakening semantic-first evidence; b0028, b0029, b0030, b0031, b0032, b0033, b0034, b0035, b0036 → c0034, c0035 is the exact unit boundary, and `accessibility`, `decoded-svg`, `baselines` remain shared semantic anchors. Approved-design unit a0202 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0202",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "Existing semantic and geometry assertions remain primary."
+      },
+      "sharedAnchors": ["accessibility", "decoded-svg", "baselines"]
     },
     {
       "id": "design-event-resource-ownership-md-crc-event-resource-ownership",
       "path": "docs/design/event-resource-ownership.md",
       "baselineIds": ["b0001"],
       "currentIds": ["c0001"],
-      "reason": "Preserves the pre-Task-14 CRC event resource ownership clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping updates only the event-ownership contract status heading; b0001 → c0001 is the exact unit boundary, and `status`, `implemented` remain shared semantic anchors. Approved-design unit a0177 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0177",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "resource ownership describe the JSX-era model consistently."
+      },
+      "sharedAnchors": ["status", "implemented"]
     },
     {
       "id": "design-event-resource-ownership-md-public-lifetime",
       "path": "docs/design/event-resource-ownership.md",
       "baselineIds": ["b0003", "b0012"],
       "currentIds": ["c0003", "c0012"],
-      "reason": "Preserves the pre-Task-14 Public lifetime clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping uses final controller and component names while retaining public listener and cleanup lifetime; b0003, b0012 → c0003, c0012 is the exact unit boundary, and `crccontroller`, `retaining`, `additive` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0132",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "teardown ownership retain their current implemented contracts unless this design explicitly changes the authoring shape."
+      },
+      "sharedAnchors": ["crccontroller", "retaining", "additive"]
     },
     {
       "id": "design-focus-and-keyboard-navigation-contract-md-crc-focus-and-keyboard-navigation-contract",
       "path": "docs/design/focus-and-keyboard-navigation-contract.md",
       "baselineIds": ["b0001", "b0003"],
       "currentIds": ["c0001", "c0003", "c0004", "c0005"],
-      "reason": "Preserves the pre-Task-14 CRC focus and keyboard-navigation contract clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping replaces enhancer vocabulary with transparent JSX focus-policy components; b0001, b0003 → c0001, c0003, c0004, c0005 is the exact unit boundary, and `applications`, `parentage`, `opt` remain shared semantic anchors. Approved-design unit a0140 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0140",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "Function enhancers become descriptive JSX policy values:"
+      },
+      "sharedAnchors": ["applications", "parentage", "opt"]
     },
     {
       "id": "design-focus-and-keyboard-navigation-contract-md-directional-boundaries",
       "path": "docs/design/focus-and-keyboard-navigation-contract.md",
       "baselineIds": ["b0027"],
       "currentIds": ["c0029"],
-      "reason": "Preserves the pre-Task-14 Directional boundaries clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping renames the directional policy boundary without changing arrow-ranking geometry; b0027 → c0029 is the exact unit boundary, and `arrow-navigation`, `component-local`, `axis-aligned` remain shared semantic anchors. Approved-design unit a0199 authorizes that bounded JSX-era change.",
       "approval": {
-        "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "id": "a0199",
+        "kind": "list",
+        "text": "`FocusManagement` and `KeyboardNavigation` are transparent to identity and retain exact policy ownership."
+      },
+      "sharedAnchors": ["arrow-navigation", "component-local", "axis-aligned"]
     },
     {
       "id": "design-focus-and-keyboard-navigation-contract-md-optionality-lifecycle-and-failures",
       "path": "docs/design/focus-and-keyboard-navigation-contract.md",
       "baselineIds": ["b0038", "b0039"],
       "currentIds": ["c0040", "c0041"],
-      "reason": "Preserves the pre-Task-14 Optionality, lifecycle, and failures clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping renames focus policies while retaining optionality, lifecycle, focus-visible, and failure behavior; b0038, b0039 → c0040, c0041 is the exact unit boundary, and `package-consumer`, `focus-visible`, `focusability` remain shared semantic anchors. Approved-design unit a0199 authorizes that bounded JSX-era change.",
       "approval": {
-        "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "id": "a0199",
+        "kind": "list",
+        "text": "transparent to identity and retain exact policy ownership."
+      },
+      "sharedAnchors": ["package-consumer", "focus-visible", "focusability"]
     },
     {
       "id": "design-layout-system-contract-md-crc-layout-system-contract",
       "path": "docs/design/layout-system-contract.md",
       "baselineIds": ["b0001", "b0002", "b0003"],
       "currentIds": ["c0001", "c0002", "c0003", "c0004"],
-      "reason": "Preserves the pre-Task-14 CRC layout-system contract clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping updates the layout-contract title and authoring vocabulary to descriptive JSX components; b0001, b0002, b0003 → c0001, c0002, c0003, c0004 is the exact unit boundary, and `speculatively`, `transformed`, `discover` remain shared semantic anchors. Approved-design unit a0034 authorizes that bounded JSX-era change.",
       "approval": {
-        "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "id": "a0034",
+        "kind": "list",
+        "text": "`Absolute`, `Overlay`, `Flow`, `Flex`, `Grid`"
+      },
+      "sharedAnchors": ["speculatively", "transformed", "discover"]
     },
     {
       "id": "design-layout-system-contract-md-shared-box-placement-and-overflow-rules",
       "path": "docs/design/layout-system-contract.md",
       "baselineIds": ["b0004", "b0005", "b0010"],
       "currentIds": ["c0005", "c0006", "c0011"],
-      "reason": "Preserves the pre-Task-14 Shared box, placement, and overflow rules clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping uses JSX direct-child vocabulary while retaining box placement, overflow, and scheduling; b0004, b0005, b0010 → c0005, c0006, c0011 is the exact unit boundary, and `occurrence-order`, `parent-relative`, `schedules` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0132",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "declared-box layout"
+      },
+      "sharedAnchors": ["occurrence-order", "parent-relative", "schedules"]
     },
     {
       "id": "design-layout-system-contract-md-absolute",
       "path": "docs/design/layout-system-contract.md",
       "baselineIds": ["b0013", "b0017"],
       "currentIds": ["c0014", "c0018"],
-      "reason": "Preserves the pre-Task-14 Absolute clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping renames `absolute` to `Absolute` while retaining independent anchored placement; b0013, b0017 → c0014, c0018 is the exact unit boundary, and `anchors`, `overlap`, `independently` remain shared semantic anchors. Approved-design unit a0034 authorizes that bounded JSX-era change.",
       "approval": {
-        "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "id": "a0034",
+        "kind": "list",
+        "text": "`Absolute`, `Overlay`, `Flow`, `Flex`, `Grid`"
+      },
+      "sharedAnchors": ["anchors", "overlap", "independently"]
     },
     {
       "id": "design-layout-system-contract-md-overlay",
       "path": "docs/design/layout-system-contract.md",
       "baselineIds": ["b0019"],
       "currentIds": ["c0020"],
-      "reason": "Preserves the pre-Task-14 Overlay clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping renames `overlay` to `Overlay` without changing alignment defaults or overrides; b0019 → c0020 is the exact unit boundary, and `justifyitems`, `justifyself`, `alignitems` remain shared semantic anchors. Approved-design unit a0034 authorizes that bounded JSX-era change.",
       "approval": {
-        "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "id": "a0034",
+        "kind": "list",
+        "text": "`Absolute`, `Overlay`, `Flow`, `Flex`, `Grid`"
+      },
+      "sharedAnchors": ["justifyitems", "justifyself", "alignitems"]
     },
     {
       "id": "design-layout-system-contract-md-flow",
       "path": "docs/design/layout-system-contract.md",
       "baselineIds": ["b0026"],
       "currentIds": ["c0027"],
-      "reason": "Preserves the pre-Task-14 Flow clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping renames `flow` to `Flow` without changing sequential inline/block placement; b0026 → c0027 is the exact unit boundary, and `sequential`, `inline`, `rather` remain shared semantic anchors. Approved-design unit a0034 authorizes that bounded JSX-era change.",
       "approval": {
-        "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "id": "a0034",
+        "kind": "list",
+        "text": "`Absolute`, `Overlay`, `Flow`, `Flex`, `Grid`"
+      },
+      "sharedAnchors": ["sequential", "inline", "rather"]
     },
     {
       "id": "design-layout-system-contract-md-flex",
       "path": "docs/design/layout-system-contract.md",
       "baselineIds": ["b0034"],
       "currentIds": ["c0035"],
-      "reason": "Preserves the pre-Task-14 Flex clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping renames `flex` to `Flex` without changing its bounded CSS-compatible subset; b0034 → c0035 is the exact unit boundary, and `bounded`, `css-compatible`, `deliberately` remain shared semantic anchors. Approved-design unit a0034 authorizes that bounded JSX-era change.",
       "approval": {
-        "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "id": "a0034",
+        "kind": "list",
+        "text": "`Absolute`, `Overlay`, `Flow`, `Flex`, `Grid`"
+      },
+      "sharedAnchors": ["bounded", "css-compatible", "deliberately"]
     },
     {
       "id": "design-layout-system-contract-md-grid",
       "path": "docs/design/layout-system-contract.md",
       "baselineIds": ["b0045"],
       "currentIds": ["c0046"],
-      "reason": "Preserves the pre-Task-14 Grid clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping renames `grid` to `Grid` without changing explicit track validation; b0045 → c0046 is the exact unit boundary, and `gridtemplatecolumns`, `gridtemplaterows`, `nonempty` remain shared semantic anchors. Approved-design unit a0034 authorizes that bounded JSX-era change.",
       "approval": {
-        "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "id": "a0034",
+        "kind": "list",
+        "text": "`Absolute`, `Overlay`, `Flow`, `Flex`, `Grid`"
+      },
+      "sharedAnchors": ["gridtemplatecolumns", "gridtemplaterows", "nonempty"]
     },
     {
       "id": "design-layout-system-contract-md-pure-measurement",
       "path": "docs/design/layout-system-contract.md",
       "baselineIds": ["b0054", "b0058", "b0060"],
-      "currentIds": ["c0055", "c0059", "c0061"],
-      "reason": "Preserves the pre-Task-14 Pure measurement clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "currentIds": ["c0055", "c0059", "c0060", "c0062"],
+      "reason": "This mapping moves measurement capability from wrapped components to primitives while retaining isolation; b0054, b0058, b0060 → c0055, c0059, c0060, c0062 is the exact unit boundary, and `calculation`, `automatic`, `question` remain shared semantic anchors. Approved-design unit a0089 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0089",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "pure measurement, and custom layout algorithms"
+      },
+      "sharedAnchors": ["calculation", "automatic", "question"]
     },
     {
       "id": "design-layout-system-contract-md-composition-failure-and-ownership",
       "path": "docs/design/layout-system-contract.md",
       "baselineIds": ["b0061", "b0062", "b0063"],
-      "currentIds": ["c0062", "c0063", "c0064"],
-      "reason": "Preserves the pre-Task-14 Composition, failure, and ownership clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "currentIds": ["c0063", "c0064", "c0065"],
+      "reason": "This mapping adds fragment-aware child preparation while retaining duplicate-key and ownership behavior; b0061, b0062, b0063 → c0063, c0064, c0065 is the exact unit boundary, and `duplicate-key`, `renormalizing`, `identically` remain shared semantic anchors. Approved-design unit a0190 authorizes that bounded JSX-era change.",
       "approval": {
-        "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "id": "a0190",
+        "kind": "list",
+        "text": "Keyed fragments, keyed children, and unkeyed occurrences preserve or remount identity exactly as specified."
+      },
+      "sharedAnchors": ["duplicate-key", "renormalizing", "identically"]
     },
     {
       "id": "design-layout-system-contract-md-deliberate-exclusions",
       "path": "docs/design/layout-system-contract.md",
       "baselineIds": ["b0065"],
-      "currentIds": ["c0066"],
-      "reason": "Preserves the pre-Task-14 Deliberate exclusions clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "currentIds": ["c0067"],
+      "reason": "This mapping replaces the old extension boundary with the final primitive and plain-component boundary; b0065 → c0067 is the exact unit boundary, and `style-system-contract`, `runtime-resource-ownership` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0132",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "style resolution, declared-box layout, pure measurement"
+      },
+      "sharedAnchors": ["style-system-contract", "runtime-resource-ownership"]
     },
     {
       "id": "design-mouse-interaction-contract-md-crc-mouse-interaction-contract",
       "path": "docs/design/mouse-interaction-contract.md",
       "baselineIds": ["b0001"],
       "currentIds": ["c0001"],
-      "reason": "Preserves the pre-Task-14 CRC mouse interaction contract clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping updates the mouse-contract title to final component names without changing interaction semantics; b0001 → c0001 is the exact unit boundary, and `user-events-contract`, `layout-placement`, `no-cancellation` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0132",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "interaction paint order, pointer capture"
+      },
+      "sharedAnchors": [
+        "user-events-contract",
+        "layout-placement",
+        "no-cancellation"
+      ]
     },
     {
       "id": "design-mouse-interaction-contract-md-tfc-05-composition-boundary",
       "path": "docs/design/mouse-interaction-contract.md",
       "baselineIds": ["b0030"],
       "currentIds": ["c0030"],
-      "reason": "Preserves the pre-Task-14 TFC-05 composition boundary clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping renames composition components while retaining transform and clip targeting precision; b0030 → c0030 is the exact unit boundary, and `contributes`, `identical`, `precision` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0132",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "transform and clip capture, interaction paint order"
+      },
+      "sharedAnchors": ["contributes", "identical", "precision"]
     },
     {
       "id": "design-mouse-interaction-contract-md-mouse-specific-non-goals-and-follow-ups",
       "path": "docs/design/mouse-interaction-contract.md",
       "baselineIds": ["b0083"],
       "currentIds": ["c0083"],
-      "reason": "Preserves the pre-Task-14 Mouse-specific non-goals and follow-ups clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping updates mouse follow-up prose to final names while preserving the established browser evidence boundary; b0083 → c0083 is the exact unit boundary, and `repeatability`, `stroke-width`, `established` remain shared semantic anchors. Approved-design unit a0201 authorizes that bounded JSX-era change.",
       "approval": {
-        "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "id": "a0201",
+        "kind": "list",
+        "text": "Browser, lifecycle, event, focus, cleanup, structural performance, package consumer, built smoke, and Studio scenarios continue to pass."
+      },
+      "sharedAnchors": ["repeatability", "stroke-width", "established"]
     },
     {
       "id": "design-runtime-hooks-contract-md-crc-runtime-and-hook-contract",
       "path": "docs/design/runtime-hooks-contract.md",
       "baselineIds": ["b0001", "b0002"],
       "currentIds": ["c0001", "c0002"],
-      "reason": "Preserves the pre-Task-14 CRC runtime and hook contract clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping updates the runtime-and-hook contract title and surface for plain function components; b0001, b0002 → c0001, c0002 is the exact unit boundary, and `defines`, `runtime-resource-ownership`, `surface` remain shared semantic anchors. Approved-design unit a0177 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0177",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "runtime identity"
+      },
+      "sharedAnchors": ["defines", "runtime-resource-ownership", "surface"]
     },
     {
       "id": "design-runtime-hooks-contract-md-component-and-tree-identity",
@@ -8902,22 +9030,26 @@
         "c0030",
         "c0031"
       ],
-      "reason": "Preserves the pre-Task-14 Component and tree identity clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping extends existing component identity rules to plain functions, fragments, and recursively prepared children; b0003, b0004, b0005, b0006, b0007, b0008, b0009, b0010, b0011 → c0003, c0004, c0005, c0006, c0007, c0008, c0009, c0010, c0011, c0012, c0013, c0014, c0015, c0016, c0017, c0018, c0019, c0020, c0021, c0022, c0023, c0024, c0025, c0026, c0027, c0028, c0029, c0030, c0031 is the exact unit boundary, and `capabilities`, `or-preserved`, `consequence` remain shared semantic anchors. Approved-design unit a0076 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0076",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "preserve current identity behavior"
+      },
+      "sharedAnchors": ["capabilities", "or-preserved", "consequence"]
     },
     {
       "id": "design-runtime-hooks-contract-md-hook-sequence-invariant",
       "path": "docs/design/runtime-hooks-contract.md",
       "baselineIds": ["b0012", "b0014"],
       "currentIds": ["c0032", "c0034", "c0052"],
-      "reason": "Preserves the pre-Task-14 Hook sequence invariant clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping clarifies fewer-hook cleanup while retaining synchronous hook sequence enforcement; b0012, b0014 → c0032, c0034, c0052 is the exact unit boundary, and `synchronously`, `abandoned`, `reporting` remain shared semantic anchors. Approved-design unit a0194 authorizes that bounded JSX-era change.",
       "approval": {
-        "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "id": "a0194",
+        "kind": "list",
+        "text": "Plain function hooks mount, update, reorder, remove, fail, and recover under the current hook contract."
+      },
+      "sharedAnchors": ["synchronously", "abandoned", "reporting"]
     },
     {
       "id": "design-runtime-hooks-contract-md-public-hook-contracts",
@@ -8943,99 +9075,125 @@
         "c0048",
         "c0049"
       ],
-      "reason": "Preserves the pre-Task-14 Public hook contracts clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping updates hook prose from render callbacks to plain functions without changing public hook behavior; b0015, b0016, b0022, b0023, b0024, b0025, b0026 → c0035, c0036, c0042, c0043, c0044, c0045, c0046, c0047, c0048, c0049 is the exact unit boundary, and `measurement-isolation`, `function-valued`, `crc-path-hooks` remain shared semantic anchors. Approved-design unit a0029 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0029",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "CRC retains the `crcState`, `crcMemo`, `crcRef`, and other `crc*` lifecycle names."
+      },
+      "sharedAnchors": [
+        "measurement-isolation",
+        "function-valued",
+        "crc-path-hooks"
+      ]
     },
     {
       "id": "design-runtime-hooks-contract-md-pure-measurement-boundary",
       "path": "docs/design/runtime-hooks-contract.md",
       "baselineIds": ["b0027", "b0028"],
       "currentIds": ["c0050", "c0051"],
-      "reason": "Preserves the pre-Task-14 Pure measurement boundary clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping moves the pure-measurement boundary from wrapper metadata to primitive metadata; b0027, b0028 → c0050, c0051 is the exact unit boundary, and `recursively`, `contextual`, `attempted` remain shared semantic anchors. Approved-design unit a0089 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0089",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "measurement isolation follow the current implemented contracts."
+      },
+      "sharedAnchors": ["recursively", "contextual", "attempted"]
     },
     {
       "id": "design-runtime-hooks-contract-md-public-package-boundary",
       "path": "docs/design/runtime-hooks-contract.md",
       "baselineIds": ["b0029"],
       "currentIds": ["c0053"],
-      "reason": "Preserves the pre-Task-14 Public package boundary clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping updates the public package boundary for the final JSX entry points and declarations; b0029 → c0053 is the exact unit boundary, and `consumers`, `entries`, `nodenext` remain shared semantic anchors. Approved-design unit a0105 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0105",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "TypeScript, Bundler, and NodeNext declarations must agree."
+      },
+      "sharedAnchors": ["consumers", "entries", "nodenext"]
     },
     {
       "id": "design-runtime-hooks-contract-md-deterministic-evidence",
       "path": "docs/design/runtime-hooks-contract.md",
       "baselineIds": ["b0030", "b0031"],
       "currentIds": ["c0054"],
-      "reason": "Preserves the pre-Task-14 Deterministic evidence clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping converts deterministic hook evidence to JSX-era scenarios without changing asserted behavior; b0030, b0031 → c0054 is the exact unit boundary, and `runtime-hooks-laboratory`, `presentation-neutral`, `outside-render` remain shared semantic anchors. Approved-design unit a0194 authorizes that bounded JSX-era change.",
       "approval": {
-        "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "id": "a0194",
+        "kind": "list",
+        "text": "Plain function hooks mount, update, reorder, remove, fail, and recover under the current hook contract."
+      },
+      "sharedAnchors": [
+        "runtime-hooks-laboratory",
+        "presentation-neutral",
+        "outside-render"
+      ]
     },
     {
       "id": "design-runtime-hooks-contract-md-deliberate-boundaries",
       "path": "docs/design/runtime-hooks-contract.md",
       "baselineIds": ["b0032", "b0033", "b0034", "b0036"],
       "currentIds": ["c0055", "c0056", "c0057", "c0059", "c0060"],
-      "reason": "Preserves the pre-Task-14 Deliberate boundaries clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping removes obsolete wrapper guidance while retaining conditional-hook and identifier boundaries; b0032, b0033, b0034, b0036 → c0055, c0056, c0057, c0059, c0060 is the exact unit boundary, and `function-as-data`, `conditional`, `identifiers` remain shared semantic anchors. Approved-design unit a0194 authorizes that bounded JSX-era change.",
       "approval": {
-        "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "id": "a0194",
+        "kind": "list",
+        "text": "under the current hook contract."
+      },
+      "sharedAnchors": ["function-as-data", "conditional", "identifiers"]
     },
     {
       "id": "design-runtime-resource-ownership-md-crc-runtime-resource-ownership",
       "path": "docs/design/runtime-resource-ownership.md",
       "baselineIds": ["b0001"],
       "currentIds": ["c0001"],
-      "reason": "Preserves the pre-Task-14 CRC runtime resource ownership clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping updates only the runtime-resource contract status heading; b0001 → c0001 is the exact unit boundary, and `status`, `implemented` remain shared semantic anchors. Approved-design unit a0177 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0177",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "resource ownership describe the JSX-era model consistently."
+      },
+      "sharedAnchors": ["status", "implemented"]
     },
     {
       "id": "design-runtime-resource-ownership-md-ownership-table",
       "path": "docs/design/runtime-resource-ownership.md",
       "baselineIds": ["b0011", "b0012"],
       "currentIds": ["c0011", "c0012"],
-      "reason": "Preserves the pre-Task-14 Ownership table clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping renames the image owner in the ownership table without changing teardown ownership; b0011, b0012 → c0011, c0012 is the exact unit boundary, and `source-tagged`, `currently`, `released` remain shared semantic anchors. Approved-design unit a0032 authorizes that bounded JSX-era change.",
       "approval": {
-        "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "id": "a0032",
+        "kind": "list",
+        "text": "`Text`, `Image`"
+      },
+      "sharedAnchors": ["source-tagged", "currently", "released"]
     },
     {
       "id": "design-runtime-resource-ownership-md-async-capability-rules",
       "path": "docs/design/runtime-resource-ownership.md",
       "baselineIds": ["b0020"],
       "currentIds": ["c0020"],
-      "reason": "Preserves the pre-Task-14 Async capability rules clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping uses `Image` and `style.src` terminology while retaining stale-capability self-detachment; b0020 → c0020 is the exact unit boundary, and `idempotently`, `state-setter`, `self-detach` remain shared semantic anchors. Approved-design unit a0032 authorizes that bounded JSX-era change.",
       "approval": {
-        "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "id": "a0032",
+        "kind": "list",
+        "text": "`Text`, `Image`"
+      },
+      "sharedAnchors": ["idempotently", "state-setter", "self-detach"]
     },
     {
       "id": "design-style-system-contract-md-crc-style-system-contract",
       "path": "docs/design/style-system-contract.md",
       "baselineIds": ["b0001", "b0002", "b0003", "b0004"],
       "currentIds": ["c0001", "c0002", "c0003", "c0004"],
-      "reason": "Preserves the pre-Task-14 CRC style-system contract clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping updates the style-contract status and authoring vocabulary while retaining the closed local model; b0001, b0002, b0003, b0004 → c0001, c0002, c0003, c0004 is the exact unit boundary, and `css-familiar`, `vocabulary`, `ambient` remain shared semantic anchors. Approved-design unit a0077 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0077",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "All author-facing visual and layout values remain under `style`"
+      },
+      "sharedAnchors": ["css-familiar", "vocabulary", "ambient"]
     },
     {
       "id": "design-style-system-contract-md-public-style-model",
@@ -9060,11 +9218,13 @@
         "c0011",
         "c0012"
       ],
-      "reason": "Preserves the pre-Task-14 Public style model clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping replaces wrapper metadata terminology with primitive style stages and plain-component props; b0005, b0006, b0007, b0008, b0009, b0010, b0011, b0012 → c0005, c0006, c0007, c0008, c0009, c0010, c0011, c0012 is the exact unit boundary, and `application-owned`, `allocation-aware`, `interpret` remain shared semantic anchors. Approved-design unit a0079 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0079",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "Behavioral props, `children`, `style`, and `key` remain distinct."
+      },
+      "sharedAnchors": ["application-owned", "allocation-aware", "interpret"]
     },
     {
       "id": "design-style-system-contract-md-length-and-box-rules",
@@ -9087,11 +9247,13 @@
         "c0019",
         "c0020"
       ],
-      "reason": "Preserves the pre-Task-14 Length and box rules clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping retains length and box resolution while expressing it through final style terminology; b0013, b0014, b0016, b0017, b0018, b0019, b0020 → c0013, c0014, c0016, c0017, c0018, c0019, c0020 is the exact unit boundary, and `responsive`, `scientific`, `whitespace` remain shared semantic anchors. Approved-design unit a0079 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0079",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "specified, normalized, and resolved stages remain authoritative"
+      },
+      "sharedAnchors": ["responsive", "scientific", "whitespace"]
     },
     {
       "id": "design-style-system-contract-md-style-only-built-in-migration",
@@ -9128,57 +9290,85 @@
         "c0031",
         "c0032",
         "c0033",
-        "c0034"
+        "c0034",
+        "c0035",
+        "c0036"
       ],
-      "reason": "Preserves the pre-Task-14 Style-only built-in migration clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping moves every old field/form pair to the migration matrix and leaves an exact final field/default table; b0021, b0022, b0023, b0024, b0025, b0026, b0027, b0028, b0029, b0030, b0031, b0032, b0033, b0034, b0035, b0036 → c0021, c0022, c0023, c0024, c0025, c0026, c0027, c0028, c0029, c0030, c0031, c0032, c0033, c0034, c0035, c0036 is the exact unit boundary, and `lineinteractionwidth`, `aligntopixelgrid`, `rotationorigin` remain shared semantic anchors. Approved-design unit a0005 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0005",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "This is an intentionally breaking pivot. CRC is unreleased and unused enough that preserving obsolete authoring syntax would make the resulting API worse. Shipped features remain in scope; compatibility aliases do not."
+      },
+      "sharedAnchors": [
+        "lineinteractionwidth",
+        "aligntopixelgrid",
+        "rotationorigin"
+      ]
     },
     {
       "id": "design-style-system-contract-md-deliberate-exclusions",
       "path": "docs/design/style-system-contract.md",
       "baselineIds": ["b0037", "b0038"],
-      "currentIds": ["c0035", "c0036"],
-      "reason": "Preserves the pre-Task-14 Deliberate exclusions clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "currentIds": ["c0037", "c0038"],
+      "reason": "This mapping updates exclusion references for JSX-era component names without adding cascade or inheritance; b0037, b0038 → c0037, c0038 is the exact unit boundary, and `drawing-components-contract`, `layout-system-contract`, `inheritance` remain shared semantic anchors. Approved-design unit a0023 authorizes that bounded JSX-era change.",
       "approval": {
-        "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "id": "a0023",
+        "kind": "list",
+        "text": "Style cascade, inheritance, selectors, or class names."
+      },
+      "sharedAnchors": [
+        "drawing-components-contract",
+        "layout-system-contract",
+        "inheritance"
+      ]
     },
     {
       "id": "design-user-events-contract-md-crc-user-event-contract",
       "path": "docs/design/user-events-contract.md",
       "baselineIds": ["b0001"],
       "currentIds": ["c0001"],
-      "reason": "Preserves the pre-Task-14 CRC user-event contract clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping updates only the user-event contract status heading for the JSX-era documentation set; b0001 → c0001 is the exact unit boundary, and `governed`, `focus-and-keyboard-navigation-contract`, `keyboard-navigation` remain shared semantic anchors. Approved-design unit a0177 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0177",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "user events, focus"
+      },
+      "sharedAnchors": [
+        "governed",
+        "focus-and-keyboard-navigation-contract",
+        "keyboard-navigation"
+      ]
     },
     {
       "id": "design-user-events-contract-md-public-registration-model",
       "path": "docs/design/user-events-contract.md",
       "baselineIds": ["b0004", "b0007"],
       "currentIds": ["c0004", "c0007"],
-      "reason": "Preserves the pre-Task-14 Public registration model clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping replaces factory registration examples with JSX event props on final components; b0004, b0007 → c0004, c0007 is the exact unit boundary, and `custom-component`, `abstraction`, `onxcapture` remain shared semantic anchors. Approved-design unit a0132 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0132",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "interaction paint order, pointer capture, focus state"
+      },
+      "sharedAnchors": ["custom-component", "abstraction", "onxcapture"]
     },
     {
       "id": "design-user-events-contract-md-non-coordinate-transport",
       "path": "docs/design/user-events-contract.md",
       "baselineIds": ["b0032", "b0033"],
       "currentIds": ["c0032", "c0033"],
-      "reason": "Preserves the pre-Task-14 Non-coordinate transport clauses while translating this section to the approved JSX-era element and component vocabulary.",
+      "reason": "This mapping replaces enhancer names with focus-policy components while retaining targetless plain-Canvas input; b0032, b0033 → c0032, c0033 is the exact unit boundary, and `keyboardfocusable`, `event-injection`, `crceventtarget` remain shared semantic anchors. Approved-design unit a0140 authorizes that bounded JSX-era change.",
       "approval": {
+        "id": "a0140",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "text": "Function enhancers become descriptive JSX policy values:"
+      },
+      "sharedAnchors": [
+        "keyboardfocusable",
+        "event-injection",
+        "crceventtarget"
+      ]
     }
   ],
   "additions": [
@@ -9186,28 +9376,32 @@
       "id": "architecture-style-and-layout-architecture-md-public-boundaries-and-evidence-addition",
       "path": "docs/architecture/style-and-layout-architecture.md",
       "currentIds": ["c0117"],
-      "reason": "Adds the approved JSX-era Public boundaries and evidence material that had no pre-Task-14 authoring-protocol counterpart.",
+      "reason": "Approved-design unit a0006 authorizes current unit c0117 as a distinct JSX-era public-boundary addition; it does not classify or replace any baseline semantic unit.",
       "approval": {
+        "id": "a0006",
         "kind": "prose",
-        "text": "The design preserves CRC's scheduled immediate-mode Canvas renderer, hook and component identity, local style language, declared-box layout, events, focus, layers, measurement, and exact resource ownership. JSX changes how a CRC tree is described, not how CRC renders it."
+        "text": "JSX changes how a CRC tree is described, not how CRC renders it."
       }
     }
   ],
   "evidenceMappings": [
     {
-      "id": "immediate-renderer",
+      "id": "plain-function-dispatch",
       "contract": "docs/architecture/style-and-layout-architecture.md",
       "claim": {
-        "kind": "prose",
-        "text": "There is no DOM renderer, virtual DOM reconciliation, retained display list, style cascade, or speculative child render."
+        "kind": "list",
+        "text": "- no primitive metadata → invoke the plain function with its props;"
       },
       "source": {
         "path": "packages/core/src/lib/render.ts",
-        "marker": "export function render("
+        "marker": "result = componentRefs.element.type(componentRefs.element.props);"
       },
       "test": {
         "path": "packages/core/src/lib/component-dispatch.test.tsx",
         "marker": "invokes a plain function once with frozen author props and supports every existing hook"
+      },
+      "relevance": {
+        "sharedAnchors": ["primitive", "function"]
       }
     },
     {
@@ -9215,7 +9409,7 @@
       "contract": "docs/architecture/style-and-layout-architecture.md",
       "claim": {
         "kind": "prose",
-        "text": "A plain component therefore needs a definite allocation when it hides that subtree from its parent."
+        "text": "A plain component exposes no intrinsic measurement capability"
       },
       "source": {
         "path": "packages/core/src/lib/layout/measure.ts",
@@ -9224,22 +9418,28 @@
       "test": {
         "path": "packages/core/src/lib/define-primitive.test.tsx",
         "marker": "reports plain functions as unsupported intrinsic measurement"
+      },
+      "relevance": {
+        "sharedAnchors": ["measurement"]
       }
     },
     {
-      "id": "measurement-purity",
+      "id": "measurement-hook-isolation",
       "contract": "docs/architecture/style-and-layout-architecture.md",
       "claim": {
         "kind": "prose",
-        "text": "It cannot paint, invoke hooks, `crcCanvasContext`, `crcLayoutBox`, create targets/images/layers, schedule work, or acquire runtime resources."
+        "text": "Pure measurement isolates itself from active render hooks and layout context."
       },
       "source": {
         "path": "packages/core/src/lib/layout/measure.ts",
-        "marker": "function withIsolatedRenderState<T>(work: () => T): T"
+        "marker": "GLOBAL_STATE.currentCRCInstance = undefined;"
       },
       "test": {
         "path": "packages/core/src/lib/layout/measure.test.ts",
         "marker": "isolates measurement from active render hooks and layout context"
+      },
+      "relevance": {
+        "sharedAnchors": ["context", "active", "measurement"]
       }
     },
     {
@@ -9256,30 +9456,36 @@
       "test": {
         "path": "packages/core/src/lib/focus/focus-manager.test.ts",
         "marker": "keeps the Canvas as the only native focus host without semantic DOM"
+      },
+      "relevance": {
+        "sharedAnchors": ["focus"]
       }
     },
     {
-      "id": "mount-configuration",
+      "id": "initial-mount-signal",
       "contract": "docs/design/canvas-surface-contract.md",
       "claim": {
         "kind": "prose",
-        "text": "JSX and `createElement` create the same opaque branded elements; fragments, arrays, finite synchronous iterables, and empty nodes are also valid roots. The configuration belongs to the first live mount. Later `crc()` calls update the root node but do not replace the surface configuration or mount signal. Dispose and remount to select a different surface mode."
+        "text": "`config.signal` likewise belongs to the first live mount and is not replaced by later `crc()` calls."
       },
       "source": {
         "path": "packages/core/src/lib/crc.ts",
-        "marker": "export function crc("
+        "marker": "if (mountedInstance) {\n    update(canvas, element);\n    return mountedInstance.controller;\n  }"
       },
       "test": {
         "path": "packages/core/test/lifecycle-characterization.test.ts",
         "marker": "uses only the initial mount signal for an existing Canvas lifetime"
+      },
+      "relevance": {
+        "sharedAnchors": ["calls", "mount"]
       }
     },
     {
-      "id": "three-coordinate-spaces",
+      "id": "rounded-backing-density",
       "contract": "docs/design/canvas-surface-contract.md",
       "claim": {
         "kind": "prose",
-        "text": "CRC derives the effective backing density from those rounded dimensions and installs one root transform before rendering. Component-local transforms then compose after that root transform. The bitmap is cleared in backing space before the root transform is installed."
+        "text": "CRC derives the effective backing density from those rounded dimensions and installs one root transform before rendering."
       },
       "source": {
         "path": "packages/core/src/lib/surface/resolve-surface.ts",
@@ -9288,6 +9494,9 @@
       "test": {
         "path": "packages/core/src/lib/surface/resolve-surface.test.ts",
         "marker": "renders a fixed viewport at the rounded backing density with contain"
+      },
+      "relevance": {
+        "sharedAnchors": ["backing"]
       }
     },
     {
@@ -9304,6 +9513,9 @@
       "test": {
         "path": "packages/core/test/canvas-surface.test.ts",
         "marker": "proves fixed density, responsive reflow, stable identity, and logical mouse coordinates"
+      },
+      "relevance": {
+        "sharedAnchors": ["coordinate", "logical"]
       }
     },
     {
@@ -9320,6 +9532,9 @@
       "test": {
         "path": "packages/core/src/lib/util/pixel-grid-adjustments.test.ts",
         "marker": "leaves every rectangle value unchanged in none mode"
+      },
+      "relevance": {
+        "sharedAnchors": ["none"]
       }
     },
     {
@@ -9336,14 +9551,17 @@
       "test": {
         "path": "packages/core/src/lib/util/pixel-grid-adjustments.test.ts",
         "marker": "preserves zero and negative integral dimensions in %s mode"
+      },
+      "relevance": {
+        "sharedAnchors": ["pixel"]
       }
     },
     {
-      "id": "text-final-line-and-ellipsis",
+      "id": "text-height-ellipsis",
       "contract": "docs/design/drawing-components-contract.md",
       "claim": {
         "kind": "prose",
-        "text": "The materialized value is reused by measurement and paint in one receiving transaction. The default is one line. When `wrap` is true, wrapped lines accumulate without losing the final fitting line. `lineHeight` advances each line. A finite style height limits complete lines; ellipsis applies to the final visible line when requested. An ellipsis box narrower than three dots resolves to an empty string."
+        "text": "A finite style height limits complete lines; ellipsis applies to the final visible line when requested."
       },
       "source": {
         "path": "packages/core/src/lib/components/text-layout.ts",
@@ -9352,6 +9570,9 @@
       "test": {
         "path": "packages/core/src/lib/components/text-layout.test.ts",
         "marker": "returns literal wrapped lines, baseline positions, and measured bounds"
+      },
+      "relevance": {
+        "sharedAnchors": ["ellipsis", "height", "lines"]
       }
     },
     {
@@ -9368,6 +9589,9 @@
       "test": {
         "path": "packages/core/src/lib/components/img-async.test.ts",
         "marker": "uses naturalWidth and naturalHeight independently when %s is explicit"
+      },
+      "relevance": {
+        "sharedAnchors": ["naturalheight", "naturalwidth", "natural"]
       }
     },
     {
@@ -9384,14 +9608,17 @@
       "test": {
         "path": "packages/core/src/lib/components/img-async.test.ts",
         "marker": "shares one %s-aligned rectangle across draw, border, and interaction"
+      },
+      "relevance": {
+        "sharedAnchors": ["drawimage", "rectangle", "pixel"]
       }
     },
     {
-      "id": "layer-retained-updates",
+      "id": "layer-retained-tree-invalidation",
       "contract": "docs/design/drawing-components-contract.md",
       "claim": {
         "kind": "prose",
-        "text": "child props (including enumerable symbol keys), specified style, direct-child sequence"
+        "text": "On one persistent mount, a `Layer` invalidates and rerenders when its retained child root type/key, child props (including enumerable symbol keys), specified style, direct-child sequence, or layer dimensions change."
       },
       "source": {
         "path": "packages/core/src/lib/components/layer.ts",
@@ -9400,6 +9627,9 @@
       "test": {
         "path": "packages/core/src/lib/components/layer.test.ts",
         "marker": "compares retained trees recursively and invalidates for prop, style, and child-sequence changes"
+      },
+      "relevance": {
+        "sharedAnchors": ["retained", "layer", "mount"]
       }
     },
     {
@@ -9416,6 +9646,9 @@
       "test": {
         "path": "packages/core/test/lifecycle-characterization.test.ts",
         "marker": "keeps a remount live when its stale controller and signal clean up again"
+      },
+      "relevance": {
+        "sharedAnchors": ["dispose", "signal"]
       }
     },
     {
@@ -9432,6 +9665,9 @@
       "test": {
         "path": "packages/core/src/lib/events/native-listener-hub.test.ts",
         "marker": "reference-counts one native listener and makes releases idempotent"
+      },
+      "relevance": {
+        "sharedAnchors": ["listener", "canvas"]
       }
     },
     {
@@ -9448,14 +9684,17 @@
       "test": {
         "path": "packages/core/src/lib/events/propagation.test.ts",
         "marker": "reports a thrown handler and continues with unrelated handlers"
+      },
+      "relevance": {
+        "sharedAnchors": ["handlers", "handler"]
       }
     },
     {
-      "id": "transparent-policies",
+      "id": "policy-child-preparation",
       "contract": "docs/design/focus-and-keyboard-navigation-contract.md",
       "claim": {
         "kind": "prose",
-        "text": "Each policy removes empty child values and requires exactly one remaining branded `CRCElement`. Policy preparation attaches lifecycle metadata to a clone of that child before identity resolution. The policy does not paint, lay out, own hooks, or change the child's type, key, identity, parentage, measurement, paint order, or source order. `KeyboardNavigation` requires an active manager; directional boundaries may be nested."
+        "text": "Each policy removes empty child values and requires exactly one remaining branded `CRCElement`. Policy preparation attaches lifecycle metadata to a clone of that child before identity resolution."
       },
       "source": {
         "path": "packages/core/src/lib/focus/policy-components.ts",
@@ -9464,6 +9703,9 @@
       "test": {
         "path": "packages/core/src/lib/focus/policy-components.test.tsx",
         "marker": "removes empties, recursively prepares one child, and preserves declaration order and child metadata"
+      },
+      "relevance": {
+        "sharedAnchors": ["policy"]
       }
     },
     {
@@ -9480,6 +9722,9 @@
       "test": {
         "path": "packages/core/test/focus-navigation.test.ts",
         "marker": "uses one forward and reverse Tab order across every native and logical stop"
+      },
+      "relevance": {
+        "sharedAnchors": ["move", "next", "tab"]
       }
     },
     {
@@ -9496,6 +9741,9 @@
       "test": {
         "path": "packages/core/src/lib/focus/keyboard-activation.test.ts",
         "marker": "does not activate when the %s prevents Enter keydown"
+      },
+      "relevance": {
+        "sharedAnchors": ["event"]
       }
     },
     {
@@ -9512,10 +9760,13 @@
       "test": {
         "path": "packages/core/src/lib/focus/directional-navigation.test.ts",
         "marker": "uses the exact beam, forward-edge, perpendicular-center, and source tuple"
+      },
+      "relevance": {
+        "sharedAnchors": ["source", "index"]
       }
     },
     {
-      "id": "finite-recursive-children",
+      "id": "recursive-array-iterable-flattening",
       "contract": "docs/design/layout-system-contract.md",
       "claim": {
         "kind": "prose",
@@ -9527,7 +9778,10 @@
       },
       "test": {
         "path": "packages/core/src/lib/element/children.test.ts",
-        "marker": "returns one frozen direct-element sequence from recursive container input"
+        "marker": "flattens root arrays, nested arrays, iterables, and unkeyed fragments in source order once"
+      },
+      "relevance": {
+        "sharedAnchors": ["fragments", "unkeyed", "arrays"]
       }
     },
     {
@@ -9544,6 +9798,9 @@
       "test": {
         "path": "packages/core/src/lib/layout/place-child.test.ts",
         "marker": "applies an optional child-space clip to paint and hit testing"
+      },
+      "relevance": {
+        "sharedAnchors": ["create", "clip", "box"]
       }
     },
     {
@@ -9560,6 +9817,9 @@
       "test": {
         "path": "packages/core/src/lib/layout/flex.test.ts",
         "marker": "implements the explicit justifyContent value %s"
+      },
+      "relevance": {
+        "sharedAnchors": ["space-between", "space-around", "space-evenly"]
       }
     },
     {
@@ -9576,6 +9836,9 @@
       "test": {
         "path": "packages/core/src/lib/layout/flex.test.ts",
         "marker": "defaults justifyContent to flex-start"
+      },
+      "relevance": {
+        "sharedAnchors": ["flex-start"]
       }
     },
     {
@@ -9592,6 +9855,9 @@
       "test": {
         "path": "packages/core/src/lib/layout/flex.test.ts",
         "marker": "rejects the %s Flex gap"
+      },
+      "relevance": {
+        "sharedAnchors": ["finite"]
       }
     },
     {
@@ -9599,7 +9865,7 @@
       "contract": "docs/design/layout-system-contract.md",
       "claim": {
         "kind": "table",
-        "text": "default `0`"
+        "text": "`gap`; default `0`"
       },
       "source": {
         "path": "packages/core/src/lib/layout/flex.ts",
@@ -9608,6 +9874,9 @@
       "test": {
         "path": "packages/core/src/lib/layout/flex.test.ts",
         "marker": "defaults gap to zero and applies one shared gap to both axes"
+      },
+      "relevance": {
+        "sharedAnchors": ["gap"]
       }
     },
     {
@@ -9624,6 +9893,9 @@
       "test": {
         "path": "packages/core/src/lib/layout/flex.test.ts",
         "marker": "gives rowGap and columnGap precedence over gap on their axes"
+      },
+      "relevance": {
+        "sharedAnchors": ["gap"]
       }
     },
     {
@@ -9640,14 +9912,17 @@
       "test": {
         "path": "packages/core/src/lib/layout/grid.test.ts",
         "marker": "leaves unused space when total fr is below one"
+      },
+      "relevance": {
+        "sharedAnchors": ["fraction", "total"]
       }
     },
     {
-      "id": "pure-measurement-resource-boundary",
+      "id": "measurement-image-generation-boundary",
       "contract": "docs/design/layout-system-contract.md",
       "claim": {
         "kind": "list",
-        "text": "create image generations, or acquire runtime resources"
+        "text": "- cannot create image generations;"
       },
       "source": {
         "path": "packages/core/src/lib/components/img.ts",
@@ -9656,6 +9931,9 @@
       "test": {
         "path": "packages/core/src/lib/layout/measure.test.ts",
         "marker": "measures only explicitly sized images without creating a resource"
+      },
+      "relevance": {
+        "sharedAnchors": ["image"]
       }
     },
     {
@@ -9672,14 +9950,17 @@
       "test": {
         "path": "packages/core/test/interaction-dispatch.test.ts",
         "marker": "selects the topmost laid-out child and rejects clipped paint overflow"
+      },
+      "relevance": {
+        "sharedAnchors": ["hit"]
       }
     },
     {
-      "id": "movement-order",
+      "id": "boundary-before-movement",
       "contract": "docs/design/mouse-interaction-contract.md",
       "claim": {
         "kind": "prose",
-        "text": "Exit always precedes entry, and every boundary transition precedes movement. Moving between overlapping shapes still targets only the topmost winner."
+        "text": "every boundary transition precedes movement."
       },
       "source": {
         "path": "packages/core/src/lib/events/dispatch.ts",
@@ -9688,14 +9969,17 @@
       "test": {
         "path": "packages/core/src/lib/events/mouse-dispatch.test.ts",
         "marker": "bubbles over/out and separately targets non-bubbling enter/leave nodes"
+      },
+      "relevance": {
+        "sharedAnchors": ["boundary"]
       }
     },
     {
-      "id": "common-ancestor-click",
+      "id": "sibling-common-listener-activation",
       "contract": "docs/design/mouse-interaction-contract.md",
       "claim": {
         "kind": "prose",
-        "text": "The browser determines normal click hysteresis. In the executable reference Chromium fixture, leaving A for Canvas background and re-entering A before release still produces `click(A)` when down, up, and the generated click all resolve to that same live target. CRC preserves that measured behavior; it does not make every intermediate `mouseout` an independent cancellation signal. Down on A/up on sibling B can activate their deepest shared still-live `crcEventListener` when it also lies on the browser click's current coordinate path. Without an explicit shared listener, no sibling-region click is emitted."
+        "text": "Down on A/up on sibling B can activate their deepest shared still-live `crcEventListener` when it also lies on the browser click's current coordinate path."
       },
       "source": {
         "path": "packages/core/src/lib/events/dispatch.ts",
@@ -9704,6 +9988,9 @@
       "test": {
         "path": "packages/core/src/lib/events/mouse-dispatch.test.ts",
         "marker": "targets the deepest common live listener after down and up resolve to siblings"
+      },
+      "relevance": {
+        "sharedAnchors": ["click", "down", "path"]
       }
     },
     {
@@ -9720,6 +10007,9 @@
       "test": {
         "path": "packages/core/src/lib/events/pointer-events.test.ts",
         "marker": "projects root-logical coordinates and deltas, bubbles, and cancels natively"
+      },
+      "relevance": {
+        "sharedAnchors": ["coordinates", "point"]
       }
     },
     {
@@ -9731,11 +10021,14 @@
       },
       "source": {
         "path": "packages/core/src/lib/element/children.ts",
-        "marker": "function visitContainerNode("
+        "marker": "throw invalidChild(receiver, 'a non-empty string');"
       },
       "test": {
         "path": "packages/core/src/lib/element/children.test.ts",
         "marker": "rejects %s with receiver and jsxDEV source context"
+      },
+      "relevance": {
+        "sharedAnchors": ["non-empty", "nonzero", "async"]
       }
     },
     {
@@ -9743,7 +10036,7 @@
       "contract": "docs/design/runtime-hooks-contract.md",
       "claim": {
         "kind": "prose",
-        "text": "Keys must be unique after transparent flattening in their sibling scope. Reparenting or adding a component/keyed-fragment wrapper creates a different scope; a key does not preserve identity across parents. Ordinary traversal rejects duplicates during recursive child preflight with the public diagnostic `<Receiver> received duplicate CRC key \"<key>\" as a CRC child.` At the root, `<Receiver>` is `CRC root`; for a component result it is the component display name plus JSX development source location when available. A lower-level prepared-identity guard retains `Duplicate CRC key \"<key>\" under \"<parent>\"` as an internal fallback. Removing a component, changing its key or type, replacing its root type, or disposing the instance releases that identity and every hook resource it owns."
+        "text": "Ordinary traversal rejects duplicates during recursive child preflight with the public diagnostic `<Receiver> received duplicate CRC key \"<key>\" as a CRC child.`"
       },
       "source": {
         "path": "packages/core/src/lib/element/children.ts",
@@ -9752,14 +10045,17 @@
       "test": {
         "path": "packages/core/src/lib/runtime-contract.test.ts",
         "marker": "Host received duplicate CRC key \"duplicate\" as a CRC child."
+      },
+      "relevance": {
+        "sharedAnchors": ["duplicate", "received", "key"]
       }
     },
     {
-      "id": "frame-coalescing",
+      "id": "pending-root-precedence",
       "contract": "docs/design/runtime-hooks-contract.md",
       "claim": {
         "kind": "prose",
-        "text": "Normal work coalesces on `requestAnimationFrame`. Several state/root/resize/ density/parent-layer requests share the pending frame. The latest explicit root wins; a state request cannot erase it, and parent-update intent is OR-preserved. Rendering remains one full synchronous Canvas traversal with no DOM reconciliation, background work, retained drawing commands, or async component continuation."
+        "text": "The latest explicit root wins; a state request cannot erase it"
       },
       "source": {
         "path": "packages/core/src/lib/update.ts",
@@ -9768,14 +10064,17 @@
       "test": {
         "path": "packages/core/src/lib/runtime-contract.test.ts",
         "marker": "does not lose a pending root replacement to a state update"
+      },
+      "relevance": {
+        "sharedAnchors": ["explicit", "request", "state"]
       }
     },
     {
-      "id": "hook-sequence",
+      "id": "omitted-hook-release",
       "contract": "docs/design/runtime-hooks-contract.md",
       "claim": {
         "kind": "prose",
-        "text": "Each component owns ordered, typed slots. Every successful update must call the same number and kinds in the same order. CRC reports a changed kind, added slot, or omitted slot deterministically. Before reporting an omitted slot, CRC releases the abandoned slot's owned resources. A failed render closes the instance's component refs, clears the partial tree, and restores temporary globals. This is a fail-closed reset, not pixel rollback; a later explicit render remounts cleanly."
+        "text": "Before reporting fewer hooks, CRC releases the abandoned slots' owned resources."
       },
       "source": {
         "path": "packages/core/src/lib/hooks/hook-slot.ts",
@@ -9784,22 +10083,28 @@
       "test": {
         "path": "packages/core/src/lib/hooks/hook-contract.test.ts",
         "marker": "releases an omitted hook resource, reports fewer hooks, and retries cleanly"
+      },
+      "relevance": {
+        "sharedAnchors": ["fewer", "hooks"]
       }
     },
     {
-      "id": "teardown-snapshot",
+      "id": "teardown-error-isolation",
       "contract": "docs/design/runtime-resource-ownership.md",
       "claim": {
         "kind": "prose",
-        "text": "`Teardowns.execute()` closes before it invokes a stable snapshot. Duplicate adds collapse to one Set member, removal before execution prevents invocation, reentrant execution is inert, and a teardown added after closure runs immediately. A throwing entry is reported without preventing the remaining entries from running. Closing either side of a follower relationship closes the child once and leaves no live parent link."
+        "text": "A throwing entry is reported"
       },
       "source": {
         "path": "packages/core/src/lib/teardowns.ts",
-        "marker": "export class Teardowns"
+        "marker": "reportError(error);"
       },
       "test": {
         "path": "packages/core/src/lib/teardowns.test.ts",
         "marker": "releases a stable snapshot once and isolates teardown errors"
+      },
+      "relevance": {
+        "sharedAnchors": ["report"]
       }
     },
     {
@@ -9807,7 +10112,7 @@
       "contract": "docs/design/runtime-resource-ownership.md",
       "claim": {
         "kind": "prose",
-        "text": "A state setter is a capability belonging to the exact instance and exact component-ref object that created it. Before mutating, it verifies both identities and verifies that neither teardown collection is closing or closed. This matters during component removal: teardown executes before the refs-map deletion, so map identity by itself is not sufficient."
+        "text": "A state setter is a capability belonging to the exact instance and exact component-ref object that created it."
       },
       "source": {
         "path": "packages/core/src/lib/hooks/crc-state.ts",
@@ -9816,22 +10121,28 @@
       "test": {
         "path": "packages/core/src/lib/hooks/crc-state.test.ts",
         "marker": "cannot let a disposed mount setter update a replacement mount"
+      },
+      "relevance": {
+        "sharedAnchors": ["instance", "setter", "state"]
       }
     },
     {
-      "id": "image-generation",
+      "id": "stale-image-generation",
       "contract": "docs/design/runtime-resource-ownership.md",
       "claim": {
         "kind": "prose",
-        "text": "Each `Image` `style.src` change creates a new generation. Its load and error handlers self-detach on settlement and are detached again idempotently on change/removal/disposal. Loaded state carries the source string; render ignores a loaded element whose source does not equal the current style. The state-setter identity guard is a second line of defense, not the image handler's primary cleanup mechanism."
+        "text": "render ignores a loaded element whose source does not equal the current style."
       },
       "source": {
         "path": "packages/core/src/lib/components/img.ts",
-        "marker": "interface LoadedImage"
+        "marker": "loadedImage && loadedImage.src === src ? loadedImage.element : null;"
       },
       "test": {
         "path": "packages/core/src/lib/components/img-async.test.ts",
         "marker": "draws only the current source when an older load callback arrives late"
+      },
+      "relevance": {
+        "sharedAnchors": ["load"]
       }
     },
     {
@@ -9848,6 +10159,9 @@
       "test": {
         "path": "packages/core/src/lib/define-primitive.test.tsx",
         "marker": "normalizes, resolves percentages, and invokes the primitive renderer with program props"
+      },
+      "relevance": {
+        "sharedAnchors": ["allocation"]
       }
     },
     {
@@ -9864,6 +10178,9 @@
       "test": {
         "path": "packages/core/test/interaction-dispatch.test.ts",
         "marker": "keeps a registered target hittable beneath later pure paint"
+      },
+      "relevance": {
+        "sharedAnchors": ["target", "event"]
       }
     },
     {
@@ -9880,14 +10197,17 @@
       "test": {
         "path": "packages/core/src/lib/events/propagation.test.ts",
         "marker": "prevents a cancelable native default and ignores an uncancelable one"
+      },
+      "relevance": {
+        "sharedAnchors": ["cancelable", "event"]
       }
     },
     {
-      "id": "pointer-capture",
+      "id": "per-pointer-capture",
       "contract": "docs/design/user-events-contract.md",
       "claim": {
         "kind": "prose",
-        "text": "Any live target or propagation-listener `currentTarget` may call `setPointerCapture(pointerId)`. CRC asks the root HTML Canvas for native capture and records the logical owner only if native capture succeeds. Capture is per pointer ID. Subsequent coordinate pointer events route to that owner until explicit release, `pointercancel`, native loss, target removal, or root disposal. `gotpointercapture` observes active ownership; `lostpointercapture` observes ownership already cleared. Release retains only the minimal pending owner needed to route a native loss notification. An unmounted target receives no ghost loss callback."
+        "text": "Capture is per pointer ID."
       },
       "source": {
         "path": "packages/core/src/lib/events/pointer-capture.ts",
@@ -9896,14 +10216,17 @@
       "test": {
         "path": "packages/core/src/lib/events/pointer-events.test.ts",
         "marker": "keeps capture ownership independent for two simultaneous pointer IDs"
+      },
+      "relevance": {
+        "sharedAnchors": ["capture", "pointer"]
       }
     },
     {
-      "id": "non-coordinate-focus-boundary",
+      "id": "plain-canvas-non-coordinate-targeting",
       "contract": "docs/design/user-events-contract.md",
       "claim": {
         "kind": "prose",
-        "text": "Keyboard, logical focus, editing, composition, and clipboard facades preserve their family fields. CRC's internal dispatcher transports them to a known target. A plain Canvas supplies no logical descendant for native non-coordinate input by itself. When an application installs `FocusManagement`, the optional focus policy chooses the current explicit target and supplies the implemented keyboard, focus, activation, and navigation behavior defined by the [focus and keyboard-navigation contract](./focus-and-keyboard-navigation-contract.md). Without that policy, native Canvas events in these families remain targetless and target handlers do not run. CRC exposes no separate public event-injection adapter or hidden editable DOM."
+        "text": "Without that policy, native Canvas events in these families remain targetless and target handlers do not run."
       },
       "source": {
         "path": "packages/core/src/lib/events/dispatch.ts",
@@ -9912,6 +10235,9 @@
       "test": {
         "path": "packages/core/src/lib/events/event-families.test.ts",
         "marker": "routes native keyboard, focus, editing, and clipboard input only to Canvas observers without focus policy"
+      },
+      "relevance": {
+        "sharedAnchors": ["native", "policy", "target"]
       }
     },
     {
@@ -9928,6 +10254,9 @@
       "test": {
         "path": "packages/core/src/lib/surface/resolve-surface.test.ts",
         "marker": "projects a fixed viewport with $fit"
+      },
+      "relevance": {
+        "sharedAnchors": ["fit"]
       }
     },
     {
@@ -9944,6 +10273,9 @@
       "test": {
         "path": "packages/core/src/lib/surface/root-surface.test.ts",
         "marker": "defers a zero-sized responsive surface and renders when it becomes visible"
+      },
+      "relevance": {
+        "sharedAnchors": ["display", "resize", "size"]
       }
     },
     {
@@ -9960,6 +10292,9 @@
       "test": {
         "path": "packages/core/src/lib/surface/root-surface.test.ts",
         "marker": "reflows a responsive viewport without remounting component state"
+      },
+      "relevance": {
+        "sharedAnchors": ["root"]
       }
     }
   ]

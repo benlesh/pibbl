@@ -309,7 +309,8 @@ in weak storage. Placement then:
 
 Nested layout is ordinary composition. The outer algorithm sizes the inner
 layout value; the inner value establishes a formatting context for its own
-prepared direct children during normal traversal. A plain component therefore
+prepared direct children during normal traversal. A plain component exposes no
+intrinsic measurement capability and therefore
 needs a definite allocation when it hides that subtree from its parent. Custom
 platform normalization, resolution, or pure measurement requires a value made
 with `definePrimitive`; those capabilities never attach to an ordinary plain
@@ -329,9 +330,10 @@ order, and identity are implemented and documented together.
 Measurement receives program props, normalized style, constraints, an explicit
 Canvas text service, and a recursive `measureElement`. It returns measured
 content size or an unsupported reason. It cannot paint, invoke hooks,
-`crcCanvasContext`, `crcLayoutBox`, create targets/images/layers, schedule work,
-or acquire runtime resources. Temporary globals are cleared/restored in
-`finally`, and cycles are diagnosed.
+`crcCanvasContext`, `crcLayoutBox`, create targets or layers, schedule work, or
+acquire runtime resources. Pure measurement cannot create image generations.
+Temporary globals are cleared/restored in `finally`, and cycles are diagnosed.
+Pure measurement isolates itself from active render hooks and layout context.
 
 `Text` shares tokenization, line breaking, typography, and one content/layout
 calculation between measurement and paint in a render transaction, so measured

@@ -48,10 +48,16 @@ contention observed during earlier upgrade and visual work.
 - the fixed preservation manifest records every normalized prose paragraph,
   list obligation, table row, and fenced-code obligation from all 12 normative
   contracts at pre-Task-14 commit `0040d65` (667 baseline units with per-file
-  source digests), the complete reviewed current form (651 units), and an
-  explicit JSX-era translation/addition allowlist tied to the approved design;
-  one fixed digest locks the whole snapshot, allowlist, and 48 unique direct
-  source/test evidence mappings;
+  source digests), the complete reviewed current form (654 units), and an
+  explicit JSX-era translation/addition allowlist tied to narrow, exact
+  approved-design unit IDs and excerpts; every translation also has exact
+  baseline/current unit IDs, unique rationale,
+  shared clause anchors, and minimum content similarity checked before the
+  digest. The 48 direct source/test mappings use claims no broader than their
+  cited tests and require the same claim-specific anchors near both markers;
+- the migration guide contains one mechanically checked row for each of the 85
+  field/structural inputs derived from the reviewed baseline style table, and
+  every final replacement must also appear in the normative final-field table;
 - ordinary `docs:check` validates that embedded digest-locked baseline without
   requiring historical Git objects. When `0040d65` is available it also proves
   every embedded baseline unit and source digest against Git; static CI fetches
@@ -61,8 +67,9 @@ contention observed during earlier upgrade and visual work.
   mutations proving rejection of heading-only documents, natural negation,
   arbitrary token insertion, prose moved into headings/code, deletion of every
   reviewed semantic unit, changed table defaults/hook rows, baseline-digest
-  tampering, irrelevant translation/evidence substitution, repeated generic
-  evidence, and missing evidence markers;
+  tampering, same-contract translation swaps and global evidence rotation even
+  after recomputing the candidate manifest digest, field-replacement drift,
+  repeated generic evidence, and missing evidence markers;
 - TypeScript, ESLint, Prettier, package output, and source/built Studio builds.
 
 `trust:package` builds real tarballs and installs them into strict Bundler and
