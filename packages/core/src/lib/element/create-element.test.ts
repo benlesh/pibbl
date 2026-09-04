@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { createElement, type CRCNode } from '../../index';
+import {
+  createElement,
+  Group,
+  Rectangle,
+  Text,
+  type CRCNode,
+} from '../../index';
 
 function Card(props: { title?: string; children?: CRCNode }): CRCNode {
   return props.children;
@@ -21,7 +27,62 @@ function ValidUnionCard(_props: ValidUnionProps): CRCNode {
   return undefined;
 }
 
+type CustomChild =
+  | string
+  | { readonly label: string }
+  | readonly CustomChild[]
+  | Iterable<CustomChild>;
+
+function CustomChildCard(_props: { children?: CustomChild }): CRCNode {
+  return undefined;
+}
+
 describe('createElement', () => {
+  it('types variadic children from the target component contract', () => {
+    const count = 1;
+    const text = createElement(
+      Text,
+      null,
+      'Count: ',
+      count,
+      [' / ', [2]],
+      new Set([' total']),
+    );
+    const child = createElement(Rectangle, {
+      style: { width: 10, height: 10 },
+    });
+    const group = createElement(Group, null, child, [child], new Set([child]));
+    const custom = createElement(
+      CustomChildCard,
+      null,
+      { label: 'custom' },
+      ['nested'],
+      new Set([{ label: 'iterable' }]),
+    );
+
+    // @ts-expect-error containers reject nonzero raw numbers
+    createElement(Group, null, 1);
+    // @ts-expect-error Text rejects CRC element children
+    createElement(Text, null, child);
+    // @ts-expect-error drawing leaves reject children
+    createElement(Rectangle, { style: { width: 10, height: 10 } }, child);
+    // @ts-expect-error custom components retain their declared child restriction
+    createElement(CustomChildCard, null, 1);
+
+    expect(text.props.children).toEqual([
+      'Count: ',
+      1,
+      [' / ', [2]],
+      new Set([' total']),
+    ]);
+    expect(group.props.children).toEqual([child, [child], new Set([child])]);
+    expect(custom.props.children).toEqual([
+      { label: 'custom' },
+      ['nested'],
+      new Set([{ label: 'iterable' }]),
+    ]);
+  });
+
   it('reserves numeric keys and omits them from delivered prop types', () => {
     const element = createElement(Card, { key: 42, title: 'CRC' });
     const nullProps = createElement(Card, null);

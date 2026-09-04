@@ -55,6 +55,25 @@ baselines; 1 built smoke test in 635 ms; 14 lifecycle tests in 9.68 seconds;
 and 9 structural-performance passes plus 2 opt-in skips in 1.47 seconds. Older
 265/294-test totals were not reused.
 
+### Release-blocker `createElement` type follow-up
+
+A final release-blocker pass started from clean commit
+`ddc78df4dfd13856712db18a84e84a90157722b4`. The public `createElement`
+signature now derives each variadic child argument from the target component's
+declared `children` contract without changing runtime construction. Focused
+public authoring tests passed 2 files and 19 tests; root typecheck, the curated
+Studio declaration verifier, direct Bundler and NodeNext package consumers, 741
+documentation RED probes, and lint/format all exited 0.
+
+The one requested aggregate command,
+`env CRC_STUDIO_PREVIEW_PORT=4175 corepack pnpm@11.21.0 trust`, exited 0 in
+52.31 seconds. It passed 42 lessons and 16 labs; exact source/built Studio types
+and builds; packed consumers; 84 browser files with 1,176 passed and 2 skipped
+tests of 1,178 in 21.44 seconds; the visual safeguard; 5 Studio baselines; 1
+built smoke test in 646 ms; 14 lifecycle tests in 9.69 seconds; and 9
+structural-performance passes plus 2 opt-in skips in 1.47 seconds. The expected
+Vite chunk-size and ineffective-dynamic-import warnings remained unchanged.
+
 ## Automated acceptance
 
 A narrow production-Studio Playwright probe exited 0 in 10.339 seconds. Each

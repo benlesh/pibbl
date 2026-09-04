@@ -461,6 +461,7 @@ import {
   FocusManagement,
   Fragment,
   Grid,
+  Group,
   HorizontalLine,
   Image,
   KeyboardNavigation,
@@ -714,6 +715,35 @@ function ValidDirectComponent(props: { label: string }): CRCNode {
   return <Text>{props.label}</Text>;
 }
 createElement(ValidDirectComponent, { label: 'valid', key: 'descriptor-key' });
+
+type DirectChild =
+  | string
+  | { readonly label: string }
+  | readonly DirectChild[]
+  | Iterable<DirectChild>;
+function DirectChildComponent(_props: { children?: DirectChild }): CRCNode {
+  return undefined;
+}
+const directChild = createElement(Rectangle, {
+  style: { width: 10, height: 10 },
+});
+createElement(Text, null, 'Count: ', 1, [' / ', [2]], new Set([' total']));
+createElement(Group, null, directChild, [directChild], new Set([directChild]));
+createElement(
+  DirectChildComponent,
+  null,
+  { label: 'custom' },
+  ['nested'],
+  new Set([{ label: 'iterable' }]),
+);
+// @ts-expect-error containers reject nonzero raw numbers
+createElement(Group, null, 1);
+// @ts-expect-error Text rejects CRC element children
+createElement(Text, null, directChild);
+// @ts-expect-error drawing leaves reject children
+createElement(Rectangle, { style: { width: 10, height: 10 } }, directChild);
+// @ts-expect-error custom components retain their declared child restriction
+createElement(DirectChildComponent, null, 1);
 
 function ReservedKeyComponent(_props: { key: string }): CRCNode {
   return undefined;
