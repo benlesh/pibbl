@@ -138,7 +138,7 @@ replacement share one row; there is no runtime alias or fallback.
 | `clip`           | structural `children`  | `Clip` recursive `children`                   | Children retain source order                               |
 | `layer`          | `width`                | `Layer` `style.width`                         | Omission uses the current logical Canvas allocation        |
 | `layer`          | `height`               | `Layer` `style.height`                        | Omission uses the current logical Canvas allocation        |
-| `layer`          | structural `render`    | `Layer` recursive `children`                  | The callback form is removed; direct children are retained |
+| `layer`          | structural `render`    | `Layer` recursive `children`                  | render element/descriptor prop removed; children retained  |
 
 ## Current component definitions
 
@@ -162,10 +162,11 @@ Move legacy style-owned content to recursive textual children:
 <Text style={{ x: 20, y: 20 }}>Count: {count}</Text>
 ```
 
-`Layer` no longer takes a render callback. All structural containers take
-ordinary recursive children. Arrays, finite synchronous iterables, conditionals,
-and fragments flatten predictably. Non-empty raw text or nonzero numbers are
-invalid outside `Text`; zero remains visible inside `Text`.
+`Layer` no longer takes a render element/descriptor prop. All structural
+containers take ordinary recursive children. Arrays, finite synchronous
+iterables, conditionals, and fragments flatten predictably. Non-empty raw text
+or nonzero numbers are invalid outside `Text`; zero remains visible inside
+`Text`.
 
 Use `key` on repeated siblings. Unkeyed fragments and arrays are transparent;
 an explicit `<Fragment key={id}>` creates a descendant identity scope.

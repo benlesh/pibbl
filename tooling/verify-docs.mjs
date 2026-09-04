@@ -22,7 +22,10 @@ import {
   replaceContractUnit,
   sha256,
 } from "./docs-contract-preservation.mjs";
-import { assertFieldMigrationCompleteness } from "./docs-field-migration.mjs";
+import {
+  assertFieldMigrationCompleteness,
+  LEGACY_FIELD_TYPE_COMMIT,
+} from "./docs-field-migration.mjs";
 
 const repositoryRoot = resolve(import.meta.dirname, "..");
 const require = createRequire(import.meta.url);
@@ -38,6 +41,21 @@ function trackedRepositoryFiles(pathspecs) {
     `Could not inventory tracked repository files:\n${listing.stderr}`,
   );
   return listing.stdout.split("\n").filter(Boolean).sort();
+}
+
+function sourceAtCommit(commit, path) {
+  const result = spawnSync("git", ["show", `${commit}:${path}`], {
+    cwd: repositoryRoot,
+    encoding: "utf8",
+  });
+  assert.equal(
+    result.status,
+    0,
+    `Could not read reviewed source ${commit}:${path}. ` +
+      "The requested contract-provenance check requires repository history.\n" +
+      result.stderr,
+  );
+  return result.stdout;
 }
 const guidePaths = [
   "docs/guides/children-text-lists-and-keys.md",
@@ -1445,13 +1463,60 @@ assert.ok(
   baselineStyleUnits,
   "Contract baseline lacks the style-system contract",
 );
-const fieldMigrationResult = assertFieldMigrationCompleteness({
+const fieldTypePaths = [
+  "packages/core/src/lib/types.ts",
+  "packages/core/src/lib/style/types.ts",
+  ...[
+    "clip",
+    "g",
+    "horizontal-line",
+    "img",
+    "layer",
+    "line",
+    "path",
+    "rect",
+    "svg-path",
+    "text",
+    "vertical-line",
+  ].map((name) => `packages/core/src/lib/components/${name}.ts`),
+];
+const legacyFieldTypePaths = fieldTypePaths.filter(
+  (path) => path !== "packages/core/src/lib/style/types.ts",
+);
+const currentFieldTypeSources = new Map(
+  await Promise.all(
+    fieldTypePaths.map(async (path) => [
+      path,
+      await readFile(join(repositoryRoot, path), "utf8"),
+    ]),
+  ),
+);
+const legacyFieldTypeObject = spawnSync(
+  "git",
+  ["cat-file", "-e", `${LEGACY_FIELD_TYPE_COMMIT}^{commit}`],
+  { cwd: repositoryRoot, encoding: "utf8" },
+);
+const legacyFieldTypeSources =
+  legacyFieldTypeObject.status === 0
+    ? new Map(
+        legacyFieldTypePaths.map((path) => [
+          path,
+          sourceAtCommit(LEGACY_FIELD_TYPE_COMMIT, path),
+        ]),
+      )
+    : undefined;
+const fieldMigrationArguments = {
   baselineStyleUnits,
   currentStyleSource: currentSources.get(
     "docs/design/style-system-contract.md",
   ),
+  currentTypeSources: currentFieldTypeSources,
+  legacyTypeSources: legacyFieldTypeSources,
   migrationSource,
-});
+};
+const fieldMigrationResult = assertFieldMigrationCompleteness(
+  fieldMigrationArguments,
+);
 const trackedContractEvidencePaths = new Set(
   trackedRepositoryFiles(["packages/core/src", "packages/core/test"]),
 );
@@ -1468,21 +1533,6 @@ for (const path of requestedContractEvidencePaths) {
     path,
     await readFile(join(repositoryRoot, path), "utf8"),
   );
-}
-
-function sourceAtCommit(commit, path) {
-  const result = spawnSync("git", ["show", `${commit}:${path}`], {
-    cwd: repositoryRoot,
-    encoding: "utf8",
-  });
-  assert.equal(
-    result.status,
-    0,
-    `Could not read reviewed source ${commit}:${path}. ` +
-      "The requested contract-provenance check requires repository history.\n" +
-      result.stderr,
-  );
-  return result.stdout;
 }
 
 const provenanceRequirement = process.env.CRC_VERIFY_CONTRACT_PROVENANCE;
@@ -1839,13 +1889,44 @@ export async function verifyMutationProbes() {
   throws(
     () =>
       assertFieldMigrationCompleteness({
-        baselineStyleUnits,
-        currentStyleSource: currentSources.get(
-          "docs/design/style-system-contract.md",
-        ),
+        ...fieldMigrationArguments,
         migrationSource: wrongFieldMigration,
       }),
     /field-level migration.*wrong final replacement/iu,
+  );
+  const wrongFieldBehavior = migrationSource.replace(
+    "`Rectangle` `style.fill`                      | Same fill value",
+    "`Rectangle` `style.fill`                      | Different fill behavior",
+  );
+  assert.notEqual(
+    wrongFieldBehavior,
+    migrationSource,
+    "Field-level behavior mutation fixture did not change",
+  );
+  throws(
+    () =>
+      assertFieldMigrationCompleteness({
+        ...fieldMigrationArguments,
+        migrationSource: wrongFieldBehavior,
+      }),
+    /field-level migration rect\.fillStyle has the wrong final behavior/iu,
+  );
+  const wrongFieldRequiredness = migrationSource.replace(
+    "`Rectangle` `style.x`                         | Optional; defaults to `0`",
+    "`Rectangle` `style.x`                         | Required; defaults to `0`",
+  );
+  assert.notEqual(
+    wrongFieldRequiredness,
+    migrationSource,
+    "Field-level requiredness mutation fixture did not change",
+  );
+  throws(
+    () =>
+      assertFieldMigrationCompleteness({
+        ...fieldMigrationArguments,
+        migrationSource: wrongFieldRequiredness,
+      }),
+    /field-level migration rect\.x has the wrong final behavior/iu,
   );
   throws(
     () =>

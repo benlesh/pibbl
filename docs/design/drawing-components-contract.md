@@ -83,7 +83,7 @@ interaction bounds remain exact.
 | `Clip`  | Applies required `Path2D` `d` and optional `nonzero`/`evenodd` rule to all children. Nested intersections, transforms, updates, empty clips, and paint/hit geometry agree. |
 | `Layer` | Renders multiple children into one persistent offscreen CRC instance, caches retained content, follows root density, and participates in global paint/target/focus order.  |
 
-`Layer` uses children, not a render callback. It installs a stable private keyed
+`Layer` uses children, not a render element/descriptor prop. It installs a stable private keyed
 fragment as the offscreen root. Direct child iterables are materialized once;
 retained comparisons do not consume opaque nested iterables. Cache hits replay
 focus metadata without executing child components. Removal recursively

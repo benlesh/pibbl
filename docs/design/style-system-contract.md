@@ -106,7 +106,8 @@ for every removed field and structural form.
 | Layout values    | Container box fields plus the contract-specific algorithm fields                                                                                                                                                                              | See the layout contract's exact defaults                                                                                                                                                                                  | Recursive direct children                       |
 
 There is no runtime compatibility adapter, alias, or fallback for top-level
-visual fields, content in `TextStyle`, or callback-owned layer content.
+visual fields, content in `TextStyle`, or a render element/descriptor prop for
+layer content.
 JavaScript receives the same strict resolution and child diagnostics as
 TypeScript.
 

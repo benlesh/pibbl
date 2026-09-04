@@ -2837,7 +2837,7 @@
           "id": "c0029",
           "kind": "prose",
           "section": "Composition values",
-          "text": "`Layer` uses children, not a render callback. It installs a stable private keyed fragment as the offscreen root. Direct child iterables are materialized once; retained comparisons do not consume opaque nested iterables. Cache hits replay focus metadata without executing child components. Removal recursively disposes its controller, targets, frames, images, and nested layers."
+          "text": "`Layer` uses children, not a render element/descriptor prop. It installs a stable private keyed fragment as the offscreen root. Direct child iterables are materialized once; retained comparisons do not consume opaque nested iterables. Cache hits replay focus metadata without executing child components. Removal recursively disposes its controller, targets, frames, images, and nested layers."
         },
         {
           "id": "c0030",
@@ -7411,7 +7411,7 @@
           "id": "c0035",
           "kind": "prose",
           "section": "Style-only built-in migration",
-          "text": "There is no runtime compatibility adapter, alias, or fallback for top-level visual fields, content in `TextStyle`, or callback-owned layer content. JavaScript receives the same strict resolution and child diagnostics as TypeScript."
+          "text": "There is no runtime compatibility adapter, alias, or fallback for top-level visual fields, content in `TextStyle`, or a render element/descriptor prop for layer content. JavaScript receives the same strict resolution and child diagnostics as TypeScript."
         },
         {
           "id": "c0036",
