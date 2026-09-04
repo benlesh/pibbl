@@ -197,6 +197,36 @@ function dispatchDrag(
 }
 
 describe('interaction dispatcher mutation contract', () => {
+  it('keeps a registered target hittable beneath later pure paint', () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 100;
+    canvas.height = 60;
+    document.body.replaceChildren(canvas);
+    const clicks: string[] = [];
+    mountCRC(canvas, createElement(Overlay, {
+      style: { width: 100, height: 60 },
+      children: [
+        createElement(Rectangle, {
+          style: { width: 100, height: 60, fill: '#2563eb' },
+          onClick: () => clicks.push('under'),
+        }),
+        createElement(Rectangle, {
+          style: { width: 100, height: 60, fill: '#f97316' },
+        }),
+      ],
+    }));
+    const instance = GLOBAL_STATE.crcInstances.get(canvas)!;
+    activeInstances.add(instance);
+    executeRender(canvas, 1);
+
+    dispatchMouse(canvas, 'mousedown', 50, 30);
+    dispatchMouse(canvas, 'mouseup', 50, 30);
+    dispatchMouse(canvas, 'click', 50, 30);
+
+    expect(clicks).toEqual(['under']);
+    expect(instance.paintEntries).toHaveLength(1);
+  });
+
   it('selects the topmost laid-out child and rejects clipped paint overflow', () => {
     const canvas = document.createElement('canvas');
     canvas.width = 160;

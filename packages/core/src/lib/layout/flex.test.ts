@@ -149,6 +149,102 @@ describe('CSS-compatible flex geometry', () => {
     ]);
   });
 
+  it.each([
+    ['flex-start', 'flex-start', [0, 20]],
+    ['flex-end', 'flex-end', [60, 80]],
+    ['center', 'center', [30, 50]],
+    ['space-between', 'space-between', [0, 80]],
+    ['space-around', 'space-around', [15, 65]],
+    ['space-evenly', 'space-evenly', [20, 60]],
+  ] as const)(
+    'implements the explicit justifyContent value %s',
+    (_label, justifyContent, expectedX) => {
+      const boxes = layoutFlex(
+        { x: 0, y: 0, width: 100, height: 20 },
+        [
+          item({ flexBasis: 20, flexShrink: 0 }),
+          item({ flexBasis: 20, flexShrink: 0 }),
+        ],
+        { justifyContent },
+        measurement,
+      );
+
+      expect(boxes.map(({ x }) => x)).toEqual(expectedX);
+    },
+  );
+
+  it('defaults justifyContent to flex-start', () => {
+    expect(layoutFlex(
+      { x: 0, y: 0, width: 100, height: 20 },
+      [
+        item({ flexBasis: 20, flexShrink: 0 }),
+        item({ flexBasis: 20, flexShrink: 0 }),
+      ],
+      {},
+      measurement,
+    ).map(({ x }) => x)).toEqual([0, 20]);
+  });
+
+  it('defaults gap to zero and applies one shared gap to both axes', () => {
+    const rowChildren = [
+      item({ flexBasis: 20, flexShrink: 0 }),
+      item({ flexBasis: 20, flexShrink: 0 }),
+    ];
+    expect(layoutFlex(
+      { x: 0, y: 0, width: 100, height: 100 },
+      rowChildren,
+      {},
+      measurement,
+    ).map(({ x }) => x)).toEqual([0, 20]);
+    expect(layoutFlex(
+      { x: 0, y: 0, width: 100, height: 100 },
+      rowChildren,
+      { gap: 9 },
+      measurement,
+    ).map(({ x }) => x)).toEqual([0, 29]);
+  });
+
+  it('gives rowGap and columnGap precedence over gap on their axes', () => {
+    const rowChildren = [
+      item({ flexBasis: 20, flexShrink: 0 }),
+      item({ flexBasis: 20, flexShrink: 0 }),
+    ];
+    expect(layoutFlex(
+      { x: 0, y: 0, width: 100, height: 100 },
+      rowChildren,
+      { gap: 9, rowGap: 13, columnGap: 7 },
+      measurement,
+    ).map(({ x }) => x)).toEqual([0, 27]);
+    const columnChildren = [
+      item({
+        flexBasis: 20,
+        flexShrink: 0,
+        width: 10,
+        height: 1,
+        minHeight: 0,
+      }),
+      item({
+        flexBasis: 20,
+        flexShrink: 0,
+        width: 10,
+        height: 1,
+        minHeight: 0,
+      }),
+    ];
+    expect(layoutFlex(
+      { x: 0, y: 0, width: 100, height: 100 },
+      columnChildren,
+      {
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        gap: 9,
+        rowGap: 13,
+        columnGap: 7,
+      },
+      measurement,
+    ).map(({ y }) => y)).toEqual([0, 33]);
+  });
+
   it('wraps source-order items and aligns multiple lines', () => {
     expect(layoutFlex(
       { x: 0, y: 0, width: 100, height: 50 },
@@ -351,6 +447,20 @@ describe('CSS-compatible flex geometry', () => {
         measurement,
       )).toThrowError(/unsupported flex/i);
     }
+  });
+
+  it.each([
+    ['percentage', '10%'],
+    ['negative', -1],
+    ['infinite', Number.POSITIVE_INFINITY],
+    ['not-a-number', Number.NaN],
+  ])('rejects the %s Flex gap', (_label, gap) => {
+    expect(() => layoutFlex(
+      { x: 0, y: 0, width: 100, height: 20 },
+      [],
+      { gap } as any,
+      measurement,
+    )).toThrowError(/gap.*unsupported flex/i);
   });
 
   it.each([

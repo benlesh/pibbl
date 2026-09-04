@@ -164,6 +164,23 @@ describe('focus candidate enrollment', () => {
     });
     expect('focus' in snapshots.at(-1)!).toBe(false);
   });
+
+  it('keeps the Canvas as the only native focus host without semantic DOM', () => {
+    const Root = (_props: {}) => {
+      crcEventTarget(
+        { onClick: clickHandler },
+        { path: rectanglePath(0, 0, 10, 10) },
+      );
+    };
+    const { canvas } = mountAndRender(focusManaged(createElement(Root, {})));
+
+    expect(canvas.getAttribute('tabindex')).toBe('0');
+    expect(canvas.childNodes).toHaveLength(0);
+    expect(canvas.hasAttribute('role')).toBe(false);
+    expect(canvas.hasAttribute('aria-activedescendant')).toBe(false);
+    expect(document.querySelectorAll('[role], [aria-activedescendant]'))
+      .toHaveLength(0);
+  });
 });
 
 describe('candidate identity and atomic render collection', () => {

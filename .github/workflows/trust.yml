@@ -18,6 +18,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js and pnpm
         uses: pnpm/setup@v2
@@ -34,6 +36,8 @@ jobs:
 
       - name: Validate current documentation
         run: pnpm docs:check
+        env:
+          CRC_VERIFY_CONTRACT_PROVENANCE: 1
 
       - name: Typecheck
         run: pnpm typecheck

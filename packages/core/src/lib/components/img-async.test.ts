@@ -11,8 +11,10 @@ import { createElement } from '../element/create-element';
 class FakeImage {
   static instances: FakeImage[] = [];
 
-  readonly width = 120;
-  readonly height = 80;
+  readonly naturalWidth = 120;
+  readonly naturalHeight = 80;
+  readonly width = 13;
+  readonly height = 17;
   onload: (() => void) | null = null;
   onerror: (() => void) | null = null;
   src = '';
@@ -75,16 +77,48 @@ describe('img async resource ownership', () => {
   });
 
   it.each([
+    ['width', { width: 30 }, [30, 80]],
+    ['height', { height: 40 }, [120, 40]],
+  ] as const)(
+    'uses naturalWidth and naturalHeight independently when %s is explicit',
+    async (_dimension, dimensions, expectedSize) => {
+      const drawImage = vi
+        .spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
+        .mockImplementation(() => {});
+      const canvas = createCanvas();
+      const controller = crc(canvas, createElement(Image, {
+        style: { src: 'independent-natural-size.png', ...dimensions },
+      }));
+      await nextFrame();
+
+      const image = FakeImage.instances[0];
+      image.onload?.();
+      await nextFrame();
+
+      expect(drawImage).toHaveBeenLastCalledWith(
+        image,
+        0,
+        0,
+        ...expectedSize,
+      );
+      controller.dispose();
+    },
+  );
+
+  it.each([
     ['none', [24.2, 20.2, 120, 80]],
     ['round', [23.5, 19.5, 120, 80]],
     ['ceil', [24.5, 20.5, 120, 80]],
     ['floor', [23.5, 19.5, 120, 80]],
-  ] as const)('uses natural dimensions and one %s-aligned image rectangle', async (
+  ] as const)('shares one %s-aligned rectangle across draw, border, and interaction', async (
     alignToPixelGrid,
     expectedRectangle,
   ) => {
     const drawImage = vi
       .spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
+      .mockImplementation(() => {});
+    const stroke = vi
+      .spyOn(CanvasRenderingContext2D.prototype, 'stroke')
       .mockImplementation(() => {});
     const canvas = createCanvas();
     const controller = crc(canvas, createElement(Image, {
@@ -92,10 +126,13 @@ describe('img async resource ownership', () => {
         src: 'aligned.png',
         x: 24.2,
         y: 20.2,
+        width: 120,
+        height: 80,
         stroke: 'blue',
         strokeWidth: 1,
         alignToPixelGrid,
       },
+      onClick: () => undefined,
     }));
     await nextFrame();
 
@@ -104,6 +141,14 @@ describe('img async resource ownership', () => {
     await nextFrame();
 
     expect(drawImage).toHaveBeenLastCalledWith(image, ...expectedRectangle);
+    const region = Array.from(getCRCInstance(canvas).regions)[0];
+    expect(stroke).toHaveBeenLastCalledWith(region.path);
+    const context = canvas.getContext('2d')!;
+    expect(context.isPointInPath(
+      region.path!,
+      expectedRectangle[0] + expectedRectangle[2] / 2,
+      expectedRectangle[1] + expectedRectangle[3] / 2,
+    )).toBe(true);
     controller.dispose();
   });
 

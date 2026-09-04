@@ -45,16 +45,24 @@ contention observed during earlier upgrade and visual work.
 - every explicitly marked complete TypeScript/TSX program extracted directly
   from its guide, plus the marked JavaScript program transformed independently
   by esbuild and the real Babel automatic-runtime plugin;
-- the fixed obligation manifest derived from pre-Task-14 commit `0040d65` and
-  the approved JSX translation record covers all 12 normative contracts with
-  substantive semantic claims, explicit contradictions, and distinct mapped
-  implementation symbols plus executable-test markers; the checker verifies
-  those markers in the cited files and rejects heading-only contracts, removed
-  or contradicted clauses, generic evidence substitution, and mapping drift;
+- the fixed preservation manifest records every normalized prose paragraph,
+  list obligation, table row, and fenced-code obligation from all 12 normative
+  contracts at pre-Task-14 commit `0040d65` (667 baseline units with per-file
+  source digests), the complete reviewed current form (651 units), and an
+  explicit JSX-era translation/addition allowlist tied to the approved design;
+  one fixed digest locks the whole snapshot, allowlist, and 48 unique direct
+  source/test evidence mappings;
+- ordinary `docs:check` validates that embedded digest-locked baseline without
+  requiring historical Git objects. When `0040d65` is available it also proves
+  every embedded baseline unit and source digest against Git; static CI fetches
+  full history and requires that provenance mode explicitly;
 - fail-closed export discovery, source-inspected acceptance-matrix evidence,
-  mounted/driven non-JSX behavior, literal `Historical status` banners, and
-  targeted RED mutations proving each check rejects stale or incomplete
-  evidence;
+  mounted/driven non-JSX behavior, literal `Historical status` banners, and RED
+  mutations proving rejection of heading-only documents, natural negation,
+  arbitrary token insertion, prose moved into headings/code, deletion of every
+  reviewed semantic unit, changed table defaults/hook rows, baseline-digest
+  tampering, irrelevant translation/evidence substitution, repeated generic
+  evidence, and missing evidence markers;
 - TypeScript, ESLint, Prettier, package output, and source/built Studio builds.
 
 `trust:package` builds real tarballs and installs them into strict Bundler and

@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
 import {
   access,
   mkdtemp,
@@ -16,6 +15,12 @@ import { transformAsync as babelTransform } from "@babel/core";
 import { parse } from "@babel/parser";
 import transformReactJsx from "@babel/plugin-transform-react-jsx";
 import { transform } from "esbuild";
+import {
+  assertContractPreservationBaseline,
+  CONTRACT_BASELINE_COMMIT,
+  CONTRACT_TRANSLATION_RECORD,
+  replaceContractUnit,
+} from "./docs-contract-preservation.mjs";
 
 const repositoryRoot = resolve(import.meta.dirname, "..");
 const require = createRequire(import.meta.url);
@@ -1417,230 +1422,17 @@ export function assertContractPrecision(sources) {
 
 assertContractPrecision(currentSources);
 
-function normalizeSemanticText(value) {
-  return value
-    .normalize("NFKC")
-    .replace(/[^\p{L}\p{N}@]+/gu, " ")
-    .replace(/\s+/gu, " ")
-    .trim()
-    .toLowerCase();
-}
-
-function semanticTokens(value) {
-  const normalized = normalizeSemanticText(value);
-  return normalized === "" ? [] : normalized.split(" ");
-}
-
-function semanticClaimWindow(sourceTokens, claimTokens) {
-  let shortest;
-  for (let start = 0; start < sourceTokens.length; start += 1) {
-    if (sourceTokens[start] !== claimTokens[0]) continue;
-    let claimIndex = 1;
-    let end = start + 1;
-    for (; end < sourceTokens.length && claimIndex < claimTokens.length; end += 1) {
-      if (sourceTokens[end] === claimTokens[claimIndex]) claimIndex += 1;
-    }
-    if (
-      claimIndex === claimTokens.length &&
-      (!shortest || end - start < shortest.end - shortest.start)
-    ) {
-      shortest = { start, end };
-    }
-  }
-  return shortest;
-}
-
-function containsSemanticClaim(source, claim) {
-  return semanticClaimWindow(semanticTokens(source), semanticTokens(claim)) !==
-    undefined;
-}
-
-function removeSemanticClaim(source, claim) {
-  const sourceTokens = semanticTokens(source);
-  const claimTokens = semanticTokens(claim);
-  let window = semanticClaimWindow(sourceTokens, claimTokens);
-  while (window) {
-    sourceTokens.splice(window.start, window.end - window.start);
-    window = semanticClaimWindow(sourceTokens, claimTokens);
-  }
-  return sourceTokens.join(" ");
-}
-
-export function assertContractObligationBaseline(
-  manifest,
-  sources,
-  evidenceSources,
-  trackedEvidencePaths,
-) {
-  assert.equal(
-    manifest.sourceCommit,
-    "0040d65cc4007aefc2ae61ef0c5b833166c38441",
-    "Contract-obligation baseline must identify the reviewed pre-Task-14 source commit",
-  );
-  assert.equal(
-    manifest.translationRecord,
-    "docs/superpowers/specs/2026-09-01-jsx-component-authoring-design.md",
-    "Contract-obligation baseline must identify the approved JSX translation record",
-  );
-  assert.match(
-    manifest.translationRule,
-    /Preserve shipped semantics while translating/u,
-    "Contract-obligation baseline must state its JSX translation rule",
-  );
-  assert.ok(
-    Array.isArray(manifest.contracts),
-    "Contract-obligation baseline must contain a contracts array",
-  );
-
-  const expectedPaths = [
-    "docs/architecture/style-and-layout-architecture.md",
-    ...currentMarkdownPaths.filter(
-      (path) =>
-        path.startsWith("docs/design/") &&
-        path !== "docs/design/tfc-01-characterization-baseline.md",
-    ),
-  ].sort();
-  const actualPaths = manifest.contracts.map((entry) => entry.path).sort();
-  assert.deepEqual(
-    actualPaths,
-    expectedPaths,
-    "Contract-obligation baseline must cover every current normative contract exactly once",
-  );
-
-  const sourceEvidenceIdentities = new Set();
-  const testEvidenceIdentities = new Set();
-  let obligationCount = 0;
-  for (const entry of manifest.contracts) {
-    const source = sources.get(entry.path);
-    assert.equal(
-      typeof source,
-      "string",
-      `Contract-obligation baseline references missing contract ${entry.path}`,
-    );
-    assert.ok(
-      !Object.hasOwn(entry, "sections") &&
-        Array.isArray(entry.obligations) &&
-        entry.obligations.length >= 3,
-      `${entry.path} must have clause-level semantic obligations, not a heading-only baseline`,
-    );
-    assert.equal(
-      new Set(entry.obligations.map(({ id }) => id)).size,
-      entry.obligations.length,
-      `${entry.path} repeats a semantic obligation id`,
-    );
-    for (const obligation of entry.obligations) {
-      obligationCount += 1;
-      const label = `${entry.path}#${obligation.id}`;
-      assert.ok(
-        semanticTokens(obligation.claim).length >= 8,
-        `${label} must state a substantive semantic claim`,
-      );
-      assert.ok(
-        containsSemanticClaim(source, obligation.claim),
-        `${label} is missing semantic obligation: ${obligation.claim}`,
-      );
-      assert.ok(
-        Array.isArray(obligation.contradictions) &&
-          obligation.contradictions.length > 0,
-        `${label} must name at least one contradictory claim`,
-      );
-      const normalizedSource = normalizeSemanticText(source);
-      for (const contradiction of obligation.contradictions) {
-        const normalizedContradiction = normalizeSemanticText(contradiction);
-        assert.ok(
-          semanticTokens(contradiction).length >= 5,
-          `${label} has a non-substantive contradiction probe`,
-        );
-        assert.ok(
-          !normalizedSource.includes(normalizedContradiction),
-          `${label} contradicts semantic obligation: ${contradiction}`,
-        );
-      }
-
-      assert.deepEqual(
-        Object.keys(obligation.evidence ?? {}).sort(),
-        ["source", "test"],
-        `${label} must map distinct implementation-source and executable-test evidence`,
-      );
-      for (const role of ["source", "test"]) {
-        const evidence = obligation.evidence[role];
-        assert.equal(
-          typeof evidence?.path,
-          "string",
-          `${label} has no ${role} evidence path`,
-        );
-        assert.equal(
-          typeof evidence.marker,
-          "string",
-          `${label} has no ${role} evidence symbol or test marker`,
-        );
-        if (role === "source") {
-          assert.match(
-            evidence.path,
-            /^packages\/core\/src\/.*\.[cm]?[jt]sx?$/u,
-            `${label} implementation evidence must be public runtime source`,
-          );
-          assert.doesNotMatch(
-            evidence.path,
-            /\.test\.[cm]?[jt]sx?$/u,
-            `${label} implementation evidence cannot be a test`,
-          );
-        } else {
-          assert.match(
-            evidence.path,
-            /^packages\/core\/(?:src|test)\/.*\.test\.[cm]?[jt]sx?$/u,
-            `${label} executable evidence must be a core test`,
-          );
-        }
-        assert.ok(
-          trackedEvidencePaths.has(evidence.path),
-          `${label} references missing ${role} evidence ${evidence.path}`,
-        );
-        const evidenceSource = evidenceSources.get(evidence.path);
-        assert.equal(
-          typeof evidenceSource,
-          "string",
-          `${label} could not read ${role} evidence ${evidence.path}`,
-        );
-        assert.ok(
-          evidence.marker.length >= 8 && evidenceSource.includes(evidence.marker),
-          `${label} ${role} evidence is irrelevant: ${evidence.path} lacks marker ${evidence.marker}`,
-        );
-        const identity = `${evidence.path}\0${evidence.marker}`;
-        (role === "source" ? sourceEvidenceIdentities : testEvidenceIdentities)
-          .add(identity);
-      }
-    }
-  }
-
-  const minimumDistinctEvidence = Math.ceil(obligationCount * 0.75);
-  assert.ok(
-    sourceEvidenceIdentities.size >= minimumDistinctEvidence,
-    "Contract obligations must use distinct relevant source evidence, not one generic implementation marker",
-  );
-  assert.ok(
-    testEvidenceIdentities.size >= minimumDistinctEvidence,
-    "Contract obligations must use distinct relevant test evidence, not one generic test marker",
-  );
-
-  const obligationDigest = createHash("sha256")
-    .update(JSON.stringify({
-      sourceCommit: manifest.sourceCommit,
-      translationRecord: manifest.translationRecord,
-      translationRule: manifest.translationRule,
-      contracts: manifest.contracts,
-    }))
-    .digest("hex");
-  assert.equal(
-    obligationDigest,
-    "fac8e63368f776c305348318c18bd7b695f170882aab88cbcbe9ebd025a332f8",
-    "Contract-obligation manifest must exactly match the reviewed semantic and evidence mapping",
-  );
-}
-
-const contractObligationBaseline = JSON.parse(
+const normativeContractPaths = [
+  "docs/architecture/style-and-layout-architecture.md",
+  ...currentMarkdownPaths.filter(
+    (path) =>
+      path.startsWith("docs/design/") &&
+      path !== "docs/design/tfc-01-characterization-baseline.md",
+  ),
+].sort();
+const contractPreservationBaseline = JSON.parse(
   await readFile(
-    join(repositoryRoot, "tooling/docs-contract-obligation-baseline.json"),
+    join(repositoryRoot, "tooling/docs-contract-preservation-baseline.json"),
     "utf8",
   ),
 );
@@ -1648,12 +1440,10 @@ const trackedContractEvidencePaths = new Set(
   trackedRepositoryFiles(["packages/core/src", "packages/core/test"]),
 );
 const requestedContractEvidencePaths = new Set(
-  contractObligationBaseline.contracts.flatMap(({ obligations }) =>
-    obligations.flatMap(({ evidence }) => [
-      evidence.source.path,
-      evidence.test.path,
-    ]),
-  ),
+  contractPreservationBaseline.evidenceMappings.flatMap(({ source, test }) => [
+    source.path,
+    test.path,
+  ]),
 );
 const contractEvidenceSources = new Map();
 for (const path of requestedContractEvidencePaths) {
@@ -1663,12 +1453,67 @@ for (const path of requestedContractEvidencePaths) {
     await readFile(join(repositoryRoot, path), "utf8"),
   );
 }
-assertContractObligationBaseline(
-  contractObligationBaseline,
-  currentSources,
-  contractEvidenceSources,
-  trackedContractEvidencePaths,
+
+function sourceAtCommit(commit, path) {
+  const result = spawnSync("git", ["show", `${commit}:${path}`], {
+    cwd: repositoryRoot,
+    encoding: "utf8",
+  });
+  assert.equal(
+    result.status,
+    0,
+    `Could not read reviewed source ${commit}:${path}. ` +
+      "The requested contract-provenance check requires repository history.\n" +
+      result.stderr,
+  );
+  return result.stdout;
+}
+
+const provenanceRequirement = process.env.CRC_VERIFY_CONTRACT_PROVENANCE;
+assert.ok(
+  provenanceRequirement === undefined || provenanceRequirement === "0" ||
+    provenanceRequirement === "1",
+  "CRC_VERIFY_CONTRACT_PROVENANCE must be 0, 1, or unset.",
 );
+const baselineObject = spawnSync(
+  "git",
+  ["cat-file", "-e", `${CONTRACT_BASELINE_COMMIT}^{commit}`],
+  { cwd: repositoryRoot, encoding: "utf8" },
+);
+const baselineHistoryAvailable = baselineObject.status === 0;
+if (provenanceRequirement === "1" && !baselineHistoryAvailable) {
+  assert.fail(
+    `Contract provenance was required, but Git commit ${CONTRACT_BASELINE_COMMIT} ` +
+      "is unavailable. Fetch full history (for example, checkout with fetch-depth: 0) " +
+      "or run without CRC_VERIFY_CONTRACT_PROVENANCE=1 to validate the embedded, " +
+      "digest-locked semantic baseline.",
+  );
+}
+const verifyBaselineProvenance = baselineHistoryAvailable &&
+  provenanceRequirement !== "0";
+const baselineContractSources = verifyBaselineProvenance ? new Map(
+  normativeContractPaths.map((path) => [
+    path,
+    sourceAtCommit(CONTRACT_BASELINE_COMMIT, path),
+  ]),
+) : undefined;
+const translationRecordSource = await readFile(
+  join(repositoryRoot, CONTRACT_TRANSLATION_RECORD),
+  "utf8",
+);
+const translationRecordBaselineSource = verifyBaselineProvenance ?
+  sourceAtCommit(CONTRACT_BASELINE_COMMIT, CONTRACT_TRANSLATION_RECORD) :
+  undefined;
+const contractPreservationResult = assertContractPreservationBaseline({
+  manifest: contractPreservationBaseline,
+  expectedContractPaths: normativeContractPaths,
+  baselineSources: baselineContractSources,
+  currentSources,
+  translationRecordSource,
+  translationRecordBaselineSource,
+  evidenceSources: contractEvidenceSources,
+  trackedEvidencePaths: trackedContractEvidencePaths,
+});
 
 const readme = currentSources.get("README.md");
 const advancedStart = readme.indexOf("## Learn the API");
@@ -2152,26 +1997,36 @@ export async function verifyMutationProbes() {
     }
   }
 
-  const headingOnlyManifest = {
-    ...contractObligationBaseline,
-    contracts: contractObligationBaseline.contracts.map(({ path }) => ({
-      path,
-      sections: ["Overview"],
-    })),
-  };
-  throws(
-    () =>
-      assertContractObligationBaseline(
-        headingOnlyManifest,
-        currentSources,
-        contractEvidenceSources,
-        trackedContractEvidencePaths,
-      ),
-    /clause-level semantic obligations/u,
-  );
+  const assertPreservation = ({
+    manifest = contractPreservationBaseline,
+    sources = currentSources,
+    baselineSources,
+    baselineTranslation,
+    embeddedOnly = false,
+    evidenceSources = contractEvidenceSources,
+    evidencePaths = trackedContractEvidencePaths,
+  } = {}) => assertContractPreservationBaseline({
+    manifest,
+    expectedContractPaths: normativeContractPaths,
+    baselineSources: embeddedOnly ? undefined :
+      baselineSources ?? baselineContractSources,
+    currentSources: sources,
+    translationRecordSource,
+    translationRecordBaselineSource: embeddedOnly ? undefined :
+      baselineTranslation ?? translationRecordBaselineSource,
+    evidenceSources,
+    trackedEvidencePaths: evidencePaths,
+  });
+
+  // The embedded snapshot remains a complete gate in shallow clones even when
+  // the optional provenance commit is unavailable.
+  assertPreservation({
+    embeddedOnly: true,
+  });
+  probes += 1;
 
   const headingOnlySources = new Map(currentSources);
-  for (const { path } of contractObligationBaseline.contracts) {
+  for (const { path } of contractPreservationBaseline.contracts) {
     headingOnlySources.set(
       path,
       [...currentSources.get(path).matchAll(/^#{1,6}\s+.+$/gmu)]
@@ -2180,133 +2035,267 @@ export async function verifyMutationProbes() {
     );
   }
   throws(
-    () =>
-      assertContractObligationBaseline(
-        contractObligationBaseline,
-        headingOnlySources,
-        contractEvidenceSources,
-        trackedContractEvidencePaths,
-      ),
-    /missing semantic obligation/u,
+    () => assertPreservation({ sources: headingOnlySources }),
+    /reviewed complete semantic snapshot/u,
   );
 
   throws(
-    () =>
-      assertContractObligationBaseline(
-        { ...contractObligationBaseline, sourceCommit: "0".repeat(40) },
-        currentSources,
-        contractEvidenceSources,
-        trackedContractEvidencePaths,
-      ),
-    /pre-Task-14 source commit/u,
+    () => assertPreservation({
+      manifest: {
+        ...contractPreservationBaseline,
+        sourceCommit: "0".repeat(40),
+      },
+    }),
+    /reviewed pre-Task-14 commit/u,
   );
 
-  assertContractObligationBaseline(
-    contractObligationBaseline,
-    currentSources,
-    contractEvidenceSources,
-    trackedContractEvidencePaths,
+  for (const [label, before, after] of [
+    [
+      "natural negation",
+      "Reference counts still collapse",
+      "Reference counts still do not collapse",
+    ],
+    [
+      "arbitrary token insertion",
+      "one actual Canvas listener per type",
+      "one actual unrelated Canvas listener per type",
+    ],
+  ]) {
+    const path = "docs/design/event-resource-ownership.md";
+    const mutatedSources = new Map(currentSources);
+    const original = currentSources.get(path);
+    const changed = original.replace(before, after);
+    assert.notEqual(changed, original, `${label} mutation must alter contract prose`);
+    mutatedSources.set(path, changed);
+    throws(
+      () => assertPreservation({ sources: mutatedSources }),
+      /reviewed complete semantic snapshot/u,
+    );
+  }
+
+  const eventContract = contractPreservationBaseline.contracts.find(
+    ({ path }) => path === "docs/design/event-resource-ownership.md",
   );
-  probes += 1;
-  for (const entry of contractObligationBaseline.contracts) {
-    for (const obligation of entry.obligations) {
+  const sharedListenerUnit = eventContract.currentUnits.find(({ text }) =>
+    text.includes("Reference counts still collapse")
+  );
+  assert.ok(sharedListenerUnit, "Shared-listener mutation unit is missing");
+  for (const [label, replacement] of [
+    ["heading", `## ${sharedListenerUnit.text}`],
+    ["code", `\`\`\`text\n${sharedListenerUnit.text}\n\`\`\``],
+  ]) {
+    const path = eventContract.path;
+    const mutatedSources = new Map(currentSources);
+    mutatedSources.set(
+      path,
+      replaceContractUnit(
+        currentSources.get(path),
+        "c",
+        sharedListenerUnit.id,
+        replacement,
+      ),
+    );
+    throws(
+      () => assertPreservation({ sources: mutatedSources }),
+      /reviewed complete semantic snapshot/u,
+    );
+    assert.ok(label);
+  }
+
+  const canvasContract = contractPreservationBaseline.contracts.find(
+    ({ path }) => path === "docs/design/canvas-surface-contract.md",
+  );
+  const unmappedParagraph = canvasContract.currentUnits.find(({ text }) =>
+    text.startsWith("Centering offsets may be fractional.")
+  );
+  assert.ok(unmappedParagraph, "Unmapped paragraph mutation unit is missing");
+  assert.equal(
+    contractPreservationBaseline.evidenceMappings.some((mapping) =>
+      mapping.contract === canvasContract.path &&
+      unmappedParagraph.text.includes(mapping.claim.text)
+    ),
+    false,
+    "Unmapped paragraph probe accidentally selected an evidence marker",
+  );
+  {
+    const mutatedSources = new Map(currentSources);
+    mutatedSources.set(
+      canvasContract.path,
+      replaceContractUnit(
+        currentSources.get(canvasContract.path),
+        "c",
+        unmappedParagraph.id,
+        "",
+      ),
+    );
+    throws(
+      () => assertPreservation({ sources: mutatedSources }),
+      /reviewed complete semantic snapshot/u,
+    );
+  }
+
+  const zeroSizeUnit = canvasContract.currentUnits.find(({ text }) =>
+    text.startsWith("A zero-sized display axis")
+  );
+  assert.ok(zeroSizeUnit, "Zero-size suppression mutation unit is missing");
+  {
+    const mutatedSources = new Map(currentSources);
+    mutatedSources.set(
+      canvasContract.path,
+      replaceContractUnit(
+        currentSources.get(canvasContract.path),
+        "c",
+        zeroSizeUnit.id,
+        "",
+      ),
+    );
+    throws(
+      () => assertPreservation({ sources: mutatedSources }),
+      /reviewed complete semantic snapshot/u,
+    );
+  }
+
+  const layoutContract = contractPreservationBaseline.contracts.find(
+    ({ path }) => path === "docs/design/layout-system-contract.md",
+  );
+  const flexDefaultRow = layoutContract.currentUnits.find(
+    ({ kind, text }) => kind === "table" && text.includes("justifyContent"),
+  );
+  assert.ok(flexDefaultRow, "Flex default table mutation unit is missing");
+  {
+    const mutatedSources = new Map(currentSources);
+    mutatedSources.set(
+      layoutContract.path,
+      replaceContractUnit(
+        currentSources.get(layoutContract.path),
+        "c",
+        flexDefaultRow.id,
+        flexDefaultRow.text.replace("(default)", "(changed default)"),
+      ),
+    );
+    throws(
+      () => assertPreservation({ sources: mutatedSources }),
+      /reviewed complete semantic snapshot/u,
+    );
+  }
+
+  const hooksContract = contractPreservationBaseline.contracts.find(
+    ({ path }) => path === "docs/design/runtime-hooks-contract.md",
+  );
+  const memoRow = hooksContract.currentUnits.find(
+    ({ kind, text }) => kind === "table" && text.includes("crcMemo(create, deps)"),
+  );
+  assert.ok(memoRow, "Hook-specific table mutation unit is missing");
+  {
+    const mutatedSources = new Map(currentSources);
+    mutatedSources.set(
+      hooksContract.path,
+      replaceContractUnit(
+        currentSources.get(hooksContract.path),
+        "c",
+        memoRow.id,
+        "",
+      ),
+    );
+    throws(
+      () => assertPreservation({ sources: mutatedSources }),
+      /reviewed complete semantic snapshot/u,
+    );
+  }
+
+  // Every prose paragraph, list obligation, table row, and code contract in all
+  // twelve files must be indispensable, including clauses with no evidence map.
+  for (const contract of contractPreservationBaseline.contracts) {
+    const original = currentSources.get(contract.path);
+    for (const unit of contract.currentUnits) {
       const mutatedSources = new Map(currentSources);
-      const original = currentSources.get(entry.path);
-      const changed = removeSemanticClaim(original, obligation.claim);
+      const changed = replaceContractUnit(original, "c", unit.id, "");
       assert.notEqual(
         changed,
         original,
-        `${entry.path}#${obligation.id} deletion probe must remove its clause`,
+        `${contract.path}#${unit.id} deletion mutation must alter source`,
       );
-      assert.ok(
-        !containsSemanticClaim(changed, obligation.claim),
-        `${entry.path}#${obligation.id} deletion probe left its claim matchable`,
-      );
-      mutatedSources.set(entry.path, changed);
+      mutatedSources.set(contract.path, changed);
       throws(
-        () =>
-          assertContractObligationBaseline(
-            contractObligationBaseline,
-            mutatedSources,
-            contractEvidenceSources,
-            trackedContractEvidencePaths,
-          ),
-        /missing semantic obligation/u,
-      );
-    }
-  }
-  for (const entry of contractObligationBaseline.contracts) {
-    for (const obligation of entry.obligations) {
-      const mutatedSources = new Map(currentSources);
-      mutatedSources.set(
-        entry.path,
-        `${currentSources.get(entry.path)}\n${obligation.contradictions[0]}\n`,
-      );
-      throws(
-        () =>
-          assertContractObligationBaseline(
-            contractObligationBaseline,
-            mutatedSources,
-            contractEvidenceSources,
-            trackedContractEvidencePaths,
-          ),
-        /contradicts semantic obligation/u,
+        () => assertPreservation({ sources: mutatedSources }),
+        /reviewed complete semantic snapshot/u,
       );
     }
   }
 
-  const irrelevantEvidenceManifest = structuredClone(contractObligationBaseline);
-  for (const entry of irrelevantEvidenceManifest.contracts) {
-    for (const obligation of entry.obligations) {
-      obligation.evidence = {
-        source: {
-          path: "packages/core/src/lib/render.ts",
-          marker: "export function render(",
-        },
-        test: {
-          path: "packages/core/src/lib/hooks/hook-contract.test.ts",
-          marker: "releases an omitted hook resource, reports fewer hooks, and retries cleanly",
-        },
-      };
-    }
-  }
+  const digestTamper = structuredClone(contractPreservationBaseline);
+  digestTamper.contracts[0].sourceSha256 = "0".repeat(64);
   throws(
-    () =>
-      assertContractObligationBaseline(
-        irrelevantEvidenceManifest,
-        currentSources,
-        contractEvidenceSources,
-        trackedContractEvidencePaths,
-      ),
-    /distinct relevant source evidence/u,
+    () => assertPreservation({
+      manifest: digestTamper,
+      embeddedOnly: true,
+    }),
+    /fixed reviewed snapshot/u,
   );
 
-  const missingMarkerManifest = structuredClone(contractObligationBaseline);
-  missingMarkerManifest.contracts[0].obligations[0].evidence.source.marker =
-    "missing reviewed implementation symbol";
+  if (baselineContractSources) {
+    const tamperedBaselineSources = new Map(baselineContractSources);
+    const path = contractPreservationBaseline.contracts[0].path;
+    tamperedBaselineSources.set(
+      path,
+      `${tamperedBaselineSources.get(path)}\nBaseline provenance tamper.\n`,
+    );
+    throws(
+      () => assertPreservation({ baselineSources: tamperedBaselineSources }),
+      /baseline source digest/u,
+    );
+  }
+
+  const irrelevantTranslation = structuredClone(contractPreservationBaseline);
+  const samePathTranslations = irrelevantTranslation.translations.filter(
+    ({ path }) => path === irrelevantTranslation.translations[0].path,
+  );
+  assert.ok(
+    samePathTranslations.length >= 2,
+    "Translation relevance mutation needs two mappings in one contract",
+  );
+  [
+    samePathTranslations[0].currentIds,
+    samePathTranslations[1].currentIds,
+  ] = [
+    samePathTranslations[1].currentIds,
+    samePathTranslations[0].currentIds,
+  ];
   throws(
-    () =>
-      assertContractObligationBaseline(
-        missingMarkerManifest,
-        currentSources,
-        contractEvidenceSources,
-        trackedContractEvidencePaths,
-      ),
-    /evidence is irrelevant/u,
+    () => assertPreservation({ manifest: irrelevantTranslation }),
+    /fixed reviewed snapshot/u,
   );
 
-  const changedMappingManifest = structuredClone(contractObligationBaseline);
-  changedMappingManifest.contracts[0].obligations[0].contradictions[0] +=
-    " This remains intentionally absent.";
+  const irrelevantEvidence = structuredClone(contractPreservationBaseline);
+  const evidencePairs = irrelevantEvidence.evidenceMappings.map(
+    ({ source, test }) => ({ source, test }),
+  );
+  for (const [index, mapping] of irrelevantEvidence.evidenceMappings.entries()) {
+    const replacement = evidencePairs[(index + 1) % evidencePairs.length];
+    mapping.source = replacement.source;
+    mapping.test = replacement.test;
+  }
   throws(
-    () =>
-      assertContractObligationBaseline(
-        changedMappingManifest,
-        currentSources,
-        contractEvidenceSources,
-        trackedContractEvidencePaths,
-      ),
-    /exactly match the reviewed semantic and evidence mapping/u,
+    () => assertPreservation({ manifest: irrelevantEvidence }),
+    /fixed reviewed snapshot/u,
+  );
+
+  const repeatedEvidence = structuredClone(contractPreservationBaseline);
+  repeatedEvidence.evidenceMappings[1].source =
+    repeatedEvidence.evidenceMappings[0].source;
+  repeatedEvidence.evidenceMappings[1].test =
+    repeatedEvidence.evidenceMappings[0].test;
+  throws(
+    () => assertPreservation({ manifest: repeatedEvidence }),
+    /reuses identical generic/u,
+  );
+
+  const missingMarker = structuredClone(contractPreservationBaseline);
+  missingMarker.evidenceMappings[0].source.marker =
+    "missing reviewed implementation evidence marker";
+  throws(
+    () => assertPreservation({ manifest: missingMarker }),
+    /lacks its exact reviewed marker/u,
   );
 
   const nonJsx = completeSnippets.get("without-jsx").source;
@@ -2397,8 +2386,11 @@ process.stdout.write(
     `${rootExports.values.size} values, ${rootExports.types.size} types, ` +
     `${matrixRows.length} acceptance rows, ${parsedSnippetCount} parsed ` +
     `code snippets, ${compiledSnippetCount} extracted TypeScript programs, ` +
-    `${contractObligationBaseline.contracts.reduce((count, entry) => count + entry.obligations.length, 0)} ` +
-    `semantic obligations across ${contractObligationBaseline.contracts.length} normative contracts, ` +
+    `${contractPreservationResult.baselineUnitCount} pre-Task-14 and ` +
+    `${contractPreservationResult.currentUnitCount} current semantic units across ` +
+    `${contractPreservationBaseline.contracts.length} normative contracts, ` +
+    `${contractPreservationResult.evidenceMappingCount} direct evidence mappings, ` +
+    `baseline provenance ${contractPreservationResult.provenanceVerified ? "verified" : "embedded/digest-locked"}, ` +
     `${presentationSourcePaths.length} discovered presentation sources, and ` +
     `the extracted JavaScript program through Babel and esbuild.\n`,
 );
