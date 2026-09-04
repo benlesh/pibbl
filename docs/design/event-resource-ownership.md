@@ -1,7 +1,7 @@
 # CRC event resource ownership
 
-Status: implemented by TFC-03 and extended by the DOM-aligned user-event
-delivery on 2026-08-29.
+Status: current implemented contract, updated for JSX-era authoring on
+2026-09-03.
 
 This contract assigns every event-related resource to one owner and one
 idempotent release path. It supplements the [user-event
@@ -11,7 +11,8 @@ failure isolation, while those documents govern dispatch and geometry.
 
 ## Public lifetime
 
-`crc(canvas, scene, config)` returns a stable `CRCController` for the active mount:
+`crc(canvas, scene, config)` accepts a branded recursive `CRCNode` and returns a
+stable `CRCController` for the active mount:
 
 ```ts
 interface CRCController {
@@ -27,7 +28,9 @@ interface CRCController {
 - An already-aborted signal produces an immediately disposed controller and schedules no render.
 - Omitting `signal` is supported; the controller still owns and removes all native listeners.
 
-Existing callers may ignore the additive return value. Retaining a controller does not keep its disposed scene instance alive; its closure releases that ownership after the first cleanup request.
+JSX and `createElement` produce the same descriptors. Retaining a controller
+does not keep its disposed scene instance alive; its closure releases that
+ownership after the first cleanup request.
 
 ## Ownership table
 

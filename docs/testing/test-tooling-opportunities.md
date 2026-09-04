@@ -4,11 +4,12 @@ This ranking synthesizes repeated friction recorded across DEP-01–04 and TFC-0
 
 ## P0 — install in the trust gate
 
-| Opportunity                       | Repeated evidence                                                                                                                            | TFC-10 disposition                                                          |
-| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| Catalog discovery/index validator | Catalog/source/action drift recurred in DEP-01, TFC-02, TFC-04, TFC-05, TFC-08, and TFC-09. Manual maps cannot detect omitted example files. | Implemented as a check-only filesystem/catalog/source/index gate.           |
-| Visual failure/recovery safeguard | DEP-01/04 and TFC-05/09 needed deliberate mismatches, artifact inspection, baseline immutability, and recovery.                              | Implemented as one scripted negative/positive guard.                        |
-| Packed-package consumer           | DEP-03 and TFC-08 found export-map and source-leak risks that workspace symlinks cannot expose.                                              | Implemented with real tarballs plus strict Bundler/NodeNext/runtime checks. |
+| Opportunity                           | Repeated evidence                                                                                                                                           | TFC-10 disposition                                                                                                                            |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Catalog discovery/index validator     | Catalog/source/action drift recurred in DEP-01, TFC-02, TFC-04, TFC-05, TFC-08, and TFC-09. Manual maps cannot detect omitted example files.                | Implemented as a check-only filesystem/catalog/source/index gate.                                                                             |
+| Documentation/public-surface verifier | The JSX pivot changed every authoring name, compiler entry, source extension, and guide while historical records intentionally retained the old vocabulary. | Implemented as `docs:check`: active links/vocabulary, exact exports, acceptance mappings, configuration markers, and compile-backed fixtures. |
+| Visual failure/recovery safeguard     | DEP-01/04 and TFC-05/09 needed deliberate mismatches, artifact inspection, baseline immutability, and recovery.                                             | Implemented as one scripted negative/positive guard.                                                                                          |
+| Packed-package consumer               | DEP-03 and TFC-08 found export-map and source-leak risks that workspace symlinks cannot expose.                                                             | Implemented with real tarballs plus strict Bundler/NodeNext/runtime checks.                                                                   |
 
 ## P1 — next internal helpers
 

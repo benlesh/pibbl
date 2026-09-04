@@ -2,7 +2,7 @@
   "name": "@crc/core",
   "type": "module",
   "version": "0.0.1",
-  "description": "Core of CRC",
+  "description": "Canvas 2D component runtime with JSX and createElement authoring",
   "author": "Ben Lesh <ben@benlesh.com>",
   "license": "MIT",
   "homepage": "https://github.com/benlesh/crc",
@@ -13,7 +13,9 @@
   },
   "bugs": "https://github.com/benlesh/crc/issues",
   "keywords": [
-    "canvas"
+    "canvas",
+    "jsx",
+    "graphics"
   ],
   "sideEffects": false,
   "exports": {

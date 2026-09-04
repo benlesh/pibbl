@@ -1,7 +1,7 @@
 # CRC user-event contract
 
-Status: implemented on 2026-08-29 by the DOM-aligned user-event delivery.
-Focus integration was added on 2026-08-30 and is governed by the implemented
+Status: current implemented contract, updated for JSX-era authoring on
+2026-09-03. Focus integration is governed by the implemented
 [focus and keyboard-navigation contract](./focus-and-keyboard-navigation-contract.md).
 
 This document defines the public event behavior shared by built-in drawing
@@ -18,8 +18,8 @@ the [mouse interaction contract](./mouse-interaction-contract.md) still apply.
 
 ## Public registration model
 
-Built-in `path`, `rect`, `text`, `img`, `line`, `horizontalLine`,
-`verticalLine`, and `svgPath` components accept DOM-style `onX` and
+Built-in `Path`, `Rectangle`, `Text`, `Image`, `Line`, `HorizontalLine`,
+`VerticalLine`, and `SvgPath` components accept DOM-style `onX` and
 `onXCapture` props. One built-in owns one logical target whose path is the
 component's explicit interaction geometry. A purely painted object is not an
 event target and does not occlude a registered target underneath it.
@@ -36,7 +36,9 @@ becomes a focus candidate merely by listening. A listener can nevertheless be
 the logical target of common-ancestor activation or pointer capture, matching
 its role on a derived event path.
 
-All three surfaces use public exports from `@crc/core`. Internal source or
+Authors construct these descriptive component values with JSX or
+`createElement`; platform values are not callable factories. All three event
+surfaces use public exports from `@crc/core`. Internal source or
 `@crc/core/lib/*` imports are unsupported. CRC does not inspect arbitrary
 custom-component props, hoist descendant handlers, create a widget
 abstraction, or retain drawing commands.
@@ -166,17 +168,17 @@ Keyboard, logical focus, editing, composition, and clipboard facades preserve
 their family fields. CRC's internal dispatcher transports them to a known
 target. A plain Canvas supplies no logical descendant for native
 non-coordinate input by itself. When an application installs
-`withFocusManagement`, the optional focus policy chooses the current explicit
+`FocusManagement`, the optional focus policy chooses the current explicit
 target and supplies the implemented keyboard, focus, activation, and navigation
 behavior defined by the
 [focus and keyboard-navigation contract](./focus-and-keyboard-navigation-contract.md).
-Without that enhancer, native Canvas events in these families remain targetless
+Without that policy, native Canvas events in these families remain targetless
 and target handlers do not run. CRC exposes no separate public event-injection
 adapter or hidden editable DOM.
 
 Registering handlers alone does not install `tabindex`, focus policy, or
 keyboard activation. The `keyboardFocusable` and `keyboardNavigationBounds`
-target options remain inert without the optional focus enhancer, and
+target options remain inert without the optional focus policy, and
 `crcEventTarget` snapshots then report `isFocused: false` and
 `isFocusVisible: false`. Exact focus ownership, traversal, defaults, snapshots,
 layer invalidation, and teardown defer to the focus contract.

@@ -1,37 +1,50 @@
 # @crc/core
 
-The public runtime, hooks, mouse interaction, and drawing components for CRC (Canvas Rendering Components).
+The ESM Canvas 2D component runtime for CRC, with an automatic JSX runtime and
+an equivalent `createElement` API. It has no React dependency and generates no
+DOM.
 
-```ts
-import { crc, defineComp, rect } from "@crc/core";
-
-const Scene = defineComp(() =>
-  rect({
-    style: {
-      x: 20,
-      y: 20,
-      width: 120,
-      height: 80,
-      fill: "#2563eb",
-    },
-  }),
-);
-
-const controller = crc(document.querySelector("canvas")!, Scene({}));
-controller.dispose();
+```json
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "@crc/core"
+  }
+}
 ```
 
-The package publishes ESM runtime code, source maps, and TypeScript declarations. Use only documented root exports; internal `@crc/core/lib/*` subpaths are intentionally not exported.
+```tsx
+import { Rectangle, Text, crc, crcState } from "@crc/core";
 
-Drawing components whose closed schema has required fields take a required local
-`style` object. A component whose entire style schema is optional may omit it;
-this includes layout containers when their defaults are sufficient. Styles do
-not cascade or inherit; compose shared objects explicitly. CRC includes
-dedicated absolute, overlay, Flow, Flex, and explicit Grid components plus pure
-opt-in measurement and local `crcLayoutBox` observation.
+function Scene() {
+  const [count, setCount] = crcState(0);
+  return [
+    <Rectangle
+      style={{ width: 240, height: 120, fill: "#2563eb", cursor: "pointer" }}
+      onClick={() => setCount((value) => value + 1)}
+    />,
+    <Text style={{ x: 20, y: 20, fill: "white" }}>Clicks: {count}</Text>,
+  ];
+}
 
-See the repository [README](../../README.md), [feature
-inventory](../../docs/library-status.md), [style
-contract](../../docs/design/style-system-contract.md), [layout
-contract](../../docs/design/layout-system-contract.md), and [scenario gallery
-guide](../../docs/testing/scenario-gallery.md).
+const controller = crc(document.querySelector("canvas")!, <Scene />);
+window.addEventListener("pagehide", () => controller.dispose(), { once: true });
+```
+
+`@crc/core/jsx-runtime` and `@crc/core/jsx-dev-runtime` are compiler-facing
+automatic-runtime entries. Normal application imports come from `@crc/core`.
+Use only documented exports; `@crc/core/lib/*` and source subpaths are private
+and blocked by the package export map.
+
+Drawing and layout values use closed, local `style` objects. Styles do not
+cascade or inherit. Structural containers accept recursive synchronous
+children; `Text` separately accepts textual children, including numeric zero.
+State and root updates are animation-frame coalesced, rendering is synchronous,
+and controller disposal is idempotent.
+
+Start with the repository [quick start](../../README.md), then use the
+[configuration guide](../../docs/guides/configuring-jsx.md), complete
+[non-JSX guide](../../docs/guides/without-jsx.md), [API
+reference](../../docs/api-reference.md), [feature
+inventory](../../docs/library-status.md), and normative [design
+contracts](../../docs/design/runtime-hooks-contract.md).

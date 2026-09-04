@@ -1,6 +1,7 @@
 # CRC canvas surface contract
 
-Status: implemented on 2026-08-19.
+Status: current implemented contract, updated for JSX-era authoring on
+2026-09-03.
 
 This document defines how a root CRC mount maps logical drawing units to the
 Canvas CSS content box and physical backing store. The mapping is owned by the
@@ -9,7 +10,8 @@ coordinate model.
 
 ## Public configuration
 
-`crc(canvas, element, config?)` accepts one mount-time surface configuration:
+`crc(canvas, root, config?)` accepts one branded recursive `CRCNode` root and
+one mount-time surface configuration:
 
 ```ts
 type CRCFit = "contain" | "cover" | "fill" | "none" | "scale-down";
@@ -29,8 +31,10 @@ type CRCConfig =
     };
 ```
 
+JSX and `createElement` create the same opaque branded elements; fragments,
+arrays, finite synchronous iterables, and empty nodes are also valid roots.
 The configuration belongs to the first live mount. Later `crc()` calls update
-the root element but do not replace the surface configuration or mount signal.
+the root node but do not replace the surface configuration or mount signal.
 Dispose and remount to select a different surface mode.
 
 The defaults are:
@@ -110,18 +114,19 @@ the same live mount.
 
 ## Interaction and composition
 
-Native mouse positions are first measured relative to the Canvas content box,
-then mapped through backing space and the inverse root render transform. The
-public event therefore reports logical coordinates for every fit and density.
-Letterboxed points can be outside the fixed logical viewport; only registered
-logical paths that actually contain the mapped point can become targets.
+Native pointer, mouse, touch, wheel, and drag positions are first measured
+relative to the Canvas content box, then mapped through backing space and the
+inverse root render transform. Their public coordinate facades therefore report
+logical positions for every fit and density. Letterboxed points can be outside
+the fixed logical viewport; only registered logical paths that actually
+contain the mapped point can become targets.
 
 Every captured interaction transform and clip omits the already-applied root
 surface transform. Hit testing maps the native point back to logical space and
 installs each captured logical transform on its isolated test context, so paint
 and targeting do not double-apply density or fit.
 
-Managed `layer` backing stores inherit the root's current backing pixels per
+Managed `Layer` backing stores inherit the root's current backing pixels per
 logical unit on both axes. A density or projection change rerenders a layer at
 the new physical size and composites its complete backing source into its
 logical destination. Layer-local layout and interaction remain expressed in

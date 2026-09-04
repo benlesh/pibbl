@@ -1,6 +1,7 @@
 # CRC runtime resource ownership
 
-Status: implemented through the Canvas surface contract on 2026-08-19.
+Status: current implemented contract, updated for JSX-era authoring on
+2026-09-03.
 
 This contract extends the [event resource ownership contract](./event-resource-ownership.md) to every current non-event runtime resource. It defines deterministic ownership and release conditions; garbage collection is supporting evidence only and is never the cleanup oracle.
 
@@ -15,8 +16,8 @@ This contract extends the [event resource ownership contract](./event-resource-o
 | `crcWhenChanged` cleanup       | Current dependency-generation callback return | That hook slot in the component collection   | Dependency change or component teardown                     | The previous generation cleans before the next setup and can never clean twice.                                             |
 | `crcState` setter              | Hook mount                                    | Exact CRC instance plus exact component refs | Component/main teardown closure or either identity changing | A stale setter is a no-op and cannot mutate or schedule a frame on a replacement mount.                                     |
 | Animation frame                | `update()`                                    | Exact instance and frame ID                  | Replacement, callback completion, or disposal               | The exact frame completes or is canceled; an already-dequeued stale callback is inert.                                      |
-| Image load/error handlers      | Current `img` source generation               | That image hook generation                   | Load, error, source change, component removal, or disposal  | Both handlers detach, the request source is released, and late callbacks cannot publish state.                              |
-| Loaded image state             | Current `img` component refs                  | Source-tagged state slot                     | Source change, component removal, or disposal               | Only an image tagged with the currently rendered source can draw.                                                           |
+| Image load/error handlers      | Current `Image` source generation             | That image hook generation                   | Load, error, source change, component removal, or disposal  | Both handlers detach, the request source is released, and late callbacks cannot publish state.                              |
+| Loaded image state             | Current `Image` component refs                | Source-tagged state slot                     | Source change, component removal, or disposal               | Only an image tagged with the currently rendered source can draw.                                                           |
 | Layer instance and paint entry | `Layer` mount/render slot                     | Layer component refs                         | Layer, ancestor, or root removal                            | Parent paint entry, child refs/frames, and nested layer instances release recursively.                                      |
 | Root surface observers         | First root mount                              | Root instance main teardown                  | Abort, controller disposal, or failed mount                 | Resize, window-resize, and resolution-query listeners are detached; stale notifications cannot schedule the replacement.    |
 | Intrinsic-size stabilization   | Backing resize that changes CSS size          | Root surface state                           | Root disposal while CRC still owns the inline value         | The prior inline width/height is restored without overwriting a later external style change.                                |
@@ -32,7 +33,12 @@ Component collections already follow their instance's main collection. Hook clea
 
 A state setter is a capability belonging to the exact instance and exact component-ref object that created it. Before mutating, it verifies both identities and verifies that neither teardown collection is closing or closed. This matters during component removal: teardown executes before the refs-map deletion, so map identity by itself is not sufficient.
 
-Each `img` source change creates a new generation. Its load and error handlers self-detach on settlement and are detached again idempotently on change/removal/disposal. Loaded state carries the source string; render ignores a loaded element whose source does not equal the current prop. The state-setter identity guard is a second line of defense, not the image handler's primary cleanup mechanism.
+Each `Image` `style.src` change creates a new generation. Its load and error
+handlers self-detach on settlement and are detached again idempotently on
+change/removal/disposal. Loaded state carries the source string; render ignores
+a loaded element whose source does not equal the current style. The state-setter
+identity guard is a second line of defense, not the image handler's primary
+cleanup mechanism.
 
 ## Deterministic evidence
 

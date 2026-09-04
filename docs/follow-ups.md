@@ -11,15 +11,20 @@ The existing-feature confidence phase closes correctness and evidence gaps in th
 
 ## Explicit product deferrals
 
-- Pointer/touch, keyboard/focus, accessibility semantics, wheel, drag, gesture, and pointer capture APIs.
-- JSX, new drawing primitives, rich text, margin/scrolling, Grid auto placement
-  and intrinsic tracks, reverse/reordered Flexbox, advanced CSS intrinsic
-  sizing, or a retained scene graph.
+- Generated accessibility semantics, editable-input adapters, gestures, and
+  semantic-control abstractions. CRC's shipped pointer, touch, wheel,
+  drag/drop, pointer-capture, keyboard, and focus facades remain Canvas-local.
+- New drawing primitives, rich text, margin/scrolling, Grid auto placement and
+  intrinsic tracks, reverse/reordered Flexbox, advanced CSS intrinsic sizing,
+  or a retained scene graph.
 - A public scrolling or virtualization API. Applications currently own large
   datasets and pass a bounded visible window of descriptors to CRC.
 - A worker renderer or spatial-index/event-architecture rewrite without the measured trigger.
 - Populating or removing the separate empty `@crc/types` compatibility package.
-- A published documentation site, API reference renderer, search, versioning, or release campaign; see the [renderer brief](./documentation-follow-up.md).
+- A published documentation site, generated API-reference renderer, search,
+  versioning, or release campaign; see the [renderer
+  brief](./documentation-follow-up.md). The current Markdown reference is
+  shipped and checked in this repository.
 - Cross-origin image policy beyond the browser's Canvas CORS/taint behavior.
 
 ## External repository administration

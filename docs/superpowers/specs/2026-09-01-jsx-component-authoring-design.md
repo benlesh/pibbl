@@ -1,6 +1,8 @@
 # JSX component authoring design
 
-Status: approved design on 2026-09-01; not implemented
+Status: approved on 2026-09-01 and implemented on 2026-09-03. This file
+preserves the approved design wording; current usage lives in `docs/guides/`,
+`docs/api-reference.md`, and `docs/design/`.
 
 Date: 2026-09-01
 

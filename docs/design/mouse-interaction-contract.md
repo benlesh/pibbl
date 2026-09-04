@@ -1,12 +1,12 @@
 # CRC mouse interaction contract
 
-Status: geometry, coordinates, cursor, and legacy-observer clauses remain
-implemented. The DOM-aligned [user-event contract](./user-events-contract.md)
+Status: current geometry, coordinates, cursor, and observer contract, updated
+for JSX-era authoring on 2026-09-03. The DOM-aligned [user-event contract](./user-events-contract.md)
 superseded this document's mouse-only non-propagation, hidden related-target,
 no-cancellation, no-capture, and sibling no-activation clauses on 2026-08-29.
 Optional press focus and keyboard activation now defer to the implemented
 [focus and keyboard-navigation contract](./focus-and-keyboard-navigation-contract.md).
-The root-Canvas, transform, clip, global-layer, layout-placement, and overflow
+The root-Canvas, `Group`, `Clip`, global-`Layer`, layout-placement, and overflow
 rules continue to operate in one logical coordinate space across fitting and
 device density.
 
@@ -220,7 +220,11 @@ The explorer visual target, native trace when analogous, CRC trace, gesture, and
 - Cross-browser normalization of context-menu ordering.
 - Performance optimization that weakens the verified contract; TFC-06 measures the implemented hot path before selecting any further optimization.
 
-TFC-03 established resource and mutation safety. TFC-04 established ordering, topmost targeting, click identity, cursor parity, and repeatability. TFC-05 established CSS scale, transforms, clips, group/layer composition, and stroke-width geometry.
+TFC-03 established resource and mutation safety. TFC-04 established ordering,
+topmost targeting, click identity, cursor parity, and repeatability. TFC-05
+established CSS scale, transforms, clips, `Group`/`Layer` composition, and
+stroke-width geometry. Current public examples construct all components with
+JSX or `createElement` over branded `CRCElement` descriptors.
 
 ## Primary sources
 

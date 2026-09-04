@@ -19,7 +19,10 @@ test catalog ─────── scenario controller ────────�
 - `tooling/scenario-catalog.ts` independently discovers both sets from disk, validates their source contracts, loads every definition, and checks the generated [example catalog index](../scenario-index.md).
 - Browser tests mount every lesson and every test scenario from those same modules.
 
-`loadScenario(entry)` rejects a definition whose ID, source ID, or ordered action IDs differ from its catalog entry. Catalog validation also rejects duplicate IDs/slugs/actions, empty tags/instructions/reasons, invalid dimensions, and non-TypeScript source references.
+`loadScenario(entry)` rejects a definition whose ID, source ID, or ordered
+action IDs differ from its catalog entry. Catalog validation also rejects
+duplicate IDs/slugs/actions, empty tags/instructions/reasons, invalid
+dimensions, and non-TSX source references.
 
 ## Learner studio
 
@@ -33,7 +36,11 @@ Open <http://localhost:5173/#/examples>. Desktop navigation stays visible; narro
 
 Each lesson loads Monaco and the TypeScript worker on demand. CRC declarations provide semantic errors, completion items, and hover types. Valid edits are emitted by the worker and run in a replaceable opaque iframe with `sandbox="allow-scripts"`; invalid edits leave the last successful preview in place. Share links use a versioned compressed hash payload and fall back safely when malformed or oversized.
 
-The Canvas lessons demonstrate CRC's mouse-only contract. The surrounding navigation and controls are keyboard accessible, but the pages do not imply keyboard semantics for Canvas targets that CRC does not provide.
+The Canvas lessons demonstrate the shipped JSX, drawing, layout, DOM-aligned
+user-event, focus, and directional-keyboard contracts. CRC focus lessons use
+the Canvas as the one native focus host and explicit logical targets; they do
+not imply generated semantic DOM descendants or an accessibility tree. The
+surrounding Studio navigation and controls remain ordinary accessible DOM.
 
 ## Automated test labs
 

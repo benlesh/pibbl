@@ -1,6 +1,7 @@
 # CRC focus and keyboard-navigation contract
 
-Status: implemented on 2026-08-30.
+Status: current implemented contract, updated for JSX-era authoring on
+2026-09-03.
 
 CRC provides optional logical focus and keyboard navigation for explicit event
 targets. The HTML Canvas remains the only native DOM focus host. While the
@@ -8,11 +9,23 @@ Canvas owns browser focus, CRC may identify one live logical target as focused.
 This facility governs keyboard interaction and rendering state; it does not
 create an accessibility tree or semantic DOM descendants.
 
-Applications opt in with the root exports `withFocusManagement` and
-`withKeyboardNavigation`. Both functions enhance an existing element without
-changing its component type, key, identity, parentage, layout, measurement,
-paint order, or source order. A root may have one focus-management boundary.
-Directional boundaries require that manager and may be nested.
+Applications opt in with the transparent policy component values
+`FocusManagement` and `KeyboardNavigation`:
+
+```tsx
+<FocusManagement>
+  <KeyboardNavigation mode="directional">
+    <Scene />
+  </KeyboardNavigation>
+</FocusManagement>
+```
+
+Each policy removes empty child values and requires exactly one remaining
+branded `CRCElement`. Policy preparation attaches lifecycle metadata to a clone
+of that child before identity resolution. The policy does not paint, lay out,
+own hooks, or change the child's type, key, identity, parentage, measurement,
+paint order, or source order. `KeyboardNavigation` requires an active manager;
+directional boundaries may be nested.
 
 ## Enrollment and committed order
 
@@ -117,7 +130,7 @@ Native clicks have no `sourceEvent`.
 
 ## Directional boundaries
 
-`withKeyboardNavigation(element, { mode: "directional" })` enrolls eligible
+`<KeyboardNavigation mode="directional">` enrolls eligible
 descendants in one arrow-navigation boundary. A custom target supplies
 `keyboardNavigationBounds` in component-local coordinates. CRC transforms its
 four corners into a root-logical axis-aligned envelope. A focusable target
@@ -161,14 +174,14 @@ layers rendered without focus management retain their ordinary cache behavior.
 ## Optionality, lifecycle, and failures
 
 The base renderer and event dispatcher do not import focus implementation
-modules. Without a used focus enhancer, CRC does not mutate `tabindex`, install
+modules. Without a used `FocusManagement` policy, CRC does not mutate `tabindex`, install
 the document Tab listener, maintain an index, or run focus, activation,
 focus-visible, or directional policies. Optimized package-consumer evidence
 proves unused focus implementation is eliminated.
 
 The focus manager owns its Canvas mutation, document and Canvas listeners,
 committed candidates, directional memberships, current target, and pending
-Space state. Enhancer removal, render failure, root abort, and `dispose()`
+Space state. Policy removal, render failure, root abort, and `dispose()`
 release those resources. Disposal is idempotent. It restores the prior Canvas
 focusability only while CRC still owns its mutation; an application `tabindex`
 change is preserved. Application handler errors remain isolated by the shared

@@ -2,7 +2,7 @@
   "name": "@crc/types",
   "type": "module",
   "version": "0.0.1",
-  "description": "Type definitions for CRC",
+  "description": "Reserved compatibility package for CRC",
   "author": "Ben Lesh <ben@benlesh.com>",
   "license": "MIT",
   "homepage": "https://github.com/benlesh/crc#readme",

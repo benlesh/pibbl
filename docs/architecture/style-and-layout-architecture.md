@@ -1,173 +1,161 @@
-# CRC style and layout architecture
+# CRC style, layout, and element architecture
 
-Status: implemented by Project Plan 003 on 2026-08-18
+Status: current architecture. Project Plan 003 established style/layout on
+2026-08-18; the JSX authoring pivot updated the element boundary on 2026-09-03.
 
-Date: 2026-08-17
+This document describes how branded elements, local style, pure measurement,
+and declared-box layout preserve CRC's scheduled immediate-mode Canvas model.
+The completed Plan 003 design and implementation documents remain dated
+historical evidence for the original style/layout delivery; this document is
+the current authoring and runtime architecture.
 
-## Purpose
+## Invariants
 
-This document translates the first-class style and layout design into a runtime
-architecture that preserves CRC's immediate-mode Canvas model. It defines the
-responsibilities and execution seams needed for a rapid, incremental
-implementation. Exact source filenames may change during planning, but the
-boundaries and data flow are architectural commitments unless the design is
-amended.
+CRC preserves:
 
-## Existing constraints
+- one live mount per Canvas and identity-guarded, idempotent disposal;
+- animation-frame update coalescing and one full synchronous traversal;
+- parent scope, component function, key, and occurrence identity;
+- Canvas save/restore and fail-closed runtime-state restoration;
+- source paint order and reverse source coordinate targeting;
+- shared transform/clip/layout geometry for paint and interaction;
+- globally ordered offscreen layers; and
+- one explicit owner and exact teardown for every resource.
 
-CRC currently renders synchronously and depth first on a scheduled animation
-frame:
+There is no DOM renderer, virtual DOM reconciliation, retained display list,
+style cascade, or speculative child render.
 
-1. Invoke a component function.
-2. Let that component paint immediately.
-3. Traverse the elements it returned in source order.
-4. Restore Canvas and runtime state after the subtree.
+## Branded element protocol
 
-Component elements already exist before invocation as lightweight descriptors
-containing a function and props. This is sufficient for declared layout. CRC does
-not need to record paths, pixels, or drawing commands into a retained display
-list.
-
-The architecture must preserve:
-
-- one live CRC mount per Canvas;
-- requestAnimationFrame update coalescing;
-- parent-path, function, key, and occurrence identity rules;
-- Canvas save/restore isolation;
-- source paint order and reverse-paint-order logical targeting;
-- accumulated transforms and clips shared by drawing and interaction;
-- layer ownership and global target ordering;
-- fail-closed resource cleanup.
-
-## Architectural units
-
-### Element protocol
-
-The element descriptor gains first-class style metadata:
+JSX and `createElement(type, props, ...children)` create the same lightweight
+descriptor:
 
 ```ts
-type ReservedElementKey = "key" | "style";
-type UnionKeys<T> = T extends unknown ? keyof T : never;
-type ProgramProps<P> = 0 extends 1 & P
-  ? P
-  : Extract<UnionKeys<P>, ReservedElementKey> extends never
-    ? P
-    : never;
-
-interface CompEl<P, S extends SystemStyle = SystemStyle> {
-  type: CompType<P, S, any, any>;
-  props: ProgramProps<P>;
-  style: Readonly<S>;
-  key?: string;
+interface CRCElement<P = unknown> {
+  readonly type: CRCElementType<P>;
+  readonly props: Readonly<P>;
+  readonly key?: string;
 }
+
+type CRCComponent<P> = (props: P) => CRCNode | void;
 ```
 
-The public component call remains a single ergonomic object with reserved
-`style` and `key` fields. `defineComp` separates those fields from programmatic
-props when it creates the descriptor:
+The public interface is nominally branded; the runtime uses the non-enumerable
+stable global symbol `Symbol.for("@crc/core.element")`. Author props are copied,
+`key` is removed and normalized from string/number to string, and compiler or
+variadic children are installed in props. Development construction
+shallow-freezes the synthetic props and descriptor and `jsxDEV` stores source
+metadata privately. Nested author objects are not deep-frozen.
+
+The descriptor is an ephemeral description, not a retained render node.
+Calling a component directly does not construct one. Platform component values
+report a targeted error when invoked outside the renderer.
+
+## Recursive nodes and preparation
 
 ```ts
-const Card = defineComp<CardProps, CardStyle>((props, style, ctx) => {
-  // props: data, callbacks, and other programmatic inputs
-  // style: normalized/resolved visual values for this render
-});
-
-Card({
-  value: 42,
-  onSelect,
-  style: { width: "100%", minHeight: 120 },
-});
+type CRCNode =
+  | CRCElement<any>
+  | false
+  | true
+  | null
+  | undefined
+  | ""
+  | 0
+  | readonly CRCNode[]
+  | Iterable<CRCNode>;
 ```
 
-`style` defaults to an empty object where a component supports complete defaults.
-Required visual inputs remain required by that component's style type. The
-factory input expresses that rule structurally:
+Arrays and finite synchronous iterables flatten recursively. Empty values do
+not create identity slots. Unkeyed fragments are transparent; keyed fragments
+remain one parent identity boundary. The receiving renderer, container, or
+layout component materializes a finite iterable once for its operation.
+
+Raw non-empty text/numbers, Promises, async iterables, functions, symbols,
+foreign elements, and unsupported objects reject contextually. `Text` uses a
+separate scalar algebra that concatenates strings/numbers (including zero) and
+empty values while rejecting elements and async/unsupported input.
+
+## Component dispatch
+
+The runtime stores private metadata keyed by component function:
+
+- no primitive metadata → invoke the plain function with its props;
+- primitive metadata → normalize/resolve style and invoke the primitive render
+  callback with program props, finite style, and isolated Canvas context;
+- policy metadata → prepare exactly one child before identity dispatch without
+  invoking the policy as an ordinary component.
+
+Ordinary application components are plain functions. Simple custom painters
+use `crcCanvasContext()` during live rendering. `definePrimitive` is reserved
+for platform extension requiring style stages or pure measurement:
 
 ```ts
-type RequiredKeys<T> = T extends unknown
-  ? {
-      [K in keyof T]-?: Pick<T, K> extends Required<Pick<T, K>> ? K : never;
-    }[keyof T]
-  : never;
-
-type StyleField<S> = [RequiredKeys<S>] extends [never]
-  ? { style?: S }
-  : { style: S };
+const PlatformValue = definePrimitive<
+  ProgramProps,
+  Specified,
+  Normalized,
+  Resolved
+>(render, { normalizeStyle, resolveStyle, measure });
 ```
 
-Both checks distribute over unions: one reserved prop member invalidates the
-whole program-props declaration, and one required style member makes `style`
-required. Every component-specific style type must explicitly extend
-`SystemStyle` or intersect with it. This is a positive style-schema contract,
-not a blacklist: unrelated arrays, functions, dates, URLs, errors, blobs,
-buffers, matrices, and arbitrary resource/class types fail structurally unless
-their declared type deliberately opts in. `SystemStyle` retains only optional
-`custom` and has no index signature, so declared style schemas remain closed and
-excess-property checked. Ordinary inputs do not need to spell `custom` when the
-declared target style has another matching member.
+The returned value is an element type, not an element. Program props cannot
+declare reserved `key` or `style`. A specified style with allocation syntax
+requires a resolver and its resolved type cannot retain percentages or
+`"auto"`.
 
-`defineComp` rejects program-prop declarations containing reserved `key` or
-`style`; the descriptor owns those values and component code cannot read them
-through props. Calls without an own `key` or `style` retain the exact program
-props object; calls with either metadata field take the extraction path and
-store a separate props object. No public API supports visual values in both
-props and style.
+Transparent `FocusManagement` and `KeyboardNavigation` values attach private
+lifecycle descriptors to their one prepared child. They do not paint, lay out,
+own hooks, or add identity.
 
-### Style schemas
+## Local style pipeline
 
-Style types are capability intersections, not a global index signature:
+Visual and layout inputs are always inside `props.style` on the descriptor.
+Component-specific schemas positively opt into `SystemStyle` and remain closed.
+There is no inheritance stage.
 
-```ts
-interface BoxStyle {
-  /* size and constraint participation */
-}
-interface TransformStyle {
-  /* transform values */
-}
-interface PaintStyle {
-  /* fill, stroke, opacity */
-}
-interface FlexContainerStyle {
-  /* flex container values */
-}
-interface LayoutItemStyle {
-  /* optional absolute, overlay, flex, and grid participation values */
-}
+1. **Specified style** is the exact author input.
+2. **Normalized style** adds pure defaults and canonical syntax without parent
+   geometry.
+3. **Resolved style** applies allocation, percentage basis, and constraints and
+   contains finite render values.
 
-interface RectStyle
-  extends SystemStyle, BoxStyle, TransformStyle, PaintStyle, LayoutItemStyle {
-  x?: Exclude<Length, "auto">;
-  y?: Exclude<Length, "auto">;
-  width: Length;
-  height: Length;
-  custom?: Record<string, unknown>;
-}
-```
+Opaque string/resource fields such as paint, font, image source, and enum
+values are registered so allocation-syntax diagnostics do not reinterpret
+them. Unknown keys are type errors and can be development diagnostics for
+untyped JavaScript.
 
-The implementation distinguishes:
+Plain components continue to receive their exact specified style. A parent may
+inspect it for allocation, but the finite child-local allocation is exposed
+separately through `crcLayoutBox()`.
 
-- **Specified style:** immutable author input stored on the element.
-- **Normalized style:** parsed values, expanded shorthands, and component
-  defaults with no parent-derived geometry.
-- **Resolved style:** finite values for the current containing box and layout
-  allocation, passed to the render function.
+### Type-level schema enforcement
 
-There is no cascade or inherited-style stage.
+Style schemas are capability intersections, not a global property bag.
+`BoxStyle`, `LayoutItemStyle`, paint/cursor types, and component-specific
+geometry combine only where a component supports them. Every system style
+positively extends `SystemStyle`; that base contains optional `custom` and no
+index signature. Excess keys therefore remain errors instead of silently
+becoming Canvas state.
 
-Normalization is owned by focused style modules. Layout-independent paint
-normalization does not depend on layout algorithms. Unknown keys are prevented
-by TypeScript and may be detected in development diagnostics when plain
-JavaScript bypasses types. Every item-participation field is optional in the
-shared capability; the owning parent validates required fields and its accepted
-value subset, avoiding incompatible `alignSelf` declarations or Grid coordinates
-on elements outside Grid.
+`PrimitiveProgramProps<P>` rejects a program-prop declaration containing the
+reserved `key` or `style` names. `PrimitiveInput<P, S>` adds `style` back as
+element input: the property is optional only when all members of `S` are
+optional. This logic distributes over unions so one invalid program-prop member
+or one required style member cannot hide behind another union arm.
 
-### Length and constraint values
+The descriptor keeps one `props` object, including specified `style` and
+`children`. Separation happens only at primitive dispatch: the render callback
+receives reserved metadata apart from its ordinary program props. Plain
+functions receive their author props normally.
 
-The first value model is deliberately small:
+### Lengths, boxes, and constraints
+
+The common allocation vocabulary remains deliberately finite:
 
 ```ts
-type Length = number | `${number}%` | "auto";
+type Percentage = `${number}%`;
+type Length = number | Percentage | "auto";
 
 interface Constraints {
   minWidth: number;
@@ -184,389 +172,267 @@ interface LayoutBox {
 }
 ```
 
-Grid track values add a separately parsed `fr` form. Shorthands normalize to
-canonical per-edge or per-axis values before an algorithm runs.
+Infinity may represent an internal unbounded measurement constraint but never
+reaches Canvas drawing. Layout sizes, min/max constraints, padding, and gaps
+are nonnegative; `min > max` is invalid. `width` and `height` describe the
+content box. Numeric padding may shrink a content allocation to zero, not below
+zero. Percentages resolve against the containing component's content box.
+`Grid` tracks add their separately parsed fractional form.
 
-All resolved Canvas geometry is finite. Infinity may represent an internal
-unbounded measurement constraint but never reaches a Canvas drawing call.
+The root allocation follows the [Canvas surface
+contract](../design/canvas-surface-contract.md): a fixed logical viewport is
+captured at mount by default, while responsive mode follows the CSS content
+box. Surface projection and backing density do not leak into local layout
+units.
 
-Percentage resolution uses the containing layout component's content box. The
-first release always uses the intrinsic Canvas size as the root containing box.
+Margin, scrolling, implicit Grid placement, reverse/reordered Flexbox, and
+advanced intrinsic CSS sizing stay outside this architecture.
 
-The initial box model is deliberately explicit:
+## Algorithm boundary
 
-- `width` and `height` specify the content box, matching CSS
-  `box-sizing: content-box`;
-- layout dimensions, min/max constraints, padding, and gaps are nonnegative;
-- `min > max` is invalid rather than silently reordered;
-- padding is numeric only and may reduce an allocation's content box to zero,
-  never below;
-- percentages are initially accepted for sizes, offsets, and tracks, not padding
-  or gaps;
-- margin is deferred;
-- signed Canvas geometry remains valid outside a layout context, but a negative
-  dimension cannot participate as a layout allocation.
+Each dedicated layout component delegates placement to an isolated algorithm
+with no Canvas-paint responsibility. Conceptually it consumes normalized
+container/item style, constraints, and a measurement callback, then produces a
+finite container box and ordered child placements. The five algorithms are
+separate by semantics:
 
-### Component type capabilities
+- `Absolute`: independent offsets within a containing box;
+- `Overlay`: one shared allocation plus alignment;
+- `Flow`: CRC-native sequential placement and optional wrapping;
+- `Flex`: the documented CSS-compatible subset; and
+- `Grid`: explicit fixed/percentage/fractional tracks and explicit placement.
 
-The component type remains a callable function, matching CRC's current identity
-and render model. Optional normalization and measurement capabilities are static
-metadata on that same function object:
-
-```ts
-type CompType<P, S extends SystemStyle = SystemStyle, N = S, R = N> = ((
-  props: ProgramProps<P>,
-  style: Readonly<R>,
-  ctx: RenderingContext2D,
-) => CRCNode) &
-  Readonly<{
-    normalizeStyle?: (style: Readonly<S>) => Readonly<N>;
-    resolveStyle?: (
-      style: Readonly<N>,
-      context: StyleResolutionContext,
-    ) => Readonly<R>;
-    measure?: (input: MeasureInput<ProgramProps<P>, N>) => MeasureResult;
-  }>;
-
-declare function defineComp<
-  P,
-  S extends SystemStyle = SystemStyle,
-  N = S,
-  R = N,
->(
-  render: CompType<P, S, N, R>,
-  capabilities?: {
-    normalizeStyle?: (style: Readonly<S>) => Readonly<N>;
-    resolveStyle?: (
-      style: Readonly<N>,
-      context: StyleResolutionContext,
-    ) => Readonly<R>;
-    measure?: (input: MeasureInput<ProgramProps<P>, N>) => MeasureResult;
-  },
-): CompFactory<ProgramProps<P>, S>;
-```
-
-Capabilities are installed as non-enumerable metadata on the render function,
-not on each element. This preserves the function object used by CRC identity.
-Numeric-only styles use identity normalization and resolution. Allocation-aware
-styles are normalized, then resolved to finite render values before the component
-callback is invoked.
-
-Drawing components render. Measurable components additionally provide a pure
-measurement function. Dedicated layout components provide a layout algorithm
-and a compatible measurement function so they can be nested inside other
-layouts.
-
-Measurement cannot use CRC hooks, paint, mutate runtime ownership, or register
-interaction. It can use an explicitly supplied Canvas measurement service. This
-keeps measurement deterministic and safe to repeat or cache.
-
-### Layout algorithms
-
-Every dedicated layout component delegates to a small algorithm module with no
-Canvas painting responsibility:
-
-```ts
-interface LayoutAlgorithm<S> {
-  layout(input: LayoutInput<S>): LayoutResult;
-  measure?(input: LayoutMeasureInput<S>): Size;
-}
-
-interface LayoutResult {
-  container: LayoutBox;
-  children: readonly ChildPlacement[];
-}
-
-interface ChildPlacement {
-  element: CompEl<any, any>;
-  box: LayoutBox;
-  clipInChildSpace?: LayoutBox;
-  identityHint: InternalIdentityHint;
-}
-```
-
-Initial modules are isolated by semantics:
-
-- absolute containing-box resolution;
-- CRC-native flow;
-- CSS-compatible flex subset;
-- CSS-compatible grid subset;
-- CRC-native overlay.
-
-Algorithms depend on normalized style, constraints, and a measurement callback.
-They do not depend on global render state, DOM nodes, mouse events, or the Canvas
-drawing API.
+Algorithms do not depend on global render state, DOM nodes, user events, or
+Canvas drawing calls. CSS-named values are accepted only where CRC implements
+their documented behavior; divergent algorithms retain CRC-specific names.
 
 ## Render pipeline
 
-### Normal drawing element
+### Drawing or composition element
 
-For a drawing element, the runtime:
+For a platform drawing/composition element the runtime:
 
-1. Reads its specified style.
-2. Normalizes component defaults and syntax.
-3. Resolves percentages and allocation-dependent values from the current layout
-   context.
-4. Invokes the component with programmatic props, resolved style, and Canvas
-   context.
-5. Traverses any non-layout children using existing parent-first semantics.
+1. reads specified style from `element.props.style`;
+2. applies the component's pure normalizer;
+3. resolves allocation-dependent values from the current layout context;
+4. validates that render geometry is finite;
+5. invokes the primitive callback with program props, resolved style, and the
+   isolated Canvas context; and
+6. traverses any declared container children in source order.
 
-Built-in drawing primitives remain leaves. Custom components may paint and
-return ordinary children under CRC's existing traversal model, but only dedicated
-layout elements establish a formatting context.
+Drawing leaves do not establish formatting contexts. `Group`, `Clip`, and
+`Layer` compose recursive children but are not layout algorithms.
 
 ### Layout element
 
-For a dedicated layout element, its component function:
+For a dedicated layout element the runtime:
 
-1. Receives its allocated box from the parent layout context or root Canvas.
-2. Reads direct child descriptors without invoking child component functions.
-3. Normalizes the container and child item styles needed by its algorithm.
-4. Resolves definite sizes and calls measurement only for unresolved intrinsic
-   inputs.
-5. Produces finite child placements.
-6. Returns stable internal placement elements in required paint order.
+1. receives its allocated box from its parent or root;
+2. prepares direct branded child descriptors without invoking their component
+   functions;
+3. normalizes only the container/item style required by the algorithm;
+4. resolves definite inputs and requests pure measurement only for unresolved
+   used sizes;
+5. calculates finite ordered placements; and
+6. traverses stable private placement descriptors in paint order.
 
-The layout component itself does not paint. Each internal placement element:
-
-1. Saves Canvas/runtime layout state.
-2. Applies the placement translation using the existing transform seam.
-3. Applies CRC-managed overflow clipping when required.
-4. Publishes the child's allocated local `LayoutBox` to style resolution.
-5. Renders the original child element.
-6. Restores state after the subtree.
-
-This preserves one ordinary component traversal. Layout adds arrangement work but
-not a speculative paint pass.
+A placement descriptor saves Canvas/runtime layout state, translates to the
+child allocation, applies CRC-owned overflow clipping, publishes a child-local
+`LayoutBox`, traverses the author element, and restores state. This remains one
+normal render traversal, never a speculative paint pass.
 
 ### Nested layout
 
-A nested layout element is an ordinary item to its parent and a formatting
-context for its own direct children. The component name makes that role explicit:
+A nested layout component is one item to its parent and a formatting context
+for its own direct children:
 
 ```text
-flex
-├── rect
-└── grid
-    ├── text
-    └── image
+Flex
+├── Rectangle
+└── Grid
+    ├── Text
+    └── Image
 ```
 
-The flex algorithm resolves the grid's outer allocation. When intrinsic size is
-required, it calls the grid component's pure measure capability over the grid's
-already-declared direct child elements. Once placed, the grid algorithm resolves
-its own children during normal traversal.
+The outer algorithm resolves the inner layout's allocation. When an intrinsic
+size is required, it asks the inner platform value's pure measurement
+capability about its already-declared children. Normal traversal later performs
+the actual inner layout and paint. A plain component that hides a layout
+subtree is opaque to its parent and therefore needs a definite outer size.
 
-If an arbitrary custom component hides a future layout subtree behind its render
-function, its parent cannot inspect that hidden subtree. The custom component
-must accept a definite allocation or provide its own measurement capability.
+## Layout preparation and placement
 
-## Geometry semantics
+Each layout component prepares one immutable direct-element array before
+algorithm work. It normalizes direct child style without invoking child
+functions. Flow/Flex/Grid call pure measurement only when a used size is not
+definite.
 
-### Allocation and local paint coordinates
+For each result, CRC creates a branded private placement clone that preserves
+the author descriptor and records per-occurrence used style/identity metadata
+in weak storage. Placement then:
 
-A layout parent owns the child's allocation origin and available size. Placement
-translates the child's local coordinate system to that origin. Primitive `x` and
-`y` styles remain local geometry inside that allocation.
+1. saves Canvas and runtime layout state;
+2. translates to the child's border/content allocation;
+3. applies overflow clipping when requested;
+4. publishes the child-local `LayoutBox`;
+5. traverses the original child component; and
+6. restores state after its subtree.
 
-- At the root, the local origin is the Canvas origin.
-- In `absolute`, declared positions determine placement inside the containing
-  box.
-- In flow/flex/grid/overlay, the algorithm determines placement; local primitive
-  geometry starts at zero unless the primitive style explicitly offsets it.
-- A resolved percentage width controls both the primitive's allocated width and,
-  for box-shaped built-ins, its painted local width.
-- Paint may overflow the allocation when overflow is visible. Paint bounds do
-  not retroactively alter allocation.
+Nested layout is ordinary composition. The outer algorithm sizes the inner
+layout value; the inner value establishes a formatting context for its own
+prepared direct children during normal traversal. A plain component that hides
+a layout subtree is opaque to its parent and therefore needs a definite outer
+size or a platform measurement capability.
 
-### Transforms
+Private placement metadata includes the original child type, canonical key,
+and same-type occurrence. One stable module-level placement component is reused
+instead of allocating a new function per child or render. A keyed child
+survives supported same-parent reflow; unkeyed `A/B/A` identity still follows
+the two occurrences of `A`; moving a child between parents remounts it. The
+placement descriptor never becomes a public wrapper or author-visible node.
 
-Layout placement is applied before the child's own transform style. This creates
-the composition:
+## Pure measurement boundary
+
+Measurement receives program props, normalized style, constraints, an explicit
+Canvas text service, and a recursive `measureElement`. It returns measured
+content size or an unsupported reason. It cannot paint, invoke hooks,
+`crcCanvasContext`, `crcLayoutBox`, create targets/images/layers, schedule work,
+or acquire runtime resources. Temporary globals are cleared/restored in
+`finally`, and cycles are diagnosed.
+
+`Text` shares one content/layout calculation between measurement and paint in a
+render transaction. Explicitly sized `Image` can measure; natural image size
+cannot because it would acquire asynchronous state. Plain components do not
+claim measurement.
+
+`crcLayoutBox()` exposes `{ x: 0, y: 0, width, height }` in the allocated
+child-local coordinate system. It is observational and does not claim root or
+DOM coordinates. Measurement caching is not required; if introduced after
+structural evidence, a cache key must include component type, relevant props,
+normalized style, constraints, and environment inputs such as font metrics.
+
+## Geometry and composition
+
+Layout owns the child's allocation origin and available size. Placement
+translates into child-local coordinates. Primitive `x`/`y` remain local paint
+offsets; parent `left`/`top` remain allocation offsets. The complete equation
+is:
 
 ```text
-ancestor transform × layout placement × child transform × local geometry
+root surface × ancestor Group × layout placement × child Group × local geometry
 ```
 
-Interaction regions and layers capture that same composed transform. Pixel-grid
-adjustment runs in the component's local paint space after its resolved dimensions
-are known.
+The same composition is captured for interaction paths, explicit clips,
+layout-overflow clips, and `Layer` bounds. Paint may overflow a visible
+allocation without changing allocation. Layers mount a stable private fragment
+root in their offscreen instance and join the root paint ledger at their
+composite position.
 
-### Clipping and overflow
+## Explicit style composition
 
-Visible overflow creates no layout clip. Clipped overflow adds a CRC-managed
-content-box clip so painting and hit testing use the same intersection. Scrolling
-is not implied and remains outside this architecture.
+Reusable styles remain ordinary immutable values and object composition:
 
-## Identity and ordering
-
-Internal placement uses one stable, module-level component type. It does not
-allocate a new component function per child or render. Each wrapper carries a
-private identity hint derived from the original child type, canonical key, and
-same-type occurrence. The renderer uses that hint for the wrapper's identity and
-then renders the original child beneath it. This preserves current unkeyed
-`A/B/A` behavior when `B` is inserted or removed; copying only a public key would
-not.
-
-- A keyed child retains identity across reflow and supported in-parent reorder.
-- Unkeyed same-type identity remains occurrence based.
-- Moving an element between layout parents changes its parent path and may
-  remount it.
-- Source order remains paint and reverse target-selection order by default.
-- CSS ordering features are not enabled until their paint/interaction order is
-  implemented and documented together.
-
-The placement wrapper is an implementation detail and does not become a public
-component or an extra author-visible node.
-
-## Measurement architecture
-
-`measure` receives:
-
-- component programmatic props;
-- normalized specified style;
-- finite or internally unbounded constraints;
-- a Canvas text/image measurement service;
-- a recursive child-measure callback for dedicated layout components.
-
-It returns a finite preferred size before min/max clamping by the owning
-algorithm, or a typed unsupported-measurement result that becomes an actionable
-diagnostic when the size is required.
-
-Text measurement and rendering share tokenization, line-breaking, and typography
-utilities so measured and painted line boxes cannot drift. Image measurement
-initially accepts explicit dimensions only. Natural image measurement is
-unsupported until resource loading has an owner that can begin outside render
-without violating measurement purity. Ordinary non-layout image rendering
-retains its current load, stale-completion, and teardown behavior.
-
-`crcLayoutBox()` exposes the current allocation in child-local coordinates as
-`{ x: 0, y: 0, width, height }`. It is observational, does not schedule a render,
-and deliberately does not claim to provide DOM/root coordinates; callers needing
-those must combine it with their own transform observation.
-
-Caching is not required initially. If structural counters demonstrate repeated
-identical measurement, cache keys include component type, relevant props,
-normalized style, constraints, and measurement-environment inputs such as font.
-
-## Style composition and custom components
-
-Reusable styles are ordinary immutable TypeScript values:
-
-```ts
+```tsx
 const cardBase = { minWidth: 240, minHeight: 120 } satisfies BoxStyle;
 
-MetricCard({
-  value,
-  style: {
-    ...cardBase,
-    width: compact ? 280 : "100%",
-    custom: { density: compact ? "compact" : "comfortable" },
-  },
-});
+const card = (
+  <MetricCard
+    value={value}
+    style={{
+      ...cardBase,
+      width: compact ? 280 : "100%",
+      custom: { density: compact ? "compact" : "comfortable" },
+    }}
+  />
+);
 ```
 
-CRC does not merge parent styles into children. A component that wants to reuse
-or forward style data does so explicitly in its component function. `custom` is
-typed by the component and ignored by system normalization.
+CRC never merges parent style into a child. A component forwards or derives
+the style fields it intentionally owns. System normalization ignores
+application-owned `custom` data.
 
-## Errors and failure containment
+## Error ownership
 
-Errors are classified close to their owner:
+Diagnostics are raised by the closest responsible boundary: invalid style
+syntax or range, non-finite resolution, unsupported/cyclic measurement,
+incompatible algorithm input, or an internal algorithm invariant. A
+`LayoutDiagnostic` records component, property, supplied value, algorithm,
+constraints, and reason. Invalid geometry never reaches Canvas.
 
-- style syntax/unknown value;
-- non-finite resolved geometry;
-- unsupported intrinsic measurement;
-- cyclic or underdetermined percentage sizing;
-- incompatible algorithm value;
-- internal algorithm invariant violation.
+A layout/style throw enters the ordinary render-failure path. Runtime-owned
+resources and refs close, Canvas and temporary state restore in `finally`, and
+the next explicit root can mount cleanly. Pixels already painted earlier in the
+failed frame retain the renderer's documented no-rollback behavior.
 
-Diagnostic messages include the component type, key when present, property,
-value, algorithm, and constraints. Production behavior never sends invalid
-geometry to Canvas.
+## Failure and ownership
 
-A thrown layout/style error uses the existing render failure path: owned
-resources are released and component refs are cleared. Global Canvas and CRC
-state are restored in `finally` blocks. Pixels already painted earlier in the
-failing frame retain the existing no-rollback behavior.
+Render setup records the current element, component refs, hook index, layout
+box, primitive receiver, context, clip stack, and seen identities. All are
+restored in `finally`. A throw closes runtime-owned refs/resources rather than
+retaining a partial tree; earlier frame pixels are not transactional.
+
+Successful traversal removes unseen identities only after the tree completes.
+Every hook cleanup, event registration, image generation, layer instance,
+surface observer, and pending frame has one owner. Private weak metadata does
+not become a lifetime owner.
 
 ## Module boundaries
 
-The implementation should preserve these conceptual modules even if filenames
+The implementation keeps these conceptual seams even when helper filenames
 differ:
 
 ```text
+element/
+  types, creation, child materialization, fragments, private metadata
 style/
-  types               public capability interfaces
-  normalize           defaults, shorthand expansion, value parsing
-  resolve-length      number/percent/auto resolution
-  diagnostics         typed style/layout errors
-
+  public schemas, normalization, length resolution, diagnostics
 layout/
-  types               constraints, sizes, boxes, placements
-  context             current allocation and containing box
-  measure             measurement dispatch and services
-  place-child         internal transform/clip placement component
-  absolute            absolute algorithm
-  flow                CRC-native flow algorithm
-  flex                CSS-compatible flex subset
-  grid                CSS-compatible grid subset
-  overlay             CRC-native overlay algorithm
+  boxes/constraints, context, measurement, placement, five algorithms
+focus/
+  transparent policy metadata and the root focus manager
 ```
 
-Built-in drawing components depend on style normalization and current layout
-context. Pure layout algorithms do not depend on built-in drawing components.
-Render integration depends on both but remains small.
-
-## Incremental delivery seams
-
-The architecture is intentionally separable:
-
-1. Add the element/style protocol and migrate existing primitives without adding
-   new layout behavior.
-2. Add box/constraint/length resolution and root allocation.
-3. Add stable placement/context integration and absolute/overlay algorithms.
-4. Add pure measurement capability and migrate text/image measurement utilities.
-5. Add flow, flex, and grid as isolated algorithms with focused fixtures.
-6. Add package, Studio, documentation, and holistic trust closure.
-
-At each seam, existing public rendering is either unchanged or the new behavior
-is exercisable through a focused public scenario. No step needs the entire layout
-family to exist before it can be reviewed.
-
-## Verification architecture
-
-Fast feedback is the default:
-
-- Pure style/layout modules use fast non-browser unit fixtures.
-- Each render-integration seam has a small focused browser contract.
-- Component migrations run their existing focused tests rather than the entire
-  repository gate after every file.
-- One representative nested scenario carries geometry, pixels, hit targets,
-  reflow, and cleanup through successive milestones.
-
-Broader checks run after cohesive milestones:
-
-- after all built-in components use style;
-- after layout placement and measurement integrate with the runtime;
-- after flex/grid reach their declared support matrices;
-- once at final Plan 003 completion through the aggregate trust gate.
-
-This cadence does not weaken correctness criteria. It avoids repeatedly paying
-the complete package/browser/visual cost while a local slice is still changing.
+Built-in primitives depend on style resolution and current allocation. Pure
+layout algorithms do not depend on drawing primitives. Runtime dispatch is the
+small integration seam that understands element, primitive, layout, and policy
+metadata.
 
 ## Architectural decisions
 
-1. Declared layout boxes, not inferred paint commands, are spatial truth.
-2. No retained display list is introduced for layout.
-3. Style is first-class element metadata and the sole visual property namespace.
-4. Cascade and inheritance do not exist.
-5. CSS names imply compatible accepted behavior; divergent algorithms get new
-   names.
-6. Formatting contexts are dedicated components, never hidden on drawing
-   primitives.
-7. Direct nesting is supported without public layout-item wrappers.
-8. Measurement is opt-in, pure, and separate from render hooks and ownership.
-9. Placement composes through existing transforms/clips so drawing and
-   interaction share geometry.
-10. Rapid focused checks precede milestone and final holistic verification.
+1. Branded descriptors, not callable factories, are the authoring boundary.
+2. Declared layout boxes, not inferred paint commands, are spatial truth.
+3. Layout adds no retained display list or speculative paint pass.
+4. Style is explicit, local, component-specific, and non-inherited.
+5. Formatting contexts are dedicated components, never hidden drawing props.
+6. Direct nesting works without public layout-item wrappers.
+7. Measurement is opt-in, pure, and separate from hooks and ownership.
+8. Placement reuses transform/clip seams so paint and interaction share
+   geometry.
+9. Source order remains paint order unless ordering, hit testing, and identity
+   are deliberately changed together.
+10. Focus policies decorate exactly one element without becoming identity or
+    layout boundaries.
+
+## Historical lineage
+
+Plan 003 delivered the architecture in six reviewable seams: element/style
+metadata; box/constraint/root allocation; stable placement with
+Absolute/Overlay; pure Text/Image measurement; Flow/Flex/Grid; and holistic
+package/Studio/documentation verification. The dated Plan 003 design,
+implementation plan, numbered plan, and field note preserve the exact original
+factory-era terminology and milestone evidence.
+
+The JSX program later replaced only the author-facing descriptor/dispatch
+boundary. It retained the Plan 003 box, algorithm, measurement, placement,
+geometry, ordering, failure, and ownership decisions. The dated JSX design and
+implementation plan preserve that transition; this file states the combined
+current architecture.
+
+## Public boundaries and evidence
+
+Root values and declarations are published only through the explicit export
+map, including automatic compiler subpaths. Strict source, built, packed,
+Bundler, NodeNext, mixed-runtime, Studio, browser, lifecycle, and visual gates
+exercise the same architecture. See the current [runtime](../design/runtime-hooks-contract.md),
+[style](../design/style-system-contract.md), and [layout](../design/layout-system-contract.md)
+contracts for normative behavior.

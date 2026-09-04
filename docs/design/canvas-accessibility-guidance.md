@@ -1,8 +1,10 @@
 # Canvas accessibility guidance
 
-CRC logical focus is not screen-reader semantics. Adding
-`withFocusManagement` makes explicit Canvas targets operable through a shared
-keyboard focus host; it does not give those targets DOM roles, accessible
+Status: current guidance, updated for JSX-era authoring on 2026-09-03.
+
+CRC logical focus is not screen-reader semantics. Wrapping one CRC scene in
+`<FocusManagement>` makes explicit Canvas targets operable through a shared
+keyboard focus host; the transparent policy does not give those targets DOM roles, accessible
 names, states, relationships, text selection, or screen-reader announcements.
 It does not make a Canvas application accessible by itself.
 

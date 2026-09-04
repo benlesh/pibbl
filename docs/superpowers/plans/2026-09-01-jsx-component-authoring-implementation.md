@@ -1,5 +1,8 @@
 # CRC JSX Component Authoring Implementation Plan
 
+Status: completed on 2026-09-03. Checkboxes and task instructions below are
+preserved as the implementation record; they are not current API guidance.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Replace CRC's factory-first authoring API with a branded element protocol shared by automatic JSX and `createElement`, make plain functions valid components, expose descriptive uppercase built-ins, preserve every shipped rendering/lifecycle/layout/event/focus feature, and document both JSX and non-JSX use comprehensively.

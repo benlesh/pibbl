@@ -1,94 +1,103 @@
 # CRC drawing-component contract
 
-Status: implemented through the Canvas surface contract on 2026-08-19.
+Status: current implemented contract, updated for JSX-era authoring on
+2026-09-03.
 
-This document defines CRC's drawing and composition exports. Rendered values
-use the required local language in the [style-system
-contract](./style-system-contract.md); layout participation follows the
-[layout-system contract](./layout-system-contract.md). Events remain program
-props. Geometry, paint, cursor, clipping, transform, text, and image source are
-style. Runtime legacy aliases and top-level visual props are unsupported.
+CRC exports descriptive component values. Authors construct them with JSX or
+`createElement`; none is a callable factory. Geometry, paint, cursor, transform,
+clip, image source, and layout participation use explicit local `style`.
+Events remain props. Drawing leaves reject children, `Text` accepts textual
+children, and composition values accept recursive `CRCNode` children.
 
 ## Shared paint and interaction rules
 
-- Drawing follows Canvas 2D geometry, paint order, transforms, clipping, text measurement, image decoding, and `Path2D` parsing.
-- `opacity` multiplies the current Canvas global alpha when supplied. Zero
-  opacity paints nothing but does not remove an otherwise interactive geometry
-  region.
-- Transparent or absent visible paint does not itself remove interaction geometry. Target selection follows the region rules in the mouse contract.
-- Property changes replace the prior frame's pixels and interaction geometry after the scheduled CRC render settles.
-- Empty paths and zero-length lines are safe no-ops. Signed primitive rectangle
-  and image dimensions follow Canvas geometry; layout allocation remains
-  nonnegative.
-- Pixel-grid alignment is optional. `none` preserves the exact input. `round`, `ceil`, and `floor` snap opposite rectangle edges or the line coordinate using the effective stroke offset, preserving the signed span instead of adding one pixel.
-- Browser-defined values remain browser-defined: malformed SVG path data is delegated to `Path2D`; decoded image edge antialiasing and system-font glyph rasterization can vary by platform.
+- Drawing follows Canvas 2D geometry, source paint order, transforms, clips,
+  text measurement, image decoding, and `Path2D` parsing.
+- `opacity` multiplies current global alpha. Zero paints nothing but does not
+  remove otherwise registered interaction geometry.
+- Absent visible paint does not by itself remove geometry. Target selection is
+  governed by the [user-event contract](./user-events-contract.md).
+- A scheduled render replaces prior pixels and target geometry.
+- Empty paths and zero-length lines are safe. Signed primitive rectangle/image
+  geometry follows Canvas; layout allocation remains nonnegative.
+- Pixel-grid modes are `none`, `round`, `ceil`, and `floor`. Snapping uses the
+  effective stroke offset and preserves signed spans.
+- Platform-defined parsing, glyph rasterization, image decoding, CORS/taint,
+  and antialiasing remain platform-defined.
 
-## Component matrix
+## Drawing values
 
-| Public export    | Supported contract                                                                                                                                                                                                 | Primary evidence                                                      |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
-| `rect`           | Required local `width` and `height`; optional `x` and `y` default zero; fill, stroke, opacity, signed geometry, pixel-grid modes, cursor, and mouse regions.                                                       | Direct component suite, shapes lesson, geometry matrix                |
-| `path`           | Required `Path2D` `d`; fill, stroke, opacity, path replacement, expanded stroke interaction width, and empty paths.                                                                                                | Direct component and interaction suites, shapes lesson                |
-| `line`           | Ordered polyline coordinates, style/update behavior, empty and one-point no-op geometry, transforms/clips, and expanded hit width.                                                                                 | Direct line suite, lines lesson, geometry matrix                      |
-| `horizontalLine` | Required local `y`; optional `x1` default zero and `x2` default allocation width; pixel-grid modes and shared line paint/interaction.                                                                              | Direct helper matrix and lines lesson                                 |
-| `verticalLine`   | Required local `x`; optional `y1` default zero and `y2` default allocation height; pixel-grid modes and parity with `horizontalLine`.                                                                              | Direct helper matrix and lines lesson                                 |
-| `svgPath`        | Required string `d`; browser `Path2D` parsing, fill/stroke/opacity, data updates, interactions, empty/malformed delegation, and transforms.                                                                        | Direct SVG suite, shapes lesson, runtime recovery suite               |
-| `text`           | Required text; local position, font, alignment and baseline; `visible`, `ellipsis`, `squish`, and `clip` fit modes; wrapping box; paint/opacity/cursor; measured per-line interaction bounds and pure measurement. | Direct call/interaction suite and text lesson                         |
-| `img`            | Required `src`; detachable source generations; success/error/race/removal; natural or explicit dimensions; border stroke, opacity, pixel-grid modes, and stable explicit geometry before/after load.               | Direct async/component suites, image lesson, cleanup laboratory       |
-| `g`              | Nested scale, rotation/origin, translation, skew, zero/negative scale, updates, and sibling transform isolation.                                                                                                   | Direct group suite, composition lesson, geometry matrix               |
-| `clip`           | `nonzero` and `evenodd` fill rules, cumulative intersections, transforms, updates, empty clips, and identical render/hit clipping.                                                                                 | Direct clip suite, composition lesson, geometry matrix                |
-| `layer`          | Same-mount root/prop/dimension updates, root-density backing stores, nested and transformed offscreen composition, global paint order, interaction bounds, and cascading cleanup.                                  | Direct layer suite, composition lesson, geometry and cleanup matrices |
+| Export           | Style/content contract                                                                                                | Evidence                                        |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `Rectangle`      | Required `width`/`height`; optional local `x`/`y`; fill, stroke, opacity, pixel alignment, cursor, event/focus props  | Rectangle lesson, direct suite, geometry matrix |
+| `Path`           | Required `Path2D` `d`; fill/stroke/opacity, cursor, stroke interaction width                                          | Path lesson and interaction suites              |
+| `Line`           | Ordered `coords`; shared stroke/opacity/cursor behavior; empty/one-point no-pixel semantics                           | Line lesson and direct suite                    |
+| `HorizontalLine` | Required `y`; `x1` defaults zero and `x2` defaults allocation width                                                   | Horizontal-line lesson and helper matrix        |
+| `VerticalLine`   | Required `x`; `y1` defaults zero and `y2` defaults allocation height                                                  | Vertical-line lesson and helper matrix          |
+| `SvgPath`        | Required string `d`; browser `Path2D` parsing and shared paint/interaction                                            | SVG-path lesson and recovery suite              |
+| `Text`           | Recursive textual children; position/font/alignment/baseline; wrap and fit; paint/cursor; line bounds and measurement | Text lesson and text layout suites              |
+| `Image`          | Required `src`; natural/explicit geometry; border, opacity, pixel alignment, async generations                        | Image lesson and async cleanup suites           |
 
-Root and layer paint use logical units defined by the
-[Canvas surface contract](./canvas-surface-contract.md). Pixel-grid alignment
-therefore operates in logical geometry before the root or inherited layer
-density transform rasterizes it. Managed layers inherit both root backing
-densities and composite their complete physical source into the declared
-logical destination.
+Every drawing value accepts the supported DOM-aligned event/focus props through
+its props type. It creates a logical target only when interactive metadata
+requires one. Purely painted content does not occlude a registered target.
 
-## Text layout details
+## Text children and layout
 
-`text` lays out one line unless `wrap` is true. Wrapped lines accumulate without
-losing the final fitting line. `lineHeight` advances each line. A finite style
-height limits complete lines; ellipsis applies to the final visible line when
-requested. An ellipsis narrower than three dots resolves to an empty string.
+`Text` concatenates strings and numbers, including zero, from recursive arrays
+or finite synchronous iterables. Booleans and nullish values add nothing. It
+rejects CRC elements, Promises, async iterables, functions, symbols, foreign
+elements, and unsupported objects. Text content is not a style member.
 
-`fit: "squish"` passes the supplied width to Canvas text paint. `fit: "clip"`
-creates a finite alignment- and baseline-aware clip rectangle when width is
-supplied; omitted height uses the Canvas allocation. Interaction paths union
-actual metrics for every rendered line. Paint and pure measurement share this
-resolver, so measured wrapping and eventual rendering agree.
+```tsx
+<Text style={{ x: 40, y: 80, fill: "black" }}>
+  Hello {name} — {0} unread
+</Text>
+```
 
-Exact Canvas calls are tested with controlled text metrics. Gallery image comparison masks only glyph rasterization, while surrounding cards, clipping, layout, state, and interaction bounds remain exact.
+The materialized value is reused by measurement and paint in one receiving
+transaction. The default is one line. `wrap` uses the finite width;
+`lineHeight` advances lines; finite height limits complete lines. `fit` accepts
+`visible`, `squish`, `ellipsis`, or `clip`. Squish passes a width to Canvas;
+clip uses an alignment/baseline-aware rectangle; ellipsis applies to the last
+visible line. Interaction bounds union actual metrics for every painted line.
 
-## Image lifetime and geometry
+## Composition values
 
-Each `style.src` owns one `Image` generation. Load and error handlers detach on
-settlement, source replacement, component removal, or instance disposal. Saved
-late callbacks and superseded loads cannot change current state. Successful
-natural sizing uses `naturalWidth`/`naturalHeight` independently for omitted
-dimensions. Explicit dimensions establish geometry before load and after
-failure; this matches CRC's geometry-first transparent-region rule. Natural
-image size is unavailable to pure layout measurement because it would acquire
-an asynchronous resource.
+| Export  | Contract                                                                                                                                                                  |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Group` | Applies nested scale, rotation/origin, translation, and skew to all recursive children. Zero/negative scale and sibling isolation retain Canvas semantics.                |
+| `Clip`  | Applies required `Path2D` `d` and optional `nonzero`/`evenodd` rule to all children. Nested clips intersect and paint/hit geometry agree.                                 |
+| `Layer` | Renders multiple children into one persistent offscreen CRC instance, caches retained content, follows root density, and participates in global paint/target/focus order. |
 
-Pixel alignment produces one adjusted rectangle used by `drawImage`, the optional border, and the interaction path. It does not stretch the image by an extra pixel.
+`Layer` uses children, not a render callback. It installs a stable private keyed
+fragment as the offscreen root. Direct child iterables are materialized once;
+retained comparisons do not consume opaque nested iterables. Cache hits replay
+focus metadata without executing child components. Removal recursively
+disposes its controller, targets, frames, images, and nested layers.
 
-## Visual evidence and limitations
+Managed layers require `OffscreenCanvas`. Their backing stores inherit both
+root densities and composite the complete physical source into the declared
+logical destination. Transforms, clips, layout overflow, events, and focus use
+the same geometry as paint.
 
-The studio exposes focused learner pages and retains the five stable integration fixtures at:
+## Image ownership
 
-- `#/examples/drawing/rectangle` through `#/examples/drawing/image`
-- `#/examples/composition/group` through `#/examples/composition/layer`
-- `#/testing/drawing-shapes`
-- `#/testing/drawing-lines`
-- `#/testing/drawing-text`
-- `#/testing/drawing-images`
-- `#/testing/drawing-composition`
+Each `style.src` creates a source-tagged image generation. Load/error handlers
+detach on settlement, source replacement, component removal, or disposal.
+Saved late callbacks cannot publish stale state. Omitted dimensions use natural
+size only after successful load; explicit dimensions establish geometry before
+load and after failure. Natural image size is unavailable to pure measurement
+because it would acquire an asynchronous resource.
 
-Each learner source and test fixture is loaded from its validated catalog path,
-and browser checks import the same modules shown by the Studio. Five native
-480×240 fixture baselines retain exact geometry outside tight font and
-decoded-SVG edge masks. CRC adds its documented layout contexts, but not rich
-text, DOM accessibility, image CORS policy, SVG validation, or a complete CSS
-formatting engine.
+## Examples and boundaries
+
+The Studio exposes one lesson for each drawing/composition value under
+`#/examples/drawing/*` and `#/examples/composition/*`, backed by `.example.tsx`
+files also mounted headlessly. Deterministic drawing fixtures retain semantic,
+Canvas-call, geometry, interaction, and inspected pixel evidence.
+
+CRC adds no rich text, semantic DOM, accessibility tree, image CORS policy, SVG
+validator, retained scene graph, or complete CSS formatting engine. See the
+[style](./style-system-contract.md), [layout](./layout-system-contract.md), and
+[runtime](./runtime-hooks-contract.md) contracts.

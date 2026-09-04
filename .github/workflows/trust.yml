@@ -32,6 +32,9 @@ jobs:
       - name: Validate scenario catalog
         run: pnpm scenarios:check
 
+      - name: Validate current documentation
+        run: pnpm docs:check
+
       - name: Typecheck
         run: pnpm typecheck
 
