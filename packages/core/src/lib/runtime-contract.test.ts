@@ -354,7 +354,9 @@ describe('component tree identity', () => {
 
     try {
       const controller = crc(canvas, createElement(Host, {}));
-      expect(() => pending?.(0)).toThrowError(/duplicate.*key/i);
+      expect(() => pending?.(0)).toThrowError(
+        'Host received duplicate CRC key "duplicate" as a CRC child.',
+      );
       controller.dispose();
     } finally {
       window.requestAnimationFrame = originalRequestAnimationFrame;

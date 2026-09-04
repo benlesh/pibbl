@@ -1,0 +1,813 @@
+{
+  "sourceCommit": "0040d65cc4007aefc2ae61ef0c5b833166c38441",
+  "translationRecord": "docs/superpowers/specs/2026-09-01-jsx-component-authoring-design.md",
+  "translationRule": "Preserve shipped semantics while translating factories, enhancer wrappers, descriptor names, and Text or Layer content to the approved JSX-era API.",
+  "contracts": [
+    {
+      "path": "docs/architecture/style-and-layout-architecture.md",
+      "obligations": [
+        {
+          "id": "immediate-renderer",
+          "claim": "There is no DOM renderer, virtual DOM reconciliation, retained display list, style cascade, or speculative child render.",
+          "contradictions": [
+            "CRC retains drawing commands in a virtual display list."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/render.ts",
+              "marker": "export function render("
+            },
+            "test": {
+              "path": "packages/core/src/lib/component-dispatch.test.tsx",
+              "marker": "invokes a plain function once with frozen author props and supports every existing hook"
+            }
+          }
+        },
+        {
+          "id": "plain-component-measurement",
+          "claim": "A plain component therefore needs a definite allocation when it hides that subtree from its parent.",
+          "contradictions": [
+            "A plain component can attach a platform measurement capability."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/define-primitive.ts",
+              "marker": "export function definePrimitive<"
+            },
+            "test": {
+              "path": "packages/core/src/lib/define-primitive.test.tsx",
+              "marker": "reports plain functions as unsupported intrinsic measurement"
+            }
+          }
+        },
+        {
+          "id": "measurement-purity",
+          "claim": "It cannot paint, invoke hooks, crcCanvasContext, crcLayoutBox, create targets/images/layers, schedule work, or acquire runtime resources.",
+          "contradictions": [
+            "Measurement may invoke hooks and acquire runtime resources."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/layout/measure.ts",
+              "marker": "function withIsolatedRenderState<T>"
+            },
+            "test": {
+              "path": "packages/core/src/lib/layout/measure.test.ts",
+              "marker": "isolates measurement from active render hooks and layout context"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "docs/design/canvas-accessibility-guidance.md",
+      "obligations": [
+        {
+          "id": "no-semantic-dom",
+          "claim": "The transparent policy does not give those targets DOM roles, accessible names, states, relationships, text selection, or screen-reader announcements.",
+          "contradictions": [
+            "FocusManagement generates semantic DOM descendants and ARIA roles."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/focus/dom-focus-host.ts",
+              "marker": "export function mountDOMFocusHost("
+            },
+            "test": {
+              "path": "packages/core/src/lib/focus/focus-manager.test.ts",
+              "marker": "installs the complete structural bridge and reports manager-backed render snapshots"
+            }
+          }
+        },
+        {
+          "id": "application-equivalent",
+          "claim": "When meaningful information or operations exist only in Canvas pixels, the application must provide an equivalent semantic experience.",
+          "contradictions": [
+            "CRC automatically provides the equivalent semantic experience."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/index.ts",
+              "marker": "FocusManagement,"
+            },
+            "test": {
+              "path": "packages/core/src/lib/focus/public-api.test.ts",
+              "marker": "exports exactly the final runtime authoring surface"
+            }
+          }
+        },
+        {
+          "id": "duplicate-keyboard-paths",
+          "claim": "A Canvas focus host and a simultaneously tabbable semantic alternative can create duplicate or invisible keyboard stops for the same operation.",
+          "contradictions": [
+            "Both Canvas and semantic alternatives should always remain in the same Tab order."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/focus/dom-focus-host.ts",
+              "marker": "canvas.setAttribute('tabindex', desired)"
+            },
+            "test": {
+              "path": "packages/core/test/focus-navigation.test.ts",
+              "marker": "uses one forward and reverse Tab order across every native and logical stop"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "docs/design/canvas-surface-contract.md",
+      "obligations": [
+        {
+          "id": "mount-configuration",
+          "claim": "The configuration belongs to the first live mount. Later crc() calls update the root node but do not replace the surface configuration or mount signal.",
+          "contradictions": [
+            "An update may replace the live mount surface configuration."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/crc.ts",
+              "marker": "export function crc("
+            },
+            "test": {
+              "path": "packages/core/test/lifecycle-characterization.test.ts",
+              "marker": "uses only the initial mount signal for an existing Canvas lifetime"
+            }
+          }
+        },
+        {
+          "id": "three-coordinate-spaces",
+          "claim": "CRC derives the effective backing density from those rounded dimensions and installs one root transform before rendering.",
+          "contradictions": [
+            "Components draw directly in unscaled physical backing pixels."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/surface/resolve-surface.ts",
+              "marker": "export function resolveSurface("
+            },
+            "test": {
+              "path": "packages/core/src/lib/surface/resolve-surface.test.ts",
+              "marker": "renders a fixed viewport at the rounded backing density with contain"
+            }
+          }
+        },
+        {
+          "id": "logical-input-and-layers",
+          "claim": "Their public coordinate facades therefore report logical positions for every fit and density.",
+          "contradictions": [
+            "Public pointer coordinates are physical backing-store coordinates."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/util/get-mouse-coordinates.ts",
+              "marker": "export function getMouseCoordinates("
+            },
+            "test": {
+              "path": "packages/core/test/canvas-surface.test.ts",
+              "marker": "proves fixed density, responsive reflow, stable identity, and logical mouse coordinates"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "docs/design/drawing-components-contract.md",
+      "obligations": [
+        {
+          "id": "pixel-grid",
+          "claim": "none preserves the exact input. round, ceil, and floor snap opposite rectangle edges or the line coordinate using the effective stroke offset, preserving the signed span instead of adding one pixel.",
+          "contradictions": ["Pixel snapping adds an extra pixel to the span."],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/util/pixel-grid-adjustments.ts",
+              "marker": "export function adjustRectangleToPixelGrid("
+            },
+            "test": {
+              "path": "packages/core/src/lib/util/pixel-grid-adjustments.test.ts",
+              "marker": "leaves every rectangle value unchanged in none mode"
+            }
+          }
+        },
+        {
+          "id": "text-final-line-and-ellipsis",
+          "claim": "When wrap is true, wrapped lines accumulate without losing the final fitting line. An ellipsis box narrower than three dots resolves to an empty string.",
+          "contradictions": [
+            "Wrapping may discard the final fitting line and always paints three dots."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/components/text-layout.ts",
+              "marker": "function getEllipsisText("
+            },
+            "test": {
+              "path": "packages/core/src/lib/components/text-layout.test.ts",
+              "marker": "returns literal wrapped lines, baseline positions, and measured bounds"
+            }
+          }
+        },
+        {
+          "id": "image-geometry",
+          "claim": "Successful natural sizing uses naturalWidth and naturalHeight independently for whichever dimension is omitted. Pixel alignment produces one adjusted rectangle used by drawImage, the optional border, and the interaction path.",
+          "contradictions": [
+            "Image drawing, border, and interaction use independently adjusted rectangles."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/components/img.ts",
+              "marker": "width = width ?? image?.naturalWidth"
+            },
+            "test": {
+              "path": "packages/core/src/lib/components/img-async.test.ts",
+              "marker": "expect(drawImage).toHaveBeenLastCalledWith(image, ...expectedRectangle)"
+            }
+          }
+        },
+        {
+          "id": "layer-retained-updates",
+          "claim": "On one persistent mount, a Layer invalidates and rerenders when its retained child root type/key, child props (including enumerable symbol keys), specified style, direct-child sequence, or layer dimensions change.",
+          "contradictions": [
+            "A Layer cache ignores same-mount prop, child, style, and dimension changes."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/components/layer.ts",
+              "marker": "function renderLayer("
+            },
+            "test": {
+              "path": "packages/core/src/lib/components/layer.test.ts",
+              "marker": "compares retained trees recursively and invalidates for prop, style, and child-sequence changes"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "docs/design/event-resource-ownership.md",
+      "obligations": [
+        {
+          "id": "controller-lifetime",
+          "claim": "dispose() is synchronous and idempotent. config.signal and dispose() enter the same central disposal path.",
+          "contradictions": [
+            "Repeated controller disposal may tear down a replacement mount."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/crc.ts",
+              "marker": "const controller = mountCRC(canvas, element, config)"
+            },
+            "test": {
+              "path": "packages/core/test/lifecycle-characterization.test.ts",
+              "marker": "cancels immediate work and disposes a no-signal mount idempotently"
+            }
+          }
+        },
+        {
+          "id": "native-listener-sharing",
+          "claim": "Reference counts still collapse all requesters to one actual Canvas listener per type.",
+          "contradictions": [
+            "Every logical handler installs its own native Canvas listener."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/events/native-listener-hub.ts",
+              "marker": "export function createNativeListenerHub("
+            },
+            "test": {
+              "path": "packages/core/src/lib/events/native-listener-hub.test.ts",
+              "marker": "reference-counts one native listener and makes releases idempotent"
+            }
+          }
+        },
+        {
+          "id": "mutation-error-isolation",
+          "claim": "Removal during dispatch therefore remains effective, route additions wait for the next event, and one thrown handler cannot prevent later handlers or final cleanup.",
+          "contradictions": [
+            "A thrown event handler aborts all remaining handlers and cleanup."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/events/propagation.ts",
+              "marker": "export function dispatchEventPath<"
+            },
+            "test": {
+              "path": "packages/core/src/lib/events/propagation.test.ts",
+              "marker": "reports a thrown handler and continues with unrelated handlers"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "docs/design/focus-and-keyboard-navigation-contract.md",
+      "obligations": [
+        {
+          "id": "transparent-policies",
+          "claim": "Each policy removes empty child values and requires exactly one remaining branded CRCElement. The policy does not paint, lay out, own hooks, or change the child's type, key, identity, parentage, measurement, paint order, or source order.",
+          "contradictions": [
+            "Focus policies add a painted layout and identity wrapper."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/focus/policy-components.ts",
+              "marker": "function definePolicyComponent<P>("
+            },
+            "test": {
+              "path": "packages/core/src/lib/focus/policy-components.test.tsx",
+              "marker": "removes empties, recursively prepares one child, and preserves declaration order and child metadata"
+            }
+          }
+        },
+        {
+          "id": "tab-order",
+          "claim": "Tab and Shift+Tab move through the source-order list and prevent the native default only when an internal next target exists.",
+          "contradictions": [
+            "Tab navigation geometrically sorts targets and always wraps."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/focus/keyboard-defaults.ts",
+              "marker": "export function moveTab("
+            },
+            "test": {
+              "path": "packages/core/test/focus-navigation.test.ts",
+              "marker": "uses one forward and reverse Tab order across every native and logical stop"
+            }
+          }
+        },
+        {
+          "id": "activation-precedence",
+          "claim": "Target and ancestor key propagation -> focus-manager activation default -> nearest directional-boundary default.",
+          "contradictions": [
+            "Keyboard defaults run before target propagation."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/focus/keyboard-defaults.ts",
+              "marker": "export function applyKeyboardActivationDefault("
+            },
+            "test": {
+              "path": "packages/core/test/focus-navigation.test.ts",
+              "marker": "keeps arrows in the nearest square boundary and gives target handlers precedence"
+            }
+          }
+        },
+        {
+          "id": "directional-ranking",
+          "claim": "Remaining candidates compare this tuple in order: perpendicular-axis overlap before off-axis candidates; nearest forward edge distance; nearest perpendicular center distance; source index as the exact tie-breaker.",
+          "contradictions": [
+            "Directional navigation chooses the nearest Euclidean center and ignores source order."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/focus/directional-navigation.ts",
+              "marker": "export function findDirectionalCandidate("
+            },
+            "test": {
+              "path": "packages/core/src/lib/focus/directional-navigation.test.ts",
+              "marker": "uses the exact beam, forward-edge, perpendicular-center, and source tuple"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "docs/design/layout-system-contract.md",
+      "obligations": [
+        {
+          "id": "finite-recursive-children",
+          "claim": "Iterables are required to be finite; infinite iterables are unsupported and CRC does not promise to detect them.",
+          "contradictions": [
+            "CRC detects and safely terminates every infinite iterable."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/element/children.ts",
+              "marker": "export function materializeContainerChildren("
+            },
+            "test": {
+              "path": "packages/core/src/lib/element/children.test.ts",
+              "marker": "returns one frozen direct-element sequence from recursive container input"
+            }
+          }
+        },
+        {
+          "id": "overflow-and-allocation",
+          "claim": "overflow: clip clips paint and target geometry to the content box; it does not create scrolling.",
+          "contradictions": [
+            "Every layout allocation clips overflow and enables scrolling."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/layout/place-child.ts",
+              "marker": "export function placeChild("
+            },
+            "test": {
+              "path": "packages/core/src/lib/layout/place-child.test.ts",
+              "marker": "applies an optional child-space clip to paint and hit testing"
+            }
+          }
+        },
+        {
+          "id": "flex-subset",
+          "claim": "justifyContent flex-start default, flex-end, center, space-between, space-around, space-evenly. gap, rowGap, columnGap finite nonnegative numbers; axis values override gap; default 0.",
+          "contradictions": [
+            "Flex gaps may be negative percentages and justifyContent defaults to center."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/layout/flex.ts",
+              "marker": "function nonnegativeGap("
+            },
+            "test": {
+              "path": "packages/core/src/lib/layout/flex.test.ts",
+              "marker": "requires explicit main-axis minimums and rejects unsupported values"
+            }
+          }
+        },
+        {
+          "id": "grid-tracks",
+          "claim": "Fractional unit size is max(0, remaining) / max(1, totalFr), so a total fraction below one leaves unused free space.",
+          "contradictions": [
+            "Grid normalizes every positive fraction total to consume all remaining space."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/layout/grid.ts",
+              "marker": "export function resolveGridTracks("
+            },
+            "test": {
+              "path": "packages/core/src/lib/layout/grid.test.ts",
+              "marker": "leaves unused space when total fr is below one"
+            }
+          }
+        },
+        {
+          "id": "pure-measurement",
+          "claim": "Measurement cannot call hooks, context accessors, observe a layout box, paint, register interaction targets, create image generations, or acquire runtime resources.",
+          "contradictions": [
+            "Measurement may paint or consume the active component's hook slots."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/layout/measure.ts",
+              "marker": "export function measureElement("
+            },
+            "test": {
+              "path": "packages/core/src/lib/layout/measure.test.ts",
+              "marker": "isolates measurement from active render hooks and layout context"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "docs/design/mouse-interaction-contract.md",
+      "obligations": [
+        {
+          "id": "topmost-target",
+          "claim": "Enumerate interactive candidates in reverse paint order. The first hit wins. Earlier overlapping siblings do not receive the event.",
+          "contradictions": [
+            "Mouse dispatch invokes every overlapping hit in forward paint order."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/events/hit-test.ts",
+              "marker": "export function resolveCoordinateTarget("
+            },
+            "test": {
+              "path": "packages/core/test/mouse-contract.test.ts",
+              "marker": "loads the shared contract explorer and renders every approved case"
+            }
+          }
+        },
+        {
+          "id": "movement-order",
+          "claim": "Exit always precedes entry, and every boundary transition precedes movement.",
+          "contradictions": [
+            "Movement dispatches before exit and entry transitions."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/events/dispatch.ts",
+              "marker": "function dispatchMouseTransition("
+            },
+            "test": {
+              "path": "packages/core/src/lib/events/mouse-dispatch.test.ts",
+              "marker": "bubbles over/out and separately targets non-bubbling enter/leave nodes"
+            }
+          }
+        },
+        {
+          "id": "common-ancestor-click",
+          "claim": "Without an explicit shared listener, no sibling-region click is emitted.",
+          "contradictions": [
+            "Sibling regions always synthesize a click on both leaves."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/events/dispatch.ts",
+              "marker": "function dispatchActivation("
+            },
+            "test": {
+              "path": "packages/core/src/lib/events/mouse-dispatch.test.ts",
+              "marker": "targets the deepest common live listener after down and up resolve to siblings"
+            }
+          }
+        },
+        {
+          "id": "root-logical-coordinates",
+          "claim": "Public coordinates are root-logical coordinates with fractional precision.",
+          "contradictions": [
+            "Public coordinates are rounded Canvas backing pixels."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/util/get-mouse-coordinates.ts",
+              "marker": "const logicalPoint = surface.inverseRenderTransform.transformPoint(backingPoint)"
+            },
+            "test": {
+              "path": "packages/core/src/lib/events/pointer-events.test.ts",
+              "marker": "projects root-logical coordinates and deltas, bubbles, and cancels natively"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "docs/design/runtime-hooks-contract.md",
+      "obligations": [
+        {
+          "id": "recursive-node-boundary",
+          "claim": "Non-empty raw strings, nonzero numbers, Promises, async iterables, functions, symbols, foreign elements, and unsupported objects are contextual errors.",
+          "contradictions": [
+            "Arbitrary raw values and Promises are silently ignored as children."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/element/children.ts",
+              "marker": "function visitContainerNode("
+            },
+            "test": {
+              "path": "packages/core/src/lib/element/children.test.ts",
+              "marker": "rejects duplicate keys in one sibling scope after transparent flattening"
+            }
+          }
+        },
+        {
+          "id": "duplicate-key-diagnostic",
+          "claim": "Ordinary traversal rejects duplicates during recursive child preflight with the public diagnostic <Receiver> received duplicate CRC key <key> as a CRC child.",
+          "contradictions": [
+            "Ordinary traversal reports only Duplicate CRC key under parent."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/element/children.ts",
+              "marker": "throw invalidChild(receiver, `duplicate CRC key \"${key}\"`)"
+            },
+            "test": {
+              "path": "packages/core/src/lib/runtime-contract.test.ts",
+              "marker": "Host received duplicate CRC key \"duplicate\" as a CRC child."
+            }
+          }
+        },
+        {
+          "id": "frame-coalescing",
+          "claim": "The latest explicit root wins; a state request cannot erase it, and parent-update intent is OR-preserved.",
+          "contradictions": [
+            "The first queued root wins and state updates erase root replacement."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/update.ts",
+              "marker": "export function update("
+            },
+            "test": {
+              "path": "packages/core/src/lib/runtime-contract.test.ts",
+              "marker": "does not lose a pending root replacement to a state update"
+            }
+          }
+        },
+        {
+          "id": "hook-sequence",
+          "claim": "Every successful update must call the same number and kinds in the same order. Before reporting an omitted slot, CRC releases the abandoned slot's owned resources.",
+          "contradictions": [
+            "Conditional hooks may change kind and count without remounting."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/hooks/hook-slot.ts",
+              "marker": "export function finalizeHookSlots("
+            },
+            "test": {
+              "path": "packages/core/src/lib/hooks/hook-contract.test.ts",
+              "marker": "releases an omitted hook resource, reports fewer hooks, and retries cleanly"
+            }
+          }
+        },
+        {
+          "id": "active-render-measurement",
+          "claim": "When measurement is nested during an active render, that isolation prevents attempted measurement hooks from consuming or reordering the parent component's hook slots.",
+          "contradictions": [
+            "Nested measurement shares and advances the active parent's hook slots."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/layout/measure.ts",
+              "marker": "function withIsolatedRenderState<T>"
+            },
+            "test": {
+              "path": "packages/core/src/lib/layout/measure.test.ts",
+              "marker": "isolates measurement from active render hooks and layout context"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "docs/design/runtime-resource-ownership.md",
+      "obligations": [
+        {
+          "id": "teardown-snapshot",
+          "claim": "Teardowns.execute() closes before it invokes a stable snapshot. A throwing entry is reported without preventing the remaining entries from running.",
+          "contradictions": [
+            "Teardown stops at the first error and may execute the same entry twice."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/teardowns.ts",
+              "marker": "export class Teardowns"
+            },
+            "test": {
+              "path": "packages/core/src/lib/teardowns.test.ts",
+              "marker": "releases a stable snapshot once and isolates teardown errors"
+            }
+          }
+        },
+        {
+          "id": "stale-state-setter",
+          "claim": "A state setter is a capability belonging to the exact instance and exact component-ref object that created it.",
+          "contradictions": [
+            "A stale state setter may update a replacement mount."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/hooks/crc-state.ts",
+              "marker": "function setter(newValueOrFactory"
+            },
+            "test": {
+              "path": "packages/core/src/lib/hooks/crc-state.test.ts",
+              "marker": "cannot let a disposed mount setter update a replacement mount"
+            }
+          }
+        },
+        {
+          "id": "image-generation",
+          "claim": "Each Image style.src change creates a new generation. Loaded state carries the source string; render ignores a loaded element whose source does not equal the current style.",
+          "contradictions": [
+            "Late completion from a superseded Image source may publish and draw."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/components/img.ts",
+              "marker": "interface LoadedImage"
+            },
+            "test": {
+              "path": "packages/core/src/lib/components/img-async.test.ts",
+              "marker": "draws only the current source when an older load callback arrives late"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "docs/design/style-system-contract.md",
+      "obligations": [
+        {
+          "id": "closed-local-style",
+          "claim": "Styles do not cascade or inherit. There are no selectors, stylesheets, specificity, ambient parent styles, computed DOM values, class names, variables, or media/container queries.",
+          "contradictions": [
+            "Styles cascade and inherit through parent components."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/types.ts",
+              "marker": "export interface SystemStyle"
+            },
+            "test": {
+              "path": "packages/core/src/lib/define-primitive.test.tsx",
+              "marker": "types optional and required specified style without exposing reserved program props"
+            }
+          }
+        },
+        {
+          "id": "style-stages",
+          "claim": "Platform components defined with definePrimitive have three immutable stages: Specified: exact author input in the element props. Normalized: pure defaults and syntax expansion, independent of parent allocation. Resolved: allocation-aware, finite values supplied to the primitive renderer.",
+          "contradictions": [
+            "Primitive renderers receive unresolved percentages directly from author props."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/define-primitive.ts",
+              "marker": "type RequiresResolver<S>"
+            },
+            "test": {
+              "path": "packages/core/src/lib/define-primitive.test.tsx",
+              "marker": "normalizes, resolves percentages, and invokes the primitive renderer with program props"
+            }
+          }
+        },
+        {
+          "id": "length-validation",
+          "claim": "Whitespace, suffixes, scientific notation, malformed strings, and non-finite results reject. Padding and gaps are finite nonnegative numbers, never percentages.",
+          "contradictions": [
+            "Scientific notation, non-finite values, and percentage gaps are accepted."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/style/resolve-length.ts",
+              "marker": "export function resolveLength("
+            },
+            "test": {
+              "path": "packages/core/src/lib/style/resolve-length.test.ts",
+              "marker": "rejects non-finite numbers and malformed or unsupported strings"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "docs/design/user-events-contract.md",
+      "obligations": [
+        {
+          "id": "explicit-targets",
+          "claim": "A purely painted object is not an event target and does not occlude a registered target underneath it.",
+          "contradictions": [
+            "Every painted object implicitly becomes an event target."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/events/registrations.ts",
+              "marker": "export function createTarget("
+            },
+            "test": {
+              "path": "packages/core/src/lib/events/event-definitions.test.ts",
+              "marker": "freezes the DOM-aligned event vocabulary"
+            }
+          }
+        },
+        {
+          "id": "phase-and-cancellation",
+          "claim": "Target capture runs before target non-capture and both report phase 2. stopPropagation() completes the remaining handlers on the current node, suppresses later nodes/phases, and forwards to the native event.",
+          "contradictions": [
+            "Target bubble runs before capture and stopPropagation skips the current node immediately."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/events/propagation.ts",
+              "marker": "export function dispatchEventPath<"
+            },
+            "test": {
+              "path": "packages/core/src/lib/events/propagation.test.ts",
+              "marker": "dispatches capture, target, and bubble in DOM path order"
+            }
+          }
+        },
+        {
+          "id": "pointer-capture",
+          "claim": "Capture is per pointer ID. Subsequent coordinate pointer events route to that owner until explicit release, pointercancel, native loss, target removal, or root disposal.",
+          "contradictions": [
+            "Pointer capture is global and survives target removal or root disposal."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/events/pointer-capture.ts",
+              "marker": "export function setLogicalPointerCapture("
+            },
+            "test": {
+              "path": "packages/core/src/lib/events/pointer-events.test.ts",
+              "marker": "keeps capture ownership independent for two simultaneous pointer IDs"
+            }
+          }
+        },
+        {
+          "id": "non-coordinate-focus-boundary",
+          "claim": "Without that policy, native Canvas events in these families remain targetless and target handlers do not run. CRC exposes no separate public event-injection adapter or hidden editable DOM.",
+          "contradictions": [
+            "A plain Canvas routes keyboard input to an implicit target and hidden editable DOM."
+          ],
+          "evidence": {
+            "source": {
+              "path": "packages/core/src/lib/events/dispatch.ts",
+              "marker": "function dispatchFocusedNativeEvent("
+            },
+            "test": {
+              "path": "packages/core/src/lib/events/event-families.test.ts",
+              "marker": "routes native keyboard, focus, editing, and clipboard input only to Canvas observers without focus policy"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

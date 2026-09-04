@@ -259,6 +259,11 @@ export function exportedSpecifiers(source, filename) {
       const exported = specifier.exported;
       const name =
         exported.type === "Identifier" ? exported.name : exported.value;
+      assert.notEqual(
+        name,
+        "default",
+        `${filename} uses an unsupported default export alias`,
+      );
       const isType =
         statement.exportKind === "type" || specifier.exportKind === "type";
       (isType ? types : values).add(name);
@@ -1377,6 +1382,14 @@ const contractPrecisionRequirements = new Map([
       "callers may ignore it",
       "measurement is nested during\nan active render",
       "consuming or reordering the parent component's hook slots",
+      '`<Receiver> received duplicate CRC key "<key>" as a CRC child.`',
+    ],
+  ],
+  [
+    "docs/architecture/style-and-layout-architecture.md",
+    [
+      "needs a definite allocation when it hides",
+      "those capabilities never attach",
     ],
   ],
   [
@@ -1404,31 +1417,79 @@ export function assertContractPrecision(sources) {
 
 assertContractPrecision(currentSources);
 
-export function assertContractSectionBaseline(
+function normalizeSemanticText(value) {
+  return value
+    .normalize("NFKC")
+    .replace(/[^\p{L}\p{N}@]+/gu, " ")
+    .replace(/\s+/gu, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function semanticTokens(value) {
+  const normalized = normalizeSemanticText(value);
+  return normalized === "" ? [] : normalized.split(" ");
+}
+
+function semanticClaimWindow(sourceTokens, claimTokens) {
+  let shortest;
+  for (let start = 0; start < sourceTokens.length; start += 1) {
+    if (sourceTokens[start] !== claimTokens[0]) continue;
+    let claimIndex = 1;
+    let end = start + 1;
+    for (; end < sourceTokens.length && claimIndex < claimTokens.length; end += 1) {
+      if (sourceTokens[end] === claimTokens[claimIndex]) claimIndex += 1;
+    }
+    if (
+      claimIndex === claimTokens.length &&
+      (!shortest || end - start < shortest.end - shortest.start)
+    ) {
+      shortest = { start, end };
+    }
+  }
+  return shortest;
+}
+
+function containsSemanticClaim(source, claim) {
+  return semanticClaimWindow(semanticTokens(source), semanticTokens(claim)) !==
+    undefined;
+}
+
+function removeSemanticClaim(source, claim) {
+  const sourceTokens = semanticTokens(source);
+  const claimTokens = semanticTokens(claim);
+  let window = semanticClaimWindow(sourceTokens, claimTokens);
+  while (window) {
+    sourceTokens.splice(window.start, window.end - window.start);
+    window = semanticClaimWindow(sourceTokens, claimTokens);
+  }
+  return sourceTokens.join(" ");
+}
+
+export function assertContractObligationBaseline(
   manifest,
   sources,
+  evidenceSources,
   trackedEvidencePaths,
 ) {
   assert.equal(
     manifest.sourceCommit,
     "0040d65cc4007aefc2ae61ef0c5b833166c38441",
-    "Contract-section baseline must identify the reviewed pre-Task-14 source commit",
+    "Contract-obligation baseline must identify the reviewed pre-Task-14 source commit",
+  );
+  assert.equal(
+    manifest.translationRecord,
+    "docs/superpowers/specs/2026-09-01-jsx-component-authoring-design.md",
+    "Contract-obligation baseline must identify the approved JSX translation record",
+  );
+  assert.match(
+    manifest.translationRule,
+    /Preserve shipped semantics while translating/u,
+    "Contract-obligation baseline must state its JSX translation rule",
   );
   assert.ok(
     Array.isArray(manifest.contracts),
-    "Contract-section baseline must contain a contracts array",
-  );
-  const sectionDigest = createHash("sha256")
-    .update(
-      JSON.stringify(
-        manifest.contracts.map(({ path, sections }) => ({ path, sections })),
-      ),
-    )
-    .digest("hex");
-  assert.equal(
-    sectionDigest,
-    "8e9674708846a2516b069f27b0f8cd6cb7624fea56fea2b75de47720e55eb003",
-    "Contract-section manifest must exactly match the pre-refactor source headings",
+    "Contract-obligation baseline must contain a contracts array",
   );
 
   const expectedPaths = [
@@ -1443,72 +1504,169 @@ export function assertContractSectionBaseline(
   assert.deepEqual(
     actualPaths,
     expectedPaths,
-    "Contract-section baseline must cover every current normative contract exactly once",
+    "Contract-obligation baseline must cover every current normative contract exactly once",
   );
 
+  const sourceEvidenceIdentities = new Set();
+  const testEvidenceIdentities = new Set();
+  let obligationCount = 0;
   for (const entry of manifest.contracts) {
     const source = sources.get(entry.path);
     assert.equal(
       typeof source,
       "string",
-      `Contract-section baseline references missing contract ${entry.path}`,
+      `Contract-obligation baseline references missing contract ${entry.path}`,
     );
     assert.ok(
-      Array.isArray(entry.sections) && entry.sections.length > 0,
-      `${entry.path} has no pre-refactor baseline sections`,
+      !Object.hasOwn(entry, "sections") &&
+        Array.isArray(entry.obligations) &&
+        entry.obligations.length >= 3,
+      `${entry.path} must have clause-level semantic obligations, not a heading-only baseline`,
     );
     assert.equal(
-      new Set(entry.sections).size,
-      entry.sections.length,
-      `${entry.path} repeats a pre-refactor baseline section`,
+      new Set(entry.obligations.map(({ id }) => id)).size,
+      entry.obligations.length,
+      `${entry.path} repeats a semantic obligation id`,
     );
-    const headings = new Set(
-      [...source.matchAll(/^#{2,4}\s+(.+?)\s*#*$/gmu)].map((match) => match[1]),
-    );
-    for (const section of entry.sections) {
+    for (const obligation of entry.obligations) {
+      obligationCount += 1;
+      const label = `${entry.path}#${obligation.id}`;
       assert.ok(
-        headings.has(section),
-        `${entry.path} lost pre-refactor baseline section “${section}”`,
+        semanticTokens(obligation.claim).length >= 8,
+        `${label} must state a substantive semantic claim`,
       );
-    }
+      assert.ok(
+        containsSemanticClaim(source, obligation.claim),
+        `${label} is missing semantic obligation: ${obligation.claim}`,
+      );
+      assert.ok(
+        Array.isArray(obligation.contradictions) &&
+          obligation.contradictions.length > 0,
+        `${label} must name at least one contradictory claim`,
+      );
+      const normalizedSource = normalizeSemanticText(source);
+      for (const contradiction of obligation.contradictions) {
+        const normalizedContradiction = normalizeSemanticText(contradiction);
+        assert.ok(
+          semanticTokens(contradiction).length >= 5,
+          `${label} has a non-substantive contradiction probe`,
+        );
+        assert.ok(
+          !normalizedSource.includes(normalizedContradiction),
+          `${label} contradicts semantic obligation: ${contradiction}`,
+        );
+      }
 
-    assert.ok(
-      Array.isArray(entry.evidence) && entry.evidence.length >= 2,
-      `${entry.path} must map its baseline to implementation and executable test evidence`,
-    );
-    assert.ok(
-      entry.evidence.some(
-        (path) =>
-          path.startsWith("packages/core/src/") &&
-          !/\.test\.[cm]?[jt]sx?$/u.test(path),
-      ),
-      `${entry.path} baseline lacks implementation-source evidence`,
-    );
-    assert.ok(
-      entry.evidence.some((path) => /\.test\.[cm]?[jt]sx?$/u.test(path)),
-      `${entry.path} baseline lacks executable-test evidence`,
-    );
-    for (const path of entry.evidence) {
-      assert.ok(
-        trackedEvidencePaths.has(path),
-        `${entry.path} baseline references missing evidence ${path}`,
+      assert.deepEqual(
+        Object.keys(obligation.evidence ?? {}).sort(),
+        ["source", "test"],
+        `${label} must map distinct implementation-source and executable-test evidence`,
       );
+      for (const role of ["source", "test"]) {
+        const evidence = obligation.evidence[role];
+        assert.equal(
+          typeof evidence?.path,
+          "string",
+          `${label} has no ${role} evidence path`,
+        );
+        assert.equal(
+          typeof evidence.marker,
+          "string",
+          `${label} has no ${role} evidence symbol or test marker`,
+        );
+        if (role === "source") {
+          assert.match(
+            evidence.path,
+            /^packages\/core\/src\/.*\.[cm]?[jt]sx?$/u,
+            `${label} implementation evidence must be public runtime source`,
+          );
+          assert.doesNotMatch(
+            evidence.path,
+            /\.test\.[cm]?[jt]sx?$/u,
+            `${label} implementation evidence cannot be a test`,
+          );
+        } else {
+          assert.match(
+            evidence.path,
+            /^packages\/core\/(?:src|test)\/.*\.test\.[cm]?[jt]sx?$/u,
+            `${label} executable evidence must be a core test`,
+          );
+        }
+        assert.ok(
+          trackedEvidencePaths.has(evidence.path),
+          `${label} references missing ${role} evidence ${evidence.path}`,
+        );
+        const evidenceSource = evidenceSources.get(evidence.path);
+        assert.equal(
+          typeof evidenceSource,
+          "string",
+          `${label} could not read ${role} evidence ${evidence.path}`,
+        );
+        assert.ok(
+          evidence.marker.length >= 8 && evidenceSource.includes(evidence.marker),
+          `${label} ${role} evidence is irrelevant: ${evidence.path} lacks marker ${evidence.marker}`,
+        );
+        const identity = `${evidence.path}\0${evidence.marker}`;
+        (role === "source" ? sourceEvidenceIdentities : testEvidenceIdentities)
+          .add(identity);
+      }
     }
   }
+
+  const minimumDistinctEvidence = Math.ceil(obligationCount * 0.75);
+  assert.ok(
+    sourceEvidenceIdentities.size >= minimumDistinctEvidence,
+    "Contract obligations must use distinct relevant source evidence, not one generic implementation marker",
+  );
+  assert.ok(
+    testEvidenceIdentities.size >= minimumDistinctEvidence,
+    "Contract obligations must use distinct relevant test evidence, not one generic test marker",
+  );
+
+  const obligationDigest = createHash("sha256")
+    .update(JSON.stringify({
+      sourceCommit: manifest.sourceCommit,
+      translationRecord: manifest.translationRecord,
+      translationRule: manifest.translationRule,
+      contracts: manifest.contracts,
+    }))
+    .digest("hex");
+  assert.equal(
+    obligationDigest,
+    "fac8e63368f776c305348318c18bd7b695f170882aab88cbcbe9ebd025a332f8",
+    "Contract-obligation manifest must exactly match the reviewed semantic and evidence mapping",
+  );
 }
 
-const contractSectionBaseline = JSON.parse(
+const contractObligationBaseline = JSON.parse(
   await readFile(
-    join(repositoryRoot, "tooling/docs-contract-section-baseline.json"),
+    join(repositoryRoot, "tooling/docs-contract-obligation-baseline.json"),
     "utf8",
   ),
 );
 const trackedContractEvidencePaths = new Set(
   trackedRepositoryFiles(["packages/core/src", "packages/core/test"]),
 );
-assertContractSectionBaseline(
-  contractSectionBaseline,
+const requestedContractEvidencePaths = new Set(
+  contractObligationBaseline.contracts.flatMap(({ obligations }) =>
+    obligations.flatMap(({ evidence }) => [
+      evidence.source.path,
+      evidence.test.path,
+    ]),
+  ),
+);
+const contractEvidenceSources = new Map();
+for (const path of requestedContractEvidencePaths) {
+  if (!trackedContractEvidencePaths.has(path)) continue;
+  contractEvidenceSources.set(
+    path,
+    await readFile(join(repositoryRoot, path), "utf8"),
+  );
+}
+assertContractObligationBaseline(
+  contractObligationBaseline,
   currentSources,
+  contractEvidenceSources,
   trackedContractEvidencePaths,
 );
 
@@ -1828,6 +1986,18 @@ export async function verifyMutationProbes() {
       /unsupported|fail closed/u,
     );
   }
+  for (const source of [
+    "const value = 1; export { value as default };",
+    'export { default } from "./added.js";',
+    "type Added = string; export type { Added as default };",
+    'const value = 1; export { value as "default" };',
+    'type Added = string; export type { Added as "default" };',
+  ]) {
+    throws(
+      () => exportedSpecifiers(source, "default-alias-red-probe.ts"),
+      /default export/u,
+    );
+  }
   throws(
     () =>
       exportedSpecifiers(
@@ -1982,61 +2152,161 @@ export async function verifyMutationProbes() {
     }
   }
 
-  {
-    const path = "docs/design/drawing-components-contract.md";
-    const mutatedSources = new Map(currentSources);
-    mutatedSources.set(
+  const headingOnlyManifest = {
+    ...contractObligationBaseline,
+    contracts: contractObligationBaseline.contracts.map(({ path }) => ({
       path,
-      currentSources.get(path).replace("## Component matrix", "## Summary"),
-    );
-    throws(
-      () =>
-        assertContractSectionBaseline(
-          contractSectionBaseline,
-          mutatedSources,
-          trackedContractEvidencePaths,
-        ),
-      /baseline section/u,
+      sections: ["Overview"],
+    })),
+  };
+  throws(
+    () =>
+      assertContractObligationBaseline(
+        headingOnlyManifest,
+        currentSources,
+        contractEvidenceSources,
+        trackedContractEvidencePaths,
+      ),
+    /clause-level semantic obligations/u,
+  );
+
+  const headingOnlySources = new Map(currentSources);
+  for (const { path } of contractObligationBaseline.contracts) {
+    headingOnlySources.set(
+      path,
+      [...currentSources.get(path).matchAll(/^#{1,6}\s+.+$/gmu)]
+        .map(([heading]) => heading)
+        .join("\n"),
     );
   }
   throws(
     () =>
-      assertContractSectionBaseline(
-        { ...contractSectionBaseline, sourceCommit: "0".repeat(40) },
+      assertContractObligationBaseline(
+        contractObligationBaseline,
+        headingOnlySources,
+        contractEvidenceSources,
+        trackedContractEvidencePaths,
+      ),
+    /missing semantic obligation/u,
+  );
+
+  throws(
+    () =>
+      assertContractObligationBaseline(
+        { ...contractObligationBaseline, sourceCommit: "0".repeat(40) },
         currentSources,
+        contractEvidenceSources,
         trackedContractEvidencePaths,
       ),
     /pre-Task-14 source commit/u,
   );
-  throws(
-    () =>
-      assertContractSectionBaseline(
-        {
-          ...contractSectionBaseline,
-          contracts: contractSectionBaseline.contracts.map((entry, index) =>
-            index === 0 ? { ...entry, sections: entry.sections.slice(1) } : entry,
-          ),
-        },
-        currentSources,
-        trackedContractEvidencePaths,
-      ),
-    /must exactly match the pre-refactor source/u,
+
+  assertContractObligationBaseline(
+    contractObligationBaseline,
+    currentSources,
+    contractEvidenceSources,
+    trackedContractEvidencePaths,
   );
+  probes += 1;
+  for (const entry of contractObligationBaseline.contracts) {
+    for (const obligation of entry.obligations) {
+      const mutatedSources = new Map(currentSources);
+      const original = currentSources.get(entry.path);
+      const changed = removeSemanticClaim(original, obligation.claim);
+      assert.notEqual(
+        changed,
+        original,
+        `${entry.path}#${obligation.id} deletion probe must remove its clause`,
+      );
+      assert.ok(
+        !containsSemanticClaim(changed, obligation.claim),
+        `${entry.path}#${obligation.id} deletion probe left its claim matchable`,
+      );
+      mutatedSources.set(entry.path, changed);
+      throws(
+        () =>
+          assertContractObligationBaseline(
+            contractObligationBaseline,
+            mutatedSources,
+            contractEvidenceSources,
+            trackedContractEvidencePaths,
+          ),
+        /missing semantic obligation/u,
+      );
+    }
+  }
+  for (const entry of contractObligationBaseline.contracts) {
+    for (const obligation of entry.obligations) {
+      const mutatedSources = new Map(currentSources);
+      mutatedSources.set(
+        entry.path,
+        `${currentSources.get(entry.path)}\n${obligation.contradictions[0]}\n`,
+      );
+      throws(
+        () =>
+          assertContractObligationBaseline(
+            contractObligationBaseline,
+            mutatedSources,
+            contractEvidenceSources,
+            trackedContractEvidencePaths,
+          ),
+        /contradicts semantic obligation/u,
+      );
+    }
+  }
+
+  const irrelevantEvidenceManifest = structuredClone(contractObligationBaseline);
+  for (const entry of irrelevantEvidenceManifest.contracts) {
+    for (const obligation of entry.obligations) {
+      obligation.evidence = {
+        source: {
+          path: "packages/core/src/lib/render.ts",
+          marker: "export function render(",
+        },
+        test: {
+          path: "packages/core/src/lib/hooks/hook-contract.test.ts",
+          marker: "releases an omitted hook resource, reports fewer hooks, and retries cleanly",
+        },
+      };
+    }
+  }
   throws(
     () =>
-      assertContractSectionBaseline(
-        {
-          ...contractSectionBaseline,
-          contracts: contractSectionBaseline.contracts.map((entry, index) =>
-            index === 0
-              ? { ...entry, evidence: ["missing-source.ts", ...entry.evidence] }
-              : entry,
-          ),
-        },
+      assertContractObligationBaseline(
+        irrelevantEvidenceManifest,
         currentSources,
+        contractEvidenceSources,
         trackedContractEvidencePaths,
       ),
-    /missing evidence/u,
+    /distinct relevant source evidence/u,
+  );
+
+  const missingMarkerManifest = structuredClone(contractObligationBaseline);
+  missingMarkerManifest.contracts[0].obligations[0].evidence.source.marker =
+    "missing reviewed implementation symbol";
+  throws(
+    () =>
+      assertContractObligationBaseline(
+        missingMarkerManifest,
+        currentSources,
+        contractEvidenceSources,
+        trackedContractEvidencePaths,
+      ),
+    /evidence is irrelevant/u,
+  );
+
+  const changedMappingManifest = structuredClone(contractObligationBaseline);
+  changedMappingManifest.contracts[0].obligations[0].contradictions[0] +=
+    " This remains intentionally absent.";
+  throws(
+    () =>
+      assertContractObligationBaseline(
+        changedMappingManifest,
+        currentSources,
+        contractEvidenceSources,
+        trackedContractEvidencePaths,
+      ),
+    /exactly match the reviewed semantic and evidence mapping/u,
   );
 
   const nonJsx = completeSnippets.get("without-jsx").source;
@@ -2127,7 +2397,8 @@ process.stdout.write(
     `${rootExports.values.size} values, ${rootExports.types.size} types, ` +
     `${matrixRows.length} acceptance rows, ${parsedSnippetCount} parsed ` +
     `code snippets, ${compiledSnippetCount} extracted TypeScript programs, ` +
-    `${contractSectionBaseline.contracts.length} preserved contract baselines, ` +
+    `${contractObligationBaseline.contracts.reduce((count, entry) => count + entry.obligations.length, 0)} ` +
+    `semantic obligations across ${contractObligationBaseline.contracts.length} normative contracts, ` +
     `${presentationSourcePaths.length} discovered presentation sources, and ` +
     `the extracted JavaScript program through Babel and esbuild.\n`,
 );

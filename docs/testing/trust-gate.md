@@ -45,9 +45,12 @@ contention observed during earlier upgrade and visual work.
 - every explicitly marked complete TypeScript/TSX program extracted directly
   from its guide, plus the marked JavaScript program transformed independently
   by esbuild and the real Babel automatic-runtime plugin;
-- the section manifest derived from pre-Task-14 commit `0040d65` preserves every
-  normative contract section and maps each contract to implementation source
-  plus executable tests;
+- the fixed obligation manifest derived from pre-Task-14 commit `0040d65` and
+  the approved JSX translation record covers all 12 normative contracts with
+  substantive semantic claims, explicit contradictions, and distinct mapped
+  implementation symbols plus executable-test markers; the checker verifies
+  those markers in the cited files and rejects heading-only contracts, removed
+  or contradicted clauses, generic evidence substitution, and mapping drift;
 - fail-closed export discovery, source-inspected acceptance-matrix evidence,
   mounted/driven non-JSX behavior, literal `Historical status` banners, and
   targeted RED mutations proving each check rejects stale or incomplete

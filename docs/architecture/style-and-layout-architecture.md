@@ -309,9 +309,11 @@ in weak storage. Placement then:
 
 Nested layout is ordinary composition. The outer algorithm sizes the inner
 layout value; the inner value establishes a formatting context for its own
-prepared direct children during normal traversal. A plain component that hides
-a layout subtree is opaque to its parent and therefore needs a definite outer
-size or a platform measurement capability.
+prepared direct children during normal traversal. A plain component therefore
+needs a definite allocation when it hides that subtree from its parent. Custom
+platform normalization, resolution, or pure measurement requires a value made
+with `definePrimitive`; those capabilities never attach to an ordinary plain
+component.
 
 Private placement metadata includes the original child type, canonical key,
 and same-type occurrence. One stable module-level placement component is reused

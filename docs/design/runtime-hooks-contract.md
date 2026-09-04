@@ -82,7 +82,12 @@ Identity is resolved within one parent scope:
 Keys must be unique after transparent flattening in their sibling scope.
 Reparenting or adding a component/keyed-fragment wrapper creates a different
 scope; a key does not preserve identity across parents.
-Duplicates report `Duplicate CRC key "<key>" under "<parent>"`. Removing a
+Ordinary traversal rejects duplicates during recursive child preflight with the
+public diagnostic `<Receiver> received duplicate CRC key "<key>" as a CRC child.`
+At the root, `<Receiver>` is `CRC root`; for a component result it is the
+component display name plus JSX development source location when available. A
+lower-level prepared-identity guard retains
+`Duplicate CRC key "<key>" under "<parent>"` as an internal fallback. Removing a
 component, changing its key or type, replacing its root type, or disposing the
 instance releases that identity and every hook resource it owns.
 
