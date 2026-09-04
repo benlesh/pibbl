@@ -1,5 +1,7 @@
 # Task 8 report — transparent focus policy components
 
+> **Historical status: COMPLETED IMPLEMENTATION EVIDENCE.** This dated report is preserved for audit and is not current API guidance.
+
 ## Result
 
 Task 8 is implemented and ready to commit.

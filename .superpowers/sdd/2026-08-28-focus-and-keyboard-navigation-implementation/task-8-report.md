@@ -1,5 +1,7 @@
 # Task 8 report: public focus API and bundle elimination
 
+> **Historical status: COMPLETED IMPLEMENTATION EVIDENCE.** This dated report is preserved for audit and is not current API guidance.
+
 ## Outcome
 
 `@crc/core` now exports `withFocusManagement`,

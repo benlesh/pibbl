@@ -1,5 +1,7 @@
 # Final review fix 3 report
 
+> **Historical status: COMPLETED IMPLEMENTATION EVIDENCE.** This dated report is preserved for audit and is not current API guidance.
+
 Date: 2026-08-30  
 Base: `419cefcf555100a195ba4df749d5683345a3b5c2`  
 Environment: Node `24.15.0`, pnpm `11.21.0`, Playwright Chromium
@@ -68,4 +70,3 @@ The full focus matrix includes manager replacement, failed-render recovery,
 cached-layer replay, nested directional ownership, and DOM focus-host teardown.
 No aggregate trust run was performed in this fix task; the parent task owns that
 final gate.
-

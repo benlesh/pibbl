@@ -1,5 +1,7 @@
 # IES-04 field note — mouse and advanced interactions
 
+> **Historical status: COMPLETED FIELD RECORD.** Results are dated evidence and are not current API guidance or current test totals.
+
 Date: 2026-08-12
 
 Eight focused pages cover `onClick`, `onDblClick`, `onContextMenu`, `onMouseMove`, `onMouseOver`, `onMouseOut`, `onMouseDown`, and `onMouseUp` exactly once in the mouse-event section. Four deeper studies cover event sequences, forgiving hit areas/cursors, overlap/paint order, and transformed/clipped/layered targets.

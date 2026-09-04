@@ -1,5 +1,7 @@
 # TFC-01 interaction and lifecycle characterization baseline
 
+> **Historical status: CHARACTERIZATION BASELINE.** This pre-contract record is discovery evidence, not current normative behavior.
+
 Date: 2026-08-11
 
 This report freezes what CRC does before the interaction contract and ownership fixes. A recorded result is not automatically a supported behavior. TFC-02 decides semantics; TFC-03, TFC-04, and TFC-07 resolve the ownership, ordering, and cleanup findings.

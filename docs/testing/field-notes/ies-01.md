@@ -1,5 +1,7 @@
 # IES-01 field note — catalogs, routes, and shell
 
+> **Historical status: COMPLETED FIELD RECORD.** Results are dated evidence and are not current API guidance or current test totals.
+
 Date: 2026-08-12
 
 The learner content now lives in `learningExampleCatalog`; deterministic browser fixtures remain in `scenarioCatalog`. The default route is `#/examples`, test fixtures live under `#/testing`, and legacy `#/scenarios` URLs redirect without changing scenario identity.

@@ -79,7 +79,7 @@ Absolute, Overlay, Flow, Flex, or Grid is hit at ancestor transform × placement
 × child transform × local geometry. Fractional and negative offsets retain
 fractional precision. Layout `overflow: "clip"` contributes the content-box clip
 to the same clip stack used for paint and hit testing; visible overflow adds no
-clip. Layout inside explicit `clip` or `layer`, and explicit clips/layers inside
+clip. Layout inside explicit `Clip` or `Layer`, and explicit clips/layers inside
 layout, therefore share identical pixel and mouse geometry.
 
 Layout never creates an implicit interaction ancestor or z-index. Direct

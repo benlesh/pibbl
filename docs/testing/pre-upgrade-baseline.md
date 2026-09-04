@@ -1,5 +1,7 @@
 # DEP-01 pre-upgrade baseline
 
+> **Historical status: COMPLETED DEPENDENCY RECORD.** Versions and results are a dated snapshot, not the current verification result.
+
 Captured on 2026-08-11 before any third-party dependency upgrade.
 
 ## Environment

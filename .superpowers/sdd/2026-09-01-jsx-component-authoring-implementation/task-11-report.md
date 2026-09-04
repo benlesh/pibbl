@@ -1,5 +1,7 @@
 # Task 11 report — deterministic scenario and cross-feature test migration
 
+> **Historical status: COMPLETED IMPLEMENTATION EVIDENCE.** This dated report is preserved for audit and is not current API guidance.
+
 ## Result
 
 Task 11 is implemented and ready to commit.

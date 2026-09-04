@@ -138,6 +138,13 @@ positively extends `SystemStyle`; that base contains optional `custom` and no
 index signature. Excess keys therefore remain errors instead of silently
 becoming Canvas state.
 
+This is a positive schema contract, not a blacklist: unrelated arrays,
+functions, dates, URLs, errors, blobs, buffers, matrices, and arbitrary
+resource/class types fail structurally unless their declared type deliberately
+opts in. Every shared item-participation field is optional; its owning parent
+validates required coordinates and the accepted value subset, avoiding an
+incompatible `alignSelf` or Grid coordinate on an element outside that layout.
+
 `PrimitiveProgramProps<P>` rejects a program-prop declaration containing the
 reserved `key` or `style` names. `PrimitiveInput<P, S>` adds `style` back as
 element input: the property is optional only when all members of `S` are
@@ -177,7 +184,11 @@ reaches Canvas drawing. Layout sizes, min/max constraints, padding, and gaps
 are nonnegative; `min > max` is invalid. `width` and `height` describe the
 content box. Numeric padding may shrink a content allocation to zero, not below
 zero. Percentages resolve against the containing component's content box.
-`Grid` tracks add their separately parsed fractional form.
+`Grid` tracks add their separately parsed fractional form. Shorthands normalize
+to canonical per-edge or per-axis values before an algorithm runs. Percentages
+are accepted for documented sizes, offsets, and tracks, not padding or gaps.
+Signed Canvas geometry can remain valid outside layout, but a negative
+dimension cannot participate as a layout allocation.
 
 The root allocation follows the [Canvas surface
 contract](../design/canvas-surface-contract.md): a fixed logical viewport is
@@ -195,6 +206,20 @@ with no Canvas-paint responsibility. Conceptually it consumes normalized
 container/item style, constraints, and a measurement callback, then produces a
 finite container box and ordered child placements. The five algorithms are
 separate by semantics:
+
+```ts
+interface LayoutResult {
+  container: LayoutBox;
+  children: readonly ChildPlacement[];
+}
+
+interface ChildPlacement {
+  element: CRCElement;
+  box: LayoutBox;
+  clipInChildSpace?: LayoutBox;
+  identityHint: InternalIdentityHint;
+}
+```
 
 - `Absolute`: independent offsets within a containing box;
 - `Overlay`: one shared allocation plus alignment;
@@ -290,6 +315,8 @@ instead of allocating a new function per child or render. A keyed child
 survives supported same-parent reflow; unkeyed `A/B/A` identity still follows
 the two occurrences of `A`; moving a child between parents remounts it. The
 placement descriptor never becomes a public wrapper or author-visible node.
+CSS ordering features remain disabled until allocation, paint/interaction
+order, and identity are implemented and documented together.
 
 ## Pure measurement boundary
 
@@ -300,10 +327,13 @@ content size or an unsupported reason. It cannot paint, invoke hooks,
 or acquire runtime resources. Temporary globals are cleared/restored in
 `finally`, and cycles are diagnosed.
 
-`Text` shares one content/layout calculation between measurement and paint in a
-render transaction. Explicitly sized `Image` can measure; natural image size
-cannot because it would acquire asynchronous state. Plain components do not
-claim measurement.
+`Text` shares tokenization, line breaking, typography, and one content/layout
+calculation between measurement and paint in a render transaction, so measured
+and painted line boxes cannot drift. Explicitly sized `Image` can measure;
+natural image size cannot because it would acquire asynchronous state. Plain
+components do not claim measurement. A supported result is a finite preferred
+size before min/max clamping by the owning algorithm; an unsupported result
+becomes an actionable diagnostic when that size is required.
 
 `crcLayoutBox()` exposes `{ x: 0, y: 0, width, height }` in the allocated
 child-local coordinate system. It is observational and does not claim root or
@@ -322,11 +352,25 @@ is:
 root surface × ancestor Group × layout placement × child Group × local geometry
 ```
 
+- At the root, local origin is the Canvas logical origin.
+- `Absolute` uses declared positions within its containing box.
+- `Flow`, `Flex`, `Grid`, and `Overlay` choose placement; local primitive
+  geometry starts at zero unless the primitive style explicitly offsets it.
+- A resolved percentage width controls both allocation and, for box-shaped
+  built-ins, painted local width.
+- Paint may overflow a visible allocation and never retroactively changes it.
+
 The same composition is captured for interaction paths, explicit clips,
 layout-overflow clips, and `Layer` bounds. Paint may overflow a visible
 allocation without changing allocation. Layers mount a stable private fragment
 root in their offscreen instance and join the root paint ledger at their
 composite position.
+
+Layout placement applies before a child's own transform. Pixel-grid adjustment
+runs in the component's local paint space after resolved dimensions are known.
+Visible overflow creates no layout clip. Clipped overflow adds a CRC-managed
+content-box clip whose intersection is shared by paint and hit testing; it does
+not imply scrolling.
 
 ## Explicit style composition
 
@@ -354,10 +398,11 @@ application-owned `custom` data.
 ## Error ownership
 
 Diagnostics are raised by the closest responsible boundary: invalid style
-syntax or range, non-finite resolution, unsupported/cyclic measurement,
-incompatible algorithm input, or an internal algorithm invariant. A
-`LayoutDiagnostic` records component, property, supplied value, algorithm,
-constraints, and reason. Invalid geometry never reaches Canvas.
+syntax or unknown value, non-finite resolution, unsupported/cyclic or
+underdetermined percentage measurement, incompatible algorithm input, or an
+internal algorithm invariant. A `LayoutDiagnostic` records component, key when
+present, property, supplied value, algorithm, constraints, and reason. Invalid
+geometry never reaches Canvas.
 
 A layout/style throw enters the ordinary render-failure path. Runtime-owned
 resources and refs close, Canvas and temporary state restore in `finally`, and
@@ -385,9 +430,16 @@ differ:
 element/
   types, creation, child materialization, fragments, private metadata
 style/
-  public schemas, normalization, length resolution, diagnostics
+  types              public capability interfaces
+  normalize          defaults, shorthand expansion, value parsing
+  resolve-length     number/percentage/auto resolution
+  diagnostics        typed style/layout errors
 layout/
-  boxes/constraints, context, measurement, placement, five algorithms
+  types              constraints, sizes, boxes, placements
+  context            current allocation and containing box
+  measure            measurement dispatch and services
+  place-child        private transform/clip placement component
+  absolute, overlay, flow, flex, grid
 focus/
   transparent policy metadata and the root focus manager
 ```
@@ -396,6 +448,16 @@ Built-in primitives depend on style resolution and current allocation. Pure
 layout algorithms do not depend on drawing primitives. Runtime dispatch is the
 small integration seam that understands element, primitive, layout, and policy
 metadata.
+
+## Verification architecture
+
+Fast feedback is the default: pure style/layout modules use non-browser unit
+fixtures; each render-integration seam has a focused browser contract; built-in
+migrations run focused component tests; and one nested public scenario carries
+geometry, pixels, targets, reflow, and cleanup. Broader checks run after
+cohesive milestones and the aggregate trust gate runs at completion. This
+cadence does not weaken correctness criteria; it avoids repeatedly paying the
+full package/browser/visual cost while a local slice is changing.
 
 ## Architectural decisions
 

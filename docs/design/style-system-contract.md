@@ -101,7 +101,9 @@ strict resolution and child diagnostics as TypeScript.
 
 `opacity: 0` suppresses paint without removing separately registered target
 geometry. Image generations remain keyed by `style.src` with exact lifecycle
-ownership. Group transforms retain the order documented in the drawing
+ownership. Explicit image dimensions establish geometry before load and after
+failure, while each omitted natural dimension remains zero until a successful
+load supplies it. Group transforms retain the order documented in the drawing
 contract.
 
 ## Deliberate exclusions

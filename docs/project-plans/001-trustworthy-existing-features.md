@@ -1,5 +1,7 @@
 # Project plan 001: Trustworthy existing features
 
+> **Historical status: COMPLETED PROJECT PLAN.** Instructions and checkpoints below are preserved as dated evidence, not current work.
+
 ## Purpose
 
 Build high confidence in CRC’s existing `main` API before expanding the framework. User interaction is the highest-risk area, followed by teardown and resource ownership. This phase will make behavior explicit, test it against observable contracts, fix proven correctness or lifecycle problems, and install regression gates.

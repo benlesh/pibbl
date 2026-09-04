@@ -15,6 +15,8 @@ children and preserve source paint order.
 - `Grid` uses explicit tracks and explicit one-based item placement; there is
   no auto placement.
 
+<!-- docs:complete-snippet:start layout-flex -->
+
 ```tsx
 import {
   Flex,
@@ -58,6 +60,8 @@ const row = (
 );
 ```
 
+<!-- docs:complete-snippet:end -->
+
 The `style` received by `Tile` is its specified author value. The finite local
 box calculated by the parent comes from `crcLayoutBox()`. Parent placement uses
 `left`/`top`; drawing-local geometry uses `x`/`y`. `width` and `height` describe
@@ -73,21 +77,29 @@ Grid, Overlay, and Absolute value.
 
 `Group` composes Canvas transforms around any number of children:
 
+<!-- docs:complete-snippet:start layout-group -->
+
 ```tsx
-<Group
-  style={{
-    translateX: 80,
-    translateY: 40,
-    scaleX: 1.25,
-    scaleY: 1.25,
-    rotationDegrees: -8,
-    rotationOrigin: [100, 50],
-  }}
->
-  <Rectangle style={{ width: 200, height: 100, fill: "tomato" }} />
-  <Text style={{ x: 20, y: 20 }}>Transformed together</Text>
-</Group>
+import { Group, Rectangle, Text } from "@crc/core";
+
+const transformed = (
+  <Group
+    style={{
+      translateX: 80,
+      translateY: 40,
+      scaleX: 1.25,
+      scaleY: 1.25,
+      rotationDegrees: -8,
+      rotationOrigin: [100, 50],
+    }}
+  >
+    <Rectangle style={{ width: 200, height: 100, fill: "tomato" }} />
+    <Text style={{ x: 20, y: 20 }}>Transformed together</Text>
+  </Group>
+);
 ```
+
+<!-- docs:complete-snippet:end -->
 
 `Group` is Canvas transformation, not layout. Its transform affects drawing,
 clips, event geometry, and nested layers consistently. Canvas save/restore
@@ -97,7 +109,11 @@ isolates siblings.
 
 `Clip` applies one `Path2D` to all children. Nested clips intersect:
 
+<!-- docs:complete-snippet:start layout-clip -->
+
 ```tsx
+import { Clip, Rectangle, Text } from "@crc/core";
+
 const windowPath = new Path2D();
 windowPath.arc(100, 100, 80, 0, Math.PI * 2);
 
@@ -109,6 +125,8 @@ const clipped = (
 );
 ```
 
+<!-- docs:complete-snippet:end -->
+
 The captured clip geometry applies to hit testing as well as paint.
 
 ## Layer
@@ -116,13 +134,27 @@ The captured clip geometry applies to hit testing as well as paint.
 `Layer` owns a persistent offscreen CRC instance and accepts ordinary
 multi-child content:
 
+<!-- docs:complete-snippet:start layout-layer -->
+
 ```tsx
-<Layer style={{ width: 300, height: 200 }}>
-  <Rectangle style={{ width: 300, height: 200, fill: "#eef2ff" }} />
-  <Chart />
-  <Text style={{ x: 12, y: 12 }}>Cached offscreen content</Text>
-</Layer>
+import { Layer, Rectangle, Text, type CRCNode } from "@crc/core";
+
+function Chart(): CRCNode {
+  return (
+    <Rectangle style={{ x: 40, y: 60, width: 220, height: 80, fill: "navy" }} />
+  );
+}
+
+const cached = (
+  <Layer style={{ width: 300, height: 200 }}>
+    <Rectangle style={{ width: 300, height: 200, fill: "#eef2ff" }} />
+    <Chart />
+    <Text style={{ x: 12, y: 12 }}>Cached offscreen content</Text>
+  </Layer>
+);
 ```
+
+<!-- docs:complete-snippet:end -->
 
 The layer uses a stable internal fragment root, shallow structural cache
 comparison, and the root's physical density. Its targets participate in the

@@ -1,5 +1,7 @@
 # IES-03 field note — drawing and composition lessons
 
+> **Historical status: COMPLETED FIELD RECORD.** Results are dated evidence and are not current API guidance or current test totals.
+
 Date: 2026-08-12
 
 Eleven focused sources now teach Rectangle, Path, SVG path, Line, Horizontal line, Vertical line, Text, Image, Group, Clip, and Layer. Every file imports only `@crc/core`, exports the canonical `mount(canvas)` contract, contains exactly one lesson scene, and is loaded from the same catalog path by the studio and browser tests.

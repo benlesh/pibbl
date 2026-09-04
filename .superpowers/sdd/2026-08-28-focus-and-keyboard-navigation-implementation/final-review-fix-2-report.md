@@ -1,5 +1,7 @@
 # Final review fix 2 report
 
+> **Historical status: COMPLETED IMPLEMENTATION EVIDENCE.** This dated report is preserved for audit and is not current API guidance.
+
 Date: 2026-08-30  
 Base: `df18e90caf6b6f55ef9ace8dbcb2afcc5ef71dd6`  
 Environment: Node `24.15.0`, pnpm `11.21.0`, Playwright Chromium
@@ -57,4 +59,3 @@ reported 137 passes and the single existing manager-replay failure caused by
 the rejected identity discriminator; that discriminator is absent from the
 final diff. Per coordination instruction, no further broad gates were run here.
 The parent task will run the final aggregate trust gate from this commit.
-

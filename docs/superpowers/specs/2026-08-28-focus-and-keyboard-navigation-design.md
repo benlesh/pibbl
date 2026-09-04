@@ -1,5 +1,7 @@
 # CRC focus and keyboard-navigation design
 
+> **Historical status: IMPLEMENTED DESIGN RECORD.** Original proposal or approval wording below is preserved; current behavior lives in `docs/design/`.
+
 Status: proposed
 
 Date: 2026-08-28

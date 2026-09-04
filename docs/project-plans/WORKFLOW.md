@@ -37,12 +37,16 @@ Keep exactly one `[NEXT]` marker in the active numbered plan. The detailed step 
   - behavior has semantic assertions and applicable visual output has deterministic pixel/screenshot assertions;
   - the manual procedure and expected observations are written down;
   - a dated field note records browser quirks, flakes, failed approaches, and reusable test-tool opportunities.
-- Keep scenario implementations presentation-neutral. Gallery pages, headless drivers, and any future documentation pages should be adapters over the same scenario/catalog entry rather than dependencies of one another.
+- Keep scenario implementations presentation-neutral. Gallery pages, headless
+  drivers, and current documentation pages should be adapters over the same
+  scenario/catalog entry rather than dependencies of one another.
 - Give each scenario an explicit visibility/maturity classification. Diagnostic and stress scenarios may remain local/test-only; do not publish them as user documentation merely because they appear in the gallery.
 - Never update visual baselines merely to make CI green. Inspect the expected, actual, and diff artifacts and record why the change is correct.
 - Internal unit tests and test-only diagnostics may supplement a step, but they do not replace its public-API integration scenario.
 - Run the verification named by the selected step. Report failures honestly.
-- Do not expand scope to new input APIs, JSX, new components, or a broad rewrite unless the plan is explicitly amended.
+- Do not expand scope to new input APIs, component families, or a broad rewrite
+  unless the plan is explicitly amended. JSX and `createElement` are the current
+  supported authoring surfaces, not future scope.
 
 ## End of a work session
 

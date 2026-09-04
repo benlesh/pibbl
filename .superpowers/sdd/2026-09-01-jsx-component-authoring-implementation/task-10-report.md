@@ -1,5 +1,7 @@
 # Task 10 report — JSX-first learning catalog migration
 
+> **Historical status: COMPLETED IMPLEMENTATION EVIDENCE.** This dated report is preserved for audit and is not current API guidance.
+
 ## Result
 
 Task 10 is implemented and ready to commit.

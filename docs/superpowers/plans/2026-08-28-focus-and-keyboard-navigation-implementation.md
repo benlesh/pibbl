@@ -1,5 +1,7 @@
 # CRC Focus and Keyboard Navigation Implementation Plan
 
+> **Historical status: IMPLEMENTED PLAN.** Agent instructions and unchecked-looking task syntax below are preserved as dated evidence, not active work.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add an optional, tree-shakable logical focus manager with DOM-integrated Tab traversal, pointer focus, keyboard activation, focus render state, and nested directional navigation.

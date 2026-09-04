@@ -44,7 +44,8 @@ contract in the [drawing contract](./drawing-components-contract.md).
 `crc(canvas, root, config?)` accepts a complete `CRCNode`, so a collection,
 fragment, or empty root is valid. The first call owns the mount configuration
 and returns a stable controller. Later calls queue root replacement on that
-same mount and return the controller.
+same mount and return the controller. Later calls cannot change the initial
+viewport, fit, pixel ratio, or abort signal.
 
 ## Traversal and identity
 
@@ -110,23 +111,24 @@ a later explicit render remounts cleanly.
 
 ## Public hook contracts
 
-| API                               | Contract                                                                                                                                                                                            |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `crcState(init?)`                 | Stable mounted setter; direct and functional updates apply in call order and coalesce. State follows component identity. A stale/dead setter is inert. Functions passed to the setter are updaters. |
-| `crcMemo(create, deps)`           | Mount/create and strict shallow `!==` dependency comparison. Length changes recompute; `NaN` recomputes and signed zeros compare equal.                                                             |
-| `crcRef(init?)`                   | Stable mutable `{ current }`; initializer is mount-only and mutation does not schedule.                                                                                                             |
-| `crcWhenChanged(callback, deps?)` | Synchronous setup during render. Previous cleanup runs once before replacement and final cleanup runs on removal. Omitted dependencies mean every render.                                           |
-| `crcRectPath(...)`                | Memoized rectangle `Path2D`, including geometry and pixel-grid input.                                                                                                                               |
-| `crcLinePath(...)`                | Memoized polyline over every coordinate and `closePath`.                                                                                                                                            |
-| `crcSvgPath(data)`                | Memoized exact SVG data with platform parsing/errors.                                                                                                                                               |
-| `crcEvent(...)`                   | Typed geometric target or narrow pathless Canvas observer with exact slot ownership.                                                                                                                |
-| `crcEventTarget(...)`             | Grouped explicit target and focus snapshot.                                                                                                                                                         |
-| `crcEventListener(...)`           | Non-geometric capture/bubble participant.                                                                                                                                                           |
-| `crcCursor(...)`                  | Target cursor or Canvas fallback with exact ownership.                                                                                                                                              |
-| `crcLayoutBox()`                  | Stable readonly child-local allocation. It is render-only and throws `No CRC layout context is available` outside a live layout context.                                                            |
-| `crcCanvasContext()`              | Current isolated Canvas 2D context. It allocates no hook slot and is unavailable outside render or during measurement.                                                                              |
+| API                               | Supported contract                                                                                                                                                                                                                                                                                                                                                                      | Direct evidence                                                         |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `crcState(init?)`                 | Returns the current value and one stable setter for the mounted slot. Direct values and functional updates apply in call order and coalesce into a frame. Identity persists across ordinary renders and resets at key/type/root removal. A setter becomes inert after its exact component or mount starts teardown. Function-valued state is not distinguished from functional updates. | `hook-contract.test.ts`, `crc-state.test.ts`, shared laboratory         |
+| `crcMemo(create, deps)`           | Runs on mount and again when dependency length changes or any position compares different with strict `!==`. Equal dependencies preserve object identity. Consequently `NaN` recomputes and `+0`/`-0` compare equal. Factory errors enter fail-closed render recovery.                                                                                                                  | `hook-contract.test.ts`, shared laboratory                              |
+| `crcRef(init?)`                   | Creates one stable mutable `{ current }` object for the slot. Mutating it does not schedule a render. The initializer is used only on mount; key/type/root removal creates a fresh ref.                                                                                                                                                                                                 | `crc-ref.test.ts`, `hook-contract.test.ts`, shared laboratory           |
+| `crcWhenChanged(callback, deps?)` | Runs synchronously on mount and when shallow strict dependencies change. The previous cleanup runs exactly once before the next setup. With no dependencies it cleans and runs on every render. Component removal owns the final cleanup; a void or throwing replacement cannot replay an older cleanup.                                                                                | `crc-when-changed.test.ts`, `hook-contract.test.ts`, cleanup laboratory |
+| `crcRectPath(...)`                | Memoizes a `Path2D` over all rectangle geometry and pixel-grid inputs. Equal effective inputs preserve identity; changed geometry creates a new path.                                                                                                                                                                                                                                   | `crc-path-hooks.test.ts`, shared laboratory                             |
+| `crcLinePath(...)`                | Memoizes over every coordinate and `closePath`; changing either creates a new `Path2D`.                                                                                                                                                                                                                                                                                                 | `crc-path-hooks.test.ts`, shared laboratory                             |
+| `crcSvgPath(data)`                | Memoizes exact SVG path data. Parsing is delegated to platform `Path2D`; malformed data propagates the platform error and participates in normal render recovery.                                                                                                                                                                                                                       | `crc-path-hooks.test.ts`, shared laboratory                             |
+| `crcEvent(...)`                   | Owns a typed event hook slot and follows geometric-target/pathless-observer and lifecycle rules in the event and ownership contracts. Switching modes keeps hook order valid.                                                                                                                                                                                                           | `hook-contract.test.ts`, user-event laboratories                        |
+| `crcEventTarget(...)`             | Groups one explicit geometric target and its focus snapshot with exact per-render ownership.                                                                                                                                                                                                                                                                                            | event-target and focus suites                                           |
+| `crcEventListener(...)`           | Adds one non-geometric capture/bubble listener participant with no implicit target.                                                                                                                                                                                                                                                                                                     | propagation and ownership suites                                        |
+| `crcCursor(...)`                  | Owns a typed cursor hook slot and follows target/fallback ownership rules. Switching path/global modes keeps hook order valid.                                                                                                                                                                                                                                                          | `hook-contract.test.ts`, cleanup laboratory                             |
+| `crcLayoutBox()`                  | Returns the current component's stable readonly local allocation `{ x: 0, y: 0, width, height }`. Equal allocation preserves object identity. Reading does not schedule work. Unlike ordinary hooks, calling it outside a live layout context—including during pure measurement—throws `No CRC layout context is available`, not the shared hook diagnostic.                            | layout foundation and measurement-isolation suites                      |
+| `crcCanvasContext()`              | Returns the current isolated Canvas 2D context without allocating a hook slot. It is unavailable outside render and during pure measurement.                                                                                                                                                                                                                                            | plain-component and measurement-isolation suites                        |
 
-The path helpers are distinct slot kinds even though all return `Path2D`.
+The three memoized path helpers are distinct slot kinds. Reordering them is a
+hook-order error even though all return `Path2D`.
 
 ## Pure measurement
 
@@ -151,12 +153,39 @@ cannot affect a replacement mount. Abort uses the same guarded path.
 
 ## Package boundary and evidence
 
-The package exports root runtime/types plus compiler-only
+The package exports the runtime, controller and surface types, components,
+hooks, hook values, and compiler-only
 `@crc/core/jsx-runtime` and `@crc/core/jsx-dev-runtime` entries. Strict Bundler,
 NodeNext, built, and packed consumers verify those entries, the CRC/React type
 boundary, and blocked private subpaths. The `runtime-hooks-laboratory`, JSX
 authoring tests, lifecycle stress suite, and cleanup ledgers cover traversal,
 identity, hook order, recovery, and disposal through public elements.
+
+The presentation-neutral `runtime-hooks-laboratory` is loaded through the same
+catalog entry by the Studio and headless Chromium. It proves exact render
+counts, state/ref separation, stable and invalidated memo/path identities,
+dependency setup/cleanup, keyed sibling identity across reorder/insert/remove,
+key/component/root remount boundaries, every supported empty child, all
+outside-render errors, recovery, text-free pixels, source-adapter identity, and
+reset. Focused tests additionally prove duplicate keys, same-name functions,
+unkeyed occurrence behavior, root/state update permutations,
+more/fewer/reordered hooks, cleanup and factory exceptions, Canvas context
+restoration, stale setters, malformed-path recovery, fragment identity, and
+recursive iterable diagnostics. Public type assertions compile against built
+declarations under both Bundler and NodeNext resolution.
+
+## Deliberate boundaries
+
+- Conditional hooks reject. Learner pages do not intentionally corrupt their
+  own hook sequence; focused tests own that error path.
+- Component identity is internal. Diagnostic IDs displayed by laboratories are
+  not public runtime identifiers.
+- `crcState` defines no separate lazy-initializer or function-as-data
+  semantics; a function passed to its setter is an updater.
+- A thrown render fails closed and requires a later explicit render. CRC does
+  not retain or restore a transactional snapshot of the previous Canvas tree.
+- Drawing, layout, events, and ownership retain their exact behavior in their
+  dedicated contracts rather than being redefined here.
 
 Completed numbered plans and dated field notes preserve the API that existed at
 their recorded revisions. They are historical evidence, not this current

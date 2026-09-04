@@ -1,5 +1,7 @@
 # Final review fix 4 report
 
+> **Historical status: COMPLETED IMPLEMENTATION EVIDENCE.** This dated report is preserved for audit and is not current API guidance.
+
 Date: 2026-08-30  
 Base: `14383d243e6d8604c9ba38c92a737d27664d1997`  
 Environment: Node `24.15.0`, pnpm `11.21.0`, Playwright Chromium
@@ -67,4 +69,3 @@ The proportional focus matrix preserves manager replacement, failed-render
 recovery, cached-manager replay, nested layers, unrelated/no-focus caching,
 directional ownership, and DOM focus-host cleanup. The parent task owns the
 final aggregate trust run.
-

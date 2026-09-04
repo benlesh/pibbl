@@ -1,5 +1,7 @@
 # CRC First-Class Style and Layout Implementation Plan
 
+> **Historical status: IMPLEMENTED PLAN.** Agent instructions and unchecked-looking task syntax below are preserved as dated evidence, not active work.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Replace CRC's visual props with one explicit typed style language, then deliver dedicated absolute, overlay, flow, CSS-compatible flex, and CSS-compatible grid layout components without introducing a retained display list.

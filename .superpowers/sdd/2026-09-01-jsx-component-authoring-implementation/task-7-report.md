@@ -1,5 +1,7 @@
 # Task 7 report — recursive JSX layout children
 
+> **Historical status: COMPLETED IMPLEMENTATION EVIDENCE.** This dated report is preserved for audit and is not current API guidance.
+
 ## Result
 
 Task 7 is implemented and ready to commit.

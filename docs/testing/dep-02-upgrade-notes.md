@@ -1,5 +1,7 @@
 # DEP-02 foundational toolchain upgrade notes
 
+> **Historical status: COMPLETED DEPENDENCY RECORD.** Versions and results are a dated snapshot, not the current verification result.
+
 Date: 2026-08-11
 
 Status: complete.

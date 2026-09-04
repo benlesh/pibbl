@@ -1,5 +1,7 @@
 # Task 7 report: nested directional boundaries and key precedence
 
+> **Historical status: COMPLETED IMPLEMENTATION EVIDENCE.** This dated report is preserved for audit and is not current API guidance.
+
 ## Outcome
 
 Nested directional navigation is explicitly contained by the focused target's

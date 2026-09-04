@@ -1,5 +1,7 @@
 # IES-05 field note — hardening and trust
 
+> **Historical status: COMPLETED FIELD RECORD.** Results are dated evidence and are not current API guidance or current test totals.
+
 Date: 2026-08-12
 
 The automated-test index and detail pages retain all 13 fixture definitions, IDs, actions, state, procedures, limitations, visual evidence, and headless consumers. Source is collapsed by default and opens in a lazy syntax-highlighted read-only editor. Current README, architecture, status, generated catalog, and drawing-contract documentation now describe the learner studio and separate labs.

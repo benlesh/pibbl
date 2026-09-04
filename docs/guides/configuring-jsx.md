@@ -88,6 +88,8 @@ from CRC, and `react` is not required.
 JavaScript authors use `.jsx`, the same automatic-runtime configuration, and
 normal ESM imports:
 
+<!-- docs:complete-snippet:start javascript-runtime -->
+
 ```jsx
 /** @jsxImportSource @crc/core */
 import { Rectangle, Text, crc } from "@crc/core";
@@ -104,6 +106,8 @@ function Scene() {
 const controller = crc(document.querySelector("canvas"), <Scene />);
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });
 ```
+
+<!-- docs:complete-snippet:end -->
 
 JavaScript receives the same runtime validation as TypeScript but not static
 prop checking. Keep styles explicit and use the diagnostics in [JSX

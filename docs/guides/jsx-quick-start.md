@@ -24,6 +24,8 @@ JavaScript, per-file setup, and mixed-runtime projects.
 
 ## A complete interactive scene
 
+<!-- docs:complete-snippet:start jsx-quick-start -->
+
 ```tsx
 import {
   Group,
@@ -82,6 +84,8 @@ const controller = mountPoster(document.querySelector("canvas")!);
 controller.dispose();
 controller.dispose(); // Idempotent.
 ```
+
+<!-- docs:complete-snippet:end -->
 
 `Rectangle`, `Text`, and `Group` are imported Canvas components. Lowercase JSX
 tags are intentionally rejected because CRC does not create HTML. Visual and

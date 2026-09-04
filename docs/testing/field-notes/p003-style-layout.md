@@ -1,5 +1,7 @@
 # Plan 003 style and layout field notes
 
+> **Historical status: COMPLETED FIELD RECORD.** Results are dated evidence and are not current API guidance or current test totals.
+
 ## 2026-08-17 — P003-01 element style protocol
 
 ### Environment

@@ -1,5 +1,7 @@
 # User Events and Focus Learning Examples Implementation Plan
 
+> **Historical status: IMPLEMENTED PLAN.** Agent instructions and unchecked-looking task syntax below are preserved as dated evidence, not active work.
+
 > **For agentic workers:** Implement the independent lesson families in parallel. Per the user's explicit workflow, do not run tests, builds, lint, formatting, or other verification until every lesson and all shared catalog/documentation integration are coded.
 
 **Goal:** Make every public user-event, focus-management, keyboard-activation, and directional-navigation capability added in the 2026-08-28 work discoverable through the CRC Studio's documentation-backed learning examples.

@@ -1,5 +1,7 @@
 # Project plan 002: CRC interactive examples studio
 
+> **Historical status: COMPLETED PROJECT PLAN.** Instructions and checkpoints below are preserved as dated evidence, not current work.
+
 ## Purpose
 
 Replace the test-oriented gallery with a learner-first Canvas studio: one focused page per drawing primitive, one per mouse event, several advanced interaction lessons, attractive live examples, and genuinely type-aware editable TypeScript. Keep the exhaustive deterministic scenarios intact in a clearly separated automated-testing area.

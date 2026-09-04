@@ -1,5 +1,7 @@
 # CRC responsive high-density Canvas surface design
 
+> **Historical status: IMPLEMENTED DESIGN RECORD.** Original proposal or approval wording below is preserved; current behavior lives in `docs/design/`.
+
 Status: approved for implementation on 2026-08-19
 
 Date: 2026-08-19

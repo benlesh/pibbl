@@ -11,9 +11,12 @@ any JSX compiler configuration to use this guide.
 pnpm add @crc/core
 ```
 
+<!-- docs:complete-snippet:start without-jsx -->
+
 ```ts
 import {
   FocusManagement,
+  Fragment,
   Group,
   KeyboardNavigation,
   Rectangle,
@@ -35,7 +38,7 @@ function Poster({ initialMessage }: PosterProps): CRCNode {
   const cards = ["A", "B"].map((label, index) =>
     createElement(
       Group,
-      { key: label },
+      { key: label, children: null },
       createElement(Rectangle, {
         style: {
           x: 32 + index * 100,
@@ -56,7 +59,7 @@ function Poster({ initialMessage }: PosterProps): CRCNode {
     null,
     createElement(
       KeyboardNavigation,
-      { mode: "directional" },
+      { mode: "directional", children: null },
       createElement(
         Group,
         null,
@@ -69,7 +72,7 @@ function Poster({ initialMessage }: PosterProps): CRCNode {
           "Selected: ",
           message,
         ),
-        cards,
+        createElement(Fragment, { key: "choices", children: null }, cards),
       ),
     ),
   );
@@ -78,7 +81,14 @@ function Poster({ initialMessage }: PosterProps): CRCNode {
 export function mount(canvas: HTMLCanvasElement): CRCController {
   return crc(canvas, createElement(Poster, { initialMessage: "None" }));
 }
+
+export function attach(canvas: HTMLCanvasElement): () => void {
+  const controller = mount(canvas);
+  return () => controller.dispose();
+}
 ```
+
+<!-- docs:complete-snippet:end -->
 
 Call `controller.dispose()` when the owner removes the Canvas or no longer
 needs the scene. Disposal is safe to repeat.
@@ -127,7 +137,15 @@ textual content.
 `Fragment` is available for an explicit keyed identity boundary:
 
 ```ts
-createElement(Fragment, { key: section.id }, section.elements);
+import { Fragment, createElement, type CRCNode } from "@crc/core";
+
+function keyedSection(section: { id: string; elements: CRCNode }) {
+  return createElement(
+    Fragment,
+    { key: section.id, children: null },
+    section.elements,
+  );
+}
 ```
 
 ## Focus and lifecycle

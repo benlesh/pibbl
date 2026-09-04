@@ -1,5 +1,7 @@
 # IES-02 field note — editor and isolated runner
 
+> **Historical status: COMPLETED FIELD RECORD.** Results are dated evidence and are not current API guidance or current test totals.
+
 Date: 2026-08-12
 
 Monaco 0.56 and the TypeScript worker load only on lesson or opened test-source routes. The CRC declaration adapter produced property completions, hover/type information, semantic errors, bracket matching, and JavaScript emission. A deliberate `widtth` property reported the exact `RectProps` diagnostic and retained run 1; the subsequent valid edit replaced it with run 2 and left one frame.

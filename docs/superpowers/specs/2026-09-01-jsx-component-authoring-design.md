@@ -1,5 +1,7 @@
 # JSX component authoring design
 
+> **Implementation status: CURRENT IMPLEMENTED DESIGN RECORD.** Approved wording is preserved; current usage lives in `docs/guides/` and normative contracts in `docs/design/`.
+
 Status: approved on 2026-09-01 and implemented on 2026-09-03. This file
 preserves the approved design wording; current usage lives in `docs/guides/`,
 `docs/api-reference.md`, and `docs/design/`.

@@ -1,5 +1,7 @@
 # TFC-04 field note — event order and logical targeting
 
+> **Historical status: COMPLETED FIELD RECORD.** Results are dated evidence and are not current API guidance or current test totals.
+
 Date: 2026-08-11
 
 ## Scenario and risk

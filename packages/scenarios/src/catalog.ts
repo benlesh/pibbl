@@ -342,7 +342,7 @@ const drawingLinesMetadata: ScenarioMetadata = {
   ],
   learningOrder: 30,
   visibility: 'documentation-candidate',
-  visibilityReason: 'It demonstrates every supported line export with short, readable public calls.',
+  visibilityReason: 'It demonstrates every supported Line-family export with short, readable public calls.',
   maturity: 'contract',
 };
 

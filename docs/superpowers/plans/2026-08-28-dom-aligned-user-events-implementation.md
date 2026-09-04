@@ -1,5 +1,7 @@
 # CRC DOM-Aligned User Events Implementation Plan
 
+> **Historical status: IMPLEMENTED PLAN.** Agent instructions and unchecked-looking task syntax below are preserved as dated evidence, not active work.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Replace CRC's eager mouse-only interaction path with one lazy, DOM-aligned user-event dispatcher supporting explicit targets, propagation, pointer capture, and the pertinent browser user-event families.

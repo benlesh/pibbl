@@ -1,5 +1,7 @@
 # Responsive High-Density Canvas Surface Implementation Plan
 
+> **Historical status: IMPLEMENTED PLAN.** Agent instructions and unchecked-looking task syntax below are preserved as dated evidence, not active work.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Make CRC own logical viewport, CSS sizing, backing density, fit projection, mouse conversion, and layer density so Canvas output is crisp by default.

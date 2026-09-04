@@ -31,15 +31,20 @@ contention observed during earlier upgrade and visual work.
 `trust:static` checks:
 
 - learning/test catalog discovery, source contracts, and the generated index;
-- the required JSX/non-JSX guide set and all active local documentation links;
+- the required JSX/non-JSX guide set and all active local documentation files,
+  links, and heading/explicit anchors;
 - exact API-reference parity with every root value/type export and both
   automatic-runtime entries, including their module-scoped JSX namespace;
 - current `.example.tsx` references and absence of removed authoring vocabulary
-  from active documentation;
+  from active documentation and Studio-facing explanatory sources;
 - required Vite/esbuild, Babel, JavaScript, mixed-runtime, lifecycle, primitive,
   text/children, layout, focus, and accessibility coverage markers;
-- an esbuild-transformed JavaScript JSX fixture and a strict compile-backed TSX
-  fixture using only the public surface;
+- every explicitly marked complete TypeScript/TSX program extracted directly
+  from its guide, plus the marked JavaScript program transformed independently
+  by esbuild and the real Babel automatic-runtime plugin;
+- fail-closed export discovery, semantic acceptance-matrix mappings, complete
+  non-JSX feature coverage, visible historical-record banners, and targeted
+  RED mutations proving each check rejects stale or incomplete evidence;
 - TypeScript, ESLint, Prettier, package output, and source/built Studio builds.
 
 `trust:package` builds real tarballs and installs them into strict Bundler and
@@ -72,17 +77,22 @@ corepack pnpm@11.21.0 docs:check
 
 The check treats root/package READMEs, `AGENTS.md`, current guides, current
 architecture/design contracts, current status/follow-up pages, current testing
-policy, and the generated scenario index as active guidance. The breaking
+policy, the generated scenario index, and Studio/editor-facing explanatory
+sources as active guidance. The breaking
 migration guide is link-checked but may show a removed name only beside its
 replacement. Completed numbered plans, approved dated designs, implementation
 plans, characterization baselines, dependency upgrade notes, dated field
 notes, task reports, and `_bmad-output/` remain historical/discovery evidence;
 their old vocabulary and point-in-time totals are not current instructions.
+Repository historical records must say so visibly near their title; their path
+alone is not evidence of historical status.
 
 Documentation success proves consistency, not runtime behavior by itself. The
 acceptance matrix in [library status](../library-status.md) maps each authoring
-topic to a current guide/contract and executable example or test. Typecheck,
-catalog, package, browser, lifecycle, and Studio gates execute those contracts.
+topic to its required current guide/contract and specific executable example or
+test. The checker validates those semantic mappings rather than accepting any
+arbitrary link. Typecheck, catalog, package, browser, lifecycle, and Studio
+gates execute those contracts.
 
 When reporting verification, name the command, runtime/browser environment,
 and fresh result. A dated field note or old test count is evidence only for its

@@ -1,5 +1,7 @@
 # Task 9 report — Studio CRC TSX compilation and execution
 
+> **Historical status: COMPLETED IMPLEMENTATION EVIDENCE.** This dated report is preserved for audit and is not current API guidance.
+
 ## Result
 
 Task 9 is implemented and ready to commit.

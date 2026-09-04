@@ -31,6 +31,8 @@ Create a Canvas and a CRC scene:
 <script type="module" src="/src/poster.tsx"></script>
 ```
 
+<!-- docs:complete-snippet:start readme-poster -->
+
 ```tsx
 import { Group, Rectangle, Text, crc, crcState, type CRCNode } from "@crc/core";
 
@@ -73,6 +75,8 @@ const controller = crc(canvas, <Poster initialMessage="Hello" />);
 // Release listeners, frames, hooks, layers, and the mount when the page leaves.
 window.addEventListener("pagehide", () => controller.dispose(), { once: true });
 ```
+
+<!-- docs:complete-snippet:end -->
 
 Uppercase imports such as `Rectangle`, `Text`, and `Group` are Canvas
 components, not HTML elements. `crc()` owns at most one live mount per Canvas.

@@ -1,5 +1,7 @@
 # Project plan 003: First-class style and layout
 
+> **Historical status: COMPLETED PROJECT PLAN.** Instructions and checkpoints below are preserved as dated evidence, not current work.
+
 ## Purpose
 
 Give CRC one explicit typed style language for every visual value and add

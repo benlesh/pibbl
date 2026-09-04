@@ -1,6 +1,9 @@
 # CRC JSX Component Authoring Implementation Plan
 
-Status: completed on 2026-09-03. Checkboxes and task instructions below are
+> **Implementation status: CURRENT IMPLEMENTATION RECORD THROUGH TASK 14.** Final aggregate trust closure is tracked by Task 15; usage guidance lives in `docs/guides/`.
+
+Status: implementation record current through Task 14 on 2026-09-03. Task 15
+owns final aggregate trust closure. Checkboxes and task instructions below are
 preserved as the implementation record; they are not current API guidance.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

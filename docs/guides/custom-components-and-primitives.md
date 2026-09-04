@@ -84,6 +84,8 @@ pure intrinsic measurement capability.
 private capabilities on the returned component value, resolves style before
 render, and permits pure measurement without invoking the renderer.
 
+<!-- docs:complete-snippet:start custom-primitive -->
+
 ```tsx
 import {
   definePrimitive,
@@ -161,6 +163,8 @@ export const Gauge = definePrimitive<
   },
 );
 ```
+
+<!-- docs:complete-snippet:end -->
 
 The four generic stages are program props, specified style, normalized style,
 and resolved style. Program props cannot declare reserved `key` or `style`.

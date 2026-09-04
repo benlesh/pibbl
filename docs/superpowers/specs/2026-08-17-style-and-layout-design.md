@@ -1,5 +1,7 @@
 # CRC first-class style and layout design
 
+> **Historical status: IMPLEMENTED DESIGN RECORD.** Original proposal or approval wording below is preserved; current behavior lives in `docs/design/`.
+
 Status: implemented by Project Plan 003 on 2026-08-18
 
 Date: 2026-08-17
