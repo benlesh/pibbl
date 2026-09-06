@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Circle, LayoutDiagnostic } from '../index';
+import {
+  Circle,
+  LayoutDiagnostic,
+  crcWhenChanged,
+} from '../index';
 import { crc } from './crc';
 import { definePrimitive } from './define-primitive';
 import { createElement, isCRCElement } from './element/create-element';
@@ -148,12 +152,34 @@ describe('crc root updates', () => {
     };
     const canvas = createCanvas();
     const arc = vi.spyOn(Path2D.prototype, 'arc');
+    const addEventListener = vi.spyOn(canvas, 'addEventListener');
+    const removeEventListener = vi.spyOn(canvas, 'removeEventListener');
+    const cleanup = vi.fn();
+    const setup = vi.fn(() => cleanup);
+    let acquiredResources:
+      | { clickListeners: number; targets: number }
+      | undefined;
+    const ResourceBearingSibling = (_props: {}) => {
+      crcWhenChanged(setup, []);
+      return createElement(Circle, {
+        style: { radius: 4, fill: '#2563eb' },
+        onClick: () => undefined,
+      });
+    };
+    const AcquisitionProbe = (_props: {}) => {
+      const instance = getCRCInstance(canvas);
+      acquiredResources = {
+        clickListeners: instance.eventRoot.nativeListeners?.count('click') ?? 0,
+        targets: instance.eventRoot.targets.size,
+      };
+    };
 
     try {
-      crc(canvas, createElement(Circle, {
-        style: { radius: -1, cursor: 'pointer' },
-        onClick: () => undefined,
-      }));
+      crc(canvas, [
+        createElement(ResourceBearingSibling, {}),
+        createElement(AcquisitionProbe, {}),
+        createElement(Circle, { style: { radius: -1 } }),
+      ]);
 
       let failure: unknown;
       try {
@@ -169,10 +195,22 @@ describe('crc root updates', () => {
         algorithm: 'render-dispatch',
       });
       expect((failure as Error).message).toMatch(/nonnegative/);
+      expect(setup).toHaveBeenCalledOnce();
+      expect(acquiredResources).toEqual({ clickListeners: 1, targets: 1 });
+      const clickAcquisition = addEventListener.mock.calls.find(
+        ([type]) => type === 'click',
+      );
+      expect(clickAcquisition).toBeDefined();
+      expect(cleanup).toHaveBeenCalledOnce();
       const failed = getCRCInstance(canvas);
       expect(failed.refs.size).toBe(0);
       expect(failed.eventRoot.targets.size).toBe(0);
       expect(failed.eventRoot.nativeListeners?.count('click')).toBe(0);
+      expect(removeEventListener).toHaveBeenCalledWith(
+        'click',
+        clickAcquisition?.[1],
+        false,
+      );
       expect(canvas.style.cursor).toBe('');
 
       crc(canvas, createElement(Circle, {
