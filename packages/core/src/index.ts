@@ -1,5 +1,16 @@
 // components
+export { Arc, type ArcProps, type ArcStyle } from './lib/components/arc.js';
+export {
+  Circle,
+  type CircleProps,
+  type CircleStyle,
+} from './lib/components/circle.js';
 export { Clip, type ClipProps, type ClipStyle } from './lib/components/clip.js';
+export {
+  Ellipse,
+  type EllipseProps,
+  type EllipseStyle,
+} from './lib/components/ellipse.js';
 export {
   Group,
   type GroupProps,
@@ -27,6 +38,11 @@ export {
 } from './lib/components/line.js';
 export { Path, type PathProps } from './lib/components/path.js';
 export {
+  Polygon,
+  type PolygonProps,
+  type PolygonStyle,
+} from './lib/components/polygon.js';
+export {
   Rectangle,
   type RectangleProps,
 } from './lib/components/rect.js';
@@ -40,6 +56,11 @@ export {
   type VerticalLineProps,
   type VerticalLineStyle,
 } from './lib/components/vertical-line.js';
+export {
+  Wedge,
+  type WedgeProps,
+  type WedgeStyle,
+} from './lib/components/wedge.js';
 export { crc } from './lib/crc.js';
 export type {
   CRCConfig,

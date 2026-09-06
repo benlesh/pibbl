@@ -14,10 +14,19 @@ import type { Component\u0043apabilities as RemovedCapabilityType } from '@crc/c
 // @ts-expect-error the old empty-node alias is not part of the final type surface
 import type { Falsy\u004eodes as RemovedEmptyNodeType } from '@crc/core';
 import {
+  Arc,
+  Circle,
+  Ellipse,
   FocusManagement,
   KeyboardNavigation,
+  Polygon,
+  Wedge,
   createElement,
+  type ArcProps,
+  type ArcStyle,
   type BoxStyle,
+  type CircleProps,
+  type CircleStyle,
   type CRCComponent,
   type CRCConfig,
   type CRCContainerChild,
@@ -33,6 +42,8 @@ import {
   type CRCRenderResult,
   type CRCTextChild,
   type Constraints,
+  type EllipseProps,
+  type EllipseStyle,
   type FocusManagementProps,
   type KeyboardNavigationProps,
   type MeasureInput,
@@ -41,11 +52,15 @@ import {
   type PrimitiveInput,
   type PrimitiveProgramProps,
   type PrimitiveRender,
+  type PolygonProps,
+  type PolygonStyle,
   type RenderingContext2D,
   type ResolvedStyle,
   type SpecifiedStyle,
   type StyleResolutionContext,
   type SystemStyle,
+  type WedgeProps,
+  type WedgeStyle,
 } from '@crc/core';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import { materializeContainerChildren } from '../element/children';
@@ -87,6 +102,16 @@ type ApprovedPublicTypes = {
   readonly eventHandlers: CRCEventHandlers;
   readonly focusProps: FocusManagementProps;
   readonly keyboardProps: KeyboardNavigationProps;
+  readonly circleProps: CircleProps;
+  readonly circleStyle: CircleStyle;
+  readonly ellipseProps: EllipseProps;
+  readonly ellipseStyle: EllipseStyle;
+  readonly arcProps: ArcProps;
+  readonly arcStyle: ArcStyle;
+  readonly wedgeProps: WedgeProps;
+  readonly wedgeStyle: WedgeStyle;
+  readonly polygonProps: PolygonProps;
+  readonly polygonStyle: PolygonStyle;
 };
 
 const obsoleteRuntimeExportParts = [
@@ -115,7 +140,10 @@ describe('public CRC API', () => {
   it('exports exactly the final runtime authoring surface', () => {
     expect(Object.keys(CRC_CORE_ROOT).sort()).toEqual([
       'Absolute',
+      'Arc',
+      'Circle',
       'Clip',
+      'Ellipse',
       'Flex',
       'Flow',
       'FocusManagement',
@@ -130,10 +158,12 @@ describe('public CRC API', () => {
       'Line',
       'Overlay',
       'Path',
+      'Polygon',
       'Rectangle',
       'SvgPath',
       'Text',
       'VerticalLine',
+      'Wedge',
       'crc',
       'crcCanvasContext',
       'crcCursor',
@@ -183,6 +213,7 @@ describe('public CRC API', () => {
 
   it('exports the approved public type families', () => {
     expectTypeOf<ApprovedPublicTypes>().toBeObject();
+    expect([Arc, Circle, Ellipse, Polygon, Wedge]).toHaveLength(5);
   });
 
   it('exports identity-transparent focus and keyboard-navigation policies', () => {

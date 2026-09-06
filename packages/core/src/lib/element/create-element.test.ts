@@ -1,10 +1,25 @@
 import { describe, expect, it } from 'vitest';
 import {
+  Arc,
+  Circle,
   createElement,
+  Ellipse,
   Group,
+  Polygon,
   Rectangle,
   Text,
+  Wedge,
+  type ArcProps,
+  type ArcStyle,
   type CRCNode,
+  type CircleProps,
+  type CircleStyle,
+  type EllipseProps,
+  type EllipseStyle,
+  type PolygonProps,
+  type PolygonStyle,
+  type WedgeProps,
+  type WedgeStyle,
 } from '../../index';
 
 function Card(props: { title?: string; children?: CRCNode }): CRCNode {
@@ -96,6 +111,85 @@ describe('createElement', () => {
       new Set([{ label: 'iterable' }]),
     ]);
     expect(scalar.props.children).toBe(firstScalarChild);
+  });
+
+  it('types standard-shape styles, props, required geometry, and leaf children', () => {
+    const circleStyle: CircleStyle = { radius: 12, fill: '#2563eb' };
+    const ellipseStyle: EllipseStyle = { radiusX: 18, radiusY: 9 };
+    const arcStyle: ArcStyle = {
+      radius: 16,
+      startAngle: 0,
+      endAngle: Math.PI,
+      stroke: '#dc2626',
+    };
+    const wedgeStyle: WedgeStyle = {
+      radius: 20,
+      startAngle: 0,
+      endAngle: Math.PI / 2,
+      fill: '#f97316',
+    };
+    const polygonStyle: PolygonStyle = {
+      coords: [[0, 0], [24, 0], [12, 18]],
+      fill: '#16a34a',
+    };
+    const circleProps: CircleProps = { onClick: () => undefined };
+    const ellipseProps: EllipseProps = { onClick: () => undefined };
+    const arcProps: ArcProps = { onClick: () => undefined };
+    const wedgeProps: WedgeProps = { onClick: () => undefined };
+    const polygonProps: PolygonProps = { onClick: () => undefined };
+
+    const shapes = [
+      createElement(Circle, { ...circleProps, style: circleStyle }),
+      createElement(Ellipse, { ...ellipseProps, style: ellipseStyle }),
+      createElement(Arc, { ...arcProps, style: arcStyle }),
+      createElement(Wedge, { ...wedgeProps, style: wedgeStyle }),
+      createElement(Polygon, { ...polygonProps, style: polygonStyle }),
+    ];
+
+    // @ts-expect-error standard shapes are drawing leaves and reject children
+    createElement(Circle, { style: circleStyle }, 'bad');
+    // @ts-expect-error standard shapes are drawing leaves and reject children
+    createElement(Ellipse, { style: ellipseStyle }, 'bad');
+    // @ts-expect-error standard shapes are drawing leaves and reject children
+    createElement(Arc, { style: arcStyle }, 'bad');
+    // @ts-expect-error standard shapes are drawing leaves and reject children
+    createElement(Wedge, { style: wedgeStyle }, 'bad');
+    // @ts-expect-error standard shapes are drawing leaves and reject children
+    createElement(Polygon, { style: polygonStyle }, 'bad');
+    // @ts-expect-error Arc is stroke-only and rejects fill paint
+    createElement(Arc, { style: { ...arcStyle, fill: 'red' } });
+    // @ts-expect-error circular radius excludes auto
+    createElement(Circle, { style: { radius: 'auto' } });
+    // @ts-expect-error ellipse radii exclude auto
+    createElement(Ellipse, { style: { radiusX: 10, radiusY: 'auto' } });
+    createElement(Arc, {
+      style: {
+        // @ts-expect-error Arc radius excludes auto
+        radius: 'auto',
+        startAngle: 0,
+        endAngle: 1,
+      },
+    });
+    createElement(Wedge, {
+      style: {
+        // @ts-expect-error Wedge radius excludes auto
+        radius: 'auto',
+        startAngle: 0,
+        endAngle: 1,
+      },
+    });
+    // @ts-expect-error Circle requires radius geometry
+    createElement(Circle, { style: {} });
+    // @ts-expect-error Ellipse requires both radii
+    createElement(Ellipse, { style: { radiusX: 10 } });
+    // @ts-expect-error Arc requires radius and both angles
+    createElement(Arc, { style: { radius: 10 } });
+    // @ts-expect-error Wedge requires radius and both angles
+    createElement(Wedge, { style: { startAngle: 0, endAngle: 1 } });
+    // @ts-expect-error Polygon requires coordinates
+    createElement(Polygon, { style: {} });
+
+    expect(shapes).toHaveLength(5);
   });
 
   it('reserves numeric keys and omits them from delivered prop types', () => {

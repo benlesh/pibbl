@@ -1,21 +1,36 @@
 import {
+  Arc,
+  Circle,
   Clip,
   createElement,
   crc,
   crcState,
+  Ellipse,
   Group,
   HorizontalLine,
   Image,
   Layer,
   Line,
   Path,
+  Polygon,
   Rectangle,
   SvgPath,
   Text,
   VerticalLine,
+  Wedge,
+  type ArcProps,
+  type ArcStyle,
+  type CircleProps,
+  type CircleStyle,
   type CRCController,
   type CRCNode,
+  type EllipseProps,
+  type EllipseStyle,
+  type PolygonProps,
+  type PolygonStyle,
   type TextStyle,
+  type WedgeProps,
+  type WedgeStyle,
 } from '@crc/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -312,6 +327,95 @@ describe('public JSX component authoring', () => {
       verticalLineWithChild,
       imageWithChild,
     ]).toHaveLength(8);
+  });
+
+  it('types every standard shape as a childless JSX drawing leaf', () => {
+    const circleStyle: CircleStyle = { radius: 12, fill: '#2563eb' };
+    const ellipseStyle: EllipseStyle = {
+      radiusX: 18,
+      radiusY: 9,
+      rotation: Math.PI / 8,
+      stroke: '#0f172a',
+    };
+    const arcStyle: ArcStyle = {
+      radius: 16,
+      startAngle: 0,
+      endAngle: Math.PI,
+      stroke: '#dc2626',
+    };
+    const wedgeStyle: WedgeStyle = {
+      radius: 20,
+      startAngle: 0,
+      endAngle: Math.PI / 2,
+      fill: '#f97316',
+    };
+    const polygonStyle: PolygonStyle = {
+      coords: [[0, 0], [24, 0], [12, 18]],
+      fill: '#16a34a',
+    };
+    const circleProps: CircleProps = { onClick: () => undefined };
+    const ellipseProps: EllipseProps = { onClick: () => undefined };
+    const arcProps: ArcProps = { onClick: () => undefined };
+    const wedgeProps: WedgeProps = { onClick: () => undefined };
+    const polygonProps: PolygonProps = { onClick: () => undefined };
+
+    const shapes = [
+      <Circle {...circleProps} style={circleStyle} />,
+      <Ellipse {...ellipseProps} style={ellipseStyle} />,
+      <Arc {...arcProps} style={arcStyle} />,
+      <Wedge {...wedgeProps} style={wedgeStyle} />,
+      <Polygon {...polygonProps} style={polygonStyle} />,
+    ];
+
+    // @ts-expect-error Circle is a drawing leaf and rejects children
+    const circleWithChild = <Circle style={{ radius: 10 }}>bad</Circle>;
+    // @ts-expect-error Ellipse is a drawing leaf and rejects children
+    const ellipseWithChild = <Ellipse style={{ radiusX: 10, radiusY: 5 }}>bad</Ellipse>;
+    // @ts-expect-error Arc is a drawing leaf and rejects children
+    const arcWithChild = <Arc style={{ radius: 10, startAngle: 0, endAngle: 1 }}>bad</Arc>;
+    // @ts-expect-error Wedge is a drawing leaf and rejects children
+    const wedgeWithChild = <Wedge style={{ radius: 10, startAngle: 0, endAngle: 1 }}>bad</Wedge>;
+    // @ts-expect-error Polygon is a drawing leaf and rejects children
+    const polygonWithChild = <Polygon style={{ coords: [[0, 0], [1, 0], [0, 1]] }}>bad</Polygon>;
+    // @ts-expect-error Arc is stroke-only and rejects fill paint
+    const filledArc = <Arc style={{ radius: 10, startAngle: 0, endAngle: 1, fill: 'red' }} />;
+    // @ts-expect-error circular radius excludes auto
+    const automaticCircle = <Circle style={{ radius: 'auto' }} />;
+    // @ts-expect-error ellipse radii exclude auto
+    const automaticEllipse = <Ellipse style={{ radiusX: 'auto', radiusY: 5 }} />;
+    // @ts-expect-error Arc radius excludes auto
+    const automaticArc = <Arc style={{ radius: 'auto', startAngle: 0, endAngle: 1 }} />;
+    // @ts-expect-error Wedge radius excludes auto
+    const automaticWedge = <Wedge style={{ radius: 'auto', startAngle: 0, endAngle: 1 }} />;
+    // @ts-expect-error Circle requires radius geometry
+    const missingCircleGeometry = <Circle style={{ fill: 'red' }} />;
+    // @ts-expect-error Ellipse requires both radii
+    const missingEllipseGeometry = <Ellipse style={{ radiusX: 10 }} />;
+    // @ts-expect-error Arc requires radius and both angles
+    const missingArcGeometry = <Arc style={{ stroke: 'red' }} />;
+    // @ts-expect-error Wedge requires radius and both angles
+    const missingWedgeGeometry = <Wedge style={{ fill: 'red' }} />;
+    // @ts-expect-error Polygon requires coordinates
+    const missingPolygonGeometry = <Polygon style={{ fill: 'red' }} />;
+
+    expect([
+      ...shapes,
+      circleWithChild,
+      ellipseWithChild,
+      arcWithChild,
+      wedgeWithChild,
+      polygonWithChild,
+      filledArc,
+      automaticCircle,
+      automaticEllipse,
+      automaticArc,
+      automaticWedge,
+      missingCircleGeometry,
+      missingEllipseGeometry,
+      missingArcGeometry,
+      missingWedgeGeometry,
+      missingPolygonGeometry,
+    ]).toHaveLength(20);
   });
 });
 

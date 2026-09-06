@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Circle, LayoutDiagnostic } from '../index';
 import { crc } from './crc';
 import { definePrimitive } from './define-primitive';
 import { createElement, isCRCElement } from './element/create-element';
@@ -138,6 +139,53 @@ describe('element and primitive contract', () => {
 });
 
 describe('crc root updates', () => {
+  it('cleans up a failed shape render and recovers on the same Canvas', () => {
+    const originalRequestAnimationFrame = window.requestAnimationFrame;
+    let pending: FrameRequestCallback | undefined;
+    window.requestAnimationFrame = callback => {
+      pending = callback;
+      return 1;
+    };
+    const canvas = createCanvas();
+    const arc = vi.spyOn(Path2D.prototype, 'arc');
+
+    try {
+      crc(canvas, createElement(Circle, {
+        style: { radius: -1, cursor: 'pointer' },
+        onClick: () => undefined,
+      }));
+
+      let failure: unknown;
+      try {
+        pending?.(0);
+      } catch (error) {
+        failure = error;
+      }
+      expect(failure).toBeInstanceOf(LayoutDiagnostic);
+      expect(failure).toMatchObject({
+        component: 'Circle',
+        property: 'radius',
+        suppliedValue: -1,
+        algorithm: 'render-dispatch',
+      });
+      expect((failure as Error).message).toMatch(/nonnegative/);
+      const failed = getCRCInstance(canvas);
+      expect(failed.refs.size).toBe(0);
+      expect(failed.eventRoot.targets.size).toBe(0);
+      expect(failed.eventRoot.nativeListeners?.count('click')).toBe(0);
+      expect(canvas.style.cursor).toBe('');
+
+      crc(canvas, createElement(Circle, {
+        style: { cx: 20, cy: 24, radius: 8, fill: '#2563eb' },
+      }));
+      expect(() => pending?.(1)).not.toThrow();
+      expect(arc).toHaveBeenLastCalledWith(20, 24, 8, 0, Math.PI * 2);
+      expect(getCRCInstance(canvas).refs.size).toBe(1);
+    } finally {
+      window.requestAnimationFrame = originalRequestAnimationFrame;
+    }
+  });
+
   it('returns one controller and commits only the latest queued root', async () => {
     const canvas = createCanvas();
     const renders: number[] = [];

@@ -9,14 +9,15 @@ its constructors from the two explicit compiler subpaths. Imports below
 
 ### `@crc/core`
 
-The root contains 41 runtime values and 112 type exports.
+The root contains 46 runtime values and 122 type exports.
 
 <!-- root-values:start -->
 
-`Absolute`, `Clip`, `Flex`, `Flow`, `FocusManagement`, `Fragment`, `Grid`,
-`Group`, `HorizontalLine`, `Image`, `KeyboardNavigation`, `Layer`,
-`LayoutDiagnostic`, `Line`, `Overlay`, `Path`, `Rectangle`, `SvgPath`, `Text`,
-`VerticalLine`, `crc`, `crcCanvasContext`, `crcCursor`, `crcEvent`,
+`Absolute`, `Arc`, `Circle`, `Clip`, `Ellipse`, `Flex`, `Flow`,
+`FocusManagement`, `Fragment`, `Grid`, `Group`, `HorizontalLine`, `Image`,
+`KeyboardNavigation`, `Layer`, `LayoutDiagnostic`, `Line`, `Overlay`, `Path`,
+`Polygon`, `Rectangle`, `SvgPath`, `Text`, `VerticalLine`, `Wedge`, `crc`,
+`crcCanvasContext`, `crcCursor`, `crcEvent`,
 `crcEventListener`, `crcEventTarget`, `crcLayoutBox`, `crcLinePath`, `crcMemo`,
 `crcRectPath`, `crcRef`, `crcState`, `crcSvgPath`, `crcWhenChanged`,
 `createElement`, `definePrimitive`, `layoutDiagnostic`, `measureElement`,
@@ -26,7 +27,8 @@ The root contains 41 runtime values and 112 type exports.
 
 <!-- root-types:start -->
 
-`AbsoluteProps`, `AbsoluteStyle`, `BoxStyle`, `CRCClipboardEvent`,
+`AbsoluteProps`, `AbsoluteStyle`, `ArcProps`, `ArcStyle`, `BoxStyle`,
+`CRCClipboardEvent`,
 `CRCComponent`, `CRCCompositionEvent`, `CRCConfig`, `CRCContainerChild`,
 `CRCController`, `CRCDragEvent`, `CRCElement`, `CRCElementType`, `CRCEmptyNode`,
 `CRCEvent`, `CRCEventCapturePropName`, `CRCEventHandler`, `CRCEventHandlers`,
@@ -37,21 +39,24 @@ The root contains 41 runtime values and 112 type exports.
 `CRCMouseEvent`, `CRCMouseEventListener`, `CRCNode`, `CRCPixelRatio`,
 `CRCPointerEvent`, `CRCPrimitiveComponent`, `CRCRef`, `CRCRenderResult`,
 `CRCResponsiveViewportConfig`, `CRCTextChild`, `CRCTouchEvent`, `CRCWheelEvent`,
-`Canvas`, `CanvasMeasurementService`, `ClipProps`, `ClipStyle`, `Constraints`,
-`CursorStyle`, `EdgeValues`, `Edges`, `FillStyle`, `FlexItemStyle`, `FlexProps`,
-`FlexStyle`, `FlowProps`, `FlowStyle`, `FocusManagementProps`, `GStyle`,
+`Canvas`, `CanvasMeasurementService`, `CircleProps`, `CircleStyle`, `ClipProps`,
+`ClipStyle`, `Constraints`, `CursorStyle`, `EdgeValues`, `Edges`, `EllipseProps`,
+`EllipseStyle`, `FillStyle`, `FlexItemStyle`, `FlexProps`, `FlexStyle`,
+`FlowProps`, `FlowStyle`, `FocusManagementProps`, `GStyle`,
 `GridItemStyle`, `GridProps`, `GridStyle`, `GridTrack`, `GroupProps`,
 `HorizontalLineProps`, `HorizontalLineStyle`, `ImageProps`, `ImgStyle`,
 `KeyboardNavigationProps`, `LayerProps`, `LayerStyle`, `LayoutBox`,
 `LayoutDiagnosticContext`, `LayoutDiagnosticInput`, `LayoutItemStyle`, `Length`,
 `LineProps`, `LineStyle`, `MeasureInput`, `MeasureResult`, `NormalizedStyle`,
 `OverlayProps`, `OverlayStyle`, `PaintStyle`, `PathProps`, `PathStyle`,
-`Percentage`, `PixelGridAlignment`, `PrimitiveCapabilities`, `PrimitiveInput`,
-`PrimitiveInputOf`, `PrimitiveProgramProps`, `PrimitiveRender`, `RectStyle`,
+`Percentage`, `PixelGridAlignment`, `PolygonProps`, `PolygonStyle`,
+`PrimitiveCapabilities`, `PrimitiveInput`, `PrimitiveInputOf`,
+`PrimitiveProgramProps`, `PrimitiveRender`, `RectStyle`,
 `RectangleProps`, `RenderingContext2D`, `ResolvedBoxStyle`, `ResolvedStyle`,
 `Size`, `SpecifiedStyle`, `StateUpdater`, `StrokeStyle`,
 `StyleResolutionContext`, `SvgPathProps`, `SvgPathStyle`, `SystemStyle`,
-`TextFit`, `TextProps`, `TextStyle`, `VerticalLineProps`, `VerticalLineStyle`
+`TextFit`, `TextProps`, `TextStyle`, `VerticalLineProps`, `VerticalLineStyle`,
+`WedgeProps`, `WedgeStyle`
 
 <!-- root-types:end -->
 

@@ -11,7 +11,10 @@ import {
 
 const expected = [
   'Absolute',
+  'Arc',
+  'Circle',
   'Clip',
+  'Ellipse',
   'Flex',
   'Flow',
   'FocusManagement',
@@ -26,10 +29,12 @@ const expected = [
   'Line',
   'Overlay',
   'Path',
+  'Polygon',
   'Rectangle',
   'SvgPath',
   'Text',
   'VerticalLine',
+  'Wedge',
   'crc',
   'crcCanvasContext',
   'crcCursor',

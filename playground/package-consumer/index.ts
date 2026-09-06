@@ -31,20 +31,28 @@ import type {
   CRCResponsiveViewportConfig,
   CRCTouchEvent,
   CRCWheelEvent,
+  ArcProps,
+  ArcStyle,
   AbsoluteStyle,
   BoxStyle,
+  CircleProps,
+  CircleStyle,
   ClipStyle,
   GStyle,
   GridItemStyle,
   GridStyle,
   HorizontalLineStyle,
   ImgStyle,
+  EllipseProps,
+  EllipseStyle,
   LayerStyle,
   LayoutBox,
   LayoutItemStyle,
   Length,
   LineStyle,
   PathStyle,
+  PolygonProps,
+  PolygonStyle,
   RectangleProps,
   RectStyle,
   RenderingContext2D,
@@ -58,6 +66,8 @@ import type {
   OverlayStyle,
   TextStyle,
   VerticalLineStyle,
+  WedgeProps,
+  WedgeStyle,
 } from '@crc/core';
 import type * as CoreTypes from '@crc/core/types';
 import {
@@ -77,7 +87,10 @@ import {
   createElement,
   definePrimitive,
   Absolute,
+  Arc,
+  Circle,
   Clip,
+  Ellipse,
   Flex,
   Flow,
   Grid,
@@ -88,10 +101,12 @@ import {
   Line,
   Overlay,
   Path,
+  Polygon,
   Rectangle,
   SvgPath,
   Text,
   VerticalLine,
+  Wedge,
   measureElement,
   FocusManagement,
   KeyboardNavigation,
@@ -264,6 +279,66 @@ const lineStyle = {
   cursor: 'pointer',
 } satisfies LineStyle;
 createElement(Line, { style: lineStyle, onMouseMove: () => undefined });
+
+const circleStyle = {
+  cx: '25%',
+  cy: 30,
+  radius: '10%',
+  fill: '#2563eb',
+  cursor: 'pointer',
+} satisfies CircleStyle;
+const circleProps = { onClick: () => undefined } satisfies CircleProps;
+
+const ellipseStyle = {
+  cx: 80,
+  cy: '40%',
+  radiusX: '15%',
+  radiusY: 12,
+  rotation: Math.PI / 8,
+  stroke: '#0f172a',
+  strokeWidth: 2,
+} satisfies EllipseStyle;
+const ellipseProps = { onPointerDown: () => undefined } satisfies EllipseProps;
+
+const arcStyle = {
+  cx: 120,
+  cy: 50,
+  radius: 24,
+  startAngle: 0,
+  endAngle: Math.PI,
+  counterclockwise: false,
+  stroke: '#dc2626',
+  lineInteractionWidth: 8,
+} satisfies ArcStyle;
+const arcProps = { onMouseMove: () => undefined } satisfies ArcProps;
+
+const wedgeStyle = {
+  cx: 170,
+  cy: 50,
+  radius: 28,
+  startAngle: -Math.PI / 2,
+  endAngle: Math.PI / 3,
+  fill: '#f97316',
+  stroke: '#9a3412',
+} satisfies WedgeStyle;
+const wedgeProps = { keyboardFocusable: true } satisfies WedgeProps;
+
+const polygonStyle = {
+  coords: [[210, 20], [250, 50], [225, 85]] as [number, number][],
+  fill: '#16a34a',
+  stroke: '#14532d',
+} satisfies PolygonStyle;
+const polygonProps = { onClick: () => undefined } satisfies PolygonProps;
+
+export const standardShapeScene = createElement(Group, {
+  children: [
+    createElement(Circle, { ...circleProps, style: circleStyle }),
+    createElement(Ellipse, { ...ellipseProps, style: ellipseStyle }),
+    createElement(Arc, { ...arcProps, style: arcStyle }),
+    createElement(Wedge, { ...wedgeProps, style: wedgeStyle }),
+    createElement(Polygon, { ...polygonProps, style: polygonStyle }),
+  ],
+});
 
 const horizontalLineStyle = {
   y: 12,
@@ -458,6 +533,11 @@ const invalidLength: Length = 'wide';
 crcLayoutBox('parent');
 
 const subpathGroupStyle: CoreTypes.GStyle = groupStyle;
+const subpathCircleStyle: CoreTypes.CircleStyle = circleStyle;
+const subpathEllipseStyle: CoreTypes.EllipseStyle = ellipseStyle;
+const subpathArcStyle: CoreTypes.ArcStyle = arcStyle;
+const subpathWedgeStyle: CoreTypes.WedgeStyle = wedgeStyle;
+const subpathPolygonStyle: CoreTypes.PolygonStyle = polygonStyle;
 const subpathClipStyle: CoreTypes.ClipStyle = clipStyle;
 const subpathLayerStyle: CoreTypes.LayerStyle = layerStyle;
 const subpathGridStyle: CoreTypes.GridStyle = gridStyle;
@@ -465,6 +545,11 @@ const subpathPercentage: CoreTypes.Percentage = percentage;
 const subpathKeyboardNavigationOptions: CoreTypes.CRCKeyboardNavigationOptions =
   keyboardNavigationOptions;
 void subpathGroupStyle;
+void subpathCircleStyle;
+void subpathEllipseStyle;
+void subpathArcStyle;
+void subpathWedgeStyle;
+void subpathPolygonStyle;
 void subpathClipStyle;
 void subpathLayerStyle;
 void subpathGridStyle;
