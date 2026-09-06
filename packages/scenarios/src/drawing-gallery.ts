@@ -206,7 +206,10 @@ export const drawingShapesScenario = createLessonDefinition<DrawingShapesState>(
     state,
     actionId as DrawingShapesAction,
   ),
-  formatState: state => formatToggleState(state, 'Rectangle · Path · SvgPath'),
+  formatState: state => formatToggleState(
+    state,
+    'Rectangle · Path · SvgPath · Circle · Ellipse · Arc · Wedge · Polygon',
+  ),
 });
 
 export const DRAWING_LINES_ACTION_IDS = ['update-lines'] as const;

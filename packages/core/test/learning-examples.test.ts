@@ -1052,11 +1052,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 42 unique, ordered, source-backed routes", () => {
+  it("contains 47 unique, ordered, source-backed routes including standard shapes", () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(42);
+    expect(learningExampleCatalog).toHaveLength(47);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1068,6 +1068,21 @@ describe("learning example catalog", () => {
         (left, right) => left - right,
       ),
     );
+    expect(
+      learningExampleCatalog
+        .filter((entry) =>
+          ["circle", "ellipse", "arc", "wedge", "polygon"].includes(
+            entry.slug,
+          ),
+        )
+        .map((entry) => ({ route: getLearningExampleRoute(entry), api: entry.api })),
+    ).toEqual([
+      { route: "#/examples/drawing/circle", api: ["Circle"] },
+      { route: "#/examples/drawing/ellipse", api: ["Ellipse"] },
+      { route: "#/examples/drawing/arc", api: ["Arc"] },
+      { route: "#/examples/drawing/wedge", api: ["Wedge"] },
+      { route: "#/examples/drawing/polygon", api: ["Polygon"] },
+    ]);
   });
 
   it("teaches one complete createElement scene immediately after getting started", async () => {
@@ -1155,6 +1170,67 @@ describe("learning example catalog", () => {
       "CLICK THE HEADLINE · ZERO 0 · #ff6b57",
     );
   });
+
+  it.each([
+    {
+      slug: "circle",
+      target: [360, 210] as const,
+      interior: [360, 210] as const,
+      exterior: [80, 80] as const,
+      initial: [255, 107, 87, 255],
+      updated: [116, 211, 174, 255],
+    },
+    {
+      slug: "ellipse",
+      target: [360, 210] as const,
+      interior: [360, 210] as const,
+      exterior: [80, 80] as const,
+      initial: [31, 75, 216, 255],
+      updated: [247, 201, 72, 255],
+    },
+    {
+      slug: "arc",
+      target: [360, 90] as const,
+      interior: [360, 90] as const,
+      exterior: [360, 210] as const,
+      initial: [31, 75, 216, 255],
+      updated: [255, 107, 87, 255],
+    },
+    {
+      slug: "wedge",
+      target: [388, 182] as const,
+      interior: [388, 182] as const,
+      exterior: [220, 330] as const,
+      initial: [168, 85, 247, 255],
+      updated: [34, 197, 94, 255],
+    },
+    {
+      slug: "polygon",
+      target: [360, 210] as const,
+      interior: [360, 210] as const,
+      exterior: [100, 320] as const,
+      initial: [245, 158, 11, 255],
+      updated: [20, 184, 166, 255],
+    },
+  ])(
+    "mounts, targets, and updates the $slug lesson without private imports",
+    async ({ slug, target, interior, exterior, initial, updated }) => {
+      const entry = learningExampleCatalog.find((candidate) => candidate.slug === slug);
+      expect(entry).toBeDefined();
+      const source = await loadLearningSource(entry!);
+      expect(source.match(/from ["'][^"']+["']/g)).toEqual([
+        expect.stringMatching(/from ["']@crc\/core["']/),
+      ]);
+
+      const { canvas } = await renderLearningExample(slug);
+      expect(pixelAt(canvas, interior[0], interior[1])).toEqual(initial);
+      expect(pixelAt(canvas, exterior[0], exterior[1])).toEqual([247, 240, 223, 255]);
+
+      await clickLogicalPoint(canvas, { x: target[0], y: target[1] });
+      await nextPaint();
+      expect(pixelAt(canvas, interior[0], interior[1])).toEqual(updated);
+    },
+  );
 
   it.each([
     ["createElement on JSX", "getting-started", "createElement"],
@@ -1279,6 +1355,11 @@ describe("learning example catalog", () => {
     expect(new Set(drawingAndComposition)).toEqual(
       new Set([
         "Rectangle",
+        "Circle",
+        "Ellipse",
+        "Arc",
+        "Wedge",
+        "Polygon",
         "Path",
         "SvgPath",
         "Line",

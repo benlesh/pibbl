@@ -126,6 +126,11 @@ describe('complete public drawing gallery', () => {
       'Rectangle',
       'Path',
       'SvgPath',
+      'Circle',
+      'Ellipse',
+      'Arc',
+      'Wedge',
+      'Polygon',
       'Line',
       'HorizontalLine',
       'VerticalLine',
@@ -137,7 +142,7 @@ describe('complete public drawing gallery', () => {
     ]);
   });
 
-  it('drives rect, path, svgPath, and line updates with exact boundary pixels', async () => {
+  it('drives every public shape update with exact interior, exterior, and stroke pixels', async () => {
     const shapes = await mountLesson<DrawingShapesState>(drawingShapesScenarioEntry);
     expect(shapes.controller.getState()).toEqual({
       lastAction: 'mount',
@@ -152,6 +157,12 @@ describe('complete public drawing gallery', () => {
     expect(pixelAt(shapes.canvas, 150, 170)).toEqual([34, 197, 94, 255]);
     expect(pixelAt(shapes.canvas, 320, 170)).toEqual([226, 232, 240, 255]);
     expect(pixelAt(shapes.canvas, 420, 170)).toEqual([99, 102, 241, 255]);
+    expect(pixelAt(shapes.canvas, 30, 124)).toEqual([14, 165, 233, 255]);
+    expect(pixelAt(shapes.canvas, 78, 124)).toEqual([249, 115, 22, 255]);
+    expect(pixelAt(shapes.canvas, 125, 136)).toEqual([20, 184, 166, 255]);
+    expect(pixelAt(shapes.canvas, 175, 129)).toEqual([168, 85, 247, 255]);
+    expect(pixelAt(shapes.canvas, 220, 125)).toEqual([244, 63, 94, 255]);
+    expect(pixelAt(shapes.canvas, 200, 124)).toEqual([248, 250, 252, 255]);
 
     await shapes.controller.perform('update-shapes');
     expect(shapes.controller.getState()).toEqual({
@@ -162,6 +173,11 @@ describe('complete public drawing gallery', () => {
     expect(pixelAt(shapes.canvas, 50, 50)).toEqual([124, 58, 237, 255]);
     expect(pixelAt(shapes.canvas, 242, 60)).toEqual([236, 72, 153, 255]);
     expect(pixelAt(shapes.canvas, 396, 60)).toEqual([20, 184, 166, 255]);
+    expect(pixelAt(shapes.canvas, 30, 124)).toEqual([139, 92, 246, 255]);
+    expect(pixelAt(shapes.canvas, 78, 124)).toEqual([236, 72, 153, 255]);
+    expect(pixelAt(shapes.canvas, 125, 136)).toEqual([250, 204, 21, 255]);
+    expect(pixelAt(shapes.canvas, 175, 129)).toEqual([34, 197, 94, 255]);
+    expect(pixelAt(shapes.canvas, 220, 125)).toEqual([59, 130, 246, 255]);
     await shapes.controller.reset();
     expect(shapes.controller.getState()).toEqual({
       lastAction: 'reset',

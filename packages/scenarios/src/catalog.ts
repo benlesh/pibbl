@@ -273,18 +273,18 @@ const drawingShapesMetadata: ScenarioMetadata = {
   id: 'drawing-shapes',
   slug: 'drawing-shapes',
   title: 'Draw shapes',
-  summary: 'Build filled and stroked rectangles, custom paths, and SVG paths, then update their geometry and styles.',
+  summary: 'Build filled and stroked rectangles, conventional shapes, custom paths, and SVG paths, then update their geometry and styles.',
   category: 'Drawing basics',
-  apiTags: ['Rectangle', 'Path', 'SvgPath'],
-  conceptTags: ['fill and stroke', 'custom geometry', 'pixel alignment', 'updates'],
+  apiTags: ['Rectangle', 'Path', 'SvgPath', 'Circle', 'Ellipse', 'Arc', 'Wedge', 'Polygon'],
+  conceptTags: ['fill and stroke', 'custom geometry', 'curved geometry', 'pixel alignment', 'updates'],
   manualSteps: [
     {
-      action: 'Compare the initial rectangle, triangle, and diamond.',
-      expected: 'Each primitive shows an intentional fill and dark stroke on a neutral background.',
+      action: 'Compare the rectangle, triangle, diamond, and compact curved-shape row.',
+      expected: 'Each primitive shows deliberate fill or stroke geometry on a neutral background.',
     },
     {
       action: 'Choose Update shapes.',
-      expected: 'All three shapes change geometry and color together while the lower boundary examples remain stable.',
+      expected: 'The rectangle, paths, circle, ellipse, arc, wedge, and polygon update together while the lower boundary examples remain stable.',
     },
     {
       action: 'Inspect the lower row, then choose Reset.',

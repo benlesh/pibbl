@@ -1,4 +1,4 @@
-import { Path, Rectangle, SvgPath } from '@crc/core';
+import { Arc, Circle, Ellipse, Path, Polygon, Rectangle, SvgPath, Wedge } from '@crc/core';
 export const DRAWING_SHAPES_SOURCE_ID = 'drawing-shapes-example';
 export type DrawingShapesAction = 'mount' | 'reset' | 'update-shapes';
 export interface DrawingShapesState {
@@ -64,6 +64,61 @@ const DrawingShapesScene = ({ state }: DrawingShapesSceneProps) => [
       strokeWidth: 3,
     }}
   />, // These underlays make invisible and boundary behavior easy to inspect.
+  <Circle
+    key="circle"
+    style={{
+      cx: 30,
+      cy: 124,
+      radius: 10,
+      fill: state.updated ? '#8b5cf6' : '#0ea5e9',
+    }}
+  />,
+  <Ellipse
+    key="ellipse"
+    style={{
+      cx: 78,
+      cy: 124,
+      radiusX: 14,
+      radiusY: 8,
+      fill: state.updated ? '#ec4899' : '#f97316',
+    }}
+  />,
+  <Arc
+    key="arc"
+    style={{
+      cx: 125,
+      cy: 124,
+      radius: 12,
+      startAngle: 0,
+      endAngle: Math.PI,
+      stroke: state.updated ? '#facc15' : '#14b8a6',
+      strokeWidth: 6,
+    }}
+  />,
+  <Wedge
+    key="wedge"
+    style={{
+      cx: 170,
+      cy: 124,
+      radius: 12,
+      startAngle: 0,
+      endAngle: Math.PI / 2,
+      fill: state.updated ? '#22c55e' : '#a855f7',
+    }}
+  />,
+  <Polygon
+    key="polygon"
+    style={{
+      coords: [
+        [220, 114],
+        [232, 120],
+        [230, 134],
+        [210, 134],
+        [208, 120],
+      ],
+      fill: state.updated ? '#3b82f6' : '#f43f5e',
+    }}
+  />,
   <Rectangle
     style={{
       x: 20,
