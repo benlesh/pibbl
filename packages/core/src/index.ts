@@ -27,6 +27,11 @@ export {
 } from './lib/components/line.js';
 export { Path, type PathProps } from './lib/components/path.js';
 export {
+  Polygon,
+  type PolygonProps,
+  type PolygonStyle,
+} from './lib/components/polygon.js';
+export {
   Rectangle,
   type RectangleProps,
 } from './lib/components/rect.js';
