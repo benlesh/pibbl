@@ -98,6 +98,18 @@ describe('Circle', () => {
     })).toThrow(LayoutDiagnostic);
   });
 
+  it('uses empty paint and hit geometry for a zero radius', async () => {
+    const onClick = vi.fn();
+    const canvas = await componentTest(createElement(Circle, {
+      style: { cx: 40, cy: 40, radius: 0, fill: 'red', stroke: 'blue' },
+      onClick,
+    }));
+
+    expect(pixelAt(canvas.element, 40, 40)).toEqual([0, 0, 0, 0]);
+    await canvas.click({ position: { x: 40, y: 40 } });
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
   it('keeps an opacity-zero fill interactive without painting it', async () => {
     const onClick = vi.fn();
     const canvas = await componentTest(createElement(Circle, {

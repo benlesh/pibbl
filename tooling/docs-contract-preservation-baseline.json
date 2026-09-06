@@ -2749,31 +2749,31 @@
           "id": "c0012",
           "kind": "table",
           "section": "Component matrix",
-          "text": "| `Circle` | Required nonnegative `radius`; optional `cx`/`cy` default zero; fill, stroke, opacity, cursor, path interaction, and circle keyboard bounds. | Direct circle suite, circle lesson, geometry matrix |"
+          "text": "| `Circle` | Required nonnegative `radius`; optional `cx`/`cy` default zero; fill, stroke, opacity, cursor, path interaction, and circle keyboard bounds. | Direct circle suite, circle lesson, `drawing-shapes` lab |"
         },
         {
           "id": "c0013",
           "kind": "table",
           "section": "Component matrix",
-          "text": "| `Ellipse` | Required nonnegative `radiusX`/`radiusY`; optional `cx`/`cy` and radian `rotation`; fill/stroke interaction and rotation-aware keyboard bounds. | Direct ellipse suite, ellipse lesson, geometry matrix |"
+          "text": "| `Ellipse` | Required nonnegative `radiusX`/`radiusY`; optional `cx`/`cy` and radian `rotation`; fill/stroke interaction and rotation-aware keyboard bounds. | Direct ellipse suite, ellipse lesson, `drawing-shapes` lab |"
         },
         {
           "id": "c0014",
           "kind": "table",
           "section": "Component matrix",
-          "text": "| `Arc` | Required nonnegative `radius` and finite radian angles; optional direction; open, stroke-only Canvas arc with sweep-aware keyboard bounds. | Direct arc/geometry suites, arc lesson, geometry matrix |"
+          "text": "| `Arc` | Required nonnegative `radius` and finite radian angles; optional direction; open, stroke-only Canvas arc with sweep-aware keyboard bounds. | Direct arc/geometry suites, arc lesson, `drawing-shapes` lab |"
         },
         {
           "id": "c0015",
           "kind": "table",
           "section": "Component matrix",
-          "text": "| `Wedge` | Arc geometry closed to its center for fill/radial strokes; a full turn omits radial edges so its stroke has no seam. | Direct wedge/geometry suites, wedge lesson, geometry matrix |"
+          "text": "| `Wedge` | Arc geometry closed to its center for fill/radial strokes; a full turn omits radial edges so its stroke has no seam. | Direct wedge/geometry suites, wedge lesson, `drawing-shapes` lab |"
         },
         {
           "id": "c0016",
           "kind": "table",
           "section": "Component matrix",
-          "text": "| `Polygon` | Required finite ordered numeric coordinate tuples; closes three or more points for fill/stroke and uses point extrema for keyboard bounds. | Direct polygon suite, polygon lesson, geometry matrix |"
+          "text": "| `Polygon` | Required finite ordered numeric coordinate tuples; closes three or more points for fill/stroke and uses point extrema for keyboard bounds. | Direct polygon suite, polygon lesson, `drawing-shapes` lab |"
         },
         {
           "id": "c0017",

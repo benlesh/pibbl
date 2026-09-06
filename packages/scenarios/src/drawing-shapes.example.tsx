@@ -63,7 +63,7 @@ const DrawingShapesScene = ({ state }: DrawingShapesSceneProps) => [
       stroke: '#0f172a',
       strokeWidth: 3,
     }}
-  />, // These underlays make invisible and boundary behavior easy to inspect.
+  />,
   <Circle
     key="circle"
     style={{
@@ -119,6 +119,7 @@ const DrawingShapesScene = ({ state }: DrawingShapesSceneProps) => [
       fill: state.updated ? '#3b82f6' : '#f43f5e',
     }}
   />,
+  // These underlays make invisible and boundary behavior easy to inspect.
   <Rectangle
     style={{
       x: 20,
