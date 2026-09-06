@@ -1,5 +1,7 @@
 # Standard shape primitives design
 
+> **Historical status: IMPLEMENTED DESIGN RECORD.** Original approved wording below is preserved; current behavior lives in `docs/design/drawing-components-contract.md` and `docs/api-reference.md`.
+
 Status: approved for implementation on 2026-09-06.
 
 ## Summary

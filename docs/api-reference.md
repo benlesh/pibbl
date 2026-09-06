@@ -155,6 +155,11 @@ All visual geometry is supplied under a closed local `style`. The corresponding
 | Value            | Props/style types                            | Purpose                                                                          |
 | ---------------- | -------------------------------------------- | -------------------------------------------------------------------------------- |
 | `Rectangle`      | `RectangleProps`, `RectStyle`                | Rectangle geometry, fill/stroke, pixel alignment, events, cursor, focus metadata |
+| `Circle`         | `CircleProps`, `CircleStyle`                 | Center/radius circle with fill, stroke, interaction, and focus geometry          |
+| `Ellipse`        | `EllipseProps`, `EllipseStyle`               | Center/radii ellipse with optional radian rotation                               |
+| `Arc`            | `ArcProps`, `ArcStyle`                       | Open stroke-only circular sweep                                                  |
+| `Wedge`          | `WedgeProps`, `WedgeStyle`                   | Filled/stroked center-closed circular sector                                     |
+| `Polygon`        | `PolygonProps`, `PolygonStyle`               | Closed ordered numeric coordinate path                                           |
 | `Path`           | `PathProps`, `PathStyle`                     | A required `Path2D` `d` with paint and interaction width                         |
 | `SvgPath`        | `SvgPathProps`, `SvgPathStyle`               | Browser-parsed SVG path-data string                                              |
 | `Line`           | `LineProps`, `LineStyle`                     | Ordered polyline coordinates                                                     |
@@ -168,6 +173,47 @@ All visual geometry is supplied under a closed local `style`. The corresponding
 
 Drawing leaves reject children. `Text` accepts `CRCTextChild`; `Group`, `Clip`,
 and `Layer` accept `CRCNode`.
+
+The standard shape styles use local logical geometry and the existing box and
+layout-item fields. All five accept event/focus props plus `cursor`, `opacity`,
+`stroke`, `strokeWidth`, and `lineInteractionWidth`; all except the stroke-only
+`Arc` also accept `fill`.
+
+- `CircleStyle` requires `radius` and optionally accepts `cx` and `cy`.
+- `EllipseStyle` requires `radiusX` and `radiusY`, and optionally accepts `cx`,
+  `cy`, and finite `rotation` in radians.
+- `ArcStyle` requires `radius`, finite radian `startAngle`, and finite radian
+  `endAngle`; optional `cx`, `cy`, and `counterclockwise` select the Canvas arc
+  direction. Its path remains open.
+- `WedgeStyle` has the same geometry as `ArcStyle`, but partial sweeps close to
+  the center. Full turns omit radial segments for a seam-free circular stroke;
+  there is no `innerRadius`.
+- `PolygonStyle` requires finite numeric `coords: [number, number][]`, connects
+  them in order, and closes paths with at least three points. Shorter arrays
+  are empty geometry, and tuple coordinates do not accept percentages.
+
+The default center is `(0, 0)`, ellipse rotation is `0`, and arc/wedge direction
+is clockwise (`counterclockwise: false`). Percentages for `cx`/`radiusX` use
+the percentage-basis width; `cy`/`radiusY` use its height; circular `radius`
+uses the smaller basis dimension. Radii must resolve to finite nonnegative
+values. Negative radii, non-finite angles/rotation, invalid coordinates, and
+indefinite percentage bases raise contextual `LayoutDiagnostic` errors. Zero
+radii or angular span, and Polygon arrays with fewer than three points, are
+safe empty geometry.
+
+Direction, wrapping, and full-turn behavior follow `Path2D.arc`: a difference
+of at least `2π` in the requested direction is a full circle. Shape paths
+are shared exactly by paint and coordinate targeting. Stroke targeting honors
+`lineInteractionWidth`; Wedge includes its radial edges on partial sweeps.
+Caller-supplied `keyboardNavigationBounds` override the built-in deterministic
+axis-aligned bounds from circle/rotated-ellipse extrema, swept arc cardinals,
+the Wedge center, or Polygon point extrema. Transforms, clips, layers, and
+source paint order use the shared drawing pipeline.
+
+Standard shapes have no intrinsic `measureElement` capability and no
+pixel-grid alignment. They do not add smoothing, interpolation, chart/data
+semantics, annular sectors, rounded rectangles, a generic public shape builder,
+new paint effects, or retained geometry.
 
 ## Layout values
 

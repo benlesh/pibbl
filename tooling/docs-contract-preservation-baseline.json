@@ -2669,7 +2669,7 @@
           "id": "c0001",
           "kind": "prose",
           "section": "CRC drawing-component contract",
-          "text": "Status: current implemented contract, updated for JSX-era authoring on 2026-09-03."
+          "text": "Status: current implemented contract, updated for standard shape primitives on 2026-09-06."
         },
         {
           "id": "c0002",
@@ -2705,7 +2705,7 @@
           "id": "c0007",
           "kind": "list",
           "section": "Shared paint and interaction rules",
-          "text": "- Empty paths and zero-length lines are safe. Signed primitive rectangle/image geometry follows Canvas; layout allocation remains nonnegative."
+          "text": "- Empty paths, zero-length lines, zero radii, zero ellipse axes, and zero-angle sweeps are safe. Signed primitive rectangle/image geometry follows Canvas; shape radii and layout allocation remain nonnegative."
         },
         {
           "id": "c0008",
@@ -2735,145 +2735,223 @@
           "id": "c0012",
           "kind": "table",
           "section": "Component matrix",
-          "text": "| `Path` | Required `Path2D` `d`; fill, stroke, opacity, path replacement, expanded stroke interaction width, and empty paths. | Direct component and interaction suites, path lesson |"
+          "text": "| `Circle` | Required nonnegative `radius`; optional `cx`/`cy` default zero; fill, stroke, opacity, cursor, path interaction, and circle keyboard bounds. | Direct circle suite, circle lesson, geometry matrix |"
         },
         {
           "id": "c0013",
           "kind": "table",
           "section": "Component matrix",
-          "text": "| `Line` | Ordered polyline coordinates; style/update behavior; empty and one-point no-op geometry; transforms/clips; and expanded hit width. | Direct line suite, line lesson, geometry matrix |"
+          "text": "| `Ellipse` | Required nonnegative `radiusX`/`radiusY`; optional `cx`/`cy` and radian `rotation`; fill/stroke interaction and rotation-aware keyboard bounds. | Direct ellipse suite, ellipse lesson, geometry matrix |"
         },
         {
           "id": "c0014",
           "kind": "table",
           "section": "Component matrix",
-          "text": "| `HorizontalLine` | Required local `y`; optional `x1` defaults zero and `x2` defaults allocation width; pixel-grid modes and shared line paint/interaction. | Direct helper matrix and horizontal-line lesson |"
+          "text": "| `Arc` | Required nonnegative `radius` and finite radian angles; optional direction; open, stroke-only Canvas arc with sweep-aware keyboard bounds. | Direct arc/geometry suites, arc lesson, geometry matrix |"
         },
         {
           "id": "c0015",
           "kind": "table",
           "section": "Component matrix",
-          "text": "| `VerticalLine` | Required local `x`; optional `y1` defaults zero and `y2` defaults allocation height; pixel-grid modes and parity with `HorizontalLine`. | Direct helper matrix and vertical-line lesson |"
+          "text": "| `Wedge` | Arc geometry closed to its center for fill/radial strokes; a full turn omits radial edges so its stroke has no seam. | Direct wedge/geometry suites, wedge lesson, geometry matrix |"
         },
         {
           "id": "c0016",
           "kind": "table",
           "section": "Component matrix",
-          "text": "| `SvgPath` | Required string `d`; browser `Path2D` parsing, fill/stroke/opacity, data updates, interactions, empty/malformed delegation, and transforms. | Direct SVG suite, SVG-path lesson, runtime recovery suite |"
+          "text": "| `Polygon` | Required finite ordered numeric coordinate tuples; closes three or more points for fill/stroke and uses point extrema for keyboard bounds. | Direct polygon suite, polygon lesson, geometry matrix |"
         },
         {
           "id": "c0017",
           "kind": "table",
           "section": "Component matrix",
-          "text": "| `Text` | Recursive textual children; local position, font, alignment and baseline; `visible`, `ellipsis`, `squish`, and `clip` fit; wrapping box; paint/opacity/cursor; per-line interaction bounds and pure measurement. | Direct call/interaction suite, text lesson, text measurement suites |"
+          "text": "| `Path` | Required `Path2D` `d`; fill, stroke, opacity, path replacement, expanded stroke interaction width, and empty paths. | Direct component and interaction suites, path lesson |"
         },
         {
           "id": "c0018",
           "kind": "table",
           "section": "Component matrix",
-          "text": "| `Image` | Required `src`; detachable source generations; success/error/race/removal; natural or explicit dimensions; border, opacity, pixel-grid modes, and stable explicit geometry before/after load. | Direct async/component suites, image lesson, cleanup laboratory |"
+          "text": "| `Line` | Ordered polyline coordinates; style/update behavior; empty and one-point no-op geometry; transforms/clips; and expanded hit width. | Direct line suite, line lesson, geometry matrix |"
         },
         {
           "id": "c0019",
+          "kind": "table",
+          "section": "Component matrix",
+          "text": "| `HorizontalLine` | Required local `y`; optional `x1` defaults zero and `x2` defaults allocation width; pixel-grid modes and shared line paint/interaction. | Direct helper matrix and horizontal-line lesson |"
+        },
+        {
+          "id": "c0020",
+          "kind": "table",
+          "section": "Component matrix",
+          "text": "| `VerticalLine` | Required local `x`; optional `y1` defaults zero and `y2` defaults allocation height; pixel-grid modes and parity with `HorizontalLine`. | Direct helper matrix and vertical-line lesson |"
+        },
+        {
+          "id": "c0021",
+          "kind": "table",
+          "section": "Component matrix",
+          "text": "| `SvgPath` | Required string `d`; browser `Path2D` parsing, fill/stroke/opacity, data updates, interactions, empty/malformed delegation, and transforms. | Direct SVG suite, SVG-path lesson, runtime recovery suite |"
+        },
+        {
+          "id": "c0022",
+          "kind": "table",
+          "section": "Component matrix",
+          "text": "| `Text` | Recursive textual children; local position, font, alignment and baseline; `visible`, `ellipsis`, `squish`, and `clip` fit; wrapping box; paint/opacity/cursor; per-line interaction bounds and pure measurement. | Direct call/interaction suite, text lesson, text measurement suites |"
+        },
+        {
+          "id": "c0023",
+          "kind": "table",
+          "section": "Component matrix",
+          "text": "| `Image` | Required `src`; detachable source generations; success/error/race/removal; natural or explicit dimensions; border, opacity, pixel-grid modes, and stable explicit geometry before/after load. | Direct async/component suites, image lesson, cleanup laboratory |"
+        },
+        {
+          "id": "c0024",
           "kind": "prose",
           "section": "Component matrix",
           "text": "Every drawing value accepts the supported DOM-aligned event/focus props through its props type. It creates a logical target only when interactive metadata requires one. Purely painted content does not occlude a registered target."
         },
         {
-          "id": "c0020",
+          "id": "c0025",
+          "kind": "prose",
+          "section": "Standard shape geometry",
+          "text": "`Circle`, `Ellipse`, `Arc`, `Wedge`, and `Polygon` are dedicated drawing leaves. They use fresh immediate `Path2D` geometry on each traversal and share the `Path` paint and event-target pipeline; they do not form a retained shape graph or cache geometry. Every shape supports `cursor`, `opacity`, `stroke`, `strokeWidth`, and `lineInteractionWidth`. `Circle`, `Ellipse`, `Wedge`, and `Polygon` also support `fill`. `Arc` is deliberately stroke-only because filling its open path would introduce implicit chord geometry."
+        },
+        {
+          "id": "c0026",
+          "kind": "prose",
+          "section": "Standard shape geometry",
+          "text": "Named position and radius lengths use the primitive's existing percentage basis. `cx` and `radiusX` percentages resolve against its width, while `cy` and `radiusY` percentages resolve against its height. A circular `radius` percentage resolves against the smaller of those two dimensions. Numeric geometry is in local logical Canvas units. Missing `cx` and `cy` default to zero; ellipse `rotation` defaults to zero radians; and Arc/Wedge `counterclockwise` defaults to `false`. Percentage lengths retain the standard finite and definite-basis diagnostics, and `\"auto\"` is not valid shape geometry."
+        },
+        {
+          "id": "c0027",
+          "kind": "prose",
+          "section": "Standard shape geometry",
+          "text": "Circle has required `radius`. Ellipse has required `radiusX` and `radiusY`, and its optional finite `rotation` is in radians. Arc and Wedge have required `radius`, `startAngle`, and `endAngle`; their angles are finite radians and their direction and angle normalization follow `Path2D.arc`. A clockwise difference of at least `2π`, or a counterclockwise difference of at least `2π` in that requested direction, is a full turn. Opposite-direction differences wrap in the requested direction as Canvas specifies."
+        },
+        {
+          "id": "c0028",
+          "kind": "prose",
+          "section": "Standard shape geometry",
+          "text": "Arc geometry stays open and exposes only its curved stroke. A partial Wedge moves from the center to the arc start, follows the circular sweep, and closes back to the center, so both radial edges participate in stroke targeting. A full-turn Wedge instead creates closed circular geometry without center or radial segments; this prevents a visible radial stroke seam. Wedge has no `innerRadius`."
+        },
+        {
+          "id": "c0029",
+          "kind": "prose",
+          "section": "Standard shape geometry",
+          "text": "Polygon takes required `coords: [number, number][]`, connects the points in order, and closes the path. Every coordinate must be finite; a failure is a `LayoutDiagnostic` whose property path identifies the offending tuple member. Polygon coordinates remain numeric because an arbitrary tuple has no unambiguous percentage basis. Fewer than three points produce empty geometry."
+        },
+        {
+          "id": "c0030",
+          "kind": "prose",
+          "section": "Standard shape geometry",
+          "text": "All radii must resolve to finite nonnegative numbers. Negative radii and non-finite angles or ellipse rotation fail style resolution with a contextual `LayoutDiagnostic`, rather than exposing a native `Path2D` exception. A zero circle radius, either zero ellipse radius, or a zero angular span produces empty geometry and paints nothing. Empty geometry still follows normal update, replacement, failure-cleanup, removal, and disposal semantics."
+        },
+        {
+          "id": "c0031",
+          "kind": "prose",
+          "section": "Standard shape geometry",
+          "text": "Paint and coordinate targeting use the exact same generated path. Fill targets use filled shape geometry when fill interaction is active; stroke targets use the existing `strokeWidth` and `lineInteractionWidth` rules. Explicit `keyboardNavigationBounds` always wins. Otherwise Circle uses center/radius bounds, rotated Ellipse uses its axis-aligned rotated extrema, Arc uses its endpoints and swept cardinal extrema, Wedge additionally includes its center, and Polygon uses point extrema. Existing Group transforms, clips, layers, focus policies, and global paint order continue to apply."
+        },
+        {
+          "id": "c0032",
+          "kind": "prose",
+          "section": "Standard shape geometry",
+          "text": "These five leaves have no intrinsic measurement: drawing radius or coordinates do not claim a layout size. Percentage geometry resolves against parent allocation, and a layout path that needs measurement must receive a declared box. Curved and arbitrary edges also do not support pixel-grid alignment."
+        },
+        {
+          "id": "c0033",
           "kind": "prose",
           "section": "Text layout details",
           "text": "`Text` concatenates strings and numbers, including zero, from recursive arrays or finite synchronous iterables. Booleans and nullish values add nothing. It rejects CRC elements, Promises, async iterables, functions, symbols, foreign elements, and unsupported objects. Text content is not a style member."
         },
         {
-          "id": "c0021",
+          "id": "c0034",
           "kind": "code",
           "section": "Text layout details",
           "text": "tsx <Text style={{ x: 40, y: 80, fill: \"black\" }}> Hello {name} — {0} unread </Text>"
         },
         {
-          "id": "c0022",
+          "id": "c0035",
           "kind": "prose",
           "section": "Text layout details",
           "text": "The materialized value is reused by measurement and paint in one receiving transaction. The default is one line. When `wrap` is true, wrapped lines accumulate without losing the final fitting line. `lineHeight` advances each line. A finite style height limits complete lines; ellipsis applies to the final visible line when requested. An ellipsis box narrower than three dots resolves to an empty string."
         },
         {
-          "id": "c0023",
+          "id": "c0036",
           "kind": "prose",
           "section": "Text layout details",
           "text": "`fit: \"squish\"` passes the supplied width to Canvas text paint. `fit: \"clip\"` creates a finite alignment- and baseline-aware clip rectangle when width is supplied; omitted height uses the Canvas allocation. Interaction paths union actual metrics for every rendered line. Paint and pure measurement share this resolver, so measured wrapping and eventual rendering agree."
         },
         {
-          "id": "c0024",
+          "id": "c0037",
           "kind": "prose",
           "section": "Text layout details",
           "text": "Exact Canvas calls are tested with controlled text metrics. Image comparison masks only glyph rasterization; surrounding cards, clipping, layout, state, and interaction bounds remain exact."
         },
         {
-          "id": "c0025",
+          "id": "c0038",
           "kind": "table",
           "section": "Composition values",
           "text": "| Export | Contract |"
         },
         {
-          "id": "c0026",
+          "id": "c0039",
           "kind": "table",
           "section": "Composition values",
           "text": "| `Group` | Applies nested scale, rotation/origin, translation, and skew to all recursive children. Updates, zero/negative scale, and sibling isolation retain Canvas semantics. |"
         },
         {
-          "id": "c0027",
+          "id": "c0040",
           "kind": "table",
           "section": "Composition values",
           "text": "| `Clip` | Applies required `Path2D` `d` and optional `nonzero`/`evenodd` rule to all children. Nested intersections, transforms, updates, empty clips, and paint/hit geometry agree. |"
         },
         {
-          "id": "c0028",
+          "id": "c0041",
           "kind": "table",
           "section": "Composition values",
           "text": "| `Layer` | Renders multiple children into one persistent offscreen CRC instance, caches retained content, follows root density, and participates in global paint/target/focus order. |"
         },
         {
-          "id": "c0029",
+          "id": "c0042",
           "kind": "prose",
           "section": "Composition values",
           "text": "`Layer` uses children, not a render element/descriptor prop. It installs a stable private keyed fragment as the offscreen root. Direct child iterables are materialized once; retained comparisons do not consume opaque nested iterables. Cache hits replay focus metadata without executing child components. Removal recursively disposes its controller, targets, frames, images, and nested layers."
         },
         {
-          "id": "c0030",
+          "id": "c0043",
           "kind": "prose",
           "section": "Composition values",
           "text": "On one persistent mount, a `Layer` invalidates and rerenders when its retained child root type/key, child props (including enumerable symbol keys), specified style, direct-child sequence, or layer dimensions change. Same-mount root, prop, and dimension updates replace the prior offscreen content; an unchanged retained tree reuses the cached backing store. Root density changes independently resize and rerender that backing store."
         },
         {
-          "id": "c0031",
+          "id": "c0044",
           "kind": "prose",
           "section": "Composition values",
           "text": "Managed layers require `OffscreenCanvas`. Their backing stores inherit both root densities and composite the complete physical source into the declared logical destination. Transforms, clips, layout overflow, events, and focus use the same geometry as paint."
         },
         {
-          "id": "c0032",
+          "id": "c0045",
           "kind": "prose",
           "section": "Image lifetime and geometry",
           "text": "Each `style.src` creates a source-tagged image generation. Load/error handlers detach on settlement, source replacement, component removal, or disposal. Saved late callbacks cannot publish stale state. Successful natural sizing uses `naturalWidth` and `naturalHeight` independently for whichever dimension is omitted. Explicit dimensions establish geometry before load and after failure; this matches CRC's geometry-first transparent-region rule. Natural image size is unavailable to pure measurement because it would acquire an asynchronous resource."
         },
         {
-          "id": "c0033",
+          "id": "c0046",
           "kind": "prose",
           "section": "Image lifetime and geometry",
           "text": "Pixel alignment produces one adjusted rectangle used by `drawImage`, the optional border, and the interaction path. It does not stretch the image by an extra pixel."
         },
         {
-          "id": "c0034",
+          "id": "c0047",
           "kind": "prose",
           "section": "Visual evidence and limitations",
-          "text": "The Studio exposes one lesson for each drawing/composition value under `#/examples/drawing/rectangle` through `#/examples/drawing/image` and `#/examples/composition/group` through `#/examples/composition/layer`. It also retains the five stable `#/testing/drawing-*` integration fixtures. Their `.example.tsx` modules are loaded by both Studio and browser tests. The stable 480×240 baselines retain semantic, Canvas-call, geometry, interaction, and inspected-pixel evidence. Image comparison masks only glyph rasterization and decoded-SVG edges where documented; surrounding cards, clipping, layout, state, and interaction bounds remain exact."
+          "text": "The Studio exposes one lesson for each drawing/composition value under `#/examples/drawing/rectangle` through `#/examples/drawing/image`, including the five standard-shape lessons, and `#/examples/composition/group` through `#/examples/composition/layer`. It also retains the five stable `#/testing/drawing-*` integration fixtures. Their `.example.tsx` modules are loaded by both Studio and browser tests. The stable 480×240 baselines retain semantic, Canvas-call, geometry, interaction, and inspected-pixel evidence. Image comparison masks only glyph rasterization and decoded-SVG edges where documented; surrounding cards, clipping, layout, state, and interaction bounds remain exact."
         },
         {
-          "id": "c0035",
+          "id": "c0048",
           "kind": "prose",
           "section": "Visual evidence and limitations",
-          "text": "CRC adds no rich text, semantic DOM, accessibility tree, image CORS policy, SVG validator, retained scene graph, or complete CSS formatting engine. See the [style](./style-system-contract.md), [layout](./layout-system-contract.md), and [runtime](./runtime-hooks-contract.md) contracts."
+          "text": "CRC adds no rich text, semantic DOM, accessibility tree, image CORS policy, SVG validator, retained scene graph, generic public shape/path-builder API, or complete CSS formatting engine. The standard shapes add no line smoothing, spline selection, data-to-mark conversion, `Pie`, charts, scales, axes, legends, annular wedges, rounded rectangles, new paint effects, or intrinsic geometry measurement. See the [style](./style-system-contract.md), [layout](./layout-system-contract.md), and [runtime](./runtime-hooks-contract.md) contracts."
         }
       ]
     },
@@ -8661,23 +8739,23 @@
       "currentIds": [
         "c0010",
         "c0011",
-        "c0012",
-        "c0013",
-        "c0014",
-        "c0015",
-        "c0016",
         "c0017",
         "c0018",
         "c0019",
-        "c0025",
-        "c0026",
-        "c0027",
-        "c0028",
-        "c0029",
-        "c0030",
-        "c0031"
+        "c0020",
+        "c0021",
+        "c0022",
+        "c0023",
+        "c0024",
+        "c0038",
+        "c0039",
+        "c0040",
+        "c0041",
+        "c0042",
+        "c0043",
+        "c0044"
       ],
-      "reason": "This mapping rewrites the component matrix for final names, styles, and children while retaining each component's geometry; b0010, b0011, b0012, b0013, b0014, b0015, b0016, b0017, b0018, b0019, b0020, b0021, b0022 → c0010, c0011, c0012, c0013, c0014, c0015, c0016, c0017, c0018, c0019, c0025, c0026, c0027, c0028, c0029, c0030, c0031 is the exact unit boundary, and `interactions`, `translation`, `delegation` remain shared semantic anchors. Approved-design unit a0030 authorizes that bounded JSX-era change.",
+      "reason": "This mapping rewrites the component matrix for final names, styles, and children while retaining each component's geometry; b0010, b0011, b0012, b0013, b0014, b0015, b0016, b0017, b0018, b0019, b0020, b0021, b0022 → c0010, c0011, c0017, c0018, c0019, c0020, c0021, c0022, c0023, c0024, c0038, c0039, c0040, c0041, c0042, c0043, c0044 is the exact unit boundary, and `interactions`, `translation`, `delegation` remain shared semantic anchors. Approved-design unit a0030 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0030",
         "kind": "prose",
@@ -8689,8 +8767,8 @@
       "id": "design-drawing-components-contract-md-text-layout-details",
       "path": "docs/design/drawing-components-contract.md",
       "baselineIds": ["b0023", "b0025"],
-      "currentIds": ["c0020", "c0021", "c0022", "c0024"],
-      "reason": "This mapping moves `Text` content from style to textual children while retaining layout and interaction behavior; b0023, b0025 → c0020, c0021, c0022, c0024 is the exact unit boundary, and `surrounding`, `comparison`, `controlled` remain shared semantic anchors. Approved-design unit a0136 authorizes that bounded JSX-era change.",
+      "currentIds": ["c0033", "c0034", "c0035", "c0037"],
+      "reason": "This mapping moves `Text` content from style to textual children while retaining layout and interaction behavior; b0023, b0025 → c0033, c0034, c0035, c0037 is the exact unit boundary, and `surrounding`, `comparison`, `controlled` remain shared semantic anchors. Approved-design unit a0136 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0136",
         "kind": "prose",
@@ -8702,8 +8780,8 @@
       "id": "design-drawing-components-contract-md-image-lifetime-and-geometry",
       "path": "docs/design/drawing-components-contract.md",
       "baselineIds": ["b0026"],
-      "currentIds": ["c0032"],
-      "reason": "This mapping renames the image primitive without changing its lifetime or natural-size geometry; b0026 → c0032 is the exact unit boundary, and `transparent-region`, `geometry-first`, `naturalheight` remain shared semantic anchors. Approved-design unit a0032 authorizes that bounded JSX-era change.",
+      "currentIds": ["c0045"],
+      "reason": "This mapping renames the image primitive without changing its lifetime or natural-size geometry; b0026 → c0045 is the exact unit boundary, and `transparent-region`, `geometry-first`, `naturalheight` remain shared semantic anchors. Approved-design unit a0032 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0032",
         "kind": "list",
@@ -8725,8 +8803,8 @@
         "b0035",
         "b0036"
       ],
-      "currentIds": ["c0034", "c0035"],
-      "reason": "This mapping updates visual-evidence prose for converted public scenarios without weakening semantic-first evidence; b0028, b0029, b0030, b0031, b0032, b0033, b0034, b0035, b0036 → c0034, c0035 is the exact unit boundary, and `accessibility`, `decoded-svg`, `baselines` remain shared semantic anchors. Approved-design unit a0202 authorizes that bounded JSX-era change.",
+      "currentIds": ["c0047", "c0048"],
+      "reason": "This mapping updates visual-evidence prose for converted public scenarios without weakening semantic-first evidence; b0028, b0029, b0030, b0031, b0032, b0033, b0034, b0035, b0036 → c0047, c0048 is the exact unit boundary, and `accessibility`, `decoded-svg`, `baselines` remain shared semantic anchors. Approved-design unit a0202 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0202",
         "kind": "prose",
@@ -9381,6 +9459,31 @@
         "id": "a0006",
         "kind": "prose",
         "text": "JSX changes how a CRC tree is described, not how CRC renders it."
+      }
+    },
+    {
+      "id": "design-drawing-components-contract-standard-shape-primitives-addition",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": [
+        "c0012",
+        "c0013",
+        "c0014",
+        "c0015",
+        "c0016",
+        "c0025",
+        "c0026",
+        "c0027",
+        "c0028",
+        "c0029",
+        "c0030",
+        "c0031",
+        "c0032"
+      ],
+      "reason": "Approved-design unit a0030 provides the public built-in vocabulary boundary; the separately approved standard-shape design adds these exact Circle, Ellipse, Arc, Wedge, and Polygon contract units without replacing any preserved baseline semantic unit.",
+      "approval": {
+        "id": "a0030",
+        "kind": "prose",
+        "text": "The public built-in vocabulary becomes:"
       }
     }
   ],

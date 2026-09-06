@@ -1,7 +1,7 @@
 # CRC library status and feature inventory
 
-_Current feature inventory refreshed 2026-09-04 after the JSX component
-authoring pivot and final trust closure. Historical totals remain evidence only
+_Current feature inventory refreshed 2026-09-06 after the standard shape
+primitive trust closure. Historical totals remain evidence only
 for their named dated revision; run the trust gate for current results._
 
 ## At a glance
@@ -14,15 +14,17 @@ current component vocabulary. CRC has no React dependency and creates no DOM.
 
 Current evidence covers source/built/packed package boundaries, Bundler and
 NodeNext declarations, both compiler entries, mixed CRC/React type boundaries,
-42 learning lessons, 16 deterministic laboratories, semantic and geometry
+47 learning lessons, 16 deterministic laboratories, semantic and geometry
 assertions, browser behavior, lifecycle ownership, Studio builds, and guarded
 visual baselines. Controlled wall-clock budgets remain opt-in; deterministic
 workload structure is always checked.
 
-The [2026-09-04 JSX authoring field note](./testing/field-notes/jsx-component-authoring.md)
-records the final local source, built, packed, Studio, browser, visual,
+The [2026-09-06 standard-shape field note](./testing/field-notes/standard-shape-primitives.md)
+records the current local source, built, packed, Studio, browser, visual,
 lifecycle, and structural-performance evidence, including its noncanonical
-Node 26 environment and accepted verifier-hardening residuals.
+Node 26 environment. The
+[2026-09-04 JSX authoring field note](./testing/field-notes/jsx-component-authoring.md)
+preserves the earlier authoring-pivot closure evidence.
 
 “Trusted” below means the supported behavior, boundaries, errors, updates, and
 teardown have executable evidence. It does not mean CRC supplies semantic DOM,
@@ -45,15 +47,16 @@ complete CSS.
 
 ### Drawing and composition
 
-| Values                                   | Supported contract                                                                                                                                                                               | Boundary                                                                                   |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
-| `Rectangle`, `Path`, `SvgPath`           | **Trusted.** Closed explicit style, Canvas geometry/paint, opacity, pixel alignment where supported, interactions, transforms, clips, layers, and platform path parsing.                         | `Path2D` parsing and signed/degenerate Canvas behavior are browser-owned.                  |
-| `Line`, `HorizontalLine`, `VerticalLine` | **Trusted.** Polyline and helper defaults, updates, pixel modes, empty/one-point behavior, transforms/clips, and stroke hit geometry.                                                            | A single move does not paint a point.                                                      |
-| `Text`                                   | **Trusted.** Recursive textual children including zero, one-shot iterable materialization, exact concatenation, wrapping/fit/clipping, shared measurement/paint, multiline targets, and updates. | Font metrics/rasterization are platform-dependent; elements are invalid textual content.   |
-| `Image`                                  | **Trusted.** Source generations, success/error/race/removal, inert late callbacks, natural/explicit dimensions, opacity, border, and pixel alignment.                                            | Decode/CORS/taint are browser behavior; natural size is not pure measurement.              |
-| `Group`                                  | **Trusted.** Nested translation, scale, rotation/origin, skew, zero/negative scale, sibling isolation, and matching target transforms.                                                           | Canvas transformation is not layout.                                                       |
-| `Clip`                                   | **Trusted.** Multi-child `nonzero`/`evenodd` clips, cumulative intersections, updates, and identical paint/hit geometry.                                                                         | No retained clip object is public.                                                         |
-| `Layer`                                  | **Trusted.** Multi-child persistent offscreen instance, one-shot direct iterable input, cache invalidation/hits, density, global paint/target/focus order, and cascading cleanup.                | Requires browser `OffscreenCanvas`; retained equality is intentionally shallow/structural. |
+| Values                                         | Supported contract                                                                                                                                                                               | Boundary                                                                                                                                |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `Rectangle`, `Path`, `SvgPath`                 | **Trusted.** Closed explicit style, Canvas geometry/paint, opacity, pixel alignment where supported, interactions, transforms, clips, layers, and platform path parsing.                         | `Path2D` parsing and signed/degenerate Canvas behavior are browser-owned.                                                               |
+| `Circle`, `Ellipse`, `Arc`, `Wedge`, `Polygon` | **Trusted.** Percentage-aware local geometry, deterministic validation/empty cases, shared paint/target paths, geometry-derived focus bounds, updates, and lifecycle cleanup.                    | `Arc` is stroke-only; there is no intrinsic measurement, pixel alignment, `innerRadius`, chart/data semantics, or retained shape graph. |
+| `Line`, `HorizontalLine`, `VerticalLine`       | **Trusted.** Polyline and helper defaults, updates, pixel modes, empty/one-point behavior, transforms/clips, and stroke hit geometry.                                                            | A single move does not paint a point.                                                                                                   |
+| `Text`                                         | **Trusted.** Recursive textual children including zero, one-shot iterable materialization, exact concatenation, wrapping/fit/clipping, shared measurement/paint, multiline targets, and updates. | Font metrics/rasterization are platform-dependent; elements are invalid textual content.                                                |
+| `Image`                                        | **Trusted.** Source generations, success/error/race/removal, inert late callbacks, natural/explicit dimensions, opacity, border, and pixel alignment.                                            | Decode/CORS/taint are browser behavior; natural size is not pure measurement.                                                           |
+| `Group`                                        | **Trusted.** Nested translation, scale, rotation/origin, skew, zero/negative scale, sibling isolation, and matching target transforms.                                                           | Canvas transformation is not layout.                                                                                                    |
+| `Clip`                                         | **Trusted.** Multi-child `nonzero`/`evenodd` clips, cumulative intersections, updates, and identical paint/hit geometry.                                                                         | No retained clip object is public.                                                                                                      |
+| `Layer`                                        | **Trusted.** Multi-child persistent offscreen instance, one-shot direct iterable input, cache invalidation/hits, density, global paint/target/focus order, and cascading cleanup.                | Requires browser `OffscreenCanvas`; retained equality is intentionally shallow/structural.                                              |
 
 ### Style, layout, and extension
 
@@ -82,13 +85,13 @@ complete CSS.
 
 ### Packages, Studio, and verification
 
-| Area                | Current confidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Boundary                                                               |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Public declarations | **Trusted.** Exact source/built/Studio export-name parity, 112 root type imports, compiler namespaces, strict positive/negative TSX, and mixed-runtime barriers.                                                                                                                                                                                                                                                                                                                          | `@crc/types` remains a deliberately minimal compatibility package.     |
-| Package output      | **Trusted.** ESM runtime/declarations/maps, shared compiler chunks, packed no-source consumers, blocked private imports, and focus tree shaking.                                                                                                                                                                                                                                                                                                                                          | ESM-only; another format needs an explicit requirement.                |
-| Studio              | **Trusted.** TSX automatic runtime, source/built execution, exact declaration bundle, 42 lessons and 16 labs, editing diagnostics, and catalog/source identity.                                                                                                                                                                                                                                                                                                                           | Internal Studio, not a hosted documentation product.                   |
-| Documentation       | **Checked.** Required guides, link anchors, fail-closed API inventory, an exhaustive 667-unit pre-Task-14 / 654-unit current semantic snapshot across all 12 normative contracts, an explicit JSX translation/addition allowlist, 48 unique direct source/test mappings, source-inspected acceptance evidence, extracted complete snippets, real Babel/esbuild transforms, historical banners, adversarial RED mutations, and Git-discovered active-vocabulary scans run in `docs:check`. | Prose cannot replace browser/runtime evidence.                         |
-| CI                  | **Configured.** Static/docs, packed package, browser/visual, lifecycle, and structural performance jobs feed one aggregate trust result.                                                                                                                                                                                                                                                                                                                                                  | Hosted status and branch protection require repository administration. |
+| Area                | Current confidence                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Boundary                                                               |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Public declarations | **Trusted.** Exact source/built/Studio export-name parity, 122 root type imports, compiler namespaces, strict positive/negative TSX, and mixed-runtime barriers.                                                                                                                                                                                                                                                                                                             | `@crc/types` remains a deliberately minimal compatibility package.     |
+| Package output      | **Trusted.** ESM runtime/declarations/maps, shared compiler chunks, packed no-source consumers, blocked private imports, and focus tree shaking.                                                                                                                                                                                                                                                                                                                             | ESM-only; another format needs an explicit requirement.                |
+| Studio              | **Trusted.** TSX automatic runtime, source/built execution, exact declaration bundle, 47 lessons and 16 labs, editing diagnostics, and catalog/source identity.                                                                                                                                                                                                                                                                                                              | Internal Studio, not a hosted documentation product.                   |
+| Documentation       | **Checked.** Required guides, link anchors, fail-closed API inventory, exhaustive 667-unit pre-Task-14 and current semantic snapshots across all 12 normative contracts, an explicit translation/addition allowlist, 48 unique direct source/test mappings, source-inspected acceptance evidence, extracted complete snippets, real Babel/esbuild transforms, historical banners, adversarial RED mutations, and Git-discovered active-vocabulary scans run in `docs:check`. | Prose cannot replace browser/runtime evidence.                         |
+| CI                  | **Configured.** Static/docs, packed package, browser/visual, lifecycle, and structural performance jobs feed one aggregate trust result.                                                                                                                                                                                                                                                                                                                                     | Hosted status and branch protection require repository administration. |
 
 ## Documentation acceptance matrix
 
@@ -151,6 +154,8 @@ as current without a fresh reproducing run.
 Current deferrals include semantic DOM/accessibility generation, hidden
 editing controls, rich text, margin/scrolling, Grid auto placement, advanced
 intrinsic CSS sizing, reverse/reordered Flexbox, a retained scene graph,
-workers/WebGL, public scrolling/virtualization, and library-owned image CORS
-policy. The [accepted/deferred follow-ups](./follow-ups.md) record measured
+workers/WebGL, public scrolling/virtualization, library-owned image CORS
+policy, line smoothing/splines, chart/data transformation, annular wedges,
+rounded rectangles, and generic public shape/path-builder APIs. The
+[accepted/deferred follow-ups](./follow-ups.md) record measured
 triggers and remaining external administration.

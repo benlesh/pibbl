@@ -1,5 +1,7 @@
 # Standard Shape Primitives Implementation Plan
 
+> **Historical status: IMPLEMENTED PLAN.**
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add public `Circle`, `Ellipse`, `Arc`, `Wedge`, and `Polygon` drawing primitives with percentage-aware geometry, deterministic validation, shared paint/interaction behavior, examples, documentation, and complete trust evidence.

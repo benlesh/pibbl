@@ -226,6 +226,11 @@
   export interface CursorStyle extends SystemStyle { cursor?: string }
   export interface PathStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { d: Path2D; lineInteractionWidth?: number }
   export interface RectStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { x?: Exclude<Length, 'auto'>; y?: Exclude<Length, 'auto'>; width: Length; height: Length; alignToPixelGrid?: PixelGridAlignment; lineInteractionWidth?: number }
+  export interface CircleStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { radius: Exclude<Length, 'auto'>; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; lineInteractionWidth?: number }
+  export interface EllipseStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { radiusX: Exclude<Length, 'auto'>; radiusY: Exclude<Length, 'auto'>; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; rotation?: number; lineInteractionWidth?: number }
+  export interface ArcStyle extends Omit<PaintStyle, 'fill'>, CursorStyle, BoxStyle, LayoutItemStyle { radius: Exclude<Length, 'auto'>; startAngle: number; endAngle: number; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; counterclockwise?: boolean; lineInteractionWidth?: number }
+  export interface WedgeStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { radius: Exclude<Length, 'auto'>; startAngle: number; endAngle: number; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; counterclockwise?: boolean; lineInteractionWidth?: number }
+  export interface PolygonStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { coords: [number, number][]; lineInteractionWidth?: number }
   export interface SvgPathStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { d: string; lineInteractionWidth?: number }
   export interface LineStyle extends SystemStyle, CursorStyle, BoxStyle, LayoutItemStyle { coords: [number, number][]; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; lineInteractionWidth?: number }
   export interface HorizontalLineStyle extends SystemStyle, CursorStyle, BoxStyle, LayoutItemStyle { y: Exclude<Length, 'auto'>; x1?: Exclude<Length, 'auto'>; x2?: Exclude<Length, 'auto'>; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; alignToPixelGrid?: PixelGridAlignment; lineInteractionWidth?: number }
@@ -239,6 +244,11 @@
 
   export interface PathProps extends CRCEventHandlers, CRCEventFocusOptions {}
   export interface RectangleProps extends CRCEventHandlers, CRCEventFocusOptions {}
+  export interface CircleProps extends CRCEventHandlers, CRCEventFocusOptions {}
+  export interface EllipseProps extends CRCEventHandlers, CRCEventFocusOptions {}
+  export interface ArcProps extends CRCEventHandlers, CRCEventFocusOptions {}
+  export interface WedgeProps extends CRCEventHandlers, CRCEventFocusOptions {}
+  export interface PolygonProps extends CRCEventHandlers, CRCEventFocusOptions {}
   export interface SvgPathProps extends PathProps {}
   export interface LineProps extends CRCEventHandlers, CRCEventFocusOptions {}
   export interface HorizontalLineProps extends CRCEventHandlers, CRCEventFocusOptions {}
@@ -281,6 +291,11 @@
   export function Fragment(props: { children?: CRCNode }): CRCNode;
   export function definePrimitive<P = Record<string, never>, S extends SystemStyle = SystemStyle, N extends SystemStyle = S, R extends SystemStyle = N>(render: PrimitiveRender<P, R> & (PrimitiveInput<P, S> extends never ? never : unknown), ...capabilityArguments: PrimitiveCapabilityArguments<P, S, N, R>): CRCPrimitiveComponent<PrimitiveProgramProps<P>, PrimitiveInput<P, S>>;
   export const Rectangle: CRCPrimitiveComponent<RectangleProps, PrimitiveInput<RectangleProps, RectStyle>>;
+  export const Circle: CRCPrimitiveComponent<CircleProps, PrimitiveInput<CircleProps, CircleStyle>>;
+  export const Ellipse: CRCPrimitiveComponent<EllipseProps, PrimitiveInput<EllipseProps, EllipseStyle>>;
+  export const Arc: CRCPrimitiveComponent<ArcProps, PrimitiveInput<ArcProps, ArcStyle>>;
+  export const Wedge: CRCPrimitiveComponent<WedgeProps, PrimitiveInput<WedgeProps, WedgeStyle>>;
+  export const Polygon: CRCPrimitiveComponent<PolygonProps, PrimitiveInput<PolygonProps, PolygonStyle>>;
   export const Path: CRCPrimitiveComponent<PathProps, PrimitiveInput<PathProps, PathStyle>>;
   export const SvgPath: CRCPrimitiveComponent<SvgPathProps, PrimitiveInput<SvgPathProps, SvgPathStyle>>;
   export const Line: CRCPrimitiveComponent<LineProps, PrimitiveInput<LineProps, LineStyle>>;

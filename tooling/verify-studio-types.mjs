@@ -297,9 +297,13 @@ for (const { moduleName, content } of declarationModules) {
 const publicTypeExports = [
   'AbsoluteProps',
   'AbsoluteStyle',
+  'ArcProps',
+  'ArcStyle',
   'BoxStyle',
   'Canvas',
   'CanvasMeasurementService',
+  'CircleProps',
+  'CircleStyle',
   'ClipProps',
   'ClipStyle',
   'Constraints',
@@ -347,6 +351,8 @@ const publicTypeExports = [
   'CursorStyle',
   'EdgeValues',
   'Edges',
+  'EllipseProps',
+  'EllipseStyle',
   'FillStyle',
   'FlexItemStyle',
   'FlexProps',
@@ -384,6 +390,8 @@ const publicTypeExports = [
   'PathStyle',
   'Percentage',
   'PixelGridAlignment',
+  'PolygonProps',
+  'PolygonStyle',
   'PrimitiveCapabilities',
   'PrimitiveInput',
   'PrimitiveInputOf',
@@ -407,6 +415,8 @@ const publicTypeExports = [
   'TextStyle',
   'VerticalLineProps',
   'VerticalLineStyle',
+  'WedgeProps',
+  'WedgeStyle',
 ].sort();
 
 const packageIndexSource = packageDeclarationSources.get('@crc/core');
@@ -1161,7 +1171,10 @@ try {
   const builtRuntimeExports = await studioRuntimeExports('built');
   const expectedStudioRuntimeExports = [
     'Absolute',
+    'Arc',
+    'Circle',
     'Clip',
+    'Ellipse',
     'Flex',
     'Flow',
     'FocusManagement',
@@ -1176,10 +1189,12 @@ try {
     'Line',
     'Overlay',
     'Path',
+    'Polygon',
     'Rectangle',
     'SvgPath',
     'Text',
     'VerticalLine',
+    'Wedge',
     'crc',
     'crcCanvasContext',
     'crcCursor',
@@ -1214,7 +1229,7 @@ try {
     throw new Error('CRC Studio source and built runtime surfaces differ.');
   }
   process.stdout.write(
-    'CRC Studio declarations passed exact export-name parity, 112-type structural ' +
+    'CRC Studio declarations passed exact export-name parity, 122-type structural ' +
     'coverage, selected signature parity, strict TSX, compiler-runtime, event-family, ' +
     'generic, and layout checks against source and built packages.\n',
   );
