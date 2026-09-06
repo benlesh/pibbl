@@ -9,7 +9,7 @@ export const CONTRACT_TRANSLATION_RECORD =
 // Updated only after the complete baseline, translation allowlist, additions,
 // and evidence map receive review together.
 const REVIEWED_MANIFEST_SHA256 =
-  "648b7ae1852908fe218666b659e1ca6b75e81e677e12f76bc57476d9082ebcd8";
+  "90f2789a6d773359a0b0a2db1255c017fb7cc32ed95e6c2a71270ebf7ddf3c80";
 
 export function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
@@ -285,6 +285,7 @@ export function assertContractPreservationBaseline({
   currentSources,
   translationRecordSource,
   translationRecordBaselineSource,
+  approvalRecordSources,
   evidenceSources,
   trackedEvidencePaths,
   reviewedManifestSha256 = REVIEWED_MANIFEST_SHA256,
@@ -296,6 +297,7 @@ export function assertContractPreservationBaseline({
       "sourceCommit",
       "translationRecord",
       "translationRule",
+      "approvalRecords",
       "contracts",
       "translations",
       "additions",
@@ -303,7 +305,7 @@ export function assertContractPreservationBaseline({
     ],
     "Contract-preservation manifest",
   );
-  assert.equal(manifest.version, 1, "Unsupported contract baseline version");
+  assert.equal(manifest.version, 2, "Unsupported contract baseline version");
   assert.equal(
     manifest.sourceCommit,
     CONTRACT_BASELINE_COMMIT,
@@ -336,6 +338,56 @@ export function assertContractPreservationBaseline({
     /Preserve shipped semantics while translating/u,
     "Contract baseline must state the approved translation boundary",
   );
+
+  assert.ok(
+    Array.isArray(manifest.approvalRecords) &&
+      manifest.approvalRecords.length > 0,
+    "Contract baseline must declare explicit addition approval records",
+  );
+  const approvalRecordsById = new Map();
+  for (const record of manifest.approvalRecords) {
+    const label = `Addition approval record ${record.id ?? "<unknown>"}`;
+    assertExactObjectKeys(
+      record,
+      ["id", "path", "sourceSha256", "unitPrefix"],
+      label,
+    );
+    assert.match(record.id, /^[a-z0-9-]+$/u, `${label} has an invalid id`);
+    assert.ok(
+      !approvalRecordsById.has(record.id),
+      `Duplicate addition approval record ${record.id}`,
+    );
+    assert.match(
+      record.path,
+      /^docs\/superpowers\/specs\/[^/]+\.md$/u,
+      `${label} must reference an approved design record`,
+    );
+    assert.match(
+      record.sourceSha256,
+      /^[a-f0-9]{64}$/u,
+      `${label} digest is malformed`,
+    );
+    assert.match(
+      record.unitPrefix,
+      /^[a-z]$/u,
+      `${label} unit prefix is malformed`,
+    );
+    const source = approvalRecordSources?.get(record.path);
+    assert.equal(
+      typeof source,
+      "string",
+      `${label} source ${record.path} is unavailable`,
+    );
+    assert.equal(
+      record.sourceSha256,
+      sha256(source),
+      `${label} digest does not match its approved design source`,
+    );
+    approvalRecordsById.set(record.id, {
+      ...record,
+      units: extractContractUnits(source, record.unitPrefix),
+    });
+  }
 
   assert.deepEqual(
     manifest.contracts.map(({ path }) => path).sort(),
@@ -608,7 +660,7 @@ export function assertContractPreservationBaseline({
     const label = `Addition ${addition.id ?? "<unknown>"}`;
     assertExactObjectKeys(
       addition,
-      ["id", "path", "currentIds", "reason", "approval"],
+      ["id", "path", "currentIds", "reason", "approval", "sharedAnchors"],
       label,
     );
     assert.match(addition.id, /^[a-z0-9-]+$/u, `${label} has an invalid id`);
@@ -620,9 +672,70 @@ export function assertContractPreservationBaseline({
       Array.isArray(addition.currentIds) && addition.currentIds.length > 0,
       `${label} must identify exact current units`,
     );
-    assertApproval(addition, label);
+    assertExactObjectKeys(
+      addition.approval ?? {},
+      ["recordId", "unitIds"],
+      `${label} approval`,
+    );
+    const approvalRecord = approvalRecordsById.get(addition.approval.recordId);
+    assert.ok(
+      approvalRecord,
+      `${label} lacks an explicit approved-design record`,
+    );
+    assert.ok(
+      Array.isArray(addition.approval.unitIds) &&
+        addition.approval.unitIds.length > 0,
+      `${label} must cite exact approved-design units`,
+    );
+    const approvalUnits = addition.approval.unitIds.map((id) => {
+      assert.match(
+        id,
+        new RegExp(`^${approvalRecord.unitPrefix}\\d{4}$`, "u"),
+        `${label} approval has a malformed unit id`,
+      );
+      const unit = approvalRecord.units.find(
+        (candidate) => candidate.id === id,
+      );
+      assert.ok(
+        unit && ["prose", "list", "table"].includes(unit.kind),
+        `${label} references unknown or unsupported approved-design unit ${id}`,
+      );
+      return unit;
+    });
+    assert.ok(
+      addition.reason.includes(addition.approval.recordId),
+      `${label} reason must identify its approved-design record`,
+    );
+    for (const id of addition.approval.unitIds) {
+      assert.ok(
+        addition.reason.includes(id),
+        `${label} reason must identify exact approved-design unit ${id}`,
+      );
+    }
+    const currentUnits = addition.currentIds.map((id) =>
+      resolveUnit(addition.path, "current", id, label),
+    );
+    const currentText = joinedUnitText(currentUnits);
+    const approvalText = joinedUnitText(approvalUnits);
+    assertAnchors(
+      currentText,
+      addition.sharedAnchors,
+      `${label} current addition relevance`,
+    );
+    assertAnchors(
+      approvalText,
+      addition.sharedAnchors,
+      `${label} approval relevance`,
+    );
+    assert.ok(
+      semanticSimilarity(currentText, approvalText) >= 0.1,
+      `${label} approved-design units lack substantive relevance to the current addition`,
+    );
     for (const id of addition.currentIds) {
-      resolveUnit(addition.path, "current", id, label);
+      assert.ok(
+        addition.reason.includes(id),
+        `${label} reason must identify exact current unit ${id}`,
+      );
       const identity = `${addition.path}\0${id}`;
       assert.ok(
         !translatedCurrent.has(identity) && !addedCurrent.has(identity),

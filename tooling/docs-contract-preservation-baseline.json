@@ -1,11 +1,25 @@
 {
-  "version": 1,
+  "version": 2,
   "sourceCommit": "0040d65cc4007aefc2ae61ef0c5b833166c38441",
   "translationRecord": {
     "path": "docs/superpowers/specs/2026-09-01-jsx-component-authoring-design.md",
     "sourceSha256": "0be2a629729214775c2ab8f8562a653f9675e17c6b4fc57b01682a0cebceab3b"
   },
   "translationRule": "Preserve shipped semantics while translating only the component factories, element descriptors, focus enhancers, and Text or Layer authoring forms approved by the JSX component-authoring design.",
+  "approvalRecords": [
+    {
+      "id": "jsx-component-authoring",
+      "path": "docs/superpowers/specs/2026-09-01-jsx-component-authoring-design.md",
+      "sourceSha256": "798440c84133b4f2c6a75c3859ab4c7f2b24055fafb153c5154b7bd9e084b52b",
+      "unitPrefix": "a"
+    },
+    {
+      "id": "standard-shape-primitives",
+      "path": "docs/superpowers/specs/2026-09-06-standard-shape-primitives-design.md",
+      "sourceSha256": "0f4f7e471ac1d770a12ebe7524f83c3b1d5092fabe9772ca1f79487a7fd0c050",
+      "unitPrefix": "s"
+    }
+  ],
   "contracts": [
     {
       "path": "docs/architecture/style-and-layout-architecture.md",
@@ -9454,37 +9468,186 @@
       "id": "architecture-style-and-layout-architecture-md-public-boundaries-and-evidence-addition",
       "path": "docs/architecture/style-and-layout-architecture.md",
       "currentIds": ["c0117"],
-      "reason": "Approved-design unit a0006 authorizes current unit c0117 as a distinct JSX-era public-boundary addition; it does not classify or replace any baseline semantic unit.",
+      "reason": "Approval record jsx-component-authoring units a0105, a0176, a0184, a0186, and a0201 authorize current unit c0117 as a distinct JSX-era public-boundary addition sharing the exact source, built, and Studio evidence anchors.",
       "approval": {
-        "id": "a0006",
-        "kind": "prose",
-        "text": "JSX changes how a CRC tree is described, not how CRC renders it."
-      }
+        "recordId": "jsx-component-authoring",
+        "unitIds": ["a0105", "a0176", "a0184", "a0186", "a0201"]
+      },
+      "sharedAnchors": ["source", "built", "Studio"]
     },
     {
-      "id": "design-drawing-components-contract-standard-shape-primitives-addition",
+      "id": "design-drawing-components-contract-standard-shape-circle-matrix-addition",
       "path": "docs/design/drawing-components-contract.md",
-      "currentIds": [
-        "c0012",
-        "c0013",
-        "c0014",
-        "c0015",
-        "c0016",
-        "c0025",
-        "c0026",
-        "c0027",
-        "c0028",
-        "c0029",
-        "c0030",
-        "c0031",
-        "c0032"
-      ],
-      "reason": "Approved-design unit a0030 provides the public built-in vocabulary boundary; the separately approved standard-shape design adds these exact Circle, Ellipse, Arc, Wedge, and Polygon contract units without replacing any preserved baseline semantic unit.",
+      "currentIds": ["c0012"],
+      "reason": "Approval record standard-shape-primitives units s0018, s0026, s0027, s0028, and s0068 authorize exact current Circle matrix unit c0012 through the shared Circle, radius, and bounds anchors.",
       "approval": {
-        "id": "a0030",
-        "kind": "prose",
-        "text": "The public built-in vocabulary becomes:"
-      }
+        "recordId": "standard-shape-primitives",
+        "unitIds": ["s0018", "s0026", "s0027", "s0028", "s0068"]
+      },
+      "sharedAnchors": ["Circle", "radius", "bounds"]
+    },
+    {
+      "id": "design-drawing-components-contract-standard-shape-ellipse-matrix-addition",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0013"],
+      "reason": "Approval record standard-shape-primitives units s0019, s0030, s0031, s0034, and s0069 authorize exact current Ellipse matrix unit c0013 through the shared Ellipse, rotation, and bounds anchors.",
+      "approval": {
+        "recordId": "standard-shape-primitives",
+        "unitIds": ["s0019", "s0030", "s0031", "s0034", "s0069"]
+      },
+      "sharedAnchors": ["Ellipse", "rotation", "bounds"]
+    },
+    {
+      "id": "design-drawing-components-contract-standard-shape-arc-matrix-addition",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0014"],
+      "reason": "Approval record standard-shape-primitives units s0020, s0024, s0042, and s0070 authorize exact current Arc matrix unit c0014 through the shared Arc, stroke, and bounds anchors.",
+      "approval": {
+        "recordId": "standard-shape-primitives",
+        "unitIds": ["s0020", "s0024", "s0042", "s0070"]
+      },
+      "sharedAnchors": ["Arc", "stroke", "bounds"]
+    },
+    {
+      "id": "design-drawing-components-contract-standard-shape-wedge-matrix-addition",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0015"],
+      "reason": "Approval record standard-shape-primitives units s0021, s0043, and s0044 authorize exact current Wedge matrix unit c0015 through the shared Wedge, center, and radial anchors.",
+      "approval": {
+        "recordId": "standard-shape-primitives",
+        "unitIds": ["s0021", "s0043", "s0044"]
+      },
+      "sharedAnchors": ["Wedge", "center", "radial"]
+    },
+    {
+      "id": "design-drawing-components-contract-standard-shape-polygon-matrix-addition",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0016"],
+      "reason": "Approval record standard-shape-primitives units s0022, s0045, and s0072 authorize exact current Polygon matrix unit c0016 through the shared Polygon, point, and bounds anchors.",
+      "approval": {
+        "recordId": "standard-shape-primitives",
+        "unitIds": ["s0022", "s0045", "s0072"]
+      },
+      "sharedAnchors": ["Polygon", "point", "bounds"]
+    },
+    {
+      "id": "design-drawing-components-contract-standard-shape-pipeline-addition",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0025"],
+      "reason": "Approval record standard-shape-primitives units s0003, s0023, s0024, s0056, and s0062 authorize exact current pipeline unit c0025 through the shared drawing leaves, Path2D, and retained anchors.",
+      "approval": {
+        "recordId": "standard-shape-primitives",
+        "unitIds": ["s0003", "s0023", "s0024", "s0056", "s0062"]
+      },
+      "sharedAnchors": ["drawing leaves", "Path2D", "retained"]
+    },
+    {
+      "id": "design-drawing-components-contract-standard-shape-percentage-addition",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0026"],
+      "reason": "Approval record standard-shape-primitives units s0027, s0028, s0032, s0033, s0034, s0041, s0048, s0049, s0050, s0051, s0052, and s0053 authorize exact current percentage/default unit c0026 through the shared percentage, default, and local anchors.",
+      "approval": {
+        "recordId": "standard-shape-primitives",
+        "unitIds": [
+          "s0027",
+          "s0028",
+          "s0032",
+          "s0033",
+          "s0034",
+          "s0041",
+          "s0048",
+          "s0049",
+          "s0050",
+          "s0051",
+          "s0052",
+          "s0053"
+        ]
+      },
+      "sharedAnchors": ["percentage", "default", "local"]
+    },
+    {
+      "id": "design-drawing-components-contract-standard-shape-angle-addition",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0027"],
+      "reason": "Approval record standard-shape-primitives units s0026, s0030, s0031, s0034, s0036, s0037, s0038, and s0042 authorize exact current radii/angle unit c0027 through the shared radius, radians, and Path2D.arc anchors.",
+      "approval": {
+        "recordId": "standard-shape-primitives",
+        "unitIds": [
+          "s0026",
+          "s0030",
+          "s0031",
+          "s0034",
+          "s0036",
+          "s0037",
+          "s0038",
+          "s0042"
+        ]
+      },
+      "sharedAnchors": ["radius", "radians", "Path2D.arc"]
+    },
+    {
+      "id": "design-drawing-components-contract-standard-shape-wedge-geometry-addition",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0028"],
+      "reason": "Approval record standard-shape-primitives units s0024, s0042, s0043, and s0044 authorize exact current Arc/Wedge geometry unit c0028 through the shared stroke, center, and radial anchors.",
+      "approval": {
+        "recordId": "standard-shape-primitives",
+        "unitIds": ["s0024", "s0042", "s0043", "s0044"]
+      },
+      "sharedAnchors": ["stroke", "center", "radial"]
+    },
+    {
+      "id": "design-drawing-components-contract-standard-shape-polygon-geometry-addition",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0029"],
+      "reason": "Approval record standard-shape-primitives units s0045, s0046, and s0055 authorize exact current Polygon geometry unit c0029 through the shared coords, finite, and fewer than three anchors.",
+      "approval": {
+        "recordId": "standard-shape-primitives",
+        "unitIds": ["s0045", "s0046", "s0055"]
+      },
+      "sharedAnchors": ["coords", "finite", "fewer than three"]
+    },
+    {
+      "id": "design-drawing-components-contract-standard-shape-validation-addition",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0030"],
+      "reason": "Approval record standard-shape-primitives units s0054, s0055, s0074, and s0075 authorize exact current validation/lifecycle unit c0030 through the shared nonnegative, LayoutDiagnostic, and disposal anchors.",
+      "approval": {
+        "recordId": "standard-shape-primitives",
+        "unitIds": ["s0054", "s0055", "s0074", "s0075"]
+      },
+      "sharedAnchors": ["nonnegative", "LayoutDiagnostic", "disposal"]
+    },
+    {
+      "id": "design-drawing-components-contract-standard-shape-interaction-addition",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0031"],
+      "reason": "Approval record standard-shape-primitives units s0066, s0067, s0068, s0069, s0070, s0071, s0072, and s0073 authorize exact current interaction/bounds unit c0031 through the shared targeting, keyboardNavigationBounds, and transforms anchors.",
+      "approval": {
+        "recordId": "standard-shape-primitives",
+        "unitIds": [
+          "s0066",
+          "s0067",
+          "s0068",
+          "s0069",
+          "s0070",
+          "s0071",
+          "s0072",
+          "s0073"
+        ]
+      },
+      "sharedAnchors": ["targeting", "keyboardNavigationBounds", "transforms"]
+    },
+    {
+      "id": "design-drawing-components-contract-standard-shape-measurement-addition",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0032"],
+      "reason": "Approval record standard-shape-primitives units s0063, s0064, and s0065 authorize exact current measurement/pixel-alignment unit c0032 through the shared layout, Percentage geometry, and pixel-grid alignment anchors.",
+      "approval": {
+        "recordId": "standard-shape-primitives",
+        "unitIds": ["s0063", "s0064", "s0065"]
+      },
+      "sharedAnchors": ["layout", "Percentage geometry", "pixel-grid alignment"]
     }
   ],
   "evidenceMappings": [

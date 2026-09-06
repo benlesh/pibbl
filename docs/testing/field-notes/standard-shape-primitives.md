@@ -89,7 +89,7 @@ The public `drawing-shapes` scenario artifacts were inspected at:
 The expected and actual images, and the committed
 `packages/core/test/visual-baselines/tfc-09-drawing-shapes.expected.png`, had
 the same SHA-256
-`8d488162d7ba3f60ec8c860cc65f3aa65b0454857124741dd163d56038359510`;
+`8d48816262326b90867cdbfa962eca61a0a15599827d8c2c9f04a79d4d07fe79`;
 byte comparison returned zero. The gallery visibly contains the intentional
 Circle, Ellipse, Arc, Wedge, and Polygon row, while the pre-existing drawing
 fixtures remain unchanged.

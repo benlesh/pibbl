@@ -1456,6 +1456,14 @@ const contractPreservationBaseline = JSON.parse(
     "utf8",
   ),
 );
+const approvalRecordSources = new Map(
+  await Promise.all(
+    contractPreservationBaseline.approvalRecords.map(async ({ path }) => [
+      path,
+      await readFile(join(repositoryRoot, path), "utf8"),
+    ]),
+  ),
+);
 const baselineStyleUnits = contractPreservationBaseline.contracts.find(
   ({ path }) => path === "docs/design/style-system-contract.md",
 )?.baselineUnits;
@@ -1580,6 +1588,7 @@ const contractPreservationResult = assertContractPreservationBaseline({
   currentSources,
   translationRecordSource,
   translationRecordBaselineSource,
+  approvalRecordSources,
   evidenceSources: contractEvidenceSources,
   trackedEvidencePaths: trackedContractEvidencePaths,
 });
@@ -2127,6 +2136,7 @@ export async function verifyMutationProbes() {
     baselineSources,
     baselineTranslation,
     embeddedOnly = false,
+    approvalSources = approvalRecordSources,
     evidenceSources = contractEvidenceSources,
     evidencePaths = trackedContractEvidencePaths,
     reviewedManifestSha256,
@@ -2142,6 +2152,7 @@ export async function verifyMutationProbes() {
       translationRecordBaselineSource: embeddedOnly
         ? undefined
         : (baselineTranslation ?? translationRecordBaselineSource),
+      approvalRecordSources: approvalSources,
       evidenceSources,
       trackedEvidencePaths: evidencePaths,
       reviewedManifestSha256,
@@ -2405,6 +2416,36 @@ export async function verifyMutationProbes() {
         reviewedManifestSha256: irrelevantTranslationDigest,
       }),
     /translation.*(?:transform|replacement|relevance)/iu,
+  );
+
+  // A current standard-shape clause must be authorized by the standard-shape
+  // design itself, not by an unrelated but otherwise valid JSX-design unit.
+  const unrelatedShapeApproval = structuredClone(contractPreservationBaseline);
+  const standardShapeAddition = unrelatedShapeApproval.additions.find(
+    ({ id }) =>
+      id ===
+      "design-drawing-components-contract-standard-shape-circle-matrix-addition",
+  );
+  assert.ok(
+    standardShapeAddition,
+    "Standard-shape approval mutation fixture is missing",
+  );
+  standardShapeAddition.approval = {
+    recordId: "jsx-component-authoring",
+    unitIds: ["a0006"],
+  };
+  standardShapeAddition.reason =
+    "Approval record jsx-component-authoring unit a0006 purports to authorize exact current Circle matrix unit c0012 through the shared Circle, radius, and bounds anchors.";
+  const unrelatedShapeApprovalDigest = sha256(
+    JSON.stringify(unrelatedShapeApproval),
+  );
+  throws(
+    () =>
+      assertPreservation({
+        manifest: unrelatedShapeApproval,
+        reviewedManifestSha256: unrelatedShapeApprovalDigest,
+      }),
+    /standard-shape.*approval/iu,
   );
 
   const irrelevantEvidence = structuredClone(contractPreservationBaseline);
