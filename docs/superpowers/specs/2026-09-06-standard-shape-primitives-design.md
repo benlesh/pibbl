@@ -88,9 +88,11 @@ would implicitly create different chord geometry.
 - optional `cy: Exclude<Length, "auto">`, default `0`
 - optional `counterclockwise: boolean`, default `false`
 
-The angles and direction follow `Path2D.arc`. The path remains open. An
-absolute angular difference of at least one full turn follows Canvas full-circle
-behavior.
+The angles and direction follow `Path2D.arc`. The path remains open. The sweep
+is a full circle when `counterclockwise` is false and `endAngle - startAngle`
+is at least `2π`, or when `counterclockwise` is true and
+`startAngle - endAngle` is at least `2π`. Opposite-direction differences
+are normalized to the requested direction exactly as Canvas specifies.
 
 ### Wedge
 
