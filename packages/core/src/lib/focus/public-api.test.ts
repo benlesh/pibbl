@@ -130,7 +130,6 @@ describe('public CRC API', () => {
       'Line',
       'Overlay',
       'Path',
-      'Polygon',
       'Rectangle',
       'SvgPath',
       'Text',
