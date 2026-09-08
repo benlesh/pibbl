@@ -21,6 +21,8 @@ import {
 import { materializeContainerChildren } from './element/children.js';
 import { isFragmentElement } from './element/fragment.js';
 import type { CRCElement, CRCNode } from './element/types.js';
+import { getResolvedFilterList } from './style/filter.js';
+import { renderFilterBoundary } from './filter/render-filter-boundary.js';
 
 export function render(
   node: CRCNode,
@@ -120,33 +122,58 @@ function renderComponentElement<P>(
       let onAfterRender: (() => void) | undefined;
       try {
         const definition = getPrimitiveDefinition(componentRefs.element.type);
-        let result: CRCNode | void;
+        const renderProgram = (invoke: () => CRCNode | void) => {
+          const result = invoke();
+          finalizeHookSlots(componentRefs);
+
+          onAfterRender = componentRefs.onAfterRender;
+          componentRefs.onAfterRender = undefined;
+
+          const children = materializeContainerChildren(
+            result as CRCNode,
+            componentRefs.element,
+          );
+          renderPreparedChildren(children, id, componentRefs, true);
+        };
         if (definition) {
-          const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
-          GLOBAL_STATE.primitiveReceiverToken =
+          const receiverToken =
             getPrimitiveReceiverToken(componentRefs.element) ?? componentRefs;
-          try {
-            result = definition.render(
-              getPrimitiveProgramProps(componentRefs.element),
-              resolveElementStyle(componentRefs.element),
-              ctx,
-            ) as CRCNode;
-          } finally {
-            GLOBAL_STATE.primitiveReceiverToken = previousReceiverToken;
+          const style = (() => {
+            const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
+            GLOBAL_STATE.primitiveReceiverToken = receiverToken;
+            try {
+              return resolveElementStyle(componentRefs.element);
+            } finally {
+              GLOBAL_STATE.primitiveReceiverToken = previousReceiverToken;
+            }
+          })();
+          const filters = getResolvedFilterList(style);
+          const renderPrimitiveProgram = () => renderProgram(() => {
+            const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
+            GLOBAL_STATE.primitiveReceiverToken = receiverToken;
+            try {
+              return definition.render(
+                getPrimitiveProgramProps(componentRefs.element),
+                style,
+                GLOBAL_STATE.renderContext!,
+              ) as CRCNode;
+            } finally {
+              GLOBAL_STATE.primitiveReceiverToken = previousReceiverToken;
+            }
+          });
+          if (filters) {
+            renderFilterBoundary({
+              component: componentRefs.element.type.name || 'Anonymous',
+              filters,
+            }, renderPrimitiveProgram);
+          } else {
+            renderPrimitiveProgram();
           }
         } else {
-          result = componentRefs.element.type(componentRefs.element.props);
+          renderProgram(() =>
+            componentRefs.element.type(componentRefs.element.props)
+          );
         }
-        finalizeHookSlots(componentRefs);
-
-        onAfterRender = componentRefs.onAfterRender;
-        componentRefs.onAfterRender = undefined;
-
-        const children = materializeContainerChildren(
-          result as CRCNode,
-          componentRefs.element,
-        );
-        renderPreparedChildren(children, id, componentRefs, true);
       } finally {
         onAfterRender ??= componentRefs.onAfterRender;
         componentRefs.onAfterRender = undefined;

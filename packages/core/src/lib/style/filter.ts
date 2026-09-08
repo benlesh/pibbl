@@ -1,4 +1,8 @@
-import type { StyleResolutionContext, SystemStyle } from '../types.js';
+import type {
+  RenderingContext2D,
+  StyleResolutionContext,
+  SystemStyle,
+} from '../types.js';
 import { layoutDiagnostic } from './diagnostics.js';
 import type { CRCFilter } from './filter-types.js';
 
@@ -58,6 +62,41 @@ export function compileFilterList(
     }
   }
   return parts.join(' ');
+}
+
+export function assertNativeFilter(
+  context: RenderingContext2D,
+  cssText: string,
+  component: string,
+): void {
+  context.filter = 'none';
+  context.filter = cssText;
+  if (context.filter !== 'none') return;
+
+  const functions = splitFilterFunctions(cssText);
+  for (let index = 0; index < functions.length; index += 1) {
+    const value = functions[index]!;
+    if (!value.startsWith('drop-shadow(')) continue;
+    context.filter = 'none';
+    context.filter = value;
+    if (context.filter === 'none') {
+      throw layoutDiagnostic({
+        component,
+        property: `filter[${index}].color`,
+        value,
+        algorithm: 'filter-rendering',
+        reason: 'was rejected by the native Canvas filter implementation',
+      });
+    }
+  }
+
+  throw layoutDiagnostic({
+    component,
+    property: 'filter',
+    value: cssText,
+    algorithm: 'filter-rendering',
+    reason: 'the complete native Canvas filter chain is unsupported',
+  });
 }
 
 export function getResolvedFilterList(
@@ -200,6 +239,30 @@ function cssFunctionName(
     | 'sepia',
 ): string {
   return type;
+}
+
+function splitFilterFunctions(cssText: string): string[] {
+  const functions: string[] = [];
+  let start = -1;
+  let depth = 0;
+  for (let index = 0; index < cssText.length; index += 1) {
+    const character = cssText[index]!;
+    if (start < 0) {
+      if (character === ' ') continue;
+      start = index;
+    }
+    if (character === '(') {
+      depth += 1;
+    } else if (character === ')') {
+      depth -= 1;
+      if (depth === 0) {
+        functions.push(cssText.slice(start, index + 1));
+        start = -1;
+      }
+    }
+  }
+  if (start >= 0) functions.push(cssText.slice(start));
+  return functions;
 }
 
 function assertNever(value: never): never {
