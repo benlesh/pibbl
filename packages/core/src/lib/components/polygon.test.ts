@@ -30,6 +30,28 @@ function alphaAt(canvas: HTMLCanvasElement, x: number, y: number) {
 }
 
 describe('Polygon', () => {
+  it('resolves rounded lengths against the smaller percentage basis', () => {
+    const resolve = getPrimitiveDefinition(Polygon)!.resolveStyle! as (
+      style: Record<string, unknown>,
+      context: object,
+    ) => Record<string, unknown>;
+
+    expect(resolve({
+      coords: [[0, 0], [40, 0], [40, 40], [0, 40]],
+      cornerRadius: '25%',
+      cornerRadii: [0, null, '50%', undefined],
+    }, {
+      allocation: { x: 0, y: 0, width: 200, height: 120 },
+      percentageBasis: { x: 0, y: 0, width: 200, height: 120 },
+      constraints,
+      component: 'Polygon',
+      algorithm: 'render-dispatch',
+    })).toMatchObject({
+      cornerRadius: 30,
+      cornerRadii: [0, null, 60, undefined],
+    });
+  });
+
   it('renders and targets a filled triangle', async () => {
     const onClick = vi.fn();
     const canvas = await componentTest(createElement(Polygon, {
@@ -87,12 +109,84 @@ describe('Polygon', () => {
     expect(alphaAt(canvas.element, 120, 70)).toBeGreaterThan(0);
   });
 
+  it('updates, replaces, and removes rounded-corner style', async () => {
+    let advance!: () => void;
+    function Probe() {
+      const [phase, setPhase] = crcState(0);
+      advance = () => setPhase(value => value + 1);
+      const corners = phase === 0 ? { cornerRadius: 12 } :
+        phase === 1 ? { cornerRadius: 12, cornerRadii: [0] } :
+        {};
+      return createElement(Polygon, {
+        style: {
+          coords: [[0, 0], [40, 0], [40, 40], [0, 40]],
+          fill: 'red',
+          ...corners,
+        },
+      });
+    }
+
+    const canvas = await componentTest(createElement(Probe, {}));
+    expect(alphaAt(canvas.element, 1, 1)).toBe(0);
+    expect(alphaAt(canvas.element, 39, 1)).toBe(0);
+
+    advance();
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+    expect(alphaAt(canvas.element, 1, 1)).toBeGreaterThan(0);
+    expect(alphaAt(canvas.element, 39, 1)).toBe(0);
+
+    advance();
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+    expect(alphaAt(canvas.element, 1, 1)).toBeGreaterThan(0);
+    expect(alphaAt(canvas.element, 39, 1)).toBeGreaterThan(0);
+  });
+
+  it('uses rounded geometry for painting and coordinate targeting', async () => {
+    const onClick = vi.fn();
+    const canvas = await componentTest(createElement(Polygon, {
+      style: {
+        coords: [[0, 0], [40, 0], [40, 40], [0, 40]],
+        cornerRadius: 10,
+        fill: 'red',
+      },
+      onClick,
+    }));
+
+    expect(alphaAt(canvas.element, 1, 1)).toBe(0);
+    expect(alphaAt(canvas.element, 20, 20)).toBeGreaterThan(0);
+    await canvas.click({ position: { x: 1, y: 1 } });
+    expect(onClick).not.toHaveBeenCalled();
+    await canvas.click({ position: { x: 20, y: 20 } });
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it('keeps rounded painting and interaction aligned through transforms', async () => {
+    const onClick = vi.fn();
+    const canvas = await componentTest(createElement(Group, {
+      style: { translateX: 50, translateY: 40 },
+      children: [createElement(Polygon, {
+        style: {
+          coords: [[0, 0], [40, 0], [40, 40], [0, 40]],
+          cornerRadius: 10,
+          fill: 'red',
+        },
+        onClick,
+      })],
+    }));
+
+    expect(alphaAt(canvas.element, 51, 41)).toBe(0);
+    expect(alphaAt(canvas.element, 70, 60)).toBeGreaterThan(0);
+    await canvas.click({ position: { x: 51, y: 41 } });
+    await canvas.click({ position: { x: 70, y: 60 } });
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
   it('derives keyboard bounds from points and honors an override', async () => {
     const override = { x: 1, y: 2, width: 3, height: 4 };
     const canvas = await componentTest(createElement(Group, {
       children: [
         createElement(Polygon, {
-          style: triangleStyle,
+          style: { ...triangleStyle, cornerRadius: 20 },
           onClick: vi.fn(),
         }),
         createElement(Polygon, {
@@ -175,6 +269,30 @@ describe('Polygon', () => {
       component: 'Polygon',
       algorithm: 'render-dispatch',
     })).toThrow(/coords\[1]\[0]/);
+  });
+
+  it('rejects invalid rounded style with contextual indexed diagnostics', () => {
+    const resolve = getPrimitiveDefinition(Polygon)!.resolveStyle! as (
+      style: Record<string, unknown>,
+      context: object,
+    ) => object;
+    const context = {
+      allocation: { x: 0, y: 0, width: 400, height: 200 },
+      percentageBasis: { x: 0, y: 0, width: 400, height: 200 },
+      constraints,
+      component: 'Polygon',
+      algorithm: 'render-dispatch',
+    };
+    const coords = [[0, 0], [40, 0], [40, 40]];
+
+    expect(() => resolve({ coords, cornerRadius: -1 }, context))
+      .toThrow(LayoutDiagnostic);
+    expect(() => resolve({ coords, cornerRadius: -1 }, context))
+      .toThrow(/Polygon.*cornerRadius.*nonnegative/);
+    expect(() => resolve({ coords, cornerRadii: [1, Number.NaN] }, context))
+      .toThrow(/Polygon.*cornerRadii\[1\].*finite/);
+    expect(() => resolve({ coords, cornerRadii: [1, 2, 3, null] }, context))
+      .toThrow(/Polygon.*cornerRadii.*length.*3/);
   });
 
   it('does not infer intrinsic measurement from polygon geometry', () => {

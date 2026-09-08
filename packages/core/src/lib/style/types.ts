@@ -9,6 +9,11 @@ import type { LayoutBox } from '../layout/types.js';
 export type Percentage = `${number}%`;
 export type Length = number | Percentage | 'auto';
 
+export interface RoundedCornerStyle {
+  cornerRadius?: Exclude<Length, 'auto'>;
+  cornerRadii?: readonly (Exclude<Length, 'auto'> | null | undefined)[];
+}
+
 export type EdgeValues =
   | number
   | Readonly<{

@@ -3,6 +3,7 @@ import {
   Circle,
   Rectangle,
   LayoutDiagnostic,
+  Polygon,
   crcWhenChanged,
 } from '../index';
 import { crc } from './crc';
@@ -227,7 +228,7 @@ describe('crc root updates', () => {
       return 1;
     };
     const canvas = createCanvas();
-    const arc = vi.spyOn(Path2D.prototype, 'arc');
+    const arcTo = vi.spyOn(Path2D.prototype, 'arcTo');
     const addEventListener = vi.spyOn(canvas, 'addEventListener');
     const removeEventListener = vi.spyOn(canvas, 'removeEventListener');
     const cleanup = vi.fn();
@@ -254,7 +255,12 @@ describe('crc root updates', () => {
       crc(canvas, [
         createElement(ResourceBearingSibling, {}),
         createElement(AcquisitionProbe, {}),
-        createElement(Circle, { style: { radius: -1 } }),
+        createElement(Polygon, {
+          style: {
+            coords: [[0, 0], [40, 0], [40, 40], [0, 40]],
+            cornerRadius: -1,
+          },
+        }),
       ]);
 
       let failure: unknown;
@@ -265,8 +271,8 @@ describe('crc root updates', () => {
       }
       expect(failure).toBeInstanceOf(LayoutDiagnostic);
       expect(failure).toMatchObject({
-        component: 'Circle',
-        property: 'radius',
+        component: 'Polygon',
+        property: 'cornerRadius',
         suppliedValue: -1,
         algorithm: 'render-dispatch',
       });
@@ -289,11 +295,15 @@ describe('crc root updates', () => {
       );
       expect(canvas.style.cursor).toBe('');
 
-      crc(canvas, createElement(Circle, {
-        style: { cx: 20, cy: 24, radius: 8, fill: '#2563eb' },
+      crc(canvas, createElement(Polygon, {
+        style: {
+          coords: [[0, 0], [40, 0], [40, 40], [0, 40]],
+          cornerRadius: 8,
+          fill: '#2563eb',
+        },
       }));
       expect(() => pending?.(1)).not.toThrow();
-      expect(arc).toHaveBeenLastCalledWith(20, 24, 8, 0, Math.PI * 2);
+      expect(arcTo).toHaveBeenCalledTimes(4);
       expect(getCRCInstance(canvas).refs.size).toBe(1);
     } finally {
       window.requestAnimationFrame = originalRequestAnimationFrame;

@@ -8,7 +8,7 @@ import {
   SystemStyle,
 } from '../types.js';
 import { stripLayoutParticipation } from '../style/resolve-built-in.js';
-import { createLinePath } from '../geometry/line.js';
+import { createPolygonPath } from '../geometry/polygon.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import { registerOpaqueStyleProperties } from '../style/resolve-dispatch.js';
 import type {
@@ -16,21 +16,34 @@ import type {
   CursorStyle,
   LayoutItemStyle,
   PaintStyle,
+  RoundedCornerStyle,
   ResolvedDrawingStyle,
 } from '../style/types.js';
 import type { StyleResolutionContext } from '../types.js';
 import { renderPath } from './path.js';
+import { resolveRoundedCornerStyle } from './rounded-corner-style.js';
 
 export interface PolygonProps extends CRCEventHandlers, CRCEventFocusOptions {}
 
 export interface PolygonStyle
-  extends SystemStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle {
+  extends
+    RoundedCornerStyle,
+    SystemStyle,
+    PaintStyle,
+    CursorStyle,
+    BoxStyle,
+    LayoutItemStyle {
   coords: [number, number][];
   lineInteractionWidth?: number;
 }
 
-type ResolvedPolygonStyle = ResolvedDrawingStyle<PolygonStyle> & {
+type ResolvedPolygonStyle = Omit<
+  ResolvedDrawingStyle<PolygonStyle>,
+  keyof RoundedCornerStyle
+> & {
   coords: [number, number][];
+  cornerRadius?: number;
+  cornerRadii?: readonly (number | null | undefined)[];
 };
 
 function renderPolygon(
@@ -46,10 +59,10 @@ function renderPolygon(
     opacity,
     cursor,
     lineInteractionWidth,
+    cornerRadius,
+    cornerRadii,
   } = style;
-  const path = coords.length < 3 ?
-    new Path2D() :
-    createLinePath({ coords, closePath: true });
+  const path = createPolygonPath({ coords, cornerRadius, cornerRadii });
 
   return renderPath(
     {
@@ -84,6 +97,7 @@ export const Polygon = definePrimitive<
     return {
       ...stripLayoutParticipation(style),
       coords,
+      ...resolveRoundedCornerStyle(coords.length, style, context),
     } as ResolvedPolygonStyle;
   },
 });
