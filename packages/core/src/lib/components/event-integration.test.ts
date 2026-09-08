@@ -16,6 +16,8 @@ import { SvgPath } from './svg-path';
 import { Text } from './text';
 import { VerticalLine } from './vertical-line';
 import { definePrimitive } from '../define-primitive';
+import type { RenderingContext2D } from '../types';
+import { Group } from './g';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -192,6 +194,63 @@ describe('built-in DOM-aligned event integration', () => {
   );
 });
 
+describe('filtered Group event integration', () => {
+  it('keeps source paint upright while registering and targeting original transformed geometry', async () => {
+    const observedContexts: Array<{
+      canvas: RenderingContext2D['canvas'];
+      transform: DOMMatrix;
+    }> = [];
+    const onClick = vi.fn();
+    const path = rectanglePath(0, 0, 20, 20);
+    const Probe = definePrimitive<{}>((_props, _style, context) => {
+      observedContexts.push({
+        canvas: context.canvas,
+        transform: context.getTransform(),
+      });
+      crcEventTarget({ onClick }, { path, fill: true });
+      context.fillStyle = 'red';
+      context.fill(path);
+    });
+    const style = {
+      scaleX: 1.5,
+      scaleY: 0.75,
+      rotationDegrees: 30,
+      translateX: 60,
+      translateY: 20,
+      filter: {
+        type: 'dropShadow' as const,
+        offsetX: 35,
+        offsetY: 0,
+        color: 'black',
+      },
+    };
+    const expectedWorld = new DOMMatrix()
+      .scale(style.scaleX, style.scaleY)
+      .rotate(style.rotationDegrees)
+      .translate(style.translateX, style.translateY);
+    const canvas = await componentTest(createElement(Group, {
+      style,
+      children: createElement(Probe, {}),
+    }), { width: 180, height: 100 });
+    const target = Array.from(
+      getCRCInstance(canvas.element).eventRoot.targets,
+    )[0]!;
+
+    expect(observedContexts).toHaveLength(1);
+    expect(observedContexts[0]!.canvas).toBeInstanceOf(OffscreenCanvas);
+    expect(observedContexts[0]!.transform.b).toBe(0);
+    expect(observedContexts[0]!.transform.c).toBe(0);
+    expect(matrixValues(target.transform))
+      .toEqual(matrixValues(expectedWorld));
+
+    const originalCenter = expectedWorld.transformPoint(new DOMPoint(10, 10));
+    const shadowCenter = expectedWorld.transformPoint(new DOMPoint(45, 10));
+    await canvas.click({ position: originalCenter });
+    await canvas.click({ position: shadowCenter });
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('layer event ancestry', () => {
   it('captures above a layer, targets inside it, and bubbles back out', async () => {
     const trace: string[] = [];
@@ -257,4 +316,8 @@ function rectanglePath(
   const value = new Path2D();
   value.rect(x, y, width, height);
   return value;
+}
+
+function matrixValues(matrix: DOMMatrixReadOnly): number[] {
+  return [matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f];
 }

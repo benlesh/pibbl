@@ -23,6 +23,10 @@ import { isFragmentElement } from './element/fragment.js';
 import type { CRCElement, CRCNode } from './element/types.js';
 import { getResolvedFilterList } from './style/filter.js';
 import { renderFilterBoundary } from './filter/render-filter-boundary.js';
+import {
+  enterPrimitivePresentation,
+  getPrimitivePresentation,
+} from './primitive-presentation.js';
 
 export function render(
   node: CRCNode,
@@ -120,6 +124,7 @@ function renderComponentElement<P>(
     try {
       ctx.save();
       let onAfterRender: (() => void) | undefined;
+      let releasePresentation: (() => void) | undefined;
       try {
         const definition = getPrimitiveDefinition(componentRefs.element.type);
         const renderProgram = (invoke: () => CRCNode | void) => {
@@ -148,6 +153,10 @@ function renderComponentElement<P>(
             }
           })();
           const filters = getResolvedFilterList(style);
+          const presentation = getPrimitivePresentation(
+            componentRefs.element.type,
+            style,
+          );
           const renderPrimitiveProgram = () => renderProgram(() => {
             const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
             GLOBAL_STATE.primitiveReceiverToken = receiverToken;
@@ -165,8 +174,10 @@ function renderComponentElement<P>(
             renderFilterBoundary({
               component: componentRefs.element.type.name || 'Anonymous',
               filters,
+              presentation,
             }, renderPrimitiveProgram);
           } else {
+            releasePresentation = enterPrimitivePresentation(presentation);
             renderPrimitiveProgram();
           }
         } else {
@@ -180,7 +191,11 @@ function renderComponentElement<P>(
         try {
           onAfterRender?.();
         } finally {
-          ctx.restore();
+          try {
+            releasePresentation?.();
+          } finally {
+            ctx.restore();
+          }
         }
       }
       enhancerSuccess = true;

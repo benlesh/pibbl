@@ -10,6 +10,7 @@ export function pushClippingPath(
   ctx: RenderingContext2D,
   path: Path2D,
   fillRule: CanvasFillRule = 'nonzero',
+  applyPaint = true,
 ): () => void {
   GLOBAL_STATE.clippingStack.push({
     path,
@@ -17,11 +18,13 @@ export function pushClippingPath(
     transform: getCurrentWorldTransform(),
   });
 
-  try {
-    ctx.clip(path, fillRule);
-  } catch (error) {
-    GLOBAL_STATE.clippingStack.pop();
-    throw error;
+  if (applyPaint) {
+    try {
+      ctx.clip(path, fillRule);
+    } catch (error) {
+      GLOBAL_STATE.clippingStack.pop();
+      throw error;
+    }
   }
 
   let active = true;

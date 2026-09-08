@@ -7,6 +7,7 @@ import { Rectangle } from './rect';
 import { Text } from './text';
 import { createElement } from '../element/create-element';
 import { definePrimitive } from '../define-primitive';
+import { Circle } from './circle';
 
 describe('g', () => {
   const defaultRectStyle = {
@@ -235,6 +236,50 @@ describe('g', () => {
     });
   });
 
+  describe('filtered presentation', () => {
+    it('rotates a locally horizontal drop shadow with the completed Group', async () => {
+      const canvas = await componentTest(createElement(Group, {
+        style: {
+          rotationDegrees: 90,
+          translateX: 20,
+          translateY: -100,
+          filter: {
+            type: 'dropShadow',
+            offsetX: 20,
+            offsetY: 0,
+            color: 'black',
+          },
+        },
+        children: createElement(Rectangle, {
+          style: { x: 10, y: 10, width: 20, height: 20, fill: 'red' },
+        }),
+      }), { width: 140, height: 100 });
+
+      expect(pixelAt(canvas.element, 80, 40)).toEqual([255, 0, 0, 255]);
+      expect(pixelAt(canvas.element, 80, 60)).toEqual([0, 0, 0, 255]);
+      expect(pixelAt(canvas.element, 100, 40)).toEqual([0, 0, 0, 0]);
+    });
+
+    it('stretches a circular local blur only after filtering', async () => {
+      const canvas = await componentTest(createElement(Group, {
+        style: {
+          scaleX: 3,
+          scaleY: 1,
+          translateX: 20,
+          translateY: 30,
+          filter: { type: 'blur', radius: 4 },
+        },
+        children: createElement(Circle, {
+          style: { cx: 10, cy: 10, radius: 5, fill: 'black' },
+        }),
+      }), { width: 180, height: 100 });
+
+      const bounds = alphaBounds(canvas.element, 4);
+      expect(bounds.width / bounds.height).toBeGreaterThan(2.6);
+      expect(bounds.width / bounds.height).toBeLessThan(3.4);
+    });
+  });
+
   describe('interaction with transformed elements', () => {
     it('handles mouse events on scaled elements', async () => {
       const onClick = vi.fn();
@@ -353,3 +398,29 @@ describe('g', () => {
     });
   });
 });
+
+function pixelAt(canvas: HTMLCanvasElement, x: number, y: number): number[] {
+  return Array.from(canvas.getContext('2d')!.getImageData(x, y, 1, 1).data);
+}
+
+function alphaBounds(
+  canvas: HTMLCanvasElement,
+  minimumAlpha: number,
+): { width: number; height: number } {
+  const { width, height } = canvas;
+  const pixels = canvas.getContext('2d')!.getImageData(0, 0, width, height).data;
+  let left = width;
+  let right = -1;
+  let top = height;
+  let bottom = -1;
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      if (pixels[(y * width + x) * 4 + 3]! < minimumAlpha) continue;
+      left = Math.min(left, x);
+      right = Math.max(right, x);
+      top = Math.min(top, y);
+      bottom = Math.max(bottom, y);
+    }
+  }
+  return { width: right - left + 1, height: bottom - top + 1 };
+}

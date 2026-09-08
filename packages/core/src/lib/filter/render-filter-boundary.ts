@@ -12,10 +12,15 @@ import {
 } from '../style/filter.js';
 import { copyFilterSourceState } from './canvas-state.js';
 import { resolveFilterWindows } from './filter-region.js';
+import {
+  enterPrimitivePresentation,
+  type PrimitivePresentation,
+} from '../primitive-presentation.js';
 
 export interface RenderFilterBoundaryInput {
   readonly component: string;
   readonly filters: ResolvedFilterList;
+  readonly presentation?: Readonly<PrimitivePresentation>;
 }
 
 export function renderFilterBoundary(
@@ -31,13 +36,21 @@ export function renderFilterBoundary(
 
   const parentPaintTransform = getCurrentPaintTransform();
   const parentWorld = getCurrentWorldTransform();
+  const boundaryPaintTransform = input.presentation?.transform ?
+    parentPaintTransform.multiply(input.presentation.transform) :
+    parentPaintTransform;
   const windows = resolveFilterWindows(
     parentTarget,
-    parentPaintTransform,
+    boundaryPaintTransform,
     input.filters,
   );
   if (windows === 'discard') {
-    renderSubtree();
+    const releasePresentation = enterPrimitivePresentation(input.presentation);
+    try {
+      renderSubtree();
+    } finally {
+      releasePresentation();
+    }
     return;
   }
 
@@ -55,7 +68,17 @@ export function renderFilterBoundary(
       source.context,
       source.target,
       parentWorld,
-      renderSubtree,
+      () => {
+        const releasePresentation = enterPrimitivePresentation(
+          input.presentation,
+          { deferPaint: true },
+        );
+        try {
+          renderSubtree();
+        } finally {
+          releasePresentation();
+        }
+      },
     );
 
     result.context.drawImage(
@@ -63,17 +86,28 @@ export function renderFilterBoundary(
       windows.sourceToOutputX,
       windows.sourceToOutputY,
     );
-    parent.drawImage(
-      result.canvas,
-      0,
-      0,
-      windows.output.backingWidth,
-      windows.output.backingHeight,
-      windows.output.logicalBounds.x,
-      windows.output.logicalBounds.y,
-      windows.output.logicalBounds.width,
-      windows.output.logicalBounds.height,
-    );
+    parent.save();
+    let releasePresentation: (() => void) | undefined;
+    try {
+      releasePresentation = enterPrimitivePresentation(input.presentation);
+      parent.drawImage(
+        result.canvas,
+        0,
+        0,
+        windows.output.backingWidth,
+        windows.output.backingHeight,
+        windows.output.logicalBounds.x,
+        windows.output.logicalBounds.y,
+        windows.output.logicalBounds.width,
+        windows.output.logicalBounds.height,
+      );
+    } finally {
+      try {
+        releasePresentation?.();
+      } finally {
+        parent.restore();
+      }
+    }
   } finally {
     pair.release();
   }

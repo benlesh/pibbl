@@ -1,7 +1,6 @@
 import { definePrimitive } from '../define-primitive.js';
-import { GLOBAL_STATE } from '../global-state.js';
-import { CRCNode, RenderingContext2D, SystemStyle } from '../types.js';
-import { pushClippingPath } from '../util/push-clipping-path.js';
+import { CRCNode, SystemStyle } from '../types.js';
+import { setPrimitivePresentation } from '../primitive-presentation.js';
 import { stripLayoutParticipation } from '../style/resolve-built-in.js';
 import type {
   BoxStyle,
@@ -22,14 +21,7 @@ type ResolvedClipStyle = ResolvedDrawingStyle<ClipStyle>;
 
 function renderClip(
   props: ClipProps,
-  style: Readonly<ResolvedClipStyle>,
-  ctx: RenderingContext2D,
 ) {
-  const { d, fillRule = 'nonzero' } = style;
-
-  const releaseClip = pushClippingPath(ctx, d, fillRule);
-  GLOBAL_STATE.componentRefs!.onAfterRender = releaseClip;
-
   return props.children;
 }
 
@@ -41,4 +33,9 @@ export const Clip = definePrimitive<
   ResolvedClipStyle
 >(renderClip, {
   resolveStyle: style => stripLayoutParticipation(style) as ResolvedClipStyle,
+});
+
+setPrimitivePresentation<ResolvedClipStyle>(Clip, style => {
+  const { d, fillRule = 'nonzero' } = style;
+  return { clip: { path: d, fillRule } };
 });
