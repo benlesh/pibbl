@@ -16,6 +16,7 @@ import type {
   CRCNode,
 } from './element/types.js';
 import type { PendingRoot } from './global-state.js';
+import type { CRCFilter } from './style/filter-types.js';
 export type {
   CRCComponent,
   CRCContainerChild,
@@ -32,6 +33,7 @@ export type {
 
 export interface SystemStyle {
   custom?: unknown;
+  filter?: CRCFilter | readonly CRCFilter[];
 }
 
 type PrimitiveReservedKey = 'key' | 'style';
