@@ -135,6 +135,16 @@ describe('filter lists', () => {
     },
   );
 
+  it('rejects an explicitly null drop-shadow blur radius', () => {
+    expect(() => resolveFilterList({
+      type: 'dropShadow',
+      offsetX: 0,
+      offsetY: 0,
+      blurRadius: null,
+      color: 'black',
+    } as unknown as CRCFilter, context)).toThrow(/filter\.blurRadius.*finite/);
+  });
+
   it('reports indexed property paths and unsupported discriminators', () => {
     expect(() => resolveFilterList([
       { type: 'blur', radius: 1 },

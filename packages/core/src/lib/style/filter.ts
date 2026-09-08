@@ -108,7 +108,7 @@ function normalizeFilter(
         offsetX: finiteNumber(descriptor.offsetX, `${property}.offsetX`, context),
         offsetY: finiteNumber(descriptor.offsetY, `${property}.offsetY`, context),
         blurRadius: nonnegativeNumber(
-          descriptor.blurRadius ?? 0,
+          descriptor.blurRadius === undefined ? 0 : descriptor.blurRadius,
           `${property}.blurRadius`,
           context,
         ),
