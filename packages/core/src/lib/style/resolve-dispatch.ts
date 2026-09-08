@@ -63,7 +63,7 @@ export function withoutSystemFilter(
   style: Readonly<SystemStyle>,
 ): Readonly<SystemStyle> {
   const { filter: _filter, ...withoutFilter } = style;
-  return withoutFilter;
+  return Object.freeze(withoutFilter);
 }
 
 export function resolveElementStyle<
@@ -155,7 +155,7 @@ function assertResolvedValue(
   }
   seen.add(value);
   for (const [key, child] of Object.entries(value)) {
-    if (key === 'custom' || key === 'filter') continue;
+    if (key === 'custom') continue;
     assertResolvedValue(
       child,
       property ? `${property}.${key}` : key,

@@ -10,7 +10,11 @@ import type { CRCElement } from '../element/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { normalizeEdges } from '../style/normalize.js';
 import { resolveLength } from '../style/resolve-length.js';
-import { setPreNormalizedStyle } from '../style/resolve-dispatch.js';
+import {
+  extractSystemFilter,
+  setPreNormalizedStyle,
+  withoutSystemFilter,
+} from '../style/resolve-dispatch.js';
 import type {
   BoxStyle,
   LayoutItemStyle,
@@ -185,9 +189,11 @@ export function normalizeDirectChildStyle(
 ): Readonly<SystemStyle> {
   const definition = getPrimitiveDefinition(child.type);
   const style = getSpecifiedStyle(child) ?? EMPTY_STYLE;
-  return definition?.normalizeStyle ?
-      definition.normalizeStyle(style) :
-      style;
+  const filter = extractSystemFilter(style);
+  const normalized = definition?.normalizeStyle ?
+      definition.normalizeStyle(withoutSystemFilter(style)) :
+      withoutSystemFilter(style);
+  return filter === undefined ? normalized : { ...normalized, filter };
 }
 
 /** @internal Converts source-order descriptors to stable placed children. */

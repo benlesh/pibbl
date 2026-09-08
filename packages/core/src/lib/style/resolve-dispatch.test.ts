@@ -118,6 +118,23 @@ describe('render style dispatch', () => {
       mounted.controller.dispose();
     }
   });
+
+  it('continues validating nested custom fields named filter', () => {
+    interface ProbeStyle extends SystemStyle {
+      effects: {
+        filter: string;
+      };
+    }
+    const Probe = definePrimitive<{}, ProbeStyle>(() => undefined);
+    const mounted = mount(createElement(Probe, {
+      style: { effects: { filter: '50%' } },
+    }));
+    try {
+      expect(() => executeRender(mounted.canvas, 1)).toThrowError(/effects\.filter/);
+    } finally {
+      mounted.controller.dispose();
+    }
+  });
 });
 
 function mountAndRender(root: CRCNode): {

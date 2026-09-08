@@ -194,6 +194,43 @@ describe('absolute layout', () => {
     },
   );
 
+  it('preserves a child filter through layout placement without exposing it to normalization', async () => {
+    interface SpecifiedStyle extends SystemStyle {}
+    interface NormalizedStyle extends SystemStyle {
+      width: number;
+      height: number;
+      label: 'normalized';
+    }
+    let normalizerInput: Readonly<SpecifiedStyle> | undefined;
+    let renderedStyle: Readonly<NormalizedStyle> | undefined;
+    const Child = definePrimitive<{}, SpecifiedStyle, NormalizedStyle, NormalizedStyle>(
+      (_props, style) => {
+        renderedStyle = style;
+      },
+      {
+        normalizeStyle: style => {
+          normalizerInput = style;
+          return { width: 20, height: 10, label: 'normalized' };
+        },
+      },
+    );
+
+    await componentTest(createElement(Absolute, {
+      style: { width: 100, height: 50 },
+      children: createElement(Child, {
+        style: { filter: { type: 'invert', amount: 1 } },
+      }),
+    }));
+
+    expect(normalizerInput).not.toHaveProperty('filter');
+    expect(renderedStyle).toEqual({
+      width: 20,
+      height: 10,
+      label: 'normalized',
+      filter: [{ type: 'invert', amount: 1 }],
+    });
+  });
+
   // @ts-expect-error absolute has no overlay alignment vocabulary
   void createElement(Absolute, { style: { alignItems: 'center' }, children: [] });
 });
