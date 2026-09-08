@@ -129,6 +129,7 @@ export function resolveFilterWindows(
 
   const output = createWindow(outputPixels, density);
   const source = createWindow(sourcePixels, density);
+  if (!output || !source) return 'discard';
   return {
     source,
     output,
@@ -224,8 +225,8 @@ function createInverseProjector(
       return undefined;
     }
     return (parentX, parentY) => {
-      const rightX = (parentX - e) / firstRowScale;
-      const rightY = (parentY - f) / secondRowScale;
+      const rightX = scaledDifference(parentX, e, firstRowScale);
+      const rightY = scaledDifference(parentY, f, secondRowScale);
       const normalizedY =
         (rightY - ratio * rightX) / schurComplement;
       const normalizedX =
@@ -242,8 +243,8 @@ function createInverseProjector(
     return undefined;
   }
   return (parentX, parentY) => {
-    const rightX = (parentX - e) / firstRowScale;
-    const rightY = (parentY - f) / secondRowScale;
+    const rightX = scaledDifference(parentX, e, firstRowScale);
+    const rightY = scaledDifference(parentY, f, secondRowScale);
     const normalizedY = (rightX - ratio * rightY) / schurComplement;
     const normalizedX =
       (rightY - normalizedD * normalizedY) / normalizedB;
@@ -251,6 +252,16 @@ function createInverseProjector(
     const y = normalizedY / secondColumnScale;
     return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : undefined;
   };
+}
+
+function scaledDifference(
+  value: number,
+  offset: number,
+  scale: number,
+): number {
+  const difference = value - offset;
+  if (Number.isFinite(difference)) return difference / scale;
+  return value / scale - offset / scale;
 }
 
 function snapToBackingPixels(
@@ -283,7 +294,25 @@ function snapToBackingPixels(
 function createWindow(
   pixels: Readonly<PixelBounds>,
   density: number,
-): FilterPixelWindow {
+): FilterPixelWindow | undefined {
+  const inverseDensity = 1 / density;
+  const logicalBounds = {
+    x: pixels.x / density,
+    y: pixels.y / density,
+    width: pixels.width / density,
+    height: pixels.height / density,
+  };
+  const inverseOriginX = pixels.x / density;
+  const inverseOriginY = pixels.y / density;
+  if (
+    !Number.isFinite(inverseDensity) ||
+    inverseDensity <= 0 ||
+    !Object.values(logicalBounds).every(Number.isFinite) ||
+    !Number.isFinite(inverseOriginX) ||
+    !Number.isFinite(inverseOriginY)
+  ) {
+    return undefined;
+  }
   const renderTransform = new DOMMatrix([
     density,
     0,
@@ -292,19 +321,28 @@ function createWindow(
     -pixels.x,
     -pixels.y,
   ]);
+  const inverseRenderTransform = new DOMMatrix([
+    inverseDensity,
+    0,
+    0,
+    inverseDensity,
+    inverseOriginX,
+    inverseOriginY,
+  ]);
+  if (
+    !isFiniteAffine(renderTransform) ||
+    !isFiniteAffine(inverseRenderTransform)
+  ) {
+    return undefined;
+  }
   return {
-    logicalBounds: Object.freeze({
-      x: pixels.x / density,
-      y: pixels.y / density,
-      width: pixels.width / density,
-      height: pixels.height / density,
-    }),
+    logicalBounds: Object.freeze(logicalBounds),
     backingX: pixels.x,
     backingY: pixels.y,
     backingWidth: pixels.width,
     backingHeight: pixels.height,
     renderTransform,
-    inverseRenderTransform: renderTransform.inverse(),
+    inverseRenderTransform,
   };
 }
 

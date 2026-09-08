@@ -282,6 +282,113 @@ describe('filter windows', () => {
   });
 
   it.each([
+    [
+      'huge',
+      1e200,
+      { x: 2e-200, y: -3e-200, width: 1e-200, height: 2e-200 },
+    ],
+    [
+      'tiny',
+      1e-200,
+      { x: 2e200, y: -3e200, width: 1e200, height: 2e200 },
+    ],
+  ] as const)('builds finite analytic window transforms at %s density', (
+    _label,
+    density,
+    logicalBounds,
+  ) => {
+    const target: RenderTargetSnapshot = {
+      logicalBounds,
+      backingWidth: 1,
+      backingHeight: 2,
+      renderTransform: scaleMatrix(density),
+      inverseRenderTransform: scaleMatrix(1 / density),
+    };
+    const filters = resolveFilterList({ type: 'opacity', amount: 1 }, context)!;
+
+    const windows = resolveFilterWindows(target, new DOMMatrix(), filters);
+
+    expect(windows).not.toBe('discard');
+    if (windows === 'discard') return;
+    expect(windows.density).toBe(density);
+    expect(windows.output).toMatchObject({
+      backingX: 2,
+      backingY: -3,
+      backingWidth: 1,
+      backingHeight: 2,
+    });
+    expect(matrixValues(windows.output.renderTransform)).toEqual([
+      density,
+      0,
+      0,
+      density,
+      -2,
+      3,
+    ]);
+    expect(matrixValues(windows.output.inverseRenderTransform)).toEqual([
+      1 / density,
+      0,
+      0,
+      1 / density,
+      2 / density,
+      -3 / density,
+    ]);
+    expect(matrixValues(windows.output.renderTransform).every(Number.isFinite))
+      .toBe(true);
+    expect(matrixValues(
+      windows.output.inverseRenderTransform,
+    ).every(Number.isFinite)).toBe(true);
+    expectMatrix(
+      windows.output.renderTransform.multiply(
+        windows.output.inverseRenderTransform,
+      ),
+      [1, 0, 0, 1, 0, 0],
+    );
+  });
+
+  it('scales opposing large translations before subtracting them', () => {
+    const scale = 1e308;
+    const targetScale = 1e-308;
+    const renderTransform = scaleMatrix(targetScale);
+    const target: RenderTargetSnapshot = {
+      logicalBounds: {
+        x: 1e308,
+        y: 0,
+        width: 2e292,
+        height: 2e292,
+      },
+      backingWidth: 2,
+      backingHeight: 1,
+      renderTransform,
+      inverseRenderTransform: scaleMatrix(scale),
+    };
+    const parentPaintTransform = new DOMMatrix([
+      scale,
+      0,
+      0,
+      scale,
+      -1e308,
+      0,
+    ]);
+    const filters = resolveFilterList({ type: 'opacity', amount: 1 }, context)!;
+
+    const windows = resolveFilterWindows(
+      target,
+      parentPaintTransform,
+      filters,
+    );
+
+    expect(windows).not.toBe('discard');
+    if (windows === 'discard') return;
+    expect(windows.density).toBeCloseTo(1, 12);
+    expect(windows.output.backingWidth).toBeGreaterThan(0);
+    expect(windows.output.backingWidth).toBeLessThanOrEqual(2);
+    expect(windows.output.backingHeight).toBe(1);
+    expect(Object.values(windows.output.logicalBounds).every(Number.isFinite))
+      .toBe(true);
+  });
+
+  it.each([
     ['non-invertible', new DOMMatrix().scale(1, 0)],
     ['non-finite', matrixWithNaN()],
   ])('discards %s parent-facing transforms', (_label, transform) => {
@@ -344,11 +451,17 @@ function scaleMatrix(scale: number): DOMMatrix {
   return new DOMMatrix([scale, 0, 0, scale, 0, 0]);
 }
 
+function matrixValues(
+  matrix: DOMMatrixReadOnly,
+): readonly [number, number, number, number, number, number] {
+  return [matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f];
+}
+
 function expectMatrix(
   actual: DOMMatrix,
   expected: readonly [number, number, number, number, number, number],
 ): void {
-  const values = [actual.a, actual.b, actual.c, actual.d, actual.e, actual.f];
+  const values = matrixValues(actual);
   for (const [index, value] of values.entries()) {
     expect(value).toBeCloseTo(expected[index]!, 12);
   }
