@@ -166,6 +166,16 @@ describe('filter lists', () => {
     },
   );
 
+  it('does not classify contextual-keyword substrings as contextual tokens', () => {
+    const colors = ['currentColorful', 'CanvasTexture', 'Marking'];
+
+    for (const color of colors) {
+      expect(resolveFilterList({
+        type: 'dropShadow', offsetX: 0, offsetY: 0, color,
+      }, context)?.values[0]).toMatchObject({ color });
+    }
+  });
+
   it('gets an already-resolved nonempty filter list from system style', () => {
     const resolved = resolveFilterList({ type: 'blur', radius: 2 }, context)!;
     const style: SystemStyle = { filter: resolved.values };

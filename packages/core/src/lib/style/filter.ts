@@ -12,6 +12,52 @@ export interface ResolvedFilterList {
 
 const filterListOrigins = new WeakMap<readonly CRCFilter[], boolean>();
 
+const contextualColorIdentifiers = new Set([
+  'accentcolor',
+  'accentcolortext',
+  'activeborder',
+  'activecaption',
+  'activetext',
+  'appworkspace',
+  'background',
+  'buttonborder',
+  'buttonface',
+  'buttonhighlight',
+  'buttonshadow',
+  'buttontext',
+  'canvas',
+  'canvastext',
+  'captiontext',
+  'currentcolor',
+  'field',
+  'fieldtext',
+  'graytext',
+  'highlight',
+  'highlighttext',
+  'inactiveborder',
+  'inactivecaption',
+  'inactivecaptiontext',
+  'infobackground',
+  'infotext',
+  'linktext',
+  'mark',
+  'marktext',
+  'menu',
+  'menutext',
+  'scrollbar',
+  'selecteditem',
+  'selecteditemtext',
+  'threeddarkshadow',
+  'threedface',
+  'threedhighlight',
+  'threedlightshadow',
+  'threedshadow',
+  'visitedtext',
+  'window',
+  'windowframe',
+  'windowtext',
+]);
+
 export function resolveFilterList(
   value: CRCFilter | readonly CRCFilter[] | undefined,
   context: Readonly<StyleResolutionContext>,
@@ -179,10 +225,7 @@ function concreteColor(
   if (typeof value !== 'string') {
     throw invalidFilter(property, value, 'must be a CSS color string', context);
   }
-  if (
-    value.trim().toLowerCase() === 'currentcolor' ||
-    /\bvar\s*\(/i.test(value)
-  ) {
+  if (containsContextualColorReference(value)) {
     throw invalidFilter(
       property,
       value,
@@ -191,6 +234,105 @@ function concreteColor(
     );
   }
   return value;
+}
+
+function containsContextualColorReference(value: string): boolean {
+  // This only tokenizes identifiers; the native Canvas parser remains the
+  // authority for whether the complete value is valid color syntax.
+  for (let index = 0; index < value.length;) {
+    const character = value[index]!;
+    if (character === '/' && value[index + 1] === '*') {
+      index = skipCssComment(value, index + 2);
+      continue;
+    }
+    if (character === '"' || character === "'") {
+      index = skipCssString(value, index + 1, character);
+      continue;
+    }
+    if (!isCssNameCharacter(character) && character !== '\\') {
+      index += 1;
+      continue;
+    }
+
+    let identifier = '';
+    while (index < value.length) {
+      const identifierCharacter = value[index]!;
+      if (isCssNameCharacter(identifierCharacter)) {
+        identifier += identifierCharacter;
+        index += 1;
+        continue;
+      }
+      if (identifierCharacter !== '\\') break;
+      const escape = consumeCssEscape(value, index);
+      identifier += escape.character;
+      index = escape.nextIndex;
+    }
+
+    const normalized = identifier.toLowerCase();
+    if (normalized === 'var' || contextualColorIdentifiers.has(normalized)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isCssNameCharacter(character: string): boolean {
+  const code = character.charCodeAt(0);
+  return (
+    code >= 0x80 ||
+    (code >= 0x30 && code <= 0x39) ||
+    (code >= 0x41 && code <= 0x5a) ||
+    (code >= 0x61 && code <= 0x7a) ||
+    character === '-' ||
+    character === '_'
+  );
+}
+
+function consumeCssEscape(
+  value: string,
+  backslashIndex: number,
+): { character: string; nextIndex: number } {
+  let index = backslashIndex + 1;
+  let hexadecimal = '';
+  while (index < value.length && hexadecimal.length < 6) {
+    const character = value[index]!;
+    if (!/[0-9a-f]/i.test(character)) break;
+    hexadecimal += character;
+    index += 1;
+  }
+  if (hexadecimal.length === 0) {
+    if (index >= value.length) return { character: '\ufffd', nextIndex: index };
+    return { character: value[index]!, nextIndex: index + 1 };
+  }
+
+  if (/\s/.test(value[index] ?? '')) {
+    if (value[index] === '\r' && value[index + 1] === '\n') index += 1;
+    index += 1;
+  }
+  const codePoint = Number.parseInt(hexadecimal, 16);
+  const character = codePoint === 0 ||
+      codePoint > 0x10ffff ||
+      (codePoint >= 0xd800 && codePoint <= 0xdfff) ?
+    '\ufffd' : String.fromCodePoint(codePoint);
+  return { character, nextIndex: index };
+}
+
+function skipCssComment(value: string, start: number): number {
+  const end = value.indexOf('*/', start);
+  return end < 0 ? value.length : end + 2;
+}
+
+function skipCssString(
+  value: string,
+  start: number,
+  quote: string,
+): number {
+  for (let index = start; index < value.length; index += 1) {
+    const character = value[index]!;
+    if (character === quote) return index + 1;
+    if (character === '\\') index += 1;
+  }
+  return value.length;
 }
 
 function finiteNumber(

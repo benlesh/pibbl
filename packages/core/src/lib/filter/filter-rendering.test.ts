@@ -406,13 +406,30 @@ describe('filter rendering', () => {
     });
   });
 
-  it.each(['currentColor', 'var(--shadow)'])(
+  it.each([
+    'currentColor',
+    'var(--shadow)',
+    'color-mix(in srgb, currentColor, red)',
+    'rgb(from currentColor r g b)',
+    'CanvasText',
+    'Mark',
+    'color-mix(in srgb, CanvasText, red)',
+    'rgb(from Mark r g b)',
+    'curr\\65 ntColor',
+    'Canvas\\54 ext',
+    'M\\61 rk',
+  ])(
     'rejects contextual color %s before the primitive callback',
     color => {
       const callback = vi.fn();
       const Probe = definePrimitive<{}, SystemStyle>(function renderProbe() {
         callback();
       });
+      const filterAssignments = vi.spyOn(
+        OffscreenCanvasRenderingContext2D.prototype,
+        'filter',
+        'set',
+      );
       const canvas = createCanvas(32, 24);
       const runFrame = scheduleScene(canvas, createElement(Probe, {
         style: {
@@ -427,12 +444,85 @@ describe('filter rendering', () => {
 
       expect(runFrame).toThrow(/Probe.*filter\.color.*contextual/);
       expect(callback).not.toHaveBeenCalled();
+      expect(filterAssignments.mock.calls.map(([value]) => value).filter(
+        value => value !== 'none',
+      )).toEqual([]);
       expect(getCRCInstance(canvas).filterSurfacePool.snapshot()).toMatchObject({
         surfaceSlots: 0,
         pairCheckouts: 0,
       });
     },
   );
+
+  it('reports an indexed nested contextual color before native filter assignment', () => {
+    const callback = vi.fn();
+    const Probe = definePrimitive<{}, SystemStyle>(function renderProbe() {
+      callback();
+    });
+    const filterAssignments = vi.spyOn(
+      OffscreenCanvasRenderingContext2D.prototype,
+      'filter',
+      'set',
+    );
+    const canvas = createCanvas(32, 24);
+    const runFrame = scheduleScene(canvas, createElement(Probe, {
+      style: {
+        filter: [
+          { type: 'grayscale', amount: 1 },
+          {
+            type: 'dropShadow',
+            offsetX: 2,
+            offsetY: 2,
+            color: 'color-mix(in srgb, red, Canvas\\54 ext)',
+          },
+        ],
+      },
+    }));
+
+    expect(runFrame).toThrow(/Probe.*filter\[1\]\.color.*contextual/);
+    expect(callback).not.toHaveBeenCalled();
+    expect(filterAssignments.mock.calls.map(([value]) => value).filter(
+      value => value !== 'none',
+    )).toEqual([]);
+    expect(getCRCInstance(canvas).filterSurfacePool.snapshot()).toMatchObject({
+      surfaceSlots: 0,
+      pairCheckouts: 0,
+    });
+  });
+
+  it.each([
+    'red',
+    '#1234',
+    'rgb(1 2 3 / 50%)',
+    'hsl(120 50% 50%)',
+    'hwb(120 10% 20%)',
+    'lab(50% 20 30)',
+    'lch(50% 20 30)',
+    'oklab(50% .1 .1)',
+    'oklch(50% .1 30)',
+    'color(display-p3 1 0 0)',
+    'color-mix(in srgb, red, blue)',
+    'rgb(from red r g b)',
+  ])('accepts concrete color %s', color => {
+    const callback = vi.fn();
+    const Probe = definePrimitive<{}, SystemStyle>(function renderProbe() {
+      callback();
+    });
+    const canvas = createCanvas(32, 24);
+    const runFrame = scheduleScene(canvas, createElement(Probe, {
+      style: {
+        filter: {
+          type: 'dropShadow',
+          offsetX: 2,
+          offsetY: 2,
+          color,
+        },
+      },
+    }));
+
+    expect(runFrame).not.toThrow();
+    expect(callback).toHaveBeenCalledOnce();
+  });
 
   it('reports rejection of an otherwise unsupported complete native chain', () => {
     const context = new OffscreenCanvas(8, 8).getContext('2d')!;
