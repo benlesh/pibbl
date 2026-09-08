@@ -49,6 +49,75 @@
 - `packages/core/test/visual-baselines/first-class-filters.expected.png`: reviewed Chromium baseline for stable non-sensitive regions.
 - `packages/core/src/index.ts`, package consumers, Studio declarations, contracts, guides, API reference, and library status: one consistent public surface and explanation.
 
+## Algorithmic performance contract
+
+Let `B` be the number of active filter boundaries rendered in a frame, `Fᵢ`
+the descriptor count at boundary `i`, `D` the maximum nested filter depth, and
+`Aᵢ(source)`/`Aᵢ(output)` the backing-pixel areas of its source and visible
+output windows.
+
+- Filter normalization, compilation, and reverse-influence calculation are
+  linear in list length: `O(ΣFᵢ)`. Each operation walks a list once; no filter
+  function triggers a component traversal or CRC surface of its own.
+- Pool checkout and return are `O(1)`. The pool uses an active-depth cursor and
+  reserves one consecutive source/result pair atomically; it never scans free
+  canvases or searches by size.
+- Surface-slot count is `2D`, independent of `B`, sibling count, and filter-list
+  length. One hundred sequential filtered siblings reuse the same two slots.
+- JavaScript work adds `O(B + ΣFᵢ)` around the existing `O(tree)` traversal.
+  Matrix inversion, four-corner projection, Canvas-state transfer, and pair
+  bookkeeping are constant work per boundary.
+- CRC's boundary overhead is exactly two submitted bitmap draws per boundary:
+  one filtered source-to-result draw and one result-to-parent composite. A
+  ten-function list still submits those same two draws, although the browser's
+  opaque native filter implementation may do more internal work for that list.
+- Same-size pair reuse submits two bitmap clears before those draws. Creation or
+  dimension change already yields a transparent bitmap and skips a redundant
+  clear; state reset still occurs in either case.
+- The result window is only the local projection of pixels that can reach the
+  parent target. The source window is the larger region obtained by walking the
+  chain backward. Source and result use separate sizes, preventing blur/shadow
+  padding from doubling result memory and raster work.
+- Production JavaScript never visits pixels. The `drawImage` input area CRC
+  submits is `Σ(Aᵢ(source) + Aᵢ(output))`; same-size clear area is tracked
+  separately and is at most that sum per frame. No operation uses a pool slot's
+  stale or inactive pixels. Actual native raster cost also depends on browser
+  implementation and the filter descriptors, so the plan does not claim an
+  exact GPU-time bound.
+- Components execute once. There is no paint-bounds prepass, replay, or retained
+  command list. For arbitrary custom painters with unknowable ink bounds, the
+  projected visible parent plus reverse filter influence is the smallest
+  correctness-preserving general capture known without pixel readback.
+- Window areas are conservative axis-aligned bounds, so a large rotation, blur,
+  or distant shadow can dominate cost even when actual ink is sparse. Edge,
+  dimension, and area arithmetic is preflighted with finite safe-integer checks
+  before allocation. CRC does not tile ordered filters or reduce resolution,
+  because either can change kernels or create seams.
+- Canvas dimensions remain a deterministic function of the current snapped
+  window, not prior pool use. A slot resizes only when its required snapped
+  dimensions change; otherwise it is cleared and reset in place. This avoids
+  history-dependent `crcCanvasContext().canvas` dimensions and unbounded
+  high-water memory retention.
+- Filter strings are rebuilt once per active boundary because density is
+  boundary-specific. No unbounded descriptor/string cache is introduced for an
+  `O(Fᵢ)` cost that is dominated by native rasterization.
+- Native capability validation assigns the complete compiled chain once on the
+  valid hot path. Only a rejected chain takes an `O(Fᵢ)` diagnostic slow path to
+  isolate an invalid drop-shadow color or unsupported function.
+- `Layer` remains the only explicit content cache. A Layer cache hit contributes
+  its existing bitmap without rerunning its child tree; an outer filter change
+  only repeats the required bitmap operations.
+
+Deliberately rejected shortcuts are per-function surfaces (`O(ΣFᵢ)` memory),
+linear free-slot searches (`O(BD)` bookkeeping), rendering the subtree twice to
+discover bounds, pixel readback to find nontransparent extents, oversized
+history-dependent backing stores, and automatic filtered-subtree memoization.
+The pool's minimal ownership ledger locks pair depth, construction, resize, and
+release. Test-local spies lock list walks, submitted draw/clear area, draw count,
+component executions, and Layer cache hits without adding general performance
+telemetry to the shipped hot path. Wall-clock timings stay diagnostic because
+GPU/browser scheduling is not deterministic.
+
 ---
 
 ### Task 1: Public filter model and pure compiler
@@ -162,33 +231,42 @@ export function compileFilterList(
   resolved: ResolvedFilterList,
   density: number,
 ): string {
-  return resolved.values
-    .map((value) => {
-      switch (value.type) {
-        case "blur":
-          return `blur(${value.radius * density}px)`;
-        case "dropShadow":
-          return `drop-shadow(${value.offsetX * density}px ${value.offsetY * density}px ${(value.blurRadius ?? 0) * density}px ${value.color})`;
-        case "hueRotate":
-          return `hue-rotate(${value.degrees}deg)`;
-        case "brightness":
-        case "contrast":
-        case "grayscale":
-        case "invert":
-        case "opacity":
-        case "saturate":
-        case "sepia":
-          return `${cssFunctionName(value.type)}(${value.amount})`;
-        default:
-          return assertNever(value);
-      }
-    })
-    .join(" ");
+  const parts = new Array<string>(resolved.values.length);
+  for (let index = 0; index < resolved.values.length; index += 1) {
+    const value = resolved.values[index]!;
+    switch (value.type) {
+      case "blur":
+        parts[index] = `blur(${value.radius * density}px)`;
+        break;
+      case "dropShadow":
+        parts[index] =
+          `drop-shadow(${value.offsetX * density}px ${value.offsetY * density}px ${(value.blurRadius ?? 0) * density}px ${value.color})`;
+        break;
+      case "hueRotate":
+        parts[index] = `hue-rotate(${value.degrees}deg)`;
+        break;
+      case "brightness":
+      case "contrast":
+      case "grayscale":
+      case "invert":
+      case "opacity":
+      case "saturate":
+      case "sepia":
+        parts[index] = `${cssFunctionName(value.type)}(${value.amount})`;
+        break;
+      default:
+        assertNever(value);
+    }
+  }
+  return parts.join(" ");
 }
 ```
 
 Throw contextual `layoutDiagnostic(...)` values for invalid fields. Do not parse
 colors here; native color acceptance is added when a real result context exists.
+Normalize into one immutable list, compile by forward index, and make reverse
+influence iterate that same list backward without cloning or calling
+`reverse()`.
 
 - [ ] **Step 5: Run focused tests and typecheck**
 
@@ -417,19 +495,23 @@ git commit -m "refactor(core): separate paint and world transforms"
 - Consumes: Task 1 `ResolvedFilterList`, Task 3 `RenderTargetSnapshot`, `LayoutBox`, and `CRCInstance`.
 - Produces:
   - `BLUR_EXTENT_FACTOR` with the exact spec formula;
-  - `reverseFilterInfluence(output, filters): LayoutBox`;
+  - `PixelBounds { x, y, width, height }` with integer edges;
+  - `reverseFilterInfluence(output, filters, density): PixelBounds`;
   - `largestAffineScale(matrix): number`;
-  - `resolveFilterWindow(parentTarget, parentPaintTransform, filters): FilterWindow | 'discard'`;
-  - `FilterWindow { logicalBounds, density, backingWidth, backingHeight, renderTransform, inverseRenderTransform }`;
-  - `FilterSurfacePool.checkout(window): FilterSurfaceLease`;
+  - `resolveFilterWindows(parentTarget, parentPaintTransform, filters): FilterWindows | 'discard'`;
+  - `FilterPixelWindow { logicalBounds, backingX, backingY, backingWidth, backingHeight, renderTransform, inverseRenderTransform }`;
+  - `FilterWindows { source, output, density, sourceToOutputX, sourceToOutputY }`;
+  - `FilterSurfacePool.checkoutPair(windows): FilterSurfacePairLease`;
   - `FilterSurfacePool.snapshot()` and idempotent `dispose()`.
 
 - [ ] **Step 1: Write failing reverse-influence and density tests**
 
-Use exact rectangles to prove reverse list order:
+Use exact backing-pixel rectangles to prove reverse list order and density
+scaling:
 
 ```ts
 const output = { x: 0, y: 0, width: 100, height: 50 };
+const density = 2;
 const filters = resolveFilterList(
   [
     {
@@ -443,14 +525,15 @@ const filters = resolveFilterList(
   ],
   context,
 )!;
-const required = reverseFilterInfluence(output, filters);
+const required = reverseFilterInfluence(output, filters, density);
 ```
 
 Compute the expected value in the test from
-`Math.ceil(radius * BLUR_EXTENT_FACTOR)`, first expanding for the final blur,
-then unioning that rectangle with the reverse-offset/expanded shadow input.
-Assert color-only filters leave the rectangle unchanged. Test largest singular
-scale for identity, rotation, uniform scale, nonuniform scale, skew, and a zero
+`Math.ceil(radius * density * BLUR_EXTENT_FACTOR)`, first expanding for the
+final blur, then unioning that rectangle with the reverse-offset/expanded
+shadow input using `offset * density` and outward integer rounding. Assert
+color-only filters leave the rectangle unchanged. Test largest singular scale
+for identity, rotation, uniform scale, nonuniform scale, skew, and a zero
 determinant.
 
 - [ ] **Step 2: Run region tests and confirm missing implementation**
@@ -464,7 +547,19 @@ Expected: FAIL because the region module does not exist.
 - [ ] **Step 3: Implement transform inversion, conservative bounds, and pixel snapping**
 
 Project all four parent logical-bound corners through the inverse current paint
-transform, take finite extrema, reverse the list influence, then use:
+transform and take finite extrema as the logical output bounds. Resolve density
+as the largest singular scale of the direct local-to-parent-backing matrix:
+
+```ts
+const localToParentLogical = getCurrentPaintTransform();
+const localToParentBacking =
+  parentTarget.renderTransform.multiply(localToParentLogical);
+const density = largestAffineScale(localToParentBacking);
+```
+
+This composition includes root or Layer density exactly once. Use the inverse
+of `localToParentLogical` for the four-corner projection, then snap the output
+outward:
 
 ```ts
 const backingX = Math.floor(bounds.x * density);
@@ -473,43 +568,94 @@ const backingRight = Math.ceil((bounds.x + bounds.width) * density);
 const backingBottom = Math.ceil((bounds.y + bounds.height) * density);
 ```
 
-Return `'discard'` for non-finite/non-invertible transforms. Reject backing
-dimensions outside finite positive unsigned-long Canvas dimensions with a
-component-aware error at checkout time.
+Walk the chain backward from that integer output rectangle. Blur expansion is
+`Math.ceil(radius * density * BLUR_EXTENT_FACTOR)` pixels; drop-shadow offsets
+are `offset * density` and every resulting edge rounds outward. Derive the
+pixel-aligned logical bounds by dividing integer backing edges by density, and
+set `sourceToOutputX/Y` to the exact difference between source and output
+backing origins. Return `'discard'` for non-finite/non-invertible transforms.
+Preserve the snapped origin in each window's transform so source and output
+pixels share one local coordinate system despite different canvas sizes.
+Reject arithmetic overflow or backing dimensions outside finite positive
+unsigned-long Canvas dimensions with a component-aware error before mutating
+pool state.
 
 - [ ] **Step 4: Write failing pool ownership tests**
 
-Assert two simultaneous leases acquire distinct slots, released siblings reuse
-slot identity, nested pairs grow capacity to four, a changed size increments
-`resized`, every checkout clears pixels and resets `filter`, transform, alpha,
-composite, shadow, dash, and smoothing state, double release is inert, and
-dispose reports:
+Assert one pair acquires consecutive source/result slots, released siblings
+reuse that same pair, and two nested pairs grow the pool to exactly four slots.
+Prove pair selection performs exactly two depth-indexed slot lookups per
+checkout and does not search existing slots. A changed snapped dimension
+increments `resized`, yields a new transparent bitmap, and does not issue a
+redundant `clearRect`; a same-size checkout clears once and resets. Every
+checkout resets `filter`, transform, alpha, composite, shadow, dash, and
+smoothing state. Pair release is idempotent and LIFO. Disposal reports zero
+active pairs and releases every constructed slot:
 
 ```ts
 expect(pool.snapshot()).toEqual({
-  acquired: 4,
-  checkedOut: 0,
-  returned: 6,
+  surfaceSlots: 4,
+  createdSurfaceSlots: 4,
+  activePairs: 0,
+  peakActivePairs: 2,
+  pairCheckouts: 3,
+  pairReturns: 3,
   resized: expectedResizes,
-  released: 4,
-  live: 0,
+  releasedSurfaceSlots: 0,
+});
+
+pool.dispose();
+expect(pool.snapshot()).toMatchObject({
+  surfaceSlots: 0,
+  createdSurfaceSlots: 4,
+  releasedSurfaceSlots: 4,
+  activePairs: 0,
 });
 ```
 
+Use test-local constructor and `clearRect` spies to prove the resize/clear
+claims. The returned source/result object identities and strict depth order
+prove slot `2d`/`2d + 1` reuse; do not add slot-lookup or pixel-area counters to
+production solely for this test.
+
 - [ ] **Step 5: Implement pool leases and CRCInstance ownership**
 
-Create `OffscreenCanvas` only on first needed checkout. Store one context per
-slot, mark it checked out, resize when backing dimensions differ, reset to a
-known state, and return an idempotent lease:
+Create `OffscreenCanvas` only for slots reached by the active-pair depth cursor.
+For pair index `d`, source always uses slot `2d` and result always uses slot
+`2d + 1`; checkout and return therefore remain `O(1)` with no free-list or size
+search. Reserve both slots atomically and roll back the depth cursor plus any
+active reservation if result-slot setup fails. A successfully constructed source
+slot may remain reusable after rollback, but it must retain no boundary or
+component references. Store one context per slot, resize to the exact current
+snapped dimensions when they differ, reset to a known state, and return one
+idempotent pair lease:
 
 ```ts
-interface FilterSurfaceLease {
+interface FilterSurface {
   readonly canvas: OffscreenCanvas;
   readonly context: OffscreenCanvasRenderingContext2D;
   readonly target: RenderTargetSnapshot;
+}
+
+interface FilterSurfacePairLease {
+  readonly source: FilterSurface;
+  readonly result: FilterSurface;
   release(): void;
 }
 ```
+
+Release must occur in strict LIFO order because the cursor represents active
+nesting. Treat an out-of-order internal return as an invariant violation. Do not
+retain a larger backing store after a smaller request: exact dimensions keep the
+canvas exposed to custom primitives independent of prior sibling history and
+bound retained memory to the most recent use of each depth slot.
+
+For same-size reuse, establish the baseline full clip and identity transform,
+clear the complete active bitmap, call `beginPath()`, then install every default
+state value. Dimension changes already replace the bitmap and state stack, so
+skip `clearRect` there and install the same defaults directly. Do not assign an
+unchanged `width` or `height`, because even a redundant assignment resets the
+Canvas backing store.
 
 Initialize one pool in `mountCRC`, add it to `CRCInstance`, and dispose it from
 `cleanupCRCInstance` after component teardowns. Pool creation itself must not
@@ -635,44 +781,65 @@ single primitive callback and descendant traversal either directly or through
 
 - [ ] **Step 7: Implement source capture, native validation, and final composite**
 
-Within `renderFilterBoundary`:
+Within `renderFilterBoundary`, compile once and acquire both surfaces in one
+transaction. The source draw is positioned in the smaller output canvas using
+the difference between the two snapped logical origins:
 
 ```ts
-const source = pool.checkout(window);
-const result = pool.checkout(window);
+const windows = resolveFilterWindows(
+  parentTarget,
+  parentPaintTransform,
+  filters,
+);
+const pair = pool.checkoutPair(windows);
 try {
+  const { source, result } = pair;
   copyFilterSourceState(parent, source.context);
-  source.context.setTransform(window.renderTransform);
+  source.context.setTransform(windows.source.renderTransform);
   withRenderTarget(source.context, source.target, parentWorld, renderSubtree);
 
-  const cssText = compileFilterList(filters, window.density);
+  const cssText = compileFilterList(filters, windows.density);
   assertNativeFilter(result.context, cssText, component);
-  result.context.drawImage(source.canvas, 0, 0);
+  result.context.drawImage(
+    source.canvas,
+    windows.sourceToOutputX,
+    windows.sourceToOutputY,
+  );
 
   parent.drawImage(
     result.canvas,
     0,
     0,
-    window.backingWidth,
-    window.backingHeight,
-    window.logicalBounds.x,
-    window.logicalBounds.y,
-    window.logicalBounds.width,
-    window.logicalBounds.height,
+    windows.output.backingWidth,
+    windows.output.backingHeight,
+    windows.output.logicalBounds.x,
+    windows.output.logicalBounds.y,
+    windows.output.logicalBounds.width,
+    windows.output.logicalBounds.height,
   );
 } finally {
-  result.release();
-  source.release();
+  pair.release();
 }
 ```
 
+Set the result context transform to identity for the native filtered draw, and
+ensure pixels outside the output canvas are clipped by that canvas instead of
+allocating a result as large as the source. The normative HTML Canvas drawing
+model renders the draw into an infinite input bitmap, applies the filter, then
+composites within the clip/output bitmap; retain Task 7's edge-pixel browser test
+to guard the actual supported Chromium path. See the
+[normative drawing model](https://html.spec.whatwg.org/multipage/canvas.html#drawing-model).
+
 For native acceptance, set `context.filter = 'none'`, assign the compiled value,
-and reject when the property is absent or the readback remains `none`. Validate
-each drop-shadow descriptor independently first so an invalid color reports its
-exact list index and `.color` field. Include native rejection tests for
-`"not-a-color"`, plus Task 1's explicit `currentColor` and `var(--shadow)`
-rejections. CORS-tainted images remain supported because the production path
-does no readback.
+and accept immediately when the readback changes from `none`. If the full chain
+is rejected, enter a diagnostic-only slow path that assigns each generated
+drop-shadow function independently to identify an invalid color with its exact
+list index and `.color` field; if every individual shadow is accepted, report
+the complete native chain as unsupported. This keeps the successful path to one
+compiled-chain validation instead of one assignment per shadow. Include native
+rejection tests for `"not-a-color"`, plus Task 1's explicit `currentColor` and
+`var(--shadow)` rejections. CORS-tainted images remain supported because the
+production path does no pixel readback.
 
 - [ ] **Step 8: Run focused filters plus representative primitive regressions**
 
@@ -835,8 +1002,9 @@ source/result draw order:
 ```
 
 Assert assignments occur `grayscale(1)`, then `drop-shadow(...)`, then
-`blur(...)`; each primitive callback runs once; pool capacity reaches six slots;
-and the final visible pixels contain the blurred shadowed grayscale subject.
+`blur(...)`; each primitive callback runs once; pool capacity reaches six slots
+with peak active-pair depth three; and the final visible pixels contain the
+blurred shadowed grayscale subject.
 
 - [ ] **Step 2: Write the ordered-single-boundary contrast test**
 
@@ -893,11 +1061,13 @@ Cover:
 - [ ] **Step 6: Add validation/allocation/render failure cleanup tests**
 
 Exercise missing `OffscreenCanvas`, missing `context.filter`, rejected concrete
-color, forced second-lease allocation failure, throwing primitive, throwing
-descendant, and throwing final `drawImage`. For every case assert the primitive
-callback count promised by the failure stage, `checkedOut: 0`, restored
-temporary globals, component refs cleared under the existing render-failure
-contract, and successful recovery on a fresh valid mount.
+color, forced result-slot failure during atomic pair checkout, throwing
+primitive, throwing descendant, and throwing final `drawImage`. Prove a
+result-slot failure rolls back its source reservation and active-depth cursor.
+For every case assert the primitive callback count promised by the failure
+stage, `activePairs: 0`, restored temporary globals, component refs cleared
+under the existing render-failure contract, and successful recovery on a fresh
+valid mount.
 
 - [ ] **Step 7: Run integration, Layer, runtime, and root-surface suites**
 
@@ -1053,8 +1223,6 @@ git commit -m "test(core): prove filters through public scenarios"
 - Create: `packages/core/test/filter-ownership.test.ts`
 - Create: `packages/core/test/filter-performance.test.ts`
 - Modify: `package.json`
-- Modify: `packages/core/src/lib/filter/filter-surface-pool.ts`
-- Modify: `packages/core/src/lib/filter/render-filter-boundary.ts`
 - Modify: `docs/testing/trust-gate.md`
 
 **Interfaces:**
@@ -1068,9 +1236,10 @@ Mount a root with three nested filters and 100 filtered siblings. Record pool
 snapshots after first render, 1,000 unchanged scheduled rerenders, replacement
 with an unfiltered root, forced failure, controller disposal, and a fresh remount.
 Assert siblings reuse two slots, nesting peaks at six, every frame ends with
-`checkedOut: 0`, replacement retains reusable capacity without component refs,
-failure returns every lease, and disposal satisfies `released === acquired` and
-`live === 0` without a GC oracle.
+`activePairs: 0`, replacement retains reusable capacity without component refs,
+failure returns every pair lease, and disposal satisfies
+`releasedSurfaceSlots === createdSurfaceSlots` and `surfaceSlots === 0` without
+a GC oracle.
 
 - [ ] **Step 2: Run ownership tests and close any counter gaps**
 
@@ -1078,29 +1247,44 @@ failure returns every lease, and disposal satisfies `released === acquired` and
 corepack pnpm@11.21.0 exec vitest run packages/core/test/filter-ownership.test.ts --browser.headless --browser.ui=false
 ```
 
-Expected before counter exposure is complete: FAIL on snapshot fields; after
-minimal diagnostic completion: PASS.
+Expected before ownership snapshot coverage is complete: FAIL on snapshot
+fields; after closing the Task 4 ownership-ledger gaps without adding general
+hot-path telemetry: PASS.
 
 - [ ] **Step 3: Write failing structural-performance tests**
 
-Instrument primitive executions, `OffscreenCanvas` construction, `drawImage`,
-`getImageData`, `putImageData`, and `transferToImageBitmap`. Assert exact counts:
+Build a test-local ledger by spying on filter helper calls, primitive
+executions, `OffscreenCanvas` construction, `clearRect`, `drawImage`,
+`getImageData`, `putImageData`, and `transferToImageBitmap`. Read pair depth and
+reuse from the pool's ownership snapshot. Assert exact counts:
 
 ```ts
 expect(singleTenFunctionList).toMatchObject({
   primitiveExecutions: 1,
-  filterSurfaceCapacity: 2,
+  filterSurfaceSlots: 2,
+  peakActivePairs: 1,
+  filterListWalks: { normalize: 1, reverse: 1, compile: 1 },
   filteredDraws: 1,
   parentCompositeDraws: 1,
+  drawImageInputPixelArea: expectedSourceArea + expectedOutputArea,
   pixelReadbacks: 0,
   imageBitmapTransfers: 0,
 });
-expect(threeNestedBoundaries.filterSurfaceCapacity).toBe(6);
-expect(oneHundredSiblingBoundaries.filterSurfaceCapacity).toBe(2);
+expect(threeNestedBoundaries.filterSurfaceSlots).toBe(6);
+expect(threeNestedBoundaries.peakActivePairs).toBe(3);
+expect(oneHundredSiblingBoundaries.filterSurfaceSlots).toBe(2);
+expect(oneHundredSiblingBoundaries.pairCheckouts).toBe(100);
 ```
 
-Add a cached Layer case proving filter-only parent updates do not increment its
-child execution counter. Do not make wall-clock timing a default assertion.
+Use fixed windows so `expectedSourceArea` and `expectedOutputArea` are exact.
+Add an alternating-size sibling case proving slot count remains two and only
+dimension changes increment `resized`; this locks bounded slot count without
+pretending resizing itself is free. Separate fresh/resize and same-size reuse
+cases must prove the former skips redundant clears and the latter records two
+clear calls plus exactly `expectedSourceArea + expectedOutputArea` cleared
+pixels. Add a cached Layer case proving filter-only parent updates do not
+increment its child execution counter. Do not make wall-clock timing a default
+assertion.
 
 - [ ] **Step 4: Run performance tests and preserve event-performance baselines**
 
@@ -1132,7 +1316,7 @@ Expected: both sub-gates PASS with exact filter ownership and structural counts.
 - [ ] **Step 7: Commit trust evidence**
 
 ```bash
-git add packages/core/test/filter-ownership.test.ts packages/core/test/filter-performance.test.ts packages/core/src/lib/filter/filter-surface-pool.ts packages/core/src/lib/filter/render-filter-boundary.ts package.json docs/testing/trust-gate.md
+git add packages/core/test/filter-ownership.test.ts packages/core/test/filter-performance.test.ts package.json docs/testing/trust-gate.md
 git commit -m "test(core): lock filter ownership and cost"
 ```
 

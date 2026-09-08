@@ -275,8 +275,9 @@ and unfiltered interaction geometry cannot drift.
 For one primitive with a non-empty filter list, the renderer:
 
 1. Resolves and validates the system filter before invoking the primitive.
-2. Computes the receiving primitive's local capture window and raster density.
-3. Checks out an empty source surface and result surface from the current CRC
+2. Computes the receiving primitive's local output window, reverse-influence
+   source window, and shared raster density.
+3. Atomically checks out an empty source/result pair from the current CRC
    instance's scratch pool.
 4. Copies inheritable drawing state needed by descendant paint into the source
    context and installs the local paint/world-transform split.
@@ -361,17 +362,23 @@ visible parent target:
 
 1. Start with the parent surface's visible logical rectangle.
 2. Project its corners back through the boundary's invertible parent-facing
-   transform and take an axis-aligned local bounding rectangle.
-3. Walk the filter list backward, expanding for blur influence and taking the
-   union of original and reverse-offset shadow influence. Color-only functions
-   require no spatial expansion.
-4. Snap the resulting logical window outward to backing pixels.
+   transform and take an axis-aligned local output window.
+3. Resolve the uniform local raster density and snap the output window outward
+   to an integer backing-pixel rectangle.
+4. Walk the filter list backward in backing-pixel coordinates, expanding for
+   blur influence and taking the union of original and reverse-offset shadow
+   influence. Color-only functions require no spatial expansion. The resulting
+   integer rectangle is the source window.
+5. Derive exact pixel-aligned logical source/output bounds and the integer
+   source-to-output offset from those two backing rectangles.
 
 The blur guard band uses the Filter Effects Level 1 ink-overflow extent for the
 common three-pass box approximation:
 `BLUR_EXTENT_FACTOR = (3 * Math.sqrt(2 * Math.PI)) / 4`. Each affected edge
-expands outward by `Math.ceil(standardDeviation * BLUR_EXTENT_FACTOR)` at the
-active local raster density. Tests lock that constant and prove that content
+expands outward by
+`Math.ceil(standardDeviation * density * BLUR_EXTENT_FACTOR)` backing pixels.
+Drop-shadow offsets are likewise scaled to backing pixels before reverse
+influence and outward rounding. Tests lock that constant and prove that content
 just outside the unexpanded viewport can still affect visible edge pixels. The
 finite guard band is a practical raster boundary, not a promise of
 mathematically infinite Gaussian support.
@@ -382,19 +389,30 @@ discard surface so hooks, resource reconciliation, context access, and identity
 remain correct, then skips filtering and parent compositing. Interaction
 behavior retains the existing transform contract.
 
-The local surface uses a uniform backing-pixel density sufficient for the
-largest output scale of the parent-facing affine transform, combined with the
-root surface density. Uniform density preserves circular local filter kernels;
-the later affine composite supplies rotation or nonuniform scaling. The source
-and result share the same logical window and density. Native filter lengths are
-scaled to backing pixels before compilation because Canvas filter coordinates
-operate in the target bitmap rather than following the draw context's current
-transform.
+The local surfaces use a uniform backing-pixel density equal to the largest
+singular scale of the boundary's direct local-to-parent-backing matrix. That
+matrix already includes the active root or Layer backing density exactly once;
+the renderer does not multiply by a second independent pixel ratio. Uniform
+density preserves circular local filter kernels; the later affine composite
+supplies rotation or nonuniform scaling. Source and result share that density
+but use their distinct source/output windows. The source is positioned relative
+to the result when filtered, so blur/shadow input outside the visible output
+remains available without allocating a second copy of the larger source window.
+This follows the [HTML Canvas drawing model](https://html.spec.whatwg.org/multipage/canvas.html#drawing-model),
+which forms the input image, applies the filter, and only then composites it
+within the output bitmap's clip. Native filter lengths are scaled to backing
+pixels before compilation because Canvas filter coordinates operate in the
+target bitmap rather than following the draw context's current transform.
 
 Surface dimensions must be finite positive integers within the browser's
 accepted `OffscreenCanvas` range. Allocation or context acquisition failure is
 an actionable render error naming the component and requested logical/backing
 dimensions; CRC does not silently lower resolution or fall back to a DOM canvas.
+The windows are conservative axis-aligned bounds. Large rotations, blur radii,
+or distant shadows can therefore dominate memory even when visible ink is
+sparse. CRC preflights finite/safe-integer edge and area arithmetic, but does not
+tile an ordered native filter chain, introduce seam-prone partial kernels, or
+silently reduce resolution.
 
 ## Layer integration
 
@@ -436,19 +454,25 @@ completed result normally. CRC adds no new overflow measurement or scrolling.
 ## Ownership, cleanup, and failure behavior
 
 Each `CRCInstance` owns one transient filter scratch pool. A simultaneously
-active boundary checks out two slots, source and result. Nested boundaries use
-additional pairs; completed siblings reuse returned pairs. Capacity therefore
-tracks maximum active filter nesting depth rather than the count of filtered
-elements rendered over time.
+active boundary atomically checks out two depth-indexed slots, source and
+result. Nested boundaries use the next pair; completed siblings reuse the same
+pair. Checkout and LIFO return are constant-time, and capacity therefore tracks
+maximum active filter nesting depth rather than the count of filtered elements
+rendered over time.
 
 Each checkout clears pixels and resets all Canvas state before use. Backing
-dimensions grow or resize lazily to the requested window; a resize is followed
-by complete state reinitialization. A returned slot retains only its reusable
-canvas/context and no component, element, image, event, hook, or callback
-references. The owning instance's main teardown clears the pool and releases
-backing-store references. Deterministic counters track acquisition, checkout,
-return, resize, and final release; heap or garbage-collection timing is not a
-pass condition.
+dimensions resize lazily to the exact current snapped window when that size
+differs; the newly transparent bitmap is not redundantly cleared, but it still
+receives complete state reinitialization. A same-size reuse clears exactly the
+active bitmap before resetting state. Exact current dimensions keep
+`crcCanvasContext().canvas` deterministic and prevent one large historical
+capture from becoming retained high-water memory. A returned slot retains only
+its reusable canvas/context and no component, element, image, event, hook, or
+callback references. The owning instance's main teardown clears the pool and
+releases backing-store references. Deterministic counters track acquisition,
+checkout, return, resize, and final release; test-local Canvas spies track clear
+and draw area without shipping a per-pixel-area telemetry path. Heap or
+garbage-collection timing is not a pass condition.
 
 Filter capture does not create a nested CRC mount, component identity, render
 frame, event root, or lifecycle. `Layer` remains the only built-in composition
@@ -465,11 +489,13 @@ frame are not rolled back, and the failed filtered boundary is not composited.
 ## Performance contract
 
 One active boundary adds two reusable backing stores, one native filtered
-`drawImage` from source to result, and one unfiltered `drawImage` from result to
-parent. A list of ten functions costs the same number of CRC surfaces and draw
-steps as a list of one function; native browser implementation determines the
-internal filter cost. Nested boundaries necessarily add one pair and two
-bitmap composites per active level.
+`drawImage` from the source window to the result window, and one unfiltered
+`drawImage` from result to parent. Same-size slot reuse also clears each active
+bitmap once; creation or resize already produces transparent pixels and skips
+that redundant clear. A list of ten functions costs the same number of CRC
+surfaces and draw steps as a list of one function; native browser implementation
+determines the internal filter cost. Nested boundaries necessarily add one pair
+and two bitmap composites per active level.
 
 CRC performs no automatic content caching for filters. An ordinary filtered
 subtree rerenders on each scheduled root render, exactly as an unfiltered
@@ -479,10 +505,11 @@ readback, direct `OffscreenCanvas` sources, sibling pool reuse, nesting-based
 capacity, and stable Layer cache hits. Controlled wall-clock thresholds remain
 optional diagnostics rather than correctness gates.
 
-Memory is proportional to the physical area of the two current capture windows
-at every simultaneously active nesting level. Documentation will show the
-approximate RGBA lower bound of `2 * width * height * 4` bytes per level while
-not presenting browser allocation overhead as deterministic.
+Memory is proportional to the physical areas of the current source and output
+windows at every simultaneously active nesting level. Documentation will show
+the approximate RGBA lower bound of
+`(sourceWidth * sourceHeight + outputWidth * outputHeight) * 4` bytes per level
+while not presenting browser allocation overhead as deterministic.
 
 ## Evidence and documentation
 
