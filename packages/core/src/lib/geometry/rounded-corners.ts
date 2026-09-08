@@ -77,12 +77,17 @@ export function createRoundedClosedPolygonPath(
     const previousLength = Math.hypot(previousDx, previousDy);
     const nextLength = Math.hypot(nextDx, nextDy);
     const radius = radii[index];
-    const exactlyCollinear = previousDx * nextDy === previousDy * nextDx;
+    const hasUnitRays = previousLength !== 0 && nextLength !== 0;
+    const towardPreviousX = hasUnitRays ? previousDx / previousLength : 0;
+    const towardPreviousY = hasUnitRays ? previousDy / previousLength : 0;
+    const towardNextX = hasUnitRays ? nextDx / nextLength : 0;
+    const towardNextY = hasUnitRays ? nextDy / nextLength : 0;
+    const exactlyCollinear = hasUnitRays &&
+      towardPreviousX * towardNextY === towardPreviousY * towardNextX;
 
     if (
       radius === 0 ||
-      previousLength === 0 ||
-      nextLength === 0 ||
+      !hasUnitRays ||
       exactlyCollinear
     ) {
       return {
@@ -98,10 +103,6 @@ export function createRoundedClosedPolygonPath(
       };
     }
 
-    const towardPreviousX = previousDx / previousLength;
-    const towardPreviousY = previousDy / previousLength;
-    const towardNextX = nextDx / nextLength;
-    const towardNextY = nextDy / nextLength;
     const dot = Math.max(-1, Math.min(1,
       towardPreviousX * towardNextX + towardPreviousY * towardNextY,
     ));

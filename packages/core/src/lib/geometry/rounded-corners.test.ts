@@ -151,6 +151,23 @@ describe('createRoundedClosedPolygonPath', () => {
     expect(collinearCommands.filter(([name]) => name === 'lineTo')).toHaveLength(1);
   });
 
+  it('does not mistake finite non-collinear large-coordinate rays for collinear rays', () => {
+    recording = installRecordingPath2D();
+
+    const commands = recording.commands(
+      createRoundedClosedPolygonPath([
+        [0, 0],
+        [1e155, 5e154],
+        [1e155, 1e155],
+      ], [1, 1, 1]),
+    );
+
+    expect(commands.map(([name]) => name)).toEqual([
+      'moveTo', 'arcTo', 'arcTo', 'arcTo', 'closePath',
+    ]);
+    expect(commands[1].slice(0, 3)).toEqual(['arcTo', 0, 0]);
+  });
+
   it('produces usable convex and concave platform paths', () => {
     recording = installRecordingPath2D();
     recording.restore();
