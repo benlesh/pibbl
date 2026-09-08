@@ -149,6 +149,34 @@ describe('pure element measurement', () => {
     expect(ImageConstructor).not.toHaveBeenCalled();
   });
 
+  it('ignores filters during pure measurement without allocating an offscreen canvas', () => {
+    let measureStyle: Readonly<SystemStyle> | undefined;
+    const offscreenConstructor = vi.spyOn(globalThis, 'OffscreenCanvas');
+    const Measuring = definePrimitive<{}, SystemStyle>(() => undefined, {
+      measure: input => {
+        measureStyle = input.style;
+        return { status: 'measured', size: { width: 12, height: 8 } };
+      },
+    });
+    const filtered = createElement(Measuring, {
+      style: {
+        filter: {
+          type: 'dropShadow',
+          offsetX: 2,
+          offsetY: 4,
+          color: 'not-a-browser-color',
+        },
+      },
+    });
+
+    expect(measureElement(filtered, constraints, service)).toEqual({
+      status: 'measured',
+      size: { width: 12, height: 8 },
+    });
+    expect(measureStyle).not.toHaveProperty('filter');
+    expect(offscreenConstructor).not.toHaveBeenCalled();
+  });
+
   it('isolates measurement from active render hooks and layout context', async () => {
     const errors: string[] = [];
     const probes = [
