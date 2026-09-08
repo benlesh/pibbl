@@ -8,6 +8,7 @@ import {
   SystemStyle,
 } from '../types.js';
 import { stripLayoutParticipation } from '../style/resolve-built-in.js';
+import { createLinePath } from '../geometry/line.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import { registerOpaqueStyleProperties } from '../style/resolve-dispatch.js';
 import type {
@@ -17,7 +18,6 @@ import type {
   PaintStyle,
   ResolvedDrawingStyle,
 } from '../style/types.js';
-import { createLinePath } from '../util/create-line-path.js';
 import type { StyleResolutionContext } from '../types.js';
 import { renderPath } from './path.js';
 
@@ -49,7 +49,7 @@ function renderPolygon(
   } = style;
   const path = coords.length < 3 ?
     new Path2D() :
-    createLinePath(coords, { closePath: true });
+    createLinePath({ coords, closePath: true });
 
   return renderPath(
     {

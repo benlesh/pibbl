@@ -1,5 +1,5 @@
 import { definePrimitive } from '../define-primitive.js';
-import { crcSvgPath } from '../hooks/crc-svg-path.js';
+import { createSvgPath } from '../geometry/svg-path.js';
 import { RenderingContext2D } from '../types.js';
 import { stripLayoutParticipation } from '../style/resolve-built-in.js';
 import { registerOpaqueStyleProperties } from '../style/resolve-dispatch.js';
@@ -15,7 +15,7 @@ function renderSvgPath(
   ctx: RenderingContext2D,
 ) {
   const { d, ...pathStyle } = style;
-  const svgPath = crcSvgPath(d);
+  const svgPath = createSvgPath({ d });
   return renderPath(
     props,
     {

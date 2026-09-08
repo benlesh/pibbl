@@ -1,10 +1,12 @@
 import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
+import { crc } from '../crc';
 import { componentTest } from '../test-utils/component-test';
 import { takeScreenshot } from '../util/test-utils';
 import { Group } from './g';
 import { Line, type LineStyle } from './line';
 import { createElement } from '../element/create-element';
+import { LayoutDiagnostic } from '../style/diagnostics';
 
 // Default test configuration for a diagonal line
 const defaultStyle = {
@@ -250,4 +252,46 @@ describe('line', () => {
     await canvas.click({ position: { x: 100, y: 80 } });
     expect(onClick).not.toHaveBeenCalled();
   });
+
+  it('reports indexed non-finite coordinates as contextual diagnostics and accepts a later valid render', () => {
+    const originalRequestAnimationFrame = window.requestAnimationFrame;
+    let pending: FrameRequestCallback | undefined;
+    let controller: ReturnType<typeof crc> | undefined;
+    window.requestAnimationFrame = callback => {
+      pending = callback;
+      return 1;
+    };
+    const canvas = document.createElement('canvas');
+    document.body.appendChild(canvas);
+
+    try {
+      controller = crc(canvas, createElement(Line, {
+        style: { coords: [[0, 0], [Number.NaN, 1]] },
+      }));
+      let failure: unknown;
+      try {
+        pending?.(0);
+      } catch (error) {
+        failure = error;
+      }
+      expect(failure).toBeInstanceOf(LayoutDiagnostic);
+      expect(failure).toMatchObject({
+        message: expect.stringMatching(/Line: property coords\[1\]\[0\]/),
+      });
+
+      controller = crc(canvas, createElement(Line, {
+        style: { coords: [[0, 0], [20, 0]], stroke: 'black', strokeWidth: 4 },
+      }));
+      expect(() => pending?.(0)).not.toThrow();
+      expect(pixel(canvas, 10, 1)[3]).toBeGreaterThan(0);
+    } finally {
+      controller?.dispose();
+      canvas.remove();
+      window.requestAnimationFrame = originalRequestAnimationFrame;
+    }
+  });
 });
+
+function pixel(canvas: HTMLCanvasElement, x: number, y: number): number[] {
+  return Array.from(canvas.getContext('2d')!.getImageData(x, y, 1, 1).data);
+}

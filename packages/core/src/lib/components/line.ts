@@ -16,7 +16,10 @@ import type {
   PaintStyle,
   ResolvedDrawingStyle,
 } from '../style/types.js';
-import { createLinePath } from '../util/create-line-path.js';
+import { layoutDiagnostic } from '../style/diagnostics.js';
+import { createLinePath } from '../geometry/line.js';
+import { validateCoordinates } from '../geometry/validation.js';
+import type { StyleResolutionContext } from '../types.js';
 import { renderPath } from './path.js';
 
 export interface LineProps extends CRCEventHandlers, CRCEventFocusOptions {}
@@ -46,7 +49,7 @@ export function renderLine(
     cursor,
     lineInteractionWidth,
   } = style;
-  const linePath = createLinePath(coords);
+  const linePath = createLinePath({ coords });
   const interactionWidth = lineInteractionWidth ?? strokeWidth ?? 0;
 
   return renderPath(
@@ -76,8 +79,14 @@ export const Line = definePrimitive<
   LineStyle,
   ResolvedLineStyle
 >(renderLine, {
-  resolveStyle: style =>
-    stripLayoutParticipation(style) as ResolvedLineStyle,
+  resolveStyle: (style, context) => ({
+    ...stripLayoutParticipation(style),
+    coords: validateCoordinates(
+      style.coords,
+      'coords',
+      layoutGeometryErrorFactory(context),
+    ),
+  }) as ResolvedLineStyle,
 });
 registerOpaqueStyleProperties(Line, ['stroke', 'cursor']);
 
@@ -99,4 +108,15 @@ function lineBounds(
     width: right - left,
     height: bottom - top,
   };
+}
+
+function layoutGeometryErrorFactory(context: Readonly<StyleResolutionContext>) {
+  return (property: string, value: unknown, reason: string) => layoutDiagnostic({
+    component: context.component,
+    property,
+    value,
+    algorithm: context.algorithm,
+    constraints: context.constraints,
+    reason,
+  });
 }

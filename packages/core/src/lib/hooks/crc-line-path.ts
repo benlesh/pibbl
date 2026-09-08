@@ -1,4 +1,4 @@
-import { createLinePath } from '../util/create-line-path.js';
+import { createLinePath } from '../geometry/line.js';
 import { crcMemoSlot } from './crc-memo.js';
 
 /**
@@ -11,7 +11,7 @@ export function crcLinePath(
 ): Path2D {
   return crcMemoSlot(
     'linePath',
-    () => createLinePath(coords, config),
+    () => createLinePath({ coords, closePath: config?.closePath }),
     [...coords.flat(), config?.closePath],
   );
 }
