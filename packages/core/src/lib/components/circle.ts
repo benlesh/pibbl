@@ -22,6 +22,7 @@ import {
   resolveNonnegativeShapeLength,
 } from './shape-style.js';
 import { renderPath } from './path.js';
+import { createCirclePath } from '../geometry/circle.js';
 
 export interface CircleProps extends CRCEventHandlers, CRCEventFocusOptions {}
 
@@ -45,8 +46,7 @@ function renderCircle(
   ctx: RenderingContext2D,
 ) {
   const { cx, cy, radius, ...pathStyle } = style;
-  const path = new Path2D();
-  if (radius > 0) path.arc(cx, cy, radius, 0, Math.PI * 2);
+  const path = createCirclePath({ cx, cy, radius });
 
   return renderPath({
     ...props,

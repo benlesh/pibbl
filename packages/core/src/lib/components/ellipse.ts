@@ -22,6 +22,7 @@ import {
   resolveNonnegativeShapeLength,
 } from './shape-style.js';
 import { renderPath } from './path.js';
+import { createEllipsePath } from '../geometry/ellipse.js';
 
 export interface EllipseProps extends CRCEventHandlers, CRCEventFocusOptions {}
 
@@ -49,10 +50,7 @@ function renderEllipse(
   ctx: RenderingContext2D,
 ) {
   const { cx, cy, radiusX, radiusY, rotation, ...pathStyle } = style;
-  const path = new Path2D();
-  if (radiusX > 0 && radiusY > 0) {
-    path.ellipse(cx, cy, radiusX, radiusY, rotation, 0, Math.PI * 2);
-  }
+  const path = createEllipsePath({ cx, cy, radiusX, radiusY, rotation });
   const halfWidth = Math.sqrt(
     (radiusX * Math.cos(rotation)) ** 2 +
       (radiusY * Math.sin(rotation)) ** 2,
