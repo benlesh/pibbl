@@ -27,6 +27,16 @@ class FakePath2D {
   rect(x: number, y: number, width: number, height: number): void {
     this.commands.push(`rect:${x},${y},${width},${height}`);
   }
+
+  roundRect(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    radii: number | readonly number[],
+  ): void {
+    this.commands.push(`roundRect:${x},${y},${width},${height},${radii}`);
+  }
 }
 
 beforeEach(() => {
@@ -41,6 +51,56 @@ afterEach(() => {
 });
 
 describe('memoized path hooks', () => {
+  it('delegates sharp and rounded rectangles and memoizes effective radii', async () => {
+    const canvas = createCanvas();
+    const paths: FakePath2D[] = [];
+    const Probe = ({ phase }: { phase: number }) => {
+      paths.push(crcRectPath(1, 2, 3, 4, phase === 0 ? {} :
+        phase === 1 ? { cornerRadius: 4, cornerRadii: [0, null] } :
+          { cornerRadii: [0, 4, 4, 4] }) as unknown as FakePath2D);
+    };
+    const controller = crc(canvas, createElement(Probe, { phase: 0 }));
+    await nextFrame();
+    crc(canvas, createElement(Probe, { phase: 1 }));
+    await nextFrame();
+    crc(canvas, createElement(Probe, { phase: 2 }));
+    await nextFrame();
+
+    expect(paths[0].commands).toEqual(['rect:1,2,3,4']);
+    expect(paths[1].commands).toEqual(['roundRect:1,2,3,4,0,4,4,4']);
+    expect(paths[2]).toBe(paths[1]);
+    controller.dispose();
+  });
+
+  it('rejects invalid direct rounded radii', () => {
+    const frames = new ManualFrames();
+    const canvas = createCanvas();
+    const Probe = () => {
+      crcRectPath(0, 0, 1, 1, { cornerRadius: -1 });
+    };
+    const controller = crc(canvas, createElement(Probe, {}));
+    expect(() => frames.flush()).toThrow(/cornerRadius.*nonnegative/);
+    controller.dispose();
+    frames.restore();
+  });
+
+  it('adjusts the box before delegating rounded radii without changing them', async () => {
+    const canvas = createCanvas();
+    const paths: FakePath2D[] = [];
+    const Probe = () => {
+      paths.push(crcRectPath(1.2, 2.3, 3.4, 4.5, {
+        alignToPixelGrid: 'round',
+        lineWidth: 1,
+        cornerRadius: 9,
+      }) as unknown as FakePath2D);
+    };
+    const controller = crc(canvas, createElement(Probe, {}));
+    await nextFrame();
+
+    expect(paths[0].commands).toEqual(['roundRect:0.5,1.5,4,5,9,9,9,9']);
+    controller.dispose();
+  });
+
   it('keeps rectangle identity for equal effective geometry and replaces it when geometry changes', async () => {
     const canvas = createCanvas();
     const paths: Path2D[] = [];

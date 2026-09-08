@@ -4,7 +4,14 @@ export type RecordedPathCommand =
   | readonly ['lineTo', number, number]
   | readonly ['closePath']
   | readonly ['rect', number, number, number, number]
-  | readonly ['roundRect', number, number, number, number, number]
+  | readonly [
+      'roundRect',
+      number,
+      number,
+      number,
+      number,
+      number | readonly number[],
+    ]
   | readonly ['arc', number, number, number, number, number, boolean | undefined]
   | readonly ['ellipse', number, number, number, number, number, number, number, boolean | undefined]
   | readonly ['arcTo', number, number, number, number, number];
@@ -32,7 +39,13 @@ class RecordingPath2D {
     this.recordedCommands.push(['rect', x, y, width, height]);
   }
 
-  roundRect(x: number, y: number, width: number, height: number, radii: number): void {
+  roundRect(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    radii: number | readonly number[],
+  ): void {
     this.recordedCommands.push(['roundRect', x, y, width, height, radii]);
   }
 

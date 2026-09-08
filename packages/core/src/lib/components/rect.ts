@@ -13,6 +13,8 @@ import type { RectStyle, ResolvedRectStyle } from '../style/types.js';
 import { registerOpaqueStyleProperties } from '../style/resolve-dispatch.js';
 import { adjustRectangleToPixelGrid } from '../util/pixel-grid-adjustments.js';
 import { renderPath } from './path.js';
+import { createRectanglePath } from '../geometry/rectangle.js';
+import { resolveRoundedCornerStyle } from './rounded-corner-style.js';
 
 export interface RectangleProps extends CRCEventHandlers, CRCEventFocusOptions {}
 
@@ -27,6 +29,8 @@ function renderRectangle(
     width,
     height,
     alignToPixelGrid,
+    cornerRadius,
+    cornerRadii,
     ...pathStyle
   } = style;
 
@@ -41,8 +45,14 @@ function renderRectangle(
     ));
   }
 
-  const rectPath = new Path2D();
-  rectPath.rect(x, y, width, height);
+  const rectPath = createRectanglePath({
+    x,
+    y,
+    width,
+    height,
+    cornerRadius,
+    cornerRadii,
+  });
 
   renderPath(
     {
@@ -87,6 +97,7 @@ export const Rectangle = definePrimitive<
       'height',
       context,
     ),
+    ...resolveRoundedCornerStyle(4, style, context),
   }) as ResolvedRectStyle,
 });
 registerOpaqueStyleProperties(Rectangle, ['fill', 'stroke', 'cursor']);

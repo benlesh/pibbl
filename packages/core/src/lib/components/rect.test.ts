@@ -4,6 +4,9 @@ import { componentTest } from '../test-utils/component-test';
 import { takeScreenshot } from '../util/test-utils';
 import { Rectangle } from './rect';
 import { createElement } from '../element/create-element';
+import { getPrimitiveDefinition } from '../element/metadata';
+import { getCRCInstance } from '../global-state';
+import { Group } from './g';
 
 const defaultStyle = {
   x: 50,
@@ -16,6 +19,76 @@ const defaultStyle = {
 };
 
 describe('rect', () => {
+  it('resolves rounded lengths against the smaller percentage basis', () => {
+    const resolve = getPrimitiveDefinition(Rectangle)!.resolveStyle! as (
+      style: Record<string, unknown>,
+      context: object,
+    ) => Record<string, unknown>;
+
+    expect(resolve({
+      width: 40,
+      height: 30,
+      cornerRadius: '25%',
+      cornerRadii: [0, null, '50%', undefined],
+    }, {
+      allocation: { x: 0, y: 0, width: 200, height: 120 },
+      percentageBasis: { x: 0, y: 0, width: 200, height: 120 },
+      constraints: { minWidth: 0, maxWidth: 400, minHeight: 0, maxHeight: 200 },
+      component: 'Rectangle',
+      algorithm: 'render-dispatch',
+    })).toMatchObject({
+      cornerRadius: 30,
+      cornerRadii: [0, null, 60, undefined],
+    });
+  });
+
+  it('uses rounded geometry for painting and coordinate targeting', async () => {
+    const onClick = vi.fn();
+    const canvas = await componentTest(createElement(Rectangle, {
+      style: {
+        x: 0,
+        y: 0,
+        width: 40,
+        height: 40,
+        cornerRadius: 10,
+        fill: 'red',
+      },
+      onClick,
+    }));
+
+    expect(canvas.element.getContext('2d')!.getImageData(1, 1, 1, 1).data[3]).toBe(0);
+    expect(canvas.element.getContext('2d')!.getImageData(20, 20, 1, 1).data[3]).toBeGreaterThan(0);
+    await canvas.click({ position: { x: 1, y: 1 } });
+    await canvas.click({ position: { x: 20, y: 20 } });
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it('keeps the resolved rectangle box for keyboard navigation and honors an override', async () => {
+    const override = { x: 1, y: 2, width: 3, height: 4 };
+    const canvas = await componentTest(createElement(Group, {
+      children: [
+        createElement(Rectangle, {
+          style: { x: 20, y: 30, width: 40, height: 50, cornerRadius: 8 },
+          onClick: vi.fn(),
+        }),
+        createElement(Rectangle, {
+          style: { x: 80, y: 30, width: 40, height: 50, cornerRadius: 8 },
+          onClick: vi.fn(),
+          keyboardNavigationBounds: override,
+        }),
+      ],
+    }));
+
+    expect(Array.from(getCRCInstance(canvas.element).eventRoot.targets)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          keyboardNavigationBounds: { x: 20, y: 30, width: 40, height: 50 },
+        }),
+        expect.objectContaining({ keyboardNavigationBounds: override }),
+      ]),
+    );
+  });
+
   it('renders a rectangle in browser', async () => {
     await componentTest(createElement(Rectangle, {
       style: defaultStyle,

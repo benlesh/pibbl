@@ -99,7 +99,8 @@ export interface PathStyle
 }
 
 export interface RectStyle
-  extends SystemStyle,
+  extends RoundedCornerStyle,
+    SystemStyle,
     PaintStyle,
     CursorStyle,
     BoxStyle,
@@ -155,11 +156,16 @@ export interface ImgStyle
 }
 
 export type ResolvedPathStyle = ResolvedDrawingStyle<PathStyle>;
-export type ResolvedRectStyle = ResolvedDrawingStyle<RectStyle> & {
+export type ResolvedRectStyle = Omit<
+  ResolvedDrawingStyle<RectStyle>,
+  keyof RoundedCornerStyle
+> & {
   x: number;
   y: number;
   width: number;
   height: number;
+  cornerRadius?: number;
+  cornerRadii?: readonly (number | null | undefined)[];
 };
 export type ResolvedSvgPathStyle = ResolvedDrawingStyle<SvgPathStyle>;
 export type ResolvedTextStyle = ResolvedDrawingStyle<TextStyle> & {

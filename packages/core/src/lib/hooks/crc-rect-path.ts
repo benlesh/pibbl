@@ -1,4 +1,6 @@
 import { PixelGridAlignment } from '../types.js';
+import { createRectanglePath } from '../geometry/rectangle.js';
+import { resolveNumericCornerRadii } from '../geometry/rounded-corners.js';
 import { adjustRectangleToPixelGrid } from '../util/pixel-grid-adjustments.js';
 import { crcMemoSlot } from './crc-memo.js';
 
@@ -12,8 +14,14 @@ export function crcRectPath(
   y: number,
   width: number,
   height: number,
-  config?: { alignToPixelGrid?: PixelGridAlignment; lineWidth?: number },
+  config?: {
+    alignToPixelGrid?: PixelGridAlignment;
+    lineWidth?: number;
+    cornerRadius?: number;
+    cornerRadii?: readonly (number | null | undefined)[];
+  },
 ): Path2D {
+  const radii = resolveNumericCornerRadii(4, config ?? {});
   const alignToPixelGrid = config?.alignToPixelGrid;
 
   if (alignToPixelGrid) {
@@ -28,8 +36,6 @@ export function crcRectPath(
   }
 
   return crcMemoSlot('rectPath', () => {
-    const path = new Path2D();
-    path.rect(x, y, width, height);
-    return path;
-  }, [x, y, width, height]);
+    return createRectanglePath({ x, y, width, height, cornerRadii: radii });
+  }, [x, y, width, height, ...radii]);
 }
