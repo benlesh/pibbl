@@ -78,13 +78,30 @@ export function reverseFilterInfluence(
 
 export function largestAffineScale(matrix: DOMMatrixReadOnly): number {
   const { a, b, c, d } = matrix;
-  const sumOfSquares = a * a + b * b + c * c + d * d;
-  const determinant = a * d - b * c;
+  const coefficientScale = Math.max(
+    Math.abs(a),
+    Math.abs(b),
+    Math.abs(c),
+    Math.abs(d),
+  );
+  if (coefficientScale === 0) return 0;
+  if (!Number.isFinite(coefficientScale)) return Number.NaN;
+
+  const normalizedA = a / coefficientScale;
+  const normalizedB = b / coefficientScale;
+  const normalizedC = c / coefficientScale;
+  const normalizedD = d / coefficientScale;
+  const sumOfSquares =
+    normalizedA * normalizedA + normalizedB * normalizedB +
+    normalizedC * normalizedC + normalizedD * normalizedD;
+  const determinant =
+    normalizedA * normalizedD - normalizedB * normalizedC;
   const discriminant = Math.max(
     0,
     sumOfSquares * sumOfSquares - 4 * determinant * determinant,
   );
-  return Math.sqrt((sumOfSquares + Math.sqrt(discriminant)) / 2);
+  return coefficientScale *
+    Math.sqrt((sumOfSquares + Math.sqrt(discriminant)) / 2);
 }
 
 export function resolveFilterWindows(
@@ -93,25 +110,8 @@ export function resolveFilterWindows(
   filters: ResolvedFilterList,
 ): FilterWindows | 'discard' {
   if (!isFiniteAffine(parentPaintTransform)) return 'discard';
-  const determinant =
-    parentPaintTransform.a * parentPaintTransform.d -
-    parentPaintTransform.b * parentPaintTransform.c;
-  if (determinant === 0) return 'discard';
-
-  let inverse: DOMMatrix;
-  try {
-    inverse = new DOMMatrix([
-      parentPaintTransform.a,
-      parentPaintTransform.b,
-      parentPaintTransform.c,
-      parentPaintTransform.d,
-      parentPaintTransform.e,
-      parentPaintTransform.f,
-    ]).inverse();
-  } catch {
-    return 'discard';
-  }
-  if (!isFiniteAffine(inverse)) return 'discard';
+  const inverseProject = createInverseProjector(parentPaintTransform);
+  if (!inverseProject) return 'discard';
 
   const localToParentBacking = parentTarget.renderTransform.multiply(
     parentPaintTransform,
@@ -120,7 +120,7 @@ export function resolveFilterWindows(
   const density = largestAffineScale(localToParentBacking);
   if (!Number.isFinite(density) || density <= 0) return 'discard';
 
-  const projected = projectBounds(parentTarget.logicalBounds, inverse);
+  const projected = projectBounds(parentTarget.logicalBounds, inverseProject);
   if (!projected) return 'discard';
   const outputPixels = snapToBackingPixels(projected, density);
   const sourcePixels = reverseFilterInfluence(outputPixels, filters, density);
@@ -151,7 +151,7 @@ function blurExtent(radius: number, density: number): number {
 
 function projectBounds(
   bounds: Readonly<LayoutBox>,
-  inverse: DOMMatrixReadOnly,
+  inverseProject: InverseProjector,
 ): LayoutBox | undefined {
   const right = bounds.x + bounds.width;
   const bottom = bounds.y + bounds.height;
@@ -160,16 +160,20 @@ function projectBounds(
   }
 
   const points = [
-    projectPoint(bounds.x, bounds.y, inverse),
-    projectPoint(right, bounds.y, inverse),
-    projectPoint(bounds.x, bottom, inverse),
-    projectPoint(right, bottom, inverse),
+    inverseProject(bounds.x, bounds.y),
+    inverseProject(right, bounds.y),
+    inverseProject(bounds.x, bottom),
+    inverseProject(right, bottom),
   ];
-  if (points.some(point => !Number.isFinite(point.x) || !Number.isFinite(point.y))) {
+  if (points.some(point => !point)) return undefined;
+  const projectedPoints = points as readonly ProjectedPoint[];
+  if (projectedPoints.some(
+    point => !Number.isFinite(point.x) || !Number.isFinite(point.y),
+  )) {
     return undefined;
   }
-  const xs = points.map(point => point.x);
-  const ys = points.map(point => point.y);
+  const xs = projectedPoints.map(point => point.x);
+  const ys = projectedPoints.map(point => point.y);
   const left = Math.min(...xs);
   const top = Math.min(...ys);
   const projectedRight = Math.max(...xs);
@@ -182,14 +186,70 @@ function projectBounds(
   };
 }
 
-function projectPoint(
-  x: number,
-  y: number,
+interface ProjectedPoint {
+  readonly x: number;
+  readonly y: number;
+}
+
+type InverseProjector = (
+  parentX: number,
+  parentY: number,
+) => ProjectedPoint | undefined;
+
+function createInverseProjector(
   matrix: DOMMatrixReadOnly,
-): { x: number; y: number } {
-  return {
-    x: matrix.a * x + matrix.c * y + matrix.e,
-    y: matrix.b * x + matrix.d * y + matrix.f,
+): InverseProjector | undefined {
+  const { a, b, c, d, e, f } = matrix;
+  const firstRowScale = Math.max(Math.abs(a), Math.abs(c));
+  const secondRowScale = Math.max(Math.abs(b), Math.abs(d));
+  if (firstRowScale === 0 || secondRowScale === 0) return undefined;
+
+  const rowA = a / firstRowScale;
+  const rowB = b / secondRowScale;
+  const rowC = c / firstRowScale;
+  const rowD = d / secondRowScale;
+  const firstColumnScale = Math.max(Math.abs(rowA), Math.abs(rowB));
+  const secondColumnScale = Math.max(Math.abs(rowC), Math.abs(rowD));
+  if (firstColumnScale === 0 || secondColumnScale === 0) return undefined;
+
+  const normalizedA = rowA / firstColumnScale;
+  const normalizedB = rowB / firstColumnScale;
+  const normalizedC = rowC / secondColumnScale;
+  const normalizedD = rowD / secondColumnScale;
+  if (Math.abs(normalizedA) >= Math.abs(normalizedB)) {
+    if (normalizedA === 0) return undefined;
+    const ratio = normalizedB / normalizedA;
+    const schurComplement = normalizedD - ratio * normalizedC;
+    if (schurComplement === 0 || !Number.isFinite(schurComplement)) {
+      return undefined;
+    }
+    return (parentX, parentY) => {
+      const rightX = (parentX - e) / firstRowScale;
+      const rightY = (parentY - f) / secondRowScale;
+      const normalizedY =
+        (rightY - ratio * rightX) / schurComplement;
+      const normalizedX =
+        (rightX - normalizedC * normalizedY) / normalizedA;
+      const x = normalizedX / firstColumnScale;
+      const y = normalizedY / secondColumnScale;
+      return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : undefined;
+    };
+  }
+
+  const ratio = normalizedA / normalizedB;
+  const schurComplement = normalizedC - ratio * normalizedD;
+  if (schurComplement === 0 || !Number.isFinite(schurComplement)) {
+    return undefined;
+  }
+  return (parentX, parentY) => {
+    const rightX = (parentX - e) / firstRowScale;
+    const rightY = (parentY - f) / secondRowScale;
+    const normalizedY = (rightX - ratio * rightY) / schurComplement;
+    const normalizedX =
+      (rightY - normalizedD * normalizedY) / normalizedB;
+    const x = normalizedX / firstColumnScale;
+    const y = normalizedY / secondColumnScale;
+    return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : undefined;
   };
 }
 

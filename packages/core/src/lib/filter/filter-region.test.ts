@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { clearTempState, GLOBAL_STATE } from '../global-state';
 import type { RenderTargetSnapshot } from '../render-target';
-import { resolveFilterList } from '../style/filter';
+import { resolveFilterList, type ResolvedFilterList } from '../style/filter';
 import type { StyleResolutionContext } from '../types';
 import {
   BLUR_EXTENT_FACTOR,
@@ -110,6 +110,31 @@ describe('reverse filter influence', () => {
 
     expect(reverseFilterInfluence(output, filters, 3)).toEqual(output);
   });
+
+  it('reads filter descriptors in descending index order', () => {
+    const filters = resolveFilterList([
+      { type: 'brightness', amount: 1.2 },
+      { type: 'contrast', amount: 0.5 },
+      { type: 'opacity', amount: 0.8 },
+    ], context)!;
+    const descriptorReads: number[] = [];
+    const values = new Proxy(filters.values, {
+      get(target, property, receiver) {
+        if (typeof property === 'string' && /^\d+$/.test(property)) {
+          descriptorReads.push(Number(property));
+        }
+        return Reflect.get(target, property, receiver);
+      },
+    });
+
+    reverseFilterInfluence(
+      { x: 0, y: 0, width: 20, height: 10 },
+      { values } as ResolvedFilterList,
+      2,
+    );
+
+    expect(descriptorReads).toEqual([2, 1, 0]);
+  });
 });
 
 describe('affine raster density', () => {
@@ -122,6 +147,13 @@ describe('affine raster density', () => {
     ['zero determinant', new DOMMatrix([2, 0, 0, 0, 0, 0]), 2],
   ])('finds the largest singular scale for %s', (_label, matrix, expected) => {
     expect(largestAffineScale(matrix)).toBeCloseTo(expected, 12);
+  });
+
+  it.each([
+    ['large', 1e200],
+    ['small', 1e-200],
+  ])('keeps a finite %s affine scale finite', (_label, scale) => {
+    expect(largestAffineScale(scaleMatrix(scale))).toBe(scale);
   });
 });
 
@@ -213,6 +245,43 @@ describe('filter windows', () => {
   });
 
   it.each([
+    ['large', 1e200],
+    ['small', 1e-200],
+  ])('resolves finite %s invertible scales to ordinary pixel windows', (
+    _label,
+    scale,
+  ) => {
+    const inverseScale = 1 / scale;
+    const renderTransform = scaleMatrix(inverseScale);
+    const target: RenderTargetSnapshot = {
+      logicalBounds: { x: 0, y: 0, width: scale, height: scale },
+      backingWidth: 1,
+      backingHeight: 1,
+      renderTransform,
+      inverseRenderTransform: scaleMatrix(scale),
+    };
+    const parentPaintTransform = scaleMatrix(scale);
+    const filters = resolveFilterList({ type: 'opacity', amount: 1 }, context)!;
+
+    const windows = resolveFilterWindows(
+      target,
+      parentPaintTransform,
+      filters,
+    );
+
+    expect(windows).not.toBe('discard');
+    if (windows === 'discard') return;
+    expect(windows.density).toBe(1);
+    expect(windows.output).toMatchObject({
+      logicalBounds: { x: 0, y: 0, width: 1, height: 1 },
+      backingX: 0,
+      backingY: 0,
+      backingWidth: 1,
+      backingHeight: 1,
+    });
+  });
+
+  it.each([
     ['non-invertible', new DOMMatrix().scale(1, 0)],
     ['non-finite', matrixWithNaN()],
   ])('discards %s parent-facing transforms', (_label, transform) => {
@@ -269,6 +338,10 @@ function matrixWithNaN(): DOMMatrix {
   const matrix = new DOMMatrix();
   matrix.a = Number.NaN;
   return matrix;
+}
+
+function scaleMatrix(scale: number): DOMMatrix {
+  return new DOMMatrix([scale, 0, 0, scale, 0, 0]);
 }
 
 function expectMatrix(
