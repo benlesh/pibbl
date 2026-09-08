@@ -1,5 +1,6 @@
 import type { LayoutContext } from './layout/types.js';
 import type { CRCNode } from './element/types.js';
+import type { RenderTargetSnapshot } from './render-target.js';
 import type {
   Canvas,
   CRCComponentRefs,
@@ -20,6 +21,8 @@ export interface GlobalState {
   componentIsMounting: boolean;
   componentHookIndex: number;
   renderContext: RenderingContext2D | undefined;
+  renderTarget: RenderTargetSnapshot | undefined;
+  worldBaseTransform: DOMMatrix | undefined;
   renderTransaction: CRCRenderTransaction | undefined;
   primitiveReceiverToken: object | undefined;
   unseenIds: Set<string> | undefined;
@@ -39,6 +42,8 @@ export const GLOBAL_STATE: GlobalState = {
   componentIsMounting: false,
   componentHookIndex: 0,
   renderContext: undefined,
+  renderTarget: undefined,
+  worldBaseTransform: undefined,
   renderTransaction: undefined,
   primitiveReceiverToken: undefined,
   unseenIds: undefined,
@@ -177,6 +182,8 @@ export function clearTempState() {
   GLOBAL_STATE.seenKeys = undefined;
   GLOBAL_STATE.canvas = undefined;
   GLOBAL_STATE.renderContext = undefined;
+  GLOBAL_STATE.renderTarget = undefined;
+  GLOBAL_STATE.worldBaseTransform = undefined;
   GLOBAL_STATE.renderTransaction = undefined;
   GLOBAL_STATE.primitiveReceiverToken = undefined;
   GLOBAL_STATE.layoutStack = undefined;

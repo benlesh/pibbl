@@ -11,6 +11,7 @@ import {
 } from './types.js';
 import { get2dContext } from './util/get-2d-context.js';
 import { prepareSurface } from './surface/root-surface.js';
+import { rootRenderTarget } from './render-target.js';
 
 /**
  * Gets the root element for a canvas and renders it. This is the
@@ -56,6 +57,8 @@ export function executeRender(
   const prevCurrentCRCInstance = GLOBAL_STATE.currentCRCInstance;
   const prevCanvas = GLOBAL_STATE.canvas;
   const prevRenderContext = GLOBAL_STATE.renderContext;
+  const prevRenderTarget = GLOBAL_STATE.renderTarget;
+  const prevWorldBaseTransform = GLOBAL_STATE.worldBaseTransform;
   const prevRenderTransaction = GLOBAL_STATE.renderTransaction;
   const prevPrimitiveReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
   const prevSeenIds = GLOBAL_STATE.seenIds;
@@ -82,6 +85,8 @@ export function executeRender(
     const ctx = get2dContext(canvas);
     renderContext = ctx;
     GLOBAL_STATE.renderContext = ctx;
+    GLOBAL_STATE.renderTarget = rootRenderTarget(surface);
+    GLOBAL_STATE.worldBaseTransform = new DOMMatrix();
     GLOBAL_STATE.clippingStack = [];
     const previousRootBox = crcInstance.rootLayoutBox;
     if (
@@ -150,6 +155,8 @@ export function executeRender(
     GLOBAL_STATE.currentCRCInstance = prevCurrentCRCInstance;
     GLOBAL_STATE.canvas = prevCanvas;
     GLOBAL_STATE.renderContext = prevRenderContext;
+    GLOBAL_STATE.renderTarget = prevRenderTarget;
+    GLOBAL_STATE.worldBaseTransform = prevWorldBaseTransform;
     GLOBAL_STATE.renderTransaction = prevRenderTransaction;
     GLOBAL_STATE.primitiveReceiverToken = prevPrimitiveReceiverToken;
     GLOBAL_STATE.seenIds = prevSeenIds;
