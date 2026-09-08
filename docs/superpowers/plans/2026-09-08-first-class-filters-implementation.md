@@ -1,5 +1,7 @@
 # First-Class Filters Implementation Plan
 
+> **Historical status: APPROVED IMPLEMENTATION PLAN.**
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add typed CSS-like `style.filter` effects to every CRC primitive, with combined-subtree silhouettes, ordered lists, inside-out nesting, upright local offscreen rendering, and exact interaction/lifecycle behavior.
