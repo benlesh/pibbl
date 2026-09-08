@@ -10,6 +10,8 @@ export interface ResolvedFilterList {
   readonly values: readonly CRCFilter[];
 }
 
+const filterListOrigins = new WeakMap<readonly CRCFilter[], boolean>();
+
 export function resolveFilterList(
   value: CRCFilter | readonly CRCFilter[] | undefined,
   context: Readonly<StyleResolutionContext>,
@@ -27,7 +29,9 @@ export function resolveFilterList(
       context,
     );
   }
-  return Object.freeze({ values: Object.freeze(resolved) });
+  const resolvedValues = Object.freeze(resolved);
+  filterListOrigins.set(resolvedValues, Array.isArray(value));
+  return Object.freeze({ values: resolvedValues });
 }
 
 export function compileFilterList(
@@ -73,23 +77,6 @@ export function assertNativeFilter(
   context.filter = cssText;
   if (context.filter !== 'none') return;
 
-  const functions = splitFilterFunctions(cssText);
-  for (let index = 0; index < functions.length; index += 1) {
-    const value = functions[index]!;
-    if (!value.startsWith('drop-shadow(')) continue;
-    context.filter = 'none';
-    context.filter = value;
-    if (context.filter === 'none') {
-      throw layoutDiagnostic({
-        component,
-        property: `filter[${index}].color`,
-        value,
-        algorithm: 'filter-rendering',
-        reason: 'was rejected by the native Canvas filter implementation',
-      });
-    }
-  }
-
   throw layoutDiagnostic({
     component,
     property: 'filter',
@@ -97,6 +84,27 @@ export function assertNativeFilter(
     algorithm: 'filter-rendering',
     reason: 'the complete native Canvas filter chain is unsupported',
   });
+}
+
+export function assertNativeFilterColors(
+  context: RenderingContext2D,
+  resolved: ResolvedFilterList,
+  component: string,
+): void {
+  for (let index = 0; index < resolved.values.length; index += 1) {
+    const value = resolved.values[index]!;
+    if (value.type !== 'dropShadow') continue;
+    if (acceptsNativeColor(context, value.color)) continue;
+    const prefix = filterListOrigins.get(resolved.values) === false ?
+        'filter' : `filter[${index}]`;
+    throw layoutDiagnostic({
+      component,
+      property: `${prefix}.color`,
+      value: value.color,
+      algorithm: 'filter-rendering',
+      reason: 'was rejected by the native Canvas filter color parser',
+    });
+  }
 }
 
 export function getResolvedFilterList(
@@ -241,28 +249,21 @@ function cssFunctionName(
   return type;
 }
 
-function splitFilterFunctions(cssText: string): string[] {
-  const functions: string[] = [];
-  let start = -1;
-  let depth = 0;
-  for (let index = 0; index < cssText.length; index += 1) {
-    const character = cssText[index]!;
-    if (start < 0) {
-      if (character === ' ') continue;
-      start = index;
-    }
-    if (character === '(') {
-      depth += 1;
-    } else if (character === ')') {
-      depth -= 1;
-      if (depth === 0) {
-        functions.push(cssText.slice(start, index + 1));
-        start = -1;
-      }
-    }
+function acceptsNativeColor(
+  context: RenderingContext2D,
+  value: string,
+): boolean {
+  const previous = context.fillStyle;
+  try {
+    context.fillStyle = '#010203';
+    context.fillStyle = value;
+    if (context.fillStyle !== '#010203') return true;
+    context.fillStyle = '#040506';
+    context.fillStyle = value;
+    return context.fillStyle !== '#040506';
+  } finally {
+    context.fillStyle = previous;
   }
-  if (start >= 0) functions.push(cssText.slice(start));
-  return functions;
 }
 
 function assertNever(value: never): never {

@@ -6,6 +6,7 @@ import {
 } from '../render-target.js';
 import {
   assertNativeFilter,
+  assertNativeFilterColors,
   compileFilterList,
   type ResolvedFilterList,
 } from '../style/filter.js';
@@ -45,6 +46,7 @@ export function renderFilterBoundary(
     const { source, result } = pair;
     result.context.setTransform(1, 0, 0, 1, 0, 0);
     const cssText = compileFilterList(input.filters, windows.density);
+    assertNativeFilterColors(result.context, input.filters, input.component);
     assertNativeFilter(result.context, cssText, input.component);
 
     copyFilterSourceState(parent, source.context);

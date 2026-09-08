@@ -50,6 +50,45 @@ describe('filter rendering', () => {
     expect(pixel(canvas, 20, 20)).toEqual([255, 0, 0, 255]);
   });
 
+  it('shadows Path fill and stroke once instead of stacking their alpha', async () => {
+    const d = new Path2D();
+    d.rect(10, 10, 20, 20);
+    const shadow = {
+      type: 'dropShadow' as const,
+      offsetX: 40,
+      offsetY: 0,
+      color: 'rgb(0 0 0 / 50%)',
+    };
+
+    const combined = await renderScene(createElement(Path, {
+      style: {
+        d,
+        fill: 'red',
+        stroke: 'blue',
+        strokeWidth: 8,
+        filter: shadow,
+      },
+    }), 90, 50);
+    const separate = await renderScene(createElement(Group, {
+      children: [
+        createElement(Path, {
+          style: { d, fill: 'red', filter: shadow },
+        }),
+        createElement(Path, {
+          style: { d, stroke: 'blue', strokeWidth: 8, filter: shadow },
+        }),
+      ],
+    }), 90, 50);
+
+    const combinedAlpha = pixel(combined, 52, 20)[3]!;
+    const separateAlpha = pixel(separate, 52, 20)[3]!;
+    expect(combinedAlpha).toBeGreaterThanOrEqual(120);
+    expect(combinedAlpha).toBeLessThanOrEqual(136);
+    expect(separateAlpha).toBeGreaterThanOrEqual(180);
+    expect(separateAlpha).toBeLessThanOrEqual(200);
+    expect(separateAlpha - combinedAlpha).toBeGreaterThan(40);
+  });
+
   it('captures overlapping Group children as one combined silhouette', async () => {
     const canvas = await renderScene(createElement(Group, {
       style: {
@@ -73,6 +112,48 @@ describe('filter rendering', () => {
     expect(pixel(canvas, 20, 20)).toEqual([255, 0, 0, 255]);
     expect(pixel(canvas, 40, 20)).toEqual([0, 0, 255, 255]);
     expect(pixel(canvas, 66, 20)).toEqual([0, 0, 0, 255]);
+  });
+
+  it('shadows overlapping Group children once instead of stacking their alpha', async () => {
+    const shadow = {
+      type: 'dropShadow' as const,
+      offsetX: 40,
+      offsetY: 0,
+      color: 'rgb(0 0 0 / 50%)',
+    };
+    const children = [
+      createElement(Rectangle, {
+        style: { x: 10, y: 10, width: 30, height: 30, fill: 'red' },
+      }),
+      createElement(Rectangle, {
+        style: { x: 30, y: 10, width: 30, height: 30, fill: 'blue' },
+      }),
+    ];
+
+    const combined = await renderScene(createElement(Group, {
+      style: { filter: shadow },
+      children,
+    }), 100, 60);
+    const separate = await renderScene(createElement(Group, {
+      children: [
+        createElement(Rectangle, {
+          ...children[0]!.props,
+          style: { ...children[0]!.props.style, filter: shadow },
+        }),
+        createElement(Rectangle, {
+          ...children[1]!.props,
+          style: { ...children[1]!.props.style, filter: shadow },
+        }),
+      ],
+    }), 100, 60);
+
+    const combinedAlpha = pixel(combined, 75, 20)[3]!;
+    const separateAlpha = pixel(separate, 75, 20)[3]!;
+    expect(combinedAlpha).toBeGreaterThanOrEqual(120);
+    expect(combinedAlpha).toBeLessThanOrEqual(136);
+    expect(separateAlpha).toBeGreaterThanOrEqual(180);
+    expect(separateAlpha).toBeLessThanOrEqual(200);
+    expect(separateAlpha - combinedAlpha).toBeGreaterThan(40);
   });
 
   it('keeps an empty filter list on the direct path without scratch surfaces', async () => {
@@ -279,10 +360,45 @@ describe('filter rendering', () => {
       .not.toContain(7);
     expect(filterAssignments.mock.calls.map(([value]) => value).filter(
       value => value !== 'none',
-    )).toEqual([
-      'grayscale(1) drop-shadow(2px 2px 0px not-a-color)',
-      'drop-shadow(2px 2px 0px not-a-color)',
-    ]);
+    )).toEqual([]);
+    expect(getCRCInstance(canvas).filterSurfacePool.snapshot()).toMatchObject({
+      activePairs: 0,
+      pairCheckouts: 1,
+      pairReturns: 1,
+    });
+  });
+
+  it.each([
+    ['not-a-color', 'an invalid color'],
+    ['red) blur(100px', 'a filter-function injection'],
+    ['red)', 'a truncated delimiter'],
+  ])('rejects %s as %s with singular property provenance', (color) => {
+    const callback = vi.fn();
+    const Probe = definePrimitive<{}, SystemStyle>(function renderProbe() {
+      callback();
+    });
+    const filterAssignments = vi.spyOn(
+      OffscreenCanvasRenderingContext2D.prototype,
+      'filter',
+      'set',
+    );
+    const canvas = createCanvas(32, 24);
+    const runFrame = scheduleScene(canvas, createElement(Probe, {
+      style: {
+        filter: {
+          type: 'dropShadow',
+          offsetX: 2,
+          offsetY: 2,
+          color,
+        },
+      },
+    }));
+
+    expect(runFrame).toThrow(/Probe.*property filter\.color .*native Canvas filter/);
+    expect(callback).not.toHaveBeenCalled();
+    expect(filterAssignments.mock.calls.map(([value]) => value).filter(
+      value => value !== 'none',
+    )).toEqual([]);
     expect(getCRCInstance(canvas).filterSurfacePool.snapshot()).toMatchObject({
       activePairs: 0,
       pairCheckouts: 1,
