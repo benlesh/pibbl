@@ -1,7 +1,6 @@
 # Rounded shapes and public path creators design
 
-Status: approved in design discussion on 2026-09-08; pending written-spec
-review before implementation planning.
+Status: approved for implementation on 2026-09-08.
 
 ## Summary
 
