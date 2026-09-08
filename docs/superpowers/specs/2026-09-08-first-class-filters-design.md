@@ -403,6 +403,11 @@ width and height. It is not replaced by the transient filter pool. Its child
 surface remains upright, inherits root density, and receives the Layer's
 parent-facing transform only at composite time.
 
+A caller-provided root `OffscreenCanvas` is already the root target rather than
+a child composition boundary. Its logical origin remains upright with no
+invented parent transform; filtered descendants use the same target/world split
+as descendants of an HTML Canvas root.
+
 A filter outside a cached Layer consumes the Layer's cached bitmap as ordinary
 source content. Changing only the outer filter recomposites the cached image
 without rerunning the Layer child tree. A filter on the Layer primitive filters
