@@ -1,5 +1,9 @@
 import { definePrimitive } from '../define-primitive.js';
-import { CRCNode, RenderingContext2D, SystemStyle } from '../types.js';
+import { CRCNode, SystemStyle } from '../types.js';
+import {
+  createGroupTransform,
+  setPrimitivePresentation,
+} from '../primitive-presentation.js';
 import { stripLayoutParticipation } from '../style/resolve-built-in.js';
 import type {
   BoxStyle,
@@ -29,42 +33,7 @@ type ResolvedGStyle = ResolvedDrawingStyle<GStyle>;
 
 function renderGroup(
   props: GroupProps,
-  style: Readonly<ResolvedGStyle>,
-  ctx: RenderingContext2D,
 ) {
-  let transform = ctx.getTransform();
-
-  const { scaleX = 1, scaleY = 1 } = style;
-  if (scaleX !== 1 || scaleY !== 1) {
-    transform = transform.scale(scaleX, scaleY);
-  }
-
-  const { rotationDegrees } = style;
-  if (rotationDegrees) {
-    const [rox, roy] = style.rotationOrigin ?? [0, 0];
-    transform = transform
-      .translate(rox, roy)
-      .rotate(rotationDegrees)
-      .translate(-rox, -roy);
-  }
-
-  const { translateX = 0, translateY = 0 } = style;
-  if (translateX !== 0 || translateY !== 0) {
-    transform = transform.translate(translateX, translateY);
-  }
-
-  const { skewX } = style;
-  if (skewX) {
-    transform = transform.skewX(skewX);
-  }
-
-  const { skewY } = style;
-  if (skewY) {
-    transform = transform.skewY(skewY);
-  }
-
-  ctx.setTransform(transform);
-
   return props.children;
 }
 
@@ -79,3 +48,7 @@ export const Group = definePrimitive<
 >(renderGroup, {
   resolveStyle: style => stripLayoutParticipation(style) as ResolvedGStyle,
 });
+
+setPrimitivePresentation<ResolvedGStyle>(Group, style => ({
+  transform: createGroupTransform(style),
+}));

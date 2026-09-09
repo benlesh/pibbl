@@ -26,6 +26,7 @@ import {
   createRootSurfaceState,
   mountRootSurface,
 } from './surface/root-surface.js';
+import { FilterSurfacePool } from './filter/filter-surface-pool.js';
 
 type MountCRCConfig = CRCConfig & {
   parent?: Canvas;
@@ -38,6 +39,7 @@ export function mountCRC(
   config?: MountCRCConfig,
 ): CRCController {
   const mainTeardowns = new Teardowns();
+  const filterSurfacePool = new FilterSurfacePool();
   const signal = config?.signal;
   let ownedInstance: CRCInstance | undefined;
   const controller: CRCController = {
@@ -116,6 +118,7 @@ export function mountCRC(
           surface.kind === 'root' ? surface.display.height : canvas.height),
     }),
     surface,
+    filterSurfacePool,
   };
   crcInstance.interactionRoot = parent ?
       GLOBAL_STATE.crcInstances.get(parent)?.interactionRoot :

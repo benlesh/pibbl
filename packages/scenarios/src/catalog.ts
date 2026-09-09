@@ -17,6 +17,7 @@ import type { MouseContractScenarioState } from './mouse-contract.example';
 import type { PerformanceLabState } from './performance-lab.example';
 import type { RuntimeHooksState } from './runtime-hooks.example';
 import type { CanvasSurfaceState } from './canvas-surface.example';
+import type { FilterLabState } from './filter-lab.example';
 import { GEOMETRY_MATRIX_CASES } from './geometry-matrix.example';
 import { MOUSE_CONTRACT_CASES } from './mouse-contract';
 import { PERFORMANCE_WORKLOADS } from './performance-lab.example';
@@ -1151,6 +1152,63 @@ const canvasSurfaceMetadata: ScenarioMetadata = {
   maturity: 'contract',
 };
 
+const filterLabMetadata: ScenarioMetadata = {
+  id: 'first-class-filters',
+  slug: 'filters',
+  title: 'First-class filters laboratory',
+  summary: 'Compare every supported filter, order-sensitive chains, nested boundaries, transforms, clips, and cached Layer interaction.',
+  category: 'Rendering',
+  apiTags: ['Group', 'Clip', 'Layer', 'Image', 'CRCFilter'],
+  conceptTags: ['filter order', 'combined silhouette', 'nested boundaries', 'visual overflow', 'source geometry'],
+  manualSteps: [
+    {
+      action: 'Choose All filters.',
+      expected: 'Ten labeled fixed-size swatches show blur, brightness, contrast, drop shadow, grayscale, hue rotation, invert, opacity, saturate, and sepia.',
+    },
+    {
+      action: 'Choose Ordered chain, then Swap order.',
+      expected: 'The same source geometry remains in place while the shadow changes because the filter list receives pixels in declaration order.',
+    },
+    {
+      action: 'Choose Nested, Transformed, and Clipped.',
+      expected: 'Nested effects resolve inside-out, transform after their upright capture, and same/ancestor/descendant clips affect completed output at their respective boundary.',
+    },
+    {
+      action: 'Choose Cached Layer, click the blue source, then click its shadow.',
+      expected: 'Only the original blue source geometry records layered-source; shadow-only pixels remain visual overflow rather than a target.',
+    },
+  ],
+  knownLimitations: [
+    'Canvas filter rasterization and color math are browser-owned; this deterministic laboratory is reviewed against the provisioned Chromium environment.',
+    'Filter pixels do not change layout, focus, cursor, clipping geometry, or logical hit regions.',
+  ],
+  learningOrder: 160,
+  visibility: 'test-laboratory',
+  visibilityReason: 'It is a dense public-API conformance matrix with stable state and pixel probes rather than a beginner-facing lesson.',
+  maturity: 'trusted',
+};
+
+export const filterLabScenarioEntry: ScenarioCatalogEntry<FilterLabState> = {
+  metadata: filterLabMetadata,
+  canvas: { width: 480, height: 240 },
+  actions: [
+    { id: 'show-all', label: 'All filters' },
+    { id: 'show-ordered', label: 'Ordered chain' },
+    { id: 'swap-order', label: 'Swap order' },
+    { id: 'show-nested', label: 'Nested boundaries' },
+    { id: 'show-transformed', label: 'Transformed filters' },
+    { id: 'show-clipped', label: 'Clip positions' },
+    { id: 'show-layered', label: 'Cached Layer' },
+  ],
+  source: {
+    id: 'first-class-filters-laboratory-example',
+    language: 'tsx',
+    marker: "FILTER_LAB_SOURCE_ID = 'first-class-filters-laboratory-example'",
+    path: 'packages/scenarios/src/filter-lab.example.tsx',
+  },
+  load: async () => (await import('./filter-lab')).filterLabScenario,
+};
+
 export const canvasSurfaceScenarioEntry: ScenarioCatalogEntry<CanvasSurfaceState> = {
   metadata: canvasSurfaceMetadata,
   canvas: { width: 480, height: 240 },
@@ -1185,6 +1243,7 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] = validateScena
   runtimeHooksScenarioEntry,
   layoutFoundationScenarioEntry,
   canvasSurfaceScenarioEntry,
+  filterLabScenarioEntry,
 ] as const);
 
 export const scenarioCatalogIndex = createScenarioCatalogIndex(scenarioCatalog);

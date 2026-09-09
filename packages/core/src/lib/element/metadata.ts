@@ -11,6 +11,7 @@ import type {
   SystemStyle,
 } from '../types.js';
 import type { CRCElement } from './types.js';
+import type { PrimitivePresentation } from '../primitive-presentation.js';
 
 export interface CRCElementSource {
   readonly fileName: string;
@@ -32,6 +33,10 @@ const elementCloneMetadataHandlers = new Set<(
   clone: CRCElement<any>,
 ) => void>();
 const primitiveDefinitions = new WeakMap<Function, PrimitiveDefinition>();
+const primitivePresentationResolvers = new WeakMap<
+  Function,
+  (style: Readonly<any>) => Readonly<PrimitivePresentation> | undefined
+>();
 const policyDefinitions = new WeakMap<Function, ElementPolicyDefinition>();
 const childPrimitiveReceiverTransactions = new WeakMap<
   CRCRenderTransaction,
@@ -86,6 +91,24 @@ export function getPrimitiveDefinition(
   type: Function,
 ): PrimitiveDefinition | undefined {
   return primitiveDefinitions.get(type);
+}
+
+/** @internal Registers private presentation behavior for one primitive. */
+export function setPrimitivePresentation<S>(
+  type: Function,
+  resolve: (
+    style: Readonly<S>,
+  ) => Readonly<PrimitivePresentation> | undefined,
+): void {
+  primitivePresentationResolvers.set(type, resolve);
+}
+
+/** @internal Resolves private presentation behavior for one primitive. */
+export function getPrimitivePresentation<S>(
+  type: Function,
+  style: Readonly<S>,
+): Readonly<PrimitivePresentation> | undefined {
+  return primitivePresentationResolvers.get(type)?.(style);
 }
 
 /** @internal Registers an identity-transparent element preparation policy. */

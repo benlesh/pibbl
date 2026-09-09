@@ -1,5 +1,7 @@
 # First-class filters design
 
+> **Historical status: IMPLEMENTED DESIGN RECORD.** Original approved wording below is preserved; current behavior lives in the linked design contracts and API reference.
+
 Status: approved for implementation on 2026-09-08.
 
 ## Summary

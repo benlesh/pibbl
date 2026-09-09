@@ -8,10 +8,7 @@ import type {
 } from './types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import type { LayoutBox } from '../layout/types.js';
-import {
-  getSurfaceSnapshot,
-  toLogicalTransform,
-} from '../surface/transform.js';
+import { getCurrentWorldTransform } from '../render-target.js';
 import type {
   CRCComponentRefs,
   CRCClippingStackEntry,
@@ -189,10 +186,7 @@ function updateTargetRegistration(
   target.fill = options.fill ?? false;
   target.lineInteractionWidth = options.lineInteractionWidth ?? 0;
   if (GLOBAL_STATE.renderContext) {
-    target.transform = toLogicalTransform(
-      getSurfaceSnapshot(target.owner),
-      GLOBAL_STATE.renderContext.getTransform(),
-    );
+    target.transform = getCurrentWorldTransform();
     target.clippingStack = Array.from(GLOBAL_STATE.clippingStack);
   }
   target.cursor = options.cursor;

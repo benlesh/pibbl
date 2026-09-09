@@ -26,8 +26,8 @@ import type {
 } from '../style/types.js';
 import {
   getSurfaceSnapshot,
-  toLogicalTransform,
 } from '../surface/transform.js';
+import { getCurrentWorldTransform } from '../render-target.js';
 import { createLayerSurface } from '../surface/resolve-surface.js';
 import type { CRCElement } from '../element/types.js';
 import {
@@ -121,10 +121,7 @@ function renderLayer(
 
   const { interactionLayer } = slot;
   parentInstance.paintEntries.delete(interactionLayer);
-  interactionLayer.transform = toLogicalTransform(
-    getSurfaceSnapshot(parentInstance),
-    ctx.getTransform(),
-  );
+  interactionLayer.transform = getCurrentWorldTransform();
   interactionLayer.clippingStack = Array.from(GLOBAL_STATE.clippingStack);
   if (dimensionsChanged) {
     interactionLayer.bounds = createBounds(width, height);

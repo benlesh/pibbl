@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   Circle,
+  Rectangle,
   LayoutDiagnostic,
   crcWhenChanged,
 } from '../index';
@@ -143,6 +144,81 @@ describe('element and primitive contract', () => {
 });
 
 describe('crc root updates', () => {
+  it('tears down existing refs after a filtered final-composite failure and recovers', () => {
+    const originalRequestAnimationFrame = window.requestAnimationFrame;
+    let pending: FrameRequestCallback | undefined;
+    window.requestAnimationFrame = callback => {
+      pending = callback;
+      return 1;
+    };
+    const canvas = createCanvas();
+    let cleanups = 0;
+    const setup = vi.fn(() => () => cleanups++);
+    const ResourceBearingSibling = (_props: {}) => {
+      crcWhenChanged(setup, []);
+      return createElement(Rectangle, {
+        style: { x: 2, y: 2, width: 8, height: 8, fill: 'blue' },
+        onClick: () => undefined,
+      });
+    };
+    const drawImage = vi.spyOn(
+      CanvasRenderingContext2D.prototype,
+      'drawImage',
+    ).mockImplementation(() => {
+      throw new Error('filtered final composite failed');
+    });
+
+    try {
+      crc(canvas, [
+        createElement(ResourceBearingSibling, {}),
+        createElement(Rectangle, {
+          style: {
+            x: 12,
+            y: 2,
+            width: 8,
+            height: 8,
+            fill: 'red',
+            filter: { type: 'blur', radius: 1 },
+          },
+        }),
+      ]);
+
+      expect(() => pending?.(0)).toThrowError('filtered final composite failed');
+      const failed = getCRCInstance(canvas);
+      expect(setup).toHaveBeenCalledOnce();
+      expect(cleanups).toBe(1);
+      expect(failed.refs.size).toBe(0);
+      expect(failed.eventRoot.targets.size).toBe(0);
+      expect(failed.filterSurfacePool.snapshot()).toMatchObject({
+        activePairs: 0,
+        pairCheckouts: 1,
+        pairReturns: 1,
+      });
+
+      drawImage.mockRestore();
+      crc(canvas, createElement(Rectangle, {
+        style: {
+          x: 4,
+          y: 4,
+          width: 8,
+          height: 8,
+          fill: 'green',
+          filter: { type: 'grayscale', amount: 1 },
+        },
+      }));
+      expect(() => pending?.(1)).not.toThrow();
+      expect(getCRCInstance(canvas).refs.size).toBe(1);
+      expect(getCRCInstance(canvas).filterSurfacePool.snapshot()).toMatchObject({
+        activePairs: 0,
+        pairCheckouts: 2,
+        pairReturns: 2,
+      });
+    } finally {
+      drawImage.mockRestore();
+      window.requestAnimationFrame = originalRequestAnimationFrame;
+    }
+  });
+
   it('cleans up a failed shape render and recovers on the same Canvas', () => {
     const originalRequestAnimationFrame = window.requestAnimationFrame;
     let pending: FrameRequestCallback | undefined;

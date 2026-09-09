@@ -164,7 +164,41 @@ affected target. Removing or disposing the layer recursively releases the
 offscreen controller and owned resources. Browser `OffscreenCanvas` support is
 required.
 
+## Filters across layout and composition
+
+All five layout primitives and `Group`, `Clip`, and `Layer` accept
+`style.filter`. A filter on a layout primitive consumes that primitive's entire
+laid-out subtree as one image; it does not independently filter each direct
+child. Functions in one list run in declaration order, while nested filtered
+primitives form separate boundaries and resolve from the inside out.
+
+The receiving container's presentation happens outside its own local filter:
+
+- a receiving `Group` filters its upright local subtree, then applies its scale,
+  rotation, translation, and skew;
+- a receiving `Clip` filters first and applies its own clip to the result;
+- a descendant Group or Clip is already part of an ancestor's captured source,
+  while an ancestor clip constrains the completed result;
+- a filter on `Layer` consumes the combined cached Layer bitmap. Changing only
+  that or an outer filter can reuse the Layer cache, while filters inside the
+  Layer belong to its child CRC instance.
+
+The full order is `local subtree paint -> receiving filter -> receiving clip ->
+receiving transform -> ancestor clip/alpha/compositing -> parent target`.
+Blurred and shadowed overflow is clipped by existing ancestor Clip and layout
+`overflow: "clip"` boundaries. It does not enlarge declared boxes,
+measurement, event paths, focus/navigation bounds, or cursor regions.
+
+Filter captures are transient upright local surfaces rather than retained
+Layers. A nonempty list requires browser `OffscreenCanvas` and native Canvas
+filter support; `[]` stays on the direct path. See the [filter
+lesson](../../packages/scenarios/src/learning/composition/filters.example.tsx)
+and [drawing contract](../design/drawing-components-contract.md).
+
 Executable lessons cover [Group](../../packages/scenarios/src/learning/composition/group.example.tsx),
 [Clip](../../packages/scenarios/src/learning/composition/clip.example.tsx),
 [Layer](../../packages/scenarios/src/learning/composition/layer.example.tsx),
-and every layout component.
+[Filters](../../packages/scenarios/src/learning/composition/filters.example.tsx),
+and every layout component. The deterministic
+[`first-class-filters` laboratory](../../packages/scenarios/src/filter-lab.example.tsx)
+is shared by the Studio and headless browser evidence.

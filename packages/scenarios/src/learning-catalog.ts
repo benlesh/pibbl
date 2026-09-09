@@ -517,6 +517,31 @@ const drafts = [
     load: () => import("./learning/composition/clip.example"),
   },
   {
+    slug: "filters",
+    title: "Filters",
+    shortTitle: "Filters",
+    section: "composition",
+    order: 115,
+    summary:
+      "Filter one Group’s overlapping rectangle, circle, and text as a single combined silhouette.",
+    api: ["Group", "Rectangle", "Circle", "Text", "CRCFilter"],
+    objectives: [
+      "Place a filter list on Group to process all of its descendants as one raster result.",
+      "Cycle the same chains in a different order and compare which pixels each next function receives.",
+    ],
+    prompts: {
+      gesture: "Click the blue card to cycle through the three filter chains.",
+      code: "Swap the two-function chains, then add blur to see it consume the preceding result.",
+    },
+    apiNotes: [
+      "The Group makes one combined silhouette, so its rectangle, circle, and text cast one shared drop shadow rather than separate shadow stacks.",
+      "A filter list runs in declaration order: each function receives the pixels produced by the preceding function.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["group", "layer", "transformed-clipped-layered-targets"],
+    load: () => import("./learning/composition/filters.example"),
+  },
+  {
     slug: "layer",
     title: "Layer",
     shortTitle: "Layer",

@@ -1,7 +1,10 @@
 import { layoutDiagnostic } from '../style/diagnostics.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { EMPTY_STYLE } from '../style/empty-style.js';
-import { takePreNormalizedStyle } from '../style/resolve-dispatch.js';
+import {
+  takePreNormalizedStyle,
+  withoutSystemFilter,
+} from '../style/resolve-dispatch.js';
 import {
   createPrimitiveReceiverToken,
   getPrimitiveDefinition,
@@ -79,10 +82,14 @@ function measureElementInternal(
   context.active.add(source);
   context.stack.push(element);
   try {
-    const specifiedStyle = getSpecifiedStyle(element) ?? EMPTY_STYLE;
-    const normalized = preNormalized?.style ?? (definition.normalizeStyle ?
-        definition.normalizeStyle(specifiedStyle) :
-        specifiedStyle);
+    const specifiedStyle = withoutSystemFilter(
+      preNormalized?.style ?? getSpecifiedStyle(element) ?? EMPTY_STYLE,
+    );
+    const normalized = preNormalized ?
+        specifiedStyle :
+      definition.normalizeStyle ?
+          definition.normalizeStyle(specifiedStyle) :
+          specifiedStyle;
     const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
     GLOBAL_STATE.primitiveReceiverToken =
       getPrimitiveReceiverToken(element) ?? createPrimitiveReceiverToken();

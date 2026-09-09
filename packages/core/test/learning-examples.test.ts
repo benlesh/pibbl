@@ -1052,11 +1052,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 47 unique, ordered, source-backed routes including standard shapes", () => {
+  it("contains 48 unique, ordered, source-backed routes including standard shapes", () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(47);
+    expect(learningExampleCatalog).toHaveLength(48);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1083,6 +1083,11 @@ describe("learning example catalog", () => {
       { route: "#/examples/drawing/wedge", api: ["Wedge"] },
       { route: "#/examples/drawing/polygon", api: ["Polygon"] },
     ]);
+    expect(
+      learningExampleCatalog
+        .filter((entry) => entry.section === "composition")
+        .map((entry) => entry.slug),
+    ).toEqual(["group", "clip", "filters", "layer"]);
   });
 
   it("teaches one complete createElement scene immediately after getting started", async () => {
@@ -1370,6 +1375,7 @@ describe("learning example catalog", () => {
         "Group",
         "Clip",
         "Layer",
+        "CRCFilter",
       ]),
     );
 

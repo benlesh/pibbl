@@ -67,7 +67,7 @@ export interface GridItemStyle extends SystemStyle {
 
 type LayoutParticipationKey = Exclude<
   keyof BoxStyle | keyof LayoutItemStyle,
-  'custom'
+  'custom' | 'filter'
 >;
 
 export type ResolvedDrawingStyle<S> = Omit<S, LayoutParticipationKey>;

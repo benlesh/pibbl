@@ -8,6 +8,7 @@ export {
   drawingShapesScenarioEntry,
   drawingTextScenarioEntry,
   focusNavigationScenarioEntry,
+  filterLabScenarioEntry,
   geometryMatrixScenarioEntry,
   getScenarioBySlug,
   getScenarioRoute,
@@ -22,6 +23,18 @@ export {
   runtimeHooksScenarioEntry,
   validateScenarioCatalog,
 } from './catalog';
+export type {
+  FilterLabMode,
+  FilterLabOrder,
+  FilterLabState,
+  FilterLabTarget,
+} from './filter-lab.example';
+export {
+  FILTER_LAB_PROBES,
+} from './filter-lab.example';
+export {
+  FILTER_LAB_ACTION_IDS,
+} from './filter-lab';
 export type {
   FocusNavigationAction,
   FocusNavigationActivationSource,

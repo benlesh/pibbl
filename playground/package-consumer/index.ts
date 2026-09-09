@@ -1,7 +1,10 @@
 import type {
   CRCConfig,
+  CRCBlurFilter,
+  CRCBrightnessFilter,
   CRCClipboardEvent,
   CRCCompositionEvent,
+  CRCContrastFilter,
   CRCController,
   CRCElement,
   CRCDragEvent,
@@ -16,21 +19,29 @@ import type {
   CRCEventTargetOptions,
   CRCEventTargetSnapshot,
   CRCEventType,
+  CRCFilter,
   CRCFit,
   CRCFixedViewportConfig,
   CRCFocusEvent,
+  CRCGrayscaleFilter,
+  CRCHueRotateFilter,
   CRCInputEvent,
+  CRCInvertFilter,
   CRCKeyboardEvent,
   CRCKeyboardNavigationOptions,
   CRCLogicalMouseEvent,
   CRCMouseEvent,
   CRCNode,
+  CRCOpacityFilter,
   CRCPixelRatio,
   CRCPointerEvent,
   CRCRef,
   CRCResponsiveViewportConfig,
+  CRCSaturateFilter,
+  CRCSepiaFilter,
   CRCTouchEvent,
   CRCWheelEvent,
+  CRCDropShadowFilter,
   ArcProps,
   ArcStyle,
   AbsoluteStyle,
@@ -217,6 +228,77 @@ const rectangleStyle = {
   fill: '#2563eb',
 } satisfies RectStyle;
 const rectangleProps = {} satisfies RectangleProps;
+
+const blurFilter: CRCBlurFilter = { type: 'blur', radius: 2 };
+const brightnessFilter: CRCBrightnessFilter = {
+  type: 'brightness',
+  amount: 1.25,
+};
+const contrastFilter: CRCContrastFilter = { type: 'contrast', amount: 0.8 };
+const dropShadowFilter: CRCDropShadowFilter = {
+  type: 'dropShadow',
+  offsetX: 3,
+  offsetY: 4,
+  blurRadius: 2,
+  color: 'rgb(0 0 0 / 40%)',
+};
+const grayscaleFilter: CRCGrayscaleFilter = {
+  type: 'grayscale',
+  amount: 0.5,
+};
+const hueRotateFilter: CRCHueRotateFilter = {
+  type: 'hueRotate',
+  degrees: 45,
+};
+const invertFilter: CRCInvertFilter = { type: 'invert', amount: 0.25 };
+const opacityFilter: CRCOpacityFilter = { type: 'opacity', amount: 0.75 };
+const saturateFilter: CRCSaturateFilter = { type: 'saturate', amount: 1.5 };
+const sepiaFilter: CRCSepiaFilter = { type: 'sepia', amount: 0.4 };
+const publicFilterList = [
+  blurFilter,
+  brightnessFilter,
+  contrastFilter,
+  dropShadowFilter,
+  grayscaleFilter,
+  hueRotateFilter,
+  invertFilter,
+  opacityFilter,
+  saturateFilter,
+  sepiaFilter,
+] as const satisfies readonly CRCFilter[];
+
+createElement(Rectangle, {
+  style: { ...rectangleStyle, filter: blurFilter },
+});
+createElement(Rectangle, {
+  style: { ...rectangleStyle, filter: publicFilterList },
+});
+createElement(Group, {
+  style: { filter: dropShadowFilter },
+  children: createElement(Rectangle, { style: rectangleStyle }),
+});
+createElement(Group, {
+  style: { filter: publicFilterList },
+  children: createElement(Rectangle, { style: rectangleStyle }),
+});
+createElement(Absolute, {
+  style: { width: 100, height: 50, filter: opacityFilter },
+  children: createElement(Rectangle, { style: rectangleStyle }),
+});
+createElement(Absolute, {
+  style: { width: 100, height: 50, filter: publicFilterList },
+  children: createElement(Rectangle, { style: rectangleStyle }),
+});
+
+// @ts-expect-error raw CSS strings are not CRC filters
+const raw: SystemStyle = { filter: 'blur(4px)' };
+// @ts-expect-error boxShadow is not a CRC system style property
+const box: SystemStyle = { boxShadow: { offsetX: 1 } };
+// @ts-expect-error url filters are excluded
+const url: CRCFilter = { type: 'url', value: '#filter' };
+void raw;
+void box;
+void url;
 
 export type PublicCoreTypes = typeof CoreTypes;
 export type PublicCoreEventTypes = [
@@ -678,6 +760,14 @@ createElement(StyledRuntimeProbe, { count: 2, style: { width: 3 } });
 createElement(StyledRuntimeProbe, {
   count: 2,
   style: { custom: { source: 'consumer' }, width: 3 },
+});
+createElement(StyledRuntimeProbe, {
+  count: 2,
+  style: { width: 3, filter: sepiaFilter },
+});
+createElement(StyledRuntimeProbe, {
+  count: 2,
+  style: { width: 3, filter: publicFilterList },
 });
 // @ts-expect-error declared styles remain closed to excess properties
 createElement(StyledRuntimeProbe, { count: 2, style: { unknown: true, width: 3 } });

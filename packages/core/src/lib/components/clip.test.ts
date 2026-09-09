@@ -6,6 +6,7 @@ import { Clip } from './clip';
 import { Rectangle } from './rect';
 import { Text } from './text';
 import { createElement } from '../element/create-element';
+import { Group } from './g';
 
 describe('clip', () => {
   it('uses style as the sole clipping-path authority', async () => {
@@ -164,6 +165,95 @@ describe('clip', () => {
       })]
     }));
     await takeScreenshot(page);
+  });
+
+  describe('filtered presentation order', () => {
+    it('filters the Clip subtree before applying the receiving Clip', async () => {
+      const clipPath = rectanglePath(0, 0, 30, 30);
+      const onClick = vi.fn();
+      const canvas = await componentTest(createElement(Clip, {
+        style: {
+          d: clipPath,
+          filter: {
+            type: 'dropShadow',
+            offsetX: 20,
+            offsetY: 0,
+            color: 'black',
+          },
+        },
+        children: createElement(Rectangle, {
+          style: { x: 5, y: 5, width: 10, height: 10, fill: 'red' },
+          onClick,
+        }),
+      }), { width: 60, height: 30 });
+
+      expect(pixelAt(canvas.element, 10, 10)).toEqual([255, 0, 0, 255]);
+      expect(pixelAt(canvas.element, 27, 10)).toEqual([0, 0, 0, 255]);
+      expect(pixelAt(canvas.element, 33, 10)).toEqual([0, 0, 0, 0]);
+      await canvas.click({ position: { x: 10, y: 10 } });
+      await canvas.click({ position: { x: 27, y: 10 } });
+      expect(onClick).toHaveBeenCalledTimes(1);
+    });
+
+    it('clips a completed inner filter at the ancestor Clip', async () => {
+      const clipPath = rectanglePath(0, 0, 30, 30);
+      const onClick = vi.fn();
+      const canvas = await componentTest(createElement(Clip, {
+        style: { d: clipPath },
+        children: createElement(Group, {
+          style: {
+            filter: {
+              type: 'dropShadow',
+              offsetX: 20,
+              offsetY: 0,
+              color: 'black',
+            },
+          },
+          children: createElement(Rectangle, {
+            style: { x: 5, y: 5, width: 10, height: 10, fill: 'red' },
+            onClick,
+          }),
+        }),
+      }), { width: 60, height: 30 });
+
+      expect(pixelAt(canvas.element, 10, 10)).toEqual([255, 0, 0, 255]);
+      expect(pixelAt(canvas.element, 27, 10)).toEqual([0, 0, 0, 255]);
+      expect(pixelAt(canvas.element, 33, 10)).toEqual([0, 0, 0, 0]);
+      await canvas.click({ position: { x: 10, y: 10 } });
+      await canvas.click({ position: { x: 27, y: 10 } });
+      expect(onClick).toHaveBeenCalledTimes(1);
+    });
+
+    it('uses a descendant Clip to form the filtered Group source silhouette', async () => {
+      const clipPath = rectanglePath(0, 0, 12, 30);
+      const onClick = vi.fn();
+      const canvas = await componentTest(createElement(Group, {
+        style: {
+          filter: {
+            type: 'dropShadow',
+            offsetX: 20,
+            offsetY: 0,
+            color: 'black',
+          },
+        },
+        children: createElement(Clip, {
+          style: { d: clipPath },
+          children: createElement(Rectangle, {
+            style: { x: 5, y: 5, width: 15, height: 10, fill: 'red' },
+            onClick,
+          }),
+        }),
+      }), { width: 60, height: 30 });
+
+      expect(pixelAt(canvas.element, 10, 10)).toEqual([255, 0, 0, 255]);
+      expect(pixelAt(canvas.element, 16, 10)).toEqual([0, 0, 0, 0]);
+      expect(pixelAt(canvas.element, 30, 10)).toEqual([0, 0, 0, 255]);
+      expect(pixelAt(canvas.element, 37, 10)).toEqual([0, 0, 0, 0]);
+      await canvas.click({ position: { x: 10, y: 10 } });
+      await canvas.click({ position: { x: 16, y: 10 } });
+      await canvas.click({ position: { x: 30, y: 10 } });
+      expect(onClick).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('clips with complex path', async () => {
@@ -340,3 +430,18 @@ describe('clip', () => {
     });
   });
 });
+
+function rectanglePath(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+): Path2D {
+  const path = new Path2D();
+  path.rect(x, y, width, height);
+  return path;
+}
+
+function pixelAt(canvas: HTMLCanvasElement, x: number, y: number): number[] {
+  return Array.from(canvas.getContext('2d')!.getImageData(x, y, 1, 1).data);
+}

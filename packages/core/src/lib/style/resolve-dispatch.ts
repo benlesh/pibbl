@@ -14,6 +14,8 @@ import type {
   SystemStyle,
 } from '../types.js';
 import { layoutDiagnostic } from './diagnostics.js';
+import { resolveFilterList } from './filter.js';
+import type { CRCFilter } from './filter-types.js';
 
 const opaqueStyleProperties = new WeakMap<Function, ReadonlySet<string>>();
 const preNormalizedStyles = new WeakMap<
@@ -49,6 +51,21 @@ export function registerOpaqueStyleProperties(
   opaqueStyleProperties.set(type, new Set(properties));
 }
 
+/** @internal Reads the framework-owned filter property from a system style. */
+export function extractSystemFilter(
+  style: Readonly<SystemStyle>,
+): CRCFilter | readonly CRCFilter[] | undefined {
+  return style.filter;
+}
+
+/** @internal Removes the framework-owned filter before custom style callbacks run. */
+export function withoutSystemFilter(
+  style: Readonly<SystemStyle>,
+): Readonly<SystemStyle> {
+  const { filter: _filter, ...withoutFilter } = style;
+  return Object.freeze(withoutFilter);
+}
+
 export function resolveElementStyle<
   S extends SystemStyle,
   N extends SystemStyle,
@@ -80,22 +97,27 @@ export function resolveElementStyle<
   const preNormalized = takePreNormalizedStyle(element);
   const specified = (getSpecifiedStyle(element) ?? EMPTY_STYLE) as
     SpecifiedStyle<S>;
+  const systemFilter = resolveFilterList(
+    extractSystemFilter(preNormalized?.style ?? specified),
+    context,
+  );
   const normalized = preNormalized ?
-      preNormalized.style as Readonly<N> :
+      withoutSystemFilter(preNormalized.style) as Readonly<N> :
     definition.normalizeStyle ?
-        definition.normalizeStyle(specified) :
-        specified as unknown as Readonly<N>;
+        definition.normalizeStyle(withoutSystemFilter(specified) as SpecifiedStyle<S>) :
+        withoutSystemFilter(specified) as unknown as Readonly<N>;
   const resolved = definition.resolveStyle ?
       definition.resolveStyle(normalized, context) :
       normalized as unknown as ResolvedStyle<R>;
+  const final = systemFilter ? { ...resolved, filter: systemFilter.values } : resolved;
   assertResolvedValue(
-    resolved,
+    final,
     '',
     context,
     new Set(),
     opaqueStyleProperties.get(type) ?? new Set(),
   );
-  return resolved;
+  return final;
 }
 
 function assertResolvedValue(
@@ -126,7 +148,7 @@ function assertResolvedValue(
     return;
   }
   if (!value || typeof value !== 'object' || seen.has(value)) return;
-  if (property === 'custom') return;
+  if (property === 'custom' || property === 'filter') return;
   const prototype = Object.getPrototypeOf(value);
   if (!Array.isArray(value) && prototype !== Object.prototype && prototype !== null) {
     return;

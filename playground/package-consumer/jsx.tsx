@@ -1,18 +1,32 @@
 import type {
+  CRCBlurFilter,
+  CRCBrightnessFilter,
+  CRCContrastFilter,
   CRCController,
+  CRCDropShadowFilter,
   CRCElement,
+  CRCFilter,
+  CRCGrayscaleFilter,
+  CRCHueRotateFilter,
+  CRCInvertFilter,
   CRCNode,
+  CRCOpacityFilter,
+  CRCSaturateFilter,
+  CRCSepiaFilter,
   CRCTextChild,
+  SystemStyle,
 } from '@crc/core';
 import {
   Absolute,
   Flex,
   Flow,
   Grid,
+  Group,
   Overlay,
   Rectangle,
   Text,
   crc,
+  definePrimitive,
 } from '@crc/core';
 import {
   Fragment as DevelopmentFragment,
@@ -24,6 +38,55 @@ function Label(props: { value: string; children?: CRCTextChild }): CRCNode {
   void props;
   return undefined;
 }
+
+const jsxFilterTypes = [
+  { type: 'blur', radius: 2 } satisfies CRCBlurFilter,
+  { type: 'brightness', amount: 1.25 } satisfies CRCBrightnessFilter,
+  { type: 'contrast', amount: 0.8 } satisfies CRCContrastFilter,
+  {
+    type: 'dropShadow',
+    offsetX: 3,
+    offsetY: 4,
+    color: 'black',
+  } satisfies CRCDropShadowFilter,
+  { type: 'grayscale', amount: 0.5 } satisfies CRCGrayscaleFilter,
+  { type: 'hueRotate', degrees: 45 } satisfies CRCHueRotateFilter,
+  { type: 'invert', amount: 0.25 } satisfies CRCInvertFilter,
+  { type: 'opacity', amount: 0.75 } satisfies CRCOpacityFilter,
+  { type: 'saturate', amount: 1.5 } satisfies CRCSaturateFilter,
+  { type: 'sepia', amount: 0.4 } satisfies CRCSepiaFilter,
+] as const satisfies readonly CRCFilter[];
+
+interface FilterPrimitiveStyle extends SystemStyle {
+  width: number;
+}
+
+const FilterPrimitive = definePrimitive<{}, FilterPrimitiveStyle>(
+  (_props, style, context) => {
+    context.fillRect(0, 0, style.width, style.width);
+  },
+);
+
+export const jsxFilterElements: readonly CRCElement[] = [
+  <Rectangle
+    style={{ width: 40, height: 20, filter: jsxFilterTypes[0] }}
+  />,
+  <Rectangle style={{ width: 40, height: 20, filter: jsxFilterTypes }} />,
+  <Group style={{ filter: jsxFilterTypes[3] }}>
+    <Rectangle style={{ width: 40, height: 20 }} />
+  </Group>,
+  <Group style={{ filter: jsxFilterTypes }}>
+    <Rectangle style={{ width: 40, height: 20 }} />
+  </Group>,
+  <Absolute style={{ width: 100, height: 50, filter: jsxFilterTypes[7] }}>
+    <Rectangle style={{ width: 40, height: 20 }} />
+  </Absolute>,
+  <Absolute style={{ width: 100, height: 50, filter: jsxFilterTypes }}>
+    <Rectangle style={{ width: 40, height: 20 }} />
+  </Absolute>,
+  <FilterPrimitive style={{ width: 12, filter: jsxFilterTypes[9] }} />,
+  <FilterPrimitive style={{ width: 12, filter: jsxFilterTypes }} />,
+];
 
 export const automaticElement: CRCElement = (
   <Label key="automatic" value="ready">
