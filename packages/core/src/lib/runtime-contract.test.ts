@@ -14,6 +14,7 @@ import { crcRef } from './hooks/crc-ref';
 import { crcState, type StateUpdater } from './hooks/crc-state';
 import type { CRCNode, SystemStyle } from './types';
 import { RegularPolygon } from './components/regular-polygon';
+import { Star } from './components/star';
 
 interface IdentityProbeProps {
   label: string;
@@ -365,6 +366,71 @@ describe('crc root updates', () => {
           cx: 40,
           cy: 40,
           circumradius: 20,
+          fill: '#2563eb',
+        },
+      }));
+      expect(() => pending?.(1)).not.toThrow();
+      expect(getCRCInstance(canvas).refs.size).toBe(1);
+    } finally {
+      window.requestAnimationFrame = originalRequestAnimationFrame;
+    }
+  });
+
+  it('cleans up an invalid star radius ordering and recovers on the same Canvas', () => {
+    const originalRequestAnimationFrame = window.requestAnimationFrame;
+    let pending: FrameRequestCallback | undefined;
+    window.requestAnimationFrame = callback => {
+      pending = callback;
+      return 1;
+    };
+    const canvas = createCanvas();
+    const cleanup = vi.fn();
+    const setup = vi.fn(() => cleanup);
+    const ResourceBearingSibling = (_props: {}) => {
+      crcWhenChanged(setup, []);
+      return createElement(Circle, {
+        style: { cx: 8, cy: 8, radius: 4, fill: '#2563eb' },
+        onClick: () => undefined,
+      });
+    };
+
+    try {
+      crc(canvas, [
+        createElement(ResourceBearingSibling, {}),
+        createElement(Star, {
+          style: {
+            points: 5,
+            outerRadius: 8,
+            innerRadius: 9,
+          },
+        }),
+      ]);
+
+      let failure: unknown;
+      try {
+        pending?.(0);
+      } catch (error) {
+        failure = error;
+      }
+      expect(failure).toBeInstanceOf(LayoutDiagnostic);
+      expect(failure).toMatchObject({
+        component: 'Star',
+        property: 'innerRadius',
+        algorithm: 'render-dispatch',
+      });
+      expect((failure as Error).message).toMatch(/outerRadius/);
+      expect(setup).toHaveBeenCalledOnce();
+      expect(cleanup).toHaveBeenCalledOnce();
+      expect(getCRCInstance(canvas).refs.size).toBe(0);
+      expect(getCRCInstance(canvas).eventRoot.targets.size).toBe(0);
+
+      crc(canvas, createElement(Star, {
+        style: {
+          points: 5,
+          cx: 40,
+          cy: 40,
+          outerRadius: 20,
+          innerRadius: 8,
           fill: '#2563eb',
         },
       }));

@@ -10,6 +10,7 @@ import {
 import { describe, expect, it, vi } from 'vitest';
 import { componentTest } from '../src/lib/test-utils/component-test';
 import { RegularPolygon } from '../src/lib/components/regular-polygon';
+import { Star } from '../src/lib/components/star';
 
 function pixelAt(canvas: HTMLCanvasElement, x: number, y: number) {
   return Array.from(canvas.getContext('2d')!.getImageData(x, y, 1, 1).data);
@@ -155,6 +156,35 @@ describe('public standard-shape declared-box allocation', () => {
     expect(pixelAt(canvas.element, 231, 100)).toEqual([0, 0, 0, 0]);
     await canvas.click({ position: { x: 200, y: 100 } });
     await canvas.click({ position: { x: 231, y: 100 } });
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it('places Star and resolves both radii against its declared box', async () => {
+    const onClick = vi.fn();
+    const canvas = await componentTest(createElement(Absolute, {
+      children: [createElement(Absolute, {
+        style: { left: 80, top: 40, width: 240, height: 120 },
+        children: [createElement(Star, {
+          style: {
+            width: 240,
+            height: 120,
+            points: 5,
+            cx: '50%',
+            cy: '50%',
+            outerRadius: '40%',
+            innerRadius: '20%',
+            fill: 'red',
+          },
+          onClick,
+        })],
+      })],
+    }));
+
+    expect(pixelAt(canvas.element, 200, 100)).toEqual([255, 0, 0, 255]);
+    expect(pixelAt(canvas.element, 200, 55)[3]).toBeGreaterThan(0);
+    expect(pixelAt(canvas.element, 200, 49)).toEqual([0, 0, 0, 0]);
+    await canvas.click({ position: { x: 200, y: 100 } });
+    await canvas.click({ position: { x: 200, y: 49 } });
     expect(onClick).toHaveBeenCalledOnce();
   });
 });
