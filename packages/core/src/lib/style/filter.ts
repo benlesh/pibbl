@@ -119,9 +119,10 @@ export function assertNativeFilter(
   cssText: string,
   component: string,
 ): void {
-  context.filter = 'none';
-  context.filter = cssText;
-  if (context.filter !== 'none') return;
+  const accessor = requireNativeFilterAccessor(context, component);
+  writeNativeFilter(context, accessor, 'none', component);
+  writeNativeFilter(context, accessor, cssText, component);
+  if (readNativeFilter(context, accessor, component) !== 'none') return;
 
   throw layoutDiagnostic({
     component,
@@ -130,6 +131,40 @@ export function assertNativeFilter(
     algorithm: 'filter-rendering',
     reason: 'the complete native Canvas filter chain is unsupported',
   });
+}
+
+export function assertNativeFilterCapability(
+  context: RenderingContext2D,
+  component: string,
+): void {
+  requireNativeFilterAccessor(context, component);
+}
+
+export function resetNativeFilter(
+  context: RenderingContext2D,
+  component: string,
+): void {
+  const accessor = requireNativeFilterAccessor(context, component);
+  writeNativeFilter(context, accessor, 'none', component);
+  if (readNativeFilter(context, accessor, component) !== 'none') {
+    throw nativeFilterDiagnostic(
+      component,
+      undefined,
+      'the native Canvas filter state could not reset to none',
+    );
+  }
+}
+
+export function resetNativeFilterIfSupported(
+  context: RenderingContext2D,
+): void {
+  try {
+    const accessor = requireNativeFilterAccessor(context, 'filter surface');
+    accessor.set.call(context, 'none');
+  } catch {
+    // Pool reset/release must not mask the boundary's component-aware
+    // capability diagnostic or an error already thrown by user rendering.
+  }
 }
 
 export function assertNativeFilterColors(
@@ -406,6 +441,110 @@ function acceptsNativeColor(
   } finally {
     context.fillStyle = previous;
   }
+}
+
+interface NativeFilterAccessor {
+  readonly get: (this: RenderingContext2D) => unknown;
+  readonly set: (this: RenderingContext2D, value: string) => void;
+}
+
+function requireNativeFilterAccessor(
+  context: RenderingContext2D,
+  component: string,
+): NativeFilterAccessor {
+  const ownDescriptor = Object.getOwnPropertyDescriptor(context, 'filter');
+  if (ownDescriptor) {
+    if (
+      !ownDescriptor.configurable ||
+      !Reflect.deleteProperty(context, 'filter')
+    ) {
+      throw nativeFilterDiagnostic(
+        component,
+        undefined,
+        'a shadowing own filter property could not be removed',
+      );
+    }
+  }
+
+  let prototype = Object.getPrototypeOf(context);
+  while (prototype) {
+    const descriptor = Object.getOwnPropertyDescriptor(prototype, 'filter');
+    if (descriptor) {
+      if (
+        typeof descriptor.get === 'function' &&
+        typeof descriptor.set === 'function'
+      ) {
+        return {
+          get: descriptor.get as NativeFilterAccessor['get'],
+          set: descriptor.set as NativeFilterAccessor['set'],
+        };
+      }
+      break;
+    }
+    prototype = Object.getPrototypeOf(prototype);
+  }
+
+  throw nativeFilterDiagnostic(
+    component,
+    undefined,
+    'requires native Canvas filter support with a getter and setter',
+  );
+}
+
+function readNativeFilter(
+  context: RenderingContext2D,
+  accessor: NativeFilterAccessor,
+  component: string,
+): string {
+  let value: unknown;
+  try {
+    value = accessor.get.call(context);
+  } catch {
+    throw nativeFilterDiagnostic(
+      component,
+      undefined,
+      'the native Canvas filter getter threw',
+    );
+  }
+  if (typeof value !== 'string') {
+    throw nativeFilterDiagnostic(
+      component,
+      value,
+      'the native Canvas filter getter returned a non-string value',
+    );
+  }
+  return value;
+}
+
+function writeNativeFilter(
+  context: RenderingContext2D,
+  accessor: NativeFilterAccessor,
+  value: string,
+  component: string,
+): void {
+  try {
+    accessor.set.call(context, value);
+  } catch {
+    throw nativeFilterDiagnostic(
+      component,
+      value,
+      'the native Canvas filter setter threw',
+    );
+  }
+}
+
+function nativeFilterDiagnostic(
+  component: string,
+  value: unknown,
+  reason: string,
+) {
+  return layoutDiagnostic({
+    component,
+    property: 'filter',
+    value,
+    algorithm: 'filter-rendering',
+    reason,
+  });
 }
 
 function assertNever(value: never): never {

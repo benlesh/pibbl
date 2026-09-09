@@ -7,8 +7,10 @@ import {
 } from '../render-target.js';
 import {
   assertNativeFilter,
+  assertNativeFilterCapability,
   assertNativeFilterColors,
   compileFilterList,
+  resetNativeFilter,
   type ResolvedFilterList,
 } from '../style/filter.js';
 import { copyFilterSourceState } from './canvas-state.js';
@@ -55,10 +57,7 @@ export function renderFilterBoundary(
   try {
     const { source, result } = pair;
     result.context.setTransform(1, 0, 0, 1, 0, 0);
-    const cssText = compileFilterList(input.filters, windows.density);
-    assertFilterCapability(result.context, input.component);
-    assertNativeFilterColors(result.context, input.filters, input.component);
-    assertNativeFilter(result.context, cssText, input.component);
+    validateNativeFilter(input, result.context, windows.density);
 
     copyFilterSourceState(parent, source.context);
     source.context.setTransform(windows.source.renderTransform);
@@ -134,6 +133,8 @@ function renderDiscardedBoundary(
   context.setTransform(1, 0, 0, 1, 0, 0);
   context.clearRect(0, 0, 1, 1);
   context.beginPath();
+  validateNativeFilter(input, context, 1);
+  resetNativeFilter(context, input.component);
   copyFilterSourceState(parent, context);
   const target: RenderTargetSnapshot = {
     logicalBounds: Object.freeze({ x: 0, y: 0, width: 1, height: 1 }),
@@ -155,28 +156,15 @@ function renderDiscardedBoundary(
   });
 }
 
-function assertFilterCapability(
+function validateNativeFilter(
+  input: Readonly<RenderFilterBoundaryInput>,
   context: OffscreenCanvasRenderingContext2D,
-  component: string,
+  density: number,
 ): void {
-  let prototype = Object.getPrototypeOf(context);
-  while (prototype) {
-    const descriptor = Object.getOwnPropertyDescriptor(prototype, 'filter');
-    if (descriptor) {
-      if (
-        typeof descriptor.get === 'function' &&
-        typeof descriptor.set === 'function'
-      ) {
-        return;
-      }
-      break;
-    }
-    prototype = Object.getPrototypeOf(prototype);
-  }
-  throw filterCapabilityError(
-    component,
-    'requires native Canvas filter support',
-  );
+  const cssText = compileFilterList(input.filters, density);
+  assertNativeFilterCapability(context, input.component);
+  assertNativeFilterColors(context, input.filters, input.component);
+  assertNativeFilter(context, cssText, input.component);
 }
 
 function filterCapabilityError(component: string, reason: string): Error {

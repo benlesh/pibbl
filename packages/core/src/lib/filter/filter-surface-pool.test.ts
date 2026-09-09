@@ -183,6 +183,52 @@ describe('filter surface pool', () => {
     second.release();
   });
 
+  it('scrubs image-backed pattern references as soon as a lease becomes idle', async () => {
+    const imageSource = new Image();
+    imageSource.src =
+      'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+    await imageSource.decode();
+    const pool = new FilterSurfacePool();
+    const pair = pool.checkoutPair(createWindows(40, 30, 20, 10));
+    const dimensions = [
+      pair.source.canvas.width,
+      pair.source.canvas.height,
+      pair.result.canvas.width,
+      pair.result.canvas.height,
+    ];
+    const patterns = [pair.source, pair.result].map(surface => {
+      const pattern = surface.context.createPattern(imageSource, 'repeat')!;
+      surface.context.fillStyle = pattern;
+      surface.context.strokeStyle = pattern;
+      return pattern;
+    });
+
+    try {
+      pair.release();
+
+      for (const [index, surface] of [pair.source, pair.result].entries()) {
+        expect(surface.context.fillStyle).toBe('#000000');
+        expect(surface.context.strokeStyle).toBe('#000000');
+        expect(surface.context.fillStyle).not.toBe(patterns[index]);
+        expect(surface.context.strokeStyle).not.toBe(patterns[index]);
+      }
+      expect([
+        pair.source.canvas.width,
+        pair.source.canvas.height,
+        pair.result.canvas.width,
+        pair.result.canvas.height,
+      ]).toEqual(dimensions);
+      expect(pool.snapshot()).toMatchObject({
+        activePairs: 0,
+        pairCheckouts: 1,
+        pairReturns: 1,
+        resized: 0,
+      });
+    } finally {
+      pool.dispose();
+    }
+  });
+
   it('enforces idempotent strict-LIFO leases', () => {
     const pool = new FilterSurfacePool();
     const windows = createWindows(40, 30, 20, 10);

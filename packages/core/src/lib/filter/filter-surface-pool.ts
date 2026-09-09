@@ -1,6 +1,7 @@
 import { GLOBAL_STATE } from '../global-state.js';
 import type { RenderTargetSnapshot } from '../render-target.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
+import { resetNativeFilterIfSupported } from '../style/filter.js';
 import type { FilterPixelWindow, FilterWindows } from './filter-region.js';
 
 const MAX_UNSIGNED_LONG = 0xffff_ffff;
@@ -88,6 +89,8 @@ export class FilterSurfacePool {
         released = true;
         this.activePairs = depth;
         this.pairReturns += 1;
+        scrubIdleSurface(source);
+        scrubIdleSurface(result);
       },
     };
   }
@@ -194,7 +197,7 @@ function installDefaultState(
 ): void {
   context.direction = 'inherit';
   context.fillStyle = '#000000';
-  context.filter = 'none';
+  resetNativeFilterIfSupported(context);
   context.font = '10px sans-serif';
   setIfPresent(context, 'fontKerning', 'auto');
   setIfPresent(context, 'fontStretch', 'normal');
@@ -219,6 +222,21 @@ function installDefaultState(
   context.textBaseline = 'alphabetic';
   setIfPresent(context, 'textRendering', 'auto');
   setIfPresent(context, 'wordSpacing', '0px');
+}
+
+function scrubIdleSurface(surface: FilterSurface): void {
+  const { context } = surface;
+  try {
+    context.fillStyle = '#000000';
+  } catch {
+    // A poisoned user-visible property must not mask an active render error.
+  }
+  try {
+    context.strokeStyle = '#000000';
+  } catch {
+    // CanvasGradient and CanvasPattern are the other reference-bearing state.
+  }
+  resetNativeFilterIfSupported(context);
 }
 
 function setIfPresent(

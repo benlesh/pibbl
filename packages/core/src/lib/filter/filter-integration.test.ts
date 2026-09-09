@@ -20,6 +20,9 @@ import { crcEventTarget } from '../hooks/crc-event-target.js';
 import { focusManaged } from '../focus/policy-test-support.js';
 import { executeRender } from '../execute-render.js';
 import { mountCRC } from '../mount-crc.js';
+import type { RenderTargetSnapshot } from '../render-target.js';
+import type { FilterSurfacePool } from './filter-surface-pool.js';
+import { renderFilterBoundary } from './render-filter-boundary.js';
 
 const controllers = new Set<CRCController>();
 
@@ -282,6 +285,7 @@ describe('filter integration', () => {
     const observations: Array<{
       canvas: RenderingContext2D['canvas'];
       transform: DOMMatrix;
+      filter: string;
     }> = [];
     const onClick = vi.fn();
     const Probe = definePrimitive<{}>((_props, _style, context) => {
@@ -289,6 +293,7 @@ describe('filter integration', () => {
       observations.push({
         canvas: context.canvas,
         transform: context.getTransform(),
+        filter: context.filter,
       });
       const path = new Path2D();
       path.rect(0, 0, 10, 10);
@@ -312,6 +317,7 @@ describe('filter integration', () => {
     expect(observations[0]!.canvas).toBeInstanceOf(OffscreenCanvas);
     expect(observations[0]!.canvas).not.toBe(canvas);
     expect(observations[0]!.transform).toEqual(new DOMMatrix());
+    expect(observations[0]!.filter).toBe('none');
     expect(parentDraw).not.toHaveBeenCalled();
     dispatchClick(canvas, 2, 2);
     expect(onClick).not.toHaveBeenCalled();
@@ -322,6 +328,152 @@ describe('filter integration', () => {
       pairCheckouts: 0,
       pairReturns: 0,
     });
+  });
+
+  it('rejects a zero-scale concrete native color before the discard callback', () => {
+    const callback = vi.fn();
+    const frames = controlFrames();
+    const baseline = temporaryGlobalSnapshot();
+    const canvas = mountScheduled(createElement(Group, {
+      style: {
+        scaleX: 0,
+        filter: {
+          type: 'dropShadow',
+          offsetX: 2,
+          offsetY: 2,
+          color: 'not-a-color',
+        },
+      },
+      children: createElement(filteredCallbackProbe(callback), {}),
+    }));
+
+    expect(() => frames.runNext())
+      .toThrow(/Group.*filter\.color.*native Canvas filter/i);
+    expectFailureBaseline(canvas, baseline, callback, 0, {
+      surfaceSlots: 0,
+      pairCheckouts: 0,
+      pairReturns: 0,
+    });
+  });
+
+  it('rejects a zero-scale contextual color before allocating a discard target', () => {
+    const callback = vi.fn();
+    const Probe = filteredCallbackProbe(callback);
+    const frames = controlFrames();
+    const baseline = temporaryGlobalSnapshot();
+    const offscreenConstructor = vi.spyOn(globalThis, 'OffscreenCanvas');
+    const canvas = mountScheduled(createElement(Group, {
+      style: {
+        scaleX: 0,
+        filter: {
+          type: 'dropShadow',
+          offsetX: 2,
+          offsetY: 2,
+          color: 'currentColor',
+        },
+      },
+      children: createElement(Probe, {}),
+    }));
+
+    expect(() => frames.runNext()).toThrow(/Group.*filter\.color.*contextual/i);
+    expect(offscreenConstructor).not.toHaveBeenCalled();
+    expectFailureBaseline(canvas, baseline, callback, 0, {
+      surfaceSlots: 0,
+      pairCheckouts: 0,
+      pairReturns: 0,
+    });
+  });
+
+  it('rejects zero-scale rendering when the native filter accessor is missing', () => {
+    const callback = vi.fn();
+    const frames = controlFrames();
+    const baseline = temporaryGlobalSnapshot();
+    const prototype = OffscreenCanvasRenderingContext2D.prototype;
+    const descriptor = Object.getOwnPropertyDescriptor(prototype, 'filter')!;
+    expect(Reflect.deleteProperty(prototype, 'filter')).toBe(true);
+    const canvas = mountScheduled(createElement(Group, {
+      style: { scaleX: 0, filter: { type: 'blur', radius: 1 } },
+      children: createElement(filteredCallbackProbe(callback), {}),
+    }));
+
+    try {
+      expect(() => frames.runNext())
+        .toThrow(/Group.*native Canvas filter support/i);
+      expectFailureBaseline(canvas, baseline, callback, 0, {
+        surfaceSlots: 0,
+        pairCheckouts: 0,
+        pairReturns: 0,
+      });
+    } finally {
+      Object.defineProperty(prototype, 'filter', descriptor);
+    }
+  });
+
+  it('rejects a zero-scale native chain before the discard callback', () => {
+    const callback = vi.fn();
+    const frames = controlFrames();
+    const baseline = temporaryGlobalSnapshot();
+    const prototype = OffscreenCanvasRenderingContext2D.prototype;
+    const descriptor = Object.getOwnPropertyDescriptor(prototype, 'filter')!;
+    let assigned = 'none';
+    Object.defineProperty(prototype, 'filter', {
+      configurable: true,
+      enumerable: descriptor.enumerable,
+      get() {
+        return assigned;
+      },
+      set(value: string) {
+        assigned = value === 'none' ? value : 'none';
+      },
+    });
+    const canvas = mountScheduled(createElement(Group, {
+      style: { scaleX: 0, filter: { type: 'blur', radius: 1 } },
+      children: createElement(filteredCallbackProbe(callback), {}),
+    }));
+
+    try {
+      expect(() => frames.runNext())
+        .toThrow(/Group.*complete native Canvas filter chain is unsupported/i);
+      expectFailureBaseline(canvas, baseline, callback, 0, {
+        surfaceSlots: 0,
+        pairCheckouts: 0,
+        pairReturns: 0,
+      });
+    } finally {
+      Object.defineProperty(prototype, 'filter', descriptor);
+    }
+  });
+
+  it('fails before a discard callback when the accepted chain cannot reset to none', () => {
+    const callback = vi.fn();
+    const frames = controlFrames();
+    const prototype = OffscreenCanvasRenderingContext2D.prototype;
+    const descriptor = Object.getOwnPropertyDescriptor(prototype, 'filter')!;
+    let assigned = 'none';
+    Object.defineProperty(prototype, 'filter', {
+      configurable: true,
+      enumerable: descriptor.enumerable,
+      get() {
+        return assigned;
+      },
+      set(value: string) {
+        if (assigned === 'none' || value !== 'none') assigned = value;
+      },
+    });
+    const canvas = mountScheduled(createElement(Group, {
+      style: { scaleX: 0, filter: { type: 'blur', radius: 1 } },
+      children: createElement(filteredCallbackProbe(callback), {}),
+    }));
+
+    try {
+      expect(() => frames.runNext())
+        .toThrow(/Group.*native Canvas filter state could not reset to none/i);
+      expect(callback).not.toHaveBeenCalled();
+      expect(getCRCInstance(canvas).filterSurfacePool.snapshot())
+        .toMatchObject({ activePairs: 0, pairCheckouts: 0, pairReturns: 0 });
+    } finally {
+      Object.defineProperty(prototype, 'filter', descriptor);
+    }
   });
 
   it('applies parent alpha, compositing, native filter, and shadow once to the completed boundary', async () => {
@@ -382,8 +534,9 @@ describe('filter integration', () => {
     }]);
   });
 
-  it('contains descendant alpha and compositing changes inside the captured source', async () => {
+  it('contains distinct descendant composite, native filter, and shadow effects inside capture', async () => {
     const finalStates: Array<ReturnType<typeof canvasState>> = [];
+    const siblingStates: Array<ReturnType<typeof canvasState>> = [];
     const nativeDrawImage = CanvasRenderingContext2D.prototype.drawImage;
     vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
       .mockImplementation(function(
@@ -394,18 +547,42 @@ describe('filter integration', () => {
         return nativeDrawImage.apply(this, args);
       });
     const StatefulChild = definePrimitive<{}>((_props, _style, context) => {
-      context.globalAlpha = 0.5;
-      context.globalCompositeOperation = 'copy';
+      context.fillStyle = 'red';
+      context.fillRect(2, 2, 8, 8);
+      context.globalCompositeOperation = 'destination-out';
+      context.fillRect(4, 4, 3, 3);
+      context.globalCompositeOperation = 'source-over';
       context.filter = 'invert(1)';
-      context.shadowColor = 'red';
+      context.fillStyle = 'red';
+      context.fillRect(14, 2, 8, 8);
+      context.filter = 'none';
+      context.shadowColor = 'blue';
       context.shadowOffsetX = 10;
-      context.fillStyle = 'blue';
-      context.fillRect(4, 4, 12, 12);
+      context.fillStyle = 'red';
+      context.fillRect(28, 2, 4, 6);
     });
-    const canvas = await renderScene(createElement(Group, {
-      style: { filter: { type: 'opacity', amount: 1 } },
-      children: createElement(StatefulChild, {}),
-    }), 40, 24);
+    const Sibling = definePrimitive<{}>((_props, _style, context) => {
+      siblingStates.push(canvasState(context));
+      context.fillStyle = 'green';
+      context.fillRect(42, 2, 8, 6);
+    });
+    const ParentClip = definePrimitive<{ children: CRCNode }>(
+      (props, _style, context) => {
+        const clip = new Path2D();
+        clip.rect(0, 0, 44, 16);
+        context.clip(clip);
+        return props.children;
+      },
+    );
+    const canvas = await renderScene(createElement(ParentClip, {
+      children: [
+        createElement(Group, {
+          style: { filter: { type: 'opacity', amount: 1 } },
+          children: createElement(StatefulChild, {}),
+        }),
+        createElement(Sibling, {}),
+      ],
+    }), 52, 18);
 
     expect(finalStates).toEqual([{
       alpha: 1,
@@ -416,8 +593,13 @@ describe('filter integration', () => {
       shadowOffsetX: 0,
       shadowOffsetY: 0,
     }]);
-    expect(pixel(canvas, 8, 8)[3]).toBeGreaterThanOrEqual(120);
-    expect(pixel(canvas, 8, 8)[3]).toBeLessThanOrEqual(136);
+    expect(siblingStates).toEqual(finalStates);
+    expect(pixel(canvas, 5, 5)).toEqual([0, 0, 0, 0]);
+    expect(pixel(canvas, 16, 5)).toEqual([0, 255, 255, 255]);
+    expect(pixel(canvas, 29, 4)).toEqual([255, 0, 0, 255]);
+    expect(pixel(canvas, 39, 4)).toEqual([0, 0, 255, 255]);
+    expect(pixel(canvas, 43, 4)).toEqual([0, 128, 0, 255]);
+    expect(pixel(canvas, 47, 4)).toEqual([0, 0, 0, 0]);
   });
 
   it('does not transfer an implicit path but preserves self-contained Path2D drawing', async () => {
@@ -623,6 +805,104 @@ describe('filter integration', () => {
 });
 
 describe('filter failure recovery', () => {
+  it('restores the exact active target, world, presentation, and clip stack before caller cleanup', () => {
+    const root = new OffscreenCanvas(32, 24);
+    const controller = mountCRC(root, undefined);
+    controllers.add(controller);
+    const instance = getCRCInstance(root);
+    const context = root.getContext('2d')!;
+    const target: RenderTargetSnapshot = {
+      logicalBounds: Object.freeze({ x: 0, y: 0, width: 32, height: 24 }),
+      backingWidth: 32,
+      backingHeight: 24,
+      renderTransform: new DOMMatrix(),
+      inverseRenderTransform: new DOMMatrix(),
+    };
+    const world = new DOMMatrix().translate(7, 9);
+    const parentClip = new Path2D();
+    parentClip.rect(0, 0, 12, 12);
+    context.clip(parentClip);
+    const priorClipEntry = {
+      path: parentClip,
+      fillRule: 'nonzero' as const,
+      transform: world,
+    };
+    const clippingStack = [priorClipEntry];
+    const boundaryClip = new Path2D();
+    boundaryClip.rect(2, 2, 6, 6);
+    const presentationTransform = new DOMMatrix().translate(3, 4);
+    context.globalAlpha = 0.625;
+    context.globalCompositeOperation = 'xor';
+    context.filter = 'contrast(0.5)';
+    context.shadowColor = 'blue';
+    context.shadowOffsetX = 2;
+    const state = canvasState(context);
+    const transform = context.getTransform();
+    const baseline = temporaryGlobalSnapshot();
+    GLOBAL_STATE.currentCRCInstance = instance;
+    GLOBAL_STATE.renderContext = context;
+    GLOBAL_STATE.renderTarget = target;
+    GLOBAL_STATE.worldBaseTransform = world;
+    GLOBAL_STATE.clippingStack = clippingStack;
+    let insideContext: RenderingContext2D | undefined;
+    let insideTarget: RenderTargetSnapshot | undefined;
+    let insideWorld: DOMMatrix | undefined;
+    let insideClipDepth = 0;
+
+    try {
+      expect(() => renderFilterBoundary({
+        component: 'BoundaryProbe',
+        filters: {
+          values: Object.freeze([{ type: 'blur' as const, radius: 1 }]),
+        },
+        presentation: {
+          transform: presentationTransform,
+          clip: { path: boundaryClip, fillRule: 'nonzero' },
+        },
+      }, () => {
+        insideContext = GLOBAL_STATE.renderContext;
+        insideTarget = GLOBAL_STATE.renderTarget;
+        insideWorld = GLOBAL_STATE.worldBaseTransform;
+        insideClipDepth = GLOBAL_STATE.clippingStack.length;
+        throw new Error('boundary-local failure');
+      })).toThrowError('boundary-local failure');
+
+      expect(insideContext).not.toBe(context);
+      expect(insideContext?.canvas).toBeInstanceOf(OffscreenCanvas);
+      expect(insideTarget).not.toBe(target);
+      expect(insideWorld).not.toBe(world);
+      expect(insideClipDepth).toBe(2);
+      expect(GLOBAL_STATE.renderContext).toBe(context);
+      expect(GLOBAL_STATE.renderTarget).toBe(target);
+      expect(GLOBAL_STATE.worldBaseTransform).toBe(world);
+      expect(GLOBAL_STATE.clippingStack).toBe(clippingStack);
+      expect(GLOBAL_STATE.clippingStack).toEqual([priorClipEntry]);
+      expect(context.getTransform()).toEqual(transform);
+      expect(canvasState(context)).toEqual(state);
+      expect(instance.filterSurfacePool.snapshot()).toMatchObject({
+        activePairs: 0,
+        pairCheckouts: 1,
+        pairReturns: 1,
+      });
+
+      context.globalAlpha = 1;
+      context.globalCompositeOperation = 'source-over';
+      context.filter = 'none';
+      context.shadowColor = 'rgba(0, 0, 0, 0)';
+      context.shadowOffsetX = 0;
+      context.fillStyle = 'green';
+      context.fillRect(0, 0, 32, 24);
+      expect(offscreenPixel(root, 4, 4)).toEqual([0, 128, 0, 255]);
+      expect(offscreenPixel(root, 20, 20)).toEqual([0, 0, 0, 0]);
+    } finally {
+      GLOBAL_STATE.currentCRCInstance = baseline.currentCRCInstance;
+      GLOBAL_STATE.renderContext = baseline.renderContext;
+      GLOBAL_STATE.renderTarget = baseline.renderTarget;
+      GLOBAL_STATE.worldBaseTransform = baseline.worldBaseTransform;
+      GLOBAL_STATE.clippingStack = baseline.clippingStack;
+    }
+  });
+
   it('fails before the callback when OffscreenCanvas is missing and recovers fresh', () => {
     const callback = vi.fn();
     const Probe = filteredCallbackProbe(callback);
@@ -644,25 +924,127 @@ describe('filter failure recovery', () => {
     expectFreshFilteredRecovery(frames);
   });
 
-  it('fails before the callback when the 2D filter property is missing and recovers fresh', () => {
+  it('recovers filtering on the same instance after a missing accessor without expando poisoning', () => {
     const callback = vi.fn();
-    const Probe = filteredCallbackProbe(callback);
+    const PixelProbe = definePrimitive<{}, SystemStyle>(function PixelProbe(
+      _props,
+      _style,
+      context,
+    ) {
+      callback();
+      context.fillStyle = 'red';
+      context.fillRect(1, 1, 5, 5);
+    });
     const frames = controlFrames();
-    const baseline = temporaryGlobalSnapshot();
+    const canvas = mountScheduled(createElement(PixelProbe, {
+      style: { filter: { type: 'opacity', amount: 1 } },
+    }));
+    frames.runNext();
+    expect(pixel(canvas, 2, 2)).toEqual([255, 0, 0, 255]);
+    const instance = getCRCInstance(canvas);
+    for (const context of idlePoolContexts(instance.filterSurfacePool)) {
+      Object.defineProperty(context, 'filter', {
+        configurable: true,
+        writable: true,
+        value: 'none',
+      });
+      expect(Object.hasOwn(context, 'filter')).toBe(true);
+    }
+    callback.mockClear();
+
     const prototype = OffscreenCanvasRenderingContext2D.prototype;
     const descriptor = Object.getOwnPropertyDescriptor(prototype, 'filter')!;
     expect(Reflect.deleteProperty(prototype, 'filter')).toBe(true);
+    crc(canvas, createElement(PixelProbe, {
+      style: { filter: { type: 'blur', radius: 1 } },
+    }));
+
+    try {
+      expect(() => frames.runNext())
+        .toThrow(/PixelProbe.*native Canvas filter support/i);
+      expect(callback).not.toHaveBeenCalled();
+      expect(instance.filterSurfacePool.snapshot()).toMatchObject({
+        activePairs: 0,
+        pairCheckouts: 2,
+        pairReturns: 2,
+      });
+      for (const context of idlePoolContexts(instance.filterSurfacePool)) {
+        expect(Object.hasOwn(context, 'filter')).toBe(false);
+      }
+    } finally {
+      Object.defineProperty(prototype, 'filter', descriptor);
+    }
+
+    crc(canvas, createElement(PixelProbe, {
+      style: { filter: { type: 'grayscale', amount: 1 } },
+    }));
+    expect(() => frames.runNext()).not.toThrow();
+    expect(callback).toHaveBeenCalledOnce();
+    expect(getCRCInstance(canvas)).toBe(instance);
+    const recovered = pixel(canvas, 2, 2);
+    expect(Math.max(recovered[0]!, recovered[1]!, recovered[2]!) -
+      Math.min(recovered[0]!, recovered[1]!, recovered[2]!))
+      .toBeLessThanOrEqual(2);
+    expect(recovered[0]).toBeGreaterThan(40);
+    expect(recovered[0]).toBeLessThan(80);
+  });
+
+  it('wraps a throwing native filter getter before the callback', () => {
+    const callback = vi.fn();
+    const Probe = filteredCallbackProbe(callback);
+    const frames = controlFrames();
+    const prototype = OffscreenCanvasRenderingContext2D.prototype;
+    const descriptor = Object.getOwnPropertyDescriptor(prototype, 'filter')!;
+    Object.defineProperty(prototype, 'filter', {
+      configurable: true,
+      enumerable: descriptor.enumerable,
+      get() {
+        throw new Error('hostile native filter getter');
+      },
+      set: descriptor.set,
+    });
     const canvas = mountScheduled(createElement(Probe, {
       style: { filter: { type: 'blur', radius: 1 } },
     }));
 
     try {
-      expect(() => frames.runNext()).toThrow(/Probe.*native Canvas filter support/i);
-      expectFailureBaseline(canvas, baseline, callback, 0);
+      expect(() => frames.runNext())
+        .toThrow(/Probe.*property filter.*native Canvas filter getter threw/i);
+      expect(callback).not.toHaveBeenCalled();
+      expect(getCRCInstance(canvas).filterSurfacePool.snapshot())
+        .toMatchObject({ activePairs: 0, pairCheckouts: 1, pairReturns: 1 });
     } finally {
       Object.defineProperty(prototype, 'filter', descriptor);
     }
-    expectFreshFilteredRecovery(frames);
+  });
+
+  it('wraps a throwing native filter setter before the callback', () => {
+    const callback = vi.fn();
+    const Probe = filteredCallbackProbe(callback);
+    const frames = controlFrames();
+    const prototype = OffscreenCanvasRenderingContext2D.prototype;
+    const descriptor = Object.getOwnPropertyDescriptor(prototype, 'filter')!;
+    Object.defineProperty(prototype, 'filter', {
+      configurable: true,
+      enumerable: descriptor.enumerable,
+      get: descriptor.get,
+      set() {
+        throw new Error('hostile native filter setter');
+      },
+    });
+    const canvas = mountScheduled(createElement(Probe, {
+      style: { filter: { type: 'blur', radius: 1 } },
+    }));
+
+    try {
+      expect(() => frames.runNext())
+        .toThrow(/Probe.*property filter.*native Canvas filter setter threw/i);
+      expect(callback).not.toHaveBeenCalled();
+      expect(getCRCInstance(canvas).filterSurfacePool.snapshot())
+        .toMatchObject({ activePairs: 0, pairCheckouts: 1, pairReturns: 1 });
+    } finally {
+      Object.defineProperty(prototype, 'filter', descriptor);
+    }
   });
 
   it('rejects a concrete native color before the callback and recovers fresh', () => {
@@ -755,28 +1137,126 @@ describe('filter failure recovery', () => {
     expectFreshFilteredRecovery(frames);
   });
 
-  it('returns the pair when a filtered descendant throws and recovers fresh', () => {
-    const parentCallback = vi.fn();
+  it('scrubs source pattern references when a filtered boundary throws', () => {
+    const patternSource = new OffscreenCanvas(2, 2);
+    const callback = vi.fn((_props: {}, _style: {}, context: RenderingContext2D) => {
+      const pattern = context.createPattern(patternSource, 'repeat')!;
+      context.fillStyle = pattern;
+      context.strokeStyle = pattern;
+      throw new Error('pattern-bearing primitive failed');
+    });
+    const Probe = definePrimitive<{}, SystemStyle>(callback);
+    const frames = controlFrames();
+    const canvas = mountScheduled(createElement(Probe, {
+      style: { filter: { type: 'blur', radius: 1 } },
+    }));
+
+    expect(() => frames.runNext())
+      .toThrowError('pattern-bearing primitive failed');
+    expect(callback).toHaveBeenCalledOnce();
+    const pool = getCRCInstance(canvas).filterSurfacePool;
+    expect(pool.snapshot()).toMatchObject({
+      activePairs: 0,
+      pairCheckouts: 1,
+      pairReturns: 1,
+    });
+    for (const context of idlePoolContexts(pool)) {
+      expect(context.fillStyle).toBe('#000000');
+      expect(context.strokeStyle).toBe('#000000');
+    }
+  });
+
+  it('preserves the original boundary failure when idle-state scrubbing also throws', () => {
+    let scrubWrites = 0;
+    const callback = vi.fn((_props: {}, _style: {}, context: RenderingContext2D) => {
+      Object.defineProperty(context, 'fillStyle', {
+        configurable: true,
+        get: () => '#000000',
+        set: () => {
+          scrubWrites += 1;
+          throw new Error('idle scrub failed');
+        },
+      });
+      throw new Error('original render failure');
+    });
+    const Probe = definePrimitive<{}, SystemStyle>(callback);
+    const frames = controlFrames();
+    const canvas = mountScheduled(createElement(Probe, {
+      style: { filter: { type: 'blur', radius: 1 } },
+    }));
+
+    expect(() => frames.runNext()).toThrowError('original render failure');
+    expect(scrubWrites).toBe(1);
+    expect(getCRCInstance(canvas).filterSurfacePool.snapshot()).toMatchObject({
+      activePairs: 0,
+      pairCheckouts: 1,
+      pairReturns: 1,
+    });
+  });
+
+  it('unwinds two filtered ancestors in strict LIFO target order when a descendant throws', () => {
+    const outerCallback = vi.fn();
+    const innerCallback = vi.fn();
     const descendantCallback = vi.fn(() => {
       throw new Error('filtered descendant failed');
     });
     const Descendant = definePrimitive<{}>(descendantCallback);
-    const Parent = definePrimitive<{ children: CRCNode }, SystemStyle>(
+    const Outer = definePrimitive<{ children: CRCNode }, SystemStyle>(
       props => {
-        parentCallback();
+        outerCallback();
+        return props.children;
+      },
+    );
+    const Inner = definePrimitive<{ children: CRCNode }, SystemStyle>(
+      props => {
+        innerCallback();
         return props.children;
       },
     );
     const frames = controlFrames();
     const baseline = temporaryGlobalSnapshot();
-    const canvas = mountScheduled(createElement(Parent, {
+    const canvas = mountScheduled(createElement(Outer, {
       style: { filter: { type: 'blur', radius: 1 } },
-      children: createElement(Descendant, {}),
+      children: createElement(Inner, {
+        style: { filter: { type: 'grayscale', amount: 1 } },
+        children: createElement(Descendant, {}),
+      }),
     }));
+    const instance = getCRCInstance(canvas);
+    const rootContext = canvas.getContext('2d')!;
+    const pool = instance.filterSurfacePool;
+    const checkoutPair = pool.checkoutPair.bind(pool);
+    const sources = new Map<number, RenderingContext2D>();
+    const releases: Array<{
+      depth: number;
+      context: RenderingContext2D | undefined;
+    }> = [];
+    vi.spyOn(pool, 'checkoutPair').mockImplementation(windows => {
+      const lease = checkoutPair(windows);
+      const depth = pool.snapshot().activePairs;
+      sources.set(depth, lease.source.context);
+      return {
+        ...lease,
+        release(): void {
+          releases.push({ depth, context: GLOBAL_STATE.renderContext });
+          lease.release();
+        },
+      };
+    });
 
     expect(() => frames.runNext()).toThrowError('filtered descendant failed');
-    expectFailureBaseline(canvas, baseline, parentCallback, 1);
+    expectFailureBaseline(canvas, baseline, outerCallback, 1, {
+      surfaceSlots: 4,
+      peakActivePairs: 2,
+      pairCheckouts: 2,
+      pairReturns: 2,
+    });
+    expect(innerCallback).toHaveBeenCalledOnce();
     expect(descendantCallback).toHaveBeenCalledOnce();
+    expect(releases).toEqual([
+      { depth: 2, context: sources.get(1) },
+      { depth: 1, context: rootContext },
+    ]);
     expectFreshFilteredRecovery(frames);
   });
 
@@ -978,7 +1458,22 @@ function dispatchClick(canvas: HTMLCanvasElement, x: number, y: number): void {
   }
 }
 
+function idlePoolContexts(
+  pool: FilterSurfacePool,
+): OffscreenCanvasRenderingContext2D[] {
+  const slots = (pool as unknown as {
+    readonly slots: ReadonlyArray<{
+      readonly context: OffscreenCanvasRenderingContext2D;
+    } | undefined>;
+  }).slots;
+  return slots.flatMap(slot => slot ? [slot.context] : []);
+}
+
 function pixel(canvas: HTMLCanvasElement, x: number, y: number): number[] {
+  return Array.from(canvas.getContext('2d')!.getImageData(x, y, 1, 1).data);
+}
+
+function offscreenPixel(canvas: OffscreenCanvas, x: number, y: number): number[] {
   return Array.from(canvas.getContext('2d')!.getImageData(x, y, 1, 1).data);
 }
 
