@@ -82,9 +82,16 @@ visual-regression/recovery safeguard, representative full-page Studio visuals,
 and a built-package smoke scenario. Semantic state and geometry assertions are
 the first-line oracle; exact pixels are used only where they add information.
 
-`trust:lifecycle` runs focused cleanup stress plus deterministic structural
-performance checks. Resource evidence uses exact acquisition/release ownership,
-not garbage-collection timing.
+`trust:lifecycle` runs focused cleanup stress plus deterministic filter ownership
+and structural-performance checks. The filter lifecycle suite fixes the workload
+at 1,000 unchanged rerenders, 100 sibling boundaries, and three nested boundaries,
+then checks exact scratch-slot creation, depth, checkout/return, resize, and release
+counts through replacement, failure, disposal, and a fresh remount. The filter
+performance suite fixes helper walks, primitive callbacks, surface construction,
+clears, filtered and parent draws, input pixel areas, pixel-readback calls, and
+bitmap transfers. Resource evidence uses exact acquisition/release ownership, not
+garbage-collection timing. Browser halo timing and pixels are scenario/visual
+evidence only; neither is a lifecycle or performance oracle.
 
 The unified GitHub Actions workflow runs the same responsibilities as parallel
 static, package, browser, and lifecycle jobs, then exposes one stable aggregate
