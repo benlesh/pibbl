@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   canonicalizeHash,
   parseStudioRoute,
+  resolveLearningExampleRoute,
   routeHref,
 } from "../src/app/routes";
 
@@ -105,6 +106,22 @@ describe("Studio routes", () => {
       canonical: "#/examples/made-up/filters?code=v1.abc",
       changed: false,
     });
+  });
+
+  it("resolves a live example only from its exact canonical route", () => {
+    expect(
+      resolveLearningExampleRoute(
+        parseStudioRoute("#/examples/drawing/filters"),
+      )?.slug,
+    ).toBe("filters");
+    expect(
+      resolveLearningExampleRoute(
+        parseStudioRoute("#/examples/made-up/filters"),
+      ),
+    ).toBeUndefined();
+
+    const legacy = canonicalizeHash("#/examples/composition/filters");
+    expect(resolveLearningExampleRoute(legacy.route)?.slug).toBe("filters");
   });
 
   it("canonicalizes old scenario routes", () => {

@@ -26,7 +26,10 @@ import { mountScenarioSurface } from "@crc/scenarios/surface";
 import { loadLearningSource } from "./learning-sources";
 import { loadScenarioSource } from "./scenario-sources";
 import { readSharedCode } from "./share-code";
-import { canonicalizeHash } from "./app/routes";
+import {
+  canonicalizeHash,
+  resolveLearningExampleRoute,
+} from "./app/routes";
 import "./style.css";
 
 type Route =
@@ -219,7 +222,7 @@ function parseRoute(): Route {
   }
   if (parsed.kind === "examples") return { kind: "examples" };
   if (parsed.kind === "example") {
-    const entry = getLearningExampleBySlug(parsed.slug);
+    const entry = resolveLearningExampleRoute(parsed);
     if (entry) {
       return { kind: "lesson", entry };
     }

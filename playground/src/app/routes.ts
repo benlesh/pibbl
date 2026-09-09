@@ -2,6 +2,7 @@ import {
   getLearningExampleBySlug,
   getLearningExampleLegacyRoutes,
   getLearningExampleRoute,
+  type LearningExampleCatalogEntry,
 } from "@crc/scenarios";
 
 const slug = "[a-z0-9]+(?:-[a-z0-9]+)*";
@@ -146,6 +147,21 @@ export function canonicalizeHash(hash: string): CanonicalRouteResult {
     changed: canonical !== hash,
     route: parseStudioRoute(canonical),
   };
+}
+
+/**
+ * Resolves a live example only when its parsed group and slug form the exact
+ * canonical route. Redirects belong to `canonicalizeHash`, before dispatch.
+ */
+export function resolveLearningExampleRoute(
+  route: ParsedStudioRoute,
+): LearningExampleCatalogEntry | undefined {
+  if (route.kind !== "example") return undefined;
+  const entry = getLearningExampleBySlug(route.slug);
+  const incoming = `#/examples/${route.group}/${route.slug}`;
+  return entry && getLearningExampleRoute(entry) === incoming
+    ? entry
+    : undefined;
 }
 
 function splitHash(hash: string): {
