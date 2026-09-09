@@ -1,5 +1,7 @@
 # Rounded Shapes and Path Creators Implementation Plan
 
+> **Historical status: APPROVED IMPLEMENTATION PLAN.**
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add rounded `Rectangle` and `Polygon` geometry, new `RegularPolygon` and `Star` drawing leaves, and public pure `Path2D` creators that are shared by components, hooks, clipping, and caller-authored paths.
