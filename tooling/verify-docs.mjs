@@ -1810,6 +1810,29 @@ export function assertAcceptanceMatrix(matrixSource) {
 }
 
 const libraryStatus = currentSources.get("docs/library-status.md");
+assert.match(
+  libraryStatus,
+  new RegExp(`\\b${rootExports.types.size} root type imports\\b`, "u"),
+  "Library status public-type count is stale.",
+);
+assert.match(
+  libraryStatus,
+  new RegExp(
+    `\\b${contractPreservationResult.baselineUnitCount} preserved baseline units and ` +
+      `${contractPreservationResult.currentUnitCount} current semantic units across all ` +
+      `${contractPreservationBaseline.contracts.length} normative contracts\\b`,
+    "u",
+  ),
+  "Library status baseline/current semantic-unit counts are stale.",
+);
+assert.match(
+  libraryStatus,
+  new RegExp(
+    `\\b${contractPreservationResult.evidenceMappingCount} unique direct source/test mappings\\b`,
+    "u",
+  ),
+  "Library status direct-evidence count is stale.",
+);
 const matrix = libraryStatus.slice(
   libraryStatus.indexOf("## Documentation acceptance matrix"),
   libraryStatus.indexOf("## Running locally"),
