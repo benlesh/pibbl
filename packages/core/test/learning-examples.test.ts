@@ -1095,7 +1095,23 @@ describe("learning example catalog", () => {
       (entry) => entry.section === "composition" && entry.slug === "clip",
     );
     expect(clip).toBeDefined();
+    expect(clip?.api).toEqual(["Clip", "createRegularPolygonPath"]);
+    expect(clip?.objectives).toEqual([
+      "Memoize a reusable hexagon Path2D with createRegularPolygonPath.",
+      "Use an inradius-defined hexagon to clip children and their interaction geometry.",
+    ]);
     expect(await loadLearningSource(clip!)).toContain("createRegularPolygonPath");
+    expect(await loadLearningSource(clip!)).toContain("crcMemo");
+
+    const regularPolygon = learningExampleCatalog.find(
+      (entry) => entry.slug === "regular-polygon",
+    );
+    expect(regularPolygon?.summary).toContain("equal sides and angles");
+
+    const star = learningExampleCatalog.find((entry) => entry.slug === "star");
+    expect(star?.apiNotes).toContain(
+      "A Star requires an integer point count of at least three and outerRadius at least as large as innerRadius.",
+    );
   });
 
   it("teaches one complete createElement scene immediately after getting started", async () => {
@@ -1375,6 +1391,7 @@ describe("learning example catalog", () => {
         "Polygon",
         "RegularPolygon",
         "Star",
+        "createRegularPolygonPath",
         "Path",
         "SvgPath",
         "Line",

@@ -133,6 +133,7 @@ describe('complete public drawing gallery', () => {
       'Polygon',
       'RegularPolygon',
       'Star',
+      'Clip',
       'createRegularPolygonPath',
       'Line',
       'HorizontalLine',

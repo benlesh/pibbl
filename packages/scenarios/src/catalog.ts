@@ -276,7 +276,7 @@ const drawingShapesMetadata: ScenarioMetadata = {
   title: 'Draw shapes',
   summary: 'Build rounded and conventional shapes, custom paths, and creator-based clipping, then update their geometry and styles.',
   category: 'Drawing basics',
-  apiTags: ['Rectangle', 'Path', 'SvgPath', 'Circle', 'Ellipse', 'Arc', 'Wedge', 'Polygon', 'RegularPolygon', 'Star', 'createRegularPolygonPath'],
+  apiTags: ['Rectangle', 'Path', 'SvgPath', 'Circle', 'Ellipse', 'Arc', 'Wedge', 'Polygon', 'RegularPolygon', 'Star', 'Clip', 'createRegularPolygonPath'],
   conceptTags: ['fill and stroke', 'custom geometry', 'curved geometry', 'rounded corners', 'generated geometry', 'clipping', 'pixel alignment', 'updates'],
   manualSteps: [
     {

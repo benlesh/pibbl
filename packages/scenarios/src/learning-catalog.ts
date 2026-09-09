@@ -301,7 +301,7 @@ const drafts = [
     shortTitle: "Regular polygon",
     section: "drawing",
     order: 75,
-    summary: "Generate an even-sided shape from a center and exactly one size mode.",
+    summary: "Generate a regular shape with equal sides and angles from a center and exactly one size mode.",
     api: ["RegularPolygon"],
     objectives: [
       "Choose circumradius, inradius, or sideLength as the one defining size.",
@@ -336,7 +336,7 @@ const drafts = [
       code: "Change points, radii, or alternating cornerRadii to reshape either star.",
     },
     apiNotes: [
-      "A Star requires a positive point count and outerRadius at least as large as innerRadius.",
+      "A Star requires an integer point count of at least three and outerRadius at least as large as innerRadius.",
       "cornerRadii follows the generated tip-and-valley traversal order.",
     ],
     canvas: { width: 720, height: 420 },
@@ -548,17 +548,19 @@ const drafts = [
     order: 110,
     summary:
       "Crop children to a reusable path while keeping interaction geometry honest.",
-    api: ["Clip"],
+    api: ["Clip", "createRegularPolygonPath"],
     objectives: [
-      "Limit a group of children to a Path2D boundary.",
-      "Use nonzero or even-odd fill rules for cutouts.",
+      "Memoize a reusable hexagon Path2D with createRegularPolygonPath.",
+      "Use an inradius-defined hexagon to clip children and their interaction geometry.",
     ],
     prompts: {
       gesture:
-        "Move around the circular window, including its cropped corners.",
-      code: "Shrink the window radius or switch the compound path to `evenodd`.",
+        "Move across the hexagon window, including its cropped corners.",
+      code: "Change the hexagon's inradius or sides, then compare the clipped region.",
     },
     apiNotes: [
+      "`crcMemo` keeps the created hexagon path stable while its dependencies are unchanged.",
+      "`createRegularPolygonPath` uses sides, center coordinates, and exactly one size mode such as inradius.",
       "Nested clips intersect, matching Canvas clipping behavior.",
       "Clip receives children directly, and both paint and targeting are constrained by its active path.",
     ],
