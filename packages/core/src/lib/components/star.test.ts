@@ -213,6 +213,47 @@ describe('Star', () => {
     expect(targets[1].keyboardNavigationBounds).toBe(override);
   });
 
+  it('keeps zero-radius generated-extrema bounds while an explicit override wins', async () => {
+    const override = { x: 1, y: 2, width: 3, height: 4 };
+    const canvas = await componentTest(createElement(Group, {
+      children: [
+        createElement(Star, {
+          style: {
+            points: 5,
+            cx: 60,
+            cy: 50,
+            outerRadius: 20,
+            innerRadius: 0,
+            fill: 'red',
+          },
+          onClick: vi.fn(),
+        }),
+        createElement(Star, {
+          style: {
+            points: 5,
+            cx: 160,
+            cy: 50,
+            outerRadius: 20,
+            innerRadius: 0,
+            fill: 'blue',
+          },
+          onClick: vi.fn(),
+          keyboardNavigationBounds: override,
+        }),
+      ],
+    }));
+    const targets = Array.from(getCRCInstance(canvas.element).eventRoot.targets);
+
+    expect(targets[0].keyboardNavigationBounds!.x)
+      .toBeCloseTo(60 - 20 * Math.cos(Math.PI / 10), 10);
+    expect(targets[0].keyboardNavigationBounds!.y).toBe(30);
+    expect(targets[0].keyboardNavigationBounds!.width)
+      .toBeCloseTo(40 * Math.cos(Math.PI / 10), 10);
+    expect(targets[0].keyboardNavigationBounds!.height)
+      .toBeCloseTo(20 + 20 * Math.sin((3 * Math.PI) / 10), 10);
+    expect(targets[1].keyboardNavigationBounds).toBe(override);
+  });
+
   it('updates geometry, then replaces and removes the drawing leaf', async () => {
     let advance!: () => void;
     const onClick = vi.fn();

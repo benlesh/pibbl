@@ -82,7 +82,16 @@ export function resolveStarGeometry(
   });
 
   if (outerRadius === 0 || innerRadius === 0) {
-    return { path: new Path2D(), vertices };
+    return {
+      path: new Path2D(),
+      vertices,
+      bounds: {
+        x: left,
+        y: top,
+        width: right - left,
+        height: bottom - top,
+      },
+    };
   }
 
   return {

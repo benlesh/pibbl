@@ -73,7 +73,7 @@ describe('createStarPath', () => {
     expect(vertices[1][1]).toBeCloseTo(-5 * Math.sqrt(2), 10);
   });
 
-  it('returns fresh empty paths for either zero radius after validating corners', () => {
+  it('returns fresh empty paths with generated-extrema bounds for either zero radius', () => {
     recording = installRecordingPath2D();
     const innerZero = {
       points: 5,
@@ -102,7 +102,13 @@ describe('createStarPath', () => {
     expect(geometry.vertices[0][0]).toBeCloseTo(5, 10);
     expect(geometry.vertices[0][1]).toBeCloseTo(-14, 10);
     expect(geometry.vertices[1]).toEqual([5, 6]);
-    expect(geometry.bounds).toBeUndefined();
+    expect(geometry.bounds!.x).toBeCloseTo(5 - 20 * Math.cos(Math.PI / 10), 10);
+    expect(geometry.bounds!.y).toBe(-14);
+    expect(geometry.bounds!.width).toBeCloseTo(40 * Math.cos(Math.PI / 10), 10);
+    expect(geometry.bounds!.height).toBeCloseTo(
+      20 + 20 * Math.sin((3 * Math.PI) / 10),
+      10,
+    );
     expect(() => createStarPath({
       ...innerZero,
       cornerRadii: Array.from({ length: 11 }, () => 0),
@@ -136,7 +142,7 @@ describe('createStarPath', () => {
     ]);
   });
 
-  it('builds one concave twelve-corner six-point silhouette without crossing strokes', () => {
+  it('records one concave twelve-corner six-point silhouette in alternating traversal order', () => {
     recording = installRecordingPath2D();
     const commands = recording.commands(createStarPath({
       points: 6,
@@ -144,8 +150,31 @@ describe('createStarPath', () => {
       innerRadius: 8,
     }));
 
-    expect(commands.filter(([name]) => name === 'moveTo')).toHaveLength(1);
-    expect(commands.filter(([name]) => name === 'lineTo')).toHaveLength(11);
+    const vertices = commands
+      .filter(command => command[0] === 'moveTo' || command[0] === 'lineTo')
+      .map(command => [command[1], command[2]] as const);
+
+    expect(vertices).toHaveLength(12);
+    const expected = [
+      [0, -20],
+      [4, -4 * Math.sqrt(3)],
+      [10 * Math.sqrt(3), -10],
+      [8, 0],
+      [10 * Math.sqrt(3), 10],
+      [4, 4 * Math.sqrt(3)],
+      [0, 20],
+      [-4, 4 * Math.sqrt(3)],
+      [-10 * Math.sqrt(3), 10],
+      [-8, 0],
+      [-10 * Math.sqrt(3), -10],
+      [-4, -4 * Math.sqrt(3)],
+    ] as const;
+    vertices.forEach(([x, y], index) => {
+      const [expectedX, expectedY] = expected[index];
+      expect(x).toBeCloseTo(expectedX, 10);
+      expect(y).toBeCloseTo(expectedY, 10);
+      expect(Math.hypot(x, y)).toBeCloseTo(index % 2 === 0 ? 20 : 8, 10);
+    });
     expect(commands.at(-1)).toEqual(['closePath']);
   });
 
