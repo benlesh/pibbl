@@ -18,6 +18,7 @@ function RectangleStudy() {
         width: 252,
         height: 316,
         fill: "#1f4bd8",
+        cornerRadius: 28,
       }}
     />,
     <Rectangle
@@ -30,6 +31,7 @@ function RectangleStudy() {
         stroke: "#17211d",
         strokeWidth: 6,
         cursor: "crosshair",
+        cornerRadii: [32, 8, 32, 8],
       }}
       onMouseOver={() => setHovered(true)}
       onMouseOut={() => setHovered(false)}

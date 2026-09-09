@@ -131,6 +131,9 @@ describe('complete public drawing gallery', () => {
       'Arc',
       'Wedge',
       'Polygon',
+      'RegularPolygon',
+      'Star',
+      'createRegularPolygonPath',
       'Line',
       'HorizontalLine',
       'VerticalLine',
@@ -145,18 +148,24 @@ describe('complete public drawing gallery', () => {
   it('drives every public shape update with exact interior, exterior, and stroke pixels', async () => {
     const shapes = await mountLesson<DrawingShapesState>(drawingShapesScenarioEntry);
     expect(shapes.controller.getState()).toEqual({
+      clippedHits: 0,
+      clippedMisses: 0,
       lastAction: 'mount',
+      roundedCutMisses: 0,
       revision: 0,
+      starHits: 0,
       updated: false,
     });
     expect(pixelAt(shapes.canvas, 10, 10)).toEqual([248, 250, 252, 255]);
     expect(pixelAt(shapes.canvas, 50, 50)).toEqual([37, 99, 235, 255]);
     expect(pixelAt(shapes.canvas, 242, 60)).toEqual([245, 158, 11, 255]);
     expect(pixelAt(shapes.canvas, 396, 60)).toEqual([16, 185, 129, 255]);
-    expect(pixelAt(shapes.canvas, 50, 170)).toEqual([239, 68, 68, 255]);
-    expect(pixelAt(shapes.canvas, 150, 170)).toEqual([34, 197, 94, 255]);
-    expect(pixelAt(shapes.canvas, 320, 170)).toEqual([226, 232, 240, 255]);
-    expect(pixelAt(shapes.canvas, 420, 170)).toEqual([99, 102, 241, 255]);
+    expect(pixelAt(shapes.canvas, 320, 60)).toEqual([99, 102, 241, 255]);
+    expect(pixelAt(shapes.canvas, 23, 145)).toEqual([239, 68, 68, 255]);
+    expect(pixelAt(shapes.canvas, 170, 180)).toEqual([247, 201, 72, 255]);
+    expect(pixelAt(shapes.canvas, 270, 180)).toEqual([244, 63, 94, 255]);
+    expect(pixelAt(shapes.canvas, 390, 180)).toEqual([20, 184, 166, 255]);
+    expect(pixelAt(shapes.canvas, 350, 140)).toEqual([248, 250, 252, 255]);
     expect(pixelAt(shapes.canvas, 30, 124)).toEqual([14, 165, 233, 255]);
     expect(pixelAt(shapes.canvas, 78, 124)).toEqual([249, 115, 22, 255]);
     expect(pixelAt(shapes.canvas, 125, 136)).toEqual([20, 184, 166, 255]);
@@ -164,10 +173,27 @@ describe('complete public drawing gallery', () => {
     expect(pixelAt(shapes.canvas, 220, 125)).toEqual([244, 63, 94, 255]);
     expect(pixelAt(shapes.canvas, 200, 124)).toEqual([248, 250, 252, 255]);
 
+    await userEvent.click(shapes.canvas, { position: { x: 270, y: 180 } });
+    await shapes.controller.settled();
+    expect(shapes.controller.getState()).toMatchObject({ starHits: 1 });
+    await userEvent.click(shapes.canvas, { position: { x: 23, y: 145 } });
+    await shapes.controller.settled();
+    expect(shapes.controller.getState()).toMatchObject({ roundedCutMisses: 1 });
+    await userEvent.click(shapes.canvas, { position: { x: 350, y: 140 } });
+    await shapes.controller.settled();
+    expect(shapes.controller.getState()).toMatchObject({ clippedMisses: 1 });
+    await userEvent.click(shapes.canvas, { position: { x: 390, y: 180 } });
+    await shapes.controller.settled();
+    expect(shapes.controller.getState()).toMatchObject({ clippedHits: 1 });
+
     await shapes.controller.perform('update-shapes');
     expect(shapes.controller.getState()).toEqual({
+      clippedHits: 1,
+      clippedMisses: 1,
       lastAction: 'update-shapes',
-      revision: 1,
+      roundedCutMisses: 1,
+      revision: 5,
+      starHits: 1,
       updated: true,
     });
     expect(pixelAt(shapes.canvas, 50, 50)).toEqual([124, 58, 237, 255]);
@@ -178,10 +204,17 @@ describe('complete public drawing gallery', () => {
     expect(pixelAt(shapes.canvas, 125, 136)).toEqual([250, 204, 21, 255]);
     expect(pixelAt(shapes.canvas, 175, 129)).toEqual([34, 197, 94, 255]);
     expect(pixelAt(shapes.canvas, 220, 125)).toEqual([59, 130, 246, 255]);
+    expect(pixelAt(shapes.canvas, 320, 60)).toEqual([139, 92, 246, 255]);
+    expect(pixelAt(shapes.canvas, 270, 180)).toEqual([236, 72, 153, 255]);
+    expect(pixelAt(shapes.canvas, 390, 180)).toEqual([34, 197, 94, 255]);
     await shapes.controller.reset();
     expect(shapes.controller.getState()).toEqual({
+      clippedHits: 0,
+      clippedMisses: 0,
       lastAction: 'reset',
+      roundedCutMisses: 0,
       revision: 0,
+      starHits: 0,
       updated: false,
     });
     await shapes.controller.dispose();

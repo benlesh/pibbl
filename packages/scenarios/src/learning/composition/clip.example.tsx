@@ -1,15 +1,19 @@
 import {
   Clip,
   crc,
+  crcMemo,
   crcState,
+  createRegularPolygonPath,
   Rectangle,
   Text,
   type CRCController,
 } from "@crc/core";
 function ClipStudy() {
   const [inside, setInside] = crcState(false);
-  const windowPath = new Path2D();
-  windowPath.arc(360, 210, 142, 0, Math.PI * 2);
+  const hexagon = crcMemo(
+    () => createRegularPolygonPath({ sides: 6, cx: 360, cy: 210, inradius: 142 }),
+    [],
+  );
   return [
     <Rectangle
       style={{
@@ -22,7 +26,7 @@ function ClipStudy() {
     />,
     <Clip
       style={{
-        d: windowPath,
+        d: hexagon,
       }}
     >
       <Rectangle
@@ -65,7 +69,7 @@ function ClipStudy() {
         textAlign: "center",
       }}
     >
-      {inside ? "INSIDE THE CLIP" : "CIRCULAR WINDOW"}
+      {inside ? "INSIDE THE CLIP" : "HEXAGON WINDOW"}
     </Text>,
   ];
 }

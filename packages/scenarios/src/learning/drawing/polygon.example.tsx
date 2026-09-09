@@ -19,6 +19,7 @@ function PolygonStudy() {
         fill: active ? "#14b8a6" : "#f59e0b",
         stroke: "#17211d",
         strokeWidth: 6,
+        cornerRadius: 18,
         cursor: "pointer",
       }}
       onClick={() => setActive((value) => !value)}

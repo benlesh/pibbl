@@ -194,12 +194,32 @@ export const drawingShapesScenario = createLessonDefinition<DrawingShapesState>(
   id: 'drawing-shapes',
   sourceId: DRAWING_SHAPES_SOURCE_ID,
   actionIds: DRAWING_SHAPES_ACTION_IDS,
-  renderScene: (canvas, state, signal) => {
-    crc(canvas, createDrawingShapesScene(state), { signal });
+  renderScene: (canvas, state, signal, updateState) => {
+    const record = (
+      action: Exclude<DrawingShapesAction, 'mount' | 'reset' | 'update-shapes'>,
+      counter: 'clippedHits' | 'clippedMisses' | 'roundedCutMisses' | 'starHits',
+    ) => {
+      updateState(current => ({
+        ...current,
+        [counter]: current[counter] + 1,
+        lastAction: action,
+        revision: current.revision + 1,
+      }));
+    };
+    crc(canvas, createDrawingShapesScene(state, {
+      onClippedHit: () => record('clipped-hit', 'clippedHits'),
+      onClippedMiss: () => record('clipped-miss', 'clippedMisses'),
+      onRoundedCutMiss: () => record('rounded-cut-miss', 'roundedCutMisses'),
+      onStarHit: () => record('star-hit', 'starHits'),
+    }), { signal });
   },
   initialState: lastAction => ({
+    clippedHits: 0,
+    clippedMisses: 0,
     lastAction: lastAction as DrawingShapesAction,
     revision: 0,
+    roundedCutMisses: 0,
+    starHits: 0,
     updated: false,
   }),
   update: (state, actionId) => nextToggleState(
@@ -208,7 +228,7 @@ export const drawingShapesScenario = createLessonDefinition<DrawingShapesState>(
   ),
   formatState: state => formatToggleState(
     state,
-    'Rectangle · Path · SvgPath · Circle · Ellipse · Arc · Wedge · Polygon',
+    'Rectangle · Path · SvgPath · Circle · Ellipse · Arc · Wedge · Polygon · RegularPolygon · Star · createRegularPolygonPath',
   ),
 });
 

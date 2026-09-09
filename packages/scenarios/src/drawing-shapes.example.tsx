@@ -1,12 +1,40 @@
-import { Arc, Circle, Ellipse, Path, Polygon, Rectangle, SvgPath, Wedge } from '@crc/core';
+import {
+  Arc,
+  Circle,
+  Clip,
+  createRegularPolygonPath,
+  Ellipse,
+  Path,
+  Polygon,
+  Rectangle,
+  RegularPolygon,
+  Star,
+  SvgPath,
+  Wedge,
+} from '@crc/core';
 export const DRAWING_SHAPES_SOURCE_ID = 'drawing-shapes-example';
-export type DrawingShapesAction = 'mount' | 'reset' | 'update-shapes';
+export type DrawingShapesAction =
+  | 'mount'
+  | 'reset'
+  | 'update-shapes'
+  | 'star-hit'
+  | 'rounded-cut-miss'
+  | 'clipped-hit'
+  | 'clipped-miss';
 export interface DrawingShapesState {
+  clippedHits: number;
+  clippedMisses: number;
   lastAction: DrawingShapesAction;
   revision: number;
+  roundedCutMisses: number;
+  starHits: number;
   updated: boolean;
 }
 interface DrawingShapesSceneProps {
+  onClippedHit: () => void;
+  onClippedMiss: () => void;
+  onRoundedCutMiss: () => void;
+  onStarHit: () => void;
   state: Readonly<DrawingShapesState>;
 }
 function trianglePath(updated: boolean): Path2D {
@@ -17,10 +45,21 @@ function trianglePath(updated: boolean): Path2D {
   triangle.closePath();
   return triangle;
 }
-function emptyPath(): Path2D {
-  return new Path2D();
+function clipHexagon(): Path2D {
+  return createRegularPolygonPath({
+    sides: 6,
+    cx: 390,
+    cy: 180,
+    inradius: 36,
+  });
 }
-const DrawingShapesScene = ({ state }: DrawingShapesSceneProps) => [
+export const DrawingShapesScene = ({
+  onClippedHit,
+  onClippedMiss,
+  onRoundedCutMiss,
+  onStarHit,
+  state,
+}: DrawingShapesSceneProps) => [
   <Rectangle
     key="background"
     style={{
@@ -38,6 +77,7 @@ const DrawingShapesScene = ({ state }: DrawingShapesSceneProps) => [
       y: state.updated ? 26 : 20,
       width: state.updated ? 132 : 120,
       height: state.updated ? 70 : 80,
+      cornerRadius: 18,
       fill: state.updated ? '#7c3aed' : '#2563eb',
       stroke: '#0f172a',
       strokeWidth: 3,
@@ -60,6 +100,19 @@ const DrawingShapesScene = ({ state }: DrawingShapesSceneProps) => [
         ? 'M 346 62 L 396 18 L 446 62 L 396 106 Z'
         : 'M 350 62 L 396 24 L 442 62 L 396 100 Z',
       fill: state.updated ? '#14b8a6' : '#10b981',
+      stroke: '#0f172a',
+      strokeWidth: 3,
+    }}
+  />,
+  <RegularPolygon
+    key="regular-polygon"
+    style={{
+      sides: 6,
+      cx: 320,
+      cy: 60,
+      circumradius: state.updated ? 36 : 32,
+      rotation: Math.PI / 6,
+      fill: state.updated ? '#8b5cf6' : '#6366f1',
       stroke: '#0f172a',
       strokeWidth: 3,
     }}
@@ -119,66 +172,86 @@ const DrawingShapesScene = ({ state }: DrawingShapesSceneProps) => [
       fill: state.updated ? '#3b82f6' : '#f43f5e',
     }}
   />,
-  // These underlays make invisible and boundary behavior easy to inspect.
   <Rectangle
+    key="rounded-cut-underlay"
     style={{
       x: 20,
       y: 142,
-      width: 72,
-      height: 62,
+      width: 92,
+      height: 64,
       fill: '#ef4444',
     }}
+    onClick={onRoundedCutMiss}
   />,
   <Rectangle
+    key="rounded-rectangle"
     style={{
       x: 20,
       y: 142,
-      width: 72,
-      height: 62,
+      width: 92,
+      height: 64,
       fill: '#2563eb',
-      opacity: 0,
+      cornerRadius: 22,
     }}
+  />,
+  <Polygon
+    key="rounded-polygon"
+    style={{
+      coords: [
+        [150, 145],
+        [190, 150],
+        [198, 190],
+        [170, 208],
+        [135, 185],
+      ],
+      cornerRadius: 10,
+      fill: state.updated ? '#f59e0b' : '#f7c948',
+      stroke: '#0f172a',
+      strokeWidth: 2,
+    }}
+  />,
+  <Star
+    key="star"
+    style={{
+      points: 5,
+      cx: 270,
+      cy: 180,
+      outerRadius: 30,
+      innerRadius: 14,
+      cornerRadii: [6, 0, 6, 0, 6, 0, 6, 0, 6, 0],
+      fill: state.updated ? '#ec4899' : '#f43f5e',
+      stroke: '#0f172a',
+      strokeWidth: 2,
+    }}
+    onClick={onStarHit}
   />,
   <Rectangle
+    key="clip-underlay"
     style={{
-      x: 120,
-      y: 142,
-      width: 72,
-      height: 62,
-      fill: '#22c55e',
+      x: 345,
+      y: 135,
+      width: 90,
+      height: 90,
+      fill: '#f8fafc',
     }}
+    onClick={onClippedMiss}
   />,
-  <Path
-    style={{
-      d: new Path2D('M 120 142 H 192 V 204 H 120 Z'),
-      fill: 'transparent',
-    }}
-  />,
-  <Rectangle
-    style={{
-      x: 294,
-      y: 142,
-      width: 72,
-      height: 62,
-      fill: '#e2e8f0',
-    }}
-  />,
-  <Path
-    style={{
-      d: emptyPath(),
-      fill: '#0f172a',
-    }}
-  />,
-  <Rectangle
-    style={{
-      x: 454,
-      y: 142,
-      width: -62,
-      height: 62,
-      fill: '#6366f1',
-    }}
-  />,
+  <Clip key="hexagon-clip" style={{ d: clipHexagon() }}>
+    <Rectangle
+      style={{
+        x: 345,
+        y: 135,
+        width: 90,
+        height: 90,
+        fill: state.updated ? '#22c55e' : '#14b8a6',
+      }}
+      onClick={onClippedHit}
+    />
+  </Clip>,
 ];
-export function createDrawingShapesScene(state: Readonly<DrawingShapesState>) {
-  return <DrawingShapesScene state={state} />;
+export function createDrawingShapesScene(
+  state: Readonly<DrawingShapesState>,
+  callbacks: Omit<DrawingShapesSceneProps, 'state'>,
+) {
+  return <DrawingShapesScene {...callbacks} state={state} />;
 }

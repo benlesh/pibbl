@@ -167,6 +167,7 @@ const drafts = [
     },
     apiNotes: [
       "A rectangle can be fill-only, stroke-only, or both.",
+      "cornerRadius and cornerRadii round every corner or target individual corners without changing the rectangle's box.",
       "Visual and layout values stay local under `style`; event handlers remain separate props.",
     ],
     canvas: { width: 720, height: 420 },
@@ -287,11 +288,60 @@ const drafts = [
     },
     apiNotes: [
       "Polygon closes the final point back to the first point automatically.",
+      "cornerRadius rounds each polygon vertex while keeping the original coordinate extrema.",
       "At least three finite coordinates are required to paint geometry.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["line", "path", "click"],
     load: () => import("./learning/drawing/polygon.example"),
+  },
+  {
+    slug: "regular-polygon",
+    title: "Regular polygon",
+    shortTitle: "Regular polygon",
+    section: "drawing",
+    order: 75,
+    summary: "Generate an even-sided shape from a center and exactly one size mode.",
+    api: ["RegularPolygon"],
+    objectives: [
+      "Choose circumradius, inradius, or sideLength as the one defining size.",
+      "Rotate a regular polygon without manually calculating its vertices.",
+    ],
+    prompts: {
+      gesture: "Compare the pentagon, hexagon, and square built from the three size modes.",
+      code: "Change sides or rotation while keeping exactly one of circumradius, inradius, or sideLength.",
+    },
+    apiNotes: [
+      "RegularPolygon accepts exactly one of circumradius, inradius, or sideLength.",
+      "rotation is measured in radians from the default upward first vertex.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["polygon", "star", "clip"],
+    load: () => import("./learning/drawing/regular-polygon.example"),
+  },
+  {
+    slug: "star",
+    title: "Star",
+    shortTitle: "Star",
+    section: "drawing",
+    order: 85,
+    summary: "Alternate outer tips and inner valleys to draw a star with selective rounded corners.",
+    api: ["Star"],
+    objectives: [
+      "Set points plus outerRadius and innerRadius to define the alternating vertices.",
+      "Round selected tips while preserving sharp valleys with cornerRadii.",
+    ],
+    prompts: {
+      gesture: "Compare the five-tip star with the selectively rounded seven-tip star.",
+      code: "Change points, radii, or alternating cornerRadii to reshape either star.",
+    },
+    apiNotes: [
+      "A Star requires a positive point count and outerRadius at least as large as innerRadius.",
+      "cornerRadii follows the generated tip-and-valley traversal order.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["regular-polygon", "polygon", "path"],
+    load: () => import("./learning/drawing/star.example"),
   },
   {
     slug: "path",

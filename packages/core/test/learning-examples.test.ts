@@ -1052,11 +1052,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 48 unique, ordered, source-backed routes including standard shapes", () => {
+  it("contains 50 unique, ordered, source-backed routes including standard shapes", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(48);
+    expect(learningExampleCatalog).toHaveLength(50);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1071,7 +1071,7 @@ describe("learning example catalog", () => {
     expect(
       learningExampleCatalog
         .filter((entry) =>
-          ["circle", "ellipse", "arc", "wedge", "polygon"].includes(
+          ["circle", "ellipse", "arc", "wedge", "polygon", "regular-polygon", "star"].includes(
             entry.slug,
           ),
         )
@@ -1082,12 +1082,20 @@ describe("learning example catalog", () => {
       { route: "#/examples/drawing/arc", api: ["Arc"] },
       { route: "#/examples/drawing/wedge", api: ["Wedge"] },
       { route: "#/examples/drawing/polygon", api: ["Polygon"] },
+      { route: "#/examples/drawing/regular-polygon", api: ["RegularPolygon"] },
+      { route: "#/examples/drawing/star", api: ["Star"] },
     ]);
     expect(
       learningExampleCatalog
         .filter((entry) => entry.section === "composition")
         .map((entry) => entry.slug),
     ).toEqual(["group", "clip", "filters", "layer"]);
+
+    const clip = learningExampleCatalog.find(
+      (entry) => entry.section === "composition" && entry.slug === "clip",
+    );
+    expect(clip).toBeDefined();
+    expect(await loadLearningSource(clip!)).toContain("createRegularPolygonPath");
   });
 
   it("teaches one complete createElement scene immediately after getting started", async () => {
@@ -1365,6 +1373,8 @@ describe("learning example catalog", () => {
         "Arc",
         "Wedge",
         "Polygon",
+        "RegularPolygon",
+        "Star",
         "Path",
         "SvgPath",
         "Line",

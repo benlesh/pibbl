@@ -274,22 +274,22 @@ const drawingShapesMetadata: ScenarioMetadata = {
   id: 'drawing-shapes',
   slug: 'drawing-shapes',
   title: 'Draw shapes',
-  summary: 'Build filled and stroked rectangles, conventional shapes, custom paths, and SVG paths, then update their geometry and styles.',
+  summary: 'Build rounded and conventional shapes, custom paths, and creator-based clipping, then update their geometry and styles.',
   category: 'Drawing basics',
-  apiTags: ['Rectangle', 'Path', 'SvgPath', 'Circle', 'Ellipse', 'Arc', 'Wedge', 'Polygon'],
-  conceptTags: ['fill and stroke', 'custom geometry', 'curved geometry', 'pixel alignment', 'updates'],
+  apiTags: ['Rectangle', 'Path', 'SvgPath', 'Circle', 'Ellipse', 'Arc', 'Wedge', 'Polygon', 'RegularPolygon', 'Star', 'createRegularPolygonPath'],
+  conceptTags: ['fill and stroke', 'custom geometry', 'curved geometry', 'rounded corners', 'generated geometry', 'clipping', 'pixel alignment', 'updates'],
   manualSteps: [
     {
-      action: 'Compare the rectangle, triangle, diamond, and compact curved-shape row.',
+      action: 'Compare the rounded rectangle, triangle, diamond, regular polygon, and compact curved-shape row.',
       expected: 'Each primitive shows deliberate fill or stroke geometry on a neutral background.',
     },
     {
       action: 'Choose Update shapes.',
-      expected: 'The rectangle, paths, circle, ellipse, arc, wedge, and polygon update together while the lower boundary examples remain stable.',
+      expected: 'The rectangle, paths, circle, ellipse, arc, wedge, polygon, regular polygon, star, and clipped fill update together.',
     },
     {
-      action: 'Inspect the lower row, then choose Reset.',
-      expected: 'Alpha-zero and transparent shapes reveal their red/green underlays, an empty path paints nothing, the negative-width rectangle extends left, and Reset restores the initial scene.',
+      action: 'Click the star, the rounded rectangle’s red corner cut, and inside and outside the hexagonal clip, then choose Reset.',
+      expected: 'Only retained star and clipped geometry receives its hit; the corner cut and outside-hex click reach their underlays, and Reset clears the counters.',
     },
   ],
   knownLimitations: [
