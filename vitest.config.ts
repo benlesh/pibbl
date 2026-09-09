@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { playwright } from '@vitest/browser-playwright';
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 import { assertBuiltCore } from './tooling/assert-built-core.ts';
 
 export default defineConfig(({ mode }) => ({
@@ -30,6 +30,7 @@ export default defineConfig(({ mode }) => ({
     ],
   },
   test: {
+    exclude: [...configDefaults.exclude, '.pnpm-store/**', '.superpowers/**'],
     browser: {
       enabled: true,
       headless: true,
