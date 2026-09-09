@@ -791,7 +791,10 @@ Expected: FAIL because the creator is absent.
 
 - [ ] **Step 3: Implement alternating-radius generation and wrapper**
 
-Validate before allocating or iterating. If either radius is zero, return an empty path and no default bounds. Otherwise generate `points * 2` vertices and delegate them to `createPolygonPath`.
+Validate before allocating or iterating. Always generate `points * 2` vertices
+and their extrema for default bounds. If either radius is zero, return an empty
+path while retaining those generated default bounds; otherwise delegate the
+vertices to `createPolygonPath`.
 
 ```ts
 const vertices = Array.from({ length: points * 2 }, (_, index) => {
