@@ -513,6 +513,7 @@ import {
   normalizeEdges,
   Overlay,
   Path,
+  Polygon,
   Rectangle,
   resolveBox,
   resolveLength,
@@ -556,6 +557,7 @@ import {
   type PrimitiveInput,
   type PrimitiveProgramProps,
   type PrimitiveRender,
+  type PolygonStyle,
   type RenderingContext2D,
   type ResolvedBoxStyle,
   type SystemStyle,
@@ -579,6 +581,8 @@ type StudioSignatureParity = [
       CRCFilter | readonly CRCFilter[] | undefined
     >
   >,
+  Assert<Equal<PolygonStyle['cornerRadius'], Exclude<Length, 'auto'> | undefined>>,
+  Assert<Equal<PolygonStyle['cornerRadii'], readonly (Exclude<Length, 'auto'> | null | undefined)[] | undefined>>,
   Assert<Equal<typeof crcMemo, <T>(create: () => T, deps: any[]) => T>>,
   Assert<Equal<
     typeof crcWhenChanged,
@@ -738,6 +742,7 @@ const focusableBuiltIns = (
     <Path keyboardFocusable keyboardNavigationBounds={navigationBounds} style={{ d: new Path2D() }} />
     <SvgPath keyboardFocusable keyboardNavigationBounds={navigationBounds} style={{ d: 'M 0 0 L 40 20' }} />
     <Line keyboardFocusable keyboardNavigationBounds={navigationBounds} style={{ coords: mutableLineCoordinates }} />
+    <Polygon style={{ coords: [[0, 0], [40, 0], [20, 20]], cornerRadius: 2, cornerRadii: [2, null] }} />
     <HorizontalLine keyboardFocusable keyboardNavigationBounds={navigationBounds} style={{ y: 10 }} />
     <VerticalLine keyboardFocusable keyboardNavigationBounds={navigationBounds} style={{ x: 10 }} />
     <Text keyboardFocusable keyboardNavigationBounds={navigationBounds}>Focusable text</Text>
@@ -745,6 +750,13 @@ const focusableBuiltIns = (
   </>
 );
 void focusableBuiltIns;
+
+const automaticPolygonCorner: PolygonStyle = {
+  coords: [[0, 0], [40, 0], [20, 20]],
+  // @ts-expect-error Polygon rounded corners exclude auto
+  cornerRadius: 'auto',
+};
+void automaticPolygonCorner;
 
 const readonlyLineCoordinates = [[0, 0], [40, 20]] as const;
 // @ts-expect-error LineStyle coordinates are mutable tuples in the package contract
