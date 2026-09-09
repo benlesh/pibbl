@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { crc } from '../crc';
 import { Layer } from '../components/layer';
-import { createElement } from '../element/create-element';
+import { Rectangle } from '../components/rect';
+import { createElement, isCRCElement } from '../element/create-element';
 import { executeRender } from '../execute-render';
 import {
   clearSharedState,
@@ -40,6 +41,7 @@ beforeEach(() => {
 afterEach(() => {
   clearSharedState();
   restoreDriver();
+  vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
 
@@ -127,6 +129,144 @@ describe('realm scheduler', () => {
     second.dispose();
   });
 
+  it('requeues a failed nested job and an unattempted latest root for deterministic retry', () => {
+    const nestedFailure = new Error('nested render failed');
+    const calls: string[] = [];
+    const canvas = createCanvas();
+    const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
+    const Initial = (_props: {}) => {
+      calls.push('parent:initial');
+      return createElement(Layer, {
+        style: { width: 20, height: 20 },
+        children: createElement(Rectangle, {
+          style: { width: 20, height: 20, fill: 'red' },
+        }),
+      });
+    };
+    const FailingChild = (_props: {}) => {
+      calls.push('child:failing');
+      throw nestedFailure;
+    };
+    const HealthyChild = (_props: {}) => {
+      calls.push('child:healthy');
+      return createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: 'blue' },
+      });
+    };
+    const Replacement = (_props: {}) => {
+      calls.push('parent:replacement');
+      return createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: 'green' },
+      });
+    };
+    const controller = crc(canvas, createElement(Initial, {}));
+    driver.flush(10);
+    const layerCanvas = drawImage.mock.calls
+      .map(([source]) => source)
+      .find(source => source instanceof OffscreenCanvas) as OffscreenCanvas;
+
+    update(layerCanvas, createElement(FailingChild, {}));
+    crc(canvas, createElement(Replacement, {}));
+    expect(() => driver.flush(20)).toThrow(nestedFailure);
+
+    expect(calls).toEqual(['parent:initial', 'child:failing']);
+    expect(snapshotRealmScheduler()).toMatchObject({
+      dirtyInstances: 2,
+      dirtyRoots: 1,
+      pendingHostFrames: 1,
+    });
+    const failedChild = getCRCInstance(layerCanvas);
+    const deferredParent = getCRCInstance(canvas);
+    expect(isCRCElement(failedChild.pendingRoot) && failedChild.pendingRoot.type)
+      .toBe(FailingChild);
+    expect(
+      isCRCElement(deferredParent.pendingRoot) && deferredParent.pendingRoot.type,
+    ).toBe(Replacement);
+    expect(failedChild.requestedRenderRevision).toBeGreaterThan(
+      failedChild.completedRenderRevision,
+    );
+    expect(deferredParent.requestedRenderRevision).toBeGreaterThan(
+      deferredParent.completedRenderRevision,
+    );
+
+    update(layerCanvas, createElement(HealthyChild, {}));
+    driver.flush(30);
+
+    expect(calls).toEqual([
+      'parent:initial',
+      'child:failing',
+      'child:healthy',
+      'parent:replacement',
+    ]);
+    expect(pixel(canvas, 5, 5)).toEqual([0, 128, 0, 255]);
+    expect(snapshotRealmScheduler()).toMatchObject({
+      dirtyInstances: 0,
+      dirtyRoots: 0,
+      pendingHostFrames: 0,
+    });
+    controller.dispose();
+  });
+
+  it('preserves a newer root queued while restoring a failed nested transaction', () => {
+    const nestedFailure = new Error('nested render failed after newer root');
+    const calls: string[] = [];
+    const canvas = createCanvas();
+    const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
+    const Initial = (_props: {}) => createElement(Layer, {
+      style: { width: 20, height: 20 },
+      children: createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: 'red' },
+      }),
+    });
+    const OlderReplacement = (_props: {}) => {
+      calls.push('parent:older');
+    };
+    const NewerReplacement = (_props: {}) => {
+      calls.push('parent:newer');
+    };
+    const FailingChild = (_props: {}) => {
+      calls.push('child:failing');
+      crc(canvas, createElement(NewerReplacement, {}));
+      throw nestedFailure;
+    };
+    const HealthyChild = (_props: {}) => {
+      calls.push('child:healthy');
+    };
+    const controller = crc(canvas, createElement(Initial, {}));
+    driver.flush(10);
+    const layerCanvas = drawImage.mock.calls
+      .map(([source]) => source)
+      .find(source => source instanceof OffscreenCanvas) as OffscreenCanvas;
+
+    update(layerCanvas, createElement(FailingChild, {}));
+    crc(canvas, createElement(OlderReplacement, {}));
+    expect(() => driver.flush(20)).toThrow(nestedFailure);
+
+    expect(snapshotRealmScheduler()).toMatchObject({
+      dirtyInstances: 2,
+      dirtyRoots: 1,
+      pendingHostFrames: 1,
+    });
+    const pendingParent = getCRCInstance(canvas).pendingRoot;
+    expect(isCRCElement(pendingParent) && pendingParent.type)
+      .toBe(NewerReplacement);
+
+    update(layerCanvas, createElement(HealthyChild, {}));
+    driver.flush(30);
+
+    expect(calls).toEqual([
+      'child:failing',
+      'child:healthy',
+      'parent:newer',
+    ]);
+    expect(snapshotRealmScheduler()).toMatchObject({
+      dirtyInstances: 0,
+      dirtyRoots: 0,
+      pendingHostFrames: 0,
+    });
+    controller.dispose();
+  });
+
   it('defers a request made during Render until the next frame', () => {
     const canvas = createCanvas();
     const renders: string[] = [];
@@ -176,6 +316,60 @@ describe('realm scheduler', () => {
     controller.dispose();
   });
 
+  it('defers a late explicit Layer request with every ancestor composite job', () => {
+    const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
+    const canvas = createCanvas();
+    let rootRenders = 0;
+    const Root = (_props: {}) => {
+      rootRenders++;
+      return createElement(Layer, {
+        style: { width: 20, height: 20 },
+        children: createElement(Rectangle, {
+          style: { width: 20, height: 20, fill: 'red' },
+        }),
+      });
+    };
+    const controller = crc(canvas, createElement(Root, {}));
+    driver.flush(10);
+    const layerCanvas = drawImage.mock.calls
+      .map(([source]) => source)
+      .find(source => source instanceof OffscreenCanvas) as OffscreenCanvas;
+    expect(pixel(canvas, 5, 5)).toEqual([255, 0, 0, 255]);
+
+    let releaseAdvance = () => {};
+    releaseAdvance = registerAdvanceParticipant(() => {
+      update(layerCanvas, createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: 'blue' },
+      }));
+      releaseAdvance();
+    });
+    driver.flush(20);
+
+    expect(rootRenders).toBe(1);
+    expect(pixel(canvas, 5, 5)).toEqual([255, 0, 0, 255]);
+    expect(snapshotRealmScheduler()).toMatchObject({
+      dirtyInstances: 2,
+      dirtyRoots: 1,
+      pendingHostFrames: 1,
+    });
+    expect(getCRCInstance(layerCanvas).requestedRenderRevision).toBeGreaterThan(
+      getCRCInstance(layerCanvas).completedRenderRevision,
+    );
+    expect(getCRCInstance(canvas).requestedRenderRevision).toBeGreaterThan(
+      getCRCInstance(canvas).completedRenderRevision,
+    );
+
+    driver.flush(30);
+    expect(rootRenders).toBe(2);
+    expect(pixel(canvas, 5, 5)).toEqual([0, 0, 255, 255]);
+    expect(snapshotRealmScheduler()).toMatchObject({
+      dirtyInstances: 0,
+      dirtyRoots: 0,
+      pendingHostFrames: 0,
+    });
+    controller.dispose();
+  });
+
   it('cancels exactly one pending host callback when the final dirty root is removed', () => {
     const controller = crc(createCanvas(), createElement(() => undefined, {}));
     expect(driver.pendingHostFrames).toBe(1);
@@ -187,6 +381,47 @@ describe('realm scheduler', () => {
     expect(driver.pendingHostFrames).toBe(0);
     expect(snapshotRealmScheduler()).toMatchObject({
       registeredRoots: 0,
+      dirtyRoots: 0,
+      pendingHostFrames: 0,
+    });
+  });
+
+  it('releases provisional dirty work when an already-aborted mount disposes', () => {
+    const canvas = createCanvas();
+    installSynchronousResizeChange(canvas);
+    const abortController = new AbortController();
+    abortController.abort();
+
+    const controller = crc(
+      canvas,
+      createElement(() => undefined, {}),
+      { signal: abortController.signal },
+    );
+
+    expect(snapshotRealmScheduler()).toMatchObject({
+      registeredRoots: 0,
+      dirtyInstances: 0,
+      dirtyRoots: 0,
+      pendingHostFrames: 0,
+    });
+    expect(driver.cancelCount).toBe(1);
+    controller.dispose();
+  });
+
+  it('releases provisional dirty work when requesting the setup frame throws', () => {
+    const canvas = createCanvas();
+    installSynchronousResizeChange(canvas);
+    const setupFailure = new Error('host frame request failed');
+    vi.spyOn(driver, 'requestFrame').mockImplementationOnce(() => {
+      throw setupFailure;
+    });
+
+    expect(() => crc(canvas, createElement(() => undefined, {})))
+      .toThrow(setupFailure);
+
+    expect(snapshotRealmScheduler()).toMatchObject({
+      registeredRoots: 0,
+      dirtyInstances: 0,
       dirtyRoots: 0,
       pendingHostFrames: 0,
     });
@@ -261,6 +496,52 @@ describe('realm scheduler', () => {
       'second:20',
       'late-complete',
     ]);
+    expect(driver.pendingHostFrames).toBe(0);
+  });
+
+  it('defers a same-callback Advance re-registration until the next Begin', () => {
+    const calls: string[] = [];
+    let releaseGate = () => {};
+    let releaseOriginal = () => {};
+    let releaseReplacement = () => {};
+    const shared: CRCAdvanceParticipant = snapshot => {
+      calls.push(`shared:${snapshot.hostTime}`);
+      releaseReplacement();
+    };
+    releaseGate = registerAdvanceParticipant(snapshot => {
+      calls.push(`gate:${snapshot.hostTime}`);
+      releaseGate();
+      releaseOriginal();
+      releaseReplacement = registerAdvanceParticipant(shared);
+    });
+    releaseOriginal = registerAdvanceParticipant(shared);
+
+    driver.flush(10);
+    expect(calls).toEqual(['gate:10']);
+    expect(driver.pendingHostFrames).toBe(1);
+
+    driver.flush(20);
+    expect(calls).toEqual(['gate:10', 'shared:20']);
+    expect(driver.pendingHostFrames).toBe(0);
+  });
+
+  it('owns concurrent registrations of one Advance callback independently', () => {
+    const calls: number[] = [];
+    const shared: CRCAdvanceParticipant = snapshot => {
+      calls.push(snapshot.hostTime);
+    };
+    const releaseFirst = registerAdvanceParticipant(shared);
+    const releaseSecond = registerAdvanceParticipant(shared);
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(2);
+
+    releaseFirst();
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(1);
+    expect(driver.pendingHostFrames).toBe(1);
+
+    driver.flush(30);
+    expect(calls).toEqual([30]);
+    releaseSecond();
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(0);
     expect(driver.pendingHostFrames).toBe(0);
   });
 
@@ -393,4 +674,29 @@ function createCanvas(): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   document.body.appendChild(canvas);
   return canvas;
+}
+
+function installSynchronousResizeChange(canvas: HTMLCanvasElement): void {
+  let boundsReadCount = 0;
+  vi.spyOn(canvas, 'getBoundingClientRect').mockImplementation(() => {
+    const width = boundsReadCount++ === 0 ? 100 : 200;
+    return DOMRect.fromRect({ width, height: 100 });
+  });
+  vi.stubGlobal('ResizeObserver', class implements ResizeObserver {
+    constructor(private readonly callback: ResizeObserverCallback) {}
+
+    observe(): void {
+      this.callback([], this);
+    }
+
+    unobserve(): void {}
+    disconnect(): void {}
+    takeRecords(): ResizeObserverEntry[] {
+      return [];
+    }
+  });
+}
+
+function pixel(canvas: HTMLCanvasElement, x: number, y: number): number[] {
+  return Array.from(canvas.getContext('2d')!.getImageData(x, y, 1, 1).data);
 }

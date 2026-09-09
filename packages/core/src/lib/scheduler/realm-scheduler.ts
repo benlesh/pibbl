@@ -21,6 +21,7 @@ interface InstanceRenderJob {
   readonly instance: CRCInstance;
   readonly revision: number;
   readonly pendingRoot: CRCInstance['pendingRoot'];
+  readonly pendingUpdateParents: boolean;
 }
 
 interface RootRenderJob {
@@ -32,9 +33,14 @@ interface RootTransaction extends CRCRenderTransaction {
   finish(success: boolean): void;
 }
 
+interface AdvanceRegistration {
+  readonly participant: CRCAdvanceParticipant;
+  active: boolean;
+}
+
 const registeredRoots = new Set<CRCInstance>();
 const dirtyInstances = new Set<CRCInstance>();
-const advanceParticipants = new Set<CRCAdvanceParticipant>();
+const advanceRegistrations = new Set<AdvanceRegistration>();
 const frameCompletions: CRCFrameCompletion[] = [];
 
 let phase: CRCFramePhase = 'idle';
@@ -51,9 +57,7 @@ export function registerRootInstance(instance: CRCInstance): void {
 }
 
 export function unregisterRootInstance(instance: CRCInstance): void {
-  if (!registeredRoots.delete(instance)) {
-    return;
-  }
+  registeredRoots.delete(instance);
   removeRootWork(instance);
   cancelIdleHostFrame();
 }
@@ -73,13 +77,13 @@ export function requestInstanceRender(instance: CRCInstance): number {
 export function registerAdvanceParticipant(
   participant: CRCAdvanceParticipant,
 ): () => void {
-  advanceParticipants.add(participant);
+  const registration: AdvanceRegistration = { participant, active: true };
+  advanceRegistrations.add(registration);
   requestHostFrameIfNeeded();
-  let registered = true;
   return () => {
-    if (!registered) return;
-    registered = false;
-    advanceParticipants.delete(participant);
+    if (!registration.active) return;
+    registration.active = false;
+    advanceRegistrations.delete(registration);
     cancelIdleHostFrame();
   };
 }
@@ -98,8 +102,9 @@ export function snapshotRealmScheduler(): RealmSchedulerSnapshot {
     phase,
     pendingHostFrames: pendingHostFrame === undefined ? 0 : 1,
     registeredRoots: registeredRoots.size,
+    dirtyInstances: dirtyInstances.size,
     dirtyRoots: countDirtyRoots(),
-    registeredAdvanceParticipants: advanceParticipants.size,
+    registeredAdvanceParticipants: advanceRegistrations.size,
     queuedFrameCompletions: frameCompletions.length,
     currentFrame,
   });
@@ -146,13 +151,14 @@ function runFrame(hostTime: number): void {
 
   phase = 'begin';
   let rootJobs = captureRootJobs();
-  const participants = Array.from(advanceParticipants);
+  const registrations = Array.from(advanceRegistrations);
   const completions = frameCompletions.splice(0);
   const batch = createSignalCommitBatch();
 
   phase = 'advance';
-  for (const participant of participants) {
-    if (!advanceParticipants.has(participant)) continue;
+  for (const registration of registrations) {
+    if (!registration.active) continue;
+    const { participant } = registration;
     try {
       participant(snapshot, batch);
     } catch (error) {
@@ -185,17 +191,23 @@ function runFrame(hostTime: number): void {
     const transactionRecord = { root: rootJob.root, transaction, success: false };
     transactions.push(transactionRecord);
     rootJob.root.eventRoot.renderTransaction = transaction;
+    let failedInstance: CRCInstance | undefined;
     try {
       const completedJobs: InstanceRenderJob[] = [];
       for (const job of rootJob.instances) {
         if (job.instance.mainTeardowns.closed) continue;
-        executeRender(
-          job.instance.canvas,
-          snapshot.logicalTime,
-          job.pendingRoot,
-          false,
-          snapshot,
-        );
+        try {
+          executeRender(
+            job.instance.canvas,
+            snapshot.logicalTime,
+            job.pendingRoot,
+            false,
+            snapshot,
+          );
+        } catch (error) {
+          failedInstance = job.instance;
+          throw error;
+        }
         completedJobs.push(job);
       }
       for (const job of completedJobs) {
@@ -203,6 +215,9 @@ function runFrame(hostTime: number): void {
       }
       transactionRecord.success = true;
     } catch (error) {
+      if (failedInstance && failedInstance !== rootJob.root) {
+        restoreRootJob(rootJob);
+      }
       errors.push(error);
     }
   }
@@ -234,9 +249,18 @@ function runFrame(hostTime: number): void {
 }
 
 function captureRootJobs(planOnly = false): RootRenderJob[] {
+  const deferredRoots = new Set<CRCInstance>();
+  if (planOnly) {
+    for (const instance of dirtyInstances) {
+      if (instance.pendingRoot === NO_PENDING_ROOT) continue;
+      const root = findRoot(instance);
+      if (root) deferredRoots.add(root);
+    }
+  }
   const requested: CRCInstance[] = [];
   for (const instance of dirtyInstances) {
-    if (planOnly && instance.pendingRoot !== NO_PENDING_ROOT) continue;
+    const root = findRoot(instance);
+    if (root && deferredRoots.has(root)) continue;
     dirtyInstances.delete(instance);
     requested.push(instance);
   }
@@ -250,6 +274,7 @@ function captureRootJobs(planOnly = false): RootRenderJob[] {
       instance,
       revision: instance.requestedRenderRevision,
       pendingRoot: instance.pendingRoot,
+      pendingUpdateParents: instance.pendingUpdateParents,
     });
     instance.pendingRoot = NO_PENDING_ROOT;
     instance.pendingUpdateParents = false;
@@ -286,6 +311,8 @@ function mergeRootJobs(
         instance: job.instance,
         revision: job.revision,
         pendingRoot: existing.pendingRoot,
+        pendingUpdateParents:
+          existing.pendingUpdateParents || job.pendingUpdateParents,
       } : job);
     }
     const instances = Array.from(byInstance.values());
@@ -303,6 +330,29 @@ function findRoot(instance: CRCInstance): CRCInstance | undefined {
     current = GLOBAL_STATE.crcInstances.get(current.parent);
   }
   return current;
+}
+
+function restoreRootJob(rootJob: RootRenderJob): void {
+  if (!registeredRoots.has(rootJob.root) || rootJob.root.mainTeardowns.closed) {
+    return;
+  }
+  for (const job of rootJob.instances) {
+    const { instance } = job;
+    if (
+      instance.mainTeardowns.closed ||
+      GLOBAL_STATE.crcInstances.get(instance.canvas) !== instance
+    ) {
+      continue;
+    }
+    dirtyInstances.add(instance);
+    if (
+      instance.pendingRoot === NO_PENDING_ROOT &&
+      job.pendingRoot !== NO_PENDING_ROOT
+    ) {
+      instance.pendingRoot = job.pendingRoot;
+    }
+    instance.pendingUpdateParents ||= job.pendingUpdateParents;
+  }
 }
 
 function instanceDepth(instance: CRCInstance): number {
@@ -334,7 +384,7 @@ function countDirtyRoots(): number {
 
 function hasFrameWork(): boolean {
   return dirtyInstances.size > 0 ||
-    advanceParticipants.size > 0 ||
+    advanceRegistrations.size > 0 ||
     frameCompletions.length > 0;
 }
 
