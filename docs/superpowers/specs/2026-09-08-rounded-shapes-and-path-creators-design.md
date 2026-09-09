@@ -1,8 +1,7 @@
 # Rounded shapes and public path creators design
 
-> **Historical status: APPROVED IMPLEMENTATION DESIGN.**
-
-Status: approved for implementation on 2026-09-08.
+> **Historical status: IMPLEMENTED DESIGN RECORD.** Original approved wording below is preserved; current behavior lives in `docs/design/`.
+> Status: approved for implementation on 2026-09-08 and implemented on 2026-09-09.
 
 ## Summary
 

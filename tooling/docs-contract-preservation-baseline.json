@@ -28,7 +28,7 @@
     {
       "id": "rounded-shapes-and-path-creators",
       "path": "docs/superpowers/specs/2026-09-08-rounded-shapes-and-path-creators-design.md",
-      "sourceSha256": "028d3e6e71a58c1a9706acefea43dc9127a4e8a8f21bb8aaa78a04eac33cad69",
+      "sourceSha256": "ea99cd9c3bf96b739712a7b2e0bf92000eccb701a80e531dda7bd47e7ec346f4",
       "unitPrefix": "r"
     }
   ],
@@ -11220,7 +11220,7 @@
         "c0062",
         "c0063"
       ],
-      "reason": "rounded-shapes-and-path-creators r0047 r0049 r0051 r0052 r0053 r0054 r0055 r0057 r0058 r0061 authorizes c0049 c0050 c0051 c0052 cornerRadius and cornerRadii behavior for Rectangle and Polygon.",
+      "reason": "rounded-shapes-and-path-creators r0047 r0049 r0051 r0052 r0053 r0054 r0055 r0057 r0058 r0061 authorizes c0060 c0061 c0062 c0063 cornerRadius and cornerRadii behavior for Rectangle and Polygon.",
       "approval": {
         "recordId": "rounded-shapes-and-path-creators",
         "unitIds": [
@@ -11249,7 +11249,7 @@
         "c0064",
         "c0065"
       ],
-      "reason": "rounded-shapes-and-path-creators r0074 r0077 r0079 r0081 r0084 r0085 r0087 r0107 r0108 r0109 r0110 r0113 r0114 r0115 authorizes c0053 c0054 for RegularPolygon and Star rotation, bounds, and layout.",
+      "reason": "rounded-shapes-and-path-creators r0074 r0077 r0079 r0081 r0084 r0085 r0087 r0107 r0108 r0109 r0110 r0113 r0114 r0115 authorizes c0064 c0065 for RegularPolygon and Star rotation, bounds, and layout.",
       "approval": {
         "recordId": "rounded-shapes-and-path-creators",
         "unitIds": [
@@ -11281,7 +11281,7 @@
       "currentIds": [
         "c0066"
       ],
-      "reason": "rounded-shapes-and-path-creators r0025 r0037 r0095 r0096 r0097 r0106 authorizes c0055 creator Path2D freshness and RangeError diagnostics.",
+      "reason": "rounded-shapes-and-path-creators r0025 r0037 r0095 r0096 r0097 r0106 authorizes c0066 creator Path2D freshness and RangeError diagnostics.",
       "approval": {
         "recordId": "rounded-shapes-and-path-creators",
         "unitIds": [
@@ -11305,7 +11305,7 @@
       "currentIds": [
         "c0067"
       ],
-      "reason": "rounded-shapes-and-path-creators r0014 r0015 r0016 r0017 r0018 r0019 r0020 r0021 r0098 r0099 r0100 r0101 r0102 r0103 authorizes c0056 zero geometry and Star non-goals.",
+      "reason": "rounded-shapes-and-path-creators r0014 r0015 r0016 r0017 r0018 r0019 r0020 r0021 r0098 r0099 r0100 r0101 r0102 r0103 authorizes c0067 zero geometry and Star non-goals.",
       "approval": {
         "recordId": "rounded-shapes-and-path-creators",
         "unitIds": [
@@ -11339,7 +11339,7 @@
         "c0060",
         "c0061"
       ],
-      "reason": "rounded-shapes-and-path-creators r0040 r0042 r0043 r0045 r0046 r0047 r0048 r0049 r0055 authorizes c0039 c0040 c0041 cornerRadius and cornerRadii style resolution for Polygon.",
+      "reason": "rounded-shapes-and-path-creators r0040 r0042 r0043 r0045 r0046 r0047 r0048 r0049 r0055 authorizes c0059 c0060 c0061 cornerRadius and cornerRadii style resolution for Polygon.",
       "approval": {
         "recordId": "rounded-shapes-and-path-creators",
         "unitIds": [
@@ -11366,7 +11366,7 @@
       "currentIds": [
         "c0062"
       ],
-      "reason": "rounded-shapes-and-path-creators r0075 r0077 r0082 r0084 r0113 r0115 authorizes c0042 RegularPolygon and Star layout style boundaries.",
+      "reason": "rounded-shapes-and-path-creators r0075 r0077 r0082 r0084 r0113 r0115 authorizes c0062 RegularPolygon and Star layout style boundaries.",
       "approval": {
         "recordId": "rounded-shapes-and-path-creators",
         "unitIds": [

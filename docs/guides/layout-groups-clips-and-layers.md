@@ -114,6 +114,8 @@ isolates siblings.
 ```tsx
 import { Clip, Image, createRegularPolygonPath } from "@crc/core";
 
+const src = "/landscape.png";
+
 const hexagon = createRegularPolygonPath({
   sides: 6,
   cx: 120,

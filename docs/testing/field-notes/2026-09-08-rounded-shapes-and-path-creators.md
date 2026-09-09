@@ -1,10 +1,9 @@
 # Rounded shapes and path creators verification field note
 
-> **Historical status: BLOCKED AGGREGATE VERIFICATION EVIDENCE.** This dated
-> record captures the feature audit and independently green trust constituents;
-> it does not mark the approved design or implementation plan as implemented.
+> **Historical status: IMPLEMENTED VERIFICATION EVIDENCE.** This dated record
+> preserves the completed feature audit and final aggregate verification.
 
-Date: 2026-09-08
+Date: 2026-09-09
 
 Branch: `codex/rounded-shapes`
 
@@ -19,22 +18,27 @@ Workspace: `/private/tmp/crc-rounded-shapes`
 
 ## Aggregate result
 
-`fnm exec --using=24.15.0 -- corepack pnpm@11.21.0 trust` did not complete.
-It passed scenario discovery and catalog validation for 49 lessons and 16 test
-labs, then stopped in `docs:check` before type, package, browser, or lifecycle
-stages. The exact assertion is the pre-existing missing visible Historical
-status banner in
-`docs/superpowers/plans/2026-09-08-first-class-filters-implementation.md`.
-That plan is outside the rounded-shapes feature scope and was not changed.
+The final status-bearing tree passed the exact aggregate command:
 
-Because the aggregate gate is red, the rounded-shapes design remains approved
-for implementation rather than being recorded as implemented, and the
-rounded-shapes implementation plan has no implemented-plan banner.
+```text
+$ fnm exec --using=24.15.0 -- corepack pnpm@11.21.0 trust
+PASS: 49 lessons, 16 test labs, 58 root runtime values, and 140 named types.
+PASS: 106 browser test files; 1,371 tests passed and 2 skipped.
+PASS: 5 Studio visual baselines; built smoke 1/1; lifecycle 2 files/14 tests;
+      structural performance 1 file/9 tests with 2 controlled skips.
+```
 
-## Independently completed trust constituents
+The first pass used a provisional historical marker because `verify-docs`
+classifies every implementation-plan path as historical and otherwise rejects
+the very plan that Task 11 conditionally needs to mark complete. That green
+pass authorized the 2026-09-09 design status and plan marker. The aggregate
+command was then rerun on the resulting status-bearing tree before completion
+was recorded.
 
-The stages the aggregate command could not reach were run independently under
-the same Node and pnpm versions:
+## Aggregate constituents
+
+The aggregate command completed these stages under the same Node and pnpm
+versions:
 
 | Gate                    | Fresh result                                                                                                                                            |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -84,9 +88,10 @@ No unrelated canvas, editor, or landing-content drift was accepted. After the
 reviewed baseline update, `test:studio-visual` matched all five routes and the
 full browser aggregate passed.
 
-## Required next authority
+## Completion decision
 
-The owner of the unrelated first-class-filters implementation plan must add its
-required Historical status banner, then a fresh aggregate `trust` run must pass.
-Only then may this design status change to implemented and the rounded-shapes
-implementation plan receive its implemented-plan banner.
+The rounded-shapes design is implemented on 2026-09-09 and the implementation
+plan is preserved as an implemented historical record. The user-authorized
+first-class-filters historical banner repair and the marker fixed-point ruling
+were both required to make the full repository gate meaningful; neither changes
+rounded-shapes runtime behavior.
