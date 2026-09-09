@@ -1,7 +1,11 @@
 import type { CRCEventTargetRegistration } from '../events/registrations.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import type { LayoutBox } from '../layout/types.js';
-import type { CRCInstance, CRCInteractionLayer } from '../types.js';
+import type { CRCInstance } from '../types.js';
+import {
+  CRCPaintEntryKind,
+  type CRCNestedPaintEntry,
+} from '../events/paint-entry.js';
 
 /** Converts one target-local navigation rectangle to root-logical space. */
 export function resolveTargetRootBounds(
@@ -40,7 +44,8 @@ function resolveRootTransform(
   target: CRCEventTargetRegistration,
 ): DOMMatrix | undefined {
   let owner = target.owner;
-  let transform = target.transform;
+  let transform = target.paintEntry?.transform;
+  if (!transform) return undefined;
   const root = owner.eventRoot.rootInstance;
   if (!root) return undefined;
 
@@ -49,7 +54,7 @@ function resolveRootTransform(
     if (!parentCanvas) return undefined;
     const parent = GLOBAL_STATE.crcInstances.get(parentCanvas);
     if (!parent) return undefined;
-    const bridge = findLayerBridge(parent, owner);
+    const bridge = findNestedInstanceBridge(parent, owner);
     if (!bridge) return undefined;
     transform = bridge.transform.multiply(transform);
     owner = parent;
@@ -57,12 +62,16 @@ function resolveRootTransform(
   return transform;
 }
 
-function findLayerBridge(
+function findNestedInstanceBridge(
   parent: CRCInstance,
   child: CRCInstance,
-): CRCInteractionLayer | undefined {
+): CRCNestedPaintEntry | undefined {
   for (const entry of parent.paintEntries) {
-    if (entry.kind === 'layer' && entry.instance === child) return entry;
+    if (
+      (entry.paintKind === CRCPaintEntryKind.NestedInstance ||
+        entry.paintKind === CRCPaintEntryKind.Resolver) &&
+      entry.instance === child
+    ) return entry;
   }
   return undefined;
 }

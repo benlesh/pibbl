@@ -5,6 +5,14 @@ import type {
 } from '../types.js';
 import { isHit } from '../util/is-hit.js';
 import {
+  CRCHitDisposition,
+  CRCPaintEntryKind,
+  createHitTestOutput,
+  type CRCHitTestInput,
+  type CRCHitTestOutput,
+  type CRCPathPaintEntry,
+} from './paint-entry.js';
+import {
   getLegacyHitGeometry,
   type CRCEventTargetRegistration,
 } from './registrations.js';
@@ -14,86 +22,151 @@ export interface CRCCoordinatePoint {
   readonly y: number;
 }
 
-/** Resolves one live target in reverse global paint order. */
+/** Resolves one paint entry in reverse global paint order without allocating. */
+export function resolveCoordinateHit(
+  eventRoot: CRCEventRoot,
+  input: CRCHitTestInput,
+  output: CRCHitTestOutput,
+): CRCHitTestOutput {
+  const instance = eventRoot.rootInstance;
+  const canvas = eventRoot.canvas;
+  reset(output);
+  if (!instance || !canvas || !instance.surface.snapshot) return output;
+  return resolveInstanceHit(
+    eventRoot,
+    instance,
+    canvas,
+    input.rootX,
+    input.rootY,
+    new DOMMatrix(),
+    [],
+    output,
+  );
+}
+
+/** Compatibility wrapper for coordinate event dispatch. */
 export function resolveCoordinateTarget(
   eventRoot: CRCEventRoot,
   point: CRCCoordinatePoint,
 ): CRCEventTargetRegistration | undefined {
-  const instance = eventRoot.rootInstance;
-  const canvas = eventRoot.canvas;
-  if (!instance || !canvas || !instance.surface.snapshot) return undefined;
-  return resolveInstanceTarget({
-    eventRoot,
-    instance,
-    canvas,
-    point,
-    transform: new DOMMatrix(),
-    clippingStack: [],
-  });
+  const input = eventRoot.coordinateHitInput ??= { rootX: 0, rootY: 0 };
+  const output = eventRoot.coordinateHitOutput ??= createHitTestOutput();
+  input.rootX = point.x;
+  input.rootY = point.y;
+  resolveCoordinateHit(eventRoot, input, output);
+  return output.disposition === CRCHitDisposition.Target ?
+    output.target ?? undefined :
+    undefined;
 }
 
-function resolveInstanceTarget({
-  eventRoot,
-  instance,
-  canvas,
-  point,
-  transform,
-  clippingStack,
-}: {
-  eventRoot: CRCEventRoot;
-  instance: CRCInstance;
-  canvas: HTMLCanvasElement;
-  point: CRCCoordinatePoint;
-  transform: DOMMatrix;
-  clippingStack: readonly CRCClippingStackEntry[];
-}): CRCEventTargetRegistration | undefined {
+function resolveInstanceHit(
+  eventRoot: CRCEventRoot,
+  instance: CRCInstance,
+  canvas: HTMLCanvasElement,
+  rootX: number,
+  rootY: number,
+  transform: DOMMatrix,
+  clippingStack: readonly CRCClippingStackEntry[],
+  output: CRCHitTestOutput,
+): CRCHitTestOutput {
   const entries = Array.from(instance.paintEntries);
   for (let index = entries.length - 1; index >= 0; index--) {
-    const entry = entries[index];
-    if (entry.kind === 'target') {
-      if (!isLiveTarget(eventRoot, entry)) continue;
-      const legacyGeometry = getLegacyHitGeometry(entry);
-      if (legacyGeometry && !legacyGeometry.path) return entry;
-      const path = legacyGeometry?.path ?? entry.path;
-      if (isHit({
-        canvas,
-        path,
-        transform: multiplyTransforms(transform, entry.transform),
-        x: point.x,
-        y: point.y,
-        fill: entry.fill,
-        lineInteractionWidth: entry.lineInteractionWidth,
-        currentClippingStack: mergeClippingStacks(
+    const entry = entries[index]!;
+    reset(output);
+    switch (entry.paintKind) {
+      case CRCPaintEntryKind.Path:
+        resolvePathHit(eventRoot, canvas, entry, rootX, rootY, transform, clippingStack, output);
+        break;
+      case CRCPaintEntryKind.NestedInstance:
+      case CRCPaintEntryKind.Resolver: {
+        if (entry.instance.mainTeardowns.closed) continue;
+        const childTransform = multiplyTransforms(transform, entry.transform);
+        const outerClippingStack = mergeClippingStacks(
           clippingStack,
           composeClippingStack(entry.clippingStack, transform),
-        ),
-      })) {
-        return entry;
-      }
-      continue;
-    }
-
-    if (entry.instance.mainTeardowns.closed) continue;
-    const childTransform = multiplyTransforms(transform, entry.transform);
-    const target = resolveInstanceTarget({
-      eventRoot,
-      instance: entry.instance,
-      canvas,
-      point,
-      transform: childTransform,
-      clippingStack: [
-        ...clippingStack,
-        ...composeClippingStack(entry.clippingStack, transform),
-        {
+        );
+        if (!isHit({
+          canvas,
           path: entry.bounds,
-          fillRule: 'nonzero',
           transform: childTransform,
-        },
-      ],
-    });
-    if (target) return target;
+          x: rootX,
+          y: rootY,
+          fill: true,
+          lineInteractionWidth: 0,
+          currentClippingStack: outerClippingStack,
+        })) break;
+        const childClippingStack = [
+          ...outerClippingStack,
+          { path: entry.bounds, fillRule: 'nonzero' as const, transform: childTransform },
+        ];
+        try {
+          if (entry.paintKind === CRCPaintEntryKind.NestedInstance) {
+            resolveInstanceHit(
+              eventRoot,
+              entry.instance,
+              canvas,
+              rootX,
+              rootY,
+              childTransform,
+              childClippingStack,
+              output,
+            );
+          } else if (entry.resolveLocal) {
+            const local = childTransform.inverse().transformPoint(
+              new DOMPoint(rootX, rootY),
+            );
+            entry.resolveLocal(local.x, local.y, output);
+          }
+        } finally {
+          // Child clipping and local coordinates are stack-local to this call.
+        }
+        break;
+      }
+    }
+    if (output.disposition !== CRCHitDisposition.Miss) return output;
   }
-  return undefined;
+  return output;
+}
+
+function resolvePathHit(
+  eventRoot: CRCEventRoot,
+  canvas: HTMLCanvasElement,
+  entry: CRCPathPaintEntry,
+  rootX: number,
+  rootY: number,
+  transform: DOMMatrix,
+  clippingStack: readonly CRCClippingStackEntry[],
+  output: CRCHitTestOutput,
+): void {
+  const target = entry.target;
+  if (!isLiveTarget(eventRoot, target)) return;
+  const legacyGeometry = getLegacyHitGeometry(target);
+  if (legacyGeometry && !legacyGeometry.path) {
+    output.disposition = CRCHitDisposition.Target;
+    output.target = target;
+    return;
+  }
+  if (isHit({
+    canvas,
+    path: legacyGeometry?.path ?? entry.path,
+    transform: multiplyTransforms(transform, entry.transform),
+    x: rootX,
+    y: rootY,
+    fill: entry.fill,
+    lineInteractionWidth: entry.lineInteractionWidth,
+    currentClippingStack: mergeClippingStacks(
+      clippingStack,
+      composeClippingStack(entry.clippingStack, transform),
+    ),
+  })) {
+    output.disposition = CRCHitDisposition.Target;
+    output.target = target;
+  }
+}
+
+function reset(output: CRCHitTestOutput): void {
+  output.disposition = CRCHitDisposition.Miss;
+  output.target = null;
 }
 
 function isLiveTarget(
@@ -110,9 +183,7 @@ function composeClippingStack(
   clippingStack: readonly CRCClippingStackEntry[],
   transform: DOMMatrix,
 ): readonly CRCClippingStackEntry[] {
-  if (clippingStack.length === 0 || transform.isIdentity) {
-    return clippingStack;
-  }
+  if (clippingStack.length === 0 || transform.isIdentity) return clippingStack;
   return clippingStack.map(entry => ({
     ...entry,
     transform: multiplyTransforms(transform, entry.transform),

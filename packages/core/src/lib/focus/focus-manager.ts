@@ -1,4 +1,5 @@
 import type { CRCEventTargetRegistration } from '../events/registrations.js';
+import { CRCPaintEntryKind } from '../events/paint-entry.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import type {
   CRCEvent,
@@ -1045,8 +1046,8 @@ function collectRetainedTargets(
   if (visited.has(instance)) return;
   visited.add(instance);
   for (const entry of instance.paintEntries) {
-    if (entry.kind === 'target') {
-      if (entry.live) targets.push(entry);
+    if (entry.paintKind === CRCPaintEntryKind.Path) {
+      if (entry.target.live) targets.push(entry.target);
     } else {
       collectRetainedTargets(entry.instance, targets, visited);
     }

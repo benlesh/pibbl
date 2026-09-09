@@ -11,10 +11,13 @@ import type { LayoutBox } from '../layout/types.js';
 import { getCurrentWorldTransform } from '../render-target.js';
 import type {
   CRCComponentRefs,
-  CRCClippingStackEntry,
   CRCInstance,
   CRCRegionHandlers,
 } from '../types.js';
+import {
+  CRCPaintEntryKind,
+  type CRCPathPaintEntry,
+} from './paint-entry.js';
 import {
   clearPointerCapturesForTarget,
   hasLogicalPointerCapture,
@@ -36,12 +39,8 @@ export interface CRCEventTargetRegistration {
   readonly component: CRCComponentRefs<any>;
   readonly slot: number;
   readonly publicTarget: CRCEventTarget;
+  paintEntry: CRCPathPaintEntry | undefined;
   handlers: CRCNormalizedHandlers;
-  path: Path2D;
-  fill: boolean;
-  lineInteractionWidth: number;
-  transform: DOMMatrix;
-  clippingStack: readonly CRCClippingStackEntry[];
   cursor: string | undefined;
   keyboardFocusable: boolean | undefined;
   keyboardNavigationBounds: Readonly<LayoutBox> | undefined;
@@ -88,12 +87,8 @@ export function createTarget(
     component,
     slot,
     publicTarget,
+    paintEntry: undefined,
     handlers: {},
-    path: new Path2D(),
-    fill: false,
-    lineInteractionWidth: 0,
-    transform: new DOMMatrix(),
-    clippingStack: [],
     cursor: undefined,
     keyboardFocusable: undefined,
     keyboardNavigationBounds: undefined,
@@ -141,7 +136,7 @@ export function updateLegacyTarget(
     target,
     normalizedHandlers,
     {
-      path: path ?? target.path,
+      path: path ?? target.paintEntry?.path ?? new Path2D(),
       fill,
       lineInteractionWidth,
       cursor,
@@ -177,17 +172,24 @@ function updateTargetRegistration(
   if (target.live) {
     // Remove while the previous handler map is still current so ownership
     // diagnostics and mutation observers attribute the release correctly.
-    target.owner.paintEntries.delete(target);
+    if (target.paintEntry) target.owner.paintEntries.delete(target.paintEntry);
     target.owner.eventRoot.targets.delete(target);
   }
 
   target.handlers = normalizedHandlers;
-  target.path = options.path;
-  target.fill = options.fill ?? false;
-  target.lineInteractionWidth = options.lineInteractionWidth ?? 0;
+  const paintEntry = target.paintEntry ?? {
+    paintKind: CRCPaintEntryKind.Path,
+  } as CRCPathPaintEntry;
+  paintEntry.target = target;
+  paintEntry.path = options.path;
+  paintEntry.fill = options.fill ?? false;
+  paintEntry.lineInteractionWidth = options.lineInteractionWidth ?? 0;
   if (GLOBAL_STATE.renderContext) {
-    target.transform = getCurrentWorldTransform();
-    target.clippingStack = Array.from(GLOBAL_STATE.clippingStack);
+    paintEntry.transform = getCurrentWorldTransform();
+    paintEntry.clippingStack = Array.from(GLOBAL_STATE.clippingStack);
+  } else {
+    paintEntry.transform ??= new DOMMatrix();
+    paintEntry.clippingStack ??= [];
   }
   target.cursor = options.cursor;
   target.keyboardFocusable = options.keyboardFocusable;
@@ -203,6 +205,7 @@ function updateTargetRegistration(
       target.owner.eventRoot.onNodeRelease?.(target);
     }
     target.owner.regions.delete(target);
+    target.paintEntry = undefined;
     target.live = false;
     clearPointerCapturesForTarget(target);
     releaseNativeOwnership(target);
@@ -210,7 +213,8 @@ function updateTargetRegistration(
   }
 
   target.live = true;
-  target.owner.paintEntries.add(target);
+  target.paintEntry = paintEntry;
+  target.owner.paintEntries.add(paintEntry);
   target.owner.eventRoot.targets.add(target);
   updateNativeOwnership(target, nativeTypes);
   target.owner.eventRoot.focusPolicy?.observeTarget(target);
@@ -219,12 +223,13 @@ function updateTargetRegistration(
 
 export function releaseTarget(target: CRCEventTargetRegistration): void {
   if (target.live) {
-    target.owner.paintEntries.delete(target);
+    if (target.paintEntry) target.owner.paintEntries.delete(target.paintEntry);
     target.owner.eventRoot.targets.delete(target);
     target.owner.eventRoot.focusPolicy?.removeTarget(target);
     target.owner.eventRoot.onNodeRelease?.(target);
   }
   target.owner.regions.delete(target);
+  target.paintEntry = undefined;
   target.live = false;
   clearPointerCapturesForTarget(target);
   releaseNativeOwnership(target);

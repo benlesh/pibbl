@@ -11,6 +11,12 @@ import type {
   CRCEventTargetRegistration,
 } from './events/registrations.js';
 import type {
+  CRCHitTestInput,
+  CRCHitTestOutput,
+  CRCPaintEntry,
+  CRCNestedPaintEntry,
+} from './events/paint-entry.js';
+import type {
   CRCElement,
   CRCElementType,
   CRCNode,
@@ -172,16 +178,10 @@ export interface CRCClippingStackEntry {
 /** @internal Legacy mouse-hook name retained until Task 8 cleanup. */
 export type CRCInteractionRegion = CRCEventTargetRegistration;
 
-export interface CRCInteractionLayer {
-  kind: 'layer';
-  instance: CRCInstance;
-  transform: DOMMatrix;
-  clippingStack: readonly CRCClippingStackEntry[];
-  bounds: Path2D;
-}
+/** @internal Canvas Layer bridge retained as one nested paint entry. */
+export type CRCInteractionLayer = CRCNestedPaintEntry;
 
-export type CRCInteractionPaintEntry = CRCEventTargetRegistration
-  | CRCInteractionLayer;
+export type CRCInteractionPaintEntry = CRCPaintEntry;
 
 export interface CRCCursorDefault {
   style: string;
@@ -214,6 +214,10 @@ export interface CRCEventRoot {
   readonly canvas: HTMLCanvasElement | undefined;
   readonly nativeListeners: NativeListenerHub | undefined;
   readonly targets: Set<CRCEventTargetRegistration>;
+  /** @internal Borrowed only for one synchronous coordinate lookup. */
+  coordinateHitInput?: CRCHitTestInput;
+  /** @internal Borrowed only for one synchronous coordinate lookup. */
+  coordinateHitOutput?: CRCHitTestOutput;
   readonly listenersByComponent: Map<string, Set<CRCEventListenerRegistration>>;
   readonly observers: Map<DOMCRCEventType, Set<CRCNativeObserver>>;
   readonly pointerCaptures: Map<number, CRCEventNode>;

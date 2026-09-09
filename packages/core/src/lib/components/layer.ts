@@ -15,6 +15,7 @@ import {
   RenderingContext2D,
   SystemStyle,
 } from '../types.js';
+import { CRCPaintEntryKind } from '../events/paint-entry.js';
 import {
   resolveRequiredLength,
   stripLayoutParticipation,
@@ -89,11 +90,12 @@ function renderLayer(
     const childInstance = getCRCInstance(offscreenCanvas);
     childInstance.eventParent = componentRefs;
     const interactionLayer: CRCInteractionLayer = {
-      kind: 'layer',
+      paintKind: CRCPaintEntryKind.NestedInstance,
       instance: childInstance,
       transform: new DOMMatrix(),
       clippingStack: [],
       bounds: createBounds(width, height),
+      resolveLocal: undefined,
     };
     componentRefs.refs[0] = {
       canvas: offscreenCanvas,
