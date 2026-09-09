@@ -15,17 +15,46 @@ export function rootRenderTarget(
   surface: CRCSurfaceSnapshot,
 ): RenderTargetSnapshot {
   return {
-    logicalBounds: Object.freeze({
-      x: 0,
-      y: 0,
-      width: surface.logicalWidth,
-      height: surface.logicalHeight,
-    }),
+    logicalBounds: bitmapVisibleLogicalBounds(surface),
     backingWidth: surface.backingWidth,
     backingHeight: surface.backingHeight,
     renderTransform: surface.renderTransform,
     inverseRenderTransform: surface.inverseRenderTransform,
   };
+}
+
+function bitmapVisibleLogicalBounds(
+  surface: CRCSurfaceSnapshot,
+): Readonly<LayoutBox> {
+  const points = [
+    surface.inverseRenderTransform.transformPoint(new DOMPoint(0, 0)),
+    surface.inverseRenderTransform.transformPoint(
+      new DOMPoint(surface.backingWidth, 0),
+    ),
+    surface.inverseRenderTransform.transformPoint(
+      new DOMPoint(0, surface.backingHeight),
+    ),
+    surface.inverseRenderTransform.transformPoint(
+      new DOMPoint(surface.backingWidth, surface.backingHeight),
+    ),
+  ];
+  if (points.some(point => !Number.isFinite(point.x) || !Number.isFinite(point.y))) {
+    throw new Error(
+      'CRC root surface inverse projection produced non-finite logical bounds.',
+    );
+  }
+  const xs = points.map(point => point.x);
+  const ys = points.map(point => point.y);
+  const left = Math.min(...xs);
+  const top = Math.min(...ys);
+  const right = Math.max(...xs);
+  const bottom = Math.max(...ys);
+  return Object.freeze({
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top,
+  });
 }
 
 export function getCurrentPaintTransform(): DOMMatrix {

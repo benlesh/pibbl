@@ -41,11 +41,11 @@ describe('render targets', () => {
 
     expect(rootTarget.backingWidth).toBe(rootSurface.backingWidth);
     expect(rootTarget.backingHeight).toBe(rootSurface.backingHeight);
-    expect(rootTarget.logicalBounds).toEqual({
+    expectBoxClose(rootTarget.logicalBounds, {
       x: 0,
-      y: 0,
+      y: -50,
       width: 200,
-      height: 100,
+      height: 200,
     });
 
     context.setTransform(rootTarget.renderTransform);
@@ -64,6 +64,99 @@ describe('render targets', () => {
       expect(matrixValues(getCurrentWorldTransform())).toEqual(
         matrixValues(worldBase.scale(2, 3)),
       );
+    });
+  });
+
+  it.each([
+    {
+      fit: 'contain' as const,
+      logical: { width: 200, height: 100 },
+      display: { width: 300, height: 300 },
+      expected: { x: 0, y: -50, width: 200, height: 200 },
+    },
+    {
+      fit: 'cover' as const,
+      logical: { width: 200, height: 100 },
+      display: { width: 300, height: 300 },
+      expected: { x: 50, y: 0, width: 100, height: 100 },
+    },
+    {
+      fit: 'none' as const,
+      logical: { width: 80, height: 40 },
+      display: { width: 120, height: 100 },
+      expected: { x: -20, y: -30, width: 120, height: 100 },
+    },
+    {
+      fit: 'scale-down' as const,
+      logical: { width: 80, height: 20 },
+      display: { width: 40, height: 40 },
+      expected: { x: 0, y: -30, width: 80, height: 80 },
+    },
+  ])(
+    'inverse-projects the full backing bitmap through a $fit projection',
+    ({ fit, logical, display, expected }) => {
+      const surface = resolveSurface(
+        {
+          mode: 'fixed',
+          width: logical.width,
+          height: logical.height,
+          fit,
+          pixelRatio: 2,
+        },
+        display,
+        2,
+      )!;
+
+      expectBoxClose(rootRenderTarget(surface).logicalBounds, expected);
+    },
+  );
+
+  it('takes finite extrema from all four inverse-projected bitmap corners', () => {
+    const inverseRenderTransform = new DOMMatrix([
+      1,
+      0.5,
+      -0.25,
+      2,
+      10,
+      -20,
+    ]);
+    const surface = {
+      mode: 'fixed' as const,
+      fit: 'none' as const,
+      logicalWidth: 80,
+      logicalHeight: 40,
+      displayWidth: 80,
+      displayHeight: 40,
+      backingWidth: 80,
+      backingHeight: 40,
+      backingPixelsPerCssPixelX: 1,
+      backingPixelsPerCssPixelY: 1,
+      backingPixelsPerLogicalUnitX: 1,
+      backingPixelsPerLogicalUnitY: 1,
+      renderTransform: inverseRenderTransform.inverse(),
+      inverseRenderTransform,
+    };
+
+    expect(rootRenderTarget(surface).logicalBounds).toEqual({
+      x: 0,
+      y: -20,
+      width: 90,
+      height: 120,
+    });
+  });
+
+  it('preserves the responsive bitmap-to-logical rectangle', () => {
+    const surface = resolveSurface(
+      { mode: 'responsive', pixelRatio: 2 },
+      { width: 300.5, height: 150.25 },
+      2,
+    )!;
+
+    expectBoxClose(rootRenderTarget(surface).logicalBounds, {
+      x: 0,
+      y: 0,
+      width: 300.5,
+      height: 150.25,
     });
   });
 
@@ -116,4 +209,14 @@ function expectMatrixClose(actual: DOMMatrix, expected: DOMMatrix): void {
   for (const [index, value] of matrixValues(actual).entries()) {
     expect(value).toBeCloseTo(matrixValues(expected)[index]!);
   }
+}
+
+function expectBoxClose(
+  actual: Readonly<{ x: number; y: number; width: number; height: number }>,
+  expected: Readonly<{ x: number; y: number; width: number; height: number }>,
+): void {
+  expect(actual.x).toBeCloseTo(expected.x, 5);
+  expect(actual.y).toBeCloseTo(expected.y, 5);
+  expect(actual.width).toBeCloseTo(expected.width, 5);
+  expect(actual.height).toBeCloseTo(expected.height, 5);
 }

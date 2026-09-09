@@ -194,6 +194,14 @@ function createSnapshot({
     .scale(backingPixelsPerCssPixelX, backingPixelsPerCssPixelY)
     .translate(offsetX, offsetY)
     .scale(scaleX, scaleY);
+  const inverseRenderTransform = new DOMMatrix([
+    1 / (backingPixelsPerCssPixelX * scaleX),
+    0,
+    0,
+    1 / (backingPixelsPerCssPixelY * scaleY),
+    -offsetX / scaleX,
+    -offsetY / scaleY,
+  ]);
   return Object.freeze({
     mode,
     fit,
@@ -208,7 +216,7 @@ function createSnapshot({
     backingPixelsPerLogicalUnitX: backingPixelsPerCssPixelX * scaleX,
     backingPixelsPerLogicalUnitY: backingPixelsPerCssPixelY * scaleY,
     renderTransform,
-    inverseRenderTransform: renderTransform.inverse(),
+    inverseRenderTransform,
   });
 }
 

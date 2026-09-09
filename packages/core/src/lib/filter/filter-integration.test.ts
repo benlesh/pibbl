@@ -21,7 +21,7 @@ import { focusManaged } from '../focus/policy-test-support.js';
 import { executeRender } from '../execute-render.js';
 import { mountCRC } from '../mount-crc.js';
 import type { RenderTargetSnapshot } from '../render-target.js';
-import type { FilterSurfacePool } from './filter-surface-pool.js';
+import { FilterSurfacePool } from './filter-surface-pool.js';
 import { renderFilterBoundary } from './render-filter-boundary.js';
 
 const controllers = new Set<CRCController>();
@@ -227,6 +227,148 @@ describe('filter integration', () => {
 
     expect(pixel(canvas, 0, 16)[3]).toBeGreaterThan(0);
     expect(pixel(canvas, 39, 16)[2]).toBeGreaterThan(180);
+  });
+
+  it('retains filter influence in contain letterbox pixels outside the nominal viewport', async () => {
+    const checkouts = vi.spyOn(FilterSurfacePool.prototype, 'checkoutPair');
+    const canvas = await renderFixedScene(
+      createElement(Rectangle, {
+        style: {
+          x: 10,
+          y: 0,
+          width: 10,
+          height: 5,
+          fill: 'red',
+          filter: {
+            type: 'dropShadow',
+            offsetX: 0,
+            offsetY: -10,
+            color: 'blue',
+          },
+        },
+      }),
+      { logicalWidth: 40, logicalHeight: 20, displayWidth: 40, displayHeight: 40, fit: 'contain' },
+    );
+
+    expect(checkouts).toHaveBeenCalledOnce();
+    expect(checkouts.mock.calls[0]![0]).toMatchObject({
+      output: {
+        logicalBounds: { x: 0, y: -10, width: 40, height: 40 },
+        backingWidth: 40,
+        backingHeight: 40,
+      },
+      source: {
+        logicalBounds: { x: 0, y: -10, width: 40, height: 50 },
+        backingWidth: 40,
+        backingHeight: 50,
+      },
+      density: 1,
+    });
+    expect(pixel(canvas, 15, 0)).toEqual([0, 0, 255, 255]);
+    expect(pixel(canvas, 15, 4)).toEqual([0, 0, 255, 255]);
+    expect(pixel(canvas, 15, 10)).toEqual([255, 0, 0, 255]);
+  });
+
+  it('uses the centered bitmap-visible rectangle for none', async () => {
+    const checkouts = vi.spyOn(FilterSurfacePool.prototype, 'checkoutPair');
+    const canvas = await renderFixedScene(
+      createElement(Group, {
+        style: { filter: { type: 'opacity', amount: 1 } },
+        children: [
+          createElement(Rectangle, {
+            style: { x: -10, y: -10, width: 3, height: 3, fill: 'red' },
+          }),
+          createElement(Rectangle, {
+            style: { x: 27, y: 17, width: 3, height: 3, fill: 'blue' },
+          }),
+        ],
+      }),
+      { logicalWidth: 20, logicalHeight: 10, displayWidth: 40, displayHeight: 30, fit: 'none' },
+    );
+
+    expect(checkouts.mock.calls[0]![0]).toMatchObject({
+      output: {
+        logicalBounds: { x: -10, y: -10, width: 40, height: 30 },
+        backingWidth: 40,
+        backingHeight: 30,
+      },
+      source: {
+        logicalBounds: { x: -10, y: -10, width: 40, height: 30 },
+        backingWidth: 40,
+        backingHeight: 30,
+      },
+      density: 1,
+    });
+    expect(pixel(canvas, 0, 0)).toEqual([255, 0, 0, 255]);
+    expect(pixel(canvas, 39, 29)).toEqual([0, 0, 255, 255]);
+  });
+
+  it('uses the centered bitmap-visible rectangle for scale-down', async () => {
+    const checkouts = vi.spyOn(FilterSurfacePool.prototype, 'checkoutPair');
+    const canvas = await renderFixedScene(
+      createElement(Group, {
+        style: { filter: { type: 'opacity', amount: 1 } },
+        children: [
+          createElement(Rectangle, {
+            style: { x: 0, y: -30, width: 4, height: 2, fill: 'red' },
+          }),
+          createElement(Rectangle, {
+            style: { x: 0, y: 48, width: 4, height: 2, fill: 'blue' },
+          }),
+        ],
+      }),
+      { logicalWidth: 80, logicalHeight: 20, displayWidth: 40, displayHeight: 40, fit: 'scale-down' },
+    );
+
+    expect(checkouts.mock.calls[0]![0]).toMatchObject({
+      output: {
+        logicalBounds: { x: 0, y: -30, width: 80, height: 80 },
+        backingWidth: 40,
+        backingHeight: 40,
+      },
+      source: {
+        logicalBounds: { x: 0, y: -30, width: 80, height: 80 },
+        backingWidth: 40,
+        backingHeight: 40,
+      },
+      density: 0.5,
+    });
+    expect(pixel(canvas, 0, 0)).toEqual([255, 0, 0, 255]);
+    expect(pixel(canvas, 0, 39)).toEqual([0, 0, 255, 255]);
+  });
+
+  it('clips cover capture and allocation to the bitmap-visible logical region', async () => {
+    const checkouts = vi.spyOn(FilterSurfacePool.prototype, 'checkoutPair');
+    const canvas = await renderFixedScene(
+      createElement(Group, {
+        style: { filter: { type: 'opacity', amount: 1 } },
+        children: [
+          createElement(Rectangle, {
+            style: { x: 10, y: 0, width: 1, height: 20, fill: 'red' },
+          }),
+          createElement(Rectangle, {
+            style: { x: 29, y: 0, width: 1, height: 20, fill: 'blue' },
+          }),
+        ],
+      }),
+      { logicalWidth: 40, logicalHeight: 20, displayWidth: 40, displayHeight: 40, fit: 'cover' },
+    );
+
+    expect(checkouts.mock.calls[0]![0]).toMatchObject({
+      output: {
+        logicalBounds: { x: 10, y: 0, width: 20, height: 20 },
+        backingWidth: 40,
+        backingHeight: 40,
+      },
+      source: {
+        logicalBounds: { x: 10, y: 0, width: 20, height: 20 },
+        backingWidth: 40,
+        backingHeight: 40,
+      },
+      density: 2,
+    });
+    expect(pixel(canvas, 0, 20)).toEqual([255, 0, 0, 255]);
+    expect(pixel(canvas, 39, 20)).toEqual([0, 0, 255, 255]);
   });
 
   it('uses root density exactly once for upright kernels before affine presentation', async () => {
@@ -1566,6 +1708,34 @@ async function renderScene(
   canvas.style.cssText = `display:block;width:${width}px;height:${height}px`;
   document.body.appendChild(canvas);
   controllers.add(crc(canvas, root, { pixelRatio }));
+  await nextFrame();
+  return canvas;
+}
+
+async function renderFixedScene(
+  root: CRCNode,
+  options: {
+    readonly logicalWidth: number;
+    readonly logicalHeight: number;
+    readonly displayWidth: number;
+    readonly displayHeight: number;
+    readonly fit: 'contain' | 'cover' | 'none' | 'scale-down';
+  },
+): Promise<HTMLCanvasElement> {
+  const canvas = document.createElement('canvas');
+  canvas.width = options.logicalWidth;
+  canvas.height = options.logicalHeight;
+  canvas.style.cssText =
+    `display:block;width:${options.displayWidth}px;height:${options.displayHeight}px`;
+  document.body.appendChild(canvas);
+  controllers.add(crc(canvas, root, {
+    viewport: {
+      width: options.logicalWidth,
+      height: options.logicalHeight,
+    },
+    fit: options.fit,
+    pixelRatio: 1,
+  }));
   await nextFrame();
   return canvas;
 }
