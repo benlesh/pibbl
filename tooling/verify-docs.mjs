@@ -108,7 +108,11 @@ const linkCheckedPaths = [
 const migrationMarkdownPaths = new Set([
   "docs/migrations/jsx-authoring-pivot.md",
 ]);
-const operationalMarkdownPaths = new Set([".beads/README.md"]);
+const operationalMarkdownPaths = new Set([
+  ".beads/README.md",
+  "tooling/studio-docs/fixtures/invalid-script.md",
+  "tooling/studio-docs/fixtures/valid-guide.md",
+]);
 const presentationSourcePaths = trackedRepositoryFiles([
   "packages/scenarios/src",
   "playground",
