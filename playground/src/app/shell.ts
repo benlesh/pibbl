@@ -173,9 +173,10 @@ export function createStudioShell(options: StudioShellOptions): StudioShell {
         "[data-navigation-id]",
       )) {
         const id = element.dataset.navigationId;
-        const current = id !== undefined && (active.has(id) || id === activeArea);
-        element.classList.toggle("is-active", current);
-        if (current && element instanceof HTMLAnchorElement) {
+        const activeBranch =
+          id !== undefined && (active.has(id) || id === activeArea);
+        element.classList.toggle("is-active", activeBranch);
+        if (element instanceof HTMLAnchorElement && isCurrentRouteLink(element, route)) {
           element.setAttribute("aria-current", "page");
         } else if (element instanceof HTMLAnchorElement) {
           element.removeAttribute("aria-current");
@@ -185,6 +186,11 @@ export function createStudioShell(options: StudioShellOptions): StudioShell {
         "is-active",
         route.kind === "testing" || route.kind === "test",
       );
+      if (route.kind === "testing") {
+        testingLink.setAttribute("aria-current", "page");
+      } else {
+        testingLink.removeAttribute("aria-current");
+      }
     },
     finishRoute(title, focus = true) {
       document.title = `${title} · CRC Studio`;
@@ -229,4 +235,31 @@ function areaForRoute(route: ParsedStudioRoute): string | undefined {
   if (route.kind !== "document") return undefined;
   if (route.route.startsWith("#/api")) return "api";
   return "learn";
+}
+
+function isCurrentRouteLink(
+  link: HTMLAnchorElement,
+  route: ParsedStudioRoute,
+): boolean {
+  const href = routePathFromHref(link.href);
+  switch (route.kind) {
+    case "document":
+      return href === route.route;
+    case "example":
+      return href === `#/examples/${route.group}/${route.slug}`;
+    case "examples":
+      return href === "#/examples";
+    default:
+      return false;
+  }
+}
+
+function routePathFromHref(href: string): string {
+  const hash = new URL(href, window.location.href).hash;
+  const anchorIndex = hash.indexOf("#", 1);
+  const queryIndex = hash.indexOf("?");
+  const end = [anchorIndex, queryIndex]
+    .filter((index) => index !== -1)
+    .reduce((smallest, index) => Math.min(smallest, index), hash.length);
+  return hash.slice(0, end);
 }

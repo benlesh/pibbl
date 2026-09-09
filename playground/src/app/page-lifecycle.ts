@@ -70,6 +70,11 @@ export function createPageLifecycle(): PageLifecycle {
         activeSurface = value;
       });
     },
-    dispose: clear,
+    async dispose(): Promise<void> {
+      // Invalidate every version already handed to an asynchronous page loader
+      // before releasing the active resources it may otherwise replace.
+      renderVersion++;
+      await clear();
+    },
   };
 }
