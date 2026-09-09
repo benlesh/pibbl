@@ -10,6 +10,14 @@ import {
   scenarioCatalog,
 } from '@crc/scenarios';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  Polygon,
+  Rectangle,
+  RegularPolygon,
+  Star,
+  crc,
+  createElement,
+} from '@crc/core';
 import filterLabSource from '../../scenarios/src/filter-lab.example.tsx?raw';
 import learningFilterSource from '../../scenarios/src/learning/composition/filters.example.tsx?raw';
 import { clickMouse, cssPointForIntrinsic } from './support/mouse-input';
@@ -236,6 +244,85 @@ describe('first-class filter public scenarios', () => {
           'blur(1.5px)',
         ],
       });
+    } finally {
+      controller.dispose();
+    }
+  });
+
+  it('filters rounded and generated shape components through their public styles', async () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 320;
+    canvas.height = 100;
+    document.body.replaceChildren(canvas);
+
+    const appliedFilters: string[] = [];
+    const nativeDrawImage = OffscreenCanvasRenderingContext2D.prototype.drawImage;
+    vi.spyOn(OffscreenCanvasRenderingContext2D.prototype, 'drawImage')
+      .mockImplementation(function(
+        this: OffscreenCanvasRenderingContext2D,
+        ...args: Parameters<OffscreenCanvasRenderingContext2D['drawImage']>
+      ) {
+        if (this.filter !== 'none') appliedFilters.push(this.filter);
+        return nativeDrawImage.apply(this, args);
+      });
+
+    const controller = crc(canvas, [
+      createElement(Rectangle, {
+        style: {
+          x: 10,
+          y: 20,
+          width: 50,
+          height: 60,
+          cornerRadius: 12,
+          fill: '#ef4444',
+          filter: { type: 'grayscale', amount: 1 },
+        },
+      }),
+      createElement(Polygon, {
+        style: {
+          coords: [[80, 75], [105, 20], [130, 75]],
+          cornerRadius: 6,
+          fill: '#facc15',
+          filter: { type: 'sepia', amount: 1 },
+        },
+      }),
+      createElement(RegularPolygon, {
+        style: {
+          sides: 6,
+          cx: 185,
+          cy: 50,
+          circumradius: 32,
+          cornerRadius: 4,
+          fill: '#10b981',
+          filter: { type: 'hueRotate', degrees: 120 },
+        },
+      }),
+      createElement(Star, {
+        style: {
+          points: 5,
+          cx: 270,
+          cy: 50,
+          outerRadius: 34,
+          innerRadius: 16,
+          cornerRadius: 3,
+          fill: '#2563eb',
+          filter: { type: 'opacity', amount: 0.55 },
+        },
+      }),
+    ]);
+
+    try {
+      await nextPaint();
+      expect(appliedFilters).toEqual([
+        'grayscale(1)',
+        'sepia(1)',
+        'hue-rotate(120deg)',
+        'opacity(0.55)',
+      ]);
+      expect(pixelAt(canvas, { x: 35, y: 50 })[3]).toBeGreaterThan(0);
+      expect(pixelAt(canvas, { x: 105, y: 50 })[3]).toBeGreaterThan(0);
+      expect(pixelAt(canvas, { x: 185, y: 50 })[3]).toBeGreaterThan(0);
+      expect(pixelAt(canvas, { x: 270, y: 50 })[3]).toBeGreaterThan(0);
     } finally {
       controller.dispose();
     }
