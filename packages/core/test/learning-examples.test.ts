@@ -1,5 +1,8 @@
 import {
+  getLearningExampleBySlug,
+  getLearningExampleLegacyRoutes,
   getLearningExampleRoute,
+  getLearningExamplesByBrowseGroup,
   learningExampleCatalog,
   loadLearningExample,
   validateLearningExampleCatalog,
@@ -1085,15 +1088,27 @@ describe("learning example catalog", () => {
       { route: "#/examples/drawing/regular-polygon", api: ["RegularPolygon"] },
       { route: "#/examples/drawing/star", api: ["Star"] },
     ]);
+    expect(getLearningExampleBySlug("filters")?.browseGroup).toBe("drawing");
     expect(
-      learningExampleCatalog
-        .filter((entry) => entry.section === "composition")
-        .map((entry) => entry.slug),
-    ).toEqual(["group", "clip", "filters", "layer"]);
-
-    const clip = learningExampleCatalog.find(
-      (entry) => entry.section === "composition" && entry.slug === "clip",
+      getLearningExampleBySlug("getting-started")?.browseGroup,
+    ).toBeUndefined();
+    expect(
+      getLearningExampleBySlug("create-element-authoring")?.browseGroup,
+    ).toBeUndefined();
+    expect(getLearningExampleRoute(getLearningExampleBySlug("click")!)).toBe(
+      "#/examples/events-and-interaction/click",
     );
+    expect(
+      getLearningExampleLegacyRoutes(getLearningExampleBySlug("click")!),
+    ).toContain("#/examples/mouse-events/click");
+    const drawingExamples = getLearningExamplesByBrowseGroup("drawing");
+    expect(drawingExamples.map(({ shortTitle }) => shortTitle)).toEqual(
+      [...drawingExamples.map(({ shortTitle }) => shortTitle)].sort((a, b) =>
+        a.localeCompare(b, "en"),
+      ),
+    );
+
+    const clip = learningExampleCatalog.find((entry) => entry.slug === "clip");
     expect(clip).toBeDefined();
     expect(clip?.api).toEqual(["Clip", "createRegularPolygonPath"]);
     expect(clip?.objectives).toEqual([
@@ -1378,7 +1393,7 @@ describe("learning example catalog", () => {
     const drawingAndComposition = learningExampleCatalog
       .filter(
         (entry) =>
-          entry.section === "drawing" || entry.section === "composition",
+          entry.browseGroup === "drawing" || entry.browseGroup === "composition",
       )
       .flatMap((entry) => entry.api);
     expect(new Set(drawingAndComposition)).toEqual(

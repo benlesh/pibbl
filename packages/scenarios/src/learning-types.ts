@@ -12,6 +12,13 @@ export type LearningSectionId =
 
 export type LearningAuthoring = "jsx" | "createElement";
 
+export type LearningBrowseGroup =
+  | "drawing"
+  | "composition"
+  | "layout"
+  | "events-and-interaction"
+  | "focus-and-keyboard";
+
 export interface LearningSection {
   id: LearningSectionId;
   label: string;
@@ -36,6 +43,11 @@ export interface LearningExampleMetadata {
   title: string;
   shortTitle: string;
   section: LearningSectionId;
+  /**
+   * The public Examples browse group. The two introductory lessons live in
+   * Learn instead, so they deliberately have no public example group.
+   */
+  browseGroup?: LearningBrowseGroup;
   order: number;
   summary: string;
   api: readonly string[];
