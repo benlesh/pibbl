@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
+  computed,
   isSignal,
   signal,
   untracked,
   type SignalEquals,
 } from '../../index';
 import {
+  flushPendingComputedValidations,
   getSignalNode,
   withSignalTracking,
   withSignalWritePolicy,
@@ -223,5 +225,168 @@ describe('untracked', () => {
     });
 
     expect(dependencies).toEqual([node]);
+  });
+});
+
+describe('computed', () => {
+  it('is lazy, memoized, and prunes stale dynamic dependencies', () => {
+    const chooseLeft = signal(true);
+    const left = signal(2);
+    const right = signal(20);
+    let evaluations = 0;
+    const selected = computed(() => {
+      evaluations++;
+      return chooseLeft.get() ? left.get() : right.get();
+    });
+
+    expect(evaluations).toBe(0);
+    expect(selected.get()).toBe(2);
+    expect(selected.get()).toBe(2);
+    expect(evaluations).toBe(1);
+
+    chooseLeft.set(false);
+    expect(selected.get()).toBe(20);
+    left.set(3);
+    expect(selected.get()).toBe(20);
+    expect(evaluations).toBe(2);
+  });
+
+  it('collects nested computed values and reuses their cached values', () => {
+    const count = signal(2);
+    let doubledEvaluations = 0;
+    const doubled = computed(() => {
+      doubledEvaluations++;
+      return count.get() * 2;
+    });
+    const label = computed(() => `value: ${doubled.get()}`);
+
+    expect(label.get()).toBe('value: 4');
+    expect(label.get()).toBe('value: 4');
+    expect(doubledEvaluations).toBe(1);
+
+    count.set(3);
+    expect(label.get()).toBe('value: 6');
+    expect(doubledEvaluations).toBe(2);
+  });
+
+  it('uses a custom equality function to retain an equal cached result', () => {
+    const source = signal({ x: 1, y: 1 });
+    let evaluations = 0;
+    const x = computed(() => {
+      evaluations++;
+      return { x: source.get().x };
+    }, { equals: (previous, next) => previous.x === next.x });
+    const node = getSignalNode(x);
+
+    expect(x.get()).toEqual({ x: 1 });
+    source.set({ x: 1, y: 2 });
+    expect(x.get()).toEqual({ x: 1 });
+    expect(evaluations).toBe(2);
+    expect(node.version).toBe(1);
+  });
+
+  it('caches a thrown error object and recovers when a dependency changes', () => {
+    const enabled = signal(false);
+    const boom = new Error('not ready');
+    let evaluations = 0;
+    const value = computed(() => {
+      evaluations++;
+      if (!enabled.get()) {
+        throw boom;
+      }
+      return 'ready';
+    });
+
+    const thrown: unknown[] = [];
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        value.get();
+      } catch (error) {
+        thrown.push(error);
+      }
+    }
+    expect(thrown[0]).toBe(boom);
+    expect(thrown[1]).toBe(boom);
+    expect(evaluations).toBe(1);
+
+    enabled.set(true);
+    expect(value.get()).toBe('ready');
+    expect(evaluations).toBe(2);
+  });
+
+  it('retains the previous successful value when equality throws', () => {
+    const source = signal(1);
+    const boom = new Error('equality failed');
+    const value = computed(() => source.get(), { equals: () => { throw boom; } });
+    const node = getSignalNode(value);
+
+    expect(value.get()).toBe(1);
+    source.set(2);
+    expect(() => value.get()).toThrow(boom);
+    expect(node.value).toBe(1);
+    expect(node.version).toBe(1);
+  });
+
+  it('reports direct and indirect computed cycles with the debug-name path', () => {
+    let direct: ReturnType<typeof computed<number>>;
+    direct = computed(() => direct.get(), { debugName: 'direct' });
+    let first: ReturnType<typeof computed<number>>;
+    let second: ReturnType<typeof computed<number>>;
+    first = computed(() => second.get(), { debugName: 'first' });
+    second = computed(() => first.get(), { debugName: 'second' });
+
+    expect(() => direct.get()).toThrow('CRC computed cycle: direct -> direct');
+    expect(() => first.get()).toThrow(
+      'CRC computed cycle: first -> second -> first',
+    );
+  });
+
+  it('does not assign promise-continuation reads to a completed computation', async () => {
+    const source = signal(1);
+    const value = computed(() => {
+      Promise.resolve().then(() => source.get());
+      return 2;
+    });
+    const dependencies: unknown[] = [];
+
+    withSignalTracking({
+      addDependency: dependency => dependencies.push(dependency),
+    }, () => value.get());
+    await Promise.resolve();
+
+    expect(dependencies).toEqual([getSignalNode(value)]);
+    source.set(3);
+    expect(value.get()).toBe(2);
+  });
+
+  it('validates observed computed values dependency-first and stops after detach', () => {
+    const source = signal(1);
+    let innerEvaluations = 0;
+    let outerEvaluations = 0;
+    const inner = computed(() => {
+      innerEvaluations++;
+      return source.get() * 2;
+    });
+    const outer = computed(() => {
+      outerEvaluations++;
+      return inner.get() + 1;
+    });
+    const observe = getSignalNode(outer).observe;
+    if (observe === undefined) {
+      throw new Error('Expected computed signals to support internal observation.');
+    }
+    const detach = observe();
+
+    flushPendingComputedValidations();
+    expect([innerEvaluations, outerEvaluations]).toEqual([1, 1]);
+
+    source.set(2);
+    flushPendingComputedValidations();
+    expect([innerEvaluations, outerEvaluations]).toEqual([2, 2]);
+
+    detach();
+    source.set(3);
+    flushPendingComputedValidations();
+    expect([innerEvaluations, outerEvaluations]).toEqual([2, 2]);
   });
 });
