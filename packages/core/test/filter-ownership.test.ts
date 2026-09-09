@@ -6,6 +6,7 @@ import {
   definePrimitive,
   type CRCController,
   type CRCNode,
+  type SystemStyle,
 } from "@crc/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { clearSharedState, getCRCInstance } from "../src/lib/global-state";
@@ -22,10 +23,41 @@ afterEach(() => {
 });
 
 describe("filter surface ownership", () => {
-  it("keeps exact ownership through stress, replacement, failure, disposal, and remount", () => {
+  it("keeps exact ownership through stress, replacement, failure, disposal, and remount", async () => {
+    let patternAssignment:
+      | {
+          context: OffscreenCanvasRenderingContext2D;
+          pattern: CanvasPattern;
+        }
+      | undefined;
+    let patternAssignments = 0;
+    const patternImage = new Image();
+    patternImage.src =
+      "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+    await patternImage.decode();
+    const PatternPrimitive = definePrimitive<{}, SystemStyle>(
+      (_props, _style, context) => {
+        if (!(context instanceof OffscreenCanvasRenderingContext2D)) {
+          throw new Error("Expected the filtered pattern primitive offscreen.");
+        }
+        const pattern = context.createPattern(patternImage, "repeat");
+        if (!pattern)
+          throw new Error("Expected an image-backed CanvasPattern.");
+        context.fillStyle = pattern;
+        context.strokeStyle = pattern;
+        context.fillRect(0, 0, 1, 1);
+        patternAssignment = { context, pattern };
+        patternAssignments += 1;
+      },
+    );
     const frames = controlFrames();
     const canvas = createCanvas();
-    const siblings = oneHundredFilteredSiblings();
+    const siblings = oneHundredFilteredSiblings(
+      createElement(PatternPrimitive, {
+        key: "pattern-bearing-sibling",
+        style: { filter: { type: "grayscale", amount: 1 } },
+      }),
+    );
     const controller = crc(canvas, siblings, { pixelRatio: 1 });
     controllers.add(controller);
     frames.runNext();
@@ -62,11 +94,34 @@ describe("filter surface ownership", () => {
     crc(canvas, undefined);
     frames.runNext(1_001);
     expect(instance.refs.size).toBe(0);
-    expect(firstPool.snapshot()).toMatchObject({
+    expect(patternAssignment).toBeDefined();
+    expect(patternAssignments).toBe(1_001);
+    if (!patternAssignment) return;
+    expect(patternAssignment.context.fillStyle).toBe("#000000");
+    expect(patternAssignment.context.strokeStyle).toBe("#000000");
+    expect(patternAssignment.context.fillStyle).not.toBe(
+      patternAssignment.pattern,
+    );
+    expect(patternAssignment.context.strokeStyle).not.toBe(
+      patternAssignment.pattern,
+    );
+    const idleContexts = idlePoolContexts(firstPool);
+    expect(idleContexts).toHaveLength(2);
+    expect(idleContexts).toContain(patternAssignment.context);
+    for (const context of idleContexts) {
+      expect(context.fillStyle).toBe("#000000");
+      expect(context.strokeStyle).toBe("#000000");
+      expect(context.fillStyle).not.toBe(patternAssignment.pattern);
+      expect(context.strokeStyle).not.toBe(patternAssignment.pattern);
+    }
+    expect(firstPool.snapshot()).toEqual({
       surfaceSlots: 2,
+      createdSurfaceSlots: 2,
       activePairs: 0,
+      peakActivePairs: 1,
       pairCheckouts: 100_100,
       pairReturns: 100_100,
+      resized: 0,
       releasedSurfaceSlots: 0,
     });
 
@@ -120,20 +175,22 @@ const ThrowingPrimitive = definePrimitive<{}>(() => {
   throw new Error("forced filter failure");
 });
 
-function oneHundredFilteredSiblings(): CRCNode {
+function oneHundredFilteredSiblings(firstSibling: CRCNode): CRCNode {
   return createElement(Group, {
     children: Array.from({ length: 100 }, (_, index) =>
-      createElement(Rectangle, {
-        key: `filtered-sibling-${index}`,
-        style: {
-          x: index % 10,
-          y: Math.floor(index / 10),
-          width: 1,
-          height: 1,
-          fill: "red",
-          filter: { type: "grayscale", amount: 1 },
-        },
-      }),
+      index === 0
+        ? firstSibling
+        : createElement(Rectangle, {
+            key: `filtered-sibling-${index}`,
+            style: {
+              x: index % 10,
+              y: Math.floor(index / 10),
+              width: 1,
+              height: 1,
+              fill: "red",
+              filter: { type: "grayscale", amount: 1 },
+            },
+          }),
     ),
   });
 }
@@ -195,4 +252,17 @@ function expectReleased(
     resized,
     releasedSurfaceSlots: createdSurfaceSlots,
   });
+}
+
+function idlePoolContexts(
+  pool: FilterSurfacePool,
+): OffscreenCanvasRenderingContext2D[] {
+  const slots = (
+    pool as unknown as {
+      readonly slots: ReadonlyArray<
+        { readonly context: OffscreenCanvasRenderingContext2D } | undefined
+      >;
+    }
+  ).slots;
+  return slots.flatMap((slot) => (slot ? [slot.context] : []));
 }

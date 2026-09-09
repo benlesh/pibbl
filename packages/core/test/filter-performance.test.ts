@@ -12,7 +12,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { executeRender } from "../src/lib/execute-render";
 import * as filterRegion from "../src/lib/filter/filter-region";
 import type { FilterWindows } from "../src/lib/filter/filter-region";
-import { FilterSurfacePool } from "../src/lib/filter/filter-surface-pool";
+import {
+  FilterSurfacePool,
+  type FilterSurface,
+} from "../src/lib/filter/filter-surface-pool";
 import { clearSharedState, getCRCInstance } from "../src/lib/global-state";
 import { mountCRC } from "../src/lib/mount-crc";
 import * as filterStyle from "../src/lib/style/filter";
@@ -47,10 +50,8 @@ describe("filter structural performance", () => {
       }),
     );
 
-    const singleTenFunctionList = ledger.snapshot(
-      getCRCInstance(canvas).filterSurfacePool,
-      primitiveExecutions,
-    );
+    const pool = getCRCInstance(canvas).filterSurfacePool;
+    const singleTenFunctionList = ledger.snapshot(pool, primitiveExecutions);
     expect(singleTenFunctionList).toMatchObject({
       primitiveExecutions: 1,
       filterSurfaceSlots: 2,
@@ -65,6 +66,31 @@ describe("filter structural performance", () => {
       pixelWrites: 0,
       imageBitmapTransfers: 0,
     });
+    const [sourceSurface, resultSurface] = poolSurfaces(pool);
+    const parentContext = canvas.getContext("2d");
+    expect(sourceSurface).toBeDefined();
+    expect(resultSurface).toBeDefined();
+    expect(parentContext).not.toBeNull();
+    expect(sourceSurface!.canvas).toMatchObject({ width: 38, height: 29 });
+    expect(resultSurface!.canvas).toMatchObject({ width: 32, height: 24 });
+    expect(singleTenFunctionList.drawCalls).toHaveLength(2);
+    const [filteredDraw, parentCompositeDraw] = singleTenFunctionList.drawCalls;
+    expect(filteredDraw).toMatchObject({
+      callOrder: 1,
+      inputPixelArea: 1_102,
+      destinationClass: "offscreen",
+    });
+    expect(filteredDraw!.sourceCanvas).toBe(sourceSurface!.canvas);
+    expect(filteredDraw!.destinationContext).toBe(resultSurface!.context);
+    expect(filteredDraw!.destinationCanvas).toBe(resultSurface!.canvas);
+    expect(parentCompositeDraw).toMatchObject({
+      callOrder: 2,
+      inputPixelArea: 768,
+      destinationClass: "parent",
+    });
+    expect(parentCompositeDraw!.sourceCanvas).toBe(resultSurface!.canvas);
+    expect(parentCompositeDraw!.destinationContext).toBe(parentContext);
+    expect(parentCompositeDraw!.destinationCanvas).toBe(canvas);
   });
 
   it("bounds slots by nesting depth rather than sibling count", () => {
@@ -93,13 +119,27 @@ describe("filter structural performance", () => {
   });
 
   it("reuses two slots for alternating windows and counts only dimension changes", () => {
-    const pool = new FilterSurfacePool();
-    for (let index = 0; index < 100; index += 1) {
-      const pair = pool.checkoutPair(
-        index % 2 === 0 ? createWindows(32, 24) : createWindows(16, 12),
-      );
-      pair.release();
-    }
+    const resolveFilterWindows = vi.mocked(filterRegion.resolveFilterWindows);
+    resolveFilterWindows.mockClear();
+    const callbacks = Array.from({ length: 100 }, () => vi.fn());
+    const Counted = ({ index }: { index: number }) => {
+      callbacks[index]!();
+    };
+    const canvas = renderScene(
+      createElement(Group, {
+        children: callbacks.map((_callback, index) =>
+          createElement(Group, {
+            key: `alternating-filter-${index}`,
+            style: {
+              rotationDegrees: index % 2 === 0 ? 0 : 90,
+              filter: COLOR_FILTER,
+            },
+            children: createElement(Counted, { index }),
+          }),
+        ),
+      }),
+    );
+    const pool = getCRCInstance(canvas).filterSurfacePool;
 
     expect(pool.snapshot()).toMatchObject({
       surfaceSlots: 2,
@@ -110,7 +150,23 @@ describe("filter structural performance", () => {
       activePairs: 0,
       resized: 198,
     });
-    pool.dispose();
+    expect(resolveFilterWindows).toHaveBeenCalledTimes(100);
+    for (const [index, result] of resolveFilterWindows.mock.results.entries()) {
+      expect(result.type).toBe("return");
+      const windows = result.value as FilterWindows | "discard";
+      expect(windows).not.toBe("discard");
+      if (windows === "discard") return;
+      const [width, height] = index % 2 === 0 ? [32, 24] : [24, 32];
+      expect(windows.source).toMatchObject({
+        backingWidth: width,
+        backingHeight: height,
+      });
+      expect(windows.output).toMatchObject({
+        backingWidth: width,
+        backingHeight: height,
+      });
+    }
+    for (const callback of callbacks) expect(callback).toHaveBeenCalledOnce();
   });
 
   it("skips clears for fresh and resized slots and clears exact same-size areas", () => {
@@ -191,8 +247,8 @@ const TEN_FUNCTION_FILTER_LIST: readonly CRCFilter[] = [
 
 class FilterWorkLedger {
   readonly clearCalls: Array<[number, number, number, number]> = [];
-  private readonly filteredInputAreas: number[] = [];
-  private readonly parentInputAreas: number[] = [];
+  readonly drawCalls: DrawCall[] = [];
+  private nextDrawCallOrder = 1;
   private readonly resolveFilterList = vi.mocked(filterStyle.resolveFilterList);
   private readonly resolveFilterWindows = vi.mocked(
     filterRegion.resolveFilterWindows,
@@ -250,12 +306,15 @@ class FilterWorkLedger {
       this: OffscreenCanvasRenderingContext2D,
       ...args: Parameters<OffscreenCanvasRenderingContext2D["drawImage"]>
     ) {
-      const inputArea = imageInputArea(args[0]);
-      if (this.filter === "none") {
-        ledger.parentInputAreas.push(inputArea);
-      } else {
-        ledger.filteredInputAreas.push(inputArea);
-      }
+      ledger.drawCalls.push({
+        callOrder: ledger.nextDrawCallOrder++,
+        sourceCanvas: args[0],
+        destinationContext: this,
+        destinationCanvas: this.canvas,
+        destinationClass: "offscreen",
+        filterAtCall: this.filter,
+        inputPixelArea: imageInputArea(args[0]),
+      });
       return nativeOffscreenDrawImage.apply(this, args);
     });
 
@@ -267,7 +326,15 @@ class FilterWorkLedger {
       this: CanvasRenderingContext2D,
       ...args: Parameters<CanvasRenderingContext2D["drawImage"]>
     ) {
-      ledger.parentInputAreas.push(imageInputArea(args[0]));
+      ledger.drawCalls.push({
+        callOrder: ledger.nextDrawCallOrder++,
+        sourceCanvas: args[0],
+        destinationContext: this,
+        destinationCanvas: this.canvas,
+        destinationClass: "parent",
+        filterAtCall: this.filter,
+        inputPixelArea: imageInputArea(args[0]),
+      });
       return nativeParentDrawImage.apply(this, args);
     });
   }
@@ -299,12 +366,18 @@ class FilterWorkLedger {
         compile: this.compileFilterList.mock.calls.length,
       },
       offscreenConstructions: this.offscreenConstructor.mock.calls.length,
-      filteredDraws: this.filteredInputAreas.length,
-      parentCompositeDraws: this.parentInputAreas.length,
-      drawImageInputPixelArea: [
-        ...this.filteredInputAreas,
-        ...this.parentInputAreas,
-      ].reduce((total, area) => total + area, 0),
+      filteredDraws: this.drawCalls.filter(
+        (call) =>
+          call.destinationClass === "offscreen" && call.filterAtCall !== "none",
+      ).length,
+      parentCompositeDraws: this.drawCalls.filter(
+        (call) => call.destinationClass === "parent",
+      ).length,
+      drawImageInputPixelArea: this.drawCalls.reduce(
+        (total, call) => total + call.inputPixelArea,
+        0,
+      ),
+      drawCalls: this.drawCalls,
       pixelReadbacks:
         this.offscreenGetImageData.mock.calls.length +
         this.htmlGetImageData.mock.calls.length,
@@ -314,6 +387,17 @@ class FilterWorkLedger {
       imageBitmapTransfers: this.imageBitmapTransfers.mock.calls.length,
     };
   }
+}
+
+interface DrawCall {
+  readonly callOrder: number;
+  readonly sourceCanvas: CanvasImageSource;
+  readonly destinationContext:
+    CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+  readonly destinationCanvas: HTMLCanvasElement | OffscreenCanvas;
+  readonly destinationClass: "offscreen" | "parent";
+  readonly filterAtCall: string;
+  readonly inputPixelArea: number;
 }
 
 function imageInputArea(input: CanvasImageSource): number {
@@ -328,6 +412,15 @@ function imageInputArea(input: CanvasImageSource): number {
     return input.width * input.height;
   }
   throw new Error("Expected filter composition to draw a Canvas surface.");
+}
+
+function poolSurfaces(pool: FilterSurfacePool): FilterSurface[] {
+  const slots = (
+    pool as unknown as {
+      readonly slots: ReadonlyArray<FilterSurface | undefined>;
+    }
+  ).slots;
+  return slots.flatMap((slot) => (slot ? [slot] : []));
 }
 
 function renderScene(root: CRCNode): HTMLCanvasElement {
