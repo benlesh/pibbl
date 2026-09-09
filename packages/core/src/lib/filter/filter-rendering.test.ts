@@ -471,6 +471,13 @@ describe('filter rendering', () => {
     'attr(data-shadow type(<color>), red)',
     'inherit(--shadow, red)',
     'if(style(--dark): white; else: black)',
+    '-webkit-link',
+    '-WEBKIT-LINK',
+    '-webkit-activelink',
+    '-WebKit-ActiveLink',
+    '-\\77 ebkit-link',
+    '-webkit-active\\6c ink',
+    'color-mix(in srgb, -webkit-link, red)',
   ])(
     'rejects contextual color %s before the primitive callback',
     color => {
@@ -495,11 +502,10 @@ describe('filter rendering', () => {
         },
       }));
 
-      expect(runFrame).toThrow(/Probe.*filter\.color.*contextual/);
+      expect(runFrame)
+        .toThrow(/Probe.*property filter\.color .*contextual/);
       expect(callback).not.toHaveBeenCalled();
-      expect(filterAssignments.mock.calls.map(([value]) => value).filter(
-        value => value !== 'none',
-      )).toEqual([]);
+      expect(filterAssignments).not.toHaveBeenCalled();
       expect(getCRCInstance(canvas).filterSurfacePool.snapshot()).toMatchObject({
         surfaceSlots: 0,
         pairCheckouts: 0,
@@ -507,7 +513,7 @@ describe('filter rendering', () => {
     },
   );
 
-  it('reports an indexed nested contextual color before native filter assignment', () => {
+  it('reports an indexed nested vendor color before allocation or native assignment', () => {
     const callback = vi.fn();
     const Probe = definePrimitive<{}, SystemStyle>(function renderProbe() {
       callback();
@@ -526,17 +532,16 @@ describe('filter rendering', () => {
             type: 'dropShadow',
             offsetX: 2,
             offsetY: 2,
-            color: 'color-mix(in srgb, red, Canvas\\54 ext)',
+            color: 'color-mix(in srgb, red, -webkit-active\\6c ink)',
           },
         ],
       },
     }));
 
-    expect(runFrame).toThrow(/Probe.*filter\[1\]\.color.*contextual/);
+    expect(runFrame)
+      .toThrow(/Probe.*property filter\[1\]\.color .*contextual/);
     expect(callback).not.toHaveBeenCalled();
-    expect(filterAssignments.mock.calls.map(([value]) => value).filter(
-      value => value !== 'none',
-    )).toEqual([]);
+    expect(filterAssignments).not.toHaveBeenCalled();
     expect(getCRCInstance(canvas).filterSurfacePool.snapshot()).toMatchObject({
       surfaceSlots: 0,
       pairCheckouts: 0,

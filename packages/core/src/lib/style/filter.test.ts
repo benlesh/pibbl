@@ -169,6 +169,13 @@ describe('filter lists', () => {
     'light-dark(red, blue)',
     'color-mix(in srgb, light-dark(red, blue), black)',
     'l\\69 ght-dark(red, blue)',
+    '-webkit-link',
+    '-WEBKIT-LINK',
+    '-webkit-activelink',
+    '-WebKit-ActiveLink',
+    '-\\77 ebkit-link',
+    '-webkit-active\\6c ink',
+    'color-mix(in srgb, -webkit-link, red)',
   ])(
     'rejects contextual drop-shadow color %s',
     color => {
@@ -177,6 +184,18 @@ describe('filter lists', () => {
       }, context)).toThrow(/filter\.color.*contextual/);
     },
   );
+
+  it('reports the exact indexed path for a nested vendor contextual color', () => {
+    expect(() => resolveFilterList([
+      { type: 'blur', radius: 1 },
+      {
+        type: 'dropShadow',
+        offsetX: 0,
+        offsetY: 0,
+        color: 'color-mix(in srgb, red, -webkit-active\\6c ink)',
+      },
+    ], context)).toThrow(/property filter\[1\]\.color .*contextual/);
+  });
 
   it.each([
     'red) blur(100px',
@@ -203,7 +222,14 @@ describe('filter lists', () => {
   });
 
   it('does not classify contextual-keyword substrings as contextual tokens', () => {
-    const colors = ['currentColorful', 'CanvasTexture', 'Marking'];
+    const colors = [
+      'currentColorful',
+      'CanvasTexture',
+      'Marking',
+      '-webkit-linkish',
+      'my-webkit-activelink',
+      'color-mix(in srgb, -webkit-linkish, red)',
+    ];
 
     for (const color of colors) {
       expect(resolveFilterList({

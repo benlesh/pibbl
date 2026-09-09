@@ -13,6 +13,8 @@ export interface ResolvedFilterList {
 const filterListOrigins = new WeakMap<readonly CRCFilter[], boolean>();
 
 const contextualColorIdentifiers = new Set([
+  '-webkit-activelink',
+  '-webkit-link',
   'accentcolor',
   'accentcolortext',
   'activeborder',
