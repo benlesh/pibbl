@@ -1,7 +1,7 @@
 # CRC canvas surface contract
 
-Status: current implemented contract, updated for JSX-era authoring on
-2026-09-03.
+Status: current implemented contract, updated for first-class filters on
+2026-09-08.
 
 This document defines how a root CRC mount maps logical drawing units to the
 Canvas CSS content box and physical backing store. The mapping is owned by the
@@ -133,6 +133,32 @@ the new physical size and composites its complete backing source into its
 logical destination. Layer-local layout and interaction remain expressed in
 logical units.
 
+Runtime-created Layer and filter surfaces are upright local targets. CRC keeps
+the current paint transform, which maps local drawing into the active target,
+separate from the world transform used by event paths, focus bounds, clipping
+entries, and Layer bridges. Inside a filtered boundary,
+`crcCanvasContext().canvas` is truthfully the local `OffscreenCanvas`, and its
+`getTransform()` describes that local capture. The filtered bitmap receives the
+boundary's parent-facing placement or Group transform exactly once when it is
+composited. Interaction geometry continues to use root-logical world transforms
+and therefore does not double-apply surface density, fitting, or presentation.
+
+A filter boundary uses one uniform local raster density: the largest singular
+scale of its direct local-to-parent-backing transform. That transform already
+contains root or Layer backing density exactly once. Source and result surfaces
+share this density but have separate conservatively snapped windows, allowing
+blur and shadow input outside the visible output without allocating a second
+large output bitmap. Filter lengths and offsets are scaled to backing pixels
+before native compilation; rotation and nonuniform scaling happen later at
+composite time.
+
+A nonempty filter list requires browser `OffscreenCanvas`, a 2D context, and
+native Canvas `filter` support on that context. Unsupported chains, invalid
+dimensions, allocation failure, and context-acquisition failure are actionable
+render errors. CRC does not fall back to a DOM canvas or silently reduce
+resolution. An empty filter list is a direct-path no-op and adds no capability
+requirement.
+
 ## Scheduling and lifetime
 
 Resize and density notifications use the ordinary animation-frame scheduler.
@@ -153,6 +179,10 @@ rounding, invalid input, default capture, layer density, and zero display size.
 Root lifecycle tests cover fixed and responsive resize, identity preservation,
 device density, intrinsic-size stabilization, and disposal. Interaction and
 layer suites prove logical coordinates and nested high-density composition.
+
+Filter projection tests additionally cover upright local capture, conservative
+windows, root and Layer density exactly once, unchanged target geometry, and
+nested high-density filter composition.
 
 The public `canvas-surface` laboratory is loaded by both the Studio and
 headless Chromium. It proves fixed 2x backing, fixed CSS resize without logical

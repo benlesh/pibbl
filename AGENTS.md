@@ -9,7 +9,8 @@ when a task needs exact behavior or historical evidence.
 CRC is a small functional component runtime over the HTML Canvas 2D API. It
 provides automatic JSX and equivalent `createElement` authoring, scheduled
 rendering, hook state, DOM-aligned user events, transforms, clipping, offscreen
-layers, and composable drawing primitives without React or generated DOM.
+layers, typed first-class filters, and composable drawing primitives without
+React or generated DOM.
 
 - Project Plans 001, 002, and 003 are complete. Plan 003 shipped first-class
   local style, declared-box layout, pure measurement, and the Absolute,
@@ -21,6 +22,10 @@ layers, and composable drawing primitives without React or generated DOM.
 - DOM-aligned user events and optional logical focus/keyboard navigation are
   implemented. The Canvas remains the only native focus host and gains no
   generated semantic DOM or accessibility tree.
+- First-class `style.filter` is implemented for every primitive with ten typed
+  Canvas filter descriptors, ordered single/list semantics, combined-subtree
+  capture, inside-out nesting, upright local surfaces, and instance-owned
+  transient pooling.
 - The local `_bmad-output/` directory remains discovery input, not normative
   behavior. Plan 003's implemented design, architecture, contracts, and
   implementation record supersede its earlier layout proposals where they
@@ -34,10 +39,12 @@ When sources disagree, use this order and call out material drift:
 2. Implemented design contracts under `docs/design/` and the trust-gate rules.
 3. The implemented JSX-authoring design and current style/layout architecture
    for exact authoring, style, and layout intent.
-4. Plan 003's implemented design for style/layout intent not superseded by the
+4. The implemented first-class filter design for exact filter intent not
+   superseded by current contracts.
+5. Plan 003's implemented design for style/layout intent not superseded by the
    current contracts.
-5. Completed numbered plans and their dated field notes as historical evidence.
-6. Draft PRDs, extraction files, `_bmad-output/`, and memlogs as discovery evidence,
+6. Completed numbered plans and their dated field notes as historical evidence.
+7. Draft PRDs, extraction files, `_bmad-output/`, and memlogs as discovery evidence,
    not normative behavior.
 
 Test totals in documentation are dated snapshots. In particular, the 265-test
@@ -89,6 +96,14 @@ either as the current result unless a fresh run reproduces it.
   the same transform/clip geometry, so paint and hit testing must stay aligned.
 - Offscreen `Layer` instances share the root interaction state and participate in
   global paint/target order. They require browser `OffscreenCanvas` support.
+- A nonempty `style.filter` creates one transient composition boundary around
+  the receiving primitive and its recursive output. One list uses one native
+  filter operation in declaration order; nested boundaries resolve inside out.
+  Receiving Group transforms and Clip geometry apply after filtering.
+- Filter and Layer surfaces are upright local targets. Paint transforms map into
+  the active surface; separate world transforms preserve root-logical event,
+  focus, and clip geometry. Filter raster density includes root/Layer backing
+  density exactly once and applies parent presentation at composite time.
 - Layout parents inspect normalized direct-child style before render, resolve
   finite allocations, and place one child descriptor without retaining drawing
   commands. Pure opt-in measurement cannot render or acquire runtime resources.
@@ -110,6 +125,11 @@ primitive, style, length, box, constraint, and measurement types. Surface
 configuration is public through `CRCConfig`,
 `CRCFit`, `CRCPixelRatio`, and the fixed/responsive configuration types.
 Directional configuration is public through `CRCKeyboardNavigationOptions`.
+Filter configuration is public through `CRCFilter` and the ten named
+`CRCBlurFilter`, `CRCBrightnessFilter`, `CRCContrastFilter`,
+`CRCDropShadowFilter`, `CRCGrayscaleFilter`, `CRCHueRotateFilter`,
+`CRCInvertFilter`, `CRCOpacityFilter`, `CRCSaturateFilter`, and
+`CRCSepiaFilter` descriptor types.
 
 Public hooks: `crcState`, `crcMemo`, `crcRef`, `crcWhenChanged`, `crcRectPath`,
 `crcLinePath`, `crcSvgPath`, `crcEvent`, `crcEventTarget`,
@@ -125,8 +145,11 @@ keyboard navigation adds deterministic arrow movement. Without the focus policy,
 native non-coordinate input on a plain Canvas has no logical target. No public
 input-injection adapter, hidden editable DOM, semantic control mirror, or
 accessibility layer exists. CRC also does not promise rich text, image CORS
-policy, complete CSS compatibility, scrolling, WebGL, or a retained scene
-graph. Browser behavior remains authoritative for Canvas/`Path2D`, font
+policy, complete CSS compatibility, raw CSS filter strings, `url()`/SVG filter
+graphs, `backdrop-filter`, `boxShadow`, scrolling, workers/WebGL, or a retained
+scene graph. Nonempty filters require browser `OffscreenCanvas` and Canvas
+`filter`; `[]` is a no-op with no filter capability requirement. Browser
+behavior remains authoritative for Canvas/`Path2D`, font
 rasterization and measurement, decoded-image behavior, and `OffscreenCanvas`
 availability.
 
@@ -224,3 +247,25 @@ async component support, lowercase intrinsic vocabulary, or compatibility
 alias for removed authoring values. Current guides and the API reference live
 under `docs/guides/` and `docs/api-reference.md`; the approved design and
 implementation record remain under `docs/superpowers/` as dated evidence.
+
+## Shipped first-class filters
+
+The implemented 2026-09-08 design added the closed `style.filter` system to
+every primitive. Filters affect pixels only: layout, measurement, hit testing,
+focus/navigation bounds, pointer coordinates, and cursor regions use original
+logical geometry. A receiving primitive and all descendants form one combined
+silhouette; list order is forward, nesting is inside out, and Group/Clip/Layer
+composition preserves the documented presentation and caching order.
+
+Each CRC instance owns a constant-time depth-indexed pool with two transient
+surfaces per active nesting level. Validation, allocation, execution, and
+compositing restore leases and render globals in `finally`; structural evidence
+locks one component traversal, two bitmap draws per boundary, sibling reuse,
+Layer cache hits, and the absence of pixel readback. Exact current behavior and
+historical intent live in:
+
+- `docs/design/style-system-contract.md`
+- `docs/design/drawing-components-contract.md`
+- `docs/design/canvas-surface-contract.md`
+- `docs/design/runtime-resource-ownership.md`
+- `docs/superpowers/specs/2026-09-08-first-class-filters-design.md`

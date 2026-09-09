@@ -75,6 +75,46 @@ requires `src`. Components whose complete style schema has defaults may omit
 `style.custom` is available for application-owned metadata and is not read or
 inherited by CRC. Arbitrary top-level style keys are not accepted.
 
+## Filters are typed local style
+
+Every primitive, including composition and layout primitives, accepts one
+filter descriptor or a readonly ordered list:
+
+```tsx
+import { Group, Rectangle, type CRCFilter } from "@crc/core";
+
+const effects = [
+  { type: "grayscale", amount: 1 },
+  {
+    type: "dropShadow",
+    offsetX: 8,
+    offsetY: 6,
+    blurRadius: 4,
+    color: "rgb(0 0 0 / 45%)",
+  },
+] satisfies readonly CRCFilter[];
+
+const filteredCard = (
+  <Group style={{ filter: effects }}>
+    <Rectangle style={{ width: 180, height: 96, fill: "tomato" }} />
+    <Rectangle style={{ x: 24, y: 24, width: 48, height: 48, fill: "gold" }} />
+  </Group>
+);
+```
+
+The list runs in declaration order over one combined image of the receiving
+primitive and everything it returns. Put the filter on a `Group` when several
+siblings should form one silhouette. Nested filtered primitives resolve inside
+out. A single descriptor means a one-item list; `[]` means no filter and stays
+on the direct rendering path.
+
+Filters affect pixels only. They do not enlarge layout or measurement, and
+blurred or shadow-only pixels outside original geometry are not clickable or
+focusable. Nonempty filters require browser `OffscreenCanvas` and native Canvas
+filter support. CRC accepts the ten typed descriptors documented in the [style
+contract](../design/style-system-contract.md), not raw CSS strings, `url()`,
+`backdrop-filter`, or `boxShadow`.
+
 ## Specified style and allocation
 
 A layout parent reads a direct child's specified `style` to calculate its

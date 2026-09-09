@@ -1,27 +1,29 @@
 # CRC runtime resource ownership
 
-Status: current implemented contract, updated for JSX-era authoring on
-2026-09-03.
+Status: current implemented contract, updated for first-class filters on
+2026-09-08.
 
 This contract extends the [event resource ownership contract](./event-resource-ownership.md) to every current non-event runtime resource. It defines deterministic ownership and release conditions; garbage collection is supporting evidence only and is never the cleanup oracle.
 
 ## Ownership table
 
-| Resource                       | Acquisition                                   | Sole owner                                   | Release trigger                                             | Required postcondition                                                                                                      |
-| ------------------------------ | --------------------------------------------- | -------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Teardown entry                 | `Teardowns.add()`                             | One teardown collection                      | Explicit removal or the collection's first execution        | It runs at most once; later execution is inert.                                                                             |
-| Follower link                  | `child.follow(parent)`                        | Child collection                             | Child or parent execution                                   | The child closes once and detaches from the parent.                                                                         |
-| Root instance and refs         | First `crc()` mount and render                | Identity-guarded controller                  | Abort or controller disposal                                | The exact map entry and every owned component ref are absent; a remount is untouched.                                       |
-| Component refs                 | First render of one component path/key        | Component teardown collection                | Key, subtree, or root replacement; instance disposal        | The ref leaves the instance map after its teardown closes.                                                                  |
-| `crcWhenChanged` cleanup       | Current dependency-generation callback return | That hook slot in the component collection   | Dependency change or component teardown                     | The previous generation cleans before the next setup and can never clean twice.                                             |
-| `crcState` setter              | Hook mount                                    | Exact CRC instance plus exact component refs | Component/main teardown closure or either identity changing | A stale setter is a no-op and cannot mutate or schedule a frame on a replacement mount.                                     |
-| Animation frame                | `update()`                                    | Exact instance and frame ID                  | Replacement, callback completion, or disposal               | The exact frame completes or is canceled; an already-dequeued stale callback is inert.                                      |
-| Image load/error handlers      | Current `Image` source generation             | That image hook generation                   | Load, error, source change, component removal, or disposal  | Both handlers detach, the request source is released, and late callbacks cannot publish state.                              |
-| Loaded image state             | Current `Image` component refs                | Source-tagged state slot                     | Source change, component removal, or disposal               | Only an image tagged with the currently rendered source can draw.                                                           |
-| Layer instance and paint entry | `Layer` mount/render slot                     | Layer component refs                         | Layer, ancestor, or root removal                            | Parent paint entry, child refs/frames, and nested layer instances release recursively.                                      |
-| Root surface observers         | First root mount                              | Root instance main teardown                  | Abort, controller disposal, or failed mount                 | Resize, window-resize, and resolution-query listeners are detached; stale notifications cannot schedule the replacement.    |
-| Intrinsic-size stabilization   | Backing resize that changes CSS size          | Root surface state                           | Root disposal while CRC still owns the inline value         | The prior inline width/height is restored without overwriting a later external style change.                                |
-| Temporary render globals       | `executeRender()` entry                       | Current synchronous render                   | `finally` on success or failure                             | Canvas, refs, instance, contexts, seen/unseen sets, hook index, mounting flag, and clip stack return to the prior baseline. |
+| Resource                       | Acquisition                                   | Sole owner                                   | Release trigger                                                                            | Required postcondition                                                                                                      |
+| ------------------------------ | --------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| Teardown entry                 | `Teardowns.add()`                             | One teardown collection                      | Explicit removal or the collection's first execution                                       | It runs at most once; later execution is inert.                                                                             |
+| Follower link                  | `child.follow(parent)`                        | Child collection                             | Child or parent execution                                                                  | The child closes once and detaches from the parent.                                                                         |
+| Root instance and refs         | First `crc()` mount and render                | Identity-guarded controller                  | Abort or controller disposal                                                               | The exact map entry and every owned component ref are absent; a remount is untouched.                                       |
+| Component refs                 | First render of one component path/key        | Component teardown collection                | Key, subtree, or root replacement; instance disposal                                       | The ref leaves the instance map after its teardown closes.                                                                  |
+| `crcWhenChanged` cleanup       | Current dependency-generation callback return | That hook slot in the component collection   | Dependency change or component teardown                                                    | The previous generation cleans before the next setup and can never clean twice.                                             |
+| `crcState` setter              | Hook mount                                    | Exact CRC instance plus exact component refs | Component/main teardown closure or either identity changing                                | A stale setter is a no-op and cannot mutate or schedule a frame on a replacement mount.                                     |
+| Animation frame                | `update()`                                    | Exact instance and frame ID                  | Replacement, callback completion, or disposal                                              | The exact frame completes or is canceled; an already-dequeued stale callback is inert.                                      |
+| Image load/error handlers      | Current `Image` source generation             | That image hook generation                   | Load, error, source change, component removal, or disposal                                 | Both handlers detach, the request source is released, and late callbacks cannot publish state.                              |
+| Loaded image state             | Current `Image` component refs                | Source-tagged state slot                     | Source change, component removal, or disposal                                              | Only an image tagged with the currently rendered source can draw.                                                           |
+| Layer instance and paint entry | `Layer` mount/render slot                     | Layer component refs                         | Layer, ancestor, or root removal                                                           | Parent paint entry, child refs/frames, and nested layer instances release recursively.                                      |
+| Filter scratch pool            | CRC instance construction                     | That CRC instance                            | Instance main teardown                                                                     | Every reusable source/result canvas and context reference is released; a remount receives a distinct pool.                  |
+| Filter surface-pair lease      | Start of one active nonempty filter boundary  | Current synchronous boundary                 | Boundary `finally`, including validation/render/composite failure, or owning pool disposal | Source and result slots return together in strict LIFO order; no active pair or user reference survives.                    |
+| Root surface observers         | First root mount                              | Root instance main teardown                  | Abort, controller disposal, or failed mount                                                | Resize, window-resize, and resolution-query listeners are detached; stale notifications cannot schedule the replacement.    |
+| Intrinsic-size stabilization   | Backing resize that changes CSS size          | Root surface state                           | Root disposal while CRC still owns the inline value                                        | The prior inline width/height is restored without overwriting a later external style change.                                |
+| Temporary render globals       | `executeRender()` entry                       | Current synchronous render                   | `finally` on success or failure                                                            | Canvas, refs, instance, contexts, seen/unseen sets, hook index, mounting flag, and clip stack return to the prior baseline. |
 
 ## Collection semantics
 
@@ -40,6 +42,32 @@ a loaded element whose source does not equal the current style. The state-setter
 identity guard is a second line of defense, not the image handler's primary
 cleanup mechanism.
 
+## Filter scratch semantics
+
+Each instance owns one depth-indexed pool. A boundary atomically reserves the
+next consecutive source/result pair in constant time; nested boundaries use the
+next pair and completed siblings reuse the current pair. Capacity is exactly two
+surface slots per maximum active filter depth, independent of sibling count and
+the number of functions in a list. Filter capture does not create a component,
+hook frame, event root, nested CRC mount, or Layer-like cache.
+
+Fresh and resized slots are already transparent. Same-size reuse clears the
+exact active source and result bitmaps, resets Canvas state and the current
+path, and scrubs reference-bearing fill/stroke/filter values before the pair
+becomes idle. Dimensions always match the current snapped windows rather than a
+historical high-water size. Returned slots retain only their reusable canvas,
+context, and target metadata—not elements, component refs, events, images,
+patterns, hooks, callbacks, or user state.
+
+Filter validation, allocation, local render-target/world-transform changes,
+primitive and descendant execution, and compositing are guarded by nested
+`try`/`finally` scopes. Any failure returns every acquired pair and restores
+temporary renderer globals before normal render-failure teardown clears owned
+component resources. Pixels painted earlier in the failing frame remain under
+the general render-failure contract; the failed filter result is not composited.
+The filter scopes specifically restore the current render target and world
+transform to their entering values.
+
 ## Deterministic evidence
 
 The shared `runtime-cleanup-stress` scenario drives the same public controls manually and headlessly. Its focused suite proves:
@@ -53,6 +81,16 @@ The shared `runtime-cleanup-stress` scenario drives the same public controls man
 - after the stress run and after final disposal, every temporary render-global slot and clip stack is at its exact baseline.
 
 Focused unit tests additionally preserve removal-before-execution, duplicate-add, reentrant, closed-follower, cleanup-to-void, thrown-cleanup, stale-setter, source-race, error, and saved-late-callback behavior.
+
+The focused filter ownership suite proves 100 sequential siblings reuse two
+slots across 1,001 renders, three nested boundaries use six slots, failure
+returns all active leases, disposal releases every slot, and remounting creates
+a distinct pool. Structural-performance evidence proves a ten-function list
+walks normalization, reverse influence, and compilation once each, executes the
+primitive once, performs one filtered source-to-result draw and one
+result-to-parent composite, uses no pixel readback/writeback or `ImageBitmap`,
+and preserves Layer cache hits. Wall-clock thresholds and heap timing remain
+diagnostic rather than correctness gates.
 
 ## Deliberate boundaries
 

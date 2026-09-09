@@ -9,7 +9,7 @@ its constructors from the two explicit compiler subpaths. Imports below
 
 ### `@crc/core`
 
-The root contains 46 runtime values and 122 type exports.
+The root contains 46 runtime values and 133 type exports.
 
 <!-- root-values:start -->
 
@@ -28,17 +28,20 @@ The root contains 46 runtime values and 122 type exports.
 <!-- root-types:start -->
 
 `AbsoluteProps`, `AbsoluteStyle`, `ArcProps`, `ArcStyle`, `BoxStyle`,
-`CRCClipboardEvent`,
+`CRCBlurFilter`, `CRCBrightnessFilter`, `CRCClipboardEvent`,
 `CRCComponent`, `CRCCompositionEvent`, `CRCConfig`, `CRCContainerChild`,
-`CRCController`, `CRCDragEvent`, `CRCElement`, `CRCElementType`, `CRCEmptyNode`,
+`CRCContrastFilter`, `CRCController`, `CRCDragEvent`, `CRCDropShadowFilter`,
+`CRCElement`, `CRCElementType`, `CRCEmptyNode`,
 `CRCEvent`, `CRCEventCapturePropName`, `CRCEventHandler`, `CRCEventHandlers`,
 `CRCEventMap`, `CRCEventPhase`, `CRCEventPropName`, `CRCEventTarget`,
-`CRCEventTargetOptions`, `CRCEventTargetSnapshot`, `CRCEventType`, `CRCFit`,
-`CRCFixedViewportConfig`, `CRCFocusEvent`, `CRCInputEvent`, `CRCKey`,
+`CRCEventTargetOptions`, `CRCEventTargetSnapshot`, `CRCEventType`, `CRCFilter`,
+`CRCFit`, `CRCFixedViewportConfig`, `CRCFocusEvent`, `CRCGrayscaleFilter`,
+`CRCHueRotateFilter`, `CRCInputEvent`, `CRCInvertFilter`, `CRCKey`,
 `CRCKeyboardEvent`, `CRCKeyboardNavigationOptions`, `CRCLogicalMouseEvent`,
-`CRCMouseEvent`, `CRCMouseEventListener`, `CRCNode`, `CRCPixelRatio`,
+`CRCMouseEvent`, `CRCMouseEventListener`, `CRCNode`, `CRCOpacityFilter`, `CRCPixelRatio`,
 `CRCPointerEvent`, `CRCPrimitiveComponent`, `CRCRef`, `CRCRenderResult`,
-`CRCResponsiveViewportConfig`, `CRCTextChild`, `CRCTouchEvent`, `CRCWheelEvent`,
+`CRCResponsiveViewportConfig`, `CRCSaturateFilter`, `CRCSepiaFilter`,
+`CRCTextChild`, `CRCTouchEvent`, `CRCWheelEvent`,
 `Canvas`, `CanvasMeasurementService`, `CircleProps`, `CircleStyle`, `ClipProps`,
 `ClipStyle`, `Constraints`, `CursorStyle`, `EdgeValues`, `Edges`, `EllipseProps`,
 `EllipseStyle`, `FillStyle`, `FlexItemStyle`, `FlexProps`, `FlexStyle`,
@@ -213,7 +216,50 @@ source paint order use the shared drawing pipeline.
 Standard shapes have no intrinsic `measureElement` capability and no
 pixel-grid alignment. They do not add smoothing, interpolation, chart/data
 semantics, annular sectors, rounded rectangles, a generic public shape builder,
-new paint effects, or retained geometry.
+or retained geometry.
+
+## First-class filters
+
+Every primitive style accepts
+`filter?: CRCFilter | readonly CRCFilter[]`. One descriptor is normalized to a
+one-item list; a readonly list executes in declaration order. An empty list is
+exactly a no-op, performs no capture, and requires no offscreen/filter
+capability. The public descriptor objects are:
+
+| Type export / discriminator          | Fields and numeric behavior                                                                                                                                | Compiled unit/function               |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| `CRCBlurFilter` / `blur`             | `radius`: finite, nonnegative Gaussian standard deviation                                                                                                  | Density-scaled `px`; `blur()`        |
+| `CRCBrightnessFilter` / `brightness` | `amount`: finite, nonnegative; values above `1` preserved                                                                                                  | Unitless ratio; `brightness()`       |
+| `CRCContrastFilter` / `contrast`     | `amount`: finite, nonnegative; values above `1` preserved                                                                                                  | Unitless ratio; `contrast()`         |
+| `CRCDropShadowFilter` / `dropShadow` | `offsetX`, `offsetY`: signed finite; optional nonnegative finite `blurRadius` defaults `0` and is a Gaussian standard deviation; concrete `color` required | Density-scaled `px`; `drop-shadow()` |
+| `CRCGrayscaleFilter` / `grayscale`   | `amount`: finite, nonnegative; values above `1` clamp to `1`                                                                                               | Unitless ratio; `grayscale()`        |
+| `CRCHueRotateFilter` / `hueRotate`   | `degrees`: any finite value; not modulo-normalized                                                                                                         | `deg`; `hue-rotate()`                |
+| `CRCInvertFilter` / `invert`         | `amount`: finite, nonnegative; values above `1` clamp to `1`                                                                                               | Unitless ratio; `invert()`           |
+| `CRCOpacityFilter` / `opacity`       | `amount`: finite, nonnegative; values above `1` clamp to `1`                                                                                               | Unitless ratio; `opacity()`          |
+| `CRCSaturateFilter` / `saturate`     | `amount`: finite, nonnegative; values above `1` preserved                                                                                                  | Unitless ratio; `saturate()`         |
+| `CRCSepiaFilter` / `sepia`           | `amount`: finite, nonnegative; values above `1` clamp to `1`                                                                                               | Unitless ratio; `sepia()`            |
+
+Amounts are ratios (`1` is 100 percent). `dropShadow.color` must be a concrete
+CSS color accepted by the active browser's Canvas filter parser;
+`currentColor`, `var(...)`, and contextual/system colors reject. The complete
+list is compiled into one native Canvas filter operation without mutating the
+caller-owned descriptors or array.
+
+The receiving primitive and every descendant it returns are filtered as one
+combined raster silhouette. Nested filters execute inside out. Receiving Group
+transforms and receiving Clip geometry apply after their filter; descendant
+transforms/clips are already inside the captured source and ancestor clips apply
+to the completed result. A filter on `Layer` consumes the combined cached Layer
+bitmap, while filters inside it use the child instance's pool. Filter pixels do
+not change measurement, layout, hit/focus/navigation bounds, pointer
+coordinates, cursor regions, or source paint order.
+
+Nonempty filters require browser `OffscreenCanvas`, an Offscreen Canvas 2D
+context, and supported native Canvas `filter` parsing. CRC provides no raw CSS
+filter strings, `url()`/SVG filter graphs, `backdrop-filter`, `boxShadow`, DOM
+Canvas fallback, or silent resolution reduction. See the [style
+contract](./design/style-system-contract.md), [drawing contract](./design/drawing-components-contract.md),
+and [surface contract](./design/canvas-surface-contract.md).
 
 ## Layout values
 
@@ -280,8 +326,9 @@ Canvas-observer payload. See the [user-event contract](./design/user-events-cont
 
 ## Style and primitive extension types
 
-`SystemStyle` is the opt-in base with optional `custom`. `SpecifiedStyle`,
-`NormalizedStyle`, and `ResolvedStyle` mark the three immutable style stages.
+`SystemStyle` is the opt-in base with optional `custom` and framework-owned
+`filter`. `SpecifiedStyle`, `NormalizedStyle`, and `ResolvedStyle` mark the
+three immutable style stages.
 `PaintStyle`, `CursorStyle`, `FillStyle`, and `StrokeStyle` expose common paint
 vocabulary.
 

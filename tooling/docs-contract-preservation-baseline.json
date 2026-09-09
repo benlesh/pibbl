@@ -18,6 +18,12 @@
       "path": "docs/superpowers/specs/2026-09-06-standard-shape-primitives-design.md",
       "sourceSha256": "0f4f7e471ac1d770a12ebe7524f83c3b1d5092fabe9772ca1f79487a7fd0c050",
       "unitPrefix": "s"
+    },
+    {
+      "id": "first-class-filters",
+      "path": "docs/superpowers/specs/2026-09-08-first-class-filters-design.md",
+      "sourceSha256": "46777251249e97f0bb9f2792bab69239ba74c25f7ae53e098d13252d5dc57e0c",
+      "unitPrefix": "f"
     }
   ],
   "contracts": [
@@ -2237,7 +2243,7 @@
           "id": "c0001",
           "kind": "prose",
           "section": "CRC canvas surface contract",
-          "text": "Status: current implemented contract, updated for JSX-era authoring on 2026-09-03."
+          "text": "Status: current implemented contract, updated for first-class filters on 2026-09-08."
         },
         {
           "id": "c0002",
@@ -2434,23 +2440,47 @@
         {
           "id": "c0034",
           "kind": "prose",
+          "section": "Interaction and composition",
+          "text": "Runtime-created Layer and filter surfaces are upright local targets. CRC keeps the current paint transform, which maps local drawing into the active target, separate from the world transform used by event paths, focus bounds, clipping entries, and Layer bridges. Inside a filtered boundary, `crcCanvasContext().canvas` is truthfully the local `OffscreenCanvas`, and its `getTransform()` describes that local capture. The filtered bitmap receives the boundary's parent-facing placement or Group transform exactly once when it is composited. Interaction geometry continues to use root-logical world transforms and therefore does not double-apply surface density, fitting, or presentation."
+        },
+        {
+          "id": "c0035",
+          "kind": "prose",
+          "section": "Interaction and composition",
+          "text": "A filter boundary uses one uniform local raster density: the largest singular scale of its direct local-to-parent-backing transform. That transform already contains root or Layer backing density exactly once. Source and result surfaces share this density but have separate conservatively snapped windows, allowing blur and shadow input outside the visible output without allocating a second large output bitmap. Filter lengths and offsets are scaled to backing pixels before native compilation; rotation and nonuniform scaling happen later at composite time."
+        },
+        {
+          "id": "c0036",
+          "kind": "prose",
+          "section": "Interaction and composition",
+          "text": "A nonempty filter list requires browser `OffscreenCanvas`, a 2D context, and native Canvas `filter` support on that context. Unsupported chains, invalid dimensions, allocation failure, and context-acquisition failure are actionable render errors. CRC does not fall back to a DOM canvas or silently reduce resolution. An empty filter list is a direct-path no-op and adds no capability requirement."
+        },
+        {
+          "id": "c0037",
+          "kind": "prose",
           "section": "Scheduling and lifetime",
           "text": "Resize and density notifications use the ordinary animation-frame scheduler. Multiple notifications while a frame is pending coalesce without canceling and moving that frame later. Device-density observation uses both the current resolution media query and window resize as platform signals, rebinding after a density change."
         },
         {
-          "id": "c0035",
+          "id": "c0038",
           "kind": "prose",
           "section": "Scheduling and lifetime",
           "text": "The root surface owns its `ResizeObserver`, density listeners, resolution media query listener, and any intrinsic-size stabilization. Abort, controller disposal, and failed-mount cleanup release the exact owned resources. A stale observer or controller cannot mutate a replacement mount."
         },
         {
-          "id": "c0036",
+          "id": "c0039",
           "kind": "prose",
           "section": "Evidence",
           "text": "Pure projection tests cover every fit, responsive resolution, independent rounding, invalid input, default capture, layer density, and zero display size. Root lifecycle tests cover fixed and responsive resize, identity preservation, device density, intrinsic-size stabilization, and disposal. Interaction and layer suites prove logical coordinates and nested high-density composition."
         },
         {
-          "id": "c0037",
+          "id": "c0040",
+          "kind": "prose",
+          "section": "Evidence",
+          "text": "Filter projection tests additionally cover upright local capture, conservative windows, root and Layer density exactly once, unchanged target geometry, and nested high-density filter composition."
+        },
+        {
+          "id": "c0041",
           "kind": "prose",
           "section": "Evidence",
           "text": "The public `canvas-surface` laboratory is loaded by both the Studio and headless Chromium. It proves fixed 2x backing, fixed CSS resize without logical reflow, responsive logical reflow without remount, and logical mouse coordinates. Full-page Studio baselines provide the corresponding sharpness and composition evidence."
@@ -2683,7 +2713,7 @@
           "id": "c0001",
           "kind": "prose",
           "section": "CRC drawing-component contract",
-          "text": "Status: current implemented contract, updated for standard shape primitives on 2026-09-06."
+          "text": "Status: current implemented contract, updated for first-class filters on 2026-09-08."
         },
         {
           "id": "c0002",
@@ -2693,279 +2723,345 @@
         },
         {
           "id": "c0003",
-          "kind": "list",
-          "section": "Shared paint and interaction rules",
-          "text": "- Drawing follows Canvas 2D geometry, source paint order, transforms, clips, text measurement, image decoding, and `Path2D` parsing."
+          "kind": "prose",
+          "section": "CRC drawing-component contract",
+          "text": "First-class filters are also explicit local style and use the composition boundary defined below."
         },
         {
           "id": "c0004",
           "kind": "list",
           "section": "Shared paint and interaction rules",
-          "text": "- `opacity` multiplies current global alpha. Zero paints nothing but does not remove otherwise registered interaction geometry."
+          "text": "- Drawing follows Canvas 2D geometry, source paint order, transforms, clips, text measurement, image decoding, and `Path2D` parsing."
         },
         {
           "id": "c0005",
           "kind": "list",
           "section": "Shared paint and interaction rules",
-          "text": "- Absent visible paint does not by itself remove geometry. Target selection is governed by the [user-event contract](./user-events-contract.md)."
+          "text": "- `opacity` multiplies current global alpha. Zero paints nothing but does not remove otherwise registered interaction geometry."
         },
         {
           "id": "c0006",
           "kind": "list",
           "section": "Shared paint and interaction rules",
-          "text": "- Property changes replace the prior frame's pixels and interaction geometry after the scheduled CRC render settles."
+          "text": "- Absent visible paint does not by itself remove geometry. Target selection is governed by the [user-event contract](./user-events-contract.md)."
         },
         {
           "id": "c0007",
           "kind": "list",
           "section": "Shared paint and interaction rules",
-          "text": "- Empty paths, zero-length lines, zero radii, zero ellipse axes, and zero-angle sweeps are safe. Signed primitive rectangle/image geometry follows Canvas; shape radii and layout allocation remain nonnegative."
+          "text": "- Property changes replace the prior frame's pixels and interaction geometry after the scheduled CRC render settles."
         },
         {
           "id": "c0008",
           "kind": "list",
           "section": "Shared paint and interaction rules",
-          "text": "- Pixel-grid alignment is optional. `none` preserves the exact input. `round`, `ceil`, and `floor` snap opposite rectangle edges or the line coordinate using the effective stroke offset, preserving the signed span instead of adding one pixel."
+          "text": "- Empty paths, zero-length lines, zero radii, zero ellipse axes, and zero-angle sweeps are safe. Signed primitive rectangle/image geometry follows Canvas; shape radii and layout allocation remain nonnegative."
         },
         {
           "id": "c0009",
           "kind": "list",
           "section": "Shared paint and interaction rules",
-          "text": "- Platform-defined parsing, glyph rasterization, image decoding, CORS/taint, and antialiasing remain platform-defined."
+          "text": "- Pixel-grid alignment is optional. `none` preserves the exact input. `round`, `ceil`, and `floor` snap opposite rectangle edges or the line coordinate using the effective stroke offset, preserving the signed span instead of adding one pixel."
         },
         {
           "id": "c0010",
-          "kind": "table",
-          "section": "Component matrix",
-          "text": "| Export | Style/content contract | Evidence |"
+          "kind": "list",
+          "section": "Shared paint and interaction rules",
+          "text": "- Platform-defined parsing, glyph rasterization, image decoding, CORS/taint, and antialiasing remain platform-defined."
         },
         {
           "id": "c0011",
-          "kind": "table",
-          "section": "Component matrix",
-          "text": "| `Rectangle` | Required local `width` and `height`; optional `x` and `y` default zero; fill, stroke, opacity, signed geometry, pixel-grid modes, cursor, event/focus regions, and exact update/replacement behavior. | Direct component suite, rectangle lesson, geometry matrix |"
+          "kind": "list",
+          "section": "Shared paint and interaction rules",
+          "text": "- Filters affect pixels only. They do not change measurement, layout boxes, hit paths, focus or keyboard-navigation bounds, pointer coordinates, cursor regions, or source paint order; visual overflow outside those logical shapes is not independently interactive."
         },
         {
           "id": "c0012",
           "kind": "table",
           "section": "Component matrix",
-          "text": "| `Circle` | Required nonnegative `radius`; optional `cx`/`cy` default zero; fill, stroke, opacity, cursor, path interaction, and circle keyboard bounds. | Direct circle suite, circle lesson, `drawing-shapes` lab |"
+          "text": "| Export | Style/content contract | Evidence |"
         },
         {
           "id": "c0013",
           "kind": "table",
           "section": "Component matrix",
-          "text": "| `Ellipse` | Required nonnegative `radiusX`/`radiusY`; optional `cx`/`cy` and radian `rotation`; fill/stroke interaction and rotation-aware keyboard bounds. | Direct ellipse suite, ellipse lesson, `drawing-shapes` lab |"
+          "text": "| `Rectangle` | Required local `width` and `height`; optional `x` and `y` default zero; fill, stroke, opacity, signed geometry, pixel-grid modes, cursor, event/focus regions, and exact update/replacement behavior. | Direct component suite, rectangle lesson, geometry matrix |"
         },
         {
           "id": "c0014",
           "kind": "table",
           "section": "Component matrix",
-          "text": "| `Arc` | Required nonnegative `radius` and finite radian angles; optional direction; open, stroke-only Canvas arc with sweep-aware keyboard bounds. | Direct arc/geometry suites, arc lesson, `drawing-shapes` lab |"
+          "text": "| `Circle` | Required nonnegative `radius`; optional `cx`/`cy` default zero; fill, stroke, opacity, cursor, path interaction, and circle keyboard bounds. | Direct circle suite, circle lesson, `drawing-shapes` lab |"
         },
         {
           "id": "c0015",
           "kind": "table",
           "section": "Component matrix",
-          "text": "| `Wedge` | Arc geometry closed to its center for fill/radial strokes; a full turn omits radial edges so its stroke has no seam. | Direct wedge/geometry suites, wedge lesson, `drawing-shapes` lab |"
+          "text": "| `Ellipse` | Required nonnegative `radiusX`/`radiusY`; optional `cx`/`cy` and radian `rotation`; fill/stroke interaction and rotation-aware keyboard bounds. | Direct ellipse suite, ellipse lesson, `drawing-shapes` lab |"
         },
         {
           "id": "c0016",
           "kind": "table",
           "section": "Component matrix",
-          "text": "| `Polygon` | Required finite ordered numeric coordinate tuples; closes three or more points for fill/stroke and uses point extrema for keyboard bounds. | Direct polygon suite, polygon lesson, `drawing-shapes` lab |"
+          "text": "| `Arc` | Required nonnegative `radius` and finite radian angles; optional direction; open, stroke-only Canvas arc with sweep-aware keyboard bounds. | Direct arc/geometry suites, arc lesson, `drawing-shapes` lab |"
         },
         {
           "id": "c0017",
           "kind": "table",
           "section": "Component matrix",
-          "text": "| `Path` | Required `Path2D` `d`; fill, stroke, opacity, path replacement, expanded stroke interaction width, and empty paths. | Direct component and interaction suites, path lesson |"
+          "text": "| `Wedge` | Arc geometry closed to its center for fill/radial strokes; a full turn omits radial edges so its stroke has no seam. | Direct wedge/geometry suites, wedge lesson, `drawing-shapes` lab |"
         },
         {
           "id": "c0018",
           "kind": "table",
           "section": "Component matrix",
-          "text": "| `Line` | Ordered polyline coordinates; style/update behavior; empty and one-point no-op geometry; transforms/clips; and expanded hit width. | Direct line suite, line lesson, geometry matrix |"
+          "text": "| `Polygon` | Required finite ordered numeric coordinate tuples; closes three or more points for fill/stroke and uses point extrema for keyboard bounds. | Direct polygon suite, polygon lesson, `drawing-shapes` lab |"
         },
         {
           "id": "c0019",
           "kind": "table",
           "section": "Component matrix",
-          "text": "| `HorizontalLine` | Required local `y`; optional `x1` defaults zero and `x2` defaults allocation width; pixel-grid modes and shared line paint/interaction. | Direct helper matrix and horizontal-line lesson |"
+          "text": "| `Path` | Required `Path2D` `d`; fill, stroke, opacity, path replacement, expanded stroke interaction width, and empty paths. | Direct component and interaction suites, path lesson |"
         },
         {
           "id": "c0020",
           "kind": "table",
           "section": "Component matrix",
-          "text": "| `VerticalLine` | Required local `x`; optional `y1` defaults zero and `y2` defaults allocation height; pixel-grid modes and parity with `HorizontalLine`. | Direct helper matrix and vertical-line lesson |"
+          "text": "| `Line` | Ordered polyline coordinates; style/update behavior; empty and one-point no-op geometry; transforms/clips; and expanded hit width. | Direct line suite, line lesson, geometry matrix |"
         },
         {
           "id": "c0021",
           "kind": "table",
           "section": "Component matrix",
-          "text": "| `SvgPath` | Required string `d`; browser `Path2D` parsing, fill/stroke/opacity, data updates, interactions, empty/malformed delegation, and transforms. | Direct SVG suite, SVG-path lesson, runtime recovery suite |"
+          "text": "| `HorizontalLine` | Required local `y`; optional `x1` defaults zero and `x2` defaults allocation width; pixel-grid modes and shared line paint/interaction. | Direct helper matrix and horizontal-line lesson |"
         },
         {
           "id": "c0022",
           "kind": "table",
           "section": "Component matrix",
-          "text": "| `Text` | Recursive textual children; local position, font, alignment and baseline; `visible`, `ellipsis`, `squish`, and `clip` fit; wrapping box; paint/opacity/cursor; per-line interaction bounds and pure measurement. | Direct call/interaction suite, text lesson, text measurement suites |"
+          "text": "| `VerticalLine` | Required local `x`; optional `y1` defaults zero and `y2` defaults allocation height; pixel-grid modes and parity with `HorizontalLine`. | Direct helper matrix and vertical-line lesson |"
         },
         {
           "id": "c0023",
           "kind": "table",
           "section": "Component matrix",
-          "text": "| `Image` | Required `src`; detachable source generations; success/error/race/removal; natural or explicit dimensions; border, opacity, pixel-grid modes, and stable explicit geometry before/after load. | Direct async/component suites, image lesson, cleanup laboratory |"
+          "text": "| `SvgPath` | Required string `d`; browser `Path2D` parsing, fill/stroke/opacity, data updates, interactions, empty/malformed delegation, and transforms. | Direct SVG suite, SVG-path lesson, runtime recovery suite |"
         },
         {
           "id": "c0024",
+          "kind": "table",
+          "section": "Component matrix",
+          "text": "| `Text` | Recursive textual children; local position, font, alignment and baseline; `visible`, `ellipsis`, `squish`, and `clip` fit; wrapping box; paint/opacity/cursor; per-line interaction bounds and pure measurement. | Direct call/interaction suite, text lesson, text measurement suites |"
+        },
+        {
+          "id": "c0025",
+          "kind": "table",
+          "section": "Component matrix",
+          "text": "| `Image` | Required `src`; detachable source generations; success/error/race/removal; natural or explicit dimensions; border, opacity, pixel-grid modes, and stable explicit geometry before/after load. | Direct async/component suites, image lesson, cleanup laboratory |"
+        },
+        {
+          "id": "c0026",
           "kind": "prose",
           "section": "Component matrix",
           "text": "Every drawing value accepts the supported DOM-aligned event/focus props through its props type. It creates a logical target only when interactive metadata requires one. Purely painted content does not occlude a registered target."
         },
         {
-          "id": "c0025",
+          "id": "c0027",
           "kind": "prose",
           "section": "Standard shape geometry",
           "text": "`Circle`, `Ellipse`, `Arc`, `Wedge`, and `Polygon` are dedicated drawing leaves. They use fresh immediate `Path2D` geometry on each traversal and share the `Path` paint and event-target pipeline; they do not form a retained shape graph or cache geometry. Every shape supports `cursor`, `opacity`, `stroke`, `strokeWidth`, and `lineInteractionWidth`. `Circle`, `Ellipse`, `Wedge`, and `Polygon` also support `fill`. `Arc` is deliberately stroke-only because filling its open path would introduce implicit chord geometry."
         },
         {
-          "id": "c0026",
+          "id": "c0028",
           "kind": "prose",
           "section": "Standard shape geometry",
           "text": "Named position and radius lengths use the primitive's existing percentage basis. `cx` and `radiusX` percentages resolve against its width, while `cy` and `radiusY` percentages resolve against its height. A circular `radius` percentage resolves against the smaller of those two dimensions. Numeric geometry is in local logical Canvas units. Missing `cx` and `cy` default to zero; ellipse `rotation` defaults to zero radians; and Arc/Wedge `counterclockwise` defaults to `false`. Percentage lengths retain the standard finite and definite-basis diagnostics, and `\"auto\"` is not valid shape geometry."
         },
         {
-          "id": "c0027",
+          "id": "c0029",
           "kind": "prose",
           "section": "Standard shape geometry",
           "text": "Circle has required `radius`. Ellipse has required `radiusX` and `radiusY`, and its optional finite `rotation` is in radians. Arc and Wedge have required `radius`, `startAngle`, and `endAngle`; their angles are finite radians and their direction and angle normalization follow `Path2D.arc`. A clockwise difference of at least `2π`, or a counterclockwise difference of at least `2π` in that requested direction, is a full turn. Opposite-direction differences wrap in the requested direction as Canvas specifies."
         },
         {
-          "id": "c0028",
+          "id": "c0030",
           "kind": "prose",
           "section": "Standard shape geometry",
           "text": "Arc geometry stays open and exposes only its curved stroke. A partial Wedge moves from the center to the arc start, follows the circular sweep, and closes back to the center, so both radial edges participate in stroke targeting. A full-turn Wedge instead creates closed circular geometry without center or radial segments; this prevents a visible radial stroke seam. Wedge has no `innerRadius`."
         },
         {
-          "id": "c0029",
+          "id": "c0031",
           "kind": "prose",
           "section": "Standard shape geometry",
           "text": "Polygon takes required `coords: [number, number][]`, connects the points in order, and closes the path. Every coordinate must be finite; a failure is a `LayoutDiagnostic` whose property path identifies the offending tuple member. Polygon coordinates remain numeric because an arbitrary tuple has no unambiguous percentage basis. Fewer than three points produce empty geometry."
         },
         {
-          "id": "c0030",
+          "id": "c0032",
           "kind": "prose",
           "section": "Standard shape geometry",
           "text": "All radii must resolve to finite nonnegative numbers. Negative radii and non-finite angles or ellipse rotation fail style resolution with a contextual `LayoutDiagnostic`, rather than exposing a native `Path2D` exception. A zero circle radius, either zero ellipse radius, or a zero angular span produces empty geometry and paints nothing. Empty geometry still follows normal update, replacement, failure-cleanup, removal, and disposal semantics."
         },
         {
-          "id": "c0031",
+          "id": "c0033",
           "kind": "prose",
           "section": "Standard shape geometry",
           "text": "Paint and coordinate targeting use the exact same generated path. Fill targets use filled shape geometry when fill interaction is active; stroke targets use the existing `strokeWidth` and `lineInteractionWidth` rules. Explicit `keyboardNavigationBounds` always wins. Otherwise Circle uses center/radius bounds, rotated Ellipse uses its axis-aligned rotated extrema, Arc uses its endpoints and swept cardinal extrema, Wedge additionally includes its center, and Polygon uses point extrema. Existing Group transforms, clips, layers, focus policies, and global paint order continue to apply."
         },
         {
-          "id": "c0032",
+          "id": "c0034",
           "kind": "prose",
           "section": "Standard shape geometry",
           "text": "These five leaves have no intrinsic measurement: drawing radius or coordinates do not claim a layout size. Percentage geometry resolves against parent allocation, and a layout path that needs measurement must receive a declared box. Curved and arbitrary edges also do not support pixel-grid alignment."
         },
         {
-          "id": "c0033",
+          "id": "c0035",
           "kind": "prose",
           "section": "Text layout details",
           "text": "`Text` concatenates strings and numbers, including zero, from recursive arrays or finite synchronous iterables. Booleans and nullish values add nothing. It rejects CRC elements, Promises, async iterables, functions, symbols, foreign elements, and unsupported objects. Text content is not a style member."
         },
         {
-          "id": "c0034",
+          "id": "c0036",
           "kind": "code",
           "section": "Text layout details",
           "text": "tsx <Text style={{ x: 40, y: 80, fill: \"black\" }}> Hello {name} — {0} unread </Text>"
         },
         {
-          "id": "c0035",
+          "id": "c0037",
           "kind": "prose",
           "section": "Text layout details",
           "text": "The materialized value is reused by measurement and paint in one receiving transaction. The default is one line. When `wrap` is true, wrapped lines accumulate without losing the final fitting line. `lineHeight` advances each line. A finite style height limits complete lines; ellipsis applies to the final visible line when requested. An ellipsis box narrower than three dots resolves to an empty string."
         },
         {
-          "id": "c0036",
+          "id": "c0038",
           "kind": "prose",
           "section": "Text layout details",
           "text": "`fit: \"squish\"` passes the supplied width to Canvas text paint. `fit: \"clip\"` creates a finite alignment- and baseline-aware clip rectangle when width is supplied; omitted height uses the Canvas allocation. Interaction paths union actual metrics for every rendered line. Paint and pure measurement share this resolver, so measured wrapping and eventual rendering agree."
         },
         {
-          "id": "c0037",
+          "id": "c0039",
           "kind": "prose",
           "section": "Text layout details",
           "text": "Exact Canvas calls are tested with controlled text metrics. Image comparison masks only glyph rasterization; surrounding cards, clipping, layout, state, and interaction bounds remain exact."
         },
         {
-          "id": "c0038",
+          "id": "c0040",
           "kind": "table",
           "section": "Composition values",
           "text": "| Export | Contract |"
         },
         {
-          "id": "c0039",
+          "id": "c0041",
           "kind": "table",
           "section": "Composition values",
           "text": "| `Group` | Applies nested scale, rotation/origin, translation, and skew to all recursive children. Updates, zero/negative scale, and sibling isolation retain Canvas semantics. |"
         },
         {
-          "id": "c0040",
+          "id": "c0042",
           "kind": "table",
           "section": "Composition values",
           "text": "| `Clip` | Applies required `Path2D` `d` and optional `nonzero`/`evenodd` rule to all children. Nested intersections, transforms, updates, empty clips, and paint/hit geometry agree. |"
         },
         {
-          "id": "c0041",
+          "id": "c0043",
           "kind": "table",
           "section": "Composition values",
           "text": "| `Layer` | Renders multiple children into one persistent offscreen CRC instance, caches retained content, follows root density, and participates in global paint/target/focus order. |"
         },
         {
-          "id": "c0042",
-          "kind": "prose",
-          "section": "Composition values",
-          "text": "`Layer` uses children, not a render element/descriptor prop. It installs a stable private keyed fragment as the offscreen root. Direct child iterables are materialized once; retained comparisons do not consume opaque nested iterables. Cache hits replay focus metadata without executing child components. Removal recursively disposes its controller, targets, frames, images, and nested layers."
-        },
-        {
-          "id": "c0043",
-          "kind": "prose",
-          "section": "Composition values",
-          "text": "On one persistent mount, a `Layer` invalidates and rerenders when its retained child root type/key, child props (including enumerable symbol keys), specified style, direct-child sequence, or layer dimensions change. Same-mount root, prop, and dimension updates replace the prior offscreen content; an unchanged retained tree reuses the cached backing store. Root density changes independently resize and rerender that backing store."
-        },
-        {
           "id": "c0044",
           "kind": "prose",
-          "section": "Composition values",
-          "text": "Managed layers require `OffscreenCanvas`. Their backing stores inherit both root densities and composite the complete physical source into the declared logical destination. Transforms, clips, layout overflow, events, and focus use the same geometry as paint."
+          "section": "Filter composition",
+          "text": "A nonempty `style.filter` turns the receiving primitive into one immediate-mode composition boundary. CRC renders that primitive and every descendant it returns once into one upright local source surface, then applies the complete filter list in one native Canvas operation. Fill and stroke, multiline text, transparent image content and borders, custom primitive paint, layout output, and overlapping descendants therefore contribute one combined alpha silhouette. In particular, `dropShadow` derives one shadow from that combined silhouette rather than one shadow per draw or child."
         },
         {
           "id": "c0045",
+          "kind": "prose",
+          "section": "Filter composition",
+          "text": "List functions consume the preceding result in declaration order. Nested filtered primitives are separate boundaries and resolve inside out: the inner filtered result becomes ordinary source paint for its parent before the parent filter runs. Component functions and primitive callbacks still execute once; filters add bitmap composition, not a second tree traversal or retained drawing commands."
+        },
+        {
+          "id": "c0046",
+          "kind": "prose",
+          "section": "Filter composition",
+          "text": "Runtime-owned layout placement and the receiving `Group` transform are applied after the receiving filter. The subtree is filtered upright in local coordinates, then scaled, rotated, translated, or skewed at composite time, so a circular local blur may become elliptical under nonuniform scale and a local shadow offset rotates with its Group. An unfiltered descendant Group is already transformed inside an ancestor's source; a descendant Group with its own filter filters in its own local space before its transform reaches the ancestor source."
+        },
+        {
+          "id": "c0047",
+          "kind": "prose",
+          "section": "Filter composition",
+          "text": "The receiving `Clip` also applies after its receiving filter. Descendant clips are captured inside the source, while ancestor clips constrain the completed filtered result. The composition order is:"
+        },
+        {
+          "id": "c0048",
+          "kind": "code",
+          "section": "Filter composition",
+          "text": "text local subtree paint -> receiving filter -> receiving clip -> receiving transform -> ancestor clip/alpha/compositing -> parent target"
+        },
+        {
+          "id": "c0049",
+          "kind": "prose",
+          "section": "Filter composition",
+          "text": "`Layer` remains the persistent cache boundary; filter scratch surfaces are transient and do not create nested CRC mounts. A filter on a Layer consumes its combined cached bitmap. Changing only an outer or Layer filter can recomposite that bitmap without rerunning retained child components. Filters inside a Layer belong to the child CRC instance and its scratch pool, while the existing bridge keeps their interaction entries in global paint order."
+        },
+        {
+          "id": "c0050",
+          "kind": "prose",
+          "section": "Filter composition",
+          "text": "Nonempty filters require browser `OffscreenCanvas`, an Offscreen Canvas 2D context, and its native `filter` state to accept the compiled chain. CRC has no DOM-canvas fallback, JavaScript pixel loop, tiling, or silent resolution reduction. An empty list stays on the direct path and has no such requirement."
+        },
+        {
+          "id": "c0051",
+          "kind": "prose",
+          "section": "Filter composition",
+          "text": "`Layer` uses children, not a render element/descriptor prop. It installs a stable private keyed fragment as the offscreen root. Direct child iterables are materialized once; retained comparisons do not consume opaque nested iterables. Cache hits replay focus metadata without executing child components. Removal recursively disposes its controller, targets, frames, images, and nested layers."
+        },
+        {
+          "id": "c0052",
+          "kind": "prose",
+          "section": "Filter composition",
+          "text": "On one persistent mount, a `Layer` invalidates and rerenders when its retained child root type/key, child props (including enumerable symbol keys), specified style, direct-child sequence, or layer dimensions change. Same-mount root, prop, and dimension updates replace the prior offscreen content; an unchanged retained tree reuses the cached backing store. Root density changes independently resize and rerender that backing store."
+        },
+        {
+          "id": "c0053",
+          "kind": "prose",
+          "section": "Filter composition",
+          "text": "Managed layers require `OffscreenCanvas`. Their backing stores inherit both root densities and composite the complete physical source into the declared logical destination. Transforms, clips, layout overflow, events, and focus use the same geometry as paint."
+        },
+        {
+          "id": "c0054",
           "kind": "prose",
           "section": "Image lifetime and geometry",
           "text": "Each `style.src` creates a source-tagged image generation. Load/error handlers detach on settlement, source replacement, component removal, or disposal. Saved late callbacks cannot publish stale state. Successful natural sizing uses `naturalWidth` and `naturalHeight` independently for whichever dimension is omitted. Explicit dimensions establish geometry before load and after failure; this matches CRC's geometry-first transparent-region rule. Natural image size is unavailable to pure measurement because it would acquire an asynchronous resource."
         },
         {
-          "id": "c0046",
+          "id": "c0055",
           "kind": "prose",
           "section": "Image lifetime and geometry",
           "text": "Pixel alignment produces one adjusted rectangle used by `drawImage`, the optional border, and the interaction path. It does not stretch the image by an extra pixel."
         },
         {
-          "id": "c0047",
+          "id": "c0056",
           "kind": "prose",
           "section": "Visual evidence and limitations",
           "text": "The Studio exposes one lesson for each drawing/composition value under `#/examples/drawing/rectangle` through `#/examples/drawing/image`, including the five standard-shape lessons, and `#/examples/composition/group` through `#/examples/composition/layer`. It also retains the five stable `#/testing/drawing-*` integration fixtures. Their `.example.tsx` modules are loaded by both Studio and browser tests. The stable 480×240 baselines retain semantic, Canvas-call, geometry, interaction, and inspected-pixel evidence. Image comparison masks only glyph rasterization and decoded-SVG edges where documented; surrounding cards, clipping, layout, state, and interaction bounds remain exact."
         },
         {
-          "id": "c0048",
+          "id": "c0057",
+          "kind": "prose",
+          "section": "Visual evidence and limitations",
+          "text": "The Studio additionally exposes `#/examples/composition/filters` and the deterministic `#/testing/filters` laboratory. Filter evidence covers every function, ordered lists, inside-out nesting, combined silhouettes, Group/Clip/Layer order, local transforms and density, custom paint, edge expansion, unchanged interaction geometry, pool ownership/failure cleanup, and structural cost. Its image comparison masks only browser-sensitive filter regions where documented."
+        },
+        {
+          "id": "c0058",
           "kind": "prose",
           "section": "Visual evidence and limitations",
           "text": "CRC adds no rich text, semantic DOM, accessibility tree, image CORS policy, SVG validator, retained scene graph, generic public shape/path-builder API, or complete CSS formatting engine. The standard shapes add no line smoothing, spline selection, data-to-mark conversion, `Pie`, charts, scales, axes, legends, annular wedges, rounded rectangles, new paint effects, or intrinsic geometry measurement. See the [style](./style-system-contract.md), [layout](./layout-system-contract.md), and [runtime](./runtime-hooks-contract.md) contracts."
+        },
+        {
+          "id": "c0059",
+          "kind": "prose",
+          "section": "Visual evidence and limitations",
+          "text": "The filter surface does not accept raw CSS strings, `url()`/SVG graphs, backdrop sampling, or a box-shadow model."
         }
       ]
     },
@@ -6871,7 +6967,7 @@
           "id": "c0001",
           "kind": "prose",
           "section": "CRC runtime resource ownership",
-          "text": "Status: current implemented contract, updated for JSX-era authoring on 2026-09-03."
+          "text": "Status: current implemented contract, updated for first-class filters on 2026-09-08."
         },
         {
           "id": "c0002",
@@ -6949,112 +7045,148 @@
           "id": "c0014",
           "kind": "table",
           "section": "Ownership table",
-          "text": "| Root surface observers | First root mount | Root instance main teardown | Abort, controller disposal, or failed mount | Resize, window-resize, and resolution-query listeners are detached; stale notifications cannot schedule the replacement. |"
+          "text": "| Filter scratch pool | CRC instance construction | That CRC instance | Instance main teardown | Every reusable source/result canvas and context reference is released; a remount receives a distinct pool. |"
         },
         {
           "id": "c0015",
           "kind": "table",
           "section": "Ownership table",
-          "text": "| Intrinsic-size stabilization | Backing resize that changes CSS size | Root surface state | Root disposal while CRC still owns the inline value | The prior inline width/height is restored without overwriting a later external style change. |"
+          "text": "| Filter surface-pair lease | Start of one active nonempty filter boundary | Current synchronous boundary | Boundary `finally`, including validation/render/composite failure, or owning pool disposal | Source and result slots return together in strict LIFO order; no active pair or user reference survives. |"
         },
         {
           "id": "c0016",
           "kind": "table",
           "section": "Ownership table",
-          "text": "| Temporary render globals | `executeRender()` entry | Current synchronous render | `finally` on success or failure | Canvas, refs, instance, contexts, seen/unseen sets, hook index, mounting flag, and clip stack return to the prior baseline. |"
+          "text": "| Root surface observers | First root mount | Root instance main teardown | Abort, controller disposal, or failed mount | Resize, window-resize, and resolution-query listeners are detached; stale notifications cannot schedule the replacement. |"
         },
         {
           "id": "c0017",
+          "kind": "table",
+          "section": "Ownership table",
+          "text": "| Intrinsic-size stabilization | Backing resize that changes CSS size | Root surface state | Root disposal while CRC still owns the inline value | The prior inline width/height is restored without overwriting a later external style change. |"
+        },
+        {
+          "id": "c0018",
+          "kind": "table",
+          "section": "Ownership table",
+          "text": "| Temporary render globals | `executeRender()` entry | Current synchronous render | `finally` on success or failure | Canvas, refs, instance, contexts, seen/unseen sets, hook index, mounting flag, and clip stack return to the prior baseline. |"
+        },
+        {
+          "id": "c0019",
           "kind": "prose",
           "section": "Collection semantics",
           "text": "`Teardowns.execute()` closes before it invokes a stable snapshot. Duplicate adds collapse to one Set member, removal before execution prevents invocation, reentrant execution is inert, and a teardown added after closure runs immediately. A throwing entry is reported without preventing the remaining entries from running. Closing either side of a follower relationship closes the child once and leaves no live parent link."
         },
         {
-          "id": "c0018",
+          "id": "c0020",
           "kind": "prose",
           "section": "Collection semantics",
           "text": "Component collections already follow their instance's main collection. Hook cleanups therefore register only with their component collection; adding the same cleanup to the main collection would create two owners and a double-release path."
         },
         {
-          "id": "c0019",
+          "id": "c0021",
           "kind": "prose",
           "section": "Async capability rules",
           "text": "A state setter is a capability belonging to the exact instance and exact component-ref object that created it. Before mutating, it verifies both identities and verifies that neither teardown collection is closing or closed. This matters during component removal: teardown executes before the refs-map deletion, so map identity by itself is not sufficient."
         },
         {
-          "id": "c0020",
+          "id": "c0022",
           "kind": "prose",
           "section": "Async capability rules",
           "text": "Each `Image` `style.src` change creates a new generation. Its load and error handlers self-detach on settlement and are detached again idempotently on change/removal/disposal. Loaded state carries the source string; render ignores a loaded element whose source does not equal the current style. The state-setter identity guard is a second line of defense, not the image handler's primary cleanup mechanism."
         },
         {
-          "id": "c0021",
+          "id": "c0023",
+          "kind": "prose",
+          "section": "Filter scratch semantics",
+          "text": "Each instance owns one depth-indexed pool. A boundary atomically reserves the next consecutive source/result pair in constant time; nested boundaries use the next pair and completed siblings reuse the current pair. Capacity is exactly two surface slots per maximum active filter depth, independent of sibling count and the number of functions in a list. Filter capture does not create a component, hook frame, event root, nested CRC mount, or Layer-like cache."
+        },
+        {
+          "id": "c0024",
+          "kind": "prose",
+          "section": "Filter scratch semantics",
+          "text": "Fresh and resized slots are already transparent. Same-size reuse clears the exact active source and result bitmaps, resets Canvas state and the current path, and scrubs reference-bearing fill/stroke/filter values before the pair becomes idle. Dimensions always match the current snapped windows rather than a historical high-water size. Returned slots retain only their reusable canvas, context, and target metadata—not elements, component refs, events, images, patterns, hooks, callbacks, or user state."
+        },
+        {
+          "id": "c0025",
+          "kind": "prose",
+          "section": "Filter scratch semantics",
+          "text": "Filter validation, allocation, local render-target/world-transform changes, primitive and descendant execution, and compositing are guarded by nested `try`/`finally` scopes. Any failure returns every acquired pair and restores temporary renderer globals before normal render-failure teardown clears owned component resources. Pixels painted earlier in the failing frame remain under the general render-failure contract; the failed filter result is not composited. The filter scopes specifically restore the current render target and world transform to their entering values."
+        },
+        {
+          "id": "c0026",
           "kind": "prose",
           "section": "Deterministic evidence",
           "text": "The shared `runtime-cleanup-stress` scenario drives the same public controls manually and headlessly. Its focused suite proves:"
         },
         {
-          "id": "c0022",
+          "id": "c0027",
           "kind": "list",
           "section": "Deterministic evidence",
           "text": "- pending frames are canceled by abort and atomic pending-frame disposal;"
         },
         {
-          "id": "c0023",
+          "id": "c0028",
           "kind": "list",
           "section": "Deterministic evidence",
           "text": "- primary and secondary data images render their exact pixels, while broken, removed, superseded, and deliberately late images remain absent;"
         },
         {
-          "id": "c0024",
+          "id": "c0029",
           "kind": "list",
           "section": "Deterministic evidence",
           "text": "- single and nested layer removal returns instance, paint-entry, pixel, and ownership snapshots to the root baseline;"
         },
         {
-          "id": "c0025",
+          "id": "c0030",
           "kind": "list",
           "section": "Deterministic evidence",
           "text": "- dependency, key, component, root, abort, and disposal boundaries pair every hook setup with exactly one cleanup;"
         },
         {
-          "id": "c0026",
+          "id": "c0031",
           "kind": "list",
           "section": "Deterministic evidence",
           "text": "- 1,000 fully rendered mount/dispose cycles acquire 1,002 instances and release 1,001 back to one live baseline, then final disposal releases the last instance;"
         },
         {
-          "id": "c0027",
+          "id": "c0032",
           "kind": "list",
           "section": "Deterministic evidence",
           "text": "- the same run acquires/releases component refs exactly, completes 2,004 requested frames with none pending, and leaves eight of 8,016 native listeners live until final disposal;"
         },
         {
-          "id": "c0028",
+          "id": "c0033",
           "kind": "list",
           "section": "Deterministic evidence",
           "text": "- after the stress run and after final disposal, every temporary render-global slot and clip stack is at its exact baseline."
         },
         {
-          "id": "c0029",
+          "id": "c0034",
           "kind": "prose",
           "section": "Deterministic evidence",
           "text": "Focused unit tests additionally preserve removal-before-execution, duplicate-add, reentrant, closed-follower, cleanup-to-void, thrown-cleanup, stale-setter, source-race, error, and saved-late-callback behavior."
         },
         {
-          "id": "c0030",
+          "id": "c0035",
+          "kind": "prose",
+          "section": "Deterministic evidence",
+          "text": "The focused filter ownership suite proves 100 sequential siblings reuse two slots across 1,001 renders, three nested boundaries use six slots, failure returns all active leases, disposal releases every slot, and remounting creates a distinct pool. Structural-performance evidence proves a ten-function list walks normalization, reverse influence, and compilation once each, executes the primitive once, performs one filtered source-to-result draw and one result-to-parent composite, uses no pixel readback/writeback or `ImageBitmap`, and preserves Layer cache hits. Wall-clock thresholds and heap timing remain diagnostic rather than correctness gates."
+        },
+        {
+          "id": "c0036",
           "kind": "list",
           "section": "Deliberate boundaries",
           "text": "- Browser fetch/decode internals are not exposed as a deterministic resource count. CRC owns and detaches its handlers, clears the element source, source-tags published state, and proves that late completion cannot schedule or draw."
         },
         {
-          "id": "c0031",
+          "id": "c0037",
           "kind": "list",
           "section": "Deliberate boundaries",
           "text": "- Heap snapshots are optional diagnostics, not a pass condition."
         },
         {
-          "id": "c0032",
+          "id": "c0038",
           "kind": "list",
           "section": "Deliberate boundaries",
           "text": "- TFC-08 completed the full component type/key/hook-order identity semantics. TFC-07 proves cleanup for an explicit key change and for replacement by two distinct root component identities; the runtime/hook contract proves the remaining identity matrix."
@@ -7299,7 +7431,7 @@
           "id": "c0001",
           "kind": "prose",
           "section": "CRC style-system contract",
-          "text": "Status: current implemented contract, updated for JSX-era authoring on 2026-09-03."
+          "text": "Status: current implemented contract, updated for first-class filters on 2026-09-08."
         },
         {
           "id": "c0002",
@@ -7309,216 +7441,336 @@
         },
         {
           "id": "c0003",
+          "kind": "prose",
+          "section": "CRC style-system contract",
+          "text": "Filters are framework-owned local style and remain closed to the descriptor vocabulary below."
+        },
+        {
+          "id": "c0004",
           "kind": "code",
           "section": "CRC style-system contract",
           "text": "tsx const cardPaint = { fill: \"#17324d\", stroke: \"#8dd8ff\", strokeWidth: 2, } as const; const card = ( <Rectangle style={{ ...cardPaint, x: 16, y: 16, width: 180, height: 80 }} onClick={() => selectCard()} /> );"
         },
         {
-          "id": "c0004",
+          "id": "c0005",
           "kind": "prose",
           "section": "CRC style-system contract",
           "text": "This vocabulary is CSS-familiar, not CSS. Styles do not cascade or inherit. There are no selectors, stylesheets, specificity, ambient parent styles, computed DOM values, class names, variables, or media/container queries. Reuse is ordinary JavaScript object composition."
         },
         {
-          "id": "c0005",
-          "kind": "prose",
-          "section": "Public style model",
-          "text": "`SystemStyle` contains only optional `custom`. Shared closed mixins include `BoxStyle`, `LayoutItemStyle`, `FlexItemStyle`, `GridItemStyle`, `PaintStyle`, and `CursorStyle`. Built-ins expose their supported intersections through `RectStyle`, `PathStyle`, `SvgPathStyle`, `LineStyle`, `TextStyle`, `ImgStyle`, `GStyle`, `ClipStyle`, `LayerStyle`, and layout styles. Unsupported members are type errors."
-        },
-        {
           "id": "c0006",
           "kind": "prose",
           "section": "Public style model",
-          "text": "`style.custom` is application-owned metadata. CRC does not interpret or inherit it. It is not an escape hatch for arbitrary top-level keys."
+          "text": "`SystemStyle` contains optional `custom` and the framework-owned `filter`:"
         },
         {
           "id": "c0007",
-          "kind": "prose",
+          "kind": "code",
           "section": "Public style model",
-          "text": "Plain functions receive their specified `style` in props. A layout parent may inspect a direct child's style but never substitutes its finite allocation into those props; the component reads that through `crcLayoutBox()`."
+          "text": "ts interface SystemStyle { custom?: unknown; filter?: CRCFilter | readonly CRCFilter[]; }"
         },
         {
           "id": "c0008",
           "kind": "prose",
           "section": "Public style model",
-          "text": "Platform components defined with `definePrimitive` have three immutable stages:"
+          "text": "Shared closed mixins include `BoxStyle`, `LayoutItemStyle`, `FlexItemStyle`, `GridItemStyle`, `PaintStyle`, and `CursorStyle`. Built-ins expose their supported intersections through `RectStyle`, `PathStyle`, `SvgPathStyle`, `LineStyle`, `TextStyle`, `ImgStyle`, `GStyle`, `ClipStyle`, `LayerStyle`, and layout styles. Every primitive style therefore accepts `filter`; unsupported members remain type errors."
         },
         {
           "id": "c0009",
+          "kind": "prose",
+          "section": "Public style model",
+          "text": "`style.custom` is application-owned metadata. CRC does not interpret or inherit it. It is not an escape hatch for arbitrary top-level keys."
+        },
+        {
+          "id": "c0010",
+          "kind": "prose",
+          "section": "Public style model",
+          "text": "Plain functions receive their specified `style` in props. A layout parent may inspect a direct child's style but never substitutes its finite allocation into those props; the component reads that through `crcLayoutBox()`."
+        },
+        {
+          "id": "c0011",
+          "kind": "prose",
+          "section": "Public style model",
+          "text": "Platform components defined with `definePrimitive` have three immutable stages:"
+        },
+        {
+          "id": "c0012",
           "kind": "list",
           "section": "Public style model",
           "text": "1. **Specified:** exact author input in the element props."
         },
         {
-          "id": "c0010",
+          "id": "c0013",
           "kind": "list",
           "section": "Public style model",
           "text": "2. **Normalized:** pure defaults and syntax expansion, independent of parent allocation."
         },
         {
-          "id": "c0011",
+          "id": "c0014",
           "kind": "list",
           "section": "Public style model",
           "text": "3. **Resolved:** allocation-aware, finite values supplied to the primitive renderer."
         },
         {
-          "id": "c0012",
+          "id": "c0015",
           "kind": "prose",
           "section": "Public style model",
           "text": "Normalization, resolution, and measurement do not render children or acquire runtime resources. Diagnostics name the component, property, supplied value, algorithm, constraints, and reason. A declared percentage or `auto` requires an explicit resolver; a resolved style type cannot retain allocation syntax. Unresolved percentages, unresolved `auto`, non-finite numeric geometry, and malformed allocation syntax reject before a primitive render callback runs."
         },
         {
-          "id": "c0013",
+          "id": "c0016",
+          "kind": "prose",
+          "section": "Public style model",
+          "text": "Filter normalization is also framework-owned. CRC removes `filter` before a custom primitive's `normalizeStyle` and `resolveStyle` callbacks, validates it from the authoritative specified or pre-normalized style, and attaches the canonical readonly descriptor list to the final resolved style. Custom style callbacks therefore cannot discard or reinterpret filters. Pure measurement ignores filters: it neither validates browser raster capabilities nor allocates offscreen surfaces, and the measured size is unchanged."
+        },
+        {
+          "id": "c0017",
+          "kind": "prose",
+          "section": "Filter descriptors",
+          "text": "One descriptor is a one-item list. A readonly list runs in declaration order; `[]` is exactly a no-op, performs no offscreen capture, and requires no filter capability. CRC copies and freezes normalized descriptors without mutating the caller-owned descriptor or array."
+        },
+        {
+          "id": "c0018",
+          "kind": "prose",
+          "section": "Filter descriptors",
+          "text": "The root package exports `CRCFilter` and all ten named descriptor types. This is the complete function and numeric contract:"
+        },
+        {
+          "id": "c0019",
+          "kind": "table",
+          "section": "Filter descriptors",
+          "text": "| Descriptor type | Fields and normalization | Native unit/function |"
+        },
+        {
+          "id": "c0020",
+          "kind": "table",
+          "section": "Filter descriptors",
+          "text": "| `blur` (`CRCBlurFilter`) | `radius` must be finite and nonnegative. It is a Gaussian standard deviation in local logical units. | Density-scaled `px` in `blur()` |"
+        },
+        {
+          "id": "c0021",
+          "kind": "table",
+          "section": "Filter descriptors",
+          "text": "| `brightness` (`CRCBrightnessFilter`) | `amount` must be finite and nonnegative; values above `1` are preserved. | Unitless ratio in `brightness()` |"
+        },
+        {
+          "id": "c0022",
+          "kind": "table",
+          "section": "Filter descriptors",
+          "text": "| `contrast` (`CRCContrastFilter`) | `amount` must be finite and nonnegative; values above `1` are preserved. | Unitless ratio in `contrast()` |"
+        },
+        {
+          "id": "c0023",
+          "kind": "table",
+          "section": "Filter descriptors",
+          "text": "| `dropShadow` (`CRCDropShadowFilter`) | Signed `offsetX`/`offsetY` must be finite. `blurRadius` defaults to `0`, must be finite and nonnegative, and is a Gaussian standard deviation. `color` must be concrete. | Density-scaled `px` in `drop-shadow()` |"
+        },
+        {
+          "id": "c0024",
+          "kind": "table",
+          "section": "Filter descriptors",
+          "text": "| `grayscale` (`CRCGrayscaleFilter`) | `amount` must be finite and nonnegative; values above `1` clamp to `1`. | Unitless ratio in `grayscale()` |"
+        },
+        {
+          "id": "c0025",
+          "kind": "table",
+          "section": "Filter descriptors",
+          "text": "| `hueRotate` (`CRCHueRotateFilter`) | `degrees` may be any finite number and is not modulo-normalized. | `deg` in `hue-rotate()` |"
+        },
+        {
+          "id": "c0026",
+          "kind": "table",
+          "section": "Filter descriptors",
+          "text": "| `invert` (`CRCInvertFilter`) | `amount` must be finite and nonnegative; values above `1` clamp to `1`. | Unitless ratio in `invert()` |"
+        },
+        {
+          "id": "c0027",
+          "kind": "table",
+          "section": "Filter descriptors",
+          "text": "| `opacity` (`CRCOpacityFilter`) | `amount` must be finite and nonnegative; values above `1` clamp to `1`. | Unitless ratio in `opacity()` |"
+        },
+        {
+          "id": "c0028",
+          "kind": "table",
+          "section": "Filter descriptors",
+          "text": "| `saturate` (`CRCSaturateFilter`) | `amount` must be finite and nonnegative; values above `1` are preserved. | Unitless ratio in `saturate()` |"
+        },
+        {
+          "id": "c0029",
+          "kind": "table",
+          "section": "Filter descriptors",
+          "text": "| `sepia` (`CRCSepiaFilter`) | `amount` must be finite and nonnegative; values above `1` clamp to `1`. | Unitless ratio in `sepia()` |"
+        },
+        {
+          "id": "c0030",
+          "kind": "prose",
+          "section": "Filter descriptors",
+          "text": "Amounts are ratios, so `1` means 100 percent. `blur.radius` and `dropShadow.blurRadius` deliberately use filter-function standard-deviation semantics, not CSS `box-shadow` blur-radius semantics. Drop-shadow color syntax is accepted only when the active browser's Canvas filter parser accepts it; `currentColor`, `var(...)`, system/contextual colors, and other contextual references reject. Diagnostics identify `filter`, a list index when present, the failing field, received value, and component before its render callback."
+        },
+        {
+          "id": "c0031",
+          "kind": "prose",
+          "section": "Filter descriptors",
+          "text": "CRC compiles the complete nonempty list once for one native Canvas filter operation. `style.opacity` remains the primitive's existing paint-alpha behavior; an `opacity` filter is a separate ordered effect over the combined raster and can differ where paint overlaps."
+        },
+        {
+          "id": "c0032",
           "kind": "prose",
           "section": "Length and box rules",
           "text": "`Percentage` is an exact `${number}%` string. `Length` is a finite number, percentage, or `\"auto\"`. Exact decimal forms such as `\"50%\"`, `\".5%\"`, and `\"-10%\"` parse where the property permits signed values. Whitespace, suffixes, scientific notation, malformed strings, and non-finite results reject."
         },
         {
-          "id": "c0014",
+          "id": "c0033",
           "kind": "list",
           "section": "Length and box rules",
           "text": "- Size and placement percentages resolve once against the containing content allocation. Root logical units come from the fixed/responsive Canvas surface; physical backing pixels do not affect style resolution."
         },
         {
-          "id": "c0015",
+          "id": "c0034",
           "kind": "list",
           "section": "Length and box rules",
           "text": "- Padding and gaps are finite nonnegative numbers, never percentages."
         },
         {
-          "id": "c0016",
+          "id": "c0035",
           "kind": "list",
           "section": "Length and box rules",
           "text": "- Allocation size, min/max, padding, gaps, and growth factors are nonnegative; minimum greater than maximum is an error."
         },
         {
-          "id": "c0017",
+          "id": "c0036",
           "kind": "list",
           "section": "Length and box rules",
           "text": "- `width` and `height` specify a content box. Min/max clamp content before numeric padding is added. Padding can reduce content to zero, not below."
         },
         {
-          "id": "c0018",
+          "id": "c0037",
           "kind": "list",
           "section": "Length and box rules",
           "text": "- There is no margin. Parent placement uses `left`/`top`; drawing-local geometry uses `x`/`y` (`x1`/`x2` or `y1`/`y2` for line helpers)."
         },
         {
-          "id": "c0019",
+          "id": "c0038",
           "kind": "list",
           "section": "Length and box rules",
           "text": "- Primitive rectangle/image geometry retains signed Canvas semantics outside nonnegative layout allocation."
         },
         {
-          "id": "c0020",
+          "id": "c0039",
           "kind": "list",
           "section": "Length and box rules",
           "text": "- `\"auto\"` is accepted only on documented measurement paths. Local offsets, parent offsets, and Grid tracks reject it."
         },
         {
-          "id": "c0021",
+          "id": "c0040",
           "kind": "prose",
           "section": "Style-only built-in migration",
           "text": "This table is the exact final field/default reference. Every drawing or composition style also accepts the documented compatible `BoxStyle` and `LayoutItemStyle` fields; the required fields below override optional inherited box declarations. See the direct [old-to-final migration matrix](../migrations/jsx-authoring-pivot.md#field-level-style-and-structure-replacements) for every removed field and structural form."
         },
         {
-          "id": "c0022",
+          "id": "c0041",
           "kind": "table",
           "section": "Style-only built-in migration",
           "text": "| Component | Final component-specific local style fields | Defaults and required fields | Structural/program props |"
         },
         {
-          "id": "c0023",
+          "id": "c0042",
           "kind": "table",
           "section": "Style-only built-in migration",
           "text": "| `Rectangle` | `style.width`, `style.height`, `style.x`, `style.y`, `style.fill`, `style.stroke`, `style.strokeWidth`, `style.opacity`, `style.cursor`, `style.alignToPixelGrid`, `style.lineInteractionWidth` | `style.width` and `style.height` required; `style.x = 0`, `style.y = 0`; omitted pixel alignment preserves input | Event/focus handlers/options |"
         },
         {
-          "id": "c0024",
+          "id": "c0043",
           "kind": "table",
           "section": "Style-only built-in migration",
           "text": "| `Path` | `style.d: Path2D`, `style.fill`, `style.stroke`, `style.strokeWidth`, `style.opacity`, `style.cursor`, `style.lineInteractionWidth` | `style.d` required; interaction width uses `style.strokeWidth`, then `0`, when omitted | Event/focus props |"
         },
         {
-          "id": "c0025",
+          "id": "c0044",
           "kind": "table",
           "section": "Style-only built-in migration",
           "text": "| `Line` | `style.coords`, `style.stroke`, `style.strokeWidth`, `style.opacity`, `style.cursor`, `style.lineInteractionWidth` | `style.coords` required; interaction width uses `style.strokeWidth`, then `0`, when omitted | Event/focus props |"
         },
         {
-          "id": "c0026",
+          "id": "c0045",
           "kind": "table",
           "section": "Style-only built-in migration",
           "text": "| `HorizontalLine` | `style.y`, `style.x1`, `style.x2`, `style.stroke`, `style.strokeWidth`, `style.opacity`, `style.cursor`, `style.alignToPixelGrid`, `style.lineInteractionWidth` | `style.y` required; `style.x1 = 0`, `style.x2 = allocation width`; omitted pixel alignment preserves input | Event/focus props |"
         },
         {
-          "id": "c0027",
+          "id": "c0046",
           "kind": "table",
           "section": "Style-only built-in migration",
           "text": "| `VerticalLine` | `style.x`, `style.y1`, `style.y2`, `style.stroke`, `style.strokeWidth`, `style.opacity`, `style.cursor`, `style.alignToPixelGrid`, `style.lineInteractionWidth` | `style.x` required; `style.y1 = 0`, `style.y2 = allocation height`; omitted pixel alignment preserves input | Event/focus props |"
         },
         {
-          "id": "c0028",
+          "id": "c0047",
           "kind": "table",
           "section": "Style-only built-in migration",
           "text": "| `SvgPath` | `style.d: string`, `style.fill`, `style.stroke`, `style.strokeWidth`, `style.opacity`, `style.cursor`, `style.lineInteractionWidth` | `style.d` required; interaction width uses `style.strokeWidth`, then `0`, when omitted | Event/focus props |"
         },
         {
-          "id": "c0029",
+          "id": "c0048",
           "kind": "table",
           "section": "Style-only built-in migration",
           "text": "| `Text` | `style.x`, `style.y`, `style.width`, `style.height`, `style.lineHeight`, `style.wrap`, `style.fit`, `style.font`, `style.textBaseline`, `style.textAlign`, `style.fill`, `style.stroke`, `style.strokeWidth`, `style.opacity`, `style.cursor` | `style.x = 0`, `style.y = 0`, `style.lineHeight = 13`, `style.wrap = false`, `style.fit = \"visible\"`, `style.font = \"13px sans-serif\"`, `style.textBaseline = \"top\"`, `style.textAlign = \"left\"`, `style.strokeWidth = 0` | Recursive textual `children`, event/focus props |"
         },
         {
-          "id": "c0030",
+          "id": "c0049",
           "kind": "table",
           "section": "Style-only built-in migration",
           "text": "| `Image` | `style.src`, `style.x`, `style.y`, `style.width`, `style.height`, `style.stroke`, `style.strokeWidth`, `style.opacity`, `style.cursor`, `style.alignToPixelGrid` | `style.src` required; `style.x = 0`, `style.y = 0`; omitted dimensions use loaded natural size, otherwise `0`; omitted pixel alignment preserves input | Event/focus props |"
         },
         {
-          "id": "c0031",
+          "id": "c0050",
           "kind": "table",
           "section": "Style-only built-in migration",
           "text": "| `Group` | `style.scaleX`, `style.scaleY`, `style.rotationDegrees`, `style.rotationOrigin`, `style.translateX`, `style.translateY`, `style.skewX`, `style.skewY` | scales default `1`; rotation, translation, and skew default `0`; rotation origin defaults `[0, 0]` | Recursive `children` |"
         },
         {
-          "id": "c0032",
+          "id": "c0051",
           "kind": "table",
           "section": "Style-only built-in migration",
           "text": "| `Clip` | `style.d: Path2D`, `style.fillRule` | `style.d` required; `style.fillRule = \"nonzero\"` | Recursive `children` |"
         },
         {
-          "id": "c0033",
+          "id": "c0052",
           "kind": "table",
           "section": "Style-only built-in migration",
           "text": "| `Layer` | `style.width`, `style.height` | Each omitted dimension uses the current logical Canvas allocation | Recursive `children` |"
         },
         {
-          "id": "c0034",
+          "id": "c0053",
           "kind": "table",
           "section": "Style-only built-in migration",
           "text": "| Layout values | Container box fields plus the contract-specific algorithm fields | See the layout contract's exact defaults | Recursive direct children |"
         },
         {
-          "id": "c0035",
+          "id": "c0054",
           "kind": "prose",
           "section": "Style-only built-in migration",
           "text": "There is no runtime compatibility adapter, alias, or fallback for top-level visual fields, content in `TextStyle`, or a render element/descriptor prop for layer content. JavaScript receives the same strict resolution and child diagnostics as TypeScript."
         },
         {
-          "id": "c0036",
+          "id": "c0055",
           "kind": "prose",
           "section": "Style-only built-in migration",
           "text": "`opacity: 0` suppresses paint without removing separately registered target geometry. Image generations remain keyed by `style.src`; source races, load/error settlement, source replacement, removal, and disposal retain exact resource ownership. Explicit image dimensions establish geometry before load and after failure, while each omitted natural dimension remains zero until a successful load supplies it. `Group` transforms retain the order documented in the drawing contract."
         },
         {
-          "id": "c0037",
+          "id": "c0056",
           "kind": "prose",
           "section": "Deliberate exclusions",
           "text": "CRC does not implement cascade, inheritance, selectors, specificity, stylesheets, CSS variables, computed DOM style, margin, scrolling, or a complete CSS parser. CSS names are used only where behavior matches the documented subset; CRC-native behavior uses names such as `rotationDegrees`, `fit`, and `Flow`."
         },
         {
-          "id": "c0038",
+          "id": "c0057",
+          "kind": "prose",
+          "section": "Deliberate exclusions",
+          "text": "Filters do not accept raw CSS strings, `url()`/SVG filter graphs, `backdrop-filter`, or `boxShadow`/CSS box-shadow semantics."
+        },
+        {
+          "id": "c0058",
           "kind": "prose",
           "section": "Deliberate exclusions",
           "text": "See the [layout contract](./layout-system-contract.md), [drawing contract](./drawing-components-contract.md), and [custom primitive guide](../guides/custom-components-and-primitives.md)."
@@ -8723,8 +8975,8 @@
       "id": "design-drawing-components-contract-md-shared-paint-and-interaction-rules",
       "path": "docs/design/drawing-components-contract.md",
       "baselineIds": ["b0003", "b0004", "b0005", "b0007", "b0009"],
-      "currentIds": ["c0003", "c0004", "c0005", "c0007", "c0009"],
-      "reason": "This mapping renames drawing leaves without changing paint or interaction rules; b0003, b0004, b0005, b0007, b0009 → c0003, c0004, c0005, c0007, c0009 is the exact unit boundary, and `antialiasing`, `zero-length`, `multiplies` remain shared semantic anchors. Approved-design unit a0197 authorizes that bounded JSX-era change.",
+      "currentIds": ["c0004", "c0005", "c0006", "c0008", "c0010"],
+      "reason": "This mapping renames drawing leaves without changing paint or interaction rules; b0003, b0004, b0005, b0007, b0009 → c0004, c0005, c0006, c0008, c0010 is the exact unit boundary, and `antialiasing`, `zero-length`, `multiplies` remain shared semantic anchors. Approved-design unit a0197 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0197",
         "kind": "list",
@@ -8751,25 +9003,25 @@
         "b0022"
       ],
       "currentIds": [
-        "c0010",
-        "c0011",
-        "c0017",
-        "c0018",
+        "c0012",
+        "c0013",
         "c0019",
         "c0020",
         "c0021",
         "c0022",
         "c0023",
         "c0024",
-        "c0038",
-        "c0039",
+        "c0025",
+        "c0026",
         "c0040",
         "c0041",
         "c0042",
         "c0043",
-        "c0044"
+        "c0051",
+        "c0052",
+        "c0053"
       ],
-      "reason": "This mapping rewrites the component matrix for final names, styles, and children while retaining each component's geometry; b0010, b0011, b0012, b0013, b0014, b0015, b0016, b0017, b0018, b0019, b0020, b0021, b0022 → c0010, c0011, c0017, c0018, c0019, c0020, c0021, c0022, c0023, c0024, c0038, c0039, c0040, c0041, c0042, c0043, c0044 is the exact unit boundary, and `interactions`, `translation`, `delegation` remain shared semantic anchors. Approved-design unit a0030 authorizes that bounded JSX-era change.",
+      "reason": "This mapping rewrites the component matrix for final names, styles, and children while retaining each component's geometry; b0010, b0011, b0012, b0013, b0014, b0015, b0016, b0017, b0018, b0019, b0020, b0021, b0022 → c0012, c0013, c0019, c0020, c0021, c0022, c0023, c0024, c0025, c0026, c0040, c0041, c0042, c0043, c0051, c0052, c0053 is the exact unit boundary, and `interactions`, `translation`, `delegation` remain shared semantic anchors. Approved-design unit a0030 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0030",
         "kind": "prose",
@@ -8781,8 +9033,8 @@
       "id": "design-drawing-components-contract-md-text-layout-details",
       "path": "docs/design/drawing-components-contract.md",
       "baselineIds": ["b0023", "b0025"],
-      "currentIds": ["c0033", "c0034", "c0035", "c0037"],
-      "reason": "This mapping moves `Text` content from style to textual children while retaining layout and interaction behavior; b0023, b0025 → c0033, c0034, c0035, c0037 is the exact unit boundary, and `surrounding`, `comparison`, `controlled` remain shared semantic anchors. Approved-design unit a0136 authorizes that bounded JSX-era change.",
+      "currentIds": ["c0035", "c0036", "c0037", "c0039"],
+      "reason": "This mapping moves `Text` content from style to textual children while retaining layout and interaction behavior; b0023, b0025 → c0035, c0036, c0037, c0039 is the exact unit boundary, and `surrounding`, `comparison`, `controlled` remain shared semantic anchors. Approved-design unit a0136 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0136",
         "kind": "prose",
@@ -8794,8 +9046,8 @@
       "id": "design-drawing-components-contract-md-image-lifetime-and-geometry",
       "path": "docs/design/drawing-components-contract.md",
       "baselineIds": ["b0026"],
-      "currentIds": ["c0045"],
-      "reason": "This mapping renames the image primitive without changing its lifetime or natural-size geometry; b0026 → c0045 is the exact unit boundary, and `transparent-region`, `geometry-first`, `naturalheight` remain shared semantic anchors. Approved-design unit a0032 authorizes that bounded JSX-era change.",
+      "currentIds": ["c0054"],
+      "reason": "This mapping renames the image primitive without changing its lifetime or natural-size geometry; b0026 → c0054 is the exact unit boundary, and `transparent-region`, `geometry-first`, `naturalheight` remain shared semantic anchors. Approved-design unit a0032 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0032",
         "kind": "list",
@@ -8817,8 +9069,8 @@
         "b0035",
         "b0036"
       ],
-      "currentIds": ["c0047", "c0048"],
-      "reason": "This mapping updates visual-evidence prose for converted public scenarios without weakening semantic-first evidence; b0028, b0029, b0030, b0031, b0032, b0033, b0034, b0035, b0036 → c0047, c0048 is the exact unit boundary, and `accessibility`, `decoded-svg`, `baselines` remain shared semantic anchors. Approved-design unit a0202 authorizes that bounded JSX-era change.",
+      "currentIds": ["c0056", "c0058"],
+      "reason": "This mapping updates visual-evidence prose for converted public scenarios without weakening semantic-first evidence; b0028, b0029, b0030, b0031, b0032, b0033, b0034, b0035, b0036 → c0056, c0058 is the exact unit boundary, and `accessibility`, `decoded-svg`, `baselines` remain shared semantic anchors. Approved-design unit a0202 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0202",
         "kind": "prose",
@@ -9265,8 +9517,8 @@
       "id": "design-runtime-resource-ownership-md-async-capability-rules",
       "path": "docs/design/runtime-resource-ownership.md",
       "baselineIds": ["b0020"],
-      "currentIds": ["c0020"],
-      "reason": "This mapping uses `Image` and `style.src` terminology while retaining stale-capability self-detachment; b0020 → c0020 is the exact unit boundary, and `idempotently`, `state-setter`, `self-detach` remain shared semantic anchors. Approved-design unit a0032 authorizes that bounded JSX-era change.",
+      "currentIds": ["c0022"],
+      "reason": "This mapping uses `Image` and `style.src` terminology while retaining stale-capability self-detachment; b0020 → c0022 is the exact unit boundary, and `idempotently`, `state-setter`, `self-detach` remain shared semantic anchors. Approved-design unit a0032 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0032",
         "kind": "list",
@@ -9278,8 +9530,8 @@
       "id": "design-style-system-contract-md-crc-style-system-contract",
       "path": "docs/design/style-system-contract.md",
       "baselineIds": ["b0001", "b0002", "b0003", "b0004"],
-      "currentIds": ["c0001", "c0002", "c0003", "c0004"],
-      "reason": "This mapping updates the style-contract status and authoring vocabulary while retaining the closed local model; b0001, b0002, b0003, b0004 → c0001, c0002, c0003, c0004 is the exact unit boundary, and `css-familiar`, `vocabulary`, `ambient` remain shared semantic anchors. Approved-design unit a0077 authorizes that bounded JSX-era change.",
+      "currentIds": ["c0001", "c0002", "c0004", "c0005"],
+      "reason": "This mapping updates the style-contract status and authoring vocabulary while retaining the closed local model; b0001, b0002, b0003, b0004 → c0001, c0002, c0004, c0005 is the exact unit boundary, and `css-familiar`, `vocabulary`, `ambient` remain shared semantic anchors. Approved-design unit a0077 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0077",
         "kind": "prose",
@@ -9301,16 +9553,15 @@
         "b0012"
       ],
       "currentIds": [
-        "c0005",
-        "c0006",
-        "c0007",
-        "c0008",
         "c0009",
         "c0010",
         "c0011",
-        "c0012"
+        "c0012",
+        "c0013",
+        "c0014",
+        "c0015"
       ],
-      "reason": "This mapping replaces wrapper metadata terminology with primitive style stages and plain-component props; b0005, b0006, b0007, b0008, b0009, b0010, b0011, b0012 → c0005, c0006, c0007, c0008, c0009, c0010, c0011, c0012 is the exact unit boundary, and `application-owned`, `allocation-aware`, `interpret` remain shared semantic anchors. Approved-design unit a0079 authorizes that bounded JSX-era change.",
+      "reason": "This mapping replaces wrapper metadata terminology with primitive style stages and plain-component props; b0005, b0006, b0007, b0008, b0009, b0010, b0011, b0012 → c0009, c0010, c0011, c0012, c0013, c0014, c0015 is the exact unit boundary, and `application-owned`, `allocation-aware`, `interpret` remain shared semantic anchors. Approved-design unit a0079 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0079",
         "kind": "prose",
@@ -9331,15 +9582,15 @@
         "b0020"
       ],
       "currentIds": [
-        "c0013",
-        "c0014",
-        "c0016",
-        "c0017",
-        "c0018",
-        "c0019",
-        "c0020"
+        "c0032",
+        "c0033",
+        "c0035",
+        "c0036",
+        "c0037",
+        "c0038",
+        "c0039"
       ],
-      "reason": "This mapping retains length and box resolution while expressing it through final style terminology; b0013, b0014, b0016, b0017, b0018, b0019, b0020 → c0013, c0014, c0016, c0017, c0018, c0019, c0020 is the exact unit boundary, and `responsive`, `scientific`, `whitespace` remain shared semantic anchors. Approved-design unit a0079 authorizes that bounded JSX-era change.",
+      "reason": "This mapping retains length and box resolution while expressing it through final style terminology; b0013, b0014, b0016, b0017, b0018, b0019, b0020 → c0032, c0033, c0035, c0036, c0037, c0038, c0039 is the exact unit boundary, and `responsive`, `scientific`, `whitespace` remain shared semantic anchors. Approved-design unit a0079 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0079",
         "kind": "prose",
@@ -9369,24 +9620,24 @@
         "b0036"
       ],
       "currentIds": [
-        "c0021",
-        "c0022",
-        "c0023",
-        "c0024",
-        "c0025",
-        "c0026",
-        "c0027",
-        "c0028",
-        "c0029",
-        "c0030",
-        "c0031",
-        "c0032",
-        "c0033",
-        "c0034",
-        "c0035",
-        "c0036"
+        "c0040",
+        "c0041",
+        "c0042",
+        "c0043",
+        "c0044",
+        "c0045",
+        "c0046",
+        "c0047",
+        "c0048",
+        "c0049",
+        "c0050",
+        "c0051",
+        "c0052",
+        "c0053",
+        "c0054",
+        "c0055"
       ],
-      "reason": "This mapping moves every old field/form pair to the migration matrix and leaves an exact final field/default table; b0021, b0022, b0023, b0024, b0025, b0026, b0027, b0028, b0029, b0030, b0031, b0032, b0033, b0034, b0035, b0036 → c0021, c0022, c0023, c0024, c0025, c0026, c0027, c0028, c0029, c0030, c0031, c0032, c0033, c0034, c0035, c0036 is the exact unit boundary, and `lineinteractionwidth`, `aligntopixelgrid`, `rotationorigin` remain shared semantic anchors. Approved-design unit a0005 authorizes that bounded JSX-era change.",
+      "reason": "This mapping moves every old field/form pair to the migration matrix and leaves an exact final field/default table; b0021, b0022, b0023, b0024, b0025, b0026, b0027, b0028, b0029, b0030, b0031, b0032, b0033, b0034, b0035, b0036 → c0040, c0041, c0042, c0043, c0044, c0045, c0046, c0047, c0048, c0049, c0050, c0051, c0052, c0053, c0054, c0055 is the exact unit boundary, and `lineinteractionwidth`, `aligntopixelgrid`, `rotationorigin` remain shared semantic anchors. Approved-design unit a0005 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0005",
         "kind": "prose",
@@ -9402,8 +9653,8 @@
       "id": "design-style-system-contract-md-deliberate-exclusions",
       "path": "docs/design/style-system-contract.md",
       "baselineIds": ["b0037", "b0038"],
-      "currentIds": ["c0037", "c0038"],
-      "reason": "This mapping updates exclusion references for JSX-era component names without adding cascade or inheritance; b0037, b0038 → c0037, c0038 is the exact unit boundary, and `drawing-components-contract`, `layout-system-contract`, `inheritance` remain shared semantic anchors. Approved-design unit a0023 authorizes that bounded JSX-era change.",
+      "currentIds": ["c0056", "c0058"],
+      "reason": "This mapping updates exclusion references for JSX-era component names without adding cascade or inheritance; b0037, b0038 → c0056, c0058 is the exact unit boundary, and `drawing-components-contract`, `layout-system-contract`, `inheritance` remain shared semantic anchors. Approved-design unit a0023 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0023",
         "kind": "list",
@@ -9478,8 +9729,8 @@
     {
       "id": "design-drawing-components-contract-standard-shape-circle-matrix-addition",
       "path": "docs/design/drawing-components-contract.md",
-      "currentIds": ["c0012"],
-      "reason": "Approval record standard-shape-primitives units s0018, s0026, s0027, s0028, and s0068 authorize exact current Circle matrix unit c0012 through the shared Circle, radius, and bounds anchors.",
+      "currentIds": ["c0014"],
+      "reason": "Approval record standard-shape-primitives units s0018, s0026, s0027, s0028, and s0068 authorize exact current Circle matrix unit c0014 through the shared Circle, radius, and bounds anchors.",
       "approval": {
         "recordId": "standard-shape-primitives",
         "unitIds": ["s0018", "s0026", "s0027", "s0028", "s0068"]
@@ -9489,8 +9740,8 @@
     {
       "id": "design-drawing-components-contract-standard-shape-ellipse-matrix-addition",
       "path": "docs/design/drawing-components-contract.md",
-      "currentIds": ["c0013"],
-      "reason": "Approval record standard-shape-primitives units s0019, s0030, s0031, s0034, and s0069 authorize exact current Ellipse matrix unit c0013 through the shared Ellipse, rotation, and bounds anchors.",
+      "currentIds": ["c0015"],
+      "reason": "Approval record standard-shape-primitives units s0019, s0030, s0031, s0034, and s0069 authorize exact current Ellipse matrix unit c0015 through the shared Ellipse, rotation, and bounds anchors.",
       "approval": {
         "recordId": "standard-shape-primitives",
         "unitIds": ["s0019", "s0030", "s0031", "s0034", "s0069"]
@@ -9500,8 +9751,8 @@
     {
       "id": "design-drawing-components-contract-standard-shape-arc-matrix-addition",
       "path": "docs/design/drawing-components-contract.md",
-      "currentIds": ["c0014"],
-      "reason": "Approval record standard-shape-primitives units s0020, s0024, s0042, and s0070 authorize exact current Arc matrix unit c0014 through the shared Arc, stroke, and bounds anchors.",
+      "currentIds": ["c0016"],
+      "reason": "Approval record standard-shape-primitives units s0020, s0024, s0042, and s0070 authorize exact current Arc matrix unit c0016 through the shared Arc, stroke, and bounds anchors.",
       "approval": {
         "recordId": "standard-shape-primitives",
         "unitIds": ["s0020", "s0024", "s0042", "s0070"]
@@ -9511,8 +9762,8 @@
     {
       "id": "design-drawing-components-contract-standard-shape-wedge-matrix-addition",
       "path": "docs/design/drawing-components-contract.md",
-      "currentIds": ["c0015"],
-      "reason": "Approval record standard-shape-primitives units s0021, s0043, and s0044 authorize exact current Wedge matrix unit c0015 through the shared Wedge, center, and radial anchors.",
+      "currentIds": ["c0017"],
+      "reason": "Approval record standard-shape-primitives units s0021, s0043, and s0044 authorize exact current Wedge matrix unit c0017 through the shared Wedge, center, and radial anchors.",
       "approval": {
         "recordId": "standard-shape-primitives",
         "unitIds": ["s0021", "s0043", "s0044"]
@@ -9522,8 +9773,8 @@
     {
       "id": "design-drawing-components-contract-standard-shape-polygon-matrix-addition",
       "path": "docs/design/drawing-components-contract.md",
-      "currentIds": ["c0016"],
-      "reason": "Approval record standard-shape-primitives units s0022, s0045, and s0072 authorize exact current Polygon matrix unit c0016 through the shared Polygon, point, and bounds anchors.",
+      "currentIds": ["c0018"],
+      "reason": "Approval record standard-shape-primitives units s0022, s0045, and s0072 authorize exact current Polygon matrix unit c0018 through the shared Polygon, point, and bounds anchors.",
       "approval": {
         "recordId": "standard-shape-primitives",
         "unitIds": ["s0022", "s0045", "s0072"]
@@ -9533,8 +9784,8 @@
     {
       "id": "design-drawing-components-contract-standard-shape-pipeline-addition",
       "path": "docs/design/drawing-components-contract.md",
-      "currentIds": ["c0025"],
-      "reason": "Approval record standard-shape-primitives units s0003, s0023, s0024, s0056, and s0062 authorize exact current pipeline unit c0025 through the shared drawing leaves, Path2D, and retained anchors.",
+      "currentIds": ["c0027"],
+      "reason": "Approval record standard-shape-primitives units s0003, s0023, s0024, s0056, and s0062 authorize exact current pipeline unit c0027 through the shared drawing leaves, Path2D, and retained anchors.",
       "approval": {
         "recordId": "standard-shape-primitives",
         "unitIds": ["s0003", "s0023", "s0024", "s0056", "s0062"]
@@ -9544,8 +9795,8 @@
     {
       "id": "design-drawing-components-contract-standard-shape-percentage-addition",
       "path": "docs/design/drawing-components-contract.md",
-      "currentIds": ["c0026"],
-      "reason": "Approval record standard-shape-primitives units s0027, s0028, s0032, s0033, s0034, s0041, s0048, s0049, s0050, s0051, s0052, and s0053 authorize exact current percentage/default unit c0026 through the shared percentage, default, and local anchors.",
+      "currentIds": ["c0028"],
+      "reason": "Approval record standard-shape-primitives units s0027, s0028, s0032, s0033, s0034, s0041, s0048, s0049, s0050, s0051, s0052, and s0053 authorize exact current percentage/default unit c0028 through the shared percentage, default, and local anchors.",
       "approval": {
         "recordId": "standard-shape-primitives",
         "unitIds": [
@@ -9568,8 +9819,8 @@
     {
       "id": "design-drawing-components-contract-standard-shape-angle-addition",
       "path": "docs/design/drawing-components-contract.md",
-      "currentIds": ["c0027"],
-      "reason": "Approval record standard-shape-primitives units s0026, s0030, s0031, s0034, s0036, s0037, s0038, and s0042 authorize exact current radii/angle unit c0027 through the shared radius, radians, and Path2D.arc anchors.",
+      "currentIds": ["c0029"],
+      "reason": "Approval record standard-shape-primitives units s0026, s0030, s0031, s0034, s0036, s0037, s0038, and s0042 authorize exact current radii/angle unit c0029 through the shared radius, radians, and Path2D.arc anchors.",
       "approval": {
         "recordId": "standard-shape-primitives",
         "unitIds": [
@@ -9588,8 +9839,8 @@
     {
       "id": "design-drawing-components-contract-standard-shape-wedge-geometry-addition",
       "path": "docs/design/drawing-components-contract.md",
-      "currentIds": ["c0028"],
-      "reason": "Approval record standard-shape-primitives units s0024, s0042, s0043, and s0044 authorize exact current Arc/Wedge geometry unit c0028 through the shared stroke, center, and radial anchors.",
+      "currentIds": ["c0030"],
+      "reason": "Approval record standard-shape-primitives units s0024, s0042, s0043, and s0044 authorize exact current Arc/Wedge geometry unit c0030 through the shared stroke, center, and radial anchors.",
       "approval": {
         "recordId": "standard-shape-primitives",
         "unitIds": ["s0024", "s0042", "s0043", "s0044"]
@@ -9599,8 +9850,8 @@
     {
       "id": "design-drawing-components-contract-standard-shape-polygon-geometry-addition",
       "path": "docs/design/drawing-components-contract.md",
-      "currentIds": ["c0029"],
-      "reason": "Approval record standard-shape-primitives units s0045, s0046, and s0055 authorize exact current Polygon geometry unit c0029 through the shared coords, finite, and fewer than three anchors.",
+      "currentIds": ["c0031"],
+      "reason": "Approval record standard-shape-primitives units s0045, s0046, and s0055 authorize exact current Polygon geometry unit c0031 through the shared coords, finite, and fewer than three anchors.",
       "approval": {
         "recordId": "standard-shape-primitives",
         "unitIds": ["s0045", "s0046", "s0055"]
@@ -9610,8 +9861,8 @@
     {
       "id": "design-drawing-components-contract-standard-shape-validation-addition",
       "path": "docs/design/drawing-components-contract.md",
-      "currentIds": ["c0030"],
-      "reason": "Approval record standard-shape-primitives units s0054, s0055, s0074, and s0075 authorize exact current validation/lifecycle unit c0030 through the shared nonnegative, LayoutDiagnostic, and disposal anchors.",
+      "currentIds": ["c0032"],
+      "reason": "Approval record standard-shape-primitives units s0054, s0055, s0074, and s0075 authorize exact current validation/lifecycle unit c0032 through the shared nonnegative, LayoutDiagnostic, and disposal anchors.",
       "approval": {
         "recordId": "standard-shape-primitives",
         "unitIds": ["s0054", "s0055", "s0074", "s0075"]
@@ -9621,8 +9872,8 @@
     {
       "id": "design-drawing-components-contract-standard-shape-interaction-addition",
       "path": "docs/design/drawing-components-contract.md",
-      "currentIds": ["c0031"],
-      "reason": "Approval record standard-shape-primitives units s0066, s0067, s0068, s0069, s0070, s0071, s0072, and s0073 authorize exact current interaction/bounds unit c0031 through the shared targeting, keyboardNavigationBounds, and transforms anchors.",
+      "currentIds": ["c0033"],
+      "reason": "Approval record standard-shape-primitives units s0066, s0067, s0068, s0069, s0070, s0071, s0072, and s0073 authorize exact current interaction/bounds unit c0033 through the shared targeting, keyboardNavigationBounds, and transforms anchors.",
       "approval": {
         "recordId": "standard-shape-primitives",
         "unitIds": [
@@ -9641,13 +9892,317 @@
     {
       "id": "design-drawing-components-contract-standard-shape-measurement-addition",
       "path": "docs/design/drawing-components-contract.md",
-      "currentIds": ["c0032"],
-      "reason": "Approval record standard-shape-primitives units s0063, s0064, and s0065 authorize exact current measurement/pixel-alignment unit c0032 through the shared layout, Percentage geometry, and pixel-grid alignment anchors.",
+      "currentIds": ["c0034"],
+      "reason": "Approval record standard-shape-primitives units s0063, s0064, and s0065 authorize exact current measurement/pixel-alignment unit c0034 through the shared layout, Percentage geometry, and pixel-grid alignment anchors.",
       "approval": {
         "recordId": "standard-shape-primitives",
         "unitIds": ["s0063", "s0064", "s0065"]
       },
       "sharedAnchors": ["layout", "Percentage geometry", "pixel-grid alignment"]
+    },
+    {
+      "id": "filter-canvas-upright-target",
+      "path": "docs/design/canvas-surface-contract.md",
+      "currentIds": ["c0034"],
+      "reason": "Approval record first-class-filters units f0005, f0048, f0049 authorize exact current units c0034 through the shared upright local, world transform, OffscreenCanvas anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": ["f0005", "f0048", "f0049"]
+      },
+      "sharedAnchors": ["upright local", "world transform", "OffscreenCanvas"]
+    },
+    {
+      "id": "filter-canvas-raster-density",
+      "path": "docs/design/canvas-surface-contract.md",
+      "currentIds": ["c0035"],
+      "reason": "Approval record first-class-filters units f0078 authorize exact current units c0035 through the shared density, root, Layer anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": ["f0078"]
+      },
+      "sharedAnchors": ["density", "root", "Layer"]
+    },
+    {
+      "id": "filter-canvas-capabilities",
+      "path": "docs/design/canvas-surface-contract.md",
+      "currentIds": ["c0036"],
+      "reason": "Approval record first-class-filters units f0023, f0036, f0079 authorize exact current units c0036 through the shared OffscreenCanvas, filter, no-op anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": ["f0023", "f0036", "f0079"]
+      },
+      "sharedAnchors": ["OffscreenCanvas", "filter", "no-op"]
+    },
+    {
+      "id": "filter-canvas-evidence",
+      "path": "docs/design/canvas-surface-contract.md",
+      "currentIds": ["c0040"],
+      "reason": "Approval record first-class-filters units f0094, f0103, f0106, f0107 authorize exact current units c0040 through the shared filter, tests anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": ["f0094", "f0103", "f0106", "f0107"]
+      },
+      "sharedAnchors": ["filter", "tests"]
+    },
+    {
+      "id": "filter-drawing-local-style",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0003"],
+      "reason": "Approval record first-class-filters units f0006 authorize exact current units c0003 through the shared filters, local, style anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": ["f0006"]
+      },
+      "sharedAnchors": ["filters", "local", "style"]
+    },
+    {
+      "id": "filter-drawing-interaction",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0011"],
+      "reason": "Approval record first-class-filters units f0010, f0017, f0083, f0084 authorize exact current units c0011 through the shared measurement, pointer, source paint order anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": ["f0010", "f0017", "f0083", "f0084"]
+      },
+      "sharedAnchors": ["measurement", "pointer", "source paint order"]
+    },
+    {
+      "id": "filter-drawing-combined-silhouette",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0044"],
+      "reason": "Approval record first-class-filters units f0003, f0007, f0060 authorize exact current units c0044 through the shared combined, descendant, shadow anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": ["f0003", "f0007", "f0060"]
+      },
+      "sharedAnchors": ["combined", "descendant", "shadow"]
+    },
+    {
+      "id": "filter-drawing-list-and-nesting",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0045"],
+      "reason": "Approval record first-class-filters units f0008, f0038, f0042, f0044 authorize exact current units c0045 through the shared list, inside out, component anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": ["f0008", "f0038", "f0042", "f0044"]
+      },
+      "sharedAnchors": ["list", "inside out", "component"]
+    },
+    {
+      "id": "filter-drawing-group-order",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0046"],
+      "reason": "Approval record first-class-filters units f0009, f0061, f0062 authorize exact current units c0046 through the shared transform, local, Group anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": ["f0009", "f0061", "f0062"]
+      },
+      "sharedAnchors": ["transform", "local", "Group"]
+    },
+    {
+      "id": "filter-drawing-clip-order",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0047", "c0048"],
+      "reason": "Approval record first-class-filters units f0063 authorize exact current units c0047, c0048 through the shared receiving, filter, clip anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": ["f0063"]
+      },
+      "sharedAnchors": ["receiving", "filter", "clip"]
+    },
+    {
+      "id": "filter-drawing-layer-order",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0049"],
+      "reason": "Approval record first-class-filters units f0005, f0080, f0082 authorize exact current units c0049 through the shared Layer, filter, cached anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": ["f0005", "f0080", "f0082"]
+      },
+      "sharedAnchors": ["Layer", "filter", "cached"]
+    },
+    {
+      "id": "filter-drawing-capabilities",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0050"],
+      "reason": "Approval record first-class-filters units f0023, f0036 authorize exact current units c0050 through the shared OffscreenCanvas, filter, empty list anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": ["f0023", "f0036"]
+      },
+      "sharedAnchors": ["OffscreenCanvas", "filter", "empty list"]
+    },
+    {
+      "id": "filter-drawing-evidence",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0057"],
+      "reason": "Approval record first-class-filters units f0012, f0094, f0095, f0110 authorize exact current units c0057 through the shared Studio, evidence, filter anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": ["f0012", "f0094", "f0095", "f0110"]
+      },
+      "sharedAnchors": ["Studio", "evidence", "filter"]
+    },
+    {
+      "id": "filter-drawing-exclusions",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0059"],
+      "reason": "Approval record first-class-filters units f0013, f0014, f0015, f0016 authorize exact current units c0059 through the shared raw CSS, url(), box-shadow anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": ["f0013", "f0014", "f0015", "f0016"]
+      },
+      "sharedAnchors": ["raw CSS", "url()", "box-shadow"]
+    },
+    {
+      "id": "filter-runtime-pool-ownership",
+      "path": "docs/design/runtime-resource-ownership.md",
+      "currentIds": ["c0014", "c0015"],
+      "reason": "Approval record first-class-filters units f0086, f0087 authorize exact current units c0014, c0015 through the shared pool, instance, slots anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": ["f0086", "f0087"]
+      },
+      "sharedAnchors": ["pool", "instance", "slots"]
+    },
+    {
+      "id": "filter-runtime-pool-depth",
+      "path": "docs/design/runtime-resource-ownership.md",
+      "currentIds": ["c0023"],
+      "reason": "Approval record first-class-filters units f0086, f0088 authorize exact current units c0023 through the shared depth, pair, nested anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": ["f0086", "f0088"]
+      },
+      "sharedAnchors": ["depth", "pair", "nested"]
+    },
+    {
+      "id": "filter-runtime-pool-reuse",
+      "path": "docs/design/runtime-resource-ownership.md",
+      "currentIds": ["c0024"],
+      "reason": "Approval record first-class-filters units f0087 authorize exact current units c0024 through the shared same-size, context anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": ["f0087"]
+      },
+      "sharedAnchors": ["same-size", "context"]
+    },
+    {
+      "id": "filter-runtime-failure-cleanup",
+      "path": "docs/design/runtime-resource-ownership.md",
+      "currentIds": ["c0025"],
+      "reason": "Approval record first-class-filters units f0049, f0058, f0089 authorize exact current units c0025 through the shared failure, finally, transform anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": ["f0049", "f0058", "f0089"]
+      },
+      "sharedAnchors": ["failure", "finally", "transform"]
+    },
+    {
+      "id": "filter-runtime-performance-evidence",
+      "path": "docs/design/runtime-resource-ownership.md",
+      "currentIds": ["c0035"],
+      "reason": "Approval record first-class-filters units f0090, f0091 authorize exact current units c0035 through the shared structural, Layer, pixel anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": ["f0090", "f0091"]
+      },
+      "sharedAnchors": ["structural", "Layer", "pixel"]
+    },
+    {
+      "id": "filter-style-local-model",
+      "path": "docs/design/style-system-contract.md",
+      "currentIds": ["c0003"],
+      "reason": "Approval record first-class-filters units f0006 authorize exact current units c0003 through the shared filters, local, style anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": ["f0006"]
+      },
+      "sharedAnchors": ["filters", "local", "style"]
+    },
+    {
+      "id": "filter-style-system-property",
+      "path": "docs/design/style-system-contract.md",
+      "currentIds": ["c0006", "c0007", "c0008"],
+      "reason": "Approval record first-class-filters units f0006, f0022 authorize exact current units c0006, c0007, c0008 through the shared filter, style, primitive anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": ["f0006", "f0022"]
+      },
+      "sharedAnchors": ["filter", "style", "primitive"]
+    },
+    {
+      "id": "filter-style-normalization",
+      "path": "docs/design/style-system-contract.md",
+      "currentIds": ["c0016"],
+      "reason": "Approval record first-class-filters units f0026, f0037 authorize exact current units c0016 through the shared filter, custom, measurement anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": ["f0026", "f0037"]
+      },
+      "sharedAnchors": ["filter", "custom", "measurement"]
+    },
+    {
+      "id": "filter-style-list-normalization",
+      "path": "docs/design/style-system-contract.md",
+      "currentIds": ["c0017"],
+      "reason": "Approval record first-class-filters units f0023 authorize exact current units c0017 through the shared descriptor, list, no-op anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": ["f0023"]
+      },
+      "sharedAnchors": ["descriptor", "list", "no-op"]
+    },
+    {
+      "id": "filter-style-descriptor-contract",
+      "path": "docs/design/style-system-contract.md",
+      "currentIds": [
+        "c0018",
+        "c0019",
+        "c0020",
+        "c0021",
+        "c0022",
+        "c0023",
+        "c0024",
+        "c0025",
+        "c0026",
+        "c0027",
+        "c0028",
+        "c0029",
+        "c0030",
+        "c0031"
+      ],
+      "reason": "Approval record first-class-filters units f0020, f0023, f0027, f0028, f0029, f0030, f0031, f0032, f0033, f0034, f0035, f0036, f0038 authorize exact current units c0018, c0019, c0020, c0021, c0022, c0023, c0024, c0025, c0026, c0027, c0028, c0029, c0030, c0031 through the shared filter, amount, blur anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": [
+          "f0020",
+          "f0023",
+          "f0027",
+          "f0028",
+          "f0029",
+          "f0030",
+          "f0031",
+          "f0032",
+          "f0033",
+          "f0034",
+          "f0035",
+          "f0036",
+          "f0038"
+        ]
+      },
+      "sharedAnchors": ["filter", "amount", "blur"]
+    },
+    {
+      "id": "filter-style-exclusions",
+      "path": "docs/design/style-system-contract.md",
+      "currentIds": ["c0057"],
+      "reason": "Approval record first-class-filters units f0013, f0014, f0015, f0016 authorize exact current units c0057 through the shared raw CSS, url(), box-shadow anchors.",
+      "approval": {
+        "recordId": "first-class-filters",
+        "unitIds": ["f0013", "f0014", "f0015", "f0016"]
+      },
+      "sharedAnchors": ["raw CSS", "url()", "box-shadow"]
     }
   ],
   "evidenceMappings": [
@@ -9660,7 +10215,7 @@
       },
       "source": {
         "path": "packages/core/src/lib/render.ts",
-        "marker": "result = componentRefs.element.type(componentRefs.element.props);"
+        "marker": "renderProgram(() =>\n            componentRefs.element.type(componentRefs.element.props)"
       },
       "test": {
         "path": "packages/core/src/lib/component-dispatch.test.tsx",
@@ -10561,6 +11116,82 @@
       },
       "relevance": {
         "sharedAnchors": ["root"]
+      }
+    },
+    {
+      "id": "filter-style-framework-ownership",
+      "contract": "docs/design/style-system-contract.md",
+      "claim": {
+        "kind": "prose",
+        "text": "Filter normalization is also framework-owned."
+      },
+      "source": {
+        "path": "packages/core/src/lib/style/resolve-dispatch.ts",
+        "marker": "export function withoutSystemFilter("
+      },
+      "test": {
+        "path": "packages/core/src/lib/style/resolve-dispatch.test.ts",
+        "marker": "keeps system filters outside custom normalization and resolution"
+      },
+      "relevance": {
+        "sharedAnchors": ["filter"]
+      }
+    },
+    {
+      "id": "filter-upright-custom-context",
+      "contract": "docs/design/canvas-surface-contract.md",
+      "claim": {
+        "kind": "prose",
+        "text": "Inside a filtered boundary, `crcCanvasContext().canvas` is truthfully the local `OffscreenCanvas`, and its `getTransform()` describes that local capture."
+      },
+      "source": {
+        "path": "packages/core/src/lib/filter/render-filter-boundary.ts",
+        "marker": "source.context.setTransform(windows.source.renderTransform);"
+      },
+      "test": {
+        "path": "packages/core/src/lib/filter/filter-rendering.test.ts",
+        "marker": "gives a filtered custom primitive an upright local OffscreenCanvas context"
+      },
+      "relevance": {
+        "sharedAnchors": ["context"]
+      }
+    },
+    {
+      "id": "filter-depth-pool-ownership",
+      "contract": "docs/design/runtime-resource-ownership.md",
+      "claim": {
+        "kind": "prose",
+        "text": "Each instance owns one depth-indexed pool."
+      },
+      "source": {
+        "path": "packages/core/src/lib/filter/filter-surface-pool.ts",
+        "marker": "const sourceIndex = 2 * depth;"
+      },
+      "test": {
+        "path": "packages/core/src/lib/filter/filter-surface-pool.test.ts",
+        "marker": "uses exactly the two depth-indexed array slots without searching"
+      },
+      "relevance": {
+        "sharedAnchors": ["depth"]
+      }
+    },
+    {
+      "id": "filter-failure-lifo-cleanup",
+      "contract": "docs/design/runtime-resource-ownership.md",
+      "claim": {
+        "kind": "prose",
+        "text": "Any failure returns every acquired pair and restores temporary renderer globals before normal render-failure teardown clears owned component resources."
+      },
+      "source": {
+        "path": "packages/core/src/lib/filter/render-filter-boundary.ts",
+        "marker": "pair.release();"
+      },
+      "test": {
+        "path": "packages/core/src/lib/filter/filter-integration.test.ts",
+        "marker": "unwinds two filtered ancestors in strict LIFO target order when a descendant throws"
+      },
+      "relevance": {
+        "sharedAnchors": ["pair"]
       }
     }
   ]

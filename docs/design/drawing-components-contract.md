@@ -1,13 +1,16 @@
 # CRC drawing-component contract
 
-Status: current implemented contract, updated for standard shape primitives on
-2026-09-06.
+Status: current implemented contract, updated for first-class filters on
+2026-09-08.
 
 CRC exports descriptive component values. Authors construct them with JSX or
 `createElement`; none is a callable factory. Geometry, paint, cursor, transform,
-clip, image source, and layout participation use explicit local `style`.
-Events remain props. Drawing leaves reject children, `Text` accepts textual
-children, and composition values accept recursive `CRCNode` children.
+clip, image source, and layout participation use explicit local `style`. Events
+remain props. Drawing leaves reject children, `Text` accepts textual children,
+and composition values accept recursive `CRCNode` children.
+
+First-class filters are also explicit local style and use the composition
+boundary defined below.
 
 ## Shared paint and interaction rules
 
@@ -28,6 +31,10 @@ children, and composition values accept recursive `CRCNode` children.
   adding one pixel.
 - Platform-defined parsing, glyph rasterization, image decoding, CORS/taint,
   and antialiasing remain platform-defined.
+- Filters affect pixels only. They do not change measurement, layout boxes,
+  hit paths, focus or keyboard-navigation bounds, pointer coordinates, cursor
+  regions, or source paint order; visual overflow outside those logical shapes
+  is not independently interactive.
 
 ## Component matrix
 
@@ -151,6 +158,53 @@ interaction bounds remain exact.
 | `Clip`  | Applies required `Path2D` `d` and optional `nonzero`/`evenodd` rule to all children. Nested intersections, transforms, updates, empty clips, and paint/hit geometry agree. |
 | `Layer` | Renders multiple children into one persistent offscreen CRC instance, caches retained content, follows root density, and participates in global paint/target/focus order.  |
 
+## Filter composition
+
+A nonempty `style.filter` turns the receiving primitive into one immediate-mode
+composition boundary. CRC renders that primitive and every descendant it
+returns once into one upright local source surface, then applies the complete
+filter list in one native Canvas operation. Fill and stroke, multiline text,
+transparent image content and borders, custom primitive paint, layout output,
+and overlapping descendants therefore contribute one combined alpha
+silhouette. In particular, `dropShadow` derives one shadow from that combined
+silhouette rather than one shadow per draw or child.
+
+List functions consume the preceding result in declaration order. Nested
+filtered primitives are separate boundaries and resolve inside out: the inner
+filtered result becomes ordinary source paint for its parent before the parent
+filter runs. Component functions and primitive callbacks still execute once;
+filters add bitmap composition, not a second tree traversal or retained drawing
+commands.
+
+Runtime-owned layout placement and the receiving `Group` transform are applied
+after the receiving filter. The subtree is filtered upright in local
+coordinates, then scaled, rotated, translated, or skewed at composite time, so
+a circular local blur may become elliptical under nonuniform scale and a local
+shadow offset rotates with its Group. An unfiltered descendant Group is already
+transformed inside an ancestor's source; a descendant Group with its own filter
+filters in its own local space before its transform reaches the ancestor source.
+
+The receiving `Clip` also applies after its receiving filter. Descendant clips
+are captured inside the source, while ancestor clips constrain the completed
+filtered result. The composition order is:
+
+```text
+local subtree paint -> receiving filter -> receiving clip -> receiving transform
+-> ancestor clip/alpha/compositing -> parent target
+```
+
+`Layer` remains the persistent cache boundary; filter scratch surfaces are
+transient and do not create nested CRC mounts. A filter on a Layer consumes its
+combined cached bitmap. Changing only an outer or Layer filter can recomposite
+that bitmap without rerunning retained child components. Filters inside a Layer
+belong to the child CRC instance and its scratch pool, while the existing bridge
+keeps their interaction entries in global paint order.
+
+Nonempty filters require browser `OffscreenCanvas`, an Offscreen Canvas 2D
+context, and its native `filter` state to accept the compiled chain. CRC has no
+DOM-canvas fallback, JavaScript pixel loop, tiling, or silent resolution
+reduction. An empty list stays on the direct path and has no such requirement.
+
 `Layer` uses children, not a render element/descriptor prop. It installs a stable private keyed
 fragment as the offscreen root. Direct child iterables are materialized once;
 retained comparisons do not consume opaque nested iterables. Cache hits replay
@@ -187,21 +241,32 @@ extra pixel.
 ## Visual evidence and limitations
 
 The Studio exposes one lesson for each drawing/composition value under
-`#/examples/drawing/rectangle` through `#/examples/drawing/image`, including
-the five standard-shape lessons, and
-`#/examples/composition/group` through `#/examples/composition/layer`. It also
-retains the five stable `#/testing/drawing-*` integration fixtures. Their
-`.example.tsx` modules are loaded by both Studio and browser tests. The stable
-480×240 baselines retain semantic, Canvas-call, geometry, interaction, and
-inspected-pixel evidence. Image comparison masks only glyph rasterization and
-decoded-SVG edges where documented; surrounding cards, clipping, layout,
-state, and interaction bounds remain exact.
+`#/examples/drawing/rectangle` through `#/examples/drawing/image`, including the
+five standard-shape lessons, and `#/examples/composition/group` through
+`#/examples/composition/layer`. It also retains the five stable
+`#/testing/drawing-*` integration fixtures. Their `.example.tsx` modules are
+loaded by both Studio and browser tests. The stable 480×240 baselines retain
+semantic, Canvas-call, geometry, interaction, and inspected-pixel evidence.
+Image comparison masks only glyph rasterization and decoded-SVG edges where
+documented; surrounding cards, clipping, layout, state, and interaction bounds
+remain exact.
+
+The Studio additionally exposes `#/examples/composition/filters` and the
+deterministic `#/testing/filters` laboratory. Filter evidence covers every
+function, ordered lists, inside-out nesting, combined silhouettes,
+Group/Clip/Layer order, local transforms and density, custom paint, edge
+expansion, unchanged interaction geometry, pool ownership/failure cleanup, and
+structural cost. Its image comparison masks only browser-sensitive filter
+regions where documented.
 
 CRC adds no rich text, semantic DOM, accessibility tree, image CORS policy, SVG
 validator, retained scene graph, generic public shape/path-builder API, or
 complete CSS formatting engine. The standard shapes add no line smoothing,
-spline selection, data-to-mark conversion, `Pie`, charts, scales, axes,
-legends, annular wedges, rounded rectangles, new paint effects, or intrinsic
-geometry measurement. See the
-[style](./style-system-contract.md), [layout](./layout-system-contract.md), and
+spline selection, data-to-mark conversion, `Pie`, charts, scales, axes, legends,
+annular wedges, rounded rectangles, new paint effects, or intrinsic geometry
+measurement. See the [style](./style-system-contract.md),
+[layout](./layout-system-contract.md), and
 [runtime](./runtime-hooks-contract.md) contracts.
+
+The filter surface does not accept raw CSS strings, `url()`/SVG graphs,
+backdrop sampling, or a box-shadow model.

@@ -1,12 +1,15 @@
 # CRC style-system contract
 
-Status: current implemented contract, updated for JSX-era authoring on
-2026-09-03.
+Status: current implemented contract, updated for first-class filters on
+2026-09-08.
 
 CRC has one typed, local, closed `style` prop. Geometry, paint, cursor,
 transforms, clipping, image source, text layout, and layout participation live
 there. Application data, handlers, and structural children are separate props;
 text content belongs in `Text` children; `key` is element metadata.
+
+Filters are framework-owned local style and remain closed to the descriptor
+vocabulary below.
 
 ```tsx
 const cardPaint = {
@@ -30,12 +33,21 @@ is ordinary JavaScript object composition.
 
 ## Public style model
 
-`SystemStyle` contains only optional `custom`. Shared closed mixins include
-`BoxStyle`, `LayoutItemStyle`, `FlexItemStyle`, `GridItemStyle`, `PaintStyle`,
-and `CursorStyle`. Built-ins expose their supported intersections through
-`RectStyle`, `PathStyle`, `SvgPathStyle`, `LineStyle`, `TextStyle`, `ImgStyle`,
-`GStyle`, `ClipStyle`, `LayerStyle`, and layout styles. Unsupported members are
-type errors.
+`SystemStyle` contains optional `custom` and the framework-owned `filter`:
+
+```ts
+interface SystemStyle {
+  custom?: unknown;
+  filter?: CRCFilter | readonly CRCFilter[];
+}
+```
+
+Shared closed mixins include `BoxStyle`, `LayoutItemStyle`, `FlexItemStyle`,
+`GridItemStyle`, `PaintStyle`, and `CursorStyle`. Built-ins expose their
+supported intersections through `RectStyle`, `PathStyle`, `SvgPathStyle`,
+`LineStyle`, `TextStyle`, `ImgStyle`, `GStyle`, `ClipStyle`, `LayerStyle`, and
+layout styles. Every primitive style therefore accepts `filter`; unsupported
+members remain type errors.
 
 `style.custom` is application-owned metadata. CRC does not interpret or
 inherit it. It is not an escape hatch for arbitrary top-level keys.
@@ -58,6 +70,50 @@ algorithm, constraints, and reason. A declared percentage or `auto` requires an
 explicit resolver; a resolved style type cannot retain allocation syntax.
 Unresolved percentages, unresolved `auto`, non-finite numeric geometry, and
 malformed allocation syntax reject before a primitive render callback runs.
+
+Filter normalization is also framework-owned. CRC removes `filter` before a
+custom primitive's `normalizeStyle` and `resolveStyle` callbacks, validates it
+from the authoritative specified or pre-normalized style, and attaches the
+canonical readonly descriptor list to the final resolved style. Custom style
+callbacks therefore cannot discard or reinterpret filters. Pure measurement
+ignores filters: it neither validates browser raster capabilities nor allocates
+offscreen surfaces, and the measured size is unchanged.
+
+## Filter descriptors
+
+One descriptor is a one-item list. A readonly list runs in declaration order;
+`[]` is exactly a no-op, performs no offscreen capture, and requires no filter
+capability. CRC copies and freezes normalized descriptors without mutating the
+caller-owned descriptor or array.
+
+The root package exports `CRCFilter` and all ten named descriptor types. This is
+the complete function and numeric contract:
+
+| Descriptor type                      | Fields and normalization                                                                                                                                                 | Native unit/function                   |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------- |
+| `blur` (`CRCBlurFilter`)             | `radius` must be finite and nonnegative. It is a Gaussian standard deviation in local logical units.                                                                     | Density-scaled `px` in `blur()`        |
+| `brightness` (`CRCBrightnessFilter`) | `amount` must be finite and nonnegative; values above `1` are preserved.                                                                                                 | Unitless ratio in `brightness()`       |
+| `contrast` (`CRCContrastFilter`)     | `amount` must be finite and nonnegative; values above `1` are preserved.                                                                                                 | Unitless ratio in `contrast()`         |
+| `dropShadow` (`CRCDropShadowFilter`) | Signed `offsetX`/`offsetY` must be finite. `blurRadius` defaults to `0`, must be finite and nonnegative, and is a Gaussian standard deviation. `color` must be concrete. | Density-scaled `px` in `drop-shadow()` |
+| `grayscale` (`CRCGrayscaleFilter`)   | `amount` must be finite and nonnegative; values above `1` clamp to `1`.                                                                                                  | Unitless ratio in `grayscale()`        |
+| `hueRotate` (`CRCHueRotateFilter`)   | `degrees` may be any finite number and is not modulo-normalized.                                                                                                         | `deg` in `hue-rotate()`                |
+| `invert` (`CRCInvertFilter`)         | `amount` must be finite and nonnegative; values above `1` clamp to `1`.                                                                                                  | Unitless ratio in `invert()`           |
+| `opacity` (`CRCOpacityFilter`)       | `amount` must be finite and nonnegative; values above `1` clamp to `1`.                                                                                                  | Unitless ratio in `opacity()`          |
+| `saturate` (`CRCSaturateFilter`)     | `amount` must be finite and nonnegative; values above `1` are preserved.                                                                                                 | Unitless ratio in `saturate()`         |
+| `sepia` (`CRCSepiaFilter`)           | `amount` must be finite and nonnegative; values above `1` clamp to `1`.                                                                                                  | Unitless ratio in `sepia()`            |
+
+Amounts are ratios, so `1` means 100 percent. `blur.radius` and
+`dropShadow.blurRadius` deliberately use filter-function standard-deviation
+semantics, not CSS `box-shadow` blur-radius semantics. Drop-shadow color syntax
+is accepted only when the active browser's Canvas filter parser accepts it;
+`currentColor`, `var(...)`, system/contextual colors, and other contextual
+references reject. Diagnostics identify `filter`, a list index when present,
+the failing field, received value, and component before its render callback.
+
+CRC compiles the complete nonempty list once for one native Canvas filter
+operation. `style.opacity` remains the primitive's existing paint-alpha
+behavior; an `opacity` filter is a separate ordered effect over the combined
+raster and can differ where paint overlaps.
 
 ## Length and box rules
 
@@ -122,10 +178,13 @@ the drawing contract.
 ## Deliberate exclusions
 
 CRC does not implement cascade, inheritance, selectors, specificity,
-stylesheets, CSS variables, computed DOM style, margin, scrolling, or a
-complete CSS parser. CSS names are used only where behavior matches the
-documented subset; CRC-native behavior uses names such as `rotationDegrees`,
-`fit`, and `Flow`.
+stylesheets, CSS variables, computed DOM style, margin, scrolling, or a complete
+CSS parser. CSS names are used only where behavior matches the documented
+subset; CRC-native behavior uses names such as `rotationDegrees`, `fit`, and
+`Flow`.
+
+Filters do not accept raw CSS strings, `url()`/SVG filter graphs,
+`backdrop-filter`, or `boxShadow`/CSS box-shadow semantics.
 
 See the [layout contract](./layout-system-contract.md), [drawing
 contract](./drawing-components-contract.md), and [custom primitive

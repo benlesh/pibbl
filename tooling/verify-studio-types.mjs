@@ -308,12 +308,16 @@ const publicTypeExports = [
   'ClipStyle',
   'Constraints',
   'CRCClipboardEvent',
+  'CRCBlurFilter',
+  'CRCBrightnessFilter',
   'CRCComponent',
   'CRCCompositionEvent',
   'CRCConfig',
   'CRCContainerChild',
+  'CRCContrastFilter',
   'CRCController',
   'CRCDragEvent',
+  'CRCDropShadowFilter',
   'CRCElement',
   'CRCElementType',
   'CRCEmptyNode',
@@ -328,10 +332,14 @@ const publicTypeExports = [
   'CRCEventTargetOptions',
   'CRCEventTargetSnapshot',
   'CRCEventType',
+  'CRCFilter',
   'CRCFit',
   'CRCFixedViewportConfig',
   'CRCFocusEvent',
+  'CRCGrayscaleFilter',
+  'CRCHueRotateFilter',
   'CRCInputEvent',
+  'CRCInvertFilter',
   'CRCKeyboardEvent',
   'CRCKeyboardNavigationOptions',
   'CRCKey',
@@ -339,10 +347,13 @@ const publicTypeExports = [
   'CRCMouseEvent',
   'CRCMouseEventListener',
   'CRCNode',
+  'CRCOpacityFilter',
   'CRCPixelRatio',
   'CRCPointerEvent',
   'CRCPrimitiveComponent',
   'CRCResponsiveViewportConfig',
+  'CRCSaturateFilter',
+  'CRCSepiaFilter',
   'CRCRef',
   'CRCRenderResult',
   'CRCTextChild',
@@ -505,6 +516,7 @@ import {
   type CRCPixelRatio,
   type CRCPointerEvent,
   type CRCEventTargetSnapshot,
+  type CRCFilter,
   type CRCTouchEvent,
   type CRCWheelEvent,
   type EdgeValues,
@@ -539,6 +551,12 @@ type StudioSignatureParity = [
   Assert<Equal<typeof FocusManagement, CRCComponent<FocusManagementProps>>>,
   Assert<Equal<typeof KeyboardNavigation, CRCComponent<KeyboardNavigationProps>>>,
   Assert<Equal<LineStyle['coords'], [number, number][]>>,
+  Assert<
+    Equal<
+      SystemStyle['filter'],
+      CRCFilter | readonly CRCFilter[] | undefined
+    >
+  >,
   Assert<Equal<typeof crcMemo, <T>(create: () => T, deps: any[]) => T>>,
   Assert<Equal<
     typeof crcWhenChanged,
@@ -1229,7 +1247,7 @@ try {
     throw new Error('CRC Studio source and built runtime surfaces differ.');
   }
   process.stdout.write(
-    'CRC Studio declarations passed exact export-name parity, 122-type structural ' +
+    'CRC Studio declarations passed exact export-name parity, 133-type structural ' +
     'coverage, selected signature parity, strict TSX, compiler-runtime, event-family, ' +
     'generic, and layout checks against source and built packages.\n',
   );
