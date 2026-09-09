@@ -2,7 +2,124 @@
 
 > **Historical status: COMPLETED FIELD RECORD.** Results are dated evidence for the named revision and environment, not current API guidance or reusable test totals.
 
-Date: 2026-09-08
+Initial delivery date: 2026-09-08
+
+Final-review correction rerun: 2026-09-09
+
+## 2026-09-09 final-review correction and trust rerun
+
+A fresh independent review of the complete implementation identified three
+correctness or diagnostic gaps. Each was reproduced before production code was
+changed, fixed without weakening structural, lifecycle, or visual assertions,
+and committed separately:
+
+- `0d0a162c62e5c675bb6357c4f0c5ddf0bb14a43c` (`fix(core): derive
+filter bounds from root bitmap`) inverse-projects all four backing-bitmap
+  corners to make the root render target describe the actually visible logical
+  rectangle for `contain`, `cover`, `none`, and `scale-down`. The focused RED
+  run had 10 failed and 35 passed tests of 45; the corrected root-surface and
+  filter-integration run passed all 66 tests in 4 files.
+- `6d5fdb60d845146635ca981f73b3de889ee94e1c` (`fix(core): trust full
+native filter chains first`) makes lexical normalization reject balanced-token
+  injection and contextual references, then gives the complete native Canvas
+  filter chain first authority. Per-shadow native assignments occur only on the
+  rejected-chain diagnostic path. The focused RED run had 25 failed and 104
+  passed tests of 129; the corrected normalization/rendering/integration and
+  structural run passed all 129 tests in 4 files.
+- `2575213ac1ce863fd716cdfe9218ae81e42abf92` (`fix(core): wrap filter
+surface acquisition failures`) wraps both `OffscreenCanvas` construction and
+  2D-context acquisition for pooled and singular discard surfaces, preserves
+  the host exception as `cause`, and retains callback suppression, pool-depth
+  rollback, global-state restoration, and same-instance recovery. The focused
+  RED run had 3 failed and 39 passed tests of 42; the pooled constructor case
+  was already green, while pooled acquisition and both discard paths exposed
+  raw host errors. The corrected integration, pool, and rendering run passed
+  all 99 tests in 3 files.
+
+The combined root-surface, normalization, filter-region, filter-pool,
+filter-rendering, filter-integration, ownership, lifecycle, cleanup, and
+structural-performance command passed all 210 tests in 12 files in 10.39
+seconds. Root typecheck, ESLint, Prettier, and `git diff --check` also exited 0
+before the complete aggregate rerun.
+
+### Native parser probe
+
+A direct `OffscreenCanvasRenderingContext2D` probe in the provisioned Chromium
+`151.0.7922.34` confirmed why `fillStyle` cannot be the authority for a
+drop-shadow color. Assigning `contrast-color(red)` left a `#010203` `fillStyle`
+sentinel unchanged, but the full native filter retained
+`drop-shadow(4px 0px 0px contrast-color(red))`; the source pixel was
+`[255, 0, 0, 255]` and its contrast shadow was `[0, 0, 0, 255]`.
+`light-dark(red, blue)` likewise left the fill sentinel unchanged but was
+accepted by the native filter and resolved its light-scheme shadow to
+`[255, 0, 0, 255]`, which is why CRC rejects it lexically as contextual.
+Concrete `color-mix(in srgb, red, blue)` and `rgb(from red r g b)` were accepted
+by both native accessors and rendered `[128, 0, 128, 255]` and
+`[255, 0, 0, 255]` shadows respectively. `currentColor` was accepted by the
+browser but remains an intentional lexical contextual rejection at the CRC
+boundary.
+
+### Fresh aggregate evidence
+
+The 2026-09-09 rerun used macOS 26.6.2 (25G83), arm64; Node.js `v24.15.0`
+through `fnm`; pnpm `11.21.0`; Vitest `4.1.10`; Playwright `1.62.1`; and
+headless Playwright Chromium `151.0.7922.34`. The exact aggregate invocation
+was:
+
+```sh
+fnm exec --using=24.15.0 corepack pnpm@11.21.0 trust
+```
+
+It exited 0. Fresh results from this rerun only were:
+
+- scenario validation: 48 lessons and 17 test laboratories;
+- documentation: 11 guides, 40 current/migration files, 57 historical/work
+  records, 46 values, 133 types, 21 acceptance rows, 53 parsed snippets, 8
+  extracted TypeScript programs, 667 pre-Task-14 and 708 current semantic units
+  across 12 normative contracts, 52 direct evidence mappings, 85
+  baseline-derived field migrations, and 103 presentation sources;
+- documentation RED mutation probes: 796 passed;
+- typecheck, ESLint, Prettier, package builds, source and built Studio builds,
+  Studio declaration parity, and packed-package consumers: passed;
+- packed focus elimination: 136,444 no-focus bytes versus 160,089 with-focus
+  bytes;
+- complete browser suite: 104 files passed; 1,458 passed and 2 intentionally
+  skipped tests of 1,460 in 21.65 seconds;
+- visual safeguard: deliberate mutation rejected, every baseline byte
+  preserved, and green recovered;
+- Studio visuals: all 5 full-page baselines matched exactly;
+- built-package smoke: 1 file and 1 test passed in 643 ms;
+- lifecycle gate: 3 files and 15 tests passed in 9.75 seconds; and
+- structural-performance gate: 2 files, 14 passed and 2 opt-in wall-clock tests
+  skipped of 16 in 1.65 seconds.
+
+The first-class-filter expected, expected-artifact, and actual images remained
+byte-identical at SHA-256
+`634e1b892cd6dee7ada14ee76369f60a2db41bdfae725b3e83924ce639f74a5f`.
+Expected, actual, and the neutral no-difference image were freshly inspected at
+the paths recorded below. This comparison uses exact channel equality and no
+ignored region or mask. All five Studio expected/actual pairs also compared
+byte-for-byte equal; the reviewed Mouse and Advanced baselines remained at
+`91df13745238b7f0957beba6d29dec8f7e8d8b00a3495f1860607c8c92727e51`
+and
+`ea1be96e8e3a088b64023d3e34e51f6f6bb7910a0bc2097010c4f7b362055dad`
+respectively. No visual baseline changed during the review-fix rerun.
+
+The fresh ownership/lifecycle assertions retained 2 created/live slots and
+peak 1 active pair for 100 filtered siblings plus 1,000 rerenders, with 100,100
+checkouts exactly matched by 100,100 returns. The forced depth-3 failure grew
+to 6 slots and peak 3, ended with 100,103 matched checkouts/returns and 0 active
+pairs, then disposal released all 6 slots. The fresh depth-3 remount again used
+and released exactly 6 slots. The structural sibling case reused 2 slots with
+peak 1 and 100 matched returns; the ten-function case retained 0 pixel
+readbacks, writes, or bitmap transfers.
+
+The rerun started from and returned to a clean isolated worktree. The original
+`main` checkout remained untouched at
+`1e4926e0286a7b4f3bed59b0b48e0b6384de4abd` with its previously recorded
+unrelated modifications and untracked files. The historical 2026-09-08
+failure/fix/baseline path remains below rather than being rewritten as current
+evidence.
 
 ## Scope and environment
 
