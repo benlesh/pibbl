@@ -43,12 +43,35 @@ describe('createRectanglePath', () => {
   });
 
   it('rejects invalid options before allocating a path', () => {
+    expect(() => createRectanglePath({ x: Number.NaN, width: 1, height: 1 }))
+      .toThrowError(RangeError);
+    expect(() => createRectanglePath({ x: Number.NaN, width: 1, height: 1 }))
+      .toThrow(/x.*finite.*NaN/);
+    expect(() => createRectanglePath({ y: Number.NEGATIVE_INFINITY, width: 1, height: 1 }))
+      .toThrowError(RangeError);
+    expect(() => createRectanglePath({ y: Number.NEGATIVE_INFINITY, width: 1, height: 1 }))
+      .toThrow(/y.*finite.*-Infinity/);
     expect(() => createRectanglePath({ width: Number.NaN, height: 1 }))
       .toThrow(/width.*finite.*NaN/);
     expect(() => createRectanglePath({ width: 1, height: Number.POSITIVE_INFINITY }))
       .toThrow(/height.*finite.*Infinity/);
     expect(() => createRectanglePath({ width: 1, height: 1, cornerRadii: [0, 0, 0, 0, null] }))
       .toThrow(/cornerRadii.*length.*4/);
+  });
+
+  it('reports uniform and indexed invalid radii with RangeError option paths', () => {
+    expect(() => createRectanglePath({ width: 1, height: 1, cornerRadius: -1 }))
+      .toThrowError(RangeError);
+    expect(() => createRectanglePath({ width: 1, height: 1, cornerRadius: -1 }))
+      .toThrow(/cornerRadius.*nonnegative/);
+    expect(() => createRectanglePath({ width: 1, height: 1, cornerRadius: Number.NaN }))
+      .toThrowError(RangeError);
+    expect(() => createRectanglePath({ width: 1, height: 1, cornerRadius: Number.NaN }))
+      .toThrow(/cornerRadius.*finite.*NaN/);
+    expect(() => createRectanglePath({ width: 1, height: 1, cornerRadii: [0, -1] }))
+      .toThrowError(RangeError);
+    expect(() => createRectanglePath({ width: 1, height: 1, cornerRadii: [0, -1] }))
+      .toThrow(/cornerRadii\[1\].*nonnegative/);
   });
 
   it('returns fresh paths and leaves fitting oversized radii to Canvas', () => {

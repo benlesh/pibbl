@@ -6,6 +6,8 @@ import { Rectangle } from './rect';
 import { createElement } from '../element/create-element';
 import { getPrimitiveDefinition } from '../element/metadata';
 import { getCRCInstance } from '../global-state';
+import { crc } from '../crc';
+import { crcState } from '../hooks/crc-state';
 import { Group } from './g';
 
 const defaultStyle = {
@@ -61,6 +63,99 @@ describe('rect', () => {
     await canvas.click({ position: { x: 1, y: 1 } });
     await canvas.click({ position: { x: 20, y: 20 } });
     expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it('uses browser signed rounded-rectangle geometry for painting', async () => {
+    const canvas = await componentTest(createElement(Rectangle, {
+      style: {
+        x: 60,
+        y: 20,
+        width: -40,
+        height: 30,
+        cornerRadius: 10,
+        fill: 'red',
+      },
+    }));
+
+    expect(alphaAt(canvas.element, 59, 21)).toBe(0);
+    expect(alphaAt(canvas.element, 50, 30)).toBeGreaterThan(0);
+  });
+
+  it('updates rounded rectangle geometry', async () => {
+    let setRadius!: (radius: number) => void;
+    function Probe() {
+      const [radius, set] = crcState(10);
+      setRadius = set;
+      return createElement(Rectangle, {
+        style: { x: 0, y: 0, width: 40, height: 40, cornerRadius: radius, fill: 'red' },
+      });
+    }
+
+    const canvas = await componentTest(createElement(Probe, {}));
+    expect(alphaAt(canvas.element, 1, 1)).toBe(0);
+
+    setRadius(0);
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+    expect(alphaAt(canvas.element, 1, 1)).toBeGreaterThan(0);
+  });
+
+  it('recovers from an invalid rounded radius with a later valid rectangle', () => {
+    const originalRequestAnimationFrame = window.requestAnimationFrame;
+    let pending: FrameRequestCallback | undefined;
+    let controller: ReturnType<typeof crc> | undefined;
+    window.requestAnimationFrame = callback => {
+      pending = callback;
+      return 1;
+    };
+    const canvas = document.createElement('canvas');
+    document.body.appendChild(canvas);
+
+    try {
+      controller = crc(canvas, createElement(Rectangle, {
+        style: { x: 0, y: 0, width: 20, height: 20, cornerRadius: -1, fill: 'red' },
+      }));
+      let failure: unknown;
+      try {
+        pending?.(0);
+      } catch (error) {
+        failure = error;
+      }
+      expect(failure).toMatchObject({
+        message: expect.stringMatching(/Rectangle: property cornerRadius.*nonnegative/),
+      });
+
+      controller = crc(canvas, createElement(Rectangle, {
+        style: { x: 0, y: 0, width: 20, height: 20, cornerRadius: 4, fill: 'red' },
+      }));
+      expect(() => pending?.(0)).not.toThrow();
+      expect(alphaAt(canvas, 10, 10)).toBeGreaterThan(0);
+    } finally {
+      controller?.dispose();
+      canvas.remove();
+      window.requestAnimationFrame = originalRequestAnimationFrame;
+    }
+  });
+
+  it('adjusts the box before passing unchanged radii to roundRect', async () => {
+    const roundRect = vi.spyOn(Path2D.prototype, 'roundRect');
+    try {
+      await componentTest(createElement(Rectangle, {
+        style: {
+          x: 1.2,
+          y: 2.3,
+          width: 3.4,
+          height: 4.5,
+          alignToPixelGrid: 'round',
+          strokeWidth: 1,
+          cornerRadius: 9,
+          fill: 'red',
+        },
+      }));
+
+      expect(roundRect).toHaveBeenCalledWith(0.5, 1.5, 4, 5, [9, 9, 9, 9]);
+    } finally {
+      roundRect.mockRestore();
+    }
   });
 
   it('keeps the resolved rectangle box for keyboard navigation and honors an override', async () => {
@@ -254,3 +349,7 @@ describe('rect', () => {
     });
   });
 });
+
+function alphaAt(canvas: HTMLCanvasElement, x: number, y: number) {
+  return canvas.getContext('2d')!.getImageData(x, y, 1, 1).data[3];
+}

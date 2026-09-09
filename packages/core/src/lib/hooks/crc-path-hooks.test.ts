@@ -57,7 +57,8 @@ describe('memoized path hooks', () => {
     const Probe = ({ phase }: { phase: number }) => {
       paths.push(crcRectPath(1, 2, 3, 4, phase === 0 ? {} :
         phase === 1 ? { cornerRadius: 4, cornerRadii: [0, null] } :
-          { cornerRadii: [0, 4, 4, 4] }) as unknown as FakePath2D);
+          phase === 2 ? { cornerRadii: [0, 4, 4, 4] } :
+            { cornerRadii: [0, 4, 3, 4] }) as unknown as FakePath2D);
     };
     const controller = crc(canvas, createElement(Probe, { phase: 0 }));
     await nextFrame();
@@ -65,10 +66,13 @@ describe('memoized path hooks', () => {
     await nextFrame();
     crc(canvas, createElement(Probe, { phase: 2 }));
     await nextFrame();
+    crc(canvas, createElement(Probe, { phase: 3 }));
+    await nextFrame();
 
     expect(paths[0].commands).toEqual(['rect:1,2,3,4']);
     expect(paths[1].commands).toEqual(['roundRect:1,2,3,4,0,4,4,4']);
     expect(paths[2]).toBe(paths[1]);
+    expect(paths[3]).not.toBe(paths[2]);
     controller.dispose();
   });
 
