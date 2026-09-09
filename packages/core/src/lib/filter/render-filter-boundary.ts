@@ -2,6 +2,7 @@ import { GLOBAL_STATE } from '../global-state.js';
 import {
   getCurrentPaintTransform,
   getCurrentWorldTransform,
+  type RenderTargetSnapshot,
   withRenderTarget,
 } from '../render-target.js';
 import {
@@ -16,6 +17,7 @@ import {
   enterPrimitivePresentation,
   type PrimitivePresentation,
 } from '../primitive-presentation.js';
+import { layoutDiagnostic } from '../style/diagnostics.js';
 
 export interface RenderFilterBoundaryInput {
   readonly component: string;
@@ -45,12 +47,7 @@ export function renderFilterBoundary(
     input.filters,
   );
   if (windows === 'discard') {
-    const releasePresentation = enterPrimitivePresentation(input.presentation);
-    try {
-      renderSubtree();
-    } finally {
-      releasePresentation();
-    }
+    renderDiscardedBoundary(input, parent, parentWorld, renderSubtree);
     return;
   }
 
@@ -59,6 +56,7 @@ export function renderFilterBoundary(
     const { source, result } = pair;
     result.context.setTransform(1, 0, 0, 1, 0, 0);
     const cssText = compileFilterList(input.filters, windows.density);
+    assertFilterCapability(result.context, input.component);
     assertNativeFilterColors(result.context, input.filters, input.component);
     assertNativeFilter(result.context, cssText, input.component);
 
@@ -111,4 +109,82 @@ export function renderFilterBoundary(
   } finally {
     pair.release();
   }
+}
+
+function renderDiscardedBoundary(
+  input: Readonly<RenderFilterBoundaryInput>,
+  parent: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+  parentWorld: DOMMatrix,
+  renderSubtree: () => void,
+): void {
+  if (typeof OffscreenCanvas === 'undefined') {
+    throw filterCapabilityError(
+      input.component,
+      'requires browser OffscreenCanvas support for its discard target',
+    );
+  }
+  const canvas = new OffscreenCanvas(1, 1);
+  const context = canvas.getContext('2d');
+  if (!context) {
+    throw filterCapabilityError(
+      input.component,
+      'could not acquire its discard OffscreenCanvas 2D context',
+    );
+  }
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.clearRect(0, 0, 1, 1);
+  context.beginPath();
+  copyFilterSourceState(parent, context);
+  const target: RenderTargetSnapshot = {
+    logicalBounds: Object.freeze({ x: 0, y: 0, width: 1, height: 1 }),
+    backingWidth: 1,
+    backingHeight: 1,
+    renderTransform: new DOMMatrix(),
+    inverseRenderTransform: new DOMMatrix(),
+  };
+  withRenderTarget(context, target, parentWorld, () => {
+    const releasePresentation = enterPrimitivePresentation(
+      input.presentation,
+      { deferPaint: true },
+    );
+    try {
+      renderSubtree();
+    } finally {
+      releasePresentation();
+    }
+  });
+}
+
+function assertFilterCapability(
+  context: OffscreenCanvasRenderingContext2D,
+  component: string,
+): void {
+  let prototype = Object.getPrototypeOf(context);
+  while (prototype) {
+    const descriptor = Object.getOwnPropertyDescriptor(prototype, 'filter');
+    if (descriptor) {
+      if (
+        typeof descriptor.get === 'function' &&
+        typeof descriptor.set === 'function'
+      ) {
+        return;
+      }
+      break;
+    }
+    prototype = Object.getPrototypeOf(prototype);
+  }
+  throw filterCapabilityError(
+    component,
+    'requires native Canvas filter support',
+  );
+}
+
+function filterCapabilityError(component: string, reason: string): Error {
+  return layoutDiagnostic({
+    component,
+    property: 'filter',
+    value: undefined,
+    algorithm: 'filter-rendering',
+    reason,
+  });
 }

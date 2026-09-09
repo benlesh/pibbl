@@ -26,6 +26,103 @@ import { Text } from './text';
 import { definePrimitive } from '../define-primitive';
 
 describe('Layer children and retained subtree contract', () => {
+  it('reuses the cached child bitmap when only an outer filter changes', () => {
+    let childRenders = 0;
+    const Counted = (_props: {}) => {
+      childRenders += 1;
+      return createElement(Rectangle, {
+        style: { x: 10, y: 10, width: 30, height: 30, fill: '#ef4444' },
+      });
+    };
+    const scene = (amount: number) => createElement(Layer, {
+      style: {
+        width: 60,
+        height: 50,
+        filter: { type: 'opacity', amount },
+      },
+      children: createElement(Counted, {}),
+    });
+    const mounted = mountNow(scene(0.75));
+    const firstAlpha = pixel(mounted.canvas, 20, 20)[3]!;
+
+    renderNow(mounted.canvas, scene(0.25));
+
+    const parent = getCRCInstance(mounted.canvas);
+    const child = Array.from(GLOBAL_STATE.crcInstances.values())
+      .find(instance => instance.parent === mounted.canvas)!;
+    expect(childRenders).toBe(1);
+    expect(firstAlpha).toBeGreaterThan(180);
+    expect(pixel(mounted.canvas, 20, 20)[3]).toBeLessThan(70);
+    expect(parent.filterSurfacePool.snapshot()).toMatchObject({
+      activePairs: 0,
+      pairCheckouts: 2,
+      pairReturns: 2,
+    });
+    expect(child.filterSurfacePool.snapshot().surfaceSlots).toBe(0);
+    mounted.controller.dispose();
+  });
+
+  it('owns descendant filter surfaces in the child instance and releases them on removal', () => {
+    const onClick = vi.fn();
+    const scene = (show: boolean) => createElement(Group, {
+      style: { translateX: 30, translateY: 20 },
+      children: show ? createElement(Layer, {
+        style: { width: 80, height: 60 },
+        children: createElement(Layer, {
+          style: { width: 70, height: 50 },
+          children: createElement(Rectangle, {
+            style: {
+              x: 10,
+              y: 10,
+              width: 30,
+              height: 20,
+              fill: '#2563eb',
+              filter: { type: 'blur', radius: 2 },
+            },
+            onClick,
+          }),
+        }),
+      }) : undefined,
+    });
+    const mounted = mountNow(scene(true));
+    const parent = getCRCInstance(mounted.canvas);
+    const child = Array.from(GLOBAL_STATE.crcInstances.values())
+      .find(instance => instance.parent === mounted.canvas)!;
+    const grandchild = Array.from(GLOBAL_STATE.crcInstances.values())
+      .find(instance => instance.parent === child.canvas)!;
+    const childCanvas = child.canvas;
+    const grandchildCanvas = grandchild.canvas;
+    const childPool = child.filterSurfacePool;
+    const grandchildPool = grandchild.filterSurfacePool;
+
+    expect(parent.filterSurfacePool.snapshot().surfaceSlots).toBe(0);
+    expect(childPool.snapshot().surfaceSlots).toBe(0);
+    expect(grandchildPool.snapshot()).toMatchObject({
+      surfaceSlots: 2,
+      activePairs: 0,
+      pairCheckouts: 1,
+      pairReturns: 1,
+    });
+    dispatchClick(mounted.canvas, 55, 40);
+    expect(onClick).toHaveBeenCalledOnce();
+
+    renderNow(mounted.canvas, scene(false));
+
+    expect(GLOBAL_STATE.crcInstances.has(childCanvas)).toBe(false);
+    expect(GLOBAL_STATE.crcInstances.has(grandchildCanvas)).toBe(false);
+    expect(parent.paintEntries.size).toBe(0);
+    expect(childPool.snapshot()).toMatchObject({
+      surfaceSlots: 0,
+      activePairs: 0,
+    });
+    expect(grandchildPool.snapshot()).toMatchObject({
+      surfaceSlots: 0,
+      activePairs: 0,
+      releasedSurfaceSlots: 2,
+    });
+    mounted.controller.dispose();
+  });
+
   it('materializes arrays and iterables once per Layer traversal and paints every child in source order', () => {
     let iterations = 0;
     let childRenders = 0;
