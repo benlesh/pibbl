@@ -169,12 +169,14 @@ All visual geometry is supplied under a closed local `style`. The corresponding
 
 | Value            | Props/style types                            | Purpose                                                                          |
 | ---------------- | -------------------------------------------- | -------------------------------------------------------------------------------- |
-| `Rectangle`      | `RectangleProps`, `RectStyle`                | Rectangle geometry, fill/stroke, pixel alignment, events, cursor, focus metadata |
+| `Rectangle`      | `RectangleProps`, `RectStyle`                | Rectangle geometry, optional rounded corners, paint, events, and pixel alignment |
 | `Circle`         | `CircleProps`, `CircleStyle`                 | Center/radius circle with fill, stroke, interaction, and focus geometry          |
 | `Ellipse`        | `EllipseProps`, `EllipseStyle`               | Center/radii ellipse with optional radian rotation                               |
 | `Arc`            | `ArcProps`, `ArcStyle`                       | Open stroke-only circular sweep                                                  |
 | `Wedge`          | `WedgeProps`, `WedgeStyle`                   | Filled/stroked center-closed circular sector                                     |
-| `Polygon`        | `PolygonProps`, `PolygonStyle`               | Closed ordered numeric coordinate path                                           |
+| `Polygon`        | `PolygonProps`, `PolygonStyle`               | Closed ordered numeric coordinate path with optional rounded corners             |
+| `RegularPolygon` | `RegularPolygonProps`, `RegularPolygonStyle` | Generated regular closed polygon with one size mode and optional rounded corners |
+| `Star`           | `StarProps`, `StarStyle`                     | Generated concave alternating outer-tip/inner-valley silhouette                  |
 | `Path`           | `PathProps`, `PathStyle`                     | A required `Path2D` `d` with paint and interaction width                         |
 | `SvgPath`        | `SvgPathProps`, `SvgPathStyle`               | Browser-parsed SVG path-data string                                              |
 | `Line`           | `LineProps`, `LineStyle`                     | Ordered polyline coordinates                                                     |
@@ -189,8 +191,8 @@ All visual geometry is supplied under a closed local `style`. The corresponding
 Drawing leaves reject children. `Text` accepts `CRCTextChild`; `Group`, `Clip`,
 and `Layer` accept `CRCNode`.
 
-The standard shape styles use local logical geometry and the existing box and
-layout-item fields. All five accept event/focus props plus `cursor`, `opacity`,
+The shape styles use local logical geometry and the existing box and layout-item
+fields. They accept the applicable event/focus props plus `cursor`, `opacity`,
 `stroke`, `strokeWidth`, and `lineInteractionWidth`; all except the stroke-only
 `Arc` also accept `fill`.
 
@@ -206,6 +208,27 @@ layout-item fields. All five accept event/focus props plus `cursor`, `opacity`,
 - `PolygonStyle` requires finite numeric `coords: [number, number][]`, connects
   them in order, and closes paths with at least three points. Shorter arrays
   are empty geometry, and tuple coordinates do not accept percentages.
+- `RegularPolygonStyle` requires integer `sides >= 3` and exactly one of
+  `circumradius`, `inradius`, or `sideLength`; `cx`/`cy` default to `0` and
+  finite `rotation` defaults to `-Math.PI / 2`. For `n = sides`, the normalized
+  circumradius is `R`, `inradius / Math.cos(Math.PI / n)`, or
+  `sideLength / (2 * Math.sin(Math.PI / n))`, respectively. Vertices advance
+  clockwise in Canvas coordinates.
+- `StarStyle` requires integer `points >= 3`, nonnegative `outerRadius` and
+  `innerRadius`, and `innerRadius <= outerRadius`. `points` counts outer tips;
+  its default rotation is also `-Math.PI / 2`, and clockwise traversal
+  alternates outer even-index tips with inner odd-index valleys. It is one
+  concave outline, not crossing triangles.
+
+`RoundedCornerStyle` is shared by `Rectangle`, `Polygon`, `RegularPolygon`,
+and `Star`. `cornerRadius` is the default; at corner index `i`,
+`cornerRadii?.[i] ?? cornerRadius ?? 0` selects the radius. Thus literal `0`
+keeps that corner sharp, while a sparse hole, `undefined`, or `null` falls back.
+`cornerRadii` cannot exceed the actual corner count. Component radii may be
+lengths and resolve percentages against the smaller current percentage-basis
+dimension; numeric creator radii are logical Canvas units. Rectangle delegates
+signed-box corner remapping and native radius scaling to Canvas; polygonal
+rounding globally scales adjacent tangent demands that do not fit an edge.
 
 The default center is `(0, 0)`, ellipse rotation is `0`, and arc/wedge direction
 is clockwise (`counterclockwise: false`). Percentages for `cx`/`radiusX` use
@@ -222,13 +245,11 @@ are shared exactly by paint and coordinate targeting. Stroke targeting honors
 `lineInteractionWidth`; Wedge includes its radial edges on partial sweeps.
 Caller-supplied `keyboardNavigationBounds` override the built-in deterministic
 axis-aligned bounds from circle/rotated-ellipse extrema, swept arc cardinals,
-the Wedge center, or Polygon point extrema. Transforms, clips, layers, and
-source paint order use the shared drawing pipeline.
-
-Standard shapes have no intrinsic `measureElement` capability and no
-pixel-grid alignment. They do not add smoothing, interpolation, chart/data
-semantics, annular sectors, rounded rectangles, a generic public shape builder,
-or retained geometry.
+the Wedge center, Polygon point extrema, or generated RegularPolygon/Star
+vertex extrema. These drawing leaves do not infer intrinsic
+`measureElement` dimensions; layouts that need size must declare a box.
+Transforms, clips, layers, and source paint order use the shared drawing
+pipeline.
 
 ## First-class filters
 
@@ -272,6 +293,42 @@ filter strings, `url()`/SVG filter graphs, `backdrop-filter`, `boxShadow`, DOM
 Canvas fallback, or silent resolution reduction. See the [style
 contract](./design/style-system-contract.md), [drawing contract](./design/drawing-components-contract.md),
 and [surface contract](./design/canvas-surface-contract.md).
+
+Shapes do not add rounded Arc/Wedge/Line joins, Circle/Ellipse corner behavior,
+automatic rounded clipping for arbitrary leaves, elliptical or CSS slash radii,
+smoothing/interpolation, chart/data semantics, annular sectors, compound or
+crossing stars, a generic shape registry/builder, new paint effects, or
+retained geometry.
+
+## Numeric path creators
+
+The ten `create*Path` functions are public, pure constructors for reuse in a
+`Path`, `Clip`, or caller-owned Canvas operation. Each takes its dedicated
+options object, returns a fresh `Path2D`, and owns no render state, events, or
+cache. Except for SVG path data, creator geometry is finite numeric logical
+Canvas units—creators do not accept `Length`, percentages, or `"auto"`.
+
+| Creator                    | Options                                                                                                                                   |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `createRectanglePath`      | `RectanglePathOptions`: `width`, `height`, optional `x`, `y`, `cornerRadius`, `cornerRadii`; width/height remain signed.                  |
+| `createCirclePath`         | `CirclePathOptions`: nonnegative `radius`, optional `cx`, `cy`.                                                                           |
+| `createEllipsePath`        | `EllipsePathOptions`: nonnegative `radiusX`/`radiusY`, optional `cx`, `cy`, finite `rotation`.                                            |
+| `createArcPath`            | `ArcPathOptions`: nonnegative `radius`, finite `startAngle`/`endAngle`, optional `cx`, `cy`, `counterclockwise`.                          |
+| `createWedgePath`          | `WedgePathOptions`: the same dedicated circular-sweep options, center-closed for partial sweeps.                                          |
+| `createLinePath`           | `LinePathOptions`: numeric `coords` and optional `closePath`.                                                                             |
+| `createPolygonPath`        | `PolygonPathOptions`: numeric `coords`, optional `cornerRadius`/`cornerRadii`.                                                            |
+| `createRegularPolygonPath` | `RegularPolygonPathOptions`: integer `sides >= 3`, exactly one numeric size field, optional position/rotation and corner options.         |
+| `createStarPath`           | `StarPathOptions`: integer `points >= 3`, nonnegative ordered `outerRadius`/`innerRadius`, optional position/rotation and corner options. |
+| `createSvgPath`            | `SvgPathOptions`: string `d`, parsed by the browser `Path2D` constructor.                                                                 |
+
+Creator structural and numeric errors throw `RangeError` with the offending
+option path; component style-resolution failures instead use contextual
+`LayoutDiagnostic`. Malformed SVG path data retains browser `Path2D` parsing
+behavior. Valid empty cases include zero circle/arc/wedge radius, either zero
+ellipse axis, zero arc/wedge span, fewer than three Polygon points, zero
+RegularPolygon size, either zero Star radius, and sharp (`0`) corner radii.
+For exact rounding, sweep, bounds, and validation rules, see the
+[drawing-components contract](./design/drawing-components-contract.md).
 
 ## Layout values
 

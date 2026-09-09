@@ -1,8 +1,8 @@
 # CRC library status and feature inventory
 
-_Current feature inventory refreshed 2026-09-08 after the first-class filter
-implementation. Historical totals remain evidence only
-for their named dated revision; run the trust gate for current results._
+_Current feature inventory refreshed 2026-09-09 after the rounded-shapes and
+path-creators trust closure. Historical totals remain evidence only for their
+named dated revision; run the trust gate for current results._
 
 ## At a glance
 
@@ -33,10 +33,11 @@ and its [browser](../packages/core/test/filter-lab.test.ts),
 [structural-performance](../packages/core/test/filter-performance.test.ts)
 suites.
 
-The [2026-09-06 standard-shape field note](./testing/field-notes/standard-shape-primitives.md)
-records its dated local source, built, packed, Studio, browser, visual,
-lifecycle, and structural-performance evidence, including its noncanonical
-Node 26 environment. The
+The [2026-09-09 rounded-shapes and path-creators field note](./testing/field-notes/2026-09-08-rounded-shapes-and-path-creators.md)
+records the current Node 24.15 source, built, packed, Studio, browser, visual,
+lifecycle, and structural-performance evidence. The
+[2026-09-06 standard-shape field note](./testing/field-notes/standard-shape-primitives.md)
+is historical/noncanonical Node 26 evidence for its dated revision. The
 [2026-09-04 JSX authoring field note](./testing/field-notes/jsx-component-authoring.md)
 preserves the earlier authoring-pivot closure evidence.
 
