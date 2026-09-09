@@ -26,6 +26,7 @@ import { mountScenarioSurface } from "@crc/scenarios/surface";
 import { loadLearningSource } from "./learning-sources";
 import { loadScenarioSource } from "./scenario-sources";
 import { readSharedCode } from "./share-code";
+import { canonicalizeHash } from "./app/routes";
 import "./style.css";
 
 type Route =
@@ -207,43 +208,30 @@ testingLink.addEventListener("click", () => closeDrawer());
 narrowNavigation.addEventListener("change", syncDrawerAvailability);
 syncDrawerAvailability();
 
-function hashPath(): string {
-  return window.location.hash.split("?", 1)[0];
-}
-
 function parseRoute(): Route {
-  const path = hashPath();
-  if (!path || path === "#" || path === "#/") {
+  const canonical = canonicalizeHash(window.location.hash);
+  if (canonical.changed)
+    window.history.replaceState(null, "", canonical.canonical);
+  const parsed = canonical.route;
+  if (window.location.hash === "" || window.location.hash === "#" || window.location.hash === "#/") {
     window.history.replaceState(null, "", "#/examples");
     return { kind: "examples" };
   }
-  if (path === "#/scenarios") {
-    window.history.replaceState(null, "", "#/testing");
-    return { kind: "testing" };
-  }
-  const legacyMatch = /^#\/scenarios\/([a-z0-9-]+)$/u.exec(path);
-  if (legacyMatch) {
-    window.history.replaceState(null, "", `#/testing/${legacyMatch[1]}`);
-    return { kind: "test", slug: legacyMatch[1] };
-  }
-  if (path === "#/examples") return { kind: "examples" };
-  const lessonMatch = /^#\/examples\/([a-z0-9-]+)\/([a-z0-9-]+)$/u.exec(path);
-  if (lessonMatch) {
-    const entry = getLearningExampleBySlug(lessonMatch[2]);
+  if (parsed.kind === "examples") return { kind: "examples" };
+  if (parsed.kind === "example") {
+    const entry = getLearningExampleBySlug(parsed.slug);
     if (entry) {
-      const canonical = getLearningExampleRoute(entry);
-      if (!path.startsWith(canonical))
-        window.history.replaceState(
-          null,
-          "",
-          `${canonical}${window.location.hash.includes("?") ? `?${window.location.hash.split("?", 2)[1]}` : ""}`,
-        );
       return { kind: "lesson", entry };
     }
   }
-  if (path === "#/testing") return { kind: "testing" };
-  const testMatch = /^#\/testing\/([a-z0-9-]+)$/u.exec(path);
-  if (testMatch) return { kind: "test", slug: testMatch[1] };
+  if (parsed.kind === "document") {
+    const entry = learningExampleCatalog.find(
+      (candidate) => getLearningExampleRoute(candidate) === parsed.route,
+    );
+    if (entry) return { kind: "lesson", entry };
+  }
+  if (parsed.kind === "testing") return { kind: "testing" };
+  if (parsed.kind === "test") return { kind: "test", slug: parsed.slug };
   window.history.replaceState(null, "", "#/examples");
   return { kind: "examples" };
 }
