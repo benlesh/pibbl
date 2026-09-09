@@ -27,6 +27,7 @@ import {
   mountRootSurface,
 } from './surface/root-surface.js';
 import { FilterSurfacePool } from './filter/filter-surface-pool.js';
+import { registerRootInstance } from './scheduler/realm-scheduler.js';
 
 type MountCRCConfig = CRCConfig & {
   parent?: Canvas;
@@ -81,7 +82,8 @@ export function mountCRC(
     pendingRoot: NO_PENDING_ROOT,
     pendingUpdateParents: false,
     refs: new Map(),
-    animationFrameId: undefined,
+    requestedRenderRevision: 0,
+    completedRenderRevision: 0,
     renderTimestamp: 0,
     mainTeardowns,
     eventRoot,
@@ -151,6 +153,10 @@ export function mountCRC(
   } catch (error) {
     controller.dispose();
     throw error;
+  }
+
+  if (!parent && GLOBAL_STATE.crcInstances.get(canvas) === crcInstance) {
+    registerRootInstance(crcInstance);
   }
 
   return controller;

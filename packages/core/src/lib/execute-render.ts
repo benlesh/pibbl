@@ -12,6 +12,7 @@ import {
 import { get2dContext } from './util/get-2d-context.js';
 import { prepareSurface } from './surface/root-surface.js';
 import { rootRenderTarget } from './render-target.js';
+import type { CRCFrameSnapshot } from './scheduler/types.js';
 
 /**
  * Gets the root element for a canvas and renders it. This is the
@@ -22,7 +23,8 @@ export function executeRender(
   canvas: Canvas,
   renderTimestamp: number,
   updatedRoot?: CRCNode | typeof NO_PENDING_ROOT,
-  updateParents = false,
+  _updateParents = false,
+  frameSnapshot?: CRCFrameSnapshot,
 ): void {
   if (!canvas) {
     throw new Error('No canvas element provided');
@@ -49,17 +51,13 @@ export function executeRender(
     (renderTransaction as RootRenderTransaction).finish(success);
   };
 
-  if (crcInstance.animationFrameId !== undefined) {
-    cancelAnimationFrame(crcInstance.animationFrameId);
-    crcInstance.animationFrameId = undefined;
-  }
-
   const prevCurrentCRCInstance = GLOBAL_STATE.currentCRCInstance;
   const prevCanvas = GLOBAL_STATE.canvas;
   const prevRenderContext = GLOBAL_STATE.renderContext;
   const prevRenderTarget = GLOBAL_STATE.renderTarget;
   const prevWorldBaseTransform = GLOBAL_STATE.worldBaseTransform;
   const prevRenderTransaction = GLOBAL_STATE.renderTransaction;
+  const prevFrameSnapshot = GLOBAL_STATE.frameSnapshot;
   const prevPrimitiveReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
   const prevSeenIds = GLOBAL_STATE.seenIds;
   const prevSeenKeys = GLOBAL_STATE.seenKeys;
@@ -69,9 +67,15 @@ export function executeRender(
   const prevLayoutStack = GLOBAL_STATE.layoutStack;
   let renderContext: ReturnType<typeof get2dContext> | undefined;
   try {
+    const activeFrameSnapshot = frameSnapshot ?? prevFrameSnapshot ?? Object.freeze({
+      frameId: 0,
+      hostTime: renderTimestamp,
+      logicalTime: renderTimestamp,
+    });
+    GLOBAL_STATE.frameSnapshot = activeFrameSnapshot;
     GLOBAL_STATE.currentCRCInstance = crcInstance;
     GLOBAL_STATE.renderTransaction = renderTransaction;
-    GLOBAL_STATE.currentCRCInstance.renderTimestamp = renderTimestamp;
+    GLOBAL_STATE.currentCRCInstance.renderTimestamp = activeFrameSnapshot.logicalTime;
     GLOBAL_STATE.canvas = canvas;
     const rootNode = arguments.length >= 3 && updatedRoot !== NO_PENDING_ROOT ?
       updatedRoot :
@@ -139,7 +143,6 @@ export function executeRender(
     throw error;
   } finally {
     renderContext?.setTransform(1, 0, 0, 1, 0, 0);
-    const { parent } = crcInstance;
     clearTempState();
     GLOBAL_STATE.clippingStack = prevClippingStack;
     GLOBAL_STATE.layoutStack = prevLayoutStack;
@@ -149,15 +152,13 @@ export function executeRender(
         crcInstance.eventRoot.renderTransaction = undefined;
       }
     }
-    if (updateParents && parent && GLOBAL_STATE.crcInstances.has(parent)) {
-      executeRender(parent, renderTimestamp);
-    }
     GLOBAL_STATE.currentCRCInstance = prevCurrentCRCInstance;
     GLOBAL_STATE.canvas = prevCanvas;
     GLOBAL_STATE.renderContext = prevRenderContext;
     GLOBAL_STATE.renderTarget = prevRenderTarget;
     GLOBAL_STATE.worldBaseTransform = prevWorldBaseTransform;
     GLOBAL_STATE.renderTransaction = prevRenderTransaction;
+    GLOBAL_STATE.frameSnapshot = prevFrameSnapshot;
     GLOBAL_STATE.primitiveReceiverToken = prevPrimitiveReceiverToken;
     GLOBAL_STATE.seenIds = prevSeenIds;
     GLOBAL_STATE.seenKeys = prevSeenKeys;

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   Circle,
+  Layer,
   Rectangle,
   LayoutDiagnostic,
   Polygon,
@@ -147,6 +148,99 @@ describe('element and primitive contract', () => {
 });
 
 describe('crc root updates', () => {
+  it('defers an update requested during render to a later host frame', () => {
+    const originalRequestAnimationFrame = window.requestAnimationFrame;
+    const callbacks: FrameRequestCallback[] = [];
+    window.requestAnimationFrame = callback => {
+      callbacks.push(callback);
+      return callbacks.length;
+    };
+    const canvas = createCanvas();
+    const renders: string[] = [];
+    const Replacement = (_props: {}) => {
+      renders.push('replacement');
+    };
+    const Initial = (_props: {}) => {
+      renders.push('initial');
+      crc(canvas, createElement(Replacement, {}));
+    };
+
+    try {
+      const controller = crc(canvas, createElement(Initial, {}));
+      expect(callbacks).toHaveLength(1);
+
+      callbacks[0](10);
+      expect(renders).toEqual(['initial']);
+      expect(callbacks).toHaveLength(2);
+
+      callbacks[1](20);
+      expect(renders).toEqual(['initial', 'replacement']);
+      controller.dispose();
+    } finally {
+      window.requestAnimationFrame = originalRequestAnimationFrame;
+    }
+  });
+
+  it('does not render a mount disposed before its pending host frame', () => {
+    const originalRequestAnimationFrame = window.requestAnimationFrame;
+    const originalCancelAnimationFrame = window.cancelAnimationFrame;
+    let pending: FrameRequestCallback | undefined;
+    const canceled: number[] = [];
+    window.requestAnimationFrame = callback => {
+      pending = callback;
+      return 41;
+    };
+    window.cancelAnimationFrame = frameId => canceled.push(frameId);
+    const canvas = createCanvas();
+    const render = vi.fn();
+
+    try {
+      const controller = crc(canvas, createElement(render, {}));
+      controller.dispose();
+      pending?.(10);
+
+      expect(canceled).toEqual([41]);
+      expect(render).not.toHaveBeenCalled();
+    } finally {
+      window.requestAnimationFrame = originalRequestAnimationFrame;
+      window.cancelAnimationFrame = originalCancelAnimationFrame;
+    }
+  });
+
+  it('renders a nested Layer in its parent frame without requesting another host frame', () => {
+    const originalRequestAnimationFrame = window.requestAnimationFrame;
+    const callbacks: FrameRequestCallback[] = [];
+    window.requestAnimationFrame = callback => {
+      callbacks.push(callback);
+      return callbacks.length;
+    };
+    const canvas = createCanvas();
+    const renders: string[] = [];
+    const LayerChild = (_props: {}) => {
+      renders.push('layer');
+    };
+    const Root = (_props: {}) => {
+      renders.push('root');
+      return createElement(Layer, {
+        style: { width: 20, height: 20 },
+        children: createElement(LayerChild, {}),
+      });
+    };
+
+    try {
+      const controller = crc(canvas, createElement(Root, {}));
+      expect(callbacks).toHaveLength(1);
+
+      callbacks[0](25);
+
+      expect(renders).toEqual(['root', 'layer']);
+      expect(callbacks).toHaveLength(1);
+      controller.dispose();
+    } finally {
+      window.requestAnimationFrame = originalRequestAnimationFrame;
+    }
+  });
+
   it('tears down existing refs after a filtered final-composite failure and recovers', () => {
     const originalRequestAnimationFrame = window.requestAnimationFrame;
     let pending: FrameRequestCallback | undefined;

@@ -7,6 +7,7 @@ import {
 } from '../global-state';
 import { Image } from './img';
 import { createElement } from '../element/create-element';
+import { snapshotRealmScheduler } from '../scheduler/testing';
 
 class FakeImage {
   static instances: FakeImage[] = [];
@@ -200,7 +201,11 @@ describe('img async resource ownership', () => {
     const drawCount = drawImage.mock.calls.length;
 
     savedFirstLoad?.();
-    expect(getCRCInstance(canvas).animationFrameId).toBeUndefined();
+    expect(snapshotRealmScheduler()).toMatchObject({
+      pendingHostFrames: 0,
+      registeredRoots: 1,
+      dirtyRoots: 0,
+    });
     expect(drawImage).toHaveBeenCalledTimes(drawCount);
 
     controller.dispose();
@@ -301,7 +306,11 @@ describe('img async resource ownership', () => {
 
     savedLoad?.();
     savedError?.();
-    expect(getCRCInstance(canvas).animationFrameId).toBeUndefined();
+    expect(snapshotRealmScheduler()).toMatchObject({
+      pendingHostFrames: 0,
+      registeredRoots: 1,
+      dirtyRoots: 0,
+    });
 
     controller.dispose();
   });

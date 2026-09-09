@@ -289,7 +289,8 @@ export interface CRCInstance {
   pendingRoot: PendingRoot;
   pendingUpdateParents: boolean;
   refs: Map<string, CRCComponentRefs<any>>;
-  animationFrameId: number | undefined;
+  requestedRenderRevision: number;
+  completedRenderRevision: number;
   renderTimestamp: number;
   mainTeardowns: Teardowns;
   eventRoot: CRCEventRoot;

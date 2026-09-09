@@ -13,7 +13,8 @@ import {
 import { afterEach, describe, expect, it } from 'vitest';
 import performanceLabSource from '../../scenarios/src/performance-lab.example.tsx?raw';
 import { Absolute, crc, crcEventListener, Flow, Rectangle, Text, type CRCController } from '../src/index';
-import { GLOBAL_STATE, getCRCInstance } from '../src/lib/global-state';
+import { GLOBAL_STATE } from '../src/lib/global-state';
+import { snapshotRealmScheduler } from '../src/lib/scheduler/testing';
 import {
   resetLayoutDiagnostics,
   snapshotLayoutDiagnostics,
@@ -745,7 +746,11 @@ describe('shared event performance laboratory', () => {
     const resourcesBefore = diagnostics!.snapshot();
     expect(instanceBefore).toMatchObject({ instances: 1, paintEntries: 1_000, regions: 1_000 });
     expect(resourcesBefore.handlers.mousemove).toBe(1_000);
-    expect(getCRCInstance(canvas).animationFrameId).toBeUndefined();
+    expect(snapshotRealmScheduler()).toMatchObject({
+      pendingHostFrames: 0,
+      registeredRoots: 1,
+      dirtyRoots: 0,
+    });
 
     await controller.perform('rerender-25');
     expect(controller.getState()).toMatchObject({
@@ -759,7 +764,11 @@ describe('shared event performance laboratory', () => {
     const handlerLedger = diagnostics!.ledgerSnapshot().handlers.mousemove;
     expect(handlerLedger).toMatchObject({ duplicateReleases: 0, live: 1_000 });
     expect(handlerLedger.acquired - handlerLedger.released).toBe(handlerLedger.live);
-    expect(getCRCInstance(canvas).animationFrameId).toBeUndefined();
+    expect(snapshotRealmScheduler()).toMatchObject({
+      pendingHostFrames: 0,
+      registeredRoots: 1,
+      dirtyRoots: 0,
+    });
 
     dispatchProbe(canvas, PERFORMANCE_WORKLOADS[2]);
     expect(controller.getState()).toMatchObject({

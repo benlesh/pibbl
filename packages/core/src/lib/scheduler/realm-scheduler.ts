@@ -1,0 +1,388 @@
+import { executeRender } from '../execute-render.js';
+import {
+  GLOBAL_STATE,
+  NO_PENDING_ROOT,
+} from '../global-state.js';
+import {
+  createSignalCommitBatch,
+  flushPendingComputedValidations,
+} from '../signals/graph.js';
+import type { CRCInstance, CRCRenderTransaction } from '../types.js';
+import type {
+  CRCAdvanceParticipant,
+  CRCFrameCompletion,
+  CRCFramePhase,
+  CRCFrameSnapshot,
+  RealmSchedulerSnapshot,
+  SchedulerDriver,
+} from './types.js';
+
+interface InstanceRenderJob {
+  readonly instance: CRCInstance;
+  readonly revision: number;
+  readonly pendingRoot: CRCInstance['pendingRoot'];
+}
+
+interface RootRenderJob {
+  readonly root: CRCInstance;
+  readonly instances: InstanceRenderJob[];
+}
+
+interface RootTransaction extends CRCRenderTransaction {
+  finish(success: boolean): void;
+}
+
+const registeredRoots = new Set<CRCInstance>();
+const dirtyInstances = new Set<CRCInstance>();
+const advanceParticipants = new Set<CRCAdvanceParticipant>();
+const frameCompletions: CRCFrameCompletion[] = [];
+
+let phase: CRCFramePhase = 'idle';
+let pendingHostFrame: number | undefined;
+let currentFrame: CRCFrameSnapshot | undefined;
+let nextFrameId = 0;
+let nextWorkRevision = 0;
+let schedulerDriver: SchedulerDriver | undefined;
+
+export function registerRootInstance(instance: CRCInstance): void {
+  if (!instance.parent) {
+    registeredRoots.add(instance);
+  }
+}
+
+export function unregisterRootInstance(instance: CRCInstance): void {
+  if (!registeredRoots.delete(instance)) {
+    return;
+  }
+  removeRootWork(instance);
+  cancelIdleHostFrame();
+}
+
+export function requestInstanceRender(instance: CRCInstance): number {
+  const revision = ++nextWorkRevision;
+  let current: CRCInstance | undefined = instance;
+  while (current) {
+    current.requestedRenderRevision = revision;
+    dirtyInstances.add(current);
+    current = current.parent ? GLOBAL_STATE.crcInstances.get(current.parent) : undefined;
+  }
+  requestHostFrameIfNeeded();
+  return revision;
+}
+
+export function registerAdvanceParticipant(
+  participant: CRCAdvanceParticipant,
+): () => void {
+  advanceParticipants.add(participant);
+  requestHostFrameIfNeeded();
+  let registered = true;
+  return () => {
+    if (!registered) return;
+    registered = false;
+    advanceParticipants.delete(participant);
+    cancelIdleHostFrame();
+  };
+}
+
+export function queueFrameCompletion(callback: CRCFrameCompletion): void {
+  frameCompletions.push(callback);
+  requestHostFrameIfNeeded();
+}
+
+export function getCurrentFrameSnapshot(): CRCFrameSnapshot | undefined {
+  return GLOBAL_STATE.frameSnapshot ?? currentFrame;
+}
+
+export function snapshotRealmScheduler(): RealmSchedulerSnapshot {
+  return Object.freeze({
+    phase,
+    pendingHostFrames: pendingHostFrame === undefined ? 0 : 1,
+    registeredRoots: registeredRoots.size,
+    dirtyRoots: countDirtyRoots(),
+    registeredAdvanceParticipants: advanceParticipants.size,
+    queuedFrameCompletions: frameCompletions.length,
+    currentFrame,
+  });
+}
+
+export function installSchedulerDriverForTest(
+  driver: SchedulerDriver,
+): () => void {
+  if (pendingHostFrame !== undefined || phase !== 'idle') {
+    throw new Error('Cannot replace the CRC scheduler driver while a frame is active.');
+  }
+  const previous = schedulerDriver;
+  schedulerDriver = driver;
+  return () => {
+    if (pendingHostFrame !== undefined || phase !== 'idle') {
+      throw new Error('Cannot restore the CRC scheduler driver while a frame is active.');
+    }
+    schedulerDriver = previous;
+  };
+}
+
+function requestHostFrameIfNeeded(): void {
+  if (pendingHostFrame !== undefined || phase !== 'idle' || !hasFrameWork()) {
+    return;
+  }
+  const driver = getSchedulerDriver();
+  pendingHostFrame = driver.requestFrame(runFrame);
+}
+
+function runFrame(hostTime: number): void {
+  pendingHostFrame = undefined;
+  const snapshot = Object.freeze({
+    frameId: ++nextFrameId,
+    hostTime,
+    logicalTime: hostTime,
+  });
+  currentFrame = snapshot;
+  const errors: unknown[] = [];
+  const transactions: Array<{
+    root: CRCInstance;
+    transaction: RootTransaction;
+    success: boolean;
+  }> = [];
+
+  phase = 'begin';
+  let rootJobs = captureRootJobs();
+  const participants = Array.from(advanceParticipants);
+  const completions = frameCompletions.splice(0);
+  const batch = createSignalCommitBatch();
+
+  phase = 'advance';
+  for (const participant of participants) {
+    if (!advanceParticipants.has(participant)) continue;
+    try {
+      participant(snapshot, batch);
+    } catch (error) {
+      batch.discardWriter(participant);
+      errors.push(error);
+    }
+  }
+
+  phase = 'commit';
+  try {
+    batch.commit();
+  } catch (error) {
+    errors.push(error);
+  }
+
+  phase = 'plan';
+  try {
+    flushPendingComputedValidations();
+  } catch (error) {
+    errors.push(error);
+  }
+  rootJobs = mergeRootJobs(rootJobs, captureRootJobs(true));
+
+  phase = 'render';
+  for (const rootJob of rootJobs) {
+    if (!registeredRoots.has(rootJob.root) || rootJob.root.mainTeardowns.closed) {
+      continue;
+    }
+    const transaction = createRootTransaction();
+    const transactionRecord = { root: rootJob.root, transaction, success: false };
+    transactions.push(transactionRecord);
+    rootJob.root.eventRoot.renderTransaction = transaction;
+    try {
+      const completedJobs: InstanceRenderJob[] = [];
+      for (const job of rootJob.instances) {
+        if (job.instance.mainTeardowns.closed) continue;
+        executeRender(
+          job.instance.canvas,
+          snapshot.logicalTime,
+          job.pendingRoot,
+          false,
+          snapshot,
+        );
+        completedJobs.push(job);
+      }
+      for (const job of completedJobs) {
+        job.instance.completedRenderRevision = job.revision;
+      }
+      transactionRecord.success = true;
+    } catch (error) {
+      errors.push(error);
+    }
+  }
+
+  phase = 'complete';
+  for (const record of transactions) {
+    try {
+      record.transaction.finish(record.success);
+    } catch (error) {
+      errors.push(error);
+    } finally {
+      if (record.root.eventRoot.renderTransaction === record.transaction) {
+        record.root.eventRoot.renderTransaction = undefined;
+      }
+    }
+  }
+  for (const completion of completions) {
+    try {
+      completion(snapshot);
+    } catch (error) {
+      errors.push(error);
+    }
+  }
+  batch.clear();
+  currentFrame = undefined;
+  phase = 'idle';
+  requestHostFrameIfNeeded();
+  throwCollectedErrors(errors);
+}
+
+function captureRootJobs(planOnly = false): RootRenderJob[] {
+  const requested: CRCInstance[] = [];
+  for (const instance of dirtyInstances) {
+    if (planOnly && instance.pendingRoot !== NO_PENDING_ROOT) continue;
+    dirtyInstances.delete(instance);
+    requested.push(instance);
+  }
+  const jobsByRoot = new Map<CRCInstance, InstanceRenderJob[]>();
+  for (const instance of requested) {
+    if (instance.mainTeardowns.closed) continue;
+    const root = findRoot(instance);
+    if (!root || !registeredRoots.has(root)) continue;
+    const jobs = jobsByRoot.get(root) ?? [];
+    jobs.push({
+      instance,
+      revision: instance.requestedRenderRevision,
+      pendingRoot: instance.pendingRoot,
+    });
+    instance.pendingRoot = NO_PENDING_ROOT;
+    instance.pendingUpdateParents = false;
+    jobsByRoot.set(root, jobs);
+  }
+
+  const result: RootRenderJob[] = [];
+  for (const root of registeredRoots) {
+    const jobs = jobsByRoot.get(root);
+    if (!jobs) continue;
+    jobs.sort((left, right) => instanceDepth(right.instance) - instanceDepth(left.instance));
+    result.push({ root, instances: jobs });
+  }
+  return result;
+}
+
+function mergeRootJobs(
+  initial: RootRenderJob[],
+  planned: RootRenderJob[],
+): RootRenderJob[] {
+  const plannedByRoot = new Map(planned.map(job => [job.root, job.instances]));
+  const merged: RootRenderJob[] = [];
+  for (const root of registeredRoots) {
+    const initialJob = initial.find(job => job.root === root);
+    const plannedInstances = plannedByRoot.get(root);
+    if (!initialJob && !plannedInstances) continue;
+    const byInstance = new Map<CRCInstance, InstanceRenderJob>();
+    for (const job of initialJob?.instances ?? []) {
+      byInstance.set(job.instance, job);
+    }
+    for (const job of plannedInstances ?? []) {
+      const existing = byInstance.get(job.instance);
+      byInstance.set(job.instance, existing ? {
+        instance: job.instance,
+        revision: job.revision,
+        pendingRoot: existing.pendingRoot,
+      } : job);
+    }
+    const instances = Array.from(byInstance.values());
+    instances.sort((left, right) =>
+      instanceDepth(right.instance) - instanceDepth(left.instance),
+    );
+    merged.push({ root, instances });
+  }
+  return merged;
+}
+
+function findRoot(instance: CRCInstance): CRCInstance | undefined {
+  let current: CRCInstance | undefined = instance;
+  while (current?.parent) {
+    current = GLOBAL_STATE.crcInstances.get(current.parent);
+  }
+  return current;
+}
+
+function instanceDepth(instance: CRCInstance): number {
+  let depth = 0;
+  let current: CRCInstance | undefined = instance;
+  while (current?.parent) {
+    depth++;
+    current = GLOBAL_STATE.crcInstances.get(current.parent);
+  }
+  return depth;
+}
+
+function removeRootWork(root: CRCInstance): void {
+  for (const instance of dirtyInstances) {
+    if (findRoot(instance) === root) {
+      dirtyInstances.delete(instance);
+    }
+  }
+}
+
+function countDirtyRoots(): number {
+  const roots = new Set<CRCInstance>();
+  for (const instance of dirtyInstances) {
+    const root = findRoot(instance);
+    if (root && registeredRoots.has(root)) roots.add(root);
+  }
+  return roots.size;
+}
+
+function hasFrameWork(): boolean {
+  return dirtyInstances.size > 0 ||
+    advanceParticipants.size > 0 ||
+    frameCompletions.length > 0;
+}
+
+function cancelIdleHostFrame(): void {
+  if (pendingHostFrame === undefined || hasFrameWork()) return;
+  getSchedulerDriver().cancelFrame(pendingHostFrame);
+  pendingHostFrame = undefined;
+}
+
+function getSchedulerDriver(): SchedulerDriver {
+  return schedulerDriver ?? {
+    requestFrame: callback => globalThis.requestAnimationFrame(callback),
+    cancelFrame: frameId => globalThis.cancelAnimationFrame(frameId),
+  };
+}
+
+function createRootTransaction(): RootTransaction {
+  const callbacks = new Set<(success: boolean) => void>();
+  let result: boolean | undefined;
+  return {
+    onFinish(callback): void {
+      if (result !== undefined) {
+        callback(result);
+      } else {
+        callbacks.add(callback);
+      }
+    },
+    finish(success): void {
+      if (result !== undefined) return;
+      result = success;
+      const pending = Array.from(callbacks);
+      callbacks.clear();
+      const failures: unknown[] = [];
+      for (const callback of pending) {
+        try {
+          callback(success);
+        } catch (error) {
+          failures.push(error);
+        }
+      }
+      throwCollectedErrors(failures);
+    },
+  };
+}
+
+function throwCollectedErrors(errors: unknown[]): void {
+  if (errors.length === 1) throw errors[0];
+  if (errors.length > 1) {
+    throw new AggregateError(errors, 'Multiple CRC frame operations failed.');
+  }
+}
