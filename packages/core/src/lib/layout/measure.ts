@@ -85,9 +85,11 @@ function measureElementInternal(
     const specifiedStyle = withoutSystemFilter(
       preNormalized?.style ?? getSpecifiedStyle(element) ?? EMPTY_STYLE,
     );
-    const normalized = definition.normalizeStyle ?
-        definition.normalizeStyle(specifiedStyle) :
-        specifiedStyle;
+    const normalized = preNormalized ?
+        specifiedStyle :
+      definition.normalizeStyle ?
+          definition.normalizeStyle(specifiedStyle) :
+          specifiedStyle;
     const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
     GLOBAL_STATE.primitiveReceiverToken =
       getPrimitiveReceiverToken(element) ?? createPrimitiveReceiverToken();
