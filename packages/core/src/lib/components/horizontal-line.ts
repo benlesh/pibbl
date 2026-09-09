@@ -2,6 +2,7 @@ import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,
   CRCEventHandlers,
+  CRCEventParticipationOptions,
 } from '../events/types.js';
 import {
   PixelGridAlignment,
@@ -24,7 +25,7 @@ import type {
 import { renderLine, type LineStyle } from './line.js';
 
 export interface HorizontalLineProps
-  extends CRCEventHandlers, CRCEventFocusOptions {}
+  extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
 
 export interface HorizontalLineStyle
   extends SystemStyle,

@@ -2,6 +2,7 @@ import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,
   CRCEventHandlers,
+  CRCEventParticipationOptions,
 } from '../events/types.js';
 import {
   resolveRegularPolygonGeometry,
@@ -35,7 +36,7 @@ import {
 } from './shape-style.js';
 
 export interface RegularPolygonProps
-  extends CRCEventHandlers, CRCEventFocusOptions {}
+  extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
 
 interface RegularPolygonCommonStyle extends RoundedCornerStyle {
   sides: number;

@@ -2,6 +2,7 @@ import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,
   CRCEventHandlers,
+  CRCEventParticipationOptions,
 } from '../events/types.js';
 import {
   resolveStarGeometry,
@@ -34,7 +35,7 @@ import {
   shapeGeometryErrorFactory,
 } from './shape-style.js';
 
-export interface StarProps extends CRCEventHandlers, CRCEventFocusOptions {}
+export interface StarProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
 
 export interface StarStyle
   extends

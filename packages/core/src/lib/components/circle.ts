@@ -2,6 +2,7 @@ import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,
   CRCEventHandlers,
+  CRCEventParticipationOptions,
 } from '../events/types.js';
 import type { RenderingContext2D, SystemStyle } from '../types.js';
 import {
@@ -24,7 +25,7 @@ import {
 import { renderPath } from './path.js';
 import { createCirclePath } from '../geometry/circle.js';
 
-export interface CircleProps extends CRCEventHandlers, CRCEventFocusOptions {}
+export interface CircleProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
 
 export interface CircleStyle
   extends SystemStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle {

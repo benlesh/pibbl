@@ -2,6 +2,7 @@ import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,
   CRCEventHandlers,
+  CRCEventParticipationOptions,
 } from '../events/types.js';
 import { RenderingContext2D } from '../types.js';
 import { stripLayoutParticipation } from '../style/resolve-built-in.js';
@@ -11,7 +12,7 @@ import type { StyleResolutionContext } from '../types.js';
 import { isTransparent } from '../util/is-transparent.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 
-export interface PathProps extends CRCEventHandlers, CRCEventFocusOptions {}
+export interface PathProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
 
 export function renderPath(
   props: PathProps,

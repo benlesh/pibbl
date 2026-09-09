@@ -2,6 +2,7 @@ import { definePrimitive } from "../define-primitive.js";
 import type {
   CRCEventFocusOptions,
   CRCEventHandlers,
+  CRCEventParticipationOptions,
 } from "../events/types.js";
 import {
   resolveLocalOffset,
@@ -29,7 +30,7 @@ import {
   resolveNonnegativeShapeLength,
 } from "./shape-style.js";
 
-export interface ArcProps extends CRCEventHandlers, CRCEventFocusOptions {}
+export interface ArcProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
 
 export interface ArcStyle
   extends

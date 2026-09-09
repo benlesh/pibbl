@@ -105,6 +105,7 @@ function region({
       {...lifecycleEvents}
     />,
     <Text
+      pointerEvents="none"
       style={{
         x: x + 10,
         y: y + 18,
@@ -206,6 +207,7 @@ const LifecycleLabScene = ({ state, recordCall }: LifecycleLabSceneProps) => [
     </Layer>
   ),
   <Text
+    pointerEvents="none"
     style={{
       x: 18,
       y: 24,
@@ -215,6 +217,7 @@ const LifecycleLabScene = ({ state, recordCall }: LifecycleLabSceneProps) => [
     key="runtime-status"
   >{`runtime ${state.runtime} · mount ${state.mountGeneration} · revision ${state.revision}`}</Text>,
   <Text
+    pointerEvents="none"
     style={{
       x: 18,
       y: 143,
@@ -224,6 +227,7 @@ const LifecycleLabScene = ({ state, recordCall }: LifecycleLabSceneProps) => [
     key="call-status"
   >{`calls ${state.calls} · last ${state.lastTarget ?? 'none'} · handler ${state.lastHandlerGeneration ?? 'none'}`}</Text>,
   <Text
+    pointerEvents="none"
     style={{
       x: 18,
       y: 224,

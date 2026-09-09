@@ -262,6 +262,7 @@ export type {
   CRCEventHandler,
   CRCEventHandlers,
   CRCEventMap,
+  CRCEventParticipationOptions,
   CRCEventPhase,
   CRCEventPropName,
   CRCEventTarget,
@@ -273,6 +274,7 @@ export type {
   CRCKeyboardEvent,
   CRCLogicalMouseEvent,
   CRCPointerEvent,
+  CRCPointerEvents,
   CRCTouchEvent,
   CRCWheelEvent,
 } from './lib/events/types.js';

@@ -2,6 +2,7 @@ import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,
   CRCEventHandlers,
+  CRCEventParticipationOptions,
 } from '../events/types.js';
 import {
   RenderingContext2D,
@@ -22,7 +23,7 @@ import { validateCoordinates } from '../geometry/validation.js';
 import type { StyleResolutionContext } from '../types.js';
 import { renderPath } from './path.js';
 
-export interface LineProps extends CRCEventHandlers, CRCEventFocusOptions {}
+export interface LineProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
 
 export interface LineStyle
   extends SystemStyle,

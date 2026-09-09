@@ -614,7 +614,7 @@ describe('shared event lifecycle laboratory', () => {
 
     const baseline = diagnostics.snapshot();
     expect(baseline).toMatchObject({
-      eventTargets: 4,
+      eventTargets: 5,
       instances: 1,
       nativeListeners: 7,
       handlers: BASELINE_HANDLERS,
@@ -651,7 +651,7 @@ describe('shared event lifecycle laboratory', () => {
 
     await controller.perform('remove-handler');
     expect(diagnostics.snapshot()).toMatchObject({
-      eventTargets: 3,
+      eventTargets: 5,
       handlers: {
         ...BASELINE_HANDLERS,
         click: 3,
@@ -674,7 +674,7 @@ describe('shared event lifecycle laboratory', () => {
     expect(canvas.style.cursor).toBe('');
     expect(pixelAt(canvas, 180, 80)).toEqual([248, 250, 252, 255]);
     expect(diagnostics.snapshot()).toMatchObject({
-      eventTargets: 2,
+      eventTargets: 4,
       handlers: {
         ...EMPTY_HANDLERS,
         click: 2,
@@ -686,7 +686,7 @@ describe('shared event lifecycle laboratory', () => {
     const beforeLayer = diagnostics.snapshot();
     await controller.perform('add-layer');
     expect(diagnostics.snapshot()).toMatchObject({
-      eventTargets: 3,
+      eventTargets: 5,
       instances: 2,
       nativeListeners: 5,
       pointerCaptures: 0,

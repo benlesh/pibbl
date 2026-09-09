@@ -4,6 +4,7 @@ import { GLOBAL_STATE } from '../global-state.js';
 import type {
   CRCEventFocusOptions,
   CRCEventHandlers,
+  CRCEventParticipationOptions,
 } from '../events/types.js';
 import {
   resolveLocalOffset,
@@ -24,7 +25,7 @@ import { wireCommonEvents } from '../util/wire-common-events.js';
 import { pushClippingPath } from '../util/push-clipping-path.js';
 import { resolveTextClipBounds, resolveTextLayout } from './text-layout.js';
 
-export interface TextProps extends CRCEventHandlers, CRCEventFocusOptions {
+export interface TextProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {
   children?: CRCTextChild;
 }
 
@@ -32,15 +33,6 @@ const materializedTextTransactions = new WeakMap<
   CRCRenderTransaction,
   WeakMap<object, string>
 >();
-
-function checkPropsForEvents(
-  props: CRCEventHandlers,
-  cursor: string | undefined,
-) {
-  return Boolean(
-    cursor || Object.values(props).some(value => typeof value === 'function'),
-  );
-}
 
 function renderText(
   props: TextProps,
@@ -88,8 +80,7 @@ function renderText(
   }
 
   try {
-    const textBounds =
-      checkPropsForEvents(props, cursor) ? new Path2D() : undefined;
+    const textBounds = props.pointerEvents === 'none' ? undefined : new Path2D();
 
     for (const line of layout.lines) {
       if (stroke && strokeWidth) {
@@ -103,12 +94,16 @@ function renderText(
         ctx.fillText(line.text, line.x, line.y, line.squishWidth);
       }
 
-      textBounds?.rect(
-        line.bounds.x,
-        line.bounds.y,
-        line.bounds.width,
-        line.bounds.height,
-      );
+      if (textBounds) {
+        textBounds.moveTo(line.bounds.x, line.bounds.y);
+        textBounds.lineTo(line.bounds.x + line.bounds.width, line.bounds.y);
+        textBounds.lineTo(
+          line.bounds.x + line.bounds.width,
+          line.bounds.y + line.bounds.height,
+        );
+        textBounds.lineTo(line.bounds.x, line.bounds.y + line.bounds.height);
+        textBounds.closePath();
+      }
     }
 
     wireCommonEvents(

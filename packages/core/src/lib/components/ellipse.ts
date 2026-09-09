@@ -2,6 +2,7 @@ import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,
   CRCEventHandlers,
+  CRCEventParticipationOptions,
 } from '../events/types.js';
 import type { RenderingContext2D, SystemStyle } from '../types.js';
 import {
@@ -24,7 +25,7 @@ import {
 import { renderPath } from './path.js';
 import { createEllipsePath } from '../geometry/ellipse.js';
 
-export interface EllipseProps extends CRCEventHandlers, CRCEventFocusOptions {}
+export interface EllipseProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
 
 export interface EllipseStyle
   extends SystemStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle {

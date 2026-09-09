@@ -2,6 +2,7 @@ import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,
   CRCEventHandlers,
+  CRCEventParticipationOptions,
 } from '../events/types.js';
 import { crcRectPath } from '../hooks/crc-rect-path.js';
 import { crcState } from '../hooks/crc-state.js';
@@ -23,7 +24,7 @@ import type { ImgStyle, ResolvedImgStyle } from '../style/types.js';
 import { adjustRectangleToPixelGrid } from '../util/pixel-grid-adjustments.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 
-export interface ImageProps extends CRCEventHandlers, CRCEventFocusOptions {}
+export interface ImageProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
 
 interface LoadedImage {
   src: string;

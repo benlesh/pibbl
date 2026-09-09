@@ -101,6 +101,7 @@ export function updateTarget(
   target: CRCEventTargetRegistration,
   handlers: CRCEventHandlers,
   options: CRCEventTargetOptions,
+  participatesInPaint = false,
 ): void {
   const normalizedHandlers = normalizeHandlers(handlers);
   const types = handledTypes(normalizedHandlers);
@@ -110,6 +111,7 @@ export function updateTarget(
     normalizedHandlers,
     options,
     requiredNativeTypes(types, Boolean(options.cursor)),
+    participatesInPaint,
   );
   if (target.live) target.owner.regions.add(target);
 }
@@ -166,6 +168,7 @@ function updateTargetRegistration(
   normalizedHandlers: CRCNormalizedHandlers,
   options: CRCEventTargetOptions,
   nativeTypes: ReadonlySet<CRCEventType>,
+  participatesInPaint = false,
 ): void {
   const types = handledTypes(normalizedHandlers);
 
@@ -196,6 +199,7 @@ function updateTargetRegistration(
   target.keyboardNavigationBounds = options.keyboardNavigationBounds;
 
   if (
+    !participatesInPaint &&
     types.size === 0 &&
     !target.cursor &&
     target.keyboardFocusable !== true

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createElement } from '../element/create-element';
+import { Fragment } from '../element/fragment';
 import type { CRCEventHandlers } from '../events/types';
 import { getCRCInstance } from '../global-state';
 import { crcEventListener } from '../hooks/crc-event-listener';
@@ -18,6 +19,9 @@ import { VerticalLine } from './vertical-line';
 import { definePrimitive } from '../define-primitive';
 import type { RenderingContext2D } from '../types';
 import { Group } from './g';
+import { Clip } from './clip';
+import { Star } from './star';
+import { crcState } from '../hooks/crc-state';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -142,6 +146,83 @@ describe('built-in DOM-aligned event integration', () => {
       });
     },
   );
+
+  it('lets a passive painted primitive occlude a rear click handler unless pointer events are disabled', async () => {
+    const rearClick = vi.fn();
+    let disableFront: (() => void) | undefined;
+    const rearStyle = { width: 80, height: 80, fill: 'red' };
+    const frontStyle = {
+      points: 5,
+      cx: 40,
+      cy: 40,
+      outerRadius: 30,
+      innerRadius: 15,
+      fill: 'blue',
+    };
+    const Scene = () => {
+      const [disabled, setDisabled] = crcState(false);
+      disableFront = () => setDisabled(true);
+      return createElement(
+        Fragment,
+        {},
+        createElement(Rectangle, { style: rearStyle, onClick: rearClick }),
+        createElement(Star, {
+          style: frontStyle,
+          pointerEvents: disabled ? 'none' : 'auto',
+        }),
+      );
+    };
+    const canvas = await componentTest(createElement(Scene, {}));
+
+    await canvas.click({ position: { x: 40, y: 40 } });
+    expect(rearClick).not.toHaveBeenCalled();
+
+    disableFront?.();
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+
+    await canvas.click({ position: { x: 40, y: 40 } });
+    expect(rearClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('uses passive painted geometry through Group, Clip, and Layer composition', async () => {
+    const rearClick = vi.fn();
+    const clipPath = new Path2D();
+    clipPath.rect(0, 0, 30, 30);
+    const canvas = await componentTest(createElement(
+      Fragment,
+      {},
+      createElement(Rectangle, {
+        style: { width: 100, height: 100, fill: 'red' },
+        onClick: rearClick,
+      }),
+      createElement(Group, {
+        style: { translateX: 30, translateY: 20 },
+        children: createElement(Clip, {
+          style: { d: clipPath },
+          children: createElement(Layer, {
+            style: { width: 40, height: 40 },
+            children: createElement(Star, {
+              style: {
+                points: 5,
+                cx: 20,
+                cy: 20,
+                outerRadius: 18,
+                innerRadius: 9,
+                fill: 'blue',
+              },
+            }),
+          }),
+        }),
+      }),
+    ));
+
+    await canvas.click({ position: { x: 50, y: 40 } });
+    expect(rearClick).not.toHaveBeenCalled();
+
+    await canvas.click({ position: { x: 35, y: 25 } });
+    await canvas.click({ position: { x: 65, y: 40 } });
+    expect(rearClick).toHaveBeenCalledTimes(2);
+  });
 
   it('keeps a cursor-only built-in as one geometric target', async () => {
     const canvas = await componentTest(createElement(Rectangle, {

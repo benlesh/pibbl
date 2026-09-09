@@ -33,6 +33,7 @@ import {
   Path,
   Rectangle,
   SvgPath,
+  Star,
   Text,
   VerticalLine,
   type CRCComponent,
@@ -76,6 +77,7 @@ const importedFinalVocabulary = {
   Path,
   Rectangle,
   SvgPath,
+  Star,
   Text,
   VerticalLine,
 };
@@ -120,9 +122,26 @@ const component: CRCComponent<Record<string, never>> = FinalVocabularyScene;
 const element: CRCElement<any> = createElement(Rectangle, {
   style: { width: 1, height: 1 },
 });
+const pointerEventsVocabulary = (
+  <>
+    <Rectangle pointerEvents="none" style={{ width: 1, height: 1 }} />
+    <Text pointerEvents="none">text</Text>
+    <Image pointerEvents="none" style={{ src: 'image.png' }} />
+    <HorizontalLine pointerEvents="none" style={{ y: 0, x2: 1 }} />
+    <Star
+      pointerEvents="none"
+      style={{ points: 5, outerRadius: 1, innerRadius: 0.5 }}
+    />
+    {/* @ts-expect-error pointerEvents only supports auto and none */}
+    <Rectangle pointerEvents="painted" style={{ width: 1, height: 1 }} />
+    {/* @ts-expect-error pointerEvents must be a string policy */}
+    <Rectangle pointerEvents={1} style={{ width: 1, height: 1 }} />
+  </>
+);
 const controller = null as CRCController | null;
 
 void importedFinalVocabulary;
 void component;
 void element;
+void pointerEventsVocabulary;
 void controller;

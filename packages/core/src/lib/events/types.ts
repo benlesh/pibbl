@@ -31,6 +31,12 @@ export interface CRCEventTargetSnapshot {
   readonly isFocusVisible: boolean;
 }
 
+export type CRCPointerEvents = 'auto' | 'none';
+
+export interface CRCEventParticipationOptions {
+  readonly pointerEvents?: CRCPointerEvents;
+}
+
 export interface CRCEventFocusOptions {
   readonly keyboardFocusable?: boolean;
   readonly keyboardNavigationBounds?: Readonly<LayoutBox>;

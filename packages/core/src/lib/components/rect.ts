@@ -2,6 +2,7 @@ import { definePrimitive } from '../define-primitive.js';
 import type {
   CRCEventFocusOptions,
   CRCEventHandlers,
+  CRCEventParticipationOptions,
 } from '../events/types.js';
 import { RenderingContext2D } from '../types.js';
 import {
@@ -16,7 +17,7 @@ import { renderPath } from './path.js';
 import { createRectanglePath } from '../geometry/rectangle.js';
 import { resolveRoundedCornerStyle } from './rounded-corner-style.js';
 
-export interface RectangleProps extends CRCEventHandlers, CRCEventFocusOptions {}
+export interface RectangleProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
 
 function renderRectangle(
   props: RectangleProps,
