@@ -12,6 +12,10 @@ import {
 import { parsePublicMarkdown } from "./markdown";
 import type { LoadedPublicDoc } from "./model";
 
+const legacyRelativeAlias = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
+const legacyHashRoute =
+  /^#\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*$/u;
+
 export interface StudioDocumentationPage extends LoadedPublicDoc {
   readonly sourcePath: string;
   readonly aliases: readonly string[];
@@ -224,9 +228,22 @@ function validateRoutesAndAliases(
 }
 
 function routeForAlias(page: StudioDocumentationPage, alias: string): string {
-  if (alias.startsWith("#/")) return alias;
+  if (alias.startsWith("#/")) {
+    if (!legacyHashRoute.test(alias)) invalidLegacyAlias(page, alias);
+    return alias;
+  }
+  if (!legacyRelativeAlias.test(alias)) invalidLegacyAlias(page, alias);
   const directory = page.route.slice(0, page.route.lastIndexOf("/") + 1);
   return `${directory}${alias}`;
+}
+
+function invalidLegacyAlias(
+  page: StudioDocumentationPage,
+  alias: string,
+): never {
+  throw new Error(
+    `${page.sourcePath}: Invalid legacy alias "${alias}". Use a stable relative slug or an absolute hash route with stable path segments.`,
+  );
 }
 
 function validateHeadingAnchors(

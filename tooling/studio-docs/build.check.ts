@@ -130,6 +130,43 @@ apiCategory: overview
 
   await writeFixture("docs/site/learn/guides/first-scene.md", guide);
   await writeFixture(
+    "docs/site/learn/guides/first-scene.md",
+    guide.replace(
+      "order: 1",
+      "order: 1\naliases: [legacy-first-scene, '#/legacy/first-scene']",
+    ),
+  );
+  const aliases = await buildStudioDocumentation(fixtureOptions);
+  assert.equal(
+    aliases.legacyRouteToRoute["#/learn/guides/legacy-first-scene"],
+    "#/learn/guides/first-scene",
+  );
+  assert.equal(
+    aliases.legacyRouteToRoute["#/legacy/first-scene"],
+    "#/learn/guides/first-scene",
+  );
+
+  for (const invalidAlias of [
+    "../../outside",
+    "legacy?query",
+    "legacy#fragment",
+    "#/legacy/../outside",
+    "#/legacy?query",
+    "#/legacy#fragment",
+    "#/Legacy",
+  ]) {
+    await writeFixture(
+      "docs/site/learn/guides/first-scene.md",
+      guide.replace("order: 1", `order: 1\naliases: ['${invalidAlias}']`),
+    );
+    await assert.rejects(
+      () => buildStudioDocumentation(fixtureOptions),
+      /Invalid legacy alias/u,
+    );
+  }
+
+  await writeFixture("docs/site/learn/guides/first-scene.md", guide);
+  await writeFixture(
     "docs/site/api/functions/duplicate-crc.md",
     api
       .replace("api-crc", "api-duplicate-crc")
