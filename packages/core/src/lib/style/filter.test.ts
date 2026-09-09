@@ -157,7 +157,19 @@ describe('filter lists', () => {
     )).toThrow(/filter\.type.*unsupported/);
   });
 
-  it.each(['currentColor', 'CURRENTcolor', 'var(--shadow)', 'VAR(--shadow)'])(
+  it.each([
+    'currentColor',
+    'CURRENTcolor',
+    'var(--shadow)',
+    'VAR(--shadow)',
+    'env(--shadow, red)',
+    'attr(data-shadow type(<color>), red)',
+    'inherit(--shadow, red)',
+    'if(style(--dark): white; else: black)',
+    'light-dark(red, blue)',
+    'color-mix(in srgb, light-dark(red, blue), black)',
+    'l\\69 ght-dark(red, blue)',
+  ])(
     'rejects contextual drop-shadow color %s',
     color => {
       expect(() => resolveFilterList({
@@ -165,6 +177,30 @@ describe('filter lists', () => {
       }, context)).toThrow(/filter\.color.*contextual/);
     },
   );
+
+  it.each([
+    'red) blur(100px',
+    'rgb(0 0 0',
+    'color-mix(in srgb, red, blue]]',
+  ])('rejects color %s that escapes its balanced token boundary', color => {
+    expect(() => resolveFilterList({
+      type: 'dropShadow', offsetX: 0, offsetY: 0, color,
+    }, context)).toThrow(/filter\.color.*balanced.*boundary/i);
+  });
+
+  it('ignores contextual names and delimiters inside comments, strings, and escapes', () => {
+    const colors = [
+      'red /* currentColor light-dark(red, blue) ) */',
+      'color-mix(in srgb, red, "currentColor)")',
+      'r\\29 ed',
+    ];
+
+    for (const color of colors) {
+      expect(resolveFilterList({
+        type: 'dropShadow', offsetX: 0, offsetY: 0, color,
+      }, context)?.values[0]).toMatchObject({ color });
+    }
+  });
 
   it('does not classify contextual-keyword substrings as contextual tokens', () => {
     const colors = ['currentColorful', 'CanvasTexture', 'Marking'];

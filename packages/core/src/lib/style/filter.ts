@@ -58,6 +58,20 @@ const contextualColorIdentifiers = new Set([
   'windowtext',
 ]);
 
+const contextualColorFunctions = new Set([
+  'attr',
+  'cycle',
+  'env',
+  'if',
+  'inherit',
+  'light-dark',
+  'random',
+  'random-item',
+  'sibling-count',
+  'sibling-index',
+  'var',
+]);
+
 export function resolveFilterList(
   value: CRCFilter | readonly CRCFilter[] | undefined,
   context: Readonly<StyleResolutionContext>,
@@ -118,18 +132,23 @@ export function assertNativeFilter(
   context: RenderingContext2D,
   cssText: string,
   component: string,
+  resolved?: ResolvedFilterList,
+  backingPixelsPerLogicalUnit = 1,
 ): void {
   const accessor = requireNativeFilterAccessor(context, component);
-  writeNativeFilter(context, accessor, 'none', component);
-  if (readNativeFilter(context, accessor, component) !== 'none') {
-    throw nativeFilterDiagnostic(
-      component,
-      undefined,
-      'the native Canvas filter state could not reset to none',
-    );
-  }
+  resetNativeFilterAccessor(context, accessor, component);
   writeNativeFilter(context, accessor, cssText, component);
   if (readNativeFilter(context, accessor, component) !== 'none') return;
+
+  if (resolved) {
+    diagnoseRejectedDropShadowColors(
+      context,
+      accessor,
+      resolved,
+      backingPixelsPerLogicalUnit,
+      component,
+    );
+  }
 
   throw layoutDiagnostic({
     component,
@@ -140,26 +159,12 @@ export function assertNativeFilter(
   });
 }
 
-export function assertNativeFilterCapability(
-  context: RenderingContext2D,
-  component: string,
-): void {
-  requireNativeFilterAccessor(context, component);
-}
-
 export function resetNativeFilter(
   context: RenderingContext2D,
   component: string,
 ): void {
   const accessor = requireNativeFilterAccessor(context, component);
-  writeNativeFilter(context, accessor, 'none', component);
-  if (readNativeFilter(context, accessor, component) !== 'none') {
-    throw nativeFilterDiagnostic(
-      component,
-      undefined,
-      'the native Canvas filter state could not reset to none',
-    );
-  }
+  resetNativeFilterAccessor(context, accessor, component);
 }
 
 export function resetNativeFilterIfSupported(
@@ -174,15 +179,23 @@ export function resetNativeFilterIfSupported(
   }
 }
 
-export function assertNativeFilterColors(
+function diagnoseRejectedDropShadowColors(
   context: RenderingContext2D,
+  accessor: NativeFilterAccessor,
   resolved: ResolvedFilterList,
+  backingPixelsPerLogicalUnit: number,
   component: string,
 ): void {
   for (let index = 0; index < resolved.values.length; index += 1) {
     const value = resolved.values[index]!;
     if (value.type !== 'dropShadow') continue;
-    if (acceptsNativeColor(context, value.color)) continue;
+    resetNativeFilterAccessor(context, accessor, component);
+    const candidate = compileFilterList(
+      { values: [value] },
+      backingPixelsPerLogicalUnit,
+    );
+    writeNativeFilter(context, accessor, candidate, component);
+    if (readNativeFilter(context, accessor, component) !== 'none') continue;
     const prefix = filterListOrigins.get(resolved.values) === false ?
         'filter' : `filter[${index}]`;
     throw layoutDiagnostic({
@@ -267,7 +280,16 @@ function concreteColor(
   if (typeof value !== 'string') {
     throw invalidFilter(property, value, 'must be a CSS color string', context);
   }
-  if (containsContextualColorReference(value)) {
+  const inspection = inspectColorTokens(value);
+  if (!inspection.balanced) {
+    throw invalidFilter(
+      property,
+      value,
+      'must remain within one balanced CSS color token boundary',
+      context,
+    );
+  }
+  if (inspection.contextual) {
     throw invalidFilter(
       property,
       value,
@@ -278,9 +300,11 @@ function concreteColor(
   return value;
 }
 
-function containsContextualColorReference(value: string): boolean {
-  // This only tokenizes identifiers; the native Canvas parser remains the
-  // authority for whether the complete value is valid color syntax.
+function inspectColorTokens(
+  value: string,
+): { readonly balanced: boolean; readonly contextual: boolean } {
+  const delimiters: string[] = [];
+  let contextual = false;
   for (let index = 0; index < value.length;) {
     const character = value[index]!;
     if (character === '/' && value[index + 1] === '*') {
@@ -289,6 +313,19 @@ function containsContextualColorReference(value: string): boolean {
     }
     if (character === '"' || character === "'") {
       index = skipCssString(value, index + 1, character);
+      continue;
+    }
+    const closing = closingDelimiter(character);
+    if (closing) {
+      delimiters.push(closing);
+      index += 1;
+      continue;
+    }
+    if (isClosingDelimiter(character)) {
+      if (delimiters.pop() !== character) {
+        return { balanced: false, contextual };
+      }
+      index += 1;
       continue;
     }
     if (!isCssNameCharacter(character) && character !== '\\') {
@@ -311,11 +348,31 @@ function containsContextualColorReference(value: string): boolean {
     }
 
     const normalized = identifier.toLowerCase();
-    if (normalized === 'var' || contextualColorIdentifiers.has(normalized)) {
-      return true;
+    if (
+      contextualColorIdentifiers.has(normalized) ||
+      contextualColorFunctions.has(normalized)
+    ) {
+      contextual = true;
     }
   }
-  return false;
+  return { balanced: delimiters.length === 0, contextual };
+}
+
+function closingDelimiter(character: string): string | undefined {
+  switch (character) {
+    case '(':
+      return ')';
+    case '[':
+      return ']';
+    case '{':
+      return '}';
+    default:
+      return undefined;
+  }
+}
+
+function isClosingDelimiter(character: string): boolean {
+  return character === ')' || character === ']' || character === '}';
 }
 
 function isCssNameCharacter(character: string): boolean {
@@ -433,20 +490,18 @@ function cssFunctionName(
   return type;
 }
 
-function acceptsNativeColor(
+function resetNativeFilterAccessor(
   context: RenderingContext2D,
-  value: string,
-): boolean {
-  const previous = context.fillStyle;
-  try {
-    context.fillStyle = '#010203';
-    context.fillStyle = value;
-    if (context.fillStyle !== '#010203') return true;
-    context.fillStyle = '#040506';
-    context.fillStyle = value;
-    return context.fillStyle !== '#040506';
-  } finally {
-    context.fillStyle = previous;
+  accessor: NativeFilterAccessor,
+  component: string,
+): void {
+  writeNativeFilter(context, accessor, 'none', component);
+  if (readNativeFilter(context, accessor, component) !== 'none') {
+    throw nativeFilterDiagnostic(
+      component,
+      undefined,
+      'the native Canvas filter state could not reset to none',
+    );
   }
 }
 

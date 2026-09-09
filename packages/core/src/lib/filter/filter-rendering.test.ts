@@ -346,6 +346,12 @@ describe('filter rendering', () => {
           { type: 'grayscale', amount: 1 },
           {
             type: 'dropShadow',
+            offsetX: 1,
+            offsetY: 1,
+            color: 'red',
+          },
+          {
+            type: 'dropShadow',
             offsetX: 2,
             offsetY: 2,
             color: 'not-a-color',
@@ -354,13 +360,17 @@ describe('filter rendering', () => {
       },
     }));
 
-    expect(runFrame).toThrow(/Probe.*filter\[1\]\.color.*native Canvas filter/);
+    expect(runFrame).toThrow(/Probe.*filter\[2\]\.color.*native Canvas filter/);
     expect(callback).not.toHaveBeenCalled();
     expect(lineWidthAssignments.mock.calls.map(([value]) => value))
       .not.toContain(7);
     expect(filterAssignments.mock.calls.map(([value]) => value).filter(
       value => value !== 'none',
-    )).toEqual([]);
+    )).toEqual([
+      'grayscale(1) drop-shadow(1px 1px 0px red) drop-shadow(2px 2px 0px not-a-color)',
+      'drop-shadow(1px 1px 0px red)',
+      'drop-shadow(2px 2px 0px not-a-color)',
+    ]);
     expect(getCRCInstance(canvas).filterSurfacePool.snapshot()).toMatchObject({
       activePairs: 0,
       pairCheckouts: 1,
@@ -368,11 +378,8 @@ describe('filter rendering', () => {
     });
   });
 
-  it.each([
-    ['not-a-color', 'an invalid color'],
-    ['red) blur(100px', 'a filter-function injection'],
-    ['red)', 'a truncated delimiter'],
-  ])('rejects %s as %s with singular property provenance', (color) => {
+  it('reports a singular invalid color after full-chain-first native parsing', () => {
+    const color = 'not-a-color';
     const callback = vi.fn();
     const Probe = definePrimitive<{}, SystemStyle>(function renderProbe() {
       callback();
@@ -398,11 +405,50 @@ describe('filter rendering', () => {
     expect(callback).not.toHaveBeenCalled();
     expect(filterAssignments.mock.calls.map(([value]) => value).filter(
       value => value !== 'none',
-    )).toEqual([]);
+    )).toEqual([
+      'drop-shadow(2px 2px 0px not-a-color)',
+      'drop-shadow(2px 2px 0px not-a-color)',
+    ]);
     expect(getCRCInstance(canvas).filterSurfacePool.snapshot()).toMatchObject({
       activePairs: 0,
       pairCheckouts: 1,
       pairReturns: 1,
+    });
+  });
+
+  it.each([
+    ['red) blur(100px', 'a filter-function injection'],
+    ['red)', 'a truncated delimiter'],
+  ])('rejects %s as %s before allocation', (color) => {
+    const callback = vi.fn();
+    const Probe = definePrimitive<{}, SystemStyle>(function renderProbe() {
+      callback();
+    });
+    const filterAssignments = vi.spyOn(
+      OffscreenCanvasRenderingContext2D.prototype,
+      'filter',
+      'set',
+    );
+    const canvas = createCanvas(32, 24);
+    const runFrame = scheduleScene(canvas, createElement(Probe, {
+      style: {
+        filter: {
+          type: 'dropShadow',
+          offsetX: 2,
+          offsetY: 2,
+          color,
+        },
+      },
+    }));
+
+    expect(runFrame).toThrow(/Probe.*property filter\.color .*balanced.*boundary/i);
+    expect(callback).not.toHaveBeenCalled();
+    expect(filterAssignments).not.toHaveBeenCalled();
+    expect(getCRCInstance(canvas).filterSurfacePool.snapshot()).toMatchObject({
+      surfaceSlots: 0,
+      activePairs: 0,
+      pairCheckouts: 0,
+      pairReturns: 0,
     });
   });
 
@@ -418,6 +464,13 @@ describe('filter rendering', () => {
     'curr\\65 ntColor',
     'Canvas\\54 ext',
     'M\\61 rk',
+    'light-dark(red, blue)',
+    'color-mix(in srgb, light-dark(red, blue), black)',
+    'l\\69 ght-dark(red, blue)',
+    'env(--shadow, red)',
+    'attr(data-shadow type(<color>), red)',
+    'inherit(--shadow, red)',
+    'if(style(--dark): white; else: black)',
   ])(
     'rejects contextual color %s before the primitive callback',
     color => {
@@ -503,6 +556,7 @@ describe('filter rendering', () => {
     'color(display-p3 1 0 0)',
     'color-mix(in srgb, red, blue)',
     'rgb(from red r g b)',
+    'contrast-color(red)',
   ])('accepts concrete color %s', color => {
     const callback = vi.fn();
     const Probe = definePrimitive<{}, SystemStyle>(function renderProbe() {
@@ -522,6 +576,45 @@ describe('filter rendering', () => {
 
     expect(runFrame).not.toThrow();
     expect(callback).toHaveBeenCalledOnce();
+  });
+
+  it('parses a successful multi-shadow list only through one complete native filter assignment', () => {
+    const callback = vi.fn();
+    const Probe = definePrimitive<{}, SystemStyle>(function renderProbe() {
+      callback();
+    });
+    const filterAssignments = vi.spyOn(
+      OffscreenCanvasRenderingContext2D.prototype,
+      'filter',
+      'set',
+    );
+    const fillAssignments = vi.spyOn(
+      OffscreenCanvasRenderingContext2D.prototype,
+      'fillStyle',
+      'set',
+    );
+    const canvas = createCanvas(32, 24);
+    const runFrame = scheduleScene(canvas, createElement(Probe, {
+      style: {
+        filter: [
+          { type: 'dropShadow', offsetX: 1, offsetY: 1, color: 'red' },
+          { type: 'brightness', amount: 1 },
+          { type: 'dropShadow', offsetX: 2, offsetY: 2, color: 'blue' },
+        ],
+      },
+    }));
+
+    expect(runFrame).not.toThrow();
+    expect(callback).toHaveBeenCalledOnce();
+    expect(filterAssignments.mock.calls.map(([value]) => value).filter(
+      value => value !== 'none',
+    )).toEqual([
+      'drop-shadow(1px 1px 0px red) brightness(1) drop-shadow(2px 2px 0px blue)',
+    ]);
+    expect(fillAssignments.mock.calls.map(([value]) => value))
+      .not.toContain('red');
+    expect(fillAssignments.mock.calls.map(([value]) => value))
+      .not.toContain('blue');
   });
 
   it('reports rejection of an otherwise unsupported complete native chain', () => {

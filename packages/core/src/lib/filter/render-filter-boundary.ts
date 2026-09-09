@@ -7,8 +7,6 @@ import {
 } from '../render-target.js';
 import {
   assertNativeFilter,
-  assertNativeFilterCapability,
-  assertNativeFilterColors,
   compileFilterList,
   resetNativeFilter,
   type ResolvedFilterList,
@@ -162,9 +160,13 @@ function validateNativeFilter(
   density: number,
 ): void {
   const cssText = compileFilterList(input.filters, density);
-  assertNativeFilterCapability(context, input.component);
-  assertNativeFilterColors(context, input.filters, input.component);
-  assertNativeFilter(context, cssText, input.component);
+  assertNativeFilter(
+    context,
+    cssText,
+    input.component,
+    input.filters,
+    density,
+  );
 }
 
 function filterCapabilityError(component: string, reason: string): Error {

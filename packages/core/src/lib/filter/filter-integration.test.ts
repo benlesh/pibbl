@@ -194,6 +194,27 @@ describe('filter integration', () => {
       .toBeLessThanOrEqual(2);
   });
 
+  it('renders a contrast-color drop shadow accepted by the native filter parser', async () => {
+    const canvas = await renderScene(createElement(Rectangle, {
+      style: {
+        x: 2,
+        y: 2,
+        width: 4,
+        height: 4,
+        fill: 'red',
+        filter: {
+          type: 'dropShadow',
+          offsetX: 8,
+          offsetY: 0,
+          color: 'contrast-color(red)',
+        },
+      },
+    }), 18, 10);
+
+    expect(pixel(canvas, 3, 3)).toEqual([255, 0, 0, 255]);
+    expect(pixel(canvas, 11, 3)).toEqual([0, 0, 0, 255]);
+  });
+
   it('retains off-viewport source influence at both output edges', async () => {
     const canvas = await renderScene(createElement(Group, {
       children: [

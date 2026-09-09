@@ -235,7 +235,7 @@ const TEN_FUNCTION_FILTER_LIST: readonly CRCFilter[] = [
     offsetX: 2,
     offsetY: 1,
     blurRadius: 0,
-    color: "black",
+    color: "contrast-color(red)",
   },
   { type: "grayscale", amount: 1 },
   { type: "hueRotate", degrees: 0 },
