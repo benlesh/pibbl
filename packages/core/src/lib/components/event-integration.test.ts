@@ -240,7 +240,7 @@ describe('filtered Group event integration', () => {
     expect(observedContexts[0]!.canvas).toBeInstanceOf(OffscreenCanvas);
     expect(observedContexts[0]!.transform.b).toBe(0);
     expect(observedContexts[0]!.transform.c).toBe(0);
-    expect(matrixValues(target.transform))
+    expect(matrixValues(target.paintEntry!.transform))
       .toEqual(matrixValues(expectedWorld));
 
     const originalCenter = expectedWorld.transformPoint(new DOMPoint(10, 10));

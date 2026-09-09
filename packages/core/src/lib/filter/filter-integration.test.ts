@@ -980,7 +980,7 @@ describe('filter integration', () => {
       c: 0,
       d: 1,
     }));
-    expect(target.transform).toEqual(new DOMMatrix());
+    expect(target.paintEntry!.transform).toEqual(new DOMMatrix());
     expect(root.getContext('2d')!.getTransform()).toEqual(new DOMMatrix());
   });
 

@@ -276,7 +276,7 @@ describe('interaction dispatcher mutation contract', () => {
       { mousemove: event => coordinates.push([event.x, event.y]) },
     );
     instance.regions.add(target);
-    instance.paintEntries.add(target);
+    instance.paintEntries.add(target.paintEntry!);
 
     dispatchMove(canvas, 120, 60);
     expect(coordinates).toEqual([[240, 120]]);
@@ -332,7 +332,7 @@ describe('interaction dispatcher mutation contract', () => {
       { click: onClick },
     );
     instance.regions.add(target);
-    instance.paintEntries.add(target);
+    instance.paintEntries.add(target.paintEntry!);
 
     dispatchMouse(canvas, 'mousedown', 300, 180);
     expect(instance.interaction.primaryDown).toBeUndefined();
@@ -369,8 +369,8 @@ describe('interaction dispatcher mutation contract', () => {
     );
     instance.regions.add(left);
     instance.regions.add(right);
-    instance.paintEntries.add(left);
-    instance.paintEntries.add(right);
+    instance.paintEntries.add(left.paintEntry!);
+    instance.paintEntries.add(right.paintEntry!);
     instance.interaction.hoveredRegion = left;
 
     dispatchMove(canvas, 300, 90);

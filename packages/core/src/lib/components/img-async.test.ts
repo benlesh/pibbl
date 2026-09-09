@@ -142,10 +142,10 @@ describe('img async resource ownership', () => {
 
     expect(drawImage).toHaveBeenLastCalledWith(image, ...expectedRectangle);
     const region = Array.from(getCRCInstance(canvas).regions)[0];
-    expect(stroke).toHaveBeenLastCalledWith(region.path);
+    expect(stroke).toHaveBeenLastCalledWith(region.paintEntry!.path);
     const context = canvas.getContext('2d')!;
     expect(context.isPointInPath(
-      region.path!,
+      region.paintEntry!.path,
       expectedRectangle[0] + expectedRectangle[2] / 2,
       expectedRectangle[1] + expectedRectangle[3] / 2,
     )).toBe(true);
@@ -229,13 +229,13 @@ describe('img async resource ownership', () => {
     expect(FakeImage.instances[0].src).toBe('styled.png');
     const region = Array.from(getCRCInstance(canvas).regions)[0];
     const context = canvas.getContext('2d')!;
-    expect(context.isPointInPath(region.path!, 15, 20)).toBe(true);
-    expect(context.isPointInPath(region.path!, 90, 80)).toBe(false);
+    expect(context.isPointInPath(region.paintEntry!.path, 15, 20)).toBe(true);
+    expect(context.isPointInPath(region.paintEntry!.path, 90, 80)).toBe(false);
 
     FakeImage.instances[0].onerror?.();
     await nextFrame();
     const failedRegion = Array.from(getCRCInstance(canvas).regions)[0];
-    expect(context.isPointInPath(failedRegion.path!, 15, 20)).toBe(true);
+    expect(context.isPointInPath(failedRegion.paintEntry!.path, 15, 20)).toBe(true);
     controller.dispose();
   });
 
@@ -251,12 +251,12 @@ describe('img async resource ownership', () => {
 
     const context = canvas.getContext('2d')!;
     const pendingRegion = Array.from(getCRCInstance(canvas).regions)[0];
-    expect(context.isPointInPath(pendingRegion.path!, 60, 40)).toBe(false);
+    expect(context.isPointInPath(pendingRegion.paintEntry!.path, 60, 40)).toBe(false);
 
     FakeImage.instances[0].onload?.();
     await nextFrame();
     const loadedRegion = Array.from(getCRCInstance(canvas).regions)[0];
-    expect(context.isPointInPath(loadedRegion.path!, 60, 40)).toBe(true);
+    expect(context.isPointInPath(loadedRegion.paintEntry!.path, 60, 40)).toBe(true);
     controller.dispose();
   });
 
