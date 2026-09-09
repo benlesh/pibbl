@@ -2,6 +2,9 @@ import { userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { crc } from '../crc';
 import { Layer } from '../components/layer';
+import { Rectangle } from '../components/rect';
+import type { CRCFocusManager } from '../focus/focus-manager';
+import { focusManaged } from '../focus/policy-test-support';
 import { clearSharedState, getCRCInstance } from '../global-state';
 import { crcEventListener } from '../hooks/crc-event-listener';
 import { crcEventTarget } from '../hooks/crc-event-target';
@@ -758,6 +761,72 @@ describe('DOM-aligned pointer dispatch', () => {
     expect(hub?.count('pointerout')).toBe(1);
     expect(hub?.count('pointerenter')).toBe(0);
     expect(hub?.count('pointerleave')).toBe(0);
+  });
+
+  it('releases a built-in target’s hover, capture, focus, cursor, and native ownership when pointer events become none', async () => {
+    let publicTarget: CRCEventTarget | undefined;
+    let pointerEnters = 0;
+    const Scene = ({ pointerEvents }: { pointerEvents: 'auto' | 'none' }) =>
+      focusManaged(createElement(Rectangle, {
+        pointerEvents,
+        keyboardFocusable: true,
+        style: {
+          width: 50,
+          height: 50,
+          fill: 'red',
+          cursor: 'pointer',
+        },
+        onPointerEnter: () => pointerEnters++,
+        onPointerDown: event => {
+          publicTarget = event.currentTarget;
+          event.currentTarget.setPointerCapture(event.pointerId);
+        },
+      }));
+    const canvas = createCanvas();
+    const native = installNativePointerCapture(canvas);
+    crc(canvas, createElement(Scene, { pointerEvents: 'auto' }));
+    await nextFrame();
+    const instance = getCRCInstance(canvas);
+    const eventRoot = instance.eventRoot;
+    const hub = eventRoot.nativeListeners!;
+    const manager = eventRoot.focusPolicy as CRCFocusManager;
+
+    dispatchPointer(canvas, 'pointerover', 25, 25, { pointerId: 87 });
+    dispatchPointer(canvas, 'pointerdown', 25, 25, { pointerId: 87 });
+    dispatchMouse(canvas, 'mousemove', 25, 25);
+    expect(pointerEnters).toBe(1);
+    expect(instance.interaction.hoveredRegion).toBeDefined();
+    expect(canvas.style.cursor).toBe('pointer');
+    expect(native.active).toEqual(new Set([87]));
+    expect(eventRoot.pointerCaptures.size).toBe(1);
+    expect(publicTarget?.hasPointerCapture(87)).toBe(true);
+    expect(manager.resolveKeyboardTarget()).toBeDefined();
+    expect(hub.count('pointerdown')).toBe(2);
+    expect(hub.count('pointermove')).toBe(1);
+    expect(hub.count('pointerout')).toBe(1);
+    expect(hub.count('pointerover')).toBe(1);
+    expect(hub.count('mousemove')).toBe(1);
+    expect(hub.count('mouseout')).toBe(1);
+
+    crc(canvas, createElement(Scene, { pointerEvents: 'none' }));
+    await nextFrame();
+
+    expect(eventRoot.targets).toHaveLength(0);
+    expect(instance.interaction.hoveredRegion).toBeUndefined();
+    expect(canvas.style.cursor).toBe('');
+    expect(native.active).toEqual(new Set());
+    expect(eventRoot.pointerCaptures).toHaveLength(0);
+    expect(publicTarget?.hasPointerCapture(87)).toBe(false);
+    expect(manager.resolveKeyboardTarget()).toBeUndefined();
+    expect(manager.candidates).toEqual([]);
+    expect(hub.count('pointerdown')).toBe(1);
+    expect(hub.count('pointermove')).toBe(0);
+    expect(hub.count('pointerout')).toBe(0);
+    expect(hub.count('pointerover')).toBe(0);
+    expect(hub.count('mousemove')).toBe(0);
+    expect(hub.count('mouseout')).toBe(0);
+    dispatchPointer(canvas, 'pointerover', 25, 25, { pointerId: 88 });
+    expect(pointerEnters).toBe(1);
   });
 });
 
@@ -1531,7 +1600,7 @@ function dispatchPointer(
 
 function dispatchMouse(
   canvas: HTMLCanvasElement,
-  type: 'mousedown',
+  type: 'mousedown' | 'mousemove',
   x: number,
   y: number,
 ): MouseEvent {
