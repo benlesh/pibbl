@@ -5,7 +5,11 @@ import {
   untracked,
   type SignalEquals,
 } from '../../index';
-import { getSignalNode } from './graph';
+import {
+  getSignalNode,
+  withSignalTracking,
+  withSignalWritePolicy,
+} from './graph';
 
 describe('signal', () => {
   it('provides explicit reads, writes, and one cached readonly view', () => {
@@ -109,6 +113,56 @@ describe('signal', () => {
     expect(value.get()).toBe(1);
     expect(node.version).toBe(0);
   });
+
+  it('uses only the innermost write policy and restores policy frames', () => {
+    const value = signal(0);
+    const policies: string[] = [];
+    const outerPolicy = () => policies.push('outer');
+    const innerPolicy = () => policies.push('inner');
+    const boom = new Error('inner scope failed');
+
+    withSignalWritePolicy(outerPolicy, () => {
+      value.set(1);
+      withSignalWritePolicy(innerPolicy, () => value.set(2));
+      value.set(3);
+
+      expect(() => withSignalWritePolicy(innerPolicy, () => {
+        throw boom;
+      })).toThrow(boom);
+      value.set(4);
+    });
+    value.set(5);
+
+    expect(policies).toEqual(['outer', 'inner', 'outer', 'outer']);
+  });
+
+  it('notifies observers after a successful write commits', () => {
+    const value = signal(1);
+    const node = getSignalNode(value);
+    const observations: Array<readonly [number, number]> = [];
+    node.observers.add(() => {
+      observations.push([node.value, node.version]);
+    });
+
+    value.set(2);
+
+    expect(observations).toEqual([[2, 1]]);
+  });
+
+  it('does not notify observers for equal or failed writes', () => {
+    const equal = signal(1);
+    const equalNode = getSignalNode(equal);
+    const failed = signal(1, { equals: () => { throw new Error('failed'); } });
+    const failedNode = getSignalNode(failed);
+    let notifications = 0;
+    equalNode.observers.add(() => notifications++);
+    failedNode.observers.add(() => notifications++);
+
+    equal.set(1);
+    expect(() => failed.set(2)).toThrow('failed');
+
+    expect(notifications).toBe(0);
+  });
 });
 
 describe('untracked', () => {
@@ -118,5 +172,56 @@ describe('untracked', () => {
 
     expect(untracked(() => value.get() + 1)).toBe(2);
     expect(() => untracked(() => { throw boom; })).toThrow(boom);
+  });
+
+  it('collects ordinary reads with only the innermost collector', () => {
+    const value = signal(1);
+    const node = getSignalNode(value);
+    const outerDependencies: unknown[] = [];
+    const innerDependencies: unknown[] = [];
+
+    withSignalTracking({
+      addDependency: dependency => outerDependencies.push(dependency),
+    }, () => withSignalTracking({
+      addDependency: dependency => innerDependencies.push(dependency),
+    }, () => value.get()));
+
+    expect(outerDependencies).toEqual([]);
+    expect(innerDependencies).toEqual([node]);
+  });
+
+  it('suppresses collection and restores the outer collector after return', () => {
+    const value = signal(1);
+    const node = getSignalNode(value);
+    const dependencies: unknown[] = [];
+
+    withSignalTracking({
+      addDependency: dependency => dependencies.push(dependency),
+    }, () => {
+      value.get();
+      untracked(() => value.get());
+      value.get();
+    });
+
+    expect(dependencies).toEqual([node, node]);
+  });
+
+  it('restores the outer collector after a suppressed callback throws', () => {
+    const value = signal(1);
+    const node = getSignalNode(value);
+    const boom = new Error('suppressed callback failed');
+    const dependencies: unknown[] = [];
+
+    withSignalTracking({
+      addDependency: dependency => dependencies.push(dependency),
+    }, () => {
+      expect(() => untracked(() => {
+        value.get();
+        throw boom;
+      })).toThrow(boom);
+      value.get();
+    });
+
+    expect(dependencies).toEqual([node]);
   });
 });
