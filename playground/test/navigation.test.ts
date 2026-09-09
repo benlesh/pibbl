@@ -10,9 +10,24 @@ import { parseStudioRoute } from "../src/app/routes";
 const documentation = {
   pages: [
     page("learn", "Learn", "landing"),
-    page("tutorial", "Learn the basics", "tutorial", {
+    page("diagram-editor", "Learn the basics", "tutorial", {
       tutorial: "diagram-editor",
       order: 10,
+    }),
+    page("first-scene", "Create a scene", "tutorial", {
+      tutorial: "diagram-editor",
+      order: 20,
+      route: "#/learn/tutorials/diagram-editor/first-scene",
+    }),
+    page("animation-basics", "Animate a scene", "tutorial", {
+      tutorial: "animation-basics",
+      order: 5,
+      route: "#/learn/tutorials/animation-basics",
+    }),
+    page("timeline", "Build a timeline", "tutorial", {
+      tutorial: "animation-basics",
+      order: 10,
+      route: "#/learn/tutorials/animation-basics/timeline",
     }),
     page("guide-state", "Manage state and lifecycle", "guide", { order: 60 }),
     page("guide-jsx", "Configure JSX", "guide", { order: 10 }),
@@ -81,6 +96,10 @@ describe("Studio navigation", () => {
       "Configure JSX",
       "Manage state and lifecycle",
     ]);
+    expect(learn.children?.[0]?.children?.map(({ label, href }) => ({ label, href }))).toEqual([
+      { label: "Animate a scene", href: "#/learn/tutorials/animation-basics" },
+      { label: "Learn the basics", href: "#/learn/tutorials/diagram-editor" },
+    ]);
   });
 
   it("groups API pages with alphabetical leaves and six type domains", () => {
@@ -111,6 +130,14 @@ describe("Studio navigation", () => {
       "Filters",
       "Layout",
       "Styles",
+    ]);
+    expect(api.children?.[4]?.children?.map(({ href }) => href)).toEqual([
+      "#/api/types/canvas-runtime",
+      "#/api/types/elements-components",
+      "#/api/types/events",
+      "#/api/types/filters",
+      "#/api/types/layout",
+      "#/api/types/styles",
     ]);
   });
 
@@ -160,12 +187,14 @@ function page(
     kind === "landing"
       ? "#/learn"
       : kind === "tutorial"
-        ? "#/learn/tutorials/diagram-editor"
+        ? String(extra.route ?? `#/learn/tutorials/${id}`)
         : kind === "guide"
           ? `#/learn/guides/${id.replace("guide-", "")}`
           : id === "api-overview"
             ? "#/api"
-            : `#/api/${String(extra.apiCategory)}s/${id}`;
+            : extra.apiCategory === "types"
+              ? `#/api/types/${String(extra.typeDomain)}`
+              : `#/api/${String(extra.apiCategory)}s/${id}`;
   return {
     route,
     frontmatter: {

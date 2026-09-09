@@ -45,6 +45,7 @@ export interface NavigationPage {
   readonly frontmatter: Pick<
     PublicDocFrontmatter,
     | "id"
+    | "slug"
     | "title"
     | "navLabel"
     | "kind"
@@ -173,7 +174,11 @@ export function activeNavigationIds(route: ParsedStudioRoute): ReadonlySet<strin
 
 function tutorialEntries(pages: readonly NavigationPage[]): readonly NavigationEntry[] {
   return pages
-    .filter(({ frontmatter }) => frontmatter.kind === "tutorial")
+    .filter(
+      ({ frontmatter }) =>
+        frontmatter.kind === "tutorial" &&
+        frontmatter.slug === frontmatter.tutorial,
+    )
     .slice()
     .sort(compareCuratedPage)
     .map(toDocumentEntry);

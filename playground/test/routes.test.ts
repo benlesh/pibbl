@@ -69,6 +69,22 @@ describe("Studio routes", () => {
     expect(routeHref(route)).toBe("#/examples/drawing/rectangle?code=v1.abc");
   });
 
+  it("round-trips document anchors together with their query text", () => {
+    const route = parseStudioRoute(
+      "#/api/types/events#crcpointerevent?mode=detail",
+    );
+
+    expect(route).toEqual({
+      kind: "document",
+      route: "#/api/types/events",
+      anchor: "crcpointerevent",
+      query: "?mode=detail",
+    });
+    expect(routeHref(route)).toBe(
+      "#/api/types/events#crcpointerevent?mode=detail",
+    );
+  });
+
   it("reports paths outside public route families as unknown", () => {
     expect(parseStudioRoute("#/made-up/place")).toEqual({
       kind: "unknown",
@@ -76,10 +92,18 @@ describe("Studio routes", () => {
     });
   });
 
-  it("canonicalizes old example section routes and preserves their query", () => {
+  it("canonicalizes only registered old example section aliases", () => {
     expect(canonicalizeHash("#/examples/composition/filters?code=v1.abc")).toMatchObject({
       canonical: "#/examples/drawing/filters?code=v1.abc",
       changed: true,
+    });
+    expect(canonicalizeHash("#/examples/drawing/filters")).toMatchObject({
+      canonical: "#/examples/drawing/filters",
+      changed: false,
+    });
+    expect(canonicalizeHash("#/examples/made-up/filters?code=v1.abc")).toMatchObject({
+      canonical: "#/examples/made-up/filters?code=v1.abc",
+      changed: false,
     });
   });
 

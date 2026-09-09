@@ -1,5 +1,6 @@
 import {
   getLearningExampleBySlug,
+  getLearningExampleLegacyRoutes,
   getLearningExampleRoute,
 } from "@crc/scenarios";
 
@@ -134,7 +135,10 @@ export function canonicalizeHash(hash: string): CanonicalRouteResult {
 
   if (parsed.kind === "example") {
     const entry = getLearningExampleBySlug(parsed.slug);
-    if (entry) canonical = `${getLearningExampleRoute(entry)}${parsed.query ?? ""}`;
+    const incoming = `#/examples/${parsed.group}/${parsed.slug}`;
+    if (entry && getLearningExampleLegacyRoutes(entry).includes(incoming)) {
+      canonical = `${getLearningExampleRoute(entry)}${parsed.query ?? ""}`;
+    }
   }
 
   return {
