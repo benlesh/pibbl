@@ -1,8 +1,8 @@
 # First-class signals and animation design
 
-> **Historical status: PROPOSED DESIGN FOR REVIEW.** This dated document records the candidate contract; current shipped behavior remains in `docs/design/` and the public code.
+> **Historical status: APPROVED DESIGN RECORD.** This dated document records the approved contract; current shipped behavior remains in `docs/design/` and the public code until implementation.
 
-Status: proposed for final review on 2026-09-09.
+Status: approved for implementation on 2026-09-09.
 
 ## Summary
 
