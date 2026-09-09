@@ -49,6 +49,10 @@ const computedStack: ComputedSignalNode<unknown>[] = [];
 const pendingComputedValidations = new Set<ComputedSignalNode<unknown>>();
 let flushingPendingComputedValidations = false;
 
+const rejectComputedWrite: SignalWritePolicy = () => {
+  throw new Error('Cannot write to a signal while evaluating a computed signal.');
+};
+
 export function signal<T>(
   initialValue: T,
   options: SignalOptions<T> = {},
@@ -179,11 +183,19 @@ export function computed<T>(
     node.state = 'evaluating';
     computedStack.push(node as ComputedSignalNode<unknown>);
     try {
-      const nextValue = withSignalTracking({
-        addDependency: dependency => dependencies.add(dependency),
-      }, node.compute);
-      const changed = !node.hasValue || node.hasError ||
-        !node.equals(node.value, nextValue);
+      const { nextValue, changed } = withSignalWritePolicy(
+        rejectComputedWrite,
+        () => {
+          const nextValue = withSignalTracking({
+            addDependency: dependency => dependencies.add(dependency),
+          }, node.compute);
+          return {
+            nextValue,
+            changed: !node.hasValue || node.hasError ||
+              !node.equals(node.value, nextValue),
+          };
+        },
+      );
 
       if (changed) {
         node.value = nextValue;

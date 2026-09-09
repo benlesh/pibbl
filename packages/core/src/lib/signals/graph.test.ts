@@ -327,6 +327,32 @@ describe('computed', () => {
     expect(node.version).toBe(1);
   });
 
+  it('rejects writes from a computation, including no-op writes', () => {
+    const source = signal(1);
+    const value = computed(() => {
+      source.set(1);
+      return source.get();
+    });
+
+    expect(() => value.get()).toThrow();
+    expect(source.get()).toBe(1);
+  });
+
+  it('rejects writes from an equality callback without committing the write', () => {
+    const source = signal(1);
+    const value = computed(() => source.get(), {
+      equals: (previous, next) => {
+        source.set(1);
+        return previous === next;
+      },
+    });
+
+    expect(value.get()).toBe(1);
+    source.set(2);
+    expect(() => value.get()).toThrow();
+    expect(source.get()).toBe(2);
+  });
+
   it('reports direct and indirect computed cycles with the debug-name path', () => {
     let direct: ReturnType<typeof computed<number>>;
     direct = computed(() => direct.get(), { debugName: 'direct' });
@@ -343,9 +369,11 @@ describe('computed', () => {
 
   it('does not assign promise-continuation reads to a completed computation', async () => {
     const source = signal(1);
+    let evaluations = 0;
     const value = computed(() => {
+      evaluations++;
       Promise.resolve().then(() => source.get());
-      return 2;
+      return evaluations * 2;
     });
     const dependencies: unknown[] = [];
 
@@ -357,6 +385,40 @@ describe('computed', () => {
     expect(dependencies).toEqual([getSignalNode(value)]);
     source.set(3);
     expect(value.get()).toBe(2);
+    expect(evaluations).toBe(1);
+  });
+
+  it('evaluates every branch of an observed diamond once per source update', () => {
+    const source = signal(1);
+    let leftEvaluations = 0;
+    let rightEvaluations = 0;
+    let joinedEvaluations = 0;
+    const left = computed(() => {
+      leftEvaluations++;
+      return source.get() * 2;
+    });
+    const right = computed(() => {
+      rightEvaluations++;
+      return source.get() * 3;
+    });
+    const joined = computed(() => {
+      joinedEvaluations++;
+      return left.get() + right.get();
+    });
+    const observe = getSignalNode(joined).observe;
+    if (observe === undefined) {
+      throw new Error('Expected computed signals to support internal observation.');
+    }
+    const detach = observe();
+
+    flushPendingComputedValidations();
+    expect([leftEvaluations, rightEvaluations, joinedEvaluations]).toEqual([1, 1, 1]);
+
+    source.set(2);
+    flushPendingComputedValidations();
+    expect([leftEvaluations, rightEvaluations, joinedEvaluations]).toEqual([2, 2, 2]);
+
+    detach();
   });
 
   it('validates observed computed values dependency-first and stops after detach', () => {
