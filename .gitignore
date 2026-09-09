@@ -365,3 +365,7 @@ __screenshots__/
 # Gas City
 .beads/*
 !.beads/identity.toml
+
+# Local agent discovery and brainstorming state
+_bmad-output/
+.superpowers/brainstorm/
