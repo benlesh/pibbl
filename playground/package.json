@@ -14,6 +14,7 @@
     "@crc/core": "workspace:*",
     "@crc/scenarios": "workspace:*",
     "lz-string": "catalog:",
+    "minisearch": "catalog:",
     "monaco-editor": "catalog:"
   },
   "devDependencies": {

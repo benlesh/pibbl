@@ -57,12 +57,15 @@
     "eslint": "catalog:",
     "esbuild": "catalog:",
     "globals": "catalog:",
+    "markdown-it": "catalog:",
+    "minisearch": "catalog:",
     "playwright": "catalog:",
     "prettier": "catalog:",
     "rimraf": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "yaml": "catalog:"
   }
 }

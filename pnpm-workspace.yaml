@@ -24,6 +24,8 @@ catalog:
   esbuild: ^0.28.2
   globals: ^17.9.0
   lz-string: ^1.5.0
+  markdown-it: ^15.0.1
+  minisearch: ^7.2.0
   monaco-editor: 0.56.0
   playwright: ^1.62.1
   prettier: ^3.9.6
@@ -32,3 +34,4 @@ catalog:
   typescript: ^7.0.2
   vite: ^8.2.1
   vitest: ^4.1.10
+  yaml: ^2.9.0
