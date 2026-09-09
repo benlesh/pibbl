@@ -8,8 +8,10 @@ import {
 } from '../../index';
 import {
   flushPendingComputedValidations,
+  createSignalCommitBatch,
   getSignalNode,
   withSignalTracking,
+  withSignalWriteForbidden,
   withSignalWritePolicy,
 } from './graph';
 
@@ -48,6 +50,21 @@ describe('signal', () => {
 
     expect(updateCalls).toBe(1);
     expect(count.get()).toBe(2);
+  });
+
+  it('rejects a forbidden update before running its callback', () => {
+    const count = signal(1);
+    let updateCalls = 0;
+
+    expect(() => withSignalWriteForbidden('writes are forbidden', () => {
+      count.update(current => {
+        updateCalls++;
+        return current + 1;
+      });
+    })).toThrow('writes are forbidden');
+
+    expect(updateCalls).toBe(0);
+    expect(count.get()).toBe(1);
   });
 
   it('treats function values as data', () => {
@@ -164,6 +181,61 @@ describe('signal', () => {
     expect(() => failed.set(2)).toThrow('failed');
 
     expect(notifications).toBe(0);
+  });
+});
+
+describe('signal commit batches', () => {
+  it('keeps staged values private until one commit and invalidates only for a changed final computed value', () => {
+    const left = signal(1);
+    const right = signal(2);
+    let evaluations = 0;
+    const total = computed(() => {
+      evaluations++;
+      return left.get() + right.get();
+    });
+    let invalidations = 0;
+    const node = getSignalNode(total);
+    expect(total.get()).toBe(3);
+    node.observers.add(() => invalidations++);
+    const detach = node.observe?.();
+    if (detach === undefined) {
+      throw new Error('Expected computed signals to support internal observation.');
+    }
+
+    const batch = createSignalCommitBatch();
+    const writer = {};
+    batch.stage(left, 2, writer);
+    batch.stage(right, 1, writer);
+
+    expect(left.get()).toBe(1);
+    expect(right.get()).toBe(2);
+    expect(batch.read(left)).toBe(2);
+    expect(batch.read(right)).toBe(1);
+
+    batch.commit();
+    flushPendingComputedValidations();
+
+    expect(left.get()).toBe(2);
+    expect(right.get()).toBe(1);
+    expect(total.get()).toBe(3);
+    expect(evaluations).toBe(2);
+    expect(invalidations).toBe(0);
+
+    batch.stage(left, 3, writer);
+    batch.stage(right, 2, writer);
+    batch.commit();
+    flushPendingComputedValidations();
+
+    expect(total.get()).toBe(5);
+    expect(invalidations).toBe(1);
+
+    const discarded = createSignalCommitBatch();
+    discarded.stage(left, 99, writer);
+    discarded.discardWriter(writer);
+    discarded.commit();
+
+    expect(left.get()).toBe(3);
+    detach();
   });
 });
 

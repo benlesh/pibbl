@@ -35,7 +35,10 @@ export interface SignalNode<T> {
   validate?(): void;
 }
 
-export type SignalObserver = (node: SignalNode<unknown>) => void;
+export interface SignalObserver {
+  (node: SignalNode<unknown>): void;
+  propagateInvalidation?: boolean;
+}
 
 export interface SignalDependencyCollector {
   addDependency(node: SignalNode<unknown>): void;
@@ -49,9 +52,25 @@ const computedStack: ComputedSignalNode<unknown>[] = [];
 const pendingComputedValidations = new Set<ComputedSignalNode<unknown>>();
 let flushingPendingComputedValidations = false;
 
-const rejectComputedWrite: SignalWritePolicy = () => {
-  throw new Error('Cannot write to a signal while evaluating a computed signal.');
-};
+function computedWriteErrorLabel(node: SignalNode<unknown>): string {
+  return node.debugName === undefined ?
+    'Cannot write to a signal while evaluating a computed signal.' :
+    `Cannot write to a signal while evaluating computed signal "${node.debugName}".`;
+}
+
+function notifySignalObservers(node: SignalNode<unknown>): void {
+  for (const observer of node.observers) {
+    observer(node);
+  }
+}
+
+function notifyComputedInvalidationObservers(node: SignalNode<unknown>): void {
+  for (const observer of node.observers) {
+    if (observer.propagateInvalidation) {
+      observer(node);
+    }
+  }
+}
 
 export function signal<T>(
   initialValue: T,
@@ -72,23 +91,27 @@ export function signal<T>(
     trackingStack.at(-1)?.addDependency(node as SignalNode<unknown>);
     return node.value;
   };
+  const assertWriteAllowed = (): void => {
+    writePolicyStack.at(-1)?.(node as SignalNode<unknown>);
+  };
+  const commit = (nextValue: T): void => {
+    if (node.equals(node.value, nextValue)) {
+      return;
+    }
+
+    node.value = nextValue;
+    node.version++;
+    notifySignalObservers(node as SignalNode<unknown>);
+  };
   const writable = {
     get: read,
     set(nextValue: T): void {
-      writePolicyStack.at(-1)?.(node as SignalNode<unknown>);
-
-      if (node.equals(node.value, nextValue)) {
-        return;
-      }
-
-      node.value = nextValue;
-      node.version++;
-      for (const observer of node.observers) {
-        observer(node as SignalNode<unknown>);
-      }
+      assertWriteAllowed();
+      commit(nextValue);
     },
     update(updateValue: (current: T) => T): void {
-      writable.set(updateValue(node.value));
+      assertWriteAllowed();
+      commit(updateValue(node.value));
     },
     asReadonly(): Signal<T> {
       return readonlySignal ??= { get: read } as Signal<T>;
@@ -128,9 +151,7 @@ export function computed<T>(
   };
 
   const notifyObservers = (): void => {
-    for (const observer of node.observers) {
-      observer(node as SignalNode<unknown>);
-    }
+    notifySignalObservers(node as SignalNode<unknown>);
   };
 
   const enqueueValidation = (): void => {
@@ -141,14 +162,15 @@ export function computed<T>(
     pendingComputedValidations.add(node as ComputedSignalNode<unknown>);
   };
 
-  const invalidate = (): void => {
+  const invalidate: SignalObserver = (): void => {
     if (node.state !== 'clean') {
       return;
     }
     node.state = 'check';
     enqueueValidation();
-    notifyObservers();
+    notifyComputedInvalidationObservers(node as SignalNode<unknown>);
   };
+  invalidate.propagateInvalidation = true;
 
   const replaceDependencies = (dependencies: Set<SignalNode<unknown>>): void => {
     for (const dependency of node.dependencies.keys()) {
@@ -182,9 +204,10 @@ export function computed<T>(
     const dependencies = new Set<SignalNode<unknown>>();
     node.state = 'evaluating';
     computedStack.push(node as ComputedSignalNode<unknown>);
+    let changed = false;
     try {
-      const { nextValue, changed } = withSignalWritePolicy(
-        rejectComputedWrite,
+      const result = withSignalWriteForbidden(
+        computedWriteErrorLabel(node as SignalNode<unknown>),
         () => {
           const nextValue = withSignalTracking({
             addDependency: dependency => dependencies.add(dependency),
@@ -197,20 +220,25 @@ export function computed<T>(
         },
       );
 
+      changed = result.changed;
       if (changed) {
-        node.value = nextValue;
+        node.value = result.nextValue;
         node.version++;
       }
       node.hasValue = true;
       node.hasError = false;
       node.error = undefined;
     } catch (error) {
+      changed = !node.hasError || node.error !== error;
       node.hasError = true;
       node.error = error;
     } finally {
       computedStack.pop();
       replaceDependencies(dependencies);
       node.state = 'clean';
+    }
+    if (changed) {
+      notifyObservers();
     }
   };
 
@@ -243,7 +271,7 @@ export function computed<T>(
     }
   };
 
-  node.invalidate = invalidate;
+  node.invalidate = () => invalidate(node as SignalNode<unknown>);
   node.validate = validate;
 
   node.observe = (): (() => void) => {
@@ -329,6 +357,70 @@ export function getSignalNode<T>(value: Signal<T>): SignalNode<T> {
   return node as SignalNode<T>;
 }
 
+interface StagedSignalValue {
+  readonly node: SignalNode<unknown>;
+  value: unknown;
+  writer: object;
+}
+
+export interface SignalCommitBatch {
+  read<T>(signal: WritableSignal<T>): T;
+  stage<T>(signal: WritableSignal<T>, value: T, writer: object): void;
+  discardWriter(writer: object): void;
+  commit(): void;
+  clear(): void;
+}
+
+export function createSignalCommitBatch(): SignalCommitBatch {
+  const staged = new Map<SignalNode<unknown>, StagedSignalValue>();
+
+  return {
+    read<T>(value: WritableSignal<T>): T {
+      const node = getSignalNode(value) as SignalNode<T>;
+      const candidate = staged.get(node as SignalNode<unknown>);
+      return candidate === undefined ? node.value : candidate.value as T;
+    },
+    stage<T>(value: WritableSignal<T>, nextValue: T, writer: object): void {
+      const node = getSignalNode(value) as SignalNode<T>;
+      writePolicyStack.at(-1)?.(node as SignalNode<unknown>);
+      staged.set(node as SignalNode<unknown>, {
+        node: node as SignalNode<unknown>,
+        value: nextValue,
+        writer,
+      });
+    },
+    discardWriter(writer: object): void {
+      for (const [node, candidate] of staged) {
+        if (candidate.writer === writer) {
+          staged.delete(node);
+        }
+      }
+    },
+    commit(): void {
+      const changed: StagedSignalValue[] = [];
+      for (const candidate of staged.values()) {
+        const node = candidate.node;
+        if (!node.equals(node.value, candidate.value)) {
+          changed.push(candidate);
+        }
+      }
+      staged.clear();
+
+      for (const candidate of changed) {
+        const node = candidate.node;
+        node.value = candidate.value;
+        node.version++;
+      }
+      for (const candidate of changed) {
+        notifySignalObservers(candidate.node);
+      }
+    },
+    clear(): void {
+      staged.clear();
+    },
+  };
+}
+
 export function withSignalTracking<T>(
   collector: SignalDependencyCollector,
   callback: () => T,
@@ -351,4 +443,13 @@ export function withSignalWritePolicy<T>(
   } finally {
     writePolicyStack.pop();
   }
+}
+
+export function withSignalWriteForbidden<T>(
+  reason: string,
+  callback: () => T,
+): T {
+  return withSignalWritePolicy(() => {
+    throw new Error(reason);
+  }, callback);
 }
