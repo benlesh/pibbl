@@ -93,7 +93,8 @@ function assertNoRawHtml(path: string, source: string): void {
 }
 
 function assignHeadingIds(tokens: Token[]): readonly PublicDocHeading[] {
-  const counts = new Map<string, number>();
+  const usedIds = new Set<string>();
+  const nextSuffixByBase = new Map<string, number>();
   const headings: PublicDocHeading[] = [];
 
   for (let index = 0; index < tokens.length; index += 1) {
@@ -103,14 +104,35 @@ function assignHeadingIds(tokens: Token[]): readonly PublicDocHeading[] {
     const inline = tokens[index + 1];
     const text = inline?.type === "inline" ? inlineText(inline) : "";
     const baseId = githubHeadingId(text);
-    const occurrence = (counts.get(baseId) ?? 0) + 1;
-    counts.set(baseId, occurrence);
-    const id = occurrence === 1 ? baseId : `${baseId}-${occurrence}`;
+    const id = nextUnusedHeadingId(baseId, usedIds, nextSuffixByBase);
     token.attrSet("id", id);
     headings.push({ id, level: Number(token.tag.slice(1)), text });
   }
 
   return headings;
+}
+
+function nextUnusedHeadingId(
+  baseId: string,
+  usedIds: Set<string>,
+  nextSuffixByBase: Map<string, number>,
+): string {
+  if (!usedIds.has(baseId)) {
+    usedIds.add(baseId);
+    nextSuffixByBase.set(baseId, 2);
+    return baseId;
+  }
+
+  let suffix = nextSuffixByBase.get(baseId) ?? 2;
+  let id = `${baseId}-${suffix}`;
+  while (usedIds.has(id)) {
+    suffix += 1;
+    id = `${baseId}-${suffix}`;
+  }
+
+  usedIds.add(id);
+  nextSuffixByBase.set(baseId, suffix + 1);
+  return id;
 }
 
 function collectInternalLinks(

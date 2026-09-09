@@ -45,6 +45,25 @@ tutorial: diagram-editor
   ).route,
   "#/learn/tutorials/diagram-editor",
 );
+assert.deepEqual(
+  parsePublicMarkdown(
+    "docs/site/learn/guides/anchor-collisions.md",
+    `---
+id: anchor-collisions
+title: Anchor collisions
+summary: Validate unique heading IDs when a natural suffix already exists.
+kind: guide
+slug: anchor-collisions
+---
+
+# A
+
+# A
+
+# A 2`,
+  ).headings.map(({ id }) => id),
+  ["a", "a-2", "a-2-2"],
+);
 assert.throws(
   () =>
     validatePublicDocFrontmatter(
