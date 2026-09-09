@@ -44,8 +44,10 @@ import type {
   CRCDropShadowFilter,
   ArcProps,
   ArcStyle,
+  ArcPathOptions,
   AbsoluteStyle,
   BoxStyle,
+  CirclePathOptions,
   CircleProps,
   CircleStyle,
   ClipStyle,
@@ -56,19 +58,34 @@ import type {
   ImgStyle,
   EllipseProps,
   EllipseStyle,
+  EllipsePathOptions,
   LayerStyle,
   LayoutBox,
   LayoutItemStyle,
   Length,
   LineStyle,
+  LinePathOptions,
   PathStyle,
   PolygonProps,
   PolygonStyle,
+  PolygonPathOptions,
   RectangleProps,
+  RectanglePathOptions,
+  RegularPolygonNumericSize,
+  RegularPolygonPathOptions,
+  RegularPolygonPathPosition,
+  RegularPolygonProps,
+  RegularPolygonStyle,
+  RoundedCornerPathOptions,
+  RoundedCornerStyle,
   RectStyle,
   RenderingContext2D,
   StateUpdater,
   SvgPathStyle,
+  SvgPathOptions,
+  StarPathOptions,
+  StarProps,
+  StarStyle,
   SystemStyle,
   Percentage,
   FlexItemStyle,
@@ -79,6 +96,7 @@ import type {
   VerticalLineStyle,
   WedgeProps,
   WedgeStyle,
+  WedgePathOptions,
 } from '@crc/core';
 import type * as CoreTypes from '@crc/core/types';
 import {
@@ -113,11 +131,23 @@ import {
   Overlay,
   Path,
   Polygon,
+  RegularPolygon,
   Rectangle,
+  Star,
   SvgPath,
   Text,
   VerticalLine,
   Wedge,
+  createArcPath,
+  createCirclePath,
+  createEllipsePath,
+  createLinePath,
+  createPolygonPath,
+  createRectanglePath,
+  createRegularPolygonPath,
+  createStarPath,
+  createSvgPath,
+  createWedgePath,
   measureElement,
   FocusManagement,
   KeyboardNavigation,
@@ -412,6 +442,67 @@ const polygonStyle = {
 } satisfies PolygonStyle;
 const polygonProps = { onClick: () => undefined } satisfies PolygonProps;
 
+const regularPolygonStyle = {
+  sides: 6,
+  circumradius: 24,
+  cornerRadius: 2,
+  fill: '#0ea5e9',
+} satisfies RegularPolygonStyle;
+const regularPolygonProps = { onClick: () => undefined } satisfies RegularPolygonProps;
+const starStyle = {
+  points: 5,
+  outerRadius: 24,
+  innerRadius: 10,
+  cornerRadii: [2, 0],
+  fill: '#f59e0b',
+} satisfies StarStyle;
+const starProps = { onClick: () => undefined } satisfies StarProps;
+
+const roundedCornerStyle = { cornerRadius: 2 } satisfies RoundedCornerStyle;
+const roundedCornerPathOptions = { cornerRadii: [2, null] } satisfies RoundedCornerPathOptions;
+const rectanglePathOptions = { width: 20, height: 10, cornerRadius: 2 } satisfies RectanglePathOptions;
+const circlePathOptions = { radius: 10 } satisfies CirclePathOptions;
+const ellipsePathOptions = { radiusX: 10, radiusY: 5 } satisfies EllipsePathOptions;
+const arcPathOptions = { radius: 10, startAngle: 0, endAngle: Math.PI } satisfies ArcPathOptions;
+const wedgePathOptions = { radius: 10, startAngle: 0, endAngle: Math.PI } satisfies WedgePathOptions;
+const linePathOptions = { coords: [[0, 0], [10, 10]] } satisfies LinePathOptions;
+const polygonPathOptions = { coords: [[0, 0], [10, 0], [5, 10]] } satisfies PolygonPathOptions;
+const regularPolygonPathPosition = { sides: 6, cx: 10, cy: 10 } satisfies RegularPolygonPathPosition;
+const regularPolygonNumericSize = { inradius: 10 } satisfies RegularPolygonNumericSize;
+const regularPolygonPathOptions = {
+  ...regularPolygonPathPosition,
+  ...regularPolygonNumericSize,
+} satisfies RegularPolygonPathOptions;
+const starPathOptions = { points: 5, outerRadius: 10, innerRadius: 4 } satisfies StarPathOptions;
+const svgPathOptions = { d: 'M 0 0 L 10 10' } satisfies SvgPathOptions;
+const pathCreators = [
+  createArcPath,
+  createCirclePath,
+  createEllipsePath,
+  createLinePath,
+  createPolygonPath,
+  createRectanglePath,
+  createRegularPolygonPath,
+  createStarPath,
+  createSvgPath,
+  createWedgePath,
+] as const;
+void roundedCornerStyle;
+void roundedCornerPathOptions;
+void rectanglePathOptions;
+void circlePathOptions;
+void ellipsePathOptions;
+void arcPathOptions;
+void wedgePathOptions;
+void linePathOptions;
+void polygonPathOptions;
+void regularPolygonPathPosition;
+void regularPolygonNumericSize;
+void regularPolygonPathOptions;
+void starPathOptions;
+void svgPathOptions;
+void pathCreators;
+
 export const standardShapeScene = createElement(Group, {
   children: [
     createElement(Circle, { ...circleProps, style: circleStyle }),
@@ -419,6 +510,11 @@ export const standardShapeScene = createElement(Group, {
     createElement(Arc, { ...arcProps, style: arcStyle }),
     createElement(Wedge, { ...wedgeProps, style: wedgeStyle }),
     createElement(Polygon, { ...polygonProps, style: polygonStyle }),
+    createElement(RegularPolygon, {
+      ...regularPolygonProps,
+      style: regularPolygonStyle,
+    }),
+    createElement(Star, { ...starProps, style: starStyle }),
   ],
 });
 

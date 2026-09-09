@@ -23,8 +23,11 @@ import {
   Grid,
   Group,
   Overlay,
+  RegularPolygon,
   Rectangle,
+  Star,
   Text,
+  createElement,
   crc,
   definePrimitive,
 } from '@crc/core';
@@ -183,4 +186,44 @@ export const layoutElements: readonly CRCElement[] = [
   >
     {layoutChildren()}
   </Grid>,
+];
+
+export const roundedShapeElements: readonly CRCElement<any>[] = [
+  <RegularPolygon
+    style={{ sides: 6, circumradius: 20, cornerRadius: 2, fill: '#0ea5e9' }}
+  />,
+  <RegularPolygon
+    style={{ sides: 6, inradius: 16, cornerRadii: [2, 0], fill: '#0ea5e9' }}
+  />,
+  <RegularPolygon style={{ sides: 6, sideLength: 12, fill: '#0ea5e9' }} />,
+  <Star
+    style={{
+      points: 5,
+      outerRadius: 20,
+      innerRadius: 8,
+      cornerRadius: 2,
+      fill: '#f59e0b',
+    }}
+  />,
+  createElement(RegularPolygon, {
+    style: { sides: 6, sideLength: 12, cornerRadii: [2, 0] },
+  }),
+  createElement(Star, {
+    style: { points: 5, outerRadius: 20, innerRadius: 8, cornerRadii: [2, 0] },
+  }),
+];
+
+// @ts-expect-error RegularPolygon requires exactly one size property
+const missingRegularPolygonSize = <RegularPolygon style={{ sides: 6 }} />;
+// @ts-expect-error RegularPolygon rejects multiple size properties
+const conflictingRegularPolygonSizes = <RegularPolygon style={{ sides: 6, circumradius: 20, inradius: 16 }} />;
+// @ts-expect-error Star requires both radii
+const missingStarRadius = <Star style={{ points: 5, outerRadius: 20 }} />;
+// @ts-expect-error rounded corner radius excludes auto
+const automaticCornerRadius = <Star style={{ points: 5, outerRadius: 20, innerRadius: 8, cornerRadius: 'auto' }} />;
+void [
+  missingRegularPolygonSize,
+  conflictingRegularPolygonSizes,
+  missingStarRadius,
+  automaticCornerRadius,
 ];

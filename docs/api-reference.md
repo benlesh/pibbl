@@ -9,26 +9,30 @@ its constructors from the two explicit compiler subpaths. Imports below
 
 ### `@crc/core`
 
-The root contains 46 runtime values and 133 type exports.
+The root contains 58 runtime values and 151 type exports.
 
 <!-- root-values:start -->
 
 `Absolute`, `Arc`, `Circle`, `Clip`, `Ellipse`, `Flex`, `Flow`,
 `FocusManagement`, `Fragment`, `Grid`, `Group`, `HorizontalLine`, `Image`,
 `KeyboardNavigation`, `Layer`, `LayoutDiagnostic`, `Line`, `Overlay`, `Path`,
-`Polygon`, `Rectangle`, `SvgPath`, `Text`, `VerticalLine`, `Wedge`, `crc`,
+`Polygon`, `Rectangle`, `RegularPolygon`, `Star`, `SvgPath`, `Text`,
+`VerticalLine`, `Wedge`, `crc`,
 `crcCanvasContext`, `crcCursor`, `crcEvent`,
 `crcEventListener`, `crcEventTarget`, `crcLayoutBox`, `crcLinePath`, `crcMemo`,
 `crcRectPath`, `crcRef`, `crcState`, `crcSvgPath`, `crcWhenChanged`,
-`createElement`, `definePrimitive`, `layoutDiagnostic`, `measureElement`,
+`createArcPath`, `createCirclePath`, `createElement`, `createEllipsePath`,
+`createLinePath`, `createPolygonPath`, `createRectanglePath`,
+`createRegularPolygonPath`, `createStarPath`, `createSvgPath`,
+`createWedgePath`, `definePrimitive`, `layoutDiagnostic`, `measureElement`,
 `normalizeEdges`, `resolveBox`, `resolveLength`
 
 <!-- root-values:end -->
 
 <!-- root-types:start -->
 
-`AbsoluteProps`, `AbsoluteStyle`, `ArcProps`, `ArcStyle`, `BoxStyle`,
-`CRCBlurFilter`, `CRCBrightnessFilter`, `CRCClipboardEvent`,
+`AbsoluteProps`, `AbsoluteStyle`, `ArcPathOptions`, `ArcProps`, `ArcStyle`,
+`BoxStyle`, `CRCBlurFilter`, `CRCBrightnessFilter`, `CRCClipboardEvent`,
 `CRCComponent`, `CRCCompositionEvent`, `CRCConfig`, `CRCContainerChild`,
 `CRCContrastFilter`, `CRCController`, `CRCDragEvent`, `CRCDropShadowFilter`,
 `CRCElement`, `CRCElementType`, `CRCEmptyNode`,
@@ -42,24 +46,32 @@ The root contains 46 runtime values and 133 type exports.
 `CRCPointerEvent`, `CRCPrimitiveComponent`, `CRCRef`, `CRCRenderResult`,
 `CRCResponsiveViewportConfig`, `CRCSaturateFilter`, `CRCSepiaFilter`,
 `CRCTextChild`, `CRCTouchEvent`, `CRCWheelEvent`,
-`Canvas`, `CanvasMeasurementService`, `CircleProps`, `CircleStyle`, `ClipProps`,
-`ClipStyle`, `Constraints`, `CursorStyle`, `EdgeValues`, `Edges`, `EllipseProps`,
-`EllipseStyle`, `FillStyle`, `FlexItemStyle`, `FlexProps`, `FlexStyle`,
+`Canvas`, `CanvasMeasurementService`, `CirclePathOptions`, `CircleProps`,
+`CircleStyle`, `ClipProps`, `ClipStyle`, `Constraints`, `CursorStyle`,
+`EdgeValues`, `Edges`, `EllipsePathOptions`, `EllipseProps`, `EllipseStyle`,
+`FillStyle`, `FlexItemStyle`, `FlexProps`, `FlexStyle`,
 `FlowProps`, `FlowStyle`, `FocusManagementProps`, `GStyle`,
 `GridItemStyle`, `GridProps`, `GridStyle`, `GridTrack`, `GroupProps`,
 `HorizontalLineProps`, `HorizontalLineStyle`, `ImageProps`, `ImgStyle`,
 `KeyboardNavigationProps`, `LayerProps`, `LayerStyle`, `LayoutBox`,
 `LayoutDiagnosticContext`, `LayoutDiagnosticInput`, `LayoutItemStyle`, `Length`,
-`LineProps`, `LineStyle`, `MeasureInput`, `MeasureResult`, `NormalizedStyle`,
+`LinePathOptions`, `LineProps`, `LineStyle`, `MeasureInput`, `MeasureResult`,
+`NormalizedStyle`,
 `OverlayProps`, `OverlayStyle`, `PaintStyle`, `PathProps`, `PathStyle`,
-`Percentage`, `PixelGridAlignment`, `PolygonProps`, `PolygonStyle`,
+`Percentage`, `PixelGridAlignment`, `PolygonPathOptions`, `PolygonProps`,
+`PolygonStyle`,
 `PrimitiveCapabilities`, `PrimitiveInput`, `PrimitiveInputOf`,
 `PrimitiveProgramProps`, `PrimitiveRender`, `RectStyle`,
-`RectangleProps`, `RenderingContext2D`, `ResolvedBoxStyle`, `ResolvedStyle`,
-`Size`, `SpecifiedStyle`, `StateUpdater`, `StrokeStyle`,
-`StyleResolutionContext`, `SvgPathProps`, `SvgPathStyle`, `SystemStyle`,
+`RectanglePathOptions`, `RectangleProps`, `RegularPolygonNumericSize`,
+`RegularPolygonPathOptions`, `RegularPolygonPathPosition`,
+`RegularPolygonProps`, `RegularPolygonStyle`, `RenderingContext2D`,
+`ResolvedBoxStyle`, `ResolvedStyle`, `RoundedCornerPathOptions`,
+`RoundedCornerStyle`, `Size`, `SpecifiedStyle`, `StateUpdater`,
+`StarPathOptions`, `StarProps`, `StarStyle`, `StrokeStyle`,
+`StyleResolutionContext`, `SvgPathOptions`, `SvgPathProps`, `SvgPathStyle`,
+`SystemStyle`,
 `TextFit`, `TextProps`, `TextStyle`, `VerticalLineProps`, `VerticalLineStyle`,
-`WedgeProps`, `WedgeStyle`
+`WedgePathOptions`, `WedgeProps`, `WedgeStyle`
 
 <!-- root-types:end -->
 

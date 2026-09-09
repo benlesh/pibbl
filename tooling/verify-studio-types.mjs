@@ -298,11 +298,13 @@ const publicTypeExports = [
   'AbsoluteProps',
   'AbsoluteStyle',
   'ArcProps',
+  'ArcPathOptions',
   'ArcStyle',
   'BoxStyle',
   'Canvas',
   'CanvasMeasurementService',
   'CircleProps',
+  'CirclePathOptions',
   'CircleStyle',
   'ClipProps',
   'ClipStyle',
@@ -363,6 +365,7 @@ const publicTypeExports = [
   'EdgeValues',
   'Edges',
   'EllipseProps',
+  'EllipsePathOptions',
   'EllipseStyle',
   'FillStyle',
   'FlexItemStyle',
@@ -390,6 +393,7 @@ const publicTypeExports = [
   'LayoutItemStyle',
   'Length',
   'LineProps',
+  'LinePathOptions',
   'LineStyle',
   'MeasureInput',
   'MeasureResult',
@@ -402,6 +406,7 @@ const publicTypeExports = [
   'Percentage',
   'PixelGridAlignment',
   'PolygonProps',
+  'PolygonPathOptions',
   'PolygonStyle',
   'PrimitiveCapabilities',
   'PrimitiveInput',
@@ -409,16 +414,28 @@ const publicTypeExports = [
   'PrimitiveProgramProps',
   'PrimitiveRender',
   'RectangleProps',
+  'RectanglePathOptions',
+  'RegularPolygonNumericSize',
+  'RegularPolygonPathOptions',
+  'RegularPolygonPathPosition',
+  'RegularPolygonProps',
+  'RegularPolygonStyle',
   'RectStyle',
   'RenderingContext2D',
   'ResolvedBoxStyle',
   'ResolvedStyle',
+  'RoundedCornerPathOptions',
+  'RoundedCornerStyle',
   'Size',
   'SpecifiedStyle',
   'StateUpdater',
   'StrokeStyle',
+  'StarPathOptions',
+  'StarProps',
+  'StarStyle',
   'StyleResolutionContext',
   'SvgPathProps',
+  'SvgPathOptions',
   'SvgPathStyle',
   'SystemStyle',
   'TextFit',
@@ -427,8 +444,13 @@ const publicTypeExports = [
   'VerticalLineProps',
   'VerticalLineStyle',
   'WedgeProps',
+  'WedgePathOptions',
   'WedgeStyle',
 ].sort();
+
+if (publicTypeExports.length !== 151) {
+  throw new Error(`CRC Studio must declare exactly 151 public types, received ${publicTypeExports.length}.`);
+}
 
 const packageIndexSource = packageDeclarationSources.get('@crc/core');
 const packageTypeExports = [];
@@ -588,6 +610,8 @@ type StudioSignatureParity = [
       config?: {
         alignToPixelGrid?: 'none' | 'round' | 'ceil' | 'floor';
         lineWidth?: number;
+        cornerRadius?: number;
+        cornerRadii?: readonly (number | null | undefined)[];
       },
     ) => Path2D
   >>,
@@ -1209,6 +1233,8 @@ try {
     'Path',
     'Polygon',
     'Rectangle',
+    'RegularPolygon',
+    'Star',
     'SvgPath',
     'Text',
     'VerticalLine',
@@ -1227,7 +1253,17 @@ try {
     'crcState',
     'crcSvgPath',
     'crcWhenChanged',
+    'createArcPath',
+    'createCirclePath',
     'createElement',
+    'createEllipsePath',
+    'createLinePath',
+    'createPolygonPath',
+    'createRectanglePath',
+    'createRegularPolygonPath',
+    'createStarPath',
+    'createSvgPath',
+    'createWedgePath',
     'definePrimitive',
     'jsx',
     'jsxDEV',
@@ -1238,6 +1274,9 @@ try {
     'resolveBox',
     'resolveLength',
   ].sort();
+  if (expectedStudioRuntimeExports.length !== 61) {
+    throw new Error(`CRC Studio runtime must expose 58 root values plus 3 compiler values, received ${expectedStudioRuntimeExports.length}.`);
+  }
   if (sourceRuntimeExports.join('\n') !== expectedStudioRuntimeExports.join('\n')) {
     throw new Error(
       `CRC Studio source runtime has unexpected exports: ${sourceRuntimeExports.join(', ')}.`,
@@ -1247,7 +1286,7 @@ try {
     throw new Error('CRC Studio source and built runtime surfaces differ.');
   }
   process.stdout.write(
-    'CRC Studio declarations passed exact export-name parity, 133-type structural ' +
+    'CRC Studio declarations passed exact export-name parity, 151-type structural ' +
     'coverage, selected signature parity, strict TSX, compiler-runtime, event-family, ' +
     'generic, and layout checks against source and built packages.\n',
   );

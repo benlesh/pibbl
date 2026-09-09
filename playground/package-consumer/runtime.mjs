@@ -31,6 +31,8 @@ const expected = [
   'Path',
   'Polygon',
   'Rectangle',
+  'RegularPolygon',
+  'Star',
   'SvgPath',
   'Text',
   'VerticalLine',
@@ -49,7 +51,17 @@ const expected = [
   'crcState',
   'crcSvgPath',
   'crcWhenChanged',
+  'createArcPath',
+  'createCirclePath',
   'createElement',
+  'createEllipsePath',
+  'createLinePath',
+  'createPolygonPath',
+  'createRectanglePath',
+  'createRegularPolygonPath',
+  'createStarPath',
+  'createSvgPath',
+  'createWedgePath',
   'definePrimitive',
   'layoutDiagnostic',
   'measureElement',
@@ -61,6 +73,9 @@ const expected = [
 const actual = Object.keys(core).sort();
 if (JSON.stringify(actual) !== JSON.stringify(expected)) {
   throw new Error(`Unexpected @crc/core exports: ${actual.join(', ')}`);
+}
+if (actual.length !== 58) {
+  throw new Error(`Expected 58 @crc/core runtime exports, received ${actual.length}.`);
 }
 
 for (const [exportName, value] of Object.entries({
@@ -81,6 +96,22 @@ if (
 for (const exportName of expected) {
   if (typeof core[exportName] !== 'function') {
     throw new Error(`Expected @crc/core ${exportName} to be a runtime function.`);
+  }
+}
+for (const creatorName of [
+  'createArcPath',
+  'createCirclePath',
+  'createEllipsePath',
+  'createLinePath',
+  'createPolygonPath',
+  'createRectanglePath',
+  'createRegularPolygonPath',
+  'createStarPath',
+  'createSvgPath',
+  'createWedgePath',
+]) {
+  if (typeof core[creatorName] !== 'function') {
+    throw new Error(`Expected @crc/core ${creatorName} to be callable.`);
   }
 }
 

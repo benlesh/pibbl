@@ -20,13 +20,28 @@ import {
   FocusManagement,
   KeyboardNavigation,
   Polygon,
+  RegularPolygon,
+  Star,
   Wedge,
+  createArcPath,
+  createCirclePath,
+  createEllipsePath,
+  createLinePath,
+  createPolygonPath,
+  createRectanglePath,
+  createRegularPolygonPath,
+  createStarPath,
+  createSvgPath,
+  createWedgePath,
   createElement,
   type ArcProps,
   type ArcStyle,
+  type ArcPathOptions,
   type BoxStyle,
+  type CirclePathOptions,
   type CircleProps,
   type CircleStyle,
+  type EllipsePathOptions,
   type CRCComponent,
   type CRCConfig,
   type CRCContainerChild,
@@ -54,11 +69,26 @@ import {
   type PrimitiveRender,
   type PolygonProps,
   type PolygonStyle,
+  type PolygonPathOptions,
+  type RectanglePathOptions,
+  type RegularPolygonNumericSize,
+  type RegularPolygonPathOptions,
+  type RegularPolygonPathPosition,
+  type RegularPolygonProps,
+  type RegularPolygonStyle,
+  type RoundedCornerPathOptions,
+  type RoundedCornerStyle,
   type RenderingContext2D,
   type ResolvedStyle,
   type SpecifiedStyle,
   type StyleResolutionContext,
   type SystemStyle,
+  type StarPathOptions,
+  type StarProps,
+  type StarStyle,
+  type SvgPathOptions,
+  type LinePathOptions,
+  type WedgePathOptions,
   type WedgeProps,
   type WedgeStyle,
 } from '@crc/core';
@@ -112,6 +142,24 @@ type ApprovedPublicTypes = {
   readonly wedgeStyle: WedgeStyle;
   readonly polygonProps: PolygonProps;
   readonly polygonStyle: PolygonStyle;
+  readonly roundedCornerStyle: RoundedCornerStyle;
+  readonly roundedCornerPathOptions: RoundedCornerPathOptions;
+  readonly rectanglePathOptions: RectanglePathOptions;
+  readonly circlePathOptions: CirclePathOptions;
+  readonly ellipsePathOptions: EllipsePathOptions;
+  readonly arcPathOptions: ArcPathOptions;
+  readonly wedgePathOptions: WedgePathOptions;
+  readonly linePathOptions: LinePathOptions;
+  readonly polygonPathOptions: PolygonPathOptions;
+  readonly regularPolygonPosition: RegularPolygonPathPosition;
+  readonly regularPolygonSize: RegularPolygonNumericSize;
+  readonly regularPolygonPathOptions: RegularPolygonPathOptions;
+  readonly starPathOptions: StarPathOptions;
+  readonly svgPathOptions: SvgPathOptions;
+  readonly regularPolygonProps: RegularPolygonProps;
+  readonly regularPolygonStyle: RegularPolygonStyle;
+  readonly starProps: StarProps;
+  readonly starStyle: StarStyle;
 };
 
 const obsoleteRuntimeExportParts = [
@@ -160,6 +208,8 @@ describe('public CRC API', () => {
       'Path',
       'Polygon',
       'Rectangle',
+      'RegularPolygon',
+      'Star',
       'SvgPath',
       'Text',
       'VerticalLine',
@@ -178,7 +228,17 @@ describe('public CRC API', () => {
       'crcState',
       'crcSvgPath',
       'crcWhenChanged',
+      'createArcPath',
+      'createCirclePath',
       'createElement',
+      'createEllipsePath',
+      'createLinePath',
+      'createPolygonPath',
+      'createRectanglePath',
+      'createRegularPolygonPath',
+      'createStarPath',
+      'createSvgPath',
+      'createWedgePath',
       'definePrimitive',
       'layoutDiagnostic',
       'measureElement',
@@ -186,6 +246,19 @@ describe('public CRC API', () => {
       'resolveBox',
       'resolveLength',
     ]);
+
+    for (const creator of [
+      createArcPath,
+      createCirclePath,
+      createEllipsePath,
+      createLinePath,
+      createPolygonPath,
+      createRectanglePath,
+      createRegularPolygonPath,
+      createStarPath,
+      createSvgPath,
+      createWedgePath,
+    ]) expectTypeOf(creator).toBeFunction();
 
     for (const parts of obsoleteRuntimeExportParts) {
       const name = parts.join('');
@@ -213,7 +286,8 @@ describe('public CRC API', () => {
 
   it('exports the approved public type families', () => {
     expectTypeOf<ApprovedPublicTypes>().toBeObject();
-    expect([Arc, Circle, Ellipse, Polygon, Wedge]).toHaveLength(5);
+    expect([Arc, Circle, Ellipse, Polygon, RegularPolygon, Star, Wedge])
+      .toHaveLength(7);
   });
 
   it('exports identity-transparent focus and keyboard-navigation policies', () => {

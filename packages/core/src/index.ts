@@ -43,9 +43,19 @@ export {
   type PolygonStyle,
 } from './lib/components/polygon.js';
 export {
+  RegularPolygon,
+  type RegularPolygonProps,
+  type RegularPolygonStyle,
+} from './lib/components/regular-polygon.js';
+export {
   Rectangle,
   type RectangleProps,
 } from './lib/components/rect.js';
+export {
+  Star,
+  type StarProps,
+  type StarStyle,
+} from './lib/components/star.js';
 export {
   SvgPath,
   type SvgPathProps,
@@ -61,6 +71,47 @@ export {
   type WedgeProps,
   type WedgeStyle,
 } from './lib/components/wedge.js';
+export {
+  createArcPath,
+  createWedgePath,
+  type ArcPathOptions,
+  type WedgePathOptions,
+} from './lib/geometry/circular-sweep.js';
+export {
+  createCirclePath,
+  type CirclePathOptions,
+} from './lib/geometry/circle.js';
+export {
+  createEllipsePath,
+  type EllipsePathOptions,
+} from './lib/geometry/ellipse.js';
+export {
+  createLinePath,
+  type LinePathOptions,
+} from './lib/geometry/line.js';
+export {
+  createPolygonPath,
+  type PolygonPathOptions,
+} from './lib/geometry/polygon.js';
+export {
+  createRectanglePath,
+  type RectanglePathOptions,
+} from './lib/geometry/rectangle.js';
+export {
+  createRegularPolygonPath,
+  type RegularPolygonNumericSize,
+  type RegularPolygonPathOptions,
+  type RegularPolygonPathPosition,
+} from './lib/geometry/regular-polygon.js';
+export {
+  createStarPath,
+  type StarPathOptions,
+} from './lib/geometry/star.js';
+export {
+  createSvgPath,
+  type SvgPathOptions,
+} from './lib/geometry/svg-path.js';
+export type { RoundedCornerPathOptions } from './lib/geometry/rounded-corners.js';
 export { crc } from './lib/crc.js';
 export type {
   CRCConfig,
@@ -125,6 +176,7 @@ export type {
   TextFit,
   TextStyle,
   Percentage,
+  RoundedCornerStyle,
 } from './lib/style/types.js';
 export {
   LayoutDiagnostic,

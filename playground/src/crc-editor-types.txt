@@ -207,6 +207,8 @@
 
   export type Percentage = `${number}%`;
   export type Length = number | Percentage | 'auto';
+  export interface RoundedCornerStyle { cornerRadius?: Exclude<Length, 'auto'>; cornerRadii?: readonly (Exclude<Length, 'auto'> | null | undefined)[] }
+  export interface RoundedCornerPathOptions { cornerRadius?: number; cornerRadii?: readonly (number | null | undefined)[] }
   export type EdgeValues = number | Readonly<{ top?: number; right?: number; bottom?: number; left?: number }>;
   export interface Size { width: number; height: number }
   export interface LayoutBox extends Size { x: number; y: number }
@@ -236,12 +238,16 @@
   export interface PaintStyle extends SystemStyle { fill?: FillStyle; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number }
   export interface CursorStyle extends SystemStyle { cursor?: string }
   export interface PathStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { d: Path2D; lineInteractionWidth?: number }
-  export interface RectStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { x?: Exclude<Length, 'auto'>; y?: Exclude<Length, 'auto'>; width: Length; height: Length; alignToPixelGrid?: PixelGridAlignment; lineInteractionWidth?: number }
+  export interface RectStyle extends RoundedCornerStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { x?: Exclude<Length, 'auto'>; y?: Exclude<Length, 'auto'>; width: Length; height: Length; alignToPixelGrid?: PixelGridAlignment; lineInteractionWidth?: number }
   export interface CircleStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { radius: Exclude<Length, 'auto'>; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; lineInteractionWidth?: number }
   export interface EllipseStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { radiusX: Exclude<Length, 'auto'>; radiusY: Exclude<Length, 'auto'>; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; rotation?: number; lineInteractionWidth?: number }
   export interface ArcStyle extends Omit<PaintStyle, 'fill'>, CursorStyle, BoxStyle, LayoutItemStyle { radius: Exclude<Length, 'auto'>; startAngle: number; endAngle: number; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; counterclockwise?: boolean; lineInteractionWidth?: number }
   export interface WedgeStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { radius: Exclude<Length, 'auto'>; startAngle: number; endAngle: number; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; counterclockwise?: boolean; lineInteractionWidth?: number }
   export interface PolygonStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { coords: [number, number][]; lineInteractionWidth?: number }
+  type RegularPolygonCommonStyle = RoundedCornerStyle & { sides: number; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; rotation?: number; lineInteractionWidth?: number };
+  type RegularPolygonSizeStyle = { circumradius: Exclude<Length, 'auto'>; inradius?: never; sideLength?: never } | { circumradius?: never; inradius: Exclude<Length, 'auto'>; sideLength?: never } | { circumradius?: never; inradius?: never; sideLength: Exclude<Length, 'auto'> };
+  export type RegularPolygonStyle = RegularPolygonCommonStyle & RegularPolygonSizeStyle & SystemStyle & PaintStyle & CursorStyle & BoxStyle & LayoutItemStyle;
+  export interface StarStyle extends RoundedCornerStyle, SystemStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { points: number; cx?: Exclude<Length, 'auto'>; cy?: Exclude<Length, 'auto'>; outerRadius: Exclude<Length, 'auto'>; innerRadius: Exclude<Length, 'auto'>; rotation?: number; lineInteractionWidth?: number }
   export interface SvgPathStyle extends PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { d: string; lineInteractionWidth?: number }
   export interface LineStyle extends SystemStyle, CursorStyle, BoxStyle, LayoutItemStyle { coords: [number, number][]; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; lineInteractionWidth?: number }
   export interface HorizontalLineStyle extends SystemStyle, CursorStyle, BoxStyle, LayoutItemStyle { y: Exclude<Length, 'auto'>; x1?: Exclude<Length, 'auto'>; x2?: Exclude<Length, 'auto'>; stroke?: StrokeStyle; strokeWidth?: number; opacity?: number; alignToPixelGrid?: PixelGridAlignment; lineInteractionWidth?: number }
@@ -260,6 +266,8 @@
   export interface ArcProps extends CRCEventHandlers, CRCEventFocusOptions {}
   export interface WedgeProps extends CRCEventHandlers, CRCEventFocusOptions {}
   export interface PolygonProps extends CRCEventHandlers, CRCEventFocusOptions {}
+  export interface RegularPolygonProps extends CRCEventHandlers, CRCEventFocusOptions {}
+  export interface StarProps extends CRCEventHandlers, CRCEventFocusOptions {}
   export interface SvgPathProps extends PathProps {}
   export interface LineProps extends CRCEventHandlers, CRCEventFocusOptions {}
   export interface HorizontalLineProps extends CRCEventHandlers, CRCEventFocusOptions {}
@@ -269,6 +277,19 @@
   export interface GroupProps { children: CRCNode }
   export interface ClipProps { children: CRCNode }
   export interface LayerProps { children: CRCNode }
+
+  export interface RectanglePathOptions extends RoundedCornerPathOptions { x?: number; y?: number; width: number; height: number }
+  export interface CirclePathOptions { cx?: number; cy?: number; radius: number }
+  export interface EllipsePathOptions { cx?: number; cy?: number; radiusX: number; radiusY: number; rotation?: number }
+  export interface ArcPathOptions { cx?: number; cy?: number; radius: number; startAngle: number; endAngle: number; counterclockwise?: boolean }
+  export type WedgePathOptions = ArcPathOptions;
+  export interface LinePathOptions { coords: readonly (readonly [number, number])[]; closePath?: boolean }
+  export interface PolygonPathOptions extends RoundedCornerPathOptions { coords: readonly (readonly [number, number])[] }
+  export interface RegularPolygonPathPosition { sides: number; cx?: number; cy?: number; rotation?: number }
+  export type RegularPolygonNumericSize = { circumradius: number; inradius?: never; sideLength?: never } | { circumradius?: never; inradius: number; sideLength?: never } | { circumradius?: never; inradius?: never; sideLength: number };
+  export type RegularPolygonPathOptions = RegularPolygonPathPosition & RegularPolygonNumericSize & RoundedCornerPathOptions;
+  export interface StarPathOptions extends RoundedCornerPathOptions { points: number; cx?: number; cy?: number; outerRadius: number; innerRadius: number; rotation?: number }
+  export interface SvgPathOptions { d: string }
 
   export type AbsoluteStyle = BoxStyle & LayoutItemStyle;
   export interface AbsoluteProps { children: CRCNode }
@@ -307,6 +328,8 @@
   export const Arc: CRCPrimitiveComponent<ArcProps, PrimitiveInput<ArcProps, ArcStyle>>;
   export const Wedge: CRCPrimitiveComponent<WedgeProps, PrimitiveInput<WedgeProps, WedgeStyle>>;
   export const Polygon: CRCPrimitiveComponent<PolygonProps, PrimitiveInput<PolygonProps, PolygonStyle>>;
+  export const RegularPolygon: CRCPrimitiveComponent<RegularPolygonProps, PrimitiveInput<RegularPolygonProps, RegularPolygonStyle>>;
+  export const Star: CRCPrimitiveComponent<StarProps, PrimitiveInput<StarProps, StarStyle>>;
   export const Path: CRCPrimitiveComponent<PathProps, PrimitiveInput<PathProps, PathStyle>>;
   export const SvgPath: CRCPrimitiveComponent<SvgPathProps, PrimitiveInput<SvgPathProps, SvgPathStyle>>;
   export const Line: CRCPrimitiveComponent<LineProps, PrimitiveInput<LineProps, LineStyle>>;
@@ -322,6 +345,16 @@
   export const Flow: CRCPrimitiveComponent<FlowProps, PrimitiveInput<FlowProps, FlowStyle>>;
   export const Flex: CRCPrimitiveComponent<FlexProps, PrimitiveInput<FlexProps, FlexStyle>>;
   export const Grid: CRCPrimitiveComponent<GridProps, PrimitiveInput<GridProps, GridStyle>>;
+  export function createArcPath(options: Readonly<ArcPathOptions>): Path2D;
+  export function createCirclePath(options: Readonly<CirclePathOptions>): Path2D;
+  export function createEllipsePath(options: Readonly<EllipsePathOptions>): Path2D;
+  export function createLinePath(options: Readonly<LinePathOptions>): Path2D;
+  export function createPolygonPath(options: Readonly<PolygonPathOptions>): Path2D;
+  export function createRectanglePath(options: Readonly<RectanglePathOptions>): Path2D;
+  export function createRegularPolygonPath(options: Readonly<RegularPolygonPathOptions>): Path2D;
+  export function createStarPath(options: Readonly<StarPathOptions>): Path2D;
+  export function createSvgPath(options: Readonly<SvgPathOptions>): Path2D;
+  export function createWedgePath(options: Readonly<WedgePathOptions>): Path2D;
   export function measureElement(element: CRCElement<any>, constraints: Readonly<Constraints>, service: CanvasMeasurementService): MeasureResult;
   export const FocusManagement: CRCComponent<FocusManagementProps>;
   export const KeyboardNavigation: CRCComponent<KeyboardNavigationProps>;
@@ -341,7 +374,7 @@
   export function crcEventListener(handlers: CRCEventHandlers): void;
   export function crcEventTarget(handlers: CRCEventHandlers, options: CRCEventTargetOptions): CRCEventTargetSnapshot;
   export function crcLinePath(coords: [number, number][], config?: { closePath?: boolean }): Path2D;
-  export function crcRectPath(x: number, y: number, width: number, height: number, config?: { alignToPixelGrid?: PixelGridAlignment; lineWidth?: number }): Path2D;
+  export function crcRectPath(x: number, y: number, width: number, height: number, config?: { alignToPixelGrid?: PixelGridAlignment; lineWidth?: number; cornerRadius?: number; cornerRadii?: readonly (number | null | undefined)[] }): Path2D;
   export function crcSvgPath(data: string): Path2D;
 
 /* @crc-studio-module @crc/core/jsx-runtime */

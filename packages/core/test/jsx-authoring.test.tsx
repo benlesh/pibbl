@@ -13,7 +13,9 @@ import {
   Line,
   Path,
   Polygon,
+  RegularPolygon,
   Rectangle,
+  Star,
   SvgPath,
   Text,
   VerticalLine,
@@ -28,6 +30,10 @@ import {
   type EllipseStyle,
   type PolygonProps,
   type PolygonStyle,
+  type RegularPolygonProps,
+  type RegularPolygonStyle,
+  type StarProps,
+  type StarStyle,
   type TextStyle,
   type WedgeProps,
   type WedgeStyle,
@@ -353,11 +359,37 @@ describe('public JSX component authoring', () => {
       coords: [[0, 0], [24, 0], [12, 18]],
       fill: '#16a34a',
     };
+    const regularPolygonCircumradiusStyle: RegularPolygonStyle = {
+      sides: 6,
+      circumradius: 20,
+      cornerRadius: 2,
+      fill: '#0891b2',
+    };
+    const regularPolygonInradiusStyle: RegularPolygonStyle = {
+      sides: 6,
+      inradius: 16,
+      cornerRadii: [2, 0],
+      fill: '#0891b2',
+    };
+    const regularPolygonSideLengthStyle: RegularPolygonStyle = {
+      sides: 6,
+      sideLength: 12,
+      fill: '#0891b2',
+    };
+    const starStyle: StarStyle = {
+      points: 5,
+      outerRadius: 20,
+      innerRadius: 8,
+      cornerRadius: 2,
+      fill: '#f59e0b',
+    };
     const circleProps: CircleProps = { onClick: () => undefined };
     const ellipseProps: EllipseProps = { onClick: () => undefined };
     const arcProps: ArcProps = { onClick: () => undefined };
     const wedgeProps: WedgeProps = { onClick: () => undefined };
     const polygonProps: PolygonProps = { onClick: () => undefined };
+    const regularPolygonProps: RegularPolygonProps = { onClick: () => undefined };
+    const starProps: StarProps = { onClick: () => undefined };
 
     const shapes = [
       <Circle {...circleProps} style={circleStyle} />,
@@ -365,6 +397,10 @@ describe('public JSX component authoring', () => {
       <Arc {...arcProps} style={arcStyle} />,
       <Wedge {...wedgeProps} style={wedgeStyle} />,
       <Polygon {...polygonProps} style={polygonStyle} />,
+      <RegularPolygon {...regularPolygonProps} style={regularPolygonCircumradiusStyle} />,
+      <RegularPolygon {...regularPolygonProps} style={regularPolygonInradiusStyle} />,
+      <RegularPolygon {...regularPolygonProps} style={regularPolygonSideLengthStyle} />,
+      <Star {...starProps} style={starStyle} />,
     ];
 
     // @ts-expect-error Circle is a drawing leaf and rejects children
@@ -377,6 +413,10 @@ describe('public JSX component authoring', () => {
     const wedgeWithChild = <Wedge style={{ radius: 10, startAngle: 0, endAngle: 1 }}>bad</Wedge>;
     // @ts-expect-error Polygon is a drawing leaf and rejects children
     const polygonWithChild = <Polygon style={{ coords: [[0, 0], [1, 0], [0, 1]] }}>bad</Polygon>;
+    // @ts-expect-error RegularPolygon is a drawing leaf and rejects children
+    const regularPolygonWithChild = <RegularPolygon style={{ sides: 3, circumradius: 10 }}>bad</RegularPolygon>;
+    // @ts-expect-error Star is a drawing leaf and rejects children
+    const starWithChild = <Star style={{ points: 5, outerRadius: 10, innerRadius: 4 }}>bad</Star>;
     // @ts-expect-error Arc is stroke-only and rejects fill paint
     const filledArc = <Arc style={{ radius: 10, startAngle: 0, endAngle: 1, fill: 'red' }} />;
     // @ts-expect-error circular radius excludes auto
@@ -397,6 +437,16 @@ describe('public JSX component authoring', () => {
     const missingWedgeGeometry = <Wedge style={{ fill: 'red' }} />;
     // @ts-expect-error Polygon requires coordinates
     const missingPolygonGeometry = <Polygon style={{ fill: 'red' }} />;
+    // @ts-expect-error RegularPolygon requires exactly one size field
+    const missingRegularPolygonSize = <RegularPolygon style={{ sides: 6, fill: 'red' }} />;
+    // @ts-expect-error RegularPolygon rejects conflicting size fields
+    const conflictingRegularPolygonSize = <RegularPolygon style={{ sides: 6, circumradius: 10, inradius: 8 }} />;
+    // @ts-expect-error RegularPolygon rounded corners exclude auto
+    const automaticRegularPolygonCorner = <RegularPolygon style={{ sides: 6, circumradius: 10, cornerRadius: 'auto' }} />;
+    // @ts-expect-error Star requires both radii
+    const missingStarRadii = <Star style={{ points: 5, outerRadius: 10 }} />;
+    // @ts-expect-error Star rounded corners exclude auto
+    const automaticStarCorner = <Star style={{ points: 5, outerRadius: 10, innerRadius: 4, cornerRadius: 'auto' }} />;
 
     expect([
       ...shapes,
@@ -405,6 +455,8 @@ describe('public JSX component authoring', () => {
       arcWithChild,
       wedgeWithChild,
       polygonWithChild,
+      regularPolygonWithChild,
+      starWithChild,
       filledArc,
       automaticCircle,
       automaticEllipse,
@@ -415,7 +467,12 @@ describe('public JSX component authoring', () => {
       missingArcGeometry,
       missingWedgeGeometry,
       missingPolygonGeometry,
-    ]).toHaveLength(20);
+      missingRegularPolygonSize,
+      conflictingRegularPolygonSize,
+      automaticRegularPolygonCorner,
+      missingStarRadii,
+      automaticStarCorner,
+    ]).toHaveLength(31);
   });
 });
 
