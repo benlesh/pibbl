@@ -409,13 +409,14 @@ describe('filter integration', () => {
     }
   });
 
-  it('rejects a zero-scale native chain before the discard callback', () => {
+  it('classifies a silently rejected zero-scale candidate as chain rejection', () => {
     const callback = vi.fn();
     const frames = controlFrames();
     const baseline = temporaryGlobalSnapshot();
     const prototype = OffscreenCanvasRenderingContext2D.prototype;
     const descriptor = Object.getOwnPropertyDescriptor(prototype, 'filter')!;
     let assigned = 'none';
+    const assignments: string[] = [];
     Object.defineProperty(prototype, 'filter', {
       configurable: true,
       enumerable: descriptor.enumerable,
@@ -423,6 +424,7 @@ describe('filter integration', () => {
         return assigned;
       },
       set(value: string) {
+        assignments.push(value);
         assigned = value === 'none' ? value : 'none';
       },
     });
@@ -434,6 +436,7 @@ describe('filter integration', () => {
     try {
       expect(() => frames.runNext())
         .toThrow(/Group.*complete native Canvas filter chain is unsupported/i);
+      expect(assignments).toEqual(['none', 'blur(1px)']);
       expectFailureBaseline(canvas, baseline, callback, 0, {
         surfaceSlots: 0,
         pairCheckouts: 0,
@@ -471,6 +474,53 @@ describe('filter integration', () => {
       expect(callback).not.toHaveBeenCalled();
       expect(getCRCInstance(canvas).filterSurfacePool.snapshot())
         .toMatchObject({ activePairs: 0, pairCheckouts: 0, pairReturns: 0 });
+    } finally {
+      Object.defineProperty(prototype, 'filter', descriptor);
+    }
+  });
+
+  it('rejects stale non-none discard state before assigning the candidate chain', () => {
+    const callback = vi.fn();
+    const frames = controlFrames();
+    const baseline = temporaryGlobalSnapshot();
+    const prototype = OffscreenCanvasRenderingContext2D.prototype;
+    const descriptor = Object.getOwnPropertyDescriptor(prototype, 'filter')!;
+    const assignments: string[] = [];
+    Object.defineProperty(prototype, 'filter', {
+      configurable: true,
+      enumerable: descriptor.enumerable,
+      get() {
+        return 'blur(9px)';
+      },
+      set(value: string) {
+        assignments.push(value);
+      },
+    });
+    const offscreenDraw = vi.spyOn(
+      OffscreenCanvasRenderingContext2D.prototype,
+      'drawImage',
+    );
+    const parentDraw = vi.spyOn(
+      CanvasRenderingContext2D.prototype,
+      'drawImage',
+    );
+    const canvas = mountScheduled(createElement(Group, {
+      style: { scaleX: 0, filter: { type: 'grayscale', amount: 1 } },
+      children: createElement(filteredCallbackProbe(callback), {}),
+    }));
+
+    try {
+      expect(() => frames.runNext())
+        .toThrow(/Group.*native Canvas filter state could not reset to none/i);
+      expect(assignments).toEqual(['none']);
+      expect(callback).not.toHaveBeenCalled();
+      expect(offscreenDraw).not.toHaveBeenCalled();
+      expect(parentDraw).not.toHaveBeenCalled();
+      expectFailureBaseline(canvas, baseline, callback, 0, {
+        surfaceSlots: 0,
+        pairCheckouts: 0,
+        pairReturns: 0,
+      });
     } finally {
       Object.defineProperty(prototype, 'filter', descriptor);
     }
@@ -981,6 +1031,82 @@ describe('filter failure recovery', () => {
     expect(() => frames.runNext()).not.toThrow();
     expect(callback).toHaveBeenCalledOnce();
     expect(getCRCInstance(canvas)).toBe(instance);
+    const recovered = pixel(canvas, 2, 2);
+    expect(Math.max(recovered[0]!, recovered[1]!, recovered[2]!) -
+      Math.min(recovered[0]!, recovered[1]!, recovered[2]!))
+      .toBeLessThanOrEqual(2);
+    expect(recovered[0]).toBeGreaterThan(40);
+    expect(recovered[0]).toBeLessThan(80);
+  });
+
+  it('rejects silently retained stale filter state and recovers the same pooled result context', () => {
+    const callback = vi.fn();
+    const PixelProbe = definePrimitive<{}, SystemStyle>(function PixelProbe(
+      _props,
+      _style,
+      context,
+    ) {
+      callback();
+      context.fillStyle = 'red';
+      context.fillRect(1, 1, 5, 5);
+    });
+    const frames = controlFrames();
+    const canvas = mountScheduled(createElement(PixelProbe, {
+      style: { filter: { type: 'opacity', amount: 1 } },
+    }));
+    frames.runNext();
+    const instance = getCRCInstance(canvas);
+    const resultContext = idlePoolContexts(instance.filterSurfacePool)[1]!;
+    const prototype = OffscreenCanvasRenderingContext2D.prototype;
+    const descriptor = Object.getOwnPropertyDescriptor(prototype, 'filter')!;
+    resultContext.restore();
+    descriptor.set!.call(resultContext, 'blur(9px)');
+    resultContext.save();
+    expect(descriptor.get!.call(resultContext)).toBe('blur(9px)');
+    callback.mockClear();
+    const offscreenDraw = vi.spyOn(
+      OffscreenCanvasRenderingContext2D.prototype,
+      'drawImage',
+    );
+    const parentDraw = vi.spyOn(
+      CanvasRenderingContext2D.prototype,
+      'drawImage',
+    );
+    const baseline = temporaryGlobalSnapshot();
+    Object.defineProperty(prototype, 'filter', {
+      configurable: true,
+      enumerable: descriptor.enumerable,
+      get: descriptor.get,
+      set() {
+        // Silently retain the stale native state for every attempted write.
+      },
+    });
+    crc(canvas, createElement(PixelProbe, {
+      style: { filter: { type: 'grayscale', amount: 1 } },
+    }));
+
+    try {
+      expect(() => frames.runNext())
+        .toThrow(/PixelProbe.*native Canvas filter state could not reset to none/i);
+      expect(callback).not.toHaveBeenCalled();
+      expect(offscreenDraw).not.toHaveBeenCalled();
+      expect(parentDraw).not.toHaveBeenCalled();
+      expectFailureBaseline(canvas, baseline, callback, 0, {
+        surfaceSlots: 2,
+        pairCheckouts: 2,
+        pairReturns: 2,
+      });
+    } finally {
+      Object.defineProperty(prototype, 'filter', descriptor);
+    }
+
+    crc(canvas, createElement(PixelProbe, {
+      style: { filter: { type: 'grayscale', amount: 1 } },
+    }));
+    expect(() => frames.runNext()).not.toThrow();
+    expect(callback).toHaveBeenCalledOnce();
+    expect(getCRCInstance(canvas)).toBe(instance);
+    expect(idlePoolContexts(instance.filterSurfacePool)[1]).toBe(resultContext);
     const recovered = pixel(canvas, 2, 2);
     expect(Math.max(recovered[0]!, recovered[1]!, recovered[2]!) -
       Math.min(recovered[0]!, recovered[1]!, recovered[2]!))

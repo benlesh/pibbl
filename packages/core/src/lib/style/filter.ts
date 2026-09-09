@@ -121,6 +121,13 @@ export function assertNativeFilter(
 ): void {
   const accessor = requireNativeFilterAccessor(context, component);
   writeNativeFilter(context, accessor, 'none', component);
+  if (readNativeFilter(context, accessor, component) !== 'none') {
+    throw nativeFilterDiagnostic(
+      component,
+      undefined,
+      'the native Canvas filter state could not reset to none',
+    );
+  }
   writeNativeFilter(context, accessor, cssText, component);
   if (readNativeFilter(context, accessor, component) !== 'none') return;
 
