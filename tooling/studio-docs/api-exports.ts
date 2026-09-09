@@ -1,7 +1,12 @@
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
   API,
+  DiagnosticCategory,
+  ModuleKind,
   SymbolFlags,
   type CompilerOptions,
   type Symbol as TypeScriptSymbol,
@@ -80,17 +85,17 @@ export async function collectPublicExports(
     throw new Error('Public API inventory requires a "root" entry point.');
   }
 
-  // TypeScript 7's supported compiler API is project-based. Its semantic
-  // snapshots honor the nearest tsconfig for each opened entry point; the
-  // parameter remains part of our stable build-tool contract for callers that
-  // pass their resolved compiler settings while TypeScript owns program setup.
-  void compilerOptions;
+  const configuration = await createCompilerConfiguration(
+    entryPaths,
+    compilerOptions,
+  );
   const api = new API({ cwd: process.cwd() });
   try {
     const snapshot = api.updateSnapshot({
-      openFiles: Object.values(entryPaths),
+      openProjects: [configuration.path],
     });
     try {
+      assertNoCompilerErrors(snapshot, Object.values(entryPaths));
       const entries = Object.fromEntries(
         Object.entries(entryPaths).map(([entryPoint, path]) => [
           entryPoint,
@@ -103,6 +108,7 @@ export async function collectPublicExports(
     }
   } finally {
     api.close();
+    await rm(configuration.directory, { force: true, recursive: true });
   }
 }
 
@@ -282,3 +288,129 @@ function compareDuplicates(
 function compareNames(left: string, right: string): number {
   return left < right ? -1 : left > right ? 1 : 0;
 }
+
+async function createCompilerConfiguration(
+  entryPaths: Readonly<Record<string, string>>,
+  compilerOptions: CompilerOptions,
+): Promise<{ readonly directory: string; readonly path: string }> {
+  const directory = await mkdtemp(join(tmpdir(), "crc-studio-docs-"));
+  const path = join(directory, "tsconfig.json");
+  await writeFile(
+    path,
+    `${JSON.stringify(
+      {
+        compilerOptions: compilerOptionsForConfig(compilerOptions),
+        files: Object.values(entryPaths),
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+  return { directory, path };
+}
+
+function compilerOptionsForConfig(
+  compilerOptions: CompilerOptions,
+): Record<string, unknown> {
+  const options: Record<string, unknown> = {
+    ...compilerOptions,
+    noEmit: true,
+  };
+  delete options.project;
+  options.module = configEnum(compilerOptions.module, moduleKindNames);
+  options.moduleResolution = configEnum(
+    compilerOptions.moduleResolution,
+    moduleResolutionKindNames,
+  );
+  options.target = configEnum(compilerOptions.target, scriptTargetNames);
+  options.jsx = configEnum(compilerOptions.jsx, jsxEmitNames);
+  return withoutUndefined(options);
+}
+
+function configEnum(
+  value: number | undefined,
+  names: Readonly<Record<number, string>>,
+): number | string | undefined {
+  return value === undefined ? undefined : (names[value] ?? value);
+}
+
+function withoutUndefined(
+  values: Readonly<Record<string, unknown>>,
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(values).filter(([, value]) => value !== undefined),
+  );
+}
+
+function assertNoCompilerErrors(
+  snapshot: ReturnType<API["updateSnapshot"]>,
+  entryPaths: readonly string[],
+): void {
+  const diagnostics = entryPaths.flatMap((path) => {
+    const project = snapshot.getDefaultProjectForFile(path);
+    if (project === undefined) {
+      return [`Could not load public API project for entry point: ${path}`];
+    }
+    return [
+      ...project.program.getProgramDiagnostics(),
+      ...project.program.getSyntacticDiagnostics(),
+      ...project.program.getBindDiagnostics(),
+      ...project.program.getSemanticDiagnostics(),
+    ]
+      .filter(({ category }) => category === DiagnosticCategory.Error)
+      .map(({ fileName, text }) => `${fileName ?? path}: ${text}`);
+  });
+  if (diagnostics.length > 0) throw new Error(diagnostics.join("\n"));
+}
+
+const moduleKindNames: Readonly<Record<number, string>> = {
+  [ModuleKind.None]: "none",
+  [ModuleKind.CommonJS]: "commonjs",
+  [ModuleKind.AMD]: "amd",
+  [ModuleKind.UMD]: "umd",
+  [ModuleKind.System]: "system",
+  [ModuleKind.ES2015]: "es2015",
+  [ModuleKind.ES2020]: "es2020",
+  [ModuleKind.ES2022]: "es2022",
+  [ModuleKind.ESNext]: "esnext",
+  [ModuleKind.Node16]: "node16",
+  [ModuleKind.Node18]: "node18",
+  [ModuleKind.Node20]: "node20",
+  [ModuleKind.NodeNext]: "nodenext",
+  [ModuleKind.Preserve]: "preserve",
+};
+
+const moduleResolutionKindNames: Readonly<Record<number, string>> = {
+  0: "classic",
+  1: "classic",
+  2: "node10",
+  3: "node16",
+  99: "nodenext",
+  100: "bundler",
+};
+
+const scriptTargetNames: Readonly<Record<number, string>> = {
+  2: "es2015",
+  3: "es2016",
+  4: "es2017",
+  5: "es2018",
+  6: "es2019",
+  7: "es2020",
+  8: "es2021",
+  9: "es2022",
+  10: "es2023",
+  11: "es2024",
+  12: "es2025",
+  99: "esnext",
+  100: "json",
+};
+
+const jsxEmitNames: Readonly<Record<number, string>> = {
+  0: "none",
+  1: "preserve",
+  2: "react-native",
+  3: "react",
+  4: "react-jsx",
+  5: "react-jsxdev",
+};

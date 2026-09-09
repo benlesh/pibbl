@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
+import { ModuleKind } from "typescript/unstable/sync";
 import {
   crcPublicEntryPaths,
   collectPublicExports,
@@ -9,6 +10,7 @@ import {
 const fixturesDirectory = fileURLToPath(
   new URL("./fixtures/api/", import.meta.url),
 );
+const moduleSensitiveFixturePath = `${fixturesDirectory}compiler-options.ts`;
 const inventory = await collectPublicExports(
   {
     root: `${fixturesDirectory}root.ts`,
@@ -21,6 +23,19 @@ const inventory = await collectPublicExports(
 assert.deepEqual(inventory.root.values, ["Circle", "crc"]);
 assert.deepEqual(inventory.root.types, ["CRCConfig", "CircleProps"]);
 assert.deepEqual(inventory.root.overview, ["JSX"]);
+
+await assert.rejects(
+  () =>
+    collectPublicExports(
+      { root: moduleSensitiveFixturePath },
+      { module: ModuleKind.CommonJS },
+    ),
+  /import\.meta/u,
+);
+await collectPublicExports(
+  { root: moduleSensitiveFixturePath },
+  { module: ModuleKind.ESNext },
+);
 
 const duplicatePages = [
   {
