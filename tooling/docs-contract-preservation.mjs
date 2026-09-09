@@ -9,7 +9,7 @@ export const CONTRACT_TRANSLATION_RECORD =
 // Updated only after the complete baseline, translation allowlist, additions,
 // and evidence map receive review together.
 const REVIEWED_MANIFEST_SHA256 =
-  "cae4b99c995dac4257b59c302d7640828f098920f7a359b198bc48b50685c2ee";
+  "d5520a32103ad299c00c2fe6eece38089c5b12935daa040f68360b5150863d36";
 
 export function sha256(value) {
   return createHash("sha256").update(value).digest("hex");

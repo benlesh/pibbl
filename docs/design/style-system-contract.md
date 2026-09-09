@@ -189,3 +189,30 @@ Filters do not accept raw CSS strings, `url()`/SVG filter graphs,
 See the [layout contract](./layout-system-contract.md), [drawing
 contract](./drawing-components-contract.md), and [custom primitive
 guide](../guides/custom-components-and-primitives.md).
+
+## Rounded drawing style
+
+`RoundedCornerStyle` is a closed reusable style capability for `Rectangle`,
+`Polygon`, `RegularPolygon`, and `Star`:
+
+```ts
+interface RoundedCornerStyle {
+  cornerRadius?: Exclude<Length, "auto">;
+  cornerRadii?: readonly (Exclude<Length, "auto"> | null | undefined)[];
+}
+```
+
+`cornerRadius` and each present `cornerRadii` entry resolve as nonnegative
+finite numeric geometry. They use the smaller current width/height percentage
+basis, matching circular radius behavior; `"auto"` is invalid. At index `i`,
+`cornerRadii?.[i] ?? cornerRadius ?? 0` provides nullish fallback, so literal
+zero is a deliberate sharp override. Arrays longer than the component's actual
+corner count reject rather than silently truncate.
+
+`RegularPolygonStyle` is a discriminated union: it requires `sides`, optional
+`cx`, `cy`, and `rotation`, and exactly one of `circumradius`, `inradius`, or
+`sideLength`. `StarStyle` requires `points`, `outerRadius`, and `innerRadius`.
+Their centers and size/radius fields describe local drawing geometry, while
+`BoxStyle` and `LayoutItemStyle` still describe allocation and placement. The
+numeric creator option types deliberately do not accept `Length`, paint,
+cursor, event, or layout fields.

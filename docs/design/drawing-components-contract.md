@@ -260,13 +260,86 @@ structural cost. Its image comparison masks only browser-sensitive filter
 regions where documented.
 
 CRC adds no rich text, semantic DOM, accessibility tree, image CORS policy, SVG
-validator, retained scene graph, generic public shape/path-builder API, or
+validator, retained scene graph, generic `Shape` component or registry, or
 complete CSS formatting engine. The standard shapes add no line smoothing,
-spline selection, data-to-mark conversion, `Pie`, charts, scales, axes, legends,
-annular wedges, rounded rectangles, new paint effects, or intrinsic geometry
-measurement. See the [style](./style-system-contract.md),
-[layout](./layout-system-contract.md), and
+spline selection, data-to-mark conversion, `Pie`, charts, scales, axes,
+legends, annular wedges, new paint effects, or intrinsic geometry measurement.
+See the
+[style](./style-system-contract.md), [layout](./layout-system-contract.md), and
 [runtime](./runtime-hooks-contract.md) contracts.
 
 The filter surface does not accept raw CSS strings, `url()`/SVG graphs,
 backdrop sampling, or a box-shadow model.
+
+## Rounded shapes and public path creators
+
+`Rectangle`, `Polygon`, `RegularPolygon`, and `Star` accept the shared
+`cornerRadius` and `cornerRadii` vocabulary. At actual corner index `i`, CRC
+uses the exact nullish fallback expression:
+
+```ts
+const specified = cornerRadii?.[i] ?? cornerRadius ?? 0;
+```
+
+Thus a literal `0` preserves a sharp corner, while a sparse array hole,
+`undefined`, or `null` falls back to `cornerRadius`. Omitting both properties
+keeps the existing sharp path. `cornerRadii` cannot be longer than the actual
+corner count, even when the extra entries are nullish. Component percentage
+radii resolve against the smaller dimension of that shape's current percentage
+basis; creator radii are finite numeric logical Canvas units only.
+
+Corner indices are directed: Rectangle uses `(x, y)`, `(x + width, y)`,
+`(x + width, y + height)`, and `(x, y + height)`; Polygon uses `coords` order;
+RegularPolygon uses generated vertex order; and Star uses generated traversal
+order, where even indices are outer tips and odd indices are inner valleys.
+`Rectangle` first applies its existing pixel-grid adjustment, then delegates
+the effective signed box and expanded radii to Canvas `roundRect`. Canvas owns
+signed-box physical-corner remapping and native radius scaling. Rounded closed
+polygons instead apply one global scale factor to all requested nonzero radii
+when adjacent tangent demands exceed an edge, preserving their proportions;
+duplicate or exactly collinear vertices remain sharp. Rounding never expands a
+rectangle box or coordinate/vertex extrema.
+
+`RegularPolygon` requires an integer `sides >= 3` and exactly one size field.
+For `n = sides`, CRC normalizes `circumradius`, `inradius`, or `sideLength` to
+the circumradius `R` as `R = circumradius`,
+`R = inradius / Math.cos(Math.PI / n)`, or
+`R = sideLength / (2 * Math.sin(Math.PI / n))`. Its finite `rotation` defaults
+to `-Math.PI / 2`; increasing angles generate vertices clockwise in Canvas
+coordinates. `Star` requires an integer `points >= 3`, finite nonnegative
+`outerRadius` and `innerRadius`, and `innerRadius <= outerRadius`. `points`
+counts outer tips. With the same default rotation, Star emits clockwise,
+alternating outer/even and inner/odd vertices. It is one concave silhouette:
+a six-point star has twelve alternating corners, not two crossing triangles.
+
+All components use the canonical creator-generated path for paint, stroke,
+events, clipping intersections, transforms, layers, and focus. Explicit
+`keyboardNavigationBounds` wins. Otherwise rounded Rectangle uses its resolved
+box, rounded Polygon uses coordinate extrema, and RegularPolygon and Star use
+generated vertex extrema. These drawing components do not infer intrinsic
+measurement from geometric dimensions; layouts that require measurement need a
+declared box.
+
+The root exports ten standalone creators: `createRectanglePath`,
+`createCirclePath`, `createEllipsePath`, `createArcPath`, `createWedgePath`,
+`createLinePath`, `createPolygonPath`, `createRegularPolygonPath`,
+`createStarPath`, and `createSvgPath`. Each accepts one dedicated options object
+and returns a fresh `Path2D`; geometric option fields are numeric-only, while
+`createSvgPath` accepts its `d` path data as a string. Creators own no runtime
+resources, event registration, cache, or render state. Rectangle width and
+height remain signed; shape radii and size fields are nonnegative. Creator
+structural or numeric validation throws `RangeError` naming the offending option
+path, while component style resolution reports the contextual `LayoutDiagnostic`
+family.
+`createSvgPath` intentionally delegates malformed path-data failure to the
+browser `Path2D` constructor.
+
+Zero geometry is valid: zero circle/arc/wedge radius, either zero ellipse axis,
+or zero angular span; fewer than three polygon points; zero normalized regular
+polygon size; and either zero Star radius produce empty paths. Zero corner
+radii keep otherwise valid geometry sharp. This feature does not add rounded
+Arc, Wedge, Line, HorizontalLine, or VerticalLine joins; corner behavior for
+Circle/Ellipse; automatic rounded clipping for arbitrary leaves; elliptical or
+CSS slash radii; smoothing/splines; compound/crossing stars; a generic shape
+registry; a retained geometry graph/cache; intrinsic geometry measurement; or
+per-shape memo hooks.

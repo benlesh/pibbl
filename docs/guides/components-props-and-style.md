@@ -115,6 +115,49 @@ filter support. CRC accepts the ten typed descriptors documented in the [style
 contract](../design/style-system-contract.md), not raw CSS strings, `url()`,
 `backdrop-filter`, or `boxShadow`.
 
+## Rounded and generated shapes
+
+Rounded corners remain local drawing geometry. `cornerRadius` supplies a
+default and `cornerRadii` selectively overrides corners in traversal order;
+`0` is a useful explicit sharp override. A percentage radius uses the smaller
+current width/height basis, while `"auto"`, negative values, non-finite values,
+and arrays longer than the shape's corner count reject.
+
+```tsx
+import { Polygon, Rectangle, RegularPolygon, Star } from "@crc/core";
+
+const shapes = (
+  <>
+    <Rectangle
+      style={{ width: 180, height: 96, cornerRadii: [20, 0, 20, 0] }}
+    />
+    <Polygon
+      style={{
+        coords: [
+          [240, 20],
+          [320, 90],
+          [270, 170],
+        ],
+        cornerRadius: 12,
+      }}
+    />
+    <RegularPolygon
+      style={{ sides: 6, cx: 430, cy: 90, inradius: 56, rotation: Math.PI / 6 }}
+    />
+    <Star
+      style={{ points: 5, cx: 580, cy: 90, outerRadius: 64, innerRadius: 28 }}
+    />
+  </>
+);
+```
+
+RegularPolygon takes exactly one of `circumradius`, `inradius`, or
+`sideLength`; Star `points` counts outer tips and must be an integer of at
+least three. Both are drawing leaves: their shape dimensions do not provide
+intrinsic layout measurement, so layouts needing a size still receive a
+declared box. `keyboardNavigationBounds` overrides the default generated
+vertex bounds when an application needs a different focus region.
+
 ## Specified style and allocation
 
 A layout parent reads a direct child's specified `style` to calculate its

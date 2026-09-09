@@ -112,22 +112,29 @@ isolates siblings.
 <!-- docs:complete-snippet:start layout-clip -->
 
 ```tsx
-import { Clip, Rectangle, Text } from "@crc/core";
+import { Clip, Image, createRegularPolygonPath } from "@crc/core";
 
-const windowPath = new Path2D();
-windowPath.arc(100, 100, 80, 0, Math.PI * 2);
+const hexagon = createRegularPolygonPath({
+  sides: 6,
+  cx: 120,
+  cy: 90,
+  inradius: 70,
+  cornerRadius: 6,
+});
 
 const clipped = (
-  <Clip style={{ d: windowPath, fillRule: "evenodd" }}>
-    <Rectangle style={{ width: 200, height: 200, fill: "#1f4bd8" }} />
-    <Text style={{ x: 45, y: 90, fill: "white" }}>One clip</Text>
+  <Clip style={{ d: hexagon }}>
+    <Image style={{ src, x: 40, y: 10, width: 160, height: 160 }} />
   </Clip>
 );
 ```
 
 <!-- docs:complete-snippet:end -->
 
-The captured clip geometry applies to hit testing as well as paint.
+The captured clip geometry applies to hit testing as well as paint. Creators
+return fresh paths; call `crcMemo` in a component when the same creator path
+needs stable identity across renders. CRC does not add a dedicated memo hook
+per shape.
 
 ## Layer
 
