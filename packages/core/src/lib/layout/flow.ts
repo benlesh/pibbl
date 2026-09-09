@@ -4,6 +4,10 @@ import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
 import type { CRCElement } from '../element/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
+import {
+  type CRCStructuralEventProps,
+  wireStructuralEvents,
+} from '../components/structural-events.js';
 import { normalizeEdges } from '../style/normalize.js';
 import { setPreNormalizedStyle } from '../style/resolve-dispatch.js';
 import type { BoxStyle, LayoutItemStyle, ResolvedBoxStyle } from '../style/types.js';
@@ -40,7 +44,7 @@ export interface FlowStyle extends BoxStyle, LayoutItemStyle {
   alignItems?: FlowAlignment;
 }
 
-export interface FlowProps {
+export interface FlowProps extends CRCStructuralEventProps {
   children: CRCNode;
 }
 
@@ -83,6 +87,7 @@ function renderFlow(
   style: Readonly<ResolvedFlowStyle>,
   ctx: RenderingContext2D,
 ) {
+  wireStructuralEvents(props);
   const children = prepareLayoutChildren(props.children, 'Flow');
   recordLayoutEvaluation();
   const content = style.box.contentBox;

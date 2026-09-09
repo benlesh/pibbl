@@ -1,6 +1,10 @@
 import { definePrimitive } from '../define-primitive.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
+import {
+  type CRCStructuralEventProps,
+  wireStructuralEvents,
+} from '../components/structural-events.js';
 import type { BoxStyle, LayoutItemStyle, ResolvedBoxStyle } from '../style/types.js';
 import type {
   CRCNode,
@@ -27,7 +31,7 @@ export interface OverlayStyle extends BoxStyle, LayoutItemStyle {
   justifyItems?: OverlayAlignment;
 }
 
-export interface OverlayProps {
+export interface OverlayProps extends CRCStructuralEventProps {
   children: CRCNode;
 }
 
@@ -43,6 +47,7 @@ function renderOverlay(
   style: Readonly<ResolvedOverlayStyle>,
   ctx: RenderingContext2D,
 ) {
+  wireStructuralEvents(props);
   const children = prepareLayoutChildren(props.children, 'Overlay');
   recordLayoutEvaluation();
   const content = style.box.contentBox;

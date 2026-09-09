@@ -36,8 +36,12 @@ import {
   snapshotLayerNodeTree,
   type LayerNodeSnapshot,
 } from './layer-node-equality.js';
+import {
+  type CRCStructuralEventProps,
+  wireStructuralEvents,
+} from './structural-events.js';
 
-export interface LayerProps {
+export interface LayerProps extends CRCStructuralEventProps {
   children: CRCNode;
 }
 
@@ -62,6 +66,7 @@ function renderLayer(
   style: Readonly<ResolvedLayerStyle>,
   ctx: RenderingContext2D,
 ) {
+  wireStructuralEvents(props);
   const materializedChildren = materializeContainerChildren(
     props.children,
     'Layer',

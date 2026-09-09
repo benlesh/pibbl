@@ -65,6 +65,8 @@ export function executeRender(
   const prevSeenKeys = GLOBAL_STATE.seenKeys;
   const prevUnseendIds = GLOBAL_STATE.unseenIds;
   const prevComponentRefs = GLOBAL_STATE.componentRefs;
+  const prevComponentHookIndex = GLOBAL_STATE.componentHookIndex;
+  const prevComponentIsMounting = GLOBAL_STATE.componentIsMounting;
   const prevClippingStack = GLOBAL_STATE.clippingStack;
   const prevLayoutStack = GLOBAL_STATE.layoutStack;
   let renderContext: ReturnType<typeof get2dContext> | undefined;
@@ -163,6 +165,8 @@ export function executeRender(
     GLOBAL_STATE.seenKeys = prevSeenKeys;
     GLOBAL_STATE.unseenIds = prevUnseendIds;
     GLOBAL_STATE.componentRefs = prevComponentRefs;
+    GLOBAL_STATE.componentHookIndex = prevComponentHookIndex;
+    GLOBAL_STATE.componentIsMounting = prevComponentIsMounting;
   }
 }
 

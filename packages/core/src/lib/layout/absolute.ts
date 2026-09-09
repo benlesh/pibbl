@@ -28,6 +28,10 @@ import type {
   SystemStyle,
 } from '../types.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
+import {
+  type CRCStructuralEventProps,
+  wireStructuralEvents,
+} from '../components/structural-events.js';
 import { pushLayoutBox } from './context.js';
 import { recordLayoutEvaluation } from './diagnostics.js';
 import { resolveBox } from './box.js';
@@ -39,7 +43,7 @@ import type { LayoutBox } from './types.js';
 
 export type AbsoluteStyle = BoxStyle & LayoutItemStyle;
 
-export interface AbsoluteProps {
+export interface AbsoluteProps extends CRCStructuralEventProps {
   children: CRCNode;
 }
 
@@ -60,6 +64,7 @@ function renderAbsolute(
   style: Readonly<ResolvedAbsoluteStyle>,
   ctx: RenderingContext2D,
 ) {
+  wireStructuralEvents(props);
   const children = prepareLayoutChildren(props.children, 'Absolute');
   recordLayoutEvaluation();
   const content = style.box.contentBox;

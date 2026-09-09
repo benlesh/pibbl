@@ -5,13 +5,17 @@ import {
   setPrimitivePresentation,
 } from '../primitive-presentation.js';
 import { stripLayoutParticipation } from '../style/resolve-built-in.js';
+import {
+  type CRCStructuralEventProps,
+  wireStructuralEvents,
+} from './structural-events.js';
 import type {
   BoxStyle,
   LayoutItemStyle,
   ResolvedDrawingStyle,
 } from '../style/types.js';
 
-export interface GroupProps {
+export interface GroupProps extends CRCStructuralEventProps {
   children: CRCNode;
 }
 
@@ -34,6 +38,7 @@ type ResolvedGStyle = ResolvedDrawingStyle<GStyle>;
 function renderGroup(
   props: GroupProps,
 ) {
+  wireStructuralEvents(props);
   return props.children;
 }
 

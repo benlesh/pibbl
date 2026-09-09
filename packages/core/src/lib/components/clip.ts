@@ -2,13 +2,17 @@ import { definePrimitive } from '../define-primitive.js';
 import { CRCNode, SystemStyle } from '../types.js';
 import { setPrimitivePresentation } from '../primitive-presentation.js';
 import { stripLayoutParticipation } from '../style/resolve-built-in.js';
+import {
+  type CRCStructuralEventProps,
+  wireStructuralEvents,
+} from './structural-events.js';
 import type {
   BoxStyle,
   LayoutItemStyle,
   ResolvedDrawingStyle,
 } from '../style/types.js';
 
-export interface ClipProps {
+export interface ClipProps extends CRCStructuralEventProps {
   children: CRCNode;
 }
 
@@ -22,6 +26,7 @@ type ResolvedClipStyle = ResolvedDrawingStyle<ClipStyle>;
 function renderClip(
   props: ClipProps,
 ) {
+  wireStructuralEvents(props);
   return props.children;
 }
 

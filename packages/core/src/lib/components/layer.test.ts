@@ -782,6 +782,7 @@ describe('layer', () => {
                 width: layerWidth
               },
               children: createElement(countedRect, {
+                pointerEvents: 'none',
                 style: {
                   x: 0,
                   y: 0,

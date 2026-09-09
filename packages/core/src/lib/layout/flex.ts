@@ -4,6 +4,10 @@ import { getChildPrimitiveReceiverToken } from '../element/metadata.js';
 import type { CRCElement } from '../element/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import { layoutDiagnostic } from '../style/diagnostics.js';
+import {
+  type CRCStructuralEventProps,
+  wireStructuralEvents,
+} from '../components/structural-events.js';
 import { normalizeEdges } from '../style/normalize.js';
 import { resolveLength } from '../style/resolve-length.js';
 import { setPreNormalizedStyle } from '../style/resolve-dispatch.js';
@@ -55,7 +59,7 @@ export interface FlexStyle extends BoxStyle, LayoutItemStyle {
   columnGap?: number;
 }
 
-export interface FlexProps {
+export interface FlexProps extends CRCStructuralEventProps {
   children: CRCNode;
 }
 
@@ -114,6 +118,7 @@ function renderFlex(
   style: Readonly<ResolvedFlexStyle>,
   ctx: RenderingContext2D,
 ) {
+  wireStructuralEvents(props);
   const children = prepareLayoutChildren(props.children, 'Flex');
   recordLayoutEvaluation();
   const content = style.box.contentBox;
