@@ -2,6 +2,10 @@ import type { LayoutContext } from './layout/types.js';
 import type { CRCNode } from './element/types.js';
 import type { RenderTargetSnapshot } from './render-target.js';
 import type {
+  CRCBackendDriver,
+  CRCBackendFrame,
+} from './backend/types.js';
+import type {
   Canvas,
   CRCComponentRefs,
   CRCClippingStackEntry,
@@ -20,6 +24,9 @@ export interface GlobalState {
   canvas: Canvas | undefined;
   componentIsMounting: boolean;
   componentHookIndex: number;
+  backendDriver: CRCBackendDriver<unknown> | undefined;
+  backendFrame: CRCBackendFrame<unknown> | undefined;
+  backendEnvironment: unknown;
   renderContext: RenderingContext2D | undefined;
   renderTarget: RenderTargetSnapshot | undefined;
   worldBaseTransform: DOMMatrix | undefined;
@@ -41,6 +48,9 @@ export const GLOBAL_STATE: GlobalState = {
   canvas: undefined,
   componentIsMounting: false,
   componentHookIndex: 0,
+  backendDriver: undefined,
+  backendFrame: undefined,
+  backendEnvironment: undefined,
   renderContext: undefined,
   renderTarget: undefined,
   worldBaseTransform: undefined,
@@ -129,6 +139,7 @@ export function cleanupCRCInstance(crcInstance: CRCInstance): void {
   GLOBAL_STATE.crcInstances.delete(canvas);
   crcInstance.eventParent = undefined;
   crcInstance.mainTeardowns.execute();
+  crcInstance.backendDriver.dispose();
   crcInstance.filterSurfacePool.dispose();
   if (!crcInstance.parent) {
     for (const observers of crcInstance.eventRoot.observers.values()) {
@@ -182,6 +193,9 @@ export function clearTempState() {
   GLOBAL_STATE.seenIds = undefined;
   GLOBAL_STATE.seenKeys = undefined;
   GLOBAL_STATE.canvas = undefined;
+  GLOBAL_STATE.backendDriver = undefined;
+  GLOBAL_STATE.backendFrame = undefined;
+  GLOBAL_STATE.backendEnvironment = undefined;
   GLOBAL_STATE.renderContext = undefined;
   GLOBAL_STATE.renderTarget = undefined;
   GLOBAL_STATE.worldBaseTransform = undefined;

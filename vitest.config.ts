@@ -16,6 +16,10 @@ export default defineConfig(({ mode }) => ({
         replacement: fileURLToPath(new URL('./packages/core/src/jsx-runtime.ts', import.meta.url)),
       },
       {
+        find: /^@crc\/core\/internal$/,
+        replacement: fileURLToPath(new URL('./packages/core/src/internal.ts', import.meta.url)),
+      },
+      {
         find: '@crc/core/types',
         replacement: fileURLToPath(new URL('./packages/core/src/types.ts', import.meta.url)),
       },

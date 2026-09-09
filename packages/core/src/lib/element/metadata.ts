@@ -1,17 +1,10 @@
 import type {
-  MeasureInput,
-  MeasureResult,
-  NormalizedStyle,
-  PrimitiveProgramProps,
   CRCRenderTransaction,
-  RenderingContext2D,
-  ResolvedStyle,
-  SpecifiedStyle,
-  StyleResolutionContext,
   SystemStyle,
 } from '../types.js';
 import type { CRCElement } from './types.js';
 import type { PrimitivePresentation } from '../primitive-presentation.js';
+import type { CRCBackendPrimitiveDefinition } from '../backend/types.js';
 
 export interface CRCElementSource {
   readonly fileName: string;
@@ -33,6 +26,7 @@ const elementCloneMetadataHandlers = new Set<(
   clone: CRCElement<any>,
 ) => void>();
 const primitiveDefinitions = new WeakMap<Function, PrimitiveDefinition>();
+const primitiveDefinitionTypes = new WeakMap<PrimitiveDefinition, Function>();
 const primitivePresentationResolvers = new WeakMap<
   Function,
   (style: Readonly<any>) => Readonly<PrimitivePresentation> | undefined
@@ -48,23 +42,7 @@ export interface PrimitiveDefinition<
   S extends SystemStyle = SystemStyle,
   N extends SystemStyle = S,
   R extends SystemStyle = N,
-> {
-  readonly render: (
-    props: Readonly<PrimitiveProgramProps<P>>,
-    style: ResolvedStyle<R>,
-    context: RenderingContext2D,
-  ) => import('./types.js').CRCNode[] | import('./types.js').CRCNode | void;
-  readonly normalizeStyle?: (
-    style: SpecifiedStyle<S>,
-  ) => NormalizedStyle<N>;
-  readonly resolveStyle?: (
-    style: NormalizedStyle<N>,
-    context: Readonly<StyleResolutionContext>,
-  ) => ResolvedStyle<R>;
-  readonly measure?: (
-    input: MeasureInput<PrimitiveProgramProps<P>, N>,
-  ) => MeasureResult;
-}
+> extends CRCBackendPrimitiveDefinition<P, S, N, R> {}
 
 export interface ElementPolicyDefinition {
   readonly prepare: (
@@ -83,7 +61,9 @@ export function setPrimitiveDefinition<
   type: Function,
   definition: PrimitiveDefinition<P, S, N, R>,
 ): void {
-  primitiveDefinitions.set(type, definition as PrimitiveDefinition);
+  const erased = definition as PrimitiveDefinition;
+  primitiveDefinitions.set(type, erased);
+  primitiveDefinitionTypes.set(erased, type);
 }
 
 /** @internal Reads platform behavior without attaching fields to a function. */
@@ -91,6 +71,15 @@ export function getPrimitiveDefinition(
   type: Function,
 ): PrimitiveDefinition | undefined {
   return primitiveDefinitions.get(type);
+}
+
+/** @internal Resolves Canvas presentation behavior from erased backend input. */
+export function getDefinitionPrimitivePresentation<S>(
+  definition: PrimitiveDefinition,
+  style: Readonly<S>,
+): Readonly<PrimitivePresentation> | undefined {
+  const type = primitiveDefinitionTypes.get(definition);
+  return type ? getPrimitivePresentation(type, style) : undefined;
 }
 
 /** @internal Registers private presentation behavior for one primitive. */

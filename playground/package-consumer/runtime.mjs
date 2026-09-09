@@ -1,4 +1,5 @@
 import * as core from '@crc/core';
+import * as internal from '@crc/core/internal';
 import {
   Fragment as ProductionFragment,
   jsx,
@@ -78,6 +79,31 @@ if (actual.length !== 58) {
   throw new Error(`Expected 58 @crc/core runtime exports, received ${actual.length}.`);
 }
 
+const expectedInternal = [
+  'createBackendToken',
+  'defineBackendPrimitive',
+  'executeBackendCRC',
+  'getBackendEnvironment',
+  'getCurrentFrameTimestamp',
+  'haveSameLayerNodeTree',
+  'mountBackendCRC',
+  'registerNestedInteractionResolver',
+  'requestCurrentInstanceFrame',
+  'setCurrentComponentAfterRender',
+  'snapshotLayerNodeTree',
+  'useBackendEventTarget',
+  'useInternalHookSlot',
+];
+const actualInternal = Object.keys(internal).sort();
+if (JSON.stringify(actualInternal) !== JSON.stringify(expectedInternal)) {
+  throw new Error(
+    `Unexpected @crc/core/internal exports: ${actualInternal.join(', ')}`,
+  );
+}
+if (typeof internal.createBackendToken('consumer') !== 'object') {
+  throw new Error('@crc/core/internal did not create an opaque backend token.');
+}
+
 for (const [exportName, value] of Object.entries({
   jsx,
   jsxs,
@@ -136,6 +162,8 @@ if (
 
 for (const specifier of [
   '@crc/core/lib/crc',
+  '@crc/core/lib/types',
+  '@crc/core/lib/global-state',
   '@crc/core/src/index',
 ]) {
   try {

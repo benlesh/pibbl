@@ -17,16 +17,16 @@ import {
   getPrimitiveDefinition,
   getPrimitiveProgramProps,
   getPrimitiveReceiverToken,
+  getElementSource,
 } from './element/metadata.js';
 import { materializeContainerChildren } from './element/children.js';
 import { isFragmentElement } from './element/fragment.js';
 import type { CRCElement, CRCNode } from './element/types.js';
-import { getResolvedFilterList } from './style/filter.js';
-import { renderFilterBoundary } from './filter/render-filter-boundary.js';
 import {
-  enterPrimitivePresentation,
-  getPrimitivePresentation,
-} from './primitive-presentation.js';
+  backendMismatchError,
+  type CRCBackendDriver,
+  type CRCBackendFrame,
+} from './backend/types.js';
 
 export function render(
   node: CRCNode,
@@ -34,27 +34,16 @@ export function render(
   parent: CRCComponentRefs<any> | undefined,
 ): void {
   const elements = materializeContainerChildren(node, 'CRC root');
-  renderPreparedChildren(elements, parentId, parent, false);
+  renderPreparedChildren(elements, parentId, parent);
 }
 
 function renderPreparedChildren(
   elements: readonly CRCElement<any>[],
   parentId: string,
   parent: CRCComponentRefs<any> | undefined,
-  isolate: boolean,
 ): void {
-  const ctx = GLOBAL_STATE.renderContext!;
   for (const element of elements) {
-    if (!isolate) {
-      renderPreparedElement(element, parentId, parent);
-      continue;
-    }
-    ctx.save();
-    try {
-      renderPreparedElement(element, parentId, parent);
-    } finally {
-      ctx.restore();
-    }
+    renderPreparedElement(element, parentId, parent);
   }
 }
 
@@ -87,15 +76,21 @@ function renderKeyedFragment(
     );
     const enteredEnhancers = enterElementEnhancers(componentRefs);
     let enhancerSuccess = false;
+    let releaseComponent: (() => void) | undefined;
     try {
+      releaseComponent = enterBackendComponent();
       const children = materializeContainerChildren(
         (element.props as { children?: CRCNode }).children,
         element,
       );
-      renderPreparedChildren(children, componentRefs.id, componentRefs, true);
+      renderPreparedChildren(children, componentRefs.id, componentRefs);
       enhancerSuccess = true;
     } finally {
-      exitElementEnhancers(enteredEnhancers, enhancerSuccess);
+      try {
+        releaseComponent?.();
+      } finally {
+        exitElementEnhancers(enteredEnhancers, enhancerSuccess);
+      }
     }
   } finally {
     clearComponentState();
@@ -119,28 +114,54 @@ function renderComponentElement<P>(
     );
     const enteredEnhancers = enterElementEnhancers(componentRefs);
     let enhancerSuccess = false;
-
-    const ctx = GLOBAL_STATE.renderContext!;
+    let releaseComponent: (() => void) | undefined;
     try {
-      ctx.save();
+      const { driver, frame } = requireBackendFrame();
+      releaseComponent = driver.enterComponent(frame);
       let onAfterRender: (() => void) | undefined;
-      let releasePresentation: (() => void) | undefined;
+      let afterRenderFinished = false;
+      const finishAfterRender = () => {
+        if (afterRenderFinished) return;
+        afterRenderFinished = true;
+        onAfterRender ??= componentRefs.onAfterRender;
+        componentRefs.onAfterRender = undefined;
+        onAfterRender?.();
+      };
       try {
         const definition = getPrimitiveDefinition(componentRefs.element.type);
         const renderProgram = (invoke: () => CRCNode | void) => {
-          const result = invoke();
-          finalizeHookSlots(componentRefs);
+          try {
+            const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
+            GLOBAL_STATE.primitiveReceiverToken =
+              getPrimitiveReceiverToken(componentRefs.element) ?? componentRefs;
+            let result: CRCNode | void;
+            try {
+              result = invoke();
+            } finally {
+              GLOBAL_STATE.primitiveReceiverToken = previousReceiverToken;
+            }
+            finalizeHookSlots(componentRefs);
 
-          onAfterRender = componentRefs.onAfterRender;
-          componentRefs.onAfterRender = undefined;
+            onAfterRender = componentRefs.onAfterRender;
+            componentRefs.onAfterRender = undefined;
 
-          const children = materializeContainerChildren(
-            result as CRCNode,
-            componentRefs.element,
-          );
-          renderPreparedChildren(children, id, componentRefs, true);
+            const children = materializeContainerChildren(
+              result as CRCNode,
+              componentRefs.element,
+            );
+            renderPreparedChildren(children, id, componentRefs);
+          } finally {
+            finishAfterRender();
+          }
         };
         if (definition) {
+          if (definition.backend !== driver.token) {
+            throw backendMismatchError(
+              componentRefs.element.type.name || 'Anonymous',
+              definition.backend,
+              driver,
+            );
+          }
           const receiverToken =
             getPrimitiveReceiverToken(componentRefs.element) ?? componentRefs;
           const style = (() => {
@@ -152,33 +173,26 @@ function renderComponentElement<P>(
               GLOBAL_STATE.primitiveReceiverToken = previousReceiverToken;
             }
           })();
-          const filters = getResolvedFilterList(style);
-          const presentation = getPrimitivePresentation(
-            componentRefs.element.type,
+          let invoked = false;
+          driver.runPrimitive(frame, {
+            componentName: componentRefs.element.type.name || 'Anonymous',
+            source: getElementSource(componentRefs.element),
+            definition,
+            props: getPrimitiveProgramProps(componentRefs.element),
             style,
-          );
-          const renderPrimitiveProgram = () => renderProgram(() => {
-            const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
-            GLOBAL_STATE.primitiveReceiverToken = receiverToken;
-            try {
-              return definition.render(
-                getPrimitiveProgramProps(componentRefs.element),
-                style,
-                GLOBAL_STATE.renderContext!,
-              ) as CRCNode;
-            } finally {
-              GLOBAL_STATE.primitiveReceiverToken = previousReceiverToken;
+          }, invoke => {
+            if (invoked) {
+              throw new Error(
+                `${driver.name} invoked ${componentRefs.element.type.name || 'Anonymous'} more than once in one traversal.`,
+              );
             }
+            invoked = true;
+            renderProgram(invoke);
           });
-          if (filters) {
-            renderFilterBoundary({
-              component: componentRefs.element.type.name || 'Anonymous',
-              filters,
-              presentation,
-            }, renderPrimitiveProgram);
-          } else {
-            releasePresentation = enterPrimitivePresentation(presentation);
-            renderPrimitiveProgram();
+          if (!invoked) {
+            throw new Error(
+              `${driver.name} did not invoke ${componentRefs.element.type.name || 'Anonymous'} during traversal.`,
+            );
           }
         } else {
           renderProgram(() =>
@@ -186,16 +200,10 @@ function renderComponentElement<P>(
           );
         }
       } finally {
-        onAfterRender ??= componentRefs.onAfterRender;
-        componentRefs.onAfterRender = undefined;
         try {
-          onAfterRender?.();
+          finishAfterRender();
         } finally {
-          try {
-            releasePresentation?.();
-          } finally {
-            ctx.restore();
-          }
+          releaseComponent?.();
         }
       }
       enhancerSuccess = true;
@@ -205,6 +213,23 @@ function renderComponentElement<P>(
   } finally {
     clearComponentState();
   }
+}
+
+function requireBackendFrame(): {
+  driver: CRCBackendDriver<unknown>;
+  frame: CRCBackendFrame<unknown>;
+} {
+  const driver = GLOBAL_STATE.backendDriver;
+  const frame = GLOBAL_STATE.backendFrame;
+  if (!driver || !frame) {
+    throw new Error('CRC component traversal requires an active backend frame.');
+  }
+  return { driver, frame };
+}
+
+function enterBackendComponent(): () => void {
+  const { driver, frame } = requireBackendFrame();
+  return driver.enterComponent(frame);
 }
 
 function prepareComponentScope<P>(

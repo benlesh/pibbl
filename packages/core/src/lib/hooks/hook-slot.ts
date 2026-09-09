@@ -45,6 +45,14 @@ export function useHookSlot<T>(
   return slot;
 }
 
+/** Official-renderer friend hook for component-owned values and teardowns. */
+export function useInternalHookSlot<T>(
+  kind: string,
+  initialize: (teardowns: Teardowns) => T,
+): CRCHookSlot<T> {
+  return useHookSlot(kind, initialize);
+}
+
 export function finalizeHookSlots(componentRefs: CRCComponentRefs<any>): void {
   const usedHooks = GLOBAL_STATE.componentHookIndex;
   if (usedHooks >= componentRefs.hooks.length) return;

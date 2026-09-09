@@ -27,10 +27,20 @@ import {
   mountRootSurface,
 } from './surface/root-surface.js';
 import { FilterSurfacePool } from './filter/filter-surface-pool.js';
+import { CANVAS_2D_BACKEND } from './backend/canvas-2d-backend.js';
+import type {
+  CRCBackendDriver,
+  CRCBackendMount,
+  CRCBackendMountOptions,
+} from './backend/types.js';
+import { createLayerSurface } from './surface/resolve-surface.js';
+import { executeRender } from './execute-render.js';
+import { update } from './update.js';
 
 type MountCRCConfig = CRCConfig & {
   parent?: Canvas;
   surface?: CRCSurfaceSnapshot;
+  driver?: CRCBackendDriver<unknown>;
 };
 
 export function mountCRC(
@@ -119,6 +129,7 @@ export function mountCRC(
     }),
     surface,
     filterSurfacePool,
+    backendDriver: config?.driver ?? CANVAS_2D_BACKEND,
   };
   crcInstance.interactionRoot = parent ?
       GLOBAL_STATE.crcInstances.get(parent)?.interactionRoot :
@@ -154,6 +165,42 @@ export function mountCRC(
   }
 
   return controller;
+}
+
+/** Mounts a private official-backend CRC child under an existing CRC root. */
+export function mountBackendCRC<E>(
+  canvas: Canvas,
+  root: CRCNode,
+  options: CRCBackendMountOptions<E>,
+): CRCBackendMount {
+  const { logicalWidth, logicalHeight } = options;
+  const surface = createLayerSurface(
+    logicalWidth,
+    logicalHeight,
+    canvas.width / logicalWidth,
+    canvas.height / logicalHeight,
+  );
+  const controller = mountCRC(canvas, root, {
+    parent: options.parent,
+    surface,
+    driver: options.driver as CRCBackendDriver<unknown>,
+  });
+  return Object.freeze({
+    canvas,
+    render(nextRoot: CRCNode, timestamp: number): void {
+      executeRender(canvas, timestamp, nextRoot, false);
+    },
+    requestFrame(updateParents: boolean): void {
+      if (updateParents) {
+        update(canvas, undefined, true);
+      } else {
+        update(canvas);
+      }
+    },
+    dispose(): void {
+      controller.dispose();
+    },
+  });
 }
 
 function createEventRoot(

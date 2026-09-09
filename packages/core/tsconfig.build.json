@@ -16,7 +16,8 @@
     "src/index.ts",
     "src/types.ts",
     "src/jsx-runtime.ts",
-    "src/jsx-dev-runtime.ts"
+    "src/jsx-dev-runtime.ts",
+    "src/internal.ts"
   ],
   "include": []
 }

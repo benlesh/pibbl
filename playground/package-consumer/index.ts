@@ -100,6 +100,29 @@ import type {
 } from '@crc/core';
 import type * as CoreTypes from '@crc/core/types';
 import {
+  createBackendToken,
+  defineBackendPrimitive,
+  executeBackendCRC,
+  getBackendEnvironment,
+  getCurrentFrameTimestamp,
+  haveSameLayerNodeTree,
+  mountBackendCRC,
+  registerNestedInteractionResolver,
+  requestCurrentInstanceFrame,
+  setCurrentComponentAfterRender,
+  snapshotLayerNodeTree,
+  useBackendEventTarget,
+  useInternalHookSlot,
+  type CRCBackendDriver,
+  type CRCBackendFrame,
+  type CRCBackendFrameInput,
+  type CRCBackendMount,
+  type CRCBackendPrimitiveDefinition,
+  type CRCBackendPrimitiveInput,
+  type CRCBackendToken,
+  type CRCNestedResolverInput,
+} from '@crc/core/internal';
+import {
   crc,
   crcCursor,
   crcEvent,
@@ -160,6 +183,53 @@ import type { CRCEventRoot } from '@crc/core/lib/types';
 import type { CRCEventDefinition } from '@crc/core/src/lib/events/event-definitions';
 void (undefined as unknown as CRCEventRoot);
 void (undefined as unknown as CRCEventDefinition);
+
+const packageConsumerBackendToken: CRCBackendToken =
+  createBackendToken('package-consumer');
+const packageConsumerEnvironment = Object.freeze({ kind: 'consumer' });
+const packageConsumerBackend: CRCBackendDriver<
+  typeof packageConsumerEnvironment
+> = {
+  token: packageConsumerBackendToken,
+  name: 'package-consumer',
+  beginFrame(_input: CRCBackendFrameInput) {
+    return { environment: packageConsumerEnvironment };
+  },
+  enterComponent(_frame: CRCBackendFrame<typeof packageConsumerEnvironment>) {
+    return () => undefined;
+  },
+  runPrimitive(_frame, _input: CRCBackendPrimitiveInput, runProgram) {
+    runProgram(() => undefined);
+  },
+  finishFrame() {},
+  dispose() {},
+};
+const PackageConsumerPrimitive = defineBackendPrimitive(
+  packageConsumerBackendToken,
+  function renderPackageConsumerPrimitive() {},
+);
+const packageConsumerDefinition = undefined as unknown as
+  CRCBackendPrimitiveDefinition;
+const packageConsumerMount = undefined as unknown as CRCBackendMount;
+const packageConsumerResolver = undefined as unknown as CRCNestedResolverInput;
+void PackageConsumerPrimitive;
+void packageConsumerDefinition;
+void packageConsumerMount;
+void packageConsumerResolver;
+void packageConsumerBackend;
+void [
+  executeBackendCRC,
+  getBackendEnvironment,
+  getCurrentFrameTimestamp,
+  haveSameLayerNodeTree,
+  mountBackendCRC,
+  registerNestedInteractionResolver,
+  requestCurrentInstanceFrame,
+  setCurrentComponentAfterRender,
+  snapshotLayerNodeTree,
+  useBackendEventTarget,
+  useInternalHookSlot,
+];
 
 export type PublicEventTypes = {
   base: CRCEvent;

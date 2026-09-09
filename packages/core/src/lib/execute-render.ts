@@ -9,9 +9,10 @@ import {
   type CRCNode,
   type CRCRenderTransaction,
 } from './types.js';
-import { get2dContext } from './util/get-2d-context.js';
-import { prepareSurface } from './surface/root-surface.js';
-import { rootRenderTarget } from './render-target.js';
+import type {
+  CRCBackendFrame,
+  CRCBackendMount,
+} from './backend/types.js';
 
 /**
  * Gets the root element for a canvas and renders it. This is the
@@ -69,7 +70,11 @@ export function executeRender(
   const prevComponentIsMounting = GLOBAL_STATE.componentIsMounting;
   const prevClippingStack = GLOBAL_STATE.clippingStack;
   const prevLayoutStack = GLOBAL_STATE.layoutStack;
-  let renderContext: ReturnType<typeof get2dContext> | undefined;
+  const prevBackendDriver = GLOBAL_STATE.backendDriver;
+  const prevBackendFrame = GLOBAL_STATE.backendFrame;
+  const prevBackendEnvironment = GLOBAL_STATE.backendEnvironment;
+  let frame: CRCBackendFrame<unknown> | undefined;
+  let frameSuccess = false;
   try {
     GLOBAL_STATE.currentCRCInstance = crcInstance;
     GLOBAL_STATE.renderTransaction = renderTransaction;
@@ -79,27 +84,39 @@ export function executeRender(
       updatedRoot :
       GLOBAL_STATE.currentCRCInstance.root;
     GLOBAL_STATE.currentCRCInstance.root = rootNode;
-    const surface = prepareSurface(crcInstance);
-    if (!surface) {
+    const driver = crcInstance.backendDriver;
+    GLOBAL_STATE.backendDriver = driver;
+    frame = driver.beginFrame({
+      canvas,
+      logicalWidth: crcInstance.rootLayoutBox.width,
+      logicalHeight: crcInstance.rootLayoutBox.height,
+      backingWidth: canvas.width,
+      backingHeight: canvas.height,
+      renderTimestamp,
+    });
+    if (!frame) {
       finishTransaction(true);
       return;
     }
-    const ctx = get2dContext(canvas);
-    renderContext = ctx;
-    GLOBAL_STATE.renderContext = ctx;
-    GLOBAL_STATE.renderTarget = rootRenderTarget(surface);
-    GLOBAL_STATE.worldBaseTransform = new DOMMatrix();
+    GLOBAL_STATE.backendFrame = frame;
+    GLOBAL_STATE.backendEnvironment = frame.environment;
+    GLOBAL_STATE.renderContext = frame.context2D;
+    GLOBAL_STATE.renderTarget = frame.renderTarget;
+    GLOBAL_STATE.worldBaseTransform = frame.worldBaseTransform;
     GLOBAL_STATE.clippingStack = [];
+    const surface = crcInstance.surface.snapshot;
+    const logicalWidth = surface?.logicalWidth ?? crcInstance.rootLayoutBox.width;
+    const logicalHeight = surface?.logicalHeight ?? crcInstance.rootLayoutBox.height;
     const previousRootBox = crcInstance.rootLayoutBox;
     if (
-      previousRootBox.width !== surface.logicalWidth ||
-      previousRootBox.height !== surface.logicalHeight
+      previousRootBox.width !== logicalWidth ||
+      previousRootBox.height !== logicalHeight
     ) {
       crcInstance.rootLayoutBox = Object.freeze({
         x: 0,
         y: 0,
-        width: surface.logicalWidth,
-        height: surface.logicalHeight,
+        width: logicalWidth,
+        height: logicalHeight,
       });
     }
     GLOBAL_STATE.layoutStack = [{
@@ -115,59 +132,69 @@ export function executeRender(
     const id = 'root';
     GLOBAL_STATE.unseenIds.delete(id);
     GLOBAL_STATE.seenIds.add(id);
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, surface.backingWidth, surface.backingHeight);
-    ctx.setTransform(surface.renderTransform);
-
-    try {
-      render(rootNode, id, undefined);
-    } catch (error) {
-      finishTransaction(false);
-      for (const refs of GLOBAL_STATE.currentCRCInstance.refs.values()) {
-        refs.teardowns.execute();
-      }
-      GLOBAL_STATE.currentCRCInstance.refs.clear();
-      throw error;
-    }
+    render(rootNode, id, undefined);
 
     for (const id of GLOBAL_STATE.unseenIds) {
       // HACK: I want to be more efficient here, but this is fine for now
       GLOBAL_STATE.currentCRCInstance.refs.get(id)?.teardowns.execute();
       GLOBAL_STATE.currentCRCInstance.refs.delete(id);
     }
+    frameSuccess = true;
+    driver.finishFrame(frame, true);
     finishTransaction(true);
   } catch (error) {
     finishTransaction(false);
+    for (const refs of crcInstance.refs.values()) {
+      refs.teardowns.execute();
+    }
+    crcInstance.refs.clear();
     throw error;
   } finally {
-    renderContext?.setTransform(1, 0, 0, 1, 0, 0);
-    const { parent } = crcInstance;
-    clearTempState();
-    GLOBAL_STATE.clippingStack = prevClippingStack;
-    GLOBAL_STATE.layoutStack = prevLayoutStack;
-    if (ownsRenderTransaction) {
-      finishTransaction(false);
-      if (crcInstance.eventRoot.renderTransaction === renderTransaction) {
-        crcInstance.eventRoot.renderTransaction = undefined;
+    try {
+      if (frame && !frameSuccess) {
+        crcInstance.backendDriver.finishFrame(frame, false);
       }
+    } finally {
+      const { parent } = crcInstance;
+      clearTempState();
+      GLOBAL_STATE.clippingStack = prevClippingStack;
+      GLOBAL_STATE.layoutStack = prevLayoutStack;
+      if (ownsRenderTransaction) {
+        finishTransaction(false);
+        if (crcInstance.eventRoot.renderTransaction === renderTransaction) {
+          crcInstance.eventRoot.renderTransaction = undefined;
+        }
+      }
+      if (updateParents && parent && GLOBAL_STATE.crcInstances.has(parent)) {
+        executeRender(parent, renderTimestamp);
+      }
+      GLOBAL_STATE.currentCRCInstance = prevCurrentCRCInstance;
+      GLOBAL_STATE.canvas = prevCanvas;
+      GLOBAL_STATE.renderContext = prevRenderContext;
+      GLOBAL_STATE.renderTarget = prevRenderTarget;
+      GLOBAL_STATE.worldBaseTransform = prevWorldBaseTransform;
+      GLOBAL_STATE.renderTransaction = prevRenderTransaction;
+      GLOBAL_STATE.primitiveReceiverToken = prevPrimitiveReceiverToken;
+      GLOBAL_STATE.seenIds = prevSeenIds;
+      GLOBAL_STATE.seenKeys = prevSeenKeys;
+      GLOBAL_STATE.unseenIds = prevUnseendIds;
+      GLOBAL_STATE.componentRefs = prevComponentRefs;
+      GLOBAL_STATE.componentHookIndex = prevComponentHookIndex;
+      GLOBAL_STATE.componentIsMounting = prevComponentIsMounting;
+      GLOBAL_STATE.backendDriver = prevBackendDriver;
+      GLOBAL_STATE.backendFrame = prevBackendFrame;
+      GLOBAL_STATE.backendEnvironment = prevBackendEnvironment;
     }
-    if (updateParents && parent && GLOBAL_STATE.crcInstances.has(parent)) {
-      executeRender(parent, renderTimestamp);
-    }
-    GLOBAL_STATE.currentCRCInstance = prevCurrentCRCInstance;
-    GLOBAL_STATE.canvas = prevCanvas;
-    GLOBAL_STATE.renderContext = prevRenderContext;
-    GLOBAL_STATE.renderTarget = prevRenderTarget;
-    GLOBAL_STATE.worldBaseTransform = prevWorldBaseTransform;
-    GLOBAL_STATE.renderTransaction = prevRenderTransaction;
-    GLOBAL_STATE.primitiveReceiverToken = prevPrimitiveReceiverToken;
-    GLOBAL_STATE.seenIds = prevSeenIds;
-    GLOBAL_STATE.seenKeys = prevSeenKeys;
-    GLOBAL_STATE.unseenIds = prevUnseendIds;
-    GLOBAL_STATE.componentRefs = prevComponentRefs;
-    GLOBAL_STATE.componentHookIndex = prevComponentHookIndex;
-    GLOBAL_STATE.componentIsMounting = prevComponentIsMounting;
   }
+}
+
+/** Executes one synchronous private-backend render through its owned mount. */
+export function executeBackendCRC(
+  mount: CRCBackendMount,
+  root: CRCNode,
+  timestamp: number,
+): void {
+  mount.render(root, timestamp);
 }
 
 class RootRenderTransaction implements CRCRenderTransaction {

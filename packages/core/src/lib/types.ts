@@ -24,6 +24,7 @@ import type {
 import type { PendingRoot } from './global-state.js';
 import type { CRCFilter } from './style/filter-types.js';
 import type { FilterSurfacePool } from './filter/filter-surface-pool.js';
+import type { CRCBackendDriver } from './backend/types.js';
 export type {
   CRCComponent,
   CRCContainerChild,
@@ -308,6 +309,7 @@ export interface CRCInstance {
   rootLayoutBox: Readonly<LayoutBox>;
   surface: CRCSurfaceState;
   filterSurfacePool: FilterSurfacePool;
+  backendDriver: CRCBackendDriver<unknown>;
 }
 
 export type PixelGridAlignment = 'none' | 'round' | 'ceil' | 'floor';

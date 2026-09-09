@@ -10,6 +10,7 @@ export function crcCanvasContext(): RenderingContext2D {
   const context = GLOBAL_STATE.renderContext;
   if (
     !context ||
+    GLOBAL_STATE.backendDriver?.name !== 'canvas2d' ||
     !GLOBAL_STATE.componentRefs ||
     !GLOBAL_STATE.currentCRCInstance ||
     !GLOBAL_STATE.canvas

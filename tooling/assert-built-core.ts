@@ -5,6 +5,7 @@ const BUILT_ENTRY_SUFFIXES = new Map([
   ['@crc/core', '/packages/core/dist/index.mjs'],
   ['@crc/core/jsx-runtime', '/packages/core/dist/jsx-runtime.mjs'],
   ['@crc/core/jsx-dev-runtime', '/packages/core/dist/jsx-dev-runtime.mjs'],
+  ['@crc/core/internal', '/packages/core/dist/internal.mjs'],
 ]);
 
 export function assertBuiltCore(): Plugin {
