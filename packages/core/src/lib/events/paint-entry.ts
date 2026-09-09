@@ -48,6 +48,21 @@ export interface CRCNestedPaintEntry {
 
 export type CRCPaintEntry = CRCPathPaintEntry | CRCNestedPaintEntry;
 
+export interface CRCHitTestScratch {
+  readonly input: CRCHitTestInput;
+  readonly output: CRCHitTestOutput;
+}
+
 export function createHitTestOutput(): CRCHitTestOutput {
   return { disposition: CRCHitDisposition.Miss, target: null };
 }
+
+/** @internal Mutable only to make root-owned scratch allocation observable. */
+export const hitTestScratchFactory = {
+  create(): CRCHitTestScratch {
+    return {
+      input: { rootX: 0, rootY: 0 },
+      output: createHitTestOutput(),
+    };
+  },
+};

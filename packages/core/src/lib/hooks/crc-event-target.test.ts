@@ -46,7 +46,7 @@ describe('crcEventTarget', () => {
     expect(target.handlers.click).toBe(onClick);
     expect(target.publicTarget.hasPointerCapture(1)).toBe(false);
     expect(instance.regions.has(target)).toBe(true);
-    expect(Array.from(instance.paintEntries)).toEqual([target]);
+    expect(Array.from(instance.paintEntries)).toEqual([target.paintEntry]);
     expect(instance.eventRoot.nativeListeners?.count('click')).toBe(1);
     expect(instance.eventRoot.nativeListeners?.count('mousedown')).toBe(1);
     expect(instance.eventRoot.nativeListeners?.count('mouseup')).toBe(1);

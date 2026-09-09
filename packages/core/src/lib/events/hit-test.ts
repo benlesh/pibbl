@@ -1,13 +1,9 @@
-import type {
-  CRCClippingStackEntry,
-  CRCEventRoot,
-  CRCInstance,
-} from '../types.js';
+import type { CRCClippingStackEntry, CRCEventRoot, CRCInstance } from '../types.js';
 import { isHit } from '../util/is-hit.js';
 import {
   CRCHitDisposition,
   CRCPaintEntryKind,
-  createHitTestOutput,
+  hitTestScratchFactory,
   type CRCHitTestInput,
   type CRCHitTestOutput,
   type CRCPathPaintEntry,
@@ -39,7 +35,6 @@ export function resolveCoordinateHit(
     input.rootX,
     input.rootY,
     new DOMMatrix(),
-    [],
     output,
   );
 }
@@ -49,8 +44,13 @@ export function resolveCoordinateTarget(
   eventRoot: CRCEventRoot,
   point: CRCCoordinatePoint,
 ): CRCEventTargetRegistration | undefined {
-  const input = eventRoot.coordinateHitInput ??= { rootX: 0, rootY: 0 };
-  const output = eventRoot.coordinateHitOutput ??= createHitTestOutput();
+  let input = eventRoot.coordinateHitInput;
+  let output = eventRoot.coordinateHitOutput;
+  if (!input || !output) {
+    const scratch = hitTestScratchFactory.create();
+    input = eventRoot.coordinateHitInput = scratch.input;
+    output = eventRoot.coordinateHitOutput = scratch.output;
+  }
   input.rootX = point.x;
   input.rootY = point.y;
   resolveCoordinateHit(eventRoot, input, output);
@@ -66,7 +66,6 @@ function resolveInstanceHit(
   rootX: number,
   rootY: number,
   transform: DOMMatrix,
-  clippingStack: readonly CRCClippingStackEntry[],
   output: CRCHitTestOutput,
 ): CRCHitTestOutput {
   const entries = Array.from(instance.paintEntries);
@@ -75,15 +74,15 @@ function resolveInstanceHit(
     reset(output);
     switch (entry.paintKind) {
       case CRCPaintEntryKind.Path:
-        resolvePathHit(eventRoot, canvas, entry, rootX, rootY, transform, clippingStack, output);
+        resolvePathHit(eventRoot, canvas, entry, rootX, rootY, transform, output);
         break;
       case CRCPaintEntryKind.NestedInstance:
       case CRCPaintEntryKind.Resolver: {
         if (entry.instance.mainTeardowns.closed) continue;
         const childTransform = multiplyTransforms(transform, entry.transform);
-        const outerClippingStack = mergeClippingStacks(
-          clippingStack,
-          composeClippingStack(entry.clippingStack, transform),
+        const boundaryClippingStack = composeClippingStack(
+          entry.clippingStack,
+          transform,
         );
         if (!isHit({
           canvas,
@@ -93,12 +92,8 @@ function resolveInstanceHit(
           y: rootY,
           fill: true,
           lineInteractionWidth: 0,
-          currentClippingStack: outerClippingStack,
+          currentClippingStack: boundaryClippingStack,
         })) break;
-        const childClippingStack = [
-          ...outerClippingStack,
-          { path: entry.bounds, fillRule: 'nonzero' as const, transform: childTransform },
-        ];
         try {
           if (entry.paintKind === CRCPaintEntryKind.NestedInstance) {
             resolveInstanceHit(
@@ -108,7 +103,6 @@ function resolveInstanceHit(
               rootX,
               rootY,
               childTransform,
-              childClippingStack,
               output,
             );
           } else if (entry.resolveLocal) {
@@ -135,7 +129,6 @@ function resolvePathHit(
   rootX: number,
   rootY: number,
   transform: DOMMatrix,
-  clippingStack: readonly CRCClippingStackEntry[],
   output: CRCHitTestOutput,
 ): void {
   const target = entry.target;
@@ -154,10 +147,7 @@ function resolvePathHit(
     y: rootY,
     fill: entry.fill,
     lineInteractionWidth: entry.lineInteractionWidth,
-    currentClippingStack: mergeClippingStacks(
-      clippingStack,
-      composeClippingStack(entry.clippingStack, transform),
-    ),
+    currentClippingStack: composeClippingStack(entry.clippingStack, transform),
   })) {
     output.disposition = CRCHitDisposition.Target;
     output.target = target;
@@ -194,13 +184,4 @@ function multiplyTransforms(parent: DOMMatrix, child: DOMMatrix): DOMMatrix {
   if (parent.isIdentity) return child;
   if (child.isIdentity) return parent;
   return parent.multiply(child);
-}
-
-function mergeClippingStacks(
-  parent: readonly CRCClippingStackEntry[],
-  child: readonly CRCClippingStackEntry[],
-): readonly CRCClippingStackEntry[] {
-  if (parent.length === 0) return child;
-  if (child.length === 0) return parent;
-  return [...parent, ...child];
 }

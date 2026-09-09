@@ -2,10 +2,14 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   CRCHitDisposition,
   CRCPaintEntryKind,
+  hitTestScratchFactory,
   type CRCNestedPaintEntry,
   type CRCPathPaintEntry,
 } from './paint-entry.js';
-import { resolveCoordinateHit } from './hit-test.js';
+import {
+  resolveCoordinateHit,
+  resolveCoordinateTarget,
+} from './hit-test.js';
 import type {
   CRCEventRoot,
   CRCInstance,
@@ -140,6 +144,71 @@ describe('coordinate hit resolution', () => {
 
     expect(resolver).toHaveBeenCalledTimes(1);
     expect(received).toEqual([output]);
+  });
+
+  it('checks each nested Layer boundary clip and bounds once', () => {
+    const childTarget = target();
+    let child = instanceWith([
+      pathEntry(childTarget, rectangle(0, 0, 20, 20)),
+    ]);
+    const depth = 4;
+    for (let level = 0; level < depth; level++) {
+      child = instanceWith([{
+        paintKind: CRCPaintEntryKind.NestedInstance,
+        instance: child,
+        bounds: rectangle(0, 0, 20, 20),
+        transform: new DOMMatrix(),
+        clippingStack: [{
+          path: rectangle(0, 0, 20, 20),
+          fillRule: 'nonzero',
+          transform: new DOMMatrix(),
+        }],
+        resolveLocal: undefined,
+      }]);
+    }
+    const { eventRoot } = rootWith(Array.from(child.paintEntries));
+    const isPointInPath = vi.spyOn(
+      CanvasRenderingContext2D.prototype,
+      'isPointInPath',
+    );
+    const output = emptyOutput();
+
+    resolveCoordinateHit(eventRoot, { rootX: 10, rootY: 10 }, output);
+
+    expect(output).toEqual({
+      disposition: CRCHitDisposition.Target,
+      target: childTarget,
+    });
+    expect(isPointInPath).toHaveBeenCalledTimes(depth * 2 + 1);
+  });
+
+  it('creates one event-root scratch pair for one nested lookup', () => {
+    const lowerTarget = target();
+    const received: unknown[] = [];
+    const lowerResolver = vi.fn((_x: number, _y: number, output: unknown) => {
+      received.push(output);
+      (output as ReturnType<typeof emptyOutput>).disposition = CRCHitDisposition.Target;
+      (output as ReturnType<typeof emptyOutput>).target = lowerTarget;
+    });
+    const upperResolver = vi.fn((_x: number, _y: number, output: unknown) => {
+      received.push(output);
+      (output as ReturnType<typeof emptyOutput>).disposition = CRCHitDisposition.Miss;
+      (output as ReturnType<typeof emptyOutput>).target = null;
+    });
+    const { eventRoot } = rootWith([
+      resolverEntry(lowerResolver),
+      resolverEntry(upperResolver),
+    ]);
+    const createScratch = vi.spyOn(hitTestScratchFactory, 'create');
+
+    expect(resolveCoordinateTarget(eventRoot, { x: 12, y: 18 })).toBe(lowerTarget);
+
+    expect(createScratch).toHaveBeenCalledTimes(1);
+    expect(received).toEqual([
+      eventRoot.coordinateHitOutput,
+      eventRoot.coordinateHitOutput,
+    ]);
+    expect(eventRoot.coordinateHitInput).toEqual({ rootX: 12, rootY: 18 });
   });
 });
 
