@@ -1,0 +1,284 @@
+import { fileURLToPath } from "node:url";
+
+import {
+  API,
+  SymbolFlags,
+  type CompilerOptions,
+  type Symbol as TypeScriptSymbol,
+} from "typescript/unstable/sync";
+
+import type { PublicDocFrontmatter } from "./model";
+
+export interface PublicApiEntryPoint {
+  readonly values: readonly string[];
+  readonly types: readonly string[];
+  /** Compiler-only exports that belong to the API overview when documented. */
+  readonly overview: readonly string[];
+}
+
+export type PublicApiInventory = Readonly<
+  Record<string, PublicApiEntryPoint>
+> & {
+  readonly root: PublicApiEntryPoint;
+};
+
+export interface ApiCoveragePage {
+  readonly route?: string;
+  readonly frontmatter: Pick<PublicDocFrontmatter, "id" | "symbols">;
+}
+
+export interface ApiCoverageDestination {
+  readonly id: string;
+  readonly route: string;
+}
+
+export interface ApiCoverageDuplicate {
+  readonly symbol: string;
+  readonly firstPageId: string;
+  readonly duplicatePageId: string;
+}
+
+export interface ApiCoverage {
+  readonly values: ReadonlyMap<string, ApiCoverageDestination>;
+  readonly types: ReadonlyMap<string, ApiCoverageDestination>;
+  readonly overview: ReadonlyMap<string, ApiCoverageDestination>;
+  readonly missingValues: readonly string[];
+  readonly missingTypes: readonly string[];
+  readonly unknownSymbols: readonly string[];
+  readonly duplicateSymbols: readonly ApiCoverageDuplicate[];
+  readonly duplicateValues: readonly string[];
+  readonly duplicateTypes: readonly string[];
+}
+
+export const crcPublicEntryPaths = {
+  root: fileURLToPath(
+    new URL("../../packages/core/src/index.ts", import.meta.url),
+  ),
+  types: fileURLToPath(
+    new URL("../../packages/core/src/types.ts", import.meta.url),
+  ),
+  jsxRuntime: fileURLToPath(
+    new URL("../../packages/core/src/jsx-runtime.ts", import.meta.url),
+  ),
+  jsxDevRuntime: fileURLToPath(
+    new URL("../../packages/core/src/jsx-dev-runtime.ts", import.meta.url),
+  ),
+} as const;
+
+const compilerOverviewSymbols = new Set(["jsx", "jsxs", "jsxDEV", "JSX"]);
+
+/**
+ * Discovers an entry point's public exports from TypeScript's semantic program.
+ * This deliberately follows aliases and never tries to parse export declarations
+ * with source-text heuristics.
+ */
+export async function collectPublicExports(
+  entryPaths: Readonly<Record<string, string>>,
+  compilerOptions: CompilerOptions,
+): Promise<PublicApiInventory> {
+  if (entryPaths.root === undefined) {
+    throw new Error('Public API inventory requires a "root" entry point.');
+  }
+
+  // TypeScript 7's supported compiler API is project-based. Its semantic
+  // snapshots honor the nearest tsconfig for each opened entry point; the
+  // parameter remains part of our stable build-tool contract for callers that
+  // pass their resolved compiler settings while TypeScript owns program setup.
+  void compilerOptions;
+  const api = new API({ cwd: process.cwd() });
+  try {
+    const snapshot = api.updateSnapshot({
+      openFiles: Object.values(entryPaths),
+    });
+    try {
+      const entries = Object.fromEntries(
+        Object.entries(entryPaths).map(([entryPoint, path]) => [
+          entryPoint,
+          collectEntryPointExports(snapshot, path),
+        ]),
+      );
+      return entries as PublicApiInventory;
+    } finally {
+      snapshot.dispose();
+    }
+  } finally {
+    api.close();
+  }
+}
+
+export function analyzeApiCoverage(
+  inventory: PublicApiInventory,
+  pages: readonly ApiCoveragePage[],
+): ApiCoverage {
+  const knownValues = new Set(inventory.root.values);
+  const knownTypes = new Set(inventory.root.types);
+  const knownOverview = new Set(
+    Object.values(inventory).flatMap((entry) => entry.overview),
+  );
+  const knownSymbols = new Set([
+    ...knownValues,
+    ...knownTypes,
+    ...knownOverview,
+  ]);
+  const values = new Map<string, ApiCoverageDestination>();
+  const types = new Map<string, ApiCoverageDestination>();
+  const overview = new Map<string, ApiCoverageDestination>();
+  const assignments = new Map<string, ApiCoverageDestination>();
+  const unknownSymbols = new Set<string>();
+  const duplicateSymbols: ApiCoverageDuplicate[] = [];
+
+  for (const page of pages) {
+    const destination = {
+      id: page.frontmatter.id,
+      route: page.route ?? "",
+    };
+    for (const symbol of page.frontmatter.symbols ?? []) {
+      if (!knownSymbols.has(symbol)) {
+        unknownSymbols.add(symbol);
+        continue;
+      }
+
+      const existing = assignments.get(symbol);
+      if (existing !== undefined && existing.id !== destination.id) {
+        duplicateSymbols.push({
+          symbol,
+          firstPageId: existing.id,
+          duplicatePageId: destination.id,
+        });
+        continue;
+      }
+      assignments.set(symbol, destination);
+
+      if (knownValues.has(symbol)) values.set(symbol, destination);
+      if (knownTypes.has(symbol)) types.set(symbol, destination);
+      if (knownOverview.has(symbol)) overview.set(symbol, destination);
+    }
+  }
+
+  const missingValues = sorted(
+    [...knownValues].filter((symbol) => !values.has(symbol)),
+  );
+  const missingTypes = sorted(
+    [...knownTypes].filter((symbol) => !types.has(symbol)),
+  );
+  const sortedDuplicates = [...duplicateSymbols].sort(compareDuplicates);
+
+  return {
+    values,
+    types,
+    overview,
+    missingValues,
+    missingTypes,
+    unknownSymbols: sorted([...unknownSymbols]),
+    duplicateSymbols: sortedDuplicates,
+    duplicateValues: sorted(
+      sortedDuplicates
+        .map(({ symbol }) => symbol)
+        .filter((symbol) => knownValues.has(symbol)),
+    ),
+    duplicateTypes: sorted(
+      sortedDuplicates
+        .map(({ symbol }) => symbol)
+        .filter((symbol) => knownTypes.has(symbol)),
+    ),
+  };
+}
+
+export function validateApiCoverage(
+  inventory: PublicApiInventory,
+  pages: readonly ApiCoveragePage[],
+): ApiCoverage {
+  const coverage = analyzeApiCoverage(inventory, pages);
+  const problems = [
+    coverage.duplicateSymbols.length === 0
+      ? undefined
+      : `Duplicate documented symbols: ${coverage.duplicateSymbols
+          .map(
+            ({ symbol, firstPageId, duplicatePageId }) =>
+              `${symbol} is assigned to both ${firstPageId} and ${duplicatePageId}`,
+          )
+          .join("; ")}.`,
+    coverage.missingValues.length + coverage.missingTypes.length === 0
+      ? undefined
+      : `Undocumented public exports: ${sorted([
+          ...coverage.missingValues,
+          ...coverage.missingTypes,
+        ]).join(", ")}.`,
+    coverage.unknownSymbols.length === 0
+      ? undefined
+      : `Unknown documented symbols: ${coverage.unknownSymbols.join(", ")}.`,
+  ].filter((problem): problem is string => problem !== undefined);
+
+  if (problems.length > 0) {
+    throw new Error(problems.join("\n"));
+  }
+  return coverage;
+}
+
+function collectEntryPointExports(
+  snapshot: ReturnType<API["updateSnapshot"]>,
+  path: string,
+): PublicApiEntryPoint {
+  const project = snapshot.getDefaultProjectForFile(path);
+  if (project === undefined) {
+    throw new Error(
+      `Could not load public API project for entry point: ${path}`,
+    );
+  }
+  const { program, checker } = project;
+  const sourceFile = program.getSourceFile(path);
+  if (sourceFile === undefined) {
+    throw new Error(`Could not load public API entry point: ${path}`);
+  }
+  const moduleSymbol = checker.getSymbolAtLocation(sourceFile);
+  if (moduleSymbol === undefined) {
+    throw new Error(`Could not inspect public API entry point: ${path}`);
+  }
+
+  const values = new Set<string>();
+  const types = new Set<string>();
+  const overview = new Set<string>();
+
+  for (const exported of checker.getExportsOfModule(moduleSymbol)) {
+    const name = exported.name;
+    if (compilerOverviewSymbols.has(name)) {
+      overview.add(name);
+      continue;
+    }
+
+    const resolved = isAlias(exported)
+      ? checker.getAliasedSymbol(exported)
+      : exported;
+    if ((resolved.flags & SymbolFlags.Value) !== 0) values.add(name);
+    if ((resolved.flags & SymbolFlags.Type) !== 0) types.add(name);
+  }
+
+  return {
+    values: sorted([...values]),
+    types: sorted([...types]),
+    overview: sorted([...overview]),
+  };
+}
+
+function isAlias(symbol: TypeScriptSymbol): boolean {
+  return (symbol.flags & SymbolFlags.Alias) !== 0;
+}
+
+function sorted(values: readonly string[]): string[] {
+  return [...new Set(values)].sort(compareNames);
+}
+
+function compareDuplicates(
+  left: ApiCoverageDuplicate,
+  right: ApiCoverageDuplicate,
+): number {
+  return (
+    compareNames(left.symbol, right.symbol) ||
+    compareNames(left.firstPageId, right.firstPageId) ||
+    compareNames(left.duplicatePageId, right.duplicatePageId)
+  );
+}
+
+function compareNames(left: string, right: string): number {
+  return left < right ? -1 : left > right ? 1 : 0;
+}

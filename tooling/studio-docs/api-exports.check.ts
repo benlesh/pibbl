@@ -1,0 +1,79 @@
+import assert from "node:assert/strict";
+import { fileURLToPath } from "node:url";
+import {
+  crcPublicEntryPaths,
+  collectPublicExports,
+  validateApiCoverage,
+} from "./api-exports";
+
+const fixturesDirectory = fileURLToPath(
+  new URL("./fixtures/api/", import.meta.url),
+);
+const inventory = await collectPublicExports(
+  {
+    root: `${fixturesDirectory}root.ts`,
+  },
+  {
+    strict: true,
+  },
+);
+
+assert.deepEqual(inventory.root.values, ["Circle", "crc"]);
+assert.deepEqual(inventory.root.types, ["CRCConfig", "CircleProps"]);
+assert.deepEqual(inventory.root.overview, ["JSX"]);
+
+const duplicatePages = [
+  {
+    frontmatter: {
+      id: "api-circle",
+      symbols: ["Circle", "crc", "CRCConfig", "CircleProps"],
+    },
+  },
+  { frontmatter: { id: "api-shapes", symbols: ["Circle"] } },
+];
+assert.throws(
+  () => validateApiCoverage(inventory, duplicatePages),
+  /Circle is assigned to both api-circle and api-shapes/u,
+);
+
+const missingPages = [
+  { frontmatter: { id: "api-circle", symbols: ["Circle", "crc"] } },
+];
+assert.throws(
+  () => validateApiCoverage(inventory, missingPages),
+  /Undocumented public exports: CRCConfig/u,
+);
+
+const stalePages = [
+  {
+    frontmatter: {
+      id: "api-circle",
+      symbols: ["Circle", "crc", "CRCConfig", "CircleProps", "RemovedValue"],
+    },
+  },
+];
+assert.throws(
+  () => validateApiCoverage(inventory, stalePages),
+  /Unknown documented symbols: RemovedValue/u,
+);
+
+const coverage = validateApiCoverage(inventory, [
+  {
+    route: "#/api/components/circle",
+    frontmatter: {
+      id: "api-circle",
+      symbols: ["Circle", "crc", "CRCConfig", "CircleProps"],
+    },
+  },
+]);
+assert.equal(coverage.values.get("Circle")?.route, "#/api/components/circle");
+assert.deepEqual(coverage.missingValues, []);
+assert.deepEqual(coverage.missingTypes, []);
+
+const crcInventory = await collectPublicExports(crcPublicEntryPaths, {});
+assert.ok(crcInventory.root.values.length > 0);
+assert.ok(crcInventory.root.types.length > 0);
+
+process.stdout.write(
+  `Validated public API coverage: ${crcInventory.root.values.length} values, ${crcInventory.root.types.length} types.\n`,
+);
