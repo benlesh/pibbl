@@ -58,17 +58,35 @@ function computedWriteErrorLabel(node: SignalNode<unknown>): string {
     `Cannot write to a signal while evaluating computed signal "${node.debugName}".`;
 }
 
-function notifySignalObservers(node: SignalNode<unknown>): void {
+function notifySignalObservers(node: SignalNode<unknown>): unknown[] {
+  const failures: unknown[] = [];
   for (const observer of node.observers) {
-    observer(node);
+    try {
+      observer(node);
+    } catch (error) {
+      failures.push(error);
+    }
   }
+  return failures;
 }
 
-function notifyComputedInvalidationObservers(node: SignalNode<unknown>): void {
+function notifyComputedInvalidationObservers(node: SignalNode<unknown>): unknown[] {
+  const failures: unknown[] = [];
   for (const observer of node.observers) {
     if (observer.propagateInvalidation) {
-      observer(node);
+      try {
+        observer(node);
+      } catch (error) {
+        failures.push(error);
+      }
     }
+  }
+  return failures;
+}
+
+function throwSignalObserverFailures(failures: readonly unknown[]): void {
+  if (failures.length > 0) {
+    throw new AggregateError(failures, 'CRC signal observer notifications failed.');
   }
 }
 
@@ -101,7 +119,7 @@ export function signal<T>(
 
     node.value = nextValue;
     node.version++;
-    notifySignalObservers(node as SignalNode<unknown>);
+    throwSignalObserverFailures(notifySignalObservers(node as SignalNode<unknown>));
   };
   const writable = {
     get: read,
@@ -150,8 +168,8 @@ export function computed<T>(
     validate: () => {},
   };
 
-  const notifyObservers = (): void => {
-    notifySignalObservers(node as SignalNode<unknown>);
+  const notifyObservers = (): unknown[] => {
+    return notifySignalObservers(node as SignalNode<unknown>);
   };
 
   const enqueueValidation = (): void => {
@@ -168,7 +186,9 @@ export function computed<T>(
     }
     node.state = 'check';
     enqueueValidation();
-    notifyComputedInvalidationObservers(node as SignalNode<unknown>);
+    throwSignalObserverFailures(
+      notifyComputedInvalidationObservers(node as SignalNode<unknown>),
+    );
   };
   invalidate.propagateInvalidation = true;
 
@@ -238,7 +258,7 @@ export function computed<T>(
       node.state = 'clean';
     }
     if (changed) {
-      notifyObservers();
+      throwSignalObserverFailures(notifyObservers());
     }
   };
 
@@ -411,9 +431,11 @@ export function createSignalCommitBatch(): SignalCommitBatch {
         node.value = candidate.value;
         node.version++;
       }
+      const failures: unknown[] = [];
       for (const candidate of changed) {
-        notifySignalObservers(candidate.node);
+        failures.push(...notifySignalObservers(candidate.node));
       }
+      throwSignalObserverFailures(failures);
     },
     clear(): void {
       staged.clear();

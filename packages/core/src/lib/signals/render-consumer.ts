@@ -16,6 +16,7 @@ export interface SignalRenderConsumerOptions {
 
 interface ConsumerState {
   readonly dependencies: Map<SignalNode<unknown>, () => void>;
+  collectionGeneration: number;
   dirty: boolean;
   disposed: boolean;
   releaseCount: number;
@@ -28,6 +29,7 @@ export function createSignalRenderConsumer(
 ): SignalRenderConsumer {
   const state: ConsumerState = {
     dependencies: new Map(),
+    collectionGeneration: 0,
     dirty: true,
     disposed: false,
     releaseCount: 0,
@@ -65,14 +67,17 @@ export function collectSignalReads<T>(
 ): T {
   const state = getConsumerState(consumer);
   if (state.disposed) {
-    return callback();
+    return withSignalTracking({ addDependency: () => {} }, callback);
   }
 
+  const collectionGeneration = ++state.collectionGeneration;
   const nextDependencies = new Set<SignalNode<unknown>>();
   const result = withSignalTracking({
     addDependency: dependency => nextDependencies.add(dependency),
   }, callback);
-  replaceDependencies(consumer, state, nextDependencies);
+  if (!state.disposed && state.collectionGeneration === collectionGeneration) {
+    replaceDependencies(consumer, state, nextDependencies);
+  }
   return result;
 }
 
@@ -82,6 +87,7 @@ export function disposeSignalRenderConsumer(consumer: SignalRenderConsumer): voi
     return;
   }
   state.disposed = true;
+  state.collectionGeneration++;
   for (const [node, releaseObservation] of state.dependencies) {
     node.observers.delete(consumerInvalidations.get(consumer)!);
     releaseObservation();

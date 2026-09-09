@@ -237,6 +237,83 @@ describe('signal commit batches', () => {
     expect(left.get()).toBe(3);
     detach();
   });
+
+  it('retains first stage order while restaging an output and supports clear', () => {
+    const first = signal(1);
+    const second = signal(2);
+    const notifications: string[] = [];
+    getSignalNode(first).observers.add(() => notifications.push('first'));
+    getSignalNode(second).observers.add(() => notifications.push('second'));
+    const writer = {};
+    const batch = createSignalCommitBatch();
+
+    batch.stage(first, 10, writer);
+    batch.stage(second, 20, writer);
+    batch.stage(first, 11, writer);
+    batch.commit();
+
+    expect(first.get()).toBe(11);
+    expect(second.get()).toBe(20);
+    expect(notifications).toEqual(['first', 'second']);
+
+    batch.stage(first, 99, writer);
+    batch.clear();
+    batch.commit();
+
+    expect(first.get()).toBe(11);
+  });
+
+  it('rejects staged writes in a forbidden scope', () => {
+    const value = signal(1);
+    const batch = createSignalCommitBatch();
+
+    expect(() => withSignalWriteForbidden('writes are forbidden', () => {
+      batch.stage(value, 2, {});
+    })).toThrow('writes are forbidden');
+
+    batch.commit();
+    expect(value.get()).toBe(1);
+  });
+
+  it('notifies every changed source after observer failures before reporting them', () => {
+    const left = signal(1);
+    const right = signal(2);
+    const leftFailure = new Error('left observer failed');
+    const rightFailure = new Error('right observer failed');
+    const notifications: string[] = [];
+    getSignalNode(left).observers.add(() => {
+      notifications.push('left failed');
+      throw leftFailure;
+    });
+    getSignalNode(left).observers.add(() => notifications.push('left later'));
+    getSignalNode(right).observers.add(() => {
+      notifications.push('right failed');
+      throw rightFailure;
+    });
+    getSignalNode(right).observers.add(() => notifications.push('right later'));
+    const batch = createSignalCommitBatch();
+    const writer = {};
+    batch.stage(left, 3, writer);
+    batch.stage(right, 4, writer);
+
+    let failure: unknown;
+    try {
+      batch.commit();
+    } catch (error) {
+      failure = error;
+    }
+
+    expect(left.get()).toBe(3);
+    expect(right.get()).toBe(4);
+    expect(notifications).toEqual([
+      'left failed',
+      'left later',
+      'right failed',
+      'right later',
+    ]);
+    expect(failure).toBeInstanceOf(AggregateError);
+    expect((failure as AggregateError).errors).toEqual([leftFailure, rightFailure]);
+  });
 });
 
 describe('untracked', () => {
