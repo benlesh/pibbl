@@ -4,7 +4,9 @@ import {
   circularPercentageBasis,
   resolveFiniteShapeNumber,
   resolveNonnegativeShapeLength,
+  shapeGeometryErrorFactory,
 } from './shape-style';
+import { LayoutDiagnostic } from '../style/diagnostics';
 
 describe('shape style helpers', () => {
   const context: StyleResolutionContext = {
@@ -36,5 +38,22 @@ describe('shape style helpers', () => {
     expect(() =>
       resolveFiniteShapeNumber(Number.NaN, 'rotation', context),
     ).toThrow(/Circle.*rotation.*NaN.*finite/);
+  });
+
+  it('adapts shared geometry failures to contextual layout diagnostics', () => {
+    const error = shapeGeometryErrorFactory({
+      ...context,
+      component: 'RegularPolygon',
+    })('sides', 2, 'must be at least 3');
+
+    expect(error).toBeInstanceOf(LayoutDiagnostic);
+    expect(error).toMatchObject({
+      component: 'RegularPolygon',
+      property: 'sides',
+      suppliedValue: 2,
+      algorithm: 'render-dispatch',
+      constraints: context.constraints,
+    });
+    expect(error.message).toMatch(/must be at least 3/);
   });
 });

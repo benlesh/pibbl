@@ -2,6 +2,7 @@ import { layoutDiagnostic } from '../style/diagnostics.js';
 import { resolveRequiredLength } from '../style/resolve-built-in.js';
 import type { Length } from '../style/types.js';
 import type { StyleResolutionContext } from '../types.js';
+import type { GeometryErrorFactory } from '../geometry/validation.js';
 
 export function resolveNonnegativeShapeLength(
   value: Exclude<Length, 'auto'>,
@@ -48,4 +49,17 @@ export function circularPercentageBasis(
     context.percentageBasis.width,
     context.percentageBasis.height,
   );
+}
+
+export function shapeGeometryErrorFactory(
+  context: Readonly<StyleResolutionContext>,
+): GeometryErrorFactory {
+  return (property, value, reason) => layoutDiagnostic({
+    component: context.component,
+    property,
+    value,
+    algorithm: context.algorithm,
+    constraints: context.constraints,
+    reason,
+  });
 }

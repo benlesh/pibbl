@@ -13,6 +13,7 @@ import { clearSharedState, getCRCInstance } from './global-state';
 import { crcRef } from './hooks/crc-ref';
 import { crcState, type StateUpdater } from './hooks/crc-state';
 import type { CRCNode, SystemStyle } from './types';
+import { RegularPolygon } from './components/regular-polygon';
 
 interface IdentityProbeProps {
   label: string;
@@ -304,6 +305,70 @@ describe('crc root updates', () => {
       }));
       expect(() => pending?.(1)).not.toThrow();
       expect(arcTo).toHaveBeenCalledTimes(4);
+      expect(getCRCInstance(canvas).refs.size).toBe(1);
+    } finally {
+      window.requestAnimationFrame = originalRequestAnimationFrame;
+    }
+  });
+
+  it('cleans up a structurally invalid regular polygon and recovers on the same Canvas', () => {
+    const originalRequestAnimationFrame = window.requestAnimationFrame;
+    let pending: FrameRequestCallback | undefined;
+    window.requestAnimationFrame = callback => {
+      pending = callback;
+      return 1;
+    };
+    const canvas = createCanvas();
+    const cleanup = vi.fn();
+    const setup = vi.fn(() => cleanup);
+    const ResourceBearingSibling = (_props: {}) => {
+      crcWhenChanged(setup, []);
+      return createElement(Circle, {
+        style: { cx: 8, cy: 8, radius: 4, fill: '#2563eb' },
+        onClick: () => undefined,
+      });
+    };
+
+    try {
+      crc(canvas, [
+        createElement(ResourceBearingSibling, {}),
+        createElement(RegularPolygon, {
+          style: {
+            sides: 6,
+            circumradius: 20,
+            inradius: 10,
+          },
+        } as unknown as Parameters<typeof RegularPolygon>[0]),
+      ]);
+
+      let failure: unknown;
+      try {
+        pending?.(0);
+      } catch (error) {
+        failure = error;
+      }
+      expect(failure).toBeInstanceOf(LayoutDiagnostic);
+      expect(failure).toMatchObject({
+        component: 'RegularPolygon',
+        property: 'circumradius|inradius|sideLength',
+        algorithm: 'render-dispatch',
+      });
+      expect((failure as Error).message).toMatch(/exactly one/);
+      expect(setup).toHaveBeenCalledOnce();
+      expect(cleanup).toHaveBeenCalledOnce();
+      expect(getCRCInstance(canvas).refs.size).toBe(0);
+      expect(getCRCInstance(canvas).eventRoot.targets.size).toBe(0);
+
+      crc(canvas, createElement(RegularPolygon, {
+        style: {
+          sides: 6,
+          cx: 40,
+          cy: 40,
+          circumradius: 20,
+          fill: '#2563eb',
+        },
+      }));
+      expect(() => pending?.(1)).not.toThrow();
       expect(getCRCInstance(canvas).refs.size).toBe(1);
     } finally {
       window.requestAnimationFrame = originalRequestAnimationFrame;

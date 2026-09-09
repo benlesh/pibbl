@@ -9,6 +9,7 @@ import {
 } from '@crc/core';
 import { describe, expect, it, vi } from 'vitest';
 import { componentTest } from '../src/lib/test-utils/component-test';
+import { RegularPolygon } from '../src/lib/components/regular-polygon';
 
 function pixelAt(canvas: HTMLCanvasElement, x: number, y: number) {
   return Array.from(canvas.getContext('2d')!.getImageData(x, y, 1, 1).data);
@@ -126,6 +127,34 @@ describe('public standard-shape declared-box allocation', () => {
     expect(pixelAt(canvas.element, 251, 101)).toEqual([0, 0, 0, 0]);
     await canvas.click({ position: { x: 225, y: 125 } });
     await canvas.click({ position: { x: 251, y: 101 } });
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it('places RegularPolygon and resolves its geometry against its declared box', async () => {
+    const onClick = vi.fn();
+    const canvas = await componentTest(createElement(Absolute, {
+      children: [createElement(Absolute, {
+        style: { left: 80, top: 40, width: 240, height: 120 },
+        children: [createElement(RegularPolygon, {
+          style: {
+            width: 240,
+            height: 120,
+            sides: 6,
+            cx: '50%',
+            cy: '50%',
+            circumradius: '25%',
+            fill: 'red',
+          },
+          onClick,
+        })],
+      })],
+    }));
+
+    expect(pixelAt(canvas.element, 200, 100)).toEqual([255, 0, 0, 255]);
+    expect(pixelAt(canvas.element, 225, 100)[3]).toBeGreaterThan(0);
+    expect(pixelAt(canvas.element, 231, 100)).toEqual([0, 0, 0, 0]);
+    await canvas.click({ position: { x: 200, y: 100 } });
+    await canvas.click({ position: { x: 231, y: 100 } });
     expect(onClick).toHaveBeenCalledOnce();
   });
 });
