@@ -523,21 +523,21 @@ const drafts = [
     section: "composition",
     order: 115,
     summary:
-      "Filter one Group’s overlapping rectangle, circle, and text as a single combined silhouette.",
+      "Compare every filter, an ordered filter array, and nested filter boundaries in one static gallery.",
     api: ["Group", "Rectangle", "Circle", "Text", "CRCFilter"],
     objectives: [
-      "Place a filter list on Group to process all of its descendants as one raster result.",
-      "Cycle the same chains in a different order and compare which pixels each next function receives.",
+      "Compare all ten filters against one shared multicolor gradient.",
+      "Contrast an ordered filter array with nested boundaries that execute inside out.",
     ],
     prompts: {
-      gesture: "Click the blue card to cycle through the three filter chains.",
-      code: "Swap the two-function chains, then add blur to see it consume the preceding result.",
+      gesture: "Scan all thirteen samples; this lesson needs no interaction.",
+      code: "Change the shared gradient or reorder the array and nested filters.",
     },
     apiNotes: [
       "The Group makes one combined silhouette, so its rectangle, circle, and text cast one shared drop shadow rather than separate shadow stacks.",
       "A filter list runs in declaration order: each function receives the pixels produced by the preceding function.",
     ],
-    canvas: { width: 720, height: 420 },
+    canvas: { width: 960, height: 660 },
     related: ["group", "layer", "transformed-clipped-layered-targets"],
     load: () => import("./learning/composition/filters.example"),
   },

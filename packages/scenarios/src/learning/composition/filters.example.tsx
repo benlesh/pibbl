@@ -1,7 +1,6 @@
 import {
   Circle,
   crc,
-  crcState,
   Group,
   Rectangle,
   Text,
@@ -9,129 +8,351 @@ import {
   type CRCFilter,
 } from "@crc/core";
 
-const CHAINS = [
-  [
-    {
-      type: "dropShadow",
-      offsetX: 12,
-      offsetY: 10,
-      blurRadius: 5,
-      color: "rgb(17 24 39 / 55%)",
-    },
-  ],
-  [
-    { type: "grayscale", amount: 1 },
-    {
-      type: "dropShadow",
-      offsetX: 12,
-      offsetY: 10,
-      blurRadius: 5,
-      color: "rgb(17 24 39 / 55%)",
-    },
-  ],
-  [
-    {
-      type: "dropShadow",
-      offsetX: 12,
-      offsetY: 10,
-      blurRadius: 5,
-      color: "rgb(17 24 39 / 55%)",
-    },
-    { type: "grayscale", amount: 1 },
-  ],
-] satisfies readonly (readonly CRCFilter[])[];
+const SAMPLE_WIDTH = 160;
 
-function FilterStudy() {
-  const [chainIndex, setChainIndex] = crcState(0);
-  const chain = CHAINS[chainIndex]!;
+const FILTER_SAMPLES = [
+  { label: "BLUR", detail: "4px", filter: { type: "blur", radius: 4 } },
+  {
+    label: "BRIGHTNESS",
+    detail: "135%",
+    filter: { type: "brightness", amount: 1.35 },
+  },
+  {
+    label: "CONTRAST",
+    detail: "150%",
+    filter: { type: "contrast", amount: 1.5 },
+  },
+  {
+    label: "DROP SHADOW",
+    detail: "8px 7px 4px",
+    filter: {
+      type: "dropShadow",
+      offsetX: 8,
+      offsetY: 7,
+      blurRadius: 4,
+      color: "rgb(15 23 42)",
+    },
+  },
+  {
+    label: "GRAYSCALE",
+    detail: "100%",
+    filter: { type: "grayscale", amount: 1 },
+  },
+  {
+    label: "HUE ROTATE",
+    detail: "120deg",
+    filter: { type: "hueRotate", degrees: 120 },
+  },
+  {
+    label: "INVERT",
+    detail: "100%",
+    filter: { type: "invert", amount: 1 },
+  },
+  {
+    label: "OPACITY",
+    detail: "55%",
+    filter: { type: "opacity", amount: 0.55 },
+  },
+  {
+    label: "SATURATE",
+    detail: "200%",
+    filter: { type: "saturate", amount: 2 },
+  },
+  {
+    label: "SEPIA",
+    detail: "100%",
+    filter: { type: "sepia", amount: 1 },
+  },
+] satisfies readonly {
+  label: string;
+  detail: string;
+  filter: CRCFilter;
+}[];
 
-  return [
-    <Rectangle
-      style={{ x: 0, y: 0, width: 720, height: 420, fill: "#f7f0df" }}
-    />,
-    <Text
-      style={{
-        x: 360,
-        y: 66,
-        fill: "#17211d",
-        font: "900 32px sans-serif",
-        textAlign: "center",
-      }}
-    >
-      FILTERED AS ONE SILHOUETTE
-    </Text>,
-    <Text
-      style={{
-        x: 360,
-        y: 96,
-        fill: "#475569",
-        font: "600 15px sans-serif",
-        textAlign: "center",
-      }}
-    >
-      {`CHAIN ${chainIndex + 1} · CLICK THE CARD`}
-    </Text>,
-    <Group style={{ filter: chain }}>
+const ORDERED_FILTERS = [
+  { type: "grayscale", amount: 0.35 },
+  { type: "contrast", amount: 1.4 },
+  {
+    type: "dropShadow",
+    offsetX: 7,
+    offsetY: 6,
+    blurRadius: 3,
+    color: "rgb(15 23 42)",
+  },
+] satisfies readonly CRCFilter[];
+
+const NESTED_SHADOW = {
+  type: "dropShadow",
+  offsetX: 7,
+  offsetY: 6,
+  blurRadius: 3,
+  color: "rgb(15 23 42)",
+} satisfies CRCFilter;
+
+interface GradientArtworkProps {
+  gradient: CanvasGradient;
+  composite?: boolean;
+}
+
+function GradientArtwork({
+  gradient,
+  composite = false,
+}: GradientArtworkProps) {
+  if (!composite) {
+    return (
       <Rectangle
         style={{
-          x: 186,
-          y: 144,
-          width: 330,
-          height: 172,
-          fill: "#2563eb",
+          width: SAMPLE_WIDTH,
+          height: 78,
+          fill: gradient,
           stroke: "#17211d",
-          strokeWidth: 6,
-          cursor: "pointer",
+          strokeWidth: 3,
         }}
-        onClick={() => setChainIndex((index) => (index + 1) % CHAINS.length)}
+      />
+    );
+  }
+
+  return (
+    <Group>
+      <Rectangle
+        style={{
+          x: 12,
+          width: SAMPLE_WIDTH - 12,
+          height: 78,
+          fill: gradient,
+          stroke: "#17211d",
+          strokeWidth: 3,
+        }}
       />
       <Circle
         style={{
-          cx: 258,
-          cy: 220,
-          radius: 62,
-          fill: "#f7c948",
+          cx: 24,
+          cy: 39,
+          radius: 28,
+          fill: "rgb(255 255 255 / 72%)",
           stroke: "#17211d",
-          strokeWidth: 5,
+          strokeWidth: 3,
         }}
       />
       <Text
         style={{
-          x: 376,
-          y: 216,
+          x: 108,
+          y: 48,
           fill: "#ffffff",
-          font: "900 31px sans-serif",
+          font: "900 20px sans-serif",
           textAlign: "center",
         }}
       >
         ONE GROUP
       </Text>
+    </Group>
+  );
+}
+
+interface TileHeadingProps {
+  label: string;
+  detail: string;
+}
+
+function TileHeading({ label, detail }: TileHeadingProps) {
+  return (
+    <Group>
       <Text
         style={{
-          x: 376,
-          y: 248,
-          fill: "#dbeafe",
-          font: "700 14px monospace",
+          x: 90,
+          y: 18,
+          fill: "#17211d",
+          font: "800 13px monospace",
           textAlign: "center",
         }}
       >
-        RECT · CIRCLE · TEXT
+        {label}
       </Text>
-    </Group>,
+      <Text
+        style={{
+          x: 90,
+          y: 37,
+          fill: "#64748b",
+          font: "600 10px monospace",
+          textAlign: "center",
+        }}
+      >
+        {detail}
+      </Text>
+    </Group>
+  );
+}
+
+interface FilterTileProps extends TileHeadingProps {
+  filter?: CRCFilter;
+  gradient: CanvasGradient;
+  x: number;
+  y: number;
+}
+
+function FilterTile({
+  filter,
+  gradient,
+  label,
+  detail,
+  x,
+  y,
+}: FilterTileProps) {
+  return (
+    <Group style={{ translateX: x, translateY: y }}>
+      <TileHeading label={label} detail={detail} />
+      <Group style={{ filter, translateX: 10, translateY: 52 }}>
+        <GradientArtwork gradient={gradient} />
+      </Group>
+    </Group>
+  );
+}
+
+interface CompositeTileProps extends TileHeadingProps {
+  gradient: CanvasGradient;
+  mode: "array" | "nested";
+  x: number;
+  y: number;
+}
+
+function CompositeTile({
+  gradient,
+  mode,
+  label,
+  detail,
+  x,
+  y,
+}: CompositeTileProps) {
+  const artwork = <GradientArtwork gradient={gradient} composite />;
+  const filteredArtwork =
+    mode === "array" ? (
+      <Group style={{ filter: ORDERED_FILTERS }}>{artwork}</Group>
+    ) : (
+      <Group style={{ filter: { type: "blur", radius: 1.5 } }}>
+        <Group style={{ filter: NESTED_SHADOW }}>
+          <Group style={{ filter: { type: "hueRotate", degrees: 155 } }}>
+            {artwork}
+          </Group>
+        </Group>
+      </Group>
+    );
+
+  return (
+    <Group style={{ translateX: x, translateY: y }}>
+      <TileHeading label={label} detail={detail} />
+      <Group style={{ translateX: 10, translateY: 52 }}>
+        {filteredArtwork}
+      </Group>
+    </Group>
+  );
+}
+
+function tilePosition(index: number): { x: number; y: number } {
+  const column = index < 10 ? index % 5 : index - 9;
+  return {
+    x: 5 + column * 190,
+    y: 92 + Math.floor(index / 5) * 178,
+  };
+}
+
+function FilterGallery({ gradient }: { gradient: CanvasGradient }) {
+  const normalPosition = tilePosition(0);
+  const orderedPosition = tilePosition(11);
+  const nestedPosition = tilePosition(12);
+
+  return [
+    <Rectangle
+      style={{ x: 0, y: 0, width: 960, height: 660, fill: "#f7f0df" }}
+    />,
     <Text
       style={{
-        x: 360,
-        y: 366,
-        fill: "#475569",
-        font: "600 14px sans-serif",
+        x: 480,
+        y: 42,
+        fill: "#17211d",
+        font: "900 28px sans-serif",
         textAlign: "center",
       }}
     >
-      LIST ORDER CHANGES WHICH PIXELS THE NEXT FILTER RECEIVES
+      FILTER GALLERY
+    </Text>,
+    <Text
+      style={{
+        x: 480,
+        y: 68,
+        fill: "#64748b",
+        font: "600 12px monospace",
+        textAlign: "center",
+      }}
+    >
+      SAME GRADIENT · ONE FRAME · EVERY FILTER
+    </Text>,
+    <FilterTile
+      gradient={gradient}
+      label="NORMAL"
+      detail="unfiltered"
+      x={normalPosition.x}
+      y={normalPosition.y}
+    />,
+    ...FILTER_SAMPLES.map((sample, index) => {
+      const position = tilePosition(index + 1);
+      return (
+        <FilterTile
+          key={sample.label}
+          filter={sample.filter}
+          gradient={gradient}
+          label={sample.label}
+          detail={sample.detail}
+          x={position.x}
+          y={position.y}
+        />
+      );
+    }),
+    <CompositeTile
+      gradient={gradient}
+      mode="array"
+      label="ORDERED ARRAY"
+      detail="gray → contrast → shadow"
+      x={orderedPosition.x}
+      y={orderedPosition.y}
+    />,
+    <CompositeTile
+      gradient={gradient}
+      mode="nested"
+      label="NESTED"
+      detail="hue → shadow → blur"
+      x={nestedPosition.x}
+      y={nestedPosition.y}
+    />,
+    <Text
+      style={{
+        x: 480,
+        y: 642,
+        fill: "#475569",
+        font: "700 11px monospace",
+        textAlign: "center",
+      }}
+    >
+      LISTS RUN LEFT TO RIGHT · NESTED BOUNDARIES RUN INSIDE OUT
     </Text>,
   ];
 }
 
+function createSharedGradient(canvas: HTMLCanvasElement): CanvasGradient {
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("The Filters example requires a 2D context.");
+
+  const gradient = context.createLinearGradient(0, 0, SAMPLE_WIDTH, 0);
+  gradient.addColorStop(0, "#0f172a");
+  gradient.addColorStop(0.14, "#ef4444");
+  gradient.addColorStop(0.3, "#facc15");
+  gradient.addColorStop(0.48, "#f8fafc");
+  gradient.addColorStop(0.64, "#10b981");
+  gradient.addColorStop(0.82, "#2563eb");
+  gradient.addColorStop(1, "#7c3aed");
+  return gradient;
+}
+
 export default function mount(canvas: HTMLCanvasElement): CRCController {
-  return crc(canvas, <FilterStudy />);
+  const gradient = createSharedGradient(canvas);
+  return crc(canvas, <FilterGallery gradient={gradient} />);
 }

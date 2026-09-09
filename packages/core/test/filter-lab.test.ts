@@ -5,6 +5,7 @@ import {
   getLearningExampleBySlug,
   getLearningExampleRoute,
   getScenarioRoute,
+  loadLearningExample,
   loadScenario,
   scenarioCatalog,
 } from '@crc/scenarios';
@@ -81,6 +82,12 @@ async function mountFilterLab() {
   return { canvas, controller, definition };
 }
 
+async function nextPaint(): Promise<void> {
+  await new Promise<void>(resolve =>
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+  );
+}
+
 describe('first-class filter public scenarios', () => {
   it('registers the exact learning route and the deterministic laboratory route', async () => {
     const learningEntry = getLearningExampleBySlug('filters');
@@ -133,12 +140,105 @@ describe('first-class filter public scenarios', () => {
       expect(source).toMatch(/from ['"]@crc\/core['"]/u);
       expect(source).not.toMatch(/@crc\/core\/(?:src|lib)\//u);
     }
-    expect(learningFilterSource).toContain('const CHAINS = [');
+    expect(learningFilterSource).toContain('const FILTER_SAMPLES = [');
+    expect(learningFilterSource).toContain('const ORDERED_FILTERS = [');
+    expect(learningFilterSource).toContain('createSharedGradient');
     expect(learningFilterSource).toContain('dropShadow');
     expect(learningFilterSource).toContain('grayscale');
     expect(filterLabSource).toContain(
       "FILTER_LAB_SOURCE_ID = 'first-class-filters-laboratory-example'",
     );
+  });
+
+  it('renders every filter plus ordered and nested compositions together in one static gallery', async () => {
+    const entry = getLearningExampleBySlug('filters');
+    if (!entry) throw new Error('Missing filters learning example.');
+
+    const canvas = document.createElement('canvas');
+    canvas.width = entry.canvas.width;
+    canvas.height = entry.canvas.height;
+    document.body.replaceChildren(canvas);
+
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('The filters learning Canvas has no 2D context.');
+
+    const labels: string[] = [];
+    const nativeFillText = context.fillText;
+    context.fillText = function(text, ...args) {
+      labels.push(text);
+      return nativeFillText.call(this, text, ...args);
+    };
+
+    const appliedFilters: string[] = [];
+    const nativeDrawImage = OffscreenCanvasRenderingContext2D.prototype.drawImage;
+    vi.spyOn(OffscreenCanvasRenderingContext2D.prototype, 'drawImage')
+      .mockImplementation(function(
+        this: OffscreenCanvasRenderingContext2D,
+        ...args: Parameters<OffscreenCanvasRenderingContext2D['drawImage']>
+      ) {
+        if (this.filter !== 'none') appliedFilters.push(this.filter);
+        return nativeDrawImage.apply(this, args);
+      });
+
+    const definition = await loadLearningExample(entry);
+    const controller = definition.default(canvas);
+    try {
+      await nextPaint();
+      expect({
+        canvas: { width: canvas.width, height: canvas.height },
+        labels: labels.filter(label => [
+          'NORMAL',
+          'BLUR',
+          'BRIGHTNESS',
+          'CONTRAST',
+          'DROP SHADOW',
+          'GRAYSCALE',
+          'HUE ROTATE',
+          'INVERT',
+          'OPACITY',
+          'SATURATE',
+          'SEPIA',
+          'ORDERED ARRAY',
+          'NESTED',
+        ].includes(label)),
+        appliedFilters,
+      }).toEqual({
+        canvas: { width: 960, height: 660 },
+        labels: [
+          'NORMAL',
+          'BLUR',
+          'BRIGHTNESS',
+          'CONTRAST',
+          'DROP SHADOW',
+          'GRAYSCALE',
+          'HUE ROTATE',
+          'INVERT',
+          'OPACITY',
+          'SATURATE',
+          'SEPIA',
+          'ORDERED ARRAY',
+          'NESTED',
+        ],
+        appliedFilters: [
+          'blur(4px)',
+          'brightness(1.35)',
+          'contrast(1.5)',
+          'drop-shadow(8px 7px 4px rgb(15 23 42))',
+          'grayscale(1)',
+          'hue-rotate(120deg)',
+          'invert(1)',
+          'opacity(0.55)',
+          'saturate(2)',
+          'sepia(1)',
+          'grayscale(0.35) contrast(1.4) drop-shadow(7px 6px 3px rgb(15 23 42))',
+          'hue-rotate(155deg)',
+          'drop-shadow(7px 6px 3px rgb(15 23 42))',
+          'blur(1.5px)',
+        ],
+      });
+    } finally {
+      controller.dispose();
+    }
   });
 
   it('renders semantic opaque centers and transparent or shadow boundaries for every laboratory action', async () => {
