@@ -1137,6 +1137,168 @@ describe('filter failure recovery', () => {
     expectFreshFilteredRecovery(frames);
   });
 
+  it('wraps a throwing pooled OffscreenCanvas constructor and recovers the same instance', () => {
+    const callback = vi.fn();
+    const Probe = filteredCallbackProbe(callback);
+    const frames = controlFrames();
+    const baseline = temporaryGlobalSnapshot();
+    const cause = new Error('host rejected pooled allocation');
+    const root = createElement(Probe, {
+      style: { filter: { type: 'blur', radius: 1 } },
+    });
+    function ThrowingOffscreenCanvas(): never {
+      throw cause;
+    }
+    vi.stubGlobal('OffscreenCanvas', ThrowingOffscreenCanvas);
+    const canvas = mountScheduled(root);
+    const instance = getCRCInstance(canvas);
+
+    const error = captureThrownError(() => frames.runNext());
+    expect(error.message)
+      .toMatch(/Probe.*filter\.sourceSurface.*could not allocate.*OffscreenCanvas/i);
+    expect(error.cause).toBe(cause);
+    expectFailureBaseline(canvas, baseline, callback, 0, {
+      surfaceSlots: 0,
+      createdSurfaceSlots: 0,
+      activePairs: 0,
+      peakActivePairs: 0,
+      pairCheckouts: 0,
+      pairReturns: 0,
+    });
+
+    vi.unstubAllGlobals();
+    crc(canvas, root);
+    expect(() => frames.runNext()).not.toThrow();
+    expect(callback).toHaveBeenCalledOnce();
+    expect(getCRCInstance(canvas)).toBe(instance);
+    expect(instance.filterSurfacePool.snapshot()).toMatchObject({
+      surfaceSlots: 2,
+      activePairs: 0,
+      pairCheckouts: 1,
+      pairReturns: 1,
+    });
+  });
+
+  it('wraps a throwing pooled 2D-context acquisition and recovers the same instance', () => {
+    const callback = vi.fn();
+    const Probe = filteredCallbackProbe(callback);
+    const frames = controlFrames();
+    const baseline = temporaryGlobalSnapshot();
+    const cause = new Error('host rejected pooled 2D context');
+    const root = createElement(Probe, {
+      style: { filter: { type: 'blur', radius: 1 } },
+    });
+    const getContext = vi.spyOn(OffscreenCanvas.prototype, 'getContext')
+      .mockImplementation(() => {
+        throw cause;
+      });
+    const canvas = mountScheduled(root);
+    const instance = getCRCInstance(canvas);
+
+    const error = captureThrownError(() => frames.runNext());
+    expect(error.message)
+      .toMatch(/Probe.*filter\.sourceSurface.*could not acquire.*2D context/i);
+    expect(error.cause).toBe(cause);
+    expectFailureBaseline(canvas, baseline, callback, 0, {
+      surfaceSlots: 0,
+      createdSurfaceSlots: 0,
+      activePairs: 0,
+      peakActivePairs: 0,
+      pairCheckouts: 0,
+      pairReturns: 0,
+    });
+
+    getContext.mockRestore();
+    crc(canvas, root);
+    expect(() => frames.runNext()).not.toThrow();
+    expect(callback).toHaveBeenCalledOnce();
+    expect(getCRCInstance(canvas)).toBe(instance);
+    expect(instance.filterSurfacePool.snapshot()).toMatchObject({
+      surfaceSlots: 2,
+      activePairs: 0,
+      pairCheckouts: 1,
+      pairReturns: 1,
+    });
+  });
+
+  it('wraps a throwing discard OffscreenCanvas constructor and recovers the same instance', () => {
+    const callback = vi.fn();
+    const frames = controlFrames();
+    const baseline = temporaryGlobalSnapshot();
+    const cause = new Error('host rejected discard allocation');
+    const root = singularFilteredProbe(callback);
+    function ThrowingOffscreenCanvas(): never {
+      throw cause;
+    }
+    vi.stubGlobal('OffscreenCanvas', ThrowingOffscreenCanvas);
+    const canvas = mountScheduled(root);
+    const instance = getCRCInstance(canvas);
+
+    const error = captureThrownError(() => frames.runNext());
+    expect(error.message)
+      .toMatch(/Group.*property filter.*could not allocate.*discard OffscreenCanvas/i);
+    expect(error.cause).toBe(cause);
+    expectFailureBaseline(canvas, baseline, callback, 0, {
+      surfaceSlots: 0,
+      createdSurfaceSlots: 0,
+      activePairs: 0,
+      peakActivePairs: 0,
+      pairCheckouts: 0,
+      pairReturns: 0,
+    });
+
+    vi.unstubAllGlobals();
+    crc(canvas, root);
+    expect(() => frames.runNext()).not.toThrow();
+    expect(callback).toHaveBeenCalledOnce();
+    expect(getCRCInstance(canvas)).toBe(instance);
+    expect(instance.filterSurfacePool.snapshot()).toMatchObject({
+      surfaceSlots: 0,
+      activePairs: 0,
+      pairCheckouts: 0,
+      pairReturns: 0,
+    });
+  });
+
+  it('wraps a throwing discard 2D-context acquisition and recovers the same instance', () => {
+    const callback = vi.fn();
+    const frames = controlFrames();
+    const baseline = temporaryGlobalSnapshot();
+    const cause = new Error('host rejected discard 2D context');
+    const root = singularFilteredProbe(callback);
+    const getContext = vi.spyOn(OffscreenCanvas.prototype, 'getContext')
+      .mockImplementation(() => {
+        throw cause;
+      });
+    const canvas = mountScheduled(root);
+    const instance = getCRCInstance(canvas);
+
+    const error = captureThrownError(() => frames.runNext());
+    expect(error.message)
+      .toMatch(/Group.*property filter.*could not acquire.*discard.*2D context/i);
+    expect(error.cause).toBe(cause);
+    expectFailureBaseline(canvas, baseline, callback, 0, {
+      surfaceSlots: 0,
+      createdSurfaceSlots: 0,
+      activePairs: 0,
+      peakActivePairs: 0,
+      pairCheckouts: 0,
+      pairReturns: 0,
+    });
+
+    getContext.mockRestore();
+    crc(canvas, root);
+    expect(() => frames.runNext()).not.toThrow();
+    expect(callback).toHaveBeenCalledOnce();
+    expect(getCRCInstance(canvas)).toBe(instance);
+    expect(instance.filterSurfacePool.snapshot()).toMatchObject({
+      surfaceSlots: 0,
+      activePairs: 0,
+      pairCheckouts: 0,
+      pairReturns: 0,
+    });
+  });
+
   it('recovers filtering on the same instance after a missing accessor without expando poisoning', () => {
     const callback = vi.fn();
     const PixelProbe = definePrimitive<{}, SystemStyle>(function PixelProbe(
@@ -1608,6 +1770,24 @@ function filteredCallbackProbe(callback: () => void) {
     callback();
     context.fillRect(1, 1, 4, 4);
   });
+}
+
+function singularFilteredProbe(callback: () => void): CRCNode {
+  const Probe = filteredCallbackProbe(callback);
+  return createElement(Group, {
+    style: { scaleX: 0, filter: { type: 'blur', radius: 1 } },
+    children: createElement(Probe, {}),
+  });
+}
+
+function captureThrownError(callback: () => void): Error {
+  try {
+    callback();
+  } catch (error) {
+    expect(error).toBeInstanceOf(Error);
+    return error as Error;
+  }
+  throw new Error('Expected the callback to throw.');
 }
 
 function controlFrames(): { runNext(timestamp?: number): void } {

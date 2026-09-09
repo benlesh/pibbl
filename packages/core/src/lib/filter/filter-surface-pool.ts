@@ -177,7 +177,17 @@ function createSlot(
   } catch (error) {
     throw surfaceError(role, window, 'could not allocate its OffscreenCanvas', error);
   }
-  const context = canvas.getContext('2d');
+  let context: OffscreenCanvasRenderingContext2D | null;
+  try {
+    context = canvas.getContext('2d');
+  } catch (error) {
+    throw surfaceError(
+      role,
+      window,
+      'could not acquire its OffscreenCanvas 2D context',
+      error,
+    );
+  }
   if (!context) {
     throw surfaceError(role, window, 'could not acquire its OffscreenCanvas 2D context');
   }

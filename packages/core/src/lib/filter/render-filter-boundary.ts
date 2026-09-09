@@ -120,8 +120,26 @@ function renderDiscardedBoundary(
       'requires browser OffscreenCanvas support for its discard target',
     );
   }
-  const canvas = new OffscreenCanvas(1, 1);
-  const context = canvas.getContext('2d');
+  let canvas: OffscreenCanvas;
+  try {
+    canvas = new OffscreenCanvas(1, 1);
+  } catch (error) {
+    throw filterCapabilityError(
+      input.component,
+      'could not allocate its discard OffscreenCanvas',
+      error,
+    );
+  }
+  let context: OffscreenCanvasRenderingContext2D | null;
+  try {
+    context = canvas.getContext('2d');
+  } catch (error) {
+    throw filterCapabilityError(
+      input.component,
+      'could not acquire its discard OffscreenCanvas 2D context',
+      error,
+    );
+  }
   if (!context) {
     throw filterCapabilityError(
       input.component,
@@ -169,12 +187,20 @@ function validateNativeFilter(
   );
 }
 
-function filterCapabilityError(component: string, reason: string): Error {
-  return layoutDiagnostic({
+function filterCapabilityError(
+  component: string,
+  reason: string,
+  cause?: unknown,
+): Error {
+  const diagnostic = layoutDiagnostic({
     component,
     property: 'filter',
     value: undefined,
     algorithm: 'filter-rendering',
     reason,
   });
+  if (cause !== undefined) {
+    diagnostic.cause = cause;
+  }
+  return diagnostic;
 }
