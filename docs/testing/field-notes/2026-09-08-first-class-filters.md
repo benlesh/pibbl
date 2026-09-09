@@ -6,6 +6,90 @@ Initial delivery date: 2026-09-08
 
 Final-review correction rerun: 2026-09-09
 
+Vendor-color correction rerun: 2026-09-09
+
+## 2026-09-09 vendor contextual-color correction
+
+A subsequent final re-review found that Chromium accepts the contextual vendor
+colors `-webkit-link` and `-webkit-activelink` in native drop shadows, while the
+CRC lexical set did not classify them as contextual. Direct Chromium
+`151.0.7922.34` probes retained all of these complete native chains:
+
+```text
+drop-shadow(4px 0px 0px -webkit-link)
+drop-shadow(4px 0px 0px -WEBKIT-ACTIVELINK)
+drop-shadow(4px 0px 0px -\77 ebkit-link)
+drop-shadow(4px 0px 0px -webkit-act\69 velink)
+drop-shadow(4px 0px 0px color-mix(in srgb, -webkit-link, red))
+```
+
+The direct and escaped vendor values left a `#010203` `fillStyle` sentinel
+unchanged even though the native filter retained them. The nested `color-mix`
+serialized through `fillStyle` as `color(srgb 0.5 0 0.466667)` and was likewise
+retained by the complete filter, but remains contextual because its result
+depends on the browser's link color.
+
+The RED normalization/rendering run failed exactly 16 vendor cases while 85
+controls passed across 2 files. It covered both identifiers, mixed case, CSS
+escapes, nested `color-mix`, exact singular `filter.color` and indexed
+`filter[1].color` diagnostics, and substring non-matches. The rendering cases
+confirmed that the old implementation could reach allocation and callback
+execution. Commit
+`b2d29cfd5d53468a7c0d5db2f82ec6d9a14f16f9` (`fix(core): reject webkit
+contextual colors`) added only the two normalized contextual identifiers and
+the regression evidence in:
+
+```text
+packages/core/src/lib/style/filter.ts
+packages/core/src/lib/style/filter.test.ts
+packages/core/src/lib/filter/filter-rendering.test.ts
+```
+
+The GREEN style/filter rendering/integration command passed all 143 tests in 3
+files in 770 ms. It retained the exact early singular/list diagnostics, zero
+native filter assignments and pool slots before rejection, no callback, and
+all existing concrete-color, full-chain-first, `contrast-color`, injection,
+`light-dark`, `currentColor`, system-color, and `var()` evidence. Typecheck,
+ESLint, Prettier, and `git diff --check` then exited 0.
+
+The complete aggregate was restarted from scratch at that clean code/test head
+with the same macOS 26.6.2 arm64, Node.js `v24.15.0`, pnpm `11.21.0`, Vitest
+`4.1.10`, Playwright `1.62.1`, and Chromium `151.0.7922.34` environment:
+
+```sh
+fnm exec --using=24.15.0 corepack pnpm@11.21.0 trust
+```
+
+It exited 0 with these fresh results:
+
+- 48 lessons and 17 test laboratories;
+- documentation: 11 guides, 40 current/migration files, 57 historical/work
+  records, 46 values, 133 types, 21 acceptance rows, 53 parsed snippets, 8
+  extracted TypeScript programs, 667 pre-Task-14 and 708 current semantic units
+  across 12 contracts, 52 mappings, 85 migrations, and 103 presentation
+  sources; all 796 documentation mutation probes passed;
+- typecheck, ESLint, Prettier, package builds, source and built Studio builds,
+  declaration parity, and packed consumers passed; packed focus elimination
+  measured 136,480 no-focus bytes versus 160,125 with-focus bytes;
+- browser suite: 104 files passed, with 1,473 passed and 2 intentionally skipped
+  tests of 1,475 in 21.62 seconds;
+- visual safeguard rejected the deliberate drill and preserved every baseline
+  byte; all 5 full-page Studio baselines matched;
+- built smoke passed 1 file and 1 test in 636 ms;
+- lifecycle passed 3 files and 15 tests in 9.75 seconds; and
+- structural performance passed 14 tests with 2 opt-in wall-clock skips of 16
+  in 1.64 seconds.
+
+No visual was altered. The first-class-filter expected/actual pair remained
+byte-identical at SHA-256
+`634e1b892cd6dee7ada14ee76369f60a2db41bdfae725b3e83924ce639f74a5f`,
+and all five Studio expected/actual comparisons were byte-identical. Exact
+channels and the previously documented no-mask status remain unchanged.
+Ownership/lifecycle counters also remained exactly as documented in the fresh
+aggregate assertions below. The isolated worktree was clean at code/test head
+`b2d29cfd5d53468a7c0d5db2f82ec6d9a14f16f9` before this field-note refresh;
+the original `main` checkout remained untouched with its six unrelated entries.
+
 ## 2026-09-09 final-review correction and trust rerun
 
 A fresh independent review of the complete implementation identified three
