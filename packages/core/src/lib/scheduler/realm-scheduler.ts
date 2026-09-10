@@ -40,6 +40,7 @@ interface AdvanceRegistration {
 
 const registeredRoots = new Set<CRCInstance>();
 const dirtyInstances = new Set<CRCInstance>();
+const deferredInstances = new Set<CRCInstance>();
 const advanceRegistrations = new Set<AdvanceRegistration>();
 const frameCompletions: CRCFrameCompletion[] = [];
 
@@ -64,10 +65,14 @@ export function unregisterRootInstance(instance: CRCInstance): void {
 
 export function requestInstanceRender(instance: CRCInstance): number {
   const revision = ++nextWorkRevision;
+  const deferUntilNextFrame = phase === 'render';
   let current: CRCInstance | undefined = instance;
   while (current) {
     current.requestedRenderRevision = revision;
     dirtyInstances.add(current);
+    if (deferUntilNextFrame) {
+      deferredInstances.add(current);
+    }
     current = current.parent ? GLOBAL_STATE.crcInstances.get(current.parent) : undefined;
   }
   requestHostFrameIfNeeded();
@@ -76,7 +81,8 @@ export function requestInstanceRender(instance: CRCInstance): number {
 
 /** Whether an instance has work that has not yet completed a successful render. */
 export function hasPendingInstanceRender(instance: CRCInstance): boolean {
-  return instance.requestedRenderRevision > instance.completedRenderRevision;
+  return instance.requestedRenderRevision > instance.completedRenderRevision &&
+    !(phase === 'render' && deferredInstances.has(instance));
 }
 
 export function registerAdvanceParticipant(
@@ -141,6 +147,7 @@ function requestHostFrameIfNeeded(): void {
 
 function runFrame(hostTime: number): void {
   pendingHostFrame = undefined;
+  deferredInstances.clear();
   const snapshot = Object.freeze({
     frameId: ++nextFrameId,
     hostTime,
@@ -370,6 +377,11 @@ function removeRootWork(root: CRCInstance): void {
   for (const instance of dirtyInstances) {
     if (findRoot(instance) === root) {
       dirtyInstances.delete(instance);
+    }
+  }
+  for (const instance of deferredInstances) {
+    if (findRoot(instance) === root) {
+      deferredInstances.delete(instance);
     }
   }
 }

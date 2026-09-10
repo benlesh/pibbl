@@ -59,7 +59,7 @@ describe('Layer children and retained subtree contract', () => {
       drawImage.mockClear();
 
       color.set('blue');
-      executeRender(canvas, 20, scene, false);
+      driver.flush(20);
 
       expect(childRenders).toBe(2);
       expect(pixel(canvas, 5, 5)).toEqual([0, 0, 255, 255]);
@@ -112,7 +112,7 @@ describe('Layer children and retained subtree contract', () => {
       offscreenDrawImage.mockClear();
 
       color.set('blue');
-      executeRender(canvas, 20, scene, false);
+      driver.flush(20);
 
       expect(nestedRenders).toBe(2);
       expect(pixel(canvas, 5, 5)).toEqual([0, 0, 255, 255]);
@@ -159,11 +159,114 @@ describe('Layer children and retained subtree contract', () => {
       driver.flush(10);
 
       offset.set(10);
-      executeRender(canvas, 20, root, false);
+      driver.flush(20);
 
       expect(childRenders).toBe(1);
       expect(pixel(canvas, 15, 5)).toEqual([255, 0, 0, 255]);
     } finally {
+      controller.dispose();
+      restoreDriver();
+    }
+  });
+
+  it('isolates scheduler-driven Layer A and nested signal work from sibling Layer B', () => {
+    const driver = new ManualSchedulerDriver();
+    const restoreDriver = installSchedulerDriverForTest(driver);
+    const aSignal = signal(0);
+    const nestedSignal = signal(0);
+    const renders = { root: 0, a: 0, b: 0, nested: 0 };
+    const AChild = (_props: {}): CRCNode => {
+      renders.a++;
+      aSignal.get();
+      return createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: 'red' },
+      });
+    };
+    const NestedChild = (_props: {}): CRCNode => {
+      renders.nested++;
+      nestedSignal.get();
+      return createElement(Rectangle, {
+        style: { x: 20, width: 20, height: 20, fill: 'blue' },
+      });
+    };
+    const BChild = (_props: {}): CRCNode => {
+      renders.b++;
+      return createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: 'green' },
+      });
+    };
+    const Root = (_props: {}): CRCNode => {
+      renders.root++;
+      return createElement(Fragment, {
+        children: [
+          createElement(Layer, {
+            style: { width: 40, height: 20 },
+            children: [
+              createElement(AChild, {}),
+              createElement(Layer, {
+                style: { width: 40, height: 20 },
+                children: createElement(NestedChild, {}),
+              }),
+            ],
+          }),
+          createElement(Layer, {
+            style: { width: 20, height: 20 },
+            children: createElement(BChild, {}),
+          }),
+        ],
+      });
+    };
+    const canvas = document.createElement('canvas');
+    canvas.width = 40;
+    canvas.height = 20;
+    document.body.appendChild(canvas);
+    const controller = crc(canvas, createElement(Root, {}), { pixelRatio: 1 });
+    const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
+    const offscreenDrawImage = vi.spyOn(
+      OffscreenCanvasRenderingContext2D.prototype,
+      'drawImage',
+    );
+
+    try {
+      driver.flush(10);
+      const [aLayer, bLayer] = Array.from(GLOBAL_STATE.crcInstances.values())
+        .filter(instance => instance.parent === canvas);
+      const nestedLayer = Array.from(GLOBAL_STATE.crcInstances.values())
+        .find(instance => instance.parent === aLayer!.canvas)!;
+      drawImage.mockClear();
+      offscreenDrawImage.mockClear();
+
+      aSignal.set(1);
+      driver.flush(20);
+
+      expect(renders).toEqual({ root: 2, a: 2, b: 1, nested: 1 });
+      expect(drawImage.mock.calls.map(([source]) => source)).toEqual([
+        aLayer!.canvas,
+        bLayer!.canvas,
+      ]);
+      expect(aLayer!.completedRenderRevision).toBe(aLayer!.requestedRenderRevision);
+      expect(bLayer!.completedRenderRevision).toBe(bLayer!.requestedRenderRevision);
+      drawImage.mockClear();
+      offscreenDrawImage.mockClear();
+
+      nestedSignal.set(1);
+      driver.flush(30);
+
+      expect(renders).toEqual({ root: 3, a: 3, b: 1, nested: 2 });
+      expect(offscreenDrawImage.mock.calls.map(([source]) => source)).toEqual([
+        nestedLayer.canvas,
+      ]);
+      expect(drawImage.mock.calls.map(([source]) => source)).toEqual([
+        aLayer!.canvas,
+        bLayer!.canvas,
+      ]);
+      expect(nestedLayer.completedRenderRevision).toBe(
+        nestedLayer.requestedRenderRevision,
+      );
+      expect(aLayer!.completedRenderRevision).toBe(aLayer!.requestedRenderRevision);
+    } finally {
+      offscreenDrawImage.mockRestore();
+      drawImage.mockRestore();
       controller.dispose();
       restoreDriver();
     }

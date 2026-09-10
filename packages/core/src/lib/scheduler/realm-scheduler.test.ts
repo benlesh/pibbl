@@ -8,6 +8,7 @@ import {
   clearSharedState,
   getCRCInstance,
   getCurrentCRCInstance,
+  GLOBAL_STATE,
 } from '../global-state';
 import { mountCRC } from '../mount-crc';
 import {
@@ -368,6 +369,142 @@ describe('realm scheduler', () => {
       pendingHostFrames: 0,
     });
     controller.dispose();
+  });
+
+  it('defers a nested request made during child rendering to the next realm frame', () => {
+    const childPulse = signal(0);
+    const calls: string[] = [];
+    const canvas = createCanvas();
+    const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
+    let layerCanvas: OffscreenCanvas | undefined;
+    let requestReplacement = false;
+    const Replacement = (_props: {}) => {
+      calls.push('replacement');
+      return createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: 'blue' },
+      });
+    };
+    const NestedChild = (_props: {}) => {
+      calls.push('child');
+      childPulse.get();
+      if (requestReplacement) {
+        requestReplacement = false;
+        update(layerCanvas!, createElement(Replacement, {}));
+      }
+      return createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: 'red' },
+      });
+    };
+    const controller = crc(canvas, createElement(Layer, {
+      style: { width: 20, height: 20 },
+      children: createElement(NestedChild, {}),
+    }));
+
+    driver.flush(10);
+    layerCanvas = drawImage.mock.calls
+      .map(([source]) => source)
+      .find(source => source instanceof OffscreenCanvas) as OffscreenCanvas;
+    calls.length = 0;
+    requestReplacement = true;
+
+    childPulse.set(1);
+    driver.flush(20);
+
+    const child = getCRCInstance(layerCanvas);
+    expect(calls).toEqual(['child']);
+    expect(child.requestedRenderRevision).toBeGreaterThan(
+      child.completedRenderRevision,
+    );
+    expect(pixel(canvas, 5, 5)).toEqual([255, 0, 0, 255]);
+    expect(driver.pendingHostFrames).toBe(1);
+
+    driver.flush(30);
+
+    expect(calls).toEqual(['child', 'replacement']);
+    expect(pixel(canvas, 5, 5)).toEqual([0, 0, 255, 255]);
+    expect(child.completedRenderRevision).toBe(child.requestedRenderRevision);
+    expect(driver.pendingHostFrames).toBe(0);
+    controller.dispose();
+  });
+
+  it('commits a shared signal before rendering a Layer root and another top-level root', () => {
+    const shared = signal('red');
+    const reads: string[] = [];
+    const LayerChild = (_props: {}) => {
+      reads.push(`layer:${shared.get()}`);
+      return createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: shared.get() },
+      });
+    };
+    const OtherRoot = (_props: {}) => {
+      reads.push(`other:${shared.get()}`);
+      return createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: shared.get() },
+      });
+    };
+    const first = crc(createCanvas(), createElement(Layer, {
+      style: { width: 20, height: 20 },
+      children: createElement(LayerChild, {}),
+    }));
+    const second = crc(createCanvas(), createElement(OtherRoot, {}));
+
+    driver.flush(10);
+    reads.length = 0;
+    shared.set('blue');
+    driver.flush(20);
+
+    expect(reads).toEqual(['layer:blue', 'other:blue']);
+    expect(driver.pendingHostFrames).toBe(0);
+    first.dispose();
+    second.dispose();
+  });
+
+  it('cleans a failed signal-driven Layer child while another root progresses and the child recovers', () => {
+    const shouldFail = signal(false);
+    const failure = new Error('nested signal failure');
+    const firstCanvas = createCanvas();
+    const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
+    let independentRenders = 0;
+    const Child = (_props: {}) => {
+      if (shouldFail.get()) throw failure;
+      return createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: 'red' },
+      });
+    };
+    const Recovered = (_props: {}) => createElement(Rectangle, {
+      style: { width: 20, height: 20, fill: 'blue' },
+    });
+    const first = crc(firstCanvas, createElement(Layer, {
+      style: { width: 20, height: 20 },
+      children: createElement(Child, {}),
+    }));
+    const secondCanvas = createCanvas();
+    const second = crc(secondCanvas, createElement(() => {
+      independentRenders++;
+    }, {}));
+    driver.flush(10);
+    const layerCanvas = drawImage.mock.calls
+      .map(([source]) => source)
+      .find(source => source instanceof OffscreenCanvas) as OffscreenCanvas;
+    const child = getCRCInstance(layerCanvas);
+
+    shouldFail.set(true);
+    crc(secondCanvas, createElement(() => {
+      independentRenders++;
+    }, {}));
+    expect(() => driver.flush(20)).toThrow(failure);
+
+    expect(child.refs.size).toBe(0);
+    expect(getSignalNode(shouldFail).observers.size).toBe(0);
+    expect(independentRenders).toBe(2);
+    expect(GLOBAL_STATE.crcInstances.has(layerCanvas)).toBe(true);
+
+    update(layerCanvas, createElement(Recovered, {}));
+    driver.flush(30);
+
+    expect(pixel(firstCanvas, 5, 5)).toEqual([0, 0, 255, 255]);
+    first.dispose();
+    second.dispose();
   });
 
   it('cancels exactly one pending host callback when the final dirty root is removed', () => {
