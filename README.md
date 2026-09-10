@@ -89,21 +89,22 @@ file has one JSX runtime, so mixed React/CRC applications keep their JSX trees
 in separate files or use an explicit element constructor for the minority
 tree.
 
-Need to avoid JSX entirely? The complete [`createElement` guide](docs/guides/without-jsx.md)
+Need to avoid JSX entirely? The complete [`createElement` guide](docs/site/learn/guides/author-without-jsx.md)
 starts from installation and mounting and does not require the JSX guides.
 
-## Learn the API
+## Learn CRC
 
-- [JSX quick start](docs/guides/jsx-quick-start.md)
-- [Compiler and JavaScript configuration](docs/guides/configuring-jsx.md)
-- [Components, props, events, and local style](docs/guides/components-props-and-style.md)
-- [Children, text, fragments, lists, and keys](docs/guides/children-text-lists-and-keys.md)
-- [Layout, groups, clips, and layers](docs/guides/layout-groups-clips-and-layers.md)
-- [State, lifecycle, disposal, and React differences](docs/guides/state-lifecycle-and-react-differences.md)
-- [Custom components, Canvas painting, and primitives](docs/guides/custom-components-and-primitives.md)
-- [React coexistence](docs/guides/react-interop.md)
-- [JSX troubleshooting](docs/guides/jsx-troubleshooting.md)
-- [Focus, keyboard navigation, and accessibility](docs/guides/focus-keyboard-and-accessibility.md)
+- [Configure JSX](docs/site/learn/guides/configure-jsx.md)
+- [Author without JSX](docs/site/learn/guides/author-without-jsx.md)
+- [Understand components, props, and children](docs/site/learn/guides/components-props-and-children.md)
+- [Style and draw](docs/site/learn/guides/style-and-draw.md)
+- [Compose and lay out scenes](docs/site/learn/guides/compose-and-layout.md)
+- [Manage state and lifecycle](docs/site/learn/guides/state-and-lifecycle.md)
+- [Add focus and keyboard navigation](docs/site/learn/guides/focus-and-keyboard.md)
+- [Create custom components and primitives](docs/site/learn/guides/custom-components-and-primitives.md)
+- [Integrate with React](docs/site/learn/guides/react-integration.md)
+- [Troubleshoot JSX](docs/site/learn/guides/jsx-troubleshooting.md)
+- [Learn the basics: Build a diagram editor](docs/site/learn/tutorials/diagram-editor/index.md)
 - [Complete API reference](docs/api-reference.md)
 
 The [one-time migration guide](docs/migrations/jsx-authoring-pivot.md) maps the

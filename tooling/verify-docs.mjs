@@ -70,6 +70,20 @@ const guidePaths = [
   "docs/guides/state-lifecycle-and-react-differences.md",
   "docs/guides/without-jsx.md",
 ];
+const publicSiteMarkdownPaths = [
+  "docs/site/learn/index.md",
+  "docs/site/learn/tutorials/diagram-editor/index.md",
+  "docs/site/learn/guides/configure-jsx.md",
+  "docs/site/learn/guides/author-without-jsx.md",
+  "docs/site/learn/guides/components-props-and-children.md",
+  "docs/site/learn/guides/style-and-draw.md",
+  "docs/site/learn/guides/compose-and-layout.md",
+  "docs/site/learn/guides/state-and-lifecycle.md",
+  "docs/site/learn/guides/focus-and-keyboard.md",
+  "docs/site/learn/guides/custom-components-and-primitives.md",
+  "docs/site/learn/guides/react-integration.md",
+  "docs/site/learn/guides/jsx-troubleshooting.md",
+];
 const currentMarkdownPaths = [
   "AGENTS.md",
   "README.md",
@@ -100,6 +114,7 @@ const currentMarkdownPaths = [
   "docs/testing/test-tooling-opportunities.md",
   "docs/testing/trust-gate.md",
   ...guidePaths,
+  ...publicSiteMarkdownPaths,
 ];
 const linkCheckedPaths = [
   ...currentMarkdownPaths,
@@ -392,6 +407,9 @@ export async function assertLocalLinks(
       target = target.slice(1, -1);
     }
     if (/^[a-z]+:/iu.test(target)) continue;
+    // Studio routes are validated against the public documentation manifest;
+    // they are not repository-local heading anchors.
+    if (target.startsWith("#/")) continue;
     target = target.split(/\s+["']/u, 1)[0];
     const hashIndex = target.indexOf("#");
     const encodedFile = hashIndex < 0 ? target : target.slice(0, hashIndex);
@@ -1598,7 +1616,7 @@ const contractPreservationResult = assertContractPreservationBaseline({
 });
 
 const readme = currentSources.get("README.md");
-const advancedStart = readme.indexOf("## Learn the API");
+const advancedStart = readme.indexOf("## Learn CRC");
 assert.ok(readme.indexOf("## Quick start") >= 0, "README needs a quick start.");
 assert.ok(
   advancedStart > readme.indexOf("## Quick start"),
@@ -1613,7 +1631,8 @@ export function assertFixedConfigSignal(source) {
 }
 assertFixedConfigSignal(apiReference);
 assert.ok(
-  readme.indexOf("docs/guides/without-jsx.md") < advancedStart,
+  readme.indexOf("docs/site/learn/guides/author-without-jsx.md") <
+    advancedStart,
   "README must link the standalone non-JSX path before advanced material.",
 );
 

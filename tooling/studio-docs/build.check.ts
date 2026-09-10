@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
+import { learningExampleCatalog } from "@crc/scenarios";
 import { buildStudioDocumentation } from "./build";
 
 const fixtureRoot = await mkdtemp(join(tmpdir(), "crc-studio-docs-build-"));
@@ -205,6 +206,43 @@ order: ${String(order)}
 } finally {
   await rm(fixtureRoot, { force: true, recursive: true });
 }
+
+const real = await buildStudioDocumentation({
+  repositoryRoot: resolve(import.meta.dirname, "../.."),
+  apiInventory: { root: { values: [], types: [], overview: [] } },
+  examples: learningExampleCatalog,
+});
+
+assert.deepEqual(
+  real.pages
+    .filter(({ frontmatter }) => frontmatter.kind === "guide")
+    .sort((left, right) => left.frontmatter.order! - right.frontmatter.order!)
+    .map(({ frontmatter }) => frontmatter.title),
+  [
+    "Configure JSX",
+    "Author without JSX",
+    "Understand components, props, and children",
+    "Style and draw",
+    "Compose and lay out scenes",
+    "Manage state and lifecycle",
+    "Add focus and keyboard navigation",
+    "Create custom components and primitives",
+    "Integrate with React",
+    "Troubleshoot JSX",
+  ],
+);
+assert.equal(
+  real.pageByRoute["#/learn/guides/configure-jsx"].frontmatter.exampleSlug,
+  "getting-started",
+);
+assert.equal(
+  real.pageByRoute["#/learn/guides/author-without-jsx"].frontmatter.exampleSlug,
+  "create-element-authoring",
+);
+assert.match(
+  real.pageByRoute["#/learn/tutorials/diagram-editor"].plainText,
+  /Finish and harden the editor/u,
+);
 
 process.stdout.write(
   "Validated the deterministic Studio documentation manifest.\n",
