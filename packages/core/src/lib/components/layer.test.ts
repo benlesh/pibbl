@@ -14,6 +14,11 @@ import { crcEventTarget } from '../hooks/crc-event-target';
 import { crcRef } from '../hooks/crc-ref';
 import { crcState } from '../hooks/crc-state';
 import { crcWhenChanged } from '../hooks/crc-when-changed';
+import { signal } from '../signals/graph';
+import {
+  installSchedulerDriverForTest,
+  ManualSchedulerDriver,
+} from '../scheduler/testing';
 import { focusManaged } from '../focus/policy-test-support';
 import { componentTest } from '../test-utils/component-test';
 import type { CRCController, CRCNode } from '../types';
@@ -26,6 +31,144 @@ import { Text } from './text';
 import { definePrimitive } from '../define-primitive';
 
 describe('Layer children and retained subtree contract', () => {
+  it('refreshes a pending signal-driven child bitmap before composing it', () => {
+    const driver = new ManualSchedulerDriver();
+    const restoreDriver = installSchedulerDriverForTest(driver);
+    const color = signal('red');
+    let childRenders = 0;
+    const Child = (_props: {}): CRCNode => {
+      childRenders++;
+      return createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: color.get() },
+      });
+    };
+    const scene = createElement(Layer, {
+      style: { width: 20, height: 20 },
+      children: createElement(Child, {}),
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = 20;
+    canvas.height = 20;
+    document.body.appendChild(canvas);
+    const controller = crc(canvas, scene, { pixelRatio: 1 });
+    const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
+
+    try {
+      driver.flush(10);
+      const layerCanvas = layerCanvasFrom(drawImage);
+      drawImage.mockClear();
+
+      color.set('blue');
+      executeRender(canvas, 20, scene, false);
+
+      expect(childRenders).toBe(2);
+      expect(pixel(canvas, 5, 5)).toEqual([0, 0, 255, 255]);
+      expect(drawImage).toHaveBeenCalledTimes(1);
+      const child = getCRCInstance(layerCanvas);
+      expect(child.completedRenderRevision).toBe(child.requestedRenderRevision);
+    } finally {
+      drawImage.mockRestore();
+      controller.dispose();
+      restoreDriver();
+    }
+  });
+
+  it('refreshes nested pending layer surfaces from child to parent', () => {
+    const driver = new ManualSchedulerDriver();
+    const restoreDriver = installSchedulerDriverForTest(driver);
+    const color = signal('red');
+    let nestedRenders = 0;
+    const NestedChild = (_props: {}): CRCNode => {
+      nestedRenders++;
+      return createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: color.get() },
+      });
+    };
+    const scene = createElement(Layer, {
+      style: { width: 20, height: 20 },
+      children: createElement(Layer, {
+        style: { width: 20, height: 20 },
+        children: createElement(NestedChild, {}),
+      }),
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = 20;
+    canvas.height = 20;
+    document.body.appendChild(canvas);
+    const controller = crc(canvas, scene, { pixelRatio: 1 });
+    const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
+    const offscreenDrawImage = vi.spyOn(
+      OffscreenCanvasRenderingContext2D.prototype,
+      'drawImage',
+    );
+
+    try {
+      driver.flush(10);
+      const outer = Array.from(GLOBAL_STATE.crcInstances.values())
+        .find(instance => instance.parent === canvas)!;
+      const nested = Array.from(GLOBAL_STATE.crcInstances.values())
+        .find(instance => instance.parent === outer.canvas)!;
+      drawImage.mockClear();
+      offscreenDrawImage.mockClear();
+
+      color.set('blue');
+      executeRender(canvas, 20, scene, false);
+
+      expect(nestedRenders).toBe(2);
+      expect(pixel(canvas, 5, 5)).toEqual([0, 0, 255, 255]);
+      expect(offscreenDrawImage.mock.calls.map(([source]) => source)).toEqual([
+        nested.canvas,
+      ]);
+      expect(drawImage.mock.calls.map(([source]) => source)).toEqual([outer.canvas]);
+      expect(nested.completedRenderRevision).toBe(nested.requestedRenderRevision);
+      expect(outer.completedRenderRevision).toBe(outer.requestedRenderRevision);
+    } finally {
+      offscreenDrawImage.mockRestore();
+      drawImage.mockRestore();
+      controller.dispose();
+      restoreDriver();
+    }
+  });
+
+  it('reuses a clean child bitmap when a parent signal changes Layer placement', () => {
+    const driver = new ManualSchedulerDriver();
+    const restoreDriver = installSchedulerDriverForTest(driver);
+    const offset = signal(0);
+    let childRenders = 0;
+    const Child = (_props: {}): CRCNode => {
+      childRenders++;
+      return createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: 'red' },
+      });
+    };
+    const Root = (_props: {}): CRCNode => createElement(Group, {
+      style: { translateX: offset.get() },
+      children: createElement(Layer, {
+        style: { width: 20, height: 20 },
+        children: createElement(Child, {}),
+      }),
+    });
+    const root = createElement(Root, {});
+    const canvas = document.createElement('canvas');
+    canvas.width = 40;
+    canvas.height = 20;
+    document.body.appendChild(canvas);
+    const controller = crc(canvas, root, { pixelRatio: 1 });
+
+    try {
+      driver.flush(10);
+
+      offset.set(10);
+      executeRender(canvas, 20, root, false);
+
+      expect(childRenders).toBe(1);
+      expect(pixel(canvas, 15, 5)).toEqual([255, 0, 0, 255]);
+    } finally {
+      controller.dispose();
+      restoreDriver();
+    }
+  });
+
   it('reuses the cached child bitmap when only an outer filter changes', () => {
     let childRenders = 0;
     const Counted = (_props: {}) => {

@@ -29,6 +29,7 @@ import {
 } from '../surface/transform.js';
 import { getCurrentWorldTransform } from '../render-target.js';
 import { createLayerSurface } from '../surface/resolve-surface.js';
+import { hasPendingInstanceRender } from '../scheduler/realm-scheduler.js';
 import type { CRCElement } from '../element/types.js';
 import {
   haveSameLayerNodeTree,
@@ -138,7 +139,8 @@ function renderLayer(
     dimensionsChanged ||
     surfaceChanged ||
     !haveSameLayerNodeTree(slot.retainedTree, nextRoot) ||
-    slot.focusRenderRevision !== focusRenderRevision;
+    slot.focusRenderRevision !== focusRenderRevision ||
+    hasPendingInstanceRender(layerCRC);
   if (shouldRender) {
     if (layerCRC.surface.kind !== 'layer') {
       throw new Error('CRC layer mounted without a derived surface.');
@@ -150,12 +152,14 @@ function renderLayer(
     slot.logicalWidth = width;
     slot.logicalHeight = height;
 
+    const renderedRevision = layerCRC.requestedRenderRevision;
     executeRender(
       offscreenCanvas,
       getCurrentCRCInstance().renderTimestamp,
       nextRoot,
       false,
     );
+    layerCRC.completedRenderRevision = renderedRevision;
     slot.retainedTree = snapshotLayerNodeTree(nextRoot);
   } else {
     parentInstance.eventRoot.focusPolicy?.replayRetainedSubtree(layerCRC);

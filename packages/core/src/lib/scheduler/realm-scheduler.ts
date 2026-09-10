@@ -74,6 +74,11 @@ export function requestInstanceRender(instance: CRCInstance): number {
   return revision;
 }
 
+/** Whether an instance has work that has not yet completed a successful render. */
+export function hasPendingInstanceRender(instance: CRCInstance): boolean {
+  return instance.requestedRenderRevision > instance.completedRenderRevision;
+}
+
 export function registerAdvanceParticipant(
   participant: CRCAdvanceParticipant,
 ): () => void {
@@ -193,7 +198,6 @@ function runFrame(hostTime: number): void {
     rootJob.root.eventRoot.renderTransaction = transaction;
     let failedInstance: CRCInstance | undefined;
     try {
-      const completedJobs: InstanceRenderJob[] = [];
       for (const job of rootJob.instances) {
         if (job.instance.mainTeardowns.closed) continue;
         try {
@@ -208,9 +212,6 @@ function runFrame(hostTime: number): void {
           failedInstance = job.instance;
           throw error;
         }
-        completedJobs.push(job);
-      }
-      for (const job of completedJobs) {
         job.instance.completedRenderRevision = job.revision;
       }
       transactionRecord.success = true;
