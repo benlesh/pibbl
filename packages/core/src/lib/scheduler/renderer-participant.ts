@@ -31,8 +31,10 @@ export interface CRCInternalFrame {
  * Every active callback in a stage runs in registration order. If one or more
  * callbacks fail, their errors are reported in that order, later dependent
  * stages are skipped, the root transaction fails, the instance revision stays
- * incomplete, and the captured renderer batch is retried on the next realm
- * frame. Other roots still run.
+ * incomplete, and the failed batch plus unexecuted batches later in the same
+ * root are retried on the next realm frame. Complete callbacks for those
+ * retried owners are deferred until a successful frame. Other owners and roots
+ * still complete normally.
  */
 export type CRCInternalRendererWorkKind = 'resource' | 'draw' | 'compose';
 

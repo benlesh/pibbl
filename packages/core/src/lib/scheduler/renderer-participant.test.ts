@@ -206,6 +206,148 @@ describe('@crc/core/internal renderer participants', () => {
     controller.dispose();
   });
 
+  it('restores unexecuted later-owner work in the same root without overwriting newer keyed work', () => {
+    const calls: string[] = [];
+    const failure = new Error('nested renderer failed');
+    const parentKey = {};
+    const retainedParentKey = {};
+    let parentOwner: CRCInternalRenderOwner | undefined;
+    let childOwner: CRCInternalRenderOwner | undefined;
+    let failOnce = true;
+    let recordRenders = false;
+
+    const Child = (_props: {}) => {
+      childOwner ??= crcInternalCurrentRenderOwner();
+      if (recordRenders) calls.push('child render');
+    };
+    const Root = (_props: {}) => {
+      parentOwner ??= crcInternalCurrentRenderOwner();
+      if (recordRenders) calls.push('parent render');
+      return createElement(Layer, {
+        style: { width: 20, height: 20 },
+        children: createElement(Child, {}),
+      });
+    };
+
+    const controller = crc(createCanvas(), createElement(Root, {}));
+    driver.flush(1);
+    recordRenders = true;
+
+    crcInternalRequestRendererWork(parentOwner!, {
+      key: parentKey,
+      kind: 'draw',
+      run: () => calls.push('stale parent work'),
+    });
+    crcInternalRequestRendererWork(parentOwner!, {
+      key: retainedParentKey,
+      kind: 'draw',
+      run: () => calls.push('retained parent work'),
+    });
+    crcInternalRequestRendererWork(childOwner!, {
+      key: {},
+      kind: 'resource',
+      run: () => {
+        calls.push('child work');
+        if (failOnce) {
+          failOnce = false;
+          crcInternalRequestRendererWork(parentOwner!, {
+            key: parentKey,
+            kind: 'draw',
+            run: () => calls.push('latest parent work'),
+          });
+          throw failure;
+        }
+      },
+    });
+
+    expect(() => driver.flush(2)).toThrow(failure);
+    expect(calls).toEqual(['child work']);
+    expect(driver.pendingHostFrames).toBe(1);
+
+    calls.length = 0;
+    driver.flush(3);
+    expect(calls).toEqual([
+      'child work',
+      'child render',
+      'retained parent work',
+      'latest parent work',
+      'parent render',
+    ]);
+    expect(driver.pendingHostFrames).toBe(0);
+    controller.dispose();
+  });
+
+  it('defers a failed owner completion while successful owners complete exactly once', () => {
+    const calls: string[] = [];
+    const failure = new Error('renderer failed before completion');
+    let failedOwner: CRCInternalRenderOwner | undefined;
+    let successfulOwner: CRCInternalRenderOwner | undefined;
+    let failOnce = true;
+    let recordRenders = false;
+
+    const FailingRoot = (_props: {}) => {
+      failedOwner ??= crcInternalCurrentRenderOwner();
+      if (recordRenders) calls.push('failed root render');
+    };
+    const SuccessfulRoot = (_props: {}) => {
+      successfulOwner ??= crcInternalCurrentRenderOwner();
+      if (recordRenders) calls.push('successful root render');
+    };
+    const failedController = crc(
+      createCanvas(),
+      createElement(FailingRoot, {}),
+    );
+    const successfulController = crc(
+      createCanvas(),
+      createElement(SuccessfulRoot, {}),
+    );
+    driver.flush(1);
+    recordRenders = true;
+
+    crcInternalRequestRendererWork(failedOwner!, {
+      key: {},
+      kind: 'resource',
+      run: () => {
+        calls.push('failed owner work');
+        if (failOnce) {
+          failOnce = false;
+          throw failure;
+        }
+      },
+    });
+    crcInternalQueueComplete(failedOwner!, () => {
+      calls.push('failed owner complete');
+    });
+    crcInternalRequestRendererWork(successfulOwner!, {
+      key: {},
+      kind: 'draw',
+      run: () => calls.push('successful owner work'),
+    });
+    crcInternalQueueComplete(successfulOwner!, () => {
+      calls.push('successful owner complete');
+    });
+
+    expect(() => driver.flush(2)).toThrow(failure);
+    expect(calls).toEqual([
+      'failed owner work',
+      'successful owner work',
+      'successful root render',
+      'successful owner complete',
+    ]);
+    expect(driver.pendingHostFrames).toBe(1);
+
+    calls.length = 0;
+    driver.flush(3);
+    expect(calls).toEqual([
+      'failed owner work',
+      'failed root render',
+      'failed owner complete',
+    ]);
+    expect(driver.pendingHostFrames).toBe(0);
+    failedController.dispose();
+    successfulController.dispose();
+  });
+
   it('coalesces several consumer invalidations into one renderer frame', () => {
     const calls: string[] = [];
     const sources = [signal(0), signal(0), signal(0)];

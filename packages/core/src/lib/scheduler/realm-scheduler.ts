@@ -267,6 +267,7 @@ function runFrame(hostTime: number): void {
   rootJobs = mergeRootJobs(rootJobs, captureRootJobs(true));
   const rendererWork = captureRendererParticipantWork();
   const rendererCompletions = rendererParticipantCompletions.splice(0);
+  const retryRendererOwners = new Set<RendererParticipantOwner>();
 
   phase = 'render';
   for (const rootJob of rootJobs) {
@@ -280,7 +281,8 @@ function runFrame(hostTime: number): void {
     let failedInstance: CRCInstance | undefined;
     let rendererFailed = false;
     try {
-      for (const job of rootJob.instances) {
+      for (let jobIndex = 0; jobIndex < rootJob.instances.length; jobIndex++) {
+        const job = rootJob.instances[jobIndex];
         if (job.instance.mainTeardowns.closed) continue;
         const participantWork = rendererWork.get(job.instance);
         const resourceFailures = runRendererParticipantStage(
@@ -289,7 +291,12 @@ function runFrame(hostTime: number): void {
           snapshot,
         );
         if (resourceFailures.length > 0) {
-          restoreRendererParticipantFailure(rootJob, participantWork);
+          restoreRendererParticipantFailure(
+            rootJob,
+            rendererWork,
+            jobIndex,
+            retryRendererOwners,
+          );
           errors.push(...resourceFailures);
           rendererFailed = true;
           break;
@@ -300,7 +307,12 @@ function runFrame(hostTime: number): void {
           snapshot,
         );
         if (drawFailures.length > 0) {
-          restoreRendererParticipantFailure(rootJob, participantWork);
+          restoreRendererParticipantFailure(
+            rootJob,
+            rendererWork,
+            jobIndex,
+            retryRendererOwners,
+          );
           errors.push(...drawFailures);
           rendererFailed = true;
           break;
@@ -319,7 +331,12 @@ function runFrame(hostTime: number): void {
             snapshot,
           );
           if (composeFailures.length > 0) {
-            restoreRendererParticipantFailure(rootJob, participantWork);
+            restoreRendererParticipantFailure(
+              rootJob,
+              rendererWork,
+              jobIndex,
+              retryRendererOwners,
+            );
             errors.push(...composeFailures);
             rendererFailed = true;
             break;
@@ -360,6 +377,10 @@ function runFrame(hostTime: number): void {
   }
   for (const completion of rendererCompletions) {
     if (!completion.owner.isActive()) continue;
+    if (retryRendererOwners.has(completion.owner)) {
+      rendererParticipantCompletions.push(completion);
+      continue;
+    }
     try {
       completion.callback(snapshot);
     } catch (error) {
@@ -570,23 +591,33 @@ function runRendererParticipantStage(
 
 function restoreRendererParticipantFailure(
   rootJob: RootRenderJob,
-  work: RendererParticipantWorkRegistration[] | undefined,
+  rendererWork: Map<CRCInstance, RendererParticipantWorkRegistration[]>,
+  failedJobIndex: number,
+  retryOwners: Set<RendererParticipantOwner>,
 ): void {
   restoreRootJob(rootJob);
-  if (!work) return;
   const ownersToRequest = new Set<RendererParticipantOwner>();
-  for (const registration of work) {
-    const { owner, request } = registration;
-    if (!owner.isActive()) continue;
-    let workByKey = rendererWorkByOwner.get(owner);
-    if (!workByKey) {
-      workByKey = new Map();
-      rendererWorkByOwner.set(owner, workByKey);
+  for (
+    let jobIndex = failedJobIndex;
+    jobIndex < rootJob.instances.length;
+    jobIndex++
+  ) {
+    const work = rendererWork.get(rootJob.instances[jobIndex].instance);
+    if (!work) continue;
+    for (const registration of work) {
+      const { owner, request } = registration;
+      if (!owner.isActive()) continue;
+      let workByKey = rendererWorkByOwner.get(owner);
+      if (!workByKey) {
+        workByKey = new Map();
+        rendererWorkByOwner.set(owner, workByKey);
+      }
+      if (!workByKey.has(request.key)) {
+        workByKey.set(request.key, registration);
+      }
+      ownersToRequest.add(owner);
+      retryOwners.add(owner);
     }
-    if (!workByKey.has(request.key)) {
-      workByKey.set(request.key, registration);
-    }
-    ownersToRequest.add(owner);
   }
   for (const owner of ownersToRequest) {
     requestInstanceRender(owner.instance);
