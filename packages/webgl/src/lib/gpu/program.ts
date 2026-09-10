@@ -36,6 +36,7 @@ export function createBuiltInProgram(
   let vertex: WebGLShader | undefined;
   let fragment: WebGLShader | undefined;
   let program: WebGLProgram | undefined;
+  let linked = false;
   let published = false;
   try {
     vertex = compileShader(
@@ -67,6 +68,7 @@ export function createBuiltInProgram(
         sanitizePlatformLog(gl.getProgramInfoLog(program)),
       );
     }
+    linked = true;
 
     const builtIn = Object.freeze({
       program,
@@ -81,9 +83,19 @@ export function createBuiltInProgram(
       color: requireUniform(gl, program, componentName, 'u_color'),
       positionAttribute: 0 as const,
     });
+    gl.detachShader(program, vertex);
+    gl.detachShader(program, fragment);
+    gl.deleteShader(vertex);
+    vertex = undefined;
+    gl.deleteShader(fragment);
+    fragment = undefined;
     published = true;
     return builtIn;
   } finally {
+    if (linked && program) {
+      if (vertex) gl.detachShader(program, vertex);
+      if (fragment) gl.detachShader(program, fragment);
+    }
     if (vertex) gl.deleteShader(vertex);
     if (fragment) gl.deleteShader(fragment);
     if (!published && program) gl.deleteProgram(program);

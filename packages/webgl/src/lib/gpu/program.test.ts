@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createBuiltInProgram } from './program.js';
+import {
+  createBuiltInProgram,
+  deleteBuiltInProgram,
+} from './program.js';
 
 describe('createBuiltInProgram', () => {
   it('names the component and vertex stage and deletes a failed shader', () => {
@@ -60,6 +63,7 @@ describe('createBuiltInProgram', () => {
       gl,
       program,
       shaders,
+      shaderCleanup,
       deleteProgram,
       deleteShader,
     } = createProgramGL();
@@ -75,7 +79,46 @@ describe('createBuiltInProgram', () => {
       positionAttribute: 0,
     });
     expect(deleteShader.mock.calls.map(([shader]) => shader)).toEqual(shaders);
+    expect(shaderCleanup).toEqual([
+      `detach:${shaders[0]!.id}`,
+      `detach:${shaders[1]!.id}`,
+      `delete:${shaders[0]!.id}`,
+      `delete:${shaders[1]!.id}`,
+    ]);
     expect(deleteProgram).not.toHaveBeenCalled();
+  });
+
+  it('detaches and deletes linked shaders before deleting a uniform-failed program', () => {
+    const {
+      gl,
+      program,
+      shaders,
+      shaderCleanup,
+      deleteProgram,
+    } = createProgramGL({ missingUniform: 'u_projection' });
+
+    expect(() => createBuiltInProgram(gl, 'Cube')).toThrowError(
+      /Cube.*program.*u_projection/i,
+    );
+    expect(shaderCleanup).toEqual([
+      `detach:${shaders[0]!.id}`,
+      `detach:${shaders[1]!.id}`,
+      `delete:${shaders[0]!.id}`,
+      `delete:${shaders[1]!.id}`,
+    ]);
+    expect(deleteProgram).toHaveBeenCalledOnce();
+    expect(deleteProgram).toHaveBeenCalledWith(program);
+  });
+
+  it('publishes a real WebGL2 program with no attached shader intermediates', () => {
+    const gl = new OffscreenCanvas(8, 8).getContext('webgl2');
+    expect(gl).not.toBeNull();
+
+    const builtIn = createBuiltInProgram(gl!, 'Mesh');
+
+    expect(gl!.getAttachedShaders(builtIn.program)).toEqual([]);
+    deleteBuiltInProgram(gl!, builtIn);
+    expect(gl!.getError()).toBe(gl!.NO_ERROR);
   });
 });
 
@@ -84,6 +127,7 @@ interface ProgramGLOptions {
   readonly linkFailed?: boolean;
   readonly shaderLog?: string;
   readonly programLog?: string;
+  readonly missingUniform?: string;
 }
 
 function createProgramGL(options: ProgramGLOptions = {}) {
@@ -92,13 +136,16 @@ function createProgramGL(options: ProgramGLOptions = {}) {
   const COMPILE_STATUS = 3;
   const LINK_STATUS = 4;
   const shaders: Array<{ readonly type: number; readonly id: number }> = [];
+  const shaderCleanup: string[] = [];
   const program = { kind: 'program' };
   const createShader = vi.fn((type: number) => {
     const shader = { type, id: shaders.length + 1 };
     shaders.push(shader);
     return shader;
   });
-  const deleteShader = vi.fn();
+  const deleteShader = vi.fn((shader: { readonly id: number }) => {
+    shaderCleanup.push(`delete:${shader.id}`);
+  });
   const createProgram = vi.fn(() => program);
   const deleteProgram = vi.fn();
   const gl = {
@@ -119,6 +166,9 @@ function createProgramGL(options: ProgramGLOptions = {}) {
     deleteShader,
     createProgram,
     attachShader: vi.fn(),
+    detachShader: vi.fn((_program: object, shader: { readonly id: number }) => {
+      shaderCleanup.push(`detach:${shader.id}`);
+    }),
     linkProgram: vi.fn(),
     getProgramParameter(_program: object, parameter: number) {
       expect(parameter).toBe(LINK_STATUS);
@@ -126,12 +176,14 @@ function createProgramGL(options: ProgramGLOptions = {}) {
     },
     getProgramInfoLog: vi.fn(() => options.programLog ?? ''),
     deleteProgram,
-    getUniformLocation: vi.fn((_program: object, name: string) => ({ name })),
+    getUniformLocation: vi.fn((_program: object, name: string) =>
+      name === options.missingUniform ? null : { name }),
   } as unknown as WebGL2RenderingContext;
   return {
     gl,
     program,
     shaders,
+    shaderCleanup,
     createProgram,
     deleteProgram,
     deleteShader,

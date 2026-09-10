@@ -115,6 +115,127 @@ describe('Mesh built-in rendering', () => {
     mounted.dispose();
   });
 
+  it.each([
+    'CanvasText',
+    'Mark',
+    'currentColor',
+    'color-mix(in srgb, currentColor, red)',
+    'rgb(from currentColor r g b)',
+    'color-mix(in srgb, rgb(from curr\\65 ntColor r g b), red)',
+    'light-dark(red, blue)',
+    'color-mix(in srgb, l\\69 ght-dark(red, blue), black)',
+    'env(--mesh-color, red)',
+    'attr(data-mesh-color type(<color>), red)',
+    'var(--mesh-color, red)',
+    'initial',
+    'color-mix(in srgb, red, inherit)',
+    'color-mix(in srgb, red, unset)',
+    'color-mix(in srgb, red, revert)',
+    'color-mix(in srgb, red, revert-layer)',
+  ])(
+    'rejects contextual color %s before acquiring GPU resources',
+    color => {
+      const recording = createDrawGL();
+      const geometry = createWebGLGeometry({
+        positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+      });
+      const root = <Mesh geometry={geometry} style={{ color }} />;
+      const mounted = mountScene(recording.gl, root);
+
+      expect(() => executeBackendCRC(mounted.mount, root, 1))
+        .toThrowError(/Mesh.*style\.color.*contextual/i);
+      expect(recording.draws).toEqual([]);
+      expect(recording.createProgram).not.toHaveBeenCalled();
+      expect(recording.createVertexArray).not.toHaveBeenCalled();
+      expect(recording.createBuffer).not.toHaveBeenCalled();
+
+      mounted.dispose();
+    },
+  );
+
+  it.each([
+    'red) blur(100px',
+    'rgb(0 0 0',
+    'color-mix(in srgb, red, blue]]',
+  ])(
+    'rejects malformed color boundary %s before acquiring GPU resources',
+    color => {
+      const recording = createDrawGL();
+      const geometry = createWebGLGeometry({
+        positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+      });
+      const root = <Mesh geometry={geometry} style={{ color }} />;
+      const mounted = mountScene(recording.gl, root);
+
+      expect(() => executeBackendCRC(mounted.mount, root, 1))
+        .toThrowError(/Mesh.*style\.color.*balanced.*boundary/i);
+      expect(recording.createProgram).not.toHaveBeenCalled();
+      expect(recording.createVertexArray).not.toHaveBeenCalled();
+      expect(recording.createBuffer).not.toHaveBeenCalled();
+
+      mounted.dispose();
+    },
+  );
+
+  it.each([
+    'red',
+    '#1234',
+    'rgb(1 2 3 / 50%)',
+    'hsl(120 50% 50%)',
+    'hwb(120 10% 20%)',
+    'lab(50% 20 30)',
+    'lch(50% 20 30)',
+    'oklab(50% .1 .1)',
+    'oklch(50% .1 30)',
+    'color(display-p3 1 0 0)',
+    'color-mix(in srgb, red, blue)',
+    'rgb(from red r g b)',
+    'color-mix(in srgb, red, /* currentColor light-dark(red, blue) ) */ blue)',
+  ])('accepts concrete browser color %s', color => {
+    const recording = createDrawGL();
+    const geometry = createWebGLGeometry({
+      positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+    });
+    const root = <Mesh geometry={geometry} style={{ color }} />;
+    const mounted = mountScene(recording.gl, root);
+
+    expect(() => executeBackendCRC(mounted.mount, root, 1)).not.toThrow();
+    expect(recording.draws).toHaveLength(1);
+
+    mounted.dispose();
+  });
+
+  it.each([
+    'color-mix(in srgb, red, "currentColor)")',
+    'r\\29 ed',
+    'currentColorful',
+    'CanvasTexture',
+    'Marking',
+  ])(
+    'leaves non-token contextual text %s to browser color validation',
+    color => {
+      const recording = createDrawGL();
+      const geometry = createWebGLGeometry({
+        positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+      });
+      const root = <Mesh geometry={geometry} style={{ color }} />;
+      const mounted = mountScene(recording.gl, root);
+
+      let error: unknown;
+      try {
+        executeBackendCRC(mounted.mount, root, 1);
+      } catch (caught) {
+        error = caught;
+      }
+      expect(error).toBeInstanceOf(TypeError);
+      expect(String(error)).toMatch(/Mesh.*style\.color.*concrete Canvas color/i);
+      expect(String(error)).not.toMatch(/contextual|balanced.*boundary/i);
+      expect(recording.createProgram).not.toHaveBeenCalled();
+
+      mounted.dispose();
+    },
+  );
+
   it('uses unit Cube and radius-0.5 Sphere defaults without extra model scale', () => {
     const recording = createDrawGL();
     const root = [<Cube key="cube" />, <Sphere key="sphere" />];
@@ -252,6 +373,8 @@ function createDrawGL() {
   const draws: DrawRecord[] = [];
   const clears: number[] = [];
   const createProgram = vi.fn(() => handle('program'));
+  const createVertexArray = vi.fn(() => handle('vertex-array'));
+  const createBuffer = vi.fn(() => handle('buffer'));
   const recordDraw = (kind: DrawRecord['kind'], count: number) => {
     draws.push({
       kind,
@@ -274,8 +397,8 @@ function createDrawGL() {
     getProgramParameter: () => true,
     getProgramInfoLog: () => '',
     getUniformLocation: (_program: object, name: string) => ({ name }),
-    createVertexArray: () => handle('vertex-array'),
-    createBuffer: () => handle('buffer'),
+    createVertexArray,
+    createBuffer,
     enable(capability: number) {
       enabled.add(capability);
     },
@@ -320,7 +443,15 @@ function createDrawGL() {
       return noop;
     },
   }) as unknown as WebGL2RenderingContext;
-  return { gl, constants, draws, clears, createProgram };
+  return {
+    gl,
+    constants,
+    draws,
+    clears,
+    createProgram,
+    createVertexArray,
+    createBuffer,
+  };
 }
 
 function createConstants(): Record<string, number> {
