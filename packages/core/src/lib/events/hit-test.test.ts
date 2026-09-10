@@ -210,6 +210,53 @@ describe('coordinate hit resolution', () => {
     ]);
     expect(eventRoot.coordinateHitInput).toEqual({ rootX: 12, rootY: 18 });
   });
+
+  it('interleaves rear Canvas, WebGL resolver, and later Canvas entries globally', () => {
+    const rearCanvas = target();
+    const webGL = target();
+    const frontCanvas = target();
+    const picker = vi.fn((x: number, _y: number, output: ReturnType<typeof emptyOutput>) => {
+      output.disposition = x < 50 ?
+        CRCHitDisposition.Target :
+        CRCHitDisposition.Miss;
+      output.target = x < 50 ? webGL : null;
+    });
+    const { eventRoot } = rootWith([
+      pathEntry(rearCanvas, rectangle(0, 0, 100, 100)),
+      resolverEntry(picker),
+      pathEntry(frontCanvas, rectangle(0, 0, 20, 20)),
+    ]);
+
+    const front = emptyOutput();
+    resolveCoordinateHit(eventRoot, { rootX: 10, rootY: 10 }, front);
+    expect(front).toEqual({
+      disposition: CRCHitDisposition.Target,
+      target: frontCanvas,
+    });
+    expect(picker).not.toHaveBeenCalled();
+
+    const island = emptyOutput();
+    resolveCoordinateHit(eventRoot, { rootX: 40, rootY: 40 }, island);
+    expect(island).toEqual({
+      disposition: CRCHitDisposition.Target,
+      target: webGL,
+    });
+    expect(picker).toHaveBeenCalledOnce();
+    expect(picker).toHaveBeenLastCalledWith(40, 40, island);
+
+    const transparentBackground = emptyOutput();
+    resolveCoordinateHit(
+      eventRoot,
+      { rootX: 80, rootY: 80 },
+      transparentBackground,
+    );
+    expect(transparentBackground).toEqual({
+      disposition: CRCHitDisposition.Target,
+      target: rearCanvas,
+    });
+    expect(picker).toHaveBeenCalledTimes(2);
+    expect(picker).toHaveBeenLastCalledWith(80, 80, transparentBackground);
+  });
 });
 
 function rootWith(entries: readonly (CRCPathPaintEntry | CRCNestedPaintEntry)[]) {

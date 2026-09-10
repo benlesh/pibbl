@@ -1,6 +1,7 @@
 import { defineWebGLPrimitive } from '../define-webgl-primitive.js';
 import {
   getWebGLGPUResources,
+  setWebGLPrimitivePickModel,
 } from '../render-environment.js';
 import {
   composeModelMatrix4,
@@ -120,6 +121,7 @@ export function drawBuiltInMesh(
   composeModelMatrix4(localModel, scaledStyle(style, uniformScale));
   const model = new Float32Array(16);
   multiplyMatrix4(model, context.modelMatrix, localModel);
+  setWebGLPrimitivePickModel(context, model);
 
   const cache = getWebGLGPUResources(context);
   const program = context.resources.use(

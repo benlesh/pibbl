@@ -1,11 +1,22 @@
 import { useInternalHookSlot } from '@crc/core/internal';
-import type { CRCBackendFrameInput } from '@crc/core/internal';
+import type {
+  CRCBackendFrameInput,
+  CRCEventTargetRegistration,
+} from '@crc/core/internal';
 import type {
   CRCWebGLCameraSnapshot,
   CRCWebGLContext,
+  CRCWebGLHitCapability,
 } from './types.js';
 import type { WebGLStateBaseline } from './gpu/state.js';
 import type { WebGLGPUResourceCache } from './gpu/resources.js';
+import {
+  createWebGLPickLedger,
+  recordCustomWebGLPick,
+  recordGeometryWebGLPick,
+  type CRCWebGLPickRecord,
+  type MutableCRCWebGLPickLedger,
+} from './pick-ledger.js';
 import {
   multiplyMatrix4,
   setIdentityMatrix4,
@@ -23,8 +34,9 @@ export interface WebGLRenderEnvironment {
   readonly stateBaseline: WebGLStateBaseline;
   readonly gpuResources: WebGLGPUResourceCache;
   readonly modelStack: Float32Array[];
-  /** Frame-local records; Task 9 supplies concrete pick entries. */
-  readonly pickEntries: unknown[];
+  readonly pickLedger: MutableCRCWebGLPickLedger;
+  readonly pickEntries: CRCWebGLPickRecord[];
+  primitivePickModel: Readonly<Float32Array> | undefined;
   activeContext: CRCWebGLContext | undefined;
 }
 
@@ -51,6 +63,10 @@ export function createWebGLRenderEnvironment(
   });
   const identity = new Float32Array(16);
   setIdentityMatrix4(identity);
+  const pickLedger = createWebGLPickLedger(
+    logicalViewport.width,
+    logicalViewport.height,
+  );
   return {
     gl: input.gl,
     contextGeneration: input.contextGeneration,
@@ -66,9 +82,78 @@ export function createWebGLRenderEnvironment(
     stateBaseline: input.stateBaseline,
     gpuResources: input.gpuResources,
     modelStack: [identity],
-    pickEntries: [],
+    pickLedger,
+    pickEntries: pickLedger.entries,
+    primitivePickModel: undefined,
     activeContext: undefined,
   };
+}
+
+interface WebGLPrimitivePickInput {
+  readonly componentName: string;
+  readonly target: CRCEventTargetRegistration;
+  readonly hit: Exclude<
+    CRCWebGLHitCapability<unknown, Readonly<Record<PropertyKey, unknown>>>,
+    { readonly kind: 'none' }
+  >;
+  readonly props: Readonly<Record<PropertyKey, unknown>>;
+  readonly style: Readonly<Record<PropertyKey, unknown>>;
+}
+
+/** Resets the one-draw model override before a primitive callback executes. */
+export function beginWebGLPrimitivePick(
+  context: CRCWebGLContext,
+): void {
+  requireContextEnvironment(context).primitivePickModel = undefined;
+}
+
+/** Appends a successful primitive's pick record before child traversal begins. */
+export function recordWebGLPrimitivePick(
+  context: CRCWebGLContext,
+  input: WebGLPrimitivePickInput,
+): void {
+  const environment = requireContextEnvironment(context);
+  const model = environment.primitivePickModel ??
+    environment.modelStack.at(-1)!;
+  const sourceOrder = environment.pickEntries.length;
+  if (input.hit.kind === 'geometry') {
+    recordGeometryWebGLPick(environment.pickLedger, {
+      componentName: input.componentName,
+      target: input.target,
+      geometry: input.hit.geometry(input.props, input.style),
+      model,
+      sourceOrder,
+      depthMode: 'less-equal',
+    });
+    return;
+  }
+  recordCustomWebGLPick(environment.pickLedger, {
+    componentName: input.componentName,
+    target: input.target,
+    resolve: input.hit.resolve,
+    props: input.props,
+    style: input.style,
+    model,
+    camera: environment.camera,
+    sourceOrder,
+    depthMode: 'less-equal',
+  });
+}
+
+/** Clears per-primitive state after success or failure. */
+export function finishWebGLPrimitivePick(
+  context: CRCWebGLContext,
+): void {
+  requireContextEnvironment(context).primitivePickModel = undefined;
+}
+
+/** Publishes the exact model used by the active built-in draw for picking. */
+export function setWebGLPrimitivePickModel(
+  context: CRCWebGLContext,
+  model: Readonly<Float32Array>,
+): void {
+  const environment = requireContextEnvironment(context);
+  environment.primitivePickModel = model;
 }
 
 export function withWebGLPrimitiveContext<T>(
@@ -127,6 +212,7 @@ function createPublicContext(
     resources,
   });
   contextGPUResources.set(context, environment.gpuResources);
+  contextEnvironments.set(context, environment);
   return context;
 }
 
@@ -134,6 +220,22 @@ const contextGPUResources = new WeakMap<
   CRCWebGLContext,
   WebGLGPUResourceCache
 >();
+const contextEnvironments = new WeakMap<
+  CRCWebGLContext,
+  WebGLRenderEnvironment
+>();
+
+function requireContextEnvironment(
+  context: CRCWebGLContext,
+): WebGLRenderEnvironment {
+  const environment = contextEnvironments.get(context);
+  if (!environment || environment.activeContext !== context) {
+    throw new Error(
+      'WebGL pick registration requires the active primitive context.',
+    );
+  }
+  return environment;
+}
 
 /** Package-private access to the current layer's generation-owned cache. */
 export function getWebGLGPUResources(

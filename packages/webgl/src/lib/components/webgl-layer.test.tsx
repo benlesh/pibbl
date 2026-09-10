@@ -3,6 +3,7 @@ import {
   Group,
   Layer,
   Rectangle,
+  Star,
   crc,
   createElement,
   type CRCController,
@@ -11,6 +12,7 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useBackendEventTarget } from '@crc/core/internal';
 import { defineWebGLPrimitive } from '../define-webgl-primitive.js';
+import { Cube } from './cube.js';
 import { WebGLLayerController } from '../layer-controller.js';
 import { WebGLLayer, type WebGLLayerProps } from './webgl-layer.js';
 
@@ -206,6 +208,133 @@ describe('WebGLLayer public surface', () => {
     expect(pixel(canvas, 45, 13)[3]).toBe(0);
   });
 
+  it('resolves transparent background and Canvas/WebGL order without a second traversal', async () => {
+    const rearClick = vi.fn();
+    const cubeClick = vi.fn();
+    const starClick = vi.fn();
+    const readPixels = vi.spyOn(
+      WebGL2RenderingContext.prototype,
+      'readPixels',
+    );
+    const picker = vi.spyOn(WebGLLayerController.prototype, 'resolveLocal');
+    const canvas = createCanvas(100, 100);
+    const scene = (
+      starPointerEvents: 'auto' | 'none',
+      cubePointerEvents: 'auto' | 'none' = 'auto',
+    ) => (
+      <>
+        <Rectangle
+          style={{ width: 100, height: 100, fill: '#1d4ed8' }}
+          onClick={rearClick}
+        />
+        <WebGLLayer style={{ width: 100, height: 100 }}>
+          <Cube
+            onClick={cubeClick}
+            pointerEvents={cubePointerEvents}
+          />
+        </WebGLLayer>
+        <Star
+          pointerEvents={starPointerEvents}
+          onClick={starClick}
+          style={{
+            points: 5,
+            cx: 50,
+            cy: 50,
+            outerRadius: 14,
+            innerRadius: 7,
+            fill: '#f59e0b',
+          }}
+        />
+      </>
+    );
+    const controller = crc(canvas, scene('auto'), { pixelRatio: 1 });
+    controllers.add(controller);
+    await nextFrame();
+
+    dispatchClick(canvas, 50, 50);
+    expect(starClick).toHaveBeenCalledOnce();
+    expect(cubeClick).not.toHaveBeenCalled();
+    expect(rearClick).not.toHaveBeenCalled();
+    expect(picker).not.toHaveBeenCalled();
+
+    dispatchClick(canvas, 5, 5);
+    expect(rearClick).toHaveBeenCalledOnce();
+    expect(picker).toHaveBeenCalledTimes(3);
+
+    crc(canvas, scene('none'));
+    await nextFrame();
+    dispatchClick(canvas, 50, 50);
+    expect(cubeClick).toHaveBeenCalledOnce();
+    expect(starClick).toHaveBeenCalledOnce();
+    expect(rearClick).toHaveBeenCalledOnce();
+    expect(picker).toHaveBeenCalledTimes(6);
+
+    crc(canvas, scene('none', 'none'));
+    await nextFrame();
+    dispatchClick(canvas, 50, 50);
+    expect(rearClick).toHaveBeenCalledTimes(2);
+    expect(cubeClick).toHaveBeenCalledOnce();
+    expect(picker).toHaveBeenCalledTimes(9);
+    expect(readPixels).not.toHaveBeenCalled();
+  });
+
+  it('uses two WebGLLayers to interleave a Canvas target between WebGL passes', async () => {
+    const backClick = vi.fn();
+    const canvasClick = vi.fn();
+    const frontClick = vi.fn();
+    const canvas = createCanvas(100, 100);
+    const scene = (
+      frontPointerEvents: 'auto' | 'none',
+      canvasPointerEvents: 'auto' | 'none',
+    ) => (
+      <>
+        <WebGLLayer
+          key="back"
+          style={{ width: 100, height: 100 }}
+        >
+          <Cube onClick={backClick} />
+        </WebGLLayer>
+        <Rectangle
+          pointerEvents={canvasPointerEvents}
+          onClick={canvasClick}
+          style={{
+            x: 35,
+            y: 35,
+            width: 30,
+            height: 30,
+            fill: '#f59e0b',
+          }}
+        />
+        <WebGLLayer
+          key="front"
+          pointerEvents={frontPointerEvents}
+          style={{ width: 100, height: 100 }}
+        >
+          <Cube onClick={frontClick} />
+        </WebGLLayer>
+      </>
+    );
+    const controller = crc(canvas, scene('auto', 'auto'), { pixelRatio: 1 });
+    controllers.add(controller);
+    await nextFrame();
+
+    dispatchClick(canvas, 50, 50);
+    expect(frontClick).toHaveBeenCalledOnce();
+    expect(canvasClick).not.toHaveBeenCalled();
+    expect(backClick).not.toHaveBeenCalled();
+
+    crc(canvas, scene('none', 'auto'));
+    await nextFrame();
+    dispatchClick(canvas, 50, 50);
+    expect(canvasClick).toHaveBeenCalledOnce();
+    expect(backClick).not.toHaveBeenCalled();
+
+    crc(canvas, scene('none', 'none'));
+    await nextFrame();
+    dispatchClick(canvas, 50, 50);
+    expect(backClick).toHaveBeenCalledOnce();
+  });
+
   it('types children as required and accepts box/layout/filter style', () => {
     const props: WebGLLayerProps = { children: undefined };
     expect(props.children).toBeUndefined();
@@ -297,4 +426,18 @@ function pixel(canvas: HTMLCanvasElement, x: number, y: number): number[] {
 
 function nextFrame(): Promise<void> {
   return new Promise(resolve => requestAnimationFrame(() => resolve()));
+}
+
+function dispatchClick(canvas: HTMLCanvasElement, x: number, y: number): void {
+  const bounds = canvas.getBoundingClientRect();
+  for (const type of ['mousedown', 'mouseup', 'click']) {
+    canvas.dispatchEvent(new MouseEvent(type, {
+      bubbles: true,
+      button: 0,
+      buttons: type === 'mousedown' ? 1 : 0,
+      cancelable: true,
+      clientX: bounds.left + x,
+      clientY: bounds.top + y,
+    }));
+  }
 }

@@ -13,9 +13,14 @@ import type {
 import {
   createWebGLBackend,
   type WebGLBackendDriver,
-  type WebGLCompletedFrame,
 } from './backend.js';
 import { resolveCamera } from './math/camera.js';
+import {
+  commitWebGLPickEntries,
+  type CRCWebGLPickLedger,
+  type CRCWebGLPickRecord,
+} from './pick-ledger.js';
+import { pickScene } from './scene-picker.js';
 import type {
   CRCWebGLCameraSnapshot,
   CRCWebGLPerspectiveCamera,
@@ -52,7 +57,8 @@ interface WebGLLayerGeneration {
   readonly number: number;
   readonly bitmap: ImageBitmap;
   readonly surface: WebGLLayerSurface;
-  readonly ledger: WebGLCompletedFrame;
+  readonly camera: CRCWebGLCameraSnapshot;
+  readonly pickLedger: CRCWebGLPickLedger;
 }
 
 /** Resolves one upright WebGL surface using core's managed-layer rounding. */
@@ -157,7 +163,7 @@ export class WebGLLayerController {
       this.currentCamera = nextCamera;
       executeBackendCRC(this.mount, root, timestamp);
       this.requireCurrentOperation('render', epoch);
-      const ledger = this.driver.takeCompletedFrame();
+      const completedFrame = this.driver.takeCompletedFrame();
       try {
         bitmap = this.canvas.transferToImageBitmap();
       } catch (error) {
@@ -171,7 +177,12 @@ export class WebGLLayerController {
         number: (this.committed?.number ?? 0) + 1,
         bitmap,
         surface,
-        ledger,
+        camera: this.currentCamera,
+        pickLedger: commitWebGLPickEntries(
+          surface.logicalWidth,
+          surface.logicalHeight,
+          completedFrame.pickEntries as readonly CRCWebGLPickRecord[],
+        ),
       });
       this.requireCurrentOperation('render', epoch);
       this.pending = candidate;
@@ -239,13 +250,23 @@ export class WebGLLayerController {
   }
 
   resolveLocal(
-    _localX: number,
-    _localY: number,
+    localX: number,
+    localY: number,
     output: CRCHitTestOutput,
   ): void {
-    // Task 9 replaces this empty committed-ledger resolver with scene picking.
-    output.disposition = 0;
-    output.target = null;
+    const committed = this.committed;
+    if (!committed) {
+      output.disposition = 0;
+      output.target = null;
+      return;
+    }
+    pickScene(
+      committed.pickLedger,
+      committed.camera,
+      localX,
+      localY,
+      output,
+    );
   }
 
   registerInteraction(
