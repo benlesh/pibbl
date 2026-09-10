@@ -6,6 +6,7 @@ import type {
   LoadedPublicDoc,
   PublicDocHeading,
   PublicDocInternalLink,
+  PublicDocSection,
 } from "./model";
 import { validatePublicDocFrontmatter } from "./model";
 
@@ -45,6 +46,7 @@ export function parsePublicMarkdown(
 
   const tokens = markdown.parse(markdownSource, {});
   const headings = assignHeadingIds(tokens);
+  const sections = collectSections(tokens, headings);
   const internalLinks = collectInternalLinks(tokens, headings);
   const html = markdown.renderer.render(tokens, markdown.options, {});
 
@@ -54,6 +56,7 @@ export function parsePublicMarkdown(
     html,
     plainText: collectPlainText(tokens),
     headings,
+    sections,
     internalLinks,
   };
 }
@@ -197,6 +200,42 @@ function collectPlainText(tokens: readonly Token[]): string {
     }
   }
   return values.join("\n");
+}
+
+function collectSections(
+  tokens: readonly Token[],
+  headings: readonly PublicDocHeading[],
+): readonly PublicDocSection[] {
+  const values = headings.map(() => [] as string[]);
+  let sectionIndex = -1;
+  let skipsHeadingText = false;
+
+  for (const token of tokens) {
+    if (token.type === "heading_open") {
+      sectionIndex += 1;
+      skipsHeadingText = true;
+      continue;
+    }
+    if (sectionIndex < 0) continue;
+    if (token.type === "inline") {
+      if (skipsHeadingText) {
+        skipsHeadingText = false;
+        continue;
+      }
+      const value = inlineText(token);
+      if (value.length > 0) values[sectionIndex].push(value);
+      continue;
+    }
+    if (token.type === "fence" || token.type === "code_block") {
+      const value = token.content.trim();
+      if (value.length > 0) values[sectionIndex].push(value);
+    }
+  }
+
+  return headings.map((heading, index) => ({
+    heading,
+    plainText: values[index].join("\n"),
+  }));
 }
 
 function inlineText(token: Token): string {

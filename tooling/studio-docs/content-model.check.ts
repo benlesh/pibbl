@@ -23,11 +23,32 @@ assert.deepEqual(
   loaded.headings.map(({ id }) => id),
   ["first-step", "first-step-2"],
 );
+assert.deepEqual(
+  loaded.sections.map(({ heading, plainText }) => ({
+    id: heading.id,
+    plainText,
+  })),
+  [
+    {
+      id: "first-step",
+      plainText: "Use crc and visit CRC.\nName\nValue\nCRC\nCanvas",
+    },
+    {
+      id: "first-step-2",
+      plainText:
+        "This duplicate heading must receive a stable collision suffix.",
+    },
+  ],
+);
 assert.match(loaded.html, /<table>/u);
 assert.doesNotMatch(loaded.html, /<script/u);
 assert.match(loaded.html, /href="https:\/\/crc\.dev" rel="noreferrer"/u);
 assert.deepEqual(loaded.internalLinks, [
-  { href: "#/api/functions/crc", sourceHeading: "first-step" },
+  {
+    href: "#/api/functions/crc",
+    sourceHeading: "first-step",
+    text: "Use crc",
+  },
 ]);
 assert.equal(
   parsePublicMarkdown(

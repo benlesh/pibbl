@@ -69,6 +69,26 @@ export interface StudioDocumentationBuild {
   readonly apiCoverage: SerializedApiCoverage;
 }
 
+/** The minimal public manifest projection used to generate the lazy search data. */
+export interface StudioDocumentationSearchInput {
+  readonly pages: readonly StudioDocumentationPage[];
+  readonly examples: readonly StudioDocumentationExample[];
+}
+
+/** Browser rendering needs generated HTML and anchors, never search-only text. */
+export type StudioDocumentationBrowserPage = Pick<
+  StudioDocumentationPage,
+  "frontmatter" | "route" | "html" | "headings"
+>;
+
+export interface StudioDocumentationBrowserBuild {
+  readonly pages: readonly StudioDocumentationBrowserPage[];
+  readonly pageByRoute: Readonly<
+    Record<string, StudioDocumentationBrowserPage>
+  >;
+  readonly apiCoverage: SerializedApiCoverage;
+}
+
 export interface StudioDocumentationBuildOptions {
   readonly repositoryRoot: string;
   readonly docsDirectory?: string;
@@ -138,6 +158,33 @@ export async function buildStudioDocumentation(
     legacyRouteToRoute,
     examples,
     apiCoverage: serializeApiCoverage(apiCoverage),
+  };
+}
+
+export function toStudioDocumentationSearchInput(
+  documentation: StudioDocumentationBuild,
+): StudioDocumentationSearchInput {
+  return {
+    pages: documentation.pages,
+    examples: documentation.examples,
+  };
+}
+
+export function toStudioDocumentationBrowserBuild(
+  documentation: StudioDocumentationBuild,
+): StudioDocumentationBrowserBuild {
+  const pages = documentation.pages.map(
+    ({ frontmatter, route, html, headings }) => ({
+      frontmatter,
+      route,
+      html,
+      headings,
+    }),
+  );
+  return {
+    pages,
+    pageByRoute: recordFromEntries(pages.map((page) => [page.route, page])),
+    apiCoverage: documentation.apiCoverage,
   };
 }
 

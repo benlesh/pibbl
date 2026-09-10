@@ -34,6 +34,12 @@ export interface PublicDocHeading {
   readonly text: string;
 }
 
+/** Plain text under one generated heading, used for heading-sized search records. */
+export interface PublicDocSection {
+  readonly heading: PublicDocHeading;
+  readonly plainText: string;
+}
+
 export interface PublicDocInternalLink {
   readonly href: string;
   readonly sourceHeading: string;
@@ -46,6 +52,7 @@ export interface LoadedPublicDoc {
   readonly html: string;
   readonly plainText: string;
   readonly headings: readonly PublicDocHeading[];
+  readonly sections: readonly PublicDocSection[];
   readonly internalLinks: readonly PublicDocInternalLink[];
 }
 

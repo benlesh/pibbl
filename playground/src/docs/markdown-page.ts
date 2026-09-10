@@ -5,8 +5,13 @@ import { loadLearningSource } from "../learning-sources";
 import { readSharedCode } from "../share-code";
 import type { LoadedPublicDoc } from "../../../tooling/studio-docs/model";
 
+export type RenderablePublicDoc = Pick<
+  LoadedPublicDoc,
+  "frontmatter" | "route" | "html" | "headings"
+>;
+
 export interface RenderMarkdownPageOptions {
-  readonly document: LoadedPublicDoc;
+  readonly document: RenderablePublicDoc;
   readonly container: HTMLElement;
   readonly anchor?: string;
   /** Focus only on a route change, never after an in-page anchor action. */
@@ -40,7 +45,9 @@ export async function renderMarkdownPage(
   const header = document.createElement("header");
   header.className = "documentation-header";
   const title = document.createElement("h1");
-  const titleHeading = options.document.headings.find(({ level }) => level === 1);
+  const titleHeading = options.document.headings.find(
+    ({ level }) => level === 1,
+  );
   if (titleHeading !== undefined) title.id = titleHeading.id;
   title.tabIndex = -1;
   title.textContent = options.document.frontmatter.title;
@@ -57,8 +64,10 @@ export async function renderMarkdownPage(
   let workbenchHost: HTMLElement | undefined;
   if (options.document.frontmatter.exampleSlug !== undefined) {
     workbenchHost = document.createElement("section");
-    workbenchHost.className = "documentation-workbench lesson-workbench-loading";
-    workbenchHost.dataset.exampleSlug = options.document.frontmatter.exampleSlug;
+    workbenchHost.className =
+      "documentation-workbench lesson-workbench-loading";
+    workbenchHost.dataset.exampleSlug =
+      options.document.frontmatter.exampleSlug;
     workbenchHost.setAttribute("aria-label", "Interactive learning example");
     workbenchHost.textContent = "Loading the TypeScript workbench…";
   }
@@ -81,17 +90,20 @@ export async function renderMarkdownPage(
     workbenchHost,
     options.mountExample,
   );
-  return disposable === undefined ? {} : { dispose: () => disposable.dispose() };
+  return disposable === undefined
+    ? {}
+    : { dispose: () => disposable.dispose() };
 }
 
 function appendGeneratedHtml(container: HTMLElement, html: string): void {
   const template = document.createElement("template");
   template.innerHTML = html;
-  for (const script of template.content.querySelectorAll("script")) script.remove();
+  for (const script of template.content.querySelectorAll("script"))
+    script.remove();
   container.replaceChildren(template.content);
 }
 
-function breadcrumbItems(documentation: LoadedPublicDoc): readonly Node[] {
+function breadcrumbItems(documentation: RenderablePublicDoc): readonly Node[] {
   const items = [document.createTextNode("Learn")];
   if (documentation.frontmatter.kind === "api") {
     items[0] = document.createTextNode("API");
@@ -118,7 +130,8 @@ async function mountLearningWorkbench(
 
   const entry = getLearningExampleBySlug(slug);
   if (!entry) {
-    container.textContent = "This page references an unavailable learning example.";
+    container.textContent =
+      "This page references an unavailable learning example.";
     return undefined;
   }
   const source = await loadLearningSource(entry);

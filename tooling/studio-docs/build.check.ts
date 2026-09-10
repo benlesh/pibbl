@@ -7,7 +7,7 @@ import { learningExampleCatalog } from "@crc/scenarios";
 import { buildNavigation } from "../../playground/src/app/navigation";
 import { collectPublicExports, crcPublicEntryPaths } from "./api-exports";
 import { buildStudioDocumentation } from "./build";
-import { studioDocumentationBuildOptions } from "./vite-plugin";
+import { crcStudioDocs, studioDocumentationBuildOptions } from "./vite-plugin";
 
 const fixtureRoot = await mkdtemp(join(tmpdir(), "crc-studio-docs-build-"));
 const repositoryRoot = resolve(import.meta.dirname, "../..");
@@ -474,6 +474,30 @@ for (const category of ["components", "functions", "hooks"] as const) {
     ),
   );
 }
+
+const documentationPlugin = crcStudioDocs({ repositoryRoot });
+const buildStart = documentationPlugin.buildStart as unknown as (this: {
+  addWatchFile(path: string): void;
+}) => Promise<void>;
+await buildStart.call({ addWatchFile() {} });
+const load = documentationPlugin.load as unknown as (
+  this: object,
+  id: string,
+) => Promise<string | undefined>;
+const documentationModule = await load.call({}, "\0virtual:crc-studio-docs");
+const searchModule = await load.call({}, "\0virtual:crc-studio-search");
+assert.equal(typeof documentationModule, "string");
+assert.equal(typeof searchModule, "string");
+assert.doesNotMatch(
+  documentationModule!,
+  /serializedSearchIndex|searchRecords/u,
+);
+assert.doesNotMatch(
+  documentationModule!,
+  /"(?:plainText|sections|internalLinks|sourcePath|aliases)":/u,
+);
+assert.match(searchModule!, /serializedSearchIndex/u);
+assert.match(searchModule!, /#\/examples\/drawing\/filters/u);
 
 process.stdout.write(
   "Validated the deterministic Studio documentation manifest.\n",

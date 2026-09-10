@@ -32,6 +32,25 @@ const fixtureDocument: LoadedPublicDoc = {
     },
     { id: "component-identity", level: 2, text: "Component identity" },
   ],
+  sections: [
+    {
+      heading: {
+        id: "manage-state-and-lifecycle",
+        level: 1,
+        text: "Manage state and lifecycle",
+      },
+      plainText: "Keep state local and clean up what you own.",
+    },
+    {
+      heading: {
+        id: "component-identity",
+        level: 2,
+        text: "Component identity",
+      },
+      plainText:
+        "crcState follows the component path.\nConcern\nRule\nCleanup\nDispose owned resources",
+    },
+  ],
   internalLinks: [],
 };
 
@@ -61,9 +80,9 @@ describe("Markdown documentation pages", () => {
     expect(container.querySelector("h1")?.id).toBe(
       "manage-state-and-lifecycle",
     );
-    expect(container.querySelector(".documentation-breadcrumb")?.textContent).toContain(
-      "Learn",
-    );
+    expect(
+      container.querySelector(".documentation-breadcrumb")?.textContent,
+    ).toContain("Learn");
     expect(container.querySelector(".documentation-summary")?.textContent).toBe(
       fixtureDocument.frontmatter.summary,
     );
@@ -73,7 +92,9 @@ describe("Markdown documentation pages", () => {
       "Cleanup",
     );
     expect(container.querySelector("script")).toBeNull();
-    expect((window as Window & { __untrusted?: boolean }).__untrusted).toBeUndefined();
+    expect(
+      (window as Window & { __untrusted?: boolean }).__untrusted,
+    ).toBeUndefined();
     expect(
       container.querySelector("[data-example-slug='getting-started']"),
     ).not.toBeNull();
