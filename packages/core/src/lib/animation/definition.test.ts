@@ -107,10 +107,7 @@ describe('seekable animation definitions', () => {
     });
   });
 
-  it('snapshots representative arbitrary values accepted with explicit interpolators', () => {
-    class Counter {
-      constructor(readonly value: number) {}
-    }
+  it('snapshots cloneable arbitrary values accepted with explicit interpolators', () => {
     const startDate = new Date(0);
     const endDate = new Date(100);
     const dates = tween({
@@ -127,14 +124,6 @@ describe('seekable animation definitions', () => {
       duration: 100,
       interpolate: (from, to) => from.get('value')! < to.get('value')! ? from : to,
     });
-    const startCounter = new Counter(0);
-    const endCounter = new Counter(10);
-    const counters = tween({
-      from: startCounter,
-      to: endCounter,
-      duration: 100,
-      interpolate: (from, to) => from.value < to.value ? from : to,
-    });
     const value = (): string => 'value';
     const functions = tween({
       from: value,
@@ -147,8 +136,6 @@ describe('seekable animation definitions', () => {
     endDate.setTime(900);
     startMap.set('value', 50);
     endMap.set('value', 90);
-    (startCounter as { value: number }).value = 50;
-    (endCounter as { value: number }).value = 90;
 
     expect(sampleSeekableDefinition(dates, {
       initialValue: new Date(-1),
@@ -158,14 +145,113 @@ describe('seekable animation definitions', () => {
       initialValue: new Map(),
       localTime: 50,
     }).get('value')).toBe(0);
-    expect(sampleSeekableDefinition(counters, {
-      initialValue: new Counter(-1),
-      localTime: 50,
-    })).toMatchObject({ value: 0 });
     expect(sampleSeekableDefinition(functions, {
       initialValue: () => 'initial',
       localTime: 50,
     })).toBe(value);
+  });
+
+  it('keeps opaque values usable when their semantics cannot be cloned generically', async () => {
+    class PrivateCounter {
+      #value: number;
+
+      constructor(value: number) {
+        this.#value = value;
+      }
+
+      get value(): number {
+        return this.#value;
+      }
+
+      set value(value: number) {
+        this.#value = value;
+      }
+    }
+    const weakKey = {};
+    const weakMap = new WeakMap([[weakKey, 'weak map']]);
+    const weakSet = new WeakSet([weakKey]);
+    const promise = Promise.resolve('promise');
+    const expression = /crc/gu;
+    const bytes = new Uint8Array([7]);
+    const counter = new PrivateCounter(3);
+    const functionValue: (() => string) & { label: string } = Object.assign(
+      () => 'function',
+      { label: 'before' },
+    );
+    const asValue = <T>(value: T) => tween({
+      from: value,
+      to: value,
+      duration: 1,
+      interpolate: from => from,
+    });
+
+    const weakMapDefinition = asValue(weakMap);
+    const weakSetDefinition = asValue(weakSet);
+    const promiseDefinition = asValue(promise);
+    const expressionDefinition = asValue(expression);
+    const bytesDefinition = asValue(bytes);
+    const counterDefinition = asValue(counter);
+    const functionDefinition = asValue<typeof functionValue>(functionValue);
+
+    expect(sampleSeekableDefinition(weakMapDefinition, {
+      initialValue: new WeakMap(), localTime: 1,
+    }).get(weakKey)).toBe('weak map');
+    expect(sampleSeekableDefinition(weakSetDefinition, {
+      initialValue: new WeakSet(), localTime: 1,
+    }).has(weakKey)).toBe(true);
+    await expect(sampleSeekableDefinition(promiseDefinition, {
+      initialValue: Promise.resolve('initial'), localTime: 1,
+    })).resolves.toBe('promise');
+    expect(sampleSeekableDefinition(expressionDefinition, {
+      initialValue: /initial/u, localTime: 1,
+    }).test('crc')).toBe(true);
+    expect(sampleSeekableDefinition(bytesDefinition, {
+      initialValue: new Uint8Array(), localTime: 1,
+    })[0]).toBe(7);
+    expect(sampleSeekableDefinition(counterDefinition, {
+      initialValue: new PrivateCounter(-1), localTime: 1,
+    }).value).toBe(3);
+    expect(sampleSeekableDefinition(functionDefinition, {
+      initialValue: functionValue, localTime: 1,
+    })()).toBe('function');
+
+    counter.value = 30;
+    functionValue.label = 'after';
+    expect(sampleSeekableDefinition(counterDefinition, {
+      initialValue: new PrivateCounter(-1), localTime: 1,
+    }).value).toBe(30);
+    expect(sampleSeekableDefinition(functionDefinition, {
+      initialValue: functionValue, localTime: 1,
+    }).label).toBe('after');
+  });
+
+  it('preserves Date, Map, and Set own properties and accessors', () => {
+    let accessorValue = 'accessor';
+    const date = Object.assign(new Date(0), { own: 'date own' });
+    const map = Object.assign(new Map([['value', 1]]), { own: 'map own' });
+    const set = Object.assign(new Set(['value']), { own: 'set own' });
+    Object.defineProperty(date, 'accessor', { get: () => accessorValue });
+    const asValue = <T>(value: T) => tween({
+      from: value,
+      to: value,
+      duration: 1,
+      interpolate: from => from,
+    });
+
+    const dateDefinition = asValue(date);
+    const mapDefinition = asValue(map);
+    const setDefinition = asValue(set);
+    accessorValue = 'updated accessor';
+
+    expect(sampleSeekableDefinition(dateDefinition, {
+      initialValue: new Date(-1), localTime: 1,
+    })).toMatchObject({ own: 'date own', accessor: 'updated accessor' });
+    expect(sampleSeekableDefinition(mapDefinition, {
+      initialValue: new Map(), localTime: 1,
+    })).toMatchObject({ own: 'map own' });
+    expect(sampleSeekableDefinition(setDefinition, {
+      initialValue: new Set(), localTime: 1,
+    })).toMatchObject({ own: 'set own' });
   });
 
   it('preserves shared value identity across one definition snapshot', () => {

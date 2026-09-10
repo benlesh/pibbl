@@ -108,28 +108,72 @@ function immutableBuiltin<T extends object>(
   });
 }
 
+function rememberIdentity<T extends object>(
+  value: T,
+  seen: WeakMap<object, unknown>,
+): T {
+  seen.set(value, value);
+  return value;
+}
+
+function hasOwnProperties(value: object, allowed: ReadonlySet<PropertyKey>): boolean {
+  return Reflect.ownKeys(value).some(key => !allowed.has(key));
+}
+
+function hasOnlyDataProperties(value: object, allowed: ReadonlySet<PropertyKey>): boolean {
+  return Reflect.ownKeys(value).every(key => {
+    if (allowed.has(key)) return true;
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    return descriptor !== undefined && 'value' in descriptor;
+  });
+}
+
+const ARRAY_OWN_KEYS = new Set<PropertyKey>(['length']);
+const REGEXP_OWN_KEYS = new Set<PropertyKey>(['lastIndex']);
+
+function isArrayIndex(key: PropertyKey): boolean {
+  return typeof key === 'string' && /^(?:0|[1-9]\d*)$/u.test(key);
+}
+
+function cloneTypedArray(value: ArrayBufferView): ArrayBufferView {
+  if (value instanceof DataView) {
+    const bytes = value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength);
+    return new DataView(bytes);
+  }
+  const TypedArray = value.constructor as unknown as {
+    new (source: ArrayBufferView): ArrayBufferView;
+  };
+  return new TypedArray(value);
+}
+
 /**
  * Definitions retain values after their caller has moved on. The context is
  * shared across one definition so aliases and cycles remain aliases and cycles
- * in its immutable snapshot. Functions and opaque host values with inaccessible
- * internal state (notably WeakMap, WeakSet, Promise, and host handles) cannot
- * be faithfully cloned without a caller-provided clone hook, so they remain
- * identity values; every inspectable mutable value is copied below.
+ * in its immutable snapshot. Only categories with stable, inspectable cloning
+ * semantics are copied. Functions, classes, accessors, and opaque host values
+ * (notably WeakMap, WeakSet, Promise, and host handles) remain usable identity
+ * values because cloning them can manufacture an invalid receiver or change
+ * their behavior; an absolute snapshot guarantee for those values requires an
+ * explicit public clone contract that CRC does not currently provide.
  */
 function snapshotAnimationValue<T>(
   value: T,
   seen: WeakMap<object, unknown>,
 ): T {
-  if (value === null || typeof value !== 'object') return value;
+  if (value === null || typeof value === 'function' || typeof value !== 'object') {
+    return value;
+  }
   const existing = seen.get(value);
   if (existing !== undefined) return existing as T;
 
   if (value instanceof Date) {
+    if (hasOwnProperties(value, new Set())) return rememberIdentity(value, seen) as T;
     const snapshot = immutableBuiltin(new Date(value.getTime()), MUTATING_DATE_METHODS);
     seen.set(value, snapshot);
     return snapshot as T;
   }
   if (value instanceof Map) {
+    if (hasOwnProperties(value, new Set())) return rememberIdentity(value, seen) as T;
     const target = new Map();
     const snapshot = immutableBuiltin(target, MUTATING_MAP_METHODS);
     seen.set(value, snapshot);
@@ -139,6 +183,7 @@ function snapshotAnimationValue<T>(
     return snapshot as T;
   }
   if (value instanceof Set) {
+    if (hasOwnProperties(value, new Set())) return rememberIdentity(value, seen) as T;
     const target = new Set();
     const snapshot = immutableBuiltin(target, MUTATING_SET_METHODS);
     seen.set(value, snapshot);
@@ -146,6 +191,11 @@ function snapshotAnimationValue<T>(
     return snapshot as T;
   }
   if (Array.isArray(value)) {
+    const ownKeys = Reflect.ownKeys(value);
+    if (ownKeys.some(key => !ARRAY_OWN_KEYS.has(key) && !isArrayIndex(key)) ||
+      !hasOnlyDataProperties(value, ARRAY_OWN_KEYS)) {
+      return rememberIdentity(value, seen) as T;
+    }
     const snapshot: unknown[] = [];
     seen.set(value, snapshot);
     for (const item of value) {
@@ -154,18 +204,44 @@ function snapshotAnimationValue<T>(
     return Object.freeze(snapshot) as T;
   }
 
+  if (value instanceof RegExp) {
+    if (hasOwnProperties(value, REGEXP_OWN_KEYS)) return rememberIdentity(value, seen) as T;
+    const snapshot = new RegExp(value.source, value.flags);
+    snapshot.lastIndex = value.lastIndex;
+    seen.set(value, snapshot);
+    return snapshot as T;
+  }
+
+  if (ArrayBuffer.isView(value)) {
+    const ownKeys = Reflect.ownKeys(value);
+    if (ownKeys.some(key => !isArrayIndex(key))) return rememberIdentity(value, seen) as T;
+    const snapshot = cloneTypedArray(value);
+    seen.set(value, snapshot);
+    return snapshot as T;
+  }
+
+  if (value instanceof ArrayBuffer) {
+    const snapshot = value.slice(0);
+    seen.set(value, snapshot);
+    return snapshot as T;
+  }
+
   const prototype = Object.getPrototypeOf(value);
+  if (prototype !== Object.prototype && prototype !== null ||
+    !hasOnlyDataProperties(value, new Set())) {
+    return rememberIdentity(value, seen) as T;
+  }
   const snapshot = Object.create(prototype) as Record<PropertyKey, unknown>;
   seen.set(value, snapshot);
   for (const key of Reflect.ownKeys(value)) {
     const descriptor = Object.getOwnPropertyDescriptor(value, key);
     if (descriptor === undefined) continue;
-    Object.defineProperty(snapshot, key, 'value' in descriptor ? {
+    Object.defineProperty(snapshot, key, {
       configurable: false,
       enumerable: descriptor.enumerable,
       writable: false,
       value: snapshotAnimationValue(descriptor.value, seen),
-    } : descriptor);
+    });
   }
   return Object.freeze(snapshot) as T;
 }
