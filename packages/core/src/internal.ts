@@ -204,6 +204,16 @@ export function registerNestedInteractionResolver(
     return value;
   });
   const { entry } = slot.value;
+  if (
+    (childInstance.eventParent !== undefined &&
+      childInstance.eventParent !== componentRefs) ||
+    (childInstance.focusParentBridge !== undefined &&
+      childInstance.focusParentBridge !== entry)
+  ) {
+    throw new Error(
+      'A nested CRC backend mount already belongs to another nested resolver.',
+    );
+  }
   crcInstance.paintEntries.delete(entry);
   if (slot.value.child !== input.child) {
     if (entry.instance.focusParentBridge === entry) {

@@ -35,6 +35,76 @@ afterEach(() => {
 });
 
 describe('backend-neutral component traversal', () => {
+  it.each(['auto', 'none'] as const)(
+    'rejects a same-root sibling claiming one nested child with pointer events %s',
+    pointerEvents => {
+      let duplicateError: unknown;
+      let originalEventParent: unknown;
+      let originalFocusBridge: unknown;
+      const parentCanvas = createCanvas();
+      const parent = mountCRC(parentCanvas, undefined);
+      const childCanvas = new OffscreenCanvas(10, 10);
+      const backend = createRecordingBackend(`sibling-${pointerEvents}`);
+      const child = mountBackendCRC(childCanvas, undefined, {
+        parent: parentCanvas,
+        logicalWidth: 10,
+        logicalHeight: 10,
+        driver: backend.driver,
+      });
+      const childInstance = getCRCInstance(childCanvas);
+      const Resolver = definePrimitive<{
+        readonly contender?: boolean;
+      }>(function renderSiblingResolver({ contender }) {
+        const bounds = new Path2D();
+        bounds.rect(0, 0, 10, 10);
+        try {
+          registerNestedInteractionResolver({
+            bounds,
+            child,
+            pointerEvents,
+            resolveLocal() {},
+          });
+        } catch (error) {
+          if (!contender) throw error;
+          duplicateError = error;
+        }
+        if (!contender) {
+          originalEventParent = childInstance.eventParent;
+          originalFocusBridge = childInstance.focusParentBridge;
+        }
+      });
+
+      executeRender(parentCanvas, 1, [
+        <Resolver key="owner" />,
+        <Resolver key="contender" contender />,
+      ]);
+
+      expect(duplicateError).toMatchObject({
+        message: expect.stringMatching(/nested.*already.*resolver/i),
+      });
+      expect(childInstance.eventParent).toBe(originalEventParent);
+      expect(childInstance.focusParentBridge).toBe(originalFocusBridge);
+      expect(Array.from(parentCanvasEntries(parentCanvas))).toEqual(
+        pointerEvents === 'auto' ? [originalFocusBridge] : [],
+      );
+
+      duplicateError = undefined;
+      executeRender(parentCanvas, 2, <Resolver key="owner" />);
+
+      expect(duplicateError).toBeUndefined();
+      expect(childInstance.eventParent).toBe(originalEventParent);
+      expect(childInstance.focusParentBridge).toBe(originalFocusBridge);
+      expect(Array.from(parentCanvasEntries(parentCanvas))).toEqual(
+        pointerEvents === 'auto' ? [originalFocusBridge] : [],
+      );
+
+      parent.dispose();
+      expect(childInstance.eventParent).toBeUndefined();
+      expect(childInstance.focusParentBridge).toBeUndefined();
+      child.dispose();
+    },
+  );
+
   it('rejects a nested focus bridge from a different event root', () => {
     const Bridge = definePrimitive<{
       readonly child: CRCBackendMount;
@@ -744,6 +814,10 @@ function createCanvas(): HTMLCanvasElement {
   canvas.style.cssText = 'display:block;width:100px;height:50px';
   document.body.appendChild(canvas);
   return canvas;
+}
+
+function parentCanvasEntries(canvas: HTMLCanvasElement) {
+  return getCRCInstance(canvas).paintEntries;
 }
 
 function createTestFilterWindows(): FilterWindows {
