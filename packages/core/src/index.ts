@@ -120,6 +120,23 @@ export type {
   SignalOptions,
   WritableSignal,
 } from './lib/signals/types.js';
+export { easing } from './lib/animation/easing.js';
+export {
+  defineAnimation,
+  keyframes,
+  stepper,
+  tween,
+} from './lib/animation/definition.js';
+export type {
+  CRCAnimationDefinition,
+  CRCAnimationOptions,
+  CRCAnimationSampleInput,
+  CRCEasing,
+  CRCInterpolator,
+  CRCKeyframesOptions,
+  CRCStepperOptions,
+  CRCTweenOptions,
+} from './lib/animation/types.js';
 export type {
   CRCConfig,
   CRCFit,
