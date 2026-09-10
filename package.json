@@ -51,6 +51,7 @@
     "@babel/plugin-transform-react-jsx": "catalog:",
     "@eslint/js": "catalog:",
     "@crc/scenarios": "workspace:*",
+    "@crc/webgl": "workspace:*",
     "@types/node": "catalog:",
     "@vitest/browser-playwright": "catalog:",
     "bumpp": "catalog:",
