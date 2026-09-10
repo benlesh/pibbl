@@ -66,6 +66,13 @@ Keep exactly one `[NEXT]` marker in the active numbered plan. The detailed step 
 When every step in the active plan is `[DONE]`:
 
 1. Leave the completed numbered plan unchanged.
-2. Create the next numbered plan only if another phase is approved.
-3. Update [`README.md`](./README.md) so exactly one plan is active and older plans are listed under the archive.
-4. Copy this operating protocol only when a future phase needs to change it; do not duplicate it into every plan.
+2. Review the [product strategy](../strategy/README.md) only when the completed
+   work produced material product evidence. Update its initiative register and
+   decision log when an assumption or priority changed; otherwise leave it
+   alone.
+3. Create the next numbered plan only if another phase is approved. For
+   strategy-driven work, name the user or reference-application problem, link
+   the relevant strategy question, record the smallest credible experiment and
+   its success/stop criteria, and state which public contracts may change.
+4. Update [`README.md`](./README.md) so exactly one plan is active and older plans are listed under the archive.
+5. Copy this operating protocol only when a future phase needs to change it; do not duplicate it into every plan.

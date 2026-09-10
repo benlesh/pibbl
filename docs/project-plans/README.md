@@ -4,6 +4,15 @@
 
 No project plan is currently active.
 
+## Strategy input
+
+- [`CRC product strategy and future opportunities`](../strategy/README.md)
+
+The strategy document is food for thought, not an active plan. When new work is
+approved, identify the strategy question, evidence, smallest credible slice,
+and public-contract effect in a numbered plan. Maintenance or correctness work
+may instead state that it does not advance a strategy initiative.
+
 ## Archive
 
 - [`001 — Trustworthy existing features`](./001-trustworthy-existing-features.md)

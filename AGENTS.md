@@ -44,7 +44,10 @@ When sources disagree, use this order and call out material drift:
 5. Plan 003's implemented design for style/layout intent not superseded by the
    current contracts.
 6. Completed numbered plans and their dated field notes as historical evidence.
-7. Draft PRDs, extraction files, `_bmad-output/`, and memlogs as discovery evidence,
+7. The [product strategy and future opportunities](docs/strategy/README.md) for
+   non-normative prioritization hypotheses only; it never defines shipped
+   behavior or authorizes implementation.
+8. Draft PRDs, extraction files, `_bmad-output/`, and memlogs as discovery evidence,
    not normative behavior.
 
 Test totals in documentation are dated snapshots. In particular, the 265-test
@@ -63,6 +66,9 @@ either as the current result unless a fresh run reproduces it.
   laboratory UI.
 - `tooling`: catalog, package-consumer, and visual verification programs.
 - `docs/design`: implemented behavior contracts.
+- `docs/strategy`: non-normative product hypotheses, candidate experiments,
+  and future opportunities. Consult it when scoping new work, not as an active
+  execution queue.
 - `docs/testing`: trust-gate policy, evidence, and historical field notes.
 - `docs/project-plans`: executable-plan workflow and completed plans.
 

@@ -94,6 +94,7 @@ const currentMarkdownPaths = [
   "docs/project-plans/README.md",
   "docs/project-plans/WORKFLOW.md",
   "docs/scenario-index.md",
+  "docs/strategy/README.md",
   "docs/testing/dependency-freshness.md",
   "docs/testing/dependency-inventory.md",
   "docs/testing/scenario-gallery.md",
