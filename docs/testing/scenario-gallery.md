@@ -1,6 +1,9 @@
 # Interactive studio and automated test labs
 
-CRC now has two deliberately different example catalogs. The learner studio presents 42 focused, attractive lessons; the automated-test catalog preserves the exhaustive scenarios used by browser verification. Both are authored against the public `@crc/core` API.
+CRC has two deliberately different catalogs. The public Studio presents focused,
+interactive learning examples alongside Learn and API documentation; the
+automated-test catalog preserves exhaustive deterministic scenarios used by
+browser verification. Both are authored against the public `@crc/core` API.
 
 ## Architecture
 
@@ -32,7 +35,16 @@ Run the source-mode studio from the repository root:
 pnpm playground
 ```
 
-Open <http://localhost:5173/#/examples>. Desktop navigation stays visible; narrow screens use a keyboard-accessible drawer. The landing page leads into drawing, composition, mouse-event, and advanced-interaction lessons.
+Open <http://localhost:5173/#/examples>. The public Studio navigation starts
+with Learn, API, and Examples; desktop navigation stays visible while narrow
+screens use a keyboard-accessible drawer. Examples are grouped for browsing as
+Drawing, Composition, Layout, Events and interaction, and Focus and keyboard,
+then sorted alphabetically within each group. Filters are a Drawing example.
+
+The public search control indexes only public Learn, API, and example records.
+Its build-generated MiniSearch data is loaded on demand in the browser, makes
+no remote request, and excludes scenario IDs, test metadata, and every
+automated test-lab route.
 
 Each lesson loads Monaco and the TypeScript worker on demand. CRC declarations provide semantic errors, completion items, and hover types. Valid edits are emitted by the worker and run in a replaceable opaque iframe with `sandbox="allow-scripts"`; invalid edits leave the last successful preview in place. Share links use a versioned compressed hash payload and fall back safely when malformed or oversized.
 
@@ -44,7 +56,7 @@ surrounding Studio navigation and controls remain ordinary accessible DOM.
 
 ## Automated test labs
 
-Open <http://localhost:5173/#/testing>. This area explains that its scenarios are deterministic browser fixtures and retains their exact IDs, action sets, diagnostic state, visual baselines, and headless consumers. Test-only visibility and maturity metadata are not shown on learning pages.
+Open <http://localhost:5173/#/testing>. This area explains that its scenarios are deterministic browser fixtures and retains their exact IDs, action sets, diagnostic state, visual baselines, and headless consumers. Test-only visibility and maturity metadata are not shown on learning pages or public search results. The legacy `#/scenarios` route family redirects here.
 
 To exercise the baseline first, open <http://localhost:5173/#/testing/baseline-smoke>.
 
@@ -71,7 +83,11 @@ Representative full-page studio layouts are checked with:
 pnpm test:studio-visual
 ```
 
-The five exact baselines cover the landing page, a drawing primitive, a mouse-event lesson, an advanced interaction lesson, and an automated test lab. To intentionally adopt a reviewed design change, run `pnpm test:studio-visual:update`, inspect every updated image, and then rerun the normal comparison. CI never updates these baselines.
+The six exact baselines cover the Learn landing, an API page, the Examples
+landing, a drawing Filters lesson, the open search dialog, and an automated
+test lab. To intentionally adopt a reviewed design change, run
+`pnpm test:studio-visual:update`, inspect every updated image, and then rerun
+the normal comparison. CI never updates these baselines.
 
 The approved baseline is `packages/core/test/visual-baselines/dep-01-smoke.expected.png`. Each run writes actual and diff-capable artifacts under ignored `test-screenshots/dep-01/`; the unified workflow is configured to upload that tree. The comparator is exact outside documented text masks. Text masks isolate cross-platform Arial glyph rasterization while semantic assertions and source identity protect the displayed values; structural backgrounds, borders, state rows, Canvas colors, and target pixels remain exact. A later bundled test font is preferable if text glyphs become a direct visual contract.
 

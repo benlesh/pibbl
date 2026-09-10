@@ -60,7 +60,8 @@ either as the current result unless a fresh run reproduces it.
 - `packages/types`: deliberately minimal compatibility package; shared public
   types do not belong here until a concrete need justifies them.
 - `playground`: the interactive examples studio and the separate automated-test
-  laboratory UI.
+  laboratory UI. Its public documentation surface is Learn, API, and Examples;
+  `docs/site/` is the only Markdown tree rendered or searched publicly.
 - `tooling`: catalog, package-consumer, and visual verification programs.
 - `docs/design`: implemented behavior contracts.
 - `docs/testing`: trust-gate policy, evidence, and historical field notes.
@@ -182,6 +183,9 @@ Read the exact contracts before changing these areas:
   actual, and diff output and record why an intentional change is correct.
 - Keep learning examples separate from exhaustive deterministic test fixtures,
   while ensuring both exercise the same supported public behavior.
+- Keep public Studio search build-time and local: MiniSearch indexes validated
+  Learn/API content and public example metadata only. Test labs, scenario-only
+  metadata, and repository documentation outside `docs/site/` are excluded.
 - New public capabilities must agree across runtime exports, declarations,
   Bundler and NodeNext consumers, packed output, source/built browser modes, and
   the Studio's editor declarations.

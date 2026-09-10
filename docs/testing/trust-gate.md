@@ -31,6 +31,12 @@ contention observed during earlier upgrade and visual work.
 `trust:static` checks:
 
 - learning/test catalog discovery, source contracts, and the generated index;
+- the validated public `docs/site/` content boundary, Learn/API/Examples
+  information architecture, canonical and legacy routes, alphabetical API and
+  example browse ordering, API coverage, Markdown rendering, and deterministic
+  static MiniSearch records;
+- public-search isolation: test-lab routes, scenario-only metadata, internal
+  records, source paths, and remote search behavior are all rejected;
 - the required JSX/non-JSX guide set and all active local documentation files,
   links, and heading/explicit anchors;
 - exact API-reference parity with every root value/type export and both
@@ -79,8 +85,9 @@ private imports.
 
 `trust:browser` runs the complete headless Chromium suite, the deliberate
 visual-regression/recovery safeguard, representative full-page Studio visuals,
-and a built-package smoke scenario. Semantic state and geometry assertions are
-the first-line oracle; exact pixels are used only where they add information.
+the public Studio documentation/navigation/search acceptance suite, and a
+built-package smoke scenario. Semantic state and geometry assertions are the
+first-line oracle; exact pixels are used only where they add information.
 
 `trust:lifecycle` runs focused cleanup stress plus deterministic filter ownership
 and structural-performance checks. The filter lifecycle suite fixes the workload
@@ -120,6 +127,12 @@ Repository historical records must use the literal `Historical status` phrase
 near their title and cannot claim `CURRENT`; their path alone is not evidence
 of historical status.
 
+Public Studio Markdown is a narrower, separately validated boundary:
+`docs/site/` is the only tree that can render in the public Studio or feed its
+local MiniSearch index. The checker also ensures public Learn/API/Examples
+routes stay canonical, their documented aliases redirect, and automated test
+labs remain absent from public navigation and search.
+
 Documentation success proves consistency, not runtime behavior by itself. The
 acceptance matrix in [library status](../library-status.md) maps each authoring
 topic to its required current guide/contract and specific executable example or
@@ -140,6 +153,9 @@ is the final local closure record for that pivot. It reports the exact
 environment, commands, wall times, inspected visuals, reviewed Studio baseline
 changes, automated acceptance, and accepted verifier-hardening residuals. Its
 Node 26 result is additive evidence; Node 24 LTS remains canonical.
+
+The [documentation information architecture and search field note](./field-notes/documentation-information-architecture-and-search.md)
+records the verification of the current Learn/API/Examples Studio experience.
 
 ## Visual baseline policy
 
