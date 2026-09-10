@@ -107,6 +107,18 @@ describe('resolveCamera', () => {
     expect(camera.projectionMatrix[14]).toBeCloseTo(-0.2, 6);
   });
 
+  test('preserves close large planes when their completed projection remains representable', () => {
+    const camera = resolveCamera(
+      { ...DEFAULT_CAMERA, near: 1e20, far: 1e20 + 1e6 },
+      100,
+      100,
+    );
+
+    expect(camera.projectionMatrix[10]).toBe(-200115260227584);
+    expect(camera.projectionMatrix[14]).toBe(-2.0011526040135322e34);
+    expect(Array.from(camera.inverseProjectionViewMatrix).every(Number.isFinite)).toBe(true);
+  });
+
   test.each([
     [0, 100],
     [100, 0],

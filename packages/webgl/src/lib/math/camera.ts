@@ -83,7 +83,6 @@ const assertProjectionRepresentability = (
     );
   }
   if (
-    floatFar <= Math.fround(descriptor.near) ||
     !Number.isFinite(projectionMatrix[10]) ||
     !Number.isFinite(projectionMatrix[14]) ||
     projectionMatrix[14] === 0
