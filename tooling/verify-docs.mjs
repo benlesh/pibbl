@@ -544,6 +544,33 @@ function extractCompleteSnippets(sources) {
   return snippets;
 }
 
+function extractApiSnippets(sources) {
+  const snippets = new Map();
+  for (const [path, source] of sources) {
+    if (!path.startsWith("docs/site/api/")) continue;
+    const fences = [...source.matchAll(/^```(ts|tsx)\n([\s\S]*?)^```$/gmu)];
+    if (fences.length > 0) {
+      const id = `api-snippet-${path.replaceAll(/[^a-z0-9]+/giu, "-")}`;
+      snippets.set(id, {
+        id,
+        path,
+        language: fences.some((match) => match[1] === "tsx") ? "tsx" : "ts",
+        source: fences.map((match) => match[2]).join("\n"),
+      });
+    }
+
+    const prose = source
+      .replace(/^---\n[\s\S]*?^---\n/mu, "")
+      .replace(/^```[\s\S]*?^```$/gmu, "");
+    assert.doesNotMatch(
+      prose,
+      /(^|[^`])\[([A-Z][^\]\n]*)\](?!\()/mu,
+      `${path} contains a bare bracket-only pseudo-link. Use a canonical Markdown link.`,
+    );
+  }
+  return snippets;
+}
+
 const requiredCompleteSnippetIds = new Set([
   "custom-primitive",
   "javascript-runtime",
@@ -1963,6 +1990,9 @@ for (const snippet of completeSnippets.values()) {
 }
 
 const compiledSnippetCount = await typecheckCompleteSnippets(completeSnippets);
+const compiledApiSnippetCount = await typecheckCompleteSnippets(
+  extractApiSnippets(currentSources),
+);
 const javascriptSnippet = completeSnippets.get("javascript-runtime");
 await assertAutomaticRuntimeTransforms(
   javascriptSnippet.source,
@@ -2679,6 +2709,7 @@ process.stdout.write(
     `${rootExports.values.size} values, ${rootExports.types.size} types, ` +
     `${matrixRows.length} acceptance rows, ${parsedSnippetCount} parsed ` +
     `code snippets, ${compiledSnippetCount} extracted TypeScript programs, ` +
+    `${compiledApiSnippetCount} compiler-checked API example programs, ` +
     `${contractPreservationResult.baselineUnitCount} pre-Task-14 and ` +
     `${contractPreservationResult.currentUnitCount} current semantic units across ` +
     `${contractPreservationBaseline.contracts.length} normative contracts, ` +

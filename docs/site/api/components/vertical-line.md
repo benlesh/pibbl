@@ -21,8 +21,8 @@ needs a finite basis.
 
 ```tsx
 <VerticalLine
-  style={{ x: 52, y: 12, height: 140, stroke: "#334155", strokeWidth: 2 }}
+  style={{ x: 52, y1: 12, y2: 152, stroke: "#334155", strokeWidth: 2 }}
 />
 ```
 
-Try [Lines].
+Try the [Vertical line live example](#/examples/drawing/vertical-line).

@@ -30,4 +30,4 @@ function HitArea() {
 }
 ```
 
-See [Mouse events].
+See the [Click live example](#/examples/events-and-interaction/click).

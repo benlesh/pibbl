@@ -11,7 +11,7 @@ symbols: [resolveBox]
 # resolveBox
 
 ```ts
-import { resolveBox } from "@crc/core";
+import { resolveBox, type Constraints } from "@crc/core";
 ```
 
 `resolveBox(style, constraints, context?)` resolves public `BoxStyle` into a
@@ -20,6 +20,12 @@ padding, and finite constraint validation, and raises `LayoutDiagnostic` for
 impossible or indefinite inputs.
 
 ```ts
+const constraints: Constraints = {
+  minWidth: 0,
+  maxWidth: 320,
+  minHeight: 0,
+  maxHeight: 240,
+};
 const box = resolveBox({ width: "50%", padding: 12 }, constraints);
 ```
 

@@ -11,7 +11,7 @@ symbols: [Layer]
 # Layer
 
 ```ts
-import { Layer } from "@crc/core";
+import { Group, Layer, Rectangle } from "@crc/core";
 ```
 
 `Layer` uses `LayerProps` and `LayerStyle` to render recursive `CRCNode`
@@ -20,9 +20,11 @@ interaction and global paint order, and requires browser `OffscreenCanvas`.
 It is a composition boundary, not a retained scene graph.
 
 ```tsx
-<Layer style={{ x: 24, y: 24, width: 160, height: 100 }}>
-  <Rectangle style={{ width: 160, height: 100, fill: "#1d4ed8" }} />
-</Layer>
+<Group style={{ translateX: 24, translateY: 24 }}>
+  <Layer style={{ width: 160, height: 100 }}>
+    <Rectangle style={{ width: 160, height: 100, fill: "#1d4ed8" }} />
+  </Layer>
+</Group>
 ```
 
-See [Layers].
+See the [Layer live example](#/examples/composition/layer).

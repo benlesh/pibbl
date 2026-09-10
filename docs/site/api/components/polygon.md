@@ -31,4 +31,4 @@ empty geometry. It rejects children and supports shared rounded-corner style.
 />
 ```
 
-See [Polygons].
+See the [Polygon live example](#/examples/drawing/polygon).

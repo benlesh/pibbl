@@ -11,7 +11,7 @@ symbols: [createElement]
 # createElement
 
 ```ts
-import { createElement } from "@crc/core";
+import { createElement, Rectangle } from "@crc/core";
 ```
 
 `createElement(type, props, ...children)` is the explicit equivalent of CRC
@@ -25,4 +25,4 @@ const scene = createElement(Rectangle, {
 });
 ```
 
-Try [Authoring without JSX].
+Try [Authoring without JSX](#/learn/guides/author-without-jsx).

@@ -11,7 +11,7 @@ symbols: [createPolygonPath]
 # createPolygonPath
 
 ```ts
-import { createPolygonPath } from "@crc/core";
+import { createPolygonPath, Path } from "@crc/core";
 ```
 
 `createPolygonPath(options: PolygonPathOptions): Path2D` creates a fresh
@@ -20,15 +20,17 @@ Short lists are safe empty geometry; no render state or events are owned.
 
 ```tsx
 <Path
-  d={createPolygonPath({
-    coords: [
-      [0, 80],
-      [50, 0],
-      [100, 80],
-    ],
-  })}
-  style={{ fill: "#f59e0b" }}
+  style={{
+    d: createPolygonPath({
+      coords: [
+        [0, 80],
+        [50, 0],
+        [100, 80],
+      ],
+    }),
+    fill: "#f59e0b",
+  }}
 />
 ```
 
-See [Polygons].
+See the [Polygon live example](#/examples/drawing/polygon).

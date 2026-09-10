@@ -11,7 +11,7 @@ symbols: [crcEventListener]
 # crcEventListener
 
 ```ts
-import { crcEventListener } from "@crc/core";
+import { crcEventListener, Group, type CRCNode } from "@crc/core";
 ```
 
 `crcEventListener(handlers)` is render-only and updates propagation listeners
@@ -20,10 +20,10 @@ with a primitive target or `crcEventTarget`. CRC owns the listener registration
 and releases it on replacement or component teardown.
 
 ```tsx
-function Panel({ children }) {
+function Panel({ children }: { children: CRCNode }) {
   crcEventListener({ onClickCapture: (event) => console.log(event.type) });
   return <Group>{children}</Group>;
 }
 ```
 
-See [Event propagation].
+See the [Propagation and cancellation live example](#/examples/events-and-interaction/propagation-and-cancellation).

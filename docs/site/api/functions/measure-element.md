@@ -11,7 +11,13 @@ symbols: [measureElement]
 # measureElement
 
 ```ts
-import { measureElement } from "@crc/core";
+import {
+  createElement,
+  measureElement,
+  Rectangle,
+  type CanvasMeasurementService,
+  type Constraints,
+} from "@crc/core";
 ```
 
 `measureElement(element, constraints, service)` measures one element through
@@ -20,6 +26,18 @@ runtime resources. Components without a measure capability return an
 `unsupported` result, and cyclic measurement dependencies are rejected.
 
 ```ts
+const element = createElement(Rectangle, {
+  style: { width: 120, height: 60, fill: "#2563eb" },
+});
+const constraints: Constraints = {
+  minWidth: 0,
+  maxWidth: 240,
+  minHeight: 0,
+  maxHeight: 120,
+};
+const measurementService: CanvasMeasurementService = {
+  measureText: () => ({}) as TextMetrics,
+};
 const result = measureElement(element, constraints, measurementService);
 ```
 

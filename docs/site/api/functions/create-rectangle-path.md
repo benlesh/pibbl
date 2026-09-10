@@ -11,7 +11,7 @@ symbols: [createRectanglePath]
 # createRectanglePath
 
 ```ts
-import { createRectanglePath } from "@crc/core";
+import { Clip, createRectanglePath, Rectangle } from "@crc/core";
 ```
 
 `createRectanglePath(options: RectanglePathOptions): Path2D` creates a fresh
@@ -31,8 +31,8 @@ semantics. It owns no render state.
     }),
   }}
 >
-  <Artwork />
+  <Rectangle style={{ width: 180, height: 100, fill: "#2563eb" }} />
 </Clip>
 ```
 
-Try [Rectangle].
+Try the [Rectangle live example](#/examples/drawing/rectangle).

@@ -11,7 +11,7 @@ symbols: [crcSvgPath]
 # crcSvgPath
 
 ```ts
-import { crcSvgPath } from "@crc/core";
+import { crcSvgPath, Path } from "@crc/core";
 ```
 
 `crcSvgPath(svgPathData)` is render-only and memoizes a browser-parsed `Path2D`
@@ -21,8 +21,8 @@ until the path-data string changes. It has no separate cleanup, and browser
 ```tsx
 function Mark() {
   const path = crcSvgPath("M10 10h90v60H10z");
-  return <Path d={path} style={{ fill: "#38bdf8" }} />;
+  return <Path style={{ d: path, fill: "#38bdf8" }} />;
 }
 ```
 
-See [SVG paths].
+See the [SVG path live example](#/examples/drawing/svg-path).

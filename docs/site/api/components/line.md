@@ -33,4 +33,4 @@ Canvas units.
 />
 ```
 
-Try [Lines].
+Try the [Line live example](#/examples/drawing/line).

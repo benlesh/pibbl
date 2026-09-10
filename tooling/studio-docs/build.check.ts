@@ -170,6 +170,39 @@ apiCategory: overview
 
   await writeFixture("docs/site/learn/guides/first-scene.md", guide);
   await writeFixture(
+    "docs/site/learn/guides/first-scene.md",
+    guide.replace("#/api/functions/crc", "#/examples/drawing/first-example"),
+  );
+  const exampleLinkOptions = {
+    ...fixtureOptions,
+    examples: [
+      {
+        slug: "first-example",
+        title: "First example",
+        shortTitle: "First example",
+        section: "drawing",
+        browseGroup: "drawing",
+        summary: "A fixture example.",
+        api: [],
+        objectives: [],
+        apiNotes: [],
+        source: { path: "fixtures/first-example.tsx" },
+      },
+    ],
+  };
+  await assert.doesNotReject(() =>
+    buildStudioDocumentation(exampleLinkOptions),
+  );
+  await writeFixture(
+    "docs/site/learn/guides/first-scene.md",
+    guide.replace("#/api/functions/crc", "#/examples/drawing/missing-example"),
+  );
+  await assert.rejects(
+    () => buildStudioDocumentation(exampleLinkOptions),
+    /Unknown live example route/u,
+  );
+  await writeFixture("docs/site/learn/guides/first-scene.md", guide);
+  await writeFixture(
     "docs/site/api/functions/duplicate-crc.md",
     api
       .replace("api-crc", "api-duplicate-crc")

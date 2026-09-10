@@ -11,7 +11,7 @@ symbols: [createSvgPath]
 # createSvgPath
 
 ```ts
-import { createSvgPath } from "@crc/core";
+import { createSvgPath, Path } from "@crc/core";
 ```
 
 `createSvgPath(options: SvgPathOptions): Path2D` returns a fresh `Path2D` from
@@ -20,9 +20,8 @@ not install rendering, interaction, or caching behavior.
 
 ```tsx
 <Path
-  d={createSvgPath({ d: "M10 10h80v50H10z" })}
-  style={{ fill: "#38bdf8" }}
+  style={{ d: createSvgPath({ d: "M10 10h80v50H10z" }), fill: "#38bdf8" }}
 />
 ```
 
-See [SVG paths].
+See the [SVG path live example](#/examples/drawing/svg-path).

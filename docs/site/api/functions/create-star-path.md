@@ -11,7 +11,7 @@ symbols: [createStarPath]
 # createStarPath
 
 ```ts
-import { createStarPath } from "@crc/core";
+import { createStarPath, Path } from "@crc/core";
 ```
 
 `createStarPath(options: StarPathOptions): Path2D` validates integer points and
@@ -20,9 +20,11 @@ pure and owns no render state, event target, or cache.
 
 ```tsx
 <Path
-  d={createStarPath({ points: 5, outerRadius: 54, innerRadius: 24 })}
-  style={{ fill: "#f59e0b" }}
+  style={{
+    d: createStarPath({ points: 5, outerRadius: 54, innerRadius: 24 }),
+    fill: "#f59e0b",
+  }}
 />
 ```
 
-Try [Stars].
+Try the [Star live example](#/examples/drawing/star).

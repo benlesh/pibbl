@@ -32,4 +32,4 @@ are not part of this component.
 />
 ```
 
-See [Wedges].
+See the [Wedge live example](#/examples/drawing/wedge).

@@ -11,7 +11,7 @@ symbols: [createRegularPolygonPath]
 # createRegularPolygonPath
 
 ```ts
-import { createRegularPolygonPath } from "@crc/core";
+import { createRegularPolygonPath, Path } from "@crc/core";
 ```
 
 `createRegularPolygonPath(options: RegularPolygonPathOptions): Path2D` requires
@@ -20,9 +20,11 @@ rotation, and numeric corner radii produce a fresh pure path.
 
 ```tsx
 <Path
-  d={createRegularPolygonPath({ sides: 6, circumradius: 48 })}
-  style={{ fill: "#22c55e" }}
+  style={{
+    d: createRegularPolygonPath({ sides: 6, circumradius: 48 }),
+    fill: "#22c55e",
+  }}
 />
 ```
 
-See [Regular polygons].
+See the [Regular polygon live example](#/examples/drawing/regular-polygon).

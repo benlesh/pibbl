@@ -20,7 +20,10 @@ same slot value. Keep hook order stable, and use it for derived values rather
 than synchronous lifecycle cleanup.
 
 ```tsx
-const path = crcMemo(() => new Path2D(svgData), [svgData]);
+function Mark() {
+  const svgData = "M10 10h90v60H10z";
+  return crcMemo(() => new Path2D(svgData), [svgData]);
+}
 ```
 
 For cleanup on changes, use [`crcWhenChanged`](#/api/hooks/crc-when-changed).

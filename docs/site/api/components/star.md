@@ -32,4 +32,4 @@ triangles.
 />
 ```
 
-Try [Stars].
+Try the [Star live example](#/examples/drawing/star).

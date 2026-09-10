@@ -11,7 +11,7 @@ symbols: [crcCursor]
 # crcCursor
 
 ```ts
-import { crcCursor } from "@crc/core";
+import { crcCursor, Text } from "@crc/core";
 ```
 
 `crcCursor({ path?, style?, fill?, lineInteractionWidth? })` is render-only.
@@ -30,4 +30,4 @@ function Link() {
 }
 ```
 
-See [Cursor interaction].
+See the [Hit areas and cursors live example](#/examples/events-and-interaction/hit-areas-and-cursors).

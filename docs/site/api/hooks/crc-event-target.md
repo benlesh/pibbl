@@ -20,7 +20,14 @@ handlers, and focus options. CRC owns the registration and releases it when the
 hook slot is replaced or the component unmounts.
 
 ```tsx
-const focus = crcEventTarget({ onClick: () => select() }, { path, fill: true });
+function Target() {
+  const path = new Path2D("M0 0h80v40H0z");
+  const focus = crcEventTarget(
+    { onClick: () => undefined },
+    { path, fill: true },
+  );
+  return focus.isFocused ? null : null;
+}
 ```
 
-Use `FocusManagement` for logical focus policy. See [Focus targets].
+Use `FocusManagement` for logical focus policy. See the [Custom event targets live example](#/examples/events-and-interaction/custom-event-targets).

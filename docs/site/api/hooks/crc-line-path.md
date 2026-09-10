@@ -11,7 +11,7 @@ symbols: [crcLinePath]
 # crcLinePath
 
 ```ts
-import { crcLinePath } from "@crc/core";
+import { crcLinePath, Path } from "@crc/core";
 ```
 
 `crcLinePath(coords, { closePath? }?)` is render-only and memoizes a fresh
@@ -25,8 +25,8 @@ function Sparkline() {
     [30, 8],
     [60, 18],
   ]);
-  return <Path d={path} style={{ stroke: "#2563eb" }} />;
+  return <Path style={{ d: path, stroke: "#2563eb" }} />;
 }
 ```
 
-See [Lines].
+See the [Line live example](#/examples/drawing/line).

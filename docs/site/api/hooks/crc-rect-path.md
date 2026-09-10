@@ -11,7 +11,7 @@ symbols: [crcRectPath]
 # crcRectPath
 
 ```ts
-import { crcRectPath } from "@crc/core";
+import { crcEvent, crcRectPath, Path } from "@crc/core";
 ```
 
 `crcRectPath(x, y, width, height, config?)` is render-only. It memoizes a
@@ -22,9 +22,9 @@ must be called in stable hook order.
 ```tsx
 function Button() {
   const path = crcRectPath(0, 0, 140, 40, { cornerRadius: 8 });
-  crcEvent("click", activate, path, true);
-  return <Path d={path} style={{ fill: "#2563eb" }} />;
+  crcEvent("click", () => undefined, path, true);
+  return <Path style={{ d: path, fill: "#2563eb" }} />;
 }
 ```
 
-See [Rectangle].
+See the [Rectangle live example](#/examples/drawing/rectangle).

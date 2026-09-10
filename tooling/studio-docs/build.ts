@@ -26,6 +26,7 @@ export interface StudioDocumentationExample {
   readonly title: string;
   readonly shortTitle: string;
   readonly section: string;
+  readonly browseGroup?: string;
   readonly summary: string;
   readonly api: readonly string[];
   readonly objectives: readonly string[];
@@ -38,6 +39,7 @@ export interface StudioDocumentationExampleInput {
   readonly title: string;
   readonly shortTitle: string;
   readonly section: string;
+  readonly browseGroup?: string;
   readonly summary: string;
   readonly api: readonly string[];
   readonly objectives: readonly string[];
@@ -106,14 +108,18 @@ export async function buildStudioDocumentation(
     }),
   );
 
+  const examples = normalizeExamples(options.examples ?? []);
   validatePageIdentity(pages);
   const legacyRouteToRoute = validateRoutesAndAliases(pages);
   validateHeadingAnchors(pages);
-  validateInternalLinks(pages, legacyRouteToRoute);
+  validateInternalLinks(
+    pages,
+    legacyRouteToRoute,
+    examples,
+    options.examples !== undefined,
+  );
   validateTutorialOrder(pages);
-
-  const examples = normalizeExamples(options.examples ?? []);
-  validateExampleReferences(pages, examples);
+  if (options.examples !== undefined) validateExampleReferences(pages, examples);
 
   const inventory =
     options.apiInventory ??
@@ -260,11 +266,39 @@ function validateHeadingAnchors(
 function validateInternalLinks(
   pages: readonly StudioDocumentationPage[],
   legacyRouteToRoute: Readonly<Record<string, string>>,
+  examples: readonly StudioDocumentationExample[],
+  validatesExampleRoutes: boolean,
 ): void {
   const pageByRoute = new Map(pages.map((page) => [page.route, page]));
+  const exampleRoutes = new Set(
+    examples.flatMap(({ browseGroup, slug }) =>
+      browseGroup === undefined ? [] : [`#/examples/${browseGroup}/${slug}`],
+    ),
+  );
   for (const page of pages) {
     for (const link of page.internalLinks) {
       const { route, anchor } = splitInternalLink(link.href);
+      if (exampleRoutes.has(route)) {
+        if (anchor !== undefined) {
+          throw new Error(
+            `Live example route "${route}" linked from ${page.sourcePath}#${link.sourceHeading} cannot have a documentation anchor.`,
+          );
+        }
+        continue;
+      }
+      if (route.startsWith("#/examples/")) {
+        if (!validatesExampleRoutes && isCanonicalExampleRoute(route)) {
+          if (anchor !== undefined) {
+            throw new Error(
+              `Live example route "${route}" linked from ${page.sourcePath}#${link.sourceHeading} cannot have a documentation anchor.`,
+            );
+          }
+          continue;
+        }
+        throw new Error(
+          `Unknown live example route "${route}" linked from ${page.sourcePath}#${link.sourceHeading}.`,
+        );
+      }
       const canonicalRoute = legacyRouteToRoute[route] ?? route;
       const destination = pageByRoute.get(canonicalRoute);
       if (destination === undefined) {
@@ -282,6 +316,12 @@ function validateInternalLinks(
       }
     }
   }
+}
+
+function isCanonicalExampleRoute(route: string): boolean {
+  return /^#\/examples\/(?:drawing|composition|layout|events-and-interaction|focus-and-keyboard)\/[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(
+    route,
+  );
 }
 
 function splitInternalLink(href: string): { route: string; anchor?: string } {
@@ -338,6 +378,7 @@ function normalizeExamples(
       title,
       shortTitle,
       section,
+      browseGroup,
       summary,
       api,
       objectives,
@@ -353,6 +394,7 @@ function normalizeExamples(
       objectives: [...objectives],
       apiNotes: [...apiNotes],
       sourcePath: source.path,
+      ...(browseGroup === undefined ? {} : { browseGroup }),
     }),
   );
   assertUnique(

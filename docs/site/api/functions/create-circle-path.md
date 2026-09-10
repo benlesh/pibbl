@@ -11,7 +11,7 @@ symbols: [createCirclePath]
 # createCirclePath
 
 ```ts
-import { createCirclePath } from "@crc/core";
+import { Circle, Clip, createCirclePath } from "@crc/core";
 ```
 
 `createCirclePath(options: CirclePathOptions): Path2D` creates a fresh circle
@@ -20,7 +20,7 @@ no render state, events, or cache.
 
 ```tsx
 <Clip style={{ d: createCirclePath({ cx: 80, cy: 80, radius: 56 }) }}>
-  <Artwork />
+  <Circle style={{ cx: 80, cy: 80, radius: 64, fill: "#2563eb" }} />
 </Clip>
 ```
 

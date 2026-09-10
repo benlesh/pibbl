@@ -11,7 +11,7 @@ symbols: [crcState]
 # crcState
 
 ```ts
-import { crcState } from "@crc/core";
+import { crcState, Rectangle } from "@crc/core";
 ```
 
 `crcState(init?)` is render-only and returns `[value, setValue]`. The setter
@@ -31,4 +31,4 @@ function Toggle() {
 }
 ```
 
-Try [State and lifecycle].
+Try the [State and lifecycle guide](#/learn/guides/state-and-lifecycle).

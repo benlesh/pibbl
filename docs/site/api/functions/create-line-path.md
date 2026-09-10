@@ -11,7 +11,7 @@ symbols: [createLinePath]
 # createLinePath
 
 ```ts
-import { createLinePath } from "@crc/core";
+import { createLinePath, Path } from "@crc/core";
 ```
 
 `createLinePath(options: LinePathOptions): Path2D` creates a fresh path from
@@ -20,15 +20,17 @@ not attach paint, events, or caching.
 
 ```tsx
 <Path
-  d={createLinePath({
-    coords: [
-      [0, 0],
-      [80, 40],
-      [160, 0],
-    ],
-  })}
-  style={{ stroke: "#2563eb" }}
+  style={{
+    d: createLinePath({
+      coords: [
+        [0, 0],
+        [80, 40],
+        [160, 0],
+      ],
+    }),
+    stroke: "#2563eb",
+  }}
 />
 ```
 
-Try [Lines].
+Try the [Line live example](#/examples/drawing/line).

@@ -11,7 +11,7 @@ symbols: [FocusManagement]
 # FocusManagement
 
 ```ts
-import { FocusManagement } from "@crc/core";
+import { FocusManagement, Rectangle } from "@crc/core";
 ```
 
 `FocusManagement` uses `FocusManagementProps` and wraps one recursive
@@ -22,8 +22,8 @@ accessibility tree.
 
 ```tsx
 <FocusManagement>
-  <Button />
+  <Rectangle style={{ width: 80, height: 32, fill: "#2563eb" }} />
 </FocusManagement>
 ```
 
-Try [Focus and keyboard].
+Try the [Focus management live example](#/examples/focus-and-keyboard/focus-management).

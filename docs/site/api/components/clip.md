@@ -11,7 +11,7 @@ symbols: [Clip]
 # Clip
 
 ```ts
-import { Clip } from "@crc/core";
+import { Circle, Clip } from "@crc/core";
 ```
 
 `Clip` uses `ClipProps` and `ClipStyle` to apply a `Path2D` and fill rule to
@@ -25,4 +25,4 @@ presented.
 </Clip>
 ```
 
-See [Composition].
+See the [Clip live example](#/examples/composition/clip).

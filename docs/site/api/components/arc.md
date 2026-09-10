@@ -33,4 +33,4 @@ a contextual layout diagnostic.
 />
 ```
 
-See [Shapes] for live drawing primitives.
+See the [Arc live example](#/examples/drawing/arc).

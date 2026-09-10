@@ -11,7 +11,7 @@ symbols: [Absolute]
 # Absolute
 
 ```ts
-import { Absolute } from "@crc/core";
+import { Absolute, Rectangle } from "@crc/core";
 ```
 
 `Absolute` places each direct child from its local `left`, `top`, and declared
@@ -27,5 +27,4 @@ measure or retain drawing commands.
 </Absolute>
 ```
 
-Use [Layout examples] to compare placement
-with other layout parents.
+Compare it with the [Absolute and Overlay live example](#/examples/layout/absolute-and-overlay).

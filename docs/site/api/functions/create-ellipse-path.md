@@ -11,7 +11,7 @@ symbols: [createEllipsePath]
 # createEllipsePath
 
 ```ts
-import { createEllipsePath } from "@crc/core";
+import { createEllipsePath, Path } from "@crc/core";
 ```
 
 `createEllipsePath(options: EllipsePathOptions): Path2D` creates a fresh path
@@ -20,9 +20,11 @@ It is pure and has no render lifecycle.
 
 ```tsx
 <Path
-  d={createEllipsePath({ radiusX: 64, radiusY: 30, rotation: 0.4 })}
-  style={{ fill: "#38bdf8" }}
+  style={{
+    d: createEllipsePath({ radiusX: 64, radiusY: 30, rotation: 0.4 }),
+    fill: "#38bdf8",
+  }}
 />
 ```
 
-See the [Ellipse example].
+See the [Ellipse live example](#/examples/drawing/ellipse).

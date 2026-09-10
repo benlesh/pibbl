@@ -32,4 +32,4 @@ radius scaling and keeps paint and targeting aligned.
 />
 ```
 
-Try the [Rectangle live example].
+Try the [Rectangle live example](#/examples/drawing/rectangle).

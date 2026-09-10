@@ -21,8 +21,8 @@ useful inside declared layout boxes. Stroke targeting respects
 
 ```tsx
 <HorizontalLine
-  style={{ x: 16, y: 40, width: 180, stroke: "#334155", strokeWidth: 2 }}
+  style={{ x1: 16, x2: 196, y: 40, stroke: "#334155", strokeWidth: 2 }}
 />
 ```
 
-Try [Lines].
+Try the [Horizontal line live example](#/examples/drawing/horizontal-line).

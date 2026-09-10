@@ -11,7 +11,7 @@ symbols: [Overlay]
 # Overlay
 
 ```ts
-import { Overlay } from "@crc/core";
+import { Overlay, Rectangle, Text } from "@crc/core";
 ```
 
 `Overlay` uses `OverlayProps` and `OverlayStyle` to allocate recursive direct
@@ -28,4 +28,4 @@ or implicit intrinsic measurement.
 </Overlay>
 ```
 
-See [Overlay layout].
+See the [Absolute and Overlay live example](#/examples/layout/absolute-and-overlay).

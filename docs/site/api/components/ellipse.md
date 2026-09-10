@@ -31,4 +31,4 @@ uses the same rotated geometry for paint, targeting, and default focus bounds.
 />
 ```
 
-Try the [Ellipse live example].
+Try the [Ellipse live example](#/examples/drawing/ellipse).

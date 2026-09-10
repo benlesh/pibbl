@@ -11,7 +11,7 @@ symbols: [Flow]
 # Flow
 
 ```ts
-import { Flow } from "@crc/core";
+import { Flow, Text } from "@crc/core";
 ```
 
 `Flow` uses `FlowProps` and `FlowStyle` to place recursive direct children in
@@ -26,4 +26,4 @@ space.
 </Flow>
 ```
 
-See [Flow layout].
+See the [Flow live example](#/examples/layout/flow).

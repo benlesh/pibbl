@@ -15,7 +15,7 @@ Import application-facing values and types from `@crc/core`. Subpaths below
 `@crc/core/lib/*` and `@crc/core/src/*` are not supported.
 
 ```ts
-import { Fragment, Rectangle, crc } from "@crc/core";
+import { Fragment, Rectangle, Text, crc } from "@crc/core";
 ```
 
 ## Authoring
@@ -42,8 +42,6 @@ by these runtime values.
 ## A small scene
 
 ```tsx
-import { Rectangle, Text, crc } from "@crc/core";
-
 function Poster() {
   return (
     <>
@@ -62,4 +60,4 @@ function Poster() {
 crc(document.querySelector("canvas")!, <Poster />);
 ```
 
-Start with the [Getting started live example].
+Start with the [Getting started guide](#/learn/guides/configure-jsx).

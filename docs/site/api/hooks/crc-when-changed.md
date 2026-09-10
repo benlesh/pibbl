@@ -20,10 +20,12 @@ returned cleanup first, and runs the final cleanup at component teardown. It is
 not deferred post-render work; use `crcMemo` for purely derived state.
 
 ```tsx
-crcWhenChanged(() => {
-  const subscription = subscribe(id);
-  return () => subscription.unsubscribe();
-}, [id]);
+function Subscription({ id }: { id: string }) {
+  crcWhenChanged(() => {
+    console.log(`subscribed to ${id}`);
+    return () => console.log(`unsubscribed from ${id}`);
+  }, [id]);
+}
 ```
 
-Try [Lifecycle changes].
+Try the [State and lifecycle guide](#/learn/guides/state-and-lifecycle).

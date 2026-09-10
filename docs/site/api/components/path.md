@@ -20,7 +20,7 @@ construct one with the browser API. Paint and coordinate targeting use the
 same path geometry.
 
 ```tsx
-<Path d={new Path2D("M10 10H110V70H10Z")} style={{ fill: "#38bdf8" }} />
+<Path style={{ d: new Path2D("M10 10H110V70H10Z"), fill: "#38bdf8" }} />
 ```
 
-Try the [Path live example].
+Try the [Path live example](#/examples/drawing/path).

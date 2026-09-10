@@ -11,7 +11,7 @@ symbols: [crcRef]
 # crcRef
 
 ```ts
-import { crcRef } from "@crc/core";
+import { crcRef, Text } from "@crc/core";
 ```
 
 `crcRef(init?)` is render-only and returns one stable `CRCRef<T>` with a mutable
@@ -22,7 +22,7 @@ not use it to preserve state across a changed component identity.
 ```tsx
 function Counter() {
   const renders = crcRef(0);
-  renders.current += 1;
+  renders.current = (renders.current ?? 0) + 1;
   return <Text>{renders.current}</Text>;
 }
 ```

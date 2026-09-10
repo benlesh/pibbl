@@ -25,4 +25,4 @@ browser behavior.
 </Text>
 ```
 
-Try the [Text live example].
+Try the [Text live example](#/examples/drawing/text).

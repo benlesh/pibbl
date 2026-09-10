@@ -24,4 +24,4 @@ coordinate targeting, and percentage radii use the smaller available axis.
 />
 ```
 
-Try the [Circle live example].
+Try the [Circle live example](#/examples/drawing/circle).

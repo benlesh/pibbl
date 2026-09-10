@@ -11,7 +11,7 @@ symbols: [KeyboardNavigation]
 # KeyboardNavigation
 
 ```ts
-import { KeyboardNavigation } from "@crc/core";
+import { FocusManagement, KeyboardNavigation, Rectangle } from "@crc/core";
 ```
 
 `KeyboardNavigation` uses `KeyboardNavigationProps` and wraps recursive
@@ -21,10 +21,10 @@ controls or infer an accessibility tree.
 
 ```tsx
 <FocusManagement>
-  <KeyboardNavigation>
-    <Menu />
+  <KeyboardNavigation mode="directional">
+    <Rectangle style={{ width: 80, height: 32, fill: "#2563eb" }} />
   </KeyboardNavigation>
 </FocusManagement>
 ```
 
-See [Keyboard navigation].
+See the [Directional navigation live example](#/examples/focus-and-keyboard/directional-navigation).

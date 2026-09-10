@@ -11,7 +11,7 @@ symbols: [Group]
 # Group
 
 ```ts
-import { Group } from "@crc/core";
+import { Group, Rectangle } from "@crc/core";
 ```
 
 `Group` uses `GroupProps` and `GStyle` to transform recursive `CRCNode`
@@ -20,9 +20,9 @@ geometry. A receiving filter captures the group's recursive output before its
 own transform is presented.
 
 ```tsx
-<Group style={{ translateX: 48, rotate: Math.PI / 12 }}>
+<Group style={{ translateX: 48, rotationDegrees: 15 }}>
   <Rectangle style={{ width: 100, height: 60, fill: "#2563eb" }} />
 </Group>
 ```
 
-See [Groups and transforms].
+See the [Group live example](#/examples/composition/group).

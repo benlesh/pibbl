@@ -11,7 +11,7 @@ symbols: [createArcPath]
 # createArcPath
 
 ```ts
-import { createArcPath } from "@crc/core";
+import { createArcPath, Path } from "@crc/core";
 ```
 
 `createArcPath(options: ArcPathOptions): Path2D` is a pure numeric constructor.
@@ -20,8 +20,10 @@ open `Path2D`; it owns no render state, events, or cache.
 
 ```tsx
 <Path
-  d={createArcPath({ radius: 48, startAngle: 0, endAngle: Math.PI })}
-  style={{ stroke: "#2563eb" }}
+  style={{
+    d: createArcPath({ radius: 48, startAngle: 0, endAngle: Math.PI }),
+    stroke: "#2563eb",
+  }}
 />
 ```
 

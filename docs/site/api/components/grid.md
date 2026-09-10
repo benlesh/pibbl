@@ -11,7 +11,7 @@ symbols: [Grid]
 # Grid
 
 ```ts
-import { Grid } from "@crc/core";
+import { Grid, Rectangle } from "@crc/core";
 ```
 
 `Grid` uses `GridProps` and `GridStyle`; children may provide `GridItemStyle`.
@@ -21,11 +21,16 @@ not supported.
 
 ```tsx
 <Grid
-  style={{ width: 240, height: 120, columns: ["1fr", "1fr"], rows: ["1fr"] }}
+  style={{
+    width: 240,
+    height: 120,
+    gridTemplateColumns: ["1fr", "1fr"],
+    gridTemplateRows: ["1fr"],
+  }}
 >
-  <Rectangle style={{ fill: "#2563eb" }} />
-  <Rectangle style={{ fill: "#f59e0b" }} />
+  <Rectangle style={{ width: "auto", height: "auto", fill: "#2563eb" }} />
+  <Rectangle style={{ width: "auto", height: "auto", fill: "#f59e0b" }} />
 </Grid>
 ```
 
-Explore [Grid layout].
+Explore the [Grid live example](#/examples/layout/grid).

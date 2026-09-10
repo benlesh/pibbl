@@ -19,7 +19,7 @@ parsed by the browser into the geometry used for paint and targeting. It
 rejects children; browser `Path2D` parsing behavior remains authoritative.
 
 ```tsx
-<SvgPath d="M10 10h90v60H10z" style={{ fill: "#38bdf8" }} />
+<SvgPath style={{ d: "M10 10h90v60H10z", fill: "#38bdf8" }} />
 ```
 
-See [SVG paths].
+See the [SVG path live example](#/examples/drawing/svg-path).

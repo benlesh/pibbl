@@ -11,7 +11,7 @@ symbols: [crcLayoutBox]
 # crcLayoutBox
 
 ```ts
-import { crcLayoutBox } from "@crc/core";
+import { crcLayoutBox, Rectangle } from "@crc/core";
 ```
 
 `crcLayoutBox(): Readonly<LayoutBox>` is render-only and returns the stable
@@ -26,4 +26,4 @@ function FillAllocation() {
 }
 ```
 
-Try [Allocated layout].
+Try the [Flex live example](#/examples/layout/flex).

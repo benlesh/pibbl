@@ -25,4 +25,4 @@ a contextual layout diagnostic.
 />
 ```
 
-See [Regular polygons].
+See the [Regular polygon live example](#/examples/drawing/regular-polygon).
