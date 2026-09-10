@@ -4,10 +4,14 @@ import {
   type NavigationEntry,
 } from "./navigation";
 import type { ParsedStudioRoute } from "./routes";
+import type { SearchDialogController } from "../search/search-dialog";
+import type { SearchBundleLoader } from "../search/search-engine";
 
 export interface StudioShellOptions {
   readonly app: HTMLElement;
   readonly navigation: readonly NavigationArea[];
+  readonly onSearchNavigate?: (url: string) => void;
+  readonly loadSearchBundle?: SearchBundleLoader;
 }
 
 export interface StudioShell {
@@ -40,7 +44,8 @@ export function createStudioShell(options: StudioShellOptions): StudioShell {
   mobileBrand.href = "#/learn";
   mobileBrand.className = "studio-mobile-brand";
   mobileBrand.textContent = "CRC / DOCS";
-  mobileBar.append(menuButton, mobileBrand);
+  const mobileSearchButton = createSearchTrigger("studio-search-trigger--mobile");
+  mobileBar.append(menuButton, mobileBrand, mobileSearchButton);
 
   const drawerBackdrop = document.createElement("button");
   drawerBackdrop.type = "button";
@@ -61,6 +66,7 @@ export function createStudioShell(options: StudioShellOptions): StudioShell {
   brand.className = "studio-brand";
   brand.innerHTML =
     '<span class="studio-brand__mark" aria-hidden="true"><i></i><b></b><em></em></span><span>CRC<br><small>Canvas docs</small></span>';
+  const desktopSearchButton = createSearchTrigger("studio-search-trigger--desktop");
   const navigationHost = document.createElement("nav");
   navigationHost.ariaLabel = "Documentation";
   navigationHost.className = "studio-nav";
@@ -70,7 +76,13 @@ export function createStudioShell(options: StudioShellOptions): StudioShell {
   testingLink.dataset.navigationId = "testing";
   testingLink.innerHTML =
     '<span aria-hidden="true">◇</span><span>Automated test labs<small>Deterministic browser fixtures</small></span>';
-  sidebar.append(drawerCloseButton, brand, navigationHost, testingLink);
+  sidebar.append(
+    drawerCloseButton,
+    brand,
+    desktopSearchButton,
+    navigationHost,
+    testingLink,
+  );
 
   const main = document.createElement("main");
   main.id = "studio-main";
@@ -85,6 +97,53 @@ export function createStudioShell(options: StudioShellOptions): StudioShell {
   options.app.replaceChildren(skipLink, shell, routeAnnouncements);
 
   const narrowNavigation = window.matchMedia("(max-width: 980px)");
+  let searchController: SearchDialogController | undefined;
+  let loadingSearch: Promise<SearchDialogController> | undefined;
+  let disposed = false;
+  const ensureSearch = async (): Promise<SearchDialogController> => {
+    if (searchController !== undefined) return searchController;
+    if (loadingSearch !== undefined) return loadingSearch;
+    loadingSearch = import("../search/search-dialog").then(({ mountSearchDialog }) => {
+      const controller = mountSearchDialog({
+        loadBundle:
+          options.loadSearchBundle ??
+          (() => Promise.reject(new Error("Search bundle loader was not configured."))),
+        navigate:
+          options.onSearchNavigate ??
+          ((url) => {
+            window.location.hash = url;
+          }),
+      });
+      if (disposed) controller.dispose();
+      else searchController = controller;
+      return controller;
+    });
+    return loadingSearch;
+  };
+  const prepareSearch = () => {
+    void ensureSearch().then((controller) => controller.preload()).catch(() => undefined);
+  };
+  const openSearch = (invoker: HTMLElement) => {
+    void ensureSearch()
+      .then((controller) => controller.open(invoker))
+      .catch(() => undefined);
+  };
+  const onSearchShortcut = (event: KeyboardEvent) => {
+    if (
+      !(event.metaKey || event.ctrlKey) ||
+      event.key.toLocaleLowerCase("en-US") !== "k" ||
+      hasOpenModal() ||
+      isMonacoInput(document.activeElement)
+    ) {
+      return;
+    }
+    event.preventDefault();
+    const invoker =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : desktopSearchButton;
+    openSearch(invoker);
+  };
   const syncDrawerAvailability = () => {
     if (!narrowNavigation.matches) {
       document.body.classList.remove("studio-drawer-open");
@@ -122,6 +181,8 @@ export function createStudioShell(options: StudioShellOptions): StudioShell {
     }
   };
   const onKeydown = (event: KeyboardEvent) => {
+    onSearchShortcut(event);
+    if (event.defaultPrevented) return;
     if (
       event.key === "Escape" &&
       document.body.classList.contains("studio-drawer-open")
@@ -152,6 +213,11 @@ export function createStudioShell(options: StudioShellOptions): StudioShell {
   drawerBackdrop.addEventListener("click", () => closeDrawer(true));
   navigationHost.addEventListener("click", () => closeDrawer());
   testingLink.addEventListener("click", () => closeDrawer());
+  for (const trigger of [desktopSearchButton, mobileSearchButton]) {
+    trigger.addEventListener("focus", prepareSearch);
+    trigger.addEventListener("pointerenter", prepareSearch);
+    trigger.addEventListener("click", () => openSearch(trigger));
+  }
   document.addEventListener("keydown", onKeydown);
   narrowNavigation.addEventListener("change", syncDrawerAvailability);
   syncDrawerAvailability();
@@ -199,12 +265,35 @@ export function createStudioShell(options: StudioShellOptions): StudioShell {
     },
     closeDrawer,
     dispose() {
+      disposed = true;
       menuButton.removeEventListener("click", onMenuClick);
       document.removeEventListener("keydown", onKeydown);
       narrowNavigation.removeEventListener("change", syncDrawerAvailability);
+      for (const trigger of [desktopSearchButton, mobileSearchButton]) {
+        trigger.removeEventListener("focus", prepareSearch);
+        trigger.removeEventListener("pointerenter", prepareSearch);
+      }
+      searchController?.dispose();
       document.body.classList.remove("studio-drawer-open");
     },
   };
+}
+
+function createSearchTrigger(modifier: string): HTMLButtonElement {
+  const trigger = document.createElement("button");
+  trigger.type = "button";
+  trigger.className = `studio-search-trigger ${modifier}`;
+  trigger.setAttribute("aria-label", "Search documentation");
+  trigger.innerHTML = '<span aria-hidden="true">⌕</span> Search docs...<kbd>⌘K</kbd>';
+  return trigger;
+}
+
+function hasOpenModal(): boolean {
+  return document.querySelector("dialog[open]") !== null;
+}
+
+function isMonacoInput(element: Element | null): boolean {
+  return element?.closest(".monaco-editor, textarea.inputarea") !== null;
 }
 
 function renderNavigationEntry(

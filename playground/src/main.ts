@@ -19,6 +19,10 @@ const lifecycle = createPageLifecycle();
 const shell = createStudioShell({
   app,
   navigation: buildNavigation(documentation, learningExampleCatalog),
+  onSearchNavigate(url) {
+    window.location.hash = url;
+  },
+  loadSearchBundle: () => import("virtual:crc-studio-search"),
 });
 const documentationPages = createDocumentationPages({
   container: shell.main,
