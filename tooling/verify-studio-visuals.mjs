@@ -14,21 +14,19 @@ if (!/^[1-9]\d{0,4}$/.test(previewPort) || Number(previewPort) > 65_535) {
 }
 const origin = `http://127.0.0.1:${previewPort}`;
 const routes = [
-  { name: "landing", hash: "#/examples", ready: ".studio-hero-canvas canvas" },
+  { name: "learn-landing", hash: "#/learn", ready: ".documentation-page h1" },
+  { name: "api-crc", hash: "#/api/functions/crc", ready: ".documentation-page h1" },
+  { name: "examples-landing", hash: "#/examples", ready: ".studio-hero-canvas canvas" },
   {
-    name: "primitive",
-    hash: "#/examples/drawing/rectangle",
+    name: "filters",
+    hash: "#/examples/drawing/filters",
     ready: ".studio-preview__frame",
   },
   {
-    name: "mouse",
-    hash: "#/examples/mouse-events/click",
-    ready: ".studio-preview__frame",
-  },
-  {
-    name: "advanced",
-    hash: "#/examples/advanced-interactions/transformed-clipped-layered-targets",
-    ready: ".studio-preview__frame",
+    name: "search-open",
+    hash: "#/learn",
+    ready: ".documentation-page h1",
+    openSearch: true,
   },
   {
     name: "test-lab",
@@ -144,6 +142,13 @@ try {
   for (const route of routes) {
     await page.goto(`${origin}/${route.hash}`);
     await page.locator(route.ready).waitFor({ timeout: 30_000 });
+    await page.evaluate(() => {
+      if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    });
+    if (route.openSearch) {
+      await page.getByRole("button", { name: "Search documentation" }).first().click();
+      await page.locator(".studio-search-dialog[open]").waitFor({ timeout: 30_000 });
+    }
     if (route.hash.startsWith("#/examples/")) {
       await page
         .getByText("Live · changes run automatically")
@@ -172,6 +177,7 @@ try {
       fullPage: true,
       animations: "disabled",
     });
+    if (route.openSearch) await page.keyboard.press("Escape");
     const baselinePath = resolve(
       workspaceRoot,
       `packages/core/test/visual-baselines/studio-${route.name}.expected.png`,

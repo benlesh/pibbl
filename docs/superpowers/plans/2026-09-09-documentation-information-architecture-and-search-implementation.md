@@ -1,5 +1,7 @@
 # Documentation Information Architecture and Search Implementation Plan
 
+> **Historical status: APPROVED IMPLEMENTATION PLAN.**
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Turn the existing CRC Vite Studio into one searchable Learn, API, and Examples documentation experience while preserving live examples, test labs, and legacy links.

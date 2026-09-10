@@ -57,25 +57,91 @@ function sourceAtCommit(commit, path) {
   );
   return result.stdout;
 }
-const guidePaths = [
-  "docs/guides/children-text-lists-and-keys.md",
-  "docs/guides/components-props-and-style.md",
-  "docs/guides/configuring-jsx.md",
-  "docs/guides/custom-components-and-primitives.md",
-  "docs/guides/focus-keyboard-and-accessibility.md",
-  "docs/guides/jsx-quick-start.md",
-  "docs/guides/jsx-troubleshooting.md",
-  "docs/guides/layout-groups-clips-and-layers.md",
-  "docs/guides/react-interop.md",
-  "docs/guides/state-lifecycle-and-react-differences.md",
-  "docs/guides/without-jsx.md",
+const publicGuidePaths = [
+  "docs/site/learn/guides/author-without-jsx.md",
+  "docs/site/learn/guides/components-props-and-children.md",
+  "docs/site/learn/guides/compose-and-layout.md",
+  "docs/site/learn/guides/configure-jsx.md",
+  "docs/site/learn/guides/custom-components-and-primitives.md",
+  "docs/site/learn/guides/focus-and-keyboard.md",
+  "docs/site/learn/guides/jsx-troubleshooting.md",
+  "docs/site/learn/guides/react-integration.md",
+  "docs/site/learn/guides/state-and-lifecycle.md",
+  "docs/site/learn/guides/style-and-draw.md",
+];
+const publicSiteMarkdownPaths = [
+  "docs/site/api/index.md",
+  "docs/site/api/components/absolute.md",
+  "docs/site/api/components/arc.md",
+  "docs/site/api/components/circle.md",
+  "docs/site/api/components/clip.md",
+  "docs/site/api/components/ellipse.md",
+  "docs/site/api/components/flex.md",
+  "docs/site/api/components/flow.md",
+  "docs/site/api/components/focus-management.md",
+  "docs/site/api/components/grid.md",
+  "docs/site/api/components/group.md",
+  "docs/site/api/components/horizontal-line.md",
+  "docs/site/api/components/image.md",
+  "docs/site/api/components/keyboard-navigation.md",
+  "docs/site/api/components/layer.md",
+  "docs/site/api/components/line.md",
+  "docs/site/api/components/overlay.md",
+  "docs/site/api/components/path.md",
+  "docs/site/api/components/polygon.md",
+  "docs/site/api/components/rectangle.md",
+  "docs/site/api/components/regular-polygon.md",
+  "docs/site/api/components/star.md",
+  "docs/site/api/components/svg-path.md",
+  "docs/site/api/components/text.md",
+  "docs/site/api/components/vertical-line.md",
+  "docs/site/api/components/wedge.md",
+  "docs/site/api/functions/crc.md",
+  "docs/site/api/functions/create-arc-path.md",
+  "docs/site/api/functions/create-circle-path.md",
+  "docs/site/api/functions/create-element.md",
+  "docs/site/api/functions/create-ellipse-path.md",
+  "docs/site/api/functions/create-line-path.md",
+  "docs/site/api/functions/create-polygon-path.md",
+  "docs/site/api/functions/create-rectangle-path.md",
+  "docs/site/api/functions/create-regular-polygon-path.md",
+  "docs/site/api/functions/create-star-path.md",
+  "docs/site/api/functions/create-svg-path.md",
+  "docs/site/api/functions/create-wedge-path.md",
+  "docs/site/api/functions/define-primitive.md",
+  "docs/site/api/functions/layout-diagnostic.md",
+  "docs/site/api/functions/measure-element.md",
+  "docs/site/api/functions/normalize-edges.md",
+  "docs/site/api/functions/resolve-box.md",
+  "docs/site/api/functions/resolve-length.md",
+  "docs/site/api/hooks/crc-canvas-context.md",
+  "docs/site/api/hooks/crc-cursor.md",
+  "docs/site/api/hooks/crc-event.md",
+  "docs/site/api/hooks/crc-event-listener.md",
+  "docs/site/api/hooks/crc-event-target.md",
+  "docs/site/api/hooks/crc-layout-box.md",
+  "docs/site/api/hooks/crc-line-path.md",
+  "docs/site/api/hooks/crc-memo.md",
+  "docs/site/api/hooks/crc-rect-path.md",
+  "docs/site/api/hooks/crc-ref.md",
+  "docs/site/api/hooks/crc-state.md",
+  "docs/site/api/hooks/crc-svg-path.md",
+  "docs/site/api/hooks/crc-when-changed.md",
+  "docs/site/api/types/canvas-runtime.md",
+  "docs/site/api/types/elements-components.md",
+  "docs/site/api/types/events.md",
+  "docs/site/api/types/filters.md",
+  "docs/site/api/types/layout.md",
+  "docs/site/api/types/styles.md",
+  "docs/site/learn/index.md",
+  "docs/site/learn/tutorials/diagram-editor/index.md",
+  ...publicGuidePaths,
 ];
 const currentMarkdownPaths = [
   "AGENTS.md",
   "README.md",
   "packages/core/README.md",
   "packages/types/README.md",
-  "docs/api-reference.md",
   "docs/architecture/style-and-layout-architecture.md",
   "docs/design/canvas-accessibility-guidance.md",
   "docs/design/canvas-surface-contract.md",
@@ -100,7 +166,7 @@ const currentMarkdownPaths = [
   "docs/testing/scenario-gallery.md",
   "docs/testing/test-tooling-opportunities.md",
   "docs/testing/trust-gate.md",
-  ...guidePaths,
+  ...publicSiteMarkdownPaths,
 ];
 const linkCheckedPaths = [
   ...currentMarkdownPaths,
@@ -109,7 +175,11 @@ const linkCheckedPaths = [
 const migrationMarkdownPaths = new Set([
   "docs/migrations/jsx-authoring-pivot.md",
 ]);
-const operationalMarkdownPaths = new Set([".beads/README.md"]);
+const operationalMarkdownPaths = new Set([
+  ".beads/README.md",
+  "tooling/studio-docs/fixtures/invalid-script.md",
+  "tooling/studio-docs/fixtures/valid-guide.md",
+]);
 const presentationSourcePaths = trackedRepositoryFiles([
   "packages/scenarios/src",
   "playground",
@@ -320,17 +390,26 @@ function jsxNamespaceMembers(source, filename) {
   return names;
 }
 
-function namesBetweenMarkers(source, marker) {
+function apiSymbolsFromFrontmatter(source, filename) {
   const match = source.match(
-    new RegExp(
-      `<!-- ${marker}:start -->([\\s\\S]*?)<!-- ${marker}:end -->`,
-      "u",
-    ),
+    /^symbols:\s*\[([^\]]*)\]\s*$/mu,
   );
-  assert.ok(match, `Missing ${marker} markers in docs/api-reference.md`);
+  assert.ok(match, `${filename} is missing a symbols frontmatter list`);
   return new Set(
-    [...match[1].matchAll(/`([A-Za-z][A-Za-z0-9]*)`/gu)].map((item) => item[1]),
+    match[1]
+      .split(",")
+      .map((name) => name.trim())
+      .filter((name) => name.length > 0),
   );
+}
+
+function assertDocumentedTokenNames(source, names, label) {
+  for (const name of names) {
+    assert.ok(
+      source.includes("`" + name + "`"),
+      `${label} is missing ${name}`,
+    );
+  }
 }
 
 function assertSameNames(actual, expected, label) {
@@ -389,6 +468,9 @@ export async function assertLocalLinks(
       target = target.slice(1, -1);
     }
     if (/^[a-z]+:/iu.test(target)) continue;
+    // Studio routes are validated against the public documentation manifest;
+    // they are not repository-local heading anchors.
+    if (target.startsWith("#/")) continue;
     target = target.split(/\s+["']/u, 1)[0];
     const hashIndex = target.indexOf("#");
     const encodedFile = hashIndex < 0 ? target : target.slice(0, hashIndex);
@@ -439,16 +521,19 @@ function assertSnippetSyntax(path, source) {
 
 function extractCompleteSnippets(sources) {
   const snippets = new Map();
-  const marker =
-    /<!-- docs:complete-snippet:start ([a-z0-9-]+) -->([\s\S]*?)<!-- docs:complete-snippet:end -->/gu;
   for (const [path, source] of sources) {
-    for (const match of source.matchAll(marker)) {
-      const id = match[1];
-      assert.ok(!snippets.has(id), `Duplicate complete snippet marker ${id}`);
+    for (const marker of source.matchAll(
+      /<!-- docs:complete-snippet:start ([a-z0-9-]+) -->\n([\s\S]*?)<!-- docs:complete-snippet:end -->/gu,
+    )) {
+      const id = marker[1];
       const fences = [
-        ...match[2].matchAll(/^```(ts|tsx|js|jsx)\n([\s\S]*?)^```$/gmu),
+        ...marker[2].matchAll(/^```(ts|tsx|js|jsx)\n([\s\S]*?)^```$/gmu),
       ];
-      assert.ok(fences.length > 0, `Complete snippet ${id} has no code fence`);
+      assert.ok(
+        fences.length > 0,
+        `Complete snippet ${id} in ${path} must contain a TypeScript or JavaScript fence`,
+      );
+      assert.ok(!snippets.has(id), `Duplicate complete snippet marker ${id}`);
       snippets.set(id, {
         id,
         path,
@@ -462,8 +547,103 @@ function extractCompleteSnippets(sources) {
         source: fences.map((fence) => fence[2]).join("\n"),
       });
     }
+    const fencesById = new Map();
+    for (const match of source.matchAll(
+      /^```(ts|tsx|js|jsx)(?:\s+docs:complete-snippet=([a-z0-9-]+))?\n([\s\S]*?)^```$/gmu,
+    )) {
+      const id = match[2];
+      if (id === undefined) continue;
+      const fences = fencesById.get(id) ?? [];
+      fences.push(match);
+      fencesById.set(id, fences);
+    }
+    for (const [id, fences] of fencesById) {
+      assert.ok(!snippets.has(id), `Duplicate complete snippet marker ${id}`);
+      snippets.set(id, {
+        id,
+        path,
+        language: fences.some((fence) => fence[1] === "jsx")
+          ? "jsx"
+          : fences.some((fence) => fence[1] === "tsx")
+            ? "tsx"
+            : fences.some((fence) => fence[1] === "js")
+              ? "js"
+              : "ts",
+        source: fences.map((fence) => fence[3]).join("\n"),
+      });
+    }
   }
   return snippets;
+}
+
+function extractApiSnippets(sources) {
+  const snippets = new Map();
+  for (const [path, source] of sources) {
+    if (!path.startsWith("docs/site/api/")) continue;
+    const fences = [...source.matchAll(/^```(ts|tsx)\n([\s\S]*?)^```$/gmu)];
+    if (fences.length > 0) {
+      const id = `api-snippet-${path.replaceAll(/[^a-z0-9]+/giu, "-")}`;
+      snippets.set(id, {
+        id,
+        path,
+        language: fences.some((match) => match[1] === "tsx") ? "tsx" : "ts",
+        source: appendCrcComponentChecks(
+          fences.map((match) => match[2]).join("\n"),
+        ),
+      });
+    }
+    assertNoBareApiPseudoLinks(path, source);
+  }
+  return snippets;
+}
+
+function appendCrcComponentChecks(source) {
+  const componentNames = new Set(
+    [
+      ...source.matchAll(
+        /^function ([A-Z][A-Za-z0-9_]*)\s*(?:<[^>]+>)?\s*\(/gmu,
+      ),
+    ].map((match) => match[1]),
+  );
+  if (componentNames.size === 0) return source;
+  return `${source}\n${[...componentNames]
+    .sort()
+    .map(
+      (name) =>
+        `const __crcComponentCheck_${name}: import("@crc/core").CRCComponent<any> = ${name};`,
+    )
+    .join("\n")}\n`;
+}
+
+function assertNoBareApiPseudoLinks(path, source) {
+  const prose = source
+    .replace(/^---\n[\s\S]*?^---\n/mu, "")
+    .replace(/^```[\s\S]*?^```$/gmu, "");
+  const referenceLabels = new Set(
+    [...prose.matchAll(/^\s{0,3}\[([^\]\n]+)\]:\s+\S.*$/gmu)].map((match) =>
+      normalizeReferenceLabel(match[1]),
+    ),
+  );
+  const markdown = stripInlineCode(prose).replace(
+    /^\s{0,3}\[[^\]\n]+\]:\s+\S.*$/gmu,
+    "",
+  );
+  for (const match of markdown.matchAll(
+    /(^|[^!\\])\[([^\]\n]+)\](?![\t ]*(?:\(|\[))/gmu,
+  )) {
+    if (referenceLabels.has(normalizeReferenceLabel(match[2]))) continue;
+    throw new Error(
+      `${path} contains a bare bracket-only pseudo-link. Use a canonical Markdown link.`,
+    );
+  }
+}
+
+function normalizeReferenceLabel(label) {
+  return label.trim().replace(/\s+/gu, " ").toLowerCase();
+}
+
+function stripInlineCode(source) {
+  return source.replace(/(`+)[\s\S]*?\1/gu, "");
 }
 
 const requiredCompleteSnippetIds = new Set([
@@ -1018,14 +1198,16 @@ export async function assertAutomaticRuntimeTransforms(source, babelOptions) {
   );
 }
 
-const discoveredGuides = (await readdir(join(repositoryRoot, "docs/guides")))
-  .filter((name) => extname(name) === ".md")
-  .map((name) => `docs/guides/${name}`)
-  .sort();
+const discoveredGuides = await readdir(join(repositoryRoot, "docs/guides"))
+  .then((entries) => entries.filter((name) => extname(name) === ".md").sort())
+  .catch((error) => {
+    if (error?.code === "ENOENT") return [];
+    throw error;
+  });
 assert.deepEqual(
   discoveredGuides,
-  [...guidePaths].sort(),
-  "The required guide set changed.",
+  [],
+  "Migrated public guides must have one canonical source under docs/site/learn/guides.",
 );
 
 const currentSources = new Map();
@@ -1197,7 +1379,18 @@ for (const [index, line] of migrationSource.split("\n").entries()) {
   );
 }
 
-const apiReference = currentSources.get("docs/api-reference.md");
+const apiDocumentationSources = publicSiteMarkdownPaths
+  .filter((path) => path.startsWith("docs/site/api/"))
+  .map((path) => [path, currentSources.get(path)]);
+const documentedApiSymbols = new Set(
+  apiDocumentationSources.flatMap(([path, source]) => [
+    ...apiSymbolsFromFrontmatter(source, path),
+  ]),
+);
+const apiOverview = currentSources.get("docs/site/api/index.md");
+const canvasRuntimeTypes = currentSources.get(
+  "docs/site/api/types/canvas-runtime.md",
+);
 const rootSource = await readFile(
   join(repositoryRoot, "packages/core/src/index.ts"),
   "utf8",
@@ -1223,22 +1416,22 @@ const devRuntimeExports = exportedSpecifiers(
   "packages/core/src/jsx-dev-runtime.ts",
 );
 assertSameNames(
-  namesBetweenMarkers(apiReference, "root-values"),
+  [...documentedApiSymbols].filter((name) => rootExports.values.has(name)),
   rootExports.values,
   "Documented root runtime values",
 );
 assertSameNames(
-  namesBetweenMarkers(apiReference, "root-types"),
+  [...documentedApiSymbols].filter((name) => rootExports.types.has(name)),
   rootExports.types,
   "Documented root types",
 );
 assertSameNames(
-  namesBetweenMarkers(apiReference, "jsx-runtime-values"),
+  [...documentedApiSymbols].filter((name) => runtimeExports.values.has(name)),
   runtimeExports.values,
   "Documented jsx-runtime values",
 );
 assertSameNames(
-  namesBetweenMarkers(apiReference, "jsx-dev-runtime-values"),
+  [...documentedApiSymbols].filter((name) => devRuntimeExports.values.has(name)),
   devRuntimeExports.values,
   "Documented jsx-dev-runtime values",
 );
@@ -1246,8 +1439,8 @@ const namespaceMembers = jsxNamespaceMembers(
   runtimeSource,
   "packages/core/src/jsx-runtime.ts",
 );
-assertSameNames(
-  namesBetweenMarkers(apiReference, "jsx-namespace-types"),
+assertDocumentedTokenNames(
+  apiOverview,
   namespaceMembers,
   "Documented JSX namespace types",
 );
@@ -1255,14 +1448,6 @@ assertSameNames(
   jsxNamespaceMembers(devRuntimeSource, "packages/core/src/jsx-dev-runtime.ts"),
   namespaceMembers,
   "Development JSX namespace types",
-);
-assert.match(
-  apiReference,
-  new RegExp(
-    `root contains ${rootExports.values.size} runtime values and ${rootExports.types.size} type exports`,
-    "u",
-  ),
-  "The API-reference export totals are stale.",
 );
 
 const coreManifest = JSON.parse(
@@ -1294,11 +1479,139 @@ const trustWorkflow = await readFile(
   join(repositoryRoot, ".github/workflows/trust.yml"),
   "utf8",
 );
+const rootManifest = JSON.parse(
+  await readFile(join(repositoryRoot, "package.json"), "utf8"),
+);
 assert.match(
   trustWorkflow,
   /run: pnpm docs:check/u,
   "The CI static job must run docs:check explicitly.",
 );
+assert.match(
+  trustWorkflow,
+  /run: pnpm studio-docs:check/u,
+  "The CI static job must run studio-docs:check explicitly.",
+);
+assert.match(
+  trustWorkflow,
+  /run: pnpm test:studio-docs:production-boundary/u,
+  "The CI static job must prove hostile acceptance environment values cannot enter production output.",
+);
+for (const command of ["test:studio-docs", "test:studio-visual"]) {
+  assert.match(
+    trustWorkflow,
+    new RegExp(`run: pnpm ${command}`, "u"),
+    `The CI browser job must run ${command} explicitly.`,
+  );
+}
+assertWorkflowCommandOrder(
+  trustWorkflow,
+  [
+    "run: pnpm docs:check\n",
+    "run: pnpm studio-docs:check\n",
+    "run: pnpm test:studio-docs:production-boundary\n",
+    "run: pnpm typecheck\n",
+  ],
+  "CI static documentation and type checks",
+);
+assertWorkflowCommandOrder(
+  trustWorkflow,
+  [
+    "run: pnpm test:ci\n",
+    "run: pnpm test:studio-docs\n",
+    "run: pnpm test:visual-safeguard\n",
+    "run: pnpm test:studio-visual\n",
+    "run: pnpm test:smoke:built\n",
+  ],
+  "CI browser, documentation, and visual checks",
+);
+assert.equal(
+  rootManifest.scripts["test:studio-docs"],
+  "node tooling/test-studio-docs.mjs",
+  "test:studio-docs must use the isolated acceptance-output runner.",
+);
+assert.equal(
+  rootManifest.scripts["test:studio-docs:production-boundary"],
+  "VITE_CRC_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE=1 corepack pnpm@11.21.0 playground:build && node tooling/verify-studio-production-output.mjs",
+  "The production boundary regression must build ordinary output with a hostile stale VITE value.",
+);
+assert.match(
+  rootManifest.scripts["trust:static"],
+  /\bstudio-docs:check\b/u,
+  "The local static trust command must include studio-docs:check.",
+);
+assert.match(
+  rootManifest.scripts["trust:browser"],
+  /\btest:studio-docs\b[\s\S]*\btest:studio-visual\b/u,
+  "The local browser trust command must retain Studio acceptance before visual baselines.",
+);
+assert.match(
+  rootManifest.scripts["test:studio-visual"],
+  /\bplayground:build\b/u,
+  "test:studio-visual must remain an explicit normal-production build gate.",
+);
+const studioDocsRunner = await readFile(
+  join(repositoryRoot, "tooling/test-studio-docs.mjs"),
+  "utf8",
+);
+assert.match(
+  studioDocsRunner,
+  /\.studio-docs-acceptance-dist/u,
+  "Studio acceptance must use its explicit isolated output directory.",
+);
+assert.match(
+  studioDocsRunner,
+  /assertNormalOutputUnchanged/u,
+  "Studio acceptance must preserve the normal production output.",
+);
+assert.match(
+  studioDocsRunner,
+  /finally[\s\S]*rm\(acceptanceOutput/u,
+  "Studio acceptance must clean its exact output directory on success and failure.",
+);
+assert.doesNotMatch(
+  studioDocsRunner,
+  /VITE_CRC_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE/u,
+  "Studio acceptance must derive retry behavior from its build mode, not an ambient VITE value.",
+);
+const studioMain = await readFile(
+  join(repositoryRoot, "playground/src/main.ts"),
+  "utf8",
+);
+assert.match(
+  studioMain,
+  /__CRC_STUDIO_DOCS_ACCEPTANCE__/u,
+  "Studio retry composition must use the private mode-defined constant.",
+);
+assert.doesNotMatch(
+  studioMain,
+  /import\.meta\.env|VITE_CRC_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE/u,
+  "Studio retry composition must not read ambient VITE values.",
+);
+const studioViteConfig = await readFile(
+  join(repositoryRoot, "playground/vite.config.ts"),
+  "utf8",
+);
+assert.match(
+  studioViteConfig,
+  /define:[\s\S]*__CRC_STUDIO_DOCS_ACCEPTANCE__/u,
+  "Vite must define the private retry flag from studio-docs-acceptance mode.",
+);
+const productionOutputVerifier = await readFile(
+  join(repositoryRoot, "tooling/verify-studio-production-output.mjs"),
+  "utf8",
+);
+for (const marker of [
+  "crcStudioSearchRetry",
+  "Intentional verifier search loader failure.",
+  "createAcceptanceSearchLoaderOptions",
+]) {
+  assert.match(
+    productionOutputVerifier,
+    new RegExp(marker.replaceAll(/[.]/gu, "\\."), "u"),
+    `Production output verifier must reject ${marker}.`,
+  );
+}
 const studioHtml = await readFile(
   join(repositoryRoot, "playground/index.html"),
   "utf8",
@@ -1306,7 +1619,16 @@ const studioHtml = await readFile(
 assert.match(studioHtml, /editable TSX/u);
 assert.doesNotMatch(studioHtml, /editable TypeScript/u);
 
-const configuring = currentSources.get("docs/guides/configuring-jsx.md");
+function assertWorkflowCommandOrder(source, commands, label) {
+  let previous = -1;
+  for (const command of commands) {
+    const position = source.indexOf(command);
+    assert.ok(position > previous, `${label} must run ${command} in order.`);
+    previous = position;
+  }
+}
+
+const configuring = currentSources.get("docs/site/learn/guides/configure-jsx.md");
 for (const marker of [
   "@crc/core/jsx-runtime",
   "@crc/core/jsx-dev-runtime",
@@ -1326,19 +1648,27 @@ for (const marker of [
 
 const requiredGuideMarkers = new Map([
   [
-    "docs/guides/children-text-lists-and-keys.md",
+    "docs/site/learn/guides/components-props-and-children.md",
     ["finite synchronous iterables", "Numeric zero", "## Fragments and keys"],
   ],
   [
-    "docs/guides/components-props-and-style.md",
-    ["ordinary synchronous", "## Local, closed style", "crcLayoutBox()"],
+    "docs/site/learn/guides/components-props-and-children.md",
+    ["ordinary synchronous"],
   ],
   [
-    "docs/guides/custom-components-and-primitives.md",
+    "docs/site/learn/guides/style-and-draw.md",
+    ["## Local, closed style"],
+  ],
+  [
+    "docs/site/learn/guides/compose-and-layout.md",
+    ["crcLayoutBox()"],
+  ],
+  [
+    "docs/site/learn/guides/custom-components-and-primitives.md",
     ["crcCanvasContext()", "normalizeStyle", "resolveStyle", "measure"],
   ],
   [
-    "docs/guides/focus-keyboard-and-accessibility.md",
+    "docs/site/learn/guides/focus-and-keyboard.md",
     [
       "FocusManagement",
       "KeyboardNavigation",
@@ -1346,19 +1676,19 @@ const requiredGuideMarkers = new Map([
     ],
   ],
   [
-    "docs/guides/layout-groups-clips-and-layers.md",
+    "docs/site/learn/guides/compose-and-layout.md",
     ["## Group", "## Clip", "## Layer", "specified author value"],
   ],
   [
-    "docs/guides/react-interop.md",
+    "docs/site/learn/guides/react-integration.md",
     ["one JSX runtime", "createCRCElement", "expression-level pragma"],
   ],
   [
-    "docs/guides/state-lifecycle-and-react-differences.md",
+    "docs/site/learn/guides/state-and-lifecycle.md",
     ["immediate Canvas runtime", "crcWhenChanged", "## Disposal"],
   ],
   [
-    "docs/guides/without-jsx.md",
+    "docs/site/learn/guides/author-without-jsx.md",
     ["## Install and mount", "## Constructor rules", "dispose()"],
   ],
 ]);
@@ -1595,7 +1925,7 @@ const contractPreservationResult = assertContractPreservationBaseline({
 });
 
 const readme = currentSources.get("README.md");
-const advancedStart = readme.indexOf("## Learn the API");
+const advancedStart = readme.indexOf("## Learn CRC");
 assert.ok(readme.indexOf("## Quick start") >= 0, "README needs a quick start.");
 assert.ok(
   advancedStart > readme.indexOf("## Quick start"),
@@ -1605,45 +1935,46 @@ export function assertFixedConfigSignal(source) {
   assert.match(
     source,
     /fixed logical viewport with optional `fit`,\s*`pixelRatio`, and `signal`/u,
-    "API reference must document signal for fixed CRCConfig as well as responsive CRCConfig",
+    "Canvas/runtime types must document signal for fixed CRCConfig as well as responsive CRCConfig",
   );
 }
-assertFixedConfigSignal(apiReference);
+assertFixedConfigSignal(canvasRuntimeTypes);
 assert.ok(
-  readme.indexOf("docs/guides/without-jsx.md") < advancedStart,
+  readme.indexOf("docs/site/learn/guides/author-without-jsx.md") <
+    advancedStart,
   "README must link the standalone non-JSX path before advanced material.",
 );
 
 const matrixRequirements = [
   {
     topic: /Complete interactive JSX quick start/u,
-    guides: ["guides/jsx-quick-start.md", "design/runtime-hooks-contract.md"],
+    guides: ["site/learn/guides/configure-jsx.md", "design/runtime-hooks-contract.md"],
     evidence: ["getting-started.example.tsx"],
   },
   {
     topic: /TypeScript automatic runtime/u,
-    guides: ["guides/configuring-jsx.md", "api-reference.md"],
+    guides: ["site/learn/guides/configure-jsx.md", "site/api/index.md"],
     evidence: ["package-consumer/jsx.tsx"],
   },
   {
     topic: /No React dependency/u,
-    guides: ["guides/configuring-jsx.md", "guides/react-interop.md"],
+    guides: ["site/learn/guides/configure-jsx.md", "site/learn/guides/react-integration.md"],
     evidence: ["verify-packed-consumer.mjs"],
   },
   {
     topic: /Vite\/esbuild setup/u,
-    guides: ["guides/configuring-jsx.md"],
+    guides: ["site/learn/guides/configure-jsx.md"],
     evidence: ["verify-docs.mjs"],
   },
   {
     topic: /Babel automatic runtime/u,
-    guides: ["guides/configuring-jsx.md"],
+    guides: ["site/learn/guides/configure-jsx.md"],
     evidence: ["verify-docs.mjs"],
   },
   {
     topic: /Components, props, events/u,
     guides: [
-      "guides/components-props-and-style.md",
+      "site/learn/guides/style-and-draw.md",
       "design/style-system-contract.md",
     ],
     evidence: ["getting-started.example.tsx"],
@@ -1651,20 +1982,20 @@ const matrixRequirements = [
   {
     topic: /Arbitrary interpolation/u,
     guides: [
-      "guides/children-text-lists-and-keys.md",
+      "site/learn/guides/components-props-and-children.md",
       "design/runtime-hooks-contract.md",
     ],
     evidence: ["children.test.ts"],
   },
   {
     topic: /Fragments, lists/u,
-    guides: ["guides/children-text-lists-and-keys.md"],
+    guides: ["site/learn/guides/components-props-and-children.md"],
     evidence: ["fragment.test.tsx"],
   },
   {
     topic: /Text children/u,
     guides: [
-      "guides/children-text-lists-and-keys.md",
+      "site/learn/guides/components-props-and-children.md",
       "design/drawing-components-contract.md",
     ],
     evidence: ["text.example.tsx", "learning-examples.test.ts"],
@@ -1672,7 +2003,7 @@ const matrixRequirements = [
   {
     topic: /Layout and specified style/u,
     guides: [
-      "guides/layout-groups-clips-and-layers.md",
+      "site/learn/guides/compose-and-layout.md",
       "design/layout-system-contract.md",
     ],
     evidence: ["flex.example.tsx"],
@@ -1680,7 +2011,7 @@ const matrixRequirements = [
   {
     topic: /`Group`, `Clip`/u,
     guides: [
-      "guides/layout-groups-clips-and-layers.md",
+      "site/learn/guides/compose-and-layout.md",
       "design/drawing-components-contract.md",
     ],
     evidence: ["group.example.tsx", "clip.example.tsx", "layer.example.tsx"],
@@ -1688,27 +2019,27 @@ const matrixRequirements = [
   {
     topic: /State, immediate lifecycle/u,
     guides: [
-      "guides/state-lifecycle-and-react-differences.md",
+      "site/learn/guides/state-and-lifecycle.md",
       "design/runtime-hooks-contract.md",
     ],
     evidence: ["runtime-hooks.example.tsx"],
   },
   {
     topic: /Ordinary composite/u,
-    guides: ["guides/custom-components-and-primitives.md"],
+    guides: ["site/learn/guides/custom-components-and-primitives.md"],
     evidence: ["crc-canvas-context.test.tsx"],
   },
   {
     topic: /Full `definePrimitive`/u,
     guides: [
-      "guides/custom-components-and-primitives.md",
+      "site/learn/guides/custom-components-and-primitives.md",
       "design/style-system-contract.md",
     ],
     evidence: ["define-primitive.test.tsx"],
   },
   {
     topic: /Complete non-JSX API/u,
-    guides: ["guides/without-jsx.md"],
+    guides: ["site/learn/guides/author-without-jsx.md"],
     evidence: [
       "create-element-authoring.example.tsx",
       "learning-examples.test.ts",
@@ -1716,18 +2047,18 @@ const matrixRequirements = [
   },
   {
     topic: /One runtime per file/u,
-    guides: ["guides/react-interop.md", "guides/configuring-jsx.md"],
+    guides: ["site/learn/guides/react-integration.md", "site/learn/guides/configure-jsx.md"],
     evidence: ["mixed-runtime/react-host.tsx"],
   },
   {
     topic: /Wrong-runtime diagnostics/u,
-    guides: ["guides/jsx-troubleshooting.md"],
+    guides: ["site/learn/guides/jsx-troubleshooting.md"],
     evidence: ["foreign-runtime-diagnostics.test.tsx"],
   },
   {
     topic: /Focus and directional keyboard/u,
     guides: [
-      "guides/focus-keyboard-and-accessibility.md",
+      "site/learn/guides/focus-and-keyboard.md",
       "design/focus-and-keyboard-navigation-contract.md",
     ],
     evidence: ["directional-navigation.example.tsx"],
@@ -1736,13 +2067,13 @@ const matrixRequirements = [
     topic: /Accessibility limitations/u,
     guides: [
       "design/canvas-accessibility-guidance.md",
-      "guides/focus-keyboard-and-accessibility.md",
+      "site/learn/guides/focus-and-keyboard.md",
     ],
     evidence: ["focus-navigation.example.tsx"],
   },
   {
     topic: /Complete public values/u,
-    guides: ["api-reference.md"],
+    guides: ["site/api/index.md", "site/api/types/canvas-runtime.md"],
     evidence: ["final-public-vocabulary.tsx"],
   },
   {
@@ -1773,7 +2104,7 @@ export function assertAcceptanceMatrix(matrixSource) {
     );
     assert.match(
       columns[2],
-      /\]\([^)]*(?:guides|design|migrations|api-reference)[^)]*\.md(?:#[^)]*)?\)/u,
+      /\]\([^)]*(?:guides|design|migrations|site\/api)[^)]*\.md(?:#[^)]*)?\)/u,
       `Acceptance row lacks a current guide/contract link: ${row}`,
     );
     assert.match(
@@ -1839,7 +2170,7 @@ const matrix = libraryStatus.slice(
   libraryStatus.indexOf("## Running locally"),
 );
 const matrixRows = assertAcceptanceMatrix(matrix);
-for (const guide of guidePaths) {
+for (const guide of publicGuidePaths) {
   assert.ok(
     libraryStatus.includes(`./${guide.slice("docs/".length)}`),
     `Acceptance matrix does not map ${guide}`,
@@ -1884,6 +2215,9 @@ for (const snippet of completeSnippets.values()) {
 }
 
 const compiledSnippetCount = await typecheckCompleteSnippets(completeSnippets);
+const compiledApiSnippetCount = await typecheckCompleteSnippets(
+  extractApiSnippets(currentSources),
+);
 const javascriptSnippet = completeSnippets.get("javascript-runtime");
 await assertAutomaticRuntimeTransforms(
   javascriptSnippet.source,
@@ -1901,6 +2235,48 @@ export async function verifyMutationProbes() {
     assert.throws(operation, pattern);
     probes += 1;
   };
+
+  throws(
+    () =>
+      extractApiSnippets(
+        new Map([
+          [
+            "docs/site/api/lowercase-pseudo-link.md",
+            "# Fixture\n\n[lowercase example]",
+          ],
+        ]),
+      ),
+    /bare bracket-only pseudo-link/u,
+  );
+  assert.doesNotThrow(
+    () =>
+      extractApiSnippets(
+        new Map([
+          [
+            "docs/site/api/valid-markdown-links.md",
+            "![Diagram](diagram.png)\n\n[Inline](#/api/index)\n\n[Reference]: #/api/index\n\n[reference]\n\n[Short form][reference]\n\n`[code]`",
+          ],
+        ]),
+      ),
+    "Images, inline links, reference links, definitions, and code must remain valid",
+  );
+  const crcMemoApiPath = "docs/site/api/hooks/crc-memo.md";
+  const brokenCrcMemoSources = new Map(currentSources);
+  const crcMemoSource = currentSources.get(crcMemoApiPath);
+  const brokenCrcMemoSource = crcMemoSource.replace(
+    'return <Path style={{ d: path, fill: "#38bdf8" }} />;',
+    "return path;",
+  );
+  assert.notEqual(
+    brokenCrcMemoSource,
+    crcMemoSource,
+    "crcMemo component-return mutation fixture did not change",
+  );
+  brokenCrcMemoSources.set(crcMemoApiPath, brokenCrcMemoSource);
+  await rejects(
+    () => typecheckCompleteSnippets(extractApiSnippets(brokenCrcMemoSources)),
+    /failed typecheck/u,
+  );
 
   const direct = exportedSpecifiers(
     "export const directValue = 1; export declare function declaredValue(): void; export interface DirectType {}",
@@ -2036,7 +2412,7 @@ export async function verifyMutationProbes() {
   await rejects(
     () =>
       assertLocalLinks(
-        "docs/guides/jsx-quick-start.md",
+        "docs/site/learn/guides/configure-jsx.md",
         "# Existing\n\n[missing](#not-an-anchor)",
       ),
     /Broken local anchor/u,
@@ -2044,7 +2420,7 @@ export async function verifyMutationProbes() {
   throws(
     () =>
       assertFixedConfigSignal(
-        apiReference.replace("`pixelRatio`, and `signal`", "`pixelRatio`"),
+        canvasRuntimeTypes.replace("`fit`, `pixelRatio`, and `signal`", "`fit` and `pixelRatio`"),
       ),
     /fixed CRCConfig/u,
   );
@@ -2594,12 +2970,13 @@ export async function verifyMutationProbes() {
 }
 
 process.stdout.write(
-  `Documentation checks passed: ${guidePaths.length} guides, ` +
+  `Documentation checks passed: ${publicGuidePaths.length} guides, ` +
     `${linkCheckedPaths.length} current/migration files, ` +
     `${historicalMarkdownPaths.length} historical/work records, ` +
     `${rootExports.values.size} values, ${rootExports.types.size} types, ` +
     `${matrixRows.length} acceptance rows, ${parsedSnippetCount} parsed ` +
     `code snippets, ${compiledSnippetCount} extracted TypeScript programs, ` +
+    `${compiledApiSnippetCount} compiler-checked API example programs, ` +
     `${contractPreservationResult.baselineUnitCount} pre-Task-14 and ` +
     `${contractPreservationResult.currentUnitCount} current semantic units across ` +
     `${contractPreservationBaseline.contracts.length} normative contracts, ` +

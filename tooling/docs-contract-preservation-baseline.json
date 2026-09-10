@@ -7827,7 +7827,7 @@
           "id": "c0058",
           "kind": "prose",
           "section": "Deliberate exclusions",
-          "text": "See the [layout contract](./layout-system-contract.md), [drawing contract](./drawing-components-contract.md), and [custom primitive guide](../guides/custom-components-and-primitives.md)."
+          "text": "See the [layout contract](./layout-system-contract.md), [drawing contract](./drawing-components-contract.md), and [custom primitive guide](../site/learn/guides/custom-components-and-primitives.md)."
         },
         {
           "id": "c0059",

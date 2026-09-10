@@ -43,8 +43,8 @@ State and root updates are animation-frame coalesced, rendering is synchronous,
 and controller disposal is idempotent.
 
 Start with the repository [quick start](../../README.md), then use the
-[configuration guide](../../docs/guides/configuring-jsx.md), complete
-[non-JSX guide](../../docs/guides/without-jsx.md), [API
-reference](../../docs/api-reference.md), [feature
+[configuration guide](../../docs/site/learn/guides/configure-jsx.md), complete
+[non-JSX guide](../../docs/site/learn/guides/author-without-jsx.md), [API
+overview](../../docs/site/api/index.md), [feature
 inventory](../../docs/library-status.md), and normative [design
 contracts](../../docs/design/runtime-hooks-contract.md).

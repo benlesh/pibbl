@@ -1,5 +1,7 @@
 # Documentation information architecture and search design
 
+> **Historical status: APPROVED DESIGN.**
+
 **Status:** Approved on 2026-09-09. This document defines the intended first
 implementation. Later implementation records may describe how the design was
 realized, but shipped public code and executable tests remain authoritative.

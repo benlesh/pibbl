@@ -49,7 +49,9 @@ export type {
 } from './canvas-surface.example';
 export {
   getLearningExampleBySlug,
+  getLearningExampleLegacyRoutes,
   getLearningExampleRoute,
+  getLearningExamplesByBrowseGroup,
   getLearningExamplesBySection,
   learningExampleCatalog,
   learningSections,
@@ -186,6 +188,7 @@ export type {
 } from './types';
 export type {
   LearningAuthoring,
+  LearningBrowseGroup,
   LearningExampleCatalogEntry,
   LearningExampleMetadata,
   LearningExampleModule,

@@ -108,7 +108,7 @@ describe('first-class filter public scenarios', () => {
       },
     });
     expect(learningEntry && getLearningExampleRoute(learningEntry)).toBe(
-      '#/examples/composition/filters',
+      '#/examples/drawing/filters',
     );
 
     expect(scenarioCatalog).toContain(filterLabScenarioEntry);

@@ -5,7 +5,8 @@
     "playground:dev": "vite dev",
     "playground:built": "vite dev --mode built",
     "playground:build": "vite build",
-    "playground:build:built": "vite build --mode built"
+    "playground:build:built": "vite build --mode built",
+    "playground:build:studio-docs-acceptance": "vite build --mode studio-docs-acceptance"
   },
   "dependencies": {
     "@fontsource-variable/jetbrains-mono": "catalog:",
@@ -14,6 +15,7 @@
     "@crc/core": "workspace:*",
     "@crc/scenarios": "workspace:*",
     "lz-string": "catalog:",
+    "minisearch": "catalog:",
     "monaco-editor": "catalog:"
   },
   "devDependencies": {

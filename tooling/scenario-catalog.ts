@@ -2,7 +2,6 @@ import {
   getLearningExampleRoute,
   getScenarioRoute,
   learningExampleCatalog,
-  learningSections,
   loadLearningExample,
   loadScenario,
   scenarioCatalog,
@@ -28,6 +27,23 @@ const indexPath = resolve(workspaceRoot, 'docs/scenario-index.md');
 
 function escapeCell(value: string): string {
   return value.replaceAll('|', '\\|');
+}
+
+function publicLocation(entry: (typeof learningExampleCatalog)[number]): string {
+  switch (entry.browseGroup) {
+    case 'drawing':
+      return 'Drawing';
+    case 'composition':
+      return 'Composition';
+    case 'layout':
+      return 'Layout';
+    case 'events-and-interaction':
+      return 'Events and interaction';
+    case 'focus-and-keyboard':
+      return 'Focus and keyboard';
+    default:
+      return 'Learn';
+  }
 }
 
 function scenarioLink(id: string, title: string): string {
@@ -57,15 +73,14 @@ function renderIndex(): string {
     '',
     '## Learning studio',
     '',
-    '| Order | Lesson | Section | Public API | Studio route | Canonical source |',
+    '| Order | Lesson | Public location | Public API | Studio route | Canonical source |',
     '| ---: | --- | --- | --- | --- | --- |',
   ];
 
   for (const entry of learningExampleCatalog) {
-    const section = learningSections.find(value => value.id === entry.section);
     const sourceLink = `../${entry.source.path}`;
     lines.push(
-      `| ${entry.order} | <a id="lesson-${entry.slug}"></a>**${escapeCell(entry.title)}**<br>${escapeCell(entry.summary)} | ${section?.label ?? entry.section} | ${escapeCell(entry.api.join(', '))} | \`${getLearningExampleRoute(entry)}\` | [\`${entry.source.path}\`](${sourceLink}) |`,
+      `| ${entry.order} | <a id="lesson-${entry.slug}"></a>**${escapeCell(entry.title)}**<br>${escapeCell(entry.summary)} | ${publicLocation(entry)} | ${escapeCell(entry.api.join(', '))} | \`${getLearningExampleRoute(entry)}\` | [\`${entry.source.path}\`](${sourceLink}) |`,
     );
   }
 
