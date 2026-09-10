@@ -1,7 +1,7 @@
 # CRC canvas surface contract
 
-Status: current implemented contract, updated for first-class filters on
-2026-09-08.
+Status: current implemented contract, updated for first-class signals and the
+realm scheduler on 2026-09-10.
 
 This document defines how a root CRC mount maps logical drawing units to the
 Canvas CSS content box and physical backing store. The mapping is owned by the
@@ -161,16 +161,22 @@ requirement.
 
 ## Scheduling and lifetime
 
-Resize and density notifications use the ordinary animation-frame scheduler.
-Multiple notifications while a frame is pending coalesce without canceling and
-moving that frame later. Device-density observation uses both the current
-resolution media query and window resize as platform signals, rebinding after a
-density change.
+Resize and density notifications join the one realm-wide animation-frame
+scheduler shared by all roots and managed Layers in the loaded runtime.
+Multiple notifications while a frame is pending coalesce without canceling or
+moving that frame later. The scheduler runs Begin, Advance, Commit, Plan,
+Render, and Complete; surface notifications captured for a frame are planned
+with the other eligible root work. Device-density observation uses both the
+current resolution media query and window resize as platform signals,
+rebinding after a density change.
 
 The root surface owns its `ResizeObserver`, density listeners, resolution media
 query listener, and any intrinsic-size stabilization. Abort, controller
 disposal, and failed-mount cleanup release the exact owned resources. A stale
-observer or controller cannot mutate a replacement mount.
+observer or controller cannot mutate a replacement mount. Removing one root
+does not cancel unrelated work already owned by the realm scheduler. See the
+[signals and scheduling contract](./signals-and-scheduling-contract.md) for
+phase admission and root/Layer revision rules.
 
 ## Evidence
 

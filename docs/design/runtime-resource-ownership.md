@@ -1,7 +1,7 @@
 # CRC runtime resource ownership
 
-Status: current implemented contract, updated for first-class filters on
-2026-09-08.
+Status: current implemented contract, updated for first-class signals and the
+realm scheduler on 2026-09-10.
 
 This contract extends the [event resource ownership contract](./event-resource-ownership.md) to every current non-event runtime resource. It defines deterministic ownership and release conditions; garbage collection is supporting evidence only and is never the cleanup oracle.
 
@@ -15,7 +15,7 @@ This contract extends the [event resource ownership contract](./event-resource-o
 | Component refs                 | First render of one component path/key        | Component teardown collection                | Key, subtree, or root replacement; instance disposal                                       | The ref leaves the instance map after its teardown closes.                                                                  |
 | `crcWhenChanged` cleanup       | Current dependency-generation callback return | That hook slot in the component collection   | Dependency change or component teardown                                                    | The previous generation cleans before the next setup and can never clean twice.                                             |
 | `crcState` setter              | Hook mount                                    | Exact CRC instance plus exact component refs | Component/main teardown closure or either identity changing                                | A stale setter is a no-op and cannot mutate or schedule a frame on a replacement mount.                                     |
-| Animation frame                | `update()`                                    | Exact instance and frame ID                  | Replacement, callback completion, or disposal                                              | The exact frame completes or is canceled; an already-dequeued stale callback is inert.                                      |
+| Realm host frame               | First pending realm work                      | Scheduler singleton for the loaded runtime   | Host callback completion, or cancellation after no registered work remains                 | At most one host frame is pending; stale callbacks cannot publish work for removed owners.                                  |
 | Image load/error handlers      | Current `Image` source generation             | That image hook generation                   | Load, error, source change, component removal, or disposal                                 | Both handlers detach, the request source is released, and late callbacks cannot publish state.                              |
 | Loaded image state             | Current `Image` component refs                | Source-tagged state slot                     | Source change, component removal, or disposal                                              | Only an image tagged with the currently rendered source can draw.                                                           |
 | Layer instance and paint entry | `Layer` mount/render slot                     | Layer component refs                         | Layer, ancestor, or root removal                                                           | Parent paint entry, child refs/frames, and nested layer instances release recursively.                                      |
@@ -97,3 +97,23 @@ diagnostic rather than correctness gates.
 - Browser fetch/decode internals are not exposed as a deterministic resource count. CRC owns and detaches its handlers, clears the element source, source-tags published state, and proves that late completion cannot schedule or draw.
 - Heap snapshots are optional diagnostics, not a pass condition.
 - TFC-08 completed the full component type/key/hook-order identity semantics. TFC-07 proves cleanup for an explicit key change and for replacement by two distinct root component identities; the runtime/hook contract proves the remaining identity matrix.
+
+## Signal and scheduler ownership
+
+The realm scheduler owns the host frame, not any individual Canvas. Disposing
+one root removes only that root's registration and work. A nested Layer request
+marks its ancestor composition path, while the requested instance retains its
+own monotonically increasing revision and completes it only after successful
+work. Signal dependency edges belong to exact consumer generations, never to a
+global subscription bag. The [signals and scheduling
+contract](./signals-and-scheduling-contract.md) defines the six phases and
+failure isolation.
+
+| Resource                    | Acquisition                                               | Sole owner                                   | Release trigger                                                                          | Required postcondition                                                                                         |
+| --------------------------- | --------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Component signal consumer   | First explicit signal `get()` during component evaluation | Exact component refs and consumer generation | Successful dependency replacement, component removal, failed-render cleanup, or disposal | Every prior signal edge detaches; invalidation cannot schedule a removed generation.                           |
+| `crcSignal` hook identity   | Hook mount                                                | Exact component hook slot                    | Hook/component/root teardown                                                             | Render-consumer edges detach; a retained signal cell remains independently readable and writable.              |
+| Computed Plan validation    | Observed computed invalidation                            | Exact computed node                          | Successful validation or loss of every observer                                          | At most one pending validation remains; equal output does not dirty downstream consumers.                      |
+| Root scheduler registration | First root mount                                          | Exact live root                              | Abort, controller disposal, or failed-mount cleanup                                      | Root and pending root work are absent without disturbing another root's registration or work.                  |
+| Instance render revision    | Root or nested-instance render request                    | Exact requested instance                     | Successful completion of that revision or instance teardown                              | Completed revision advances only after success; failed friend work remains available for retry.                |
+| Friend renderer owner/work  | Exact component evaluation or staged friend request       | Exact owner scope or renderer transaction    | Owner-scope `finally`; staged success, retry restoration, or renderer teardown           | Owner identity never escapes evaluation; failed work skips dependent stages and restores only its transaction. |

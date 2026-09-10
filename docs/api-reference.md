@@ -9,7 +9,7 @@ its constructors from the two explicit compiler subpaths. Imports below
 
 ### `@crc/core`
 
-The root contains 58 runtime values and 151 type exports.
+The root contains 63 runtime values and 155 type exports.
 
 <!-- root-values:start -->
 
@@ -17,15 +17,16 @@ The root contains 58 runtime values and 151 type exports.
 `FocusManagement`, `Fragment`, `Grid`, `Group`, `HorizontalLine`, `Image`,
 `KeyboardNavigation`, `Layer`, `LayoutDiagnostic`, `Line`, `Overlay`, `Path`,
 `Polygon`, `Rectangle`, `RegularPolygon`, `Star`, `SvgPath`, `Text`,
-`VerticalLine`, `Wedge`, `crc`,
+`VerticalLine`, `Wedge`, `computed`, `crc`,
 `crcCanvasContext`, `crcCursor`, `crcEvent`,
 `crcEventListener`, `crcEventTarget`, `crcLayoutBox`, `crcLinePath`, `crcMemo`,
-`crcRectPath`, `crcRef`, `crcState`, `crcSvgPath`, `crcWhenChanged`,
+`crcRectPath`, `crcRef`, `crcSignal`, `crcState`, `crcSvgPath`, `crcWhenChanged`,
 `createArcPath`, `createCirclePath`, `createElement`, `createEllipsePath`,
 `createLinePath`, `createPolygonPath`, `createRectanglePath`,
 `createRegularPolygonPath`, `createStarPath`, `createSvgPath`,
-`createWedgePath`, `definePrimitive`, `layoutDiagnostic`, `measureElement`,
-`normalizeEdges`, `resolveBox`, `resolveLength`
+`createWedgePath`, `definePrimitive`, `isSignal`, `layoutDiagnostic`,
+`measureElement`, `normalizeEdges`, `resolveBox`, `resolveLength`, `signal`,
+`untracked`
 
 <!-- root-values:end -->
 
@@ -66,12 +67,13 @@ The root contains 58 runtime values and 151 type exports.
 `RegularPolygonPathOptions`, `RegularPolygonPathPosition`,
 `RegularPolygonProps`, `RegularPolygonStyle`, `RenderingContext2D`,
 `ResolvedBoxStyle`, `ResolvedStyle`, `RoundedCornerPathOptions`,
-`RoundedCornerStyle`, `Size`, `SpecifiedStyle`, `StateUpdater`,
+`RoundedCornerStyle`, `Signal`, `SignalEquals`, `SignalOptions`, `Size`,
+`SpecifiedStyle`, `StateUpdater`,
 `StarPathOptions`, `StarProps`, `StarStyle`, `StrokeStyle`,
 `StyleResolutionContext`, `SvgPathOptions`, `SvgPathProps`, `SvgPathStyle`,
 `SystemStyle`,
 `TextFit`, `TextProps`, `TextStyle`, `VerticalLineProps`, `VerticalLineStyle`,
-`WedgePathOptions`, `WedgeProps`, `WedgeStyle`
+`WedgePathOptions`, `WedgeProps`, `WedgeStyle`, `WritableSignal`
 
 <!-- root-types:end -->
 
@@ -115,6 +117,20 @@ not export any compiler constructor.
 
 This type-only entry preserves the package's explicit type entry. Most authors
 should import types from `@crc/core` alongside values.
+
+### `@crc/core/internal`
+
+This entry is reserved for official renderer packages released in lockstep
+with the exact `@crc/core` version. It exports
+`crcInternalCreateSignalConsumer`, `crcInternalCurrentFrame`,
+`crcInternalCurrentRenderOwner`, `crcInternalQueueComplete`, and
+`crcInternalRequestRendererWork`, plus `CRCInternalFrame`,
+`CRCInternalRendererWorkKind`, `CRCInternalRenderOwner`, and
+`CRCInternalSignalConsumer`.
+
+This version-coupled friend entry is not a stable third-party API, does not
+re-export the public root, and is intentionally unavailable in ordinary Studio
+examples. It does not make `@crc/core/lib/*` or source paths supported.
 
 ## Runtime and element protocol
 
@@ -362,6 +378,7 @@ accessibility guide](./guides/focus-keyboard-and-accessibility.md).
 ## Hooks
 
 - `crcState(init?)` → readonly `[value, StateUpdater<T>]`
+- `crcSignal(initialValue, options?)` → one mount-owned `WritableSignal<T>`
 - `crcMemo(create, deps)` → memoized value under strict shallow dependency
   comparison
 - `crcRef(init?)` → stable `CRCRef<T>` with mutable `current`
@@ -375,6 +392,29 @@ accessibility guide](./guides/focus-keyboard-and-accessibility.md).
 `Canvas` is the supported HTML/offscreen Canvas union;
 `RenderingContext2D` is the corresponding 2D-context union.
 `PixelGridAlignment` is `none`, `round`, `ceil`, or `floor`.
+
+## Signals
+
+- `signal(initialValue, options?)` returns a `WritableSignal<T>` with explicit
+  `get()`, `set(value)`, `update(updater)`, and cached `asReadonly()`.
+- `computed(compute, options?)` returns a lazy cached readonly `Signal<T>` with
+  dynamic synchronous dependencies.
+- `untracked(read)` performs synchronous reads without collecting
+  dependencies; it does not disable write guards.
+- `isSignal(value)` narrows recognized writable, readonly, and computed signal
+  objects to `Signal<unknown>`.
+
+`SignalOptions<T>` accepts `equals?: SignalEquals<T>` and `debugName?: string`.
+Equality defaults to `Object.is`. `set()` treats functions as data;
+`update()` is the explicit functional-update operation. Signals never unwrap
+implicitly: read with `get()`, including in JSX or style construction. Writes
+are forbidden while a component, primitive render callback, or computed
+function is executing, even when the candidate would compare equal.
+
+See the [signals and scheduling
+contract](./design/signals-and-scheduling-contract.md) for computed graph,
+component-consumer, six-phase realm scheduler, Layer revision, error-isolation,
+ownership, and friend-entry rules.
 
 ## Events
 
@@ -416,4 +456,5 @@ primitives](./guides/custom-components-and-primitives.md).
 `CRCController` has idempotent `dispose()`. `CRCConfig`,
 `CRCFixedViewportConfig`, `CRCResponsiveViewportConfig`, `CRCFit`, and
 `CRCPixelRatio` describe the root surface. `StateUpdater` and `CRCRef` are the
-public hook value types.
+public hook value types. `Signal`, `WritableSignal`, `SignalOptions`, and
+`SignalEquals` describe public signal values and configuration.

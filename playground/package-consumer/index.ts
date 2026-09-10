@@ -80,6 +80,9 @@ import type {
   RoundedCornerStyle,
   RectStyle,
   RenderingContext2D,
+  Signal,
+  SignalEquals,
+  SignalOptions,
   StateUpdater,
   SvgPathStyle,
   SvgPathOptions,
@@ -97,6 +100,7 @@ import type {
   WedgeProps,
   WedgeStyle,
   WedgePathOptions,
+  WritableSignal,
 } from '@crc/core';
 import type * as CoreTypes from '@crc/core/types';
 import {
@@ -121,6 +125,7 @@ import {
   crcMemo,
   crcRectPath,
   crcRef,
+  crcSignal,
   crcState,
   crcSvgPath,
   crcWhenChanged,
@@ -163,6 +168,10 @@ import {
   FocusManagement,
   KeyboardNavigation,
   crcCanvasContext,
+  computed,
+  isSignal,
+  signal,
+  untracked,
 } from '@crc/core';
 
 // @ts-expect-error internal library modules are outside the public export map
@@ -824,7 +833,8 @@ declare const canvas: HTMLCanvasElement;
 
 function RuntimeProbe({ count }: { count: number; label?: string }): CRCNode {
   const publicContext: RenderingContext2D = crcCanvasContext();
-  publicContext.fillRect(0, 0, count, count);
+  const reactiveCount = crcSignal(count);
+  publicContext.fillRect(0, 0, reactiveCount.get(), reactiveCount.get());
   return [
     createElement(Rectangle, { style: { x: count, y: 0, width: 1, height: 1 } }),
     false,
@@ -965,6 +975,35 @@ typedSetter({ count: stateCount + 1 });
 typedSetter(previous => ({ count: previous.count + 1 }));
 // @ts-expect-error state setters preserve the initialized value type
 typedSetter({ count: 'one' });
+
+const signalEquals: SignalEquals<number> = (previous, next) => previous === next;
+const signalOptions: SignalOptions<number> = {
+  debugName: 'package count',
+  equals: signalEquals,
+};
+const inferredWritable = signal(1, signalOptions);
+const writableCount: WritableSignal<number> = inferredWritable;
+const readonlyCount: Signal<number> = writableCount.asReadonly();
+const computedCount: Signal<number> = computed(() => readonlyCount.get() * 2);
+const untrackedCount: number = untracked(() => computedCount.get());
+const callbackSignal = signal<() => string>(() => 'ready');
+const callbackValue: () => string = callbackSignal.get();
+callbackSignal.set(() => 'updated');
+const unknownSignal: unknown = readonlyCount;
+if (isSignal(unknownSignal)) {
+  const narrowedSignal: Signal<unknown> = unknownSignal;
+  void narrowedSignal.get();
+}
+
+// @ts-expect-error readonly signals do not expose writes
+readonlyCount.set(2);
+// @ts-expect-error CRC style accepts resolved numbers, not signal containers
+const badSignalStyle: RectStyle = { x: writableCount, width: 10, height: 10 };
+// @ts-expect-error computed values are readonly
+computed(() => writableCount.get() * 2).update(value => value + 1);
+void untrackedCount;
+void callbackValue;
+void badSignalStyle;
 
 const memoValue: Readonly<{ value: number }> = crcMemo(
   () => ({ value: 1 }),

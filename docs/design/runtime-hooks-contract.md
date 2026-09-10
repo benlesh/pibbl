@@ -1,7 +1,7 @@
 # CRC runtime and hook contract
 
-Status: current implemented contract, updated for JSX-era authoring on
-2026-09-03.
+Status: current implemented contract, updated for first-class signals and the
+realm scheduler on 2026-09-10.
 
 This document defines element construction, traversal, identity, updates,
 hooks, recovery, and disposal. The [resource ownership
@@ -98,12 +98,17 @@ not add component or hook scopes.
 
 ## Scheduling
 
-Normal work coalesces on `requestAnimationFrame`. Several state/root/resize/
-density/parent-layer requests share the pending frame. The latest explicit
-root wins; a state request cannot erase it, and parent-update intent is
-OR-preserved. Rendering remains one full synchronous Canvas traversal with no
-DOM reconciliation, background work, retained drawing commands, or async
-component continuation.
+Normal work from every root and managed Layer in one loaded runtime coalesces
+onto one realm-wide `requestAnimationFrame`. Each frame runs Begin, Advance,
+Commit, Plan, Render, and Complete in order. The latest explicit root wins; a
+state or signal request cannot erase it, and nested-instance requests mark
+their ancestor composition path so parent-update intent remains OR-preserved.
+Rendering remains synchronous Canvas
+traversal with no DOM reconciliation, background work, retained drawing
+commands, or async component continuation. The [signals and scheduling
+contract](./signals-and-scheduling-contract.md) defines phase admission,
+revision, computed-validation, Layer, failure-isolation, and friend-renderer
+rules.
 
 ## Hook sequence invariant
 
@@ -163,14 +168,17 @@ render callback.
 
 CRC saves/restores Canvas state around every component subtree. Component
 throws release runtime ownership and refs and restore global state; pixels
-already painted earlier in the frame remain. The controller's `dispose()` is
-idempotent, cancels the exact pending frame, releases every owned resource, and
-cannot affect a replacement mount. Abort uses the same guarded path.
+already painted earlier in the frame remain. Signal writes are forbidden while
+CRC evaluates components or primitive render callbacks, even for equality
+no-ops, and the guard runs before an updater or equality function. The
+controller's `dispose()` is idempotent, removes that root and its pending work
+from the realm scheduler, releases every owned resource, and cannot affect a
+replacement mount or unrelated roots. Abort uses the same guarded path.
 
 ## Public package boundary
 
 The package exports the runtime, controller and surface types, components,
-hooks, hook values, and compiler-only
+signals, hooks, hook values, and compiler-only
 `@crc/core/jsx-runtime` and `@crc/core/jsx-dev-runtime` entries. Strict Bundler,
 NodeNext, built, and packed consumers verify those entries, the CRC/React type
 boundary, and blocked private subpaths. The `runtime-hooks-laboratory`, JSX
@@ -190,7 +198,9 @@ unkeyed occurrence behavior, root/state update permutations,
 more/fewer/reordered hooks, cleanup and factory exceptions, Canvas context
 restoration, stale setters, malformed-path recovery, fragment identity, and
 recursive iterable diagnostics. Public type assertions compile against built
-declarations under both Bundler and NodeNext resolution.
+declarations under both Bundler and NodeNext resolution. Focused signal graph,
+component-consumer, hook, scheduler, Layer, and error-isolation suites cover
+explicit reads and realm-frame behavior.
 
 ## Deliberate boundaries
 
@@ -208,3 +218,21 @@ declarations under both Bundler and NodeNext resolution.
 Completed numbered plans and dated field notes preserve the API that existed at
 their recorded revisions. They are historical evidence, not this current
 contract.
+
+## First-class signal integration
+
+`crcSignal(initialValue, options?)` returns one writable signal created for the
+mounted hook slot. The initial value, equality function, and debug name are
+mount-only. Explicit `get()` reads subscribe the evaluating component. Removal
+detaches that owner; a retained signal remains readable and writable but cannot
+schedule the removed owner. Focused `crc-signal`, signal graph,
+component-consumer, scheduler, Layer, and error-isolation suites cover these
+rules.
+
+`signal().set()` treats a function as data; `signal().update()` is the explicit
+updater operation. Signals require explicit `get()` and are not automatically
+unwrapped into styles or nodes.
+
+`@crc/core/internal` is a separate version-coupled friend entry for official
+lockstep renderer packages. It is neither re-exported at the root nor available
+to ordinary Studio examples.

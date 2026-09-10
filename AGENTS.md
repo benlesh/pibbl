@@ -8,9 +8,9 @@ when a task needs exact behavior or historical evidence.
 
 CRC is a small functional component runtime over the HTML Canvas 2D API. It
 provides automatic JSX and equivalent `createElement` authoring, scheduled
-rendering, hook state, DOM-aligned user events, transforms, clipping, offscreen
-layers, typed first-class filters, and composable drawing primitives without
-React or generated DOM.
+rendering, first-class synchronous signals, hook state, DOM-aligned user
+events, transforms, clipping, offscreen layers, typed first-class filters, and
+composable drawing primitives without React or generated DOM.
 
 - Project Plans 001, 002, and 003 are complete. Plan 003 shipped first-class
   local style, declared-box layout, pure measurement, and the Absolute,
@@ -26,6 +26,11 @@ React or generated DOM.
   Canvas filter descriptors, ordered single/list semantics, combined-subtree
   capture, inside-out nesting, upright local surfaces, and instance-owned
   transient pooling.
+- First-class `signal`, `computed`, `untracked`, `isSignal`, and `crcSignal`
+  are implemented with explicit reads, dynamic synchronous dependency graphs,
+  render write guards, and exact consumer ownership. One realm scheduler runs
+  six ordered phases across roots and managed Layers. The approved animation
+  design is not yet implemented.
 - The local `_bmad-output/` directory remains discovery input, not normative
   behavior. Plan 003's implemented design, architecture, contracts, and
   implementation record supersede its earlier layout proposals where they
@@ -74,8 +79,10 @@ either as the current result unless a fresh run reproduces it.
   The default captures the initial Canvas attributes as a fixed logical
   viewport, uses centered `contain`, and follows device density;
   `viewport: 'responsive'` makes CSS content-box pixels the logical root.
-- Updates are coalesced and rendered on `requestAnimationFrame`. A normal render
-  clears the Canvas and synchronously traverses the full component tree.
+- Updates across every root and managed Layer in one loaded runtime coalesce
+  onto one realm-wide `requestAnimationFrame`. A frame runs Begin, Advance,
+  Commit, Plan, Render, and Complete; normal root rendering clears the Canvas
+  and synchronously traverses the full component tree.
 - Components are ordinary synchronous TypeScript/JavaScript functions. JSX and
   `createElement` create opaque branded `CRCElement` descriptors over the same
   recursive `CRCNode` protocol. The public surface is exported from `@crc/core`;
@@ -87,6 +94,11 @@ either as the current result unless a fresh run reproduces it.
   and optional sibling key. Unkeyed same-type siblings use occurrence order.
   Reparenting or adding a wrapper can remount a subtree; keys do not preserve
   identity across parents.
+- Signal reads are explicit through `get()`. A component subscribes only to
+  reads performed during its own evaluation; child reads do not become parent
+  dependencies. `set()` treats functions as data, while `update()` is the
+  explicit updater operation. Writes are forbidden during component,
+  primitive-render, and computed evaluation, including equality no-ops.
 - Canvas state is isolated with save/restore around component traversal. Render
   failure tears down runtime-owned resources and clears component refs; pixels
   already painted earlier in the failing frame are not rolled back.
@@ -95,7 +107,9 @@ either as the current result unless a fresh run reproduces it.
 - `Group` composes Canvas transforms. Interaction regions, `Clip`, and `Layer` capture
   the same transform/clip geometry, so paint and hit testing must stay aligned.
 - Offscreen `Layer` instances share the root interaction state and participate in
-  global paint/target order. They require browser `OffscreenCanvas` support.
+  global paint/target order. Revisioned nested work renders deepest-first;
+  clean sibling bitmaps remain cached and ancestor composition follows the
+  dirty path. Layers require browser `OffscreenCanvas` support.
 - A nonempty `style.filter` creates one transient composition boundary around
   the receiving primitive and its recursive output. One list uses one native
   filter operation in declaration order; nested boundaries resolve inside out.
@@ -116,7 +130,8 @@ either as the current result unless a fresh run reproduces it.
 ## Public surface and deliberate boundaries
 
 Public runtime/authoring: `crc`, `createElement`, `Fragment`,
-`definePrimitive`, and `crcCanvasContext`; drawing and composition components
+`definePrimitive`, `crcCanvasContext`, `signal`, `computed`, `untracked`, and
+`isSignal`; drawing and composition components
 `Rectangle`, `Path`, `Line`, `HorizontalLine`, `VerticalLine`, `SvgPath`,
 `Text`, `Image`, `Group`, `Clip`, and `Layer`; layout components `Absolute`,
 `Overlay`, `Flow`, `Flex`, and `Grid`; focus policies `FocusManagement` and
@@ -125,13 +140,15 @@ primitive, style, length, box, constraint, and measurement types. Surface
 configuration is public through `CRCConfig`,
 `CRCFit`, `CRCPixelRatio`, and the fixed/responsive configuration types.
 Directional configuration is public through `CRCKeyboardNavigationOptions`.
+Signal configuration and values are public through `Signal`,
+`WritableSignal`, `SignalOptions`, and `SignalEquals`.
 Filter configuration is public through `CRCFilter` and the ten named
 `CRCBlurFilter`, `CRCBrightnessFilter`, `CRCContrastFilter`,
 `CRCDropShadowFilter`, `CRCGrayscaleFilter`, `CRCHueRotateFilter`,
 `CRCInvertFilter`, `CRCOpacityFilter`, `CRCSaturateFilter`, and
 `CRCSepiaFilter` descriptor types.
 
-Public hooks: `crcState`, `crcMemo`, `crcRef`, `crcWhenChanged`, `crcRectPath`,
+Public hooks: `crcState`, `crcSignal`, `crcMemo`, `crcRef`, `crcWhenChanged`, `crcRectPath`,
 `crcLinePath`, `crcSvgPath`, `crcEvent`, `crcEventTarget`,
 `crcEventListener`, `crcCursor`, and `crcLayoutBox`.
 
@@ -155,6 +172,7 @@ availability.
 
 Read the exact contracts before changing these areas:
 
+- `docs/design/signals-and-scheduling-contract.md`
 - `docs/design/canvas-surface-contract.md`
 - `docs/design/runtime-hooks-contract.md`
 - `docs/design/drawing-components-contract.md`
@@ -269,3 +287,27 @@ historical intent live in:
 - `docs/design/canvas-surface-contract.md`
 - `docs/design/runtime-resource-ownership.md`
 - `docs/superpowers/specs/2026-09-08-first-class-filters-design.md`
+
+## Shipped first-class signals and realm scheduler
+
+The implemented 2026-09-10 signal work added writable and readonly signals,
+lazy computed values, untracked reads, nominal recognition, and the
+mount-owned `crcSignal` hook. Reads are explicit; component consumers replace
+their dependency edges after successful evaluation and detach them on
+removal, failure cleanup, or disposal. Computed graphs are synchronous,
+dynamic, cached, dependency-first, equality-aware, and cycle checked.
+
+One scheduler singleton per loaded runtime owns at most one host frame across
+all roots and managed Layers. Begin, Advance, Commit, Plan, Render, and
+Complete have explicit admission and failure-isolation rules. Layer requests
+carry monotonically increasing realm revisions, mark their ancestor
+composition path, render dirty nested instances deepest-first, and preserve
+clean sibling caches. Errors are collected after Complete rather than stopping
+unrelated roots or completions.
+
+`@crc/core/internal` is an explicit version-coupled friend entry for official
+renderer packages released in lockstep. It is not re-exported from the root,
+is not available to ordinary Studio examples, and is not a stable third-party
+API. Exact current behavior lives in
+`docs/design/signals-and-scheduling-contract.md`; the approved animation
+design remains future-facing until its separate implementation plan ships.

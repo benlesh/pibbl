@@ -14,6 +14,7 @@ import type {
   CRCSaturateFilter,
   CRCSepiaFilter,
   CRCTextChild,
+  Signal,
   SystemStyle,
 } from '@crc/core';
 import {
@@ -27,9 +28,14 @@ import {
   Rectangle,
   Star,
   Text,
+  computed,
   createElement,
   crc,
+  crcSignal,
   definePrimitive,
+  isSignal,
+  signal,
+  untracked,
 } from '@crc/core';
 import {
   Fragment as DevelopmentFragment,
@@ -41,6 +47,24 @@ function Label(props: { value: string; children?: CRCTextChild }): CRCNode {
   void props;
   return undefined;
 }
+
+const jsxCount = signal(2);
+const jsxDoubled: Signal<number> = computed(() => jsxCount.get() * 2);
+const jsxCallback = signal<() => string>(() => 'ready');
+jsxCallback.set(() => 'updated');
+
+function SignalLabel(): CRCNode {
+  const suffix = crcSignal('signals');
+  const count = untracked(() => jsxDoubled.get());
+  return (
+    <Text>
+      {count} {suffix.get()}
+    </Text>
+  );
+}
+
+export const signalElement: CRCElement = <SignalLabel />;
+void isSignal(jsxCallback.asReadonly());
 
 const jsxFilterTypes = [
   { type: 'blur', radius: 2 } satisfies CRCBlurFilter,

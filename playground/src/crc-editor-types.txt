@@ -311,9 +311,18 @@
   export class LayoutDiagnostic extends Error { readonly component: string; readonly property: string; readonly suppliedValue: unknown; readonly algorithm: string; readonly constraints: Readonly<Constraints> | undefined; constructor(input: LayoutDiagnosticInput) }
 
   export interface CRCRef<T> { current: T | undefined }
+  export type SignalEquals<T> = (previous: T, next: T) => boolean;
+  declare const signalBrand: unique symbol;
+  export interface SignalOptions<T> { equals?: SignalEquals<T>; debugName?: string }
+  export interface Signal<T> { readonly [signalBrand]: T; get(): T }
+  export interface WritableSignal<T> extends Signal<T> { set(value: T): void; update(update: (current: T) => T): void; asReadonly(): Signal<T> }
   export type StateUpdater<T> = (update: T | ((oldValue: T) => T)) => void;
 
   export function crc(canvas: HTMLCanvasElement, element: CRCNode, config?: CRCConfig): CRCController;
+  export function signal<T>(initialValue: T, options?: SignalOptions<T>): WritableSignal<T>;
+  export function computed<T>(compute: () => T, options?: SignalOptions<T>): Signal<T>;
+  export function untracked<T>(callback: () => T): T;
+  export function isSignal(value: unknown): value is Signal<unknown>;
   type ElementInput<P> = 0 extends (1 & P) ? P & { key?: CRCKey } : 'key' extends UnionKeys<P> ? never : P & { key?: CRCKey };
   type ElementInputOrNull<P> = [ElementInput<P>] extends [never] ? never : ElementInput<P> | null;
   type ChildrenForProps<P> = P extends unknown ? 'children' extends keyof P ? P['children'] : never : never;
@@ -367,6 +376,7 @@
   export function crcState<T>(initial?: T): readonly [T, StateUpdater<T>];
   export function crcMemo<T>(create: () => T, dependencies: any[]): T;
   export function crcRef<T>(initial?: T): CRCRef<T>;
+  export function crcSignal<T>(initialValue: T, options?: SignalOptions<T>): WritableSignal<T>;
   export function crcWhenChanged(effect: () => void | (() => void), dependencies?: any[]): void;
   export function crcCursor(options: { style?: string; path?: Path2D; fill?: boolean; lineInteractionWidth?: number }): void;
   export function crcEvent<K extends Extract<CRCEventType, 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseout' | 'mousedown' | 'mouseup' | 'contextmenu'>>(eventName: K, listener: CRCEventHandler<K> | undefined, path: Path2D, fill?: boolean, lineInteractionWidth?: number): void;

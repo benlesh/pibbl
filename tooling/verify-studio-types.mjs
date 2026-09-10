@@ -426,6 +426,9 @@ const publicTypeExports = [
   'ResolvedStyle',
   'RoundedCornerPathOptions',
   'RoundedCornerStyle',
+  'Signal',
+  'SignalEquals',
+  'SignalOptions',
   'Size',
   'SpecifiedStyle',
   'StateUpdater',
@@ -446,10 +449,11 @@ const publicTypeExports = [
   'WedgeProps',
   'WedgePathOptions',
   'WedgeStyle',
+  'WritableSignal',
 ].sort();
 
-if (publicTypeExports.length !== 151) {
-  throw new Error(`CRC Studio must declare exactly 151 public types, received ${publicTypeExports.length}.`);
+if (publicTypeExports.length !== 155) {
+  throw new Error(`CRC Studio must declare exactly 155 public types, received ${publicTypeExports.length}.`);
 }
 
 const packageIndexSource = packageDeclarationSources.get('@crc/core');
@@ -484,9 +488,12 @@ import type {
 
 const consumer = `
 ${removedAuthoringImports}
+// @ts-expect-error ordinary Studio examples cannot import the version-coupled friend entry
+import type { CRCInternalFrame } from '@crc/core/internal';
 import * as CRC_CORE_ROOT from '@crc/core';
 import {
   Absolute,
+  computed,
   crc,
   crcCanvasContext,
   crcCursor,
@@ -496,6 +503,7 @@ import {
   crcLinePath,
   crcMemo,
   crcRectPath,
+  crcSignal,
   crcWhenChanged,
   createElement,
   definePrimitive,
@@ -507,6 +515,7 @@ import {
   Group,
   HorizontalLine,
   Image,
+  isSignal,
   KeyboardNavigation,
   LayoutDiagnostic,
   Line,
@@ -517,6 +526,7 @@ import {
   Rectangle,
   resolveBox,
   resolveLength,
+  signal,
   SvgPath,
   Text,
   VerticalLine,
@@ -560,7 +570,12 @@ import {
   type PolygonStyle,
   type RenderingContext2D,
   type ResolvedBoxStyle,
+  type Signal,
+  type SignalEquals,
+  type SignalOptions,
   type SystemStyle,
+  type WritableSignal,
+  untracked,
 } from '@crc/core';
 import { jsx, jsxs } from '@crc/core/jsx-runtime';
 import { jsxDEV } from '@crc/core/jsx-dev-runtime';
@@ -584,6 +599,20 @@ type StudioSignatureParity = [
   Assert<Equal<PolygonStyle['cornerRadius'], Exclude<Length, 'auto'> | undefined>>,
   Assert<Equal<PolygonStyle['cornerRadii'], readonly (Exclude<Length, 'auto'> | null | undefined)[] | undefined>>,
   Assert<Equal<typeof crcMemo, <T>(create: () => T, deps: any[]) => T>>,
+  Assert<Equal<
+    typeof signal,
+    <T>(initialValue: T, options?: SignalOptions<T>) => WritableSignal<T>
+  >>,
+  Assert<Equal<
+    typeof computed,
+    <T>(compute: () => T, options?: SignalOptions<T>) => Signal<T>
+  >>,
+  Assert<Equal<typeof untracked, <T>(callback: () => T) => T>>,
+  Assert<Equal<typeof isSignal, (value: unknown) => value is Signal<unknown>>>,
+  Assert<Equal<
+    typeof crcSignal,
+    <T>(initialValue: T, options?: SignalOptions<T>) => WritableSignal<T>
+  >>,
   Assert<Equal<
     typeof crcWhenChanged,
     (callback: () => (() => void) | void, deps?: any[]) => void
@@ -649,6 +678,30 @@ void (null as unknown as StudioSignatureParity);
 
 const fragmentResult: CRCNode = Fragment({ children: false });
 void fragmentResult;
+void (null as unknown as CRCInternalFrame);
+
+const signalEquals: SignalEquals<number> = (previous, next) => previous === next;
+const studioCount = signal(1, {
+  debugName: 'Studio count',
+  equals: signalEquals,
+});
+const studioReadonly: Signal<number> = studioCount.asReadonly();
+const studioComputed: Signal<number> = computed(() => studioReadonly.get() * 2);
+const studioUntracked: number = untracked(() => studioComputed.get());
+const studioCallback = signal<() => string>(() => 'ready');
+studioCallback.set(() => 'updated');
+if (isSignal(studioReadonly)) void studioReadonly.get();
+// @ts-expect-error readonly signals do not expose writes
+studioReadonly.set(2);
+// @ts-expect-error computed values are readonly
+studioComputed.update(value => value + 1);
+void studioUntracked;
+
+function StudioSignalHook(): CRCNode {
+  const value = crcSignal('hook value');
+  return <Text>{value.get()}</Text>;
+}
+void <StudioSignalHook />;
 
 // @ts-expect-error compiler constructors stay off the root package
 void CRC_CORE_ROOT.jsx;
@@ -1251,6 +1304,7 @@ try {
     'Text',
     'VerticalLine',
     'Wedge',
+    'computed',
     'crc',
     'crcCanvasContext',
     'crcCursor',
@@ -1262,6 +1316,7 @@ try {
     'crcMemo',
     'crcRectPath',
     'crcRef',
+    'crcSignal',
     'crcState',
     'crcSvgPath',
     'crcWhenChanged',
@@ -1277,6 +1332,7 @@ try {
     'createSvgPath',
     'createWedgePath',
     'definePrimitive',
+    'isSignal',
     'jsx',
     'jsxDEV',
     'jsxs',
@@ -1285,9 +1341,11 @@ try {
     'normalizeEdges',
     'resolveBox',
     'resolveLength',
+    'signal',
+    'untracked',
   ].sort();
-  if (expectedStudioRuntimeExports.length !== 61) {
-    throw new Error(`CRC Studio runtime must expose 58 root values plus 3 compiler values, received ${expectedStudioRuntimeExports.length}.`);
+  if (expectedStudioRuntimeExports.length !== 66) {
+    throw new Error(`CRC Studio runtime must expose 63 root values plus 3 compiler values, received ${expectedStudioRuntimeExports.length}.`);
   }
   if (sourceRuntimeExports.join('\n') !== expectedStudioRuntimeExports.join('\n')) {
     throw new Error(
@@ -1298,7 +1356,7 @@ try {
     throw new Error('CRC Studio source and built runtime surfaces differ.');
   }
   process.stdout.write(
-    'CRC Studio declarations passed exact export-name parity, 151-type structural ' +
+    'CRC Studio declarations passed exact export-name parity, 155-type structural ' +
     'coverage, selected signature parity, strict TSX, compiler-runtime, event-family, ' +
     'generic, and layout checks against source and built packages.\n',
   );

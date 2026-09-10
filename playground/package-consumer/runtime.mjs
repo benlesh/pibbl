@@ -111,6 +111,25 @@ if (actual.length !== 63) {
   throw new Error(`Expected 63 @crc/core runtime exports, received ${actual.length}.`);
 }
 
+const runtimeCount = core.signal(2, { debugName: 'runtime count' });
+const runtimeReadonly = runtimeCount.asReadonly();
+const runtimeComputed = core.computed(() => runtimeReadonly.get() * 3);
+if (!core.isSignal(runtimeCount) || !core.isSignal(runtimeReadonly)) {
+  throw new Error('Public signal values were not recognized by isSignal().');
+}
+if (core.untracked(() => runtimeComputed.get()) !== 6) {
+  throw new Error('Public computed or untracked behavior was unavailable.');
+}
+runtimeCount.update(value => value + 1);
+if (runtimeComputed.get() !== 9) {
+  throw new Error('Public computed values did not update from their dependencies.');
+}
+const runtimeCallback = core.signal(() => 'ready');
+runtimeCallback.set(() => 'updated');
+if (runtimeCallback.get()() !== 'updated') {
+  throw new Error('Function-valued signals were treated as updater callbacks.');
+}
+
 for (const [exportName, value] of Object.entries({
   jsx,
   jsxs,

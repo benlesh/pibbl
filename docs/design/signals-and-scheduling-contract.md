@@ -1,0 +1,212 @@
+# CRC signals and scheduling contract
+
+Status: current implemented contract, published 2026-09-10.
+
+This document defines CRC's first-class synchronous signals and the one
+realm-wide frame scheduler shared by every mounted root and managed `Layer` in
+that loaded runtime. The separately approved animation design is not part of
+the shipped surface; animation remains deferred to its implementation plan.
+
+## Public signal surface
+
+```ts
+type SignalEquals<T> = (previous: T, next: T) => boolean;
+
+declare const signalBrand: unique symbol;
+
+interface SignalOptions<T> {
+  equals?: SignalEquals<T>;
+  debugName?: string;
+}
+
+interface Signal<T> {
+  readonly [signalBrand]: T;
+  get(): T;
+}
+
+interface WritableSignal<T> extends Signal<T> {
+  set(value: T): void;
+  update(updater: (current: T) => T): void;
+  asReadonly(): Signal<T>;
+}
+
+declare function signal<T>(
+  initialValue: T,
+  options?: SignalOptions<T>,
+): WritableSignal<T>;
+declare function computed<T>(
+  compute: () => T,
+  options?: SignalOptions<T>,
+): Signal<T>;
+declare function untracked<T>(read: () => T): T;
+declare function isSignal(value: unknown): value is Signal<unknown>;
+declare function crcSignal<T>(
+  initialValue: T,
+  options?: SignalOptions<T>,
+): WritableSignal<T>;
+```
+
+Signals are containers, not implicitly unwrapped values. Every dependency read
+is explicit:
+
+```tsx
+const count = signal(0);
+const doubled = computed(() => count.get() * 2);
+
+function Counter() {
+  return <Text>{doubled.get()}</Text>;
+}
+```
+
+A signal container is not a resolved style number, text child, or other CRC
+value merely because its contained value would be accepted there.
+
+## Writable signals
+
+`signal(initialValue, options?)` creates one writable cell. `Object.is` is the
+default equality function. A supplied `equals` function and `debugName` are
+captured at construction. An equal candidate publishes nothing, advances no
+revision, and notifies no consumer.
+
+`set(value)` always treats `value` as data, including when `T` is a function.
+`update(updater)` invokes the updater exactly once with the current value. If
+the updater or equality function throws, the previous value remains current.
+`asReadonly()` returns one cached readonly view over the same cell;
+`isSignal()` recognizes both views without adding a structural false positive.
+
+## Computed signals and untracked reads
+
+`computed(compute, options?)` is lazy, synchronous, cached, and readonly. It
+records only signal reads made synchronously while `compute` runs. Dependencies
+are dynamic and are replaced after each successful evaluation. Nested computed
+values validate dependency-first. Equality suppresses a computed revision and
+downstream invalidation when the next value is equivalent.
+
+Thrown computations are cached until a dependency changes. Cycles throw a
+deterministic path using available `debugName` values. Promise continuations do
+not inherit read tracking. `untracked(read)` suppresses dependency collection
+only for the synchronous callback and restores the previous collector in
+`finally`; it does not relax any write guard.
+
+Observed computed values invalidated by a source are queued for validation in
+the Plan phase of the next already-requested realm frame. Reading the computed
+explicitly also validates it immediately. Computed invalidation by itself does
+not request a host frame.
+
+## Component consumers and `crcSignal`
+
+During component evaluation, CRC collects that component's explicit signal
+reads. Primitive style resolution and render callbacks belong to the primitive
+consumer that performs those reads; a child's reads do not become parent
+dependencies. A successful evaluation replaces the old dependency set.
+Removal, failed-render cleanup, and root disposal detach all consumer edges.
+
+When a dependency changes, each clean component consumer becomes dirty once
+and requests its owning instance. Multiple changes coalesce. `crcSignal()` is
+an ordered hook slot that creates its writable signal on mount; its initial
+value and options are mount-only. Removing its owner detaches render
+dependencies. A retained hook signal remains a usable signal cell, but is inert
+with respect to the removed owner.
+
+Signal writes are forbidden during component traversal, primitive render, and
+computed evaluation, including writes that would be equality no-ops. The guard
+is checked before invoking an updater or equality function. Event handlers,
+scheduler Advance callbacks, and other code outside those protected scopes may
+write normally.
+
+## One realm scheduler
+
+One scheduler singleton belongs to one loaded `@crc/core` runtime in one
+JavaScript realm. All roots, managed Layers, signal consumers, and official
+friend renderers using that runtime share at most one pending
+`requestAnimationFrame`. Work requested while a frame is running is retained
+for a later frame unless its documented phase admits it to the current frame.
+
+Each frame has six ordered active phases:
+
+| Phase    | Contract                                                                                                                                                                                       |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Begin    | Capture the frame's dirty jobs, Advance registrations, and ordinary completions. Registrations made after this point wait for the next frame.                                                  |
+| Advance  | Run captured participants in registration order. Each participant stages signal writes as one batch; a throwing participant loses only its staged writes and does not stop later participants. |
+| Commit   | Publish changed staged values, then notify all affected consumers after publication.                                                                                                           |
+| Plan     | Validate queued computed values, capture resulting component dirtiness, and determine eligible root, Layer, and friend-renderer work. Dirtiness discovered here may render in this frame.      |
+| Render   | Render roots in registration order and nested instances deepest-first, with friend stages ordered resource, draw, then compose.                                                                |
+| Complete | Commit successful root transactions, run captured ordinary and eligible renderer completions, restore idle state, and request any required follow-up frame.                                    |
+
+Outside a frame the scheduler phase is `idle`. `logicalTime` is the scheduler's
+frame time and is distinct from any host callback timestamp.
+
+## Revisions, roots, and Layers
+
+Every render request receives a monotonically increasing realm revision. A
+request for a nested instance marks that instance and its ancestors so the
+updated bitmap can be composited to the root. Managed Layers are scheduler
+instances, never separately registered top-level roots. Dirty nested Layers
+render deepest-first before ancestor composition; clean sibling Layer trees
+retain their cached bitmaps. A parent placement-only change may reuse a clean
+child bitmap.
+
+An instance's completed revision advances only after its successful work.
+Requests raised during Render are deferred to a later frame. An explicit root
+replacement remains latest-wins and cannot be erased by another kind of
+request.
+
+## Error isolation and completion
+
+Errors are isolated to the narrowest scheduled participant or render
+transaction. One failed Advance participant does not block other participants.
+One failed root does not block later roots or captured ordinary completions;
+ordinary CRC failure remains fail-closed and requires later explicit work.
+Errors are collected and thrown singly or as an aggregate only after Complete.
+
+For friend renderer work, callbacks later in the same independent stage still
+run, but dependent stages for the failed transaction are skipped. Its revision
+does not complete, its work is restored for retry, and only its affected
+completion is deferred. Cleanup and scheduler state restoration occur in
+`finally` paths.
+
+## Version-coupled friend entry
+
+`@crc/core/internal` is an explicit package entry only for official lockstep
+renderer packages built against the exact same CRC version. It exports
+`crcInternalCreateSignalConsumer`, `crcInternalCurrentFrame`,
+`crcInternalCurrentRenderOwner`, `crcInternalQueueComplete`,
+`crcInternalRequestRendererWork`, and the `CRCInternalFrame`,
+`CRCInternalRendererWorkKind`, `CRCInternalRenderOwner`, and
+`CRCInternalSignalConsumer` types. The current render owner is available only
+while CRC is evaluating that exact component.
+
+The friend entry is not a stable third-party API, is not re-exported by
+`@crc/core`, and is intentionally absent from the ordinary Studio declaration
+and runtime surface. Consumers must never import `@crc/core/lib/*` or source
+paths as a substitute.
+
+## Ownership summary
+
+| Resource                    | Sole owner                                             | Release or completion rule                                                                               |
+| --------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| Signal-to-component edge    | Exact component consumer                               | Replaced after successful evaluation; detached on removal, failure cleanup, or disposal.                 |
+| `crcSignal` hook cell       | Exact hook slot                                        | Owner removal detaches scheduling edges; a retained cell remains independently usable.                   |
+| Computed validation         | Exact computed node                                    | Cleared by successful validation or removed when no longer observed.                                     |
+| Root scheduler registration | Exact live root                                        | Removed by abort, disposal, or failed-mount cleanup without affecting other roots.                       |
+| Pending host frame          | Realm scheduler                                        | Cleared by callback completion; canceled only when no registered work remains.                           |
+| Render revision             | Exact requested instance                               | Completed only by successful work; failed friend work remains pending for retry.                         |
+| Friend work and owner       | Exact friend renderer transaction/component evaluation | Work completes through staged success or is restored on failure; owner scope always closes in `finally`. |
+
+The [runtime/hook contract](./runtime-hooks-contract.md), [Canvas surface
+contract](./canvas-surface-contract.md), and [resource ownership
+contract](./runtime-resource-ownership.md) define the adjacent lifecycle and
+surface rules. Focused signal graph, scheduler, Layer, failure-isolation,
+package-consumer, and Studio declaration suites are the executable evidence.
+
+## Deliberate boundaries
+
+- Reads are never implicit and styles do not accept signal containers.
+- Signals are synchronous; async resources and Promise-aware dependency
+  tracking are not provided.
+- Computed invalidation does not independently schedule a host frame.
+- The scheduler is not a retained scene graph, DOM reconciler, worker runtime,
+  or public manual-clock/input-injection API.
+- Animation values and hooks are not shipped by this contract. Their approved
+  design record remains future-facing until the separate implementation plan
+  lands.

@@ -19,6 +19,7 @@ import {
   assertContractPreservationBaseline,
   CONTRACT_BASELINE_COMMIT,
   CONTRACT_TRANSLATION_RECORD,
+  extractContractUnits,
   replaceContractUnit,
   sha256,
 } from "./docs-contract-preservation.mjs";
@@ -86,6 +87,7 @@ const currentMarkdownPaths = [
   "docs/design/mouse-interaction-contract.md",
   "docs/design/runtime-hooks-contract.md",
   "docs/design/runtime-resource-ownership.md",
+  "docs/design/signals-and-scheduling-contract.md",
   "docs/design/style-system-contract.md",
   "docs/design/user-events-contract.md",
   "docs/documentation-follow-up.md",
@@ -1079,11 +1081,19 @@ export function assertHistoricalBanner(path, source) {
   );
 }
 
-for (const path of historicalMarkdownPaths) {
-  assertHistoricalBanner(
-    path,
-    await readFile(join(repositoryRoot, path), "utf8"),
-  );
+const historicalSources = new Map(
+  await Promise.all(
+    historicalMarkdownPaths.map(async (path) => [
+      path,
+      await readFile(join(repositoryRoot, path), "utf8"),
+    ]),
+  ),
+);
+
+export function assertHistoricalBanners() {
+  for (const [path, source] of historicalSources) {
+    assertHistoricalBanner(path, source);
+  }
 }
 
 const staleIdentifiers = [
@@ -1267,7 +1277,13 @@ assert.match(
 const coreManifest = JSON.parse(
   await readFile(join(repositoryRoot, "packages/core/package.json"), "utf8"),
 );
-for (const entry of [".", "./jsx-runtime", "./jsx-dev-runtime", "./types"]) {
+for (const entry of [
+  ".",
+  "./internal",
+  "./jsx-runtime",
+  "./jsx-dev-runtime",
+  "./types",
+]) {
   assert.ok(
     coreManifest.exports[entry],
     `@crc/core package exports is missing ${entry}`,
@@ -1373,6 +1389,22 @@ for (const [path, markers] of requiredGuideMarkers) {
 
 const contractPrecisionRequirements = new Map([
   [
+    "docs/design/signals-and-scheduling-contract.md",
+    [
+      "Every dependency read\nis explicit",
+      "`set(value)` always treats `value` as data, including when `T` is a function",
+      "Computed invalidation by itself does\nnot request a host frame",
+      "Signal writes are forbidden during component traversal",
+      "including writes that would be equality no-ops",
+      "Each frame has six ordered active phases",
+      "Managed Layers are scheduler\ninstances, never separately registered top-level roots",
+      "Errors are collected and thrown singly or as an aggregate only after Complete",
+      "The friend entry is not a stable third-party API, is not re-exported by\n`@crc/core`, and is intentionally absent from the ordinary Studio declaration\nand runtime surface",
+      "| Signal-to-component edge",
+      "Exact component consumer",
+    ],
+  ],
+  [
     "docs/design/layout-system-contract.md",
     [
       "`justifyContent`             | `flex-start` (default), `flex-end`, `center`, `space-between`, `space-around`, `space-evenly`",
@@ -1442,7 +1474,10 @@ export function assertContractPrecision(sources) {
 
 assertContractPrecision(currentSources);
 
-const normativeContractPaths = [
+// Current normative inventory can grow after the dated pre-Task-14 snapshot.
+// Keep new implemented contracts classified and precision-checked without
+// fabricating provenance for files that did not exist at the snapshot commit.
+const currentNormativeContractPaths = [
   "docs/architecture/style-and-layout-architecture.md",
   ...currentMarkdownPaths.filter(
     (path) =>
@@ -1450,6 +1485,22 @@ const normativeContractPaths = [
       path !== "docs/design/tfc-01-characterization-baseline.md",
   ),
 ].sort();
+const postBaselineNormativeContractPaths = new Set([
+  "docs/design/signals-and-scheduling-contract.md",
+]);
+const baselineSnapshotContractPaths = currentNormativeContractPaths.filter(
+  (path) => !postBaselineNormativeContractPaths.has(path),
+);
+
+export function assertCurrentNormativeContractInventory(paths) {
+  assert.deepEqual(
+    [...paths].sort(),
+    currentNormativeContractPaths,
+    "Current normative contract inventory must include every implemented contract exactly once",
+  );
+}
+
+assertCurrentNormativeContractInventory(currentNormativeContractPaths);
 const contractPreservationBaseline = JSON.parse(
   await readFile(
     join(repositoryRoot, "tooling/docs-contract-preservation-baseline.json"),
@@ -1463,6 +1514,108 @@ const approvalRecordSources = new Map(
       await readFile(join(repositoryRoot, path), "utf8"),
     ]),
   ),
+);
+
+const signalsDesignPath =
+  "docs/superpowers/specs/2026-09-09-first-class-signals-and-animation-design.md";
+const signalsDesignUnits = extractContractUnits(
+  approvalRecordSources.get(signalsDesignPath),
+  "g",
+);
+const postBaselineSignalContractMappings = [
+  {
+    label: "signal API and write rules",
+    approvalIds: ["g0063", "g0064", "g0067", "g0076", "g0080"],
+    currentMarkers: [
+      "## Public signal surface",
+      "`set(value)` always treats `value` as data",
+      "Signal writes are forbidden during component traversal",
+    ],
+    sharedAnchors: ["signal", "get", "set", "render"],
+  },
+  {
+    label: "realm scheduler and Layer rules",
+    approvalIds: [
+      "g0058",
+      "g0136",
+      "g0138",
+      "g0139",
+      "g0140",
+      "g0153",
+      "g0188",
+    ],
+    currentMarkers: [
+      "Each frame has six ordered active phases",
+      "Managed Layers are scheduler",
+      "Errors are collected and thrown singly or as an aggregate only after Complete",
+    ],
+    sharedAnchors: ["scheduler", "Layer", "Render", "Complete"],
+  },
+  {
+    label: "consumer ownership and friend boundary",
+    approvalIds: [
+      "g0050",
+      "g0051",
+      "g0158",
+      "g0160",
+      "g0161",
+      "g0164",
+      "g0165",
+      "g0209",
+      "g0210",
+      "g0211",
+      "g0212",
+      "g0216",
+      "g0217",
+    ],
+    currentMarkers: [
+      "## Version-coupled friend entry",
+      "## Ownership summary",
+      "Signal-to-component edge",
+    ],
+    sharedAnchors: ["owner", "consumer", "friend", "Render"],
+  },
+];
+
+export function assertPostBaselineSignalContractApproval(
+  contractSource,
+  approvedUnits = signalsDesignUnits,
+) {
+  for (const mapping of postBaselineSignalContractMappings) {
+    const units = mapping.approvalIds.map((id) => {
+      const unit = approvedUnits.find((candidate) => candidate.id === id);
+      assert.ok(unit, `${mapping.label} lacks approved design unit ${id}`);
+      return unit;
+    });
+    const approvedText = units.map(({ text }) => text).join(" ");
+    for (const marker of mapping.currentMarkers) {
+      assert.ok(
+        contractSource.includes(marker),
+        `${mapping.label} lacks current contract marker ${marker}`,
+      );
+    }
+    for (const anchor of mapping.sharedAnchors) {
+      assert.match(
+        contractSource,
+        new RegExp(anchor, "iu"),
+        `${mapping.label} lacks current anchor ${anchor}`,
+      );
+      assert.match(
+        approvedText,
+        new RegExp(anchor, "iu"),
+        `${mapping.label} lacks approved anchor ${anchor}`,
+      );
+    }
+  }
+  assert.doesNotMatch(
+    contractSource,
+    /declare function (?:animate|tween|keyframes|spring)|crcPlayback/u,
+    "The implemented signals contract must not publish the deferred animation API",
+  );
+}
+
+assertPostBaselineSignalContractApproval(
+  currentSources.get("docs/design/signals-and-scheduling-contract.md"),
 );
 const baselineStyleUnits = contractPreservationBaseline.contracts.find(
   ({ path }) => path === "docs/design/style-system-contract.md",
@@ -1568,7 +1721,7 @@ const verifyBaselineProvenance =
   baselineHistoryAvailable && provenanceRequirement !== "0";
 const baselineContractSources = verifyBaselineProvenance
   ? new Map(
-      normativeContractPaths.map((path) => [
+      baselineSnapshotContractPaths.map((path) => [
         path,
         sourceAtCommit(CONTRACT_BASELINE_COMMIT, path),
       ]),
@@ -1583,7 +1736,7 @@ const translationRecordBaselineSource = verifyBaselineProvenance
   : undefined;
 const contractPreservationResult = assertContractPreservationBaseline({
   manifest: contractPreservationBaseline,
-  expectedContractPaths: normativeContractPaths,
+  expectedContractPaths: baselineSnapshotContractPaths,
   baselineSources: baselineContractSources,
   currentSources,
   translationRecordSource,
@@ -1691,6 +1844,19 @@ const matrixRequirements = [
       "design/runtime-hooks-contract.md",
     ],
     evidence: ["runtime-hooks.example.tsx"],
+  },
+  {
+    topic: /Signals, computed graphs/u,
+    guides: [
+      "design/signals-and-scheduling-contract.md",
+      "guides/state-lifecycle-and-react-differences.md",
+    ],
+    evidence: [
+      "graph.test.ts",
+      "render-consumer.test.ts",
+      "crc-signal.test.tsx",
+      "realm-scheduler.test.ts",
+    ],
   },
   {
     topic: /Ordinary composite/u,
@@ -1820,10 +1986,18 @@ assert.match(
   new RegExp(
     `\\b${contractPreservationResult.baselineUnitCount} preserved baseline units and ` +
       `${contractPreservationResult.currentUnitCount} current semantic units across all ` +
-      `${contractPreservationBaseline.contracts.length} normative contracts\\b`,
+      `${contractPreservationBaseline.contracts.length} baseline-snapshotted normative contracts\\b`,
     "u",
   ),
   "Library status baseline/current semantic-unit counts are stale.",
+);
+assert.match(
+  libraryStatus,
+  new RegExp(
+    `\\b${currentNormativeContractPaths.length} current normative contracts\\b`,
+    "u",
+  ),
+  "Library status current normative-contract count is stale.",
 );
 assert.match(
   libraryStatus,
@@ -1900,6 +2074,24 @@ export async function verifyMutationProbes() {
     assert.throws(operation, pattern);
     probes += 1;
   };
+
+  throws(
+    () =>
+      assertCurrentNormativeContractInventory(
+        currentNormativeContractPaths.filter(
+          (path) => path !== "docs/design/signals-and-scheduling-contract.md",
+        ),
+      ),
+    /Current normative contract inventory/u,
+  );
+  throws(
+    () =>
+      assertPostBaselineSignalContractApproval(
+        currentSources.get("docs/design/signals-and-scheduling-contract.md"),
+        signalsDesignUnits.filter(({ id }) => id !== "g0138"),
+      ),
+    /realm scheduler and Layer rules lacks approved design unit g0138/u,
+  );
 
   const direct = exportedSpecifiers(
     "export const directValue = 1; export declare function declaredValue(): void; export interface DirectType {}",
@@ -2166,7 +2358,7 @@ export async function verifyMutationProbes() {
   } = {}) =>
     assertContractPreservationBaseline({
       manifest,
-      expectedContractPaths: normativeContractPaths,
+      expectedContractPaths: baselineSnapshotContractPaths,
       baselineSources: embeddedOnly
         ? undefined
         : (baselineSources ?? baselineContractSources),
@@ -2590,6 +2782,7 @@ export async function verifyMutationProbes() {
   process.stdout.write(
     `Documentation RED mutation probes passed: ${probes}.\n`,
   );
+  assertHistoricalBanners();
 }
 
 process.stdout.write(
@@ -2601,10 +2794,18 @@ process.stdout.write(
     `code snippets, ${compiledSnippetCount} extracted TypeScript programs, ` +
     `${contractPreservationResult.baselineUnitCount} pre-Task-14 and ` +
     `${contractPreservationResult.currentUnitCount} current semantic units across ` +
-    `${contractPreservationBaseline.contracts.length} normative contracts, ` +
+    `${contractPreservationBaseline.contracts.length} baseline-snapshotted normative contracts, ` +
+    `${currentNormativeContractPaths.length} current normative contracts, ` +
     `${contractPreservationResult.evidenceMappingCount} direct evidence mappings, ` +
     `${fieldMigrationResult.fieldMigrationCount} baseline-derived field migrations, ` +
     `baseline provenance ${contractPreservationResult.provenanceVerified ? "verified" : "embedded/digest-locked"}, ` +
     `${presentationSourcePaths.length} discovered presentation sources, and ` +
     `the extracted JavaScript program through Babel and esbuild.\n`,
 );
+
+if (
+  resolve(process.argv[1] ?? "") ===
+  join(repositoryRoot, "tooling/verify-docs.mjs")
+) {
+  assertHistoricalBanners();
+}
