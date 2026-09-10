@@ -28,6 +28,10 @@ const WEBGL_CONTEXT_ATTRIBUTES: WebGLContextAttributes = Object.freeze({
   preserveDrawingBuffer: false,
 });
 
+const MAX_OFFSCREEN_CANVAS_DIMENSION = 0xffff_ffff;
+
+type WebGLLayerOperation = 'idle' | 'render' | 'composite';
+
 export interface WebGLLayerSurface {
   readonly logicalWidth: number;
   readonly logicalHeight: number;
@@ -63,8 +67,8 @@ export function resolveWebGLLayerSurface(
   assertPositiveFinite(density.y, 'density.y');
   const backingWidth = Math.max(1, Math.round(logicalWidth * density.x));
   const backingHeight = Math.max(1, Math.round(logicalHeight * density.y));
-  assertPositiveFinite(backingWidth, 'backing width');
-  assertPositiveFinite(backingHeight, 'backing height');
+  assertBackingDimension(backingWidth, 'backing width');
+  assertBackingDimension(backingHeight, 'backing height');
   return Object.freeze({
     logicalWidth,
     logicalHeight,
@@ -87,6 +91,8 @@ export class WebGLLayerController {
   private contextGenerationValue = 1;
   private pending: WebGLLayerGeneration | undefined;
   private committed: WebGLLayerGeneration | undefined;
+  private operation: WebGLLayerOperation = 'idle';
+  private operationEpoch = 0;
   private disposed = false;
 
   constructor(
@@ -135,68 +141,101 @@ export class WebGLLayerController {
     surface: WebGLLayerSurface,
     timestamp: number,
   ): void {
-    this.requireActive();
-    validateSurface(surface);
-    const nextCamera = resolveCamera(
-      camera,
-      surface.logicalWidth,
-      surface.logicalHeight,
-    );
-    this.releasePending();
-    if (!haveSameSurface(this.currentSurface, surface)) {
-      this.resizeSurface(surface);
-    }
-    this.currentCamera = nextCamera;
-    executeBackendCRC(this.mount, root, timestamp);
-    const ledger = this.driver.takeCompletedFrame();
-    let bitmap: ImageBitmap;
+    const epoch = this.beginOperation('render');
+    let bitmap: ImageBitmap | undefined;
     try {
-      bitmap = this.canvas.transferToImageBitmap();
-    } catch (error) {
-      throw webGLLayerError('could not transfer its rendered ImageBitmap', error);
+      validateSurface(surface);
+      const nextCamera = resolveCamera(
+        camera,
+        surface.logicalWidth,
+        surface.logicalHeight,
+      );
+      this.releasePending();
+      if (!haveSameSurface(this.currentSurface, surface)) {
+        this.resizeSurface(surface);
+      }
+      this.currentCamera = nextCamera;
+      executeBackendCRC(this.mount, root, timestamp);
+      this.requireCurrentOperation('render', epoch);
+      const ledger = this.driver.takeCompletedFrame();
+      try {
+        bitmap = this.canvas.transferToImageBitmap();
+      } catch (error) {
+        throw webGLLayerError(
+          'could not transfer its rendered ImageBitmap',
+          error,
+        );
+      }
+      this.requireCurrentOperation('render', epoch);
+      const candidate = Object.freeze({
+        number: (this.committed?.number ?? 0) + 1,
+        bitmap,
+        surface,
+        ledger,
+      });
+      this.requireCurrentOperation('render', epoch);
+      this.pending = candidate;
+      bitmap = undefined;
+    } finally {
+      try {
+        bitmap?.close();
+      } finally {
+        this.finishOperation('render', epoch);
+      }
     }
-    this.pending = Object.freeze({
-      number: (this.committed?.number ?? 0) + 1,
-      bitmap,
-      surface,
-      ledger,
-    });
   }
 
   composite(
     context: RenderingContext2D,
     destination: WebGLLayerDestination,
   ): void {
-    this.requireActive();
+    const epoch = this.beginOperation('composite');
     const candidate = this.pending;
     const visible = candidate ?? this.committed;
-    if (!visible) {
-      throw new Error('WebGLLayer has no completed bitmap to composite.');
-    }
     try {
-      context.drawImage(
-        visible.bitmap,
-        0,
-        0,
-        visible.surface.backingWidth,
-        visible.surface.backingHeight,
-        destination.x,
-        destination.y,
-        destination.width,
-        destination.height,
-      );
-    } catch (error) {
-      if (candidate) {
-        this.pending = undefined;
-        candidate.bitmap.close();
+      if (!visible) {
+        throw new Error('WebGLLayer has no completed bitmap to composite.');
       }
-      throw error;
+      try {
+        context.drawImage(
+          visible.bitmap,
+          0,
+          0,
+          visible.surface.backingWidth,
+          visible.surface.backingHeight,
+          destination.x,
+          destination.y,
+          destination.width,
+          destination.height,
+        );
+      } catch (error) {
+        if (candidate && this.pending === candidate) {
+          this.pending = undefined;
+          candidate.bitmap.close();
+        }
+        throw error;
+      }
+      this.requireCurrentOperation('composite', epoch);
+      if (!candidate) {
+        if (this.committed !== visible) {
+          throw webGLLayerError(
+            'composite operation lost ownership of its committed generation',
+          );
+        }
+        return;
+      }
+      if (this.pending !== candidate) {
+        throw webGLLayerError(
+          'composite operation lost ownership of its pending generation',
+        );
+      }
+      const previous = this.committed;
+      this.pending = undefined;
+      this.committed = candidate;
+      previous?.bitmap.close();
+    } finally {
+      this.finishOperation('composite', epoch);
     }
-    if (!candidate) return;
-    const previous = this.committed;
-    this.pending = undefined;
-    this.committed = candidate;
-    previous?.bitmap.close();
   }
 
   resolveLocal(
@@ -229,6 +268,8 @@ export class WebGLLayerController {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    this.operationEpoch += 1;
+    this.operation = 'idle';
     const mount = this.mount;
     const pending = this.pending;
     const committed = this.committed;
@@ -246,10 +287,23 @@ export class WebGLLayerController {
   }
 
   private resizeSurface(surface: WebGLLayerSurface): void {
-    this.canvas.width = surface.backingWidth;
-    this.canvas.height = surface.backingHeight;
+    const previous = this.currentSurface;
+    try {
+      setCanvasDimensions(this.canvas, surface, 'resize');
+      this.mount.resize(surface.logicalWidth, surface.logicalHeight);
+    } catch (error) {
+      try {
+        setCanvasDimensions(this.canvas, previous, 'resize rollback');
+      } catch (rollbackError) {
+        this.dispose();
+        throw webGLLayerError(
+          'could not restore its OffscreenCanvas after a failed resize',
+          rollbackError,
+        );
+      }
+      throw error;
+    }
     this.currentSurface = surface;
-    this.mount.resize(surface.logicalWidth, surface.logicalHeight);
   }
 
   private releasePending(): void {
@@ -261,6 +315,38 @@ export class WebGLLayerController {
   private requireActive(): void {
     if (this.disposed) {
       throw new Error('WebGLLayer controller is disposed.');
+    }
+  }
+
+  private beginOperation(operation: Exclude<WebGLLayerOperation, 'idle'>): number {
+    this.requireActive();
+    if (this.operation !== 'idle') {
+      throw webGLLayerError(
+        `rejected a reentrant ${operation} operation while ` +
+        `${this.operation} is active`,
+      );
+    }
+    this.operation = operation;
+    this.operationEpoch += 1;
+    return this.operationEpoch;
+  }
+
+  private requireCurrentOperation(
+    operation: Exclude<WebGLLayerOperation, 'idle'>,
+    epoch: number,
+  ): void {
+    this.requireActive();
+    if (this.operation !== operation || this.operationEpoch !== epoch) {
+      throw webGLLayerError(`${operation} operation lost ownership`);
+    }
+  }
+
+  private finishOperation(
+    operation: Exclude<WebGLLayerOperation, 'idle'>,
+    epoch: number,
+  ): void {
+    if (this.operation === operation && this.operationEpoch === epoch) {
+      this.operation = 'idle';
     }
   }
 }
@@ -275,6 +361,7 @@ function createOffscreenCanvas(surface: WebGLLayerSurface): OffscreenCanvas {
   } catch (error) {
     throw webGLLayerError('could not allocate its OffscreenCanvas', error);
   }
+  assertCanvasDimensions(canvas, surface, 'allocation');
   if (typeof canvas.transferToImageBitmap !== 'function') {
     throw webGLLayerError('requires OffscreenCanvas.transferToImageBitmap()');
   }
@@ -310,10 +397,55 @@ function acquireWebGL2Context(canvas: OffscreenCanvas): WebGL2RenderingContext {
 function validateSurface(surface: WebGLLayerSurface): void {
   assertPositiveFinite(surface.logicalWidth, 'width');
   assertPositiveFinite(surface.logicalHeight, 'height');
-  assertPositiveFinite(surface.backingWidth, 'backing width');
-  assertPositiveFinite(surface.backingHeight, 'backing height');
+  assertBackingDimension(surface.backingWidth, 'backing width');
+  assertBackingDimension(surface.backingHeight, 'backing height');
   assertPositiveFinite(surface.densityX, 'density.x');
   assertPositiveFinite(surface.densityY, 'density.y');
+}
+
+function assertBackingDimension(value: number, field: string): void {
+  if (
+    !Number.isSafeInteger(value) ||
+    value <= 0 ||
+    value > MAX_OFFSCREEN_CANVAS_DIMENSION
+  ) {
+    throw new RangeError(
+      `WebGLLayer ${field} must be a positive representable integer.`,
+    );
+  }
+}
+
+function setCanvasDimensions(
+  canvas: OffscreenCanvas,
+  surface: WebGLLayerSurface,
+  phase: string,
+): void {
+  try {
+    canvas.width = surface.backingWidth;
+    canvas.height = surface.backingHeight;
+  } catch (error) {
+    throw webGLLayerError(
+      `could not apply its OffscreenCanvas ${phase} dimensions`,
+      error,
+    );
+  }
+  assertCanvasDimensions(canvas, surface, phase);
+}
+
+function assertCanvasDimensions(
+  canvas: OffscreenCanvas,
+  surface: WebGLLayerSurface,
+  phase: string,
+): void {
+  if (
+    canvas.width !== surface.backingWidth ||
+    canvas.height !== surface.backingHeight
+  ) {
+    throw webGLLayerError(
+      `OffscreenCanvas ${phase} dimensions did not match the requested ` +
+      `${surface.backingWidth}x${surface.backingHeight} backing size`,
+    );
+  }
 }
 
 function assertPositiveFinite(value: number, field: string): void {

@@ -97,6 +97,40 @@ describe('WebGLLayerController surface and capabilities', () => {
     expect(platform.constructed).toEqual([]);
   });
 
+  it('rejects backing dimensions outside the OffscreenCanvas integer range before allocation', () => {
+    const platform = installRecordingPlatform();
+
+    expect(() => resolveWebGLLayerSurface(
+      0x1_0000_0000,
+      1,
+      { x: 1, y: 1 },
+    )).toThrowError(/WebGLLayer.*backing width.*representable integer/i);
+    expect(platform.constructed).toEqual([]);
+  });
+
+  it('rejects a constructor dimension clamp before context acquisition or child execution', () => {
+    const platform = installRecordingPlatform({
+      constructDimensions: (width, height) => ({
+        width: width - 1,
+        height,
+      }),
+    });
+    const childRender = vi.fn();
+    const Child = defineWebGLPrimitive<{}, {}>(function renderClampedChild() {
+      childRender();
+    }, { hit: { kind: 'none' } });
+    const root = createElement(Child, { pointerEvents: 'none' });
+
+    expect(() => new WebGLLayerController(
+      mountParent(),
+      root,
+      undefined,
+      resolveWebGLLayerSurface(11, 7, { x: 1, y: 1 }),
+    )).toThrowError(/WebGLLayer.*OffscreenCanvas.*dimensions/i);
+    expect(platform.contextRequests).toEqual([]);
+    expect(childRender).not.toHaveBeenCalled();
+  });
+
   it('resizes one private mount without replacing its hook identity or WebGL context', () => {
     const platform = installRecordingPlatform();
     const parentCanvas = mountParent();
@@ -169,6 +203,51 @@ describe('WebGLLayerController surface and capabilities', () => {
     controller.dispose();
     controller.dispose();
     expect(cleanup).toHaveBeenCalledOnce();
+  });
+
+  it('rolls back a clamped resize before child execution or surface publication', () => {
+    const stable = bitmap('stable');
+    const platform = installRecordingPlatform({
+      transfers: [stable],
+      resizeDimension: (axis, value) =>
+        axis === 'height' && value === 18 ? 17 : value,
+    });
+    const parentCanvas = mountParent();
+    const childRender = vi.fn();
+    const Child = defineWebGLPrimitive<{}, {}>(function renderResizeClampChild() {
+      childRender();
+    }, { hit: { kind: 'none' } });
+    const root = createElement(Child, { pointerEvents: 'none' });
+    const initial = resolveWebGLLayerSurface(10, 8, { x: 1, y: 1 });
+    const resized = resolveWebGLLayerSurface(12, 6, { x: 2, y: 3 });
+    const controller = new WebGLLayerController(
+      parentCanvas,
+      root,
+      undefined,
+      initial,
+    );
+    const context = { drawImage() {} } as unknown as CanvasRenderingContext2D;
+    controller.renderUpdatedChild(root, undefined, initial, 1);
+    controller.composite(context, { x: 0, y: 0, width: 10, height: 8 });
+    childRender.mockClear();
+
+    expect(() => controller.renderUpdatedChild(
+      root,
+      undefined,
+      resized,
+      2,
+    )).toThrowError(/WebGLLayer.*resize.*dimensions/i);
+
+    expect(childRender).not.toHaveBeenCalled();
+    expect(platform.transferCount).toBe(1);
+    expect(controller.canvas.width).toBe(initial.backingWidth);
+    expect(controller.canvas.height).toBe(initial.backingHeight);
+    expect(controller.surface).toBe(initial);
+    expect(controller.committedGeneration).toBe(1);
+    expect(stable.close).not.toHaveBeenCalled();
+
+    controller.dispose();
+    expect(stable.close).toHaveBeenCalledOnce();
   });
 });
 
@@ -317,7 +396,151 @@ describe('WebGLLayerController bitmap transaction', () => {
     expect(candidate.close).toHaveBeenCalledOnce();
     expect(stable.close).toHaveBeenCalledOnce();
   });
+
+  it('does not transfer or retain ownership after disposal during child traversal', () => {
+    const candidate = bitmap('never-transferred');
+    const platform = installRecordingPlatform({ transfers: [candidate] });
+    const parentCanvas = mountParent();
+    let controller: WebGLLayerController;
+    const Child = defineWebGLPrimitive<{}, {}>(function renderDisposingChild() {
+      controller.dispose();
+    }, { hit: { kind: 'none' } });
+    const root = createElement(Child, { pointerEvents: 'none' });
+    const surface = resolveWebGLLayerSurface(10, 8, { x: 1, y: 1 });
+    controller = new WebGLLayerController(
+      parentCanvas,
+      root,
+      undefined,
+      surface,
+    );
+
+    expect(() => controller.renderUpdatedChild(
+      root,
+      undefined,
+      surface,
+      1,
+    )).toThrowError(/WebGLLayer.*disposed/i);
+    expect(platform.transferCount).toBe(0);
+    expect(candidate.close).not.toHaveBeenCalled();
+    expectNoOwnedGenerations(controller);
+
+    controller.dispose();
+    expect(candidate.close).not.toHaveBeenCalled();
+  });
+
+  it('closes a locally acquired bitmap when disposal occurs during transfer', () => {
+    const candidate = bitmap('disposed-during-transfer');
+    let controller: WebGLLayerController;
+    const platform = installRecordingPlatform({
+      transfers: [candidate],
+      onTransfer: () => controller.dispose(),
+    });
+    const parentCanvas = mountParent();
+    const Child = defineWebGLPrimitive<{}, {}>(function renderTransferChild() {}, {
+      hit: { kind: 'none' },
+    });
+    const root = createElement(Child, { pointerEvents: 'none' });
+    const surface = resolveWebGLLayerSurface(10, 8, { x: 1, y: 1 });
+    controller = new WebGLLayerController(
+      parentCanvas,
+      root,
+      undefined,
+      surface,
+    );
+
+    expect(() => controller.renderUpdatedChild(
+      root,
+      undefined,
+      surface,
+      1,
+    )).toThrowError(/WebGLLayer.*disposed/i);
+    expect(platform.transferCount).toBe(1);
+    expect(candidate.close).toHaveBeenCalledOnce();
+    expectNoOwnedGenerations(controller);
+
+    controller.dispose();
+    expect(candidate.close).toHaveBeenCalledOnce();
+  });
+
+  it('does not republish a candidate disposed during parent drawImage', () => {
+    const candidate = bitmap('disposed-during-draw');
+    installRecordingPlatform({ transfers: [candidate] });
+    const parentCanvas = mountParent();
+    const Child = defineWebGLPrimitive<{}, {}>(function renderDrawDisposeChild() {}, {
+      hit: { kind: 'none' },
+    });
+    const root = createElement(Child, { pointerEvents: 'none' });
+    const surface = resolveWebGLLayerSurface(10, 8, { x: 1, y: 1 });
+    const controller = new WebGLLayerController(
+      parentCanvas,
+      root,
+      undefined,
+      surface,
+    );
+    controller.renderUpdatedChild(root, undefined, surface, 1);
+
+    expect(() => controller.composite({
+      drawImage() {
+        controller.dispose();
+      },
+    } as unknown as CanvasRenderingContext2D, {
+      x: 0,
+      y: 0,
+      width: 10,
+      height: 8,
+    })).toThrowError(/WebGLLayer.*disposed/i);
+    expect(candidate.close).toHaveBeenCalledOnce();
+    expectNoOwnedGenerations(controller);
+
+    controller.dispose();
+    expect(candidate.close).toHaveBeenCalledOnce();
+  });
+
+  it('rejects a reentrant render during draw without replacing or leaking its candidate', () => {
+    const candidate = bitmap('reentrant-draw');
+    const platform = installRecordingPlatform({ transfers: [candidate] });
+    const parentCanvas = mountParent();
+    const Child = defineWebGLPrimitive<{}, {}>(function renderReentrantChild() {}, {
+      hit: { kind: 'none' },
+    });
+    const root = createElement(Child, { pointerEvents: 'none' });
+    const surface = resolveWebGLLayerSurface(10, 8, { x: 1, y: 1 });
+    const controller = new WebGLLayerController(
+      parentCanvas,
+      root,
+      undefined,
+      surface,
+    );
+    controller.renderUpdatedChild(root, undefined, surface, 1);
+
+    expect(() => controller.composite({
+      drawImage() {
+        controller.renderUpdatedChild(root, undefined, surface, 2);
+      },
+    } as unknown as CanvasRenderingContext2D, {
+      x: 0,
+      y: 0,
+      width: 10,
+      height: 8,
+    })).toThrowError(/WebGLLayer.*reentrant render/i);
+    expect(platform.transferCount).toBe(1);
+    expect(candidate.close).toHaveBeenCalledOnce();
+    expectNoOwnedGenerations(controller);
+
+    controller.dispose();
+    expect(candidate.close).toHaveBeenCalledOnce();
+  });
 });
+
+function expectNoOwnedGenerations(controller: WebGLLayerController): void {
+  const ownership = controller as unknown as {
+    pending: unknown;
+    committed: unknown;
+  };
+  expect(ownership.pending).toBeUndefined();
+  expect(ownership.committed).toBeUndefined();
+  expect(controller.committedGeneration).toBeUndefined();
+}
 
 interface FakeBitmap extends ImageBitmap {
   readonly label: string;
@@ -338,6 +561,14 @@ interface RecordingPlatformOptions {
   readonly transfers?: FakeBitmap[];
   readonly attributes?: { alpha: boolean; depth: boolean };
   readonly onTransfer?: () => void;
+  readonly constructDimensions?: (
+    width: number,
+    height: number,
+  ) => { width: number; height: number };
+  readonly resizeDimension?: (
+    axis: 'width' | 'height',
+    value: number,
+  ) => number;
 }
 
 function installRecordingPlatform(options: RecordingPlatformOptions = {}) {
@@ -347,12 +578,16 @@ function installRecordingPlatform(options: RecordingPlatformOptions = {}) {
   let transferCount = 0;
   let throwTransfer: Error | undefined;
   class RecordingOffscreenCanvas {
-    width: number;
-    height: number;
+    private currentWidth: number;
+    private currentHeight: number;
 
     constructor(width: number, height: number) {
-      this.width = width;
-      this.height = height;
+      const actual = options.constructDimensions?.(width, height) ?? {
+        width,
+        height,
+      };
+      this.currentWidth = actual.width;
+      this.currentHeight = actual.height;
       constructed.push({ width, height });
       (this as unknown as { transferToImageBitmap?: () => ImageBitmap })
         .transferToImageBitmap = 'transfer' in options ? options.transfer : () => {
@@ -362,6 +597,22 @@ function installRecordingPlatform(options: RecordingPlatformOptions = {}) {
           const next = options.transfers?.shift() ?? bitmap(`bitmap-${transferCount}`);
           return next;
         };
+    }
+
+    get width(): number {
+      return this.currentWidth;
+    }
+
+    set width(value: number) {
+      this.currentWidth = options.resizeDimension?.('width', value) ?? value;
+    }
+
+    get height(): number {
+      return this.currentHeight;
+    }
+
+    set height(value: number) {
+      this.currentHeight = options.resizeDimension?.('height', value) ?? value;
     }
 
     getContext(type: string, attributes?: unknown): WebGL2RenderingContext | null {
