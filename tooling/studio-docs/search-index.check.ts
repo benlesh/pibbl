@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
+import MiniSearch from "minisearch";
 
 import {
   buildSearchBundle,
+  querySearchIndex,
   searchSearchBundle,
+  searchIndexOptions,
   tokenizeSearchText,
   type SearchBundleInput,
 } from "./search-index";
@@ -151,6 +154,10 @@ assert.equal(
   searchSearchBundle(first, "filter", { kinds: ["example"] })[0]?.url,
   "#/examples/drawing/filters",
 );
+assert.equal(
+  searchSearchBundle(first, "crcWhenChangd")[0]?.url,
+  "#/api/hooks/crc-when-changed",
+);
 assert.throws(
   () =>
     buildSearchBundle({
@@ -159,6 +166,31 @@ assert.throws(
     }),
   /Invalid public search URL/u,
 );
+
+const restoredBrowserIndex = MiniSearch.loadJSON(
+  first.serializedSearchIndex,
+  searchIndexOptions(),
+);
+for (const [query, options] of [
+  ["crcWhenChanged", undefined],
+  ["crcWhen", undefined],
+  ["crcWhenChangd", undefined],
+  ["filter", { kinds: ["example"] }],
+] as const) {
+  assert.deepEqual(
+    querySearchIndex(
+      restoredBrowserIndex,
+      first.searchRecords,
+      query,
+      options,
+    ).map(({ id, url }) => ({ id, url })),
+    searchSearchBundle(first, query, options).map(({ id, url }) => ({
+      id,
+      url,
+    })),
+    `Restored browser index must preserve the build query contract for ${query}.`,
+  );
+}
 
 process.stdout.write(
   "Validated deterministic public MiniSearch records and ranking.\n",

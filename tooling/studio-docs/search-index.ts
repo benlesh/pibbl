@@ -120,11 +120,13 @@ export function buildSearchBundle(
 }
 
 /**
- * A Node-side query helper that proves the build's ranking contract. The
- * browser restores and queries this same bundle in the lazy search module.
+ * Queries one already-restored MiniSearch instance using CRC's public ranking
+ * contract. This is browser-safe: all source imports other than MiniSearch are
+ * type-only, so the lazy browser search can use it without build-time tooling.
  */
-export function searchSearchBundle(
-  bundle: SerializedSearchBundle,
+export function querySearchIndex(
+  index: MiniSearch<SearchRecord>,
+  searchRecords: readonly SearchRecord[],
   query: string,
   options: SearchBundleQueryOptions = {},
 ): readonly SearchRecord[] {
@@ -132,14 +134,10 @@ export function searchSearchBundle(
   if (normalizedQuery.length === 0) return [];
 
   const recordsById = new Map(
-    bundle.searchRecords.map((record) => [record.id, record]),
+    searchRecords.map((record) => [record.id, record]),
   );
   const allowedKinds =
     options.kinds === undefined ? undefined : new Set(options.kinds);
-  const index = MiniSearch.loadJSON<SearchRecord>(
-    bundle.serializedSearchIndex,
-    searchIndexOptions(),
-  );
   const matches = index.search(query, {
     boost: fieldBoosts,
     prefix: true,
@@ -173,6 +171,19 @@ export function searchSearchBundle(
         compareText(left.record.id, right.record.id),
     )
     .map(({ record }) => record);
+}
+
+/** A Node-side helper that restores a bundle, then uses the shared query path. */
+export function searchSearchBundle(
+  bundle: SerializedSearchBundle,
+  query: string,
+  options: SearchBundleQueryOptions = {},
+): readonly SearchRecord[] {
+  const index = MiniSearch.loadJSON<SearchRecord>(
+    bundle.serializedSearchIndex,
+    searchIndexOptions(),
+  );
+  return querySearchIndex(index, bundle.searchRecords, query, options);
 }
 
 function collectSearchRecords(
