@@ -23,6 +23,10 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.mjs"
     },
+    "./internal": {
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.mjs"
+    },
     "./jsx-runtime": {
       "types": "./dist/jsx-runtime.d.ts",
       "default": "./dist/jsx-runtime.mjs"
@@ -54,7 +58,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts src/types.ts src/jsx-runtime.ts src/jsx-dev-runtime.ts --bundle --splitting --format=esm --platform=neutral --target=esnext --sourcemap --outdir=dist --out-extension:.js=.mjs --chunk-names=chunks/[name]-[hash] --external:@crc/types",
+    "build": "rimraf dist && tsc -p tsconfig.build.json && esbuild src/index.ts src/internal.ts src/types.ts src/jsx-runtime.ts src/jsx-dev-runtime.ts --bundle --splitting --format=esm --platform=neutral --target=esnext --sourcemap --outdir=dist --out-extension:.js=.mjs --chunk-names=chunks/[name]-[hash] --external:@crc/types",
     "dev": "pnpm run build",
     "prepublishOnly": "pnpm run build",
     "test": "vitest"

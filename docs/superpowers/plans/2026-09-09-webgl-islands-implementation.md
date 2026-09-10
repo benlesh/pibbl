@@ -345,11 +345,11 @@ git add packages/core/src/lib/components/structural-events.ts packages/core/src/
 git commit -m "feat(core): propagate events through structural components"
 ```
 
-### Task 4: Backend-neutral traversal and the core friend entry
+### Task 4: Backend-neutral traversal through the existing core friend entry
 
 **Files:**
 
-- Create: `packages/core/src/internal.ts`
+- Modify: `packages/core/src/internal.ts`
 - Create: `packages/core/src/lib/backend/types.ts`
 - Create: `packages/core/src/lib/backend/canvas-2d-backend.ts`
 - Create: `packages/core/src/lib/backend/backend-dispatch.test.tsx`
@@ -366,7 +366,7 @@ git commit -m "feat(core): propagate events through structural components"
 
 **Interfaces:**
 
-- Produces an opaque `CRCBackendToken`, `CRCBackendDriver<E>`, `CRCBackendFrame<E>`, `CRCBackendPrimitiveDefinition`, `defineBackendPrimitive`, `mountBackendCRC`, `executeBackendCRC`, `getBackendEnvironment`, `getCurrentFrameTimestamp`, `requestCurrentInstanceFrame`, `useInternalHookSlot`, `useBackendEventTarget`, `setCurrentComponentAfterRender`, `registerNestedInteractionResolver`, `snapshotLayerNodeTree`, and `haveSameLayerNodeTree` through `@crc/core/internal`.
+- Extends the existing `@crc/core/internal` renderer-scheduler friend entry with an opaque `CRCBackendToken`, `CRCBackendDriver<E>`, `CRCBackendFrame<E>`, `CRCBackendPrimitiveDefinition`, `defineBackendPrimitive`, `mountBackendCRC`, `executeBackendCRC`, `getBackendEnvironment`, `getCurrentFrameTimestamp`, `requestCurrentInstanceFrame`, `useInternalHookSlot`, `useBackendEventTarget`, `setCurrentComponentAfterRender`, `registerNestedInteractionResolver`, `snapshotLayerNodeTree`, and `haveSameLayerNodeTree`.
 - The core root uses `CANVAS_2D_BACKEND`; official sibling packages create private tokens through `createBackendToken("webgl2")`.
 
 ```ts
@@ -433,7 +433,7 @@ Create a test backend whose counters record begin, enter, primitive, finish, and
 corepack pnpm@11.21.0 exec vitest run packages/core/src/lib/backend/backend-dispatch.test.tsx --browser.headless --browser.ui=false
 ```
 
-Expected: FAIL on the missing backend modules and internal entry.
+Expected: FAIL on the missing backend modules and backend traversal friend APIs.
 
 - [ ] **Step 3: Move Canvas-specific frame behavior behind the driver**
 
@@ -449,18 +449,13 @@ Canvas primitives under WebGL name the Canvas primitive and explain that Canvas 
 
 - [ ] **Step 4: Add internal mount and scheduling hooks**
 
-`mountBackendCRC(canvas, root, { parent, logicalWidth, logicalHeight, driver })` registers the private instance in the same `GLOBAL_STATE.crcInstances`, shares the parent's event root, and sets `interactionRoot`. `requestCurrentInstanceFrame(updateParents)` delegates to existing `update()` so stale callbacks, coalescing, disposal, and parent scheduling keep one implementation.
+`mountBackendCRC(canvas, root, { parent, logicalWidth, logicalHeight, driver })` registers the private instance in the same `GLOBAL_STATE.crcInstances`, shares the parent's event root, and sets `interactionRoot`. Its `requestCurrentInstanceFrame(true)` adapter delegates to `crcInternalRequestRendererWork` so stale callbacks, realm scheduler coalescing, disposal, and parent scheduling keep one implementation.
 
-- [ ] **Step 5: Publish only the reviewed friend list**
+- [ ] **Step 5: Extend only the reviewed friend list**
 
-Add this package entry and build input:
-
-```json
-"./internal": {
-  "types": "./dist/internal.d.ts",
-  "default": "./dist/internal.mjs"
-}
-```
+Extend the existing `@crc/core/internal` source and declaration entry with the
+reviewed backend traversal APIs. Do not create another package entry, build
+input, or scheduler singleton.
 
 Update packed runtime evidence so `@crc/core/internal` resolves, while `@crc/core/lib/types`, `@crc/core/src/index`, and other undeclared subpaths still fail. Do not re-export `GLOBAL_STATE`, raw registries, `update`, or source-only implementation classes.
 
@@ -1037,7 +1032,7 @@ Expected: FAIL because continuing-frame ownership and WebGL cache generations ar
 
 - [ ] **Step 4: Implement the continuing-frame hook**
 
-Use one internal hook slot to retain mount identity, return `getCurrentFrameTimestamp()`, and call `requestCurrentInstanceFrame(true)`. Rely on core's existing instance rAF coalescing and stale-owner checks; do not install a package-global loop or a second scheduler.
+Use one internal hook slot to retain mount identity, return `getCurrentFrameTimestamp()`, and call `requestCurrentInstanceFrame(true)`. Rely on core's realm scheduler coalescing and stale-owner checks; do not install a package-global loop or a second scheduler.
 
 - [ ] **Step 5: Implement cache snapshots and generation handoff**
 

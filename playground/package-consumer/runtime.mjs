@@ -1,4 +1,5 @@
 import * as core from '@crc/core';
+import * as internal from '@crc/core/internal';
 import {
   Fragment as ProductionFragment,
   jsx,
@@ -37,6 +38,7 @@ const expected = [
   'Text',
   'VerticalLine',
   'Wedge',
+  'computed',
   'crc',
   'crcCanvasContext',
   'crcCursor',
@@ -48,6 +50,7 @@ const expected = [
   'crcMemo',
   'crcRectPath',
   'crcRef',
+  'crcSignal',
   'crcState',
   'crcSvgPath',
   'crcWhenChanged',
@@ -63,19 +66,49 @@ const expected = [
   'createSvgPath',
   'createWedgePath',
   'definePrimitive',
+  'isSignal',
   'layoutDiagnostic',
   'measureElement',
   'normalizeEdges',
   'resolveBox',
   'resolveLength',
+  'signal',
+  'untracked',
 ];
 
 const actual = Object.keys(core).sort();
 if (JSON.stringify(actual) !== JSON.stringify(expected)) {
   throw new Error(`Unexpected @crc/core exports: ${actual.join(', ')}`);
 }
-if (actual.length !== 58) {
-  throw new Error(`Expected 58 @crc/core runtime exports, received ${actual.length}.`);
+
+const expectedInternal = [
+  'crcInternalCreateSignalConsumer',
+  'crcInternalCurrentFrame',
+  'crcInternalCurrentRenderOwner',
+  'crcInternalQueueComplete',
+  'crcInternalRequestRendererWork',
+];
+const actualInternal = Object.keys(internal).sort();
+if (JSON.stringify(actualInternal) !== JSON.stringify(expectedInternal)) {
+  throw new Error(
+    `Unexpected @crc/core/internal exports: ${actualInternal.join(', ')}`,
+  );
+}
+for (const exportName of expectedInternal) {
+  if (typeof internal[exportName] !== 'function') {
+    throw new Error(`Expected @crc/core/internal ${exportName} to be callable.`);
+  }
+  if (exportName in core) {
+    throw new Error(`Internal renderer function leaked from @crc/core: ${exportName}.`);
+  }
+}
+for (const exportName of expected) {
+  if (exportName in internal) {
+    throw new Error(`@crc/core/internal re-exported public root value ${exportName}.`);
+  }
+}
+if (actual.length !== 63) {
+  throw new Error(`Expected 63 @crc/core runtime exports, received ${actual.length}.`);
 }
 
 for (const [exportName, value] of Object.entries({

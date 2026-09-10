@@ -38,17 +38,45 @@ interface AdvanceRegistration {
   active: boolean;
 }
 
+export interface RendererParticipantOwner {
+  readonly instance: CRCInstance;
+  isActive(): boolean;
+}
+
+interface RendererParticipantWorkRequest {
+  readonly key: object;
+  readonly kind: 'resource' | 'draw' | 'compose';
+  readonly run: CRCFrameCompletion;
+}
+
+interface RendererParticipantWorkRegistration {
+  readonly owner: RendererParticipantOwner;
+  request: RendererParticipantWorkRequest;
+  readonly order: number;
+}
+
+interface RendererParticipantCompletion {
+  readonly owner: RendererParticipantOwner;
+  readonly callback: CRCFrameCompletion;
+}
+
 const registeredRoots = new Set<CRCInstance>();
 const dirtyInstances = new Set<CRCInstance>();
 const deferredInstances = new Set<CRCInstance>();
 const advanceRegistrations = new Set<AdvanceRegistration>();
 const frameCompletions: CRCFrameCompletion[] = [];
+const rendererWorkByOwner = new Map<
+  RendererParticipantOwner,
+  Map<object, RendererParticipantWorkRegistration>
+>();
+const rendererParticipantCompletions: RendererParticipantCompletion[] = [];
 
 let phase: CRCFramePhase = 'idle';
 let pendingHostFrame: number | undefined;
 let currentFrame: CRCFrameSnapshot | undefined;
 let nextFrameId = 0;
 let nextWorkRevision = 0;
+let nextRendererWorkOrder = 0;
 let schedulerDriver: SchedulerDriver | undefined;
 
 export function registerRootInstance(instance: CRCInstance): void {
@@ -102,6 +130,50 @@ export function registerAdvanceParticipant(
 export function queueFrameCompletion(callback: CRCFrameCompletion): void {
   frameCompletions.push(callback);
   requestHostFrameIfNeeded();
+}
+
+export function requestRendererParticipantWork(
+  owner: RendererParticipantOwner,
+  request: RendererParticipantWorkRequest,
+): void {
+  if (!owner.isActive()) return;
+  let workByKey = rendererWorkByOwner.get(owner);
+  if (!workByKey) {
+    workByKey = new Map();
+    rendererWorkByOwner.set(owner, workByKey);
+  }
+  const existing = workByKey.get(request.key);
+  if (existing) {
+    existing.request = request;
+  } else {
+    workByKey.set(request.key, {
+      owner,
+      request,
+      order: ++nextRendererWorkOrder,
+    });
+  }
+  requestInstanceRender(owner.instance);
+}
+
+export function queueRendererParticipantComplete(
+  owner: RendererParticipantOwner,
+  callback: CRCFrameCompletion,
+): void {
+  if (!owner.isActive()) return;
+  rendererParticipantCompletions.push({ owner, callback });
+  requestHostFrameIfNeeded();
+}
+
+export function removeRendererParticipantOwner(
+  owner: RendererParticipantOwner,
+): void {
+  rendererWorkByOwner.delete(owner);
+  for (let index = rendererParticipantCompletions.length - 1; index >= 0; index--) {
+    if (rendererParticipantCompletions[index].owner === owner) {
+      rendererParticipantCompletions.splice(index, 1);
+    }
+  }
+  cancelIdleHostFrame();
 }
 
 export function getCurrentFrameSnapshot(): CRCFrameSnapshot | undefined {
@@ -193,6 +265,8 @@ function runFrame(hostTime: number): void {
     errors.push(error);
   }
   rootJobs = mergeRootJobs(rootJobs, captureRootJobs(true));
+  const rendererWork = captureRendererParticipantWork();
+  const rendererCompletions = rendererParticipantCompletions.splice(0);
 
   phase = 'render';
   for (const rootJob of rootJobs) {
@@ -208,12 +282,24 @@ function runFrame(hostTime: number): void {
       for (const job of rootJob.instances) {
         if (job.instance.mainTeardowns.closed) continue;
         try {
+          runRendererParticipantWork(
+            rendererWork.get(job.instance),
+            ['resource', 'draw'],
+            snapshot,
+            errors,
+          );
           executeRender(
             job.instance.canvas,
             snapshot.logicalTime,
             job.pendingRoot,
             false,
             snapshot,
+          );
+          runRendererParticipantWork(
+            rendererWork.get(job.instance),
+            ['compose'],
+            snapshot,
+            errors,
           );
         } catch (error) {
           failedInstance = job.instance;
@@ -245,6 +331,14 @@ function runFrame(hostTime: number): void {
   for (const completion of completions) {
     try {
       completion(snapshot);
+    } catch (error) {
+      errors.push(error);
+    }
+  }
+  for (const completion of rendererCompletions) {
+    if (!completion.owner.isActive()) continue;
+    try {
+      completion.callback(snapshot);
     } catch (error) {
       errors.push(error);
     }
@@ -398,7 +492,56 @@ function countDirtyRoots(): number {
 function hasFrameWork(): boolean {
   return dirtyInstances.size > 0 ||
     advanceRegistrations.size > 0 ||
-    frameCompletions.length > 0;
+    frameCompletions.length > 0 ||
+    rendererWorkByOwner.size > 0 ||
+    rendererParticipantCompletions.length > 0;
+}
+
+function captureRendererParticipantWork(): Map<
+  CRCInstance,
+  RendererParticipantWorkRegistration[]
+> {
+  const byInstance = new Map<
+    CRCInstance,
+    RendererParticipantWorkRegistration[]
+  >();
+  for (const [owner, workByKey] of rendererWorkByOwner) {
+    rendererWorkByOwner.delete(owner);
+    if (!owner.isActive()) continue;
+    const work = byInstance.get(owner.instance) ?? [];
+    work.push(...workByKey.values());
+    byInstance.set(owner.instance, work);
+  }
+  const kindOrder = { resource: 0, draw: 1, compose: 2 } as const;
+  for (const work of byInstance.values()) {
+    work.sort((left, right) =>
+      kindOrder[left.request.kind] - kindOrder[right.request.kind] ||
+      left.order - right.order,
+    );
+  }
+  return byInstance;
+}
+
+function runRendererParticipantWork(
+  work: RendererParticipantWorkRegistration[] | undefined,
+  kinds: readonly RendererParticipantWorkRequest['kind'][],
+  snapshot: CRCFrameSnapshot,
+  errors: unknown[],
+): void {
+  if (!work) return;
+  for (const registration of work) {
+    if (
+      !kinds.includes(registration.request.kind) ||
+      !registration.owner.isActive()
+    ) {
+      continue;
+    }
+    try {
+      registration.request.run(snapshot);
+    } catch (error) {
+      errors.push(error);
+    }
+  }
 }
 
 function cancelIdleHostFrame(): void {

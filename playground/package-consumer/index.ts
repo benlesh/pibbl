@@ -100,6 +100,17 @@ import type {
 } from '@crc/core';
 import type * as CoreTypes from '@crc/core/types';
 import {
+  crcInternalCreateSignalConsumer,
+  crcInternalCurrentFrame,
+  crcInternalCurrentRenderOwner,
+  crcInternalQueueComplete,
+  crcInternalRequestRendererWork,
+  type CRCInternalFrame,
+  type CRCInternalRendererWorkKind,
+  type CRCInternalRenderOwner,
+  type CRCInternalSignalConsumer,
+} from '@crc/core/internal';
+import {
   crc,
   crcCursor,
   crcEvent,
@@ -160,6 +171,20 @@ import type { CRCEventRoot } from '@crc/core/lib/types';
 import type { CRCEventDefinition } from '@crc/core/src/lib/events/event-definitions';
 void (undefined as unknown as CRCEventRoot);
 void (undefined as unknown as CRCEventDefinition);
+
+declare const internalOwner: CRCInternalRenderOwner;
+declare const internalFrame: CRCInternalFrame;
+declare const internalConsumer: CRCInternalSignalConsumer;
+const internalWorkKind = 'draw' satisfies CRCInternalRendererWorkKind;
+void internalOwner;
+void internalFrame;
+void internalConsumer;
+void internalWorkKind;
+void crcInternalCreateSignalConsumer;
+void crcInternalCurrentFrame;
+void crcInternalCurrentRenderOwner;
+void crcInternalQueueComplete;
+void crcInternalRequestRendererWork;
 
 export type PublicEventTypes = {
   base: CRCEvent;
