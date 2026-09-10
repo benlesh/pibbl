@@ -150,40 +150,49 @@ export function executeRender(
     crcInstance.refs.clear();
     throw error;
   } finally {
+    const { parent } = crcInstance;
     try {
-      if (frame && !frameSuccess) {
-        crcInstance.backendDriver.finishFrame(frame, false);
-      }
-    } finally {
-      const { parent } = crcInstance;
-      clearTempState();
-      GLOBAL_STATE.clippingStack = prevClippingStack;
-      GLOBAL_STATE.layoutStack = prevLayoutStack;
-      if (ownsRenderTransaction) {
-        finishTransaction(false);
-        if (crcInstance.eventRoot.renderTransaction === renderTransaction) {
-          crcInstance.eventRoot.renderTransaction = undefined;
+      try {
+        if (frame && !frameSuccess) {
+          crcInstance.backendDriver.finishFrame(frame, false);
+        }
+      } finally {
+        try {
+          clearTempState();
+          GLOBAL_STATE.clippingStack = prevClippingStack;
+          GLOBAL_STATE.layoutStack = prevLayoutStack;
+          if (ownsRenderTransaction) {
+            try {
+              finishTransaction(false);
+            } finally {
+              if (crcInstance.eventRoot.renderTransaction === renderTransaction) {
+                crcInstance.eventRoot.renderTransaction = undefined;
+              }
+            }
+          }
+        } finally {
+          GLOBAL_STATE.currentCRCInstance = prevCurrentCRCInstance;
+          GLOBAL_STATE.canvas = prevCanvas;
+          GLOBAL_STATE.renderContext = prevRenderContext;
+          GLOBAL_STATE.renderTarget = prevRenderTarget;
+          GLOBAL_STATE.worldBaseTransform = prevWorldBaseTransform;
+          GLOBAL_STATE.renderTransaction = prevRenderTransaction;
+          GLOBAL_STATE.primitiveReceiverToken = prevPrimitiveReceiverToken;
+          GLOBAL_STATE.seenIds = prevSeenIds;
+          GLOBAL_STATE.seenKeys = prevSeenKeys;
+          GLOBAL_STATE.unseenIds = prevUnseendIds;
+          GLOBAL_STATE.componentRefs = prevComponentRefs;
+          GLOBAL_STATE.componentHookIndex = prevComponentHookIndex;
+          GLOBAL_STATE.componentIsMounting = prevComponentIsMounting;
+          GLOBAL_STATE.backendDriver = prevBackendDriver;
+          GLOBAL_STATE.backendFrame = prevBackendFrame;
+          GLOBAL_STATE.backendEnvironment = prevBackendEnvironment;
         }
       }
+    } finally {
       if (updateParents && parent && GLOBAL_STATE.crcInstances.has(parent)) {
         executeRender(parent, renderTimestamp);
       }
-      GLOBAL_STATE.currentCRCInstance = prevCurrentCRCInstance;
-      GLOBAL_STATE.canvas = prevCanvas;
-      GLOBAL_STATE.renderContext = prevRenderContext;
-      GLOBAL_STATE.renderTarget = prevRenderTarget;
-      GLOBAL_STATE.worldBaseTransform = prevWorldBaseTransform;
-      GLOBAL_STATE.renderTransaction = prevRenderTransaction;
-      GLOBAL_STATE.primitiveReceiverToken = prevPrimitiveReceiverToken;
-      GLOBAL_STATE.seenIds = prevSeenIds;
-      GLOBAL_STATE.seenKeys = prevSeenKeys;
-      GLOBAL_STATE.unseenIds = prevUnseendIds;
-      GLOBAL_STATE.componentRefs = prevComponentRefs;
-      GLOBAL_STATE.componentHookIndex = prevComponentHookIndex;
-      GLOBAL_STATE.componentIsMounting = prevComponentIsMounting;
-      GLOBAL_STATE.backendDriver = prevBackendDriver;
-      GLOBAL_STATE.backendFrame = prevBackendFrame;
-      GLOBAL_STATE.backendEnvironment = prevBackendEnvironment;
     }
   }
 }

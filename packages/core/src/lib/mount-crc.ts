@@ -48,6 +48,9 @@ export function mountCRC(
   element: CRCNode,
   config?: MountCRCConfig,
 ): CRCController {
+  if (GLOBAL_STATE.crcInstances.has(canvas)) {
+    throw new Error('CRC is already mounted on this element.');
+  }
   const mainTeardowns = new Teardowns();
   const filterSurfacePool = new FilterSurfacePool();
   const signal = config?.signal;
@@ -58,8 +61,8 @@ export function mountCRC(
       if (!instance) {
         return;
       }
-      ownedInstance = undefined;
       cleanupCRCInstance(instance);
+      ownedInstance = undefined;
     },
   };
   const parent = config?.parent;
@@ -185,12 +188,26 @@ export function mountBackendCRC<E>(
     surface,
     driver: options.driver as CRCBackendDriver<unknown>,
   });
+  const instance = GLOBAL_STATE.crcInstances.get(canvas);
+  if (!instance) {
+    throw new Error('CRC backend mount did not retain its instance.');
+  }
+  const requireActiveInstance = () => {
+    if (
+      instance.mainTeardowns.closed ||
+      GLOBAL_STATE.crcInstances.get(canvas) !== instance
+    ) {
+      throw new Error('CRC backend mount is no longer active.');
+    }
+  };
   return Object.freeze({
     canvas,
     render(nextRoot: CRCNode, timestamp: number): void {
+      requireActiveInstance();
       executeRender(canvas, timestamp, nextRoot, false);
     },
     requestFrame(updateParents: boolean): void {
+      requireActiveInstance();
       if (updateParents) {
         update(canvas, undefined, true);
       } else {

@@ -13,6 +13,7 @@ import type {
   CRCRenderTransaction,
   RenderingContext2D,
 } from './types.js';
+import { runTeardown } from './teardowns.js';
 
 export const NO_PENDING_ROOT = Symbol('CRC_NO_PENDING_ROOT');
 export type PendingRoot = CRCNode | typeof NO_PENDING_ROOT;
@@ -127,7 +128,7 @@ export function clearSharedState() {
 
 export function cleanupCRCInstance(crcInstance: CRCInstance): void {
   const { canvas } = crcInstance;
-  if (GLOBAL_STATE.crcInstances.get(canvas) !== crcInstance) {
+  if (crcInstance.mainTeardowns.closed) {
     return;
   }
 
@@ -136,11 +137,13 @@ export function cleanupCRCInstance(crcInstance: CRCInstance): void {
     crcInstance.animationFrameId = undefined;
   }
 
-  GLOBAL_STATE.crcInstances.delete(canvas);
+  if (GLOBAL_STATE.crcInstances.get(canvas) === crcInstance) {
+    GLOBAL_STATE.crcInstances.delete(canvas);
+  }
   crcInstance.eventParent = undefined;
   crcInstance.mainTeardowns.execute();
-  crcInstance.backendDriver.dispose();
-  crcInstance.filterSurfacePool.dispose();
+  runTeardown(() => crcInstance.backendDriver.dispose());
+  runTeardown(() => crcInstance.filterSurfacePool.dispose());
   if (!crcInstance.parent) {
     for (const observers of crcInstance.eventRoot.observers.values()) {
       observers.clear();

@@ -8,6 +8,7 @@ import {
   mountBackendCRC,
   requestCurrentInstanceFrame,
   setCurrentComponentAfterRender,
+  useBackendEventTarget,
   useInternalHookSlot,
   type CRCBackendDriver,
   type CRCBackendFrame,
@@ -20,6 +21,7 @@ import {
 } from '../global-state.js';
 import { crcWhenChanged } from '../hooks/crc-when-changed.js';
 import { mountCRC } from '../mount-crc.js';
+import type { FilterWindows } from '../filter/filter-region.js';
 import type { CRCNode } from '../types.js';
 
 afterEach(() => {
@@ -288,6 +290,185 @@ describe('backend-neutral component traversal', () => {
 
     parent.dispose();
   });
+
+  it('restores the scheduled child snapshot when its live parent update throws', () => {
+    const callbacks: FrameRequestCallback[] = [];
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
+      callbacks.push(callback);
+      return callbacks.length;
+    });
+    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined);
+    let parentRenders = 0;
+    function ThrowingParent(): void {
+      parentRenders += 1;
+      if (parentRenders === 2) {
+        throw new Error('parent update failed');
+      }
+    }
+    const parentCanvas = createCanvas();
+    const parent = mountCRC(parentCanvas, <ThrowingParent />);
+    executeRender(parentCanvas, 1);
+    const backend = createRecordingBackend('test');
+    const canvas = new OffscreenCanvas(10, 10);
+    const child = mountBackendCRC(canvas, undefined, {
+      parent: parentCanvas,
+      logicalWidth: 10,
+      logicalHeight: 10,
+      driver: backend.driver,
+    });
+    const before = snapshotRenderGlobals();
+
+    child.requestFrame(true);
+    expect(callbacks).toHaveLength(1);
+    expect(() => callbacks[0]!(2)).toThrowError('parent update failed');
+
+    expect(haveSameRenderGlobals(before, snapshotRenderGlobals())).toBe(true);
+    child.dispose();
+    parent.dispose();
+  });
+
+  it('rejects a duplicate live private mount without replacing its owner', () => {
+    const parentCanvas = createCanvas();
+    const parent = mountCRC(parentCanvas, undefined);
+    const canvas = new OffscreenCanvas(10, 10);
+    const firstBackend = createRecordingBackend('first');
+    const first = mountBackendCRC(canvas, undefined, {
+      parent: parentCanvas,
+      logicalWidth: 10,
+      logicalHeight: 10,
+      driver: firstBackend.driver,
+    });
+    const firstInstance = getCRCInstance(canvas);
+    const secondBackend = createRecordingBackend('second');
+
+    expect(() => mountBackendCRC(canvas, undefined, {
+      parent: parentCanvas,
+      logicalWidth: 10,
+      logicalHeight: 10,
+      driver: secondBackend.driver,
+    })).toThrowError('CRC is already mounted on this element.');
+
+    expect(getCRCInstance(canvas)).toBe(firstInstance);
+    first.render(undefined, 1);
+    expect(firstBackend.calls).toContain('begin:10x10@10x10:1');
+    expect(secondBackend.calls).toEqual([]);
+    first.dispose();
+    parent.dispose();
+  });
+
+  it('prevents a stale private handle from controlling a replacement mount', () => {
+    const callbacks: FrameRequestCallback[] = [];
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
+      callbacks.push(callback);
+      return callbacks.length;
+    });
+    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined);
+    const parentCanvas = createCanvas();
+    const parent = mountCRC(parentCanvas, undefined);
+    const canvas = new OffscreenCanvas(10, 10);
+    const firstBackend = createRecordingBackend('first');
+    const first = mountBackendCRC(canvas, undefined, {
+      parent: parentCanvas,
+      logicalWidth: 10,
+      logicalHeight: 10,
+      driver: firstBackend.driver,
+    });
+    first.dispose();
+    const secondBackend = createRecordingBackend('second');
+    const second = mountBackendCRC(canvas, undefined, {
+      parent: parentCanvas,
+      logicalWidth: 10,
+      logicalHeight: 10,
+      driver: secondBackend.driver,
+    });
+    const secondInstance = getCRCInstance(canvas);
+
+    expect(() => first.render(undefined, 2)).toThrowError(
+      'CRC backend mount is no longer active.',
+    );
+    expect(() => first.requestFrame(false)).toThrowError(
+      'CRC backend mount is no longer active.',
+    );
+    first.dispose();
+
+    expect(getCRCInstance(canvas)).toBe(secondInstance);
+    expect(callbacks).toEqual([]);
+    second.render(undefined, 3);
+    expect(secondBackend.calls).toContain('begin:10x10@10x10:3');
+    expect(secondBackend.calls).not.toContain('begin:10x10@10x10:2');
+    expect(secondBackend.calls.filter(call => call === 'dispose')).toEqual([]);
+    second.dispose();
+    parent.dispose();
+  });
+
+  it('finishes all owned cleanup when backend disposal throws', () => {
+    const callbacks: FrameRequestCallback[] = [];
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
+      callbacks.push(callback);
+      return callbacks.length;
+    });
+    const cancel = vi.spyOn(window, 'cancelAnimationFrame')
+      .mockImplementation(() => undefined);
+    const reportError = vi.spyOn(globalThis, 'reportError')
+      .mockImplementation(() => undefined);
+    const disposeError = new Error('backend dispose failed');
+    const backend = createRecordingBackend('test');
+    const driver: CRCBackendDriver<TestEnvironment> = {
+      ...backend.driver,
+      dispose() {
+        backend.calls.push('dispose');
+        throw disposeError;
+      },
+    };
+    const cleanup = vi.fn();
+    function OwnedScene(): void {
+      crcWhenChanged(() => cleanup, []);
+      useBackendEventTarget({ onClick() {} });
+    }
+    const parentCanvas = createCanvas();
+    const parent = mountCRC(parentCanvas, undefined);
+    const canvas = new OffscreenCanvas(10, 10);
+    const child = mountBackendCRC(canvas, <OwnedScene />, {
+      parent: parentCanvas,
+      logicalWidth: 10,
+      logicalHeight: 10,
+      driver,
+    });
+    child.render(<OwnedScene />, 1);
+    child.requestFrame(false);
+    const instance = getCRCInstance(canvas);
+    const pool = instance.filterSurfacePool;
+    const pair = pool.checkoutPair(createTestFilterWindows());
+    pair.release();
+    expect(instance.eventRoot.targets.size).toBe(1);
+    expect(instance.refs.size).toBe(1);
+    expect(pool.snapshot().surfaceSlots).toBe(2);
+
+    expect(() => child.dispose()).not.toThrow();
+
+    expect(reportError).toHaveBeenCalledOnce();
+    expect(reportError).toHaveBeenCalledWith(disposeError);
+    expect(cleanup).toHaveBeenCalledOnce();
+    expect(cancel).toHaveBeenCalledWith(1);
+    expect(GLOBAL_STATE.crcInstances.has(canvas)).toBe(false);
+    expect(instance.animationFrameId).toBeUndefined();
+    expect(instance.eventRoot.targets.size).toBe(0);
+    expect(instance.refs.size).toBe(0);
+    expect(instance.regions.size).toBe(0);
+    expect(instance.paintEntries.size).toBe(0);
+    expect(pool.snapshot()).toMatchObject({
+      surfaceSlots: 0,
+      releasedSurfaceSlots: 2,
+      activePairs: 0,
+    });
+    expect(() => pool.checkoutPair(createTestFilterWindows())).toThrowError(
+      'Cannot check out filter surfaces from a disposed pool.',
+    );
+    child.dispose();
+    expect(backend.calls.filter(call => call === 'dispose')).toHaveLength(1);
+    expect(reportError).toHaveBeenCalledOnce();
+    parent.dispose();
+  });
 });
 
 interface TestEnvironment {
@@ -397,4 +578,23 @@ function createCanvas(): HTMLCanvasElement {
   canvas.style.cssText = 'display:block;width:100px;height:50px';
   document.body.appendChild(canvas);
   return canvas;
+}
+
+function createTestFilterWindows(): FilterWindows {
+  const window = {
+    logicalBounds: { x: 0, y: 0, width: 10, height: 10 },
+    backingX: 0,
+    backingY: 0,
+    backingWidth: 10,
+    backingHeight: 10,
+    renderTransform: new DOMMatrix(),
+    inverseRenderTransform: new DOMMatrix(),
+  };
+  return {
+    source: window,
+    output: window,
+    density: 1,
+    sourceToOutputX: 0,
+    sourceToOutputY: 0,
+  };
 }
