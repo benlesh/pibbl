@@ -5,6 +5,7 @@ import type {
   CRCWebGLContext,
 } from './types.js';
 import type { WebGLStateBaseline } from './gpu/state.js';
+import type { WebGLGPUResourceCache } from './gpu/resources.js';
 import {
   multiplyMatrix4,
   setIdentityMatrix4,
@@ -20,6 +21,7 @@ export interface WebGLRenderEnvironment {
   readonly timestamp: number;
   readonly isContextLost: (generation: number) => boolean;
   readonly stateBaseline: WebGLStateBaseline;
+  readonly gpuResources: WebGLGPUResourceCache;
   readonly modelStack: Float32Array[];
   /** Frame-local records; Task 9 supplies concrete pick entries. */
   readonly pickEntries: unknown[];
@@ -33,6 +35,7 @@ export interface CreateWebGLRenderEnvironmentInput {
   readonly frame: CRCBackendFrameInput;
   readonly isContextLost: (generation: number) => boolean;
   readonly stateBaseline: WebGLStateBaseline;
+  readonly gpuResources: WebGLGPUResourceCache;
 }
 
 export function createWebGLRenderEnvironment(
@@ -61,6 +64,7 @@ export function createWebGLRenderEnvironment(
     timestamp: input.frame.renderTimestamp,
     isContextLost: input.isContextLost,
     stateBaseline: input.stateBaseline,
+    gpuResources: input.gpuResources,
     modelStack: [identity],
     pickEntries: [],
     activeContext: undefined,
@@ -111,7 +115,7 @@ function createPublicContext(
     contextGeneration: environment.contextGeneration,
     isContextLost: environment.isContextLost,
   });
-  return Object.freeze({
+  const context = Object.freeze({
     gl: environment.gl,
     contextGeneration: environment.contextGeneration,
     camera: snapshotCamera(environment.camera),
@@ -122,6 +126,24 @@ function createPublicContext(
     timestamp: environment.timestamp,
     resources,
   });
+  contextGPUResources.set(context, environment.gpuResources);
+  return context;
+}
+
+const contextGPUResources = new WeakMap<
+  CRCWebGLContext,
+  WebGLGPUResourceCache
+>();
+
+/** Package-private access to the current layer's generation-owned cache. */
+export function getWebGLGPUResources(
+  context: CRCWebGLContext,
+): WebGLGPUResourceCache {
+  const resources = contextGPUResources.get(context);
+  if (!resources) {
+    throw new Error('WebGL built-in rendering requires an active GPU cache.');
+  }
+  return resources;
 }
 
 interface WebGLResourceScope {

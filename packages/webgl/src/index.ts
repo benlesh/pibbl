@@ -11,6 +11,21 @@ export {
   type Group3DProps,
   type Group3DStyle,
 } from './lib/components/group-3d.js';
+export {
+  Mesh,
+  type MeshProps,
+  type MeshStyle,
+} from './lib/components/mesh.js';
+export {
+  Cube,
+  type CubeProps,
+  type CubeStyle,
+} from './lib/components/cube.js';
+export {
+  Sphere,
+  type SphereProps,
+  type SphereStyle,
+} from './lib/components/sphere.js';
 export type {
   CRCWebGLCameraSnapshot,
   CRCWebGLContext,

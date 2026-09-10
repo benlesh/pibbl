@@ -43,6 +43,14 @@ export interface CRCWebGLTransformStyle {
   scaleZ?: number;
 }
 
+/** Shared logical-target props for geometry-backed WebGL built-ins. */
+export interface CRCWebGLTargetProps
+  extends CRCEventHandlers, CRCEventParticipationOptions {
+  readonly keyboardFocusable?: CRCEventTargetOptions['keyboardFocusable'];
+  readonly keyboardNavigationBounds?:
+    CRCEventTargetOptions['keyboardNavigationBounds'];
+}
+
 export interface CRCWebGLGeometryInput {
   positions: ArrayLike<number>;
   indices?: ArrayLike<number>;

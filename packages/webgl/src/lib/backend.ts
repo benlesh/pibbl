@@ -17,6 +17,7 @@ import {
   type WebGLStateBaseline,
 } from './gpu/state.js';
 import { getWebGLPrimitiveHitMetadata } from './primitive-metadata.js';
+import { WebGLGPUResourceCache } from './gpu/resources.js';
 
 export const WEBGL_BACKEND_TOKEN = createBackendToken('webgl2');
 
@@ -45,12 +46,24 @@ export function createWebGLBackend(
   const isContextLost = options.isContextLost ?? (() => gl.isContextLost());
   let baselineGeneration: number | undefined;
   let stateBaseline: WebGLStateBaseline | undefined;
+  let gpuResourceGeneration: number | undefined;
+  let gpuResources: WebGLGPUResourceCache | undefined;
   let completedFrame: WebGLCompletedFrame | undefined;
   return {
     token: WEBGL_BACKEND_TOKEN,
     name: 'webgl2',
     beginFrame(frameInput) {
       const contextGeneration = options.getContextGeneration();
+      if (
+        gpuResources === undefined ||
+        gpuResourceGeneration !== contextGeneration
+      ) {
+        if (gpuResources !== undefined && gpuResourceGeneration !== undefined) {
+          gpuResources.dispose(isContextLost(gpuResourceGeneration));
+        }
+        gpuResources = new WebGLGPUResourceCache(gl, contextGeneration);
+        gpuResourceGeneration = contextGeneration;
+      }
       if (
         stateBaseline === undefined ||
         baselineGeneration !== contextGeneration
@@ -65,6 +78,7 @@ export function createWebGLBackend(
         frame: frameInput,
         isContextLost,
         stateBaseline,
+        gpuResources,
       });
       beginWebGLFrame(
         gl,
@@ -133,6 +147,11 @@ export function createWebGLBackend(
     },
     dispose() {
       completedFrame = undefined;
+      if (gpuResources !== undefined && gpuResourceGeneration !== undefined) {
+        gpuResources.dispose(isContextLost(gpuResourceGeneration));
+      }
+      gpuResources = undefined;
+      gpuResourceGeneration = undefined;
       stateBaseline = undefined;
       baselineGeneration = undefined;
     },
