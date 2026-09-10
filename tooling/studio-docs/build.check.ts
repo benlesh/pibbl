@@ -243,6 +243,18 @@ assert.match(
   real.pageByRoute["#/learn/tutorials/diagram-editor"].plainText,
   /Finish and harden the editor/u,
 );
+assert.match(
+  real.pageByRoute["#/learn/guides/components-props-and-children"].plainText,
+  /Style and draw/u,
+);
+assert.doesNotMatch(
+  real.pageByRoute["#/learn/guides/components-props-and-children"].plainText,
+  /Filters are typed local style/u,
+);
+assert.match(
+  real.pageByRoute["#/learn/guides/style-and-draw"].plainText,
+  /Filters are typed local style/u,
+);
 
 process.stdout.write(
   "Validated the deterministic Studio documentation manifest.\n",
