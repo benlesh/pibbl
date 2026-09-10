@@ -2,9 +2,9 @@ import { readFile, readdir } from "node:fs/promises";
 import { relative, resolve } from "node:path";
 
 import {
-  analyzeApiCoverage,
   collectPublicExports,
   crcPublicEntryPaths,
+  validateApiCoverage,
   type ApiCoverage,
   type ApiCoverageDestination,
   type PublicApiInventory,
@@ -124,14 +124,12 @@ export async function buildStudioDocumentation(
   const inventory =
     options.apiInventory ??
     (await collectPublicExports(crcPublicEntryPaths, {}));
-  const apiCoverage = analyzeApiCoverage(
+  const apiCoverage = validateApiCoverage(
     inventory,
     pages
       .filter(({ frontmatter }) => frontmatter.kind === "api")
       .map(({ frontmatter, route }) => ({ frontmatter, route })),
   );
-  validateDocumentedApiSymbols(apiCoverage);
-
   return {
     pages,
     pageByRoute: recordFromEntries(pages.map((page) => [page.route, page])),
@@ -416,21 +414,6 @@ function validateExampleReferences(
         `${page.sourcePath}: Unknown learning example "${slug}" referenced by exampleSlug.`,
       );
     }
-  }
-}
-
-function validateDocumentedApiSymbols(coverage: ApiCoverage): void {
-  if (coverage.duplicateSymbols.length > 0) {
-    throw new Error(
-      `Duplicate documented API symbols: ${coverage.duplicateSymbols
-        .map(({ symbol }) => symbol)
-        .join(", ")}.`,
-    );
-  }
-  if (coverage.unknownSymbols.length > 0) {
-    throw new Error(
-      `Unknown documented API symbols: ${coverage.unknownSymbols.join(", ")}.`,
-    );
   }
 }
 

@@ -245,7 +245,7 @@ execution, and a complete JSX/non-JSX learning catalog.
 There is no React dependency, global JSX namespace, classic-transform contract,
 async component support, lowercase intrinsic vocabulary, or compatibility
 alias for removed authoring values. Current guides and the API reference live
-under `docs/guides/` and `docs/api-reference.md`; the approved design and
+under `docs/guides/` and `docs/site/api/`; the approved design and
 implementation record remain under `docs/superpowers/` as dated evidence.
 
 ## Shipped first-class filters

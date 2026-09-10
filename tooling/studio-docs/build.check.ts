@@ -235,7 +235,7 @@ apiCategory: overview
   );
   await assert.rejects(
     () => buildStudioDocumentation(fixtureOptions),
-    /Duplicate documented API symbols: crc/u,
+    /Duplicate documented symbols: crc is assigned to both api-crc and api-duplicate-crc/u,
   );
   await rm(join(fixtureRoot, "docs/site/api/functions/duplicate-crc.md"));
 
@@ -328,6 +328,61 @@ assert.equal(
 );
 assert.deepEqual(runtimeCoverage.duplicateValues, []);
 assert.deepEqual(runtimeCoverage.missingValues, []);
+assert.deepEqual(runtimeCoverage.missingTypes, []);
+assert.deepEqual(runtimeCoverage.unknownSymbols, []);
+assert.deepEqual(runtimeCoverage.duplicateSymbols, []);
+for (const symbol of ["JSX", "jsx", "jsxDEV", "jsxs"]) {
+  assert.equal(
+    runtimeCoverage.overview[symbol]?.route,
+    "#/api",
+    `${symbol} must remain discoverable from the API overview`,
+  );
+}
+
+const typeDomains = [
+  "canvas-runtime",
+  "elements-components",
+  "events",
+  "filters",
+  "layout",
+  "styles",
+] as const;
+const typeCollator = new Intl.Collator("en", {
+  sensitivity: "base",
+  numeric: true,
+});
+for (const domain of typeDomains) {
+  const page = real.pageByRoute[`#/api/types/${domain}`];
+  assert.ok(page, `Missing API type domain page: ${domain}`);
+  const typeHeadings = page.headings
+    .filter(({ level }) => level === 2)
+    .map(({ text }) => text.replaceAll("`", ""));
+  assert.deepEqual(
+    typeHeadings,
+    page.frontmatter.symbols ?? [],
+    `${domain} must have one heading for every owned type symbol`,
+  );
+  assert.deepEqual(
+    typeHeadings,
+    [...typeHeadings].sort(typeCollator.compare),
+    `${domain} type headings must be alphabetized`,
+  );
+  for (const typeName of typeHeadings) {
+    const anchor = typeName.toLowerCase();
+    assert.equal(
+      page.headings.some(({ id }) => id === anchor),
+      true,
+      `${domain} must expose a stable anchor for ${typeName}`,
+    );
+    assert.equal(
+      real.pageByRoute[`#/api/types/${domain}`]?.headings.some(
+        ({ id }) => id === anchor,
+      ),
+      true,
+      `#/api/types/${domain}#${anchor} must resolve to ${typeName}`,
+    );
+  }
+}
 
 const apiNavigation = buildNavigation({ pages: real.pages }, []).find(
   ({ id }) => id === "api",

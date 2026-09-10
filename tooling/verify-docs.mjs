@@ -128,6 +128,12 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/hooks/crc-state.md",
   "docs/site/api/hooks/crc-svg-path.md",
   "docs/site/api/hooks/crc-when-changed.md",
+  "docs/site/api/types/canvas-runtime.md",
+  "docs/site/api/types/elements-components.md",
+  "docs/site/api/types/events.md",
+  "docs/site/api/types/filters.md",
+  "docs/site/api/types/layout.md",
+  "docs/site/api/types/styles.md",
   "docs/site/learn/index.md",
   "docs/site/learn/tutorials/diagram-editor/index.md",
   "docs/site/learn/guides/configure-jsx.md",
@@ -146,7 +152,6 @@ const currentMarkdownPaths = [
   "README.md",
   "packages/core/README.md",
   "packages/types/README.md",
-  "docs/api-reference.md",
   "docs/architecture/style-and-layout-architecture.md",
   "docs/design/canvas-accessibility-guidance.md",
   "docs/design/canvas-surface-contract.md",
@@ -395,17 +400,26 @@ function jsxNamespaceMembers(source, filename) {
   return names;
 }
 
-function namesBetweenMarkers(source, marker) {
+function apiSymbolsFromFrontmatter(source, filename) {
   const match = source.match(
-    new RegExp(
-      `<!-- ${marker}:start -->([\\s\\S]*?)<!-- ${marker}:end -->`,
-      "u",
-    ),
+    /^symbols:\s*\[([^\]]*)\]\s*$/mu,
   );
-  assert.ok(match, `Missing ${marker} markers in docs/api-reference.md`);
+  assert.ok(match, `${filename} is missing a symbols frontmatter list`);
   return new Set(
-    [...match[1].matchAll(/`([A-Za-z][A-Za-z0-9]*)`/gu)].map((item) => item[1]),
+    match[1]
+      .split(",")
+      .map((name) => name.trim())
+      .filter((name) => name.length > 0),
   );
+}
+
+function assertDocumentedTokenNames(source, names, label) {
+  for (const name of names) {
+    assert.ok(
+      source.includes("`" + name + "`"),
+      `${label} is missing ${name}`,
+    );
+  }
 }
 
 function assertSameNames(actual, expected, label) {
@@ -1345,7 +1359,18 @@ for (const [index, line] of migrationSource.split("\n").entries()) {
   );
 }
 
-const apiReference = currentSources.get("docs/api-reference.md");
+const apiDocumentationSources = publicSiteMarkdownPaths
+  .filter((path) => path.startsWith("docs/site/api/"))
+  .map((path) => [path, currentSources.get(path)]);
+const documentedApiSymbols = new Set(
+  apiDocumentationSources.flatMap(([path, source]) => [
+    ...apiSymbolsFromFrontmatter(source, path),
+  ]),
+);
+const apiOverview = currentSources.get("docs/site/api/index.md");
+const canvasRuntimeTypes = currentSources.get(
+  "docs/site/api/types/canvas-runtime.md",
+);
 const rootSource = await readFile(
   join(repositoryRoot, "packages/core/src/index.ts"),
   "utf8",
@@ -1371,22 +1396,22 @@ const devRuntimeExports = exportedSpecifiers(
   "packages/core/src/jsx-dev-runtime.ts",
 );
 assertSameNames(
-  namesBetweenMarkers(apiReference, "root-values"),
+  [...documentedApiSymbols].filter((name) => rootExports.values.has(name)),
   rootExports.values,
   "Documented root runtime values",
 );
 assertSameNames(
-  namesBetweenMarkers(apiReference, "root-types"),
+  [...documentedApiSymbols].filter((name) => rootExports.types.has(name)),
   rootExports.types,
   "Documented root types",
 );
 assertSameNames(
-  namesBetweenMarkers(apiReference, "jsx-runtime-values"),
+  [...documentedApiSymbols].filter((name) => runtimeExports.values.has(name)),
   runtimeExports.values,
   "Documented jsx-runtime values",
 );
 assertSameNames(
-  namesBetweenMarkers(apiReference, "jsx-dev-runtime-values"),
+  [...documentedApiSymbols].filter((name) => devRuntimeExports.values.has(name)),
   devRuntimeExports.values,
   "Documented jsx-dev-runtime values",
 );
@@ -1394,8 +1419,8 @@ const namespaceMembers = jsxNamespaceMembers(
   runtimeSource,
   "packages/core/src/jsx-runtime.ts",
 );
-assertSameNames(
-  namesBetweenMarkers(apiReference, "jsx-namespace-types"),
+assertDocumentedTokenNames(
+  apiOverview,
   namespaceMembers,
   "Documented JSX namespace types",
 );
@@ -1403,14 +1428,6 @@ assertSameNames(
   jsxNamespaceMembers(devRuntimeSource, "packages/core/src/jsx-dev-runtime.ts"),
   namespaceMembers,
   "Development JSX namespace types",
-);
-assert.match(
-  apiReference,
-  new RegExp(
-    `root contains ${rootExports.values.size} runtime values and ${rootExports.types.size} type exports`,
-    "u",
-  ),
-  "The API-reference export totals are stale.",
 );
 
 const coreManifest = JSON.parse(
@@ -1753,10 +1770,10 @@ export function assertFixedConfigSignal(source) {
   assert.match(
     source,
     /fixed logical viewport with optional `fit`,\s*`pixelRatio`, and `signal`/u,
-    "API reference must document signal for fixed CRCConfig as well as responsive CRCConfig",
+    "Canvas/runtime types must document signal for fixed CRCConfig as well as responsive CRCConfig",
   );
 }
-assertFixedConfigSignal(apiReference);
+assertFixedConfigSignal(canvasRuntimeTypes);
 assert.ok(
   readme.indexOf("docs/site/learn/guides/author-without-jsx.md") <
     advancedStart,
@@ -1771,7 +1788,7 @@ const matrixRequirements = [
   },
   {
     topic: /TypeScript automatic runtime/u,
-    guides: ["guides/configuring-jsx.md", "api-reference.md"],
+    guides: ["guides/configuring-jsx.md", "site/api/index.md"],
     evidence: ["package-consumer/jsx.tsx"],
   },
   {
@@ -1891,7 +1908,7 @@ const matrixRequirements = [
   },
   {
     topic: /Complete public values/u,
-    guides: ["api-reference.md"],
+    guides: ["site/api/index.md", "site/api/types/canvas-runtime.md"],
     evidence: ["final-public-vocabulary.tsx"],
   },
   {
@@ -1922,7 +1939,7 @@ export function assertAcceptanceMatrix(matrixSource) {
     );
     assert.match(
       columns[2],
-      /\]\([^)]*(?:guides|design|migrations|api-reference)[^)]*\.md(?:#[^)]*)?\)/u,
+      /\]\([^)]*(?:guides|design|migrations|site\/api)[^)]*\.md(?:#[^)]*)?\)/u,
       `Acceptance row lacks a current guide/contract link: ${row}`,
     );
     assert.match(
@@ -2238,7 +2255,7 @@ export async function verifyMutationProbes() {
   throws(
     () =>
       assertFixedConfigSignal(
-        apiReference.replace("`pixelRatio`, and `signal`", "`pixelRatio`"),
+        canvasRuntimeTypes.replace("`fit`, `pixelRatio`, and `signal`", "`fit` and `pixelRatio`"),
       ),
     /fixed CRCConfig/u,
   );

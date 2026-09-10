@@ -105,7 +105,7 @@ starts from installation and mounting and does not require the JSX guides.
 - [Integrate with React](docs/site/learn/guides/react-integration.md)
 - [Troubleshoot JSX](docs/site/learn/guides/jsx-troubleshooting.md)
 - [Learn the basics: Build a diagram editor](docs/site/learn/tutorials/diagram-editor/index.md)
-- [Complete API reference](docs/api-reference.md)
+- [API overview](docs/site/api/index.md) and [complete type reference](docs/site/api/types/canvas-runtime.md)
 
 The [one-time migration guide](docs/migrations/jsx-authoring-pivot.md) maps the
 removed factory-first API to the current surface. There are no compatibility
@@ -150,9 +150,9 @@ corepack pnpm@11.21.0 playground:built
 - Compiler-only entries: `@crc/core/jsx-runtime` and
   `@crc/core/jsx-dev-runtime`
 
-See the [API reference](docs/api-reference.md) for every value and type export,
-and [CRC library status](docs/library-status.md) for supported behavior and
-evidence.
+See the [API overview](docs/site/api/index.md) and [grouped type reference](docs/site/api/types/canvas-runtime.md)
+for every value and type export, and [CRC library status](docs/library-status.md)
+for supported behavior and evidence.
 
 ## Contributing
 

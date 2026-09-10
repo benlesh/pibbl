@@ -5,7 +5,7 @@ summary: The supported @crc/core API, arranged by authoring role.
 kind: api
 slug: overview
 apiCategory: overview
-symbols: [Fragment]
+symbols: [Fragment, JSX, jsx, jsxDEV, jsxs]
 keywords: [canvas, JSX, createElement, API]
 ---
 
@@ -38,6 +38,24 @@ fragments are transparent; a keyed fragment creates an identity scope.
 Type contracts are grouped by domain in the API sidebar. They describe the
 props, local styles, event facades, filters, layout, and element protocol used
 by these runtime values.
+
+## Compiler entries
+
+`@crc/core/jsx-runtime` exports `Fragment`, `jsx`, and `jsxs`; its local `JSX`
+namespace exports `Element`, `ElementType`, `ElementChildrenAttribute`,
+`IntrinsicAttributes`, `IntrinsicElements`, and `LibraryManagedAttributes`.
+`Element` is the branded `CRCElement`; `ElementType` is a synchronous CRC
+component; `ElementChildrenAttribute` names `children`; `IntrinsicAttributes`
+admits a string or numeric `key`; `IntrinsicElements` is empty; and
+`LibraryManagedAttributes` maps primitive values to their specified-style input.
+
+`@crc/core/jsx-dev-runtime` exports `Fragment` and `jsxDEV` plus the same local
+`JSX` namespace. `jsxDEV` carries development-only filename, line, and column
+metadata for diagnostics. These compiler-facing constructors are not normal
+application APIs: use JSX or `createElement`, never call them directly.
+
+`@crc/core/types` preserves the explicit type-only package entry. Most authors
+can import types from `@crc/core` beside the corresponding runtime values.
 
 ## A small scene
 
