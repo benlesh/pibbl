@@ -1,4 +1,5 @@
 import type { SearchKind } from "../../../tooling/studio-docs/search-index";
+import { hasOpenModalOwner } from "../app/modal-owner";
 
 import {
   createSearchEngine,
@@ -278,7 +279,7 @@ export function mountSearchDialog(
   const onDocumentKeydown = (event: KeyboardEvent) => {
     if (disposed || event.defaultPrevented) return;
     if ((event.metaKey || event.ctrlKey) && event.key.toLocaleLowerCase("en-US") === "k") {
-      if (hasOtherOpenDialog(dialog) || isMonacoInput(document.activeElement)) return;
+      if (hasOpenModalOwner(dialog) || isMonacoInput(document.activeElement)) return;
       event.preventDefault();
       open();
       return;
@@ -363,12 +364,6 @@ export function appendHighlightedText(
 
 function resultId(index: number): string {
   return `studio-search-result-${index}`;
-}
-
-function hasOtherOpenDialog(current: HTMLDialogElement): boolean {
-  return [...document.querySelectorAll("dialog[open]")].some(
-    (candidate) => candidate !== current,
-  );
 }
 
 function isMonacoInput(element: Element | null): boolean {

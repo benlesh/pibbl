@@ -80,6 +80,33 @@ describe("documentation search dialog", () => {
     dialog.dispose();
   });
 
+  it("does not reopen over an aria-modal drawer after it has been mounted", () => {
+    const dialog = mountSearchDialog({ loadBundle: async () => bundle, navigate: vi.fn() });
+    const drawer = document.createElement("aside");
+    drawer.setAttribute("role", "dialog");
+    drawer.setAttribute("aria-modal", "true");
+    document.body.append(drawer);
+
+    dialog.open();
+    dialog.close();
+    document.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }),
+    );
+    expect(document.querySelector<HTMLDialogElement>(".studio-search-dialog")?.open).toBe(
+      false,
+    );
+
+    drawer.remove();
+    document.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }),
+    );
+    expect(document.querySelector<HTMLDialogElement>(".studio-search-dialog")?.open).toBe(
+      true,
+    );
+
+    dialog.dispose();
+  });
+
   it("opens from its trigger, filters results, and activates the selected route", async () => {
     const navigate = vi.fn();
     const trigger = document.createElement("button");

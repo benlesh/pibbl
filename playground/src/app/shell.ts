@@ -3,6 +3,7 @@ import {
   type NavigationArea,
   type NavigationEntry,
 } from "./navigation";
+import { hasOpenModalOwner } from "./modal-owner";
 import type { ParsedStudioRoute } from "./routes";
 import type { SearchDialogController } from "../search/search-dialog";
 import type { SearchBundleLoader } from "../search/search-engine";
@@ -132,7 +133,7 @@ export function createStudioShell(options: StudioShellOptions): StudioShell {
     if (
       !(event.metaKey || event.ctrlKey) ||
       event.key.toLocaleLowerCase("en-US") !== "k" ||
-      hasOpenModal() ||
+      hasOpenModalOwner() ||
       isMonacoInput(document.activeElement)
     ) {
       return;
@@ -291,10 +292,6 @@ function createSearchTrigger(modifier: string): HTMLButtonElement {
   trigger.setAttribute("aria-label", "Search documentation");
   trigger.innerHTML = '<span aria-hidden="true">⌕</span> Search docs...<kbd>⌘K</kbd>';
   return trigger;
-}
-
-function hasOpenModal(): boolean {
-  return document.querySelector("dialog[open], [aria-modal='true']") !== null;
 }
 
 function isMonacoInput(element: Element | null): boolean {
