@@ -8,6 +8,13 @@ export interface WebGLGeometryData {
 const geometryBrand = Symbol('CRCWebGLGeometry');
 const geometryData = new WeakMap<CRCWebGLGeometry, WebGLGeometryData>();
 
+/** Identifies the package's immutable opaque geometry descriptors. */
+export function isWebGLGeometry(value: unknown): value is CRCWebGLGeometry {
+  return typeof value === 'object' &&
+    value !== null &&
+    geometryData.has(value as CRCWebGLGeometry);
+}
+
 const getLength = (values: ArrayLike<number>, field: string): number => {
   const { length } = values;
   if (!Number.isSafeInteger(length) || length < 0) {

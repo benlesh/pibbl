@@ -136,6 +136,16 @@ export function useBackendEventTarget(
   return target;
 }
 
+/** Tests whether an official backend target can still win coordinate picking. */
+export function isBackendEventTargetLive(
+  target: CRCEventTargetRegistration,
+): boolean {
+  const { owner } = target;
+  return target.live &&
+    !owner.mainTeardowns.closed &&
+    owner.eventRoot.targets.has(target);
+}
+
 /** Registers work that runs after this component's rendered descendants. */
 export function setCurrentComponentAfterRender(callback: () => void): void {
   const { componentRefs } = requireHookContext();

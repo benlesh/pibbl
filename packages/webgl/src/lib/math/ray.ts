@@ -44,7 +44,10 @@ export function createRayFromNDC<TOrigin extends WritableNumbers, TDirection ext
   normalizedY: number,
 ): TOrigin {
   unprojectPoint(origin, inverseProjectionViewMatrix, normalizedX, normalizedY, -1);
-  unprojectPoint(direction, inverseProjectionViewMatrix, normalizedX, normalizedY, 1);
+  // The exact perspective far point can have homogeneous w = 0 after a valid
+  // large far/near ratio is rounded to Float32. Any finite interior clip point
+  // defines the same perspective ray without depending on that asymptote.
+  unprojectPoint(direction, inverseProjectionViewMatrix, normalizedX, normalizedY, 0);
   const directionX = direction[0]! - origin[0]!;
   const directionY = direction[1]! - origin[1]!;
   const directionZ = direction[2]! - origin[2]!;
@@ -72,7 +75,17 @@ export function intersectRayTriangle(
   const crossY = direction[2] * edge2X - direction[0] * edge2Z;
   const crossZ = direction[0] * edge2Y - direction[1] * edge2X;
   const determinant = edge1X * crossX + edge1Y * crossY + edge1Z * crossZ;
-  if (Math.abs(determinant) < 1e-8) {
+  const normalX = edge1Y * edge2Z - edge1Z * edge2Y;
+  const normalY = edge1Z * edge2X - edge1X * edge2Z;
+  const normalZ = edge1X * edge2Y - edge1Y * edge2X;
+  const comparisonScale = Math.hypot(normalX, normalY, normalZ) *
+    Math.hypot(direction[0], direction[1], direction[2]);
+  if (
+    !Number.isFinite(determinant) ||
+    !Number.isFinite(comparisonScale) ||
+    comparisonScale === 0 ||
+    Math.abs(determinant) <= comparisonScale * 1e-12
+  ) {
     return undefined;
   }
   const reciprocal = 1 / determinant;

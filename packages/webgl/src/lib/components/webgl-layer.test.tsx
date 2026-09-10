@@ -335,6 +335,73 @@ describe('WebGLLayer public surface', () => {
     expect(backClick).toHaveBeenCalledOnce();
   });
 
+  it('falls through an old committed ledger after its private target is released', async () => {
+    installComponentPlatform();
+    const { getCRCInstance } = await import(
+      '../../../../core/src/lib/global-state.js'
+    );
+    const { resolveCoordinateTarget } = await import(
+      '../../../../core/src/lib/events/hit-test.js'
+    );
+    const rearClick = vi.fn();
+    const staleCustomHit = vi.fn(() => 4.9);
+    const Interactive = defineWebGLPrimitive<{}, {}>(
+      function renderReleasedTarget() {},
+      { hit: { kind: 'custom', resolve: staleCustomHit } },
+    );
+    const canvas = createCanvas(100, 100);
+    let resolveDuringComposite = false;
+    const observations: Array<{
+      rear: unknown;
+      resolved: unknown;
+    }> = [];
+    vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
+      .mockImplementation(() => {
+        if (!resolveDuringComposite) return;
+        resolveDuringComposite = false;
+        const eventRoot = getCRCInstance(canvas).eventRoot;
+        observations.push({
+          rear: Array.from(eventRoot.targets)[0],
+          resolved: resolveCoordinateTarget(eventRoot, { x: 50, y: 50 }),
+        });
+      });
+    const scene = (mode: 'auto' | 'none' | 'removed') => (
+      <>
+        <Rectangle
+          onClick={rearClick}
+          style={{ width: 100, height: 100, fill: '#1d4ed8' }}
+        />
+        <WebGLLayer style={{ width: 100, height: 100 }}>
+          {mode === 'removed' ? undefined : (
+            <Interactive pointerEvents={mode} />
+          )}
+        </WebGLLayer>
+      </>
+    );
+    const controller = crc(canvas, scene('auto'), { pixelRatio: 1 });
+    controllers.add(controller);
+    await nextFrame();
+
+    resolveDuringComposite = true;
+    crc(canvas, scene('none'));
+    await nextFrame();
+    expect(staleCustomHit).not.toHaveBeenCalled();
+
+    crc(canvas, scene('auto'));
+    await nextFrame();
+    resolveDuringComposite = true;
+    crc(canvas, scene('removed'));
+    await nextFrame();
+    expect(staleCustomHit).not.toHaveBeenCalled();
+    expect(observations).toHaveLength(2);
+    for (const observation of observations) {
+      expect(observation.resolved).toBe(observation.rear);
+    }
+
+    dispatchClick(canvas, 50, 50);
+    expect(rearClick).toHaveBeenCalledOnce();
+  });
+
   it('types children as required and accepts box/layout/filter style', () => {
     const props: WebGLLayerProps = { children: undefined };
     expect(props.children).toBeUndefined();

@@ -7,6 +7,7 @@ import {
   getCurrentBackendHostCanvas,
   getCurrentFrameTimestamp,
   getCurrentSurfaceDensity,
+  isBackendEventTargetLive,
   mountBackendCRC,
   requestCurrentInstanceFrame,
   setCurrentComponentAfterRender,
@@ -32,6 +33,34 @@ afterEach(() => {
 });
 
 describe('backend-neutral component traversal', () => {
+  it('reports backend target liveness from registration, root membership, and teardown', () => {
+    let target: ReturnType<typeof useBackendEventTarget>;
+    function TargetProbe(): void {
+      target = useBackendEventTarget({});
+    }
+    const canvas = createCanvas();
+    const controller = mountCRC(canvas, <TargetProbe />);
+
+    executeRender(canvas, 1);
+
+    expect(target).toBeDefined();
+    expect(isBackendEventTargetLive(target!)).toBe(true);
+    target!.owner.eventRoot.targets.delete(target!);
+    expect(isBackendEventTargetLive(target!)).toBe(false);
+    target!.owner.eventRoot.targets.add(target!);
+    expect(isBackendEventTargetLive(target!)).toBe(true);
+    target!.live = false;
+    expect(isBackendEventTargetLive(target!)).toBe(false);
+    target!.live = true;
+    expect(isBackendEventTargetLive(target!)).toBe(true);
+
+    controller.dispose();
+    expect(isBackendEventTargetLive(target!)).toBe(false);
+    target!.live = true;
+    target!.owner.eventRoot.targets.add(target!);
+    expect(isBackendEventTargetLive(target!)).toBe(false);
+  });
+
   it('exposes the owning Canvas and anisotropic surface density inside a filtered primitive', () => {
     const observations: Array<{
       host: unknown;

@@ -1,4 +1,8 @@
-import type { CRCHitTestOutput } from '@crc/core/internal';
+import {
+  isBackendEventTargetLive,
+  type CRCEventTargetRegistration,
+  type CRCHitTestOutput,
+} from '@crc/core/internal';
 import { getWebGLGeometryData } from './geometry/geometry.js';
 import {
   invertMatrix4,
@@ -9,6 +13,7 @@ import {
   intersectRayTriangle,
 } from './math/ray.js';
 import {
+  cloneCustomHitRecord,
   snapshotWebGLPickCamera,
   type CRCWebGLCustomPickRecord,
   type CRCWebGLGeometryPickRecord,
@@ -34,6 +39,10 @@ interface ScenePickerScratch {
   readonly third: Float32Array;
   readonly worldHit: Float32Array;
   readonly projectedHit: Float32Array;
+  candidateCount: number;
+  readonly candidateTargets: Array<CRCEventTargetRegistration | undefined>;
+  readonly candidateDepths: number[];
+  readonly candidateSourceOrders: number[];
 }
 
 interface ScenePickerScratchPool {
@@ -77,33 +86,65 @@ export function pickScene(
       ndcX,
       ndcY,
     );
+    const worldDirectionLength = Math.hypot(
+      scratch.worldDirection[0]!,
+      scratch.worldDirection[1]!,
+      scratch.worldDirection[2]!,
+    );
+    if (
+      !isFiniteVector(scratch.worldOrigin) ||
+      !Number.isFinite(worldDirectionLength) ||
+      worldDirectionLength === 0
+    ) {
+      return output;
+    }
+    scratch.worldDirection[0] /= worldDirectionLength;
+    scratch.worldDirection[1] /= worldDirectionLength;
+    scratch.worldDirection[2] /= worldDirectionLength;
+
+    for (const entry of ledger.entries) {
+      if (!isBackendEventTargetLive(entry.target)) continue;
+      const distance = entry.kind === 'geometry' ?
+        intersectGeometry(entry, scratch) :
+        resolveCustom(entry, localX, localY, ndcX, ndcY, scratch);
+      if (
+        distance === undefined ||
+        !isBackendEventTargetLive(entry.target)
+      ) continue;
+      const depth = projectDistanceToDepth(distance, camera, scratch);
+      if (depth === undefined) continue;
+      const candidateIndex = scratch.candidateCount++;
+      scratch.candidateTargets[candidateIndex] = entry.target;
+      scratch.candidateDepths[candidateIndex] = depth;
+      scratch.candidateSourceOrders[candidateIndex] = entry.sourceOrder;
+    }
 
     let winningDepth = Number.POSITIVE_INFINITY;
     let winningSourceOrder = -1;
     let winningTarget = null as typeof output.target;
-    for (const entry of ledger.entries) {
-      const distance = entry.kind === 'geometry' ?
-        intersectGeometry(entry, scratch) :
-        resolveCustom(entry, localX, localY, ndcX, ndcY, scratch);
-      if (distance === undefined) continue;
-      const depth = projectDistanceToDepth(distance, camera, scratch);
-      if (depth === undefined) continue;
+    for (let index = 0; index < scratch.candidateCount; index += 1) {
+      const target = scratch.candidateTargets[index]!;
+      if (!isBackendEventTargetLive(target)) continue;
+      const depth = scratch.candidateDepths[index]!;
+      const sourceOrder = scratch.candidateSourceOrders[index]!;
       if (
         depth < winningDepth ||
-        (depth === winningDepth && entry.sourceOrder > winningSourceOrder)
+        (depth === winningDepth && sourceOrder > winningSourceOrder)
       ) {
         winningDepth = depth;
-        winningSourceOrder = entry.sourceOrder;
-        winningTarget = entry.target;
+        winningSourceOrder = sourceOrder;
+        winningTarget = target;
       }
     }
 
-    if (winningTarget) {
-      output.disposition = HIT_TARGET;
-      output.target = winningTarget;
-    }
+    output.disposition = winningTarget ? HIT_TARGET : HIT_MISS;
+    output.target = winningTarget;
     return output;
+  } catch (error) {
+    resetOutput(output);
+    throw error;
   } finally {
+    clearCandidates(scratch);
     pool.depth -= 1;
   }
 }
@@ -125,6 +166,18 @@ function intersectGeometry(
     scratch.inverseModel,
     scratch.worldDirection,
   );
+  if (!isFiniteVector(scratch.localOrigin)) return undefined;
+  const localDirectionLength = Math.hypot(
+    scratch.localDirection[0]!,
+    scratch.localDirection[1]!,
+    scratch.localDirection[2]!,
+  );
+  if (!Number.isFinite(localDirectionLength) || localDirectionLength === 0) {
+    return undefined;
+  }
+  scratch.localDirection[0] /= localDirectionLength;
+  scratch.localDirection[1] /= localDirectionLength;
+  scratch.localDirection[2] /= localDirectionLength;
   const { positions, indices } = getWebGLGeometryData(entry.geometry);
   let nearest = Number.POSITIVE_INFINITY;
   const elementCount = indices?.length ?? positions.length / 3;
@@ -144,7 +197,7 @@ function intersectGeometry(
     );
     if (distance !== undefined && distance < nearest) nearest = distance;
   }
-  return Number.isFinite(nearest) ? nearest : undefined;
+  return Number.isFinite(nearest) ? nearest / localDirectionLength : undefined;
 }
 
 function resolveCustom(
@@ -156,8 +209,8 @@ function resolveCustom(
   scratch: ScenePickerScratch,
 ): number | undefined {
   const input = Object.freeze({
-    props: entry.props,
-    style: entry.style,
+    props: cloneCustomHitRecord(entry.props, entry.componentName, 'props'),
+    style: cloneCustomHitRecord(entry.style, entry.componentName, 'style'),
     layerX,
     layerY,
     ndcX,
@@ -245,6 +298,19 @@ function resetOutput(output: CRCHitTestOutput): void {
   output.target = null;
 }
 
+function clearCandidates(scratch: ScenePickerScratch): void {
+  for (let index = 0; index < scratch.candidateCount; index += 1) {
+    scratch.candidateTargets[index] = undefined;
+  }
+  scratch.candidateCount = 0;
+}
+
+function isFiniteVector(vector: Readonly<Float32Array>): boolean {
+  return Number.isFinite(vector[0]) &&
+    Number.isFinite(vector[1]) &&
+    Number.isFinite(vector[2]);
+}
+
 function getScratchPool(ledger: CRCWebGLPickLedger): ScenePickerScratchPool {
   let pool = scratchPools.get(ledger);
   if (!pool) {
@@ -266,5 +332,9 @@ function createScratch(): ScenePickerScratch {
     third: new Float32Array(3),
     worldHit: new Float32Array(3),
     projectedHit: new Float32Array(3),
+    candidateCount: 0,
+    candidateTargets: [],
+    candidateDepths: [],
+    candidateSourceOrders: [],
   };
 }

@@ -88,6 +88,7 @@ const expectedInternal = [
   'getCurrentFrameTimestamp',
   'getCurrentSurfaceDensity',
   'haveSameLayerNodeTree',
+  'isBackendEventTargetLive',
   'mountBackendCRC',
   'registerNestedInteractionResolver',
   'requestCurrentInstanceFrame',

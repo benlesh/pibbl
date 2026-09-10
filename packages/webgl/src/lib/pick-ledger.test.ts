@@ -125,6 +125,156 @@ describe('WebGL pick ledger', () => {
     expect(Object.isFrozen(entry.style)).toBe(true);
   });
 
+  it('recursively snapshots supported custom values and preserves opaque identities', () => {
+    const ledger = createWebGLPickLedger(50, 50);
+    const geometry = createWebGLGeometry({
+      positions: [-1, -1, 0, 1, -1, 0, 0, 1, 0],
+    });
+    const callback = () => undefined;
+    const nested = { distance: 1 };
+    const list = [{ enabled: true }];
+    const typed = new Float32Array([2, 3]);
+    const bytes = new Uint8Array([4, 5]);
+    const view = new DataView(bytes.buffer);
+    const styleNested = { threshold: 6 };
+
+    recordCustomWebGLPick(ledger, {
+      camera: resolveCamera(undefined, 50, 50),
+      componentName: 'SnapshotShape',
+      depthMode: 'less-equal',
+      model: new Float32Array(16),
+      props: { callback, geometry, list, nested, typed, view },
+      resolve: () => null,
+      sourceOrder: 0,
+      style: { nested: styleNested },
+      target: fakeTarget(),
+    });
+    nested.distance = 9;
+    list[0]!.enabled = false;
+    typed[0] = 9;
+    view.setUint8(0, 9);
+    styleNested.threshold = 9;
+    const entry = commitWebGLPickLedger(ledger).entries[0]!;
+
+    expect(entry.kind).toBe('custom');
+    if (entry.kind !== 'custom') throw new Error('expected custom pick entry');
+    const props = entry.props as {
+      callback: typeof callback;
+      geometry: typeof geometry;
+      list: Array<{ enabled: boolean }>;
+      nested: { distance: number };
+      typed: Float32Array;
+      view: DataView;
+    };
+    const style = entry.style as { nested: { threshold: number } };
+    expect(props.nested.distance).toBe(1);
+    expect(props.list[0]!.enabled).toBe(true);
+    expect(Array.from(props.typed)).toEqual([2, 3]);
+    expect(props.view.getUint8(0)).toBe(4);
+    expect(style.nested.threshold).toBe(6);
+    expect(props.callback).toBe(callback);
+    expect(props.geometry).toBe(geometry);
+    expect(Object.isFrozen(props.nested)).toBe(true);
+    expect(Object.isFrozen(props.list)).toBe(true);
+    expect(Object.isFrozen(props.list[0])).toBe(true);
+    expect(Object.isFrozen(style.nested)).toBe(true);
+  });
+
+  it('rejects unsupported and cyclic custom snapshot graphs before publication', () => {
+    const target = fakeTarget();
+    const camera = resolveCamera(undefined, 50, 50);
+    const unsupportedLedger = createWebGLPickLedger(50, 50);
+
+    expect(() => recordCustomWebGLPick(unsupportedLedger, {
+      camera,
+      componentName: 'UnsupportedShape',
+      depthMode: 'less-equal',
+      model: new Float32Array(16),
+      props: { nested: { mutable: new Map([['distance', 1]]) } },
+      resolve: () => null,
+      sourceOrder: 0,
+      style: {},
+      target,
+    })).toThrowError(/UnsupportedShape.*props\.nested\.mutable.*Map/i);
+    expect(unsupportedLedger.entries).toEqual([]);
+
+    const cycleLedger = createWebGLPickLedger(50, 50);
+    const cyclic: Record<string, unknown> = {};
+    cyclic.self = cyclic;
+    expect(() => recordCustomWebGLPick(cycleLedger, {
+      camera,
+      componentName: 'CyclicShape',
+      depthMode: 'less-equal',
+      model: new Float32Array(16),
+      props: {},
+      resolve: () => null,
+      sourceOrder: 0,
+      style: { nested: cyclic },
+      target,
+    })).toThrowError(/CyclicShape.*style\.nested\.self.*cyclic/i);
+    expect(cycleLedger.entries).toEqual([]);
+  });
+
+  it('rejects binary subclasses without invoking their cloning hooks', () => {
+    const externalBuffer = new ArrayBuffer(8);
+    let bufferSpeciesCalls = 0;
+    class ArrayBufferSubclass extends ArrayBuffer {
+      static override get [Symbol.species](): ArrayBufferConstructor {
+        bufferSpeciesCalls += 1;
+        return class extends ArrayBuffer {
+          constructor() {
+            super(0);
+            return externalBuffer;
+          }
+        };
+      }
+    }
+    class Uint8ArraySubclass extends Uint8Array {}
+    const externalView = new Uint8Array([7, 8]);
+    const view = new Uint8ArraySubclass([1, 2]);
+    let viewConstructorCalls = 0;
+    Object.defineProperty(view, 'constructor', {
+      value: class AliasingView {
+        constructor() {
+          viewConstructorCalls += 1;
+          return externalView;
+        }
+      },
+    });
+    const camera = resolveCamera(undefined, 50, 50);
+    const target = fakeTarget();
+    const bufferLedger = createWebGLPickLedger(50, 50);
+
+    expect(() => recordCustomWebGLPick(bufferLedger, {
+      camera,
+      componentName: 'BinarySubclass',
+      depthMode: 'less-equal',
+      model: new Float32Array(16),
+      props: { buffer: new ArrayBufferSubclass(8) },
+      resolve: () => null,
+      sourceOrder: 0,
+      style: {},
+      target,
+    })).toThrowError(/BinarySubclass.*props\.buffer.*ArrayBufferSubclass/i);
+    expect(bufferSpeciesCalls).toBe(0);
+    expect(bufferLedger.entries).toEqual([]);
+
+    const viewLedger = createWebGLPickLedger(50, 50);
+    expect(() => recordCustomWebGLPick(viewLedger, {
+      camera,
+      componentName: 'BinarySubclass',
+      depthMode: 'less-equal',
+      model: new Float32Array(16),
+      props: { view },
+      resolve: () => null,
+      sourceOrder: 0,
+      style: {},
+      target,
+    })).toThrowError(/BinarySubclass.*props\.view.*Uint8ArraySubclass/i);
+    expect(viewConstructorCalls).toBe(0);
+    expect(viewLedger.entries).toEqual([]);
+  });
+
   it('records interactive primitives during their one draw traversal only', () => {
     const geometry = createWebGLGeometry({
       positions: [-1, -1, 0, 1, -1, 0, 0, 1, 0],
