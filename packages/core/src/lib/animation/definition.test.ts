@@ -4,11 +4,13 @@ import {
   easing,
   keyframes,
   signal,
+  stepper,
   tween,
   type CRCInterpolator,
 } from '../../index';
 import {
   sampleSeekableDefinition,
+  getDefinitionRecord,
 } from './definition';
 
 describe('seekable animation definitions', () => {
@@ -58,6 +60,60 @@ describe('seekable animation definitions', () => {
       initialValue: { x: -1 },
       localTime: 25,
     })).toEqual({ x: 2 });
+  });
+
+  it('snapshots mutable tween endpoints, keyframe values, and stepper state', () => {
+    const from = { x: 0 };
+    const to = { x: 10 };
+    const tweenDefinition = tween({
+      from,
+      to,
+      duration: 100,
+      interpolate: (start, end, progress) => ({
+        x: start.x + (end.x - start.x) * progress,
+      }),
+    });
+    const keyframeStart = { x: 0 };
+    const keyframeEnd = { x: 10 };
+    const keyframeDefinition = keyframes({
+      values: [keyframeStart, keyframeEnd],
+      duration: 100,
+      interpolate: (start, end, progress) => ({
+        x: start.x + (end.x - start.x) * progress,
+      }),
+    });
+    const initialState = { elapsed: 0 };
+    const stepperDefinition = stepper({
+      initialState,
+      step: state => state,
+    });
+
+    from.x = 50;
+    to.x = 90;
+    keyframeStart.x = 50;
+    keyframeEnd.x = 90;
+    initialState.elapsed = 50;
+
+    expect(sampleSeekableDefinition(tweenDefinition, {
+      initialValue: { x: -1 },
+      localTime: 50,
+    })).toEqual({ x: 5 });
+    expect(sampleSeekableDefinition(keyframeDefinition, {
+      initialValue: { x: -1 },
+      localTime: 50,
+    })).toEqual({ x: 5 });
+    expect(getDefinitionRecord(stepperDefinition)).toMatchObject({
+      initialState: { elapsed: 0 },
+    });
+  });
+
+  it('rejects mutable values outside the plain data snapshot boundary', () => {
+    expect(() => tween({
+      from: new Date(0),
+      to: new Date(1),
+      duration: 1,
+      interpolate: from => from,
+    })).toThrow('plain data');
   });
 
   it('does not guess interpolation for nonnumeric values', () => {
@@ -180,5 +236,16 @@ describe('seekable animation definitions', () => {
       initialValue: 0,
       localTime: 1,
     })).toThrow('finite');
+  });
+
+  it('rejects nonfinite terminal keyframe values', () => {
+    for (const value of [Number.NaN, Number.POSITIVE_INFINITY]) {
+      const definition = keyframes({ values: [0, value], duration: 1 });
+
+      expect(() => sampleSeekableDefinition(definition, {
+        initialValue: 0,
+        localTime: 1,
+      })).toThrow('finite');
+    }
   });
 });

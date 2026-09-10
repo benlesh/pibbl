@@ -72,6 +72,63 @@ function assertFiniteNumber(value: number, message: string): void {
   if (!Number.isFinite(value)) throw new RangeError(message);
 }
 
+/**
+ * Definitions retain values after their caller has moved on. Primitive values,
+ * arrays, and plain data records can be copied into an immutable snapshot.
+ * Other object categories (for example Date, Map, Set, instances, and
+ * functions) have mutable or opaque internal state that cannot be preserved by
+ * a faithful immutable data snapshot, so definitions reject them up front.
+ */
+function snapshotAnimationValue<T>(
+  value: T,
+  seen = new WeakMap<object, unknown>(),
+): T {
+  if (value === null || typeof value !== 'object') {
+    if (typeof value === 'function') {
+      throw new TypeError('CRC animation values must be plain data to create an immutable snapshot.');
+    }
+    return value;
+  }
+  const existing = seen.get(value);
+  if (existing !== undefined) return existing as T;
+
+  if (Array.isArray(value)) {
+    const snapshot: unknown[] = [];
+    seen.set(value, snapshot);
+    for (const item of value) {
+      snapshot.push(snapshotAnimationValue(item, seen));
+    }
+    return Object.freeze(snapshot) as T;
+  }
+
+  const prototype = Object.getPrototypeOf(value);
+  if (prototype !== Object.prototype && prototype !== null) {
+    throw new TypeError('CRC animation values must be plain data to create an immutable snapshot.');
+  }
+  const snapshot = Object.create(prototype) as Record<PropertyKey, unknown>;
+  seen.set(value, snapshot);
+  for (const key of Reflect.ownKeys(value)) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    if (descriptor === undefined || !('value' in descriptor)) {
+      throw new TypeError('CRC animation values must be plain data without accessors to create an immutable snapshot.');
+    }
+    Object.defineProperty(snapshot, key, {
+      configurable: false,
+      enumerable: descriptor.enumerable,
+      writable: false,
+      value: snapshotAnimationValue(descriptor.value, seen),
+    });
+  }
+  return Object.freeze(snapshot) as T;
+}
+
+function validateSampledValue<T>(sampled: T, debugName: string | undefined): T {
+  if (typeof sampled === 'number' && !Number.isFinite(sampled)) {
+    throw new RangeError(`${definitionLabel(debugName)} sampled value must be finite.`);
+  }
+  return sampled;
+}
+
 function createDefinition<T>(record: DefinitionRecord<T>): CRCAnimationDefinition<T> {
   const definition = Object.freeze({}) as CRCAnimationDefinition<T>;
   definitionRecords.set(
@@ -122,10 +179,7 @@ function interpolate<T>(
     ((from as unknown as number) +
       ((to as unknown as number) - (from as unknown as number)) * progress) as T :
     callback(debugName, () => custom(from, to, progress));
-  if (typeof sampled === 'number' && !Number.isFinite(sampled)) {
-    throw new RangeError(`${definitionLabel(debugName)} sampled value must be finite.`);
-  }
-  return sampled;
+  return validateSampledValue(sampled, debugName);
 }
 
 function easedProgress(
@@ -201,13 +255,14 @@ export function tween<T>(options: Readonly<CRCTweenOptions<T>>): CRCAnimationDef
   if (typeof options.interpolate !== 'undefined' && typeof options.interpolate !== 'function') {
     throw new TypeError(`${definitionLabel(options.debugName)} interpolator must be a function.`);
   }
+  const hasFrom = hasOwn(options, 'from');
   return createDefinition({
     kind: 'tween',
     duration: options.duration,
     debugName: options.debugName,
-    hasFrom: hasOwn(options, 'from'),
-    from: options.from,
-    to: options.to,
+    hasFrom,
+    from: hasFrom ? snapshotAnimationValue(options.from as T) : undefined,
+    to: snapshotAnimationValue(options.to),
     easing: options.easing ?? easing.linear,
     interpolate: options.interpolate,
   });
@@ -224,7 +279,7 @@ export function keyframes<T>(
   if (typeof options.interpolate !== 'undefined' && typeof options.interpolate !== 'function') {
     throw new TypeError(`${definitionLabel(options.debugName)} interpolator must be a function.`);
   }
-  const values = Object.freeze([...options.values]);
+  const values = Object.freeze(options.values.map(value => snapshotAnimationValue(value)));
   return createDefinition({
     kind: 'keyframes',
     duration: options.duration,
@@ -273,7 +328,7 @@ export function stepper<T>(
     kind: 'stepper',
     duration: Number.POSITIVE_INFINITY,
     debugName: options.debugName,
-    initialState: options.initialState,
+    initialState: snapshotAnimationValue(options.initialState),
     step: options.step,
     done: options.done,
     fixedDelta,
@@ -305,10 +360,7 @@ export function sampleSeekableDefinition<T>(
       localTime: timing.localTime,
       progress: timing.progress,
     })));
-    if (typeof sampled === 'number' && !Number.isFinite(sampled)) {
-      throw new RangeError(`${definitionLabel(record.debugName)} sampled value must be finite.`);
-    }
-    return sampled;
+    return validateSampledValue(sampled, record.debugName);
   }
   if (record.kind === 'tween') {
     const from = record.hasFrom ? record.from as T : input.initialValue;
@@ -326,7 +378,9 @@ export function sampleSeekableDefinition<T>(
     if (record.offsets[index] <= timing.progress) segment = index;
     else break;
   }
-  if (segment === record.values.length - 1) return record.values[segment];
+  if (segment === record.values.length - 1) {
+    return validateSampledValue(record.values[segment], record.debugName);
+  }
   const start = record.offsets[segment];
   const end = record.offsets[segment + 1];
   return interpolate(
