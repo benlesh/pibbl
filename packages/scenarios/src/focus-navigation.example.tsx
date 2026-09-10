@@ -117,6 +117,7 @@ const CanvasControl = function CanvasControl({
   onFocusSnapshot(target, snapshot);
   return [
     <Rectangle
+      pointerEvents="none"
       style={{
         x,
         y,
@@ -129,6 +130,7 @@ const CanvasControl = function CanvasControl({
     />,
     snapshot.isFocusVisible ? (
       <Rectangle
+        pointerEvents="none"
         style={{
           x: x - 5,
           y: y - 5,
@@ -140,6 +142,7 @@ const CanvasControl = function CanvasControl({
       />
     ) : undefined,
     <Text
+      pointerEvents="none"
       style={{
         x: x + width / 2,
         y: y + height / 2,
@@ -176,6 +179,7 @@ const FocusNavigationScene = function FocusNavigationScene(
 ) {
   return [
     <Rectangle
+      pointerEvents="none"
       style={{
         x: 0,
         y: 0,
@@ -185,6 +189,7 @@ const FocusNavigationScene = function FocusNavigationScene(
       }}
     />,
     <Text
+      pointerEvents="none"
       style={{
         x: 28,
         y: 25,
@@ -239,6 +244,7 @@ const FocusNavigationScene = function FocusNavigationScene(
       y={350}
     />,
     <Text
+      pointerEvents="none"
       style={{
         x: 390,
         y: 356,
@@ -247,6 +253,7 @@ const FocusNavigationScene = function FocusNavigationScene(
       }}
     >{`focused: ${props.state.currentTarget}`}</Text>,
     <Text
+      pointerEvents="none"
       style={{
         x: 390,
         y: 380,

@@ -346,6 +346,7 @@ export const PerformanceScene = (props: PerformanceSceneProps) => {
   return [
     <Rectangle
       key={`background-${props.revision}`}
+      pointerEvents="none"
       style={{
         x: 0,
         y: 0,

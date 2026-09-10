@@ -194,11 +194,13 @@ function expectedCounters(workload: PerformanceWorkload): PerformanceCounters {
     case 'layered':
       return {
         ...EMPTY_COUNTERS,
-        getContext: regions,
-        pathTests: regions * 2,
-        restore: regions * 2,
-        save: regions * 2,
-        setTransform: regions * 2,
+        // The four Layer paint bridges are candidates in the root ledger;
+        // each contributes one resolved nested hit alongside its child paths.
+        getContext: regions + 4,
+        pathTests: regions + 4,
+        restore: regions + 4,
+        save: regions + 4,
+        setTransform: regions + 4,
       };
     case 'cursor':
     case 'miss':

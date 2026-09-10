@@ -57,6 +57,7 @@ function NavigationTarget({
   );
   return [
     <Rectangle
+      pointerEvents={"none"}
       style={{
         x,
         y,
@@ -69,6 +70,7 @@ function NavigationTarget({
     />,
     snapshot.isFocusVisible ? (
       <Rectangle
+        pointerEvents={"none"}
         style={{
           x: x - 5,
           y: y - 5,
@@ -80,6 +82,7 @@ function NavigationTarget({
       />
     ) : undefined,
     <Text
+      pointerEvents={"none"}
       style={{
         x: x + width / 2,
         y: y + height / 2 + 5,
@@ -158,6 +161,7 @@ function OuterGrid({ onFocusTarget, onInput }: BoundaryProps) {
       y={142}
     />,
     <Rectangle
+      pointerEvents={"none"}
       style={{
         x: 207,
         y: 82,
@@ -180,6 +184,7 @@ function OuterGrid({ onFocusTarget, onInput }: BoundaryProps) {
       y={102}
     />,
     <Text
+      pointerEvents={"none"}
       style={{
         x: 360,
         y: 175,
@@ -230,6 +235,7 @@ function NestedDirectionalNavigationLesson() {
     }));
   return [
     <Rectangle
+      pointerEvents={"none"}
       style={{
         width: 720,
         height: 520,
@@ -237,6 +243,7 @@ function NestedDirectionalNavigationLesson() {
       }}
     />,
     <Text
+      pointerEvents={"none"}
       style={{
         x: 360,
         y: 30,
@@ -248,6 +255,7 @@ function NestedDirectionalNavigationLesson() {
       {"A DIRECTIONAL GRID INSIDE A DIRECTIONAL GRID"}
     </Text>,
     <Text
+      pointerEvents={"none"}
       style={{
         x: 360,
         y: 58,
@@ -264,6 +272,7 @@ function NestedDirectionalNavigationLesson() {
       <OuterGrid onFocusTarget={onFocusTarget} onInput={onInput} />
     </KeyboardNavigation>,
     <Rectangle
+      pointerEvents={"none"}
       style={{
         x: 34,
         y: 422,
@@ -275,6 +284,7 @@ function NestedDirectionalNavigationLesson() {
       }}
     />,
     <Text
+      pointerEvents={"none"}
       style={{
         x: 54,
         y: 451,
@@ -283,6 +293,7 @@ function NestedDirectionalNavigationLesson() {
       }}
     >{`FOCUSED: ${status.focused.toUpperCase()}`}</Text>,
     <Text
+      pointerEvents={"none"}
       style={{
         x: 54,
         y: 477,
@@ -291,6 +302,7 @@ function NestedDirectionalNavigationLesson() {
       }}
     >{`ACTIVE BOUNDARY: ${status.boundary}`}</Text>,
     <Text
+      pointerEvents={"none"}
       style={{
         x: 666,
         y: 477,

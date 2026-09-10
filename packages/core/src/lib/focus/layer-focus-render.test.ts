@@ -35,6 +35,7 @@ describe("focus snapshots in cached layers", () => {
         { path: rectanglePath(0, 0, 80, 80), fill: true },
       );
       return createElement(Rectangle, {
+        pointerEvents: 'none',
         style: {
           width: 80,
           height: 80,
@@ -116,6 +117,7 @@ describe("focus snapshots in cached layers", () => {
         { path: rectanglePath(0, 0, 80, 80), fill: true },
       );
       return createElement(Rectangle, {
+        pointerEvents: 'none',
         style: {
           width: 80,
           height: 80,
@@ -154,6 +156,7 @@ describe("focus snapshots in cached layers", () => {
         { path: rectanglePath(0, 0, 80, 80), fill: true },
       );
       return createElement(Rectangle, {
+        pointerEvents: 'none',
         style: {
           width: 80,
           height: 80,
@@ -208,6 +211,7 @@ describe("focus snapshots during manager removal", () => {
       );
       snapshots.push(snapshot);
       return createElement(Rectangle, {
+        pointerEvents: 'none',
         style: {
           width: 80,
           height: 80,

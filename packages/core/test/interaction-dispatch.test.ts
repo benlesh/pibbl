@@ -197,7 +197,7 @@ function dispatchDrag(
 }
 
 describe('interaction dispatcher mutation contract', () => {
-  it('keeps a registered target hittable beneath later pure paint', () => {
+  it('lets later default painted content occlude a registered target', () => {
     const canvas = document.createElement('canvas');
     canvas.width = 100;
     canvas.height = 60;
@@ -223,8 +223,8 @@ describe('interaction dispatcher mutation contract', () => {
     dispatchMouse(canvas, 'mouseup', 50, 30);
     dispatchMouse(canvas, 'click', 50, 30);
 
-    expect(clicks).toEqual(['under']);
-    expect(instance.paintEntries).toHaveLength(1);
+    expect(clicks).toEqual([]);
+    expect(instance.paintEntries).toHaveLength(2);
   });
 
   it('selects the topmost laid-out child and rejects clipped paint overflow', () => {

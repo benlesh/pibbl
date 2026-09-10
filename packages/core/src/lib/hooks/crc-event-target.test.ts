@@ -177,7 +177,7 @@ describe('crcEventListener', () => {
     controller.dispose();
   });
 
-  it('does not infer a hit target from returned descendants', async () => {
+  it('propagates a returned painted descendant to its listener ancestor', async () => {
     const calls: string[] = [];
     const Composite = ({ onClick }: {
       onClick: CRCEventHandlers['onClick'];
@@ -195,8 +195,8 @@ describe('crcEventListener', () => {
     dispatchMouse(canvas, 'mouseup', 20, 20);
     dispatchMouse(canvas, 'click', 20, 20);
 
-    expect(calls).toEqual([]);
-    expect(getCRCInstance(canvas).eventRoot.targets.size).toBe(0);
+    expect(calls).toEqual(['listener']);
+    expect(getCRCInstance(canvas).eventRoot.targets.size).toBe(1);
     controller.dispose();
   });
 });

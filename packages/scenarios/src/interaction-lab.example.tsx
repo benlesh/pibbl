@@ -370,6 +370,7 @@ const NestedInteractiveAncestor = ({ record }: NestedAncestorProps) => {
   return [
     <Rectangle
       key="ancestor-guide"
+      pointerEvents="none"
       style={{
         x: 70,
         y: 52,
@@ -499,6 +500,7 @@ const CustomPointerCapture = ({ record }: NestedAncestorProps) => {
   return (
     <Path
       key="custom-capture-art"
+      pointerEvents="none"
       style={{
         d: geometry,
         fill: '#0f766e',
@@ -821,6 +823,7 @@ function caseVisual(
       return [
         <Rectangle
           key="transparent-guide"
+          pointerEvents="none"
           style={{
             x: 90,
             y: 66,
@@ -859,6 +862,7 @@ function caseVisual(
         />,
         <Line
           key="interaction-top-guide"
+          pointerEvents="none"
           style={{
             coords: [
               [90, 114],
@@ -870,6 +874,7 @@ function caseVisual(
         />,
         <Line
           key="interaction-bottom-guide"
+          pointerEvents="none"
           style={{
             coords: [
               [90, 138],
@@ -884,6 +889,7 @@ function caseVisual(
       return [
         <Rectangle
           key="no-hit-guide"
+          pointerEvents="none"
           style={{
             x: 90,
             y: 66,
@@ -969,6 +975,7 @@ const InteractionLabScene = ({ state, record }: InteractionLabSceneProps) => {
   return [
     <Rectangle
       key="background"
+      pointerEvents="none"
       style={{
         x: 0,
         y: 0,
@@ -978,6 +985,7 @@ const InteractionLabScene = ({ state, record }: InteractionLabSceneProps) => {
       }}
     />,
     <Text
+      pointerEvents="none"
       style={{
         x: 24,
         y: 28,
@@ -988,6 +996,7 @@ const InteractionLabScene = ({ state, record }: InteractionLabSceneProps) => {
     >{`Ordering lab · ${state.fixture}`}</Text>,
     ...caseVisual(state, record),
     <Text
+      pointerEvents="none"
       style={{
         x: 24,
         y: 226,

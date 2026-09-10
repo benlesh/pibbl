@@ -53,6 +53,7 @@ const CanvasSurfaceScene = ({
       onMouseMove={(event) => onMouseMove(event.x, event.y)}
     />,
     <Rectangle
+      pointerEvents="none"
       style={{
         x: box.width / 4,
         y: box.height / 4,
@@ -64,6 +65,7 @@ const CanvasSurfaceScene = ({
       }}
     />,
     <Text
+      pointerEvents="none"
       style={{
         x: box.width / 2,
         y: box.height / 2,

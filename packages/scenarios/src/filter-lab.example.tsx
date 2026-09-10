@@ -120,7 +120,7 @@ const ALL_FILTERS: readonly { label: string; filter: CRCFilter }[] = [
 ];
 
 function label(text: string, x: number, y: number) {
-  return <Text key={`${text}-${x}-${y}`} style={{
+  return <Text key={`${text}-${x}-${y}`} pointerEvents="none" style={{
     x,
     y,
     fill: '#0f172a',
@@ -252,7 +252,7 @@ function layeredScene(recordTarget: FilterLabRecordTarget) {
           style={{ x: 0, y: 0, width: 80, height: 50, fill: '#2563eb', cursor: 'pointer' }}
           onClick={() => recordTarget('layered-source')}
         />
-        <Circle style={{ cx: 25, cy: 25, radius: 16, fill: '#f7c948' }} />
+        <Circle pointerEvents="none" style={{ cx: 25, cy: 25, radius: 16, fill: '#f7c948' }} />
       </Layer>
     </Group>,
     label('cached Layer · source hit only', 160, 168),

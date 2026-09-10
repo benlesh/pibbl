@@ -79,6 +79,7 @@ const HookProbe = ({ metrics, state }: CleanupStressSceneProps) => {
   return (
     <Rectangle
       key={`hook-fill-${state.hookDependency}`}
+      pointerEvents="none"
       style={{
         x: 20,
         y: 30,
@@ -92,6 +93,7 @@ const HookProbe = ({ metrics, state }: CleanupStressSceneProps) => {
 const SingleLayerScene = () => (
   <Rectangle
     key="single-layer-fill"
+    pointerEvents="none"
     style={{
       x: 170,
       y: 30,
@@ -105,6 +107,7 @@ const NestedLayerScene = () => (
   <Layer key="inner-cleanup-layer">
     <Rectangle
       key="nested-layer-fill"
+      pointerEvents="none"
       style={{
         x: 320,
         y: 30,
@@ -122,6 +125,7 @@ function imageNode(state: Readonly<CleanupStressState>) {
   return (
     <Image
       key="cleanup-image"
+      pointerEvents="none"
       style={{
         src: CLEANUP_IMAGE_SOURCES[state.imageMode],
         x: 170,
@@ -137,6 +141,7 @@ function sceneNodes({ metrics, state }: CleanupStressSceneProps) {
   return [
     <Rectangle
       key="cleanup-background"
+      pointerEvents="none"
       style={{
         x: 0,
         y: 0,

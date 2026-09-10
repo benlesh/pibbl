@@ -67,6 +67,7 @@ function caseVisual(
         region('a', 88, 78, 190, 100, '#93c5fd'),
         region('top', 190, 96, 190, 100, '#7c3aed'),
         <Text
+          pointerEvents="none"
           style={{
             x: 214,
             y: 126,
@@ -87,6 +88,7 @@ function caseVisual(
           key="translated-group"
         >
           <Rectangle
+            pointerEvents="none"
             style={{
               x: 42,
               y: 45,
@@ -97,6 +99,7 @@ function caseVisual(
           />
           {region('child', 70, 70, 100, 72, '#2563eb')}
           <Text
+            pointerEvents="none"
             style={{
               x: 84,
               y: 100,
@@ -128,6 +131,7 @@ function caseVisual(
           </Clip>
         </Clip>,
         <Text
+          pointerEvents="none"
           style={{
             x: 286,
             y: 132,
@@ -153,6 +157,7 @@ function caseVisual(
           {region('a', 60, 80, 104, 60, '#2563eb')}
         </Group>,
         <Text
+          pointerEvents="none"
           style={{
             x: 96,
             y: 136,
@@ -163,6 +168,7 @@ function caseVisual(
           {'local shape'}
         </Text>,
         <Line
+          pointerEvents="none"
           style={{
             coords: [
               [158, 132],
@@ -180,6 +186,7 @@ function caseVisual(
           {region('layer', 198, 96, 180, 94, '#f59e0b')}
         </Layer>,
         <Text
+          pointerEvents="none"
           style={{
             x: 218,
             y: 126,
@@ -194,6 +201,7 @@ function caseVisual(
       return [
         region('a', 150, 88, 180, 88, '#2563eb'),
         <Line
+          pointerEvents="none"
           style={{
             coords: [
               [150, 188],
@@ -204,6 +212,7 @@ function caseVisual(
           }}
         />,
         <Text
+          pointerEvents="none"
           style={{
             x: 173,
             y: 122,
@@ -214,6 +223,7 @@ function caseVisual(
           {'intrinsic 180 × 88'}
         </Text>,
         <Text
+          pointerEvents="none"
           style={{
             x: 166,
             y: 207,
@@ -245,6 +255,7 @@ function caseVisual(
           {...interactive('a')}
         />,
         <Text
+          pointerEvents="none"
           style={{
             x: 116,
             y: 136,
@@ -272,6 +283,7 @@ function caseVisual(
     case 'transparent-fill-hit':
       return [
         <Rectangle
+          pointerEvents="none"
           style={{
             x: 72,
             y: 72,
@@ -281,6 +293,7 @@ function caseVisual(
           }}
         />,
         <Line
+          pointerEvents="none"
           style={{
             coords: [
               [72, 72],
@@ -291,6 +304,7 @@ function caseVisual(
           }}
         />,
         <Line
+          pointerEvents="none"
           style={{
             coords: [
               [262, 72],
@@ -312,6 +326,7 @@ function caseVisual(
           {...interactive('a')}
         />,
         <Text
+          pointerEvents="none"
           style={{
             x: 94,
             y: 136,
@@ -339,6 +354,7 @@ function caseVisual(
           {...interactive('a')}
         />,
         <Line
+          pointerEvents="none"
           style={{
             coords: [
               [90, 120],
@@ -349,6 +365,7 @@ function caseVisual(
           }}
         />,
         <Line
+          pointerEvents="none"
           style={{
             coords: [
               [90, 144],
@@ -359,6 +376,7 @@ function caseVisual(
           }}
         />,
         <Text
+          pointerEvents="none"
           style={{
             x: 126,
             y: 104,
@@ -372,6 +390,7 @@ function caseVisual(
     case 'root-event-no-path':
       return [
         <Text
+          pointerEvents="none"
           style={{
             x: 120,
             y: 126,
@@ -382,6 +401,7 @@ function caseVisual(
           {'Canvas-wide observer'}
         </Text>,
         <Text
+          pointerEvents="none"
           style={{
             x: 94,
             y: 154,
@@ -396,6 +416,7 @@ function caseVisual(
     case 'remove-target-during-move-plan':
       return [
         <Rectangle
+          pointerEvents="none"
           style={{
             x: 72,
             y: 72,
@@ -406,6 +427,7 @@ function caseVisual(
           }}
         />,
         <Line
+          pointerEvents="none"
           style={{
             coords: [
               [72, 72],
@@ -416,6 +438,7 @@ function caseVisual(
           }}
         />,
         <Line
+          pointerEvents="none"
           style={{
             coords: [
               [262, 72],
@@ -426,6 +449,7 @@ function caseVisual(
           }}
         />,
         <Text
+          pointerEvents="none"
           style={{
             x: 102,
             y: 136,
@@ -445,6 +469,7 @@ function caseVisual(
         region('a', 72, 68, 190, 112, selectedA ? '#2563eb' : '#93c5fd'),
         region('b', 278, 86, 118, 100, selectedB ? '#7c3aed' : '#c4b5fd'),
         <Text
+          pointerEvents="none"
           style={{
             x: 94,
             y: 100,
@@ -455,6 +480,7 @@ function caseVisual(
           {'A'}
         </Text>,
         <Text
+          pointerEvents="none"
           style={{
             x: 300,
             y: 118,
@@ -483,6 +509,7 @@ const MouseContractScene = ({
   return [
     <Rectangle
       key="background"
+      pointerEvents="none"
       style={{
         x: 0,
         y: 0,
@@ -492,6 +519,7 @@ const MouseContractScene = ({
       }}
     />,
     <Text
+      pointerEvents="none"
       style={{
         x: 24,
         y: 28,
@@ -505,6 +533,7 @@ const MouseContractScene = ({
     ...caseVisual(contractCase, record),
     <Line
       key="probe-horizontal"
+      pointerEvents="none"
       style={{
         coords: [
           [probe.x - 6, probe.y],
@@ -516,6 +545,7 @@ const MouseContractScene = ({
     />,
     <Line
       key="probe-vertical"
+      pointerEvents="none"
       style={{
         coords: [
           [probe.x, probe.y - 6],
@@ -526,6 +556,7 @@ const MouseContractScene = ({
       }}
     />,
     <Text
+      pointerEvents="none"
       style={{
         x: 24,
         y: 224,
