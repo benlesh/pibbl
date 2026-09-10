@@ -129,6 +129,29 @@ describe('signal render consumers', () => {
     expect(parentInvalidations).toBe(1);
   });
 
+  it('can commit component reads before traversing returned children', () => {
+    const ownSource = signal(1);
+    const returnedChildSource = signal(10);
+    let invalidations = 0;
+    const consumer = createSignalRenderConsumer({
+      debugName: 'component consumer',
+      invalidate: () => invalidations++,
+    });
+
+    collectSignalReads(consumer, commit => {
+      ownSource.get();
+      commit();
+      returnedChildSource.get();
+    });
+    consumer.markClean();
+
+    returnedChildSource.set(11);
+    expect(invalidations).toBe(0);
+    ownSource.set(2);
+    expect(invalidations).toBe(1);
+    disposeSignalRenderConsumer(consumer);
+  });
+
   it('calls its owner once while multiple direct dependencies leave it dirty', () => {
     const left = signal(1);
     const right = signal(2);

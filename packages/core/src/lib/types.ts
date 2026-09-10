@@ -18,6 +18,7 @@ import type {
 import type { PendingRoot } from './global-state.js';
 import type { CRCFilter } from './style/filter-types.js';
 import type { FilterSurfacePool } from './filter/filter-surface-pool.js';
+import type { SignalRenderConsumer } from './signals/render-consumer.js';
 export type {
   CRCComponent,
   CRCContainerChild,
@@ -137,6 +138,7 @@ export interface CRCComponentRefs<P> {
   element: CRCElement<P>;
   refs: any[];
   hooks: CRCHookSlot[];
+  signalConsumer: SignalRenderConsumer | undefined;
   teardowns: Teardowns;
   onAfterRender: (() => void) | undefined;
 }

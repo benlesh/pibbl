@@ -14,6 +14,7 @@ import { crcLinePath } from './crc-line-path';
 import { crcMemo } from './crc-memo';
 import { crcRectPath } from './crc-rect-path';
 import { crcRef } from './crc-ref';
+import { crcSignal } from './crc-signal';
 import { crcState, type StateUpdater } from './crc-state';
 import { crcSvgPath } from './crc-svg-path';
 import { crcWhenChanged } from './crc-when-changed';
@@ -278,6 +279,7 @@ describe('hook ordering and render errors', () => {
       () => crcState(0),
       () => crcMemo(() => 1, []),
       () => crcRef(0),
+      () => crcSignal(0),
       () => crcWhenChanged(() => {}, []),
       () => crcRectPath(0, 0, 1, 1),
       () => crcLinePath([[0, 0], [1, 1]]),

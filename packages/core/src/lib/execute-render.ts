@@ -13,6 +13,7 @@ import { get2dContext } from './util/get-2d-context.js';
 import { prepareSurface } from './surface/root-surface.js';
 import { rootRenderTarget } from './render-target.js';
 import type { CRCFrameSnapshot } from './scheduler/types.js';
+import { withSignalWriteForbidden } from './signals/graph.js';
 
 /**
  * Gets the root element for a canvas and renders it. This is the
@@ -122,7 +123,10 @@ export function executeRender(
     ctx.setTransform(surface.renderTransform);
 
     try {
-      render(rootNode, id, undefined);
+      withSignalWriteForbidden(
+        'CRC render',
+        () => render(rootNode, id, undefined),
+      );
     } catch (error) {
       finishTransaction(false);
       for (const refs of GLOBAL_STATE.currentCRCInstance.refs.values()) {

@@ -224,6 +224,7 @@ export { crcLayoutBox } from './lib/hooks/crc-layout-box.js';
 export { crcMemo } from './lib/hooks/crc-memo.js';
 export { crcRectPath } from './lib/hooks/crc-rect-path.js';
 export { crcRef, type CRCRef } from './lib/hooks/crc-ref.js';
+export { crcSignal } from './lib/hooks/crc-signal.js';
 export { crcState, type StateUpdater } from './lib/hooks/crc-state.js';
 export { crcSvgPath } from './lib/hooks/crc-svg-path.js';
 export { crcWhenChanged } from './lib/hooks/crc-when-changed.js';

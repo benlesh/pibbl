@@ -63,21 +63,32 @@ const consumerInvalidations = new WeakMap<SignalRenderConsumer, () => void>();
 
 export function collectSignalReads<T>(
   consumer: SignalRenderConsumer,
-  callback: () => T,
+  callback: (commit: () => void) => T,
 ): T {
   const state = getConsumerState(consumer);
   if (state.disposed) {
-    return withSignalTracking({ addDependency: () => {} }, callback);
+    return withSignalTracking(
+      { addDependency: () => {} },
+      () => callback(() => {}),
+    );
   }
 
   const collectionGeneration = ++state.collectionGeneration;
   const nextDependencies = new Set<SignalNode<unknown>>();
+  let committed = false;
+  const commit = (): void => {
+    if (committed) return;
+    committed = true;
+    if (!state.disposed && state.collectionGeneration === collectionGeneration) {
+      replaceDependencies(consumer, state, nextDependencies);
+    }
+  };
   const result = withSignalTracking({
-    addDependency: dependency => nextDependencies.add(dependency),
-  }, callback);
-  if (!state.disposed && state.collectionGeneration === collectionGeneration) {
-    replaceDependencies(consumer, state, nextDependencies);
-  }
+    addDependency: dependency => {
+      if (!committed) nextDependencies.add(dependency);
+    },
+  }, () => callback(commit));
+  commit();
   return result;
 }
 
