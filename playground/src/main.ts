@@ -21,7 +21,7 @@ if (!app) throw new Error("No app element found.");
 
 const lifecycle = createPageLifecycle();
 const searchLoaderOptions =
-  import.meta.env.VITE_CRC_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE === "1"
+  __CRC_STUDIO_DOCS_ACCEPTANCE__
     ? createAcceptanceSearchLoaderOptions()
     : undefined;
 const shell = createStudioShell({

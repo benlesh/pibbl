@@ -20,6 +20,9 @@ export default defineConfig(({ mode }) => {
     resolve: {
       tsconfigPaths: mode !== "built",
     },
+    define: {
+      __CRC_STUDIO_DOCS_ACCEPTANCE__: JSON.stringify(isStudioDocsAcceptance),
+    },
     build: isStudioDocsAcceptance
       ? { outDir: studioDocsAcceptanceOutput }
       : undefined,

@@ -100,10 +100,6 @@ try {
   await run(
     "corepack",
     ["pnpm@11.21.0", "playground:build:studio-docs-acceptance"],
-    {
-      ...process.env,
-      VITE_CRC_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE: "1",
-    },
   );
   await assertNormalOutputUnchanged(normalOutputBefore);
   await run(process.execPath, ["tooling/verify-studio-docs.mjs"], {

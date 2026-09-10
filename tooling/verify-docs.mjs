@@ -1491,6 +1491,11 @@ assert.match(
   /run: pnpm studio-docs:check/u,
   "The CI static job must run studio-docs:check explicitly.",
 );
+assert.match(
+  trustWorkflow,
+  /run: pnpm test:studio-docs:production-boundary/u,
+  "The CI static job must prove hostile acceptance environment values cannot enter production output.",
+);
 for (const command of ["test:studio-docs", "test:studio-visual"]) {
   assert.match(
     trustWorkflow,
@@ -1501,20 +1506,21 @@ for (const command of ["test:studio-docs", "test:studio-visual"]) {
 assertWorkflowCommandOrder(
   trustWorkflow,
   [
-    "pnpm docs:check",
-    "pnpm studio-docs:check",
-    "pnpm typecheck",
+    "run: pnpm docs:check\n",
+    "run: pnpm studio-docs:check\n",
+    "run: pnpm test:studio-docs:production-boundary\n",
+    "run: pnpm typecheck\n",
   ],
   "CI static documentation and type checks",
 );
 assertWorkflowCommandOrder(
   trustWorkflow,
   [
-    "pnpm test:ci",
-    "pnpm test:studio-docs",
-    "pnpm test:visual-safeguard",
-    "pnpm test:studio-visual",
-    "pnpm test:smoke:built",
+    "run: pnpm test:ci\n",
+    "run: pnpm test:studio-docs\n",
+    "run: pnpm test:visual-safeguard\n",
+    "run: pnpm test:studio-visual\n",
+    "run: pnpm test:smoke:built\n",
   ],
   "CI browser, documentation, and visual checks",
 );
@@ -1522,6 +1528,11 @@ assert.equal(
   rootManifest.scripts["test:studio-docs"],
   "node tooling/test-studio-docs.mjs",
   "test:studio-docs must use the isolated acceptance-output runner.",
+);
+assert.equal(
+  rootManifest.scripts["test:studio-docs:production-boundary"],
+  "VITE_CRC_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE=1 corepack pnpm@11.21.0 playground:build && node tooling/verify-studio-production-output.mjs",
+  "The production boundary regression must build ordinary output with a hostile stale VITE value.",
 );
 assert.match(
   rootManifest.scripts["trust:static"],
@@ -1557,6 +1568,49 @@ assert.match(
   /finally[\s\S]*rm\(acceptanceOutput/u,
   "Studio acceptance must clean its exact output directory on success and failure.",
 );
+assert.doesNotMatch(
+  studioDocsRunner,
+  /VITE_CRC_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE/u,
+  "Studio acceptance must derive retry behavior from its build mode, not an ambient VITE value.",
+);
+const studioMain = await readFile(
+  join(repositoryRoot, "playground/src/main.ts"),
+  "utf8",
+);
+assert.match(
+  studioMain,
+  /__CRC_STUDIO_DOCS_ACCEPTANCE__/u,
+  "Studio retry composition must use the private mode-defined constant.",
+);
+assert.doesNotMatch(
+  studioMain,
+  /import\.meta\.env|VITE_CRC_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE/u,
+  "Studio retry composition must not read ambient VITE values.",
+);
+const studioViteConfig = await readFile(
+  join(repositoryRoot, "playground/vite.config.ts"),
+  "utf8",
+);
+assert.match(
+  studioViteConfig,
+  /define:[\s\S]*__CRC_STUDIO_DOCS_ACCEPTANCE__/u,
+  "Vite must define the private retry flag from studio-docs-acceptance mode.",
+);
+const productionOutputVerifier = await readFile(
+  join(repositoryRoot, "tooling/verify-studio-production-output.mjs"),
+  "utf8",
+);
+for (const marker of [
+  "crcStudioSearchRetry",
+  "Intentional verifier search loader failure.",
+  "createAcceptanceSearchLoaderOptions",
+]) {
+  assert.match(
+    productionOutputVerifier,
+    new RegExp(marker.replaceAll(/[.]/gu, "\\."), "u"),
+    `Production output verifier must reject ${marker}.`,
+  );
+}
 const studioHtml = await readFile(
   join(repositoryRoot, "playground/index.html"),
   "utf8",
