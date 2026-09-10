@@ -179,12 +179,16 @@ replacement mount or unrelated roots. Abort uses the same guarded path.
 ## Public package boundary
 
 The package exports the runtime, controller and surface types, components,
-signals, hooks, hook values, and compiler-only
+hooks, hook values, and compiler-only
 `@crc/core/jsx-runtime` and `@crc/core/jsx-dev-runtime` entries. Strict Bundler,
 NodeNext, built, and packed consumers verify those entries, the CRC/React type
 boundary, and blocked private subpaths. The `runtime-hooks-laboratory`, JSX
 authoring tests, lifecycle stress suite, and cleanup ledgers cover traversal,
 identity, hook order, recovery, and disposal through public elements.
+
+The root `@crc/core` entry also exports `Signal`, `WritableSignal`,
+`SignalOptions`, `SignalEquals`, `signal`, `computed`, `untracked`, `isSignal`,
+and `crcSignal`.
 
 ## Deterministic evidence
 
@@ -199,9 +203,11 @@ unkeyed occurrence behavior, root/state update permutations,
 more/fewer/reordered hooks, cleanup and factory exceptions, Canvas context
 restoration, stale setters, malformed-path recovery, fragment identity, and
 recursive iterable diagnostics. Public type assertions compile against built
-declarations under both Bundler and NodeNext resolution. Focused signal graph,
-component-consumer, hook, scheduler, Layer, and error-isolation suites cover
-explicit reads and realm-frame behavior.
+declarations under both Bundler and NodeNext resolution.
+
+Focused suites cover signal `get()` reads, component consumers, realm scheduler
+requests, Layer invalidation, exact ownership, and isolated root render
+failures.
 
 ## Deliberate boundaries
 

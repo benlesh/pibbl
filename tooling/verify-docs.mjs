@@ -1575,7 +1575,94 @@ export function assertTask9EvidenceMappings(manifest) {
   );
 }
 
+export function assertMixedLegacyTask9Preservation(manifest) {
+  const translationsById = new Map(
+    manifest.translations.map((mapping) => [mapping.id, mapping]),
+  );
+  const additionsById = new Map(
+    manifest.additions.map((mapping) => [mapping.id, mapping]),
+  );
+  const publicPackage = translationsById.get(
+    "design-runtime-hooks-contract-md-public-package-boundary",
+  );
+  assert.deepEqual(
+    publicPackage?.approval,
+    {
+      id: "a0105",
+      kind: "prose",
+      text: "TypeScript, Bundler, and NodeNext declarations must agree.",
+    },
+    "Public-package JSX translation must retain approved unit a0105",
+  );
+  assert.deepEqual(
+    publicPackage?.currentIds,
+    ["c0053"],
+    "Public-package JSX translation must remain isolated from signal additions",
+  );
+  assert.deepEqual(
+    publicPackage?.sharedAnchors,
+    ["consumers", "entries", "nodenext"],
+    "Public-package JSX translation must retain its distinctive relevance anchors",
+  );
+  const deterministicEvidence = translationsById.get(
+    "design-runtime-hooks-contract-md-deterministic-evidence",
+  );
+  assert.deepEqual(
+    deterministicEvidence?.approval,
+    {
+      id: "a0194",
+      kind: "list",
+      text: "Plain function hooks mount, update, reorder, remove, fail, and recover under the current hook contract.",
+    },
+    "Deterministic-evidence JSX translation must retain approved unit a0194",
+  );
+  assert.deepEqual(
+    deterministicEvidence?.currentIds,
+    ["c0055"],
+    "Deterministic-evidence JSX translation must remain isolated from signal additions",
+  );
+  assert.deepEqual(
+    deterministicEvidence?.sharedAnchors,
+    ["runtime-hooks-laboratory", "presentation-neutral", "outside-render"],
+    "Deterministic-evidence JSX translation must retain its distinctive relevance anchors",
+  );
+
+  const publicSignalAddition = additionsById.get(
+    "design-runtime-hooks-contract-public-signal-package-addition",
+  );
+  assert.deepEqual(
+    publicSignalAddition?.approval,
+    {
+      recordId: "first-class-signals-and-scheduler",
+      unitIds: ["g0061", "g0062"],
+    },
+    "Public signal package unit must retain bounded signal-design approval",
+  );
+  assert.deepEqual(
+    publicSignalAddition?.currentIds,
+    ["c0054"],
+    "Public signal package proof must remain a separate semantic addition",
+  );
+  const signalEvidenceAddition = additionsById.get(
+    "design-runtime-hooks-contract-signal-evidence-addition",
+  );
+  assert.deepEqual(
+    signalEvidenceAddition?.approval,
+    {
+      recordId: "first-class-signals-and-scheduler",
+      unitIds: ["g0064", "g0136", "g0153", "g0165", "g0188"],
+    },
+    "Signal evidence unit must retain bounded signal-design approval",
+  );
+  assert.deepEqual(
+    signalEvidenceAddition?.currentIds,
+    ["c0056"],
+    "Signal evidence proof must remain a separate semantic addition",
+  );
+}
+
 assertTask9EvidenceMappings(contractPreservationBaseline);
+assertMixedLegacyTask9Preservation(contractPreservationBaseline);
 const baselineStyleUnits = contractPreservationBaseline.contracts.find(
   ({ path }) => path === "docs/design/style-system-contract.md",
 )?.baselineUnits;
@@ -2124,6 +2211,58 @@ export async function verifyMutationProbes() {
   throws(
     () => assertTask9EvidenceMappings(weakenedStaleSetter),
     /replacement mounts/u,
+  );
+  const missingPublicPackageLegacyApproval = structuredClone(
+    contractPreservationBaseline,
+  );
+  missingPublicPackageLegacyApproval.translations.find(
+    ({ id }) =>
+      id === "design-runtime-hooks-contract-md-public-package-boundary",
+  ).approval = {
+    recordId: "first-class-signals-and-scheduler",
+    unitIds: ["g0061", "g0158"],
+  };
+  throws(
+    () =>
+      assertMixedLegacyTask9Preservation(missingPublicPackageLegacyApproval),
+    /must retain approved unit a0105/u,
+  );
+  const weakenedPublicPackageAnchors = structuredClone(
+    contractPreservationBaseline,
+  );
+  weakenedPublicPackageAnchors.translations.find(
+    ({ id }) =>
+      id === "design-runtime-hooks-contract-md-public-package-boundary",
+  ).sharedAnchors = ["package", "crc"];
+  throws(
+    () => assertMixedLegacyTask9Preservation(weakenedPublicPackageAnchors),
+    /must retain its distinctive relevance anchors/u,
+  );
+  const missingDeterministicLegacyApproval = structuredClone(
+    contractPreservationBaseline,
+  );
+  missingDeterministicLegacyApproval.translations.find(
+    ({ id }) =>
+      id === "design-runtime-hooks-contract-md-deterministic-evidence",
+  ).approval = {
+    recordId: "first-class-signals-and-scheduler",
+    unitIds: ["g0064", "g0136", "g0153", "g0165", "g0192"],
+  };
+  throws(
+    () =>
+      assertMixedLegacyTask9Preservation(missingDeterministicLegacyApproval),
+    /must retain approved unit a0194/u,
+  );
+  const weakenedDeterministicAnchors = structuredClone(
+    contractPreservationBaseline,
+  );
+  weakenedDeterministicAnchors.translations.find(
+    ({ id }) =>
+      id === "design-runtime-hooks-contract-md-deterministic-evidence",
+  ).sharedAnchors = ["render"];
+  throws(
+    () => assertMixedLegacyTask9Preservation(weakenedDeterministicAnchors),
+    /must retain its distinctive relevance anchors/u,
   );
 
   const direct = exportedSpecifiers(

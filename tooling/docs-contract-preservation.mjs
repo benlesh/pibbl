@@ -9,7 +9,7 @@ export const CONTRACT_TRANSLATION_RECORD =
 // Updated only after the complete baseline, translation allowlist, additions,
 // and evidence map receive review together.
 const REVIEWED_MANIFEST_SHA256 =
-  "d1578f1fdc63d78eb0ea9e1da4283a4077ea64f8fc4e03ac61ef2e093cbf1596";
+  "f264a2bff40637e224a56aa881cbe9d25daa9e13539846419aa9fb2925de70c1";
 
 const SIGNALS_SCHEDULER_APPROVAL_RECORD = "first-class-signals-and-scheduler";
 const SIGNALS_SCHEDULER_APPROVED_SECTIONS = new Set([
@@ -31,8 +31,6 @@ const SIGNALS_SCHEDULER_APPROVED_SECTIONS = new Set([
 ]);
 const SIGNALS_SCHEDULER_TRANSLATION_IDS = new Set([
   "design-canvas-surface-contract-realm-scheduling",
-  "design-runtime-hooks-contract-md-deterministic-evidence",
-  "design-runtime-hooks-contract-md-public-package-boundary",
   "design-runtime-hooks-contract-realm-scheduling",
   "design-runtime-resource-ownership-realm-host-frame",
 ]);
