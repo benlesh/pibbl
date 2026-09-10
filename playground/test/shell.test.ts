@@ -119,6 +119,57 @@ describe("Studio shell navigation", () => {
 
     shell.dispose();
   });
+
+  it("defers the shortcut to an open mobile drawer and removes trigger listeners on dispose", async () => {
+    let bundleLoads = 0;
+    const app = document.createElement("div");
+    document.body.appendChild(app);
+    const shell = createStudioShell({
+      app,
+      navigation,
+      loadSearchBundle: async () => {
+        bundleLoads++;
+        return searchBundle;
+      },
+    });
+    const menu = app.querySelector<HTMLButtonElement>(".studio-menu-button")!;
+    const trigger = app.querySelector<HTMLButtonElement>(
+      ".studio-search-trigger--mobile",
+    )!;
+
+    menu.click();
+    expect(document.querySelector("#studio-navigation")).toHaveAttribute(
+      "aria-modal",
+      "true",
+    );
+    document.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }),
+    );
+    await settle();
+    expect(document.querySelector(".studio-search-dialog")).toBeNull();
+    expect(bundleLoads).toBe(0);
+
+    menu.click();
+    document.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }),
+    );
+    await settle();
+    expect(document.querySelector<HTMLDialogElement>(".studio-search-dialog")?.open).toBe(
+      true,
+    );
+    document.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }),
+    );
+    expect(document.querySelector<HTMLDialogElement>(".studio-search-dialog")?.open).toBe(
+      true,
+    );
+
+    shell.dispose();
+    document.querySelector<HTMLDialogElement>(".studio-search-dialog")?.remove();
+    trigger.click();
+    await settle();
+    expect(document.querySelector(".studio-search-dialog")).toBeNull();
+  });
 });
 
 const searchBundle = buildSearchBundle({

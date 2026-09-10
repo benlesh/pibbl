@@ -81,6 +81,27 @@ describe("browser documentation search engine", () => {
     }
   });
 
+  it("keeps highlight ranges aligned after collapsing source whitespace", async () => {
+    const whitespaceBundle = buildSearchBundle({
+      pages: [
+        page("whitespace", "#/learn/guides/whitespace", "Whitespace", "learn", {
+          body: `${"background ".repeat(24)}\n\nstate remains readable after line breaks.`,
+        }),
+      ],
+      examples: [],
+    } satisfies SearchBundleInput);
+    const engine = createSearchEngine(async () => whitespaceBundle);
+
+    const excerpt = (await engine.search("state")).results[0]?.excerpt;
+
+    expect(excerpt?.matches).toHaveLength(1);
+    for (const range of excerpt?.matches ?? []) {
+      expect(excerpt?.text.slice(range.start, range.end)).toBe("state");
+      expect(range.start).toBeGreaterThanOrEqual(0);
+      expect(range.end).toBeLessThanOrEqual(excerpt!.text.length);
+    }
+  });
+
   it("allows a failed lazy bundle to be retried", async () => {
     let loadCalls = 0;
     const engine = createSearchEngine(async () => {

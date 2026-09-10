@@ -111,12 +111,16 @@ function countKinds(
 
 function createExcerpt(record: SearchRecord, query: string): SearchExcerpt {
   const source = record.body || record.summary || record.heading || record.title;
-  const match = findMatch(source, query);
+  const normalizedSource = source.replace(/\s+/gu, " ").trim();
+  const match = findMatch(normalizedSource, query);
   const start = match === undefined ? 0 : Math.max(0, match.start - 72);
-  const end = Math.min(source.length, Math.max(start + 180, (match?.end ?? 0) + 72));
+  const end = Math.min(
+    normalizedSource.length,
+    Math.max(start + 180, (match?.end ?? 0) + 72),
+  );
   const prefix = start === 0 ? "" : "…";
-  const suffix = end === source.length ? "" : "…";
-  const text = `${prefix}${source.slice(start, end).replace(/\s+/gu, " ").trim()}${suffix}`;
+  const suffix = end === normalizedSource.length ? "" : "…";
+  const text = `${prefix}${normalizedSource.slice(start, end)}${suffix}`;
   if (match === undefined || text.length === 0) return { text, matches: [] };
 
   const excerptOffset = prefix.length - start;

@@ -111,6 +111,43 @@ describe("documentation search dialog", () => {
     dialog.dispose();
   });
 
+  it("keeps combobox focus while traversing non-tabbable listbox options", async () => {
+    const navigate = vi.fn();
+    const dialog = mountSearchDialog({ loadBundle: async () => bundle, navigate });
+
+    dialog.open();
+    const input = document.querySelector<HTMLInputElement>("[data-search-input]")!;
+    input.value = "state";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    await settle();
+    const options = [
+      ...document.querySelectorAll<HTMLElement>("[role='option']"),
+    ];
+    expect(input).toHaveAttribute("role", "combobox");
+    expect(input).toHaveAttribute("aria-controls", "studio-search-results");
+    expect(options.length).toBeGreaterThan(1);
+    expect(options.every((option) => option.tabIndex === -1)).toBe(true);
+    expect(options.every((option) => option.tagName !== "BUTTON")).toBe(true);
+
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+    expect(document.activeElement).toBe(input);
+    expect(input).toHaveAttribute("aria-activedescendant", options[0]!.id);
+    expect(document.getElementById(options[0]!.id)).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "End", bubbles: true }));
+    expect(input).toHaveAttribute("aria-activedescendant", options.at(-1)!.id);
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Home", bubbles: true }));
+    expect(input).toHaveAttribute("aria-activedescendant", options[0]!.id);
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", bubbles: true }));
+    expect(document.activeElement).toBe(input);
+
+    document.getElementById(options[0]!.id)?.click();
+    expect(navigate).toHaveBeenCalledWith("#/api/hooks/crc-state");
+    dialog.dispose();
+  });
+
   it("dismisses with Escape, restores its invoker, and removes global listeners", async () => {
     const trigger = document.createElement("button");
     document.body.append(trigger);

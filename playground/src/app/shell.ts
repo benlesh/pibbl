@@ -144,6 +144,10 @@ export function createStudioShell(options: StudioShellOptions): StudioShell {
         : desktopSearchButton;
     openSearch(invoker);
   };
+  const searchTriggers = [desktopSearchButton, mobileSearchButton];
+  const onSearchTriggerClick = (event: Event) => {
+    openSearch(event.currentTarget as HTMLButtonElement);
+  };
   const syncDrawerAvailability = () => {
     if (!narrowNavigation.matches) {
       document.body.classList.remove("studio-drawer-open");
@@ -213,10 +217,10 @@ export function createStudioShell(options: StudioShellOptions): StudioShell {
   drawerBackdrop.addEventListener("click", () => closeDrawer(true));
   navigationHost.addEventListener("click", () => closeDrawer());
   testingLink.addEventListener("click", () => closeDrawer());
-  for (const trigger of [desktopSearchButton, mobileSearchButton]) {
+  for (const trigger of searchTriggers) {
     trigger.addEventListener("focus", prepareSearch);
     trigger.addEventListener("pointerenter", prepareSearch);
-    trigger.addEventListener("click", () => openSearch(trigger));
+    trigger.addEventListener("click", onSearchTriggerClick);
   }
   document.addEventListener("keydown", onKeydown);
   narrowNavigation.addEventListener("change", syncDrawerAvailability);
@@ -269,9 +273,10 @@ export function createStudioShell(options: StudioShellOptions): StudioShell {
       menuButton.removeEventListener("click", onMenuClick);
       document.removeEventListener("keydown", onKeydown);
       narrowNavigation.removeEventListener("change", syncDrawerAvailability);
-      for (const trigger of [desktopSearchButton, mobileSearchButton]) {
+      for (const trigger of searchTriggers) {
         trigger.removeEventListener("focus", prepareSearch);
         trigger.removeEventListener("pointerenter", prepareSearch);
+        trigger.removeEventListener("click", onSearchTriggerClick);
       }
       searchController?.dispose();
       document.body.classList.remove("studio-drawer-open");
@@ -289,7 +294,7 @@ function createSearchTrigger(modifier: string): HTMLButtonElement {
 }
 
 function hasOpenModal(): boolean {
-  return document.querySelector("dialog[open]") !== null;
+  return document.querySelector("dialog[open], [aria-modal='true']") !== null;
 }
 
 function isMonacoInput(element: Element | null): boolean {

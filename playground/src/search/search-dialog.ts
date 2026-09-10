@@ -59,6 +59,9 @@ export function mountSearchDialog(
   input.dataset.searchInput = "";
   input.placeholder = "Search docs...";
   input.autocomplete = "off";
+  input.setAttribute("role", "combobox");
+  input.setAttribute("aria-haspopup", "listbox");
+  input.setAttribute("aria-expanded", "false");
   input.setAttribute("aria-controls", "studio-search-results");
   input.setAttribute("aria-autocomplete", "list");
 
@@ -184,6 +187,7 @@ export function mountSearchDialog(
       button.textContent = `${kindLabels[kind]} (${counts[kind]})`;
     }
     results.replaceChildren(...currentResults.map(renderResult));
+    input.setAttribute("aria-expanded", String(currentResults.length > 0));
     if (activeResult >= 0) {
       input.setAttribute("aria-activedescendant", resultId(activeResult));
     } else {
@@ -191,11 +195,11 @@ export function mountSearchDialog(
     }
   };
   const renderResult = (result: SearchResult, index: number): HTMLElement => {
-    const option = document.createElement("button");
-    option.type = "button";
+    const option = document.createElement("div");
     option.id = resultId(index);
     option.className = "studio-search-result";
     option.role = "option";
+    option.tabIndex = -1;
     option.setAttribute("aria-selected", String(index === activeResult));
     if (index === activeResult) option.classList.add("is-active");
     const resultHeader = document.createElement("span");
@@ -212,6 +216,7 @@ export function mountSearchDialog(
     excerpt.className = "studio-search-result__excerpt";
     appendHighlightedText(excerpt, result.excerpt);
     option.append(resultHeader, breadcrumb, excerpt);
+    option.addEventListener("mousedown", (event) => event.preventDefault());
     option.addEventListener("pointermove", () => setActiveResult(index));
     option.addEventListener("click", () => activate(index));
     return option;
@@ -245,7 +250,17 @@ export function mountSearchDialog(
       setActiveResult(Math.min(activeResult + 1, currentResults.length - 1));
     } else if (event.key === "ArrowUp" && currentResults.length > 0) {
       event.preventDefault();
-      setActiveResult(Math.max(activeResult - 1, 0));
+      setActiveResult(
+        activeResult === -1
+          ? currentResults.length - 1
+          : Math.max(activeResult - 1, 0),
+      );
+    } else if (event.key === "Home" && currentResults.length > 0) {
+      event.preventDefault();
+      setActiveResult(0);
+    } else if (event.key === "End" && currentResults.length > 0) {
+      event.preventDefault();
+      setActiveResult(currentResults.length - 1);
     } else if (event.key === "Enter" && activeResult >= 0) {
       event.preventDefault();
       activate(activeResult);
@@ -261,7 +276,7 @@ export function mountSearchDialog(
     closeDialog();
   };
   const onDocumentKeydown = (event: KeyboardEvent) => {
-    if (event.defaultPrevented) return;
+    if (disposed || event.defaultPrevented) return;
     if ((event.metaKey || event.ctrlKey) && event.key.toLocaleLowerCase("en-US") === "k") {
       if (hasOtherOpenDialog(dialog) || isMonacoInput(document.activeElement)) return;
       event.preventDefault();
@@ -274,6 +289,7 @@ export function mountSearchDialog(
     }
   };
   const open = (nextInvoker?: HTMLElement) => {
+    if (disposed || !dialog.isConnected) return;
     if (nextInvoker !== undefined) invoker = nextInvoker;
     else if (document.activeElement instanceof HTMLElement && document.activeElement !== dialog) {
       invoker = document.activeElement;
