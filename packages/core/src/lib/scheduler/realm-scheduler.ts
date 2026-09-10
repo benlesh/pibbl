@@ -137,26 +137,15 @@ export function requestInstanceRender(
   const revision = ++nextWorkRevision;
   const target = shouldDeferNewFrameWork() ?
     nextInstanceWork : currentInstanceWork;
+  if (
+    target === currentInstanceWork &&
+    request.pendingRoot !== NO_PENDING_ROOT
+  ) {
+    supersedeDeferredRootPayloads(instance, revision);
+  }
   let current: CRCInstance | undefined = instance;
   while (current) {
     current.requestedRenderRevision = revision;
-    if (
-      current === instance &&
-      target === currentInstanceWork &&
-      request.pendingRoot !== NO_PENDING_ROOT
-    ) {
-      const deferred = nextInstanceWork.get(current);
-      if (
-        deferred &&
-        deferred.pendingRootRevision > 0 &&
-        deferred.pendingRootRevision < revision
-      ) {
-        // A later sanctioned root remains latest-wins even when the earlier
-        // root request must retain its deferred revision for the next frame.
-        deferred.pendingRoot = NO_PENDING_ROOT;
-        deferred.pendingRootRevision = 0;
-      }
-    }
     mergePendingInstanceWork(target, current, {
       firstRevision: revision,
       revision,
@@ -574,6 +563,38 @@ function findRoot(instance: CRCInstance): CRCInstance | undefined {
     current = GLOBAL_STATE.crcInstances.get(current.parent);
   }
   return current;
+}
+
+function supersedeDeferredRootPayloads(
+  ancestor: CRCInstance,
+  revision: number,
+): void {
+  for (const [instance, deferred] of nextInstanceWork) {
+    if (
+      deferred.pendingRootRevision > 0 &&
+      deferred.pendingRootRevision < revision &&
+      isInstanceWithin(instance, ancestor)
+    ) {
+      // A later sanctioned ancestor root owns the retained subtree. Preserve
+      // the older revision/composition job, but never let its obsolete root
+      // payload overwrite the newer tree in the following frame.
+      deferred.pendingRoot = NO_PENDING_ROOT;
+      deferred.pendingRootRevision = 0;
+      synchronizeInstancePendingState(instance);
+    }
+  }
+}
+
+function isInstanceWithin(
+  instance: CRCInstance,
+  ancestor: CRCInstance,
+): boolean {
+  let current: CRCInstance | undefined = instance;
+  while (current) {
+    if (current === ancestor) return true;
+    current = current.parent ? GLOBAL_STATE.crcInstances.get(current.parent) : undefined;
+  }
+  return false;
 }
 
 function restoreRootJob(rootJob: RootRenderJob): void {

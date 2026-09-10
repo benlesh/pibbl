@@ -25,6 +25,7 @@ import {
   signalGraphSnapshot,
 } from '../signals/graph';
 import { update } from '../update';
+import type { Canvas } from '../types';
 import {
   getCurrentFrameSnapshot,
   queueFrameCompletion,
@@ -375,6 +376,84 @@ describe('realm scheduler', () => {
       dirtyRoots: 0,
       pendingHostFrames: 0,
     });
+    controller.dispose();
+  });
+
+  it('keeps a later Commit-admitted parent root latest over an Advance-deferred Layer root', () => {
+    const commitTrigger = signal(0);
+    const calls: string[] = [];
+    const canvas = createCanvas();
+    const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
+    const Child = ({ color }: { color: string }) => {
+      calls.push(`child:${color}`);
+      return createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: color },
+      });
+    };
+    const Parent = ({ color }: { color: string }) => {
+      calls.push(`parent:${color}`);
+      return createElement(Layer, {
+        key: 'stable-layer',
+        style: { width: 20, height: 20 },
+        children: createElement(Child, { color }),
+      });
+    };
+    const controller = crc(canvas, createElement(Parent, { color: 'red' }));
+    driver.flush(10);
+    const layerCanvas = drawImage.mock.calls
+      .map(([source]) => source)
+      .find(source => source instanceof OffscreenCanvas) as OffscreenCanvas;
+    calls.length = 0;
+
+    const commitLatestParent = () => {
+      crc(canvas, createElement(Parent, { color: 'green' }));
+    };
+    getSignalNode(commitTrigger).observers.add(commitLatestParent);
+    let releaseAdvance = () => {};
+    const participant: CRCAdvanceParticipant = (_snapshot, batch) => {
+      releaseAdvance();
+      update(layerCanvas, createElement(Child, { color: 'blue' }));
+      batch.stage(commitTrigger, 1, participant);
+    };
+    releaseAdvance = registerAdvanceParticipant(participant);
+
+    driver.flush(20);
+
+    expect(calls).toEqual(['parent:green', 'child:green']);
+    expect(pixel(layerCanvas, 5, 5)).toEqual([0, 128, 0, 255]);
+    expect(pixel(canvas, 5, 5)).toEqual([0, 128, 0, 255]);
+    const childInstance = getCRCInstance(layerCanvas);
+    const parentInstance = getCRCInstance(canvas);
+    expect(childInstance.requestedRenderRevision).toBeGreaterThan(
+      childInstance.completedRenderRevision,
+    );
+    expect(parentInstance.requestedRenderRevision).toBeGreaterThan(
+      parentInstance.completedRenderRevision,
+    );
+    expect(snapshotRealmScheduler()).toMatchObject({
+      dirtyInstances: 2,
+      dirtyRoots: 1,
+      pendingHostFrames: 1,
+    });
+
+    calls.length = 0;
+    driver.flush(30);
+
+    expect(calls).toEqual(['child:green', 'parent:green']);
+    expect(pixel(layerCanvas, 5, 5)).toEqual([0, 128, 0, 255]);
+    expect(pixel(canvas, 5, 5)).toEqual([0, 128, 0, 255]);
+    expect(childInstance.completedRenderRevision).toBe(
+      childInstance.requestedRenderRevision,
+    );
+    expect(parentInstance.completedRenderRevision).toBe(
+      parentInstance.requestedRenderRevision,
+    );
+    expect(snapshotRealmScheduler()).toMatchObject({
+      dirtyInstances: 0,
+      dirtyRoots: 0,
+      pendingHostFrames: 0,
+    });
+    getSignalNode(commitTrigger).observers.delete(commitLatestParent);
     controller.dispose();
   });
 
@@ -1104,7 +1183,7 @@ function installSynchronousResizeChange(canvas: HTMLCanvasElement): void {
   });
 }
 
-function pixel(canvas: HTMLCanvasElement, x: number, y: number): number[] {
+function pixel(canvas: Canvas, x: number, y: number): number[] {
   return Array.from(canvas.getContext('2d')!.getImageData(x, y, 1, 1).data);
 }
 
