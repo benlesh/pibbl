@@ -1,5 +1,6 @@
 import {
   GLOBAL_STATE,
+  NO_PENDING_ROOT,
 } from './global-state.js';
 import { requestInstanceRender } from './scheduler/realm-scheduler.js';
 import { Canvas, type CRCNode } from './types.js';
@@ -24,10 +25,8 @@ export function update(
   const hasExplicitRoot = arguments.length >= 2 && !(
     rootElement === undefined && updateParents
   );
-  if (hasExplicitRoot) {
-    crcInstance.pendingRoot = rootElement;
-  }
-  crcInstance.pendingUpdateParents ||= updateParents;
-
-  requestInstanceRender(crcInstance);
+  requestInstanceRender(crcInstance, {
+    pendingRoot: hasExplicitRoot ? rootElement : NO_PENDING_ROOT,
+    pendingUpdateParents: updateParents,
+  });
 }

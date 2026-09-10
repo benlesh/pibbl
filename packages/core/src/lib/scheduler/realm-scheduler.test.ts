@@ -745,6 +745,42 @@ describe('realm scheduler', () => {
     replacementController.dispose();
   });
 
+  it('keeps a later Commit-admitted root latest over an earlier Advance-deferred root', () => {
+    const source = signal(0);
+    const renders: string[] = [];
+    const canvas = createCanvas();
+    const Deferred = (_props: {}) => {
+      renders.push('deferred');
+    };
+    const Latest = (_props: {}) => {
+      renders.push('latest');
+    };
+    const controller = crc(canvas, createElement(() => undefined, {}));
+    driver.flush(10);
+    const commitLatestRoot = () => {
+      crc(canvas, createElement(Latest, {}));
+    };
+    getSignalNode(source).observers.add(commitLatestRoot);
+
+    let release = () => {};
+    const participant: CRCAdvanceParticipant = (_snapshot, batch) => {
+      release();
+      crc(canvas, createElement(Deferred, {}));
+      batch.stage(source, 1, participant);
+    };
+    release = registerAdvanceParticipant(participant);
+
+    driver.flush(20);
+    expect(renders).toEqual(['latest']);
+    expect(driver.pendingHostFrames).toBe(1);
+
+    driver.flush(30);
+    expect(renders).toEqual(['latest', 'latest']);
+    expect(driver.pendingHostFrames).toBe(0);
+    getSignalNode(source).observers.delete(commitLatestRoot);
+    controller.dispose();
+  });
+
   it('drains nested computed failures, renders independent roots, and reports the value error once', () => {
     const failingSource = signal(0);
     const healthySource = signal(0);

@@ -22,7 +22,23 @@ import type {
 
 interface InstanceRenderJob {
   readonly instance: CRCInstance;
+  readonly firstRevision: number;
   readonly revision: number;
+  readonly pendingRoot: CRCInstance['pendingRoot'];
+  readonly pendingRootRevision: number;
+  readonly pendingUpdateParents: boolean;
+}
+
+interface PendingInstanceWork {
+  /** Earliest accepted revision not yet completed in this eligibility bucket. */
+  firstRevision: number;
+  revision: number;
+  pendingRoot: CRCInstance['pendingRoot'];
+  pendingRootRevision: number;
+  pendingUpdateParents: boolean;
+}
+
+interface InstanceRenderRequest {
   readonly pendingRoot: CRCInstance['pendingRoot'];
   readonly pendingUpdateParents: boolean;
 }
@@ -61,20 +77,26 @@ interface RendererParticipantWorkRegistration {
 interface RendererParticipantCompletion {
   readonly owner: RendererParticipantOwner;
   readonly callback: CRCFrameCompletion;
+  readonly order: number;
 }
 
 const registeredRoots = new Set<CRCInstance>();
-const dirtyInstances = new Set<CRCInstance>();
-const deferredInstances = new Set<CRCInstance>();
+// A running frame drains only current work. Late work is promoted after
+// Complete, so equal owner/key requests never coalesce across frame epochs.
+const currentInstanceWork = new Map<CRCInstance, PendingInstanceWork>();
+const nextInstanceWork = new Map<CRCInstance, PendingInstanceWork>();
 const advanceRegistrations = new Set<AdvanceRegistration>();
 const frameCompletions: CRCFrameCompletion[] = [];
-const rendererWorkByOwner = new Map<
+const currentRendererWorkByOwner = new Map<
   RendererParticipantOwner,
   Map<object, RendererParticipantWorkRegistration>
 >();
-const deferredRendererWork = new Set<RendererParticipantWorkRegistration>();
-const rendererParticipantCompletions: RendererParticipantCompletion[] = [];
-const deferredRendererCompletions = new Set<RendererParticipantCompletion>();
+const nextRendererWorkByOwner = new Map<
+  RendererParticipantOwner,
+  Map<object, RendererParticipantWorkRegistration>
+>();
+const currentRendererParticipantCompletions: RendererParticipantCompletion[] = [];
+const nextRendererParticipantCompletions: RendererParticipantCompletion[] = [];
 
 let phase: CRCFramePhase = 'idle';
 let pendingHostFrame: number | undefined;
@@ -82,6 +104,7 @@ let currentFrame: CRCFrameSnapshot | undefined;
 let nextFrameId = 0;
 let nextWorkRevision = 0;
 let nextRendererWorkOrder = 0;
+let nextRendererCompletionOrder = 0;
 let schedulerDriver: SchedulerDriver | undefined;
 let createdRootRegistrations = 0;
 let releasedRootRegistrations = 0;
@@ -104,16 +127,47 @@ export function unregisterRootInstance(instance: CRCInstance): void {
   cancelIdleHostFrame();
 }
 
-export function requestInstanceRender(instance: CRCInstance): number {
+export function requestInstanceRender(
+  instance: CRCInstance,
+  request: InstanceRenderRequest = {
+    pendingRoot: NO_PENDING_ROOT,
+    pendingUpdateParents: false,
+  },
+): number {
   const revision = ++nextWorkRevision;
-  const deferUntilNextFrame = shouldDeferNewFrameWork();
+  const target = shouldDeferNewFrameWork() ?
+    nextInstanceWork : currentInstanceWork;
   let current: CRCInstance | undefined = instance;
   while (current) {
     current.requestedRenderRevision = revision;
-    dirtyInstances.add(current);
-    if (deferUntilNextFrame) {
-      deferredInstances.add(current);
+    if (
+      current === instance &&
+      target === currentInstanceWork &&
+      request.pendingRoot !== NO_PENDING_ROOT
+    ) {
+      const deferred = nextInstanceWork.get(current);
+      if (
+        deferred &&
+        deferred.pendingRootRevision > 0 &&
+        deferred.pendingRootRevision < revision
+      ) {
+        // A later sanctioned root remains latest-wins even when the earlier
+        // root request must retain its deferred revision for the next frame.
+        deferred.pendingRoot = NO_PENDING_ROOT;
+        deferred.pendingRootRevision = 0;
+      }
     }
+    mergePendingInstanceWork(target, current, {
+      firstRevision: revision,
+      revision,
+      pendingRoot: current === instance ? request.pendingRoot : NO_PENDING_ROOT,
+      pendingRootRevision:
+        current === instance && request.pendingRoot !== NO_PENDING_ROOT ?
+          revision : 0,
+      pendingUpdateParents:
+        current === instance && request.pendingUpdateParents,
+    });
+    synchronizeInstancePendingState(current);
     current = current.parent ? GLOBAL_STATE.crcInstances.get(current.parent) : undefined;
   }
   requestHostFrameIfNeeded();
@@ -123,7 +177,7 @@ export function requestInstanceRender(instance: CRCInstance): number {
 /** Whether an instance has work that has not yet completed a successful render. */
 export function hasPendingInstanceRender(instance: CRCInstance): boolean {
   return instance.requestedRenderRevision > instance.completedRenderRevision &&
-    !(phase === 'render' && deferredInstances.has(instance));
+    !(phase === 'render' && nextInstanceWork.has(instance));
 }
 
 export function registerAdvanceParticipant(
@@ -150,28 +204,22 @@ export function requestRendererParticipantWork(
   request: RendererParticipantWorkRequest,
 ): void {
   if (!owner.isActive()) return;
+  const rendererWorkByOwner = shouldDeferNewFrameWork() ?
+    nextRendererWorkByOwner : currentRendererWorkByOwner;
   let workByKey = rendererWorkByOwner.get(owner);
   if (!workByKey) {
     workByKey = new Map();
     rendererWorkByOwner.set(owner, workByKey);
   }
   const existing = workByKey.get(request.key);
-  let registration: RendererParticipantWorkRegistration;
   if (existing) {
     existing.request = request;
-    registration = existing;
   } else {
-    registration = {
+    workByKey.set(request.key, {
       owner,
       request,
       order: ++nextRendererWorkOrder,
-    };
-    workByKey.set(request.key, registration);
-  }
-  if (shouldDeferNewFrameWork()) {
-    deferredRendererWork.add(registration);
-  } else {
-    deferredRendererWork.delete(registration);
+    });
   }
   requestInstanceRender(owner.instance);
 }
@@ -181,28 +229,30 @@ export function queueRendererParticipantComplete(
   callback: CRCFrameCompletion,
 ): void {
   if (!owner.isActive()) return;
-  const completion = { owner, callback };
-  rendererParticipantCompletions.push(completion);
-  if (shouldDeferNewFrameWork()) {
-    deferredRendererCompletions.add(completion);
-  }
+  const completions = shouldDeferNewFrameWork() ?
+    nextRendererParticipantCompletions :
+    currentRendererParticipantCompletions;
+  completions.push({
+    owner,
+    callback,
+    order: ++nextRendererCompletionOrder,
+  });
   requestHostFrameIfNeeded();
 }
 
 export function removeRendererParticipantOwner(
   owner: RendererParticipantOwner,
 ): void {
-  const workByKey = rendererWorkByOwner.get(owner);
-  if (workByKey) {
-    for (const registration of workByKey.values()) {
-      deferredRendererWork.delete(registration);
-    }
-  }
-  rendererWorkByOwner.delete(owner);
-  for (let index = rendererParticipantCompletions.length - 1; index >= 0; index--) {
-    if (rendererParticipantCompletions[index].owner === owner) {
-      deferredRendererCompletions.delete(rendererParticipantCompletions[index]);
-      rendererParticipantCompletions.splice(index, 1);
+  currentRendererWorkByOwner.delete(owner);
+  nextRendererWorkByOwner.delete(owner);
+  for (const completions of [
+    currentRendererParticipantCompletions,
+    nextRendererParticipantCompletions,
+  ]) {
+    for (let index = completions.length - 1; index >= 0; index--) {
+      if (completions[index].owner === owner) {
+        completions.splice(index, 1);
+      }
     }
   }
   cancelIdleHostFrame();
@@ -219,10 +269,12 @@ export function snapshotRealmScheduler(): RealmSchedulerSnapshot {
     registeredRoots: registeredRoots.size,
     advanceParticipants: advanceRegistrations.size,
     completionCallbacks:
-      frameCompletions.length + rendererParticipantCompletions.length,
+      frameCompletions.length +
+      currentRendererParticipantCompletions.length +
+      nextRendererParticipantCompletions.length,
     createdRootRegistrations,
     releasedRootRegistrations,
-    dirtyInstances: dirtyInstances.size,
+    dirtyInstances: countDirtyInstances(),
     dirtyRoots: countDirtyRoots(),
     registeredAdvanceParticipants: advanceRegistrations.size,
     queuedFrameCompletions: frameCompletions.length,
@@ -256,9 +308,6 @@ function requestHostFrameIfNeeded(): void {
 
 function runFrame(hostTime: number): void {
   pendingHostFrame = undefined;
-  deferredInstances.clear();
-  deferredRendererWork.clear();
-  deferredRendererCompletions.clear();
   const snapshot = Object.freeze({
     frameId: ++nextFrameId,
     hostTime,
@@ -306,9 +355,20 @@ function runFrame(hostTime: number): void {
   } catch (error) {
     errors.push(error);
   }
-  rootJobs = mergeRootJobs(rootJobs, captureRootJobs(true));
-  const rendererWork = captureRendererParticipantWork();
-  const rendererCompletions = captureRendererParticipantCompletions();
+  rootJobs = mergeRootJobs(rootJobs, captureRootJobs());
+  const executableInstances = new Set(
+    rootJobs.flatMap(rootJob =>
+      rootJob.instances.map(instanceJob => instanceJob.instance),
+    ),
+  );
+  const blockedRendererOwners = new Set<RendererParticipantOwner>();
+  const rendererWork = captureRendererParticipantWork(
+    executableInstances,
+    blockedRendererOwners,
+  );
+  const rendererCompletions = captureRendererParticipantCompletions(
+    blockedRendererOwners,
+  );
   const retryRendererOwners = new Set<RendererParticipantOwner>();
 
   phase = 'render';
@@ -387,7 +447,7 @@ function runFrame(hostTime: number): void {
           failedInstance = job.instance;
           throw error;
         }
-        job.instance.completedRenderRevision = job.revision;
+        completeInstanceRenderRevision(job.instance, job.revision);
       }
       transactionRecord.success = !rendererFailed;
     } catch (error) {
@@ -420,7 +480,7 @@ function runFrame(hostTime: number): void {
   for (const completion of rendererCompletions) {
     if (!completion.owner.isActive()) continue;
     if (retryRendererOwners.has(completion.owner)) {
-      rendererParticipantCompletions.push(completion);
+      nextRendererParticipantCompletions.push(completion);
       continue;
     }
     try {
@@ -432,31 +492,29 @@ function runFrame(hostTime: number): void {
   batch.clear();
   currentFrame = undefined;
   phase = 'idle';
+  promoteNextFrameWork();
   requestHostFrameIfNeeded();
   throwCollectedErrors(errors);
 }
 
-function captureRootJobs(planOnly = false): RootRenderJob[] {
-  const requested: CRCInstance[] = [];
-  for (const instance of dirtyInstances) {
-    if (planOnly && deferredInstances.has(instance)) continue;
-    dirtyInstances.delete(instance);
-    requested.push(instance);
-  }
+function captureRootJobs(): RootRenderJob[] {
+  const requested = Array.from(currentInstanceWork);
+  currentInstanceWork.clear();
   const jobsByRoot = new Map<CRCInstance, InstanceRenderJob[]>();
-  for (const instance of requested) {
+  for (const [instance, work] of requested) {
+    synchronizeInstancePendingState(instance);
     if (instance.mainTeardowns.closed) continue;
     const root = findRoot(instance);
     if (!root || !registeredRoots.has(root)) continue;
     const jobs = jobsByRoot.get(root) ?? [];
     jobs.push({
       instance,
-      revision: instance.requestedRenderRevision,
-      pendingRoot: instance.pendingRoot,
-      pendingUpdateParents: instance.pendingUpdateParents,
+      firstRevision: work.firstRevision,
+      revision: work.revision,
+      pendingRoot: work.pendingRoot,
+      pendingRootRevision: work.pendingRootRevision,
+      pendingUpdateParents: work.pendingUpdateParents,
     });
-    instance.pendingRoot = NO_PENDING_ROOT;
-    instance.pendingUpdateParents = false;
     jobsByRoot.set(root, jobs);
   }
 
@@ -488,8 +546,15 @@ function mergeRootJobs(
       const existing = byInstance.get(job.instance);
       byInstance.set(job.instance, existing ? {
         instance: job.instance,
-        revision: job.revision,
-        pendingRoot: existing.pendingRoot,
+        firstRevision: Math.min(existing.firstRevision, job.firstRevision),
+        revision: Math.max(existing.revision, job.revision),
+        pendingRoot:
+          job.pendingRootRevision > existing.pendingRootRevision ?
+            job.pendingRoot : existing.pendingRoot,
+        pendingRootRevision: Math.max(
+          existing.pendingRootRevision,
+          job.pendingRootRevision,
+        ),
         pendingUpdateParents:
           existing.pendingUpdateParents || job.pendingUpdateParents,
       } : job);
@@ -523,14 +588,8 @@ function restoreRootJob(rootJob: RootRenderJob): void {
     ) {
       continue;
     }
-    dirtyInstances.add(instance);
-    if (
-      instance.pendingRoot === NO_PENDING_ROOT &&
-      job.pendingRoot !== NO_PENDING_ROOT
-    ) {
-      instance.pendingRoot = job.pendingRoot;
-    }
-    instance.pendingUpdateParents ||= job.pendingUpdateParents;
+    mergePendingInstanceWork(nextInstanceWork, instance, job);
+    synchronizeInstancePendingState(instance);
   }
 }
 
@@ -545,37 +604,50 @@ function instanceDepth(instance: CRCInstance): number {
 }
 
 function removeRootWork(root: CRCInstance): void {
-  for (const instance of dirtyInstances) {
-    if (findRoot(instance) === root) {
-      dirtyInstances.delete(instance);
-    }
-  }
-  for (const instance of deferredInstances) {
-    if (findRoot(instance) === root) {
-      deferredInstances.delete(instance);
+  for (const workByInstance of [currentInstanceWork, nextInstanceWork]) {
+    for (const instance of workByInstance.keys()) {
+      if (findRoot(instance) === root) {
+        workByInstance.delete(instance);
+        synchronizeInstancePendingState(instance);
+      }
     }
   }
 }
 
 function countDirtyRoots(): number {
   const roots = new Set<CRCInstance>();
-  for (const instance of dirtyInstances) {
-    const root = findRoot(instance);
-    if (root && registeredRoots.has(root)) roots.add(root);
+  for (const workByInstance of [currentInstanceWork, nextInstanceWork]) {
+    for (const instance of workByInstance.keys()) {
+      const root = findRoot(instance);
+      if (root && registeredRoots.has(root)) roots.add(root);
+    }
   }
   return roots.size;
 }
 
+function countDirtyInstances(): number {
+  return new Set([
+    ...currentInstanceWork.keys(),
+    ...nextInstanceWork.keys(),
+  ]).size;
+}
+
 function hasFrameWork(): boolean {
-  return dirtyInstances.size > 0 ||
+  return currentInstanceWork.size > 0 ||
+    nextInstanceWork.size > 0 ||
     hasPendingComputedValidations() ||
     advanceRegistrations.size > 0 ||
     frameCompletions.length > 0 ||
-    rendererWorkByOwner.size > 0 ||
-    rendererParticipantCompletions.length > 0;
+    currentRendererWorkByOwner.size > 0 ||
+    nextRendererWorkByOwner.size > 0 ||
+    currentRendererParticipantCompletions.length > 0 ||
+    nextRendererParticipantCompletions.length > 0;
 }
 
-function captureRendererParticipantWork(): Map<
+function captureRendererParticipantWork(
+  executableInstances: ReadonlySet<CRCInstance>,
+  blockedOwners: Set<RendererParticipantOwner>,
+): Map<
   CRCInstance,
   RendererParticipantWorkRegistration[]
 > {
@@ -583,22 +655,20 @@ function captureRendererParticipantWork(): Map<
     CRCInstance,
     RendererParticipantWorkRegistration[]
   >();
-  for (const [owner, workByKey] of rendererWorkByOwner) {
+  for (const [owner, workByKey] of currentRendererWorkByOwner) {
     if (!owner.isActive()) {
-      for (const registration of workByKey.values()) {
-        deferredRendererWork.delete(registration);
-      }
-      rendererWorkByOwner.delete(owner);
+      currentRendererWorkByOwner.delete(owner);
+      continue;
+    }
+    if (!executableInstances.has(owner.instance)) {
+      blockedOwners.add(owner);
       continue;
     }
     const work = byInstance.get(owner.instance) ?? [];
-    for (const [key, registration] of workByKey) {
-      if (deferredRendererWork.has(registration)) continue;
-      deferredRendererWork.delete(registration);
-      workByKey.delete(key);
+    for (const registration of workByKey.values()) {
       work.push(registration);
     }
-    if (workByKey.size === 0) rendererWorkByOwner.delete(owner);
+    currentRendererWorkByOwner.delete(owner);
     if (work.length > 0) byInstance.set(owner.instance, work);
   }
   const kindOrder = { resource: 0, draw: 1, compose: 2 } as const;
@@ -611,17 +681,20 @@ function captureRendererParticipantWork(): Map<
   return byInstance;
 }
 
-function captureRendererParticipantCompletions(): RendererParticipantCompletion[] {
+function captureRendererParticipantCompletions(
+  blockedOwners: ReadonlySet<RendererParticipantOwner>,
+): RendererParticipantCompletion[] {
   const captured: RendererParticipantCompletion[] = [];
-  for (let index = 0; index < rendererParticipantCompletions.length;) {
-    const completion = rendererParticipantCompletions[index];
-    if (deferredRendererCompletions.has(completion)) {
+  for (let index = 0; index < currentRendererParticipantCompletions.length;) {
+    const completion = currentRendererParticipantCompletions[index];
+    if (blockedOwners.has(completion.owner)) {
       index++;
       continue;
     }
-    rendererParticipantCompletions.splice(index, 1);
+    currentRendererParticipantCompletions.splice(index, 1);
     captured.push(completion);
   }
+  captured.sort((left, right) => left.order - right.order);
   return captured;
 }
 
@@ -666,10 +739,10 @@ function restoreRendererParticipantFailure(
     for (const registration of work) {
       const { owner, request } = registration;
       if (!owner.isActive()) continue;
-      let workByKey = rendererWorkByOwner.get(owner);
+      let workByKey = nextRendererWorkByOwner.get(owner);
       if (!workByKey) {
         workByKey = new Map();
-        rendererWorkByOwner.set(owner, workByKey);
+        nextRendererWorkByOwner.set(owner, workByKey);
       }
       if (!workByKey.has(request.key)) {
         workByKey.set(request.key, registration);
@@ -681,6 +754,98 @@ function restoreRendererParticipantFailure(
   for (const owner of ownersToRequest) {
     requestInstanceRender(owner.instance);
   }
+}
+
+function mergePendingInstanceWork(
+  target: Map<CRCInstance, PendingInstanceWork>,
+  instance: CRCInstance,
+  incoming: PendingInstanceWork,
+): void {
+  const existing = target.get(instance);
+  if (!existing) {
+    target.set(instance, { ...incoming });
+    return;
+  }
+  existing.firstRevision = Math.min(
+    existing.firstRevision,
+    incoming.firstRevision,
+  );
+  existing.revision = Math.max(existing.revision, incoming.revision);
+  if (incoming.pendingRootRevision > existing.pendingRootRevision) {
+    existing.pendingRoot = incoming.pendingRoot;
+    existing.pendingRootRevision = incoming.pendingRootRevision;
+  }
+  existing.pendingUpdateParents ||= incoming.pendingUpdateParents;
+}
+
+function synchronizeInstancePendingState(instance: CRCInstance): void {
+  const current = currentInstanceWork.get(instance);
+  const next = nextInstanceWork.get(instance);
+  const rootSource = !current ? next : !next ? current :
+    current.pendingRootRevision >= next.pendingRootRevision ? current : next;
+  instance.pendingRoot = rootSource ? rootSource.pendingRoot : NO_PENDING_ROOT;
+  instance.pendingUpdateParents = Boolean(
+    current?.pendingUpdateParents || next?.pendingUpdateParents,
+  );
+}
+
+export function completeInstanceRenderRevision(
+  instance: CRCInstance,
+  revision: number,
+): void {
+  const pendingFirstRevisions = [
+    currentInstanceWork.get(instance)?.firstRevision,
+    nextInstanceWork.get(instance)?.firstRevision,
+  ].filter((value): value is number => value !== undefined);
+  if (pendingFirstRevisions.length === 0) {
+    instance.completedRenderRevision = instance.requestedRenderRevision;
+    return;
+  }
+  // Revisions are global request order. Do not advance across an older hole
+  // that was deferred before newer Commit/Plan work joined this frame.
+  if (Math.min(...pendingFirstRevisions) > revision) {
+    instance.completedRenderRevision = Math.max(
+      instance.completedRenderRevision,
+      revision,
+    );
+  }
+}
+
+function promoteNextFrameWork(): void {
+  const pendingInstances = new Set<CRCInstance>();
+  for (const [instance, work] of nextInstanceWork) {
+    mergePendingInstanceWork(currentInstanceWork, instance, work);
+    pendingInstances.add(instance);
+  }
+  nextInstanceWork.clear();
+  for (const instance of pendingInstances) {
+    synchronizeInstancePendingState(instance);
+  }
+
+  for (const [owner, nextWorkByKey] of nextRendererWorkByOwner) {
+    let currentWorkByKey = currentRendererWorkByOwner.get(owner);
+    if (!currentWorkByKey) {
+      currentWorkByKey = new Map();
+      currentRendererWorkByOwner.set(owner, currentWorkByKey);
+    }
+    for (const [key, registration] of nextWorkByKey) {
+      const existing = currentWorkByKey.get(key);
+      if (existing) {
+        existing.request = registration.request;
+      } else {
+        currentWorkByKey.set(key, registration);
+      }
+    }
+  }
+  nextRendererWorkByOwner.clear();
+
+  currentRendererParticipantCompletions.push(
+    ...nextRendererParticipantCompletions,
+  );
+  currentRendererParticipantCompletions.sort(
+    (left, right) => left.order - right.order,
+  );
+  nextRendererParticipantCompletions.length = 0;
 }
 
 function cancelIdleHostFrame(): void {

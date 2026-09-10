@@ -2063,6 +2063,31 @@ assert.match(
   ),
   "Library status direct-evidence count is stale.",
 );
+export function assertTrustGatePreservationCounts(
+  source,
+  { currentUnitCount, evidenceMappingCount },
+) {
+  assert.match(
+    source,
+    new RegExp(
+      `\\bcomplete reviewed current form \\(${currentUnitCount} units\\)`,
+      "u",
+    ),
+    "Trust-gate current semantic-unit count is stale.",
+  );
+  assert.match(
+    source,
+    new RegExp(`\\bThe ${evidenceMappingCount} direct source/test mappings\\b`, "u"),
+    "Trust-gate direct-evidence count is stale.",
+  );
+}
+
+const trustGate = currentSources.get("docs/testing/trust-gate.md");
+const trustGatePreservationCounts = {
+  currentUnitCount: contractPreservationResult.currentUnitCount,
+  evidenceMappingCount: contractPreservationResult.evidenceMappingCount,
+};
+assertTrustGatePreservationCounts(trustGate, trustGatePreservationCounts);
 const matrix = libraryStatus.slice(
   libraryStatus.indexOf("## Documentation acceptance matrix"),
   libraryStatus.indexOf("## Running locally"),
@@ -2130,6 +2155,41 @@ export async function verifyMutationProbes() {
     assert.throws(operation, pattern);
     probes += 1;
   };
+
+  const staleTrustGateUnitCount = trustGate.replace(
+    `(${trustGatePreservationCounts.currentUnitCount} units)`,
+    `(${trustGatePreservationCounts.currentUnitCount - 1} units)`,
+  );
+  assert.notEqual(
+    staleTrustGateUnitCount,
+    trustGate,
+    "Trust-gate unit-count mutation fixture did not change",
+  );
+  throws(
+    () =>
+      assertTrustGatePreservationCounts(
+        staleTrustGateUnitCount,
+        trustGatePreservationCounts,
+      ),
+    /Trust-gate current semantic-unit count is stale/u,
+  );
+  const staleTrustGateEvidenceCount = trustGate.replace(
+    `The ${trustGatePreservationCounts.evidenceMappingCount} direct source/test mappings`,
+    `The ${trustGatePreservationCounts.evidenceMappingCount - 1} direct source/test mappings`,
+  );
+  assert.notEqual(
+    staleTrustGateEvidenceCount,
+    trustGate,
+    "Trust-gate evidence-count mutation fixture did not change",
+  );
+  throws(
+    () =>
+      assertTrustGatePreservationCounts(
+        staleTrustGateEvidenceCount,
+        trustGatePreservationCounts,
+      ),
+    /Trust-gate direct-evidence count is stale/u,
+  );
 
   throws(
     () =>

@@ -29,7 +29,10 @@ import {
 } from '../surface/transform.js';
 import { getCurrentWorldTransform } from '../render-target.js';
 import { createLayerSurface } from '../surface/resolve-surface.js';
-import { hasPendingInstanceRender } from '../scheduler/realm-scheduler.js';
+import {
+  completeInstanceRenderRevision,
+  hasPendingInstanceRender,
+} from '../scheduler/realm-scheduler.js';
 import type { CRCElement } from '../element/types.js';
 import {
   haveSameLayerNodeTree,
@@ -159,7 +162,7 @@ function renderLayer(
       nextRoot,
       false,
     );
-    layerCRC.completedRenderRevision = renderedRevision;
+    completeInstanceRenderRevision(layerCRC, renderedRevision);
     slot.retainedTree = snapshotLayerNodeTree(nextRoot);
   } else {
     parentInstance.eventRoot.focusPolicy?.replayRetainedSubtree(layerCRC);

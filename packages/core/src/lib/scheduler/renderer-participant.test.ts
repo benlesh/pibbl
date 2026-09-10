@@ -641,6 +641,210 @@ describe('@crc/core/internal renderer participants', () => {
     controller.dispose();
   });
 
+  it('keeps same-key pre-Begin work current while Advance coalesces the next frame separately', () => {
+    const calls: string[] = [];
+    const workKey = {};
+    let owner: CRCInternalRenderOwner | undefined;
+    let recordRootRender = false;
+    const canvas = createCanvas();
+    const controller = crc(canvas, createElement(() => {
+      owner ??= crcInternalCurrentRenderOwner();
+      if (recordRootRender) calls.push('root render');
+    }, {}));
+    driver.flush(1);
+    recordRootRender = true;
+    const instance = getCRCInstance(canvas);
+    const completedBeforeWork = instance.completedRenderRevision;
+
+    crcInternalRequestRendererWork(owner!, {
+      key: workKey,
+      kind: 'draw',
+      run: () => calls.push('current draw'),
+    });
+    crcInternalQueueComplete(owner!, () => calls.push('current complete'));
+    let release = () => {};
+    release = registerAdvanceParticipant(() => {
+      release();
+      crcInternalRequestRendererWork(owner!, {
+        key: workKey,
+        kind: 'draw',
+        run: () => calls.push('next draw'),
+      });
+      crcInternalQueueComplete(owner!, () => calls.push('next complete'));
+    });
+
+    driver.flush(2);
+    expect(calls).toEqual([
+      'current draw',
+      'root render',
+      'current complete',
+    ]);
+    expect(instance.requestedRenderRevision).toBeGreaterThan(
+      instance.completedRenderRevision,
+    );
+    expect(instance.completedRenderRevision).toBeGreaterThan(
+      completedBeforeWork,
+    );
+    expect(driver.pendingHostFrames).toBe(1);
+
+    calls.length = 0;
+    driver.flush(3);
+    expect(calls).toEqual(['next draw', 'root render', 'next complete']);
+    expect(instance.completedRenderRevision).toBe(
+      instance.requestedRenderRevision,
+    );
+    expect(driver.pendingHostFrames).toBe(0);
+    controller.dispose();
+  });
+
+  it('retains Commit and Plan friend work after an earlier Advance request for the same owner', () => {
+    const calls: string[] = [];
+    const commitSource = signal(0);
+    const planSource = signal(0);
+    const plannedValue = computed(() => planSource.get() + 1);
+    const keys = {
+      advance: {},
+      commit: {},
+      plan: {},
+    };
+    let owner: CRCInternalRenderOwner | undefined;
+    let consumer: CRCInternalSignalConsumer | undefined;
+    let recordRootRender = false;
+    const canvas = createCanvas();
+    const controller = crc(canvas, createElement(() => {
+      owner ??= crcInternalCurrentRenderOwner();
+      consumer ??= crcInternalCreateSignalConsumer({
+        owner,
+        invalidate: () => {
+          crcInternalRequestRendererWork(owner!, {
+            key: keys.plan,
+            kind: 'draw',
+            run: () => calls.push('plan draw'),
+          });
+          crcInternalQueueComplete(owner!, () => calls.push('plan complete'));
+        },
+      });
+      consumer.collect(() => plannedValue.get());
+      consumer.markClean();
+      if (recordRootRender) calls.push('root render');
+    }, {}));
+    driver.flush(1);
+    recordRootRender = true;
+    const instance = getCRCInstance(canvas);
+    const completedBeforeWork = instance.completedRenderRevision;
+    const commitObserver = () => {
+      crcInternalRequestRendererWork(owner!, {
+        key: keys.commit,
+        kind: 'draw',
+        run: () => calls.push('commit draw'),
+      });
+      crcInternalQueueComplete(owner!, () => calls.push('commit complete'));
+    };
+    getSignalNode(commitSource).observers.add(commitObserver);
+    expect(driver.pendingHostFrames).toBe(0);
+
+    let release = () => {};
+    const participant: CRCAdvanceParticipant = (_snapshot, batch) => {
+      release();
+      crcInternalRequestRendererWork(owner!, {
+        key: keys.advance,
+        kind: 'draw',
+        run: () => calls.push('advance draw'),
+      });
+      crcInternalQueueComplete(owner!, () => calls.push('advance complete'));
+      batch.stage(commitSource, 1, participant);
+      batch.stage(planSource, 1, participant);
+    };
+    release = registerAdvanceParticipant(participant);
+
+    driver.flush(2);
+    expect(calls).toEqual([
+      'commit draw',
+      'plan draw',
+      'root render',
+      'commit complete',
+      'plan complete',
+    ]);
+    expect(instance.completedRenderRevision).toBe(completedBeforeWork);
+    expect(instance.requestedRenderRevision).toBeGreaterThan(
+      instance.completedRenderRevision,
+    );
+    expect(driver.pendingHostFrames).toBe(1);
+
+    calls.length = 0;
+    driver.flush(3);
+    expect(calls).toEqual([
+      'advance draw',
+      'root render',
+      'advance complete',
+    ]);
+    expect(instance.completedRenderRevision).toBe(
+      instance.requestedRenderRevision,
+    );
+    expect(driver.pendingHostFrames).toBe(0);
+
+    getSignalNode(commitSource).observers.delete(commitObserver);
+    controller.dispose();
+  });
+
+  it('keeps deferred nested friend revisions incomplete during an admitted parent render', () => {
+    const calls: string[] = [];
+    const parentSource = signal(0);
+    const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
+    let owner: CRCInternalRenderOwner | undefined;
+    let recordChildRender = false;
+    const Child = ({ value: _value }: { value: number }) => {
+      owner ??= crcInternalCurrentRenderOwner();
+      if (recordChildRender) calls.push('child render');
+    };
+    const Root = (_props: {}) => createElement(Layer, {
+      style: { width: 20, height: 20 },
+      children: createElement(Child, { value: parentSource.get() }),
+    });
+    const controller = crc(createCanvas(), createElement(Root, {}));
+    driver.flush(1);
+    const layerCanvas = drawImage.mock.calls
+      .map(([source]) => source)
+      .find(source => source instanceof OffscreenCanvas) as OffscreenCanvas;
+    const child = getCRCInstance(layerCanvas);
+    const completedBeforeWork = child.completedRenderRevision;
+    recordChildRender = true;
+
+    let release = () => {};
+    const participant: CRCAdvanceParticipant = (_snapshot, batch) => {
+      release();
+      crcInternalRequestRendererWork(owner!, {
+        key: {},
+        kind: 'draw',
+        run: () => calls.push('friend draw'),
+      });
+      crcInternalQueueComplete(owner!, () => calls.push('friend complete'));
+      batch.stage(parentSource, 1, participant);
+    };
+    release = registerAdvanceParticipant(participant);
+
+    driver.flush(2);
+    expect(calls).toEqual(['child render']);
+    expect(child.completedRenderRevision).toBe(completedBeforeWork);
+    expect(child.requestedRenderRevision).toBeGreaterThan(
+      child.completedRenderRevision,
+    );
+    expect(driver.pendingHostFrames).toBe(1);
+
+    calls.length = 0;
+    driver.flush(3);
+    expect(calls).toEqual([
+      'friend draw',
+      'child render',
+      'friend complete',
+    ]);
+    expect(child.completedRenderRevision).toBe(
+      child.requestedRenderRevision,
+    );
+    expect(driver.pendingHostFrames).toBe(0);
+    controller.dispose();
+  });
+
   it('replaces signal dependencies only after successful collection', () => {
     const first = signal(0);
     const second = signal(0);
