@@ -103,13 +103,15 @@ function Greeting() {
 `set()` treats a function as data; use `update()` for a functional update.
 Signals do not unwrap in JSX or styles. Writes are rejected during component,
 primitive-render, and computed evaluation—even when equality would make the
-write a no-op. `untracked()` suppresses synchronous dependency collection but
-does not relax that guard.
+write a no-op. Direct writes are also rejected during scheduler Advance;
+sanctioned Advance producers stage their changes for Commit. `untracked()`
+suppresses synchronous dependency collection but does not relax either guard.
 
 Computed values are lazy, cached, dynamically dependent, and
 dependency-first. Equal results do not invalidate downstream consumers.
-Invalidating an observed computed queues validation for Plan in the next
-already-requested frame; it does not request a frame by itself.
+Invalidating an observed computed requests one coalesced realm frame for Plan
+validation. An equal result renders nothing; a changed result invalidates and
+renders its exact consumers in that same frame.
 
 ## Identity
 

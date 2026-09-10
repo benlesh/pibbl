@@ -10,6 +10,7 @@ import {
   flushPendingComputedValidations,
   createSignalCommitBatch,
   getSignalNode,
+  signalGraphSnapshot,
   withSignalTracking,
   withSignalWriteForbidden,
   withSignalWritePolicy,
@@ -463,7 +464,7 @@ describe('computed', () => {
     expect(evaluations).toBe(2);
   });
 
-  it('retains the previous successful value when equality throws', () => {
+  it('retains the previous successful value and publishes the cached error when equality throws', () => {
     const source = signal(1);
     const boom = new Error('equality failed');
     const value = computed(() => source.get(), { equals: () => { throw boom; } });
@@ -473,7 +474,7 @@ describe('computed', () => {
     source.set(2);
     expect(() => value.get()).toThrow(boom);
     expect(node.value).toBe(1);
-    expect(node.version).toBe(1);
+    expect(node.version).toBe(2);
   });
 
   it('rejects writes from a computation, including no-op writes', () => {
@@ -502,18 +503,70 @@ describe('computed', () => {
     expect(source.get()).toBe(2);
   });
 
-  it('reports direct and indirect computed cycles with the debug-name path', () => {
+  it('caches one direct cycle error without retaining the closing edge', () => {
     let direct: ReturnType<typeof computed<number>>;
     direct = computed(() => direct.get(), { debugName: 'direct' });
+
+    const firstFailure = captureFailure(() => direct.get());
+    const secondFailure = captureFailure(() => direct.get());
+
+    expect(firstFailure).toBeInstanceOf(Error);
+    expect(firstFailure).not.toBeInstanceOf(RangeError);
+    expect((firstFailure as Error).message).toBe(
+      'CRC computed cycle: direct -> direct',
+    );
+    expect(secondFailure).toBe(firstFailure);
+    expect(getSignalNode(direct).observers.size).toBe(0);
+  });
+
+  it('caches one indirect cycle error without retaining the back edge', () => {
     let first: ReturnType<typeof computed<number>>;
     let second: ReturnType<typeof computed<number>>;
     first = computed(() => second.get(), { debugName: 'first' });
     second = computed(() => first.get(), { debugName: 'second' });
 
-    expect(() => direct.get()).toThrow('CRC computed cycle: direct -> direct');
-    expect(() => first.get()).toThrow(
+    const firstFailure = captureFailure(() => first.get());
+    const secondFailure = captureFailure(() => first.get());
+
+    expect(firstFailure).toBeInstanceOf(Error);
+    expect(firstFailure).not.toBeInstanceOf(RangeError);
+    expect((firstFailure as Error).message).toBe(
       'CRC computed cycle: first -> second -> first',
     );
+    expect(secondFailure).toBe(firstFailure);
+    expect(getSignalNode(first).observers.size).toBe(0);
+    expect(getSignalNode(second).observers.size).toBe(0);
+  });
+
+  it('recovers guarded direct and indirect cycles after the guard changes', () => {
+    const directGuard = signal(true);
+    let direct: ReturnType<typeof computed<number>>;
+    direct = computed(
+      () => directGuard.get() ? direct.get() : 7,
+      { debugName: 'guarded direct' },
+    );
+    expect(() => direct.get()).toThrow(
+      'CRC computed cycle: guarded direct -> guarded direct',
+    );
+
+    const indirectGuard = signal(true);
+    let first: ReturnType<typeof computed<number>>;
+    let second: ReturnType<typeof computed<number>>;
+    first = computed(() => second.get(), { debugName: 'guarded first' });
+    second = computed(
+      () => indirectGuard.get() ? first.get() : 11,
+      { debugName: 'guarded second' },
+    );
+    expect(() => first.get()).toThrow(
+      'CRC computed cycle: guarded first -> guarded second -> guarded first',
+    );
+
+    directGuard.set(false);
+    indirectGuard.set(false);
+
+    expect(direct.get()).toBe(7);
+    expect(first.get()).toBe(11);
+    expect(second.get()).toBe(11);
   });
 
   it('does not assign promise-continuation reads to a completed computation', async () => {
@@ -600,4 +653,145 @@ describe('computed', () => {
     flushPendingComputedValidations();
     expect([innerEvaluations, outerEvaluations]).toEqual([2, 2]);
   });
+
+  it('drains independent observed computeds when an earlier value fails', () => {
+    const failingSource = signal(0);
+    const healthySource = signal(0);
+    const computationFailure = new Error('observed computation failed');
+    let healthyEvaluations = 0;
+    const failing = computed(() => {
+      if (failingSource.get() > 0) throw computationFailure;
+      return 0;
+    });
+    const healthy = computed(() => {
+      healthyEvaluations++;
+      return healthySource.get() + 1;
+    });
+    expect(failing.get()).toBe(0);
+    expect(healthy.get()).toBe(1);
+    const detachFailing = getSignalNode(failing).observe!();
+    const detachHealthy = getSignalNode(healthy).observe!();
+
+    failingSource.set(1);
+    healthySource.set(1);
+
+    expect(() => flushPendingComputedValidations()).not.toThrow();
+    expect(healthyEvaluations).toBe(2);
+    expect(healthy.get()).toBe(2);
+    expect(captureFailure(() => failing.get())).toBe(computationFailure);
+    expect(signalGraphSnapshot().pendingComputedValidations).toBe(0);
+
+    detachFailing();
+    detachHealthy();
+  });
+
+  it('leases computed source edges only while observed and validates retained values by version', () => {
+    const baseline = signalGraphSnapshot();
+    const source = signal(2);
+    const doubled = computed(() => source.get() * 2);
+
+    expect(doubled.get()).toBe(4);
+    expect(getSignalNode(source).observers.size).toBe(0);
+    expect(signalGraphSnapshot().computedSourceEdges).toBe(
+      baseline.computedSourceEdges,
+    );
+
+    const detach = getSignalNode(doubled).observe!();
+    expect(getSignalNode(source).observers.size).toBe(1);
+    expect(signalGraphSnapshot()).toMatchObject({
+      computedSourceEdges: baseline.computedSourceEdges + 1,
+      createdComputedSourceEdges: baseline.createdComputedSourceEdges + 1,
+    });
+
+    detach();
+    expect(getSignalNode(source).observers.size).toBe(0);
+    expect(signalGraphSnapshot()).toMatchObject({
+      computedSourceEdges: baseline.computedSourceEdges,
+      releasedComputedSourceEdges: baseline.releasedComputedSourceEdges + 1,
+    });
+
+    source.set(3);
+    expect(doubled.get()).toBe(6);
+    expect(getSignalNode(source).observers.size).toBe(0);
+  });
+
+  it('clears queued Plan work when an explicit observed read validates it', () => {
+    const source = signal(1);
+    const parity = computed(() => source.get() % 2);
+    expect(parity.get()).toBe(1);
+    const detach = getSignalNode(parity).observe!();
+
+    source.set(3);
+    expect(signalGraphSnapshot().pendingComputedValidations).toBe(1);
+
+    expect(parity.get()).toBe(1);
+    expect(signalGraphSnapshot().pendingComputedValidations).toBe(0);
+
+    detach();
+  });
+
+  it('recursively acquires and releases nested computed source edges', () => {
+    const baseline = signalGraphSnapshot();
+    const source = signal(1);
+    const inner = computed(() => source.get() + 1);
+    const outer = computed(() => inner.get() + 1);
+    expect(outer.get()).toBe(3);
+
+    const detach = getSignalNode(outer).observe!();
+    expect(signalGraphSnapshot().computedSourceEdges).toBe(
+      baseline.computedSourceEdges + 2,
+    );
+    expect(getSignalNode(source).observers.size).toBe(1);
+    expect(getSignalNode(inner).observers.size).toBe(1);
+
+    detach();
+    expect(signalGraphSnapshot()).toMatchObject({
+      computedSourceEdges: baseline.computedSourceEdges,
+      createdComputedSourceEdges: baseline.createdComputedSourceEdges + 2,
+      releasedComputedSourceEdges: baseline.releasedComputedSourceEdges + 2,
+    });
+    expect(getSignalNode(source).observers.size).toBe(0);
+    expect(getSignalNode(inner).observers.size).toBe(0);
+  });
+
+  it('replaces observed computed source-edge leases after dependency switching', () => {
+    const baseline = signalGraphSnapshot();
+    const chooseLeft = signal(true);
+    const left = signal(1);
+    const right = signal(10);
+    const selected = computed(() => chooseLeft.get() ? left.get() : right.get());
+    expect(selected.get()).toBe(1);
+    const detach = getSignalNode(selected).observe!();
+
+    expect(getSignalNode(chooseLeft).observers.size).toBe(1);
+    expect(getSignalNode(left).observers.size).toBe(1);
+    expect(getSignalNode(right).observers.size).toBe(0);
+
+    chooseLeft.set(false);
+    flushPendingComputedValidations();
+
+    expect(selected.get()).toBe(10);
+    expect(getSignalNode(left).observers.size).toBe(0);
+    expect(getSignalNode(right).observers.size).toBe(1);
+    expect(signalGraphSnapshot()).toMatchObject({
+      computedSourceEdges: baseline.computedSourceEdges + 2,
+      createdComputedSourceEdges: baseline.createdComputedSourceEdges + 3,
+      releasedComputedSourceEdges: baseline.releasedComputedSourceEdges + 1,
+    });
+
+    detach();
+    expect(signalGraphSnapshot()).toMatchObject({
+      computedSourceEdges: baseline.computedSourceEdges,
+      releasedComputedSourceEdges: baseline.releasedComputedSourceEdges + 3,
+    });
+  });
 });
+
+function captureFailure(callback: () => unknown): unknown {
+  try {
+    callback();
+  } catch (error) {
+    return error;
+  }
+  throw new Error('Expected callback to throw.');
+}

@@ -6,6 +6,9 @@ import {
 import {
   createSignalCommitBatch,
   flushPendingComputedValidations,
+  hasPendingComputedValidations,
+  setSignalGraphPlanWorkNotifier,
+  withDirectSignalWriteForbidden,
 } from '../signals/graph.js';
 import type { CRCInstance, CRCRenderTransaction } from '../types.js';
 import type {
@@ -69,7 +72,9 @@ const rendererWorkByOwner = new Map<
   RendererParticipantOwner,
   Map<object, RendererParticipantWorkRegistration>
 >();
+const deferredRendererWork = new Set<RendererParticipantWorkRegistration>();
 const rendererParticipantCompletions: RendererParticipantCompletion[] = [];
+const deferredRendererCompletions = new Set<RendererParticipantCompletion>();
 
 let phase: CRCFramePhase = 'idle';
 let pendingHostFrame: number | undefined;
@@ -80,6 +85,9 @@ let nextRendererWorkOrder = 0;
 let schedulerDriver: SchedulerDriver | undefined;
 let createdRootRegistrations = 0;
 let releasedRootRegistrations = 0;
+let currentFramePlanAdmissionDepth = 0;
+
+setSignalGraphPlanWorkNotifier(syncSignalGraphPlanWork);
 
 export function registerRootInstance(instance: CRCInstance): void {
   if (!instance.parent && !registeredRoots.has(instance)) {
@@ -98,7 +106,7 @@ export function unregisterRootInstance(instance: CRCInstance): void {
 
 export function requestInstanceRender(instance: CRCInstance): number {
   const revision = ++nextWorkRevision;
-  const deferUntilNextFrame = phase === 'render';
+  const deferUntilNextFrame = shouldDeferNewFrameWork();
   let current: CRCInstance | undefined = instance;
   while (current) {
     current.requestedRenderRevision = revision;
@@ -148,14 +156,22 @@ export function requestRendererParticipantWork(
     rendererWorkByOwner.set(owner, workByKey);
   }
   const existing = workByKey.get(request.key);
+  let registration: RendererParticipantWorkRegistration;
   if (existing) {
     existing.request = request;
+    registration = existing;
   } else {
-    workByKey.set(request.key, {
+    registration = {
       owner,
       request,
       order: ++nextRendererWorkOrder,
-    });
+    };
+    workByKey.set(request.key, registration);
+  }
+  if (shouldDeferNewFrameWork()) {
+    deferredRendererWork.add(registration);
+  } else {
+    deferredRendererWork.delete(registration);
   }
   requestInstanceRender(owner.instance);
 }
@@ -165,16 +181,27 @@ export function queueRendererParticipantComplete(
   callback: CRCFrameCompletion,
 ): void {
   if (!owner.isActive()) return;
-  rendererParticipantCompletions.push({ owner, callback });
+  const completion = { owner, callback };
+  rendererParticipantCompletions.push(completion);
+  if (shouldDeferNewFrameWork()) {
+    deferredRendererCompletions.add(completion);
+  }
   requestHostFrameIfNeeded();
 }
 
 export function removeRendererParticipantOwner(
   owner: RendererParticipantOwner,
 ): void {
+  const workByKey = rendererWorkByOwner.get(owner);
+  if (workByKey) {
+    for (const registration of workByKey.values()) {
+      deferredRendererWork.delete(registration);
+    }
+  }
   rendererWorkByOwner.delete(owner);
   for (let index = rendererParticipantCompletions.length - 1; index >= 0; index--) {
     if (rendererParticipantCompletions[index].owner === owner) {
+      deferredRendererCompletions.delete(rendererParticipantCompletions[index]);
       rendererParticipantCompletions.splice(index, 1);
     }
   }
@@ -230,6 +257,8 @@ function requestHostFrameIfNeeded(): void {
 function runFrame(hostTime: number): void {
   pendingHostFrame = undefined;
   deferredInstances.clear();
+  deferredRendererWork.clear();
+  deferredRendererCompletions.clear();
   const snapshot = Object.freeze({
     frameId: ++nextFrameId,
     hostTime,
@@ -254,7 +283,10 @@ function runFrame(hostTime: number): void {
     if (!registration.active) continue;
     const { participant } = registration;
     try {
-      participant(snapshot, batch);
+      withDirectSignalWriteForbidden(
+        'Cannot write to a signal directly during CRC scheduler Advance; stage it through the provided batch.',
+        () => participant(snapshot, batch),
+      );
     } catch (error) {
       batch.discardWriter(participant);
       errors.push(error);
@@ -263,20 +295,20 @@ function runFrame(hostTime: number): void {
 
   phase = 'commit';
   try {
-    batch.commit();
+    withCurrentFramePlanAdmission(() => batch.commit());
   } catch (error) {
     errors.push(error);
   }
 
   phase = 'plan';
   try {
-    flushPendingComputedValidations();
+    withCurrentFramePlanAdmission(flushPendingComputedValidations);
   } catch (error) {
     errors.push(error);
   }
   rootJobs = mergeRootJobs(rootJobs, captureRootJobs(true));
   const rendererWork = captureRendererParticipantWork();
-  const rendererCompletions = rendererParticipantCompletions.splice(0);
+  const rendererCompletions = captureRendererParticipantCompletions();
   const retryRendererOwners = new Set<RendererParticipantOwner>();
 
   phase = 'render';
@@ -405,18 +437,9 @@ function runFrame(hostTime: number): void {
 }
 
 function captureRootJobs(planOnly = false): RootRenderJob[] {
-  const deferredRoots = new Set<CRCInstance>();
-  if (planOnly) {
-    for (const instance of dirtyInstances) {
-      if (instance.pendingRoot === NO_PENDING_ROOT) continue;
-      const root = findRoot(instance);
-      if (root) deferredRoots.add(root);
-    }
-  }
   const requested: CRCInstance[] = [];
   for (const instance of dirtyInstances) {
-    const root = findRoot(instance);
-    if (root && deferredRoots.has(root)) continue;
+    if (planOnly && deferredInstances.has(instance)) continue;
     dirtyInstances.delete(instance);
     requested.push(instance);
   }
@@ -545,6 +568,7 @@ function countDirtyRoots(): number {
 
 function hasFrameWork(): boolean {
   return dirtyInstances.size > 0 ||
+    hasPendingComputedValidations() ||
     advanceRegistrations.size > 0 ||
     frameCompletions.length > 0 ||
     rendererWorkByOwner.size > 0 ||
@@ -560,11 +584,22 @@ function captureRendererParticipantWork(): Map<
     RendererParticipantWorkRegistration[]
   >();
   for (const [owner, workByKey] of rendererWorkByOwner) {
-    rendererWorkByOwner.delete(owner);
-    if (!owner.isActive()) continue;
+    if (!owner.isActive()) {
+      for (const registration of workByKey.values()) {
+        deferredRendererWork.delete(registration);
+      }
+      rendererWorkByOwner.delete(owner);
+      continue;
+    }
     const work = byInstance.get(owner.instance) ?? [];
-    work.push(...workByKey.values());
-    byInstance.set(owner.instance, work);
+    for (const [key, registration] of workByKey) {
+      if (deferredRendererWork.has(registration)) continue;
+      deferredRendererWork.delete(registration);
+      workByKey.delete(key);
+      work.push(registration);
+    }
+    if (workByKey.size === 0) rendererWorkByOwner.delete(owner);
+    if (work.length > 0) byInstance.set(owner.instance, work);
   }
   const kindOrder = { resource: 0, draw: 1, compose: 2 } as const;
   for (const work of byInstance.values()) {
@@ -574,6 +609,20 @@ function captureRendererParticipantWork(): Map<
     );
   }
   return byInstance;
+}
+
+function captureRendererParticipantCompletions(): RendererParticipantCompletion[] {
+  const captured: RendererParticipantCompletion[] = [];
+  for (let index = 0; index < rendererParticipantCompletions.length;) {
+    const completion = rendererParticipantCompletions[index];
+    if (deferredRendererCompletions.has(completion)) {
+      index++;
+      continue;
+    }
+    rendererParticipantCompletions.splice(index, 1);
+    captured.push(completion);
+  }
+  return captured;
 }
 
 function runRendererParticipantStage(
@@ -638,6 +687,29 @@ function cancelIdleHostFrame(): void {
   if (pendingHostFrame === undefined || hasFrameWork()) return;
   getSchedulerDriver().cancelFrame(pendingHostFrame);
   pendingHostFrame = undefined;
+}
+
+function syncSignalGraphPlanWork(): void {
+  if (hasPendingComputedValidations()) {
+    requestHostFrameIfNeeded();
+  } else {
+    cancelIdleHostFrame();
+  }
+}
+
+function withCurrentFramePlanAdmission<T>(callback: () => T): T {
+  currentFramePlanAdmissionDepth++;
+  try {
+    return callback();
+  } finally {
+    currentFramePlanAdmissionDepth--;
+  }
+}
+
+function shouldDeferNewFrameWork(): boolean {
+  return phase !== 'idle' &&
+    phase !== 'begin' &&
+    currentFramePlanAdmissionDepth === 0;
 }
 
 function getSchedulerDriver(): SchedulerDriver {

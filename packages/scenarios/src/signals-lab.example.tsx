@@ -40,6 +40,7 @@ export interface SignalsLabState {
 
 export interface SignalsLabMetrics {
   computedEvaluations: number;
+  renderedComputed: number;
   rootRenders: { a: number; b: number };
   layerChildRenders: { a: number; b: number };
 }
@@ -84,12 +85,12 @@ export function SignalsLabRootA({ model, metrics }: RootProps) {
   metrics.rootRenders.a += 1;
   const direct = model.direct.get();
   const derived = model.derived.get();
-  const selectedSource = model.selectLeft.get() ? 'left' : 'right';
+  metrics.renderedComputed = derived;
   const shared = model.shared.get();
   return <Group>
     <Rectangle style={{ width: 480, height: 240, fill: '#f8fafc' }} />
     <Rectangle style={{ x: 24 + direct * 8, y: 32, width: 76, height: 54, fill: '#2563eb' }} />
-    <Text style={{ x: 24, y: 126, fill: '#0f172a', font: '700 13px monospace' }}>{`direct ${direct} · computed ${derived} · ${selectedSource} · shared ${shared}`}</Text>
+    <Text style={{ x: 24, y: 126, fill: '#0f172a', font: '700 13px monospace' }}>{`direct ${direct} · computed ${derived} · shared ${shared}`}</Text>
     <Group style={{ translateX: 24, translateY: 150 }}>
       <Layer style={{ width: 80, height: 42 }}><LayerA model={model} metrics={metrics} /></Layer>
     </Group>

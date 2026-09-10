@@ -29,6 +29,7 @@ export const SIGNALS_LAB_ACTION_IDS = [
 function createMetrics(): SignalsLabMetrics {
   return {
     computedEvaluations: 0,
+    renderedComputed: 0,
     rootRenders: { a: 0, b: 0 },
     layerChildRenders: { a: 0, b: 0 },
   };
@@ -53,7 +54,7 @@ function snapshot(
     layerB: model.layerB.get(),
     retained: model.retained.get(),
     selectedSource: model.selectLeft.get() ? 'left' : 'right',
-    computed: model.derived.get(),
+    computed: metrics.renderedComputed,
     computedEvaluations: metrics.computedEvaluations,
     rootRenders: { ...metrics.rootRenders },
     layerChildRenders: { ...metrics.layerChildRenders },

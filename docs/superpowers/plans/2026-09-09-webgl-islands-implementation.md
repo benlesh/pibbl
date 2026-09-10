@@ -1016,7 +1016,7 @@ git commit -m "feat(webgl): integrate propagation focus and input events"
 
 - [ ] **Step 1: Write failing animation coalescing tests**
 
-Render two animated components and one Canvas sibling. Assert both hooks see the same timestamp, one child rAF is pending, one parent recomposition follows, removing one caller leaves one continuing request, removing both stops, and disposal cancels the pending callback. Invoke a stale saved callback after key replacement and assert it cannot schedule the replacement mount.
+Render two animated components and one Canvas sibling. Assert both hooks see the same timestamp, one realm host frame is pending for the child work, one parent recomposition follows, removing one caller leaves one continuing scheduler request, removing both stops, and disposal releases the central registration and pending callback. Invoke a stale saved callback after key replacement and assert it cannot schedule the replacement mount.
 
 - [ ] **Step 2: Write failing cache and single-traversal counters**
 
@@ -1076,7 +1076,7 @@ Dispatch a cancelable loss event and assert it is handled once, stale bitmap/pic
 
 - [ ] **Step 2: Write failing failure-injection ownership matrix**
 
-Inject failures at context acquisition, shader creation/compile/link, buffer/VAO creation, upload, primitive draw, custom resolver registration, child traversal, bitmap transfer, parent composite, state restoration, and disposal. Record acquired/released counts for contexts, listeners, programs, shaders, buffers, VAOs, framebuffers, textures, bitmaps, targets, component refs, and rAFs; every completed test returns to its exact baseline.
+Inject failures at context acquisition, shader creation/compile/link, buffer/VAO creation, upload, primitive draw, custom resolver registration, child traversal, bitmap transfer, parent composite, state restoration, and disposal. Record acquired/released counts for contexts, listeners, programs, shaders, buffers, VAOs, framebuffers, textures, bitmaps, targets, component refs, central scheduler registrations, and the realm pending callback; every completed test returns to its exact baseline.
 
 - [ ] **Step 3: Run ownership tests and confirm leaked generations**
 

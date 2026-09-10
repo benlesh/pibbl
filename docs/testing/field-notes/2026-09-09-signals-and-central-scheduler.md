@@ -4,6 +4,10 @@
 
 Delivery date: 2026-09-10
 
+The initial implementation evidence is preserved below. The final-review
+remediation section supersedes its behavioral conclusions and test totals for
+the completed branch where they differ.
+
 ## Scope and environment
 
 This record closes the signal-graph and realm-scheduler foundation plan only.
@@ -127,6 +131,78 @@ subscribe/effect/batch surface, no implicit signal-to-style binding, no
 automatic cache, and no animation API. Signal reads remain explicit, Layers
 remain the only retained rendering boundary, and timing remains diagnostic.
 
-No Task 10 production defect was found. The only production edits made while
-closing this evidence were internal-only ownership and structural counters;
-they do not expand the public API or alter runtime scheduling semantics.
+A subsequent complete review from `f5f576e` found five Important foundation
+defects and one Minor documentation defect. The initial conclusion that no
+production defect remained is superseded by the repair evidence below.
+
+## Final-review remediation
+
+The repair keeps the public API unchanged and does not implement animation. It
+adds a host-agnostic graph-to-scheduler liveness seam so an observed pending
+computed requests Plan work without dirtying a renderer early. Equal computed
+results now stop after Plan, while changed results can invalidate and render
+their exact consumer in the same frame. The learning and laboratory scenarios
+now prove computed-only behavior without a direct source read or an
+out-of-render computed read masking the result.
+
+Cycle-closing computed edges are not committed. Direct and indirect cycles
+rethrow the same cached error object and deterministic path on repeated reads;
+guarded cycles retain noncyclic dependencies and recover when the guard
+changes. Plan drains eligible observed computeds dependency-first without
+fail-fast behavior. Computation errors remain attached to their value and enter
+normal render recovery only when read, so one failing nested computed is not
+reported once from Plan and again from Render, and independent roots still
+progress.
+
+Computed-to-source observer leases now exist only while the computed is
+observed. First observation acquires dependencies recursively; final detach
+releases them recursively; retained unobserved graphs validate version
+snapshots on explicit `get()`. Deterministic ownership evidence observed these
+exact deltas from clean baselines:
+
+- the complete repeated-mount lifecycle acquired/released 36 renderer
+  consumers, one computed source edge, and 28 root registrations exactly;
+- the nested retained graph acquired and released exactly two computed source
+  edges across failed-render cleanup, recovery, and final disposal;
+- unit-level first-observer/final-detach evidence acquired/released one edge,
+  a nested chain acquired/released two, and a dependency switch acquired and
+  released three while keeping exactly two live before final detach; and
+- every release boundary returned renderer consumers, renderer edges, computed
+  source edges, pending validations, root registrations, Advance participants,
+  completion callbacks, and host frames to zero.
+
+Advance participants may mutate signals only through their supplied batch.
+Direct `set()` and `update()` reject before mutation, and a participant that
+stages then attempts a direct write loses its staged values. Commit
+notifications and Plan-derived dirtiness may join the current plan. Arbitrary
+state, root, renderer, or completion requests from Advance, Render, or Complete
+wait for the next Begin. The controlled trace remained
+`Advance → Commit → Plan → Render → Complete`; Advance state/root work produced
+no render in its requesting frame and rendered in the next, while friend draw,
+root render, and friend completion likewise appeared together only in the next
+frame.
+
+Meaningful RED runs first exposed six graph failures, two computed-only
+root/Layer liveness failures, four scheduler admission failures, one public-lab
+masking failure, three ownership/friend-edge failures, and two deferred friend
+work/completion failures. The final focused matrix passed 474 tests across 11 graph,
+consumer, hook, scheduler, friend, Layer, public-scenario, ownership, and
+structural-performance files.
+
+Fresh pre-aggregate verification ran on macOS `26.6.2` (`arm64`) with Node.js
+`v26.7.0`, pnpm `11.21.0`, Vitest `4.1.10`, Playwright `1.62.1`, and Chrome for
+Testing `151.0.7922.34`. This remains Node 26 evidence, not Node 24 LTS
+evidence. Documentation passed 667 protected baseline units, 734 current units,
+47 exhaustively mapped post-baseline signal-contract units, and 847 adversarial
+mutation probes. Typecheck, ESLint, Prettier, source/built package and Studio
+builds, strict source and packed consumers, and declaration parity passed. The
+complete browser suite passed 1,722 tests in 126 files with 2 intentional timing
+skips. The built smoke passed 1 test; lifecycle passed 17 tests in 4 files; and
+structural performance passed 18 tests with 2 intentional timing skips in 3
+files. The visual safeguard preserved every baseline byte and recovered green;
+all 5 Studio images matched and were inspected at full-page scope with no
+baseline rewrite or mask change.
+
+After the complete tracked repair diff and self-review correction were in
+place, a fresh `corepack pnpm@11.21.0 trust` run repeated the aggregate gate and
+exited zero in the environment above.

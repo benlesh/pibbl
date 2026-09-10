@@ -12,7 +12,6 @@ import {
 import { clearSharedState } from '../global-state.js';
 import { crcRef } from './crc-ref.js';
 import { crcState } from './crc-state.js';
-import { flushPendingComputedValidations } from '../signals/graph.js';
 import type { SystemStyle } from '../types.js';
 
 beforeEach(() => {
@@ -74,7 +73,7 @@ describe('component signal reads', () => {
     frames.restore();
   });
 
-  it('suppresses root traversal when an observed computed stays equal', () => {
+  it('schedules computed-only Plan work and renders only when its value changes', () => {
     const frames = new ManualFrames();
     const source = signal(1);
     const parity = computed(() => source.get() % 2);
@@ -92,14 +91,14 @@ describe('component signal reads', () => {
     frames.flush();
 
     source.set(3);
-    flushPendingComputedValidations();
+    expect(frames.pendingCount).toBe(1);
+    frames.flush();
     expect(renders).toHaveBeenCalledOnce();
     expect(frames.pendingCount).toBe(0);
 
     source.set(4);
-    flushPendingComputedValidations();
-    expect(renders).toHaveBeenCalledOnce();
     expect(frames.pendingCount).toBe(1);
+    expect(renders).toHaveBeenCalledOnce();
     frames.flush();
     expect(renders).toHaveBeenCalledTimes(2);
     controller.dispose();

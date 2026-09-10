@@ -83,15 +83,25 @@ values validate dependency-first. Equality suppresses a computed revision and
 downstream invalidation when the next value is equivalent.
 
 Thrown computations are cached until a dependency changes. Cycles throw a
-deterministic path using available `debugName` values. Promise continuations do
-not inherit read tracking. `untracked(read)` suppresses dependency collection
-only for the synchronous callback and restores the previous collector in
-`finally`; it does not relax any write guard.
+deterministic path using available `debugName` values, cache that exact error,
+and never install the cycle-closing source edge. A guarded computation can
+therefore recover when one of its retained noncyclic dependencies changes.
+Promise continuations do not inherit read tracking. `untracked(read)` suppresses
+dependency collection only for the synchronous callback and restores the
+previous collector in `finally`; it does not relax any write guard.
 
-Observed computed values invalidated by a source are queued for validation in
-the Plan phase of the next already-requested realm frame. Reading the computed
-explicitly also validates it immediately. Computed invalidation by itself does
-not request a host frame.
+Computed-to-source observer edges are held only while the computed is observed.
+The first observer recursively acquires those leases and the final observer
+recursively releases them. An unobserved computed retains dependency identities
+and version snapshots without remaining in source observer sets, so a later
+explicit `get()` can validate the retained graph correctly.
+
+When an observed computed first becomes pending, its Plan work requests and
+coalesces the realm host frame without prematurely dirtying a renderer. Plan
+validates the graph dependency-first. An equal result ends after Plan with zero
+renderer traversals; a changed result dirties the exact consumers and may render
+them in that same frame. Reading the computed explicitly also validates it
+immediately.
 
 ## Component consumers and `crcSignal`
 
@@ -110,9 +120,11 @@ with respect to the removed owner.
 
 Signal writes are forbidden during component traversal, primitive render, and
 computed evaluation, including writes that would be equality no-ops. The guard
-is checked before invoking an updater or equality function. Event handlers,
-scheduler Advance callbacks, and other code outside those protected scopes may
-write normally.
+is checked before invoking an updater or equality function. Direct `set()` and
+`update()` calls are also forbidden inside scheduler Advance participants;
+those participants may mutate signals only through their provided staging
+batch. Event handlers and other code outside protected scopes may write
+normally.
 
 ## One realm scheduler
 
@@ -124,14 +136,14 @@ for a later frame unless its documented phase admits it to the current frame.
 
 Each frame has six ordered active phases:
 
-| Phase    | Contract                                                                                                                                                                                       |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Begin    | Capture the frame's dirty jobs, Advance registrations, and ordinary completions. Registrations made after this point wait for the next frame.                                                  |
-| Advance  | Run captured participants in registration order. Each participant stages signal writes as one batch; a throwing participant loses only its staged writes and does not stop later participants. |
-| Commit   | Publish changed staged values, then notify all affected consumers after publication.                                                                                                           |
-| Plan     | Validate queued computed values, capture resulting component dirtiness, and determine eligible root, Layer, and friend-renderer work. Dirtiness discovered here may render in this frame.      |
-| Render   | Render roots in registration order and nested instances deepest-first, with friend stages ordered resource, draw, then compose.                                                                |
-| Complete | Commit successful root transactions, run captured ordinary and eligible renderer completions, restore idle state, and request any required follow-up frame.                                    |
+| Phase    | Contract                                                                                                                                                                                                                       |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Begin    | Capture the frame's dirty jobs, Advance registrations, and ordinary completions. Registrations made after this point wait for the next frame.                                                                                  |
+| Advance  | Run captured participants in registration order. Each participant may mutate signals only through its staging batch; a throwing participant loses only its staged writes and does not stop later participants.                 |
+| Commit   | Publish changed staged values, then notify all affected consumers after publication. Dirtiness produced by this sanctioned admission scope may join the current plan.                                                          |
+| Plan     | Drain eligible computed validation dependency-first without fail-fast behavior, capture resulting component dirtiness, and determine eligible root, Layer, and friend-renderer work. Admitted dirtiness may render this frame. |
+| Render   | Render roots in registration order and nested instances deepest-first, with friend stages ordered resource, draw, then compose.                                                                                                |
+| Complete | Commit successful root transactions, run captured ordinary and eligible renderer completions, restore idle state, and request any required follow-up frame.                                                                    |
 
 Outside a frame the scheduler phase is `idle`. `logicalTime` is the scheduler's
 frame time and is distinct from any host callback timestamp.
@@ -147,9 +159,11 @@ retain their cached bitmaps. A parent placement-only change may reuse a clean
 child bitmap.
 
 An instance's completed revision advances only after its successful work.
-Requests raised during Render are deferred to a later frame. An explicit root
-replacement remains latest-wins and cannot be erased by another kind of
-request.
+Arbitrary state, root, renderer, or completion requests raised during Advance,
+Render, or Complete are deferred to a later frame. Signal notifications from
+Commit and computed-result dirtiness from Plan are the sanctioned scopes that
+may join the current plan. An explicit root replacement remains latest-wins and
+cannot be erased by another kind of request.
 
 ## Error isolation and completion
 
@@ -158,6 +172,13 @@ transaction. One failed Advance participant does not block other participants.
 One failed root does not block later roots or captured ordinary completions;
 ordinary CRC failure remains fail-closed and requires later explicit work.
 Errors are collected and thrown singly or as an aggregate only after Complete.
+
+Plan validates every eligible observed computed in stable dependency order even
+when another computed caches an error. A cached computation error remains owned
+by the value and enters normal renderer or resource recovery only when that
+consumer reads it; Plan does not report the same value error separately.
+Observer or scheduler-infrastructure failures are collected independently and
+reported once after Complete without stranding unrelated graph work.
 
 For friend renderer work, callbacks later in the same independent stage still
 run, but dependent stages for the failed transaction are skipped. Its revision
@@ -187,6 +208,7 @@ paths as a substitute.
 | --------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
 | Signal-to-component edge    | Exact component consumer                               | Replaced after successful evaluation; detached on removal, failure cleanup, or disposal.                 |
 | `crcSignal` hook cell       | Exact hook slot                                        | Owner removal detaches scheduling edges; a retained cell remains independently usable.                   |
+| Computed-to-source edge     | Exact computed node while it has at least one observer | Acquired recursively on first observation; replaced with dependencies or released after final observer.  |
 | Computed validation         | Exact computed node                                    | Cleared by successful validation or removed when no longer observed.                                     |
 | Root scheduler registration | Exact live root                                        | Removed by abort, disposal, or failed-mount cleanup without affecting other roots.                       |
 | Pending host frame          | Realm scheduler                                        | Cleared by callback completion; canceled only when no registered work remains.                           |
@@ -204,7 +226,8 @@ package-consumer, and Studio declaration suites are the executable evidence.
 - Reads are never implicit and styles do not accept signal containers.
 - Signals are synchronous; async resources and Promise-aware dependency
   tracking are not provided.
-- Computed invalidation does not independently schedule a host frame.
+- Observed pending computed validation is Plan work; it requests only the
+  coalesced realm frame and does not dirty a renderer before its result changes.
 - The scheduler is not a retained scene graph, DOM reconciler, worker runtime,
   or public manual-clock/input-injection API.
 - Animation values and hooks are not shipped by this contract. Their approved

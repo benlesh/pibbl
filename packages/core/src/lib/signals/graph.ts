@@ -18,6 +18,7 @@ interface ComputedSignalNode<T> extends SignalNode<T> {
   hasError: boolean;
   error: unknown;
   dependencies: Map<SignalNode<unknown>, number>;
+  dependencyObservations: Map<SignalNode<unknown>, () => void>;
   invalidate(): void;
   validate(): void;
   observedCount: number;
@@ -44,7 +45,12 @@ export interface SignalDependencyCollector {
   addDependency(node: SignalNode<unknown>): void;
 }
 
-export type SignalWritePolicy = (node: SignalNode<unknown>) => void;
+export type SignalWriteOperation = 'direct' | 'staged';
+
+export type SignalWritePolicy = (
+  node: SignalNode<unknown>,
+  operation: SignalWriteOperation,
+) => void;
 
 const trackingStack: Array<SignalDependencyCollector | undefined> = [];
 const writePolicyStack: SignalWritePolicy[] = [];
@@ -57,15 +63,22 @@ let createdRendererConsumers = 0;
 let releasedRendererConsumers = 0;
 let signalCommitNotifications = 0;
 let planComputedValidations = 0;
+let computedSourceEdges = 0;
+let createdComputedSourceEdges = 0;
+let releasedComputedSourceEdges = 0;
+let signalGraphPlanWorkNotifier: (() => void) | undefined;
 
 export interface SignalGraphSnapshot {
   readonly rendererConsumers: number;
   readonly rendererEdges: number;
+  readonly computedSourceEdges: number;
   readonly pendingComputedValidations: number;
   readonly createdRendererConsumers: number;
   readonly releasedRendererConsumers: number;
   readonly signalCommitNotifications: number;
   readonly planComputedValidations: number;
+  readonly createdComputedSourceEdges: number;
+  readonly releasedComputedSourceEdges: number;
 }
 
 /** @internal Deterministic ownership and structural evidence for tests. */
@@ -73,11 +86,14 @@ export function signalGraphSnapshot(): SignalGraphSnapshot {
   return Object.freeze({
     rendererConsumers,
     rendererEdges,
+    computedSourceEdges,
     pendingComputedValidations: pendingComputedValidations.size,
     createdRendererConsumers,
     releasedRendererConsumers,
     signalCommitNotifications,
     planComputedValidations,
+    createdComputedSourceEdges,
+    releasedComputedSourceEdges,
   });
 }
 
@@ -162,7 +178,7 @@ export function signal<T>(
     return node.value;
   };
   const assertWriteAllowed = (): void => {
-    writePolicyStack.at(-1)?.(node as SignalNode<unknown>);
+    writePolicyStack.at(-1)?.(node as SignalNode<unknown>, 'direct');
   };
   const commit = (nextValue: T): void => {
     if (node.equals(node.value, nextValue)) {
@@ -213,6 +229,7 @@ export function computed<T>(
     hasError: false,
     error: undefined,
     dependencies: new Map(),
+    dependencyObservations: new Map(),
     observedCount: 0,
     pendingValidation: false,
     observe: () => () => {},
@@ -229,7 +246,16 @@ export function computed<T>(
       return;
     }
     node.pendingValidation = true;
+    const wasEmpty = pendingComputedValidations.size === 0;
     pendingComputedValidations.add(node as ComputedSignalNode<unknown>);
+    if (wasEmpty) signalGraphPlanWorkNotifier?.();
+  };
+
+  const removePendingValidation = (): void => {
+    if (!node.pendingValidation) return;
+    node.pendingValidation = false;
+    pendingComputedValidations.delete(node as ComputedSignalNode<unknown>);
+    if (pendingComputedValidations.size === 0) signalGraphPlanWorkNotifier?.();
   };
 
   const invalidate: SignalObserver = (): void => {
@@ -244,15 +270,44 @@ export function computed<T>(
   };
   invalidate.propagateInvalidation = true;
 
-  const replaceDependencies = (dependencies: Set<SignalNode<unknown>>): void => {
+  const acquireDependency = (dependency: SignalNode<unknown>): void => {
+    if (node.dependencyObservations.has(dependency)) return;
+    dependency.observers.add(invalidate);
+    const releaseObservation = dependency.observe?.() ?? (() => {});
+    node.dependencyObservations.set(dependency, releaseObservation);
+    computedSourceEdges++;
+    createdComputedSourceEdges++;
+  };
+
+  const releaseDependency = (dependency: SignalNode<unknown>): void => {
+    const releaseObservation = node.dependencyObservations.get(dependency);
+    if (releaseObservation === undefined) return;
+    dependency.observers.delete(invalidate);
+    node.dependencyObservations.delete(dependency);
+    releaseObservation();
+    computedSourceEdges--;
+    releasedComputedSourceEdges++;
+  };
+
+  const acquireDependencies = (): void => {
     for (const dependency of node.dependencies.keys()) {
-      if (!dependencies.has(dependency)) {
-        dependency.observers.delete(invalidate);
-      }
+      acquireDependency(dependency);
     }
-    for (const dependency of dependencies) {
-      if (!node.dependencies.has(dependency)) {
-        dependency.observers.add(invalidate);
+  };
+
+  const releaseDependencies = (): void => {
+    for (const dependency of Array.from(node.dependencyObservations.keys())) {
+      releaseDependency(dependency);
+    }
+  };
+
+  const replaceDependencies = (dependencies: Set<SignalNode<unknown>>): void => {
+    if (node.observedCount > 0) {
+      for (const dependency of node.dependencies.keys()) {
+        if (!dependencies.has(dependency)) releaseDependency(dependency);
+      }
+      for (const dependency of dependencies) {
+        if (!node.dependencies.has(dependency)) acquireDependency(dependency);
       }
     }
     node.dependencies = new Map(
@@ -282,7 +337,14 @@ export function computed<T>(
         computedWriteErrorLabel(node as SignalNode<unknown>),
         () => {
           const nextValue = withSignalTracking({
-            addDependency: dependency => dependencies.add(dependency),
+            addDependency: dependency => {
+              if (
+                !isComputedSignalNode(dependency) ||
+                dependency.state !== 'evaluating'
+              ) {
+                dependencies.add(dependency);
+              }
+            },
           }, node.compute);
           return {
             nextValue,
@@ -310,36 +372,29 @@ export function computed<T>(
       node.state = 'clean';
     }
     if (changed) {
+      if (node.hasError) node.version++;
       throwSignalObserverFailures(notifyObservers());
     }
   };
 
   const validate = (): void => {
-    if (node.state === 'clean') {
-      if (node.hasError) {
-        throw node.error;
-      }
-      return;
-    }
     if (node.state === 'evaluating') {
       throw cycleError();
     }
 
     let dependencyChanged = false;
+    if (node.state === 'clean' && node.observedCount > 0) return;
     for (const [dependency, version] of node.dependencies) {
       dependency.validate?.();
       if (dependency.version !== version) {
         dependencyChanged = true;
-        break;
       }
     }
+    if (node.state === 'clean' && !dependencyChanged) return;
     if (dependencyChanged || node.dependencies.size === 0 || !node.hasValue) {
       evaluate();
     } else {
       node.state = 'clean';
-    }
-    if (node.hasError) {
-      throw node.error;
     }
   };
 
@@ -348,6 +403,17 @@ export function computed<T>(
 
   node.observe = (): (() => void) => {
     node.observedCount++;
+    if (node.observedCount === 1) {
+      acquireDependencies();
+      if (
+        node.state === 'clean' &&
+        Array.from(node.dependencies).some(
+          ([dependency, version]) => dependency.version !== version,
+        )
+      ) {
+        node.state = 'check';
+      }
+    }
     if (node.state === 'check') {
       enqueueValidation();
     }
@@ -359,9 +425,9 @@ export function computed<T>(
       }
       detached = true;
       node.observedCount--;
-      if (node.observedCount === 0 && node.pendingValidation) {
-        node.pendingValidation = false;
-        pendingComputedValidations.delete(node as ComputedSignalNode<unknown>);
+      if (node.observedCount === 0) {
+        removePendingValidation();
+        releaseDependencies();
       }
     };
   };
@@ -370,6 +436,7 @@ export function computed<T>(
     get(): T {
       trackingStack.at(-1)?.addDependency(node as SignalNode<unknown>);
       validate();
+      removePendingValidation();
       if (node.hasError) {
         throw node.error;
       }
@@ -389,22 +456,51 @@ export function flushPendingComputedValidations(): void {
   }
 
   flushingPendingComputedValidations = true;
+  const attempted = new Set<ComputedSignalNode<unknown>>();
+  const failures: unknown[] = [];
   try {
     while (pendingComputedValidations.size > 0) {
-      const node = pendingComputedValidations.values().next().value;
+      const node = Array.from(pendingComputedValidations)
+        .find(candidate => !attempted.has(candidate));
       if (node === undefined) {
         break;
       }
-      pendingComputedValidations.delete(node);
+      attempted.add(node);
       node.pendingValidation = false;
+      pendingComputedValidations.delete(node);
+      if (pendingComputedValidations.size === 0) signalGraphPlanWorkNotifier?.();
       if (node.observedCount > 0) {
         planComputedValidations++;
-        node.validate();
+        try {
+          node.validate();
+        } catch (error) {
+          if (
+            error instanceof AggregateError &&
+            error.message === 'CRC signal observer notifications failed.'
+          ) {
+            failures.push(...error.errors);
+          } else {
+            failures.push(error);
+          }
+          if (node.state === 'check') enqueueComputedValidation(node);
+        }
       }
     }
   } finally {
     flushingPendingComputedValidations = false;
   }
+  throwSignalObserverFailures(failures);
+}
+
+/** @internal Whether the realm scheduler has graph Plan work to service. */
+export function hasPendingComputedValidations(): boolean {
+  return pendingComputedValidations.size > 0;
+}
+
+/** @internal Connects graph liveness to its host-agnostic scheduler owner. */
+export function setSignalGraphPlanWorkNotifier(notifier: () => void): void {
+  signalGraphPlanWorkNotifier = notifier;
+  if (pendingComputedValidations.size > 0) notifier();
 }
 
 export function untracked<T>(callback: () => T): T {
@@ -455,7 +551,7 @@ export function createSignalCommitBatch(): SignalCommitBatch {
     },
     stage<T>(value: WritableSignal<T>, nextValue: T, writer: object): void {
       const node = getSignalNode(value) as SignalNode<T>;
-      writePolicyStack.at(-1)?.(node as SignalNode<unknown>);
+      writePolicyStack.at(-1)?.(node as SignalNode<unknown>, 'staged');
       staged.set(node as SignalNode<unknown>, {
         node: node as SignalNode<unknown>,
         value: nextValue,
@@ -527,4 +623,27 @@ export function withSignalWriteForbidden<T>(
   return withSignalWritePolicy(() => {
     throw new Error(reason);
   }, callback);
+}
+
+export function withDirectSignalWriteForbidden<T>(
+  reason: string,
+  callback: () => T,
+): T {
+  return withSignalWritePolicy((_node, operation) => {
+    if (operation === 'direct') throw new Error(reason);
+  }, callback);
+}
+
+function isComputedSignalNode(
+  node: SignalNode<unknown>,
+): node is ComputedSignalNode<unknown> {
+  return 'kind' in node && node.kind === 'computed';
+}
+
+function enqueueComputedValidation(node: ComputedSignalNode<unknown>): void {
+  if (node.observedCount === 0 || node.pendingValidation) return;
+  node.pendingValidation = true;
+  const wasEmpty = pendingComputedValidations.size === 0;
+  pendingComputedValidations.add(node);
+  if (wasEmpty) signalGraphPlanWorkNotifier?.();
 }

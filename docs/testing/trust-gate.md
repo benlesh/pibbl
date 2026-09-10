@@ -86,10 +86,11 @@ the first-line oracle; exact pixels are used only where they add information.
 ownership and structural-performance checks. The signal/scheduler lifecycle suite
 drives repeated mount, shared reads, branch and Layer removal, root replacement,
 render failure, abort, disposal, and fresh remount. Test-only snapshots require
-zero live renderer consumers, dependency edges, queued computed validations,
-registered roots, Advance participants, completion callbacks, and host frames at
-release boundaries, while cumulative consumer and root-registration acquisitions
-must match releases exactly.
+zero live renderer consumers, renderer dependency edges, computed source-edge
+leases, queued computed validations, registered roots, Advance participants,
+completion callbacks, and host frames at release boundaries, while cumulative
+consumer, computed-edge, and root-registration acquisitions must match releases
+exactly.
 
 The signal/scheduler performance suite fixes structural work rather than elapsed
 time: 1,000 writes coalesce to one realm host callback and one root traversal; 100

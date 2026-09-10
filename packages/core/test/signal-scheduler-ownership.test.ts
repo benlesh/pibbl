@@ -19,9 +19,12 @@ import {
 interface SignalGraphOwnershipSnapshot {
   readonly rendererConsumers: number;
   readonly rendererEdges: number;
+  readonly computedSourceEdges: number;
   readonly pendingComputedValidations: number;
   readonly createdRendererConsumers: number;
   readonly releasedRendererConsumers: number;
+  readonly createdComputedSourceEdges: number;
+  readonly releasedComputedSourceEdges: number;
 }
 
 interface SchedulerOwnershipSnapshot {
@@ -58,6 +61,7 @@ describe('signal graph and realm scheduler ownership', () => {
     expect(graphBaseline).toMatchObject({
       rendererConsumers: 0,
       rendererEdges: 0,
+      computedSourceEdges: 0,
       pendingComputedValidations: 0,
     });
     expect(schedulerBaseline).toMatchObject({
@@ -214,6 +218,10 @@ describe('signal graph and realm scheduler ownership', () => {
     expect(snapshotSignalGraph()).toMatchObject({
       createdRendererConsumers: graphBaseline.createdRendererConsumers + 36,
       releasedRendererConsumers: graphBaseline.releasedRendererConsumers + 36,
+      createdComputedSourceEdges:
+        graphBaseline.createdComputedSourceEdges + 1,
+      releasedComputedSourceEdges:
+        graphBaseline.releasedComputedSourceEdges + 1,
     });
     expect(schedulerOwnershipSnapshot()).toMatchObject({
       createdRootRegistrations:
@@ -221,6 +229,57 @@ describe('signal graph and realm scheduler ownership', () => {
       releasedRootRegistrations:
         schedulerBaseline.releasedRootRegistrations + 28,
     });
+  });
+
+  it('releases nested computed edges after failed render cleanup and final disposal', () => {
+    const baseline = snapshotSignalGraph();
+    const source = signal(1);
+    const inner = computed(() => source.get() + 1);
+    const outer = computed(() => inner.get() + 1);
+    const canvas = createCanvas();
+    const failure = new Error('computed reader failed');
+    const Broken = (_props: {}): CRCNode => {
+      outer.get();
+      throw failure;
+    };
+    const Healthy = (_props: {}) => {
+      outer.get();
+    };
+    const controller = track(crc(canvas, createElement(Broken, {})));
+
+    expect(() => driver.flush(1)).toThrow(failure);
+    expect(snapshotSignalGraph()).toMatchObject({
+      rendererConsumers: baseline.rendererConsumers,
+      rendererEdges: baseline.rendererEdges,
+      computedSourceEdges: baseline.computedSourceEdges,
+    });
+    expect(getSignalNodeForTest(source).observers.size).toBe(0);
+    expect(getSignalNodeForTest(inner).observers.size).toBe(0);
+
+    crc(canvas, createElement(Healthy, {}));
+    driver.flush(2);
+    expect(snapshotSignalGraph().computedSourceEdges).toBe(
+      baseline.computedSourceEdges + 2,
+    );
+
+    controller.dispose();
+    expect(snapshotSignalGraph()).toMatchObject({
+      rendererConsumers: baseline.rendererConsumers,
+      rendererEdges: baseline.rendererEdges,
+      computedSourceEdges: baseline.computedSourceEdges,
+      createdComputedSourceEdges:
+        baseline.createdComputedSourceEdges + 2,
+      releasedComputedSourceEdges:
+        baseline.releasedComputedSourceEdges + 2,
+    });
+    expect(getSignalNodeForTest(source).observers.size).toBe(0);
+    expect(getSignalNodeForTest(inner).observers.size).toBe(0);
+
+    source.set(2);
+    expect(outer.get()).toBe(4);
+    expect(snapshotSignalGraph().computedSourceEdges).toBe(
+      baseline.computedSourceEdges,
+    );
   });
 });
 
@@ -245,6 +304,7 @@ function expectReleasedState(): void {
   expect(snapshotSignalGraph()).toMatchObject({
     rendererConsumers: 0,
     rendererEdges: 0,
+    computedSourceEdges: 0,
     pendingComputedValidations: 0,
   });
   expect(schedulerOwnershipSnapshot()).toMatchObject({
@@ -253,6 +313,18 @@ function expectReleasedState(): void {
     advanceParticipants: 0,
     completionCallbacks: 0,
   });
+}
+
+function getSignalNodeForTest<T>(value: import('@crc/core').Signal<T>) {
+  const getNode = (
+    signalGraph as typeof signalGraph & {
+      getSignalNode?: (signal: import('@crc/core').Signal<T>) => {
+        observers: Set<unknown>;
+      };
+    }
+  ).getSignalNode;
+  expect(getNode).toBeTypeOf('function');
+  return getNode!(value);
 }
 
 function track(controller: CRCController): CRCController {

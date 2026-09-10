@@ -7309,22 +7309,28 @@
           "id": "c0043",
           "kind": "table",
           "section": "Signal and scheduler ownership",
-          "text": "| Computed Plan validation | Observed computed invalidation | Exact computed node | Successful validation or loss of every observer | At most one pending validation remains; equal output does not dirty downstream consumers. |"
+          "text": "| Computed source edge | First observer of an evaluated computed | Exact computed node while observed | Dependency replacement or loss of the final observer | Source observer leases release recursively; retained unobserved nodes validate dependency versions on `get()`. |"
         },
         {
           "id": "c0044",
           "kind": "table",
           "section": "Signal and scheduler ownership",
-          "text": "| Root scheduler registration | First root mount | Exact live root | Abort, controller disposal, or failed-mount cleanup | Root and pending root work are absent without disturbing another root's registration or work. |"
+          "text": "| Computed Plan validation | Observed computed invalidation | Exact computed node | Successful validation or loss of every observer | At most one pending validation remains; equal output does not dirty downstream consumers. |"
         },
         {
           "id": "c0045",
           "kind": "table",
           "section": "Signal and scheduler ownership",
-          "text": "| Instance render revision | Root or nested-instance render request | Exact requested instance | Successful completion of that revision or instance teardown | Completed revision advances only after success; failed friend work remains available for retry. |"
+          "text": "| Root scheduler registration | First root mount | Exact live root | Abort, controller disposal, or failed-mount cleanup | Root and pending root work are absent without disturbing another root's registration or work. |"
         },
         {
           "id": "c0046",
+          "kind": "table",
+          "section": "Signal and scheduler ownership",
+          "text": "| Instance render revision | Root or nested-instance render request | Exact requested instance | Successful completion of that revision or instance teardown | Completed revision advances only after success; failed friend work remains available for retry. |"
+        },
+        {
+          "id": "c0047",
           "kind": "table",
           "section": "Signal and scheduler ownership",
           "text": "| Friend renderer owner/work | Exact component evaluation or staged friend request | Exact owner scope or renderer transaction | Owner-scope `finally`; staged success, retry restoration, or renderer teardown | Owner identity never escapes evaluation; failed work skips dependent stages and restores only its transaction. |"
@@ -8540,8 +8546,8 @@
     {
       "path": "docs/design/signals-and-scheduling-contract.md",
       "unitPrefix": "s",
-      "currentUnitCount": 44,
-      "currentUnitsSha256": "aef395f0ff2e999ae4c9d3a94455a7554a990938eacf866c89a956a9cab94496",
+      "currentUnitCount": 47,
+      "currentUnitsSha256": "0aa98c35ffadaec5492343a5c47314bc37f4bb5ce1cdd59dc8f1f9a710310f58",
       "approvalRecordId": "first-class-signals-and-scheduler",
       "mappings": [
         {
@@ -8586,8 +8592,8 @@
         },
         {
           "id": "computed-signals",
-          "currentIds": ["s0009", "s0010", "s0011"],
-          "reason": "first-class-signals-and-scheduler units g0071 g0072 g0073 g0074 g0075 g0138 g0190 g0198 g0199 authorize s0009 s0010 s0011 as the lazy dynamic computed dependency and Plan validation contract.",
+          "currentIds": ["s0009", "s0010", "s0011", "s0012"],
+          "reason": "first-class-signals-and-scheduler units g0071 g0072 g0073 g0074 g0075 g0136 g0138 g0190 g0194 g0198 g0199 g0212 authorize s0009 s0010 s0011 s0012 as the lazy dynamic computed dependency, cached cycle, observed source-edge, and live Plan validation contract.",
           "approval": {
             "recordId": "first-class-signals-and-scheduler",
             "unitIds": [
@@ -8596,18 +8602,21 @@
               "g0073",
               "g0074",
               "g0075",
+              "g0136",
               "g0138",
               "g0190",
+              "g0194",
               "g0198",
-              "g0199"
+              "g0199",
+              "g0212"
             ]
           },
           "sharedAnchors": ["computed", "dependency", "Plan"]
         },
         {
           "id": "component-consumers",
-          "currentIds": ["s0012", "s0013", "s0014"],
-          "reason": "first-class-signals-and-scheduler units g0050 g0051 g0064 g0076 g0142 g0153 g0192 g0220 authorize s0012 s0013 s0014 as the component consumer, crcSignal, cleanup, and render write-guard contract.",
+          "currentIds": ["s0013", "s0014", "s0015"],
+          "reason": "first-class-signals-and-scheduler units g0050 g0051 g0064 g0076 g0138 g0140 g0142 g0153 g0192 g0220 authorize s0013 s0014 s0015 as the component consumer, crcSignal, cleanup, render write-guard, and staged-only Advance contract.",
           "approval": {
             "recordId": "first-class-signals-and-scheduler",
             "unitIds": [
@@ -8615,6 +8624,8 @@
               "g0051",
               "g0064",
               "g0076",
+              "g0138",
+              "g0140",
               "g0142",
               "g0153",
               "g0192",
@@ -8626,7 +8637,6 @@
         {
           "id": "realm-frame-phases",
           "currentIds": [
-            "s0015",
             "s0016",
             "s0017",
             "s0018",
@@ -8635,9 +8645,10 @@
             "s0021",
             "s0022",
             "s0023",
-            "s0024"
+            "s0024",
+            "s0025"
           ],
-          "reason": "first-class-signals-and-scheduler units g0058 g0136 g0137 g0138 g0139 g0140 g0161 g0162 g0163 g0164 g0166 g0194 authorize s0015 s0016 s0017 s0018 s0019 s0020 s0021 s0022 s0023 s0024 as the one-scheduler frame and ordered Begin through Complete phase contract.",
+          "reason": "first-class-signals-and-scheduler units g0058 g0136 g0137 g0138 g0139 g0140 g0161 g0162 g0163 g0164 g0166 g0194 authorize s0016 s0017 s0018 s0019 s0020 s0021 s0022 s0023 s0024 s0025 as the one-scheduler frame and ordered Begin through Complete phase contract.",
           "approval": {
             "recordId": "first-class-signals-and-scheduler",
             "unitIds": [
@@ -8659,28 +8670,48 @@
         },
         {
           "id": "root-and-layer-revisions",
-          "currentIds": ["s0025", "s0026"],
-          "reason": "first-class-signals-and-scheduler units g0058 g0140 g0153 g0154 g0203 g0217 authorize s0025 s0026 as the Layer-before-root rendering, clean cache reuse, and deferred revision contract.",
+          "currentIds": ["s0026", "s0027"],
+          "reason": "first-class-signals-and-scheduler units g0058 g0138 g0140 g0153 g0154 g0203 g0217 authorize s0026 s0027 as the Layer-before-root rendering, clean cache reuse, explicit Commit/Plan admission, phase deferral, and revision contract.",
           "approval": {
             "recordId": "first-class-signals-and-scheduler",
-            "unitIds": ["g0058", "g0140", "g0153", "g0154", "g0203", "g0217"]
+            "unitIds": [
+              "g0058",
+              "g0138",
+              "g0140",
+              "g0153",
+              "g0154",
+              "g0203",
+              "g0217"
+            ]
           },
           "sharedAnchors": ["Layer", "root", "render"]
         },
         {
           "id": "error-isolation",
-          "currentIds": ["s0027", "s0028"],
-          "reason": "first-class-signals-and-scheduler units g0138 g0164 g0165 g0166 g0188 g0192 authorize s0027 s0028 as the isolated error, render transaction, dependent-stage, and restored-work contract.",
+          "currentIds": ["s0028", "s0029", "s0030"],
+          "reason": "first-class-signals-and-scheduler units g0072 g0073 g0138 g0164 g0165 g0166 g0188 g0190 g0192 g0198 g0199 authorize s0028 s0029 s0030 as the non-fail-fast Plan, value-error ownership, isolated render transaction, dependent-stage, and restored-work contract.",
           "approval": {
             "recordId": "first-class-signals-and-scheduler",
-            "unitIds": ["g0138", "g0164", "g0165", "g0166", "g0188", "g0192"]
+            "unitIds": [
+              "g0072",
+              "g0073",
+              "g0138",
+              "g0164",
+              "g0165",
+              "g0166",
+              "g0188",
+              "g0190",
+              "g0192",
+              "g0198",
+              "g0199"
+            ]
           },
           "sharedAnchors": ["error", "render", "work"]
         },
         {
           "id": "friend-entry",
-          "currentIds": ["s0029", "s0030"],
-          "reason": "first-class-signals-and-scheduler units g0158 g0159 g0160 g0161 g0162 g0163 g0164 g0165 g0166 authorize s0029 s0030 as the official version-coupled friend renderer and signal-consumer boundary.",
+          "currentIds": ["s0031", "s0032"],
+          "reason": "first-class-signals-and-scheduler units g0158 g0159 g0160 g0161 g0162 g0163 g0164 g0165 g0166 authorize s0031 s0032 as the official version-coupled friend renderer and signal-consumer boundary.",
           "approval": {
             "recordId": "first-class-signals-and-scheduler",
             "unitIds": [
@@ -8700,17 +8731,18 @@
         {
           "id": "ownership-ledger",
           "currentIds": [
-            "s0031",
-            "s0032",
             "s0033",
             "s0034",
             "s0035",
             "s0036",
             "s0037",
             "s0038",
-            "s0039"
+            "s0039",
+            "s0040",
+            "s0041",
+            "s0042"
           ],
-          "reason": "first-class-signals-and-scheduler units g0050 g0051 g0071 g0072 g0153 g0165 g0188 g0192 g0195 g0208 g0209 g0210 g0211 g0212 g0216 g0217 g0218 authorize s0031 s0032 s0033 s0034 s0035 s0036 s0037 s0038 s0039 as the exact signal, scheduler, Layer, root, frame, revision, and friend ownership ledger.",
+          "reason": "first-class-signals-and-scheduler units g0050 g0051 g0071 g0072 g0153 g0165 g0188 g0192 g0195 g0208 g0209 g0210 g0211 g0212 g0216 g0217 g0218 authorize s0033 s0034 s0035 s0036 s0037 s0038 s0039 s0040 s0041 s0042 as the exact renderer edge, computed source edge, scheduler, Layer, root, frame, revision, friend ownership ledger, and evidence boundary.",
           "approval": {
             "recordId": "first-class-signals-and-scheduler",
             "unitIds": [
@@ -8737,8 +8769,8 @@
         },
         {
           "id": "deliberate-boundaries",
-          "currentIds": ["s0040", "s0041", "s0042", "s0043", "s0044"],
-          "reason": "first-class-signals-and-scheduler units g0064 g0072 g0075 g0080 g0136 g0157 g0207 g0220 authorize s0040 s0041 s0042 s0043 s0044 as the explicit signal/style, synchronous graph, scheduler, and deferred-surface boundaries.",
+          "currentIds": ["s0043", "s0044", "s0045", "s0046", "s0047"],
+          "reason": "first-class-signals-and-scheduler units g0064 g0072 g0075 g0080 g0136 g0138 g0157 g0194 g0207 g0220 authorize s0043 s0044 s0045 s0046 s0047 as the explicit signal/style, synchronous graph, observed Plan-work liveness, scheduler, and deferred-surface boundaries.",
           "approval": {
             "recordId": "first-class-signals-and-scheduler",
             "unitIds": [
@@ -8747,7 +8779,9 @@
               "g0075",
               "g0080",
               "g0136",
+              "g0138",
               "g0157",
+              "g0194",
               "g0207",
               "g0220"
             ]
@@ -10815,9 +10849,10 @@
         "c0043",
         "c0044",
         "c0045",
-        "c0046"
+        "c0046",
+        "c0047"
       ],
-      "reason": "first-class-signals-and-scheduler g0050 g0051 g0058 g0071 g0072 g0140 g0153 g0158 g0164 g0165 g0188 g0209 g0210 g0211 g0212 g0216 g0217 authorizes c0039 c0040 c0041 c0042 c0043 c0044 c0045 c0046 as the exact signal consumer, hook, computed, root, realm frame, Layer revision, and friend renderer ownership ledger.",
+      "reason": "first-class-signals-and-scheduler g0050 g0051 g0058 g0071 g0072 g0140 g0153 g0158 g0164 g0165 g0188 g0209 g0210 g0211 g0212 g0216 g0217 authorizes c0039 c0040 c0041 c0042 c0043 c0044 c0045 c0046 c0047 as the exact signal consumer, hook, computed source edge, computed validation, root, realm frame, Layer revision, and friend renderer ownership ledger.",
       "approval": {
         "recordId": "first-class-signals-and-scheduler",
         "unitIds": [

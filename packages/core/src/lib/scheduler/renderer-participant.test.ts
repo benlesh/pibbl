@@ -17,7 +17,7 @@ import {
   type CRCInternalSignalConsumer,
 } from '@crc/core/internal';
 import { clearSharedState, getCRCInstance } from '../global-state';
-import { getSignalNode } from '../signals/graph';
+import { getSignalNode, signalGraphSnapshot } from '../signals/graph';
 import {
   registerAdvanceParticipant,
 } from './realm-scheduler';
@@ -559,6 +559,88 @@ describe('@crc/core/internal renderer participants', () => {
     controller.dispose();
   });
 
+  it('defers friend work and completion requested during Advance without losing either', () => {
+    const calls: string[] = [];
+    const workKey = {};
+    let owner: CRCInternalRenderOwner | undefined;
+    let recordRootRender = false;
+    const controller = crc(createCanvas(), createElement(() => {
+      owner ??= crcInternalCurrentRenderOwner();
+      if (recordRootRender) calls.push('root render');
+    }, {}));
+    driver.flush(1);
+    recordRootRender = true;
+
+    let release = () => {};
+    release = registerAdvanceParticipant(() => {
+      release();
+      crcInternalRequestRendererWork(owner!, {
+        key: workKey,
+        kind: 'draw',
+        run: () => calls.push('friend draw'),
+      });
+      crcInternalQueueComplete(owner!, () => calls.push('friend complete'));
+    });
+    driver.flush(2);
+
+    expect(calls).toEqual([]);
+    expect(driver.pendingHostFrames).toBe(1);
+
+    driver.flush(3);
+    expect(calls).toEqual(['friend draw', 'root render', 'friend complete']);
+    expect(driver.pendingHostFrames).toBe(0);
+    controller.dispose();
+  });
+
+  it('keeps pre-Begin friend work eligible when Advance defers separate work for the same owner', () => {
+    const calls: string[] = [];
+    const currentKey = {};
+    const deferredKey = {};
+    let owner: CRCInternalRenderOwner | undefined;
+    let recordRootRender = false;
+    const controller = crc(createCanvas(), createElement(() => {
+      owner ??= crcInternalCurrentRenderOwner();
+      if (recordRootRender) calls.push('root render');
+    }, {}));
+    driver.flush(1);
+    recordRootRender = true;
+
+    crcInternalRequestRendererWork(owner!, {
+      key: currentKey,
+      kind: 'draw',
+      run: () => calls.push('current draw'),
+    });
+    crcInternalQueueComplete(owner!, () => calls.push('current complete'));
+    let release = () => {};
+    release = registerAdvanceParticipant(() => {
+      release();
+      crcInternalRequestRendererWork(owner!, {
+        key: deferredKey,
+        kind: 'draw',
+        run: () => calls.push('deferred draw'),
+      });
+      crcInternalQueueComplete(owner!, () => calls.push('deferred complete'));
+    });
+
+    driver.flush(2);
+    expect(calls).toEqual([
+      'current draw',
+      'root render',
+      'current complete',
+    ]);
+    expect(driver.pendingHostFrames).toBe(1);
+
+    calls.length = 0;
+    driver.flush(3);
+    expect(calls).toEqual([
+      'deferred draw',
+      'root render',
+      'deferred complete',
+    ]);
+    expect(driver.pendingHostFrames).toBe(0);
+    controller.dispose();
+  });
+
   it('replaces signal dependencies only after successful collection', () => {
     const first = signal(0);
     const second = signal(0);
@@ -685,6 +767,39 @@ describe('@crc/core/internal renderer participants', () => {
     driver.flush(2);
     expect(calls).toEqual(['invalidate']);
     fallback.dispose();
+  });
+
+  it('releases recursive computed leases when a friend consumer owner is disposed', () => {
+    const baseline = signalGraphSnapshot();
+    const source = signal(1);
+    const inner = computed(() => source.get() + 1);
+    const outer = computed(() => inner.get() + 1);
+    let consumer: CRCInternalSignalConsumer | undefined;
+    const controller = crc(createCanvas(), createElement(() => {
+      consumer ??= crcInternalCreateSignalConsumer({
+        owner: crcInternalCurrentRenderOwner(),
+        invalidate: () => {},
+      });
+      consumer.collect(() => outer.get());
+      consumer.markClean();
+    }, {}));
+    driver.flush(1);
+
+    expect(signalGraphSnapshot().computedSourceEdges).toBe(
+      baseline.computedSourceEdges + 2,
+    );
+    expect(getSignalNode(source).observers.size).toBe(1);
+    expect(getSignalNode(inner).observers.size).toBe(1);
+
+    controller.dispose();
+
+    expect(signalGraphSnapshot()).toMatchObject({
+      computedSourceEdges: baseline.computedSourceEdges,
+      createdComputedSourceEdges: baseline.createdComputedSourceEdges + 2,
+      releasedComputedSourceEdges: baseline.releasedComputedSourceEdges + 2,
+    });
+    expect(getSignalNode(source).observers.size).toBe(0);
+    expect(getSignalNode(inner).observers.size).toBe(0);
   });
 });
 

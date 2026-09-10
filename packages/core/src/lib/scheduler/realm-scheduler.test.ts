@@ -12,12 +12,18 @@ import {
 } from '../global-state';
 import { mountCRC } from '../mount-crc';
 import { crcRef } from '../hooks/crc-ref';
+import { crcState, type StateUpdater } from '../hooks/crc-state';
 import {
   collectSignalReads,
   createSignalRenderConsumer,
   disposeSignalRenderConsumer,
 } from '../signals/render-consumer';
-import { computed, getSignalNode, signal } from '../signals/graph';
+import {
+  computed,
+  getSignalNode,
+  signal,
+  signalGraphSnapshot,
+} from '../signals/graph';
 import { update } from '../update';
 import {
   getCurrentFrameSnapshot,
@@ -646,6 +652,193 @@ describe('realm scheduler', () => {
     controller.dispose();
   });
 
+  it('rejects direct set and update during Advance before either can mutate', () => {
+    const value = signal(0);
+    let releaseSet = () => {};
+    releaseSet = registerAdvanceParticipant(() => {
+      releaseSet();
+      value.set(1);
+    });
+
+    const setFailure = captureFailure(() => driver.flush(60));
+    expect(setFailure).toMatchObject({
+      message: 'Cannot write to a signal directly during CRC scheduler Advance; stage it through the provided batch.',
+    });
+    expect(value.get()).toBe(0);
+
+    let updateCalls = 0;
+    let releaseUpdate = () => {};
+    releaseUpdate = registerAdvanceParticipant(() => {
+      releaseUpdate();
+      value.update(current => {
+        updateCalls++;
+        return current + 1;
+      });
+    });
+
+    const updateFailure = captureFailure(() => driver.flush(70));
+    expect(updateFailure).toMatchObject({
+      message: 'Cannot write to a signal directly during CRC scheduler Advance; stage it through the provided batch.',
+    });
+    expect(updateCalls).toBe(0);
+    expect(value.get()).toBe(0);
+    expect(driver.pendingHostFrames).toBe(0);
+  });
+
+  it('discards sanctioned stages when the same Advance participant attempts a direct write', () => {
+    const staged = signal(0);
+    const direct = signal(0);
+    let release = () => {};
+    const participant: CRCAdvanceParticipant = (_snapshot, batch) => {
+      release();
+      batch.stage(staged, 1, participant);
+      direct.set(1);
+    };
+    release = registerAdvanceParticipant(participant);
+
+    expect(() => driver.flush(80)).toThrow(
+      'Cannot write to a signal directly during CRC scheduler Advance; stage it through the provided batch.',
+    );
+    expect(staged.get()).toBe(0);
+    expect(direct.get()).toBe(0);
+    expect(driver.pendingHostFrames).toBe(0);
+  });
+
+  it('defers state-only and root replacement requests made during Advance', () => {
+    const stateValues: number[] = [];
+    const replacementRenders: string[] = [];
+    let setState: StateUpdater<number> = () => {};
+    const Stateful = (_props: {}) => {
+      const [value, updateState] = crcState(0);
+      setState = updateState;
+      stateValues.push(value);
+    };
+    const Replacement = (_props: {}) => {
+      replacementRenders.push('replacement');
+    };
+    const stateController = crc(createCanvas(), createElement(Stateful, {}));
+    const replacementCanvas = createCanvas();
+    const replacementController = crc(
+      replacementCanvas,
+      createElement(() => undefined, {}),
+    );
+    driver.flush(10);
+    stateValues.length = 0;
+
+    let release = () => {};
+    release = registerAdvanceParticipant(() => {
+      release();
+      setState(1);
+      crc(replacementCanvas, createElement(Replacement, {}));
+    });
+    driver.flush(20);
+
+    expect(stateValues).toEqual([]);
+    expect(replacementRenders).toEqual([]);
+    expect(driver.pendingHostFrames).toBe(1);
+
+    driver.flush(30);
+    expect(stateValues).toEqual([1]);
+    expect(replacementRenders).toEqual(['replacement']);
+    expect(driver.pendingHostFrames).toBe(0);
+    stateController.dispose();
+    replacementController.dispose();
+  });
+
+  it('drains nested computed failures, renders independent roots, and reports the value error once', () => {
+    const failingSource = signal(0);
+    const healthySource = signal(0);
+    const computationFailure = new Error('nested computed failed');
+    const inner = computed(() => {
+      if (failingSource.get() > 0) throw computationFailure;
+      return 1;
+    }, { debugName: 'failing inner' });
+    const outer = computed(
+      () => inner.get() + 1,
+      { debugName: 'failing outer' },
+    );
+    const healthy = computed(() => healthySource.get() + 1);
+    let failingRenderAttempts = 0;
+    const healthyValues: number[] = [];
+    const first = crc(createCanvas(), createElement(() => {
+      failingRenderAttempts++;
+      outer.get();
+    }, {}));
+    const second = crc(createCanvas(), createElement(() => {
+      healthyValues.push(healthy.get());
+    }, {}));
+    driver.flush(10);
+
+    let release = () => {};
+    const participant: CRCAdvanceParticipant = (_snapshot, batch) => {
+      release();
+      batch.stage(failingSource, 1, participant);
+      batch.stage(healthySource, 1, participant);
+    };
+    release = registerAdvanceParticipant(participant);
+
+    const reported = captureFailure(() => driver.flush(20));
+
+    expect(reported).toBe(computationFailure);
+    expect(failingRenderAttempts).toBe(2);
+    expect(healthyValues).toEqual([1, 2]);
+    expect(signalGraphSnapshot().pendingComputedValidations).toBe(0);
+    expect(driver.pendingHostFrames).toBe(0);
+    first.dispose();
+    second.dispose();
+  });
+
+  it('admits Commit and Plan dirtiness into the current frame', () => {
+    const directSource = signal(0);
+    const computedSource = signal(0);
+    const derived = computed(() => computedSource.get() * 2);
+    const calls: string[] = [];
+    const directController = crc(createCanvas(), createElement(() => {
+      calls.push(`direct:${directSource.get()}:${snapshotRealmScheduler().phase}`);
+    }, {}));
+    const computedController = crc(createCanvas(), createElement(() => {
+      calls.push(`computed:${derived.get()}:${snapshotRealmScheduler().phase}`);
+    }, {}));
+    driver.flush(10);
+    calls.length = 0;
+
+    let release = () => {};
+    const participant: CRCAdvanceParticipant = (_snapshot, batch) => {
+      release();
+      batch.stage(directSource, 1, participant);
+      batch.stage(computedSource, 1, participant);
+    };
+    release = registerAdvanceParticipant(participant);
+    driver.flush(20);
+
+    expect(calls).toEqual(['direct:1:render', 'computed:2:render']);
+    expect(driver.pendingHostFrames).toBe(0);
+    directController.dispose();
+    computedController.dispose();
+  });
+
+  it('defers a state request made during Complete until the next Begin', () => {
+    const values: number[] = [];
+    let setState: StateUpdater<number> = () => {};
+    const controller = crc(createCanvas(), createElement(() => {
+      const [value, updateState] = crcState(0);
+      setState = updateState;
+      values.push(value);
+    }, {}));
+    driver.flush(10);
+    values.length = 0;
+
+    queueFrameCompletion(() => setState(1));
+    driver.flush(20);
+
+    expect(values).toEqual([]);
+    expect(driver.pendingHostFrames).toBe(1);
+    driver.flush(30);
+    expect(values).toEqual([1]);
+    expect(driver.pendingHostFrames).toBe(0);
+    controller.dispose();
+  });
+
   it('defers participants and completions registered after Begin', () => {
     const calls: string[] = [];
     let releaseFirst = () => {};
@@ -877,4 +1070,13 @@ function installSynchronousResizeChange(canvas: HTMLCanvasElement): void {
 
 function pixel(canvas: HTMLCanvasElement, x: number, y: number): number[] {
   return Array.from(canvas.getContext('2d')!.getImageData(x, y, 1, 1).data);
+}
+
+function captureFailure(callback: () => unknown): unknown {
+  try {
+    callback();
+  } catch (error) {
+    return error;
+  }
+  throw new Error('Expected callback to throw.');
 }

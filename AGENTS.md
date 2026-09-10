@@ -28,9 +28,10 @@ composable drawing primitives without React or generated DOM.
   transient pooling.
 - First-class `signal`, `computed`, `untracked`, `isSignal`, and `crcSignal`
   are implemented with explicit reads, dynamic synchronous dependency graphs,
-  render write guards, and exact consumer ownership. One realm scheduler runs
-  six ordered phases across roots and managed Layers. The approved animation
-  design is not yet implemented.
+  render/Advance write guards, observation-aware computed source-edge leases,
+  and exact consumer ownership. Observed pending computed validation is live
+  Plan work. One realm scheduler runs six ordered phases across roots and
+  managed Layers. The approved animation design is not yet implemented.
 - The local `_bmad-output/` directory remains discovery input, not normative
   behavior. Plan 003's implemented design, architecture, contracts, and
   implementation record supersede its earlier layout proposals where they
@@ -98,7 +99,8 @@ either as the current result unless a fresh run reproduces it.
   reads performed during its own evaluation; child reads do not become parent
   dependencies. `set()` treats functions as data, while `update()` is the
   explicit updater operation. Writes are forbidden during component,
-  primitive-render, and computed evaluation, including equality no-ops.
+  primitive-render, and computed evaluation, including equality no-ops. Advance
+  participants may mutate signals only through their scheduler staging batch.
 - Canvas state is isolated with save/restore around component traversal. Render
   failure tears down runtime-owned resources and clears component refs; pixels
   already painted earlier in the failing frame are not rolled back.
@@ -295,11 +297,15 @@ lazy computed values, untracked reads, nominal recognition, and the
 mount-owned `crcSignal` hook. Reads are explicit; component consumers replace
 their dependency edges after successful evaluation and detach them on
 removal, failure cleanup, or disposal. Computed graphs are synchronous,
-dynamic, cached, dependency-first, equality-aware, and cycle checked.
+dynamic, cached, dependency-first, equality-aware, and cycle checked. Their
+source observer leases exist only while observed, and observed invalidation
+requests Plan work without dirtying a renderer until the result changes.
 
 One scheduler singleton per loaded runtime owns at most one host frame across
 all roots and managed Layers. Begin, Advance, Commit, Plan, Render, and
-Complete have explicit admission and failure-isolation rules. Layer requests
+Complete have explicit admission, phase-deferral, and failure-isolation rules.
+Advance mutations are staged; Commit notifications and Plan-derived dirtiness
+may join the current plan. Layer requests
 carry monotonically increasing realm revisions, mark their ancestor
 composition path, render dirty nested instances deepest-first, and preserve
 clean sibling caches. Errors are collected after Complete rather than stopping

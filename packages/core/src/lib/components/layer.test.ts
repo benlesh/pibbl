@@ -14,7 +14,7 @@ import { crcEventTarget } from '../hooks/crc-event-target';
 import { crcRef } from '../hooks/crc-ref';
 import { crcState } from '../hooks/crc-state';
 import { crcWhenChanged } from '../hooks/crc-when-changed';
-import { signal } from '../signals/graph';
+import { computed, signal } from '../signals/graph';
 import {
   installSchedulerDriverForTest,
   ManualSchedulerDriver,
@@ -31,6 +31,50 @@ import { Text } from './text';
 import { definePrimitive } from '../define-primitive';
 
 describe('Layer children and retained subtree contract', () => {
+  it('schedules computed-only Layer validation and repaints only for changed output', () => {
+    const driver = new ManualSchedulerDriver();
+    const restoreDriver = installSchedulerDriverForTest(driver);
+    const source = signal(0);
+    const color = computed(() => source.get() % 2 === 0 ? 'red' : 'blue');
+    let childRenders = 0;
+    const Child = (_props: {}): CRCNode => {
+      childRenders++;
+      return createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: color.get() },
+      });
+    };
+    const canvas = document.createElement('canvas');
+    canvas.width = 20;
+    canvas.height = 20;
+    document.body.appendChild(canvas);
+    const controller = crc(canvas, createElement(Layer, {
+      style: { width: 20, height: 20 },
+      children: createElement(Child, {}),
+    }), { pixelRatio: 1 });
+
+    try {
+      driver.flush(10);
+      expect(childRenders).toBe(1);
+      expect(pixel(canvas, 5, 5)).toEqual([255, 0, 0, 255]);
+
+      source.set(1);
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(20);
+      expect(childRenders).toBe(2);
+      expect(pixel(canvas, 5, 5)).toEqual([0, 0, 255, 255]);
+
+      source.set(3);
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(30);
+      expect(childRenders).toBe(2);
+      expect(pixel(canvas, 5, 5)).toEqual([0, 0, 255, 255]);
+      expect(driver.pendingHostFrames).toBe(0);
+    } finally {
+      controller.dispose();
+      restoreDriver();
+    }
+  });
+
   it('refreshes a pending signal-driven child bitmap before composing it', () => {
     const driver = new ManualSchedulerDriver();
     const restoreDriver = installSchedulerDriverForTest(driver);

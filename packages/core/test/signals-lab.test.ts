@@ -124,7 +124,7 @@ describe('first-class signal public scenarios', () => {
     );
   });
 
-  it('mounts the learning example with explicit reads and updates its writable signals on click', async () => {
+  it('mounts the learning example with explicit reads and updates its writable signal on click', async () => {
     const entry = getLearningExampleBySlug('signals');
     if (!entry) throw new Error('Missing signals learning example.');
     const canvas = document.createElement('canvas');
@@ -358,6 +358,21 @@ describe('first-class signal public scenarios', () => {
       const definition = await loadScenario(signalsLabScenarioEntry);
       const controller = await drainFrames(frames, definition.mount({ canvas, referenceHost }));
       activeControllers.add(controller);
+
+      const computedEqual = controller.perform('computed-equal-write');
+      expect(frames.pendingCount).toBe(2);
+      expect(controller.getState()).toMatchObject({
+        computed: 0,
+        computedEvaluations: 1,
+        rootRenders: { a: 1, b: 1 },
+      });
+      frames.flushOne();
+      expect(controller.getState()).toMatchObject({
+        computed: 0,
+        computedEvaluations: 2,
+        rootRenders: { a: 1, b: 1 },
+      });
+      await drainFrames(frames, computedEqual);
 
       const shared = controller.perform('shared-roots');
       expect(frames.pendingCount).toBe(2);

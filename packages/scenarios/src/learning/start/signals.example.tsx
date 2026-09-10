@@ -13,9 +13,9 @@ const doubledX = computed(() => x.get() * 2, { debugName: "learning doubled x" }
 
 function SignalCard() {
   const color = crcSignal("#2563eb", { debugName: "learning color" });
-  const currentX = x.get();
-  const currentColor = color.get();
   const derivedX = doubledX.get();
+  const currentX = derivedX / 2;
+  const currentColor = color.get();
 
   return [
     <Rectangle style={{ width: 720, height: 420, fill: "#eef2ff" }} />,
@@ -32,7 +32,6 @@ function SignalCard() {
       }}
       onClick={() => {
         x.update((value) => (value === 144 ? 196 : 144));
-        color.update((value) => (value === "#2563eb" ? "#7c3aed" : "#2563eb"));
       }}
     />,
     <Text
