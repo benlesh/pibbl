@@ -100,9 +100,10 @@ not add component or hook scopes.
 
 Normal work from every root and managed Layer in one loaded runtime coalesces
 onto one realm-wide `requestAnimationFrame`. Each frame runs Begin, Advance,
-Commit, Plan, Render, and Complete in order. The latest explicit root wins; a
-state or signal request cannot erase it, and nested-instance requests mark
-their ancestor composition path so parent-update intent remains OR-preserved.
+Commit, Plan, Render, and Complete in order. The latest explicit root wins. A
+state request cannot erase it. A signal request cannot erase it, and
+nested-instance requests mark their ancestor composition path so parent-update
+intent remains OR-preserved.
 Rendering remains synchronous Canvas
 traversal with no DOM reconciliation, background work, retained drawing
 commands, or async component continuation. The [signals and scheduling

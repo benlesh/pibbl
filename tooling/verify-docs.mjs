@@ -17,6 +17,7 @@ import transformReactJsx from "@babel/plugin-transform-react-jsx";
 import { transform } from "esbuild";
 import {
   assertContractPreservationBaseline,
+  assertPostBaselineContractPreservation,
   CONTRACT_BASELINE_COMMIT,
   CONTRACT_TRANSLATION_RECORD,
   extractContractUnits,
@@ -1516,107 +1517,65 @@ const approvalRecordSources = new Map(
   ),
 );
 
-const signalsDesignPath =
-  "docs/superpowers/specs/2026-09-09-first-class-signals-and-animation-design.md";
-const signalsDesignUnits = extractContractUnits(
-  approvalRecordSources.get(signalsDesignPath),
-  "g",
+const approvalRecordsById = new Map(
+  contractPreservationBaseline.approvalRecords.map((record) => [
+    record.id,
+    {
+      ...record,
+      units: extractContractUnits(
+        approvalRecordSources.get(record.path),
+        record.unitPrefix,
+      ),
+    },
+  ]),
 );
-const postBaselineSignalContractMappings = [
-  {
-    label: "signal API and write rules",
-    approvalIds: ["g0063", "g0064", "g0067", "g0076", "g0080"],
-    currentMarkers: [
-      "## Public signal surface",
-      "`set(value)` always treats `value` as data",
-      "Signal writes are forbidden during component traversal",
-    ],
-    sharedAnchors: ["signal", "get", "set", "render"],
-  },
-  {
-    label: "realm scheduler and Layer rules",
-    approvalIds: [
-      "g0058",
-      "g0136",
-      "g0138",
-      "g0139",
-      "g0140",
-      "g0153",
-      "g0188",
-    ],
-    currentMarkers: [
-      "Each frame has six ordered active phases",
-      "Managed Layers are scheduler",
-      "Errors are collected and thrown singly or as an aggregate only after Complete",
-    ],
-    sharedAnchors: ["scheduler", "Layer", "Render", "Complete"],
-  },
-  {
-    label: "consumer ownership and friend boundary",
-    approvalIds: [
-      "g0050",
-      "g0051",
-      "g0158",
-      "g0160",
-      "g0161",
-      "g0164",
-      "g0165",
-      "g0209",
-      "g0210",
-      "g0211",
-      "g0212",
-      "g0216",
-      "g0217",
-    ],
-    currentMarkers: [
-      "## Version-coupled friend entry",
-      "## Ownership summary",
-      "Signal-to-component edge",
-    ],
-    sharedAnchors: ["owner", "consumer", "friend", "Render"],
-  },
-];
+assert.deepEqual(
+  contractPreservationBaseline.postBaselineContracts.map(({ path }) => path),
+  [...postBaselineNormativeContractPaths],
+  "Post-baseline preservation inventory must cover each current contract outside the dated snapshot",
+);
+const postBaselineSignalContractRecord =
+  contractPreservationBaseline.postBaselineContracts[0];
+const postBaselineContractResult = assertPostBaselineContractPreservation({
+  record: postBaselineSignalContractRecord,
+  currentSource: currentSources.get(postBaselineSignalContractRecord.path),
+  approvalRecordsById,
+});
 
-export function assertPostBaselineSignalContractApproval(
-  contractSource,
-  approvedUnits = signalsDesignUnits,
-) {
-  for (const mapping of postBaselineSignalContractMappings) {
-    const units = mapping.approvalIds.map((id) => {
-      const unit = approvedUnits.find((candidate) => candidate.id === id);
-      assert.ok(unit, `${mapping.label} lacks approved design unit ${id}`);
-      return unit;
-    });
-    const approvedText = units.map(({ text }) => text).join(" ");
-    for (const marker of mapping.currentMarkers) {
-      assert.ok(
-        contractSource.includes(marker),
-        `${mapping.label} lacks current contract marker ${marker}`,
-      );
-    }
-    for (const anchor of mapping.sharedAnchors) {
-      assert.match(
-        contractSource,
-        new RegExp(anchor, "iu"),
-        `${mapping.label} lacks current anchor ${anchor}`,
-      );
-      assert.match(
-        approvedText,
-        new RegExp(anchor, "iu"),
-        `${mapping.label} lacks approved anchor ${anchor}`,
-      );
-    }
-  }
-  assert.doesNotMatch(
-    contractSource,
-    /declare function (?:animate|tween|keyframes|spring)|crcPlayback/u,
-    "The implemented signals contract must not publish the deferred animation API",
+export function assertTask9EvidenceMappings(manifest) {
+  const byId = new Map(
+    manifest.evidenceMappings.map((mapping) => [mapping.id, mapping]),
+  );
+  const statePrecedence = byId.get("pending-root-precedence");
+  assert.equal(
+    statePrecedence?.claim.text,
+    "A state request cannot erase it.",
+    "State pending-root precedence must retain its own exact claim",
+  );
+  const signalPrecedence = byId.get("pending-root-precedence-signal");
+  assert.equal(
+    signalPrecedence?.test.marker,
+    "does not lose a pending root replacement to a signal request",
+    "Signal pending-root precedence requires signal-specific executable evidence",
+  );
+  assert.deepEqual(
+    signalPrecedence?.relevance.sharedAnchors,
+    ["request", "signal"],
+    "Signal pending-root precedence must retain signal relevance",
+  );
+  const staleStateSetter = byId.get("stale-state-setter");
+  assert.equal(
+    staleStateSetter?.test.marker,
+    "cannot let an exact-instance disposed mount setter update a replacement mount",
+    "Stale state-setter evidence must cover replacement mounts",
+  );
+  assert.ok(
+    staleStateSetter?.relevance.sharedAnchors.includes("instance"),
+    "Stale state-setter evidence must retain exact-instance relevance",
   );
 }
 
-assertPostBaselineSignalContractApproval(
-  currentSources.get("docs/design/signals-and-scheduling-contract.md"),
-);
+assertTask9EvidenceMappings(contractPreservationBaseline);
 const baselineStyleUnits = contractPreservationBaseline.contracts.find(
   ({ path }) => path === "docs/design/style-system-contract.md",
 )?.baselineUnits;
@@ -2002,6 +1961,14 @@ assert.match(
 assert.match(
   libraryStatus,
   new RegExp(
+    `\\b${postBaselineContractResult.currentUnitCount} exhaustively mapped post-baseline units\\b`,
+    "u",
+  ),
+  "Library status post-baseline semantic-unit count is stale.",
+);
+assert.match(
+  libraryStatus,
+  new RegExp(
     `\\b${contractPreservationResult.evidenceMappingCount} unique direct source/test mappings\\b`,
     "u",
   ),
@@ -2084,13 +2051,79 @@ export async function verifyMutationProbes() {
       ),
     /Current normative contract inventory/u,
   );
+  const alteredSignalContract = replaceContractUnit(
+    currentSources.get("docs/design/signals-and-scheduling-contract.md"),
+    "s",
+    "s0008",
+    "Signals may implicitly unwrap and update during render.",
+  );
   throws(
     () =>
-      assertPostBaselineSignalContractApproval(
-        currentSources.get("docs/design/signals-and-scheduling-contract.md"),
-        signalsDesignUnits.filter(({ id }) => id !== "g0138"),
-      ),
-    /realm scheduler and Layer rules lacks approved design unit g0138/u,
+      assertPostBaselineContractPreservation({
+        record: postBaselineSignalContractRecord,
+        currentSource: alteredSignalContract,
+        approvalRecordsById,
+      }),
+    /reviewed complete semantic inventory/u,
+  );
+  const unmappedSignalContract = structuredClone(
+    postBaselineSignalContractRecord,
+  );
+  const boundaryMapping = unmappedSignalContract.mappings.find(
+    ({ id }) => id === "deliberate-boundaries",
+  );
+  boundaryMapping.currentIds = boundaryMapping.currentIds.filter(
+    (id) => id !== "s0044",
+  );
+  throws(
+    () =>
+      assertPostBaselineContractPreservation({
+        record: unmappedSignalContract,
+        currentSource: currentSources.get(
+          "docs/design/signals-and-scheduling-contract.md",
+        ),
+        approvalRecordsById,
+      }),
+    /current text is not exhaustively mapped/u,
+  );
+  const animationApprovalMutation = structuredClone(
+    postBaselineSignalContractRecord,
+  );
+  const publicSignalMapping = animationApprovalMutation.mappings.find(
+    ({ id }) => id === "public-signal-api",
+  );
+  publicSignalMapping.approval.unitIds = ["g0084"];
+  publicSignalMapping.reason += " g0084";
+  throws(
+    () =>
+      assertPostBaselineContractPreservation({
+        record: animationApprovalMutation,
+        currentSource: currentSources.get(
+          "docs/design/signals-and-scheduling-contract.md",
+        ),
+        approvalRecordsById,
+      }),
+    /out-of-scope approved-design unit g0084 from Animation value definitions/u,
+  );
+  const missingSignalPrecedence = structuredClone(contractPreservationBaseline);
+  missingSignalPrecedence.evidenceMappings =
+    missingSignalPrecedence.evidenceMappings.filter(
+      ({ id }) => id !== "pending-root-precedence-signal",
+    );
+  throws(
+    () => assertTask9EvidenceMappings(missingSignalPrecedence),
+    /Signal pending-root precedence requires signal-specific executable evidence/u,
+  );
+  const weakenedStaleSetter = structuredClone(contractPreservationBaseline);
+  const weakenedStaleSetterMapping = weakenedStaleSetter.evidenceMappings.find(
+    ({ id }) => id === "stale-state-setter",
+  );
+  weakenedStaleSetterMapping.test.marker =
+    "ignores a stale setter after its component is removed";
+  weakenedStaleSetterMapping.relevance.sharedAnchors = ["setter", "state"];
+  throws(
+    () => assertTask9EvidenceMappings(weakenedStaleSetter),
+    /replacement mounts/u,
   );
 
   const direct = exportedSpecifiers(
@@ -2379,6 +2412,51 @@ export async function verifyMutationProbes() {
     embeddedOnly: true,
   });
   probes += 1;
+
+  const oldTask9TranslationApproval = structuredClone(
+    contractPreservationBaseline,
+  );
+  const oldTask9Translation = oldTask9TranslationApproval.translations.find(
+    ({ id }) => id === "design-canvas-surface-contract-realm-scheduling",
+  );
+  oldTask9Translation.approval = {
+    id: "a0177",
+    kind: "prose",
+    text: "Existing design contracts are updated together",
+  };
+  oldTask9Translation.reason =
+    "Approved-design unit a0177 purports to authorize the Task 9 realm scheduler translation.";
+  throws(
+    () =>
+      assertPreservation({
+        manifest: oldTask9TranslationApproval,
+        reviewedManifestSha256: sha256(
+          JSON.stringify(oldTask9TranslationApproval),
+        ),
+      }),
+    /must use approved-design record first-class-signals-and-scheduler/u,
+  );
+
+  const animationTask9TranslationApproval = structuredClone(
+    contractPreservationBaseline,
+  );
+  const animationTask9Translation =
+    animationTask9TranslationApproval.translations.find(
+      ({ id }) => id === "design-canvas-surface-contract-realm-scheduling",
+    );
+  animationTask9Translation.approval.unitIds = ["g0084"];
+  animationTask9Translation.reason =
+    "first-class-signals-and-scheduler unit g0084 purports to authorize b0034 b0035 to c0037 c0038 through root scheduler density anchors.";
+  throws(
+    () =>
+      assertPreservation({
+        manifest: animationTask9TranslationApproval,
+        reviewedManifestSha256: sha256(
+          JSON.stringify(animationTask9TranslationApproval),
+        ),
+      }),
+    /out-of-scope approved-design unit g0084 from Animation value definitions/u,
+  );
 
   const headingOnlySources = new Map(currentSources);
   for (const { path } of contractPreservationBaseline.contracts) {
@@ -2796,6 +2874,7 @@ process.stdout.write(
     `${contractPreservationResult.currentUnitCount} current semantic units across ` +
     `${contractPreservationBaseline.contracts.length} baseline-snapshotted normative contracts, ` +
     `${currentNormativeContractPaths.length} current normative contracts, ` +
+    `${postBaselineContractResult.currentUnitCount} exhaustively mapped post-baseline units, ` +
     `${contractPreservationResult.evidenceMappingCount} direct evidence mappings, ` +
     `${fieldMigrationResult.fieldMigrationCount} baseline-derived field migrations, ` +
     `baseline provenance ${contractPreservationResult.provenanceVerified ? "verified" : "embedded/digest-locked"}, ` +

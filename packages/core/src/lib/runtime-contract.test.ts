@@ -6,6 +6,7 @@ import {
   LayoutDiagnostic,
   Polygon,
   crcWhenChanged,
+  signal,
 } from '../index';
 import { crc } from './crc';
 import { definePrimitive } from './define-primitive';
@@ -575,6 +576,30 @@ describe('crc root updates', () => {
     await nextFrame();
 
     expect(renders).toEqual(['stateful:0', 'replacement']);
+    controller.dispose();
+  });
+
+  it('does not lose a pending root replacement to a signal request', async () => {
+    const canvas = createCanvas();
+    const renders: string[] = [];
+    const value = signal(0);
+    const SignalRoot = (_props: {}) => {
+      renders.push(`signal:${value.get()}`);
+    };
+    const ReplacementRoot = (_props: {}) => {
+      renders.push('replacement');
+    };
+    const controller = crc(canvas, createElement(SignalRoot, {}));
+    await nextFrame();
+
+    crc(canvas, createElement(ReplacementRoot, {}));
+    value.set(1);
+    const pendingRoot = getCRCInstance(canvas).pendingRoot;
+    expect(isCRCElement(pendingRoot) && pendingRoot.type)
+      .toBe(createElement(ReplacementRoot, {}).type);
+    await nextFrame();
+
+    expect(renders).toEqual(['signal:0', 'replacement']);
     controller.dispose();
   });
 

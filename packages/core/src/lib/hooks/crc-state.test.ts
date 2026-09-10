@@ -64,7 +64,7 @@ describe('crcState ownership', () => {
     controller.dispose();
   });
 
-  it('cannot let a disposed mount setter update a replacement mount', async () => {
+  it('cannot let an exact-instance disposed mount setter update a replacement mount', async () => {
     const canvas = createCanvas();
     let staleSetter: StateUpdater<number> | undefined;
     const staleController = crc(canvas, createElement(StateProbe, {

@@ -9,7 +9,33 @@ export const CONTRACT_TRANSLATION_RECORD =
 // Updated only after the complete baseline, translation allowlist, additions,
 // and evidence map receive review together.
 const REVIEWED_MANIFEST_SHA256 =
-  "8f7ffc30840c0aee0e762fddcbe6bb04c6007cc7dccb36e4356779d6d9df49e9";
+  "d1578f1fdc63d78eb0ea9e1da4283a4077ea64f8fc4e03ac61ef2e093cbf1596";
+
+const SIGNALS_SCHEDULER_APPROVAL_RECORD = "first-class-signals-and-scheduler";
+const SIGNALS_SCHEDULER_APPROVED_SECTIONS = new Set([
+  "Signal ownership",
+  "Scheduler and root ownership",
+  "Public signal API",
+  "Signal semantics",
+  "Explicit style reads",
+  "Central scheduler and frame phases",
+  "Consumer scopes",
+  "Layer behavior",
+  "No automatic caching",
+  "WebGL integration",
+  "Error handling and phase isolation",
+  "Performance architecture",
+  "Future packed execution",
+  "Resource ownership",
+  "Validation and diagnostics",
+]);
+const SIGNALS_SCHEDULER_TRANSLATION_IDS = new Set([
+  "design-canvas-surface-contract-realm-scheduling",
+  "design-runtime-hooks-contract-md-deterministic-evidence",
+  "design-runtime-hooks-contract-md-public-package-boundary",
+  "design-runtime-hooks-contract-realm-scheduling",
+  "design-runtime-resource-ownership-realm-host-frame",
+]);
 
 export function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
@@ -278,6 +304,202 @@ function assertExactObjectKeys(value, expected, label) {
   );
 }
 
+function resolveApprovalRecordUnits({
+  approval,
+  approvalRecordsById,
+  label,
+  reason,
+  requiredRecordId,
+  allowedSections,
+}) {
+  assertExactObjectKeys(
+    approval ?? {},
+    ["recordId", "unitIds"],
+    `${label} approval`,
+  );
+  if (requiredRecordId !== undefined) {
+    assert.equal(
+      approval.recordId,
+      requiredRecordId,
+      `${label} must use approved-design record ${requiredRecordId}`,
+    );
+  }
+  const approvalRecord = approvalRecordsById.get(approval.recordId);
+  assert.ok(
+    approvalRecord,
+    `${label} lacks an explicit approved-design record`,
+  );
+  assert.ok(
+    Array.isArray(approval.unitIds) && approval.unitIds.length > 0,
+    `${label} must cite exact approved-design units`,
+  );
+  assert.equal(
+    new Set(approval.unitIds).size,
+    approval.unitIds.length,
+    `${label} repeats an approved-design unit`,
+  );
+  const approvalUnits = approval.unitIds.map((id) => {
+    assert.match(
+      id,
+      new RegExp(`^${approvalRecord.unitPrefix}\\d{4}$`, "u"),
+      `${label} approval has a malformed unit id`,
+    );
+    const unit = approvalRecord.units.find((candidate) => candidate.id === id);
+    assert.ok(
+      unit && ["prose", "list", "table", "code"].includes(unit.kind),
+      `${label} references unknown or unsupported approved-design unit ${id}`,
+    );
+    if (allowedSections !== undefined) {
+      assert.ok(
+        allowedSections.has(unit.section),
+        `${label} references out-of-scope approved-design unit ${id} from ${unit.section}`,
+      );
+    }
+    return unit;
+  });
+  assert.ok(
+    reason.includes(approval.recordId),
+    `${label} reason must identify its approved-design record`,
+  );
+  for (const id of approval.unitIds) {
+    assert.ok(
+      reason.includes(id),
+      `${label} reason must identify exact approved-design unit ${id}`,
+    );
+  }
+  return { approvalRecord, approvalUnits };
+}
+
+export function assertPostBaselineContractPreservation({
+  record,
+  currentSource,
+  approvalRecordsById,
+}) {
+  const label = `Post-baseline contract ${record?.path ?? "<unknown>"}`;
+  assertExactObjectKeys(
+    record ?? {},
+    [
+      "path",
+      "unitPrefix",
+      "currentUnitCount",
+      "currentUnitsSha256",
+      "approvalRecordId",
+      "mappings",
+    ],
+    label,
+  );
+  assert.equal(
+    record.path,
+    "docs/design/signals-and-scheduling-contract.md",
+    `${label} has an unsupported path`,
+  );
+  assert.equal(record.unitPrefix, "s", `${label} must use semantic prefix s`);
+  assert.equal(
+    record.approvalRecordId,
+    SIGNALS_SCHEDULER_APPROVAL_RECORD,
+    `${label} must use the bounded signal/scheduler approval record`,
+  );
+  assert.match(
+    record.currentUnitsSha256,
+    /^[a-f0-9]{64}$/u,
+    `${label} semantic inventory digest is malformed`,
+  );
+  assert.equal(
+    typeof currentSource,
+    "string",
+    `${label} source is unavailable`,
+  );
+  const currentUnits = extractContractUnits(currentSource, record.unitPrefix);
+  assert.equal(
+    record.currentUnitCount,
+    currentUnits.length,
+    `${label} semantic unit count is stale`,
+  );
+  assert.equal(
+    record.currentUnitsSha256,
+    sha256(JSON.stringify(currentUnits)),
+    `${label} differs from its reviewed complete semantic inventory`,
+  );
+
+  const mappedCurrentIds = new Set();
+  const mappingIds = new Set();
+  for (const mapping of record.mappings) {
+    const mappingLabel = `${label} mapping ${mapping?.id ?? "<unknown>"}`;
+    assertExactObjectKeys(
+      mapping ?? {},
+      ["id", "currentIds", "reason", "approval", "sharedAnchors"],
+      mappingLabel,
+    );
+    assert.match(
+      mapping.id,
+      /^[a-z0-9-]+$/u,
+      `${mappingLabel} has an invalid id`,
+    );
+    assert.ok(
+      !mappingIds.has(mapping.id),
+      `${mappingLabel} repeats a mapping id`,
+    );
+    mappingIds.add(mapping.id);
+    assert.ok(
+      typeof mapping.reason === "string" && mapping.reason.length >= 24,
+      `${mappingLabel} needs a specific human-readable reason`,
+    );
+    assert.ok(
+      Array.isArray(mapping.currentIds) && mapping.currentIds.length > 0,
+      `${mappingLabel} must identify exact current units`,
+    );
+    const currentMappingUnits = mapping.currentIds.map((id) => {
+      const unit = currentUnits.find((candidate) => candidate.id === id);
+      assert.ok(unit, `${mappingLabel} references unknown current unit ${id}`);
+      assert.ok(
+        !mappedCurrentIds.has(id),
+        `${mappingLabel} repeats current unit ${id}`,
+      );
+      mappedCurrentIds.add(id);
+      assert.ok(
+        mapping.reason.includes(id),
+        `${mappingLabel} reason must identify exact current unit ${id}`,
+      );
+      return unit;
+    });
+    const { approvalUnits } = resolveApprovalRecordUnits({
+      approval: mapping.approval,
+      approvalRecordsById,
+      label: mappingLabel,
+      reason: mapping.reason,
+      requiredRecordId: record.approvalRecordId,
+      allowedSections: SIGNALS_SCHEDULER_APPROVED_SECTIONS,
+    });
+    const currentText = joinedUnitText(currentMappingUnits);
+    const approvalText = joinedUnitText(approvalUnits);
+    assertAnchors(
+      currentText,
+      mapping.sharedAnchors,
+      `${mappingLabel} current relevance`,
+    );
+    assertAnchors(
+      approvalText,
+      mapping.sharedAnchors,
+      `${mappingLabel} approval relevance`,
+    );
+    assert.ok(
+      semanticSimilarity(currentText, approvalText) >= 0.08,
+      `${mappingLabel} approved-design units lack substantive relevance`,
+    );
+  }
+  assert.deepEqual(
+    [...mappedCurrentIds].sort(),
+    currentUnits.map(({ id }) => id).sort(),
+    `${label} current text is not exhaustively mapped to approved design units`,
+  );
+  assert.doesNotMatch(
+    currentSource,
+    /declare function (?:animate|tween|keyframes|spring)|crcPlayback/u,
+    `${label} must not publish the deferred animation API`,
+  );
+  return { currentUnitCount: currentUnits.length };
+}
+
 export function assertContractPreservationBaseline({
   manifest,
   expectedContractPaths,
@@ -299,6 +521,7 @@ export function assertContractPreservationBaseline({
       "translationRule",
       "approvalRecords",
       "contracts",
+      "postBaselineContracts",
       "translations",
       "additions",
       "evidenceMappings",
@@ -513,6 +736,36 @@ export function assertContractPreservationBaseline({
   const approvalUses = new Map();
   const approvals = extractContractUnits(translationRecordSource, "a");
   const assertApproval = (entry, label) => {
+    const requiredRecordId = SIGNALS_SCHEDULER_TRANSLATION_IDS.has(entry.id)
+      ? SIGNALS_SCHEDULER_APPROVAL_RECORD
+      : undefined;
+    if (
+      requiredRecordId !== undefined ||
+      "recordId" in (entry.approval ?? {})
+    ) {
+      if (requiredRecordId !== undefined) {
+        assert.equal(
+          entry.approval?.recordId,
+          requiredRecordId,
+          `${label} must use approved-design record ${requiredRecordId}`,
+        );
+      }
+      const resolved = resolveApprovalRecordUnits({
+        approval: entry.approval,
+        approvalRecordsById,
+        label,
+        reason: entry.reason,
+        requiredRecordId,
+        allowedSections:
+          entry.approval?.recordId === SIGNALS_SCHEDULER_APPROVAL_RECORD
+            ? SIGNALS_SCHEDULER_APPROVED_SECTIONS
+            : undefined,
+      });
+      return {
+        identity: `${entry.approval.recordId}\0${entry.approval.unitIds.join(",")}`,
+        units: resolved.approvalUnits,
+      };
+    }
     assertExactObjectKeys(
       entry.approval ?? {},
       ["id", "kind", "text"],
@@ -537,6 +790,10 @@ export function assertContractPreservationBaseline({
       entry.reason.includes(entry.approval.id),
       `${label} reason must identify its exact approved-design unit`,
     );
+    return {
+      identity: `${entry.approval.id}\0${entry.approval.kind}\0${normalizeContractText(entry.approval.text)}`,
+      units: undefined,
+    };
   };
   const resolveUnit = (path, side, id, label) => {
     const contract = contractsByPath.get(path);
@@ -588,8 +845,8 @@ export function assertContractPreservationBaseline({
         translation.currentIds.length > 0,
       `${label} must map to exact current prose/table/list/code`,
     );
-    assertApproval(translation, label);
-    const approvalIdentity = `${translation.approval.id}\0${translation.approval.kind}\0${normalizeContractText(translation.approval.text)}`;
+    const { identity: approvalIdentity, units: translationApprovalUnits } =
+      assertApproval(translation, label);
     approvalUses.set(
       approvalIdentity,
       (approvalUses.get(approvalIdentity) ?? 0) + 1,
@@ -612,6 +869,18 @@ export function assertContractPreservationBaseline({
       translation.sharedAnchors,
       `${label} current transformation`,
     );
+    if (translationApprovalUnits !== undefined) {
+      const approvalText = joinedUnitText(translationApprovalUnits);
+      assertAnchors(
+        approvalText,
+        translation.sharedAnchors,
+        `${label} approval relevance`,
+      );
+      assert.ok(
+        semanticSimilarity(currentText, approvalText) >= 0.08,
+        `${label} approved-design units lack substantive relevance to the current translation`,
+      );
+    }
     assert.ok(
       semanticSimilarity(baselineText, currentText) >= 0.1,
       `${label} transformation lacks substantive content similarity`,
@@ -672,46 +941,16 @@ export function assertContractPreservationBaseline({
       Array.isArray(addition.currentIds) && addition.currentIds.length > 0,
       `${label} must identify exact current units`,
     );
-    assertExactObjectKeys(
-      addition.approval ?? {},
-      ["recordId", "unitIds"],
-      `${label} approval`,
-    );
-    const approvalRecord = approvalRecordsById.get(addition.approval.recordId);
-    assert.ok(
-      approvalRecord,
-      `${label} lacks an explicit approved-design record`,
-    );
-    assert.ok(
-      Array.isArray(addition.approval.unitIds) &&
-        addition.approval.unitIds.length > 0,
-      `${label} must cite exact approved-design units`,
-    );
-    const approvalUnits = addition.approval.unitIds.map((id) => {
-      assert.match(
-        id,
-        new RegExp(`^${approvalRecord.unitPrefix}\\d{4}$`, "u"),
-        `${label} approval has a malformed unit id`,
-      );
-      const unit = approvalRecord.units.find(
-        (candidate) => candidate.id === id,
-      );
-      assert.ok(
-        unit && ["prose", "list", "table"].includes(unit.kind),
-        `${label} references unknown or unsupported approved-design unit ${id}`,
-      );
-      return unit;
+    const { approvalUnits } = resolveApprovalRecordUnits({
+      approval: addition.approval,
+      approvalRecordsById,
+      label,
+      reason: addition.reason,
+      allowedSections:
+        addition.approval?.recordId === SIGNALS_SCHEDULER_APPROVAL_RECORD
+          ? SIGNALS_SCHEDULER_APPROVED_SECTIONS
+          : undefined,
     });
-    assert.ok(
-      addition.reason.includes(addition.approval.recordId),
-      `${label} reason must identify its approved-design record`,
-    );
-    for (const id of addition.approval.unitIds) {
-      assert.ok(
-        addition.reason.includes(id),
-        `${label} reason must identify exact approved-design unit ${id}`,
-      );
-    }
     const currentUnits = addition.currentIds.map((id) =>
       resolveUnit(addition.path, "current", id, label),
     );

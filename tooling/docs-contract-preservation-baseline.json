@@ -6647,7 +6647,7 @@
           "id": "c0031",
           "kind": "prose",
           "section": "Scheduling",
-          "text": "Normal work from every root and managed Layer in one loaded runtime coalesces onto one realm-wide `requestAnimationFrame`. Each frame runs Begin, Advance, Commit, Plan, Render, and Complete in order. The latest explicit root wins; a state or signal request cannot erase it, and nested-instance requests mark their ancestor composition path so parent-update intent remains OR-preserved. Rendering remains synchronous Canvas traversal with no DOM reconciliation, background work, retained drawing commands, or async component continuation. The [signals and scheduling contract](./signals-and-scheduling-contract.md) defines phase admission, revision, computed-validation, Layer, failure-isolation, and friend-renderer rules."
+          "text": "Normal work from every root and managed Layer in one loaded runtime coalesces onto one realm-wide `requestAnimationFrame`. Each frame runs Begin, Advance, Commit, Plan, Render, and Complete in order. The latest explicit root wins. A state request cannot erase it. A signal request cannot erase it, and nested-instance requests mark their ancestor composition path so parent-update intent remains OR-preserved. Rendering remains synchronous Canvas traversal with no DOM reconciliation, background work, retained drawing commands, or async component continuation. The [signals and scheduling contract](./signals-and-scheduling-contract.md) defines phase admission, revision, computed-validation, Layer, failure-isolation, and friend-renderer rules."
         },
         {
           "id": "c0032",
@@ -8524,6 +8524,227 @@
       ]
     }
   ],
+  "postBaselineContracts": [
+    {
+      "path": "docs/design/signals-and-scheduling-contract.md",
+      "unitPrefix": "s",
+      "currentUnitCount": 44,
+      "currentUnitsSha256": "aef395f0ff2e999ae4c9d3a94455a7554a990938eacf866c89a956a9cab94496",
+      "approvalRecordId": "first-class-signals-and-scheduler",
+      "mappings": [
+        {
+          "id": "document-scope",
+          "currentIds": ["s0001", "s0002"],
+          "reason": "first-class-signals-and-scheduler units g0058 g0061 g0062 authorize s0001 s0002 as the current implemented signal and scheduler contract while its separate animation design remains outside this shipped surface.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": ["g0058", "g0061", "g0062"]
+          },
+          "sharedAnchors": ["signal", "scheduler"]
+        },
+        {
+          "id": "public-signal-api",
+          "currentIds": ["s0003"],
+          "reason": "first-class-signals-and-scheduler unit g0062 authorizes s0003 as the exact branded SignalOptions, computed, and crcSignal declaration surface.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": ["g0062"]
+          },
+          "sharedAnchors": ["SignalOptions", "computed", "crcSignal"]
+        },
+        {
+          "id": "explicit-signal-reads",
+          "currentIds": ["s0004", "s0005", "s0006"],
+          "reason": "first-class-signals-and-scheduler units g0064 g0078 g0079 g0080 g0081 g0082 authorize s0004 s0005 s0006 as the explicit get() observation and resolved-style boundary.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": ["g0064", "g0078", "g0079", "g0080", "g0081", "g0082"]
+          },
+          "sharedAnchors": ["get()", "signal", "style"]
+        },
+        {
+          "id": "writable-signals",
+          "currentIds": ["s0007", "s0008"],
+          "reason": "first-class-signals-and-scheduler units g0063 g0067 g0068 g0069 g0070 authorize s0007 s0008 as the equality, set, function-value, update, and readonly contract.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": ["g0063", "g0067", "g0068", "g0069", "g0070"]
+          },
+          "sharedAnchors": ["equality", "set", "readonly"]
+        },
+        {
+          "id": "computed-signals",
+          "currentIds": ["s0009", "s0010", "s0011"],
+          "reason": "first-class-signals-and-scheduler units g0071 g0072 g0073 g0074 g0075 g0138 g0190 g0198 g0199 authorize s0009 s0010 s0011 as the lazy dynamic computed dependency and Plan validation contract.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": [
+              "g0071",
+              "g0072",
+              "g0073",
+              "g0074",
+              "g0075",
+              "g0138",
+              "g0190",
+              "g0198",
+              "g0199"
+            ]
+          },
+          "sharedAnchors": ["computed", "dependency", "Plan"]
+        },
+        {
+          "id": "component-consumers",
+          "currentIds": ["s0012", "s0013", "s0014"],
+          "reason": "first-class-signals-and-scheduler units g0050 g0051 g0064 g0076 g0142 g0153 g0192 g0220 authorize s0012 s0013 s0014 as the component consumer, crcSignal, cleanup, and render write-guard contract.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": [
+              "g0050",
+              "g0051",
+              "g0064",
+              "g0076",
+              "g0142",
+              "g0153",
+              "g0192",
+              "g0220"
+            ]
+          },
+          "sharedAnchors": ["component", "consumer", "render"]
+        },
+        {
+          "id": "realm-frame-phases",
+          "currentIds": [
+            "s0015",
+            "s0016",
+            "s0017",
+            "s0018",
+            "s0019",
+            "s0020",
+            "s0021",
+            "s0022",
+            "s0023",
+            "s0024"
+          ],
+          "reason": "first-class-signals-and-scheduler units g0058 g0136 g0137 g0138 g0139 g0140 g0161 g0162 g0163 g0164 g0166 g0194 authorize s0015 s0016 s0017 s0018 s0019 s0020 s0021 s0022 s0023 s0024 as the one-scheduler frame and ordered Begin through Complete phase contract.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": [
+              "g0058",
+              "g0136",
+              "g0137",
+              "g0138",
+              "g0139",
+              "g0140",
+              "g0161",
+              "g0162",
+              "g0163",
+              "g0164",
+              "g0166",
+              "g0194"
+            ]
+          },
+          "sharedAnchors": ["scheduler", "frame", "Render"]
+        },
+        {
+          "id": "root-and-layer-revisions",
+          "currentIds": ["s0025", "s0026"],
+          "reason": "first-class-signals-and-scheduler units g0058 g0140 g0153 g0154 g0203 g0217 authorize s0025 s0026 as the Layer-before-root rendering, clean cache reuse, and deferred revision contract.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": ["g0058", "g0140", "g0153", "g0154", "g0203", "g0217"]
+          },
+          "sharedAnchors": ["Layer", "root", "render"]
+        },
+        {
+          "id": "error-isolation",
+          "currentIds": ["s0027", "s0028"],
+          "reason": "first-class-signals-and-scheduler units g0138 g0164 g0165 g0166 g0188 g0192 authorize s0027 s0028 as the isolated error, render transaction, dependent-stage, and restored-work contract.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": ["g0138", "g0164", "g0165", "g0166", "g0188", "g0192"]
+          },
+          "sharedAnchors": ["error", "render", "work"]
+        },
+        {
+          "id": "friend-entry",
+          "currentIds": ["s0029", "s0030"],
+          "reason": "first-class-signals-and-scheduler units g0158 g0159 g0160 g0161 g0162 g0163 g0164 g0165 g0166 authorize s0029 s0030 as the official version-coupled friend renderer and signal-consumer boundary.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": [
+              "g0158",
+              "g0159",
+              "g0160",
+              "g0161",
+              "g0162",
+              "g0163",
+              "g0164",
+              "g0165",
+              "g0166"
+            ]
+          },
+          "sharedAnchors": ["friend", "renderer", "signal"]
+        },
+        {
+          "id": "ownership-ledger",
+          "currentIds": [
+            "s0031",
+            "s0032",
+            "s0033",
+            "s0034",
+            "s0035",
+            "s0036",
+            "s0037",
+            "s0038",
+            "s0039"
+          ],
+          "reason": "first-class-signals-and-scheduler units g0050 g0051 g0071 g0072 g0153 g0165 g0188 g0192 g0195 g0208 g0209 g0210 g0211 g0212 g0216 g0217 g0218 authorize s0031 s0032 s0033 s0034 s0035 s0036 s0037 s0038 s0039 as the exact signal, scheduler, Layer, root, frame, revision, and friend ownership ledger.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": [
+              "g0050",
+              "g0051",
+              "g0071",
+              "g0072",
+              "g0153",
+              "g0165",
+              "g0188",
+              "g0192",
+              "g0195",
+              "g0208",
+              "g0209",
+              "g0210",
+              "g0211",
+              "g0212",
+              "g0216",
+              "g0217",
+              "g0218"
+            ]
+          },
+          "sharedAnchors": ["owner", "signal", "scheduler"]
+        },
+        {
+          "id": "deliberate-boundaries",
+          "currentIds": ["s0040", "s0041", "s0042", "s0043", "s0044"],
+          "reason": "first-class-signals-and-scheduler units g0064 g0072 g0075 g0080 g0136 g0157 g0207 g0220 authorize s0040 s0041 s0042 s0043 s0044 as the explicit signal/style, synchronous graph, scheduler, and deferred-surface boundaries.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": [
+              "g0064",
+              "g0072",
+              "g0075",
+              "g0080",
+              "g0136",
+              "g0157",
+              "g0207",
+              "g0220"
+            ]
+          },
+          "sharedAnchors": ["signal", "scheduler", "style"]
+        }
+      ]
+    }
+  ],
   "translations": [
     {
       "id": "architecture-style-and-layout-architecture-md-crc-style-and-layout-architecture",
@@ -9113,11 +9334,10 @@
       "path": "docs/design/canvas-surface-contract.md",
       "baselineIds": ["b0034", "b0035"],
       "currentIds": ["c0037", "c0038"],
-      "reason": "This mapping preserves the root surface scheduling and teardown guarantees while aligning them to the realm scheduler; b0034, b0035 → c0037, c0038 is the exact unit boundary, and `root`, `scheduler`, `density`, and `disposal` remain shared semantic anchors. Approved-design unit a0177 authorizes coordinated contract updates.",
+      "reason": "This mapping preserves the root surface scheduling and teardown guarantees while aligning them to the realm scheduler; b0034, b0035 → c0037, c0038 is the exact unit boundary, and `root`, `scheduler`, and `density` remain shared semantic anchors. first-class-signals-and-scheduler units g0058 g0136 g0138 g0140 authorize the bounded scheduling change.",
       "approval": {
-        "id": "a0177",
-        "kind": "prose",
-        "text": "Existing design contracts are updated together"
+        "recordId": "first-class-signals-and-scheduler",
+        "unitIds": ["g0058", "g0136", "g0138", "g0140"]
       },
       "sharedAnchors": ["root", "scheduler", "density"]
     },
@@ -9480,8 +9700,7 @@
         "b0007",
         "b0008",
         "b0009",
-        "b0010",
-        "b0011"
+        "b0010"
       ],
       "currentIds": [
         "c0003",
@@ -9511,23 +9730,34 @@
         "c0027",
         "c0028",
         "c0029",
-        "c0030",
-        "c0031"
+        "c0030"
       ],
-      "reason": "This mapping extends existing component identity rules to plain functions, fragments, and recursively prepared children; b0003, b0004, b0005, b0006, b0007, b0008, b0009, b0010, b0011 → c0003, c0004, c0005, c0006, c0007, c0008, c0009, c0010, c0011, c0012, c0013, c0014, c0015, c0016, c0017, c0018, c0019, c0020, c0021, c0022, c0023, c0024, c0025, c0026, c0027, c0028, c0029, c0030, c0031 is the exact unit boundary, and `capabilities`, `or-preserved`, `consequence` remain shared semantic anchors. Approved-design unit a0076 authorizes that bounded JSX-era change.",
+      "reason": "This mapping extends existing component identity rules to plain functions, fragments, and recursively prepared children; b0003, b0004, b0005, b0006, b0007, b0008, b0009, b0010 → c0003, c0004, c0005, c0006, c0007, c0008, c0009, c0010, c0011, c0012, c0013, c0014, c0015, c0016, c0017, c0018, c0019, c0020, c0021, c0022, c0023, c0024, c0025, c0026, c0027, c0028, c0029, c0030 is the exact unit boundary, and `capabilities`, `identity`, `consequence` remain shared semantic anchors. Approved-design unit a0076 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0076",
         "kind": "prose",
         "text": "preserve current identity behavior"
       },
-      "sharedAnchors": ["capabilities", "or-preserved", "consequence"]
+      "sharedAnchors": ["capabilities", "identity", "consequence"]
+    },
+    {
+      "id": "design-runtime-hooks-contract-realm-scheduling",
+      "path": "docs/design/runtime-hooks-contract.md",
+      "baselineIds": ["b0011"],
+      "currentIds": ["c0031"],
+      "reason": "This mapping preserves pending root and state precedence while aligning realm scheduling; b0011 → c0031 is the exact unit boundary, and `root` and `state` remain shared semantic anchors. first-class-signals-and-scheduler units g0058 g0136 g0138 g0140 authorize the bounded signal/scheduler change.",
+      "approval": {
+        "recordId": "first-class-signals-and-scheduler",
+        "unitIds": ["g0058", "g0136", "g0138", "g0140"]
+      },
+      "sharedAnchors": ["root", "state"]
     },
     {
       "id": "design-runtime-hooks-contract-md-hook-sequence-invariant",
       "path": "docs/design/runtime-hooks-contract.md",
       "baselineIds": ["b0012", "b0014"],
-      "currentIds": ["c0032", "c0034", "c0052"],
-      "reason": "This mapping clarifies fewer-hook cleanup while retaining synchronous hook sequence enforcement; b0012, b0014 → c0032, c0034, c0052 is the exact unit boundary, and `synchronously`, `abandoned`, `reporting` remain shared semantic anchors. Approved-design unit a0194 authorizes that bounded JSX-era change.",
+      "currentIds": ["c0032", "c0034"],
+      "reason": "This mapping clarifies fewer-hook cleanup while retaining synchronous hook sequence enforcement; b0012, b0014 → c0032, c0034 is the exact unit boundary, and `synchronously`, `abandoned`, `reporting` remain shared semantic anchors. Approved-design unit a0194 authorizes that bounded JSX-era change.",
       "approval": {
         "id": "a0194",
         "kind": "list",
@@ -9589,30 +9819,24 @@
       "path": "docs/design/runtime-hooks-contract.md",
       "baselineIds": ["b0029"],
       "currentIds": ["c0053"],
-      "reason": "This mapping updates the public package boundary for the final JSX entry points and declarations; b0029 → c0053 is the exact unit boundary, and `consumers`, `entries`, `nodenext` remain shared semantic anchors. Approved-design unit a0105 authorizes that bounded JSX-era change.",
+      "reason": "This mapping preserves the public package boundary while adding the root signal surface; b0029 → c0053 is the exact unit boundary, and `package` and `crc` remain shared semantic anchors. first-class-signals-and-scheduler units g0061 g0158 authorize that bounded root-export and official-friend distinction.",
       "approval": {
-        "id": "a0105",
-        "kind": "prose",
-        "text": "TypeScript, Bundler, and NodeNext declarations must agree."
+        "recordId": "first-class-signals-and-scheduler",
+        "unitIds": ["g0061", "g0158"]
       },
-      "sharedAnchors": ["consumers", "entries", "nodenext"]
+      "sharedAnchors": ["package", "crc"]
     },
     {
       "id": "design-runtime-hooks-contract-md-deterministic-evidence",
       "path": "docs/design/runtime-hooks-contract.md",
       "baselineIds": ["b0030", "b0031"],
       "currentIds": ["c0054"],
-      "reason": "This mapping converts deterministic hook evidence to JSX-era scenarios without changing asserted behavior; b0030, b0031 → c0054 is the exact unit boundary, and `runtime-hooks-laboratory`, `presentation-neutral`, `outside-render` remain shared semantic anchors. Approved-design unit a0194 authorizes that bounded JSX-era change.",
+      "reason": "This mapping preserves the deterministic hook evidence while adding focused signal/scheduler coverage; b0030, b0031 → c0054 is the exact unit boundary, and `render` remains a shared semantic anchor. first-class-signals-and-scheduler units g0064 g0136 g0153 g0165 g0192 authorize that bounded evidence change.",
       "approval": {
-        "id": "a0194",
-        "kind": "list",
-        "text": "Plain function hooks mount, update, reorder, remove, fail, and recover under the current hook contract."
+        "recordId": "first-class-signals-and-scheduler",
+        "unitIds": ["g0064", "g0136", "g0153", "g0165", "g0192"]
       },
-      "sharedAnchors": [
-        "runtime-hooks-laboratory",
-        "presentation-neutral",
-        "outside-render"
-      ]
+      "sharedAnchors": ["render"]
     },
     {
       "id": "design-runtime-hooks-contract-md-deliberate-boundaries",
@@ -9645,11 +9869,10 @@
       "path": "docs/design/runtime-resource-ownership.md",
       "baselineIds": ["b0010"],
       "currentIds": ["c0010"],
-      "reason": "This mapping preserves exact frame callback completion and stale-callback safety while moving host-frame ownership to the realm scheduler; b0010 → c0010 is the exact unit boundary, and `frame` and `callback` remain shared semantic anchors. Approved-design unit a0177 authorizes consistent resource ownership.",
+      "reason": "This mapping preserves exact frame callback completion and stale-callback safety while moving host-frame ownership to the realm scheduler; b0010 → c0010 is the exact unit boundary, and `frame` and `callback` remain shared semantic anchors. first-class-signals-and-scheduler units g0058 g0216 authorize the bounded ownership change.",
       "approval": {
-        "id": "a0177",
-        "kind": "prose",
-        "text": "resource ownership describe the JSX-era model consistently."
+        "recordId": "first-class-signals-and-scheduler",
+        "unitIds": ["g0058", "g0216"]
       },
       "sharedAnchors": ["frame", "callback"]
     },
@@ -10498,6 +10721,17 @@
       "sharedAnchors": ["RegularPolygon", "Star", "layout"]
     },
     {
+      "id": "design-runtime-hooks-contract-signal-write-guard-addition",
+      "path": "docs/design/runtime-hooks-contract.md",
+      "currentIds": ["c0052"],
+      "reason": "first-class-signals-and-scheduler units g0076 g0192 g0216 authorize c0052 as the render write guard, realm-root teardown, pending-work release, and replacement-identity contract.",
+      "approval": {
+        "recordId": "first-class-signals-and-scheduler",
+        "unitIds": ["g0076", "g0192", "g0216"]
+      },
+      "sharedAnchors": ["render", "root", "signal"]
+    },
+    {
       "id": "design-runtime-hooks-contract-signal-hook-addition",
       "path": "docs/design/runtime-hooks-contract.md",
       "currentIds": ["c0061"],
@@ -11240,7 +11474,7 @@
       "contract": "docs/design/runtime-hooks-contract.md",
       "claim": {
         "kind": "prose",
-        "text": "The latest explicit root wins; a state or signal request cannot erase it"
+        "text": "A state request cannot erase it."
       },
       "source": {
         "path": "packages/core/src/lib/update.ts",
@@ -11251,7 +11485,26 @@
         "marker": "does not lose a pending root replacement to a state update"
       },
       "relevance": {
-        "sharedAnchors": ["explicit", "request", "state"]
+        "sharedAnchors": ["request", "state"]
+      }
+    },
+    {
+      "id": "pending-root-precedence-signal",
+      "contract": "docs/design/runtime-hooks-contract.md",
+      "claim": {
+        "kind": "prose",
+        "text": "A signal request cannot erase it"
+      },
+      "source": {
+        "path": "packages/core/src/lib/render.ts",
+        "marker": "componentRefs.signalConsumer = createSignalRenderConsumer({"
+      },
+      "test": {
+        "path": "packages/core/src/lib/runtime-contract.test.ts",
+        "marker": "does not lose a pending root replacement to a signal request"
+      },
+      "relevance": {
+        "sharedAnchors": ["request", "signal"]
       }
     },
     {
@@ -11305,10 +11558,10 @@
       },
       "test": {
         "path": "packages/core/src/lib/hooks/crc-state.test.ts",
-        "marker": "ignores a stale setter after its component is removed"
+        "marker": "cannot let an exact-instance disposed mount setter update a replacement mount"
       },
       "relevance": {
-        "sharedAnchors": ["setter", "state"]
+        "sharedAnchors": ["instance", "setter", "state"]
       }
     },
     {
