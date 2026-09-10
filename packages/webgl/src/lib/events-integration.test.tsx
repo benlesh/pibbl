@@ -484,25 +484,53 @@ describe('WebGL focus geometry', () => {
 
   it('replays focus through a cached outer Layer when the WebGL resolver is omitted', async () => {
     const focusTrace: string[] = [];
+    const rearClick = vi.fn();
+    const cubeClick = vi.fn();
+    const sphereClick = vi.fn();
+    const layerClick = vi.fn();
     let updateRoot!: () => void;
     const island = (
-      <WebGLLayer
-        pointerEvents="none"
-        style={{ width: 160, height: 100 }}
-      >
-        <Cube
-          onClick={() => undefined}
-          onFocus={() => focusTrace.push('cube')}
-        />
-      </WebGLLayer>
+      <Group style={{ translateX: 5, translateY: 7, rotationDegrees: -8 }}>
+        <WebGLLayer
+          pointerEvents="none"
+          style={{ width: 100, height: 80 }}
+          onClick={layerClick}
+        >
+          <Cube
+            onClick={cubeClick}
+            onFocus={() => focusTrace.push('cube')}
+          />
+          <Sphere
+            keyboardNavigationBounds={{ x: 70, y: 8, width: 12, height: 10 }}
+            onClick={sphereClick}
+            onFocus={() => focusTrace.push('sphere')}
+          />
+        </WebGLLayer>
+      </Group>
+    );
+    const retainedLayer = (
+      <Group style={{
+        translateX: 30,
+        translateY: 20,
+        rotationDegrees: 12,
+        skewX: 6,
+      }}>
+        <Layer key="cached" style={{ width: 160, height: 120 }}>
+          {island}
+        </Layer>
+      </Group>
     );
     const Root = (): CRCNode => {
       const [version, setVersion] = crcState(0);
       updateRoot = () => setVersion(version + 1);
       return [
-        <Layer key="cached" style={{ width: 160, height: 100 }}>
-          {island}
-        </Layer>,
+        <Rectangle
+          key="rear"
+          keyboardFocusable={false}
+          style={{ width: 240, height: 160, fill: '#0f172a' }}
+          onClick={rearClick}
+        />,
+        retainedLayer,
         <Rectangle
           key="update"
           pointerEvents="none"
@@ -511,23 +539,126 @@ describe('WebGL focus geometry', () => {
       ];
     };
     const before = document.createElement('button');
-    const canvas = createCanvas(200, 120, false);
+    const canvas = createCanvas(240, 160, false);
     const after = document.createElement('button');
     document.body.append(before, canvas, after);
     controllers.add(crc(canvas, <FocusManagement><Root /></FocusManagement>, {
       pixelRatio: 1,
     }));
     await nextFrame();
-    expect((await focusManager(canvas)).candidates).toHaveLength(1);
+    const bridge = createGroupTransform({
+      translateX: 30,
+      translateY: 20,
+      rotationDegrees: 12,
+      skewX: 6,
+    }).multiply(createGroupTransform({
+      translateX: 5,
+      translateY: 7,
+      rotationDegrees: -8,
+    }));
+    const camera = resolveCamera(undefined, 100, 80);
+    const automatic = boundsOf(projectUnitCube(
+      camera.projectionViewMatrix,
+      100,
+      80,
+    ).map(point => bridge.transformPoint(new DOMPoint(point.x, point.y))));
+    const explicit = boundsOf([
+      [70, 8], [82, 8], [70, 18], [82, 18],
+    ].map(([x, y]) => bridge.transformPoint(new DOMPoint(x, y))));
+    const expected = [automatic, explicit];
+    expectFocusBounds(await focusManager(canvas), expected);
+    const center = bridge.transformPoint(new DOMPoint(50, 40));
+    dispatchClick(canvas, center.x, center.y);
+    expect(rearClick).toHaveBeenCalledOnce();
+    expect(cubeClick).not.toHaveBeenCalled();
+    expect(sphereClick).not.toHaveBeenCalled();
+    expect(layerClick).not.toHaveBeenCalled();
 
     updateRoot();
     await nextFrame();
 
-    expect((await focusManager(canvas)).candidates).toHaveLength(1);
+    expectFocusBounds(await focusManager(canvas), expected);
+    dispatchClick(canvas, center.x, center.y);
+    expect(rearClick).toHaveBeenCalledTimes(2);
+    expect(cubeClick).not.toHaveBeenCalled();
+    expect(sphereClick).not.toHaveBeenCalled();
+    expect(layerClick).not.toHaveBeenCalled();
     before.focus();
     await userEvent.tab();
     expect(document.activeElement).toBe(canvas);
     expect(focusTrace).toEqual(['cube']);
+  });
+
+  it('updates focus transforms and hit participation across pointerEvents toggles', async () => {
+    const rearClick = vi.fn();
+    const cubeClick = vi.fn();
+    const canvas = createCanvas(220, 120);
+    const scene = (
+      pointerEvents: 'auto' | 'none',
+      translateX: number,
+      show = true,
+    ): CRCNode => [
+      <Rectangle
+        key="rear"
+        keyboardFocusable={false}
+        style={{ width: 220, height: 120, fill: '#0f172a' }}
+        onClick={rearClick}
+      />,
+      show ? (
+        <Group key="group" style={{ translateX, translateY: 10 }}>
+          <WebGLLayer
+            key="island"
+            pointerEvents={pointerEvents}
+            style={{ width: 100, height: 80 }}
+          >
+            <Cube key="cube" onClick={cubeClick} />
+          </WebGLLayer>
+        </Group>
+      ) : undefined,
+    ];
+    controllers.add(crc(canvas, (
+      <FocusManagement><Group>{scene('none', 10)}</Group></FocusManagement>
+    ), { pixelRatio: 1 }));
+    await nextFrame();
+
+    await expectTranslatedCubeBounds(canvas, 10, 10);
+    dispatchClick(canvas, 60, 50);
+    expect(rearClick).toHaveBeenCalledOnce();
+    expect(cubeClick).not.toHaveBeenCalled();
+
+    crc(canvas, (
+      <FocusManagement><Group>{scene('auto', 40)}</Group></FocusManagement>
+    ));
+    await nextFrame();
+    await expectTranslatedCubeBounds(canvas, 40, 10);
+    dispatchClick(canvas, 90, 50);
+    expect(cubeClick).toHaveBeenCalledOnce();
+
+    crc(canvas, (
+      <FocusManagement><Group>{scene('none', 70)}</Group></FocusManagement>
+    ));
+    await nextFrame();
+    await expectTranslatedCubeBounds(canvas, 70, 10);
+    dispatchClick(canvas, 120, 50);
+    expect(rearClick).toHaveBeenCalledTimes(2);
+    expect(cubeClick).toHaveBeenCalledOnce();
+
+    crc(canvas, (
+      <FocusManagement>
+        <Group>{scene('none', 100, false)}</Group>
+      </FocusManagement>
+    ));
+    await nextFrame();
+    expect((await focusManager(canvas)).candidates).toHaveLength(0);
+
+    crc(canvas, (
+      <FocusManagement><Group>{scene('none', 100)}</Group></FocusManagement>
+    ));
+    await nextFrame();
+    await expectTranslatedCubeBounds(canvas, 100, 10);
+    dispatchClick(canvas, 150, 50);
+    expect(rearClick).toHaveBeenCalledTimes(3);
+    expect(cubeClick).toHaveBeenCalledOnce();
   });
 
   it('commits projected geometry bounds and honors a local-layer override', async () => {
@@ -844,4 +975,42 @@ function boundsOf(
     width: right - left,
     height: bottom - top,
   };
+}
+
+function expectFocusBounds(
+  manager: Awaited<ReturnType<typeof focusManager>>,
+  expected: ReadonlyArray<Readonly<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }>>,
+): void {
+  expect(manager.candidates).toHaveLength(expected.length);
+  for (let index = 0; index < expected.length; index += 1) {
+    const bounds = expected[index]!;
+    expect(manager.candidates[index]!.rootBounds).toEqual({
+      x: expect.closeTo(bounds.x, 4),
+      y: expect.closeTo(bounds.y, 4),
+      width: expect.closeTo(bounds.width, 4),
+      height: expect.closeTo(bounds.height, 4),
+    });
+  }
+}
+
+async function expectTranslatedCubeBounds(
+  canvas: HTMLCanvasElement,
+  translateX: number,
+  translateY: number,
+): Promise<void> {
+  const camera = resolveCamera(undefined, 100, 80);
+  const expected = boundsOf(projectUnitCube(
+    camera.projectionViewMatrix,
+    100,
+    80,
+  ).map(point => ({
+    x: point.x + translateX,
+    y: point.y + translateY,
+  })));
+  expectFocusBounds(await focusManager(canvas), [expected]);
 }

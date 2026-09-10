@@ -171,6 +171,14 @@ export function registerNestedInteractionResolver(
 ): void {
   const { componentRefs, crcInstance } = requireHookContext();
   const childInstance = backendMountInstance(input.child);
+  if (
+    childInstance.parent !== crcInstance.canvas ||
+    childInstance.eventRoot !== crcInstance.eventRoot
+  ) {
+    throw new Error(
+      'A nested CRC backend mount must belong to the current instance and same event root.',
+    );
+  }
   const slot = useInternalHookSlot<{
     entry: CRCInteractionLayer;
     child: CRCBackendMount;
@@ -186,6 +194,9 @@ export function registerNestedInteractionResolver(
     const value = { entry, child: input.child };
     teardowns.add(() => {
       crcInstance.paintEntries.delete(entry);
+      if (entry.instance.focusParentBridge === entry) {
+        entry.instance.focusParentBridge = undefined;
+      }
       if (entry.instance.eventParent === componentRefs) {
         entry.instance.eventParent = undefined;
       }
@@ -195,6 +206,9 @@ export function registerNestedInteractionResolver(
   const { entry } = slot.value;
   crcInstance.paintEntries.delete(entry);
   if (slot.value.child !== input.child) {
+    if (entry.instance.focusParentBridge === entry) {
+      entry.instance.focusParentBridge = undefined;
+    }
     if (entry.instance.eventParent === componentRefs) {
       entry.instance.eventParent = undefined;
     }
@@ -206,6 +220,7 @@ export function registerNestedInteractionResolver(
   entry.transform = getCurrentWorldTransform();
   entry.clippingStack = Array.from(GLOBAL_STATE.clippingStack);
   entry.resolveLocal = input.resolveLocal;
+  entry.instance.focusParentBridge = entry;
   if (input.pointerEvents === 'auto') {
     crcInstance.paintEntries.add(entry);
   }

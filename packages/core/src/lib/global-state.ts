@@ -141,6 +141,7 @@ export function cleanupCRCInstance(crcInstance: CRCInstance): void {
     GLOBAL_STATE.crcInstances.delete(canvas);
   }
   crcInstance.eventParent = undefined;
+  crcInstance.focusParentBridge = undefined;
   crcInstance.mainTeardowns.execute();
   runTeardown(() => crcInstance.backendDriver.dispose());
   runTeardown(() => crcInstance.filterSurfacePool.dispose());

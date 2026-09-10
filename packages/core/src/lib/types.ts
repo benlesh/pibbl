@@ -306,6 +306,8 @@ export interface CRCInstance {
   parent: Canvas | undefined;
   /** Parent layer component used only for temporary cross-instance event paths. */
   eventParent: CRCComponentRefs<any> | undefined;
+  /** Current child-to-parent mapping for focus geometry outside hit order. */
+  focusParentBridge: CRCNestedPaintEntry | undefined;
   rootLayoutBox: Readonly<LayoutBox>;
   surface: CRCSurfaceState;
   filterSurfacePool: FilterSurfacePool;

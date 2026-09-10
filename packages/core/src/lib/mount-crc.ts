@@ -118,6 +118,7 @@ export function mountCRC(
     interactionRoot: undefined,
     parent,
     eventParent: undefined,
+    focusParentBridge: undefined,
     rootLayoutBox: Object.freeze({
       x: 0,
       y: 0,

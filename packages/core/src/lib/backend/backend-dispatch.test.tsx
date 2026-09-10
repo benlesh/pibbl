@@ -9,12 +9,14 @@ import {
   getCurrentSurfaceDensity,
   isBackendEventTargetLive,
   mountBackendCRC,
+  registerNestedInteractionResolver,
   requestCurrentInstanceFrame,
   setCurrentComponentAfterRender,
   useBackendEventTarget,
   useInternalHookSlot,
   type CRCBackendDriver,
   type CRCBackendFrame,
+  type CRCBackendMount,
 } from '../../internal.js';
 import { executeRender } from '../execute-render.js';
 import {
@@ -33,6 +35,45 @@ afterEach(() => {
 });
 
 describe('backend-neutral component traversal', () => {
+  it('rejects a nested focus bridge from a different event root', () => {
+    const Bridge = definePrimitive<{
+      readonly child: CRCBackendMount;
+    }>(function renderCrossRootBridge(props) {
+      const bounds = new Path2D();
+      bounds.rect(0, 0, 10, 10);
+      registerNestedInteractionResolver({
+        bounds,
+        child: props.child,
+        pointerEvents: 'none',
+        resolveLocal() {},
+      });
+    });
+    const firstCanvas = createCanvas();
+    const firstParent = mountCRC(firstCanvas, undefined);
+    const childCanvas = new OffscreenCanvas(10, 10);
+    const backend = createRecordingBackend('cross-root-child');
+    const child = mountBackendCRC(childCanvas, undefined, {
+      parent: firstCanvas,
+      logicalWidth: 10,
+      logicalHeight: 10,
+      driver: backend.driver,
+    });
+    const secondCanvas = createCanvas();
+    const secondParent = mountCRC(secondCanvas, <Bridge child={child} />);
+    const childInstance = getCRCInstance(childCanvas);
+
+    expect(() => executeRender(secondCanvas, 1)).toThrowError(
+      /nested.*same event root/i,
+    );
+    expect((childInstance as typeof childInstance & {
+      readonly focusParentBridge?: unknown;
+    }).focusParentBridge).toBeUndefined();
+
+    child.dispose();
+    firstParent.dispose();
+    secondParent.dispose();
+  });
+
   it('reports backend target liveness from registration, root membership, and teardown', () => {
     let target: ReturnType<typeof useBackendEventTarget>;
     function TargetProbe(): void {

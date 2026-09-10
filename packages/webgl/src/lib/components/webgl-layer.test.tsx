@@ -84,22 +84,29 @@ describe('WebGLLayer public surface', () => {
       .mockImplementation(() => undefined);
     const resolve = vi.spyOn(WebGLLayerController.prototype, 'resolveLocal');
     const rearClick = vi.fn();
+    const Interactive = defineWebGLPrimitive<{}, {}>(
+      function renderBridgeOwnershipTarget() {},
+      { hit: { kind: 'custom', resolve: () => null } },
+    );
     const canvas = createCanvas(100, 60);
     const clip = new Path2D();
     clip.rect(0, 0, 15, 20);
-    const scene = (pointerEvents: 'auto' | 'none') => [
+    const scene = (
+      pointerEvents: 'auto' | 'none',
+      translateX = 20,
+    ) => [
       <Rectangle
         key="rear"
         style={{ width: 100, height: 60, fill: '#000' }}
         onClick={rearClick}
       />,
-      <Group key="island" style={{ translateX: 20, translateY: 10 }}>
+      <Group key="island" style={{ translateX, translateY: 10 }}>
         <Clip style={{ d: clip }}>
           <WebGLLayer
             style={{ width: 30, height: 20 }}
             pointerEvents={pointerEvents}
           >
-            {undefined}
+            <Interactive onClick={() => undefined} />
           </WebGLLayer>
         </Clip>
       </Group>,
@@ -117,11 +124,20 @@ describe('WebGLLayer public surface', () => {
     );
     const instance = getCRCInstance(canvas);
     const eventRoot = instance.eventRoot;
+    const backendTarget = Array.from(eventRoot.targets).find(
+      target => target.owner !== instance,
+    )!;
+    const childInstance = backendTarget.owner;
     const entries = Array.from(instance.paintEntries);
     expect(entries.map(entry => entry.paintKind)).toEqual([0, 2]);
     expect(entries[1]).toMatchObject({
       transform: { e: 20, f: 10 },
       clippingStack: [{ fillRule: 'nonzero' }],
+    });
+    expect(focusParentBridge(childInstance)).toBe(entries[1]);
+    expect(focusParentBridge(childInstance)).toMatchObject({
+      instance: childInstance,
+      transform: { e: 20, f: 10 },
     });
 
     expect(resolveCoordinateTarget(eventRoot, { x: 25, y: 15 }))
@@ -135,14 +151,48 @@ describe('WebGLLayer public surface', () => {
       .toBeDefined();
     expect(resolve).toHaveBeenCalledOnce();
 
-    const noEvents = scene('none');
+    const noEvents = scene('none', 30);
     crc(canvas, noEvents);
     await nextFrame();
     expect(Array.from(instance.paintEntries).map(entry => entry.paintKind))
       .toEqual([0]);
+    expect(focusParentBridge(childInstance)).toMatchObject({
+      instance: childInstance,
+      transform: { e: 30, f: 10 },
+    });
     expect(resolveCoordinateTarget(eventRoot, { x: 25, y: 15 }))
       .toBeDefined();
     expect(resolve).toHaveBeenCalledOnce();
+
+    crc(canvas, scene('auto', 40));
+    await nextFrame();
+    const restoredEntries = Array.from(instance.paintEntries);
+    expect(restoredEntries.map(entry => entry.paintKind)).toEqual([0, 2]);
+    expect(focusParentBridge(childInstance)).toBe(restoredEntries[1]);
+    expect(focusParentBridge(childInstance)).toMatchObject({
+      transform: { e: 40, f: 10 },
+    });
+
+    crc(canvas, <Rectangle
+      keyboardFocusable={false}
+      style={{ width: 100, height: 60, fill: '#000' }}
+      onClick={rearClick}
+    />);
+    await nextFrame();
+    expect(childInstance.mainTeardowns.closed).toBe(true);
+    expect(focusParentBridge(childInstance)).toBeUndefined();
+
+    crc(canvas, scene('none', 50));
+    await nextFrame();
+    const replacementTarget = Array.from(eventRoot.targets).find(
+      target => target.owner !== instance,
+    )!;
+    expect(replacementTarget.owner).not.toBe(childInstance);
+    expect(focusParentBridge(replacementTarget.owner)).toMatchObject({
+      instance: replacementTarget.owner,
+      transform: { e: 50, f: 10 },
+    });
+    expect(focusParentBridge(childInstance)).toBeUndefined();
   });
 
   it('binds the Canvas event parent before executing the private child', async () => {
@@ -507,4 +557,18 @@ function dispatchClick(canvas: HTMLCanvasElement, x: number, y: number): void {
       clientY: bounds.top + y,
     }));
   }
+}
+
+function focusParentBridge(owner: {
+  readonly eventRoot: unknown;
+}): Readonly<{
+  readonly instance: unknown;
+  readonly transform: DOMMatrix;
+}> | undefined {
+  return (owner as typeof owner & {
+    readonly focusParentBridge?: Readonly<{
+      readonly instance: unknown;
+      readonly transform: DOMMatrix;
+    }>;
+  }).focusParentBridge;
 }

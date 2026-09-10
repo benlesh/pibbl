@@ -71,6 +71,14 @@ function findNestedInstanceBridge(
   parent: CRCInstance,
   child: CRCInstance,
 ): CRCNestedPaintEntry | undefined {
+  if (
+    parent.mainTeardowns.closed ||
+    child.mainTeardowns.closed ||
+    child.parent !== parent.canvas ||
+    child.eventRoot !== parent.eventRoot
+  ) return undefined;
+  const focusBridge = child.focusParentBridge;
+  if (focusBridge?.instance === child) return focusBridge;
   for (const entry of parent.paintEntries) {
     if (
       (entry.paintKind === CRCPaintEntryKind.NestedInstance ||
