@@ -7,8 +7,10 @@ import { learningExampleCatalog } from "@crc/scenarios";
 import { buildNavigation } from "../../playground/src/app/navigation";
 import { collectPublicExports, crcPublicEntryPaths } from "./api-exports";
 import { buildStudioDocumentation } from "./build";
+import { studioDocumentationBuildOptions } from "./vite-plugin";
 
 const fixtureRoot = await mkdtemp(join(tmpdir(), "crc-studio-docs-build-"));
+const repositoryRoot = resolve(import.meta.dirname, "../..");
 const inventory = {
   root: {
     values: ["crc"],
@@ -132,6 +134,29 @@ apiCategory: overview
   );
 
   await writeFixture("docs/site/learn/guides/first-scene.md", guide);
+  await writeFixture(
+    "docs/site/api/functions/nonexistent-live-example.md",
+    api
+      .replace("id: api-crc", "id: api-nonexistent-live-example")
+      .replace("slug: crc", "slug: nonexistent-live-example")
+      .replace("symbols: [crc]", "symbols: []")
+      .replace(
+        "# crc",
+        "# Missing live example\n\n[Missing](#/examples/drawing/not-real)",
+      ),
+  );
+  await assert.rejects(
+    () =>
+      buildStudioDocumentation({
+        ...studioDocumentationBuildOptions(repositoryRoot),
+        repositoryRoot: fixtureRoot,
+        apiInventory: inventory,
+      }),
+    /Unknown live example route/u,
+  );
+  await rm(
+    join(fixtureRoot, "docs/site/api/functions/nonexistent-live-example.md"),
+  );
   await writeFixture(
     "docs/site/learn/guides/first-scene.md",
     guide.replace(

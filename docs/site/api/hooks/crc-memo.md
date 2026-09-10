@@ -11,7 +11,7 @@ symbols: [crcMemo]
 # crcMemo
 
 ```ts
-import { crcMemo } from "@crc/core";
+import { Path, crcMemo } from "@crc/core";
 ```
 
 `crcMemo(create, deps)` is render-only. It invokes `create` on mount and again
@@ -22,7 +22,8 @@ than synchronous lifecycle cleanup.
 ```tsx
 function Mark() {
   const svgData = "M10 10h90v60H10z";
-  return crcMemo(() => new Path2D(svgData), [svgData]);
+  const path = crcMemo(() => new Path2D(svgData), [svgData]);
+  return <Path style={{ d: path, fill: "#38bdf8" }} />;
 }
 ```
 

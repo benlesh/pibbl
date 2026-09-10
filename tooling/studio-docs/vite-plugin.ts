@@ -7,6 +7,7 @@ import {
   discoverStudioDocumentationSourcePaths,
   type StudioDocumentationBuild,
 } from "./build";
+import { loadStudioLearningExamples } from "./learning-catalog-adapter";
 
 const virtualDocumentationId = "virtual:crc-studio-docs";
 const resolvedVirtualDocumentationId = `\0${virtualDocumentationId}`;
@@ -17,7 +18,9 @@ export function crcStudioDocs(options: { repositoryRoot: string }): Plugin {
   async function rebuild(pluginContext?: {
     addWatchFile(path: string): void;
   }): Promise<StudioDocumentationBuild> {
-    const documentation = await buildStudioDocumentation(options);
+    const documentation = await buildStudioDocumentation(
+      studioDocumentationBuildOptions(options.repositoryRoot),
+    );
     latestBuild = documentation;
     pluginContext?.addWatchFile(resolve(options.repositoryRoot, "docs/site"));
     for (const sourcePath of await discoverStudioDocumentationSourcePaths(
@@ -57,6 +60,17 @@ export function crcStudioDocs(options: { repositoryRoot: string }): Plugin {
       latestBuild = undefined;
       return invalidateVirtualDocumentation(context.server);
     },
+  };
+}
+
+/**
+ * Supplies the real public learning catalog to every served or built manifest
+ * without asking Vite's config loader to compile the catalog's TSX examples.
+ */
+export function studioDocumentationBuildOptions(repositoryRoot: string) {
+  return {
+    repositoryRoot,
+    examples: loadStudioLearningExamples(repositoryRoot),
   };
 }
 

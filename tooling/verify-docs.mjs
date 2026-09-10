@@ -555,20 +555,63 @@ function extractApiSnippets(sources) {
         id,
         path,
         language: fences.some((match) => match[1] === "tsx") ? "tsx" : "ts",
-        source: fences.map((match) => match[2]).join("\n"),
+        source: appendCrcComponentChecks(
+          fences.map((match) => match[2]).join("\n"),
+        ),
       });
     }
+    assertNoBareApiPseudoLinks(path, source);
+  }
+  return snippets;
+}
 
-    const prose = source
-      .replace(/^---\n[\s\S]*?^---\n/mu, "")
-      .replace(/^```[\s\S]*?^```$/gmu, "");
-    assert.doesNotMatch(
-      prose,
-      /(^|[^`])\[([A-Z][^\]\n]*)\](?!\()/mu,
+function appendCrcComponentChecks(source) {
+  const componentNames = new Set(
+    [
+      ...source.matchAll(
+        /^function ([A-Z][A-Za-z0-9_]*)\s*(?:<[^>]+>)?\s*\(/gmu,
+      ),
+    ].map((match) => match[1]),
+  );
+  if (componentNames.size === 0) return source;
+  return `${source}\n${[...componentNames]
+    .sort()
+    .map(
+      (name) =>
+        `const __crcComponentCheck_${name}: import("@crc/core").CRCComponent<any> = ${name};`,
+    )
+    .join("\n")}\n`;
+}
+
+function assertNoBareApiPseudoLinks(path, source) {
+  const prose = source
+    .replace(/^---\n[\s\S]*?^---\n/mu, "")
+    .replace(/^```[\s\S]*?^```$/gmu, "");
+  const referenceLabels = new Set(
+    [...prose.matchAll(/^\s{0,3}\[([^\]\n]+)\]:\s+\S.*$/gmu)].map((match) =>
+      normalizeReferenceLabel(match[1]),
+    ),
+  );
+  const markdown = stripInlineCode(prose).replace(
+    /^\s{0,3}\[[^\]\n]+\]:\s+\S.*$/gmu,
+    "",
+  );
+  for (const match of markdown.matchAll(
+    /(^|[^!\\])\[([^\]\n]+)\](?![\t ]*(?:\(|\[))/gmu,
+  )) {
+    if (referenceLabels.has(normalizeReferenceLabel(match[2]))) continue;
+    throw new Error(
       `${path} contains a bare bracket-only pseudo-link. Use a canonical Markdown link.`,
     );
   }
-  return snippets;
+}
+
+function normalizeReferenceLabel(label) {
+  return label.trim().replace(/\s+/gu, " ").toLowerCase();
+}
+
+function stripInlineCode(source) {
+  return source.replace(/(`+)[\s\S]*?\1/gu, "");
 }
 
 const requiredCompleteSnippetIds = new Set([
@@ -2010,6 +2053,48 @@ export async function verifyMutationProbes() {
     assert.throws(operation, pattern);
     probes += 1;
   };
+
+  throws(
+    () =>
+      extractApiSnippets(
+        new Map([
+          [
+            "docs/site/api/lowercase-pseudo-link.md",
+            "# Fixture\n\n[lowercase example]",
+          ],
+        ]),
+      ),
+    /bare bracket-only pseudo-link/u,
+  );
+  assert.doesNotThrow(
+    () =>
+      extractApiSnippets(
+        new Map([
+          [
+            "docs/site/api/valid-markdown-links.md",
+            "![Diagram](diagram.png)\n\n[Inline](#/api/index)\n\n[Reference]: #/api/index\n\n[reference]\n\n[Short form][reference]\n\n`[code]`",
+          ],
+        ]),
+      ),
+    "Images, inline links, reference links, definitions, and code must remain valid",
+  );
+  const crcMemoApiPath = "docs/site/api/hooks/crc-memo.md";
+  const brokenCrcMemoSources = new Map(currentSources);
+  const crcMemoSource = currentSources.get(crcMemoApiPath);
+  const brokenCrcMemoSource = crcMemoSource.replace(
+    'return <Path style={{ d: path, fill: "#38bdf8" }} />;',
+    "return path;",
+  );
+  assert.notEqual(
+    brokenCrcMemoSource,
+    crcMemoSource,
+    "crcMemo component-return mutation fixture did not change",
+  );
+  brokenCrcMemoSources.set(crcMemoApiPath, brokenCrcMemoSource);
+  await rejects(
+    () => typecheckCompleteSnippets(extractApiSnippets(brokenCrcMemoSources)),
+    /failed typecheck/u,
+  );
 
   const direct = exportedSpecifiers(
     "export const directValue = 1; export declare function declaredValue(): void; export interface DirectType {}",
