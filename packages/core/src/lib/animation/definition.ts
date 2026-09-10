@@ -72,26 +72,79 @@ function assertFiniteNumber(value: number, message: string): void {
   if (!Number.isFinite(value)) throw new RangeError(message);
 }
 
+const MUTATING_MAP_METHODS = new Set<PropertyKey>(['set', 'delete', 'clear']);
+const MUTATING_SET_METHODS = new Set<PropertyKey>(['add', 'delete', 'clear']);
+const MUTATING_DATE_METHODS = new Set<PropertyKey>([
+  'setDate', 'setFullYear', 'setHours', 'setMilliseconds', 'setMinutes',
+  'setMonth', 'setSeconds', 'setTime', 'setUTCDate', 'setUTCFullYear',
+  'setUTCHours', 'setUTCMilliseconds', 'setUTCMinutes', 'setUTCMonth',
+  'setUTCSeconds', 'setYear',
+]);
+
+function immutableBuiltin<T extends object>(
+  target: T,
+  mutatingMethods: ReadonlySet<PropertyKey>,
+): T {
+  return new Proxy(target, {
+    get(current, key) {
+      if (mutatingMethods.has(key)) {
+        return (): never => {
+          throw new TypeError('Cannot mutate an animation definition snapshot.');
+        };
+      }
+      const member = Reflect.get(current, key, current);
+      return typeof member === 'function' && key !== 'constructor' ?
+        member.bind(current) : member;
+    },
+    set(): false {
+      return false;
+    },
+    defineProperty(): false {
+      return false;
+    },
+    deleteProperty(): false {
+      return false;
+    },
+  });
+}
+
 /**
- * Definitions retain values after their caller has moved on. Primitive values,
- * arrays, and plain data records can be copied into an immutable snapshot.
- * Other object categories (for example Date, Map, Set, instances, and
- * functions) have mutable or opaque internal state that cannot be preserved by
- * a faithful immutable data snapshot, so definitions reject them up front.
+ * Definitions retain values after their caller has moved on. The context is
+ * shared across one definition so aliases and cycles remain aliases and cycles
+ * in its immutable snapshot. Functions and opaque host values with inaccessible
+ * internal state (notably WeakMap, WeakSet, Promise, and host handles) cannot
+ * be faithfully cloned without a caller-provided clone hook, so they remain
+ * identity values; every inspectable mutable value is copied below.
  */
 function snapshotAnimationValue<T>(
   value: T,
-  seen = new WeakMap<object, unknown>(),
+  seen: WeakMap<object, unknown>,
 ): T {
-  if (value === null || typeof value !== 'object') {
-    if (typeof value === 'function') {
-      throw new TypeError('CRC animation values must be plain data to create an immutable snapshot.');
-    }
-    return value;
-  }
+  if (value === null || typeof value !== 'object') return value;
   const existing = seen.get(value);
   if (existing !== undefined) return existing as T;
 
+  if (value instanceof Date) {
+    const snapshot = immutableBuiltin(new Date(value.getTime()), MUTATING_DATE_METHODS);
+    seen.set(value, snapshot);
+    return snapshot as T;
+  }
+  if (value instanceof Map) {
+    const target = new Map();
+    const snapshot = immutableBuiltin(target, MUTATING_MAP_METHODS);
+    seen.set(value, snapshot);
+    for (const [key, entry] of value) {
+      target.set(snapshotAnimationValue(key, seen), snapshotAnimationValue(entry, seen));
+    }
+    return snapshot as T;
+  }
+  if (value instanceof Set) {
+    const target = new Set();
+    const snapshot = immutableBuiltin(target, MUTATING_SET_METHODS);
+    seen.set(value, snapshot);
+    for (const entry of value) target.add(snapshotAnimationValue(entry, seen));
+    return snapshot as T;
+  }
   if (Array.isArray(value)) {
     const snapshot: unknown[] = [];
     seen.set(value, snapshot);
@@ -102,22 +155,17 @@ function snapshotAnimationValue<T>(
   }
 
   const prototype = Object.getPrototypeOf(value);
-  if (prototype !== Object.prototype && prototype !== null) {
-    throw new TypeError('CRC animation values must be plain data to create an immutable snapshot.');
-  }
   const snapshot = Object.create(prototype) as Record<PropertyKey, unknown>;
   seen.set(value, snapshot);
   for (const key of Reflect.ownKeys(value)) {
     const descriptor = Object.getOwnPropertyDescriptor(value, key);
-    if (descriptor === undefined || !('value' in descriptor)) {
-      throw new TypeError('CRC animation values must be plain data without accessors to create an immutable snapshot.');
-    }
-    Object.defineProperty(snapshot, key, {
+    if (descriptor === undefined) continue;
+    Object.defineProperty(snapshot, key, 'value' in descriptor ? {
       configurable: false,
       enumerable: descriptor.enumerable,
       writable: false,
       value: snapshotAnimationValue(descriptor.value, seen),
-    });
+    } : descriptor);
   }
   return Object.freeze(snapshot) as T;
 }
@@ -256,13 +304,14 @@ export function tween<T>(options: Readonly<CRCTweenOptions<T>>): CRCAnimationDef
     throw new TypeError(`${definitionLabel(options.debugName)} interpolator must be a function.`);
   }
   const hasFrom = hasOwn(options, 'from');
+  const snapshots = new WeakMap<object, unknown>();
   return createDefinition({
     kind: 'tween',
     duration: options.duration,
     debugName: options.debugName,
     hasFrom,
-    from: hasFrom ? snapshotAnimationValue(options.from as T) : undefined,
-    to: snapshotAnimationValue(options.to),
+    from: hasFrom ? snapshotAnimationValue(options.from as T, snapshots) : undefined,
+    to: snapshotAnimationValue(options.to, snapshots),
     easing: options.easing ?? easing.linear,
     interpolate: options.interpolate,
   });
@@ -279,7 +328,8 @@ export function keyframes<T>(
   if (typeof options.interpolate !== 'undefined' && typeof options.interpolate !== 'function') {
     throw new TypeError(`${definitionLabel(options.debugName)} interpolator must be a function.`);
   }
-  const values = Object.freeze(options.values.map(value => snapshotAnimationValue(value)));
+  const snapshots = new WeakMap<object, unknown>();
+  const values = Object.freeze(options.values.map(value => snapshotAnimationValue(value, snapshots)));
   return createDefinition({
     kind: 'keyframes',
     duration: options.duration,
@@ -328,7 +378,7 @@ export function stepper<T>(
     kind: 'stepper',
     duration: Number.POSITIVE_INFINITY,
     debugName: options.debugName,
-    initialState: snapshotAnimationValue(options.initialState),
+    initialState: snapshotAnimationValue(options.initialState, new WeakMap()),
     step: options.step,
     done: options.done,
     fixedDelta,

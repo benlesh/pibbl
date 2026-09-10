@@ -107,13 +107,90 @@ describe('seekable animation definitions', () => {
     });
   });
 
-  it('rejects mutable values outside the plain data snapshot boundary', () => {
-    expect(() => tween({
-      from: new Date(0),
-      to: new Date(1),
-      duration: 1,
+  it('snapshots representative arbitrary values accepted with explicit interpolators', () => {
+    class Counter {
+      constructor(readonly value: number) {}
+    }
+    const startDate = new Date(0);
+    const endDate = new Date(100);
+    const dates = tween({
+      from: startDate,
+      to: endDate,
+      duration: 100,
+      interpolate: (from, to) => from.getTime() < to.getTime() ? from : to,
+    });
+    const startMap = new Map([['value', 0]]);
+    const endMap = new Map([['value', 10]]);
+    const maps = tween({
+      from: startMap,
+      to: endMap,
+      duration: 100,
+      interpolate: (from, to) => from.get('value')! < to.get('value')! ? from : to,
+    });
+    const startCounter = new Counter(0);
+    const endCounter = new Counter(10);
+    const counters = tween({
+      from: startCounter,
+      to: endCounter,
+      duration: 100,
+      interpolate: (from, to) => from.value < to.value ? from : to,
+    });
+    const value = (): string => 'value';
+    const functions = tween({
+      from: value,
+      to: value,
+      duration: 100,
       interpolate: from => from,
-    })).toThrow('plain data');
+    });
+
+    startDate.setTime(500);
+    endDate.setTime(900);
+    startMap.set('value', 50);
+    endMap.set('value', 90);
+    (startCounter as { value: number }).value = 50;
+    (endCounter as { value: number }).value = 90;
+
+    expect(sampleSeekableDefinition(dates, {
+      initialValue: new Date(-1),
+      localTime: 50,
+    }).getTime()).toBe(0);
+    expect(sampleSeekableDefinition(maps, {
+      initialValue: new Map(),
+      localTime: 50,
+    }).get('value')).toBe(0);
+    expect(sampleSeekableDefinition(counters, {
+      initialValue: new Counter(-1),
+      localTime: 50,
+    })).toMatchObject({ value: 0 });
+    expect(sampleSeekableDefinition(functions, {
+      initialValue: () => 'initial',
+      localTime: 50,
+    })).toBe(value);
+  });
+
+  it('preserves shared value identity across one definition snapshot', () => {
+    const shared = { value: 0 };
+    const tweenDefinition = tween({
+      from: shared,
+      to: shared,
+      duration: 100,
+      interpolate: (from, to) => ({ same: from === to, value: from.value }),
+    });
+    const keyframeDefinition = keyframes({
+      values: [shared, shared],
+      duration: 100,
+      interpolate: (from, to) => ({ same: from === to, value: from.value }),
+    });
+    shared.value = 50;
+
+    expect(sampleSeekableDefinition(tweenDefinition, {
+      initialValue: { value: -1 },
+      localTime: 50,
+    })).toEqual({ same: true, value: 0 });
+    expect(sampleSeekableDefinition(keyframeDefinition, {
+      initialValue: { value: -1 },
+      localTime: 50,
+    })).toEqual({ same: true, value: 0 });
   });
 
   it('does not guess interpolation for nonnumeric values', () => {
