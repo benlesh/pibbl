@@ -1,0 +1,35 @@
+---
+id: api-component-star
+title: Star
+summary: Draws one concave alternating-tip star outline.
+kind: api
+slug: star
+apiCategory: component
+symbols: [Star]
+---
+
+# Star
+
+```ts
+import { Star } from "@crc/core";
+```
+
+`Star` uses `StarProps` and `StarStyle`. It requires integer `points >= 3`,
+nonnegative `outerRadius` and `innerRadius`, and `innerRadius <= outerRadius`.
+It rejects children and creates one concave outline rather than intersecting
+triangles.
+
+```tsx
+<Star
+  style={{
+    cx: 82,
+    cy: 72,
+    points: 5,
+    outerRadius: 58,
+    innerRadius: 26,
+    fill: "#f59e0b",
+  }}
+/>
+```
+
+Try [Stars].

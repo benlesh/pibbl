@@ -4,6 +4,8 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 import { learningExampleCatalog } from "@crc/scenarios";
+import { buildNavigation } from "../../playground/src/app/navigation";
+import { collectPublicExports, crcPublicEntryPaths } from "./api-exports";
 import { buildStudioDocumentation } from "./build";
 
 const fixtureRoot = await mkdtemp(join(tmpdir(), "crc-studio-docs-build-"));
@@ -209,7 +211,7 @@ order: ${String(order)}
 
 const real = await buildStudioDocumentation({
   repositoryRoot: resolve(import.meta.dirname, "../.."),
-  apiInventory: { root: { values: [], types: [], overview: [] } },
+  apiInventory: await collectPublicExports(crcPublicEntryPaths, {}),
   examples: learningExampleCatalog,
 });
 
@@ -255,6 +257,35 @@ assert.match(
   real.pageByRoute["#/learn/guides/style-and-draw"].plainText,
   /Filters are typed local style/u,
 );
+
+const runtimeCoverage = real.apiCoverage;
+assert.equal(runtimeCoverage.values.Fragment?.route, "#/api");
+assert.equal(
+  runtimeCoverage.values.createCirclePath?.route,
+  "#/api/functions/create-circle-path",
+);
+assert.equal(
+  runtimeCoverage.values.crcWhenChanged?.route,
+  "#/api/hooks/crc-when-changed",
+);
+assert.deepEqual(runtimeCoverage.duplicateValues, []);
+assert.deepEqual(runtimeCoverage.missingValues, []);
+
+const apiNavigation = buildNavigation({ pages: real.pages }, []).find(
+  ({ id }) => id === "api",
+)!;
+for (const category of ["components", "functions", "hooks"] as const) {
+  const titles =
+    apiNavigation.children
+      ?.find(({ id }) => id === `api-${category}`)
+      ?.children?.map(({ label }) => label) ?? [];
+  assert.deepEqual(
+    titles,
+    [...titles].sort(
+      new Intl.Collator("en", { sensitivity: "base", numeric: true }).compare,
+    ),
+  );
+}
 
 process.stdout.write(
   "Validated the deterministic Studio documentation manifest.\n",
