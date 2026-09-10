@@ -78,15 +78,20 @@ let nextFrameId = 0;
 let nextWorkRevision = 0;
 let nextRendererWorkOrder = 0;
 let schedulerDriver: SchedulerDriver | undefined;
+let createdRootRegistrations = 0;
+let releasedRootRegistrations = 0;
 
 export function registerRootInstance(instance: CRCInstance): void {
-  if (!instance.parent) {
+  if (!instance.parent && !registeredRoots.has(instance)) {
     registeredRoots.add(instance);
+    createdRootRegistrations++;
   }
 }
 
 export function unregisterRootInstance(instance: CRCInstance): void {
-  registeredRoots.delete(instance);
+  if (registeredRoots.delete(instance)) {
+    releasedRootRegistrations++;
+  }
   removeRootWork(instance);
   cancelIdleHostFrame();
 }
@@ -185,6 +190,11 @@ export function snapshotRealmScheduler(): RealmSchedulerSnapshot {
     phase,
     pendingHostFrames: pendingHostFrame === undefined ? 0 : 1,
     registeredRoots: registeredRoots.size,
+    advanceParticipants: advanceRegistrations.size,
+    completionCallbacks:
+      frameCompletions.length + rendererParticipantCompletions.length,
+    createdRootRegistrations,
+    releasedRootRegistrations,
     dirtyInstances: dirtyInstances.size,
     dirtyRoots: countDirtyRoots(),
     registeredAdvanceParticipants: advanceRegistrations.size,

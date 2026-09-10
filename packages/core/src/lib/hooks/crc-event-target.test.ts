@@ -98,9 +98,10 @@ describe('crcEventTarget', () => {
     expect(instance.eventRoot.targets.size).toBe(1);
     expect(instance.paintEntries.size).toBe(1);
     expect(component.hooks).toHaveLength(1);
-    // Every mounted component already has one parent-runtime follower; the
-    // grouped target contributes exactly one additional component teardown.
-    expect(teardownCount(component.teardowns) - 1).toBe(1);
+    // Every mounted component already has a parent-runtime follower and one
+    // signal-consumer release; the grouped target contributes one additional
+    // component teardown.
+    expect(teardownCount(component.teardowns) - 2).toBe(1);
     expect(instance.eventRoot.nativeListeners?.count('click')).toBe(1);
     expect(instance.eventRoot.nativeListeners?.count('keydown')).toBe(1);
     expect(instance.eventRoot.nativeListeners?.count('pointerdown')).toBe(1);
@@ -113,7 +114,7 @@ describe('crcEventTarget', () => {
     expect(second.handlers.click).toBe(secondClick);
     expect(second.cursor).toBe('crosshair');
     expect(component.hooks).toHaveLength(1);
-    expect(teardownCount(component.teardowns) - 1).toBe(1);
+    expect(teardownCount(component.teardowns) - 2).toBe(1);
     expect(instance.eventRoot.nativeListeners?.count('click')).toBe(1);
     controller.dispose();
   });

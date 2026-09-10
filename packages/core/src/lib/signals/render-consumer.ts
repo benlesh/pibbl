@@ -1,4 +1,8 @@
 import {
+  recordRendererConsumerCreated,
+  recordRendererConsumerReleased,
+  recordRendererEdgeCreated,
+  recordRendererEdgeReleased,
   type SignalNode,
   withSignalTracking,
 } from './graph.js';
@@ -56,6 +60,7 @@ export function createSignalRenderConsumer(
   };
   consumerStates.set(consumer, state);
   consumerInvalidations.set(consumer, invalidate);
+  recordRendererConsumerCreated();
   return consumer;
 }
 
@@ -102,9 +107,11 @@ export function disposeSignalRenderConsumer(consumer: SignalRenderConsumer): voi
   for (const [node, releaseObservation] of state.dependencies) {
     node.observers.delete(consumerInvalidations.get(consumer)!);
     releaseObservation();
+    recordRendererEdgeReleased();
   }
   state.dependencies.clear();
   state.releaseCount++;
+  recordRendererConsumerReleased();
 }
 
 function getConsumerState(consumer: SignalRenderConsumer): ConsumerState {
@@ -126,12 +133,14 @@ function replaceDependencies(
       node.observers.delete(invalidate);
       releaseObservation();
       state.dependencies.delete(node);
+      recordRendererEdgeReleased();
     }
   }
   for (const node of nextDependencies) {
     if (!state.dependencies.has(node)) {
       node.observers.add(invalidate);
       state.dependencies.set(node, node.observe?.() ?? (() => {}));
+      recordRendererEdgeCreated();
     }
   }
 }

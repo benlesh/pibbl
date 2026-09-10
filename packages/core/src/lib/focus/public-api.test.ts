@@ -214,6 +214,7 @@ describe('public CRC API', () => {
       'Text',
       'VerticalLine',
       'Wedge',
+      'computed',
       'crc',
       'crcCanvasContext',
       'crcCursor',
@@ -225,6 +226,7 @@ describe('public CRC API', () => {
       'crcMemo',
       'crcRectPath',
       'crcRef',
+      'crcSignal',
       'crcState',
       'crcSvgPath',
       'crcWhenChanged',
@@ -240,11 +242,14 @@ describe('public CRC API', () => {
       'createSvgPath',
       'createWedgePath',
       'definePrimitive',
+      'isSignal',
       'layoutDiagnostic',
       'measureElement',
       'normalizeEdges',
       'resolveBox',
       'resolveLength',
+      'signal',
+      'untracked',
     ]);
 
     for (const creator of [

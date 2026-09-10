@@ -82,16 +82,30 @@ visual-regression/recovery safeguard, representative full-page Studio visuals,
 and a built-package smoke scenario. Semantic state and geometry assertions are
 the first-line oracle; exact pixels are used only where they add information.
 
-`trust:lifecycle` runs focused cleanup stress plus deterministic filter ownership
-and structural-performance checks. The filter lifecycle suite fixes the workload
-at 1,000 unchanged rerenders, 100 sibling boundaries, and three nested boundaries,
-then checks exact scratch-slot creation, depth, checkout/return, resize, and release
-counts through replacement, failure, disposal, and a fresh remount. The filter
-performance suite fixes helper walks, primitive callbacks, surface construction,
-clears, filtered and parent draws, input pixel areas, pixel-readback calls, and
-bitmap transfers. Resource evidence uses exact acquisition/release ownership, not
-garbage-collection timing. Browser halo timing and pixels are scenario/visual
-evidence only; neither is a lifecycle or performance oracle.
+`trust:lifecycle` runs focused cleanup stress plus deterministic filter and signal
+ownership and structural-performance checks. The signal/scheduler lifecycle suite
+drives repeated mount, shared reads, branch and Layer removal, root replacement,
+render failure, abort, disposal, and fresh remount. Test-only snapshots require
+zero live renderer consumers, dependency edges, queued computed validations,
+registered roots, Advance participants, completion callbacks, and host frames at
+release boundaries, while cumulative consumer and root-registration acquisitions
+must match releases exactly.
+
+The signal/scheduler performance suite fixes structural work rather than elapsed
+time: 1,000 writes coalesce to one realm host callback and one root traversal; 100
+roots traverse once in stable mount order after one signal commit notification;
+an unchanged computed performs one Plan validation and no render; and a stable
+100-Layer tree repaints only its signal-owning child while reusing every sibling
+bitmap identity. The filter lifecycle suite fixes the workload at 1,000 unchanged
+rerenders, 100 sibling boundaries, and three nested boundaries, then checks exact
+scratch-slot creation, depth, checkout/return, resize, and release counts through
+replacement, failure, disposal, and a fresh remount. The filter performance suite
+fixes helper walks, primitive callbacks, surface construction, clears, filtered
+and parent draws, input pixel areas, pixel-readback calls, and bitmap transfers.
+Resource evidence uses deterministic ownership counters rather than a garbage-
+collection oracle. Wall-clock measurements remain optional diagnostics with no
+default pass threshold; browser halo timing and pixels remain scenario/visual
+evidence rather than lifecycle or structural-performance oracles.
 
 The unified GitHub Actions workflow runs the same responsibilities as parallel
 static, package, browser, and lifecycle jobs, then exposes one stable aggregate

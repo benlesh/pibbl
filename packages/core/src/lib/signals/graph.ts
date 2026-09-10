@@ -51,6 +51,57 @@ const writePolicyStack: SignalWritePolicy[] = [];
 const computedStack: ComputedSignalNode<unknown>[] = [];
 const pendingComputedValidations = new Set<ComputedSignalNode<unknown>>();
 let flushingPendingComputedValidations = false;
+let rendererConsumers = 0;
+let rendererEdges = 0;
+let createdRendererConsumers = 0;
+let releasedRendererConsumers = 0;
+let signalCommitNotifications = 0;
+let planComputedValidations = 0;
+
+export interface SignalGraphSnapshot {
+  readonly rendererConsumers: number;
+  readonly rendererEdges: number;
+  readonly pendingComputedValidations: number;
+  readonly createdRendererConsumers: number;
+  readonly releasedRendererConsumers: number;
+  readonly signalCommitNotifications: number;
+  readonly planComputedValidations: number;
+}
+
+/** @internal Deterministic ownership and structural evidence for tests. */
+export function signalGraphSnapshot(): SignalGraphSnapshot {
+  return Object.freeze({
+    rendererConsumers,
+    rendererEdges,
+    pendingComputedValidations: pendingComputedValidations.size,
+    createdRendererConsumers,
+    releasedRendererConsumers,
+    signalCommitNotifications,
+    planComputedValidations,
+  });
+}
+
+/** @internal Records one live renderer consumer for test diagnostics. */
+export function recordRendererConsumerCreated(): void {
+  rendererConsumers++;
+  createdRendererConsumers++;
+}
+
+/** @internal Records release of one renderer consumer for test diagnostics. */
+export function recordRendererConsumerReleased(): void {
+  rendererConsumers--;
+  releasedRendererConsumers++;
+}
+
+/** @internal Records one live renderer dependency edge for test diagnostics. */
+export function recordRendererEdgeCreated(): void {
+  rendererEdges++;
+}
+
+/** @internal Records release of one renderer dependency edge for tests. */
+export function recordRendererEdgeReleased(): void {
+  rendererEdges--;
+}
 
 function computedWriteErrorLabel(node: SignalNode<unknown>): string {
   return node.debugName === undefined ?
@@ -59,6 +110,7 @@ function computedWriteErrorLabel(node: SignalNode<unknown>): string {
 }
 
 function notifySignalObservers(node: SignalNode<unknown>): unknown[] {
+  signalCommitNotifications++;
   const failures: unknown[] = [];
   for (const observer of node.observers) {
     try {
@@ -346,6 +398,7 @@ export function flushPendingComputedValidations(): void {
       pendingComputedValidations.delete(node);
       node.pendingValidation = false;
       if (node.observedCount > 0) {
+        planComputedValidations++;
         node.validate();
       }
     }

@@ -31,6 +31,10 @@ export interface RealmSchedulerSnapshot {
   readonly phase: CRCFramePhase;
   readonly pendingHostFrames: number;
   readonly registeredRoots: number;
+  readonly advanceParticipants: number;
+  readonly completionCallbacks: number;
+  readonly createdRootRegistrations: number;
+  readonly releasedRootRegistrations: number;
   readonly dirtyInstances: number;
   readonly dirtyRoots: number;
   readonly registeredAdvanceParticipants: number;

@@ -1,6 +1,6 @@
 # First-Class Signals and Central Scheduler Foundation Implementation Plan
 
-> **Historical status: EXECUTION PLAN.** This is the first of two dependency-ordered plans for the approved signals and animation design.
+> **Historical status: IMPLEMENTED PLAN.** The animation engine remains tracked by the dependency-ordered follow-up plan.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
