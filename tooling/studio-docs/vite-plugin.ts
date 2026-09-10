@@ -62,6 +62,7 @@ export function crcStudioDocs(options: { repositoryRoot: string }): Plugin {
           `export const documentation = ${JSON.stringify(browserDocumentation)};`,
           "export const pages = documentation.pages;",
           "export const pageByRoute = documentation.pageByRoute;",
+          "export const legacyRouteToRoute = documentation.legacyRouteToRoute;",
           "export const apiCoverage = documentation.apiCoverage;",
         ].join("\n");
       }

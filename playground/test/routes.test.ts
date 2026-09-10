@@ -133,4 +133,21 @@ describe("Studio routes", () => {
       "#/testing/baseline-smoke",
     );
   });
+
+  it("canonicalizes public document aliases before dispatch while preserving anchors and queries", () => {
+    expect(
+      canonicalizeHash("#/legacy/first-scene#next-steps?mode=detail", {
+        "#/legacy/first-scene": "#/learn/guides/first-scene",
+      }),
+    ).toMatchObject({
+      canonical: "#/learn/guides/first-scene#next-steps?mode=detail",
+      changed: true,
+      route: {
+        kind: "document",
+        route: "#/learn/guides/first-scene",
+        anchor: "next-steps",
+        query: "?mode=detail",
+      },
+    });
+  });
 });

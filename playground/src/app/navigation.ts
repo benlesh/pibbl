@@ -67,6 +67,50 @@ export interface NavigationExample {
   readonly browseGroup?: LearningBrowseGroup;
 }
 
+/** Versioned browser storage key for only the user's expandable navigation choices. */
+export const navigationStorageKey = "crc-studio-navigation:v1";
+
+export interface NavigationStateOptions {
+  /** Injectable so the model remains usable outside a browser and in tests. */
+  readonly storage?: Pick<Storage, "getItem" | "setItem">;
+  readonly activeRoute?: ParsedStudioRoute;
+}
+
+export interface NavigationState {
+  isExpanded(id: string): boolean;
+  setActiveRoute(route: ParsedStudioRoute): void;
+  toggle(id: string): void;
+}
+
+/**
+ * Holds only persisted expansion preferences. The route itself is authoritative:
+ * an active destination and every ancestor remain visible even if the user had
+ * previously collapsed that branch.
+ */
+export function createNavigationState(
+  options: NavigationStateOptions = {},
+): NavigationState {
+  const storage = options.storage ?? browserStorage();
+  const expanded = readExpandedPreferences(storage);
+  let active = options.activeRoute === undefined
+    ? new Set<string>()
+    : activeNavigationIds(options.activeRoute);
+
+  return {
+    isExpanded(id): boolean {
+      return active.has(id) || expanded[id] === true;
+    },
+    setActiveRoute(route): void {
+      active = activeNavigationIds(route);
+    },
+    toggle(id): void {
+      const visible = active.has(id) || expanded[id] === true;
+      expanded[id] = !visible;
+      persistExpandedPreferences(storage, expanded);
+    },
+  };
+}
+
 /** Builds the public Learn, API, and Examples hierarchy from validated data. */
 export function buildNavigation(
   documentation: NavigationDocumentation,
@@ -257,6 +301,42 @@ function compareDisplayPage(left: NavigationPage, right: NavigationPage): number
 
 function compareExample(left: NavigationExample, right: NavigationExample): number {
   return collator.compare(left.shortTitle, right.shortTitle);
+}
+
+function browserStorage(): Pick<Storage, "getItem" | "setItem"> | undefined {
+  try {
+    return window.localStorage;
+  } catch {
+    return undefined;
+  }
+}
+
+function readExpandedPreferences(
+  storage: Pick<Storage, "getItem"> | undefined,
+): Record<string, boolean> {
+  if (storage === undefined) return {};
+  try {
+    const value: unknown = JSON.parse(storage.getItem(navigationStorageKey) ?? "{}");
+    if (value === null || typeof value !== "object" || Array.isArray(value)) return {};
+    return Object.fromEntries(
+      Object.entries(value).filter(
+        (entry): entry is [string, boolean] => typeof entry[1] === "boolean",
+      ),
+    );
+  } catch {
+    return {};
+  }
+}
+
+function persistExpandedPreferences(
+  storage: Pick<Storage, "setItem"> | undefined,
+  expanded: Readonly<Record<string, boolean>>,
+): void {
+  try {
+    storage?.setItem(navigationStorageKey, JSON.stringify(expanded));
+  } catch {
+    // Storage is an optional enhancement; navigation must still work privately.
+  }
 }
 
 function apiCategoryFromRoute(route: string): "component" | "function" | "hook" | undefined {

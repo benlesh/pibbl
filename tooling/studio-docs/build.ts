@@ -86,6 +86,7 @@ export interface StudioDocumentationBrowserBuild {
   readonly pageByRoute: Readonly<
     Record<string, StudioDocumentationBrowserPage>
   >;
+  readonly legacyRouteToRoute: Readonly<Record<string, string>>;
   readonly apiCoverage: SerializedApiCoverage;
 }
 
@@ -184,6 +185,7 @@ export function toStudioDocumentationBrowserBuild(
   return {
     pages,
     pageByRoute: recordFromEntries(pages.map((page) => [page.route, page])),
+    legacyRouteToRoute: documentation.legacyRouteToRoute,
     apiCoverage: documentation.apiCoverage,
   };
 }

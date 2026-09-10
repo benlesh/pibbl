@@ -4,6 +4,7 @@ declare module "virtual:crc-studio-docs" {
   export const documentation: StudioDocumentationBrowserBuild;
   export const pages: StudioDocumentationBrowserBuild["pages"];
   export const pageByRoute: StudioDocumentationBrowserBuild["pageByRoute"];
+  export const legacyRouteToRoute: StudioDocumentationBrowserBuild["legacyRouteToRoute"];
   export const apiCoverage: StudioDocumentationBrowserBuild["apiCoverage"];
 }
 

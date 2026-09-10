@@ -410,8 +410,8 @@ code {
 }
 
 .studio-nav__home,
-.studio-nav__group a,
-.studio-nav__area > a {
+.studio-nav__group .studio-nav__entry > a,
+.studio-nav__area > .studio-nav__entry > a {
   display: flex;
   align-items: center;
   min-height: 40px;
@@ -436,13 +436,72 @@ code {
   margin-bottom: 18px;
 }
 
-.studio-nav__area > a {
+.studio-nav__entry {
+  display: flex;
+  align-items: stretch;
+}
+
+.studio-nav__entry > a {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.studio-nav__area > .studio-nav__entry > a {
   border: 1px solid #59645c;
   color: var(--paper);
   font-size: 15px;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.studio-nav__toggle {
+  display: grid;
+  width: 40px;
+  flex: 0 0 40px;
+  place-items: center;
+  border: 1px solid #59645c;
+  border-left: 0;
+  background: #27312a;
+  color: var(--mint);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.studio-nav__toggle > span {
+  transition: transform 160ms ease-out;
+}
+
+.studio-nav__toggle[aria-expanded="false"] > span {
+  transform: rotate(-90deg);
+}
+
+.studio-nav__group .studio-nav__toggle--label {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  border: 0;
+  background: transparent;
+  color: var(--mint);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.studio-nav__toggle--label::after {
+  content: "⌄";
+  font-size: 14px;
+  transition: transform 160ms ease-out;
+}
+
+.studio-nav__toggle--label[aria-expanded="false"]::after {
+  transform: rotate(-90deg);
 }
 
 .studio-nav__area > ul {
@@ -455,15 +514,6 @@ code {
   margin-top: 10px;
 }
 
-.studio-nav__group h2 {
-  margin: 0 10px 6px;
-  color: var(--mint);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
 .studio-nav__group ul {
   margin: 0;
   padding: 0;
@@ -471,16 +521,18 @@ code {
 }
 
 .studio-nav__home:hover,
-.studio-nav__group a:hover,
+.studio-nav__group .studio-nav__entry > a:hover,
 .studio-nav__home.is-active,
-.studio-nav__group a.is-active,
-.studio-nav__area > a:hover,
-.studio-nav__area > a.is-active {
+.studio-nav__group .studio-nav__entry > a.is-active,
+.studio-nav__area > .studio-nav__entry > a:hover,
+.studio-nav__area > .studio-nav__entry > a.is-active,
+.studio-nav__toggle:hover,
+.studio-nav__toggle.is-active {
   background: var(--paper);
   color: var(--ink);
 }
 
-.studio-nav__group a.is-active::before {
+.studio-nav__group .studio-nav__entry > a.is-active::before {
   width: 9px;
   height: 9px;
   margin-right: 10px;

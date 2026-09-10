@@ -130,7 +130,11 @@ export function routeHref(route: ParsedStudioRoute): string {
  * Resolves data-owned legacy aliases to their stable public destination while
  * preserving a learning example's share query unchanged.
  */
-export function canonicalizeHash(hash: string): CanonicalRouteResult {
+export function canonicalizeHash(
+  hash: string,
+  legacyDocumentRoutes: Readonly<Record<string, string>> = {},
+): CanonicalRouteResult {
+  const split = splitHash(hash);
   const parsed = parseStudioRoute(hash);
   let canonical = routeHref(parsed);
 
@@ -139,6 +143,15 @@ export function canonicalizeHash(hash: string): CanonicalRouteResult {
     const incoming = `#/examples/${parsed.group}/${parsed.slug}`;
     if (entry && getLearningExampleLegacyRoutes(entry).includes(incoming)) {
       canonical = `${getLearningExampleRoute(entry)}${parsed.query ?? ""}`;
+    }
+  } else if (parsed.kind === "testing" && split.path === "#/scenarios") {
+    canonical = `#/testing${split.query}`;
+  } else if (parsed.kind === "test" && split.path.startsWith("#/scenarios/")) {
+    canonical = `#/testing/${parsed.slug}${split.query}`;
+  } else {
+    const destination = legacyDocumentRoutes[split.path];
+    if (destination !== undefined) {
+      canonical = `${destination}${split.anchor === "" ? "" : `#${split.anchor}`}${split.query}`;
     }
   }
 

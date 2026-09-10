@@ -91,6 +91,42 @@ describe("Studio shell navigation", () => {
     shell.dispose();
   });
 
+  it("uses buttons to expand navigation groups and keeps active ancestors visible", () => {
+    const app = document.createElement("div");
+    document.body.appendChild(app);
+    const shell = createStudioShell({ app, navigation });
+    const learnToggle = app.querySelector<HTMLButtonElement>(
+      "[data-navigation-id='learn'][aria-expanded]",
+    )!;
+
+    expect(learnToggle).toHaveAttribute("aria-expanded", "false");
+    expect(app.querySelector(".studio-nav__area > ul")).toHaveAttribute("hidden");
+
+    learnToggle.click();
+    expect(
+      app.querySelector<HTMLButtonElement>(
+        "[data-navigation-id='learn'][aria-expanded]",
+      ),
+    ).toHaveAttribute("aria-expanded", "true");
+    expect(app.querySelector(".studio-nav__area > ul")).not.toHaveAttribute("hidden");
+
+    shell.setActiveNavigation(
+      parseStudioRoute("#/learn/guides/state-and-lifecycle"),
+    );
+    expect(
+      app.querySelector<HTMLButtonElement>(
+        "[data-navigation-id='learn'][aria-expanded]",
+      ),
+    ).toHaveAttribute("aria-expanded", "true");
+    expect(
+      app.querySelector<HTMLButtonElement>(
+        "[data-navigation-id='learn-guides'][aria-expanded]",
+      ),
+    ).toHaveAttribute("aria-expanded", "true");
+
+    shell.dispose();
+  });
+
   it("opens search from a visible trigger and the Ctrl/Cmd+K shortcut", async () => {
     const app = document.createElement("div");
     document.body.appendChild(app);

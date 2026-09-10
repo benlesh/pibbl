@@ -1,5 +1,6 @@
 import {
   activeNavigationIds,
+  createNavigationState,
   type NavigationArea,
   type NavigationEntry,
 } from "./navigation";
@@ -101,6 +102,8 @@ export function createStudioShell(options: StudioShellOptions): StudioShell {
   let searchController: SearchDialogController | undefined;
   let loadingSearch: Promise<SearchDialogController> | undefined;
   let disposed = false;
+  const navigationState = createNavigationState();
+  let currentNavigation = options.navigation;
   const ensureSearch = async (): Promise<SearchDialogController> => {
     if (searchController !== undefined) return searchController;
     if (loadingSearch !== undefined) return loadingSearch;
@@ -216,7 +219,9 @@ export function createStudioShell(options: StudioShellOptions): StudioShell {
   menuButton.addEventListener("click", onMenuClick);
   drawerCloseButton.addEventListener("click", () => closeDrawer(true));
   drawerBackdrop.addEventListener("click", () => closeDrawer(true));
-  navigationHost.addEventListener("click", () => closeDrawer());
+  navigationHost.addEventListener("click", (event) => {
+    if ((event.target as Element).closest("a") !== null) closeDrawer();
+  });
   testingLink.addEventListener("click", () => closeDrawer());
   for (const trigger of searchTriggers) {
     trigger.addEventListener("focus", prepareSearch);
@@ -228,8 +233,13 @@ export function createStudioShell(options: StudioShellOptions): StudioShell {
   syncDrawerAvailability();
 
   const setNavigation = (navigation: readonly NavigationArea[]) => {
+    currentNavigation = navigation;
     navigationHost.replaceChildren(
-      ...navigation.map((area) => renderNavigationEntry(area, true)),
+      ...navigation.map((area) =>
+        renderNavigationEntry(area, navigationState, () => {
+          setNavigation(currentNavigation);
+        }, true),
+      ),
     );
   };
   setNavigation(options.navigation);
@@ -238,6 +248,8 @@ export function createStudioShell(options: StudioShellOptions): StudioShell {
     main,
     setNavigation,
     setActiveNavigation(route) {
+      navigationState.setActiveRoute(route);
+      setNavigation(currentNavigation);
       const active = activeNavigationIds(route);
       const activeArea = areaForRoute(route);
       for (const element of navigationHost.querySelectorAll<HTMLElement>(
@@ -300,20 +312,51 @@ function isMonacoInput(element: Element | null): boolean {
 
 function renderNavigationEntry(
   entry: NavigationEntry,
+  state: ReturnType<typeof createNavigationState>,
+  onToggle: () => void,
   primary = false,
 ): HTMLElement {
   const section = document.createElement("section");
   section.className = primary ? "studio-nav__area" : "studio-nav__group";
-  const label = entry.href === undefined ? document.createElement("h2") : document.createElement("a");
-  label.dataset.navigationId = entry.id;
-  label.textContent = entry.label;
-  if (label instanceof HTMLAnchorElement) label.href = entry.href!;
-  section.appendChild(label);
-  if (entry.children?.length) {
+  const children = entry.children ?? [];
+  const hasChildren = children.length > 0;
+  const header = document.createElement("div");
+  header.className = "studio-nav__entry";
+  if (entry.href !== undefined) {
+    const label = document.createElement("a");
+    label.dataset.navigationId = entry.id;
+    label.textContent = entry.label;
+    label.href = entry.href;
+    header.appendChild(label);
+  }
+  if (hasChildren) {
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "studio-nav__toggle";
+    toggle.dataset.navigationId = entry.id;
+    toggle.setAttribute("aria-expanded", String(state.isExpanded(entry.id)));
+    toggle.setAttribute(
+      "aria-label",
+      `${state.isExpanded(entry.id) ? "Collapse" : "Expand"} ${entry.label}`,
+    );
+    toggle.innerHTML = '<span aria-hidden="true">⌄</span>';
+    toggle.addEventListener("click", () => {
+      state.toggle(entry.id);
+      onToggle();
+    });
+    if (entry.href === undefined) {
+      toggle.classList.add("studio-nav__toggle--label");
+      toggle.textContent = entry.label;
+    }
+    header.appendChild(toggle);
+  }
+  section.appendChild(header);
+  if (hasChildren) {
     const list = document.createElement("ul");
-    for (const child of entry.children) {
+    list.hidden = !state.isExpanded(entry.id);
+    for (const child of children) {
       const item = document.createElement("li");
-      item.appendChild(renderNavigationEntry(child));
+      item.appendChild(renderNavigationEntry(child, state, onToggle));
       list.appendChild(item);
     }
     section.appendChild(list);

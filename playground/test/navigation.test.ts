@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   activeNavigationIds,
   buildNavigation,
+  createNavigationState,
+  navigationStorageKey,
   type NavigationDocumentation,
 } from "../src/app/navigation";
 import { parseStudioRoute } from "../src/app/routes";
@@ -175,6 +177,43 @@ describe("Studio navigation", () => {
       "example:filters",
     ]);
   });
+
+  it("persists collapsed preferences while active ancestors stay expanded", () => {
+    const storage = memoryStorage();
+    storage.setItem(
+      navigationStorageKey,
+      JSON.stringify({ api: false, "api-types": false }),
+    );
+
+    const state = createNavigationState({
+      storage,
+      activeRoute: parseStudioRoute("#/api/types/events"),
+    });
+
+    expect(state.isExpanded("api")).toBe(true);
+    expect(state.isExpanded("api-types")).toBe(true);
+    expect(state.isExpanded("examples")).toBe(false);
+
+    state.toggle("api");
+    expect(state.isExpanded("api")).toBe(true);
+    expect(createNavigationState({ storage }).isExpanded("api")).toBe(false);
+
+    state.toggle("examples");
+    expect(state.isExpanded("examples")).toBe(true);
+    expect(
+      createNavigationState({ storage }).isExpanded("examples"),
+    ).toBe(true);
+  });
+
+  it("treats malformed persisted navigation state as empty preferences", () => {
+    const storage = memoryStorage();
+    storage.setItem(navigationStorageKey, "not JSON");
+
+    const state = createNavigationState({ storage });
+
+    expect(state.isExpanded("api")).toBe(false);
+    expect(() => state.toggle("api")).not.toThrow();
+  });
 });
 
 function page(
@@ -219,4 +258,18 @@ function example(
     | "focus-and-keyboard",
 ) {
   return { slug, title, shortTitle: title, browseGroup };
+}
+
+function memoryStorage(): Storage {
+  const values = new Map<string, string>();
+  return {
+    get length() {
+      return values.size;
+    },
+    clear: () => values.clear(),
+    getItem: (key) => values.get(key) ?? null,
+    key: (index) => [...values.keys()][index] ?? null,
+    removeItem: (key) => values.delete(key),
+    setItem: (key, value) => values.set(key, value),
+  };
 }

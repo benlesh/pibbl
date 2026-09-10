@@ -1,7 +1,10 @@
 import "@fontsource-variable/space-grotesk";
 import "@fontsource-variable/jetbrains-mono";
 import { learningExampleCatalog } from "@crc/scenarios";
-import { documentation } from "virtual:crc-studio-docs";
+import {
+  documentation,
+  legacyRouteToRoute,
+} from "virtual:crc-studio-docs";
 
 import { buildNavigation } from "./app/navigation";
 import { createPageLifecycle } from "./app/page-lifecycle";
@@ -48,7 +51,7 @@ function currentRoute() {
   ) {
     window.history.replaceState(null, "", "#/examples");
   }
-  const canonical = canonicalizeHash(window.location.hash);
+  const canonical = canonicalizeHash(window.location.hash, legacyRouteToRoute);
   if (canonical.changed) {
     window.history.replaceState(null, "", canonical.canonical);
   }
