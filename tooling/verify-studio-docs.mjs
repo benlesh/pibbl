@@ -6,6 +6,10 @@ import { resolve } from "node:path";
 import { chromium } from "playwright";
 
 const workspaceRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
+const previewOutputDirectory = resolve(
+  workspaceRoot,
+  process.env.CRC_STUDIO_DOCS_PREVIEW_OUTPUT_DIRECTORY ?? "playground/dist",
+);
 const previewPort = process.env.CRC_STUDIO_DOCS_PREVIEW_PORT ?? "4175";
 if (!/^[1-9]\d{0,4}$/.test(previewPort) || Number(previewPort) > 65_535) {
   throw new Error(
@@ -341,6 +345,8 @@ const server = spawn(
     "--port",
     previewPort,
     "--strictPort",
+    "--outDir",
+    previewOutputDirectory,
   ],
   { cwd: resolve(workspaceRoot, "playground"), stdio: ["ignore", "pipe", "pipe"] },
 );

@@ -385,6 +385,7 @@ function splitInternalLink(href: string): { route: string; anchor?: string } {
 function validateTutorialOrder(
   pages: readonly StudioDocumentationPage[],
 ): void {
+  const rootsByTutorial = new Map<string, StudioDocumentationPage[]>();
   const chaptersByTutorial = new Map<string, StudioDocumentationPage[]>();
   for (const page of pages) {
     const { frontmatter } = page;
@@ -394,7 +395,12 @@ function validateTutorialOrder(
         `${page.sourcePath}: tutorial pages must identify a tutorial.`,
       );
     }
-    if (frontmatter.slug === frontmatter.tutorial) continue;
+    if (frontmatter.slug === frontmatter.tutorial) {
+      const roots = rootsByTutorial.get(frontmatter.tutorial) ?? [];
+      roots.push(page);
+      rootsByTutorial.set(frontmatter.tutorial, roots);
+      continue;
+    }
     if (frontmatter.order === undefined) {
       throw new Error(
         `${page.sourcePath}: tutorial chapters must declare an order.`,
@@ -406,6 +412,12 @@ function validateTutorialOrder(
   }
 
   for (const [tutorial, chapters] of chaptersByTutorial) {
+    const roots = rootsByTutorial.get(tutorial) ?? [];
+    if (roots.length !== 1) {
+      throw new Error(
+        `Tutorial "${tutorial}" requires exactly one matching tutorial root.`,
+      );
+    }
     const orders = chapters
       .map(({ frontmatter }) => frontmatter.order as number)
       .sort((a, b) => a - b);

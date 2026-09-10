@@ -1478,10 +1478,84 @@ const trustWorkflow = await readFile(
   join(repositoryRoot, ".github/workflows/trust.yml"),
   "utf8",
 );
+const rootManifest = JSON.parse(
+  await readFile(join(repositoryRoot, "package.json"), "utf8"),
+);
 assert.match(
   trustWorkflow,
   /run: pnpm docs:check/u,
   "The CI static job must run docs:check explicitly.",
+);
+assert.match(
+  trustWorkflow,
+  /run: pnpm studio-docs:check/u,
+  "The CI static job must run studio-docs:check explicitly.",
+);
+for (const command of ["test:studio-docs", "test:studio-visual"]) {
+  assert.match(
+    trustWorkflow,
+    new RegExp(`run: pnpm ${command}`, "u"),
+    `The CI browser job must run ${command} explicitly.`,
+  );
+}
+assertWorkflowCommandOrder(
+  trustWorkflow,
+  [
+    "pnpm docs:check",
+    "pnpm studio-docs:check",
+    "pnpm typecheck",
+  ],
+  "CI static documentation and type checks",
+);
+assertWorkflowCommandOrder(
+  trustWorkflow,
+  [
+    "pnpm test:ci",
+    "pnpm test:studio-docs",
+    "pnpm test:visual-safeguard",
+    "pnpm test:studio-visual",
+    "pnpm test:smoke:built",
+  ],
+  "CI browser, documentation, and visual checks",
+);
+assert.equal(
+  rootManifest.scripts["test:studio-docs"],
+  "node tooling/test-studio-docs.mjs",
+  "test:studio-docs must use the isolated acceptance-output runner.",
+);
+assert.match(
+  rootManifest.scripts["trust:static"],
+  /\bstudio-docs:check\b/u,
+  "The local static trust command must include studio-docs:check.",
+);
+assert.match(
+  rootManifest.scripts["trust:browser"],
+  /\btest:studio-docs\b[\s\S]*\btest:studio-visual\b/u,
+  "The local browser trust command must retain Studio acceptance before visual baselines.",
+);
+assert.match(
+  rootManifest.scripts["test:studio-visual"],
+  /\bplayground:build\b/u,
+  "test:studio-visual must remain an explicit normal-production build gate.",
+);
+const studioDocsRunner = await readFile(
+  join(repositoryRoot, "tooling/test-studio-docs.mjs"),
+  "utf8",
+);
+assert.match(
+  studioDocsRunner,
+  /\.studio-docs-acceptance-dist/u,
+  "Studio acceptance must use its explicit isolated output directory.",
+);
+assert.match(
+  studioDocsRunner,
+  /assertNormalOutputUnchanged/u,
+  "Studio acceptance must preserve the normal production output.",
+);
+assert.match(
+  studioDocsRunner,
+  /finally[\s\S]*rm\(acceptanceOutput/u,
+  "Studio acceptance must clean its exact output directory on success and failure.",
 );
 const studioHtml = await readFile(
   join(repositoryRoot, "playground/index.html"),
@@ -1489,6 +1563,15 @@ const studioHtml = await readFile(
 );
 assert.match(studioHtml, /editable TSX/u);
 assert.doesNotMatch(studioHtml, /editable TypeScript/u);
+
+function assertWorkflowCommandOrder(source, commands, label) {
+  let previous = -1;
+  for (const command of commands) {
+    const position = source.indexOf(command);
+    assert.ok(position > previous, `${label} must run ${command} in order.`);
+    previous = position;
+  }
+}
 
 const configuring = currentSources.get("docs/site/learn/guides/configure-jsx.md");
 for (const marker of [

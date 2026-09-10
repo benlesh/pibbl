@@ -39,6 +39,9 @@ jobs:
         env:
           CRC_VERIFY_CONTRACT_PROVENANCE: 1
 
+      - name: Validate Studio documentation manifest
+        run: pnpm studio-docs:check
+
       - name: Typecheck
         run: pnpm typecheck
 
@@ -100,8 +103,14 @@ jobs:
       - name: Run browser contracts
         run: pnpm test:ci
 
+      - name: Validate Studio documentation browser acceptance
+        run: pnpm test:studio-docs
+
       - name: Prove visual safeguards
         run: pnpm test:visual-safeguard
+
+      - name: Match Studio visual baselines
+        run: pnpm test:studio-visual
 
       - name: Verify built gallery smoke
         run: pnpm test:smoke:built

@@ -357,6 +357,10 @@ order: ${String(order)}
     "docs/site/learn/tutorials/advanced-animation/timeline.md",
     tutorialChapter("advanced-animation", "timeline", 1),
   );
+  await writeFixture(
+    "docs/site/learn/tutorials/advanced-animation/publish.md",
+    tutorialChapter("advanced-animation", "publish", 2),
+  );
   const multipleTutorials = await buildStudioDocumentation(fixtureOptions);
   assert.deepEqual(
     multipleTutorials.pages
@@ -364,6 +368,7 @@ order: ${String(order)}
       .map(({ route }) => route),
     [
       "#/learn/tutorials/advanced-animation",
+      "#/learn/tutorials/advanced-animation/publish",
       "#/learn/tutorials/advanced-animation/timeline",
       "#/learn/tutorials/diagram-editor/first",
       "#/learn/tutorials/diagram-editor",
@@ -379,6 +384,16 @@ order: ${String(order)}
       "#/learn/tutorials/diagram-editor",
     ],
     "Navigation must retain each tutorial root while hiding chapters beneath it.",
+  );
+  await rm(join(fixtureRoot, "docs/site/learn/tutorials/advanced-animation/index.md"));
+  await assert.rejects(
+    () => buildStudioDocumentation(fixtureOptions),
+    /requires exactly one matching tutorial root/u,
+    "Tutorial chapters must not produce an orphan route tree.",
+  );
+  await writeFixture(
+    "docs/site/learn/tutorials/advanced-animation/index.md",
+    tutorialRoot("advanced-animation", "Animate a scene"),
   );
   await writeFixture(
     "docs/site/learn/tutorials/diagram-editor/first.md",
