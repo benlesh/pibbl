@@ -201,6 +201,36 @@ describe('component signal reads', () => {
 });
 
 describe('signal write guard', () => {
+  it('rejects a no-op set before equality suppression during CRC render', () => {
+    const target = signal(0);
+    const frames = new ManualFrames();
+    function Broken() {
+      target.set(target.get());
+    }
+
+    const controller = crc(createCanvas(), <Broken />);
+    expect(() => frames.flush()).toThrowError('CRC render');
+    expect(target.get()).toBe(0);
+    controller.dispose();
+    frames.restore();
+  });
+
+  it('rejects a no-op update before invoking its updater during CRC render', () => {
+    const target = signal(0);
+    const updater = vi.fn((value: number) => value);
+    const frames = new ManualFrames();
+    function Broken() {
+      target.update(updater);
+    }
+
+    const controller = crc(createCanvas(), <Broken />);
+    expect(() => frames.flush()).toThrowError('CRC render');
+    expect(updater).not.toHaveBeenCalled();
+    expect(target.get()).toBe(0);
+    controller.dispose();
+    frames.restore();
+  });
+
   for (const write of ['set', 'update'] as const) {
     it(`rejects signal ${write} from an ordinary component without changing the value`, () => {
       const target = signal(0);
