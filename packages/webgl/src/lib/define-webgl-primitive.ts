@@ -21,14 +21,15 @@ export function defineWebGLPrimitive<
   S extends SystemStyle,
   N extends SystemStyle = S,
   R extends SystemStyle = N,
+  const H extends { readonly kind: 'none' } = { readonly kind: 'none' },
 >(
   render: CRCWebGLPrimitiveRender<P, R>,
   capabilities: CRCWebGLPrimitiveCapabilities<P, S, N, R> & {
-    hit: { readonly kind: 'none' };
+    hit: H;
   },
 ): CRCPrimitiveComponent<
-  CRCWebGLProgramProps<P, { readonly kind: 'none' }>,
-  CRCWebGLPrimitiveInput<P, S, { readonly kind: 'none' }>
+  CRCWebGLProgramProps<P, H>,
+  CRCWebGLPrimitiveInput<P, S, H>
 >;
 export function defineWebGLPrimitive<
   P,

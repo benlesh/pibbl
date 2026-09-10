@@ -42,6 +42,17 @@ describe('defineWebGLPrimitive', () => {
       function renderDecorative() {},
       { hit: { kind: 'none' } },
     );
+    type ExactNone = { readonly kind: 'none' };
+    const ExplicitDecorative = defineWebGLPrimitive<
+      {},
+      CRCWebGLTransformStyle,
+      CRCWebGLTransformStyle,
+      CRCWebGLTransformStyle,
+      ExactNone
+    >(
+      function renderExplicitDecorative() {},
+      { hit: { kind: 'none' } },
+    );
 
     const elements = [
       createElement(Geometry, null),
@@ -63,6 +74,7 @@ describe('defineWebGLPrimitive', () => {
     expect(Object.getOwnPropertySymbols(Decorative)).toEqual([]);
 
     type DecorativeInput = PrimitiveInputOf<typeof Decorative>;
+    type ExplicitDecorativeInput = PrimitiveInputOf<typeof ExplicitDecorative>;
     type GeometryInput = PrimitiveInputOf<typeof Geometry>;
     const widenedHit = { kind: 'none' } as CRCWebGLHitCapability<
       {},
@@ -70,6 +82,7 @@ describe('defineWebGLPrimitive', () => {
     >;
     const typeContract = () => {
       const allowed: DecorativeInput = { pointerEvents: 'none' };
+      const explicitAllowed: ExplicitDecorativeInput = { pointerEvents: 'none' };
       // @ts-expect-error Decorative WebGL primitives cannot participate in hits.
       const automatic: DecorativeInput = { pointerEvents: 'auto' };
       // @ts-expect-error Decorative WebGL primitives cannot expose handlers.
@@ -83,7 +96,17 @@ describe('defineWebGLPrimitive', () => {
         // @ts-expect-error A widened hit union must be narrowed before definition.
         { hit: widenedHit },
       );
-      return { allowed, automatic, interactive, filtered, Widened };
+      // @ts-expect-error Explicit exact-none H remains decorative.
+      const explicitAutomatic: ExplicitDecorativeInput = { pointerEvents: 'auto' };
+      return {
+        allowed,
+        explicitAllowed,
+        automatic,
+        interactive,
+        filtered,
+        Widened,
+        explicitAutomatic,
+      };
     };
     void typeContract;
   });
@@ -141,6 +164,68 @@ describe('defineWebGLPrimitive', () => {
         },
       };
       return { valid, filtered };
+    };
+    void typeContract;
+  });
+
+  it('preserves every branch of a union specified style while closing filters', () => {
+    type UnionStyle =
+      | (SystemStyle & { readonly kind: 'a'; readonly amount: number })
+      | (SystemStyle & { readonly kind: 'b'; readonly label: string });
+    const UnionStyled = defineWebGLPrimitive<{}, UnionStyle, UnionStyle, UnionStyle>(
+      function renderUnionStyled(_props, style) {
+        if (style.kind === 'a') {
+          const amount: number = style.amount;
+          void amount;
+        } else {
+          const label: string = style.label;
+          void label;
+        }
+      },
+      {
+        normalizeStyle(style) {
+          return style.kind === 'a' ?
+            { ...style, amount: style.amount } :
+            { ...style, label: style.label };
+        },
+        resolveStyle(style) {
+          return style.kind === 'a' ?
+            { ...style, amount: style.amount } :
+            { ...style, label: style.label };
+        },
+        hit: { kind: 'none' },
+      },
+    );
+
+    type UnionInput = PrimitiveInputOf<typeof UnionStyled>;
+    const typeContract = () => {
+      const branchA: UnionInput = {
+        pointerEvents: 'none',
+        style: { kind: 'a', amount: 1 },
+      };
+      const branchB: UnionInput = {
+        pointerEvents: 'none',
+        style: { kind: 'b', label: 'two' },
+      };
+      const filteredA: UnionInput = {
+        pointerEvents: 'none',
+        style: {
+          kind: 'a',
+          amount: 1,
+          // @ts-expect-error Every union branch closes core filters.
+          filter: { type: 'blur', radius: 1 },
+        },
+      };
+      const filteredB: UnionInput = {
+        pointerEvents: 'none',
+        style: {
+          kind: 'b',
+          label: 'two',
+          // @ts-expect-error Every union branch closes core filters.
+          filter: { type: 'blur', radius: 1 },
+        },
+      };
+      return { branchA, branchB, filteredA, filteredB };
     };
     void typeContract;
   });

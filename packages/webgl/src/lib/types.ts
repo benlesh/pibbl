@@ -96,8 +96,8 @@ export type CRCWebGLProgramProps<
       'keyboardFocusable' | 'keyboardNavigationBounds'
     > & CRCEventParticipationOptions;
 
-export type CRCWebGLSpecifiedStyle<S extends SystemStyle> =
-  Omit<S, 'filter'> & { readonly filter?: never };
+export type CRCWebGLSpecifiedStyle<S extends SystemStyle> = S extends unknown ?
+  Omit<S, 'filter'> & { readonly filter?: never } : never;
 
 export type CRCWebGLPrimitiveInput<
   P,
