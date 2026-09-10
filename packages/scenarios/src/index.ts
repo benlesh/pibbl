@@ -21,8 +21,14 @@ export {
   mouseContractScenarioEntry,
   performanceLabScenarioEntry,
   runtimeHooksScenarioEntry,
+  signalsLabScenarioEntry,
   validateScenarioCatalog,
 } from './catalog';
+export type {
+  SignalsLabAction,
+  SignalsLabState,
+} from './signals-lab.example';
+export { SIGNALS_LAB_ACTION_IDS } from './signals-lab';
 export type {
   FilterLabMode,
   FilterLabOrder,

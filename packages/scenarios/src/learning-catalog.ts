@@ -149,6 +149,31 @@ const drafts = [
     load: () => import("./learning/start/create-element-authoring.example"),
   },
   {
+    slug: "signals",
+    title: "Signals",
+    shortTitle: "Signals",
+    section: "start",
+    order: 17,
+    summary:
+      "Read writable and computed values explicitly, then update a shared signal without turning styles into bindings.",
+    api: ["signal", "computed", "crcSignal", "Layer"],
+    objectives: [
+      "Use .get() during a component render to declare the values that should refresh it.",
+      "Update writable signals from an event and derive a normal resolved value with computed().",
+    ],
+    prompts: {
+      gesture: "Click the blue card to move it and switch its component-local color.",
+      code: "Change the x update or derive another label from the shared writable signal.",
+    },
+    apiNotes: [
+      "Calling .get() is the explicit dependency declaration; a changed write schedules one future CRC frame.",
+      "The style object contains ordinary resolved values, and a module-level signal can be shared independently of any mount.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["getting-started", "layer", "create-element-authoring"],
+    load: () => import("./learning/start/signals.example"),
+  },
+  {
     slug: "rectangle",
     title: "Rectangle",
     shortTitle: "Rectangle",

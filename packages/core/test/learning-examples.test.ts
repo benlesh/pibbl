@@ -1052,11 +1052,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 50 unique, ordered, source-backed routes including standard shapes", async () => {
+  it("contains 51 unique, ordered, source-backed routes including standard shapes and signals", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(50);
+    expect(learningExampleCatalog).toHaveLength(51);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1090,6 +1090,28 @@ describe("learning example catalog", () => {
         .filter((entry) => entry.section === "composition")
         .map((entry) => entry.slug),
     ).toEqual(["group", "clip", "filters", "layer"]);
+
+    const startExamples = learningExampleCatalog.filter(
+      (entry) => entry.section === "start",
+    );
+    expect(startExamples.map((entry) => entry.slug)).toContain("signals");
+
+    const signals = startExamples.find((entry) => entry.slug === "signals");
+    expect(signals).toMatchObject({
+      api: ["signal", "computed", "crcSignal", "Layer"],
+      source: {
+        path: "packages/scenarios/src/learning/start/signals.example.tsx",
+      },
+    });
+    expect(signals && getLearningExampleRoute(signals)).toBe(
+      "#/examples/start/signals",
+    );
+    const signalsSource = await loadLearningSource(signals!);
+    expect(signalsSource).toMatch(/from ["']@crc\/core["']/u);
+    expect(signalsSource).not.toMatch(/@crc\/core\/(?:internal|lib|src)\b/u);
+    expect(signalsSource).toContain(".get()");
+    expect(signalsSource).toContain(".update(");
+    expect(signalsSource).toContain("computed(");
 
     const clip = learningExampleCatalog.find(
       (entry) => entry.section === "composition" && entry.slug === "clip",

@@ -1,10 +1,12 @@
 import type { ScenarioCatalogRecord } from '@crc/scenarios';
 import {
   focusNavigationScenarioEntry,
+  getScenarioRoute,
   interactionLabScenarioEntry,
   loadScenario,
   scenarioCatalog,
   scenarioCatalogIndex,
+  signalsLabScenarioEntry,
   validateScenarioCatalog,
 } from '@crc/scenarios';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -804,6 +806,33 @@ describe('scenario catalog trust gate', () => {
       .join(' ');
     expect(instructions).not.toContain('explicit input adapter');
     expect(instructions).toContain('internal headless contract transport');
+  });
+
+  it('publishes the public signal laboratory route, source, and deterministic action surface', () => {
+    expect(scenarioCatalog).toContain(signalsLabScenarioEntry);
+    expect(getScenarioRoute(signalsLabScenarioEntry)).toBe('#/testing/signals');
+    expect(signalsLabScenarioEntry).toMatchObject({
+      metadata: {
+        id: 'first-class-signals',
+        slug: 'signals',
+      },
+      canvas: { width: 480, height: 240 },
+      source: {
+        id: 'first-class-signals-laboratory-example',
+        marker: "SIGNALS_LAB_SOURCE_ID = 'first-class-signals-laboratory-example'",
+        path: 'packages/scenarios/src/signals-lab.example.tsx',
+      },
+    });
+    expect(signalsLabScenarioEntry.actions.map(action => action.id)).toEqual([
+      'direct-write',
+      'equal-write',
+      'computed-equal-write',
+      'dependency-switch',
+      'shared-roots',
+      'layer-local-write',
+      'remove-consumer',
+      'reset',
+    ]);
   });
 
   it('discovers exactly one catalog entry for every executable example', () => {

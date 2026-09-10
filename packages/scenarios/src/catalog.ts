@@ -18,6 +18,7 @@ import type { PerformanceLabState } from './performance-lab.example';
 import type { RuntimeHooksState } from './runtime-hooks.example';
 import type { CanvasSurfaceState } from './canvas-surface.example';
 import type { FilterLabState } from './filter-lab.example';
+import type { SignalsLabState } from './signals-lab.example';
 import { GEOMETRY_MATRIX_CASES } from './geometry-matrix.example';
 import { MOUSE_CONTRACT_CASES } from './mouse-contract';
 import { PERFORMANCE_WORKLOADS } from './performance-lab.example';
@@ -1209,6 +1210,64 @@ export const filterLabScenarioEntry: ScenarioCatalogEntry<FilterLabState> = {
   load: async () => (await import('./filter-lab')).filterLabScenario,
 };
 
+const signalsLabMetadata: ScenarioMetadata = {
+  id: 'first-class-signals',
+  slug: 'signals',
+  title: 'First-class signals laboratory',
+  summary: 'Prove writable, computed, dynamic, shared-root, Layer-local, and removed-consumer signal behavior through public CRC APIs.',
+  category: 'Rendering',
+  apiTags: ['crc', 'signal', 'computed', 'crcSignal', 'Layer'],
+  conceptTags: ['explicit dependency', 'equal write', 'dynamic dependencies', 'shared scheduler', 'layer reuse', 'consumer cleanup'],
+  manualSteps: [
+    {
+      action: 'Choose Direct write, then Equal write.',
+      expected: 'The direct value and root A render count advance once; the equal write leaves the render counters unchanged.',
+    },
+    {
+      action: 'Choose Computed-equal write, then Dependency switch.',
+      expected: 'The computed evaluates to confirm equality without a root redraw, then follows the right source after the dynamic branch changes.',
+    },
+    {
+      action: 'Choose Shared roots and Layer-local write.',
+      expected: 'One logical shared update advances both roots, while a Layer A update refreshes its child before root A presents the new pixels and Layer B remains reused.',
+    },
+    {
+      action: 'Choose Remove consumer, then Reset.',
+      expected: 'The retained consumer disappears before its retained signal is written; reset recreates the original two-root scene and counters.',
+    },
+  ],
+  knownLimitations: [
+    'The counters describe deterministic public-scene work; scheduler internals remain covered by the dedicated core scheduler tests.',
+    'Layers retain their existing browser OffscreenCanvas requirement and only demonstrate cache reuse for their local public child output.',
+  ],
+  learningOrder: 170,
+  visibility: 'test-laboratory',
+  visibilityReason: 'It exposes deterministic structural counters and teardown controls rather than a beginner-facing visual lesson.',
+  maturity: 'trusted',
+};
+
+export const signalsLabScenarioEntry: ScenarioCatalogEntry<SignalsLabState> = {
+  metadata: signalsLabMetadata,
+  canvas: { width: 480, height: 240 },
+  actions: [
+    { id: 'direct-write', label: 'Direct write' },
+    { id: 'equal-write', label: 'Equal write' },
+    { id: 'computed-equal-write', label: 'Computed-equal write' },
+    { id: 'dependency-switch', label: 'Dependency switch' },
+    { id: 'shared-roots', label: 'Shared roots' },
+    { id: 'layer-local-write', label: 'Layer-local write' },
+    { id: 'remove-consumer', label: 'Remove consumer' },
+    { id: 'reset', label: 'Reset' },
+  ],
+  source: {
+    id: 'first-class-signals-laboratory-example',
+    language: 'tsx',
+    marker: "SIGNALS_LAB_SOURCE_ID = 'first-class-signals-laboratory-example'",
+    path: 'packages/scenarios/src/signals-lab.example.tsx',
+  },
+  load: async () => (await import('./signals-lab')).signalsLabScenario,
+};
+
 export const canvasSurfaceScenarioEntry: ScenarioCatalogEntry<CanvasSurfaceState> = {
   metadata: canvasSurfaceMetadata,
   canvas: { width: 480, height: 240 },
@@ -1244,6 +1303,7 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] = validateScena
   layoutFoundationScenarioEntry,
   canvasSurfaceScenarioEntry,
   filterLabScenarioEntry,
+  signalsLabScenarioEntry,
 ] as const);
 
 export const scenarioCatalogIndex = createScenarioCatalogIndex(scenarioCatalog);
