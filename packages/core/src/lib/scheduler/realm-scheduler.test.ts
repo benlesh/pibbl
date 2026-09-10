@@ -11,6 +11,7 @@ import {
   GLOBAL_STATE,
 } from '../global-state';
 import { mountCRC } from '../mount-crc';
+import { crcRef } from '../hooks/crc-ref';
 import {
   collectSignalReads,
   createSignalRenderConsumer,
@@ -466,6 +467,8 @@ describe('realm scheduler', () => {
     const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
     let independentRenders = 0;
     const Child = (_props: {}) => {
+      const ref = crcRef<string>();
+      ref.current ??= 'acquired';
       if (shouldFail.get()) throw failure;
       return createElement(Rectangle, {
         style: { width: 20, height: 20, fill: 'red' },
@@ -476,7 +479,10 @@ describe('realm scheduler', () => {
     });
     const first = crc(firstCanvas, createElement(Layer, {
       style: { width: 20, height: 20 },
-      children: createElement(Child, {}),
+      children: createElement(Layer, {
+        style: { width: 20, height: 20 },
+        children: createElement(Child, {}),
+      }),
     }));
     const secondCanvas = createCanvas();
     const second = crc(secondCanvas, createElement(() => {
@@ -486,7 +492,9 @@ describe('realm scheduler', () => {
     const layerCanvas = drawImage.mock.calls
       .map(([source]) => source)
       .find(source => source instanceof OffscreenCanvas) as OffscreenCanvas;
-    const child = getCRCInstance(layerCanvas);
+    const nested = Array.from(GLOBAL_STATE.crcInstances.values())
+      .find(instance => instance.parent === layerCanvas)!;
+    expect(nested.refs.size).toBeGreaterThan(0);
 
     shouldFail.set(true);
     crc(secondCanvas, createElement(() => {
@@ -494,17 +502,50 @@ describe('realm scheduler', () => {
     }, {}));
     expect(() => driver.flush(20)).toThrow(failure);
 
-    expect(child.refs.size).toBe(0);
+    expect(nested.refs.size).toBe(0);
     expect(getSignalNode(shouldFail).observers.size).toBe(0);
     expect(independentRenders).toBe(2);
     expect(GLOBAL_STATE.crcInstances.has(layerCanvas)).toBe(true);
 
-    update(layerCanvas, createElement(Recovered, {}));
+    update(nested.canvas, createElement(Recovered, {}));
     driver.flush(30);
 
     expect(pixel(firstCanvas, 5, 5)).toEqual([0, 0, 255, 255]);
     first.dispose();
+    expect(GLOBAL_STATE.crcInstances.has(layerCanvas)).toBe(false);
+    expect(GLOBAL_STATE.crcInstances.has(nested.canvas)).toBe(false);
     second.dispose();
+  });
+
+  it('cancels pending nested Layer work and releases nested ownership on disposal', () => {
+    const canvas = createCanvas();
+    const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
+    const controller = crc(canvas, createElement(Layer, {
+      style: { width: 20, height: 20 },
+      children: createElement(Layer, {
+        style: { width: 20, height: 20 },
+        children: createElement(Rectangle, {
+          style: { width: 20, height: 20, fill: 'red' },
+        }),
+      }),
+    }));
+    driver.flush(10);
+    const outer = drawImage.mock.calls
+      .map(([source]) => source)
+      .find(source => source instanceof OffscreenCanvas) as OffscreenCanvas;
+    const nested = Array.from(GLOBAL_STATE.crcInstances.values())
+      .find(instance => instance.parent === outer)!;
+
+    update(nested.canvas, createElement(Rectangle, {
+      style: { width: 20, height: 20, fill: 'blue' },
+    }));
+    expect(driver.pendingHostFrames).toBe(1);
+    controller.dispose();
+
+    expect(driver.cancelCount).toBe(1);
+    expect(driver.pendingHostFrames).toBe(0);
+    expect(GLOBAL_STATE.crcInstances.has(outer)).toBe(false);
+    expect(GLOBAL_STATE.crcInstances.has(nested.canvas)).toBe(false);
   });
 
   it('cancels exactly one pending host callback when the final dirty root is removed', () => {
