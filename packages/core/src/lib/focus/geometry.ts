@@ -44,8 +44,10 @@ function resolveRootTransform(
   target: CRCEventTargetRegistration,
 ): DOMMatrix | undefined {
   let owner = target.owner;
-  let transform = target.paintEntry?.transform;
-  if (!transform) return undefined;
+  // Geometry-independent backend targets publish layer-local focus rectangles.
+  // Their initial transform is identity; nested resolver bridges compose the
+  // owning layer into root-logical space below.
+  let transform = target.paintEntry?.transform ?? new DOMMatrix();
   const root = owner.eventRoot.rootInstance;
   if (!root) return undefined;
 

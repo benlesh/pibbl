@@ -6,7 +6,11 @@ import type {
   CRCWebGLGeometry,
   CRCWebGLHitCapability,
 } from './types.js';
-import { isWebGLGeometry } from './geometry/geometry.js';
+import {
+  getWebGLGeometryData,
+  isWebGLGeometry,
+} from './geometry/geometry.js';
+import { multiplyMatrix4 } from './math/matrix4.js';
 
 const arrayBufferByteLength = Object.getOwnPropertyDescriptor(
   ArrayBuffer.prototype,
@@ -44,6 +48,8 @@ export interface CRCWebGLGeometryPickRecord {
   readonly target: CRCEventTargetRegistration;
   readonly geometry: CRCWebGLGeometry;
   readonly model: Readonly<Float32Array>;
+  readonly keyboardNavigationBounds:
+    CRCEventTargetRegistration['keyboardNavigationBounds'];
   readonly sourceOrder: number;
   readonly depthMode: 'less-equal';
 }
@@ -59,6 +65,8 @@ export interface CRCWebGLCustomPickRecord {
   readonly props: Readonly<Record<PropertyKey, unknown>>;
   readonly style: Readonly<Record<PropertyKey, unknown>>;
   readonly model: Readonly<Float32Array>;
+  readonly keyboardNavigationBounds:
+    CRCEventTargetRegistration['keyboardNavigationBounds'];
   readonly camera: CRCWebGLCameraSnapshot;
   readonly sourceOrder: number;
   readonly depthMode: 'less-equal';
@@ -84,6 +92,9 @@ interface GeometryPickInput {
   readonly target: CRCEventTargetRegistration;
   readonly geometry: CRCWebGLGeometry;
   readonly model: Readonly<Float32Array>;
+  readonly camera?: CRCWebGLCameraSnapshot;
+  readonly keyboardNavigationBounds?:
+    CRCEventTargetRegistration['keyboardNavigationBounds'];
   readonly sourceOrder: number;
   readonly depthMode: 'less-equal';
 }
@@ -95,6 +106,8 @@ interface CustomPickInput {
   readonly props: Readonly<Record<PropertyKey, unknown>>;
   readonly style: Readonly<Record<PropertyKey, unknown>>;
   readonly model: Readonly<Float32Array>;
+  readonly keyboardNavigationBounds?:
+    CRCEventTargetRegistration['keyboardNavigationBounds'];
   readonly camera: CRCWebGLCameraSnapshot;
   readonly sourceOrder: number;
   readonly depthMode: 'less-equal';
@@ -120,12 +133,21 @@ export function recordGeometryWebGLPick(
   input: GeometryPickInput,
 ): void {
   assertMutable(ledger);
+  const model = new Float32Array(input.model);
+  const keyboardNavigationBounds = input.keyboardNavigationBounds === undefined ?
+    input.camera === undefined ? undefined : projectGeometryBounds(
+      input.geometry,
+      model,
+      input.camera,
+      ledger.logicalViewport,
+    ) : snapshotNavigationBounds(input.keyboardNavigationBounds);
   ledger.entries.push(Object.freeze({
     kind: 'geometry',
     componentName: input.componentName,
     target: input.target,
     geometry: input.geometry,
-    model: new Float32Array(input.model),
+    model,
+    keyboardNavigationBounds,
     sourceOrder: input.sourceOrder,
     depthMode: input.depthMode,
   }));
@@ -155,6 +177,8 @@ export function recordCustomWebGLPick(
     props,
     style,
     model: new Float32Array(input.model),
+    keyboardNavigationBounds: input.keyboardNavigationBounds === undefined ?
+      undefined : snapshotNavigationBounds(input.keyboardNavigationBounds),
     camera: snapshotWebGLPickCamera(input.camera),
     sourceOrder: input.sourceOrder,
     depthMode: input.depthMode,
@@ -185,6 +209,100 @@ export function commitWebGLPickEntries(
   return Object.freeze({
     logicalViewport: Object.freeze({ width, height }),
     entries: Object.freeze(entries.slice()),
+  });
+}
+
+/** Publishes one committed frame's layer-local focus rectangles. */
+export function applyWebGLFocusMetadata(
+  ledger: CRCWebGLPickLedger,
+): void {
+  for (const entry of ledger.entries) {
+    entry.target.keyboardNavigationBounds = entry.keyboardNavigationBounds;
+  }
+}
+
+function snapshotNavigationBounds(
+  bounds: NonNullable<CRCEventTargetRegistration['keyboardNavigationBounds']>,
+): NonNullable<CRCEventTargetRegistration['keyboardNavigationBounds']> {
+  return Object.freeze({
+    x: bounds.x,
+    y: bounds.y,
+    width: bounds.width,
+    height: bounds.height,
+  });
+}
+
+function projectGeometryBounds(
+  geometry: CRCWebGLGeometry,
+  model: Readonly<Float32Array>,
+  camera: CRCWebGLCameraSnapshot,
+  viewport: Readonly<{ width: number; height: number }>,
+): CRCEventTargetRegistration['keyboardNavigationBounds'] {
+  const { positions } = getWebGLGeometryData(geometry);
+  let minimumX = Number.POSITIVE_INFINITY;
+  let minimumY = Number.POSITIVE_INFINITY;
+  let minimumZ = Number.POSITIVE_INFINITY;
+  let maximumX = Number.NEGATIVE_INFINITY;
+  let maximumY = Number.NEGATIVE_INFINITY;
+  let maximumZ = Number.NEGATIVE_INFINITY;
+  for (let offset = 0; offset < positions.length; offset += 3) {
+    const x = positions[offset]!;
+    const y = positions[offset + 1]!;
+    const z = positions[offset + 2]!;
+    minimumX = Math.min(minimumX, x);
+    minimumY = Math.min(minimumY, y);
+    minimumZ = Math.min(minimumZ, z);
+    maximumX = Math.max(maximumX, x);
+    maximumY = Math.max(maximumY, y);
+    maximumZ = Math.max(maximumZ, z);
+  }
+
+  const projectionModel = new Float32Array(16);
+  multiplyMatrix4(
+    projectionModel,
+    camera.projectionViewMatrix,
+    model,
+  );
+  let left = Number.POSITIVE_INFINITY;
+  let top = Number.POSITIVE_INFINITY;
+  let right = Number.NEGATIVE_INFINITY;
+  let bottom = Number.NEGATIVE_INFINITY;
+  for (const x of [minimumX, maximumX]) {
+    for (const y of [minimumY, maximumY]) {
+      for (const z of [minimumZ, maximumZ]) {
+        const w = projectionModel[3]! * x +
+          projectionModel[7]! * y +
+          projectionModel[11]! * z +
+          projectionModel[15]!;
+        const ndcX = (
+          projectionModel[0]! * x +
+          projectionModel[4]! * y +
+          projectionModel[8]! * z +
+          projectionModel[12]!
+        ) / w;
+        const ndcY = (
+          projectionModel[1]! * x +
+          projectionModel[5]! * y +
+          projectionModel[9]! * z +
+          projectionModel[13]!
+        ) / w;
+        const layerX = (ndcX + 1) * viewport.width * 0.5;
+        const layerY = (1 - ndcY) * viewport.height * 0.5;
+        if (!Number.isFinite(layerX) || !Number.isFinite(layerY)) {
+          return undefined;
+        }
+        left = Math.min(left, layerX);
+        top = Math.min(top, layerY);
+        right = Math.max(right, layerX);
+        bottom = Math.max(bottom, layerY);
+      }
+    }
+  }
+  return Object.freeze({
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top,
   });
 }
 

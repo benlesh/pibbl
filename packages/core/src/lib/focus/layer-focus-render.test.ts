@@ -7,8 +7,9 @@ import { crcState } from "../hooks/crc-state";
 import { Layer } from "../components/layer";
 import { Rectangle } from "../components/rect";
 import { Group } from "../components/g";
+import type { CRCEventTargetRegistration } from "../events/registrations";
 import type { CRCElement, CRCController } from "../types";
-import { focusManaged } from "./policy-test-support";
+import { directionalPolicy, focusManaged } from "./policy-test-support";
 import { createElement } from '../element/create-element';
 
 const activeControllers = new Set<CRCController>();
@@ -24,6 +25,48 @@ afterEach(() => {
 });
 
 describe("focus snapshots in cached layers", () => {
+  it("replays geometry-independent backend targets with their retained directional boundary", async () => {
+    const BackendTarget = (_props: {}) => {
+      crcEventTarget(
+        { onClick: () => undefined },
+        {
+          path: rectanglePath(0, 0, 20, 10),
+          fill: true,
+          keyboardNavigationBounds: { x: 4, y: 5, width: 20, height: 10 },
+        },
+      );
+    };
+    const mounted = mount(focusManaged(directionalPolicy(
+      createElement(BackendTarget, {}),
+    )));
+    await nextFrame();
+    const manager = getCRCInstance(mounted.canvas).eventRoot.focusPolicy as
+      NonNullable<ReturnType<typeof getCRCInstance>["eventRoot"]["focusPolicy"]> & {
+        readonly candidates: ReadonlyArray<{
+          readonly target: CRCEventTargetRegistration;
+          readonly directionalBoundary: unknown;
+          readonly rootBounds: unknown;
+        }>;
+        beginCollection(): void;
+        finishCollection(success: boolean): void;
+      };
+    const original = manager.candidates[0]!;
+    const target = original.target;
+
+    target.owner.paintEntries.delete(target.paintEntry!);
+    target.paintEntry = undefined;
+    manager.beginCollection();
+    manager.replayRetainedSubtree(target.owner);
+    manager.finishCollection(true);
+
+    expect(manager.candidates).toHaveLength(1);
+    expect(manager.candidates[0]).toMatchObject({
+      target,
+      directionalBoundary: original.directionalBoundary,
+      rootBounds: { x: 4, y: 5, width: 20, height: 10 },
+    });
+  });
+
   it("repaints an affected layer for Tab, pointer, and blur transitions only", async () => {
     let layerRenders = 0;
     let unrelatedLayerRenders = 0;

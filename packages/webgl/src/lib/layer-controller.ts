@@ -16,6 +16,7 @@ import {
 } from './backend.js';
 import { resolveCamera } from './math/camera.js';
 import {
+  applyWebGLFocusMetadata,
   commitWebGLPickEntries,
   type CRCWebGLPickLedger,
   type CRCWebGLPickRecord,
@@ -233,6 +234,7 @@ export class WebGLLayerController {
             'composite operation lost ownership of its committed generation',
           );
         }
+        this.replayCommittedFocusMetadata();
         return;
       }
       if (this.pending !== candidate) {
@@ -243,10 +245,24 @@ export class WebGLLayerController {
       const previous = this.committed;
       this.pending = undefined;
       this.committed = candidate;
+      applyWebGLFocusMetadata(candidate.pickLedger);
       previous?.bitmap.close();
     } finally {
       this.finishOperation('composite', epoch);
     }
+  }
+
+  /** Re-enrolls the committed targets without rebuilding WebGL frame data. */
+  replayCommittedFocusMetadata(): void {
+    const committed = this.committed;
+    if (!committed) return;
+    applyWebGLFocusMetadata(committed.pickLedger);
+    const liveEntry = committed.pickLedger.entries.find(
+      entry => entry.target.live,
+    );
+    liveEntry?.target.owner.eventRoot.focusPolicy?.replayRetainedSubtree(
+      liveEntry.target.owner,
+    );
   }
 
   resolveLocal(

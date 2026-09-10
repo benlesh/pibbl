@@ -1,7 +1,15 @@
-import { crc, createElement, type CRCController } from '@crc/core';
-import { useInternalHookSlot } from '@crc/core/internal';
+import {
+  crc,
+  createElement,
+  type CRCController,
+} from '@crc/core';
+import {
+  useInternalHookSlot,
+  type CRCEventTargetRegistration,
+} from '@crc/core/internal';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { defineWebGLPrimitive } from './define-webgl-primitive.js';
+import { createWebGLGeometry } from './geometry/geometry.js';
 import {
   WebGLLayerController,
   resolveWebGLLayerSurface,
@@ -252,6 +260,52 @@ describe('WebGLLayerController surface and capabilities', () => {
 });
 
 describe('WebGLLayerController bitmap transaction', () => {
+  it('replays committed backend focus metadata with a cached composite', () => {
+    const stable = bitmap('stable');
+    const platform = installRecordingPlatform({ transfers: [stable] });
+    const geometry = createWebGLGeometry({
+      positions: [-1, -1, 0, 1, -1, 0, 0, 1, 0],
+    });
+    const Target = defineWebGLPrimitive<{}, {}>(function renderFocusTarget() {}, {
+      hit: { kind: 'geometry', geometry: () => geometry },
+    });
+    const root = createElement(Target, { onClick: () => undefined });
+    const controller = new WebGLLayerController(
+      mountParent(),
+      root,
+      undefined,
+      resolveWebGLLayerSurface(10, 8, { x: 1, y: 1 }),
+    );
+    const context = { drawImage() {} } as unknown as CanvasRenderingContext2D;
+
+    controller.renderUpdatedChild(root, undefined, controller.surface, 1);
+    controller.composite(context, { x: 0, y: 0, width: 10, height: 8 });
+    const state = controller as unknown as {
+      readonly committed: {
+        readonly pickLedger: {
+          readonly entries: ReadonlyArray<{
+            readonly target: CRCEventTargetRegistration;
+          }>;
+        };
+      };
+    };
+    const target = state.committed.pickLedger.entries[0]!.target;
+    const committedBounds = target.keyboardNavigationBounds;
+    const replayRetainedSubtree = vi.fn();
+    target.owner.eventRoot.focusPolicy = {
+      replayRetainedSubtree,
+    } as unknown as NonNullable<typeof target.owner.eventRoot.focusPolicy>;
+    target.keyboardNavigationBounds = undefined;
+
+    controller.composite(context, { x: 0, y: 0, width: 10, height: 8 });
+
+    expect(target.keyboardNavigationBounds).toEqual(committedBounds);
+    expect(replayRetainedSubtree).toHaveBeenCalledWith(target.owner);
+    expect(platform.transferCount).toBe(1);
+    target.owner.eventRoot.focusPolicy = undefined;
+    controller.dispose();
+  });
+
   it('renders, transfers, draws, commits, then closes the previous bitmap', () => {
     const calls: string[] = [];
     let controller: WebGLLayerController;

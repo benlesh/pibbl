@@ -1052,6 +1052,14 @@ function collectRetainedTargets(
       collectRetainedTargets(entry.instance, targets, visited);
     }
   }
+  // Official backend targets deliberately do not publish empty Canvas paths.
+  // Their root-wide registration set retains current source order, so include
+  // the geometry-independent targets owned by this retained instance.
+  for (const target of instance.eventRoot.targets) {
+    if (target.owner === instance && target.live && !target.paintEntry) {
+      targets.push(target);
+    }
+  }
 }
 
 function isInstanceWithin(
