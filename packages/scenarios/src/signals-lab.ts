@@ -31,7 +31,6 @@ function createMetrics(): SignalsLabMetrics {
     computedEvaluations: 0,
     rootRenders: { a: 0, b: 0 },
     layerChildRenders: { a: 0, b: 0 },
-    layerComposites: { a: 0, b: 0 },
   };
 }
 
@@ -47,12 +46,17 @@ function snapshot(
   return {
     direct: model.direct.get(),
     derivedSource: model.derivedSource.get(),
+    left: model.left.get(),
+    right: model.right.get(),
+    shared: model.shared.get(),
+    layerA: model.layerA.get(),
+    layerB: model.layerB.get(),
+    retained: model.retained.get(),
     selectedSource: model.selectLeft.get() ? 'left' : 'right',
     computed: model.derived.get(),
     computedEvaluations: metrics.computedEvaluations,
     rootRenders: { ...metrics.rootRenders },
     layerChildRenders: { ...metrics.layerChildRenders },
-    layerComposites: { ...metrics.layerComposites },
     consumerCount: 4 + (model.consumerVisible ? 1 : 0),
     lastAction,
   };
@@ -136,6 +140,8 @@ async function mountSignalsLab(
           break;
         case 'dependency-switch':
           model.selectLeft.set(false);
+          await settle();
+          model.left.update(value => value + 1);
           break;
         case 'shared-roots':
           model.shared.update(value => value + 1);
@@ -180,12 +186,15 @@ export const signalsLabScenario: ScenarioDefinition<SignalsLabState> = {
   actionIds: SIGNALS_LAB_ACTION_IDS,
   mount: mountSignalsLab,
   formatState: state => [
-    { label: 'Direct', value: String(state.direct) },
+    {
+      label: 'Sources',
+      value: `direct ${state.direct} · derived ${state.derivedSource} · left ${state.left} · right ${state.right} · shared ${state.shared}`,
+    },
     { label: 'Computed', value: `${state.computed} · ${state.computedEvaluations} evaluations` },
+    { label: 'Layer sources', value: `A ${state.layerA} · B ${state.layerB} · retained ${state.retained}` },
     { label: 'Selected source', value: state.selectedSource },
     { label: 'Root renders', value: `A ${state.rootRenders.a} · B ${state.rootRenders.b}` },
     { label: 'Layer children', value: `A ${state.layerChildRenders.a} · B ${state.layerChildRenders.b}` },
-    { label: 'Layer composites', value: `A ${state.layerComposites.a} · B ${state.layerComposites.b}` },
     { label: 'Consumers', value: String(state.consumerCount) },
     { label: 'Last action', value: state.lastAction },
   ],

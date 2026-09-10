@@ -156,7 +156,7 @@ const drafts = [
     order: 17,
     summary:
       "Read writable and computed values explicitly, then update a shared signal without turning styles into bindings.",
-    api: ["signal", "computed", "crcSignal", "Layer"],
+    api: ["signal", "computed", "crcSignal"],
     objectives: [
       "Use .get() during a component render to declare the values that should refresh it.",
       "Update writable signals from an event and derive a normal resolved value with computed().",

@@ -23,12 +23,17 @@ export type SignalsLabAction =
 export interface SignalsLabState {
   direct: number;
   derivedSource: number;
+  left: number;
+  right: number;
+  shared: number;
+  layerA: number;
+  layerB: number;
+  retained: number;
   selectedSource: 'left' | 'right';
   computed: number;
   computedEvaluations: number;
   rootRenders: Readonly<{ a: number; b: number }>;
   layerChildRenders: Readonly<{ a: number; b: number }>;
-  layerComposites: Readonly<{ a: number; b: number }>;
   consumerCount: number;
   lastAction: 'mount' | SignalsLabAction;
 }
@@ -37,7 +42,6 @@ export interface SignalsLabMetrics {
   computedEvaluations: number;
   rootRenders: { a: number; b: number };
   layerChildRenders: { a: number; b: number };
-  layerComposites: { a: number; b: number };
 }
 
 export interface SignalsLabModel {
@@ -61,14 +65,12 @@ interface RootProps {
 
 function LayerA({ model, metrics }: RootProps) {
   metrics.layerChildRenders.a += 1;
-  metrics.layerComposites.a += 1;
   const value = model.layerA.get();
   return <Rectangle style={{ x: 0, y: 0, width: 80, height: 42, fill: value % 2 ? '#2563eb' : '#7c3aed' }} />;
 }
 
 function LayerB({ model, metrics }: RootProps) {
   metrics.layerChildRenders.b += 1;
-  metrics.layerComposites.b += 1;
   const value = model.layerB.get();
   return <Rectangle style={{ x: 0, y: 0, width: 80, height: 42, fill: value % 2 ? '#f59e0b' : '#10b981' }} />;
 }

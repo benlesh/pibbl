@@ -1098,7 +1098,7 @@ describe("learning example catalog", () => {
 
     const signals = startExamples.find((entry) => entry.slug === "signals");
     expect(signals).toMatchObject({
-      api: ["signal", "computed", "crcSignal", "Layer"],
+      api: ["signal", "computed", "crcSignal"],
       source: {
         path: "packages/scenarios/src/learning/start/signals.example.tsx",
       },
