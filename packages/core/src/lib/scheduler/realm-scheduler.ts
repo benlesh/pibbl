@@ -278,16 +278,34 @@ function runFrame(hostTime: number): void {
     transactions.push(transactionRecord);
     rootJob.root.eventRoot.renderTransaction = transaction;
     let failedInstance: CRCInstance | undefined;
+    let rendererFailed = false;
     try {
       for (const job of rootJob.instances) {
         if (job.instance.mainTeardowns.closed) continue;
+        const participantWork = rendererWork.get(job.instance);
+        const resourceFailures = runRendererParticipantStage(
+          participantWork,
+          'resource',
+          snapshot,
+        );
+        if (resourceFailures.length > 0) {
+          restoreRendererParticipantFailure(rootJob, participantWork);
+          errors.push(...resourceFailures);
+          rendererFailed = true;
+          break;
+        }
+        const drawFailures = runRendererParticipantStage(
+          participantWork,
+          'draw',
+          snapshot,
+        );
+        if (drawFailures.length > 0) {
+          restoreRendererParticipantFailure(rootJob, participantWork);
+          errors.push(...drawFailures);
+          rendererFailed = true;
+          break;
+        }
         try {
-          runRendererParticipantWork(
-            rendererWork.get(job.instance),
-            ['resource', 'draw'],
-            snapshot,
-            errors,
-          );
           executeRender(
             job.instance.canvas,
             snapshot.logicalTime,
@@ -295,19 +313,24 @@ function runFrame(hostTime: number): void {
             false,
             snapshot,
           );
-          runRendererParticipantWork(
-            rendererWork.get(job.instance),
-            ['compose'],
+          const composeFailures = runRendererParticipantStage(
+            participantWork,
+            'compose',
             snapshot,
-            errors,
           );
+          if (composeFailures.length > 0) {
+            restoreRendererParticipantFailure(rootJob, participantWork);
+            errors.push(...composeFailures);
+            rendererFailed = true;
+            break;
+          }
         } catch (error) {
           failedInstance = job.instance;
           throw error;
         }
         job.instance.completedRenderRevision = job.revision;
       }
-      transactionRecord.success = true;
+      transactionRecord.success = !rendererFailed;
     } catch (error) {
       if (failedInstance && failedInstance !== rootJob.root) {
         restoreRootJob(rootJob);
@@ -522,16 +545,16 @@ function captureRendererParticipantWork(): Map<
   return byInstance;
 }
 
-function runRendererParticipantWork(
+function runRendererParticipantStage(
   work: RendererParticipantWorkRegistration[] | undefined,
-  kinds: readonly RendererParticipantWorkRequest['kind'][],
+  kind: RendererParticipantWorkRequest['kind'],
   snapshot: CRCFrameSnapshot,
-  errors: unknown[],
-): void {
-  if (!work) return;
+): unknown[] {
+  const errors: unknown[] = [];
+  if (!work) return errors;
   for (const registration of work) {
     if (
-      !kinds.includes(registration.request.kind) ||
+      registration.request.kind !== kind ||
       !registration.owner.isActive()
     ) {
       continue;
@@ -541,6 +564,32 @@ function runRendererParticipantWork(
     } catch (error) {
       errors.push(error);
     }
+  }
+  return errors;
+}
+
+function restoreRendererParticipantFailure(
+  rootJob: RootRenderJob,
+  work: RendererParticipantWorkRegistration[] | undefined,
+): void {
+  restoreRootJob(rootJob);
+  if (!work) return;
+  const ownersToRequest = new Set<RendererParticipantOwner>();
+  for (const registration of work) {
+    const { owner, request } = registration;
+    if (!owner.isActive()) continue;
+    let workByKey = rendererWorkByOwner.get(owner);
+    if (!workByKey) {
+      workByKey = new Map();
+      rendererWorkByOwner.set(owner, workByKey);
+    }
+    if (!workByKey.has(request.key)) {
+      workByKey.set(request.key, registration);
+    }
+    ownersToRequest.add(owner);
+  }
+  for (const owner of ownersToRequest) {
+    requestInstanceRender(owner.instance);
   }
 }
 

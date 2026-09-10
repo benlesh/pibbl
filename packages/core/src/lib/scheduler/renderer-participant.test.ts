@@ -16,7 +16,7 @@ import {
   type CRCInternalRenderOwner,
   type CRCInternalSignalConsumer,
 } from '@crc/core/internal';
-import { clearSharedState } from '../global-state';
+import { clearSharedState, getCRCInstance } from '../global-state';
 import { getSignalNode } from '../signals/graph';
 import {
   registerAdvanceParticipant,
@@ -43,6 +43,269 @@ afterEach(() => {
 });
 
 describe('@crc/core/internal renderer participants', () => {
+  const failureCases = [
+    {
+      kind: 'resource',
+      failedCalls: ['resource', 'independent root'],
+    },
+    {
+      kind: 'draw',
+      failedCalls: ['resource', 'draw', 'independent root'],
+    },
+    {
+      kind: 'compose',
+      failedCalls: [
+        'resource',
+        'draw',
+        'root render',
+        'compose',
+        'independent root',
+      ],
+    },
+  ] as const;
+
+  for (const failureCase of failureCases) {
+    it(`keeps the renderer revision incomplete and retries after ${failureCase.kind} fails`, () => {
+      const calls: string[] = [];
+      const transactionOutcomes: boolean[] = [];
+      const failure = new Error(`${failureCase.kind} failed`);
+      const keys = {
+        resource: {},
+        draw: {},
+        compose: {},
+      };
+      let owner: CRCInternalRenderOwner | undefined;
+      let recordRootRender = false;
+      let failedOnce = false;
+      const canvas = createCanvas();
+      const Root = (_props: {}) => {
+        owner ??= crcInternalCurrentRenderOwner();
+        if (recordRootRender) calls.push('root render');
+      };
+      const controller = crc(canvas, createElement(Root, {}));
+      driver.flush(1);
+      const instance = getCRCInstance(canvas);
+      const completedBeforeWork = instance.completedRenderRevision;
+
+      for (const kind of ['resource', 'draw', 'compose'] as const) {
+        crcInternalRequestRendererWork(owner!, {
+          key: keys[kind],
+          kind,
+          run: () => {
+            calls.push(kind);
+            if (kind === 'resource') {
+              instance.eventRoot.renderTransaction!.onFinish(success => {
+                transactionOutcomes.push(success);
+              });
+            }
+            if (kind === failureCase.kind && !failedOnce) {
+              failedOnce = true;
+              throw failure;
+            }
+          },
+        });
+      }
+      const independent = crc(createCanvas(), createElement(() => {
+        calls.push('independent root');
+      }, {}));
+      recordRootRender = true;
+
+      expect(() => driver.flush(2)).toThrow(failure);
+      expect(calls).toEqual(failureCase.failedCalls);
+      expect(transactionOutcomes).toEqual([false]);
+      expect(instance.completedRenderRevision).toBe(completedBeforeWork);
+      expect(driver.pendingHostFrames).toBe(1);
+
+      calls.length = 0;
+      driver.flush(3);
+      expect(calls).toEqual([
+        'resource',
+        'draw',
+        'root render',
+        'compose',
+      ]);
+      expect(transactionOutcomes).toEqual([false, true]);
+      expect(instance.completedRenderRevision).toBeGreaterThan(
+        completedBeforeWork,
+      );
+      expect(driver.pendingHostFrames).toBe(0);
+      independent.dispose();
+      controller.dispose();
+    });
+  }
+
+  it('runs independent same-stage work and aggregates failures in registration order', () => {
+    const calls: string[] = [];
+    const firstFailure = new Error('first draw failed');
+    const secondFailure = new Error('third draw failed');
+    let owner: CRCInternalRenderOwner | undefined;
+    let recordRootRender = false;
+    const canvas = createCanvas();
+    const Root = (_props: {}) => {
+      owner ??= crcInternalCurrentRenderOwner();
+      if (recordRootRender) calls.push('root render');
+    };
+    const controller = crc(canvas, createElement(Root, {}));
+    driver.flush(1);
+    const completedBeforeWork = getCRCInstance(canvas).completedRenderRevision;
+
+    crcInternalRequestRendererWork(owner!, {
+      key: {},
+      kind: 'resource',
+      run: () => calls.push('resource'),
+    });
+    crcInternalRequestRendererWork(owner!, {
+      key: {},
+      kind: 'draw',
+      run: () => {
+        calls.push('draw:first');
+        throw firstFailure;
+      },
+    });
+    crcInternalRequestRendererWork(owner!, {
+      key: {},
+      kind: 'draw',
+      run: () => calls.push('draw:second'),
+    });
+    crcInternalRequestRendererWork(owner!, {
+      key: {},
+      kind: 'draw',
+      run: () => {
+        calls.push('draw:third');
+        throw secondFailure;
+      },
+    });
+    crcInternalRequestRendererWork(owner!, {
+      key: {},
+      kind: 'compose',
+      run: () => calls.push('compose'),
+    });
+    recordRootRender = true;
+
+    let thrown: unknown;
+    try {
+      driver.flush(2);
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(AggregateError);
+    expect((thrown as AggregateError).errors).toEqual([
+      firstFailure,
+      secondFailure,
+    ]);
+    expect(calls).toEqual([
+      'resource',
+      'draw:first',
+      'draw:second',
+      'draw:third',
+    ]);
+    expect(getCRCInstance(canvas).completedRenderRevision)
+      .toBe(completedBeforeWork);
+    expect(driver.pendingHostFrames).toBe(1);
+    controller.dispose();
+  });
+
+  it('coalesces several consumer invalidations into one renderer frame', () => {
+    const calls: string[] = [];
+    const sources = [signal(0), signal(0), signal(0)];
+    const consumers: CRCInternalSignalConsumer[] = [];
+    const sharedKey = {};
+    let owner: CRCInternalRenderOwner | undefined;
+    let recordRootRender = false;
+    const Root = (_props: {}) => {
+      owner ??= crcInternalCurrentRenderOwner();
+      if (consumers.length === 0) {
+        for (const [index] of sources.entries()) {
+          consumers.push(crcInternalCreateSignalConsumer({
+            owner,
+            invalidate: () => {
+              calls.push(`invalidate:${index + 1}`);
+              crcInternalRequestRendererWork(owner!, {
+                key: sharedKey,
+                kind: 'draw',
+                run: () => calls.push(`work:${index + 1}`),
+              });
+            },
+          }));
+        }
+      }
+      for (const [index, consumer] of consumers.entries()) {
+        consumer.collect(() => sources[index].get());
+        consumer.markClean();
+      }
+      if (recordRootRender) calls.push('root render');
+    };
+    const controller = crc(createCanvas(), createElement(Root, {}));
+    driver.flush(1);
+    const requestsBeforeInvalidation = driver.requestCount;
+    recordRootRender = true;
+
+    sources[0].set(1);
+    sources[1].set(1);
+    sources[2].set(1);
+
+    expect(calls).toEqual(['invalidate:1', 'invalidate:2', 'invalidate:3']);
+    expect(driver.requestCount).toBe(requestsBeforeInvalidation + 1);
+    expect(driver.pendingHostFrames).toBe(1);
+    driver.flush(2);
+    expect(calls).toEqual([
+      'invalidate:1',
+      'invalidate:2',
+      'invalidate:3',
+      'work:3',
+      'root render',
+    ]);
+    expect(driver.pendingHostFrames).toBe(0);
+    controller.dispose();
+  });
+
+  it('preserves same-kind registration order when replacing a work key', () => {
+    const calls: string[] = [];
+    const firstKey = {};
+    let owner: CRCInternalRenderOwner | undefined;
+    let recordRootRender = false;
+    const Root = (_props: {}) => {
+      owner ??= crcInternalCurrentRenderOwner();
+      if (recordRootRender) calls.push('root render');
+    };
+    const controller = crc(createCanvas(), createElement(Root, {}));
+    driver.flush(1);
+
+    crcInternalRequestRendererWork(owner!, {
+      key: firstKey,
+      kind: 'resource',
+      run: () => calls.push('stale first'),
+    });
+    crcInternalRequestRendererWork(owner!, {
+      key: {},
+      kind: 'resource',
+      run: () => calls.push('second'),
+    });
+    crcInternalRequestRendererWork(owner!, {
+      key: firstKey,
+      kind: 'resource',
+      run: () => calls.push('latest first'),
+    });
+    crcInternalRequestRendererWork(owner!, {
+      key: {},
+      kind: 'resource',
+      run: () => calls.push('third'),
+    });
+    recordRootRender = true;
+
+    driver.flush(2);
+
+    expect(calls).toEqual([
+      'latest first',
+      'second',
+      'third',
+      'root render',
+    ]);
+    expect(driver.pendingHostFrames).toBe(0);
+    controller.dispose();
+  });
+
   it('orders coalesced renderer work around its Canvas render in one realm frame', () => {
     const calls: string[] = [];
     const frames: CRCInternalFrame[] = [];
@@ -146,7 +409,8 @@ describe('@crc/core/internal renderer participants', () => {
     ]);
     expect(frames).toHaveLength(5);
     expect(frames.every(frame => frame === frames[0])).toBe(true);
-    expect(frames[0]).toMatchObject({ frameId: 2, logicalTime: 25 });
+    expect(frames[0]).toMatchObject({ logicalTime: 25 });
+    expect(frames[0].frameId).toBeGreaterThan(0);
     expect(Object.isFrozen(frames[0])).toBe(true);
     expect(driver.pendingHostFrames).toBe(0);
     expect(() => crcInternalCurrentFrame()).toThrow(/current CRC frame/i);

@@ -26,6 +26,14 @@ export interface CRCInternalFrame {
   readonly logicalTime: number;
 }
 
+/**
+ * Ordered renderer stages around one owning Canvas instance traversal.
+ * Every active callback in a stage runs in registration order. If one or more
+ * callbacks fail, their errors are reported in that order, later dependent
+ * stages are skipped, the root transaction fails, the instance revision stays
+ * incomplete, and the captured renderer batch is retried on the next realm
+ * frame. Other roots still run.
+ */
 export type CRCInternalRendererWorkKind = 'resource' | 'draw' | 'compose';
 
 export interface CRCInternalSignalConsumer {
