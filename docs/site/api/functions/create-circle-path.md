@@ -6,6 +6,7 @@ kind: api
 slug: create-circle-path
 apiCategory: function
 symbols: [createCirclePath]
+relatedTypes: [CirclePathOptions]
 ---
 
 # createCirclePath
@@ -14,7 +15,7 @@ symbols: [createCirclePath]
 import { Circle, Clip, createCirclePath } from "@crc/core";
 ```
 
-`createCirclePath(options: CirclePathOptions): Path2D` creates a fresh circle
+[`CirclePathOptions`](#/api/types/elements-components#circlepathoptions) is accepted by `createCirclePath(options): Path2D`, which creates a fresh circle
 from a nonnegative numeric `radius` and optional `cx`/`cy`. It is pure and owns
 no render state, events, or cache.
 

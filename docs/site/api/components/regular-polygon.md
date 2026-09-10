@@ -6,6 +6,7 @@ kind: api
 slug: regular-polygon
 apiCategory: component
 symbols: [RegularPolygon]
+relatedTypes: [RegularPolygonProps, RegularPolygonStyle]
 ---
 
 # RegularPolygon
@@ -14,7 +15,7 @@ symbols: [RegularPolygon]
 import { RegularPolygon } from "@crc/core";
 ```
 
-`RegularPolygon` uses `RegularPolygonProps` and `RegularPolygonStyle`. It
+`RegularPolygon` uses [`RegularPolygonProps`](#/api/types/elements-components#regularpolygonprops) and [`RegularPolygonStyle`](#/api/types/styles#regularpolygonstyle). It
 requires integer `sides >= 3` and exactly one of `circumradius`, `inradius`, or
 `sideLength`. It rejects children; invalid sizes or nonfinite geometry produce
 a contextual layout diagnostic.

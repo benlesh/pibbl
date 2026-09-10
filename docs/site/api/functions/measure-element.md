@@ -6,6 +6,7 @@ kind: api
 slug: measure-element
 apiCategory: function
 symbols: [measureElement]
+relatedTypes: [CanvasMeasurementService, Constraints, MeasureResult]
 ---
 
 # measureElement
@@ -41,5 +42,5 @@ const measurementService: CanvasMeasurementService = {
 const result = measureElement(element, constraints, measurementService);
 ```
 
-Use declared boxes for ordinary layout rather than assuming visual primitives
+[`Constraints`](#/api/types/layout#constraints) and a [`CanvasMeasurementService`](#/api/types/layout#canvasmeasurementservice) describe the call; its result is a [`MeasureResult`](#/api/types/layout#measureresult). Use declared boxes for ordinary layout rather than assuming visual primitives
 have intrinsic dimensions.

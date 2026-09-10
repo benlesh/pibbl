@@ -6,6 +6,7 @@ kind: api
 slug: create-wedge-path
 apiCategory: function
 symbols: [createWedgePath]
+relatedTypes: [WedgePathOptions]
 ---
 
 # createWedgePath
@@ -14,7 +15,7 @@ symbols: [createWedgePath]
 import { createWedgePath, Path } from "@crc/core";
 ```
 
-`createWedgePath(options: WedgePathOptions): Path2D` creates a fresh numeric
+[`WedgePathOptions`](#/api/types/elements-components#wedgepathoptions) is accepted by `createWedgePath(options): Path2D`, which creates a fresh numeric
 circular sweep that closes to the center for partial turns. Full turns omit
 radial segments. It is pure and does not accept percentages or own render state.
 

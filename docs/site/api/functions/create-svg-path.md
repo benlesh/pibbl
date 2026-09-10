@@ -6,6 +6,7 @@ kind: api
 slug: create-svg-path
 apiCategory: function
 symbols: [createSvgPath]
+relatedTypes: [SvgPathOptions]
 ---
 
 # createSvgPath
@@ -14,7 +15,7 @@ symbols: [createSvgPath]
 import { createSvgPath, Path } from "@crc/core";
 ```
 
-`createSvgPath(options: SvgPathOptions): Path2D` returns a fresh `Path2D` from
+[`SvgPathOptions`](#/api/types/elements-components#svgpathoptions) is accepted by `createSvgPath(options): Path2D`, which returns a fresh `Path2D` from
 SVG path data. Browser parsing is authoritative; the function is pure and does
 not install rendering, interaction, or caching behavior.
 

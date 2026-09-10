@@ -6,6 +6,7 @@ kind: api
 slug: grid
 apiCategory: component
 symbols: [Grid]
+relatedTypes: [CRCNode, GridItemStyle, GridProps, GridStyle]
 ---
 
 # Grid
@@ -14,8 +15,8 @@ symbols: [Grid]
 import { Grid, Rectangle } from "@crc/core";
 ```
 
-`Grid` uses `GridProps` and `GridStyle`; children may provide `GridItemStyle`.
-It accepts recursive `CRCNode` children and places explicit tracks with finite
+`Grid` uses [`GridProps`](#/api/types/layout#gridprops) and [`GridStyle`](#/api/types/layout#gridstyle); children may provide [`GridItemStyle`](#/api/types/layout#griditemstyle).
+It accepts recursive [`CRCNode`](#/api/types/elements-components#crcnode) children and places explicit tracks with finite
 allocation. CSS auto-placement, advanced intrinsic sizing, and scrolling are
 not supported.
 

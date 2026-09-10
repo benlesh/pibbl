@@ -6,6 +6,7 @@ kind: api
 slug: line
 apiCategory: component
 symbols: [Line]
+relatedTypes: [Canvas, LineProps, LineStyle]
 ---
 
 # Line
@@ -14,10 +15,10 @@ symbols: [Line]
 import { Line } from "@crc/core";
 ```
 
-`Line` uses `LineProps` and `LineStyle`. Its numeric coordinate pairs define
+`Line` uses [`LineProps`](#/api/types/elements-components#lineprops) and [`LineStyle`](#/api/types/styles#linestyle). Its numeric coordinate pairs define
 an ordered polyline; it rejects children. Stroke targeting uses
 `lineInteractionWidth` when supplied. Coordinates must be finite logical
-Canvas units.
+[`Canvas`](#/api/types/canvas-runtime#canvas) units.
 
 ```tsx
 <Line

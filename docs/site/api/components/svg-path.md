@@ -6,6 +6,7 @@ kind: api
 slug: svg-path
 apiCategory: component
 symbols: [SvgPath]
+relatedTypes: [SvgPathProps, SvgPathStyle]
 ---
 
 # SvgPath
@@ -14,7 +15,7 @@ symbols: [SvgPath]
 import { SvgPath } from "@crc/core";
 ```
 
-`SvgPath` uses `SvgPathProps` and `SvgPathStyle`. Its SVG path-data input is
+`SvgPath` uses [`SvgPathProps`](#/api/types/elements-components#svgpathprops) and [`SvgPathStyle`](#/api/types/styles#svgpathstyle). Its SVG path-data input is
 parsed by the browser into the geometry used for paint and targeting. It
 rejects children; browser `Path2D` parsing behavior remains authoritative.
 

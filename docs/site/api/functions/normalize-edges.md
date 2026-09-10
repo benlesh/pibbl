@@ -6,6 +6,7 @@ kind: api
 slug: normalize-edges
 apiCategory: function
 symbols: [normalizeEdges]
+relatedTypes: [Edges, EdgeValues]
 ---
 
 # normalizeEdges
@@ -14,8 +15,8 @@ symbols: [normalizeEdges]
 import { normalizeEdges } from "@crc/core";
 ```
 
-`normalizeEdges(value, property, context?)` converts an `EdgeValues` shorthand
-into `Edges`. A number applies to all four edges; omitted values become zero.
+`normalizeEdges(value, property, context?)` converts an [`EdgeValues`](#/api/types/layout#edgevalues) shorthand
+into [`Edges`](#/api/types/layout#edges). A number applies to all four edges; omitted values become zero.
 Every edge must be finite and nonnegative, otherwise a `LayoutDiagnostic`
 identifies the source property and context.
 

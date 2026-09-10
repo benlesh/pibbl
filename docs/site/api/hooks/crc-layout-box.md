@@ -6,6 +6,7 @@ kind: api
 slug: crc-layout-box
 apiCategory: hook
 symbols: [crcLayoutBox]
+relatedTypes: [LayoutBox]
 ---
 
 # crcLayoutBox
@@ -14,7 +15,7 @@ symbols: [crcLayoutBox]
 import { crcLayoutBox, Rectangle } from "@crc/core";
 ```
 
-`crcLayoutBox(): Readonly<LayoutBox>` is render-only and returns the stable
+`crcLayoutBox()` returns a readonly [`LayoutBox`](#/api/types/layout#layoutbox) and is render-only, returning the stable
 allocation supplied by the current layout parent. It schedules no work and does
 not measure. Read it during render to adapt local drawing, rather than retaining
 it beyond the current render.

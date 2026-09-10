@@ -6,6 +6,7 @@ kind: api
 slug: horizontal-line
 apiCategory: component
 symbols: [HorizontalLine]
+relatedTypes: [HorizontalLineProps, HorizontalLineStyle]
 ---
 
 # HorizontalLine
@@ -14,7 +15,7 @@ symbols: [HorizontalLine]
 import { HorizontalLine } from "@crc/core";
 ```
 
-`HorizontalLine` uses `HorizontalLineProps` and `HorizontalLineStyle`. It
+`HorizontalLine` uses [`HorizontalLineProps`](#/api/types/elements-components#horizontallineprops) and [`HorizontalLineStyle`](#/api/types/styles#horizontallinestyle). It
 rejects children and supplies an allocation-aware default endpoint, making it
 useful inside declared layout boxes. Stroke targeting respects
 `lineInteractionWidth`.

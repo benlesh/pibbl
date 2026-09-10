@@ -149,7 +149,9 @@ function collectInternalLinks(
     }
     if (token.type !== "inline") continue;
 
-    for (const child of token.children ?? []) {
+    const children = token.children ?? [];
+    for (let index = 0; index < children.length; index += 1) {
+      const child = children[index];
       if (child.type !== "link_open") continue;
       const href = child.attrGet("href");
       if (typeof href === "string" && href.startsWith("#/")) {
@@ -159,12 +161,28 @@ function collectInternalLinks(
             "Internal documentation links must appear beneath a heading.",
           );
         }
-        links.push({ href, sourceHeading });
+        links.push({
+          href,
+          sourceHeading,
+          text: linkText(children, index + 1),
+        });
       }
     }
   }
 
   return links;
+}
+
+function linkText(children: readonly Token[], start: number): string {
+  const values: string[] = [];
+  for (let index = start; index < children.length; index += 1) {
+    const child = children[index];
+    if (child.type === "link_close") break;
+    if (child.type === "text" || child.type === "code_inline") {
+      values.push(child.content);
+    }
+  }
+  return values.join("").trim();
 }
 
 function collectPlainText(tokens: readonly Token[]): string {

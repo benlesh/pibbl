@@ -6,6 +6,7 @@ kind: api
 slug: create-star-path
 apiCategory: function
 symbols: [createStarPath]
+relatedTypes: [StarPathOptions]
 ---
 
 # createStarPath
@@ -14,7 +15,7 @@ symbols: [createStarPath]
 import { createStarPath, Path } from "@crc/core";
 ```
 
-`createStarPath(options: StarPathOptions): Path2D` validates integer points and
+[`StarPathOptions`](#/api/types/elements-components#starpathoptions) is accepted by `createStarPath(options): Path2D`, which validates integer points and
 nonnegative inner/outer radii, then returns a fresh concave star outline. It is
 pure and owns no render state, event target, or cache.
 

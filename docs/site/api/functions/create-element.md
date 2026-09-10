@@ -6,6 +6,7 @@ kind: api
 slug: create-element
 apiCategory: function
 symbols: [createElement]
+relatedTypes: [CRCElement, CRCElementType, CRCKey, CRCNode]
 ---
 
 # createElement
@@ -14,10 +15,9 @@ symbols: [createElement]
 import { createElement, Rectangle } from "@crc/core";
 ```
 
-`createElement(type, props, ...children)` is the explicit equivalent of CRC
-JSX. `props` can be `null`; variadic children override `props.children`, while
-zero variadic children preserve it. `key` accepts a string or number, is
-normalized, and is not delivered to props.
+`createElement(type, props, ...children)` constructs the branded [`CRCElement`](#/api/types/elements-components#crcelement) explicit equivalent of CRC
+JSX. Its `type` is a [`CRCElementType`](#/api/types/elements-components#crcelementtype); `props` can be `null`; variadic [`CRCNode`](#/api/types/elements-components#crcnode) children override `props.children`, while
+zero variadic children preserve it. `key` accepts a [`CRCKey`](#/api/types/elements-components#crckey), is normalized, and is not delivered to props.
 
 ```ts
 const scene = createElement(Rectangle, {

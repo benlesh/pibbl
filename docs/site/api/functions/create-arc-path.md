@@ -6,6 +6,7 @@ kind: api
 slug: create-arc-path
 apiCategory: function
 symbols: [createArcPath]
+relatedTypes: [ArcPathOptions]
 ---
 
 # createArcPath
@@ -14,7 +15,7 @@ symbols: [createArcPath]
 import { createArcPath, Path } from "@crc/core";
 ```
 
-`createArcPath(options: ArcPathOptions): Path2D` is a pure numeric constructor.
+[`ArcPathOptions`](#/api/types/elements-components#arcpathoptions) is accepted by `createArcPath(options): Path2D`, a pure numeric constructor.
 It accepts finite logical-unit center/radius/sweep options and returns a fresh,
 open `Path2D`; it owns no render state, events, or cache.
 

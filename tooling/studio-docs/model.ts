@@ -21,6 +21,8 @@ export interface PublicDocFrontmatter {
   readonly apiCategory?: ApiCategory;
   readonly typeDomain?: TypeDomain;
   readonly symbols?: readonly string[];
+  /** Public type contracts named and linked by a runtime API page. */
+  readonly relatedTypes?: readonly string[];
   readonly aliases?: readonly string[];
   readonly keywords?: readonly string[];
   readonly exampleSlug?: string;
@@ -35,6 +37,7 @@ export interface PublicDocHeading {
 export interface PublicDocInternalLink {
   readonly href: string;
   readonly sourceHeading: string;
+  readonly text: string;
 }
 
 export interface LoadedPublicDoc {
@@ -103,6 +106,7 @@ export function validatePublicDocFrontmatter(
   );
   const typeDomain = optionalEnumFrom(value, "typeDomain", typeDomains, path);
   const symbols = optionalStringArrayFrom(value, "symbols", path);
+  const relatedTypes = optionalStringArrayFrom(value, "relatedTypes", path);
   const aliases = optionalStringArrayFrom(value, "aliases", path);
   const keywords = optionalStringArrayFrom(value, "keywords", path);
   const exampleSlug = optionalStringFrom(value, "exampleSlug", path);
@@ -123,6 +127,7 @@ export function validatePublicDocFrontmatter(
     ...(apiCategory === undefined ? {} : { apiCategory }),
     ...(typeDomain === undefined ? {} : { typeDomain }),
     ...(symbols === undefined ? {} : { symbols }),
+    ...(relatedTypes === undefined ? {} : { relatedTypes }),
     ...(aliases === undefined ? {} : { aliases }),
     ...(keywords === undefined ? {} : { keywords }),
     ...(exampleSlug === undefined ? {} : { exampleSlug }),

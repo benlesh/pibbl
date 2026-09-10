@@ -6,6 +6,7 @@ kind: api
 slug: crc-rect-path
 apiCategory: hook
 symbols: [crcRectPath]
+relatedTypes: [PixelGridAlignment, RoundedCornerPathOptions]
 ---
 
 # crcRectPath
@@ -18,6 +19,8 @@ import { crcEvent, crcRectPath, Path } from "@crc/core";
 numeric rectangle path using its geometry and resolved numeric radii; optional
 pixel-grid alignment incorporates `lineWidth`. It has no separate cleanup and
 must be called in stable hook order.
+
+Its numeric rounding fields follow [`RoundedCornerPathOptions`](#/api/types/elements-components#roundedcornerpathoptions), and its alignment uses [`PixelGridAlignment`](#/api/types/styles#pixelgridalignment).
 
 ```tsx
 function Button() {

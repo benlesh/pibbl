@@ -6,6 +6,7 @@ kind: api
 slug: arc
 apiCategory: component
 symbols: [Arc]
+relatedTypes: [ArcProps, ArcStyle]
 ---
 
 # Arc
@@ -14,8 +15,8 @@ symbols: [Arc]
 import { Arc } from "@crc/core";
 ```
 
-`Arc` draws an open circular sweep. Its props are `ArcProps`; its local style
-is `ArcStyle`, which requires `radius`, `startAngle`, and `endAngle` in radians.
+`Arc` draws an open circular sweep. Its props are [`ArcProps`](#/api/types/elements-components#arcprops); its local style
+is [`ArcStyle`](#/api/types/styles#arcstyle), which requires `radius`, `startAngle`, and `endAngle` in radians.
 It is stroke-only and rejects children. Invalid or indefinite geometry reports
 a contextual layout diagnostic.
 

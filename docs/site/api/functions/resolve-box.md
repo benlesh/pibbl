@@ -6,6 +6,7 @@ kind: api
 slug: resolve-box
 apiCategory: function
 symbols: [resolveBox]
+relatedTypes: [BoxStyle, Constraints, ResolvedBoxStyle]
 ---
 
 # resolveBox
@@ -14,8 +15,8 @@ symbols: [resolveBox]
 import { resolveBox, type Constraints } from "@crc/core";
 ```
 
-`resolveBox(style, constraints, context?)` resolves public `BoxStyle` into a
-`ResolvedBoxStyle` with border and content boxes. It applies min/max lengths,
+`resolveBox(style, constraints, context?)` resolves public [`BoxStyle`](#/api/types/layout#boxstyle) into a
+[`ResolvedBoxStyle`](#/api/types/layout#resolvedboxstyle) with border and content boxes. It applies min/max lengths,
 padding, and finite constraint validation, and raises `LayoutDiagnostic` for
 impossible or indefinite inputs.
 
@@ -29,4 +30,4 @@ const constraints: Constraints = {
 const box = resolveBox({ width: "50%", padding: 12 }, constraints);
 ```
 
-It is a public layout helper, not a retained layout engine.
+It accepts [`Constraints`](#/api/types/layout#constraints) and is a public layout helper, not a retained layout engine.

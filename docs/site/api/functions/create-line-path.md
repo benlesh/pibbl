@@ -6,6 +6,7 @@ kind: api
 slug: create-line-path
 apiCategory: function
 symbols: [createLinePath]
+relatedTypes: [LinePathOptions]
 ---
 
 # createLinePath
@@ -14,7 +15,7 @@ symbols: [createLinePath]
 import { createLinePath, Path } from "@crc/core";
 ```
 
-`createLinePath(options: LinePathOptions): Path2D` creates a fresh path from
+[`LinePathOptions`](#/api/types/elements-components#linepathoptions) is accepted by `createLinePath(options): Path2D`, which creates a fresh path from
 finite numeric coordinate pairs and optional `closePath`. It is pure, and does
 not attach paint, events, or caching.
 

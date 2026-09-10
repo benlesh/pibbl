@@ -6,6 +6,7 @@ kind: api
 slug: define-primitive
 apiCategory: function
 symbols: [definePrimitive]
+relatedTypes: [Canvas, PrimitiveCapabilities, PrimitiveRender]
 ---
 
 # definePrimitive
@@ -14,7 +15,7 @@ symbols: [definePrimitive]
 import { definePrimitive } from "@crc/core";
 ```
 
-`definePrimitive(render, capabilities?)` creates a CRC primitive component
+`definePrimitive(render, capabilities?)` creates a CRC primitive component from a [`PrimitiveRender`](#/api/types/styles#primitiverender) callback and optional [`PrimitiveCapabilities`](#/api/types/styles#primitivecapabilities),
 with private style normalization, resolution, and optional measurement
 capabilities. Use it for component-library primitives, not ordinary application
 components: invoking its returned component outside the CRC renderer throws.
@@ -25,5 +26,6 @@ const Dot = definePrimitive(function renderDot(props) {
 });
 ```
 
-The exact generic contracts are in the Elements and components type reference.
+The exact generic contracts are in the Elements and components type reference;
+primitive painting receives CRC's active [`Canvas`](#/api/types/canvas-runtime#canvas) context.
 See [Custom components and primitives](#/learn/guides/custom-components-and-primitives).

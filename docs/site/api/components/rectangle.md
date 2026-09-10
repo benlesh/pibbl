@@ -6,6 +6,7 @@ kind: api
 slug: rectangle
 apiCategory: component
 symbols: [Rectangle]
+relatedTypes: [Canvas, RectStyle, RectangleProps]
 ---
 
 # Rectangle
@@ -14,9 +15,9 @@ symbols: [Rectangle]
 import { Rectangle } from "@crc/core";
 ```
 
-`Rectangle` uses `RectangleProps` and `RectStyle`. It rejects children and
+`Rectangle` uses [`RectangleProps`](#/api/types/elements-components#rectangleprops) and [`RectStyle`](#/api/types/styles#rectstyle). It rejects children and
 accepts local box geometry, fill, stroke, events, cursor, filters, and optional
-`cornerRadius` or `cornerRadii`. Its signed-box rounding uses native Canvas
+`cornerRadius` or `cornerRadii`. Its signed-box rounding uses native [`Canvas`](#/api/types/canvas-runtime#canvas)
 radius scaling and keeps paint and targeting aligned.
 
 ```tsx

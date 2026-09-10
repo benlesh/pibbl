@@ -6,6 +6,7 @@ kind: api
 slug: group
 apiCategory: component
 symbols: [Group]
+relatedTypes: [Canvas, CRCNode, GStyle, GroupProps]
 ---
 
 # Group
@@ -14,9 +15,9 @@ symbols: [Group]
 import { Group, Rectangle } from "@crc/core";
 ```
 
-`Group` uses `GroupProps` and `GStyle` to transform recursive `CRCNode`
+`Group` uses [`GroupProps`](#/api/types/elements-components#groupprops) and [`GStyle`](#/api/types/styles#gstyle) to transform recursive [`CRCNode`](#/api/types/elements-components#crcnode)
 children. Interaction regions, clips, layers, and paint share the transformed
-geometry. A receiving filter captures the group's recursive output before its
+[`Canvas`](#/api/types/canvas-runtime#canvas) geometry. A receiving filter captures the group's recursive output before its
 own transform is presented.
 
 ```tsx

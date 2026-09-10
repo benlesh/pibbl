@@ -6,6 +6,7 @@ kind: api
 slug: keyboard-navigation
 apiCategory: component
 symbols: [KeyboardNavigation]
+relatedTypes: [CRCNode, KeyboardNavigationProps]
 ---
 
 # KeyboardNavigation
@@ -14,8 +15,8 @@ symbols: [KeyboardNavigation]
 import { FocusManagement, KeyboardNavigation, Rectangle } from "@crc/core";
 ```
 
-`KeyboardNavigation` uses `KeyboardNavigationProps` and wraps recursive
-`CRCNode` children. Place it inside `FocusManagement` to opt into deterministic
+`KeyboardNavigation` uses [`KeyboardNavigationProps`](#/api/types/elements-components#keyboardnavigationprops) and wraps recursive
+[`CRCNode`](#/api/types/elements-components#crcnode) children. Place it inside `FocusManagement` to opt into deterministic
 arrow-key movement among logical focus targets. It does not create native DOM
 controls or infer an accessibility tree.
 

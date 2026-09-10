@@ -6,6 +6,7 @@ kind: api
 slug: resolve-length
 apiCategory: function
 symbols: [resolveLength]
+relatedTypes: [Length]
 ---
 
 # resolveLength
@@ -14,7 +15,7 @@ symbols: [resolveLength]
 import { resolveLength } from "@crc/core";
 ```
 
-`resolveLength(value, reference, property, context?)` returns a finite logical
+`resolveLength(value, reference, property, context?)` resolves a public [`Length`](#/api/types/layout#length) and returns a finite logical
 number or `undefined` for `"auto"`. Numeric values must be finite; percentages
 need a definite nonnegative reference. Invalid input produces a contextual
 `LayoutDiagnostic`.

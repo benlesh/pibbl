@@ -6,6 +6,7 @@ kind: api
 slug: absolute
 apiCategory: component
 symbols: [Absolute]
+relatedTypes: [AbsoluteProps, AbsoluteStyle, CRCNode]
 ---
 
 # Absolute
@@ -15,8 +16,8 @@ import { Absolute, Rectangle } from "@crc/core";
 ```
 
 `Absolute` places each direct child from its local `left`, `top`, and declared
-box style. Its props are `AbsoluteProps`; its local style is `AbsoluteStyle`.
-Children are recursive `CRCNode` values. Allocation is finite and does not
+box style. Its props are [`AbsoluteProps`](#/api/types/elements-components#absoluteprops); its local style is [`AbsoluteStyle`](#/api/types/layout#absolutestyle).
+Children are recursive [`CRCNode`](#/api/types/elements-components#crcnode) values. Allocation is finite and does not
 measure or retain drawing commands.
 
 ```tsx

@@ -6,6 +6,7 @@ kind: api
 slug: create-ellipse-path
 apiCategory: function
 symbols: [createEllipsePath]
+relatedTypes: [EllipsePathOptions]
 ---
 
 # createEllipsePath
@@ -14,7 +15,7 @@ symbols: [createEllipsePath]
 import { createEllipsePath, Path } from "@crc/core";
 ```
 
-`createEllipsePath(options: EllipsePathOptions): Path2D` creates a fresh path
+[`EllipsePathOptions`](#/api/types/elements-components#ellipsepathoptions) is accepted by `createEllipsePath(options): Path2D`, which creates a fresh path
 from nonnegative numeric radii, optional center, and finite radian rotation.
 It is pure and has no render lifecycle.
 

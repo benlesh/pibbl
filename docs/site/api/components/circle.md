@@ -6,6 +6,7 @@ kind: api
 slug: circle
 apiCategory: component
 symbols: [Circle]
+relatedTypes: [CircleProps, CircleStyle]
 ---
 
 # Circle
@@ -14,7 +15,7 @@ symbols: [Circle]
 import { Circle } from "@crc/core";
 ```
 
-`Circle` uses `CircleProps` and `CircleStyle`. `radius` is required; `cx` and
+`Circle` uses [`CircleProps`](#/api/types/elements-components#circleprops) and [`CircleStyle`](#/api/types/styles#circlestyle). `radius` is required; `cx` and
 `cy` default to zero. It rejects children. Its same geometry drives paint and
 coordinate targeting, and percentage radii use the smaller available axis.
 

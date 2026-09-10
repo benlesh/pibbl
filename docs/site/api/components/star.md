@@ -6,6 +6,7 @@ kind: api
 slug: star
 apiCategory: component
 symbols: [Star]
+relatedTypes: [StarProps, StarStyle]
 ---
 
 # Star
@@ -14,7 +15,7 @@ symbols: [Star]
 import { Star } from "@crc/core";
 ```
 
-`Star` uses `StarProps` and `StarStyle`. It requires integer `points >= 3`,
+`Star` uses [`StarProps`](#/api/types/elements-components#starprops) and [`StarStyle`](#/api/types/styles#starstyle). It requires integer `points >= 3`,
 nonnegative `outerRadius` and `innerRadius`, and `innerRadius <= outerRadius`.
 It rejects children and creates one concave outline rather than intersecting
 triangles.

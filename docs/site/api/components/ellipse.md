@@ -6,6 +6,7 @@ kind: api
 slug: ellipse
 apiCategory: component
 symbols: [Ellipse]
+relatedTypes: [EllipseProps, EllipseStyle]
 ---
 
 # Ellipse
@@ -14,7 +15,7 @@ symbols: [Ellipse]
 import { Ellipse } from "@crc/core";
 ```
 
-`Ellipse` uses `EllipseProps` and `EllipseStyle`. It requires nonnegative
+`Ellipse` uses [`EllipseProps`](#/api/types/elements-components#ellipseprops) and [`EllipseStyle`](#/api/types/styles#ellipsestyle). It requires nonnegative
 `radiusX` and `radiusY`; `rotation` is finite radians. It rejects children and
 uses the same rotated geometry for paint, targeting, and default focus bounds.
 

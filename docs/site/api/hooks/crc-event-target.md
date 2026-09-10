@@ -6,6 +6,7 @@ kind: api
 slug: crc-event-target
 apiCategory: hook
 symbols: [crcEventTarget]
+relatedTypes: [CRCEventHandlers, CRCEventTargetOptions, CRCEventTargetSnapshot]
 ---
 
 # crcEventTarget
@@ -14,10 +15,12 @@ symbols: [crcEventTarget]
 import { crcEventTarget } from "@crc/core";
 ```
 
-`crcEventTarget(handlers, options)` is render-only. It returns the current
+`crcEventTarget(handlers, options)` accepts [`CRCEventHandlers`](#/api/types/events#crceventhandlers) and [`CRCEventTargetOptions`](#/api/types/events#crceventtargetoptions), is render-only, and returns the current
 focus snapshot while registering/updating a geometric target, its event
 handlers, and focus options. CRC owns the registration and releases it when the
 hook slot is replaced or the component unmounts.
+
+The returned focus state is a [`CRCEventTargetSnapshot`](#/api/types/events#crceventtargetsnapshot).
 
 ```tsx
 function Target() {

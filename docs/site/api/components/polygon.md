@@ -6,6 +6,7 @@ kind: api
 slug: polygon
 apiCategory: component
 symbols: [Polygon]
+relatedTypes: [PolygonProps, PolygonStyle]
 ---
 
 # Polygon
@@ -14,7 +15,7 @@ symbols: [Polygon]
 import { Polygon } from "@crc/core";
 ```
 
-`Polygon` uses `PolygonProps` and `PolygonStyle`. `coords` is a finite numeric
+`Polygon` uses [`PolygonProps`](#/api/types/elements-components#polygonprops) and [`PolygonStyle`](#/api/types/styles#polygonstyle). `coords` is a finite numeric
 pair list; three or more points form one closed outline, and shorter lists are
 empty geometry. It rejects children and supports shared rounded-corner style.
 

@@ -6,6 +6,7 @@ kind: api
 slug: crc-cursor
 apiCategory: hook
 symbols: [crcCursor]
+relatedTypes: [CursorStyle]
 ---
 
 # crcCursor
@@ -18,6 +19,8 @@ import { crcCursor, Text } from "@crc/core";
 With a path, it follows the same logical targeting geometry as mouse events;
 without one it supplies a component-level default. Re-render updates it, and
 replacement or unmount releases its region and cursor ownership.
+
+Its `style` uses the local [`CursorStyle`](#/api/types/styles#cursorstyle) vocabulary.
 
 ```tsx
 function Link() {

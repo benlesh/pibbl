@@ -6,6 +6,7 @@ kind: api
 slug: overlay
 apiCategory: component
 symbols: [Overlay]
+relatedTypes: [OverlayProps, OverlayStyle]
 ---
 
 # Overlay
@@ -14,7 +15,7 @@ symbols: [Overlay]
 import { Overlay, Rectangle, Text } from "@crc/core";
 ```
 
-`Overlay` uses `OverlayProps` and `OverlayStyle` to allocate recursive direct
+`Overlay` uses [`OverlayProps`](#/api/types/elements-components#overlayprops) and [`OverlayStyle`](#/api/types/layout#overlaystyle) to allocate recursive direct
 children against one declared box. Source order remains paint order, so later
 children appear over earlier children. It performs no drawing-command retention
 or implicit intrinsic measurement.

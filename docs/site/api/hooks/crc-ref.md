@@ -6,6 +6,7 @@ kind: api
 slug: crc-ref
 apiCategory: hook
 symbols: [crcRef]
+relatedTypes: [CRCRef]
 ---
 
 # crcRef
@@ -14,7 +15,7 @@ symbols: [crcRef]
 import { crcRef, Text } from "@crc/core";
 ```
 
-`crcRef(init?)` is render-only and returns one stable `CRCRef<T>` with a mutable
+`crcRef(init?)` is render-only and returns one stable [`CRCRef`](#/api/types/canvas-runtime#crcref) with a generic mutable
 `current` field for the component identity. Updating `current` does not schedule
 a render. Its normal hook slot lifetime ends when the component unmounts; do
 not use it to preserve state across a changed component identity.

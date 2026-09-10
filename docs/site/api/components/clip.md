@@ -6,6 +6,7 @@ kind: api
 slug: clip
 apiCategory: component
 symbols: [Clip]
+relatedTypes: [CRCNode, ClipProps, ClipStyle]
 ---
 
 # Clip
@@ -14,8 +15,8 @@ symbols: [Clip]
 import { Circle, Clip } from "@crc/core";
 ```
 
-`Clip` uses `ClipProps` and `ClipStyle` to apply a `Path2D` and fill rule to
-recursive `CRCNode` children. The clip geometry stays aligned with paint and
+`Clip` uses [`ClipProps`](#/api/types/elements-components#clipprops) and [`ClipStyle`](#/api/types/styles#clipstyle) to apply a `Path2D` and fill rule to
+recursive [`CRCNode`](#/api/types/elements-components#crcnode) children. The clip geometry stays aligned with paint and
 hit testing. Filters on the receiving clip are composed before its own clip is
 presented.
 

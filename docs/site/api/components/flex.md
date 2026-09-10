@@ -6,6 +6,7 @@ kind: api
 slug: flex
 apiCategory: component
 symbols: [Flex]
+relatedTypes: [CRCNode, FlexItemStyle, FlexProps, FlexStyle]
 ---
 
 # Flex
@@ -14,8 +15,8 @@ symbols: [Flex]
 import { Flex, Rectangle } from "@crc/core";
 ```
 
-`Flex` uses `FlexProps` and `FlexStyle`; direct children can supply
-`FlexItemStyle`. It accepts recursive `CRCNode` children and resolves finite
+`Flex` uses [`FlexProps`](#/api/types/layout#flexprops) and [`FlexStyle`](#/api/types/layout#flexstyle); direct children can supply
+[`FlexItemStyle`](#/api/types/layout#flexitemstyle). It accepts recursive [`CRCNode`](#/api/types/elements-components#crcnode) children and resolves finite
 allocations before rendering. Reverse ordering, advanced intrinsic sizing,
 margins, and scrolling are outside the supported subset.
 

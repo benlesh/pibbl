@@ -239,6 +239,81 @@ apiCategory: overview
   );
   await rm(join(fixtureRoot, "docs/site/api/functions/duplicate-crc.md"));
 
+  const typeFixtureInventory = {
+    root: {
+      values: ["crc"],
+      types: ["CRCNode"],
+      overview: [],
+    },
+  };
+  await writeFixture(
+    "docs/site/api/types/elements-components.md",
+    `---
+id: api-types-elements-components
+title: Elements and components types
+summary: The canonical CRC element type contract.
+kind: api
+slug: elements-components
+apiCategory: types
+typeDomain: elements-components
+symbols: [CRCNode]
+---
+
+# Elements and components types
+
+## CRCNode
+`,
+  );
+  await writeFixture(
+    "docs/site/api/types/events.md",
+    `---
+id: api-types-events
+title: Event types
+summary: A route with a deliberately misleading anchor fixture.
+kind: api
+slug: events
+apiCategory: types
+typeDomain: events
+symbols: []
+---
+
+# Event types
+
+## CRCNode
+`,
+  );
+  await writeFixture(
+    "docs/site/api/functions/uses-node.md",
+    `---
+id: api-function-uses-node
+title: usesNode
+summary: A type-link validation fixture.
+kind: api
+slug: uses-node
+apiCategory: function
+symbols: []
+relatedTypes: [CRCNode]
+---
+
+# usesNode
+
+Links [CRCNode](#/api/types/events#crcnode) to the wrong valid type anchor.
+`,
+  );
+  await assert.rejects(
+    () =>
+      buildStudioDocumentation({
+        ...fixtureOptions,
+        apiInventory: typeFixtureInventory,
+      }),
+    /CRCNode must link to #\/api\/types\/elements-components#crcnode/u,
+  );
+  await rm(join(fixtureRoot, "docs/site/api/functions/uses-node.md"));
+  await rm(join(fixtureRoot, "docs/site/api/types"), {
+    force: true,
+    recursive: true,
+  });
+
   const tutorialChapter = (slug: string, order: number) => `---
 id: tutorial-${slug}
 title: ${slug}

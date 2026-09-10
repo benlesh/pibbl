@@ -6,6 +6,7 @@ kind: api
 slug: flow
 apiCategory: component
 symbols: [Flow]
+relatedTypes: [FlowProps, FlowStyle]
 ---
 
 # Flow
@@ -14,7 +15,7 @@ symbols: [Flow]
 import { Flow, Text } from "@crc/core";
 ```
 
-`Flow` uses `FlowProps` and `FlowStyle` to place recursive direct children in
+`Flow` uses [`FlowProps`](#/api/types/layout#flowprops) and [`FlowStyle`](#/api/types/layout#flowstyle) to place recursive direct children in
 source order. Children retain their own local drawing geometry; the parent
 resolves only placement. Declare finite boxes when a child needs allocated
 space.

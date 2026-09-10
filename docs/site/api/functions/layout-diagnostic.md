@@ -6,6 +6,7 @@ kind: api
 slug: layout-diagnostic
 apiCategory: function
 symbols: [LayoutDiagnostic, layoutDiagnostic]
+relatedTypes: [LayoutDiagnosticContext, LayoutDiagnosticInput]
 ---
 
 # LayoutDiagnostic and layoutDiagnostic
@@ -27,4 +28,4 @@ throw layoutDiagnostic({
 });
 ```
 
-Its input/context types belong to the Layout type reference.
+Its [`LayoutDiagnosticInput`](#/api/types/layout#layoutdiagnosticinput) and [`LayoutDiagnosticContext`](#/api/types/layout#layoutdiagnosticcontext) types belong to the Layout type reference.

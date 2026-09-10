@@ -6,6 +6,7 @@ kind: api
 slug: focus-management
 apiCategory: component
 symbols: [FocusManagement]
+relatedTypes: [Canvas, CRCNode, FocusManagementProps]
 ---
 
 # FocusManagement
@@ -14,8 +15,8 @@ symbols: [FocusManagement]
 import { FocusManagement, Rectangle } from "@crc/core";
 ```
 
-`FocusManagement` uses `FocusManagementProps` and wraps one recursive
-`CRCNode` subtree. It installs the Canvas as the only native focus host and
+`FocusManagement` uses [`FocusManagementProps`](#/api/types/elements-components#focusmanagementprops) and wraps one recursive
+[`CRCNode`](#/api/types/elements-components#crcnode) subtree. It installs the [`Canvas`](#/api/types/canvas-runtime#canvas) as the only native focus host and
 adds logical focus events, source-order Tab traversal, press focus, activation,
 and focus-visible modality. It does not generate semantic DOM or an
 accessibility tree.

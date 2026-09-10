@@ -6,6 +6,7 @@ kind: api
 slug: crc-canvas-context
 apiCategory: hook
 symbols: [crcCanvasContext]
+relatedTypes: [Canvas, RenderingContext2D]
 ---
 
 # crcCanvasContext
@@ -14,9 +15,9 @@ symbols: [crcCanvasContext]
 import { crcCanvasContext } from "@crc/core";
 ```
 
-`crcCanvasContext(): RenderingContext2D` is render-only: call it synchronously
+`crcCanvasContext()` returns [`RenderingContext2D`](#/api/types/canvas-runtime#renderingcontext2d) and is render-only: call it synchronously
 from a CRC component while it is rendering, never from pure measurement or an
-event callback. CRC isolates Canvas state around component traversal; do not
+event callback. CRC isolates [`Canvas`](#/api/types/canvas-runtime#canvas) state around component traversal; do not
 retain the context for later work.
 
 ```tsx

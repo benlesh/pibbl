@@ -6,6 +6,7 @@ kind: api
 slug: layer
 apiCategory: component
 symbols: [Layer]
+relatedTypes: [CRCNode, LayerProps, LayerStyle]
 ---
 
 # Layer
@@ -14,7 +15,7 @@ symbols: [Layer]
 import { Group, Layer, Rectangle } from "@crc/core";
 ```
 
-`Layer` uses `LayerProps` and `LayerStyle` to render recursive `CRCNode`
+`Layer` uses [`LayerProps`](#/api/types/elements-components#layerprops) and [`LayerStyle`](#/api/types/styles#layerstyle) to render recursive [`CRCNode`](#/api/types/elements-components#crcnode)
 children through a persistent offscreen CRC instance. It shares root
 interaction and global paint order, and requires browser `OffscreenCanvas`.
 It is a composition boundary, not a retained scene graph.

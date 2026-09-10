@@ -6,6 +6,7 @@ kind: api
 slug: vertical-line
 apiCategory: component
 symbols: [VerticalLine]
+relatedTypes: [VerticalLineProps, VerticalLineStyle]
 ---
 
 # VerticalLine
@@ -14,7 +15,7 @@ symbols: [VerticalLine]
 import { VerticalLine } from "@crc/core";
 ```
 
-`VerticalLine` uses `VerticalLineProps` and `VerticalLineStyle`. It rejects
+`VerticalLine` uses [`VerticalLineProps`](#/api/types/elements-components#verticallineprops) and [`VerticalLineStyle`](#/api/types/styles#verticallinestyle). It rejects
 children and supplies an allocation-aware default endpoint. Stroke targeting
 honors `lineInteractionWidth`; use a declared box when percentage geometry
 needs a finite basis.

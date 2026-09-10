@@ -119,7 +119,8 @@ export async function buildStudioDocumentation(
     options.examples !== undefined,
   );
   validateTutorialOrder(pages);
-  if (options.examples !== undefined) validateExampleReferences(pages, examples);
+  if (options.examples !== undefined)
+    validateExampleReferences(pages, examples);
 
   const inventory =
     options.apiInventory ??
@@ -130,6 +131,7 @@ export async function buildStudioDocumentation(
       .filter(({ frontmatter }) => frontmatter.kind === "api")
       .map(({ frontmatter, route }) => ({ frontmatter, route })),
   );
+  validateRelatedTypeLinks(pages);
   return {
     pages,
     pageByRoute: recordFromEntries(pages.map((page) => [page.route, page])),
@@ -413,6 +415,58 @@ function validateExampleReferences(
       throw new Error(
         `${page.sourcePath}: Unknown learning example "${slug}" referenced by exampleSlug.`,
       );
+    }
+  }
+}
+
+function validateRelatedTypeLinks(
+  pages: readonly StudioDocumentationPage[],
+): void {
+  const destinations = new Map<string, string>();
+  for (const page of pages) {
+    if (page.frontmatter.apiCategory !== "types") continue;
+    for (const symbol of page.frontmatter.symbols ?? []) {
+      const heading = page.headings.find(
+        ({ level, text }) => level === 2 && text === symbol,
+      );
+      if (heading === undefined) {
+        throw new Error(
+          `${page.sourcePath}: Type ${symbol} must have a matching level-two heading.`,
+        );
+      }
+      const destination = `${page.route}#${heading.id}`;
+      const existing = destinations.get(symbol);
+      if (existing !== undefined && existing !== destination) {
+        throw new Error(
+          `Type ${symbol} has multiple grouped reference destinations: ${existing} and ${destination}.`,
+        );
+      }
+      destinations.set(symbol, destination);
+    }
+  }
+
+  for (const page of pages) {
+    const relatedTypes = page.frontmatter.relatedTypes ?? [];
+    assertUnique(
+      relatedTypes,
+      `related type declaration in ${page.sourcePath}`,
+    );
+    for (const type of relatedTypes) {
+      const destination = destinations.get(type);
+      if (destination === undefined) {
+        throw new Error(
+          `${page.sourcePath}: Related type ${type} has no grouped type reference destination.`,
+        );
+      }
+      if (
+        !page.internalLinks.some(
+          ({ href, text }) => href === destination && text === type,
+        )
+      ) {
+        throw new Error(
+          `${page.sourcePath}: ${type} must link to ${destination}.`,
+        );
+      }
     }
   }
 }

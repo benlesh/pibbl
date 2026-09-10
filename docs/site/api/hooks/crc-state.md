@@ -6,6 +6,7 @@ kind: api
 slug: crc-state
 apiCategory: hook
 symbols: [crcState]
+relatedTypes: [Canvas, StateUpdater]
 ---
 
 # crcState
@@ -15,9 +16,11 @@ import { crcState, Rectangle } from "@crc/core";
 ```
 
 `crcState(init?)` is render-only and returns `[value, setValue]`. The setter
-accepts a value or updater function and schedules the owning Canvas through
+accepts a value or updater function and schedules the owning [`Canvas`](#/api/types/canvas-runtime#canvas) through
 CRC's animation-frame update path. Multiple updates before the next frame
 coalesce; stale setters from a disposed or unmounted component safely do nothing.
+
+The returned setter is a generic [`StateUpdater`](#/api/types/canvas-runtime#stateupdater).
 
 ```tsx
 function Toggle() {

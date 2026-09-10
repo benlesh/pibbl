@@ -6,6 +6,7 @@ kind: api
 slug: create-polygon-path
 apiCategory: function
 symbols: [createPolygonPath]
+relatedTypes: [PolygonPathOptions]
 ---
 
 # createPolygonPath
@@ -14,7 +15,7 @@ symbols: [createPolygonPath]
 import { createPolygonPath, Path } from "@crc/core";
 ```
 
-`createPolygonPath(options: PolygonPathOptions): Path2D` creates a fresh
+[`PolygonPathOptions`](#/api/types/elements-components#polygonpathoptions) is accepted by `createPolygonPath(options): Path2D`, which creates a fresh
 closed path from finite numeric pairs, with optional numeric corner radii.
 Short lists are safe empty geometry; no render state or events are owned.
 

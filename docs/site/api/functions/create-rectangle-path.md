@@ -6,6 +6,7 @@ kind: api
 slug: create-rectangle-path
 apiCategory: function
 symbols: [createRectanglePath]
+relatedTypes: [Canvas, RectanglePathOptions]
 ---
 
 # createRectanglePath
@@ -14,9 +15,9 @@ symbols: [createRectanglePath]
 import { Clip, createRectanglePath, Rectangle } from "@crc/core";
 ```
 
-`createRectanglePath(options: RectanglePathOptions): Path2D` creates a fresh
+[`RectanglePathOptions`](#/api/types/elements-components#rectanglepathoptions) is accepted by `createRectanglePath(options): Path2D`, which creates a fresh
 rectangle from numeric width, height, optional position, and optional numeric
-corner radii. Width and height remain signed, matching Canvas rectangle
+corner radii. Width and height remain signed, matching [`Canvas`](#/api/types/canvas-runtime#canvas) rectangle
 semantics. It owns no render state.
 
 ```tsx
