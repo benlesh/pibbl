@@ -66,6 +66,54 @@ tutorial: diagram-editor
   ).route,
   "#/learn/tutorials/diagram-editor",
 );
+assert.equal(
+  parsePublicMarkdown(
+    "docs/site/learn/tutorials/advanced-animation/index.md",
+    `---
+id: tutorial-advanced-animation
+title: Animate a scene
+summary: A future tutorial root with a stable public slug.
+kind: tutorial
+slug: advanced-animation
+tutorial: advanced-animation
+---
+
+# Animate a scene`,
+  ).route,
+  "#/learn/tutorials/advanced-animation",
+);
+assert.equal(
+  parsePublicMarkdown(
+    "docs/site/learn/tutorials/advanced-animation/timeline.md",
+    `---
+id: tutorial-advanced-animation-timeline
+title: Build a timeline
+summary: A future tutorial chapter with a stable public parent slug.
+kind: tutorial
+slug: timeline
+tutorial: advanced-animation
+order: 10
+---
+
+# Build a timeline`,
+  ).route,
+  "#/learn/tutorials/advanced-animation/timeline",
+);
+assert.throws(
+  () =>
+    validatePublicDocFrontmatter(
+      {
+        id: "invalid-tutorial",
+        title: "Invalid tutorial",
+        summary: "Reject unstable future tutorial slugs.",
+        kind: "tutorial",
+        slug: "invalid-tutorial",
+        tutorial: "Advanced Animation",
+      },
+      "invalid-tutorial.md",
+    ),
+  /tutorial.*lowercase/u,
+);
 assert.deepEqual(
   parsePublicMarkdown(
     "docs/site/learn/guides/anchor-collisions.md",

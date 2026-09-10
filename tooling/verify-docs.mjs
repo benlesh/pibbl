@@ -57,18 +57,17 @@ function sourceAtCommit(commit, path) {
   );
   return result.stdout;
 }
-const guidePaths = [
-  "docs/guides/children-text-lists-and-keys.md",
-  "docs/guides/components-props-and-style.md",
-  "docs/guides/configuring-jsx.md",
-  "docs/guides/custom-components-and-primitives.md",
-  "docs/guides/focus-keyboard-and-accessibility.md",
-  "docs/guides/jsx-quick-start.md",
-  "docs/guides/jsx-troubleshooting.md",
-  "docs/guides/layout-groups-clips-and-layers.md",
-  "docs/guides/react-interop.md",
-  "docs/guides/state-lifecycle-and-react-differences.md",
-  "docs/guides/without-jsx.md",
+const publicGuidePaths = [
+  "docs/site/learn/guides/author-without-jsx.md",
+  "docs/site/learn/guides/components-props-and-children.md",
+  "docs/site/learn/guides/compose-and-layout.md",
+  "docs/site/learn/guides/configure-jsx.md",
+  "docs/site/learn/guides/custom-components-and-primitives.md",
+  "docs/site/learn/guides/focus-and-keyboard.md",
+  "docs/site/learn/guides/jsx-troubleshooting.md",
+  "docs/site/learn/guides/react-integration.md",
+  "docs/site/learn/guides/state-and-lifecycle.md",
+  "docs/site/learn/guides/style-and-draw.md",
 ];
 const publicSiteMarkdownPaths = [
   "docs/site/api/index.md",
@@ -136,16 +135,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/types/styles.md",
   "docs/site/learn/index.md",
   "docs/site/learn/tutorials/diagram-editor/index.md",
-  "docs/site/learn/guides/configure-jsx.md",
-  "docs/site/learn/guides/author-without-jsx.md",
-  "docs/site/learn/guides/components-props-and-children.md",
-  "docs/site/learn/guides/style-and-draw.md",
-  "docs/site/learn/guides/compose-and-layout.md",
-  "docs/site/learn/guides/state-and-lifecycle.md",
-  "docs/site/learn/guides/focus-and-keyboard.md",
-  "docs/site/learn/guides/custom-components-and-primitives.md",
-  "docs/site/learn/guides/react-integration.md",
-  "docs/site/learn/guides/jsx-troubleshooting.md",
+  ...publicGuidePaths,
 ];
 const currentMarkdownPaths = [
   "AGENTS.md",
@@ -175,7 +165,6 @@ const currentMarkdownPaths = [
   "docs/testing/scenario-gallery.md",
   "docs/testing/test-tooling-opportunities.md",
   "docs/testing/trust-gate.md",
-  ...guidePaths,
   ...publicSiteMarkdownPaths,
 ];
 const linkCheckedPaths = [
@@ -531,16 +520,19 @@ function assertSnippetSyntax(path, source) {
 
 function extractCompleteSnippets(sources) {
   const snippets = new Map();
-  const marker =
-    /<!-- docs:complete-snippet:start ([a-z0-9-]+) -->([\s\S]*?)<!-- docs:complete-snippet:end -->/gu;
   for (const [path, source] of sources) {
-    for (const match of source.matchAll(marker)) {
-      const id = match[1];
-      assert.ok(!snippets.has(id), `Duplicate complete snippet marker ${id}`);
+    for (const marker of source.matchAll(
+      /<!-- docs:complete-snippet:start ([a-z0-9-]+) -->\n([\s\S]*?)<!-- docs:complete-snippet:end -->/gu,
+    )) {
+      const id = marker[1];
       const fences = [
-        ...match[2].matchAll(/^```(ts|tsx|js|jsx)\n([\s\S]*?)^```$/gmu),
+        ...marker[2].matchAll(/^```(ts|tsx|js|jsx)\n([\s\S]*?)^```$/gmu),
       ];
-      assert.ok(fences.length > 0, `Complete snippet ${id} has no code fence`);
+      assert.ok(
+        fences.length > 0,
+        `Complete snippet ${id} in ${path} must contain a TypeScript or JavaScript fence`,
+      );
+      assert.ok(!snippets.has(id), `Duplicate complete snippet marker ${id}`);
       snippets.set(id, {
         id,
         path,
@@ -552,6 +544,31 @@ function extractCompleteSnippets(sources) {
               ? "js"
               : "ts",
         source: fences.map((fence) => fence[2]).join("\n"),
+      });
+    }
+    const fencesById = new Map();
+    for (const match of source.matchAll(
+      /^```(ts|tsx|js|jsx)(?:\s+docs:complete-snippet=([a-z0-9-]+))?\n([\s\S]*?)^```$/gmu,
+    )) {
+      const id = match[2];
+      if (id === undefined) continue;
+      const fences = fencesById.get(id) ?? [];
+      fences.push(match);
+      fencesById.set(id, fences);
+    }
+    for (const [id, fences] of fencesById) {
+      assert.ok(!snippets.has(id), `Duplicate complete snippet marker ${id}`);
+      snippets.set(id, {
+        id,
+        path,
+        language: fences.some((fence) => fence[1] === "jsx")
+          ? "jsx"
+          : fences.some((fence) => fence[1] === "tsx")
+            ? "tsx"
+            : fences.some((fence) => fence[1] === "js")
+              ? "js"
+              : "ts",
+        source: fences.map((fence) => fence[3]).join("\n"),
       });
     }
   }
@@ -1180,14 +1197,16 @@ export async function assertAutomaticRuntimeTransforms(source, babelOptions) {
   );
 }
 
-const discoveredGuides = (await readdir(join(repositoryRoot, "docs/guides")))
-  .filter((name) => extname(name) === ".md")
-  .map((name) => `docs/guides/${name}`)
-  .sort();
+const discoveredGuides = await readdir(join(repositoryRoot, "docs/guides"))
+  .then((entries) => entries.filter((name) => extname(name) === ".md").sort())
+  .catch((error) => {
+    if (error?.code === "ENOENT") return [];
+    throw error;
+  });
 assert.deepEqual(
   discoveredGuides,
-  [...guidePaths].sort(),
-  "The required guide set changed.",
+  [],
+  "Migrated public guides must have one canonical source under docs/site/learn/guides.",
 );
 
 const currentSources = new Map();
@@ -1471,7 +1490,7 @@ const studioHtml = await readFile(
 assert.match(studioHtml, /editable TSX/u);
 assert.doesNotMatch(studioHtml, /editable TypeScript/u);
 
-const configuring = currentSources.get("docs/guides/configuring-jsx.md");
+const configuring = currentSources.get("docs/site/learn/guides/configure-jsx.md");
 for (const marker of [
   "@crc/core/jsx-runtime",
   "@crc/core/jsx-dev-runtime",
@@ -1491,19 +1510,27 @@ for (const marker of [
 
 const requiredGuideMarkers = new Map([
   [
-    "docs/guides/children-text-lists-and-keys.md",
+    "docs/site/learn/guides/components-props-and-children.md",
     ["finite synchronous iterables", "Numeric zero", "## Fragments and keys"],
   ],
   [
-    "docs/guides/components-props-and-style.md",
-    ["ordinary synchronous", "## Local, closed style", "crcLayoutBox()"],
+    "docs/site/learn/guides/components-props-and-children.md",
+    ["ordinary synchronous"],
   ],
   [
-    "docs/guides/custom-components-and-primitives.md",
+    "docs/site/learn/guides/style-and-draw.md",
+    ["## Local, closed style"],
+  ],
+  [
+    "docs/site/learn/guides/compose-and-layout.md",
+    ["crcLayoutBox()"],
+  ],
+  [
+    "docs/site/learn/guides/custom-components-and-primitives.md",
     ["crcCanvasContext()", "normalizeStyle", "resolveStyle", "measure"],
   ],
   [
-    "docs/guides/focus-keyboard-and-accessibility.md",
+    "docs/site/learn/guides/focus-and-keyboard.md",
     [
       "FocusManagement",
       "KeyboardNavigation",
@@ -1511,19 +1538,19 @@ const requiredGuideMarkers = new Map([
     ],
   ],
   [
-    "docs/guides/layout-groups-clips-and-layers.md",
+    "docs/site/learn/guides/compose-and-layout.md",
     ["## Group", "## Clip", "## Layer", "specified author value"],
   ],
   [
-    "docs/guides/react-interop.md",
+    "docs/site/learn/guides/react-integration.md",
     ["one JSX runtime", "createCRCElement", "expression-level pragma"],
   ],
   [
-    "docs/guides/state-lifecycle-and-react-differences.md",
+    "docs/site/learn/guides/state-and-lifecycle.md",
     ["immediate Canvas runtime", "crcWhenChanged", "## Disposal"],
   ],
   [
-    "docs/guides/without-jsx.md",
+    "docs/site/learn/guides/author-without-jsx.md",
     ["## Install and mount", "## Constructor rules", "dispose()"],
   ],
 ]);
@@ -1783,33 +1810,33 @@ assert.ok(
 const matrixRequirements = [
   {
     topic: /Complete interactive JSX quick start/u,
-    guides: ["guides/jsx-quick-start.md", "design/runtime-hooks-contract.md"],
+    guides: ["site/learn/guides/configure-jsx.md", "design/runtime-hooks-contract.md"],
     evidence: ["getting-started.example.tsx"],
   },
   {
     topic: /TypeScript automatic runtime/u,
-    guides: ["guides/configuring-jsx.md", "site/api/index.md"],
+    guides: ["site/learn/guides/configure-jsx.md", "site/api/index.md"],
     evidence: ["package-consumer/jsx.tsx"],
   },
   {
     topic: /No React dependency/u,
-    guides: ["guides/configuring-jsx.md", "guides/react-interop.md"],
+    guides: ["site/learn/guides/configure-jsx.md", "site/learn/guides/react-integration.md"],
     evidence: ["verify-packed-consumer.mjs"],
   },
   {
     topic: /Vite\/esbuild setup/u,
-    guides: ["guides/configuring-jsx.md"],
+    guides: ["site/learn/guides/configure-jsx.md"],
     evidence: ["verify-docs.mjs"],
   },
   {
     topic: /Babel automatic runtime/u,
-    guides: ["guides/configuring-jsx.md"],
+    guides: ["site/learn/guides/configure-jsx.md"],
     evidence: ["verify-docs.mjs"],
   },
   {
     topic: /Components, props, events/u,
     guides: [
-      "guides/components-props-and-style.md",
+      "site/learn/guides/style-and-draw.md",
       "design/style-system-contract.md",
     ],
     evidence: ["getting-started.example.tsx"],
@@ -1817,20 +1844,20 @@ const matrixRequirements = [
   {
     topic: /Arbitrary interpolation/u,
     guides: [
-      "guides/children-text-lists-and-keys.md",
+      "site/learn/guides/components-props-and-children.md",
       "design/runtime-hooks-contract.md",
     ],
     evidence: ["children.test.ts"],
   },
   {
     topic: /Fragments, lists/u,
-    guides: ["guides/children-text-lists-and-keys.md"],
+    guides: ["site/learn/guides/components-props-and-children.md"],
     evidence: ["fragment.test.tsx"],
   },
   {
     topic: /Text children/u,
     guides: [
-      "guides/children-text-lists-and-keys.md",
+      "site/learn/guides/components-props-and-children.md",
       "design/drawing-components-contract.md",
     ],
     evidence: ["text.example.tsx", "learning-examples.test.ts"],
@@ -1838,7 +1865,7 @@ const matrixRequirements = [
   {
     topic: /Layout and specified style/u,
     guides: [
-      "guides/layout-groups-clips-and-layers.md",
+      "site/learn/guides/compose-and-layout.md",
       "design/layout-system-contract.md",
     ],
     evidence: ["flex.example.tsx"],
@@ -1846,7 +1873,7 @@ const matrixRequirements = [
   {
     topic: /`Group`, `Clip`/u,
     guides: [
-      "guides/layout-groups-clips-and-layers.md",
+      "site/learn/guides/compose-and-layout.md",
       "design/drawing-components-contract.md",
     ],
     evidence: ["group.example.tsx", "clip.example.tsx", "layer.example.tsx"],
@@ -1854,27 +1881,27 @@ const matrixRequirements = [
   {
     topic: /State, immediate lifecycle/u,
     guides: [
-      "guides/state-lifecycle-and-react-differences.md",
+      "site/learn/guides/state-and-lifecycle.md",
       "design/runtime-hooks-contract.md",
     ],
     evidence: ["runtime-hooks.example.tsx"],
   },
   {
     topic: /Ordinary composite/u,
-    guides: ["guides/custom-components-and-primitives.md"],
+    guides: ["site/learn/guides/custom-components-and-primitives.md"],
     evidence: ["crc-canvas-context.test.tsx"],
   },
   {
     topic: /Full `definePrimitive`/u,
     guides: [
-      "guides/custom-components-and-primitives.md",
+      "site/learn/guides/custom-components-and-primitives.md",
       "design/style-system-contract.md",
     ],
     evidence: ["define-primitive.test.tsx"],
   },
   {
     topic: /Complete non-JSX API/u,
-    guides: ["guides/without-jsx.md"],
+    guides: ["site/learn/guides/author-without-jsx.md"],
     evidence: [
       "create-element-authoring.example.tsx",
       "learning-examples.test.ts",
@@ -1882,18 +1909,18 @@ const matrixRequirements = [
   },
   {
     topic: /One runtime per file/u,
-    guides: ["guides/react-interop.md", "guides/configuring-jsx.md"],
+    guides: ["site/learn/guides/react-integration.md", "site/learn/guides/configure-jsx.md"],
     evidence: ["mixed-runtime/react-host.tsx"],
   },
   {
     topic: /Wrong-runtime diagnostics/u,
-    guides: ["guides/jsx-troubleshooting.md"],
+    guides: ["site/learn/guides/jsx-troubleshooting.md"],
     evidence: ["foreign-runtime-diagnostics.test.tsx"],
   },
   {
     topic: /Focus and directional keyboard/u,
     guides: [
-      "guides/focus-keyboard-and-accessibility.md",
+      "site/learn/guides/focus-and-keyboard.md",
       "design/focus-and-keyboard-navigation-contract.md",
     ],
     evidence: ["directional-navigation.example.tsx"],
@@ -1902,7 +1929,7 @@ const matrixRequirements = [
     topic: /Accessibility limitations/u,
     guides: [
       "design/canvas-accessibility-guidance.md",
-      "guides/focus-keyboard-and-accessibility.md",
+      "site/learn/guides/focus-and-keyboard.md",
     ],
     evidence: ["focus-navigation.example.tsx"],
   },
@@ -2005,7 +2032,7 @@ const matrix = libraryStatus.slice(
   libraryStatus.indexOf("## Running locally"),
 );
 const matrixRows = assertAcceptanceMatrix(matrix);
-for (const guide of guidePaths) {
+for (const guide of publicGuidePaths) {
   assert.ok(
     libraryStatus.includes(`./${guide.slice("docs/".length)}`),
     `Acceptance matrix does not map ${guide}`,
@@ -2247,7 +2274,7 @@ export async function verifyMutationProbes() {
   await rejects(
     () =>
       assertLocalLinks(
-        "docs/guides/jsx-quick-start.md",
+        "docs/site/learn/guides/configure-jsx.md",
         "# Existing\n\n[missing](#not-an-anchor)",
       ),
     /Broken local anchor/u,
@@ -2805,7 +2832,7 @@ export async function verifyMutationProbes() {
 }
 
 process.stdout.write(
-  `Documentation checks passed: ${guidePaths.length} guides, ` +
+  `Documentation checks passed: ${publicGuidePaths.length} guides, ` +
     `${linkCheckedPaths.length} current/migration files, ` +
     `${historicalMarkdownPaths.length} historical/work records, ` +
     `${rootExports.values.size} values, ${rootExports.types.size} types, ` +

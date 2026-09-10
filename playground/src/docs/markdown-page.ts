@@ -77,9 +77,14 @@ export async function renderMarkdownPage(
   options.container.replaceChildren(article);
 
   if (options.anchor !== undefined) {
-    options.container
-      .querySelector<HTMLElement>(`#${CSS.escape(options.anchor)}`)
-      ?.scrollIntoView();
+    const anchor = options.container.querySelector<HTMLElement>(
+      `#${CSS.escape(options.anchor)}`,
+    );
+    if (anchor !== null) {
+      anchor.tabIndex = -1;
+      anchor.scrollIntoView();
+      anchor.focus({ preventScroll: true });
+    }
   } else if (options.focus) {
     title.focus({ preventScroll: true });
   }

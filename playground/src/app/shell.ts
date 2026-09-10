@@ -232,15 +232,26 @@ export function createStudioShell(options: StudioShellOptions): StudioShell {
   narrowNavigation.addEventListener("change", syncDrawerAvailability);
   syncDrawerAvailability();
 
-  const setNavigation = (navigation: readonly NavigationArea[]) => {
+  const setNavigation = (
+    navigation: readonly NavigationArea[],
+    focusNavigationId = focusedNavigationId(navigationHost),
+  ) => {
     currentNavigation = navigation;
     navigationHost.replaceChildren(
       ...navigation.map((area) =>
-        renderNavigationEntry(area, navigationState, () => {
-          setNavigation(currentNavigation);
+        renderNavigationEntry(area, navigationState, (navigationId) => {
+          setNavigation(currentNavigation, navigationId);
         }, true),
       ),
     );
+    if (!disposed && focusNavigationId !== undefined) {
+      navigationHost
+        .querySelectorAll<HTMLButtonElement>("button[data-navigation-id]")
+        .forEach((button) => {
+          if (button.dataset.navigationId === focusNavigationId)
+            button.focus({ preventScroll: true });
+        });
+    }
   };
   setNavigation(options.navigation);
 
@@ -313,7 +324,7 @@ function isMonacoInput(element: Element | null): boolean {
 function renderNavigationEntry(
   entry: NavigationEntry,
   state: ReturnType<typeof createNavigationState>,
-  onToggle: () => void,
+  onToggle: (navigationId: string) => void,
   primary = false,
 ): HTMLElement {
   const section = document.createElement("section");
@@ -342,7 +353,7 @@ function renderNavigationEntry(
     toggle.innerHTML = '<span aria-hidden="true">⌄</span>';
     toggle.addEventListener("click", () => {
       state.toggle(entry.id);
-      onToggle();
+      onToggle(entry.id);
     });
     if (entry.href === undefined) {
       toggle.classList.add("studio-nav__toggle--label");
@@ -362,6 +373,14 @@ function renderNavigationEntry(
     section.appendChild(list);
   }
   return section;
+}
+
+function focusedNavigationId(host: HTMLElement): string | undefined {
+  const focused = document.activeElement;
+  if (!(focused instanceof HTMLButtonElement) || !host.contains(focused)) {
+    return undefined;
+  }
+  return focused.dataset.navigationId;
 }
 
 function areaForRoute(route: ParsedStudioRoute): string | undefined {

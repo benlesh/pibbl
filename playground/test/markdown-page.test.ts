@@ -103,7 +103,7 @@ describe("Markdown documentation pages", () => {
     await page.dispose?.();
   });
 
-  it("scrolls to a route anchor without stealing focus", async () => {
+  it("scrolls and focuses a route anchor without a second page jump", async () => {
     const container = document.createElement("main");
     document.body.appendChild(container);
     const scrollIntoView = vi.fn();
@@ -121,7 +121,9 @@ describe("Markdown documentation pages", () => {
     });
 
     expect(scrollIntoView).toHaveBeenCalledOnce();
-    expect(document.activeElement).not.toBe(container.querySelector("h1"));
+    const anchor = container.querySelector<HTMLElement>("#component-identity");
+    expect(anchor).toHaveAttribute("tabindex", "-1");
+    expect(document.activeElement).toBe(anchor);
   });
 
   it("focuses the document heading for a new route without an anchor", async () => {

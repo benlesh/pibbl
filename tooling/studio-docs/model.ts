@@ -17,7 +17,8 @@ export interface PublicDocFrontmatter {
   readonly kind: PublicDocKind;
   readonly slug: string;
   readonly order?: number;
-  readonly tutorial?: "diagram-editor";
+  /** Stable public tutorial slug. New tutorials do not require a code change. */
+  readonly tutorial?: string;
   readonly apiCategory?: ApiCategory;
   readonly typeDomain?: TypeDomain;
   readonly symbols?: readonly string[];
@@ -99,12 +100,7 @@ export function validatePublicDocFrontmatter(
 
   const navLabel = optionalStringFrom(value, "navLabel", path);
   const order = optionalOrderFrom(value, path);
-  const tutorial = optionalEnumFrom(
-    value,
-    "tutorial",
-    ["diagram-editor"],
-    path,
-  );
+  const tutorial = optionalStableSlugFrom(value, "tutorial", path);
   const apiCategory = optionalEnumFrom(
     value,
     "apiCategory",
@@ -179,6 +175,16 @@ function optionalOrderFrom(
   ) {
     throw new Error(`${path}: order must be a non-negative safe integer.`);
   }
+  return candidate;
+}
+
+function optionalStableSlugFrom(
+  value: Record<string, unknown>,
+  key: string,
+  path: string,
+): string | undefined {
+  const candidate = optionalStringFrom(value, key, path);
+  if (candidate !== undefined) assertSlug(candidate, key, path);
   return candidate;
 }
 

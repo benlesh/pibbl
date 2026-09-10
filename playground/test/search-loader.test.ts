@@ -1,28 +1,29 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import {
   createSearchBundleLoader,
-  searchLoaderFailureFlag,
 } from "../src/search/search-loader";
 
-afterEach(() => {
-  delete (globalThis as Record<string, unknown>)[searchLoaderFailureFlag];
-});
-
 describe("Studio search bundle loader", () => {
-  it("fails exactly once when the acceptance-only failure flag is set", async () => {
+  it("retries a composition-injected one-shot load failure", async () => {
     let loads = 0;
+    let failures = 0;
     const load = createSearchBundleLoader(async () => {
       loads++;
       return { serializedSearchIndex: "{}", searchRecords: [] };
+    }, {
+      beforeLoad: () => {
+        failures++;
+        if (failures === 1) throw new Error("Intentional search loader failure.");
+      },
     });
-    (globalThis as Record<string, unknown>)[searchLoaderFailureFlag] = true;
 
-    await expect(load()).rejects.toThrow("acceptance failure");
+    await expect(load()).rejects.toThrow("Intentional search loader failure.");
     await expect(load()).resolves.toEqual({
       serializedSearchIndex: "{}",
       searchRecords: [],
     });
     expect(loads).toBe(1);
+    expect(failures).toBe(2);
   });
 });

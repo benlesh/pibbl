@@ -314,25 +314,79 @@ Links [CRCNode](#/api/types/events#crcnode) to the wrong valid type anchor.
     recursive: true,
   });
 
-  const tutorialChapter = (slug: string, order: number) => `---
+  const tutorialRoot = (slug: string, title: string) => `---
 id: tutorial-${slug}
+title: ${title}
+summary: A future tutorial root fixture.
+kind: tutorial
+slug: ${slug}
+tutorial: ${slug}
+---
+
+# ${title}
+`;
+  const tutorialChapter = (
+    tutorial: string,
+    slug: string,
+    order: number,
+  ) => `---
+id: tutorial-${tutorial}-${slug}
 title: ${slug}
 summary: A tutorial chapter fixture.
 kind: tutorial
 slug: ${slug}
-tutorial: diagram-editor
+tutorial: ${tutorial}
 order: ${String(order)}
 ---
 
 # ${slug}
 `;
   await writeFixture(
+    "docs/site/learn/tutorials/diagram-editor/index.md",
+    tutorialRoot("diagram-editor", "Learn the basics"),
+  );
+  await writeFixture(
     "docs/site/learn/tutorials/diagram-editor/first.md",
-    tutorialChapter("first", 1),
+    tutorialChapter("diagram-editor", "first", 1),
+  );
+  await writeFixture(
+    "docs/site/learn/tutorials/advanced-animation/index.md",
+    tutorialRoot("advanced-animation", "Animate a scene"),
+  );
+  await writeFixture(
+    "docs/site/learn/tutorials/advanced-animation/timeline.md",
+    tutorialChapter("advanced-animation", "timeline", 1),
+  );
+  const multipleTutorials = await buildStudioDocumentation(fixtureOptions);
+  assert.deepEqual(
+    multipleTutorials.pages
+      .filter(({ frontmatter }) => frontmatter.kind === "tutorial")
+      .map(({ route }) => route),
+    [
+      "#/learn/tutorials/advanced-animation",
+      "#/learn/tutorials/advanced-animation/timeline",
+      "#/learn/tutorials/diagram-editor/first",
+      "#/learn/tutorials/diagram-editor",
+    ],
+    "Validated tutorial frontmatter must model multiple roots and chapters.",
+  );
+  assert.deepEqual(
+    buildNavigation(multipleTutorials, []).at(0)?.children?.[0]?.children?.map(
+      ({ href }) => href,
+    ),
+    [
+      "#/learn/tutorials/advanced-animation",
+      "#/learn/tutorials/diagram-editor",
+    ],
+    "Navigation must retain each tutorial root while hiding chapters beneath it.",
+  );
+  await writeFixture(
+    "docs/site/learn/tutorials/diagram-editor/first.md",
+    tutorialChapter("diagram-editor", "first", 1),
   );
   await writeFixture(
     "docs/site/learn/tutorials/diagram-editor/third.md",
-    tutorialChapter("third", 3),
+    tutorialChapter("diagram-editor", "third", 3),
   );
   await assert.rejects(
     () => buildStudioDocumentation(fixtureOptions),

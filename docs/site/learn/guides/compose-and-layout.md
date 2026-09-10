@@ -25,7 +25,7 @@ children and preserve source paint order.
 - `Grid` uses explicit tracks and explicit one-based item placement; there is
   no auto placement.
 
-```tsx
+```tsx docs:complete-snippet=layout-flex
 import {
   Flex,
   Rectangle,
@@ -83,7 +83,7 @@ Grid, Overlay, and Absolute value.
 
 `Group` composes Canvas transforms around any number of children:
 
-```tsx
+```tsx docs:complete-snippet=layout-group
 import { Group, Rectangle, Text } from "@crc/core";
 
 const transformed = (
@@ -111,7 +111,7 @@ isolates siblings.
 
 `Clip` applies one `Path2D` to all children. Nested clips intersect:
 
-```tsx
+```tsx docs:complete-snippet=layout-clip
 import { Clip, Image, createRegularPolygonPath } from "@crc/core";
 
 const src = "/landscape.png";
@@ -141,7 +141,7 @@ per shape.
 `Layer` owns a persistent offscreen CRC instance and accepts ordinary
 multi-child content:
 
-```tsx
+```tsx docs:complete-snippet=layout-layer
 import { Layer, Rectangle, Text, type CRCNode } from "@crc/core";
 
 function Chart(): CRCNode {

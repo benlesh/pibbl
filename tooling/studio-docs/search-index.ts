@@ -156,7 +156,7 @@ export function querySearchIndex(
         score:
           match.score +
           (record.kind === "api" &&
-          isExactApiSymbolMatch(record, normalizedQuery)
+          isExactApiSymbolMatch(record, query)
             ? exactApiSymbolBoost
             : 0),
       };
@@ -204,7 +204,13 @@ function recordsForPage(
   const kind = kindForPage(page.route);
   const breadcrumb = breadcrumbForPage(page.route, page.frontmatter.typeDomain);
   const aliases = (page.frontmatter.aliases ?? []).join(" ");
-  const symbols = (page.frontmatter.symbols ?? []).join(" ");
+  // Type-domain pages own their public symbols at individual anchored H2s.
+  // Keeping those symbols off the domain root makes an exact type search land
+  // on the canonical declaration rather than a generic category page.
+  const symbols =
+    page.frontmatter.apiCategory === "types"
+      ? ""
+      : (page.frontmatter.symbols ?? []).join(" ");
   const keywords = (page.frontmatter.keywords ?? []).join(" ");
   const root = {
     id: page.frontmatter.id,
@@ -219,7 +225,11 @@ function recordsForPage(
     keywords,
     body: page.plainText,
   } satisfies SearchRecord;
-  const headings = page.sections.map(({ heading, plainText }) => ({
+  const headings = page.sections
+    // The root record already represents the H1 and all of its text. Emitting
+    // an H1 record produces duplicate search destinations for the same page.
+    .filter(({ heading }) => heading.level > 1)
+    .map(({ heading, plainText }) => ({
     id: `${page.frontmatter.id}#${heading.id}`,
     url: `${page.route}#${heading.id}`,
     kind,
@@ -231,7 +241,7 @@ function recordsForPage(
     aliases: "",
     keywords,
     body: plainText,
-  })) satisfies SearchRecord[];
+    })) satisfies SearchRecord[];
   return [root, ...headings];
 }
 
@@ -305,13 +315,13 @@ function assertUniqueRecordIds(records: readonly SearchRecord[]): void {
 
 function isExactApiSymbolMatch(
   record: SearchRecord,
-  normalizedQuery: string,
+  query: string,
 ): boolean {
   return [record.symbols, record.aliases].some((value) =>
     value
       .split(/[\s,]+/u)
       .filter((candidate) => candidate.length > 0)
-      .some((candidate) => normalizeToken(candidate) === normalizedQuery),
+      .some((candidate) => candidate === query),
   );
 }
 

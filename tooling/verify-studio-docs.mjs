@@ -36,8 +36,8 @@ async function waitForServer(process) {
   throw new Error("Timed out waiting for the Studio preview server.");
 }
 
-async function open(page, hash) {
-  await page.goto(`${origin}/${hash}`);
+async function open(page, hash, query = "") {
+  await page.goto(`${origin}/${query}${hash}`);
   await page.locator("#studio-main").waitFor({ timeout: 30_000 });
 }
 
@@ -83,7 +83,21 @@ async function navigationContract(page) {
   }
   await assertExpanded(page, "#/api/types/events", "examples", false);
 
-  await page.locator("[data-navigation-id='examples'][aria-expanded]").click();
+  const examplesDisclosure = page.locator(
+    "[data-navigation-id='examples'][aria-expanded]",
+  );
+  await examplesDisclosure.focus();
+  await examplesDisclosure.click();
+  const focusedDisclosure = await page.evaluate(
+    () => document.activeElement?.getAttribute("data-navigation-id"),
+  );
+  if (focusedDisclosure !== "examples") {
+    throw failure(
+      "#/api/types/events",
+      "a rerendered disclosure to retain visible keyboard focus",
+      String(focusedDisclosure),
+    );
+  }
   await assertExpanded(page, "#/api/types/events", "examples", true);
   await page.reload();
   await assertExpanded(page, "#/api/types/events", "examples", true);
@@ -148,6 +162,22 @@ async function publicContentContract(page) {
   const typeAnchor = page.locator("#studio-main #crcpointerevent");
   if ((await typeAnchor.count()) !== 1) {
     throw failure("#/api/types/events#crcpointerevent", "the CRCPointerEvent type anchor", `${await typeAnchor.count()} anchors`);
+  }
+  const directAnchorFocus = await page.evaluate(
+    () => ({
+      id: document.activeElement?.id,
+      tabindex: document.activeElement?.getAttribute("tabindex"),
+    }),
+  );
+  if (
+    directAnchorFocus.id !== "crcpointerevent" ||
+    directAnchorFocus.tabindex !== "-1"
+  ) {
+    throw failure(
+      "#/api/types/events#crcpointerevent",
+      "direct anchored documentation navigation to focus the exact type target",
+      JSON.stringify(directAnchorFocus),
+    );
   }
 
   await open(page, "#/examples/drawing/filters");
@@ -236,6 +266,24 @@ async function searchContract(page) {
   if (!after.some((url) => /search-dialog|crc-studio-search/u.test(url))) {
     throw failure(route, "search code loaded after focus intent", JSON.stringify(after.filter((url) => /search/u.test(url))));
   }
+
+  await page.getByRole("button", { name: "Search documentation" }).first().click();
+  await page.locator("[data-search-input]").fill("CRCPointerEvent");
+  await dialog.getByRole("status").getByText("results found", { exact: false }).waitFor({ timeout: 30_000 });
+  const typeResult = page.locator("[role='option']").first();
+  const typeResultUrl = await typeResult.getAttribute("data-search-url");
+  if (typeResultUrl !== "#/api/types/events#crcpointerevent") {
+    throw failure(route, "exact CRCPointerEvent type search destination", String(typeResultUrl));
+  }
+  await page.locator("[data-search-input]").press("ArrowDown");
+  await page.locator("[data-search-input]").press("Enter");
+  await page.locator("#studio-main #crcpointerevent").waitFor({ timeout: 30_000 });
+  const searchAnchorFocus = await page.evaluate(
+    () => document.activeElement?.id,
+  );
+  if (searchAnchorFocus !== "crcpointerevent") {
+    throw failure(route, "search navigation to focus the exact type anchor", String(searchAnchorFocus));
+  }
 }
 
 async function searchRetryContract(browser) {
@@ -243,10 +291,7 @@ async function searchRetryContract(browser) {
   const page = await context.newPage();
   const route = "#/learn";
   try {
-    await page.addInitScript(() => {
-      window.__CRC_STUDIO_ACCEPTANCE_FAIL_SEARCH_ONCE__ = true;
-    });
-    await open(page, route);
+    await open(page, route, "?crcStudioSearchRetry=1");
     await page
       .getByRole("button", { name: "Search documentation" })
       .first()
@@ -259,12 +304,6 @@ async function searchRetryContract(browser) {
     await retry.click();
     await page.locator("[data-search-input]").fill("crcState");
     await dialog.getByRole("status").getByText("results found", { exact: false }).waitFor({ timeout: 30_000 });
-    const failureFlag = await page.evaluate(
-      () => window.__CRC_STUDIO_ACCEPTANCE_FAIL_SEARCH_ONCE__,
-    );
-    if (failureFlag !== false) {
-      throw failure(route, "the one-shot acceptance loader failure to be consumed", String(failureFlag));
-    }
   } finally {
     await context.close();
   }

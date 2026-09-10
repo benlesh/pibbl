@@ -107,7 +107,7 @@ from CRC, and `react` is not required.
 JavaScript authors use `.jsx`, the same automatic-runtime configuration, and
 normal ESM imports:
 
-```jsx
+```jsx docs:complete-snippet=javascript-runtime
 /** @jsxImportSource @crc/core */
 import { Rectangle, Text, crc } from "@crc/core";
 
@@ -127,6 +127,60 @@ window.addEventListener("pagehide", () => controller.dispose(), { once: true });
 JavaScript receives the same runtime validation as TypeScript but not static
 prop checking. Keep styles explicit and use the diagnostics in [JSX
 troubleshooting](#/learn/guides/jsx-troubleshooting).
+
+## A complete interactive scene
+
+```tsx docs:complete-snippet=jsx-quick-start
+import {
+  Group,
+  Rectangle,
+  Text,
+  crc,
+  crcState,
+  type CRCController,
+  type CRCNode,
+} from "@crc/core";
+
+interface PosterProps {
+  initialMessage: string;
+}
+
+function Poster({ initialMessage }: PosterProps): CRCNode {
+  const [message, setMessage] = crcState(initialMessage);
+
+  return (
+    <Group>
+      <Rectangle
+        style={{ width: 400, height: 240, fill: "#1f4bd8", cursor: "pointer" }}
+        onClick={() =>
+          setMessage((old) => (old === "Hello" ? "CRC!" : "Hello"))
+        }
+      />
+      <Text
+        style={{
+          x: 200,
+          y: 100,
+          fill: "#fff",
+          font: "800 48px sans-serif",
+          textAlign: "center",
+        }}
+      >
+        {message}
+      </Text>
+    </Group>
+  );
+}
+
+export function mountPoster(canvas: HTMLCanvasElement): CRCController {
+  return crc(canvas, <Poster initialMessage="Hello" />);
+}
+```
+
+```ts docs:complete-snippet=jsx-quick-start
+const controller = mountPoster(document.querySelector("canvas")!);
+controller.dispose();
+controller.dispose(); // Idempotent.
+```
 
 ## One runtime per file
 

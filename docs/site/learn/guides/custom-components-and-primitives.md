@@ -99,7 +99,7 @@ filtered `Group`.
 private capabilities on the returned component value, resolves style before
 render, and permits pure measurement without invoking the renderer.
 
-```tsx
+```tsx docs:complete-snippet=custom-primitive
 import {
   definePrimitive,
   type FillStyle,

@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import MiniSearch from "minisearch";
+import { resolve } from "node:path";
 
+import { buildStudioDocumentation } from "./build";
 import {
   buildSearchBundle,
   querySearchIndex,
@@ -158,6 +160,18 @@ assert.equal(
   searchSearchBundle(first, "crcWhenChangd")[0]?.url,
   "#/api/hooks/crc-when-changed",
 );
+assert.equal(
+  searchSearchBundle(first, "CRCFilter")[0]?.url,
+  "#/api/types/filters#crcfilter",
+  "A type symbol must prefer its owned heading over its type-domain root.",
+);
+assert.equal(
+  first.searchRecords.some(
+    ({ id }) => id === "api-types-filters#filter-types",
+  ),
+  false,
+  "A page root and its H1 section must not create duplicate destinations.",
+);
 assert.throws(
   () =>
     buildSearchBundle({
@@ -191,6 +205,49 @@ for (const [query, options] of [
     `Restored browser index must preserve the build query contract for ${query}.`,
   );
 }
+
+const realDocumentation = await buildStudioDocumentation({
+  repositoryRoot: resolve(import.meta.dirname, "../.."),
+});
+const realBundle = buildSearchBundle({
+  pages: realDocumentation.pages,
+  examples: realDocumentation.examples,
+});
+for (const [symbol, destination] of Object.entries(
+  realDocumentation.apiCoverage.types,
+)) {
+  const page = realDocumentation.pageByRoute[destination.route];
+  if (page?.frontmatter.apiCategory !== "types") {
+    assert.equal(
+      searchSearchBundle(realBundle, symbol)[0]?.url,
+      destination.route,
+      `${symbol} must rank its exact API owner first.`,
+    );
+    continue;
+  }
+  const heading = page?.headings.find(
+    ({ level, text }) => level === 2 && text.replaceAll("`", "") === symbol,
+  );
+  assert.ok(
+    heading,
+    `${symbol} must have one owning API type heading in the public manifest.`,
+  );
+  assert.equal(
+    searchSearchBundle(realBundle, symbol)[0]?.url,
+    `${destination.route}#${heading.id}`,
+    `${symbol} must rank its exact type anchor first.`,
+  );
+}
+assert.equal(
+  searchSearchBundle(realBundle, "CRCRef")[0]?.url,
+  "#/api/types/canvas-runtime#crcref",
+  "The public CRCRef type must beat the lower-case crcRef hook.",
+);
+assert.equal(
+  searchSearchBundle(realBundle, "CRCPointerEvent")[0]?.url,
+  "#/api/types/events#crcpointerevent",
+  "The public CRCPointerEvent type must resolve directly to its anchor.",
+);
 
 process.stdout.write(
   "Validated deterministic public MiniSearch records and ranking.\n",

@@ -22,7 +22,7 @@ any JSX compiler configuration to use this guide.
 pnpm add @crc/core
 ```
 
-```ts
+```ts docs:complete-snippet=without-jsx
 import {
   FocusManagement,
   Fragment,

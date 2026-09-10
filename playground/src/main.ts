@@ -20,6 +20,10 @@ const app = document.getElementById("app");
 if (!app) throw new Error("No app element found.");
 
 const lifecycle = createPageLifecycle();
+const searchLoaderOptions =
+  import.meta.env.VITE_CRC_STUDIO_ACCEPTANCE_SEARCH_FAIL_ONCE === "1"
+    ? createAcceptanceSearchLoaderOptions()
+    : undefined;
 const shell = createStudioShell({
   app,
   navigation: buildNavigation(documentation, learningExampleCatalog),
@@ -28,6 +32,7 @@ const shell = createStudioShell({
   },
   loadSearchBundle: createSearchBundleLoader(
     () => import("virtual:crc-studio-search"),
+    searchLoaderOptions,
   ),
 });
 const documentationPages = createDocumentationPages({
@@ -109,3 +114,21 @@ window.addEventListener("beforeunload", () => {
   shell.dispose();
 });
 void renderRoute();
+
+/**
+ * The verifier-only build opts into one failed lazy load for one explicit test
+ * URL. Normal production builds erase this branch, so visitors receive no
+ * browser global or URL-controlled search behavior.
+ */
+function createAcceptanceSearchLoaderOptions() {
+  let failNextSearchLoad = new URLSearchParams(window.location.search).has(
+    "crcStudioSearchRetry",
+  );
+  return {
+    beforeLoad: () => {
+      if (!failNextSearchLoad) return;
+      failNextSearchLoad = false;
+      throw new Error("Intentional verifier search loader failure.");
+    },
+  };
+}

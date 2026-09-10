@@ -208,7 +208,7 @@ createElement(
 
 The exact signature is `createElement(type, props, ...children)`. It replaces
 all direct factory calls and is not a compatibility shim. See the standalone
-[non-JSX guide](../guides/without-jsx.md).
+[non-JSX guide](../site/learn/guides/author-without-jsx.md).
 
 ## Verification checklist
 

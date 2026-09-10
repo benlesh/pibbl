@@ -127,6 +127,26 @@ describe("Studio shell navigation", () => {
     shell.dispose();
   });
 
+  it("restores focus to a disclosure after rerendering its navigation branch", () => {
+    const app = document.createElement("div");
+    document.body.appendChild(app);
+    const shell = createStudioShell({ app, navigation });
+    app.querySelector<HTMLButtonElement>(".studio-menu-button")?.click();
+    const learnToggle = app.querySelector<HTMLButtonElement>(
+      "[data-navigation-id='learn'][aria-expanded]",
+    )!;
+
+    learnToggle.focus();
+    learnToggle.click();
+
+    const replacement = app.querySelector<HTMLButtonElement>(
+      "[data-navigation-id='learn'][aria-expanded]",
+    )!;
+    expect(document.activeElement).toBe(replacement);
+
+    shell.dispose();
+  });
+
   it("opens search from a visible trigger and the Ctrl/Cmd+K shortcut", async () => {
     const app = document.createElement("div");
     document.body.appendChild(app);
