@@ -224,7 +224,7 @@ export function computed<T>(
     const dependencies = new Set<SignalNode<unknown>>();
     node.state = 'evaluating';
     computedStack.push(node as ComputedSignalNode<unknown>);
-    let changed = false;
+    let changed: boolean;
     try {
       const result = withSignalWriteForbidden(
         computedWriteErrorLabel(node as SignalNode<unknown>),
