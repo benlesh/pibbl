@@ -1,8 +1,28 @@
+export interface WebGLStateBaseline {
+  readonly textureUnitCount: number;
+}
+
+/** Reads the one bounded capability needed to install the fixed state baseline. */
+export function createWebGLStateBaseline(
+  gl: WebGL2RenderingContext,
+): WebGLStateBaseline {
+  const textureUnitCount = gl.getParameter(
+    gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS,
+  ) as unknown;
+  if (!Number.isInteger(textureUnitCount) || (textureUnitCount as number) < 1) {
+    throw new Error(
+      'WebGL2 MAX_COMBINED_TEXTURE_IMAGE_UNITS must be a positive integer.',
+    );
+  }
+  return Object.freeze({ textureUnitCount: textureUnitCount as number });
+}
+
 /** Installs the complete WebGL state baseline owned by the initial CRC pass. */
 export function installWebGLStateBaseline(
   gl: WebGL2RenderingContext,
   width: number,
   height: number,
+  baseline: WebGLStateBaseline,
 ): void {
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   gl.viewport(0, 0, width, height);
@@ -14,11 +34,18 @@ export function installWebGLStateBaseline(
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
-  gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(gl.TEXTURE_2D, null);
-  gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
-  gl.bindTexture(gl.TEXTURE_3D, null);
-  gl.bindTexture(gl.TEXTURE_2D_ARRAY, null);
+  try {
+    for (let unit = 0; unit < baseline.textureUnitCount; unit += 1) {
+      gl.activeTexture(gl.TEXTURE0 + unit);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+      gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+      gl.bindTexture(gl.TEXTURE_3D, null);
+      gl.bindTexture(gl.TEXTURE_2D_ARRAY, null);
+      gl.bindSampler(unit, null);
+    }
+  } finally {
+    gl.activeTexture(gl.TEXTURE0);
+  }
 
   gl.colorMask(true, true, true, true);
   gl.depthMask(true);
@@ -74,7 +101,8 @@ export function beginWebGLFrame(
   gl: WebGL2RenderingContext,
   width: number,
   height: number,
+  baseline: WebGLStateBaseline,
 ): void {
-  installWebGLStateBaseline(gl, width, height);
+  installWebGLStateBaseline(gl, width, height, baseline);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 }

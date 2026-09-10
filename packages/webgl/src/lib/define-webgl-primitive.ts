@@ -6,6 +6,7 @@ import type {
 } from '@crc/core';
 import { WEBGL_BACKEND_TOKEN } from './backend.js';
 import { crcWebGLContext } from './hooks/crc-webgl-context.js';
+import { registerWebGLPrimitiveHitMetadata } from './primitive-metadata.js';
 import type {
   CRCWebGLHitCapability,
   CRCWebGLPrimitiveCapabilities,
@@ -34,7 +35,13 @@ export function defineWebGLPrimitive<
   S extends SystemStyle,
   N extends SystemStyle = S,
   R extends SystemStyle = N,
-  const H extends CRCWebGLHitCapability<P, R> = CRCWebGLHitCapability<P, R>,
+  const H extends Exclude<
+    CRCWebGLHitCapability<P, R>,
+    { readonly kind: 'none' }
+  > = Exclude<
+    CRCWebGLHitCapability<P, R>,
+    { readonly kind: 'none' }
+  >,
 >(
   render: CRCWebGLPrimitiveRender<P, R>,
   capabilities: CRCWebGLPrimitiveCapabilities<P, S, N, R> & { hit: H },
@@ -89,10 +96,12 @@ export function defineWebGLPrimitive<
     CRCWebGLProgramProps<P, H>,
     CRCWebGLPrimitiveInput<P, S, H>
   >;
-  return define(WEBGL_BACKEND_TOKEN, program, {
+  const component = define(WEBGL_BACKEND_TOKEN, program, {
     normalizeStyle: capabilities.normalizeStyle,
     resolveStyle: capabilities.resolveStyle,
   });
+  registerWebGLPrimitiveHitMetadata(program, capabilities.hit);
+  return component;
 }
 
 function assertHitCapability(

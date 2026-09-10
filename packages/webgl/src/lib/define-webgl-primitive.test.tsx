@@ -4,6 +4,7 @@ import {
   crc,
   type CRCNode,
   type PrimitiveInputOf,
+  type SystemStyle,
 } from '@crc/core';
 import {
   executeBackendCRC,
@@ -13,6 +14,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   createWebGLGeometry,
   defineWebGLPrimitive,
+  type CRCWebGLHitCapability,
   type CRCWebGLTransformStyle,
 } from '../index.js';
 import { createWebGLBackend } from './backend.js';
@@ -62,6 +64,10 @@ describe('defineWebGLPrimitive', () => {
 
     type DecorativeInput = PrimitiveInputOf<typeof Decorative>;
     type GeometryInput = PrimitiveInputOf<typeof Geometry>;
+    const widenedHit = { kind: 'none' } as CRCWebGLHitCapability<
+      {},
+      CRCWebGLTransformStyle
+    >;
     const typeContract = () => {
       const allowed: DecorativeInput = { pointerEvents: 'none' };
       // @ts-expect-error Decorative WebGL primitives cannot participate in hits.
@@ -72,7 +78,69 @@ describe('defineWebGLPrimitive', () => {
         // @ts-expect-error Core Canvas filters belong on WebGLLayer, not children.
         style: { filter: { type: 'blur', radius: 1 } },
       };
-      return { allowed, automatic, interactive, filtered };
+      const Widened = defineWebGLPrimitive<{}, CRCWebGLTransformStyle>(
+        function renderWidened() {},
+        // @ts-expect-error A widened hit union must be narrowed before definition.
+        { hit: widenedHit },
+      );
+      return { allowed, automatic, interactive, filtered, Widened };
+    };
+    void typeContract;
+  });
+
+  it('closes filters for custom specified styles without collapsing normalize/resolve types', () => {
+    interface CustomSpecifiedStyle extends SystemStyle {
+      readonly tone?: string;
+    }
+    interface CustomNormalizedStyle extends SystemStyle {
+      readonly normalizedTone: string;
+    }
+    interface CustomResolvedStyle extends SystemStyle {
+      readonly resolvedTone: string;
+    }
+    const Styled = defineWebGLPrimitive<
+      { readonly label: string },
+      CustomSpecifiedStyle,
+      CustomNormalizedStyle,
+      CustomResolvedStyle
+    >(
+      function renderStyled(props, style) {
+        const label: string = props.label;
+        const resolvedTone: string = style.resolvedTone;
+        void label;
+        void resolvedTone;
+      },
+      {
+        normalizeStyle(style) {
+          const tone: string | undefined = style.tone;
+          return { normalizedTone: tone ?? 'default' };
+        },
+        resolveStyle(style) {
+          const normalizedTone: string = style.normalizedTone;
+          return { resolvedTone: normalizedTone };
+        },
+        hit: {
+          kind: 'custom',
+          resolve(input) {
+            const resolvedTone: string = input.style.resolvedTone;
+            return resolvedTone.length > 0 ? 1 : null;
+          },
+        },
+      },
+    );
+
+    type StyledInput = PrimitiveInputOf<typeof Styled>;
+    const typeContract = () => {
+      const valid: StyledInput = { label: 'valid', style: { tone: 'warm' } };
+      const filtered: StyledInput = {
+        label: 'filtered',
+        style: {
+          tone: 'warm',
+          // @ts-expect-error Every custom WebGL specified style closes core filters.
+          filter: { type: 'blur', radius: 1 },
+        },
+      };
+      return { valid, filtered };
     };
     void typeContract;
   });
@@ -148,6 +216,36 @@ describe('defineWebGLPrimitive', () => {
     );
     mounted.dispose();
   });
+
+  it.each([
+    ['automatic pointer events', { pointerEvents: 'auto' }],
+    ['an event handler', { pointerEvents: 'none', onClick() {} }],
+    ['focus participation', { pointerEvents: 'none', keyboardFocusable: true }],
+    [
+      'focus navigation bounds',
+      {
+        pointerEvents: 'none',
+        keyboardNavigationBounds: { x: 0, y: 0, width: 1, height: 1 },
+      },
+    ],
+    ['a cursor', { pointerEvents: 'none', cursor: 'pointer' }],
+  ] as const)('rejects untyped decorative input with %s', (_label, props) => {
+    const render = vi.fn();
+    const Decorative = defineWebGLPrimitive<{}, CRCWebGLTransformStyle>(
+      function renderDecorativeParticipation() {
+        render();
+      },
+      { hit: { kind: 'none' } },
+    );
+    const root = createElement(Decorative as any, props as any);
+    const mounted = mountWebGL(root);
+
+    expect(() => executeBackendCRC(mounted.mount, root, 4)).toThrowError(
+      /DecorativeParticipation.*decorative.*event.*focus.*cursor.*unsupported/i,
+    );
+    expect(render).not.toHaveBeenCalled();
+    mounted.dispose();
+  });
 });
 
 function mountWebGL(root: CRCNode) {
@@ -183,7 +281,8 @@ function createNoopGL(): WebGL2RenderingContext {
       if (typeof property !== 'string') return undefined;
       const record = target as Record<string, unknown>;
       if (!(property in record)) {
-        record[property] = /^[A-Z0-9_]+$/.test(property) ? constant++ : () => undefined;
+        record[property] = /^[A-Z0-9_]+$/.test(property) ? constant++ :
+          property === 'getParameter' ? () => 8 : () => undefined;
       }
       return record[property];
     },

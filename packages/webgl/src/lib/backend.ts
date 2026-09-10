@@ -12,8 +12,11 @@ import {
 } from './render-environment.js';
 import {
   beginWebGLFrame,
+  createWebGLStateBaseline,
   installWebGLStateBaseline,
+  type WebGLStateBaseline,
 } from './gpu/state.js';
+import { getWebGLPrimitiveHitMetadata } from './primitive-metadata.js';
 
 export const WEBGL_BACKEND_TOKEN = createBackendToken('webgl2');
 
@@ -30,26 +33,56 @@ export function createWebGLBackend(
 ): CRCBackendDriver<WebGLRenderEnvironment> {
   const { gl } = options;
   const isContextLost = options.isContextLost ?? (() => gl.isContextLost());
+  let baselineGeneration: number | undefined;
+  let stateBaseline: WebGLStateBaseline | undefined;
   return {
     token: WEBGL_BACKEND_TOKEN,
     name: 'webgl2',
     beginFrame(frameInput) {
+      const contextGeneration = options.getContextGeneration();
+      if (
+        stateBaseline === undefined ||
+        baselineGeneration !== contextGeneration
+      ) {
+        stateBaseline = createWebGLStateBaseline(gl);
+        baselineGeneration = contextGeneration;
+      }
       const environment = createWebGLRenderEnvironment({
         gl,
-        contextGeneration: options.getContextGeneration(),
+        contextGeneration,
         camera: options.getCamera(),
         frame: frameInput,
         isContextLost,
+        stateBaseline,
       });
-      beginWebGLFrame(gl, frameInput.backingWidth, frameInput.backingHeight);
+      beginWebGLFrame(
+        gl,
+        frameInput.backingWidth,
+        frameInput.backingHeight,
+        stateBaseline,
+      );
       return { environment };
     },
     enterComponent(frame) {
       const { width, height } = frame.environment.backingViewport;
-      installWebGLStateBaseline(gl, width, height);
-      return () => installWebGLStateBaseline(gl, width, height);
+      const { stateBaseline: frameBaseline } = frame.environment;
+      installWebGLStateBaseline(gl, width, height, frameBaseline);
+      return () => installWebGLStateBaseline(
+        gl,
+        width,
+        height,
+        frameBaseline,
+      );
     },
     runPrimitive(frame, input, runProgram) {
+      const hit = getWebGLPrimitiveHitMetadata(input.definition.program);
+      if (hit?.kind === 'none') {
+        assertDecorativeNonParticipation(
+          input.componentName,
+          input.props,
+          input.style,
+        );
+      }
       if (input.style.filter !== undefined) {
         throw new Error(
           `${input.componentName} style.filter is not supported inside ` +
@@ -68,8 +101,40 @@ export function createWebGLBackend(
     },
     finishFrame(frame) {
       const { width, height } = frame.environment.backingViewport;
-      installWebGLStateBaseline(gl, width, height);
+      installWebGLStateBaseline(
+        gl,
+        width,
+        height,
+        frame.environment.stateBaseline,
+      );
     },
-    dispose() {},
+    dispose() {
+      stateBaseline = undefined;
+      baselineGeneration = undefined;
+    },
   };
+}
+
+function assertDecorativeNonParticipation(
+  componentName: string,
+  props: Readonly<Record<PropertyKey, unknown>>,
+  style: Readonly<SystemStyle>,
+): void {
+  const hasEventHandler = Object.entries(props).some(
+    ([name, value]) => /^on[A-Z]/.test(name) && typeof value === 'function',
+  );
+  const styleRecord = style as Readonly<Record<PropertyKey, unknown>>;
+  if (
+    (props.pointerEvents !== undefined && props.pointerEvents !== 'none') ||
+    props.keyboardFocusable !== undefined ||
+    props.keyboardNavigationBounds !== undefined ||
+    props.cursor !== undefined ||
+    styleRecord.cursor !== undefined ||
+    hasEventHandler
+  ) {
+    throw new Error(
+      `${componentName} is decorative (hit kind "none"); event, focus, and ` +
+      'cursor participation is unsupported.',
+    );
+  }
 }

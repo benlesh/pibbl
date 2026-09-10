@@ -5,13 +5,18 @@ import { createWebGLBackend } from '../backend.js';
 import { defineWebGLPrimitive } from '../define-webgl-primitive.js';
 import { resolveCamera } from '../math/camera.js';
 import type { CRCWebGLTransformStyle } from '../types.js';
-import { beginWebGLFrame, installWebGLStateBaseline } from './state.js';
+import {
+  beginWebGLFrame,
+  createWebGLStateBaseline,
+  installWebGLStateBaseline,
+} from './state.js';
 
 describe('WebGL state baseline', () => {
   it('begins from transparent color and depth clear values and clears both buffers', () => {
     const recording = createRecordingGL();
+    const baseline = createWebGLStateBaseline(recording.gl);
 
-    beginWebGLFrame(recording.gl, 320, 180);
+    beginWebGLFrame(recording.gl, 320, 180, baseline);
 
     expect(recording.operations.at(-1)).toEqual([
       'clear',
@@ -23,14 +28,52 @@ describe('WebGL state baseline', () => {
     });
   });
 
-  it('resets every declared state category to a fixed framework baseline', () => {
+  it('resets every declared state category, including nonzero texture units, to a fixed framework baseline', () => {
     const recording = createRecordingGL();
+    const baseline = createWebGLStateBaseline(recording.gl);
     mutateEveryState(recording.gl);
 
-    installWebGLStateBaseline(recording.gl, 320, 180);
+    installWebGLStateBaseline(recording.gl, 320, 180, baseline);
 
-    expect(recording.snapshot()).toEqual(expectedBaseline(recording.gl, 320, 180));
-    expect(recording.getParameterCalls).toBe(0);
+    expect(recording.snapshot()).toEqual(
+      expectedBaseline(recording.gl, 320, 180, baseline.textureUnitCount),
+    );
+    expect(recording.snapshot()).toMatchObject({
+      activeTexture: recording.gl.TEXTURE0,
+      [`sampler:${7}`]: null,
+      [`texture:${recording.gl.TEXTURE0 + 7}:${recording.gl.TEXTURE_2D}`]: null,
+    });
+    expect(recording.getParameterCalls).toBe(1);
+  });
+
+  it('clears a real WebGL2 texture and sampler from a nonzero unit', () => {
+    const gl = document.createElement('canvas').getContext('webgl2');
+    expect(gl).not.toBeNull();
+    const context = gl!;
+    const baseline = createWebGLStateBaseline(context);
+    expect(baseline.textureUnitCount).toBeGreaterThan(1);
+    const unit = Math.min(7, baseline.textureUnitCount - 1);
+    const texture = context.createTexture();
+    const sampler = context.createSampler();
+    expect(texture).not.toBeNull();
+    expect(sampler).not.toBeNull();
+
+    try {
+      context.activeTexture(context.TEXTURE0 + unit);
+      context.bindTexture(context.TEXTURE_2D, texture);
+      context.bindSampler(unit, sampler);
+
+      installWebGLStateBaseline(context, 1, 1, baseline);
+
+      expect(context.getParameter(context.ACTIVE_TEXTURE)).toBe(context.TEXTURE0);
+      context.activeTexture(context.TEXTURE0 + unit);
+      expect(context.getParameter(context.TEXTURE_BINDING_2D)).toBeNull();
+      expect(context.getParameter(context.SAMPLER_BINDING)).toBeNull();
+    } finally {
+      context.activeTexture(context.TEXTURE0);
+      context.deleteSampler(sampler);
+      context.deleteTexture(texture);
+    }
   });
 
   it('gives the next primitive the baseline after a sibling mutates GL state', () => {
@@ -55,8 +98,8 @@ describe('WebGL state baseline', () => {
 
     executeBackendCRC(mounted.mount, mounted.root, 10);
 
-    expect(observed).toEqual(expectedBaseline(recording.gl, 80, 40));
-    expect(recording.getParameterCalls).toBe(0);
+    expect(observed).toEqual(expectedBaseline(recording.gl, 80, 40, 8));
+    expect(recording.getParameterCalls).toBe(1);
     mounted.dispose();
   });
 
@@ -76,20 +119,44 @@ describe('WebGL state baseline', () => {
     );
 
     expect(() => executeBackendCRC(mounted.mount, mounted.root, 11)).toThrow(failure);
-    expect(recording.snapshot()).toEqual(expectedBaseline(recording.gl, 80, 40));
-    expect(recording.getParameterCalls).toBe(0);
+    expect(recording.snapshot()).toEqual(expectedBaseline(recording.gl, 80, 40, 8));
+    expect(recording.getParameterCalls).toBe(1);
+    mounted.dispose();
+  });
+
+  it('queries the texture-unit capability once for each context generation', () => {
+    const recording = createRecordingGL();
+    let generation = 1;
+    const Probe = defineWebGLPrimitive<{}, CRCWebGLTransformStyle>(
+      function renderGenerationProbe() {},
+      { hit: { kind: 'none' } },
+    );
+    const root = createElement(Probe, { pointerEvents: 'none' });
+    const mounted = mountScene(recording.gl, root, () => generation);
+
+    executeBackendCRC(mounted.mount, root, 20);
+    executeBackendCRC(mounted.mount, root, 21);
+    expect(recording.getParameterCalls).toBe(1);
+
+    generation = 2;
+    executeBackendCRC(mounted.mount, root, 22);
+    expect(recording.getParameterCalls).toBe(2);
     mounted.dispose();
   });
 });
 
-function mountScene(gl: WebGL2RenderingContext, root: CRCNode) {
+function mountScene(
+  gl: WebGL2RenderingContext,
+  root: CRCNode,
+  getContextGeneration: () => number = () => 1,
+) {
   const parentCanvas = document.createElement('canvas');
   const parent = crc(parentCanvas, undefined);
   const camera = resolveCamera(undefined, 40, 20);
   const driver = createWebGLBackend({
     gl,
     getCamera: () => camera,
-    getContextGeneration: () => 1,
+    getContextGeneration,
   });
   const mount = mountBackendCRC(new OffscreenCanvas(80, 40), root, {
     parent: parentCanvas,
@@ -114,7 +181,7 @@ interface RecordingGL {
   snapshot(): Record<string, unknown>;
 }
 
-function createRecordingGL(): RecordingGL {
+function createRecordingGL(textureUnitCount = 8): RecordingGL {
   const state: Record<string, unknown> = {};
   let nextConstant = 1;
   let getParameterCalls = 0;
@@ -123,9 +190,10 @@ function createRecordingGL(): RecordingGL {
   const gl = new Proxy({}, {
     get(_target, property) {
       if (property === 'getParameter') {
-        return () => {
+        return (parameter: number) => {
           getParameterCalls += 1;
-          return undefined;
+          return parameter === constants.MAX_COMBINED_TEXTURE_IMAGE_UNITS ?
+            textureUnitCount : undefined;
         };
       }
       if (typeof property !== 'string') return undefined;
@@ -158,7 +226,11 @@ function recordState(
     return;
   }
   if (operation === 'bindTexture') {
-    state[`texture:${String(args[0])}`] = args[1];
+    state[`texture:${String(state.activeTexture)}:${String(args[0])}`] = args[1];
+    return;
+  }
+  if (operation === 'bindSampler') {
+    state[`sampler:${String(args[0])}`] = args[1];
     return;
   }
   if (operation === 'bindBuffer') {
@@ -186,11 +258,12 @@ function mutateEveryState(gl: WebGL2RenderingContext): void {
   gl.bindVertexArray({ dirty: 'vao' } as WebGLVertexArrayObject);
   gl.bindBuffer(gl.ARRAY_BUFFER, { dirty: 'array' } as WebGLBuffer);
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, { dirty: 'element' } as WebGLBuffer);
-  gl.activeTexture(gl.TEXTURE7);
+  gl.activeTexture(gl.TEXTURE0 + 7);
   gl.bindTexture(gl.TEXTURE_2D, { dirty: '2d' } as WebGLTexture);
   gl.bindTexture(gl.TEXTURE_CUBE_MAP, { dirty: 'cube' } as WebGLTexture);
   gl.bindTexture(gl.TEXTURE_3D, { dirty: '3d' } as WebGLTexture);
   gl.bindTexture(gl.TEXTURE_2D_ARRAY, { dirty: 'array' } as WebGLTexture);
+  gl.bindSampler(7, { dirty: 'sampler' } as WebGLSampler);
   gl.colorMask(false, false, false, false);
   gl.depthMask(false);
   gl.stencilMaskSeparate(gl.FRONT, 0);
@@ -224,6 +297,7 @@ function expectedBaseline(
   gl: WebGL2RenderingContext,
   width: number,
   height: number,
+  textureUnitCount: number,
 ): Record<string, unknown> {
   const state: Record<string, unknown> = {};
   recordState(state, 'bindFramebuffer', [gl.FRAMEBUFFER, null]);
@@ -234,13 +308,17 @@ function expectedBaseline(
   recordState(state, 'bindVertexArray', [null]);
   recordState(state, 'bindBuffer', [gl.ARRAY_BUFFER, null]);
   recordState(state, 'bindBuffer', [gl.ELEMENT_ARRAY_BUFFER, null]);
+  for (let unit = 0; unit < textureUnitCount; unit += 1) {
+    recordState(state, 'activeTexture', [gl.TEXTURE0 + unit]);
+    for (const target of [
+      gl.TEXTURE_2D,
+      gl.TEXTURE_CUBE_MAP,
+      gl.TEXTURE_3D,
+      gl.TEXTURE_2D_ARRAY,
+    ]) recordState(state, 'bindTexture', [target, null]);
+    recordState(state, 'bindSampler', [unit, null]);
+  }
   recordState(state, 'activeTexture', [gl.TEXTURE0]);
-  for (const target of [
-    gl.TEXTURE_2D,
-    gl.TEXTURE_CUBE_MAP,
-    gl.TEXTURE_3D,
-    gl.TEXTURE_2D_ARRAY,
-  ]) recordState(state, 'bindTexture', [target, null]);
   recordState(state, 'colorMask', [true, true, true, true]);
   recordState(state, 'depthMask', [true]);
   recordState(state, 'stencilMaskSeparate', [gl.FRONT, 0xffffffff]);

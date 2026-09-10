@@ -218,7 +218,8 @@ function createNoopGL(): WebGL2RenderingContext {
       if (typeof property !== 'string') return undefined;
       const record = target as Record<string, unknown>;
       if (!(property in record)) {
-        record[property] = /^[A-Z0-9_]+$/.test(property) ? constant++ : () => undefined;
+        record[property] = /^[A-Z0-9_]+$/.test(property) ? constant++ :
+          property === 'getParameter' ? () => 8 : () => undefined;
       }
       return record[property];
     },

@@ -65,6 +65,50 @@ describe('Group3D', () => {
     mounted.dispose();
   });
 
+  it('restores its model scope before a failed frame finishes', () => {
+    const parentCanvas = document.createElement('canvas');
+    const parent = crc(parentCanvas, undefined);
+    const gl = createNoopGL();
+    const camera = resolveCamera(undefined, 20, 10);
+    const baseDriver = createWebGLBackend({
+      gl,
+      getCamera: () => camera,
+      getContextGeneration: () => 1,
+    });
+    const finished: { readonly success: boolean; readonly modelDepth: number }[] = [];
+    const driver = {
+      ...baseDriver,
+      finishFrame(frame: Parameters<typeof baseDriver.finishFrame>[0], success: boolean) {
+        finished.push({ success, modelDepth: frame.environment.modelStack.length });
+        baseDriver.finishFrame(frame, success);
+      },
+    };
+    const failure = new Error('descendant failed');
+    const Throwing = defineWebGLPrimitive<{}, CRCWebGLTransformStyle>(
+      function renderThrowingDescendant() {
+        throw failure;
+      },
+      { hit: { kind: 'none' } },
+    );
+    const root = (
+      <Group3D style={{ translateX: 5 }}>
+        <Throwing pointerEvents="none" />
+      </Group3D>
+    );
+    const mount = mountBackendCRC(new OffscreenCanvas(40, 20), root, {
+      parent: parentCanvas,
+      logicalWidth: 20,
+      logicalHeight: 10,
+      driver,
+    });
+
+    expect(() => executeBackendCRC(mount, root, 2)).toThrow(failure);
+    expect(finished).toEqual([{ success: false, modelDepth: 1 }]);
+
+    mount.dispose();
+    parent.dispose();
+  });
+
   it('owns only a propagation listener and releases it when removed', () => {
     const parentCanvas = document.createElement('canvas');
     const add = vi.spyOn(parentCanvas, 'addEventListener');
@@ -128,7 +172,8 @@ function createNoopGL(): WebGL2RenderingContext {
       if (typeof property !== 'string') return undefined;
       const record = target as Record<string, unknown>;
       if (!(property in record)) {
-        record[property] = /^[A-Z0-9_]+$/.test(property) ? constant++ : () => undefined;
+        record[property] = /^[A-Z0-9_]+$/.test(property) ? constant++ :
+          property === 'getParameter' ? () => 8 : () => undefined;
       }
       return record[property];
     },

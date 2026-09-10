@@ -4,6 +4,7 @@ import type {
   CRCWebGLCameraSnapshot,
   CRCWebGLContext,
 } from './types.js';
+import type { WebGLStateBaseline } from './gpu/state.js';
 import {
   multiplyMatrix4,
   setIdentityMatrix4,
@@ -18,6 +19,7 @@ export interface WebGLRenderEnvironment {
   readonly density: Readonly<{ x: number; y: number }>;
   readonly timestamp: number;
   readonly isContextLost: (generation: number) => boolean;
+  readonly stateBaseline: WebGLStateBaseline;
   readonly modelStack: Float32Array[];
   activeContext: CRCWebGLContext | undefined;
 }
@@ -28,6 +30,7 @@ export interface CreateWebGLRenderEnvironmentInput {
   readonly camera: CRCWebGLCameraSnapshot;
   readonly frame: CRCBackendFrameInput;
   readonly isContextLost: (generation: number) => boolean;
+  readonly stateBaseline: WebGLStateBaseline;
 }
 
 export function createWebGLRenderEnvironment(
@@ -55,6 +58,7 @@ export function createWebGLRenderEnvironment(
     }),
     timestamp: input.frame.renderTimestamp,
     isContextLost: input.isContextLost,
+    stateBaseline: input.stateBaseline,
     modelStack: [identity],
     activeContext: undefined,
   };

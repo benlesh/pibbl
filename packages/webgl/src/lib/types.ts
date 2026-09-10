@@ -96,11 +96,14 @@ export type CRCWebGLProgramProps<
       'keyboardFocusable' | 'keyboardNavigationBounds'
     > & CRCEventParticipationOptions;
 
+export type CRCWebGLSpecifiedStyle<S extends SystemStyle> =
+  Omit<S, 'filter'> & { readonly filter?: never };
+
 export type CRCWebGLPrimitiveInput<
   P,
   S extends SystemStyle,
   H extends CRCWebGLHitCapability<P, any>,
-> = PrimitiveInput<CRCWebGLProgramProps<P, H>, S>;
+> = PrimitiveInput<CRCWebGLProgramProps<P, H>, CRCWebGLSpecifiedStyle<S>>;
 
 export interface CRCWebGLContext {
   readonly gl: WebGL2RenderingContext;
