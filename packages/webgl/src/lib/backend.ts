@@ -27,14 +27,25 @@ export interface CreateWebGLBackendOptions {
   readonly isContextLost?: (generation: number) => boolean;
 }
 
+export interface WebGLCompletedFrame {
+  readonly contextGeneration: number;
+  readonly pickEntries: readonly unknown[];
+}
+
+export interface WebGLBackendDriver
+  extends CRCBackendDriver<WebGLRenderEnvironment> {
+  takeCompletedFrame(): WebGLCompletedFrame;
+}
+
 /** Creates the package-private backend driver owned by one WebGLLayer. */
 export function createWebGLBackend(
   options: CreateWebGLBackendOptions,
-): CRCBackendDriver<WebGLRenderEnvironment> {
+): WebGLBackendDriver {
   const { gl } = options;
   const isContextLost = options.isContextLost ?? (() => gl.isContextLost());
   let baselineGeneration: number | undefined;
   let stateBaseline: WebGLStateBaseline | undefined;
+  let completedFrame: WebGLCompletedFrame | undefined;
   return {
     token: WEBGL_BACKEND_TOKEN,
     name: 'webgl2',
@@ -99,7 +110,7 @@ export function createWebGLBackend(
         () => program(input.props, input.style, frame.environment),
       ));
     },
-    finishFrame(frame) {
+    finishFrame(frame, success) {
       const { width, height } = frame.environment.backingViewport;
       installWebGLStateBaseline(
         gl,
@@ -107,8 +118,21 @@ export function createWebGLBackend(
         height,
         frame.environment.stateBaseline,
       );
+      completedFrame = success ? Object.freeze({
+        contextGeneration: frame.environment.contextGeneration,
+        pickEntries: Object.freeze(frame.environment.pickEntries.slice()),
+      }) : undefined;
+    },
+    takeCompletedFrame() {
+      const completed = completedFrame;
+      completedFrame = undefined;
+      if (!completed) {
+        throw new Error('WebGLLayer child traversal did not complete a frame.');
+      }
+      return completed;
     },
     dispose() {
+      completedFrame = undefined;
       stateBaseline = undefined;
       baselineGeneration = undefined;
     },

@@ -99,6 +99,7 @@ export interface CRCBackendPrimitiveInput {
 
 export interface CRCBackendMount {
   readonly canvas: Canvas;
+  resize(logicalWidth: number, logicalHeight: number): void;
   render(root: CRCNode, timestamp: number): void;
   requestFrame(updateParents: boolean): void;
   dispose(): void;

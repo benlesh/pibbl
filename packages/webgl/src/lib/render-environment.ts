@@ -21,6 +21,8 @@ export interface WebGLRenderEnvironment {
   readonly isContextLost: (generation: number) => boolean;
   readonly stateBaseline: WebGLStateBaseline;
   readonly modelStack: Float32Array[];
+  /** Frame-local records; Task 9 supplies concrete pick entries. */
+  readonly pickEntries: unknown[];
   activeContext: CRCWebGLContext | undefined;
 }
 
@@ -60,6 +62,7 @@ export function createWebGLRenderEnvironment(
     isContextLost: input.isContextLost,
     stateBaseline: input.stateBaseline,
     modelStack: [identity],
+    pickEntries: [],
     activeContext: undefined,
   };
 }

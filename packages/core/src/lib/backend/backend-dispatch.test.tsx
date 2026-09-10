@@ -1,10 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Rectangle } from '../../index.js';
+import { Rectangle, definePrimitive } from '../../index.js';
 import {
   createBackendToken,
   defineBackendPrimitive,
   getBackendEnvironment,
+  getCurrentBackendHostCanvas,
   getCurrentFrameTimestamp,
+  getCurrentSurfaceDensity,
   mountBackendCRC,
   requestCurrentInstanceFrame,
   setCurrentComponentAfterRender,
@@ -30,6 +32,43 @@ afterEach(() => {
 });
 
 describe('backend-neutral component traversal', () => {
+  it('exposes the owning Canvas and anisotropic surface density inside a filtered primitive', () => {
+    const observations: Array<{
+      host: unknown;
+      drawingTarget: unknown;
+      density: unknown;
+    }> = [];
+    const Probe = definePrimitive<{}>(function renderFriendSurfaceProbe(
+      _props,
+      _style,
+      context,
+    ) {
+      observations.push({
+        host: getCurrentBackendHostCanvas(),
+        drawingTarget: context.canvas,
+        density: getCurrentSurfaceDensity(),
+      });
+    });
+    const canvas = createCanvas();
+    const controller = mountCRC(canvas, <Probe style={{
+      filter: { type: 'opacity', amount: 0.5 },
+    }} />, {
+      viewport: { width: 80, height: 20 },
+      fit: 'fill',
+      pixelRatio: 2,
+    });
+
+    executeRender(canvas, 1);
+
+    expect(observations).toEqual([{
+      host: canvas,
+      drawingTarget: expect.not.objectContaining({ ownerDocument: document }),
+      density: { x: 2.5, y: 5 },
+    }]);
+    expect(observations[0]!.drawingTarget).not.toBe(canvas);
+    controller.dispose();
+  });
+
   it('dispatches one traversal through the selected backend and retains keyed hook identity', () => {
     const backend = createRecordingBackend('test');
     const identities: object[] = [];
@@ -100,6 +139,60 @@ describe('backend-neutral component traversal', () => {
     expect(cleanup).toHaveBeenCalledOnce();
     expect(backend.calls.at(-1)).toBe('dispose');
     expect(backend.calls.filter(call => call === 'dispose')).toHaveLength(1);
+    parent.dispose();
+  });
+
+  it('resizes a managed backend surface in place before its next frame', () => {
+    const backend = createRecordingBackend('test');
+    const identities: object[] = [];
+    const cleanup = vi.fn();
+    function Stateful(): void {
+      const identity = useInternalHookSlot('backend-resize-identity', teardowns => {
+        teardowns.add(cleanup);
+        return {};
+      });
+      identities.push(identity.value);
+    }
+    const parentCanvas = createCanvas();
+    const parent = mountCRC(parentCanvas, undefined);
+    const canvas = new OffscreenCanvas(20, 10);
+    const root = <Stateful key="stable" />;
+    const mount = mountBackendCRC(canvas, root, {
+      parent: parentCanvas,
+      logicalWidth: 20,
+      logicalHeight: 10,
+      driver: backend.driver,
+    });
+
+    mount.render(root, 1);
+    canvas.width = 60;
+    canvas.height = 40;
+    mount.resize(30, 20);
+    mount.render(root, 2);
+
+    expect(identities).toHaveLength(2);
+    expect(identities[1]).toBe(identities[0]);
+    expect(cleanup).not.toHaveBeenCalled();
+    expect(backend.calls.filter(call => call.startsWith('begin:'))).toEqual([
+      'begin:20x10@20x10:1',
+      'begin:30x20@60x40:2',
+    ]);
+    expect(getCRCInstance(canvas).surface).toMatchObject({
+      kind: 'layer',
+      managed: true,
+      snapshot: {
+        logicalWidth: 30,
+        logicalHeight: 20,
+        backingWidth: 60,
+        backingHeight: 40,
+        backingPixelsPerLogicalUnitX: 2,
+        backingPixelsPerLogicalUnitY: 2,
+      },
+    });
+
+    mount.dispose();
+    mount.dispose();
+    expect(cleanup).toHaveBeenCalledOnce();
     parent.dispose();
   });
 
@@ -387,6 +480,9 @@ describe('backend-neutral component traversal', () => {
       'CRC backend mount is no longer active.',
     );
     expect(() => first.requestFrame(false)).toThrowError(
+      'CRC backend mount is no longer active.',
+    );
+    expect(() => first.resize(10, 10)).toThrowError(
       'CRC backend mount is no longer active.',
     );
     first.dispose();

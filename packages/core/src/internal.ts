@@ -63,6 +63,8 @@ import {
   useInternalHookSlot,
 } from './lib/hooks/hook-slot.js';
 import { getCurrentWorldTransform } from './lib/render-target.js';
+import { getSurfaceSnapshot } from './lib/surface/transform.js';
+import type { Canvas } from './lib/types.js';
 import type { CRCInteractionLayer } from './lib/types.js';
 import { update } from './lib/update.js';
 
@@ -79,6 +81,20 @@ export function getBackendEnvironment<E>(token: CRCBackendToken): E {
 /** Returns the timestamp shared by the current CRC render transaction. */
 export function getCurrentFrameTimestamp(): number {
   return getCurrentCRCInstance().renderTimestamp;
+}
+
+/** Returns the active instance's owning Canvas, never a transient filter target. */
+export function getCurrentBackendHostCanvas(): Canvas {
+  return getCurrentCRCInstance().canvas;
+}
+
+/** Returns the active surface's independent effective backing densities. */
+export function getCurrentSurfaceDensity(): Readonly<{ x: number; y: number }> {
+  const surface = getSurfaceSnapshot(getCurrentCRCInstance());
+  return Object.freeze({
+    x: surface.backingPixelsPerLogicalUnitX,
+    y: surface.backingPixelsPerLogicalUnitY,
+  });
 }
 
 /** Requests a coalesced frame for the current private backend instance. */

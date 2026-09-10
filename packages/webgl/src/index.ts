@@ -2,6 +2,11 @@ export { createWebGLGeometry } from './lib/geometry/geometry.js';
 export { defineWebGLPrimitive } from './lib/define-webgl-primitive.js';
 export { crcWebGLContext } from './lib/hooks/crc-webgl-context.js';
 export {
+  WebGLLayer,
+  type WebGLLayerProps,
+  type WebGLLayerStyle,
+} from './lib/components/webgl-layer.js';
+export {
   Group3D,
   type Group3DProps,
   type Group3DStyle,

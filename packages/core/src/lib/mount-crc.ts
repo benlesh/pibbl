@@ -202,6 +202,26 @@ export function mountBackendCRC<E>(
   };
   return Object.freeze({
     canvas,
+    resize(nextLogicalWidth: number, nextLogicalHeight: number): void {
+      requireActiveInstance();
+      const nextSurface = createLayerSurface(
+        nextLogicalWidth,
+        nextLogicalHeight,
+        canvas.width / nextLogicalWidth,
+        canvas.height / nextLogicalHeight,
+      );
+      if (instance.surface.kind !== 'layer') {
+        throw new Error('CRC backend mount does not own a managed layer surface.');
+      }
+      instance.surface.snapshot = nextSurface;
+      instance.surface.managed = true;
+      instance.rootLayoutBox = Object.freeze({
+        x: 0,
+        y: 0,
+        width: nextSurface.logicalWidth,
+        height: nextSurface.logicalHeight,
+      });
+    },
     render(nextRoot: CRCNode, timestamp: number): void {
       requireActiveInstance();
       executeRender(canvas, timestamp, nextRoot, false);
