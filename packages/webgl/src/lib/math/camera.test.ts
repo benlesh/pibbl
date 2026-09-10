@@ -70,6 +70,44 @@ describe('resolveCamera', () => {
   });
 
   test.each([
+    [
+      'fieldOfViewDegrees',
+      { ...DEFAULT_CAMERA, fieldOfViewDegrees: Number.MIN_VALUE },
+      /WebGLLayer camera\.fieldOfViewDegrees must produce a finite nonzero Float32 projection scale/,
+    ],
+    [
+      'near (underflow)',
+      { ...DEFAULT_CAMERA, near: Number.MIN_VALUE, far: 1 },
+      /WebGLLayer camera\.near must produce a finite nonzero Float32 projection depth/,
+    ],
+    [
+      'near (overflow)',
+      { ...DEFAULT_CAMERA, near: 2e38, far: 4e38 },
+      /WebGLLayer camera\.near must produce a finite nonzero Float32 projection depth/,
+    ],
+    [
+      'far',
+      { ...DEFAULT_CAMERA, near: 1e23, far: 1e23 + 2e7 },
+      /WebGLLayer camera\.far must remain sufficiently separated from camera\.near for a finite Float32 projection/,
+    ],
+    [
+      'far (overflow)',
+      { ...DEFAULT_CAMERA, far: Number.MAX_VALUE },
+      /WebGLLayer camera\.far must be representable as a finite Float32 projection distance/,
+    ],
+  ])('attributes an unrepresentable projection to camera.%s', (_field, camera, message) => {
+    expect(() => resolveCamera(camera, 100, 100)).toThrow(message);
+  });
+
+  test('preserves a large finite far plane when its Float32 projection remains representable', () => {
+    const camera = resolveCamera({ ...DEFAULT_CAMERA, far: 3e38 }, 100, 100);
+
+    expect(Array.from(camera.projectionMatrix).every(Number.isFinite)).toBe(true);
+    expect(camera.projectionMatrix[10]).toBeCloseTo(-1, 6);
+    expect(camera.projectionMatrix[14]).toBeCloseTo(-0.2, 6);
+  });
+
+  test.each([
     [0, 100],
     [100, 0],
     [Number.NaN, 100],

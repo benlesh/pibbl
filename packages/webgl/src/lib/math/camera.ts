@@ -58,6 +58,42 @@ const assertFiniteMatrix = (matrix: Float32Array, field: string): void => {
   }
 };
 
+const assertProjectionRepresentability = (
+  descriptor: CRCWebGLPerspectiveCamera,
+  projectionMatrix: Float32Array,
+): void => {
+  const verticalScale = projectionMatrix[5]!;
+  if (!Number.isFinite(verticalScale) || verticalScale === 0) {
+    throw new RangeError(
+      'WebGLLayer camera.fieldOfViewDegrees must produce a finite nonzero Float32 projection scale.',
+    );
+  }
+
+  const minimumDepthOffset = Math.fround(2 * descriptor.near);
+  if (!Number.isFinite(minimumDepthOffset) || minimumDepthOffset === 0) {
+    throw new RangeError(
+      'WebGLLayer camera.near must produce a finite nonzero Float32 projection depth.',
+    );
+  }
+
+  const floatFar = Math.fround(descriptor.far);
+  if (!Number.isFinite(floatFar)) {
+    throw new RangeError(
+      'WebGLLayer camera.far must be representable as a finite Float32 projection distance.',
+    );
+  }
+  if (
+    floatFar <= Math.fround(descriptor.near) ||
+    !Number.isFinite(projectionMatrix[10]) ||
+    !Number.isFinite(projectionMatrix[14]) ||
+    projectionMatrix[14] === 0
+  ) {
+    throw new RangeError(
+      'WebGLLayer camera.far must remain sufficiently separated from camera.near for a finite Float32 projection.',
+    );
+  }
+};
+
 const snapshotDescriptor = (
   camera: CRCWebGLPerspectiveCamera | undefined,
 ): CRCWebGLPerspectiveCamera => {
@@ -133,6 +169,7 @@ export function resolveCamera(
     descriptor.near,
     descriptor.far,
   );
+  assertProjectionRepresentability(descriptor, projectionMatrix);
   multiplyMatrix4(projectionViewMatrix, projectionMatrix, viewMatrix);
   if (invertMatrix4(inverseProjectionViewMatrix, projectionViewMatrix) === undefined) {
     throw new RangeError('WebGLLayer camera must produce an invertible projection-view matrix.');
