@@ -7,7 +7,10 @@ import { crcState } from "../hooks/crc-state";
 import { Layer } from "../components/layer";
 import { Rectangle } from "../components/rect";
 import { Group } from "../components/g";
-import type { CRCEventTargetRegistration } from "../events/registrations";
+import {
+  releaseTarget,
+  type CRCEventTargetRegistration,
+} from "../events/registrations";
 import type { CRCElement, CRCController } from "../types";
 import { directionalPolicy, focusManaged } from "./policy-test-support";
 import { createElement } from '../element/create-element';
@@ -25,6 +28,94 @@ afterEach(() => {
 });
 
 describe("focus snapshots in cached layers", () => {
+  it("replays mixed retained targets once in root registration order and excludes dead siblings", async () => {
+    const Target = (_props: { label: string }) => {
+      crcEventTarget(
+        { onClick: () => undefined },
+        {
+          path: rectanglePath(0, 0, 10, 10),
+          fill: true,
+          keyboardNavigationBounds: { x: 0, y: 0, width: 10, height: 10 },
+        },
+      );
+    };
+    const mounted = mount(focusManaged(createElement(Group, {
+      children: [
+        createElement(Layer, {
+          key: "retained",
+          style: { width: 80, height: 80 },
+          children: ["backend-a", "path-b", "backend-c", "dead-d", "path-e"]
+            .map(label => createElement(Target, { key: label, label })),
+        }),
+        createElement(Layer, {
+          key: "sibling",
+          style: { width: 80, height: 80 },
+          children: createElement(Target, { label: "sibling" }),
+        }),
+      ],
+    })));
+    await nextFrame();
+    const manager = getCRCInstance(mounted.canvas).eventRoot.focusPolicy as
+      NonNullable<ReturnType<typeof getCRCInstance>["eventRoot"]["focusPolicy"]> & {
+        readonly candidates: ReadonlyArray<{
+          readonly target: CRCEventTargetRegistration;
+        }>;
+        beginCollection(): void;
+        finishCollection(success: boolean): void;
+      };
+    const targets = new Map(manager.candidates.map(candidate => [
+      (candidate.target.component.element.props as { label: string }).label,
+      candidate.target,
+    ]));
+    const retainedOwner = targets.get("backend-a")!.owner;
+    const siblingRoot = mount(focusManaged(createElement(Target, {
+      label: "sibling-root",
+    })));
+    await nextFrame();
+    const siblingRootManager = getCRCInstance(siblingRoot.canvas).eventRoot
+      .focusPolicy as NonNullable<ReturnType<
+        typeof getCRCInstance
+      >["eventRoot"]["focusPolicy"]> & {
+        readonly candidates: ReadonlyArray<{
+          readonly target: CRCEventTargetRegistration;
+        }>;
+      };
+    const siblingRootTarget = siblingRootManager.candidates[0]!.target;
+    retainedOwner.eventRoot.targets.add(siblingRootTarget);
+    for (const label of ["backend-a", "backend-c"]) {
+      const target = targets.get(label)!;
+      target.owner.paintEntries.delete(target.paintEntry!);
+      target.paintEntry = undefined;
+    }
+    const reattached = targets.get("path-b")!;
+    const reattachedEntry = reattached.paintEntry!;
+    reattached.owner.paintEntries.delete(reattachedEntry);
+    reattached.owner.paintEntries.add(reattachedEntry);
+    reattached.owner.eventRoot.targets.delete(reattached);
+    reattached.owner.eventRoot.targets.add(reattached);
+    releaseTarget(targets.get("dead-d")!);
+
+    manager.beginCollection();
+    manager.replayRetainedSubtree(retainedOwner);
+    manager.finishCollection(true);
+
+    const replayedLabels = manager.candidates.map(candidate =>
+      (candidate.target.component.element.props as { label: string }).label
+    );
+    expect(replayedLabels).toEqual([
+      "backend-a",
+      "backend-c",
+      "path-e",
+      "path-b",
+    ]);
+    expect(new Set(manager.candidates.map(candidate => candidate.target)).size)
+      .toBe(manager.candidates.length);
+    expect(replayedLabels).not.toContain("dead-d");
+    expect(replayedLabels).not.toContain("sibling");
+    expect(replayedLabels).not.toContain("sibling-root");
+    retainedOwner.eventRoot.targets.delete(siblingRootTarget);
+  });
+
   it("replays geometry-independent backend targets with their retained directional boundary", async () => {
     const BackendTarget = (_props: {}) => {
       crcEventTarget(

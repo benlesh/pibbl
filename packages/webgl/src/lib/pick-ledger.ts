@@ -1,5 +1,6 @@
-import type {
-  CRCEventTargetRegistration,
+import {
+  isBackendEventTargetLive,
+  type CRCEventTargetRegistration,
 } from '@crc/core/internal';
 import type {
   CRCWebGLCameraSnapshot,
@@ -10,7 +11,10 @@ import {
   getWebGLGeometryData,
   isWebGLGeometry,
 } from './geometry/geometry.js';
-import { multiplyMatrix4 } from './math/matrix4.js';
+import {
+  invertMatrix4,
+  multiplyMatrix4,
+} from './math/matrix4.js';
 
 const arrayBufferByteLength = Object.getOwnPropertyDescriptor(
   ArrayBuffer.prototype,
@@ -50,6 +54,8 @@ export interface CRCWebGLGeometryPickRecord {
   readonly model: Readonly<Float32Array>;
   readonly keyboardNavigationBounds:
     CRCEventTargetRegistration['keyboardNavigationBounds'];
+  readonly keyboardNavigationPoints:
+    CRCEventTargetRegistration['keyboardNavigationPoints'];
   readonly sourceOrder: number;
   readonly depthMode: 'less-equal';
 }
@@ -67,6 +73,8 @@ export interface CRCWebGLCustomPickRecord {
   readonly model: Readonly<Float32Array>;
   readonly keyboardNavigationBounds:
     CRCEventTargetRegistration['keyboardNavigationBounds'];
+  readonly keyboardNavigationPoints:
+    CRCEventTargetRegistration['keyboardNavigationPoints'];
   readonly camera: CRCWebGLCameraSnapshot;
   readonly sourceOrder: number;
   readonly depthMode: 'less-equal';
@@ -135,12 +143,14 @@ export function recordGeometryWebGLPick(
   assertMutable(ledger);
   const model = new Float32Array(input.model);
   const keyboardNavigationBounds = input.keyboardNavigationBounds === undefined ?
-    input.camera === undefined ? undefined : projectGeometryBounds(
+    undefined : snapshotNavigationBounds(input.keyboardNavigationBounds);
+  const keyboardNavigationPoints = input.keyboardNavigationBounds !== undefined ||
+      input.camera === undefined ? undefined : projectGeometryPoints(
       input.geometry,
       model,
       input.camera,
       ledger.logicalViewport,
-    ) : snapshotNavigationBounds(input.keyboardNavigationBounds);
+    );
   ledger.entries.push(Object.freeze({
     kind: 'geometry',
     componentName: input.componentName,
@@ -148,6 +158,7 @@ export function recordGeometryWebGLPick(
     geometry: input.geometry,
     model,
     keyboardNavigationBounds,
+    keyboardNavigationPoints,
     sourceOrder: input.sourceOrder,
     depthMode: input.depthMode,
   }));
@@ -179,6 +190,7 @@ export function recordCustomWebGLPick(
     model: new Float32Array(input.model),
     keyboardNavigationBounds: input.keyboardNavigationBounds === undefined ?
       undefined : snapshotNavigationBounds(input.keyboardNavigationBounds),
+    keyboardNavigationPoints: undefined,
     camera: snapshotWebGLPickCamera(input.camera),
     sourceOrder: input.sourceOrder,
     depthMode: input.depthMode,
@@ -212,13 +224,22 @@ export function commitWebGLPickEntries(
   });
 }
 
-/** Publishes one committed frame's layer-local focus rectangles. */
+/** Publishes one committed frame's focus geometry to still-current targets. */
 export function applyWebGLFocusMetadata(
   ledger: CRCWebGLPickLedger,
-): void {
+): CRCEventTargetRegistration | undefined {
+  const eventRoot = ledger.entries[0]?.target.owner.eventRoot;
+  let firstApplied: CRCEventTargetRegistration | undefined;
   for (const entry of ledger.entries) {
+    if (
+      entry.target.owner.eventRoot !== eventRoot ||
+      !isBackendEventTargetLive(entry.target)
+    ) continue;
     entry.target.keyboardNavigationBounds = entry.keyboardNavigationBounds;
+    entry.target.keyboardNavigationPoints = entry.keyboardNavigationPoints;
+    firstApplied ??= entry.target;
   }
+  return firstApplied;
 }
 
 function snapshotNavigationBounds(
@@ -232,78 +253,248 @@ function snapshotNavigationBounds(
   });
 }
 
-function projectGeometryBounds(
+type GeometryBounds = ReturnType<typeof getWebGLGeometryData>['bounds'];
+
+interface HomogeneousPoint {
+  readonly x: number;
+  readonly y: number;
+  readonly z: number;
+  readonly w: number;
+}
+
+interface LocalPoint {
+  readonly x: number;
+  readonly y: number;
+  readonly z: number;
+}
+
+const BOX_EDGES = Object.freeze([
+  [0, 1], [0, 2], [0, 4],
+  [1, 3], [1, 5],
+  [2, 3], [2, 6],
+  [3, 7],
+  [4, 5], [4, 6],
+  [5, 7],
+  [6, 7],
+] as const);
+const CLIP_SPACE_BOUNDS = Object.freeze({
+  minimumX: -1,
+  minimumY: -1,
+  minimumZ: -1,
+  maximumX: 1,
+  maximumY: 1,
+  maximumZ: 1,
+});
+
+function projectGeometryPoints(
   geometry: CRCWebGLGeometry,
   model: Readonly<Float32Array>,
   camera: CRCWebGLCameraSnapshot,
   viewport: Readonly<{ width: number; height: number }>,
-): CRCEventTargetRegistration['keyboardNavigationBounds'] {
-  const { positions } = getWebGLGeometryData(geometry);
-  let minimumX = Number.POSITIVE_INFINITY;
-  let minimumY = Number.POSITIVE_INFINITY;
-  let minimumZ = Number.POSITIVE_INFINITY;
-  let maximumX = Number.NEGATIVE_INFINITY;
-  let maximumY = Number.NEGATIVE_INFINITY;
-  let maximumZ = Number.NEGATIVE_INFINITY;
-  for (let offset = 0; offset < positions.length; offset += 3) {
-    const x = positions[offset]!;
-    const y = positions[offset + 1]!;
-    const z = positions[offset + 2]!;
-    minimumX = Math.min(minimumX, x);
-    minimumY = Math.min(minimumY, y);
-    minimumZ = Math.min(minimumZ, z);
-    maximumX = Math.max(maximumX, x);
-    maximumY = Math.max(maximumY, y);
-    maximumZ = Math.max(maximumZ, z);
+): CRCEventTargetRegistration['keyboardNavigationPoints'] {
+  const bounds = getWebGLGeometryData(geometry).bounds;
+  const localCorners = boxCorners(bounds);
+  const projectionModel = new Float32Array(16);
+  multiplyMatrix4(projectionModel, camera.projectionViewMatrix, model);
+  const clipCorners = localCorners.map(point =>
+    transformPoint4(projectionModel, point)
+  );
+  const clipPoints: HomogeneousPoint[] = [];
+
+  for (const [startIndex, endIndex] of BOX_EDGES) {
+    const clipped = clipHomogeneousSegment(
+      clipCorners[startIndex]!,
+      clipCorners[endIndex]!,
+    );
+    if (clipped) clipPoints.push(...clipped);
   }
 
-  const projectionModel = new Float32Array(16);
-  multiplyMatrix4(
-    projectionModel,
-    camera.projectionViewMatrix,
-    model,
-  );
-  let left = Number.POSITIVE_INFINITY;
-  let top = Number.POSITIVE_INFINITY;
-  let right = Number.NEGATIVE_INFINITY;
-  let bottom = Number.NEGATIVE_INFINITY;
-  for (const x of [minimumX, maximumX]) {
-    for (const y of [minimumY, maximumY]) {
-      for (const z of [minimumZ, maximumZ]) {
-        const w = projectionModel[3]! * x +
-          projectionModel[7]! * y +
-          projectionModel[11]! * z +
-          projectionModel[15]!;
-        const ndcX = (
-          projectionModel[0]! * x +
-          projectionModel[4]! * y +
-          projectionModel[8]! * z +
-          projectionModel[12]!
-        ) / w;
-        const ndcY = (
-          projectionModel[1]! * x +
-          projectionModel[5]! * y +
-          projectionModel[9]! * z +
-          projectionModel[13]!
-        ) / w;
-        const layerX = (ndcX + 1) * viewport.width * 0.5;
-        const layerY = (1 - ndcY) * viewport.height * 0.5;
-        if (!Number.isFinite(layerX) || !Number.isFinite(layerY)) {
-          return undefined;
-        }
-        left = Math.min(left, layerX);
-        top = Math.min(top, layerY);
-        right = Math.max(right, layerX);
-        bottom = Math.max(bottom, layerY);
+  // A large box may surround the view volume without one of its own edges
+  // entering it. Clip the inverse-projected frustum edges against the local
+  // AABB as the complementary constant-size intersection case.
+  const inverseProjectionModel = new Float32Array(16);
+  if (invertMatrix4(inverseProjectionModel, projectionModel)) {
+    const frustumCorners = boxCorners(CLIP_SPACE_BOUNDS).map(point =>
+      homogeneousToLocal(transformPoint4(inverseProjectionModel, point))
+    );
+    for (const [startIndex, endIndex] of BOX_EDGES) {
+      const start = frustumCorners[startIndex];
+      const end = frustumCorners[endIndex];
+      if (!start || !end) continue;
+      const clipped = clipLocalSegment(start, end, bounds);
+      if (!clipped) continue;
+      clipPoints.push(
+        transformPoint4(projectionModel, clipped[0]),
+        transformPoint4(projectionModel, clipped[1]),
+      );
+    }
+  }
+
+  const points: Array<Readonly<{ x: number; y: number }>> = [];
+  for (const point of clipPoints) {
+    const projected = clipPointToLayer(point, viewport);
+    if (!projected || points.some(existing =>
+      Math.abs(existing.x - projected.x) <= 1e-9 &&
+      Math.abs(existing.y - projected.y) <= 1e-9
+    )) continue;
+    points.push(projected);
+  }
+  return points.length === 0 ? undefined : Object.freeze(points);
+}
+
+function boxCorners(bounds: GeometryBounds): LocalPoint[] {
+  const corners: LocalPoint[] = [];
+  for (const x of [bounds.minimumX, bounds.maximumX]) {
+    for (const y of [bounds.minimumY, bounds.maximumY]) {
+      for (const z of [bounds.minimumZ, bounds.maximumZ]) {
+        corners.push({ x, y, z });
       }
     }
   }
-  return Object.freeze({
-    x: left,
-    y: top,
-    width: right - left,
-    height: bottom - top,
-  });
+  return corners;
+}
+
+function transformPoint4(
+  matrix: Readonly<Float32Array>,
+  point: LocalPoint,
+): HomogeneousPoint {
+  const { x, y, z } = point;
+  return {
+    x: matrix[0]! * x + matrix[4]! * y + matrix[8]! * z + matrix[12]!,
+    y: matrix[1]! * x + matrix[5]! * y + matrix[9]! * z + matrix[13]!,
+    z: matrix[2]! * x + matrix[6]! * y + matrix[10]! * z + matrix[14]!,
+    w: matrix[3]! * x + matrix[7]! * y + matrix[11]! * z + matrix[15]!,
+  };
+}
+
+function clipHomogeneousSegment(
+  start: HomogeneousPoint,
+  end: HomogeneousPoint,
+): readonly [HomogeneousPoint, HomogeneousPoint] | undefined {
+  if (!isFinitePoint4(start) || !isFinitePoint4(end)) return undefined;
+  const startPlanes = frustumPlaneValues(start);
+  const endPlanes = frustumPlaneValues(end);
+  let minimum = 0;
+  let maximum = 1;
+  for (let plane = 0; plane < startPlanes.length; plane += 1) {
+    const startValue = startPlanes[plane]!;
+    const endValue = endPlanes[plane]!;
+    if (startValue < 0 && endValue < 0) return undefined;
+    if ((startValue < 0) !== (endValue < 0)) {
+      const crossing = startValue / (startValue - endValue);
+      if (!Number.isFinite(crossing)) return undefined;
+      if (startValue < 0) minimum = Math.max(minimum, crossing);
+      else maximum = Math.min(maximum, crossing);
+      if (minimum > maximum) return undefined;
+    }
+  }
+  return [lerpPoint4(start, end, minimum), lerpPoint4(start, end, maximum)];
+}
+
+function frustumPlaneValues(point: HomogeneousPoint): readonly number[] {
+  return [
+    point.x + point.w,
+    point.w - point.x,
+    point.y + point.w,
+    point.w - point.y,
+    point.z + point.w,
+    point.w - point.z,
+  ];
+}
+
+function lerpPoint4(
+  start: HomogeneousPoint,
+  end: HomogeneousPoint,
+  amount: number,
+): HomogeneousPoint {
+  return {
+    x: start.x + (end.x - start.x) * amount,
+    y: start.y + (end.y - start.y) * amount,
+    z: start.z + (end.z - start.z) * amount,
+    w: start.w + (end.w - start.w) * amount,
+  };
+}
+
+function homogeneousToLocal(point: HomogeneousPoint): LocalPoint | undefined {
+  if (!isFinitePoint4(point) || point.w === 0) return undefined;
+  const x = point.x / point.w;
+  const y = point.y / point.w;
+  const z = point.z / point.w;
+  return Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z) ?
+    { x, y, z } : undefined;
+}
+
+function clipLocalSegment(
+  start: LocalPoint,
+  end: LocalPoint,
+  bounds: GeometryBounds,
+): readonly [LocalPoint, LocalPoint] | undefined {
+  let minimum = 0;
+  let maximum = 1;
+  const axes = [
+    [start.x, end.x, bounds.minimumX, bounds.maximumX],
+    [start.y, end.y, bounds.minimumY, bounds.maximumY],
+    [start.z, end.z, bounds.minimumZ, bounds.maximumZ],
+  ] as const;
+  for (const [startValue, endValue, axisMinimum, axisMaximum] of axes) {
+    const delta = endValue - startValue;
+    if (delta === 0) {
+      if (startValue < axisMinimum || startValue > axisMaximum) return undefined;
+      continue;
+    }
+    const first = (axisMinimum - startValue) / delta;
+    const second = (axisMaximum - startValue) / delta;
+    minimum = Math.max(minimum, Math.min(first, second));
+    maximum = Math.min(maximum, Math.max(first, second));
+    if (minimum > maximum) return undefined;
+  }
+  return [
+    lerpLocalPoint(start, end, minimum),
+    lerpLocalPoint(start, end, maximum),
+  ];
+}
+
+function lerpLocalPoint(
+  start: LocalPoint,
+  end: LocalPoint,
+  amount: number,
+): LocalPoint {
+  return {
+    x: start.x + (end.x - start.x) * amount,
+    y: start.y + (end.y - start.y) * amount,
+    z: start.z + (end.z - start.z) * amount,
+  };
+}
+
+function clipPointToLayer(
+  point: HomogeneousPoint,
+  viewport: Readonly<{ width: number; height: number }>,
+): Readonly<{ x: number; y: number }> | undefined {
+  if (!isFinitePoint4(point) || point.w <= 0) return undefined;
+  const scale = Math.max(
+    1,
+    Math.abs(point.x),
+    Math.abs(point.y),
+    Math.abs(point.z),
+    Math.abs(point.w),
+  );
+  const tolerance = Number.EPSILON * scale * 32;
+  if (frustumPlaneValues(point).some(value => value < -tolerance)) {
+    return undefined;
+  }
+  const ndcX = Math.max(-1, Math.min(1, point.x / point.w));
+  const ndcY = Math.max(-1, Math.min(1, point.y / point.w));
+  const x = (ndcX + 1) * viewport.width * 0.5;
+  const y = (1 - ndcY) * viewport.height * 0.5;
+  return Number.isFinite(x) && Number.isFinite(y) ?
+    Object.freeze({ x, y }) : undefined;
+}
+
+function isFinitePoint4(point: HomogeneousPoint): boolean {
+  return Number.isFinite(point.x) &&
+    Number.isFinite(point.y) &&
+    Number.isFinite(point.z) &&
+    Number.isFinite(point.w);
 }
 
 function assertMutable(ledger: MutableCRCWebGLPickLedger): void {

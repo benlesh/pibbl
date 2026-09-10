@@ -128,7 +128,13 @@ export function useBackendEventTarget(
     releaseTarget(target);
     return undefined;
   }
-  updateTarget(target, handlers, { ...options, path: emptyPath }, true);
+  updateTarget(
+    target,
+    handlers,
+    { ...options, path: emptyPath },
+    true,
+    options.deferKeyboardNavigationGeometry ?? false,
+  );
   if (target.paintEntry) {
     target.owner.paintEntries.delete(target.paintEntry);
     target.paintEntry = undefined;

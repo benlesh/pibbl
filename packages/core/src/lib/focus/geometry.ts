@@ -12,16 +12,19 @@ export function resolveTargetRootBounds(
   target: CRCEventTargetRegistration,
 ): Readonly<LayoutBox> | undefined {
   const bounds = target.keyboardNavigationBounds;
-  if (!bounds) return undefined;
+  const points = target.keyboardNavigationPoints ?? (bounds ? [
+    { x: bounds.x, y: bounds.y },
+    { x: bounds.x + bounds.width, y: bounds.y },
+    { x: bounds.x, y: bounds.y + bounds.height },
+    { x: bounds.x + bounds.width, y: bounds.y + bounds.height },
+  ] : undefined);
+  if (!points?.length) return undefined;
 
   const transform = resolveRootTransform(target);
   if (!transform) return undefined;
-  const corners = [
-    new DOMPoint(bounds.x, bounds.y),
-    new DOMPoint(bounds.x + bounds.width, bounds.y),
-    new DOMPoint(bounds.x, bounds.y + bounds.height),
-    new DOMPoint(bounds.x + bounds.width, bounds.y + bounds.height),
-  ].map(point => transform.transformPoint(point));
+  const corners = points.map(point =>
+    transform.transformPoint(new DOMPoint(point.x, point.y))
+  );
   if (corners.some(point => !Number.isFinite(point.x) || !Number.isFinite(point.y))) {
     return undefined;
   }

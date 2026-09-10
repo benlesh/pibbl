@@ -3,8 +3,10 @@ import {
   FocusManagement,
   Group,
   KeyboardNavigation,
+  Layer,
   Rectangle,
   crc,
+  crcState,
   type CRCController,
   type CRCEventTarget,
   type CRCNode,
@@ -16,6 +18,12 @@ import {
   WebGLLayer,
 } from '@crc/webgl';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { createGroupTransform } from '../../../core/src/lib/primitive-presentation.js';
+import { resolveCamera } from './math/camera.js';
+import {
+  composeModelMatrix4,
+  multiplyMatrix4,
+} from './math/matrix4.js';
 
 const controllers = new Set<CRCController>();
 
@@ -136,7 +144,7 @@ describe('WebGL event integration', () => {
     let rearTarget: CRCEventTarget | undefined;
     let pointerRelated: CRCEventTarget | null | undefined;
     let mouseRelated: CRCEventTarget | null | undefined;
-    let activationSource: Event | undefined;
+    const keyboardActivations: string[] = [];
 
     const record = (event: {
       readonly type: string;
@@ -150,8 +158,11 @@ describe('WebGL event integration', () => {
       if (event.x !== undefined && event.y !== undefined) {
         coordinates.push([event.type, event.x, event.y]);
       }
-      if (event.type === 'click' && event.sourceEvent) {
-        activationSource = event.sourceEvent;
+      if (
+        event.type === 'click' &&
+        event.sourceEvent instanceof KeyboardEvent
+      ) {
+        keyboardActivations.push(event.sourceEvent.key);
       }
     };
     const scene = (showCube: boolean): CRCNode => (
@@ -267,6 +278,16 @@ describe('WebGL event integration', () => {
       cancelable: true,
       key: 'Enter',
     }));
+    canvas.dispatchEvent(new KeyboardEvent('keydown', {
+      bubbles: true,
+      cancelable: true,
+      key: ' ',
+    }));
+    canvas.dispatchEvent(new KeyboardEvent('keyup', {
+      bubbles: true,
+      cancelable: true,
+      key: ' ',
+    }));
     canvas.dispatchEvent(new InputEvent('beforeinput', {
       bubbles: true,
       cancelable: true,
@@ -323,7 +344,7 @@ describe('WebGL event integration', () => {
       'select', 'selectionchange', 'copy', 'cut', 'paste', 'dragstart',
       'drag', 'dragenter', 'dragover', 'drop', 'dragleave', 'dragend',
     ]));
-    expect(activationSource).toBeInstanceOf(KeyboardEvent);
+    expect(keyboardActivations).toEqual(['Enter', ' ']);
 
     after.focus();
     expect(types).toEqual(expect.arrayContaining(['focusout', 'blur']));
@@ -336,9 +357,179 @@ describe('WebGL event integration', () => {
     expect(cubeTarget?.hasPointerCapture(9)).toBe(false);
     expect(canvas.style.cursor).toBe('');
   });
+
+  it('follows native pointer capture transitions for a WebGL target', async () => {
+    const trace: string[] = [];
+    let trustedPointerDown = false;
+    const canvas = createCanvas(100, 100);
+    canvas.addEventListener('pointerdown', event => {
+      trustedPointerDown = event.isTrusted;
+    }, { once: true });
+    controllers.add(crc(canvas, (
+      <WebGLLayer style={{ width: 100, height: 100 }}>
+        <Cube
+          onPointerDown={event => {
+            trace.push(`down:${event.pointerId}`);
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }}
+          onGotPointerCapture={event => trace.push(`got:${event.pointerId}`)}
+          onPointerUp={event => trace.push(`up:${event.pointerId}`)}
+          onLostPointerCapture={event => trace.push(`lost:${event.pointerId}`)}
+        />
+      </WebGLLayer>
+    ), { pixelRatio: 1 }));
+    await nextFrame();
+
+    await userEvent.click(canvas, { position: { x: 50, y: 50 } });
+
+    expect(trustedPointerDown).toBe(true);
+    expect(trace).toHaveLength(4);
+    const pointerId = trace[0]!.split(':')[1];
+    expect(trace).toEqual([
+      `down:${pointerId}`,
+      `got:${pointerId}`,
+      `up:${pointerId}`,
+      `lost:${pointerId}`,
+    ]);
+  });
 });
 
 describe('WebGL focus geometry', () => {
+  it('keeps wholly clipped targets in Tab order without directional bounds', async () => {
+    const focusTrace: string[] = [];
+    const before = document.createElement('button');
+    const canvas = createCanvas(100, 100, false);
+    const after = document.createElement('button');
+    document.body.append(before, canvas, after);
+    controllers.add(crc(canvas, (
+      <FocusManagement>
+        <KeyboardNavigation mode="directional">
+          <WebGLLayer style={{ width: 100, height: 100 }}>
+            <Cube
+              style={{ translateZ: 10 }}
+              onClick={() => undefined}
+              onFocus={() => focusTrace.push('clipped')}
+            />
+          </WebGLLayer>
+        </KeyboardNavigation>
+      </FocusManagement>
+    ), { pixelRatio: 1 }));
+    await nextFrame();
+
+    const manager = await focusManager(canvas);
+    expect(manager.candidates).toHaveLength(1);
+    expect(manager.candidates[0]!.rootBounds).toBeUndefined();
+    before.focus();
+    await userEvent.tab();
+    expect(document.activeElement).toBe(canvas);
+    expect(focusTrace).toEqual(['clipped']);
+  });
+
+  it('keeps clipped projected points through nested Layer and Canvas transforms', async () => {
+    const canvas = createCanvas(500, 400);
+    const outerStyle = {
+      translateX: 80,
+      translateY: 40,
+      rotationDegrees: 35,
+      skewX: 18,
+    } as const;
+    const innerStyle = {
+      translateX: 15,
+      translateY: 10,
+      rotationDegrees: -12,
+    } as const;
+    const modelStyle = {
+      rotationXDegrees: 20,
+      rotationYDegrees: 35,
+      rotationZDegrees: 10,
+    } as const;
+    controllers.add(crc(canvas, (
+      <FocusManagement>
+        <Group style={outerStyle}>
+          <Layer style={{ width: 260, height: 180 }}>
+            <Group style={innerStyle}>
+              <WebGLLayer style={{ width: 200, height: 100 }}>
+                <Cube style={modelStyle} onClick={() => undefined} />
+              </WebGLLayer>
+            </Group>
+          </Layer>
+        </Group>
+      </FocusManagement>
+    ), { pixelRatio: 1 }));
+    await nextFrame();
+
+    const manager = await focusManager(canvas);
+    const model = new Float32Array(16);
+    composeModelMatrix4(model, modelStyle);
+    const camera = resolveCamera(undefined, 200, 100);
+    const projectionModel = new Float32Array(16);
+    multiplyMatrix4(projectionModel, camera.projectionViewMatrix, model);
+    const bridge = createGroupTransform(outerStyle).multiply(
+      createGroupTransform(innerStyle),
+    );
+    const expected = boundsOf(projectUnitCube(
+      projectionModel,
+      200,
+      100,
+    ).map(point => bridge.transformPoint(new DOMPoint(point.x, point.y))));
+
+    expect(manager.candidates).toHaveLength(1);
+    expect(manager.candidates[0]!.rootBounds).toEqual({
+      x: expect.closeTo(expected.x, 4),
+      y: expect.closeTo(expected.y, 4),
+      width: expect.closeTo(expected.width, 4),
+      height: expect.closeTo(expected.height, 4),
+    });
+  });
+
+  it('replays focus through a cached outer Layer when the WebGL resolver is omitted', async () => {
+    const focusTrace: string[] = [];
+    let updateRoot!: () => void;
+    const island = (
+      <WebGLLayer
+        pointerEvents="none"
+        style={{ width: 160, height: 100 }}
+      >
+        <Cube
+          onClick={() => undefined}
+          onFocus={() => focusTrace.push('cube')}
+        />
+      </WebGLLayer>
+    );
+    const Root = (): CRCNode => {
+      const [version, setVersion] = crcState(0);
+      updateRoot = () => setVersion(version + 1);
+      return [
+        <Layer key="cached" style={{ width: 160, height: 100 }}>
+          {island}
+        </Layer>,
+        <Rectangle
+          key="update"
+          pointerEvents="none"
+          style={{ width: version + 1, height: 1 }}
+        />,
+      ];
+    };
+    const before = document.createElement('button');
+    const canvas = createCanvas(200, 120, false);
+    const after = document.createElement('button');
+    document.body.append(before, canvas, after);
+    controllers.add(crc(canvas, <FocusManagement><Root /></FocusManagement>, {
+      pixelRatio: 1,
+    }));
+    await nextFrame();
+    expect((await focusManager(canvas)).candidates).toHaveLength(1);
+
+    updateRoot();
+    await nextFrame();
+
+    expect((await focusManager(canvas)).candidates).toHaveLength(1);
+    before.focus();
+    await userEvent.tab();
+    expect(document.activeElement).toBe(canvas);
+    expect(focusTrace).toEqual(['cube']);
+  });
+
   it('commits projected geometry bounds and honors a local-layer override', async () => {
     const canvas = createCanvas(240, 140);
     controllers.add(crc(canvas, (
@@ -586,4 +777,71 @@ function dispatchDrag(
 
 function nextFrame(): Promise<void> {
   return new Promise(resolve => requestAnimationFrame(() => resolve()));
+}
+
+async function focusManager(canvas: HTMLCanvasElement): Promise<{
+  readonly candidates: ReadonlyArray<{
+    readonly rootBounds: Readonly<{
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    }> | undefined;
+  }>;
+}> {
+  const { getCRCInstance } = await import(
+    '../../../core/src/lib/global-state.js'
+  );
+  return getCRCInstance(canvas).eventRoot.focusPolicy as unknown as {
+    readonly candidates: ReadonlyArray<{
+      readonly rootBounds: Readonly<{
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+      }> | undefined;
+    }>;
+  };
+}
+
+function projectUnitCube(
+  matrix: Readonly<Float32Array>,
+  width: number,
+  height: number,
+): Array<Readonly<{ x: number; y: number }>> {
+  const points: Array<Readonly<{ x: number; y: number }>> = [];
+  for (const x of [-0.5, 0.5]) {
+    for (const y of [-0.5, 0.5]) {
+      for (const z of [-0.5, 0.5]) {
+        const w = matrix[3]! * x + matrix[7]! * y +
+          matrix[11]! * z + matrix[15]!;
+        const ndcX = (matrix[0]! * x + matrix[4]! * y +
+          matrix[8]! * z + matrix[12]!) / w;
+        const ndcY = (matrix[1]! * x + matrix[5]! * y +
+          matrix[9]! * z + matrix[13]!) / w;
+        points.push({
+          x: (ndcX + 1) * width * 0.5,
+          y: (1 - ndcY) * height * 0.5,
+        });
+      }
+    }
+  }
+  return points;
+}
+
+function boundsOf(
+  points: ReadonlyArray<Readonly<{ x: number; y: number }>>,
+): Readonly<{ x: number; y: number; width: number; height: number }> {
+  const xs = points.map(point => point.x);
+  const ys = points.map(point => point.y);
+  const left = Math.min(...xs);
+  const right = Math.max(...xs);
+  const top = Math.min(...ys);
+  const bottom = Math.max(...ys);
+  return {
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top,
+  };
 }

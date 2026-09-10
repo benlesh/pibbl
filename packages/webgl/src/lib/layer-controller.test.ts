@@ -10,6 +10,7 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { defineWebGLPrimitive } from './define-webgl-primitive.js';
 import { createWebGLGeometry } from './geometry/geometry.js';
+import type { CRCWebGLTransformStyle } from './types.js';
 import {
   WebGLLayerController,
   resolveWebGLLayerSurface,
@@ -260,6 +261,154 @@ describe('WebGLLayerController surface and capabilities', () => {
 });
 
 describe('WebGLLayerController bitmap transaction', () => {
+  it('keeps committed automatic focus metadata through transfer, draw, and child failures', () => {
+    const stable = bitmap('stable');
+    const drawCandidate = bitmap('draw-candidate');
+    const platform = installRecordingPlatform({
+      transfers: [stable, drawCandidate],
+    });
+    const geometry = createWebGLGeometry({
+      positions: [-1, -1, 0, 1, -1, 0, 0, 1, 0],
+    });
+    const failure = new Error('interactive child failed');
+    const Target = defineWebGLPrimitive<{
+      readonly failure?: Error;
+    }, CRCWebGLTransformStyle>(function renderTransactionalFocusTarget(props) {
+      if (props.failure) throw props.failure;
+    }, {
+      hit: { kind: 'geometry', geometry: () => geometry },
+    });
+    const scene = (translateX: number, childFailure?: Error) =>
+      createElement(Target, {
+        key: 'stable',
+        failure: childFailure,
+        onClick: () => undefined,
+        style: { translateX },
+      });
+    const initial = scene(0);
+    const surface = resolveWebGLLayerSurface(10, 8, { x: 1, y: 1 });
+    const controller = new WebGLLayerController(
+      mountParent(),
+      initial,
+      undefined,
+      surface,
+    );
+    const context = { drawImage() {} } as unknown as CanvasRenderingContext2D;
+    controller.renderUpdatedChild(initial, undefined, surface, 1);
+    controller.composite(context, { x: 0, y: 0, width: 10, height: 8 });
+    const target = committedTarget(controller);
+    const committedMetadata = focusMetadata(target);
+
+    platform.throwTransfer = new Error('transfer failed');
+    expect(() => controller.renderUpdatedChild(
+      scene(1),
+      undefined,
+      surface,
+      2,
+    )).toThrowError(/transfer/i);
+    expect(focusMetadata(target)).toEqual(committedMetadata);
+    expect(controller.committedGeneration).toBe(1);
+
+    platform.throwTransfer = undefined;
+    controller.renderUpdatedChild(scene(2), undefined, surface, 3);
+    expect(focusMetadata(target)).toEqual(committedMetadata);
+    expect(() => controller.composite({
+      drawImage() {
+        throw new Error('parent draw failed');
+      },
+    } as unknown as CanvasRenderingContext2D, {
+      x: 0,
+      y: 0,
+      width: 10,
+      height: 8,
+    })).toThrowError('parent draw failed');
+    expect(focusMetadata(target)).toEqual(committedMetadata);
+    expect(controller.committedGeneration).toBe(1);
+
+    expect(() => controller.renderUpdatedChild(
+      scene(3, failure),
+      undefined,
+      surface,
+      4,
+    )).toThrow(failure);
+    expect(focusMetadata(target)).toEqual(committedMetadata);
+    expect(controller.committedGeneration).toBe(1);
+    controller.dispose();
+  });
+
+  it('publishes explicit focus metadata only after successful parent composition', () => {
+    const failed = bitmap('failed');
+    const committed = bitmap('committed');
+    const platform = installRecordingPlatform({ transfers: [failed, committed] });
+    const geometry = createWebGLGeometry({
+      positions: [-1, -1, 0, 1, -1, 0, 0, 1, 0],
+    });
+    const Target = defineWebGLPrimitive<{}, {}>(function renderExplicitTarget() {}, {
+      hit: { kind: 'geometry', geometry: () => geometry },
+    });
+    const bounds = { x: 2, y: 3, width: 4, height: 5 };
+    const root = createElement(Target, {
+      keyboardNavigationBounds: bounds,
+      onClick: () => undefined,
+    });
+    const surface = resolveWebGLLayerSurface(10, 8, { x: 1, y: 1 });
+    const controller = new WebGLLayerController(
+      mountParent(),
+      root,
+      undefined,
+      surface,
+    );
+
+    controller.renderUpdatedChild(root, undefined, surface, 1);
+    const target = pendingTarget(controller);
+    expect(focusMetadata(target)).toEqual({
+      keyboardNavigationBounds: undefined,
+      keyboardNavigationPoints: undefined,
+    });
+    expect(() => controller.composite({
+      drawImage() {
+        throw new Error('parent draw failed');
+      },
+    } as unknown as CanvasRenderingContext2D, {
+      x: 0,
+      y: 0,
+      width: 10,
+      height: 8,
+    })).toThrowError('parent draw failed');
+    expect(focusMetadata(target)).toEqual({
+      keyboardNavigationBounds: undefined,
+      keyboardNavigationPoints: undefined,
+    });
+    expect(controller.committedGeneration).toBeUndefined();
+
+    controller.renderUpdatedChild(root, undefined, surface, 2);
+    controller.composite(
+      { drawImage() {} } as unknown as CanvasRenderingContext2D,
+      { x: 0, y: 0, width: 10, height: 8 },
+    );
+    expect(focusMetadata(target)).toEqual({
+      keyboardNavigationBounds: bounds,
+      keyboardNavigationPoints: undefined,
+    });
+
+    platform.throwTransfer = new Error('later transfer failed');
+    const changed = createElement(Target, {
+      keyboardNavigationBounds: { x: 20, y: 30, width: 40, height: 50 },
+      onClick: () => undefined,
+    });
+    expect(() => controller.renderUpdatedChild(
+      changed,
+      undefined,
+      surface,
+      3,
+    )).toThrowError(/transfer/i);
+    expect(focusMetadata(target)).toEqual({
+      keyboardNavigationBounds: bounds,
+      keyboardNavigationPoints: undefined,
+    });
+    controller.dispose();
+  });
+
   it('replays committed backend focus metadata with a cached composite', () => {
     const stable = bitmap('stable');
     const platform = installRecordingPlatform({ transfers: [stable] });
@@ -290,18 +439,32 @@ describe('WebGLLayerController bitmap transaction', () => {
       };
     };
     const target = state.committed.pickLedger.entries[0]!.target;
-    const committedBounds = target.keyboardNavigationBounds;
+    const committedMetadata = focusMetadata(target);
+    expect(committedMetadata.keyboardNavigationPoints).toBeDefined();
     const replayRetainedSubtree = vi.fn();
     target.owner.eventRoot.focusPolicy = {
       replayRetainedSubtree,
     } as unknown as NonNullable<typeof target.owner.eventRoot.focusPolicy>;
     target.keyboardNavigationBounds = undefined;
+    target.keyboardNavigationPoints = undefined;
 
     controller.composite(context, { x: 0, y: 0, width: 10, height: 8 });
 
-    expect(target.keyboardNavigationBounds).toEqual(committedBounds);
+    expect(focusMetadata(target)).toEqual(committedMetadata);
     expect(replayRetainedSubtree).toHaveBeenCalledWith(target.owner);
     expect(platform.transferCount).toBe(1);
+
+    target.owner.eventRoot.targets.delete(target);
+    target.keyboardNavigationBounds = undefined;
+    target.keyboardNavigationPoints = undefined;
+    replayRetainedSubtree.mockClear();
+    controller.composite(context, { x: 0, y: 0, width: 10, height: 8 });
+    expect(focusMetadata(target)).toEqual({
+      keyboardNavigationBounds: undefined,
+      keyboardNavigationPoints: undefined,
+    });
+    expect(replayRetainedSubtree).not.toHaveBeenCalled();
+    target.owner.eventRoot.targets.add(target);
     target.owner.eventRoot.focusPolicy = undefined;
     controller.dispose();
   });
@@ -594,6 +757,47 @@ function expectNoOwnedGenerations(controller: WebGLLayerController): void {
   expect(ownership.pending).toBeUndefined();
   expect(ownership.committed).toBeUndefined();
   expect(controller.committedGeneration).toBeUndefined();
+}
+
+function pendingTarget(
+  controller: WebGLLayerController,
+): CRCEventTargetRegistration {
+  return generationTarget(controller, 'pending');
+}
+
+function committedTarget(
+  controller: WebGLLayerController,
+): CRCEventTargetRegistration {
+  return generationTarget(controller, 'committed');
+}
+
+function generationTarget(
+  controller: WebGLLayerController,
+  generation: 'committed' | 'pending',
+): CRCEventTargetRegistration {
+  const state = controller as unknown as Record<
+    'committed' | 'pending',
+    {
+      readonly pickLedger: {
+        readonly entries: ReadonlyArray<{
+          readonly target: CRCEventTargetRegistration;
+        }>;
+      };
+    } | undefined
+  >;
+  return state[generation]!.pickLedger.entries[0]!.target;
+}
+
+function focusMetadata(target: CRCEventTargetRegistration) {
+  return {
+    keyboardNavigationBounds: target.keyboardNavigationBounds,
+    keyboardNavigationPoints: (target as CRCEventTargetRegistration & {
+      readonly keyboardNavigationPoints?: ReadonlyArray<{
+        readonly x: number;
+        readonly y: number;
+      }>;
+    }).keyboardNavigationPoints,
+  };
 }
 
 interface FakeBitmap extends ImageBitmap {

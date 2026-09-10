@@ -79,6 +79,89 @@ describe('WebGL pick ledger', () => {
     expect(Object.isFrozen(committed.entries)).toBe(true);
   });
 
+  it.each([
+    ['behind the eye', 1, 2],
+    ['before the near plane', -0.5, -0.2],
+    ['beyond the far plane', -12, -11],
+  ])('omits automatic directional geometry wholly %s', (
+    _label,
+    minimumZ,
+    maximumZ,
+  ) => {
+    const entry = projectedGeometryEntry(
+      geometryBox(-0.5, -0.5, minimumZ, 0.5, 0.5, maximumZ),
+    );
+
+    expect(layerFocusBounds(entry)).toBeUndefined();
+  });
+
+  it.each([
+    ['near plane', -2, -0.5, { x: 25, y: 25, width: 50, height: 50 }],
+    ['eye w=0', -2, 0, { x: 25, y: 25, width: 50, height: 50 }],
+    [
+      'far plane',
+      -12,
+      -9,
+      {
+        x: 47.2222222222,
+        y: 47.2222222222,
+        width: 5.5555555556,
+        height: 5.5555555556,
+      },
+    ],
+  ])('clips automatic directional geometry crossing the %s', (
+    _label,
+    minimumZ,
+    maximumZ,
+    expected,
+  ) => {
+    const entry = projectedGeometryEntry(
+      geometryBox(-0.5, -0.5, minimumZ, 0.5, 0.5, maximumZ),
+    );
+
+    expect(layerFocusBounds(entry)).toEqual({
+      x: expect.closeTo(expected.x, 5),
+      y: expect.closeTo(expected.y, 5),
+      width: expect.closeTo(expected.width, 5),
+      height: expect.closeTo(expected.height, 5),
+    });
+  });
+
+  it('clips giant finite geometry deterministically to the logical viewport', () => {
+    const entry = projectedGeometryEntry(geometryBox(
+      -3e38,
+      -3e38,
+      -2,
+      3e38,
+      3e38,
+      -1,
+    ));
+
+    expect(layerFocusBounds(entry)).toEqual({
+      x: expect.closeTo(0, 6),
+      y: expect.closeTo(0, 6),
+      width: expect.closeTo(100, 6),
+      height: expect.closeTo(100, 6),
+    });
+  });
+
+  it('keeps an explicit local-layer rectangle when geometry is fully clipped', () => {
+    const ledger = createWebGLPickLedger(100, 100);
+    recordGeometryWebGLPick(ledger, {
+      camera: clippingCamera(),
+      componentName: 'ExplicitClippedBox',
+      depthMode: 'less-equal',
+      geometry: geometryBox(-1, -1, 1, 1, 1, 2),
+      keyboardNavigationBounds: { x: 7, y: 8, width: 9, height: 10 },
+      model: identityMatrix(),
+      sourceOrder: 0,
+      target: fakeTarget(),
+    });
+
+    expect(layerFocusBounds(commitWebGLPickLedger(ledger).entries[0]!))
+      .toEqual({ x: 7, y: 8, width: 9, height: 10 });
+  });
+
   it('snapshots custom props, style, model, and camera without retaining frame objects', () => {
     const ledger = createWebGLPickLedger(50, 50);
     const target = fakeTarget();
@@ -394,6 +477,85 @@ function mountScene(root: CRCNode) {
 
 function fakeTarget(): CRCEventTargetRegistration {
   return { kind: 'target', live: true } as CRCEventTargetRegistration;
+}
+
+function projectedGeometryEntry(
+  geometry: ReturnType<typeof createWebGLGeometry>,
+): CRCWebGLPickRecord {
+  const ledger = createWebGLPickLedger(100, 100);
+  recordGeometryWebGLPick(ledger, {
+    camera: clippingCamera(),
+    componentName: 'ClippedBox',
+    depthMode: 'less-equal',
+    geometry,
+    model: identityMatrix(),
+    sourceOrder: 0,
+    target: fakeTarget(),
+  });
+  return commitWebGLPickLedger(ledger).entries[0]!;
+}
+
+function clippingCamera() {
+  return resolveCamera({
+    type: 'perspective',
+    position: [0, 0, 0],
+    lookAt: [0, 0, -1],
+    up: [0, 1, 0],
+    fieldOfViewDegrees: 90,
+    near: 1,
+    far: 10,
+  }, 100, 100);
+}
+
+function geometryBox(
+  minimumX: number,
+  minimumY: number,
+  minimumZ: number,
+  maximumX: number,
+  maximumY: number,
+  maximumZ: number,
+) {
+  return createWebGLGeometry({
+    positions: [
+      minimumX, minimumY, minimumZ,
+      maximumX, minimumY, maximumZ,
+      minimumX, maximumY, maximumZ,
+    ],
+  });
+}
+
+function identityMatrix(): Float32Array {
+  return new Float32Array([
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1,
+  ]);
+}
+
+function layerFocusBounds(
+  entry: CRCWebGLPickRecord,
+): Readonly<{ x: number; y: number; width: number; height: number }> | undefined {
+  const focus = entry as CRCWebGLPickRecord & {
+    readonly keyboardNavigationPoints?: ReadonlyArray<{
+      readonly x: number;
+      readonly y: number;
+    }>;
+  };
+  const points = focus.keyboardNavigationPoints;
+  if (!points?.length) return focus.keyboardNavigationBounds;
+  const xs = points.map(point => point.x);
+  const ys = points.map(point => point.y);
+  const left = Math.min(...xs);
+  const right = Math.max(...xs);
+  const top = Math.min(...ys);
+  const bottom = Math.max(...ys);
+  return {
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top,
+  };
 }
 
 function createNoopGL(): WebGL2RenderingContext {

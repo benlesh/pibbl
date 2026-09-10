@@ -3,6 +3,14 @@ import type { CRCWebGLGeometry, CRCWebGLGeometryInput } from '../types.js';
 export interface WebGLGeometryData {
   readonly positions: Float32Array;
   readonly indices: Uint32Array | undefined;
+  readonly bounds: Readonly<{
+    minimumX: number;
+    minimumY: number;
+    minimumZ: number;
+    maximumX: number;
+    maximumY: number;
+    maximumZ: number;
+  }>;
 }
 
 const geometryBrand = Symbol('CRCWebGLGeometry');
@@ -33,6 +41,12 @@ export function createWebGLGeometry(input: CRCWebGLGeometryInput): CRCWebGLGeome
   }
 
   const positions = new Float32Array(positionLength);
+  let minimumX = Number.POSITIVE_INFINITY;
+  let minimumY = Number.POSITIVE_INFINITY;
+  let minimumZ = Number.POSITIVE_INFINITY;
+  let maximumX = Number.NEGATIVE_INFINITY;
+  let maximumY = Number.NEGATIVE_INFINITY;
+  let maximumZ = Number.NEGATIVE_INFINITY;
   for (let index = 0; index < positionLength; index += 1) {
     const value = input.positions[index];
     if (!Number.isFinite(value)) {
@@ -45,7 +59,29 @@ export function createWebGLGeometry(input: CRCWebGLGeometryInput): CRCWebGLGeome
       );
     }
     positions[index] = copiedValue;
+    switch (index % 3) {
+      case 0:
+        minimumX = Math.min(minimumX, copiedValue);
+        maximumX = Math.max(maximumX, copiedValue);
+        break;
+      case 1:
+        minimumY = Math.min(minimumY, copiedValue);
+        maximumY = Math.max(maximumY, copiedValue);
+        break;
+      case 2:
+        minimumZ = Math.min(minimumZ, copiedValue);
+        maximumZ = Math.max(maximumZ, copiedValue);
+        break;
+    }
   }
+  const bounds = Object.freeze({
+    minimumX,
+    minimumY,
+    minimumZ,
+    maximumX,
+    maximumY,
+    maximumZ,
+  });
 
   const vertexCount = positionLength / 3;
   let indices: Uint32Array | undefined;
@@ -86,7 +122,7 @@ export function createWebGLGeometry(input: CRCWebGLGeometryInput): CRCWebGLGeome
     vertexCount,
     triangleCount,
   }) as unknown as CRCWebGLGeometry;
-  geometryData.set(geometry, { positions, indices });
+  geometryData.set(geometry, { positions, indices, bounds });
   return geometry;
 }
 

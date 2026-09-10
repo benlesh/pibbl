@@ -1,6 +1,12 @@
 import { describe, expect, test } from 'vitest';
 import { createWebGLGeometry } from '@crc/webgl';
+import type { CRCEventTargetRegistration } from '@crc/core/internal';
 import { getWebGLGeometryData } from './geometry.js';
+import { resolveCamera } from '../math/camera.js';
+import {
+  createWebGLPickLedger,
+  recordGeometryWebGLPick,
+} from '../pick-ledger.js';
 
 describe('createWebGLGeometry', () => {
   test('copies indexed triangle data into a frozen opaque descriptor', () => {
@@ -19,6 +25,14 @@ describe('createWebGLGeometry', () => {
     expect(getWebGLGeometryData(geometry)).toEqual({
       positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
       indices: new Uint32Array([0, 1, 2]),
+      bounds: {
+        minimumX: 0,
+        minimumY: 0,
+        minimumZ: 0,
+        maximumX: 1,
+        maximumY: 1,
+        maximumZ: 0,
+      },
     });
   });
 
@@ -37,6 +51,60 @@ describe('createWebGLGeometry', () => {
     expect(geometry.vertexCount).toBe(6);
     expect(geometry.triangleCount).toBe(2);
     expect(getWebGLGeometryData(geometry).indices).toBeUndefined();
+  });
+
+  test('caches one finite local AABB without rereading vertices per frame', () => {
+    const geometry = createWebGLGeometry({
+      positions: [
+        -4, 2, -1,
+        3, -5, 7,
+        1, 6, -2,
+      ],
+    });
+    const data = getWebGLGeometryData(geometry);
+    const cachedBounds = (data as unknown as {
+      readonly bounds: unknown;
+    }).bounds;
+    let coordinateReads = 0;
+    const positions = new Proxy(data.positions, {
+      get(target, property) {
+        if (typeof property === 'string' && /^\d+$/.test(property)) {
+          coordinateReads += 1;
+        }
+        return Reflect.get(target, property, target);
+      },
+    });
+    (data as unknown as { positions: Float32Array }).positions = positions;
+    const camera = resolveCamera(undefined, 100, 100);
+    const target = { kind: 'target', live: true } as
+      CRCEventTargetRegistration;
+
+    for (let frame = 0; frame < 2; frame += 1) {
+      const ledger = createWebGLPickLedger(100, 100);
+      recordGeometryWebGLPick(ledger, {
+        camera,
+        componentName: 'CachedBounds',
+        depthMode: 'less-equal',
+        geometry,
+        model: identityMatrix(),
+        sourceOrder: 0,
+        target,
+      });
+    }
+
+    expect(cachedBounds).toEqual({
+      minimumX: -4,
+      minimumY: -5,
+      minimumZ: -2,
+      maximumX: 3,
+      maximumY: 6,
+      maximumZ: 7,
+    });
+    expect(Object.isFrozen(cachedBounds)).toBe(true);
+    expect(coordinateReads).toBe(0);
+    expect((getWebGLGeometryData(geometry) as unknown as {
+      readonly bounds: unknown;
+    }).bounds).toBe(cachedBounds);
   });
 
   test.each([
@@ -67,3 +135,12 @@ describe('createWebGLGeometry', () => {
     expect(() => createWebGLGeometry(input)).toThrow(message);
   });
 });
+
+function identityMatrix(): Float32Array {
+  return new Float32Array([
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1,
+  ]);
+}

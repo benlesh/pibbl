@@ -128,6 +128,8 @@ export interface CRCBackendMountOptions<E> {
 
 export interface CRCBackendEventTargetOptions extends CRCEventFocusOptions {
   readonly cursor?: string;
+  /** Defers backend-owned focus geometry until its visual generation commits. */
+  readonly deferKeyboardNavigationGeometry?: boolean;
 }
 
 export interface CRCNestedResolverInput {

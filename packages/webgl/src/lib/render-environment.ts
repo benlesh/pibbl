@@ -92,6 +92,8 @@ export function createWebGLRenderEnvironment(
 interface WebGLPrimitivePickInput {
   readonly componentName: string;
   readonly target: CRCEventTargetRegistration;
+  readonly keyboardNavigationBounds:
+    CRCEventTargetRegistration['keyboardNavigationBounds'];
   readonly hit: Exclude<
     CRCWebGLHitCapability<unknown, Readonly<Record<PropertyKey, unknown>>>,
     { readonly kind: 'none' }
@@ -123,7 +125,7 @@ export function recordWebGLPrimitivePick(
       geometry: input.hit.geometry(input.props, input.style),
       model,
       camera: environment.camera,
-      keyboardNavigationBounds: input.target.keyboardNavigationBounds,
+      keyboardNavigationBounds: input.keyboardNavigationBounds,
       sourceOrder,
       depthMode: 'less-equal',
     });
@@ -136,7 +138,7 @@ export function recordWebGLPrimitivePick(
     props: input.props,
     style: input.style,
     model,
-    keyboardNavigationBounds: input.target.keyboardNavigationBounds,
+    keyboardNavigationBounds: input.keyboardNavigationBounds,
     camera: environment.camera,
     sourceOrder,
     depthMode: 'less-equal',

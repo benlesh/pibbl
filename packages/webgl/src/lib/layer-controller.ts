@@ -256,12 +256,9 @@ export class WebGLLayerController {
   replayCommittedFocusMetadata(): void {
     const committed = this.committed;
     if (!committed) return;
-    applyWebGLFocusMetadata(committed.pickLedger);
-    const liveEntry = committed.pickLedger.entries.find(
-      entry => entry.target.live,
-    );
-    liveEntry?.target.owner.eventRoot.focusPolicy?.replayRetainedSubtree(
-      liveEntry.target.owner,
+    const target = applyWebGLFocusMetadata(committed.pickLedger);
+    target?.owner.eventRoot.focusPolicy?.replayRetainedSubtree(
+      target.owner,
     );
   }
 

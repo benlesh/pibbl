@@ -522,6 +522,7 @@ function createFixture(eventRoot = createEventRoot()): Fixture {
         cursor: undefined,
         keyboardFocusable: undefined,
         keyboardNavigationBounds: undefined,
+        keyboardNavigationPoints: undefined,
         live: true,
       };
       eventRoot.targets.add(target);

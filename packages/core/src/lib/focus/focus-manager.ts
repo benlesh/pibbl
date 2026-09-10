@@ -1,5 +1,4 @@
 import type { CRCEventTargetRegistration } from '../events/registrations.js';
-import { CRCPaintEntryKind } from '../events/paint-entry.js';
 import { GLOBAL_STATE } from '../global-state.js';
 import type {
   CRCEvent,
@@ -571,7 +570,7 @@ export class CRCFocusManager implements CRCFocusPolicyBridge {
 
   private replayRetainedTargets(instance: CRCInstance): void {
     const targets: CRCEventTargetRegistration[] = [];
-    collectRetainedTargets(instance, targets, new Set());
+    collectRetainedTargets(instance, targets);
     if (this.pending) {
       for (const target of targets) {
         if (!isKeyboardFocusable(target)) {
@@ -1041,24 +1040,15 @@ function isKeyboardFocusable(target: CRCEventTargetRegistration): boolean {
 function collectRetainedTargets(
   instance: CRCInstance,
   targets: CRCEventTargetRegistration[],
-  visited: Set<CRCInstance>,
 ): void {
-  if (visited.has(instance)) return;
-  visited.add(instance);
-  for (const entry of instance.paintEntries) {
-    if (entry.paintKind === CRCPaintEntryKind.Path) {
-      if (entry.target.live) targets.push(entry.target);
-    } else {
-      collectRetainedTargets(entry.instance, targets, visited);
-    }
-  }
-  // Official backend targets deliberately do not publish empty Canvas paths.
-  // Their root-wide registration set retains current source order, so include
-  // the geometry-independent targets owned by this retained instance.
+  if (instance.mainTeardowns.closed) return;
   for (const target of instance.eventRoot.targets) {
-    if (target.owner === instance && target.live && !target.paintEntry) {
-      targets.push(target);
-    }
+    if (
+      target.live &&
+      target.owner.eventRoot === instance.eventRoot &&
+      !target.owner.mainTeardowns.closed &&
+      isInstanceWithin(target.owner, instance)
+    ) targets.push(target);
   }
 }
 

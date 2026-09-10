@@ -85,12 +85,9 @@ export function defineWebGLPrimitive<
       propsRecord as CRCEventHandlers,
       {
         cursor: resolveCursor(propsRecord, styleRecord),
+        deferKeyboardNavigationGeometry: true,
         keyboardFocusable: propsRecord.keyboardFocusable as
           boolean | undefined,
-        keyboardNavigationBounds: propsRecord.keyboardNavigationBounds as
-          NonNullable<Parameters<typeof useBackendEventTarget>[1]>[
-            'keyboardNavigationBounds'
-          ],
       },
       propsRecord.pointerEvents === 'none' ? 'none' : 'auto',
     );
@@ -114,6 +111,10 @@ export function defineWebGLPrimitive<
           >,
           props: propsRecord,
           style: styleRecord,
+          keyboardNavigationBounds: propsRecord.keyboardNavigationBounds as
+            NonNullable<Parameters<typeof useBackendEventTarget>[1]>[
+              'keyboardNavigationBounds'
+            ],
         });
       }
       return result;

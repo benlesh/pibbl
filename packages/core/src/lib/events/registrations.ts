@@ -44,6 +44,8 @@ export interface CRCEventTargetRegistration {
   cursor: string | undefined;
   keyboardFocusable: boolean | undefined;
   keyboardNavigationBounds: Readonly<LayoutBox> | undefined;
+  /** @internal Backend-projected points retained until root-space resolution. */
+  keyboardNavigationPoints: readonly Readonly<{ x: number; y: number }>[] | undefined;
   live: boolean;
 }
 
@@ -92,6 +94,7 @@ export function createTarget(
     cursor: undefined,
     keyboardFocusable: undefined,
     keyboardNavigationBounds: undefined,
+    keyboardNavigationPoints: undefined,
     live: false,
   });
   return target;
@@ -102,6 +105,7 @@ export function updateTarget(
   handlers: CRCEventHandlers,
   options: CRCEventTargetOptions,
   participatesInPaint = false,
+  preserveKeyboardNavigationGeometry = false,
 ): void {
   const normalizedHandlers = normalizeHandlers(handlers);
   const types = handledTypes(normalizedHandlers);
@@ -112,6 +116,7 @@ export function updateTarget(
     options,
     requiredNativeTypes(types, Boolean(options.cursor)),
     participatesInPaint,
+    preserveKeyboardNavigationGeometry,
   );
   if (target.live) target.owner.regions.add(target);
 }
@@ -169,6 +174,7 @@ function updateTargetRegistration(
   options: CRCEventTargetOptions,
   nativeTypes: ReadonlySet<CRCEventType>,
   participatesInPaint = false,
+  preserveKeyboardNavigationGeometry = false,
 ): void {
   const types = handledTypes(normalizedHandlers);
 
@@ -196,7 +202,10 @@ function updateTargetRegistration(
   }
   target.cursor = options.cursor;
   target.keyboardFocusable = options.keyboardFocusable;
-  target.keyboardNavigationBounds = options.keyboardNavigationBounds;
+  if (!preserveKeyboardNavigationGeometry) {
+    target.keyboardNavigationBounds = options.keyboardNavigationBounds;
+    target.keyboardNavigationPoints = undefined;
+  }
 
   if (
     !participatesInPaint &&
