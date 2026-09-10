@@ -201,6 +201,7 @@ export function mountSearchDialog(
     option.className = "studio-search-result";
     option.role = "option";
     option.tabIndex = -1;
+    option.dataset.searchUrl = result.url;
     option.setAttribute("aria-selected", String(index === activeResult));
     if (index === activeResult) option.classList.add("is-active");
     const resultHeader = document.createElement("span");

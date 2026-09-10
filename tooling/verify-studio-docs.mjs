@@ -41,18 +41,21 @@ async function open(page, hash) {
   await page.locator("#studio-main").waitFor({ timeout: 30_000 });
 }
 
-async function expectText(page, route, text) {
+async function expectMainHeading(page, route, text) {
   try {
-    await page.getByText(text, { exact: false }).first().waitFor({ timeout: 30_000 });
+    await page
+      .locator("#studio-main")
+      .getByRole("heading", { name: text, exact: true })
+      .waitFor({ timeout: 30_000 });
   } catch {
-    throw failure(route, `visible text ${JSON.stringify(text)}`, "it was not rendered");
+    throw failure(route, `main-page heading ${JSON.stringify(text)}`, "it was not rendered");
   }
 }
 
 async function navigationContract(page) {
   const route = "#/learn";
   await open(page, route);
-  await expectText(page, route, "Learn CRC");
+  await expectMainHeading(page, route, "Learn CRC");
   const publicAreas = await page.locator(
     ".studio-nav__area > .studio-nav__entry > a",
   ).allTextContents();
@@ -111,7 +114,10 @@ async function mobileDrawerContract(browser) {
       throw failure(route, "mobile drawer focus to wrap to its final destination", String(focusedClass));
     }
     await page.keyboard.press("Escape");
-    await page.locator("#studio-navigation[role='dialog']").waitFor({ state: "detached" }).catch(() => undefined);
+    const drawerRole = await page.locator("#studio-navigation").getAttribute("role");
+    if (drawerRole !== null) {
+      throw failure(route, "Escape to close the mobile drawer", `role=${drawerRole}`);
+    }
     const focusedMenu = await page.evaluate(() => document.activeElement?.className);
     if (focusedMenu !== "studio-menu-button") {
       throw failure(route, "Escape to restore focus to Browse", String(focusedMenu));
@@ -129,16 +135,20 @@ async function mobileDrawerContract(browser) {
 
 async function publicContentContract(page) {
   await open(page, "#/learn/guides/compose-and-layout#filters-across-layout-and-composition");
-  await expectText(page, "#/learn/guides/compose-and-layout#filters-across-layout-and-composition", "Filters across layout and composition");
-  const anchor = page.locator("#filters-across-layout-and-composition");
+  const guideRoute = "#/learn/guides/compose-and-layout#filters-across-layout-and-composition";
+  await expectMainHeading(page, guideRoute, "Compose and lay out scenes");
+  const anchor = page.locator("#studio-main #filters-across-layout-and-composition");
   if ((await anchor.count()) !== 1) {
-    throw failure("#/learn/guides/compose-and-layout#filters-across-layout-and-composition", "one generated heading anchor", `${await anchor.count()} anchors`);
+    throw failure(guideRoute, "one generated heading anchor", `${await anchor.count()} anchors`);
   }
 
   await open(page, "#/api/functions/crc");
-  await expectText(page, "#/api/functions/crc", "crc");
+  await expectMainHeading(page, "#/api/functions/crc", "crc");
   await open(page, "#/api/types/events#crcpointerevent");
-  await expectText(page, "#/api/types/events#crcpointerevent", "CRCPointerEvent");
+  const typeAnchor = page.locator("#studio-main #crcpointerevent");
+  if ((await typeAnchor.count()) !== 1) {
+    throw failure("#/api/types/events#crcpointerevent", "the CRCPointerEvent type anchor", `${await typeAnchor.count()} anchors`);
+  }
 
   await open(page, "#/examples/drawing/filters");
   await page.locator(".studio-preview__frame").waitFor({ timeout: 30_000 });
@@ -174,11 +184,17 @@ async function searchContract(page) {
   if (before.some((url) => /search-dialog|crc-studio-search/u.test(url))) {
     throw failure(route, "search code absent before search intent", JSON.stringify(before.filter((url) => /search/u.test(url))));
   }
-  await page.getByRole("button", { name: "Search documentation" }).first().focus();
+  const trigger = page.getByRole("button", { name: "Search documentation" }).first();
+  await trigger.focus();
   const dialog = page.locator(".studio-search-dialog");
-  await dialog.waitFor({ timeout: 30_000 });
+  await dialog.waitFor({ state: "attached", timeout: 30_000 });
+  if (await dialog.evaluate((element) => element.open)) {
+    throw failure(route, "preload intent to leave search dialog closed", "dialog was already open");
+  }
+  await trigger.click();
+  await page.locator(".studio-search-dialog[open]").waitFor({ timeout: 30_000 });
   await page.locator("[data-search-input]").fill("crcState");
-  await expectText(page, route, "results found");
+  await dialog.getByRole("status").getByText("results found", { exact: false }).waitFor({ timeout: 30_000 });
   const firstResult = page.locator("[role='option']").first();
   const firstTitle = (await firstResult.locator("strong").textContent())?.trim();
   if (firstTitle !== "crcState") {
@@ -190,6 +206,21 @@ async function searchContract(page) {
     throw failure(route, "API category filter toggle", `aria-pressed=${selected}`);
   }
   await page.locator("[data-search-kind='api']").click();
+  const resultUrls = await page.locator("[role='option']").evaluateAll(
+    (options) => options.map((option) => option.getAttribute("data-search-url")),
+  );
+  const resultContents = await page.locator("[role='option']").allTextContents();
+  if (
+    resultUrls.length === 0 ||
+    resultUrls.some((url) => url === null || url.startsWith("#/testing")) ||
+    resultContents.some((content) => /testing|test lab|scenario/u.test(content))
+  ) {
+    throw failure(
+      route,
+      "public search results with no test-lab route or record",
+      JSON.stringify({ resultUrls, resultContents }),
+    );
+  }
   await page.locator("[data-search-input]").press("ArrowDown");
   await page.locator("[data-search-input]").press("Enter");
   await page.locator(".studio-search-dialog").waitFor({ state: "hidden" });
@@ -198,12 +229,8 @@ async function searchContract(page) {
   }
 
   await page.getByRole("button", { name: "Search documentation" }).first().click();
-  await page.locator("[data-search-input]").fill("no-such-public-document");
-  await expectText(page, "#/api/hooks/crc-state", "No results");
-  const resultText = await page.locator(".studio-search-dialog__results").textContent();
-  if (/testing|test lab|scenario/u.test(resultText ?? "")) {
-    throw failure("#/api/hooks/crc-state", "no testing routes in search results", JSON.stringify(resultText));
-  }
+  await page.locator("[data-search-input]").fill("qzvxylmnop");
+  await dialog.getByRole("status").getByText("No results", { exact: false }).waitFor({ timeout: 30_000 });
   await page.keyboard.press("Escape");
   const after = await page.evaluate(() => performance.getEntriesByType("resource").map((entry) => entry.name));
   if (!after.some((url) => /search-dialog|crc-studio-search/u.test(url))) {
@@ -211,10 +238,45 @@ async function searchContract(page) {
   }
 }
 
+async function searchRetryContract(browser) {
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const page = await context.newPage();
+  const route = "#/learn";
+  try {
+    await page.addInitScript(() => {
+      window.__CRC_STUDIO_ACCEPTANCE_FAIL_SEARCH_ONCE__ = true;
+    });
+    await open(page, route);
+    await page
+      .getByRole("button", { name: "Search documentation" })
+      .first()
+      .dispatchEvent("click");
+    const dialog = page.locator(".studio-search-dialog[open]");
+    await dialog.waitFor({ timeout: 30_000 });
+    await dialog.getByRole("status").getByText("Search unavailable", { exact: false }).waitFor({ timeout: 30_000 });
+    const retry = dialog.locator("[data-search-retry]");
+    await retry.waitFor({ timeout: 30_000 });
+    await retry.click();
+    await page.locator("[data-search-input]").fill("crcState");
+    await dialog.getByRole("status").getByText("results found", { exact: false }).waitFor({ timeout: 30_000 });
+    const failureFlag = await page.evaluate(
+      () => window.__CRC_STUDIO_ACCEPTANCE_FAIL_SEARCH_ONCE__,
+    );
+    if (failureFlag !== false) {
+      throw failure(route, "the one-shot acceptance loader failure to be consumed", String(failureFlag));
+    }
+  } finally {
+    await context.close();
+  }
+}
+
 async function existingStudioContract(page) {
   const route = "#/examples/drawing/rectangle";
   await open(page, route);
-  await expectText(page, route, "Live · changes run automatically");
+  await page
+    .locator("#studio-main")
+    .getByText("Live · changes run automatically", { exact: true })
+    .waitFor({ timeout: 30_000 });
   const frames = page.locator(".studio-preview__frame");
   const count = await frames.count();
   const sandbox = await frames.first().getAttribute("sandbox");
@@ -261,6 +323,7 @@ try {
   await mobileDrawerContract(browser);
   await publicContentContract(page);
   await redirectContract(page);
+  await searchRetryContract(browser);
   await searchContract(page);
   await existingStudioContract(page);
   await context.close();

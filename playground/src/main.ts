@@ -13,6 +13,7 @@ import { createStudioShell } from "./app/shell";
 import { createDocumentationPages } from "./docs/documentation-pages";
 import { createExamplePages } from "./examples/example-pages";
 import { createTestingPages } from "./testing/testing-pages";
+import { createSearchBundleLoader } from "./search/search-loader";
 import "./style.css";
 
 const app = document.getElementById("app");
@@ -25,7 +26,9 @@ const shell = createStudioShell({
   onSearchNavigate(url) {
     window.location.hash = url;
   },
-  loadSearchBundle: () => import("virtual:crc-studio-search"),
+  loadSearchBundle: createSearchBundleLoader(
+    () => import("virtual:crc-studio-search"),
+  ),
 });
 const documentationPages = createDocumentationPages({
   container: shell.main,

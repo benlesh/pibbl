@@ -130,6 +130,10 @@ describe("documentation search dialog", () => {
     expect(document.querySelector("[data-search-kind='api']")?.textContent).toContain(
       "API (1)",
     );
+    expect(document.querySelector("[role='option']")).toHaveAttribute(
+      "data-search-url",
+      "#/api/hooks/crc-state",
+    );
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
     expect(navigate).toHaveBeenCalledWith("#/api/hooks/crc-state");
