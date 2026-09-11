@@ -1,6 +1,6 @@
 # First-class signals and animation design
 
-> **Historical status: APPROVED DESIGN RECORD.** This dated document records the approved contract; current shipped behavior remains in `docs/design/` and the public code until implementation.
+> **Historical status: IMPLEMENTED DESIGN RECORD.** Original approved wording below is preserved; current behavior lives in the linked design contracts and API reference.
 
 Status: approved for implementation on 2026-09-09.
 

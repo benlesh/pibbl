@@ -107,7 +107,16 @@ own monotonically increasing revision and completes it only after successful
 work. Signal dependency edges belong to exact consumer generations, never to a
 global subscription bag. The [signals and scheduling
 contract](./signals-and-scheduling-contract.md) defines the six phases and
-failure isolation.
+failure isolation. Animation definitions and programs own no clock or runtime
+registration. One mounted playback hook slot owns its controller, scheduler
+registration, commands, milestone/error callbacks, and current evaluator or
+stepper state; one accepted run owns all reachable output writer leases.
+Finish, cancel, failure, explicit replacement, or teardown releases the exact
+applicable owners. Replacement preflights before displacement and remains
+provisional until Commit, and rejected Commit restores prior ownership without
+publishing partial values or skipping replay work. The [animation
+contract](./animation-contract.md) provides the complete ownership ledger and
+postconditions.
 
 | Resource                    | Acquisition                                               | Sole owner                                   | Release trigger                                                                          | Required postcondition                                                                                         |
 | --------------------------- | --------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |

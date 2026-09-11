@@ -9,7 +9,7 @@ its constructors from the two explicit compiler subpaths. Imports below
 
 ### `@crc/core`
 
-The root contains 63 runtime values and 155 type exports.
+The root contains 77 runtime values and 173 type exports.
 
 <!-- root-values:start -->
 
@@ -20,33 +20,42 @@ The root contains 63 runtime values and 155 type exports.
 `VerticalLine`, `Wedge`, `computed`, `crc`,
 `crcCanvasContext`, `crcCursor`, `crcEvent`,
 `crcEventListener`, `crcEventTarget`, `crcLayoutBox`, `crcLinePath`, `crcMemo`,
-`crcRectPath`, `crcRef`, `crcSignal`, `crcState`, `crcSvgPath`, `crcWhenChanged`,
+`crcPlayback`, `crcRectPath`, `crcRef`, `crcSignal`, `crcState`, `crcSvgPath`,
+`crcTransition`, `crcWhenChanged`,
 `createArcPath`, `createCirclePath`, `createElement`, `createEllipsePath`,
 `createLinePath`, `createPolygonPath`, `createRectanglePath`,
 `createRegularPolygonPath`, `createStarPath`, `createSvgPath`,
-`createWedgePath`, `definePrimitive`, `isSignal`, `layoutDiagnostic`,
-`measureElement`, `normalizeEdges`, `resolveBox`, `resolveLength`, `signal`,
-`untracked`
+`createWedgePath`, `defineAnimation`, `definePrimitive`, `easing`, `isSignal`,
+`keyframes`, `layoutDiagnostic`, `marker`, `measureElement`, `normalizeEdges`,
+`parallel`, `repeat`, `resolveBox`, `resolveLength`, `sequence`, `signal`,
+`spring`, `stepper`, `track`, `tween`, `untracked`, `wait`
 
 <!-- root-values:end -->
 
 <!-- root-types:start -->
 
 `AbsoluteProps`, `AbsoluteStyle`, `ArcPathOptions`, `ArcProps`, `ArcStyle`,
-`BoxStyle`, `CRCBlurFilter`, `CRCBrightnessFilter`, `CRCClipboardEvent`,
+`BoxStyle`, `CRCAnimationDefinition`, `CRCAnimationOptions`,
+`CRCAnimationProgram`, `CRCAnimationRepeatDirection`,
+`CRCAnimationRepeatOptions`, `CRCAnimationSampleInput`, `CRCBlurFilter`,
+`CRCBrightnessFilter`, `CRCClipboardEvent`,
 `CRCComponent`, `CRCCompositionEvent`, `CRCConfig`, `CRCContainerChild`,
 `CRCContrastFilter`, `CRCController`, `CRCDragEvent`, `CRCDropShadowFilter`,
-`CRCElement`, `CRCElementType`, `CRCEmptyNode`,
+`CRCEasing`, `CRCElement`, `CRCElementType`, `CRCEmptyNode`,
 `CRCEvent`, `CRCEventCapturePropName`, `CRCEventHandler`, `CRCEventHandlers`,
 `CRCEventMap`, `CRCEventPhase`, `CRCEventPropName`, `CRCEventTarget`,
 `CRCEventTargetOptions`, `CRCEventTargetSnapshot`, `CRCEventType`, `CRCFilter`,
 `CRCFit`, `CRCFixedViewportConfig`, `CRCFocusEvent`, `CRCGrayscaleFilter`,
-`CRCHueRotateFilter`, `CRCInputEvent`, `CRCInvertFilter`, `CRCKey`,
-`CRCKeyboardEvent`, `CRCKeyboardNavigationOptions`, `CRCLogicalMouseEvent`,
-`CRCMouseEvent`, `CRCMouseEventListener`, `CRCNode`, `CRCOpacityFilter`, `CRCPixelRatio`,
-`CRCPointerEvent`, `CRCPrimitiveComponent`, `CRCRef`, `CRCRenderResult`,
+`CRCHueRotateFilter`, `CRCInputEvent`, `CRCInterpolator`, `CRCInvertFilter`,
+`CRCKey`, `CRCKeyframesOptions`, `CRCKeyboardEvent`,
+`CRCKeyboardNavigationOptions`, `CRCLogicalMouseEvent`, `CRCMouseEvent`,
+`CRCMouseEventListener`, `CRCNode`, `CRCOpacityFilter`, `CRCPixelRatio`,
+`CRCPointerEvent`, `CRCPlayback`, `CRCPlaybackEvent`, `CRCPlaybackOptions`,
+`CRCPlaybackStatus`, `CRCPrimitiveComponent`, `CRCRef`, `CRCRenderResult`,
 `CRCResponsiveViewportConfig`, `CRCSaturateFilter`, `CRCSepiaFilter`,
-`CRCTextChild`, `CRCTouchEvent`, `CRCWheelEvent`,
+`CRCSpringOptions`, `CRCSpringTransitionOptions`, `CRCStepperOptions`,
+`CRCTextChild`, `CRCTouchEvent`, `CRCTweenOptions`,
+`CRCTweenTransitionOptions`, `CRCWheelEvent`,
 `Canvas`, `CanvasMeasurementService`, `CirclePathOptions`, `CircleProps`,
 `CircleStyle`, `ClipProps`, `ClipStyle`, `Constraints`, `CursorStyle`,
 `EdgeValues`, `Edges`, `EllipsePathOptions`, `EllipseProps`, `EllipseStyle`,
@@ -379,6 +388,8 @@ accessibility guide](./guides/focus-keyboard-and-accessibility.md).
 
 - `crcState(init?)` → readonly `[value, StateUpdater<T>]`
 - `crcSignal(initialValue, options?)` → one mount-owned `WritableSignal<T>`
+- `crcPlayback(program, options?)` → one stable component-owned `CRCPlayback`
+- `crcTransition(target, options)` → one stable readonly presented-value signal
 - `crcMemo(create, deps)` → memoized value under strict shallow dependency
   comparison
 - `crcRef(init?)` → stable `CRCRef<T>` with mutable `current`
@@ -415,6 +426,69 @@ See the [signals and scheduling
 contract](./design/signals-and-scheduling-contract.md) for computed graph,
 component-consumer, six-phase realm scheduler, Layer revision, error-isolation,
 ownership, and friend-entry rules.
+
+## Animation
+
+Animation has three explicit layers: definitions describe typed values over
+local time, programs bind definitions to writable signals and compose work,
+and `crcPlayback` gives a mounted hook slot ownership of a running program.
+There is no free `play(program)` export and no animation object is accepted as
+an ordinary style value.
+
+The definition constructors are:
+
+- `tween(options)` for duration/easing interpolation. Numbers interpolate
+  linearly by default; every other value requires `CRCInterpolator<T>`.
+- `keyframes(options)` for two or more values with optional nondecreasing
+  offsets and one easing or one easing per segment.
+- `spring(options)` for a number-only analytic damped oscillator.
+- `defineAnimation(options)` for a synchronous custom seekable sampler.
+- `stepper(options)` for owned fixed-step state such as acceleration and
+  velocity.
+
+`easing` is a frozen object containing `linear`, `easeIn`, `easeOut`,
+`easeInOut`, `cubicBezier`, and `steps`; it is not itself a function. The
+associated types are `CRCEasing`, `CRCInterpolator`,
+`CRCAnimationDefinition`, `CRCTweenOptions`, `CRCKeyframesOptions`,
+`CRCSpringOptions`, `CRCAnimationOptions`, `CRCAnimationSampleInput`, and
+`CRCStepperOptions`.
+
+Programs are created with `track`, `sequence`, `parallel`, `wait`, `marker`,
+and `repeat`. They are opaque immutable `CRCAnimationProgram` values.
+`CRCAnimationRepeatOptions` chooses a positive iteration count or infinity and
+an optional `CRCAnimationRepeatDirection`. An accepted run leases every output
+for its whole lifetime. Another owner conflicts unless replacement is explicit;
+direct `set` and `update` on a leased output throw.
+
+`crcPlayback(program, options?)` returns `CRCPlayback`. Its readonly `status`
+and `currentTime` are signals. Controls are `play`, `pause`, `resume`, `cancel`,
+`finish`, `seek`, `reverse`, and `setPlaybackRate`. Controls enqueue immutable
+commands for the next Begin phase. `CRCPlaybackOptions` configures autoplay,
+conflict policy, a debug name, `onEvent`, and `onError`.
+`CRCPlaybackStatus` enumerates `idle`, `scheduled`, `running`, `paused`,
+`finished`, `cancelled`, and `disposed`; `CRCPlaybackEvent` describes start,
+iteration, marker, finish, and cancel milestones delivered during Complete
+after committed rendering.
+
+`crcTransition` has a number-only spring overload using
+`CRCSpringTransitionOptions` and a generic tween overload using
+`CRCTweenTransitionOptions<T>`. Omitted `initial` presents the target without
+mount animation. A distinct initial value queues entrance motion after the
+mounting render succeeds; later unequal targets retarget from the last
+committed presented value. Read the returned signal explicitly:
+
+```tsx
+function MovingCard({ targetX }: { targetX: number }) {
+  const x = crcTransition(targetX, { type: "spring", initial: 0 });
+  return <Rectangle style={{ x: x.get(), width: 48, height: 32 }} />;
+}
+```
+
+All playback shares the realm scheduler's Begin, Advance, Commit, Plan,
+Render, and Complete phases. See the [signals and animation
+guide](./guides/signals-and-animation.md) for authoring patterns and the
+[animation contract](./design/animation-contract.md) for defaults, validation,
+ordering, determinism, Layer guidance, and failure/teardown semantics.
 
 ## Events
 

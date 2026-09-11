@@ -1,11 +1,12 @@
 # CRC signals and scheduling contract
 
-Status: current implemented contract, published 2026-09-10.
+Status: current implemented contract, updated for animation on 2026-09-11.
 
 This document defines CRC's first-class synchronous signals and the one
 realm-wide frame scheduler shared by every mounted root and managed `Layer` in
-that loaded runtime. The separately approved animation design is not part of
-the shipped surface; animation remains deferred to its implementation plan.
+that loaded runtime. The [animation contract](./animation-contract.md) defines
+the definitions, programs, playback, transitions, and staged animation work
+that now use this graph and scheduler.
 
 ## Public signal surface
 
@@ -230,6 +231,6 @@ package-consumer, and Studio declaration suites are the executable evidence.
   coalesced realm frame and does not dirty a renderer before its result changes.
 - The scheduler is not a retained scene graph, DOM reconciler, worker runtime,
   or public manual-clock/input-injection API.
-- Animation values and hooks are not shipped by this contract. Their approved
-  design record remains future-facing until the separate implementation plan
-  lands.
+- Animation values and hooks use these same explicit reads, staging, frame
+  phases, consumer boundaries, and ownership rules. Their specialized behavior
+  lives in the [animation contract](./animation-contract.md).

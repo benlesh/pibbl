@@ -1,4 +1,5 @@
 import type {
+  CRCAnimationProgram,
   CRCBlurFilter,
   CRCBrightnessFilter,
   CRCContrastFilter,
@@ -31,10 +32,17 @@ import {
   computed,
   createElement,
   crc,
+  crcPlayback,
   crcSignal,
+  crcTransition,
   definePrimitive,
   isSignal,
+  marker,
   signal,
+  sequence,
+  spring,
+  track,
+  tween,
   untracked,
 } from '@crc/core';
 import {
@@ -65,6 +73,30 @@ function SignalLabel(): CRCNode {
 
 export const signalElement: CRCElement = <SignalLabel />;
 void isSignal(jsxCallback.asReadonly());
+
+function AnimatedLabel(): CRCNode {
+  const x = crcSignal(0);
+  const program: CRCAnimationProgram = sequence(
+    track(x, tween({ to: 40, duration: 120 })),
+    marker('arrived'),
+    track(x, spring({ to: 0 })),
+  );
+  const player = crcPlayback(program);
+  const transitioned = crcTransition(x.get(), {
+    type: 'tween',
+    duration: 80,
+  });
+  return (
+    <Group style={{ translateX: transitioned.get() }}>
+      <Rectangle
+        style={{ x: x.get(), width: 10, height: 10 }}
+        onClick={() => player.play()}
+      />
+    </Group>
+  );
+}
+
+export const animatedElement: CRCElement = <AnimatedLabel />;
 
 const jsxFilterTypes = [
   { type: 'blur', radius: 2 } satisfies CRCBlurFilter,

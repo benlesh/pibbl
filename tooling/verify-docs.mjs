@@ -69,6 +69,7 @@ const guidePaths = [
   "docs/guides/jsx-troubleshooting.md",
   "docs/guides/layout-groups-clips-and-layers.md",
   "docs/guides/react-interop.md",
+  "docs/guides/signals-and-animation.md",
   "docs/guides/state-lifecycle-and-react-differences.md",
   "docs/guides/without-jsx.md",
 ];
@@ -81,6 +82,7 @@ const currentMarkdownPaths = [
   "docs/architecture/style-and-layout-architecture.md",
   "docs/design/canvas-accessibility-guidance.md",
   "docs/design/canvas-surface-contract.md",
+  "docs/design/animation-contract.md",
   "docs/design/drawing-components-contract.md",
   "docs/design/event-resource-ownership.md",
   "docs/design/focus-and-keyboard-navigation-contract.md",
@@ -1370,6 +1372,15 @@ const requiredGuideMarkers = new Map([
     ["one JSX runtime", "createCRCElement", "expression-level pragma"],
   ],
   [
+    "docs/guides/signals-and-animation.md",
+    [
+      "## Read signals explicitly",
+      "## Event-triggered playback",
+      "## One frame transaction",
+      "CRC never automatically promotes components",
+    ],
+  ],
+  [
     "docs/guides/state-lifecycle-and-react-differences.md",
     ["immediate Canvas runtime", "crcWhenChanged", "## Disposal"],
   ],
@@ -1389,6 +1400,29 @@ for (const [path, markers] of requiredGuideMarkers) {
 }
 
 const contractPrecisionRequirements = new Map([
+  [
+    "docs/design/animation-contract.md",
+    [
+      "There is no free `play(program)` function",
+      "The frozen `easing` object contains",
+      "before a competing run is cancelled and before any writer lease\nsurvives",
+      "512th occurrence is allowed; work that would enter the 513th fails",
+      "one shared 512-descent\nconstruction budget",
+      "The handoff is provisional until Commit",
+      "Candidate program/options validation occurs synchronously during Render",
+      "Capture one logical time/frame identity and drain accepted commands",
+      "Sample registered playbacks in registration order",
+      "Validate and publish every playback's stages",
+      "Validate computed dependencies and collect the exact dirty",
+      "Repaint planned Layer children before ancestors",
+      "Finalize successful transactions, release ended runs/leases",
+      "including numeric style values",
+      "CRC never automatically promotes\na stable component",
+      "Future official WebGL integration is a lockstep friend",
+      "CRC exposes no public scheduler clock, frame-step API,\ntrace history",
+      "Future worker or WASM number crunching may use packed buffers only if Begin",
+    ],
+  ],
   [
     "docs/design/signals-and-scheduling-contract.md",
     [
@@ -1489,6 +1523,7 @@ const currentNormativeContractPaths = [
   ),
 ].sort();
 const postBaselineNormativeContractPaths = new Set([
+  "docs/design/animation-contract.md",
   "docs/design/signals-and-scheduling-contract.md",
 ]);
 const baselineSnapshotContractPaths = currentNormativeContractPaths.filter(
@@ -1536,13 +1571,29 @@ assert.deepEqual(
   [...postBaselineNormativeContractPaths],
   "Post-baseline preservation inventory must cover each current contract outside the dated snapshot",
 );
-const postBaselineSignalContractRecord =
-  contractPreservationBaseline.postBaselineContracts[0];
-const postBaselineContractResult = assertPostBaselineContractPreservation({
-  record: postBaselineSignalContractRecord,
-  currentSource: currentSources.get(postBaselineSignalContractRecord.path),
-  approvalRecordsById,
-});
+const postBaselineContractRecordsByPath = new Map(
+  contractPreservationBaseline.postBaselineContracts.map((record) => [
+    record.path,
+    record,
+  ]),
+);
+const postBaselineSignalContractRecord = postBaselineContractRecordsByPath.get(
+  "docs/design/signals-and-scheduling-contract.md",
+);
+const postBaselineAnimationContractRecord =
+  postBaselineContractRecordsByPath.get("docs/design/animation-contract.md");
+const postBaselineContractResults =
+  contractPreservationBaseline.postBaselineContracts.map((record) =>
+    assertPostBaselineContractPreservation({
+      record,
+      currentSource: currentSources.get(record.path),
+      approvalRecordsById,
+    }),
+  );
+const postBaselineUnitCount = postBaselineContractResults.reduce(
+  (total, result) => total + result.currentUnitCount,
+  0,
+);
 
 export function assertTask9EvidenceMappings(manifest) {
   const byId = new Map(
@@ -1907,6 +1958,18 @@ const matrixRequirements = [
     ],
   },
   {
+    topic: /Definitions, programs, playback/u,
+    guides: [
+      "guides/signals-and-animation.md",
+      "design/animation-contract.md",
+    ],
+    evidence: [
+      "animation-lab.test.ts",
+      "animation-rendering.test.tsx",
+      "final-public-vocabulary.tsx",
+    ],
+  },
+  {
     topic: /Ordinary composite/u,
     guides: ["guides/custom-components-and-primitives.md"],
     evidence: ["crc-canvas-context.test.tsx"],
@@ -2050,7 +2113,7 @@ assert.match(
 assert.match(
   libraryStatus,
   new RegExp(
-    `\\b${postBaselineContractResult.currentUnitCount} exhaustively mapped post-baseline units\\b`,
+    `\\b${postBaselineUnitCount} exhaustively mapped post-baseline units\\b`,
     "u",
   ),
   "Library status post-baseline semantic-unit count is stale.",
@@ -2200,6 +2263,15 @@ export async function verifyMutationProbes() {
       ),
     /Current normative contract inventory/u,
   );
+  throws(
+    () =>
+      assertCurrentNormativeContractInventory(
+        currentNormativeContractPaths.filter(
+          (path) => path !== "docs/design/animation-contract.md",
+        ),
+      ),
+    /Current normative contract inventory/u,
+  );
   const alteredSignalContract = replaceContractUnit(
     currentSources.get("docs/design/signals-and-scheduling-contract.md"),
     "s",
@@ -2211,6 +2283,21 @@ export async function verifyMutationProbes() {
       assertPostBaselineContractPreservation({
         record: postBaselineSignalContractRecord,
         currentSource: alteredSignalContract,
+        approvalRecordsById,
+      }),
+    /reviewed complete semantic inventory/u,
+  );
+  const alteredAnimationContract = replaceContractUnit(
+    currentSources.get("docs/design/animation-contract.md"),
+    "m",
+    "m0008",
+    "Animation easing is mutable and may run on its own clock.",
+  );
+  throws(
+    () =>
+      assertPostBaselineContractPreservation({
+        record: postBaselineAnimationContractRecord,
+        currentSource: alteredAnimationContract,
         approvalRecordsById,
       }),
     /reviewed complete semantic inventory/u,
@@ -2235,6 +2322,23 @@ export async function verifyMutationProbes() {
       }),
     /current text is not exhaustively mapped/u,
   );
+  const unmappedAnimationContract = structuredClone(
+    postBaselineAnimationContractRecord,
+  );
+  const animationBoundaryMapping = unmappedAnimationContract.mappings.find(
+    ({ id }) => id === "deliberate-animation-boundaries",
+  );
+  animationBoundaryMapping.currentIds =
+    animationBoundaryMapping.currentIds.filter((id) => id !== "m0060");
+  throws(
+    () =>
+      assertPostBaselineContractPreservation({
+        record: unmappedAnimationContract,
+        currentSource: currentSources.get("docs/design/animation-contract.md"),
+        approvalRecordsById,
+      }),
+    /current text is not exhaustively mapped/u,
+  );
   const animationApprovalMutation = structuredClone(
     postBaselineSignalContractRecord,
   );
@@ -2253,6 +2357,23 @@ export async function verifyMutationProbes() {
         approvalRecordsById,
       }),
     /out-of-scope approved-design unit g0084 from Animation value definitions/u,
+  );
+  const signalApprovalMutation = structuredClone(
+    postBaselineAnimationContractRecord,
+  );
+  const animationModelMapping = signalApprovalMutation.mappings.find(
+    ({ id }) => id === "animation-document-and-public-model",
+  );
+  animationModelMapping.approval.unitIds = ["g0062"];
+  animationModelMapping.reason += " g0062";
+  throws(
+    () =>
+      assertPostBaselineContractPreservation({
+        record: signalApprovalMutation,
+        currentSource: currentSources.get("docs/design/animation-contract.md"),
+        approvalRecordsById,
+      }),
+    /out-of-scope approved-design unit g0062 from Public signal API/u,
   );
   const missingSignalPrecedence = structuredClone(contractPreservationBaseline);
   missingSignalPrecedence.evidenceMappings =
@@ -3075,7 +3196,7 @@ process.stdout.write(
     `${contractPreservationResult.currentUnitCount} current semantic units across ` +
     `${contractPreservationBaseline.contracts.length} baseline-snapshotted normative contracts, ` +
     `${currentNormativeContractPaths.length} current normative contracts, ` +
-    `${postBaselineContractResult.currentUnitCount} exhaustively mapped post-baseline units, ` +
+    `${postBaselineUnitCount} exhaustively mapped post-baseline units, ` +
     `${contractPreservationResult.evidenceMappingCount} direct evidence mappings, ` +
     `${fieldMigrationResult.fieldMigrationCount} baseline-derived field migrations, ` +
     `baseline provenance ${contractPreservationResult.provenanceVerified ? "verified" : "embedded/digest-locked"}, ` +

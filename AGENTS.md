@@ -31,7 +31,12 @@ composable drawing primitives without React or generated DOM.
   render/Advance write guards, observation-aware computed source-edge leases,
   and exact consumer ownership. Observed pending computed validation is live
   Plan work. One realm scheduler runs six ordered phases across roots and
-  managed Layers. The approved animation design is not yet implemented.
+  managed Layers.
+- First-class animation is implemented through immutable tween, keyframe,
+  analytic-spring, custom, and fixed-step definitions; composable programs;
+  whole-run writer leases; component-owned playback; update-driven
+  transitions; and ordered post-render milestones. All animation advances in
+  the existing realm scheduler and writes ordinary signals atomically.
 - The local `_bmad-output/` directory remains discovery input, not normative
   behavior. Plan 003's implemented design, architecture, contracts, and
   implementation record supersede its earlier layout proposals where they
@@ -101,6 +106,12 @@ either as the current result unless a fresh run reproduces it.
   explicit updater operation. Writes are forbidden during component,
   primitive-render, and computed evaluation, including equality no-ops. Advance
   participants may mutate signals only through their scheduler staging batch.
+- Animation definitions and programs are nominal immutable values without a
+  clock. `track` binds definitions to writable signals; `crcPlayback` and
+  `crcTransition` create component-owned running state. Commands enter Begin,
+  playback samples in Advance, outputs/status/time publish together in Commit,
+  milestones deliver in Complete, and teardown releases all writer leases and
+  state. There is no free `play(program)` API or independent animation loop.
 - Canvas state is isolated with save/restore around component traversal. Render
   failure tears down runtime-owned resources and clears component refs; pixels
   already painted earlier in the failing frame are not rolled back.
@@ -133,7 +144,9 @@ either as the current result unless a fresh run reproduces it.
 
 Public runtime/authoring: `crc`, `createElement`, `Fragment`,
 `definePrimitive`, `crcCanvasContext`, `signal`, `computed`, `untracked`, and
-`isSignal`; drawing and composition components
+`isSignal`; animation definitions/programs `easing`, `tween`, `keyframes`,
+`spring`, `defineAnimation`, `stepper`, `track`, `sequence`, `parallel`,
+`wait`, `marker`, and `repeat`; drawing and composition components
 `Rectangle`, `Path`, `Line`, `HorizontalLine`, `VerticalLine`, `SvgPath`,
 `Text`, `Image`, `Group`, `Clip`, and `Layer`; layout components `Absolute`,
 `Overlay`, `Flow`, `Flex`, and `Grid`; focus policies `FocusManagement` and
@@ -144,13 +157,17 @@ configuration is public through `CRCConfig`,
 Directional configuration is public through `CRCKeyboardNavigationOptions`.
 Signal configuration and values are public through `Signal`,
 `WritableSignal`, `SignalOptions`, and `SignalEquals`.
+Animation configuration and values are public through the named
+`CRCAnimationDefinition`, `CRCAnimationProgram`, easing/interpolator,
+definition-option, repeat, playback, event/status, and transition-option types.
 Filter configuration is public through `CRCFilter` and the ten named
 `CRCBlurFilter`, `CRCBrightnessFilter`, `CRCContrastFilter`,
 `CRCDropShadowFilter`, `CRCGrayscaleFilter`, `CRCHueRotateFilter`,
 `CRCInvertFilter`, `CRCOpacityFilter`, `CRCSaturateFilter`, and
 `CRCSepiaFilter` descriptor types.
 
-Public hooks: `crcState`, `crcSignal`, `crcMemo`, `crcRef`, `crcWhenChanged`, `crcRectPath`,
+Public hooks: `crcState`, `crcSignal`, `crcPlayback`, `crcTransition`, `crcMemo`,
+`crcRef`, `crcWhenChanged`, `crcRectPath`,
 `crcLinePath`, `crcSvgPath`, `crcEvent`, `crcEventTarget`,
 `crcEventListener`, `crcCursor`, and `crcLayoutBox`.
 
@@ -165,8 +182,9 @@ native non-coordinate input on a plain Canvas has no logical target. No public
 input-injection adapter, hidden editable DOM, semantic control mirror, or
 accessibility layer exists. CRC also does not promise rich text, image CORS
 policy, complete CSS compatibility, raw CSS filter strings, `url()`/SVG filter
-graphs, `backdrop-filter`, `boxShadow`, scrolling, workers/WebGL, or a retained
-scene graph. Nonempty filters require browser `OffscreenCanvas` and Canvas
+graphs, `backdrop-filter`, `boxShadow`, scrolling, worker/WASM animation,
+cross-thread signals, public manual clocks/history, automatic caching, WebGL,
+or a retained scene graph. Nonempty filters require browser `OffscreenCanvas` and Canvas
 `filter`; `[]` is a no-op with no filter capability requirement. Browser
 behavior remains authoritative for Canvas/`Path2D`, font
 rasterization and measurement, decoded-image behavior, and `OffscreenCanvas`
@@ -174,6 +192,7 @@ availability.
 
 Read the exact contracts before changing these areas:
 
+- `docs/design/animation-contract.md`
 - `docs/design/signals-and-scheduling-contract.md`
 - `docs/design/canvas-surface-contract.md`
 - `docs/design/runtime-hooks-contract.md`
@@ -315,5 +334,27 @@ unrelated roots or completions.
 renderer packages released in lockstep. It is not re-exported from the root,
 is not available to ordinary Studio examples, and is not a stable third-party
 API. Exact current behavior lives in
-`docs/design/signals-and-scheduling-contract.md`; the approved animation
-design remains future-facing until its separate implementation plan ships.
+`docs/design/signals-and-scheduling-contract.md`.
+
+## Shipped first-class animation
+
+The implemented 2026-09-11 animation work adds numeric tweening, keyframes,
+analytic springs, custom seekable definitions, and fixed-step stateful
+steppers. Immutable programs compose `track`, `sequence`, `parallel`, `wait`,
+`marker`, and `repeat`; whole-run writer leases reject ambiguous writers unless
+replacement is explicit. `crcPlayback` owns stable controls/status/current time
+for one mounted hook slot, while `crcTransition` provides explicit target-driven
+spring and tween values. Ordinary styles still receive numbers through visible
+`.get()` calls.
+
+Every command enters Begin, every active playback samples in Advance,
+user/status/time writes publish atomically in Commit, computed and renderer work
+is planned afterward, and milestones/errors deliver in Complete. Time-based
+definitions use logical time; only steppers integrate clamped fixed steps.
+Ordinary Canvas content still repaints its immediate-mode root. Explicit Layers
+remain the only retained Canvas boundary, and CRC never promotes content
+automatically. WebGL remains a future lockstep friend of this scheduler;
+workers/WASM remain future internal optimizations with no permission to change
+observable behavior. Exact behavior lives in
+`docs/design/animation-contract.md` and the authoring guide is
+`docs/guides/signals-and-animation.md`.

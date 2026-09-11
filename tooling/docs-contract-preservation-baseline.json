@@ -34,7 +34,7 @@
     {
       "id": "first-class-signals-and-scheduler",
       "path": "docs/superpowers/specs/2026-09-09-first-class-signals-and-animation-design.md",
-      "sourceSha256": "3d34db700c11865dda6f6e3998f60fbf4bb01db928eb07c0e8700607a2b0c33f",
+      "sourceSha256": "35e1d4acdf91062b5852b2452ca127706769198912b59d7c128103b017bde819",
       "unitPrefix": "g"
     }
   ],
@@ -6839,7 +6839,7 @@
           "id": "c0063",
           "kind": "prose",
           "section": "First-class signal integration",
-          "text": "`crcSignal(initialValue, options?)` returns one writable signal created for the mounted hook slot. The initial value, equality function, and debug name are mount-only. Explicit `get()` reads subscribe the evaluating component. Removal detaches that owner; a retained signal remains readable and writable but cannot schedule the removed owner. Focused `crc-signal`, signal graph, component-consumer, scheduler, Layer, and error-isolation suites cover these rules."
+          "text": "`crcSignal(initialValue, options?)` returns one writable signal created for the mounted hook slot. The initial value, equality function, and debug name are mount-only. Explicit `get()` reads subscribe the evaluating component. Removal detaches that owner; a retained signal remains readable and writable but cannot schedule the removed owner. Focused `crc-signal`, signal graph, component-consumer, scheduler, Layer, and error-isolation suites cover these rules. `crcPlayback(program, options?)` and `crcTransition(target, options)` are ordered render-only hook slots. The first returns a stable component-owned handle; the second returns a stable readonly signal backed by private playback. Only successful renders adopt candidates or queue autoplay, entrance, and retarget work. Teardown releases registrations, writer leases, evaluator and stepper state, queued commands and milestones, and live callbacks exactly once; stale controls and retained transition results cannot schedule a replacement identity. All commands enter the shared realm scheduler, outputs/status/time publish in one Commit, and specialized behavior lives in the [animation contract](./animation-contract.md)."
         },
         {
           "id": "c0064",
@@ -7285,7 +7285,7 @@
           "id": "c0039",
           "kind": "prose",
           "section": "Signal and scheduler ownership",
-          "text": "The realm scheduler owns the host frame, not any individual Canvas. Disposing one root removes only that root's registration and work. A nested Layer request marks its ancestor composition path, while the requested instance retains its own monotonically increasing revision and completes it only after successful work. Signal dependency edges belong to exact consumer generations, never to a global subscription bag. The [signals and scheduling contract](./signals-and-scheduling-contract.md) defines the six phases and failure isolation."
+          "text": "The realm scheduler owns the host frame, not any individual Canvas. Disposing one root removes only that root's registration and work. A nested Layer request marks its ancestor composition path, while the requested instance retains its own monotonically increasing revision and completes it only after successful work. Signal dependency edges belong to exact consumer generations, never to a global subscription bag. The [signals and scheduling contract](./signals-and-scheduling-contract.md) defines the six phases and failure isolation. Animation definitions and programs own no clock or runtime registration. One mounted playback hook slot owns its controller, scheduler registration, commands, milestone/error callbacks, and current evaluator or stepper state; one accepted run owns all reachable output writer leases. Finish, cancel, failure, explicit replacement, or teardown releases the exact applicable owners. Replacement preflights before displacement and remains provisional until Commit, and rejected Commit restores prior ownership without publishing partial values or skipping replay work. The [animation contract](./animation-contract.md) provides the complete ownership ledger and postconditions."
         },
         {
           "id": "c0040",
@@ -8544,10 +8544,343 @@
   ],
   "postBaselineContracts": [
     {
+      "path": "docs/design/animation-contract.md",
+      "unitPrefix": "m",
+      "currentUnitCount": 60,
+      "currentUnitsSha256": "52050c7a1b95a8466fbbe753c10edaf8424a151108612014e2bfbdaa6fccab7e",
+      "approvalRecordId": "first-class-signals-and-scheduler",
+      "mappings": [
+        {
+          "id": "animation-document-and-public-model",
+          "currentIds": ["m0001", "m0002", "m0003", "m0004", "m0005", "m0006"],
+          "reason": "first-class-signals-and-scheduler units g0003 g0004 g0052 g0053 g0055 g0057 g0085 g0087 authorize m0001 m0002 m0003 m0004 m0005 m0006 for the current layered public and private execution model.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": [
+              "g0003",
+              "g0004",
+              "g0052",
+              "g0053",
+              "g0055",
+              "g0057",
+              "g0085",
+              "g0087"
+            ]
+          },
+          "sharedAnchors": ["animation", "program", "playback"]
+        },
+        {
+          "id": "definitions-and-interpolation",
+          "currentIds": ["m0007", "m0008", "m0009", "m0010", "m0011", "m0012"],
+          "reason": "first-class-signals-and-scheduler units g0054 g0084 g0086 g0088 g0089 g0090 g0091 g0092 g0093 g0094 g0098 g0099 g0100 g0185 g0223 g0224 g0225 authorize m0007 m0008 m0009 m0010 m0011 m0012 for normalized definitions, interpolation, snapshots, and activation validation.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": [
+              "g0054",
+              "g0084",
+              "g0086",
+              "g0088",
+              "g0089",
+              "g0090",
+              "g0091",
+              "g0092",
+              "g0093",
+              "g0094",
+              "g0098",
+              "g0099",
+              "g0100",
+              "g0185",
+              "g0223",
+              "g0224",
+              "g0225"
+            ]
+          },
+          "sharedAnchors": ["duration", "interpolator", "sample"]
+        },
+        {
+          "id": "analytic-springs",
+          "currentIds": ["m0013", "m0014"],
+          "reason": "first-class-signals-and-scheduler units g0095 g0096 g0097 g0141 g0171 authorize m0013 m0014 for analytic spring settlement and logical-time sampling.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": ["g0095", "g0096", "g0097", "g0141", "g0171"]
+          },
+          "sharedAnchors": ["spring", "duration", "velocity"]
+        },
+        {
+          "id": "stateful-steppers",
+          "currentIds": ["m0015", "m0016", "m0017", "m0018"],
+          "reason": "first-class-signals-and-scheduler units g0101 g0102 g0103 g0104 g0123 g0173 g0183 g0223 g0230 g0233 authorize m0015 m0016 m0017 m0018 for bounded fixed-step state, terminal discovery, replay, and synchronous work.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": [
+              "g0101",
+              "g0102",
+              "g0103",
+              "g0104",
+              "g0123",
+              "g0173",
+              "g0183",
+              "g0223",
+              "g0230",
+              "g0233"
+            ]
+          },
+          "sharedAnchors": ["stepper", "callback", "replay"]
+        },
+        {
+          "id": "program-composition-and-duration",
+          "currentIds": ["m0019", "m0020", "m0021", "m0022", "m0023"],
+          "reason": "first-class-signals-and-scheduler units g0105 g0106 g0107 g0108 g0109 g0110 g0111 g0112 g0113 g0114 g0123 g0124 g0138 authorize m0019 m0020 m0021 m0022 m0023 for program composition, duration, overlap, and committed evaluator state.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": [
+              "g0105",
+              "g0106",
+              "g0107",
+              "g0108",
+              "g0109",
+              "g0110",
+              "g0111",
+              "g0112",
+              "g0113",
+              "g0114",
+              "g0123",
+              "g0124",
+              "g0138"
+            ]
+          },
+          "sharedAnchors": ["sequence", "signal", "Commit"]
+        },
+        {
+          "id": "writer-leases-and-replacement",
+          "currentIds": ["m0024", "m0025"],
+          "reason": "first-class-signals-and-scheduler units g0115 g0116 g0185 g0192 g0213 g0214 g0215 g0227 authorize m0024 m0025 for whole-run leases, explicit replacement, preflight, and atomic handoff.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": [
+              "g0115",
+              "g0116",
+              "g0185",
+              "g0192",
+              "g0213",
+              "g0214",
+              "g0215",
+              "g0227"
+            ]
+          },
+          "sharedAnchors": ["lease", "output", "replacement"]
+        },
+        {
+          "id": "component-owned-playback",
+          "currentIds": ["m0026", "m0027", "m0028", "m0029"],
+          "reason": "first-class-signals-and-scheduler units g0055 g0056 g0057 g0120 g0121 g0122 g0123 g0124 g0125 g0128 g0192 g0213 authorize m0026 m0027 m0028 m0029 for stable component playback, ordered commands, successful render adoption, autoplay, and teardown.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": [
+              "g0055",
+              "g0056",
+              "g0057",
+              "g0120",
+              "g0121",
+              "g0122",
+              "g0123",
+              "g0124",
+              "g0125",
+              "g0128",
+              "g0192",
+              "g0213"
+            ]
+          },
+          "sharedAnchors": ["playback", "component", "disposed"]
+        },
+        {
+          "id": "milestones-callbacks-and-errors",
+          "currentIds": ["m0030", "m0031", "m0032"],
+          "reason": "first-class-signals-and-scheduler units g0126 g0127 g0128 g0166 g0168 g0185 g0186 g0187 g0191 g0192 authorize m0030 m0031 m0032 for ordered post-render milestones, callback isolation, errors, and disposal.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": [
+              "g0126",
+              "g0127",
+              "g0128",
+              "g0166",
+              "g0168",
+              "g0185",
+              "g0186",
+              "g0187",
+              "g0191",
+              "g0192"
+            ]
+          },
+          "sharedAnchors": ["milestone", "error", "Complete"]
+        },
+        {
+          "id": "update-driven-transitions",
+          "currentIds": ["m0033", "m0034", "m0035"],
+          "reason": "first-class-signals-and-scheduler units g0129 g0130 g0131 g0132 g0133 g0134 g0135 g0188 authorize m0033 m0034 m0035 for readonly transitions, retargeting, successful-render adoption, and teardown.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": [
+              "g0129",
+              "g0130",
+              "g0131",
+              "g0132",
+              "g0133",
+              "g0134",
+              "g0135",
+              "g0188"
+            ]
+          },
+          "sharedAnchors": ["transition", "target", "render"]
+        },
+        {
+          "id": "scheduler-transaction-and-trace",
+          "currentIds": [
+            "m0036",
+            "m0037",
+            "m0038",
+            "m0039",
+            "m0040",
+            "m0041",
+            "m0042",
+            "m0043",
+            "m0044",
+            "m0045"
+          ],
+          "reason": "first-class-signals-and-scheduler units g0058 g0059 g0060 g0136 g0137 g0138 g0139 g0140 g0141 g0175 g0176 g0177 g0178 g0179 g0180 g0181 g0182 g0183 g0184 g0194 g0197 g0198 authorize m0036 m0037 m0038 m0039 m0040 m0041 m0042 m0043 m0044 m0045 for the Begin, Advance, Commit, Plan, Render, Complete transaction, logical time, private clock, and nonsemantic trace.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": [
+              "g0058",
+              "g0059",
+              "g0060",
+              "g0136",
+              "g0137",
+              "g0138",
+              "g0139",
+              "g0140",
+              "g0141",
+              "g0175",
+              "g0176",
+              "g0177",
+              "g0178",
+              "g0179",
+              "g0180",
+              "g0181",
+              "g0182",
+              "g0183",
+              "g0184",
+              "g0194",
+              "g0197",
+              "g0198"
+            ]
+          },
+          "sharedAnchors": ["Commit", "Render", "frame"]
+        },
+        {
+          "id": "renderer-layer-and-webgl-integration",
+          "currentIds": ["m0046", "m0047", "m0048", "m0049", "m0050", "m0051"],
+          "reason": "first-class-signals-and-scheduler units g0078 g0079 g0080 g0081 g0082 g0142 g0143 g0144 g0145 g0146 g0147 g0148 g0149 g0150 g0151 g0152 g0153 g0154 g0155 g0156 g0157 g0158 g0159 g0160 g0161 g0162 g0163 g0164 g0165 g0166 g0167 g0168 g0169 g0200 g0201 g0202 g0203 authorize m0046 m0047 m0048 m0049 m0050 m0051 for explicit signal reads, immediate roots, explicit Layer caching, diagnostics, and future lockstep WebGL.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": [
+              "g0078",
+              "g0079",
+              "g0080",
+              "g0081",
+              "g0082",
+              "g0142",
+              "g0143",
+              "g0144",
+              "g0145",
+              "g0146",
+              "g0147",
+              "g0148",
+              "g0149",
+              "g0150",
+              "g0151",
+              "g0152",
+              "g0153",
+              "g0154",
+              "g0155",
+              "g0156",
+              "g0157",
+              "g0158",
+              "g0159",
+              "g0160",
+              "g0161",
+              "g0162",
+              "g0163",
+              "g0164",
+              "g0165",
+              "g0166",
+              "g0167",
+              "g0168",
+              "g0169",
+              "g0200",
+              "g0201",
+              "g0202",
+              "g0203"
+            ]
+          },
+          "sharedAnchors": ["signal", "Layer", "render"]
+        },
+        {
+          "id": "determinism-and-portability",
+          "currentIds": ["m0052", "m0053", "m0054", "m0055"],
+          "reason": "first-class-signals-and-scheduler units g0037 g0039 g0052 g0053 g0054 g0170 g0171 g0172 g0173 g0174 g0184 g0257 g0258 g0259 authorize m0052 m0053 m0054 m0055 for logical determinism, platform-pixel limits, portable definitions, and freshly bound program factories.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": [
+              "g0037",
+              "g0039",
+              "g0052",
+              "g0053",
+              "g0054",
+              "g0170",
+              "g0171",
+              "g0172",
+              "g0173",
+              "g0174",
+              "g0184",
+              "g0257",
+              "g0258",
+              "g0259"
+            ]
+          },
+          "sharedAnchors": ["definition", "logical", "program"]
+        },
+        {
+          "id": "deliberate-animation-boundaries",
+          "currentIds": ["m0056", "m0057", "m0058", "m0059", "m0060"],
+          "reason": "first-class-signals-and-scheduler units g0100 g0135 g0155 g0174 g0175 g0184 g0205 g0206 g0207 g0257 g0258 g0259 authorize m0056 m0057 m0058 m0059 m0060 for the no implicit-style, auto-caching, public-clock/history, cross-thread-signal, and initial worker/WASM boundary.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": [
+              "g0100",
+              "g0135",
+              "g0155",
+              "g0174",
+              "g0175",
+              "g0184",
+              "g0205",
+              "g0206",
+              "g0207",
+              "g0257",
+              "g0258",
+              "g0259"
+            ]
+          },
+          "sharedAnchors": ["public", "worker", "signal"]
+        }
+      ]
+    },
+    {
       "path": "docs/design/signals-and-scheduling-contract.md",
       "unitPrefix": "s",
       "currentUnitCount": 47,
-      "currentUnitsSha256": "0aa98c35ffadaec5492343a5c47314bc37f4bb5ce1cdd59dc8f1f9a710310f58",
+      "currentUnitsSha256": "e58b55c660e1419bd53ffdb449c8604685f2d3c9680e883bde7ad764f2b86373",
       "approvalRecordId": "first-class-signals-and-scheduler",
       "mappings": [
         {
@@ -10809,10 +11142,22 @@
       "id": "design-runtime-hooks-contract-signal-hook-addition",
       "path": "docs/design/runtime-hooks-contract.md",
       "currentIds": ["c0063"],
-      "reason": "first-class-signals-and-scheduler g0050 g0063 authorizes c0063 as the mounted crcSignal component hook contract for a retained signal.",
+      "reason": "first-class-signals-and-scheduler units g0050 g0055 g0056 g0063 g0120 g0121 g0122 g0126 g0128 g0138 g0213 authorize c0063 as the mounted crcSignal, crcPlayback, and crcTransition component-hook contract with successful adoption, shared Commit, live callbacks, and exact teardown.",
       "approval": {
         "recordId": "first-class-signals-and-scheduler",
-        "unitIds": ["g0050", "g0063"]
+        "unitIds": [
+          "g0050",
+          "g0055",
+          "g0056",
+          "g0063",
+          "g0120",
+          "g0121",
+          "g0122",
+          "g0126",
+          "g0128",
+          "g0138",
+          "g0213"
+        ]
       },
       "sharedAnchors": ["crcSignal", "component", "signal"]
     },
@@ -10852,25 +11197,37 @@
         "c0046",
         "c0047"
       ],
-      "reason": "first-class-signals-and-scheduler g0050 g0051 g0058 g0071 g0072 g0140 g0153 g0158 g0164 g0165 g0188 g0209 g0210 g0211 g0212 g0216 g0217 authorizes c0039 c0040 c0041 c0042 c0043 c0044 c0045 c0046 c0047 as the exact signal consumer, hook, computed source edge, computed validation, root, realm frame, Layer revision, and friend renderer ownership ledger.",
+      "reason": "first-class-signals-and-scheduler units g0050 g0051 g0055 g0058 g0071 g0072 g0115 g0116 g0128 g0138 g0140 g0153 g0158 g0164 g0165 g0185 g0186 g0187 g0188 g0192 g0209 g0210 g0211 g0212 g0213 g0214 g0215 g0216 g0217 authorize c0039 c0040 c0041 c0042 c0043 c0044 c0045 c0046 c0047 as the exact signal consumer, hook, computed source edge/validation, root, realm frame, Layer/friend, playback registration, writer lease, evaluator, command/callback, provisional Commit, and teardown ownership ledger.",
       "approval": {
         "recordId": "first-class-signals-and-scheduler",
         "unitIds": [
           "g0050",
           "g0051",
+          "g0055",
           "g0058",
           "g0071",
           "g0072",
+          "g0115",
+          "g0116",
+          "g0128",
+          "g0138",
           "g0140",
           "g0153",
           "g0158",
           "g0164",
           "g0165",
+          "g0185",
+          "g0186",
+          "g0187",
           "g0188",
+          "g0192",
           "g0209",
           "g0210",
           "g0211",
           "g0212",
+          "g0213",
+          "g0214",
+          "g0215",
           "g0216",
           "g0217"
         ]

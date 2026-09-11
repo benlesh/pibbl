@@ -48,11 +48,13 @@ const expected = [
   'crcLayoutBox',
   'crcLinePath',
   'crcMemo',
+  'crcPlayback',
   'crcRectPath',
   'crcRef',
   'crcSignal',
   'crcState',
   'crcSvgPath',
+  'crcTransition',
   'crcWhenChanged',
   'createArcPath',
   'createCirclePath',
@@ -65,15 +67,27 @@ const expected = [
   'createStarPath',
   'createSvgPath',
   'createWedgePath',
+  'defineAnimation',
   'definePrimitive',
+  'easing',
   'isSignal',
+  'keyframes',
   'layoutDiagnostic',
+  'marker',
   'measureElement',
   'normalizeEdges',
+  'parallel',
+  'repeat',
   'resolveBox',
   'resolveLength',
+  'sequence',
   'signal',
+  'spring',
+  'stepper',
+  'track',
+  'tween',
   'untracked',
+  'wait',
 ];
 
 const actual = Object.keys(core).sort();
@@ -107,8 +121,8 @@ for (const exportName of expected) {
     throw new Error(`@crc/core/internal re-exported public root value ${exportName}.`);
   }
 }
-if (actual.length !== 63) {
-  throw new Error(`Expected 63 @crc/core runtime exports, received ${actual.length}.`);
+if (actual.length !== 77) {
+  throw new Error(`Expected 77 @crc/core runtime exports, received ${actual.length}.`);
 }
 
 const runtimeCount = core.signal(2, { debugName: 'runtime count' });
@@ -145,10 +159,17 @@ if (
 ) {
   throw new Error('Compiler subpaths did not share the public Fragment value.');
 }
-for (const exportName of expected) {
+for (const exportName of expected.filter(exportName => exportName !== 'easing')) {
   if (typeof core[exportName] !== 'function') {
     throw new Error(`Expected @crc/core ${exportName} to be a runtime function.`);
   }
+}
+if (
+  typeof core.easing !== 'object' ||
+  Object.isFrozen(core.easing) !== true ||
+  typeof core.easing.linear !== 'function'
+) {
+  throw new Error('Expected @crc/core easing to be a frozen function collection.');
 }
 for (const creatorName of [
   'createArcPath',

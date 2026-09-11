@@ -9,7 +9,7 @@ export const CONTRACT_TRANSLATION_RECORD =
 // Updated only after the complete baseline, translation allowlist, additions,
 // and evidence map receive review together.
 const REVIEWED_MANIFEST_SHA256 =
-  "2ae3af528f78d05111c3ff6248d7334497e27278e5a71b8c2a03c39aabb23c9e";
+  "8ec7c07ba49c265bdd4164e96da50be375dc4219ebcc40f5b12836579253a5fb";
 
 const SIGNALS_SCHEDULER_APPROVAL_RECORD = "first-class-signals-and-scheduler";
 const SIGNALS_SCHEDULER_APPROVED_SECTIONS = new Set([
@@ -33,6 +33,74 @@ const SIGNALS_SCHEDULER_TRANSLATION_IDS = new Set([
   "design-canvas-surface-contract-realm-scheduling",
   "design-runtime-hooks-contract-realm-scheduling",
   "design-runtime-resource-ownership-realm-host-frame",
+]);
+const MIXED_SIGNAL_ANIMATION_ADDITION_IDS = new Set([
+  "design-runtime-hooks-contract-signal-hook-addition",
+  "design-runtime-resource-ownership-signal-scheduler-addition",
+]);
+
+const ANIMATION_APPROVED_SECTIONS = new Set([
+  "Summary",
+  "Approved principles",
+  "Definition and program ownership",
+  "Playback ownership",
+  "Scheduler and root ownership",
+  "Explicit style reads",
+  "Animation value definitions",
+  "Tween and interpolation",
+  "Keyframes",
+  "Spring",
+  "Custom seekable definitions",
+  "Stateful steppers",
+  "Animation programs",
+  "Playback API and lifecycle",
+  "Update-driven transitions",
+  "Central scheduler and frame phases",
+  "Consumer scopes",
+  "Layer behavior",
+  "No automatic caching",
+  "WebGL integration",
+  "Determinism, seeking, and replay",
+  "Seekable definitions",
+  "Renderer output",
+  "Manual clock and traces",
+  "Error handling and phase isolation",
+  "Performance architecture",
+  "Future packed execution",
+  "Resource ownership",
+  "Validation and diagnostics",
+  "Scheduler and playback",
+  "Definitions and composition",
+  "Rendering integration",
+  "Scenarios and trust gate",
+  "Compatibility and migration",
+  "Final boundaries",
+]);
+const MIXED_SIGNAL_ANIMATION_APPROVED_SECTIONS = new Set([
+  ...SIGNALS_SCHEDULER_APPROVED_SECTIONS,
+  ...ANIMATION_APPROVED_SECTIONS,
+]);
+
+const POST_BASELINE_CONTRACT_PROFILES = new Map([
+  [
+    "docs/design/signals-and-scheduling-contract.md",
+    {
+      unitPrefix: "s",
+      approvalRecordId: SIGNALS_SCHEDULER_APPROVAL_RECORD,
+      allowedSections: SIGNALS_SCHEDULER_APPROVED_SECTIONS,
+      forbiddenPattern:
+        /declare function (?:animate|tween|keyframes|spring|crcPlayback)/u,
+      forbiddenMessage: "must not duplicate the animation declaration surface",
+    },
+  ],
+  [
+    "docs/design/animation-contract.md",
+    {
+      unitPrefix: "m",
+      approvalRecordId: SIGNALS_SCHEDULER_APPROVAL_RECORD,
+      allowedSections: ANIMATION_APPROVED_SECTIONS,
+    },
+  ],
 ]);
 
 export function sha256(value) {
@@ -386,16 +454,17 @@ export function assertPostBaselineContractPreservation({
     ],
     label,
   );
+  const profile = POST_BASELINE_CONTRACT_PROFILES.get(record.path);
+  assert.ok(profile, `${label} has an unsupported path`);
   assert.equal(
-    record.path,
-    "docs/design/signals-and-scheduling-contract.md",
-    `${label} has an unsupported path`,
+    record.unitPrefix,
+    profile.unitPrefix,
+    `${label} must use semantic prefix ${profile.unitPrefix}`,
   );
-  assert.equal(record.unitPrefix, "s", `${label} must use semantic prefix s`);
   assert.equal(
     record.approvalRecordId,
-    SIGNALS_SCHEDULER_APPROVAL_RECORD,
-    `${label} must use the bounded signal/scheduler approval record`,
+    profile.approvalRecordId,
+    `${label} must use its bounded approved-design record`,
   );
   assert.match(
     record.currentUnitsSha256,
@@ -466,7 +535,7 @@ export function assertPostBaselineContractPreservation({
       label: mappingLabel,
       reason: mapping.reason,
       requiredRecordId: record.approvalRecordId,
-      allowedSections: SIGNALS_SCHEDULER_APPROVED_SECTIONS,
+      allowedSections: profile.allowedSections,
     });
     const currentText = joinedUnitText(currentMappingUnits);
     const approvalText = joinedUnitText(approvalUnits);
@@ -490,11 +559,13 @@ export function assertPostBaselineContractPreservation({
     currentUnits.map(({ id }) => id).sort(),
     `${label} current text is not exhaustively mapped to approved design units`,
   );
-  assert.doesNotMatch(
-    currentSource,
-    /declare function (?:animate|tween|keyframes|spring)|crcPlayback/u,
-    `${label} must not publish the deferred animation API`,
-  );
+  if (profile.forbiddenPattern) {
+    assert.doesNotMatch(
+      currentSource,
+      profile.forbiddenPattern,
+      `${label} ${profile.forbiddenMessage}`,
+    );
+  }
   return { currentUnitCount: currentUnits.length };
 }
 
@@ -734,7 +805,8 @@ export function assertContractPreservationBaseline({
   const approvalUses = new Map();
   const approvals = extractContractUnits(translationRecordSource, "a");
   const assertApproval = (entry, label) => {
-    const requiredRecordId = SIGNALS_SCHEDULER_TRANSLATION_IDS.has(entry.id)
+    const usesSignalApproval = SIGNALS_SCHEDULER_TRANSLATION_IDS.has(entry.id);
+    const requiredRecordId = usesSignalApproval
       ? SIGNALS_SCHEDULER_APPROVAL_RECORD
       : undefined;
     if (
@@ -944,8 +1016,9 @@ export function assertContractPreservationBaseline({
       approvalRecordsById,
       label,
       reason: addition.reason,
-      allowedSections:
-        addition.approval?.recordId === SIGNALS_SCHEDULER_APPROVAL_RECORD
+      allowedSections: MIXED_SIGNAL_ANIMATION_ADDITION_IDS.has(addition.id)
+        ? MIXED_SIGNAL_ANIMATION_APPROVED_SECTIONS
+        : addition.approval?.recordId === SIGNALS_SCHEDULER_APPROVAL_RECORD
           ? SIGNALS_SCHEDULER_APPROVED_SECTIONS
           : undefined,
     });

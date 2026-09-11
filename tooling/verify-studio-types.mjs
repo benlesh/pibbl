@@ -310,6 +310,12 @@ const publicTypeExports = [
   'ClipStyle',
   'Constraints',
   'CRCClipboardEvent',
+  'CRCAnimationDefinition',
+  'CRCAnimationOptions',
+  'CRCAnimationProgram',
+  'CRCAnimationRepeatDirection',
+  'CRCAnimationRepeatOptions',
+  'CRCAnimationSampleInput',
   'CRCBlurFilter',
   'CRCBrightnessFilter',
   'CRCComponent',
@@ -318,6 +324,7 @@ const publicTypeExports = [
   'CRCContainerChild',
   'CRCContrastFilter',
   'CRCController',
+  'CRCEasing',
   'CRCDragEvent',
   'CRCDropShadowFilter',
   'CRCElement',
@@ -344,6 +351,8 @@ const publicTypeExports = [
   'CRCInvertFilter',
   'CRCKeyboardEvent',
   'CRCKeyboardNavigationOptions',
+  'CRCInterpolator',
+  'CRCKeyframesOptions',
   'CRCKey',
   'CRCLogicalMouseEvent',
   'CRCMouseEvent',
@@ -352,14 +361,23 @@ const publicTypeExports = [
   'CRCOpacityFilter',
   'CRCPixelRatio',
   'CRCPointerEvent',
+  'CRCPlayback',
+  'CRCPlaybackEvent',
+  'CRCPlaybackOptions',
+  'CRCPlaybackStatus',
   'CRCPrimitiveComponent',
   'CRCResponsiveViewportConfig',
+  'CRCSpringOptions',
+  'CRCSpringTransitionOptions',
+  'CRCStepperOptions',
   'CRCSaturateFilter',
   'CRCSepiaFilter',
   'CRCRef',
   'CRCRenderResult',
   'CRCTextChild',
   'CRCTouchEvent',
+  'CRCTweenOptions',
+  'CRCTweenTransitionOptions',
   'CRCWheelEvent',
   'CursorStyle',
   'EdgeValues',
@@ -452,8 +470,8 @@ const publicTypeExports = [
   'WritableSignal',
 ].sort();
 
-if (publicTypeExports.length !== 155) {
-  throw new Error(`CRC Studio must declare exactly 155 public types, received ${publicTypeExports.length}.`);
+if (publicTypeExports.length !== 173) {
+  throw new Error(`CRC Studio must declare exactly 173 public types, received ${publicTypeExports.length}.`);
 }
 
 const packageIndexSource = packageDeclarationSources.get('@crc/core');
@@ -502,11 +520,15 @@ import {
   crcEventTarget,
   crcLinePath,
   crcMemo,
+  crcPlayback,
   crcRectPath,
   crcSignal,
+  crcTransition,
   crcWhenChanged,
   createElement,
+  defineAnimation,
   definePrimitive,
+  easing,
   Flex,
   Flow,
   FocusManagement,
@@ -516,23 +538,36 @@ import {
   HorizontalLine,
   Image,
   isSignal,
+  keyframes,
   KeyboardNavigation,
   LayoutDiagnostic,
   Line,
+  marker,
   normalizeEdges,
   Overlay,
+  parallel,
   Path,
   Polygon,
   Rectangle,
+  repeat,
   resolveBox,
   resolveLength,
   signal,
+  sequence,
+  spring,
+  stepper,
   SvgPath,
   Text,
+  track,
+  tween,
   VerticalLine,
+  wait,
+  type CRCAnimationDefinition,
+  type CRCAnimationProgram,
   type CRCConfig,
   type CRCComponent,
   type CRCController,
+  type CRCInterpolator,
   type CRCClipboardEvent,
   type CRCCompositionEvent,
   type CRCDragEvent,
@@ -546,6 +581,7 @@ import {
   type CRCLogicalMouseEvent,
   type CRCMouseEvent,
   type CRCNode,
+  type CRCPlayback,
   type CRCPixelRatio,
   type CRCPointerEvent,
   type CRCEventTargetSnapshot,
@@ -702,6 +738,50 @@ function StudioSignalHook(): CRCNode {
   return <Text>{value.get()}</Text>;
 }
 void <StudioSignalHook />;
+
+function StudioAnimationHook(): CRCNode {
+  const x = crcSignal(0);
+  const alpha = crcTransition(1, {
+    type: 'tween',
+    duration: 120,
+  });
+  const sprung = crcTransition(20, { type: 'spring' });
+  const tweened: CRCAnimationDefinition<number> = tween({
+    to: 40,
+    duration: 160,
+    easing: easing.easeOut,
+  });
+  const program: CRCAnimationProgram = sequence(
+    parallel(track(x, tweened), wait(20)),
+    marker('arrived'),
+    repeat(track(x, spring({ to: 0 })), { iterations: 2 }),
+    track(x, keyframes({ values: [0, 10, 20], duration: 100 })),
+    track(x, defineAnimation({
+      duration: 10,
+      sample: ({ progress }) => progress,
+    })),
+    track(x, stepper({
+      stepMilliseconds: 10,
+      initial: value => ({ value }),
+      step: state => ({ value: state.value + 1 }),
+      read: state => state.value,
+    })),
+  );
+  const playback: CRCPlayback = crcPlayback(program);
+  const interpolatePoint: CRCInterpolator<{ x: number }> = (from, to, progress) => ({
+    x: from.x + (to.x - from.x) * progress,
+  });
+  void crcTransition({ x: 1 }, {
+    type: 'tween',
+    duration: 100,
+    interpolate: interpolatePoint,
+  });
+  return <Rectangle
+    style={{ x: x.get(), width: sprung.get(), height: 20, opacity: alpha.get() }}
+    onClick={() => playback.play()}
+  />;
+}
+void <StudioAnimationHook />;
 
 // @ts-expect-error compiler constructors stay off the root package
 void CRC_CORE_ROOT.jsx;
@@ -1314,11 +1394,13 @@ try {
     'crcLayoutBox',
     'crcLinePath',
     'crcMemo',
+    'crcPlayback',
     'crcRectPath',
     'crcRef',
     'crcSignal',
     'crcState',
     'crcSvgPath',
+    'crcTransition',
     'crcWhenChanged',
     'createArcPath',
     'createCirclePath',
@@ -1332,20 +1414,32 @@ try {
     'createSvgPath',
     'createWedgePath',
     'definePrimitive',
+    'defineAnimation',
+    'easing',
     'isSignal',
+    'keyframes',
     'jsx',
     'jsxDEV',
     'jsxs',
     'layoutDiagnostic',
+    'marker',
     'measureElement',
     'normalizeEdges',
+    'parallel',
+    'repeat',
     'resolveBox',
     'resolveLength',
     'signal',
+    'sequence',
+    'spring',
+    'stepper',
+    'track',
+    'tween',
     'untracked',
+    'wait',
   ].sort();
-  if (expectedStudioRuntimeExports.length !== 66) {
-    throw new Error(`CRC Studio runtime must expose 63 root values plus 3 compiler values, received ${expectedStudioRuntimeExports.length}.`);
+  if (expectedStudioRuntimeExports.length !== 80) {
+    throw new Error(`CRC Studio runtime must expose 77 root values plus 3 compiler values, received ${expectedStudioRuntimeExports.length}.`);
   }
   if (sourceRuntimeExports.join('\n') !== expectedStudioRuntimeExports.join('\n')) {
     throw new Error(
@@ -1356,7 +1450,7 @@ try {
     throw new Error('CRC Studio source and built runtime surfaces differ.');
   }
   process.stdout.write(
-    'CRC Studio declarations passed exact export-name parity, 155-type structural ' +
+    'CRC Studio declarations passed exact export-name parity, 173-type structural ' +
     'coverage, selected signature parity, strict TSX, compiler-runtime, event-family, ' +
     'generic, and layout checks against source and built packages.\n',
   );

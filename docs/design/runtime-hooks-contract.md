@@ -234,7 +234,16 @@ mount-only. Explicit `get()` reads subscribe the evaluating component. Removal
 detaches that owner; a retained signal remains readable and writable but cannot
 schedule the removed owner. Focused `crc-signal`, signal graph,
 component-consumer, scheduler, Layer, and error-isolation suites cover these
-rules.
+rules. `crcPlayback(program, options?)` and `crcTransition(target, options)` are
+ordered render-only hook slots. The first returns a stable component-owned
+handle; the second returns a stable readonly signal backed by private playback.
+Only successful renders adopt candidates or queue autoplay, entrance, and
+retarget work. Teardown releases registrations, writer leases, evaluator and
+stepper state, queued commands and milestones, and live callbacks exactly once;
+stale controls and retained transition results cannot schedule a replacement
+identity. All commands enter the shared realm scheduler, outputs/status/time
+publish in one Commit, and specialized behavior lives in the [animation
+contract](./animation-contract.md).
 
 `signal().set()` treats a function as data; `signal().update()` is the explicit
 updater operation. Signals require explicit `get()` and are not automatically
