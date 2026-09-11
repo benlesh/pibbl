@@ -4,6 +4,7 @@ import {
   recordRendererEdgeCreated,
   recordRendererEdgeReleased,
   type SignalNode,
+  type SignalObserver,
   withSignalTracking,
 } from './graph.js';
 
@@ -51,20 +52,21 @@ export function createSignalRenderConsumer(
     },
   };
 
-  const invalidate = (): void => {
+  const invalidate: SignalObserver = (): void => {
     if (state.disposed || state.dirty) {
       return;
     }
     state.dirty = true;
     options.invalidate();
   };
+  invalidate.renderInvalidation = true;
   consumerStates.set(consumer, state);
   consumerInvalidations.set(consumer, invalidate);
   recordRendererConsumerCreated();
   return consumer;
 }
 
-const consumerInvalidations = new WeakMap<SignalRenderConsumer, () => void>();
+const consumerInvalidations = new WeakMap<SignalRenderConsumer, SignalObserver>();
 
 export function collectSignalReads<T>(
   consumer: SignalRenderConsumer,

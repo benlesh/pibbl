@@ -40,6 +40,7 @@ export interface SignalNode<T> {
 export interface SignalObserver {
   (node: SignalNode<unknown>): void;
   propagateInvalidation?: boolean;
+  renderInvalidation?: boolean;
 }
 
 type SignalRenderProvisionStatus = 'pending' | 'success' | 'failure';
@@ -197,6 +198,20 @@ function notifyComputedInvalidationObservers(node: SignalNode<unknown>): unknown
   return failures;
 }
 
+function notifyRendererInvalidationObservers(node: SignalNode<unknown>): unknown[] {
+  const failures: unknown[] = [];
+  for (const observer of node.observers) {
+    if (observer.renderInvalidation) {
+      try {
+        observer(node);
+      } catch (error) {
+        failures.push(error);
+      }
+    }
+  }
+  return failures;
+}
+
 function throwSignalObserverFailures(failures: readonly unknown[]): void {
   if (failures.length > 0) {
     throw new AggregateError(failures, 'CRC signal observer notifications failed.');
@@ -296,7 +311,7 @@ export function provisionSignalValueForRender<T>(
   };
   const publishEffectiveValue = (
     forceEntry?: SignalRenderProvisionEntry,
-  ): void => {
+  ): boolean => {
     const entry = effectiveEntry();
     const effectiveValue = entry?.value ?? state.baseValue;
     if (
@@ -304,7 +319,9 @@ export function provisionSignalValueForRender<T>(
       !Object.is(node.value, effectiveValue)
     ) {
       publishComputedVersion(effectiveValue);
+      return true;
     }
+    return false;
   };
 
   let entry = state.entriesByTransaction.get(transaction);
@@ -329,7 +346,10 @@ export function provisionSignalValueForRender<T>(
         }
       }
 
-      publishEffectiveValue();
+      const effectiveValueChanged = publishEffectiveValue();
+      if (!success && effectiveValueChanged) {
+        throwSignalObserverFailures(notifyRendererInvalidationObservers(node));
+      }
       if (provisionState.entries.length === 0) {
         activeSignalRenderProvisions.delete(node);
       }

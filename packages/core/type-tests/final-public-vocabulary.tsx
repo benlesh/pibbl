@@ -251,6 +251,12 @@ const keyframesOptions: CRCKeyframesOptions<number> = {
   values: [0, 1],
   duration: 10,
 };
+const oneValueKeyframesOptions: CRCKeyframesOptions<number> = {
+  // @ts-expect-error public keyframes require at least two values
+  values: [0],
+  duration: 10,
+};
+void oneValueKeyframesOptions;
 const springOptions: CRCSpringOptions = { to: 1 };
 const sampleInput: CRCAnimationSampleInput<number> = {
   initialValue: 0,

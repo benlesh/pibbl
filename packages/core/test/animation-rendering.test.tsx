@@ -4,6 +4,7 @@ import {
   Rectangle,
   crc,
   crcPlayback,
+  crcTransition,
   parallel,
   signal,
   track,
@@ -11,7 +12,13 @@ import {
   type CRCController,
   type CRCNode,
   type CRCPlayback,
+  type Signal,
 } from '@crc/core';
+import {
+  crcInternalCurrentRenderOwner,
+  crcInternalRequestRendererWork,
+  type CRCInternalRenderOwner,
+} from '@crc/core/internal';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   installSchedulerDriverForTest,
@@ -121,6 +128,83 @@ describe('animation rendering integration', () => {
       { root: 'second', x: 10, y: 5 },
     ]);
     expect(driver.pendingHostFrames).toBe(1);
+  });
+
+  it('repaints another root after a failed transition preview rolls back', () => {
+    let producerOwner!: CRCInternalRenderOwner;
+    let failComposition = false;
+    let output!: Signal<number>;
+    const observed: number[] = [];
+    const workKey = {};
+
+    function TransitionChild({ initial, target }: { initial: number; target: number }) {
+      output = crcTransition(target, {
+        type: 'tween',
+        duration: 100,
+        initial,
+      });
+      output.get();
+    }
+
+    function Producer({
+      include,
+      initial,
+      target,
+    }: { include: boolean; initial: number; target: number }) {
+      producerOwner ??= crcInternalCurrentRenderOwner();
+      return include ? <TransitionChild initial={initial} target={target} /> : undefined;
+    }
+
+    function Observer() {
+      const value = output.get();
+      observed.push(value);
+      return (
+        <Rectangle
+          style={{ x: value * 10, width: 10, height: 10, fill: 'blue' }}
+        />
+      );
+    }
+
+    const producerCanvas = createCanvas(60, 10);
+    controllers.add(crc(
+      producerCanvas,
+      <Producer include={false} initial={0} target={0} />,
+      { pixelRatio: 1 },
+    ));
+    driver.flush(0);
+    crcInternalRequestRendererWork(producerOwner, {
+      key: workKey,
+      kind: 'compose',
+      run: () => {
+        if (failComposition) throw new Error('transition composition failed');
+      },
+    });
+
+    failComposition = true;
+    crc(producerCanvas, <Producer include initial={1} target={10} />);
+    expect(() => driver.flush(10)).toThrow(/transition composition failed/iu);
+    expect(output.get()).toBe(1);
+
+    const observerCanvas = createCanvas(60, 10);
+    controllers.add(crc(observerCanvas, <Observer />, { pixelRatio: 1 }));
+    crc(producerCanvas, <Producer include initial={3} target={20} />);
+    expect(() => driver.flush(20)).toThrow(/transition composition failed/iu);
+
+    expect(observed).toEqual([3]);
+    expect(output.get()).toBe(1);
+    expect(pixel(observerCanvas, 31, 1)).toEqual([0, 0, 255, 255]);
+
+    failComposition = false;
+    crc(producerCanvas, <Producer include={false} initial={0} target={0} />);
+    driver.flush(30);
+    for (const logicalTime of [40, 50, 60]) {
+      if (driver.pendingHostFrames === 0) break;
+      driver.flush(logicalTime);
+    }
+
+    expect(observed).toEqual([3, 1]);
+    expect(pixel(observerCanvas, 11, 1)).toEqual([0, 0, 255, 255]);
+    expect(pixel(observerCanvas, 31, 1)).toEqual([0, 0, 0, 0]);
   });
 
   it('preserves animated transforms, rectangle geometry, layout, and event order', () => {

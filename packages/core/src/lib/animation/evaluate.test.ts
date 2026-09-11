@@ -357,6 +357,47 @@ describe('seekable animation program evaluation', () => {
     }
   });
 
+  it('bounds first-sample milestones for zero-duration repeats without dropping accepted events', () => {
+    const accepted = evaluateAt(
+      activateProgram(repeat(marker('instant'), { iterations: 512 }), {}),
+      0,
+    );
+
+    expect(accepted.milestones).toHaveLength(1_023);
+    expect(accepted.milestones.filter(event => event.kind === 'marker')).toHaveLength(512);
+    expect(accepted.milestones.filter(event => event.kind === 'iteration')).toHaveLength(511);
+    expect(accepted.milestones.slice(0, 4).map(event => [
+      event.kind,
+      event.kind === 'marker' ? event.marker : event.iteration,
+    ])).toEqual([
+      ['marker', 'instant'],
+      ['iteration', 1],
+      ['marker', 'instant'],
+      ['iteration', 2],
+    ]);
+    expect(accepted.milestones.at(-1)).toMatchObject({
+      kind: 'marker',
+      marker: 'instant',
+      iteration: 511,
+    });
+
+    expect(() => evaluateAt(
+      activateProgram(repeat(marker('instant'), { iterations: 513 }), {}),
+      0,
+      undefined,
+      'forward',
+      7,
+    )).toThrow(/zero-duration.*512.*marker.*path.*repeat iterations \[512\].*frame 7/iu);
+
+    expect(() => evaluateAt(
+      activateProgram(repeat(marker('instant'), { iterations: 1e308 }), {}),
+      0,
+      undefined,
+      'forward',
+      8,
+    )).toThrow(/zero-duration.*512.*marker.*path.*repeat iterations \[512\].*frame 8/iu);
+  });
+
   it('samples only the owning zero-duration writer occurrence in every repeat direction', () => {
     for (const direction of [
       'normal',

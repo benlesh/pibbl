@@ -4,7 +4,7 @@ The documentation renderer follow-up described here has been implemented as the 
 
 ## Current model
 
-- `learningExampleCatalog` drives the 42 learner pages under `#/examples`.
+- `learningExampleCatalog` drives the 52 learner pages under `#/examples`.
 - `scenarioCatalog` drives deterministic fixtures under `#/testing`.
 - Learning pages load their canonical TSX and Monaco editor only when visited.
 - Existing `#/scenarios` routes redirect to their matching automated-test routes.

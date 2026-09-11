@@ -8571,7 +8571,7 @@
       "path": "docs/design/animation-contract.md",
       "unitPrefix": "m",
       "currentUnitCount": 60,
-      "currentUnitsSha256": "4b410a5d0422293abc476c9fb8cc2789f3704760c5f67966f71eff1fee6e7c83",
+      "currentUnitsSha256": "90f4b76cb79d5b631d78a52e8431274d00b82ce1ac2832b1af64f347d8aebbd1",
       "approvalRecordId": "first-class-signals-and-scheduler",
       "mappings": [
         {
@@ -8634,17 +8634,23 @@
         {
           "id": "stateful-steppers",
           "currentIds": ["m0015", "m0016", "m0017", "m0018"],
-          "reason": "first-class-signals-and-scheduler units g0101 g0102 g0103 g0104 g0123 g0173 g0183 g0223 g0230 g0233 authorize m0015 m0016 m0017 m0018 for bounded fixed-step state, terminal discovery, replay, and synchronous work.",
+          "reason": "first-class-signals-and-scheduler units g0039 g0101 g0102 g0103 g0104 g0111 g0112 g0123 g0126 g0173 g0183 g0193 g0204 g0223 g0230 g0233 authorize m0015 m0016 m0017 m0018 for bounded fixed-step state, terminal discovery, replay, exact zero-duration repeat milestones, and deterministic synchronous work.",
           "approval": {
             "recordId": "first-class-signals-and-scheduler",
             "unitIds": [
+              "g0039",
               "g0101",
               "g0102",
               "g0103",
               "g0104",
+              "g0111",
+              "g0112",
               "g0123",
+              "g0126",
               "g0173",
               "g0183",
+              "g0193",
+              "g0204",
               "g0223",
               "g0230",
               "g0233"
@@ -8742,10 +8748,11 @@
         {
           "id": "update-driven-transitions",
           "currentIds": ["m0033", "m0034", "m0035"],
-          "reason": "first-class-signals-and-scheduler units g0129 g0130 g0131 g0132 g0133 g0134 g0135 g0188 authorize m0033 m0034 m0035 for readonly transitions, retargeting, successful-render adoption, and teardown.",
+          "reason": "first-class-signals-and-scheduler units g0060 g0129 g0130 g0131 g0132 g0133 g0134 g0135 g0138 g0188 authorize m0033 m0034 m0035 for readonly transitions, retargeting, successful-render adoption, failed-preview renderer recovery without ordinary publication, and teardown.",
           "approval": {
             "recordId": "first-class-signals-and-scheduler",
             "unitIds": [
+              "g0060",
               "g0129",
               "g0130",
               "g0131",
@@ -8753,6 +8760,7 @@
               "g0133",
               "g0134",
               "g0135",
+              "g0138",
               "g0188"
             ]
           },

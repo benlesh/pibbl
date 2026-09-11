@@ -18,7 +18,7 @@ describe('seekable animation definitions', () => {
     expect(() => tween({ to: 1, duration: -1 })).toThrow('duration');
     expect(() => tween({ to: 1, duration: Number.POSITIVE_INFINITY })).toThrow('duration');
 
-    const values = [0, 10] as number[];
+    const values: [number, number] = [0, 10];
     const offsets = [0, 1] as number[];
     const definition = keyframes({ values, offsets, duration: 100 });
     values[1] = 500;
@@ -235,6 +235,79 @@ describe('seekable animation definitions', () => {
       [7, 7],
       [8, 8],
       [9, 9],
+    ]);
+  });
+
+  it('preserves shared backing buffers, view geometry, cycles, and binary immutability', () => {
+    interface BinaryGraph {
+      readonly buffer: ArrayBuffer;
+      readonly bytes: Uint8Array;
+      readonly words: Uint16Array;
+      readonly data: DataView;
+      self: BinaryGraph;
+    }
+
+    const buffer = new ArrayBuffer(12);
+    new Uint8Array(buffer).set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+    const value = {
+      bytes: new Uint8Array(buffer, 1, 6),
+      words: new Uint16Array(buffer, 2, 3),
+      data: new DataView(buffer, 3, 5),
+      buffer,
+      self: undefined as unknown as BinaryGraph,
+    } satisfies BinaryGraph;
+    value.self = value;
+    const observed: Array<readonly [BinaryGraph, BinaryGraph]> = [];
+    const definition = tween({
+      from: value,
+      to: value,
+      duration: 1,
+      interpolate: (from, to) => {
+        observed.push([from, to]);
+        return from;
+      },
+    });
+
+    new Uint8Array(buffer).fill(90);
+    const first = sampleSeekableDefinition(definition, {
+      initialValue: value,
+      localTime: 0.5,
+    });
+
+    expect(observed[0]![0]).toBe(observed[0]![1]);
+    expect(first.self).toBe(first);
+    expect(first.buffer).not.toBe(buffer);
+    expect(first.bytes.buffer).toBe(first.buffer);
+    expect(first.words.buffer).toBe(first.buffer);
+    expect(first.data.buffer).toBe(first.buffer);
+    expect([
+      [first.bytes.byteOffset, first.bytes.byteLength],
+      [first.words.byteOffset, first.words.byteLength],
+      [first.data.byteOffset, first.data.byteLength],
+    ]).toEqual([
+      [1, 6],
+      [2, 6],
+      [3, 5],
+    ]);
+    expect(Array.from(new Uint8Array(first.buffer))).toEqual([
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+    ]);
+
+    first.bytes[1] = 70;
+    first.data.setUint8(1, 80);
+    new Uint8Array(first.buffer)[8] = 90;
+    const second = sampleSeekableDefinition(definition, {
+      initialValue: value,
+      localTime: 0.5,
+    });
+
+    expect(second).not.toBe(first);
+    expect(second.self).toBe(second);
+    expect(second.bytes.buffer).toBe(second.buffer);
+    expect(second.words.buffer).toBe(second.buffer);
+    expect(second.data.buffer).toBe(second.buffer);
+    expect(Array.from(new Uint8Array(second.buffer))).toEqual([
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
     ]);
   });
 
@@ -513,7 +586,10 @@ describe('seekable animation definitions', () => {
   });
 
   it('validates keyframe shapes, offsets, and per-segment easing lists', () => {
-    expect(() => keyframes({ values: [1], duration: 1 })).toThrow('at least two');
+    expect(() => keyframes<number>({
+      values: [1] as unknown as readonly [number, number, ...number[]],
+      duration: 1,
+    })).toThrow('at least two');
     expect(() => keyframes({
       values: [0, 1], offsets: [0, 0.9, 1], duration: 1,
     })).toThrow('offsets');

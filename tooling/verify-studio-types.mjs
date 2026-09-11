@@ -782,6 +782,8 @@ function StudioAnimationHook(): CRCNode {
   />;
 }
 void <StudioAnimationHook />;
+// @ts-expect-error Studio keyframes require at least two values
+void keyframes({ values: [0], duration: 100 });
 
 // @ts-expect-error compiler constructors stay off the root package
 void CRC_CORE_ROOT.jsx;

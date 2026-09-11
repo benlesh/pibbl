@@ -151,6 +151,46 @@ It exited zero. Fresh results from that run were:
 - structural-performance gate: 4 files, 25 passed and 2 opt-in wall-clock tests
   skipped of 27 in 1.86 seconds.
 
+## Final-review closure
+
+On 2026-09-11, an independent final review of
+`55e3f54f6abc7b8e655697c58160de4e8ab95122` completed with 0 Critical, 3
+Important, and 2 Minor findings. The fix round verified each finding against
+that candidate before changing production code and closed them with focused
+RED-to-GREEN evidence:
+
+- first samples of repeated zero-duration work now share the deterministic 512
+  instantly-completed-occurrence budget, retaining every accepted marker and
+  iteration milestone while rejecting the 513th occurrence before constructing
+  more work;
+- animation value snapshots clone each reconstructable `ArrayBuffer` once and
+  recreate overlapping typed-array and `DataView` aliases with their original
+  geometry, cycles, and sample immutability intact;
+- a failed transition preview rollback that changes the effective value now
+  invalidates only renderer consumers for a recovery frame, preserving zero
+  ordinary signal/effect notifications and adding no successful-provision
+  rerender;
+- package and Studio declarations require at least two keyframe values through
+  `readonly [T, T, ...T[]]`, with positive and negative type evidence; and
+- the three current-facing catalog references now report 52 lessons, including
+  51 JSX lessons and one non-JSX lesson, and 19 test labs where both totals are
+  stated. Historical count snapshots were not rewritten.
+
+The combined adjacent verification passed 22 files and 395 tests. Public
+typecheck, Studio declaration parity across all 173 types, catalog validation,
+and documentation preservation also passed, including 738 current semantic
+units, 107 mapped post-baseline units, and all 880 mutation probes.
+
+The required complete `corepack pnpm@11.21.0 trust` rerun then exited zero on
+Node.js `v26.7.0` and pnpm `11.21.0`. It reported 140 browser files with 2,006
+passed and 2 skipped tests of 2,008; 5 lifecycle files with 19 passed tests; and
+4 structural-performance files with 25 passed and 2 opt-in wall-clock tests
+skipped. The packed Bundler and NodeNext consumers, declarations, runtime
+exports, blocked deep imports, no-source checks, optimized focus elimination,
+and built smoke all passed. The visual safeguard recovered green and all 5
+Studio baselines matched exactly; no baseline was updated. The public inventory
+remained 77 runtime values and 173 types. Node 24 LTS CI remains canonical.
+
 ## Remaining deliberate boundaries
 
 This closure adds no public manual clock, retained trace history, free-standing

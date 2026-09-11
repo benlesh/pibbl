@@ -202,15 +202,27 @@ function isArrayIndex(key: PropertyKey): boolean {
   return typeof key === 'string' && /^(?:0|[1-9]\d*)$/u.test(key);
 }
 
-function cloneTypedArray(value: ArrayBufferView): ArrayBufferView {
+function cloneTypedArray(
+  value: ArrayBufferView,
+  buffer?: ArrayBuffer,
+): ArrayBufferView {
   if (value instanceof DataView) {
+    if (buffer !== undefined) {
+      return new DataView(buffer, value.byteOffset, value.byteLength);
+    }
     const bytes = value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength);
     return new DataView(bytes);
   }
   const TypedArray = value.constructor as unknown as {
     new (source: ArrayBufferView): ArrayBufferView;
+    new (buffer: ArrayBuffer, byteOffset: number, length: number): ArrayBufferView;
   };
-  return new TypedArray(value);
+  return buffer === undefined ? new TypedArray(value) :
+    new TypedArray(
+      buffer,
+      value.byteOffset,
+      (value as ArrayBufferView & { readonly length: number }).length,
+    );
 }
 
 /**
@@ -315,7 +327,9 @@ function snapshotAnimationValue<T>(
   if (ArrayBuffer.isView(value)) {
     const ownKeys = Reflect.ownKeys(value);
     if (ownKeys.some(key => !isArrayIndex(key))) return rememberIdentity(value, seen) as T;
-    const snapshot = cloneTypedArray(value);
+    const buffer = value.buffer instanceof ArrayBuffer ?
+      snapshotAnimationValue(value.buffer, seen, isolateStoredValue) : undefined;
+    const snapshot = cloneTypedArray(value, buffer);
     seen.set(value, snapshot);
     snapshotsRequiringIsolation.add(snapshot);
     return snapshot as T;

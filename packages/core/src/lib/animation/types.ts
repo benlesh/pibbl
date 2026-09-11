@@ -38,7 +38,7 @@ export interface CRCTweenOptions<T> {
 }
 
 export interface CRCKeyframesOptions<T> {
-  readonly values: readonly T[];
+  readonly values: readonly [T, T, ...T[]];
   readonly duration: number;
   readonly offsets?: readonly number[];
   readonly easing?: CRCEasing | readonly CRCEasing[];

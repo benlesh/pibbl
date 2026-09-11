@@ -112,10 +112,12 @@ is statically infinite. CRC never probes an unbounded callback domain to invent
 an endpoint: fresh reverse or finish rejects when the required terminal is not
 already known.
 
-Instantly completed stateful repeats share one deterministic 512-occurrence
-budget per evaluation across nesting, parallel branches, seeks, and replay. The
-512th occurrence is allowed; work that would enter the 513th fails before that
-callback. This bounds synchronous callback and milestone growth.
+Instantly completed work shares one deterministic 512-occurrence budget per
+evaluation across nesting, parallel branches, seeks, and replay. The budget
+counts both opaque stateful occurrences and stateless zero-duration repeat
+occurrences whose exact milestones must be retained. The 512th occurrence is allowed; work that would enter the 513th fails before another callback or
+milestone is constructed. This bounds synchronous callback and milestone
+growth without silently dropping accepted events.
 
 ## Programs and duration
 
@@ -245,7 +247,10 @@ equal target.
 Equality and option validation run under the Render write guard. Failed mount
 or update renders adopt neither target nor options. Concurrent render previews
 of the same transition signal settle transactionally: a failed older render
-cannot overwrite a newer surviving preview. Teardown disposes the private
+cannot overwrite a newer surviving preview. When rollback changes an effective
+preview that another root may have rendered, CRC invalidates renderer consumers
+for a follow-up frame without issuing ordinary signal or effect notifications;
+successful provisions add no such invalidation. Teardown disposes the private
 playback; a retained readonly result cannot schedule the removed component.
 
 ## Scheduler integration
