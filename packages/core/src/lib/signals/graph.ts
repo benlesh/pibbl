@@ -4,6 +4,7 @@ import type {
   SignalOptions,
   WritableSignal,
 } from './types.js';
+import type { CRCRenderTransaction } from '../types.js';
 
 const signalNodes = new WeakMap<object, SignalNode<unknown>>();
 const signalValues = new WeakSet<object>();
@@ -41,10 +42,8 @@ export interface SignalObserver {
   propagateInvalidation?: boolean;
 }
 
-/** @internal One render-local source value that can be accepted or restored. */
-export interface SignalRenderProvision {
-  commit(): void;
-  rollback(): void;
+interface SignalRenderProvisionState {
+  readonly baseValue: unknown;
 }
 
 export interface SignalDependencyCollector {
@@ -75,6 +74,10 @@ export interface SignalWriterLeasePolicy {
 const trackingStack: Array<SignalDependencyCollector | undefined> = [];
 const writePolicyStack: SignalWritePolicy[] = [];
 const computedStack: ComputedSignalNode<unknown>[] = [];
+const activeSignalRenderProvisions = new WeakMap<
+  SignalNode<unknown>,
+  Map<CRCRenderTransaction, SignalRenderProvisionState>
+>();
 const pendingComputedValidations = new Set<ComputedSignalNode<unknown>>();
 let flushingPendingComputedValidations = false;
 let rendererConsumers = 0;
@@ -238,34 +241,42 @@ export function signal<T>(
  * @internal Presents a provisional value to reads and computed dependencies
  * during one render without publishing an ordinary signal notification.
  * This is reserved for a not-yet-successfully-mounted owner whose render
- * transaction will immediately call exactly one settlement method.
+ * transaction owns acceptance or restoration of every overlapping preview.
  */
 export function provisionSignalValueForRender<T>(
   value: WritableSignal<T>,
   nextValue: T,
-): SignalRenderProvision {
-  const node = getSignalNode(value);
-  const previousValue = node.value;
-  let unsettled = true;
-  const publishComputedVersion = (next: T): void => {
+  transaction: CRCRenderTransaction,
+): void {
+  const node = getSignalNode(value) as SignalNode<unknown>;
+  let transactionStates = activeSignalRenderProvisions.get(node);
+  if (transactionStates === undefined) {
+    transactionStates = new Map();
+    activeSignalRenderProvisions.set(node, transactionStates);
+  }
+  let state = transactionStates.get(transaction);
+  const publishComputedVersion = (next: unknown): void => {
     node.value = next;
     node.version++;
     throwSignalObserverFailures(
-      notifyComputedInvalidationObservers(node as SignalNode<unknown>),
+      notifyComputedInvalidationObservers(node),
     );
   };
 
+  if (state === undefined) {
+    state = { baseValue: node.value };
+    transactionStates.set(transaction, state);
+    const activeStates = transactionStates;
+    const provisionState = state;
+    transaction.onFinish(success => {
+      if (!activeStates.delete(transaction)) return;
+      if (activeStates.size === 0) {
+        activeSignalRenderProvisions.delete(node);
+      }
+      if (!success) publishComputedVersion(provisionState.baseValue);
+    });
+  }
   publishComputedVersion(nextValue);
-  return Object.freeze({
-    commit(): void {
-      unsettled = false;
-    },
-    rollback(): void {
-      if (!unsettled) return;
-      unsettled = false;
-      publishComputedVersion(previousValue);
-    },
-  });
 }
 
 export function computed<T>(

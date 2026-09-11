@@ -199,22 +199,127 @@ describe('signal', () => {
     getSignalNode(value).observers.add(() => notifications++);
 
     expect(doubled.get()).toBe(2);
-    const failed = provisionSignalValueForRender(value, 2);
+    let finish!: (success: boolean) => void;
+    const failedTransaction = {
+      onFinish(callback: (success: boolean) => void): void {
+        finish = callback;
+      },
+    };
+    provisionSignalValueForRender(value, 2, failedTransaction);
     versions.push(getSignalNode(value).version);
     expect(value.get()).toBe(2);
     expect(doubled.get()).toBe(4);
-    failed.rollback();
+    finish(false);
     versions.push(getSignalNode(value).version);
     expect(value.get()).toBe(1);
     expect(doubled.get()).toBe(2);
 
-    const successful = provisionSignalValueForRender(value, 3);
+    const successfulTransaction = {
+      onFinish(callback: (success: boolean) => void): void {
+        finish = callback;
+      },
+    };
+    provisionSignalValueForRender(value, 3, successfulTransaction);
     versions.push(getSignalNode(value).version);
     expect(doubled.get()).toBe(6);
-    successful.commit();
+    finish(true);
 
     expect(versions).toEqual([1, 2, 3]);
     expect(value.get()).toBe(3);
+    expect(notifications).toBe(0);
+  });
+
+  it('restores the pre-transaction value after overlapping render provisions fail', () => {
+    const value = signal(1);
+    const doubled = computed(() => value.get() * 2);
+    const node = getSignalNode(value);
+    const versions = [node.version];
+    let notifications = 0;
+    node.observers.add(() => notifications++);
+    const beforeEdges = signalGraphSnapshot().computedSourceEdges;
+
+    expect(doubled.get()).toBe(2);
+    const detach = getSignalNode(doubled).observe?.();
+    if (detach === undefined) {
+      throw new Error('Expected computed signals to support internal observation.');
+    }
+    expect(signalGraphSnapshot().computedSourceEdges).toBe(beforeEdges + 1);
+
+    const callbacks: Array<(success: boolean) => void> = [];
+    const transaction = {
+      onFinish(callback: (success: boolean) => void): void {
+        callbacks.push(callback);
+      },
+    };
+    provisionSignalValueForRender(value, 2, transaction);
+    versions.push(node.version);
+    expect([value.get(), doubled.get()]).toEqual([2, 4]);
+
+    provisionSignalValueForRender(value, 3, transaction);
+    versions.push(node.version);
+    expect([value.get(), doubled.get()]).toEqual([3, 6]);
+
+    for (const callback of callbacks) callback(false);
+    versions.push(node.version);
+
+    expect([value.get(), doubled.get()]).toEqual([1, 2]);
+    expect(versions.every((version, index) =>
+      index === 0 || version > versions[index - 1])).toBe(true);
+    expect(callbacks).toHaveLength(1);
+    expect(notifications).toBe(0);
+    detach();
+    expect(signalGraphSnapshot().computedSourceEdges).toBe(beforeEdges);
+  });
+
+  it('retains only the latest overlapping provision after successful settlement', () => {
+    const value = signal(1);
+    const doubled = computed(() => value.get() * 2);
+    const node = getSignalNode(value);
+    let notifications = 0;
+    node.observers.add(() => notifications++);
+
+    expect(doubled.get()).toBe(2);
+    const callbacks: Array<(success: boolean) => void> = [];
+    const transaction = {
+      onFinish(callback: (success: boolean) => void): void {
+        callbacks.push(callback);
+      },
+    };
+    provisionSignalValueForRender(value, 2, transaction);
+    provisionSignalValueForRender(value, 3, transaction);
+    expect([value.get(), doubled.get(), node.version]).toEqual([3, 6, 2]);
+
+    for (const callback of callbacks) callback(true);
+    for (const callback of callbacks) callback(false);
+
+    expect([value.get(), doubled.get(), node.version]).toEqual([3, 6, 2]);
+    expect(callbacks).toHaveLength(1);
+    expect(notifications).toBe(0);
+  });
+
+  it('restores the base once when failed provisions settle in reverse order', () => {
+    const value = signal(1);
+    const doubled = computed(() => value.get() * 2);
+    const node = getSignalNode(value);
+    let notifications = 0;
+    node.observers.add(() => notifications++);
+
+    expect(doubled.get()).toBe(2);
+    const callbacks: Array<(success: boolean) => void> = [];
+    const transaction = {
+      onFinish(callback: (success: boolean) => void): void {
+        callbacks.push(callback);
+      },
+    };
+    provisionSignalValueForRender(value, 2, transaction);
+    provisionSignalValueForRender(value, 2, transaction);
+    expect([value.get(), doubled.get(), node.version]).toEqual([2, 4, 2]);
+
+    for (const callback of callbacks.reverse()) callback(false);
+    for (const callback of callbacks) callback(true);
+
+    expect([value.get(), doubled.get(), node.version]).toEqual([1, 2, 3]);
+    expect(callbacks).toHaveLength(1);
     expect(notifications).toBe(0);
   });
 });

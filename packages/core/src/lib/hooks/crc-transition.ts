@@ -173,20 +173,17 @@ export function crcTransition<T>(
   const previousProvisionalValue = untracked(() => slot.output.get());
   const hasProvisionalValue = !slot.settled &&
     !Object.is(previousProvisionalValue, candidate.initial);
-  const provision = hasProvisionalValue ?
-    provisionSignalValueForRender(slot.output, candidate.initial) : undefined;
-  const revision = ++slot.renderRevision;
   const transaction = GLOBAL_STATE.renderTransaction;
   if (!transaction) {
     throw new Error('crcTransition requires an active CRC render transaction.');
   }
+  if (hasProvisionalValue) {
+    provisionSignalValueForRender(slot.output, candidate.initial, transaction);
+  }
+  const revision = ++slot.renderRevision;
   transaction.onFinish(success => {
-    if (!success) {
-      if (revision === slot.renderRevision && !slot.settled) provision?.rollback();
-      return;
-    }
+    if (!success) return;
     if (revision !== slot.renderRevision || !isCurrentSlot(slot)) return;
-    provision?.commit();
     slot.settled = true;
     slot.target = candidate.target;
     if (!shouldEnter && !shouldRetarget) {
