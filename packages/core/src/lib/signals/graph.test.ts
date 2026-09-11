@@ -3,6 +3,8 @@ import {
   computed,
   isSignal,
   signal,
+  track,
+  tween,
   untracked,
   type SignalEquals,
 } from '../../index';
@@ -15,6 +17,10 @@ import {
   withSignalWriteForbidden,
   withSignalWritePolicy,
 } from './graph';
+import {
+  acquireProgramWriterLeases,
+  type ProgramWriterLease,
+} from '../animation/writer-leases';
 
 describe('signal', () => {
   it('provides explicit reads, writes, and one cached readonly view', () => {
@@ -314,6 +320,67 @@ describe('signal commit batches', () => {
     ]);
     expect(failure).toBeInstanceOf(AggregateError);
     expect((failure as AggregateError).errors).toEqual([leftFailure, rightFailure]);
+  });
+
+  it('authorizes a staged writer against the exact live lease at commit time', () => {
+    const value = signal(1, { debugName: 'commit-owned value' });
+    const token = {};
+    const lease = acquireProgramWriterLeases(
+      track(value, tween({ to: 2, duration: 10 })),
+      {},
+      {
+        token,
+        registrationOrder: 1,
+        debugName: 'commit owner',
+        cancel: () => {},
+      },
+    );
+    const batch = createSignalCommitBatch();
+    batch.stage(value, 2, token);
+
+    batch.commit();
+
+    expect(value.get()).toBe(2);
+    lease.release();
+  });
+
+  it('discards every staged value atomically when one writer lease is stale', () => {
+    const leased = signal(1, { debugName: 'stale leased value' });
+    const ordinary = signal(10, { debugName: 'ordinary value' });
+    const oldToken = {};
+    let oldLease: ProgramWriterLease;
+    oldLease = acquireProgramWriterLeases(
+      track(leased, tween({ to: 2, duration: 10 })),
+      {},
+      {
+        token: oldToken,
+        registrationOrder: 1,
+        debugName: 'old owner',
+        cancel: () => oldLease.release(),
+      },
+    );
+    const batch = createSignalCommitBatch();
+    batch.stage(ordinary, 20, oldToken);
+    batch.stage(leased, 2, oldToken);
+    oldLease.release();
+    const replacement = acquireProgramWriterLeases(
+      track(leased, tween({ to: 3, duration: 10 })),
+      {},
+      {
+        token: {},
+        registrationOrder: 2,
+        debugName: 'replacement owner',
+        cancel: () => {},
+      },
+    );
+
+    expect(() => batch.commit()).toThrow(/stale leased value.*replacement owner/iu);
+
+    expect(leased.get()).toBe(1);
+    expect(ordinary.get()).toBe(10);
+    expect(batch.read(leased)).toBe(1);
+    expect(batch.read(ordinary)).toBe(10);
+    replacement.release();
   });
 });
 

@@ -2586,21 +2586,12 @@ export function activateProgram(
   if (typeof registration !== 'object' || registration === null) {
     throw new TypeError('CRC animation registration identity must be an object.');
   }
-  const programRecord = getProgramRecord(program);
-  const snapshots = new WeakMap<object, unknown>();
-  const originalValues = new Map<WritableSignal<unknown>, unknown>();
-  for (const output of programRecord.outputs) {
-    originalValues.set(
-      output,
-      snapshotAnimationActivationValue(getSignalNode(output).value, snapshots),
-    );
-  }
-  validateActivationWriterSafety(program, originalValues);
+  const originalValues = captureProgramOriginalValues(program);
   const activation = Object.freeze({}) as ProgramActivation;
   activationRecords.set(activation, {
     program,
     registration,
-    originalValues: immutableMap(originalValues),
+    originalValues,
     starts: new Map(),
     steppers: new Map(),
     terminalSteppers: new Map(),
@@ -2610,6 +2601,57 @@ export function activateProgram(
     terminalDuration: undefined,
   });
   return activation;
+}
+
+function captureProgramOriginalValues(
+  program: CRCAnimationProgram,
+): ReadonlyMap<WritableSignal<unknown>, unknown> {
+  const programRecord = getProgramRecord(program);
+  const snapshots = new WeakMap<object, unknown>();
+  const originalValues = new Map<WritableSignal<unknown>, unknown>();
+  for (const output of programRecord.outputs) {
+    originalValues.set(
+      output,
+      snapshotAnimationActivationValue(getSignalNode(output).value, snapshots),
+    );
+  }
+  validateCapturedDefinitionInputs(program, originalValues);
+  validateActivationWriterSafety(program, originalValues);
+  return immutableMap(originalValues);
+}
+
+function validateCapturedDefinitionInputs(
+  program: CRCAnimationProgram,
+  originalValues: ReadonlyMap<WritableSignal<unknown>, unknown>,
+): void {
+  const record = getProgramRecord(program);
+  if (record.kind !== 'track') {
+    for (const child of record.children) {
+      validateCapturedDefinitionInputs(child, originalValues);
+    }
+    return;
+  }
+  const definition = getDefinitionRecord(record.definition);
+  if (definition.kind === 'stepper' ||
+    definition.kind !== 'spring' &&
+    (definition.kind !== 'tween' || definition.hasFrom)) {
+    return;
+  }
+  const initialValue = originalValues.get(record.output);
+  if (definition.kind === 'tween' && definition.interpolate === undefined &&
+    (typeof initialValue !== 'number' || typeof definition.to !== 'number')) {
+    const label = definition.debugName === undefined ? 'CRC animation definition' :
+      `CRC animation definition "${definition.debugName}"`;
+    throw new TypeError(
+      `${label} requires an explicit interpolator for nonnumeric values.`,
+    );
+  }
+  activateSeekableDefinition(record.definition, initialValue);
+}
+
+/** @internal Validates one current committed activation snapshot without retaining it. */
+export function preflightProgramActivation(program: CRCAnimationProgram): void {
+  captureProgramOriginalValues(program);
 }
 
 /** Evaluates one ordinary advance without committing staged output values. */

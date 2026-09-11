@@ -52,6 +52,20 @@ export type SignalWritePolicy = (
   operation: SignalWriteOperation,
 ) => void;
 
+/** @internal Authorization seam owned by the animation writer-lease registry. */
+export interface SignalWriterLeasePolicy {
+  assertDirectWriteAllowed(node: SignalNode<unknown>): void;
+  captureStagedWrite(
+    node: SignalNode<unknown>,
+    writer: object,
+  ): unknown;
+  assertStagedWriteAllowed(
+    node: SignalNode<unknown>,
+    writer: object,
+    authorization: unknown,
+  ): void;
+}
+
 const trackingStack: Array<SignalDependencyCollector | undefined> = [];
 const writePolicyStack: SignalWritePolicy[] = [];
 const computedStack: ComputedSignalNode<unknown>[] = [];
@@ -67,6 +81,7 @@ let computedSourceEdges = 0;
 let createdComputedSourceEdges = 0;
 let releasedComputedSourceEdges = 0;
 let signalGraphPlanWorkNotifier: (() => void) | undefined;
+let signalWriterLeasePolicy: SignalWriterLeasePolicy | undefined;
 
 export interface SignalGraphSnapshot {
   readonly rendererConsumers: number;
@@ -179,6 +194,7 @@ export function signal<T>(
   };
   const assertWriteAllowed = (): void => {
     writePolicyStack.at(-1)?.(node as SignalNode<unknown>, 'direct');
+    signalWriterLeasePolicy?.assertDirectWriteAllowed(node as SignalNode<unknown>);
   };
   const commit = (nextValue: T): void => {
     if (node.equals(node.value, nextValue)) {
@@ -530,6 +546,7 @@ interface StagedSignalValue {
   readonly node: SignalNode<unknown>;
   value: unknown;
   writer: object;
+  authorization: unknown;
 }
 
 export interface SignalCommitBatch {
@@ -556,6 +573,10 @@ export function createSignalCommitBatch(): SignalCommitBatch {
         node: node as SignalNode<unknown>,
         value: nextValue,
         writer,
+        authorization: signalWriterLeasePolicy?.captureStagedWrite(
+          node as SignalNode<unknown>,
+          writer,
+        ),
       });
     },
     discardWriter(writer: object): void {
@@ -566,14 +587,23 @@ export function createSignalCommitBatch(): SignalCommitBatch {
       }
     },
     commit(): void {
+      const candidates = [...staged.values()];
+      staged.clear();
+      for (const candidate of candidates) {
+        signalWriterLeasePolicy?.assertStagedWriteAllowed(
+          candidate.node,
+          candidate.writer,
+          candidate.authorization,
+        );
+      }
+
       const changed: StagedSignalValue[] = [];
-      for (const candidate of staged.values()) {
+      for (const candidate of candidates) {
         const node = candidate.node;
         if (!node.equals(node.value, candidate.value)) {
           changed.push(candidate);
         }
       }
-      staged.clear();
 
       for (const candidate of changed) {
         const node = candidate.node;
@@ -632,6 +662,16 @@ export function withDirectSignalWriteForbidden<T>(
   return withSignalWritePolicy((_node, operation) => {
     if (operation === 'direct') throw new Error(reason);
   }, callback);
+}
+
+/** @internal Installs the singleton policy that validates active writer leases. */
+export function installSignalWriterLeasePolicy(
+  policy: SignalWriterLeasePolicy,
+): void {
+  if (signalWriterLeasePolicy !== undefined && signalWriterLeasePolicy !== policy) {
+    throw new Error('CRC signal writer-lease policy is already installed.');
+  }
+  signalWriterLeasePolicy = policy;
 }
 
 function isComputedSignalNode(
