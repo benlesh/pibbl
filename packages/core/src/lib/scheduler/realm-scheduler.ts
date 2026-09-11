@@ -13,10 +13,14 @@ import {
 import type { CRCInstance, CRCRenderTransaction } from '../types.js';
 import type {
   CRCAdvanceParticipant,
+  CRCBeginCommand,
+  CRCBeginCommandHandle,
   CRCFrameCompletion,
   CRCFramePhase,
   CRCFrameSnapshot,
   RealmSchedulerSnapshot,
+  CRCSchedulerTraceCollector,
+  CRCSchedulerTraceRecord,
   SchedulerDriver,
 } from './types.js';
 
@@ -57,6 +61,14 @@ interface AdvanceRegistration {
   active: boolean;
 }
 
+interface BeginCommandRegistration {
+  readonly accepted: {
+    readonly sequence: number;
+    readonly command: CRCBeginCommand;
+  };
+  active: boolean;
+}
+
 export interface RendererParticipantOwner {
   readonly instance: CRCInstance;
   isActive(): boolean;
@@ -86,6 +98,7 @@ const registeredRoots = new Set<CRCInstance>();
 const currentInstanceWork = new Map<CRCInstance, PendingInstanceWork>();
 const nextInstanceWork = new Map<CRCInstance, PendingInstanceWork>();
 const advanceRegistrations = new Set<AdvanceRegistration>();
+const beginCommands: BeginCommandRegistration[] = [];
 const frameCompletions: CRCFrameCompletion[] = [];
 const currentRendererWorkByOwner = new Map<
   RendererParticipantOwner,
@@ -109,6 +122,9 @@ let schedulerDriver: SchedulerDriver | undefined;
 let createdRootRegistrations = 0;
 let releasedRootRegistrations = 0;
 let currentFramePlanAdmissionDepth = 0;
+let nextBeginCommandSequence = 0;
+let currentFramePlaybackCompletions: CRCFrameCompletion[] | undefined;
+let schedulerTraceCollector: CRCSchedulerTraceCollector | undefined;
 
 setSignalGraphPlanWorkNotifier(syncSignalGraphPlanWork);
 
@@ -183,9 +199,45 @@ export function registerAdvanceParticipant(
   };
 }
 
+/** Queues immutable, realm-ordered work for the next frozen Begin prefix. */
+export function queueBeginCommand(command: CRCBeginCommand): CRCBeginCommandHandle {
+  const sequence = ++nextBeginCommandSequence;
+  const registration: BeginCommandRegistration = {
+    accepted: Object.freeze({ sequence, command }),
+    active: true,
+  };
+  beginCommands.push(registration);
+  requestHostFrameIfNeeded();
+  return Object.freeze({
+    sequence,
+    cancel(): void {
+      if (!registration.active) return;
+      registration.active = false;
+      const index = beginCommands.indexOf(registration);
+      if (index >= 0) beginCommands.splice(index, 1);
+      cancelIdleHostFrame();
+    },
+  });
+}
+
+/** Queues scheduler-owned work for Complete in the currently advancing frame. */
+export function queueCurrentFrameCompletion(callback: CRCFrameCompletion): void {
+  if (currentFramePlaybackCompletions === undefined ||
+    (phase !== 'begin' && phase !== 'advance')) {
+    queueFrameCompletion(callback);
+    return;
+  }
+  currentFramePlaybackCompletions.push(callback);
+}
+
 export function queueFrameCompletion(callback: CRCFrameCompletion): void {
   frameCompletions.push(callback);
   requestHostFrameIfNeeded();
+}
+
+/** @internal Emits one immutable fact only while a source-only collector is installed. */
+export function recordSchedulerTrace(record: CRCSchedulerTraceRecord): void {
+  schedulerTraceCollector?.(Object.freeze(record));
 }
 
 export function requestRendererParticipantWork(
@@ -267,6 +319,7 @@ export function snapshotRealmScheduler(): RealmSchedulerSnapshot {
     dirtyRoots: countDirtyRoots(),
     registeredAdvanceParticipants: advanceRegistrations.size,
     queuedFrameCompletions: frameCompletions.length,
+    queuedBeginCommands: beginCommands.length,
     currentFrame,
   });
 }
@@ -284,6 +337,17 @@ export function installSchedulerDriverForTest(
       throw new Error('Cannot restore the CRC scheduler driver while a frame is active.');
     }
     schedulerDriver = previous;
+  };
+}
+
+/** @internal Test/diagnostic seam; production retains no trace history. */
+export function installSchedulerTraceCollectorForTest(
+  collector: CRCSchedulerTraceCollector,
+): () => void {
+  const previous = schedulerTraceCollector;
+  schedulerTraceCollector = collector;
+  return () => {
+    if (schedulerTraceCollector === collector) schedulerTraceCollector = previous;
   };
 }
 
@@ -312,9 +376,22 @@ function runFrame(hostTime: number): void {
 
   phase = 'begin';
   let rootJobs = captureRootJobs();
-  const registrations = Array.from(advanceRegistrations);
+  const commands = beginCommands.splice(0);
   const completions = frameCompletions.splice(0);
   const batch = createSignalCommitBatch();
+  currentFramePlaybackCompletions = [];
+  for (const registration of commands) {
+    if (!registration.active) continue;
+    registration.active = false;
+    const { command, sequence } = registration.accepted;
+    try {
+      command(snapshot, batch, sequence);
+    } catch (error) {
+      batch.discardWriter(command);
+      errors.push(error);
+    }
+  }
+  const registrations = Array.from(advanceRegistrations);
 
   phase = 'advance';
   for (const registration of registrations) {
@@ -460,6 +537,15 @@ function runFrame(hostTime: number): void {
     }
   }
   for (const completion of completions) {
+    try {
+      completion(snapshot);
+    } catch (error) {
+      errors.push(error);
+    }
+  }
+  const playbackCompletions = currentFramePlaybackCompletions;
+  currentFramePlaybackCompletions = undefined;
+  for (const completion of playbackCompletions) {
     try {
       completion(snapshot);
     } catch (error) {
@@ -657,6 +743,7 @@ function hasFrameWork(): boolean {
   return currentInstanceWork.size > 0 ||
     nextInstanceWork.size > 0 ||
     hasPendingComputedValidations() ||
+    beginCommands.length > 0 ||
     advanceRegistrations.size > 0 ||
     frameCompletions.length > 0 ||
     currentRendererWorkByOwner.size > 0 ||

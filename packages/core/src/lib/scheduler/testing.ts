@@ -1,8 +1,9 @@
 import {
   installSchedulerDriverForTest as installDriver,
+  installSchedulerTraceCollectorForTest,
   snapshotRealmScheduler,
 } from './realm-scheduler.js';
-import type { SchedulerDriver } from './types.js';
+import type { CRCSchedulerTraceRecord, SchedulerDriver } from './types.js';
 
 export class ManualSchedulerDriver implements SchedulerDriver {
   private readonly callbacks = new Map<number, FrameRequestCallback>();
@@ -46,4 +47,8 @@ export function installSchedulerDriverForTest(
   return installDriver(driver);
 }
 
-export { snapshotRealmScheduler };
+export {
+  installSchedulerTraceCollectorForTest,
+  snapshotRealmScheduler,
+  type CRCSchedulerTraceRecord,
+};

@@ -20,7 +20,75 @@ export type CRCAdvanceParticipant = (
   batch: SignalCommitBatch,
 ) => void;
 
+export type CRCBeginCommand = (
+  snapshot: CRCFrameSnapshot,
+  batch: SignalCommitBatch,
+  sequence: number,
+) => void;
+
+export interface CRCBeginCommandHandle {
+  readonly sequence: number;
+  cancel(): void;
+}
+
 export type CRCFrameCompletion = (snapshot: CRCFrameSnapshot) => void;
+
+export type CRCSchedulerTraceRecord =
+  | {
+      readonly kind: 'animation-command';
+      readonly frameId: number;
+      readonly logicalTime: number;
+      readonly sequence: number;
+      readonly command: string;
+      readonly debugName: string | undefined;
+    }
+  | {
+      readonly kind: 'animation-sample';
+      readonly frameId: number;
+      readonly logicalTime: number;
+      readonly registrationOrder: number;
+      readonly debugName: string | undefined;
+      readonly localTime: number;
+      readonly direction: 'forward' | 'reverse';
+    }
+  | {
+      readonly kind: 'animation-write';
+      readonly frameId: number;
+      readonly logicalTime: number;
+      readonly debugName: string | undefined;
+      readonly target: string;
+      readonly outcome: 'staged' | 'equality-suppressed';
+    }
+  | {
+      readonly kind: 'animation-milestone';
+      readonly frameId: number;
+      readonly logicalTime: number;
+      readonly debugName: string | undefined;
+      readonly event: string;
+      readonly programPath: readonly number[];
+      readonly iteration: number;
+    }
+  | {
+      readonly kind: 'animation-stepper';
+      readonly frameId: number;
+      readonly logicalTime: number;
+      readonly debugName: string | undefined;
+      readonly programPath: readonly number[];
+      readonly repeatIterations: readonly number[];
+      readonly appliedSteps: number;
+      readonly retainedRemainderMilliseconds: number;
+      readonly clampedElapsedMilliseconds: number;
+      readonly discardedElapsedMilliseconds: number;
+    }
+  | {
+      readonly kind: 'animation-error';
+      readonly frameId: number;
+      readonly logicalTime: number;
+      readonly debugName: string | undefined;
+      readonly error: unknown;
+    };
+
+export type CRCSchedulerTraceCollector = (record: CRCSchedulerTraceRecord) => void;
 
 export interface SchedulerDriver {
   requestFrame(callback: FrameRequestCallback): number;
@@ -39,5 +107,6 @@ export interface RealmSchedulerSnapshot {
   readonly dirtyRoots: number;
   readonly registeredAdvanceParticipants: number;
   readonly queuedFrameCompletions: number;
+  readonly queuedBeginCommands: number;
   readonly currentFrame: CRCFrameSnapshot | undefined;
 }

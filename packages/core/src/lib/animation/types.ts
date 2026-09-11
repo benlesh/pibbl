@@ -81,3 +81,43 @@ export interface CRCStepperOptions<State, T> {
   readonly done?: (state: State) => boolean;
   readonly debugName?: string;
 }
+
+export type CRCPlaybackStatus =
+  | 'idle'
+  | 'scheduled'
+  | 'running'
+  | 'paused'
+  | 'finished'
+  | 'cancelled'
+  | 'disposed';
+
+export interface CRCPlaybackEvent {
+  readonly type: 'start' | 'iteration' | 'marker' | 'finish' | 'cancel';
+  readonly logicalTime: number;
+  readonly frameId: number;
+  readonly programPath: readonly number[];
+  readonly iteration: number;
+  readonly marker?: string;
+}
+
+export interface CRCPlayback {
+  readonly status: import('../signals/types.js').Signal<CRCPlaybackStatus>;
+  readonly currentTime: import('../signals/types.js').Signal<number>;
+
+  play(options?: { readonly conflict?: 'error' | 'replace' }): void;
+  pause(): void;
+  resume(): void;
+  cancel(): void;
+  finish(): void;
+  seek(milliseconds: number): void;
+  reverse(): void;
+  setPlaybackRate(rate: number): void;
+}
+
+export interface CRCPlaybackOptions {
+  readonly autoplay?: boolean;
+  readonly conflict?: 'error' | 'replace';
+  readonly debugName?: string;
+  readonly onEvent?: (event: CRCPlaybackEvent) => void;
+  readonly onError?: (error: unknown) => void;
+}
