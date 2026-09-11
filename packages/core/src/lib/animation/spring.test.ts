@@ -46,6 +46,11 @@ describe('analytic spring definitions', () => {
         to: 1,
         [property]: Number.POSITIVE_INFINITY,
       })).toThrow('finite');
+      expect(() => spring({
+        from: 0,
+        to: 1,
+        [property]: null,
+      } as never)).toThrow('finite');
     }
     for (const property of ['mass', 'stiffness', 'maxDuration'] as const) {
       expect(() => spring({ from: 0, to: 1, [property]: 0 })).toThrow('positive');
@@ -54,6 +59,37 @@ describe('analytic spring definitions', () => {
     for (const property of ['damping', 'restSpeed', 'restDelta'] as const) {
       expect(() => spring({ from: 0, to: 1, [property]: -1 })).toThrow('nonnegative');
     }
+  });
+
+  it('preserves representable motion across extreme finite parameter scales', () => {
+    const tinyFrequency = spring({
+      from: 0,
+      to: 0,
+      mass: Number.MAX_VALUE,
+      stiffness: Number.MIN_VALUE,
+      damping: 0,
+      initialVelocity: 1,
+    });
+    const scaledUnderdamped = spring({
+      from: 0,
+      to: 1,
+      mass: Number.MAX_VALUE,
+      stiffness: Number.MAX_VALUE,
+      damping: Number.MAX_VALUE,
+    });
+    const tinyFrequencyRecord = getDefinitionRecord(tinyFrequency);
+    const scaledRecord = getDefinitionRecord(scaledUnderdamped);
+    if (tinyFrequencyRecord.kind !== 'spring' || scaledRecord.kind !== 'spring') {
+      throw new Error('Expected spring records.');
+    }
+
+    expect(sampleSpring(tinyFrequencyRecord, 1)).toEqual({
+      position: 1,
+      velocity: 1,
+    });
+    const scaledSample = sampleSpring(scaledRecord, 0.5);
+    expect(scaledSample.position).toBeCloseTo(0.10440547345507933, 14);
+    expect(scaledSample.velocity).toBeCloseTo(0.3773452034749068, 14);
   });
 
   it.each([
@@ -147,6 +183,67 @@ describe('analytic spring definitions', () => {
       initialValue: -1,
       localTime: 200,
     }));
+  });
+
+  it.each([
+    {
+      regime: 'underdamped',
+      damping: 10,
+      expectedDuration: 1269.7103641967983,
+      displacementEnvelope: (seconds: number) =>
+        11.433284742365162 * Math.exp(-5 * seconds),
+      velocityEnvelope: (seconds: number) =>
+        114.33284742365161 * Math.exp(-5 * seconds),
+    },
+    {
+      regime: 'critically damped',
+      damping: 20,
+      expectedDuration: 831.4906680262643,
+      displacementEnvelope: (seconds: number) =>
+        (10 + 98 * seconds) * Math.exp(-10 * seconds),
+      velocityEnvelope: (seconds: number) =>
+        (2 + 980 * seconds) * Math.exp(-10 * seconds),
+    },
+    {
+      regime: 'overdamped',
+      damping: 30,
+      expectedDuration: 1414.3196865155617,
+      displacementEnvelope: (seconds: number) =>
+        11.618761213399377 * Math.exp(-3.819660112501051 * seconds) +
+        1.6187612133993774 * Math.exp(-26.18033988749895 * seconds),
+      velocityEnvelope: (seconds: number) =>
+        44.379718763495916 * Math.exp(-3.819660112501051 * seconds) +
+        42.379718763495916 * Math.exp(-26.18033988749895 * seconds),
+    },
+  ])('resolves the earliest conservative $regime settlement', ({
+    damping,
+    expectedDuration,
+    displacementEnvelope,
+    velocityEnvelope,
+  }) => {
+    const definition = spring({
+      from: 0,
+      to: 10,
+      mass: 1,
+      stiffness: 100,
+      damping,
+      initialVelocity: 2,
+      restDelta: 0.1,
+      restSpeed: 0.2,
+      maxDuration: 5_000,
+    });
+    const record = getDefinitionRecord(definition);
+    if (record.kind !== 'spring') throw new Error('Expected a spring record.');
+    const durationSeconds = record.duration / 1000;
+    const earlierSeconds = durationSeconds - 0.000001;
+
+    expect(record.duration).toBeCloseTo(expectedDuration, 9);
+    expect(displacementEnvelope(durationSeconds)).toBeLessThanOrEqual(0.1 + 1e-12);
+    expect(velocityEnvelope(durationSeconds)).toBeLessThanOrEqual(0.2 + 1e-12);
+    expect(
+      displacementEnvelope(earlierSeconds) > 0.1 ||
+      velocityEnvelope(earlierSeconds) > 0.2,
+    ).toBe(true);
   });
 
   it('returns the exact target at settlement and at the maximum duration', () => {

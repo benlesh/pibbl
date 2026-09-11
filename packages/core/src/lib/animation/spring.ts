@@ -46,6 +46,12 @@ interface SpringEnvelope {
   readonly velocity: (seconds: number) => number;
 }
 
+interface SpringFrequencies {
+  readonly natural: number;
+  readonly ratio: number;
+  readonly decay: number;
+}
+
 function definitionLabel(debugName: string | undefined): string {
   return debugName === undefined ? 'CRC spring definition' :
     `CRC spring definition "${debugName}"`;
@@ -78,6 +84,10 @@ function nonnegative(
   return value;
 }
 
+function defaulted(value: number | undefined, fallback: number): number {
+  return value === undefined ? fallback : value;
+}
+
 function normalizedSpring(options: Readonly<CRCSpringOptions>): SpringWithoutDuration {
   const debugName = options.debugName;
   const hasFrom = options.from !== undefined;
@@ -85,42 +95,134 @@ function normalizedSpring(options: Readonly<CRCSpringOptions>): SpringWithoutDur
     kind: 'spring',
     debugName,
     hasFrom,
-    from: finite(options.from ?? 0, 'from', debugName),
+    from: finite(defaulted(options.from, 0), 'from', debugName),
     to: finite(options.to, 'to', debugName),
-    mass: positive(options.mass ?? DEFAULT_MASS, 'mass', debugName),
-    stiffness: positive(options.stiffness ?? DEFAULT_STIFFNESS, 'stiffness', debugName),
-    damping: nonnegative(options.damping ?? DEFAULT_DAMPING, 'damping', debugName),
+    mass: positive(defaulted(options.mass, DEFAULT_MASS), 'mass', debugName),
+    stiffness: positive(
+      defaulted(options.stiffness, DEFAULT_STIFFNESS),
+      'stiffness',
+      debugName,
+    ),
+    damping: nonnegative(
+      defaulted(options.damping, DEFAULT_DAMPING),
+      'damping',
+      debugName,
+    ),
     initialVelocity: finite(
-      options.initialVelocity ?? DEFAULT_INITIAL_VELOCITY,
+      defaulted(options.initialVelocity, DEFAULT_INITIAL_VELOCITY),
       'initialVelocity',
       debugName,
     ),
-    restSpeed: nonnegative(options.restSpeed ?? DEFAULT_REST_SPEED, 'restSpeed', debugName),
-    restDelta: nonnegative(options.restDelta ?? DEFAULT_REST_DELTA, 'restDelta', debugName),
+    restSpeed: nonnegative(
+      defaulted(options.restSpeed, DEFAULT_REST_SPEED),
+      'restSpeed',
+      debugName,
+    ),
+    restDelta: nonnegative(
+      defaulted(options.restDelta, DEFAULT_REST_DELTA),
+      'restDelta',
+      debugName,
+    ),
     maxDuration: positive(
-      options.maxDuration ?? DEFAULT_MAX_DURATION,
+      defaulted(options.maxDuration, DEFAULT_MAX_DURATION),
       'maxDuration',
       debugName,
     ),
   };
 }
 
-function frequencies(record: SpringWithoutDuration): {
-  readonly natural: number;
-  readonly ratio: number;
+function frequencies(record: SpringWithoutDuration): SpringFrequencies {
+  const logMass = Math.log(record.mass);
+  const logStiffness = Math.log(record.stiffness);
+  const natural = Math.exp((logStiffness - logMass) / 2);
+  const dampingLog = record.damping === 0 ? Number.NEGATIVE_INFINITY :
+    Math.log(record.damping);
+  const ratio = record.damping === 0 ? 0 : Math.exp(
+    dampingLog - Math.LN2 - logStiffness / 2 - logMass / 2,
+  );
+  const decay = record.damping === 0 ? 0 : Math.exp(
+    dampingLog - Math.LN2 - logMass,
+  );
+  if (!(natural > 0) || !Number.isFinite(natural) ||
+    !Number.isFinite(ratio) || !Number.isFinite(decay)) {
+    throw new RangeError(
+      `${definitionLabel(record.debugName)} parameters must produce finite representable frequencies.`,
+    );
+  }
+  return { natural, ratio, decay };
+}
+
+function displacement(record: SpringWithoutDuration): number {
+  const value = record.from - record.to;
+  if (!Number.isFinite(value)) {
+    throw new RangeError(
+      `${definitionLabel(record.debugName)} displacement must be finite and representable.`,
+    );
+  }
+  return value;
+}
+
+function assertRepresentable(
+  record: SpringWithoutDuration,
+  ...values: readonly number[]
+): void {
+  if (values.some(value => !Number.isFinite(value))) {
+    throw new RangeError(
+      `${definitionLabel(record.debugName)} parameters must produce finite representable coefficients.`,
+    );
+  }
+}
+
+function underdampedTerms(
+  record: SpringWithoutDuration,
+  natural: number,
+  ratio: number,
+  decay: number,
+): {
+  readonly displacement: number;
+  readonly damped: number;
+  readonly velocityCoefficient: number;
 } {
-  return {
-    natural: Math.sqrt(record.stiffness / record.mass),
-    ratio: record.damping / (2 * Math.sqrt(record.stiffness * record.mass)),
-  };
+  const initialDisplacement = displacement(record);
+  const damped = natural * Math.sqrt((1 - ratio) * (1 + ratio));
+  const velocityCoefficient =
+    record.initialVelocity + decay * initialDisplacement;
+  const maximumSeconds = record.maxDuration / 1000;
+  if (!(damped > 0)) {
+    throw new RangeError(
+      `${definitionLabel(record.debugName)} parameters must produce finite representable coefficients.`,
+    );
+  }
+  assertRepresentable(
+    record,
+    damped,
+    velocityCoefficient,
+    damped * maximumSeconds,
+    velocityCoefficient * maximumSeconds,
+    initialDisplacement * damped,
+    decay * velocityCoefficient * maximumSeconds,
+    Math.abs(record.to) + Math.abs(initialDisplacement) +
+      Math.abs(velocityCoefficient * maximumSeconds),
+  );
+  return { displacement: initialDisplacement, damped, velocityCoefficient };
 }
 
 function criticalEnvelope(
   record: SpringWithoutDuration,
   natural: number,
 ): SpringEnvelope {
-  const a = record.from - record.to;
+  const a = displacement(record);
   const b = record.initialVelocity + natural * a;
+  const maximumSeconds = record.maxDuration / 1000;
+  assertRepresentable(
+    record,
+    b,
+    b * maximumSeconds,
+    natural * a,
+    natural * b,
+    natural * b * maximumSeconds,
+    Math.abs(record.to) + Math.abs(a) + Math.abs(b * maximumSeconds),
+  );
   const velocityA = b - natural * a;
   const velocityB = -natural * b;
   const displacementA = Math.abs(a);
@@ -147,20 +249,26 @@ function underdampedEnvelope(
   record: SpringWithoutDuration,
   natural: number,
   ratio: number,
+  decay: number,
 ): SpringEnvelope {
-  const a = record.from - record.to;
-  const decay = ratio * natural;
-  const damped = natural * Math.sqrt(1 - ratio * ratio);
-  const b = (record.initialVelocity + decay * a) / damped;
+  const terms = underdampedTerms(record, natural, ratio, decay);
+  const a = terms.displacement;
+  const b = terms.velocityCoefficient / terms.damped;
   const displacementAmplitude = Math.hypot(a, b);
+  const velocitySineCoefficient = terms.velocityCoefficient === 0 ? 0 :
+    -a * terms.damped - (decay / terms.damped) * terms.velocityCoefficient;
   const velocityAmplitude = Math.hypot(
-    b * damped - decay * a,
-    -a * damped - decay * b,
+    record.initialVelocity,
+    velocitySineCoefficient,
   );
+  const conservative = (value: number): number =>
+    Number.isFinite(value) ? value : Number.POSITIVE_INFINITY;
   return {
     lastPeakSeconds: 0,
-    displacement: seconds => displacementAmplitude * Math.exp(-decay * seconds),
-    velocity: seconds => velocityAmplitude * Math.exp(-decay * seconds),
+    displacement: seconds =>
+      conservative(displacementAmplitude * Math.exp(-decay * seconds)),
+    velocity: seconds =>
+      conservative(velocityAmplitude * Math.exp(-decay * seconds)),
   };
 }
 
@@ -175,15 +283,33 @@ function overdampedTerms(
   readonly secondRoot: number;
 } {
   const rootOffset = Math.sqrt(ratio * ratio - 1);
-  const firstRoot = -natural * (ratio - rootOffset);
-  const secondRoot = -natural * (ratio + rootOffset);
-  const displacement = record.from - record.to;
+  const rootSum = natural * (ratio + rootOffset);
+  const firstRoot = -(natural / rootSum) * natural;
+  const secondRoot = -rootSum;
+  const initialDisplacement = displacement(record);
   const firstCoefficient =
-    (record.initialVelocity - secondRoot * displacement) / (firstRoot - secondRoot);
+    (record.initialVelocity - secondRoot * initialDisplacement) /
+    (firstRoot - secondRoot);
+  const secondCoefficient = initialDisplacement - firstCoefficient;
+  if (!(firstRoot < 0) || !(secondRoot < 0)) {
+    throw new RangeError(
+      `${definitionLabel(record.debugName)} parameters must produce finite representable coefficients.`,
+    );
+  }
+  assertRepresentable(
+    record,
+    firstRoot,
+    secondRoot,
+    firstCoefficient,
+    secondCoefficient,
+    firstRoot * firstCoefficient,
+    secondRoot * secondCoefficient,
+    Math.abs(record.to) + Math.abs(firstCoefficient) + Math.abs(secondCoefficient),
+  );
   return {
     firstCoefficient,
     firstRoot,
-    secondCoefficient: displacement - firstCoefficient,
+    secondCoefficient,
     secondRoot,
   };
 }
@@ -208,12 +334,12 @@ function overdampedEnvelope(
 }
 
 function springEnvelope(record: SpringWithoutDuration): SpringEnvelope {
-  const { natural, ratio } = frequencies(record);
+  const { natural, ratio, decay } = frequencies(record);
   if (Math.abs(ratio - 1) <= CRITICAL_DAMPING_EPSILON) {
     return criticalEnvelope(record, natural);
   }
   return ratio < 1 ?
-    underdampedEnvelope(record, natural, ratio) :
+    underdampedEnvelope(record, natural, ratio, decay) :
     overdampedEnvelope(record, natural, ratio);
 }
 
@@ -253,6 +379,8 @@ export function createSpringRecord(
   options: Readonly<CRCSpringOptions>,
 ): SpringDefinitionRecord {
   const normalized = normalizedSpring(options);
+  frequencies(normalized);
+  springEnvelope(normalized);
   return Object.freeze({
     ...normalized,
     duration: normalized.hasFrom ?
@@ -294,26 +422,30 @@ export function sampleSpring(
     });
   }
 
-  const displacement = record.from - record.to;
-  const { natural, ratio } = frequencies(record);
+  const initialDisplacement = displacement(record);
+  const { natural, ratio, decay: decayRate } = frequencies(record);
   let offset: number;
   let velocity: number;
   if (Math.abs(ratio - 1) <= CRITICAL_DAMPING_EPSILON) {
-    const b = record.initialVelocity + natural * displacement;
+    const b = record.initialVelocity + natural * initialDisplacement;
     const decay = Math.exp(-natural * time);
-    offset = (displacement + b * time) * decay;
-    velocity = (b - natural * (displacement + b * time)) * decay;
+    offset = (initialDisplacement + b * time) * decay;
+    velocity = (b - natural * (initialDisplacement + b * time)) * decay;
   } else if (ratio < 1) {
-    const decayRate = ratio * natural;
-    const damped = natural * Math.sqrt(1 - ratio * ratio);
-    const b = (record.initialVelocity + decayRate * displacement) / damped;
+    const terms = underdampedTerms(record, natural, ratio, decayRate);
+    const angle = terms.damped * time;
+    const sine = Math.sin(angle);
+    const sineOverFrequency = angle === 0 ? time : time * sine / angle;
     const decay = Math.exp(-decayRate * time);
-    const cosine = Math.cos(damped * time);
-    const sine = Math.sin(damped * time);
-    offset = decay * (displacement * cosine + b * sine);
+    const cosine = Math.cos(angle);
+    offset = decay * (
+      initialDisplacement * cosine +
+      terms.velocityCoefficient * sineOverFrequency
+    );
     velocity = decay * (
-      (b * damped - decayRate * displacement) * cosine +
-      (-displacement * damped - decayRate * b) * sine
+      record.initialVelocity * cosine -
+      initialDisplacement * terms.damped * sine -
+      decayRate * terms.velocityCoefficient * sineOverFrequency
     );
   } else {
     const terms = overdampedTerms(record, natural, ratio);
