@@ -42,8 +42,21 @@ export interface SignalObserver {
   propagateInvalidation?: boolean;
 }
 
+type SignalRenderProvisionStatus = 'pending' | 'success' | 'failure';
+
+interface SignalRenderProvisionEntry {
+  readonly transaction: CRCRenderTransaction;
+  value: unknown;
+  status: SignalRenderProvisionStatus;
+}
+
 interface SignalRenderProvisionState {
-  readonly baseValue: unknown;
+  baseValue: unknown;
+  readonly entries: SignalRenderProvisionEntry[];
+  readonly entriesByTransaction: Map<
+    CRCRenderTransaction,
+    SignalRenderProvisionEntry
+  >;
 }
 
 export interface SignalDependencyCollector {
@@ -76,7 +89,7 @@ const writePolicyStack: SignalWritePolicy[] = [];
 const computedStack: ComputedSignalNode<unknown>[] = [];
 const activeSignalRenderProvisions = new WeakMap<
   SignalNode<unknown>,
-  Map<CRCRenderTransaction, SignalRenderProvisionState>
+  SignalRenderProvisionState
 >();
 const pendingComputedValidations = new Set<ComputedSignalNode<unknown>>();
 let flushingPendingComputedValidations = false;
@@ -249,12 +262,6 @@ export function provisionSignalValueForRender<T>(
   transaction: CRCRenderTransaction,
 ): void {
   const node = getSignalNode(value) as SignalNode<unknown>;
-  let transactionStates = activeSignalRenderProvisions.get(node);
-  if (transactionStates === undefined) {
-    transactionStates = new Map();
-    activeSignalRenderProvisions.set(node, transactionStates);
-  }
-  let state = transactionStates.get(transaction);
   const publishComputedVersion = (next: unknown): void => {
     node.value = next;
     node.version++;
@@ -262,21 +269,66 @@ export function provisionSignalValueForRender<T>(
       notifyComputedInvalidationObservers(node),
     );
   };
-
+  let state = activeSignalRenderProvisions.get(node);
   if (state === undefined) {
-    state = { baseValue: node.value };
-    transactionStates.set(transaction, state);
-    const activeStates = transactionStates;
+    state = {
+      baseValue: node.value,
+      entries: [],
+      entriesByTransaction: new Map(),
+    };
+    activeSignalRenderProvisions.set(node, state);
+  }
+
+  const effectiveEntry = (): SignalRenderProvisionEntry | undefined => {
+    for (let index = state.entries.length - 1; index >= 0; index--) {
+      const entry = state.entries[index];
+      if (entry.status !== 'failure') return entry;
+    }
+    return undefined;
+  };
+  const publishEffectiveValue = (
+    forceEntry?: SignalRenderProvisionEntry,
+  ): void => {
+    const entry = effectiveEntry();
+    const effectiveValue = entry?.value ?? state.baseValue;
+    if (
+      (forceEntry !== undefined && entry === forceEntry) ||
+      !Object.is(node.value, effectiveValue)
+    ) {
+      publishComputedVersion(effectiveValue);
+    }
+  };
+
+  let entry = state.entriesByTransaction.get(transaction);
+  if (entry === undefined) {
+    entry = { transaction, value: nextValue, status: 'pending' };
+    state.entries.push(entry);
+    state.entriesByTransaction.set(transaction, entry);
     const provisionState = state;
+    const provisionEntry = entry;
     transaction.onFinish(success => {
-      if (!activeStates.delete(transaction)) return;
-      if (activeStates.size === 0) {
+      if (provisionEntry.status !== 'pending') return;
+      provisionEntry.status = success ? 'success' : 'failure';
+
+      while (
+        provisionState.entries[0]?.status !== 'pending' &&
+        provisionState.entries.length > 0
+      ) {
+        const settled = provisionState.entries.shift()!;
+        provisionState.entriesByTransaction.delete(settled.transaction);
+        if (settled.status === 'success') {
+          provisionState.baseValue = settled.value;
+        }
+      }
+
+      publishEffectiveValue();
+      if (provisionState.entries.length === 0) {
         activeSignalRenderProvisions.delete(node);
       }
-      if (!success) publishComputedVersion(provisionState.baseValue);
     });
   }
-  publishComputedVersion(nextValue);
+  entry.value = nextValue;
+  publishEffectiveValue(entry);
 }
 
 export function computed<T>(

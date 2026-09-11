@@ -322,6 +322,126 @@ describe('signal', () => {
     expect(callbacks).toHaveLength(1);
     expect(notifications).toBe(0);
   });
+
+  it('keeps a newer transaction preview when an older transaction fails', () => {
+    const value = signal(1);
+    const doubled = computed(() => value.get() * 2);
+    const node = getSignalNode(value);
+    const beforeEdges = signalGraphSnapshot().computedSourceEdges;
+    let notifications = 0;
+    node.observers.add(() => notifications++);
+
+    expect(doubled.get()).toBe(2);
+    const detach = getSignalNode(doubled).observe?.();
+    if (detach === undefined) {
+      throw new Error('Expected computed signals to support internal observation.');
+    }
+    expect(signalGraphSnapshot().computedSourceEdges).toBe(beforeEdges + 1);
+
+    let finishA!: (success: boolean) => void;
+    const transactionA = {
+      onFinish(callback: (success: boolean) => void): void {
+        finishA = callback;
+      },
+    };
+    let finishB!: (success: boolean) => void;
+    const transactionB = {
+      onFinish(callback: (success: boolean) => void): void {
+        finishB = callback;
+      },
+    };
+
+    provisionSignalValueForRender(value, 2, transactionA);
+    provisionSignalValueForRender(value, 3, transactionB);
+    expect([value.get(), doubled.get(), node.version]).toEqual([3, 6, 2]);
+
+    finishA(false);
+    expect([value.get(), doubled.get(), node.version]).toEqual([3, 6, 2]);
+    finishB(true);
+    expect([value.get(), doubled.get(), node.version]).toEqual([3, 6, 2]);
+
+    expect(notifications).toBe(0);
+    detach();
+    expect(signalGraphSnapshot().computedSourceEdges).toBe(beforeEdges);
+  });
+
+  it.each([
+    {
+      name: 'older success then newer failure',
+      settlements: [['a', true], ['b', false]] as const,
+      intermediate: [[3, 6, 2], [2, 4, 3]] as const,
+      final: [2, 4, 3] as const,
+    },
+    {
+      name: 'newer success then older failure',
+      settlements: [['b', true], ['a', false]] as const,
+      intermediate: [[3, 6, 2], [3, 6, 2]] as const,
+      final: [3, 6, 2] as const,
+    },
+    {
+      name: 'newer failure then older success',
+      settlements: [['b', false], ['a', true]] as const,
+      intermediate: [[2, 4, 3], [2, 4, 3]] as const,
+      final: [2, 4, 3] as const,
+    },
+    {
+      name: 'both fail',
+      settlements: [['b', false], ['a', false]] as const,
+      intermediate: [[2, 4, 3], [1, 2, 4]] as const,
+      final: [1, 2, 4] as const,
+    },
+    {
+      name: 'both succeed',
+      settlements: [['b', true], ['a', true]] as const,
+      intermediate: [[3, 6, 2], [3, 6, 2]] as const,
+      final: [3, 6, 2] as const,
+    },
+  ])('settles different render transactions without cross-root corruption: $name', ({
+    settlements,
+    intermediate,
+    final,
+  }) => {
+    const value = signal(1);
+    const doubled = computed(() => value.get() * 2);
+    const node = getSignalNode(value);
+    const callbacks = new Map<string, (success: boolean) => void>();
+    let notifications = 0;
+    node.observers.add(() => notifications++);
+    const beforeEdges = signalGraphSnapshot().computedSourceEdges;
+
+    expect(doubled.get()).toBe(2);
+    const detach = getSignalNode(doubled).observe?.();
+    if (detach === undefined) {
+      throw new Error('Expected computed signals to support internal observation.');
+    }
+    const transactionA = {
+      onFinish(callback: (success: boolean) => void): void {
+        callbacks.set('a', callback);
+      },
+    };
+    const transactionB = {
+      onFinish(callback: (success: boolean) => void): void {
+        callbacks.set('b', callback);
+      },
+    };
+
+    provisionSignalValueForRender(value, 2, transactionA);
+    provisionSignalValueForRender(value, 3, transactionB);
+    expect(callbacks.size).toBe(2);
+    expect([value.get(), doubled.get(), node.version]).toEqual([3, 6, 2]);
+
+    for (let index = 0; index < settlements.length; index++) {
+      const [transaction, success] = settlements[index];
+      callbacks.get(transaction)!(success);
+      expect([value.get(), doubled.get(), node.version])
+        .toEqual(intermediate[index]);
+    }
+
+    expect([value.get(), doubled.get(), node.version]).toEqual(final);
+    expect(notifications).toBe(0);
+    detach();
+    expect(signalGraphSnapshot().computedSourceEdges).toBe(beforeEdges);
+  });
 });
 
 describe('signal commit batches', () => {
