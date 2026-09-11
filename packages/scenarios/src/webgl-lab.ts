@@ -147,7 +147,7 @@ async function mountWebGLLab(
         onSphereFocus: recordSphereFocus,
         onCubeTarget: recordCubeTarget,
         onSphereTarget: recordSphereTarget,
-        reportContext: recordContext,
+        onContext: recordContext,
       }),
       { signal: abortController.signal, pixelRatio: 1 },
     );

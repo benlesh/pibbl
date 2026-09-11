@@ -37,6 +37,7 @@ export type {
 export type {
   CRCHitTestOutput,
 } from './lib/events/paint-entry.js';
+export { hasCRCEventHandler } from './lib/events/event-definitions.js';
 
 import type {
   CRCBackendEventTargetOptions,

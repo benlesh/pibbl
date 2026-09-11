@@ -17,14 +17,38 @@ import learningWebGLSource from '../../scenarios/src/learning/composition/webgl-
 import webglLabSource from '../../scenarios/src/webgl-lab.example.tsx?raw';
 import {
   clickLogicalPoint,
+  penDownLogicalPoint,
+  penUpLogicalPoint,
   pressKey,
-  pressPenLogicalPoint,
   tab,
-  tapTouchLogicalPoint,
+  touchEndLogicalPoint,
+  touchStartLogicalPoint,
 } from './support/user-input';
 import { expectVisualMatch } from './visual-compare';
 
 const activeControllers = new Set<ScenarioController<WebGLLabState>>();
+
+function pixelSignature(canvas: HTMLCanvasElement): number {
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('The WebGL laboratory Canvas has no 2D context.');
+  const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+  let hash = 2166136261;
+  for (const value of pixels) {
+    hash ^= value;
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function pixelAt(
+  canvas: HTMLCanvasElement,
+  x: number,
+  y: number,
+): readonly number[] {
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('The WebGL laboratory Canvas has no 2D context.');
+  return [...context.getImageData(x, y, 1, 1).data];
+}
 
 afterEach(async () => {
   for (const controller of activeControllers) await controller.dispose();
@@ -221,14 +245,20 @@ describe('public WebGL island scenarios', () => {
     const before = document.createElement('button');
     canvas.before(before);
 
-    await pressPenLogicalPoint(canvas, WEBGL_LAB_PROBES.cube);
+    await penDownLogicalPoint(canvas, WEBGL_LAB_PROBES.cube);
     expect(controller.getState()).toMatchObject({
       lastTarget: 'cube',
-      cubeSelections: 1,
+      cubeSelections: 0,
     });
+    await penUpLogicalPoint(canvas, WEBGL_LAB_PROBES.cube);
+    expect(controller.getState().cubeSelections).toBe(1);
 
-    await tapTouchLogicalPoint(canvas, WEBGL_LAB_PROBES.sphere);
-    expect(controller.getState().lastTarget).toBe('sphere');
+    await touchStartLogicalPoint(canvas, WEBGL_LAB_PROBES.sphere);
+    expect(controller.getState()).toMatchObject({
+      lastTarget: 'sphere',
+      sphereSelections: 0,
+    });
+    await touchEndLogicalPoint(canvas);
 
     await controller.perform('show-focus');
     before.focus();
@@ -245,32 +275,46 @@ describe('public WebGL island scenarios', () => {
   });
 
   it('changes camera, rotation, animation angle, and context generation deterministically', async () => {
-    const { controller } = await mountWebGLLab();
+    const { canvas, controller } = await mountWebGLLab();
     const initialGeneration = controller.getState().contextGeneration;
+    const defaultCameraPixels = pixelSignature(canvas);
 
     await controller.perform('change-camera');
     expect(controller.getState()).toMatchObject({
       mode: 'mixed-order',
       revision: 1,
     });
+    expect(pixelSignature(canvas)).not.toBe(defaultCameraPixels);
+
+    await controller.perform('show-transforms');
+    const initialTransformPixels = pixelSignature(canvas);
     await controller.perform('rotate-scene');
     expect(controller.getState()).toMatchObject({
       mode: 'transforms',
-      revision: 2,
+      revision: 3,
     });
+    expect(pixelSignature(canvas)).not.toBe(initialTransformPixels);
+
     await controller.perform('show-animation');
+    const initialAnimationPixels = pixelSignature(canvas);
     await controller.perform('advance-animation');
     expect(controller.getState()).toMatchObject({
       mode: 'animation',
-      revision: 4,
+      revision: 5,
       animationAngle: 30,
     });
+    expect(pixelSignature(canvas)).not.toBe(initialAnimationPixels);
 
     await controller.perform('restore-context');
     expect(controller.getState()).toMatchObject({
       mode: 'context-restored',
-      revision: 5,
+      revision: 6,
       contextGeneration: initialGeneration + 1,
+    });
+    await clickLogicalPoint(canvas, WEBGL_LAB_PROBES.cube);
+    expect(controller.getState()).toMatchObject({
+      lastTarget: 'cube',
+      cubeSelections: 1,
     });
   });
 
@@ -278,6 +322,10 @@ describe('public WebGL island scenarios', () => {
     const { canvas, controller } = await mountWebGLLab();
     await controller.perform('show-filtered');
     await controller.settled();
+
+    const background = pixelAt(canvas, 400, 150);
+    expect(pixelAt(canvas, 359, 150)).not.toEqual(background);
+    expect(pixelAt(canvas, 360, 150)).toEqual(background);
 
     await expectVisualMatch({
       element: canvas,

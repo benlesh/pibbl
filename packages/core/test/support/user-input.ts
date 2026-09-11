@@ -65,6 +65,14 @@ export async function pressPenLogicalPoint(
   canvas: HTMLCanvasElement,
   point: MousePoint,
 ): Promise<void> {
+  await penDownLogicalPoint(canvas, point);
+  await penUpLogicalPoint(canvas, point);
+}
+
+export async function penDownLogicalPoint(
+  canvas: HTMLCanvasElement,
+  point: MousePoint,
+): Promise<void> {
   const position = logicalScreenPoint(canvas, point);
   await cdp().send('Input.dispatchMouseEvent', {
     type: 'mousePressed',
@@ -74,6 +82,13 @@ export async function pressPenLogicalPoint(
     clickCount: 1,
     pointerType: 'pen',
   });
+}
+
+export async function penUpLogicalPoint(
+  canvas: HTMLCanvasElement,
+  point: MousePoint,
+): Promise<void> {
+  const position = logicalScreenPoint(canvas, point);
   await cdp().send('Input.dispatchMouseEvent', {
     type: 'mouseReleased',
     x: position.x,
@@ -88,11 +103,24 @@ export async function tapTouchLogicalPoint(
   canvas: HTMLCanvasElement,
   point: MousePoint,
 ): Promise<void> {
+  await touchStartLogicalPoint(canvas, point);
+  await touchEndLogicalPoint(canvas);
+}
+
+export async function touchStartLogicalPoint(
+  canvas: HTMLCanvasElement,
+  point: MousePoint,
+): Promise<void> {
   const position = logicalScreenPoint(canvas, point);
   await cdp().send('Input.dispatchTouchEvent', {
     type: 'touchStart',
     touchPoints: [{ x: position.x, y: position.y, id: 1 }],
   });
+}
+
+export async function touchEndLogicalPoint(
+  _canvas: HTMLCanvasElement,
+): Promise<void> {
   await cdp().send('Input.dispatchTouchEvent', {
     type: 'touchEnd',
     touchPoints: [],

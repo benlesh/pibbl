@@ -68,7 +68,7 @@ export const WEBGL_LAB_PROBES = {
   clippedAway: { x: 292, y: 150 },
   layeredCube: { x: 240, y: 150 },
   filteredSource: { x: 225, y: 150 },
-  filteredShadowOnly: { x: 360, y: 150 },
+  filteredShadowOnly: { x: 380, y: 150 },
   focusCube: { x: 183, y: 150 },
   focusSphere: { x: 292, y: 150 },
 } as const satisfies Readonly<Record<string, WebGLLabPoint>>;
@@ -86,16 +86,16 @@ interface WebGLLabSceneProps {
   readonly onSphereFocus: () => void;
   readonly onCubeTarget: () => void;
   readonly onSphereTarget: () => void;
-  readonly reportContext: (context: CRCWebGLContext) => void;
+  readonly onContext: (context: CRCWebGLContext) => void;
 }
 
 interface ContextReporterProps {
-  readonly reportContext: (context: CRCWebGLContext) => void;
+  readonly onContext: (context: CRCWebGLContext) => void;
 }
 
 const ContextReporter = defineWebGLPrimitive<ContextReporterProps, {}>(
   function renderContextReporter(props, _style, context) {
-    props.reportContext(context);
+    props.onContext(context);
   },
   { hit: { kind: 'none' } },
 );
@@ -124,9 +124,7 @@ function standardObjects(props: WebGLLabSceneProps): CRCNode {
         }}
         onClick={props.onCubeSelection}
         onFocus={props.onCubeFocus}
-        onMouseDown={props.onCubeTarget}
         onPointerDown={props.onCubeTarget}
-        onTouchStart={props.onCubeTarget}
       />
       <Sphere
         keyboardFocusable
@@ -138,13 +136,11 @@ function standardObjects(props: WebGLLabSceneProps): CRCNode {
         }}
         onClick={props.onSphereSelection}
         onFocus={props.onSphereFocus}
-        onMouseDown={props.onSphereTarget}
-        onPointerDown={props.onSphereTarget}
         onTouchStart={props.onSphereTarget}
       />
       <ContextReporter
         pointerEvents="none"
-        reportContext={props.reportContext}
+        onContext={props.onContext}
       />
     </>
   );
@@ -197,7 +193,7 @@ function modeContent(props: WebGLLabSceneProps): CRCNode {
           />
           <ContextReporter
             pointerEvents="none"
-            reportContext={props.reportContext}
+            onContext={props.onContext}
           />
         </>,
       );
@@ -219,7 +215,7 @@ function modeContent(props: WebGLLabSceneProps): CRCNode {
           </Group3D>
           <ContextReporter
             pointerEvents="none"
-            reportContext={props.reportContext}
+            onContext={props.onContext}
           />
         </>,
       );
@@ -246,7 +242,7 @@ function modeContent(props: WebGLLabSceneProps): CRCNode {
                 />
                 <ContextReporter
                   pointerEvents="none"
-                  reportContext={props.reportContext}
+                  onContext={props.onContext}
                 />
               </>,
               false,
@@ -258,7 +254,7 @@ function modeContent(props: WebGLLabSceneProps): CRCNode {
       );
     case 'filtered':
       return (
-        <Clip style={{ d: rectanglePath(20, 20, 420, 260) }}>
+        <Clip style={{ d: rectanglePath(20, 20, 340, 260) }}>
           {island(props, standardObjects(props), true)}
         </Clip>
       );

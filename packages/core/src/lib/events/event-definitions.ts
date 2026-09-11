@@ -1,5 +1,6 @@
 import type {
   CRCEventCapturePropName,
+  CRCEventHandlers,
   CRCEventPropName,
   CRCEventType,
 } from './types.js';
@@ -81,6 +82,17 @@ export const CRC_EVENT_DEFINITIONS = Object.freeze([
 export const CRC_EVENT_TYPES = Object.freeze(
   CRC_EVENT_DEFINITIONS.map(definition => definition.type),
 );
+
+/** Returns whether an object supplies any supported CRC event callback. */
+export function hasCRCEventHandler(
+  handlers: Readonly<Record<PropertyKey, unknown>> | CRCEventHandlers,
+): boolean {
+  return CRC_EVENT_DEFINITIONS.some(
+    definition =>
+      typeof handlers[definition.prop] === 'function' ||
+      typeof handlers[definition.captureProp] === 'function',
+  );
+}
 
 const definitionsByType = new Map<CRCEventType, CRCEventDefinition>(
   CRC_EVENT_DEFINITIONS.map(definition => [definition.type, definition]),

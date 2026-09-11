@@ -331,6 +331,27 @@ describe('defineWebGLPrimitive', () => {
     expect(render).not.toHaveBeenCalled();
     mounted.dispose();
   });
+
+  it('allows ordinary on-prefixed callbacks on decorative primitives', () => {
+    const onContext = vi.fn();
+    const Decorative = defineWebGLPrimitive<
+      { readonly onContext: () => void },
+      CRCWebGLTransformStyle
+    >(
+      function renderDecorativeCallback(props) {
+        props.onContext();
+      },
+      { hit: { kind: 'none' } },
+    );
+    const root = (
+      <Decorative pointerEvents="none" onContext={onContext} />
+    );
+    const mounted = mountWebGL(root);
+
+    expect(() => executeBackendCRC(mounted.mount, root, 5)).not.toThrow();
+    expect(onContext).toHaveBeenCalledOnce();
+    mounted.dispose();
+  });
 });
 
 function mountWebGL(root: CRCNode) {

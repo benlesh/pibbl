@@ -1,5 +1,6 @@
 import {
   createBackendToken,
+  hasCRCEventHandler,
   type CRCBackendDriver,
   type CRCBackendPrimitiveProgram,
 } from '@crc/core/internal';
@@ -250,9 +251,6 @@ function assertDecorativeNonParticipation(
   props: Readonly<Record<PropertyKey, unknown>>,
   style: Readonly<SystemStyle>,
 ): void {
-  const hasEventHandler = Object.entries(props).some(
-    ([name, value]) => /^on[A-Z]/.test(name) && typeof value === 'function',
-  );
   const styleRecord = style as Readonly<Record<PropertyKey, unknown>>;
   if (
     (props.pointerEvents !== undefined && props.pointerEvents !== 'none') ||
@@ -260,7 +258,7 @@ function assertDecorativeNonParticipation(
     props.keyboardNavigationBounds !== undefined ||
     props.cursor !== undefined ||
     styleRecord.cursor !== undefined ||
-    hasEventHandler
+    hasCRCEventHandler(props)
   ) {
     throw new Error(
       `${componentName} is decorative (hit kind "none"); event, focus, and ` +
