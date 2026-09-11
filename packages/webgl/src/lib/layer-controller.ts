@@ -4,6 +4,7 @@ import {
   haveSameLayerNodeTree,
   mountBackendCRC,
   registerNestedInteractionResolver,
+  retainBackendMountRoot,
   snapshotLayerNodeTree,
   type CRCBackendMount,
   type CRCHitTestOutput,
@@ -107,8 +108,11 @@ export class WebGLLayerController {
   private readonly mount: CRCBackendMount;
   private currentCamera: ResolvedWebGLCamera;
   private currentSurface: WebGLLayerSurface;
+  private retainedCamera: ResolvedWebGLCamera;
+  private retainedSurface: WebGLLayerSurface;
   private mountedRoot: CRCNode;
   private renderedTree: LayerNodeSnapshot | undefined;
+  private restorationTree: LayerNodeSnapshot | undefined;
   private cacheInvalidated = false;
   private contextGenerationValue = 1;
   private pending: WebGLLayerGeneration | undefined;
@@ -133,6 +137,8 @@ export class WebGLLayerController {
       surface.logicalWidth,
       surface.logicalHeight,
     );
+    this.retainedCamera = this.currentCamera;
+    this.retainedSurface = surface;
     this.canvas = createOffscreenCanvas(surface);
     this.gl = acquireWebGL2Context(this.canvas);
     this.driver = createWebGLBackend({
@@ -202,7 +208,6 @@ export class WebGLLayerController {
     force: boolean,
   ): void {
     this.requireActive();
-    if (!this.contextAvailable) return;
     const epoch = this.beginOperation('render');
     try {
       validateSurface(surface);
@@ -211,6 +216,14 @@ export class WebGLLayerController {
         surface.logicalWidth,
         surface.logicalHeight,
       );
+      this.mountedRoot = root;
+      this.retainedCamera = nextCamera;
+      this.retainedSurface = surface;
+      if (!this.contextAvailable) {
+        retainBackendMountRoot(this.mount, root);
+        this.cacheInvalidated = true;
+        return;
+      }
       const hadPending = this.pending !== undefined;
       this.releasePending();
 
@@ -231,13 +244,17 @@ export class WebGLLayerController {
             this.driver.ownedResourceGeneration;
         this.cacheInvalidated = true;
         this.renderedTree = undefined;
+        this.restorationTree = undefined;
         if (canDeferFailedRetry) return;
       }
 
       if (this.driver.hasCompletedFrame()) {
         const completedFrame = this.driver.takeCompletedFrame();
         if (
-          haveSameLayerNodeTree(this.renderedTree, root) &&
+          haveSameLayerNodeTree(
+            this.restorationTree ?? this.renderedTree,
+            root,
+          ) &&
           haveSameCamera(this.currentCamera, nextCamera) &&
           haveSameSurface(this.currentSurface, surface) &&
           completedFrame.contextGeneration === this.contextGenerationValue &&
@@ -247,6 +264,7 @@ export class WebGLLayerController {
           this.publishCompletedFrame(root, surface, completedFrame, epoch);
           return;
         }
+        this.restorationTree = undefined;
       }
 
       const committed = this.committed;
@@ -266,7 +284,7 @@ export class WebGLLayerController {
         this.resizeSurface(surface);
       }
       this.currentCamera = nextCamera;
-      this.mountedRoot = root;
+      this.restorationTree = undefined;
       executeBackendCRC(this.mount, root, timestamp);
       this.requireCurrentOperation('render', epoch);
       this.publishCompletedFrame(
@@ -416,6 +434,7 @@ export class WebGLLayerController {
     this.pending = undefined;
     this.committed = undefined;
     this.renderedTree = undefined;
+    this.restorationTree = undefined;
     this.cacheInvalidated = true;
     cancelBackendMountFrame(this.mount);
     suspendGenerationParticipation(pending, committed);
@@ -428,9 +447,20 @@ export class WebGLLayerController {
 
   private readonly handleContextRestoration = (): void => {
     if (this.disposed || this.contextAvailable) return;
+    if (!haveSameSurface(this.currentSurface, this.retainedSurface)) {
+      try {
+        this.resizeSurface(this.retainedSurface);
+      } catch (error) {
+        runCleanup(() => { throw error; });
+        return;
+      }
+    }
+    this.currentCamera = this.retainedCamera;
+    retainBackendMountRoot(this.mount, this.mountedRoot);
+    this.restorationTree = snapshotLayerNodeTree(this.mountedRoot);
+    this.driver.restoreContext();
     this.contextAvailable = true;
     this.cacheInvalidated = true;
-    this.renderedTree = snapshotLayerNodeTree(this.mountedRoot);
     runCleanup(() => this.mount.requestFrame(true));
   };
 
@@ -522,6 +552,7 @@ export class WebGLLayerController {
       });
       this.requireCurrentOperation('render', epoch);
       this.renderedTree = retainedTree;
+      this.restorationTree = undefined;
       this.cacheInvalidated = false;
       this.pending = candidate;
       bitmap = undefined;

@@ -1,5 +1,6 @@
 import {
   crc,
+  crcState,
   createElement,
   type CRCController,
 } from '@crc/core';
@@ -461,6 +462,223 @@ describe('WebGLLayer context lifecycle', () => {
       { x: 0, y: 0, width: 20, height: 10 },
     );
     expect(controller.committedGeneration).toBe(1);
+    controller.dispose();
+  });
+
+  it('does not traverse or acquire resources from private state updates while unavailable', async () => {
+    const initial = bitmap('state-initial');
+    const restored = bitmap('state-restored');
+    let glCalls = 0;
+    const platform = installContextPlatform([initial, restored], {
+      onGLCall() {
+        glCalls += 1;
+      },
+    });
+    const parentCanvas = mountParent();
+    const callbacks: FrameRequestCallback[] = [];
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
+      callbacks.push(callback);
+      return callbacks.length;
+    });
+    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined);
+    let setValue: ((value: number | ((old: number) => number)) => void) |
+      undefined;
+    let traversals = 0;
+    const resourceCreates: number[] = [];
+    const resourceReleases: Array<{
+      readonly generation: number;
+      readonly contextLost: boolean;
+    }> = [];
+    const Stateful = defineWebGLPrimitive<{}, {}>(function renderLostState(
+      _props,
+      _style,
+      context,
+    ) {
+      traversals += 1;
+      const [value, setter] = crcState(0);
+      setValue = setter;
+      context.resources.use(
+        () => {
+          context.gl.createBuffer();
+          resourceCreates.push(context.contextGeneration);
+          return { generation: context.contextGeneration };
+        },
+        (resource, releaseContext) => {
+          resourceReleases.push({
+            generation: resource.generation,
+            contextLost: releaseContext.contextLost,
+          });
+          setter(old => old + 1);
+        },
+        [value],
+      );
+    }, { hit: { kind: 'custom', resolve: () => 1 } });
+    const root = createElement(Stateful, { onClick: () => undefined });
+    const surface = resolveWebGLLayerSurface(20, 10, { x: 1, y: 1 });
+    const controller = new WebGLLayerController(
+      parentCanvas,
+      root,
+      undefined,
+      surface,
+    );
+    controller.renderUpdatedChild(root, undefined, surface, 1);
+    controller.composite(
+      { drawImage() {} } as unknown as CanvasRenderingContext2D,
+      { x: 0, y: 0, width: 20, height: 10 },
+    );
+    const initialGLCalls = glCalls;
+
+    platform.contextLost = true;
+    platform.canvas.dispatchEvent(
+      new Event('webglcontextlost', { cancelable: true }),
+    );
+    setValue?.(old => old + 1);
+    expect(callbacks).toHaveLength(1);
+    callbacks[0]!(2);
+
+    const { getCRCInstance } = await import(
+      '../../../core/src/lib/global-state.js'
+    );
+    expect(traversals).toBe(1);
+    expect(glCalls).toBe(initialGLCalls);
+    expect(resourceCreates).toEqual([1]);
+    expect(resourceReleases).toEqual([{
+      generation: 1,
+      contextLost: true,
+    }]);
+    expect(getCRCInstance(parentCanvas).eventRoot.targets.size).toBe(0);
+    expect(controller.renderedGeneration).toBe(1);
+    expect(controller.candidateGeneration).toBeUndefined();
+    expect(controller.committedGeneration).toBeUndefined();
+
+    platform.contextLost = false;
+    platform.canvas.dispatchEvent(new Event('webglcontextrestored'));
+    expect(callbacks).toHaveLength(2);
+    callbacks[1]!(3);
+    expect(traversals).toBe(2);
+    expect(resourceCreates).toEqual([1, 2]);
+    controller.renderRetainedChild(root, undefined, surface, 3);
+    controller.composite(
+      { drawImage() {} } as unknown as CanvasRenderingContext2D,
+      { x: 0, y: 0, width: 20, height: 10 },
+    );
+    expect(controller.committedGeneration).toBe(2);
+    controller.dispose();
+  });
+
+  it('restores exactly the latest parent root, camera, and surface once', () => {
+    const initial = bitmap('parent-initial');
+    const restored = bitmap('parent-restored');
+    const platform = installContextPlatform([initial, restored]);
+    const parentCanvas = mountParent();
+    const callbacks: FrameRequestCallback[] = [];
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
+      callbacks.push(callback);
+      return callbacks.length;
+    });
+    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined);
+    let oldTraversals = 0;
+    let currentTraversals = 0;
+    const oldResourceCreates: number[] = [];
+    const currentSnapshots: unknown[] = [];
+    const Old = defineWebGLPrimitive<{}, {}>(function renderRemovedChild(
+      _props,
+      _style,
+      context,
+    ) {
+      oldTraversals += 1;
+      context.resources.use(
+        () => {
+          oldResourceCreates.push(context.contextGeneration);
+          return {};
+        },
+        () => undefined,
+        [],
+      );
+    }, { hit: { kind: 'none' } });
+    const Current = defineWebGLPrimitive<{}, {}>(function renderCurrentChild(
+      _props,
+      _style,
+      context,
+    ) {
+      currentTraversals += 1;
+      currentSnapshots.push({
+        generation: context.contextGeneration,
+        camera: context.camera.descriptor,
+        logicalViewport: context.logicalViewport,
+        backingViewport: context.backingViewport,
+      });
+    }, { hit: { kind: 'none' } });
+    const oldRoot = createElement(Old, { key: 'old', pointerEvents: 'none' });
+    const currentRoot = createElement(Current, {
+      key: 'current',
+      pointerEvents: 'none',
+    });
+    const oldSurface = resolveWebGLLayerSurface(20, 10, { x: 1, y: 1 });
+    const currentSurface = resolveWebGLLayerSurface(30, 12, { x: 2, y: 3 });
+    const currentCamera = {
+      type: 'perspective' as const,
+      position: [3, 4, 9] as const,
+      lookAt: [1, 2, 0] as const,
+      up: [0, 1, 0] as const,
+      fieldOfViewDegrees: 55,
+      near: 0.25,
+      far: 500,
+    };
+    const controller = new WebGLLayerController(
+      parentCanvas,
+      oldRoot,
+      undefined,
+      oldSurface,
+    );
+    controller.renderUpdatedChild(oldRoot, undefined, oldSurface, 1);
+    controller.composite(
+      { drawImage() {} } as unknown as CanvasRenderingContext2D,
+      { x: 0, y: 0, width: 20, height: 10 },
+    );
+
+    platform.contextLost = true;
+    platform.canvas.dispatchEvent(
+      new Event('webglcontextlost', { cancelable: true }),
+    );
+    controller.renderRetainedChild(
+      currentRoot,
+      currentCamera,
+      currentSurface,
+      2,
+    );
+    expect(callbacks).toHaveLength(0);
+
+    platform.contextLost = false;
+    platform.canvas.dispatchEvent(new Event('webglcontextrestored'));
+    expect(callbacks).toHaveLength(1);
+    callbacks[0]!(3);
+
+    expect(oldTraversals).toBe(1);
+    expect(oldResourceCreates).toEqual([1]);
+    expect(currentTraversals).toBe(1);
+    expect(currentSnapshots).toEqual([{
+      generation: 2,
+      camera: currentCamera,
+      logicalViewport: { width: 30, height: 12 },
+      backingViewport: { width: 60, height: 36 },
+    }]);
+    expect(platform.canvas.width).toBe(60);
+    expect(platform.canvas.height).toBe(36);
+
+    controller.renderRetainedChild(
+      currentRoot,
+      currentCamera,
+      currentSurface,
+      3,
+    );
+    expect(currentTraversals).toBe(1);
+    expect(platform.transferCount).toBe(2);
+    controller.composite(
+      { drawImage() {} } as unknown as CanvasRenderingContext2D,
+      { x: 0, y: 0, width: 30, height: 12 },
+    );
+    expect(controller.committedGeneration).toBe(2);
     controller.dispose();
   });
 });

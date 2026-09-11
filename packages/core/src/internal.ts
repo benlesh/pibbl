@@ -66,7 +66,7 @@ import {
 } from './lib/hooks/hook-slot.js';
 import { getCurrentWorldTransform } from './lib/render-target.js';
 import { getSurfaceSnapshot } from './lib/surface/transform.js';
-import type { Canvas } from './lib/types.js';
+import type { Canvas, CRCNode } from './lib/types.js';
 import type { CRCInteractionLayer } from './lib/types.js';
 import { update } from './lib/update.js';
 import { runTeardown } from './lib/teardowns.js';
@@ -174,6 +174,14 @@ export function cancelBackendMountFrame(mount: CRCBackendMount): void {
   if (frameId !== undefined) {
     runTeardown(() => cancelAnimationFrame(frameId));
   }
+}
+
+/** Retains a private backend's latest root without scheduling or traversing it. */
+export function retainBackendMountRoot(
+  mount: CRCBackendMount,
+  root: CRCNode,
+): void {
+  backendMountInstance(mount).pendingRoot = root;
 }
 
 /** Registers work that runs after this component's rendered descendants. */

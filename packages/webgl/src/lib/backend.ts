@@ -45,6 +45,7 @@ export interface WebGLBackendDriver
   takeFailedFrameTimestamp(): number | undefined;
   takeCompletedFrame(): WebGLCompletedFrame;
   invalidateContext(generation: number): void;
+  restoreContext(): void;
 }
 
 /** Creates the package-private backend driver owned by one WebGLLayer. */
@@ -61,6 +62,7 @@ export function createWebGLBackend(
   let failedFrameTimestamp: number | undefined;
   let renderedGeneration = 0;
   let ownedResourceGeneration = 0;
+  let contextAvailable = true;
   const resourceRegistry = new WebGLResourceGenerationRegistry();
   const invalidContextGenerations = new Set<number>();
   return {
@@ -74,7 +76,10 @@ export function createWebGLBackend(
     },
     beginFrame(frameInput) {
       const contextGeneration = options.getContextGeneration();
-      if (invalidContextGenerations.has(contextGeneration)) return undefined;
+      if (
+        !contextAvailable ||
+        invalidContextGenerations.has(contextGeneration)
+      ) return undefined;
       if (
         gpuResources === undefined ||
         gpuResourceGeneration !== contextGeneration
@@ -200,6 +205,7 @@ export function createWebGLBackend(
       return completed;
     },
     invalidateContext(generation) {
+      contextAvailable = false;
       invalidContextGenerations.add(generation);
       resourceRegistry.invalidateGeneration(generation);
       if (
@@ -219,7 +225,11 @@ export function createWebGLBackend(
       }
       failedFrameTimestamp = undefined;
     },
+    restoreContext() {
+      contextAvailable = true;
+    },
     dispose() {
+      contextAvailable = false;
       completedFrame = undefined;
       failedFrameTimestamp = undefined;
       resourceRegistry.dispose(isContextLost);
