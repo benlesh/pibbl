@@ -89,6 +89,7 @@ const expectedInternal = [
   'getCurrentBackendHostCanvas',
   'getCurrentFrameTimestamp',
   'getCurrentSurfaceDensity',
+  'hasCRCEventHandler',
   'haveSameLayerNodeTree',
   'isBackendEventTargetLive',
   'materializeRetainedLayerChildren',
