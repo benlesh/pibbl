@@ -207,6 +207,27 @@ describe('seekable animation program evaluation', () => {
     expect(result.terminal.duration).toBe(100);
   });
 
+  it('fails closed when an omitted spring shifts parallel same-output writers into overlap', () => {
+    const y = signal(10, { debugName: 'duration source' });
+    const x = signal(0, { debugName: 'shared output' });
+    const program = parallel(
+      sequence(
+        track(y, spring({ to: 10 })),
+        track(x, tween({ from: 0, to: 100, duration: 100 })),
+      ),
+      sequence(
+        wait(50),
+        track(x, tween({ from: 0, to: 200, duration: 100 })),
+      ),
+    );
+
+    expect(() => activateProgram(program, {})).toThrow(
+      /activation-dependent.*writer.*shared output/iu,
+    );
+    expect(x.get()).toBe(0);
+    expect(y.get()).toBe(10);
+  });
+
   it('maps all finite repeat directions at boundaries with zero-based iterations', () => {
     const cases = [
       { direction: 'normal' as const, time: 0, want: 0 },
@@ -248,6 +269,67 @@ describe('seekable animation program evaluation', () => {
     }))).toEqual([
       { time: 100, iteration: 1 },
       { time: 200, iteration: 2 },
+    ]);
+  });
+
+  it('samples every repeat direction at start, interiors, boundaries, and final endpoint', () => {
+    const cases = [
+      {
+        direction: 'normal' as const,
+        values: [0, 5, 10, 0, 5, 10, 0, 5, 10, 10],
+      },
+      {
+        direction: 'reverse' as const,
+        values: [10, 10, 5, 10, 10, 5, 10, 10, 5, 0],
+      },
+      {
+        direction: 'alternate' as const,
+        values: [0, 5, 10, 10, 10, 5, 0, 5, 10, 10],
+      },
+      {
+        direction: 'alternate-reverse' as const,
+        values: [10, 10, 5, 0, 5, 10, 10, 10, 5, 0],
+      },
+    ];
+    const times = [0, 25, 75, 100, 125, 175, 200, 225, 275, 300];
+
+    for (const { direction, values } of cases) {
+      for (let index = 0; index < times.length; index++) {
+        const output = signal(-1);
+        const child = sequence(
+          track(output, tween({ from: 0, to: 10, duration: 50 })),
+          wait(50),
+        );
+        const program = repeat(child, { iterations: 3, direction });
+        expect(committedValueAt(program, output, times[index]!)).toBe(values[index]);
+      }
+    }
+  });
+
+  it('keeps nested omitted starts distinct by outer and inner repeat iteration', () => {
+    const output = signal(0);
+    const increment = defineAnimation<number>({
+      duration: 10,
+      sample: ({ initialValue, progress }) => initialValue + 10 * progress,
+    });
+    const program = repeat(repeat(sequence(
+      track(output, increment),
+      wait(1),
+    ), { iterations: 2 }), { iterations: 2 });
+    const activation = activateProgram(program, {});
+
+    const result = evaluateAt(activation, 44);
+
+    expect(result.batch.read(output)).toBe(40);
+    expect(getProgramActivationRecord(activation).trackStarts.map(start => ({
+      path: start.programPath,
+      iterations: start.repeatIterations,
+      initialValue: start.initialValue,
+    }))).toEqual([
+      { path: [0, 0, 0], iterations: [0, 0], initialValue: 0 },
+      { path: [0, 0, 0], iterations: [0, 1], initialValue: 10 },
+      { path: [0, 0, 0], iterations: [1, 0], initialValue: 20 },
+      { path: [0, 0, 0], iterations: [1, 1], initialValue: 30 },
     ]);
   });
 
@@ -369,6 +451,86 @@ describe('seekable animation program evaluation', () => {
     expect(result.batch.read(output)).toBe(7);
     expect(samples).toBe(1);
     expect(result.milestones).toEqual([]);
+  });
+
+  it('samples reverse advance and seek only at the requested destination', () => {
+    function fixture(throwAtTerminal: boolean) {
+      const output = signal(0);
+      const samples: number[] = [];
+      const program = track(output, defineAnimation({
+        duration: 100,
+        sample: ({ progress }) => {
+          samples.push(progress);
+          if (throwAtTerminal && progress === 1) throw new Error('terminal only');
+          return progress * 10;
+        },
+      }));
+      return { activation: activateProgram(program, {}), output, samples };
+    }
+
+    const advanced = fixture(false);
+    const advancedBatch = createSignalCommitBatch();
+    const advancedResult = evaluateProgram(advanced.activation, {
+      previousTime: 100,
+      time: 50,
+      direction: 'reverse',
+      frameId: 2,
+      writer,
+      batch: advancedBatch,
+    });
+    expect(advancedResult.batch.read(advanced.output)).toBe(5);
+    expect(advanced.samples).toEqual([0.5]);
+
+    const sought = fixture(true);
+    const seekBatch = createSignalCommitBatch();
+    const seekResult = seekProgram(sought.activation, {
+      previousTime: 100,
+      time: 50,
+      direction: 'reverse',
+      frameId: 3,
+      writer,
+      batch: seekBatch,
+    });
+    expect(seekResult.batch.read(sought.output)).toBe(5);
+    expect(sought.samples).toEqual([0.5]);
+  });
+
+  it('rolls back caller staging and activation starts when a later sampler fails', () => {
+    const first = signal(0);
+    const second = signal(0);
+    const program = sequence(
+      track(first, tween({ to: 10, duration: 10 })),
+      track(second, defineAnimation({
+        duration: 10,
+        sample: () => {
+          throw new Error('later sample failed');
+        },
+      })),
+    );
+    const activation = activateProgram(program, {});
+    evaluateAt(activation, 5).batch.clear();
+    const before = getProgramActivationRecord(activation).trackStarts;
+    expect(before).toEqual([
+      expect.objectContaining({ programPath: [0], initialValue: 0 }),
+    ]);
+    const callerWriter = {};
+    const batch = createSignalCommitBatch();
+    batch.stage(first, 99, callerWriter);
+
+    expect(() => evaluateProgram(activation, {
+      previousTime: 0,
+      time: 15,
+      direction: 'forward',
+      frameId: 1,
+      writer,
+      batch,
+    })).toThrow('later sample failed');
+
+    expect(batch.read(first)).toBe(99);
+    expect(batch.read(second)).toBe(0);
+    expect(first.get()).toBe(0);
+    expect(second.get()).toBe(0);
+    expect(getProgramActivationRecord(activation).trackStarts).toEqual(before);
   });
 
   it('fails explicitly when seekable evaluation reaches deferred stateful work', () => {

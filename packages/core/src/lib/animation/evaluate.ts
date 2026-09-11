@@ -11,6 +11,7 @@ import {
   type SeekableDefinitionActivation,
 } from './definition.js';
 import {
+  assertProgramActivationWriterSafety,
   getExactSeekableProgramDuration,
   getProgramRecord,
 } from './program.js';
@@ -213,8 +214,15 @@ function knownDuration(
   path: readonly number[],
   repeatIterations: readonly number[],
 ): number | undefined {
-  return state.durations.get(instanceKey(path, repeatIterations)) ??
-    getExactSeekableProgramDuration(program);
+  const key = instanceKey(path, repeatIterations);
+  const resolved = state.durations.get(key);
+  if (resolved !== undefined) return resolved;
+  const record = getProgramRecord(program);
+  if (record.kind === 'track') {
+    const start = state.starts.get(key);
+    if (start !== undefined) return start.definition.duration;
+  }
+  return getExactSeekableProgramDuration(program);
 }
 
 function sampleTrack(
@@ -337,18 +345,26 @@ function sampleNode(
       record.direction === 'alternate' && iteration % 2 === 1;
     let duration: number;
     if (reversed) {
-      const terminal = sampleNode(
-        child,
-        Number.POSITIVE_INFINITY,
-        state,
-        childPath,
-        iterationPath,
-      );
-      if (!terminal.atEnd || terminal.duration === undefined ||
-        terminal.duration === Number.POSITIVE_INFINITY) {
-        throw new TypeError('A reversed repeat child must have a finite seekable duration.');
+      const exactDuration = knownDuration(child, state, childPath, iterationPath);
+      if (exactDuration === undefined) {
+        const terminal = sampleNode(
+          child,
+          Number.POSITIVE_INFINITY,
+          state,
+          childPath,
+          iterationPath,
+        );
+        if (!terminal.atEnd || terminal.duration === undefined ||
+          terminal.duration === Number.POSITIVE_INFINITY) {
+          throw new TypeError('A reversed repeat child must have a finite seekable duration.');
+        }
+        duration = terminal.duration;
+      } else {
+        if (exactDuration === Number.POSITIVE_INFINITY) {
+          throw new TypeError('A reversed repeat child must have a finite seekable duration.');
+        }
+        duration = exactDuration;
       }
-      duration = terminal.duration;
       sampleNode(
         child,
         duration - Math.min(remaining, duration),
@@ -584,20 +600,20 @@ function evaluate(
     Math.max(0, input.previousTime);
   const normalizedInput = { ...input, time, previousTime };
   const horizon = Math.max(time, previousTime ?? time);
-  const horizonStarts = rebuildStarts ? new Map<string, InternalTrackStart>() :
+  const destinationStarts = rebuildStarts ? new Map<string, InternalTrackStart>() :
     new Map(record.starts);
-  const horizonState = createSampleState(record, horizonStarts);
-  const horizonResult = sampleNode(record.program, horizon, horizonState, [], []);
-  const milestones = crossedMilestones(record, normalizedInput, horizon, horizonState);
-
-  let destinationState = horizonState;
-  let destinationResult = horizonResult;
-  if (horizon !== time) {
-    const destinationStarts = rebuildStarts ? new Map<string, InternalTrackStart>() :
-      horizonStarts;
-    destinationState = createSampleState(record, destinationStarts);
-    destinationResult = sampleNode(record.program, time, destinationState, [], []);
+  const destinationState = createSampleState(record, destinationStarts);
+  const destinationResult = sampleNode(record.program, time, destinationState, [], []);
+  let milestoneState = destinationState;
+  if (horizon !== time && rebuildStarts && record.starts.size > 0) {
+    const milestoneStarts = new Map(record.starts);
+    for (const [key, start] of destinationState.starts) milestoneStarts.set(key, start);
+    milestoneState = {
+      ...destinationState,
+      starts: milestoneStarts,
+    };
   }
+  const milestones = crossedMilestones(record, normalizedInput, horizon, milestoneState);
   record.starts = destinationState.starts;
   for (const output of getProgramRecord(record.program).outputs) {
     if (destinationState.writtenOutputs.has(output)) {
@@ -630,6 +646,7 @@ export function activateProgram(
     throw new TypeError('CRC animation registration identity must be an object.');
   }
   const programRecord = getProgramRecord(program);
+  assertProgramActivationWriterSafety(program);
   const snapshots = new WeakMap<object, unknown>();
   const originalValues = new Map<WritableSignal<unknown>, unknown>();
   for (const output of programRecord.outputs) {

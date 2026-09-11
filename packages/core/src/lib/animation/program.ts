@@ -79,6 +79,10 @@ export type ProgramRecord =
 
 const programRecords = new WeakMap<CRCAnimationProgram, ProgramRecord>();
 const exactSeekableDurations = new WeakMap<CRCAnimationProgram, number | undefined>();
+const activationDependentWriterOutputs = new WeakMap<
+  CRCAnimationProgram,
+  ReadonlySet<WritableSignal<unknown>>
+>();
 
 const finite = (milliseconds: number): ProgramDuration => Object.freeze({
   kind: 'finite' as const,
@@ -944,4 +948,87 @@ export function getExactSeekableProgramDuration(
   }
   exactSeekableDurations.set(program, duration);
   return duration;
+}
+
+function dependentWriterOutputs(
+  program: CRCAnimationProgram,
+): ReadonlySet<WritableSignal<unknown>> {
+  const cached = activationDependentWriterOutputs.get(program);
+  if (cached !== undefined) return cached;
+  const record = getProgramRecord(program);
+  const dependent = new Set<WritableSignal<unknown>>();
+  if (record.kind === 'track') {
+    const definition = getDefinitionRecord(record.definition);
+    if (definition.kind === 'spring' && !definition.hasFrom) {
+      dependent.add(record.output);
+    }
+  } else if (record.kind === 'sequence') {
+    let prefixDurationDependsOnActivation = false;
+    for (const child of record.children) {
+      for (const output of dependentWriterOutputs(child)) dependent.add(output);
+      if (prefixDurationDependsOnActivation) {
+        for (const output of getProgramRecord(child).outputs) dependent.add(output);
+      }
+      if (getExactSeekableProgramDuration(child) === undefined) {
+        prefixDurationDependsOnActivation = true;
+      }
+    }
+  } else {
+    for (const child of record.children) {
+      for (const output of dependentWriterOutputs(child)) dependent.add(output);
+    }
+    if (record.kind === 'repeat' &&
+      getExactSeekableProgramDuration(record.children[0]!) === undefined &&
+      (record.iterations > 1 || record.direction !== 'normal')) {
+      for (const output of record.outputs) dependent.add(output);
+    }
+  }
+  activationDependentWriterOutputs.set(program, dependent);
+  return dependent;
+}
+
+function assertActivationWriterSafetyAt(
+  program: CRCAnimationProgram,
+  path: readonly number[],
+): void {
+  const record = getProgramRecord(program);
+  if (record.kind === 'parallel') {
+    for (let firstIndex = 0; firstIndex < record.children.length; firstIndex++) {
+      for (let secondIndex = firstIndex + 1;
+        secondIndex < record.children.length;
+        secondIndex++) {
+        const first = record.children[firstIndex]!;
+        const second = record.children[secondIndex]!;
+        const secondOutputs = getProgramRecord(second).outputs;
+        const firstDependent = dependentWriterOutputs(first);
+        const secondDependent = dependentWriterOutputs(second);
+        const output = getProgramRecord(first).outputs.find(candidate =>
+          secondOutputs.includes(candidate) &&
+          (firstDependent.has(candidate) || secondDependent.has(candidate)),
+        );
+        if (output !== undefined) {
+          const name = getSignalNode(output).debugName ?? '<unnamed signal>';
+          throw new RangeError(
+            `CRC animation activation-dependent writer schedules at parallel paths ` +
+              `${programLabel([...path, firstIndex])} and ` +
+              `${programLabel([...path, secondIndex])} cannot be proven disjoint for ` +
+              `signal "${name}". Use statically timed branches or distinct output signals.`,
+          );
+        }
+      }
+    }
+  }
+  for (let index = 0; index < record.children.length; index++) {
+    assertActivationWriterSafetyAt(record.children[index]!, [...path, index]);
+  }
+}
+
+/**
+ * @internal Fails closed when activation-dependent duration can invalidate a
+ * same-output parallel proof made from construction-time schedule metadata.
+ */
+export function assertProgramActivationWriterSafety(
+  program: CRCAnimationProgram,
+): void {
+  assertActivationWriterSafetyAt(program, []);
 }
