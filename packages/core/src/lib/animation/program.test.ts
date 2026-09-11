@@ -9,6 +9,7 @@ import {
   track,
   tween,
   wait,
+  type CRCAnimationProgram,
   type WritableSignal,
 } from '../../index';
 import { getProgramRecord } from './program';
@@ -18,13 +19,14 @@ describe('immutable animation programs', () => {
     const output = signal(0, { debugName: 'position' });
     const first = wait(10);
     const children = [first];
-    const program = Reflect.apply(sequence, undefined, children);
+    const program = sequence(...children);
     children[0] = wait(20);
 
     expect(Object.isFrozen(program)).toBe(true);
-    expect(getProgramRecord(program).children).not.toBe(children);
     expect(getProgramRecord(program).children).toEqual([first]);
     expect(Object.isFrozen(getProgramRecord(program).children)).toBe(true);
+    expect(() => (getProgramRecord(program).children as CRCAnimationProgram[]).push(wait(1)))
+      .toThrow(TypeError);
     expect(() => getProgramRecord({} as typeof program)).toThrow('CRC animation program');
     expect(() => sequence({} as typeof program)).toThrow('CRC animation program');
     expect(() => track(output, {} as ReturnType<typeof tween>)).toThrow(
@@ -171,6 +173,47 @@ describe('immutable animation programs', () => {
       track(x, tween({ to: 3, duration: 0.5 })),
       wait(3.5),
     ), { iterations, direction: 'reverse' });
+
+    expect(() => parallel(evens, odds)).not.toThrow();
+    expect(() => parallel(evens, multiplesOfFour)).toThrow('overlap');
+  });
+
+  it('proves hole-separated nested repeat frames disjoint exactly', () => {
+    const x = signal(0, { debugName: 'x' });
+    const lhs = repeat(sequence(
+      repeat(sequence(track(x, tween({ to: 1, duration: 0 })), wait(1)), { iterations: 2 }),
+      wait(10),
+    ), { iterations: 2 });
+    const rhs = repeat(sequence(
+      wait(2),
+      track(x, tween({ to: 2, duration: 0 })),
+      wait(10),
+    ), { iterations: 2 });
+    const overlapping = repeat(sequence(
+      wait(1),
+      track(x, tween({ to: 3, duration: 0 })),
+      wait(11),
+    ), { iterations: 2 });
+
+    expect(() => parallel(lhs, rhs)).not.toThrow();
+    expect(() => parallel(lhs, overlapping)).toThrow('overlap');
+  });
+
+  it('proves different infinite periodic schedules disjoint or overlapping exactly', () => {
+    const x = signal(0, { debugName: 'x' });
+    const evens = repeat(sequence(
+      track(x, tween({ to: 1, duration: 0.5 })),
+      wait(1.5),
+    ), { iterations: Number.POSITIVE_INFINITY });
+    const odds = repeat(sequence(
+      wait(1),
+      track(x, tween({ to: 2, duration: 0.5 })),
+      wait(2.5),
+    ), { iterations: Number.POSITIVE_INFINITY });
+    const multiplesOfFour = repeat(sequence(
+      track(x, tween({ to: 3, duration: 0.5 })),
+      wait(3.5),
+    ), { iterations: Number.POSITIVE_INFINITY });
 
     expect(() => parallel(evens, odds)).not.toThrow();
     expect(() => parallel(evens, multiplesOfFour)).toThrow('overlap');
