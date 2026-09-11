@@ -217,6 +217,19 @@ interface ExactArithmeticSchedule {
   readonly iterations: number;
 }
 
+interface OverlapProofBudget {
+  remainingAlignments: number;
+}
+
+/**
+ * Caps exact recursive alignment descents during one writer-pair proof. This
+ * is an availability boundary, not an acceptance shortcut: exhaustion rejects
+ * the composition instead of claiming that the schedules are disjoint.
+ */
+const maximumNestedAlignmentDescents = 512;
+
+class OverlapProofBudgetExceeded extends Error {}
+
 const numberBits = new DataView(new ArrayBuffer(8));
 
 function dyadic(value: number): Dyadic {
@@ -546,6 +559,7 @@ function shiftedSchedule(
 function symbolicOuterRepeatOverlap(
   first: ExactWriterSchedule,
   second: ExactWriterSchedule,
+  budget: OverlapProofBudget,
 ): boolean {
   const firstOuter = first.repeats.at(-1)!;
   const secondOuter = second.repeats.at(-1)!;
@@ -564,7 +578,13 @@ function symbolicOuterRepeatOverlap(
     upper,
   );
   while (difference !== undefined) {
-    if (exactSchedulesOverlap(firstInner, shiftedSchedule(secondInner, difference))) return true;
+    if (budget.remainingAlignments === 0) throw new OverlapProofBudgetExceeded();
+    budget.remainingAlignments--;
+    if (exactSchedulesOverlap(
+      firstInner,
+      shiftedSchedule(secondInner, difference),
+      budget,
+    )) return true;
     if (difference === upper) return false;
     difference = leastBoundedDifference(
       firstOuter.period,
@@ -613,6 +633,7 @@ function repeatAgainstStaticOverlap(
 function exactSchedulesOverlap(
   first: ExactWriterSchedule,
   second: ExactWriterSchedule,
+  budget: OverlapProofBudget,
 ): boolean {
   const firstArithmetic = oneRepeatSchedule(first);
   const secondArithmetic = oneRepeatSchedule(second);
@@ -622,7 +643,7 @@ function exactSchedulesOverlap(
   const firstOuter = first.repeats.at(-1);
   const secondOuter = second.repeats.at(-1);
   if (firstOuter !== undefined && secondOuter !== undefined) {
-    return symbolicOuterRepeatOverlap(first, second);
+    return symbolicOuterRepeatOverlap(first, second, budget);
   }
   if (firstOuter !== undefined) return repeatAgainstStaticOverlap(first, second);
   if (secondOuter !== undefined) return repeatAgainstStaticOverlap(second, first);
@@ -636,10 +657,23 @@ function schedulesOverlap(first: WriterSchedule, second: WriterSchedule): boolea
     return firstRange.start <= secondRange.end && secondRange.start <= firstRange.end;
   }
   const exponent = commonDyadicExponent(first, second);
-  return exactSchedulesOverlap(
-    exactSchedule(first, exponent),
-    exactSchedule(second, exponent),
-  );
+  try {
+    return exactSchedulesOverlap(
+      exactSchedule(first, exponent),
+      exactSchedule(second, exponent),
+      { remainingAlignments: maximumNestedAlignmentDescents },
+    );
+  } catch (error) {
+    if (!(error instanceof OverlapProofBudgetExceeded)) throw error;
+    const name = getSignalNode(first.span.output).debugName ?? '<unnamed signal>';
+    throw new RangeError(
+      `Animation program cannot prove nested same-output writer schedules at paths ` +
+        `${programLabel(first.span.path)} and ${programLabel(second.span.path)} are disjoint ` +
+        `for signal "${name}" within its structural validation budget. Refactor the nested ` +
+        `repeats into sequential programs or use nonoverlapping output signals.`,
+      { cause: error },
+    );
+  }
 }
 
 function throwWriterConflict(first: WriterSchedule, second: WriterSchedule): never {

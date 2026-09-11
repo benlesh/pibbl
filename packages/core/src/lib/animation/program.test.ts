@@ -280,4 +280,41 @@ describe('immutable animation programs', () => {
 
     expect(() => parallel(lhs, rhs)).toThrow('overlap');
   });
+
+  it('fails closed before enumerating a trillion reachable outer alignments', () => {
+    const x = signal(0, { debugName: 'x' });
+    const iterations = 1_000_000_000_000;
+    const lhs = repeat(sequence(
+      repeat(sequence(
+        track(x, tween({ to: 1, duration: 0 })),
+        wait(0.25),
+      ), { iterations: 2 }),
+      wait(0.75),
+    ), { iterations });
+    const rhs = repeat(sequence(
+      wait(0.1),
+      track(x, tween({ to: 2, duration: 0 })),
+      wait(1.15 + Number.EPSILON),
+    ), { iterations });
+
+    expect(() => parallel(lhs, rhs)).toThrow(/cannot prove.*nested.*x.*sequential.*nonoverlapping/iu);
+  });
+
+  it('rejects an exact collision before exhausting the nested proof budget', () => {
+    const x = signal(0, { debugName: 'x' });
+    const iterations = 1_000_000_000_000;
+    const lhs = repeat(sequence(
+      repeat(sequence(
+        track(x, tween({ to: 1, duration: 0 })),
+        wait(0.25),
+      ), { iterations: 2 }),
+      wait(0.75),
+    ), { iterations });
+    const rhs = repeat(sequence(
+      track(x, tween({ to: 2, duration: 0 })),
+      wait(1.25 + Number.EPSILON),
+    ), { iterations });
+
+    expect(() => parallel(lhs, rhs)).toThrow(/overlap.*x/iu);
+  });
 });
