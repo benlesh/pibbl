@@ -10,7 +10,7 @@ import type {
   CRCTweenTransitionOptions,
 } from '../animation/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
-import { signal, untracked } from '../signals/graph.js';
+import { getSignalNode, signal } from '../signals/graph.js';
 import type { Signal, SignalEquals, WritableSignal } from '../signals/types.js';
 import type { CRCComponentRefs, CRCInstance } from '../types.js';
 import { requireHookContext, useHookSlot } from './hook-slot.js';
@@ -31,8 +31,8 @@ interface CRCTransitionHookSlot<T> {
   readonly componentRefs: CRCComponentRefs<any>;
   readonly controller: AnimationPlaybackController;
   readonly crcInstance: CRCInstance;
-  output: WritableSignal<T>;
-  readonlyOutput: Signal<T>;
+  readonly output: WritableSignal<T>;
+  readonly readonlyOutput: Signal<T>;
   renderRevision: number;
   settled: boolean;
   target: T;
@@ -162,26 +162,28 @@ export function crcTransition<T>(
     return value;
   }).value;
 
-  if (!slot.settled && !Object.is(
-    untracked(() => slot.output.get()),
-    candidate.initial,
-  )) {
-    slot.output = signal(candidate.initial);
-    slot.readonlyOutput = slot.output.asReadonly();
-  }
-
+  const shouldEnter = !slot.settled && candidate.hasInitial &&
+    !candidate.equals(candidate.initial, candidate.target);
+  const shouldRetarget = slot.settled &&
+    !candidate.equals(slot.target, candidate.target);
+  const outputNode = getSignalNode(slot.output);
+  const previousProvisionalValue = outputNode.value;
+  const hasProvisionalValue = !slot.settled &&
+    !Object.is(previousProvisionalValue, candidate.initial);
+  if (hasProvisionalValue) outputNode.value = candidate.initial;
   const revision = ++slot.renderRevision;
   const transaction = GLOBAL_STATE.renderTransaction;
   if (!transaction) {
     throw new Error('crcTransition requires an active CRC render transaction.');
   }
   transaction.onFinish(success => {
-    if (!success || revision !== slot.renderRevision || !isCurrentSlot(slot)) return;
-    const previousTarget = slot.target;
-    const shouldEnter = !slot.settled && candidate.hasInitial &&
-      !candidate.equals(candidate.initial, candidate.target);
-    const shouldRetarget = slot.settled &&
-      !candidate.equals(previousTarget, candidate.target);
+    if (!success) {
+      if (revision === slot.renderRevision && hasProvisionalValue && !slot.settled) {
+        outputNode.value = previousProvisionalValue;
+      }
+      return;
+    }
+    if (revision !== slot.renderRevision || !isCurrentSlot(slot)) return;
     slot.settled = true;
     slot.target = candidate.target;
     if (!shouldEnter && !shouldRetarget) {

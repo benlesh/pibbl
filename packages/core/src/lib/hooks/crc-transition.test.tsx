@@ -7,12 +7,13 @@ import {
 import {
   crc,
   crcTransition,
+  signal,
   type Signal,
 } from '../../index.js';
 import { animationPlaybackSnapshot } from '../animation/playback.js';
 import { createSpringRecord, sampleSpring } from '../animation/spring.js';
 import { executeRender } from '../execute-render.js';
-import { clearSharedState } from '../global-state.js';
+import { clearSharedState, getCRCInstance } from '../global-state.js';
 import { signalGraphSnapshot } from '../signals/graph.js';
 import { writerLeaseSnapshot } from '../animation/writer-leases.js';
 import {
@@ -326,18 +327,82 @@ describe('crcTransition retargeting', () => {
     expect(animationPlaybackSnapshot().activePlaybacks).toBe(0);
   });
 
-  it('presents the latest omitted-initial target after a failed mounting transaction', () => {
+  it('evaluates throwing target equality during Render and fails closed once', () => {
+    const failure = new Error('transition equality failed');
+    let equalityCalls = 0;
+    let output!: Signal<number>;
+    function Probe({ fail, target }: { fail: boolean; target: number }) {
+      output = crcTransition(target, {
+        type: 'tween',
+        duration: 100,
+        equals: fail ? () => {
+          equalityCalls++;
+          throw failure;
+        } : Object.is,
+      });
+      output.get();
+    }
+
+    const { canvas } = mount(<Probe fail={false} target={0} />);
+    driver.flush(0);
+    const staleOutput = output;
+    crc(canvas, <Probe fail target={10} />);
+
+    expect(() => driver.flush(10)).toThrow(failure);
+    expect(equalityCalls).toBe(1);
+    expect(getCRCInstance(canvas).refs.size).toBe(0);
+    expect(animationPlaybackSnapshot().activePlaybacks).toBe(0);
+    expect(animationPlaybackSnapshot().queuedCommands).toBe(0);
+    expect(writerLeaseSnapshot().active).toBe(0);
+    driver.flush(11);
+    expect(staleOutput.get()).toBe(0);
+    expect(equalityCalls).toBe(1);
+    expect(driver.pendingHostFrames).toBe(0);
+  });
+
+  it('runs target equality under the Render signal-write guard', () => {
+    const external = signal(0);
+    function Probe({ target, write }: { target: number; write: boolean }) {
+      crcTransition(target, {
+        type: 'tween',
+        duration: 100,
+        equals: write ? () => {
+          external.set(1);
+          return false;
+        } : Object.is,
+      }).get();
+    }
+
+    const { canvas } = mount(<Probe target={0} write={false} />);
+    driver.flush(0);
+    crc(canvas, <Probe target={10} write />);
+
+    expect(() => driver.flush(10)).toThrow('CRC render');
+    expect(external.get()).toBe(0);
+    expect(getCRCInstance(canvas).refs.size).toBe(0);
+    driver.flush(11);
+  });
+
+  it('keeps one signal identity across failed omitted and explicit initial mount retries', () => {
     let owner!: CRCInternalRenderOwner;
     let failComposition = false;
     const values: number[] = [];
+    const outputs: Signal<number>[] = [];
     const workKey = {};
-    function Child({ target }: { target: number }) {
-      const output = crcTransition(target, { type: 'tween', duration: 100 });
+    function Child({ initial, target }: { initial?: number; target: number }) {
+      const output = initial === undefined ?
+        crcTransition(target, { type: 'tween', duration: 100 }) :
+        crcTransition(target, { type: 'tween', duration: 100, initial });
+      outputs.push(output);
       values.push(output.get());
     }
-    function Root({ include, target }: { include: boolean; target: number }) {
+    function Root({
+      include,
+      initial,
+      target,
+    }: { include: boolean; initial?: number; target: number }) {
       owner ??= crcInternalCurrentRenderOwner();
-      return include ? <Child target={target} /> : undefined;
+      return include ? <Child initial={initial} target={target} /> : undefined;
     }
 
     const { canvas } = mount(<Root include={false} target={0} />);
@@ -353,11 +418,18 @@ describe('crcTransition retargeting', () => {
     failComposition = true;
     crc(canvas, <Root include target={10} />);
     expect(() => driver.flush(10)).toThrow(/mount transaction failed/iu);
+    crc(canvas, <Root include initial={3} target={20} />);
+    expect(() => driver.flush(20)).toThrow(/mount transaction failed/iu);
     failComposition = false;
-    crc(canvas, <Root include target={20} />);
-    driver.flush(20);
+    crc(canvas, <Root include target={30} />);
+    driver.flush(30);
 
-    expect(values).toEqual([10, 20]);
+    expect(values).toEqual([10, 3, 30]);
+    expect(outputs[1]).toBe(outputs[0]);
+    expect(outputs[2]).toBe(outputs[0]);
+    expect(animationPlaybackSnapshot().activePlaybacks).toBe(0);
+    expect(animationPlaybackSnapshot().queuedCommands).toBe(0);
+    expect(writerLeaseSnapshot().active).toBe(0);
     expect(driver.pendingHostFrames).toBe(0);
   });
 });
