@@ -1,4 +1,5 @@
 export {
+  animationLabScenarioEntry,
   canvasSurfaceScenarioEntry,
   cleanupStressScenarioEntry,
   createScenarioCatalogIndex,
@@ -24,6 +25,11 @@ export {
   signalsLabScenarioEntry,
   validateScenarioCatalog,
 } from './catalog';
+export type {
+  AnimationLabAction,
+  AnimationLabState,
+} from './animation-lab.example';
+export { ANIMATION_LAB_ACTION_IDS } from './animation-lab';
 export type {
   SignalsLabAction,
   SignalsLabState,

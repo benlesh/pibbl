@@ -1052,11 +1052,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 51 unique, ordered, source-backed routes including standard shapes and signals", async () => {
+  it("contains 52 unique, ordered, source-backed routes including standard shapes, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(51);
+    expect(learningExampleCatalog).toHaveLength(52);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1089,7 +1089,7 @@ describe("learning example catalog", () => {
       learningExampleCatalog
         .filter((entry) => entry.section === "composition")
         .map((entry) => entry.slug),
-    ).toEqual(["group", "clip", "filters", "layer"]);
+    ).toEqual(["group", "clip", "filters", "signals-and-animation", "layer"]);
 
     const startExamples = learningExampleCatalog.filter(
       (entry) => entry.section === "start",
@@ -1425,6 +1425,13 @@ describe("learning example catalog", () => {
         "Clip",
         "Layer",
         "CRCFilter",
+        "crcSignal",
+        "crcTransition",
+        "crcPlayback",
+        "parallel",
+        "sequence",
+        "marker",
+        "spring",
       ]),
     );
 

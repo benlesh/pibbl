@@ -19,6 +19,7 @@ import type { RuntimeHooksState } from './runtime-hooks.example';
 import type { CanvasSurfaceState } from './canvas-surface.example';
 import type { FilterLabState } from './filter-lab.example';
 import type { SignalsLabState } from './signals-lab.example';
+import type { AnimationLabState } from './animation-lab.example';
 import { GEOMETRY_MATRIX_CASES } from './geometry-matrix.example';
 import { MOUSE_CONTRACT_CASES } from './mouse-contract';
 import { PERFORMANCE_WORKLOADS } from './performance-lab.example';
@@ -1268,6 +1269,71 @@ export const signalsLabScenarioEntry: ScenarioCatalogEntry<SignalsLabState> = {
   load: async () => (await import('./signals-lab')).signalsLabScenario,
 };
 
+const animationLabMetadata: ScenarioMetadata = {
+  id: 'first-class-animation',
+  slug: 'animation',
+  title: 'First-class animation laboratory',
+  summary: 'Drive deterministic playback, transitions, composition, simulation, Layer reuse, shared roots, and owner teardown through public CRC APIs.',
+  category: 'Rendering',
+  apiTags: ['crcPlayback', 'crcTransition', 'tween', 'spring', 'stepper', 'sequence', 'parallel', 'repeat', 'marker', 'Layer'],
+  conceptTags: ['central scheduler', 'deterministic time', 'milestones', 'retarget continuity', 'fixed-step simulation', 'owner teardown'],
+  manualSteps: [
+    {
+      action: 'Choose Play, Pause, Step, or one of the fixed Seek controls.',
+      expected: 'The status, logical time, numeric outputs, and normalized public milestone transcript update together.',
+    },
+    {
+      action: 'Choose Retarget, Repeat, or Simulate.',
+      expected: 'A successful render adopts the next target or immutable program before its owned run begins.',
+    },
+    {
+      action: 'Choose Show Layer, then Show shared roots.',
+      expected: 'Layer presentation reuses its stable child bitmap, while one committed shared value is visible to both roots.',
+    },
+    {
+      action: 'Choose Cancel or Remove owner, then Reset.',
+      expected: 'Cancel retains committed values; removing the component disposes its stale playback handle; Reset recreates an independent initial scene.',
+    },
+  ],
+  knownLimitations: [
+    'The laboratory exposes normalized public milestone events, not the source-only scheduler trace or a public manual clock.',
+    'Layer presentation count measures the public wrapper that precedes bitmap composition; native drawImage counters remain internal test evidence.',
+  ],
+  learningOrder: 180,
+  visibility: 'test-laboratory',
+  visibilityReason: 'It exposes exact clocks, counters, event transcripts, and teardown diagnostics for deterministic browser evidence.',
+  maturity: 'trusted',
+};
+
+export const animationLabScenarioEntry: ScenarioCatalogEntry<AnimationLabState> = {
+  metadata: animationLabMetadata,
+  canvas: { width: 480, height: 240 },
+  actions: [
+    { id: 'play', label: 'Play' },
+    { id: 'pause', label: 'Pause' },
+    { id: 'step', label: 'Step 16.667 ms' },
+    { id: 'seek-start', label: 'Seek start' },
+    { id: 'seek-middle', label: 'Seek middle' },
+    { id: 'seek-end', label: 'Seek end' },
+    { id: 'reverse', label: 'Reverse' },
+    { id: 'retarget', label: 'Retarget' },
+    { id: 'repeat', label: 'Repeat alternate' },
+    { id: 'simulate', label: 'Simulate' },
+    { id: 'show-layer', label: 'Show Layer reuse' },
+    { id: 'show-shared-roots', label: 'Show shared roots' },
+    { id: 'cancel', label: 'Cancel' },
+    { id: 'remove-owner', label: 'Remove owner' },
+    { id: 'reset', label: 'Reset' },
+  ],
+  source: {
+    id: 'first-class-animation-laboratory-example',
+    language: 'tsx',
+    marker: "ANIMATION_LAB_SOURCE_ID = 'first-class-animation-laboratory-example'",
+    path: 'packages/scenarios/src/animation-lab.example.tsx',
+  },
+  load: async () => (await import('./animation-lab')).animationLabScenario,
+};
+
 export const canvasSurfaceScenarioEntry: ScenarioCatalogEntry<CanvasSurfaceState> = {
   metadata: canvasSurfaceMetadata,
   canvas: { width: 480, height: 240 },
@@ -1304,6 +1370,7 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] = validateScena
   canvasSurfaceScenarioEntry,
   filterLabScenarioEntry,
   signalsLabScenarioEntry,
+  animationLabScenarioEntry,
 ] as const);
 
 export const scenarioCatalogIndex = createScenarioCatalogIndex(scenarioCatalog);

@@ -1,5 +1,6 @@
 import type { ScenarioCatalogRecord } from '@crc/scenarios';
 import {
+  animationLabScenarioEntry,
   focusNavigationScenarioEntry,
   getScenarioRoute,
   interactionLabScenarioEntry,
@@ -831,6 +832,40 @@ describe('scenario catalog trust gate', () => {
       'shared-roots',
       'layer-local-write',
       'remove-consumer',
+      'reset',
+    ]);
+  });
+
+  it('publishes the public animation laboratory route, source, and deterministic action surface', () => {
+    expect(scenarioCatalog).toContain(animationLabScenarioEntry);
+    expect(getScenarioRoute(animationLabScenarioEntry)).toBe('#/testing/animation');
+    expect(animationLabScenarioEntry).toMatchObject({
+      metadata: {
+        id: 'first-class-animation',
+        slug: 'animation',
+      },
+      canvas: { width: 480, height: 240 },
+      source: {
+        id: 'first-class-animation-laboratory-example',
+        marker: "ANIMATION_LAB_SOURCE_ID = 'first-class-animation-laboratory-example'",
+        path: 'packages/scenarios/src/animation-lab.example.tsx',
+      },
+    });
+    expect(animationLabScenarioEntry.actions.map(action => action.id)).toEqual([
+      'play',
+      'pause',
+      'step',
+      'seek-start',
+      'seek-middle',
+      'seek-end',
+      'reverse',
+      'retarget',
+      'repeat',
+      'simulate',
+      'show-layer',
+      'show-shared-roots',
+      'cancel',
+      'remove-owner',
       'reset',
     ]);
   });

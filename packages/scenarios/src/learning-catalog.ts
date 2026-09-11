@@ -619,6 +619,42 @@ const drafts = [
     load: () => import("./learning/composition/filters.example"),
   },
   {
+    slug: "signals-and-animation",
+    title: "Signals and animation",
+    shortTitle: "Signals + animation",
+    section: "composition",
+    order: 117,
+    summary:
+      "Compose immutable animation definitions into one component-owned program whose committed signal values enter ordinary styles explicitly.",
+    api: [
+      "crcSignal",
+      "crcTransition",
+      "crcPlayback",
+      "parallel",
+      "sequence",
+      "marker",
+      "spring",
+    ],
+    objectives: [
+      "Bind tween and spring definitions to writable signals, then compose their tracks with parallel, sequence, and a named marker.",
+      "Keep playback ownership in one component while every animation advances and commits through CRC's central frame scheduler.",
+    ],
+    prompts: {
+      gesture:
+        "Click the blue card or focus it and press Enter to replay the entrance and retarget its scale.",
+      code: "Change the entrance duration, marker name, or spring stiffness without changing how style reads resolved values.",
+    },
+    apiNotes: [
+      "Definitions and programs are immutable descriptions; crcPlayback supplies the stateful component owner and snapshots an accepted run.",
+      "All playbacks advance in shared scheduler phases and publish one central Commit before affected CRC roots render.",
+      "Signals declare dependencies through explicit .get() calls, so style receives ordinary numbers rather than signal or animation objects.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["signals", "group", "layer"],
+    load: () =>
+      import("./learning/composition/signals-and-animation.example"),
+  },
+  {
     slug: "layer",
     title: "Layer",
     shortTitle: "Layer",
