@@ -228,6 +228,44 @@ describe('seekable animation program evaluation', () => {
     expect(y.get()).toBe(10);
   });
 
+  it('fails activation when a resolved repeat period makes writer instances touch', () => {
+    const y = signal(10, { debugName: 'repeat duration source' });
+    const x = signal(0, { debugName: 'repeated output' });
+    const program = repeat(sequence(
+      track(y, spring({ to: 10 })),
+      track(x, tween({ from: 0, to: 100, duration: 100 })),
+    ), { iterations: 2 });
+    const callerWriter = {};
+    const callerBatch = createSignalCommitBatch();
+    callerBatch.stage(x, 73, callerWriter);
+    const graphBefore = signalGraphSnapshot();
+
+    expect(() => activateProgram(program, {})).toThrow(
+      /activation-dependent.*writer.*repeated output/iu,
+    );
+
+    expect(callerBatch.read(x)).toBe(73);
+    expect(x.get()).toBe(0);
+    expect(y.get()).toBe(10);
+    expect(signalGraphSnapshot()).toEqual(graphBefore);
+  });
+
+  it('accepts activation-dependent same-output writers that remain provably separated', () => {
+    const x = signal(0, { debugName: 'separated output' });
+    const program = parallel(
+      track(x, spring({ to: 10 })),
+      sequence(
+        wait(10_001),
+        track(x, tween({ from: 10, to: 20, duration: 100 })),
+      ),
+    );
+
+    const activation = activateProgram(program, {});
+
+    expect(getProgramActivationRecord(activation).originalValues.get(x)).toBe(0);
+    expect(getProgramActivationRecord(activation).trackStarts).toEqual([]);
+  });
+
   it('maps all finite repeat directions at boundaries with zero-based iterations', () => {
     const cases = [
       { direction: 'normal' as const, time: 0, want: 0 },
@@ -493,6 +531,126 @@ describe('seekable animation program evaluation', () => {
     });
     expect(seekResult.batch.read(sought.output)).toBe(5);
     expect(sought.samples).toEqual([0.5]);
+  });
+
+  it('discovers a dynamically timed reversed repeat without terminal custom sampling', () => {
+    function fixture(throwAtTerminal: boolean) {
+      const durationSource = signal(10);
+      const output = signal(0);
+      const samples: number[] = [];
+      const program = repeat(sequence(
+        track(durationSource, spring({ to: 10 })),
+        track(output, defineAnimation({
+          duration: 100,
+          sample: ({ progress }) => {
+            samples.push(progress);
+            if (throwAtTerminal && progress === 1) throw new Error('old terminal only');
+            return progress * 10;
+          },
+        })),
+      ), { iterations: 1, direction: 'reverse' });
+      return { activation: activateProgram(program, {}), output, samples };
+    }
+
+    const advanced = fixture(false);
+    const advancedResult = evaluateAt(advanced.activation, 50, 100, 'reverse');
+    expect(advancedResult.batch.read(advanced.output)).toBe(5);
+    expect(advanced.samples).toEqual([0.5]);
+    expect(advancedResult.terminal.duration).toBe(100);
+
+    const sought = fixture(true);
+    const seekBatch = createSignalCommitBatch();
+    const seekResult = seekProgram(sought.activation, {
+      previousTime: 100,
+      time: 50,
+      direction: 'reverse',
+      frameId: 4,
+      writer,
+      batch: seekBatch,
+    });
+    expect(seekResult.batch.read(sought.output)).toBe(5);
+    expect(sought.samples).toEqual([0.5]);
+    expect(seekResult.terminal.duration).toBe(100);
+  });
+
+  it('discovers fresh reverse milestones and duration across omitted-start springs', () => {
+    const first = signal(0);
+    const second = signal(0);
+    const program = sequence(
+      track(first, spring({ to: 10, damping: 0, maxDuration: 100 })),
+      marker('first'),
+      track(second, spring({ to: 20, damping: 0, maxDuration: 200 })),
+      marker('second'),
+    );
+    const activation = activateProgram(program, {});
+    const batch = createSignalCommitBatch();
+
+    const result = seekProgram(activation, {
+      previousTime: 20_000,
+      time: 0,
+      direction: 'reverse',
+      frameId: 5,
+      writer,
+      batch,
+    });
+
+    expect(result.milestones.map(event => ({
+      kind: event.kind,
+      marker: event.kind === 'marker' ? event.marker : undefined,
+      time: event.programTime,
+      path: event.programPath,
+    }))).toEqual([
+      { kind: 'marker', marker: 'second', time: 300, path: [3] },
+      { kind: 'marker', marker: 'first', time: 100, path: [1] },
+    ]);
+    expect(result.terminal).toEqual({
+      duration: 300,
+      atStart: true,
+      atEnd: false,
+      reached: true,
+    });
+    expect(getProgramActivationRecord(activation).trackStarts.map(start => ({
+      path: start.programPath,
+      initialValue: start.initialValue,
+      duration: start.duration,
+    }))).toEqual([
+      { path: [0], initialValue: 0, duration: 100 },
+    ]);
+  });
+
+  it('carries callback-free terminal values through static definitions during discovery', () => {
+    const output = signal(0);
+    const samples: number[] = [];
+    const program = sequence(
+      track(output, defineAnimation({
+        duration: 10,
+        sample: ({ progress }) => {
+          samples.push(progress);
+          return progress * 5;
+        },
+      })),
+      track(output, spring({ from: 0, to: 10, damping: 0, maxDuration: 100 })),
+      track(output, spring({ to: 10 })),
+      marker('done'),
+    );
+    const activation = activateProgram(program, {});
+    const batch = createSignalCommitBatch();
+
+    const result = seekProgram(activation, {
+      previousTime: 1_000,
+      time: 0,
+      direction: 'reverse',
+      frameId: 6,
+      writer,
+      batch,
+    });
+
+    expect(samples).toEqual([0]);
+    expect(result.milestones.map(event => ({
+      marker: event.kind === 'marker' ? event.marker : undefined,
+      time: event.programTime,
+    }))).toEqual([{ marker: 'done', time: 110 }]);
+    expect(result.terminal.duration).toBe(110);
   });
 
   it('rolls back caller staging and activation starts when a later sampler fails', () => {

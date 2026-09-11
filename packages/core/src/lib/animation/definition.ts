@@ -69,6 +69,11 @@ export interface SeekableDefinitionActivation<T> {
   readonly initialValue: T;
 }
 
+/** @internal Callback-free knowledge about a seekable definition boundary. */
+export type SeekableDefinitionBoundaryValue<T> =
+  | { readonly kind: 'known'; readonly value: T }
+  | { readonly kind: 'unknown' };
+
 interface SeekableDefinitionActivationRecord<T> {
   readonly definition: CRCAnimationDefinition<T>;
   readonly definitionRecord: Exclude<DefinitionRecord<T>, StepperDefinitionRecord<T>>;
@@ -684,4 +689,81 @@ export function sampleActivatedSeekableDefinition<T>(
     initialValue: activationRecord.initialValue,
     localTime,
   });
+}
+
+/**
+ * @internal Returns a boundary value only when the normalized definition makes
+ * it exact without invoking user easing, interpolation, or sampling callbacks.
+ */
+export function getSeekableDefinitionBoundaryValue<T>(
+  activation: SeekableDefinitionActivation<T>,
+  boundary: 'start' | 'end',
+): SeekableDefinitionBoundaryValue<T> {
+  const activationRecord = seekableActivationRecords.get(
+    activation as SeekableDefinitionActivation<unknown>,
+  ) as SeekableDefinitionActivationRecord<T> | undefined;
+  if (activationRecord === undefined) {
+    throw new TypeError('Expected a seekable CRC animation definition activation.');
+  }
+  const record = activationRecord.definitionRecord;
+  if (record.kind === 'spring') {
+    return Object.freeze({
+      kind: 'known' as const,
+      value: (boundary === 'start' ? record.from : record.to) as T,
+    });
+  }
+  if (record.kind === 'keyframes') {
+    if (boundary === 'end') {
+      return Object.freeze({ kind: 'known' as const, value: record.values.at(-1)! });
+    }
+    if (record.interpolate === undefined && record.easings[0] === easing.linear) {
+      return Object.freeze({ kind: 'known' as const, value: record.values[0]! });
+    }
+    return Object.freeze({ kind: 'unknown' as const });
+  }
+  if (record.kind === 'tween' && record.interpolate === undefined &&
+    record.easing === easing.linear) {
+    return Object.freeze({
+      kind: 'known' as const,
+      value: boundary === 'start' ?
+        (record.hasFrom ? record.from as T : activationRecord.initialValue) : record.to,
+    });
+  }
+  return Object.freeze({ kind: 'unknown' as const });
+}
+
+/**
+ * @internal Returns a callback-free boundary that does not depend on a track's
+ * activation value. This lets discovery recover known terminal state after an
+ * earlier opaque custom value.
+ */
+export function getStaticSeekableDefinitionBoundaryValue<T>(
+  definition: CRCAnimationDefinition<T>,
+  boundary: 'start' | 'end',
+): SeekableDefinitionBoundaryValue<T> {
+  const record = getDefinitionRecord(definition);
+  if (record.kind === 'spring' && record.hasFrom) {
+    return Object.freeze({
+      kind: 'known' as const,
+      value: (boundary === 'start' ? record.from : record.to) as T,
+    });
+  }
+  if (record.kind === 'keyframes') {
+    if (boundary === 'end') {
+      return Object.freeze({ kind: 'known' as const, value: record.values.at(-1)! });
+    }
+    if (record.interpolate === undefined && record.easings[0] === easing.linear) {
+      return Object.freeze({ kind: 'known' as const, value: record.values[0]! });
+    }
+  }
+  if (record.kind === 'tween' && record.interpolate === undefined &&
+    record.easing === easing.linear) {
+    if (boundary === 'end') {
+      return Object.freeze({ kind: 'known' as const, value: record.to });
+    }
+    if (record.hasFrom) {
+      return Object.freeze({ kind: 'known' as const, value: record.from as T });
+    }
+  }
+  return Object.freeze({ kind: 'unknown' as const });
 }

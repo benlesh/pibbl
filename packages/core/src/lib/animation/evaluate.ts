@@ -6,14 +6,16 @@ import {
 import type { WritableSignal } from '../signals/types.js';
 import {
   activateSeekableDefinition,
+  getSeekableDefinitionBoundaryValue,
+  getStaticSeekableDefinitionBoundaryValue,
   sampleActivatedSeekableDefinition,
   snapshotAnimationActivationValue,
   type SeekableDefinitionActivation,
 } from './definition.js';
 import {
-  assertProgramActivationWriterSafety,
   getExactSeekableProgramDuration,
   getProgramRecord,
+  requiresProgramActivationWriterSafety,
 } from './program.js';
 import type { CRCAnimationProgram } from './types.js';
 
@@ -108,6 +110,33 @@ interface SampleResult {
   readonly atEnd: boolean;
 }
 
+const unknownDiscoveredValue = Symbol('unknown animation discovery value');
+type DiscoveredValue = unknown | typeof unknownDiscoveredValue;
+
+interface ResolvedWriter {
+  readonly output: WritableSignal<unknown>;
+  readonly start: number;
+  readonly end: number;
+  readonly programPath: readonly number[];
+  readonly repeatIterations: readonly number[];
+}
+
+interface DiscoveryResult {
+  readonly duration: number | undefined;
+  readonly writers: readonly ResolvedWriter[];
+  readonly startWrites: ReadonlyMap<WritableSignal<unknown>, DiscoveredValue>;
+  readonly endWrites: ReadonlyMap<WritableSignal<unknown>, DiscoveredValue>;
+}
+
+interface DiscoveryState {
+  readonly values: Map<WritableSignal<unknown>, DiscoveredValue>;
+  readonly starts: Map<string, InternalTrackStart>;
+  readonly durations: Map<string, number>;
+  readonly snapshots: WeakMap<object, unknown>;
+  readonly validateWriters: boolean;
+  readonly writerBudget: { remaining: number };
+}
+
 interface TimelineEvent {
   readonly kind: 'marker' | 'iteration';
   readonly marker?: string;
@@ -124,6 +153,7 @@ interface TimeTransform {
 
 const activationRecords = new WeakMap<ProgramActivation, InternalProgramActivation>();
 const baselineWriter = Object.freeze({ name: 'CRC animation activation baseline' });
+const maximumResolvedWriterComparisons = 512;
 
 function freezePath(path: readonly number[]): readonly number[] {
   return Object.freeze([...path]);
@@ -223,6 +253,315 @@ function knownDuration(
     if (start !== undefined) return start.definition.duration;
   }
   return getExactSeekableProgramDuration(program);
+}
+
+function discoveredWrites(
+  ...sources: readonly ReadonlyMap<WritableSignal<unknown>, DiscoveredValue>[]
+): Map<WritableSignal<unknown>, DiscoveredValue> {
+  const writes = new Map<WritableSignal<unknown>, DiscoveredValue>();
+  for (const source of sources) {
+    for (const [output, value] of source) writes.set(output, value);
+  }
+  return writes;
+}
+
+function applyDiscoveredWrites(
+  values: Map<WritableSignal<unknown>, DiscoveredValue>,
+  writes: ReadonlyMap<WritableSignal<unknown>, DiscoveredValue>,
+): void {
+  for (const [output, value] of writes) values.set(output, value);
+}
+
+function shiftedResolvedWriters(
+  writers: readonly ResolvedWriter[],
+  offset: number,
+): readonly ResolvedWriter[] {
+  return writers.map(writerSpan => Object.freeze({
+    ...writerSpan,
+    start: writerSpan.start + offset,
+    end: writerSpan.end + offset,
+  }));
+}
+
+function resolvedWriterLabel(writerSpan: ResolvedWriter): string {
+  const iterations = writerSpan.repeatIterations.length === 0 ? '' :
+    ` in repeat iterations [${writerSpan.repeatIterations.join(', ')}]`;
+  return `[${writerSpan.programPath.join(', ')}]${iterations}`;
+}
+
+function assertResolvedWritersDisjoint(
+  first: readonly ResolvedWriter[],
+  second: readonly ResolvedWriter[],
+  state: DiscoveryState,
+): void {
+  if (!state.validateWriters) return;
+  for (const firstWriter of first) {
+    for (const secondWriter of second) {
+      if (firstWriter.output !== secondWriter.output) continue;
+      if (state.writerBudget.remaining === 0) {
+        const name = getSignalNode(firstWriter.output).debugName ?? '<unnamed signal>';
+        throw new RangeError(
+          `CRC animation activation-dependent writer schedule proof exhausted its ` +
+            `${maximumResolvedWriterComparisons}-comparison budget for signal "${name}".`,
+        );
+      }
+      state.writerBudget.remaining--;
+      if (firstWriter.start <= secondWriter.end && secondWriter.start <= firstWriter.end) {
+        const name = getSignalNode(firstWriter.output).debugName ?? '<unnamed signal>';
+        throw new RangeError(
+          `CRC animation activation-dependent writer schedules at paths ` +
+            `${resolvedWriterLabel(firstWriter)} and ` +
+            `${resolvedWriterLabel(secondWriter)} overlap for signal "${name}".`,
+        );
+      }
+    }
+  }
+}
+
+function discoverTrack(
+  program: CRCAnimationProgram,
+  state: DiscoveryState,
+  path: readonly number[],
+  repeatIterations: readonly number[],
+): DiscoveryResult {
+  const record = getProgramRecord(program);
+  if (record.kind !== 'track') throw new Error('Expected an animation track record.');
+  const key = instanceKey(path, repeatIterations);
+  let start = state.starts.get(key);
+  if (start === undefined) {
+    const initialValue = state.values.has(record.output) ?
+      state.values.get(record.output)! : unknownDiscoveredValue;
+    if (initialValue !== unknownDiscoveredValue) {
+      const definition = activateSeekableDefinition(
+        record.definition,
+        initialValue,
+        state.snapshots,
+      );
+      start = Object.freeze({
+        programPath: freezePath(path),
+        repeatIterations: freezePath(repeatIterations),
+        initialValue: definition.initialValue,
+        definition,
+      });
+      state.starts.set(key, start);
+    }
+  }
+  const duration = start?.definition.duration ?? getExactSeekableProgramDuration(program);
+  if (duration === undefined || duration === Number.POSITIVE_INFINITY) {
+    throw new TypeError(
+      'Stateful or value-dependent animation timing could not be discovered callback-free.',
+    );
+  }
+  state.durations.set(key, duration);
+  let startValue: DiscoveredValue = unknownDiscoveredValue;
+  let endValue: DiscoveredValue = unknownDiscoveredValue;
+  if (start !== undefined) {
+    const first = getSeekableDefinitionBoundaryValue(start.definition, 'start');
+    const last = getSeekableDefinitionBoundaryValue(start.definition, 'end');
+    if (first.kind === 'known') startValue = first.value;
+    if (last.kind === 'known') endValue = last.value;
+  } else {
+    const first = getStaticSeekableDefinitionBoundaryValue(record.definition, 'start');
+    const last = getStaticSeekableDefinitionBoundaryValue(record.definition, 'end');
+    if (first.kind === 'known') startValue = first.value;
+    if (last.kind === 'known') endValue = last.value;
+  }
+  const startWrites = new Map([[record.output, startValue]]);
+  const endWrites = new Map([[record.output, endValue]]);
+  state.values.set(record.output, endValue);
+  return {
+    duration,
+    writers: Object.freeze([Object.freeze({
+      output: record.output,
+      start: 0,
+      end: duration,
+      programPath: freezePath(path),
+      repeatIterations: freezePath(repeatIterations),
+    })]),
+    startWrites,
+    endWrites,
+  };
+}
+
+function discoverNode(
+  program: CRCAnimationProgram,
+  requestedTime: number,
+  state: DiscoveryState,
+  path: readonly number[],
+  repeatIterations: readonly number[],
+): DiscoveryResult {
+  const record = getProgramRecord(program);
+  const localTime = Math.max(0, requestedTime);
+  if (record.kind === 'track') {
+    return discoverTrack(program, state, path, repeatIterations);
+  }
+  if (record.kind === 'wait' || record.kind === 'marker') {
+    const duration = record.kind === 'wait' && record.duration.kind === 'finite' ?
+      record.duration.milliseconds : 0;
+    state.durations.set(instanceKey(path, repeatIterations), duration);
+    return {
+      duration,
+      writers: Object.freeze([]),
+      startWrites: new Map(),
+      endWrites: new Map(),
+    };
+  }
+  if (record.kind === 'sequence') {
+    let remaining = localTime;
+    let elapsed = 0;
+    const writers: ResolvedWriter[] = [];
+    const startWrites = new Map<WritableSignal<unknown>, DiscoveredValue>();
+    const endWrites = new Map<WritableSignal<unknown>, DiscoveredValue>();
+    let startBoundaryOpen = true;
+    let stoppedAt: number | undefined;
+    for (let index = 0; index < record.children.length; index++) {
+      const child = record.children[index]!;
+      const discovered = discoverNode(
+        child,
+        remaining,
+        state,
+        [...path, index],
+        repeatIterations,
+      );
+      writers.push(...shiftedResolvedWriters(discovered.writers, elapsed));
+      if (startBoundaryOpen) {
+        applyDiscoveredWrites(startWrites, discovered.startWrites);
+        if (discovered.duration === 0) {
+          applyDiscoveredWrites(startWrites, discovered.endWrites);
+        } else {
+          startBoundaryOpen = false;
+        }
+      }
+      applyDiscoveredWrites(endWrites, discovered.endWrites);
+      if (discovered.duration === undefined || remaining < discovered.duration) {
+        stoppedAt = index;
+        break;
+      }
+      elapsed += discovered.duration;
+      remaining = Math.max(0, remaining - discovered.duration);
+    }
+    let duration: number | undefined = stoppedAt === undefined ? elapsed : undefined;
+    if (stoppedAt !== undefined) {
+      const activeDuration = state.durations.get(instanceKey(
+        [...path, stoppedAt],
+        repeatIterations,
+      ));
+      duration = activeDuration === undefined ? undefined : elapsed + activeDuration;
+      for (let index = stoppedAt + 1;
+        duration !== undefined && index < record.children.length;
+        index++) {
+        const childDuration = getExactSeekableProgramDuration(record.children[index]!);
+        duration = childDuration === undefined ? undefined : duration + childDuration;
+      }
+    }
+    if (duration !== undefined) state.durations.set(instanceKey(path, repeatIterations), duration);
+    return { duration, writers: Object.freeze(writers), startWrites, endWrites };
+  }
+  if (record.kind === 'parallel') {
+    const baseline = new Map(state.values);
+    const children: DiscoveryResult[] = [];
+    let duration: number | undefined = 0;
+    for (let index = 0; index < record.children.length; index++) {
+      const branchState: DiscoveryState = { ...state, values: new Map(baseline) };
+      const child = discoverNode(
+        record.children[index]!,
+        localTime,
+        branchState,
+        [...path, index],
+        repeatIterations,
+      );
+      for (const previous of children) {
+        assertResolvedWritersDisjoint(previous.writers, child.writers, state);
+      }
+      children.push(child);
+      duration = duration === undefined || child.duration === undefined ? undefined :
+        Math.max(duration, child.duration);
+    }
+    const startWrites = discoveredWrites(...children.map(child => child.startWrites));
+    const endWrites = discoveredWrites(...children.map(child => child.endWrites));
+    state.values.clear();
+    for (const [output, value] of baseline) state.values.set(output, value);
+    applyDiscoveredWrites(state.values, endWrites);
+    if (duration !== undefined) state.durations.set(instanceKey(path, repeatIterations), duration);
+    return {
+      duration,
+      writers: Object.freeze(children.flatMap(child => child.writers)),
+      startWrites,
+      endWrites,
+    };
+  }
+
+  let remaining = localTime;
+  let elapsed = 0;
+  let firstWrites = new Map<WritableSignal<unknown>, DiscoveredValue>();
+  let lastWrites = new Map<WritableSignal<unknown>, DiscoveredValue>();
+  let previousWriters: readonly ResolvedWriter[] = Object.freeze([]);
+  const writers: ResolvedWriter[] = [];
+  for (let iteration = 0; iteration < record.iterations; iteration++) {
+    const child = record.children[0]!;
+    const iterationPath = [...repeatIterations, iteration];
+    const reversed = record.direction === 'reverse' ||
+      record.direction === 'alternate-reverse' && iteration % 2 === 0 ||
+      record.direction === 'alternate' && iteration % 2 === 1;
+    const baseline = new Map(state.values);
+    const discovered = discoverNode(
+      child,
+      reversed ? Number.POSITIVE_INFINITY : remaining,
+      state,
+      [...path, 0],
+      iterationPath,
+    );
+    const duration = discovered.duration;
+    if (duration === undefined || duration === Number.POSITIVE_INFINITY) {
+      return {
+        duration: undefined,
+        writers: Object.freeze(writers),
+        startWrites: firstWrites,
+        endWrites: lastWrites,
+      };
+    }
+    if (duration === 0 && record.iterations === Number.POSITIVE_INFINITY) {
+      throw new TypeError('An infinite repeat with zero duration cannot be discovered seekably.');
+    }
+    const iterationWriters = shiftedResolvedWriters(discovered.writers, elapsed);
+    assertResolvedWritersDisjoint(previousWriters, iterationWriters, state);
+    writers.push(...iterationWriters);
+    previousWriters = iterationWriters;
+    const iterationStartWrites = reversed ? discovered.endWrites : discovered.startWrites;
+    const iterationEndWrites = reversed ? discovered.startWrites : discovered.endWrites;
+    if (iteration === 0) firstWrites = new Map(iterationStartWrites);
+    lastWrites = new Map(iterationEndWrites);
+    state.values.clear();
+    for (const [output, value] of baseline) state.values.set(output, value);
+    applyDiscoveredWrites(state.values, iterationEndWrites);
+    elapsed += duration;
+    if (remaining < duration) {
+      const exact = getExactSeekableProgramDuration(program);
+      if (exact !== undefined) state.durations.set(instanceKey(path, repeatIterations), exact);
+      return {
+        duration: exact,
+        writers: Object.freeze(writers),
+        startWrites: firstWrites,
+        endWrites: lastWrites,
+      };
+    }
+    if (iteration + 1 === record.iterations) {
+      state.durations.set(instanceKey(path, repeatIterations), elapsed);
+      return {
+        duration: elapsed,
+        writers: Object.freeze(writers),
+        startWrites: firstWrites,
+        endWrites: lastWrites,
+      };
+    }
+    remaining = Math.max(0, remaining - duration);
+  }
+  return {
+    duration: elapsed,
+    writers: Object.freeze(writers),
+    startWrites: firstWrites,
+    endWrites: lastWrites,
+  };
 }
 
 function sampleTrack(
@@ -530,13 +869,29 @@ function collectTimeline(
 function createSampleState(
   record: InternalProgramActivation,
   starts: Map<string, InternalTrackStart>,
+  durations: Map<string, number> = new Map(),
 ): SampleState {
   return {
     batch: seedOriginalValues(record),
     starts,
-    durations: new Map(),
+    durations,
     writtenOutputs: new Set(),
     snapshots: new WeakMap(),
+  };
+}
+
+function createDiscoveryState(
+  originalValues: ReadonlyMap<WritableSignal<unknown>, unknown>,
+  starts: Map<string, InternalTrackStart>,
+  validateWriters: boolean,
+): DiscoveryState {
+  return {
+    values: new Map(originalValues),
+    starts,
+    durations: new Map(),
+    snapshots: new WeakMap(),
+    validateWriters,
+    writerBudget: { remaining: maximumResolvedWriterComparisons },
   };
 }
 
@@ -600,19 +955,31 @@ function evaluate(
     Math.max(0, input.previousTime);
   const normalizedInput = { ...input, time, previousTime };
   const horizon = Math.max(time, previousTime ?? time);
+  const discoveryState = createDiscoveryState(
+    record.originalValues,
+    rebuildStarts ? new Map() : new Map(record.starts),
+    false,
+  );
+  const discoveryResult = discoverNode(
+    record.program,
+    horizon,
+    discoveryState,
+    [],
+    [],
+  );
   const destinationStarts = rebuildStarts ? new Map<string, InternalTrackStart>() :
     new Map(record.starts);
-  const destinationState = createSampleState(record, destinationStarts);
+  const destinationState = createSampleState(
+    record,
+    destinationStarts,
+    new Map(discoveryState.durations),
+  );
   const destinationResult = sampleNode(record.program, time, destinationState, [], []);
-  let milestoneState = destinationState;
-  if (horizon !== time && rebuildStarts && record.starts.size > 0) {
-    const milestoneStarts = new Map(record.starts);
-    for (const [key, start] of destinationState.starts) milestoneStarts.set(key, start);
-    milestoneState = {
-      ...destinationState,
-      starts: milestoneStarts,
-    };
-  }
+  const milestoneState = createSampleState(
+    record,
+    discoveryState.starts,
+    discoveryState.durations,
+  );
   const milestones = crossedMilestones(record, normalizedInput, horizon, milestoneState);
   record.starts = destinationState.starts;
   for (const output of getProgramRecord(record.program).outputs) {
@@ -623,7 +990,7 @@ function evaluate(
 
   const atStart = time === 0;
   const atEnd = destinationResult.atEnd;
-  const duration = destinationResult.duration ??
+  const duration = discoveryResult.duration ?? destinationResult.duration ??
     getExactSeekableProgramDuration(record.program);
   return Object.freeze({
     batch: input.batch,
@@ -646,7 +1013,6 @@ export function activateProgram(
     throw new TypeError('CRC animation registration identity must be an object.');
   }
   const programRecord = getProgramRecord(program);
-  assertProgramActivationWriterSafety(program);
   const snapshots = new WeakMap<object, unknown>();
   const originalValues = new Map<WritableSignal<unknown>, unknown>();
   for (const output of programRecord.outputs) {
@@ -654,6 +1020,10 @@ export function activateProgram(
       output,
       snapshotAnimationActivationValue(getSignalNode(output).value, snapshots),
     );
+  }
+  if (requiresProgramActivationWriterSafety(program)) {
+    const discoveryState = createDiscoveryState(originalValues, new Map(), true);
+    discoverNode(program, Number.POSITIVE_INFINITY, discoveryState, [], []);
   }
   const activation = Object.freeze({}) as ProgramActivation;
   activationRecords.set(activation, {

@@ -987,10 +987,7 @@ function dependentWriterOutputs(
   return dependent;
 }
 
-function assertActivationWriterSafetyAt(
-  program: CRCAnimationProgram,
-  path: readonly number[],
-): void {
+function requiresActivationWriterSafetyAt(program: CRCAnimationProgram): boolean {
   const record = getProgramRecord(program);
   if (record.kind === 'parallel') {
     for (let firstIndex = 0; firstIndex < record.children.length; firstIndex++) {
@@ -1002,33 +999,28 @@ function assertActivationWriterSafetyAt(
         const secondOutputs = getProgramRecord(second).outputs;
         const firstDependent = dependentWriterOutputs(first);
         const secondDependent = dependentWriterOutputs(second);
-        const output = getProgramRecord(first).outputs.find(candidate =>
+        if (getProgramRecord(first).outputs.some(candidate =>
           secondOutputs.includes(candidate) &&
           (firstDependent.has(candidate) || secondDependent.has(candidate)),
-        );
-        if (output !== undefined) {
-          const name = getSignalNode(output).debugName ?? '<unnamed signal>';
-          throw new RangeError(
-            `CRC animation activation-dependent writer schedules at parallel paths ` +
-              `${programLabel([...path, firstIndex])} and ` +
-              `${programLabel([...path, secondIndex])} cannot be proven disjoint for ` +
-              `signal "${name}". Use statically timed branches or distinct output signals.`,
-          );
-        }
+        )) return true;
       }
     }
   }
-  for (let index = 0; index < record.children.length; index++) {
-    assertActivationWriterSafetyAt(record.children[index]!, [...path, index]);
+  if (record.kind === 'repeat' && record.iterations > 1 &&
+    getExactSeekableProgramDuration(record.children[0]!) === undefined &&
+    record.outputs.length > 0) {
+    return true;
   }
+  return record.children.some(requiresActivationWriterSafetyAt);
 }
 
 /**
- * @internal Fails closed when activation-dependent duration can invalidate a
- * same-output parallel proof made from construction-time schedule metadata.
+ * @internal Reports whether activation-resolved duration can invalidate a
+ * construction-time parallel or repeat writer proof. The evaluator performs
+ * the exact resolved proof against its private activation snapshot.
  */
-export function assertProgramActivationWriterSafety(
+export function requiresProgramActivationWriterSafety(
   program: CRCAnimationProgram,
-): void {
-  assertActivationWriterSafetyAt(program, []);
+): boolean {
+  return requiresActivationWriterSafetyAt(program);
 }
