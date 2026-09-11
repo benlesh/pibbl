@@ -225,6 +225,10 @@ function scaleDyadics(values: readonly number[]): readonly bigint[] {
   );
 }
 
+function scaledDyadicExponent(values: readonly number[]): number {
+  return Math.min(...values.map(value => dyadic(value).exponent));
+}
+
 function floorDivide(value: bigint, divisor: bigint): bigint {
   if (value >= 0n) return value / divisor;
   return -((-value + divisor - 1n) / divisor);
@@ -247,6 +251,29 @@ function greatestCommonDivisor(first: bigint, second: bigint): bigint {
     right = remainder;
   }
   return left;
+}
+
+function extendedGreatestCommonDivisor(
+  first: bigint,
+  second: bigint,
+): { readonly gcd: bigint; readonly first: bigint; readonly second: bigint } {
+  let previousRemainder = first;
+  let remainder = second;
+  let previousFirst = 1n;
+  let currentFirst = 0n;
+  let previousSecond = 0n;
+  let currentSecond = 1n;
+  while (remainder !== 0n) {
+    const quotient = previousRemainder / remainder;
+    [previousRemainder, remainder] = [remainder, previousRemainder - quotient * remainder];
+    [previousFirst, currentFirst] = [currentFirst, previousFirst - quotient * currentFirst];
+    [previousSecond, currentSecond] = [currentSecond, previousSecond - quotient * currentSecond];
+  }
+  return Object.freeze({
+    gcd: previousRemainder,
+    first: previousFirst,
+    second: previousSecond,
+  });
 }
 
 /** Returns sum(floor((multiplier * i + offset) / divisor), i = 0..count). */
@@ -405,41 +432,102 @@ function shiftedSchedule(schedule: WriterSchedule, offset: number): WriterSchedu
   ), schedule.repeats);
 }
 
-function matchingOuterRepeatOverlap(first: WriterSchedule, second: WriterSchedule): boolean {
+function reachableOuterDifference(
+  firstPeriod: bigint,
+  firstIterations: number,
+  secondPeriod: bigint,
+  secondIterations: number,
+  difference: bigint,
+): boolean {
+  const solution = extendedGreatestCommonDivisor(firstPeriod, secondPeriod);
+  const target = -difference;
+  if (target % solution.gcd !== 0n) return false;
+  const multiple = target / solution.gcd;
+  const firstStart = solution.first * multiple;
+  const secondStart = -solution.second * multiple;
+  const firstStep = secondPeriod / solution.gcd;
+  const secondStep = firstPeriod / solution.gcd;
+  let minimum = ceilDivide(-firstStart, firstStep);
+  minimum = minimum > ceilDivide(-secondStart, secondStep) ?
+    minimum : ceilDivide(-secondStart, secondStep);
+  let maximum: bigint | undefined;
+  if (firstIterations !== Number.POSITIVE_INFINITY) {
+    maximum = floorDivide(BigInt(firstIterations - 1) - firstStart, firstStep);
+  }
+  if (secondIterations !== Number.POSITIVE_INFINITY) {
+    const secondMaximum = floorDivide(
+      BigInt(secondIterations - 1) - secondStart,
+      secondStep,
+    );
+    maximum = maximum === undefined || secondMaximum < maximum ? secondMaximum : maximum;
+  }
+  return maximum === undefined || minimum <= maximum;
+}
+
+function symbolicOuterRepeatOverlap(first: WriterSchedule, second: WriterSchedule): boolean {
   const firstOuter = first.repeats.at(-1)!;
   const secondOuter = second.repeats.at(-1)!;
   const firstInner = withoutOuterRepeat(first);
   const secondInner = withoutOuterRepeat(second);
   const firstRange = scheduleRange(firstInner);
   const secondRange = scheduleRange(secondInner);
-  const [firstStart, firstEnd, secondStart, secondEnd, period] = scaleDyadics([
+  const values = [
     firstRange.start,
     firstRange.end,
     secondRange.start,
     secondRange.end,
     firstOuter.period,
-  ]);
-  const lower = ceilDivide(firstStart - secondEnd, period);
-  const upper = floorDivide(firstEnd - secondStart, period);
-  const minimum = firstOuter.iterations === Number.POSITIVE_INFINITY ? undefined :
-    -BigInt(firstOuter.iterations - 1);
-  const maximum = secondOuter.iterations === Number.POSITIVE_INFINITY ? undefined :
-    BigInt(secondOuter.iterations - 1);
-  const start = minimum === undefined ? lower : lower > minimum ? lower : minimum;
-  const end = maximum === undefined ? upper : upper < maximum ? upper : maximum;
-  if (start > end) return false;
-  // An outer frame's period is its child duration, so both inner ranges fit
-  // within one period. Only the same or immediately adjacent frame offsets
-  // can intersect; this loop is therefore constant-size, not occurrence expansion.
-  for (let difference = start; difference <= end; difference++) {
+    secondOuter.period,
+  ] as const;
+  const [firstStart, firstEnd, secondStart, secondEnd, firstPeriod, secondPeriod] = scaleDyadics(values);
+  const exponent = scaledDyadicExponent(values);
+  const increment = greatestCommonDivisor(firstPeriod, secondPeriod);
+  const lower = firstStart - secondEnd;
+  const upper = firstEnd - secondStart;
+  const start = ceilDivide(lower, increment) * increment;
+  // Inner ranges fit their outer child durations. Candidate deltas occupy a
+  // period-alignment window, never one slot per repeat occurrence.
+  for (let difference = start; difference <= upper; difference += increment) {
+    if (!reachableOuterDifference(
+      firstPeriod,
+      firstOuter.iterations,
+      secondPeriod,
+      secondOuter.iterations,
+      difference,
+    )) continue;
     if (schedulesOverlap(firstInner, shiftedSchedule(
       secondInner,
-      Number(difference) * firstOuter.period,
+      Number(difference) * 2 ** exponent,
     ))) {
       return true;
     }
   }
   return false;
+}
+
+function repeatAgainstStaticOverlap(repeated: WriterSchedule, staticSchedule: WriterSchedule): boolean {
+  const outer = repeated.repeats.at(-1)!;
+  const inner = withoutOuterRepeat(repeated);
+  const innerRange = scheduleRange(inner);
+  const staticRange = scheduleRange(staticSchedule);
+  const values = [innerRange.start, innerRange.end, staticRange.start, staticRange.end, outer.period] as const;
+  const [innerStart, innerEnd, staticStart, staticEnd, period] = scaleDyadics(values);
+  const first = ceilDivide(staticStart - innerEnd, period);
+  const last = floorDivide(staticEnd - innerStart, period);
+  const maximum = outer.iterations === Number.POSITIVE_INFINITY ? undefined :
+    BigInt(outer.iterations - 1);
+  for (let iteration = first > 0n ? first : 0n;
+    iteration <= last && (maximum === undefined || iteration <= maximum);
+    iteration++) {
+    if (schedulesOverlap(shiftedSchedule(inner, Number(iteration) * outer.period), staticSchedule)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function matchingOuterRepeatOverlap(first: WriterSchedule, second: WriterSchedule): boolean {
+  return symbolicOuterRepeatOverlap(first, second);
 }
 
 function schedulesOverlap(first: WriterSchedule, second: WriterSchedule): boolean {
@@ -450,13 +538,12 @@ function schedulesOverlap(first: WriterSchedule, second: WriterSchedule): boolea
   }
   const firstOuter = first.repeats.at(-1);
   const secondOuter = second.repeats.at(-1);
-  if (firstOuter !== undefined && secondOuter !== undefined &&
-    firstOuter.period === secondOuter.period) {
+  if (firstOuter !== undefined && secondOuter !== undefined) {
     return matchingOuterRepeatOverlap(first, second);
   }
-  const firstRange = scheduleRange(first);
-  const secondRange = scheduleRange(second);
-  return firstRange.start <= secondRange.end && secondRange.start <= firstRange.end;
+  if (firstOuter !== undefined) return repeatAgainstStaticOverlap(first, second);
+  if (secondOuter !== undefined) return repeatAgainstStaticOverlap(second, first);
+  return false;
 }
 
 function throwWriterConflict(first: WriterSchedule, second: WriterSchedule): never {

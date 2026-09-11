@@ -218,4 +218,31 @@ describe('immutable animation programs', () => {
     expect(() => parallel(evens, odds)).not.toThrow();
     expect(() => parallel(evens, multiplesOfFour)).toThrow('overlap');
   });
+
+  it('aligns unequal finite and mixed nested outer periods without filling holes', () => {
+    const x = signal(0, { debugName: 'x' });
+    const lhs = repeat(sequence(
+      repeat(sequence(track(x, tween({ to: 1, duration: 0 })), wait(1)), { iterations: 2 }),
+      wait(10),
+    ), { iterations: 2 });
+    const rhsFinite = repeat(sequence(
+      wait(2),
+      track(x, tween({ to: 2, duration: 0 })),
+      wait(13),
+    ), { iterations: 2 });
+    const rhsInfinite = repeat(sequence(
+      wait(2),
+      track(x, tween({ to: 3, duration: 0 })),
+      wait(13),
+    ), { iterations: Number.POSITIVE_INFINITY });
+    const overlapping = repeat(sequence(
+      wait(1),
+      track(x, tween({ to: 4, duration: 0 })),
+      wait(14),
+    ), { iterations: Number.POSITIVE_INFINITY });
+
+    expect(() => parallel(lhs, rhsFinite)).not.toThrow();
+    expect(() => parallel(lhs, rhsInfinite)).not.toThrow();
+    expect(() => parallel(lhs, overlapping)).toThrow('overlap');
+  });
 });
