@@ -1,11 +1,17 @@
 import type {
   LearningExampleCatalogEntry,
   LearningExampleMetadata,
+  LearningBrowseGroup,
   LearningSection,
   LearningSectionId,
 } from "./learning-types";
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+const introductionRoutes = {
+  "getting-started": "#/learn/guides/configure-jsx",
+  "create-element-authoring": "#/learn/guides/author-without-jsx",
+} as const;
 
 export const learningSections = [
   {
@@ -82,6 +88,24 @@ function isLearningSourcePath(
   slug: string,
 ): boolean {
   return path === sourcePath(section, slug);
+}
+
+function browseGroupFor(
+  section: LearningSectionId,
+  slug: string,
+): LearningBrowseGroup | undefined {
+  if (section === "start") return undefined;
+  if (section === "drawing" || slug === "filters") return "drawing";
+  if (section === "composition") return "composition";
+  if (section === "layout") return "layout";
+  if (
+    section === "mouse-events" ||
+    section === "user-events" ||
+    section === "advanced-interactions"
+  ) {
+    return "events-and-interaction";
+  }
+  return "focus-and-keyboard";
 }
 
 const drafts = [
@@ -1460,6 +1484,20 @@ export function validateLearningExampleCatalog(
         `Learning example "${entry.slug}" has an unknown section.`,
       );
     }
+    const expectedBrowseGroup = browseGroupFor(entry.section, entry.slug);
+    if (entry.browseGroup !== expectedBrowseGroup) {
+      throw new Error(
+        `Learning example "${entry.slug}" has an invalid public browse group.`,
+      );
+    }
+    if (
+      !entry.browseGroup &&
+      !(entry.slug in introductionRoutes)
+    ) {
+      throw new Error(
+        `Learning example "${entry.slug}" must belong to a public browse group.`,
+      );
+    }
     if (
       !Number.isInteger(entry.order) ||
       entry.order < 1 ||
@@ -1554,17 +1592,21 @@ const orderedDrafts = [...drafts].sort(
 );
 
 export const learningExampleCatalog = validateLearningExampleCatalog(
-  orderedDrafts.map((draft, index): LearningExampleCatalogEntry => ({
-    ...draft,
-    authoring: "authoring" in draft ? draft.authoring : "jsx",
-    source: { path: sourcePath(draft.section, draft.slug) },
-    relationships: {
-      previous: orderedDrafts[index - 1]?.slug,
-      next: orderedDrafts[index + 1]?.slug,
-      related: draft.related ?? [],
-    },
-    load: async () => (await draft.load()) as never,
-  })),
+  orderedDrafts.map((draft, index): LearningExampleCatalogEntry => {
+    const browseGroup = browseGroupFor(draft.section, draft.slug);
+    return {
+      ...draft,
+      authoring: "authoring" in draft ? draft.authoring : "jsx",
+      ...(browseGroup ? { browseGroup } : {}),
+      source: { path: sourcePath(draft.section, draft.slug) },
+      relationships: {
+        previous: orderedDrafts[index - 1]?.slug,
+        next: orderedDrafts[index + 1]?.slug,
+        related: draft.related ?? [],
+      },
+      load: async () => (await draft.load()) as never,
+    };
+  }),
 );
 
 export function getLearningExampleBySlug(
@@ -1576,13 +1618,41 @@ export function getLearningExampleBySlug(
 export function getLearningExampleRoute(
   entry: LearningExampleMetadata,
 ): string {
-  return `#/examples/${entry.section}/${entry.slug}`;
+  if (entry.browseGroup) {
+    return `#/examples/${entry.browseGroup}/${entry.slug}`;
+  }
+  const introductionRoute = introductionRoutes[
+    entry.slug as keyof typeof introductionRoutes
+  ];
+  if (!introductionRoute) {
+    throw new Error(
+      `Learning example "${entry.slug}" has no canonical public route.`,
+    );
+  }
+  return introductionRoute;
+}
+
+export function getLearningExampleLegacyRoutes(
+  entry: LearningExampleMetadata,
+): readonly string[] {
+  const legacyRoute = `#/examples/${entry.section}/${entry.slug}`;
+  return legacyRoute === getLearningExampleRoute(entry) ? [] : [legacyRoute];
 }
 
 export function getLearningExamplesBySection(
   section: LearningSectionId,
 ): readonly LearningExampleCatalogEntry[] {
   return learningExampleCatalog.filter((entry) => entry.section === section);
+}
+
+export function getLearningExamplesByBrowseGroup(
+  group: LearningBrowseGroup,
+): readonly LearningExampleCatalogEntry[] {
+  return learningExampleCatalog
+    .filter((entry) => entry.browseGroup === group)
+    .sort((left, right) =>
+      left.shortTitle.localeCompare(right.shortTitle, "en"),
+    );
 }
 
 export async function loadLearningExample(entry: LearningExampleCatalogEntry) {

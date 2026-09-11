@@ -1,0 +1,29 @@
+---
+id: api-component-text
+title: Text
+summary: Draws recursive textual children with local fitting and paint.
+kind: api
+slug: text
+apiCategory: component
+symbols: [Text]
+relatedTypes: [CRCTextChild, TextProps, TextStyle]
+---
+
+# Text
+
+```ts
+import { Text } from "@crc/core";
+```
+
+`Text` uses [`TextProps`](#/api/types/elements-components#textprops) and [`TextStyle`](#/api/types/styles#textstyle), and accepts recursive [`CRCTextChild`](#/api/types/elements-components#crctextchild)
+content rather than visual child elements. It supports paint, wrapping, fitting,
+and measurement under its local style. Font rasterization and measurement are
+browser behavior.
+
+```tsx
+<Text style={{ x: 20, y: 44, fill: "#0f172a", font: "600 24px sans-serif" }}>
+  Hello, {42}
+</Text>
+```
+
+Try the [Text live example](#/examples/drawing/text).

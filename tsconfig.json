@@ -12,7 +12,8 @@
       "@crc/core/types": ["./packages/core/src/types.ts"],
       "@crc/core": ["./packages/core/src/index.ts"],
       "@crc/webgl": ["./packages/webgl/src/index.ts"],
-      "@crc/types": ["./packages/types/src/index.ts"]
+      "@crc/types": ["./packages/types/src/index.ts"],
+      "virtual:crc-studio-docs": ["./playground/src/studio-docs.d.ts"]
     },
     "resolveJsonModule": true,
     "types": ["vite/client", "node", "vitest/config"],

@@ -188,7 +188,7 @@ Filters do not accept raw CSS strings, `url()`/SVG filter graphs,
 
 See the [layout contract](./layout-system-contract.md), [drawing
 contract](./drawing-components-contract.md), and [custom primitive
-guide](../guides/custom-components-and-primitives.md).
+guide](../site/learn/guides/custom-components-and-primitives.md).
 
 ## Rounded drawing style
 

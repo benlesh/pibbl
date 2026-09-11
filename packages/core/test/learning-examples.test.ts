@@ -1,9 +1,12 @@
 import {
+  getLearningExampleLegacyRoutes,
   getLearningExampleRoute,
+  getLearningExamplesByBrowseGroup,
   learningExampleCatalog,
   loadLearningExample,
   validateLearningExampleCatalog,
 } from "@crc/scenarios";
+import type { LearningBrowseGroup } from "@crc/scenarios";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   learningSourcePaths,
@@ -1085,15 +1088,116 @@ describe("learning example catalog", () => {
       { route: "#/examples/drawing/regular-polygon", api: ["RegularPolygon"] },
       { route: "#/examples/drawing/star", api: ["Star"] },
     ]);
+    const expectedBrowseGroups = {
+      drawing: [
+        "arc",
+        "circle",
+        "ellipse",
+        "filters",
+        "horizontal-line",
+        "image",
+        "line",
+        "path",
+        "polygon",
+        "rectangle",
+        "regular-polygon",
+        "star",
+        "svg-path",
+        "text",
+        "vertical-line",
+        "wedge",
+      ],
+      composition: ["clip", "group", "layer"],
+      layout: ["absolute-and-overlay", "flex", "flow", "grid"],
+      "events-and-interaction": [
+        "click",
+        "context-menu",
+        "custom-event-targets",
+        "double-click",
+        "drag-and-drop",
+        "event-sequences",
+        "hit-areas-and-cursors",
+        "mouse-boundaries-and-auxiliary-click",
+        "mouse-down",
+        "mouse-move",
+        "mouse-out",
+        "mouse-over",
+        "mouse-up",
+        "overlap-and-paint-order",
+        "pointer-capture",
+        "pointer-events",
+        "propagation-and-cancellation",
+        "touch-events",
+        "transformed-clipped-layered-targets",
+        "wheel",
+      ],
+      "focus-and-keyboard": [
+        "directional-navigation",
+        "editing-composition-and-clipboard",
+        "focus-management",
+        "keyboard-events-and-activation",
+        "nested-directional-navigation",
+      ],
+    } as const satisfies Readonly<
+      Record<LearningBrowseGroup, readonly string[]>
+    >;
+    const expectedIntroductionRoutes = {
+      "getting-started": "#/learn/guides/configure-jsx",
+      "create-element-authoring": "#/learn/guides/author-without-jsx",
+    } as const;
+
+    for (const [group, expectedSlugs] of Object.entries(expectedBrowseGroups) as Array<
+      [LearningBrowseGroup, readonly string[]]
+    >) {
+      const entries = getLearningExamplesByBrowseGroup(group);
+      expect(
+        entries.map((entry) => entry.slug).sort(),
+        group,
+      ).toEqual([...expectedSlugs].sort());
+      expect(entries.map(({ shortTitle }) => shortTitle), group).toEqual(
+        [...entries.map(({ shortTitle }) => shortTitle)].sort((a, b) =>
+          a.localeCompare(b, "en"),
+        ),
+      );
+    }
+
     expect(
       learningExampleCatalog
-        .filter((entry) => entry.section === "composition")
-        .map((entry) => entry.slug),
-    ).toEqual(["group", "clip", "filters", "layer"]);
+        .filter((entry) => !entry.browseGroup)
+        .map((entry) => entry.slug)
+        .sort(),
+    ).toEqual(Object.keys(expectedIntroductionRoutes).sort());
 
-    const clip = learningExampleCatalog.find(
-      (entry) => entry.section === "composition" && entry.slug === "clip",
+    const expectedGroupBySlug = new Map<string, LearningBrowseGroup>(
+      Object.entries(expectedBrowseGroups).flatMap(([group, slugs]) =>
+        slugs.map((slug) => [slug, group as LearningBrowseGroup] as const),
+      ),
     );
+    for (const entry of learningExampleCatalog) {
+      const expectedGroup = expectedGroupBySlug.get(entry.slug);
+      const oldRoute = `#/examples/${entry.section}/${entry.slug}`;
+      if (expectedGroup) {
+        const expectedRoute = `#/examples/${expectedGroup}/${entry.slug}`;
+        expect(entry.browseGroup, entry.slug).toBe(expectedGroup);
+        expect(getLearningExampleRoute(entry), entry.slug).toBe(expectedRoute);
+        expect(getLearningExampleLegacyRoutes(entry), entry.slug).toEqual(
+          oldRoute === expectedRoute ? [] : [oldRoute],
+        );
+      } else {
+        const expectedRoute =
+          expectedIntroductionRoutes[
+            entry.slug as keyof typeof expectedIntroductionRoutes
+          ];
+        expect(expectedRoute, entry.slug).toBeDefined();
+        expect(entry.browseGroup, entry.slug).toBeUndefined();
+        expect(getLearningExampleRoute(entry), entry.slug).toBe(expectedRoute);
+        expect(getLearningExampleLegacyRoutes(entry), entry.slug).toEqual([
+          oldRoute,
+        ]);
+      }
+    }
+
+    const clip = learningExampleCatalog.find((entry) => entry.slug === "clip");
     expect(clip).toBeDefined();
     expect(clip?.api).toEqual(["Clip", "createRegularPolygonPath"]);
     expect(clip?.objectives).toEqual([
@@ -1378,7 +1482,7 @@ describe("learning example catalog", () => {
     const drawingAndComposition = learningExampleCatalog
       .filter(
         (entry) =>
-          entry.section === "drawing" || entry.section === "composition",
+          entry.browseGroup === "drawing" || entry.browseGroup === "composition",
       )
       .flatMap((entry) => entry.api);
     expect(new Set(drawingAndComposition)).toEqual(

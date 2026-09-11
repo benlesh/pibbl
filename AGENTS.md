@@ -44,7 +44,10 @@ When sources disagree, use this order and call out material drift:
 5. Plan 003's implemented design for style/layout intent not superseded by the
    current contracts.
 6. Completed numbered plans and their dated field notes as historical evidence.
-7. Draft PRDs, extraction files, `_bmad-output/`, and memlogs as discovery evidence,
+7. The [product strategy and future opportunities](docs/strategy/README.md) for
+   non-normative prioritization hypotheses only; it never defines shipped
+   behavior or authorizes implementation.
+8. Draft PRDs, extraction files, `_bmad-output/`, and memlogs as discovery evidence,
    not normative behavior.
 
 Test totals in documentation are dated snapshots. In particular, the 265-test
@@ -60,9 +63,13 @@ either as the current result unless a fresh run reproduces it.
 - `packages/types`: deliberately minimal compatibility package; shared public
   types do not belong here until a concrete need justifies them.
 - `playground`: the interactive examples studio and the separate automated-test
-  laboratory UI.
+  laboratory UI. Its public documentation surface is Learn, API, and Examples;
+  `docs/site/` is the only Markdown tree rendered or searched publicly.
 - `tooling`: catalog, package-consumer, and visual verification programs.
 - `docs/design`: implemented behavior contracts.
+- `docs/strategy`: non-normative product hypotheses, candidate experiments,
+  and future opportunities. Consult it when scoping new work, not as an active
+  execution queue.
 - `docs/testing`: trust-gate policy, evidence, and historical field notes.
 - `docs/project-plans`: executable-plan workflow and completed plans.
 
@@ -182,6 +189,9 @@ Read the exact contracts before changing these areas:
   actual, and diff output and record why an intentional change is correct.
 - Keep learning examples separate from exhaustive deterministic test fixtures,
   while ensuring both exercise the same supported public behavior.
+- Keep public Studio search build-time and local: MiniSearch indexes validated
+  Learn/API content and public example metadata only. Test labs, scenario-only
+  metadata, and repository documentation outside `docs/site/` are excluded.
 - New public capabilities must agree across runtime exports, declarations,
   Bundler and NodeNext consumers, packed output, source/built browser modes, and
   the Studio's editor declarations.
@@ -244,8 +254,8 @@ execution, and a complete JSX/non-JSX learning catalog.
 
 There is no React dependency, global JSX namespace, classic-transform contract,
 async component support, lowercase intrinsic vocabulary, or compatibility
-alias for removed authoring values. Current guides and the API reference live
-under `docs/guides/` and `docs/api-reference.md`; the approved design and
+alias for removed authoring values. Current public guides and the API reference
+live under `docs/site/learn/guides/` and `docs/site/api/`; the approved design and
 implementation record remain under `docs/superpowers/` as dated evidence.
 
 ## Shipped first-class filters

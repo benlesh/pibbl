@@ -2,6 +2,11 @@
 
 The existing-feature confidence phase closes correctness and evidence gaps in the current API. The remaining backlog contains only measured triggers or explicitly out-of-scope product work.
 
+For broader, non-normative product hypotheses and possible experiments, see the
+[CRC product strategy and future opportunities](./strategy/README.md). This
+file remains the concrete ledger for accepted triggers and current deferrals;
+the strategy document does not override it.
+
 ## Measured triggers
 
 - Add a spatial index only after the controlled 10,000-region sparse/miss workload exceeds 6 ms median or 12 ms p95 in three reference runs after environment and constant-factor regressions are excluded.
