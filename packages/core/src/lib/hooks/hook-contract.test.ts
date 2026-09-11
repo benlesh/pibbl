@@ -13,6 +13,7 @@ import { crcEventTarget } from './crc-event-target';
 import { crcLinePath } from './crc-line-path';
 import { crcMemo } from './crc-memo';
 import { crcPlayback } from './crc-playback';
+import { crcTransition } from './crc-transition';
 import { crcRectPath } from './crc-rect-path';
 import { crcRef } from './crc-ref';
 import { crcSignal } from './crc-signal';
@@ -285,6 +286,7 @@ describe('hook ordering and render errors', () => {
       () => crcRef(0),
       () => crcSignal(0),
       () => crcPlayback(track(signal(0), tween({ to: 1, duration: 1 }))),
+      () => crcTransition(1, { type: 'tween', duration: 1 }),
       () => crcWhenChanged(() => {}, []),
       () => crcRectPath(0, 0, 1, 1),
       () => crcLinePath([[0, 0], [1, 1]]),

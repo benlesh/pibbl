@@ -143,6 +143,7 @@ export type {
   CRCAnimationRepeatDirection,
   CRCAnimationRepeatOptions,
   CRCAnimationSampleInput,
+  CRCSpringTransitionOptions,
   CRCPlayback,
   CRCPlaybackEvent,
   CRCPlaybackOptions,
@@ -153,6 +154,7 @@ export type {
   CRCSpringOptions,
   CRCStepperOptions,
   CRCTweenOptions,
+  CRCTweenTransitionOptions,
 } from './lib/animation/types.js';
 export type {
   CRCConfig,
@@ -259,6 +261,7 @@ export { crcMemo } from './lib/hooks/crc-memo.js';
 export { crcRectPath } from './lib/hooks/crc-rect-path.js';
 export { crcRef, type CRCRef } from './lib/hooks/crc-ref.js';
 export { crcPlayback } from './lib/hooks/crc-playback.js';
+export { crcTransition } from './lib/hooks/crc-transition.js';
 export { crcSignal } from './lib/hooks/crc-signal.js';
 export { crcState, type StateUpdater } from './lib/hooks/crc-state.js';
 export { crcSvgPath } from './lib/hooks/crc-svg-path.js';

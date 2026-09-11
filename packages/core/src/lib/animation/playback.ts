@@ -18,6 +18,7 @@ import type {
   CRCFrameSnapshot,
 } from '../scheduler/types.js';
 import { getDefinitionRecord } from './definition.js';
+import { sampleSpring, type SpringSample } from './spring.js';
 import {
   adoptProgramActivationFork,
   evaluateProgram,
@@ -119,6 +120,8 @@ export interface AnimationPlaybackSnapshot {
 export interface AnimationPlaybackController {
   readonly handle: CRCPlayback;
   adopt(program: CRCAnimationProgram, options?: CRCPlaybackOptions): void;
+  committedSpringSnapshot(): SpringSample | undefined;
+  retarget(program: CRCAnimationProgram, options?: CRCPlaybackOptions): void;
   dispose(): void;
 }
 
@@ -256,6 +259,7 @@ export function createAnimationPlaybackController(
   let run: PlaybackRun | undefined;
   let storedPlaybackRate = 1;
   let delivery: FrameDelivery | undefined;
+  let pendingRetarget: CRCBeginCommandHandle | undefined;
   const pendingCommands = new Set<CRCBeginCommandHandle>();
   const metadataWriter = Object.freeze({ name: 'CRC playback metadata' });
   const status = signal<CRCPlaybackStatus>('idle', {
@@ -922,12 +926,13 @@ export function createAnimationPlaybackController(
     command: PlaybackCommandName,
     generation: number,
     argument?: number | 'error' | 'replace',
-  ): void {
-    if (disposed) return;
+  ): CRCBeginCommandHandle | undefined {
+    if (disposed) return undefined;
     queuedCommands++;
     let commandHandle!: CRCBeginCommandHandle;
     commandHandle = queueBeginCommand((snapshot, batch, sequence) => {
       pendingCommands.delete(commandHandle);
+      if (pendingRetarget === commandHandle) pendingRetarget = undefined;
       queuedCommands--;
       if (disposed || generation !== queuedGeneration) return;
       recordSchedulerTrace({
@@ -947,6 +952,7 @@ export function createAnimationPlaybackController(
       }
     });
     pendingCommands.add(commandHandle);
+    return commandHandle;
   }
 
   function acceptCommandWithoutTrace(
@@ -1122,6 +1128,27 @@ export function createAnimationPlaybackController(
       program = candidate.program;
       options = candidate.options;
     },
+    committedSpringSnapshot(): SpringSample | undefined {
+      const target = run;
+      if (disposed || target === undefined || target.released) return undefined;
+      const programRecord = getProgramRecord(target.program);
+      if (programRecord.kind !== 'track') return undefined;
+      const definitionRecord = getDefinitionRecord(programRecord.definition);
+      if (definitionRecord.kind !== 'spring') return undefined;
+      return sampleSpring(definitionRecord, target.position / 1000);
+    },
+    retarget(nextProgram: CRCAnimationProgram, nextOptions: CRCPlaybackOptions = {}): void {
+      if (disposed) return;
+      const candidate = normalizeAnimationPlaybackCandidate(nextProgram, nextOptions);
+      program = candidate.program;
+      options = candidate.options;
+      if (pendingRetarget !== undefined) {
+        pendingRetarget.cancel();
+        if (pendingCommands.delete(pendingRetarget)) queuedCommands--;
+      }
+      const generation = ++queuedGeneration;
+      pendingRetarget = enqueue('play', generation, 'replace');
+    },
     dispose(): void {
       if (disposed) return;
       disposed = true;
@@ -1131,6 +1158,7 @@ export function createAnimationPlaybackController(
         queuedCommands--;
       }
       pendingCommands.clear();
+      pendingRetarget = undefined;
       if (run !== undefined) releaseRun(run);
       if (delivery !== undefined) {
         queuedMilestones -= delivery.events.length;

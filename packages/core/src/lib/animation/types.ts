@@ -59,6 +59,30 @@ export interface CRCSpringOptions {
   readonly debugName?: string;
 }
 
+export interface CRCTweenTransitionOptions<T> {
+  readonly type: 'tween';
+  readonly duration: number;
+  readonly easing?: CRCEasing;
+  readonly interpolate?: CRCInterpolator<T>;
+  readonly equals?: import('../signals/types.js').SignalEquals<T>;
+  readonly initial?: T;
+  readonly debugName?: string;
+}
+
+export interface CRCSpringTransitionOptions {
+  readonly type: 'spring';
+  readonly mass?: number;
+  readonly stiffness?: number;
+  readonly damping?: number;
+  readonly initialVelocity?: number;
+  readonly restSpeed?: number;
+  readonly restDelta?: number;
+  readonly maxDuration?: number;
+  readonly equals?: import('../signals/types.js').SignalEquals<number>;
+  readonly initial?: number;
+  readonly debugName?: string;
+}
+
 export interface CRCAnimationSampleInput<T> {
   readonly initialValue: T;
   readonly localTime: number;
