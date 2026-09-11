@@ -84,7 +84,7 @@ crc(document.querySelector("canvas")!, <Scene />);
 The omitted camera is exactly:
 
 ```ts
-{
+const defaultCamera = {
   type: "perspective",
   position: [0, 0, 5],
   lookAt: [0, 0, 0],
@@ -92,7 +92,7 @@ The omitted camera is exactly:
   fieldOfViewDegrees: 50,
   near: 0.1,
   far: 1000,
-}
+} as const;
 ```
 
 Its aspect ratio follows the layer's logical width and height. Backing density

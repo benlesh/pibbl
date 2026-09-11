@@ -19,11 +19,14 @@ import { Sphere } from "@crc/webgl";
 origin. `style.radius` defaults to `0.5` and must be finite and positive. It
 also accepts the [`Mesh`](#/api/components/mesh) transform, color, opacity, and
 cursor style plus event/focus props.
+Its public surface is [`SphereProps`](#/api/types/webgl#sphereprops) with
+[`SphereStyle`](#/api/types/webgl#spherestyle), including the shared
+[`CRCWebGLTransformStyle`](#/api/types/webgl#crcwebgltransformstyle).
 
 ```tsx
 <Sphere
   style={{ radius: 0.75, translateX: 1.2, color: "#22c55e" }}
-  onClick={() => selectSphere()}
+  onClick={() => console.log("sphere selected")}
 />
 ```
 

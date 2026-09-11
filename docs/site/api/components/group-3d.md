@@ -12,13 +12,17 @@ relatedTypes: [CRCNode, CRCWebGLTransformStyle, Group3DProps, Group3DStyle]
 # Group3D
 
 ```ts
-import { Group3D } from "@crc/webgl";
+import { Cube, Group3D } from "@crc/webgl";
 ```
 
 `Group3D` is a nonpainting WebGL structural component. It composes translation,
 X/Y/Z degree rotation, and scale for recursive children in the fixed order
 translation × Z × Y × X × scale. Translation and rotation default to zero;
 scale defaults to one, supports negative values, and rejects zero.
+Its recursive [`CRCNode`](#/api/types/elements-components#crcnode) children are
+declared by [`Group3DProps`](#/api/types/webgl#group3dprops), and
+[`Group3DStyle`](#/api/types/webgl#group3dstyle) uses the shared
+[`CRCWebGLTransformStyle`](#/api/types/webgl#crcwebgltransformstyle).
 
 ```tsx
 <Group3D

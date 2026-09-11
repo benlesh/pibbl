@@ -26,6 +26,12 @@ import { defineWebGLPrimitive } from "@crc/webgl";
 `definePrimitive`. It creates a platform component that renders only inside
 [`WebGLLayer`](#/api/components/webgl-layer), with optional pure style
 normalization/resolution and one required hit capability.
+Its generic public surface is described by
+[`CRCWebGLPrimitiveRender`](#/api/types/webgl#crcwebglprimitiverender),
+[`CRCWebGLPrimitiveCapabilities`](#/api/types/webgl#crcwebglprimitivecapabilities),
+[`CRCWebGLHitCapability`](#/api/types/webgl#crcwebglhitcapability),
+[`CRCWebGLProgramProps`](#/api/types/webgl#crcwebglprogramprops), and
+[`CRCWebGLPrimitiveInput`](#/api/types/webgl#crcwebglprimitiveinput).
 
 The capability is one of:
 

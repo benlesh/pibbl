@@ -13,13 +13,17 @@ relatedTypes:
 # WebGLLayer
 
 ```ts
-import { WebGLLayer } from "@crc/webgl";
+import { Cube, WebGLLayer } from "@crc/webgl";
 ```
 
 `WebGLLayer` is a Canvas composition primitive whose recursive `children` run
 under the WebGL backend. Each omitted `style.width` or `style.height` uses the
 current logical Canvas allocation. Compatible box/layout fields and core
 `style.filter` apply at the completed bitmap boundary.
+Those recursive [`CRCNode`](#/api/types/elements-components#crcnode) values are
+declared by [`WebGLLayerProps`](#/api/types/webgl#webgllayerprops), while
+[`WebGLLayerStyle`](#/api/types/webgl#webgllayerstyle) describes its Canvas
+allocation and presentation.
 
 ```tsx
 <WebGLLayer style={{ width: 480, height: 300 }}>

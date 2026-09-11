@@ -19,6 +19,8 @@ import { createWebGLGeometry } from "@crc/webgl";
 [`CRCWebGLGeometry`](#/api/types/webgl#crcwebglgeometry). It copies positions to
 finite `Float32` values and optional indices to unsigned 32-bit values, so
 later caller-array mutation cannot affect rendering or picking.
+The accepted source object is
+[`CRCWebGLGeometryInput`](#/api/types/webgl#crcwebglgeometryinput).
 
 ```ts
 const quad = createWebGLGeometry({

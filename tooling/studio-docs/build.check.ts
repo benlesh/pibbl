@@ -376,16 +376,18 @@ order: ${String(order)}
     "Validated tutorial frontmatter must model multiple roots and chapters.",
   );
   assert.deepEqual(
-    buildNavigation(multipleTutorials, []).at(0)?.children?.[0]?.children?.map(
-      ({ href }) => href,
-    ),
+    buildNavigation(multipleTutorials, [])
+      .at(0)
+      ?.children?.[0]?.children?.map(({ href }) => href),
     [
       "#/learn/tutorials/advanced-animation",
       "#/learn/tutorials/diagram-editor",
     ],
     "Navigation must retain each tutorial root while hiding chapters beneath it.",
   );
-  await rm(join(fixtureRoot, "docs/site/learn/tutorials/advanced-animation/index.md"));
+  await rm(
+    join(fixtureRoot, "docs/site/learn/tutorials/advanced-animation/index.md"),
+  );
   await assert.rejects(
     () => buildStudioDocumentation(fixtureOptions),
     /requires exactly one matching tutorial root/u,
@@ -429,6 +431,7 @@ assert.deepEqual(
     "Style and draw",
     "Compose and lay out scenes",
     "Manage state and lifecycle",
+    "Add WebGL islands",
     "Add focus and keyboard navigation",
     "Create custom components and primitives",
     "Integrate with React",

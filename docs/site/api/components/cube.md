@@ -19,12 +19,15 @@ import { Cube } from "@crc/webgl";
 `style.size` defaults to `1` and must be finite and positive. It also accepts
 the [`Mesh`](#/api/components/mesh) transform, color, opacity, and cursor style
 plus event/focus props.
+Its public surface is [`CubeProps`](#/api/types/webgl#cubeprops) with
+[`CubeStyle`](#/api/types/webgl#cubestyle), including the shared
+[`CRCWebGLTransformStyle`](#/api/types/webgl#crcwebgltransformstyle).
 
 ```tsx
 <Cube
   keyboardFocusable
   style={{ size: 1.4, rotationYDegrees: 25, color: "#8b5cf6" }}
-  onClick={() => selectCube()}
+  onClick={() => console.log("cube selected")}
 />
 ```
 

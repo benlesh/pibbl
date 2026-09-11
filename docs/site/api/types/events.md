@@ -16,6 +16,7 @@ symbols:
     CRCEventHandler,
     CRCEventHandlers,
     CRCEventMap,
+    CRCEventParticipationOptions,
     CRCEventPhase,
     CRCEventPropName,
     CRCEventTarget,
@@ -30,6 +31,7 @@ symbols:
     CRCMouseEvent,
     CRCMouseEventListener,
     CRCPointerEvent,
+    CRCPointerEvents,
     CRCTouchEvent,
     CRCWheelEvent,
   ]
@@ -78,6 +80,11 @@ specific logical event-handler type.
 
 `CRCEventMap` maps supported event-type strings to their corresponding facade
 types for generic event code.
+
+## CRCEventParticipationOptions
+
+`CRCEventParticipationOptions` supplies the shared optional `pointerEvents`
+property used by drawing primitives and WebGL layers.
 
 ## CRCEventPhase
 
@@ -144,6 +151,12 @@ coordinates.
 
 `CRCPointerEvent` is the logical facade for pointer events, including capture
 and CRC root-logical coordinates.
+
+## CRCPointerEvents
+
+`CRCPointerEvents` is exactly `"auto" | "none"`. `"auto"` keeps the receiving
+paint or WebGL geometry in hit resolution; `"none"` opts it and its owned
+interaction bridge out without changing pixels.
 
 ## CRCTouchEvent
 

@@ -1,6 +1,6 @@
 # WebGL islands documentation field note
 
-> **Status: DOCUMENTATION-TRACK EVIDENCE ONLY.** This note records fresh checks
+> **Historical status: DOCUMENTATION-TRACK EVIDENCE ONLY.** This note records fresh checks
 > run in the isolated Task 14 documentation worktree. It is not an aggregate
 > trust result, browser result, or implementation-completion claim. Joined
 > integration owns the final status-bearing evidence.

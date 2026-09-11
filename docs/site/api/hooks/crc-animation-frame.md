@@ -12,7 +12,7 @@ relatedTypes: []
 # crcAnimationFrame
 
 ```ts
-import { crcAnimationFrame } from "@crc/webgl";
+import { crcAnimationFrame, Cube } from "@crc/webgl";
 ```
 
 `crcAnimationFrame()` is a render-only hook. It returns the current CRC frame

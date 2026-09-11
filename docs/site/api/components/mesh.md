@@ -18,6 +18,9 @@ import { Mesh, createWebGLGeometry } from "@crc/webgl";
 `Mesh` draws one [`CRCWebGLGeometry`](#/api/types/webgl#crcwebglgeometry) through
 CRC's unlit solid-color pipeline and registers the same geometry/model snapshot
 for ray picking.
+Its public surface is [`MeshProps`](#/api/types/webgl#meshprops) with
+[`MeshStyle`](#/api/types/webgl#meshstyle), including the shared
+[`CRCWebGLTransformStyle`](#/api/types/webgl#crcwebgltransformstyle).
 
 ```tsx
 const geometry = createWebGLGeometry({

@@ -405,9 +405,7 @@ function jsxNamespaceMembers(source, filename) {
 }
 
 function apiSymbolsFromFrontmatter(source, filename) {
-  const match = source.match(
-    /^symbols:\s*\[([^\]]*)\]\s*$/mu,
-  );
+  const match = source.match(/^symbols:\s*\[([^\]]*)\]\s*$/mu);
   assert.ok(match, `${filename} is missing a symbols frontmatter list`);
   return new Set(
     match[1]
@@ -419,10 +417,7 @@ function apiSymbolsFromFrontmatter(source, filename) {
 
 function assertDocumentedTokenNames(source, names, label) {
   for (const name of names) {
-    assert.ok(
-      source.includes("`" + name + "`"),
-      `${label} is missing ${name}`,
-    );
+    assert.ok(source.includes("`" + name + "`"), `${label} is missing ${name}`);
   }
 }
 
@@ -710,6 +705,9 @@ async function typecheckCompleteSnippets(snippets) {
               ],
               "@crc/core/jsx-runtime": [
                 join(repositoryRoot, "packages/core/src/jsx-runtime.ts"),
+              ],
+              "@crc/core/internal": [
+                join(repositoryRoot, "packages/core/src/internal.ts"),
               ],
               "@crc/core/types": [
                 join(repositoryRoot, "packages/core/src/types.ts"),
@@ -1456,7 +1454,9 @@ assertSameNames(
   "Documented jsx-runtime values",
 );
 assertSameNames(
-  [...documentedApiSymbols].filter((name) => devRuntimeExports.values.has(name)),
+  [...documentedApiSymbols].filter((name) =>
+    devRuntimeExports.values.has(name),
+  ),
   devRuntimeExports.values,
   "Documented jsx-dev-runtime values",
 );
@@ -1527,7 +1527,10 @@ for (const dependencies of [
   webglManifest.peerDependencies,
 ]) {
   assert.ok(!dependencies?.react, "@crc/webgl must not depend on React.");
-  assert.ok(!dependencies?.["@crc/types"], "@crc/webgl must not depend on @crc/types.");
+  assert.ok(
+    !dependencies?.["@crc/types"],
+    "@crc/webgl must not depend on @crc/types.",
+  );
 }
 const typesManifest = JSON.parse(
   await readFile(join(repositoryRoot, "packages/types/package.json"), "utf8"),
@@ -1690,7 +1693,9 @@ function assertWorkflowCommandOrder(source, commands, label) {
   }
 }
 
-const configuring = currentSources.get("docs/site/learn/guides/configure-jsx.md");
+const configuring = currentSources.get(
+  "docs/site/learn/guides/configure-jsx.md",
+);
 for (const marker of [
   "@crc/core/jsx-runtime",
   "@crc/core/jsx-dev-runtime",
@@ -1717,14 +1722,8 @@ const requiredGuideMarkers = new Map([
     "docs/site/learn/guides/components-props-and-children.md",
     ["ordinary synchronous"],
   ],
-  [
-    "docs/site/learn/guides/style-and-draw.md",
-    ["## Local, closed style"],
-  ],
-  [
-    "docs/site/learn/guides/compose-and-layout.md",
-    ["crcLayoutBox()"],
-  ],
+  ["docs/site/learn/guides/style-and-draw.md", ["## Local, closed style"]],
+  ["docs/site/learn/guides/compose-and-layout.md", ["crcLayoutBox()"]],
   [
     "docs/site/learn/guides/custom-components-and-primitives.md",
     ["crcCanvasContext()", "normalizeStyle", "resolveStyle", "measure"],
@@ -2010,7 +2009,10 @@ assert.ok(
 const matrixRequirements = [
   {
     topic: /Complete interactive JSX quick start/u,
-    guides: ["site/learn/guides/configure-jsx.md", "design/runtime-hooks-contract.md"],
+    guides: [
+      "site/learn/guides/configure-jsx.md",
+      "design/runtime-hooks-contract.md",
+    ],
     evidence: ["getting-started.example.tsx"],
   },
   {
@@ -2020,7 +2022,10 @@ const matrixRequirements = [
   },
   {
     topic: /No React dependency/u,
-    guides: ["site/learn/guides/configure-jsx.md", "site/learn/guides/react-integration.md"],
+    guides: [
+      "site/learn/guides/configure-jsx.md",
+      "site/learn/guides/react-integration.md",
+    ],
     evidence: ["verify-packed-consumer.mjs"],
   },
   {
@@ -2109,7 +2114,10 @@ const matrixRequirements = [
   },
   {
     topic: /One runtime per file/u,
-    guides: ["site/learn/guides/react-integration.md", "site/learn/guides/configure-jsx.md"],
+    guides: [
+      "site/learn/guides/react-integration.md",
+      "site/learn/guides/configure-jsx.md",
+    ],
     evidence: ["mixed-runtime/react-host.tsx"],
   },
   {
@@ -2142,6 +2150,36 @@ const matrixRequirements = [
     topic: /One-time breaking migration/u,
     guides: ["migrations/jsx-authoring-pivot.md"],
     evidence: ["public-api.test.ts"],
+  },
+  {
+    topic: /One JSX runtime, package setup, cameras/u,
+    guides: [
+      "site/learn/guides/webgl-islands.md",
+      "design/drawing-components-contract.md",
+    ],
+    evidence: ["webgl-islands.example.tsx", "webgl-lab.example.tsx"],
+  },
+  {
+    topic: /Fixed Canvas\/WebGL targeting/u,
+    guides: [
+      "site/learn/guides/webgl-islands.md",
+      "design/user-events-contract.md",
+      "design/focus-and-keyboard-navigation-contract.md",
+    ],
+    evidence: ["events-integration.test.tsx", "webgl-lab.test.ts"],
+  },
+  {
+    topic: /Raw WebGL extension/u,
+    guides: [
+      "site/learn/guides/custom-components-and-primitives.md",
+      "design/runtime-resource-ownership.md",
+    ],
+    evidence: ["define-webgl-primitive.test.tsx", "webgl-ownership.test.ts"],
+  },
+  {
+    topic: /Default drawing participation migration/u,
+    guides: ["migrations/default-pointer-participation.md"],
+    evidence: ["events-integration.test.tsx", "public-pointer-events.test.ts"],
   },
 ];
 
@@ -2482,7 +2520,10 @@ export async function verifyMutationProbes() {
   throws(
     () =>
       assertFixedConfigSignal(
-        canvasRuntimeTypes.replace("`fit`, `pixelRatio`, and `signal`", "`fit` and `pixelRatio`"),
+        canvasRuntimeTypes.replace(
+          "`fit`, `pixelRatio`, and `signal`",
+          "`fit` and `pixelRatio`",
+        ),
       ),
     /fixed CRCConfig/u,
   );
