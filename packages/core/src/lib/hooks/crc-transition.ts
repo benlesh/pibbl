@@ -10,7 +10,11 @@ import type {
   CRCTweenTransitionOptions,
 } from '../animation/types.js';
 import { GLOBAL_STATE } from '../global-state.js';
-import { getSignalNode, signal } from '../signals/graph.js';
+import {
+  provisionSignalValueForRender,
+  signal,
+  untracked,
+} from '../signals/graph.js';
 import type { Signal, SignalEquals, WritableSignal } from '../signals/types.js';
 import type { CRCComponentRefs, CRCInstance } from '../types.js';
 import { requireHookContext, useHookSlot } from './hook-slot.js';
@@ -166,11 +170,11 @@ export function crcTransition<T>(
     !candidate.equals(candidate.initial, candidate.target);
   const shouldRetarget = slot.settled &&
     !candidate.equals(slot.target, candidate.target);
-  const outputNode = getSignalNode(slot.output);
-  const previousProvisionalValue = outputNode.value;
+  const previousProvisionalValue = untracked(() => slot.output.get());
   const hasProvisionalValue = !slot.settled &&
     !Object.is(previousProvisionalValue, candidate.initial);
-  if (hasProvisionalValue) outputNode.value = candidate.initial;
+  const provision = hasProvisionalValue ?
+    provisionSignalValueForRender(slot.output, candidate.initial) : undefined;
   const revision = ++slot.renderRevision;
   const transaction = GLOBAL_STATE.renderTransaction;
   if (!transaction) {
@@ -178,12 +182,11 @@ export function crcTransition<T>(
   }
   transaction.onFinish(success => {
     if (!success) {
-      if (revision === slot.renderRevision && hasProvisionalValue && !slot.settled) {
-        outputNode.value = previousProvisionalValue;
-      }
+      if (revision === slot.renderRevision && !slot.settled) provision?.rollback();
       return;
     }
     if (revision !== slot.renderRevision || !isCurrentSlot(slot)) return;
+    provision?.commit();
     slot.settled = true;
     slot.target = candidate.target;
     if (!shouldEnter && !shouldRetarget) {

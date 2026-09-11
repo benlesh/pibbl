@@ -6,6 +6,8 @@ import {
 } from '@crc/core/internal';
 import {
   crc,
+  computed,
+  crcMemo,
   crcTransition,
   signal,
   type Signal,
@@ -14,7 +16,7 @@ import { animationPlaybackSnapshot } from '../animation/playback.js';
 import { createSpringRecord, sampleSpring } from '../animation/spring.js';
 import { executeRender } from '../execute-render.js';
 import { clearSharedState, getCRCInstance } from '../global-state.js';
-import { signalGraphSnapshot } from '../signals/graph.js';
+import { getSignalNode, signalGraphSnapshot } from '../signals/graph.js';
 import { writerLeaseSnapshot } from '../animation/writer-leases.js';
 import {
   installSchedulerDriverForTest,
@@ -384,17 +386,28 @@ describe('crcTransition retargeting', () => {
   });
 
   it('keeps one signal identity across failed omitted and explicit initial mount retries', () => {
+    const beforeGraph = signalGraphSnapshot();
     let owner!: CRCInternalRenderOwner;
     let failComposition = false;
-    const values: number[] = [];
+    const values: Array<readonly [direct: number, derived: number]> = [];
+    const versions: number[] = [];
     const outputs: Signal<number>[] = [];
+    let outputNotifications = 0;
+    let observedOutput: Signal<number> | undefined;
+    const outputObserver = () => outputNotifications++;
     const workKey = {};
     function Child({ initial, target }: { initial?: number; target: number }) {
       const output = initial === undefined ?
         crcTransition(target, { type: 'tween', duration: 100 }) :
         crcTransition(target, { type: 'tween', duration: 100, initial });
+      const doubled = crcMemo(() => computed(() => output.get() * 2), []);
+      if (observedOutput === undefined) {
+        observedOutput = output;
+        getSignalNode(output).observers.add(outputObserver);
+      }
       outputs.push(output);
-      values.push(output.get());
+      values.push([output.get(), doubled.get()]);
+      versions.push(getSignalNode(output).version);
     }
     function Root({
       include,
@@ -424,13 +437,23 @@ describe('crcTransition retargeting', () => {
     crc(canvas, <Root include target={30} />);
     driver.flush(30);
 
-    expect(values).toEqual([10, 3, 30]);
+    expect(values).toEqual([[10, 20], [3, 6], [30, 60]]);
+    expect(versions[1]).toBeGreaterThan(versions[0]);
+    expect(versions[2]).toBeGreaterThan(versions[1]);
     expect(outputs[1]).toBe(outputs[0]);
     expect(outputs[2]).toBe(outputs[0]);
+    expect(outputNotifications).toBe(0);
     expect(animationPlaybackSnapshot().activePlaybacks).toBe(0);
     expect(animationPlaybackSnapshot().queuedCommands).toBe(0);
     expect(writerLeaseSnapshot().active).toBe(0);
     expect(driver.pendingHostFrames).toBe(0);
+    expect(signalGraphSnapshot().computedSourceEdges)
+      .toBe(beforeGraph.computedSourceEdges + 1);
+
+    getSignalNode(observedOutput!).observers.delete(outputObserver);
+    executeRender(canvas, 31, undefined);
+    expect(signalGraphSnapshot().computedSourceEdges)
+      .toBe(beforeGraph.computedSourceEdges);
   });
 });
 

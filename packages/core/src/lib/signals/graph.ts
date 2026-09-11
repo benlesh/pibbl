@@ -41,6 +41,12 @@ export interface SignalObserver {
   propagateInvalidation?: boolean;
 }
 
+/** @internal One render-local source value that can be accepted or restored. */
+export interface SignalRenderProvision {
+  commit(): void;
+  rollback(): void;
+}
+
 export interface SignalDependencyCollector {
   addDependency(node: SignalNode<unknown>): void;
 }
@@ -226,6 +232,40 @@ export function signal<T>(
   signalValues.add(readonly);
   signalNodes.set(readonly, node as SignalNode<unknown>);
   return writable;
+}
+
+/**
+ * @internal Presents a provisional value to reads and computed dependencies
+ * during one render without publishing an ordinary signal notification.
+ * This is reserved for a not-yet-successfully-mounted owner whose render
+ * transaction will immediately call exactly one settlement method.
+ */
+export function provisionSignalValueForRender<T>(
+  value: WritableSignal<T>,
+  nextValue: T,
+): SignalRenderProvision {
+  const node = getSignalNode(value);
+  const previousValue = node.value;
+  let unsettled = true;
+  const publishComputedVersion = (next: T): void => {
+    node.value = next;
+    node.version++;
+    throwSignalObserverFailures(
+      notifyComputedInvalidationObservers(node as SignalNode<unknown>),
+    );
+  };
+
+  publishComputedVersion(nextValue);
+  return Object.freeze({
+    commit(): void {
+      unsettled = false;
+    },
+    rollback(): void {
+      if (!unsettled) return;
+      unsettled = false;
+      publishComputedVersion(previousValue);
+    },
+  });
 }
 
 export function computed<T>(

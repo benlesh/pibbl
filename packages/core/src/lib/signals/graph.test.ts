@@ -12,6 +12,7 @@ import {
   flushPendingComputedValidations,
   createSignalCommitBatch,
   getSignalNode,
+  provisionSignalValueForRender,
   signalGraphSnapshot,
   withSignalTracking,
   withSignalWriteForbidden,
@@ -187,6 +188,33 @@ describe('signal', () => {
     equal.set(1);
     expect(() => failed.set(2)).toThrow('failed');
 
+    expect(notifications).toBe(0);
+  });
+
+  it('versions provisional render values for computed reads without ordinary notifications', () => {
+    const value = signal(1);
+    const doubled = computed(() => value.get() * 2);
+    const versions: number[] = [];
+    let notifications = 0;
+    getSignalNode(value).observers.add(() => notifications++);
+
+    expect(doubled.get()).toBe(2);
+    const failed = provisionSignalValueForRender(value, 2);
+    versions.push(getSignalNode(value).version);
+    expect(value.get()).toBe(2);
+    expect(doubled.get()).toBe(4);
+    failed.rollback();
+    versions.push(getSignalNode(value).version);
+    expect(value.get()).toBe(1);
+    expect(doubled.get()).toBe(2);
+
+    const successful = provisionSignalValueForRender(value, 3);
+    versions.push(getSignalNode(value).version);
+    expect(doubled.get()).toBe(6);
+    successful.commit();
+
+    expect(versions).toEqual([1, 2, 3]);
+    expect(value.get()).toBe(3);
     expect(notifications).toBe(0);
   });
 });
