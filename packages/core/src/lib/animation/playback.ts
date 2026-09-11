@@ -450,6 +450,7 @@ export function createAnimationPlaybackController(
     }
     const previousStatus = target.status;
     const previousStartPending = target.startPending;
+    const wasRegistered = target.unregisterAdvance !== undefined;
     queuePendingStart(target, snapshot);
     target.status = 'ending';
     target.unregisterAdvance?.();
@@ -473,7 +474,7 @@ export function createAnimationPlaybackController(
         }
         target.status = previousStatus;
         target.startPending = previousStartPending;
-        registerRun(target);
+        if (wasRegistered) registerRun(target);
       },
     });
   }

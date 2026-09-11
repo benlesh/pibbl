@@ -61,6 +61,7 @@ interface WriterLease {
 }
 
 const leases = new Map<SignalNode<unknown>, WriterLease>();
+const leaseStacks = new Map<SignalNode<unknown>, WriterLease[]>();
 let registrationSequence = 0;
 let acquired = 0;
 let released = 0;
@@ -183,6 +184,31 @@ function firstConflictExcept(
   return undefined;
 }
 
+function pushLease(node: SignalNode<unknown>, lease: WriterLease): void {
+  const stack = leaseStacks.get(node);
+  if (stack === undefined) {
+    leaseStacks.set(node, [lease]);
+  } else {
+    stack.push(lease);
+  }
+  leases.set(node, lease);
+}
+
+function removeLease(node: SignalNode<unknown>, lease: WriterLease): void {
+  const stack = leaseStacks.get(node);
+  if (stack === undefined) return;
+  const index = stack.lastIndexOf(lease);
+  if (index < 0) return;
+  stack.splice(index, 1);
+  const active = stack.at(-1);
+  if (active === undefined) {
+    leaseStacks.delete(node);
+    leases.delete(node);
+  } else {
+    leases.set(node, active);
+  }
+}
+
 function cancelReplacedOwners(conflicting: readonly WriterLease[]): void {
   const failures: unknown[] = [];
   for (const lease of conflicting) {
@@ -243,9 +269,7 @@ function acquireLease(
     }
     isReleased = true;
     for (const node of nodes) {
-      if (leases.get(node) === lease) {
-        leases.delete(node);
-      }
+      removeLease(node, lease);
       released++;
     }
   };
@@ -263,7 +287,7 @@ function acquireLease(
     release,
   });
   for (const node of nodes) {
-    leases.set(node, lease);
+    pushLease(node, lease);
     acquired++;
   }
   return { outputs, release };
@@ -379,11 +403,6 @@ export function acquireTransactionalProgramWriterLeases(
     if (!replacementPending) return;
     replacementPending = false;
     acquiredLease.release();
-    for (const lease of conflicting) {
-      for (const node of lease.nodes) {
-        if (!leases.has(node)) leases.set(node, lease);
-      }
-    }
     for (let index = replacementTransactions.length - 1; index >= 0; index--) {
       replacementTransactions[index]!.rollback();
     }

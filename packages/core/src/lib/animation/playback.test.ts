@@ -461,6 +461,190 @@ describe('scheduler-integrated animation playback', () => {
     });
   });
 
+  it('restores a paused displaced playback without registering continuous work', () => {
+    let rejectReplacement = false;
+    const value = signal(0, {
+      equals: (previous, next) => {
+        if (rejectReplacement) {
+          rejectReplacement = false;
+          throw new Error('paused replacement rejected');
+        }
+        return Object.is(previous, next);
+      },
+    });
+    const first = playback(track(value, tween({ from: 0, to: 10, duration: 100 })));
+    const second = playback(track(value, tween({ to: 20, duration: 100 })));
+    first.handle.play();
+    driver.flush(0);
+    driver.flush(20);
+    first.handle.pause();
+    driver.flush(21);
+
+    rejectReplacement = true;
+    second.handle.play({ conflict: 'replace' });
+    expect(() => driver.flush(30)).toThrow(/paused replacement rejected/iu);
+
+    expect([value.get(), first.handle.currentTime.get(), first.handle.status.get()])
+      .toEqual([2, 20, 'paused']);
+    expect(second.handle.status.get()).toBe('idle');
+    expect(writerLeaseSnapshot().active).toBe(1);
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(0);
+    expect(driver.pendingHostFrames).toBe(0);
+
+    queueFrameCompletion(() => {});
+    driver.flush(40);
+    expect([value.get(), first.handle.currentTime.get(), first.handle.status.get()])
+      .toEqual([2, 20, 'paused']);
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(0);
+    expect(driver.pendingHostFrames).toBe(0);
+  });
+
+  it('restores the rightful owner after a rejected chained replacement', () => {
+    let rejectReplacement = false;
+    const value = signal(0, {
+      equals: (previous, next) => {
+        if (rejectReplacement) {
+          rejectReplacement = false;
+          throw new Error('chained replacement rejected');
+        }
+        return Object.is(previous, next);
+      },
+    });
+    const before = writerLeaseSnapshot();
+    const first = playback(track(value, tween({ from: 0, to: 10, duration: 100 })));
+    const second = playback(track(value, tween({ to: 20, duration: 100 })));
+    const third = playback(track(value, tween({ to: 30, duration: 100 })));
+    first.handle.play();
+    driver.flush(0);
+    driver.flush(20);
+
+    rejectReplacement = true;
+    second.handle.play({ conflict: 'replace' });
+    third.handle.play({ conflict: 'replace' });
+    expect(() => driver.flush(30)).toThrow(/chained replacement rejected/iu);
+
+    expect([value.get(), first.handle.currentTime.get(), first.handle.status.get()])
+      .toEqual([2, 20, 'running']);
+    expect([second.handle.status.get(), third.handle.status.get()])
+      .toEqual(['idle', 'idle']);
+    expect(writerLeaseSnapshot()).toMatchObject({
+      active: before.active + 1,
+      acquired: before.acquired + 3,
+      released: before.released + 2,
+    });
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(1);
+
+    expect(() => driver.flush(40)).not.toThrow();
+    expect([value.get(), first.handle.currentTime.get()]).toEqual([4, 40]);
+    expect(writerLeaseSnapshot().active).toBe(before.active + 1);
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(1);
+  });
+
+  it('does not restore a displaced lease whose owner disposed during rejected sampling', () => {
+    let rejectReplacement = false;
+    const value = signal(0, {
+      equals: (previous, next) => {
+        if (rejectReplacement) {
+          rejectReplacement = false;
+          throw new Error('disposed owner replacement rejected');
+        }
+        return Object.is(previous, next);
+      },
+    });
+    const before = writerLeaseSnapshot();
+    const first = playback(track(value, tween({ from: 0, to: 10, duration: 100 })));
+    let disposed = false;
+    const second = playback(track(value, defineAnimation({
+      duration: 100,
+      sample: ({ localTime }) => {
+        if (!disposed) {
+          disposed = true;
+          first.dispose();
+        }
+        return 10 + localTime;
+      },
+    })));
+    first.handle.play();
+    driver.flush(0);
+    driver.flush(20);
+
+    rejectReplacement = true;
+    second.handle.play({ conflict: 'replace' });
+    expect(() => driver.flush(30)).toThrow(/disposed owner replacement rejected/iu);
+
+    const statusAfterRejection = second.handle.status.get();
+    const leasesAfterRejection = writerLeaseSnapshot();
+    const participantsAfterRejection =
+      snapshotRealmScheduler().registeredAdvanceParticipants;
+    let directWriteError: unknown;
+    try {
+      value.set(7);
+    } catch (error) {
+      directWriteError = error;
+    }
+    driver.flush(31);
+
+    expect(statusAfterRejection).toBe('idle');
+    expect(leasesAfterRejection).toMatchObject({
+      active: before.active,
+      acquired: before.acquired + 2,
+      released: before.released + 2,
+    });
+    expect(participantsAfterRejection).toBe(0);
+    expect(directWriteError).toBeUndefined();
+    expect(first.handle.status.get()).toBe('disposed');
+    expect(writerLeaseSnapshot().active).toBe(before.active);
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(0);
+    expect(driver.pendingHostFrames).toBe(0);
+  });
+
+  it('keeps only the final owner after a successful chained replacement', () => {
+    const value = signal(0);
+    const before = writerLeaseSnapshot();
+    const events: string[] = [];
+    const first = playback(
+      track(value, tween({ from: 0, to: 10, duration: 100 })),
+      { onEvent: event => events.push(`first:${event.type}`) },
+    );
+    const second = playback(
+      track(value, tween({ to: 20, duration: 100 })),
+      { onEvent: event => events.push(`second:${event.type}`) },
+    );
+    const third = playback(
+      track(value, tween({ to: 30, duration: 100 })),
+      { onEvent: event => events.push(`third:${event.type}`) },
+    );
+    first.handle.play();
+    driver.flush(0);
+    driver.flush(20);
+
+    second.handle.play({ conflict: 'replace' });
+    third.handle.play({ conflict: 'replace' });
+    driver.flush(30);
+
+    expect([first.handle.status.get(), second.handle.status.get(), third.handle.status.get()])
+      .toEqual(['cancelled', 'cancelled', 'running']);
+    expect(events).toEqual([
+      'first:start',
+      'first:cancel',
+      'second:start',
+      'second:cancel',
+      'third:start',
+    ]);
+    expect(writerLeaseSnapshot()).toMatchObject({
+      active: before.active + 1,
+      acquired: before.acquired + 3,
+      released: before.released + 2,
+    });
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(1);
+
+    driver.flush(40);
+    expect(value.get()).toBeCloseTo(4.8);
+    expect(third.handle.currentTime.get()).toBe(10);
+    expect(writerLeaseSnapshot().active).toBe(before.active + 1);
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(1);
+  });
+
   it('pauses without a jump, retains leases, and resumes from a fresh anchor', () => {
     const value = signal(0);
     const before = writerLeaseSnapshot();
