@@ -62,10 +62,17 @@ describe('immutable animation programs', () => {
   it('classifies finite, infinite, and unresolved program durations', () => {
     const x = signal(0);
     const finiteTrack = track(x, tween({ to: 1, duration: 20 }));
-    const nonterminating = track(x, stepper({ initialState: 0, step: state => state }));
+    const nonterminating = track(x, stepper({
+      stepMilliseconds: 10,
+      initial: (current: number) => current,
+      step: state => state,
+      read: state => state,
+    }));
     const discoverable = track(x, stepper({
-      initialState: 0,
+      stepMilliseconds: 10,
+      initial: (current: number) => current,
       step: state => state + 1,
+      read: state => state,
       done: state => state > 0,
     }));
 

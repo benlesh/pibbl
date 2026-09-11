@@ -62,7 +62,7 @@ describe('seekable animation definitions', () => {
     })).toEqual({ x: 2 });
   });
 
-  it('snapshots mutable tween endpoints, keyframe values, and stepper state', () => {
+  it('snapshots mutable tween endpoints and keyframe values', () => {
     const from = { x: 0 };
     const to = { x: 10 };
     const tweenDefinition = tween({
@@ -82,18 +82,10 @@ describe('seekable animation definitions', () => {
         x: start.x + (end.x - start.x) * progress,
       }),
     });
-    const initialState = { elapsed: 0 };
-    const stepperDefinition = stepper({
-      initialState,
-      step: state => state,
-    });
-
     from.x = 50;
     to.x = 90;
     keyframeStart.x = 50;
     keyframeEnd.x = 90;
-    initialState.elapsed = 50;
-
     expect(sampleSeekableDefinition(tweenDefinition, {
       initialValue: { x: -1 },
       localTime: 50,
@@ -102,9 +94,56 @@ describe('seekable animation definitions', () => {
       initialValue: { x: -1 },
       localTime: 50,
     })).toEqual({ x: 5 });
-    expect(getDefinitionRecord(stepperDefinition)).toMatchObject({
-      initialState: { elapsed: 0 },
+  });
+
+  it('normalizes the approved fixed-step callback contract and elapsed clamp default', () => {
+    const initial = (currentValue: number): { value: number } => ({ value: currentValue });
+    const advance = (state: { value: number }, delta: number): { value: number } => ({
+      value: state.value + delta,
     });
+    const read = (state: { value: number }): number => state.value;
+    const done = (state: { value: number }): boolean => state.value >= 100;
+
+    const definition = stepper({
+      stepMilliseconds: 10,
+      initial,
+      step: advance,
+      read,
+      done,
+    });
+
+    expect(getDefinitionRecord(definition)).toMatchObject({
+      kind: 'stepper',
+      duration: Number.POSITIVE_INFINITY,
+      stepMilliseconds: 10,
+      maxElapsedMilliseconds: 100,
+      initial,
+      step: advance,
+      read,
+      done,
+    });
+  });
+
+  it('validates every stepper callback and elapsed-time option at construction', () => {
+    const valid = {
+      stepMilliseconds: 10,
+      initial: (current: number) => current,
+      step: (state: number) => state,
+      read: (state: number) => state,
+    };
+
+    expect(() => stepper({ ...valid, initial: undefined as never })).toThrow('initial');
+    expect(() => stepper({ ...valid, step: undefined as never })).toThrow('step');
+    expect(() => stepper({ ...valid, read: undefined as never })).toThrow('read');
+    expect(() => stepper({ ...valid, done: 1 as never })).toThrow('done');
+    for (const stepMilliseconds of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(() => stepper({ ...valid, stepMilliseconds })).toThrow('stepMilliseconds');
+    }
+    for (const maxElapsedMilliseconds of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(() => stepper({ ...valid, maxElapsedMilliseconds })).toThrow(
+        'maxElapsedMilliseconds',
+      );
+    }
   });
 
   it('snapshots cloneable arbitrary values accepted with explicit interpolators', () => {

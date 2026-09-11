@@ -936,16 +936,18 @@ describe('seekable animation program evaluation', () => {
     expect(getProgramActivationRecord(activation).trackStarts).toEqual(before);
   });
 
-  it('fails explicitly when seekable evaluation reaches deferred stateful work', () => {
+  it('evaluates stateful work without changing seekable transaction semantics', () => {
     const output = signal(0);
     const program = track(output, stepper({
-      initialState: 0,
+      stepMilliseconds: 10,
+      initial: (current: number) => current,
       step: state => state + 1,
+      read: state => state,
     }));
 
-    expect(() => evaluateAt(activateProgram(program, {}), 10)).toThrow(
-      /stateful.*Task 5/iu,
-    );
+    const result = evaluateAt(activateProgram(program, {}), 10, 0);
+
+    expect(result.batch.read(output)).toBe(1);
     expect(output.get()).toBe(0);
   });
 });

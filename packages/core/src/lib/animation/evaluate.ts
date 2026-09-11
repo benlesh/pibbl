@@ -1,6 +1,7 @@
 import {
   createSignalCommitBatch,
   getSignalNode,
+  withSignalWriteForbidden,
   type SignalCommitBatch,
 } from '../signals/graph.js';
 import type { WritableSignal } from '../signals/types.js';
@@ -70,7 +71,22 @@ export interface ProgramTerminalState {
 export interface ProgramEvaluationResult {
   readonly batch: SignalCommitBatch;
   readonly milestones: readonly ProgramMilestone[];
+  readonly steppers: readonly ProgramStepperTrace[];
   readonly terminal: ProgramTerminalState;
+}
+
+/** @internal Immutable fixed-step facts emitted without application callbacks. */
+export interface ProgramStepperTrace {
+  readonly programPath: readonly number[];
+  readonly repeatIterations: readonly number[];
+  readonly appliedSteps: number;
+  readonly retainedRemainderMilliseconds: number;
+  readonly clampedElapsedMilliseconds: number;
+  readonly discardedElapsedMilliseconds: number;
+  readonly terminal: {
+    readonly step: number;
+    readonly time: number;
+  } | undefined;
 }
 
 export interface TrackStartSnapshot {
@@ -80,11 +96,30 @@ export interface TrackStartSnapshot {
   readonly duration: number;
 }
 
+export interface ActiveStepperSnapshot {
+  readonly programPath: readonly number[];
+  readonly repeatIterations: readonly number[];
+  readonly wholeSteps: number;
+  readonly retainedRemainderMilliseconds: number;
+  readonly appliedElapsedMilliseconds: number;
+  readonly discardedElapsedMilliseconds: number;
+}
+
+export interface TerminalStepperSnapshot {
+  readonly programPath: readonly number[];
+  readonly repeatIterations: readonly number[];
+  readonly terminalStep: number;
+  readonly terminalTime: number;
+}
+
 export interface ProgramActivationRecord {
   readonly program: CRCAnimationProgram;
   readonly registration: object;
   readonly originalValues: ReadonlyMap<WritableSignal<unknown>, unknown>;
   readonly trackStarts: readonly TrackStartSnapshot[];
+  readonly activeSteppers: readonly ActiveStepperSnapshot[];
+  readonly terminalSteppers: readonly TerminalStepperSnapshot[];
+  readonly terminalDuration: number | undefined;
 }
 
 interface InternalTrackStart {
@@ -99,6 +134,30 @@ interface InternalProgramActivation {
   readonly registration: object;
   readonly originalValues: ReadonlyMap<WritableSignal<unknown>, unknown>;
   starts: Map<string, InternalTrackStart>;
+  steppers: Map<string, InternalStepperRecord>;
+  terminalSteppers: Map<string, InternalStepperTerminal>;
+  terminalDuration: number | undefined;
+}
+
+interface InternalStepperRecord {
+  readonly programPath: readonly number[];
+  readonly repeatIterations: readonly number[];
+  readonly activationInput: unknown;
+  state: unknown;
+  wholeSteps: number;
+  remainderMilliseconds: number;
+  appliedElapsedMilliseconds: number;
+  discardedElapsedMilliseconds: number;
+  sampledLocalTime: number;
+}
+
+interface InternalStepperTerminal {
+  readonly programPath: readonly number[];
+  readonly repeatIterations: readonly number[];
+  readonly activationInput: unknown;
+  readonly finalValue: unknown;
+  readonly terminalStep: number;
+  readonly terminalTime: number;
 }
 
 interface SampleState {
@@ -108,6 +167,12 @@ interface SampleState {
   readonly writtenOutputs: Set<WritableSignal<unknown>>;
   readonly snapshots: WeakMap<object, unknown>;
   readonly owners: Map<WritableSignal<unknown>, SampledWriterOwner>;
+  readonly steppers: Map<string, InternalStepperRecord>;
+  readonly terminalSteppers: Map<string, InternalStepperTerminal>;
+  readonly activeStepperKeys: Set<string>;
+  readonly stepperTraces: ProgramStepperTrace[];
+  readonly frameId: number;
+  readonly replaySteppers: boolean;
 }
 
 interface SampleResult {
@@ -148,6 +213,7 @@ interface DiscoveryState {
   readonly durations: Map<string, number>;
   readonly snapshots: WeakMap<object, unknown>;
   readonly validateWriters: boolean;
+  readonly terminalSteppers: ReadonlyMap<string, InternalStepperTerminal>;
 }
 
 interface TimelineEvent {
@@ -167,6 +233,86 @@ interface TimeTransform {
 const activationRecords = new WeakMap<ProgramActivation, InternalProgramActivation>();
 const baselineWriter = Object.freeze({ name: 'CRC animation activation baseline' });
 const directRepeatSelection = new WeakMap<CRCAnimationProgram, boolean>();
+const containsStepperDefinition = new WeakMap<CRCAnimationProgram, boolean>();
+
+class StepperCallbackError extends Error {
+  constructor(message: string, readonly cause: unknown) {
+    super(message);
+    this.name = 'StepperCallbackError';
+  }
+}
+
+function stepperLabel(debugName: string | undefined): string {
+  return debugName === undefined ? 'CRC animation stepper' :
+    `CRC animation stepper "${debugName}"`;
+}
+
+function invokeStepperCallback<T>(
+  debugName: string | undefined,
+  callbackName: 'initial' | 'step' | 'read' | 'done',
+  path: readonly number[],
+  repeatIterations: readonly number[],
+  frameId: number,
+  localTime: number,
+  callback: () => T,
+): T {
+  try {
+    return withSignalWriteForbidden(
+      `${stepperLabel(debugName)} callbacks cannot write to signals.`,
+      callback,
+    );
+  } catch (error) {
+    const repeats = repeatIterations.length === 0 ? '' :
+      `, repeat iterations [${repeatIterations.join(', ')}]`;
+    const detail = error instanceof Error ? `: ${error.message}` : '';
+    throw new StepperCallbackError(
+      `${stepperLabel(debugName)} ${callbackName} callback failed at program path ` +
+        `[${path.join(', ')}]${repeats}, frame ${frameId}, local time ${localTime}${detail}`,
+      error,
+    );
+  }
+}
+
+function validateStepperOutput(value: unknown, debugName: string | undefined): unknown {
+  if (typeof value === 'number' && !Number.isFinite(value)) {
+    throw new RangeError(
+      `${stepperLabel(debugName)} read callback produced a nonfinite value.`,
+    );
+  }
+  return value;
+}
+
+function programContainsStepper(program: CRCAnimationProgram): boolean {
+  const cached = containsStepperDefinition.get(program);
+  if (cached !== undefined) return cached;
+  const record = getProgramRecord(program);
+  const contains = record.kind === 'track' ?
+    getDefinitionRecord(record.definition).kind === 'stepper' :
+    record.children.some(programContainsStepper);
+  containsStepperDefinition.set(program, contains);
+  return contains;
+}
+
+function knownProgramTerminalDuration(record: InternalProgramActivation): number | undefined {
+  const exact = getExactSeekableProgramDuration(record.program);
+  if (exact !== undefined && Number.isFinite(exact)) return exact;
+  return record.terminalDuration;
+}
+
+function validateActivationWriterSafety(
+  program: CRCAnimationProgram,
+  originalValues: ReadonlyMap<WritableSignal<unknown>, unknown>,
+): void {
+  if (!requiresProgramActivationWriterSafety(program)) return;
+  if (!programContainsStepper(program)) {
+    const discoveryState = createDiscoveryState(originalValues, new Map(), true);
+    discoverNode(program, Number.POSITIVE_INFINITY, discoveryState, [], []);
+    return;
+  }
+  for (const child of getProgramRecord(program).children) {
+    validateActivationWriterSafety(child, originalValues);
+  }
+}
 
 function freezePath(path: readonly number[]): readonly number[] {
   return Object.freeze([...path]);
@@ -264,6 +410,8 @@ function knownDuration(
   if (record.kind === 'track') {
     const start = state.starts.get(key);
     if (start !== undefined) return start.definition.duration;
+    const terminal = state.terminalSteppers.get(key);
+    if (terminal !== undefined) return terminal.terminalTime;
   }
   return getExactSeekableProgramDuration(program);
 }
@@ -400,6 +548,39 @@ function discoverTrack(
   const record = getProgramRecord(program);
   if (record.kind !== 'track') throw new Error('Expected an animation track record.');
   const key = instanceKey(path, repeatIterations);
+  const definitionRecord = getDefinitionRecord(record.definition);
+  if (definitionRecord.kind === 'stepper') {
+    const terminal = state.terminalSteppers.get(key);
+    if (terminal === undefined) {
+      if (state.validateWriters) {
+        throw new RangeError(
+          `CRC animation activation-dependent writer schedule at path ` +
+            `[${path.join(', ')}] contains a stepper whose terminal time is not discovered.`,
+        );
+      }
+      return {
+        duration: undefined,
+        writers: Object.freeze([]),
+        startWrites: new Map([[record.output, unknownDiscoveredValue]]),
+        endWrites: new Map([[record.output, unknownDiscoveredValue]]),
+      };
+    }
+    state.durations.set(key, terminal.terminalTime);
+    state.values.set(record.output, terminal.finalValue);
+    return {
+      duration: terminal.terminalTime,
+      writers: Object.freeze([Object.freeze({
+        output: record.output,
+        start: 0,
+        end: terminal.terminalTime,
+        programPath: freezePath(path),
+        repeatIterations: freezePath(repeatIterations),
+        repeats: Object.freeze([]),
+      })]),
+      startWrites: new Map([[record.output, terminal.activationInput]]),
+      endWrites: new Map([[record.output, terminal.finalValue]]),
+    };
+  }
   let start = state.starts.get(key);
   if (start === undefined) {
     const initialValue = state.values.has(record.output) ?
@@ -827,6 +1008,243 @@ function discoverNode(
   };
 }
 
+function frozenStepperTerminal(
+  path: readonly number[],
+  repeatIterations: readonly number[],
+  activationInput: unknown,
+  finalValue: unknown,
+  terminalStep: number,
+  terminalTime: number,
+): InternalStepperTerminal {
+  return Object.freeze({
+    programPath: freezePath(path),
+    repeatIterations: freezePath(repeatIterations),
+    activationInput,
+    finalValue,
+    terminalStep,
+    terminalTime,
+  });
+}
+
+function frozenStepperTrace(
+  path: readonly number[],
+  repeatIterations: readonly number[],
+  appliedSteps: number,
+  retainedRemainderMilliseconds: number,
+  clampedElapsedMilliseconds: number,
+  discardedElapsedMilliseconds: number,
+  terminal: InternalStepperTerminal | undefined,
+): ProgramStepperTrace {
+  return Object.freeze({
+    programPath: freezePath(path),
+    repeatIterations: freezePath(repeatIterations),
+    appliedSteps,
+    retainedRemainderMilliseconds,
+    clampedElapsedMilliseconds,
+    discardedElapsedMilliseconds,
+    terminal: terminal === undefined ? undefined : Object.freeze({
+      step: terminal.terminalStep,
+      time: terminal.terminalTime,
+    }),
+  });
+}
+
+function sampleStepperTrack(
+  program: CRCAnimationProgram,
+  localTime: number,
+  state: SampleState,
+  path: readonly number[],
+  repeatIterations: readonly number[],
+  offset: number,
+): SampleResult {
+  const trackRecord = getProgramRecord(program);
+  if (trackRecord.kind !== 'track') throw new Error('Expected an animation track record.');
+  const definitionRecord = getDefinitionRecord(trackRecord.definition);
+  if (definitionRecord.kind !== 'stepper') {
+    throw new Error('Expected a stateful animation definition.');
+  }
+  const key = instanceKey(path, repeatIterations);
+  const knownTerminal = state.terminalSteppers.get(key);
+  if (!state.replaySteppers && knownTerminal !== undefined &&
+    localTime >= knownTerminal.terminalTime) {
+    state.batch.stage(trackRecord.output, knownTerminal.finalValue, baselineWriter);
+    state.writtenOutputs.add(trackRecord.output);
+    state.owners.set(trackRecord.output, Object.freeze({
+      start: offset,
+      end: offset + knownTerminal.terminalTime,
+    }));
+    state.stepperTraces.push(frozenStepperTrace(
+      path,
+      repeatIterations,
+      0,
+      0,
+      0,
+      0,
+      undefined,
+    ));
+    setDuration(state, path, repeatIterations, knownTerminal.terminalTime);
+    return Object.freeze({ duration: knownTerminal.terminalTime, atEnd: true });
+  }
+  if (!Number.isFinite(localTime)) {
+    throw new TypeError(
+      `${stepperLabel(definitionRecord.debugName)} terminal time is not discovered.`,
+    );
+  }
+
+  let stepperRecord = state.steppers.get(key);
+  let newlyInitialized = false;
+  if (stepperRecord === undefined) {
+    const activationInput = snapshotAnimationActivationValue(
+      state.batch.read(trackRecord.output),
+      state.snapshots,
+    );
+    const initialState = invokeStepperCallback(
+      definitionRecord.debugName,
+      'initial',
+      path,
+      repeatIterations,
+      state.frameId,
+      0,
+      () => definitionRecord.initial(activationInput),
+    );
+    stepperRecord = {
+      programPath: freezePath(path),
+      repeatIterations: freezePath(repeatIterations),
+      activationInput,
+      state: initialState,
+      wholeSteps: 0,
+      remainderMilliseconds: 0,
+      appliedElapsedMilliseconds: 0,
+      discardedElapsedMilliseconds: 0,
+      sampledLocalTime: 0,
+    };
+    newlyInitialized = true;
+  }
+
+  let terminal: InternalStepperTerminal | undefined;
+  if (newlyInitialized && definitionRecord.done !== undefined && invokeStepperCallback(
+    definitionRecord.debugName,
+    'done',
+    path,
+    repeatIterations,
+    state.frameId,
+    stepperRecord.appliedElapsedMilliseconds,
+    () => definitionRecord.done!(stepperRecord.state),
+  )) {
+    terminal = frozenStepperTerminal(
+      path,
+      repeatIterations,
+      stepperRecord.activationInput,
+      undefined,
+      stepperRecord.wholeSteps,
+      stepperRecord.appliedElapsedMilliseconds,
+    );
+  }
+
+  const rawContribution = Math.max(0, localTime - stepperRecord.sampledLocalTime);
+  const clampedContribution = state.replaySteppers ? rawContribution :
+    Math.min(rawContribution, definitionRecord.maxElapsedMilliseconds);
+  const discardedGap = rawContribution - clampedContribution;
+  const accumulator = stepperRecord.remainderMilliseconds + clampedContribution;
+  const availableSteps = terminal === undefined ?
+    Math.floor(accumulator / definitionRecord.stepMilliseconds) : 0;
+  let appliedSteps = 0;
+  for (; appliedSteps < availableSteps; appliedSteps++) {
+    stepperRecord.state = invokeStepperCallback(
+      definitionRecord.debugName,
+      'step',
+      path,
+      repeatIterations,
+      state.frameId,
+      stepperRecord.appliedElapsedMilliseconds + definitionRecord.stepMilliseconds,
+      () => definitionRecord.step(
+        stepperRecord.state,
+        definitionRecord.stepMilliseconds,
+      ),
+    );
+    stepperRecord.wholeSteps++;
+    stepperRecord.appliedElapsedMilliseconds =
+      stepperRecord.wholeSteps * definitionRecord.stepMilliseconds;
+    if (definitionRecord.done !== undefined && invokeStepperCallback(
+      definitionRecord.debugName,
+      'done',
+      path,
+      repeatIterations,
+      state.frameId,
+      stepperRecord.appliedElapsedMilliseconds,
+      () => definitionRecord.done!(stepperRecord.state),
+    )) {
+      appliedSteps++;
+      terminal = frozenStepperTerminal(
+        path,
+        repeatIterations,
+        stepperRecord.activationInput,
+        undefined,
+        stepperRecord.wholeSteps,
+        stepperRecord.appliedElapsedMilliseconds,
+      );
+      break;
+    }
+  }
+  stepperRecord.remainderMilliseconds = terminal === undefined ?
+    accumulator - appliedSteps * definitionRecord.stepMilliseconds : 0;
+  if (Math.abs(stepperRecord.remainderMilliseconds) < Number.EPSILON) {
+    stepperRecord.remainderMilliseconds = 0;
+  }
+  stepperRecord.discardedElapsedMilliseconds += discardedGap;
+  stepperRecord.sampledLocalTime = localTime;
+
+  const projected = invokeStepperCallback(
+    definitionRecord.debugName,
+    'read',
+    path,
+    repeatIterations,
+    state.frameId,
+    stepperRecord.appliedElapsedMilliseconds,
+    () => validateStepperOutput(
+      definitionRecord.read(stepperRecord.state),
+      definitionRecord.debugName,
+    ),
+  );
+  if (terminal !== undefined) {
+    terminal = frozenStepperTerminal(
+      path,
+      repeatIterations,
+      stepperRecord.activationInput,
+      projected,
+      terminal.terminalStep,
+      terminal.terminalTime,
+    );
+    state.terminalSteppers.set(key, terminal);
+    state.steppers.delete(key);
+  } else {
+    state.steppers.set(key, stepperRecord);
+    state.activeStepperKeys.add(key);
+  }
+  state.stepperTraces.push(frozenStepperTrace(
+    path,
+    repeatIterations,
+    appliedSteps,
+    stepperRecord.remainderMilliseconds,
+    clampedContribution,
+    discardedGap,
+    terminal,
+  ));
+  state.batch.stage(trackRecord.output, projected, baselineWriter);
+  state.writtenOutputs.add(trackRecord.output);
+  const duration = terminal?.terminalTime ??
+    (definitionRecord.done === undefined ? Number.POSITIVE_INFINITY : undefined);
+  state.owners.set(trackRecord.output, Object.freeze({
+    start: offset,
+    end: offset + (duration ?? Number.POSITIVE_INFINITY),
+  }));
+  setDuration(state, path, repeatIterations, duration);
+  return Object.freeze({
+    duration,
+    atEnd: terminal !== undefined && localTime >= terminal.terminalTime,
+  });
+}
+
 function sampleTrack(
   program: CRCAnimationProgram,
   localTime: number,
@@ -837,6 +1255,16 @@ function sampleTrack(
 ): SampleResult {
   const record = getProgramRecord(program);
   if (record.kind !== 'track') throw new Error('Expected an animation track record.');
+  if (getDefinitionRecord(record.definition).kind === 'stepper') {
+    return sampleStepperTrack(
+      program,
+      localTime,
+      state,
+      path,
+      repeatIterations,
+      offset,
+    );
+  }
   const key = instanceKey(path, repeatIterations);
   let start = state.starts.get(key);
   if (start === undefined) {
@@ -884,6 +1312,12 @@ function forkSampleState(
     writtenOutputs: new Set(),
     snapshots: state.snapshots,
     owners: new Map(),
+    steppers: state.steppers,
+    terminalSteppers: state.terminalSteppers,
+    activeStepperKeys: state.activeStepperKeys,
+    stepperTraces: state.stepperTraces,
+    frameId: state.frameId,
+    replaySteppers: state.replaySteppers,
   };
 }
 
@@ -1235,6 +1669,11 @@ function createSampleState(
   record: InternalProgramActivation,
   starts: Map<string, InternalTrackStart>,
   durations: Map<string, number> = new Map(),
+  steppers: Map<string, InternalStepperRecord> = new Map(record.steppers),
+  terminalSteppers: Map<string, InternalStepperTerminal> =
+    new Map(record.terminalSteppers),
+  frameId = 0,
+  replaySteppers = false,
 ): SampleState {
   return {
     batch: seedOriginalValues(record),
@@ -1243,6 +1682,12 @@ function createSampleState(
     writtenOutputs: new Set(),
     snapshots: new WeakMap(),
     owners: new Map(),
+    steppers,
+    terminalSteppers,
+    activeStepperKeys: new Set(),
+    stepperTraces: [],
+    frameId,
+    replaySteppers,
   };
 }
 
@@ -1250,6 +1695,7 @@ function createDiscoveryState(
   originalValues: ReadonlyMap<WritableSignal<unknown>, unknown>,
   starts: Map<string, InternalTrackStart>,
   validateWriters: boolean,
+  terminalSteppers: ReadonlyMap<string, InternalStepperTerminal> = new Map(),
 ): DiscoveryState {
   return {
     values: new Map(originalValues),
@@ -1257,6 +1703,7 @@ function createDiscoveryState(
     durations: new Map(),
     snapshots: new WeakMap(),
     validateWriters,
+    terminalSteppers,
   };
 }
 
@@ -1319,16 +1766,28 @@ function evaluate(
   const time = Math.max(0, input.time);
   const previousTime = input.previousTime === undefined ? undefined :
     Math.max(0, input.previousTime);
+  if (rebuildStarts && input.direction === 'reverse' && previousTime === undefined &&
+    knownProgramTerminalDuration(record) === undefined) {
+    throw new TypeError(
+      'CRC animation stateful terminal time is not discovered; reverse-from-idle is unavailable.',
+    );
+  }
   const normalizedInput = { ...input, time, previousTime };
   const horizon = Math.max(time, previousTime ?? time);
+  const replaySteppers = rebuildStarts || input.direction === 'reverse' ||
+    previousTime !== undefined && time < previousTime;
   const destinationStarts = rebuildStarts ? new Map<string, InternalTrackStart>() :
     new Map(record.starts);
+  const destinationSteppers = replaySteppers ? new Map<string, InternalStepperRecord>() :
+    new Map(record.steppers);
+  const destinationTerminals = new Map(record.terminalSteppers);
   let seededDurations = new Map<string, number>();
   if (needsCallbackFreeDurationSeed(record.program)) {
     const seedState = createDiscoveryState(
       record.originalValues,
       new Map(destinationStarts),
       false,
+      destinationTerminals,
     );
     discoverNode(record.program, time, seedState, [], []);
     seededDurations = seedState.durations;
@@ -1337,52 +1796,79 @@ function evaluate(
     record,
     destinationStarts,
     seededDurations,
+    destinationSteppers,
+    destinationTerminals,
+    input.frameId,
+    replaySteppers,
   );
-  const destinationResult = sampleNode(record.program, time, destinationState, [], []);
-  const exactDuration = getExactSeekableProgramDuration(record.program);
-  let discoveredDuration = exactDuration;
-  let milestoneState = destinationState;
-  if (exactDuration === undefined) {
-    const discoveryState = createDiscoveryState(
-      record.originalValues,
-      new Map(destinationState.starts),
-      false,
-    );
-    const discoveryResult = discoverNode(
-      record.program,
-      horizon,
-      discoveryState,
-      [],
-      [],
-    );
-    discoveredDuration = discoveryResult.duration;
-    milestoneState = createSampleState(
-      record,
-      discoveryState.starts,
-      discoveryState.durations,
-    );
-  }
-  const milestones = crossedMilestones(record, normalizedInput, horizon, milestoneState);
-  record.starts = destinationState.starts;
-  for (const output of getProgramRecord(record.program).outputs) {
-    if (destinationState.writtenOutputs.has(output)) {
-      input.batch.stage(output, destinationState.batch.read(output), input.writer);
+  try {
+    const destinationResult = sampleNode(record.program, time, destinationState, [], []);
+    const exactDuration = getExactSeekableProgramDuration(record.program);
+    let discoveredDuration = exactDuration;
+    let milestoneState = destinationState;
+    if (exactDuration === undefined) {
+      const discoveryState = createDiscoveryState(
+        record.originalValues,
+        new Map(destinationState.starts),
+        false,
+        destinationState.terminalSteppers,
+      );
+      const discoveryResult = discoverNode(
+        record.program,
+        horizon,
+        discoveryState,
+        [],
+        [],
+      );
+      discoveredDuration = discoveryResult.duration;
+      milestoneState = createSampleState(
+        record,
+        discoveryState.starts,
+        discoveryState.durations,
+        new Map(),
+        destinationState.terminalSteppers,
+      );
     }
-  }
+    const milestones = crossedMilestones(record, normalizedInput, horizon, milestoneState);
+    for (const key of destinationState.steppers.keys()) {
+      if (!destinationState.activeStepperKeys.has(key)) {
+        destinationState.steppers.delete(key);
+      }
+    }
+    record.starts = destinationState.starts;
+    record.steppers = destinationState.steppers;
+    record.terminalSteppers = destinationState.terminalSteppers;
+    for (const output of getProgramRecord(record.program).outputs) {
+      if (destinationState.writtenOutputs.has(output)) {
+        input.batch.stage(output, destinationState.batch.read(output), input.writer);
+      }
+    }
 
-  const atStart = time === 0;
-  const atEnd = destinationResult.atEnd;
-  const duration = discoveredDuration ?? destinationResult.duration;
-  return Object.freeze({
-    batch: input.batch,
-    milestones,
-    terminal: Object.freeze({
-      duration,
-      atStart,
-      atEnd,
-      reached: input.direction === 'forward' ? atEnd : atStart,
-    }),
-  });
+    const atStart = time === 0;
+    const atEnd = destinationResult.atEnd;
+    const duration = discoveredDuration ?? destinationResult.duration;
+    if (duration !== undefined && Number.isFinite(duration)) {
+      record.terminalDuration = duration;
+    }
+    return Object.freeze({
+      batch: input.batch,
+      milestones,
+      steppers: Object.freeze([...destinationState.stepperTraces]),
+      terminal: Object.freeze({
+        duration,
+        atStart,
+        atEnd,
+        reached: input.direction === 'forward' ? atEnd : atStart,
+      }),
+    });
+  } catch (error) {
+    if (programContainsStepper(record.program)) {
+      record.steppers.clear();
+      record.terminalSteppers.clear();
+      record.terminalDuration = undefined;
+    }
+    throw error;
+  }
 }
 
 /** Captures one program token, its committed outputs, and registration identity. */
@@ -1402,16 +1888,16 @@ export function activateProgram(
       snapshotAnimationActivationValue(getSignalNode(output).value, snapshots),
     );
   }
-  if (requiresProgramActivationWriterSafety(program)) {
-    const discoveryState = createDiscoveryState(originalValues, new Map(), true);
-    discoverNode(program, Number.POSITIVE_INFINITY, discoveryState, [], []);
-  }
+  validateActivationWriterSafety(program, originalValues);
   const activation = Object.freeze({}) as ProgramActivation;
   activationRecords.set(activation, {
     program,
     registration,
     originalValues: immutableMap(originalValues),
     starts: new Map(),
+    steppers: new Map(),
+    terminalSteppers: new Map(),
+    terminalDuration: undefined,
   });
   return activation;
 }
@@ -1432,6 +1918,41 @@ export function seekProgram(
   return evaluate(activation, input, true);
 }
 
+export interface ProgramFinishInput {
+  readonly previousTime: number | undefined;
+  readonly frameId: number;
+  readonly writer: object;
+  readonly batch: SignalCommitBatch;
+}
+
+/** Replays a finite program to its exact known terminal state. */
+export function finishProgram(
+  activation: ProgramActivation,
+  input: ProgramFinishInput,
+): ProgramEvaluationResult {
+  const record = activationRecord(activation);
+  const duration = knownProgramTerminalDuration(record);
+  if (duration === undefined) {
+    throw new TypeError(
+      'CRC animation stateful terminal time is not discovered; finish is unavailable.',
+    );
+  }
+  return evaluate(activation, {
+    ...input,
+    time: duration,
+    direction: 'forward',
+  }, true);
+}
+
+/** Releases every resource retained by one activated program run. */
+export function releaseProgramActivation(activation: ProgramActivation): void {
+  const record = activationRecord(activation);
+  record.starts.clear();
+  record.steppers.clear();
+  record.terminalSteppers.clear();
+  activationRecords.delete(activation);
+}
+
 /** @internal Immutable diagnostic view of one private activation snapshot. */
 export function getProgramActivationRecord(
   activation: ProgramActivation,
@@ -1447,5 +1968,24 @@ export function getProgramActivationRecord(
       initialValue: start.initialValue,
       duration: start.definition.duration,
     }))),
+    activeSteppers: Object.freeze([...record.steppers.values()].map(stepperRecord =>
+      Object.freeze({
+        programPath: freezePath(stepperRecord.programPath),
+        repeatIterations: freezePath(stepperRecord.repeatIterations),
+        wholeSteps: stepperRecord.wholeSteps,
+        retainedRemainderMilliseconds: stepperRecord.remainderMilliseconds,
+        appliedElapsedMilliseconds: stepperRecord.appliedElapsedMilliseconds,
+        discardedElapsedMilliseconds: stepperRecord.discardedElapsedMilliseconds,
+      }),
+    )),
+    terminalSteppers: Object.freeze([...record.terminalSteppers.values()].map(terminal =>
+      Object.freeze({
+        programPath: freezePath(terminal.programPath),
+        repeatIterations: freezePath(terminal.repeatIterations),
+        terminalStep: terminal.terminalStep,
+        terminalTime: terminal.terminalTime,
+      }),
+    )),
+    terminalDuration: record.terminalDuration,
   });
 }

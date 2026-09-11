@@ -71,11 +71,13 @@ export interface CRCAnimationOptions<T> {
   readonly debugName?: string;
 }
 
-/** Construction-only state-machine configuration; execution is internal. */
-export interface CRCStepperOptions<T> {
-  readonly initialState: T;
-  readonly step: (state: T, delta: number) => T;
-  readonly done?: (state: T) => boolean;
-  readonly fixedDelta?: number;
+/** Fixed-step state-machine configuration; execution state is playback-owned. */
+export interface CRCStepperOptions<State, T> {
+  readonly stepMilliseconds: number;
+  readonly maxElapsedMilliseconds?: number;
+  readonly initial: (currentValue: T) => State;
+  readonly step: (state: State, deltaMilliseconds: number) => State;
+  readonly read: (state: State) => T;
+  readonly done?: (state: State) => boolean;
   readonly debugName?: string;
 }

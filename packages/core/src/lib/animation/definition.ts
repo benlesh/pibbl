@@ -47,12 +47,14 @@ interface CustomDefinitionRecord<T> extends BaseDefinitionRecord {
   readonly sample: (input: CRCAnimationSampleInput<T>) => T;
 }
 
-interface StepperDefinitionRecord<T> extends BaseDefinitionRecord {
+export interface StepperDefinitionRecord<T> extends BaseDefinitionRecord {
   readonly kind: 'stepper';
-  readonly initialState: T;
-  readonly step: (state: T, delta: number) => T;
-  readonly done: ((state: T) => boolean) | undefined;
-  readonly fixedDelta: number;
+  readonly stepMilliseconds: number;
+  readonly maxElapsedMilliseconds: number;
+  readonly initial: (currentValue: T) => unknown;
+  readonly step: (state: unknown, deltaMilliseconds: number) => unknown;
+  readonly read: (state: unknown) => T;
+  readonly done: ((state: unknown) => boolean) | undefined;
 }
 
 export type DefinitionRecord<T> =
@@ -547,27 +549,38 @@ export function defineAnimation<T>(
  * Returns an opaque immutable stepper definition. Steppers are evaluated by
  * the playback engine, not by the seekable sampler.
  */
-export function stepper<T>(
-  options: Readonly<CRCStepperOptions<T>>,
+export function stepper<State, T>(
+  options: Readonly<CRCStepperOptions<State, T>>,
 ): CRCAnimationDefinition<T> {
+  if (typeof options.initial !== 'function') {
+    throw new TypeError(`${definitionLabel(options.debugName)} stepper initial must be a function.`);
+  }
   if (typeof options.step !== 'function') {
     throw new TypeError(`${definitionLabel(options.debugName)} stepper step must be a function.`);
+  }
+  if (typeof options.read !== 'function') {
+    throw new TypeError(`${definitionLabel(options.debugName)} stepper read must be a function.`);
   }
   if (typeof options.done !== 'undefined' && typeof options.done !== 'function') {
     throw new TypeError(`${definitionLabel(options.debugName)} stepper done must be a function.`);
   }
-  const fixedDelta = options.fixedDelta ?? 1000 / 60;
-  if (!Number.isFinite(fixedDelta) || fixedDelta <= 0) {
-    throw new RangeError(`${definitionLabel(options.debugName)} stepper fixedDelta must be finite and positive.`);
+  if (!Number.isFinite(options.stepMilliseconds) || options.stepMilliseconds <= 0) {
+    throw new RangeError(`${definitionLabel(options.debugName)} stepper stepMilliseconds must be finite and positive.`);
+  }
+  const maxElapsedMilliseconds = options.maxElapsedMilliseconds ?? 100;
+  if (!Number.isFinite(maxElapsedMilliseconds) || maxElapsedMilliseconds <= 0) {
+    throw new RangeError(`${definitionLabel(options.debugName)} stepper maxElapsedMilliseconds must be finite and positive.`);
   }
   return createDefinition({
     kind: 'stepper',
     duration: Number.POSITIVE_INFINITY,
     debugName: options.debugName,
-    initialState: snapshotAnimationValue(options.initialState, new WeakMap()),
-    step: options.step,
-    done: options.done,
-    fixedDelta,
+    stepMilliseconds: options.stepMilliseconds,
+    maxElapsedMilliseconds,
+    initial: options.initial as (currentValue: T) => unknown,
+    step: options.step as (state: unknown, deltaMilliseconds: number) => unknown,
+    read: options.read as (state: unknown) => T,
+    done: options.done as ((state: unknown) => boolean) | undefined,
   });
 }
 
@@ -638,7 +651,7 @@ export function sampleSeekableDefinition<T>(
 
 /**
  * @internal Resolves activation-dependent definition data exactly once for a
- * track instance. Stateful definitions are deliberately deferred to Task 5.
+ * track instance. Stateful definitions use a separate playback-owned record.
  */
 export function activateSeekableDefinition<T>(
   definition: CRCAnimationDefinition<T>,
