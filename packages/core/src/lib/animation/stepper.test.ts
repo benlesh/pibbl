@@ -3,6 +3,7 @@ import {
   parallel,
   sequence,
   repeat,
+  marker,
   signal,
   stepper,
   track,
@@ -343,6 +344,100 @@ describe('stateful fixed-step animation evaluation', () => {
     }
   });
 
+  it('shares one clamped contribution across repeated occurrences of one track path', () => {
+    const output = signal(0);
+    let steps = 0;
+    const activation = activateProgram(repeat(track(output, stepper({
+      stepMilliseconds: 10,
+      maxElapsedMilliseconds: 100,
+      initial: (current: number) => ({ value: current, steps: 0 }),
+      step: state => {
+        steps++;
+        return { value: state.value + 1, steps: state.steps + 1 };
+      },
+      read: state => state.value,
+      done: state => state.steps === 1,
+    })), { iterations: Number.POSITIVE_INFINITY }), {});
+
+    const result = advance(activation, 0, 10_000, 1);
+
+    expect(steps).toBe(10);
+    expect(result.batch.read(output)).toBe(10);
+    expect(result.steppers.length).toBeLessThanOrEqual(11);
+    expect(result.steppers.reduce(
+      (total, trace) => total + trace.clampedElapsedMilliseconds,
+      0,
+    )).toBe(100);
+    expect(result.steppers.reduce(
+      (total, trace) => total + trace.discardedElapsedMilliseconds,
+      0,
+    )).toBe(9_900);
+    expect(result.steppers.filter(
+      trace => trace.discardedElapsedMilliseconds > 0,
+    )).toHaveLength(1);
+    expect(getProgramActivationRecord(activation).activeSteppers).toHaveLength(1);
+    expect(getProgramActivationRecord(activation).terminalSteppers).toEqual([]);
+  });
+
+  it('bounds nested finite repeat crossings by the shared track-path budget', () => {
+    const output = signal(0);
+    let steps = 0;
+    const definition = stepper({
+      stepMilliseconds: 10,
+      maxElapsedMilliseconds: 100,
+      initial: (current: number) => ({ value: current, steps: 0 }),
+      step: state => {
+        steps++;
+        return { value: state.value + 1, steps: state.steps + 1 };
+      },
+      read: state => state.value,
+      done: state => state.steps === 1,
+    });
+    const activation = activateProgram(repeat(
+      repeat(track(output, definition), { iterations: 2 }),
+      { iterations: 20 },
+    ), {});
+
+    const result = advance(activation, 0, 10_000, 1);
+
+    expect(steps).toBe(10);
+    expect(result.batch.read(output)).toBe(10);
+    expect(result.terminal.atEnd).toBe(false);
+    expect(result.steppers.length).toBeLessThanOrEqual(11);
+  });
+
+  it('gives distinct stepper track paths independent frame budgets', () => {
+    const one = signal(0);
+    const two = signal(0);
+    const steps = [0, 0];
+    const branch = (output: ReturnType<typeof signal<number>>, index: number) =>
+      repeat(track(output, stepper({
+        stepMilliseconds: 10,
+        maxElapsedMilliseconds: 100,
+        initial: (current: number) => ({ value: current, steps: 0 }),
+        step: state => {
+          steps[index]!++;
+          return { value: state.value + 1, steps: state.steps + 1 };
+        },
+        read: state => state.value,
+        done: state => state.steps === 1,
+      })), { iterations: Number.POSITIVE_INFINITY });
+    const activation = activateProgram(parallel(branch(one, 0), branch(two, 1)), {});
+
+    const result = advance(activation, 0, 10_000, 1);
+
+    expect(steps).toEqual([10, 10]);
+    expect(result.batch.read(one)).toBe(10);
+    expect(result.batch.read(two)).toBe(10);
+    expect(result.steppers.reduce(
+      (total, trace) => total + trace.discardedElapsedMilliseconds,
+      0,
+    )).toBe(19_800);
+    expect(result.steppers.filter(
+      trace => trace.discardedElapsedMilliseconds > 0,
+    )).toHaveLength(2);
+  });
+
   it('releases finite sequence and parallel state across multiple outputs and done-at-initial', () => {
     const instant = signal(5);
     const one = signal(0);
@@ -477,15 +572,7 @@ describe('stateful fixed-step replay', () => {
     expect(finished.terminal.atEnd).toBe(true);
   });
 
-  it.each([
-    { direction: 'normal' as const, values: [0, 1, 2, 3, 4] },
-    { direction: 'reverse' as const, values: [2, 1, 2, 1, 0] },
-    { direction: 'alternate' as const, values: [0, 1, 4, 3, 2] },
-    { direction: 'alternate-reverse' as const, values: [2, 1, 0, 1, 2] },
-  ])('replays $direction stepper repeat occurrences at exact boundaries', ({
-    direction,
-    values,
-  }) => {
+  it('replays normal stepper repeat occurrences at exact boundaries', () => {
     const createProgram = (output: ReturnType<typeof signal<number>>) =>
       repeat(track(output, stepper({
         stepMilliseconds: 10,
@@ -493,8 +580,9 @@ describe('stateful fixed-step replay', () => {
         step: state => ({ value: state.value + 1, steps: state.steps + 1 }),
         read: state => state.value,
         done: state => state.steps === 2,
-      })), { iterations: 2, direction });
+      })), { iterations: 2, direction: 'normal' });
     const times = [0, 10, 20, 30, 40];
+    const values = [0, 1, 2, 3, 4];
 
     for (const [index, time] of times.entries()) {
       const output = signal(0);
@@ -505,7 +593,7 @@ describe('stateful fixed-step replay', () => {
         'forward',
         index + 1,
       );
-      expect(result.batch.read(output), `seek ${direction} at ${time}`).toBe(values[index]);
+      expect(result.batch.read(output), `seek normal at ${time}`).toBe(values[index]);
       if (time === 40) expect(result.terminal.duration).toBe(40);
     }
 
@@ -518,7 +606,7 @@ describe('stateful fixed-step replay', () => {
         time,
         index + 10,
       );
-      expect(result.batch.read(output), `advance ${direction} at ${time}`).toBe(values[index]);
+      expect(result.batch.read(output), `advance normal at ${time}`).toBe(values[index]);
       if (time === 40) {
         expect(result.terminal.duration).toBe(40);
         expect(getProgramActivationRecord(activation).activeSteppers).toEqual([]);
@@ -527,34 +615,314 @@ describe('stateful fixed-step replay', () => {
     }
   });
 
-  it('rolls back reversed-occurrence endpoint discovery when a callback fails', () => {
+  it.each(['reverse', 'alternate-reverse'] as const)(
+    'rejects a fresh unresolved %s occurrence without invoking callbacks',
+    direction => {
+      const output = signal(0);
+      const calls = { initial: 0, step: 0, read: 0, done: 0 };
+      const activation = activateProgram(repeat(track(output, stepper({
+        debugName: 'unresolved reverse',
+        stepMilliseconds: 10,
+        initial: (current: number) => {
+          calls.initial++;
+          return current;
+        },
+        step: state => {
+          calls.step++;
+          return state + 1;
+        },
+        read: state => {
+          calls.read++;
+          return state;
+        },
+        done: state => {
+          calls.done++;
+          return state === 2;
+        },
+      })), { iterations: 2, direction }), {});
+      const batch = createSignalCommitBatch();
+      const callerWriter = {};
+      batch.stage(output, 77, callerWriter);
+
+      expect(() => seekProgram(activation, {
+        previousTime: 0,
+        time: 0,
+        direction: 'forward',
+        frameId: 3,
+        writer,
+        batch,
+      })).toThrow(/unresolved reverse.*endpoint.*activation input.*path/iu);
+
+      expect(calls).toEqual({ initial: 0, step: 0, read: 0, done: 0 });
+      expect(output.get()).toBe(0);
+      expect(batch.read(output)).toBe(77);
+      expect(getProgramActivationRecord(activation).activeSteppers).toEqual([]);
+    },
+  );
+
+  it('rejects a statically infinite reversed stepper before every callback', () => {
     const output = signal(0);
+    let callbacks = 0;
+    const activation = activateProgram(repeat(track(output, stepper({
+      debugName: 'infinite reverse',
+      stepMilliseconds: Number.MAX_VALUE,
+      initial: (current: number) => {
+        callbacks++;
+        return current;
+      },
+      step: state => {
+        callbacks++;
+        return state + 1;
+      },
+      read: state => {
+        callbacks++;
+        return state;
+      },
+    })), { iterations: 2, direction: 'reverse' }), {});
+
+    expect(() => advance(activation, 0, 0, 1)).toThrow(
+      /infinite reverse.*finite endpoint.*path/iu,
+    );
+    expect(callbacks).toBe(0);
+  });
+
+  it('rejects an unresolved never-done reverse without searching callbacks', () => {
+    const output = signal(0);
+    let callbacks = 0;
+    const activation = activateProgram(repeat(track(output, stepper({
+      debugName: 'never done reverse',
+      stepMilliseconds: Number.MAX_VALUE,
+      initial: (current: number) => {
+        callbacks++;
+        return current;
+      },
+      step: state => {
+        callbacks++;
+        return state + 1;
+      },
+      read: state => {
+        callbacks++;
+        return state;
+      },
+      done: () => {
+        callbacks++;
+        return false;
+      },
+    })), { iterations: 2, direction: 'reverse' }), {});
+
+    expect(() => advance(activation, 0, 0, 1)).toThrow(
+      /never done reverse.*endpoint.*activation input.*path/iu,
+    );
+    expect(callbacks).toBe(0);
+  });
+
+  it('reuses a forward endpoint only when the reversed occurrence has the exact input', () => {
+    const createProgram = (output: ReturnType<typeof signal<number>>) =>
+      repeat(track(output, stepper({
+        stepMilliseconds: 10,
+        initial: (current: number) => ({ initial: current, value: current, steps: 0 }),
+        step: state => ({
+          ...state,
+          value: state.steps === 0 ? state.initial + 1 : state.initial,
+          steps: state.steps + 1,
+        }),
+        read: state => state.value,
+        done: state => state.steps === 2,
+      })), { iterations: 2, direction: 'alternate' });
+
+    for (const [index, expected] of [0, 1, 0, 1, 0].entries()) {
+      const output = signal(0);
+      expect(seek(
+        activateProgram(createProgram(output), {}),
+        0,
+        index * 10,
+        'forward',
+        index + 20,
+      ).batch.read(output)).toBe(expected);
+    }
+
+    const output = signal(0);
+    const activation = activateProgram(createProgram(output), {});
+    for (const [index, expected] of [0, 1, 0, 1, 0].entries()) {
+      const time = index * 10;
+      expect(advance(activation, Math.max(0, time - 10), time, index + 1)
+        .batch.read(output)).toBe(expected);
+    }
+  });
+
+  it('rejects an alternate reverse occurrence when the forward endpoint input changed', () => {
+    const output = signal(0);
+    const activation = activateProgram(repeat(track(output, stepper({
+      debugName: 'changed alternate input',
+      stepMilliseconds: 10,
+      initial: (current: number) => ({ value: current, steps: 0 }),
+      step: state => ({ value: state.value + 1, steps: state.steps + 1 }),
+      read: state => state.value,
+      done: state => state.steps === 2,
+    })), { iterations: 2, direction: 'alternate' }), {});
+    const batch = createSignalCommitBatch();
+    const callerWriter = {};
+    batch.stage(output, 88, callerWriter);
+
+    expect(() => evaluateProgram(activation, {
+      previousTime: 0,
+      time: 20,
+      direction: 'forward',
+      frameId: 4,
+      writer,
+      batch,
+    })).toThrow(/changed alternate input.*endpoint.*activation input.*path/iu);
+
+    expect(output.get()).toBe(0);
+    expect(batch.read(output)).toBe(88);
+    expect(getProgramActivationRecord(activation).activeSteppers).toEqual([]);
+  });
+
+  it('rolls back cached reversed-occurrence replay when a callback fails', () => {
+    const output = signal(0);
+    let shouldFail = false;
     const activation = activateProgram(repeat(track(output, stepper({
       debugName: 'reversed failure',
       stepMilliseconds: 10,
-      initial: (current: number) => current,
-      step: () => {
-        throw new Error('endpoint failed');
+      initial: (current: number) => ({ initial: current, value: current, steps: 0 }),
+      step: state => {
+        if (shouldFail) throw new Error('replay failed');
+        return {
+          ...state,
+          value: state.steps === 0 ? state.initial + 1 : state.initial,
+          steps: state.steps + 1,
+        };
       },
-      read: state => state,
-      done: state => state === 2,
-    })), { iterations: 2, direction: 'reverse' }), {});
+      read: state => state.value,
+      done: state => state.steps === 2,
+    })), { iterations: 2, direction: 'alternate' }), {});
+    advance(activation, 0, 20, 8);
+    shouldFail = true;
     const batch = createSignalCommitBatch();
     const callerWriter = {};
     batch.stage(output, 91, callerWriter);
 
-    expect(() => seekProgram(activation, {
-      previousTime: 0,
-      time: 0,
+    expect(() => evaluateProgram(activation, {
+      previousTime: 20,
+      time: 30,
       direction: 'forward',
       frameId: 9,
       writer,
       batch,
-    })).toThrow(/reversed failure.*step.*endpoint failed/iu);
+    })).toThrow(/reversed failure.*step.*replay failed/iu);
 
     expect(output.get()).toBe(0);
     expect(batch.read(output)).toBe(91);
     expect(getProgramActivationRecord(activation).activeSteppers).toEqual([]);
     expect(getProgramActivationRecord(activation).terminalSteppers).toEqual([]);
+  });
+});
+
+describe('stateful repeat milestones', () => {
+  function oneStepRepeat(
+    output: ReturnType<typeof signal<number>>,
+    options: { direction?: 'normal' | 'alternate'; maxElapsedMilliseconds?: number } = {},
+  ) {
+    return repeat(track(output, stepper({
+      stepMilliseconds: 10,
+      maxElapsedMilliseconds: options.maxElapsedMilliseconds ?? 100,
+      initial: (current: number) => ({ initial: current, value: current, steps: 0 }),
+      step: state => ({
+        ...state,
+        value: options.direction === 'alternate' ? state.initial : state.value + 1,
+        steps: state.steps + 1,
+      }),
+      read: state => state.value,
+      done: state => state.steps === 1,
+    })), {
+      iterations: Number.POSITIVE_INFINITY,
+      direction: options.direction ?? 'normal',
+    });
+  }
+
+  it('reports every crossed normal boundary without retaining occurrence history', () => {
+    const output = signal(0);
+    const activation = activateProgram(oneStepRepeat(output), {});
+
+    const result = advance(activation, 0, 40, 1);
+
+    expect(result.milestones.map(event => [event.kind, event.programTime, event.iteration]))
+      .toEqual([
+        ['iteration', 10, 1],
+        ['iteration', 20, 2],
+        ['iteration', 30, 3],
+        ['iteration', 40, 4],
+      ]);
+  });
+
+  it('does not report repeat boundaries from discarded host-gap time', () => {
+    const output = signal(0);
+    const activation = activateProgram(oneStepRepeat(output, {
+      maxElapsedMilliseconds: 100,
+    }), {});
+
+    const result = advance(activation, 0, 10_000, 1);
+
+    expect(result.milestones.map(event => event.programTime)).toEqual([
+      10, 20, 30, 40, 50, 60, 70, 80, 90, 100,
+    ]);
+  });
+
+  it('preserves nested marker and iteration source order at tied boundaries', () => {
+    const output = signal(0);
+    const child = sequence(
+      track(output, stepper({
+        stepMilliseconds: 10,
+        initial: (current: number) => ({ value: current, steps: 0 }),
+        step: state => ({ value: state.value + 1, steps: state.steps + 1 }),
+        read: state => state.value,
+        done: state => state.steps === 1,
+      })),
+      marker('first'),
+      marker('second'),
+    );
+    const activation = activateProgram(repeat(child, {
+      iterations: Number.POSITIVE_INFINITY,
+    }), {});
+
+    const result = advance(activation, 0, 20, 1);
+
+    expect(result.milestones.map(event => [
+      event.kind,
+      event.kind === 'marker' ? event.marker : event.iteration,
+      event.programTime,
+    ])).toEqual([
+      ['marker', 'first', 10],
+      ['marker', 'second', 10],
+      ['iteration', 1, 10],
+      ['marker', 'first', 20],
+      ['marker', 'second', 20],
+      ['iteration', 2, 20],
+    ]);
+  });
+
+  it('reports alternate boundaries when the exact-input endpoint is reusable', () => {
+    const output = signal(0);
+    const activation = activateProgram(oneStepRepeat(output, {
+      direction: 'alternate',
+    }), {});
+
+    const result = advance(activation, 0, 40, 1);
+
+    expect(result.milestones.map(event => event.programTime)).toEqual([10, 20, 30, 40]);
+  });
+
+  it('reports stateful repeat boundaries in reverse traversal order', () => {
+    const output = signal(0);
+    const activation = activateProgram(oneStepRepeat(output), {});
+    advance(activation, 0, 40, 1);
+
+    const result = seek(activation, 40, 10, 'reverse', 2);
+
+    expect(result.milestones.map(event => [event.programTime, event.iteration])).toEqual([
+      [30, 3],
+      [20, 2],
+      [10, 1],
+    ]);
   });
 });
