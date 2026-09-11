@@ -980,6 +980,8 @@ describe('filter integration', () => {
     try {
       expect(driver.pendingHostFrames).toBe(1);
       driver.flush(-1);
+      const baselineOutsideAlpha = pixel(canvas, 17, 15)[3]!;
+      const baselineInteriorAlpha = pixel(canvas, 25, 15)[3]!;
       playback.play();
       expect(driver.pendingHostFrames).toBe(1);
       driver.flush(0);
@@ -1006,8 +1008,11 @@ describe('filter integration', () => {
       const outsideAlpha = pixel(canvas, 17, 15)[3]!;
       const interiorAlpha = pixel(canvas, 25, 15)[3]!;
       // The outside sample is three pixels beyond the unfiltered geometry:
-      // nonzero coverage plus a denser interior distinguishes real blur output.
-      expect(outsideAlpha).toBeGreaterThan(0);
+      // radius 2 -> 6 measured +19 outside and -151 inside in Chromium.
+      // These directional margins reject a stale radius-2 composition while
+      // leaving 9 and 51 alpha levels of rasterization tolerance respectively.
+      expect(outsideAlpha).toBeGreaterThan(baselineOutsideAlpha + 10);
+      expect(interiorAlpha).toBeLessThan(baselineInteriorAlpha - 100);
       expect(interiorAlpha).toBeGreaterThan(outsideAlpha);
 
       dispatchClick(canvas, 17, 15);
