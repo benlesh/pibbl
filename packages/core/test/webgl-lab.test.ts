@@ -1,3 +1,10 @@
+import {
+  Fragment,
+  Rectangle,
+  crc,
+  createElement,
+  type CRCController,
+} from '@crc/core';
 import type {
   ScenarioController,
   WebGLLabState,
@@ -12,7 +19,13 @@ import {
   scenarioCatalog,
   webglLabScenarioEntry,
 } from '@crc/scenarios';
-import { afterEach, describe, expect, it } from 'vitest';
+import {
+  Cube,
+  Group3D,
+  WebGLLayer,
+  crcAnimationFrame,
+} from '@crc/webgl';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import learningWebGLSource from '../../scenarios/src/learning/composition/webgl-islands.example.tsx?raw';
 import webglLabSource from '../../scenarios/src/webgl-lab.example.tsx?raw';
 import {
@@ -27,6 +40,32 @@ import {
 import { expectVisualMatch } from './visual-compare';
 
 const activeControllers = new Set<ScenarioController<WebGLLabState>>();
+const activeCRCs = new Set<CRCController>();
+
+function installControlledFrames() {
+  let nextId = 0;
+  const callbacks = new Map<number, FrameRequestCallback>();
+  const pending = new Set<number>();
+  vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
+    const id = ++nextId;
+    callbacks.set(id, callback);
+    pending.add(id);
+    return id;
+  });
+  vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(id => {
+    pending.delete(id);
+  });
+  return {
+    runNext(timestamp: number): void {
+      const id = pending.values().next().value;
+      if (id === undefined) throw new Error('No animation frame is pending.');
+      const callback = callbacks.get(id);
+      if (!callback) throw new Error(`Unknown animation frame ${id}.`);
+      pending.delete(id);
+      callback(timestamp);
+    },
+  };
+}
 
 function pixelSignature(canvas: HTMLCanvasElement): number {
   const context = canvas.getContext('2d');
@@ -53,6 +92,9 @@ function pixelAt(
 afterEach(async () => {
   for (const controller of activeControllers) await controller.dispose();
   activeControllers.clear();
+  for (const controller of activeCRCs) controller.dispose();
+  activeCRCs.clear();
+  vi.restoreAllMocks();
   document.body.replaceChildren();
 });
 
@@ -277,6 +319,11 @@ describe('public WebGL island scenarios', () => {
   it('changes camera, rotation, animation angle, and context generation deterministically', async () => {
     const { canvas, controller } = await mountWebGLLab();
     const initialGeneration = controller.getState().contextGeneration;
+    await clickLogicalPoint(canvas, WEBGL_LAB_PROBES.cameraOuterCube);
+    expect(controller.getState()).toMatchObject({
+      lastTarget: 'cube',
+      cubeSelections: 1,
+    });
     const defaultCameraPixels = pixelSignature(canvas);
 
     await controller.perform('change-camera');
@@ -285,6 +332,8 @@ describe('public WebGL island scenarios', () => {
       revision: 1,
     });
     expect(pixelSignature(canvas)).not.toBe(defaultCameraPixels);
+    await clickLogicalPoint(canvas, WEBGL_LAB_PROBES.cameraOuterCube);
+    expect(controller.getState().lastTarget).toBe('lower-canvas');
 
     await controller.perform('show-transforms');
     const initialTransformPixels = pixelSignature(canvas);
@@ -314,8 +363,62 @@ describe('public WebGL island scenarios', () => {
     await clickLogicalPoint(canvas, WEBGL_LAB_PROBES.cube);
     expect(controller.getState()).toMatchObject({
       lastTarget: 'cube',
-      cubeSelections: 1,
+      cubeSelections: 2,
     });
+  });
+
+  it('uses one animation timestamp for the committed pixels and pick transform', async () => {
+    const frames = installControlledFrames();
+    const timestamps: number[] = [];
+    let lastTarget: 'background' | 'cube' | null = null;
+    function AnimatedCube(_props: {}) {
+      const timestamp = crcAnimationFrame();
+      timestamps.push(timestamp);
+      return createElement(Group3D, {
+        style: { rotationYDegrees: timestamp / 10 },
+        children: createElement(Cube, {
+          style: { size: 1, translateX: 1.2, color: '#8b5cf6' },
+          onClick: () => {
+            lastTarget = 'cube';
+          },
+        }),
+      });
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = 200;
+    canvas.height = 200;
+    canvas.style.cssText = 'display:block;width:200px;height:200px';
+    document.body.replaceChildren(canvas);
+    const scene = createElement(
+      Fragment,
+      null,
+      createElement(Rectangle, {
+        style: { width: 200, height: 200, fill: '#dbeafe' },
+        onClick: () => {
+          lastTarget = 'background';
+        },
+      }),
+      createElement(WebGLLayer, {
+        style: { width: 200, height: 200 },
+        children: createElement(AnimatedCube, {}),
+      }),
+    );
+    const controller = crc(canvas, scene, { pixelRatio: 1 });
+    activeCRCs.add(controller);
+
+    frames.runNext(0);
+    const initialPixels = pixelSignature(canvas);
+    await clickLogicalPoint(canvas, { x: 150, y: 100 });
+    expect(lastTarget).toBe('cube');
+
+    lastTarget = null;
+    frames.runNext(900);
+    expect(timestamps).toEqual([0, 900]);
+    expect(pixelSignature(canvas)).not.toBe(initialPixels);
+    await clickLogicalPoint(canvas, { x: 150, y: 100 });
+    expect(lastTarget).toBe('background');
+    await clickLogicalPoint(canvas, { x: 100, y: 100 });
+    expect(lastTarget).toBe('cube');
   });
 
   it('matches the reviewed Canvas/WebGL composition baseline', async () => {

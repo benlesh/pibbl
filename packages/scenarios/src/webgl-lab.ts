@@ -203,10 +203,10 @@ async function mountWebGLLab(
           ? undefined
           : {
               type: 'perspective',
-              position: [0, 0, 6],
+              position: [0, 0, 8],
               lookAt: [0, 0, 0],
               up: [0, 1, 0],
-              fieldOfViewDegrees: 40,
+              fieldOfViewDegrees: 50,
               near: 0.1,
               far: 1000,
             };

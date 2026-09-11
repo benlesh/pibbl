@@ -59,6 +59,7 @@ export interface WebGLLabPoint {
 export const WEBGL_LAB_PROBES = {
   lowerCanvas: { x: 24, y: 276 },
   cube: { x: 210, y: 150 },
+  cameraOuterCube: { x: 210, y: 118 },
   transparentIsland: { x: 240, y: 26 },
   upperStar: { x: 183, y: 150 },
   sphere: { x: 292, y: 150 },
