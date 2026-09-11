@@ -1003,6 +1003,13 @@ describe('filter integration', () => {
       expect(policy.candidates.map(candidate => candidate.target))
         .toEqual(targets);
 
+      const outsideAlpha = pixel(canvas, 17, 15)[3]!;
+      const interiorAlpha = pixel(canvas, 25, 15)[3]!;
+      // The outside sample is three pixels beyond the unfiltered geometry:
+      // nonzero coverage plus a denser interior distinguishes real blur output.
+      expect(outsideAlpha).toBeGreaterThan(0);
+      expect(interiorAlpha).toBeGreaterThan(outsideAlpha);
+
       dispatchClick(canvas, 17, 15);
       expect(onClick).not.toHaveBeenCalled();
       dispatchClick(canvas, 22, 15);

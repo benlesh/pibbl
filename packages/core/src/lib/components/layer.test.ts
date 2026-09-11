@@ -456,7 +456,11 @@ describe('Layer children and retained subtree contract', () => {
       )).toBe(true);
       expect(drawImage.mock.calls.some(([source]) => source === bLayer!.canvas))
         .toBe(true);
-      expect(pixel(canvas, 30, 5)[3]).toBeGreaterThan(0);
+      const presentedPixel = pixel(canvas, 30, 5);
+      expect(presentedPixel.slice(0, 3)).toEqual([255, 0, 0]);
+      // Chromium rounds 255 * the midpoint opacity (0.75) to 191.
+      expect(presentedPixel[3]).toBeGreaterThanOrEqual(190);
+      expect(presentedPixel[3]).toBeLessThanOrEqual(192);
     } finally {
       offscreenDrawImage.mockRestore();
       drawImage.mockRestore();
