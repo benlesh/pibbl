@@ -18,6 +18,8 @@ import type {
   CRCTweenOptions,
 } from './types.js';
 
+declare const seekableDefinitionActivationBrand: unique symbol;
+
 interface BaseDefinitionRecord {
   readonly duration: number;
   readonly debugName: string | undefined;
@@ -60,9 +62,26 @@ export type DefinitionRecord<T> =
   | StepperDefinitionRecord<T>
   | SpringDefinitionRecord;
 
+/** @internal Opaque activation-time state for one seekable track instance. */
+export interface SeekableDefinitionActivation<T> {
+  readonly [seekableDefinitionActivationBrand]: T;
+  readonly duration: number;
+  readonly initialValue: T;
+}
+
+interface SeekableDefinitionActivationRecord<T> {
+  readonly definition: CRCAnimationDefinition<T>;
+  readonly definitionRecord: Exclude<DefinitionRecord<T>, StepperDefinitionRecord<T>>;
+  readonly initialValue: T;
+}
+
 const definitionRecords = new WeakMap<
   CRCAnimationDefinition<unknown>,
   DefinitionRecord<unknown>
+>();
+const seekableActivationRecords = new WeakMap<
+  SeekableDefinitionActivation<unknown>,
+  SeekableDefinitionActivationRecord<unknown>
 >();
 
 function definitionLabel(debugName: string | undefined): string {
@@ -309,6 +328,14 @@ function isolateStoredAnimationValue<T>(
   seen: WeakMap<object, unknown>,
 ): T {
   return snapshotAnimationValue(value, seen, true);
+}
+
+/** @internal Captures a committed output value for a playback activation. */
+export function snapshotAnimationActivationValue<T>(
+  value: T,
+  seen: WeakMap<object, unknown> = new WeakMap(),
+): T {
+  return snapshotAnimationValue(value, seen);
 }
 
 function validateSampledValue<T>(sampled: T, debugName: string | undefined): T {
@@ -602,4 +629,59 @@ export function sampleSeekableDefinition<T>(
     record.interpolate,
     record.debugName,
   );
+}
+
+/**
+ * @internal Resolves activation-dependent definition data exactly once for a
+ * track instance. Stateful definitions are deliberately deferred to Task 5.
+ */
+export function activateSeekableDefinition<T>(
+  definition: CRCAnimationDefinition<T>,
+  initialValue: T,
+  seen: WeakMap<object, unknown> = new WeakMap(),
+): SeekableDefinitionActivation<T> {
+  const definitionRecord = getDefinitionRecord(definition);
+  if (definitionRecord.kind === 'stepper') {
+    throw new TypeError(
+      'Stateful animation definitions are deferred to Task 5 and cannot be evaluated seekably.',
+    );
+  }
+  const snapshot = snapshotAnimationActivationValue(initialValue, seen);
+  const resolved = definitionRecord.kind === 'spring' ?
+    resolveSpringStart(definitionRecord, snapshot as number) : definitionRecord;
+  const activation = Object.freeze({
+    duration: resolved.duration,
+    initialValue: snapshot,
+  }) as SeekableDefinitionActivation<T>;
+  seekableActivationRecords.set(
+    activation as SeekableDefinitionActivation<unknown>,
+    Object.freeze({
+      definition,
+      definitionRecord: resolved,
+      initialValue: snapshot,
+    }) as SeekableDefinitionActivationRecord<unknown>,
+  );
+  return activation;
+}
+
+/** @internal Samples a definition from one retained activation record. */
+export function sampleActivatedSeekableDefinition<T>(
+  activation: SeekableDefinitionActivation<T>,
+  localTime: number,
+): T {
+  const activationRecord = seekableActivationRecords.get(
+    activation as SeekableDefinitionActivation<unknown>,
+  ) as SeekableDefinitionActivationRecord<T> | undefined;
+  if (activationRecord === undefined) {
+    throw new TypeError('Expected a seekable CRC animation definition activation.');
+  }
+  const record = activationRecord.definitionRecord;
+  if (record.kind === 'spring') {
+    const timing = sampledProgress(record.duration, localTime);
+    return sampleSpring(record, timing.localTime / 1000).position as T;
+  }
+  return sampleSeekableDefinition(activationRecord.definition, {
+    initialValue: activationRecord.initialValue,
+    localTime,
+  });
 }

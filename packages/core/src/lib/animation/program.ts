@@ -78,6 +78,7 @@ export type ProgramRecord =
   | RepeatProgramRecord;
 
 const programRecords = new WeakMap<CRCAnimationProgram, ProgramRecord>();
+const exactSeekableDurations = new WeakMap<CRCAnimationProgram, number | undefined>();
 
 const finite = (milliseconds: number): ProgramDuration => Object.freeze({
   kind: 'finite' as const,
@@ -904,4 +905,43 @@ export function getProgramRecord(program: CRCAnimationProgram): ProgramRecord {
   const record = programRecords.get(program);
   if (record === undefined) throw new TypeError('Expected a CRC animation program.');
   return record;
+}
+
+/**
+ * @internal Returns a construction-time exact seekable duration when no track
+ * needs activation data to resolve it. Positive infinity is exact; `undefined`
+ * means activation or Task 5 state is required.
+ */
+export function getExactSeekableProgramDuration(
+  program: CRCAnimationProgram,
+): number | undefined {
+  if (exactSeekableDurations.has(program)) return exactSeekableDurations.get(program);
+  const record = getProgramRecord(program);
+  let duration: number | undefined;
+  if (record.kind === 'track') {
+    const definition = getDefinitionRecord(record.definition);
+    duration = definition.kind === 'stepper' ||
+      definition.kind === 'spring' && !definition.hasFrom ?
+      undefined : definition.duration;
+  } else if (record.kind === 'wait') {
+    duration = record.duration.kind === 'finite' ? record.duration.milliseconds : undefined;
+  } else if (record.kind === 'marker') {
+    duration = 0;
+  } else {
+    const childDurations = record.children.map(getExactSeekableProgramDuration);
+    if (childDurations.some(childDuration => childDuration === undefined)) {
+      duration = undefined;
+    } else if (record.kind === 'sequence') {
+      duration = (childDurations as number[]).reduce<number>((total, childDuration) =>
+        total + childDuration, 0);
+    } else if (record.kind === 'parallel') {
+      duration = Math.max(0, ...(childDurations as number[]));
+    } else {
+      const childDuration = childDurations[0] as number;
+      duration = record.iterations === Number.POSITIVE_INFINITY ?
+        Number.POSITIVE_INFINITY : childDuration * record.iterations;
+    }
+  }
+  exactSeekableDurations.set(program, duration);
+  return duration;
 }
