@@ -171,6 +171,10 @@ interface InternalStepperFrameBudget {
   discardedReported: boolean;
 }
 
+interface InternalZeroDurationStepperOccurrenceBudget {
+  value: number;
+}
+
 interface InternalStepperRecord {
   readonly programPath: readonly number[];
   readonly repeatIterations: readonly number[];
@@ -206,6 +210,7 @@ interface SampleState {
   readonly repeatTerminals: Map<string, InternalRepeatTerminal>;
   readonly reverseEndpoints: Map<string, InternalReverseEndpoint>;
   readonly stepperFrameBudgets: Map<string, InternalStepperFrameBudget>;
+  readonly zeroDurationStepperOccurrences: InternalZeroDurationStepperOccurrenceBudget;
   readonly sampledTimelineEvents: TimelineEvent[];
   readonly nextTimelineSourceOrder: { value: number };
   readonly activeStepperKeys: Set<string>;
@@ -262,6 +267,7 @@ interface TimelineEvent {
   readonly marker?: string;
   readonly programTime: number;
   readonly programPath: readonly number[];
+  readonly repeatIterations: readonly number[];
   readonly iteration: number;
   readonly sourceOrder: number;
 }
@@ -275,6 +281,9 @@ const activationRecords = new WeakMap<ProgramActivation, InternalProgramActivati
 const baselineWriter = Object.freeze({ name: 'CRC animation activation baseline' });
 const directRepeatSelection = new WeakMap<CRCAnimationProgram, boolean>();
 const containsStepperDefinition = new WeakMap<CRCAnimationProgram, boolean>();
+// Opaque zero-time callbacks cannot be collapsed symbolically. This fixed shared
+// work bound keeps one evaluation deterministic while permitting useful finite bursts.
+const maximumZeroDurationStepperOccurrencesPerEvaluation = 512;
 
 class StepperCallbackError extends Error {
   constructor(message: string, readonly cause: unknown) {
@@ -286,6 +295,26 @@ class StepperCallbackError extends Error {
 function stepperLabel(debugName: string | undefined): string {
   return debugName === undefined ? 'CRC animation stepper' :
     `CRC animation stepper "${debugName}"`;
+}
+
+function reservePotentialZeroDurationStepperOccurrence(
+  state: SampleState,
+  debugName: string | undefined,
+  path: readonly number[],
+  repeatIterations: readonly number[],
+): void {
+  if (state.zeroDurationStepperOccurrences.value >=
+    maximumZeroDurationStepperOccurrencesPerEvaluation) {
+    const repeats = repeatIterations.length === 0 ? '' :
+      `, repeat iterations [${repeatIterations.join(', ')}]`;
+    throw new RangeError(
+      `CRC animation zero-duration stateful occurrence budget of ` +
+        `${maximumZeroDurationStepperOccurrencesPerEvaluation} was exhausted before ` +
+        `${stepperLabel(debugName)} at program path [${path.join(', ')}]${repeats}, ` +
+        `frame ${state.frameId}.`,
+    );
+  }
+  state.zeroDurationStepperOccurrences.value++;
 }
 
 function invokeStepperCallback<T>(
@@ -1138,7 +1167,17 @@ function sampleStepperTrack(
 
   let stepperRecord = state.steppers.get(key);
   let newlyInitialized = false;
+  let zeroDurationReservation = false;
   if (stepperRecord === undefined) {
+    if (definitionRecord.done !== undefined) {
+      reservePotentialZeroDurationStepperOccurrence(
+        state,
+        definitionRecord.debugName,
+        path,
+        repeatIterations,
+      );
+      zeroDurationReservation = true;
+    }
     const activationInput = snapshotAnimationActivationValue(
       state.batch.read(trackRecord.output),
       state.snapshots,
@@ -1184,6 +1223,9 @@ function sampleStepperTrack(
       stepperRecord.wholeSteps,
       stepperRecord.appliedElapsedMilliseconds,
     );
+  }
+  if (zeroDurationReservation && terminal === undefined) {
+    state.zeroDurationStepperOccurrences.value--;
   }
 
   const rawContribution = Math.max(0, localTime - stepperRecord.sampledLocalTime);
@@ -1272,9 +1314,8 @@ function sampleStepperTrack(
     );
   }
   const discardedGap = frameBudget !== undefined &&
-    frameBudget.remainingMilliseconds === 0 &&
     !frameBudget.discardedReported ? frameBudget.discardedMilliseconds : 0;
-  if (frameBudget !== undefined && discardedGap > 0) {
+  if (frameBudget !== undefined && !frameBudget.discardedReported) {
     frameBudget.discardedReported = true;
   }
   stepperRecord.discardedElapsedMilliseconds += discardedGap;
@@ -1405,6 +1446,7 @@ function forkSampleState(
     repeatTerminals: state.repeatTerminals,
     reverseEndpoints: state.reverseEndpoints,
     stepperFrameBudgets: state.stepperFrameBudgets,
+    zeroDurationStepperOccurrences: state.zeroDurationStepperOccurrences,
     sampledTimelineEvents: state.sampledTimelineEvents,
     nextTimelineSourceOrder: state.nextTimelineSourceOrder,
     activeStepperKeys: state.activeStepperKeys,
@@ -1437,6 +1479,10 @@ function queueSampledTimelineEvent(
     existing.marker === event.marker &&
     existing.programTime === event.programTime &&
     existing.iteration === event.iteration &&
+    existing.repeatIterations.length === event.repeatIterations.length &&
+    existing.repeatIterations.every(
+      (part, index) => part === event.repeatIterations[index],
+    ) &&
     existing.programPath.length === event.programPath.length &&
     existing.programPath.every((part, index) => part === event.programPath[index]),
   );
@@ -1444,6 +1490,7 @@ function queueSampledTimelineEvent(
   state.sampledTimelineEvents.push(Object.freeze({
     ...event,
     programPath: freezePath(event.programPath),
+    repeatIterations: freezePath(event.repeatIterations),
     sourceOrder: state.nextTimelineSourceOrder.value++,
   }));
 }
@@ -1573,6 +1620,7 @@ function isolatedReplayState(
     new Map(),
     state.frameId,
     true,
+    state.zeroDurationStepperOccurrences,
   );
   for (const [output, value] of values) {
     isolated.batch.stage(output, value, baselineWriter);
@@ -1793,6 +1841,7 @@ function sampleStatefulRepeatFrontier(
         kind: 'iteration',
         programTime: offset + frontier.elapsedMilliseconds,
         programPath: path,
+        repeatIterations,
         iteration: frontier.completedIterations,
       });
     }
@@ -1846,6 +1895,7 @@ function sampleNode(
       marker: record.name,
       programTime: offset,
       programPath: path,
+      repeatIterations,
       iteration: repeatIterations.at(-1) ?? 0,
     });
     setDuration(state, path, repeatIterations, 0);
@@ -2062,6 +2112,7 @@ function sampleNode(
         kind: 'iteration',
         programTime: offset + elapsed,
         programPath: path,
+        repeatIterations,
         iteration: iteration + 1,
       });
     }
@@ -2108,6 +2159,7 @@ function collectTimeline(
       marker: record.name,
       programTime: transformedTime(transform, 0),
       programPath: freezePath(path),
+      repeatIterations: freezePath(repeatIterations),
       iteration: repeatIterations.at(-1) ?? 0,
       sourceOrder: nextSourceOrder.value++,
     }));
@@ -2196,6 +2248,7 @@ function collectTimeline(
         kind: 'iteration',
         programTime: transformedTime(transform, offset),
         programPath: freezePath(path),
+        repeatIterations: freezePath(repeatIterations),
         iteration: iteration + 1,
         sourceOrder: nextSourceOrder.value++,
       }));
@@ -2218,6 +2271,7 @@ function createSampleState(
     new Map(record.reverseEndpoints),
   frameId = 0,
   replaySteppers = false,
+  zeroDurationStepperOccurrences: InternalZeroDurationStepperOccurrenceBudget = { value: 0 },
 ): SampleState {
   return {
     activation: record,
@@ -2233,6 +2287,7 @@ function createSampleState(
     repeatTerminals,
     reverseEndpoints,
     stepperFrameBudgets: new Map(),
+    zeroDurationStepperOccurrences,
     sampledTimelineEvents: [],
     nextTimelineSourceOrder: { value: 0 },
     activeStepperKeys: new Set(),
@@ -2298,6 +2353,10 @@ function crossedMilestones(
       candidate.marker === event.marker &&
       candidate.programTime === event.programTime &&
       candidate.iteration === event.iteration &&
+      candidate.repeatIterations.length === event.repeatIterations.length &&
+      candidate.repeatIterations.every(
+        (part, pathIndex) => part === event.repeatIterations[pathIndex],
+      ) &&
       candidate.programPath.length === event.programPath.length &&
       candidate.programPath.every(
         (part, pathIndex) => part === event.programPath[pathIndex],
@@ -2366,6 +2425,7 @@ function evaluate(
     new Map<string, InternalRepeatTerminal>() : new Map(record.repeatTerminals);
   const destinationReverseEndpoints = replaySteppers ?
     new Map<string, InternalReverseEndpoint>() : new Map(record.reverseEndpoints);
+  const zeroDurationStepperOccurrences = { value: 0 };
   let seededDurations = new Map<string, number>();
   if (needsCallbackFreeDurationSeed(record.program)) {
     const seedState = createDiscoveryState(
@@ -2388,6 +2448,7 @@ function evaluate(
     destinationReverseEndpoints,
     input.frameId,
     replaySteppers,
+    zeroDurationStepperOccurrences,
   );
   try {
     const destinationResult = sampleNode(record.program, time, destinationState, [], []);
@@ -2409,6 +2470,7 @@ function evaluate(
         new Map(record.reverseEndpoints),
         input.frameId,
         true,
+        zeroDurationStepperOccurrences,
       );
       sampleNode(record.program, horizon, horizonState, [], []);
       milestoneState = horizonState;
@@ -2439,6 +2501,9 @@ function evaluate(
           new Map(),
           new Map(),
           new Map(),
+          0,
+          false,
+          zeroDurationStepperOccurrences,
         );
       }
     }

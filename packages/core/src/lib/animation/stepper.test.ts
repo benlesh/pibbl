@@ -438,6 +438,83 @@ describe('stateful fixed-step animation evaluation', () => {
     )).toHaveLength(2);
   });
 
+  it('reports an initial clamp discard once when a bare stepper terminates early', () => {
+    const output = signal(0);
+    const activation = activateProgram(track(output, stepper({
+      stepMilliseconds: 10,
+      maxElapsedMilliseconds: 100,
+      initial: (current: number) => current,
+      step: state => state + 1,
+      read: state => state,
+      done: state => state === 3,
+    })), {});
+
+    const result = advance(activation, 0, 250, 1);
+
+    expect(result.batch.read(output)).toBe(3);
+    expect(result.steppers).toEqual([expect.objectContaining({
+      appliedSteps: 3,
+      clampedElapsedMilliseconds: 30,
+      discardedElapsedMilliseconds: 150,
+      terminal: { step: 3, time: 30 },
+    })]);
+  });
+
+  it('reports one initial clamp discard when a finite repeat terminates early', () => {
+    const output = signal(0);
+    const activation = activateProgram(repeat(track(output, stepper({
+      stepMilliseconds: 10,
+      maxElapsedMilliseconds: 100,
+      initial: (current: number) => ({ value: current, steps: 0 }),
+      step: state => ({ value: state.value + 1, steps: state.steps + 1 }),
+      read: state => state.value,
+      done: state => state.steps === 1,
+    })), { iterations: 3 }), {});
+
+    const result = advance(activation, 0, 250, 1);
+
+    expect(result.batch.read(output)).toBe(3);
+    expect(result.steppers.reduce(
+      (total, trace) => total + trace.clampedElapsedMilliseconds,
+      0,
+    )).toBe(30);
+    expect(result.steppers.reduce(
+      (total, trace) => total + trace.discardedElapsedMilliseconds,
+      0,
+    )).toBe(150);
+    expect(result.steppers.filter(
+      trace => trace.discardedElapsedMilliseconds > 0,
+    )).toHaveLength(1);
+  });
+
+  it('reports one early-terminal clamp discard for each distinct track path', () => {
+    const one = signal(0);
+    const two = signal(0);
+    const branch = (output: ReturnType<typeof signal<number>>) =>
+      track(output, stepper({
+        stepMilliseconds: 10,
+        maxElapsedMilliseconds: 100,
+        initial: (current: number) => current,
+        step: state => state + 1,
+        read: state => state,
+        done: state => state === 3,
+      }));
+    const activation = activateProgram(parallel(branch(one), branch(two)), {});
+
+    const result = advance(activation, 0, 250, 1);
+
+    expect(result.batch.read(one)).toBe(3);
+    expect(result.batch.read(two)).toBe(3);
+    expect(result.steppers.map(trace => ({
+      path: trace.programPath,
+      clamped: trace.clampedElapsedMilliseconds,
+      discarded: trace.discardedElapsedMilliseconds,
+    }))).toEqual([
+      { path: [0], clamped: 30, discarded: 150 },
+      { path: [1], clamped: 30, discarded: 150 },
+    ]);
+  });
+
   it('releases finite sequence and parallel state across multiple outputs and done-at-initial', () => {
     const instant = signal(5);
     const one = signal(0);
@@ -487,6 +564,210 @@ describe('stateful fixed-step animation evaluation', () => {
       { path: [1, 0], terminal: { step: 1, time: 10 } },
       { path: [1, 1], terminal: { step: 2, time: 20 } },
     ]);
+    expect(getProgramActivationRecord(activation).activeSteppers).toEqual([]);
+    expect(getProgramActivationRecord(activation).terminalSteppers).toEqual([]);
+  });
+});
+
+describe('zero-duration stateful occurrence budget', () => {
+  function instantIncrement(
+    output: ReturnType<typeof signal<number>>,
+    counters: { initials: number; dones: number; reads: number },
+  ) {
+    return track(output, stepper({
+      debugName: 'instant increment',
+      stepMilliseconds: 10,
+      initial: (current: number) => {
+        counters.initials++;
+        return current + 1;
+      },
+      step: state => state,
+      read: state => {
+        counters.reads++;
+        return state;
+      },
+      done: state => {
+        counters.dones++;
+        return state > 0;
+      },
+    }));
+  }
+
+  it.each([
+    ['ordinary advance', advance],
+    ['direct replay seek', (
+      activation: ProgramActivation,
+      previousTime: number | undefined,
+      time: number,
+      frameId: number,
+    ) => seek(activation, previousTime, time, 'forward', frameId)],
+  ] as const)('permits the exact 512-occurrence boundary during %s', (_, evaluate) => {
+    const output = signal(0);
+    const counters = { initials: 0, dones: 0, reads: 0 };
+    const activation = activateProgram(repeat(
+      instantIncrement(output, counters),
+      { iterations: 512 },
+    ), {});
+
+    const result = evaluate(activation, undefined, 0, 1);
+
+    expect(result.batch.read(output)).toBe(512);
+    expect(result.steppers).toHaveLength(512);
+    expect(result.milestones).toHaveLength(511);
+    expect(counters).toEqual({ initials: 512, dones: 512, reads: 512 });
+    expect(result.terminal).toEqual({
+      duration: 0,
+      atStart: true,
+      atEnd: true,
+      reached: true,
+    });
+  });
+
+  it('shares the budget across nested repeats and preserves zero-time source order', () => {
+    const output = signal(0);
+    const counters = { initials: 0, dones: 0, reads: 0 };
+    const activation = activateProgram(repeat(
+      repeat(sequence(
+        instantIncrement(output, counters),
+        marker('instant boundary'),
+      ), { iterations: 2 }),
+      { iterations: 2 },
+    ), {});
+
+    const result = advance(activation, undefined, 0, 1);
+
+    expect(result.batch.read(output)).toBe(4);
+    expect(counters).toEqual({ initials: 4, dones: 4, reads: 4 });
+    expect(result.milestones.map(event => [
+      event.kind,
+      event.kind === 'marker' ? event.marker : event.iteration,
+      event.programPath,
+    ])).toEqual([
+      ['marker', 'instant boundary', [0, 0, 1]],
+      ['iteration', 1, [0]],
+      ['marker', 'instant boundary', [0, 0, 1]],
+      ['iteration', 1, []],
+      ['marker', 'instant boundary', [0, 0, 1]],
+      ['iteration', 1, [0]],
+      ['marker', 'instant boundary', [0, 0, 1]],
+    ]);
+  });
+
+  it.each([
+    ['ordinary advance', evaluateProgram],
+    ['direct replay seek', seekProgram],
+  ] as const)('rejects the 513th zero-time occurrence atomically during %s', (_, evaluate) => {
+    const output = signal(0);
+    const counters = { initials: 0, dones: 0, reads: 0 };
+    const activation = activateProgram(repeat(
+      instantIncrement(output, counters),
+      { iterations: 513 },
+    ), {});
+    const batch = createSignalCommitBatch();
+    const callerWriter = {};
+    batch.stage(output, 91, callerWriter);
+
+    expect(() => evaluate(activation, {
+      previousTime: undefined,
+      time: 0,
+      direction: 'forward',
+      frameId: 7,
+      writer,
+      batch,
+    })).toThrow(/zero-duration.*512.*instant increment.*path.*frame 7/iu);
+
+    expect(counters).toEqual({ initials: 512, dones: 512, reads: 512 });
+    expect(output.get()).toBe(0);
+    expect(batch.read(output)).toBe(91);
+    expect(getProgramActivationRecord(activation).activeSteppers).toEqual([]);
+    expect(getProgramActivationRecord(activation).terminalSteppers).toEqual([]);
+  });
+
+  it('shares the rejection boundary across nested repeat nodes', () => {
+    const output = signal(0);
+    const counters = { initials: 0, dones: 0, reads: 0 };
+    const activation = activateProgram(repeat(
+      repeat(instantIncrement(output, counters), { iterations: 171 }),
+      { iterations: 3 },
+    ), {});
+
+    expect(() => advance(activation, undefined, 0, 9)).toThrow(
+      /zero-duration.*512.*instant increment.*path.*frame 9/iu,
+    );
+
+    expect(counters).toEqual({ initials: 512, dones: 512, reads: 512 });
+    expect(output.get()).toBe(0);
+    expect(getProgramActivationRecord(activation).activeSteppers).toEqual([]);
+    expect(getProgramActivationRecord(activation).terminalSteppers).toEqual([]);
+  });
+
+  it('shares one limit across parallel branches and rejects huge finite repeats promptly', () => {
+    const one = signal(0);
+    const two = signal(0);
+    let callbackAttempts = 0;
+    const counters = [
+      { initials: 0, dones: 0, reads: 0 },
+      { initials: 0, dones: 0, reads: 0 },
+    ];
+    const guardedInstant = (output: ReturnType<typeof signal<number>>, index: number) =>
+      track(output, stepper({
+        debugName: `guarded instant ${index}`,
+        stepMilliseconds: 10,
+        initial: (current: number) => {
+          callbackAttempts++;
+          if (callbackAttempts > 512) throw new Error('budget failed to stop traversal');
+          counters[index]!.initials++;
+          return current + 1;
+        },
+        step: state => state,
+        read: state => {
+          counters[index]!.reads++;
+          return state;
+        },
+        done: () => {
+          counters[index]!.dones++;
+          return true;
+        },
+      }));
+    const activation = activateProgram(parallel(
+      repeat(guardedInstant(one, 0), { iterations: 300 }),
+      repeat(guardedInstant(two, 1), { iterations: 1_000_000_000 }),
+    ), {});
+    const batch = createSignalCommitBatch();
+    const callerWriter = {};
+    batch.stage(one, 81, callerWriter);
+    batch.stage(two, 82, callerWriter);
+
+    expect(() => evaluateProgram(activation, {
+      previousTime: undefined,
+      time: 0,
+      direction: 'forward',
+      frameId: 8,
+      writer,
+      batch,
+    })).toThrow(/zero-duration.*512.*guarded instant 1.*path.*frame 8/iu);
+
+    expect(callbackAttempts).toBe(512);
+    expect(counters[0]).toEqual({ initials: 300, dones: 300, reads: 300 });
+    expect(counters[1]).toEqual({ initials: 212, dones: 212, reads: 212 });
+    expect(batch.read(one)).toBe(81);
+    expect(batch.read(two)).toBe(82);
+    expect(getProgramActivationRecord(activation).activeSteppers).toEqual([]);
+    expect(getProgramActivationRecord(activation).terminalSteppers).toEqual([]);
+  });
+
+  it('continues to reject an infinite zero-duration stateful repeat promptly', () => {
+    const output = signal(0);
+    const counters = { initials: 0, dones: 0, reads: 0 };
+    const activation = activateProgram(repeat(
+      instantIncrement(output, counters),
+      { iterations: Number.POSITIVE_INFINITY },
+    ), {});
+
+    expect(() => advance(activation, undefined, 0, 1)).toThrow(
+      /infinite repeat with zero duration/iu,
+    );
+    expect(counters).toEqual({ initials: 1, dones: 1, reads: 1 });
     expect(getProgramActivationRecord(activation).activeSteppers).toEqual([]);
     expect(getProgramActivationRecord(activation).terminalSteppers).toEqual([]);
   });
