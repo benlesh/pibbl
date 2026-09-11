@@ -384,7 +384,6 @@ export function createSpringRecord(
   options: Readonly<CRCSpringOptions>,
 ): SpringDefinitionRecord {
   const normalized = normalizedSpring(options);
-  if (!normalized.hasFrom) frequencies(normalized);
   return Object.freeze({
     ...normalized,
     duration: normalized.hasFrom ?

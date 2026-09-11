@@ -4,7 +4,7 @@ import {
   getDefinitionRecord,
   sampleSeekableDefinition,
 } from './definition';
-import { sampleSpring } from './spring';
+import { resolveSpringStart, sampleSpring } from './spring';
 
 describe('analytic spring definitions', () => {
   it('normalizes defaults into an immutable snapshot', () => {
@@ -113,6 +113,26 @@ describe('analytic spring definitions', () => {
       initialValue: Number.MAX_VALUE,
       localTime: 0,
     })).toBe(Number.MAX_VALUE);
+
+    const extremeTemplate = spring({
+      to: 0,
+      mass: Number.MIN_VALUE,
+      stiffness: Number.MAX_VALUE,
+      damping: 0,
+    });
+    const extremeTemplateRecord = getDefinitionRecord(extremeTemplate);
+    if (extremeTemplateRecord.kind !== 'spring') {
+      throw new Error('Expected a spring record.');
+    }
+    const settledActivation = resolveSpringStart(extremeTemplateRecord, 0);
+    expect(settledActivation.duration).toBe(0);
+    expect(sampleSpring(settledActivation, 0)).toEqual({
+      position: 0,
+      velocity: 0,
+    });
+    expect(() => resolveSpringStart(extremeTemplateRecord, 1)).toThrow(
+      'representable frequencies',
+    );
   });
 
   it('samples finite overdamped roots without squaring a huge damping ratio', () => {
