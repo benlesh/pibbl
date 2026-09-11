@@ -130,6 +130,16 @@ function hasOnlyDataProperties(value: object, allowed: ReadonlySet<PropertyKey>)
 
 const ARRAY_OWN_KEYS = new Set<PropertyKey>(['length']);
 const REGEXP_OWN_KEYS = new Set<PropertyKey>(['lastIndex']);
+const snapshotsRequiringIsolation = new WeakSet<object>();
+
+function requiresIsolation(value: unknown): value is object {
+  return (typeof value === 'object' && value !== null || typeof value === 'function') &&
+    snapshotsRequiringIsolation.has(value as object);
+}
+
+function propagateIsolation(snapshot: object, value: unknown): void {
+  if (requiresIsolation(value)) snapshotsRequiringIsolation.add(snapshot);
+}
 
 function isArrayIndex(key: PropertyKey): boolean {
   return typeof key === 'string' && /^(?:0|[1-9]\d*)$/u.test(key);
@@ -150,21 +160,29 @@ function cloneTypedArray(value: ArrayBufferView): ArrayBufferView {
  * Definitions retain values after their caller has moved on. The context is
  * shared across one definition so aliases and cycles remain aliases and cycles
  * in its immutable snapshot. Only categories with stable, inspectable cloning
- * semantics are copied. Functions, classes, accessors, and opaque host values
- * (notably WeakMap, WeakSet, Promise, and host handles) remain usable identity
- * values because cloning them can manufacture an invalid receiver or change
- * their behavior; an absolute snapshot guarantee for those values requires an
- * explicit public clone contract that CRC does not currently provide.
+ * semantics are copied. Reconstructable values that cannot themselves be
+ * frozen are marked so only the containing paths are rematerialized before a
+ * callback or terminal return. Functions, classes, accessors, and opaque host
+ * values (notably WeakMap, WeakSet, Promise, and host handles) remain usable
+ * identity values because cloning them can manufacture an invalid receiver or
+ * change their behavior; an absolute snapshot guarantee for those values
+ * requires an explicit public clone contract that CRC does not currently
+ * provide.
  */
 function snapshotAnimationValue<T>(
   value: T,
   seen: WeakMap<object, unknown>,
+  isolateStoredValue = false,
 ): T {
   if (value === null || typeof value === 'function' || typeof value !== 'object') {
     return value;
   }
   const existing = seen.get(value);
   if (existing !== undefined) return existing as T;
+  if (isolateStoredValue && !requiresIsolation(value)) {
+    seen.set(value, value);
+    return value;
+  }
 
   if (value instanceof Date) {
     if (hasOwnProperties(value, new Set())) return rememberIdentity(value, seen) as T;
@@ -178,7 +196,11 @@ function snapshotAnimationValue<T>(
     const snapshot = immutableBuiltin(target, MUTATING_MAP_METHODS);
     seen.set(value, snapshot);
     for (const [key, entry] of value) {
-      target.set(snapshotAnimationValue(key, seen), snapshotAnimationValue(entry, seen));
+      const keySnapshot = snapshotAnimationValue(key, seen, isolateStoredValue);
+      const entrySnapshot = snapshotAnimationValue(entry, seen, isolateStoredValue);
+      target.set(keySnapshot, entrySnapshot);
+      propagateIsolation(snapshot, keySnapshot);
+      propagateIsolation(snapshot, entrySnapshot);
     }
     return snapshot as T;
   }
@@ -187,19 +209,38 @@ function snapshotAnimationValue<T>(
     const target = new Set();
     const snapshot = immutableBuiltin(target, MUTATING_SET_METHODS);
     seen.set(value, snapshot);
-    for (const entry of value) target.add(snapshotAnimationValue(entry, seen));
+    for (const entry of value) {
+      const entrySnapshot = snapshotAnimationValue(entry, seen, isolateStoredValue);
+      target.add(entrySnapshot);
+      propagateIsolation(snapshot, entrySnapshot);
+    }
     return snapshot as T;
   }
   if (Array.isArray(value)) {
     const ownKeys = Reflect.ownKeys(value);
-    if (ownKeys.some(key => !ARRAY_OWN_KEYS.has(key) && !isArrayIndex(key)) ||
+    if (Object.getPrototypeOf(value) !== Array.prototype ||
+      ownKeys.some(key => !ARRAY_OWN_KEYS.has(key) && !isArrayIndex(key)) ||
       !hasOnlyDataProperties(value, ARRAY_OWN_KEYS)) {
       return rememberIdentity(value, seen) as T;
     }
-    const snapshot: unknown[] = [];
+    const snapshot: unknown[] = new Array(value.length);
     seen.set(value, snapshot);
-    for (const item of value) {
-      snapshot.push(snapshotAnimationValue(item, seen));
+    for (const key of ownKeys) {
+      if (ARRAY_OWN_KEYS.has(key)) continue;
+      const descriptor = Object.getOwnPropertyDescriptor(value, key);
+      if (descriptor === undefined || !('value' in descriptor)) continue;
+      const itemSnapshot = snapshotAnimationValue(
+        descriptor.value,
+        seen,
+        isolateStoredValue,
+      );
+      Object.defineProperty(snapshot, key, {
+        configurable: false,
+        enumerable: descriptor.enumerable,
+        writable: false,
+        value: itemSnapshot,
+      });
+      propagateIsolation(snapshot, itemSnapshot);
     }
     return Object.freeze(snapshot) as T;
   }
@@ -209,6 +250,7 @@ function snapshotAnimationValue<T>(
     const snapshot = new RegExp(value.source, value.flags);
     snapshot.lastIndex = value.lastIndex;
     seen.set(value, snapshot);
+    snapshotsRequiringIsolation.add(snapshot);
     return snapshot as T;
   }
 
@@ -217,12 +259,14 @@ function snapshotAnimationValue<T>(
     if (ownKeys.some(key => !isArrayIndex(key))) return rememberIdentity(value, seen) as T;
     const snapshot = cloneTypedArray(value);
     seen.set(value, snapshot);
+    snapshotsRequiringIsolation.add(snapshot);
     return snapshot as T;
   }
 
   if (value instanceof ArrayBuffer) {
     const snapshot = value.slice(0);
     seen.set(value, snapshot);
+    snapshotsRequiringIsolation.add(snapshot);
     return snapshot as T;
   }
 
@@ -236,14 +280,27 @@ function snapshotAnimationValue<T>(
   for (const key of Reflect.ownKeys(value)) {
     const descriptor = Object.getOwnPropertyDescriptor(value, key);
     if (descriptor === undefined) continue;
+    const propertySnapshot = snapshotAnimationValue(
+      descriptor.value,
+      seen,
+      isolateStoredValue,
+    );
     Object.defineProperty(snapshot, key, {
       configurable: false,
       enumerable: descriptor.enumerable,
       writable: false,
-      value: snapshotAnimationValue(descriptor.value, seen),
+      value: propertySnapshot,
     });
+    propagateIsolation(snapshot, propertySnapshot);
   }
   return Object.freeze(snapshot) as T;
+}
+
+function isolateStoredAnimationValue<T>(
+  value: T,
+  seen: WeakMap<object, unknown>,
+): T {
+  return snapshotAnimationValue(value, seen, true);
 }
 
 function validateSampledValue<T>(sampled: T, debugName: string | undefined): T {
@@ -299,10 +356,16 @@ function interpolate<T>(
   if (custom === undefined && (typeof from !== 'number' || typeof to !== 'number')) {
     throw new TypeError(`${definitionLabel(debugName)} requires an explicit interpolator for nonnumeric values.`);
   }
-  const sampled = custom === undefined ?
-    ((from as unknown as number) +
-      ((to as unknown as number) - (from as unknown as number)) * progress) as T :
-    callback(debugName, () => custom(from, to, progress));
+  let sampled: T;
+  if (custom === undefined) {
+    sampled = ((from as unknown as number) +
+      ((to as unknown as number) - (from as unknown as number)) * progress) as T;
+  } else {
+    const isolated = new WeakMap<object, unknown>();
+    const isolatedFrom = isolateStoredAnimationValue(from, isolated);
+    const isolatedTo = isolateStoredAnimationValue(to, isolated);
+    sampled = callback(debugName, () => custom(isolatedFrom, isolatedTo, progress));
+  }
   return validateSampledValue(sampled, debugName);
 }
 
@@ -505,7 +568,10 @@ export function sampleSeekableDefinition<T>(
     else break;
   }
   if (segment === record.values.length - 1) {
-    return validateSampledValue(record.values[segment], record.debugName);
+    return validateSampledValue(
+      isolateStoredAnimationValue(record.values[segment], new WeakMap()),
+      record.debugName,
+    );
   }
   const start = record.offsets[segment];
   const end = record.offsets[segment + 1];

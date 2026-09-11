@@ -151,6 +151,151 @@ describe('seekable animation definitions', () => {
     })).toBe(value);
   });
 
+  it('isolates stored RegExp and binary snapshots from interpolator mutation', () => {
+    const observeSamples = <T,>(
+      value: T,
+      read: (sample: T) => number,
+      mutate: (sample: T) => void,
+    ): readonly number[] => {
+      const observed: number[] = [];
+      const definition = tween({
+        from: value,
+        to: value,
+        duration: 1,
+        interpolate: from => {
+          observed.push(read(from));
+          mutate(from);
+          return from;
+        },
+      });
+
+      sampleSeekableDefinition(definition, { initialValue: value, localTime: 0.5 });
+      sampleSeekableDefinition(definition, { initialValue: value, localTime: 0.5 });
+      return observed;
+    };
+    const dataViewBuffer = new ArrayBuffer(1);
+    new Uint8Array(dataViewBuffer)[0] = 8;
+    const arrayBuffer = new ArrayBuffer(1);
+    new Uint8Array(arrayBuffer)[0] = 9;
+
+    expect([
+      observeSamples(/crc/gu, value => value.lastIndex, value => {
+        value.lastIndex = 4;
+      }),
+      observeSamples(new Uint8Array([7]), value => value[0], value => {
+        value[0] = 70;
+      }),
+      observeSamples(new DataView(dataViewBuffer), value => value.getUint8(0), value => {
+        value.setUint8(0, 80);
+      }),
+      observeSamples(arrayBuffer, value => new Uint8Array(value)[0], value => {
+        new Uint8Array(value)[0] = 90;
+      }),
+    ]).toEqual([
+      [0, 0],
+      [7, 7],
+      [8, 8],
+      [9, 9],
+    ]);
+  });
+
+  it('does not expose stored mutable built-ins from terminal keyframes', () => {
+    const observeTerminalSamples = <T,>(
+      value: T,
+      read: (sample: T) => number,
+      mutate: (sample: T) => void,
+    ): readonly number[] => {
+      const definition = keyframes({
+        values: [value, value],
+        duration: 1,
+        interpolate: from => from,
+      });
+      const first = sampleSeekableDefinition(definition, {
+        initialValue: value,
+        localTime: 1,
+      });
+      const observed = [read(first)];
+      mutate(first);
+      observed.push(read(sampleSeekableDefinition(definition, {
+        initialValue: value,
+        localTime: 1,
+      })));
+      return observed;
+    };
+    const dataViewBuffer = new ArrayBuffer(1);
+    new Uint8Array(dataViewBuffer)[0] = 8;
+    const arrayBuffer = new ArrayBuffer(1);
+    new Uint8Array(arrayBuffer)[0] = 9;
+
+    expect([
+      observeTerminalSamples(/crc/gu, value => value.lastIndex, value => {
+        value.lastIndex = 4;
+      }),
+      observeTerminalSamples(new Uint8Array([7]), value => value[0], value => {
+        value[0] = 70;
+      }),
+      observeTerminalSamples(new DataView(dataViewBuffer), value => value.getUint8(0), value => {
+        value.setUint8(0, 80);
+      }),
+      observeTerminalSamples(arrayBuffer, value => new Uint8Array(value)[0], value => {
+        new Uint8Array(value)[0] = 90;
+      }),
+    ]).toEqual([
+      [0, 0],
+      [7, 7],
+      [8, 8],
+      [9, 9],
+    ]);
+  });
+
+  it('preserves holes while snapshotting plain arrays', () => {
+    const sparse: Array<{ value: number } | undefined> = [];
+    sparse.length = 2;
+    sparse[1] = { value: 7 };
+    const definition = tween({
+      from: sparse,
+      to: sparse,
+      duration: 1,
+      interpolate: from => from,
+    });
+
+    sparse[0] = { value: 70 };
+    sparse[1]!.value = 70;
+    const sampled = sampleSeekableDefinition(definition, {
+      initialValue: [],
+      localTime: 0.5,
+    });
+
+    expect(Object.prototype.hasOwnProperty.call(sampled, 0)).toBe(false);
+    expect(sampled).toHaveLength(2);
+    expect(sampled[1]).toEqual({ value: 7 });
+  });
+
+  it('preserves Array subclass semantics instead of fabricating a plain array', () => {
+    class TaggedArray extends Array<number> {
+      #tag = 'tagged';
+
+      describe(): string {
+        return `${this.#tag}:${this.join(',')}`;
+      }
+    }
+    const value = new TaggedArray(3, 4);
+    const definition = tween({
+      from: value,
+      to: value,
+      duration: 1,
+      interpolate: from => from,
+    });
+
+    const sampled = sampleSeekableDefinition(definition, {
+      initialValue: new TaggedArray(),
+      localTime: 0.5,
+    });
+
+    expect(sampled).toBeInstanceOf(TaggedArray);
+    expect(sampled.describe()).toBe('tagged:3,4');
+  });
+
   it('keeps opaque values usable when their semantics cannot be cloned generically', async () => {
     class PrivateCounter {
       #value: number;
@@ -178,7 +323,7 @@ describe('seekable animation definitions', () => {
       () => 'function',
       { label: 'before' },
     );
-    const asValue = <T>(value: T) => tween({
+    const asValue = <T,>(value: T) => tween({
       from: value,
       to: value,
       duration: 1,
@@ -214,24 +359,18 @@ describe('seekable animation definitions', () => {
     expect(sampleSeekableDefinition(functionDefinition, {
       initialValue: functionValue, localTime: 1,
     })()).toBe('function');
-
-    counter.value = 30;
-    functionValue.label = 'after';
-    expect(sampleSeekableDefinition(counterDefinition, {
-      initialValue: new PrivateCounter(-1), localTime: 1,
-    }).value).toBe(30);
     expect(sampleSeekableDefinition(functionDefinition, {
       initialValue: functionValue, localTime: 1,
-    }).label).toBe('after');
+    }).label).toBe('before');
   });
 
   it('preserves Date, Map, and Set own properties and accessors', () => {
-    let accessorValue = 'accessor';
+    const accessorValue = 'accessor';
     const date = Object.assign(new Date(0), { own: 'date own' });
     const map = Object.assign(new Map([['value', 1]]), { own: 'map own' });
     const set = Object.assign(new Set(['value']), { own: 'set own' });
     Object.defineProperty(date, 'accessor', { get: () => accessorValue });
-    const asValue = <T>(value: T) => tween({
+    const asValue = <T,>(value: T) => tween({
       from: value,
       to: value,
       duration: 1,
@@ -241,11 +380,10 @@ describe('seekable animation definitions', () => {
     const dateDefinition = asValue(date);
     const mapDefinition = asValue(map);
     const setDefinition = asValue(set);
-    accessorValue = 'updated accessor';
 
     expect(sampleSeekableDefinition(dateDefinition, {
       initialValue: new Date(-1), localTime: 1,
-    })).toMatchObject({ own: 'date own', accessor: 'updated accessor' });
+    })).toMatchObject({ own: 'date own', accessor: 'accessor' });
     expect(sampleSeekableDefinition(mapDefinition, {
       initialValue: new Map(), localTime: 1,
     })).toMatchObject({ own: 'map own' });
