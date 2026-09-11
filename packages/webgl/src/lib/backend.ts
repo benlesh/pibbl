@@ -29,12 +29,18 @@ export interface CreateWebGLBackendOptions {
 }
 
 export interface WebGLCompletedFrame {
+  readonly renderedGeneration: number;
   readonly contextGeneration: number;
+  readonly ownedResourceGeneration: number;
   readonly pickEntries: readonly unknown[];
 }
 
 export interface WebGLBackendDriver
   extends CRCBackendDriver<WebGLRenderEnvironment> {
+  readonly renderedGeneration: number;
+  readonly ownedResourceGeneration: number;
+  hasCompletedFrame(): boolean;
+  takeFailedFrameTimestamp(): number | undefined;
   takeCompletedFrame(): WebGLCompletedFrame;
 }
 
@@ -49,9 +55,18 @@ export function createWebGLBackend(
   let gpuResourceGeneration: number | undefined;
   let gpuResources: WebGLGPUResourceCache | undefined;
   let completedFrame: WebGLCompletedFrame | undefined;
+  let failedFrameTimestamp: number | undefined;
+  let renderedGeneration = 0;
+  let ownedResourceGeneration = 0;
   return {
     token: WEBGL_BACKEND_TOKEN,
     name: 'webgl2',
+    get renderedGeneration() {
+      return renderedGeneration;
+    },
+    get ownedResourceGeneration() {
+      return ownedResourceGeneration;
+    },
     beginFrame(frameInput) {
       const contextGeneration = options.getContextGeneration();
       if (
@@ -63,6 +78,7 @@ export function createWebGLBackend(
         }
         gpuResources = new WebGLGPUResourceCache(gl, contextGeneration);
         gpuResourceGeneration = contextGeneration;
+        ownedResourceGeneration += 1;
       }
       if (
         stateBaseline === undefined ||
@@ -132,10 +148,27 @@ export function createWebGLBackend(
         height,
         frame.environment.stateBaseline,
       );
-      completedFrame = success ? Object.freeze({
-        contextGeneration: frame.environment.contextGeneration,
-        pickEntries: Object.freeze(frame.environment.pickEntries.slice()),
-      }) : undefined;
+      if (success) {
+        renderedGeneration += 1;
+        failedFrameTimestamp = undefined;
+        completedFrame = Object.freeze({
+          renderedGeneration,
+          contextGeneration: frame.environment.contextGeneration,
+          ownedResourceGeneration,
+          pickEntries: Object.freeze(frame.environment.pickEntries.slice()),
+        });
+      } else {
+        completedFrame = undefined;
+        failedFrameTimestamp = frame.environment.timestamp;
+      }
+    },
+    hasCompletedFrame() {
+      return completedFrame !== undefined;
+    },
+    takeFailedFrameTimestamp() {
+      const timestamp = failedFrameTimestamp;
+      failedFrameTimestamp = undefined;
+      return timestamp;
     },
     takeCompletedFrame() {
       const completed = completedFrame;
@@ -147,6 +180,7 @@ export function createWebGLBackend(
     },
     dispose() {
       completedFrame = undefined;
+      failedFrameTimestamp = undefined;
       if (gpuResources !== undefined && gpuResourceGeneration !== undefined) {
         gpuResources.dispose(isContextLost(gpuResourceGeneration));
       }

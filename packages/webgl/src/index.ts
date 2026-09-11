@@ -1,6 +1,7 @@
 export { createWebGLGeometry } from './lib/geometry/geometry.js';
 export { defineWebGLPrimitive } from './lib/define-webgl-primitive.js';
 export { crcWebGLContext } from './lib/hooks/crc-webgl-context.js';
+export { crcAnimationFrame } from './lib/hooks/crc-animation-frame.js';
 export {
   WebGLLayer,
   type WebGLLayerProps,

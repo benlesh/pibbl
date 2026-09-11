@@ -190,8 +190,18 @@ export function executeRender(
         }
       }
     } finally {
-      if (updateParents && parent && GLOBAL_STATE.crcInstances.has(parent)) {
-        executeRender(parent, renderTimestamp);
+      if (updateParents && parent) {
+        const parentInstance = GLOBAL_STATE.crcInstances.get(parent);
+        if (
+          parentInstance &&
+          parentInstance.eventRoot === crcInstance.eventRoot &&
+          !parentInstance.mainTeardowns.closed
+        ) {
+          const pendingRoot = parentInstance.pendingRoot;
+          parentInstance.pendingRoot = NO_PENDING_ROOT;
+          parentInstance.pendingUpdateParents = false;
+          executeRender(parent, renderTimestamp, pendingRoot, true);
+        }
       }
     }
   }

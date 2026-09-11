@@ -5,6 +5,7 @@ import {
   definePrimitive,
   resolveLength,
   type BoxStyle,
+  type CRCElement,
   type CRCEventHandlers,
   type CRCNode,
   type LayoutItemStyle,
@@ -15,7 +16,11 @@ import {
   getCurrentBackendHostCanvas,
   getCurrentFrameTimestamp,
   getCurrentSurfaceDensity,
+  haveSameLayerNodeTree,
+  materializeRetainedLayerChildren,
+  snapshotLayerNodeTree,
   useInternalHookSlot,
+  type LayerNodeSnapshot,
 } from '@crc/core/internal';
 import {
   WebGLLayerController,
@@ -37,15 +42,35 @@ interface ResolvedWebGLLayerStyle {
   readonly filter?: WebGLLayerStyle['filter'];
 }
 
+interface WebGLLayerChildrenSlot {
+  retainedInput: LayerNodeSnapshot | undefined;
+  materialized: readonly CRCElement<any>[];
+}
+
 function renderWebGLLayer(
   props: Readonly<WebGLLayerProps>,
   style: Readonly<ResolvedWebGLLayerStyle>,
   context: RenderingContext2D,
 ): void {
   crcEventListener(props);
+  const childrenSlot = useInternalHookSlot<WebGLLayerChildrenSlot>(
+    'webglLayerChildren',
+    () => ({
+      retainedInput: undefined,
+      materialized: Object.freeze([]),
+    }),
+  );
+  if (!haveSameLayerNodeTree(childrenSlot.value.retainedInput, props.children)) {
+    const materialized = materializeRetainedLayerChildren(
+      props.children,
+      'WebGLLayer',
+    );
+    childrenSlot.value.materialized = materialized;
+    childrenSlot.value.retainedInput = snapshotLayerNodeTree(props.children);
+  }
   const root = createElement(Fragment, {
     key: 'crc-webgl-layer-root',
-    children: props.children,
+    children: childrenSlot.value.materialized,
   });
   const density = getCurrentSurfaceDensity();
   const surface = resolveWebGLLayerSurface(
@@ -72,7 +97,7 @@ function renderWebGLLayer(
     style.height,
     props.pointerEvents ?? 'auto',
   );
-  controller.renderUpdatedChild(
+  controller.renderRetainedChild(
     root,
     props.camera,
     surface,

@@ -25,6 +25,7 @@ export { mountBackendCRC } from './lib/mount-crc.js';
 export { useInternalHookSlot } from './lib/hooks/hook-slot.js';
 export {
   haveSameLayerNodeTree,
+  materializeRetainedLayerChildren,
   snapshotLayerNodeTree,
 } from './lib/components/layer-node-equality.js';
 export type {

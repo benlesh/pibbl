@@ -1,9 +1,12 @@
 import {
   executeBackendCRC,
+  haveSameLayerNodeTree,
   mountBackendCRC,
   registerNestedInteractionResolver,
+  snapshotLayerNodeTree,
   type CRCBackendMount,
   type CRCHitTestOutput,
+  type LayerNodeSnapshot,
 } from '@crc/core/internal';
 import type {
   Canvas,
@@ -13,8 +16,12 @@ import type {
 import {
   createWebGLBackend,
   type WebGLBackendDriver,
+  type WebGLCompletedFrame,
 } from './backend.js';
-import { resolveCamera } from './math/camera.js';
+import {
+  resolveCamera,
+  type ResolvedWebGLCamera,
+} from './math/camera.js';
 import {
   applyWebGLFocusMetadata,
   commitWebGLPickEntries,
@@ -23,7 +30,6 @@ import {
 } from './pick-ledger.js';
 import { pickScene } from './scene-picker.js';
 import type {
-  CRCWebGLCameraSnapshot,
   CRCWebGLPerspectiveCamera,
 } from './types.js';
 
@@ -58,8 +64,12 @@ interface WebGLLayerGeneration {
   readonly number: number;
   readonly bitmap: ImageBitmap;
   readonly surface: WebGLLayerSurface;
-  readonly camera: CRCWebGLCameraSnapshot;
+  readonly camera: ResolvedWebGLCamera;
   readonly pickLedger: CRCWebGLPickLedger;
+  readonly retainedTree: LayerNodeSnapshot;
+  readonly focusRevision: number | undefined;
+  readonly contextGeneration: number;
+  readonly ownedResourceGeneration: number;
 }
 
 /** Resolves one upright WebGL surface using core's managed-layer rounding. */
@@ -93,8 +103,10 @@ export class WebGLLayerController {
 
   private readonly driver: WebGLBackendDriver;
   private readonly mount: CRCBackendMount;
-  private currentCamera: CRCWebGLCameraSnapshot;
+  private currentCamera: ResolvedWebGLCamera;
   private currentSurface: WebGLLayerSurface;
+  private renderedTree: LayerNodeSnapshot | undefined;
+  private cacheInvalidated = false;
   private contextGenerationValue = 1;
   private pending: WebGLLayerGeneration | undefined;
   private committed: WebGLLayerGeneration | undefined;
@@ -138,6 +150,14 @@ export class WebGLLayerController {
     return this.committed?.number;
   }
 
+  get candidateGeneration(): number | undefined {
+    return this.pending?.number;
+  }
+
+  get renderedGeneration(): number {
+    return this.driver.renderedGeneration;
+  }
+
   get contextGeneration(): number {
     return this.contextGenerationValue;
   }
@@ -148,8 +168,26 @@ export class WebGLLayerController {
     surface: WebGLLayerSurface,
     timestamp: number,
   ): void {
+    this.renderChild(root, camera, surface, timestamp, true);
+  }
+
+  renderRetainedChild(
+    root: CRCNode,
+    camera: CRCWebGLPerspectiveCamera | undefined,
+    surface: WebGLLayerSurface,
+    timestamp: number,
+  ): void {
+    this.renderChild(root, camera, surface, timestamp, false);
+  }
+
+  private renderChild(
+    root: CRCNode,
+    camera: CRCWebGLPerspectiveCamera | undefined,
+    surface: WebGLLayerSurface,
+    timestamp: number,
+    force: boolean,
+  ): void {
     const epoch = this.beginOperation('render');
-    let bitmap: ImageBitmap | undefined;
     try {
       validateSurface(surface);
       const nextCamera = resolveCamera(
@@ -157,43 +195,71 @@ export class WebGLLayerController {
         surface.logicalWidth,
         surface.logicalHeight,
       );
+      const hadPending = this.pending !== undefined;
       this.releasePending();
+
+      const failedFrameTimestamp = this.driver.takeFailedFrameTimestamp();
+      if (failedFrameTimestamp !== undefined) {
+        const committed = this.committed;
+        const canDeferFailedRetry = failedFrameTimestamp === timestamp &&
+          !hadPending &&
+          committed !== undefined &&
+          haveSameLayerNodeTree(committed.retainedTree, root) &&
+          haveSameCamera(committed.camera, nextCamera) &&
+          haveSameSurface(committed.surface, surface) &&
+          committed.focusRevision === currentFocusRevision(
+            committed.pickLedger,
+          ) &&
+          committed.contextGeneration === this.contextGenerationValue &&
+          committed.ownedResourceGeneration ===
+            this.driver.ownedResourceGeneration;
+        this.cacheInvalidated = true;
+        this.renderedTree = undefined;
+        if (canDeferFailedRetry) return;
+      }
+
+      if (this.driver.hasCompletedFrame()) {
+        const completedFrame = this.driver.takeCompletedFrame();
+        if (
+          haveSameLayerNodeTree(this.renderedTree, root) &&
+          haveSameCamera(this.currentCamera, nextCamera) &&
+          haveSameSurface(this.currentSurface, surface) &&
+          completedFrame.contextGeneration === this.contextGenerationValue &&
+          completedFrame.ownedResourceGeneration ===
+            this.driver.ownedResourceGeneration
+        ) {
+          this.publishCompletedFrame(root, surface, completedFrame, epoch);
+          return;
+        }
+      }
+
+      const committed = this.committed;
+      const focusRevision = currentFocusRevision(committed?.pickLedger);
+      const shouldRender = force || hadPending || committed === undefined ||
+        this.cacheInvalidated ||
+        !haveSameLayerNodeTree(committed.retainedTree, root) ||
+        !haveSameCamera(committed.camera, nextCamera) ||
+        !haveSameSurface(committed.surface, surface) ||
+        committed.focusRevision !== focusRevision ||
+        committed.contextGeneration !== this.contextGenerationValue ||
+        committed.ownedResourceGeneration !==
+          this.driver.ownedResourceGeneration;
+      if (!shouldRender) return;
+
       if (!haveSameSurface(this.currentSurface, surface)) {
         this.resizeSurface(surface);
       }
       this.currentCamera = nextCamera;
       executeBackendCRC(this.mount, root, timestamp);
       this.requireCurrentOperation('render', epoch);
-      const completedFrame = this.driver.takeCompletedFrame();
-      try {
-        bitmap = this.canvas.transferToImageBitmap();
-      } catch (error) {
-        throw webGLLayerError(
-          'could not transfer its rendered ImageBitmap',
-          error,
-        );
-      }
-      this.requireCurrentOperation('render', epoch);
-      const candidate = Object.freeze({
-        number: (this.committed?.number ?? 0) + 1,
-        bitmap,
+      this.publishCompletedFrame(
+        root,
         surface,
-        camera: this.currentCamera,
-        pickLedger: commitWebGLPickEntries(
-          surface.logicalWidth,
-          surface.logicalHeight,
-          completedFrame.pickEntries as readonly CRCWebGLPickRecord[],
-        ),
-      });
-      this.requireCurrentOperation('render', epoch);
-      this.pending = candidate;
-      bitmap = undefined;
+        this.driver.takeCompletedFrame(),
+        epoch,
+      );
     } finally {
-      try {
-        bitmap?.close();
-      } finally {
-        this.finishOperation('render', epoch);
-      }
+      this.finishOperation('render', epoch);
     }
   }
 
@@ -338,6 +404,50 @@ export class WebGLLayerController {
       throw error;
     }
     this.currentSurface = surface;
+  }
+
+  private publishCompletedFrame(
+    root: CRCNode,
+    surface: WebGLLayerSurface,
+    completedFrame: WebGLCompletedFrame,
+    epoch: number,
+  ): void {
+    let bitmap: ImageBitmap | undefined;
+    try {
+      try {
+        bitmap = this.canvas.transferToImageBitmap();
+      } catch (error) {
+        throw webGLLayerError(
+          'could not transfer its rendered ImageBitmap',
+          error,
+        );
+      }
+      this.requireCurrentOperation('render', epoch);
+      const pickLedger = commitWebGLPickEntries(
+        surface.logicalWidth,
+        surface.logicalHeight,
+        completedFrame.pickEntries as readonly CRCWebGLPickRecord[],
+      );
+      const retainedTree = snapshotLayerNodeTree(root);
+      const candidate = Object.freeze({
+        number: completedFrame.renderedGeneration,
+        bitmap,
+        surface,
+        camera: this.currentCamera,
+        pickLedger,
+        retainedTree,
+        focusRevision: currentFocusRevision(pickLedger),
+        contextGeneration: completedFrame.contextGeneration,
+        ownedResourceGeneration: completedFrame.ownedResourceGeneration,
+      });
+      this.requireCurrentOperation('render', epoch);
+      this.renderedTree = retainedTree;
+      this.cacheInvalidated = false;
+      this.pending = candidate;
+      bitmap = undefined;
+    } finally {
+      bitmap?.close();
+    }
   }
 
   private releasePending(): void {
@@ -495,7 +605,26 @@ function haveSameSurface(
   return previous.logicalWidth === next.logicalWidth &&
     previous.logicalHeight === next.logicalHeight &&
     previous.backingWidth === next.backingWidth &&
-    previous.backingHeight === next.backingHeight;
+    previous.backingHeight === next.backingHeight &&
+    previous.densityX === next.densityX &&
+    previous.densityY === next.densityY;
+}
+
+function haveSameCamera(
+  previous: ResolvedWebGLCamera,
+  next: ResolvedWebGLCamera,
+): boolean {
+  return previous.generationValues.length === next.generationValues.length &&
+    previous.generationValues.every(
+      (value, index) => Object.is(value, next.generationValues[index]),
+    );
+}
+
+function currentFocusRevision(
+  ledger: CRCWebGLPickLedger | undefined,
+): number | undefined {
+  const owner = ledger?.entries[0]?.target.owner;
+  return owner?.eventRoot.focusPolicy?.layerFocusRenderRevision?.(owner);
 }
 
 function webGLLayerError(reason: string, cause?: unknown): Error {
