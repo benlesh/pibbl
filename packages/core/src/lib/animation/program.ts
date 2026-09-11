@@ -20,10 +20,14 @@ export interface WriterSpan {
   readonly path: readonly number[];
 }
 
-interface WriterSchedule {
-  readonly span: WriterSpan;
+interface WriterRepeatFrame {
   readonly period: number;
   readonly iterations: number;
+}
+
+interface WriterSchedule {
+  readonly span: WriterSpan;
+  readonly repeats: readonly WriterRepeatFrame[];
 }
 
 interface BaseProgramRecord {
@@ -97,30 +101,16 @@ function freezeSpan(
 
 function freezeSchedule(
   span: WriterSpan,
-  period = 0,
-  iterations = 1,
+  repeats: readonly WriterRepeatFrame[] = [],
 ): WriterSchedule {
-  return Object.freeze({ span, period, iterations });
+  return Object.freeze({
+    span,
+    repeats: Object.freeze(repeats.map(repeat => Object.freeze({ ...repeat }))),
+  });
 }
 
 function finiteWriterSpans(schedules: readonly WriterSchedule[]): readonly WriterSpan[] {
-  const spans: WriterSpan[] = [];
-  for (const schedule of schedules) {
-    if (schedule.iterations === Number.POSITIVE_INFINITY) {
-      spans.push(schedule.span);
-      continue;
-    }
-    for (let iteration = 0; iteration < schedule.iterations; iteration++) {
-      const offset = iteration * schedule.period;
-      spans.push(freezeSpan(
-        schedule.span.output,
-        schedule.span.start + offset,
-        schedule.span.end + offset,
-        schedule.span.path,
-      ));
-    }
-  }
-  return Object.freeze(spans);
+  return Object.freeze(schedules.map(schedule => schedule.span));
 }
 
 function outputsFor(schedules: readonly WriterSchedule[]): readonly WritableSignal<unknown>[] {
@@ -166,28 +156,28 @@ function prefixedSchedules(
       schedule.span.end + offset,
       [childIndex, ...schedule.span.path],
     ),
-    schedule.period,
-    schedule.iterations,
+    schedule.repeats,
   )));
 }
 
-function finiteSchedules(schedules: readonly WriterSchedule[]): readonly WriterSchedule[] {
-  const expanded: WriterSchedule[] = [];
-  for (const schedule of schedules) {
-    if (schedule.iterations === Number.POSITIVE_INFINITY) {
-      throw new TypeError('A finite animation program cannot contain an infinite writer schedule.');
-    }
-    for (let iteration = 0; iteration < schedule.iterations; iteration++) {
-      const offset = iteration * schedule.period;
-      expanded.push(freezeSchedule(freezeSpan(
-        schedule.span.output,
-        schedule.span.start + offset,
-        schedule.span.end + offset,
-        schedule.span.path,
-      )));
+function normalizedRepeats(
+  repeats: readonly WriterRepeatFrame[],
+): readonly WriterRepeatFrame[] {
+  const normalized: WriterRepeatFrame[] = [];
+  for (const repeat of repeats) {
+    if (repeat.iterations === 1) continue;
+    const previous = normalized.at(-1);
+    const combinedIterations = previous === undefined ? Number.NaN :
+      previous.iterations * repeat.iterations;
+    if (previous !== undefined &&
+      repeat.period === previous.period * previous.iterations &&
+      Number.isFinite(combinedIterations) && Number.isInteger(combinedIterations)) {
+      normalized[normalized.length - 1] = { period: previous.period, iterations: combinedIterations };
+    } else {
+      normalized.push({ period: repeat.period, iterations: repeat.iterations });
     }
   }
-  return Object.freeze(expanded);
+  return Object.freeze(normalized.map(repeat => Object.freeze(repeat)));
 }
 
 function withRepeat(
@@ -195,89 +185,207 @@ function withRepeat(
   period: number,
   iterations: number,
 ): readonly WriterSchedule[] {
-  return Object.freeze(finiteSchedules(schedules).map(schedule => freezeSchedule(
-    schedule.span,
-    period,
-    iterations,
-  )));
+  return Object.freeze(schedules.map(schedule => freezeSchedule(schedule.span, normalizedRepeats([
+    ...schedule.repeats,
+    { period, iterations },
+  ]))));
 }
 
-function scheduleOccurrenceOverlap(
-  first: WriterSchedule,
-  second: WriterSchedule,
-  firstIteration: number,
-): boolean {
-  const offset = firstIteration * first.period;
-  const span = freezeSpan(
-    first.span.output,
-    first.span.start + offset,
-    first.span.end + offset,
-    first.span.path,
+interface ArithmeticSchedule {
+  readonly span: WriterSpan;
+  readonly period: number;
+  readonly iterations: number;
+}
+
+interface Dyadic {
+  readonly exponent: number;
+  readonly numerator: bigint;
+}
+
+const numberBits = new DataView(new ArrayBuffer(8));
+
+function dyadic(value: number): Dyadic {
+  numberBits.setFloat64(0, value, false);
+  const high = numberBits.getUint32(0, false);
+  const low = numberBits.getUint32(4, false);
+  const fraction = BigInt(high & 0x000f_ffff) << 32n | BigInt(low);
+  const exponentBits = (high >>> 20) & 0x7ff;
+  if (exponentBits === 0) return { numerator: fraction, exponent: -1074 };
+  return {
+    numerator: (1n << 52n) | fraction,
+    exponent: exponentBits - 1023 - 52,
+  };
+}
+
+function scaleDyadics(values: readonly number[]): readonly bigint[] {
+  const valuesAsDyadics = values.map(dyadic);
+  const minimumExponent = Math.min(...valuesAsDyadics.map(value => value.exponent));
+  return valuesAsDyadics.map(value =>
+    value.numerator << BigInt(value.exponent - minimumExponent),
   );
-  return singleAgainstSchedule(span, second);
 }
 
-function singleAgainstSchedule(single: WriterSpan, schedule: WriterSchedule): boolean {
-  if (schedule.period === 0) {
-    return single.start <= schedule.span.end && schedule.span.start <= single.end;
+function floorDivide(value: bigint, divisor: bigint): bigint {
+  if (value >= 0n) return value / divisor;
+  return -((-value + divisor - 1n) / divisor);
+}
+
+function clamp(value: bigint, minimum: bigint, maximum: bigint): bigint {
+  return value < minimum ? minimum : value > maximum ? maximum : value;
+}
+
+/** Returns sum(floor((multiplier * i + offset) / divisor), i = 0..count). */
+function floorSum(
+  count: bigint,
+  divisor: bigint,
+  multiplier: bigint,
+  offset: bigint,
+): bigint {
+  let currentCount = count;
+  let currentDivisor = divisor;
+  let currentMultiplier = multiplier;
+  let currentOffset = offset;
+  let result = 0n;
+  while (true) {
+    if (currentMultiplier >= currentDivisor) {
+      result += (currentCount - 1n) * currentCount * (currentMultiplier / currentDivisor) / 2n;
+      currentMultiplier %= currentDivisor;
+    }
+    if (currentOffset >= currentDivisor) {
+      result += currentCount * (currentOffset / currentDivisor);
+      currentOffset %= currentDivisor;
+    }
+    const maximum = currentMultiplier * currentCount + currentOffset;
+    if (maximum < currentDivisor) return result;
+    currentCount = maximum / currentDivisor;
+    currentOffset = maximum % currentDivisor;
+    const previousDivisor = currentDivisor;
+    currentDivisor = currentMultiplier;
+    currentMultiplier = previousDivisor;
   }
-  const lower = Math.ceil((single.start - schedule.span.end) / schedule.period);
-  const upper = Math.floor((single.end - schedule.span.start) / schedule.period);
-  const last = schedule.iterations === Number.POSITIVE_INFINITY ?
-    Number.POSITIVE_INFINITY : schedule.iterations - 1;
-  return Math.max(0, lower) <= Math.min(last, upper);
 }
 
-function samePeriodOverlap(
-  first: WriterSchedule,
-  second: WriterSchedule,
-  differentIterations: boolean,
+/** Counts bounded nonnegative pairs where a*i + b*j is at most limit. */
+function boundedLinearCount(
+  firstPeriod: bigint,
+  firstIterations: bigint,
+  secondPeriod: bigint,
+  secondIterations: bigint,
+  limit: bigint,
+): bigint {
+  if (limit < 0n) return 0n;
+  const nonemptyFirst = clamp(floorDivide(limit, firstPeriod) + 1n, 0n, firstIterations);
+  if (nonemptyFirst === 0n) return 0n;
+  const completeFirst = clamp(
+    floorDivide(limit - secondPeriod * (secondIterations - 1n), firstPeriod) + 1n,
+    0n,
+    nonemptyFirst,
+  );
+  const partialCount = nonemptyFirst - completeFirst;
+  if (partialCount === 0n) return completeFirst * secondIterations;
+  const reverseOffset = limit - firstPeriod * (nonemptyFirst - 1n);
+  return completeFirst * secondIterations + partialCount + floorSum(
+    partialCount,
+    secondPeriod,
+    firstPeriod,
+    reverseOffset,
+  );
+}
+
+function oneRepeatSchedule(schedule: WriterSchedule): ArithmeticSchedule | undefined {
+  if (schedule.repeats.length === 0) {
+    return { span: schedule.span, period: 0, iterations: 1 };
+  }
+  if (schedule.repeats.length !== 1) return undefined;
+  const repeat = schedule.repeats[0]!;
+  return { span: schedule.span, period: repeat.period, iterations: repeat.iterations };
+}
+
+function fixedAgainstPeriodic(
+  fixed: WriterSpan,
+  periodic: ArithmeticSchedule,
 ): boolean {
-  const period = first.period;
-  if (period === 0) {
-    if (differentIterations && first.iterations < 2 && second.iterations < 2) return false;
+  const [fixedStart, fixedEnd, periodicStart, periodicEnd, period] = scaleDyadics([
+    fixed.start,
+    fixed.end,
+    periodic.span.start,
+    periodic.span.end,
+    periodic.period,
+  ]);
+  const first = floorDivide(fixedStart - periodicEnd + period - 1n, period);
+  const last = floorDivide(fixedEnd - periodicStart, period);
+  if (last < 0n) return false;
+  if (periodic.iterations === Number.POSITIVE_INFINITY) return first <= last;
+  const maximum = BigInt(periodic.iterations) - 1n;
+  return first <= maximum && clamp(first, 0n, maximum) <= clamp(last, 0n, maximum);
+}
+
+function arithmeticSchedulesOverlap(first: ArithmeticSchedule, second: ArithmeticSchedule): boolean {
+  if (!Number.isFinite(first.span.end) || !Number.isFinite(second.span.end)) {
     return first.span.start <= second.span.end && second.span.start <= first.span.end;
   }
-  const minimumDifference = first.iterations === Number.POSITIVE_INFINITY ?
-    Number.NEGATIVE_INFINITY : -(first.iterations - 1);
-  const maximumDifference = second.iterations === Number.POSITIVE_INFINITY ?
-    Number.POSITIVE_INFINITY : second.iterations - 1;
-  const minimumOverlap = Math.ceil((first.span.start - second.span.end) / period);
-  const maximumOverlap = Math.floor((first.span.end - second.span.start) / period);
-  const lower = Math.max(minimumDifference, minimumOverlap);
-  const upper = Math.min(maximumDifference, maximumOverlap);
-  if (lower > upper) return false;
-  return !differentIterations || lower !== 0 || upper !== 0;
+  if (first.period === 0 && second.period === 0) {
+    return first.span.start <= second.span.end && second.span.start <= first.span.end;
+  }
+  if (first.period === 0) return fixedAgainstPeriodic(first.span, second);
+  if (second.period === 0) return fixedAgainstPeriodic(second.span, first);
+  if (first.iterations === Number.POSITIVE_INFINITY ||
+    second.iterations === Number.POSITIVE_INFINITY) {
+    const firstRange = scheduleRange(freezeSchedule(first.span, [{
+      period: first.period,
+      iterations: first.iterations,
+    }]));
+    const secondRange = scheduleRange(freezeSchedule(second.span, [{
+      period: second.period,
+      iterations: second.iterations,
+    }]));
+    return firstRange.start <= secondRange.end && secondRange.start <= firstRange.end;
+  }
+  const [firstStart, firstEnd, secondStart, secondEnd, firstPeriod, secondPeriod] = scaleDyadics([
+    first.span.start,
+    first.span.end,
+    second.span.start,
+    second.span.end,
+    first.period,
+    second.period,
+  ]);
+  const firstIterations = BigInt(first.iterations);
+  const secondIterations = BigInt(second.iterations);
+  const lower = secondStart - firstEnd;
+  const upper = secondEnd - firstStart;
+  const atMostUpper = boundedLinearCount(
+    firstPeriod,
+    firstIterations,
+    secondPeriod,
+    secondIterations,
+    upper + secondPeriod * (secondIterations - 1n),
+  );
+  const belowLower = boundedLinearCount(
+    firstPeriod,
+    firstIterations,
+    secondPeriod,
+    secondIterations,
+    lower - 1n + secondPeriod * (secondIterations - 1n),
+  );
+  return atMostUpper > belowLower;
 }
 
-function schedulesOverlap(
-  first: WriterSchedule,
-  second: WriterSchedule,
-  differentIterations = false,
-): boolean {
-  if (first.period === second.period) {
-    return samePeriodOverlap(first, second, differentIterations);
-  }
-  if (differentIterations) {
-    throw new TypeError('Repeat writer schedules must share one iteration period.');
-  }
-  if (first.iterations === 1) return singleAgainstSchedule(first.span, second);
-  if (second.iterations === 1) return singleAgainstSchedule(second.span, first);
+function scheduleRange(schedule: WriterSchedule): { readonly start: number; readonly end: number } {
+  const offset = schedule.repeats.reduce((total, repeat) =>
+    total + (repeat.iterations - 1) * repeat.period,
+  0);
+  return Object.freeze({ start: schedule.span.start, end: schedule.span.end + offset });
+}
 
-  const finiteIterations = Math.min(first.iterations, second.iterations);
-  if (finiteIterations !== Number.POSITIVE_INFINITY && finiteIterations <= 100_000) {
-    const enumerateFirst = first.iterations <= second.iterations;
-    const enumerated = enumerateFirst ? first : second;
-    const searched = enumerateFirst ? second : first;
-    for (let iteration = 0; iteration < enumerated.iterations; iteration++) {
-      if (scheduleOccurrenceOverlap(enumerated, searched, iteration)) return true;
-    }
-    return false;
+function schedulesOverlap(first: WriterSchedule, second: WriterSchedule): boolean {
+  const firstArithmetic = oneRepeatSchedule(first);
+  const secondArithmetic = oneRepeatSchedule(second);
+  if (firstArithmetic !== undefined && secondArithmetic !== undefined) {
+    return arithmeticSchedulesOverlap(firstArithmetic, secondArithmetic);
   }
-
-  // Different unbounded periods cannot be safely proven disjoint without
-  // expanding an infinite timeline. Reject the ambiguous same-output program.
-  return true;
+  const firstRange = scheduleRange(first);
+  const secondRange = scheduleRange(second);
+  return firstRange.start <= secondRange.end && secondRange.start <= firstRange.end;
 }
 
 function throwWriterConflict(first: WriterSchedule, second: WriterSchedule): never {
@@ -304,12 +412,18 @@ function validateParallelChildren(children: readonly ProgramRecord[]): void {
   }
 }
 
-function validateRepeatSchedules(schedules: readonly WriterSchedule[]): void {
-  for (let firstIndex = 0; firstIndex < schedules.length; firstIndex++) {
-    for (let secondIndex = firstIndex; secondIndex < schedules.length; secondIndex++) {
-      const first = schedules[firstIndex]!;
-      const second = schedules[secondIndex]!;
-      if (first.span.output === second.span.output && schedulesOverlap(first, second, true)) {
+function validateRepeatSchedules(
+  schedules: readonly WriterSchedule[],
+  period: number,
+  iterations: number,
+): void {
+  if (iterations < 2) return;
+  for (const first of schedules) {
+    const firstRange = scheduleRange(first);
+    for (const second of schedules) {
+      if (first.span.output !== second.span.output) continue;
+      const secondRange = scheduleRange(second);
+      if (firstRange.end >= period + secondRange.start) {
         throwWriterConflict(first, second);
       }
     }
@@ -463,12 +577,19 @@ export function repeat(
     childRecord.duration.kind === 'infinite' ? infinite :
       childRecord.duration.kind === 'unresolved-stepper' ? unresolved :
         finiteProduct(childRecord.duration.milliseconds, iterations as number);
+  const childSchedules = prefixedSchedules(childRecord.writerSchedules, 0, 0);
+  if (childRecord.duration.kind === 'finite') {
+    validateRepeatSchedules(
+      childSchedules,
+      childRecord.duration.milliseconds,
+      iterations as number,
+    );
+  }
   const schedules = childRecord.duration.kind === 'finite' ? withRepeat(
-    prefixedSchedules(childRecord.writerSchedules, 0, 0),
+    childSchedules,
     childRecord.duration.milliseconds,
     iterations as number,
-  ) : prefixedSchedules(childRecord.writerSchedules, 0, 0);
-  validateRepeatSchedules(schedules);
+  ) : childSchedules;
   return createProgram({
     kind: 'repeat',
     children: Object.freeze([child]),

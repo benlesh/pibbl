@@ -18,10 +18,11 @@ describe('immutable animation programs', () => {
     const output = signal(0, { debugName: 'position' });
     const first = wait(10);
     const children = [first];
-    const program = sequence(...children);
+    const program = Reflect.apply(sequence, undefined, children);
     children[0] = wait(20);
 
     expect(Object.isFrozen(program)).toBe(true);
+    expect(getProgramRecord(program).children).not.toBe(children);
     expect(getProgramRecord(program).children).toEqual([first]);
     expect(Object.isFrozen(getProgramRecord(program).children)).toBe(true);
     expect(() => getProgramRecord({} as typeof program)).toThrow('CRC animation program');
@@ -134,5 +135,44 @@ describe('immutable animation programs', () => {
       separated,
       sequence(wait(5), track(x, tween({ to: 2, duration: 1 }))),
     )).toThrow('overlap');
+  });
+
+  it('retains large finite and nested repeat writers as constant-size metadata', () => {
+    const x = signal(0, { debugName: 'x' });
+    const base = sequence(
+      track(x, tween({ to: 1, duration: 0 })),
+      wait(1),
+    );
+    const iterations = 100_001;
+    const large = repeat(base, { iterations });
+    const nested = repeat(repeat(base, { iterations: 2 }), { iterations });
+
+    expect(getProgramRecord(large).writerSchedules).toHaveLength(1);
+    expect(getProgramRecord(large).writerSpans).toHaveLength(1);
+    expect(getProgramRecord(nested).writerSchedules).toHaveLength(1);
+    expect(getProgramRecord(nested).writerSpans).toHaveLength(1);
+    expect(getProgramRecord(nested).duration)
+      .toEqual({ kind: 'finite', milliseconds: 200_002 });
+  });
+
+  it('proves large different-period finite schedules disjoint or overlapping exactly', () => {
+    const x = signal(0, { debugName: 'x' });
+    const iterations = 100_001;
+    const evens = repeat(sequence(
+      track(x, tween({ to: 1, duration: 0.5 })),
+      wait(1.5),
+    ), { iterations, direction: 'alternate-reverse' });
+    const odds = repeat(sequence(
+      wait(1),
+      track(x, tween({ to: 2, duration: 0.5 })),
+      wait(2.5),
+    ), { iterations, direction: 'alternate' });
+    const multiplesOfFour = repeat(sequence(
+      track(x, tween({ to: 3, duration: 0.5 })),
+      wait(3.5),
+    ), { iterations, direction: 'reverse' });
+
+    expect(() => parallel(evens, odds)).not.toThrow();
+    expect(() => parallel(evens, multiplesOfFour)).toThrow('overlap');
   });
 });
