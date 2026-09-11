@@ -1410,6 +1410,7 @@ const contractPrecisionRequirements = new Map([
       "one shared 512-descent\nconstruction budget",
       "The handoff is provisional until Commit",
       "Candidate program/options validation occurs synchronously during Render",
+      "On an idle, cancelled, or finished handle it creates a paused\nrun; on an active running or paused run it preserves that status, and a running\nseek schedules continued advancement.",
       "Capture one logical time/frame identity and drain accepted commands",
       "Sample registered playbacks in registration order",
       "Validate and publish every playback's stages",
@@ -1421,6 +1422,15 @@ const contractPrecisionRequirements = new Map([
       "Future official WebGL integration is a lockstep friend",
       "CRC exposes no public scheduler clock, frame-step API,\ntrace history",
       "Future worker or WASM number crunching may use packed buffers only if Begin",
+    ],
+  ],
+  [
+    "docs/design/runtime-resource-ownership.md",
+    [
+      "| Playback command/Advance registration",
+      "| Playback milestone/error delivery",
+      "| Output writer leases",
+      "| Evaluator/stepper activation state",
     ],
   ],
   [
@@ -1959,10 +1969,7 @@ const matrixRequirements = [
   },
   {
     topic: /Definitions, programs, playback/u,
-    guides: [
-      "guides/signals-and-animation.md",
-      "design/animation-contract.md",
-    ],
+    guides: ["guides/signals-and-animation.md", "design/animation-contract.md"],
     evidence: [
       "animation-lab.test.ts",
       "animation-rendering.test.tsx",
@@ -2140,7 +2147,10 @@ export function assertTrustGatePreservationCounts(
   );
   assert.match(
     source,
-    new RegExp(`\\bThe ${evidenceMappingCount} direct source/test mappings\\b`, "u"),
+    new RegExp(
+      `\\bThe ${evidenceMappingCount} direct source/test mappings\\b`,
+      "u",
+    ),
     "Trust-gate direct-evidence count is stale.",
   );
 }

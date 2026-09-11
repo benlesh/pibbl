@@ -188,8 +188,10 @@ components do not require a separately rendered scheduled frame.
 
 `play()` starts or restarts from committed outputs. `pause()` retains position
 and leases; `resume()` reanchors logical time. `seek(milliseconds)` clamps a
-finite program and leaves a fresh or existing run paused. `reverse()` preserves
-the presented position, or starts an idle finite seekable run at its endpoint.
+finite program. On an idle, cancelled, or finished handle it creates a paused
+run; on an active running or paused run it preserves that status, and a running
+seek schedules continued advancement. `reverse()` preserves the presented
+position, or starts an idle finite seekable run at its endpoint.
 `setPlaybackRate(rate)` requires a finite positive rate and preserves position.
 `finish()` samples a known finite terminal. `cancel()` retains committed user
 values. Commands are immutable, queue for the next Begin, and run in invocation

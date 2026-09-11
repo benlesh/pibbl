@@ -9,7 +9,7 @@ export const CONTRACT_TRANSLATION_RECORD =
 // Updated only after the complete baseline, translation allowlist, additions,
 // and evidence map receive review together.
 const REVIEWED_MANIFEST_SHA256 =
-  "8ec7c07ba49c265bdd4164e96da50be375dc4219ebcc40f5b12836579253a5fb";
+  "bfac44b74ce65778581db9108d1f01a38c3267ca5c945256cf390554be0ba218";
 
 const SIGNALS_SCHEDULER_APPROVAL_RECORD = "first-class-signals-and-scheduler";
 const SIGNALS_SCHEDULER_APPROVED_SECTIONS = new Set([
@@ -37,6 +37,10 @@ const SIGNALS_SCHEDULER_TRANSLATION_IDS = new Set([
 const MIXED_SIGNAL_ANIMATION_ADDITION_IDS = new Set([
   "design-runtime-hooks-contract-signal-hook-addition",
   "design-runtime-resource-ownership-signal-scheduler-addition",
+  "design-runtime-resource-ownership-animation-registration-addition",
+  "design-runtime-resource-ownership-animation-delivery-addition",
+  "design-runtime-resource-ownership-animation-leases-addition",
+  "design-runtime-resource-ownership-animation-state-addition",
 ]);
 
 const ANIMATION_APPROVED_SECTIONS = new Set([

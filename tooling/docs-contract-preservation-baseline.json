@@ -7334,6 +7334,30 @@
           "kind": "table",
           "section": "Signal and scheduler ownership",
           "text": "| Friend renderer owner/work | Exact component evaluation or staged friend request | Exact owner scope or renderer transaction | Owner-scope `finally`; staged success, retry restoration, or renderer teardown | Owner identity never escapes evaluation; failed work skips dependent stages and restores only its transaction. |"
+        },
+        {
+          "id": "c0048",
+          "kind": "table",
+          "section": "Signal and scheduler ownership",
+          "text": "| Playback command/Advance registration | A control or autoplay enqueues Begin work; an accepted active run registers for Advance | Exact mounted playback hook slot and its active run generation | Command drain/cancellation; successful pause Commit; finish, cancel, error, committed replacement, or teardown | Each command is accepted at most once; no stale generation advances; a failed Commit restores prior registration/state and requeues the control needed for retry. |"
+        },
+        {
+          "id": "c0049",
+          "kind": "table",
+          "section": "Signal and scheduler ownership",
+          "text": "| Playback milestone/error delivery | Advance queues milestones; Begin/control or sampling queues contextual errors | Exact frame delivery and still-mounted playback hook slot callbacks | Complete delivery after the applicable Commit outcome, failed-Commit discard/retry, or teardown | No application callback runs before Complete; committed milestones deliver once in stable order, one-shot acceptance errors survive an unrelated rejected Commit exactly once, and a disposed owner receives none. |"
+        },
+        {
+          "id": "c0050",
+          "kind": "table",
+          "section": "Signal and scheduler ownership",
+          "text": "| Output writer leases | Accepted run before sampling, after complete preflight | Exact active playback run and writer token | Finish, cancel, definition failure, committed replacement, or teardown | Acquisition is all-or-nothing; provisional replacement publishes no cancellation before Commit, and rejected Commit restores the displaced owner/leases while releasing the contender without partial values. |"
+        },
+        {
+          "id": "c0051",
+          "kind": "table",
+          "section": "Signal and scheduler ownership",
+          "text": "| Evaluator/stepper activation state | Run creation; each Advance forks state before sampling | Exact active playback run and its current-frame evaluation fork | Track/run completion, cancel, error, replacement, teardown, or frame-fork adoption/discard | Applied Commit adopts the fork once; failed Commit discards it and retains the prior activation/stepper state for deterministic retry; stale state cannot schedule or write. |"
         }
       ]
     },
@@ -8547,7 +8571,7 @@
       "path": "docs/design/animation-contract.md",
       "unitPrefix": "m",
       "currentUnitCount": 60,
-      "currentUnitsSha256": "52050c7a1b95a8466fbbe753c10edaf8424a151108612014e2bfbdaa6fccab7e",
+      "currentUnitsSha256": "e17576e0b8de494305257dfd71516ea939d654edf1d74674b92a458ece04fdcd",
       "approvalRecordId": "first-class-signals-and-scheduler",
       "mappings": [
         {
@@ -11233,6 +11257,50 @@
         ]
       },
       "sharedAnchors": ["consumer", "scheduler", "Layer"]
+    },
+    {
+      "id": "design-runtime-resource-ownership-animation-registration-addition",
+      "path": "docs/design/runtime-resource-ownership.md",
+      "currentIds": ["c0048"],
+      "reason": "first-class-signals-and-scheduler units g0122 g0213 authorize c0048 as the exact playback command and Advance-registration ownership row, including stale-generation exclusion and failed-Commit restoration.",
+      "approval": {
+        "recordId": "first-class-signals-and-scheduler",
+        "unitIds": ["g0122", "g0213"]
+      },
+      "sharedAnchors": ["playback", "registration", "run"]
+    },
+    {
+      "id": "design-runtime-resource-ownership-animation-delivery-addition",
+      "path": "docs/design/runtime-resource-ownership.md",
+      "currentIds": ["c0049"],
+      "reason": "first-class-signals-and-scheduler units g0121 g0126 g0128 authorize c0049 as the exact milestone/error Complete-delivery ownership row with live callbacks, stable once-only delivery, failure isolation, and teardown suppression.",
+      "approval": {
+        "recordId": "first-class-signals-and-scheduler",
+        "unitIds": ["g0121", "g0126", "g0128"]
+      },
+      "sharedAnchors": ["milestone", "callback", "playback"]
+    },
+    {
+      "id": "design-runtime-resource-ownership-animation-leases-addition",
+      "path": "docs/design/runtime-resource-ownership.md",
+      "currentIds": ["c0050"],
+      "reason": "first-class-signals-and-scheduler units g0115 g0116 g0214 authorize c0050 as the exact all-or-nothing output-writer lease row with explicit provisional replacement and rejected-Commit rollback.",
+      "approval": {
+        "recordId": "first-class-signals-and-scheduler",
+        "unitIds": ["g0115", "g0116", "g0214"]
+      },
+      "sharedAnchors": ["lease", "replacement", "run"]
+    },
+    {
+      "id": "design-runtime-resource-ownership-animation-state-addition",
+      "path": "docs/design/runtime-resource-ownership.md",
+      "currentIds": ["c0051"],
+      "reason": "first-class-signals-and-scheduler units g0101 g0103 g0215 authorize c0051 as the exact evaluator/stepper activation-state row with per-Advance ownership, failed-Commit discard, and deterministic retry.",
+      "approval": {
+        "recordId": "first-class-signals-and-scheduler",
+        "unitIds": ["g0101", "g0103", "g0215"]
+      },
+      "sharedAnchors": ["stepper", "state", "run"]
     }
   ],
   "evidenceMappings": [
