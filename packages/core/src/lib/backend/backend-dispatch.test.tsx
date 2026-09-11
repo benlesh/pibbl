@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Rectangle, definePrimitive } from '../../index.js';
+import { jsxDEV } from '../../jsx-dev-runtime.js';
 import {
   createBackendToken,
   defineBackendPrimitive,
@@ -454,11 +455,20 @@ describe('backend-neutral component traversal', () => {
       function renderCube() {},
     );
     const canvas = createCanvas();
-    const canvasRoot = mountCRC(canvas, <Cube />);
+    const webGLSource = {
+      fileName: '/app/webgl-scene.tsx',
+      lineNumber: 12,
+      columnNumber: 7,
+    };
+    const canvasRoot = mountCRC(
+      canvas,
+      jsxDEV(Cube, {}, undefined, false, webGLSource, undefined),
+    );
 
     expect(() => executeRender(canvas, 1)).toThrowError(
       'Cube requires the webgl2 backend and cannot render in the canvas2d ' +
-      'root. Place it under <WebGLLayer>.',
+      'root. Place it under <WebGLLayer>. ' +
+      'JSX source: /app/webgl-scene.tsx:12:7.',
     );
     canvasRoot.dispose();
 
@@ -475,11 +485,15 @@ describe('backend-neutral component traversal', () => {
       driver: webgl.driver,
     });
 
-    expect(() => child.render(<Rectangle style={{
-      width: 10,
-      height: 10,
-    }} />, 2)).toThrowError(
-      /Rectangle requires the canvas2d backend and cannot render in the webgl2 root.*Canvas 2D children inside a WebGL island are unsupported/i,
+    const canvasSource = {
+      fileName: '/app/canvas-child.tsx',
+      lineNumber: 28,
+      columnNumber: 11,
+    };
+    expect(() => child.render(jsxDEV(Rectangle, {
+      style: { width: 10, height: 10 },
+    }, undefined, false, canvasSource, undefined), 2)).toThrowError(
+      /Rectangle requires the canvas2d backend and cannot render in the webgl2 root.*Canvas 2D children inside a WebGL island are unsupported.*JSX source: \/app\/canvas-child\.tsx:28:11/i,
     );
     expect(webgl.calls.at(-1)).toBe('finish:false');
 

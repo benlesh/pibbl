@@ -34,6 +34,7 @@ export type {
 export type {
   CRCEventTargetRegistration,
 } from './lib/events/registrations.js';
+export type { CRCElementSource } from './lib/element/metadata.js';
 export type {
   CRCHitTestOutput,
 } from './lib/events/paint-entry.js';
@@ -66,6 +67,10 @@ import {
   useInternalHookSlot,
 } from './lib/hooks/hook-slot.js';
 import { getCurrentWorldTransform } from './lib/render-target.js';
+import {
+  getElementSource,
+  type CRCElementSource,
+} from './lib/element/metadata.js';
 import { getSurfaceSnapshot } from './lib/surface/transform.js';
 import type { Canvas, CRCNode } from './lib/types.js';
 import type { CRCInteractionLayer } from './lib/types.js';
@@ -90,6 +95,12 @@ export function getCurrentFrameTimestamp(): number {
 /** Returns the active instance's owning Canvas, never a transient filter target. */
 export function getCurrentBackendHostCanvas(): Canvas {
   return getCurrentCRCInstance().canvas;
+}
+
+/** Returns development JSX source metadata for the current component. */
+export function getCurrentElementSource(): CRCElementSource | undefined {
+  const { componentRefs } = requireHookContext();
+  return getElementSource(componentRefs.element);
 }
 
 /** Returns the active surface's independent effective backing densities. */

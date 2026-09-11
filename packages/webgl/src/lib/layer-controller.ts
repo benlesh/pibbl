@@ -7,6 +7,7 @@ import {
   retainBackendMountRoot,
   snapshotLayerNodeTree,
   type CRCBackendMount,
+  type CRCElementSource,
   type CRCHitTestOutput,
   type LayerNodeSnapshot,
 } from '@crc/core/internal';
@@ -80,15 +81,16 @@ export function resolveWebGLLayerSurface(
   logicalWidth: number,
   logicalHeight: number,
   density: Readonly<{ x: number; y: number }>,
+  source?: CRCElementSource,
 ): WebGLLayerSurface {
-  assertPositiveFinite(logicalWidth, 'width');
-  assertPositiveFinite(logicalHeight, 'height');
-  assertPositiveFinite(density.x, 'density.x');
-  assertPositiveFinite(density.y, 'density.y');
+  assertPositiveFinite(logicalWidth, 'width', source);
+  assertPositiveFinite(logicalHeight, 'height', source);
+  assertPositiveFinite(density.x, 'density.x', source);
+  assertPositiveFinite(density.y, 'density.y', source);
   const backingWidth = Math.max(1, Math.round(logicalWidth * density.x));
   const backingHeight = Math.max(1, Math.round(logicalHeight * density.y));
-  assertBackingDimension(backingWidth, 'backing width');
-  assertBackingDimension(backingHeight, 'backing height');
+  assertBackingDimension(backingWidth, 'backing width', source);
+  assertBackingDimension(backingHeight, 'backing height', source);
   return Object.freeze({
     logicalWidth,
     logicalHeight,
@@ -128,19 +130,16 @@ export class WebGLLayerController {
     root: CRCNode,
     camera: CRCWebGLPerspectiveCamera | undefined,
     surface: WebGLLayerSurface,
+    private readonly source?: CRCElementSource,
   ) {
-    validateSurface(surface);
+    validateSurface(surface, source);
     this.mountedRoot = root;
     this.currentSurface = surface;
-    this.currentCamera = resolveCamera(
-      camera,
-      surface.logicalWidth,
-      surface.logicalHeight,
-    );
+    this.currentCamera = resolveCameraWithSource(camera, surface, source);
     this.retainedCamera = this.currentCamera;
     this.retainedSurface = surface;
-    this.canvas = createOffscreenCanvas(surface);
-    this.gl = acquireWebGL2Context(this.canvas);
+    this.canvas = createOffscreenCanvas(surface, source);
+    this.gl = acquireWebGL2Context(this.canvas, source);
     this.driver = createWebGLBackend({
       gl: this.gl,
       getCamera: () => this.currentCamera,
@@ -210,12 +209,8 @@ export class WebGLLayerController {
     this.requireActive();
     const epoch = this.beginOperation('render');
     try {
-      validateSurface(surface);
-      const nextCamera = resolveCamera(
-        camera,
-        surface.logicalWidth,
-        surface.logicalHeight,
-      );
+      validateSurface(surface, this.source);
+      const nextCamera = resolveCameraWithSource(camera, surface, this.source);
       this.mountedRoot = root;
       this.retainedCamera = nextCamera;
       this.retainedSurface = surface;
@@ -335,6 +330,8 @@ export class WebGLLayerController {
         if (this.committed !== visible) {
           throw webGLLayerError(
             'composite operation lost ownership of its committed generation',
+            undefined,
+            this.source,
           );
         }
         this.replayCommittedFocusMetadata();
@@ -343,6 +340,8 @@ export class WebGLLayerController {
       if (this.pending !== candidate) {
         throw webGLLayerError(
           'composite operation lost ownership of its pending generation',
+          undefined,
+          this.source,
         );
       }
       const previous = this.committed;
@@ -499,16 +498,22 @@ export class WebGLLayerController {
   private resizeSurface(surface: WebGLLayerSurface): void {
     const previous = this.currentSurface;
     try {
-      setCanvasDimensions(this.canvas, surface, 'resize');
+      setCanvasDimensions(this.canvas, surface, 'resize', this.source);
       this.mount.resize(surface.logicalWidth, surface.logicalHeight);
     } catch (error) {
       try {
-        setCanvasDimensions(this.canvas, previous, 'resize rollback');
+        setCanvasDimensions(
+          this.canvas,
+          previous,
+          'resize rollback',
+          this.source,
+        );
       } catch (rollbackError) {
         this.dispose();
         throw webGLLayerError(
           'could not restore its OffscreenCanvas after a failed resize',
           rollbackError,
+          this.source,
         );
       }
       throw error;
@@ -530,6 +535,7 @@ export class WebGLLayerController {
         throw webGLLayerError(
           'could not transfer its rendered ImageBitmap',
           error,
+          this.source,
         );
       }
       this.requireCurrentOperation('render', epoch);
@@ -584,6 +590,8 @@ export class WebGLLayerController {
       throw webGLLayerError(
         `rejected a reentrant ${operation} operation while ` +
         `${this.operation} is active`,
+        undefined,
+        this.source,
       );
     }
     this.operation = operation;
@@ -597,7 +605,11 @@ export class WebGLLayerController {
   ): void {
     this.requireActive();
     if (this.operation !== operation || this.operationEpoch !== epoch) {
-      throw webGLLayerError(`${operation} operation lost ownership`);
+      throw webGLLayerError(
+        `${operation} operation lost ownership`,
+        undefined,
+        this.source,
+      );
     }
   }
 
@@ -611,66 +623,106 @@ export class WebGLLayerController {
   }
 }
 
-function createOffscreenCanvas(surface: WebGLLayerSurface): OffscreenCanvas {
+function createOffscreenCanvas(
+  surface: WebGLLayerSurface,
+  source?: CRCElementSource,
+): OffscreenCanvas {
   if (typeof OffscreenCanvas === 'undefined') {
-    throw webGLLayerError('requires browser OffscreenCanvas support');
+    throw webGLLayerError(
+      'requires browser OffscreenCanvas support',
+      undefined,
+      source,
+    );
   }
   let canvas: OffscreenCanvas;
   try {
     canvas = new OffscreenCanvas(surface.backingWidth, surface.backingHeight);
   } catch (error) {
-    throw webGLLayerError('could not allocate its OffscreenCanvas', error);
+    throw webGLLayerError('could not allocate its OffscreenCanvas', error, source);
   }
-  assertCanvasDimensions(canvas, surface, 'allocation');
+  assertCanvasDimensions(canvas, surface, 'allocation', source);
   if (typeof canvas.transferToImageBitmap !== 'function') {
-    throw webGLLayerError('requires OffscreenCanvas.transferToImageBitmap()');
+    throw webGLLayerError(
+      'requires OffscreenCanvas.transferToImageBitmap()',
+      undefined,
+      source,
+    );
   }
   return canvas;
 }
 
-function acquireWebGL2Context(canvas: OffscreenCanvas): WebGL2RenderingContext {
+function acquireWebGL2Context(
+  canvas: OffscreenCanvas,
+  source?: CRCElementSource,
+): WebGL2RenderingContext {
   let context: WebGL2RenderingContext | null;
   try {
     context = canvas.getContext('webgl2', WEBGL_CONTEXT_ATTRIBUTES);
   } catch (error) {
-    throw webGLLayerError('could not acquire its WebGL2 context', error);
+    throw webGLLayerError('could not acquire its WebGL2 context', error, source);
   }
   if (!context) {
-    throw webGLLayerError('requires browser WebGL2 OffscreenCanvas support');
+    throw webGLLayerError(
+      'requires browser WebGL2 OffscreenCanvas support',
+      undefined,
+      source,
+    );
   }
   const gl = context as WebGL2RenderingContext;
   let actual: WebGLContextAttributes | null;
   try {
     actual = gl.getContextAttributes();
   } catch (error) {
-    throw webGLLayerError('could not inspect its WebGL2 context attributes', error);
+    throw webGLLayerError(
+      'could not inspect its WebGL2 context attributes',
+      error,
+      source,
+    );
   }
   if (actual?.alpha !== true) {
-    throw webGLLayerError('requires a WebGL2 context with alpha enabled');
+    throw webGLLayerError(
+      'requires a WebGL2 context with alpha enabled',
+      undefined,
+      source,
+    );
   }
   if (actual.depth !== true) {
-    throw webGLLayerError('requires a WebGL2 context with depth enabled');
+    throw webGLLayerError(
+      'requires a WebGL2 context with depth enabled',
+      undefined,
+      source,
+    );
   }
   return gl;
 }
 
-function validateSurface(surface: WebGLLayerSurface): void {
-  assertPositiveFinite(surface.logicalWidth, 'width');
-  assertPositiveFinite(surface.logicalHeight, 'height');
-  assertBackingDimension(surface.backingWidth, 'backing width');
-  assertBackingDimension(surface.backingHeight, 'backing height');
-  assertPositiveFinite(surface.densityX, 'density.x');
-  assertPositiveFinite(surface.densityY, 'density.y');
+function validateSurface(
+  surface: WebGLLayerSurface,
+  source?: CRCElementSource,
+): void {
+  assertPositiveFinite(surface.logicalWidth, 'width', source);
+  assertPositiveFinite(surface.logicalHeight, 'height', source);
+  assertBackingDimension(surface.backingWidth, 'backing width', source);
+  assertBackingDimension(surface.backingHeight, 'backing height', source);
+  assertPositiveFinite(surface.densityX, 'density.x', source);
+  assertPositiveFinite(surface.densityY, 'density.y', source);
 }
 
-function assertBackingDimension(value: number, field: string): void {
+function assertBackingDimension(
+  value: number,
+  field: string,
+  source?: CRCElementSource,
+): void {
   if (
     !Number.isSafeInteger(value) ||
     value <= 0 ||
     value > MAX_OFFSCREEN_CANVAS_DIMENSION
   ) {
     throw new RangeError(
-      `WebGLLayer ${field} must be a positive representable integer.`,
+      withJSXSource(
+        `WebGLLayer ${field} must be a positive representable integer.`,
+        source,
+      ),
     );
   }
 }
@@ -679,6 +731,7 @@ function setCanvasDimensions(
   canvas: OffscreenCanvas,
   surface: WebGLLayerSurface,
   phase: string,
+  source?: CRCElementSource,
 ): void {
   try {
     canvas.width = surface.backingWidth;
@@ -687,15 +740,17 @@ function setCanvasDimensions(
     throw webGLLayerError(
       `could not apply its OffscreenCanvas ${phase} dimensions`,
       error,
+      source,
     );
   }
-  assertCanvasDimensions(canvas, surface, phase);
+  assertCanvasDimensions(canvas, surface, phase, source);
 }
 
 function assertCanvasDimensions(
   canvas: OffscreenCanvas,
   surface: WebGLLayerSurface,
   phase: string,
+  source?: CRCElementSource,
 ): void {
   if (
     canvas.width !== surface.backingWidth ||
@@ -704,13 +759,46 @@ function assertCanvasDimensions(
     throw webGLLayerError(
       `OffscreenCanvas ${phase} dimensions did not match the requested ` +
       `${surface.backingWidth}x${surface.backingHeight} backing size`,
+      undefined,
+      source,
     );
   }
 }
 
-function assertPositiveFinite(value: number, field: string): void {
+function assertPositiveFinite(
+  value: number,
+  field: string,
+  source?: CRCElementSource,
+): void {
   if (!Number.isFinite(value) || value <= 0) {
-    throw new RangeError(`WebGLLayer ${field} must be finite and positive.`);
+    throw new RangeError(
+      withJSXSource(
+        `WebGLLayer ${field} must be finite and positive.`,
+        source,
+      ),
+    );
+  }
+}
+
+function resolveCameraWithSource(
+  camera: CRCWebGLPerspectiveCamera | undefined,
+  surface: WebGLLayerSurface,
+  source?: CRCElementSource,
+): ResolvedWebGLCamera {
+  try {
+    return resolveCamera(
+      camera,
+      surface.logicalWidth,
+      surface.logicalHeight,
+    );
+  } catch (error) {
+    if (!source || !(error instanceof Error)) throw error;
+    const message = withJSXSource(error.message, source);
+    const enhanced = error instanceof RangeError ?
+      new RangeError(message) :
+      new Error(message);
+    enhanced.cause = error;
+    throw enhanced;
   }
 }
 
@@ -765,8 +853,18 @@ function runCleanup(cleanup: () => void): void {
   }
 }
 
-function webGLLayerError(reason: string, cause?: unknown): Error {
-  const error = new Error(`WebGLLayer ${reason}.`);
+function webGLLayerError(
+  reason: string,
+  cause?: unknown,
+  source?: CRCElementSource,
+): Error {
+  const error = new Error(withJSXSource(`WebGLLayer ${reason}.`, source));
   if (cause !== undefined) error.cause = cause;
   return error;
+}
+
+function withJSXSource(message: string, source?: CRCElementSource): string {
+  return source ?
+      `${message} JSX source: ${source.fileName}:${source.lineNumber}:${source.columnNumber}.` :
+    message;
 }

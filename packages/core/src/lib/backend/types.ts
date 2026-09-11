@@ -148,19 +148,29 @@ export function backendMismatchError(
   componentName: string,
   required: CRCBackendToken,
   active: CRCBackendDriver<unknown>,
+  source?: CRCElementSource,
 ): Error {
   const requiredName = getBackendTokenName(required);
   const prefix = `${componentName} requires the ${requiredName} backend and ` +
     `cannot render in the ${active.name} root.`;
   if (requiredName === 'webgl2' && active.name === 'canvas2d') {
-    return new Error(`${prefix} Place it under <WebGLLayer>.`);
+    return new Error(withJSXSource(`${prefix} Place it under <WebGLLayer>.`, source));
   }
   if (requiredName === 'canvas2d' && active.name === 'webgl2') {
     return new Error(
-      `${prefix} Canvas 2D children inside a WebGL island are unsupported.`,
+      withJSXSource(
+        `${prefix} Canvas 2D children inside a WebGL island are unsupported.`,
+        source,
+      ),
     );
   }
-  return new Error(prefix);
+  return new Error(withJSXSource(prefix, source));
+}
+
+function withJSXSource(message: string, source?: CRCElementSource): string {
+  return source ?
+      `${message} JSX source: ${source.fileName}:${source.lineNumber}:${source.columnNumber}.` :
+    message;
 }
 
 export type { CRCEventHandlers };

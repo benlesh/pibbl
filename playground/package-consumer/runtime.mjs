@@ -87,6 +87,7 @@ const expectedInternal = [
   'executeBackendCRC',
   'getBackendEnvironment',
   'getCurrentBackendHostCanvas',
+  'getCurrentElementSource',
   'getCurrentFrameTimestamp',
   'getCurrentSurfaceDensity',
   'hasCRCEventHandler',

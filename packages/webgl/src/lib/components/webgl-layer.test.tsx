@@ -11,6 +11,7 @@ import {
 } from '@crc/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useBackendEventTarget } from '@crc/core/internal';
+import { jsxDEV } from '@crc/core/jsx-dev-runtime';
 import { defineWebGLPrimitive } from '../define-webgl-primitive.js';
 import { Cube } from './cube.js';
 import { WebGLLayerController } from '../layer-controller.js';
@@ -27,6 +28,38 @@ afterEach(() => {
 });
 
 describe('WebGLLayer public surface', () => {
+  it('includes jsxDEV source in a representative capability failure', () => {
+    vi.stubGlobal('OffscreenCanvas', undefined);
+    let frame: FrameRequestCallback | undefined;
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
+      frame = callback;
+      return 1;
+    });
+    const source = {
+      fileName: '/app/island.tsx',
+      lineNumber: 42,
+      columnNumber: 9,
+    };
+    const canvas = createCanvas(100, 50);
+    const controller = crc(
+      canvas,
+      jsxDEV(
+        WebGLLayer,
+        { children: null },
+        undefined,
+        false,
+        source,
+        undefined,
+      ),
+      { pixelRatio: 1 },
+    );
+    controllers.add(controller);
+
+    expect(() => frame?.(1)).toThrowError(
+      /WebGLLayer requires browser OffscreenCanvas support.*JSX source: \/app\/island\.tsx:42:9/i,
+    );
+  });
+
   it('uses the current allocation by default and preserves one materialization/traversal', async () => {
     const platform = installComponentPlatform();
     const draws = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage')

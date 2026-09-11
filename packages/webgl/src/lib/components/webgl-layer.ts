@@ -14,6 +14,7 @@ import {
 } from '@crc/core';
 import {
   getCurrentBackendHostCanvas,
+  getCurrentElementSource,
   getCurrentFrameTimestamp,
   getCurrentSurfaceDensity,
   haveSameLayerNodeTree,
@@ -72,11 +73,13 @@ function renderWebGLLayer(
     key: 'crc-webgl-layer-root',
     children: childrenSlot.value.materialized,
   });
+  const source = getCurrentElementSource();
   const density = getCurrentSurfaceDensity();
   const surface = resolveWebGLLayerSurface(
     style.width,
     style.height,
     density,
+    source,
   );
   const slot = useInternalHookSlot(
     'webglLayerController',
@@ -86,6 +89,7 @@ function renderWebGLLayer(
         root,
         props.camera,
         surface,
+        source,
       );
       teardowns.add(() => controller.dispose());
       return controller;

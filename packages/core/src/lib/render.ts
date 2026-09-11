@@ -160,6 +160,7 @@ function renderComponentElement<P>(
               componentRefs.element.type.name || 'Anonymous',
               definition.backend,
               driver,
+              getElementSource(componentRefs.element),
             );
           }
           const receiverToken =
