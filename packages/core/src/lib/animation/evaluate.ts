@@ -996,10 +996,16 @@ function sampleNode(
   const directChild = record.children[0]!;
   const directChildDuration = getExactSeekableProgramDuration(directChild);
   if (directChildDuration !== undefined && Number.isFinite(directChildDuration) &&
-    directChildDuration > 0 && canDirectlySelectRepeat(directChild)) {
-    const totalDuration = record.iterations === Number.POSITIVE_INFINITY ?
-      Number.POSITIVE_INFINITY : directChildDuration * record.iterations;
+    (directChildDuration > 0 || record.iterations !== Number.POSITIVE_INFINITY) &&
+    canDirectlySelectRepeat(directChild)) {
+    const totalDuration = directChildDuration === 0 ? 0 :
+      record.iterations === Number.POSITIVE_INFINITY ? Number.POSITIVE_INFINITY :
+        directChildDuration * record.iterations;
     const atEnd = localTime >= totalDuration;
+    if (directChildDuration === 0 && getProgramRecord(directChild).outputs.length === 0) {
+      setDuration(state, path, repeatIterations, totalDuration);
+      return Object.freeze({ duration: totalDuration, atEnd });
+    }
     const iteration = atEnd ? Math.max(0, record.iterations - 1) :
       Math.floor(localTime / directChildDuration);
     const iterationStart = iteration * directChildDuration;

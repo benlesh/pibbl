@@ -312,6 +312,88 @@ describe('seekable animation program evaluation', () => {
     expect(samples).toBe(1);
   });
 
+  it('resolves huge zero-duration no-write repeats without visiting occurrences', () => {
+    const directions = [
+      'normal',
+      'reverse',
+      'alternate',
+      'alternate-reverse',
+    ] as const;
+    const children = [
+      { name: 'wait', program: wait(0) },
+      { name: 'empty sequence', program: sequence() },
+      { name: 'marker', program: marker('instant') },
+    ];
+
+    for (const { name, program: child } of children) {
+      for (const repeatDirection of directions) {
+        for (const traversalDirection of ['forward', 'reverse'] as const) {
+          const program = repeat(child, {
+            iterations: 1e308,
+            direction: repeatDirection,
+          });
+          const batch = createSignalCommitBatch();
+          const result = seekProgram(activateProgram(program, {}), {
+            previousTime: 0,
+            time: 0,
+            direction: traversalDirection,
+            frameId: 1,
+            writer,
+            batch,
+          });
+
+          expect(result.terminal, `${name}/${repeatDirection}/${traversalDirection}`).toEqual({
+            duration: 0,
+            atStart: true,
+            atEnd: true,
+            reached: true,
+          });
+          expect(result.milestones).toEqual([]);
+        }
+      }
+    }
+  });
+
+  it('samples only the owning zero-duration writer occurrence in every repeat direction', () => {
+    for (const direction of [
+      'normal',
+      'reverse',
+      'alternate',
+      'alternate-reverse',
+    ] as const) {
+      const output = signal(1);
+      let samples = 0;
+      const program = repeat(track(output, tween({
+        from: 1,
+        to: 9,
+        duration: 0,
+        easing: progress => {
+          samples++;
+          return progress;
+        },
+      })), { iterations: 1, direction });
+
+      const result = seekProgram(activateProgram(program, {}), {
+        previousTime: 0,
+        time: 0,
+        direction: 'forward',
+        frameId: 2,
+        writer,
+        batch: createSignalCommitBatch(),
+      });
+
+      expect(result.batch.read(output)).toBe(9);
+      expect(result.terminal).toEqual({
+        duration: 0,
+        atStart: true,
+        atEnd: true,
+        reached: true,
+      });
+      expect(result.milestones).toEqual([]);
+      expect(samples).toBe(1);
+    }
+  });
+
   it('maps all finite repeat directions at boundaries with zero-based iterations', () => {
     const cases = [
       { direction: 'normal' as const, time: 0, want: 0 },
