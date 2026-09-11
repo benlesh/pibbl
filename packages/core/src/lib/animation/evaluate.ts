@@ -6,6 +6,7 @@ import {
 import type { WritableSignal } from '../signals/types.js';
 import {
   activateSeekableDefinition,
+  getDefinitionRecord,
   getSeekableDefinitionBoundaryValue,
   getStaticSeekableDefinitionBoundaryValue,
   sampleActivatedSeekableDefinition,
@@ -15,7 +16,10 @@ import {
 import {
   getExactSeekableProgramDuration,
   getProgramRecord,
+  repeatResolvedWriterSchedules,
+  resolvedWriterSchedulesOverlap,
   requiresProgramActivationWriterSafety,
+  type ResolvedWriterSchedule,
 } from './program.js';
 import type { CRCAnimationProgram } from './types.js';
 
@@ -103,11 +107,17 @@ interface SampleState {
   readonly durations: Map<string, number>;
   readonly writtenOutputs: Set<WritableSignal<unknown>>;
   readonly snapshots: WeakMap<object, unknown>;
+  readonly owners: Map<WritableSignal<unknown>, SampledWriterOwner>;
 }
 
 interface SampleResult {
   readonly duration: number | undefined;
   readonly atEnd: boolean;
+}
+
+interface SampledWriterOwner {
+  readonly start: number;
+  readonly end: number;
 }
 
 const unknownDiscoveredValue = Symbol('unknown animation discovery value');
@@ -119,6 +129,10 @@ interface ResolvedWriter {
   readonly end: number;
   readonly programPath: readonly number[];
   readonly repeatIterations: readonly number[];
+  readonly repeats: readonly {
+    readonly period: number;
+    readonly iterations: number;
+  }[];
 }
 
 interface DiscoveryResult {
@@ -134,7 +148,6 @@ interface DiscoveryState {
   readonly durations: Map<string, number>;
   readonly snapshots: WeakMap<object, unknown>;
   readonly validateWriters: boolean;
-  readonly writerBudget: { remaining: number };
 }
 
 interface TimelineEvent {
@@ -153,7 +166,7 @@ interface TimeTransform {
 
 const activationRecords = new WeakMap<ProgramActivation, InternalProgramActivation>();
 const baselineWriter = Object.freeze({ name: 'CRC animation activation baseline' });
-const maximumResolvedWriterComparisons = 512;
+const directRepeatSelection = new WeakMap<CRCAnimationProgram, boolean>();
 
 function freezePath(path: readonly number[]): readonly number[] {
   return Object.freeze([...path]);
@@ -255,6 +268,33 @@ function knownDuration(
   return getExactSeekableProgramDuration(program);
 }
 
+function canDirectlySelectRepeat(program: CRCAnimationProgram): boolean {
+  const cached = directRepeatSelection.get(program);
+  if (cached !== undefined) return cached;
+  const record = getProgramRecord(program);
+  let direct: boolean;
+  if (record.kind === 'track') {
+    const definition = getDefinitionRecord(record.definition);
+    direct = definition.kind === 'keyframes' ||
+      definition.kind === 'tween' && definition.hasFrom ||
+      definition.kind === 'spring' && definition.hasFrom;
+  } else {
+    direct = record.kind === 'wait' || record.kind === 'marker' ||
+      record.children.every(canDirectlySelectRepeat);
+  }
+  directRepeatSelection.set(program, direct);
+  return direct;
+}
+
+function needsCallbackFreeDurationSeed(program: CRCAnimationProgram): boolean {
+  const record = getProgramRecord(program);
+  if (record.kind === 'repeat' && record.direction !== 'normal' &&
+    getExactSeekableProgramDuration(record.children[0]!) === undefined) {
+    return true;
+  }
+  return record.children.some(needsCallbackFreeDurationSeed);
+}
+
 function discoveredWrites(
   ...sources: readonly ReadonlyMap<WritableSignal<unknown>, DiscoveredValue>[]
 ): Map<WritableSignal<unknown>, DiscoveredValue> {
@@ -263,6 +303,33 @@ function discoveredWrites(
     for (const [output, value] of source) writes.set(output, value);
   }
   return writes;
+}
+
+function chronologicalEndWrites(
+  children: readonly DiscoveryResult[],
+): Map<WritableSignal<unknown>, DiscoveredValue> {
+  const selected = new Map<WritableSignal<unknown>, {
+    readonly end: number;
+    readonly value: DiscoveredValue;
+  }>();
+  for (const child of children) {
+    for (const [output, value] of child.endWrites) {
+      let end = Number.NEGATIVE_INFINITY;
+      for (const writerSpan of child.writers) {
+        if (writerSpan.output === output) {
+          const resolvedEnd = writerSpan.repeats.reduce((writerEnd, repeat) =>
+            writerEnd + (repeat.iterations - 1) * repeat.period,
+          writerSpan.end);
+          end = Math.max(end, resolvedEnd);
+        }
+      }
+      const current = selected.get(output);
+      if (current === undefined || end >= current.end) selected.set(output, { end, value });
+    }
+  }
+  return new Map([...selected].map(([output, selectedValue]) =>
+    [output, selectedValue.value],
+  ));
 }
 
 function applyDiscoveredWrites(
@@ -298,15 +365,21 @@ function assertResolvedWritersDisjoint(
   for (const firstWriter of first) {
     for (const secondWriter of second) {
       if (firstWriter.output !== secondWriter.output) continue;
-      if (state.writerBudget.remaining === 0) {
-        const name = getSignalNode(firstWriter.output).debugName ?? '<unnamed signal>';
-        throw new RangeError(
-          `CRC animation activation-dependent writer schedule proof exhausted its ` +
-            `${maximumResolvedWriterComparisons}-comparison budget for signal "${name}".`,
-        );
-      }
-      state.writerBudget.remaining--;
-      if (firstWriter.start <= secondWriter.end && secondWriter.start <= firstWriter.end) {
+      const firstSchedule: ResolvedWriterSchedule = {
+        output: firstWriter.output,
+        start: firstWriter.start,
+        end: firstWriter.end,
+        path: firstWriter.programPath,
+        repeats: firstWriter.repeats,
+      };
+      const secondSchedule: ResolvedWriterSchedule = {
+        output: secondWriter.output,
+        start: secondWriter.start,
+        end: secondWriter.end,
+        path: secondWriter.programPath,
+        repeats: secondWriter.repeats,
+      };
+      if (resolvedWriterSchedulesOverlap(firstSchedule, secondSchedule)) {
         const name = getSignalNode(firstWriter.output).debugName ?? '<unnamed signal>';
         throw new RangeError(
           `CRC animation activation-dependent writer schedules at paths ` +
@@ -377,10 +450,58 @@ function discoverTrack(
       end: duration,
       programPath: freezePath(path),
       repeatIterations: freezePath(repeatIterations),
+      repeats: Object.freeze([]),
     })]),
     startWrites,
     endWrites,
   };
+}
+
+function discoveredValuesEqual(
+  first: ReadonlyMap<WritableSignal<unknown>, DiscoveredValue>,
+  second: ReadonlyMap<WritableSignal<unknown>, DiscoveredValue>,
+): boolean {
+  if (first.size !== second.size) return false;
+  for (const [output, value] of first) {
+    if (!second.has(output) || !Object.is(value, second.get(output))) return false;
+  }
+  return true;
+}
+
+function symbolicRepeatWriters(
+  writers: readonly ResolvedWriter[],
+  period: number,
+  iterations: number,
+  offset = 0,
+): readonly ResolvedWriter[] {
+  const schedules = repeatResolvedWriterSchedules(writers.map(writerSpan => ({
+    output: writerSpan.output,
+    start: writerSpan.start + offset,
+    end: writerSpan.end + offset,
+    path: writerSpan.programPath,
+    repeats: writerSpan.repeats,
+  })), period, iterations);
+  return Object.freeze(schedules.map((schedule, index) => Object.freeze({
+    output: schedule.output,
+    start: schedule.start,
+    end: schedule.end,
+    programPath: freezePath(schedule.path),
+    repeatIterations: writers[index]!.repeatIterations,
+    repeats: schedule.repeats,
+  })));
+}
+
+function applyIterationEnd(
+  state: DiscoveryState,
+  baseline: ReadonlyMap<WritableSignal<unknown>, DiscoveredValue>,
+  discovered: DiscoveryResult,
+  reversed: boolean,
+): ReadonlyMap<WritableSignal<unknown>, DiscoveredValue> {
+  const writes = reversed ? discovered.startWrites : discovered.endWrites;
+  state.values.clear();
+  for (const [output, value] of baseline) state.values.set(output, value);
+  applyDiscoveredWrites(state.values, writes);
+  return writes;
 }
 
 function discoverNode(
@@ -478,7 +599,7 @@ function discoverNode(
         Math.max(duration, child.duration);
     }
     const startWrites = discoveredWrites(...children.map(child => child.startWrites));
-    const endWrites = discoveredWrites(...children.map(child => child.endWrites));
+    const endWrites = chronologicalEndWrites(children);
     state.values.clear();
     for (const [output, value] of baseline) state.values.set(output, value);
     applyDiscoveredWrites(state.values, endWrites);
@@ -488,6 +609,146 @@ function discoverNode(
       writers: Object.freeze(children.flatMap(child => child.writers)),
       startWrites,
       endWrites,
+    };
+  }
+
+  if (state.validateWriters && record.iterations > 1) {
+    const child = record.children[0]!;
+    const initialValues = new Map(state.values);
+    const firstReversed = record.direction === 'reverse' ||
+      record.direction === 'alternate-reverse';
+    const first = discoverNode(
+      child,
+      Number.POSITIVE_INFINITY,
+      state,
+      [...path, 0],
+      [...repeatIterations, 0],
+    );
+    if (first.duration === undefined || !Number.isFinite(first.duration)) {
+      throw new RangeError(
+        'CRC animation activation-dependent repeat writer period could not be proven finite.',
+      );
+    }
+    const firstEndWrites = applyIterationEnd(state, initialValues, first, firstReversed);
+    const stableAfterFirst = discoveredValuesEqual(initialValues, state.values);
+    const alternating = record.direction === 'alternate' ||
+      record.direction === 'alternate-reverse';
+    if (stableAfterFirst && !alternating) {
+      const next = shiftedResolvedWriters(first.writers, first.duration);
+      assertResolvedWritersDisjoint(first.writers, next, state);
+      const writers = symbolicRepeatWriters(
+        first.writers,
+        first.duration,
+        record.iterations,
+      );
+      const duration = record.iterations === Number.POSITIVE_INFINITY ?
+        Number.POSITIVE_INFINITY : first.duration * record.iterations;
+      state.durations.set(instanceKey(path, repeatIterations), duration);
+      return {
+        duration,
+        writers,
+        startWrites: new Map(firstReversed ? first.endWrites : first.startWrites),
+        endWrites: new Map(firstEndWrites),
+      };
+    }
+
+    const steadyBaseline = new Map(state.values);
+    const secondReversed = record.direction === 'reverse' ||
+      record.direction === 'alternate';
+    const second = discoverNode(
+      child,
+      Number.POSITIVE_INFINITY,
+      state,
+      [...path, 0],
+      [...repeatIterations, 1],
+    );
+    if (second.duration === undefined || !Number.isFinite(second.duration)) {
+      throw new RangeError(
+        'CRC animation activation-dependent repeat writer period could not be proven finite.',
+      );
+    }
+    const secondEndWrites = applyIterationEnd(
+      state,
+      steadyBaseline,
+      second,
+      secondReversed,
+    );
+    const shiftedSecond = shiftedResolvedWriters(second.writers, first.duration);
+    assertResolvedWritersDisjoint(first.writers, shiftedSecond, state);
+    if (record.iterations === 2) {
+      const duration = first.duration + second.duration;
+      state.durations.set(instanceKey(path, repeatIterations), duration);
+      return {
+        duration,
+        writers: Object.freeze([...first.writers, ...shiftedSecond]),
+        startWrites: new Map(firstReversed ? first.endWrites : first.startWrites),
+        endWrites: new Map(secondEndWrites),
+      };
+    }
+    if (alternating) {
+      if (!discoveredValuesEqual(initialValues, state.values)) {
+        throw new RangeError(
+          'CRC animation activation-dependent alternating repeat writer schedule did not reach a bounded symbolic period.',
+        );
+      }
+      const pairDuration = first.duration + second.duration;
+      assertResolvedWritersDisjoint(
+        second.writers,
+        shiftedResolvedWriters(first.writers, pairDuration - first.duration),
+        state,
+      );
+      const pairCount = record.iterations === Number.POSITIVE_INFINITY ?
+        Number.POSITIVE_INFINITY : Math.floor(record.iterations / 2);
+      const writers: ResolvedWriter[] = [
+        ...symbolicRepeatWriters(first.writers, pairDuration, pairCount),
+        ...symbolicRepeatWriters(second.writers, pairDuration, pairCount, first.duration),
+      ];
+      const hasOddIteration = record.iterations !== Number.POSITIVE_INFINITY &&
+        record.iterations % 2 === 1;
+      if (hasOddIteration) {
+        writers.push(...shiftedResolvedWriters(first.writers, pairCount * pairDuration));
+      }
+      const duration = record.iterations === Number.POSITIVE_INFINITY ?
+        Number.POSITIVE_INFINITY : pairCount * pairDuration +
+          (hasOddIteration ? first.duration : 0);
+      state.durations.set(instanceKey(path, repeatIterations), duration);
+      return {
+        duration,
+        writers: Object.freeze(writers),
+        startWrites: new Map(firstReversed ? first.endWrites : first.startWrites),
+        endWrites: new Map(hasOddIteration ? firstEndWrites : secondEndWrites),
+      };
+    }
+    if (!discoveredValuesEqual(steadyBaseline, state.values)) {
+      throw new RangeError(
+        'CRC animation activation-dependent repeat writer schedule did not reach a bounded symbolic period.',
+      );
+    }
+    assertResolvedWritersDisjoint(
+      second.writers,
+      shiftedResolvedWriters(second.writers, second.duration),
+      state,
+    );
+    const remainingIterations = record.iterations === Number.POSITIVE_INFINITY ?
+      Number.POSITIVE_INFINITY : record.iterations - 1;
+    const writers = Object.freeze([
+      ...first.writers,
+      ...symbolicRepeatWriters(
+        second.writers,
+        second.duration,
+        remainingIterations,
+        first.duration,
+      ),
+    ]);
+    const duration = record.iterations === Number.POSITIVE_INFINITY ?
+      Number.POSITIVE_INFINITY :
+      first.duration + second.duration * remainingIterations;
+    state.durations.set(instanceKey(path, repeatIterations), duration);
+    return {
+      duration,
+      writers,
+      startWrites: new Map(firstReversed ? first.endWrites : first.startWrites),
+      endWrites: new Map(secondEndWrites),
     };
   }
 
@@ -524,9 +785,11 @@ function discoverNode(
       throw new TypeError('An infinite repeat with zero duration cannot be discovered seekably.');
     }
     const iterationWriters = shiftedResolvedWriters(discovered.writers, elapsed);
-    assertResolvedWritersDisjoint(previousWriters, iterationWriters, state);
-    writers.push(...iterationWriters);
-    previousWriters = iterationWriters;
+    if (state.validateWriters) {
+      assertResolvedWritersDisjoint(previousWriters, iterationWriters, state);
+      writers.push(...iterationWriters);
+      previousWriters = iterationWriters;
+    }
     const iterationStartWrites = reversed ? discovered.endWrites : discovered.startWrites;
     const iterationEndWrites = reversed ? discovered.startWrites : discovered.endWrites;
     if (iteration === 0) firstWrites = new Map(iterationStartWrites);
@@ -570,6 +833,7 @@ function sampleTrack(
   state: SampleState,
   path: readonly number[],
   repeatIterations: readonly number[],
+  offset: number,
 ): SampleResult {
   const record = getProgramRecord(program);
   if (record.kind !== 'track') throw new Error('Expected an animation track record.');
@@ -597,8 +861,42 @@ function sampleTrack(
     baselineWriter,
   );
   state.writtenOutputs.add(record.output);
+  state.owners.set(record.output, Object.freeze({
+    start: offset,
+    end: offset + duration,
+  }));
   setDuration(state, path, repeatIterations, duration);
   return Object.freeze({ duration, atEnd: localTime >= duration });
+}
+
+function forkSampleState(
+  state: SampleState,
+  outputs: readonly WritableSignal<unknown>[],
+): SampleState {
+  const batch = createSignalCommitBatch();
+  for (const output of outputs) {
+    batch.stage(output, state.batch.read(output), baselineWriter);
+  }
+  return {
+    batch,
+    starts: state.starts,
+    durations: state.durations,
+    writtenOutputs: new Set(),
+    snapshots: state.snapshots,
+    owners: new Map(),
+  };
+}
+
+function ownerWins(
+  candidate: SampledWriterOwner,
+  current: SampledWriterOwner | undefined,
+  time: number,
+): boolean {
+  if (current === undefined) return true;
+  const candidateActive = candidate.start <= time && time <= candidate.end;
+  const currentActive = current.start <= time && time <= current.end;
+  if (candidateActive !== currentActive) return candidateActive;
+  return candidate.end >= current.end;
 }
 
 function sampleNode(
@@ -607,11 +905,12 @@ function sampleNode(
   state: SampleState,
   path: readonly number[],
   repeatIterations: readonly number[],
+  offset = 0,
 ): SampleResult {
   const record = getProgramRecord(program);
   const localTime = Math.max(0, requestedTime);
   if (record.kind === 'track') {
-    return sampleTrack(program, localTime, state, path, repeatIterations);
+    return sampleTrack(program, localTime, state, path, repeatIterations, offset);
   }
   if (record.kind === 'wait') {
     const duration = record.duration.kind === 'finite' ? record.duration.milliseconds : 0;
@@ -628,7 +927,14 @@ function sampleNode(
     for (let index = 0; index < record.children.length; index++) {
       const child = record.children[index]!;
       const childPath = [...path, index];
-      const sampled = sampleNode(child, remaining, state, childPath, repeatIterations);
+      const sampled = sampleNode(
+        child,
+        remaining,
+        state,
+        childPath,
+        repeatIterations,
+        offset + elapsed,
+      );
       if (!sampled.atEnd || sampled.duration === undefined) {
         let resolvedDuration = sampled.duration === undefined ? undefined :
           elapsed + sampled.duration;
@@ -652,21 +958,65 @@ function sampleNode(
     let duration = 0;
     let durationKnown = true;
     let atEnd = true;
+    const selected = new Map<WritableSignal<unknown>, {
+      readonly owner: SampledWriterOwner;
+      readonly value: unknown;
+    }>();
     for (let index = 0; index < record.children.length; index++) {
+      const child = record.children[index]!;
+      const branchState = forkSampleState(state, getProgramRecord(child).outputs);
       const sampled = sampleNode(
-        record.children[index]!,
+        child,
         localTime,
-        state,
+        branchState,
         [...path, index],
         repeatIterations,
+        offset,
       );
       if (sampled.duration === undefined) durationKnown = false;
       else duration = Math.max(duration, sampled.duration);
       if (!sampled.atEnd) atEnd = false;
+      for (const output of branchState.writtenOutputs) {
+        const owner = branchState.owners.get(output)!;
+        if (ownerWins(owner, selected.get(output)?.owner, offset + localTime)) {
+          selected.set(output, { owner, value: branchState.batch.read(output) });
+        }
+      }
+    }
+    for (const [output, candidate] of selected) {
+      state.batch.stage(output, candidate.value, baselineWriter);
+      state.writtenOutputs.add(output);
+      state.owners.set(output, candidate.owner);
     }
     const resolvedDuration = durationKnown ? duration : undefined;
     setDuration(state, path, repeatIterations, resolvedDuration);
     return Object.freeze({ duration: resolvedDuration, atEnd });
+  }
+
+  const directChild = record.children[0]!;
+  const directChildDuration = getExactSeekableProgramDuration(directChild);
+  if (directChildDuration !== undefined && Number.isFinite(directChildDuration) &&
+    directChildDuration > 0 && canDirectlySelectRepeat(directChild)) {
+    const totalDuration = record.iterations === Number.POSITIVE_INFINITY ?
+      Number.POSITIVE_INFINITY : directChildDuration * record.iterations;
+    const atEnd = localTime >= totalDuration;
+    const iteration = atEnd ? Math.max(0, record.iterations - 1) :
+      Math.floor(localTime / directChildDuration);
+    const iterationStart = iteration * directChildDuration;
+    const iterationTime = atEnd ? directChildDuration : localTime - iterationStart;
+    const reversed = record.direction === 'reverse' ||
+      record.direction === 'alternate-reverse' && iteration % 2 === 0 ||
+      record.direction === 'alternate' && iteration % 2 === 1;
+    sampleNode(
+      directChild,
+      reversed ? directChildDuration - iterationTime : iterationTime,
+      state,
+      [...path, 0],
+      [...repeatIterations, iteration],
+      offset + iterationStart,
+    );
+    setDuration(state, path, repeatIterations, totalDuration);
+    return Object.freeze({ duration: totalDuration, atEnd });
   }
 
   if (localTime === Number.POSITIVE_INFINITY &&
@@ -692,6 +1042,7 @@ function sampleNode(
           state,
           childPath,
           iterationPath,
+          offset + elapsed,
         );
         if (!terminal.atEnd || terminal.duration === undefined ||
           terminal.duration === Number.POSITIVE_INFINITY) {
@@ -710,9 +1061,17 @@ function sampleNode(
         state,
         childPath,
         iterationPath,
+        offset + elapsed,
       );
     } else {
-      const sampled = sampleNode(child, remaining, state, childPath, iterationPath);
+      const sampled = sampleNode(
+        child,
+        remaining,
+        state,
+        childPath,
+        iterationPath,
+        offset + elapsed,
+      );
       if (sampled.duration === undefined) {
         return Object.freeze({ duration: undefined, atEnd: false });
       }
@@ -877,6 +1236,7 @@ function createSampleState(
     durations,
     writtenOutputs: new Set(),
     snapshots: new WeakMap(),
+    owners: new Map(),
   };
 }
 
@@ -891,7 +1251,6 @@ function createDiscoveryState(
     durations: new Map(),
     snapshots: new WeakMap(),
     validateWriters,
-    writerBudget: { remaining: maximumResolvedWriterComparisons },
   };
 }
 
@@ -901,6 +1260,7 @@ function crossedMilestones(
   horizon: number,
   state: SampleState,
 ): readonly ProgramMilestone[] {
+  if (input.previousTime === input.time) return Object.freeze([]);
   const timeline: TimelineEvent[] = [];
   collectTimeline(
     record.program,
@@ -955,31 +1315,47 @@ function evaluate(
     Math.max(0, input.previousTime);
   const normalizedInput = { ...input, time, previousTime };
   const horizon = Math.max(time, previousTime ?? time);
-  const discoveryState = createDiscoveryState(
-    record.originalValues,
-    rebuildStarts ? new Map() : new Map(record.starts),
-    false,
-  );
-  const discoveryResult = discoverNode(
-    record.program,
-    horizon,
-    discoveryState,
-    [],
-    [],
-  );
   const destinationStarts = rebuildStarts ? new Map<string, InternalTrackStart>() :
     new Map(record.starts);
+  let seededDurations = new Map<string, number>();
+  if (needsCallbackFreeDurationSeed(record.program)) {
+    const seedState = createDiscoveryState(
+      record.originalValues,
+      new Map(destinationStarts),
+      false,
+    );
+    discoverNode(record.program, time, seedState, [], []);
+    seededDurations = seedState.durations;
+  }
   const destinationState = createSampleState(
     record,
     destinationStarts,
-    new Map(discoveryState.durations),
+    seededDurations,
   );
   const destinationResult = sampleNode(record.program, time, destinationState, [], []);
-  const milestoneState = createSampleState(
-    record,
-    discoveryState.starts,
-    discoveryState.durations,
-  );
+  const exactDuration = getExactSeekableProgramDuration(record.program);
+  let discoveredDuration = exactDuration;
+  let milestoneState = destinationState;
+  if (exactDuration === undefined) {
+    const discoveryState = createDiscoveryState(
+      record.originalValues,
+      new Map(destinationState.starts),
+      false,
+    );
+    const discoveryResult = discoverNode(
+      record.program,
+      horizon,
+      discoveryState,
+      [],
+      [],
+    );
+    discoveredDuration = discoveryResult.duration;
+    milestoneState = createSampleState(
+      record,
+      discoveryState.starts,
+      discoveryState.durations,
+    );
+  }
   const milestones = crossedMilestones(record, normalizedInput, horizon, milestoneState);
   record.starts = destinationState.starts;
   for (const output of getProgramRecord(record.program).outputs) {
@@ -990,8 +1366,7 @@ function evaluate(
 
   const atStart = time === 0;
   const atEnd = destinationResult.atEnd;
-  const duration = discoveryResult.duration ?? destinationResult.duration ??
-    getExactSeekableProgramDuration(record.program);
+  const duration = discoveredDuration ?? destinationResult.duration;
   return Object.freeze({
     batch: input.batch,
     milestones,

@@ -25,6 +25,15 @@ interface WriterRepeatFrame {
   readonly iterations: number;
 }
 
+/** @internal Activation-resolved symbolic writer schedule. */
+export interface ResolvedWriterSchedule {
+  readonly output: WritableSignal<unknown>;
+  readonly start: number;
+  readonly end: number;
+  readonly path: readonly number[];
+  readonly repeats: readonly WriterRepeatFrame[];
+}
+
 interface WriterSchedule {
   readonly span: WriterSpan;
   readonly repeats: readonly WriterRepeatFrame[];
@@ -948,6 +957,40 @@ export function getExactSeekableProgramDuration(
   }
   exactSeekableDurations.set(program, duration);
   return duration;
+}
+
+function resolvedSchedule(schedule: ResolvedWriterSchedule): WriterSchedule {
+  return freezeSchedule(
+    freezeSpan(schedule.output, schedule.start, schedule.end, schedule.path),
+    schedule.repeats,
+  );
+}
+
+/** @internal Uses Task 3's bounded exact symbolic proof for resolved schedules. */
+export function resolvedWriterSchedulesOverlap(
+  first: ResolvedWriterSchedule,
+  second: ResolvedWriterSchedule,
+): boolean {
+  return schedulesOverlap(resolvedSchedule(first), resolvedSchedule(second));
+}
+
+/** @internal Adds one normalized symbolic repeat frame without expansion. */
+export function repeatResolvedWriterSchedules(
+  schedules: readonly ResolvedWriterSchedule[],
+  period: number,
+  iterations: number,
+): readonly ResolvedWriterSchedule[] {
+  return Object.freeze(withRepeat(
+    schedules.map(resolvedSchedule),
+    period,
+    iterations,
+  ).map(schedule => Object.freeze({
+    output: schedule.span.output,
+    start: schedule.span.start,
+    end: schedule.span.end,
+    path: freezePath(schedule.span.path),
+    repeats: schedule.repeats,
+  })));
 }
 
 function dependentWriterOutputs(

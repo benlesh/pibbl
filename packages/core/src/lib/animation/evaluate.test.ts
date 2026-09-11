@@ -266,6 +266,52 @@ describe('seekable animation program evaluation', () => {
     expect(getProgramActivationRecord(activation).trackStarts).toEqual([]);
   });
 
+  it('accepts large activation-dependent repeats when writer instances stay separated', () => {
+    const y = signal(10, { debugName: 'large repeat duration source' });
+    const x = signal(0, { debugName: 'large repeated output' });
+    const program = repeat(sequence(
+      track(y, spring({ to: 10 })),
+      track(x, tween({ from: 0, to: 1, duration: 1 })),
+      wait(100),
+    ), { iterations: 600 });
+
+    const activation = activateProgram(program, {});
+
+    expect(getProgramActivationRecord(activation).trackStarts).toEqual([]);
+  });
+
+  it('directly selects a static repeat terminal without visiting prior iterations', () => {
+    const output = signal(0);
+    let samples = 0;
+    const program = repeat(sequence(
+      track(output, tween({
+        from: 0,
+        to: 1,
+        duration: 0.5,
+        easing: progress => {
+          samples++;
+          return progress;
+        },
+      })),
+      wait(0.5),
+    ), { iterations: 1e308 });
+    const activation = activateProgram(program, {});
+    const batch = createSignalCommitBatch();
+
+    const result = seekProgram(activation, {
+      previousTime: 1e308,
+      time: 1e308,
+      direction: 'forward',
+      frameId: 1,
+      writer,
+      batch,
+    });
+
+    expect(result.batch.read(output)).toBe(1);
+    expect(result.terminal.duration).toBe(1e308);
+    expect(samples).toBe(1);
+  });
+
   it('maps all finite repeat directions at boundaries with zero-based iterations', () => {
     const cases = [
       { direction: 'normal' as const, time: 0, want: 0 },
@@ -651,6 +697,123 @@ describe('seekable animation program evaluation', () => {
       time: event.programTime,
     }))).toEqual([{ marker: 'done', time: 110 }]);
     expect(result.terminal.duration).toBe(110);
+  });
+
+  it.each(['custom', 'eased', 'interpolated'] as const)(
+    'carries a %s terminal into an omitted spring without duplicate destination sampling',
+    kind => {
+      function fixture() {
+        const output = signal(0);
+        let calls = 0;
+        const first = kind === 'custom' ? defineAnimation<number>({
+          duration: 10,
+          sample: ({ progress }) => {
+            calls++;
+            return progress * 10;
+          },
+        }) : kind === 'eased' ? tween({
+          from: 0,
+          to: 10,
+          duration: 10,
+          easing: progress => {
+            calls++;
+            return progress;
+          },
+        }) : tween({
+          from: 0,
+          to: 10,
+          duration: 10,
+          interpolate: (from, to, progress) => {
+            calls++;
+            return from + (to - from) * progress;
+          },
+        });
+        const program = sequence(
+          track(output, first),
+          track(output, spring({ to: 20, damping: 0, maxDuration: 100 })),
+        );
+        return { output, program, calls: () => calls };
+      }
+
+      const advanced = fixture();
+      const advancedActivation = activateProgram(advanced.program, {});
+      evaluateAt(advancedActivation, 5).batch.clear();
+      const advancedResult = evaluateAt(advancedActivation, 15, 5);
+
+      const sought = fixture();
+      const seekBatch = createSignalCommitBatch();
+      const seekResult = seekProgram(activateProgram(sought.program, {}), {
+        previousTime: 0,
+        time: 15,
+        direction: 'forward',
+        frameId: 2,
+        writer,
+        batch: seekBatch,
+      });
+
+      const reversed = fixture();
+      const reverseBatch = createSignalCommitBatch();
+      const reverseResult = seekProgram(activateProgram(reversed.program, {}), {
+        previousTime: 110,
+        time: 15,
+        direction: 'reverse',
+        frameId: 3,
+        writer,
+        batch: reverseBatch,
+      });
+
+      expect(seekResult.batch.read(sought.output)).toBe(
+        advancedResult.batch.read(advanced.output),
+      );
+      expect(reverseResult.batch.read(reversed.output)).toBe(
+        advancedResult.batch.read(advanced.output),
+      );
+      expect(advanced.calls()).toBe(2);
+      expect(sought.calls()).toBe(1);
+      expect(reversed.calls()).toBe(1);
+    },
+  );
+
+  it('selects disjoint parallel writers chronologically in either branch order', () => {
+    const times = [5, 10, 10.5, 11, 11.5, 12] as const;
+    const values = [5, 10, 10, 10, 15, 20] as const;
+
+    for (const reverseBranches of [false, true]) {
+      for (let index = 0; index < times.length; index++) {
+        const output = signal(0);
+        const early = track(output, tween({ from: 0, to: 10, duration: 10 }));
+        const late = sequence(
+          wait(11),
+          track(output, tween({ from: 10, to: 20, duration: 1 })),
+        );
+        const branches = reverseBranches ? [late, early] : [early, late];
+        const result = evaluateAt(
+          activateProgram(parallel(...branches), {}),
+          times[index]!,
+        );
+        expect(result.batch.read(output)).toBe(values[index]);
+      }
+
+      const output = signal(0);
+      const early = track(output, tween({ from: 0, to: 10, duration: 10 }));
+      const late = sequence(
+        wait(11),
+        track(output, tween({ from: 10, to: 20, duration: 1 })),
+      );
+      const branches = reverseBranches ? [late, early] : [early, late];
+      const program = sequence(
+        parallel(...branches),
+        track(output, tween({ to: 30, duration: 10 })),
+      );
+      const activation = activateProgram(program, {});
+      const result = evaluateAt(activation, 17);
+
+      expect(result.batch.read(output)).toBe(25);
+      expect(getProgramActivationRecord(activation).trackStarts.at(-1)).toMatchObject({
+        programPath: [1],
+        initialValue: 20,
+      });
+    }
   });
 
   it('rolls back caller staging and activation starts when a later sampler fails', () => {
