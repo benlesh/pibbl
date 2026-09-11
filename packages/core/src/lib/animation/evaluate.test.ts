@@ -22,8 +22,11 @@ import {
 } from '../signals/graph';
 import {
   activateProgram,
+  adoptProgramActivationFork,
   evaluateProgram,
+  forkProgramActivation,
   getProgramActivationRecord,
+  releaseProgramActivation,
   seekProgram,
   type ProgramEvaluationResult,
 } from './evaluate';
@@ -949,5 +952,27 @@ describe('seekable animation program evaluation', () => {
 
     expect(result.batch.read(output)).toBe(1);
     expect(output.get()).toBe(0);
+  });
+
+  it('keeps forked activation starts private until adoption and invalidates consumed forks', () => {
+    const output = signal(0);
+    const activation = activateProgram(
+      track(output, tween({ to: 10, duration: 10 })),
+      {},
+    );
+    const discarded = forkProgramActivation(activation);
+    evaluateAt(discarded, 5);
+
+    expect(getProgramActivationRecord(activation).trackStarts).toEqual([]);
+    expect(getProgramActivationRecord(discarded).trackStarts).toHaveLength(1);
+    releaseProgramActivation(discarded);
+    expect(() => getProgramActivationRecord(discarded)).toThrow(/activation/iu);
+
+    const committed = forkProgramActivation(activation);
+    evaluateAt(committed, 5);
+    adoptProgramActivationFork(activation, committed);
+
+    expect(getProgramActivationRecord(activation).trackStarts).toHaveLength(1);
+    expect(() => getProgramActivationRecord(committed)).toThrow(/activation/iu);
   });
 });

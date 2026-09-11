@@ -7,6 +7,7 @@ import type { WritableSignal } from '../signals/types.js';
 import {
   activateProgram,
   preflightProgramActivation,
+  releaseProgramActivation,
   type ProgramActivation,
 } from './evaluate.js';
 import { getProgramRecord } from './program.js';
@@ -17,12 +18,24 @@ export interface AnimationWriterLeaseOwner {
   readonly registrationOrder: number;
   readonly debugName?: string;
   cancel(): void;
+  beginReplacement?(): AnimationWriterLeaseReplacement;
+}
+
+export interface AnimationWriterLeaseReplacement {
+  commit(): void;
+  rollback(): void;
 }
 
 export interface ProgramWriterLease {
   readonly activation: ProgramActivation;
   readonly outputs: readonly WritableSignal<unknown>[];
   release(): void;
+}
+
+export interface TransactionalProgramWriterLease extends ProgramWriterLease {
+  readonly replacedOwnerCount: number;
+  commitReplacement(): void;
+  rollbackReplacement(): void;
 }
 
 export interface ProgramWriterLeaseOptions {
@@ -185,12 +198,37 @@ function cancelReplacedOwners(conflicting: readonly WriterLease[]): void {
   }
 }
 
+function beginReplacedOwners(
+  conflicting: readonly WriterLease[],
+): AnimationWriterLeaseReplacement[] {
+  const replacementTransactions: AnimationWriterLeaseReplacement[] = [];
+  try {
+    for (const lease of conflicting) {
+      if (lease.owner.beginReplacement === undefined) {
+        throw new Error(
+          `CRC animation playback "${playbackName(lease)}" cannot be replaced ` +
+            'transactionally.',
+        );
+      }
+      replacements++;
+      replacementTransactions.push(lease.owner.beginReplacement());
+    }
+    return replacementTransactions;
+  } catch (error) {
+    for (let index = replacementTransactions.length - 1; index >= 0; index--) {
+      replacementTransactions[index]!.rollback();
+    }
+    throw error;
+  }
+}
+
 function acquireLease(
   outputs: readonly WritableSignal<unknown>[],
   nodes: readonly SignalNode<unknown>[],
   owner: AnimationWriterLeaseOwner,
+  allowOccupied = false,
 ): Pick<ProgramWriterLease, 'outputs' | 'release'> {
-  const remainingConflict = firstConflict(nodes);
+  const remainingConflict = allowOccupied ? undefined : firstConflict(nodes);
   if (remainingConflict !== undefined) {
     conflicts++;
     throw conflictError(remainingConflict.node, remainingConflict.lease);
@@ -207,8 +245,8 @@ function acquireLease(
     for (const node of nodes) {
       if (leases.get(node) === lease) {
         leases.delete(node);
-        released++;
       }
+      released++;
     }
   };
   lease = Object.freeze({
@@ -217,6 +255,7 @@ function acquireLease(
       registrationOrder: owner.registrationOrder,
       debugName: owner.debugName,
       cancel: owner.cancel,
+      beginReplacement: owner.beginReplacement,
     }),
     outputs,
     nodes,
@@ -294,4 +333,77 @@ export function acquireProgramWriterLeases(
   const activation = activateProgram(program, registration);
   const acquiredLease = acquireLease(outputs, nodes, owner);
   return Object.freeze({ activation, ...acquiredLease });
+}
+
+/** @internal Acquires provisional ownership that can restore displaced leases. */
+export function acquireTransactionalProgramWriterLeases(
+  program: CRCAnimationProgram,
+  registration: object,
+  owner: AnimationWriterLeaseOwner,
+  options: ProgramWriterLeaseOptions & { readonly ignoredToken?: object } = {},
+): TransactionalProgramWriterLease {
+  assertOwner(owner);
+  if (typeof registration !== 'object' || registration === null) {
+    throw new TypeError('CRC animation registration identity must be an object.');
+  }
+  const conflict = options.conflict ?? 'error';
+  if (conflict !== 'error' && conflict !== 'replace') {
+    throw new TypeError('CRC animation writer conflict must be "error" or "replace".');
+  }
+
+  preflightProgramActivation(program);
+  const outputs = Object.freeze([...getProgramRecord(program).outputs]);
+  const nodes = Object.freeze(outputs.map(output => getSignalNode(output)));
+  const conflicting = uniqueConflicts(nodes);
+  const forbiddenConflict = conflicting.find(
+    lease => conflict === 'error' && lease.owner.token !== options.ignoredToken,
+  );
+  if (forbiddenConflict !== undefined) {
+    conflicts++;
+    const occupiedNode = nodes.find(node => leases.get(node) === forbiddenConflict)!;
+    throw conflictError(occupiedNode, forbiddenConflict);
+  }
+
+  const activation = activateProgram(program, registration);
+  let replacementTransactions: AnimationWriterLeaseReplacement[];
+  try {
+    replacementTransactions = beginReplacedOwners(conflicting);
+  } catch (error) {
+    releaseProgramActivation(activation);
+    throw error;
+  }
+  const acquiredLease = acquireLease(outputs, nodes, owner, true);
+  let replacementPending = conflicting.length > 0;
+
+  const rollbackReplacement = (): void => {
+    if (!replacementPending) return;
+    replacementPending = false;
+    acquiredLease.release();
+    for (const lease of conflicting) {
+      for (const node of lease.nodes) {
+        if (!leases.has(node)) leases.set(node, lease);
+      }
+    }
+    for (let index = replacementTransactions.length - 1; index >= 0; index--) {
+      replacementTransactions[index]!.rollback();
+    }
+  };
+  const commitReplacement = (): void => {
+    if (!replacementPending) return;
+    replacementPending = false;
+    for (const replacement of replacementTransactions) replacement.commit();
+  };
+  const release = (): void => {
+    if (replacementPending) rollbackReplacement();
+    else acquiredLease.release();
+  };
+
+  return Object.freeze({
+    activation,
+    outputs: acquiredLease.outputs,
+    replacedOwnerCount: conflicting.length,
+    release,
+    commitReplacement,
+    rollbackReplacement,
+  });
 }

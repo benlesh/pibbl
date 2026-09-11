@@ -2537,6 +2537,53 @@ function cloneRepeatFrontiers(
   }]));
 }
 
+function cloneStepperRecords(
+  source: ReadonlyMap<string, InternalStepperRecord>,
+): Map<string, InternalStepperRecord> {
+  return new Map([...source].map(([key, stepperRecord]) => [key, {
+    ...stepperRecord,
+    // A stepper's opaque state belongs to its callbacks. CRC can transact its
+    // own mutable counters, but cannot clone arbitrary class/closure state
+    // without changing user-observable identity or semantics.
+    state: stepperRecord.state,
+  }]));
+}
+
+function cloneRepeatTerminals(
+  source: ReadonlyMap<string, InternalRepeatTerminal>,
+): Map<string, InternalRepeatTerminal> {
+  return new Map([...source].map(([key, terminal]) => [key, Object.freeze({
+    ...terminal,
+    values: new Map(terminal.values),
+  })]));
+}
+
+function cloneReverseEndpoints(
+  source: ReadonlyMap<string, InternalReverseEndpoint>,
+): Map<string, InternalReverseEndpoint> {
+  return new Map([...source].map(([key, endpoint]) => [key, Object.freeze({
+    ...endpoint,
+    inputValues: new Map(endpoint.inputValues),
+  })]));
+}
+
+function cloneProgramActivationRecord(
+  source: InternalProgramActivation,
+): InternalProgramActivation {
+  return {
+    program: source.program,
+    registration: source.registration,
+    originalValues: source.originalValues,
+    starts: new Map(source.starts),
+    steppers: cloneStepperRecords(source.steppers),
+    terminalSteppers: new Map(source.terminalSteppers),
+    repeatFrontiers: cloneRepeatFrontiers(source.repeatFrontiers),
+    repeatTerminals: cloneRepeatTerminals(source.repeatTerminals),
+    reverseEndpoints: cloneReverseEndpoints(source.reverseEndpoints),
+    terminalDuration: source.terminalDuration,
+  };
+}
+
 function createDiscoveryState(
   originalValues: ReadonlyMap<WritableSignal<unknown>, unknown>,
   starts: Map<string, InternalTrackStart>,
@@ -2828,6 +2875,36 @@ export function activateProgram(
     terminalDuration: undefined,
   });
   return activation;
+}
+
+/** @internal Forks engine-owned activation state for an outer transaction. */
+export function forkProgramActivation(
+  activation: ProgramActivation,
+): ProgramActivation {
+  const fork = Object.freeze({}) as ProgramActivation;
+  activationRecords.set(fork, cloneProgramActivationRecord(activationRecord(activation)));
+  return fork;
+}
+
+/** @internal Publishes one successfully committed activation fork and consumes it. */
+export function adoptProgramActivationFork(
+  activation: ProgramActivation,
+  fork: ProgramActivation,
+): void {
+  const target = activationRecord(activation);
+  const source = activationRecord(fork);
+  if (source.program !== target.program || source.registration !== target.registration ||
+    source.originalValues !== target.originalValues) {
+    throw new TypeError('CRC animation activation fork does not belong to this activation.');
+  }
+  target.starts = source.starts;
+  target.steppers = source.steppers;
+  target.terminalSteppers = source.terminalSteppers;
+  target.repeatFrontiers = source.repeatFrontiers;
+  target.repeatTerminals = source.repeatTerminals;
+  target.reverseEndpoints = source.reverseEndpoints;
+  target.terminalDuration = source.terminalDuration;
+  activationRecords.delete(fork);
 }
 
 function captureProgramOriginalValues(

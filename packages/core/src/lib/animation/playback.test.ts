@@ -293,6 +293,174 @@ describe('scheduler-integrated animation playback', () => {
     expect(writerLeaseSnapshot().active).toBe(2);
   });
 
+  it('restores a same-handle run when its accepted restart is rejected at Commit', () => {
+    let rejectRestart = false;
+    const value = signal(0, {
+      equals: (previous, next) => {
+        if (rejectRestart) {
+          rejectRestart = false;
+          throw new Error('restart Commit rejected');
+        }
+        return Object.is(previous, next);
+      },
+    });
+    const events: string[] = [];
+    const controller = playback(
+      track(value, tween({ from: 0, to: 10, duration: 100 })),
+      { onEvent: event => events.push(event.type) },
+    );
+    controller.handle.play();
+    driver.flush(0);
+    driver.flush(20);
+    expect(value.get()).toBe(2);
+
+    controller.adopt(track(value, tween({ to: 20, duration: 100 })), {
+      onEvent: event => events.push(event.type),
+    });
+    rejectRestart = true;
+    controller.handle.play();
+    expect(() => driver.flush(30)).toThrow(/restart Commit rejected/iu);
+
+    expect([value.get(), controller.handle.currentTime.get(), controller.handle.status.get()])
+      .toEqual([2, 20, 'running']);
+    expect(events).toEqual(['start']);
+    expect(writerLeaseSnapshot().active).toBe(1);
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(1);
+
+    driver.flush(40);
+    expect([value.get(), controller.handle.currentTime.get()]).toEqual([4, 40]);
+    controller.handle.play();
+    driver.flush(50);
+    expect([value.get(), controller.handle.currentTime.get(), controller.handle.status.get()])
+      .toEqual([4, 0, 'running']);
+    expect(events).toEqual(['start', 'cancel', 'start']);
+  });
+
+  it('releases disjoint provisional outputs when an adopted restart rolls back', () => {
+    const previousValue = signal(0);
+    let rejectRestart = true;
+    const adoptedValue = signal(5, {
+      equals: (previous, next) => {
+        if (rejectRestart) {
+          rejectRestart = false;
+          throw new Error('disjoint restart rejected');
+        }
+        return Object.is(previous, next);
+      },
+    });
+    const controller = playback(
+      track(previousValue, tween({ from: 0, to: 10, duration: 100 })),
+    );
+    controller.handle.play();
+    driver.flush(0);
+    driver.flush(20);
+
+    controller.adopt(track(adoptedValue, tween({ to: 20, duration: 100 })));
+    controller.handle.play();
+    expect(() => driver.flush(30)).toThrow(/disjoint restart rejected/iu);
+
+    expect(writerLeaseSnapshot().active).toBe(1);
+    expect(() => adoptedValue.set(6)).not.toThrow();
+    driver.flush(40);
+    expect([previousValue.get(), controller.handle.currentTime.get()]).toEqual([4, 40]);
+  });
+
+  it('releases a displaced run when disposal interrupts a rejected restart', () => {
+    const previousValue = signal(0);
+    const adoptedValue = signal(0);
+    const rejector = signal(0, {
+      equals: () => {
+        throw new Error('disposed restart rejected');
+      },
+    });
+    const before = {
+      leases: writerLeaseSnapshot().active,
+      playbacks: animationPlaybackSnapshot().activePlaybacks,
+    };
+    let controller!: AnimationPlaybackController;
+    controller = playback(
+      track(previousValue, tween({ from: 0, to: 10, duration: 100 })),
+    );
+    controller.handle.play();
+    driver.flush(0);
+
+    controller.adopt(track(adoptedValue, defineAnimation({
+      duration: 100,
+      sample: () => {
+        controller.dispose();
+        return 1;
+      },
+    })));
+    controller.handle.play();
+    let unregister = () => {};
+    unregister = registerAdvanceParticipant((_snapshot, batch) => {
+      unregister();
+      batch.stage(rejector, 1, {});
+    });
+    let thrown: unknown;
+    try {
+      driver.flush(10);
+    } catch (error) {
+      thrown = error;
+    }
+    const failures = thrown instanceof AggregateError ? thrown.errors : [thrown];
+    expect(failures.map(error => (error as Error).message))
+      .toContainEqual(expect.stringMatching(/disposed restart rejected/iu));
+    if (driver.pendingHostFrames > 0) driver.flush(11);
+
+    expect(writerLeaseSnapshot().active).toBe(before.leases);
+    expect(animationPlaybackSnapshot().activePlaybacks).toBe(before.playbacks);
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(0);
+  });
+
+  it('restores a replaced playback when the replacing run is rejected at Commit', () => {
+    const before = writerLeaseSnapshot();
+    const value = signal(0, { debugName: 'provisional replacement output' });
+    const events: string[] = [];
+    const first = playback(
+      track(value, tween({ from: 0, to: 10, duration: 100 })),
+      { debugName: 'restored owner', onEvent: event => events.push(`first:${event.type}`) },
+    );
+    const second = playback(
+      track(value, tween({ to: 20, duration: 100 })),
+      { debugName: 'provisional owner', onEvent: event => events.push(`second:${event.type}`) },
+    );
+    first.handle.play();
+    driver.flush(0);
+    driver.flush(20);
+
+    second.handle.play({ conflict: 'replace' });
+    queueBeginCommand(() => {
+      let unregister = () => {};
+      unregister = registerAdvanceParticipant((_snapshot, batch) => {
+        unregister();
+        batch.stage(value, 999, {});
+      });
+    });
+    expect(() => driver.flush(30)).toThrow(/does not own the active lease/iu);
+
+    expect([value.get(), first.handle.currentTime.get(), first.handle.status.get()])
+      .toEqual([2, 20, 'running']);
+    expect(second.handle.status.get()).toBe('idle');
+    expect(events).toEqual(['first:start']);
+    expect(writerLeaseSnapshot().active).toBe(1);
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(1);
+
+    driver.flush(40);
+    expect([value.get(), first.handle.currentTime.get()]).toEqual([4, 40]);
+    second.handle.play({ conflict: 'replace' });
+    driver.flush(50);
+    expect(first.handle.status.get()).toBe('cancelled');
+    expect([value.get(), second.handle.currentTime.get(), second.handle.status.get()])
+      .toEqual([4, 0, 'running']);
+    expect(events).toEqual(['first:start', 'first:cancel', 'second:start']);
+    expect(writerLeaseSnapshot()).toMatchObject({
+      active: before.active + 1,
+      acquired: before.acquired + 3,
+      released: before.released + 2,
+    });
+  });
+
   it('pauses without a jump, retains leases, and resumes from a fresh anchor', () => {
     const value = signal(0);
     const before = writerLeaseSnapshot();
@@ -317,6 +485,58 @@ describe('scheduler-integrated animation playback', () => {
     expect(controller.handle.status.get()).toBe('running');
     driver.flush(140);
     expect(value.get()).toBe(8);
+  });
+
+  it('publishes start before a same-Begin pause without scheduling continuous work', () => {
+    const value = signal(0);
+    const events: string[] = [];
+    const controller = playback(
+      track(value, tween({ from: 0, to: 10, duration: 100 })),
+      { onEvent: event => events.push(event.type) },
+    );
+
+    controller.handle.play();
+    controller.handle.pause();
+    driver.flush(0);
+
+    expect(controller.handle.status.get()).toBe('paused');
+    expect(controller.handle.currentTime.get()).toBe(0);
+    expect(value.get()).toBe(0);
+    expect(events).toEqual(['start']);
+    expect(writerLeaseSnapshot().active).toBe(1);
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(0);
+    expect(driver.pendingHostFrames).toBe(0);
+  });
+
+  it('retries start before cancel when a same-Begin cancellation Commit is rejected', () => {
+    const value = signal(0);
+    const rejector = signal(0, {
+      equals: () => {
+        throw new Error('play cancel Commit rejected');
+      },
+    });
+    const events: string[] = [];
+    const controller = playback(
+      track(value, tween({ from: 0, to: 10, duration: 100 })),
+      { onEvent: event => events.push(event.type) },
+    );
+    let unregister = () => {};
+    unregister = registerAdvanceParticipant((_snapshot, batch) => {
+      unregister();
+      batch.stage(rejector, 1, {});
+    });
+
+    controller.handle.play();
+    controller.handle.cancel();
+    expect(() => driver.flush(0)).toThrow(/play cancel Commit rejected/iu);
+    expect(controller.handle.status.get()).toBe('idle');
+    expect(events).toEqual([]);
+    expect(writerLeaseSnapshot().active).toBe(1);
+
+    driver.flush(1);
+    expect(controller.handle.status.get()).toBe('cancelled');
+    expect(events).toEqual(['start', 'cancel']);
+    expect(writerLeaseSnapshot().active).toBe(0);
   });
 
   it('seeks fresh idle, cancelled, and finished handles into a paused run', () => {
@@ -567,6 +787,114 @@ describe('scheduler-integrated animation playback', () => {
     expect(stateful.handle.status.get()).toBe('idle');
   });
 
+  it('delivers one-shot playback diagnostics despite an unrelated rejected Commit', () => {
+    const leased = signal(0, { debugName: 'diagnostic leased output' });
+    const rejector = signal(0, {
+      equals: () => {
+        throw new Error('unrelated Commit rejected');
+      },
+    });
+    const owner = playback(
+      track(leased, tween({ from: 0, to: 10, duration: 100 })),
+      { debugName: 'diagnostic owner' },
+    );
+    const preflightErrors: unknown[] = [];
+    const stalePreflightErrors: unknown[] = [];
+    const preflightProgram = track(leased, tween({ from: 0, to: 20, duration: 100 }));
+    const preflight = playback(preflightProgram, {
+      debugName: 'preflight contender',
+      onError: error => stalePreflightErrors.push(error),
+    });
+    const acquisitionErrors: unknown[] = [];
+    const acquisition = playback(
+      track(leased, tween({ from: 0, to: 30, duration: 100 })),
+      { debugName: 'acquisition contender', onError: error => acquisitionErrors.push(error) },
+    );
+    const unavailableErrors: unknown[] = [];
+    const unavailable = playback(
+      repeat(wait(10), { iterations: Number.POSITIVE_INFINITY }),
+      { onError: error => unavailableErrors.push(error) },
+    );
+    owner.handle.play();
+    driver.flush(0);
+
+    const rejectNextCommit = () => {
+      let unregister = () => {};
+      unregister = registerAdvanceParticipant((_snapshot, batch) => {
+        unregister();
+        batch.stage(rejector, 1, {});
+      });
+    };
+
+    rejectNextCommit();
+    preflight.handle.play();
+    queueFrameCompletion(() => preflight.adopt(preflightProgram, {
+      debugName: 'preflight contender',
+      onError: error => preflightErrors.push(error),
+    }));
+    expect(() => driver.flush(10)).toThrow(/unrelated Commit rejected/iu);
+    expect(preflightErrors).toHaveLength(1);
+    expect(stalePreflightErrors).toEqual([]);
+    expect((preflightErrors[0] as Error).message).toMatch(
+      /diagnostic leased output.*diagnostic owner/iu,
+    );
+    expect(preflight.handle.status.get()).toBe('idle');
+
+    rejectNextCommit();
+    acquisition.handle.seek(10);
+    expect(() => driver.flush(20)).toThrow(/unrelated Commit rejected/iu);
+    expect(acquisitionErrors).toHaveLength(1);
+    expect((acquisitionErrors[0] as Error).message).toMatch(
+      /diagnostic leased output.*diagnostic owner/iu,
+    );
+    expect(acquisition.handle.status.get()).toBe('idle');
+
+    rejectNextCommit();
+    unavailable.handle.finish();
+    expect(() => driver.flush(30)).toThrow(/unrelated Commit rejected/iu);
+    expect(unavailableErrors).toHaveLength(1);
+    expect((unavailableErrors[0] as Error).message).toMatch(/infinite.*finish/iu);
+    expect(unavailable.handle.status.get()).toBe('idle');
+
+    driver.flush(40);
+    expect(preflightErrors).toHaveLength(1);
+    expect(acquisitionErrors).toHaveLength(1);
+    expect(unavailableErrors).toHaveLength(1);
+    expect(owner.handle.status.get()).toBe('running');
+    expect(writerLeaseSnapshot().active).toBe(1);
+  });
+
+  it('reports an unhandled one-shot diagnostic alongside the rejected Commit', () => {
+    const rejector = signal(0, {
+      equals: () => {
+        throw new Error('host-path Commit rejected');
+      },
+    });
+    const controller = playback(
+      repeat(wait(10), { iterations: Number.POSITIVE_INFINITY }),
+    );
+    let unregister = () => {};
+    unregister = registerAdvanceParticipant((_snapshot, batch) => {
+      unregister();
+      batch.stage(rejector, 1, {});
+    });
+    controller.handle.finish();
+
+    let thrown: unknown;
+    try {
+      driver.flush(0);
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBeInstanceOf(AggregateError);
+    expect((thrown as AggregateError).errors.map(error => (error as Error).message))
+      .toEqual([
+        expect.stringMatching(/host-path Commit rejected/iu),
+        expect.stringMatching(/infinite.*finish/iu),
+      ]);
+    expect(controller.handle.status.get()).toBe('idle');
+  });
+
   it('samples seekable definitions directly after dropped frames and clamps stepper work with trace evidence', () => {
     const tweened = signal(0);
     const tweenController = playback(
@@ -807,6 +1135,131 @@ describe('scheduler-integrated animation playback', () => {
     expect(events).toEqual(['start', 'finish']);
     expect(writerLeaseSnapshot().active).toBe(before.active);
     expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(0);
+  });
+
+  it('retries a rejected stateful sample from the last committed activation state', () => {
+    let rejectNextStep = true;
+    const value = signal(0, {
+      equals: (previous, next) => {
+        if (next === 1 && rejectNextStep) {
+          rejectNextStep = false;
+          throw new Error('stateful equality rejected');
+        }
+        return Object.is(previous, next);
+      },
+    });
+    const traces: CRCSchedulerTraceRecord[] = [];
+    const restoreTrace = installSchedulerTraceCollectorForTest(record => traces.push(record));
+    const before = {
+      leases: writerLeaseSnapshot().active,
+      playbacks: animationPlaybackSnapshot().activePlaybacks,
+    };
+    const controller = playback(track(value, stepper({
+      stepMilliseconds: 10,
+      initial: current => current,
+      step: state => state + 1,
+      read: state => state,
+    })));
+    controller.handle.play();
+    driver.flush(0);
+    traces.length = 0;
+
+    expect(() => driver.flush(10)).toThrow(/stateful equality rejected/iu);
+    expect([value.get(), controller.handle.currentTime.get()]).toEqual([0, 0]);
+    expect(traces.filter(record => record.kind === 'animation-stepper'))
+      .toEqual([expect.objectContaining({ appliedSteps: 1 })]);
+
+    traces.length = 0;
+    driver.flush(10);
+    expect([value.get(), controller.handle.currentTime.get()]).toEqual([1, 10]);
+    expect(traces.filter(record => record.kind === 'animation-stepper'))
+      .toEqual([expect.objectContaining({ appliedSteps: 1 })]);
+
+    controller.dispose();
+    expect(writerLeaseSnapshot().active).toBe(before.leases);
+    expect(animationPlaybackSnapshot().activePlaybacks).toBe(before.playbacks);
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(0);
+    restoreTrace();
+  });
+
+  it('replays a rejected alternate repeat frontier and reverse endpoint exactly', () => {
+    const value = signal(0);
+    const rejector = signal(0, {
+      equals: () => {
+        throw new Error('repeat frontier rejected');
+      },
+    });
+    const events: string[] = [];
+    const traces: CRCSchedulerTraceRecord[] = [];
+    const restoreTrace = installSchedulerTraceCollectorForTest(record => traces.push(record));
+    const controller = playback(repeat(track(value, stepper({
+      stepMilliseconds: 10,
+      initial: (current: number) => ({ value: current, steps: 0 }),
+      step: state => ({ value: state.value, steps: state.steps + 1 }),
+      read: state => state.value,
+      done: state => state.steps === 1,
+    })), { iterations: 2, direction: 'alternate' }), {
+      onEvent: event => events.push(event.type),
+    });
+    controller.handle.play();
+    driver.flush(0);
+    events.length = 0;
+    traces.length = 0;
+    let unregister = () => {};
+    unregister = registerAdvanceParticipant((_snapshot, batch) => {
+      unregister();
+      batch.stage(rejector, 1, {});
+    });
+
+    expect(() => driver.flush(15)).toThrow(/repeat frontier rejected/iu);
+    expect([value.get(), controller.handle.currentTime.get()]).toEqual([0, 0]);
+    expect(events).toEqual([]);
+
+    traces.length = 0;
+    driver.flush(15);
+    expect([value.get(), controller.handle.currentTime.get()]).toEqual([0, 15]);
+    expect(events).toEqual(['iteration']);
+    expect(traces.filter(record => record.kind === 'animation-stepper'))
+      .toEqual([
+        expect.objectContaining({ appliedSteps: 1 }),
+        expect.objectContaining({ appliedSteps: 0 }),
+      ]);
+    restoreTrace();
+  });
+
+  it('does not publish unresolved terminal discovery from a rejected sample', () => {
+    let rejectTerminal = true;
+    const value = signal(0, {
+      equals: (previous, next) => {
+        if (next === 1 && rejectTerminal) {
+          rejectTerminal = false;
+          throw new Error('terminal discovery rejected');
+        }
+        return Object.is(previous, next);
+      },
+    });
+    const failures: unknown[] = [];
+    const controller = playback(track(value, stepper({
+      debugName: 'transactional terminal',
+      stepMilliseconds: 10,
+      initial: current => current,
+      step: state => state + 1,
+      read: state => state,
+      done: state => state === 1,
+    })), { onError: error => failures.push(error) });
+    controller.handle.play();
+    driver.flush(0);
+
+    expect(() => driver.flush(10)).toThrow(/terminal discovery rejected/iu);
+    controller.handle.finish();
+    driver.flush(10);
+
+    expect(failures).toHaveLength(1);
+    expect((failures[0] as Error).message).toMatch(
+      /transactional terminal.*terminal time.*finish/iu,
+    );
+    expect([value.get(), controller.handle.currentTime.get(), controller.handle.status.get()])
+      .toEqual([1, 10, 'finished']);
   });
 
   it('retries rejected authorization from the old position and redelivers crossed milestones', () => {
