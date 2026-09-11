@@ -578,6 +578,20 @@ describe('seekable animation definitions', () => {
     })).toThrow('finite');
   });
 
+  it('directs stateful definitions to the stateful program evaluator', () => {
+    const definition = stepper({
+      stepMilliseconds: 10,
+      initial: (current: number) => current,
+      step: state => state,
+      read: state => state,
+    });
+
+    expect(() => sampleSeekableDefinition(definition, {
+      initialValue: 0,
+      localTime: 0,
+    })).toThrow(/stateful program evaluator/iu);
+  });
+
   it('rejects nonfinite terminal keyframe values', () => {
     for (const value of [Number.NaN, Number.POSITIVE_INFINITY]) {
       const definition = keyframes({ values: [0, value], duration: 1 });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  parallel,
   sequence,
   repeat,
   signal,
@@ -164,13 +165,8 @@ describe('stateful fixed-step animation evaluation', () => {
     })]);
     expect(reads).toBe(1);
     expect(getProgramActivationRecord(activation).activeSteppers).toEqual([]);
-    expect(getProgramActivationRecord(activation).terminalSteppers).toEqual([
-      expect.objectContaining({
-        programPath: [0],
-        terminalStep: 3,
-        terminalTime: 30,
-      }),
-    ]);
+    expect(getProgramActivationRecord(activation).terminalSteppers).toEqual([]);
+    expect(getProgramActivationRecord(activation).terminalDuration).toBe(50);
   });
 
   it('keys repeated state by immutable path and occurrence and releases every terminal record', () => {
@@ -194,17 +190,8 @@ describe('stateful fixed-step animation evaluation', () => {
     expect(initials).toBe(2);
     const record = getProgramActivationRecord(activation);
     expect(record.activeSteppers).toEqual([]);
-    expect(record.terminalSteppers.map(stepperRecord => ({
-      path: stepperRecord.programPath,
-      repeats: stepperRecord.repeatIterations,
-    }))).toEqual([
-      { path: [0], repeats: [0] },
-      { path: [0], repeats: [1] },
-    ]);
-    expect(record.terminalSteppers.every(stepperRecord =>
-      Object.isFrozen(stepperRecord) && Object.isFrozen(stepperRecord.programPath) &&
-      Object.isFrozen(stepperRecord.repeatIterations),
-    )).toBe(true);
+    expect(record.terminalSteppers).toEqual([]);
+    expect(record.terminalDuration).toBe(20);
   });
 
   it.each(['initial', 'step', 'read', 'done'] as const)(
@@ -270,6 +257,143 @@ describe('stateful fixed-step animation evaluation', () => {
 
     expect(() => getProgramActivationRecord(activation)).toThrow('activation');
     expect(() => advance(activation, 10, 20, 2)).toThrow('activation');
+  });
+
+  it.each([
+    {
+      name: 'an infinite quotient',
+      stepMilliseconds: Number.MIN_VALUE,
+      elapsed: 1,
+    },
+    {
+      name: 'a finite unsafe-integer quotient',
+      stepMilliseconds: 1,
+      elapsed: Number.MAX_SAFE_INTEGER + 1,
+    },
+  ])('rejects $name transactionally before advance or seek stepping', ({
+    stepMilliseconds,
+    elapsed,
+  }) => {
+    for (const mode of ['advance', 'seek'] as const) {
+      const output = signal(0);
+      let steps = 0;
+      let reads = 0;
+      const definition = stepper({
+        debugName: 'unsafe quotient',
+        stepMilliseconds,
+        maxElapsedMilliseconds: elapsed,
+        initial: (current: number) => current,
+        step: state => {
+          steps++;
+          return state + 1;
+        },
+        read: state => {
+          reads++;
+          return state;
+        },
+        done: state => state === 1,
+      });
+      const activation = activateProgram(track(output, definition), {});
+      const batch = createSignalCommitBatch();
+      const callerWriter = {};
+      batch.stage(output, 99, callerWriter);
+      const evaluate = mode === 'advance' ? evaluateProgram : seekProgram;
+
+      expect(() => evaluate(activation, {
+        previousTime: 0,
+        time: elapsed,
+        direction: 'forward',
+        frameId: 7,
+        writer,
+        batch,
+      })).toThrow(/stepper.*unsafe quotient.*whole-step count.*safe.*path.*frame 7/iu);
+
+      expect(steps).toBe(0);
+      expect(reads).toBe(0);
+      expect(output.get()).toBe(0);
+      expect(batch.read(output)).toBe(99);
+      expect(getProgramActivationRecord(activation).activeSteppers).toEqual([]);
+      expect(getProgramActivationRecord(activation).terminalSteppers).toEqual([]);
+    }
+  });
+
+  it('keeps infinite normal-repeat state, terminal facts, traces, and work bounded', () => {
+    const output = signal(0);
+    let steps = 0;
+    const activation = activateProgram(repeat(track(output, stepper({
+      stepMilliseconds: 10,
+      initial: (current: number) => ({ value: current, steps: 0 }),
+      step: state => {
+        steps++;
+        return { value: state.value + 1, steps: state.steps + 1 };
+      },
+      read: state => state.value,
+      done: state => state.steps === 1,
+    })), { iterations: Number.POSITIVE_INFINITY }), {});
+
+    for (let frame = 1; frame <= 100; frame++) {
+      const beforeSteps = steps;
+      const result = advance(activation, (frame - 1) * 10, frame * 10, frame);
+      const snapshot = getProgramActivationRecord(activation);
+      expect(result.batch.read(output)).toBe(frame);
+      expect(steps - beforeSteps).toBeLessThanOrEqual(1);
+      expect(result.steppers.length).toBeLessThanOrEqual(2);
+      expect(snapshot.activeSteppers.length).toBeLessThanOrEqual(1);
+      expect(snapshot.terminalSteppers.length).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('releases finite sequence and parallel state across multiple outputs and done-at-initial', () => {
+    const instant = signal(5);
+    const one = signal(0);
+    const two = signal(0);
+    const activation = activateProgram(sequence(
+      track(instant, stepper({
+        stepMilliseconds: 10,
+        initial: (current: number) => ({ value: current, done: true }),
+        step: state => state,
+        read: state => state.value,
+        done: state => state.done,
+      })),
+      parallel(
+        track(one, stepper({
+          stepMilliseconds: 10,
+          initial: (current: number) => ({ value: current, steps: 0 }),
+          step: state => ({ value: state.value + 1, steps: state.steps + 1 }),
+          read: state => state.value,
+          done: state => state.steps === 1,
+        })),
+        track(two, stepper({
+          stepMilliseconds: 10,
+          initial: (current: number) => ({ value: current, steps: 0 }),
+          step: state => ({ value: state.value + 1, steps: state.steps + 1 }),
+          read: state => state.value,
+          done: state => state.steps === 2,
+        })),
+      ),
+    ), {});
+
+    const result = advance(activation, 0, 20, 1);
+
+    expect(result.batch.read(instant)).toBe(5);
+    expect(result.batch.read(one)).toBe(1);
+    expect(result.batch.read(two)).toBe(2);
+    expect(result.terminal).toEqual({
+      duration: 20,
+      atStart: false,
+      atEnd: true,
+      reached: true,
+    });
+    expect(result.steppers.map(trace => ({
+      path: trace.programPath,
+      terminal: trace.terminal,
+    }))).toEqual([
+      { path: [0], terminal: { step: 0, time: 0 } },
+      { path: [1, 0], terminal: { step: 1, time: 10 } },
+      { path: [1, 1], terminal: { step: 2, time: 20 } },
+    ]);
+    expect(getProgramActivationRecord(activation).activeSteppers).toEqual([]);
+    expect(getProgramActivationRecord(activation).terminalSteppers).toEqual([]);
   });
 });
 
@@ -351,5 +475,86 @@ describe('stateful fixed-step replay', () => {
     });
     expect(finished.batch.read(output)).toBe(3);
     expect(finished.terminal.atEnd).toBe(true);
+  });
+
+  it.each([
+    { direction: 'normal' as const, values: [0, 1, 2, 3, 4] },
+    { direction: 'reverse' as const, values: [2, 1, 2, 1, 0] },
+    { direction: 'alternate' as const, values: [0, 1, 4, 3, 2] },
+    { direction: 'alternate-reverse' as const, values: [2, 1, 0, 1, 2] },
+  ])('replays $direction stepper repeat occurrences at exact boundaries', ({
+    direction,
+    values,
+  }) => {
+    const createProgram = (output: ReturnType<typeof signal<number>>) =>
+      repeat(track(output, stepper({
+        stepMilliseconds: 10,
+        initial: (current: number) => ({ value: current, steps: 0 }),
+        step: state => ({ value: state.value + 1, steps: state.steps + 1 }),
+        read: state => state.value,
+        done: state => state.steps === 2,
+      })), { iterations: 2, direction });
+    const times = [0, 10, 20, 30, 40];
+
+    for (const [index, time] of times.entries()) {
+      const output = signal(0);
+      const result = seek(
+        activateProgram(createProgram(output), {}),
+        0,
+        time,
+        'forward',
+        index + 1,
+      );
+      expect(result.batch.read(output), `seek ${direction} at ${time}`).toBe(values[index]);
+      if (time === 40) expect(result.terminal.duration).toBe(40);
+    }
+
+    const output = signal(0);
+    const activation = activateProgram(createProgram(output), {});
+    for (const [index, time] of times.entries()) {
+      const result = advance(
+        activation,
+        index === 0 ? 0 : times[index - 1],
+        time,
+        index + 10,
+      );
+      expect(result.batch.read(output), `advance ${direction} at ${time}`).toBe(values[index]);
+      if (time === 40) {
+        expect(result.terminal.duration).toBe(40);
+        expect(getProgramActivationRecord(activation).activeSteppers).toEqual([]);
+        expect(getProgramActivationRecord(activation).terminalSteppers).toEqual([]);
+      }
+    }
+  });
+
+  it('rolls back reversed-occurrence endpoint discovery when a callback fails', () => {
+    const output = signal(0);
+    const activation = activateProgram(repeat(track(output, stepper({
+      debugName: 'reversed failure',
+      stepMilliseconds: 10,
+      initial: (current: number) => current,
+      step: () => {
+        throw new Error('endpoint failed');
+      },
+      read: state => state,
+      done: state => state === 2,
+    })), { iterations: 2, direction: 'reverse' }), {});
+    const batch = createSignalCommitBatch();
+    const callerWriter = {};
+    batch.stage(output, 91, callerWriter);
+
+    expect(() => seekProgram(activation, {
+      previousTime: 0,
+      time: 0,
+      direction: 'forward',
+      frameId: 9,
+      writer,
+      batch,
+    })).toThrow(/reversed failure.*step.*endpoint failed/iu);
+
+    expect(output.get()).toBe(0);
+    expect(batch.read(output)).toBe(91);
+    expect(getProgramActivationRecord(activation).activeSteppers).toEqual([]);
+    expect(getProgramActivationRecord(activation).terminalSteppers).toEqual([]);
   });
 });

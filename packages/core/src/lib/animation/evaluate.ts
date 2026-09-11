@@ -136,7 +136,32 @@ interface InternalProgramActivation {
   starts: Map<string, InternalTrackStart>;
   steppers: Map<string, InternalStepperRecord>;
   terminalSteppers: Map<string, InternalStepperTerminal>;
+  repeatFrontiers: Map<string, InternalRepeatFrontier>;
+  repeatTerminals: Map<string, InternalRepeatTerminal>;
+  reverseEndpointDurations: Map<string, InternalReverseEndpoint>;
   terminalDuration: number | undefined;
+}
+
+interface InternalRepeatFrontier {
+  readonly programPath: readonly number[];
+  readonly repeatIterations: readonly number[];
+  completedIterations: number;
+  elapsedMilliseconds: number;
+  iterationInputValues: Map<WritableSignal<unknown>, unknown>;
+  values: Map<WritableSignal<unknown>, unknown>;
+}
+
+interface InternalRepeatTerminal {
+  readonly programPath: readonly number[];
+  readonly repeatIterations: readonly number[];
+  readonly duration: number;
+  readonly values: ReadonlyMap<WritableSignal<unknown>, unknown>;
+}
+
+interface InternalReverseEndpoint {
+  readonly programPath: readonly number[];
+  readonly repeatIterations: readonly number[];
+  readonly duration: number;
 }
 
 interface InternalStepperRecord {
@@ -161,6 +186,7 @@ interface InternalStepperTerminal {
 }
 
 interface SampleState {
+  readonly activation: InternalProgramActivation;
   readonly batch: SignalCommitBatch;
   readonly starts: Map<string, InternalTrackStart>;
   readonly durations: Map<string, number>;
@@ -169,7 +195,12 @@ interface SampleState {
   readonly owners: Map<WritableSignal<unknown>, SampledWriterOwner>;
   readonly steppers: Map<string, InternalStepperRecord>;
   readonly terminalSteppers: Map<string, InternalStepperTerminal>;
+  readonly repeatFrontiers: Map<string, InternalRepeatFrontier>;
+  readonly repeatTerminals: Map<string, InternalRepeatTerminal>;
+  readonly reverseEndpointDurations: Map<string, InternalReverseEndpoint>;
   readonly activeStepperKeys: Set<string>;
+  readonly activeRepeatFrontierKeys: Set<string>;
+  readonly activeReverseEndpointKeys: Set<string>;
   readonly stepperTraces: ProgramStepperTrace[];
   readonly frameId: number;
   readonly replaySteppers: boolean;
@@ -1148,6 +1179,13 @@ function sampleStepperTrack(
   const accumulator = stepperRecord.remainderMilliseconds + clampedContribution;
   const availableSteps = terminal === undefined ?
     Math.floor(accumulator / definitionRecord.stepMilliseconds) : 0;
+  if (!Number.isSafeInteger(availableSteps)) {
+    throw new RangeError(
+      `${stepperLabel(definitionRecord.debugName)} whole-step count must be a safe integer ` +
+        `at program path [${path.join(', ')}], frame ${state.frameId}, local time ` +
+        `${localTime}; received ${availableSteps}.`,
+    );
+  }
   let appliedSteps = 0;
   for (; appliedSteps < availableSteps; appliedSteps++) {
     stepperRecord.state = invokeStepperCallback(
@@ -1306,6 +1344,7 @@ function forkSampleState(
     batch.stage(output, state.batch.read(output), baselineWriter);
   }
   return {
+    activation: state.activation,
     batch,
     starts: state.starts,
     durations: state.durations,
@@ -1314,7 +1353,12 @@ function forkSampleState(
     owners: new Map(),
     steppers: state.steppers,
     terminalSteppers: state.terminalSteppers,
+    repeatFrontiers: state.repeatFrontiers,
+    repeatTerminals: state.repeatTerminals,
+    reverseEndpointDurations: state.reverseEndpointDurations,
     activeStepperKeys: state.activeStepperKeys,
+    activeRepeatFrontierKeys: state.activeRepeatFrontierKeys,
+    activeReverseEndpointKeys: state.activeReverseEndpointKeys,
     stepperTraces: state.stepperTraces,
     frameId: state.frameId,
     replaySteppers: state.replaySteppers,
@@ -1331,6 +1375,355 @@ function ownerWins(
   const currentActive = current.start <= time && time <= current.end;
   if (candidateActive !== currentActive) return candidateActive;
   return candidate.end >= current.end;
+}
+
+function pathHasPrefix(
+  path: readonly number[],
+  prefix: readonly number[],
+): boolean {
+  return prefix.length <= path.length &&
+    prefix.every((part, index) => path[index] === part);
+}
+
+function belongsToOccurrence(
+  programPath: readonly number[],
+  repeatIterations: readonly number[],
+  childPath: readonly number[],
+  iterationPath: readonly number[],
+): boolean {
+  return pathHasPrefix(programPath, childPath) &&
+    pathHasPrefix(repeatIterations, iterationPath);
+}
+
+function clearOccurrenceState(
+  state: SampleState,
+  childPath: readonly number[],
+  iterationPath: readonly number[],
+): void {
+  for (const [key, start] of state.starts) {
+    if (belongsToOccurrence(
+      start.programPath,
+      start.repeatIterations,
+      childPath,
+      iterationPath,
+    )) state.starts.delete(key);
+  }
+  for (const [key, stepperRecord] of state.steppers) {
+    if (belongsToOccurrence(
+      stepperRecord.programPath,
+      stepperRecord.repeatIterations,
+      childPath,
+      iterationPath,
+    )) state.steppers.delete(key);
+  }
+  for (const [key, terminal] of state.terminalSteppers) {
+    if (belongsToOccurrence(
+      terminal.programPath,
+      terminal.repeatIterations,
+      childPath,
+      iterationPath,
+    )) state.terminalSteppers.delete(key);
+  }
+  for (const [key, frontier] of state.repeatFrontiers) {
+    if (belongsToOccurrence(
+      frontier.programPath,
+      frontier.repeatIterations,
+      childPath,
+      iterationPath,
+    )) state.repeatFrontiers.delete(key);
+  }
+  for (const [key, terminal] of state.repeatTerminals) {
+    if (belongsToOccurrence(
+      terminal.programPath,
+      terminal.repeatIterations,
+      childPath,
+      iterationPath,
+    )) state.repeatTerminals.delete(key);
+  }
+  for (const [key, endpoint] of state.reverseEndpointDurations) {
+    if (belongsToOccurrence(
+      endpoint.programPath,
+      endpoint.repeatIterations,
+      childPath,
+      iterationPath,
+    )) state.reverseEndpointDurations.delete(key);
+  }
+}
+
+function programValues(
+  program: CRCAnimationProgram,
+  batch: SignalCommitBatch,
+): Map<WritableSignal<unknown>, unknown> {
+  return new Map(getProgramRecord(program).outputs.map(output => [output, batch.read(output)]));
+}
+
+function stageProgramValues(
+  program: CRCAnimationProgram,
+  values: ReadonlyMap<WritableSignal<unknown>, unknown>,
+  state: SampleState,
+  offset: number,
+  duration: number | undefined,
+): void {
+  for (const output of getProgramRecord(program).outputs) {
+    if (!values.has(output)) continue;
+    state.batch.stage(output, values.get(output), baselineWriter);
+    state.writtenOutputs.add(output);
+    state.owners.set(output, Object.freeze({
+      start: offset,
+      end: offset + (duration ?? Number.POSITIVE_INFINITY),
+    }));
+  }
+}
+
+function minimumStepperQuantum(program: CRCAnimationProgram): number | undefined {
+  const record = getProgramRecord(program);
+  if (record.kind === 'track') {
+    const definition = getDefinitionRecord(record.definition);
+    return definition.kind === 'stepper' ? definition.stepMilliseconds : undefined;
+  }
+  let minimum: number | undefined;
+  for (const child of record.children) {
+    const childMinimum = minimumStepperQuantum(child);
+    if (childMinimum !== undefined && (minimum === undefined || childMinimum < minimum)) {
+      minimum = childMinimum;
+    }
+  }
+  return minimum;
+}
+
+function isolatedReplayState(
+  state: SampleState,
+  values: ReadonlyMap<WritableSignal<unknown>, unknown>,
+): SampleState {
+  const isolated = createSampleState(
+    state.activation,
+    new Map(),
+    new Map(),
+    new Map(),
+    new Map(),
+    new Map(),
+    new Map(),
+    new Map(),
+    state.frameId,
+    true,
+  );
+  for (const [output, value] of values) {
+    isolated.batch.stage(output, value, baselineWriter);
+  }
+  return isolated;
+}
+
+function mergeReplaySample(
+  program: CRCAnimationProgram,
+  replay: SampleState,
+  state: SampleState,
+  offset: number,
+  duration: number,
+): void {
+  for (const [key, value] of replay.durations) state.durations.set(key, value);
+  state.stepperTraces.push(...replay.stepperTraces);
+  stageProgramValues(program, programValues(program, replay.batch), state, offset, duration);
+}
+
+function discoverReverseEndpoint(
+  program: CRCAnimationProgram,
+  state: SampleState,
+  path: readonly number[],
+  repeatIterations: readonly number[],
+  values: ReadonlyMap<WritableSignal<unknown>, unknown>,
+  offset: number,
+): number {
+  const endpointKey = instanceKey(path, repeatIterations);
+  const knownEndpoint = state.reverseEndpointDurations.get(endpointKey);
+  if (knownEndpoint !== undefined) {
+    state.activeReverseEndpointKeys.add(endpointKey);
+    return knownEndpoint.duration;
+  }
+
+  const exact = getExactSeekableProgramDuration(program);
+  if (exact !== undefined) {
+    if (!Number.isFinite(exact)) {
+      throw new TypeError('A reversed repeat child must have a finite seekable duration.');
+    }
+    return exact;
+  }
+  const quantum = minimumStepperQuantum(program);
+  if (quantum === undefined) {
+    throw new TypeError('A reversed repeat child must have a finite seekable duration.');
+  }
+  let candidate = 0;
+  for (;;) {
+    const discovery = isolatedReplayState(state, values);
+    const result = sampleNode(
+      program,
+      candidate,
+      discovery,
+      path,
+      repeatIterations,
+      offset,
+    );
+    if (result.atEnd && result.duration !== undefined && Number.isFinite(result.duration)) {
+      const endpoint: InternalReverseEndpoint = Object.freeze({
+        programPath: freezePath(path),
+        repeatIterations: freezePath(repeatIterations),
+        duration: result.duration,
+      });
+      state.reverseEndpointDurations.set(endpointKey, endpoint);
+      state.activeReverseEndpointKeys.add(endpointKey);
+      return result.duration;
+    }
+    const nextCandidate = candidate === 0 ? quantum : candidate * 2;
+    if (!Number.isFinite(nextCandidate) || nextCandidate <= candidate) {
+      throw new TypeError('A reversed repeat child must have a finite seekable duration.');
+    }
+    candidate = nextCandidate;
+  }
+}
+
+function sampleReversedOccurrence(
+  program: CRCAnimationProgram,
+  occurrenceTime: number,
+  state: SampleState,
+  path: readonly number[],
+  repeatIterations: readonly number[],
+  values: ReadonlyMap<WritableSignal<unknown>, unknown>,
+  offset: number,
+): SampleResult {
+  const duration = discoverReverseEndpoint(
+    program,
+    state,
+    path,
+    repeatIterations,
+    values,
+    offset,
+  );
+  const replay = isolatedReplayState(state, values);
+  sampleNode(
+    program,
+    duration - Math.min(occurrenceTime, duration),
+    replay,
+    path,
+    repeatIterations,
+    offset,
+  );
+  mergeReplaySample(program, replay, state, offset, duration);
+  return Object.freeze({ duration, atEnd: occurrenceTime >= duration });
+}
+
+function reversedRepeatOccurrence(
+  direction: 'normal' | 'reverse' | 'alternate' | 'alternate-reverse',
+  iteration: number,
+): boolean {
+  return direction === 'reverse' ||
+    direction === 'alternate-reverse' && iteration % 2 === 0 ||
+    direction === 'alternate' && iteration % 2 === 1;
+}
+
+function sampleStatefulRepeatFrontier(
+  program: CRCAnimationProgram,
+  localTime: number,
+  state: SampleState,
+  path: readonly number[],
+  repeatIterations: readonly number[],
+  offset: number,
+): SampleResult {
+  const record = getProgramRecord(program);
+  if (record.kind !== 'repeat') throw new Error('Expected an animation repeat record.');
+  const child = record.children[0]!;
+  const childPath = [...path, 0];
+  const key = instanceKey(path, repeatIterations);
+  const terminal = state.repeatTerminals.get(key);
+  if (terminal !== undefined && localTime >= terminal.duration) {
+    stageProgramValues(program, terminal.values, state, offset, terminal.duration);
+    setDuration(state, path, repeatIterations, terminal.duration);
+    return Object.freeze({ duration: terminal.duration, atEnd: true });
+  }
+
+  let frontier = state.repeatFrontiers.get(key);
+  if (frontier === undefined || localTime < frontier.elapsedMilliseconds) {
+    const initialValues = programValues(program, state.batch);
+    frontier = {
+      programPath: freezePath(path),
+      repeatIterations: freezePath(repeatIterations),
+      completedIterations: 0,
+      elapsedMilliseconds: 0,
+      iterationInputValues: new Map(initialValues),
+      values: new Map(initialValues),
+    };
+    state.repeatFrontiers.set(key, frontier);
+  }
+  stageProgramValues(program, frontier.values, state, offset, undefined);
+
+  let remaining = Math.max(0, localTime - frontier.elapsedMilliseconds);
+  for (let iteration = frontier.completedIterations;
+    iteration < record.iterations;
+    iteration++) {
+    const iterationPath = [...repeatIterations, iteration];
+    const reversed = reversedRepeatOccurrence(record.direction, iteration);
+    const sampled = reversed ? sampleReversedOccurrence(
+      child,
+      remaining,
+      state,
+      childPath,
+      iterationPath,
+      frontier.iterationInputValues,
+      offset + frontier.elapsedMilliseconds,
+    ) : sampleNode(
+      child,
+      remaining,
+      state,
+      childPath,
+      iterationPath,
+      offset + frontier.elapsedMilliseconds,
+    );
+
+    if (sampled.duration === undefined) {
+      frontier.values = programValues(program, state.batch);
+      state.activeRepeatFrontierKeys.add(key);
+      return Object.freeze({ duration: undefined, atEnd: false });
+    }
+    if (sampled.duration === 0 && record.iterations === Number.POSITIVE_INFINITY) {
+      throw new TypeError('An infinite repeat with zero duration cannot be evaluated seekably.');
+    }
+    if (!sampled.atEnd) {
+      frontier.values = programValues(program, state.batch);
+      state.activeRepeatFrontierKeys.add(key);
+      return Object.freeze({
+        duration: getExactSeekableProgramDuration(program),
+        atEnd: false,
+      });
+    }
+
+    frontier.values = programValues(program, state.batch);
+    if (programContainsStepper(child)) {
+      clearOccurrenceState(state, childPath, iterationPath);
+    }
+    frontier.completedIterations = iteration + 1;
+    frontier.elapsedMilliseconds += sampled.duration;
+    if (frontier.completedIterations === record.iterations) {
+      const repeatTerminal: InternalRepeatTerminal = Object.freeze({
+        programPath: freezePath(path),
+        repeatIterations: freezePath(repeatIterations),
+        duration: frontier.elapsedMilliseconds,
+        values: new Map(frontier.values),
+      });
+      state.repeatFrontiers.delete(key);
+      state.repeatTerminals.set(key, repeatTerminal);
+      setDuration(state, path, repeatIterations, repeatTerminal.duration);
+      return Object.freeze({ duration: repeatTerminal.duration, atEnd: true });
+    }
+
+    remaining = Math.max(0, remaining - sampled.duration);
+    frontier.iterationInputValues = new Map(frontier.values);
+    stageProgramValues(
+      program,
+      frontier.values,
+      state,
+      offset + frontier.elapsedMilliseconds,
+      undefined,
+    );
+  }
+  throw new Error('CRC animation repeat frontier exceeded its declared iterations.');
 }
 
 function sampleNode(
@@ -1428,6 +1821,16 @@ function sampleNode(
   }
 
   const directChild = record.children[0]!;
+  if (programContainsStepper(directChild) && !state.replaySteppers) {
+    return sampleStatefulRepeatFrontier(
+      program,
+      localTime,
+      state,
+      path,
+      repeatIterations,
+      offset,
+    );
+  }
   const directChildDuration = getExactSeekableProgramDuration(directChild);
   if (directChildDuration !== undefined && Number.isFinite(directChildDuration) &&
     (directChildDuration > 0 || record.iterations !== Number.POSITIVE_INFINITY) &&
@@ -1469,11 +1872,21 @@ function sampleNode(
     const child = record.children[0]!;
     const childPath = [...path, 0];
     const iterationPath = [...repeatIterations, iteration];
-    const reversed = record.direction === 'reverse' ||
-      record.direction === 'alternate-reverse' && iteration % 2 === 0 ||
-      record.direction === 'alternate' && iteration % 2 === 1;
+    const reversed = reversedRepeatOccurrence(record.direction, iteration);
     let duration: number;
-    if (reversed) {
+    if (reversed && programContainsStepper(child)) {
+      const inputValues = programValues(child, state.batch);
+      const sampled = sampleReversedOccurrence(
+        child,
+        remaining,
+        state,
+        childPath,
+        iterationPath,
+        inputValues,
+        offset + elapsed,
+      );
+      duration = sampled.duration!;
+    } else if (reversed) {
       const exactDuration = knownDuration(child, state, childPath, iterationPath);
       if (exactDuration === undefined) {
         const terminal = sampleNode(
@@ -1526,6 +1939,9 @@ function sampleNode(
       const exact = getExactSeekableProgramDuration(program);
       setDuration(state, path, repeatIterations, exact);
       return Object.freeze({ duration: exact, atEnd: false });
+    }
+    if (programContainsStepper(child)) {
+      clearOccurrenceState(state, childPath, iterationPath);
     }
     if (iteration + 1 === record.iterations) {
       setDuration(state, path, repeatIterations, elapsed);
@@ -1672,10 +2088,17 @@ function createSampleState(
   steppers: Map<string, InternalStepperRecord> = new Map(record.steppers),
   terminalSteppers: Map<string, InternalStepperTerminal> =
     new Map(record.terminalSteppers),
+  repeatFrontiers: Map<string, InternalRepeatFrontier> =
+    new Map(record.repeatFrontiers),
+  repeatTerminals: Map<string, InternalRepeatTerminal> =
+    new Map(record.repeatTerminals),
+  reverseEndpointDurations: Map<string, InternalReverseEndpoint> =
+    new Map(record.reverseEndpointDurations),
   frameId = 0,
   replaySteppers = false,
 ): SampleState {
   return {
+    activation: record,
     batch: seedOriginalValues(record),
     starts,
     durations,
@@ -1684,11 +2107,29 @@ function createSampleState(
     owners: new Map(),
     steppers,
     terminalSteppers,
+    repeatFrontiers,
+    repeatTerminals,
+    reverseEndpointDurations,
     activeStepperKeys: new Set(),
+    activeRepeatFrontierKeys: new Set(),
+    activeReverseEndpointKeys: new Set(),
     stepperTraces: [],
     frameId,
     replaySteppers,
   };
+}
+
+function cloneRepeatFrontiers(
+  source: ReadonlyMap<string, InternalRepeatFrontier>,
+): Map<string, InternalRepeatFrontier> {
+  return new Map([...source].map(([key, frontier]) => [key, {
+    programPath: frontier.programPath,
+    repeatIterations: frontier.repeatIterations,
+    completedIterations: frontier.completedIterations,
+    elapsedMilliseconds: frontier.elapsedMilliseconds,
+    iterationInputValues: new Map(frontier.iterationInputValues),
+    values: new Map(frontier.values),
+  }]));
 }
 
 function createDiscoveryState(
@@ -1781,6 +2222,12 @@ function evaluate(
   const destinationSteppers = replaySteppers ? new Map<string, InternalStepperRecord>() :
     new Map(record.steppers);
   const destinationTerminals = new Map(record.terminalSteppers);
+  const destinationRepeatFrontiers = replaySteppers ?
+    new Map<string, InternalRepeatFrontier>() : cloneRepeatFrontiers(record.repeatFrontiers);
+  const destinationRepeatTerminals = replaySteppers ?
+    new Map<string, InternalRepeatTerminal>() : new Map(record.repeatTerminals);
+  const destinationReverseEndpoints = replaySteppers ?
+    new Map<string, InternalReverseEndpoint>() : new Map(record.reverseEndpointDurations);
   let seededDurations = new Map<string, number>();
   if (needsCallbackFreeDurationSeed(record.program)) {
     const seedState = createDiscoveryState(
@@ -1798,6 +2245,9 @@ function evaluate(
     seededDurations,
     destinationSteppers,
     destinationTerminals,
+    destinationRepeatFrontiers,
+    destinationRepeatTerminals,
+    destinationReverseEndpoints,
     input.frameId,
     replaySteppers,
   );
@@ -1827,6 +2277,9 @@ function evaluate(
         discoveryState.durations,
         new Map(),
         destinationState.terminalSteppers,
+        new Map(),
+        new Map(),
+        new Map(),
       );
     }
     const milestones = crossedMilestones(record, normalizedInput, horizon, milestoneState);
@@ -1835,9 +2288,29 @@ function evaluate(
         destinationState.steppers.delete(key);
       }
     }
+    for (const key of destinationState.repeatFrontiers.keys()) {
+      if (!destinationState.activeRepeatFrontierKeys.has(key)) {
+        destinationState.repeatFrontiers.delete(key);
+      }
+    }
+    for (const key of destinationState.reverseEndpointDurations.keys()) {
+      if (!destinationState.activeReverseEndpointKeys.has(key)) {
+        destinationState.reverseEndpointDurations.delete(key);
+      }
+    }
+    if (destinationResult.atEnd) {
+      destinationState.steppers.clear();
+      destinationState.terminalSteppers.clear();
+      destinationState.repeatFrontiers.clear();
+      destinationState.repeatTerminals.clear();
+      destinationState.reverseEndpointDurations.clear();
+    }
     record.starts = destinationState.starts;
     record.steppers = destinationState.steppers;
     record.terminalSteppers = destinationState.terminalSteppers;
+    record.repeatFrontiers = destinationState.repeatFrontiers;
+    record.repeatTerminals = destinationState.repeatTerminals;
+    record.reverseEndpointDurations = destinationState.reverseEndpointDurations;
     for (const output of getProgramRecord(record.program).outputs) {
       if (destinationState.writtenOutputs.has(output)) {
         input.batch.stage(output, destinationState.batch.read(output), input.writer);
@@ -1865,6 +2338,9 @@ function evaluate(
     if (programContainsStepper(record.program)) {
       record.steppers.clear();
       record.terminalSteppers.clear();
+      record.repeatFrontiers.clear();
+      record.repeatTerminals.clear();
+      record.reverseEndpointDurations.clear();
       record.terminalDuration = undefined;
     }
     throw error;
@@ -1897,6 +2373,9 @@ export function activateProgram(
     starts: new Map(),
     steppers: new Map(),
     terminalSteppers: new Map(),
+    repeatFrontiers: new Map(),
+    repeatTerminals: new Map(),
+    reverseEndpointDurations: new Map(),
     terminalDuration: undefined,
   });
   return activation;
@@ -1950,6 +2429,9 @@ export function releaseProgramActivation(activation: ProgramActivation): void {
   record.starts.clear();
   record.steppers.clear();
   record.terminalSteppers.clear();
+  record.repeatFrontiers.clear();
+  record.repeatTerminals.clear();
+  record.reverseEndpointDurations.clear();
   activationRecords.delete(activation);
 }
 

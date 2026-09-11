@@ -600,7 +600,9 @@ export function sampleSeekableDefinition<T>(
 ): T {
   const record = getDefinitionRecord(definition);
   if (record.kind === 'stepper') {
-    throw new TypeError(`${definitionLabel(record.debugName)} is stateful and cannot be sampled directly.`);
+    throw new TypeError(
+      `${definitionLabel(record.debugName)} is stateful and requires the stateful program evaluator.`,
+    );
   }
   if (record.kind === 'spring') {
     const resolved = resolveSpringStart(record, input.initialValue as number);
@@ -661,7 +663,7 @@ export function activateSeekableDefinition<T>(
   const definitionRecord = getDefinitionRecord(definition);
   if (definitionRecord.kind === 'stepper') {
     throw new TypeError(
-      'Stateful animation definitions are deferred to Task 5 and cannot be evaluated seekably.',
+      'Stateful animation definitions require the stateful program evaluator.',
     );
   }
   const snapshot = snapshotAnimationActivationValue(initialValue, seen);
