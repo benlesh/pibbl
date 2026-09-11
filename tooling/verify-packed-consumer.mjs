@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { cpSync, existsSync, mkdtempSync, mkdirSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
@@ -94,10 +94,51 @@ async function bundleConsumerEntry(source) {
     },
     jsx: 'automatic',
     jsxImportSource: '@crc/core',
+    metafile: true,
     treeShaking: true,
     write: false,
   });
-  return result.outputFiles.map(file => file.text).join('\n');
+  return {
+    code: result.outputFiles.map(file => file.text).join('\n'),
+    metafile: result.metafile,
+  };
+}
+
+function assertSinglePackedRuntime(metafile) {
+  const normalizedInputs = Object.keys(metafile.inputs).map(input =>
+    input.replaceAll('\\', '/'),
+  );
+  const leakedSources = normalizedInputs.filter(input =>
+    /\/packages\/(?:core|webgl)\/src\//u.test(input),
+  );
+  if (leakedSources.length > 0) {
+    throw new Error(
+      `Packed consumer resolved workspace sources: ${leakedSources.join(', ')}`,
+    );
+  }
+  for (const packageName of ['core', 'webgl']) {
+    const marker = `/node_modules/@crc/${packageName}/`;
+    const packageRoots = new Set(
+      normalizedInputs
+        .filter(input => input.includes(marker))
+        .map(input => input.slice(0, input.indexOf(marker) + marker.length - 1)),
+    );
+    if (packageRoots.size !== 1) {
+      throw new Error(
+        `Packed bundle must resolve exactly one @crc/${packageName} package; ` +
+        `received ${[...packageRoots].join(', ') || 'none'}.`,
+      );
+    }
+  }
+}
+
+function assertIdentityMarkerOnce(code, marker, label) {
+  const count = code.split(marker).length - 1;
+  if (count !== 1) {
+    throw new Error(
+      `Packed core identity must contain one ${label}; received ${count}.`,
+    );
+  }
 }
 
 try {
@@ -106,8 +147,10 @@ try {
 
   const typesTarball = pack('packages/types');
   const coreTarball = pack('packages/core');
+  const webglTarball = pack('packages/webgl');
   assertTarballHasNoSources(typesTarball);
   const coreEntries = assertTarballHasNoSources(coreTarball);
+  const webglEntries = assertTarballHasNoSources(webglTarball);
   assertRequiredEntries(coreEntries, [
     'package/dist/index.d.ts',
     'package/dist/index.mjs',
@@ -119,6 +162,11 @@ try {
     'package/dist/jsx-runtime.mjs.map',
     'package/dist/types.d.ts',
   ]);
+  assertRequiredEntries(webglEntries, [
+    'package/dist/index.d.ts',
+    'package/dist/index.mjs',
+    'package/dist/index.mjs.map',
+  ]);
 
   writeFileSync(join(consumerDirectory, 'package.json'), `${JSON.stringify({
     name: 'crc-packed-consumer',
@@ -127,6 +175,7 @@ try {
     dependencies: {
       '@crc/core': `file:${coreTarball}`,
       '@crc/types': `file:${typesTarball}`,
+      '@crc/webgl': `file:${webglTarball}`,
     },
   }, null, 2)}\n`);
   writeFileSync(
@@ -154,12 +203,14 @@ try {
   });
 
   const requireFromConsumer = createRequire(join(consumerDirectory, 'runtime.mjs'));
-  for (const packageName of ['@crc/core', '@crc/types']) {
+  const installedPackageRoots = new Map();
+  for (const packageName of ['@crc/core', '@crc/types', '@crc/webgl']) {
     const packageEntry = realpathSync(requireFromConsumer.resolve(packageName));
     if (!packageEntry.startsWith(realpathSync(join(consumerDirectory, 'node_modules')))) {
       throw new Error(`${packageName} resolved outside the packed consumer: ${packageEntry}`);
     }
     const installedRoot = findPackageRoot(packageEntry);
+    installedPackageRoots.set(packageName, installedRoot);
     try {
       realpathSync(join(installedRoot, 'src'));
       throw new Error(`${packageName} unexpectedly installed a src directory.`);
@@ -170,12 +221,59 @@ try {
     }
   }
 
+  const installedCoreEntry = realpathSync(requireFromConsumer.resolve('@crc/core'));
+  const installedWebGLRoot = installedPackageRoots.get('@crc/webgl');
+  const installedWebGLEntry = realpathSync(requireFromConsumer.resolve('@crc/webgl'));
+  const requireFromWebGL = createRequire(installedWebGLEntry);
+  const webglCoreEntry = realpathSync(requireFromWebGL.resolve('@crc/core'));
+  if (webglCoreEntry !== installedCoreEntry) {
+    throw new Error(
+      `@crc/webgl resolved a second core identity: ${webglCoreEntry}.`,
+    );
+  }
+  const webglManifest = JSON.parse(
+    readFileSync(join(installedWebGLRoot, 'package.json'), 'utf8'),
+  );
+  if (
+    JSON.stringify(webglManifest.peerDependencies) !==
+      JSON.stringify({ '@crc/core': '0.0.1' }) ||
+    Object.keys(webglManifest.dependencies ?? {}).length !== 0
+  ) {
+    throw new Error(
+      '@crc/webgl must declare exactly @crc/core 0.0.1 as a peer dependency.',
+    );
+  }
+  const installedWebGLBundle = readFileSync(installedWebGLEntry, 'utf8');
+  for (const marker of [
+    focusImplementationMarker,
+    '@crc/core.element',
+    'CRC backend names must be nonempty.',
+    'requestAnimationFrame',
+  ]) {
+    if (installedWebGLBundle.includes(marker)) {
+      throw new Error(
+        `Packed @crc/webgl embedded core implementation marker ${marker}.`,
+      );
+    }
+  }
+  const webglSourceMap = JSON.parse(
+    readFileSync(`${installedWebGLEntry}.map`, 'utf8'),
+  );
+  const leakedCoreSources = webglSourceMap.sources.filter(source =>
+    /(?:packages\/core|node_modules\/@crc\/core)/u.test(source),
+  );
+  if (leakedCoreSources.length > 0) {
+    throw new Error(
+      `Packed @crc/webgl source map embedded core sources: ${leakedCoreSources.join(', ')}`,
+    );
+  }
+
   const tsc = join(dirname(createRequire(import.meta.url).resolve('typescript')), 'tsc.js');
   run(process.execPath, [tsc, '-p', 'tsconfig.bundler.json'], { cwd: consumerDirectory });
   run(process.execPath, [tsc, '-p', 'tsconfig.nodenext.json'], { cwd: consumerDirectory });
   run(process.execPath, ['runtime.mjs'], { cwd: consumerDirectory });
 
-  const noFocusBundle = await bundleConsumerEntry(`
+  const { code: noFocusBundle } = await bundleConsumerEntry(`
     import { Rectangle } from '@crc/core';
     function Scene() {
       return <Rectangle style={{ width: 1, height: 1 }} />;
@@ -186,7 +284,7 @@ try {
     throw new Error('Optimized no-focus bundle retained focus implementation code.');
   }
 
-  const withFocusBundle = await bundleConsumerEntry(`
+  const { code: withFocusBundle } = await bundleConsumerEntry(`
     import { FocusManagement, Rectangle } from '@crc/core';
     function Scene() {
       return (
@@ -208,8 +306,47 @@ try {
     );
   }
 
+
+  const sharedRuntimeBundle = await bundleConsumerEntry(`
+    import { Fragment, crc, createElement } from '@crc/core';
+    import {
+      Cube,
+      WebGLLayer,
+      crcAnimationFrame,
+      createWebGLGeometry,
+    } from '@crc/webgl';
+    const geometry = createWebGLGeometry({
+      positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+    });
+    const scene = (
+      <WebGLLayer style={{ width: 1, height: 1 }}>
+        <Cube style={{ size: geometry.vertexCount }} />
+      </WebGLLayer>
+    );
+    console.log(Fragment, crc, createElement, crcAnimationFrame, scene);
+  `);
+  assertSinglePackedRuntime(sharedRuntimeBundle.metafile);
+  assertIdentityMarkerOnce(
+    sharedRuntimeBundle.code,
+    '@crc/core.element',
+    'element brand',
+  );
+  assertIdentityMarkerOnce(
+    sharedRuntimeBundle.code,
+    'CRC backend names must be nonempty.',
+    'backend token registry',
+  );
+  assertIdentityMarkerOnce(
+    sharedRuntimeBundle.code,
+    'requestAnimationFrame',
+    'scheduler implementation',
+  );
+
   process.stdout.write(
-    `Packed @crc/core consumer passed Bundler, NodeNext, declarations, runtime exports, blocked deep imports, no-src checks, and optimized focus elimination (marker absent without focus; present with focus; ${noFocusBytes} no-focus bytes vs ${withFocusBytes} with-focus bytes).\n`,
+    `Packed @crc/core and @crc/webgl consumer passed Bundler, NodeNext, declarations, ` +
+    `runtime exports, blocked deep imports, no-src checks, one shared core identity, and ` +
+    `optimized focus elimination (marker absent without focus; present with focus; ` +
+    `${noFocusBytes} no-focus bytes vs ${withFocusBytes} with-focus bytes).\n`,
   );
 } finally {
   rmSync(temporaryRoot, { force: true, recursive: true });

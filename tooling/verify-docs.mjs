@@ -68,6 +68,7 @@ const publicGuidePaths = [
   "docs/site/learn/guides/react-integration.md",
   "docs/site/learn/guides/state-and-lifecycle.md",
   "docs/site/learn/guides/style-and-draw.md",
+  "docs/site/learn/guides/webgl-islands.md",
 ];
 const publicSiteMarkdownPaths = [
   "docs/site/api/index.md",
@@ -75,27 +76,32 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/components/arc.md",
   "docs/site/api/components/circle.md",
   "docs/site/api/components/clip.md",
+  "docs/site/api/components/cube.md",
   "docs/site/api/components/ellipse.md",
   "docs/site/api/components/flex.md",
   "docs/site/api/components/flow.md",
   "docs/site/api/components/focus-management.md",
   "docs/site/api/components/grid.md",
+  "docs/site/api/components/group-3d.md",
   "docs/site/api/components/group.md",
   "docs/site/api/components/horizontal-line.md",
   "docs/site/api/components/image.md",
   "docs/site/api/components/keyboard-navigation.md",
   "docs/site/api/components/layer.md",
   "docs/site/api/components/line.md",
+  "docs/site/api/components/mesh.md",
   "docs/site/api/components/overlay.md",
   "docs/site/api/components/path.md",
   "docs/site/api/components/polygon.md",
   "docs/site/api/components/rectangle.md",
   "docs/site/api/components/regular-polygon.md",
   "docs/site/api/components/star.md",
+  "docs/site/api/components/sphere.md",
   "docs/site/api/components/svg-path.md",
   "docs/site/api/components/text.md",
   "docs/site/api/components/vertical-line.md",
   "docs/site/api/components/wedge.md",
+  "docs/site/api/components/webgl-layer.md",
   "docs/site/api/functions/crc.md",
   "docs/site/api/functions/create-arc-path.md",
   "docs/site/api/functions/create-circle-path.md",
@@ -107,13 +113,16 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/create-regular-polygon-path.md",
   "docs/site/api/functions/create-star-path.md",
   "docs/site/api/functions/create-svg-path.md",
+  "docs/site/api/functions/create-webgl-geometry.md",
   "docs/site/api/functions/create-wedge-path.md",
   "docs/site/api/functions/define-primitive.md",
+  "docs/site/api/functions/define-webgl-primitive.md",
   "docs/site/api/functions/layout-diagnostic.md",
   "docs/site/api/functions/measure-element.md",
   "docs/site/api/functions/normalize-edges.md",
   "docs/site/api/functions/resolve-box.md",
   "docs/site/api/functions/resolve-length.md",
+  "docs/site/api/hooks/crc-animation-frame.md",
   "docs/site/api/hooks/crc-canvas-context.md",
   "docs/site/api/hooks/crc-cursor.md",
   "docs/site/api/hooks/crc-event.md",
@@ -127,12 +136,14 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/hooks/crc-state.md",
   "docs/site/api/hooks/crc-svg-path.md",
   "docs/site/api/hooks/crc-when-changed.md",
+  "docs/site/api/hooks/crc-webgl-context.md",
   "docs/site/api/types/canvas-runtime.md",
   "docs/site/api/types/elements-components.md",
   "docs/site/api/types/events.md",
   "docs/site/api/types/filters.md",
   "docs/site/api/types/layout.md",
   "docs/site/api/types/styles.md",
+  "docs/site/api/types/webgl.md",
   "docs/site/learn/index.md",
   "docs/site/learn/tutorials/diagram-editor/index.md",
   ...publicGuidePaths,
@@ -142,6 +153,7 @@ const currentMarkdownPaths = [
   "README.md",
   "packages/core/README.md",
   "packages/types/README.md",
+  "packages/webgl/README.md",
   "docs/architecture/style-and-layout-architecture.md",
   "docs/design/canvas-accessibility-guidance.md",
   "docs/design/canvas-surface-contract.md",
@@ -170,9 +182,11 @@ const currentMarkdownPaths = [
 ];
 const linkCheckedPaths = [
   ...currentMarkdownPaths,
+  "docs/migrations/default-pointer-participation.md",
   "docs/migrations/jsx-authoring-pivot.md",
 ];
 const migrationMarkdownPaths = new Set([
+  "docs/migrations/default-pointer-participation.md",
   "docs/migrations/jsx-authoring-pivot.md",
 ]);
 const operationalMarkdownPaths = new Set([
@@ -699,6 +713,9 @@ async function typecheckCompleteSnippets(snippets) {
               ],
               "@crc/core/types": [
                 join(repositoryRoot, "packages/core/src/types.ts"),
+              ],
+              "@crc/webgl": [
+                join(repositoryRoot, "packages/webgl/src/index.ts"),
               ],
             },
             skipLibCheck: true,
@@ -1403,6 +1420,10 @@ const devRuntimeSource = await readFile(
   join(repositoryRoot, "packages/core/src/jsx-dev-runtime.ts"),
   "utf8",
 );
+const webglSource = await readFile(
+  join(repositoryRoot, "packages/webgl/src/index.ts"),
+  "utf8",
+);
 const rootExports = exportedSpecifiers(
   rootSource,
   "packages/core/src/index.ts",
@@ -1414,6 +1435,10 @@ const runtimeExports = exportedSpecifiers(
 const devRuntimeExports = exportedSpecifiers(
   devRuntimeSource,
   "packages/core/src/jsx-dev-runtime.ts",
+);
+const webglExports = exportedSpecifiers(
+  webglSource,
+  "packages/webgl/src/index.ts",
 );
 assertSameNames(
   [...documentedApiSymbols].filter((name) => rootExports.values.has(name)),
@@ -1434,6 +1459,16 @@ assertSameNames(
   [...documentedApiSymbols].filter((name) => devRuntimeExports.values.has(name)),
   devRuntimeExports.values,
   "Documented jsx-dev-runtime values",
+);
+assertSameNames(
+  [...documentedApiSymbols].filter((name) => webglExports.values.has(name)),
+  webglExports.values,
+  "Documented @crc/webgl runtime values",
+);
+assertSameNames(
+  [...documentedApiSymbols].filter((name) => webglExports.types.has(name)),
+  webglExports.types,
+  "Documented @crc/webgl types",
 );
 const namespaceMembers = jsxNamespaceMembers(
   runtimeSource,
@@ -1467,6 +1502,33 @@ for (const dependencies of [
   assert.ok(!dependencies?.react, "@crc/core must not depend on React.");
 }
 assert.match(coreManifest.description, /JSX.*createElement/u);
+const webglManifest = JSON.parse(
+  await readFile(join(repositoryRoot, "packages/webgl/package.json"), "utf8"),
+);
+assert.deepEqual(
+  Object.keys(webglManifest.exports),
+  ["."],
+  "@crc/webgl must expose only its root package entry.",
+);
+assert.deepEqual(
+  webglManifest.peerDependencies,
+  { "@crc/core": "0.0.1" },
+  "@crc/webgl must use the matching @crc/core release as its only peer.",
+);
+assert.equal(
+  webglManifest.dependencies,
+  undefined,
+  "@crc/webgl must not ship a second runtime dependency graph.",
+);
+assert.equal(webglManifest.sideEffects, false);
+for (const dependencies of [
+  webglManifest.dependencies,
+  webglManifest.devDependencies,
+  webglManifest.peerDependencies,
+]) {
+  assert.ok(!dependencies?.react, "@crc/webgl must not depend on React.");
+  assert.ok(!dependencies?.["@crc/types"], "@crc/webgl must not depend on @crc/types.");
+}
 const typesManifest = JSON.parse(
   await readFile(join(repositoryRoot, "packages/types/package.json"), "utf8"),
 );

@@ -32,6 +32,15 @@ import {
   definePrimitive,
 } from '@crc/core';
 import {
+  Cube,
+  Group3D,
+  Mesh,
+  Sphere,
+  WebGLLayer,
+  createWebGLGeometry,
+  type CRCWebGLPerspectiveCamera,
+} from '@crc/webgl';
+import {
   Fragment as DevelopmentFragment,
   jsxDEV,
   type JSX as DevelopmentJSX,
@@ -212,6 +221,35 @@ export const roundedShapeElements: readonly CRCElement<any>[] = [
     style: { points: 5, outerRadius: 20, innerRadius: 8, cornerRadii: [2, 0] },
   }),
 ];
+
+const automaticWebGLCamera = {
+  type: 'perspective',
+  position: [0, 0, 5],
+  lookAt: [0, 0, 0],
+  up: [0, 1, 0],
+  fieldOfViewDegrees: 45,
+  near: 0.1,
+  far: 100,
+} as const satisfies CRCWebGLPerspectiveCamera;
+const automaticWebGLGeometry = createWebGLGeometry({
+  positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+});
+
+export const automaticWebGLScene: CRCElement = (
+  <WebGLLayer
+    camera={automaticWebGLCamera}
+    style={{ width: 320, height: 180 }}
+  >
+    <Group3D style={{ rotationYDegrees: 15 }}>
+      <Cube style={{ color: '#74d3ae', size: 1 }} />
+      <Sphere style={{ radius: 0.5, translateX: 1 }} />
+      <Mesh
+        geometry={automaticWebGLGeometry}
+        style={{ color: '#f7c948' }}
+      />
+    </Group3D>
+  </WebGLLayer>
+);
 
 // @ts-expect-error RegularPolygon requires exactly one size property
 const missingRegularPolygonSize = <RegularPolygon style={{ sides: 6 }} />;

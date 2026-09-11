@@ -24,6 +24,26 @@ assert.deepEqual(inventory.root.values, ["Circle", "crc"]);
 assert.deepEqual(inventory.root.types, ["CRCConfig", "CircleProps"]);
 assert.deepEqual(inventory.root.overview, ["JSX"]);
 
+const multiPackageInventory = await collectPublicExports(
+  {
+    root: `${fixturesDirectory}root.ts`,
+    webgl: `${fixturesDirectory}webgl.ts`,
+  },
+  { strict: true },
+);
+assert.throws(
+  () =>
+    validateApiCoverage(multiPackageInventory, [
+      {
+        frontmatter: {
+          id: "api-core",
+          symbols: ["Circle", "crc", "CRCConfig", "CircleProps"],
+        },
+      },
+    ]),
+  /Undocumented public exports: CRCWebGLContext, WebGLLayer/u,
+);
+
 await assert.rejects(
   () =>
     collectPublicExports(
@@ -88,7 +108,11 @@ assert.deepEqual(coverage.missingTypes, []);
 const crcInventory = await collectPublicExports(crcPublicEntryPaths, {});
 assert.ok(crcInventory.root.values.length > 0);
 assert.ok(crcInventory.root.types.length > 0);
+assert.equal(crcInventory.webgl.values.length, 9);
+assert.equal(crcInventory.webgl.types.length, 23);
 
 process.stdout.write(
-  `Validated public API coverage: ${crcInventory.root.values.length} values, ${crcInventory.root.types.length} types.\n`,
+  `Validated public API coverage: ${crcInventory.root.values.length} core values, ` +
+    `${crcInventory.root.types.length} core types, ${crcInventory.webgl.values.length} ` +
+    `WebGL values, and ${crcInventory.webgl.types.length} WebGL types.\n`,
 );

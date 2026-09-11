@@ -165,6 +165,21 @@ assert.throws(
   () => parsePublicMarkdown("invalid.md", invalidScript),
   /Raw HTML is not supported/u,
 );
+assert.equal(
+  validatePublicDocFrontmatter(
+    {
+      apiCategory: "types",
+      id: "api-types-webgl",
+      kind: "api",
+      slug: "webgl",
+      summary: "Public WebGL package types.",
+      title: "WebGL types",
+      typeDomain: "webgl",
+    },
+    "docs/site/api/types/webgl.md",
+  ).typeDomain,
+  "webgl",
+);
 
 process.stdout.write(
   "Validated public documentation metadata and safe Markdown rendering.\n",

@@ -1,5 +1,6 @@
 import * as core from '@crc/core';
 import * as internal from '@crc/core/internal';
+import * as webgl from '@crc/webgl';
 import {
   Fragment as ProductionFragment,
   jsx,
@@ -80,6 +81,7 @@ if (actual.length !== 58) {
 }
 
 const expectedInternal = [
+  'cancelBackendMountFrame',
   'createBackendToken',
   'defineBackendPrimitive',
   'executeBackendCRC',
@@ -89,9 +91,12 @@ const expectedInternal = [
   'getCurrentSurfaceDensity',
   'haveSameLayerNodeTree',
   'isBackendEventTargetLive',
+  'materializeRetainedLayerChildren',
   'mountBackendCRC',
   'registerNestedInteractionResolver',
+  'releaseBackendEventTarget',
   'requestCurrentInstanceFrame',
+  'retainBackendMountRoot',
   'setCurrentComponentAfterRender',
   'snapshotLayerNodeTree',
   'useBackendEventTarget',
@@ -105,6 +110,32 @@ if (JSON.stringify(actualInternal) !== JSON.stringify(expectedInternal)) {
 }
 if (typeof internal.createBackendToken('consumer') !== 'object') {
   throw new Error('@crc/core/internal did not create an opaque backend token.');
+}
+
+const expectedWebGL = [
+  'Cube',
+  'Group3D',
+  'Mesh',
+  'Sphere',
+  'WebGLLayer',
+  'crcAnimationFrame',
+  'crcWebGLContext',
+  'createWebGLGeometry',
+  'defineWebGLPrimitive',
+];
+const actualWebGL = Object.keys(webgl).sort();
+if (JSON.stringify(actualWebGL) !== JSON.stringify(expectedWebGL)) {
+  throw new Error(`Unexpected @crc/webgl exports: ${actualWebGL.join(', ')}`);
+}
+if (actualWebGL.length !== 9) {
+  throw new Error(
+    `Expected 9 @crc/webgl runtime exports, received ${actualWebGL.length}.`,
+  );
+}
+for (const exportName of expectedWebGL) {
+  if (typeof webgl[exportName] !== 'function') {
+    throw new Error(`Expected @crc/webgl ${exportName} to be a runtime function.`);
+  }
 }
 
 for (const [exportName, value] of Object.entries({
@@ -163,11 +194,45 @@ if (
   throw new Error('Focus policy descriptors did not retain their exact child.');
 }
 
+const runtimeGeometry = webgl.createWebGLGeometry({
+  positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+});
+const RuntimeWebGLPrimitive = webgl.defineWebGLPrimitive(
+  function renderRuntimeWebGLPrimitive() {},
+  { hit: { kind: 'none' } },
+);
+const runtimeWebGLElement = core.createElement(webgl.WebGLLayer, {
+  style: { width: 1, height: 1 },
+  children: core.createElement(core.Fragment, {
+    children: [
+      core.createElement(webgl.Mesh, {
+        geometry: runtimeGeometry,
+        style: {},
+      }),
+      core.createElement(RuntimeWebGLPrimitive, { style: {} }),
+    ],
+  }),
+});
+if (
+  runtimeWebGLElement.type !== webgl.WebGLLayer ||
+  runtimeWebGLElement.props.children.type !== core.Fragment ||
+  runtimeWebGLElement.$$typeof !== Symbol.for('@crc/core.element') ||
+  runtimeWebGLElement.props.children.$$typeof !== runtimeWebGLElement.$$typeof
+) {
+  throw new Error(
+    '@crc/webgl did not share the @crc/core Fragment and element identity.',
+  );
+}
+
 for (const specifier of [
   '@crc/core/lib/crc',
   '@crc/core/lib/types',
   '@crc/core/lib/global-state',
   '@crc/core/src/index',
+  '@crc/webgl/internal',
+  '@crc/webgl/lib/backend',
+  '@crc/webgl/lib/types',
+  '@crc/webgl/src/index',
 ]) {
   try {
     await import(specifier);

@@ -48,34 +48,40 @@ function crcEntryPoints(mode: string): ReadonlyMap<string, string> {
   ]);
 }
 
-function assertSingleCoreMode(
+function assertSingleRuntimeMode(
   metafile: Metafile,
   mode: string,
   repositoryRoot: string,
 ): void {
-  const coreRoot = resolve(repositoryRoot, "packages/core");
-  const expectedRoot = resolve(
-    coreRoot,
-    mode === "built" ? "dist" : "src",
-  );
   const inputs = Object.keys(metafile.inputs).map((path) =>
     isAbsolute(path) ? path : resolve(repositoryRoot, path),
   );
-  const coreInputs = inputs.filter(
-    (path) => path === coreRoot || path.startsWith(`${coreRoot}${sep}`),
-  );
-  if (
-    coreInputs.length === 0 ||
-    coreInputs.some(
-      (path) => path !== expectedRoot && !path.startsWith(`${expectedRoot}${sep}`),
-    ) ||
-    inputs.some((path) =>
-      path.includes(`${sep}node_modules${sep}@crc${sep}core${sep}`),
-    )
-  ) {
-    throw new Error(
-      `CRC Studio ${mode} runtime must bundle @crc/core once from ${expectedRoot}.`,
+  for (const packageName of ["core", "webgl"]) {
+    const packageRoot = resolve(repositoryRoot, `packages/${packageName}`);
+    const expectedRoot = resolve(
+      packageRoot,
+      mode === "built" ? "dist" : "src",
     );
+    const packageInputs = inputs.filter(
+      (path) =>
+        path === packageRoot || path.startsWith(`${packageRoot}${sep}`),
+    );
+    if (
+      packageInputs.length === 0 ||
+      packageInputs.some(
+        (path) =>
+          path !== expectedRoot && !path.startsWith(`${expectedRoot}${sep}`),
+      ) ||
+      inputs.some((path) =>
+        path.includes(
+          `${sep}node_modules${sep}@crc${sep}${packageName}${sep}`,
+        ),
+      )
+    ) {
+      throw new Error(
+        `CRC Studio ${mode} runtime must bundle @crc/${packageName} once from ${expectedRoot}.`,
+      );
+    }
   }
 }
 
@@ -115,7 +121,7 @@ export function crcRuntimeSource(mode: string) {
         target: "es2022",
         write: false,
       });
-      assertSingleCoreMode(result.metafile, mode, repositoryRoot);
+      assertSingleRuntimeMode(result.metafile, mode, repositoryRoot);
       const output = result.outputFiles[0]?.text;
       if (!output)
         throw new Error("CRC runtime bundling produced no browser output.");

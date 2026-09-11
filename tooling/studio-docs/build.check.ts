@@ -490,6 +490,7 @@ const typeDomains = [
   "filters",
   "layout",
   "styles",
+  "webgl",
 ] as const;
 const typeCollator = new Intl.Collator("en", {
   sensitivity: "base",

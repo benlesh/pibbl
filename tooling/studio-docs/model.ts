@@ -7,7 +7,8 @@ export type TypeDomain =
   | "events"
   | "filters"
   | "layout"
-  | "styles";
+  | "styles"
+  | "webgl";
 
 export interface PublicDocFrontmatter {
   readonly id: string;
@@ -77,6 +78,7 @@ const typeDomains = new Set<TypeDomain>([
   "filters",
   "layout",
   "styles",
+  "webgl",
 ]);
 const stableSlug = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 

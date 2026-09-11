@@ -6,6 +6,7 @@ const BUILT_ENTRY_SUFFIXES = new Map([
   ['@crc/core/jsx-runtime', '/packages/core/dist/jsx-runtime.mjs'],
   ['@crc/core/jsx-dev-runtime', '/packages/core/dist/jsx-dev-runtime.mjs'],
   ['@crc/core/internal', '/packages/core/dist/internal.mjs'],
+  ['@crc/webgl', '/packages/webgl/dist/index.mjs'],
 ]);
 
 export function assertBuiltCore(): Plugin {
@@ -31,7 +32,10 @@ export function assertBuiltCore(): Plugin {
     },
     transform(_, id) {
       const normalizedId = id.replaceAll('\\', '/');
-      if (normalizedId.includes('/packages/core/src/')) {
+      if (
+        normalizedId.includes('/packages/core/src/') ||
+        normalizedId.includes('/packages/webgl/src/')
+      ) {
         this.error(`Built mode loaded CRC source instead of package output: ${id}`);
       }
     },

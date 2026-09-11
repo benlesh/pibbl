@@ -177,13 +177,53 @@ import {
   KeyboardNavigation,
   crcCanvasContext,
 } from '@crc/core';
+import {
+  crcAnimationFrame,
+  crcWebGLContext,
+  createWebGLGeometry,
+  Cube,
+  defineWebGLPrimitive,
+  Group3D,
+  Mesh,
+  Sphere,
+  WebGLLayer,
+  type CRCWebGLCameraSnapshot,
+  type CRCWebGLContext,
+  type CRCWebGLGeometry,
+  type CRCWebGLGeometryInput,
+  type CRCWebGLHitCapability,
+  type CRCWebGLPerspectiveCamera,
+  type CRCWebGLPrimitiveCapabilities,
+  type CRCWebGLPrimitiveHitInput,
+  type CRCWebGLPrimitiveInput,
+  type CRCWebGLPrimitiveRender,
+  type CRCWebGLProgramProps,
+  type CRCWebGLTransformStyle,
+  type CRCWebGLVector3,
+  type CubeProps,
+  type CubeStyle,
+  type Group3DProps,
+  type Group3DStyle,
+  type MeshProps,
+  type MeshStyle,
+  type SphereProps,
+  type SphereStyle,
+  type WebGLLayerProps,
+  type WebGLLayerStyle,
+} from '@crc/webgl';
 
 // @ts-expect-error internal library modules are outside the public export map
 import type { CRCEventRoot } from '@crc/core/lib/types';
 // @ts-expect-error package source modules are outside the public export map
 import type { CRCEventDefinition } from '@crc/core/src/lib/events/event-definitions';
+// @ts-expect-error WebGL library modules are outside the public export map
+import type { WebGLCompletedFrame } from '@crc/webgl/lib/backend';
+// @ts-expect-error WebGL package source modules are outside the public export map
+import type { WebGLRenderEnvironment } from '@crc/webgl/src/lib/render-environment';
 void (undefined as unknown as CRCEventRoot);
 void (undefined as unknown as CRCEventDefinition);
+void (undefined as unknown as WebGLCompletedFrame);
+void (undefined as unknown as WebGLRenderEnvironment);
 
 const packageConsumerBackendToken: CRCBackendToken =
   createBackendToken('package-consumer');
@@ -1088,3 +1128,115 @@ crcCursor({
 crcCursor({ path: 'line', style: 'pointer' });
 // @ts-expect-error cursor configuration has no unrelated fields
 crcCursor({ style: 'pointer', capture: true });
+
+const consumerWebGLGeometryInput = {
+  positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+  indices: [0, 1, 2],
+} satisfies CRCWebGLGeometryInput;
+const consumerWebGLGeometry: CRCWebGLGeometry = createWebGLGeometry(
+  consumerWebGLGeometryInput,
+);
+const consumerWebGLVector: CRCWebGLVector3 = [0, 0, 5];
+const consumerWebGLCamera: CRCWebGLPerspectiveCamera = {
+  type: 'perspective',
+  position: consumerWebGLVector,
+  lookAt: [0, 0, 0],
+  up: [0, 1, 0],
+  fieldOfViewDegrees: 45,
+  near: 0.1,
+  far: 100,
+};
+
+const GeometryConsumerPrimitive = defineWebGLPrimitive<
+  {},
+  CRCWebGLTransformStyle
+>(
+  (_props, _style, context) => {
+    const publicContext: CRCWebGLContext = crcWebGLContext();
+    const timestamp: number = crcAnimationFrame();
+    void [context, publicContext, timestamp];
+  },
+  {
+    hit: {
+      kind: 'geometry',
+      geometry: () => consumerWebGLGeometry,
+    },
+  },
+);
+const CustomHitConsumerPrimitive = defineWebGLPrimitive<
+  { id: string },
+  CRCWebGLTransformStyle
+>(() => undefined, {
+  hit: {
+    kind: 'custom',
+    resolve: input => input.props.id === 'hit' ? 0 : null,
+  },
+});
+const DecorativeConsumerPrimitive = defineWebGLPrimitive<
+  {},
+  CRCWebGLTransformStyle
+>(() => undefined, { hit: { kind: 'none' } });
+
+export const createElementWebGLScene = createElement(
+  WebGLLayer,
+  {
+    camera: consumerWebGLCamera,
+    children: createElement(Group3D, {
+      children: [
+        createElement(Cube, { style: { color: '#74d3ae', size: 1 } }),
+        createElement(Sphere, { style: { radius: 0.5, translateX: 1 } }),
+        createElement(Mesh, {
+          geometry: consumerWebGLGeometry,
+          style: { color: '#f7c948' },
+        }),
+        createElement(GeometryConsumerPrimitive, { style: {} }),
+        createElement(CustomHitConsumerPrimitive, { id: 'hit', style: {} }),
+        createElement(DecorativeConsumerPrimitive, {
+          pointerEvents: 'none',
+          style: {},
+        }),
+      ],
+      style: { rotationYDegrees: 15 },
+    }),
+    style: { width: 320, height: 180 },
+  },
+);
+
+// @ts-expect-error Canvas filters belong on WebGLLayer, never inner WebGL geometry
+createElement(Cube, { style: { filter: { type: 'blur', radius: 2 } } });
+
+type PublicWebGLTypes = [
+  CRCWebGLCameraSnapshot,
+  CRCWebGLContext,
+  CRCWebGLGeometry,
+  CRCWebGLGeometryInput,
+  CRCWebGLHitCapability<{}, CRCWebGLTransformStyle>,
+  CRCWebGLPerspectiveCamera,
+  CRCWebGLPrimitiveCapabilities<
+    {},
+    CRCWebGLTransformStyle,
+    CRCWebGLTransformStyle,
+    CRCWebGLTransformStyle
+  >,
+  CRCWebGLPrimitiveHitInput<{}, CRCWebGLTransformStyle>,
+  CRCWebGLPrimitiveInput<
+    {},
+    CRCWebGLTransformStyle,
+    { readonly kind: 'none' }
+  >,
+  CRCWebGLPrimitiveRender<{}, CRCWebGLTransformStyle>,
+  CRCWebGLProgramProps<{}, { readonly kind: 'none' }>,
+  CRCWebGLTransformStyle,
+  CRCWebGLVector3,
+  CubeProps,
+  CubeStyle,
+  Group3DProps,
+  Group3DStyle,
+  MeshProps,
+  MeshStyle,
+  SphereProps,
+  SphereStyle,
+  WebGLLayerProps,
+  WebGLLayerStyle,
+];
+void (undefined as unknown as PublicWebGLTypes);

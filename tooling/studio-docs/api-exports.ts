@@ -59,6 +59,9 @@ export const crcPublicEntryPaths = {
   root: fileURLToPath(
     new URL("../../packages/core/src/index.ts", import.meta.url),
   ),
+  webgl: fileURLToPath(
+    new URL("../../packages/webgl/src/index.ts", import.meta.url),
+  ),
   types: fileURLToPath(
     new URL("../../packages/core/src/types.ts", import.meta.url),
   ),
@@ -116,8 +119,12 @@ export function analyzeApiCoverage(
   inventory: PublicApiInventory,
   pages: readonly ApiCoveragePage[],
 ): ApiCoverage {
-  const knownValues = new Set(inventory.root.values);
-  const knownTypes = new Set(inventory.root.types);
+  const knownValues = new Set(
+    Object.values(inventory).flatMap((entry) => entry.values),
+  );
+  const knownTypes = new Set(
+    Object.values(inventory).flatMap((entry) => entry.types),
+  );
   const knownOverview = new Set(
     Object.values(inventory).flatMap((entry) => entry.overview),
   );
