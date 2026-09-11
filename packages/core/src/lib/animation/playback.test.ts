@@ -4,6 +4,8 @@ import {
   crc,
   createElement,
   defineAnimation,
+  marker,
+  parallel,
   repeat,
   sequence,
   signal,
@@ -18,6 +20,7 @@ import {
 import { clearSharedState } from '../global-state';
 import { getSignalNode } from '../signals/graph';
 import {
+  queueBeginCommand,
   queueFrameCompletion,
   registerAdvanceParticipant,
 } from '../scheduler/realm-scheduler';
@@ -230,6 +233,66 @@ describe('scheduler-integrated animation playback', () => {
     }));
   });
 
+  it('preserves a healthy run when an adopted restart has a non-self conflict', () => {
+    const firstOutput = signal(0, { debugName: 'restart first output' });
+    const externalOutput = signal(0, { debugName: 'restart external output' });
+    const firstEvents: string[] = [];
+    const externalEvents: string[] = [];
+    const failures: unknown[] = [];
+    const first = playback(
+      track(firstOutput, tween({ to: 10, duration: 100 })),
+      {
+        debugName: 'restarting playback',
+        onEvent: event => firstEvents.push(event.type),
+        onError: error => failures.push(error),
+      },
+    );
+    const external = playback(
+      track(externalOutput, tween({ to: 20, duration: 100 })),
+      {
+        debugName: 'external playback',
+        onEvent: event => externalEvents.push(event.type),
+      },
+    );
+    first.handle.play();
+    external.handle.play();
+    driver.flush(0);
+    driver.flush(20);
+
+    first.adopt(parallel(
+      track(firstOutput, tween({ to: 100, duration: 100 })),
+      track(externalOutput, tween({ to: 200, duration: 100 })),
+    ), {
+      debugName: 'restarting playback',
+      onEvent: event => firstEvents.push(event.type),
+      onError: error => failures.push(error),
+    });
+    first.handle.play();
+    driver.flush(30);
+
+    expect(first.handle.status.get()).toBe('running');
+    expect(first.handle.currentTime.get()).toBe(30);
+    expect(external.handle.status.get()).toBe('running');
+    expect([firstOutput.get(), externalOutput.get()]).toEqual([3, 6]);
+    expect(firstEvents).toEqual(['start']);
+    expect(externalEvents).toEqual(['start']);
+    expect((failures[0] as Error).message).toMatch(
+      /restart external output.*external playback/iu,
+    );
+    expect(writerLeaseSnapshot().active).toBe(2);
+
+    first.handle.play({ conflict: 'replace' });
+    driver.flush(40);
+
+    expect(first.handle.status.get()).toBe('running');
+    expect(first.handle.currentTime.get()).toBe(0);
+    expect(external.handle.status.get()).toBe('cancelled');
+    expect([firstOutput.get(), externalOutput.get()]).toEqual([3, 6]);
+    expect(firstEvents.filter(event => event === 'cancel')).toHaveLength(1);
+    expect(externalEvents).toEqual(['start', 'cancel']);
+    expect(writerLeaseSnapshot().active).toBe(2);
+  });
+
   it('pauses without a jump, retains leases, and resumes from a fresh anchor', () => {
     const value = signal(0);
     const before = writerLeaseSnapshot();
@@ -305,6 +368,69 @@ describe('scheduler-integrated animation playback', () => {
     expect([value.get(), controller.handle.currentTime.get()]).toEqual([1, 10]);
     expect(() => controller.handle.setPlaybackRate(0)).toThrow(/finite and greater than zero/iu);
     expect(() => controller.handle.setPlaybackRate(Number.NaN)).toThrow(/finite and greater than zero/iu);
+  });
+
+  it('samples seekable time from a stable control anchor regardless of frame cadence', () => {
+    const jumpedValue = signal(0);
+    const jumped = playback(track(jumpedValue, tween({
+      from: 0,
+      to: 1_000,
+      duration: 1_000,
+    })));
+    jumped.handle.play();
+    jumped.handle.setPlaybackRate(0.1);
+    driver.flush(0);
+    driver.flush(1_000);
+    const oneJump = jumpedValue.get();
+    jumped.dispose();
+
+    const cadencedValue = signal(0);
+    const cadenced = playback(track(cadencedValue, tween({
+      from: 0,
+      to: 1_000,
+      duration: 1_000,
+    })));
+    cadenced.handle.play();
+    cadenced.handle.setPlaybackRate(0.1);
+    driver.flush(1_000);
+    for (let index = 1; index <= 10_000; index++) {
+      driver.flush(1_000 + index / 10);
+    }
+
+    expect(oneJump).toBe(100);
+    expect(cadencedValue.get()).toBe(oneJump);
+    expect(cadenced.handle.currentTime.get()).toBe(oneJump);
+  });
+
+  it('reanchors stable logical time only when pause-resume, reverse, or rate controls require it', () => {
+    const value = signal(0);
+    const controller = playback(track(value, tween({
+      from: 0,
+      to: 1_000,
+      duration: 1_000,
+    })));
+    controller.handle.play();
+    controller.handle.setPlaybackRate(0.1);
+    driver.flush(0);
+    driver.flush(50);
+    expect(value.get()).toBe(5);
+
+    controller.handle.pause();
+    driver.flush(60);
+    controller.handle.resume();
+    driver.flush(100);
+    driver.flush(120);
+    expect(value.get()).toBe(7);
+
+    controller.handle.reverse();
+    driver.flush(130);
+    driver.flush(140);
+    expect(value.get()).toBe(6);
+
+    controller.handle.setPlaybackRate(0.2);
+    driver.flush(150);
+    driver.flush(160);
+    expect(value.get()).toBe(4);
   });
 
   it('starts a fresh finite seekable program in reverse from its resolved terminal', () => {
@@ -548,6 +674,80 @@ describe('scheduler-integrated animation playback', () => {
     expect(calls).toEqual(['advance', 'complete', 'late-complete']);
   });
 
+  it('delivers an older run marker and finish before a newer Begin start at the same logical time', () => {
+    const events: string[] = [];
+    const older = playback(sequence(
+      wait(10),
+      marker('older marker'),
+    ), { onEvent: event => events.push(`older:${event.marker ?? event.type}`) });
+    const newerValue = signal(0);
+    const newer = playback(
+      track(newerValue, tween({ to: 10, duration: 100 })),
+      { onEvent: event => events.push(`newer:${event.type}`) },
+    );
+    older.handle.play();
+    driver.flush(0);
+    expect(events).toEqual(['older:start']);
+    events.length = 0;
+
+    newer.handle.play();
+    driver.flush(10);
+
+    expect(events).toEqual([
+      'older:older marker',
+      'older:finish',
+      'newer:start',
+    ]);
+    expect(older.handle.status.get()).toBe('finished');
+    expect(newer.handle.status.get()).toBe('running');
+  });
+
+  it('discards later owner deliveries when an earlier Complete callback disposes it', () => {
+    const statefulValue = signal(0);
+    const ownerEvents: string[] = [];
+    const ownerErrors: unknown[] = [];
+    const otherEvents: string[] = [];
+    let owner!: AnimationPlaybackController;
+    owner = playback(sequence(
+      wait(10),
+      marker('first owner marker'),
+      marker('second owner marker'),
+      track(statefulValue, stepper({
+        stepMilliseconds: 10,
+        initial: current => current,
+        step: state => state + 1,
+        read: state => state,
+      })),
+    ), {
+      onEvent: event => {
+        ownerEvents.push(event.marker ?? event.type);
+        if (event.marker === 'first owner marker') {
+          owner.dispose();
+          throw new Error('first owner callback failed');
+        }
+      },
+      onError: error => ownerErrors.push(error),
+    });
+    const other = playback(sequence(
+      wait(10),
+      marker('other marker'),
+    ), { onEvent: event => otherEvents.push(event.marker ?? event.type) });
+    owner.handle.play();
+    other.handle.play();
+    driver.flush(0);
+    ownerEvents.length = 0;
+    otherEvents.length = 0;
+
+    owner.handle.finish();
+    expect(() => driver.flush(10)).toThrow(/first owner callback failed/iu);
+
+    expect(ownerEvents).toEqual(['first owner marker']);
+    expect(ownerErrors).toEqual([]);
+    expect(owner.handle.status.get()).toBe('disposed');
+    expect(otherEvents).toEqual(['other marker', 'finish']);
+    expect(other.handle.status.get()).toBe('finished');
+  });
+
   it('cancels only a failing playback, discards its frame writes, and completes unrelated work', () => {
     const failed = signal(0);
     const healthy = signal(0);
@@ -571,6 +771,191 @@ describe('scheduler-integrated animation playback', () => {
     expect(failedController.handle.status.get()).toBe('cancelled');
     expect(healthyController.handle.status.get()).toBe('running');
     expect((errors[0] as Error).message).toMatch(/sample exploded/iu);
+  });
+
+  it('retries terminal sampling and suppresses finish when equality rejects Commit', () => {
+    let rejectTerminalOnce = true;
+    const value = signal(0, {
+      equals: (previous, next) => {
+        if (next === 10 && rejectTerminalOnce) {
+          rejectTerminalOnce = false;
+          throw new Error('terminal equality rejected');
+        }
+        return Object.is(previous, next);
+      },
+    });
+    const events: string[] = [];
+    const before = writerLeaseSnapshot();
+    const controller = playback(
+      track(value, tween({ from: 0, to: 10, duration: 10 })),
+      { onEvent: event => events.push(event.type) },
+    );
+    controller.handle.play();
+    driver.flush(0);
+
+    expect(() => driver.flush(10)).toThrow(/terminal equality rejected/iu);
+    expect([value.get(), controller.handle.currentTime.get(), controller.handle.status.get()])
+      .toEqual([0, 0, 'running']);
+    expect(events).toEqual(['start']);
+    expect(writerLeaseSnapshot().active).toBe(before.active + 1);
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(1);
+    expect(driver.pendingHostFrames).toBe(1);
+
+    driver.flush(20);
+    expect([value.get(), controller.handle.currentTime.get(), controller.handle.status.get()])
+      .toEqual([10, 10, 'finished']);
+    expect(events).toEqual(['start', 'finish']);
+    expect(writerLeaseSnapshot().active).toBe(before.active);
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(0);
+  });
+
+  it('retries rejected authorization from the old position and redelivers crossed milestones', () => {
+    const value = signal(0, { debugName: 'authorization retry output' });
+    const events: string[] = [];
+    const controller = playback(sequence(
+      wait(5),
+      marker('committed marker'),
+      track(value, tween({ from: 0, to: 20, duration: 15 })),
+    ), { onEvent: event => events.push(event.marker ?? event.type) });
+    controller.handle.play();
+    driver.flush(0);
+
+    const unauthorizedWriter = Object.freeze({});
+    let unregister = () => {};
+    unregister = registerAdvanceParticipant((_snapshot, batch) => {
+      unregister();
+      batch.stage(value, 999, unauthorizedWriter);
+    });
+
+    expect(() => driver.flush(10)).toThrow(/does not own the active lease/iu);
+    expect([value.get(), controller.handle.currentTime.get(), controller.handle.status.get()])
+      .toEqual([0, 0, 'running']);
+    expect(events).toEqual(['start']);
+    expect(writerLeaseSnapshot().active).toBe(1);
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(1);
+
+    driver.flush(20);
+    expect([value.get(), controller.handle.currentTime.get(), controller.handle.status.get()])
+      .toEqual([20, 20, 'finished']);
+    expect(events).toEqual(['start', 'committed marker', 'finish']);
+    expect(writerLeaseSnapshot().active).toBe(0);
+  });
+
+  it('retains the run and retries an explicit cancellation rejected by Commit', () => {
+    const value = signal(0, { debugName: 'cancel retry output' });
+    const events: string[] = [];
+    const controller = playback(
+      track(value, tween({ from: 0, to: 10, duration: 100 })),
+      { onEvent: event => events.push(event.type) },
+    );
+    controller.handle.play();
+    driver.flush(0);
+
+    const unauthorizedWriter = Object.freeze({});
+    let unregister = () => {};
+    unregister = registerAdvanceParticipant((_snapshot, batch) => {
+      unregister();
+      batch.stage(value, 999, unauthorizedWriter);
+    });
+    controller.handle.cancel();
+
+    expect(() => driver.flush(10)).toThrow(/does not own the active lease/iu);
+    expect(controller.handle.status.get()).toBe('running');
+    expect(events).toEqual(['start']);
+    expect(writerLeaseSnapshot().active).toBe(1);
+    expect(driver.pendingHostFrames).toBe(1);
+
+    driver.flush(20);
+    expect(controller.handle.status.get()).toBe('cancelled');
+    expect(events).toEqual(['start', 'cancel']);
+    expect(writerLeaseSnapshot().active).toBe(0);
+  });
+
+  it('restores registration and retries a pause rejected by Commit', () => {
+    const value = signal(0, { debugName: 'pause retry output' });
+    const controller = playback(
+      track(value, tween({ from: 0, to: 10, duration: 100 })),
+    );
+    controller.handle.play();
+    driver.flush(0);
+
+    const unauthorizedWriter = Object.freeze({});
+    let unregister = () => {};
+    unregister = registerAdvanceParticipant((_snapshot, batch) => {
+      unregister();
+      batch.stage(value, 999, unauthorizedWriter);
+    });
+    controller.handle.pause();
+
+    expect(() => driver.flush(10)).toThrow(/does not own the active lease/iu);
+    expect(controller.handle.status.get()).toBe('running');
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(1);
+    expect(driver.pendingHostFrames).toBe(1);
+
+    driver.flush(20);
+    expect(controller.handle.status.get()).toBe('paused');
+    expect(controller.handle.currentTime.get()).toBe(0);
+    expect(value.get()).toBe(0);
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(0);
+    expect(writerLeaseSnapshot().active).toBe(1);
+  });
+
+  it('restores a paused run and retries resume when Commit rejects it', () => {
+    const value = signal(0, { debugName: 'resume retry output' });
+    const controller = playback(
+      track(value, tween({ from: 0, to: 10, duration: 100 })),
+    );
+    controller.handle.play();
+    driver.flush(0);
+    controller.handle.pause();
+    driver.flush(1);
+
+    const unauthorizedWriter = Object.freeze({});
+    controller.handle.resume();
+    let unregister = () => {};
+    queueBeginCommand(() => {
+      unregister = registerAdvanceParticipant((_snapshot, batch) => {
+        unregister();
+        batch.stage(value, 999, unauthorizedWriter);
+      });
+    });
+
+    expect(() => driver.flush(10)).toThrow(/does not own the active lease/iu);
+    expect([value.get(), controller.handle.currentTime.get(), controller.handle.status.get()])
+      .toEqual([0, 0, 'paused']);
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(0);
+    expect(driver.pendingHostFrames).toBe(1);
+
+    driver.flush(20);
+    expect(controller.handle.status.get()).toBe('running');
+    expect(controller.handle.currentTime.get()).toBe(0);
+    driver.flush(30);
+    expect(value.get()).toBe(1);
+  });
+
+  it('finalizes playback when an observer throws after Commit has mutated values', () => {
+    const value = signal(0);
+    const events: string[] = [];
+    const before = writerLeaseSnapshot();
+    const controller = playback(
+      track(value, tween({ from: 0, to: 10, duration: 10 })),
+      { onEvent: event => events.push(event.type) },
+    );
+    controller.handle.play();
+    driver.flush(0);
+    const observer = () => {
+      throw new Error('committed observer failed');
+    };
+    getSignalNode(value).observers.add(observer);
+
+    expect(() => driver.flush(10)).toThrow(/observer notifications failed/iu);
+    getSignalNode(value).observers.delete(observer);
+    expect([value.get(), controller.handle.currentTime.get(), controller.handle.status.get()])
+      .toEqual([10, 10, 'finished']);
+    expect(events).toEqual(['start', 'finish']);
+    expect(writerLeaseSnapshot().active).toBe(before.active);
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(0);
+    expect(driver.pendingHostFrames).toBe(0);
   });
 
   it('keeps an existing lease on error and cancels it in order when replacement is requested', () => {
@@ -701,6 +1086,133 @@ describe('scheduler-integrated animation playback', () => {
       kind: 'animation-write',
       target: 'future trace output',
     }));
+    restoreTrace();
+  });
+
+  it.each([
+    {
+      point: 'Begin command',
+      throwsAt: (record: CRCSchedulerTraceRecord) =>
+        record.kind === 'animation-command',
+    },
+    {
+      point: 'Begin start milestone',
+      throwsAt: (record: CRCSchedulerTraceRecord) =>
+        record.kind === 'animation-milestone' && record.event === 'start',
+    },
+    {
+      point: 'Advance sample',
+      throwsAt: (record: CRCSchedulerTraceRecord) =>
+        record.kind === 'animation-sample',
+    },
+    {
+      point: 'Complete write',
+      throwsAt: (record: CRCSchedulerTraceRecord) =>
+        record.kind === 'animation-write',
+    },
+  ])('isolates a trace collector exception at $point', ({ throwsAt }) => {
+    const value = signal(0);
+    const events: string[] = [];
+    const before = writerLeaseSnapshot();
+    const controller = playback(
+      track(value, tween({ from: 0, to: 10, duration: 10 })),
+      { onEvent: event => events.push(event.type) },
+    );
+    const restoreTrace = installSchedulerTraceCollectorForTest(record => {
+      if (throwsAt(record)) throw new Error('trace collector exploded');
+    });
+
+    expect(() => {
+      controller.handle.play();
+      driver.flush(0);
+      driver.flush(10);
+    }).not.toThrow();
+    expect(value.get()).toBe(10);
+    expect(controller.handle.status.get()).toBe('finished');
+    expect(events).toEqual(['start', 'finish']);
+    expect(writerLeaseSnapshot().active).toBe(before.active);
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(0);
+    restoreTrace();
+  });
+
+  it('isolates trace collector exceptions from Advance marker and stepper facts', () => {
+    const markerValue = signal(0);
+    const markerEvents: string[] = [];
+    const markerController = playback(sequence(
+      marker('trace marker'),
+      track(markerValue, tween({ from: 0, to: 10, duration: 10 })),
+    ), { onEvent: event => markerEvents.push(event.marker ?? event.type) });
+    let restoreTrace = installSchedulerTraceCollectorForTest(record => {
+      if (record.kind === 'animation-milestone' && record.event === 'marker') {
+        throw new Error('marker trace exploded');
+      }
+    });
+    expect(() => {
+      markerController.handle.play();
+      driver.flush(0);
+      driver.flush(10);
+    }).not.toThrow();
+    expect(markerValue.get()).toBe(10);
+    expect(markerController.handle.status.get()).toBe('finished');
+    expect(markerEvents).toEqual(['start', 'trace marker', 'finish']);
+    restoreTrace();
+
+    const stepped = signal(0);
+    const stepperEvents: string[] = [];
+    const stepperController = playback(track(stepped, stepper({
+      stepMilliseconds: 10,
+      initial: current => current,
+      step: state => state + 1,
+      read: state => state,
+      done: state => state >= 1,
+    })), { onEvent: event => stepperEvents.push(event.type) });
+    restoreTrace = installSchedulerTraceCollectorForTest(record => {
+      if (record.kind === 'animation-stepper') {
+        throw new Error('stepper trace exploded');
+      }
+    });
+    expect(() => {
+      stepperController.handle.play();
+      driver.flush(20);
+      if (stepperController.handle.status.get() !== 'finished') driver.flush(30);
+    }).not.toThrow();
+    expect(stepped.get()).toBe(1);
+    expect(stepperController.handle.status.get()).toBe('finished');
+    expect(stepperEvents).toEqual(['start', 'finish']);
+    restoreTrace();
+  });
+
+  it('isolates a trace collector exception from evaluator error cleanup and callbacks', () => {
+    const value = signal(0);
+    const events: string[] = [];
+    const errors: unknown[] = [];
+    const before = writerLeaseSnapshot();
+    const controller = playback(track(value, defineAnimation({
+      duration: 100,
+      sample: ({ localTime }) => {
+        if (localTime >= 10) throw new Error('sampler exploded');
+        return 1;
+      },
+    })), {
+      onEvent: event => events.push(event.type),
+      onError: error => errors.push(error),
+    });
+    const restoreTrace = installSchedulerTraceCollectorForTest(record => {
+      if (record.kind === 'animation-error') throw new Error('error trace exploded');
+    });
+
+    expect(() => {
+      controller.handle.play();
+      driver.flush(0);
+      driver.flush(10);
+    }).not.toThrow();
+    expect(value.get()).toBe(1);
+    expect(controller.handle.status.get()).toBe('cancelled');
+    expect(events).toEqual(['start', 'cancel']);
+    expect(errors).toHaveLength(1);
+    expect((errors[0] as Error).message).toMatch(/sampler exploded/iu);
+    expect(writerLeaseSnapshot().active).toBe(before.active);
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(0);
     restoreTrace();
   });
 });

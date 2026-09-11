@@ -154,6 +154,22 @@ function firstConflict(nodes: readonly SignalNode<unknown>[]): {
   return undefined;
 }
 
+function firstConflictExcept(
+  nodes: readonly SignalNode<unknown>[],
+  ignoredToken: object | undefined,
+): {
+  readonly node: SignalNode<unknown>;
+  readonly lease: WriterLease;
+} | undefined {
+  for (const node of nodes) {
+    const lease = leases.get(node);
+    if (lease !== undefined && lease.owner.token !== ignoredToken) {
+      return { node, lease };
+    }
+  }
+  return undefined;
+}
+
 function cancelReplacedOwners(conflicting: readonly WriterLease[]): void {
   const failures: unknown[] = [];
   for (const lease of conflicting) {
@@ -225,6 +241,21 @@ export function writerLeaseSnapshot(): WriterLeaseSnapshot {
     replacements,
     activeOutputs: Object.freeze([...leases.keys()].map(signalName)),
   });
+}
+
+/** @internal Validates activation and conflicts without disturbing one current owner. */
+export function preflightProgramWriterLeaseAcquisition(
+  program: CRCAnimationProgram,
+  ignoredToken?: object,
+): void {
+  preflightProgramActivation(program);
+  const outputs = getProgramRecord(program).outputs;
+  const nodes = outputs.map(output => getSignalNode(output));
+  const occupied = firstConflictExcept(nodes, ignoredToken);
+  if (occupied !== undefined) {
+    conflicts++;
+    throw conflictError(occupied.node, occupied.lease);
+  }
 }
 
 /** @internal Acquires every program output for one future playback run. */

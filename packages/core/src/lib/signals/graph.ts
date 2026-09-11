@@ -553,7 +553,7 @@ export interface SignalCommitBatch {
   read<T>(signal: WritableSignal<T>): T;
   stage<T>(signal: WritableSignal<T>, value: T, writer: object): void;
   discardWriter(writer: object): void;
-  commit(): void;
+  commit(onApplied?: () => void): void;
   clear(): void;
 }
 
@@ -586,7 +586,7 @@ export function createSignalCommitBatch(): SignalCommitBatch {
         }
       }
     },
-    commit(): void {
+    commit(onApplied?: () => void): void {
       const candidates = [...staged.values()];
       staged.clear();
       for (const candidate of candidates) {
@@ -610,6 +610,7 @@ export function createSignalCommitBatch(): SignalCommitBatch {
         node.value = candidate.value;
         node.version++;
       }
+      onApplied?.();
       const failures: unknown[] = [];
       for (const candidate of changed) {
         failures.push(...notifySignalObservers(candidate.node));

@@ -33,6 +33,15 @@ export interface CRCBeginCommandHandle {
 
 export type CRCFrameCompletion = (snapshot: CRCFrameSnapshot) => void;
 
+export interface CRCCommitOutcome {
+  readonly applied: boolean;
+}
+
+export type CRCFrameCommitAcknowledgement = (
+  snapshot: CRCFrameSnapshot,
+  outcome: CRCCommitOutcome,
+) => void;
+
 export type CRCSchedulerTraceRecord =
   | {
       readonly kind: 'animation-command';

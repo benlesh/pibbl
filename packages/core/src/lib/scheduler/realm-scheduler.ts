@@ -15,6 +15,7 @@ import type {
   CRCAdvanceParticipant,
   CRCBeginCommand,
   CRCBeginCommandHandle,
+  CRCFrameCommitAcknowledgement,
   CRCFrameCompletion,
   CRCFramePhase,
   CRCFrameSnapshot,
@@ -67,6 +68,12 @@ interface BeginCommandRegistration {
     readonly command: CRCBeginCommand;
   };
   active: boolean;
+}
+
+interface OrderedPlaybackCompletion {
+  readonly registrationOrder: number;
+  readonly sequence: number;
+  readonly callback: CRCFrameCompletion;
 }
 
 export interface RendererParticipantOwner {
@@ -124,6 +131,9 @@ let releasedRootRegistrations = 0;
 let currentFramePlanAdmissionDepth = 0;
 let nextBeginCommandSequence = 0;
 let currentFramePlaybackCompletions: CRCFrameCompletion[] | undefined;
+let currentFrameCommitAcknowledgements: CRCFrameCommitAcknowledgement[] | undefined;
+let currentFrameOrderedPlaybackCompletions: OrderedPlaybackCompletion[] | undefined;
+let nextOrderedPlaybackCompletionSequence = 0;
 let schedulerTraceCollector: CRCSchedulerTraceCollector | undefined;
 
 setSignalGraphPlanWorkNotifier(syncSignalGraphPlanWork);
@@ -230,6 +240,35 @@ export function queueCurrentFrameCompletion(callback: CRCFrameCompletion): void 
   currentFramePlaybackCompletions.push(callback);
 }
 
+/** Registers playback state adoption against this frame's explicit Commit outcome. */
+export function queueCurrentFrameCommitAcknowledgement(
+  callback: CRCFrameCommitAcknowledgement,
+): void {
+  if (currentFrameCommitAcknowledgements === undefined ||
+    (phase !== 'begin' && phase !== 'advance')) {
+    throw new Error(
+      'CRC frame Commit acknowledgements may only be queued during Begin or Advance.',
+    );
+  }
+  currentFrameCommitAcknowledgements.push(callback);
+}
+
+/** Queues one playback delivery ordered by run identity, then source insertion. */
+export function queueCurrentFrameOrderedPlaybackCompletion(
+  registrationOrder: number,
+  callback: CRCFrameCompletion,
+): void {
+  if (currentFrameOrderedPlaybackCompletions === undefined) {
+    queueFrameCompletion(callback);
+    return;
+  }
+  currentFrameOrderedPlaybackCompletions.push({
+    registrationOrder,
+    sequence: ++nextOrderedPlaybackCompletionSequence,
+    callback,
+  });
+}
+
 export function queueFrameCompletion(callback: CRCFrameCompletion): void {
   frameCompletions.push(callback);
   requestHostFrameIfNeeded();
@@ -237,7 +276,13 @@ export function queueFrameCompletion(callback: CRCFrameCompletion): void {
 
 /** @internal Emits one immutable fact only while a source-only collector is installed. */
 export function recordSchedulerTrace(record: CRCSchedulerTraceRecord): void {
-  schedulerTraceCollector?.(Object.freeze(record));
+  const collector = schedulerTraceCollector;
+  if (collector === undefined) return;
+  try {
+    collector(Object.freeze(record));
+  } catch {
+    if (schedulerTraceCollector === collector) schedulerTraceCollector = undefined;
+  }
 }
 
 export function requestRendererParticipantWork(
@@ -311,6 +356,9 @@ export function snapshotRealmScheduler(): RealmSchedulerSnapshot {
     advanceParticipants: advanceRegistrations.size,
     completionCallbacks:
       frameCompletions.length +
+      (currentFrameCommitAcknowledgements?.length ?? 0) +
+      (currentFramePlaybackCompletions?.length ?? 0) +
+      (currentFrameOrderedPlaybackCompletions?.length ?? 0) +
       currentRendererParticipantCompletions.length +
       nextRendererParticipantCompletions.length,
     createdRootRegistrations,
@@ -380,6 +428,8 @@ function runFrame(hostTime: number): void {
   const completions = frameCompletions.splice(0);
   const batch = createSignalCommitBatch();
   currentFramePlaybackCompletions = [];
+  currentFrameCommitAcknowledgements = [];
+  currentFrameOrderedPlaybackCompletions = [];
   for (const registration of commands) {
     if (!registration.active) continue;
     registration.active = false;
@@ -409,10 +459,23 @@ function runFrame(hostTime: number): void {
   }
 
   phase = 'commit';
+  let commitApplied = false;
   try {
-    withCurrentFramePlanAdmission(() => batch.commit());
+    withCurrentFramePlanAdmission(() => batch.commit(() => {
+      commitApplied = true;
+    }));
   } catch (error) {
     errors.push(error);
+  }
+  const commitAcknowledgements = currentFrameCommitAcknowledgements;
+  currentFrameCommitAcknowledgements = undefined;
+  const commitOutcome = Object.freeze({ applied: commitApplied });
+  for (const acknowledgement of commitAcknowledgements) {
+    try {
+      acknowledgement(snapshot, commitOutcome);
+    } catch (error) {
+      errors.push(error);
+    }
   }
 
   phase = 'plan';
@@ -544,10 +607,23 @@ function runFrame(hostTime: number): void {
     }
   }
   const playbackCompletions = currentFramePlaybackCompletions;
-  currentFramePlaybackCompletions = undefined;
   for (const completion of playbackCompletions) {
     try {
       completion(snapshot);
+    } catch (error) {
+      errors.push(error);
+    }
+  }
+  currentFramePlaybackCompletions = undefined;
+  const orderedPlaybackCompletions = currentFrameOrderedPlaybackCompletions;
+  currentFrameOrderedPlaybackCompletions = undefined;
+  orderedPlaybackCompletions.sort((left, right) =>
+    left.registrationOrder - right.registrationOrder ||
+    left.sequence - right.sequence,
+  );
+  for (const completion of orderedPlaybackCompletions) {
+    try {
+      completion.callback(snapshot);
     } catch (error) {
       errors.push(error);
     }

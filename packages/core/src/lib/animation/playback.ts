@@ -6,7 +6,9 @@ import {
 import type { WritableSignal } from '../signals/types.js';
 import {
   queueBeginCommand,
+  queueCurrentFrameCommitAcknowledgement,
   queueCurrentFrameCompletion,
+  queueCurrentFrameOrderedPlaybackCompletion,
   recordSchedulerTrace,
   registerAdvanceParticipant,
   snapshotRealmScheduler,
@@ -36,6 +38,7 @@ import type {
 } from './types.js';
 import {
   acquireProgramWriterLeases,
+  preflightProgramWriterLeaseAcquisition,
   type ProgramWriterLease,
 } from './writer-leases.js';
 
@@ -75,6 +78,7 @@ interface PlaybackRun {
   pendingEvaluation: PendingEvaluation | undefined;
   unregisterAdvance: (() => void) | undefined;
   released: boolean;
+  startPending: boolean;
 }
 
 interface PendingTraceWrite {
@@ -86,10 +90,17 @@ interface PendingTraceWrite {
 interface FrameDelivery {
   readonly frameId: number;
   readonly logicalTime: number;
-  readonly events: CRCPlaybackEvent[];
-  readonly errors: unknown[];
+  readonly events: Array<{
+    readonly event: CRCPlaybackEvent;
+    readonly registrationOrder: number;
+  }>;
+  readonly errors: Array<{
+    readonly error: unknown;
+    readonly registrationOrder: number;
+  }>;
   readonly terminalRuns: Set<PlaybackRun>;
   readonly writes: PendingTraceWrite[];
+  commitApplied: boolean;
 }
 
 export interface AnimationPlaybackSnapshot {
@@ -204,13 +215,6 @@ function finiteDuration(duration: ProgramDuration): number | undefined {
   return duration.kind === 'finite' ? duration.milliseconds : undefined;
 }
 
-function throwFailures(failures: readonly unknown[]): void {
-  if (failures.length === 1) throw failures[0];
-  if (failures.length > 1) {
-    throw new AggregateError(failures, 'Multiple CRC playback callbacks failed.');
-  }
-}
-
 /**
  * Creates one scheduler-owned playback slot. Component lifetime is added by
  * crcPlayback in the following implementation task.
@@ -251,10 +255,18 @@ export function createAnimationPlaybackController(
       errors: [],
       terminalRuns: new Set(),
       writes: [],
+      commitApplied: false,
     };
     delivery = current;
+    queueCurrentFrameCommitAcknowledgement((_snapshot, outcome) => {
+      current.commitApplied = outcome.applied;
+    });
     queueCurrentFrameCompletion(() => {
       if (delivery === current) delivery = undefined;
+      if (!current.commitApplied) {
+        queuedMilestones -= current.events.length;
+        return;
+      }
       for (const terminalRun of current.terminalRuns) releaseRun(terminalRun);
 
       for (const write of current.writes) {
@@ -270,32 +282,30 @@ export function createAnimationPlaybackController(
         });
       }
 
-      queuedMilestones -= current.events.length;
-      if (disposed) return;
-      const failures: unknown[] = [];
-      for (const event of current.events) {
-        try {
-          options.onEvent?.(event);
-        } catch (error) {
-          failures.push(error);
-        }
+      for (const { event, registrationOrder } of current.events) {
+        queueCurrentFrameOrderedPlaybackCompletion(registrationOrder, () => {
+          queuedMilestones--;
+          if (!disposed) options.onEvent?.(event);
+        });
       }
-      for (const error of current.errors) {
-        try {
+      for (const { error, registrationOrder } of current.errors) {
+        queueCurrentFrameOrderedPlaybackCompletion(registrationOrder, () => {
+          if (disposed) return;
           if (options.onError) options.onError(error);
-          else failures.push(error);
-        } catch (callbackError) {
-          failures.push(callbackError);
-        }
+          else throw error;
+        });
       }
-      throwFailures(failures);
     });
     return current;
   }
 
-  function queueEvent(snapshot: CRCFrameSnapshot, event: CRCPlaybackEvent): void {
+  function queueEvent(
+    snapshot: CRCFrameSnapshot,
+    event: CRCPlaybackEvent,
+    registrationOrder: number,
+  ): void {
     const frame = ensureDelivery(snapshot);
-    frame.events.push(event);
+    frame.events.push({ event, registrationOrder });
     queuedMilestones++;
     recordSchedulerTrace({
       kind: 'animation-milestone',
@@ -308,15 +318,22 @@ export function createAnimationPlaybackController(
     });
   }
 
-  function queueError(snapshot: CRCFrameSnapshot, error: unknown): void {
-    ensureDelivery(snapshot).errors.push(error);
-    recordSchedulerTrace({
-      kind: 'animation-error',
-      frameId: snapshot.frameId,
-      logicalTime: snapshot.logicalTime,
-      debugName: debugName(),
-      error,
-    });
+  function queueError(
+    snapshot: CRCFrameSnapshot,
+    error: unknown,
+    registrationOrder: number,
+    trace = true,
+  ): void {
+    ensureDelivery(snapshot).errors.push({ error, registrationOrder });
+    if (trace) {
+      recordSchedulerTrace({
+        kind: 'animation-error',
+        frameId: snapshot.frameId,
+        logicalTime: snapshot.logicalTime,
+        debugName: debugName(),
+        error,
+      });
+    }
   }
 
   function stage<T>(
@@ -374,13 +391,32 @@ export function createAnimationPlaybackController(
     releaseImmediately = false,
   ): void {
     if (target.status === 'ending') return;
+    if (target.startPending) {
+      target.startPending = false;
+      queueEvent(snapshot, playbackEvent('start', snapshot), target.registrationOrder);
+    }
+    const previousStatus = target.status;
     target.status = 'ending';
-    target.unregisterAdvance?.();
-    target.unregisterAdvance = undefined;
     stageStatus(batch, snapshot, 'cancelled');
-    queueEvent(snapshot, playbackEvent('cancel', snapshot));
-    scheduleTerminal(snapshot, target);
-    if (releaseImmediately) releaseRun(target);
+    queueEvent(snapshot, playbackEvent('cancel', snapshot), target.registrationOrder);
+    if (releaseImmediately) {
+      target.unregisterAdvance?.();
+      target.unregisterAdvance = undefined;
+      scheduleTerminal(snapshot, target);
+      releaseRun(target);
+      return;
+    }
+    queueCurrentFrameCommitAcknowledgement((_committedSnapshot, outcome) => {
+      if (disposed || run !== target || target.released) return;
+      if (!outcome.applied) {
+        target.status = previousStatus;
+        enqueue('cancel', target.generation);
+        return;
+      }
+      target.unregisterAdvance?.();
+      target.unregisterAdvance = undefined;
+      scheduleTerminal(snapshot, target);
+    });
   }
 
   function queueEvaluationTraces(
@@ -388,6 +424,7 @@ export function createAnimationPlaybackController(
     snapshot: CRCFrameSnapshot,
     result: ProgramEvaluationResult,
     stagedOutputs: ReadonlySet<WritableSignal<unknown>>,
+    sampledTime: number,
   ): void {
     recordSchedulerTrace({
       kind: 'animation-sample',
@@ -395,7 +432,7 @@ export function createAnimationPlaybackController(
       logicalTime: snapshot.logicalTime,
       registrationOrder: target.registrationOrder,
       debugName: debugName(),
-      localTime: target.position,
+      localTime: sampledTime,
       direction: target.direction,
     });
     for (const output of stagedOutputs) {
@@ -422,6 +459,7 @@ export function createAnimationPlaybackController(
   }
 
   function queueEvaluationMilestones(
+    target: PlaybackRun,
     snapshot: CRCFrameSnapshot,
     result: ProgramEvaluationResult,
   ): void {
@@ -432,7 +470,7 @@ export function createAnimationPlaybackController(
         milestone.programPath,
         milestone.iteration,
         milestone.kind === 'marker' ? milestone.marker : undefined,
-      ));
+      ), target.registrationOrder);
     }
   }
 
@@ -447,7 +485,7 @@ export function createAnimationPlaybackController(
   function registerRun(target: PlaybackRun): void {
     if (target.unregisterAdvance !== undefined || target.released) return;
     target.unregisterAdvance = registerAdvanceParticipant((snapshot, batch) => {
-      if (disposed || run !== target || target.released) return;
+      if (disposed || run !== target || target.released || target.status === 'ending') return;
       advanceRun(target, snapshot, batch);
     });
   }
@@ -527,12 +565,27 @@ export function createAnimationPlaybackController(
       }
     } catch (error) {
       batch.discardWriter(target.token);
-      target.unregisterAdvance?.();
-      target.unregisterAdvance = undefined;
       stageStatus(batch, snapshot, 'cancelled');
-      queueEvent(snapshot, playbackEvent('cancel', snapshot));
-      queueError(snapshot, error);
-      scheduleTerminal(snapshot, target);
+      recordSchedulerTrace({
+        kind: 'animation-error',
+        frameId: snapshot.frameId,
+        logicalTime: snapshot.logicalTime,
+        debugName: debugName(),
+        error,
+      });
+      queueCurrentFrameCommitAcknowledgement((_committedSnapshot, outcome) => {
+        if (!outcome.applied || disposed || run !== target || target.released) return;
+        if (target.startPending) {
+          target.startPending = false;
+          queueEvent(snapshot, playbackEvent('start', snapshot), target.registrationOrder);
+        }
+        target.status = 'ending';
+        target.unregisterAdvance?.();
+        target.unregisterAdvance = undefined;
+        queueEvent(snapshot, playbackEvent('cancel', snapshot), target.registrationOrder);
+        queueError(snapshot, error, target.registrationOrder, false);
+        scheduleTerminal(snapshot, target);
+      });
       return;
     }
 
@@ -544,30 +597,40 @@ export function createAnimationPlaybackController(
     const duration = result.terminal.duration;
     const presentedTime = duration !== undefined && Number.isFinite(duration) &&
       result.terminal.atEnd ? duration : destination;
-    target.position = presentedTime;
-    target.previousTime = presentedTime;
-    target.anchorPosition = presentedTime;
-    target.anchorLogicalTime = snapshot.logicalTime;
-    target.pendingEvaluation = undefined;
     stageCurrentTime(batch, snapshot, presentedTime);
-    queueEvaluationTraces(target, snapshot, result, stagedOutputs);
-    queueEvaluationMilestones(snapshot, result);
+    queueEvaluationTraces(target, snapshot, result, stagedOutputs, presentedTime);
 
     const terminalReached = target.status === 'running' && result.terminal.reached ||
       pending?.kind === 'finish';
     if (terminalReached) {
-      target.unregisterAdvance?.();
-      target.unregisterAdvance = undefined;
       stageStatus(batch, snapshot, 'finished');
-      queueEvent(snapshot, playbackEvent('finish', snapshot));
-      scheduleTerminal(snapshot, target);
-      return;
+    } else {
+      stageStatus(batch, snapshot, target.status === 'paused' ? 'paused' : 'running');
     }
-    stageStatus(batch, snapshot, target.status === 'paused' ? 'paused' : 'running');
-    if (target.status === 'paused') {
-      target.unregisterAdvance?.();
-      target.unregisterAdvance = undefined;
-    }
+    queueCurrentFrameCommitAcknowledgement((_committedSnapshot, outcome) => {
+      if (!outcome.applied || disposed || run !== target || target.released) return;
+      target.position = presentedTime;
+      target.previousTime = presentedTime;
+      if (pending?.kind === 'seek') {
+        target.anchorPosition = presentedTime;
+        target.anchorLogicalTime = snapshot.logicalTime;
+      }
+      target.pendingEvaluation = undefined;
+      if (target.startPending) {
+        target.startPending = false;
+        queueEvent(snapshot, playbackEvent('start', snapshot), target.registrationOrder);
+      }
+      queueEvaluationMilestones(target, snapshot, result);
+      if (terminalReached) {
+        target.unregisterAdvance?.();
+        target.unregisterAdvance = undefined;
+        queueEvent(snapshot, playbackEvent('finish', snapshot), target.registrationOrder);
+        scheduleTerminal(snapshot, target);
+      } else if (target.status === 'paused') {
+        target.unregisterAdvance?.();
+        target.unregisterAdvance = undefined;
+      }
+    });
   }
 
   function createRun(
@@ -611,10 +674,11 @@ export function createAnimationPlaybackController(
         pendingEvaluation: undefined,
         unregisterAdvance: undefined,
         released: false,
+        startPending: false,
       };
     } catch (error) {
       stageStatus(batch, snapshot, 'cancelled');
-      queueError(snapshot, error);
+      queueError(snapshot, error, registrationOrder);
       return undefined;
     }
     run = target;
@@ -630,23 +694,37 @@ export function createAnimationPlaybackController(
     batch: SignalCommitBatch,
   ): void {
     try {
-      preflightProgramActivation(program);
+      if (conflict === 'error') {
+        preflightProgramWriterLeaseAcquisition(program, run?.token);
+      } else {
+        preflightProgramActivation(program);
+      }
     } catch (error) {
       if (run === undefined || run.status === 'ending') {
         stageStatus(batch, snapshot, 'cancelled');
       } else if (queuedGeneration === generation) {
         queuedGeneration = run.generation;
       }
-      queueError(snapshot, error);
+      queueError(
+        snapshot,
+        error,
+        run?.registrationOrder ?? Number.MAX_SAFE_INTEGER,
+      );
       return;
     }
-    if (run !== undefined) cancelRun(run, snapshot, batch, true);
+    const previousRun = run;
+    if (conflict === 'error' && previousRun !== undefined) {
+      cancelRun(previousRun, snapshot, batch, true);
+    }
     const target = createRun(generation, snapshot, batch, conflict);
     if (target === undefined) return;
+    if (previousRun !== undefined && !previousRun.released) {
+      cancelRun(previousRun, snapshot, batch, true);
+    }
     stageStatus(batch, snapshot, 'scheduled');
     stageCurrentTime(batch, snapshot, 0);
     stageStatus(batch, snapshot, 'running');
-    queueEvent(snapshot, playbackEvent('start', snapshot));
+    target.startPending = true;
     registerRun(target);
   }
 
@@ -660,7 +738,7 @@ export function createAnimationPlaybackController(
     if (command !== 'seek') {
       const error = unavailableControlError(program, command);
       if (error !== undefined) {
-        queueError(snapshot, error);
+        queueError(snapshot, error, Number.MAX_SAFE_INTEGER);
         return;
       }
     }
@@ -680,13 +758,13 @@ export function createAnimationPlaybackController(
       target.pendingEvaluation = { kind: 'seek', time: duration, direction: 'reverse' };
       stageStatus(batch, snapshot, 'scheduled');
       stageStatus(batch, snapshot, 'running');
-      queueEvent(snapshot, playbackEvent('start', snapshot));
+      target.startPending = true;
     } else if (command === 'finish') {
       target.status = 'running';
       target.pendingEvaluation = { kind: 'finish' };
       stageStatus(batch, snapshot, 'scheduled');
       stageStatus(batch, snapshot, 'running');
-      queueEvent(snapshot, playbackEvent('start', snapshot));
+      target.startPending = true;
     } else {
       const staticDuration = finiteDuration(getProgramRecord(target.program).duration);
       target.pendingEvaluation = {
@@ -777,20 +855,38 @@ export function createAnimationPlaybackController(
     }
     if (command === 'pause') {
       if (target.status !== 'paused') {
+        const previousStatus = target.status;
         target.status = 'paused';
         target.unregisterAdvance?.();
         target.unregisterAdvance = undefined;
         stageStatus(batch, snapshot, 'paused');
+        queueCurrentFrameCommitAcknowledgement((_committedSnapshot, outcome) => {
+          if (outcome.applied || disposed || run !== target || target.released) return;
+          target.status = previousStatus;
+          registerRun(target);
+          enqueue('pause', target.generation);
+        });
       }
       return;
     }
     if (command === 'resume') {
       if (target.status === 'paused') {
+        const previousAnchorPosition = target.anchorPosition;
+        const previousAnchorLogicalTime = target.anchorLogicalTime;
         target.status = 'running';
         target.anchorPosition = target.position;
         target.anchorLogicalTime = snapshot.logicalTime;
         stageStatus(batch, snapshot, 'running');
         registerRun(target);
+        queueCurrentFrameCommitAcknowledgement((_committedSnapshot, outcome) => {
+          if (outcome.applied || disposed || run !== target || target.released) return;
+          target.status = 'paused';
+          target.anchorPosition = previousAnchorPosition;
+          target.anchorLogicalTime = previousAnchorLogicalTime;
+          target.unregisterAdvance?.();
+          target.unregisterAdvance = undefined;
+          enqueue('resume', target.generation);
+        });
       }
       return;
     }
@@ -825,7 +921,7 @@ export function createAnimationPlaybackController(
     const unavailable = unavailableControlError(target.program, 'finish');
     if (unavailable !== undefined &&
       getProgramActivationRecord(target.activation).terminalDuration === undefined) {
-      queueError(snapshot, unavailable);
+      queueError(snapshot, unavailable, target.registrationOrder);
       return;
     }
     target.pendingEvaluation = { kind: 'finish' };
