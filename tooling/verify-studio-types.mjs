@@ -21,6 +21,7 @@ const modulePaths = new Map([
   ['@crc/core', 'node_modules/@crc/core/index.d.ts'],
   ['@crc/core/jsx-runtime', 'node_modules/@crc/core/jsx-runtime.d.ts'],
   ['@crc/core/jsx-dev-runtime', 'node_modules/@crc/core/jsx-dev-runtime.d.ts'],
+  ['@crc/webgl', 'node_modules/@crc/webgl/index.d.ts'],
 ]);
 
 function readDeclarationModules(bundle) {
@@ -37,7 +38,7 @@ function readDeclarationModules(bundle) {
     new Set(modules.map(({ moduleName }) => moduleName)).size !== modulePaths.size ||
     modules.some(({ moduleName }) => !modulePaths.has(moduleName))
   ) {
-    throw new Error('CRC Studio declarations must define the three package entry points exactly once.');
+    throw new Error('CRC Studio declarations must define the four package entry points exactly once.');
   }
   return modules;
 }
@@ -262,6 +263,7 @@ const packageDeclarationSources = new Map([
     '@crc/core/jsx-dev-runtime',
     await readFile(join(repositoryRoot, 'packages/core/src/jsx-dev-runtime.ts'), 'utf8'),
   ],
+  ['@crc/webgl', await readFile(join(repositoryRoot, 'packages/webgl/src/index.ts'), 'utf8')],
 ]);
 
 const builtPackageDeclarationSources = new Map([
@@ -274,6 +276,7 @@ const builtPackageDeclarationSources = new Map([
     '@crc/core/jsx-dev-runtime',
     await readFile(join(repositoryRoot, 'packages/core/dist/jsx-dev-runtime.d.ts'), 'utf8'),
   ],
+  ['@crc/webgl', await readFile(join(repositoryRoot, 'packages/webgl/dist/index.d.ts'), 'utf8')],
 ]);
 
 for (const { moduleName, content } of declarationModules) {
@@ -328,6 +331,7 @@ const publicTypeExports = [
   'CRCEventHandler',
   'CRCEventHandlers',
   'CRCEventMap',
+  'CRCEventParticipationOptions',
   'CRCEventPhase',
   'CRCEventPropName',
   'CRCEventTarget',
@@ -352,6 +356,7 @@ const publicTypeExports = [
   'CRCOpacityFilter',
   'CRCPixelRatio',
   'CRCPointerEvent',
+  'CRCPointerEvents',
   'CRCPrimitiveComponent',
   'CRCResponsiveViewportConfig',
   'CRCSaturateFilter',
@@ -448,43 +453,85 @@ const publicTypeExports = [
   'WedgeStyle',
 ].sort();
 
-if (publicTypeExports.length !== 151) {
-  throw new Error(`CRC Studio must declare exactly 151 public types, received ${publicTypeExports.length}.`);
+if (publicTypeExports.length !== 153) {
+  throw new Error(`CRC Studio must declare exactly 153 core public types, received ${publicTypeExports.length}.`);
 }
 
-const packageIndexSource = packageDeclarationSources.get('@crc/core');
-const packageTypeExports = [];
-for (const match of packageIndexSource.matchAll(
-  /export\s+(type\s+)?\{([\s\S]*?)\}\s+from\s+['"][^'"]+['"]/gu,
-)) {
-  const wholeBlockIsTypes = match[1] !== undefined;
-  for (const rawExport of match[2].split(',')) {
-    const exported = rawExport.trim();
-    if (!exported) continue;
-    if (!wholeBlockIsTypes && !exported.startsWith('type ')) continue;
-    packageTypeExports.push(
-      exported.replace(/^type\s+/u, '').split(/\s+as\s+/u)[0],
+const publicWebGLTypeExports = [
+  'CRCWebGLCameraSnapshot',
+  'CRCWebGLContext',
+  'CRCWebGLGeometry',
+  'CRCWebGLGeometryInput',
+  'CRCWebGLHitCapability',
+  'CRCWebGLPerspectiveCamera',
+  'CRCWebGLPrimitiveCapabilities',
+  'CRCWebGLPrimitiveHitInput',
+  'CRCWebGLPrimitiveInput',
+  'CRCWebGLPrimitiveRender',
+  'CRCWebGLProgramProps',
+  'CRCWebGLTransformStyle',
+  'CRCWebGLVector3',
+  'CubeProps',
+  'CubeStyle',
+  'Group3DProps',
+  'Group3DStyle',
+  'MeshProps',
+  'MeshStyle',
+  'SphereProps',
+  'SphereStyle',
+  'WebGLLayerProps',
+  'WebGLLayerStyle',
+].sort();
+
+if (publicWebGLTypeExports.length !== 23) {
+  throw new Error(`CRC Studio must declare exactly 23 WebGL public types, received ${publicWebGLTypeExports.length}.`);
+}
+
+function explicitTypeExportNames(source) {
+  const names = [];
+  for (const match of source.matchAll(
+    /export\s+(type\s+)?\{([\s\S]*?)\}\s+from\s+['"][^'"]+['"]/gu,
+  )) {
+    const wholeBlockIsTypes = match[1] !== undefined;
+    for (const rawExport of match[2].split(',')) {
+      const exported = rawExport.trim();
+      if (!exported) continue;
+      if (!wholeBlockIsTypes && !exported.startsWith('type ')) continue;
+      names.push(exported.replace(/^type\s+/u, '').split(/\s+as\s+/u)[0]);
+    }
+  }
+  return names.sort();
+}
+
+for (const [moduleName, publicTypes] of [
+  ['@crc/core', publicTypeExports],
+  ['@crc/webgl', publicWebGLTypeExports],
+]) {
+  const packageTypeExports = explicitTypeExportNames(
+    packageDeclarationSources.get(moduleName),
+  );
+  if (packageTypeExports.join('\n') !== publicTypes.join('\n')) {
+    throw new Error(
+      `CRC Studio public type manifest differs from ${moduleName} source.\n` +
+      `Package: ${packageTypeExports.join(', ')}.\n` +
+      `Studio verifier: ${publicTypes.join(', ')}.`,
     );
   }
-}
-packageTypeExports.sort();
-if (packageTypeExports.join('\n') !== publicTypeExports.join('\n')) {
-  throw new Error(
-    'CRC Studio public type manifest differs from packages/core/src/index.ts.\n' +
-    `Package: ${packageTypeExports.join(', ')}.\n` +
-    `Studio verifier: ${publicTypeExports.join(', ')}.`,
-  );
 }
 
 const publicTypeSurfaceConsumer = `
 import type {
   ${publicTypeExports.join(',\n  ')}
 } from '@crc/core';
+import type {
+  ${publicWebGLTypeExports.join(',\n  ')}
+} from '@crc/webgl';
 `;
 
 const consumer = `
 ${removedAuthoringImports}
 import * as CRC_CORE_ROOT from '@crc/core';
+import * as CRC_WEBGL_ROOT from '@crc/webgl';
 import {
   Absolute,
   crc,
@@ -538,6 +585,8 @@ import {
   type CRCNode,
   type CRCPixelRatio,
   type CRCPointerEvent,
+  type CRCPointerEvents,
+  type CRCEventParticipationOptions,
   type CRCEventTargetSnapshot,
   type CRCFilter,
   type CRCTouchEvent,
@@ -564,6 +613,34 @@ import {
 } from '@crc/core';
 import { jsx, jsxs } from '@crc/core/jsx-runtime';
 import { jsxDEV } from '@crc/core/jsx-dev-runtime';
+import {
+  crcAnimationFrame,
+  crcWebGLContext,
+  createWebGLGeometry,
+  Cube,
+  defineWebGLPrimitive,
+  Group3D,
+  Mesh,
+  Sphere,
+  WebGLLayer,
+  type CRCWebGLContext,
+  type CRCWebGLPerspectiveCamera,
+  type CRCWebGLPrimitiveCapabilities,
+  type CRCWebGLPrimitiveHitInput,
+  type CRCWebGLPrimitiveInput,
+  type CRCWebGLPrimitiveRender,
+  type CRCWebGLProgramProps,
+  type CubeProps,
+  type CubeStyle,
+  type Group3DProps,
+  type Group3DStyle,
+  type MeshProps,
+  type MeshStyle,
+  type SphereProps,
+  type SphereStyle,
+  type WebGLLayerProps,
+  type WebGLLayerStyle,
+} from '@crc/webgl';
 
 type Equal<A, B> =
   (<T>() => T extends A ? 1 : 2) extends
@@ -646,6 +723,57 @@ type StudioSignatureParity = [
   >>,
 ];
 void (null as unknown as StudioSignatureParity);
+
+const studioCamera = {
+  type: 'perspective',
+  position: [0, 0, 5],
+  lookAt: [0, 0, 0],
+  up: [0, 1, 0],
+  fieldOfViewDegrees: 45,
+  near: 0.1,
+  far: 100,
+} as const satisfies CRCWebGLPerspectiveCamera;
+const studioGeometry = createWebGLGeometry({
+  positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+});
+const webglScene = (
+  <WebGLLayer style={{ width: 320, height: 180 }} camera={studioCamera}>
+    <Group3D style={{ rotationYDegrees: 15 }}>
+      <Cube style={{ size: 1, color: '#74d3ae' }} />
+      <Sphere style={{ radius: 0.5, translateX: 1 }} />
+      <Mesh geometry={studioGeometry} style={{ color: '#f7c948' }} />
+    </Group3D>
+  </WebGLLayer>
+);
+void webglScene;
+// @ts-expect-error filters belong on WebGLLayer, never inner WebGL geometry
+const filteredCube = <Cube style={{ filter: { type: 'blur', radius: 2 } }} />;
+void filteredCube;
+void CRC_WEBGL_ROOT.crcAnimationFrame;
+void crcAnimationFrame;
+void crcWebGLContext;
+type StudioWebGLTypes = [
+  CRCWebGLContext,
+  CRCWebGLPrimitiveCapabilities<{}, CubeStyle, CubeStyle, CubeStyle>,
+  CRCWebGLPrimitiveHitInput<CubeProps, CubeStyle>,
+  CRCWebGLPrimitiveInput<CubeProps, CubeStyle, { readonly kind: 'none' }>,
+  CRCWebGLPrimitiveRender<CubeProps, CubeStyle>,
+  CRCWebGLProgramProps<CubeProps, { readonly kind: 'none' }>,
+  Group3DProps,
+  Group3DStyle,
+  MeshProps,
+  MeshStyle,
+  SphereProps,
+  SphereStyle,
+  WebGLLayerProps,
+  WebGLLayerStyle,
+];
+void (null as unknown as StudioWebGLTypes);
+const StudioWebGLPrimitive = defineWebGLPrimitive<{}, SystemStyle>(
+  () => undefined,
+  { hit: { kind: 'none' } },
+);
+createElement(StudioWebGLPrimitive, { style: {} });
 
 const fragmentResult: CRCNode = Fragment({ children: false });
 void fragmentResult;
@@ -738,7 +866,7 @@ const navigationBounds = {
 const mutableLineCoordinates: [number, number][] = [[0, 0], [40, 20]];
 const focusableBuiltIns = (
   <>
-    <Rectangle keyboardFocusable keyboardNavigationBounds={navigationBounds} style={{ width: 40, height: 20 }} />
+    <Rectangle pointerEvents="none" keyboardFocusable keyboardNavigationBounds={navigationBounds} style={{ width: 40, height: 20 }} />
     <Path keyboardFocusable keyboardNavigationBounds={navigationBounds} style={{ d: new Path2D() }} />
     <SvgPath keyboardFocusable keyboardNavigationBounds={navigationBounds} style={{ d: 'M 0 0 L 40 20' }} />
     <Line keyboardFocusable keyboardNavigationBounds={navigationBounds} style={{ coords: mutableLineCoordinates }} />
@@ -750,6 +878,9 @@ const focusableBuiltIns = (
   </>
 );
 void focusableBuiltIns;
+const pointerEvents: CRCPointerEvents = 'auto';
+const participation = { pointerEvents } satisfies CRCEventParticipationOptions;
+void participation;
 
 const automaticPolygonCorner: PolygonStyle = {
   coords: [[0, 0], [40, 0], [20, 20]],
@@ -1081,7 +1212,7 @@ declare const canvas: HTMLCanvasElement;
 crc(canvas, <ForeignScene />);
 `;
 
-async function studioRuntimeExports(mode) {
+async function studioRuntime(mode) {
   const plugin = crcRuntimeSource(mode);
   const resolvedId = plugin.resolveId('virtual:crc-runtime-source');
   const loaded = await plugin.load(resolvedId);
@@ -1091,7 +1222,9 @@ async function studioRuntimeExports(mode) {
   }
   const context = {};
   runInNewContext(JSON.parse(serializedRuntime), context);
-  return Object.keys(context.CRC_CORE ?? {}).sort();
+  const runtime = context.CRC_CORE;
+  if (!runtime) throw new Error(`CRC Studio ${mode} runtime did not initialize.`);
+  return runtime;
 }
 
 try {
@@ -1123,14 +1256,18 @@ try {
     {
       label: 'source',
       root: join(repositoryRoot, 'packages/core/src/index.ts'),
+      internal: join(repositoryRoot, 'packages/core/src/internal.ts'),
       jsxRuntime: join(repositoryRoot, 'packages/core/src/jsx-runtime.ts'),
       jsxDevRuntime: join(repositoryRoot, 'packages/core/src/jsx-dev-runtime.ts'),
+      webgl: join(repositoryRoot, 'packages/webgl/src/index.ts'),
     },
     {
       label: 'built',
       root: join(repositoryRoot, 'packages/core/dist/index.d.ts'),
+      internal: join(repositoryRoot, 'packages/core/dist/internal.d.ts'),
       jsxRuntime: join(repositoryRoot, 'packages/core/dist/jsx-runtime.d.ts'),
       jsxDevRuntime: join(repositoryRoot, 'packages/core/dist/jsx-dev-runtime.d.ts'),
+      webgl: join(repositoryRoot, 'packages/webgl/dist/index.d.ts'),
     },
   ];
   for (const entries of packageEntrySets) {
@@ -1148,8 +1285,10 @@ try {
         noEmit: true,
         paths: {
           '@crc/core': [entries.root],
+          '@crc/core/internal': [entries.internal],
           '@crc/core/jsx-runtime': [entries.jsxRuntime],
           '@crc/core/jsx-dev-runtime': [entries.jsxDevRuntime],
+          '@crc/webgl': [entries.webgl],
         },
         skipLibCheck: false,
         strict: true,
@@ -1221,13 +1360,16 @@ try {
       'CRC Studio declarations did not diagnose a foreign JSX runtime at crc().',
     );
   }
-  const sourceRuntimeExports = await studioRuntimeExports('source');
-  const builtRuntimeExports = await studioRuntimeExports('built');
+  const sourceRuntime = await studioRuntime('source');
+  const builtRuntime = await studioRuntime('built');
+  const sourceRuntimeExports = Object.keys(sourceRuntime).sort();
+  const builtRuntimeExports = Object.keys(builtRuntime).sort();
   const expectedStudioRuntimeExports = [
     'Absolute',
     'Arc',
     'Circle',
     'Clip',
+    'Cube',
     'Ellipse',
     'Flex',
     'Flow',
@@ -1235,22 +1377,27 @@ try {
     'Fragment',
     'Grid',
     'Group',
+    'Group3D',
     'HorizontalLine',
     'Image',
     'KeyboardNavigation',
     'Layer',
     'LayoutDiagnostic',
     'Line',
+    'Mesh',
     'Overlay',
     'Path',
     'Polygon',
     'Rectangle',
     'RegularPolygon',
     'Star',
+    'Sphere',
     'SvgPath',
     'Text',
     'VerticalLine',
     'Wedge',
+    'WebGLLayer',
+    'crcAnimationFrame',
     'crc',
     'crcCanvasContext',
     'crcCursor',
@@ -1265,6 +1412,7 @@ try {
     'crcState',
     'crcSvgPath',
     'crcWhenChanged',
+    'crcWebGLContext',
     'createArcPath',
     'createCirclePath',
     'createElement',
@@ -1276,7 +1424,9 @@ try {
     'createStarPath',
     'createSvgPath',
     'createWedgePath',
+    'createWebGLGeometry',
     'definePrimitive',
+    'defineWebGLPrimitive',
     'jsx',
     'jsxDEV',
     'jsxs',
@@ -1286,8 +1436,8 @@ try {
     'resolveBox',
     'resolveLength',
   ].sort();
-  if (expectedStudioRuntimeExports.length !== 61) {
-    throw new Error(`CRC Studio runtime must expose 58 root values plus 3 compiler values, received ${expectedStudioRuntimeExports.length}.`);
+  if (expectedStudioRuntimeExports.length !== 70) {
+    throw new Error(`CRC Studio runtime must expose 58 core values, 9 WebGL values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`);
   }
   if (sourceRuntimeExports.join('\n') !== expectedStudioRuntimeExports.join('\n')) {
     throw new Error(
@@ -1298,7 +1448,7 @@ try {
     throw new Error('CRC Studio source and built runtime surfaces differ.');
   }
   process.stdout.write(
-    'CRC Studio declarations passed exact export-name parity, 151-type structural ' +
+    'CRC Studio declarations passed exact export-name parity, 176-type structural ' +
     'coverage, selected signature parity, strict TSX, compiler-runtime, event-family, ' +
     'generic, and layout checks against source and built packages.\n',
   );

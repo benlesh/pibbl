@@ -136,6 +136,104 @@ afterEach(() => {
 });
 
 describe("learning example catalog", () => {
+  const webglLessonSourcePath =
+    "packages/scenarios/src/learning/composition/webgl-islands.example.tsx";
+
+  it("requires direct core and WebGL package imports for the WebGL lesson", () => {
+    const source = `
+      import { crc, type CRCController } from "@crc/core";
+      import { Cube, WebGLLayer } from "@crc/webgl";
+      function Scene() {
+        return (
+          <WebGLLayer style={{ width: 320, height: 180 }}>
+            <Cube style={{ size: 1 }} />
+          </WebGLLayer>
+        );
+      }
+      export default function mount(canvas: HTMLCanvasElement): CRCController {
+        return crc(canvas, <Scene />);
+      }
+    `;
+
+    expect(() =>
+      validateLearningSourceText(source, {
+        authoring: "jsx",
+        label: "fixture",
+        sourcePath: webglLessonSourcePath,
+      }),
+    ).not.toThrow();
+    expect(() =>
+      validateLearningSourceText(source, {
+        authoring: "jsx",
+        label: "webgl-islands",
+      }),
+    ).not.toThrow();
+
+    expect(() =>
+      validateLearningSourceText(
+        source.replace(
+          'import { Cube, WebGLLayer } from "@crc/webgl";',
+          "",
+        ),
+        {
+          authoring: "jsx",
+          label: "fixture",
+          sourcePath: webglLessonSourcePath,
+        },
+      ),
+    ).toThrow(/both @crc\/core and @crc\/webgl/u);
+
+    expect(() =>
+      validateLearningSourceText(source, {
+        authoring: "jsx",
+        label: "fixture",
+        sourcePath:
+          "packages/scenarios/src/learning/composition/layers.example.tsx",
+      }),
+    ).toThrow(/only from @crc\/core/u);
+  });
+
+  it("keeps WebGL lesson imports direct and components declarative", () => {
+    const source = `
+      import { crc, type CRCController } from "@crc/core";
+      import { Cube as Box, WebGLLayer } from "@crc/webgl";
+      function Scene() {
+        return <WebGLLayer style={{ width: 320, height: 180 }}>{Box({})}</WebGLLayer>;
+      }
+      export default function mount(canvas: HTMLCanvasElement): CRCController {
+        return crc(canvas, <Scene />);
+      }
+    `;
+
+    expect(() =>
+      validateLearningSourceText(source, {
+        authoring: "jsx",
+        label: "fixture",
+        sourcePath: webglLessonSourcePath,
+      }),
+    ).toThrow(/direct, unaliased/u);
+  });
+
+  it("rejects even type-only WebGL imports from ordinary lessons", () => {
+    const source = `
+      import { crc, Rectangle, type CRCController } from "@crc/core";
+      import { type CubeProps } from "@crc/webgl";
+      function Scene() {
+        return <Rectangle style={{ width: 20, height: 20 }} />;
+      }
+      export default function mount(canvas: HTMLCanvasElement): CRCController {
+        return crc(canvas, <Scene />);
+      }
+    `;
+
+    expect(() =>
+      validateLearningSourceText(source, {
+        authoring: "jsx",
+        label: "rectangle",
+      }),
+    ).toThrow(/only from @crc\/core/u);
+  });
+
   it.each([
     ["fragment", "<>fragment</>"],
     ["member expression", "<CRC.Rectangle />"],

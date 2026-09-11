@@ -72,6 +72,8 @@
     stopImmediatePropagation(): void;
   }
   export interface CRCEventTargetSnapshot { readonly isFocused: boolean; readonly isFocusVisible: boolean }
+  export type CRCPointerEvents = 'auto' | 'none';
+  export interface CRCEventParticipationOptions { readonly pointerEvents?: CRCPointerEvents }
   export interface CRCKeyboardNavigationOptions { readonly mode: 'directional' }
   type CRCPolicyChild = CRCElement<any> | CRCEmptyNode | readonly CRCPolicyChild[] | (Iterable<CRCPolicyChild> & { readonly charAt?: never });
   export interface FocusManagementProps { readonly children: CRCPolicyChild }
@@ -259,21 +261,21 @@
   export interface ClipStyle extends BoxStyle, LayoutItemStyle { d: Path2D; fillRule?: CanvasFillRule }
   export interface LayerStyle extends BoxStyle, LayoutItemStyle {}
 
-  export interface PathProps extends CRCEventHandlers, CRCEventFocusOptions {}
-  export interface RectangleProps extends CRCEventHandlers, CRCEventFocusOptions {}
-  export interface CircleProps extends CRCEventHandlers, CRCEventFocusOptions {}
-  export interface EllipseProps extends CRCEventHandlers, CRCEventFocusOptions {}
-  export interface ArcProps extends CRCEventHandlers, CRCEventFocusOptions {}
-  export interface WedgeProps extends CRCEventHandlers, CRCEventFocusOptions {}
-  export interface PolygonProps extends CRCEventHandlers, CRCEventFocusOptions {}
-  export interface RegularPolygonProps extends CRCEventHandlers, CRCEventFocusOptions {}
-  export interface StarProps extends CRCEventHandlers, CRCEventFocusOptions {}
+  export interface PathProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
+  export interface RectangleProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
+  export interface CircleProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
+  export interface EllipseProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
+  export interface ArcProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
+  export interface WedgeProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
+  export interface PolygonProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
+  export interface RegularPolygonProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
+  export interface StarProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
   export interface SvgPathProps extends PathProps {}
-  export interface LineProps extends CRCEventHandlers, CRCEventFocusOptions {}
-  export interface HorizontalLineProps extends CRCEventHandlers, CRCEventFocusOptions {}
-  export interface VerticalLineProps extends CRCEventHandlers, CRCEventFocusOptions {}
-  export interface TextProps extends CRCEventHandlers, CRCEventFocusOptions { children?: CRCTextChild }
-  export interface ImageProps extends CRCEventHandlers, CRCEventFocusOptions {}
+  export interface LineProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
+  export interface HorizontalLineProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
+  export interface VerticalLineProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
+  export interface TextProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions { children?: CRCTextChild }
+  export interface ImageProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
   export interface GroupProps { children: CRCNode }
   export interface ClipProps { children: CRCNode }
   export interface LayerProps { children: CRCNode }
@@ -403,3 +405,263 @@
     export interface IntrinsicElements {}
     export type LibraryManagedAttributes<C, P> = C extends CRCPrimitiveComponent<any, any> ? PrimitiveInputOf<C> : 'key' extends keyof P ? never : P;
   }
+
+/* @crc-studio-module @crc/webgl */
+  import type {
+    BoxStyle,
+    CRCEventHandlers,
+    CRCEventParticipationOptions,
+    CRCEventTargetOptions,
+    CRCNode,
+    CRCPrimitiveComponent,
+    LayoutItemStyle,
+    PrimitiveInput,
+    StyleResolutionContext,
+    SystemStyle,
+  } from '@crc/core';
+
+  export type CRCWebGLVector3 = readonly [x: number, y: number, z: number];
+
+  export interface CRCWebGLPerspectiveCamera {
+    type: 'perspective';
+    position: CRCWebGLVector3;
+    lookAt: CRCWebGLVector3;
+    up: CRCWebGLVector3;
+    fieldOfViewDegrees: number;
+    near: number;
+    far: number;
+  }
+
+  export interface CRCWebGLCameraSnapshot {
+    readonly descriptor: CRCWebGLPerspectiveCamera;
+    readonly aspect: number;
+    readonly viewMatrix: Readonly<Float32Array>;
+    readonly projectionMatrix: Readonly<Float32Array>;
+    readonly projectionViewMatrix: Readonly<Float32Array>;
+    readonly inverseProjectionViewMatrix: Readonly<Float32Array>;
+  }
+
+  export interface CRCWebGLTransformStyle {
+    filter?: never;
+    translateX?: number;
+    translateY?: number;
+    translateZ?: number;
+    rotationXDegrees?: number;
+    rotationYDegrees?: number;
+    rotationZDegrees?: number;
+    scaleX?: number;
+    scaleY?: number;
+    scaleZ?: number;
+  }
+
+  interface CRCWebGLTargetProps extends CRCEventHandlers, CRCEventParticipationOptions {
+    readonly keyboardFocusable?: CRCEventTargetOptions['keyboardFocusable'];
+    readonly keyboardNavigationBounds?: CRCEventTargetOptions['keyboardNavigationBounds'];
+  }
+
+  export interface CRCWebGLGeometryInput {
+    positions: ArrayLike<number>;
+    indices?: ArrayLike<number>;
+  }
+
+  declare const crcWebGLGeometryBrand: unique symbol;
+  export interface CRCWebGLGeometry {
+    readonly [crcWebGLGeometryBrand]: true;
+    readonly vertexCount: number;
+    readonly triangleCount: number;
+  }
+
+  export type CRCWebGLPrimitiveRender<P, S> = (
+    props: Readonly<P>,
+    style: Readonly<S>,
+    context: CRCWebGLContext,
+  ) => CRCNode | void;
+
+  export type CRCWebGLHitCapability<P, S> =
+    | {
+        readonly kind: 'geometry';
+        geometry(props: Readonly<P>, style: Readonly<S>): CRCWebGLGeometry;
+      }
+    | {
+        readonly kind: 'custom';
+        resolve(input: CRCWebGLPrimitiveHitInput<P, S>): number | null;
+      }
+    | { readonly kind: 'none' };
+
+  export interface CRCWebGLPrimitiveCapabilities<P, S, N, R> {
+    readonly normalizeStyle?: (style: Readonly<S>) => Readonly<N>;
+    readonly resolveStyle?: (
+      style: Readonly<N>,
+      context: Readonly<StyleResolutionContext>,
+    ) => Readonly<R>;
+    readonly hit: CRCWebGLHitCapability<P, R>;
+  }
+
+  export type CRCWebGLProgramProps<
+    P,
+    H extends CRCWebGLHitCapability<P, any>,
+  > = H extends { readonly kind: 'none' }
+    ? P & { readonly pointerEvents?: 'none' }
+    : P & CRCEventHandlers &
+        Pick<
+          CRCEventTargetOptions,
+          'keyboardFocusable' | 'keyboardNavigationBounds'
+        > &
+        CRCEventParticipationOptions;
+
+  type CRCWebGLSpecifiedStyle<S extends SystemStyle> = S extends unknown
+    ? Omit<S, 'filter'> & { readonly filter?: never }
+    : never;
+
+  export type CRCWebGLPrimitiveInput<
+    P,
+    S extends SystemStyle,
+    H extends CRCWebGLHitCapability<P, any>,
+  > = PrimitiveInput<
+    CRCWebGLProgramProps<P, H>,
+    CRCWebGLSpecifiedStyle<S>
+  >;
+
+  export interface CRCWebGLContext {
+    readonly gl: WebGL2RenderingContext;
+    readonly contextGeneration: number;
+    readonly camera: CRCWebGLCameraSnapshot;
+    readonly modelMatrix: Readonly<Float32Array>;
+    readonly logicalViewport: Readonly<{ width: number; height: number }>;
+    readonly backingViewport: Readonly<{ width: number; height: number }>;
+    readonly density: Readonly<{ x: number; y: number }>;
+    readonly timestamp: number;
+    readonly resources: {
+      use<T>(
+        create: (gl: WebGL2RenderingContext) => T,
+        release: (
+          value: T,
+          context: Readonly<{
+            gl: WebGL2RenderingContext;
+            contextLost: boolean;
+          }>,
+        ) => void,
+        deps: readonly unknown[],
+      ): T;
+    };
+  }
+
+  export interface CRCWebGLPrimitiveHitInput<P, S> {
+    readonly props: Readonly<P>;
+    readonly style: Readonly<S>;
+    readonly layerX: number;
+    readonly layerY: number;
+    readonly ndcX: number;
+    readonly ndcY: number;
+    readonly rayOrigin: CRCWebGLVector3;
+    readonly rayDirection: CRCWebGLVector3;
+    readonly modelMatrix: Readonly<Float32Array>;
+    readonly camera: CRCWebGLCameraSnapshot;
+  }
+
+  export interface WebGLLayerProps extends CRCEventHandlers {
+    children: CRCNode;
+    camera?: CRCWebGLPerspectiveCamera;
+    pointerEvents?: 'auto' | 'none';
+  }
+  export interface WebGLLayerStyle extends BoxStyle, LayoutItemStyle {}
+
+  export interface Group3DProps extends CRCEventHandlers {
+    readonly children: CRCNode;
+  }
+  export interface Group3DStyle extends CRCWebGLTransformStyle {}
+
+  export interface MeshProps extends CRCWebGLTargetProps {
+    readonly geometry: CRCWebGLGeometry;
+  }
+  export interface MeshStyle extends CRCWebGLTransformStyle {
+    readonly color?: string;
+    readonly opacity?: number;
+    readonly cursor?: string;
+  }
+
+  export interface CubeProps extends CRCWebGLTargetProps {}
+  export interface CubeStyle extends MeshStyle { readonly size?: number }
+  export interface SphereProps extends CRCWebGLTargetProps {}
+  export interface SphereStyle extends MeshStyle { readonly radius?: number }
+
+  type CRCWebGLGeometryHit<P, S> = Exclude<
+    CRCWebGLHitCapability<P, S>,
+    { readonly kind: 'none' }
+  >;
+
+  export function createWebGLGeometry(
+    input: CRCWebGLGeometryInput,
+  ): CRCWebGLGeometry;
+
+  export function defineWebGLPrimitive<
+    P,
+    S extends SystemStyle,
+    N extends SystemStyle = S,
+    R extends SystemStyle = N,
+    const H extends { readonly kind: 'none' } = { readonly kind: 'none' },
+  >(
+    render: CRCWebGLPrimitiveRender<P, R>,
+    capabilities: CRCWebGLPrimitiveCapabilities<P, S, N, R> & { hit: H },
+  ): CRCPrimitiveComponent<
+    CRCWebGLProgramProps<P, H>,
+    CRCWebGLPrimitiveInput<P, S, H>
+  >;
+  export function defineWebGLPrimitive<
+    P,
+    S extends SystemStyle,
+    N extends SystemStyle = S,
+    R extends SystemStyle = N,
+    const H extends Exclude<
+      CRCWebGLHitCapability<P, R>,
+      { readonly kind: 'none' }
+    > = Exclude<
+      CRCWebGLHitCapability<P, R>,
+      { readonly kind: 'none' }
+    >,
+  >(
+    render: CRCWebGLPrimitiveRender<P, R>,
+    capabilities: CRCWebGLPrimitiveCapabilities<P, S, N, R> & { hit: H },
+  ): CRCPrimitiveComponent<
+    CRCWebGLProgramProps<P, H>,
+    CRCWebGLPrimitiveInput<P, S, H>
+  >;
+
+  export function crcWebGLContext(): CRCWebGLContext;
+  export function crcAnimationFrame(): number;
+
+  export const WebGLLayer: CRCPrimitiveComponent<
+    WebGLLayerProps,
+    PrimitiveInput<WebGLLayerProps, WebGLLayerStyle>
+  >;
+  export const Group3D: CRCPrimitiveComponent<
+    Group3DProps,
+    PrimitiveInput<Group3DProps, Group3DStyle>
+  >;
+  export const Mesh: CRCPrimitiveComponent<
+    CRCWebGLProgramProps<MeshProps, CRCWebGLGeometryHit<MeshProps, MeshStyle>>,
+    CRCWebGLPrimitiveInput<
+      MeshProps,
+      MeshStyle,
+      CRCWebGLGeometryHit<MeshProps, MeshStyle>
+    >
+  >;
+  export const Cube: CRCPrimitiveComponent<
+    CRCWebGLProgramProps<CubeProps, CRCWebGLGeometryHit<CubeProps, CubeStyle>>,
+    CRCWebGLPrimitiveInput<
+      CubeProps,
+      CubeStyle,
+      CRCWebGLGeometryHit<CubeProps, CubeStyle>
+    >
+  >;
+  export const Sphere: CRCPrimitiveComponent<
+    CRCWebGLProgramProps<
+      SphereProps,
+      CRCWebGLGeometryHit<SphereProps, SphereStyle>
+    >,
+    CRCWebGLPrimitiveInput<
+      SphereProps,
+      SphereStyle,
+      CRCWebGLGeometryHit<SphereProps, SphereStyle>
+    >
+  >;

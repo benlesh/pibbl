@@ -5,6 +5,7 @@ export type LearningSourceAuthoring = "jsx" | "createElement";
 export interface LearningSourceContract {
   readonly authoring: LearningSourceAuthoring;
   readonly label: string;
+  readonly sourcePath?: string;
 }
 
 interface SyntaxNode {
@@ -16,6 +17,7 @@ interface SourceInspection {
   readonly hasBindingViolation: boolean;
   readonly hasCommonJsSyntax: boolean;
   readonly hasCoreValueImport: boolean;
+  readonly hasWebGLValueImport: boolean;
   readonly hasCreateElementCall: boolean;
   readonly hasDirectComponentCall: boolean;
   readonly hasDynamicImportExpression: boolean;
@@ -31,6 +33,7 @@ interface SourceInspection {
   readonly hasLegacyTextStyle: boolean;
   readonly hasLegacyTypes: boolean;
   readonly hasNamedValueCoreImport: boolean;
+  readonly hasNamedValueWebGLImport: boolean;
   readonly hasNamespaceExport: boolean;
   readonly hasOnlyApprovedImports: boolean;
   readonly hasOnlyScenarioImports: boolean;
@@ -40,7 +43,14 @@ interface SourceInspection {
   readonly hasUninspectableProps: boolean;
   readonly hasUninspectableLegacySensitiveProps: boolean;
   readonly hasTypeImport: boolean;
+  readonly packageImportModules: readonly string[];
 }
+
+const CORE_MODULE = "@crc/core";
+const WEBGL_MODULE = "@crc/webgl";
+const LEARNING_VALUE_MODULES = new Set([CORE_MODULE, WEBGL_MODULE]);
+const WEBGL_LEARNING_SOURCE_PATH =
+  "packages/scenarios/src/learning/composition/webgl-islands.example.tsx";
 
 const LEGACY_AUTHORING_NAMES = new Set([
   ["define", "Comp"].join(""),
@@ -92,6 +102,11 @@ const DESCRIPTIVE_COMPONENT_EXPORTS = new Set([
   "SvgPath",
   "Text",
   "VerticalLine",
+  "Cube",
+  "Group3D",
+  "Mesh",
+  "Sphere",
+  "WebGLLayer",
 ]);
 const COMMONJS_BINDING_NAMES = new Set(["exports", "module", "require"]);
 const COMMONJS_GLOBAL_NAMES = new Set([
@@ -811,9 +826,13 @@ function inspectSource(source: string, label: string): SourceInspection {
   const programBody = nodes(program?.body);
   const valueImports = new Map<string, string>();
   const namespaceBindings = new Set<string>();
+  const coreNamespaceBindings = new Set<string>();
   const valueNamespaceBindings = new Set<string>();
+  const packageImportModules = new Set<string>();
   let hasCoreValueImport = false;
+  let hasWebGLValueImport = false;
   let hasNamedValueCoreImport = false;
+  let hasNamedValueWebGLImport = false;
   let hasOnlyApprovedImports = true;
   let hasOnlyScenarioImports = true;
   let hasForbiddenLearningModuleSyntax = false;
@@ -841,6 +860,9 @@ function inspectSource(source: string, label: string): SourceInspection {
         ? sourceNode.value
         : undefined;
     const specifiers = nodes(statement.specifiers);
+    if (LEARNING_VALUE_MODULES.has(moduleName ?? "")) {
+      packageImportModules.add(moduleName!);
+    }
     const isTypeOnlyDeclaration =
       statement.importKind === "type" ||
       (specifiers.length > 0 && specifiers.every((specifier) =>
@@ -856,7 +878,7 @@ function inspectSource(source: string, label: string): SourceInspection {
       hasImportAttributes = true;
     }
     if (
-      moduleName !== "@crc/core" ||
+      !LEARNING_VALUE_MODULES.has(moduleName ?? "") ||
       statement.importKind === "type" ||
       specifiers.length === 0 ||
       nodes(statement.attributes).length > 0 ||
@@ -870,7 +892,8 @@ function inspectSource(source: string, label: string): SourceInspection {
       (isLocalTypeOnlyImport && specifier.type === "ImportDefaultSpecifier")
     );
     if (
-      (moduleName !== "@crc/core" && !isLocalTypeOnlyImport) ||
+      (!LEARNING_VALUE_MODULES.has(moduleName ?? "") &&
+        !isLocalTypeOnlyImport) ||
       specifiers.length === 0 ||
       nodes(statement.attributes).length > 0 ||
       nodes(statement.assertions).length > 0 ||
@@ -882,11 +905,13 @@ function inspectSource(source: string, label: string): SourceInspection {
     for (const specifier of specifiers) {
       const localName = identifierName(specifier.local);
       if (specifier.type === "ImportNamespaceSpecifier") {
-        if (localName && moduleName === "@crc/core") {
+        if (localName && LEARNING_VALUE_MODULES.has(moduleName ?? "")) {
           namespaceBindings.add(localName);
+          if (moduleName === CORE_MODULE) coreNamespaceBindings.add(localName);
           if (statement.importKind !== "type") {
             valueNamespaceBindings.add(localName);
-            hasCoreValueImport = true;
+            if (moduleName === CORE_MODULE) hasCoreValueImport = true;
+            if (moduleName === WEBGL_MODULE) hasWebGLValueImport = true;
           }
         }
         hasOnlyApprovedImports = false;
@@ -902,16 +927,26 @@ function inspectSource(source: string, label: string): SourceInspection {
         continue;
       }
       if (localName !== importedName) hasOnlyApprovedImports = false;
-      if (moduleName !== "@crc/core") continue;
+      if (!LEARNING_VALUE_MODULES.has(moduleName ?? "")) continue;
       const isTypeImport =
         statement.importKind === "type" || specifier.importKind === "type";
-      if (LEGACY_TYPE_NAMES.has(importedName)) hasLegacyTypes = true;
+      if (moduleName === CORE_MODULE && LEGACY_TYPE_NAMES.has(importedName)) {
+        hasLegacyTypes = true;
+      }
       if (isTypeImport) continue;
-      hasCoreValueImport = true;
-      hasNamedValueCoreImport = true;
+      if (moduleName === CORE_MODULE) {
+        hasCoreValueImport = true;
+        hasNamedValueCoreImport = true;
+      } else {
+        hasWebGLValueImport = true;
+        hasNamedValueWebGLImport = true;
+      }
       if (valueImports.has(localName)) hasOnlyApprovedImports = false;
       valueImports.set(localName, importedName);
-      if (LEGACY_AUTHORING_NAMES.has(importedName)) {
+      if (
+        moduleName === CORE_MODULE &&
+        LEGACY_AUTHORING_NAMES.has(importedName)
+      ) {
         hasLegacyAuthoring = true;
       }
     }
@@ -1062,7 +1097,7 @@ function inspectSource(source: string, label: string): SourceInspection {
     }
     const namespaceTypeName = resolvedCoreNamespaceTypeName(
       node,
-      namespaceBindings,
+      coreNamespaceBindings,
       bindingShadows,
     );
     if (namespaceTypeName && LEGACY_TYPE_NAMES.has(namespaceTypeName)) {
@@ -1164,6 +1199,7 @@ function inspectSource(source: string, label: string): SourceInspection {
     hasCanonicalMount: isCanonicalMount(programBody),
     hasCommonJsSyntax,
     hasCoreValueImport,
+    hasWebGLValueImport,
     hasCreateElementCall,
     hasDirectComponentCall,
     hasDynamicImportExpression,
@@ -1179,6 +1215,7 @@ function inspectSource(source: string, label: string): SourceInspection {
     hasLegacyTextStyle,
     hasLegacyTypes,
     hasNamedValueCoreImport,
+    hasNamedValueWebGLImport,
     hasNamespaceExport,
     hasOnlyApprovedImports,
     hasOnlyScenarioImports,
@@ -1187,6 +1224,7 @@ function inspectSource(source: string, label: string): SourceInspection {
     hasUninspectableProps,
     hasUninspectableLegacySensitiveProps,
     hasTypeImport,
+    packageImportModules: [...packageImportModules].sort(),
   };
 }
 
@@ -1236,12 +1274,15 @@ export function validateScenarioSourceText(
     throw invalid(label, "must not use CommonJS module loading or exports.");
   }
   if (inspection.hasScenarioReExport) {
-    throw invalid(label, "must not re-export local, external, or @crc/core modules.");
+    throw invalid(
+      label,
+      "must not re-export local, external, @crc/core, or @crc/webgl modules.",
+    );
   }
   if (!inspection.hasCoreValueImport || !inspection.hasOnlyScenarioImports) {
     throw invalid(
       label,
-      "must use supported static imports: named or namespace imports from @crc/core, relative type-only imports, and at least one public @crc/core value.",
+      "must use supported static imports: named or namespace imports from @crc/core and @crc/webgl, relative type-only imports, and at least one public @crc/core value.",
     );
   }
   if (inspection.hasLegacyTypes) {
@@ -1277,15 +1318,26 @@ export function validateLearningSourceText(
   source: string,
   contract: LearningSourceContract,
 ): void {
-  const { authoring, label } = contract;
+  const { authoring, label, sourcePath } = contract;
   const inspection = inspectSource(source, label);
-  if (
-    !inspection.hasNamedValueCoreImport ||
-    !inspection.hasOnlyApprovedImports
-  ) {
+  const isWebGLLesson =
+    sourcePath === WEBGL_LEARNING_SOURCE_PATH ||
+    (sourcePath === undefined &&
+      (label === "webgl-islands" ||
+        label === 'Learning example "webgl-islands"'));
+  const hasExactPackageImports = isWebGLLesson
+    ? inspection.hasNamedValueCoreImport &&
+      inspection.hasNamedValueWebGLImport &&
+      inspection.packageImportModules.length === 2
+    : inspection.hasNamedValueCoreImport &&
+      !inspection.hasNamedValueWebGLImport &&
+      inspection.packageImportModules.length === 1;
+  if (!inspection.hasOnlyApprovedImports || !hasExactPackageImports) {
     throw invalid(
       label,
-      "must use direct, unaliased static named imports only from @crc/core, including at least one value import.",
+      isWebGLLesson
+        ? "must use direct, unaliased static named value imports from both @crc/core and @crc/webgl."
+        : "must use direct, unaliased static named imports only from @crc/core, including at least one value import.",
     );
   }
   if (
@@ -1307,7 +1359,9 @@ export function validateLearningSourceText(
   if (inspection.hasBindingViolation) {
     throw invalid(
       label,
-      "must use direct @crc/core bindings without aliases, reassignment, or shadowing.",
+      isWebGLLesson
+        ? "must use direct @crc/core and @crc/webgl bindings without aliases, reassignment, or shadowing."
+        : "must use direct @crc/core bindings without aliases, reassignment, or shadowing.",
     );
   }
   if (inspection.hasTestScaffolding) {

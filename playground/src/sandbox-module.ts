@@ -4,6 +4,7 @@ const SUPPORTED_CRC_MODULES = new Set([
   "@crc/core",
   "@crc/core/jsx-runtime",
   "@crc/core/jsx-dev-runtime",
+  "@crc/webgl",
 ]);
 
 interface SourceEdit {
@@ -15,7 +16,7 @@ interface SourceEdit {
 function invalidModuleShape(): Error {
   return new Error(
     "Lessons may contain named imports only from @crc/core, " +
-      "@crc/core/jsx-runtime, and @crc/core/jsx-dev-runtime, plus exactly " +
+      "@crc/core/jsx-runtime, @crc/core/jsx-dev-runtime, and @crc/webgl, plus exactly " +
       "one default mount(canvas) export.",
   );
 }

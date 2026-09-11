@@ -1,9 +1,10 @@
-import { build } from "esbuild";
-import { resolve } from "node:path";
+import { build, type Metafile } from "esbuild";
+import { isAbsolute, resolve, sep } from "node:path";
 
 const VIRTUAL_RUNTIME_ID = "virtual:crc-runtime-source";
 const RESOLVED_RUNTIME_ID = `\0${VIRTUAL_RUNTIME_ID}`;
-const CRC_ENTRY_POINT = /^@crc\/core(?:\/jsx-runtime|\/jsx-dev-runtime)?$/;
+const CRC_ENTRY_POINT =
+  /^@crc\/(?:core(?:\/internal|\/jsx-runtime|\/jsx-dev-runtime)?|webgl)$/;
 
 function crcEntryPoints(mode: string): ReadonlyMap<string, string> {
   const directory = mode === "built" ? "dist" : "src";
@@ -30,7 +31,52 @@ function crcEntryPoints(mode: string): ReadonlyMap<string, string> {
         `../packages/core/${directory}/jsx-dev-runtime.${extension}`,
       ),
     ],
+    [
+      "@crc/core/internal",
+      resolve(
+        import.meta.dirname,
+        `../packages/core/${directory}/internal.${extension}`,
+      ),
+    ],
+    [
+      "@crc/webgl",
+      resolve(
+        import.meta.dirname,
+        `../packages/webgl/${directory}/index.${extension}`,
+      ),
+    ],
   ]);
+}
+
+function assertSingleCoreMode(
+  metafile: Metafile,
+  mode: string,
+  repositoryRoot: string,
+): void {
+  const coreRoot = resolve(repositoryRoot, "packages/core");
+  const expectedRoot = resolve(
+    coreRoot,
+    mode === "built" ? "dist" : "src",
+  );
+  const inputs = Object.keys(metafile.inputs).map((path) =>
+    isAbsolute(path) ? path : resolve(repositoryRoot, path),
+  );
+  const coreInputs = inputs.filter(
+    (path) => path === coreRoot || path.startsWith(`${coreRoot}${sep}`),
+  );
+  if (
+    coreInputs.length === 0 ||
+    coreInputs.some(
+      (path) => path !== expectedRoot && !path.startsWith(`${expectedRoot}${sep}`),
+    ) ||
+    inputs.some((path) =>
+      path.includes(`${sep}node_modules${sep}@crc${sep}core${sep}`),
+    )
+  ) {
+    throw new Error(
+      `CRC Studio ${mode} runtime must bundle @crc/core once from ${expectedRoot}.`,
+    );
+  }
 }
 
 export function crcRuntimeSource(mode: string) {
@@ -41,8 +87,10 @@ export function crcRuntimeSource(mode: string) {
     },
     async load(id: string) {
       if (id !== RESOLVED_RUNTIME_ID) return undefined;
+      const repositoryRoot = resolve(import.meta.dirname, "..");
       const entryPoints = crcEntryPoints(mode);
       const result = await build({
+        absWorkingDir: repositoryRoot,
         entryPoints: [
           resolve(import.meta.dirname, "./crc-studio-runtime-entry.ts"),
         ],
@@ -50,6 +98,7 @@ export function crcRuntimeSource(mode: string) {
         define: { "import.meta.env.DEV": "false" },
         format: "iife",
         globalName: "CRC_CORE",
+        metafile: true,
         platform: "browser",
         plugins: [
           {
@@ -66,6 +115,7 @@ export function crcRuntimeSource(mode: string) {
         target: "es2022",
         write: false,
       });
+      assertSingleCoreMode(result.metafile, mode, repositoryRoot);
       const output = result.outputFiles[0]?.text;
       if (!output)
         throw new Error("CRC runtime bundling produced no browser output.");

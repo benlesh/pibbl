@@ -164,11 +164,46 @@ export default function mount(canvas) {
     ]);
   });
 
+  it("executes core and WebGL imports through one Studio runtime", () => {
+    const result = executeSandbox(
+      `
+import { crc } from "@crc/core";
+import { jsx as _jsx } from "@crc/core/jsx-runtime";
+import { Cube, WebGLLayer } from "@crc/webgl";
+export default function mount(canvas) {
+  return crc(canvas, _jsx(WebGLLayer, {
+    style: { width: 320, height: 180 },
+    children: _jsx(Cube, { style: { size: 1 } }),
+  }));
+}
+`,
+      {
+        crc: (_canvas: unknown, node: unknown) => node,
+        jsx: (type: unknown, props: unknown) => ({ type, props }),
+        Cube: "cube-component",
+        WebGLLayer: "webgl-layer-component",
+      },
+      {},
+    );
+
+    expect(result).toEqual({
+      type: "webgl-layer-component",
+      props: {
+        style: { width: 320, height: 180 },
+        children: {
+          type: "cube-component",
+          props: { style: { size: 1 } },
+        },
+      },
+    });
+  });
+
   it.each([
     'import external from "external";',
     'import * as CRC from "@crc/core";',
     'import CRC from "@crc/core";',
     'import { jsx } from "@crc/core/private-runtime";',
+    'import { jsx } from "@crc/webgl/jsx-runtime";',
     'import "@crc/core";',
     'import type { CRCNode } from "@crc/core";',
   ])("rejects unsupported emitted module syntax: %s", (statement) => {
