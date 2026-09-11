@@ -29,6 +29,19 @@ export interface CRCKeyframesOptions<T> {
   readonly debugName?: string;
 }
 
+export interface CRCSpringOptions {
+  readonly from?: number;
+  readonly to: number;
+  readonly mass?: number;
+  readonly stiffness?: number;
+  readonly damping?: number;
+  readonly initialVelocity?: number;
+  readonly restSpeed?: number;
+  readonly restDelta?: number;
+  readonly maxDuration?: number;
+  readonly debugName?: string;
+}
+
 export interface CRCAnimationSampleInput<T> {
   readonly initialValue: T;
   readonly localTime: number;

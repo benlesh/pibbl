@@ -124,6 +124,7 @@ export { easing } from './lib/animation/easing.js';
 export {
   defineAnimation,
   keyframes,
+  spring,
   stepper,
   tween,
 } from './lib/animation/definition.js';
@@ -134,6 +135,7 @@ export type {
   CRCEasing,
   CRCInterpolator,
   CRCKeyframesOptions,
+  CRCSpringOptions,
   CRCStepperOptions,
   CRCTweenOptions,
 } from './lib/animation/types.js';

@@ -1,5 +1,11 @@
 import { withSignalWriteForbidden } from '../signals/graph.js';
 import { easing } from './easing.js';
+import {
+  createSpringRecord,
+  resolveSpringStart,
+  sampleSpring,
+  type SpringDefinitionRecord,
+} from './spring.js';
 import type {
   CRCAnimationDefinition,
   CRCAnimationOptions,
@@ -7,6 +13,7 @@ import type {
   CRCEasing,
   CRCInterpolator,
   CRCKeyframesOptions,
+  CRCSpringOptions,
   CRCStepperOptions,
   CRCTweenOptions,
 } from './types.js';
@@ -50,7 +57,8 @@ export type DefinitionRecord<T> =
   | TweenDefinitionRecord<T>
   | KeyframesDefinitionRecord<T>
   | CustomDefinitionRecord<T>
-  | StepperDefinitionRecord<T>;
+  | StepperDefinitionRecord<T>
+  | SpringDefinitionRecord;
 
 const definitionRecords = new WeakMap<
   CRCAnimationDefinition<unknown>,
@@ -480,6 +488,13 @@ export function keyframes<T>(
   });
 }
 
+/** Returns an opaque immutable analytic one-dimensional spring definition. */
+export function spring(
+  options: Readonly<CRCSpringOptions>,
+): CRCAnimationDefinition<number> {
+  return createDefinition(createSpringRecord(options));
+}
+
 /** Returns an opaque immutable definition from a custom seekable sampler. */
 export function defineAnimation<T>(
   options: Readonly<CRCAnimationOptions<T>>,
@@ -541,6 +556,11 @@ export function sampleSeekableDefinition<T>(
   const record = getDefinitionRecord(definition);
   if (record.kind === 'stepper') {
     throw new TypeError(`${definitionLabel(record.debugName)} is stateful and cannot be sampled directly.`);
+  }
+  if (record.kind === 'spring') {
+    const resolved = resolveSpringStart(record, input.initialValue as number);
+    const timing = sampledProgress(resolved.duration, input.localTime);
+    return sampleSpring(resolved, timing.localTime / 1000).position as T;
   }
   const timing = sampledProgress(record.duration, input.localTime);
   if (record.kind === 'custom') {
