@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
   defineAnimation,
+  keyframes,
   parallel,
+  repeat,
   sequence,
   signal,
   track,
   tween,
+  wait,
 } from '../../index';
 import { createSignalCommitBatch } from '../signals/graph';
 import { evaluateProgram, getProgramActivationRecord } from './evaluate';
@@ -316,5 +319,234 @@ describe('animation writer leases', () => {
       .toBe(3);
 
     replacement.release();
+  });
+
+  it('rejects a future omitted numeric tween from the preceding string terminal before replacement', () => {
+    const output = signal<number | string>(0, { debugName: 'composed invalid output' });
+    let cancellationCalls = 0;
+    let existingLease: ProgramWriterLease;
+    const existingOwner = owner('preserved playback', 1, () => {
+      cancellationCalls++;
+      existingLease.release();
+    });
+    existingLease = acquireProgramWriterLeases(
+      track(output, tween({ from: 0, to: 1, duration: 10 })),
+      {},
+      existingOwner,
+    );
+    const before = writerLeaseSnapshot();
+    const program = sequence(
+      track(output, keyframes<number | string>({
+        values: ['a', 'b'],
+        duration: 10,
+        interpolate: (from, to, progress) => progress < 1 ? from : to,
+      })),
+      track(output, tween({
+        to: 2,
+        duration: 10,
+        debugName: 'future omitted numeric',
+      })),
+    );
+
+    expect(() => acquireProgramWriterLeases(
+      program,
+      {},
+      owner('invalid composed replacement', 2),
+      { conflict: 'replace' },
+    )).toThrow(/future omitted numeric.*interpolator.*nonnumeric/iu);
+
+    expect(cancellationCalls).toBe(0);
+    expect(output.get()).toBe(0);
+    expect(writerLeaseSnapshot()).toEqual(before);
+    existingLease.release();
+  });
+
+  it('accepts a future omitted numeric tween from the preceding numeric terminal', () => {
+    const output = signal<number | string>('initial', {
+      debugName: 'composed valid output',
+    });
+    let interpolationCalls = 0;
+    const program = sequence(
+      track(output, keyframes<number | string>({
+        values: [0, 1],
+        duration: 10,
+        interpolate: (from, to, progress) => {
+          interpolationCalls++;
+          return progress < 1 ? from : to;
+        },
+      })),
+      track(output, tween({
+        to: 2,
+        duration: 10,
+        debugName: 'valid future omitted numeric',
+      })),
+    );
+
+    const lease = acquireProgramWriterLeases(
+      program,
+      {},
+      owner('valid composed playback', 1),
+    );
+
+    expect(interpolationCalls).toBe(0);
+    expect(getProgramActivationRecord(lease.activation).originalValues.get(output))
+      .toBe('initial');
+    lease.release();
+  });
+
+  it('propagates zero-duration sequence boundaries before validating omitted starts', () => {
+    const invalid = signal<number | string>(0);
+    const invalidProgram = sequence(
+      track(invalid, keyframes<number | string>({
+        values: [0, 1],
+        duration: 0,
+        interpolate: (from, to, progress) => progress < 1 ? from : to,
+      })),
+      track(invalid, keyframes<number | string>({
+        values: ['before', 'after'],
+        duration: 0,
+        interpolate: (from, to, progress) => progress < 1 ? from : to,
+      })),
+      track(invalid, tween({ to: 2, duration: 1, debugName: 'zero invalid' })),
+    );
+    expect(() => acquireProgramWriterLeases(
+      invalidProgram,
+      {},
+      owner('zero invalid playback', 1),
+    )).toThrow(/zero invalid.*interpolator.*nonnumeric/iu);
+
+    const valid = signal<number | string>('initial');
+    const validProgram = sequence(
+      track(valid, keyframes<number | string>({
+        values: ['before', 'after'],
+        duration: 0,
+        interpolate: (from, to, progress) => progress < 1 ? from : to,
+      })),
+      track(valid, keyframes<number | string>({
+        values: [0, 1],
+        duration: 0,
+        interpolate: (from, to, progress) => progress < 1 ? from : to,
+      })),
+      track(valid, tween({ to: 2, duration: 1, debugName: 'zero valid' })),
+    );
+    const lease = acquireProgramWriterLeases(
+      validProgram,
+      {},
+      owner('zero valid playback', 2),
+    );
+    lease.release();
+  });
+
+  it('uses repeat direction and terminal boundaries without expanding every iteration', () => {
+    const cases = [
+      { direction: 'normal', iterations: 10_000, accepts: false },
+      { direction: 'reverse', iterations: 10_000, accepts: true },
+      { direction: 'alternate', iterations: 10_000, accepts: true },
+      { direction: 'alternate', iterations: 9_999, accepts: false },
+      { direction: 'alternate-reverse', iterations: 10_000, accepts: false },
+      { direction: 'alternate-reverse', iterations: 9_999, accepts: true },
+    ] as const;
+
+    for (const { direction, iterations, accepts } of cases) {
+      const output = signal<number | string>('initial');
+      const program = sequence(
+        repeat(sequence(
+          track(output, tween<number | string>({
+            from: 0,
+            to: 1,
+            duration: 1,
+          })),
+          track(output, keyframes<number | string>({
+            values: ['a', 'b'],
+            duration: 1,
+            interpolate: (from, to, progress) => progress < 1 ? from : to,
+          })),
+          wait(1),
+        ), { iterations, direction }),
+        track(output, tween({
+          to: 2,
+          duration: 1,
+          debugName: `${direction} ${iterations} repeat terminal`,
+        })),
+      );
+
+      if (accepts) {
+        const lease = acquireProgramWriterLeases(
+          program,
+          {},
+          owner(`${direction} ${iterations} repeat playback`, 2),
+        );
+        lease.release();
+      } else {
+        expect(() => acquireProgramWriterLeases(
+          program,
+          {},
+          owner(`${direction} ${iterations} repeat playback`, 2),
+        )).toThrow(/repeat terminal.*interpolator.*nonnumeric/iu);
+      }
+    }
+  });
+
+  it('uses the chronologically latest parallel terminal regardless of branch order', () => {
+    for (const reverseBranches of [false, true]) {
+      const output = signal<number | string>('initial');
+      const early = track(output, keyframes<number | string>({
+        values: ['a', 'b'],
+        duration: 10,
+        interpolate: (from, to, progress) => progress < 1 ? from : to,
+      }));
+      const late = sequence(
+        wait(11),
+        track(output, keyframes<number | string>({
+          values: [0, 1],
+          duration: 1,
+          interpolate: (from, to, progress) => progress < 1 ? from : to,
+        })),
+      );
+      const branches = reverseBranches ? [late, early] : [early, late];
+      const program = sequence(
+        parallel(...branches),
+        track(output, tween({
+          to: 2,
+          duration: 1,
+          debugName: 'parallel future omitted numeric',
+        })),
+      );
+
+      const lease = acquireProgramWriterLeases(
+        program,
+        {},
+        owner(`parallel order ${String(reverseBranches)}`, 1),
+      );
+      lease.release();
+    }
+  });
+
+  it('fails closed without invoking an opaque callback needed by a future omitted start', () => {
+    const output = signal<number | string>(0);
+    let sampleCalls = 0;
+    const before = writerLeaseSnapshot();
+    const program = sequence(
+      track(output, defineAnimation({
+        duration: 10,
+        sample: () => {
+          sampleCalls++;
+          return 'opaque';
+        },
+      })),
+      track(output, tween({
+        to: 2,
+        duration: 1,
+        debugName: 'opaque future omitted',
+      })),
+    );
+
+    expect(() => acquireProgramWriterLeases(
+      program,
+      {},
+      owner('opaque future playback', 1),
+    )).toThrow(/opaque future omitted.*callback-free/iu);
+    expect(sampleCalls).toBe(0);
+    expect(writerLeaseSnapshot()).toEqual(before);
   });
 });

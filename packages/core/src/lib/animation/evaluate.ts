@@ -259,6 +259,7 @@ interface DiscoveryState {
   readonly durations: Map<string, number>;
   readonly snapshots: WeakMap<object, unknown>;
   readonly validateWriters: boolean;
+  readonly validateInputs: boolean;
   readonly terminalSteppers: ReadonlyMap<string, InternalStepperTerminal>;
 }
 
@@ -529,10 +530,12 @@ function discoveredWrites(
 
 function chronologicalEndWrites(
   children: readonly DiscoveryResult[],
+  failClosedOnUnknownTiming = false,
 ): Map<WritableSignal<unknown>, DiscoveredValue> {
   const selected = new Map<WritableSignal<unknown>, {
     readonly end: number;
     readonly value: DiscoveredValue;
+    readonly timingUnknown: boolean;
   }>();
   for (const child of children) {
     for (const [output, value] of child.endWrites) {
@@ -546,7 +549,22 @@ function chronologicalEndWrites(
         }
       }
       const current = selected.get(output);
-      if (current === undefined || end >= current.end) selected.set(output, { end, value });
+      if (current === undefined) {
+        selected.set(output, {
+          end,
+          value,
+          timingUnknown: child.duration === undefined,
+        });
+      } else if (failClosedOnUnknownTiming &&
+        (child.duration === undefined || current.timingUnknown)) {
+        selected.set(output, {
+          end: Number.POSITIVE_INFINITY,
+          value: unknownDiscoveredValue,
+          timingUnknown: true,
+        });
+      } else if (end >= current.end) {
+        selected.set(output, { end, value, timingUnknown: false });
+      }
     }
   }
   return new Map([...selected].map(([output, selectedValue]) =>
@@ -559,6 +577,37 @@ function applyDiscoveredWrites(
   writes: ReadonlyMap<WritableSignal<unknown>, DiscoveredValue>,
 ): void {
   for (const [output, value] of writes) values.set(output, value);
+}
+
+function unknownRepeatDiscovery(
+  program: CRCAnimationProgram,
+  outputs: readonly WritableSignal<unknown>[],
+  state: DiscoveryState,
+  path: readonly number[],
+  repeatIterations: readonly number[],
+): DiscoveryResult {
+  const duration = getExactSeekableProgramDuration(program);
+  const writes = new Map(outputs.map(output =>
+    [output, unknownDiscoveredValue] as const,
+  ));
+  applyDiscoveredWrites(state.values, writes);
+  if (duration !== undefined) {
+    state.durations.set(instanceKey(path, repeatIterations), duration);
+  }
+  const writerEnd = duration ?? Number.POSITIVE_INFINITY;
+  return {
+    duration,
+    writers: Object.freeze(outputs.map(output => Object.freeze({
+      output,
+      start: 0,
+      end: writerEnd,
+      programPath: freezePath(path),
+      repeatIterations: freezePath(repeatIterations),
+      repeats: Object.freeze([]),
+    }))),
+    startWrites: writes,
+    endWrites: writes,
+  };
 }
 
 function shiftedResolvedWriters(
@@ -659,7 +708,30 @@ function discoverTrack(
   if (start === undefined) {
     const initialValue = state.values.has(record.output) ?
       state.values.get(record.output)! : unknownDiscoveredValue;
+    const needsCapturedInput = definitionRecord.kind === 'spring' &&
+      !definitionRecord.hasFrom || definitionRecord.kind === 'tween' &&
+      !definitionRecord.hasFrom;
+    if (state.validateInputs && needsCapturedInput &&
+      initialValue === unknownDiscoveredValue) {
+      const label = definitionRecord.debugName === undefined ?
+        'CRC animation definition' :
+        `CRC animation definition "${definitionRecord.debugName}"`;
+      throw new TypeError(
+        `${label} activation input could not be determined callback-free at ` +
+          `program path [${path.join(', ')}].`,
+      );
+    }
     if (initialValue !== unknownDiscoveredValue) {
+      if (state.validateInputs && definitionRecord.kind === 'tween' &&
+        !definitionRecord.hasFrom && definitionRecord.interpolate === undefined &&
+        (typeof initialValue !== 'number' || typeof definitionRecord.to !== 'number')) {
+        const label = definitionRecord.debugName === undefined ?
+          'CRC animation definition' :
+          `CRC animation definition "${definitionRecord.debugName}"`;
+        throw new TypeError(
+          `${label} requires an explicit interpolator for nonnumeric values.`,
+        );
+      }
       const definition = activateSeekableDefinition(
         record.definition,
         initialValue,
@@ -783,6 +855,42 @@ function discoverNode(
     };
   }
   if (record.kind === 'sequence') {
+    if (state.validateInputs) {
+      let elapsed: number | undefined = 0;
+      const writers: ResolvedWriter[] = [];
+      const startWrites = new Map<WritableSignal<unknown>, DiscoveredValue>();
+      const endWrites = new Map<WritableSignal<unknown>, DiscoveredValue>();
+      let startBoundaryOpen = true;
+      for (let index = 0; index < record.children.length; index++) {
+        const discovered = discoverNode(
+          record.children[index]!,
+          Number.POSITIVE_INFINITY,
+          state,
+          [...path, index],
+          repeatIterations,
+        );
+        writers.push(...shiftedResolvedWriters(
+          discovered.writers,
+          elapsed ?? Number.POSITIVE_INFINITY,
+        ));
+        if (startBoundaryOpen) {
+          applyDiscoveredWrites(startWrites, discovered.startWrites);
+          if (discovered.duration === 0) {
+            applyDiscoveredWrites(startWrites, discovered.endWrites);
+          } else {
+            startBoundaryOpen = false;
+          }
+        }
+        applyDiscoveredWrites(endWrites, discovered.endWrites);
+        applyDiscoveredWrites(state.values, discovered.endWrites);
+        elapsed = elapsed === undefined || discovered.duration === undefined ?
+          undefined : elapsed + discovered.duration;
+      }
+      if (elapsed !== undefined) {
+        state.durations.set(instanceKey(path, repeatIterations), elapsed);
+      }
+      return { duration: elapsed, writers: Object.freeze(writers), startWrites, endWrites };
+    }
     let remaining = localTime;
     let elapsed = 0;
     const writers: ResolvedWriter[] = [];
@@ -854,7 +962,7 @@ function discoverNode(
         Math.max(duration, child.duration);
     }
     const startWrites = discoveredWrites(...children.map(child => child.startWrites));
-    const endWrites = chronologicalEndWrites(children);
+    const endWrites = chronologicalEndWrites(children, state.validateInputs);
     state.values.clear();
     for (const [output, value] of baseline) state.values.set(output, value);
     applyDiscoveredWrites(state.values, endWrites);
@@ -867,7 +975,7 @@ function discoverNode(
     };
   }
 
-  if (state.validateWriters && record.iterations > 1) {
+  if ((state.validateWriters || state.validateInputs) && record.iterations > 1) {
     const child = record.children[0]!;
     const initialValues = new Map(state.values);
     const firstReversed = record.direction === 'reverse' ||
@@ -880,6 +988,15 @@ function discoverNode(
       [...repeatIterations, 0],
     );
     if (first.duration === undefined || !Number.isFinite(first.duration)) {
+      if (state.validateInputs && !state.validateWriters) {
+        return unknownRepeatDiscovery(
+          program,
+          record.outputs,
+          state,
+          path,
+          repeatIterations,
+        );
+      }
       throw new RangeError(
         'CRC animation activation-dependent repeat writer period could not be proven finite.',
       );
@@ -918,6 +1035,15 @@ function discoverNode(
       [...repeatIterations, 1],
     );
     if (second.duration === undefined || !Number.isFinite(second.duration)) {
+      if (state.validateInputs && !state.validateWriters) {
+        return unknownRepeatDiscovery(
+          program,
+          record.outputs,
+          state,
+          path,
+          repeatIterations,
+        );
+      }
       throw new RangeError(
         'CRC animation activation-dependent repeat writer period could not be proven finite.',
       );
@@ -942,6 +1068,96 @@ function discoverNode(
     }
     if (alternating) {
       if (!discoveredValuesEqual(initialValues, state.values)) {
+        if (state.validateInputs && !state.validateWriters) {
+          const pairEndValues = new Map(state.values);
+          const third = discoverNode(
+            child,
+            Number.POSITIVE_INFINITY,
+            state,
+            [...path, 0],
+            [...repeatIterations, 2],
+          );
+          if (third.duration === undefined || !Number.isFinite(third.duration)) {
+            return unknownRepeatDiscovery(
+              program,
+              record.outputs,
+              state,
+              path,
+              repeatIterations,
+            );
+          }
+          const thirdEndWrites = applyIterationEnd(
+            state,
+            pairEndValues,
+            third,
+            firstReversed,
+          );
+          const fourthBaseline = new Map(state.values);
+          const fourth = discoverNode(
+            child,
+            Number.POSITIVE_INFINITY,
+            state,
+            [...path, 0],
+            [...repeatIterations, 3],
+          );
+          if (fourth.duration === undefined || !Number.isFinite(fourth.duration)) {
+            return unknownRepeatDiscovery(
+              program,
+              record.outputs,
+              state,
+              path,
+              repeatIterations,
+            );
+          }
+          const fourthEndWrites = applyIterationEnd(
+            state,
+            fourthBaseline,
+            fourth,
+            secondReversed,
+          );
+          if (!discoveredValuesEqual(pairEndValues, state.values)) {
+            return unknownRepeatDiscovery(
+              program,
+              record.outputs,
+              state,
+              path,
+              repeatIterations,
+            );
+          }
+          const firstPairDuration = first.duration + second.duration;
+          const steadyPairDuration = third.duration + fourth.duration;
+          const pairCount = record.iterations === Number.POSITIVE_INFINITY ?
+            Number.POSITIVE_INFINITY : Math.floor(record.iterations / 2);
+          const hasOddIteration = record.iterations !== Number.POSITIVE_INFINITY &&
+            record.iterations % 2 === 1;
+          const duration = record.iterations === Number.POSITIVE_INFINITY ?
+            Number.POSITIVE_INFINITY : firstPairDuration +
+              (pairCount - 1) * steadyPairDuration +
+              (hasOddIteration ? third.duration : 0);
+          const finalIteration = hasOddIteration ? third : fourth;
+          const finalIterationDuration = hasOddIteration ?
+            third.duration : fourth.duration;
+          const finalEndWrites = hasOddIteration ? thirdEndWrites : fourthEndWrites;
+          if (hasOddIteration) {
+            state.values.clear();
+            for (const [output, value] of pairEndValues) {
+              state.values.set(output, value);
+            }
+            applyDiscoveredWrites(state.values, thirdEndWrites);
+          }
+          state.durations.set(instanceKey(path, repeatIterations), duration);
+          const finalOffset = Number.isFinite(duration) ?
+            duration - finalIterationDuration : Number.POSITIVE_INFINITY;
+          return {
+            duration,
+            writers: Object.freeze(shiftedResolvedWriters(
+              finalIteration.writers,
+              finalOffset,
+            )),
+            startWrites: new Map(firstReversed ? first.endWrites : first.startWrites),
+            endWrites: new Map(finalEndWrites),
+          };
+        }
         throw new RangeError(
           'CRC animation activation-dependent alternating repeat writer schedule did not reach a bounded symbolic period.',
         );
@@ -975,6 +1191,15 @@ function discoverNode(
       };
     }
     if (!discoveredValuesEqual(steadyBaseline, state.values)) {
+      if (state.validateInputs && !state.validateWriters) {
+        return unknownRepeatDiscovery(
+          program,
+          record.outputs,
+          state,
+          path,
+          repeatIterations,
+        );
+      }
       throw new RangeError(
         'CRC animation activation-dependent repeat writer schedule did not reach a bounded symbolic period.',
       );
@@ -2317,6 +2542,7 @@ function createDiscoveryState(
   starts: Map<string, InternalTrackStart>,
   validateWriters: boolean,
   terminalSteppers: ReadonlyMap<string, InternalStepperTerminal> = new Map(),
+  validateInputs = false,
 ): DiscoveryState {
   return {
     values: new Map(originalValues),
@@ -2324,6 +2550,7 @@ function createDiscoveryState(
     durations: new Map(),
     snapshots: new WeakMap(),
     validateWriters,
+    validateInputs,
     terminalSteppers,
   };
 }
@@ -2586,7 +2813,7 @@ export function activateProgram(
   if (typeof registration !== 'object' || registration === null) {
     throw new TypeError('CRC animation registration identity must be an object.');
   }
-  const originalValues = captureProgramOriginalValues(program);
+  const originalValues = captureProgramOriginalValues(program, false);
   const activation = Object.freeze({}) as ProgramActivation;
   activationRecords.set(activation, {
     program,
@@ -2605,6 +2832,7 @@ export function activateProgram(
 
 function captureProgramOriginalValues(
   program: CRCAnimationProgram,
+  validateInputs: boolean,
 ): ReadonlyMap<WritableSignal<unknown>, unknown> {
   const programRecord = getProgramRecord(program);
   const snapshots = new WeakMap<object, unknown>();
@@ -2615,7 +2843,7 @@ function captureProgramOriginalValues(
       snapshotAnimationActivationValue(getSignalNode(output).value, snapshots),
     );
   }
-  validateCapturedDefinitionInputs(program, originalValues);
+  if (validateInputs) validateCapturedDefinitionInputs(program, originalValues);
   validateActivationWriterSafety(program, originalValues);
   return immutableMap(originalValues);
 }
@@ -2624,34 +2852,30 @@ function validateCapturedDefinitionInputs(
   program: CRCAnimationProgram,
   originalValues: ReadonlyMap<WritableSignal<unknown>, unknown>,
 ): void {
+  if (!requiresCapturedDefinitionInput(program)) return;
+  const state = createDiscoveryState(
+    originalValues,
+    new Map(),
+    false,
+    new Map(),
+    true,
+  );
+  discoverNode(program, Number.POSITIVE_INFINITY, state, [], []);
+}
+
+function requiresCapturedDefinitionInput(program: CRCAnimationProgram): boolean {
   const record = getProgramRecord(program);
-  if (record.kind !== 'track') {
-    for (const child of record.children) {
-      validateCapturedDefinitionInputs(child, originalValues);
-    }
-    return;
+  if (record.kind === 'track') {
+    const definition = getDefinitionRecord(record.definition);
+    return definition.kind === 'spring' && !definition.hasFrom ||
+      definition.kind === 'tween' && !definition.hasFrom;
   }
-  const definition = getDefinitionRecord(record.definition);
-  if (definition.kind === 'stepper' ||
-    definition.kind !== 'spring' &&
-    (definition.kind !== 'tween' || definition.hasFrom)) {
-    return;
-  }
-  const initialValue = originalValues.get(record.output);
-  if (definition.kind === 'tween' && definition.interpolate === undefined &&
-    (typeof initialValue !== 'number' || typeof definition.to !== 'number')) {
-    const label = definition.debugName === undefined ? 'CRC animation definition' :
-      `CRC animation definition "${definition.debugName}"`;
-    throw new TypeError(
-      `${label} requires an explicit interpolator for nonnumeric values.`,
-    );
-  }
-  activateSeekableDefinition(record.definition, initialValue);
+  return record.children.some(requiresCapturedDefinitionInput);
 }
 
 /** @internal Validates one current committed activation snapshot without retaining it. */
 export function preflightProgramActivation(program: CRCAnimationProgram): void {
-  captureProgramOriginalValues(program);
+  captureProgramOriginalValues(program, true);
 }
 
 /** Evaluates one ordinary advance without committing staged output values. */
