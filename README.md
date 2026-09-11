@@ -1,9 +1,9 @@
 # CRC — Canvas Rendering Components
 
-CRC is a small functional component runtime for the HTML Canvas 2D API. JSX is
-the preferred authoring syntax, but CRC has its own renderer, hooks, element
-brand, and lifecycle: it does not depend on React and it does not create DOM
-nodes.
+CRC is a small functional component runtime for the HTML Canvas 2D API, with an
+optional `@crc/webgl` package for WebGL2 islands. JSX is the preferred authoring
+syntax, but CRC has its own renderer, hooks, element brand, and lifecycle: it
+does not depend on React and it does not create DOM nodes.
 
 ## Quick start
 
@@ -55,6 +55,7 @@ function Poster({ initialMessage }: PosterProps): CRCNode {
         onClick={() => setMessage("CRC!")}
       />
       <Text
+        pointerEvents="none"
         style={{
           x: 200,
           y: 100,
@@ -100,6 +101,7 @@ starts from installation and mounting and does not require the JSX guides.
 - [Style and draw](docs/site/learn/guides/style-and-draw.md)
 - [Compose and lay out scenes](docs/site/learn/guides/compose-and-layout.md)
 - [Manage state and lifecycle](docs/site/learn/guides/state-and-lifecycle.md)
+- [Add WebGL islands](docs/site/learn/guides/webgl-islands.md)
 - [Add focus and keyboard navigation](docs/site/learn/guides/focus-and-keyboard.md)
 - [Create custom components and primitives](docs/site/learn/guides/custom-components-and-primitives.md)
 - [Integrate with React](docs/site/learn/guides/react-integration.md)
@@ -122,9 +124,9 @@ corepack pnpm@11.21.0 playground
 ```
 
 Open <http://localhost:5173/#/examples>. The CRC Interactive Examples Studio
-contains 42 focused lessons: 41 use JSX and one demonstrates the complete
+contains 50 focused lessons: 49 use JSX and one demonstrates the complete
 non-JSX API. Every lesson pairs a live Canvas with editable, type-aware source.
-The separate `#/testing` area contains 16 deterministic laboratories used by
+The separate `#/testing` area contains 17 deterministic laboratories used by
 browser verification. Old `#/scenarios` URLs redirect there.
 
 To exercise built package output instead of source aliases:
@@ -147,8 +149,15 @@ corepack pnpm@11.21.0 playground:built
   `crcEventListener`, `crcCursor`, and `crcLayoutBox`
 - Platform extension: `definePrimitive` plus style-resolution and pure
   measurement types
+- Optional WebGL2 islands from `@crc/webgl`: `WebGLLayer`, `Group3D`, `Mesh`,
+  `Cube`, `Sphere`, `createWebGLGeometry`, `defineWebGLPrimitive`,
+  `crcWebGLContext`, `crcAnimationFrame`, and their public types
 - Compiler-only entries: `@crc/core/jsx-runtime` and
   `@crc/core/jsx-dev-runtime`
+
+Both packages use the same `@crc/core` JSX runtime, element brand, scheduler,
+and event system. The exported `@crc/core/internal` friend seam is reserved for
+matching official CRC packages and is not an application compatibility promise.
 
 See the [API overview](docs/site/api/index.md) and [grouped type reference](docs/site/api/types/canvas-runtime.md)
 for every value and type export, and [CRC library status](docs/library-status.md)
@@ -173,11 +182,15 @@ safeguards. See the [trust-gate guide](docs/testing/trust-gate.md).
 CRC supports explicit Canvas targets and DOM-aligned pointer, mouse, touch,
 wheel, keyboard/focus, editing/composition, clipboard, and drag/drop event
 facades. Optional focus policies use the Canvas as the one native focus host.
+Canvas and WebGL drawing primitives participate in hit testing by default;
+`pointerEvents="none"` is the explicit decorative/pass-through opt-out, while
+structural handler props add propagation listeners without target geometry.
 CRC does not generate semantic DOM descendants or an accessibility tree;
 applications remain responsible for an equivalent accessible DOM experience.
 There is no editable-input adapter, rich text, scrolling, complete CSS engine,
-retained scene graph, WebGL renderer, or image CORS policy. Canvas/`Path2D`,
-font, decoded-image, and `OffscreenCanvas` behavior remain browser-owned.
+retained scene graph, WebGL1/WebGPU fallback, multi-camera island, Canvas/WebGL
+subprimitive interleaving, or image CORS policy. Canvas/`Path2D`, font,
+decoded-image, `OffscreenCanvas`, and WebGL2 behavior remain browser-owned.
 
 ## License
 

@@ -47,6 +47,7 @@ function Button({ onActivate }: ButtonProps): CRCNode {
 
   return (
     <Rectangle
+      pointerEvents="none"
       style={{
         x: 20,
         y: 20,
@@ -76,10 +77,16 @@ navigation requires focus management on the same root.
 
 ## Enrollment and interaction
 
-Only explicit event targets become candidates. A target enrolls automatically
+Only logical event targets become candidates. A target enrolls automatically
 with `onClick`, `onKeyDown`, or `onKeyUp`; set `keyboardFocusable: true` to add
-another target or `false` to exclude it. Built-in drawing components create an
-explicit target when their supported event/cursor/focus props require one.
+another target or `false` to exclude it. Built-in Canvas drawing and
+geometry-backed WebGL components create a logical target by default, even when
+passive; `pointerEvents="none"` removes that drawing from hit and focus
+participation. Propagation-only structural listeners never become candidates.
+
+When `crcEventTarget()` supplies custom geometry and a later drawing primitive
+only visualizes it, mark that drawing `pointerEvents="none"` as in the example.
+Otherwise the default-participating drawing would be the topmost logical target.
 
 The manager owns source-order Tab and Shift+Tab traversal, logical
 focus/blur/focusin/focusout events, pointer-press focus defaults,
@@ -94,6 +101,14 @@ state may invalidate a retained `Layer` containing the changed target.
 
 A root `OffscreenCanvas` cannot host DOM focus and rejects focus management.
 Offscreen layers under an HTML Canvas share the root manager.
+
+Geometry-backed WebGL targets derive directional-navigation bounds by
+projecting their clipped 3D geometry bounds into their logical `WebGLLayer`.
+An explicit `keyboardNavigationBounds` on a WebGL target is interpreted as a
+layer-local 2D override. Custom-hit WebGL primitives need that override to
+participate in arrow ranking. Source-order Tab behavior and the one native
+Canvas focus host stay unchanged across the WebGL-to-Canvas bridge. See [Add
+WebGL islands](#/learn/guides/webgl-islands#understand-paint-order-and-targeting).
 
 ## Accessibility responsibility
 

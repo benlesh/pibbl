@@ -11,7 +11,8 @@ exampleSlug: create-element-authoring
 
 # Author without JSX
 
-`createElement(type, props, ...children)` is the complete non-JSX API. It uses
+`createElement(type, props, ...children)` is the complete non-JSX API for both
+`@crc/core` and `@crc/webgl` component values. It uses
 the same branded element protocol, component identity, child traversal, style,
 hooks, events, focus policies, scheduling, and disposal as JSX. You do not need
 any JSX compiler configuration to use this guide.
@@ -59,7 +60,11 @@ function Poster({ initialMessage }: PosterProps): CRCNode {
         },
         onClick: () => setMessage(label),
       }),
-      createElement(Text, { style: { x: 64 + index * 100, y: 116 } }, label),
+      createElement(
+        Text,
+        { pointerEvents: "none", style: { x: 64 + index * 100, y: 116 } },
+        label,
+      ),
     ),
   );
 
@@ -77,7 +82,10 @@ function Poster({ initialMessage }: PosterProps): CRCNode {
         }),
         createElement(
           Text,
-          { style: { x: 24, y: 28, fill: "white" } },
+          {
+            pointerEvents: "none",
+            style: { x: 24, y: 28, fill: "white" },
+          },
           "Selected: ",
           message,
         ),
@@ -170,3 +178,28 @@ unchanged.
 
 The executable Studio lesson is
 [`create-element-authoring.example.tsx`](../../../../packages/scenarios/src/learning/start/create-element-authoring.example.tsx).
+
+## WebGL without JSX
+
+Keep using core's constructor and import only the 3D values from `@crc/webgl`:
+
+```ts
+import { crc, createElement } from "@crc/core";
+import { Cube, Group3D, WebGLLayer } from "@crc/webgl";
+
+const scene = createElement(
+  WebGLLayer,
+  { style: { width: 320, height: 180 }, children: null },
+  createElement(
+    Group3D,
+    { style: { rotationYDegrees: 25 }, children: null },
+    createElement(Cube, { style: { color: "#8b5cf6" } }),
+  ),
+);
+
+crc(document.querySelector("canvas")!, scene);
+```
+
+There is no `createWebGLElement`, WebGL fragment, or alternate hook/event
+vocabulary. The complete composition, camera, picking, animation, and raw
+context rules are in [Add WebGL islands](#/learn/guides/webgl-islands).

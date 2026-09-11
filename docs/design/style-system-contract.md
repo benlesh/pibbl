@@ -1,7 +1,6 @@
 # CRC style-system contract
 
-Status: current implemented contract, updated for first-class filters on
-2026-09-08.
+Status: current implemented contract, updated for WebGL islands on 2026-09-10.
 
 CRC has one typed, local, closed `style` prop. Geometry, paint, cursor,
 transforms, clipping, image source, text layout, and layout participation live
@@ -9,7 +8,8 @@ there. Application data, handlers, and structural children are separate props;
 text content belongs in `Text` children; `key` is element metadata.
 
 Filters are framework-owned local style and remain closed to the descriptor
-vocabulary below.
+vocabulary below. `WebGLLayer` accepts that Canvas composition effect; inner
+WebGL primitive styles explicitly exclude it.
 
 ```tsx
 const cardPaint = {
@@ -43,11 +43,11 @@ interface SystemStyle {
 ```
 
 Shared closed mixins include `BoxStyle`, `LayoutItemStyle`, `FlexItemStyle`,
-`GridItemStyle`, `PaintStyle`, and `CursorStyle`. Built-ins expose their
+`GridItemStyle`, `PaintStyle`, and `CursorStyle`. Core built-ins expose their
 supported intersections through `RectStyle`, `PathStyle`, `SvgPathStyle`,
 `LineStyle`, `TextStyle`, `ImgStyle`, `GStyle`, `ClipStyle`, `LayerStyle`, and
-layout styles. Every primitive style therefore accepts `filter`; unsupported
-members remain type errors.
+layout styles. Every Canvas primitive style therefore accepts `filter`;
+unsupported members remain type errors.
 
 `style.custom` is application-owned metadata. CRC does not interpret or
 inherit it. It is not an escape hatch for arbitrary top-level keys.
@@ -78,6 +78,12 @@ canonical readonly descriptor list to the final resolved style. Custom style
 callbacks therefore cannot discard or reinterpret filters. Pure measurement
 ignores filters: it neither validates browser raster capabilities nor allocates
 offscreen surfaces, and the measured size is unchanged.
+
+`WebGLLayerStyle` combines core `BoxStyle` and `LayoutItemStyle`, so its
+specified filter is normalized by this same framework path around the completed
+island bitmap. `CRCWebGLTransformStyle` declares `filter?: never`; Mesh, Cube,
+Sphere, Group3D, and custom inner WebGL primitives cannot reinterpret a Canvas
+filter as WebGL state.
 
 ## Filter descriptors
 
@@ -161,6 +167,23 @@ for every removed field and structural form.
 | `Layer`          | `style.width`, `style.height`                                                                                                                                                                                                                 | Each omitted dimension uses the current logical Canvas allocation                                                                                                                                                         | Recursive `children`                            |
 | Layout values    | Container box fields plus the contract-specific algorithm fields                                                                                                                                                                              | See the layout contract's exact defaults                                                                                                                                                                                  | Recursive direct children                       |
 
+The optional `@crc/webgl` package adds this separate closed style vocabulary:
+
+| Component    | WebGL-specific style fields                                                | Defaults and validation                                                                      |
+| ------------ | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `WebGLLayer` | Core box and layout-item fields, including `width`, `height`, and `filter` | Each omitted dimension uses current logical allocation; both resolve finite and positive     |
+| `Group3D`    | `translateX/Y/Z`, `rotationXDegrees/YDegrees/ZDegrees`, `scaleX/Y/Z`       | Translation/rotation `0`, scale `1`; all finite, scale nonzero; negative scale supported     |
+| `Mesh`       | Shared 3D transform plus `color`, `opacity`, and `cursor`                  | Concrete `color = "#ffffff"`; finite `opacity = 1` in `[0, 1]`; `geometry` is a program prop |
+| `Cube`       | Mesh style plus `size`                                                     | `size = 1`, finite and positive                                                              |
+| `Sphere`     | Mesh style plus `radius`                                                   | `radius = 0.5`, finite and positive                                                          |
+
+The fixed 3D transform order is translation multiplied by Z, Y, and X degree
+rotations, then scale. Child-local transforms follow the current Group3D model
+matrix. Color must be a concrete browser-accepted Canvas color; contextual
+references such as `currentColor`, system colors, and `var(...)` reject because
+the WebGL surface has no computed DOM color context. Opacity does not remove
+hit geometry.
+
 There is no runtime compatibility adapter, alias, or fallback for top-level
 visual fields, content in `TextStyle`, or a render element/descriptor prop for
 layer content.
@@ -185,6 +208,11 @@ subset; CRC-native behavior uses names such as `rotationDegrees`, `fit`, and
 
 Filters do not accept raw CSS strings, `url()`/SVG filter graphs,
 `backdrop-filter`, or `boxShadow`/CSS box-shadow semantics.
+
+WebGL styles do not add lighting, materials, textures, shader graphs, multiple
+viewports/cameras, Canvas filter descriptors on inner objects, or arbitrary
+ambient GL state. Application-specific data belongs in program props or
+`style.custom` where the defined primitive intentionally reads it.
 
 See the [layout contract](./layout-system-contract.md), [drawing
 contract](./drawing-components-contract.md), and [custom primitive

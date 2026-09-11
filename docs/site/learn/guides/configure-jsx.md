@@ -13,7 +13,8 @@ exampleSlug: getting-started
 
 CRC publishes automatic-runtime entries at `@crc/core/jsx-runtime` and
 `@crc/core/jsx-dev-runtime`. Compilers generate those imports; application code
-normally imports components and hooks only from `@crc/core`.
+normally imports Canvas/runtime values from `@crc/core`. Optional WebGL island
+components come from `@crc/webgl`, but still use these same compiler entries.
 
 ## Start with a Canvas scene
 
@@ -157,6 +158,7 @@ function Poster({ initialMessage }: PosterProps): CRCNode {
         }
       />
       <Text
+        pointerEvents="none"
         style={{
           x: 200,
           y: 100,
@@ -200,3 +202,23 @@ The strict Bundler and NodeNext fixture
 [`playground/package-consumer/jsx.tsx`](../../../../playground/package-consumer/jsx.tsx)
 exercises both compiler subpaths without React installed. See [React
 coexistence](#/learn/guides/react-integration) for the full host pattern.
+
+Imports from `@crc/core` and `@crc/webgl` can share one CRC JSX file. Do not
+change `jsxImportSource` to `@crc/webgl`; that package deliberately has no
+second element constructor or JSX runtime:
+
+```tsx
+import { Rectangle } from "@crc/core";
+import { Cube, WebGLLayer } from "@crc/webgl";
+
+const scene = (
+  <>
+    <Rectangle pointerEvents="none" style={{ width: 320, height: 180 }} />
+    <WebGLLayer style={{ width: 320, height: 180 }}>
+      <Cube />
+    </WebGLLayer>
+  </>
+);
+```
+
+Continue with [Add WebGL islands](#/learn/guides/webgl-islands).

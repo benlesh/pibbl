@@ -1,7 +1,6 @@
 # CRC drawing-component contract
 
-Status: current implemented contract, updated for first-class filters on
-2026-09-08.
+Status: current implemented contract, updated for WebGL islands on 2026-09-10.
 
 CRC exports descriptive component values. Authors construct them with JSX or
 `createElement`; none is a callable factory. Geometry, paint, cursor, transform,
@@ -18,8 +17,10 @@ boundary defined below.
   text measurement, image decoding, and `Path2D` parsing.
 - `opacity` multiplies current global alpha. Zero paints nothing but does not
   remove otherwise registered interaction geometry.
-- Absent visible paint does not by itself remove geometry. Target selection is
-  governed by the [user-event contract](./user-events-contract.md).
+- Canvas and WebGL drawing leaves contribute their supported geometry to hit
+  resolution by default, even without handlers, cursor, or focus metadata.
+  `pointerEvents="none"` removes that leaf from targeting without changing
+  paint. Absent visible paint does not by itself remove declared geometry.
 - Property changes replace the prior frame's pixels and interaction geometry
   after the scheduled CRC render settles.
 - Empty paths, zero-length lines, zero radii, zero ellipse axes, and zero-angle
@@ -55,8 +56,11 @@ boundary defined below.
 | `Image`          | Required `src`; detachable source generations; success/error/race/removal; natural or explicit dimensions; border, opacity, pixel-grid modes, and stable explicit geometry before/after load.                    | Direct async/component suites, image lesson, cleanup laboratory     |
 
 Every drawing value accepts the supported DOM-aligned event/focus props through
-its props type. It creates a logical target only when interactive metadata
-requires one. Purely painted content does not occlude a registered target.
+its props type. With default `pointerEvents="auto"`, it owns a stable logical
+target and may occlude a registered target painted behind it even when passive.
+Empty/unsupported local geometry remains a miss. Handler props on `Group`,
+`Clip`, `Layer`, and layout containers are propagation listeners only and add no
+structural rectangle target.
 
 ## Standard shape geometry
 
@@ -158,6 +162,40 @@ interaction bounds remain exact.
 | `Clip`  | Applies required `Path2D` `d` and optional `nonzero`/`evenodd` rule to all children. Nested intersections, transforms, updates, empty clips, and paint/hit geometry agree. |
 | `Layer` | Renders multiple children into one persistent offscreen CRC instance, caches retained content, follows root density, and participates in global paint/target/focus order.  |
 
+## WebGL island values
+
+`@crc/webgl` supplies one Canvas composition boundary and four WebGL children:
+
+| Export       | Contract                                                                                                                                                                                                 |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `WebGLLayer` | Resolves a finite positive logical box, renders recursive WebGL children through one private backend instance, transfers one candidate `ImageBitmap`, and composites one transparent Canvas paint entry. |
+| `Group3D`    | Composes translation × Z/Y/X degree rotations × scale for recursive WebGL children and contributes listener ancestry without paint or hit geometry.                                                      |
+| `Mesh`       | Draws one immutable triangle geometry through the unlit solid-color pipeline and records that exact geometry/model snapshot for depth-aware ray picking.                                                 |
+| `Cube`       | Uses centered indexed cube geometry; positive `size` defaults to one and drives the same model scale for draw and pick.                                                                                  |
+| `Sphere`     | Uses deterministic centered indexed sphere geometry; positive `radius` defaults to `0.5` and drives the same model scale for draw and pick.                                                              |
+
+`WebGLLayer` accepts one optional perspective camera; omission uses position
+`[0, 0, 5]`, look-at `[0, 0, 0]`, up `[0, 1, 0]`, field of view `50`, near
+`0.1`, and far `1000`. Camera aspect follows logical layer dimensions and CRC
+does not auto-fit scene bounds. `Mesh`, `Cube`, and `Sphere` accept the shared
+3D transform, concrete color (default white), opacity (default one), cursor,
+event, pointer-participation, and focus props. Geometry-backed focus bounds are
+projected from the committed model/camera state unless a layer-local 2D override
+is supplied.
+
+`createWebGLGeometry` validates and copies a finite nonempty XYZ triangle list
+and optional in-range triangle indices into an immutable branded descriptor.
+`defineWebGLPrimitive` requires `geometry`, synchronous `custom`, or decorative
+`none` hit behavior. The render callback and `crcWebGLContext()` expose one
+immutable WebGL frame snapshot and component-owned resource operations; raw
+primitives must set every state they depend on and restore extension-specific
+state. A decorative definition permits only `pointerEvents="none"`.
+
+Canvas primitives inside a WebGL island and WebGL primitives outside one are
+backend errors. One island is flattened: its individual objects cannot
+alternate around an external Canvas sibling. Authors use two `WebGLLayer`
+passes for `WebGL back -> Canvas -> WebGL front`.
+
 ## Filter composition
 
 A nonempty `style.filter` turns the receiving primitive into one immediate-mode
@@ -199,6 +237,12 @@ combined cached bitmap. Changing only an outer or Layer filter can recomposite
 that bitmap without rerunning retained child components. Filters inside a Layer
 belong to the child CRC instance and its scratch pool, while the existing bridge
 keeps their interaction entries in global paint order.
+
+`WebGLLayer` is another persistent cache boundary. Its WebGL draw/depth pass
+produces one committed bitmap, and a receiving core filter consumes that whole
+island bitmap before the outer clip/transform/presentation. Inner WebGL
+primitive styles reject Canvas filters. Filter pixels do not alter the island's
+committed pick or projected focus geometry.
 
 Nonempty filters require browser `OffscreenCanvas`, an Offscreen Canvas 2D
 context, and its native `filter` state to accept the compiled chain. CRC has no
@@ -258,6 +302,13 @@ Group/Clip/Layer order, local transforms and density, custom paint, edge
 expansion, unchanged interaction geometry, pool ownership/failure cleanup, and
 structural cost. Its image comparison masks only browser-sensitive filter
 regions where documented.
+
+The Studio's `#/examples/composition/webgl-islands` lesson and
+`#/testing/webgl-islands` laboratory cover default/explicit cameras,
+Cube/Sphere/Mesh/Group3D composition, Canvas/WebGL order, transparent
+pass-through, default participation and opt-out, propagation, depth, projected
+focus, animation, filters outside the island, cache reuse, context restoration,
+and deterministic GPU/bitmap ownership.
 
 CRC adds no rich text, semantic DOM, accessibility tree, image CORS policy, SVG
 validator, retained scene graph, generic `Shape` component or registry, or

@@ -167,6 +167,24 @@ affected target. Removing or disposing the layer recursively releases the
 offscreen controller and owned resources. Browser `OffscreenCanvas` support is
 required.
 
+## WebGL islands
+
+`WebGLLayer` from `@crc/webgl` is another Canvas composition primitive. It
+receives a normal declared box and can be placed by Absolute, Overlay, Flow,
+Flex, or Grid; each omitted dimension uses the current logical allocation. Its
+children render through one persistent WebGL2 offscreen surface and composite
+as one item at the layer's Canvas source position.
+
+`WebGLLayer` has no intrinsic measurement capability. An auto-sized layout path
+must give it a definite allocation instead of rendering 3D children to discover
+a preferred size.
+
+Outer `Group` transforms, `Clip`, layout overflow, `Layer`, alpha/compositing,
+and filters apply to the complete island bitmap. Individual WebGL objects use
+depth inside that bitmap, but cannot interleave around an external Canvas
+sibling. Use two `WebGLLayer` passes when Canvas content must appear between a
+back and front 3D pass. See [Add WebGL islands](#/learn/guides/webgl-islands).
+
 ## Filters across layout and composition
 
 All five layout primitives and `Group`, `Clip`, and `Layer` accept
@@ -185,6 +203,9 @@ The receiving container's presentation happens outside its own local filter:
 - a filter on `Layer` consumes the combined cached Layer bitmap. Changing only
   that or an outer filter can reuse the Layer cache, while filters inside the
   Layer belong to its child CRC instance.
+- a filter on `WebGLLayer` consumes the complete committed island bitmap after
+  its WebGL draw/depth pass. Inner WebGL primitives do not accept Canvas filter
+  descriptors.
 
 The full order is `local subtree paint -> receiving filter -> receiving clip ->
 receiving transform -> ancestor clip/alpha/compositing -> parent target`.

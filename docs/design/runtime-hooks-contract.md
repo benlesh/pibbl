@@ -1,7 +1,6 @@
 # CRC runtime and hook contract
 
-Status: current implemented contract, updated for JSX-era authoring on
-2026-09-03.
+Status: current implemented contract, updated for WebGL islands on 2026-09-10.
 
 This document defines element construction, traversal, identity, updates,
 hooks, recovery, and disposal. The [resource ownership
@@ -25,8 +24,8 @@ type CRCComponent<P> = (props: P) => CRCNode | void;
 
 No definition wrapper, base class, or registration step is required. The
 function value is runtime identity. Platform components defined by
-`definePrimitive` use the same public element protocol while retaining private
-style-resolution and measurement capabilities.
+`definePrimitive` and `defineWebGLPrimitive` use the same public element
+protocol while retaining backend-specific private capabilities.
 
 `key` accepts a string or number, is removed from delivered props, and does not
 act like a React element ref. Compiler-supplied children live in props.
@@ -64,6 +63,15 @@ On a scheduled frame CRC:
 6. traverses returned nodes in source order;
 7. finalizes slots and restores state;
 8. after successful traversal, removes unseen identities and their resources.
+
+The public root backend is Canvas 2D. A `WebGLLayer` owns a private child CRC
+instance whose root backend is WebGL. Core still establishes identity, hooks,
+style, allocation, listener ancestry, after-render work, and teardown; backend
+dispatch selects the primitive renderer and environment. Plain synchronous
+components use the same rules under either backend. A WebGL primitive outside a
+`WebGLLayer`, or a Canvas primitive inside one, reports the mismatched boundary.
+Every temporary backend, environment, instance, context, transform, and
+ownership slot is restored in `finally`.
 
 Synchronous iterables are materialized once at a receiving render or
 measurement boundary. They must be finite.
@@ -105,6 +113,14 @@ OR-preserved. Rendering remains one full synchronous Canvas traversal with no
 DOM reconciliation, background work, retained drawing commands, or async
 component continuation.
 
+A required `WebGLLayer` child update synchronously traverses that invalidated
+private instance once and requests the necessary parent composition without a
+second child traversal. `crcAnimationFrame()` returns the current transaction's
+timestamp and requests one continuing coalesced frame while its component is
+mounted. Canvas and WebGL work in that transaction observes the same timestamp;
+multiple animation callers do not create independent scheduler loops. Static
+WebGL content requests no continuing frame.
+
 ## Hook sequence invariant
 
 Hooks run only synchronously while CRC invokes a mounted component. Ordinary
@@ -139,6 +155,8 @@ a later explicit render remounts cleanly.
 | `crcCursor(...)`                  | Owns a typed cursor hook slot and follows target/fallback ownership rules. Switching path/global modes keeps hook order valid.                                                                                                                                                                                                                                                          | `hook-contract.test.ts`, cleanup laboratory                             |
 | `crcLayoutBox()`                  | Returns the current component's stable readonly local allocation `{ x: 0, y: 0, width, height }`. Equal allocation preserves object identity. Reading does not schedule work. Unlike ordinary hooks, calling it outside a live layout context—including during pure measurement—throws `No CRC layout context is available`, not the shared hook diagnostic.                            | layout foundation and measurement-isolation suites                      |
 | `crcCanvasContext()`              | Returns the current isolated Canvas 2D context without allocating a hook slot. It is unavailable outside render and during pure measurement.                                                                                                                                                                                                                                            | plain-component and measurement-isolation suites                        |
+| `crcWebGLContext()`               | From `@crc/webgl`, returns the immutable active WebGL primitive context snapshot without allocating a hook slot. It is unavailable outside WebGL primitive rendering, under Canvas 2D, and during pure measurement.                                                                                                                                                                     | WebGL context and backend-isolation suites                              |
+| `crcAnimationFrame()`             | From `@crc/webgl`, owns a typed hook slot, returns the shared current timestamp, and retains one continuing-frame request while mounted. Removal/disposal makes stale callbacks inert.                                                                                                                                                                                                  | WebGL animation and structural-performance suites                       |
 
 The three memoized path helpers are distinct slot kinds. Reordering them is a
 hook-order error even though all return `Path2D`.
@@ -147,8 +165,9 @@ hook-order error even though all return `Path2D`.
 
 `measureElement` and a `definePrimitive` `measure` capability are not render
 passes. They normalize style and may recursively measure elements, but cannot
-invoke render callbacks, hooks, `crcLayoutBox`, `crcCanvasContext`, paint,
-register interaction, load images, or acquire resources. CRC clears and
+invoke render callbacks, hooks, `crcLayoutBox`, `crcCanvasContext`,
+`crcWebGLContext`, or `crcAnimationFrame`, paint, register interaction, load
+images, or acquire resources. CRC clears and
 restores temporary render state in `finally`. When measurement is nested during
 an active render, that isolation prevents attempted measurement hooks from
 consuming or reordering the parent component's hook slots. Direct or indirect
@@ -161,21 +180,31 @@ render callback.
 
 ## Canvas isolation, errors, and disposal
 
-CRC saves/restores Canvas state around every component subtree. Component
-throws release runtime ownership and refs and restore global state; pixels
+CRC saves/restores Canvas state around every Canvas component subtree. WebGL
+backend callbacks receive an explicit framework state baseline; built-ins set
+every state value they depend on, and CRC reinstalls the baseline after custom
+callbacks without broad state readback. Component throws release runtime
+ownership and refs and restore global/backend state; pixels
 already painted earlier in the frame remain. The controller's `dispose()` is
 idempotent, cancels the exact pending frame, releases every owned resource, and
 cannot affect a replacement mount. Abort uses the same guarded path.
 
 ## Public package boundary
 
-The package exports the runtime, controller and surface types, components,
+Core exports the runtime, controller and surface types, components,
 hooks, hook values, and compiler-only
 `@crc/core/jsx-runtime` and `@crc/core/jsx-dev-runtime` entries. Strict Bundler,
 NodeNext, built, and packed consumers verify those entries, the CRC/React type
 boundary, and blocked private subpaths. The `runtime-hooks-laboratory`, JSX
 authoring tests, lifecycle stress suite, and cleanup ledgers cover traversal,
 identity, hook order, recovery, and disposal through public elements.
+
+`@crc/webgl` consumes that one installed core instance as a matching peer and
+exports no second JSX runtime, element constructor, fragment, or core
+hook/event vocabulary. The explicit `@crc/core/internal` friend entry supports
+matching official CRC packages only. It is version-coupled, absent from the
+application API reference, and carries no independent semantic-versioning or
+compatibility promise. Applications must not import it.
 
 ## Deterministic evidence
 
@@ -191,6 +220,11 @@ more/fewer/reordered hooks, cleanup and factory exceptions, Canvas context
 restoration, stale setters, malformed-path recovery, fragment identity, and
 recursive iterable diagnostics. Public type assertions compile against built
 declarations under both Bundler and NodeNext resolution.
+
+WebGL backend, hook, package-consumer, cache, and structural suites additionally
+prove one shared core identity, one traversal per invalidated child frame,
+coalesced animation requests, static cache hits, matched timestamp propagation,
+backend mismatch diagnostics, and restoration after success or failure.
 
 ## Deliberate boundaries
 

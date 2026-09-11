@@ -219,3 +219,18 @@ Nonempty filters require browser `OffscreenCanvas` plus native Canvas `filter`;
 Ordinary application components should rarely need `definePrimitive`. The
 executable contract is
 [`define-primitive.test.tsx`](../../../../packages/core/src/lib/define-primitive.test.tsx).
+
+## WebGL platform primitives
+
+Use `defineWebGLPrimitive()` from `@crc/webgl` for a platform component that
+draws inside `WebGLLayer`. It has the same specified/normalized/resolved style
+stages, but its callback receives a `CRCWebGLContext` rather than a Canvas 2D
+context and every definition must declare `geometry`, `custom`, or `none` hit
+behavior.
+
+Raw WebGL access carries additional obligations: set all state the draw depends
+on, restore extension-specific state in `finally`, allocate GPU handles through
+`context.resources.use(...)`, and keep its hit result aligned with the visible
+draw. Inner WebGL primitive styles reject Canvas filters; put `style.filter` on
+the receiving `WebGLLayer`. See [Add WebGL islands](#/learn/guides/webgl-islands#define-a-raw-webgl-primitive)
+and the [`defineWebGLPrimitive` API](#/api/functions/define-webgl-primitive).

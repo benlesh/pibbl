@@ -1,7 +1,6 @@
 # CRC layout-system contract
 
-Status: current implemented contract, updated for JSX-era authoring on
-2026-09-03.
+Status: current implemented contract, updated for WebGL islands on 2026-09-10.
 
 CRC provides dedicated `Absolute`, `Overlay`, `Flow`, `Flex`, and `Grid`
 components. They arrange direct branded `CRCElement` children into declared
@@ -18,7 +17,9 @@ contextual errors.
 
 Every layout component is itself a normal component: it can be nested inside
 another layout, transformed by `Group`, clipped by `Clip`, or rendered through
-a `Layer`. Source order remains paint order and reverse source order remains
+a `Layer`. `WebGLLayer` is a layout-participating Canvas composition primitive;
+its WebGL descendants do not become layout items in the parent Canvas
+algorithm. Source order remains paint order and reverse source order remains
 coordinate-event target order.
 
 ## Shared box, placement, and overflow rules
@@ -34,6 +35,13 @@ A child's parent-relative placement lives in its own specified style:
 - `alignSelf` and `justifySelf` override a container alignment where supported;
 - `flexBasis`, `flexGrow`, and `flexShrink` are consumed only by Flex;
 - Grid consumes one-based starts and positive spans.
+
+`WebGLLayerStyle` accepts the shared box and layout-item fields. Each omitted
+layer dimension uses its current finite logical allocation; an explicit or
+allocated width and height must resolve to positive finite values. A
+`WebGLLayer` has no intrinsic measurement capability, so an automatic sizing
+path must supply a definite size rather than rendering WebGL children to
+discover one.
 
 The runtime places one private wrapper per direct child. The wrapper preserves
 the original brand, component type, props, key, compiler source metadata,
@@ -175,6 +183,8 @@ render work. Measurement:
 - cannot call hooks, context accessors, observe a layout box, paint, register
   interaction targets, or acquire runtime resources;
 - cannot create image generations;
+- cannot acquire a WebGL context, invoke `crcWebGLContext` or
+  `crcAnimationFrame`, traverse a WebGL island, or acquire GPU/bitmap resources;
 - detects direct and indirect cycles and restores all temporary runtime state
   after success or failure.
 
@@ -201,9 +211,12 @@ style. A thrown render or duplicate-key failure releases targets, handlers,
 cursors, image generations, offscreen layers, and component refs exactly once.
 Repeated reflow does not accumulate owners.
 
-Offscreen layers share the root interaction ledger, so nested layout still
-participates in one global source paint/target order. `Clip` and layout overflow
-constraints apply identically to pixels and coordinate geometry.
+Offscreen Canvas layers and WebGL islands share the root interaction ledger, so
+nested layout still participates in one global source paint/target order.
+`Clip` and layout overflow constraints apply identically to pixels and
+coordinate geometry. A complete WebGL island occupies one Canvas paint
+position; layout cannot interleave an external Canvas child between objects in
+that flattened WebGL pass.
 
 ## Deliberate exclusions
 
@@ -211,7 +224,7 @@ CRC layout does not promise a complete CSS formatting engine. Deferred features
 include margin, scrolling, auto-placement Grid, implicit tracks, advanced CSS
 intrinsic sizing, reverse/reordered Flexbox, baseline alignment, percentage
 gaps, auto margins, DOM overlays/accessibility, a retained scene graph, workers,
-WebGL, and a public virtualization API. Applications can window large datasets
+multiple WebGL viewports/cameras, and a public virtualization API. Applications can window large datasets
 and pass the visible descriptors to CRC; the library does not own the records or
 scroll model.
 

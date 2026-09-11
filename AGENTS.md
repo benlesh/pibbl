@@ -6,11 +6,12 @@ when a task needs exact behavior or historical evidence.
 
 ## Product and current state
 
-CRC is a small functional component runtime over the HTML Canvas 2D API. It
-provides automatic JSX and equivalent `createElement` authoring, scheduled
-rendering, hook state, DOM-aligned user events, transforms, clipping, offscreen
-layers, typed first-class filters, and composable drawing primitives without
-React or generated DOM.
+CRC is a small functional component runtime over the HTML Canvas 2D API, with
+an optional official WebGL2-island package. It provides automatic JSX and
+equivalent `createElement` authoring, scheduled rendering, hook state,
+DOM-aligned user events, transforms, clipping, offscreen layers, typed
+first-class filters, and composable 2D/3D drawing primitives without React or
+generated DOM.
 
 - Project Plans 001, 002, and 003 are complete. Plan 003 shipped first-class
   local style, declared-box layout, pure measurement, and the Absolute,
@@ -26,6 +27,10 @@ React or generated DOM.
   Canvas filter descriptors, ordered single/list semantics, combined-subtree
   capture, inside-out nesting, upright local surfaces, and instance-owned
   transient pooling.
+- `@crc/webgl` is implemented as transparent WebGL2 islands in Canvas paint
+  order. It shares core's element protocol, scheduler, events, focus, and JSX
+  runtime while owning its WebGL contexts, bitmap/pick transactions, geometry,
+  caches, animation requests, and GPU resources.
 - The local `_bmad-output/` directory remains discovery input, not normative
   behavior. Plan 003's implemented design, architecture, contracts, and
   implementation record supersede its earlier layout proposals where they
@@ -37,8 +42,9 @@ When sources disagree, use this order and call out material drift:
 
 1. Current public code, package manifests, and executable tests for shipped behavior.
 2. Implemented design contracts under `docs/design/` and the trust-gate rules.
-3. The implemented JSX-authoring design and current style/layout architecture
-   for exact authoring, style, and layout intent.
+3. The implemented JSX-authoring and WebGL-island designs and current
+   style/layout architecture for exact authoring, style, layout, and WebGL
+   intent.
 4. The implemented first-class filter design for exact filter intent not
    superseded by current contracts.
 5. Plan 003's implemented design for style/layout intent not superseded by the
@@ -58,6 +64,9 @@ either as the current result unless a fresh run reproduces it.
 
 - `packages/core`: the public `@crc/core` runtime, components, hooks, contracts,
   unit tests, browser tests, and visual baselines.
+- `packages/webgl`: the optional public `@crc/webgl` WebGL2-island components,
+  immutable geometry, hooks, render/pick backend, and deterministic ownership
+  evidence.
 - `packages/scenarios`: private learning examples and deterministic test-lab
   scenarios. Keep their catalogs and presentation metadata separate.
 - `packages/types`: deliberately minimal compatibility package; shared public
@@ -98,11 +107,18 @@ either as the current result unless a fresh run reproduces it.
   failure tears down runtime-owned resources and clears component refs; pixels
   already painted earlier in the failing frame are not rolled back.
 - Source traversal is paint order. Coordinate-event targeting walks the shared
-  paint ledger in reverse and selects one topmost logical target.
+  paint ledger in reverse and resolves at most one topmost logical target.
+  Canvas and WebGL drawing primitives participate by default;
+  `pointerEvents="none"` is the explicit opt-out. Structural handler props add
+  propagation listeners but no independent hit geometry.
 - `Group` composes Canvas transforms. Interaction regions, `Clip`, and `Layer` capture
   the same transform/clip geometry, so paint and hit testing must stay aligned.
 - Offscreen `Layer` instances share the root interaction state and participate in
   global paint/target order. They require browser `OffscreenCanvas` support.
+- `WebGLLayer` owns a private WebGL backend instance and composites one
+  transparent committed `ImageBitmap` at one Canvas paint position. Its picker
+  bridges fixed miss/block/target results into the global event stack, and its
+  geometry-backed focus targets expose projected bounds.
 - A nonempty `style.filter` creates one transient composition boundary around
   the receiving primitive and its recursive output. One list uses one native
   filter operation in declaration order; nested boundaries resolve inside out.
@@ -119,6 +135,9 @@ either as the current result unless a fresh run reproduces it.
   drawing primitives keep local `x`/`y` geometry.
 - Runtime resources have one explicit owner and exact teardown semantics. Prefer
   deterministic ownership counters to heap or garbage-collection timing.
+- Core and WebGL components use one `@crc/core` automatic JSX runtime. The
+  version-coupled `@crc/core/internal` export is reserved for matching official
+  sibling packages and is not an application compatibility promise.
 
 ## Public surface and deliberate boundaries
 
@@ -142,6 +161,12 @@ Public hooks: `crcState`, `crcMemo`, `crcRef`, `crcWhenChanged`, `crcRectPath`,
 `crcLinePath`, `crcSvgPath`, `crcEvent`, `crcEventTarget`,
 `crcEventListener`, `crcCursor`, and `crcLayoutBox`.
 
+Public `@crc/webgl` surface: `WebGLLayer`, `Group3D`, `Mesh`, `Cube`, `Sphere`,
+`createWebGLGeometry`, `defineWebGLPrimitive`, `crcWebGLContext`,
+`crcAnimationFrame`, and their public camera, geometry, transform, primitive,
+context, and component prop/style types. The package has no second JSX runtime,
+element constructor, fragment, or core hook/event vocabulary.
+
 Current interaction supports DOM-aligned pointer, mouse, touch, wheel,
 keyboard/focus, editing/composition, clipboard, and drag/drop event facades,
 explicit geometric targets, propagation listeners, cancellation, logical
@@ -153,8 +178,11 @@ native non-coordinate input on a plain Canvas has no logical target. No public
 input-injection adapter, hidden editable DOM, semantic control mirror, or
 accessibility layer exists. CRC also does not promise rich text, image CORS
 policy, complete CSS compatibility, raw CSS filter strings, `url()`/SVG filter
-graphs, `backdrop-filter`, `boxShadow`, scrolling, workers/WebGL, or a retained
-scene graph. Nonempty filters require browser `OffscreenCanvas` and Canvas
+graphs, `backdrop-filter`, `boxShadow`, scrolling, or a retained scene graph.
+WebGL islands do not promise WebGL1/WebGPU fallback, Canvas children inside an
+island, Canvas/WebGL subprimitive interleaving, multiple cameras or viewports in
+one island, a material/lighting engine, workers, or cross-context GPU sharing.
+Nonempty filters require browser `OffscreenCanvas` and Canvas
 `filter`; `[]` is a no-op with no filter capability requirement. Browser
 behavior remains authoritative for Canvas/`Path2D`, font
 rasterization and measurement, decoded-image behavior, and `OffscreenCanvas`
@@ -233,8 +261,9 @@ scenarios only; they do not authorize public popover or virtualization APIs.
 
 Auto-placement Grid, advanced intrinsic CSS sizing, reverse/reordered Flexbox,
 margin, scrolling, focus pseudo-styles, editable input adapters, semantic DOM
-overlays/accessibility, workers/WebGL, and a retained scene graph remain
-deferred. Exact implemented contracts and records live in:
+overlays/accessibility, workers, and a retained scene graph remain deferred.
+Plan 003's WebGL deferral was superseded by the later shipped island model.
+Exact implemented contracts and records live in:
 
 - `docs/superpowers/specs/2026-08-17-style-and-layout-design.md`
 - `docs/architecture/style-and-layout-architecture.md`
@@ -279,3 +308,31 @@ historical intent live in:
 - `docs/design/canvas-surface-contract.md`
 - `docs/design/runtime-resource-ownership.md`
 - `docs/superpowers/specs/2026-09-08-first-class-filters-design.md`
+
+## Shipped WebGL islands
+
+The implemented 2026-09-09 design added the optional `@crc/webgl` package.
+`WebGLLayer` owns one persistent transparent WebGL2 `OffscreenCanvas`, private
+backend instance, transactional committed bitmap/pick pair, and context-owned
+GPU generations. `Group3D`, `Mesh`, `Cube`, and `Sphere` compose one depth-aware
+3D pass; `createWebGLGeometry`, `defineWebGLPrimitive`, `crcWebGLContext`, and
+`crcAnimationFrame` provide the public lower-level surface.
+
+Canvas and WebGL leaves now participate in coordinate targeting by default;
+`pointerEvents="none"` makes decorative paint pass through. Structural
+containers remain listener-only. Transparent island background misses,
+geometry uses committed depth-aware ray picking, and the nested bridge preserves
+normal capture/target/bubble propagation, pointer capture, cursor, focus, and
+keyboard behavior. Geometry-backed focus bounds are projected from the same
+committed model/camera state.
+
+An island is one flattened Canvas paint entry. Core filters, layout, transforms,
+clips, and composition apply outside the completed bitmap; inner WebGL
+primitives cannot use Canvas filter descriptors. Canvas children inside an
+island, WebGL values outside one, and Canvas/WebGL subprimitive interleaving are
+unsupported. The official version-coupled `@crc/core/internal` friend seam is
+reserved for matching CRC packages. Exact current behavior lives in the ten
+updated contracts under `docs/design/`; historical intent lives in:
+
+- `docs/superpowers/specs/2026-09-09-webgl-islands-design.md`
+- `docs/superpowers/plans/2026-09-09-webgl-islands-implementation.md`

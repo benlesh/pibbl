@@ -1,21 +1,23 @@
 ---
 id: api-overview
 title: API overview
-summary: The supported @crc/core API, arranged by authoring role.
+summary: The supported @crc/core and @crc/webgl APIs, arranged by authoring role.
 kind: api
 slug: overview
 apiCategory: overview
 symbols: [Fragment, JSX, jsx, jsxDEV, jsxs]
-keywords: [canvas, JSX, createElement, API]
+keywords: [canvas, webgl, JSX, createElement, API]
 ---
 
 # API overview
 
-Import application-facing values and types from `@crc/core`. Subpaths below
-`@crc/core/lib/*` and `@crc/core/src/*` are not supported.
+Import Canvas/runtime values and types from `@crc/core`. Import optional WebGL2
+island values and types from `@crc/webgl`. Subpaths below `@crc/core/lib/*`,
+`@crc/core/src/*`, and `@crc/webgl/lib/*` are not supported.
 
 ```ts
 import { Fragment, Rectangle, Text, crc } from "@crc/core";
+import { Cube, WebGLLayer } from "@crc/webgl";
 ```
 
 ## Authoring
@@ -38,6 +40,23 @@ fragments are transparent; a keyed fragment creates an identity scope.
 Type contracts are grouped by domain in the API sidebar. They describe the
 props, local styles, event facades, filters, layout, and element protocol used
 by these runtime values.
+
+## WebGL islands
+
+`@crc/webgl` adds [`WebGLLayer`](#/api/components/webgl-layer),
+[`Group3D`](#/api/components/group-3d), [`Mesh`](#/api/components/mesh),
+[`Cube`](#/api/components/cube), and [`Sphere`](#/api/components/sphere).
+[`createWebGLGeometry`](#/api/functions/create-webgl-geometry) builds immutable
+triangle descriptors; [`defineWebGLPrimitive`](#/api/functions/define-webgl-primitive)
+and [`crcWebGLContext`](#/api/hooks/crc-webgl-context) support raw WebGL2
+extensions; [`crcAnimationFrame`](#/api/hooks/crc-animation-frame) uses the
+shared scheduler. See the grouped [WebGL types](#/api/types/webgl).
+
+Both packages use the one `@crc/core/jsx-runtime` configured for the source
+file. `@crc/webgl` does not publish a second JSX runtime or hook/event system.
+The version-coupled `@crc/core/internal` export exists only for matching
+official CRC packages. It is intentionally absent from this application API
+inventory and carries no compatibility promise.
 
 ## Compiler entries
 
@@ -79,3 +98,4 @@ crc(document.querySelector("canvas")!, <Poster />);
 ```
 
 Start with the [Getting started guide](#/learn/guides/configure-jsx).
+Add 3D content with the [WebGL islands guide](#/learn/guides/webgl-islands).

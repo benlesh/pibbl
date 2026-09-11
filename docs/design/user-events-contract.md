@@ -1,7 +1,7 @@
 # CRC user-event contract
 
-Status: current implemented contract, updated for JSX-era authoring on
-2026-09-03. Focus integration is governed by the implemented
+Status: current implemented contract, updated for WebGL islands on 2026-09-10.
+Focus integration is governed by the implemented
 [focus and keyboard-navigation contract](./focus-and-keyboard-navigation-contract.md).
 
 This document defines the public event behavior shared by built-in drawing
@@ -18,11 +18,18 @@ the [mouse interaction contract](./mouse-interaction-contract.md) still apply.
 
 ## Public registration model
 
-Built-in `Path`, `Rectangle`, `Text`, `Image`, `Line`, `HorizontalLine`,
-`VerticalLine`, and `SvgPath` components accept DOM-style `onX` and
-`onXCapture` props. One built-in owns one logical target whose path is the
-component's explicit interaction geometry. A purely painted object is not an
-event target and does not occlude a registered target underneath it.
+Canvas drawing components (`Rectangle`, `Circle`, `Ellipse`, `Arc`, `Wedge`,
+`Polygon`, `RegularPolygon`, `Star`, `Path`, `Line`, `HorizontalLine`,
+`VerticalLine`, `SvgPath`, `Text`, and `Image`) accept DOM-style `onX` and
+`onXCapture` props. Each owns one logical target whose path is its explicit
+interaction geometry when `pointerEvents` is `"auto"`, including when it has no
+handler, cursor, or focus option. A passive painted object can therefore
+occlude a target underneath. `pointerEvents="none"` removes it from coordinate
+resolution while leaving paint unchanged.
+
+`Mesh`, `Cube`, and `Sphere` from `@crc/webgl` follow the same default
+participation rule with committed ray-pick geometry. `WebGLLayer` can disable
+its complete nested resolver with `pointerEvents="none"`.
 
 `crcEventTarget(handlers, options)` creates one grouped custom target. Its
 required `Path2D`, fill/stroke hit options, captured render transform, clips,
@@ -42,6 +49,12 @@ surfaces use public exports from `@crc/core`. Internal source or
 `@crc/core/lib/*` imports are unsupported. CRC does not inspect arbitrary
 custom-component props, hoist descendant handlers, create a widget
 abstraction, or retain drawing commands.
+
+The child-bearing `Group`, `Clip`, `Layer`, `Absolute`, `Overlay`, `Flow`,
+`Flex`, and `Grid` built-ins accept handler props with `crcEventListener`
+semantics. `WebGLLayer` and `Group3D` do the same. These structural values add
+listener ancestry only: they have no independent rectangle or conceptual-bounds
+target, and empty space does not select them.
 
 ## Event vocabulary
 
@@ -70,17 +83,37 @@ mouse sequence nor suppresses one supplied by the browser.
 ## Target resolution and temporary path
 
 Coordinate events convert the Canvas content-box position into root-logical
-`x`/`y`, then search the shared root/layer paint ledger in reverse order. A
-candidate must pass its accumulated transforms, every active clip, layer
-bounds, and configured fill or positive stroke interaction width. The first
-live candidate wins. Pointer capture and retained touch ownership override
+`x`/`y`, then search the shared Canvas/WebGL paint ledger in reverse order.
+Every candidate writes one reusable fixed-shape result as miss, block, or
+target. Miss continues behind; block stops with no logical leaf; target stops
+with a live logical leaf. Canvas paths, nested Canvas instances, and backend
+resolvers share this protocol. A Canvas candidate must pass its accumulated
+transforms, every active clip/layer bound, and configured fill or positive
+stroke interaction width. Pointer capture and retained touch ownership override
 fresh coordinate hit testing as described below.
 
+Built-in drawing normally returns target on a geometry hit, including passive
+drawing. Block is reserved for an official composition resolver that knows a
+point is occluded but cannot identify a finer logical target. Every resolver
+resets both disposition and target before use; borrowed input/output scratch has
+only synchronous resolution lifetime and cannot be retained.
+
+A `WebGLLayer` is one nested resolver at its exact Canvas composite position.
+It first rejects outer clips and layer bounds, maps through the inverse outer
+world transform to layer-local coordinates and normalized device coordinates,
+then delegates to the bitmap-matched committed scene picker. The picker casts
+one camera ray, resolves geometry or custom hit distances, chooses nearest
+supported depth, and uses later source order for an equal-depth tie.
+`pointerEvents="none"` skips an object; transparent island background returns
+miss so lower Canvas content may win. Default picking performs no pixel
+readback, `readPixels`, or hidden GPU ID pass.
+
 For one logical dispatch, CRC walks the target's mounted-component ancestry,
-including explicit layer-parent bridges, and snapshots the live listener nodes
-already present on that route. Listener registration order within a component
-is source/hook order. The path is temporary and is not retained after
-dispatch.
+including explicit Canvas-layer and WebGL-layer parent bridges, and snapshots
+the live listener nodes already present on that route. A WebGL leaf path can
+therefore cross `Group3D` and `WebGLLayer` listeners into Canvas ancestors.
+Listener registration order within a component is source/hook order. The path
+is temporary and is not retained after dispatch.
 
 The exact phase order is:
 
@@ -232,8 +265,9 @@ registrations also own the native prerequisite and terminal types needed to
 establish and clear their state. Every release closure and root disposal is
 idempotent.
 
-Offscreen layers share their root HTML Canvas event root, global paint order,
-paths, captures, contacts, drag hover, listeners, and observers. A CRC mount
+Offscreen Canvas layers and WebGL islands share their root HTML Canvas event
+root, global paint order, paths, captures, contacts, drag hover, listeners, and
+observers. A CRC mount
 whose root is itself an `OffscreenCanvas` has no DOM native-event source and
 therefore no native-listener hub. CRC does not pretend that such a root can
 receive browser UI input and exposes no public event-injection API in this
@@ -251,7 +285,9 @@ activation.
 Root disposal synchronously clears native listeners, logical registrations,
 pointer captures and pending loss, pointer hover, touch contacts, drag hover,
 mouse activation/click streaks, cursor ownership, observers, and layer bridges.
-Stale controllers and repeated releases cannot affect a newer mount.
+WebGL context loss removes its stale nested resolver targets and committed pick
+state before restoration can rebuild them. Stale controllers and repeated
+releases cannot affect a newer mount.
 
 ## Evidence boundary
 
@@ -271,6 +307,12 @@ demonstrates the opt-in keyboard path described by the focus contract.
 Exhaustive event vocabulary, multi-pointer/contact, mutation, failure, geometry,
 layer, and ownership matrices remain in focused tests so the learning fixture
 stays readable.
+
+The public `webgl-islands` lesson and deterministic WebGL laboratory add
+transparent pass-through, Canvas/WebGL paint order, passive occlusion,
+object/layer opt-out, depth selection, structural propagation, pointer capture,
+cursor, projected focus bounds, keyboard activation, cache replay, and context
+generation evidence through public package imports.
 
 CRC still does not provide semantic controls, DOM accessibility, a retained
 scene graph, hidden editable DOM, pointer/touch gesture recognition, or

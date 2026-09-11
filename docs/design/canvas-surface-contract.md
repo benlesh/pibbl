@@ -1,12 +1,11 @@
 # CRC canvas surface contract
 
-Status: current implemented contract, updated for first-class filters on
-2026-09-08.
+Status: current implemented contract, updated for WebGL islands on 2026-09-10.
 
 This document defines how a root CRC mount maps logical drawing units to the
 Canvas CSS content box and physical backing store. The mapping is owned by the
-runtime so drawing, layout, interaction, clipping, and offscreen layers use one
-coordinate model.
+runtime so drawing, layout, interaction, clipping, Canvas layers, filters, and
+WebGL islands use one coordinate model.
 
 ## Public configuration
 
@@ -133,6 +132,14 @@ the new physical size and composites its complete backing source into its
 logical destination. Layer-local layout and interaction remain expressed in
 logical units.
 
+Managed `WebGLLayer` surfaces use the same independently rounded backing
+density. One layer owns one persistent WebGL2 `OffscreenCanvas`; its logical
+width and height determine camera aspect and local picking coordinates, while
+its backing width and height determine raster resolution only. The surface is
+created with alpha, depth, premultiplied alpha, and an unpreserved drawing
+buffer. A successful render transfers a candidate `ImageBitmap` and composites
+the complete physical source into one logical Canvas destination.
+
 Runtime-created Layer and filter surfaces are upright local targets. CRC keeps
 the current paint transform, which maps local drawing into the active target,
 separate from the world transform used by event paths, focus bounds, clipping
@@ -142,6 +149,14 @@ entries, and Layer bridges. Inside a filtered boundary,
 boundary's parent-facing placement or Group transform exactly once when it is
 composited. Interaction geometry continues to use root-logical world transforms
 and therefore does not double-apply surface density, fitting, or presentation.
+
+`WebGLLayer` is also an upright local raster target. Parent layout placement,
+Canvas `Group` transforms, clips, filters, alpha, and compositing apply when its
+committed bitmap is drawn into the parent. Its nested resolver rejects outer
+clips and bounds, maps the root-logical point through the inverse outer world
+transform to layer-local coordinates, then delegates to the committed camera
+and pick ledger. Transparent island background is a miss rather than an
+implicit rectangle target.
 
 A filter boundary uses one uniform local raster density: the largest singular
 scale of its direct local-to-parent-backing transform. That transform already
@@ -172,6 +187,12 @@ query listener, and any intrinsic-size stabilization. Abort, controller
 disposal, and failed-mount cleanup release the exact owned resources. A stale
 observer or controller cannot mutate a replacement mount.
 
+Each `WebGLLayer` owns its context loss/restoration listeners. Loss invalidates
+the current GPU generation, committed bitmap, and matching pick state;
+restoration requests one ordinary coalesced CRC frame. Layer removal or root
+disposal detaches those listeners and prevents a stale restore notification
+from scheduling work.
+
 ## Evidence
 
 Pure projection tests cover every fit, responsive resolution, independent
@@ -183,6 +204,11 @@ layer suites prove logical coordinates and nested high-density composition.
 Filter projection tests additionally cover upright local capture, conservative
 windows, root and Layer density exactly once, unchanged target geometry, and
 nested high-density filter composition.
+
+WebGL surface, interaction, and browser suites cover logical/backing viewport
+snapshots, default and explicit cameras, outer layout/transforms/clips/Layers,
+transparent composition, delegated picking, density changes, bitmap
+transactions, cache reuse, and context loss/restoration.
 
 The public `canvas-surface` laboratory is loaded by both the Studio and
 headless Chromium. It proves fixed 2x backing, fixed CSS resize without logical

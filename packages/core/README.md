@@ -36,11 +36,22 @@ automatic-runtime entries. Normal application imports come from `@crc/core`.
 Use only documented exports; `@crc/core/lib/*` and source subpaths are private
 and blocked by the package export map.
 
+The optional `@crc/webgl` package uses these same JSX entries and the same
+element, scheduler, and event identities. `@crc/core/internal` is a
+version-coupled friend seam reserved for matching official CRC packages; it is
+not supported for application imports and has no independent compatibility
+promise.
+
 Drawing and layout values use closed, local `style` objects. Styles do not
 cascade or inherit. Structural containers accept recursive synchronous
 children; `Text` separately accepts textual children, including numeric zero.
 State and root updates are animation-frame coalesced, rendering is synchronous,
 and controller disposal is idempotent.
+
+Drawing primitives participate in coordinate targeting by default, including
+when they have no handler. Use `pointerEvents="none"` for decorative paint that
+must pass input through. Handler props on `Group`, `Clip`, `Layer`, and layout
+containers are propagation listeners and do not create structural hit boxes.
 
 Start with the repository [quick start](../../README.md), then use the
 [configuration guide](../../docs/site/learn/guides/configure-jsx.md), complete
@@ -48,3 +59,7 @@ Start with the repository [quick start](../../README.md), then use the
 overview](../../docs/site/api/index.md), [feature
 inventory](../../docs/library-status.md), and normative [design
 contracts](../../docs/design/runtime-hooks-contract.md).
+
+For transparent 3D composition, use the [WebGL islands
+guide](../../docs/site/learn/guides/webgl-islands.md) and install the matching
+`@crc/webgl` release.

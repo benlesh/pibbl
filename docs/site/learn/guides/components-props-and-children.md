@@ -35,7 +35,9 @@ function Card({ title, selected, onSelect }: CardProps): CRCNode {
         }}
         onClick={onSelect}
       />
-      <Text style={{ x: 16, y: 20, fill: "white" }}>{title}</Text>
+      <Text pointerEvents="none" style={{ x: 16, y: 20, fill: "white" }}>
+        {title}
+      </Text>
     </Group>
   );
 }
@@ -45,6 +47,10 @@ function Card({ title, selected, onSelect }: CardProps): CRCNode {
 `children` is declared only by components that accept it. `key` is construction
 metadata: CRC normalizes strings and numbers to a string and never delivers it
 in props.
+
+Drawing components participate in coordinate targeting by default. The card's
+decorative `Text` uses `pointerEvents="none"` so its glyph bounds do not hide
+the clickable rectangle behind it.
 
 Call a component through JSX or `createElement`; a direct JavaScript call does
 not create a CRC element or establish render context. For the closed local

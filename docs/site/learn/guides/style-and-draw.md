@@ -50,7 +50,9 @@ function Card({ title, selected, onSelect }: CardProps): CRCNode {
         }}
         onClick={onSelect}
       />
-      <Text style={{ x: 16, y: 20, fill: "white" }}>{title}</Text>
+      <Text pointerEvents="none" style={{ x: 16, y: 20, fill: "white" }}>
+        {title}
+      </Text>
     </Group>
   );
 }
@@ -91,6 +93,19 @@ requires `src`. Components whose complete style schema has defaults may omit
 
 `style.custom` is available for application-owned metadata and is not read or
 inherited by CRC. Arbitrary top-level style keys are not accepted.
+
+## Choose pointer participation
+
+Drawing primitives contribute their declared interaction geometry by default,
+even without a handler or cursor. A front label, highlight, or transparent
+fill can therefore become the logical target instead of content painted behind
+it. Set the drawing prop `pointerEvents="none"` when decorative paint should
+pass coordinate input through, as the card label above does. Structural
+containers with handlers add propagation listeners but no rectangular target.
+
+Opacity and filters affect pixels, not interaction geometry. See the [default
+pointer-participation migration](../../../migrations/default-pointer-participation.md)
+for an upgrade audit.
 
 ## Filters are typed local style
 

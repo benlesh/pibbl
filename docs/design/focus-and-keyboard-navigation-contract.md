@@ -1,7 +1,6 @@
 # CRC focus and keyboard-navigation contract
 
-Status: current implemented contract, updated for JSX-era authoring on
-2026-09-03.
+Status: current implemented contract, updated for WebGL islands on 2026-09-10.
 
 CRC provides optional logical focus and keyboard navigation for explicit event
 targets. The HTML Canvas remains the only native DOM focus host. While the
@@ -29,9 +28,16 @@ directional boundaries may be nested.
 
 ## Enrollment and committed order
 
-Only an explicit event-target registration can become a focus candidate.
+Only a logical event-target registration can become a focus candidate.
 Painted descendants, component props, propagation listeners, cursor
 declarations, and returned geometry do not implicitly create candidates.
+
+Canvas drawing leaves and geometry/custom-hit WebGL primitives own a logical
+target by default even when passive. They still enroll only by the rules below;
+passive paint alone is not focusable. `pointerEvents="none"` releases the leaf
+from hit and focus participation. `Group`, `Clip`, `Layer`, layout containers,
+`WebGLLayer`, and `Group3D` handler props are listener-only and cannot enroll
+their structural allocation or conceptual bounds.
 
 A target enrolls automatically when it has `onClick`, `onKeyDown`, or
 `onKeyUp`. `keyboardFocusable: true` explicitly includes another target and
@@ -137,6 +143,15 @@ four corners into a root-logical axis-aligned envelope. A focusable target
 without finite bounds remains in Tab order but cannot participate in arrow
 selection.
 
+Geometry-backed `Mesh`, `Cube`, and `Sphere` targets derive navigation geometry
+from their local geometry bounds, committed model matrix, and committed camera.
+CRC clips the projected bounds to the camera frustum, maps them into the
+logical `WebGLLayer`, then applies the same outer Canvas layout, transform, and
+clip projection used by paint and picking. An explicit
+`keyboardNavigationBounds` on a WebGL target is a layer-local 2D override.
+Custom-hit primitives have no inferred 3D bounds and need that override for
+arrow selection. WebGL target source traversal remains the global Tab order.
+
 For each arrow, candidates outside the requested center half-plane are
 discarded. Remaining candidates compare this tuple in order:
 
@@ -171,6 +186,11 @@ transition invalidates only cached layer instances containing the previous or
 next target, including their nested layer ancestors. Unrelated layers and
 layers rendered without focus management retain their ordinary cache behavior.
 
+`WebGLLayer` commits and replays its projected focus metadata with the same
+bitmap/pick generation. A focus revision invalidates the necessary private
+island and outer retained-Layer ancestors once; an otherwise unchanged cache
+hit reuses committed focus geometry without executing WebGL child components.
+
 ## Optionality, lifecycle, and failures
 
 The base renderer and event dispatcher do not import focus implementation
@@ -187,6 +207,10 @@ focusability only while CRC still owns its mutation; an application `tabindex`
 change is preserved. Application handler errors remain isolated by the shared
 event dispatcher.
 
+WebGL context loss removes stale pick/focus metadata and its owned target
+generation. Restoration schedules a normal frame, and new projected geometry
+becomes eligible only with a successfully committed bitmap/pick generation.
+
 The shared `focus-and-keyboard-navigation` scenario demonstrates native DOM
 controls before and after the Canvas, two explicit top targets, twelve keyed
 row-major directional squares, and two explicit bottom targets. Its private
@@ -199,6 +223,11 @@ Enter/Space activation, directional navigation, a visibly instrumented
 directional grid nested inside another directional grid, and
 editing/composition/clipboard transport. The last lesson deliberately documents
 that event transport does not make Canvas an editable or semantic DOM control.
+
+The `webgl-islands` lesson and deterministic WebGL laboratory additionally
+prove projected and explicit bounds, source-order Tab, directional movement,
+press focus, keyboard activation, outer transforms/clips/Layers, and focus
+cache replay across the nested WebGL event-parent bridge.
 
 See [Canvas accessibility guidance](./canvas-accessibility-guidance.md) for the
 separate semantic responsibility.

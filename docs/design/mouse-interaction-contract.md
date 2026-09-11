@@ -1,7 +1,7 @@
 # CRC mouse interaction contract
 
 Status: current geometry, coordinates, cursor, and observer contract, updated
-for JSX-era authoring on 2026-09-03. The DOM-aligned [user-event contract](./user-events-contract.md)
+for WebGL islands on 2026-09-10. The DOM-aligned [user-event contract](./user-events-contract.md)
 superseded this document's mouse-only non-propagation, hidden related-target,
 no-cancellation, no-capture, and sibling no-activation clauses on 2026-08-29.
 Optional press focus and keyboard activation now defer to the implemented
@@ -26,33 +26,41 @@ The platform evidence is consistent on the important shape: mouse events target 
 
 ## Terms
 
-- **Interactive region:** a CRC path registration with at least one mouse handler or cursor style. Its identity is the owning mounted component plus that interaction-path slot, not a particular handler function.
-- **Logical target:** the one interactive region selected for a native mouse event.
+- **Paint target:** a default-participating Canvas path or WebGL geometry/custom-hit registration. Its identity is the owning mounted component plus that target slot, not a particular handler function.
+- **Logical target:** the one live paint/custom target selected for a native mouse event.
 - **Paint order:** the order in which CRC composites interactive paths, including layers. Later paint is visually above earlier paint.
-- **Live target:** a region still owned by the current rendered tree with the handler generation selected for dispatch.
+- **Live target:** a region still owned by the current rendered tree with the target generation selected for dispatch.
 - **Root coordinates:** coordinates in the mounted logical viewport exposed as `CRCMouseEvent.x/y`.
 - **Boundary transition:** logical over/out and enter/leave events derived from
   movement between CRC targets. Over/out bubble; enter/leave do not.
 
 ## Target selection
 
-CRC resolves exactly one logical target for each native event. Region identity is independent of the native event type: an upper region with only `onClick` still occludes a lower region with `onMouseMove`. Replacing handlers without replacing the keyed/tree-slot component preserves identity.
+CRC resolves at most one logical target for each native event. Target identity
+is independent of the native event type: a passive upper drawing or one with
+only `onClick` occludes a lower target with `onMouseMove`. Replacing handlers
+without replacing the keyed/tree-slot component preserves identity.
 
-1. Enumerate interactive candidates in reverse paint order.
+1. Enumerate paint candidates in reverse paint order.
 2. Apply the complete rendered transform and require the point to pass every active ancestor clip.
 3. A filled path hits through `isPointInPath`; a stroked path hits through its configured `lineInteractionWidth`.
-4. The first hit wins. Earlier overlapping siblings do not receive the event.
-5. A later layer participates in the same paint order and may win over root or earlier-layer content.
-6. Nested groups do not create implicit geometric targets. Explicit listener
+4. A candidate reports fixed-shape miss, block, or target. Miss continues;
+   block stops without a leaf; target stops with that leaf.
+5. The first non-miss result wins. Earlier overlapping siblings do not receive
+   the event.
+6. A later layer participates in the same paint order and may win over root or earlier-layer content.
+7. Nested groups do not create implicit geometric targets. Explicit listener
    registrations on mounted ancestors can participate in propagation while the
    deepest painted interactive child remains the hit target.
-7. Cursor selection uses this same target. It must not run a separate “first cursor handler to write” policy.
+8. Cursor selection uses this same target. It must not run a separate “first cursor handler to write” policy.
 
-Purely visual paths with no handler or cursor do not become synthetic targets.
-Conversely, hit eligibility follows configured interaction geometry rather than
-rendered opacity: a configured transparent fill is still a fill hit area, and
-zero opacity does not disable interaction. A path with neither a fill hit area
-nor a positive stroke interaction width is not hittable.
+Canvas and WebGL drawing primitives participate by default even without a
+handler or cursor. `pointerEvents="none"` releases one leaf from coordinate and
+focus participation while leaving paint unchanged. Hit eligibility follows
+declared geometry rather than rendered opacity: a configured transparent fill
+is still a fill hit area, and zero opacity does not disable interaction. A
+Canvas path with neither a fill hit area nor a positive stroke interaction
+width remains a miss.
 
 The public `crcEvent` hook with no path is explicitly a Canvas-wide observer, not another geometric region. It runs once for its matching native event after any target-bound callback plan and does not affect logical target or cursor selection. Multiple no-path observers retain registration order. This preserves the existing whole-Canvas use case without turning overlap into implicit propagation.
 
@@ -66,13 +74,26 @@ geometric hit or infers an ancestor from paint.
 
 ## TFC-04 implementation boundary
 
-One stable interaction-region slot owns all eight mouse handlers and its optional cursor for a rendered path. Rerender mutates that slot in place, then refreshes its reverse-paint-order position without changing logical identity. Removing the component or its last interactive property releases the region and any hover, activation, or cursor state it owns.
+One stable paint-target slot owns the complete handler set and optional cursor
+for a rendered Canvas drawing. Rerender mutates that slot in place, then
+refreshes its reverse-paint-order position without changing logical identity.
+Removing the component or switching to `pointerEvents="none"` releases the
+target and any hover, activation, focus, or cursor state it owns.
 
 Pathless observers remain ordered per-type Sets outside the target registry. A public `crc()` rerender requested by a handler settles on the next animation frame, so the current dispatch plan completes before the new tree is visible. Narrow dispatcher tests separately prove the synchronous rule for direct live-registry mutation: removed callbacks/targets are skipped, newly added callbacks wait for the next native event, and a reported exception does not stop the remaining plan.
 
 ## TFC-05 composition boundary
 
 One root dispatcher owns interaction state across the root Canvas and every nested layer. Each Canvas instance retains local paint entries; layer entries compose their child entries into the root order at the exact `drawImage` position. Target resolution walks that composition in reverse paint order, applies every accumulated transform, clip, and layer bound, and returns the stable leaf-region identity. Layers therefore do not double-dispatch, create independent hover state, or compete for the cursor.
+
+A `WebGLLayer` adds one nested resolver at its Canvas bitmap position. After
+outer clip/bounds rejection, it maps the root point through the inverse Canvas
+world transform to layer-local coordinates and delegates to its committed scene
+picker. Transparent background reports miss. Geometry/custom-hit candidates use
+one camera ray, supported WebGL depth, and later source order as the exact depth
+tie-breaker. Object or complete-island `pointerEvents="none"` permits a lower
+WebGL or Canvas target to win. The picker performs no `readPixels` or hidden ID
+render.
 
 Layout placement is another transform in that same composition. A region inside
 Absolute, Overlay, Flow, Flex, or Grid is hit at ancestor transform × placement
@@ -176,7 +197,10 @@ fit, responsive layout, rounded backing size, and device density.
 `originalEvent.clientX/Y` remain CSS viewport coordinates; the native event is
 not rewritten. Component transforms and layout placements affect hit testing,
 not public root-coordinate values. Nested Canvas layers convert the root point
-through their composition transform before testing layer-local geometry. See
+through their composition transform before testing layer-local geometry. A
+nested WebGL island then derives normalized-device coordinates and a camera ray
+from its logical layer size. Selected WebGL leaves retain public root-logical
+event coordinates; layer-local/NDC/ray values remain private resolver inputs. See
 the [Canvas surface contract](./canvas-surface-contract.md) for the complete
 projection model.
 
@@ -203,7 +227,8 @@ The explorer visual target, native trace when analogous, CRC trace, gesture, and
 
 - CRC exposes opaque logical targets and a temporary explicit-registration
   path, not DOM nodes or a retained event tree.
-- It never invokes all overlapping hits or infers interaction from paint.
+- It never invokes all overlapping hits or infers hit geometry from raster
+  opacity; built-in drawing uses declared geometry by default.
 - A sibling down/up sequence reaches a common ancestor only when that ancestor
   explicitly registered a matching listener.
 - Boundary-removal timing is normalized to stable postconditions rather than browser layout-task timing.
