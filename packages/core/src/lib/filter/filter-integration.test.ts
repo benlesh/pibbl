@@ -3,10 +3,15 @@ import {
   Group,
   Rectangle,
   crc,
+  crcPlayback,
   createElement,
   definePrimitive,
+  signal,
+  track,
+  tween,
   type CRCController,
   type CRCNode,
+  type CRCPlayback,
   type RenderingContext2D,
   type SystemStyle,
 } from '@crc/core';
@@ -20,6 +25,10 @@ import { crcEventTarget } from '../hooks/crc-event-target.js';
 import { focusManaged } from '../focus/policy-test-support.js';
 import { executeRender } from '../execute-render.js';
 import { mountCRC } from '../mount-crc.js';
+import {
+  installSchedulerDriverForTest,
+  ManualSchedulerDriver,
+} from '../scheduler/testing.js';
 import type { RenderTargetSnapshot } from '../render-target.js';
 import { FilterSurfacePool } from './filter-surface-pool.js';
 import { renderFilterBoundary } from './render-filter-boundary.js';
@@ -927,6 +936,83 @@ describe('filter integration', () => {
       .toEqual([firstBounds, secondBounds]);
     expect(policy.candidates.map(candidate => candidate.target))
       .toEqual(targets);
+  });
+
+  it('animates filter numbers without changing hit or focus geometry', () => {
+    const driver = new ManualSchedulerDriver();
+    const restoreDriver = installSchedulerDriverForTest(driver);
+    const radius = signal(2);
+    const bounds = Object.freeze({ x: 20, y: 10, width: 10, height: 10 });
+    const onClick = vi.fn();
+    let playback!: CRCPlayback;
+    const AnimatedFilter = (_props: {}): CRCNode => {
+      playback = crcPlayback(
+        track(radius, tween({ from: 2, to: 10, duration: 100 })),
+      );
+      return focusManaged(createElement(Rectangle, {
+        style: {
+          x: 20,
+          y: 10,
+          width: 10,
+          height: 10,
+          fill: 'red',
+          filter: { type: 'blur', radius: radius.get() },
+        },
+        keyboardNavigationBounds: bounds,
+        onClick,
+      }));
+    };
+    const canvas = document.createElement('canvas');
+    canvas.width = 50;
+    canvas.height = 30;
+    canvas.style.cssText = 'display:block;width:50px;height:30px';
+    document.body.appendChild(canvas);
+    const controller = crc(canvas, createElement(AnimatedFilter, {}), {
+      pixelRatio: 1,
+    });
+    controllers.add(controller);
+    const filterAssignments = vi.spyOn(
+      OffscreenCanvasRenderingContext2D.prototype,
+      'filter',
+      'set',
+    );
+
+    try {
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(-1);
+      playback.play();
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(0);
+      filterAssignments.mockClear();
+      expect(driver.pendingHostFrames).toBe(1);
+
+      driver.flush(50);
+
+      expect(radius.get()).toBe(6);
+      expect(filterAssignments.mock.calls
+        .map(([value]) => value)
+        .filter(value => value !== 'none'))
+        .toEqual(['blur(6px)']);
+      const instance = getCRCInstance(canvas);
+      const targets = Array.from(instance.eventRoot.targets);
+      const policy = instance.eventRoot.focusPolicy as unknown as {
+        readonly candidates: readonly { readonly target: unknown }[];
+      };
+      expect(targets.map(target => target.keyboardNavigationBounds))
+        .toEqual([bounds]);
+      expect(policy.candidates.map(candidate => candidate.target))
+        .toEqual(targets);
+
+      dispatchClick(canvas, 17, 15);
+      expect(onClick).not.toHaveBeenCalled();
+      dispatchClick(canvas, 22, 15);
+      expect(onClick).toHaveBeenCalledOnce();
+    } finally {
+      filterAssignments.mockRestore();
+      controller.dispose();
+      controllers.delete(controller);
+      restoreDriver();
+    }
   });
 
   it('keeps filtered and direct targets in original source paint order', async () => {

@@ -5,8 +5,14 @@ import {
   Rectangle,
   LayoutDiagnostic,
   Polygon,
+  crcPlayback,
   crcWhenChanged,
+  defineAnimation,
+  parallel,
   signal,
+  track,
+  tween,
+  type CRCPlayback,
 } from '../index';
 import { crc } from './crc';
 import { definePrimitive } from './define-primitive';
@@ -14,6 +20,11 @@ import { createElement, isCRCElement } from './element/create-element';
 import { clearSharedState, getCRCInstance } from './global-state';
 import { crcRef } from './hooks/crc-ref';
 import { crcState, type StateUpdater } from './hooks/crc-state';
+import {
+  installSchedulerDriverForTest,
+  ManualSchedulerDriver,
+  snapshotRealmScheduler,
+} from './scheduler/testing';
 import type { CRCNode, SystemStyle } from './types';
 import { RegularPolygon } from './components/regular-polygon';
 import { Star } from './components/star';
@@ -601,6 +612,197 @@ describe('crc root updates', () => {
 
     expect(renders).toEqual(['signal:0', 'replacement']);
     controller.dispose();
+  });
+
+  it('keeps committed animation values and healthy roots after an animated root fails', () => {
+    const driver = new ManualSchedulerDriver();
+    const restoreDriver = installSchedulerDriverForTest(driver);
+    const failedOutput = signal(0);
+    const healthyOutput = signal(0);
+    const renderFailure = new Error('animated root failed');
+    const failedRenders: number[] = [];
+    const healthyRenders: number[] = [];
+    const recoveredRenders: number[] = [];
+    let shouldFail = false;
+    let failedPlayback!: CRCPlayback;
+    let healthyPlayback!: CRCPlayback;
+    const failingCanvas = createCanvas();
+    const healthyCanvas = createCanvas();
+    const FailingRoot = (_props: {}) => {
+      failedPlayback = crcPlayback(
+        track(failedOutput, tween({ from: 0, to: 10, duration: 100 })),
+      );
+      const value = failedOutput.get();
+      failedRenders.push(value);
+      if (shouldFail && value > 0) throw renderFailure;
+      return createElement(Rectangle, {
+        style: { x: value, width: 10, height: 10, fill: 'red' },
+      });
+    };
+    const HealthyRoot = (_props: {}) => {
+      healthyPlayback = crcPlayback(
+        track(healthyOutput, tween({ from: 0, to: 10, duration: 100 })),
+      );
+      const value = healthyOutput.get();
+      healthyRenders.push(value);
+      return createElement(Rectangle, {
+        style: { x: value, width: 10, height: 10, fill: 'blue' },
+      });
+    };
+    const RecoveredRoot = (_props: {}) => {
+      const value = failedOutput.get();
+      recoveredRenders.push(value);
+      return createElement(Rectangle, {
+        style: { x: value, width: 10, height: 10, fill: 'green' },
+      });
+    };
+    const failedController = crc(
+      failingCanvas,
+      createElement(FailingRoot, {}),
+      { pixelRatio: 1 },
+    );
+    const healthyController = crc(
+      healthyCanvas,
+      createElement(HealthyRoot, {}),
+      { pixelRatio: 1 },
+    );
+
+    try {
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(-1);
+      failedPlayback.play();
+      healthyPlayback.play();
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(0);
+      shouldFail = true;
+      expect(driver.pendingHostFrames).toBe(1);
+
+      expect(() => driver.flush(50)).toThrow(renderFailure);
+
+      expect(failedOutput.get()).toBe(5);
+      expect(healthyOutput.get()).toBe(5);
+      expect(failedRenders.at(-1)).toBe(5);
+      expect(healthyRenders.at(-1)).toBe(5);
+      expect(getCRCInstance(failingCanvas).refs.size).toBe(0);
+      expect(healthyPlayback.status.get()).toBe('running');
+      expect(driver.pendingHostFrames).toBe(1);
+
+      shouldFail = false;
+      crc(failingCanvas, createElement(RecoveredRoot, {}));
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(75);
+
+      expect(failedPlayback.status.get()).toBe('disposed');
+      expect(failedOutput.get()).toBe(5);
+      expect(healthyOutput.get()).toBe(7.5);
+      expect(recoveredRenders).toEqual([5]);
+      expect(healthyRenders.at(-1)).toBe(7.5);
+
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(100);
+      expect(healthyOutput.get()).toBe(10);
+      expect(healthyPlayback.status.get()).toBe('finished');
+      expect(driver.pendingHostFrames).toBe(0);
+      const requestsBeforeStalePlay = driver.requestCount;
+      failedPlayback.play();
+      expect(driver.requestCount).toBe(requestsBeforeStalePlay);
+      expect(driver.pendingHostFrames).toBe(0);
+    } finally {
+      failedController.dispose();
+      healthyController.dispose();
+      restoreDriver();
+    }
+  });
+
+  it('discards every staged writer from a failing animation sampler', () => {
+    const driver = new ManualSchedulerDriver();
+    const restoreDriver = installSchedulerDriverForTest(driver);
+    const firstFailedOutput = signal(0);
+    const secondFailedOutput = signal(0);
+    const healthyOutput = signal(0);
+    const errors: unknown[] = [];
+    const healthyRenders: number[] = [];
+    let failedPlayback!: CRCPlayback;
+    let healthyPlayback!: CRCPlayback;
+    const FailingRoot = (_props: {}) => {
+      failedPlayback = crcPlayback(parallel(
+        track(firstFailedOutput, defineAnimation({
+          duration: 100,
+          sample: ({ localTime }) => localTime + 1,
+        })),
+        track(secondFailedOutput, defineAnimation({
+          duration: 100,
+          sample: ({ localTime }) => {
+            if (localTime >= 50) throw new Error('integration sampler failed');
+            return localTime + 1;
+          },
+        })),
+      ), { onError: error => errors.push(error) });
+      return [
+        createElement(Rectangle, {
+          style: {
+            x: firstFailedOutput.get(),
+            width: 5,
+            height: 5,
+            fill: 'red',
+          },
+        }),
+        createElement(Rectangle, {
+          style: {
+            x: secondFailedOutput.get(),
+            y: 5,
+            width: 5,
+            height: 5,
+            fill: 'red',
+          },
+        }),
+      ];
+    };
+    const HealthyRoot = (_props: {}) => {
+      healthyPlayback = crcPlayback(
+        track(healthyOutput, tween({ from: 0, to: 10, duration: 100 })),
+      );
+      const value = healthyOutput.get();
+      healthyRenders.push(value);
+      return createElement(Rectangle, {
+        style: { x: value, width: 5, height: 5, fill: 'blue' },
+      });
+    };
+    const failedController = crc(createCanvas(), createElement(FailingRoot, {}));
+    const healthyController = crc(createCanvas(), createElement(HealthyRoot, {}));
+
+    try {
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(-1);
+      failedPlayback.play();
+      healthyPlayback.play();
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(0);
+      expect([firstFailedOutput.get(), secondFailedOutput.get()]).toEqual([1, 1]);
+      expect(driver.pendingHostFrames).toBe(1);
+
+      driver.flush(50);
+
+      expect([firstFailedOutput.get(), secondFailedOutput.get()]).toEqual([1, 1]);
+      expect(failedPlayback.status.get()).toBe('cancelled');
+      expect((errors[0] as Error).message).toBe('integration sampler failed');
+      expect(healthyOutput.get()).toBe(5);
+      expect(healthyRenders.at(-1)).toBe(5);
+      expect(driver.pendingHostFrames).toBe(1);
+
+      driver.flush(100);
+      expect(healthyPlayback.status.get()).toBe('finished');
+      expect(snapshotRealmScheduler()).toMatchObject({
+        pendingHostFrames: 0,
+        registeredAdvanceParticipants: 0,
+        queuedFrameCompletions: 0,
+        queuedBeginCommands: 0,
+      });
+    } finally {
+      failedController.dispose();
+      healthyController.dispose();
+      restoreDriver();
+    }
   });
 
   it('lets the latest explicit root win after a state update while preserving parent intent', async () => {

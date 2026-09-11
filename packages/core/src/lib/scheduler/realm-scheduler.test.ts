@@ -1,4 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  crcPlayback,
+  defineAnimation,
+  marker,
+  sequence,
+  track,
+  type CRCPlayback,
+} from '../../index';
 import { crc } from '../crc';
 import { Layer } from '../components/layer';
 import { Rectangle } from '../components/rect';
@@ -728,6 +736,68 @@ describe('realm scheduler', () => {
     expect(selected.get()).toBe(2);
     expect(driver.pendingHostFrames).toBe(0);
     disposeSignalRenderConsumer(consumer);
+    controller.dispose();
+  });
+
+  it('runs animation work through every phase and releases the finished frame', () => {
+    const phases: string[] = [];
+    const output = signal(0);
+    const derived = computed(() => {
+      const value = output.get() * 2;
+      if (value > 0) phases.push(snapshotRealmScheduler().phase);
+      return value;
+    });
+    const observer = () => {
+      if (output.get() > 0) phases.push(snapshotRealmScheduler().phase);
+    };
+    getSignalNode(output).observers.add(observer);
+    let playback!: CRCPlayback;
+    const Root = (_props: {}) => {
+      playback = crcPlayback(sequence(
+        track(output, defineAnimation({
+          duration: 50,
+          sample: ({ localTime }) => {
+            if (localTime === 50) phases.push(snapshotRealmScheduler().phase);
+            return localTime / 5;
+          },
+        })),
+        marker('finished-frame'),
+      ), {
+        onEvent: event => {
+          if (event.marker === 'finished-frame') {
+            phases.push(snapshotRealmScheduler().phase);
+          }
+        },
+      });
+      const value = derived.get();
+      if (value > 0) phases.push(snapshotRealmScheduler().phase);
+    };
+    const controller = crc(createCanvas(), createElement(Root, {}));
+    expect(driver.pendingHostFrames).toBe(1);
+    driver.flush(-1);
+    playback.play();
+    expect(driver.pendingHostFrames).toBe(1);
+    driver.flush(0);
+    phases.length = 0;
+
+    expect(driver.pendingHostFrames).toBe(1);
+    driver.flush(50);
+
+    expect(output.get()).toBe(10);
+    expect(derived.get()).toBe(20);
+    expect(phases).toEqual(['advance', 'commit', 'plan', 'render', 'complete']);
+    expect(snapshotRealmScheduler()).toMatchObject({
+      phase: 'idle',
+      pendingHostFrames: 0,
+      advanceParticipants: 0,
+      completionCallbacks: 0,
+      dirtyInstances: 0,
+      dirtyRoots: 0,
+      registeredAdvanceParticipants: 0,
+      queuedFrameCompletions: 0,
+      queuedBeginCommands: 0,
+    });
+    getSignalNode(output).observers.delete(observer);
     controller.dispose();
   });
 

@@ -1,6 +1,13 @@
 import type { RectangleProps } from './rect';
 import type { RectStyle } from '../style/types';
 import type { SystemStyle } from '../types';
+import {
+  crcPlayback,
+  parallel,
+  track,
+  tween,
+  type CRCPlayback,
+} from '@crc/core';
 import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
 import { crc } from '../crc';
@@ -308,6 +315,148 @@ describe('Layer children and retained subtree contract', () => {
         nestedLayer.requestedRenderRevision,
       );
       expect(aLayer!.completedRenderRevision).toBe(aLayer!.requestedRenderRevision);
+    } finally {
+      offscreenDrawImage.mockRestore();
+      drawImage.mockRestore();
+      controller.dispose();
+      restoreDriver();
+    }
+  });
+
+  it('keeps animation invalidation local to Layer children and reuses them for parent presentation', () => {
+    const driver = new ManualSchedulerDriver();
+    const restoreDriver = installSchedulerDriverForTest(driver);
+    const childX = signal(0);
+    const parentOffset = signal(0);
+    const parentOpacity = signal(1);
+    let childPlayback!: CRCPlayback;
+    let presentationPlayback!: CRCPlayback;
+    const renders = { root: 0, a: 0, b: 0 };
+    const AChild = vi.fn((_props: {}): CRCNode => {
+      renders.a++;
+      return createElement(Rectangle, {
+        style: {
+          x: childX.get(),
+          width: 10,
+          height: 10,
+          fill: 'red',
+        },
+      });
+    });
+    const BChild = (_props: {}): CRCNode => {
+      renders.b++;
+      return createElement(Rectangle, {
+        style: { width: 10, height: 10, fill: 'blue' },
+      });
+    };
+    const Root = (_props: {}): CRCNode => {
+      renders.root++;
+      childPlayback = crcPlayback(
+        track(childX, tween({ from: 0, to: 20, duration: 100 })),
+      );
+      presentationPlayback = crcPlayback(parallel(
+        track(parentOffset, tween({ from: 0, to: 10, duration: 100 })),
+        track(parentOpacity, tween({ from: 1, to: 0.5, duration: 100 })),
+      ));
+      const offset = parentOffset.get();
+      const opacity = parentOpacity.get();
+      return createElement(Fragment, {
+        children: [
+          createElement(Group, {
+            style: { translateX: offset },
+            children: createElement(Layer, {
+              style: {
+                width: 30,
+                height: 10,
+                filter: { type: 'opacity', amount: opacity },
+              },
+              children: createElement(AChild, {}),
+            }),
+          }),
+          createElement(Layer, {
+            style: { width: 10, height: 10 },
+            children: createElement(BChild, {}),
+          }),
+        ],
+      });
+    };
+    const canvas = document.createElement('canvas');
+    canvas.width = 40;
+    canvas.height = 10;
+    document.body.appendChild(canvas);
+    const controller = crc(canvas, createElement(Root, {}), { pixelRatio: 1 });
+    const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
+    const offscreenDrawImage = vi.spyOn(
+      OffscreenCanvasRenderingContext2D.prototype,
+      'drawImage',
+    );
+
+    try {
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(-1);
+      const [aLayer, bLayer] = Array.from(GLOBAL_STATE.crcInstances.values())
+        .filter(instance => instance.parent === canvas);
+      expect(aLayer).toBeDefined();
+      expect(bLayer).toBeDefined();
+      renders.root = 0;
+      renders.a = 0;
+      renders.b = 0;
+      drawImage.mockClear();
+      offscreenDrawImage.mockClear();
+      const requestsBeforeChild = driver.requestCount;
+      childPlayback.play();
+      expect(driver.requestCount).toBe(requestsBeforeChild + 1);
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(0);
+      drawImage.mockClear();
+      offscreenDrawImage.mockClear();
+      expect(renders).toEqual({ root: 0, a: 0, b: 0 });
+
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(50);
+
+      expect(renders).toEqual({ root: 1, a: 1, b: 0 });
+      const aCompositeIndex = offscreenDrawImage.mock.calls.findIndex(
+        ([source]) => source === aLayer!.canvas,
+      );
+      expect(aCompositeIndex).toBeGreaterThanOrEqual(0);
+      expect(AChild.mock.invocationCallOrder.at(-1))
+        .toBeLessThan(
+          offscreenDrawImage.mock.invocationCallOrder[aCompositeIndex]!,
+        );
+      expect(drawImage.mock.calls.some(([source]) => source === bLayer!.canvas))
+        .toBe(true);
+      const bRevision = bLayer!.requestedRenderRevision;
+
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(100);
+      const aRevision = aLayer!.requestedRenderRevision;
+      renders.root = 0;
+      renders.a = 0;
+      renders.b = 0;
+      drawImage.mockClear();
+      offscreenDrawImage.mockClear();
+      const requestsBeforePresentation = driver.requestCount;
+      presentationPlayback.play();
+      expect(driver.requestCount).toBe(requestsBeforePresentation + 1);
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(110);
+      drawImage.mockClear();
+      offscreenDrawImage.mockClear();
+      expect(renders).toEqual({ root: 0, a: 0, b: 0 });
+
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(160);
+
+      expect(renders).toEqual({ root: 1, a: 0, b: 0 });
+      expect(aLayer!.requestedRenderRevision).toBe(aRevision);
+      expect(bLayer!.requestedRenderRevision).toBe(bRevision);
+      expect(offscreenDrawImage.mock.calls.some(
+        ([source]) => source === aLayer!.canvas,
+      )).toBe(true);
+      expect(drawImage.mock.calls.some(([source]) => source === bLayer!.canvas))
+        .toBe(true);
+      expect(pixel(canvas, 30, 5)[3]).toBeGreaterThan(0);
     } finally {
       offscreenDrawImage.mockRestore();
       drawImage.mockRestore();
