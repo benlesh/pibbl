@@ -1,4 +1,5 @@
 declare const crcAnimationDefinitionBrand: unique symbol;
+declare const crcAnimationProgramBrand: unique symbol;
 
 /** Maps normalized animation progress to an interpolation progress. */
 export type CRCEasing = (progress: number) => number;
@@ -9,6 +10,22 @@ export type CRCInterpolator<T> = (from: T, to: T, progress: number) => T;
 /** An opaque, immutable description of an animation value. */
 export interface CRCAnimationDefinition<T> {
   readonly [crcAnimationDefinitionBrand]: T;
+}
+
+/** An opaque, immutable composition of animation definitions. */
+export interface CRCAnimationProgram {
+  readonly [crcAnimationProgramBrand]: true;
+}
+
+export type CRCAnimationRepeatDirection =
+  | 'normal'
+  | 'reverse'
+  | 'alternate'
+  | 'alternate-reverse';
+
+export interface CRCAnimationRepeatOptions {
+  readonly iterations: number;
+  readonly direction?: CRCAnimationRepeatDirection;
 }
 
 export interface CRCTweenOptions<T> {

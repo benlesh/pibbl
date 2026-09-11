@@ -128,9 +128,20 @@ export {
   stepper,
   tween,
 } from './lib/animation/definition.js';
+export {
+  marker,
+  parallel,
+  repeat,
+  sequence,
+  track,
+  wait,
+} from './lib/animation/program.js';
 export type {
   CRCAnimationDefinition,
   CRCAnimationOptions,
+  CRCAnimationProgram,
+  CRCAnimationRepeatDirection,
+  CRCAnimationRepeatOptions,
   CRCAnimationSampleInput,
   CRCEasing,
   CRCInterpolator,
