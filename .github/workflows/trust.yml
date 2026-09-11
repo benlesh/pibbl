@@ -103,6 +103,9 @@ jobs:
       - name: Prove visual safeguards
         run: pnpm test:visual-safeguard
 
+      - name: Verify Studio visuals
+        run: pnpm test:studio-visual
+
       - name: Verify built gallery smoke
         run: pnpm test:smoke:built
 

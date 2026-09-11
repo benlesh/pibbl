@@ -1,6 +1,6 @@
 # First-Class Animation Engine Implementation Plan
 
-> **Historical status: EXECUTION PLAN.** This is the second of two dependency-ordered plans for the approved signals and animation design.
+> **Historical status: IMPLEMENTED PLAN.** Current behavior lives in the signals/scheduling and animation contracts plus the API reference.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 

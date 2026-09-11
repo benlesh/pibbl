@@ -97,6 +97,8 @@ let rendererConsumers = 0;
 let rendererEdges = 0;
 let createdRendererConsumers = 0;
 let releasedRendererConsumers = 0;
+let createdRendererEdges = 0;
+let releasedRendererEdges = 0;
 let signalCommitNotifications = 0;
 let planComputedValidations = 0;
 let computedSourceEdges = 0;
@@ -112,6 +114,8 @@ export interface SignalGraphSnapshot {
   readonly pendingComputedValidations: number;
   readonly createdRendererConsumers: number;
   readonly releasedRendererConsumers: number;
+  readonly createdRendererEdges: number;
+  readonly releasedRendererEdges: number;
   readonly signalCommitNotifications: number;
   readonly planComputedValidations: number;
   readonly createdComputedSourceEdges: number;
@@ -127,6 +131,8 @@ export function signalGraphSnapshot(): SignalGraphSnapshot {
     pendingComputedValidations: pendingComputedValidations.size,
     createdRendererConsumers,
     releasedRendererConsumers,
+    createdRendererEdges,
+    releasedRendererEdges,
     signalCommitNotifications,
     planComputedValidations,
     createdComputedSourceEdges,
@@ -149,11 +155,13 @@ export function recordRendererConsumerReleased(): void {
 /** @internal Records one live renderer dependency edge for test diagnostics. */
 export function recordRendererEdgeCreated(): void {
   rendererEdges++;
+  createdRendererEdges++;
 }
 
 /** @internal Records release of one renderer dependency edge for tests. */
 export function recordRendererEdgeReleased(): void {
   rendererEdges--;
+  releasedRendererEdges++;
 }
 
 function computedWriteErrorLabel(node: SignalNode<unknown>): string {

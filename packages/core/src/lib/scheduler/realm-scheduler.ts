@@ -68,6 +68,7 @@ interface BeginCommandRegistration {
     readonly command: CRCBeginCommand;
   };
   active: boolean;
+  owned: boolean;
 }
 
 interface OrderedPlaybackCompletion {
@@ -128,6 +129,10 @@ let nextRendererCompletionOrder = 0;
 let schedulerDriver: SchedulerDriver | undefined;
 let createdRootRegistrations = 0;
 let releasedRootRegistrations = 0;
+let createdBeginCommands = 0;
+let releasedBeginCommands = 0;
+let createdCompletionCallbacks = 0;
+let releasedCompletionCallbacks = 0;
 let currentFramePlanAdmissionDepth = 0;
 let nextBeginCommandSequence = 0;
 let currentFramePlaybackCompletions: CRCFrameCompletion[] | undefined;
@@ -215,8 +220,10 @@ export function queueBeginCommand(command: CRCBeginCommand): CRCBeginCommandHand
   const registration: BeginCommandRegistration = {
     accepted: Object.freeze({ sequence, command }),
     active: true,
+    owned: true,
   };
   beginCommands.push(registration);
+  createdBeginCommands++;
   requestHostFrameIfNeeded();
   return Object.freeze({
     sequence,
@@ -224,7 +231,10 @@ export function queueBeginCommand(command: CRCBeginCommand): CRCBeginCommandHand
       if (!registration.active) return;
       registration.active = false;
       const index = beginCommands.indexOf(registration);
-      if (index >= 0) beginCommands.splice(index, 1);
+      if (index >= 0) {
+        beginCommands.splice(index, 1);
+        releaseBeginCommand(registration);
+      }
       cancelIdleHostFrame();
     },
   });
@@ -238,6 +248,7 @@ export function queueCurrentFrameCompletion(callback: CRCFrameCompletion): void 
     return;
   }
   currentFramePlaybackCompletions.push(callback);
+  createdCompletionCallbacks++;
 }
 
 /** Registers playback state adoption against this frame's explicit Commit outcome. */
@@ -251,6 +262,7 @@ export function queueCurrentFrameCommitAcknowledgement(
     );
   }
   currentFrameCommitAcknowledgements.push(callback);
+  createdCompletionCallbacks++;
 }
 
 /** Queues one playback delivery ordered by run identity, then source insertion. */
@@ -267,10 +279,12 @@ export function queueCurrentFrameOrderedPlaybackCompletion(
     sequence: ++nextOrderedPlaybackCompletionSequence,
     callback,
   });
+  createdCompletionCallbacks++;
 }
 
 export function queueFrameCompletion(callback: CRCFrameCompletion): void {
   frameCompletions.push(callback);
+  createdCompletionCallbacks++;
   requestHostFrameIfNeeded();
 }
 
@@ -323,6 +337,7 @@ export function queueRendererParticipantComplete(
     callback,
     order: ++nextRendererCompletionOrder,
   });
+  createdCompletionCallbacks++;
   requestHostFrameIfNeeded();
 }
 
@@ -338,6 +353,7 @@ export function removeRendererParticipantOwner(
     for (let index = completions.length - 1; index >= 0; index--) {
       if (completions[index].owner === owner) {
         completions.splice(index, 1);
+        releasedCompletionCallbacks++;
       }
     }
   }
@@ -363,6 +379,10 @@ export function snapshotRealmScheduler(): RealmSchedulerSnapshot {
       nextRendererParticipantCompletions.length,
     createdRootRegistrations,
     releasedRootRegistrations,
+    createdBeginCommands,
+    releasedBeginCommands,
+    createdCompletionCallbacks,
+    releasedCompletionCallbacks,
     dirtyInstances: countDirtyInstances(),
     dirtyRoots: countDirtyRoots(),
     registeredAdvanceParticipants: advanceRegistrations.size,
@@ -431,7 +451,10 @@ function runFrame(hostTime: number): void {
   currentFrameCommitAcknowledgements = [];
   currentFrameOrderedPlaybackCompletions = [];
   for (const registration of commands) {
-    if (!registration.active) continue;
+    if (!registration.active) {
+      releaseBeginCommand(registration);
+      continue;
+    }
     registration.active = false;
     const { command, sequence } = registration.accepted;
     try {
@@ -439,6 +462,8 @@ function runFrame(hostTime: number): void {
     } catch (error) {
       batch.discardWriter(command);
       errors.push(error);
+    } finally {
+      releaseBeginCommand(registration);
     }
   }
   const registrations = Array.from(advanceRegistrations);
@@ -475,6 +500,8 @@ function runFrame(hostTime: number): void {
       acknowledgement(snapshot, commitOutcome);
     } catch (error) {
       errors.push(error);
+    } finally {
+      releasedCompletionCallbacks++;
     }
   }
 
@@ -604,6 +631,8 @@ function runFrame(hostTime: number): void {
       completion(snapshot);
     } catch (error) {
       errors.push(error);
+    } finally {
+      releasedCompletionCallbacks++;
     }
   }
   const playbackCompletions = currentFramePlaybackCompletions;
@@ -612,6 +641,8 @@ function runFrame(hostTime: number): void {
       completion(snapshot);
     } catch (error) {
       errors.push(error);
+    } finally {
+      releasedCompletionCallbacks++;
     }
   }
   currentFramePlaybackCompletions = undefined;
@@ -626,10 +657,15 @@ function runFrame(hostTime: number): void {
       completion.callback(snapshot);
     } catch (error) {
       errors.push(error);
+    } finally {
+      releasedCompletionCallbacks++;
     }
   }
   for (const completion of rendererCompletions) {
-    if (!completion.owner.isActive()) continue;
+    if (!completion.owner.isActive()) {
+      releasedCompletionCallbacks++;
+      continue;
+    }
     if (retryRendererOwners.has(completion.owner)) {
       nextRendererParticipantCompletions.push(completion);
       continue;
@@ -638,6 +674,8 @@ function runFrame(hostTime: number): void {
       completion.callback(snapshot);
     } catch (error) {
       errors.push(error);
+    } finally {
+      releasedCompletionCallbacks++;
     }
   }
   batch.clear();
@@ -646,6 +684,12 @@ function runFrame(hostTime: number): void {
   promoteNextFrameWork();
   requestHostFrameIfNeeded();
   throwCollectedErrors(errors);
+}
+
+function releaseBeginCommand(registration: BeginCommandRegistration): void {
+  if (!registration.owned) return;
+  registration.owned = false;
+  releasedBeginCommands++;
 }
 
 function captureRootJobs(): RootRenderJob[] {

@@ -267,10 +267,13 @@ or spring sample. Only steppers consume their clamped fixed-step elapsed input.
 All animation outputs and playback metadata become visible in one Commit before
 any root renders.
 
-The source-only trace collector records internal frame, command, sampling,
-staging, equality, stepper clamp, invalidation, work, milestone, and error facts.
-It retains no production history, has no semantic effect, and disables itself
-if its collector throws. CRC exposes no public scheduler clock, frame-step API,
+The source-only trace collector records command, sampling, write outcome,
+stepper clamp, milestone, and error facts. Every emitted record carries the
+applicable frame identity, logical time, run identity, or program path from its
+declared trace shape; write outcomes distinguish staged from
+equality-suppressed values. It retains no production history, has no semantic
+effect, and disables itself if its collector throws.
+CRC exposes no public scheduler clock, frame-step API,
 trace history, or input-injection surface; `seek` controls one playback rather
 than the realm.
 

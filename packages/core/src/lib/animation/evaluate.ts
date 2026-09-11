@@ -279,6 +279,63 @@ interface TimeTransform {
 }
 
 const activationRecords = new WeakMap<ProgramActivation, InternalProgramActivation>();
+const activationStepperKeys = new WeakMap<ProgramActivation, Set<string>>();
+let activeStepperStates = 0;
+let acquiredStepperStates = 0;
+let releasedStepperStates = 0;
+
+export interface AnimationEvaluationOwnershipSnapshot {
+  readonly activeStepperStates: number;
+  readonly acquiredStepperStates: number;
+  readonly releasedStepperStates: number;
+}
+
+/** @internal Exact ownership counters for retained and current-frame stepper state. */
+export function animationEvaluationOwnershipSnapshot():
+AnimationEvaluationOwnershipSnapshot {
+  return Object.freeze({
+    activeStepperStates,
+    acquiredStepperStates,
+    releasedStepperStates,
+  });
+}
+
+function registerActivationStepperKeys(
+  activation: ProgramActivation,
+  keys: Iterable<string>,
+): void {
+  const snapshot = new Set(keys);
+  activationStepperKeys.set(activation, snapshot);
+  activeStepperStates += snapshot.size;
+  acquiredStepperStates += snapshot.size;
+}
+
+function reconcileActivationStepperKeys(activation: ProgramActivation): void {
+  const tracked = activationStepperKeys.get(activation);
+  const record = activationRecords.get(activation);
+  if (tracked === undefined || record === undefined) return;
+  const next = new Set(record.steppers.keys());
+  for (const key of tracked) {
+    if (next.has(key)) continue;
+    tracked.delete(key);
+    activeStepperStates--;
+    releasedStepperStates++;
+  }
+  for (const key of next) {
+    if (tracked.has(key)) continue;
+    tracked.add(key);
+    activeStepperStates++;
+    acquiredStepperStates++;
+  }
+}
+
+function releaseActivationStepperKeys(activation: ProgramActivation): void {
+  const tracked = activationStepperKeys.get(activation);
+  if (tracked === undefined) return;
+  activeStepperStates -= tracked.size;
+  releasedStepperStates += tracked.size;
+  activationStepperKeys.delete(activation);
+}
 const baselineWriter = Object.freeze({ name: 'CRC animation activation baseline' });
 const directRepeatSelection = new WeakMap<CRCAnimationProgram, boolean>();
 const containsStepperDefinition = new WeakMap<CRCAnimationProgram, boolean>();
@@ -2874,6 +2931,7 @@ export function activateProgram(
     reverseEndpoints: new Map(),
     terminalDuration: undefined,
   });
+  registerActivationStepperKeys(activation, []);
   return activation;
 }
 
@@ -2882,7 +2940,9 @@ export function forkProgramActivation(
   activation: ProgramActivation,
 ): ProgramActivation {
   const fork = Object.freeze({}) as ProgramActivation;
-  activationRecords.set(fork, cloneProgramActivationRecord(activationRecord(activation)));
+  const record = cloneProgramActivationRecord(activationRecord(activation));
+  activationRecords.set(fork, record);
+  registerActivationStepperKeys(fork, record.steppers.keys());
   return fork;
 }
 
@@ -2895,8 +2955,14 @@ export function adoptProgramActivationFork(
   const source = activationRecord(fork);
   if (source.program !== target.program || source.registration !== target.registration ||
     source.originalValues !== target.originalValues) {
-    throw new TypeError('CRC animation activation fork does not belong to this activation.');
+      throw new TypeError('CRC animation activation fork does not belong to this activation.');
   }
+  reconcileActivationStepperKeys(activation);
+  reconcileActivationStepperKeys(fork);
+  releaseActivationStepperKeys(activation);
+  const forkKeys = activationStepperKeys.get(fork) ?? new Set<string>();
+  activationStepperKeys.delete(fork);
+  activationStepperKeys.set(activation, forkKeys);
   target.starts = source.starts;
   target.steppers = source.steppers;
   target.terminalSteppers = source.terminalSteppers;
@@ -2960,7 +3026,11 @@ export function evaluateProgram(
   activation: ProgramActivation,
   input: ProgramEvaluationInput,
 ): ProgramEvaluationResult {
-  return evaluate(activation, input, false);
+  try {
+    return evaluate(activation, input, false);
+  } finally {
+    reconcileActivationStepperKeys(activation);
+  }
 }
 
 /** Rebuilds activation starts from the original run snapshot before sampling. */
@@ -2968,7 +3038,11 @@ export function seekProgram(
   activation: ProgramActivation,
   input: ProgramEvaluationInput,
 ): ProgramEvaluationResult {
-  return evaluate(activation, input, true);
+  try {
+    return evaluate(activation, input, true);
+  } finally {
+    reconcileActivationStepperKeys(activation);
+  }
 }
 
 export interface ProgramFinishInput {
@@ -2990,16 +3064,22 @@ export function finishProgram(
       'CRC animation stateful terminal time is not discovered; finish is unavailable.',
     );
   }
-  return evaluate(activation, {
-    ...input,
-    time: duration,
-    direction: 'forward',
-  }, true);
+  try {
+    return evaluate(activation, {
+      ...input,
+      time: duration,
+      direction: 'forward',
+    }, true);
+  } finally {
+    reconcileActivationStepperKeys(activation);
+  }
 }
 
 /** Releases every resource retained by one activated program run. */
 export function releaseProgramActivation(activation: ProgramActivation): void {
   const record = activationRecord(activation);
+  reconcileActivationStepperKeys(activation);
+  releaseActivationStepperKeys(activation);
   record.starts.clear();
   record.steppers.clear();
   record.terminalSteppers.clear();

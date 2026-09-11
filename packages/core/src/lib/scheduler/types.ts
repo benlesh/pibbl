@@ -112,6 +112,10 @@ export interface RealmSchedulerSnapshot {
   readonly completionCallbacks: number;
   readonly createdRootRegistrations: number;
   readonly releasedRootRegistrations: number;
+  readonly createdBeginCommands: number;
+  readonly releasedBeginCommands: number;
+  readonly createdCompletionCallbacks: number;
+  readonly releasedCompletionCallbacks: number;
   readonly dirtyInstances: number;
   readonly dirtyRoots: number;
   readonly registeredAdvanceParticipants: number;

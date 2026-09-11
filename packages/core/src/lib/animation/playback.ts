@@ -115,6 +115,7 @@ export interface AnimationPlaybackSnapshot {
   readonly releasedPlaybacks: number;
   readonly queuedCommands: number;
   readonly queuedMilestones: number;
+  readonly outputStageAttempts: number;
 }
 
 export interface AnimationPlaybackController {
@@ -136,6 +137,7 @@ let createdPlaybacks = 0;
 let releasedPlaybacks = 0;
 let queuedCommands = 0;
 let queuedMilestones = 0;
+let outputStageAttempts = 0;
 let activePlaybackBeginContext: {
   readonly snapshot: CRCFrameSnapshot;
   readonly batch: SignalCommitBatch;
@@ -149,6 +151,7 @@ export function animationPlaybackSnapshot(): AnimationPlaybackSnapshot {
     releasedPlaybacks,
     queuedCommands,
     queuedMilestones,
+    outputStageAttempts,
   });
 }
 
@@ -587,6 +590,7 @@ export function createAnimationPlaybackController(
       stage<T>(value: WritableSignal<T>, nextValue: T, writer: object): void {
         batch.stage(value, nextValue, writer);
         if (writer === target.token) {
+          outputStageAttempts++;
           stagedOutputs.add(value as WritableSignal<unknown>);
         }
       },

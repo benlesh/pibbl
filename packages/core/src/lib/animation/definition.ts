@@ -90,6 +90,29 @@ const seekableActivationRecords = new WeakMap<
   SeekableDefinitionActivation<unknown>,
   SeekableDefinitionActivationRecord<unknown>
 >();
+let keyframeDefinitions = 0;
+let keyframeStorageArrayAllocations = 0;
+let keyframeSamples = 0;
+let keyframeSampleArrayAllocations = 0;
+let keyframeSampleDepth = 0;
+
+export interface AnimationDefinitionPerformanceSnapshot {
+  readonly keyframeDefinitions: number;
+  readonly keyframeStorageArrayAllocations: number;
+  readonly keyframeSamples: number;
+  readonly keyframeSampleArrayAllocations: number;
+}
+
+/** @internal Deterministic structural counters for normalized keyframe sampling. */
+export function animationDefinitionPerformanceSnapshot():
+AnimationDefinitionPerformanceSnapshot {
+  return Object.freeze({
+    keyframeDefinitions,
+    keyframeStorageArrayAllocations,
+    keyframeSamples,
+    keyframeSampleArrayAllocations,
+  });
+}
 
 function definitionLabel(debugName: string | undefined): string {
   return debugName === undefined ? 'CRC animation definition' :
@@ -258,6 +281,7 @@ function snapshotAnimationValue<T>(
       return rememberIdentity(value, seen) as T;
     }
     const snapshot: unknown[] = new Array(value.length);
+    if (keyframeSampleDepth > 0) keyframeSampleArrayAllocations++;
     seen.set(value, snapshot);
     for (const key of ownKeys) {
       if (ARRAY_OWN_KEYS.has(key)) continue;
@@ -511,13 +535,17 @@ export function keyframes<T>(
   }
   const snapshots = new WeakMap<object, unknown>();
   const values = Object.freeze(options.values.map(value => snapshotAnimationValue(value, snapshots)));
+  const offsets = normalizeOffsets(values, options.offsets, options.debugName);
+  const easings = normalizeEasings(options.easing, values.length - 1, options.debugName);
+  keyframeDefinitions++;
+  keyframeStorageArrayAllocations += 3;
   return createDefinition({
     kind: 'keyframes',
     duration: options.duration,
     debugName: options.debugName,
     values,
-    offsets: normalizeOffsets(values, options.offsets, options.debugName),
-    easings: normalizeEasings(options.easing, values.length - 1, options.debugName),
+    offsets,
+    easings,
     interpolate: options.interpolate,
   });
 }
@@ -629,6 +657,19 @@ export function sampleSeekableDefinition<T>(
     );
   }
 
+  keyframeSamples++;
+  keyframeSampleDepth++;
+  try {
+    return sampleKeyframe(record, timing);
+  } finally {
+    keyframeSampleDepth--;
+  }
+}
+
+function sampleKeyframe<T>(
+  record: KeyframesDefinitionRecord<T>,
+  timing: { readonly progress: number },
+): T {
   let segment = 0;
   for (let index = 1; index < record.offsets.length; index++) {
     if (record.offsets[index] <= timing.progress) segment = index;

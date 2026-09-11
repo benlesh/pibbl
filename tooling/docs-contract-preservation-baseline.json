@@ -8571,7 +8571,7 @@
       "path": "docs/design/animation-contract.md",
       "unitPrefix": "m",
       "currentUnitCount": 60,
-      "currentUnitsSha256": "e17576e0b8de494305257dfd71516ea939d654edf1d74674b92a458ece04fdcd",
+      "currentUnitsSha256": "4b410a5d0422293abc476c9fb8cc2789f3704760c5f67966f71eff1fee6e7c83",
       "approvalRecordId": "first-class-signals-and-scheduler",
       "mappings": [
         {
