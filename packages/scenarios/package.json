@@ -13,9 +13,11 @@
     "./mouse-contract": "./src/mouse-contract.ts",
     "./mouse-contract-scenario": "./src/mouse-contract-scenario.ts",
     "./smoke": "./src/smoke.ts",
-    "./surface": "./src/surface.ts"
+    "./surface": "./src/surface.ts",
+    "./webgl-lab": "./src/webgl-lab.ts"
   },
   "dependencies": {
-    "@crc/core": "workspace:*"
+    "@crc/core": "workspace:*",
+    "@crc/webgl": "workspace:*"
   }
 }

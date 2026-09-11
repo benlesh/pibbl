@@ -1055,11 +1055,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 50 unique, ordered, source-backed routes including standard shapes", async () => {
+  it("contains 51 unique, ordered, source-backed routes including standard shapes", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(50);
+    expect(learningExampleCatalog).toHaveLength(51);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1107,7 +1107,7 @@ describe("learning example catalog", () => {
         "vertical-line",
         "wedge",
       ],
-      composition: ["clip", "group", "layer"],
+      composition: ["clip", "group", "layer", "webgl-islands"],
       layout: ["absolute-and-overlay", "flex", "flow", "grid"],
       "events-and-interaction": [
         "click",
@@ -1507,6 +1507,11 @@ describe("learning example catalog", () => {
         "Clip",
         "Layer",
         "CRCFilter",
+        "WebGLLayer",
+        "Group3D",
+        "Cube",
+        "Sphere",
+        "crcAnimationFrame",
       ]),
     );
 

@@ -18,6 +18,7 @@ import type { PerformanceLabState } from './performance-lab.example';
 import type { RuntimeHooksState } from './runtime-hooks.example';
 import type { CanvasSurfaceState } from './canvas-surface.example';
 import type { FilterLabState } from './filter-lab.example';
+import type { WebGLLabState } from './webgl-lab.example';
 import { GEOMETRY_MATRIX_CASES } from './geometry-matrix.example';
 import { MOUSE_CONTRACT_CASES } from './mouse-contract';
 import { PERFORMANCE_WORKLOADS } from './performance-lab.example';
@@ -1209,6 +1210,90 @@ export const filterLabScenarioEntry: ScenarioCatalogEntry<FilterLabState> = {
   load: async () => (await import('./filter-lab')).filterLabScenario,
 };
 
+const webglLabMetadata: ScenarioMetadata = {
+  id: 'webgl-islands',
+  slug: 'webgl-islands',
+  title: 'WebGL islands laboratory',
+  summary:
+    'Prove transparent Canvas/WebGL composition, depth picking, transforms, clips, layers, filters, focus, animation, and context restoration.',
+  category: 'Rendering',
+  apiTags: [
+    'WebGLLayer',
+    'Group3D',
+    'Cube',
+    'Sphere',
+    'defineWebGLPrimitive',
+  ],
+  conceptTags: [
+    'transparent composition',
+    'depth picking',
+    'WebGL context restoration',
+    'Canvas paint order',
+  ],
+  manualSteps: [
+    {
+      action:
+        'Compare Mixed order, Depth, Transforms, Clipped, Layered, and Filtered.',
+      expected:
+        'Visible WebGL geometry composes at one Canvas paint position while depth, transforms, clips, layers, and filter overflow preserve source geometry.',
+    },
+    {
+      action:
+        'Click the lower Canvas, cube, transparent island background, upper star, and sphere probes.',
+      expected:
+        'Transparent pixels pass through, visible geometry targets the selected WebGL primitive, and later Canvas paint wins at overlap.',
+    },
+    {
+      action:
+        'Choose Focus, use Tab and Enter, then choose Animation and advance it.',
+      expected:
+        'Logical focus enters the cube, keyboard activation selects it, and the reported angle advances by one deterministic step.',
+    },
+    {
+      action: 'Choose Restore context.',
+      expected:
+        'The context generation advances once and the current scene is redrawn after restoration.',
+    },
+  ],
+  knownLimitations: [
+    'The initial backend is WebGL2-only and requires OffscreenCanvas plus ImageBitmap transfer; the restoration action dispatches the same cancelable platform events used by browser context lifecycle.',
+    'Picking uses declared CPU triangle geometry; shader discard, texture alpha, blending, and procedural displacement do not alter hit geometry.',
+  ],
+  learningOrder: 170,
+  visibility: 'test-laboratory',
+  visibilityReason:
+    'It exposes nine dense conformance modes, exact probes, and context diagnostics rather than a single beginner lesson.',
+  maturity: 'contract',
+};
+
+export const webglLabScenarioEntry: ScenarioCatalogEntry<WebGLLabState> = {
+  metadata: webglLabMetadata,
+  canvas: { width: 480, height: 300 },
+  actions: [
+    { id: 'show-mixed-order', label: 'Mixed order' },
+    { id: 'show-depth', label: 'Depth' },
+    { id: 'show-transforms', label: 'Transforms' },
+    { id: 'show-clipped', label: 'Clipped' },
+    { id: 'show-layered', label: 'Layered' },
+    { id: 'show-filtered', label: 'Filtered' },
+    { id: 'show-focus', label: 'Focus' },
+    { id: 'show-animation', label: 'Animation' },
+    { id: 'restore-context', label: 'Restore context' },
+    { id: 'change-camera', label: 'Change camera' },
+    { id: 'rotate-scene', label: 'Rotate scene' },
+    { id: 'toggle-pointer-events', label: 'Toggle pointer events' },
+    { id: 'swap-source-order', label: 'Swap source order' },
+    { id: 'advance-animation', label: 'Advance animation' },
+  ],
+  source: {
+    id: 'webgl-islands-laboratory-example',
+    language: 'tsx',
+    marker: "WEBGL_LAB_SOURCE_ID = 'webgl-islands-laboratory-example'",
+    path: 'packages/scenarios/src/webgl-lab.example.tsx',
+  },
+  load: async () => (await import('./webgl-lab')).webglLabScenario,
+};
+
 export const canvasSurfaceScenarioEntry: ScenarioCatalogEntry<CanvasSurfaceState> = {
   metadata: canvasSurfaceMetadata,
   canvas: { width: 480, height: 240 },
@@ -1244,6 +1329,7 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] = validateScena
   layoutFoundationScenarioEntry,
   canvasSurfaceScenarioEntry,
   filterLabScenarioEntry,
+  webglLabScenarioEntry,
 ] as const);
 
 export const scenarioCatalogIndex = createScenarioCatalogIndex(scenarioCatalog);

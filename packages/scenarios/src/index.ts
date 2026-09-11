@@ -22,6 +22,7 @@ export {
   performanceLabScenarioEntry,
   runtimeHooksScenarioEntry,
   validateScenarioCatalog,
+  webglLabScenarioEntry,
 } from './catalog';
 export type {
   FilterLabMode,
@@ -35,6 +36,18 @@ export {
 export {
   FILTER_LAB_ACTION_IDS,
 } from './filter-lab';
+export {
+  WEBGL_LAB_ACTION_IDS,
+  WEBGL_LAB_PROBES,
+} from './webgl-lab';
+export type {
+  WebGLLabAction,
+  WebGLLabFocusTarget,
+  WebGLLabMode,
+  WebGLLabPoint,
+  WebGLLabState,
+  WebGLLabTarget,
+} from './webgl-lab';
 export type {
   FocusNavigationAction,
   FocusNavigationActivationSource,

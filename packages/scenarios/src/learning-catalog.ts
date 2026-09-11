@@ -618,6 +618,37 @@ const drafts = [
     load: () => import("./learning/composition/filters.example"),
   },
   {
+    slug: "webgl-islands",
+    title: "WebGL islands",
+    shortTitle: "WebGL islands",
+    section: "composition",
+    order: 117,
+    summary:
+      "Compose an animated WebGL2 cube and sphere between ordinary Canvas 2D paint.",
+    api: [
+      "WebGLLayer",
+      "Group3D",
+      "Cube",
+      "Sphere",
+      "crcAnimationFrame",
+    ],
+    objectives: [
+      "Place one transparent WebGL island between Canvas background and overlay content.",
+      "Animate a Group3D with CRC frame time and select Cube or Sphere through ordinary event handlers.",
+    ],
+    prompts: {
+      gesture: "Click the rotating cube and sphere to change their colors.",
+      code: "Change either 3D translation or replace the animated Y rotation with an X rotation.",
+    },
+    apiNotes: [
+      "WebGLLayer uses the same CRC JSX runtime, component identity, hooks, and event vocabulary as Canvas components.",
+      "The omitted camera uses the documented perspective default; transparent island pixels reveal earlier Canvas paint.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["group", "layer", "overlap-and-paint-order"],
+    load: () => import("./learning/composition/webgl-islands.example"),
+  },
+  {
     slug: "layer",
     title: "Layer",
     shortTitle: "Layer",
