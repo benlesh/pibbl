@@ -245,4 +245,39 @@ describe('immutable animation programs', () => {
     expect(() => parallel(lhs, rhsInfinite)).not.toThrow();
     expect(() => parallel(lhs, overlapping)).toThrow('overlap');
   });
+
+  it('terminates for near-equal nested outer periods without scanning the dyadic window', () => {
+    const x = signal(0, { debugName: 'x' });
+    const lhs = repeat(sequence(
+      repeat(sequence(
+        track(x, tween({ to: 1, duration: 0 })),
+        wait(0.5),
+      ), { iterations: 2 }),
+      wait(0.25),
+    ), { iterations: 2 });
+    const rhs = repeat(sequence(
+      wait(0.75),
+      track(x, tween({ to: 2, duration: 0 })),
+      wait(0.5 + Number.EPSILON),
+    ), { iterations: 2 });
+
+    expect(() => parallel(lhs, rhs)).not.toThrow();
+  });
+
+  it('detects a nonzero outer alignment when an inner writer endpoint is zero', () => {
+    const x = signal(0, { debugName: 'x' });
+    const lhs = repeat(sequence(
+      repeat(sequence(
+        wait(0.5),
+        track(x, tween({ to: 1, duration: 0 })),
+      ), { iterations: 2 }),
+      wait(1),
+    ), { iterations: 2 });
+    const rhs = repeat(sequence(
+      track(x, tween({ to: 2, duration: 0 })),
+      wait(3),
+    ), { iterations: 2 });
+
+    expect(() => parallel(lhs, rhs)).toThrow('overlap');
+  });
 });
