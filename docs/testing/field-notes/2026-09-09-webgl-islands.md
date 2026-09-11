@@ -1,73 +1,81 @@
-# WebGL islands documentation field note
+# WebGL islands implementation field note
 
-> **Historical status: DOCUMENTATION-TRACK EVIDENCE ONLY.** This note records fresh checks
-> run in the isolated Task 14 documentation worktree. It is not an aggregate
-> trust result, browser result, or implementation-completion claim. Joined
-> integration owns the final status-bearing evidence.
+> **Historical status: FINAL INTEGRATED EVIDENCE.** This note records the fresh
+> aggregate verification of the WebGL-islands implementation in its isolated
+> feature worktree. It is evidence for the named revision and environment, not
+> a promise about later revisions.
 
 Date: 2026-09-10
 
-Branch: `codex/webgl-task14-docs`
+Branch: `codex/webgl-islands`
 
-Base revision: `7a1435384d0f8eb77915dce693b042ba639be734`
+Base revision: `7053bae8f8b0c277bf725a2bd9681399b9f2b6b4`
 
-Workspace: `/private/tmp/crc-webgl-task14-docs`
+Verified implementation revision: `7b43e3791bf2fa80398affaeb7cb5367f90ace2d`
+
+Workspace: `/private/tmp/crc-webgl-islands`
 
 ## Environment
 
-- Node: `v24.15.0` through `fnm exec --using=24.15.0`
+- Node: `v26.7.0`
 - pnpm: `11.21.0` through Corepack
-- Host: local macOS
-- Browser: not invoked by this documentation track
+- Host: macOS `26.6.2` (`25G83`)
+- Browser harness: Playwright `1.62.1` with its bundled headless Chromium
 
-## Scope and inspected evidence
+The repository's documented environment is Node 24.15 or newer on the Node 24
+LTS line. This run used a newer, noncanonical Node major, so the aggregate result
+is fresh local evidence but does not replace a Node 24 CI result.
 
-This track reconciled public Markdown with the implementation already present
-at the base revision. Source inspection confirmed the nine root runtime values
-and 23 named types exported by `@crc/webgl`, the current Canvas/WebGL default
-pointer-participation model, and the implementation/test paths cited by the
-new guide, API pages, migration, library inventory, and design contracts.
+## Verified scope
 
-The principal executable evidence available for joined verification is:
+The integrated branch includes the `@crc/webgl` package, the matching-version
+`@crc/core/internal` friend seam, fixed global Canvas/WebGL hit resolution,
+JSX and `createElement` authoring, default and explicit cameras, Cube, Sphere,
+Mesh, Group3D, geometry and primitive extension APIs, animation/context hooks,
+context-loss recovery, package consumers, Studio examples, documentation, and
+resource/performance evidence.
 
-- the public `webgl-islands` learning example and deterministic `webgl-islands`
-  laboratory;
-- the WebGL component, geometry, context, animation, event-integration,
-  lifecycle, scene-picker, cache, GPU state/resource, and structural tests;
-- the headless WebGL laboratory, ownership, performance, and visual-baseline
-  suites under `packages/core/test`.
+The documentation preservation manifest accounts for 667 pre-Task-14 units and
+782 current semantic units across all 12 normative contracts. It records 75
+translations, 55 additions, and 52 direct source/test evidence mappings under
+the approved WebGL design.
 
-These paths were inspected as documentation sources; this field note does not
-convert their mere presence into a passing result.
+## Fresh aggregate result
 
-## Fresh documentation checks
+The exact command was:
 
-Results below are limited to commands actually run in this worktree. The final
-documentation, package-consumer, Studio, browser, visual, lifecycle, and
-structural results must be recorded after the documentation and tooling tracks
-are joined.
+```sh
+CI=true corepack pnpm@11.21.0 trust
+```
 
-| Check                                                              | Fresh result                                                                                                                                                                                                                                                                                        |
-| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Node/pnpm environment                                              | `v24.15.0` / `11.21.0` confirmed.                                                                                                                                                                                                                                                                   |
-| Prettier over all 38 changed Markdown files, including `AGENTS.md` | Passed: all files use Prettier code style. The check used the already provisioned repository dependency because the isolated worktree has no installed dependency links.                                                                                                                            |
-| Read-only relative-link scan over all 38 changed Markdown files    | Passed: every relative target exists.                                                                                                                                                                                                                                                               |
-| Read-only Studio route/heading scan from changed documents         | Passed: all 68 checked public-document routes and heading anchors resolve. Generated Example/Testing routes were intentionally outside this Markdown-only scan.                                                                                                                                     |
-| `@crc/webgl` export/frontmatter comparison                         | Passed: all 9 values and 23 types exported by the package root occur exactly once in API `symbols` metadata.                                                                                                                                                                                        |
-| `git diff --check`                                                 | Passed with no whitespace errors.                                                                                                                                                                                                                                                                   |
-| `node tooling/verify-docs.mjs`                                     | Reached and passed its current local-link/snippet phase, then failed at the expected pre-WebGL closed-path classification. The 13 reported paths are the package README, migration, WebGL guide, five component pages, two function pages, two hook pages, and WebGL type page added by this track. |
+It exited successfully. The aggregate gate reported:
 
-The first workspace-local Prettier invocation attempted dependency resolution
-and could not complete because registry DNS is unavailable in this isolated
-environment. It changed no tracked dependency, manifest, lock, or tooling file;
-the transient install directory was removed before verification.
+- 51 learning lessons and 18 deterministic test labs discovered and cataloged;
+- documentation verification across 117 current/migration files, including
+  872 passing adversarial mutation probes;
+- Studio API coverage of 58 core values, 154 core types, 9 WebGL values, and
+  23 WebGL types, plus 176-type source/built structural declaration coverage;
+- source, built, packed Bundler and NodeNext consumers with one shared core
+  identity and blocked unsupported deep imports;
+- package and Studio production builds, including the built smoke scenario;
+- 1,942 browser tests passed and 2 skipped across 156 files;
+- all 6 full-page Studio visual baselines matched;
+- 29 lifecycle/ownership tests passed across 5 files; and
+- 24 structural-performance tests passed and 2 controlled wall-clock tests
+  skipped across 4 files.
 
-## Known integration boundary
+The WebGL laboratory baseline was manually inspected before acceptance. Its
+SHA-256 is
+`b3788e6b915c20aa9da850be5e41071719c295fb97164cb75cd97d763fa967ec`.
+The three Studio baselines intentionally changed by the new public guide were
+also inspected: the Learn landing page adds the WebGL guide, the Filters lesson
+now links forward to WebGL islands, and the search overlay inherits the updated
+Learn page beneath it.
 
-The base revision's documentation verifier uses a closed Markdown
-classification and API inventory that predates these new WebGL pages. The
-parallel tooling track owns the corresponding `typeDomain: webgl`, package/API
-inventory, and new-path classification updates. This Markdown-only worktree
-does not edit JavaScript, JSON, package manifests, locks, or tooling.
+## Deliberate boundaries
 
-No aggregate `trust` result is claimed here.
+The result does not add a retained scene graph, DOM overlay, semantic or
+accessibility tree, worker renderer, WebGL 1 fallback, arbitrary shader graph,
+transparent-pixel readback picker, or automatic picking for raw context draws.
+`pointerEvents="none"` remains the explicit visual-only opt-out, and raw custom
+WebGL drawing participates only through its declared hit capability.
