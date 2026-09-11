@@ -716,6 +716,17 @@ export function createAnimationPlaybackController(
             else cancelRun(target, context.snapshot, context.batch, true);
           }
         },
+        preflightReplacement(): void {
+          if (target === undefined || target.released) {
+            throw new Error('CRC animation replacement owner is unavailable.');
+          }
+          if (activePlaybackBeginContext === undefined) {
+            throw new Error('CRC animation replacement must begin during Begin.');
+          }
+          if (target.status === 'ending') {
+            throw new Error('CRC animation playback run is already ending.');
+          }
+        },
         beginReplacement(): AnimationWriterLeaseReplacement {
           if (target === undefined || target.released) {
             throw new Error('CRC animation replacement owner is unavailable.');

@@ -499,6 +499,78 @@ describe('scheduler-integrated animation playback', () => {
     expect(driver.pendingHostFrames).toBe(0);
   });
 
+  it('rejects a multi-owner replacement before staging effects for an earlier paused owner', () => {
+    const x = signal(0, { debugName: 'ending owner output' });
+    const y = signal(0, { debugName: 'paused owner output' });
+    const z = signal(100, { debugName: 'paused owner second output' });
+    const pausedEvents: string[] = [];
+    const endingEvents: string[] = [];
+    const candidateEvents: string[] = [];
+    const candidateErrors: unknown[] = [];
+    const paused = playback(
+      parallel(
+        track(y, tween({ from: 0, to: 10, duration: 100 })),
+        track(z, tween({ from: 100, to: 110, duration: 100 })),
+      ),
+      { onEvent: event => pausedEvents.push(event.type) },
+    );
+    const ending = playback(
+      track(x, tween({ from: 0, to: 20, duration: 100 })),
+      { onEvent: event => endingEvents.push(event.type) },
+    );
+    const candidate = playback(
+      parallel(
+        track(x, tween({ to: 30, duration: 100 })),
+        track(y, tween({ to: 40, duration: 100 })),
+        track(z, tween({ to: 140, duration: 100 })),
+      ),
+      {
+        onEvent: event => candidateEvents.push(event.type),
+        onError: error => candidateErrors.push(error),
+      },
+    );
+
+    paused.handle.play();
+    driver.flush(0);
+    driver.flush(20);
+    paused.handle.pause();
+    driver.flush(21);
+    ending.handle.play();
+    driver.flush(22);
+
+    ending.handle.cancel();
+    candidate.handle.play({ conflict: 'replace' });
+    driver.flush(30);
+
+    expect([y.get(), z.get(), paused.handle.currentTime.get(), paused.handle.status.get()])
+      .toEqual([2, 102, 20, 'paused']);
+    expect([x.get(), ending.handle.status.get(), candidate.handle.status.get()])
+      .toEqual([0, 'cancelled', 'cancelled']);
+    expect(pausedEvents).toEqual(['start']);
+    expect(endingEvents).toEqual(['start', 'cancel']);
+    expect(candidateEvents).toEqual([]);
+    expect(candidateErrors).toHaveLength(1);
+    expect(candidateErrors[0]).toEqual(expect.objectContaining({
+      message: expect.stringMatching(/already ending/iu),
+    }));
+    expect(writerLeaseSnapshot().activeOutputs).toEqual([
+      'paused owner output',
+      'paused owner second output',
+    ]);
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(0);
+    expect(driver.pendingHostFrames).toBe(0);
+    expect(() => x.set(5)).not.toThrow();
+    expect(() => y.set(5)).toThrow(/paused owner output/iu);
+    expect(() => z.set(105)).toThrow(/paused owner second output/iu);
+
+    paused.handle.resume();
+    driver.flush(40);
+    expect([y.get(), z.get(), paused.handle.currentTime.get(), paused.handle.status.get()])
+      .toEqual([2, 102, 20, 'running']);
+    driver.flush(50);
+    expect([y.get(), z.get(), paused.handle.currentTime.get()]).toEqual([3, 103, 30]);
+  });
+
   it('restores the rightful owner after a rejected chained replacement', () => {
     let rejectReplacement = false;
     const value = signal(0, {

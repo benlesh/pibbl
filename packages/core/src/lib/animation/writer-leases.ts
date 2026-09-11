@@ -18,6 +18,7 @@ export interface AnimationWriterLeaseOwner {
   readonly registrationOrder: number;
   readonly debugName?: string;
   cancel(): void;
+  preflightReplacement?(): void;
   beginReplacement?(): AnimationWriterLeaseReplacement;
 }
 
@@ -227,17 +228,22 @@ function cancelReplacedOwners(conflicting: readonly WriterLease[]): void {
 function beginReplacedOwners(
   conflicting: readonly WriterLease[],
 ): AnimationWriterLeaseReplacement[] {
+  for (const lease of conflicting) {
+    if (lease.owner.preflightReplacement === undefined ||
+      lease.owner.beginReplacement === undefined) {
+      throw new Error(
+        `CRC animation playback "${playbackName(lease)}" cannot be replaced ` +
+          'transactionally.',
+      );
+    }
+    lease.owner.preflightReplacement();
+  }
+
   const replacementTransactions: AnimationWriterLeaseReplacement[] = [];
   try {
     for (const lease of conflicting) {
-      if (lease.owner.beginReplacement === undefined) {
-        throw new Error(
-          `CRC animation playback "${playbackName(lease)}" cannot be replaced ` +
-            'transactionally.',
-        );
-      }
       replacements++;
-      replacementTransactions.push(lease.owner.beginReplacement());
+      replacementTransactions.push(lease.owner.beginReplacement!());
     }
     return replacementTransactions;
   } catch (error) {
@@ -279,6 +285,7 @@ function acquireLease(
       registrationOrder: owner.registrationOrder,
       debugName: owner.debugName,
       cancel: owner.cancel,
+      preflightReplacement: owner.preflightReplacement,
       beginReplacement: owner.beginReplacement,
     }),
     outputs,
