@@ -55,6 +55,15 @@ function AnimatedCard() {
           debugName: "learning entrance opacity",
         }),
       ),
+      track(
+        pulseScale,
+        tween({
+          from: 1,
+          to: 1,
+          duration: 0,
+          debugName: "learning pulse reset",
+        }),
+      ),
     ),
     marker("arrived"),
     track(

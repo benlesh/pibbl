@@ -157,7 +157,7 @@ describe('first-class animation public scenarios', () => {
     );
   });
 
-  it('replaces the active learning playback through FocusManagement Enter without a leased write', async () => {
+  it('resets an active learning pulse on FocusManagement Enter without a delayed snap', async () => {
     const learning = getLearningExampleBySlug('signals-and-animation');
     if (!learning) throw new Error('Missing signals-and-animation learning example.');
     const beforeLeases = writerLeaseSnapshot().active;
@@ -168,11 +168,18 @@ describe('first-class animation public scenarios', () => {
     document.body.appendChild(canvas);
     const context = canvas.getContext('2d');
     if (!context) throw new Error('The signals-and-animation lesson has no 2D context.');
-    const textPaints: string[] = [];
+    const textPaints: Array<{ readonly scale: number; readonly text: string }> = [];
     const fillText = context.fillText;
     context.fillText = function(text, ...args) {
-      textPaints.push(text);
+      textPaints.push({ scale: this.getTransform().a, text });
       return fillText.call(this, text, ...args);
+    };
+    const latestCardScale = (): number => {
+      const scale = textPaints
+        .filter(paint => paint.text === 'EXPLICIT .get()')
+        .at(-1)?.scale;
+      if (scale === undefined) throw new Error('The animated learning card was not painted.');
+      return scale;
     };
 
     const hostErrors: unknown[] = [];
@@ -199,7 +206,10 @@ describe('first-class animation public scenarios', () => {
       flushAfter();
       expect(writerLeaseSnapshot().active).toBeGreaterThan(beforeLeases);
 
-      flushAfter(180);
+      flushAfter();
+      flushAfter(500);
+      const advancedPulseScale = latestCardScale();
+      expect(advancedPulseScale).toBeGreaterThan(0.96);
       expect(Array.from(context.getImageData(120, 160, 1, 1).data)).toEqual([
         238,
         242,
@@ -211,6 +221,7 @@ describe('first-class animation public scenarios', () => {
       expect(hostErrors).toEqual([]);
       expect(driver.pendingHostFrames).toBe(1);
       flushAfter();
+      const replacementStartScale = latestCardScale();
       expect(Array.from(context.getImageData(120, 160, 1, 1).data)).not.toEqual([
         238,
         242,
@@ -218,9 +229,27 @@ describe('first-class animation public scenarios', () => {
         255,
       ]);
 
-      flushAfter(360);
+      flushAfter(359);
+      const scaleBeforePulse = latestCardScale();
+      expect(Array.from(context.getImageData(120, 160, 1, 1).data)).toEqual([
+        238,
+        242,
+        255,
+        255,
+      ]);
+      flushAfter(1);
+      const scaleAtPulseStart = latestCardScale();
       flushAfter();
-      expect(textPaints).toContain('ARRIVED · ONE COMMITTED FRAME');
+      expect(textPaints.map(paint => paint.text)).toContain(
+        'ARRIVED · ONE COMMITTED FRAME',
+      );
+      expect({
+        delayedPulseSnap: Math.abs(scaleAtPulseStart - scaleBeforePulse) > 0.01,
+        replacementStartScale,
+      }).toEqual({
+        delayedPulseSnap: false,
+        replacementStartScale: expect.closeTo(0.96, 6),
+      });
       expect(writerLeaseSnapshot().active).toBeGreaterThan(beforeLeases);
     } finally {
       controller.dispose();
