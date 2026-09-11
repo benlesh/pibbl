@@ -46,8 +46,8 @@ and its [browser](../packages/core/test/webgl-lab.test.ts),
 [ownership](../packages/core/test/webgl-ownership.test.ts), and
 [structural-performance](../packages/core/test/webgl-performance.test.ts)
 suites. The [WebGL field note](./testing/field-notes/2026-09-09-webgl-islands.md)
-records only the fresh checks run for this documentation track; the joined
-Task 14 trust result remains the integration owner's evidence.
+records the successful integrated trust gate for the feature revision. That
+fresh local run used Node 26; canonical Node 24 CI remains required.
 
 The [2026-09-09 rounded-shapes and path-creators field note](./testing/field-notes/2026-09-08-rounded-shapes-and-path-creators.md)
 records the current Node 24.15 source, built, packed, Studio, browser, visual,

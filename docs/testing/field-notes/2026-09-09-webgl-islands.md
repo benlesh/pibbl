@@ -11,7 +11,9 @@ Branch: `codex/webgl-islands`
 
 Base revision: `7053bae8f8b0c277bf725a2bd9681399b9f2b6b4`
 
-Verified implementation revision: `7b43e3791bf2fa80398affaeb7cb5367f90ace2d`
+Verified implementation revision: `66addd0367c554bacf59d76c6b637cd3f5a8c3ee`
+
+The later evidence-note commit changes only this Markdown record.
 
 Workspace: `/private/tmp/crc-webgl-islands`
 
@@ -58,7 +60,7 @@ It exited successfully. The aggregate gate reported:
 - source, built, packed Bundler and NodeNext consumers with one shared core
   identity and blocked unsupported deep imports;
 - package and Studio production builds, including the built smoke scenario;
-- 1,942 browser tests passed and 2 skipped across 156 files;
+- 1,943 browser tests passed and 2 skipped across 156 files;
 - all 6 full-page Studio visual baselines matched;
 - 29 lifecycle/ownership tests passed across 5 files; and
 - 24 structural-performance tests passed and 2 controlled wall-clock tests
