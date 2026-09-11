@@ -162,7 +162,10 @@ function simulationProgram(model: AnimationLabModel): CRCAnimationProgram {
   return track(model.stepper, stepper({
     stepMilliseconds: 10,
     maxElapsedMilliseconds: 30,
-    initial: (current: AnimationLabStepperProjection) => current,
+    initial: (): AnimationLabStepperProjection => Object.freeze({
+      value: 0,
+      steps: 0,
+    }),
     step: current => Object.freeze({
       value: current.value + 2,
       steps: current.steps + 1,

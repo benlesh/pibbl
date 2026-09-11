@@ -123,10 +123,6 @@ async function mountAnimationLab(
     model.metrics.eventOrigin = undefined;
     model.metrics.iteration = 0;
     model.programMode = mode;
-    if (mode === 'repeat') model.x.set(0);
-    if (mode === 'simulate') {
-      model.stepper.set(Object.freeze({ value: 0, steps: 0 }));
-    }
     renderPrimary();
     await nextPaint();
     model.playback?.play({ conflict: 'replace' });
@@ -142,7 +138,9 @@ async function mountAnimationLab(
         playback?.play({ conflict: 'replace' });
         break;
       case 'pause':
-        playback?.play({ conflict: 'replace' });
+        if (playback?.status.get() === 'idle' || playback?.status.get() === 'scheduled') {
+          playback.play({ conflict: 'replace' });
+        }
         playback?.pause();
         break;
       case 'step':
@@ -236,22 +234,24 @@ async function mountAnimationLab(
         );
       }
       const action = actionId as AnimationLabAction;
-      actionQueue = actionQueue.then(async () => {
+      const currentAction = actionQueue.then(async () => {
         assertActive();
         lastAction = action;
         await execute(action);
       });
-      return actionQueue;
+      actionQueue = currentAction.catch(() => {});
+      return currentAction;
     },
     reset: () => {
       assertActive();
-      actionQueue = actionQueue.then(() => {
+      const currentReset = actionQueue.then(() => {
         assertActive();
         lastAction = 'reset';
         resetRoots();
         publish();
       });
-      return actionQueue;
+      actionQueue = currentReset.catch(() => {});
+      return currentReset;
     },
     settled: async () => {
       await actionQueue;

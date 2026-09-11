@@ -4,6 +4,7 @@ import {
   getLearningExampleBySlug,
   getLearningExampleRoute,
   getScenarioRoute,
+  loadLearningExample,
   loadScenario,
   type AnimationLabState,
   type ScenarioController,
@@ -13,12 +14,14 @@ import {
   installSchedulerDriverForTest,
   ManualSchedulerDriver,
 } from '../src/lib/scheduler/testing.js';
+import { writerLeaseSnapshot } from '../src/lib/animation/writer-leases.js';
 import { loadLearningSource } from '../../../playground/src/learning-sources';
 import { loadScenarioSource } from '../../../playground/src/scenario-sources';
 import {
   mountScenarioSurface,
   scenarioSurfaceStyles,
 } from '../../scenarios/src/surface';
+import { clickLogicalPoint, pressKey } from './support/user-input';
 import { expectVisualMatch } from './visual-compare';
 
 const EXPECTED_ACTION_IDS = [
@@ -154,6 +157,80 @@ describe('first-class animation public scenarios', () => {
     );
   });
 
+  it('replaces the active learning playback through FocusManagement Enter without a leased write', async () => {
+    const learning = getLearningExampleBySlug('signals-and-animation');
+    if (!learning) throw new Error('Missing signals-and-animation learning example.');
+    const beforeLeases = writerLeaseSnapshot().active;
+    const canvas = document.createElement('canvas');
+    canvas.width = learning.canvas.width;
+    canvas.height = learning.canvas.height;
+    canvas.style.cssText = `display:block;width:${canvas.width}px;height:${canvas.height}px`;
+    document.body.appendChild(canvas);
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('The signals-and-animation lesson has no 2D context.');
+    const textPaints: string[] = [];
+    const fillText = context.fillText;
+    context.fillText = function(text, ...args) {
+      textPaints.push(text);
+      return fillText.call(this, text, ...args);
+    };
+
+    const hostErrors: unknown[] = [];
+    const captureError = (event: ErrorEvent): void => {
+      event.preventDefault();
+      hostErrors.push(event.error ?? event.message);
+    };
+    const captureRejection = (event: PromiseRejectionEvent): void => {
+      event.preventDefault();
+      hostErrors.push(event.reason);
+    };
+    window.addEventListener('error', captureError);
+    window.addEventListener('unhandledrejection', captureRejection);
+    const module = await loadLearningExample(learning);
+    const controller = module.default(canvas);
+
+    try {
+      flushAfter();
+      await expect(
+        clickLogicalPoint(canvas, { x: 180, y: 180 }),
+      ).resolves.toBeUndefined();
+      expect(document.activeElement).toBe(canvas);
+      expect(driver.pendingHostFrames).toBe(1);
+      flushAfter();
+      expect(writerLeaseSnapshot().active).toBeGreaterThan(beforeLeases);
+
+      flushAfter(180);
+      expect(Array.from(context.getImageData(120, 160, 1, 1).data)).toEqual([
+        238,
+        242,
+        255,
+        255,
+      ]);
+
+      await expect(pressKey('Enter')).resolves.toBeUndefined();
+      expect(hostErrors).toEqual([]);
+      expect(driver.pendingHostFrames).toBe(1);
+      flushAfter();
+      expect(Array.from(context.getImageData(120, 160, 1, 1).data)).not.toEqual([
+        238,
+        242,
+        255,
+        255,
+      ]);
+
+      flushAfter(360);
+      flushAfter();
+      expect(textPaints).toContain('ARRIVED · ONE COMMITTED FRAME');
+      expect(writerLeaseSnapshot().active).toBeGreaterThan(beforeLeases);
+    } finally {
+      controller.dispose();
+      window.removeEventListener('error', captureError);
+      window.removeEventListener('unhandledrejection', captureRejection);
+    }
+    expect(writerLeaseSnapshot().active).toBe(beforeLeases);
+    expect(driver.pendingHostFrames).toBe(0);
+  });
+
   it('drives play, pause, step, fixed seeks, cancel, and reset independently', async () => {
     const { controller } = await mountAnimationLab();
     expect(controller.getState()).toMatchObject({
@@ -262,6 +339,31 @@ describe('first-class animation public scenarios', () => {
     });
   });
 
+  it('pauses a progressed playback at its exact committed time and values', async () => {
+    const { controller } = await mountAnimationLab();
+
+    await controller.perform('play');
+    flushAfter();
+    flushAfter(100);
+    expect(controller.getState()).toMatchObject({
+      status: 'running',
+      currentTime: 100,
+      x: 90,
+      opacity: 0.7,
+    });
+
+    await controller.perform('pause');
+    flushAfter();
+    expect(controller.getState()).toMatchObject({
+      status: 'paused',
+      currentTime: 100,
+      x: 90,
+      opacity: 0.7,
+      lastAction: 'pause',
+    });
+    expect(driver.pendingHostFrames).toBe(0);
+  });
+
   it('drives reverse, render-adopted retarget and repeat, and fixed-step simulation independently', async () => {
     const { controller } = await mountAnimationLab();
 
@@ -341,6 +443,91 @@ describe('first-class animation public scenarios', () => {
       status: 'running',
       currentTime: 25,
       stepper: { value: 4, steps: 2 },
+    });
+  });
+
+  it('replaces an active Repeat with reset samples and remains resettable', async () => {
+    const { controller } = await mountAnimationLab();
+
+    await performAdoptedAction(controller, 'repeat');
+    flushAfter(25);
+    const firstRun = controller.getState();
+    expect(firstRun.currentTime).toBe(25);
+    expect(firstRun.x).toBeCloseTo(33.3333333333, 10);
+
+    await performAdoptedAction(controller, 'repeat');
+    expect(controller.getState()).toMatchObject({
+      status: 'running',
+      currentTime: 0,
+      x: 0,
+      iteration: 0,
+      milestones: ['cancel@0:root:0', 'start@0:root:0'],
+      lastAction: 'repeat',
+    });
+
+    await resetAndFlush(controller);
+    expect(controller.getState()).toMatchObject({
+      status: 'idle',
+      currentTime: 0,
+      x: 0,
+      iteration: 0,
+      milestones: [],
+      lastAction: 'reset',
+    });
+  });
+
+  it('replaces an active Simulate with initial stepper state and remains resettable', async () => {
+    const { controller } = await mountAnimationLab();
+
+    await performAdoptedAction(controller, 'simulate');
+    flushAfter(25);
+    expect(controller.getState()).toMatchObject({
+      currentTime: 25,
+      stepper: { value: 4, steps: 2 },
+    });
+
+    await performAdoptedAction(controller, 'simulate');
+    expect(controller.getState()).toMatchObject({
+      status: 'running',
+      currentTime: 0,
+      stepper: { value: 0, steps: 0 },
+      milestones: ['cancel@0:root:0', 'start@0:root:0'],
+      lastAction: 'simulate',
+    });
+
+    await resetAndFlush(controller);
+    expect(controller.getState()).toMatchObject({
+      status: 'idle',
+      currentTime: 0,
+      stepper: { value: 0, steps: 0 },
+      milestones: [],
+      lastAction: 'reset',
+    });
+  });
+
+  it('returns one action rejection without poisoning a later Reset', async () => {
+    const { controller, referenceHost } = await mountAnimationLab();
+    const inducedFailure = new Error('induced reference host failure');
+    Object.defineProperty(referenceHost, 'appendChild', {
+      configurable: true,
+      value: () => {
+        throw inducedFailure;
+      },
+    });
+
+    await expect(controller.perform('show-shared-roots')).rejects.toBe(
+      inducedFailure,
+    );
+    delete (referenceHost as unknown as Record<string, unknown>).appendChild;
+
+    await expect(controller.perform('reset')).resolves.toBeUndefined();
+    flushAfter();
+    expect(controller.getState()).toMatchObject({
+      status: 'idle',
+      currentTime: 0,
+      x: 0,
+      stepper: { value: 0, steps: 0 },
+      lastAction: 'reset',
     });
   });
 

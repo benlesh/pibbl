@@ -124,7 +124,6 @@ function AnimatedCard() {
           cursor: "pointer",
         }}
         onClick={() => {
-          pulseScale.set(1);
           setTargetScale((value) => (value === 1 ? 0.96 : 1));
           setMessage("PLAYING IMMUTABLE PROGRAM");
           playback.play({ conflict: "replace" });
