@@ -89,14 +89,14 @@ export class WebGLGPUResourceCache {
     if (program?.live) {
       program.live = false;
       if (!contextLost && !program.contextLost) {
-        deleteBuiltInProgram(this.gl, program.value);
+        runResourceCleanup(() => deleteBuiltInProgram(this.gl, program.value));
       }
     }
     for (const entry of this.geometries.values()) {
       if (!entry.live) continue;
       entry.live = false;
       if (!contextLost && !entry.contextLost) {
-        deleteGeometry(this.gl, entry.value);
+        runResourceCleanup(() => deleteGeometry(this.gl, entry.value));
       }
     }
     this.geometries.clear();
@@ -213,9 +213,15 @@ function uploadGeometry(
     throw new Error(`${componentName} geometry upload failed.`, { cause: error });
   } finally {
     if (!published) {
-      if (indexBuffer) gl.deleteBuffer(indexBuffer);
-      if (positionBuffer) gl.deleteBuffer(positionBuffer);
-      if (vertexArray) gl.deleteVertexArray(vertexArray);
+      if (indexBuffer) {
+        runResourceCleanup(() => gl.deleteBuffer(indexBuffer!));
+      }
+      if (positionBuffer) {
+        runResourceCleanup(() => gl.deleteBuffer(positionBuffer!));
+      }
+      if (vertexArray) {
+        runResourceCleanup(() => gl.deleteVertexArray(vertexArray!));
+      }
     }
   }
 }
@@ -224,7 +230,21 @@ function deleteGeometry(
   gl: WebGL2RenderingContext,
   geometry: WebGLGeometryResource,
 ): void {
-  if (geometry.indexBuffer) gl.deleteBuffer(geometry.indexBuffer);
-  gl.deleteBuffer(geometry.positionBuffer);
-  gl.deleteVertexArray(geometry.vertexArray);
+  if (geometry.indexBuffer) {
+    runResourceCleanup(() => gl.deleteBuffer(geometry.indexBuffer!));
+  }
+  runResourceCleanup(() => gl.deleteBuffer(geometry.positionBuffer));
+  runResourceCleanup(() => gl.deleteVertexArray(geometry.vertexArray));
+}
+
+function runResourceCleanup(cleanup: () => void): void {
+  try {
+    cleanup();
+  } catch (error) {
+    try {
+      globalThis.reportError(error);
+    } catch {
+      // Reporting cannot suppress release of later context-owned handles.
+    }
+  }
 }

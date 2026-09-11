@@ -1,4 +1,7 @@
-import { useInternalHookSlot } from '@crc/core/internal';
+import {
+  releaseBackendEventTarget,
+  useInternalHookSlot,
+} from '@crc/core/internal';
 import type {
   CRCBackendFrameInput,
   CRCEventTargetRegistration,
@@ -33,6 +36,7 @@ export interface WebGLRenderEnvironment {
   readonly isContextLost: (generation: number) => boolean;
   readonly stateBaseline: WebGLStateBaseline;
   readonly gpuResources: WebGLGPUResourceCache;
+  readonly resourceRegistry: WebGLResourceGenerationRegistry;
   readonly modelStack: Float32Array[];
   readonly pickLedger: MutableCRCWebGLPickLedger;
   readonly pickEntries: CRCWebGLPickRecord[];
@@ -48,6 +52,7 @@ export interface CreateWebGLRenderEnvironmentInput {
   readonly isContextLost: (generation: number) => boolean;
   readonly stateBaseline: WebGLStateBaseline;
   readonly gpuResources: WebGLGPUResourceCache;
+  readonly resourceRegistry: WebGLResourceGenerationRegistry;
 }
 
 export function createWebGLRenderEnvironment(
@@ -81,6 +86,7 @@ export function createWebGLRenderEnvironment(
     isContextLost: input.isContextLost,
     stateBaseline: input.stateBaseline,
     gpuResources: input.gpuResources,
+    resourceRegistry: input.resourceRegistry,
     modelStack: [identity],
     pickLedger,
     pickEntries: pickLedger.entries,
@@ -152,6 +158,17 @@ export function finishWebGLPrimitivePick(
   requireContextEnvironment(context).primitivePickModel = undefined;
 }
 
+/** Releases logical participation belonging only to discarded frame data. */
+export function releaseWebGLPickParticipation(
+  entries: readonly CRCWebGLPickRecord[],
+): void {
+  const targets = new Set<CRCEventTargetRegistration>();
+  for (const entry of entries) targets.add(entry.target);
+  for (const target of targets) {
+    runRelease(() => releaseBackendEventTarget(target));
+  }
+}
+
 /** Publishes the exact model used by the active built-in draw for picking. */
 export function setWebGLPrimitivePickModel(
   context: CRCWebGLContext,
@@ -204,6 +221,7 @@ function createPublicContext(
     gl: environment.gl,
     contextGeneration: environment.contextGeneration,
     isContextLost: environment.isContextLost,
+    resourceRegistry: environment.resourceRegistry,
   });
   const context = Object.freeze({
     gl: environment.gl,
@@ -257,6 +275,7 @@ interface WebGLResourceScope {
   readonly gl: WebGL2RenderingContext;
   readonly contextGeneration: number;
   readonly isContextLost: (generation: number) => boolean;
+  readonly resourceRegistry: WebGLResourceGenerationRegistry;
 }
 
 function createResourceOperations(
@@ -293,6 +312,37 @@ interface WebGLResourceSlot<T> {
   gl: WebGL2RenderingContext | undefined;
   generation: number | undefined;
   isContextLost: ((generation: number) => boolean) | undefined;
+  registry: WebGLResourceGenerationRegistry | undefined;
+}
+
+/** Tracks live component-owned resources so a lost context invalidates now. */
+export class WebGLResourceGenerationRegistry {
+  private readonly slots = new Set<WebGLResourceSlot<unknown>>();
+
+  add(slot: WebGLResourceSlot<unknown>): void {
+    this.slots.add(slot);
+  }
+
+  remove(slot: WebGLResourceSlot<unknown>): void {
+    this.slots.delete(slot);
+  }
+
+  invalidateGeneration(generation: number): void {
+    for (const slot of Array.from(this.slots)) {
+      if (slot.generation !== generation) continue;
+      runRelease(() => releaseWebGLResource(slot));
+    }
+  }
+
+  dispose(isContextLost: (generation: number) => boolean): void {
+    for (const slot of Array.from(this.slots)) {
+      const generation = slot.generation;
+      runRelease(() => releaseWebGLResource(
+        slot,
+        generation === undefined ? undefined : isContextLost(generation),
+      ));
+    }
+  }
 }
 
 function useWebGLResource<T>(
@@ -318,6 +368,7 @@ function useWebGLResource<T>(
         gl: undefined,
         generation: undefined,
         isContextLost: undefined,
+        registry: undefined,
       };
       teardowns.add(() => releaseWebGLResource(owned));
       return owned;
@@ -337,16 +388,22 @@ function useWebGLResource<T>(
   slot.gl = scope.gl;
   slot.generation = scope.contextGeneration;
   slot.isContextLost = scope.isContextLost;
+  slot.registry = scope.resourceRegistry;
+  scope.resourceRegistry.add(slot as WebGLResourceSlot<unknown>);
   return value;
 }
 
-function releaseWebGLResource<T>(slot: WebGLResourceSlot<T>): void {
+function releaseWebGLResource<T>(
+  slot: WebGLResourceSlot<T>,
+  contextLostOverride?: boolean,
+): void {
   if (!slot.hasValue) return;
   const value = slot.value as T;
   const release = slot.release!;
   const gl = slot.gl!;
   const generation = slot.generation!;
   const isContextLost = slot.isContextLost!;
+  const registry = slot.registry;
   slot.hasValue = false;
   slot.value = undefined;
   slot.release = undefined;
@@ -354,10 +411,24 @@ function releaseWebGLResource<T>(slot: WebGLResourceSlot<T>): void {
   slot.gl = undefined;
   slot.generation = undefined;
   slot.isContextLost = undefined;
+  slot.registry = undefined;
+  registry?.remove(slot as WebGLResourceSlot<unknown>);
   release(value, Object.freeze({
     gl,
-    contextLost: isContextLost(generation),
+    contextLost: contextLostOverride ?? isContextLost(generation),
   }));
+}
+
+function runRelease(release: () => void): void {
+  try {
+    release();
+  } catch (error) {
+    try {
+      globalThis.reportError(error);
+    } catch {
+      // Reporting cannot suppress release of later generation-owned resources.
+    }
+  }
 }
 
 function haveSameDependencies(

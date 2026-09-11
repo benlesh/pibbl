@@ -133,8 +133,9 @@ export function cleanupCRCInstance(crcInstance: CRCInstance): void {
   }
 
   if (crcInstance.animationFrameId !== undefined) {
-    cancelAnimationFrame(crcInstance.animationFrameId);
+    const animationFrameId = crcInstance.animationFrameId;
     crcInstance.animationFrameId = undefined;
+    runTeardown(() => cancelAnimationFrame(animationFrameId));
   }
 
   if (GLOBAL_STATE.crcInstances.get(canvas) === crcInstance) {

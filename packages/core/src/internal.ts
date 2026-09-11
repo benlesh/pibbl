@@ -58,6 +58,7 @@ import type {
 import {
   getCurrentCRCInstance,
   GLOBAL_STATE,
+  NO_PENDING_ROOT,
 } from './lib/global-state.js';
 import {
   requireHookContext,
@@ -68,6 +69,7 @@ import { getSurfaceSnapshot } from './lib/surface/transform.js';
 import type { Canvas } from './lib/types.js';
 import type { CRCInteractionLayer } from './lib/types.js';
 import { update } from './lib/update.js';
+import { runTeardown } from './lib/teardowns.js';
 
 /** Reads the selected official backend's current frame environment. */
 export function getBackendEnvironment<E>(token: CRCBackendToken): E {
@@ -151,6 +153,27 @@ export function isBackendEventTargetLive(
   return target.live &&
     !owner.mainTeardowns.closed &&
     owner.eventRoot.targets.has(target);
+}
+
+/** Temporarily releases one backend target; its retained hook may enroll it again. */
+export function releaseBackendEventTarget(
+  target: CRCEventTargetRegistration,
+): void {
+  releaseTarget(target);
+  target.keyboardNavigationBounds = undefined;
+  target.keyboardNavigationPoints = undefined;
+}
+
+/** Cancels work owned by one private backend mount without disposing its state. */
+export function cancelBackendMountFrame(mount: CRCBackendMount): void {
+  const instance = backendMountInstance(mount);
+  const frameId = instance.animationFrameId;
+  instance.animationFrameId = undefined;
+  instance.pendingRoot = NO_PENDING_ROOT;
+  instance.pendingUpdateParents = false;
+  if (frameId !== undefined) {
+    runTeardown(() => cancelAnimationFrame(frameId));
+  }
 }
 
 /** Registers work that runs after this component's rendered descendants. */

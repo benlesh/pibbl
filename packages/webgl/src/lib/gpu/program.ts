@@ -83,22 +83,28 @@ export function createBuiltInProgram(
       color: requireUniform(gl, program, componentName, 'u_color'),
       positionAttribute: 0 as const,
     });
-    gl.detachShader(program, vertex);
-    gl.detachShader(program, fragment);
-    gl.deleteShader(vertex);
+    runProgramCleanup(() => gl.detachShader(program!, vertex!));
+    runProgramCleanup(() => gl.detachShader(program!, fragment!));
+    runProgramCleanup(() => gl.deleteShader(vertex!));
     vertex = undefined;
-    gl.deleteShader(fragment);
+    runProgramCleanup(() => gl.deleteShader(fragment!));
     fragment = undefined;
     published = true;
     return builtIn;
   } finally {
     if (linked && program) {
-      if (vertex) gl.detachShader(program, vertex);
-      if (fragment) gl.detachShader(program, fragment);
+      if (vertex) {
+        runProgramCleanup(() => gl.detachShader(program!, vertex!));
+      }
+      if (fragment) {
+        runProgramCleanup(() => gl.detachShader(program!, fragment!));
+      }
     }
-    if (vertex) gl.deleteShader(vertex);
-    if (fragment) gl.deleteShader(fragment);
-    if (!published && program) gl.deleteProgram(program);
+    if (vertex) runProgramCleanup(() => gl.deleteShader(vertex!));
+    if (fragment) runProgramCleanup(() => gl.deleteShader(fragment!));
+    if (!published && program) {
+      runProgramCleanup(() => gl.deleteProgram(program!));
+    }
   }
 }
 
@@ -133,8 +139,20 @@ function compileShader(
     }
     return shader;
   } catch (error) {
-    gl.deleteShader(shader);
+    runProgramCleanup(() => gl.deleteShader(shader));
     throw error;
+  }
+}
+
+function runProgramCleanup(cleanup: () => void): void {
+  try {
+    cleanup();
+  } catch (error) {
+    try {
+      globalThis.reportError(error);
+    } catch {
+      // Reporting cannot suppress release of later shader intermediates.
+    }
   }
 }
 

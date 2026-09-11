@@ -7,6 +7,8 @@ import type { SystemStyle } from '@crc/core';
 import type { CRCWebGLCameraSnapshot } from './types.js';
 import {
   createWebGLRenderEnvironment,
+  releaseWebGLPickParticipation,
+  WebGLResourceGenerationRegistry,
   withWebGLPrimitiveContext,
   type WebGLRenderEnvironment,
 } from './render-environment.js';
@@ -42,6 +44,7 @@ export interface WebGLBackendDriver
   hasCompletedFrame(): boolean;
   takeFailedFrameTimestamp(): number | undefined;
   takeCompletedFrame(): WebGLCompletedFrame;
+  invalidateContext(generation: number): void;
 }
 
 /** Creates the package-private backend driver owned by one WebGLLayer. */
@@ -58,6 +61,8 @@ export function createWebGLBackend(
   let failedFrameTimestamp: number | undefined;
   let renderedGeneration = 0;
   let ownedResourceGeneration = 0;
+  const resourceRegistry = new WebGLResourceGenerationRegistry();
+  const invalidContextGenerations = new Set<number>();
   return {
     token: WEBGL_BACKEND_TOKEN,
     name: 'webgl2',
@@ -69,6 +74,7 @@ export function createWebGLBackend(
     },
     beginFrame(frameInput) {
       const contextGeneration = options.getContextGeneration();
+      if (invalidContextGenerations.has(contextGeneration)) return undefined;
       if (
         gpuResources === undefined ||
         gpuResourceGeneration !== contextGeneration
@@ -95,6 +101,7 @@ export function createWebGLBackend(
         isContextLost,
         stateBaseline,
         gpuResources,
+        resourceRegistry,
       });
       beginWebGLFrame(
         gl,
@@ -102,18 +109,20 @@ export function createWebGLBackend(
         frameInput.backingHeight,
         stateBaseline,
       );
+      if (invalidContextGenerations.has(contextGeneration)) return undefined;
       return { environment };
     },
     enterComponent(frame) {
       const { width, height } = frame.environment.backingViewport;
       const { stateBaseline: frameBaseline } = frame.environment;
       installWebGLStateBaseline(gl, width, height, frameBaseline);
-      return () => installWebGLStateBaseline(
-        gl,
-        width,
-        height,
-        frameBaseline,
-      );
+      return () => {
+        if (!invalidContextGenerations.has(
+          frame.environment.contextGeneration,
+        )) {
+          installWebGLStateBaseline(gl, width, height, frameBaseline);
+        }
+      };
     },
     runPrimitive(frame, input, runProgram) {
       const hit = getWebGLPrimitiveHitMetadata(input.definition.program);
@@ -141,6 +150,12 @@ export function createWebGLBackend(
       ));
     },
     finishFrame(frame, success) {
+      if (invalidContextGenerations.has(frame.environment.contextGeneration)) {
+        releaseWebGLPickParticipation(frame.environment.pickEntries);
+        completedFrame = undefined;
+        failedFrameTimestamp = undefined;
+        return;
+      }
       const { width, height } = frame.environment.backingViewport;
       installWebGLStateBaseline(
         gl,
@@ -148,6 +163,12 @@ export function createWebGLBackend(
         height,
         frame.environment.stateBaseline,
       );
+      if (invalidContextGenerations.has(frame.environment.contextGeneration)) {
+        releaseWebGLPickParticipation(frame.environment.pickEntries);
+        completedFrame = undefined;
+        failedFrameTimestamp = undefined;
+        return;
+      }
       if (success) {
         renderedGeneration += 1;
         failedFrameTimestamp = undefined;
@@ -178,9 +199,30 @@ export function createWebGLBackend(
       }
       return completed;
     },
+    invalidateContext(generation) {
+      invalidContextGenerations.add(generation);
+      resourceRegistry.invalidateGeneration(generation);
+      if (
+        gpuResources !== undefined &&
+        gpuResourceGeneration === generation
+      ) {
+        gpuResources.dispose(true);
+        gpuResources = undefined;
+        gpuResourceGeneration = undefined;
+      }
+      if (baselineGeneration === generation) {
+        stateBaseline = undefined;
+        baselineGeneration = undefined;
+      }
+      if (completedFrame?.contextGeneration === generation) {
+        completedFrame = undefined;
+      }
+      failedFrameTimestamp = undefined;
+    },
     dispose() {
       completedFrame = undefined;
       failedFrameTimestamp = undefined;
+      resourceRegistry.dispose(isContextLost);
       if (gpuResources !== undefined && gpuResourceGeneration !== undefined) {
         gpuResources.dispose(isContextLost(gpuResourceGeneration));
       }
@@ -188,6 +230,7 @@ export function createWebGLBackend(
       gpuResourceGeneration = undefined;
       stateBaseline = undefined;
       baselineGeneration = undefined;
+      invalidContextGenerations.clear();
     },
   };
 }
