@@ -92,6 +92,45 @@ describe('analytic spring definitions', () => {
     expect(scaledSample.velocity).toBeCloseTo(0.3773452034749068, 14);
   });
 
+  it('does not derive unused frequencies or coefficients for settled motion', () => {
+    const settledExtreme = spring({
+      from: 0,
+      to: 0,
+      mass: Number.MIN_VALUE,
+      stiffness: Number.MAX_VALUE,
+      damping: 0,
+      initialVelocity: 0,
+    });
+    const settledExtremeRecord = getDefinitionRecord(settledExtreme);
+    expect(settledExtremeRecord.duration).toBe(0);
+    expect(sampleSeekableDefinition(settledExtreme, {
+      initialValue: 1,
+      localTime: 0,
+    })).toBe(0);
+
+    const activationDependent = spring({ to: Number.MAX_VALUE });
+    expect(sampleSeekableDefinition(activationDependent, {
+      initialValue: Number.MAX_VALUE,
+      localTime: 0,
+    })).toBe(Number.MAX_VALUE);
+  });
+
+  it('samples finite overdamped roots without squaring a huge damping ratio', () => {
+    const definition = spring({
+      from: 0,
+      to: 1,
+      mass: 1,
+      stiffness: 1e200,
+      damping: 2e300,
+    });
+    const record = getDefinitionRecord(definition);
+    if (record.kind !== 'spring') throw new Error('Expected a spring record.');
+
+    const sample = sampleSpring(record, 1);
+    expect(sample.position).toBe(0);
+    expect(sample.velocity / 5e-101).toBeCloseTo(1, 12);
+  });
+
   it.each([
     {
       regime: 'underdamped',

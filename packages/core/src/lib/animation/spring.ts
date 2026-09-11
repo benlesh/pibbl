@@ -276,14 +276,18 @@ function overdampedTerms(
   record: SpringWithoutDuration,
   natural: number,
   ratio: number,
+  decay: number,
 ): {
   readonly firstCoefficient: number;
   readonly firstRoot: number;
   readonly secondCoefficient: number;
   readonly secondRoot: number;
 } {
-  const rootOffset = Math.sqrt(ratio * ratio - 1);
-  const rootSum = natural * (ratio + rootOffset);
+  const reciprocalRatio = 1 / ratio;
+  const rootOffsetRatio = Math.sqrt(
+    (1 - reciprocalRatio) * (1 + reciprocalRatio),
+  );
+  const rootSum = decay * (1 + rootOffsetRatio);
   const firstRoot = -(natural / rootSum) * natural;
   const secondRoot = -rootSum;
   const initialDisplacement = displacement(record);
@@ -318,8 +322,9 @@ function overdampedEnvelope(
   record: SpringWithoutDuration,
   natural: number,
   ratio: number,
+  decay: number,
 ): SpringEnvelope {
-  const terms = overdampedTerms(record, natural, ratio);
+  const terms = overdampedTerms(record, natural, ratio, decay);
   return {
     lastPeakSeconds: 0,
     displacement: seconds =>
@@ -340,7 +345,7 @@ function springEnvelope(record: SpringWithoutDuration): SpringEnvelope {
   }
   return ratio < 1 ?
     underdampedEnvelope(record, natural, ratio, decay) :
-    overdampedEnvelope(record, natural, ratio);
+    overdampedEnvelope(record, natural, ratio, decay);
 }
 
 /** @internal Resolves a deterministic settlement duration in milliseconds. */
@@ -379,8 +384,7 @@ export function createSpringRecord(
   options: Readonly<CRCSpringOptions>,
 ): SpringDefinitionRecord {
   const normalized = normalizedSpring(options);
-  frequencies(normalized);
-  springEnvelope(normalized);
+  if (!normalized.hasFrom) frequencies(normalized);
   return Object.freeze({
     ...normalized,
     duration: normalized.hasFrom ?
@@ -448,7 +452,7 @@ export function sampleSpring(
       decayRate * terms.velocityCoefficient * sineOverFrequency
     );
   } else {
-    const terms = overdampedTerms(record, natural, ratio);
+    const terms = overdampedTerms(record, natural, ratio, decayRate);
     const first = terms.firstCoefficient * Math.exp(terms.firstRoot * time);
     const second = terms.secondCoefficient * Math.exp(terms.secondRoot * time);
     offset = first + second;
