@@ -1,5 +1,6 @@
 import {
   createAnimationPlaybackController,
+  normalizeAnimationPlaybackCandidate,
   type AnimationPlaybackController,
 } from '../animation/playback.js';
 import type {
@@ -50,10 +51,14 @@ export function crcPlayback(
   options: CRCPlaybackOptions = {},
 ): CRCPlayback {
   const { componentRefs, crcInstance } = requireHookContext();
-  const candidateOptions: CRCPlaybackOptions = { ...options };
+  const candidate = normalizeAnimationPlaybackCandidate(program, options);
+  const candidateOptions = candidate.options;
   const slot = useHookSlot<CRCPlaybackHookSlot>('playback', teardowns => {
     let value!: CRCPlaybackHookSlot;
-    const controller = createAnimationPlaybackController(program, candidateOptions);
+    const controller = createAnimationPlaybackController(
+      candidate.program,
+      candidateOptions,
+    );
     const onEvent = (event: CRCPlaybackEvent): void => {
       if (isCurrentSlot(value)) value.latestOptions.onEvent?.(event);
     };
@@ -71,7 +76,7 @@ export function crcPlayback(
       renderRevision: 0,
     };
     controller.adopt(
-      program,
+      candidate.program,
       controllerOptions(candidateOptions, onEvent, onError),
     );
     teardowns.add(() => controller.dispose());
@@ -85,7 +90,7 @@ export function crcPlayback(
   transaction.onFinish(success => {
     if (!success || revision !== slot.renderRevision || !isCurrentSlot(slot)) return;
     slot.controller.adopt(
-      program,
+      candidate.program,
       controllerOptions(candidateOptions, slot.onEvent, slot.onError),
     );
     slot.latestOptions = candidateOptions;

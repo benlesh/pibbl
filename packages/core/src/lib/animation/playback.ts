@@ -122,6 +122,11 @@ export interface AnimationPlaybackController {
   dispose(): void;
 }
 
+export interface AnimationPlaybackCandidate {
+  readonly program: CRCAnimationProgram;
+  readonly options: CRCPlaybackOptions;
+}
+
 let nextPlaybackRegistrationOrder = 0;
 let activePlaybacks = 0;
 let createdPlaybacks = 0;
@@ -182,6 +187,17 @@ function validateOptions(options: CRCPlaybackOptions): void {
   }
 }
 
+/** @internal Creates one validated immutable render-time playback candidate. */
+export function normalizeAnimationPlaybackCandidate(
+  program: CRCAnimationProgram,
+  options: CRCPlaybackOptions = {},
+): AnimationPlaybackCandidate {
+  getProgramRecord(program);
+  const normalizedOptions = Object.freeze({ ...options });
+  validateOptions(normalizedOptions);
+  return Object.freeze({ program, options: normalizedOptions });
+}
+
 function firstStepperName(program: CRCAnimationProgram): string | undefined {
   const record = getProgramRecord(program);
   if (record.kind === 'track') {
@@ -228,11 +244,13 @@ export function createAnimationPlaybackController(
   initialProgram: CRCAnimationProgram,
   initialOptions: CRCPlaybackOptions = {},
 ): AnimationPlaybackController {
-  getProgramRecord(initialProgram);
-  validateOptions(initialOptions);
+  const initialCandidate = normalizeAnimationPlaybackCandidate(
+    initialProgram,
+    initialOptions,
+  );
 
-  let program = initialProgram;
-  let options = { ...initialOptions };
+  let program = initialCandidate.program;
+  let options = initialCandidate.options;
   let disposed = false;
   let queuedGeneration = 0;
   let run: PlaybackRun | undefined;
@@ -1100,10 +1118,9 @@ export function createAnimationPlaybackController(
     handle,
     adopt(nextProgram: CRCAnimationProgram, nextOptions: CRCPlaybackOptions = {}): void {
       if (disposed) return;
-      getProgramRecord(nextProgram);
-      validateOptions(nextOptions);
-      program = nextProgram;
-      options = { ...nextOptions };
+      const candidate = normalizeAnimationPlaybackCandidate(nextProgram, nextOptions);
+      program = candidate.program;
+      options = candidate.options;
     },
     dispose(): void {
       if (disposed) return;

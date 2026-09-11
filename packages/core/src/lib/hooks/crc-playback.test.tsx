@@ -17,10 +17,11 @@ import {
   track,
   tween,
   wait,
+  type CRCAnimationProgram,
   type CRCPlayback,
   type CRCPlaybackOptions,
 } from '../../index.js';
-import { clearSharedState } from '../global-state.js';
+import { clearSharedState, getCRCInstance } from '../global-state.js';
 import { animationPlaybackSnapshot } from '../animation/playback.js';
 import { writerLeaseSnapshot } from '../animation/writer-leases.js';
 import {
@@ -196,6 +197,75 @@ describe('crcPlayback', () => {
     expect(output.get()).toBe(10);
     expect(events).toEqual(['first:start', 'failed:finish']);
   });
+
+  for (const invalidCandidate of ['program', 'onEvent'] as const) {
+    it(`fails closed during render for an update-time invalid ${invalidCandidate} candidate`, () => {
+      const output = signal(0);
+      const validProgram = track(
+        output,
+        tween({ from: 0, to: 10, duration: 100 }),
+      );
+      const beforePlayback = animationPlaybackSnapshot();
+      const beforeLeases = writerLeaseSnapshot();
+      const events: string[] = [];
+      let handle!: CRCPlayback;
+      function Probe({ invalid }: { invalid: boolean }) {
+        const program = invalid && invalidCandidate === 'program' ?
+          {} as CRCAnimationProgram : validProgram;
+        const options = invalid && invalidCandidate === 'onEvent' ? {
+          onEvent: 1 as unknown as CRCPlaybackOptions['onEvent'],
+        } : {
+          onEvent: (event: Parameters<
+            NonNullable<CRCPlaybackOptions['onEvent']>
+          >[0]) => events.push(event.type),
+        };
+        handle = crcPlayback(program, options);
+      }
+
+      const canvas = document.createElement('canvas');
+      document.body.appendChild(canvas);
+      roots.add(crc(canvas, <Probe invalid={false} />));
+      driver.flush(-1);
+      handle.play();
+      driver.flush(0);
+      expect(events).toEqual(['start']);
+      expect(animationPlaybackSnapshot().activePlaybacks)
+        .toBe(beforePlayback.activePlaybacks + 1);
+      expect(writerLeaseSnapshot().active).toBe(beforeLeases.active + 1);
+
+      crc(canvas, <Probe invalid />);
+      expect(() => driver.flush(10)).toThrow(
+        invalidCandidate === 'program' ?
+          /expected a CRC animation program/iu :
+          /onEvent must be a function/iu,
+      );
+
+      expect(getCRCInstance(canvas).refs.size).toBe(0);
+      expect(animationPlaybackSnapshot()).toMatchObject({
+        activePlaybacks: beforePlayback.activePlaybacks,
+        createdPlaybacks: beforePlayback.createdPlaybacks + 1,
+        releasedPlaybacks: beforePlayback.releasedPlaybacks + 1,
+        queuedCommands: 0,
+        queuedMilestones: 0,
+      });
+      expect(writerLeaseSnapshot().active).toBe(beforeLeases.active);
+      expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(0);
+      expect(driver.pendingHostFrames).toBe(1);
+
+      driver.flush(11);
+      expect(handle.status.get()).toBe('disposed');
+      handle.play();
+      handle.pause();
+      handle.resume();
+      handle.cancel();
+      handle.finish();
+      handle.seek(Number.POSITIVE_INFINITY);
+      handle.reverse();
+      handle.setPlaybackRate(0);
+      expect(driver.pendingHostFrames).toBe(0);
+      expect(events).toEqual(['start']);
+    });
+  }
 
   it('queues autoplay once after mount succeeds and never restarts for later program identities', () => {
     const output = signal(0);
