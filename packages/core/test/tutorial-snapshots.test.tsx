@@ -60,6 +60,7 @@ function removeTrackedController(controller: { dispose: () => void }): void {
 
 async function renderTutorialSnapshot(slug: string): Promise<{
   readonly canvas: HTMLCanvasElement;
+  readonly context: CanvasRenderingContext2D;
   readonly controller: { dispose: () => void };
   readonly textPaints: readonly TextPaint[];
   readonly paintOperations: readonly PaintOperation[];
@@ -181,6 +182,7 @@ async function renderTutorialSnapshot(slug: string): Promise<{
 
   return {
     canvas,
+    context,
     controller,
     textPaints,
     paintOperations,
@@ -762,39 +764,153 @@ it("clips Chapter 9 transformed content while reusing its stable grid layer", as
   }
 });
 
-it("filters only the selected Chapter 10 card without enlarging its hit geometry", async () => {
+it("filters exactly one selected Chapter 10 card without enlarging its hit geometry", async () => {
   const offscreenPrototype = OffscreenCanvasRenderingContext2D.prototype;
-  const drawImage = offscreenPrototype.drawImage;
-  let offscreenCompositions = 0;
+  const offscreenDrawImage = offscreenPrototype.drawImage;
+  const rootPrototype = CanvasRenderingContext2D.prototype;
+  const rootDrawImage = rootPrototype.drawImage;
+  const transferToImageBitmap = OffscreenCanvas.prototype.transferToImageBitmap;
+  const transferredSurfaces = new WeakMap<ImageBitmap, OffscreenCanvas>();
+  const offscreenDraws: Array<{
+    readonly filter: string;
+    readonly surface: OffscreenCanvas;
+  }> = [];
+  const rootComposites: Array<{
+    readonly context: CanvasRenderingContext2D;
+    readonly surface: OffscreenCanvas | undefined;
+    readonly x: number;
+    readonly y: number;
+    readonly width: number;
+    readonly height: number;
+  }> = [];
   offscreenPrototype.drawImage = function (...args) {
-    offscreenCompositions += 1;
-    drawImage.apply(this, args);
+    offscreenDraws.push({ filter: this.filter, surface: this.canvas });
+    offscreenDrawImage.apply(this, args);
+  };
+  OffscreenCanvas.prototype.transferToImageBitmap = function () {
+    const bitmap = transferToImageBitmap.call(this);
+    transferredSurfaces.set(bitmap, this);
+    return bitmap;
+  };
+  rootPrototype.drawImage = function (...args) {
+    const source = args[0];
+    const surface =
+      source instanceof OffscreenCanvas
+        ? source
+        : source instanceof ImageBitmap
+          ? transferredSurfaces.get(source)
+          : undefined;
+    const [x, y, width, height] =
+      args.length === 3
+        ? [args[1], args[2], surface?.width, surface?.height]
+        : args.length === 5
+          ? [args[1], args[2], args[3], args[4]]
+          : [args[5], args[6], args[7], args[8]];
+    rootComposites.push({
+      context: this,
+      surface,
+      x: Number(x),
+      y: Number(y),
+      width: Number(width),
+      height: Number(height),
+    });
+    rootDrawImage.apply(this, args);
+  };
+  const filterBoundariesFrom = (start: number) =>
+    offscreenDraws.slice(start).filter(({ filter }) => filter !== "none");
+  const assertOneBoundaryAt = (
+    snapshot: Awaited<ReturnType<typeof renderTutorialSnapshot>>,
+    boundary: { readonly filter: string; readonly surface: OffscreenCanvas },
+    card: Readonly<{ x: number; y: number; width: number; height: number }>,
+  ): void => {
+    expect(boundary.filter).toBe(
+      "drop-shadow(6px 8px 10px rgb(23 33 29 / 35%))",
+    );
+    const composites = rootComposites.filter(
+      (candidate) =>
+        candidate.context === snapshot.context &&
+        candidate.surface === boundary.surface,
+    );
+    expect(composites.length).toBeGreaterThan(0);
+    for (const composite of composites) {
+      expect(composite.x).toBeLessThanOrEqual(card.x);
+      expect(composite.y).toBeLessThanOrEqual(card.y);
+      expect(composite.x + composite.width).toBeGreaterThanOrEqual(
+        card.x + card.width,
+      );
+      expect(composite.y + composite.height).toBeGreaterThanOrEqual(
+        card.y + card.height,
+      );
+    }
   };
   try {
     const snapshot = await renderTutorialSnapshot("diagram-editor-filters");
-    expect(offscreenCompositions).toBeGreaterThan(0);
+    const initialBoundaries = filterBoundariesFrom(0);
+    expect(initialBoundaries).toHaveLength(1);
+    expect(offscreenDraws).toHaveLength(1);
+    assertOneBoundaryAt(snapshot, initialBoundaries[0]!, {
+      x: 326,
+      y: 148,
+      width: 168,
+      height: 84,
+    });
 
+    const afterInitial = offscreenDraws.length;
     await clickLogicalPoint(snapshot.canvas, { x: 300, y: 510 });
     await nextPaint();
-    const directPathCompositions = offscreenCompositions;
     expect(latestStatus(snapshot.textPaints)).toBe("NO SELECTION");
+    expect(offscreenDraws.slice(afterInitial)).toEqual([]);
+    const directNodePositions = Object.fromEntries(
+      (["IDEA", "SKETCH", "BUILD", "SHIP"] as const).map((title) => [
+        title,
+        latestTitlePosition(snapshot.textPaints, title),
+      ]),
+    );
 
+    const afterClear = offscreenDraws.length;
     await clickLogicalPoint(snapshot.canvas, { x: 176, y: 278 });
     await nextPaint();
     expect(latestStatus(snapshot.textPaints)).toBe("SELECTED · IDEA");
-    expect(offscreenCompositions).toBeGreaterThan(directPathCompositions);
+    const ideaBoundaries = filterBoundariesFrom(afterClear);
+    expect(ideaBoundaries).toHaveLength(1);
+    expect(offscreenDraws.slice(afterClear)).toHaveLength(1);
+    assertOneBoundaryAt(snapshot, ideaBoundaries[0]!, {
+      x: 92,
+      y: 236,
+      width: 168,
+      height: 84,
+    });
+    expect(latestTitlePosition(snapshot.textPaints, "SKETCH")).toMatchObject({
+      x: directNodePositions.SKETCH.x,
+      y: directNodePositions.SKETCH.y,
+    });
 
+    const afterIdea = offscreenDraws.length;
     await clickLogicalPoint(snapshot.canvas, { x: 268, y: 278 });
     await nextPaint();
     expect(latestStatus(snapshot.textPaints)).toBe("NO SELECTION");
+    expect(offscreenDraws.slice(afterIdea)).toEqual([]);
 
+    const afterShadow = offscreenDraws.length;
     await clickLogicalPoint(snapshot.canvas, { x: 410, y: 190 });
     await nextPaint();
     expect(latestStatus(snapshot.textPaints)).toBe("SELECTED · SKETCH");
-    await clickLogicalPoint(snapshot.canvas, { x: 268, y: 278 });
-    await nextPaint();
-    expect(latestStatus(snapshot.textPaints)).toBe("NO SELECTION");
+    const sketchBoundaries = filterBoundariesFrom(afterShadow);
+    expect(sketchBoundaries).toHaveLength(1);
+    expect(offscreenDraws.slice(afterShadow)).toHaveLength(1);
+    assertOneBoundaryAt(snapshot, sketchBoundaries[0]!, {
+      x: 326,
+      y: 148,
+      width: 168,
+      height: 84,
+    });
+    expect(latestTitlePosition(snapshot.textPaints, "IDEA")).toMatchObject({
+      x: directNodePositions.IDEA.x,
+      y: directNodePositions.IDEA.y,
+    });
   } finally {
-    offscreenPrototype.drawImage = drawImage;
+    offscreenPrototype.drawImage = offscreenDrawImage;
+    OffscreenCanvas.prototype.transferToImageBitmap = transferToImageBitmap;
+    rootPrototype.drawImage = rootDrawImage;
   }
 });
