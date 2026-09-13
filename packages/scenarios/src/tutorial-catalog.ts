@@ -49,7 +49,34 @@ export function validateTutorialSnapshotCatalog(
   return catalog;
 }
 
-export const tutorialSnapshotCatalog = validateTutorialSnapshotCatalog([]);
+const drafts = [
+  {
+    slug: "diagram-editor-canvas-scene",
+    tutorial: "diagram-editor",
+    chapter: 1,
+    title: "Create the Canvas scene",
+    authoring: "jsx",
+    canvas: { width: 960, height: 600 },
+    source: {
+      path: "packages/scenarios/src/tutorials/diagram-editor/01-canvas-scene.example.tsx",
+    },
+    load: () => import("./tutorials/diagram-editor/01-canvas-scene.example"),
+  },
+  {
+    slug: "diagram-editor-first-node",
+    tutorial: "diagram-editor",
+    chapter: 2,
+    title: "Draw the first node",
+    authoring: "jsx",
+    canvas: { width: 960, height: 600 },
+    source: {
+      path: "packages/scenarios/src/tutorials/diagram-editor/02-first-node.example.tsx",
+    },
+    load: () => import("./tutorials/diagram-editor/02-first-node.example"),
+  },
+] satisfies readonly TutorialSnapshotCatalogEntry[];
+
+export const tutorialSnapshotCatalog = validateTutorialSnapshotCatalog(drafts);
 
 export function getTutorialSnapshotBySlug(
   slug: string,

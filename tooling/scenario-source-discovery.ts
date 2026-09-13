@@ -41,9 +41,14 @@ export function assertExampleSourceDiscovery(
   discoveredPaths: readonly string[],
   scenarioCatalogPaths: readonly string[],
   learningCatalogPaths: readonly string[],
+  tutorialCatalogPaths: readonly string[],
 ): void {
   const learningPaths = discoveredPaths.filter(path => path.includes('/learning/'));
-  const testPaths = discoveredPaths.filter(path => !path.includes('/learning/'));
+  const tutorialPaths = discoveredPaths.filter(path => path.includes('/tutorials/'));
+  const testPaths = discoveredPaths.filter(
+    path => !path.includes('/learning/') && !path.includes('/tutorials/'),
+  );
   assertPathSetMatches('Scenario', testPaths, scenarioCatalogPaths);
   assertPathSetMatches('Learning', learningPaths, learningCatalogPaths);
+  assertPathSetMatches('Tutorial', tutorialPaths, tutorialCatalogPaths);
 }

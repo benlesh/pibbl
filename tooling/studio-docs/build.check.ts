@@ -483,6 +483,42 @@ const real = await buildStudioDocumentation({
   workbenchSources: [...learningExampleCatalog, ...tutorialSnapshotCatalog],
 });
 
+const canvasScene =
+  real.pageByRoute["#/learn/tutorials/diagram-editor/canvas-scene"];
+const firstNode =
+  real.pageByRoute["#/learn/tutorials/diagram-editor/first-node"];
+assert.ok(canvasScene, "Missing Chapter 1 diagram-editor tutorial route.");
+assert.ok(firstNode, "Missing Chapter 2 diagram-editor tutorial route.");
+assert.equal(canvasScene.frontmatter.order, 1);
+assert.equal(firstNode.frontmatter.order, 2);
+assert.equal(
+  canvasScene.frontmatter.exampleSlug,
+  "diagram-editor-canvas-scene",
+);
+assert.equal(firstNode.frontmatter.exampleSlug, "diagram-editor-first-node");
+assert.deepEqual(canvasScene.tutorialRelationship, {
+  rootRoute: "#/learn/tutorials/diagram-editor",
+  chapter: 1,
+  chapterCount: 2,
+  previous: {
+    route: "#/learn/tutorials/diagram-editor",
+    title: "Learn the basics: Build a diagram editor",
+  },
+  next: {
+    route: "#/learn/tutorials/diagram-editor/first-node",
+    title: "Draw the first node",
+  },
+});
+assert.deepEqual(firstNode.tutorialRelationship, {
+  rootRoute: "#/learn/tutorials/diagram-editor",
+  chapter: 2,
+  chapterCount: 2,
+  previous: {
+    route: "#/learn/tutorials/diagram-editor/canvas-scene",
+    title: "Create the Canvas scene",
+  },
+});
+
 assert.deepEqual(
   real.pages
     .filter(({ frontmatter }) => frontmatter.kind === "guide")
