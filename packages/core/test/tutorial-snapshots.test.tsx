@@ -21,6 +21,14 @@ interface TextPaint {
   readonly text: string;
   readonly x: number;
   readonly y: number;
+  readonly frame: number;
+}
+
+interface PaintOperation {
+  readonly frame: number;
+  readonly operation: "clearRect" | "fill" | "stroke";
+  readonly fillStyle: string;
+  readonly strokeStyle: string;
 }
 
 function removeTrackedController(controller: { dispose: () => void }): void {
@@ -32,6 +40,7 @@ async function renderTutorialSnapshot(slug: string): Promise<{
   readonly canvas: HTMLCanvasElement;
   readonly controller: { dispose: () => void };
   readonly textPaints: readonly TextPaint[];
+  readonly paintOperations: readonly PaintOperation[];
 }> {
   const entry = tutorialSnapshotCatalog.find(
     (candidate) => candidate.slug === slug,
@@ -46,12 +55,54 @@ async function renderTutorialSnapshot(slug: string): Promise<{
   const context = canvas.getContext("2d");
   if (!context) throw new Error(`Tutorial snapshot ${slug} has no 2D context.`);
 
+  let frame = 0;
+  const paintOperations: PaintOperation[] = [];
+  const clearRect = context.clearRect.bind(context);
+  context.clearRect = function (x, y, width, height) {
+    frame += 1;
+    paintOperations.push({
+      frame,
+      operation: "clearRect",
+      fillStyle: String(this.fillStyle),
+      strokeStyle: String(this.strokeStyle),
+    });
+    clearRect(x, y, width, height);
+  };
+  const fill = context.fill.bind(context);
+  const recordFill = function (
+    this: CanvasRenderingContext2D,
+    pathOrFillRule?: Path2D | CanvasFillRule,
+    fillRule?: CanvasFillRule,
+  ): void {
+    paintOperations.push({
+      frame,
+      operation: "fill",
+      fillStyle: String(this.fillStyle),
+      strokeStyle: String(this.strokeStyle),
+    });
+    if (pathOrFillRule instanceof Path2D) fill(pathOrFillRule, fillRule);
+    else if (pathOrFillRule) fill(pathOrFillRule);
+    else fill();
+  };
+  context.fill = recordFill as CanvasRenderingContext2D["fill"];
+  const stroke = context.stroke.bind(context);
+  context.stroke = function (path?: Path2D) {
+    paintOperations.push({
+      frame,
+      operation: "stroke",
+      fillStyle: String(this.fillStyle),
+      strokeStyle: String(this.strokeStyle),
+    });
+    if (path) stroke(path);
+    else stroke();
+  };
+
   const textPaints: TextPaint[] = [];
   const fillText = context.fillText;
   context.fillText = function (...args) {
     const [text, x, y] = args;
     const point = new DOMPoint(x, y).matrixTransform(this.getTransform());
-    textPaints.push({ text, x: point.x, y: point.y });
+    textPaints.push({ text, x: point.x, y: point.y, frame });
     fillText.apply(this, args);
   };
 
@@ -62,7 +113,7 @@ async function renderTutorialSnapshot(slug: string): Promise<{
     requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
   );
 
-  return { canvas, controller, textPaints };
+  return { canvas, controller, textPaints, paintOperations };
 }
 
 afterEach(() => {
@@ -113,6 +164,16 @@ it("keeps tutorial and ordinary learning slugs in one workbench namespace", () =
       chapter: 2,
       slug: "diagram-editor-first-node",
       path: "packages/scenarios/src/tutorials/diagram-editor/02-first-node.example.tsx",
+    },
+    {
+      chapter: 3,
+      slug: "diagram-editor-connect-nodes",
+      path: "packages/scenarios/src/tutorials/diagram-editor/03-connect-nodes.example.tsx",
+    },
+    {
+      chapter: 4,
+      slug: "diagram-editor-reusable-node",
+      path: "packages/scenarios/src/tutorials/diagram-editor/04-reusable-node.example.tsx",
     },
   ]);
   expect(getWorkbenchEntryBySlug(learningExampleCatalog[0]!.slug)).toBe(
@@ -224,4 +285,48 @@ it("paints the Chapter 2 card text in the translated root position", async () =>
   expect(latestPaints).toContainEqual(
     expect.objectContaining({ text: "Find the spark" }),
   );
+});
+
+it("paints both Chapter 3 node titles and the connection before the Idea card", async () => {
+  const { paintOperations, textPaints } = await renderTutorialSnapshot(
+    "diagram-editor-connect-nodes",
+  );
+  const lastFrame = Math.max(...textPaints.map(({ frame }) => frame));
+  const titles = textPaints
+    .filter(
+      (paint) =>
+        paint.frame === lastFrame &&
+        (paint.text === "IDEA" || paint.text === "SKETCH"),
+    )
+    .map(({ text }) => text);
+  expect(titles).toEqual(["IDEA", "SKETCH"]);
+
+  const lastFrameOperations = paintOperations.filter(
+    (operation) => operation.frame === lastFrame,
+  );
+  const inkStroke = lastFrameOperations.findIndex(
+    (operation) =>
+      operation.operation === "stroke" && operation.strokeStyle === "#17211d",
+  );
+  const firstIdeaFill = lastFrameOperations.findIndex(
+    (operation) =>
+      operation.operation === "fill" && operation.fillStyle === "#ff6b57",
+  );
+  expect(inkStroke).toBeGreaterThanOrEqual(0);
+  expect(firstIdeaFill).toBeGreaterThan(inkStroke);
+});
+
+it("paints every Chapter 4 node title exactly once in the last frame", async () => {
+  const { textPaints } = await renderTutorialSnapshot(
+    "diagram-editor-reusable-node",
+  );
+  const lastFrame = Math.max(...textPaints.map(({ frame }) => frame));
+  const titles = textPaints
+    .filter(
+      (paint) =>
+        paint.frame === lastFrame &&
+        ["IDEA", "SKETCH", "BUILD", "SHIP"].includes(paint.text),
+    )
+    .map(({ text }) => text);
+  expect(titles).toEqual(["IDEA", "SKETCH", "BUILD", "SHIP"]);
 });

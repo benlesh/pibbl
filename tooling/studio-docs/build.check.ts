@@ -487,8 +487,14 @@ const canvasScene =
   real.pageByRoute["#/learn/tutorials/diagram-editor/canvas-scene"];
 const firstNode =
   real.pageByRoute["#/learn/tutorials/diagram-editor/first-node"];
+const connectNodes =
+  real.pageByRoute["#/learn/tutorials/diagram-editor/connect-nodes"];
+const reusableNode =
+  real.pageByRoute["#/learn/tutorials/diagram-editor/reusable-node"];
 assert.ok(canvasScene, "Missing Chapter 1 diagram-editor tutorial route.");
 assert.ok(firstNode, "Missing Chapter 2 diagram-editor tutorial route.");
+assert.ok(connectNodes, "Missing Chapter 3 diagram-editor tutorial route.");
+assert.ok(reusableNode, "Missing Chapter 4 diagram-editor tutorial route.");
 const tutorialChapterHeadings = [
   "What you will make",
   "How it works",
@@ -497,7 +503,7 @@ const tutorialChapterHeadings = [
   "Check your result",
   "What you learned",
 ];
-for (const chapter of [canvasScene, firstNode]) {
+for (const chapter of [canvasScene, firstNode, connectNodes, reusableNode]) {
   assert.deepEqual(
     chapter.headings
       .filter(({ level }) => level === 2)
@@ -508,15 +514,19 @@ for (const chapter of [canvasScene, firstNode]) {
 }
 assert.equal(canvasScene.frontmatter.order, 1);
 assert.equal(firstNode.frontmatter.order, 2);
+assert.equal(connectNodes.frontmatter.order, 3);
+assert.equal(reusableNode.frontmatter.order, 4);
 assert.equal(
   canvasScene.frontmatter.exampleSlug,
   "diagram-editor-canvas-scene",
 );
 assert.equal(firstNode.frontmatter.exampleSlug, "diagram-editor-first-node");
+assert.equal(connectNodes.frontmatter.exampleSlug, "diagram-editor-connect-nodes");
+assert.equal(reusableNode.frontmatter.exampleSlug, "diagram-editor-reusable-node");
 assert.deepEqual(canvasScene.tutorialRelationship, {
   rootRoute: "#/learn/tutorials/diagram-editor",
   chapter: 1,
-  chapterCount: 2,
+  chapterCount: 4,
   previous: {
     route: "#/learn/tutorials/diagram-editor",
     title: "Learn the basics: Build a diagram editor",
@@ -529,10 +539,36 @@ assert.deepEqual(canvasScene.tutorialRelationship, {
 assert.deepEqual(firstNode.tutorialRelationship, {
   rootRoute: "#/learn/tutorials/diagram-editor",
   chapter: 2,
-  chapterCount: 2,
+  chapterCount: 4,
   previous: {
     route: "#/learn/tutorials/diagram-editor/canvas-scene",
     title: "Create the Canvas scene",
+  },
+  next: {
+    route: "#/learn/tutorials/diagram-editor/connect-nodes",
+    title: "Connect two nodes",
+  },
+});
+assert.deepEqual(connectNodes.tutorialRelationship, {
+  rootRoute: "#/learn/tutorials/diagram-editor",
+  chapter: 3,
+  chapterCount: 4,
+  previous: {
+    route: "#/learn/tutorials/diagram-editor/first-node",
+    title: "Draw the first node",
+  },
+  next: {
+    route: "#/learn/tutorials/diagram-editor/reusable-node",
+    title: "Extract a reusable node component",
+  },
+});
+assert.deepEqual(reusableNode.tutorialRelationship, {
+  rootRoute: "#/learn/tutorials/diagram-editor",
+  chapter: 4,
+  chapterCount: 4,
+  previous: {
+    route: "#/learn/tutorials/diagram-editor/connect-nodes",
+    title: "Connect two nodes",
   },
 });
 

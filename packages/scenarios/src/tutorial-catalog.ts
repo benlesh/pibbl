@@ -74,6 +74,30 @@ const drafts = [
     },
     load: () => import("./tutorials/diagram-editor/02-first-node.example"),
   },
+  {
+    slug: "diagram-editor-connect-nodes",
+    tutorial: "diagram-editor",
+    chapter: 3,
+    title: "Connect two nodes",
+    authoring: "jsx",
+    canvas: { width: 960, height: 600 },
+    source: {
+      path: "packages/scenarios/src/tutorials/diagram-editor/03-connect-nodes.example.tsx",
+    },
+    load: () => import("./tutorials/diagram-editor/03-connect-nodes.example"),
+  },
+  {
+    slug: "diagram-editor-reusable-node",
+    tutorial: "diagram-editor",
+    chapter: 4,
+    title: "Extract a reusable node component",
+    authoring: "jsx",
+    canvas: { width: 960, height: 600 },
+    source: {
+      path: "packages/scenarios/src/tutorials/diagram-editor/04-reusable-node.example.tsx",
+    },
+    load: () => import("./tutorials/diagram-editor/04-reusable-node.example"),
+  },
 ] satisfies readonly TutorialSnapshotCatalogEntry[];
 
 export const tutorialSnapshotCatalog = validateTutorialSnapshotCatalog(drafts);
