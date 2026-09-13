@@ -2,7 +2,6 @@ import {
   Absolute,
   Clip,
   crc,
-  crcEventListener,
   crcEventTarget,
   crcLayoutBox,
   crcRectPath,
@@ -497,7 +496,7 @@ function Workspace({
   }>): CRCNode {
   const box = crcLayoutBox();
   return (
-    <WheelScope onWheel={onWheel}>
+    <Group onWheel={onWheel}>
       <Clip style={{ d: createWorkspaceClip(), width: 960, height: 512 }}>
         <Rectangle
           keyboardFocusable={false}
@@ -543,18 +542,8 @@ function Workspace({
           ))}
         </Group>
       </Clip>
-    </WheelScope>
+    </Group>
   );
-}
-function WheelScope({
-  onWheel,
-  children,
-}: Readonly<{
-  onWheel: (event: CRCWheelEvent) => void;
-  children: CRCNode;
-}>): CRCNode {
-  crcEventListener({ onWheel });
-  return children;
 }
 function Status({
   style: _style,
