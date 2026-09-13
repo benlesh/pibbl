@@ -501,6 +501,10 @@ const panAndZoom =
 const viewportAndLayer =
   real.pageByRoute["#/learn/tutorials/diagram-editor/viewport-and-layer"];
 const filters = real.pageByRoute["#/learn/tutorials/diagram-editor/filters"];
+const keyboardInteraction =
+  real.pageByRoute["#/learn/tutorials/diagram-editor/keyboard-interaction"];
+const finishedEditor =
+  real.pageByRoute["#/learn/tutorials/diagram-editor/finished-editor"];
 assert.ok(canvasScene, "Missing Chapter 1 diagram-editor tutorial route.");
 assert.ok(firstNode, "Missing Chapter 2 diagram-editor tutorial route.");
 assert.ok(connectNodes, "Missing Chapter 3 diagram-editor tutorial route.");
@@ -511,6 +515,11 @@ assert.ok(dragging, "Missing Chapter 7 diagram-editor tutorial route.");
 assert.ok(panAndZoom, "Missing Chapter 8 diagram-editor tutorial route.");
 assert.ok(viewportAndLayer, "Missing Chapter 9 diagram-editor tutorial route.");
 assert.ok(filters, "Missing Chapter 10 diagram-editor tutorial route.");
+assert.ok(
+  keyboardInteraction,
+  "Missing Chapter 11 diagram-editor tutorial route.",
+);
+assert.ok(finishedEditor, "Missing Chapter 12 diagram-editor tutorial route.");
 const tutorialChapterHeadings = [
   "What you will make",
   "How it works",
@@ -530,6 +539,8 @@ for (const chapter of [
   panAndZoom,
   viewportAndLayer,
   filters,
+  keyboardInteraction,
+  finishedEditor,
 ]) {
   assert.deepEqual(
     chapter.headings.filter(({ level }) => level === 2).map(({ text }) => text),
@@ -547,6 +558,8 @@ assert.equal(dragging.frontmatter.order, 7);
 assert.equal(panAndZoom.frontmatter.order, 8);
 assert.equal(viewportAndLayer.frontmatter.order, 9);
 assert.equal(filters.frontmatter.order, 10);
+assert.equal(keyboardInteraction.frontmatter.order, 11);
+assert.equal(finishedEditor.frontmatter.order, 12);
 assert.equal(
   canvasScene.frontmatter.exampleSlug,
   "diagram-editor-canvas-scene",
@@ -572,10 +585,15 @@ assert.equal(
   "diagram-editor-viewport-and-layer",
 );
 assert.equal(filters.frontmatter.exampleSlug, "diagram-editor-filters");
+assert.equal(
+  keyboardInteraction.frontmatter.exampleSlug,
+  "diagram-editor-keyboard-interaction",
+);
+assert.equal(finishedEditor.frontmatter.exampleSlug, "diagram-editor-finished");
 assert.deepEqual(canvasScene.tutorialRelationship, {
   rootRoute: "#/learn/tutorials/diagram-editor",
   chapter: 1,
-  chapterCount: 10,
+  chapterCount: 12,
   previous: {
     route: "#/learn/tutorials/diagram-editor",
     title: "Learn the basics: Build a diagram editor",
@@ -588,7 +606,7 @@ assert.deepEqual(canvasScene.tutorialRelationship, {
 assert.deepEqual(firstNode.tutorialRelationship, {
   rootRoute: "#/learn/tutorials/diagram-editor",
   chapter: 2,
-  chapterCount: 10,
+  chapterCount: 12,
   previous: {
     route: "#/learn/tutorials/diagram-editor/canvas-scene",
     title: "Create the Canvas scene",
@@ -601,7 +619,7 @@ assert.deepEqual(firstNode.tutorialRelationship, {
 assert.deepEqual(connectNodes.tutorialRelationship, {
   rootRoute: "#/learn/tutorials/diagram-editor",
   chapter: 3,
-  chapterCount: 10,
+  chapterCount: 12,
   previous: {
     route: "#/learn/tutorials/diagram-editor/first-node",
     title: "Draw the first node",
@@ -614,7 +632,7 @@ assert.deepEqual(connectNodes.tutorialRelationship, {
 assert.deepEqual(reusableNode.tutorialRelationship, {
   rootRoute: "#/learn/tutorials/diagram-editor",
   chapter: 4,
-  chapterCount: 10,
+  chapterCount: 12,
   previous: {
     route: "#/learn/tutorials/diagram-editor/connect-nodes",
     title: "Connect two nodes",
@@ -627,7 +645,7 @@ assert.deepEqual(reusableNode.tutorialRelationship, {
 assert.deepEqual(editorChrome.tutorialRelationship, {
   rootRoute: "#/learn/tutorials/diagram-editor",
   chapter: 5,
-  chapterCount: 10,
+  chapterCount: 12,
   previous: {
     route: "#/learn/tutorials/diagram-editor/reusable-node",
     title: "Extract a reusable node component",
@@ -640,7 +658,7 @@ assert.deepEqual(editorChrome.tutorialRelationship, {
 assert.deepEqual(selection.tutorialRelationship, {
   rootRoute: "#/learn/tutorials/diagram-editor",
   chapter: 6,
-  chapterCount: 10,
+  chapterCount: 12,
   previous: {
     route: "#/learn/tutorials/diagram-editor/editor-chrome",
     title: "Build the editor chrome",
@@ -653,7 +671,7 @@ assert.deepEqual(selection.tutorialRelationship, {
 assert.deepEqual(dragging.tutorialRelationship, {
   rootRoute: "#/learn/tutorials/diagram-editor",
   chapter: 7,
-  chapterCount: 10,
+  chapterCount: 12,
   previous: {
     route: "#/learn/tutorials/diagram-editor/selection",
     title: "Select nodes with state",
@@ -666,7 +684,7 @@ assert.deepEqual(dragging.tutorialRelationship, {
 assert.deepEqual(panAndZoom.tutorialRelationship, {
   rootRoute: "#/learn/tutorials/diagram-editor",
   chapter: 8,
-  chapterCount: 10,
+  chapterCount: 12,
   previous: {
     route: "#/learn/tutorials/diagram-editor/dragging",
     title: "Drag nodes safely",
@@ -679,7 +697,7 @@ assert.deepEqual(panAndZoom.tutorialRelationship, {
 assert.deepEqual(viewportAndLayer.tutorialRelationship, {
   rootRoute: "#/learn/tutorials/diagram-editor",
   chapter: 9,
-  chapterCount: 10,
+  chapterCount: 12,
   previous: {
     route: "#/learn/tutorials/diagram-editor/pan-and-zoom",
     title: "Pan and zoom the workspace",
@@ -692,10 +710,36 @@ assert.deepEqual(viewportAndLayer.tutorialRelationship, {
 assert.deepEqual(filters.tutorialRelationship, {
   rootRoute: "#/learn/tutorials/diagram-editor",
   chapter: 10,
-  chapterCount: 10,
+  chapterCount: 12,
   previous: {
     route: "#/learn/tutorials/diagram-editor/viewport-and-layer",
     title: "Constrain the viewport",
+  },
+  next: {
+    route: "#/learn/tutorials/diagram-editor/keyboard-interaction",
+    title: "Add keyboard interaction",
+  },
+});
+assert.deepEqual(keyboardInteraction.tutorialRelationship, {
+  rootRoute: "#/learn/tutorials/diagram-editor",
+  chapter: 11,
+  chapterCount: 12,
+  previous: {
+    route: "#/learn/tutorials/diagram-editor/filters",
+    title: "Polish selection with filters",
+  },
+  next: {
+    route: "#/learn/tutorials/diagram-editor/finished-editor",
+    title: "Finish and harden the editor",
+  },
+});
+assert.deepEqual(finishedEditor.tutorialRelationship, {
+  rootRoute: "#/learn/tutorials/diagram-editor",
+  chapter: 12,
+  chapterCount: 12,
+  previous: {
+    route: "#/learn/tutorials/diagram-editor/keyboard-interaction",
+    title: "Add keyboard interaction",
   },
 });
 

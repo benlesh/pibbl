@@ -164,8 +164,7 @@ describe("Markdown documentation pages", () => {
       )?.href,
     ).toContain("#/learn/tutorials/diagram-editor");
     expect(
-      container.querySelector("[data-tutorial-direction='next']")
-        ?.textContent,
+      container.querySelector("[data-tutorial-direction='next']")?.textContent,
     ).toContain("Back to the tutorial overview");
   });
 

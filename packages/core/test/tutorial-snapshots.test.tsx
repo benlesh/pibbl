@@ -19,6 +19,8 @@ import {
   pointerDownLogicalPoint,
   pointerMoveLogicalPoint,
   pointerUpLogicalPoint,
+  pressKey,
+  tab,
   wheelLogicalPoint,
 } from "./support/user-input";
 import { validateLearningSourceText } from "../../../tooling/learning-source-contract";
@@ -37,6 +39,7 @@ interface PaintOperation {
   readonly operation: "clearRect" | "fill" | "stroke";
   readonly fillStyle: string;
   readonly strokeStyle: string;
+  readonly lineWidth: number;
 }
 
 interface RectanglePaint {
@@ -107,6 +110,7 @@ async function renderTutorialSnapshot(slug: string): Promise<{
       operation: "clearRect",
       fillStyle: String(this.fillStyle),
       strokeStyle: String(this.strokeStyle),
+      lineWidth: this.lineWidth,
     });
     clearRect(x, y, width, height);
   };
@@ -121,6 +125,7 @@ async function renderTutorialSnapshot(slug: string): Promise<{
       operation: "fill",
       fillStyle: String(this.fillStyle),
       strokeStyle: String(this.strokeStyle),
+      lineWidth: this.lineWidth,
     });
     if (pathOrFillRule instanceof Path2D) {
       const rectangle = rectanglePaths.get(pathOrFillRule);
@@ -150,6 +155,7 @@ async function renderTutorialSnapshot(slug: string): Promise<{
       operation: "stroke",
       fillStyle: String(this.fillStyle),
       strokeStyle: String(this.strokeStyle),
+      lineWidth: this.lineWidth,
     });
     if (path) {
       const start = pathStarts.get(path);
@@ -279,6 +285,16 @@ it("keeps tutorial and ordinary learning slugs in one workbench namespace", () =
       chapter: 10,
       slug: "diagram-editor-filters",
       path: "packages/scenarios/src/tutorials/diagram-editor/10-filters.example.tsx",
+    },
+    {
+      chapter: 11,
+      slug: "diagram-editor-keyboard-interaction",
+      path: "packages/scenarios/src/tutorials/diagram-editor/11-keyboard-interaction.example.tsx",
+    },
+    {
+      chapter: 12,
+      slug: "diagram-editor-finished",
+      path: "packages/scenarios/src/tutorials/diagram-editor/12-finished-editor.example.tsx",
     },
   ]);
   expect(getWorkbenchEntryBySlug(learningExampleCatalog[0]!.slug)).toBe(
@@ -991,4 +1007,115 @@ it("filters exactly one selected Chapter 10 card without enlarging its hit geome
     Path2D.prototype.rect = pathRect;
     Path2D.prototype.roundRect = pathRoundRect;
   }
+});
+
+it("traverses, activates, and visibly focuses Chapter 11 custom Canvas targets", async () => {
+  const snapshot = await renderTutorialSnapshot(
+    "diagram-editor-keyboard-interaction",
+  );
+  await tab();
+  await tab();
+  await pressKey("Enter");
+  await nextPaint();
+  expect(latestStatus(snapshot.textPaints)).toBe("SELECTED · IDEA");
+
+  await pressKey("ArrowRight");
+  await pressKey("Enter");
+  await nextPaint();
+  expect(latestStatus(snapshot.textPaints)).toBe("SELECTED · SKETCH");
+  const keyboardFrame = Math.max(
+    ...snapshot.paintOperations.map(({ frame }) => frame),
+  );
+  expect(
+    snapshot.paintOperations.filter(
+      ({ frame, operation, strokeStyle, lineWidth }) =>
+        frame === keyboardFrame &&
+        operation === "stroke" &&
+        strokeStyle === "#fffdf6" &&
+        lineWidth === 3,
+    ),
+  ).not.toEqual([]);
+
+  await tab(true);
+  await tab(true);
+  await tab(true);
+  expect(document.activeElement).not.toBe(snapshot.canvas);
+  await clickLogicalPoint(snapshot.canvas, { x: 176, y: 278 });
+  await nextPaint();
+  const pointerFrame = Math.max(
+    ...snapshot.paintOperations.map(({ frame }) => frame),
+  );
+  expect(
+    snapshot.paintOperations.filter(
+      ({ frame, operation, strokeStyle, lineWidth }) =>
+        frame === pointerFrame &&
+        operation === "stroke" &&
+        strokeStyle === "#fffdf6" &&
+        lineWidth === 3,
+    ),
+  ).toEqual([]);
+  expect(document.querySelectorAll("canvas")).toHaveLength(1);
+  expect(Array.from(document.body.children)).toEqual([snapshot.canvas]);
+});
+
+it("publishes all twelve canonical tutorial snapshots", () => {
+  expect(tutorialSnapshotCatalog).toHaveLength(12);
+  expect(tutorialSnapshotCatalog.map(({ chapter }) => chapter)).toEqual([
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+  ]);
+  expect(getWorkbenchEntryBySlug("diagram-editor-finished")?.chapter).toBe(12);
+});
+
+it("runs the complete Chapter 12 pointer and keyboard editor flow", async () => {
+  const snapshot = await renderTutorialSnapshot("diagram-editor-finished");
+  const beforeConnection = snapshot.pathStartPaints.at(-4);
+  await dragPointerLogicalPoint(
+    snapshot.canvas,
+    { x: 176, y: 278 },
+    { x: 360, y: 450 },
+  );
+  await nextPaint();
+  expect(latestStatus(snapshot.textPaints)).toBe("SELECTED · IDEA");
+  expect(snapshot.pathStartPaints.at(-4)).toMatchObject({
+    x: beforeConnection!.x + 184,
+    y: beforeConnection!.y + 172,
+  });
+
+  await dragPointerLogicalPoint(
+    snapshot.canvas,
+    { x: 40, y: 520 },
+    { x: 120, y: 480 },
+  );
+  await wheelLogicalPoint(snapshot.canvas, { x: 480, y: 300 }, -160);
+  await nextPaint();
+  expect(snapshot.textPaints.at(-1)?.text).toMatch(/ZOOM · (?!100%)\d+%/u);
+
+  window.scrollTo({ left: 160, top: 0 });
+  await clickLogicalPoint(snapshot.canvas, { x: 878, y: 28 });
+  await nextPaint();
+  expect(snapshot.textPaints.at(-1)?.text).toBe("ZOOM · 100%");
+  expect(latestStatus(snapshot.textPaints)).toBe("SELECTED · IDEA");
+
+  await tab();
+  await tab();
+  await pressKey("Enter");
+  await nextPaint();
+  expect(latestStatus(snapshot.textPaints)).toBe("SELECTED · SKETCH");
+
+  snapshot.controller.dispose();
+  snapshot.controller.dispose();
+  removeTrackedController(snapshot.controller);
+  const pixels = Array.from(snapshot.context.getImageData(0, 0, 960, 600).data);
+  snapshot.canvas.dispatchEvent(
+    new PointerEvent("pointerdown", {
+      bubbles: true,
+      cancelable: true,
+      clientX: 176,
+      clientY: 278,
+      pointerId: 71,
+    }),
+  );
+  expect(
+    Array.from(snapshot.context.getImageData(0, 0, 960, 600).data),
+  ).toEqual(pixels);
 });

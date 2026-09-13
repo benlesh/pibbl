@@ -174,6 +174,31 @@ const drafts = [
     },
     load: () => import("./tutorials/diagram-editor/10-filters.example"),
   },
+  {
+    slug: "diagram-editor-keyboard-interaction",
+    tutorial: "diagram-editor",
+    chapter: 11,
+    title: "Add keyboard interaction",
+    authoring: "jsx",
+    canvas: { width: 960, height: 600 },
+    source: {
+      path: "packages/scenarios/src/tutorials/diagram-editor/11-keyboard-interaction.example.tsx",
+    },
+    load: () =>
+      import("./tutorials/diagram-editor/11-keyboard-interaction.example"),
+  },
+  {
+    slug: "diagram-editor-finished",
+    tutorial: "diagram-editor",
+    chapter: 12,
+    title: "Finish and harden the editor",
+    authoring: "jsx",
+    canvas: { width: 960, height: 600 },
+    source: {
+      path: "packages/scenarios/src/tutorials/diagram-editor/12-finished-editor.example.tsx",
+    },
+    load: () => import("./tutorials/diagram-editor/12-finished-editor.example"),
+  },
 ] satisfies readonly TutorialSnapshotCatalogEntry[];
 
 export const tutorialSnapshotCatalog = validateTutorialSnapshotCatalog(drafts);
