@@ -38,7 +38,7 @@ Reviewed the Task 2 diff for exact alpha boundaries, transparent comparator dire
 
 ## Commit
 
-`PENDING`
+Implementation commit: `cabe5e0b9498053934ebc21dc2afbf62e5b39e41` — `feat(webgl): settle scene render and pick queues`.
 
 ## Deferred concern
 
