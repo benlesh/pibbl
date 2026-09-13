@@ -61,6 +61,73 @@ export async function clickLogicalPoint(
   });
 }
 
+export async function dragPointerLogicalPoint(
+  canvas: HTMLCanvasElement,
+  from: MousePoint,
+  to: MousePoint,
+  intermediate: readonly MousePoint[] = [],
+): Promise<void> {
+  await pointerDownLogicalPoint(canvas, from);
+  for (const point of [...intermediate, to]) {
+    await pointerMoveLogicalPoint(canvas, point);
+  }
+  await pointerUpLogicalPoint(canvas, to);
+}
+
+async function dispatchPointerLogicalPoint(
+  canvas: HTMLCanvasElement,
+  type: "mousePressed" | "mouseMoved" | "mouseReleased",
+  point: MousePoint,
+): Promise<void> {
+  const position = logicalScreenPoint(canvas, point);
+  await cdp().send("Input.dispatchMouseEvent", {
+    type,
+    x: position.x,
+    y: position.y,
+    button: "left",
+    buttons: type === "mouseReleased" ? 0 : 1,
+    pointerType: "mouse",
+  });
+}
+
+export function pointerDownLogicalPoint(
+  canvas: HTMLCanvasElement,
+  point: MousePoint,
+): Promise<void> {
+  return dispatchPointerLogicalPoint(canvas, "mousePressed", point);
+}
+
+export function pointerMoveLogicalPoint(
+  canvas: HTMLCanvasElement,
+  point: MousePoint,
+): Promise<void> {
+  return dispatchPointerLogicalPoint(canvas, "mouseMoved", point);
+}
+
+export function pointerUpLogicalPoint(
+  canvas: HTMLCanvasElement,
+  point: MousePoint,
+): Promise<void> {
+  return dispatchPointerLogicalPoint(canvas, "mouseReleased", point);
+}
+
+export async function wheelLogicalPoint(
+  canvas: HTMLCanvasElement,
+  point: MousePoint,
+  deltaY: number,
+  deltaX = 0,
+): Promise<void> {
+  const position = logicalScreenPoint(canvas, point);
+  await cdp().send("Input.dispatchMouseEvent", {
+    type: "mouseWheel",
+    x: position.x,
+    y: position.y,
+    deltaX,
+    deltaY,
+    pointerType: "mouse",
+  });
+}
+
 export async function pressPenLogicalPoint(
   canvas: HTMLCanvasElement,
   point: MousePoint,

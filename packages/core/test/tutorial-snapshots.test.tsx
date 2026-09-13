@@ -13,7 +13,14 @@ import {
   tutorialSourcePaths,
   workbenchSourcePaths,
 } from "../../../playground/src/learning-sources";
-import { clickLogicalPoint } from "./support/user-input";
+import {
+  clickLogicalPoint,
+  dragPointerLogicalPoint,
+  pointerDownLogicalPoint,
+  pointerMoveLogicalPoint,
+  pointerUpLogicalPoint,
+  wheelLogicalPoint,
+} from "./support/user-input";
 import { validateLearningSourceText } from "../../../tooling/learning-source-contract";
 
 const mountedControllers: Array<{ dispose: () => void }> = [];
@@ -40,6 +47,12 @@ interface RectanglePaint {
   readonly frame: number;
 }
 
+interface PathStartPaint {
+  readonly x: number;
+  readonly y: number;
+  readonly frame: number;
+}
+
 function removeTrackedController(controller: { dispose: () => void }): void {
   const index = mountedControllers.indexOf(controller);
   if (index >= 0) mountedControllers.splice(index, 1);
@@ -51,6 +64,7 @@ async function renderTutorialSnapshot(slug: string): Promise<{
   readonly textPaints: readonly TextPaint[];
   readonly paintOperations: readonly PaintOperation[];
   readonly rectanglePaints: readonly RectanglePaint[];
+  readonly pathStartPaints: readonly PathStartPaint[];
 }> {
   const entry = tutorialSnapshotCatalog.find(
     (candidate) => candidate.slug === slug,
@@ -72,10 +86,17 @@ async function renderTutorialSnapshot(slug: string): Promise<{
     Path2D,
     Readonly<{ x: number; y: number; width: number; height: number }>
   >();
+  const pathStarts = new WeakMap<Path2D, Readonly<{ x: number; y: number }>>();
+  const pathStartPaints: PathStartPaint[] = [];
   const pathRect = Path2D.prototype.rect;
   Path2D.prototype.rect = function (x, y, width, height) {
     rectanglePaths.set(this, { x, y, width, height });
     pathRect.call(this, x, y, width, height);
+  };
+  const pathMoveTo = Path2D.prototype.moveTo;
+  Path2D.prototype.moveTo = function (x, y) {
+    pathStarts.set(this, { x, y });
+    pathMoveTo.call(this, x, y);
   };
   const clearRect = context.clearRect.bind(context);
   context.clearRect = function (x, y, width, height) {
@@ -129,7 +150,16 @@ async function renderTutorialSnapshot(slug: string): Promise<{
       fillStyle: String(this.fillStyle),
       strokeStyle: String(this.strokeStyle),
     });
-    if (path) stroke(path);
+    if (path) {
+      const start = pathStarts.get(path);
+      if (start) {
+        const point = new DOMPoint(start.x, start.y).matrixTransform(
+          this.getTransform(),
+        );
+        pathStartPaints.push({ x: point.x, y: point.y, frame });
+      }
+      stroke(path);
+    }
     else stroke();
   };
 
@@ -150,7 +180,14 @@ async function renderTutorialSnapshot(slug: string): Promise<{
   );
   Path2D.prototype.rect = pathRect;
 
-  return { canvas, controller, textPaints, paintOperations, rectanglePaints };
+  return {
+    canvas,
+    controller,
+    textPaints,
+    paintOperations,
+    rectanglePaints,
+    pathStartPaints,
+  };
 }
 
 afterEach(() => {
@@ -221,6 +258,16 @@ it("keeps tutorial and ordinary learning slugs in one workbench namespace", () =
       chapter: 6,
       slug: "diagram-editor-selection",
       path: "packages/scenarios/src/tutorials/diagram-editor/06-selection.example.tsx",
+    },
+    {
+      chapter: 7,
+      slug: "diagram-editor-dragging",
+      path: "packages/scenarios/src/tutorials/diagram-editor/07-dragging.example.tsx",
+    },
+    {
+      chapter: 8,
+      slug: "diagram-editor-pan-and-zoom",
+      path: "packages/scenarios/src/tutorials/diagram-editor/08-pan-and-zoom.example.tsx",
     },
   ]);
   expect(getWorkbenchEntryBySlug(learningExampleCatalog[0]!.slug)).toBe(
@@ -420,4 +467,194 @@ it("selects the Idea body from the Chapter 6 initial Sketch selection", async ()
       .filter(({ frame }) => frame === latestFrame)
       .map(({ text }) => text),
   ).toContain("SELECTED · IDEA");
+});
+
+function latestTitlePosition(
+  paints: readonly TextPaint[],
+  title: "IDEA" | "SKETCH" | "BUILD" | "SHIP",
+): Readonly<{ x: number; y: number }> {
+  const paint = paints.filter((candidate) => candidate.text === title).at(-1);
+  if (!paint) throw new Error(`Missing ${title} title paint.`);
+  return paint;
+}
+
+function latestStatus(paints: readonly TextPaint[]): string {
+  const paint = paints
+    .filter(({ text }) => text.startsWith("SELECTED") || text === "NO SELECTION")
+    .at(-1);
+  if (!paint) throw new Error("Missing status paint.");
+  return paint.text;
+}
+
+async function nextPaint(): Promise<void> {
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+}
+
+it("keeps a captured Chapter 7 node drag active outside its original body", async () => {
+  const snapshot = await renderTutorialSnapshot("diagram-editor-dragging");
+  const before = Object.fromEntries(
+    (["IDEA", "SKETCH", "BUILD", "SHIP"] as const).map((title) => [
+      title,
+      latestTitlePosition(snapshot.textPaints, title),
+    ]),
+  );
+  const connectorStart = snapshot.pathStartPaints.at(-4);
+  let pointerId: number | undefined;
+  snapshot.canvas.addEventListener(
+    "pointerdown",
+    (event) => {
+      pointerId = event.pointerId;
+    },
+    { capture: true, once: true },
+  );
+
+  await dragPointerLogicalPoint(
+    snapshot.canvas,
+    { x: 176, y: 278 },
+    { x: 360, y: 450 },
+    [{ x: 280, y: 420 }],
+  );
+  await nextPaint();
+
+  expect(latestTitlePosition(snapshot.textPaints, "IDEA")).toMatchObject({
+    x: before.IDEA.x + 184,
+    y: before.IDEA.y + 172,
+  });
+  for (const title of ["SKETCH", "BUILD", "SHIP"] as const) {
+    expect(latestTitlePosition(snapshot.textPaints, title)).toMatchObject(
+      { x: before[title].x, y: before[title].y },
+    );
+  }
+  expect(snapshot.pathStartPaints.at(-4)).toMatchObject({
+    x: connectorStart!.x + 184,
+    y: connectorStart!.y + 172,
+  });
+  expect(latestStatus(snapshot.textPaints)).toBe("SELECTED · IDEA");
+  expect(pointerId).toBeTypeOf("number");
+  expect(snapshot.canvas.hasPointerCapture(pointerId!)).toBe(false);
+});
+
+it("clears a Chapter 7 node drag after cancellation or capture loss", async () => {
+  const snapshot = await renderTutorialSnapshot("diagram-editor-dragging");
+  let pointerId: number | undefined;
+  snapshot.canvas.addEventListener(
+    "pointerdown",
+    (event) => {
+      pointerId = event.pointerId;
+    },
+    { capture: true, once: true },
+  );
+  await pointerDownLogicalPoint(snapshot.canvas, { x: 176, y: 278 });
+  await pointerMoveLogicalPoint(snapshot.canvas, { x: 280, y: 420 });
+  await nextPaint();
+  const afterCancellation = latestTitlePosition(snapshot.textPaints, "IDEA");
+  snapshot.canvas.dispatchEvent(
+    new PointerEvent("pointercancel", {
+      bubbles: true,
+      cancelable: true,
+      pointerId: pointerId!,
+    }),
+  );
+  await pointerUpLogicalPoint(snapshot.canvas, { x: 280, y: 420 });
+  await pointerMoveLogicalPoint(snapshot.canvas, { x: 600, y: 500 });
+  await nextPaint();
+  expect(latestTitlePosition(snapshot.textPaints, "IDEA")).toMatchObject({
+    x: afterCancellation.x,
+    y: afterCancellation.y,
+  });
+
+  snapshot.controller.dispose();
+  removeTrackedController(snapshot.controller);
+  snapshot.canvas.remove();
+  const captureLoss = await renderTutorialSnapshot("diagram-editor-dragging");
+  let lostPointerId: number | undefined;
+  captureLoss.canvas.addEventListener("pointerdown", (event) => {
+    lostPointerId = event.pointerId;
+  }, { capture: true, once: true });
+  await pointerDownLogicalPoint(captureLoss.canvas, { x: 176, y: 278 });
+  await nextPaint();
+  const afterLoss = latestTitlePosition(captureLoss.textPaints, "IDEA");
+  const lost = new Promise<void>((resolve) => {
+    captureLoss.canvas.addEventListener("lostpointercapture", () => resolve(), { once: true });
+  });
+  captureLoss.canvas.releasePointerCapture(lostPointerId!);
+  captureLoss.canvas.dispatchEvent(
+    new PointerEvent("lostpointercapture", {
+      bubbles: true,
+      pointerId: lostPointerId!,
+    }),
+  );
+  await lost;
+  await pointerUpLogicalPoint(captureLoss.canvas, { x: 280, y: 420 });
+  await pointerMoveLogicalPoint(captureLoss.canvas, { x: 600, y: 500 });
+  await nextPaint();
+  expect(latestTitlePosition(captureLoss.textPaints, "IDEA")).toMatchObject({
+    x: afterLoss.x,
+    y: afterLoss.y,
+  });
+});
+
+it("pans, pointer-zooms, clamps, and resets Chapter 8 without changing node data", async () => {
+  const snapshot = await renderTutorialSnapshot("diagram-editor-pan-and-zoom");
+  const initial = Object.fromEntries(
+    (["IDEA", "SKETCH", "BUILD", "SHIP"] as const).map((title) => [
+      title,
+      latestTitlePosition(snapshot.textPaints, title),
+    ]),
+  );
+  await dragPointerLogicalPoint(snapshot.canvas, { x: 176, y: 278 }, { x: 196, y: 298 });
+  await nextPaint();
+  expect(latestTitlePosition(snapshot.textPaints, "IDEA")).toMatchObject({
+    x: initial.IDEA.x + 20,
+    y: initial.IDEA.y + 20,
+  });
+  const before = Object.fromEntries(
+    (["IDEA", "SKETCH", "BUILD", "SHIP"] as const).map((title) => [
+      title,
+      latestTitlePosition(snapshot.textPaints, title),
+    ]),
+  );
+  await dragPointerLogicalPoint(snapshot.canvas, { x: 40, y: 520 }, { x: 140, y: 470 });
+  await nextPaint();
+  for (const title of ["IDEA", "SKETCH", "BUILD", "SHIP"] as const) {
+    expect(latestTitlePosition(snapshot.textPaints, title)).toMatchObject({
+      x: before[title].x + 100,
+      y: before[title].y - 50,
+    });
+  }
+
+  let wheelPrevented = false;
+  snapshot.canvas.addEventListener(
+    "wheel",
+    (event) => {
+      wheelPrevented = event.defaultPrevented;
+    },
+    { once: true },
+  );
+  const ideaBeforeZoom = latestTitlePosition(snapshot.textPaints, "IDEA");
+  await wheelLogicalPoint(snapshot.canvas, { x: 480, y: 300 }, -160);
+  await nextPaint();
+  const ideaAfterZoom = latestTitlePosition(snapshot.textPaints, "IDEA");
+  expect(wheelPrevented).toBe(true);
+  expect(ideaAfterZoom).not.toMatchObject(ideaBeforeZoom);
+
+  for (let index = 0; index < 20; index += 1) {
+    await wheelLogicalPoint(snapshot.canvas, { x: 480, y: 300 }, -160);
+  }
+  await nextPaint();
+  expect(snapshot.textPaints.at(-1)?.text).toMatch(/ZOOM · 180%/u);
+  for (let index = 0; index < 30; index += 1) {
+    await wheelLogicalPoint(snapshot.canvas, { x: 480, y: 300 }, 160);
+  }
+  await nextPaint();
+  expect(snapshot.textPaints.at(-1)?.text).toMatch(/ZOOM · 60%/u);
+
+  window.scrollTo({ left: 160, top: 0 });
+  await clickLogicalPoint(snapshot.canvas, { x: 878, y: 28 });
+  await nextPaint();
+  await nextPaint();
+  expect(latestTitlePosition(snapshot.textPaints, "IDEA")).toMatchObject({
+    x: initial.IDEA.x + 20,
+    y: initial.IDEA.y + 20,
+  });
 });

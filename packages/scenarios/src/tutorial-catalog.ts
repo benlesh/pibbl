@@ -125,6 +125,30 @@ const drafts = [
     },
     load: () => import("./tutorials/diagram-editor/06-selection.example"),
   },
+  {
+    slug: "diagram-editor-dragging",
+    tutorial: "diagram-editor",
+    chapter: 7,
+    title: "Drag nodes safely",
+    authoring: "jsx",
+    canvas: { width: 960, height: 600 },
+    source: {
+      path: "packages/scenarios/src/tutorials/diagram-editor/07-dragging.example.tsx",
+    },
+    load: () => import("./tutorials/diagram-editor/07-dragging.example"),
+  },
+  {
+    slug: "diagram-editor-pan-and-zoom",
+    tutorial: "diagram-editor",
+    chapter: 8,
+    title: "Pan and zoom the workspace",
+    authoring: "jsx",
+    canvas: { width: 960, height: 600 },
+    source: {
+      path: "packages/scenarios/src/tutorials/diagram-editor/08-pan-and-zoom.example.tsx",
+    },
+    load: () => import("./tutorials/diagram-editor/08-pan-and-zoom.example"),
+  },
 ] satisfies readonly TutorialSnapshotCatalogEntry[];
 
 export const tutorialSnapshotCatalog = validateTutorialSnapshotCatalog(drafts);
