@@ -4,8 +4,7 @@
 > approved design; current shipped behavior remains governed by `docs/design/`
 > until implementation lands.
 
-Status: design approved in conversation on 2026-09-13; written-spec review
-pending.
+Status: design and written specification approved on 2026-09-13.
 
 Date: 2026-09-13
 
