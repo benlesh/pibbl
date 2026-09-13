@@ -1036,10 +1036,25 @@ it("traverses, activates, and visibly focuses Chapter 11 custom Canvas targets",
     ),
   ).not.toEqual([]);
 
+  await wheelLogicalPoint(snapshot.canvas, { x: 480, y: 300 }, -160);
+  await nextPaint();
+  expect(snapshot.textPaints.at(-1)?.text).toBe("ZOOM · 117%");
   await tab(true);
+  await pressKey("Enter");
+  await nextPaint();
+  expect(latestStatus(snapshot.textPaints)).toBe("SELECTED · IDEA");
   await tab(true);
+  await pressKey("Enter");
+  await nextPaint();
+  expect(snapshot.textPaints.at(-1)?.text).toBe("ZOOM · 100%");
   await tab(true);
   expect(document.activeElement).not.toBe(snapshot.canvas);
+
+  await pointerMoveLogicalPoint(snapshot.canvas, { x: 176, y: 278 });
+  await pointerDownLogicalPoint(snapshot.canvas, { x: 176, y: 278 });
+  await nextPaint();
+  expect(snapshot.canvas.style.cursor).toBe("grabbing");
+  await pointerUpLogicalPoint(snapshot.canvas, { x: 176, y: 278 });
   await clickLogicalPoint(snapshot.canvas, { x: 176, y: 278 });
   await nextPaint();
   const pointerFrame = Math.max(
@@ -1080,21 +1095,33 @@ it("runs the complete Chapter 12 pointer and keyboard editor flow", async () => 
     x: beforeConnection!.x + 184,
     y: beforeConnection!.y + 172,
   });
+  const movedConnection = snapshot.pathStartPaints.at(-4)!;
 
   await dragPointerLogicalPoint(
     snapshot.canvas,
     { x: 40, y: 520 },
     { x: 120, y: 480 },
   );
-  await wheelLogicalPoint(snapshot.canvas, { x: 480, y: 300 }, -160);
+  for (let index = 0; index < 20; index += 1) {
+    await wheelLogicalPoint(snapshot.canvas, { x: 480, y: 300 }, -160);
+  }
   await nextPaint();
-  expect(snapshot.textPaints.at(-1)?.text).toMatch(/ZOOM · (?!100%)\d+%/u);
+  expect(snapshot.textPaints.at(-1)?.text).toBe("ZOOM · 180%");
+  for (let index = 0; index < 30; index += 1) {
+    await wheelLogicalPoint(snapshot.canvas, { x: 480, y: 300 }, 160);
+  }
+  await nextPaint();
+  expect(snapshot.textPaints.at(-1)?.text).toBe("ZOOM · 60%");
 
   window.scrollTo({ left: 160, top: 0 });
   await clickLogicalPoint(snapshot.canvas, { x: 878, y: 28 });
   await nextPaint();
   expect(snapshot.textPaints.at(-1)?.text).toBe("ZOOM · 100%");
   expect(latestStatus(snapshot.textPaints)).toBe("SELECTED · IDEA");
+  expect(snapshot.pathStartPaints.at(-4)).toMatchObject({
+    x: movedConnection.x,
+    y: movedConnection.y,
+  });
 
   await tab();
   await tab();

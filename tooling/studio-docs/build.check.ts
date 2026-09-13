@@ -483,43 +483,52 @@ const real = await buildStudioDocumentation({
   workbenchSources: [...learningExampleCatalog, ...tutorialSnapshotCatalog],
 });
 
-const canvasScene =
-  real.pageByRoute["#/learn/tutorials/diagram-editor/canvas-scene"];
-const firstNode =
-  real.pageByRoute["#/learn/tutorials/diagram-editor/first-node"];
-const connectNodes =
-  real.pageByRoute["#/learn/tutorials/diagram-editor/connect-nodes"];
-const reusableNode =
-  real.pageByRoute["#/learn/tutorials/diagram-editor/reusable-node"];
-const editorChrome =
-  real.pageByRoute["#/learn/tutorials/diagram-editor/editor-chrome"];
-const selection =
-  real.pageByRoute["#/learn/tutorials/diagram-editor/selection"];
-const dragging = real.pageByRoute["#/learn/tutorials/diagram-editor/dragging"];
-const panAndZoom =
-  real.pageByRoute["#/learn/tutorials/diagram-editor/pan-and-zoom"];
-const viewportAndLayer =
-  real.pageByRoute["#/learn/tutorials/diagram-editor/viewport-and-layer"];
-const filters = real.pageByRoute["#/learn/tutorials/diagram-editor/filters"];
-const keyboardInteraction =
-  real.pageByRoute["#/learn/tutorials/diagram-editor/keyboard-interaction"];
-const finishedEditor =
-  real.pageByRoute["#/learn/tutorials/diagram-editor/finished-editor"];
-assert.ok(canvasScene, "Missing Chapter 1 diagram-editor tutorial route.");
-assert.ok(firstNode, "Missing Chapter 2 diagram-editor tutorial route.");
-assert.ok(connectNodes, "Missing Chapter 3 diagram-editor tutorial route.");
-assert.ok(reusableNode, "Missing Chapter 4 diagram-editor tutorial route.");
-assert.ok(editorChrome, "Missing Chapter 5 diagram-editor tutorial route.");
-assert.ok(selection, "Missing Chapter 6 diagram-editor tutorial route.");
-assert.ok(dragging, "Missing Chapter 7 diagram-editor tutorial route.");
-assert.ok(panAndZoom, "Missing Chapter 8 diagram-editor tutorial route.");
-assert.ok(viewportAndLayer, "Missing Chapter 9 diagram-editor tutorial route.");
-assert.ok(filters, "Missing Chapter 10 diagram-editor tutorial route.");
-assert.ok(
-  keyboardInteraction,
-  "Missing Chapter 11 diagram-editor tutorial route.",
-);
-assert.ok(finishedEditor, "Missing Chapter 12 diagram-editor tutorial route.");
+const diagramEditorRootRoute = "#/learn/tutorials/diagram-editor";
+const diagramEditorOverviewTitle = "Learn the basics: Build a diagram editor";
+const diagramEditorVocabulary = [
+  [1, "canvas-scene", "Create the Canvas scene", "diagram-editor-canvas-scene"],
+  [2, "first-node", "Draw the first node", "diagram-editor-first-node"],
+  [3, "connect-nodes", "Connect two nodes", "diagram-editor-connect-nodes"],
+  [
+    4,
+    "reusable-node",
+    "Extract a reusable node component",
+    "diagram-editor-reusable-node",
+  ],
+  [
+    5,
+    "editor-chrome",
+    "Build the editor chrome",
+    "diagram-editor-editor-chrome",
+  ],
+  [6, "selection", "Select nodes with state", "diagram-editor-selection"],
+  [7, "dragging", "Drag nodes safely", "diagram-editor-dragging"],
+  [
+    8,
+    "pan-and-zoom",
+    "Pan and zoom the workspace",
+    "diagram-editor-pan-and-zoom",
+  ],
+  [
+    9,
+    "viewport-and-layer",
+    "Constrain the viewport",
+    "diagram-editor-viewport-and-layer",
+  ],
+  [10, "filters", "Polish selection with filters", "diagram-editor-filters"],
+  [
+    11,
+    "keyboard-interaction",
+    "Add keyboard interaction",
+    "diagram-editor-keyboard-interaction",
+  ],
+  [
+    12,
+    "finished-editor",
+    "Finish and harden the editor",
+    "diagram-editor-finished",
+  ],
+] as const;
 const tutorialChapterHeadings = [
   "What you will make",
   "How it works",
@@ -528,220 +537,45 @@ const tutorialChapterHeadings = [
   "Check your result",
   "What you learned",
 ];
-for (const chapter of [
-  canvasScene,
-  firstNode,
-  connectNodes,
-  reusableNode,
-  editorChrome,
-  selection,
-  dragging,
-  panAndZoom,
-  viewportAndLayer,
-  filters,
-  keyboardInteraction,
-  finishedEditor,
-]) {
+for (const [
+  index,
+  [order, slug, title, exampleSlug],
+] of diagramEditorVocabulary.entries()) {
+  const route = `${diagramEditorRootRoute}/${slug}`;
+  const chapter = real.pageByRoute[route];
+  assert.ok(chapter, `Missing Chapter ${order} diagram-editor tutorial route.`);
+  assert.equal(chapter.frontmatter.kind, "tutorial");
+  assert.equal(chapter.frontmatter.tutorial, "diagram-editor");
+  assert.equal(chapter.frontmatter.title, title);
+  assert.equal(chapter.frontmatter.order, order);
+  assert.equal(chapter.frontmatter.exampleSlug, exampleSlug);
   assert.deepEqual(
     chapter.headings.filter(({ level }) => level === 2).map(({ text }) => text),
     tutorialChapterHeadings,
     `${chapter.sourcePath} must use the standard tutorial chapter sequence.`,
   );
+  const previous = diagramEditorVocabulary[index - 1];
+  const next = diagramEditorVocabulary[index + 1];
+  assert.deepEqual(chapter.tutorialRelationship, {
+    rootRoute: diagramEditorRootRoute,
+    chapter: order,
+    chapterCount: diagramEditorVocabulary.length,
+    previous: previous
+      ? {
+          route: `${diagramEditorRootRoute}/${previous[1]}`,
+          title: previous[2],
+        }
+      : { route: diagramEditorRootRoute, title: diagramEditorOverviewTitle },
+    ...(next
+      ? {
+          next: {
+            route: `${diagramEditorRootRoute}/${next[1]}`,
+            title: next[2],
+          },
+        }
+      : {}),
+  });
 }
-assert.equal(canvasScene.frontmatter.order, 1);
-assert.equal(firstNode.frontmatter.order, 2);
-assert.equal(connectNodes.frontmatter.order, 3);
-assert.equal(reusableNode.frontmatter.order, 4);
-assert.equal(editorChrome.frontmatter.order, 5);
-assert.equal(selection.frontmatter.order, 6);
-assert.equal(dragging.frontmatter.order, 7);
-assert.equal(panAndZoom.frontmatter.order, 8);
-assert.equal(viewportAndLayer.frontmatter.order, 9);
-assert.equal(filters.frontmatter.order, 10);
-assert.equal(keyboardInteraction.frontmatter.order, 11);
-assert.equal(finishedEditor.frontmatter.order, 12);
-assert.equal(
-  canvasScene.frontmatter.exampleSlug,
-  "diagram-editor-canvas-scene",
-);
-assert.equal(firstNode.frontmatter.exampleSlug, "diagram-editor-first-node");
-assert.equal(
-  connectNodes.frontmatter.exampleSlug,
-  "diagram-editor-connect-nodes",
-);
-assert.equal(
-  reusableNode.frontmatter.exampleSlug,
-  "diagram-editor-reusable-node",
-);
-assert.equal(
-  editorChrome.frontmatter.exampleSlug,
-  "diagram-editor-editor-chrome",
-);
-assert.equal(selection.frontmatter.exampleSlug, "diagram-editor-selection");
-assert.equal(dragging.frontmatter.exampleSlug, "diagram-editor-dragging");
-assert.equal(panAndZoom.frontmatter.exampleSlug, "diagram-editor-pan-and-zoom");
-assert.equal(
-  viewportAndLayer.frontmatter.exampleSlug,
-  "diagram-editor-viewport-and-layer",
-);
-assert.equal(filters.frontmatter.exampleSlug, "diagram-editor-filters");
-assert.equal(
-  keyboardInteraction.frontmatter.exampleSlug,
-  "diagram-editor-keyboard-interaction",
-);
-assert.equal(finishedEditor.frontmatter.exampleSlug, "diagram-editor-finished");
-assert.deepEqual(canvasScene.tutorialRelationship, {
-  rootRoute: "#/learn/tutorials/diagram-editor",
-  chapter: 1,
-  chapterCount: 12,
-  previous: {
-    route: "#/learn/tutorials/diagram-editor",
-    title: "Learn the basics: Build a diagram editor",
-  },
-  next: {
-    route: "#/learn/tutorials/diagram-editor/first-node",
-    title: "Draw the first node",
-  },
-});
-assert.deepEqual(firstNode.tutorialRelationship, {
-  rootRoute: "#/learn/tutorials/diagram-editor",
-  chapter: 2,
-  chapterCount: 12,
-  previous: {
-    route: "#/learn/tutorials/diagram-editor/canvas-scene",
-    title: "Create the Canvas scene",
-  },
-  next: {
-    route: "#/learn/tutorials/diagram-editor/connect-nodes",
-    title: "Connect two nodes",
-  },
-});
-assert.deepEqual(connectNodes.tutorialRelationship, {
-  rootRoute: "#/learn/tutorials/diagram-editor",
-  chapter: 3,
-  chapterCount: 12,
-  previous: {
-    route: "#/learn/tutorials/diagram-editor/first-node",
-    title: "Draw the first node",
-  },
-  next: {
-    route: "#/learn/tutorials/diagram-editor/reusable-node",
-    title: "Extract a reusable node component",
-  },
-});
-assert.deepEqual(reusableNode.tutorialRelationship, {
-  rootRoute: "#/learn/tutorials/diagram-editor",
-  chapter: 4,
-  chapterCount: 12,
-  previous: {
-    route: "#/learn/tutorials/diagram-editor/connect-nodes",
-    title: "Connect two nodes",
-  },
-  next: {
-    route: "#/learn/tutorials/diagram-editor/editor-chrome",
-    title: "Build the editor chrome",
-  },
-});
-assert.deepEqual(editorChrome.tutorialRelationship, {
-  rootRoute: "#/learn/tutorials/diagram-editor",
-  chapter: 5,
-  chapterCount: 12,
-  previous: {
-    route: "#/learn/tutorials/diagram-editor/reusable-node",
-    title: "Extract a reusable node component",
-  },
-  next: {
-    route: "#/learn/tutorials/diagram-editor/selection",
-    title: "Select nodes with state",
-  },
-});
-assert.deepEqual(selection.tutorialRelationship, {
-  rootRoute: "#/learn/tutorials/diagram-editor",
-  chapter: 6,
-  chapterCount: 12,
-  previous: {
-    route: "#/learn/tutorials/diagram-editor/editor-chrome",
-    title: "Build the editor chrome",
-  },
-  next: {
-    route: "#/learn/tutorials/diagram-editor/dragging",
-    title: "Drag nodes safely",
-  },
-});
-assert.deepEqual(dragging.tutorialRelationship, {
-  rootRoute: "#/learn/tutorials/diagram-editor",
-  chapter: 7,
-  chapterCount: 12,
-  previous: {
-    route: "#/learn/tutorials/diagram-editor/selection",
-    title: "Select nodes with state",
-  },
-  next: {
-    route: "#/learn/tutorials/diagram-editor/pan-and-zoom",
-    title: "Pan and zoom the workspace",
-  },
-});
-assert.deepEqual(panAndZoom.tutorialRelationship, {
-  rootRoute: "#/learn/tutorials/diagram-editor",
-  chapter: 8,
-  chapterCount: 12,
-  previous: {
-    route: "#/learn/tutorials/diagram-editor/dragging",
-    title: "Drag nodes safely",
-  },
-  next: {
-    route: "#/learn/tutorials/diagram-editor/viewport-and-layer",
-    title: "Constrain the viewport",
-  },
-});
-assert.deepEqual(viewportAndLayer.tutorialRelationship, {
-  rootRoute: "#/learn/tutorials/diagram-editor",
-  chapter: 9,
-  chapterCount: 12,
-  previous: {
-    route: "#/learn/tutorials/diagram-editor/pan-and-zoom",
-    title: "Pan and zoom the workspace",
-  },
-  next: {
-    route: "#/learn/tutorials/diagram-editor/filters",
-    title: "Polish selection with filters",
-  },
-});
-assert.deepEqual(filters.tutorialRelationship, {
-  rootRoute: "#/learn/tutorials/diagram-editor",
-  chapter: 10,
-  chapterCount: 12,
-  previous: {
-    route: "#/learn/tutorials/diagram-editor/viewport-and-layer",
-    title: "Constrain the viewport",
-  },
-  next: {
-    route: "#/learn/tutorials/diagram-editor/keyboard-interaction",
-    title: "Add keyboard interaction",
-  },
-});
-assert.deepEqual(keyboardInteraction.tutorialRelationship, {
-  rootRoute: "#/learn/tutorials/diagram-editor",
-  chapter: 11,
-  chapterCount: 12,
-  previous: {
-    route: "#/learn/tutorials/diagram-editor/filters",
-    title: "Polish selection with filters",
-  },
-  next: {
-    route: "#/learn/tutorials/diagram-editor/finished-editor",
-    title: "Finish and harden the editor",
-  },
-});
-assert.deepEqual(finishedEditor.tutorialRelationship, {
-  rootRoute: "#/learn/tutorials/diagram-editor",
-  chapter: 12,
-  chapterCount: 12,
-  previous: {
-    route: "#/learn/tutorials/diagram-editor/keyboard-interaction",
-    title: "Add keyboard interaction",
-  },
-});
 
 assert.deepEqual(
   real.pages

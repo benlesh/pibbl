@@ -167,18 +167,25 @@ interface NodeHandlers {
 function NodeCard({
   node,
   selected,
+  dragActive,
   handlers,
   onSelect,
 }: Readonly<{
   node: DiagramNode;
   selected: boolean;
+  dragActive: boolean;
   handlers: NodeHandlers;
   onSelect: () => void;
 }>): CRCNode {
   return (
     <Group style={{ translateX: node.x, translateY: node.y }}>
       <NodePaint node={node} selected={selected} />
-      <NodeTarget node={node} handlers={handlers} onSelect={onSelect} />
+      <NodeTarget
+        node={node}
+        dragActive={dragActive}
+        handlers={handlers}
+        onSelect={onSelect}
+      />
     </Group>
   );
 }
@@ -294,10 +301,12 @@ function FocusVisual({ visible }: Readonly<{ visible: boolean }>): CRCNode {
 }
 function NodeTarget({
   node,
+  dragActive,
   handlers,
   onSelect,
 }: Readonly<{
   node: DiagramNode;
+  dragActive: boolean;
   handlers: NodeHandlers;
   onSelect: () => void;
 }>): CRCNode {
@@ -316,7 +325,7 @@ function NodeTarget({
     {
       path: targetPath,
       fill: true,
-      cursor: "grab",
+      cursor: dragActive ? "grabbing" : "grab",
       keyboardNavigationBounds: {
         x: 0,
         y: 0,
@@ -462,6 +471,7 @@ function Workspace({
   style: _style,
   nodes,
   selected,
+  draggingNodeId,
   view,
   onSelect,
   onWheel,
@@ -474,6 +484,7 @@ function Workspace({
   Readonly<{
     nodes: readonly DiagramNode[];
     selected: NodeId | null;
+    draggingNodeId: NodeId | null;
     view: ViewTransform;
     onSelect: (id: NodeId | null) => void;
     onWheel: (event: CRCWheelEvent) => void;
@@ -526,6 +537,7 @@ function Workspace({
             key={node.id}
             node={node}
             selected={node.id === selected}
+            dragActive={node.id === draggingNodeId}
             handlers={handlers}
             onSelect={() => onSelect(node.id)}
           />
@@ -575,10 +587,14 @@ function Status({
 function DiagramEditor(): CRCNode {
   const [nodes, setNodes] = crcState<readonly DiagramNode[]>(INITIAL_NODES);
   const [selected, setSelected] = crcState<NodeId | null>("sketch");
+  const [draggingNodeId, setDraggingNodeId] = crcState<NodeId | null>(null);
   const [view, setView] = crcState<ViewTransform>(INITIAL_VIEW);
   const gesture = crcRef<Gesture | null>(null);
   const finishGesture = (pointerId: number): void => {
-    if (gesture.current?.pointerId === pointerId) gesture.current = null;
+    if (gesture.current?.pointerId === pointerId) {
+      gesture.current = null;
+      setDraggingNodeId(null);
+    }
   };
   const handlers: NodeHandlers = {
     down(node, event) {
@@ -591,6 +607,7 @@ function DiagramEditor(): CRCNode {
         pointerStart,
         nodeStart: { x: node.x, y: node.y },
       };
+      setDraggingNodeId(node.id);
       setSelected(node.id);
     },
     move(event) {
@@ -663,6 +680,7 @@ function DiagramEditor(): CRCNode {
         style={{ left: 0, top: 56, width: "100%", height: 512 }}
         nodes={nodes}
         selected={selected}
+        draggingNodeId={draggingNodeId}
         view={view}
         onSelect={setSelected}
         onWheel={(event) => {

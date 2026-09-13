@@ -259,6 +259,27 @@ assert.equal(
   true,
   "The pointer-capture diagram-editor query must return Chapter 7.",
 );
+const tutorialPages = realDocumentation.pages.filter(
+  ({ frontmatter }) =>
+    frontmatter.kind === "tutorial" &&
+    frontmatter.tutorial === "diagram-editor" &&
+    frontmatter.order !== undefined,
+);
+assert.equal(
+  tutorialPages.length,
+  12,
+  "All twelve tutorial chapters must publish.",
+);
+for (const chapter of tutorialPages) {
+  const chapterRecords = realBundle.searchRecords.filter(
+    ({ url }) => url === chapter.route || url.startsWith(`${chapter.route}#`),
+  );
+  assert.equal(
+    chapterRecords.length,
+    7,
+    `${chapter.route} must publish one root and six H2 Learn records.`,
+  );
+}
 for (const { slug } of tutorialSnapshotCatalog) {
   assert.equal(
     realBundle.searchRecords.some(({ id }) => id === `example:${slug}`),

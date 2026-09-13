@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { LoadedPublicDoc } from "../../tooling/studio-docs/model";
+import { pageByRoute } from "virtual:crc-studio-docs";
 import { renderMarkdownPage } from "../src/docs/markdown-page";
 
 const fixtureDocument: LoadedPublicDoc = {
@@ -138,18 +139,8 @@ describe("Markdown documentation pages", () => {
   it("returns terminal chapters to their tutorial overview", async () => {
     const container = document.createElement("main");
     document.body.appendChild(container);
-    const terminalDocument: LoadedPublicDoc = {
-      ...tutorialDocument,
-      tutorialRelationship: {
-        ...tutorialDocument.tutorialRelationship!,
-        chapter: 3,
-        previous: {
-          route: "#/learn/tutorials/diagram-editor/selection",
-          title: "Select nodes",
-        },
-        next: undefined,
-      },
-    };
+    const terminalDocument =
+      pageByRoute["#/learn/tutorials/diagram-editor/finished-editor"]!;
 
     await renderMarkdownPage({
       document: terminalDocument,
