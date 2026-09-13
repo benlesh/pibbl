@@ -770,11 +770,29 @@ it("filters exactly one selected Chapter 10 card without enlarging its hit geome
   const rootPrototype = CanvasRenderingContext2D.prototype;
   const rootDrawImage = rootPrototype.drawImage;
   const transferToImageBitmap = OffscreenCanvas.prototype.transferToImageBitmap;
+  const pathRect = Path2D.prototype.rect;
+  const pathRoundRect = Path2D.prototype.roundRect;
   const transferredSurfaces = new WeakMap<ImageBitmap, OffscreenCanvas>();
+  const pathRectangles = new WeakMap<
+    Path2D,
+    Readonly<{ x: number; y: number; width: number; height: number }>
+  >();
   const offscreenDraws: Array<{
     readonly filter: string;
     readonly surface: OffscreenCanvas;
+    readonly source: OffscreenCanvas | undefined;
   }> = [];
+  const offscreenFills: Array<{
+    readonly surface: OffscreenCanvas;
+    readonly fillStyle: string;
+    readonly rectangle: Readonly<{
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    }>;
+  }> = [];
+  const offscreenFill = offscreenPrototype.fill;
   const rootComposites: Array<{
     readonly context: CanvasRenderingContext2D;
     readonly surface: OffscreenCanvas | undefined;
@@ -783,9 +801,36 @@ it("filters exactly one selected Chapter 10 card without enlarging its hit geome
     readonly width: number;
     readonly height: number;
   }> = [];
+  Path2D.prototype.rect = function (x, y, width, height) {
+    pathRectangles.set(this, { x, y, width, height });
+    pathRect.call(this, x, y, width, height);
+  };
+  Path2D.prototype.roundRect = function (x, y, width, height, radii) {
+    pathRectangles.set(this, { x, y, width, height });
+    pathRoundRect.call(this, x, y, width, height, radii);
+  };
   offscreenPrototype.drawImage = function (...args) {
-    offscreenDraws.push({ filter: this.filter, surface: this.canvas });
+    const source = args[0];
+    offscreenDraws.push({
+      filter: this.filter,
+      surface: this.canvas,
+      source: source instanceof OffscreenCanvas ? source : undefined,
+    });
     offscreenDrawImage.apply(this, args);
+  };
+  offscreenPrototype.fill = function (...args) {
+    const path = args[0];
+    if (path instanceof Path2D) {
+      const rectangle = pathRectangles.get(path);
+      if (rectangle) {
+        offscreenFills.push({
+          surface: this.canvas,
+          fillStyle: String(this.fillStyle),
+          rectangle,
+        });
+      }
+    }
+    offscreenFill.apply(this, args);
   };
   OffscreenCanvas.prototype.transferToImageBitmap = function () {
     const bitmap = transferToImageBitmap.call(this);
@@ -820,12 +865,35 @@ it("filters exactly one selected Chapter 10 card without enlarging its hit geome
     offscreenDraws.slice(start).filter(({ filter }) => filter !== "none");
   const assertOneBoundaryAt = (
     snapshot: Awaited<ReturnType<typeof renderTutorialSnapshot>>,
-    boundary: { readonly filter: string; readonly surface: OffscreenCanvas },
-    card: Readonly<{ x: number; y: number; width: number; height: number }>,
+    boundary: {
+      readonly filter: string;
+      readonly surface: OffscreenCanvas;
+      readonly source: OffscreenCanvas | undefined;
+    },
+    card: Readonly<{
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      color: string;
+    }>,
   ): void => {
     expect(boundary.filter).toBe(
       "drop-shadow(6px 8px 10px rgb(23 33 29 / 35%))",
     );
+    expect(boundary.source).toBeDefined();
+    const bodyPaints = offscreenFills.filter(
+      (paint) =>
+        paint.surface === boundary.source && paint.fillStyle === card.color,
+    );
+    expect(bodyPaints.length).toBeGreaterThan(0);
+    for (const paint of bodyPaints) {
+      expect(paint).toEqual({
+        surface: boundary.source,
+        fillStyle: card.color,
+        rectangle: { x: 0, y: 0, width: card.width, height: card.height },
+      });
+    }
     const composites = rootComposites.filter(
       (candidate) =>
         candidate.context === snapshot.context &&
@@ -853,6 +921,7 @@ it("filters exactly one selected Chapter 10 card without enlarging its hit geome
       y: 148,
       width: 168,
       height: 84,
+      color: "#f7c948",
     });
 
     const afterInitial = offscreenDraws.length;
@@ -879,11 +948,14 @@ it("filters exactly one selected Chapter 10 card without enlarging its hit geome
       y: 236,
       width: 168,
       height: 84,
+      color: "#ff6b57",
     });
-    expect(latestTitlePosition(snapshot.textPaints, "SKETCH")).toMatchObject({
-      x: directNodePositions.SKETCH.x,
-      y: directNodePositions.SKETCH.y,
-    });
+    for (const title of ["SKETCH", "BUILD", "SHIP"] as const) {
+      expect(latestTitlePosition(snapshot.textPaints, title)).toMatchObject({
+        x: directNodePositions[title].x,
+        y: directNodePositions[title].y,
+      });
+    }
 
     const afterIdea = offscreenDraws.length;
     await clickLogicalPoint(snapshot.canvas, { x: 268, y: 278 });
@@ -903,14 +975,20 @@ it("filters exactly one selected Chapter 10 card without enlarging its hit geome
       y: 148,
       width: 168,
       height: 84,
+      color: "#f7c948",
     });
-    expect(latestTitlePosition(snapshot.textPaints, "IDEA")).toMatchObject({
-      x: directNodePositions.IDEA.x,
-      y: directNodePositions.IDEA.y,
-    });
+    for (const title of ["IDEA", "BUILD", "SHIP"] as const) {
+      expect(latestTitlePosition(snapshot.textPaints, title)).toMatchObject({
+        x: directNodePositions[title].x,
+        y: directNodePositions[title].y,
+      });
+    }
   } finally {
     offscreenPrototype.drawImage = offscreenDrawImage;
+    offscreenPrototype.fill = offscreenFill;
     OffscreenCanvas.prototype.transferToImageBitmap = transferToImageBitmap;
     rootPrototype.drawImage = rootDrawImage;
+    Path2D.prototype.rect = pathRect;
+    Path2D.prototype.roundRect = pathRoundRect;
   }
 });
