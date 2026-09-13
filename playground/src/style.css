@@ -639,6 +639,20 @@ code {
   margin: 0;
 }
 
+.documentation-body img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: var(--line);
+  background: var(--paper);
+  box-shadow: 5px 5px 0 var(--ink);
+}
+
+.documentation-body a:focus-visible img {
+  outline: 4px solid var(--cobalt);
+  outline-offset: 4px;
+}
+
 .documentation-body pre {
   overflow-x: auto;
   padding: 18px;

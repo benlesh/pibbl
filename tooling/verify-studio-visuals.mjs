@@ -21,6 +21,19 @@ const routes = [
     name: "filters",
     hash: "#/examples/drawing/filters",
     ready: ".studio-preview__frame",
+    waitForWorkbench: true,
+  },
+  {
+    name: "diagram-editor-landing",
+    hash: "#/learn/tutorials/diagram-editor",
+    ready: "img[src$='/tutorials/diagram-editor/finished-editor.png']",
+  },
+  {
+    name: "diagram-editor-finished",
+    hash: "#/learn/tutorials/diagram-editor/finished-editor",
+    ready: ".studio-preview__frame",
+    waitForWorkbench: true,
+    captureSelector: ".studio-preview__frame",
   },
   {
     name: "search-open",
@@ -149,7 +162,9 @@ try {
       await page.getByRole("button", { name: "Search documentation" }).first().click();
       await page.locator(".studio-search-dialog[open]").waitFor({ timeout: 30_000 });
     }
-    if (route.hash.startsWith("#/examples/")) {
+    if (route.waitForWorkbench) {
+      if (route.captureSelector)
+        await page.locator(route.ready).scrollIntoViewIfNeeded();
       await page
         .getByText("Live · changes run automatically")
         .waitFor({ timeout: 30_000 });
@@ -173,10 +188,14 @@ try {
           requestAnimationFrame(() => requestAnimationFrame(resolvePromise)),
         ),
     );
-    const actual = await page.screenshot({
-      fullPage: true,
-      animations: "disabled",
-    });
+    const actual = route.captureSelector
+      ? await page.locator(route.captureSelector).screenshot({
+          animations: "disabled",
+        })
+      : await page.screenshot({
+          fullPage: true,
+          animations: "disabled",
+        });
     if (route.openSearch) await page.keyboard.press("Escape");
     const baselinePath = resolve(
       workspaceRoot,
@@ -204,7 +223,7 @@ try {
     }
   }
   process.stdout.write(
-    `${update ? "Updated and inspected" : "Matched"} ${routes.length} full-page CRC studio visual baselines.\n`,
+    `${update ? "Updated and inspected" : "Matched"} ${routes.length} CRC studio visual baselines.\n`,
   );
 } catch (error) {
   if (serverOutput) process.stderr.write(serverOutput);

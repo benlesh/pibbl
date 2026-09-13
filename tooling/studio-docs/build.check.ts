@@ -609,6 +609,32 @@ assert.match(
   real.pageByRoute["#/learn/tutorials/diagram-editor"].plainText,
   /Finish and harden the editor/u,
 );
+const landing = real.pageByRoute["#/learn/tutorials/diagram-editor"];
+assert.match(landing.html, /finished-editor\.png/u);
+assert.deepEqual(
+  landing.internalLinks
+    .filter(({ href }) => href.includes("/diagram-editor/"))
+    .map(({ href }) => href),
+  [
+    "#/learn/tutorials/diagram-editor/finished-editor",
+    "#/learn/tutorials/diagram-editor/canvas-scene",
+    "#/learn/tutorials/diagram-editor/finished-editor",
+    "#/learn/tutorials/diagram-editor/canvas-scene",
+    "#/learn/tutorials/diagram-editor/first-node",
+    "#/learn/tutorials/diagram-editor/connect-nodes",
+    "#/learn/tutorials/diagram-editor/reusable-node",
+    "#/learn/tutorials/diagram-editor/editor-chrome",
+    "#/learn/tutorials/diagram-editor/selection",
+    "#/learn/tutorials/diagram-editor/dragging",
+    "#/learn/tutorials/diagram-editor/pan-and-zoom",
+    "#/learn/tutorials/diagram-editor/viewport-and-layer",
+    "#/learn/tutorials/diagram-editor/filters",
+    "#/learn/tutorials/diagram-editor/keyboard-interaction",
+    "#/learn/tutorials/diagram-editor/finished-editor",
+  ],
+);
+assert.doesNotMatch(landing.plainText, /forthcoming|not published yet/u);
+assert.equal(landing.frontmatter.exampleSlug, undefined);
 assert.match(
   real.pageByRoute["#/learn/guides/components-props-and-children"].plainText,
   /Style and draw/u,
