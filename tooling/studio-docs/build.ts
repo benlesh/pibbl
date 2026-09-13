@@ -10,7 +10,7 @@ import {
   type PublicApiInventory,
 } from "./api-exports";
 import { parsePublicMarkdown } from "./markdown";
-import type { LoadedPublicDoc } from "./model";
+import type { LoadedPublicDoc, TutorialPageRelationship } from "./model";
 
 const legacyRelativeAlias = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 const legacyHashRoute =
@@ -78,7 +78,7 @@ export interface StudioDocumentationSearchInput {
 /** Browser rendering needs generated HTML and anchors, never search-only text. */
 export type StudioDocumentationBrowserPage = Pick<
   StudioDocumentationPage,
-  "frontmatter" | "route" | "html" | "headings"
+  "frontmatter" | "route" | "html" | "headings" | "tutorialRelationship"
 >;
 
 export interface StudioDocumentationBrowserBuild {
@@ -114,7 +114,7 @@ export async function buildStudioDocumentation(
     repositoryRoot,
     docsDirectory,
   );
-  const pages = await Promise.all(
+  let pages: readonly StudioDocumentationPage[] = await Promise.all(
     sourcePaths.map(async (sourcePath) => {
       const source = await readFile(
         resolve(repositoryRoot, sourcePath),
@@ -139,7 +139,7 @@ export async function buildStudioDocumentation(
     examples,
     options.examples !== undefined,
   );
-  validateTutorialOrder(pages);
+  pages = deriveTutorialRelationships(pages);
   if (options.examples !== undefined)
     validateExampleReferences(pages, examples);
 
@@ -175,11 +175,12 @@ export function toStudioDocumentationBrowserBuild(
   documentation: StudioDocumentationBuild,
 ): StudioDocumentationBrowserBuild {
   const pages = documentation.pages.map(
-    ({ frontmatter, route, html, headings }) => ({
+    ({ frontmatter, route, html, headings, tutorialRelationship }) => ({
       frontmatter,
       route,
       html,
       headings,
+      ...(tutorialRelationship === undefined ? {} : { tutorialRelationship }),
     }),
   );
   return {
@@ -382,9 +383,9 @@ function splitInternalLink(href: string): { route: string; anchor?: string } {
   };
 }
 
-function validateTutorialOrder(
+function deriveTutorialRelationships(
   pages: readonly StudioDocumentationPage[],
-): void {
+): readonly StudioDocumentationPage[] {
   const rootsByTutorial = new Map<string, StudioDocumentationPage[]>();
   const chaptersByTutorial = new Map<string, StudioDocumentationPage[]>();
   for (const page of pages) {
@@ -411,6 +412,7 @@ function validateTutorialOrder(
     chaptersByTutorial.set(frontmatter.tutorial, chapters);
   }
 
+  const relationships = new Map<string, TutorialPageRelationship>();
   for (const [tutorial, chapters] of chaptersByTutorial) {
     const roots = rootsByTutorial.get(tutorial) ?? [];
     if (roots.length !== 1) {
@@ -427,7 +429,40 @@ function validateTutorialOrder(
         `Tutorial "${tutorial}" chapter order must be unique and contiguous from 1.`,
       );
     }
+    const root = roots[0]!;
+    const orderedChapters = [...chapters].sort(
+      (left, right) => left.frontmatter.order! - right.frontmatter.order!,
+    );
+    for (const [index, chapter] of orderedChapters.entries()) {
+      relationships.set(chapter.route, {
+        rootRoute: root.route,
+        chapter: index + 1,
+        chapterCount: orderedChapters.length,
+        previous:
+          index === 0
+            ? { route: root.route, title: root.frontmatter.title }
+            : {
+                route: orderedChapters[index - 1]!.route,
+                title: orderedChapters[index - 1]!.frontmatter.title,
+              },
+        ...(orderedChapters[index + 1] === undefined
+          ? {}
+          : {
+              next: {
+                route: orderedChapters[index + 1]!.route,
+                title: orderedChapters[index + 1]!.frontmatter.title,
+              },
+            }),
+      });
+    }
   }
+
+  return pages.map((page) => {
+    const tutorialRelationship = relationships.get(page.route);
+    return tutorialRelationship === undefined
+      ? page
+      : { ...page, tutorialRelationship };
+  });
 }
 
 function normalizeExamples(

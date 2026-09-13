@@ -54,6 +54,33 @@ const fixtureDocument: LoadedPublicDoc = {
   internalLinks: [],
 };
 
+const tutorialDocument: LoadedPublicDoc = {
+  ...fixtureDocument,
+  frontmatter: {
+    ...fixtureDocument.frontmatter,
+    id: "tutorial-diagram-editor-reusable-node",
+    title: "Extract a reusable node component",
+    kind: "tutorial",
+    slug: "reusable-node",
+    tutorial: "diagram-editor",
+    order: 2,
+  },
+  route: "#/learn/tutorials/diagram-editor/reusable-node",
+  tutorialRelationship: {
+    rootRoute: "#/learn/tutorials/diagram-editor",
+    chapter: 2,
+    chapterCount: 3,
+    previous: {
+      route: "#/learn/tutorials/diagram-editor/first-node",
+      title: "Draw the first node",
+    },
+    next: {
+      route: "#/learn/tutorials/diagram-editor/selection",
+      title: "Extract a reusable node component",
+    },
+  },
+};
+
 afterEach(() => {
   document.body.replaceChildren();
   window.location.hash = "";
@@ -62,6 +89,86 @@ afterEach(() => {
 });
 
 describe("Markdown documentation pages", () => {
+  it("renders tutorial chapter pagination after the workbench", async () => {
+    const container = document.createElement("main");
+    document.body.appendChild(container);
+    let finishMount: (() => void) | undefined;
+
+    const rendering = renderMarkdownPage({
+      document: tutorialDocument,
+      container,
+      focus: false,
+      mountExample: () =>
+        new Promise((resolve) => {
+          finishMount = () => resolve({ dispose: () => undefined });
+        }),
+    });
+
+    expect(
+      [...container.querySelector("article")!.children].map(
+        (element) => element.className,
+      ),
+    ).toEqual([
+      "documentation-breadcrumb",
+      "documentation-header",
+      "documentation-body",
+      "documentation-workbench lesson-workbench-loading",
+      "tutorial-pagination",
+    ]);
+    expect(
+      container
+        .getElementsByClassName("tutorial-pagination")[0]
+        ?.getAttribute("aria-label"),
+    ).toBe("Tutorial chapters");
+    expect(
+      container.querySelector<HTMLAnchorElement>(
+        "[data-tutorial-direction='previous']",
+      )?.href,
+    ).toContain("#/learn/tutorials/diagram-editor/first-node");
+    expect(
+      container.querySelector<HTMLAnchorElement>(
+        "[data-tutorial-direction='next']",
+      )?.textContent,
+    ).toContain("Next: Extract a reusable node component");
+
+    finishMount!();
+    await rendering;
+  });
+
+  it("returns terminal chapters to their tutorial overview", async () => {
+    const container = document.createElement("main");
+    document.body.appendChild(container);
+    const terminalDocument: LoadedPublicDoc = {
+      ...tutorialDocument,
+      tutorialRelationship: {
+        ...tutorialDocument.tutorialRelationship!,
+        chapter: 3,
+        previous: {
+          route: "#/learn/tutorials/diagram-editor/selection",
+          title: "Select nodes",
+        },
+        next: undefined,
+      },
+    };
+
+    await renderMarkdownPage({
+      document: terminalDocument,
+      container,
+      focus: false,
+      mountExample: () => ({ dispose: () => undefined }),
+    });
+
+    expect(
+      container.querySelector<HTMLAnchorElement>(
+        "[data-tutorial-direction='next']",
+      )?.href,
+    ).toContain("#/learn/tutorials/diagram-editor");
+    expect(
+      container.querySelector("[data-tutorial-direction='next']")
+        ?.textContent,
+    ).toContain("Back to the tutorial overview");
+  });
+
   it("renders generated Markdown safely with semantic route context", async () => {
     const container = document.createElement("main");
     document.body.appendChild(container);

@@ -362,6 +362,37 @@ order: ${String(order)}
     tutorialChapter("advanced-animation", "publish", 2),
   );
   const multipleTutorials = await buildStudioDocumentation(fixtureOptions);
+  const timeline =
+    multipleTutorials.pageByRoute[
+      "#/learn/tutorials/advanced-animation/timeline"
+    ];
+  const publish =
+    multipleTutorials.pageByRoute[
+      "#/learn/tutorials/advanced-animation/publish"
+    ];
+  assert.deepEqual(timeline.tutorialRelationship, {
+    rootRoute: "#/learn/tutorials/advanced-animation",
+    chapter: 1,
+    chapterCount: 2,
+    previous: {
+      route: "#/learn/tutorials/advanced-animation",
+      title: "Animate a scene",
+    },
+    next: {
+      route: "#/learn/tutorials/advanced-animation/publish",
+      title: "publish",
+    },
+  });
+  assert.deepEqual(publish.tutorialRelationship?.previous, {
+    route: "#/learn/tutorials/advanced-animation/timeline",
+    title: "timeline",
+  });
+  assert.equal(publish.tutorialRelationship?.next, undefined);
+  assert.equal(
+    multipleTutorials.pageByRoute["#/learn/tutorials/advanced-animation"]
+      .tutorialRelationship,
+    undefined,
+  );
   assert.deepEqual(
     multipleTutorials.pages
       .filter(({ frontmatter }) => frontmatter.kind === "tutorial")
