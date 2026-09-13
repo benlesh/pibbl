@@ -2,6 +2,7 @@ import {
   Absolute,
   Clip,
   crc,
+  crcEventListener,
   crcEventTarget,
   crcLayoutBox,
   crcRectPath,
@@ -496,55 +497,64 @@ function Workspace({
   }>): CRCNode {
   const box = crcLayoutBox();
   return (
-    <Clip
-      style={{ d: createWorkspaceClip(), width: 960, height: 512 }}
-      onWheel={onWheel}
-    >
-      <Rectangle
-        keyboardFocusable={false}
-        onClick={() => onSelect(null)}
-        onPointerDown={panDown}
-        onPointerMove={panMove}
-        onPointerUp={panUp}
-        onPointerCancel={finish}
-        onLostPointerCapture={finish}
-        style={{
-          width: box.width,
-          height: box.height,
-          fill: "#eef2e8",
-          cursor: "grab",
-        }}
-      />
-      <Group
-        style={{
-          translateX: view.panX / view.zoom,
-          translateY: view.panY / view.zoom,
-          scaleX: view.zoom,
-          scaleY: view.zoom,
-        }}
-      >
-        <Layer style={{ width: 1400, height: 900 }}>
-          <Path
-            pointerEvents="none"
-            style={{ d: createGridPath(), fill: "#c8d2c6" }}
-          />
-        </Layer>
-        {EDGES.map((edge) => (
-          <Connection key={edge.id} edge={edge} nodes={nodes} />
-        ))}
-        {nodes.map((node) => (
-          <NodeCard
-            key={node.id}
-            node={node}
-            selected={node.id === selected}
-            dragActive={node.id === draggingNodeId}
-            handlers={handlers}
-            onSelect={() => onSelect(node.id)}
-          />
-        ))}
-      </Group>
-    </Clip>
+    <WheelScope onWheel={onWheel}>
+      <Clip style={{ d: createWorkspaceClip(), width: 960, height: 512 }}>
+        <Rectangle
+          keyboardFocusable={false}
+          onClick={() => onSelect(null)}
+          onPointerDown={panDown}
+          onPointerMove={panMove}
+          onPointerUp={panUp}
+          onPointerCancel={finish}
+          onLostPointerCapture={finish}
+          style={{
+            width: box.width,
+            height: box.height,
+            fill: "#eef2e8",
+            cursor: "grab",
+          }}
+        />
+        <Group
+          style={{
+            translateX: view.panX / view.zoom,
+            translateY: view.panY / view.zoom,
+            scaleX: view.zoom,
+            scaleY: view.zoom,
+          }}
+        >
+          <Layer style={{ width: 1400, height: 900 }}>
+            <Path
+              pointerEvents="none"
+              style={{ d: createGridPath(), fill: "#c8d2c6" }}
+            />
+          </Layer>
+          {EDGES.map((edge) => (
+            <Connection key={edge.id} edge={edge} nodes={nodes} />
+          ))}
+          {nodes.map((node) => (
+            <NodeCard
+              key={node.id}
+              node={node}
+              selected={node.id === selected}
+              dragActive={node.id === draggingNodeId}
+              handlers={handlers}
+              onSelect={() => onSelect(node.id)}
+            />
+          ))}
+        </Group>
+      </Clip>
+    </WheelScope>
   );
+}
+function WheelScope({
+  onWheel,
+  children,
+}: Readonly<{
+  onWheel: (event: CRCWheelEvent) => void;
+  children: CRCNode;
+}>): CRCNode {
+  crcEventListener({ onWheel });
+  return children;
 }
 function Status({
   style: _style,

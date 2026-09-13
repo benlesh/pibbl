@@ -2,6 +2,7 @@ import {
   Absolute,
   Clip,
   crc,
+  crcEventListener,
   crcLayoutBox,
   crcRef,
   crcState,
@@ -363,43 +364,52 @@ function Workspace({
     />
   ));
   return (
-    <Clip
-      style={{ d: getWorkspaceClip(), width: 960, height: 512 }}
-      onWheel={onWheel}
-    >
-      <Rectangle
-        onClick={onClearSelection}
-        onPointerDown={onWorkspacePointerDown}
-        onPointerMove={onWorkspacePointerMove}
-        onPointerUp={onWorkspacePointerUp}
-        onPointerCancel={onWorkspacePointerCancel}
-        onLostPointerCapture={onWorkspaceLostPointerCapture}
-        style={{
-          width: box.width,
-          height: box.height,
-          fill: "#eef2e8",
-          cursor: "grab",
-        }}
-      />
-      <Group
-        style={{
-          translateX: view.panX / view.zoom,
-          translateY: view.panY / view.zoom,
-          scaleX: view.zoom,
-          scaleY: view.zoom,
-        }}
-      >
-        <Layer style={{ width: 1400, height: 900 }}>
-          <Path
-            pointerEvents="none"
-            style={{ d: getGridDots(), fill: "#c8d2c6" }}
-          />
-        </Layer>
-        {connections}
-        {cards}
-      </Group>
-    </Clip>
+    <WheelScope onWheel={onWheel}>
+      <Clip style={{ d: getWorkspaceClip(), width: 960, height: 512 }}>
+        <Rectangle
+          onClick={onClearSelection}
+          onPointerDown={onWorkspacePointerDown}
+          onPointerMove={onWorkspacePointerMove}
+          onPointerUp={onWorkspacePointerUp}
+          onPointerCancel={onWorkspacePointerCancel}
+          onLostPointerCapture={onWorkspaceLostPointerCapture}
+          style={{
+            width: box.width,
+            height: box.height,
+            fill: "#eef2e8",
+            cursor: "grab",
+          }}
+        />
+        <Group
+          style={{
+            translateX: view.panX / view.zoom,
+            translateY: view.panY / view.zoom,
+            scaleX: view.zoom,
+            scaleY: view.zoom,
+          }}
+        >
+          <Layer style={{ width: 1400, height: 900 }}>
+            <Path
+              pointerEvents="none"
+              style={{ d: getGridDots(), fill: "#c8d2c6" }}
+            />
+          </Layer>
+          {connections}
+          {cards}
+        </Group>
+      </Clip>
+    </WheelScope>
   );
+}
+function WheelScope({
+  onWheel,
+  children,
+}: Readonly<{
+  onWheel: (event: CRCWheelEvent) => void;
+  children: CRCNode;
+}>): CRCNode {
+  crcEventListener({ onWheel });
+  return children;
 }
 function StatusBar({
   style: _style,
