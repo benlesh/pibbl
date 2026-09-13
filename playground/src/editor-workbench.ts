@@ -1,4 +1,4 @@
-import type { LearningExampleCatalogEntry } from "@crc/scenarios";
+import type { WorkbenchSourceMetadata } from "@crc/scenarios";
 import * as monaco from "monaco-editor/editor/editor.api";
 import "monaco-editor/editor/browser/coreCommands";
 import "monaco-editor/editor/contrib/bracketMatching/browser/bracketMatching";
@@ -70,7 +70,7 @@ interface EmitOutput {
 
 interface WorkbenchOptions {
   container: HTMLElement;
-  entry: LearningExampleCatalogEntry;
+  entry: WorkbenchSourceMetadata;
   canonicalSource: string;
   initialSource: string;
   sourceIssue?: string;

@@ -2,7 +2,15 @@ import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
-import type { StudioDocumentationExampleInput } from "./build";
+import type {
+  StudioDocumentationExampleInput,
+  StudioDocumentationWorkbenchInput,
+} from "./build";
+
+export interface StudioLearningCatalogs {
+  readonly examples: readonly StudioDocumentationExampleInput[];
+  readonly workbenchSources: readonly StudioDocumentationWorkbenchInput[];
+}
 
 /**
  * Reads the learning catalog in a short-lived TypeScript-aware Node process.
@@ -10,16 +18,21 @@ import type { StudioDocumentationExampleInput } from "./build";
  * while loading this plugin, before the application's automatic JSX runtime is
  * configured. The serialized data is the manifest's supported catalog shape.
  */
-export function loadStudioLearningExamples(
+export function loadStudioLearningCatalogs(
   repositoryRoot: string,
-): readonly StudioDocumentationExampleInput[] {
+): StudioLearningCatalogs {
   const catalogUrl = pathToFileURL(
     join(repositoryRoot, "packages/scenarios/src/learning-catalog.ts"),
   ).href;
+  const tutorialCatalogUrl = pathToFileURL(
+    join(repositoryRoot, "packages/scenarios/src/tutorial-catalog.ts"),
+  ).href;
   const program = [
     `import { learningExampleCatalog } from ${JSON.stringify(catalogUrl)};`,
+    `import { tutorialSnapshotCatalog } from ${JSON.stringify(tutorialCatalogUrl)};`,
     "const examples = learningExampleCatalog.map(({ slug, title, shortTitle, section, browseGroup, summary, api, objectives, apiNotes, source }) => ({ slug, title, shortTitle, section, browseGroup, summary, api, objectives, apiNotes, source: { path: source.path } }));",
-    "process.stdout.write(JSON.stringify(examples));",
+    "const workbenchSources = [...learningExampleCatalog, ...tutorialSnapshotCatalog].map(({ slug, source }) => ({ slug, source: { path: source.path } }));",
+    "process.stdout.write(JSON.stringify({ examples, workbenchSources }));",
   ].join("\n");
   const result = spawnSync(
     process.execPath,
@@ -31,5 +44,5 @@ export function loadStudioLearningExamples(
       `Could not load the learning example catalog for Studio documentation:\n${result.stderr}`,
     );
   }
-  return JSON.parse(result.stdout) as StudioDocumentationExampleInput[];
+  return JSON.parse(result.stdout) as StudioLearningCatalogs;
 }

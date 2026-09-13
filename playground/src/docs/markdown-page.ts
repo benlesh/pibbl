@@ -1,7 +1,7 @@
-import { getLearningExampleBySlug } from "@crc/scenarios";
+import { getWorkbenchEntryBySlug } from "@crc/scenarios";
 
 import type { Disposable } from "../app/page-lifecycle";
-import { loadLearningSource } from "../learning-sources";
+import { loadWorkbenchSource } from "../learning-sources";
 import { readSharedCode } from "../share-code";
 import type { LoadedPublicDoc } from "../../../tooling/studio-docs/model";
 
@@ -168,13 +168,13 @@ async function mountLearningWorkbench(
     return disposable;
   }
 
-  const entry = getLearningExampleBySlug(slug);
+  const entry = getWorkbenchEntryBySlug(slug);
   if (!entry) {
     container.textContent =
-      "This page references an unavailable learning example.";
+      "This page references an unavailable workbench source.";
     return undefined;
   }
-  const source = await loadLearningSource(entry);
+  const source = await loadWorkbenchSource(entry);
   const shared = readSharedCode(window.location.hash, source);
   container.replaceChildren();
   container.classList.remove("lesson-workbench-loading");

@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import MiniSearch from "minisearch";
 import { resolve } from "node:path";
+import {
+  learningExampleCatalog,
+  tutorialSnapshotCatalog,
+} from "@crc/scenarios";
 
 import { buildStudioDocumentation } from "./build";
 import {
@@ -208,6 +212,8 @@ for (const [query, options] of [
 
 const realDocumentation = await buildStudioDocumentation({
   repositoryRoot: resolve(import.meta.dirname, "../.."),
+  examples: learningExampleCatalog,
+  workbenchSources: [...learningExampleCatalog, ...tutorialSnapshotCatalog],
 });
 const realBundle = buildSearchBundle({
   pages: realDocumentation.pages,

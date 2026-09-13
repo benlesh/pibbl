@@ -84,6 +84,13 @@ export {
   validateLearningExampleCatalog,
 } from './learning-catalog';
 export {
+  getTutorialSnapshotBySlug,
+  getWorkbenchEntryBySlug,
+  loadTutorialSnapshot,
+  tutorialSnapshotCatalog,
+  validateTutorialSnapshotCatalog,
+} from './tutorial-catalog';
+export {
   CLEANUP_IMAGE_SOURCES,
 } from './cleanup-stress.example';
 export type {
@@ -222,4 +229,9 @@ export type {
   LearningRelationships,
   LearningSection,
   LearningSectionId,
+  WorkbenchSourceMetadata,
 } from './learning-types';
+export type {
+  TutorialSnapshotCatalogEntry,
+  TutorialSnapshotMetadata,
+} from './tutorial-types';

@@ -49,6 +49,11 @@ export interface StudioDocumentationExampleInput {
   };
 }
 
+export interface StudioDocumentationWorkbenchInput {
+  readonly slug: string;
+  readonly source: { readonly path: string };
+}
+
 export interface SerializedApiCoverage {
   readonly values: Readonly<Record<string, ApiCoverageDestination>>;
   readonly types: Readonly<Record<string, ApiCoverageDestination>>;
@@ -95,6 +100,7 @@ export interface StudioDocumentationBuildOptions {
   readonly docsDirectory?: string;
   readonly apiInventory?: PublicApiInventory;
   readonly examples?: readonly StudioDocumentationExampleInput[];
+  readonly workbenchSources?: readonly StudioDocumentationWorkbenchInput[];
 }
 
 /**
@@ -140,8 +146,10 @@ export async function buildStudioDocumentation(
     options.examples !== undefined,
   );
   pages = deriveTutorialRelationships(pages);
-  if (options.examples !== undefined)
-    validateExampleReferences(pages, examples);
+  validateExampleReferences(
+    pages,
+    validateWorkbenchSources(options.workbenchSources ?? options.examples ?? []),
+  );
 
   const inventory =
     options.apiInventory ??
@@ -502,17 +510,31 @@ function normalizeExamples(
 
 function validateExampleReferences(
   pages: readonly StudioDocumentationPage[],
-  examples: readonly StudioDocumentationExample[],
+  workbenchSources: readonly StudioDocumentationWorkbenchInput[],
 ): void {
-  const exampleSlugs = new Set(examples.map(({ slug }) => slug));
+  const workbenchSlugs = new Set(workbenchSources.map(({ slug }) => slug));
   for (const page of pages) {
     const slug = page.frontmatter.exampleSlug;
-    if (slug !== undefined && !exampleSlugs.has(slug)) {
+    if (slug !== undefined && !workbenchSlugs.has(slug)) {
       throw new Error(
-        `${page.sourcePath}: Unknown learning example "${slug}" referenced by exampleSlug.`,
+        `${page.sourcePath}: Unknown workbench source "${slug}" referenced by exampleSlug.`,
       );
     }
   }
+}
+
+function validateWorkbenchSources(
+  sources: readonly StudioDocumentationWorkbenchInput[],
+): readonly StudioDocumentationWorkbenchInput[] {
+  assertUnique(
+    sources.map(({ slug }) => slug),
+    "workbench source slug",
+  );
+  assertUnique(
+    sources.map(({ source }) => source.path),
+    "workbench source path",
+  );
+  return sources;
 }
 
 function validateRelatedTypeLinks(

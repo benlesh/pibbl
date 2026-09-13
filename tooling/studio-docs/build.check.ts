@@ -3,10 +3,16 @@ import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
-import { learningExampleCatalog } from "@crc/scenarios";
+import {
+  learningExampleCatalog,
+  tutorialSnapshotCatalog,
+} from "@crc/scenarios";
 import { buildNavigation } from "../../playground/src/app/navigation";
 import { collectPublicExports, crcPublicEntryPaths } from "./api-exports";
-import { buildStudioDocumentation } from "./build";
+import {
+  buildStudioDocumentation,
+  toStudioDocumentationSearchInput,
+} from "./build";
 import { crcStudioDocs, studioDocumentationBuildOptions } from "./vite-plugin";
 
 const fixtureRoot = await mkdtemp(join(tmpdir(), "crc-studio-docs-build-"));
@@ -130,7 +136,7 @@ apiCategory: overview
   );
   await assert.rejects(
     () => buildStudioDocumentation(fixtureOptions),
-    /Unknown learning example/u,
+    /Unknown workbench source/u,
   );
 
   await writeFixture("docs/site/learn/guides/first-scene.md", guide);
@@ -416,6 +422,32 @@ order: ${String(order)}
     ],
     "Navigation must retain each tutorial root while hiding chapters beneath it.",
   );
+  await writeFixture(
+    "docs/site/learn/tutorials/diagram-editor/first.md",
+    tutorialChapter("diagram-editor", "first", 1).replace(
+      "order: 1",
+      "order: 1\nexampleSlug: tutorial-only",
+    ),
+  );
+  const tutorialWorkbench = await buildStudioDocumentation({
+    ...fixtureOptions,
+    workbenchSources: [
+      {
+        slug: "tutorial-only",
+        source: { path: "fixtures/tutorial-only.example.tsx" },
+      },
+    ],
+  });
+  assert.deepEqual(
+    tutorialWorkbench.examples,
+    [],
+    "Tutorial workbench sources must not become public Examples.",
+  );
+  assert.deepEqual(
+    toStudioDocumentationSearchInput(tutorialWorkbench).examples,
+    [],
+    "Tutorial workbench sources must not create independent search records.",
+  );
   await rm(
     join(fixtureRoot, "docs/site/learn/tutorials/advanced-animation/index.md"),
   );
@@ -448,6 +480,7 @@ const real = await buildStudioDocumentation({
   repositoryRoot: resolve(import.meta.dirname, "../.."),
   apiInventory: await collectPublicExports(crcPublicEntryPaths, {}),
   examples: learningExampleCatalog,
+  workbenchSources: [...learningExampleCatalog, ...tutorialSnapshotCatalog],
 });
 
 assert.deepEqual(
