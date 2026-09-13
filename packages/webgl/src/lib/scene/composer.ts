@@ -6,6 +6,7 @@ import type {
   WebGLMeshSubmission,
   WebGLSceneComposer,
 } from './types.js';
+import type { ResolvedWebGLCamera } from '../math/camera.js';
 
 interface MutableComposer extends WebGLSceneComposer {
   readonly modelStack: Float32Array[];
@@ -19,6 +20,22 @@ const requireOpen = (composer: WebGLSceneComposer): MutableComposer => {
   if (value.state !== 'open') throw new Error('WebGL scene composer is already closed.');
   return value;
 };
+
+const snapshotCamera = (camera: ResolvedWebGLCamera): ResolvedWebGLCamera => Object.freeze({
+  descriptor: Object.freeze({
+    ...camera.descriptor,
+    position: Object.freeze([...camera.descriptor.position]) as ResolvedWebGLCamera['descriptor']['position'],
+    lookAt: Object.freeze([...camera.descriptor.lookAt]) as ResolvedWebGLCamera['descriptor']['lookAt'],
+    up: Object.freeze([...camera.descriptor.up]) as ResolvedWebGLCamera['descriptor']['up'],
+  }),
+  aspect: camera.aspect,
+  viewMatrix: new Float32Array(camera.viewMatrix),
+  projectionMatrix: new Float32Array(camera.projectionMatrix),
+  projectionViewMatrix: new Float32Array(camera.projectionViewMatrix),
+  inverseProjectionViewMatrix: new Float32Array(camera.inverseProjectionViewMatrix),
+  viewport: Object.freeze({ ...camera.viewport }),
+  generationValues: Object.freeze([...camera.generationValues]),
+});
 
 export function createWebGLSceneComposer(
   input: CreateWebGLSceneComposerInput,
@@ -39,7 +56,7 @@ export function createWebGLSceneComposer(
   setIdentityMatrix4(identity);
   return {
     contextGeneration: input.contextGeneration,
-    camera: input.camera,
+    camera: snapshotCamera(input.camera),
     logicalViewport,
     backingViewport,
     density,

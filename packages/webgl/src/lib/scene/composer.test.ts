@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { CRCBackendFrameInput } from '@crc/core/internal';
+import type { ResolvedWebGLCamera } from '../math/camera.js';
 import { createWebGLGeometry } from '../geometry/geometry.js';
 import { resolveCamera } from '../math/camera.js';
 import { closeWebGLSceneComposer, createWebGLSceneComposer, discardWebGLSceneComposer, pushWebGLModelMatrix, submitWebGLMesh } from './composer.js';
@@ -31,6 +32,24 @@ describe('CPU-only WebGL scene composer', () => {
     expect(Object.isFrozen(draft)).toBe(true);
     expect(Object.isFrozen(draft.meshes)).toBe(true);
     expect(Object.isFrozen(draft.meshes[0])).toBe(true);
+  });
+
+  test('owns caller inputs and never invokes an ignored GL-like value', () => {
+    const mutableFrame = { ...frame };
+    const camera = resolveCamera(undefined, 100, 50);
+    const fakeGl = new Proxy({}, { get: () => () => { throw new Error('GL must not be called'); } });
+    const scene = createWebGLSceneComposer({ frame: mutableFrame, camera, contextGeneration: 4, gl: fakeGl } as unknown as { frame: CRCBackendFrameInput; camera: ResolvedWebGLCamera; contextGeneration: number });
+    const color = [0.2, 0.3, 0.4, 0.5] as [number, number, number, number];
+    submitWebGLMesh(scene, { componentName: 'Mesh', geometry, localModel: identity(), color });
+    mutableFrame.logicalWidth = 999;
+    mutableFrame.renderTimestamp = 999;
+    camera.projectionMatrix[0] = 999;
+    color[0] = 999;
+    const draft = closeWebGLSceneComposer(scene);
+    expect(draft.logicalViewport).toEqual({ width: 100, height: 50 });
+    expect(draft.timestamp).toBe(123.5);
+    expect(draft.camera.projectionMatrix[0]).not.toBe(999);
+    expect(draft.meshes[0]!.color).toEqual([0.2, 0.3, 0.4, 0.5]);
   });
 
   test('composes nested model scopes and requires LIFO release', () => {
