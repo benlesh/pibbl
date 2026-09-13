@@ -489,6 +489,23 @@ const firstNode =
   real.pageByRoute["#/learn/tutorials/diagram-editor/first-node"];
 assert.ok(canvasScene, "Missing Chapter 1 diagram-editor tutorial route.");
 assert.ok(firstNode, "Missing Chapter 2 diagram-editor tutorial route.");
+const tutorialChapterHeadings = [
+  "What you will make",
+  "How it works",
+  "Build the change",
+  "Predict and try",
+  "Check your result",
+  "What you learned",
+];
+for (const chapter of [canvasScene, firstNode]) {
+  assert.deepEqual(
+    chapter.headings
+      .filter(({ level }) => level === 2)
+      .map(({ text }) => text),
+    tutorialChapterHeadings,
+    `${chapter.sourcePath} must use the standard tutorial chapter sequence.`,
+  );
+}
 assert.equal(canvasScene.frontmatter.order, 1);
 assert.equal(firstNode.frontmatter.order, 2);
 assert.equal(
