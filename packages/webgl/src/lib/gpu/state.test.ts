@@ -8,6 +8,8 @@ import type { CRCWebGLTransformStyle } from '../types.js';
 import {
   beginWebGLFrame,
   createWebGLStateBaseline,
+  installOpaqueWebGLPass,
+  installTransparentWebGLPass,
   installWebGLStateBaseline,
 } from './state.js';
 
@@ -142,6 +144,46 @@ describe('WebGL state baseline', () => {
     executeBackendCRC(mounted.mount, root, 22);
     expect(recording.getParameterCalls).toBe(2);
     mounted.dispose();
+  });
+
+  it('installs the opaque pass with blending off and less-equal depth writes on', () => {
+    const recording = createRecordingGL();
+    mutateEveryState(recording.gl);
+
+    installOpaqueWebGLPass(recording.gl);
+
+    expect(recording.snapshot()).toMatchObject({
+      [`cap:${recording.gl.BLEND}`]: false,
+      [`cap:${recording.gl.DEPTH_TEST}`]: true,
+      colorMask: [true, true, true, true],
+      depthMask: true,
+      depthFunc: recording.gl.LEQUAL,
+      depthRange: [0, 1],
+    });
+  });
+
+  it('installs standard source-alpha blending with depth testing on and writes off', () => {
+    const recording = createRecordingGL();
+    mutateEveryState(recording.gl);
+
+    installTransparentWebGLPass(recording.gl);
+
+    expect(recording.snapshot()).toMatchObject({
+      [`cap:${recording.gl.BLEND}`]: true,
+      [`cap:${recording.gl.DEPTH_TEST}`]: true,
+      colorMask: [true, true, true, true],
+      blendColor: [0, 0, 0, 0],
+      blendEquationSeparate: [recording.gl.FUNC_ADD, recording.gl.FUNC_ADD],
+      blendFuncSeparate: [
+        recording.gl.SRC_ALPHA,
+        recording.gl.ONE_MINUS_SRC_ALPHA,
+        recording.gl.ONE,
+        recording.gl.ONE_MINUS_SRC_ALPHA,
+      ],
+      depthMask: false,
+      depthFunc: recording.gl.LEQUAL,
+      depthRange: [0, 1],
+    });
   });
 });
 

@@ -126,3 +126,31 @@ export function beginWebGLFrame(
   installWebGLStateBaseline(gl, width, height, baseline);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 }
+
+/** Installs the fixed state dependencies for opaque settled-scene draws. */
+export function installOpaqueWebGLPass(gl: WebGL2RenderingContext): void {
+  gl.colorMask(true, true, true, true);
+  gl.disable(gl.BLEND);
+  gl.enable(gl.DEPTH_TEST);
+  gl.depthMask(true);
+  gl.depthFunc(gl.LEQUAL);
+  gl.depthRange(0, 1);
+}
+
+/** Installs standard source-alpha blending without transparent depth writes. */
+export function installTransparentWebGLPass(gl: WebGL2RenderingContext): void {
+  gl.colorMask(true, true, true, true);
+  gl.enable(gl.BLEND);
+  gl.blendColor(0, 0, 0, 0);
+  gl.blendEquationSeparate(gl.FUNC_ADD, gl.FUNC_ADD);
+  gl.blendFuncSeparate(
+    gl.SRC_ALPHA,
+    gl.ONE_MINUS_SRC_ALPHA,
+    gl.ONE,
+    gl.ONE_MINUS_SRC_ALPHA,
+  );
+  gl.enable(gl.DEPTH_TEST);
+  gl.depthMask(false);
+  gl.depthFunc(gl.LEQUAL);
+  gl.depthRange(0, 1);
+}
