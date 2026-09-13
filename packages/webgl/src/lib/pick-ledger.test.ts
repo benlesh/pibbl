@@ -23,6 +23,7 @@ import {
   createWebGLPickLedger,
   recordCustomWebGLPick,
   recordGeometryWebGLPick,
+  releaseWebGLPickParticipation,
   type CRCWebGLPickRecord,
 } from './pick-ledger.js';
 
@@ -450,6 +451,9 @@ describe('WebGL pick ledger', () => {
     expect(entries.every(
       entry => entry.target.paintEntry === undefined,
     )).toBe(true);
+    releaseWebGLPickParticipation([...entries, entries[0]!]);
+    releaseWebGLPickParticipation(entries);
+    expect(entries.every(entry => entry.target.live === false)).toBe(true);
   });
 });
 

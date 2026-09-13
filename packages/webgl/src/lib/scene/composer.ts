@@ -103,7 +103,8 @@ export function submitWebGLMesh(
     color: Object.freeze([...input.color]) as unknown as WebGLMeshSubmission['color'],
     sourceIndex: value.nextSourceIndex++,
     target: input.target,
-    keyboardNavigationBounds: input.keyboardNavigationBounds,
+    keyboardNavigationBounds: input.keyboardNavigationBounds === undefined ?
+      undefined : Object.freeze({ ...input.keyboardNavigationBounds }),
   }));
 }
 

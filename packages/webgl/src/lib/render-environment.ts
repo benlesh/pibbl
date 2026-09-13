@@ -1,5 +1,4 @@
 import {
-  releaseBackendEventTarget,
   useInternalHookSlot,
 } from '@crc/core/internal';
 import type {
@@ -20,6 +19,8 @@ import {
   type CRCWebGLPickRecord,
   type MutableCRCWebGLPickLedger,
 } from './pick-ledger.js';
+
+export { releaseWebGLPickParticipation } from './pick-ledger.js';
 import {
   multiplyMatrix4,
   setIdentityMatrix4,
@@ -156,17 +157,6 @@ export function finishWebGLPrimitivePick(
   context: CRCWebGLContext,
 ): void {
   requireContextEnvironment(context).primitivePickModel = undefined;
-}
-
-/** Releases logical participation belonging only to discarded frame data. */
-export function releaseWebGLPickParticipation(
-  entries: readonly CRCWebGLPickRecord[],
-): void {
-  const targets = new Set<CRCEventTargetRegistration>();
-  for (const entry of entries) targets.add(entry.target);
-  for (const target of targets) {
-    runRelease(() => releaseBackendEventTarget(target));
-  }
 }
 
 /** Publishes the exact model used by the active built-in draw for picking. */

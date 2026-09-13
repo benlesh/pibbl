@@ -1,5 +1,6 @@
 import {
   isBackendEventTargetLive,
+  releaseBackendEventTarget,
   type CRCEventTargetRegistration,
 } from '@crc/core/internal';
 import type {
@@ -52,6 +53,7 @@ export interface CRCWebGLGeometryPickRecord {
   readonly target: CRCEventTargetRegistration;
   readonly geometry: CRCWebGLGeometry;
   readonly model: Readonly<Float32Array>;
+  readonly camera: CRCWebGLCameraSnapshot | undefined;
   readonly keyboardNavigationBounds:
     CRCEventTargetRegistration['keyboardNavigationBounds'];
   readonly keyboardNavigationPoints:
@@ -157,6 +159,7 @@ export function recordGeometryWebGLPick(
     target: input.target,
     geometry: input.geometry,
     model,
+    camera: input.camera === undefined ? undefined : snapshotWebGLPickCamera(input.camera),
     keyboardNavigationBounds,
     keyboardNavigationPoints,
     sourceOrder: input.sourceOrder,
@@ -240,6 +243,15 @@ export function applyWebGLFocusMetadata(
     firstApplied ??= entry.target;
   }
   return firstApplied;
+}
+
+/** Releases unique frame-local target participation; safe to repeat. */
+export function releaseWebGLPickParticipation(
+  entries: readonly CRCWebGLPickRecord[],
+): void {
+  const targets = new Set<CRCEventTargetRegistration>();
+  for (const entry of entries) targets.add(entry.target);
+  for (const target of targets) runRelease(() => releaseBackendEventTarget(target));
 }
 
 function snapshotNavigationBounds(
@@ -508,6 +520,18 @@ function assertViewportDimension(value: number, field: string): void {
     throw new RangeError(
       `WebGL pick ledger ${field} must be finite and positive.`,
     );
+  }
+}
+
+function runRelease(release: () => void): void {
+  try {
+    release();
+  } catch (error) {
+    try {
+      globalThis.reportError(error);
+    } catch {
+      // Reporting cannot suppress release of later frame-owned targets.
+    }
   }
 }
 
