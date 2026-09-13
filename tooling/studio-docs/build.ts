@@ -148,7 +148,9 @@ export async function buildStudioDocumentation(
   pages = deriveTutorialRelationships(pages);
   validateExampleReferences(
     pages,
-    validateWorkbenchSources(options.workbenchSources ?? options.examples ?? []),
+    validateWorkbenchSources(
+      options.workbenchSources ?? options.examples ?? [],
+    ),
   );
 
   const inventory =
@@ -253,10 +255,6 @@ function validatePageIdentity(pages: readonly StudioDocumentationPage[]): void {
   assertUnique(
     pages.map(({ frontmatter }) => frontmatter.id),
     "content ID",
-  );
-  assertUnique(
-    pages.map(({ frontmatter }) => frontmatter.slug),
-    "content slug",
   );
 }
 

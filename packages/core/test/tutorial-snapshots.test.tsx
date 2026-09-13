@@ -159,8 +159,7 @@ async function renderTutorialSnapshot(slug: string): Promise<{
         pathStartPaints.push({ x: point.x, y: point.y, frame });
       }
       stroke(path);
-    }
-    else stroke();
+    } else stroke();
   };
 
   const textPaints: TextPaint[] = [];
@@ -268,6 +267,16 @@ it("keeps tutorial and ordinary learning slugs in one workbench namespace", () =
       chapter: 8,
       slug: "diagram-editor-pan-and-zoom",
       path: "packages/scenarios/src/tutorials/diagram-editor/08-pan-and-zoom.example.tsx",
+    },
+    {
+      chapter: 9,
+      slug: "diagram-editor-viewport-and-layer",
+      path: "packages/scenarios/src/tutorials/diagram-editor/09-viewport-and-layer.example.tsx",
+    },
+    {
+      chapter: 10,
+      slug: "diagram-editor-filters",
+      path: "packages/scenarios/src/tutorials/diagram-editor/10-filters.example.tsx",
     },
   ]);
   expect(getWorkbenchEntryBySlug(learningExampleCatalog[0]!.slug)).toBe(
@@ -480,7 +489,9 @@ function latestTitlePosition(
 
 function latestStatus(paints: readonly TextPaint[]): string {
   const paint = paints
-    .filter(({ text }) => text.startsWith("SELECTED") || text === "NO SELECTION")
+    .filter(
+      ({ text }) => text.startsWith("SELECTED") || text === "NO SELECTION",
+    )
     .at(-1);
   if (!paint) throw new Error("Missing status paint.");
   return paint.text;
@@ -521,9 +532,10 @@ it("keeps a captured Chapter 7 node drag active outside its original body", asyn
     y: before.IDEA.y + 172,
   });
   for (const title of ["SKETCH", "BUILD", "SHIP"] as const) {
-    expect(latestTitlePosition(snapshot.textPaints, title)).toMatchObject(
-      { x: before[title].x, y: before[title].y },
-    );
+    expect(latestTitlePosition(snapshot.textPaints, title)).toMatchObject({
+      x: before[title].x,
+      y: before[title].y,
+    });
   }
   expect(snapshot.pathStartPaints.at(-4)).toMatchObject({
     x: connectorStart!.x + 184,
@@ -568,9 +580,13 @@ it("clears a Chapter 7 node drag after cancellation or capture loss", async () =
   snapshot.canvas.remove();
   const captureLoss = await renderTutorialSnapshot("diagram-editor-dragging");
   let lostPointerId: number | undefined;
-  captureLoss.canvas.addEventListener("pointerdown", (event) => {
-    lostPointerId = event.pointerId;
-  }, { capture: true, once: true });
+  captureLoss.canvas.addEventListener(
+    "pointerdown",
+    (event) => {
+      lostPointerId = event.pointerId;
+    },
+    { capture: true, once: true },
+  );
   await pointerDownLogicalPoint(captureLoss.canvas, { x: 176, y: 278 });
   await nextPaint();
   expect(captureLoss.canvas.hasPointerCapture(lostPointerId!)).toBe(true);
@@ -602,7 +618,11 @@ it("pans, pointer-zooms, clamps, and resets Chapter 8 without changing node data
       latestTitlePosition(snapshot.textPaints, title),
     ]),
   );
-  await dragPointerLogicalPoint(snapshot.canvas, { x: 176, y: 278 }, { x: 196, y: 298 });
+  await dragPointerLogicalPoint(
+    snapshot.canvas,
+    { x: 176, y: 278 },
+    { x: 196, y: 298 },
+  );
   await nextPaint();
   expect(latestTitlePosition(snapshot.textPaints, "IDEA")).toMatchObject({
     x: initial.IDEA.x + 20,
@@ -614,7 +634,11 @@ it("pans, pointer-zooms, clamps, and resets Chapter 8 without changing node data
       latestTitlePosition(snapshot.textPaints, title),
     ]),
   );
-  await dragPointerLogicalPoint(snapshot.canvas, { x: 40, y: 520 }, { x: 140, y: 470 });
+  await dragPointerLogicalPoint(
+    snapshot.canvas,
+    { x: 40, y: 520 },
+    { x: 140, y: 470 },
+  );
   await nextPaint();
   for (const title of ["IDEA", "SKETCH", "BUILD", "SHIP"] as const) {
     expect(latestTitlePosition(snapshot.textPaints, title)).toMatchObject({
@@ -659,19 +683,15 @@ it("pans, pointer-zooms, clamps, and resets Chapter 8 without changing node data
     (initial.SKETCH.x - initial.BUILD.x);
   const afterPan = {
     x: afterZoom.SKETCH.x - initial.SKETCH.x * zoom,
-    y:
-      afterZoom.SKETCH.y -
-      56 -
-      (initial.SKETCH.y - 56) * zoom,
+    y: afterZoom.SKETCH.y - 56 - (initial.SKETCH.y - 56) * zoom,
   };
   const afterAnchor = {
     x: (480 - afterPan.x) / zoom,
     y: (300 - 56 - afterPan.y) / zoom,
   };
-  expect(Math.hypot(
-    afterAnchor.x - beforeAnchor.x,
-    afterAnchor.y - beforeAnchor.y,
-  )).toBeLessThanOrEqual(0.5);
+  expect(
+    Math.hypot(afterAnchor.x - beforeAnchor.x, afterAnchor.y - beforeAnchor.y),
+  ).toBeLessThanOrEqual(0.5);
 
   for (let index = 0; index < 20; index += 1) {
     await wheelLogicalPoint(snapshot.canvas, { x: 480, y: 300 }, -160);
@@ -692,4 +712,89 @@ it("pans, pointer-zooms, clamps, and resets Chapter 8 without changing node data
     x: initial.IDEA.x + 20,
     y: initial.IDEA.y + 20,
   });
+});
+
+it("clips Chapter 9 transformed content while reusing its stable grid layer", async () => {
+  const offscreenPrototype = OffscreenCanvasRenderingContext2D.prototype;
+  const fill = offscreenPrototype.fill;
+  let offscreenFills = 0;
+  offscreenPrototype.fill = function (...args) {
+    offscreenFills += 1;
+    fill.apply(this, args);
+  };
+  try {
+    const snapshot = await renderTutorialSnapshot(
+      "diagram-editor-viewport-and-layer",
+    );
+    const initialIdea = latestTitlePosition(snapshot.textPaints, "IDEA");
+    const initialGridFills = offscreenFills;
+
+    await dragPointerLogicalPoint(
+      snapshot.canvas,
+      { x: 300, y: 510 },
+      { x: 380, y: 470 },
+    );
+    await nextPaint();
+    await nextPaint();
+    expect(offscreenFills).toBe(initialGridFills);
+    expect(latestTitlePosition(snapshot.textPaints, "IDEA")).toMatchObject({
+      x: initialIdea.x + 80,
+      y: initialIdea.y - 40,
+    });
+
+    await dragPointerLogicalPoint(
+      snapshot.canvas,
+      { x: 300, y: 510 },
+      { x: 300, y: 270 },
+    );
+    await nextPaint();
+    await clickLogicalPoint(snapshot.canvas, { x: 200, y: 30 });
+    await nextPaint();
+    expect(latestStatus(snapshot.textPaints)).toBe("SELECTED · SKETCH");
+
+    await clickLogicalPoint(snapshot.canvas, { x: 878, y: 28 });
+    await nextPaint();
+    await clickLogicalPoint(snapshot.canvas, { x: 176, y: 278 });
+    await nextPaint();
+    expect(latestStatus(snapshot.textPaints)).toBe("SELECTED · IDEA");
+  } finally {
+    offscreenPrototype.fill = fill;
+  }
+});
+
+it("filters only the selected Chapter 10 card without enlarging its hit geometry", async () => {
+  const offscreenPrototype = OffscreenCanvasRenderingContext2D.prototype;
+  const drawImage = offscreenPrototype.drawImage;
+  let offscreenCompositions = 0;
+  offscreenPrototype.drawImage = function (...args) {
+    offscreenCompositions += 1;
+    drawImage.apply(this, args);
+  };
+  try {
+    const snapshot = await renderTutorialSnapshot("diagram-editor-filters");
+    expect(offscreenCompositions).toBeGreaterThan(0);
+
+    await clickLogicalPoint(snapshot.canvas, { x: 300, y: 510 });
+    await nextPaint();
+    const directPathCompositions = offscreenCompositions;
+    expect(latestStatus(snapshot.textPaints)).toBe("NO SELECTION");
+
+    await clickLogicalPoint(snapshot.canvas, { x: 176, y: 278 });
+    await nextPaint();
+    expect(latestStatus(snapshot.textPaints)).toBe("SELECTED · IDEA");
+    expect(offscreenCompositions).toBeGreaterThan(directPathCompositions);
+
+    await clickLogicalPoint(snapshot.canvas, { x: 268, y: 278 });
+    await nextPaint();
+    expect(latestStatus(snapshot.textPaints)).toBe("NO SELECTION");
+
+    await clickLogicalPoint(snapshot.canvas, { x: 410, y: 190 });
+    await nextPaint();
+    expect(latestStatus(snapshot.textPaints)).toBe("SELECTED · SKETCH");
+    await clickLogicalPoint(snapshot.canvas, { x: 268, y: 278 });
+    await nextPaint();
+    expect(latestStatus(snapshot.textPaints)).toBe("NO SELECTION");
+  } finally {
+    offscreenPrototype.drawImage = drawImage;
+  }
 });

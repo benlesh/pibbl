@@ -149,6 +149,31 @@ const drafts = [
     },
     load: () => import("./tutorials/diagram-editor/08-pan-and-zoom.example"),
   },
+  {
+    slug: "diagram-editor-viewport-and-layer",
+    tutorial: "diagram-editor",
+    chapter: 9,
+    title: "Constrain the viewport",
+    authoring: "jsx",
+    canvas: { width: 960, height: 600 },
+    source: {
+      path: "packages/scenarios/src/tutorials/diagram-editor/09-viewport-and-layer.example.tsx",
+    },
+    load: () =>
+      import("./tutorials/diagram-editor/09-viewport-and-layer.example"),
+  },
+  {
+    slug: "diagram-editor-filters",
+    tutorial: "diagram-editor",
+    chapter: 10,
+    title: "Polish selection with filters",
+    authoring: "jsx",
+    canvas: { width: 960, height: 600 },
+    source: {
+      path: "packages/scenarios/src/tutorials/diagram-editor/10-filters.example.tsx",
+    },
+    load: () => import("./tutorials/diagram-editor/10-filters.example"),
+  },
 ] satisfies readonly TutorialSnapshotCatalogEntry[];
 
 export const tutorialSnapshotCatalog = validateTutorialSnapshotCatalog(drafts);
