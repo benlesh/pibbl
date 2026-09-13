@@ -73,7 +73,6 @@ interface WebGLLayerGeneration {
   readonly retainedTree: LayerNodeSnapshot;
   readonly focusRevision: number | undefined;
   readonly contextGeneration: number;
-  readonly ownedResourceGeneration: number;
 }
 
 /** Resolves one upright WebGL surface using core's managed-layer rounding. */
@@ -234,9 +233,7 @@ export class WebGLLayerController {
           committed.focusRevision === currentFocusRevision(
             committed.pickLedger,
           ) &&
-          committed.contextGeneration === this.contextGenerationValue &&
-          committed.ownedResourceGeneration ===
-            this.driver.ownedResourceGeneration;
+          committed.contextGeneration === this.contextGenerationValue;
         this.cacheInvalidated = true;
         this.renderedTree = undefined;
         this.restorationTree = undefined;
@@ -252,9 +249,7 @@ export class WebGLLayerController {
           ) &&
           haveSameCamera(this.currentCamera, nextCamera) &&
           haveSameSurface(this.currentSurface, surface) &&
-          completedFrame.contextGeneration === this.contextGenerationValue &&
-          completedFrame.ownedResourceGeneration ===
-            this.driver.ownedResourceGeneration
+          completedFrame.contextGeneration === this.contextGenerationValue
         ) {
           this.publishCompletedFrame(root, surface, completedFrame, epoch);
           return;
@@ -270,9 +265,7 @@ export class WebGLLayerController {
         !haveSameCamera(committed.camera, nextCamera) ||
         !haveSameSurface(committed.surface, surface) ||
         committed.focusRevision !== focusRevision ||
-        committed.contextGeneration !== this.contextGenerationValue ||
-        committed.ownedResourceGeneration !==
-          this.driver.ownedResourceGeneration;
+        committed.contextGeneration !== this.contextGenerationValue;
       if (!shouldRender) return;
 
       if (!haveSameSurface(this.currentSurface, surface)) {
@@ -554,7 +547,6 @@ export class WebGLLayerController {
         retainedTree,
         focusRevision: currentFocusRevision(pickLedger),
         contextGeneration: completedFrame.contextGeneration,
-        ownedResourceGeneration: completedFrame.ownedResourceGeneration,
       });
       this.requireCurrentOperation('render', epoch);
       this.renderedTree = retainedTree;

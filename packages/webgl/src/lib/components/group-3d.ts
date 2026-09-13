@@ -11,8 +11,8 @@ import {
 import { WEBGL_BACKEND_TOKEN } from '../backend.js';
 import {
   pushWebGLModelMatrix,
-  type WebGLRenderEnvironment,
-} from '../render-environment.js';
+} from '../scene/composer.js';
+import type { WebGLSceneComposer } from '../scene/types.js';
 import { composeModelMatrix4 } from '../math/matrix4.js';
 import type { CRCWebGLTransformStyle } from '../types.js';
 
@@ -26,14 +26,14 @@ function renderGroup3D(
   props: Readonly<Group3DProps>,
   style: Readonly<Group3DStyle>,
 ): CRCNode {
-  const environment = getBackendEnvironment<WebGLRenderEnvironment>(
+  const composer = getBackendEnvironment<WebGLSceneComposer>(
     WEBGL_BACKEND_TOKEN,
   );
   // Validate before acquiring listener or model-stack ownership.
   const localModel = new Float32Array(16);
   composeModelMatrix4(localModel, style);
   crcEventListener(props);
-  const popModel = pushWebGLModelMatrix(environment, localModel);
+  const popModel = pushWebGLModelMatrix(composer, localModel);
   try {
     setCurrentComponentAfterRender(popModel);
   } catch (error) {
@@ -49,5 +49,5 @@ export const Group3D = defineBackendPrimitive<
   Group3DStyle,
   Group3DStyle,
   Group3DStyle,
-  WebGLRenderEnvironment
+  WebGLSceneComposer
 >(WEBGL_BACKEND_TOKEN, renderGroup3D);

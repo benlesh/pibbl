@@ -4,13 +4,15 @@ import {
   type CRCController,
 } from '@crc/core';
 import {
+  defineBackendPrimitive,
   useInternalHookSlot,
   type CRCEventTargetRegistration,
 } from '@crc/core/internal';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { defineWebGLPrimitive } from './define-webgl-primitive.js';
+import { Mesh } from './components/mesh.js';
+import { WEBGL_BACKEND_TOKEN } from './backend.js';
 import { createWebGLGeometry } from './geometry/geometry.js';
-import type { CRCWebGLTransformStyle } from './types.js';
+import type { WebGLSceneComposer } from './scene/types.js';
 import {
   WebGLLayerController,
   resolveWebGLLayerSurface,
@@ -68,10 +70,10 @@ describe('WebGLLayerController surface and capabilities', () => {
   ] as const)('rejects %s before child execution', (_label, install, message) => {
     install();
     const childRender = vi.fn();
-    const Child = defineWebGLPrimitive<{}, {}>(function renderCapabilityChild() {
+    const Child = defineTestPrimitive(function renderCapabilityChild() {
       childRender();
-    }, { hit: { kind: 'none' } });
-    const root = createElement(Child, { pointerEvents: 'none' });
+    });
+    const root = createElement(Child, {});
     const parentCanvas = mountParent();
 
     expect(() => new WebGLLayerController(
@@ -125,10 +127,10 @@ describe('WebGLLayerController surface and capabilities', () => {
       }),
     });
     const childRender = vi.fn();
-    const Child = defineWebGLPrimitive<{}, {}>(function renderClampedChild() {
+    const Child = defineTestPrimitive(function renderClampedChild() {
       childRender();
-    }, { hit: { kind: 'none' } });
-    const root = createElement(Child, { pointerEvents: 'none' });
+    });
+    const root = createElement(Child, {});
 
     expect(() => new WebGLLayerController(
       mountParent(),
@@ -150,7 +152,7 @@ describe('WebGLLayerController surface and capabilities', () => {
       density: Readonly<{ x: number; y: number }>;
     }> = [];
     const cleanup = vi.fn();
-    const Probe = defineWebGLPrimitive<{}, {}>(function renderResizeProbe(
+    const Probe = defineTestPrimitive(function renderResizeProbe(
       _props,
       _style,
       context,
@@ -160,14 +162,14 @@ describe('WebGLLayerController surface and capabilities', () => {
         backing: context.backingViewport,
         density: context.density,
       });
-    }, { hit: { kind: 'none' } });
+    });
     function Stateful(_props: {}) {
       const identity = useInternalHookSlot('resize-identity', teardowns => {
         teardowns.add(cleanup);
         return {};
       });
       identities.push(identity.value);
-      return createElement(Probe, { pointerEvents: 'none' });
+      return createElement(Probe, {});
     }
     const root = createElement(Stateful, { key: 'stable' });
     const initial = resolveWebGLLayerSurface(10, 8, { x: 1, y: 1 });
@@ -223,10 +225,10 @@ describe('WebGLLayerController surface and capabilities', () => {
     });
     const parentCanvas = mountParent();
     const childRender = vi.fn();
-    const Child = defineWebGLPrimitive<{}, {}>(function renderResizeClampChild() {
+    const Child = defineTestPrimitive(function renderResizeClampChild() {
       childRender();
-    }, { hit: { kind: 'none' } });
-    const root = createElement(Child, { pointerEvents: 'none' });
+    });
+    const root = createElement(Child, {});
     const initial = resolveWebGLLayerSurface(10, 8, { x: 1, y: 1 });
     const resized = resolveWebGLLayerSurface(12, 6, { x: 2, y: 3 });
     const controller = new WebGLLayerController(
@@ -271,17 +273,16 @@ describe('WebGLLayerController bitmap transaction', () => {
       positions: [-1, -1, 0, 1, -1, 0, 0, 1, 0],
     });
     const failure = new Error('interactive child failed');
-    const Target = defineWebGLPrimitive<{
-      readonly failure?: Error;
-    }, CRCWebGLTransformStyle>(function renderTransactionalFocusTarget(props) {
-      if (props.failure) throw props.failure;
-    }, {
-      hit: { kind: 'geometry', geometry: () => geometry },
+    const Throwing = defineTestPrimitive<{
+      readonly failure: Error;
+    }>(function renderTransactionalFocusFailure(props) {
+      throw props.failure;
     });
-    const scene = (translateX: number, childFailure?: Error) =>
-      createElement(Target, {
+    const scene = (translateX: number, childFailure?: Error) => childFailure ?
+      createElement(Throwing, { key: 'stable', failure: childFailure }) :
+      createElement(Mesh, {
         key: 'stable',
-        failure: childFailure,
+        geometry,
         onClick: () => undefined,
         style: { translateX },
       });
@@ -343,11 +344,9 @@ describe('WebGLLayerController bitmap transaction', () => {
     const geometry = createWebGLGeometry({
       positions: [-1, -1, 0, 1, -1, 0, 0, 1, 0],
     });
-    const Target = defineWebGLPrimitive<{}, {}>(function renderExplicitTarget() {}, {
-      hit: { kind: 'geometry', geometry: () => geometry },
-    });
     const bounds = { x: 2, y: 3, width: 4, height: 5 };
-    const root = createElement(Target, {
+    const root = createElement(Mesh, {
+      geometry,
       keyboardNavigationBounds: bounds,
       onClick: () => undefined,
     });
@@ -392,7 +391,8 @@ describe('WebGLLayerController bitmap transaction', () => {
     });
 
     platform.throwTransfer = new Error('later transfer failed');
-    const changed = createElement(Target, {
+    const changed = createElement(Mesh, {
+      geometry,
       keyboardNavigationBounds: { x: 20, y: 30, width: 40, height: 50 },
       onClick: () => undefined,
     });
@@ -415,10 +415,10 @@ describe('WebGLLayerController bitmap transaction', () => {
     const geometry = createWebGLGeometry({
       positions: [-1, -1, 0, 1, -1, 0, 0, 1, 0],
     });
-    const Target = defineWebGLPrimitive<{}, {}>(function renderFocusTarget() {}, {
-      hit: { kind: 'geometry', geometry: () => geometry },
+    const root = createElement(Mesh, {
+      geometry,
+      onClick: () => undefined,
     });
-    const root = createElement(Target, { onClick: () => undefined });
     const controller = new WebGLLayerController(
       mountParent(),
       root,
@@ -485,10 +485,10 @@ describe('WebGLLayerController bitmap transaction', () => {
       onTransfer: () => calls.push('transfer-to-image-bitmap'),
     });
     const parentCanvas = mountParent();
-    const Child = defineWebGLPrimitive<{}, {}>(function renderTransactionChild() {
+    const Child = defineTestPrimitive(function renderTransactionChild() {
       calls.push('child-render');
-    }, { hit: { kind: 'none' } });
-    const root = createElement(Child, { pointerEvents: 'none' });
+    });
+    const root = createElement(Child, {});
     controller = new WebGLLayerController(
       parentCanvas,
       root,
@@ -519,19 +519,53 @@ describe('WebGLLayerController bitmap transaction', () => {
     controller.dispose();
   });
 
+  it('keeps each transferred bitmap paired with the exact settled pick generation', () => {
+    const first = bitmap('first');
+    const second = bitmap('second');
+    installRecordingPlatform({ transfers: [first, second] });
+    const geometry = createWebGLGeometry({
+      positions: [-1, -1, 0, 1, -1, 0, 0, 1, 0],
+    });
+    const scene = (translateX: number) => createElement(Mesh, {
+      geometry,
+      onClick: () => undefined,
+      style: { translateX },
+    });
+    const surface = resolveWebGLLayerSurface(10, 8, { x: 1, y: 1 });
+    const controller = new WebGLLayerController(
+      mountParent(),
+      scene(1),
+      undefined,
+      surface,
+    );
+    const context = { drawImage() {} } as unknown as CanvasRenderingContext2D;
+
+    controller.renderUpdatedChild(scene(1), undefined, surface, 1);
+    expectGenerationPair(controller, 'pending', 1, first, 1);
+    controller.composite(context, { x: 0, y: 0, width: 10, height: 8 });
+    expectGenerationPair(controller, 'committed', 1, first, 1);
+
+    controller.renderUpdatedChild(scene(2), undefined, surface, 2);
+    expectGenerationPair(controller, 'pending', 2, second, 2);
+    expectGenerationPair(controller, 'committed', 1, first, 1);
+    controller.composite(context, { x: 0, y: 0, width: 10, height: 8 });
+    expectGenerationPair(controller, 'committed', 2, second, 2);
+    expect(first.close).toHaveBeenCalledOnce();
+
+    controller.dispose();
+  });
+
   it('keeps the prior committed pair through child and transfer failures', () => {
     const stable = bitmap('stable');
     const platform = installRecordingPlatform({ transfers: [stable] });
     const parentCanvas = mountParent();
-    const Good = defineWebGLPrimitive<{}, {}>(function renderGood() {}, {
-      hit: { kind: 'none' },
-    });
+    const Good = defineTestPrimitive(function renderGood() {});
     const failure = new Error('child render failed');
-    const Bad = defineWebGLPrimitive<{}, {}>(function renderBad() {
+    const Bad = defineTestPrimitive(function renderBad() {
       throw failure;
-    }, { hit: { kind: 'none' } });
+    });
     const surface = resolveWebGLLayerSurface(10, 8, { x: 1, y: 1 });
-    const goodRoot = createElement(Good, { pointerEvents: 'none' });
+    const goodRoot = createElement(Good, {});
     const controller = new WebGLLayerController(
       parentCanvas,
       goodRoot,
@@ -543,7 +577,7 @@ describe('WebGLLayerController bitmap transaction', () => {
     controller.composite(context, { x: 0, y: 0, width: 10, height: 8 });
 
     expect(() => controller.renderUpdatedChild(
-      createElement(Bad, { pointerEvents: 'none' }),
+      createElement(Bad, {}),
       undefined,
       surface,
       2,
@@ -576,10 +610,8 @@ describe('WebGLLayerController bitmap transaction', () => {
     const candidate = bitmap('candidate');
     installRecordingPlatform({ transfers: [stable, candidate] });
     const parentCanvas = mountParent();
-    const Child = defineWebGLPrimitive<{}, {}>(function renderDrawFailureChild() {}, {
-      hit: { kind: 'none' },
-    });
-    const root = createElement(Child, { pointerEvents: 'none' });
+    const Child = defineTestPrimitive(function renderDrawFailureChild() {});
+    const root = createElement(Child, {});
     const surface = resolveWebGLLayerSurface(10, 8, { x: 1, y: 1 });
     const controller = new WebGLLayerController(
       parentCanvas,
@@ -619,10 +651,10 @@ describe('WebGLLayerController bitmap transaction', () => {
     const platform = installRecordingPlatform({ transfers: [candidate] });
     const parentCanvas = mountParent();
     let controller: WebGLLayerController;
-    const Child = defineWebGLPrimitive<{}, {}>(function renderDisposingChild() {
+    const Child = defineTestPrimitive(function renderDisposingChild() {
       controller.dispose();
-    }, { hit: { kind: 'none' } });
-    const root = createElement(Child, { pointerEvents: 'none' });
+    });
+    const root = createElement(Child, {});
     const surface = resolveWebGLLayerSurface(10, 8, { x: 1, y: 1 });
     controller = new WebGLLayerController(
       parentCanvas,
@@ -653,10 +685,8 @@ describe('WebGLLayerController bitmap transaction', () => {
       onTransfer: () => controller.dispose(),
     });
     const parentCanvas = mountParent();
-    const Child = defineWebGLPrimitive<{}, {}>(function renderTransferChild() {}, {
-      hit: { kind: 'none' },
-    });
-    const root = createElement(Child, { pointerEvents: 'none' });
+    const Child = defineTestPrimitive(function renderTransferChild() {});
+    const root = createElement(Child, {});
     const surface = resolveWebGLLayerSurface(10, 8, { x: 1, y: 1 });
     controller = new WebGLLayerController(
       parentCanvas,
@@ -683,10 +713,8 @@ describe('WebGLLayerController bitmap transaction', () => {
     const candidate = bitmap('disposed-during-draw');
     installRecordingPlatform({ transfers: [candidate] });
     const parentCanvas = mountParent();
-    const Child = defineWebGLPrimitive<{}, {}>(function renderDrawDisposeChild() {}, {
-      hit: { kind: 'none' },
-    });
-    const root = createElement(Child, { pointerEvents: 'none' });
+    const Child = defineTestPrimitive(function renderDrawDisposeChild() {});
+    const root = createElement(Child, {});
     const surface = resolveWebGLLayerSurface(10, 8, { x: 1, y: 1 });
     const controller = new WebGLLayerController(
       parentCanvas,
@@ -717,10 +745,8 @@ describe('WebGLLayerController bitmap transaction', () => {
     const candidate = bitmap('reentrant-draw');
     const platform = installRecordingPlatform({ transfers: [candidate] });
     const parentCanvas = mountParent();
-    const Child = defineWebGLPrimitive<{}, {}>(function renderReentrantChild() {}, {
-      hit: { kind: 'none' },
-    });
-    const root = createElement(Child, { pointerEvents: 'none' });
+    const Child = defineTestPrimitive(function renderReentrantChild() {});
+    const root = createElement(Child, {});
     const surface = resolveWebGLLayerSurface(10, 8, { x: 1, y: 1 });
     const controller = new WebGLLayerController(
       parentCanvas,
@@ -757,6 +783,48 @@ function expectNoOwnedGenerations(controller: WebGLLayerController): void {
   expect(ownership.pending).toBeUndefined();
   expect(ownership.committed).toBeUndefined();
   expect(controller.committedGeneration).toBeUndefined();
+}
+
+function expectGenerationPair(
+  controller: WebGLLayerController,
+  owner: 'pending' | 'committed',
+  number: number,
+  expectedBitmap: ImageBitmap,
+  expectedTranslateX: number,
+): void {
+  const state = controller as unknown as Record<
+    'pending' | 'committed',
+    {
+      readonly number: number;
+      readonly bitmap: ImageBitmap;
+      readonly pickLedger: {
+        readonly entries: ReadonlyArray<{
+          readonly model: Readonly<Float32Array>;
+        }>;
+      };
+    } | undefined
+  >;
+  const generation = state[owner];
+  expect(generation?.number).toBe(number);
+  expect(generation?.bitmap).toBe(expectedBitmap);
+  expect(generation?.pickLedger.entries).toHaveLength(1);
+  expect(generation?.pickLedger.entries[0]!.model[12]).toBeCloseTo(
+    expectedTranslateX,
+    6,
+  );
+}
+
+function defineTestPrimitive<P = Record<string, never>>(
+  program: (
+    props: Readonly<P>,
+    style: Readonly<{}>,
+    environment: WebGLSceneComposer,
+  ) => CRCNode | void,
+) {
+  return defineBackendPrimitive<P, {}, {}, {}, WebGLSceneComposer>(
+    WEBGL_BACKEND_TOKEN,
+    program,
+  );
 }
 
 function pendingTarget(
@@ -896,6 +964,7 @@ function createNoopGL(
   attributes: { alpha: boolean; depth: boolean } = { alpha: true, depth: true },
 ): WebGL2RenderingContext {
   let constant = 1;
+  let handle = 0;
   return new Proxy({}, {
     get(target, property) {
       if (typeof property !== 'string') return undefined;
@@ -914,7 +983,20 @@ function createNoopGL(
               preserveDrawingBuffer: false,
               stencil: false,
               xrCompatible: false,
-            }) : () => undefined;
+            }) :
+              property === 'getShaderParameter' ||
+              property === 'getProgramParameter' ? () => true :
+                property === 'getShaderInfoLog' ||
+                property === 'getProgramInfoLog' ? () => '' :
+                  property === 'getUniformLocation' ?
+                    (_program: object, name: string) => ({ name }) :
+                    property === 'createShader' ||
+                    property === 'createProgram' ||
+                    property === 'createVertexArray' ||
+                    property === 'createBuffer' ?
+                      () => ({ kind: property, id: ++handle }) :
+                      property === 'isContextLost' ? () => false :
+                        () => undefined;
       }
       return record[property];
     },

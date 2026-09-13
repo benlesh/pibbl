@@ -1,14 +1,16 @@
-import { defineWebGLPrimitive } from '../define-webgl-primitive.js';
 import {
-  getWebGLGPUResources,
-  setWebGLPrimitivePickModel,
-} from '../render-environment.js';
+  defineBackendPrimitive,
+  getBackendEnvironment,
+  getCurrentElementSource,
+  useBackendEventTarget,
+} from '@crc/core/internal';
+import { WEBGL_BACKEND_TOKEN } from '../backend.js';
 import {
   composeModelMatrix4,
-  multiplyMatrix4,
 } from '../math/matrix4.js';
+import { submitWebGLMesh } from '../scene/composer.js';
+import type { WebGLSceneComposer, WebGLRGBA } from '../scene/types.js';
 import type {
-  CRCWebGLContext,
   CRCWebGLGeometry,
   CRCWebGLTargetProps,
   CRCWebGLTransformStyle,
@@ -102,91 +104,59 @@ let colorParser: CanvasRenderingContext2D | undefined;
 function renderMesh(
   props: Readonly<MeshProps>,
   style: Readonly<MeshStyle>,
-  context: CRCWebGLContext,
 ): void {
-  drawBuiltInMesh('Mesh', props.geometry, style, context, 1);
+  submitBuiltInMesh('Mesh', props, props.geometry, style, 1);
 }
 
-/** Draws one built-in geometry through the shared unlit pipeline. */
-export function drawBuiltInMesh(
+/** Submits one built-in geometry to the current frame's CPU-only composer. */
+export function submitBuiltInMesh(
   componentName: string,
+  props: Readonly<CRCWebGLTargetProps>,
   geometry: CRCWebGLGeometry,
   style: Readonly<MeshStyle>,
-  context: CRCWebGLContext,
   uniformScale: number,
 ): void {
+  const composer = getBackendEnvironment<WebGLSceneComposer>(
+    WEBGL_BACKEND_TOKEN,
+  );
   const opacity = resolveOpacity(componentName, style.opacity);
   const color = parseConcreteColor(componentName, style.color ?? '#ffffff');
   const localModel = new Float32Array(16);
   composeModelMatrix4(localModel, scaledStyle(style, uniformScale));
-  const model = new Float32Array(16);
-  multiplyMatrix4(model, context.modelMatrix, localModel);
-  setWebGLPrimitivePickModel(context, model);
-
-  const cache = getWebGLGPUResources(context);
-  const program = context.resources.use(
-    () => cache.acquireProgram(componentName),
-    (lease, releaseContext) => lease.release(releaseContext.contextLost),
-    [cache],
-  ).value;
-  const uploaded = context.resources.use(
-    () => cache.acquireGeometry(geometry, componentName),
-    (lease, releaseContext) => lease.release(releaseContext.contextLost),
-    [cache, geometry],
-  ).value;
-  const { gl } = context;
-
-  installBuiltInDrawState(gl, context);
-  gl.useProgram(program.program);
-  gl.bindVertexArray(uploaded.vertexArray);
-  gl.bindBuffer(gl.ARRAY_BUFFER, uploaded.positionBuffer);
-  gl.enableVertexAttribArray(program.positionAttribute);
-  gl.vertexAttribPointer(
-    program.positionAttribute,
-    3,
-    gl.FLOAT,
-    false,
-    0,
-    0,
+  const target = useBackendEventTarget(
+    props,
+    {
+      cursor: style.cursor,
+      deferKeyboardNavigationGeometry: true,
+      keyboardFocusable: props.keyboardFocusable,
+    },
+    props.pointerEvents === 'none' ? 'none' : 'auto',
   );
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, uploaded.indexBuffer ?? null);
-  gl.uniformMatrix4fv(program.model, false, model);
-  gl.uniformMatrix4fv(
-    program.view,
-    false,
-    context.camera.viewMatrix as Float32Array,
-  );
-  gl.uniformMatrix4fv(
-    program.projection,
-    false,
-    context.camera.projectionMatrix as Float32Array,
-  );
-  gl.uniform4f(
-    program.color,
+  const finalColor = Object.freeze([
     color.red,
     color.green,
     color.blue,
     color.alpha * opacity,
-  );
-  if (uploaded.indexCount !== undefined) {
-    gl.drawElements(
-      gl.TRIANGLES,
-      uploaded.indexCount,
-      gl.UNSIGNED_INT,
-      0,
-    );
-  } else {
-    gl.drawArrays(gl.TRIANGLES, 0, uploaded.vertexCount);
-  }
+  ]) as WebGLRGBA;
+  submitWebGLMesh(composer, {
+    componentName,
+    source: getCurrentElementSource(),
+    geometry,
+    localModel,
+    color: finalColor,
+    target,
+    keyboardNavigationBounds: props.keyboardNavigationBounds,
+  });
 }
 
 /** Geometry capability stays present even when paint opacity resolves to zero. */
-export const Mesh = defineWebGLPrimitive<MeshProps, MeshStyle>(renderMesh, {
-  hit: {
-    kind: 'geometry',
-    geometry: props => props.geometry,
-  },
-});
+export const Mesh = defineBackendPrimitive<
+  MeshProps,
+  MeshStyle,
+  MeshStyle,
+  MeshStyle,
+  WebGLSceneComposer
+>(WEBGL_BACKEND_TOKEN, renderMesh);
 
 function scaledStyle(
   style: Readonly<MeshStyle>,
@@ -417,44 +387,4 @@ function getColorParser(componentName: string): CanvasRenderingContext2D {
   }
   colorParser = context;
   return context;
-}
-
-function installBuiltInDrawState(
-  gl: WebGL2RenderingContext,
-  context: CRCWebGLContext,
-): void {
-  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  gl.viewport(
-    0,
-    0,
-    context.backingViewport.width,
-    context.backingViewport.height,
-  );
-  gl.disable(gl.SCISSOR_TEST);
-  gl.scissor(
-    0,
-    0,
-    context.backingViewport.width,
-    context.backingViewport.height,
-  );
-  gl.colorMask(true, true, true, true);
-  gl.enable(gl.BLEND);
-  gl.blendColor(0, 0, 0, 0);
-  gl.blendEquationSeparate(gl.FUNC_ADD, gl.FUNC_ADD);
-  gl.blendFuncSeparate(
-    gl.SRC_ALPHA,
-    gl.ONE_MINUS_SRC_ALPHA,
-    gl.ONE,
-    gl.ONE_MINUS_SRC_ALPHA,
-  );
-  gl.enable(gl.DEPTH_TEST);
-  gl.depthMask(true);
-  gl.depthFunc(gl.LEQUAL);
-  gl.depthRange(0, 1);
-  gl.disable(gl.CULL_FACE);
-  gl.cullFace(gl.BACK);
-  gl.frontFace(gl.CCW);
-  gl.disable(gl.STENCIL_TEST);
-  gl.disable(gl.POLYGON_OFFSET_FILL);
-  gl.polygonOffset(0, 0);
 }
