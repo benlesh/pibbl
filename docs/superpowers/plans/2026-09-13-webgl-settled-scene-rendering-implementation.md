@@ -981,11 +981,11 @@ export interface WebGLBackendDriver extends CRCBackendDriver<WebGLSceneComposer>
 
   ```bash
   git status --short
-  git diff --check 4b2b0c5..HEAD
+  git diff --check 3b09bb5..HEAD
   rg -n "defineWebGLPrimitive|crcWebGLContext|CRCWebGLContext|WebGLResourceGenerationRegistry|ownedResourceGeneration" packages playground tooling README.md AGENTS.md docs/design docs/site docs/library-status.md
   ```
 
-  Expected: only the three known unrelated working-tree items remain unstaged; diff check is clean; current code/docs contain no forbidden API/ownership remnants.
+  Expected: only the two known unrelated working-tree items remain unstaged; diff check is clean; current code/docs contain no forbidden API/ownership remnants. The separately committed particle-effects design remains untouched and falls before this implementation diff boundary.
 
 - [ ] **Step 8: Commit final verified evidence**
 
@@ -994,7 +994,7 @@ export interface WebGLBackendDriver extends CRCBackendDriver<WebGLSceneComposer>
   git commit -m "test(webgl): record settled scene verification"
   ```
 
-  Confirm the baseline is unchanged and the unrelated `tooling/verify-docs.mjs`, `docs/strategy/particle-effects-research.md`, and `docs/superpowers/specs/2026-09-13-first-class-particle-effects-design.md` changes were never staged.
+  Confirm the baseline is unchanged; the unrelated `tooling/verify-docs.mjs` and `docs/strategy/particle-effects-research.md` changes were never staged; and the separately committed `docs/superpowers/specs/2026-09-13-first-class-particle-effects-design.md` was not modified.
 
 ## Completion Boundary
 
