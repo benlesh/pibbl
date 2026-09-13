@@ -58,6 +58,7 @@ export function createWebGLBackend(
   let contextAvailable = true;
   let disposed = false;
   const invalidContextGenerations = new Set<number>();
+  const finishedComposers = new WeakSet<WebGLSceneComposer>();
 
   return {
     token: WEBGL_BACKEND_TOKEN,
@@ -114,6 +115,10 @@ export function createWebGLBackend(
     },
     finishFrame(frame, success) {
       const composer = frame.environment;
+      if (finishedComposers.has(composer)) {
+        throw new Error('WebGL backend frame is already finished.');
+      }
+      finishedComposers.add(composer);
       completedFrame = undefined;
       if (!success) {
         failedFrameTimestamp = composer.timestamp;
@@ -201,6 +206,7 @@ export function createWebGLBackend(
             isContextLost(composer.contextGeneration),
           ));
         }
+        if (composer.state === 'open') discardWebGLSceneComposer(composer);
         if (settledPickEntries) {
           releaseWebGLPickParticipation(settledPickEntries);
         } else {

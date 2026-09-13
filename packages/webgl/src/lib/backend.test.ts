@@ -8,7 +8,10 @@ import {
 import { describe, expect, it, vi } from 'vitest';
 import { Mesh, createWebGLGeometry } from '../index.js';
 import { resolveCamera } from './math/camera.js';
-import { submitWebGLMesh } from './scene/composer.js';
+import {
+  pushWebGLModelMatrix,
+  submitWebGLMesh,
+} from './scene/composer.js';
 import { createWebGLBackend } from './backend.js';
 
 describe('deferred WebGL backend phases', () => {
@@ -109,6 +112,98 @@ describe('deferred WebGL backend phases', () => {
     expect(recording.deleteVertexArray).toHaveBeenCalledOnce();
     expect(driver.hasCompletedFrame()).toBe(false);
     expect(driver.takeFailedFrameTimestamp()).toBe(73);
+    driver.dispose();
+  });
+
+  it('discards an unbalanced composer when scene settlement fails', () => {
+    const failureTrace: string[] = [];
+    const recording = createPhaseGL(failureTrace);
+    const driver = createWebGLBackend({
+      gl: recording.gl,
+      getCamera: () => resolveCamera(undefined, 20, 10),
+      getContextGeneration: () => 11,
+    });
+    const frame = driver.beginFrame(frameInput(89))!;
+    const target = fakeTarget();
+    submitWebGLMesh(frame.environment, {
+      componentName: 'UnbalancedMesh',
+      geometry: triangle(),
+      localModel: identity(),
+      color: [1, 0, 0, 1],
+      target,
+    });
+    pushWebGLModelMatrix(frame.environment, identity());
+
+    expect(() => driver.finishFrame(frame, true)).toThrowError(
+      'Cannot close WebGL scene composer with an unbalanced model stack.',
+    );
+
+    expect(failureTrace).toEqual([]);
+    expect(frame.environment.state).toBe('closed');
+    expect(target.live).toBe(false);
+    expect(driver.hasCompletedFrame()).toBe(false);
+    expect(driver.takeFailedFrameTimestamp()).toBe(89);
+    driver.dispose();
+  });
+
+  it('rejects a second finish without clearing a successful completion', () => {
+    const trace: string[] = [];
+    const recording = createPhaseGL(trace);
+    const driver = createWebGLBackend({
+      gl: recording.gl,
+      getCamera: () => resolveCamera(undefined, 20, 10),
+      getContextGeneration: () => 13,
+    });
+    const frame = driver.beginFrame(frameInput(97))!;
+
+    driver.finishFrame(frame, true);
+    const traceAfterSuccess = trace.slice();
+
+    expect(() => driver.finishFrame(frame, false)).toThrowError(
+      'WebGL backend frame is already finished.',
+    );
+    expect(trace).toEqual(traceAfterSuccess);
+    expect(driver.hasCompletedFrame()).toBe(true);
+    expect(driver.renderedGeneration).toBe(1);
+    expect(driver.takeFailedFrameTimestamp()).toBeUndefined();
+    expect(driver.takeCompletedFrame()).toMatchObject({
+      renderedGeneration: 1,
+      contextGeneration: 13,
+    });
+    driver.dispose();
+  });
+
+  it('rejects a second finish without repeating failed-frame release', () => {
+    const trace: string[] = [];
+    const recording = createPhaseGL(trace);
+    const driver = createWebGLBackend({
+      gl: recording.gl,
+      getCamera: () => resolveCamera(undefined, 20, 10),
+      getContextGeneration: () => 17,
+    });
+    const frame = driver.beginFrame(frameInput(101))!;
+    const target = fakeTarget();
+    const deleteRegion = vi.spyOn(target.owner.regions, 'delete');
+    submitWebGLMesh(frame.environment, {
+      componentName: 'DiscardedMesh',
+      geometry: triangle(),
+      localModel: identity(),
+      color: [1, 0, 0, 1],
+      target,
+    });
+
+    driver.finishFrame(frame, false);
+
+    expect(() => driver.finishFrame(frame, false)).toThrowError(
+      'WebGL backend frame is already finished.',
+    );
+    expect(trace).toEqual([]);
+    expect(deleteRegion).toHaveBeenCalledOnce();
+    expect(frame.environment.state).toBe('closed');
+    expect(target.live).toBe(false);
+    expect(driver.hasCompletedFrame()).toBe(false);
+    expect(driver.takeFailedFrameTimestamp()).toBe(101);
+    expect(driver.takeFailedFrameTimestamp()).toBeUndefined();
     driver.dispose();
   });
 });
