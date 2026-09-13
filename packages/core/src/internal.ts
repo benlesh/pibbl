@@ -1,6 +1,8 @@
 /**
- * Unsupported, version-coupled friend API for official CRC sibling packages.
- * Applications should use the stable exports from `@crc/core` instead.
+ * @packageDocumentation
+ * Reserved for official CRC packages that are released in lockstep with
+ * `@crc/core`. This version-coupled module is not a stable third-party plugin
+ * API and intentionally does not re-export the public root module.
  */
 
 export {
@@ -60,7 +62,6 @@ import type {
 import {
   getCurrentCRCInstance,
   GLOBAL_STATE,
-  NO_PENDING_ROOT,
 } from './lib/global-state.js';
 import {
   requireHookContext,
@@ -72,10 +73,33 @@ import {
   type CRCElementSource,
 } from './lib/element/metadata.js';
 import { getSurfaceSnapshot } from './lib/surface/transform.js';
-import type { Canvas, CRCNode } from './lib/types.js';
+import type {
+  Canvas,
+  CRCComponentRefs,
+  CRCInstance,
+  CRCNode,
+} from './lib/types.js';
 import type { CRCInteractionLayer } from './lib/types.js';
 import { update } from './lib/update.js';
-import { runTeardown } from './lib/teardowns.js';
+import { queueBeginCommand } from './lib/scheduler/realm-scheduler.js';
+import type { CRCBeginCommandHandle } from './lib/scheduler/types.js';
+
+interface CurrentInstanceFrameRequestState {
+  readonly componentRefs: CRCComponentRefs<any>;
+  readonly instance: CRCInstance;
+  active: boolean;
+  handle: CRCBeginCommandHandle | undefined;
+  updateParents: boolean;
+}
+
+const frameRequestsByComponent = new WeakMap<
+  CRCComponentRefs<any>,
+  CurrentInstanceFrameRequestState
+>();
+const frameRequestsByInstance = new WeakMap<
+  CRCInstance,
+  Set<CurrentInstanceFrameRequestState>
+>();
 
 /** Reads the selected official backend's current frame environment. */
 export function getBackendEnvironment<E>(token: CRCBackendToken): E {
@@ -114,12 +138,38 @@ export function getCurrentSurfaceDensity(): Readonly<{ x: number; y: number }> {
 
 /** Requests a coalesced frame for the current private backend instance. */
 export function requestCurrentInstanceFrame(updateParents: boolean): void {
-  const { canvas } = getCurrentCRCInstance();
-  if (updateParents) {
-    update(canvas, undefined, true);
-  } else {
-    update(canvas);
+  const { componentRefs, crcInstance } = requireHookContext();
+  let state = frameRequestsByComponent.get(componentRefs);
+  if (!state) {
+    state = {
+      componentRefs,
+      instance: crcInstance,
+      active: true,
+      handle: undefined,
+      updateParents: false,
+    };
+    frameRequestsByComponent.set(componentRefs, state);
+    let instanceRequests = frameRequestsByInstance.get(crcInstance);
+    if (!instanceRequests) {
+      instanceRequests = new Set();
+      frameRequestsByInstance.set(crcInstance, instanceRequests);
+    }
+    instanceRequests.add(state);
+    componentRefs.teardowns.add(() => releaseCurrentInstanceFrameRequest(state!));
   }
+  state.updateParents ||= updateParents;
+  if (state.handle) return;
+  state.handle = queueBeginCommand(() => {
+    state!.handle = undefined;
+    const updateParentsForFrame = state!.updateParents;
+    state!.updateParents = false;
+    if (!isCurrentInstanceFrameRequestActive(state!)) return;
+    if (updateParentsForFrame) {
+      update(state!.instance.canvas, undefined, true);
+    } else {
+      update(state!.instance.canvas);
+    }
+  });
 }
 
 /** Retains one geometry-independent target for an official backend picker. */
@@ -179,12 +229,9 @@ export function releaseBackendEventTarget(
 /** Cancels work owned by one private backend mount without disposing its state. */
 export function cancelBackendMountFrame(mount: CRCBackendMount): void {
   const instance = backendMountInstance(mount);
-  const frameId = instance.animationFrameId;
-  instance.animationFrameId = undefined;
-  instance.pendingRoot = NO_PENDING_ROOT;
-  instance.pendingUpdateParents = false;
-  if (frameId !== undefined) {
-    runTeardown(() => cancelAnimationFrame(frameId));
+  mount.cancelFrame();
+  for (const request of frameRequestsByInstance.get(instance) ?? []) {
+    cancelCurrentInstanceFrameRequest(request);
   }
 }
 
@@ -193,7 +240,8 @@ export function retainBackendMountRoot(
   mount: CRCBackendMount,
   root: CRCNode,
 ): void {
-  backendMountInstance(mount).pendingRoot = root;
+  backendMountInstance(mount);
+  mount.retainRoot(root);
 }
 
 /** Registers work that runs after this component's rendered descendants. */
@@ -287,3 +335,48 @@ function backendMountInstance(mount: CRCBackendMount) {
   }
   return instance;
 }
+
+function cancelCurrentInstanceFrameRequest(
+  state: CurrentInstanceFrameRequestState,
+): void {
+  state.handle?.cancel();
+  state.handle = undefined;
+  state.updateParents = false;
+}
+
+function releaseCurrentInstanceFrameRequest(
+  state: CurrentInstanceFrameRequestState,
+): void {
+  if (!state.active) return;
+  state.active = false;
+  cancelCurrentInstanceFrameRequest(state);
+  frameRequestsByComponent.delete(state.componentRefs);
+  const instanceRequests = frameRequestsByInstance.get(state.instance);
+  instanceRequests?.delete(state);
+  if (instanceRequests?.size === 0) {
+    frameRequestsByInstance.delete(state.instance);
+  }
+}
+
+function isCurrentInstanceFrameRequestActive(
+  state: CurrentInstanceFrameRequestState,
+): boolean {
+  return state.active &&
+    !state.componentRefs.teardowns.closed &&
+    !state.instance.mainTeardowns.closed &&
+    GLOBAL_STATE.crcInstances.get(state.instance.canvas) === state.instance &&
+    state.instance.refs.get(state.componentRefs.id) === state.componentRefs;
+}
+export {
+  crcInternalCreateSignalConsumer,
+  crcInternalCurrentFrame,
+  crcInternalCurrentRenderOwner,
+  crcInternalQueueComplete,
+  crcInternalRequestRendererWork,
+} from './lib/scheduler/renderer-participant.js';
+export type {
+  CRCInternalFrame,
+  CRCInternalRendererWorkKind,
+  CRCInternalRenderOwner,
+  CRCInternalSignalConsumer,
+} from './lib/scheduler/renderer-participant.js';

@@ -124,9 +124,9 @@ corepack pnpm@11.21.0 playground
 ```
 
 Open <http://localhost:5173/#/examples>. The CRC Interactive Examples Studio
-contains 50 focused lessons: 49 use JSX and one demonstrates the complete
+contains 52 focused lessons: 51 use JSX and one demonstrates the complete
 non-JSX API. Every lesson pairs a live Canvas with editable, type-aware source.
-The separate `#/testing` area contains 17 deterministic laboratories used by
+The separate `#/testing` area contains 19 deterministic laboratories used by
 browser verification. Old `#/scenarios` URLs redirect there.
 
 To exercise built package output instead of source aliases:

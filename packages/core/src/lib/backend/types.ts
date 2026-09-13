@@ -102,6 +102,10 @@ export interface CRCBackendMount {
   resize(logicalWidth: number, logicalHeight: number): void;
   render(root: CRCNode, timestamp: number): void;
   requestFrame(updateParents: boolean): void;
+  /** @internal Cancels queued work without disposing retained backend state. */
+  cancelFrame(): void;
+  /** @internal Replaces the retained root without scheduling traversal. */
+  retainRoot(root: CRCNode): void;
   dispose(): void;
 }
 

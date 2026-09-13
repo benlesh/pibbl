@@ -35,13 +35,14 @@ describe('WebGLLayer context lifecycle', () => {
     const firstBitmap = bitmap('first');
     const restoredBitmap = bitmap('restored');
     const platform = installContextPlatform([firstBitmap, restoredBitmap]);
-    const parentCanvas = mountParent();
     const callbacks: FrameRequestCallback[] = [];
     vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
       callbacks.push(callback);
       return callbacks.length;
     });
     vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined);
+    const parentCanvas = mountParent();
+    callbacks.shift()!(0);
     const resourceCreates: number[] = [];
     const resourceReleases: Array<{
       readonly generation: number;
@@ -356,7 +357,6 @@ describe('WebGLLayer context lifecycle', () => {
   it('cancels pre-existing child animation work when the context is lost', () => {
     const first = bitmap('animated');
     const platform = installContextPlatform([first]);
-    const parentCanvas = mountParent();
     const callbacks: FrameRequestCallback[] = [];
     const request = vi.spyOn(window, 'requestAnimationFrame')
       .mockImplementation(callback => {
@@ -365,6 +365,9 @@ describe('WebGLLayer context lifecycle', () => {
       });
     const cancel = vi.spyOn(window, 'cancelAnimationFrame')
       .mockImplementation(() => undefined);
+    const parentCanvas = mountParent();
+    callbacks.shift()!(0);
+    request.mockClear();
     let renders = 0;
     const Animated = defineWebGLPrimitive<{}, {}>(function renderAnimated() {
       renders += 1;
@@ -413,13 +416,14 @@ describe('WebGLLayer context lifecycle', () => {
         );
       },
     });
-    const parentCanvas = mountParent();
     const callbacks: FrameRequestCallback[] = [];
     vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
       callbacks.push(callback);
       return callbacks.length;
     });
     vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined);
+    const parentCanvas = mountParent();
+    callbacks.shift()!(0);
     const Target = defineWebGLPrimitive<{}, {}>(function renderStateLossTarget() {
       armed = true;
     }, { hit: { kind: 'custom', resolve: () => 1 } });
@@ -474,13 +478,14 @@ describe('WebGLLayer context lifecycle', () => {
         glCalls += 1;
       },
     });
-    const parentCanvas = mountParent();
     const callbacks: FrameRequestCallback[] = [];
     vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
       callbacks.push(callback);
       return callbacks.length;
     });
     vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined);
+    const parentCanvas = mountParent();
+    callbacks.shift()!(0);
     let setValue: ((value: number | ((old: number) => number)) => void) |
       undefined;
     let traversals = 0;
@@ -570,13 +575,14 @@ describe('WebGLLayer context lifecycle', () => {
     const initial = bitmap('parent-initial');
     const restored = bitmap('parent-restored');
     const platform = installContextPlatform([initial, restored]);
-    const parentCanvas = mountParent();
     const callbacks: FrameRequestCallback[] = [];
     vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
       callbacks.push(callback);
       return callbacks.length;
     });
     vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined);
+    const parentCanvas = mountParent();
+    callbacks.shift()!(0);
     let oldTraversals = 0;
     let currentTraversals = 0;
     const oldResourceCreates: number[] = [];

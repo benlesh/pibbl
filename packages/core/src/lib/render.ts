@@ -27,6 +27,13 @@ import {
   type CRCBackendDriver,
   type CRCBackendFrame,
 } from './backend/types.js';
+import {
+  collectSignalReads,
+  createSignalRenderConsumer,
+  disposeSignalRenderConsumer,
+} from './signals/render-consumer.js';
+import { untracked } from './signals/graph.js';
+import { requestInstanceRender } from './scheduler/realm-scheduler.js';
 
 export function render(
   node: CRCNode,
@@ -128,78 +135,84 @@ function renderComponentElement<P>(
         onAfterRender?.();
       };
       try {
-        const definition = getPrimitiveDefinition(componentRefs.element.type);
-        const renderProgram = (invoke: () => CRCNode | void) => {
-          try {
-            const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
-            GLOBAL_STATE.primitiveReceiverToken =
-              getPrimitiveReceiverToken(componentRefs.element) ?? componentRefs;
-            let result: CRCNode | void;
+        collectSignalReads(componentRefs.signalConsumer!, commitSignalReads => {
+          const definition = getPrimitiveDefinition(componentRefs.element.type);
+          const renderProgram = (invoke: () => CRCNode | void) => {
             try {
-              result = invoke();
-            } finally {
-              GLOBAL_STATE.primitiveReceiverToken = previousReceiverToken;
-            }
-            finalizeHookSlots(componentRefs);
+              const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
+              GLOBAL_STATE.primitiveReceiverToken =
+                getPrimitiveReceiverToken(componentRefs.element) ?? componentRefs;
+              let result: CRCNode | void;
+              try {
+                result = invoke();
+              } finally {
+                GLOBAL_STATE.primitiveReceiverToken = previousReceiverToken;
+              }
+              finalizeHookSlots(componentRefs);
 
-            onAfterRender = componentRefs.onAfterRender;
-            componentRefs.onAfterRender = undefined;
+              onAfterRender = componentRefs.onAfterRender;
+              componentRefs.onAfterRender = undefined;
+              commitSignalReads();
 
-            const children = materializeContainerChildren(
-              result as CRCNode,
-              componentRefs.element,
-            );
-            renderPreparedChildren(children, id, componentRefs);
-          } finally {
-            finishAfterRender();
-          }
-        };
-        if (definition) {
-          if (definition.backend !== driver.token) {
-            throw backendMismatchError(
-              componentRefs.element.type.name || 'Anonymous',
-              definition.backend,
-              driver,
-              getElementSource(componentRefs.element),
-            );
-          }
-          const receiverToken =
-            getPrimitiveReceiverToken(componentRefs.element) ?? componentRefs;
-          const style = (() => {
-            const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
-            GLOBAL_STATE.primitiveReceiverToken = receiverToken;
-            try {
-              return resolveElementStyle(componentRefs.element);
+              untracked(() => {
+                const children = materializeContainerChildren(
+                  result as CRCNode,
+                  componentRefs.element,
+                );
+                renderPreparedChildren(children, id, componentRefs);
+              });
             } finally {
-              GLOBAL_STATE.primitiveReceiverToken = previousReceiverToken;
+              finishAfterRender();
             }
-          })();
-          let invoked = false;
-          driver.runPrimitive(frame, {
-            componentName: componentRefs.element.type.name || 'Anonymous',
-            source: getElementSource(componentRefs.element),
-            definition,
-            props: getPrimitiveProgramProps(componentRefs.element),
-            style,
-          }, invoke => {
-            if (invoked) {
-              throw new Error(
-                `${driver.name} invoked ${componentRefs.element.type.name || 'Anonymous'} more than once in one traversal.`,
+          };
+          if (definition) {
+            if (definition.backend !== driver.token) {
+              throw backendMismatchError(
+                componentRefs.element.type.name || 'Anonymous',
+                definition.backend,
+                driver,
+                getElementSource(componentRefs.element),
               );
             }
-            invoked = true;
-            renderProgram(invoke);
-          });
-          if (!invoked) {
-            throw new Error(
-              `${driver.name} did not invoke ${componentRefs.element.type.name || 'Anonymous'} during traversal.`,
+            const receiverToken =
+              getPrimitiveReceiverToken(componentRefs.element) ?? componentRefs;
+            const style = (() => {
+              const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
+              GLOBAL_STATE.primitiveReceiverToken = receiverToken;
+              try {
+                return resolveElementStyle(componentRefs.element);
+              } finally {
+                GLOBAL_STATE.primitiveReceiverToken = previousReceiverToken;
+              }
+            })();
+            let invoked = false;
+            driver.runPrimitive(frame, {
+              componentName: componentRefs.element.type.name || 'Anonymous',
+              source: getElementSource(componentRefs.element),
+              definition,
+              props: getPrimitiveProgramProps(componentRefs.element),
+              style,
+            }, invoke => {
+              if (invoked) {
+                throw new Error(
+                  `${driver.name} invoked ${componentRefs.element.type.name || 'Anonymous'} more than once in one traversal.`,
+                );
+              }
+              invoked = true;
+              renderProgram(invoke);
+            });
+            if (!invoked) {
+              throw new Error(
+                `${driver.name} did not invoke ${componentRefs.element.type.name || 'Anonymous'} during traversal.`,
+              );
+            }
+          } else {
+            renderProgram(() =>
+              componentRefs.element.type(componentRefs.element.props)
             );
           }
-        } else {
-          renderProgram(() =>
-            componentRefs.element.type(componentRefs.element.props)
-          );
-        }
+        });
+        componentRefs.signalConsumer!.markClean();
       } finally {
         try {
           finishAfterRender();
@@ -253,9 +266,30 @@ function prepareComponentScope<P>(
       element,
       refs: [],
       hooks: [],
+      signalConsumer: undefined,
       teardowns,
       onAfterRender: undefined,
     };
+    if (!isFragmentElement(element)) {
+      const crcInstance = GLOBAL_STATE.currentCRCInstance!;
+      componentRefs.signalConsumer = createSignalRenderConsumer({
+        debugName: `${element.type.name || 'Anonymous'} (${id})`,
+        invalidate: () => {
+          if (
+            GLOBAL_STATE.crcInstances.get(crcInstance.canvas) !== crcInstance ||
+            crcInstance.mainTeardowns.closed ||
+            componentRefs.teardowns.closed ||
+            crcInstance.refs.get(componentRefs.id) !== componentRefs
+          ) {
+            return;
+          }
+          requestInstanceRender(crcInstance);
+        },
+      });
+      teardowns.add(() => {
+        disposeSignalRenderConsumer(componentRefs.signalConsumer!);
+      });
+    }
     GLOBAL_STATE.currentCRCInstance!.refs.set(id, componentRefs);
   }
 

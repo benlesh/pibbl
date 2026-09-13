@@ -36,6 +36,11 @@ import type {
 import { createLayerSurface } from './surface/resolve-surface.js';
 import { executeRender } from './execute-render.js';
 import { update } from './update.js';
+import {
+  queueBeginCommand,
+  registerRootInstance,
+} from './scheduler/realm-scheduler.js';
+import type { CRCBeginCommandHandle } from './scheduler/types.js';
 
 type MountCRCConfig = CRCConfig & {
   parent?: Canvas;
@@ -94,7 +99,8 @@ export function mountCRC(
     pendingRoot: NO_PENDING_ROOT,
     pendingUpdateParents: false,
     refs: new Map(),
-    animationFrameId: undefined,
+    requestedRenderRevision: 0,
+    completedRenderRevision: 0,
     renderTimestamp: 0,
     mainTeardowns,
     eventRoot,
@@ -168,6 +174,10 @@ export function mountCRC(
     throw error;
   }
 
+  if (!parent && GLOBAL_STATE.crcInstances.get(canvas) === crcInstance) {
+    registerRootInstance(crcInstance);
+  }
+
   return controller;
 }
 
@@ -201,6 +211,13 @@ export function mountBackendCRC<E>(
       throw new Error('CRC backend mount is no longer active.');
     }
   };
+  let pendingFrame: CRCBeginCommandHandle | undefined;
+  let pendingUpdateParents = false;
+  const cancelFrame = () => {
+    pendingFrame?.cancel();
+    pendingFrame = undefined;
+    pendingUpdateParents = false;
+  };
   return Object.freeze({
     canvas,
     resize(nextLogicalWidth: number, nextLogicalHeight: number): void {
@@ -229,13 +246,30 @@ export function mountBackendCRC<E>(
     },
     requestFrame(updateParents: boolean): void {
       requireActiveInstance();
-      if (updateParents) {
-        update(canvas, undefined, true);
-      } else {
-        update(canvas);
-      }
+      pendingUpdateParents ||= updateParents;
+      if (pendingFrame) return;
+      pendingFrame = queueBeginCommand(() => {
+        pendingFrame = undefined;
+        const updateParentsForFrame = pendingUpdateParents;
+        pendingUpdateParents = false;
+        requireActiveInstance();
+        if (updateParentsForFrame) {
+          update(canvas, undefined, true);
+        } else {
+          update(canvas);
+        }
+      });
+    },
+    cancelFrame(): void {
+      requireActiveInstance();
+      cancelFrame();
+    },
+    retainRoot(nextRoot: CRCNode): void {
+      requireActiveInstance();
+      instance.root = nextRoot;
     },
     dispose(): void {
+      cancelFrame();
       controller.dispose();
     },
   });

@@ -1153,11 +1153,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 51 unique, ordered, source-backed routes including standard shapes", async () => {
+  it("contains 53 unique, ordered, source-backed routes including standard shapes, WebGL, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(51);
+    expect(learningExampleCatalog).toHaveLength(53);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1205,7 +1205,13 @@ describe("learning example catalog", () => {
         "vertical-line",
         "wedge",
       ],
-      composition: ["clip", "group", "layer", "webgl-islands"],
+      composition: [
+        "clip",
+        "group",
+        "layer",
+        "signals-and-animation",
+        "webgl-islands",
+      ],
       layout: ["absolute-and-overlay", "flex", "flow", "grid"],
       "events-and-interaction": [
         "click",
@@ -1242,6 +1248,7 @@ describe("learning example catalog", () => {
     const expectedIntroductionRoutes = {
       "getting-started": "#/learn/guides/configure-jsx",
       "create-element-authoring": "#/learn/guides/author-without-jsx",
+      signals: "#/examples/start/signals",
     } as const;
 
     for (const [group, expectedSlugs] of Object.entries(expectedBrowseGroups) as Array<
@@ -1266,6 +1273,41 @@ describe("learning example catalog", () => {
         .sort(),
     ).toEqual(Object.keys(expectedIntroductionRoutes).sort());
 
+    expect(
+      learningExampleCatalog
+        .filter((entry) => entry.section === "composition")
+        .map((entry) => entry.slug),
+    ).toEqual([
+      "group",
+      "clip",
+      "filters",
+      "webgl-islands",
+      "signals-and-animation",
+      "layer",
+    ]);
+
+    const startExamples = learningExampleCatalog.filter(
+      (entry) => entry.section === "start",
+    );
+    expect(startExamples.map((entry) => entry.slug)).toContain("signals");
+
+    const signals = startExamples.find((entry) => entry.slug === "signals");
+    expect(signals).toMatchObject({
+      api: ["signal", "computed", "crcSignal"],
+      source: {
+        path: "packages/scenarios/src/learning/start/signals.example.tsx",
+      },
+    });
+    expect(signals && getLearningExampleRoute(signals)).toBe(
+      "#/examples/start/signals",
+    );
+    const signalsSource = await loadLearningSource(signals!);
+    expect(signalsSource).toMatch(/from ["']@crc\/core["']/u);
+    expect(signalsSource).not.toMatch(/@crc\/core\/(?:internal|lib|src)\b/u);
+    expect(signalsSource).toContain(".get()");
+    expect(signalsSource).toContain(".update(");
+    expect(signalsSource).toContain("computed(");
+
     const expectedGroupBySlug = new Map<string, LearningBrowseGroup>(
       Object.entries(expectedBrowseGroups).flatMap(([group, slugs]) =>
         slugs.map((slug) => [slug, group as LearningBrowseGroup] as const),
@@ -1289,9 +1331,9 @@ describe("learning example catalog", () => {
         expect(expectedRoute, entry.slug).toBeDefined();
         expect(entry.browseGroup, entry.slug).toBeUndefined();
         expect(getLearningExampleRoute(entry), entry.slug).toBe(expectedRoute);
-        expect(getLearningExampleLegacyRoutes(entry), entry.slug).toEqual([
-          oldRoute,
-        ]);
+        expect(getLearningExampleLegacyRoutes(entry), entry.slug).toEqual(
+          oldRoute === expectedRoute ? [] : [oldRoute],
+        );
       }
     }
 
@@ -1610,6 +1652,13 @@ describe("learning example catalog", () => {
         "Cube",
         "Sphere",
         "crcAnimationFrame",
+        "crcSignal",
+        "crcTransition",
+        "crcPlayback",
+        "parallel",
+        "sequence",
+        "marker",
+        "spring",
       ]),
     );
 

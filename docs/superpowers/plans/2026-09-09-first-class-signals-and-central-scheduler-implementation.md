@@ -1,6 +1,15 @@
 # First-Class Signals and Central Scheduler Foundation Implementation Plan
 
-> **Historical status: EXECUTION PLAN.** This is the first of two dependency-ordered plans for the approved signals and animation design.
+> **Historical status: IMPLEMENTED PLAN.** The animation engine remains tracked by the dependency-ordered follow-up plan.
+
+> **Final-review closure (2026-09-10):** Five Important foundation defects and
+> one Minor WebGL-plan wording defect found after the initial implementation
+> were repaired test-first. The final behavior includes live computed-only Plan
+> scheduling, repeatable cached-cycle recovery, non-fail-fast validation,
+> observation-scoped computed source edges, and staged-only Advance mutation
+> with explicit phase admission. Fresh evidence is recorded in the delivery
+> field note; the original task sequence below remains the historical execution
+> plan rather than a claim that its first implementation passed final review.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 

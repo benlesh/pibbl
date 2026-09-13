@@ -12,13 +12,19 @@ import { crcEventListener } from './crc-event-listener';
 import { crcEventTarget } from './crc-event-target';
 import { crcLinePath } from './crc-line-path';
 import { crcMemo } from './crc-memo';
+import { crcPlayback } from './crc-playback';
+import { crcTransition } from './crc-transition';
 import { crcRectPath } from './crc-rect-path';
 import { crcRef } from './crc-ref';
+import { crcSignal } from './crc-signal';
 import { crcState, type StateUpdater } from './crc-state';
 import { crcSvgPath } from './crc-svg-path';
 import { crcWhenChanged } from './crc-when-changed';
 import { createElement } from '../element/create-element';
 import { definePrimitive } from '../define-primitive';
+import { track } from '../animation/program';
+import { tween } from '../animation/definition';
+import { signal } from '../signals/graph';
 
 beforeEach(() => {
   document.body.innerHTML = '';
@@ -278,6 +284,9 @@ describe('hook ordering and render errors', () => {
       () => crcState(0),
       () => crcMemo(() => 1, []),
       () => crcRef(0),
+      () => crcSignal(0),
+      () => crcPlayback(track(signal(0), tween({ to: 1, duration: 1 }))),
+      () => crcTransition(1, { type: 'tween', duration: 1 }),
       () => crcWhenChanged(() => {}, []),
       () => crcRectPath(0, 0, 1, 1),
       () => crcLinePath([[0, 0], [1, 1]]),

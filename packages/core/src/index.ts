@@ -113,6 +113,49 @@ export {
 } from './lib/geometry/svg-path.js';
 export type { RoundedCornerPathOptions } from './lib/geometry/rounded-corners.js';
 export { crc } from './lib/crc.js';
+export { computed, isSignal, signal, untracked } from './lib/signals/graph.js';
+export type {
+  Signal,
+  SignalEquals,
+  SignalOptions,
+  WritableSignal,
+} from './lib/signals/types.js';
+export { easing } from './lib/animation/easing.js';
+export {
+  defineAnimation,
+  keyframes,
+  spring,
+  stepper,
+  tween,
+} from './lib/animation/definition.js';
+export {
+  marker,
+  parallel,
+  repeat,
+  sequence,
+  track,
+  wait,
+} from './lib/animation/program.js';
+export type {
+  CRCAnimationDefinition,
+  CRCAnimationOptions,
+  CRCAnimationProgram,
+  CRCAnimationRepeatDirection,
+  CRCAnimationRepeatOptions,
+  CRCAnimationSampleInput,
+  CRCSpringTransitionOptions,
+  CRCPlayback,
+  CRCPlaybackEvent,
+  CRCPlaybackOptions,
+  CRCPlaybackStatus,
+  CRCEasing,
+  CRCInterpolator,
+  CRCKeyframesOptions,
+  CRCSpringOptions,
+  CRCStepperOptions,
+  CRCTweenOptions,
+  CRCTweenTransitionOptions,
+} from './lib/animation/types.js';
 export type {
   CRCConfig,
   CRCFit,
@@ -217,6 +260,9 @@ export { crcLayoutBox } from './lib/hooks/crc-layout-box.js';
 export { crcMemo } from './lib/hooks/crc-memo.js';
 export { crcRectPath } from './lib/hooks/crc-rect-path.js';
 export { crcRef, type CRCRef } from './lib/hooks/crc-ref.js';
+export { crcPlayback } from './lib/hooks/crc-playback.js';
+export { crcTransition } from './lib/hooks/crc-transition.js';
+export { crcSignal } from './lib/hooks/crc-signal.js';
 export { crcState, type StateUpdater } from './lib/hooks/crc-state.js';
 export { crcSvgPath } from './lib/hooks/crc-svg-path.js';
 export { crcWhenChanged } from './lib/hooks/crc-when-changed.js';

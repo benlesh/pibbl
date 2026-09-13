@@ -431,6 +431,7 @@ assert.deepEqual(
     "Style and draw",
     "Compose and lay out scenes",
     "Manage state and lifecycle",
+    "Use signals and animation",
     "Add WebGL islands",
     "Add focus and keyboard navigation",
     "Create custom components and primitives",

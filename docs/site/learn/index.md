@@ -25,6 +25,7 @@ question while you work.
 - [Style and draw](#/learn/guides/style-and-draw)
 - [Compose and lay out scenes](#/learn/guides/compose-and-layout)
 - [Manage state and lifecycle](#/learn/guides/state-and-lifecycle)
+- [Use signals and animation](#/learn/guides/signals-and-animation)
 - [Add WebGL islands](#/learn/guides/webgl-islands)
 - [Add focus and keyboard navigation](#/learn/guides/focus-and-keyboard)
 - [Create custom components and primitives](#/learn/guides/custom-components-and-primitives)

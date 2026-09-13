@@ -54,12 +54,12 @@ contention observed during earlier upgrade and visual work.
 - the fixed preservation manifest records every normalized prose paragraph,
   list obligation, table row, and fenced-code obligation from all 12 normative
   contracts at pre-Task-14 commit `0040d65` (667 baseline units with per-file
-  source digests), the complete reviewed current form (654 units), and an
+  source digests), the complete reviewed current form (800 units), and an
   explicit JSX-era translation/addition allowlist tied to narrow, exact
   approved-design unit IDs and excerpts; every translation also has exact
   baseline/current unit IDs, unique rationale,
   shared clause anchors, and minimum content similarity checked before the
-  digest. The 48 direct source/test mappings use claims no broader than their
+  digest. The 53 direct source/test mappings use claims no broader than their
   cited tests and require the same claim-specific anchors near both markers;
 - the migration guide contains one mechanically checked row for each of the 85
   field/structural inputs derived from the reviewed baseline style table, and
@@ -89,16 +89,53 @@ the public Studio documentation/navigation/search acceptance suite, and a
 built-package smoke scenario. Semantic state and geometry assertions are the
 first-line oracle; exact pixels are used only where they add information.
 
-`trust:lifecycle` runs focused cleanup stress plus deterministic filter ownership
-and structural-performance checks. The filter lifecycle suite fixes the workload
-at 1,000 unchanged rerenders, 100 sibling boundaries, and three nested boundaries,
-then checks exact scratch-slot creation, depth, checkout/return, resize, and release
-counts through replacement, failure, disposal, and a fresh remount. The filter
-performance suite fixes helper walks, primitive callbacks, surface construction,
-clears, filtered and parent draws, input pixel areas, pixel-readback calls, and
-bitmap transfers. Resource evidence uses exact acquisition/release ownership, not
-garbage-collection timing. Browser halo timing and pixels are scenario/visual
-evidence only; neither is a lifecycle or performance oracle.
+`trust:lifecycle` runs focused cleanup stress plus deterministic filter and signal
+ownership and structural-performance checks. The signal/scheduler lifecycle suite
+drives repeated mount, shared reads, branch and Layer removal, root replacement,
+render failure, abort, disposal, and fresh remount. The animation lifecycle suite
+also drives autoplay, pause, seek, reverse, replacement, custom failure, owner
+removal, and fresh remount. Test-only snapshots require zero live renderer
+consumers, renderer dependency edges, computed source-edge leases, playback
+registrations, writer leases, evaluator/stepper states, queued commands and
+milestones, registered roots, Advance participants, completion callbacks, and
+host frames at release boundaries. Cumulative consumer, edge, root, playback,
+lease, stepper-state, Begin-command, and Complete-callback acquisitions must
+match releases exactly.
+
+The signal/scheduler performance suite fixes structural work rather than elapsed
+time: 1,000 writes coalesce to one realm host callback and one root traversal; 100
+roots traverse once in stable mount order after one signal commit notification;
+an unchanged computed performs one Plan validation and no render; and a stable
+100-Layer tree repaints only its signal-owning child while reusing every sibling
+bitmap identity. The animation performance suite fixes 1,000 numeric playbacks
+to one realm host callback and one root traversal per presented frame, exactly
+one sample and no more than one output-stage attempt per playback, and no render
+for equality-suppressed output when metadata is unobserved. It also fixes one
+lease across 100 sequential same-signal tracks, zero sample-time array allocation
+for ten numeric keyframes, gap-independent closed-form spring samples, bounded
+fixed-step work, zero animation-owned offscreen or pixel operations, and Layer
+child-cache reuse under presentation-only animation. The filter lifecycle suite
+fixes the workload at 1,000 unchanged rerenders, 100 sibling boundaries, and three nested boundaries, then checks exact
+scratch-slot creation, depth, checkout/return, resize, and release counts through
+replacement, failure, disposal, and a fresh remount. The filter performance suite
+fixes helper walks, primitive callbacks, surface construction, clears, filtered
+and parent draws, input pixel areas, pixel-readback calls, and bitmap transfers.
+Resource evidence uses deterministic ownership counters rather than a garbage-
+collection oracle. Wall-clock measurements remain optional diagnostics with no
+default pass threshold; browser halo timing and pixels remain scenario/visual
+evidence rather than lifecycle or structural-performance oracles.
+
+Animation correctness uses the scheduler's frozen logical frame time. Seekable
+tweens, keyframes, and springs jump directly to that time; only stateful steppers
+integrate retained fixed steps. A stepper configured with step size `s` and
+maximum elapsed input `m` performs at most `ceil(m / s)` steps in a presented
+frame because the previous frame may retain a fractional remainder. Tests assert
+that bound and the exact clamped/discarded elapsed trace values rather than an
+uncontrolled duration threshold. The animation visual uses frozen-time semantic
+state and exact Chromium pixels, and its committed expected/actual/diff artifacts
+are inspected before any baseline decision. This evidence does not claim
+cross-browser/GPU pixel identity, and no uncontrolled wall-clock measurement is
+a default correctness gate.
 
 The unified GitHub Actions workflow runs the same responsibilities as parallel
 static, package, browser, and lifecycle jobs, then exposes one stable aggregate

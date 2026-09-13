@@ -313,6 +313,12 @@ const publicTypeExports = [
   'ClipStyle',
   'Constraints',
   'CRCClipboardEvent',
+  'CRCAnimationDefinition',
+  'CRCAnimationOptions',
+  'CRCAnimationProgram',
+  'CRCAnimationRepeatDirection',
+  'CRCAnimationRepeatOptions',
+  'CRCAnimationSampleInput',
   'CRCBlurFilter',
   'CRCBrightnessFilter',
   'CRCComponent',
@@ -321,6 +327,7 @@ const publicTypeExports = [
   'CRCContainerChild',
   'CRCContrastFilter',
   'CRCController',
+  'CRCEasing',
   'CRCDragEvent',
   'CRCDropShadowFilter',
   'CRCElement',
@@ -348,6 +355,8 @@ const publicTypeExports = [
   'CRCInvertFilter',
   'CRCKeyboardEvent',
   'CRCKeyboardNavigationOptions',
+  'CRCInterpolator',
+  'CRCKeyframesOptions',
   'CRCKey',
   'CRCLogicalMouseEvent',
   'CRCMouseEvent',
@@ -357,14 +366,23 @@ const publicTypeExports = [
   'CRCPixelRatio',
   'CRCPointerEvent',
   'CRCPointerEvents',
+  'CRCPlayback',
+  'CRCPlaybackEvent',
+  'CRCPlaybackOptions',
+  'CRCPlaybackStatus',
   'CRCPrimitiveComponent',
   'CRCResponsiveViewportConfig',
+  'CRCSpringOptions',
+  'CRCSpringTransitionOptions',
+  'CRCStepperOptions',
   'CRCSaturateFilter',
   'CRCSepiaFilter',
   'CRCRef',
   'CRCRenderResult',
   'CRCTextChild',
   'CRCTouchEvent',
+  'CRCTweenOptions',
+  'CRCTweenTransitionOptions',
   'CRCWheelEvent',
   'CursorStyle',
   'EdgeValues',
@@ -431,6 +449,9 @@ const publicTypeExports = [
   'ResolvedStyle',
   'RoundedCornerPathOptions',
   'RoundedCornerStyle',
+  'Signal',
+  'SignalEquals',
+  'SignalOptions',
   'Size',
   'SpecifiedStyle',
   'StateUpdater',
@@ -451,10 +472,11 @@ const publicTypeExports = [
   'WedgeProps',
   'WedgePathOptions',
   'WedgeStyle',
+  'WritableSignal',
 ].sort();
 
-if (publicTypeExports.length !== 153) {
-  throw new Error(`CRC Studio must declare exactly 153 core public types, received ${publicTypeExports.length}.`);
+if (publicTypeExports.length !== 175) {
+  throw new Error(`CRC Studio must declare exactly 175 core public types, received ${publicTypeExports.length}.`);
 }
 
 const publicWebGLTypeExports = [
@@ -530,10 +552,13 @@ import type {
 
 const consumer = `
 ${removedAuthoringImports}
+// @ts-expect-error ordinary Studio examples cannot import the version-coupled friend entry
+import type { CRCInternalFrame } from '@crc/core/internal';
 import * as CRC_CORE_ROOT from '@crc/core';
 import * as CRC_WEBGL_ROOT from '@crc/webgl';
 import {
   Absolute,
+  computed,
   crc,
   crcCanvasContext,
   crcCursor,
@@ -542,10 +567,15 @@ import {
   crcEventTarget,
   crcLinePath,
   crcMemo,
+  crcPlayback,
   crcRectPath,
+  crcSignal,
+  crcTransition,
   crcWhenChanged,
   createElement,
+  defineAnimation,
   definePrimitive,
+  easing,
   Flex,
   Flow,
   FocusManagement,
@@ -554,22 +584,37 @@ import {
   Group,
   HorizontalLine,
   Image,
+  isSignal,
+  keyframes,
   KeyboardNavigation,
   LayoutDiagnostic,
   Line,
+  marker,
   normalizeEdges,
   Overlay,
+  parallel,
   Path,
   Polygon,
   Rectangle,
+  repeat,
   resolveBox,
   resolveLength,
+  signal,
+  sequence,
+  spring,
+  stepper,
   SvgPath,
   Text,
+  track,
+  tween,
   VerticalLine,
+  wait,
+  type CRCAnimationDefinition,
+  type CRCAnimationProgram,
   type CRCConfig,
   type CRCComponent,
   type CRCController,
+  type CRCInterpolator,
   type CRCClipboardEvent,
   type CRCCompositionEvent,
   type CRCDragEvent,
@@ -583,6 +628,7 @@ import {
   type CRCLogicalMouseEvent,
   type CRCMouseEvent,
   type CRCNode,
+  type CRCPlayback,
   type CRCPixelRatio,
   type CRCPointerEvent,
   type CRCPointerEvents,
@@ -609,7 +655,12 @@ import {
   type PolygonStyle,
   type RenderingContext2D,
   type ResolvedBoxStyle,
+  type Signal,
+  type SignalEquals,
+  type SignalOptions,
   type SystemStyle,
+  type WritableSignal,
+  untracked,
 } from '@crc/core';
 import { jsx, jsxs } from '@crc/core/jsx-runtime';
 import { jsxDEV } from '@crc/core/jsx-dev-runtime';
@@ -661,6 +712,20 @@ type StudioSignatureParity = [
   Assert<Equal<PolygonStyle['cornerRadius'], Exclude<Length, 'auto'> | undefined>>,
   Assert<Equal<PolygonStyle['cornerRadii'], readonly (Exclude<Length, 'auto'> | null | undefined)[] | undefined>>,
   Assert<Equal<typeof crcMemo, <T>(create: () => T, deps: any[]) => T>>,
+  Assert<Equal<
+    typeof signal,
+    <T>(initialValue: T, options?: SignalOptions<T>) => WritableSignal<T>
+  >>,
+  Assert<Equal<
+    typeof computed,
+    <T>(compute: () => T, options?: SignalOptions<T>) => Signal<T>
+  >>,
+  Assert<Equal<typeof untracked, <T>(callback: () => T) => T>>,
+  Assert<Equal<typeof isSignal, (value: unknown) => value is Signal<unknown>>>,
+  Assert<Equal<
+    typeof crcSignal,
+    <T>(initialValue: T, options?: SignalOptions<T>) => WritableSignal<T>
+  >>,
   Assert<Equal<
     typeof crcWhenChanged,
     (callback: () => (() => void) | void, deps?: any[]) => void
@@ -777,6 +842,76 @@ createElement(StudioWebGLPrimitive, { style: {} });
 
 const fragmentResult: CRCNode = Fragment({ children: false });
 void fragmentResult;
+void (null as unknown as CRCInternalFrame);
+
+const signalEquals: SignalEquals<number> = (previous, next) => previous === next;
+const studioCount = signal(1, {
+  debugName: 'Studio count',
+  equals: signalEquals,
+});
+const studioReadonly: Signal<number> = studioCount.asReadonly();
+const studioComputed: Signal<number> = computed(() => studioReadonly.get() * 2);
+const studioUntracked: number = untracked(() => studioComputed.get());
+const studioCallback = signal<() => string>(() => 'ready');
+studioCallback.set(() => 'updated');
+if (isSignal(studioReadonly)) void studioReadonly.get();
+// @ts-expect-error readonly signals do not expose writes
+studioReadonly.set(2);
+// @ts-expect-error computed values are readonly
+studioComputed.update(value => value + 1);
+void studioUntracked;
+
+function StudioSignalHook(): CRCNode {
+  const value = crcSignal('hook value');
+  return <Text>{value.get()}</Text>;
+}
+void <StudioSignalHook />;
+
+function StudioAnimationHook(): CRCNode {
+  const x = crcSignal(0);
+  const alpha = crcTransition(1, {
+    type: 'tween',
+    duration: 120,
+  });
+  const sprung = crcTransition(20, { type: 'spring' });
+  const tweened: CRCAnimationDefinition<number> = tween({
+    to: 40,
+    duration: 160,
+    easing: easing.easeOut,
+  });
+  const program: CRCAnimationProgram = sequence(
+    parallel(track(x, tweened), wait(20)),
+    marker('arrived'),
+    repeat(track(x, spring({ to: 0 })), { iterations: 2 }),
+    track(x, keyframes({ values: [0, 10, 20], duration: 100 })),
+    track(x, defineAnimation({
+      duration: 10,
+      sample: ({ progress }) => progress,
+    })),
+    track(x, stepper({
+      stepMilliseconds: 10,
+      initial: value => ({ value }),
+      step: state => ({ value: state.value + 1 }),
+      read: state => state.value,
+    })),
+  );
+  const playback: CRCPlayback = crcPlayback(program);
+  const interpolatePoint: CRCInterpolator<{ x: number }> = (from, to, progress) => ({
+    x: from.x + (to.x - from.x) * progress,
+  });
+  void crcTransition({ x: 1 }, {
+    type: 'tween',
+    duration: 100,
+    interpolate: interpolatePoint,
+  });
+  return <Rectangle
+    style={{ x: x.get(), width: sprung.get(), height: 20, opacity: alpha.get() }}
+    onClick={() => playback.play()}
+  />;
+}
+void <StudioAnimationHook />;
+// @ts-expect-error Studio keyframes require at least two values
+void keyframes({ values: [0], duration: 100 });
 
 // @ts-expect-error compiler constructors stay off the root package
 void CRC_CORE_ROOT.jsx;
@@ -1185,6 +1320,11 @@ export default function mount(canvas: HTMLCanvasElement): CRCController {
 }
 `;
 
+const packageConsumer = consumer.replace(
+  '// @ts-expect-error ordinary Studio examples cannot import the version-coupled friend entry\n',
+  '',
+);
+
 const foreignRuntimeDeclarations = `
 declare const foreignElementBrand: unique symbol;
 export interface ForeignElement { readonly [foreignElementBrand]: true }
@@ -1234,6 +1374,7 @@ try {
     await writeFile(declarationPath, content);
   }
   await writeFile(join(directory, 'consumer.tsx'), consumer);
+  await writeFile(join(directory, 'package-consumer.tsx'), packageConsumer);
   await writeFile(
     join(directory, 'public-type-surface.ts'),
     publicTypeSurfaceConsumer,
@@ -1294,7 +1435,7 @@ try {
         strict: true,
         target: 'ESNext',
       },
-      files: ['consumer.tsx', 'public-type-surface.ts'],
+      files: ['package-consumer.tsx', 'public-type-surface.ts'],
     }));
     const packageResult = spawnSync(
       process.execPath,
@@ -1398,6 +1539,7 @@ try {
     'Wedge',
     'WebGLLayer',
     'crcAnimationFrame',
+    'computed',
     'crc',
     'crcCanvasContext',
     'crcCursor',
@@ -1407,10 +1549,13 @@ try {
     'crcLayoutBox',
     'crcLinePath',
     'crcMemo',
+    'crcPlayback',
     'crcRectPath',
     'crcRef',
+    'crcSignal',
     'crcState',
     'crcSvgPath',
+    'crcTransition',
     'crcWhenChanged',
     'crcWebGLContext',
     'createArcPath',
@@ -1427,17 +1572,32 @@ try {
     'createWebGLGeometry',
     'definePrimitive',
     'defineWebGLPrimitive',
+    'defineAnimation',
+    'easing',
+    'isSignal',
+    'keyframes',
     'jsx',
     'jsxDEV',
     'jsxs',
     'layoutDiagnostic',
+    'marker',
     'measureElement',
     'normalizeEdges',
+    'parallel',
+    'repeat',
     'resolveBox',
     'resolveLength',
+    'signal',
+    'sequence',
+    'spring',
+    'stepper',
+    'track',
+    'tween',
+    'untracked',
+    'wait',
   ].sort();
-  if (expectedStudioRuntimeExports.length !== 70) {
-    throw new Error(`CRC Studio runtime must expose 58 core values, 9 WebGL values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`);
+  if (expectedStudioRuntimeExports.length !== 89) {
+    throw new Error(`CRC Studio runtime must expose 77 core values, 9 WebGL values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`);
   }
   if (sourceRuntimeExports.join('\n') !== expectedStudioRuntimeExports.join('\n')) {
     throw new Error(
@@ -1448,7 +1608,7 @@ try {
     throw new Error('CRC Studio source and built runtime surfaces differ.');
   }
   process.stdout.write(
-    'CRC Studio declarations passed exact export-name parity, 176-type structural ' +
+    'CRC Studio declarations passed exact export-name parity, 198-type structural ' +
     'coverage, selected signature parity, strict TSX, compiler-runtime, event-family, ' +
     'generic, and layout checks against source and built packages.\n',
   );

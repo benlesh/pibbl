@@ -154,6 +154,9 @@ try {
   assertRequiredEntries(coreEntries, [
     'package/dist/index.d.ts',
     'package/dist/index.mjs',
+    'package/dist/internal.d.ts',
+    'package/dist/internal.mjs',
+    'package/dist/internal.mjs.map',
     'package/dist/jsx-dev-runtime.d.ts',
     'package/dist/jsx-dev-runtime.mjs',
     'package/dist/jsx-dev-runtime.mjs.map',
@@ -204,7 +207,7 @@ try {
 
   const requireFromConsumer = createRequire(join(consumerDirectory, 'runtime.mjs'));
   const installedPackageRoots = new Map();
-  for (const packageName of ['@crc/core', '@crc/types', '@crc/webgl']) {
+  for (const packageName of ['@crc/core', '@crc/core/internal', '@crc/types', '@crc/webgl']) {
     const packageEntry = realpathSync(requireFromConsumer.resolve(packageName));
     if (!packageEntry.startsWith(realpathSync(join(consumerDirectory, 'node_modules')))) {
       throw new Error(`${packageName} resolved outside the packed consumer: ${packageEntry}`);

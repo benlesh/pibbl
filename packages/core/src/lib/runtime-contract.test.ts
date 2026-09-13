@@ -1,10 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   Circle,
+  Layer,
   Rectangle,
   LayoutDiagnostic,
   Polygon,
+  crcPlayback,
   crcWhenChanged,
+  defineAnimation,
+  parallel,
+  signal,
+  track,
+  tween,
+  type CRCPlayback,
 } from '../index';
 import { crc } from './crc';
 import { definePrimitive } from './define-primitive';
@@ -12,6 +20,11 @@ import { createElement, isCRCElement } from './element/create-element';
 import { clearSharedState, getCRCInstance } from './global-state';
 import { crcRef } from './hooks/crc-ref';
 import { crcState, type StateUpdater } from './hooks/crc-state';
+import {
+  installSchedulerDriverForTest,
+  ManualSchedulerDriver,
+  snapshotRealmScheduler,
+} from './scheduler/testing';
 import type { CRCNode, SystemStyle } from './types';
 import { RegularPolygon } from './components/regular-polygon';
 import { Star } from './components/star';
@@ -147,6 +160,99 @@ describe('element and primitive contract', () => {
 });
 
 describe('crc root updates', () => {
+  it('defers an update requested during render to a later host frame', () => {
+    const originalRequestAnimationFrame = window.requestAnimationFrame;
+    const callbacks: FrameRequestCallback[] = [];
+    window.requestAnimationFrame = callback => {
+      callbacks.push(callback);
+      return callbacks.length;
+    };
+    const canvas = createCanvas();
+    const renders: string[] = [];
+    const Replacement = (_props: {}) => {
+      renders.push('replacement');
+    };
+    const Initial = (_props: {}) => {
+      renders.push('initial');
+      crc(canvas, createElement(Replacement, {}));
+    };
+
+    try {
+      const controller = crc(canvas, createElement(Initial, {}));
+      expect(callbacks).toHaveLength(1);
+
+      callbacks[0](10);
+      expect(renders).toEqual(['initial']);
+      expect(callbacks).toHaveLength(2);
+
+      callbacks[1](20);
+      expect(renders).toEqual(['initial', 'replacement']);
+      controller.dispose();
+    } finally {
+      window.requestAnimationFrame = originalRequestAnimationFrame;
+    }
+  });
+
+  it('does not render a mount disposed before its pending host frame', () => {
+    const originalRequestAnimationFrame = window.requestAnimationFrame;
+    const originalCancelAnimationFrame = window.cancelAnimationFrame;
+    let pending: FrameRequestCallback | undefined;
+    const canceled: number[] = [];
+    window.requestAnimationFrame = callback => {
+      pending = callback;
+      return 41;
+    };
+    window.cancelAnimationFrame = frameId => canceled.push(frameId);
+    const canvas = createCanvas();
+    const render = vi.fn();
+
+    try {
+      const controller = crc(canvas, createElement(render, {}));
+      controller.dispose();
+      pending?.(10);
+
+      expect(canceled).toEqual([41]);
+      expect(render).not.toHaveBeenCalled();
+    } finally {
+      window.requestAnimationFrame = originalRequestAnimationFrame;
+      window.cancelAnimationFrame = originalCancelAnimationFrame;
+    }
+  });
+
+  it('renders a nested Layer in its parent frame without requesting another host frame', () => {
+    const originalRequestAnimationFrame = window.requestAnimationFrame;
+    const callbacks: FrameRequestCallback[] = [];
+    window.requestAnimationFrame = callback => {
+      callbacks.push(callback);
+      return callbacks.length;
+    };
+    const canvas = createCanvas();
+    const renders: string[] = [];
+    const LayerChild = (_props: {}) => {
+      renders.push('layer');
+    };
+    const Root = (_props: {}) => {
+      renders.push('root');
+      return createElement(Layer, {
+        style: { width: 20, height: 20 },
+        children: createElement(LayerChild, {}),
+      });
+    };
+
+    try {
+      const controller = crc(canvas, createElement(Root, {}));
+      expect(callbacks).toHaveLength(1);
+
+      callbacks[0](25);
+
+      expect(renders).toEqual(['root', 'layer']);
+      expect(callbacks).toHaveLength(1);
+      controller.dispose();
+    } finally {
+      window.requestAnimationFrame = originalRequestAnimationFrame;
+    }
+  });
+
   it('tears down existing refs after a filtered final-composite failure and recovers', () => {
     const originalRequestAnimationFrame = window.requestAnimationFrame;
     let pending: FrameRequestCallback | undefined;
@@ -482,6 +588,221 @@ describe('crc root updates', () => {
 
     expect(renders).toEqual(['stateful:0', 'replacement']);
     controller.dispose();
+  });
+
+  it('does not lose a pending root replacement to a signal request', async () => {
+    const canvas = createCanvas();
+    const renders: string[] = [];
+    const value = signal(0);
+    const SignalRoot = (_props: {}) => {
+      renders.push(`signal:${value.get()}`);
+    };
+    const ReplacementRoot = (_props: {}) => {
+      renders.push('replacement');
+    };
+    const controller = crc(canvas, createElement(SignalRoot, {}));
+    await nextFrame();
+
+    crc(canvas, createElement(ReplacementRoot, {}));
+    value.set(1);
+    const pendingRoot = getCRCInstance(canvas).pendingRoot;
+    expect(isCRCElement(pendingRoot) && pendingRoot.type)
+      .toBe(createElement(ReplacementRoot, {}).type);
+    await nextFrame();
+
+    expect(renders).toEqual(['signal:0', 'replacement']);
+    controller.dispose();
+  });
+
+  it('keeps committed animation values and healthy roots after an animated root fails', () => {
+    const driver = new ManualSchedulerDriver();
+    const restoreDriver = installSchedulerDriverForTest(driver);
+    const failedOutput = signal(0);
+    const healthyOutput = signal(0);
+    const renderFailure = new Error('animated root failed');
+    const failedRenders: number[] = [];
+    const healthyRenders: number[] = [];
+    const recoveredRenders: number[] = [];
+    let shouldFail = false;
+    let failedPlayback!: CRCPlayback;
+    let healthyPlayback!: CRCPlayback;
+    const failingCanvas = createCanvas();
+    const healthyCanvas = createCanvas();
+    const FailingRoot = (_props: {}) => {
+      failedPlayback = crcPlayback(
+        track(failedOutput, tween({ from: 0, to: 10, duration: 100 })),
+      );
+      const value = failedOutput.get();
+      failedRenders.push(value);
+      if (shouldFail && value > 0) throw renderFailure;
+      return createElement(Rectangle, {
+        style: { x: value, width: 10, height: 10, fill: 'red' },
+      });
+    };
+    const HealthyRoot = (_props: {}) => {
+      healthyPlayback = crcPlayback(
+        track(healthyOutput, tween({ from: 0, to: 10, duration: 100 })),
+      );
+      const value = healthyOutput.get();
+      healthyRenders.push(value);
+      return createElement(Rectangle, {
+        style: { x: value, width: 10, height: 10, fill: 'blue' },
+      });
+    };
+    const RecoveredRoot = (_props: {}) => {
+      const value = failedOutput.get();
+      recoveredRenders.push(value);
+      return createElement(Rectangle, {
+        style: { x: value, width: 10, height: 10, fill: 'green' },
+      });
+    };
+    const failedController = crc(
+      failingCanvas,
+      createElement(FailingRoot, {}),
+      { pixelRatio: 1 },
+    );
+    const healthyController = crc(
+      healthyCanvas,
+      createElement(HealthyRoot, {}),
+      { pixelRatio: 1 },
+    );
+
+    try {
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(-1);
+      failedPlayback.play();
+      healthyPlayback.play();
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(0);
+      shouldFail = true;
+      expect(driver.pendingHostFrames).toBe(1);
+
+      expect(() => driver.flush(50)).toThrow(renderFailure);
+
+      expect(failedOutput.get()).toBe(5);
+      expect(healthyOutput.get()).toBe(5);
+      expect(failedRenders.at(-1)).toBe(5);
+      expect(healthyRenders.at(-1)).toBe(5);
+      expect(getCRCInstance(failingCanvas).refs.size).toBe(0);
+      expect(healthyPlayback.status.get()).toBe('running');
+      expect(driver.pendingHostFrames).toBe(1);
+
+      shouldFail = false;
+      crc(failingCanvas, createElement(RecoveredRoot, {}));
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(75);
+
+      expect(failedPlayback.status.get()).toBe('disposed');
+      expect(failedOutput.get()).toBe(5);
+      expect(healthyOutput.get()).toBe(7.5);
+      expect(recoveredRenders).toEqual([5]);
+      expect(healthyRenders.at(-1)).toBe(7.5);
+
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(100);
+      expect(healthyOutput.get()).toBe(10);
+      expect(healthyPlayback.status.get()).toBe('finished');
+      expect(driver.pendingHostFrames).toBe(0);
+      const requestsBeforeStalePlay = driver.requestCount;
+      failedPlayback.play();
+      expect(driver.requestCount).toBe(requestsBeforeStalePlay);
+      expect(driver.pendingHostFrames).toBe(0);
+    } finally {
+      failedController.dispose();
+      healthyController.dispose();
+      restoreDriver();
+    }
+  });
+
+  it('discards every staged writer from a failing animation sampler', () => {
+    const driver = new ManualSchedulerDriver();
+    const restoreDriver = installSchedulerDriverForTest(driver);
+    const firstFailedOutput = signal(0);
+    const secondFailedOutput = signal(0);
+    const healthyOutput = signal(0);
+    const errors: unknown[] = [];
+    const healthyRenders: number[] = [];
+    let failedPlayback!: CRCPlayback;
+    let healthyPlayback!: CRCPlayback;
+    const FailingRoot = (_props: {}) => {
+      failedPlayback = crcPlayback(parallel(
+        track(firstFailedOutput, defineAnimation({
+          duration: 100,
+          sample: ({ localTime }) => localTime + 1,
+        })),
+        track(secondFailedOutput, defineAnimation({
+          duration: 100,
+          sample: ({ localTime }) => {
+            if (localTime >= 50) throw new Error('integration sampler failed');
+            return localTime + 1;
+          },
+        })),
+      ), { onError: error => errors.push(error) });
+      return [
+        createElement(Rectangle, {
+          style: {
+            x: firstFailedOutput.get(),
+            width: 5,
+            height: 5,
+            fill: 'red',
+          },
+        }),
+        createElement(Rectangle, {
+          style: {
+            x: secondFailedOutput.get(),
+            y: 5,
+            width: 5,
+            height: 5,
+            fill: 'red',
+          },
+        }),
+      ];
+    };
+    const HealthyRoot = (_props: {}) => {
+      healthyPlayback = crcPlayback(
+        track(healthyOutput, tween({ from: 0, to: 10, duration: 100 })),
+      );
+      const value = healthyOutput.get();
+      healthyRenders.push(value);
+      return createElement(Rectangle, {
+        style: { x: value, width: 5, height: 5, fill: 'blue' },
+      });
+    };
+    const failedController = crc(createCanvas(), createElement(FailingRoot, {}));
+    const healthyController = crc(createCanvas(), createElement(HealthyRoot, {}));
+
+    try {
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(-1);
+      failedPlayback.play();
+      healthyPlayback.play();
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(0);
+      expect([firstFailedOutput.get(), secondFailedOutput.get()]).toEqual([1, 1]);
+      expect(driver.pendingHostFrames).toBe(1);
+
+      driver.flush(50);
+
+      expect([firstFailedOutput.get(), secondFailedOutput.get()]).toEqual([1, 1]);
+      expect(failedPlayback.status.get()).toBe('cancelled');
+      expect((errors[0] as Error).message).toBe('integration sampler failed');
+      expect(healthyOutput.get()).toBe(5);
+      expect(healthyRenders.at(-1)).toBe(5);
+      expect(driver.pendingHostFrames).toBe(1);
+
+      driver.flush(100);
+      expect(healthyPlayback.status.get()).toBe('finished');
+      expect(snapshotRealmScheduler()).toMatchObject({
+        pendingHostFrames: 0,
+        registeredAdvanceParticipants: 0,
+        queuedFrameCompletions: 0,
+        queuedBeginCommands: 0,
+      });
+    } finally {
+      failedController.dispose();
+      healthyController.dispose();
+      restoreDriver();
+    }
   });
 
   it('lets the latest explicit root win after a state update while preserving parent intent', async () => {

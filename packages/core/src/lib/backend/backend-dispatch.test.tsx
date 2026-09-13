@@ -701,7 +701,6 @@ describe('backend-neutral component traversal', () => {
     expect(cleanup).toHaveBeenCalledOnce();
     expect(cancel).toHaveBeenCalledWith(1);
     expect(GLOBAL_STATE.crcInstances.has(canvas)).toBe(false);
-    expect(instance.animationFrameId).toBeUndefined();
     expect(instance.eventRoot.targets.size).toBe(0);
     expect(instance.refs.size).toBe(0);
     expect(instance.regions.size).toBe(0);

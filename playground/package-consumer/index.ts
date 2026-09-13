@@ -1,4 +1,10 @@
 import type {
+  CRCAnimationDefinition,
+  CRCAnimationOptions,
+  CRCAnimationProgram,
+  CRCAnimationRepeatDirection,
+  CRCAnimationRepeatOptions,
+  CRCAnimationSampleInput,
   CRCConfig,
   CRCBlurFilter,
   CRCBrightnessFilter,
@@ -6,6 +12,7 @@ import type {
   CRCCompositionEvent,
   CRCContrastFilter,
   CRCController,
+  CRCEasing,
   CRCElement,
   CRCDragEvent,
   CRCEvent,
@@ -29,17 +36,28 @@ import type {
   CRCInvertFilter,
   CRCKeyboardEvent,
   CRCKeyboardNavigationOptions,
+  CRCInterpolator,
+  CRCKeyframesOptions,
   CRCLogicalMouseEvent,
   CRCMouseEvent,
   CRCNode,
   CRCOpacityFilter,
   CRCPixelRatio,
   CRCPointerEvent,
+  CRCPlayback,
+  CRCPlaybackEvent,
+  CRCPlaybackOptions,
+  CRCPlaybackStatus,
   CRCRef,
   CRCResponsiveViewportConfig,
+  CRCSpringOptions,
+  CRCSpringTransitionOptions,
+  CRCStepperOptions,
   CRCSaturateFilter,
   CRCSepiaFilter,
   CRCTouchEvent,
+  CRCTweenOptions,
+  CRCTweenTransitionOptions,
   CRCWheelEvent,
   CRCDropShadowFilter,
   ArcProps,
@@ -80,6 +98,9 @@ import type {
   RoundedCornerStyle,
   RectStyle,
   RenderingContext2D,
+  Signal,
+  SignalEquals,
+  SignalOptions,
   StateUpdater,
   SvgPathStyle,
   SvgPathOptions,
@@ -97,6 +118,7 @@ import type {
   WedgeProps,
   WedgeStyle,
   WedgePathOptions,
+  WritableSignal,
 } from '@crc/core';
 import type * as CoreTypes from '@crc/core/types';
 import {
@@ -122,6 +144,15 @@ import {
   type CRCBackendPrimitiveInput,
   type CRCBackendToken,
   type CRCNestedResolverInput,
+  crcInternalCreateSignalConsumer,
+  crcInternalCurrentFrame,
+  crcInternalCurrentRenderOwner,
+  crcInternalQueueComplete,
+  crcInternalRequestRendererWork,
+  type CRCInternalFrame,
+  type CRCInternalRendererWorkKind,
+  type CRCInternalRenderOwner,
+  type CRCInternalSignalConsumer,
 } from '@crc/core/internal';
 import {
   crc,
@@ -132,13 +163,18 @@ import {
   crcLayoutBox,
   crcLinePath,
   crcMemo,
+  crcPlayback,
   crcRectPath,
   crcRef,
+  crcSignal,
   crcState,
   crcSvgPath,
+  crcTransition,
   crcWhenChanged,
   createElement,
+  defineAnimation,
   definePrimitive,
+  easing,
   Absolute,
   Arc,
   Circle,
@@ -175,7 +211,21 @@ import {
   measureElement,
   FocusManagement,
   KeyboardNavigation,
+  keyframes,
+  marker,
+  parallel,
+  repeat,
+  sequence,
   crcCanvasContext,
+  computed,
+  isSignal,
+  signal,
+  spring,
+  stepper,
+  track,
+  tween,
+  untracked,
+  wait,
 } from '@crc/core';
 import {
   crcAnimationFrame,
@@ -272,6 +322,20 @@ void [
   useBackendEventTarget,
   useInternalHookSlot,
 ];
+
+declare const internalOwner: CRCInternalRenderOwner;
+declare const internalFrame: CRCInternalFrame;
+declare const internalConsumer: CRCInternalSignalConsumer;
+const internalWorkKind = 'draw' satisfies CRCInternalRendererWorkKind;
+void internalOwner;
+void internalFrame;
+void internalConsumer;
+void internalWorkKind;
+void crcInternalCreateSignalConsumer;
+void crcInternalCurrentFrame;
+void crcInternalCurrentRenderOwner;
+void crcInternalQueueComplete;
+void crcInternalRequestRendererWork;
 
 export type PublicEventTypes = {
   base: CRCEvent;
@@ -911,7 +975,8 @@ declare const canvas: HTMLCanvasElement;
 
 function RuntimeProbe({ count }: { count: number; label?: string }): CRCNode {
   const publicContext: RenderingContext2D = crcCanvasContext();
-  publicContext.fillRect(0, 0, count, count);
+  const reactiveCount = crcSignal(count);
+  publicContext.fillRect(0, 0, reactiveCount.get(), reactiveCount.get());
   return [
     createElement(Rectangle, { style: { x: count, y: 0, width: 1, height: 1 } }),
     false,
@@ -1052,6 +1117,148 @@ typedSetter({ count: stateCount + 1 });
 typedSetter(previous => ({ count: previous.count + 1 }));
 // @ts-expect-error state setters preserve the initialized value type
 typedSetter({ count: 'one' });
+
+const signalEquals: SignalEquals<number> = (previous, next) => previous === next;
+const signalOptions: SignalOptions<number> = {
+  debugName: 'package count',
+  equals: signalEquals,
+};
+const inferredWritable = signal(1, signalOptions);
+const writableCount: WritableSignal<number> = inferredWritable;
+const readonlyCount: Signal<number> = writableCount.asReadonly();
+const computedCount: Signal<number> = computed(() => readonlyCount.get() * 2);
+const untrackedCount: number = untracked(() => computedCount.get());
+const callbackSignal = signal<() => string>(() => 'ready');
+const callbackValue: () => string = callbackSignal.get();
+callbackSignal.set(() => 'updated');
+const unknownSignal: unknown = readonlyCount;
+if (isSignal(unknownSignal)) {
+  const narrowedSignal: Signal<unknown> = unknownSignal;
+  void narrowedSignal.get();
+}
+
+const animationOutput = signal(0);
+const objectAnimationOutput = signal({ x: 0 });
+const objectInterpolator: CRCInterpolator<{ x: number }> = (
+  from,
+  to,
+  progress,
+) => ({ x: from.x + (to.x - from.x) * progress });
+const tweenDefinition: CRCAnimationDefinition<number> = tween({
+  to: 10,
+  duration: 100,
+  easing: easing.easeInOut,
+});
+const springDefinition: CRCAnimationDefinition<number> = spring({ to: 20 });
+const objectDefinition = tween({
+  to: { x: 10 },
+  duration: 100,
+  interpolate: objectInterpolator,
+});
+const keyframeDefinition = keyframes({ values: [0, 5, 10], duration: 200 });
+const customDefinition = defineAnimation<number>({
+  duration: 10,
+  sample: ({ progress }) => progress,
+});
+const fixedStepper = stepper<{ value: number }, number>({
+  stepMilliseconds: 10,
+  initial: value => ({ value }),
+  step: state => ({ value: state.value + 1 }),
+  read: state => state.value,
+});
+const animationProgram: CRCAnimationProgram = sequence(
+  parallel(
+    track(animationOutput, tweenDefinition),
+    track(objectAnimationOutput, objectDefinition),
+  ),
+  marker('middle'),
+  track(animationOutput, keyframeDefinition),
+  wait(10),
+  repeat(track(animationOutput, springDefinition), {
+    iterations: 2,
+    direction: 'alternate',
+  }),
+  track(animationOutput, customDefinition),
+  track(animationOutput, fixedStepper),
+);
+const easingFunction: CRCEasing = easing.linear;
+const repeatDirection: CRCAnimationRepeatDirection = 'alternate-reverse';
+const repeatOptions: CRCAnimationRepeatOptions = {
+  iterations: 2,
+  direction: repeatDirection,
+};
+const tweenOptions: CRCTweenOptions<number> = { to: 1, duration: 10 };
+const keyframesOptions: CRCKeyframesOptions<number> = {
+  values: [0, 1],
+  duration: 10,
+};
+const springOptions: CRCSpringOptions = { to: 1 };
+const sampleInput: CRCAnimationSampleInput<number> = {
+  initialValue: 0,
+  localTime: 5,
+  progress: 0.5,
+};
+const animationOptions: CRCAnimationOptions<number> = {
+  duration: 10,
+  sample: input => input.progress,
+};
+const stepperOptions: CRCStepperOptions<{ value: number }, number> = {
+  stepMilliseconds: 10,
+  initial: value => ({ value }),
+  step: state => state,
+  read: state => state.value,
+};
+const playbackOptions: CRCPlaybackOptions = { autoplay: false };
+const playbackStatus: CRCPlaybackStatus = 'scheduled';
+const playbackEvent = null as CRCPlaybackEvent | null;
+const tweenTransitionOptions: CRCTweenTransitionOptions<{ x: number }> = {
+  type: 'tween',
+  duration: 100,
+  interpolate: objectInterpolator,
+};
+const springTransitionOptions: CRCSpringTransitionOptions = { type: 'spring' };
+
+function AnimationProbe(): CRCNode {
+  const player: CRCPlayback = crcPlayback(animationProgram, playbackOptions);
+  const tweened = crcTransition({ x: 10 }, tweenTransitionOptions);
+  const sprung = crcTransition(10, springTransitionOptions);
+  return createElement(
+    Text,
+    null,
+    `${player.status.get()}:${tweened.get().x}:${sprung.get()}`,
+  );
+}
+createElement(AnimationProbe, {});
+
+// @ts-expect-error spring values are number-only
+spring({ to: 'done' });
+const numberDefinition = tween({ to: 10, duration: 100 });
+// @ts-expect-error a numeric definition cannot write an object signal
+track(objectAnimationOutput, numberDefinition);
+type CoreExports = typeof import('@crc/core');
+// @ts-expect-error no free playback function is exported
+type FreePlay = CoreExports['play'];
+
+// @ts-expect-error readonly signals do not expose writes
+readonlyCount.set(2);
+// @ts-expect-error CRC style accepts resolved numbers, not signal containers
+const badSignalStyle: RectStyle = { x: writableCount, width: 10, height: 10 };
+// @ts-expect-error computed values are readonly
+computed(() => writableCount.get() * 2).update(value => value + 1);
+void untrackedCount;
+void callbackValue;
+void badSignalStyle;
+void easingFunction;
+void repeatOptions;
+void tweenOptions;
+void keyframesOptions;
+void springOptions;
+void sampleInput;
+void animationOptions;
+void stepperOptions;
+void playbackStatus;
+void playbackEvent;
+void (null as unknown as FreePlay);
 
 const memoValue: Readonly<{ value: number }> = crcMemo(
   () => ({ value: 1 }),

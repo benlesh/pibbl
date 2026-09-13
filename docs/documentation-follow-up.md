@@ -13,6 +13,12 @@ creates the Studio's generated documentation module. Repository design
 contracts, plans, testing notes, field notes, and other prose outside that
 tree are not public Studio pages and never enter public search.
 
+- `learningExampleCatalog` drives the 52 learner pages under `#/examples`.
+- `scenarioCatalog` drives deterministic fixtures under `#/testing`.
+- Learning pages load their canonical TSX and Monaco editor only when visited.
+- Existing `#/scenarios` routes redirect to their matching automated-test routes.
+- The generated [example catalog index](./scenario-index.md) documents both catalogs.
+
 The persistent public navigation has three areas, in this order:
 
 - **Learn** has cumulative Tutorials followed by a shallow, curated list of

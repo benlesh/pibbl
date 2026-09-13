@@ -11,6 +11,7 @@ const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const introductionRoutes = {
   "getting-started": "#/learn/guides/configure-jsx",
   "create-element-authoring": "#/learn/guides/author-without-jsx",
+  signals: "#/examples/start/signals",
 } as const;
 
 export const learningSections = [
@@ -173,6 +174,32 @@ const drafts = [
     load: () => import("./learning/start/create-element-authoring.example"),
   },
   {
+    slug: "signals",
+    title: "Signals",
+    shortTitle: "Signals",
+    section: "start",
+    order: 17,
+    summary:
+      "Read writable and computed values explicitly, then update a shared signal without turning styles into bindings.",
+    api: ["signal", "computed", "crcSignal"],
+    objectives: [
+      "Use .get() during a component render to declare the values that should refresh it.",
+      "Update writable signals from an event and derive a normal resolved value with computed().",
+    ],
+    prompts: {
+      gesture:
+        "Click the blue card to move it and switch its component-local color.",
+      code: "Change the x update or derive another label from the shared writable signal.",
+    },
+    apiNotes: [
+      "Calling .get() is the explicit dependency declaration; a changed write schedules one future CRC frame.",
+      "The style object contains ordinary resolved values, and a module-level signal can be shared independently of any mount.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["getting-started", "layer", "create-element-authoring"],
+    load: () => import("./learning/start/signals.example"),
+  },
+  {
     slug: "rectangle",
     title: "Rectangle",
     shortTitle: "Rectangle",
@@ -228,7 +255,8 @@ const drafts = [
     shortTitle: "Ellipse",
     section: "drawing",
     order: 35,
-    summary: "Stretch and rotate a curved mark with independent horizontal and vertical radii.",
+    summary:
+      "Stretch and rotate a curved mark with independent horizontal and vertical radii.",
     api: ["Ellipse"],
     objectives: [
       "Use radiusX, radiusY, and rotation to define ellipse geometry.",
@@ -252,7 +280,8 @@ const drafts = [
     shortTitle: "Arc",
     section: "drawing",
     order: 45,
-    summary: "Draw a stroke-only curved sweep with explicit start and end angles.",
+    summary:
+      "Draw a stroke-only curved sweep with explicit start and end angles.",
     api: ["Arc"],
     objectives: [
       "Define an open curved stroke with a radius and radian angles.",
@@ -276,7 +305,8 @@ const drafts = [
     shortTitle: "Wedge",
     section: "drawing",
     order: 55,
-    summary: "Close a circular sweep back to its center to make a filled sector.",
+    summary:
+      "Close a circular sweep back to its center to make a filled sector.",
     api: ["Wedge"],
     objectives: [
       "Use radius and radian angles to draw a center-closed sector.",
@@ -300,7 +330,8 @@ const drafts = [
     shortTitle: "Polygon",
     section: "drawing",
     order: 65,
-    summary: "Close ordered coordinate pairs into a filled, outlined multi-sided mark.",
+    summary:
+      "Close ordered coordinate pairs into a filled, outlined multi-sided mark.",
     api: ["Polygon"],
     objectives: [
       "Connect finite coordinate pairs into a closed polygon.",
@@ -325,14 +356,16 @@ const drafts = [
     shortTitle: "Regular polygon",
     section: "drawing",
     order: 75,
-    summary: "Generate a regular shape with equal sides and angles from a center and exactly one size mode.",
+    summary:
+      "Generate a regular shape with equal sides and angles from a center and exactly one size mode.",
     api: ["RegularPolygon"],
     objectives: [
       "Choose circumradius, inradius, or sideLength as the one defining size.",
       "Rotate a regular polygon without manually calculating its vertices.",
     ],
     prompts: {
-      gesture: "Compare the pentagon, hexagon, and square built from the three size modes.",
+      gesture:
+        "Compare the pentagon, hexagon, and square built from the three size modes.",
       code: "Change sides or rotation while keeping exactly one of circumradius, inradius, or sideLength.",
     },
     apiNotes: [
@@ -349,14 +382,16 @@ const drafts = [
     shortTitle: "Star",
     section: "drawing",
     order: 85,
-    summary: "Alternate outer tips and inner valleys to draw a star with selective rounded corners.",
+    summary:
+      "Alternate outer tips and inner valleys to draw a star with selective rounded corners.",
     api: ["Star"],
     objectives: [
       "Set points plus outerRadius and innerRadius to define the alternating vertices.",
       "Round selected tips while preserving sharp valleys with cornerRadii.",
     ],
     prompts: {
-      gesture: "Compare the five-tip star with the selectively rounded seven-tip star.",
+      gesture:
+        "Compare the five-tip star with the selectively rounded seven-tip star.",
       code: "Change points, radii, or alternating cornerRadii to reshape either star.",
     },
     apiNotes: [
@@ -578,8 +613,7 @@ const drafts = [
       "Use an inradius-defined hexagon to clip children and their interaction geometry.",
     ],
     prompts: {
-      gesture:
-        "Move across the hexagon window, including its cropped corners.",
+      gesture: "Move across the hexagon window, including its cropped corners.",
       code: "Change the hexagon's inradius or sides, then compare the clipped region.",
     },
     apiNotes: [
@@ -625,13 +659,7 @@ const drafts = [
     order: 117,
     summary:
       "Compose an animated WebGL2 cube and sphere between ordinary Canvas 2D paint.",
-    api: [
-      "WebGLLayer",
-      "Group3D",
-      "Cube",
-      "Sphere",
-      "crcAnimationFrame",
-    ],
+    api: ["WebGLLayer", "Group3D", "Cube", "Sphere", "crcAnimationFrame"],
     objectives: [
       "Place one transparent WebGL island between Canvas background and overlay content.",
       "Animate a Group3D with CRC frame time and select Cube or Sphere through ordinary event handlers.",
@@ -647,6 +675,41 @@ const drafts = [
     canvas: { width: 720, height: 420 },
     related: ["group", "layer", "overlap-and-paint-order"],
     load: () => import("./learning/composition/webgl-islands.example"),
+  },
+  {
+    slug: "signals-and-animation",
+    title: "Signals and animation",
+    shortTitle: "Signals + animation",
+    section: "composition",
+    order: 118,
+    summary:
+      "Compose immutable animation definitions into one component-owned program whose committed signal values enter ordinary styles explicitly.",
+    api: [
+      "crcSignal",
+      "crcTransition",
+      "crcPlayback",
+      "parallel",
+      "sequence",
+      "marker",
+      "spring",
+    ],
+    objectives: [
+      "Bind tween and spring definitions to writable signals, then compose their tracks with parallel, sequence, and a named marker.",
+      "Keep playback ownership in one component while every animation advances and commits through CRC's central frame scheduler.",
+    ],
+    prompts: {
+      gesture:
+        "Click the blue card or focus it and press Enter to replay the entrance and retarget its scale.",
+      code: "Change the entrance duration, marker name, or spring stiffness without changing how style reads resolved values.",
+    },
+    apiNotes: [
+      "Definitions and programs are immutable descriptions; crcPlayback supplies the stateful component owner and snapshots an accepted run.",
+      "All playbacks advance in shared scheduler phases and publish one central Commit before affected CRC roots render.",
+      "Signals declare dependencies through explicit .get() calls, so style receives ordinary numbers rather than signal or animation objects.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["signals", "group", "layer"],
+    load: () => import("./learning/composition/signals-and-animation.example"),
   },
   {
     slug: "layer",
@@ -1521,10 +1584,7 @@ export function validateLearningExampleCatalog(
         `Learning example "${entry.slug}" has an invalid public browse group.`,
       );
     }
-    if (
-      !entry.browseGroup &&
-      !(entry.slug in introductionRoutes)
-    ) {
+    if (!entry.browseGroup && !(entry.slug in introductionRoutes)) {
       throw new Error(
         `Learning example "${entry.slug}" must belong to a public browse group.`,
       );
@@ -1652,9 +1712,8 @@ export function getLearningExampleRoute(
   if (entry.browseGroup) {
     return `#/examples/${entry.browseGroup}/${entry.slug}`;
   }
-  const introductionRoute = introductionRoutes[
-    entry.slug as keyof typeof introductionRoutes
-  ];
+  const introductionRoute =
+    introductionRoutes[entry.slug as keyof typeof introductionRoutes];
   if (!introductionRoute) {
     throw new Error(
       `Learning example "${entry.slug}" has no canonical public route.`,

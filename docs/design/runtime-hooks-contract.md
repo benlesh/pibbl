@@ -1,6 +1,7 @@
 # CRC runtime and hook contract
 
-Status: current implemented contract, updated for WebGL islands on 2026-09-10.
+Status: current implemented contract, updated for WebGL islands, first-class
+signals, and the realm scheduler on 2026-09-13.
 
 This document defines element construction, traversal, identity, updates,
 hooks, recovery, and disposal. The [resource ownership
@@ -106,12 +107,18 @@ not add component or hook scopes.
 
 ## Scheduling
 
-Normal work coalesces on `requestAnimationFrame`. Several state/root/resize/
-density/parent-layer requests share the pending frame. The latest explicit
-root wins; a state request cannot erase it, and parent-update intent is
-OR-preserved. Rendering remains one full synchronous Canvas traversal with no
-DOM reconciliation, background work, retained drawing commands, or async
-component continuation.
+Normal work from every root and managed Layer in one loaded runtime coalesces
+onto one realm-wide `requestAnimationFrame`. Each frame runs Begin, Advance,
+Commit, Plan, Render, and Complete in order. The latest explicit root wins. A
+state request cannot erase it. A signal request cannot erase it, and
+nested-instance requests mark their ancestor composition path so parent-update
+intent remains OR-preserved.
+Rendering remains synchronous Canvas
+traversal with no DOM reconciliation, background work, retained drawing
+commands, or async component continuation. The [signals and scheduling
+contract](./signals-and-scheduling-contract.md) defines phase admission,
+revision, computed-validation, Layer, failure-isolation, and friend-renderer
+rules.
 
 A required `WebGLLayer` child update synchronously traverses that invalidated
 private instance once and requests the necessary parent composition without a
@@ -184,10 +191,13 @@ CRC saves/restores Canvas state around every Canvas component subtree. WebGL
 backend callbacks receive an explicit framework state baseline; built-ins set
 every state value they depend on, and CRC reinstalls the baseline after custom
 callbacks without broad state readback. Component throws release runtime
-ownership and refs and restore global/backend state; pixels
-already painted earlier in the frame remain. The controller's `dispose()` is
-idempotent, cancels the exact pending frame, releases every owned resource, and
-cannot affect a replacement mount. Abort uses the same guarded path.
+ownership and refs and restore global/backend state; pixels already painted
+earlier in the frame remain. Signal writes are forbidden while CRC evaluates
+components or primitive render callbacks, even for equality no-ops, and the
+guard runs before an updater or equality function. The controller's `dispose()`
+is idempotent, removes that root and its pending work from the realm scheduler,
+releases every owned resource, and cannot affect a replacement mount or
+unrelated roots. Abort uses the same guarded path.
 
 ## Public package boundary
 
@@ -205,6 +215,10 @@ hook/event vocabulary. The explicit `@crc/core/internal` friend entry supports
 matching official CRC packages only. It is version-coupled, absent from the
 application API reference, and carries no independent semantic-versioning or
 compatibility promise. Applications must not import it.
+
+The root `@crc/core` entry also exports `Signal`, `WritableSignal`,
+`SignalOptions`, `SignalEquals`, `signal`, `computed`, `untracked`, `isSignal`,
+and `crcSignal`.
 
 ## Deterministic evidence
 
@@ -226,6 +240,10 @@ prove one shared core identity, one traversal per invalidated child frame,
 coalesced animation requests, static cache hits, matched timestamp propagation,
 backend mismatch diagnostics, and restoration after success or failure.
 
+Focused suites cover signal `get()` reads, component consumers, realm scheduler
+requests, Layer invalidation, exact ownership, and isolated root render
+failures.
+
 ## Deliberate boundaries
 
 - Conditional hooks reject. Learner pages do not intentionally corrupt their
@@ -242,3 +260,30 @@ backend mismatch diagnostics, and restoration after success or failure.
 Completed numbered plans and dated field notes preserve the API that existed at
 their recorded revisions. They are historical evidence, not this current
 contract.
+
+## First-class signal integration
+
+`crcSignal(initialValue, options?)` returns one writable signal created for the
+mounted hook slot. The initial value, equality function, and debug name are
+mount-only. Explicit `get()` reads subscribe the evaluating component. Removal
+detaches that owner; a retained signal remains readable and writable but cannot
+schedule the removed owner. Focused `crc-signal`, signal graph,
+component-consumer, scheduler, Layer, and error-isolation suites cover these
+rules. `crcPlayback(program, options?)` and `crcTransition(target, options)` are
+ordered render-only hook slots. The first returns a stable component-owned
+handle; the second returns a stable readonly signal backed by private playback.
+Only successful renders adopt candidates or queue autoplay, entrance, and
+retarget work. Teardown releases registrations, writer leases, evaluator and
+stepper state, queued commands and milestones, and live callbacks exactly once;
+stale controls and retained transition results cannot schedule a replacement
+identity. All commands enter the shared realm scheduler, outputs/status/time
+publish in one Commit, and specialized behavior lives in the [animation
+contract](./animation-contract.md).
+
+`signal().set()` treats a function as data; `signal().update()` is the explicit
+updater operation. Signals require explicit `get()` and are not automatically
+unwrapped into styles or nodes.
+
+`@crc/core/internal` is a separate version-coupled friend entry for official
+lockstep renderer packages. It is neither re-exported at the root nor available
+to ordinary Studio examples.

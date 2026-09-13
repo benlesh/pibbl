@@ -319,13 +319,13 @@ describe('identity-transparent element enhancers', () => {
     const instance = getCRCInstance(canvas);
     const component = Array.from(instance.refs.values())[0];
     expect(instance.refs.size).toBe(1);
-    expect(teardownCount(component.teardowns)).toBe(1);
+    expect(teardownCount(component.teardowns)).toBe(2);
     expect(trace).toEqual(['render:component']);
 
     trace.length = 0;
     executeRender(canvas, 2, enhancedElement(1));
     expect(Array.from(instance.refs.values())[0]).toBe(component);
-    expect(teardownCount(component.teardowns)).toBe(2);
+    expect(teardownCount(component.teardowns)).toBe(3);
     expect(trace).toEqual([
       'mount:lazy-owner',
       'update:lazy-owner:1',
@@ -336,12 +336,12 @@ describe('identity-transparent element enhancers', () => {
 
     trace.length = 0;
     executeRender(canvas, 3, plainElement());
-    expect(teardownCount(component.teardowns)).toBe(2);
+    expect(teardownCount(component.teardowns)).toBe(3);
     expect(trace).toEqual(['dispose:lazy-owner', 'render:component']);
 
     trace.length = 0;
     executeRender(canvas, 4, enhancedElement(2));
-    expect(teardownCount(component.teardowns)).toBe(2);
+    expect(teardownCount(component.teardowns)).toBe(3);
     expect(trace).toEqual([
       'mount:lazy-owner',
       'update:lazy-owner:2',

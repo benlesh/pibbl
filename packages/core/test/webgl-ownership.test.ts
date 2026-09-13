@@ -2,6 +2,7 @@ import { createElement, crcWhenChanged, type CRCController } from '../src/index'
 import { executeRender } from '../src/lib/execute-render';
 import { GLOBAL_STATE, getCRCInstance } from '../src/lib/global-state';
 import { mountCRC } from '../src/lib/mount-crc';
+import { snapshotRealmScheduler } from '../src/lib/scheduler/testing';
 import { update } from '../src/lib/update';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -41,13 +42,13 @@ describe('backend ownership cleanup', () => {
     executeRender(canvas, 1);
     update(canvas);
     const instance = getCRCInstance(canvas);
-    expect(instance.animationFrameId).toBe(41);
+    expect(snapshotRealmScheduler().pendingHostFrames).toBe(1);
 
     expect(() => controller.dispose()).not.toThrow();
 
     expect(cancel).toHaveBeenCalledOnce();
     expect(reported).toEqual([cancellationError]);
-    expect(instance.animationFrameId).toBeUndefined();
+    expect(snapshotRealmScheduler().pendingHostFrames).toBe(0);
     expect(instance.mainTeardowns.closed).toBe(true);
     expect(instance.refs.size).toBe(0);
     expect(GLOBAL_STATE.crcInstances.has(canvas)).toBe(false);

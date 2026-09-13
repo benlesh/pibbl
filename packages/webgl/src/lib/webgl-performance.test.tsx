@@ -245,7 +245,7 @@ describe('WebGL retained structural performance', () => {
     expect(snapshot(counters, childExecutions)).toMatchObject({
       childExecutions: 2,
       transfers: 1,
-      composites: 2,
+      composites: 1,
     });
 
     shouldFail = false;
@@ -254,7 +254,7 @@ describe('WebGL retained structural performance', () => {
     expect(snapshot(counters, childExecutions)).toMatchObject({
       childExecutions: 3,
       transfers: 2,
-      composites: 3,
+      composites: 2,
     });
     expect(counters.layerController()?.committedGeneration).toBe(2);
 
@@ -264,11 +264,20 @@ describe('WebGL retained structural performance', () => {
     expect(() => counters.frames.runNext(4)).toThrow(failure);
     expect(snapshot(counters, childExecutions)).toMatchObject({
       childExecutions: 4,
+      transfers: 2,
+      composites: 2,
+    });
+    expect(replacementExecutions).toBe(0);
+
+    shouldFail = false;
+    counters.frames.runNext(5);
+    expect(snapshot(counters, childExecutions)).toMatchObject({
+      childExecutions: 5,
       transfers: 3,
-      composites: 4,
+      composites: 3,
     });
     expect(replacementExecutions).toBe(1);
-    expect(counters.layerController()?.committedGeneration).toBe(3);
+    expect(counters.layerController()?.committedGeneration).toBe(4);
   });
 
   it('does not consume a retained opaque child iterable during cache comparison', () => {

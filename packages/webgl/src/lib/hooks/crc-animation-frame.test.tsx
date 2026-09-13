@@ -1,7 +1,13 @@
 import {
   Rectangle,
   crc,
+  crcPlayback,
+  signal,
+  track,
+  tween,
   type CRCController,
+  type CRCPlayback,
+  type SystemStyle,
 } from '@crc/core';
 import { getCurrentFrameTimestamp } from '@crc/core/internal';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -20,6 +26,55 @@ afterEach(() => {
 });
 
 describe('crcAnimationFrame', () => {
+  it('renders committed animation signal values inside a WebGL island', () => {
+    installAnimationPlatform();
+    const frames = installControlledFrames();
+    vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
+      .mockImplementation(() => undefined);
+    const output = signal(0, { debugName: 'WebGL animation integration' });
+    const renderedValues: number[] = [];
+    let playback!: CRCPlayback;
+    type AnimatedStyle = SystemStyle & { readonly value: number };
+    const Draw = defineWebGLPrimitive<{}, AnimatedStyle>(
+      function renderAnimatedSignal(_props, style) {
+        renderedValues.push(style.value);
+      },
+      { hit: { kind: 'none' } },
+    );
+    function Animated(): ReturnType<typeof Draw> {
+      playback = crcPlayback(track(
+        output,
+        tween({ from: 0, to: 10, duration: 100 }),
+      ));
+      return (
+        <Draw
+          pointerEvents="none"
+          style={{ value: output.get() }}
+        />
+      );
+    }
+    const canvas = createCanvas(20, 20);
+    const controller = crc(canvas, (
+      <WebGLLayer style={{ width: 20, height: 20 }}>
+        <Animated />
+      </WebGLLayer>
+    ), { pixelRatio: 1 });
+    controllers.add(controller);
+
+    frames.runNext(-1);
+    expect(renderedValues).toEqual([0]);
+
+    playback.play();
+    frames.runNext(0);
+    frames.runNext(50);
+    expect(renderedValues).toEqual([0, 5]);
+    expect(frames.pendingIds()).toHaveLength(1);
+
+    frames.runNext(100);
+    expect(renderedValues).toEqual([0, 5, 10]);
+    expect(frames.pendingIds()).toEqual([]);
+  });
+
   it('shares one child frame across callers and stops when the final caller leaves', () => {
     installAnimationPlatform();
     const frames = installControlledFrames();
@@ -66,18 +121,18 @@ describe('crcAnimationFrame', () => {
 
     crc(canvas, scene(false, true));
     frames.runNewest(30);
-    expect(childTimestamps).toEqual([10, 10, 20, 20, 30]);
+    expect(childTimestamps).toEqual([10, 10, 20, 20, 30, 30, 30]);
     expect(canvasTimestamps).toEqual([10, 20, 30]);
     expect(frames.pendingIds()).toHaveLength(1);
 
     crc(canvas, scene(false, false));
     frames.runNewest(40);
-    expect(childTimestamps).toEqual([10, 10, 20, 20, 30]);
+    expect(childTimestamps).toEqual([10, 10, 20, 20, 30, 30, 30, 40]);
     expect(canvasTimestamps).toEqual([10, 20, 30, 40]);
     expect(frames.pendingIds()).toEqual([]);
   });
 
-  it('cancels disposal ownership and rejects a saved callback after keyed replacement', () => {
+  it('cancels pending realm work on disposal and ignores its saved callback', () => {
     installAnimationPlatform();
     const frames = installControlledFrames();
     vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
@@ -101,7 +156,6 @@ describe('crcAnimationFrame', () => {
 
     frames.runNext(1);
     const staleId = frames.pendingIds()[0]!;
-    const stale = frames.callback(staleId);
 
     crc(canvas, scene('replacement'));
     frames.runNewest(2);
@@ -109,21 +163,18 @@ describe('crcAnimationFrame', () => {
     expect(replacementId).not.toBe(staleId);
     expect(timestamps).toEqual([
       { key: 'old', timestamp: 1 },
+      { key: 'old', timestamp: 2 },
       { key: 'replacement', timestamp: 2 },
     ]);
-
-    stale(3);
-    expect(timestamps).toHaveLength(2);
-    expect(frames.pendingIds()).toEqual([replacementId]);
 
     controller.dispose();
     expect(frames.cancelledIds()).toContain(replacementId);
     expect(frames.pendingIds()).toEqual([]);
     frames.callback(replacementId)(4);
-    expect(timestamps).toHaveLength(2);
+    expect(timestamps).toHaveLength(3);
   });
 
-  it('does not strand a pending parent root when a child frame recomposes first', () => {
+  it('coalesces pending parent and child work into one realm frame', () => {
     installAnimationPlatform();
     const frames = installControlledFrames();
     vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
@@ -155,7 +206,7 @@ describe('crcAnimationFrame', () => {
     const childFrameId = frames.pendingIds()[0]!;
 
     crc(canvas, scene(false, 'replacement'));
-    expect(frames.pendingIds()).toHaveLength(2);
+    expect(frames.pendingIds()).toEqual([childFrameId]);
     frames.run(childFrameId, 2);
 
     expect(childTimestamps).toEqual([1, 2]);

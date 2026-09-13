@@ -313,9 +313,50 @@
   export class LayoutDiagnostic extends Error { readonly component: string; readonly property: string; readonly suppliedValue: unknown; readonly algorithm: string; readonly constraints: Readonly<Constraints> | undefined; constructor(input: LayoutDiagnosticInput) }
 
   export interface CRCRef<T> { current: T | undefined }
+  export type SignalEquals<T> = (previous: T, next: T) => boolean;
+  declare const signalBrand: unique symbol;
+  export interface SignalOptions<T> { equals?: SignalEquals<T>; debugName?: string }
+  export interface Signal<T> { readonly [signalBrand]: T; get(): T }
+  export interface WritableSignal<T> extends Signal<T> { set(value: T): void; update(update: (current: T) => T): void; asReadonly(): Signal<T> }
+  export type CRCEasing = (progress: number) => number;
+  export type CRCInterpolator<T> = (from: T, to: T, progress: number) => T;
+  declare const crcAnimationDefinitionBrand: unique symbol;
+  declare const crcAnimationProgramBrand: unique symbol;
+  export interface CRCAnimationDefinition<T> { readonly [crcAnimationDefinitionBrand]: T }
+  export interface CRCAnimationProgram { readonly [crcAnimationProgramBrand]: true }
+  export type CRCAnimationRepeatDirection = 'normal' | 'reverse' | 'alternate' | 'alternate-reverse';
+  export interface CRCAnimationRepeatOptions { readonly iterations: number; readonly direction?: CRCAnimationRepeatDirection }
+  export interface CRCTweenOptions<T> { readonly from?: T; readonly to: T; readonly duration: number; readonly easing?: CRCEasing; readonly interpolate?: CRCInterpolator<T>; readonly debugName?: string }
+  export interface CRCKeyframesOptions<T> { readonly values: readonly [T, T, ...T[]]; readonly duration: number; readonly offsets?: readonly number[]; readonly easing?: CRCEasing | readonly CRCEasing[]; readonly interpolate?: CRCInterpolator<T>; readonly debugName?: string }
+  export interface CRCSpringOptions { readonly from?: number; readonly to: number; readonly mass?: number; readonly stiffness?: number; readonly damping?: number; readonly initialVelocity?: number; readonly restSpeed?: number; readonly restDelta?: number; readonly maxDuration?: number; readonly debugName?: string }
+  export interface CRCTweenTransitionOptions<T> { readonly type: 'tween'; readonly duration: number; readonly easing?: CRCEasing; readonly interpolate?: CRCInterpolator<T>; readonly equals?: SignalEquals<T>; readonly initial?: T; readonly debugName?: string }
+  export interface CRCSpringTransitionOptions { readonly type: 'spring'; readonly mass?: number; readonly stiffness?: number; readonly damping?: number; readonly initialVelocity?: number; readonly restSpeed?: number; readonly restDelta?: number; readonly maxDuration?: number; readonly equals?: SignalEquals<number>; readonly initial?: number; readonly debugName?: string }
+  export interface CRCAnimationSampleInput<T> { readonly initialValue: T; readonly localTime: number; readonly progress: number }
+  export interface CRCAnimationOptions<T> { readonly duration: number; readonly sample: (input: CRCAnimationSampleInput<T>) => T; readonly debugName?: string }
+  export interface CRCStepperOptions<State, T> { readonly stepMilliseconds: number; readonly maxElapsedMilliseconds?: number; readonly initial: (currentValue: T) => State; readonly step: (state: State, deltaMilliseconds: number) => State; readonly read: (state: State) => T; readonly done?: (state: State) => boolean; readonly debugName?: string }
+  export type CRCPlaybackStatus = 'idle' | 'scheduled' | 'running' | 'paused' | 'finished' | 'cancelled' | 'disposed';
+  export interface CRCPlaybackEvent { readonly type: 'start' | 'iteration' | 'marker' | 'finish' | 'cancel'; readonly logicalTime: number; readonly frameId: number; readonly programPath: readonly number[]; readonly iteration: number; readonly marker?: string }
+  export interface CRCPlayback { readonly status: Signal<CRCPlaybackStatus>; readonly currentTime: Signal<number>; play(options?: { readonly conflict?: 'error' | 'replace' }): void; pause(): void; resume(): void; cancel(): void; finish(): void; seek(milliseconds: number): void; reverse(): void; setPlaybackRate(rate: number): void }
+  export interface CRCPlaybackOptions { readonly autoplay?: boolean; readonly conflict?: 'error' | 'replace'; readonly debugName?: string; readonly onEvent?: (event: CRCPlaybackEvent) => void; readonly onError?: (error: unknown) => void }
   export type StateUpdater<T> = (update: T | ((oldValue: T) => T)) => void;
 
   export function crc(canvas: HTMLCanvasElement, element: CRCNode, config?: CRCConfig): CRCController;
+  export function signal<T>(initialValue: T, options?: SignalOptions<T>): WritableSignal<T>;
+  export function computed<T>(compute: () => T, options?: SignalOptions<T>): Signal<T>;
+  export function untracked<T>(callback: () => T): T;
+  export function isSignal(value: unknown): value is Signal<unknown>;
+  export const easing: Readonly<{ readonly linear: CRCEasing; readonly easeIn: CRCEasing; readonly easeOut: CRCEasing; readonly easeInOut: CRCEasing; readonly cubicBezier: (x1: number, y1: number, x2: number, y2: number) => CRCEasing; readonly steps: (count: number, position?: 'start' | 'end') => CRCEasing }>;
+  export function tween<T>(options: Readonly<CRCTweenOptions<T>>): CRCAnimationDefinition<T>;
+  export function keyframes<T>(options: Readonly<CRCKeyframesOptions<T>>): CRCAnimationDefinition<T>;
+  export function spring(options: Readonly<CRCSpringOptions>): CRCAnimationDefinition<number>;
+  export function defineAnimation<T>(options: Readonly<CRCAnimationOptions<T>>): CRCAnimationDefinition<T>;
+  export function stepper<State, T>(options: Readonly<CRCStepperOptions<State, T>>): CRCAnimationDefinition<T>;
+  export function track<T>(output: WritableSignal<T>, definition: CRCAnimationDefinition<T>): CRCAnimationProgram;
+  export function sequence(...children: readonly CRCAnimationProgram[]): CRCAnimationProgram;
+  export function parallel(...children: readonly CRCAnimationProgram[]): CRCAnimationProgram;
+  export function wait(duration: number): CRCAnimationProgram;
+  export function marker(name: string): CRCAnimationProgram;
+  export function repeat(child: CRCAnimationProgram, options: Readonly<CRCAnimationRepeatOptions>): CRCAnimationProgram;
   type ElementInput<P> = 0 extends (1 & P) ? P & { key?: CRCKey } : 'key' extends UnionKeys<P> ? never : P & { key?: CRCKey };
   type ElementInputOrNull<P> = [ElementInput<P>] extends [never] ? never : ElementInput<P> | null;
   type ChildrenForProps<P> = P extends unknown ? 'children' extends keyof P ? P['children'] : never : never;
@@ -369,6 +410,10 @@
   export function crcState<T>(initial?: T): readonly [T, StateUpdater<T>];
   export function crcMemo<T>(create: () => T, dependencies: any[]): T;
   export function crcRef<T>(initial?: T): CRCRef<T>;
+  export function crcSignal<T>(initialValue: T, options?: SignalOptions<T>): WritableSignal<T>;
+  export function crcPlayback(program: CRCAnimationProgram, options?: CRCPlaybackOptions): CRCPlayback;
+  export function crcTransition(target: number, options: CRCSpringTransitionOptions): Signal<number>;
+  export function crcTransition<T>(target: T, options: CRCTweenTransitionOptions<T>): Signal<T>;
   export function crcWhenChanged(effect: () => void | (() => void), dependencies?: any[]): void;
   export function crcCursor(options: { style?: string; path?: Path2D; fill?: boolean; lineInteractionWidth?: number }): void;
   export function crcEvent<K extends Extract<CRCEventType, 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseout' | 'mousedown' | 'mouseup' | 'contextmenu'>>(eventName: K, listener: CRCEventHandler<K> | undefined, path: Path2D, fill?: boolean, lineInteractionWidth?: number): void;

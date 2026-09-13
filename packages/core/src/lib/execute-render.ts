@@ -13,6 +13,8 @@ import type {
   CRCBackendFrame,
   CRCBackendMount,
 } from './backend/types.js';
+import type { CRCFrameSnapshot } from './scheduler/types.js';
+import { withSignalWriteForbidden } from './signals/graph.js';
 
 /**
  * Gets the root element for a canvas and renders it. This is the
@@ -23,7 +25,8 @@ export function executeRender(
   canvas: Canvas,
   renderTimestamp: number,
   updatedRoot?: CRCNode | typeof NO_PENDING_ROOT,
-  updateParents = false,
+  _updateParents = false,
+  frameSnapshot?: CRCFrameSnapshot,
 ): void {
   if (!canvas) {
     throw new Error('No canvas element provided');
@@ -50,17 +53,13 @@ export function executeRender(
     (renderTransaction as RootRenderTransaction).finish(success);
   };
 
-  if (crcInstance.animationFrameId !== undefined) {
-    cancelAnimationFrame(crcInstance.animationFrameId);
-    crcInstance.animationFrameId = undefined;
-  }
-
   const prevCurrentCRCInstance = GLOBAL_STATE.currentCRCInstance;
   const prevCanvas = GLOBAL_STATE.canvas;
   const prevRenderContext = GLOBAL_STATE.renderContext;
   const prevRenderTarget = GLOBAL_STATE.renderTarget;
   const prevWorldBaseTransform = GLOBAL_STATE.worldBaseTransform;
   const prevRenderTransaction = GLOBAL_STATE.renderTransaction;
+  const prevFrameSnapshot = GLOBAL_STATE.frameSnapshot;
   const prevPrimitiveReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
   const prevSeenIds = GLOBAL_STATE.seenIds;
   const prevSeenKeys = GLOBAL_STATE.seenKeys;
@@ -76,9 +75,19 @@ export function executeRender(
   let frame: CRCBackendFrame<unknown> | undefined;
   let frameSuccess = false;
   try {
+    const activeFrameSnapshot = frameSnapshot ?? (
+      prevFrameSnapshot?.logicalTime === renderTimestamp ?
+        prevFrameSnapshot :
+        Object.freeze({
+          frameId: prevFrameSnapshot?.frameId ?? 0,
+          hostTime: prevFrameSnapshot?.hostTime ?? renderTimestamp,
+          logicalTime: renderTimestamp,
+        })
+    );
+    GLOBAL_STATE.frameSnapshot = activeFrameSnapshot;
     GLOBAL_STATE.currentCRCInstance = crcInstance;
     GLOBAL_STATE.renderTransaction = renderTransaction;
-    GLOBAL_STATE.currentCRCInstance.renderTimestamp = renderTimestamp;
+    GLOBAL_STATE.currentCRCInstance.renderTimestamp = activeFrameSnapshot.logicalTime;
     GLOBAL_STATE.canvas = canvas;
     const rootNode = arguments.length >= 3 && updatedRoot !== NO_PENDING_ROOT ?
       updatedRoot :
@@ -92,7 +101,7 @@ export function executeRender(
       logicalHeight: crcInstance.rootLayoutBox.height,
       backingWidth: canvas.width,
       backingHeight: canvas.height,
-      renderTimestamp,
+      renderTimestamp: activeFrameSnapshot.logicalTime,
     });
     if (!frame) {
       finishTransaction(true);
@@ -132,7 +141,10 @@ export function executeRender(
     const id = 'root';
     GLOBAL_STATE.unseenIds.delete(id);
     GLOBAL_STATE.seenIds.add(id);
-    render(rootNode, id, undefined);
+    withSignalWriteForbidden(
+      'CRC render',
+      () => render(rootNode, id, undefined),
+    );
 
     for (const id of GLOBAL_STATE.unseenIds) {
       // HACK: I want to be more efficient here, but this is fine for now
@@ -150,58 +162,42 @@ export function executeRender(
     crcInstance.refs.clear();
     throw error;
   } finally {
-    const { parent } = crcInstance;
     try {
-      try {
-        if (frame && !frameSuccess) {
-          crcInstance.backendDriver.finishFrame(frame, false);
-        }
-      } finally {
-        try {
-          clearTempState();
-          GLOBAL_STATE.clippingStack = prevClippingStack;
-          GLOBAL_STATE.layoutStack = prevLayoutStack;
-          if (ownsRenderTransaction) {
-            try {
-              finishTransaction(false);
-            } finally {
-              if (crcInstance.eventRoot.renderTransaction === renderTransaction) {
-                crcInstance.eventRoot.renderTransaction = undefined;
-              }
-            }
-          }
-        } finally {
-          GLOBAL_STATE.currentCRCInstance = prevCurrentCRCInstance;
-          GLOBAL_STATE.canvas = prevCanvas;
-          GLOBAL_STATE.renderContext = prevRenderContext;
-          GLOBAL_STATE.renderTarget = prevRenderTarget;
-          GLOBAL_STATE.worldBaseTransform = prevWorldBaseTransform;
-          GLOBAL_STATE.renderTransaction = prevRenderTransaction;
-          GLOBAL_STATE.primitiveReceiverToken = prevPrimitiveReceiverToken;
-          GLOBAL_STATE.seenIds = prevSeenIds;
-          GLOBAL_STATE.seenKeys = prevSeenKeys;
-          GLOBAL_STATE.unseenIds = prevUnseendIds;
-          GLOBAL_STATE.componentRefs = prevComponentRefs;
-          GLOBAL_STATE.componentHookIndex = prevComponentHookIndex;
-          GLOBAL_STATE.componentIsMounting = prevComponentIsMounting;
-          GLOBAL_STATE.backendDriver = prevBackendDriver;
-          GLOBAL_STATE.backendFrame = prevBackendFrame;
-          GLOBAL_STATE.backendEnvironment = prevBackendEnvironment;
-        }
+      if (frame && !frameSuccess) {
+        crcInstance.backendDriver.finishFrame(frame, false);
       }
     } finally {
-      if (updateParents && parent) {
-        const parentInstance = GLOBAL_STATE.crcInstances.get(parent);
-        if (
-          parentInstance &&
-          parentInstance.eventRoot === crcInstance.eventRoot &&
-          !parentInstance.mainTeardowns.closed
-        ) {
-          const pendingRoot = parentInstance.pendingRoot;
-          parentInstance.pendingRoot = NO_PENDING_ROOT;
-          parentInstance.pendingUpdateParents = false;
-          executeRender(parent, renderTimestamp, pendingRoot, true);
+      try {
+        clearTempState();
+        GLOBAL_STATE.clippingStack = prevClippingStack;
+        GLOBAL_STATE.layoutStack = prevLayoutStack;
+        if (ownsRenderTransaction) {
+          try {
+            finishTransaction(false);
+          } finally {
+            if (crcInstance.eventRoot.renderTransaction === renderTransaction) {
+              crcInstance.eventRoot.renderTransaction = undefined;
+            }
+          }
         }
+      } finally {
+        GLOBAL_STATE.currentCRCInstance = prevCurrentCRCInstance;
+        GLOBAL_STATE.canvas = prevCanvas;
+        GLOBAL_STATE.renderContext = prevRenderContext;
+        GLOBAL_STATE.renderTarget = prevRenderTarget;
+        GLOBAL_STATE.worldBaseTransform = prevWorldBaseTransform;
+        GLOBAL_STATE.renderTransaction = prevRenderTransaction;
+        GLOBAL_STATE.frameSnapshot = prevFrameSnapshot;
+        GLOBAL_STATE.primitiveReceiverToken = prevPrimitiveReceiverToken;
+        GLOBAL_STATE.seenIds = prevSeenIds;
+        GLOBAL_STATE.seenKeys = prevSeenKeys;
+        GLOBAL_STATE.unseenIds = prevUnseendIds;
+        GLOBAL_STATE.componentRefs = prevComponentRefs;
+        GLOBAL_STATE.componentHookIndex = prevComponentHookIndex;
+        GLOBAL_STATE.componentIsMounting = prevComponentIsMounting;
+        GLOBAL_STATE.backendDriver = prevBackendDriver;
+        GLOBAL_STATE.backendFrame = prevBackendFrame;
+        GLOBAL_STATE.backendEnvironment = prevBackendEnvironment;
       }
     }
   }

@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { crc } from '../crc';
-import { clearSharedState, getCRCInstance } from '../global-state';
+import { clearSharedState } from '../global-state';
 import { crcState, type StateUpdater } from './crc-state';
 import { crcWhenChanged } from './crc-when-changed';
 import { createElement } from '../element/create-element';
+import { snapshotRealmScheduler } from '../scheduler/testing';
 
 interface StateProbeProps {
   onRender: (value: number, setValue: StateUpdater<number>) => void;
@@ -47,15 +48,23 @@ describe('crcState ownership', () => {
 
     crc(canvas, createElement(Empty, {}));
     await nextFrame();
-    expect(getCRCInstance(canvas).animationFrameId).toBeUndefined();
+    expect(snapshotRealmScheduler()).toMatchObject({
+      pendingHostFrames: 0,
+      registeredRoots: 1,
+      dirtyRoots: 0,
+    });
 
     expect(() => staleSetter?.(1)).not.toThrow();
-    expect(getCRCInstance(canvas).animationFrameId).toBeUndefined();
+    expect(snapshotRealmScheduler()).toMatchObject({
+      pendingHostFrames: 0,
+      registeredRoots: 1,
+      dirtyRoots: 0,
+    });
 
     controller.dispose();
   });
 
-  it('cannot let a disposed mount setter update a replacement mount', async () => {
+  it('cannot let an exact-instance disposed mount setter update a replacement mount', async () => {
     const canvas = createCanvas();
     let staleSetter: StateUpdater<number> | undefined;
     const staleController = crc(canvas, createElement(StateProbe, {
@@ -77,7 +86,11 @@ describe('crcState ownership', () => {
     await nextFrame();
 
     expect(() => staleSetter?.(10)).not.toThrow();
-    expect(getCRCInstance(canvas).animationFrameId).toBeUndefined();
+    expect(snapshotRealmScheduler()).toMatchObject({
+      pendingHostFrames: 0,
+      registeredRoots: 1,
+      dirtyRoots: 0,
+    });
     expect(liveValues).toEqual([0]);
 
     liveSetter?.(2);
@@ -99,7 +112,11 @@ describe('crcState ownership', () => {
     await nextFrame();
 
     expect(updaterCalls).toBe(0);
-    expect(getCRCInstance(canvas).animationFrameId).toBeUndefined();
+    expect(snapshotRealmScheduler()).toMatchObject({
+      pendingHostFrames: 0,
+      registeredRoots: 1,
+      dirtyRoots: 0,
+    });
 
     controller.dispose();
   });

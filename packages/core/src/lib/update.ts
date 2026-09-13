@@ -1,8 +1,8 @@
-import { executeRender } from './execute-render.js';
 import {
   GLOBAL_STATE,
   NO_PENDING_ROOT,
 } from './global-state.js';
+import { requestInstanceRender } from './scheduler/realm-scheduler.js';
 import { Canvas, type CRCNode } from './types.js';
 
 /**
@@ -25,31 +25,8 @@ export function update(
   const hasExplicitRoot = arguments.length >= 2 && !(
     rootElement === undefined && updateParents
   );
-  if (hasExplicitRoot) {
-    crcInstance.pendingRoot = rootElement;
-  }
-  crcInstance.pendingUpdateParents ||= updateParents;
-
-  if (crcInstance.animationFrameId !== undefined) {
-    return;
-  }
-
-  let frameId = 0;
-  frameId = requestAnimationFrame((timestamp) => {
-    if (
-      GLOBAL_STATE.crcInstances.get(canvas) !== crcInstance ||
-      crcInstance.mainTeardowns.closed ||
-      crcInstance.animationFrameId !== frameId
-    ) {
-      return;
-    }
-
-    crcInstance.animationFrameId = undefined;
-    const pendingRoot = crcInstance.pendingRoot;
-    const pendingUpdateParents = crcInstance.pendingUpdateParents;
-    crcInstance.pendingRoot = NO_PENDING_ROOT;
-    crcInstance.pendingUpdateParents = false;
-    executeRender(canvas, timestamp, pendingRoot, pendingUpdateParents);
+  requestInstanceRender(crcInstance, {
+    pendingRoot: hasExplicitRoot ? rootElement : NO_PENDING_ROOT,
+    pendingUpdateParents: updateParents,
   });
-  crcInstance.animationFrameId = frameId;
 }

@@ -1,6 +1,13 @@
 import type { RectangleProps } from './rect';
 import type { RectStyle } from '../style/types';
 import type { SystemStyle } from '../types';
+import {
+  crcPlayback,
+  parallel,
+  track,
+  tween,
+  type CRCPlayback,
+} from '@crc/core';
 import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
 import { crc } from '../crc';
@@ -14,6 +21,11 @@ import { crcEventTarget } from '../hooks/crc-event-target';
 import { crcRef } from '../hooks/crc-ref';
 import { crcState } from '../hooks/crc-state';
 import { crcWhenChanged } from '../hooks/crc-when-changed';
+import { computed, signal } from '../signals/graph';
+import {
+  installSchedulerDriverForTest,
+  ManualSchedulerDriver,
+} from '../scheduler/testing';
 import { focusManaged } from '../focus/policy-test-support';
 import { componentTest } from '../test-utils/component-test';
 import type { CRCController, CRCNode } from '../types';
@@ -26,6 +38,437 @@ import { Text } from './text';
 import { definePrimitive } from '../define-primitive';
 
 describe('Layer children and retained subtree contract', () => {
+  it('schedules computed-only Layer validation and repaints only for changed output', () => {
+    const driver = new ManualSchedulerDriver();
+    const restoreDriver = installSchedulerDriverForTest(driver);
+    const source = signal(0);
+    const color = computed(() => source.get() % 2 === 0 ? 'red' : 'blue');
+    let childRenders = 0;
+    const Child = (_props: {}): CRCNode => {
+      childRenders++;
+      return createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: color.get() },
+      });
+    };
+    const canvas = document.createElement('canvas');
+    canvas.width = 20;
+    canvas.height = 20;
+    document.body.appendChild(canvas);
+    const controller = crc(canvas, createElement(Layer, {
+      style: { width: 20, height: 20 },
+      children: createElement(Child, {}),
+    }), { pixelRatio: 1 });
+
+    try {
+      driver.flush(10);
+      expect(childRenders).toBe(1);
+      expect(pixel(canvas, 5, 5)).toEqual([255, 0, 0, 255]);
+
+      source.set(1);
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(20);
+      expect(childRenders).toBe(2);
+      expect(pixel(canvas, 5, 5)).toEqual([0, 0, 255, 255]);
+
+      source.set(3);
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(30);
+      expect(childRenders).toBe(2);
+      expect(pixel(canvas, 5, 5)).toEqual([0, 0, 255, 255]);
+      expect(driver.pendingHostFrames).toBe(0);
+    } finally {
+      controller.dispose();
+      restoreDriver();
+    }
+  });
+
+  it('refreshes a pending signal-driven child bitmap before composing it', () => {
+    const driver = new ManualSchedulerDriver();
+    const restoreDriver = installSchedulerDriverForTest(driver);
+    const color = signal('red');
+    let childRenders = 0;
+    const Child = (_props: {}): CRCNode => {
+      childRenders++;
+      return createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: color.get() },
+      });
+    };
+    const scene = createElement(Layer, {
+      style: { width: 20, height: 20 },
+      children: createElement(Child, {}),
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = 20;
+    canvas.height = 20;
+    document.body.appendChild(canvas);
+    const controller = crc(canvas, scene, { pixelRatio: 1 });
+    const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
+
+    try {
+      driver.flush(10);
+      const layerCanvas = layerCanvasFrom(drawImage);
+      drawImage.mockClear();
+
+      color.set('blue');
+      driver.flush(20);
+
+      expect(childRenders).toBe(2);
+      expect(pixel(canvas, 5, 5)).toEqual([0, 0, 255, 255]);
+      expect(drawImage).toHaveBeenCalledTimes(1);
+      const child = getCRCInstance(layerCanvas);
+      expect(child.completedRenderRevision).toBe(child.requestedRenderRevision);
+    } finally {
+      drawImage.mockRestore();
+      controller.dispose();
+      restoreDriver();
+    }
+  });
+
+  it('refreshes nested pending layer surfaces from child to parent', () => {
+    const driver = new ManualSchedulerDriver();
+    const restoreDriver = installSchedulerDriverForTest(driver);
+    const color = signal('red');
+    let nestedRenders = 0;
+    const NestedChild = (_props: {}): CRCNode => {
+      nestedRenders++;
+      return createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: color.get() },
+      });
+    };
+    const scene = createElement(Layer, {
+      style: { width: 20, height: 20 },
+      children: createElement(Layer, {
+        style: { width: 20, height: 20 },
+        children: createElement(NestedChild, {}),
+      }),
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = 20;
+    canvas.height = 20;
+    document.body.appendChild(canvas);
+    const controller = crc(canvas, scene, { pixelRatio: 1 });
+    const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
+    const offscreenDrawImage = vi.spyOn(
+      OffscreenCanvasRenderingContext2D.prototype,
+      'drawImage',
+    );
+
+    try {
+      driver.flush(10);
+      const outer = Array.from(GLOBAL_STATE.crcInstances.values())
+        .find(instance => instance.parent === canvas)!;
+      const nested = Array.from(GLOBAL_STATE.crcInstances.values())
+        .find(instance => instance.parent === outer.canvas)!;
+      drawImage.mockClear();
+      offscreenDrawImage.mockClear();
+
+      color.set('blue');
+      driver.flush(20);
+
+      expect(nestedRenders).toBe(2);
+      expect(pixel(canvas, 5, 5)).toEqual([0, 0, 255, 255]);
+      expect(offscreenDrawImage.mock.calls.map(([source]) => source)).toEqual([
+        nested.canvas,
+      ]);
+      expect(drawImage.mock.calls.map(([source]) => source)).toEqual([outer.canvas]);
+      expect(nested.completedRenderRevision).toBe(nested.requestedRenderRevision);
+      expect(outer.completedRenderRevision).toBe(outer.requestedRenderRevision);
+    } finally {
+      offscreenDrawImage.mockRestore();
+      drawImage.mockRestore();
+      controller.dispose();
+      restoreDriver();
+    }
+  });
+
+  it('reuses a clean child bitmap when a parent signal changes Layer placement', () => {
+    const driver = new ManualSchedulerDriver();
+    const restoreDriver = installSchedulerDriverForTest(driver);
+    const offset = signal(0);
+    let childRenders = 0;
+    const Child = (_props: {}): CRCNode => {
+      childRenders++;
+      return createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: 'red' },
+      });
+    };
+    const Root = (_props: {}): CRCNode => createElement(Group, {
+      style: { translateX: offset.get() },
+      children: createElement(Layer, {
+        style: { width: 20, height: 20 },
+        children: createElement(Child, {}),
+      }),
+    });
+    const root = createElement(Root, {});
+    const canvas = document.createElement('canvas');
+    canvas.width = 40;
+    canvas.height = 20;
+    document.body.appendChild(canvas);
+    const controller = crc(canvas, root, { pixelRatio: 1 });
+
+    try {
+      driver.flush(10);
+
+      offset.set(10);
+      driver.flush(20);
+
+      expect(childRenders).toBe(1);
+      expect(pixel(canvas, 15, 5)).toEqual([255, 0, 0, 255]);
+    } finally {
+      controller.dispose();
+      restoreDriver();
+    }
+  });
+
+  it('isolates scheduler-driven Layer A and nested signal work from sibling Layer B', () => {
+    const driver = new ManualSchedulerDriver();
+    const restoreDriver = installSchedulerDriverForTest(driver);
+    const aSignal = signal(0);
+    const nestedSignal = signal(0);
+    const renders = { root: 0, a: 0, b: 0, nested: 0 };
+    const AChild = (_props: {}): CRCNode => {
+      renders.a++;
+      aSignal.get();
+      return createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: 'red' },
+      });
+    };
+    const NestedChild = (_props: {}): CRCNode => {
+      renders.nested++;
+      nestedSignal.get();
+      return createElement(Rectangle, {
+        style: { x: 20, width: 20, height: 20, fill: 'blue' },
+      });
+    };
+    const BChild = (_props: {}): CRCNode => {
+      renders.b++;
+      return createElement(Rectangle, {
+        style: { width: 20, height: 20, fill: 'green' },
+      });
+    };
+    const Root = (_props: {}): CRCNode => {
+      renders.root++;
+      return createElement(Fragment, {
+        children: [
+          createElement(Layer, {
+            style: { width: 40, height: 20 },
+            children: [
+              createElement(AChild, {}),
+              createElement(Layer, {
+                style: { width: 40, height: 20 },
+                children: createElement(NestedChild, {}),
+              }),
+            ],
+          }),
+          createElement(Layer, {
+            style: { width: 20, height: 20 },
+            children: createElement(BChild, {}),
+          }),
+        ],
+      });
+    };
+    const canvas = document.createElement('canvas');
+    canvas.width = 40;
+    canvas.height = 20;
+    document.body.appendChild(canvas);
+    const controller = crc(canvas, createElement(Root, {}), { pixelRatio: 1 });
+    const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
+    const offscreenDrawImage = vi.spyOn(
+      OffscreenCanvasRenderingContext2D.prototype,
+      'drawImage',
+    );
+
+    try {
+      driver.flush(10);
+      const [aLayer, bLayer] = Array.from(GLOBAL_STATE.crcInstances.values())
+        .filter(instance => instance.parent === canvas);
+      const nestedLayer = Array.from(GLOBAL_STATE.crcInstances.values())
+        .find(instance => instance.parent === aLayer!.canvas)!;
+      drawImage.mockClear();
+      offscreenDrawImage.mockClear();
+
+      aSignal.set(1);
+      driver.flush(20);
+
+      expect(renders).toEqual({ root: 2, a: 2, b: 1, nested: 1 });
+      expect(drawImage.mock.calls.map(([source]) => source)).toEqual([
+        aLayer!.canvas,
+        bLayer!.canvas,
+      ]);
+      expect(aLayer!.completedRenderRevision).toBe(aLayer!.requestedRenderRevision);
+      expect(bLayer!.completedRenderRevision).toBe(bLayer!.requestedRenderRevision);
+      drawImage.mockClear();
+      offscreenDrawImage.mockClear();
+
+      nestedSignal.set(1);
+      driver.flush(30);
+
+      expect(renders).toEqual({ root: 3, a: 3, b: 1, nested: 2 });
+      expect(offscreenDrawImage.mock.calls.map(([source]) => source)).toEqual([
+        nestedLayer.canvas,
+      ]);
+      expect(drawImage.mock.calls.map(([source]) => source)).toEqual([
+        aLayer!.canvas,
+        bLayer!.canvas,
+      ]);
+      expect(nestedLayer.completedRenderRevision).toBe(
+        nestedLayer.requestedRenderRevision,
+      );
+      expect(aLayer!.completedRenderRevision).toBe(aLayer!.requestedRenderRevision);
+    } finally {
+      offscreenDrawImage.mockRestore();
+      drawImage.mockRestore();
+      controller.dispose();
+      restoreDriver();
+    }
+  });
+
+  it('keeps animation invalidation local to Layer children and reuses them for parent presentation', () => {
+    const driver = new ManualSchedulerDriver();
+    const restoreDriver = installSchedulerDriverForTest(driver);
+    const childX = signal(0);
+    const parentOffset = signal(0);
+    const parentOpacity = signal(1);
+    let childPlayback!: CRCPlayback;
+    let presentationPlayback!: CRCPlayback;
+    const renders = { root: 0, a: 0, b: 0 };
+    const AChild = vi.fn((_props: {}): CRCNode => {
+      renders.a++;
+      return createElement(Rectangle, {
+        style: {
+          x: childX.get(),
+          width: 10,
+          height: 10,
+          fill: 'red',
+        },
+      });
+    });
+    const BChild = (_props: {}): CRCNode => {
+      renders.b++;
+      return createElement(Rectangle, {
+        style: { width: 10, height: 10, fill: 'blue' },
+      });
+    };
+    const Root = (_props: {}): CRCNode => {
+      renders.root++;
+      childPlayback = crcPlayback(
+        track(childX, tween({ from: 0, to: 20, duration: 100 })),
+      );
+      presentationPlayback = crcPlayback(parallel(
+        track(parentOffset, tween({ from: 0, to: 10, duration: 100 })),
+        track(parentOpacity, tween({ from: 1, to: 0.5, duration: 100 })),
+      ));
+      const offset = parentOffset.get();
+      const opacity = parentOpacity.get();
+      return createElement(Fragment, {
+        children: [
+          createElement(Group, {
+            style: { translateX: offset },
+            children: createElement(Layer, {
+              style: {
+                width: 30,
+                height: 10,
+                filter: { type: 'opacity', amount: opacity },
+              },
+              children: createElement(AChild, {}),
+            }),
+          }),
+          createElement(Layer, {
+            style: { width: 10, height: 10 },
+            children: createElement(BChild, {}),
+          }),
+        ],
+      });
+    };
+    const canvas = document.createElement('canvas');
+    canvas.width = 40;
+    canvas.height = 10;
+    document.body.appendChild(canvas);
+    const controller = crc(canvas, createElement(Root, {}), { pixelRatio: 1 });
+    const drawImage = vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage');
+    const offscreenDrawImage = vi.spyOn(
+      OffscreenCanvasRenderingContext2D.prototype,
+      'drawImage',
+    );
+
+    try {
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(-1);
+      const [aLayer, bLayer] = Array.from(GLOBAL_STATE.crcInstances.values())
+        .filter(instance => instance.parent === canvas);
+      expect(aLayer).toBeDefined();
+      expect(bLayer).toBeDefined();
+      renders.root = 0;
+      renders.a = 0;
+      renders.b = 0;
+      drawImage.mockClear();
+      offscreenDrawImage.mockClear();
+      const requestsBeforeChild = driver.requestCount;
+      childPlayback.play();
+      expect(driver.requestCount).toBe(requestsBeforeChild + 1);
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(0);
+      drawImage.mockClear();
+      offscreenDrawImage.mockClear();
+      expect(renders).toEqual({ root: 0, a: 0, b: 0 });
+
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(50);
+
+      expect(renders).toEqual({ root: 1, a: 1, b: 0 });
+      const aCompositeIndex = offscreenDrawImage.mock.calls.findIndex(
+        ([source]) => source === aLayer!.canvas,
+      );
+      expect(aCompositeIndex).toBeGreaterThanOrEqual(0);
+      expect(AChild.mock.invocationCallOrder.at(-1))
+        .toBeLessThan(
+          offscreenDrawImage.mock.invocationCallOrder[aCompositeIndex]!,
+        );
+      expect(drawImage.mock.calls.some(([source]) => source === bLayer!.canvas))
+        .toBe(true);
+      const bRevision = bLayer!.requestedRenderRevision;
+
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(100);
+      const aRevision = aLayer!.requestedRenderRevision;
+      renders.root = 0;
+      renders.a = 0;
+      renders.b = 0;
+      drawImage.mockClear();
+      offscreenDrawImage.mockClear();
+      const requestsBeforePresentation = driver.requestCount;
+      presentationPlayback.play();
+      expect(driver.requestCount).toBe(requestsBeforePresentation + 1);
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(110);
+      drawImage.mockClear();
+      offscreenDrawImage.mockClear();
+      expect(renders).toEqual({ root: 0, a: 0, b: 0 });
+
+      expect(driver.pendingHostFrames).toBe(1);
+      driver.flush(160);
+
+      expect(renders).toEqual({ root: 1, a: 0, b: 0 });
+      expect(aLayer!.requestedRenderRevision).toBe(aRevision);
+      expect(bLayer!.requestedRenderRevision).toBe(bRevision);
+      expect(offscreenDrawImage.mock.calls.some(
+        ([source]) => source === aLayer!.canvas,
+      )).toBe(true);
+      expect(drawImage.mock.calls.some(([source]) => source === bLayer!.canvas))
+        .toBe(true);
+      const presentedPixel = pixel(canvas, 30, 5);
+      expect(presentedPixel.slice(0, 3)).toEqual([255, 0, 0]);
+      // Chromium rounds 255 * the midpoint opacity (0.75) to 191.
+      expect(presentedPixel[3]).toBeGreaterThanOrEqual(190);
+      expect(presentedPixel[3]).toBeLessThanOrEqual(192);
+    } finally {
+      offscreenDrawImage.mockRestore();
+      drawImage.mockRestore();
+      controller.dispose();
+      restoreDriver();
+    }
+  });
+
   it('reuses the cached child bitmap when only an outer filter changes', () => {
     let childRenders = 0;
     const Counted = (_props: {}) => {

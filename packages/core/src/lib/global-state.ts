@@ -1,6 +1,8 @@
 import type { LayoutContext } from './layout/types.js';
 import type { CRCNode } from './element/types.js';
 import type { RenderTargetSnapshot } from './render-target.js';
+import type { CRCFrameSnapshot } from './scheduler/types.js';
+import { unregisterRootInstance } from './scheduler/realm-scheduler.js';
 import type {
   CRCBackendDriver,
   CRCBackendFrame,
@@ -32,6 +34,7 @@ export interface GlobalState {
   renderTarget: RenderTargetSnapshot | undefined;
   worldBaseTransform: DOMMatrix | undefined;
   renderTransaction: CRCRenderTransaction | undefined;
+  frameSnapshot: CRCFrameSnapshot | undefined;
   primitiveReceiverToken: object | undefined;
   unseenIds: Set<string> | undefined;
   seenIds: Set<string> | undefined;
@@ -56,6 +59,7 @@ export const GLOBAL_STATE: GlobalState = {
   renderTarget: undefined,
   worldBaseTransform: undefined,
   renderTransaction: undefined,
+  frameSnapshot: undefined,
   primitiveReceiverToken: undefined,
   unseenIds: undefined,
   seenIds: undefined,
@@ -132,10 +136,8 @@ export function cleanupCRCInstance(crcInstance: CRCInstance): void {
     return;
   }
 
-  if (crcInstance.animationFrameId !== undefined) {
-    const animationFrameId = crcInstance.animationFrameId;
-    crcInstance.animationFrameId = undefined;
-    runTeardown(() => cancelAnimationFrame(animationFrameId));
+  if (!crcInstance.parent) {
+    unregisterRootInstance(crcInstance);
   }
 
   if (GLOBAL_STATE.crcInstances.get(canvas) === crcInstance) {
@@ -205,6 +207,7 @@ export function clearTempState() {
   GLOBAL_STATE.renderTarget = undefined;
   GLOBAL_STATE.worldBaseTransform = undefined;
   GLOBAL_STATE.renderTransaction = undefined;
+  GLOBAL_STATE.frameSnapshot = undefined;
   GLOBAL_STATE.primitiveReceiverToken = undefined;
   GLOBAL_STATE.layoutStack = undefined;
   clearComponentState();

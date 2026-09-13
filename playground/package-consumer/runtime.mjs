@@ -39,6 +39,7 @@ const expected = [
   'Text',
   'VerticalLine',
   'Wedge',
+  'computed',
   'crc',
   'crcCanvasContext',
   'crcCursor',
@@ -48,10 +49,13 @@ const expected = [
   'crcLayoutBox',
   'crcLinePath',
   'crcMemo',
+  'crcPlayback',
   'crcRectPath',
   'crcRef',
+  'crcSignal',
   'crcState',
   'crcSvgPath',
+  'crcTransition',
   'crcWhenChanged',
   'createArcPath',
   'createCirclePath',
@@ -64,24 +68,41 @@ const expected = [
   'createStarPath',
   'createSvgPath',
   'createWedgePath',
+  'defineAnimation',
   'definePrimitive',
+  'easing',
+  'isSignal',
+  'keyframes',
   'layoutDiagnostic',
+  'marker',
   'measureElement',
   'normalizeEdges',
+  'parallel',
+  'repeat',
   'resolveBox',
   'resolveLength',
+  'sequence',
+  'signal',
+  'spring',
+  'stepper',
+  'track',
+  'tween',
+  'untracked',
+  'wait',
 ];
 
 const actual = Object.keys(core).sort();
 if (JSON.stringify(actual) !== JSON.stringify(expected)) {
   throw new Error(`Unexpected @crc/core exports: ${actual.join(', ')}`);
 }
-if (actual.length !== 58) {
-  throw new Error(`Expected 58 @crc/core runtime exports, received ${actual.length}.`);
-}
 
 const expectedInternal = [
   'cancelBackendMountFrame',
+  'crcInternalCreateSignalConsumer',
+  'crcInternalCurrentFrame',
+  'crcInternalCurrentRenderOwner',
+  'crcInternalQueueComplete',
+  'crcInternalRequestRendererWork',
   'createBackendToken',
   'defineBackendPrimitive',
   'executeBackendCRC',
@@ -109,6 +130,41 @@ if (JSON.stringify(actualInternal) !== JSON.stringify(expectedInternal)) {
   throw new Error(
     `Unexpected @crc/core/internal exports: ${actualInternal.join(', ')}`,
   );
+}
+for (const exportName of expectedInternal) {
+  if (typeof internal[exportName] !== 'function') {
+    throw new Error(`Expected @crc/core/internal ${exportName} to be callable.`);
+  }
+  if (exportName in core) {
+    throw new Error(`Internal renderer function leaked from @crc/core: ${exportName}.`);
+  }
+}
+for (const exportName of expected) {
+  if (exportName in internal) {
+    throw new Error(`@crc/core/internal re-exported public root value ${exportName}.`);
+  }
+}
+if (actual.length !== 77) {
+  throw new Error(`Expected 77 @crc/core runtime exports, received ${actual.length}.`);
+}
+
+const runtimeCount = core.signal(2, { debugName: 'runtime count' });
+const runtimeReadonly = runtimeCount.asReadonly();
+const runtimeComputed = core.computed(() => runtimeReadonly.get() * 3);
+if (!core.isSignal(runtimeCount) || !core.isSignal(runtimeReadonly)) {
+  throw new Error('Public signal values were not recognized by isSignal().');
+}
+if (core.untracked(() => runtimeComputed.get()) !== 6) {
+  throw new Error('Public computed or untracked behavior was unavailable.');
+}
+runtimeCount.update(value => value + 1);
+if (runtimeComputed.get() !== 9) {
+  throw new Error('Public computed values did not update from their dependencies.');
+}
+const runtimeCallback = core.signal(() => 'ready');
+runtimeCallback.set(() => 'updated');
+if (runtimeCallback.get()() !== 'updated') {
+  throw new Error('Function-valued signals were treated as updater callbacks.');
 }
 if (typeof internal.createBackendToken('consumer') !== 'object') {
   throw new Error('@crc/core/internal did not create an opaque backend token.');
@@ -155,10 +211,17 @@ if (
 ) {
   throw new Error('Compiler subpaths did not share the public Fragment value.');
 }
-for (const exportName of expected) {
+for (const exportName of expected.filter(exportName => exportName !== 'easing')) {
   if (typeof core[exportName] !== 'function') {
     throw new Error(`Expected @crc/core ${exportName} to be a runtime function.`);
   }
+}
+if (
+  typeof core.easing !== 'object' ||
+  Object.isFrozen(core.easing) !== true ||
+  typeof core.easing.linear !== 'function'
+) {
+  throw new Error('Expected @crc/core easing to be a frozen function collection.');
 }
 for (const creatorName of [
   'createArcPath',

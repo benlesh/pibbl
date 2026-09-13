@@ -17,8 +17,10 @@ import transformReactJsx from "@babel/plugin-transform-react-jsx";
 import { transform } from "esbuild";
 import {
   assertContractPreservationBaseline,
+  assertPostBaselineContractPreservation,
   CONTRACT_BASELINE_COMMIT,
   CONTRACT_TRANSLATION_RECORD,
+  extractContractUnits,
   replaceContractUnit,
   sha256,
 } from "./docs-contract-preservation.mjs";
@@ -66,6 +68,7 @@ const publicGuidePaths = [
   "docs/site/learn/guides/focus-and-keyboard.md",
   "docs/site/learn/guides/jsx-troubleshooting.md",
   "docs/site/learn/guides/react-integration.md",
+  "docs/site/learn/guides/signals-and-animation.md",
   "docs/site/learn/guides/state-and-lifecycle.md",
   "docs/site/learn/guides/style-and-draw.md",
   "docs/site/learn/guides/webgl-islands.md",
@@ -103,6 +106,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/components/wedge.md",
   "docs/site/api/components/webgl-layer.md",
   "docs/site/api/functions/crc.md",
+  "docs/site/api/functions/computed.md",
   "docs/site/api/functions/create-arc-path.md",
   "docs/site/api/functions/create-circle-path.md",
   "docs/site/api/functions/create-element.md",
@@ -115,13 +119,28 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/create-svg-path.md",
   "docs/site/api/functions/create-webgl-geometry.md",
   "docs/site/api/functions/create-wedge-path.md",
+  "docs/site/api/functions/define-animation.md",
   "docs/site/api/functions/define-primitive.md",
   "docs/site/api/functions/define-webgl-primitive.md",
+  "docs/site/api/functions/easing.md",
+  "docs/site/api/functions/is-signal.md",
+  "docs/site/api/functions/keyframes.md",
   "docs/site/api/functions/layout-diagnostic.md",
+  "docs/site/api/functions/marker.md",
   "docs/site/api/functions/measure-element.md",
   "docs/site/api/functions/normalize-edges.md",
+  "docs/site/api/functions/parallel.md",
+  "docs/site/api/functions/repeat.md",
   "docs/site/api/functions/resolve-box.md",
   "docs/site/api/functions/resolve-length.md",
+  "docs/site/api/functions/sequence.md",
+  "docs/site/api/functions/signal.md",
+  "docs/site/api/functions/spring.md",
+  "docs/site/api/functions/stepper.md",
+  "docs/site/api/functions/track.md",
+  "docs/site/api/functions/tween.md",
+  "docs/site/api/functions/untracked.md",
+  "docs/site/api/functions/wait.md",
   "docs/site/api/hooks/crc-animation-frame.md",
   "docs/site/api/hooks/crc-canvas-context.md",
   "docs/site/api/hooks/crc-cursor.md",
@@ -131,10 +150,13 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/hooks/crc-layout-box.md",
   "docs/site/api/hooks/crc-line-path.md",
   "docs/site/api/hooks/crc-memo.md",
+  "docs/site/api/hooks/crc-playback.md",
   "docs/site/api/hooks/crc-rect-path.md",
   "docs/site/api/hooks/crc-ref.md",
+  "docs/site/api/hooks/crc-signal.md",
   "docs/site/api/hooks/crc-state.md",
   "docs/site/api/hooks/crc-svg-path.md",
+  "docs/site/api/hooks/crc-transition.md",
   "docs/site/api/hooks/crc-when-changed.md",
   "docs/site/api/hooks/crc-webgl-context.md",
   "docs/site/api/types/canvas-runtime.md",
@@ -157,6 +179,7 @@ const currentMarkdownPaths = [
   "docs/architecture/style-and-layout-architecture.md",
   "docs/design/canvas-accessibility-guidance.md",
   "docs/design/canvas-surface-contract.md",
+  "docs/design/animation-contract.md",
   "docs/design/drawing-components-contract.md",
   "docs/design/event-resource-ownership.md",
   "docs/design/focus-and-keyboard-navigation-contract.md",
@@ -164,6 +187,7 @@ const currentMarkdownPaths = [
   "docs/design/mouse-interaction-contract.md",
   "docs/design/runtime-hooks-contract.md",
   "docs/design/runtime-resource-ownership.md",
+  "docs/design/signals-and-scheduling-contract.md",
   "docs/design/style-system-contract.md",
   "docs/design/user-events-contract.md",
   "docs/documentation-follow-up.md",
@@ -1277,11 +1301,19 @@ export function assertHistoricalBanner(path, source) {
   );
 }
 
-for (const path of historicalMarkdownPaths) {
-  assertHistoricalBanner(
-    path,
-    await readFile(join(repositoryRoot, path), "utf8"),
-  );
+const historicalSources = new Map(
+  await Promise.all(
+    historicalMarkdownPaths.map(async (path) => [
+      path,
+      await readFile(join(repositoryRoot, path), "utf8"),
+    ]),
+  ),
+);
+
+export function assertHistoricalBanners() {
+  for (const [path, source] of historicalSources) {
+    assertHistoricalBanner(path, source);
+  }
 }
 
 const staleIdentifiers = [
@@ -1488,7 +1520,13 @@ assertSameNames(
 const coreManifest = JSON.parse(
   await readFile(join(repositoryRoot, "packages/core/package.json"), "utf8"),
 );
-for (const entry of [".", "./jsx-runtime", "./jsx-dev-runtime", "./types"]) {
+for (const entry of [
+  ".",
+  "./internal",
+  "./jsx-runtime",
+  "./jsx-dev-runtime",
+  "./types",
+]) {
   assert.ok(
     coreManifest.exports[entry],
     `@crc/core package exports is missing ${entry}`,
@@ -1745,6 +1783,15 @@ const requiredGuideMarkers = new Map([
     ["one JSX runtime", "createCRCElement", "expression-level pragma"],
   ],
   [
+    "docs/site/learn/guides/signals-and-animation.md",
+    [
+      "## Read signals explicitly",
+      "## Event-triggered playback",
+      "## One frame transaction",
+      "CRC never automatically promotes components",
+    ],
+  ],
+  [
     "docs/site/learn/guides/state-and-lifecycle.md",
     ["immediate Canvas runtime", "crcWhenChanged", "## Disposal"],
   ],
@@ -1764,6 +1811,57 @@ for (const [path, markers] of requiredGuideMarkers) {
 }
 
 const contractPrecisionRequirements = new Map([
+  [
+    "docs/design/animation-contract.md",
+    [
+      "There is no free `play(program)` function",
+      "The frozen `easing` object contains",
+      "before a competing run is cancelled and before any writer lease\nsurvives",
+      "512th occurrence is allowed; work that would enter the 513th fails",
+      "one shared 512-descent\nconstruction budget",
+      "The handoff is provisional until Commit",
+      "Candidate program/options validation occurs synchronously during Render",
+      "On an idle, cancelled, or finished handle it creates a paused\nrun; on an active running or paused run it preserves that status, and a running\nseek schedules continued advancement.",
+      "Capture one logical time/frame identity and drain accepted commands",
+      "Sample registered playbacks in registration order",
+      "Validate and publish every playback's stages",
+      "Validate computed dependencies and collect the exact dirty",
+      "Repaint planned Layer children before ancestors",
+      "Finalize successful transactions, release ended runs/leases",
+      "including numeric style values",
+      "CRC never automatically promotes\na stable component",
+      "The official `@crc/webgl` integration is a lockstep friend",
+      "CRC exposes no public scheduler clock, frame-step API,\ntrace history",
+      "Future worker or WASM number crunching may use packed buffers only if Begin",
+    ],
+  ],
+  [
+    "docs/design/runtime-resource-ownership.md",
+    [
+      "| Playback command/Advance registration",
+      "| Playback milestone/error delivery",
+      "| Output writer leases",
+      "| Evaluator/stepper activation state",
+    ],
+  ],
+  [
+    "docs/design/signals-and-scheduling-contract.md",
+    [
+      "Every dependency read\nis explicit",
+      "`set(value)` always treats `value` as data, including when `T` is a function",
+      "When an observed computed first becomes pending, its Plan work requests and\ncoalesces the realm host frame",
+      "Signal writes are forbidden during component traversal",
+      "including writes that would be equality no-ops",
+      "Direct `set()` and\n`update()` calls are also forbidden inside scheduler Advance participants",
+      "Each frame has six ordered active phases",
+      "Managed Layers are scheduler\ninstances, never separately registered top-level roots",
+      "Errors are collected and thrown singly or as an aggregate only after Complete",
+      "The friend entry is not a stable third-party API, is not re-exported by\n`@crc/core`, and is intentionally absent from the ordinary Studio declaration\nand runtime surface",
+      "| Signal-to-component edge",
+      "| Computed-to-source edge",
+      "Exact component consumer",
+    ],
+  ],
   [
     "docs/design/layout-system-contract.md",
     [
@@ -1834,7 +1932,10 @@ export function assertContractPrecision(sources) {
 
 assertContractPrecision(currentSources);
 
-const normativeContractPaths = [
+// Current normative inventory can grow after the dated pre-Task-14 snapshot.
+// Keep new implemented contracts classified and precision-checked without
+// fabricating provenance for files that did not exist at the snapshot commit.
+const currentNormativeContractPaths = [
   "docs/architecture/style-and-layout-architecture.md",
   ...currentMarkdownPaths.filter(
     (path) =>
@@ -1842,6 +1943,23 @@ const normativeContractPaths = [
       path !== "docs/design/tfc-01-characterization-baseline.md",
   ),
 ].sort();
+const postBaselineNormativeContractPaths = new Set([
+  "docs/design/animation-contract.md",
+  "docs/design/signals-and-scheduling-contract.md",
+]);
+const baselineSnapshotContractPaths = currentNormativeContractPaths.filter(
+  (path) => !postBaselineNormativeContractPaths.has(path),
+);
+
+export function assertCurrentNormativeContractInventory(paths) {
+  assert.deepEqual(
+    [...paths].sort(),
+    currentNormativeContractPaths,
+    "Current normative contract inventory must include every implemented contract exactly once",
+  );
+}
+
+assertCurrentNormativeContractInventory(currentNormativeContractPaths);
 const contractPreservationBaseline = JSON.parse(
   await readFile(
     join(repositoryRoot, "tooling/docs-contract-preservation-baseline.json"),
@@ -1856,6 +1974,169 @@ const approvalRecordSources = new Map(
     ]),
   ),
 );
+
+const approvalRecordsById = new Map(
+  contractPreservationBaseline.approvalRecords.map((record) => [
+    record.id,
+    {
+      ...record,
+      units: extractContractUnits(
+        approvalRecordSources.get(record.path),
+        record.unitPrefix,
+      ),
+    },
+  ]),
+);
+assert.deepEqual(
+  contractPreservationBaseline.postBaselineContracts.map(({ path }) => path),
+  [...postBaselineNormativeContractPaths],
+  "Post-baseline preservation inventory must cover each current contract outside the dated snapshot",
+);
+const postBaselineContractRecordsByPath = new Map(
+  contractPreservationBaseline.postBaselineContracts.map((record) => [
+    record.path,
+    record,
+  ]),
+);
+const postBaselineSignalContractRecord = postBaselineContractRecordsByPath.get(
+  "docs/design/signals-and-scheduling-contract.md",
+);
+const postBaselineAnimationContractRecord =
+  postBaselineContractRecordsByPath.get("docs/design/animation-contract.md");
+const postBaselineContractResults =
+  contractPreservationBaseline.postBaselineContracts.map((record) =>
+    assertPostBaselineContractPreservation({
+      record,
+      currentSource: currentSources.get(record.path),
+      approvalRecordsById,
+    }),
+  );
+const postBaselineUnitCount = postBaselineContractResults.reduce(
+  (total, result) => total + result.currentUnitCount,
+  0,
+);
+
+export function assertTask9EvidenceMappings(manifest) {
+  const byId = new Map(
+    manifest.evidenceMappings.map((mapping) => [mapping.id, mapping]),
+  );
+  const statePrecedence = byId.get("pending-root-precedence");
+  assert.equal(
+    statePrecedence?.claim.text,
+    "A state request cannot erase it.",
+    "State pending-root precedence must retain its own exact claim",
+  );
+  const signalPrecedence = byId.get("pending-root-precedence-signal");
+  assert.equal(
+    signalPrecedence?.test.marker,
+    "does not lose a pending root replacement to a signal request",
+    "Signal pending-root precedence requires signal-specific executable evidence",
+  );
+  assert.deepEqual(
+    signalPrecedence?.relevance.sharedAnchors,
+    ["request", "signal"],
+    "Signal pending-root precedence must retain signal relevance",
+  );
+  const staleStateSetter = byId.get("stale-state-setter");
+  assert.equal(
+    staleStateSetter?.test.marker,
+    "cannot let an exact-instance disposed mount setter update a replacement mount",
+    "Stale state-setter evidence must cover replacement mounts",
+  );
+  assert.ok(
+    staleStateSetter?.relevance.sharedAnchors.includes("instance"),
+    "Stale state-setter evidence must retain exact-instance relevance",
+  );
+}
+
+export function assertMixedLegacyTask9Preservation(manifest) {
+  const translationsById = new Map(
+    manifest.translations.map((mapping) => [mapping.id, mapping]),
+  );
+  const additionsById = new Map(
+    manifest.additions.map((mapping) => [mapping.id, mapping]),
+  );
+  const publicPackage = translationsById.get(
+    "design-runtime-hooks-contract-md-public-package-boundary",
+  );
+  assert.deepEqual(
+    publicPackage?.approval,
+    {
+      id: "a0105",
+      kind: "prose",
+      text: "TypeScript, Bundler, and NodeNext declarations must agree.",
+    },
+    "Public-package JSX translation must retain approved unit a0105",
+  );
+  assert.deepEqual(
+    publicPackage?.currentIds,
+    ["c0057"],
+    "Public-package JSX translation must remain isolated from signal additions",
+  );
+  assert.deepEqual(
+    publicPackage?.sharedAnchors,
+    ["consumers", "entries", "nodenext"],
+    "Public-package JSX translation must retain its distinctive relevance anchors",
+  );
+  const deterministicEvidence = translationsById.get(
+    "design-runtime-hooks-contract-md-deterministic-evidence",
+  );
+  assert.deepEqual(
+    deterministicEvidence?.approval,
+    {
+      id: "a0194",
+      kind: "list",
+      text: "Plain function hooks mount, update, reorder, remove, fail, and recover under the current hook contract.",
+    },
+    "Deterministic-evidence JSX translation must retain approved unit a0194",
+  );
+  assert.deepEqual(
+    deterministicEvidence?.currentIds,
+    ["c0060"],
+    "Deterministic-evidence JSX translation must remain isolated from signal additions",
+  );
+  assert.deepEqual(
+    deterministicEvidence?.sharedAnchors,
+    ["runtime-hooks-laboratory", "presentation-neutral", "outside-render"],
+    "Deterministic-evidence JSX translation must retain its distinctive relevance anchors",
+  );
+
+  const publicSignalAddition = additionsById.get(
+    "design-runtime-hooks-contract-public-signal-package-addition",
+  );
+  assert.deepEqual(
+    publicSignalAddition?.approval,
+    {
+      recordId: "first-class-signals-and-scheduler",
+      unitIds: ["g0061", "g0062"],
+    },
+    "Public signal package unit must retain bounded signal-design approval",
+  );
+  assert.deepEqual(
+    publicSignalAddition?.currentIds,
+    ["c0059"],
+    "Public signal package proof must remain a separate semantic addition",
+  );
+  const signalEvidenceAddition = additionsById.get(
+    "design-runtime-hooks-contract-signal-evidence-addition",
+  );
+  assert.deepEqual(
+    signalEvidenceAddition?.approval,
+    {
+      recordId: "first-class-signals-and-scheduler",
+      unitIds: ["g0064", "g0136", "g0153", "g0165", "g0188"],
+    },
+    "Signal evidence unit must retain bounded signal-design approval",
+  );
+  assert.deepEqual(
+    signalEvidenceAddition?.currentIds,
+    ["c0062"],
+    "Signal evidence proof must remain a separate semantic addition",
+  );
+}
+
+assertTask9EvidenceMappings(contractPreservationBaseline);
+assertMixedLegacyTask9Preservation(contractPreservationBaseline);
 const baselineStyleUnits = contractPreservationBaseline.contracts.find(
   ({ path }) => path === "docs/design/style-system-contract.md",
 )?.baselineUnits;
@@ -1960,7 +2241,7 @@ const verifyBaselineProvenance =
   baselineHistoryAvailable && provenanceRequirement !== "0";
 const baselineContractSources = verifyBaselineProvenance
   ? new Map(
-      normativeContractPaths.map((path) => [
+      baselineSnapshotContractPaths.map((path) => [
         path,
         sourceAtCommit(CONTRACT_BASELINE_COMMIT, path),
       ]),
@@ -1975,7 +2256,7 @@ const translationRecordBaselineSource = verifyBaselineProvenance
   : undefined;
 const contractPreservationResult = assertContractPreservationBaseline({
   manifest: contractPreservationBaseline,
-  expectedContractPaths: normativeContractPaths,
+  expectedContractPaths: baselineSnapshotContractPaths,
   baselineSources: baselineContractSources,
   currentSources,
   translationRecordSource,
@@ -2090,6 +2371,31 @@ const matrixRequirements = [
       "design/runtime-hooks-contract.md",
     ],
     evidence: ["runtime-hooks.example.tsx"],
+  },
+  {
+    topic: /Signals, computed graphs/u,
+    guides: [
+      "design/signals-and-scheduling-contract.md",
+      "site/learn/guides/state-and-lifecycle.md",
+    ],
+    evidence: [
+      "graph.test.ts",
+      "render-consumer.test.ts",
+      "crc-signal.test.tsx",
+      "realm-scheduler.test.ts",
+    ],
+  },
+  {
+    topic: /Definitions, programs, playback/u,
+    guides: [
+      "site/learn/guides/signals-and-animation.md",
+      "design/animation-contract.md",
+    ],
+    evidence: [
+      "animation-lab.test.ts",
+      "animation-rendering.test.tsx",
+      "final-public-vocabulary.tsx",
+    ],
   },
   {
     topic: /Ordinary composite/u,
@@ -2252,10 +2558,26 @@ assert.match(
   new RegExp(
     `\\b${contractPreservationResult.baselineUnitCount} preserved baseline units and ` +
       `${contractPreservationResult.currentUnitCount} current semantic units across all ` +
-      `${contractPreservationBaseline.contracts.length} normative contracts\\b`,
+      `${contractPreservationBaseline.contracts.length} baseline-snapshotted normative contracts\\b`,
     "u",
   ),
   "Library status baseline/current semantic-unit counts are stale.",
+);
+assert.match(
+  libraryStatus,
+  new RegExp(
+    `\\b${currentNormativeContractPaths.length} current normative contracts\\b`,
+    "u",
+  ),
+  "Library status current normative-contract count is stale.",
+);
+assert.match(
+  libraryStatus,
+  new RegExp(
+    `\\b${postBaselineUnitCount} exhaustively mapped post-baseline units\\b`,
+    "u",
+  ),
+  "Library status post-baseline semantic-unit count is stale.",
 );
 assert.match(
   libraryStatus,
@@ -2265,6 +2587,34 @@ assert.match(
   ),
   "Library status direct-evidence count is stale.",
 );
+export function assertTrustGatePreservationCounts(
+  source,
+  { currentUnitCount, evidenceMappingCount },
+) {
+  assert.match(
+    source,
+    new RegExp(
+      `\\bcomplete reviewed current form \\(${currentUnitCount} units\\)`,
+      "u",
+    ),
+    "Trust-gate current semantic-unit count is stale.",
+  );
+  assert.match(
+    source,
+    new RegExp(
+      `\\bThe ${evidenceMappingCount} direct source/test mappings\\b`,
+      "u",
+    ),
+    "Trust-gate direct-evidence count is stale.",
+  );
+}
+
+const trustGate = currentSources.get("docs/testing/trust-gate.md");
+const trustGatePreservationCounts = {
+  currentUnitCount: contractPreservationResult.currentUnitCount,
+  evidenceMappingCount: contractPreservationResult.evidenceMappingCount,
+};
+assertTrustGatePreservationCounts(trustGate, trustGatePreservationCounts);
 const matrix = libraryStatus.slice(
   libraryStatus.indexOf("## Documentation acceptance matrix"),
   libraryStatus.indexOf("## Running locally"),
@@ -2376,6 +2726,234 @@ export async function verifyMutationProbes() {
   await rejects(
     () => typecheckCompleteSnippets(extractApiSnippets(brokenCrcMemoSources)),
     /failed typecheck/u,
+  );
+  const staleTrustGateUnitCount = trustGate.replace(
+    `(${trustGatePreservationCounts.currentUnitCount} units)`,
+    `(${trustGatePreservationCounts.currentUnitCount - 1} units)`,
+  );
+  assert.notEqual(
+    staleTrustGateUnitCount,
+    trustGate,
+    "Trust-gate unit-count mutation fixture did not change",
+  );
+  throws(
+    () =>
+      assertTrustGatePreservationCounts(
+        staleTrustGateUnitCount,
+        trustGatePreservationCounts,
+      ),
+    /Trust-gate current semantic-unit count is stale/u,
+  );
+  const staleTrustGateEvidenceCount = trustGate.replace(
+    `The ${trustGatePreservationCounts.evidenceMappingCount} direct source/test mappings`,
+    `The ${trustGatePreservationCounts.evidenceMappingCount - 1} direct source/test mappings`,
+  );
+  assert.notEqual(
+    staleTrustGateEvidenceCount,
+    trustGate,
+    "Trust-gate evidence-count mutation fixture did not change",
+  );
+  throws(
+    () =>
+      assertTrustGatePreservationCounts(
+        staleTrustGateEvidenceCount,
+        trustGatePreservationCounts,
+      ),
+    /Trust-gate direct-evidence count is stale/u,
+  );
+
+  throws(
+    () =>
+      assertCurrentNormativeContractInventory(
+        currentNormativeContractPaths.filter(
+          (path) => path !== "docs/design/signals-and-scheduling-contract.md",
+        ),
+      ),
+    /Current normative contract inventory/u,
+  );
+  throws(
+    () =>
+      assertCurrentNormativeContractInventory(
+        currentNormativeContractPaths.filter(
+          (path) => path !== "docs/design/animation-contract.md",
+        ),
+      ),
+    /Current normative contract inventory/u,
+  );
+  const alteredSignalContract = replaceContractUnit(
+    currentSources.get("docs/design/signals-and-scheduling-contract.md"),
+    "s",
+    "s0008",
+    "Signals may implicitly unwrap and update during render.",
+  );
+  throws(
+    () =>
+      assertPostBaselineContractPreservation({
+        record: postBaselineSignalContractRecord,
+        currentSource: alteredSignalContract,
+        approvalRecordsById,
+      }),
+    /reviewed complete semantic inventory/u,
+  );
+  const alteredAnimationContract = replaceContractUnit(
+    currentSources.get("docs/design/animation-contract.md"),
+    "m",
+    "m0008",
+    "Animation easing is mutable and may run on its own clock.",
+  );
+  throws(
+    () =>
+      assertPostBaselineContractPreservation({
+        record: postBaselineAnimationContractRecord,
+        currentSource: alteredAnimationContract,
+        approvalRecordsById,
+      }),
+    /reviewed complete semantic inventory/u,
+  );
+  const unmappedSignalContract = structuredClone(
+    postBaselineSignalContractRecord,
+  );
+  const boundaryMapping = unmappedSignalContract.mappings.find(
+    ({ id }) => id === "deliberate-boundaries",
+  );
+  boundaryMapping.currentIds = boundaryMapping.currentIds.filter(
+    (id) => id !== "s0044",
+  );
+  throws(
+    () =>
+      assertPostBaselineContractPreservation({
+        record: unmappedSignalContract,
+        currentSource: currentSources.get(
+          "docs/design/signals-and-scheduling-contract.md",
+        ),
+        approvalRecordsById,
+      }),
+    /current text is not exhaustively mapped/u,
+  );
+  const unmappedAnimationContract = structuredClone(
+    postBaselineAnimationContractRecord,
+  );
+  const animationBoundaryMapping = unmappedAnimationContract.mappings.find(
+    ({ id }) => id === "deliberate-animation-boundaries",
+  );
+  animationBoundaryMapping.currentIds =
+    animationBoundaryMapping.currentIds.filter((id) => id !== "m0060");
+  throws(
+    () =>
+      assertPostBaselineContractPreservation({
+        record: unmappedAnimationContract,
+        currentSource: currentSources.get("docs/design/animation-contract.md"),
+        approvalRecordsById,
+      }),
+    /current text is not exhaustively mapped/u,
+  );
+  const animationApprovalMutation = structuredClone(
+    postBaselineSignalContractRecord,
+  );
+  const publicSignalMapping = animationApprovalMutation.mappings.find(
+    ({ id }) => id === "public-signal-api",
+  );
+  publicSignalMapping.approval.unitIds = ["g0084"];
+  publicSignalMapping.reason += " g0084";
+  throws(
+    () =>
+      assertPostBaselineContractPreservation({
+        record: animationApprovalMutation,
+        currentSource: currentSources.get(
+          "docs/design/signals-and-scheduling-contract.md",
+        ),
+        approvalRecordsById,
+      }),
+    /out-of-scope approved-design unit g0084 from Animation value definitions/u,
+  );
+  const signalApprovalMutation = structuredClone(
+    postBaselineAnimationContractRecord,
+  );
+  const animationModelMapping = signalApprovalMutation.mappings.find(
+    ({ id }) => id === "animation-document-and-public-model",
+  );
+  animationModelMapping.approval.unitIds = ["g0062"];
+  animationModelMapping.reason += " g0062";
+  throws(
+    () =>
+      assertPostBaselineContractPreservation({
+        record: signalApprovalMutation,
+        currentSource: currentSources.get("docs/design/animation-contract.md"),
+        approvalRecordsById,
+      }),
+    /out-of-scope approved-design unit g0062 from Public signal API/u,
+  );
+  const missingSignalPrecedence = structuredClone(contractPreservationBaseline);
+  missingSignalPrecedence.evidenceMappings =
+    missingSignalPrecedence.evidenceMappings.filter(
+      ({ id }) => id !== "pending-root-precedence-signal",
+    );
+  throws(
+    () => assertTask9EvidenceMappings(missingSignalPrecedence),
+    /Signal pending-root precedence requires signal-specific executable evidence/u,
+  );
+  const weakenedStaleSetter = structuredClone(contractPreservationBaseline);
+  const weakenedStaleSetterMapping = weakenedStaleSetter.evidenceMappings.find(
+    ({ id }) => id === "stale-state-setter",
+  );
+  weakenedStaleSetterMapping.test.marker =
+    "ignores a stale setter after its component is removed";
+  weakenedStaleSetterMapping.relevance.sharedAnchors = ["setter", "state"];
+  throws(
+    () => assertTask9EvidenceMappings(weakenedStaleSetter),
+    /replacement mounts/u,
+  );
+  const missingPublicPackageLegacyApproval = structuredClone(
+    contractPreservationBaseline,
+  );
+  missingPublicPackageLegacyApproval.translations.find(
+    ({ id }) =>
+      id === "design-runtime-hooks-contract-md-public-package-boundary",
+  ).approval = {
+    recordId: "first-class-signals-and-scheduler",
+    unitIds: ["g0061", "g0158"],
+  };
+  throws(
+    () =>
+      assertMixedLegacyTask9Preservation(missingPublicPackageLegacyApproval),
+    /must retain approved unit a0105/u,
+  );
+  const weakenedPublicPackageAnchors = structuredClone(
+    contractPreservationBaseline,
+  );
+  weakenedPublicPackageAnchors.translations.find(
+    ({ id }) =>
+      id === "design-runtime-hooks-contract-md-public-package-boundary",
+  ).sharedAnchors = ["package", "crc"];
+  throws(
+    () => assertMixedLegacyTask9Preservation(weakenedPublicPackageAnchors),
+    /must retain its distinctive relevance anchors/u,
+  );
+  const missingDeterministicLegacyApproval = structuredClone(
+    contractPreservationBaseline,
+  );
+  missingDeterministicLegacyApproval.translations.find(
+    ({ id }) =>
+      id === "design-runtime-hooks-contract-md-deterministic-evidence",
+  ).approval = {
+    recordId: "first-class-signals-and-scheduler",
+    unitIds: ["g0064", "g0136", "g0153", "g0165", "g0192"],
+  };
+  throws(
+    () =>
+      assertMixedLegacyTask9Preservation(missingDeterministicLegacyApproval),
+    /must retain approved unit a0194/u,
+  );
+  const weakenedDeterministicAnchors = structuredClone(
+    contractPreservationBaseline,
+  );
+  weakenedDeterministicAnchors.translations.find(
+    ({ id }) =>
+      id === "design-runtime-hooks-contract-md-deterministic-evidence",
+  ).sharedAnchors = ["render"];
+  throws(
+    () => assertMixedLegacyTask9Preservation(weakenedDeterministicAnchors),
+    /must retain its distinctive relevance anchors/u,
   );
 
   const direct = exportedSpecifiers(
@@ -2646,7 +3224,7 @@ export async function verifyMutationProbes() {
   } = {}) =>
     assertContractPreservationBaseline({
       manifest,
-      expectedContractPaths: normativeContractPaths,
+      expectedContractPaths: baselineSnapshotContractPaths,
       baselineSources: embeddedOnly
         ? undefined
         : (baselineSources ?? baselineContractSources),
@@ -2667,6 +3245,51 @@ export async function verifyMutationProbes() {
     embeddedOnly: true,
   });
   probes += 1;
+
+  const oldTask9TranslationApproval = structuredClone(
+    contractPreservationBaseline,
+  );
+  const oldTask9Translation = oldTask9TranslationApproval.translations.find(
+    ({ id }) => id === "design-canvas-surface-contract-realm-scheduling",
+  );
+  oldTask9Translation.approval = {
+    id: "a0177",
+    kind: "prose",
+    text: "Existing design contracts are updated together",
+  };
+  oldTask9Translation.reason =
+    "Approved-design unit a0177 purports to authorize the Task 9 realm scheduler translation.";
+  throws(
+    () =>
+      assertPreservation({
+        manifest: oldTask9TranslationApproval,
+        reviewedManifestSha256: sha256(
+          JSON.stringify(oldTask9TranslationApproval),
+        ),
+      }),
+    /must use approved-design record first-class-signals-and-scheduler/u,
+  );
+
+  const animationTask9TranslationApproval = structuredClone(
+    contractPreservationBaseline,
+  );
+  const animationTask9Translation =
+    animationTask9TranslationApproval.translations.find(
+      ({ id }) => id === "design-canvas-surface-contract-realm-scheduling",
+    );
+  animationTask9Translation.approval.unitIds = ["g0084"];
+  animationTask9Translation.reason =
+    "first-class-signals-and-scheduler unit g0084 purports to authorize b0034 b0035 to c0037 c0038 through root scheduler density anchors.";
+  throws(
+    () =>
+      assertPreservation({
+        manifest: animationTask9TranslationApproval,
+        reviewedManifestSha256: sha256(
+          JSON.stringify(animationTask9TranslationApproval),
+        ),
+      }),
+    /out-of-scope approved-design unit g0084 from Animation value definitions/u,
+  );
 
   const headingOnlySources = new Map(currentSources);
   for (const { path } of contractPreservationBaseline.contracts) {
@@ -3070,6 +3693,7 @@ export async function verifyMutationProbes() {
   process.stdout.write(
     `Documentation RED mutation probes passed: ${probes}.\n`,
   );
+  assertHistoricalBanners();
 }
 
 process.stdout.write(
@@ -3082,10 +3706,19 @@ process.stdout.write(
     `${compiledApiSnippetCount} compiler-checked API example programs, ` +
     `${contractPreservationResult.baselineUnitCount} pre-Task-14 and ` +
     `${contractPreservationResult.currentUnitCount} current semantic units across ` +
-    `${contractPreservationBaseline.contracts.length} normative contracts, ` +
+    `${contractPreservationBaseline.contracts.length} baseline-snapshotted normative contracts, ` +
+    `${currentNormativeContractPaths.length} current normative contracts, ` +
+    `${postBaselineUnitCount} exhaustively mapped post-baseline units, ` +
     `${contractPreservationResult.evidenceMappingCount} direct evidence mappings, ` +
     `${fieldMigrationResult.fieldMigrationCount} baseline-derived field migrations, ` +
     `baseline provenance ${contractPreservationResult.provenanceVerified ? "verified" : "embedded/digest-locked"}, ` +
     `${presentationSourcePaths.length} discovered presentation sources, and ` +
     `the extracted JavaScript program through Babel and esbuild.\n`,
 );
+
+if (
+  resolve(process.argv[1] ?? "") ===
+  join(repositoryRoot, "tooling/verify-docs.mjs")
+) {
+  assertHistoricalBanners();
+}

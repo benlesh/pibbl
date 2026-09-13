@@ -1,4 +1,5 @@
 export {
+  animationLabScenarioEntry,
   canvasSurfaceScenarioEntry,
   cleanupStressScenarioEntry,
   createScenarioCatalogIndex,
@@ -21,9 +22,20 @@ export {
   mouseContractScenarioEntry,
   performanceLabScenarioEntry,
   runtimeHooksScenarioEntry,
+  signalsLabScenarioEntry,
   validateScenarioCatalog,
   webglLabScenarioEntry,
 } from './catalog';
+export type {
+  AnimationLabAction,
+  AnimationLabState,
+} from './animation-lab.example';
+export { ANIMATION_LAB_ACTION_IDS } from './animation-lab';
+export type {
+  SignalsLabAction,
+  SignalsLabState,
+} from './signals-lab.example';
+export { SIGNALS_LAB_ACTION_IDS } from './signals-lab';
 export type {
   FilterLabMode,
   FilterLabOrder,
