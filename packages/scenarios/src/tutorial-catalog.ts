@@ -1,16 +1,13 @@
-import {
-  learningExampleCatalog,
-} from "./learning-catalog";
+import { learningExampleCatalog } from "./learning-catalog";
 import type {
   LearningExampleCatalogEntry,
   LearningExampleModule,
 } from "./learning-types";
-import type {
-  TutorialSnapshotCatalogEntry,
-} from "./tutorial-types";
+import type { TutorialSnapshotCatalogEntry } from "./tutorial-types";
 
 const TUTORIAL = "diagram-editor";
-const SOURCE_PATH = /^packages\/scenarios\/src\/tutorials\/diagram-editor\/\d{2}-.+\.example\.tsx$/u;
+const SOURCE_PATH =
+  /^packages\/scenarios\/src\/tutorials\/diagram-editor\/\d{2}-.+\.example\.tsx$/u;
 
 export function validateTutorialSnapshotCatalog(
   catalog: readonly TutorialSnapshotCatalogEntry[],
@@ -24,13 +21,19 @@ export function validateTutorialSnapshotCatalog(
       throw new Error("Tutorial chapters must be contiguous from 1.");
     }
     if (entry.tutorial !== TUTORIAL) {
-      throw new Error(`Tutorial snapshot "${entry.slug}" must use ${TUTORIAL}.`);
+      throw new Error(
+        `Tutorial snapshot "${entry.slug}" must use ${TUTORIAL}.`,
+      );
     }
     if (entry.authoring !== "jsx") {
-      throw new Error(`Tutorial snapshot "${entry.slug}" must use JSX authoring.`);
+      throw new Error(
+        `Tutorial snapshot "${entry.slug}" must use JSX authoring.`,
+      );
     }
     if (entry.canvas.width !== 960 || entry.canvas.height !== 600) {
-      throw new Error(`Tutorial snapshot "${entry.slug}" must use a 960 by 600 canvas.`);
+      throw new Error(
+        `Tutorial snapshot "${entry.slug}" must use a 960 by 600 canvas.`,
+      );
     }
     if (!SOURCE_PATH.test(entry.source.path)) {
       throw new Error(
@@ -98,6 +101,30 @@ const drafts = [
     },
     load: () => import("./tutorials/diagram-editor/04-reusable-node.example"),
   },
+  {
+    slug: "diagram-editor-editor-chrome",
+    tutorial: "diagram-editor",
+    chapter: 5,
+    title: "Build the editor chrome",
+    authoring: "jsx",
+    canvas: { width: 960, height: 600 },
+    source: {
+      path: "packages/scenarios/src/tutorials/diagram-editor/05-editor-chrome.example.tsx",
+    },
+    load: () => import("./tutorials/diagram-editor/05-editor-chrome.example"),
+  },
+  {
+    slug: "diagram-editor-selection",
+    tutorial: "diagram-editor",
+    chapter: 6,
+    title: "Select nodes with state",
+    authoring: "jsx",
+    canvas: { width: 960, height: 600 },
+    source: {
+      path: "packages/scenarios/src/tutorials/diagram-editor/06-selection.example.tsx",
+    },
+    load: () => import("./tutorials/diagram-editor/06-selection.example"),
+  },
 ] satisfies readonly TutorialSnapshotCatalogEntry[];
 
 export const tutorialSnapshotCatalog = validateTutorialSnapshotCatalog(drafts);
@@ -122,7 +149,9 @@ export async function loadTutorialSnapshot(
 ): Promise<LearningExampleModule> {
   const module = await entry.load();
   if (typeof module.default !== "function") {
-    throw new Error(`Tutorial snapshot "${entry.slug}" has no default mount function.`);
+    throw new Error(
+      `Tutorial snapshot "${entry.slug}" has no default mount function.`,
+    );
   }
   return module;
 }

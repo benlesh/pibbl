@@ -13,6 +13,7 @@ import {
   tutorialSourcePaths,
   workbenchSourcePaths,
 } from "../../../playground/src/learning-sources";
+import { clickLogicalPoint } from "./support/user-input";
 import { validateLearningSourceText } from "../../../tooling/learning-source-contract";
 
 const mountedControllers: Array<{ dispose: () => void }> = [];
@@ -31,6 +32,14 @@ interface PaintOperation {
   readonly strokeStyle: string;
 }
 
+interface RectanglePaint {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly frame: number;
+}
+
 function removeTrackedController(controller: { dispose: () => void }): void {
   const index = mountedControllers.indexOf(controller);
   if (index >= 0) mountedControllers.splice(index, 1);
@@ -41,6 +50,7 @@ async function renderTutorialSnapshot(slug: string): Promise<{
   readonly controller: { dispose: () => void };
   readonly textPaints: readonly TextPaint[];
   readonly paintOperations: readonly PaintOperation[];
+  readonly rectanglePaints: readonly RectanglePaint[];
 }> {
   const entry = tutorialSnapshotCatalog.find(
     (candidate) => candidate.slug === slug,
@@ -57,6 +67,16 @@ async function renderTutorialSnapshot(slug: string): Promise<{
 
   let frame = 0;
   const paintOperations: PaintOperation[] = [];
+  const rectanglePaints: RectanglePaint[] = [];
+  const rectanglePaths = new WeakMap<
+    Path2D,
+    Readonly<{ x: number; y: number; width: number; height: number }>
+  >();
+  const pathRect = Path2D.prototype.rect;
+  Path2D.prototype.rect = function (x, y, width, height) {
+    rectanglePaths.set(this, { x, y, width, height });
+    pathRect.call(this, x, y, width, height);
+  };
   const clearRect = context.clearRect.bind(context);
   context.clearRect = function (x, y, width, height) {
     frame += 1;
@@ -80,6 +100,22 @@ async function renderTutorialSnapshot(slug: string): Promise<{
       fillStyle: String(this.fillStyle),
       strokeStyle: String(this.strokeStyle),
     });
+    if (pathOrFillRule instanceof Path2D) {
+      const rectangle = rectanglePaths.get(pathOrFillRule);
+      if (rectangle) {
+        const point = new DOMPoint(rectangle.x, rectangle.y).matrixTransform(
+          this.getTransform(),
+        );
+        const transform = this.getTransform();
+        rectanglePaints.push({
+          x: point.x,
+          y: point.y,
+          width: rectangle.width * transform.a,
+          height: rectangle.height * transform.d,
+          frame,
+        });
+      }
+    }
     if (pathOrFillRule instanceof Path2D) fill(pathOrFillRule, fillRule);
     else if (pathOrFillRule) fill(pathOrFillRule);
     else fill();
@@ -112,8 +148,9 @@ async function renderTutorialSnapshot(slug: string): Promise<{
   await new Promise<void>((resolve) =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
   );
+  Path2D.prototype.rect = pathRect;
 
-  return { canvas, controller, textPaints, paintOperations };
+  return { canvas, controller, textPaints, paintOperations, rectanglePaints };
 }
 
 afterEach(() => {
@@ -175,6 +212,16 @@ it("keeps tutorial and ordinary learning slugs in one workbench namespace", () =
       slug: "diagram-editor-reusable-node",
       path: "packages/scenarios/src/tutorials/diagram-editor/04-reusable-node.example.tsx",
     },
+    {
+      chapter: 5,
+      slug: "diagram-editor-editor-chrome",
+      path: "packages/scenarios/src/tutorials/diagram-editor/05-editor-chrome.example.tsx",
+    },
+    {
+      chapter: 6,
+      slug: "diagram-editor-selection",
+      path: "packages/scenarios/src/tutorials/diagram-editor/06-selection.example.tsx",
+    },
   ]);
   expect(getWorkbenchEntryBySlug(learningExampleCatalog[0]!.slug)).toBe(
     learningExampleCatalog[0],
@@ -189,7 +236,10 @@ it("keeps tutorial and ordinary learning slugs in one workbench namespace", () =
 it("rejects metadata outside the diagram-editor JSX snapshot contract", () => {
   expect(() =>
     validateTutorialSnapshotCatalog([
-      { ...record(1), tutorial: "other" } as unknown as TutorialSnapshotCatalogEntry,
+      {
+        ...record(1),
+        tutorial: "other",
+      } as unknown as TutorialSnapshotCatalogEntry,
     ]),
   ).toThrow(/diagram-editor/u);
   expect(() =>
@@ -210,7 +260,12 @@ it("rejects metadata outside the diagram-editor JSX snapshot contract", () => {
   ).toThrow(/960 by 600/u);
   expect(() =>
     validateTutorialSnapshotCatalog([
-      { ...record(1), source: { path: "packages/scenarios/src/learning/start/nope.example.tsx" } },
+      {
+        ...record(1),
+        source: {
+          path: "packages/scenarios/src/learning/start/nope.example.tsx",
+        },
+      },
     ]),
   ).toThrow(/canonical tutorial source path/u);
 });
@@ -329,4 +384,40 @@ it("paints every Chapter 4 node title exactly once in the last frame", async () 
     )
     .map(({ text }) => text);
   expect(titles).toEqual(["IDEA", "SKETCH", "BUILD", "SHIP"]);
+});
+
+it("allocates the Chapter 5 editor chrome regions through Absolute", async () => {
+  const { rectanglePaints } = await renderTutorialSnapshot(
+    "diagram-editor-editor-chrome",
+  );
+  const lastFrame = Math.max(...rectanglePaints.map(({ frame }) => frame));
+  const regions = rectanglePaints.filter(
+    ({ frame, x, width }) => frame === lastFrame && x === 0 && width === 960,
+  );
+  expect(regions).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ y: 0, height: 56 }),
+      expect.objectContaining({ y: 56, height: 512 }),
+      expect.objectContaining({ y: 568, height: 32 }),
+    ]),
+  );
+});
+
+it("selects the Idea body from the Chapter 6 initial Sketch selection", async () => {
+  const snapshot = await renderTutorialSnapshot("diagram-editor-selection");
+  expect(snapshot.textPaints.map(({ text }) => text)).toContain(
+    "SELECTED · SKETCH",
+  );
+
+  await clickLogicalPoint(snapshot.canvas, { x: 176, y: 278 });
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+  const latestFrame = Math.max(
+    ...snapshot.textPaints.map(({ frame }) => frame),
+  );
+  expect(
+    snapshot.textPaints
+      .filter(({ frame }) => frame === latestFrame)
+      .map(({ text }) => text),
+  ).toContain("SELECTED · IDEA");
 });
