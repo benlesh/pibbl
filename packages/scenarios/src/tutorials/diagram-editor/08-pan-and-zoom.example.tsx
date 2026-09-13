@@ -1,6 +1,7 @@
 import {
   Absolute,
   crc,
+  crcEventListener,
   crcLayoutBox,
   crcRef,
   crcState,
@@ -336,8 +337,9 @@ function Workspace({
   onWorkspaceLostPointerCapture,
 }: WorkspaceProps): CRCNode {
   const box = crcLayoutBox();
+  crcEventListener({ onWheel });
   return (
-    <Group onWheel={onWheel}>
+    <Group>
       <Rectangle
         onClick={onClearSelection}
         onPointerDown={onWorkspacePointerDown}
