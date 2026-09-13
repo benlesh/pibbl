@@ -1,6 +1,6 @@
 # Diagram Editor Tutorial Design
 
-> **Status: APPROVED.** Approved in conversation on 2026-09-13.
+> **Historical status: APPROVED DESIGN.** Approved in conversation on 2026-09-13.
 
 **Date:** 2026-09-13  
 **Scope:** The complete twelve-chapter diagram-editor tutorial, its runnable
