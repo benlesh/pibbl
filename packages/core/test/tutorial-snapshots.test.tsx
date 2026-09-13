@@ -573,18 +573,18 @@ it("clears a Chapter 7 node drag after cancellation or capture loss", async () =
   }, { capture: true, once: true });
   await pointerDownLogicalPoint(captureLoss.canvas, { x: 176, y: 278 });
   await nextPaint();
+  expect(captureLoss.canvas.hasPointerCapture(lostPointerId!)).toBe(true);
   const afterLoss = latestTitlePosition(captureLoss.textPaints, "IDEA");
-  const lost = new Promise<void>((resolve) => {
-    captureLoss.canvas.addEventListener("lostpointercapture", () => resolve(), { once: true });
+  let nativeLosses = 0;
+  captureLoss.canvas.addEventListener("lostpointercapture", () => {
+    nativeLosses += 1;
   });
   captureLoss.canvas.releasePointerCapture(lostPointerId!);
-  captureLoss.canvas.dispatchEvent(
-    new PointerEvent("lostpointercapture", {
-      bubbles: true,
-      pointerId: lostPointerId!,
-    }),
-  );
-  await lost;
+  await nextPaint();
+  // Chromium's CDP mouse transport establishes native capture but does not
+  // deliver a native loss after direct release. Keep that harness limitation
+  // explicit rather than manufacturing the terminal event.
+  expect(nativeLosses).toBe(0);
   await pointerUpLogicalPoint(captureLoss.canvas, { x: 280, y: 420 });
   await pointerMoveLogicalPoint(captureLoss.canvas, { x: 600, y: 500 });
   await nextPaint();
@@ -631,12 +631,47 @@ it("pans, pointer-zooms, clamps, and resets Chapter 8 without changing node data
     },
     { once: true },
   );
-  const ideaBeforeZoom = latestTitlePosition(snapshot.textPaints, "IDEA");
+  const beforeZoom = Object.fromEntries(
+    (["IDEA", "SKETCH", "BUILD", "SHIP"] as const).map((title) => [
+      title,
+      latestTitlePosition(snapshot.textPaints, title),
+    ]),
+  );
   await wheelLogicalPoint(snapshot.canvas, { x: 480, y: 300 }, -160);
   await nextPaint();
-  const ideaAfterZoom = latestTitlePosition(snapshot.textPaints, "IDEA");
+  const afterZoom = Object.fromEntries(
+    (["IDEA", "SKETCH", "BUILD", "SHIP"] as const).map((title) => [
+      title,
+      latestTitlePosition(snapshot.textPaints, title),
+    ]),
+  );
   expect(wheelPrevented).toBe(true);
-  expect(ideaAfterZoom).not.toMatchObject(ideaBeforeZoom);
+  const beforePan = {
+    x: beforeZoom.SKETCH.x - initial.SKETCH.x,
+    y: beforeZoom.SKETCH.y - initial.SKETCH.y,
+  };
+  const beforeAnchor = {
+    x: 480 - beforePan.x,
+    y: 300 - 56 - beforePan.y,
+  };
+  const zoom =
+    (afterZoom.SKETCH.x - afterZoom.BUILD.x) /
+    (initial.SKETCH.x - initial.BUILD.x);
+  const afterPan = {
+    x: afterZoom.SKETCH.x - initial.SKETCH.x * zoom,
+    y:
+      afterZoom.SKETCH.y -
+      56 -
+      (initial.SKETCH.y - 56) * zoom,
+  };
+  const afterAnchor = {
+    x: (480 - afterPan.x) / zoom,
+    y: (300 - 56 - afterPan.y) / zoom,
+  };
+  expect(Math.hypot(
+    afterAnchor.x - beforeAnchor.x,
+    afterAnchor.y - beforeAnchor.y,
+  )).toBeLessThanOrEqual(0.5);
 
   for (let index = 0; index < 20; index += 1) {
     await wheelLogicalPoint(snapshot.canvas, { x: 480, y: 300 }, -160);
