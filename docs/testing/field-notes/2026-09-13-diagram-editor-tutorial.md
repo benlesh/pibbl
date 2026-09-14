@@ -1,6 +1,6 @@
 # Diagram editor tutorial delivery field note
 
-> **Historical status: COMPLETED FIELD RECORD.** Results are dated evidence for
+> **Historical status: IMPLEMENTATION FIELD NOTE.** Results are dated evidence for
 > the named candidate and environment, not current API guidance or reusable
 > test totals.
 
@@ -9,7 +9,7 @@ Delivery verification date: 2026-09-14
 ## Scope and environment
 
 Final verification covered the diagram-editor tutorial candidate at
-`556314226f0fbbba32b623b08ade43d76432a25b`; this note is committed separately
+`29e421e94d7c8ceac670201a1945bdd182242f3d`; this note is committed separately
 after that verified implementation revision.
 
 - Darwin `25.6.0`, arm64
@@ -87,10 +87,10 @@ env PATH=/Users/benlesh/.local/share/fnm/node-versions/v24.15.0/installation/bin
 ```
 
 It exited zero at implementation revision
-`556314226f0fbbba32b623b08ade43d76432a25b`. Fresh results included:
+`29e421e94d7c8ceac670201a1945bdd182242f3d`. Fresh results included:
 
 - scenario validation: 53 lessons, 12 tutorial snapshots, and 20 test labs;
-- documentation: 12 guides, 151 current/migration files, 73 historical/work
+- documentation: 12 guides, 151 current/migration files, 74 historical/work
   records, 77 values, 175 types, 27 acceptance rows, 199 parsed snippets, 8
   extracted TypeScript programs, 66 compiler-checked API examples, 800 current
   semantic units, 14 current normative contracts, 107 mapped post-baseline
@@ -121,6 +121,8 @@ The implementation commits before this field record are:
   teardown recoveries;
 - `0aa94464eed9d3a50753f8ad87fb1508085db39a` — mobile-drawer shortcut guard;
 - `556314226f0fbbba32b623b08ade43d76432a25b` — visual capture readiness.
+- `29e421e94d7c8ceac670201a1945bdd182242f3d` — decoded public-asset
+  containment and per-chapter serialized relationship acceptance.
 
 Self-review found no tutorial contamination of the Test Lab catalog and no
 baseline update beyond the inspected landing plus the explicitly authorized
@@ -129,3 +131,20 @@ search-open replacement. The isolated worktree did not modify
 checkout particle-effects work. The remaining limitation is the narrowly
 documented Chromium Test Lab compositor behavior above; it is contained to the
 visual verifier and leaves the strict baseline comparison intact.
+
+## Correction-round verification
+
+Independent review found that decoded root-relative public links could resolve
+outside `playground/public`. The new minimal `/../../package.json` mutation
+probe first failed because the previous resolver accepted the escaped target.
+The resolver now canonicalizes the decoded path, normalizes separator input,
+and rejects every path whose relative result escapes the public asset root; the
+documentation check passed with all 944 RED probes afterward. No existing
+baseline changed in this correction round.
+
+The Studio acceptance now obtains the generated browser documentation payload
+and, for all twelve real diagram-editor chapter routes, asserts that its actual
+serialized `chapter` equals the canonical numeric position and its
+`chapterCount` equals 12. Existing rendered heading, workbench, and pagination
+assertions remain in place. The focused Studio acceptance and the complete
+trust gate passed on the revision recorded above.
