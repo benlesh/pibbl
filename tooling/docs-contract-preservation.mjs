@@ -9,7 +9,7 @@ export const CONTRACT_TRANSLATION_RECORD =
 // Updated only after the complete baseline, translation allowlist, additions,
 // and evidence map receive review together.
 const REVIEWED_MANIFEST_SHA256 =
-  "27c1644bdf07c9c9175d1b867f422702e2303cdda2e2afb25aa75cdb83357c91";
+  "5b9e72a1cf4333e29e86f7270df9067a76c12df5dbbcadc2064c66557f0011e9";
 
 const SIGNALS_SCHEDULER_APPROVAL_RECORD = "first-class-signals-and-scheduler";
 const SIGNALS_SCHEDULER_APPROVED_SECTIONS = new Set([
@@ -1038,11 +1038,18 @@ export function assertContractPreservationBaseline({
 
   for (const addition of manifest.additions) {
     const label = `Addition ${addition.id ?? "<unknown>"}`;
-    assertExactObjectKeys(
-      addition,
-      ["id", "path", "currentIds", "reason", "approval", "sharedAnchors"],
-      label,
-    );
+    const additionFields = [
+      "id",
+      "path",
+      "currentIds",
+      "reason",
+      "approval",
+      "sharedAnchors",
+    ];
+    if ("supplementalApprovals" in (addition ?? {})) {
+      additionFields.push("supplementalApprovals");
+    }
+    assertExactObjectKeys(addition, additionFields, label);
     assert.match(addition.id, /^[a-z0-9-]+$/u, `${label} has an invalid id`);
     assert.ok(
       typeof addition.reason === "string" && addition.reason.length >= 24,
@@ -1063,11 +1070,46 @@ export function assertContractPreservationBaseline({
           ? SIGNALS_SCHEDULER_APPROVED_SECTIONS
           : undefined,
     });
+    const supplementalApprovalUnits = [];
+    if (addition.supplementalApprovals !== undefined) {
+      assert.ok(
+        Array.isArray(addition.supplementalApprovals) &&
+          addition.supplementalApprovals.length > 0,
+        `${label} supplemental approvals must be a nonempty array`,
+      );
+      const supplementalRecordIds = new Set();
+      for (const [
+        index,
+        approval,
+      ] of addition.supplementalApprovals.entries()) {
+        const supplementalLabel = `${label} supplemental approval ${index + 1}`;
+        assert.notEqual(
+          approval?.recordId,
+          addition.approval.recordId,
+          `${supplementalLabel} must use a record distinct from the primary approval`,
+        );
+        assert.ok(
+          !supplementalRecordIds.has(approval?.recordId),
+          `${supplementalLabel} repeats a supplemental approved-design record`,
+        );
+        supplementalRecordIds.add(approval?.recordId);
+        const resolved = resolveApprovalRecordUnits({
+          approval,
+          approvalRecordsById,
+          label: supplementalLabel,
+          reason: addition.reason,
+        });
+        supplementalApprovalUnits.push(...resolved.approvalUnits);
+      }
+    }
     const currentUnits = addition.currentIds.map((id) =>
       resolveUnit(addition.path, "current", id, label),
     );
     const currentText = joinedUnitText(currentUnits);
-    const approvalText = joinedUnitText(approvalUnits);
+    const approvalText = joinedUnitText([
+      ...approvalUnits,
+      ...supplementalApprovalUnits,
+    ]);
     assertAnchors(
       currentText,
       addition.sharedAnchors,

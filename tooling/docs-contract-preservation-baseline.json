@@ -11098,15 +11098,35 @@
       "sharedAnchors": ["WebGL", "bitmap", "context"]
     },
     {
-      "id": "webgl-drawing-surface-and-exports-preservation",
+      "id": "webgl-drawing-contract-table-preservation",
       "path": "docs/design/drawing-components-contract.md",
-      "currentIds": ["c0040", "c0044"],
-      "reason": "webgl-islands units w0047 w0048 w0049 w0050 w0051 w0172 authorize retained current units c0040 c0044 for the unchanged WebGL exports and one Canvas composition boundary.",
+      "currentIds": ["c0040"],
+      "reason": "webgl-islands unit w0172 authorizes retained current table-header unit c0040 as contract inventory framing for WebGLLayer drawing composition.",
       "approval": {
         "recordId": "webgl-islands",
-        "unitIds": ["w0047", "w0048", "w0049", "w0050", "w0051", "w0172"]
+        "unitIds": ["w0172"]
       },
-      "sharedAnchors": ["WebGL", "composition"]
+      "sharedAnchors": ["Contract"]
+    },
+    {
+      "id": "webgl-settled-drawing-public-surface-evidence",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0044"],
+      "reason": "webgl-settled-scene-rendering public-surface units v0045 v0046 v0047 v0048 v0049 v0050 and evidence units v0228 v0229 authorize current inventory unit c0044 for the @crc/webgl boundary and four WebGL child values verified through root exports and declarations.",
+      "approval": {
+        "recordId": "webgl-settled-scene-rendering",
+        "unitIds": [
+          "v0045",
+          "v0046",
+          "v0047",
+          "v0048",
+          "v0049",
+          "v0050",
+          "v0228",
+          "v0229"
+        ]
+      },
+      "sharedAnchors": ["WebGL"]
     },
     {
       "id": "webgl-drawing-camera-and-leaf-preservation",
@@ -11179,12 +11199,18 @@
       "id": "webgl-settled-drawing-custom-geometry",
       "path": "docs/design/drawing-components-contract.md",
       "currentIds": ["c0052"],
-      "reason": "webgl-settled-scene-rendering unit v0075 authorizes current unit c0052 for the application-defined Mesh geometry path and removal of raw shader, hit-callback, mutable-scene, GPU-handle, and context-resource access.",
+      "reason": "webgl-settled-scene-rendering unit v0075 authorizes current unit c0052 for the application-defined Mesh geometry path and removal of raw shader, hit-callback, mutable-scene, GPU-handle, and context-resource access; supplemental webgl-islands unit w0075 retains createWebGLGeometry validation, copying, and immutable geometry semantics.",
       "approval": {
         "recordId": "webgl-settled-scene-rendering",
         "unitIds": ["v0075"]
       },
-      "sharedAnchors": ["application", "Mesh", "geometry"]
+      "sharedAnchors": ["application", "Mesh", "geometry"],
+      "supplementalApprovals": [
+        {
+          "recordId": "webgl-islands",
+          "unitIds": ["w0075"]
+        }
+      ]
     },
     {
       "id": "webgl-settled-drawing-raster-planning",
@@ -13071,7 +13097,7 @@
         {
           "id": "webgl-animation-scene-lifecycle",
           "currentIds": ["m0051"],
-          "reason": "first-class-signals-and-scheduler units g0058 g0139 g0158 g0161 g0162 g0163 g0166 g0167 g0168 g0169 retain the shared scheduler, signal, Complete-event, logical-time, and context-loss contract in m0051; supplemental webgl-settled-scene-rendering unit v0160 authorizes the same shared realm frame and current logical timestamp for WebGL animation.",
+          "reason": "first-class-signals-and-scheduler units g0058 g0139 g0158 g0161 g0162 g0163 g0166 g0167 g0168 g0169 retain the shared scheduler, signal, Complete-event, logical-time, and context-loss contract in m0051; supplemental webgl-settled-scene-rendering units v0078 v0079 v0115 v0160 authorize compose, settle, render, candidate publication, immutable scene ownership, the shared realm frame, and its current logical timestamp for WebGL animation.",
           "approval": {
             "recordId": "first-class-signals-and-scheduler",
             "unitIds": [
@@ -13091,7 +13117,7 @@
           "supplementalApprovals": [
             {
               "recordId": "webgl-settled-scene-rendering",
-              "unitIds": ["v0160"]
+              "unitIds": ["v0078", "v0079", "v0115", "v0160"]
             }
           ]
         },

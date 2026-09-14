@@ -2029,7 +2029,7 @@ export function assertSettledScenePostBaselineApprovals({
     [
       {
         recordId: "webgl-settled-scene-rendering",
-        unitIds: ["v0160"],
+        unitIds: ["v0078", "v0079", "v0115", "v0160"],
       },
     ],
     "Animation WebGL lifecycle unit m0051 must retain exact settled-scene supplemental approval",
@@ -2050,6 +2050,80 @@ assertSettledScenePostBaselineApprovals({
   animationRecord: postBaselineAnimationContractRecord,
   signalRecord: postBaselineSignalContractRecord,
 });
+
+export function assertSettledSceneDrawingApprovals(manifest) {
+  const additionsById = new Map(
+    manifest.additions.map((addition) => [addition.id, addition]),
+  );
+  const supplementalAdditionIds = manifest.additions
+    .filter(({ supplementalApprovals }) => supplementalApprovals !== undefined)
+    .map(({ id }) => id);
+  assert.deepEqual(
+    supplementalAdditionIds,
+    ["webgl-settled-drawing-custom-geometry"],
+    "Only drawing unit c0052 may use supplemental baseline-addition approval",
+  );
+  assert.deepEqual(
+    additionsById.get("webgl-drawing-contract-table-preservation")?.currentIds,
+    ["c0040"],
+    "Drawing export-contract table framing must remain isolated as unit c0040",
+  );
+  assert.deepEqual(
+    additionsById.get("webgl-drawing-contract-table-preservation")?.approval,
+    {
+      recordId: "webgl-islands",
+      unitIds: ["w0172"],
+    },
+    "Drawing export-contract table framing must retain exact historical approval",
+  );
+  assert.deepEqual(
+    additionsById.get("webgl-settled-drawing-public-surface-evidence")
+      ?.currentIds,
+    ["c0044"],
+    "Drawing public-surface evidence must remain isolated as unit c0044",
+  );
+  assert.deepEqual(
+    additionsById.get("webgl-settled-drawing-public-surface-evidence")
+      ?.approval,
+    {
+      recordId: "webgl-settled-scene-rendering",
+      unitIds: [
+        "v0045",
+        "v0046",
+        "v0047",
+        "v0048",
+        "v0049",
+        "v0050",
+        "v0228",
+        "v0229",
+      ],
+    },
+    "Drawing public-surface evidence must retain exact settled-scene inventory and verification approval",
+  );
+  const customGeometry = additionsById.get(
+    "webgl-settled-drawing-custom-geometry",
+  );
+  assert.deepEqual(
+    customGeometry?.approval,
+    {
+      recordId: "webgl-settled-scene-rendering",
+      unitIds: ["v0075"],
+    },
+    "Drawing unit c0052 must retain exact declarative-extension approval",
+  );
+  assert.deepEqual(
+    customGeometry?.supplementalApprovals,
+    [
+      {
+        recordId: "webgl-islands",
+        unitIds: ["w0075"],
+      },
+    ],
+    "Drawing unit c0052 must retain exact geometry-validation supplemental approval",
+  );
+}
+
+assertSettledSceneDrawingApprovals(contractPreservationBaseline);
 const postBaselineContractResults =
   contractPreservationBaseline.postBaselineContracts.map((record) =>
     assertPostBaselineContractPreservation({
@@ -2909,6 +2983,41 @@ export async function verifyMutationProbes() {
       }),
     /m0042 must retain exact settled-scene supplemental approval/u,
   );
+  const incompleteAnimationSceneApproval = structuredClone(
+    postBaselineAnimationContractRecord,
+  );
+  const animationSceneMapping = incompleteAnimationSceneApproval.mappings.find(
+    ({ id }) => id === "webgl-animation-scene-lifecycle",
+  );
+  animationSceneMapping.supplementalApprovals[0].unitIds = ["v0160"];
+  throws(
+    () =>
+      assertSettledScenePostBaselineApprovals({
+        animationRecord: incompleteAnimationSceneApproval,
+        signalRecord: postBaselineSignalContractRecord,
+      }),
+    /m0051 must retain exact settled-scene supplemental approval/u,
+  );
+  const missingDrawingGeometryApproval = structuredClone(
+    contractPreservationBaseline,
+  );
+  delete missingDrawingGeometryApproval.additions.find(
+    ({ id }) => id === "webgl-settled-drawing-custom-geometry",
+  ).supplementalApprovals;
+  throws(
+    () => assertSettledSceneDrawingApprovals(missingDrawingGeometryApproval),
+    /c0052 may use supplemental baseline-addition approval/u,
+  );
+  const incompleteDrawingSurfaceEvidence = structuredClone(
+    contractPreservationBaseline,
+  );
+  incompleteDrawingSurfaceEvidence.additions
+    .find(({ id }) => id === "webgl-settled-drawing-public-surface-evidence")
+    .approval.unitIds.pop();
+  throws(
+    () => assertSettledSceneDrawingApprovals(incompleteDrawingSurfaceEvidence),
+    /public-surface evidence must retain exact settled-scene inventory/u,
+  );
   const animationApprovalMutation = structuredClone(
     postBaselineSignalContractRecord,
   );
@@ -3307,6 +3416,30 @@ export async function verifyMutationProbes() {
     embeddedOnly: true,
   });
   probes += 1;
+
+  const duplicatePrimaryDrawingSupplement = structuredClone(
+    contractPreservationBaseline,
+  );
+  const duplicatePrimaryGeometry =
+    duplicatePrimaryDrawingSupplement.additions.find(
+      ({ id }) => id === "webgl-settled-drawing-custom-geometry",
+    );
+  duplicatePrimaryGeometry.supplementalApprovals = [
+    {
+      recordId: "webgl-settled-scene-rendering",
+      unitIds: ["v0075"],
+    },
+  ];
+  throws(
+    () =>
+      assertPreservation({
+        manifest: duplicatePrimaryDrawingSupplement,
+        reviewedManifestSha256: sha256(
+          JSON.stringify(duplicatePrimaryDrawingSupplement),
+        ),
+      }),
+    /must use a record distinct from the primary approval/u,
+  );
 
   const oldTask9TranslationApproval = structuredClone(
     contractPreservationBaseline,
