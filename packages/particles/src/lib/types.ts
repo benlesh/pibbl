@@ -347,10 +347,11 @@ export interface CRCParticleSystemOptions {
   readonly onError?: (error: unknown) => void;
 }
 
-export interface CRCParticleBurstOverrides {
+export interface CRCParticleBurstOverrides<Dimension extends 2 | 3 = 2 | 3> {
   readonly count?: number;
-  readonly position?:
-    readonly [number, number] | readonly [number, number, number];
+  readonly position?: Dimension extends 2
+    ? readonly [number, number]
+    : readonly [number, number, number];
   readonly seedSalt?: number;
   readonly parameters?: Readonly<
     Record<string, number | readonly number[] | string>
@@ -374,7 +375,10 @@ export interface CRCParticleSystem<
   pause(): void;
   resume(): void;
   restart(options?: Readonly<{ seed?: number }>): void;
-  emit(emitter: EmitterName, options?: CRCParticleBurstOverrides): void;
+  emit(
+    emitter: EmitterName,
+    options?: CRCParticleBurstOverrides<Dimension>,
+  ): void;
   stop(options?: Readonly<{ mode?: "drain" | "clear" }>): void;
 }
 

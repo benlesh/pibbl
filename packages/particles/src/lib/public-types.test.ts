@@ -58,6 +58,7 @@ import type {
   Particles3DProps,
   Particles3DStyle,
 } from "@crc/particles/webgl";
+import { expectTypeOf, it } from "vitest";
 
 const parameterDefinitions = {
   wind: { type: "vector2", default: [0, 0], timing: "simulation" },
@@ -76,32 +77,61 @@ void wind;
 const wrongWind: Parameters = { wind: [0, 0, 0], tint: "#ffffff" };
 void wrongWind;
 
-declare const effect2D: CRCParticleEffect2D<"impact" | "smoke", Parameters>;
-declare const system2D: CRCParticleSystem<"impact" | "smoke", Parameters, 2>;
+const effectDefinition = {
+  parameters: parameterDefinitions,
+  emitters: [{ name: "impact" }, { name: "smoke" }],
+} as const;
 
-system2D.emit("impact");
-// @ts-expect-error emitter names stay narrowed from the effect definition
-system2D.emit("unknown");
+type InferredEffect = CRCParticleEffect2D<
+  (typeof effectDefinition)["emitters"][number]["name"],
+  CRCParticleValuesOf<(typeof effectDefinition)["parameters"]>
+>;
+type InferredSystem =
+  InferredEffect extends CRCParticleEffect2D<
+    infer EmitterName,
+    infer EffectParameters
+  >
+    ? CRCParticleSystem<EmitterName, EffectParameters, 2>
+    : never;
 
-const implicit2D: Particles2DProps<"impact" | "smoke", Parameters> = {
-  effect: effect2D,
-  parameters,
-  autoplay: true,
-};
-void implicit2D;
+declare const effect2D: InferredEffect;
+declare const system2D: InferredSystem;
+declare const system3D: CRCParticleSystem<"impact", Parameters, 3>;
 
-// @ts-expect-error effect and system modes are mutually exclusive
-const conflicting2D: Particles2DProps<"impact" | "smoke", Parameters> = {
-  effect: effect2D,
-  system: system2D,
-};
-void conflicting2D;
+if (false) {
+  system2D.emit("impact");
+  // @ts-expect-error emitter names stay narrowed from the inferred effect
+  system2D.emit("unknown");
+  // @ts-expect-error dimension-2 systems reject three-dimensional bursts
+  system2D.emit("impact", { position: [0, 0, 0] });
+  system3D.emit("impact", { position: [0, 0, 0] });
 
-const particle3DStyle: Particles3DStyle = { opacity: 0.5 };
-void particle3DStyle;
-// @ts-expect-error Canvas filters belong on the receiving WebGLLayer
-const filtered3DStyle: Particles3DStyle = { filter: [] };
-void filtered3DStyle;
+  const implicit2D: Particles2DProps<"impact" | "smoke", Parameters> = {
+    effect: effect2D,
+    parameters,
+    autoplay: true,
+  };
+  void implicit2D;
+
+  // @ts-expect-error effect and system modes are mutually exclusive
+  const conflicting2D: Particles2DProps<"impact" | "smoke", Parameters> = {
+    effect: effect2D,
+    system: system2D,
+  };
+  void conflicting2D;
+
+  const particle3DStyle: Particles3DStyle = { opacity: 0.5 };
+  void particle3DStyle;
+  // @ts-expect-error Canvas filters belong on the receiving WebGLLayer
+  const filtered3DStyle: Particles3DStyle = { filter: [] };
+  void filtered3DStyle;
+}
+
+it("runs as an inert compile fixture", () => {
+  expectTypeOf<InferredSystem>().toMatchTypeOf<
+    CRCParticleSystem<"impact" | "smoke", Parameters, 2>
+  >();
+});
 
 type RootPublicTypes =
   | CRCParticleAppearance
@@ -163,5 +193,8 @@ type WebGLPublicTypes =
 
 declare const rootPublicTypes: RootPublicTypes;
 declare const webglPublicTypes: WebGLPublicTypes;
-void rootPublicTypes;
-void webglPublicTypes;
+
+if (false) {
+  void rootPublicTypes;
+  void webglPublicTypes;
+}
