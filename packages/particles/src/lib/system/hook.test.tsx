@@ -113,27 +113,31 @@ describe("crcParticleSystem hook ownership", () => {
     system.emit("burst");
     driver.flush(2);
     driver.flush(3);
+    driver.flush(4);
     expect(calls).toEqual(["old:start", "old:burst-accepted"]);
 
     observerVersion.set("new");
     selected.set(second);
-    driver.flush(4);
+    driver.flush(5);
     expect(system).toBe(original);
     expect(getParticleSystemController(system).compiled).toBe(
       compileParticleEffect2D(second),
     );
     expect(system.status.get()).toBe("running");
     expect(driver.pendingHostFrames).toBe(1);
-    driver.flush(5);
+    driver.flush(6);
     expect(system.status.get()).toBe("running");
     expect(particleSystemControllerSnapshot(system)).toMatchObject({
       generation: 2,
       effectTimeMilliseconds: 0,
       previousEffectTimeMilliseconds: 0,
     });
+    driver.flush(7);
     expect(calls).toEqual(["old:start", "old:burst-accepted", "new:start"]);
     system.emit("burst");
-    driver.flush(6);
+    driver.flush(8);
+    driver.flush(9);
+    driver.flush(10);
     expect(calls).toEqual([
       "old:start",
       "old:burst-accepted",
@@ -178,7 +182,8 @@ describe("crcParticleSystem hook ownership", () => {
 
     system.emit("burst");
     driver.flush(10);
-    expect(() => driver.flush(11)).toThrow(/observer failed/i);
+    driver.flush(11);
+    expect(() => driver.flush(12)).toThrow(/observer failed/i);
     expect(order).toEqual([
       "system:start",
       "component:start",
