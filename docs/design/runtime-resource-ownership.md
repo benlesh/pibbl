@@ -1,36 +1,36 @@
 # CRC runtime resource ownership
 
-Status: current implemented contract, updated for WebGL islands, first-class
-signals, animation, and the realm scheduler on 2026-09-13.
+Status: current implemented contract, updated for settled WebGL scenes,
+first-class signals, animation, and the realm scheduler on 2026-09-13.
 
 This contract extends the [event resource ownership contract](./event-resource-ownership.md) to every current non-event runtime resource. It defines deterministic ownership and release conditions; garbage collection is supporting evidence only and is never the cleanup oracle.
 
 ## Ownership table
 
-| Resource                       | Acquisition                                   | Sole owner                                   | Release trigger                                                                                               | Required postcondition                                                                                                      |
-| ------------------------------ | --------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Teardown entry                 | `Teardowns.add()`                             | One teardown collection                      | Explicit removal or the collection's first execution                                                          | It runs at most once; later execution is inert.                                                                             |
-| Follower link                  | `child.follow(parent)`                        | Child collection                             | Child or parent execution                                                                                     | The child closes once and detaches from the parent.                                                                         |
-| Root instance and refs         | First `crc()` mount and render                | Identity-guarded controller                  | Abort or controller disposal                                                                                  | The exact map entry and every owned component ref are absent; a remount is untouched.                                       |
-| Component refs                 | First render of one component path/key        | Component teardown collection                | Key, subtree, or root replacement; instance disposal                                                          | The ref leaves the instance map after its teardown closes.                                                                  |
-| `crcWhenChanged` cleanup       | Current dependency-generation callback return | That hook slot in the component collection   | Dependency change or component teardown                                                                       | The previous generation cleans before the next setup and can never clean twice.                                             |
-| `crcState` setter              | Hook mount                                    | Exact CRC instance plus exact component refs | Component/main teardown closure or either identity changing                                                   | A stale setter is a no-op and cannot mutate or schedule a frame on a replacement mount.                                     |
-| Realm host frame               | First pending realm work                      | Scheduler singleton for the loaded runtime   | Host callback completion, or cancellation after no registered work remains                                    | At most one host frame is pending; stale callbacks cannot publish work for removed owners.                                  |
-| Image load/error handlers      | Current `Image` source generation             | That image hook generation                   | Load, error, source change, component removal, or disposal                                                    | Both handlers detach, the request source is released, and late callbacks cannot publish state.                              |
-| Loaded image state             | Current `Image` component refs                | Source-tagged state slot                     | Source change, component removal, or disposal                                                                 | Only an image tagged with the currently rendered source can draw.                                                           |
-| Layer instance and paint entry | `Layer` mount/render slot                     | Layer component refs                         | Layer, ancestor, or root removal                                                                              | Parent paint entry, child refs/frames, and nested layer instances release recursively.                                      |
-| WebGL child instance/surface   | `WebGLLayer` mount slot                       | That `WebGLLayer` component refs             | Layer/ancestor removal, render failure teardown, or root disposal                                             | Private refs, frames, event bridge, context listeners, picker, cache, and surface references release recursively.           |
-| WebGL context generation       | Successful WebGL2 context acquisition         | Owning `WebGLLayer` controller               | Context loss, layer removal, failure teardown, or disposal                                                    | No GPU handle, pick entry, or restore callback can publish through the dead generation.                                     |
-| WebGL candidate bitmap/ledger  | Completed child traversal and bitmap transfer | Current uncommitted layer transaction        | Successful parent composition/commit, or any transfer/composition failure                                     | Bitmap and pick ledger commit together; an uncommitted candidate bitmap closes and its ledger is discarded.                 |
-| WebGL committed bitmap/ledger  | Successful parent Canvas composition          | Owning layer generation                      | Successful replacement, context loss, layer removal, invalidation that discards output, or disposal           | Visible bitmap and selectable pick state always describe the same completed generation; replaced bitmap closes once.        |
-| WebGL GPU resource/cache lease | Primitive `resources.use` or built-in cache   | Component resource slot in one context       | Dependency/context generation change, last cache release, component/layer removal, loss, failure, or disposal | The exact handle generation is released/deleted once and never crosses contexts.                                            |
-| WebGL continuing-frame hook    | `crcAnimationFrame()` render                  | That component hook slot                     | Component removal, hook teardown, child/layer disposal, or root disposal                                      | Its request is released once; stale callbacks cannot schedule a replacement mount.                                          |
-| WebGL transient frame state    | Start of one required island render           | Current synchronous WebGL transaction        | Transaction `finally` on success or failure                                                                   | Draw/pick ledgers, model/camera/resource scopes, backend globals, and framework GL baseline return to their entering state. |
-| Filter scratch pool            | CRC instance construction                     | That CRC instance                            | Instance main teardown                                                                                        | Every reusable source/result canvas and context reference is released; a remount receives a distinct pool.                  |
-| Filter surface-pair lease      | Start of one active nonempty filter boundary  | Current synchronous boundary                 | Boundary `finally`, including validation/render/composite failure, or owning pool disposal                    | Source and result slots return together in strict LIFO order; no active pair or user reference survives.                    |
-| Root surface observers         | First root mount                              | Root instance main teardown                  | Abort, controller disposal, or failed mount                                                                   | Resize, window-resize, and resolution-query listeners are detached; stale notifications cannot schedule the replacement.    |
-| Intrinsic-size stabilization   | Backing resize that changes CSS size          | Root surface state                           | Root disposal while CRC still owns the inline value                                                           | The prior inline width/height is restored without overwriting a later external style change.                                |
-| Temporary render globals       | `executeRender()` entry                       | Current synchronous render                   | `finally` on success or failure                                                                               | Canvas, refs, instance, contexts, seen/unseen sets, hook index, mounting flag, and clip stack return to the prior baseline. |
+| Resource                             | Acquisition                                                      | Sole owner                                              | Release trigger                                                                                     | Required postcondition                                                                                                                                   |
+| ------------------------------------ | ---------------------------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Teardown entry                       | `Teardowns.add()`                                                | One teardown collection                                 | Explicit removal or the collection's first execution                                                | It runs at most once; later execution is inert.                                                                                                          |
+| Follower link                        | `child.follow(parent)`                                           | Child collection                                        | Child or parent execution                                                                           | The child closes once and detaches from the parent.                                                                                                      |
+| Root instance and refs               | First `crc()` mount and render                                   | Identity-guarded controller                             | Abort or controller disposal                                                                        | The exact map entry and every owned component ref are absent; a remount is untouched.                                                                    |
+| Component refs                       | First render of one component path/key                           | Component teardown collection                           | Key, subtree, or root replacement; instance disposal                                                | The ref leaves the instance map after its teardown closes.                                                                                               |
+| `crcWhenChanged` cleanup             | Current dependency-generation callback return                    | That hook slot in the component collection              | Dependency change or component teardown                                                             | The previous generation cleans before the next setup and can never clean twice.                                                                          |
+| `crcState` setter                    | Hook mount                                                       | Exact CRC instance plus exact component refs            | Component/main teardown closure or either identity changing                                         | A stale setter is a no-op and cannot mutate or schedule a frame on a replacement mount.                                                                  |
+| Realm host frame                     | First pending realm work                                         | Scheduler singleton for the loaded runtime              | Host callback completion, or cancellation after no registered work remains                          | At most one host frame is pending; stale callbacks cannot publish work for removed owners.                                                               |
+| Image load/error handlers            | Current `Image` source generation                                | That image hook generation                              | Load, error, source change, component removal, or disposal                                          | Both handlers detach, the request source is released, and late callbacks cannot publish state.                                                           |
+| Loaded image state                   | Current `Image` component refs                                   | Source-tagged state slot                                | Source change, component removal, or disposal                                                       | Only an image tagged with the currently rendered source can draw.                                                                                        |
+| Layer instance and paint entry       | `Layer` mount/render slot                                        | Layer component refs                                    | Layer, ancestor, or root removal                                                                    | Parent paint entry, child refs/frames, and nested layer instances release recursively.                                                                   |
+| WebGL child instance/surface         | `WebGLLayer` mount slot                                          | That `WebGLLayer` component refs                        | Layer/ancestor removal, render failure teardown, or root disposal                                   | Private refs, frames, event bridge, context listeners, picker, cache, and surface references release recursively.                                        |
+| WebGL context generation             | Successful WebGL2 context acquisition                            | Owning `WebGLLayer` controller and renderer             | Context loss, layer removal, failure teardown, or disposal                                          | No GPU handle, bitmap, pick/focus entry, or restore callback can publish through the dead generation.                                                    |
+| WebGL candidate bitmap/pick/focus    | Completed settled-scene render and bitmap transfer               | Current uncommitted layer transaction                   | Successful parent Canvas composite/commit, or any transfer/composite failure                        | Bitmap, picker, and focus metadata commit together; an uncommitted bitmap closes and its metadata is discarded.                                          |
+| WebGL committed bitmap/pick/focus    | Successful parent Canvas composition                             | Owning layer generation                                 | Successful replacement, context loss, layer removal, invalidation that discards output, or disposal | Visible bitmap and selectable/projected metadata always describe the same rendered generation; replaced bitmap closes once.                              |
+| WebGL renderer resident set          | First settled render referencing a program or immutable geometry | Renderer resource cache in one valid context generation | Successful candidate sweep, context loss, layer removal, render-failure teardown, or disposal       | Candidate-only handles roll back; retired or still-live handles are deleted exactly once while valid, and lost handles are invalidated without deletion. |
+| WebGL continuing-frame hook          | `crcAnimationFrame()` render                                     | That component hook slot                                | Component removal, hook teardown, child/layer disposal, or root disposal                            | Its request is released once; stale callbacks cannot schedule a replacement mount.                                                                       |
+| WebGL scene draft/render transaction | Start of one required island composition                         | Current synchronous WebGL frame                         | Composition discard or settlement/render `finally` on success or failure                            | Draft, submissions, queues, candidate metadata, resource transaction, backend globals, and GL baseline cannot survive the frame.                         |
+| Filter scratch pool                  | CRC instance construction                                        | That CRC instance                                       | Instance main teardown                                                                              | Every reusable source/result canvas and context reference is released; a remount receives a distinct pool.                                               |
+| Filter surface-pair lease            | Start of one active nonempty filter boundary                     | Current synchronous boundary                            | Boundary `finally`, including validation/render/composite failure, or owning pool disposal          | Source and result slots return together in strict LIFO order; no active pair or user reference survives.                                                 |
+| Root surface observers               | First root mount                                                 | Root instance main teardown                             | Abort, controller disposal, or failed mount                                                         | Resize, window-resize, and resolution-query listeners are detached; stale notifications cannot schedule the replacement.                                 |
+| Intrinsic-size stabilization         | Backing resize that changes CSS size                             | Root surface state                                      | Root disposal while CRC still owns the inline value                                                 | The prior inline width/height is restored without overwriting a later external style change.                                                             |
+| Temporary render globals             | `executeRender()` entry                                          | Current synchronous render                              | `finally` on success or failure                                                                     | Canvas, refs, instance, contexts, seen/unseen sets, hook index, mounting flag, and clip stack return to the prior baseline.                              |
 
 ## Collection semantics
 
@@ -78,37 +78,60 @@ transform to their entering values.
 ## WebGL transaction and context semantics
 
 One `WebGLLayer` owns one persistent WebGL2 `OffscreenCanvas`, context,
-context-loss/restoration listener pair, private CRC child instance, and at most
-one committed `ImageBitmap`/pick-ledger pair. A required render clears and
-initializes framework state, traverses the child once, builds a fresh pick
-ledger, and transfers one candidate bitmap. CRC composites that candidate into
-the parent Canvas before publishing it. Only a successful composition commits
-the bitmap and ledger together and closes the previous committed bitmap.
-Transfer or composition failure closes the candidate and publishes no partial
-generation; ordinary fail-closed teardown owns the previous pair thereafter.
+context-loss/restoration listener pair, private CRC child instance, scene
+renderer/resource cache, and at most one committed
+`ImageBitmap`/pick/focus-generation tuple. One dirty frame proceeds through four
+owned stages: child composition appends frame-local mesh submissions; settlement
+closes and validates the draft and derives raster/pick/focus records; rendering
+executes the settled queues; then Canvas composition transactionally commits the
+transferred candidate. Child traversal performs no framebuffer mutation or
+GPU-resource construction.
 
-A cache hit composites the committed bitmap and replays matching focus metadata
-without reading an unpreserved WebGL buffer or executing child components.
-State, retained root/props, camera, logical/backing dimensions, density,
-resource/context generation, or relevant focus revision invalidates the cache.
-Comparison materializes direct opaque child iterables once rather than
-preflighting the component tree.
+Only a successful parent Canvas composite commits the bitmap, picker, and focus
+metadata together and closes the previous committed bitmap. Composition,
+settlement, render, transfer, or composite failure publishes no partial
+generation. Candidate target participation releases idempotently, and an
+uncommitted bitmap closes. The backend success-completion path owns settlement,
+render-transaction rollback, GL-baseline restoration, and failed-timestamp
+recording before it rethrows; the pre-success completion path only closes and
+discards its draft. Core remains authoritative for broader fail-closed root
+teardown, which may then release a previously committed tuple.
 
-All GPU objects belong to exactly one WebGL2 context. Built-in caches use
-deterministic leases, while custom primitives use
-`context.resources.use(create, release, deps)`. The final release reports
-whether its context generation was lost. Context loss invalidates every GPU
-generation, closes/removes committed bitmap and pick state, and suppresses
-stale participation. Restoration schedules one ordinary CRC frame; component
-state and public descriptors recreate resources, and nothing becomes live
-until a complete transaction commits. Removal/disposal detaches the listener
-pair before stale restoration can schedule work.
+A clean cache hit is constant-time with respect to scene size: it composites the
+committed bitmap and replays matching pick/focus metadata without executing
+children, constructing a scene draft, settling or rendering queues, reading an
+unpreserved WebGL buffer, or transferring another bitmap. Retained child input,
+camera, logical/backing dimensions, density, relevant focus revision, or context
+generation invalidates the cache. Resource-cache contents neither invalidate nor
+schedule a scene. Comparison materializes direct opaque child iterables once
+rather than preflighting the component tree.
 
-CRC owns an explicit WebGL baseline rather than Canvas-style save/restore.
-Framework setup and every custom primitive callback reinstall that baseline in
-`finally`; user extension state outside the declared baseline is application
-owned and must be restored by the primitive. Broad `getParameter()` snapshots,
-pixel readback, and garbage-collection timing are not release mechanisms.
+All GPU objects belong to the renderer for exactly one WebGL2 context
+generation. Its cache retains the program and immutable-geometry handles used by
+the previous successful render. Each render opens a candidate transaction,
+marks the keys referenced by the settled scene, and lazily creates missing
+handles only during rendering. Success adopts that candidate resident set and
+deletes no-longer-referenced handles. Failure deletes handles created only for
+the candidate and leaves the prior resident set internally valid. Partial
+shader, program, buffer, or vertex-array construction deletes every successfully
+created intermediate before propagating its error, and every transaction closes
+in `finally`.
+
+At most one handle exists for a program or immutable geometry key in one valid
+generation; during a candidate render, handles are bounded by the union of the
+prior and candidate resident sets. The cache retains no component, transform,
+target, focus, or draw-order record. Context loss invalidates the whole resident
+set without calling WebGL deletion against lost handles, closes/removes
+committed bitmap/pick/focus state, and suppresses stale publication. Restoration
+creates a new renderer generation on an ordinary CRC frame from component state
+and immutable geometry descriptors. Removal/disposal detaches the listener pair,
+closes every bitmap, and deletes every still-live valid-generation handle
+exactly once before stale restoration can schedule work.
+
+CRC owns an explicit WebGL baseline rather than Canvas-style save/restore. The
+renderer installs and restores that baseline around settled-scene execution in
+`finally`. Broad `getParameter()` snapshots, pixel readback, and
+garbage-collection timing are not ownership or release mechanisms.
 
 ## Deterministic evidence
 
@@ -135,12 +158,14 @@ and preserves Layer cache hits. Wall-clock thresholds and heap timing remain
 diagnostic rather than correctness gates.
 
 The focused WebGL ownership and performance suites prove exact context,
-listener, bitmap, pick-ledger, program/shader/buffer/vertex-array, custom
-resource, animation-request, backend-global, cache-lease, and component-ref
-baselines through replacement, context loss/restoration, injected failure,
-removal, root disposal, and remount. Structural checks cover one child traversal
-and one bitmap transfer per updated island, no transfer on a cache hit, one
-Canvas composite, no default pixel readback/ID pass, and exact bitmap closure.
+listener, bitmap, pick/focus generation, renderer-resident
+program/shader/buffer/vertex-array, animation-request, backend-global, and
+component-ref baselines through candidate commit/rollback, resident sweep,
+replacement, context loss/restoration, injected failure, removal, root disposal,
+and remount. Structural checks cover one child composition and settled render
+plus one bitmap transfer per updated island, constant-time clean cache hits, one
+Canvas composite, no default pixel readback/ID pass, and exact bitmap/handle
+closure.
 
 ## Deliberate boundaries
 

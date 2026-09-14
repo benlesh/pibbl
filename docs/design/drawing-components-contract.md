@@ -1,6 +1,7 @@
 # CRC drawing-component contract
 
-Status: current implemented contract, updated for WebGL islands on 2026-09-10.
+Status: current implemented contract, updated for settled WebGL scenes on
+2026-09-13.
 
 CRC exports descriptive component values. Authors construct them with JSX or
 `createElement`; none is a callable factory. Geometry, paint, cursor, transform,
@@ -13,8 +14,10 @@ boundary defined below.
 
 ## Shared paint and interaction rules
 
-- Drawing follows Canvas 2D geometry, source paint order, transforms, clips,
-  text measurement, image decoding, and `Path2D` parsing.
+- Canvas drawing follows Canvas 2D geometry, source paint order, transforms,
+  clips, text measurement, image decoding, and `Path2D` parsing. WebGL child
+  source order establishes scene identity and exact ties; raster order follows
+  the settled opaque and transparent queues below.
 - `opacity` multiplies current global alpha. Zero paints nothing but does not
   remove otherwise registered interaction geometry.
 - Canvas and WebGL drawing leaves contribute their supported geometry to hit
@@ -166,13 +169,13 @@ interaction bounds remain exact.
 
 `@crc/webgl` supplies one Canvas composition boundary and four WebGL children:
 
-| Export       | Contract                                                                                                                                                                                                 |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `WebGLLayer` | Resolves a finite positive logical box, renders recursive WebGL children through one private backend instance, transfers one candidate `ImageBitmap`, and composites one transparent Canvas paint entry. |
-| `Group3D`    | Composes translation × Z/Y/X degree rotations × scale for recursive WebGL children and contributes listener ancestry without paint or hit geometry.                                                      |
-| `Mesh`       | Draws one immutable triangle geometry through the unlit solid-color pipeline and records that exact geometry/model snapshot for depth-aware ray picking.                                                 |
-| `Cube`       | Uses centered indexed cube geometry; positive `size` defaults to one and drives the same model scale for draw and pick.                                                                                  |
-| `Sphere`     | Uses deterministic centered indexed sphere geometry; positive `radius` defaults to `0.5` and drives the same model scale for draw and pick.                                                              |
+| Export       | Contract                                                                                                                                                                                               |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `WebGLLayer` | Resolves a finite positive logical box; composes, settles, and renders one frame-local WebGL scene through a private backend; then transfers and transactionally commits one transparent Canvas entry. |
+| `Group3D`    | Scopes translation × Z/Y/X degree rotations × scale for recursive WebGL declarations and contributes listener ancestry without paint, a scene submission, or hit geometry.                             |
+| `Mesh`       | Submits one immutable triangle geometry, composed model transform, final unlit color, and target participation shared by settled raster, ray-pick, and focus records.                                  |
+| `Cube`       | Uses centered indexed cube geometry; positive `size` defaults to one and drives the same submitted model scale for raster and pick.                                                                    |
+| `Sphere`     | Uses deterministic centered indexed sphere geometry; positive `radius` defaults to `0.5` and drives the same submitted model scale for raster and pick.                                                |
 
 `WebGLLayer` accepts one optional perspective camera; omission uses position
 `[0, 0, 5]`, look-at `[0, 0, 0]`, up `[0, 1, 0]`, field of view `50`, near
@@ -185,11 +188,27 @@ is supplied.
 
 `createWebGLGeometry` validates and copies a finite nonempty XYZ triangle list
 and optional in-range triangle indices into an immutable branded descriptor.
-`defineWebGLPrimitive` requires `geometry`, synchronous `custom`, or decorative
-`none` hit behavior. The render callback and `crcWebGLContext()` expose one
-immutable WebGL frame snapshot and component-owned resource operations; raw
-primitives must set every state they depend on and restore extension-specific
-state. A decorative definition permits only `pointerEvents="none"`.
+An application-defined shape is an ordinary component that returns `Mesh` with
+one of these descriptors. `@crc/webgl` exposes no application shader/draw
+callback, analytic hit callback, mutable scene draft, GPU handle, or context
+resource operation.
+
+For one dirty scene, core traverses the child tree exactly once to compose
+declarations without framebuffer mutation or GPU-resource construction. After
+successful composition, the backend closes and settles the complete draft,
+derives raster queues plus geometry pick/focus records from the same immutable
+submissions, renders the WebGL passes, and publishes one candidate for Canvas
+composite and transactional bitmap/pick/focus commit. A failed composition is
+discarded without settling or rendering.
+
+Final alpha is parsed color alpha multiplied by `style.opacity`. Alpha `1`
+enters the opaque queue in ascending source order with depth test and writes.
+Alpha strictly between `0` and `1` enters an object-level bounds-center sort
+back-to-front with depth test and no writes; equal depths retain ascending
+source order. Alpha `0` enters neither raster queue but retains geometry-backed
+pick and focus participation. Intersecting or very large transparent objects
+can expose the limits of object-level sorting. Raster queue order never changes
+component identity, event ancestry, focus order, or nearest-depth picking.
 
 Canvas primitives inside a WebGL island and WebGL primitives outside one are
 backend errors. One island is flattened: its individual objects cannot
@@ -238,11 +257,12 @@ that bitmap without rerunning retained child components. Filters inside a Layer
 belong to the child CRC instance and its scratch pool, while the existing bridge
 keeps their interaction entries in global paint order.
 
-`WebGLLayer` is another persistent cache boundary. Its WebGL draw/depth pass
-produces one committed bitmap, and a receiving core filter consumes that whole
-island bitmap before the outer clip/transform/presentation. Inner WebGL
-primitive styles reject Canvas filters. Filter pixels do not alter the island's
-committed pick or projected focus geometry.
+`WebGLLayer` is another persistent cache boundary. Its settled opaque and
+transparent passes produce one committed bitmap, and a receiving core filter
+consumes that whole island bitmap before the outer
+clip/transform/presentation. Inner WebGL object styles reject Canvas filters.
+Filter pixels do not alter the island's committed pick or projected focus
+geometry.
 
 Nonempty filters require browser `OffscreenCanvas`, an Offscreen Canvas 2D
 context, and its native `filter` state to accept the compiled chain. CRC has no
@@ -306,9 +326,10 @@ regions where documented.
 The Studio's `#/examples/composition/webgl-islands` lesson and
 `#/testing/webgl-islands` laboratory cover default/explicit cameras,
 Cube/Sphere/Mesh/Group3D composition, Canvas/WebGL order, transparent
-pass-through, default participation and opt-out, propagation, depth, projected
-focus, animation, filters outside the island, cache reuse, context restoration,
-and deterministic GPU/bitmap ownership.
+pass-through and object sorting, default participation and opt-out,
+propagation, depth, projected focus, animation, filters outside the island,
+constant-time clean cache reuse, context restoration, and deterministic
+renderer-resource/bitmap ownership.
 
 CRC adds no rich text, semantic DOM, accessibility tree, image CORS policy, SVG
 validator, retained scene graph, generic `Shape` component or registry, or
@@ -321,6 +342,10 @@ See the
 
 The filter surface does not accept raw CSS strings, `url()`/SVG graphs,
 backdrop sampling, or a box-shadow model.
+
+WebGL islands add no lighting, materials, textures, environment maps, shadows,
+emissive surfaces, glow/bloom, or post-processing API. They remain one-camera,
+flattened Canvas entries rather than retained public scene graphs.
 
 ## Rounded shapes and public path creators
 

@@ -1,5 +1,7 @@
 # Settled-Scene WebGL Rendering Implementation Plan
 
+> **Historical status: APPROVED IMPLEMENTATION PLAN.** Final verification remains pending; current behavior is governed by the current contracts until Task 9 completes.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Replace primitive-at-a-time WebGL drawing with one frame-local compose → settle → render pipeline per `WebGLLayer`, while preserving the existing unlit built-ins and island transaction and removing traversal-time raw WebGL APIs.

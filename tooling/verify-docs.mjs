@@ -121,7 +121,6 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/create-wedge-path.md",
   "docs/site/api/functions/define-animation.md",
   "docs/site/api/functions/define-primitive.md",
-  "docs/site/api/functions/define-webgl-primitive.md",
   "docs/site/api/functions/easing.md",
   "docs/site/api/functions/is-signal.md",
   "docs/site/api/functions/keyframes.md",
@@ -158,7 +157,6 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/hooks/crc-svg-path.md",
   "docs/site/api/hooks/crc-transition.md",
   "docs/site/api/hooks/crc-when-changed.md",
-  "docs/site/api/hooks/crc-webgl-context.md",
   "docs/site/api/types/canvas-runtime.md",
   "docs/site/api/types/elements-components.md",
   "docs/site/api/types/events.md",
@@ -2070,7 +2068,7 @@ export function assertMixedLegacyTask9Preservation(manifest) {
   );
   assert.deepEqual(
     publicPackage?.currentIds,
-    ["c0057"],
+    ["c0056"],
     "Public-package JSX translation must remain isolated from signal additions",
   );
   assert.deepEqual(
@@ -2092,7 +2090,7 @@ export function assertMixedLegacyTask9Preservation(manifest) {
   );
   assert.deepEqual(
     deterministicEvidence?.currentIds,
-    ["c0060"],
+    ["c0059"],
     "Deterministic-evidence JSX translation must remain isolated from signal additions",
   );
   assert.deepEqual(
@@ -2114,7 +2112,7 @@ export function assertMixedLegacyTask9Preservation(manifest) {
   );
   assert.deepEqual(
     publicSignalAddition?.currentIds,
-    ["c0059"],
+    ["c0058"],
     "Public signal package proof must remain a separate semantic addition",
   );
   const signalEvidenceAddition = additionsById.get(
@@ -2130,7 +2128,7 @@ export function assertMixedLegacyTask9Preservation(manifest) {
   );
   assert.deepEqual(
     signalEvidenceAddition?.currentIds,
-    ["c0062"],
+    ["c0061"],
     "Signal evidence proof must remain a separate semantic addition",
   );
 }
@@ -2475,12 +2473,12 @@ const matrixRequirements = [
     evidence: ["events-integration.test.tsx", "webgl-lab.test.ts"],
   },
   {
-    topic: /Raw WebGL extension/u,
+    topic: /Declarative custom WebGL geometry/u,
     guides: [
       "site/learn/guides/custom-components-and-primitives.md",
       "design/runtime-resource-ownership.md",
     ],
-    evidence: ["define-webgl-primitive.test.tsx", "webgl-ownership.test.ts"],
+    evidence: ["mesh.test.tsx", "webgl-ownership.test.ts"],
   },
   {
     topic: /Default drawing participation migration/u,

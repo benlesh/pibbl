@@ -1,7 +1,7 @@
 # CRC mouse interaction contract
 
 Status: current geometry, coordinates, cursor, and observer contract, updated
-for WebGL islands on 2026-09-10. The DOM-aligned [user-event contract](./user-events-contract.md)
+for settled WebGL scenes on 2026-09-13. The DOM-aligned [user-event contract](./user-events-contract.md)
 superseded this document's mouse-only non-propagation, hidden related-target,
 no-cancellation, no-capture, and sibling no-activation clauses on 2026-08-29.
 Optional press focus and keyboard activation now defer to the implemented
@@ -26,7 +26,7 @@ The platform evidence is consistent on the important shape: mouse events target 
 
 ## Terms
 
-- **Paint target:** a default-participating Canvas path or WebGL geometry/custom-hit registration. Its identity is the owning mounted component plus that target slot, not a particular handler function.
+- **Paint target:** a default-participating Canvas path, geometry-backed WebGL object, or explicit Canvas target registration. Its identity is the owning mounted component plus that target slot, not a particular handler function.
 - **Logical target:** the one live paint/custom target selected for a native mouse event.
 - **Paint order:** the order in which CRC composites interactive paths, including layers. Later paint is visually above earlier paint.
 - **Live target:** a region still owned by the current rendered tree with the target generation selected for dispatch.
@@ -89,11 +89,13 @@ One root dispatcher owns interaction state across the root Canvas and every nest
 A `WebGLLayer` adds one nested resolver at its Canvas bitmap position. After
 outer clip/bounds rejection, it maps the root point through the inverse Canvas
 world transform to layer-local coordinates and delegates to its committed scene
-picker. Transparent background reports miss. Geometry/custom-hit candidates use
-one camera ray, supported WebGL depth, and later source order as the exact depth
-tie-breaker. Object or complete-island `pointerEvents="none"` permits a lower
-WebGL or Canvas target to win. The picker performs no `readPixels` or hidden ID
-render.
+picker. Transparent background reports miss. The picker consumes geometry,
+model matrix, camera, and source index from the same settled mesh submissions as
+the renderer, uses one camera ray and nearest supported WebGL depth, and chooses
+the later source index for an equal-depth tie. Opaque/transparent raster queues
+and transparent blend order do not change this target order. Object or
+complete-island `pointerEvents="none"` permits a lower WebGL or Canvas target to
+win. The picker performs no `readPixels` or hidden ID render.
 
 Layout placement is another transform in that same composition. A region inside
 Absolute, Overlay, Flow, Flex, or Grid is hit at ancestor transform × placement

@@ -1,6 +1,7 @@
 # CRC animation contract
 
-Status: current implemented contract, published 2026-09-11.
+Status: current implemented contract, updated for settled WebGL scenes on
+2026-09-13.
 
 This document defines CRC's first-class animation definitions, programs,
 component-owned playback, transitions, and their integration with the shared
@@ -257,14 +258,14 @@ playback; a retained readonly result cannot schedule the removed component.
 
 Every playback shares the realm's one frame transaction:
 
-| Phase    | Animation work                                                                                                                                       |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Begin    | Capture one logical time/frame identity and drain accepted commands in invocation order.                                                             |
-| Advance  | Sample registered playbacks in registration order, stage outputs/status/time, and queue milestones.                                                  |
-| Commit   | Validate and publish every playback's stages with the signal graph as one atomic batch.                                                              |
-| Plan     | Validate computed dependencies and collect the exact dirty render/resource boundaries.                                                               |
-| Render   | Repaint planned Layer children before ancestors and render top-level roots/friend work from the committed graph.                                     |
-| Complete | Finalize successful transactions, release ended runs/leases, deliver milestones and isolated errors, and request another frame only if work remains. |
+| Phase    | Animation work                                                                                                                                                                                           |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Begin    | Capture one logical time/frame identity and drain accepted commands in invocation order.                                                                                                                 |
+| Advance  | Sample registered playbacks in registration order, stage outputs/status/time, and queue milestones.                                                                                                      |
+| Commit   | Validate and publish every playback's stages with the signal graph as one atomic batch.                                                                                                                  |
+| Plan     | Validate computed dependencies and collect the exact dirty render/resource boundaries.                                                                                                                   |
+| Render   | Repaint planned Layer children before ancestors and render top-level roots/friend work from the committed graph; a dirty WebGL island composes, settles, and renders before ancestor Canvas composition. |
+| Complete | Finalize successful transactions, release ended runs/leases, deliver milestones and isolated errors, and request another frame only if work remains.                                                     |
 
 Time-based definitions use stable logical-time anchors, not accumulated display
 deltas. A dropped display frame jumps directly to the correct tween, keyframe,
@@ -317,6 +318,12 @@ create another animation loop. Continuous shared state stays in signals; sparse
 renderer facts such as context loss or selection may queue semantic events for
 Complete. WebGL context loss suspends renderer work by default while playback
 continues, so restoration consumes the latest committed values.
+Animation changes ordinary component declarations before a dirty
+`WebGLLayer`'s child tree composes. The layer then settles the complete
+frame-local scene, renders its opaque and transparent queues, and publishes one
+candidate for ancestor Canvas composition. Animation never mutates a settled
+scene or advances an independent WebGL clock; Canvas and WebGL declarations in
+one transaction observe the same realm logical time.
 
 ## Determinism and portability
 

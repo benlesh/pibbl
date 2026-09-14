@@ -14,7 +14,9 @@ exampleSlug: webgl-islands
 `@crc/webgl` renders transparent WebGL2 islands inside an ordinary CRC Canvas
 scene. A [`WebGLLayer`](#/api/components/webgl-layer) is one Canvas composition
 entry: Canvas content can paint before or after it, while the island's own
-children use WebGL depth.
+children declare one frame-local 3D scene. CRC composes the complete successful
+scene first, settles its render and pick data, renders its WebGL passes, and
+then composites and transactionally commits one bitmap to Canvas.
 
 Install the version-matched packages together:
 
@@ -125,11 +127,13 @@ differ, while `up` must be nonzero and non-collinear with the view direction.
 
 ## Transform and draw geometry
 
-[`Group3D`](#/api/components/group-3d) is a nonpainting transform and event
-propagation boundary. Translation and rotation default to zero, scale defaults
-to one, negative scale is supported, and zero or non-finite scale is invalid.
-Its fixed transform order is translation × Z rotation × Y rotation × X
-rotation × scale. Child transforms follow the parent transform.
+[`Group3D`](#/api/components/group-3d) is a nonpainting transform and listener
+scope. It changes the composed model transform for its descendants and adds
+event propagation ancestry, but contributes no independent pixels or hit
+geometry. Translation and rotation default to zero, scale defaults to one,
+negative scale is supported, and zero or non-finite scale is invalid. Its fixed
+transform order is translation × Z rotation × Y rotation × X rotation × scale.
+Child transforms follow the parent transform.
 
 [`Cube`](#/api/components/cube) defaults to size `1`.
 [`Sphere`](#/api/components/sphere) defaults to radius `0.5`.
@@ -159,9 +163,48 @@ within the vertex range.
 
 `Mesh`, `Cube`, and `Sphere` use an unlit solid color. `color` defaults to white
 and must be a concrete browser-accepted Canvas color. `opacity` defaults to one
-and stays between zero and one. Opacity affects pixels, not hit geometry.
+and stays between zero and one. Final raster alpha is parsed color alpha
+multiplied by `opacity`. Opacity affects pixels, not hit or focus geometry.
+
+## Add a custom shape
+
+`Mesh` plus `createWebGLGeometry` is the custom-shape extension path. An
+ordinary component can translate application props into a declarative mesh:
+
+```tsx
+import { Mesh, createWebGLGeometry } from "@crc/webgl";
+
+const markerGeometry = createWebGLGeometry({
+  positions: [-0.5, -0.5, 0, 0.5, -0.5, 0, 0, 0.5, 0],
+});
+
+function Marker({ x }: { x: number }) {
+  return <Mesh geometry={markerGeometry} style={{ translateX: x }} />;
+}
+```
+
+The immutable geometry is shared by rasterization, ray picking, and projected
+focus bounds. Application components do not receive raw WebGL access, custom
+shader or hit callbacks, or ownership of the renderer's GPU handles.
 
 ## Understand paint order and targeting
+
+Child source order establishes CRC identity, event ancestry, global focus
+order, and stable tie-break indices. It is not an irrevocable GPU draw sequence:
+after the whole scene composes successfully, the renderer sees every submitted
+object and plans two raster queues.
+
+Opaque objects render first in source order with depth testing and depth writes.
+Transparent objects then sort back-to-front by their transformed geometry
+bounds-center depth, using source order only to break equal-depth ties; they
+retain depth testing but disable depth writes. Standard source-alpha blending
+uses each object's final color × opacity alpha. Exactly zero-alpha objects enter
+neither raster queue, but their declared geometry remains pickable and can keep
+projected focus bounds unless `pointerEvents="none"` opts out.
+
+This is deterministic object-level transparency, not order-independent
+transparency. Intersecting or very large transparent meshes can still reveal
+the limitations of a single bounds-center sort.
 
 Canvas and WebGL drawing primitives participate in coordinate targeting by
 default, even without a handler or cursor. The topmost matching geometry can
@@ -186,14 +229,15 @@ machinery.
 CRC internally resolves every paint candidate as miss, block, or target. A
 Canvas path uses its declared geometry, a nested Canvas layer delegates to its
 child ledger, and a WebGL layer maps the root point into its committed camera
-and scene picker. The default WebGL picker uses geometry ray intersections; it
-does not read pixels or run a hidden GPU ID pass.
+and scene picker. The WebGL picker is derived from the same settled mesh
+submissions used for rasterization. It uses geometry ray intersections rather
+than transparent blend order and does not read pixels or run a hidden GPU ID
+pass.
 
 Focus-managed geometry-backed WebGL targets derive directional-navigation
 bounds from their clipped 3D bounds projected into the logical layer. An
-explicit `keyboardNavigationBounds` is a layer-local 2D override. Custom-hit
-primitives need that explicit override when they should participate in arrow
-navigation.
+explicit `keyboardNavigationBounds` is a layer-local 2D override. Raster queue
+sorting never changes source-order Tab navigation.
 
 See the [default pointer-participation migration](../../../migrations/default-pointer-participation.md)
 when upgrading a scene that expected passive paint to click through.
@@ -219,40 +263,12 @@ function Spinner() {
 Multiple callers coalesce through core's scheduler, and Canvas and WebGL
 components in the same root observe one timestamp. Static islands request no
 continuing frames. An unchanged island may reuse its committed bitmap and pick
-ledger without rerunning child components; state, props, camera, size, density,
-focus metadata, resource generation, or context generation invalidates the
-appropriate cache.
-
-## Define a raw WebGL primitive
-
-[`defineWebGLPrimitive`](#/api/functions/define-webgl-primitive) creates a
-WebGL-only platform component. Its render callback can read the current
-[`CRCWebGLContext`](#/api/types/webgl#crcwebglcontext) directly or through
-[`crcWebGLContext`](#/api/hooks/crc-webgl-context). The snapshot includes the
-WebGL2 context, camera and model matrices, logical/backing viewports, density,
-timestamp, context generation, and component-owned `resources.use(...)`.
-
-Every definition must declare one hit capability:
-
-- `geometry` returns a `CRCWebGLGeometry` used for draw-matched ray picking;
-- `custom` synchronously returns `null` for a miss or a finite nonnegative ray
-  distance for a hit;
-- `none` declares a decorative primitive and fixes its public participation to
-  `pointerEvents="none"`.
-
-A raw-context primitive must set every WebGL state value it depends on. CRC
-restores its framework baseline after the callback, so bindings and enable flags
-do not survive between primitives. Extension-specific state outside CRC's
-baseline remains the primitive's responsibility and should be restored in
-`finally`. Use `context.resources.use(create, release, deps)` for programs,
-buffers, textures, vertex arrays, framebuffers, and related context-owned
-resources. Never share a GPU object between `WebGLLayer` contexts.
-
-The draw callback and hit resolver are synchronous. A resolver must not invoke
-hooks, render components, mutate CRC state, retain its input snapshot, perform
-asynchronous work, or infer hits from later GPU readback. Custom WebGL
-primitives do not accept Canvas `style.filter`; apply a core filter to the
-receiving `WebGLLayer` instead.
+ledger and focus metadata in constant time without composing or settling a
+scene, executing child components, issuing WebGL draws, or transferring another
+bitmap. State, props, camera, size, density, focus metadata, or context
+generation invalidates the appropriate cache. Animation changes ordinary
+declarations before the layer composes, settles, and renders; it does not create
+a second clock or independent draw loop.
 
 ## Construct the same scene without JSX
 
@@ -277,12 +293,29 @@ crc(document.querySelector("canvas")!, scene);
 
 ## Composition and platform limits
 
-A `WebGLLayer` owns one persistent WebGL2 `OffscreenCanvas`, context, committed
-`ImageBitmap`, and matched pick ledger. A new image/ledger pair becomes live
-only after WebGL traversal, bitmap transfer, and parent Canvas composition all
-succeed. Replacement closes the previous bitmap. Context loss removes stale
-paint, pick, and GPU generations; restoration schedules an ordinary rebuild.
-Removal and root disposal detach listeners and release each owned generation.
+A `WebGLLayer` owns one persistent WebGL2 `OffscreenCanvas`, context, renderer,
+committed `ImageBitmap`, and matched pick/focus generation. A dirty frame has
+four distinct stages:
+
+1. **compose** — components evaluate once and Mesh/Cube/Sphere declarations
+   append frame-local submissions without framebuffer changes or GPU-resource
+   construction;
+2. **settle** — CRC closes and validates the complete draft and derives raster,
+   pick, and focus records from the same immutable submissions;
+3. **render** — the layer renderer acquires its context-owned resources and
+   issues the opaque and transparent WebGL passes; and
+4. **Canvas composite and transactional commit** — CRC transfers one candidate
+   bitmap, composites it into the parent Canvas, and commits the bitmap,
+   picker, and focus metadata together.
+
+A failure before commit publishes no partial candidate. The renderer rolls back
+candidate-only handles and preserves the prior resident set internally; broader
+root failure still follows CRC's fail-closed teardown. Replacement closes the
+previous bitmap. Context loss invalidates handles without issuing deletion
+calls against the lost generation, removes stale paint/pick/focus participation,
+and schedules an ordinary reconstruction after restoration. Removal and root
+disposal detach listeners, close bitmaps, and delete every still-live handle
+exactly once while its context remains valid.
 
 The island is one flattened Canvas paint entry. Canvas primitives cannot appear
 inside it, WebGL primitives cannot render outside it, and an external Canvas
@@ -291,11 +324,12 @@ primitive cannot be interleaved between two objects in the same island. Use two
 
 Outer Canvas layout, `Group` transforms, `Clip`, alpha/compositing, and
 `style.filter` apply to the completed island bitmap. A filter on `WebGLLayer`
-therefore affects the whole island after its WebGL draw/depth pass and does not
+therefore affects the whole island after its settled WebGL passes and does not
 change picking or focus geometry. The initial package has one perspective
-camera per island and no WebGL1 fallback, multiple viewports, lighting/material
-system, loader, retained scene graph, worker renderer, WebGPU backend, or
-cross-context GPU sharing.
+camera per island and no WebGL1 fallback, multiple viewports, lighting,
+materials, textures, environment maps, shadows, emissive surfaces, glow/bloom,
+post-processing API, loader, retained scene graph, worker renderer, WebGPU
+backend, or cross-context GPU sharing.
 
 The package uses the version-coupled `@crc/core/internal` friend entry to keep
 one element brand, scheduler, and event root. That entry is reserved for

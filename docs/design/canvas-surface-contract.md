@@ -1,7 +1,7 @@
 # CRC canvas surface contract
 
-Status: current implemented contract, updated for WebGL islands, first-class
-signals, and the realm scheduler on 2026-09-13.
+Status: current implemented contract, updated for settled WebGL scenes,
+first-class signals, and the realm scheduler on 2026-09-13.
 
 This document defines how a root CRC mount maps logical drawing units to the
 Canvas CSS content box and physical backing store. The mapping is owned by the
@@ -138,8 +138,11 @@ density. One layer owns one persistent WebGL2 `OffscreenCanvas`; its logical
 width and height determine camera aspect and local picking coordinates, while
 its backing width and height determine raster resolution only. The surface is
 created with alpha, depth, premultiplied alpha, and an unpreserved drawing
-buffer. A successful render transfers a candidate `ImageBitmap` and composites
-the complete physical source into one logical Canvas destination.
+buffer. After the child tree composes successfully, the backend settles one
+frame-local scene, renders its planned queues, and transfers a candidate
+`ImageBitmap`. Parent Canvas composition draws that complete physical source
+into one logical destination before bitmap, pick, and focus metadata commit as
+one matching generation.
 
 Runtime-created Layer and filter surfaces are upright local targets. CRC keeps
 the current paint transform, which maps local drawing into the active target,
@@ -195,10 +198,11 @@ does not cancel unrelated work already owned by the realm scheduler. See the
 phase admission and root/Layer revision rules.
 
 Each `WebGLLayer` owns its context loss/restoration listeners. Loss invalidates
-the current GPU generation, committed bitmap, and matching pick state;
-restoration requests one ordinary coalesced CRC frame. Layer removal or root
-disposal detaches those listeners and prevents a stale restore notification
-from scheduling work.
+the renderer-owned resident set without deleting handles from the lost
+generation, closes the committed bitmap, and removes matching pick/focus state;
+restoration requests one ordinary coalesced CRC frame under a new context
+generation. Layer removal or root disposal detaches those listeners and
+prevents a stale restore notification from scheduling work.
 
 ## Evidence
 
@@ -214,8 +218,9 @@ nested high-density filter composition.
 
 WebGL surface, interaction, and browser suites cover logical/backing viewport
 snapshots, default and explicit cameras, outer layout/transforms/clips/Layers,
-transparent composition, delegated picking, density changes, bitmap
-transactions, cache reuse, and context loss/restoration.
+opaque and settled-transparent composition, delegated geometry picking,
+density changes, bitmap/pick/focus generation transactions, constant-time clean
+cache reuse, and context loss/restoration.
 
 The public `canvas-surface` laboratory is loaded by both the Studio and
 headless Chromium. It proves fixed 2x backing, fixed CSS resize without logical

@@ -1,6 +1,7 @@
 # CRC layout-system contract
 
-Status: current implemented contract, updated for WebGL islands on 2026-09-10.
+Status: current implemented contract, updated for settled WebGL scenes on
+2026-09-13.
 
 CRC provides dedicated `Absolute`, `Overlay`, `Flow`, `Flex`, and `Grid`
 components. They arrange direct branded `CRCElement` children into declared
@@ -19,8 +20,10 @@ Every layout component is itself a normal component: it can be nested inside
 another layout, transformed by `Group`, clipped by `Clip`, or rendered through
 a `Layer`. `WebGLLayer` is a layout-participating Canvas composition primitive;
 its WebGL descendants do not become layout items in the parent Canvas
-algorithm. Source order remains paint order and reverse source order remains
-coordinate-event target order.
+algorithm. Source order remains Canvas composition order and reverse Canvas
+order remains coordinate-event target order. Within one WebGL scene, child
+source order establishes identity and tie-break indices while settled opaque
+and transparent queues determine raster order.
 
 ## Shared box, placement, and overflow rules
 
@@ -183,8 +186,8 @@ render work. Measurement:
 - cannot call hooks, context accessors, observe a layout box, paint, register
   interaction targets, or acquire runtime resources;
 - cannot create image generations;
-- cannot acquire a WebGL context, invoke `crcWebGLContext` or
-  `crcAnimationFrame`, traverse a WebGL island, or acquire GPU/bitmap resources;
+- cannot traverse a WebGL island, request WebGL animation, compose or settle a
+  WebGL scene, or acquire GPU/bitmap resources;
 - detects direct and indirect cycles and restores all temporary runtime state
   after success or failure.
 
@@ -212,11 +215,11 @@ cursors, image generations, offscreen layers, and component refs exactly once.
 Repeated reflow does not accumulate owners.
 
 Offscreen Canvas layers and WebGL islands share the root interaction ledger, so
-nested layout still participates in one global source paint/target order.
+nested layout still participates in one global Canvas composition/target order.
 `Clip` and layout overflow constraints apply identically to pixels and
 coordinate geometry. A complete WebGL island occupies one Canvas paint
 position; layout cannot interleave an external Canvas child between objects in
-that flattened WebGL pass.
+that flattened settled scene.
 
 ## Deliberate exclusions
 
