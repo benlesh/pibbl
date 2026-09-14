@@ -1,5 +1,6 @@
-export { defineParticleEffect2D } from './lib/definition.js';
-export { particle } from './lib/particle.js';
+export { defineParticleEffect2D } from "./lib/definition.js";
+export { particle } from "./lib/particle.js";
+export { crcParticleSystem } from "./lib/system/hook.js";
 
 export type {
   CRCParticleAppearance,
