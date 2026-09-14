@@ -3,7 +3,12 @@ import {
   requireHookContext,
   useInternalHookSlot,
 } from '../hooks/hook-slot.js';
-import type { SignalCommitBatch } from '../signals/graph.js';
+import {
+  discardSignalCommitBatchProvenance,
+  discardSignalCommitBatchWriterForProvenance,
+  stageSignalCommitBatchWithProvenance,
+  type SignalCommitBatch,
+} from '../signals/graph.js';
 import type { WritableSignal } from '../signals/types.js';
 import type { CRCComponentRefs, CRCInstance } from '../types.js';
 import {
@@ -44,10 +49,6 @@ const ownerStates = new WeakMap<
   SimulationOwnerState
 >();
 const batchViews = new WeakMap<SignalCommitBatch, CRCInternalSignalBatch>();
-const batchWriters = new WeakMap<
-  SignalCommitBatch,
-  Map<CRCInternalSimulationOwner, Set<object>>
->();
 let currentSimulationOwner: CRCInternalSimulationOwner | undefined;
 
 export function crcInternalCurrentSimulationOwner(): CRCInternalSimulationOwner {
@@ -96,6 +97,9 @@ export function crcInternalQueueSimulationBegin(
       withCurrentSimulationOwner(owner, () => {
         command(frame, simulationBatchView(batch), sequence);
       });
+      if (!isCurrentOwner(state)) {
+        discardSimulationOwnerWriters(batch, owner);
+      }
     } catch (error) {
       discardSimulationOwnerWriters(batch, owner);
       throw error;
@@ -125,6 +129,9 @@ export function crcInternalRegisterSimulationAdvance(
       withCurrentSimulationOwner(owner, () => {
         advance(frame, simulationBatchView(batch));
       });
+      if (!isCurrentOwner(state)) {
+        discardSimulationOwnerWriters(batch, owner);
+      }
     } catch (error) {
       discardSimulationOwnerWriters(batch, owner);
       throw error;
@@ -222,24 +229,28 @@ function simulationBatchView(batch: SignalCommitBatch): CRCInternalSignalBatch {
       return batch.read(signal);
     },
     stage<T>(signal: WritableSignal<T>, value: T, writer: object): void {
-      batch.stage(signal, value, writer);
       const owner = currentSimulationOwner;
-      if (owner !== undefined) {
-        let writersByOwner = batchWriters.get(batch);
-        if (!writersByOwner) {
-          writersByOwner = new Map();
-          batchWriters.set(batch, writersByOwner);
-        }
-        let writers = writersByOwner.get(owner);
-        if (!writers) {
-          writers = new Set();
-          writersByOwner.set(owner, writers);
-        }
-        writers.add(writer);
+      if (owner === undefined) {
+        throw new Error(
+          'CRC internal simulation batches may only stage during their owning callback.',
+        );
       }
+      stageSignalCommitBatchWithProvenance(
+        batch,
+        owner,
+        signal,
+        value,
+        writer,
+      );
     },
     discardWriter(writer: object): void {
-      batch.discardWriter(writer);
+      const owner = currentSimulationOwner;
+      if (owner === undefined) {
+        throw new Error(
+          'CRC internal simulation batches may only discard during their owning callback.',
+        );
+      }
+      discardSignalCommitBatchWriterForProvenance(batch, owner, writer);
     },
   });
   batchViews.set(batch, view);
@@ -263,11 +274,7 @@ function discardSimulationOwnerWriters(
   batch: SignalCommitBatch,
   owner: CRCInternalSimulationOwner,
 ): void {
-  const writersByOwner = batchWriters.get(batch);
-  for (const writer of writersByOwner?.get(owner) ?? []) {
-    batch.discardWriter(writer);
-  }
-  writersByOwner?.delete(owner);
+  discardSignalCommitBatchProvenance(batch, owner);
 }
 
 function requireActiveOwner(

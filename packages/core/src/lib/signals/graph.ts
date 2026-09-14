@@ -678,7 +678,18 @@ interface StagedSignalValue {
   value: unknown;
   writer: object;
   authorization: unknown;
+  provenance: object | undefined;
+  previous: StagedSignalValue | undefined;
 }
+
+interface SignalCommitBatchState {
+  readonly staged: Map<SignalNode<unknown>, StagedSignalValue>;
+}
+
+const signalCommitBatchStates = new WeakMap<
+  SignalCommitBatch,
+  SignalCommitBatchState
+>();
 
 export interface SignalCommitBatch {
   read<T>(signal: WritableSignal<T>): T;
@@ -691,24 +702,20 @@ export interface SignalCommitBatch {
 export function createSignalCommitBatch(): SignalCommitBatch {
   const staged = new Map<SignalNode<unknown>, StagedSignalValue>();
 
-  return {
+  const batch: SignalCommitBatch = {
     read<T>(value: WritableSignal<T>): T {
       const node = getSignalNode(value) as SignalNode<T>;
       const candidate = staged.get(node as SignalNode<unknown>);
       return candidate === undefined ? node.value : candidate.value as T;
     },
     stage<T>(value: WritableSignal<T>, nextValue: T, writer: object): void {
-      const node = getSignalNode(value) as SignalNode<T>;
-      writePolicyStack.at(-1)?.(node as SignalNode<unknown>, 'staged');
-      staged.set(node as SignalNode<unknown>, {
-        node: node as SignalNode<unknown>,
-        value: nextValue,
+      stageSignalCommitBatchCandidate(
+        staged,
+        value,
+        nextValue,
         writer,
-        authorization: signalWriterLeasePolicy?.captureStagedWrite(
-          node as SignalNode<unknown>,
-          writer,
-        ),
-      });
+        undefined,
+      );
     },
     discardWriter(writer: object): void {
       for (const [node, candidate] of staged) {
@@ -752,6 +759,109 @@ export function createSignalCommitBatch(): SignalCommitBatch {
       staged.clear();
     },
   };
+  signalCommitBatchStates.set(batch, { staged });
+  return batch;
+}
+
+/** @internal Stages a candidate with rollback provenance for one owner. */
+export function stageSignalCommitBatchWithProvenance<T>(
+  batch: SignalCommitBatch,
+  provenance: object,
+  signal: WritableSignal<T>,
+  value: T,
+  writer: object,
+): void {
+  stageSignalCommitBatchCandidate(
+    requireSignalCommitBatchState(batch).staged,
+    signal,
+    value,
+    writer,
+    provenance,
+  );
+}
+
+/** @internal Discards only candidates staged with one owner's provenance. */
+export function discardSignalCommitBatchProvenance(
+  batch: SignalCommitBatch,
+  provenance: object,
+): void {
+  discardSignalCommitBatchCandidates(
+    requireSignalCommitBatchState(batch).staged,
+    candidate => candidate.provenance === provenance,
+  );
+}
+
+/** @internal Applies friend discardWriter semantics inside one owner provenance. */
+export function discardSignalCommitBatchWriterForProvenance(
+  batch: SignalCommitBatch,
+  provenance: object,
+  writer: object,
+): void {
+  discardSignalCommitBatchCandidates(
+    requireSignalCommitBatchState(batch).staged,
+    candidate =>
+      candidate.provenance === provenance && candidate.writer === writer,
+  );
+}
+
+function stageSignalCommitBatchCandidate<T>(
+  staged: Map<SignalNode<unknown>, StagedSignalValue>,
+  value: WritableSignal<T>,
+  nextValue: T,
+  writer: object,
+  provenance: object | undefined,
+): void {
+  const node = getSignalNode(value) as SignalNode<T>;
+  const unknownNode = node as SignalNode<unknown>;
+  writePolicyStack.at(-1)?.(unknownNode, 'staged');
+  staged.set(unknownNode, {
+    node: unknownNode,
+    value: nextValue,
+    writer,
+    authorization: signalWriterLeasePolicy?.captureStagedWrite(
+      unknownNode,
+      writer,
+    ),
+    provenance,
+    previous: staged.get(unknownNode),
+  });
+}
+
+function requireSignalCommitBatchState(
+  batch: SignalCommitBatch,
+): SignalCommitBatchState {
+  const state = signalCommitBatchStates.get(batch);
+  if (!state) throw new TypeError('Expected a CRC signal Commit batch.');
+  return state;
+}
+
+function discardSignalCommitBatchCandidates(
+  staged: Map<SignalNode<unknown>, StagedSignalValue>,
+  discard: (candidate: StagedSignalValue) => boolean,
+): void {
+  for (const [node, candidate] of staged) {
+    const retained = discardStagedSignalCandidates(candidate, discard);
+    if (retained === undefined) staged.delete(node);
+    else staged.set(node, retained);
+  }
+}
+
+function discardStagedSignalCandidates(
+  candidate: StagedSignalValue | undefined,
+  discard: (candidate: StagedSignalValue) => boolean,
+): StagedSignalValue | undefined {
+  const retained: StagedSignalValue[] = [];
+  let current = candidate;
+  while (current !== undefined) {
+    if (!discard(current)) retained.push(current);
+    current = current.previous;
+  }
+  let previous: StagedSignalValue | undefined;
+  for (let index = retained.length - 1; index >= 0; index--) {
+    retained[index].previous = previous;
+    previous = retained[index];
+  }
+  return previous;
 }
 
 export function withSignalTracking<T>(

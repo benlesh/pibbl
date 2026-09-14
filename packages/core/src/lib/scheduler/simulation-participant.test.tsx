@@ -176,7 +176,7 @@ describe('@crc/core/internal simulation participants', () => {
     const discarded = signal(0);
     const surviving = signal(0);
     const failure = new Error('physics owner failed');
-    const failedWriter = Object.freeze({});
+    const sharedWriter = Object.freeze({});
     const calls: string[] = [];
     const registrations = new WeakSet<CRCInternalSimulationOwner>();
     let recordRender = false;
@@ -221,13 +221,13 @@ describe('@crc/core/internal simulation participants', () => {
           createElement(Probe, {
             label: 'animation',
             lane: 'animation',
-            run: (owner, _frame, batch) => batch.stage(animated, 1, owner),
+            run: (_owner, _frame, batch) => batch.stage(animated, 1, sharedWriter),
           }),
           createElement(Probe, {
             label: 'physics-failed',
             lane: 'physics',
             run: (owner, _frame, batch) => {
-              batch.stage(discarded, 2, failedWriter);
+              batch.stage(discarded, 2, sharedWriter);
               crcInternalQueueSimulationComplete(owner, () => {
                 calls.push('complete');
               });
@@ -294,6 +294,112 @@ describe('@crc/core/internal simulation participants', () => {
     expect(() => crcInternalRequestSimulationRender(owner!)).toThrow(
       /active CRC internal simulation owner/i,
     );
+  });
+
+  it('discards writes staged before and after owner teardown during Begin', () => {
+    const beforeTeardown = signal(0);
+    const afterTeardown = signal(0);
+    let controller: ReturnType<typeof crc>;
+    const Root = () => {
+      const owner = crcInternalCurrentSimulationOwner();
+      crcInternalQueueSimulationBegin(owner, (_frame, batch) => {
+        batch.stage(beforeTeardown, 1, {});
+        controller.dispose();
+        batch.stage(afterTeardown, 2, {});
+      });
+      return undefined;
+    };
+
+    controller = crc(createCanvas(), createElement(Root, {}));
+    driver.flush(1);
+    driver.flush(2);
+
+    expect([beforeTeardown.get(), afterTeardown.get()]).toEqual([0, 0]);
+    expect(driver.pendingHostFrames).toBe(0);
+  });
+
+  it('discards writes staged before and after owner teardown during Advance', () => {
+    const beforeTeardown = signal(0);
+    const afterTeardown = signal(0);
+    let controller: ReturnType<typeof crc>;
+    const Root = () => {
+      const owner = crcInternalCurrentSimulationOwner();
+      crcInternalRegisterSimulationAdvance(
+        owner,
+        'physics',
+        (_frame, batch) => {
+          batch.stage(beforeTeardown, 1, {});
+          controller.dispose();
+          batch.stage(afterTeardown, 2, {});
+        },
+      );
+      return undefined;
+    };
+
+    controller = crc(createCanvas(), createElement(Root, {}));
+    driver.flush(1);
+    driver.flush(2);
+
+    expect([beforeTeardown.get(), afterTeardown.get()]).toEqual([0, 0]);
+    expect(driver.pendingHostFrames).toBe(0);
+  });
+
+  it('scopes explicit discardWriter to the calling simulation owner', () => {
+    const retained = signal(0);
+    const discarded = signal(0);
+    const sharedWriter = Object.freeze({});
+    const registrations = new WeakSet<CRCInternalSimulationOwner>();
+
+    const Probe = ({
+      lane,
+      run,
+    }: {
+      lane: CRCInternalAdvanceLane;
+      run: (batch: CRCInternalSignalBatch) => void;
+    }) => {
+      const owner = crcInternalCurrentSimulationOwner();
+      if (!registrations.has(owner)) {
+        registrations.add(owner);
+        let release = () => {};
+        release = crcInternalRegisterSimulationAdvance(
+          owner,
+          lane,
+          (_frame, batch) => {
+            run(batch);
+            release();
+          },
+        );
+      }
+      return undefined;
+    };
+
+    const Root = () => {
+      retained.get();
+      discarded.get();
+      return createElement(Fragment, {
+        children: [
+          createElement(Probe, {
+            lane: 'animation',
+            run: batch => batch.stage(retained, 1, sharedWriter),
+          }),
+          createElement(Probe, {
+            lane: 'physics',
+            run: batch => {
+              batch.stage(discarded, 2, sharedWriter);
+              batch.discardWriter(sharedWriter);
+            },
+          }),
+        ],
+      });
+    };
+
+    const controller = crc(createCanvas(), createElement(Root, {}));
+    driver.flush(1);
+    driver.flush(2);
+
+    expect([retained.get(), discarded.get()]).toEqual([1, 0]);
+    expect(driver.pendingHostFrames).toBe(0);
+    controller.dispose();
   });
 });
 

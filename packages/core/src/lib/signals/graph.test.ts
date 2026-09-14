@@ -9,11 +9,14 @@ import {
   type SignalEquals,
 } from '../../index';
 import {
+  discardSignalCommitBatchProvenance,
+  discardSignalCommitBatchWriterForProvenance,
   flushPendingComputedValidations,
   createSignalCommitBatch,
   getSignalNode,
   provisionSignalValueForRender,
   signalGraphSnapshot,
+  stageSignalCommitBatchWithProvenance,
   withSignalTracking,
   withSignalWriteForbidden,
   withSignalWritePolicy,
@@ -445,6 +448,59 @@ describe('signal', () => {
 });
 
 describe('signal commit batches', () => {
+  it('rolls back one provenance without erasing earlier shared-writer candidates', () => {
+    const overwritten = signal(0);
+    const separate = signal(0);
+    const sharedWriter = Object.freeze({});
+    const earlierOwner = Object.freeze({});
+    const failedOwner = Object.freeze({});
+    const batch = createSignalCommitBatch();
+
+    stageSignalCommitBatchWithProvenance(
+      batch,
+      earlierOwner,
+      overwritten,
+      1,
+      sharedWriter,
+    );
+    stageSignalCommitBatchWithProvenance(
+      batch,
+      failedOwner,
+      overwritten,
+      2,
+      sharedWriter,
+    );
+    stageSignalCommitBatchWithProvenance(
+      batch,
+      failedOwner,
+      separate,
+      3,
+      sharedWriter,
+    );
+
+    discardSignalCommitBatchWriterForProvenance(
+      batch,
+      failedOwner,
+      sharedWriter,
+    );
+
+    expect(batch.read(overwritten)).toBe(1);
+    expect(batch.read(separate)).toBe(0);
+
+    stageSignalCommitBatchWithProvenance(
+      batch,
+      failedOwner,
+      separate,
+      4,
+      sharedWriter,
+    );
+    discardSignalCommitBatchProvenance(batch, failedOwner);
+    batch.commit();
+
+    expect(overwritten.get()).toBe(1);
+    expect(separate.get()).toBe(0);
+  });
+
   it('keeps staged values private until one commit and invalidates only for a changed final computed value', () => {
     const left = signal(1);
     const right = signal(2);
