@@ -333,7 +333,7 @@ export function createWebGLLabScene(props: WebGLLabSceneProps): CRCNode {
           pointerEvents="none"
           style={{ x: 14, y: 292, fill: '#334155', font: '11px monospace' }}
         >
-          {`cube ${props.state.cubeSelections} · sphere ${props.state.sphereSelections} · generation ${props.state.revision}`}
+          {`cube ${props.state.cubeSelections} · sphere ${props.state.sphereSelections} · revision ${props.state.revision}`}
         </Text>
       </Group>
     </FocusManagement>

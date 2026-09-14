@@ -226,6 +226,20 @@ describe('public WebGL island scenarios', () => {
     }
   });
 
+  it('labels the public footer with the scenario revision', async () => {
+    const fillText = vi.spyOn(CanvasRenderingContext2D.prototype, 'fillText');
+
+    const { controller } = await mountWebGLLab();
+    expect(fillText.mock.calls.map(([text]) => text)).toContain(
+      'cube 0 · sphere 0 · revision 0',
+    );
+
+    await controller.perform('show-filtered');
+    expect(fillText.mock.calls.map(([text]) => text)).toContain(
+      'cube 0 · sphere 0 · revision 1',
+    );
+  });
+
   it('passes through transparent pixels while preserving Canvas/WebGL source order', async () => {
     const { canvas, controller } = await mountWebGLLab();
     expect(controller.getState()).toEqual({
