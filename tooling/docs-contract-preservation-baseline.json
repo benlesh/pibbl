@@ -11098,76 +11098,104 @@
       "sharedAnchors": ["WebGL", "bitmap", "context"]
     },
     {
-      "id": "webgl-drawing-components-contract-additions",
+      "id": "webgl-drawing-surface-and-exports-preservation",
       "path": "docs/design/drawing-components-contract.md",
-      "currentIds": ["c0040", "c0044", "c0051", "c0055"],
-      "reason": "webgl-islands units w0047 w0048 w0049 w0050 w0051 w0052 w0053 w0054 w0055 w0057 w0060 w0061 w0064 w0065 w0067 w0068 w0069 w0072 w0073 w0074 w0075 w0078 w0079 w0080 w0081 w0082 w0083 w0084 w0085 w0086 w0093 w0096 w0167 w0168 authorize retained current units c0040 c0044 c0051 c0055 for the unchanged WebGL, primitive, geometry clauses.",
+      "currentIds": ["c0040", "c0044"],
+      "reason": "webgl-islands units w0047 w0048 w0049 w0050 w0051 w0172 authorize retained current units c0040 c0044 for the unchanged WebGL exports and one Canvas composition boundary.",
+      "approval": {
+        "recordId": "webgl-islands",
+        "unitIds": ["w0047", "w0048", "w0049", "w0050", "w0051", "w0172"]
+      },
+      "sharedAnchors": ["WebGL", "composition"]
+    },
+    {
+      "id": "webgl-drawing-camera-and-leaf-preservation",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0051"],
+      "reason": "webgl-islands units w0060 w0061 w0064 w0067 w0069 w0074 w0075 w0078 w0080 w0125 authorize retained current unit c0051 for the unchanged camera, transform, geometry, style, picking, and focus contract.",
       "approval": {
         "recordId": "webgl-islands",
         "unitIds": [
-          "w0047",
-          "w0048",
-          "w0049",
-          "w0050",
-          "w0051",
-          "w0052",
-          "w0053",
-          "w0054",
-          "w0055",
-          "w0057",
           "w0060",
           "w0061",
           "w0064",
-          "w0065",
           "w0067",
-          "w0068",
           "w0069",
-          "w0072",
-          "w0073",
           "w0074",
           "w0075",
           "w0078",
-          "w0079",
           "w0080",
-          "w0081",
-          "w0082",
-          "w0083",
-          "w0084",
-          "w0085",
-          "w0086",
-          "w0093",
-          "w0096",
-          "w0167",
-          "w0168"
+          "w0125"
         ]
       },
-      "sharedAnchors": ["WebGL", "primitive", "geometry"]
+      "sharedAnchors": ["camera", "transform", "geometry"]
     },
     {
-      "id": "webgl-settled-drawing-components-additions",
+      "id": "webgl-drawing-flattening-preservation",
       "path": "docs/design/drawing-components-contract.md",
-      "currentIds": [
-        "c0046",
-        "c0047",
-        "c0048",
-        "c0049",
-        "c0050",
-        "c0052",
-        "c0053",
-        "c0054",
-        "c0062",
-        "c0071",
-        "c0074"
-      ],
-      "reason": "webgl-settled-scene-rendering units v0027 v0043 v0044 v0075 v0078 v0111 v0112 v0113 v0114 v0121 v0122 v0125 v0161 authorize current units c0046 c0047 c0048 c0049 c0050 c0052 c0053 c0054 c0062 c0071 c0074 for the frame-local geometry scene, four-stage lifecycle, exact alpha queues, source-order ties, cache, and deliberate effects boundary.",
+      "currentIds": ["c0055"],
+      "reason": "webgl-islands units w0046 w0096 authorize retained current unit c0055 for the unchanged Canvas/WebGL backend boundary and flattened island composition.",
+      "approval": {
+        "recordId": "webgl-islands",
+        "unitIds": ["w0046", "w0096"]
+      },
+      "sharedAnchors": ["Canvas", "WebGL", "island"]
+    },
+    {
+      "id": "webgl-settled-drawing-scene-lifecycle",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0046", "c0053"],
+      "reason": "webgl-settled-scene-rendering units v0037 v0078 v0079 authorize current units c0046 c0053 for the complete frame-local scene composition, settlement, rendering, Canvas composite, and transactional commit lifecycle.",
+      "approval": {
+        "recordId": "webgl-settled-scene-rendering",
+        "unitIds": ["v0037", "v0078", "v0079"]
+      },
+      "sharedAnchors": ["scene", "render", "Canvas"]
+    },
+    {
+      "id": "webgl-settled-drawing-declarations",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0047", "c0048", "c0049", "c0050"],
+      "reason": "webgl-settled-scene-rendering units v0014 v0047 v0048 v0049 v0050 v0081 v0101 v0103 v0140 v0143 v0146 authorize current units c0047 c0048 c0049 c0050 for Group3D scope and Mesh/Cube/Sphere geometry/model submissions shared by raster and interaction records.",
       "approval": {
         "recordId": "webgl-settled-scene-rendering",
         "unitIds": [
-          "v0027",
-          "v0043",
-          "v0044",
-          "v0075",
-          "v0078",
+          "v0014",
+          "v0047",
+          "v0048",
+          "v0049",
+          "v0050",
+          "v0081",
+          "v0101",
+          "v0103",
+          "v0140",
+          "v0143",
+          "v0146"
+        ]
+      },
+      "sharedAnchors": ["Group3D", "geometry", "model"]
+    },
+    {
+      "id": "webgl-settled-drawing-custom-geometry",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0052"],
+      "reason": "webgl-settled-scene-rendering unit v0075 authorizes current unit c0052 for the application-defined Mesh geometry path and removal of raw shader, hit-callback, mutable-scene, GPU-handle, and context-resource access.",
+      "approval": {
+        "recordId": "webgl-settled-scene-rendering",
+        "unitIds": ["v0075"]
+      },
+      "sharedAnchors": ["application", "Mesh", "geometry"]
+    },
+    {
+      "id": "webgl-settled-drawing-raster-planning",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0054"],
+      "reason": "webgl-settled-scene-rendering units v0020 v0022 v0111 v0112 v0113 v0114 v0121 v0122 v0125 v0148 authorize current unit c0054 for final-alpha classification, opaque/transparent queues, source-order ties, zero-alpha geometry, and stable identity/focus order.",
+      "approval": {
+        "recordId": "webgl-settled-scene-rendering",
+        "unitIds": [
+          "v0020",
+          "v0022",
           "v0111",
           "v0112",
           "v0113",
@@ -11175,10 +11203,65 @@
           "v0121",
           "v0122",
           "v0125",
-          "v0161"
+          "v0148"
         ]
       },
-      "sharedAnchors": ["WebGL", "geometry", "source order"]
+      "sharedAnchors": ["alpha", "source order", "geometry"]
+    },
+    {
+      "id": "webgl-settled-drawing-filter-preservation",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0062"],
+      "reason": "webgl-settled-scene-rendering units v0023 v0112 v0113 authorize current unit c0062 for preserving the outer Canvas filter boundary around the completed opaque/transparent island bitmap.",
+      "approval": {
+        "recordId": "webgl-settled-scene-rendering",
+        "unitIds": ["v0023", "v0112", "v0113"]
+      },
+      "sharedAnchors": ["filter", "opaque", "transparent"]
+    },
+    {
+      "id": "webgl-settled-drawing-evidence",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0071"],
+      "reason": "webgl-settled-scene-rendering evidence units v0197 v0198 v0201 v0203 v0204 v0207 v0208 v0209 v0210 v0211 v0213 v0214 v0215 v0216 v0217 v0218 v0219 v0222 v0224 v0225 v0227 authorize current evidence unit c0071 for the Studio lesson/laboratory coverage of composition, transparency, interaction, filters, cache reuse, context restoration, and deterministic ownership.",
+      "approval": {
+        "recordId": "webgl-settled-scene-rendering",
+        "unitIds": [
+          "v0197",
+          "v0198",
+          "v0201",
+          "v0203",
+          "v0204",
+          "v0207",
+          "v0208",
+          "v0209",
+          "v0210",
+          "v0211",
+          "v0213",
+          "v0214",
+          "v0215",
+          "v0216",
+          "v0217",
+          "v0218",
+          "v0219",
+          "v0222",
+          "v0224",
+          "v0225",
+          "v0227"
+        ]
+      },
+      "sharedAnchors": ["transparent", "filters", "context"]
+    },
+    {
+      "id": "webgl-settled-drawing-effects-boundary",
+      "path": "docs/design/drawing-components-contract.md",
+      "currentIds": ["c0074"],
+      "reason": "webgl-settled-scene-rendering units v0005 v0027 v0031 v0252 authorize current unit c0074 for the one-camera scene boundary and the deliberate absence of lighting, materials, environments, glow/bloom, and post-processing.",
+      "approval": {
+        "recordId": "webgl-settled-scene-rendering",
+        "unitIds": ["v0005", "v0027", "v0031", "v0252"]
+      },
+      "sharedAnchors": ["lighting", "camera", "scene"]
     },
     {
       "id": "webgl-settled-event-resource-additions",
@@ -11248,24 +11331,13 @@
     {
       "id": "webgl-layout-system-contract-additions",
       "path": "docs/design/layout-system-contract.md",
-      "currentIds": ["c0011"],
-      "reason": "webgl-islands units w0057 w0067 w0093 w0096 w0149 authorize retained current units c0011 for the unchanged WebGL, layout, layer clauses.",
+      "currentIds": ["c0011", "c0062"],
+      "reason": "webgl-islands units w0057 w0067 w0085 w0086 w0174 authorize retained current units c0011 c0062 for WebGLLayer allocation and pure-measurement isolation from child rendering, animation requests, and GPU/bitmap resources.",
       "approval": {
         "recordId": "webgl-islands",
-        "unitIds": ["w0057", "w0067", "w0093", "w0096", "w0149"]
+        "unitIds": ["w0057", "w0067", "w0085", "w0086", "w0174"]
       },
-      "sharedAnchors": ["WebGL", "layout", "layer"]
-    },
-    {
-      "id": "webgl-settled-layout-measurement-addition",
-      "path": "docs/design/layout-system-contract.md",
-      "currentIds": ["c0062"],
-      "reason": "webgl-settled-scene-rendering units v0009 v0203 authorize current unit c0062 for measurement isolation from scene traversal and GPU/bitmap resource acquisition.",
-      "approval": {
-        "recordId": "webgl-settled-scene-rendering",
-        "unitIds": ["v0009", "v0203"]
-      },
-      "sharedAnchors": ["resource"]
+      "sharedAnchors": ["WebGL", "animation", "render"]
     },
     {
       "id": "webgl-settled-mouse-resolver-addition",
@@ -11397,58 +11469,57 @@
       "sharedAnchors": ["WebGL", "resource", "bitmap"]
     },
     {
-      "id": "webgl-style-system-contract-additions",
+      "id": "webgl-style-filter-preservation",
       "path": "docs/design/style-system-contract.md",
-      "currentIds": [
-        "c0055",
-        "c0056",
-        "c0057",
-        "c0058",
-        "c0059",
-        "c0060",
-        "c0061"
-      ],
-      "reason": "webgl-islands units w0057 w0067 w0068 w0069 w0072 w0074 w0075 w0078 w0080 w0082 w0083 w0093 w0102 authorize retained current units c0055 c0056 c0057 c0058 c0059 c0060 c0061 for the unchanged WebGL, style, filter clauses.",
+      "currentIds": ["c0017", "c0057"],
+      "reason": "webgl-islands units w0057 w0093 w0173 authorize retained current units c0017 c0057 for the unchanged WebGLLayer style/filter boundary and rejection of Canvas filters on inner WebGL objects.",
+      "approval": {
+        "recordId": "webgl-islands",
+        "unitIds": ["w0057", "w0093", "w0173"]
+      },
+      "sharedAnchors": ["WebGLLayer", "filter", "style"]
+    },
+    {
+      "id": "webgl-style-transform-and-leaf-preservation",
+      "path": "docs/design/style-system-contract.md",
+      "currentIds": ["c0055", "c0056", "c0058", "c0059", "c0060", "c0061"],
+      "reason": "webgl-islands units w0069 w0071 w0072 w0074 w0075 w0077 w0078 w0080 authorize retained current units c0055 c0056 c0058 c0059 c0060 c0061 for the unchanged WebGL transform, color, opacity, Cube-size, and Sphere-radius style vocabulary.",
       "approval": {
         "recordId": "webgl-islands",
         "unitIds": [
-          "w0057",
-          "w0067",
-          "w0068",
           "w0069",
+          "w0071",
           "w0072",
           "w0074",
           "w0075",
+          "w0077",
           "w0078",
-          "w0080",
-          "w0082",
-          "w0083",
-          "w0093",
-          "w0102"
+          "w0080"
         ]
       },
-      "sharedAnchors": ["WebGL", "style", "filter"]
+      "sharedAnchors": ["WebGL", "transform", "opacity"]
     },
     {
-      "id": "webgl-settled-style-system-additions",
+      "id": "webgl-settled-style-raster-alpha",
       "path": "docs/design/style-system-contract.md",
-      "currentIds": ["c0017", "c0062", "c0067"],
-      "reason": "webgl-settled-scene-rendering units v0027 v0031 v0033 v0043 v0075 v0111 v0112 v0113 v0114 authorize current units c0017 c0062 c0067 for the closed Mesh style/custom-shape path, exact final-alpha classification, filter boundary, and absence of lighting/effects style APIs.",
+      "currentIds": ["c0062"],
+      "reason": "webgl-settled-scene-rendering units v0103 v0111 v0112 v0113 v0114 v0148 authorize current unit c0062 for composed transforms, final-alpha queue classification, zero-alpha geometry participation, and source-order interaction stability.",
       "approval": {
         "recordId": "webgl-settled-scene-rendering",
-        "unitIds": [
-          "v0027",
-          "v0031",
-          "v0033",
-          "v0043",
-          "v0075",
-          "v0111",
-          "v0112",
-          "v0113",
-          "v0114"
-        ]
+        "unitIds": ["v0103", "v0111", "v0112", "v0113", "v0114", "v0148"]
       },
-      "sharedAnchors": ["WebGL", "style", "geometry"]
+      "sharedAnchors": ["model", "alpha", "geometry"]
+    },
+    {
+      "id": "webgl-settled-style-effects-boundary",
+      "path": "docs/design/style-system-contract.md",
+      "currentIds": ["c0067"],
+      "reason": "webgl-settled-scene-rendering units v0027 v0031 v0075 v0252 authorize current unit c0067 for the closed WebGL geometry/style path and the absence of lighting, materials, environments, glow, multiple cameras, raw state, and custom shaders.",
+      "approval": {
+        "recordId": "webgl-settled-scene-rendering",
+        "unitIds": ["v0027", "v0031", "v0075", "v0252"]
+      },
+      "sharedAnchors": ["lighting", "geometry", "WebGL"]
     },
     {
       "id": "webgl-user-events-contract-additions",
@@ -12911,12 +12982,11 @@
             "m0039",
             "m0040",
             "m0041",
-            "m0042",
             "m0043",
             "m0044",
             "m0045"
           ],
-          "reason": "first-class-signals-and-scheduler units g0058 g0059 g0060 g0136 g0137 g0138 g0139 g0140 g0141 g0175 g0176 g0177 g0178 g0179 g0180 g0181 g0182 g0183 g0184 g0194 g0197 g0198 authorize m0036 m0037 m0038 m0039 m0040 m0041 m0042 m0043 m0044 m0045 for the Begin, Advance, Commit, Plan, Render, Complete transaction, logical time, private clock, and nonsemantic trace.",
+          "reason": "first-class-signals-and-scheduler units g0058 g0059 g0060 g0136 g0137 g0138 g0139 g0140 g0141 g0175 g0176 g0177 g0178 g0179 g0180 g0181 g0182 g0183 g0184 g0194 g0197 g0198 authorize m0036 m0037 m0038 m0039 m0040 m0041 m0043 m0044 m0045 for the Begin, Advance, Commit, Plan, Complete transaction, logical time, private clock, and nonsemantic trace.",
           "approval": {
             "recordId": "first-class-signals-and-scheduler",
             "unitIds": [
@@ -12944,12 +13014,28 @@
               "g0198"
             ]
           },
-          "sharedAnchors": ["Commit", "Render", "frame"]
+          "sharedAnchors": ["Commit", "Complete", "frame"]
+        },
+        {
+          "id": "scheduler-render-webgl-lifecycle",
+          "currentIds": ["m0042"],
+          "reason": "first-class-signals-and-scheduler unit g0058 retains the realm scheduler and root render-participant ordering in m0042; supplemental webgl-settled-scene-rendering units v0078 v0079 authorize its exact WebGL composition, settlement, rendering, and Canvas-composition lifecycle.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": ["g0058"]
+          },
+          "sharedAnchors": ["Render", "composition"],
+          "supplementalApprovals": [
+            {
+              "recordId": "webgl-settled-scene-rendering",
+              "unitIds": ["v0078", "v0079"]
+            }
+          ]
         },
         {
           "id": "renderer-layer-and-webgl-integration",
-          "currentIds": ["m0046", "m0047", "m0048", "m0049", "m0050", "m0051"],
-          "reason": "first-class-signals-and-scheduler units g0078 g0079 g0080 g0081 g0082 g0142 g0143 g0144 g0145 g0146 g0147 g0148 g0149 g0150 g0151 g0152 g0153 g0154 g0155 g0156 g0157 g0158 g0159 g0160 g0161 g0162 g0163 g0164 g0165 g0166 g0167 g0168 g0169 g0200 g0201 g0202 g0203 authorize m0046 m0047 m0048 m0049 m0050 m0051 for explicit signal reads, immediate roots, explicit Layer caching, diagnostics, and future lockstep WebGL.",
+          "currentIds": ["m0046", "m0047", "m0048", "m0049", "m0050"],
+          "reason": "first-class-signals-and-scheduler units g0078 g0079 g0080 g0081 g0082 g0142 g0143 g0144 g0145 g0146 g0147 g0148 g0149 g0150 g0151 g0152 g0153 g0154 g0155 g0156 g0157 g0200 g0201 g0202 g0203 authorize m0046 m0047 m0048 m0049 m0050 for explicit signal reads, immediate roots, explicit Layer caching, and diagnostics.",
           "approval": {
             "recordId": "first-class-signals-and-scheduler",
             "unitIds": [
@@ -12974,18 +13060,6 @@
               "g0155",
               "g0156",
               "g0157",
-              "g0158",
-              "g0159",
-              "g0160",
-              "g0161",
-              "g0162",
-              "g0163",
-              "g0164",
-              "g0165",
-              "g0166",
-              "g0167",
-              "g0168",
-              "g0169",
               "g0200",
               "g0201",
               "g0202",
@@ -12993,6 +13067,33 @@
             ]
           },
           "sharedAnchors": ["signal", "Layer", "render"]
+        },
+        {
+          "id": "webgl-animation-scene-lifecycle",
+          "currentIds": ["m0051"],
+          "reason": "first-class-signals-and-scheduler units g0058 g0139 g0158 g0161 g0162 g0163 g0166 g0167 g0168 g0169 retain the shared scheduler, signal, Complete-event, logical-time, and context-loss contract in m0051; supplemental webgl-settled-scene-rendering unit v0160 authorizes the same shared realm frame and current logical timestamp for WebGL animation.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": [
+              "g0058",
+              "g0139",
+              "g0158",
+              "g0161",
+              "g0162",
+              "g0163",
+              "g0166",
+              "g0167",
+              "g0168",
+              "g0169"
+            ]
+          },
+          "sharedAnchors": ["WebGL", "frame", "scheduler"],
+          "supplementalApprovals": [
+            {
+              "recordId": "webgl-settled-scene-rendering",
+              "unitIds": ["v0160"]
+            }
+          ]
         },
         {
           "id": "determinism-and-portability",
@@ -13145,11 +13246,10 @@
             "s0020",
             "s0021",
             "s0022",
-            "s0023",
             "s0024",
             "s0025"
           ],
-          "reason": "first-class-signals-and-scheduler units g0058 g0136 g0137 g0138 g0139 g0140 g0161 g0162 g0163 g0164 g0166 g0194 authorize s0016 s0017 s0018 s0019 s0020 s0021 s0022 s0023 s0024 s0025 as the one-scheduler frame and ordered Begin through Complete phase contract.",
+          "reason": "first-class-signals-and-scheduler units g0058 g0136 g0137 g0138 g0139 g0140 g0161 g0162 g0163 g0164 g0166 g0194 authorize s0016 s0017 s0018 s0019 s0020 s0021 s0022 s0024 s0025 as the one-scheduler frame and ordered Begin through Complete phase contract outside the separately mapped WebGL Render lifecycle.",
           "approval": {
             "recordId": "first-class-signals-and-scheduler",
             "unitIds": [
@@ -13167,7 +13267,23 @@
               "g0194"
             ]
           },
-          "sharedAnchors": ["scheduler", "frame", "Render"]
+          "sharedAnchors": ["scheduler", "frame", "Complete"]
+        },
+        {
+          "id": "realm-render-webgl-lifecycle",
+          "currentIds": ["s0023"],
+          "reason": "first-class-signals-and-scheduler unit g0058 retains the realm scheduler and root render-participant ordering in s0023; supplemental webgl-settled-scene-rendering units v0078 v0079 authorize the exact WebGL composition, settlement/rendering, and ancestor Canvas-composition lifecycle.",
+          "approval": {
+            "recordId": "first-class-signals-and-scheduler",
+            "unitIds": ["g0058"]
+          },
+          "sharedAnchors": ["Render", "composition"],
+          "supplementalApprovals": [
+            {
+              "recordId": "webgl-settled-scene-rendering",
+              "unitIds": ["v0078", "v0079"]
+            }
+          ]
         },
         {
           "id": "root-and-layer-revisions",

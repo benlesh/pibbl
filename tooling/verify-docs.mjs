@@ -2001,6 +2001,55 @@ const postBaselineSignalContractRecord = postBaselineContractRecordsByPath.get(
 );
 const postBaselineAnimationContractRecord =
   postBaselineContractRecordsByPath.get("docs/design/animation-contract.md");
+
+export function assertSettledScenePostBaselineApprovals({
+  animationRecord,
+  signalRecord,
+}) {
+  const animationMappings = new Map(
+    animationRecord.mappings.map((mapping) => [mapping.id, mapping]),
+  );
+  const signalMappings = new Map(
+    signalRecord.mappings.map((mapping) => [mapping.id, mapping]),
+  );
+  assert.deepEqual(
+    animationMappings.get("scheduler-render-webgl-lifecycle")
+      ?.supplementalApprovals,
+    [
+      {
+        recordId: "webgl-settled-scene-rendering",
+        unitIds: ["v0078", "v0079"],
+      },
+    ],
+    "Animation Render lifecycle unit m0042 must retain exact settled-scene supplemental approval",
+  );
+  assert.deepEqual(
+    animationMappings.get("webgl-animation-scene-lifecycle")
+      ?.supplementalApprovals,
+    [
+      {
+        recordId: "webgl-settled-scene-rendering",
+        unitIds: ["v0160"],
+      },
+    ],
+    "Animation WebGL lifecycle unit m0051 must retain exact settled-scene supplemental approval",
+  );
+  assert.deepEqual(
+    signalMappings.get("realm-render-webgl-lifecycle")?.supplementalApprovals,
+    [
+      {
+        recordId: "webgl-settled-scene-rendering",
+        unitIds: ["v0078", "v0079"],
+      },
+    ],
+    "Scheduler Render lifecycle unit s0023 must retain exact settled-scene supplemental approval",
+  );
+}
+
+assertSettledScenePostBaselineApprovals({
+  animationRecord: postBaselineAnimationContractRecord,
+  signalRecord: postBaselineSignalContractRecord,
+});
 const postBaselineContractResults =
   contractPreservationBaseline.postBaselineContracts.map((record) =>
     assertPostBaselineContractPreservation({
@@ -2844,6 +2893,21 @@ export async function verifyMutationProbes() {
         approvalRecordsById,
       }),
     /current text is not exhaustively mapped/u,
+  );
+  const missingSettledSceneApproval = structuredClone(
+    postBaselineAnimationContractRecord,
+  );
+  const renderLifecycleMapping = missingSettledSceneApproval.mappings.find(
+    ({ id }) => id === "scheduler-render-webgl-lifecycle",
+  );
+  delete renderLifecycleMapping.supplementalApprovals;
+  throws(
+    () =>
+      assertSettledScenePostBaselineApprovals({
+        animationRecord: missingSettledSceneApproval,
+        signalRecord: postBaselineSignalContractRecord,
+      }),
+    /m0042 must retain exact settled-scene supplemental approval/u,
   );
   const animationApprovalMutation = structuredClone(
     postBaselineSignalContractRecord,

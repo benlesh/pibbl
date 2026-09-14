@@ -9,7 +9,7 @@ export const CONTRACT_TRANSLATION_RECORD =
 // Updated only after the complete baseline, translation allowlist, additions,
 // and evidence map receive review together.
 const REVIEWED_MANIFEST_SHA256 =
-  "d4a7cad9ec54906ed6f08c383330a5fdf830f5b9cbffca4c915fb00c14d528cc";
+  "27c1644bdf07c9c9175d1b867f422702e2303cdda2e2afb25aa75cdb83357c91";
 
 const SIGNALS_SCHEDULER_APPROVAL_RECORD = "first-class-signals-and-scheduler";
 const SIGNALS_SCHEDULER_APPROVED_SECTIONS = new Set([
@@ -495,11 +495,17 @@ export function assertPostBaselineContractPreservation({
   const mappingIds = new Set();
   for (const mapping of record.mappings) {
     const mappingLabel = `${label} mapping ${mapping?.id ?? "<unknown>"}`;
-    assertExactObjectKeys(
-      mapping ?? {},
-      ["id", "currentIds", "reason", "approval", "sharedAnchors"],
-      mappingLabel,
-    );
+    const mappingFields = [
+      "id",
+      "currentIds",
+      "reason",
+      "approval",
+      "sharedAnchors",
+    ];
+    if ("supplementalApprovals" in (mapping ?? {})) {
+      mappingFields.push("supplementalApprovals");
+    }
+    assertExactObjectKeys(mapping ?? {}, mappingFields, mappingLabel);
     assert.match(
       mapping.id,
       /^[a-z0-9-]+$/u,
@@ -540,8 +546,40 @@ export function assertPostBaselineContractPreservation({
       requiredRecordId: record.approvalRecordId,
       allowedSections: profile.allowedSections,
     });
+    const supplementalApprovalUnits = [];
+    if (mapping.supplementalApprovals !== undefined) {
+      assert.ok(
+        Array.isArray(mapping.supplementalApprovals) &&
+          mapping.supplementalApprovals.length > 0,
+        `${mappingLabel} supplemental approvals must be a nonempty array`,
+      );
+      const supplementalRecordIds = new Set();
+      for (const [index, approval] of mapping.supplementalApprovals.entries()) {
+        const supplementalLabel = `${mappingLabel} supplemental approval ${index + 1}`;
+        assert.notEqual(
+          approval?.recordId,
+          mapping.approval.recordId,
+          `${supplementalLabel} must use a record distinct from the required primary approval`,
+        );
+        assert.ok(
+          !supplementalRecordIds.has(approval?.recordId),
+          `${supplementalLabel} repeats a supplemental approved-design record`,
+        );
+        supplementalRecordIds.add(approval?.recordId);
+        const resolved = resolveApprovalRecordUnits({
+          approval,
+          approvalRecordsById,
+          label: supplementalLabel,
+          reason: mapping.reason,
+        });
+        supplementalApprovalUnits.push(...resolved.approvalUnits);
+      }
+    }
     const currentText = joinedUnitText(currentMappingUnits);
-    const approvalText = joinedUnitText(approvalUnits);
+    const approvalText = joinedUnitText([
+      ...approvalUnits,
+      ...supplementalApprovalUnits,
+    ]);
     assertAnchors(
       currentText,
       mapping.sharedAnchors,

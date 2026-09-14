@@ -308,14 +308,23 @@ four distinct stages:
    bitmap, composites it into the parent Canvas, and commits the bitmap,
    picker, and focus metadata together.
 
-A failure before commit publishes no partial candidate. The renderer rolls back
-candidate-only handles and preserves the prior resident set internally; broader
-root failure still follows CRC's fail-closed teardown. Replacement closes the
-previous bitmap. Context loss invalidates handles without issuing deletion
-calls against the lost generation, removes stale paint/pick/focus participation,
-and schedules an ordinary reconstruction after restoration. Removal and root
-disposal detach listeners, close bitmaps, and delete every still-live handle
-exactly once while its context remains valid.
+A failure before Canvas commit publishes no partial bitmap/pick/focus
+generation, but each stage has its own cleanup boundary. Composition failure
+discards the CPU draft without opening a GPU-resource transaction. Settlement
+or rendering failure rolls back candidate-only handles and preserves the prior
+resident set internally. Successful rendering commits the candidate resident
+set, including deletion of retired valid-generation handles, before bitmap
+transfer begins. Transfer failure discards the completed render and
+pick/focus-candidate metadata; when transfer succeeds but parent Canvas
+composition fails, CRC also closes the uncommitted candidate bitmap. The error
+then reaches CRC's broader fail-closed root teardown, which may release the
+previous committed tuple and current resident set; that later release is not a
+candidate-resource rollback. Successful replacement closes the previous
+bitmap. Context loss invalidates handles without issuing deletion calls against
+the lost generation, removes stale paint/pick/focus participation, and schedules
+an ordinary reconstruction after restoration. Removal and root disposal detach
+listeners, close bitmaps, and delete every still-live handle exactly once while
+its context remains valid.
 
 The island is one flattened Canvas paint entry. Canvas primitives cannot appear
 inside it, WebGL primitives cannot render outside it, and an external Canvas
