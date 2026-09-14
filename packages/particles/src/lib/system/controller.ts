@@ -368,6 +368,7 @@ export function createParticleSystemController(
   let reservation: ParticleBindingReservation | undefined;
   let unregisterAdvance: (() => void) | undefined;
   const deliveries: Delivery[] = [];
+  let metadataPublication: Delivery | undefined;
   let nextEpoch = 0;
   let currentEpoch = 0;
   let simulationParameters = copyParameters(compiled.parameterLayout.defaults);
@@ -576,27 +577,83 @@ export function createParticleSystemController(
   }
 
   function queueMetadataPublication(current: Delivery): void {
-    if (current.publicationQueued || current.metadataAfter === undefined)
+    if (
+      current.publicationQueued ||
+      current.metadataAfter === undefined ||
+      metadataPublication !== undefined
+    )
       return;
     current.publicationQueued = true;
+    metadataPublication = current;
     const metadata = current.metadataAfter;
     enqueue((_frame, batch) => {
-      if (current.finalized) return;
+      if (current.finalized) {
+        if (metadataPublication === current) metadataPublication = undefined;
+        queueNextMetadataPublication();
+        return;
+      }
       stageMetadata(batch, metadata, current);
       let applied = false;
       crcInternalQueueCurrentCommit(owner, (_commitFrame, outcome) => {
         applied = outcome.applied;
       });
       crcInternalQueueCurrentComplete(owner, () => {
-        if (current.finalized) return;
+        if (metadataPublication === current) metadataPublication = undefined;
+        if (current.finalized) {
+          queueNextMetadataPublication();
+          return;
+        }
         if (!applied) {
           failDeliveryCascade(current);
           return;
         }
         removeDelivery(current);
-        if (!disposed) deliver(current);
+        try {
+          if (!disposed) deliver(current);
+        } finally {
+          queueNextMetadataPublication();
+        }
       });
     });
+  }
+
+  function queueNextMetadataPublication(): void {
+    if (disposed || metadataPublication !== undefined) return;
+    const next = deliveries.find(
+      (current) =>
+        !current.finalized &&
+        current.metadataDeferred &&
+        !current.publicationQueued &&
+        current.metadataAfter !== undefined &&
+        current.commitCompleted &&
+        current.commitApplied &&
+        (current.presentationOwner === undefined ||
+          current.rendererSucceeded === true),
+    );
+    if (next !== undefined) queueMetadataPublication(next);
+  }
+
+  function metadataMatchesPrecedingSnapshot(current: Delivery): boolean {
+    const metadata = current.metadataAfter;
+    if (metadata === undefined) return true;
+    const index = deliveries.indexOf(current);
+    for (
+      let precedingIndex = index - 1;
+      precedingIndex >= 0;
+      precedingIndex--
+    ) {
+      const preceding = deliveries[precedingIndex];
+      if (preceding?.finalized || preceding?.metadataAfter === undefined)
+        continue;
+      return (
+        preceding.metadataAfter.status === metadata.status &&
+        preceding.metadataAfter.execution === metadata.execution
+      );
+    }
+    return (
+      statusSignal.get() === metadata.status &&
+      executionSignal.get() === metadata.execution
+    );
   }
 
   function finalizeDeliveryIfReady(current: Delivery): void {
@@ -617,6 +674,14 @@ export function createParticleSystemController(
       return;
     }
     if (current.metadataDeferred) {
+      if (
+        current.events.length === 0 &&
+        current.errors.length === 0 &&
+        metadataMatchesPrecedingSnapshot(current)
+      ) {
+        removeDelivery(current);
+        return;
+      }
       queueMetadataPublication(current);
       return;
     }
@@ -838,7 +903,10 @@ export function createParticleSystemController(
       requirePresentation(frame, activeBinding.owner);
     }
     current.metadataAfter = snapshotMetadata();
-    if (current.presentationOwner === undefined) {
+    if (
+      current.presentationOwner === undefined &&
+      metadataPublication === undefined
+    ) {
       stageMetadata(batch, current.metadataAfter);
     } else {
       current.metadataDeferred = true;
@@ -1686,9 +1754,10 @@ export function createParticleSystemController(
         );
       } finally {
         if (!disposed) {
-          enqueue((_frame, batch) => {
-            executionState = "unbound";
-            batch.stage(executionSignal, "unbound", metadataWriter);
+          enqueue((frame, batch) => {
+            transaction(frame, batch, () => {
+              executionState = "unbound";
+            });
           });
         }
       }
@@ -1741,6 +1810,7 @@ export function createParticleSystemController(
     dispose(): void {
       if (disposed) return;
       disposed = true;
+      metadataPublication = undefined;
       for (const pending of Array.from(deliveries)) removeDelivery(pending);
       cancelPendingCommands();
       preparedEffectCandidate = undefined;

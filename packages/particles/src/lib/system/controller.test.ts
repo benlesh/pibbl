@@ -14,9 +14,11 @@ import { compileParticleEffect2D } from "../compiler.js";
 import { defineParticleEffect2D } from "../definition.js";
 import type {
   CRCParticleEffect2D,
+  CRCParticleExecution,
   CRCParticleSystem,
   CRCParticleSystemEvent,
   CRCParticleSystemOptions,
+  CRCParticleSystemStatus,
 } from "../types.js";
 import {
   type ParticleBindingCandidate,
@@ -197,6 +199,46 @@ function infiniteEffect() {
 }
 
 describe("scheduled particle system controller", () => {
+  it("catches a later pause overwriting running metadata before its start delivery", () => {
+    const observations: Array<
+      readonly [
+        type: CRCParticleSystemEvent["type"],
+        status: CRCParticleSystemStatus,
+        execution: CRCParticleExecution,
+      ]
+    > = [];
+    const { system } = mountSystem(manualEffect(), {
+      onEvent(event) {
+        observations.push([
+          event.type,
+          system.status.get(),
+          system.execution.get(),
+        ]);
+      },
+    });
+
+    system.play();
+    driver.flush(10);
+    expect(system.status.get()).toBe("idle");
+    expect(observations).toEqual([]);
+    driver.flush(11);
+    expect(system.status.get()).toBe("idle");
+    expect(observations).toEqual([]);
+
+    system.pause();
+    driver.flush(12);
+    expect(system.status.get()).toBe("running");
+    expect(system.execution.get()).toBe("stateless-canvas");
+    expect(observations).toEqual([["start", "running", "stateless-canvas"]]);
+
+    driver.flush(13);
+    expect(system.status.get()).toBe("paused");
+    expect(system.execution.get()).toBe("stateless-canvas");
+    expect(observations).toEqual([["start", "running", "stateless-canvas"]]);
+    expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(0);
+    expect(driver.pendingHostFrames).toBe(0);
+  });
+
   it("catches immediate status writes, delta accumulation, and duplicate Advance registrations", () => {
     const { candidate, system } = mountSystem(finiteEffect());
 
@@ -318,6 +360,9 @@ describe("scheduled particle system controller", () => {
     driver.flush(70);
     expect(system.status.get()).toBe("running");
     driver.flush(71);
+    expect(system.status.get()).toBe("running");
+    expect(events.at(-1)?.type).toBe("burst-accepted");
+    driver.flush(72);
     expect(system.status.get()).toBe("draining");
     expect(events.at(-1)?.type).toBe("drain-start");
     driver.flush(160);
@@ -333,6 +378,9 @@ describe("scheduled particle system controller", () => {
     system.stop({ mode: "clear" });
     driver.flush(201);
     driver.flush(202);
+    expect(system.status.get()).toBe("running");
+    expect(events.at(-1)?.type).toBe("start");
+    driver.flush(203);
     expect(system.status.get()).toBe("finished");
     expect(candidate.clearCount).toBe(3);
     expect(events.at(-1)?.type).toBe("finish");
@@ -493,6 +541,9 @@ describe("scheduled particle system controller", () => {
     driver.flush(11);
     system.pause();
     driver.flush(12);
+    expect(system.status.get()).toBe("running");
+    driver.flush(13);
+    expect(system.status.get()).toBe("paused");
     expect(driver.pendingHostFrames).toBe(0);
     const rendersBeforeClear = renderCount;
 
@@ -550,6 +601,8 @@ describe("scheduled particle system controller", () => {
     driver.flush(21);
     expect(system.status.get()).toBe("running");
     expect(events.some((event) => event.type === "finish")).toBe(false);
+    expect(errors).toEqual([]);
+    driver.flush(22);
     expect(errors).toEqual([
       expect.objectContaining({
         type: "execution-failed",
