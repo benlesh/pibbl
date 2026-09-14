@@ -36,6 +36,8 @@ import type { CRCParticleEffect3D } from "../webgl-types.js";
 import type {
   CompiledParticleEffect,
   ParticleBindingCandidate,
+  ParticleBindingBurstResult,
+  ParticleBindingFrameState,
   ParticleSystemFrame,
 } from "./binding.js";
 import {
@@ -140,6 +142,7 @@ interface ControllerStateSnapshot {
   readonly automaticClosed: boolean;
   readonly drainFinishTime: number;
   readonly pendingFrameAdoption: boolean;
+  readonly bindingFrameState: ParticleBindingFrameState | undefined;
 }
 
 export interface ParticleSystemControllerSnapshot {
@@ -364,6 +367,7 @@ export function createParticleSystemController(
   let automaticClosed = false;
   let drainFinishTime = 0;
   let pendingFrameAdoption = false;
+  let bindingFrameState: ParticleBindingFrameState | undefined;
   let activeBinding: ActiveBinding | undefined;
   let reservation: ParticleBindingReservation | undefined;
   let unregisterAdvance: (() => void) | undefined;
@@ -406,6 +410,14 @@ export function createParticleSystemController(
     currentEpoch = 0;
   }
 
+  function releaseInactiveEpochs(): void {
+    for (const epoch of Array.from(epochs.values())) {
+      if (epoch.id !== currentEpoch && epoch.references === 0) {
+        releaseEpoch(epoch);
+      }
+    }
+  }
+
   function createEpoch(parameters: Readonly<Float64Array>): number {
     const id = ++nextEpoch;
     epochs.set(id, {
@@ -429,8 +441,6 @@ export function createParticleSystemController(
       )
     ) {
       currentEpoch = createEpoch(parameters);
-      if (previous !== undefined && previous.references === 0)
-        releaseEpoch(previous);
     }
     simulationParameters = copyParameters(parameters);
     renderParameters = copyParameters(parameters);
@@ -819,6 +829,7 @@ export function createParticleSystemController(
       automaticClosed,
       drainFinishTime,
       pendingFrameAdoption,
+      bindingFrameState,
     };
   }
 
@@ -882,6 +893,7 @@ export function createParticleSystemController(
     automaticClosed = snapshot.automaticClosed;
     drainFinishTime = snapshot.drainFinishTime;
     pendingFrameAdoption = snapshot.pendingFrameAdoption;
+    bindingFrameState = snapshot.bindingFrameState;
     synchronizeAdvanceRegistration();
   }
 
@@ -958,13 +970,22 @@ export function createParticleSystemController(
     if (activeBinding === undefined || disposed) return false;
     if (pendingFrameAdoption) return true;
     if (statusState === "running") {
+      if (bindingFrameState !== undefined) {
+        return (
+          bindingFrameState.nextAutomaticBirthMilliseconds !== null ||
+          bindingFrameState.liveCount > 0
+        );
+      }
       return (
         hasOpenAutomaticEmission() ||
         acceptedLifetimes.length > 0 ||
         finiteCompletionMilliseconds() !== undefined
       );
     }
-    return statusState === "draining";
+    return (
+      statusState === "draining" &&
+      (bindingFrameState === undefined || bindingFrameState.liveCount > 0)
+    );
   }
 
   function synchronizeAdvanceRegistration(): void {
@@ -1018,6 +1039,7 @@ export function createParticleSystemController(
     automaticClosed = false;
     drainFinishTime = 0;
     pendingFrameAdoption = true;
+    bindingFrameState = undefined;
     startPending = true;
     nextOrdinalByEmitter.clear();
     if (activeBinding === undefined) {
@@ -1031,7 +1053,8 @@ export function createParticleSystemController(
 
   function resetRunStorage(frame: CRCInternalFrame): boolean {
     try {
-      activeBinding?.candidate.clear();
+      const cleared = activeBinding?.candidate.clear();
+      if (cleared !== undefined) bindingFrameState = cleared;
     } catch (error) {
       queueError(
         frame,
@@ -1071,18 +1094,7 @@ export function createParticleSystemController(
       const binding = activeBinding!;
       previousEffectTime = effectTime;
       effectTime = effectTimeAt(frame.logicalTime);
-      releaseExpired(effectTime);
-      if (statusState === "running") {
-        const completion = finiteCompletionMilliseconds();
-        if (completion !== undefined && effectTime >= completion)
-          finishRun(frame);
-      } else if (
-        statusState === "draining" &&
-        effectTime >= drainFinishTime &&
-        acceptedLifetimes.length === 0
-      ) {
-        finishRun(frame);
-      }
+      if (bindingFrameState === undefined) releaseExpired(effectTime);
       const particleFrame: ParticleSystemFrame = Object.freeze({
         generation,
         frameId: frame.frameId,
@@ -1093,10 +1105,38 @@ export function createParticleSystemController(
         status: statusState,
       });
       try {
-        binding.candidate.adoptFrame(particleFrame);
+        const adopted = binding.candidate.adoptFrame(particleFrame);
+        if (adopted !== undefined) bindingFrameState = adopted;
       } catch (error) {
         failCurrentDelivery(frame, error, "adopt-frame");
         return;
+      }
+      if (bindingFrameState !== undefined) {
+        if (
+          statusState === "running" &&
+          compiled.emitters.every(
+            (emitter) => emitter.emission.completion === "finite",
+          ) &&
+          bindingFrameState.nextAutomaticBirthMilliseconds === null &&
+          bindingFrameState.liveCount === 0
+        ) {
+          finishRun(frame);
+        } else if (
+          statusState === "draining" &&
+          bindingFrameState.liveCount === 0
+        ) {
+          finishRun(frame);
+        }
+      } else if (statusState === "running") {
+        const completion = finiteCompletionMilliseconds();
+        if (completion !== undefined && effectTime >= completion)
+          finishRun(frame);
+      } else if (
+        statusState === "draining" &&
+        effectTime >= drainFinishTime &&
+        acceptedLifetimes.length === 0
+      ) {
+        finishRun(frame);
       }
       try {
         binding.candidate.requestRender();
@@ -1140,6 +1180,13 @@ export function createParticleSystemController(
 
   function emitterByName(name: string) {
     return compiled.emitters.find((emitter) => emitter.name === name);
+  }
+
+  function emitterIndexByName(name: string): number {
+    for (let index = 0; index < compiled.emitters.length; index += 1) {
+      if (compiled.emitters[index]?.name === name) return index;
+    }
+    return -1;
   }
 
   function validatePositiveCount(count: number | undefined): void {
@@ -1269,7 +1316,13 @@ export function createParticleSystemController(
     frame: CRCInternalFrame,
   ): void {
     const emitter = emitterByName(emitterName)!;
-    const requested = requestedBurstCount(emitter, overrides.count);
+    const emitterIndex = emitterIndexByName(emitterName);
+    const requested =
+      activeBinding?.candidate.requestedBurstCount?.(
+        emitterIndex,
+        overrides.count,
+        seed,
+      ) ?? requestedBurstCount(emitter, overrides.count);
     if (
       statusState === "paused" ||
       statusState === "draining" ||
@@ -1286,6 +1339,76 @@ export function createParticleSystemController(
       return;
     }
     if (statusState === "idle") startRun(frame, seed);
+    if (activeBinding?.candidate.emitBurst !== undefined) {
+      const currentParameters = epochs.get(currentEpoch)!.parameters;
+      const epoch =
+        overrideParameters !== undefined &&
+        !parameterValuesEqual(
+          currentParameters,
+          overrideParameters,
+          compiled.parameterLayout.spawnMask,
+        )
+          ? createEpoch(overrideParameters)
+          : currentEpoch;
+      let result: ParticleBindingBurstResult;
+      try {
+        result = activeBinding.candidate.emitBurst({
+          generation,
+          emitterIndex,
+          count: overrides.count,
+          birthTimeMilliseconds: effectTimeAt(frame.logicalTime),
+          seed,
+          seedSalt: Math.trunc(overrides.seedSalt ?? 0) >>> 0,
+          origin:
+            overrides.position ??
+            (compiled.dimension === 2
+              ? ([0, 0] as const)
+              : ([0, 0, 0] as const)),
+          spawnEpoch: epoch,
+        });
+      } catch (error) {
+        if (epoch !== currentEpoch) releaseEpoch(epochs.get(epoch)!);
+        failCurrentDelivery(frame, error, "emit-burst");
+        return;
+      }
+      bindingFrameState = result;
+      if (result.accepted === 0 && epoch !== currentEpoch) {
+        releaseEpoch(epochs.get(epoch)!);
+      }
+      const exactRequested = result.requested;
+      if (result.accepted > 0) {
+        queueEvent(frame, "burst-accepted", {
+          emitter: emitterName,
+          requested: exactRequested,
+          accepted: result.accepted,
+        });
+      } else {
+        queueEvent(frame, "burst-rejected", {
+          emitter: emitterName,
+          requested: exactRequested,
+          accepted: 0,
+          reason: "capacity",
+        });
+      }
+      if (result.rejected > 0) {
+        queueError(
+          frame,
+          diagnosticRecord(
+            "capacity-rejected",
+            `CRC particle emitter "${emitterName}" accepted ${result.accepted} of ${exactRequested} requested particles.`,
+            frame,
+            effectDebugName,
+            {
+              emitter: emitterName,
+              requested: exactRequested,
+              accepted: result.accepted,
+            },
+          ),
+        );
+      }
+      synchronizeAdvanceRegistration();
+      return;
+    }
     const live = liveByEmitter.get(emitterName) ?? 0;
     const available = Math.max(0, emitter.capacity - live);
     const accepted = Math.min(requested, available);
@@ -1478,6 +1601,7 @@ export function createParticleSystemController(
             finishRun(frame);
           } else {
             statusState = "draining";
+            pendingFrameAdoption = true;
             const hasAutomaticSources = compiled.emitters.some(
               (emitter) =>
                 emitter.emission.rates.length > 0 ||
@@ -1486,6 +1610,7 @@ export function createParticleSystemController(
             drainFinishTime = Math.max(
               effectTime,
               ...acceptedLifetimes.map((accepted) => accepted.deathTime),
+              bindingFrameState?.latestDeathMilliseconds ?? effectTime,
               hasAutomaticSources
                 ? effectTime + maximumLifetimeMilliseconds()
                 : effectTime,
@@ -1554,8 +1679,10 @@ export function createParticleSystemController(
         cancelPendingCommands();
         releaseAcceptedLifetimes();
         nextOrdinalByEmitter.clear();
-        releaseAllEpochs();
+        currentEpoch = 0;
+        releaseInactiveEpochs();
         compiled = candidate.compiled;
+        bindingFrameState = undefined;
         originalSeed = normalizeSeed(candidate.options.seed);
         enqueue((frame, batch) => {
           transaction(frame, batch, () => {
@@ -1706,6 +1833,7 @@ export function createParticleSystemController(
         releaseOwnership: recordParticleBindingAcquired(),
       };
       executionState = candidate.execution;
+      bindingFrameState = undefined;
       previous?.releaseOwnership();
       if (previous !== undefined) {
         disposeRendererCandidate(
@@ -1743,6 +1871,7 @@ export function createParticleSystemController(
       const released = activeBinding;
       activeBinding = undefined;
       executionState = "unbound";
+      bindingFrameState = undefined;
       failRendererTransactions(bindingOwner);
       unregisterAdvance?.();
       unregisterAdvance = undefined;
@@ -1780,6 +1909,7 @@ export function createParticleSystemController(
         current.rendererSucceeded = true;
         finalizeDeliveryIfReady(current);
       }
+      releaseInactiveEpochs();
     },
     spawnParameters(epoch: number): Readonly<Float64Array> {
       const found = epochs.get(epoch);
@@ -1819,9 +1949,9 @@ export function createParticleSystemController(
       unregisterAdvance?.();
       unregisterAdvance = undefined;
       releaseAcceptedLifetimes();
-      releaseAllEpochs();
       const binding = activeBinding;
       activeBinding = undefined;
+      bindingFrameState = undefined;
       binding?.releaseOwnership();
       try {
         if (binding !== undefined) {
@@ -1831,6 +1961,7 @@ export function createParticleSystemController(
           disposeRendererCandidate(candidate, "retry-retired-binding");
         }
       } finally {
+        releaseAllEpochs();
         statusState = "disposed";
         executionState = "unbound";
         statusSignal.set("disposed");

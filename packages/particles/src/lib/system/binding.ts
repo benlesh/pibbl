@@ -20,6 +20,30 @@ import {
 
 export type CompiledParticleEffect = CompiledEffect2D | CompiledEffect3D;
 
+export interface ParticleBindingFrameState {
+  readonly liveCount: number;
+  readonly nextAutomaticBirthMilliseconds: number | null;
+  readonly latestDeathMilliseconds: number | null;
+}
+
+export interface ParticleBindingBurstRequest {
+  readonly generation: number;
+  readonly emitterIndex: number;
+  readonly count: number | undefined;
+  readonly birthTimeMilliseconds: number;
+  readonly seed: number;
+  readonly seedSalt: number;
+  readonly origin:
+    readonly [number, number] | readonly [number, number, number];
+  readonly spawnEpoch: number;
+}
+
+export interface ParticleBindingBurstResult extends ParticleBindingFrameState {
+  readonly requested: number;
+  readonly accepted: number;
+  readonly rejected: number;
+}
+
 export interface ParticleBindingCandidate {
   readonly owner: CRCInternalRenderOwner;
   readonly backend: "canvas" | "webgl";
@@ -27,8 +51,15 @@ export interface ParticleBindingCandidate {
   readonly compiled: CompiledParticleEffect;
   readonly parameters: Readonly<Float64Array>;
   requestRender(): void;
-  adoptFrame(frame: ParticleSystemFrame): void;
-  clear(): void;
+  adoptFrame(frame: ParticleSystemFrame): ParticleBindingFrameState | void;
+  requestedBurstCount?(
+    emitterIndex: number,
+    count: number | undefined,
+    seed: number,
+  ): number;
+  emitBurst?(request: ParticleBindingBurstRequest): ParticleBindingBurstResult;
+  clear(): ParticleBindingFrameState | void;
+  finishTransaction?(success: boolean): void;
   dispose(): void;
 }
 
@@ -157,6 +188,7 @@ export function useParticleSystemBinding(
     slot.pending = undefined;
     slot.reservation = undefined;
     if (!success) {
+      candidate.finishTransaction?.(false);
       controller.recordRendererTransaction(owner, false);
       if (slot.committedController !== controller) {
         slot.committedController?.recordRendererTransaction(owner, false);
@@ -177,6 +209,7 @@ export function useParticleSystemBinding(
     if (previousController !== undefined && previousController !== controller) {
       previousController.releaseBinding(slot.owner, previousCandidate);
     }
+    candidate.finishTransaction?.(true);
     controller.recordRendererTransaction(owner, true);
   });
   return candidate;

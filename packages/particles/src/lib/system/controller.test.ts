@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { crc, createElement, type CRCNode } from "@crc/core";
+import { crc, createElement, signal, type CRCNode } from "@crc/core";
 import {
   crcInternalRequestRender,
   type CRCInternalRenderOwner,
@@ -10,8 +10,14 @@ import {
   ManualSchedulerDriver,
   snapshotRealmScheduler,
 } from "../../../../core/src/lib/scheduler/testing.js";
+import {
+  createCanvasBirthLedger,
+  type CanvasBirthLedger,
+} from "../canvas/birth-ledger.js";
 import { compileParticleEffect2D } from "../compiler.js";
 import { defineParticleEffect2D } from "../definition.js";
+import { sampleBurstCount } from "../emission.js";
+import { particle } from "../particle.js";
 import type {
   CRCParticleEffect2D,
   CRCParticleExecution,
@@ -140,6 +146,84 @@ function mountSystem(
     root,
     system,
   };
+}
+
+interface LedgerCandidate extends ParticleBindingCandidate {
+  readonly ledger: CanvasBirthLedger;
+  disposeCount: number;
+}
+
+function mountLedgerSystem(
+  effect: CRCParticleEffect2D,
+  options: CRCParticleSystemOptions = {},
+) {
+  let system!: CRCParticleSystem;
+  let candidate!: LedgerCandidate;
+  const Root = (): CRCNode => {
+    system = crcParticleSystem(effect, options);
+    const controller = getParticleSystemController(system);
+    useParticleSystemBinding({
+      system,
+      backend: "canvas",
+      create(owner) {
+        if (candidate !== undefined) return candidate;
+        const ledger = createCanvasBirthLedger(
+          compileParticleEffect2D(effect),
+          {
+            retainSpawnEpoch: (epoch) => controller.retainSpawnEpoch(epoch),
+            releaseSpawnEpoch: (epoch) => controller.releaseSpawnEpoch(epoch),
+          },
+        );
+        candidate = {
+          owner,
+          backend: "canvas",
+          execution: "stateless-canvas",
+          compiled: compileParticleEffect2D(effect),
+          parameters: compileParticleEffect2D(effect).parameterLayout.defaults,
+          ledger,
+          disposeCount: 0,
+          requestRender() {
+            crcInternalRequestRender(owner);
+          },
+          adoptFrame(nextFrame) {
+            return ledger.adoptFrame(
+              nextFrame,
+              controller.currentSpawnEpoch,
+              controller.spawnParameters(controller.currentSpawnEpoch),
+            );
+          },
+          requestedBurstCount(emitterIndex, count, seed) {
+            return ledger.requestedManualBirths(emitterIndex, count, seed);
+          },
+          emitBurst(request) {
+            const acceptance = ledger.emitManualSources({
+              ...request,
+              origin: [request.origin[0], request.origin[1]],
+              parameters: controller.spawnParameters(request.spawnEpoch),
+            });
+            return { ...ledger.candidateSummary(), ...acceptance };
+          },
+          clear() {
+            ledger.clear();
+            return ledger.candidateSummary();
+          },
+          finishTransaction(success) {
+            ledger.finishTransaction(success);
+          },
+          dispose() {
+            this.disposeCount += 1;
+            ledger.dispose();
+          },
+        };
+        return candidate;
+      },
+    });
+    return null;
+  };
+  const root = mount(createElement(Root, {}));
+  driver.flush(0);
+  if (driver.pendingHostFrames > 0) driver.flush(1);
+  return { candidate, root, system };
 }
 
 function mount(node: CRCNode) {
@@ -760,6 +844,293 @@ describe("scheduled particle system controller", () => {
     if (driver.pendingHostFrames > 0) driver.flush(2_003);
     expect(manual.system.status.get()).toBe("running");
     expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(0);
+    expect(driver.pendingHostFrames).toBe(0);
+  });
+
+  it("uses the Canvas ledger's exact recycle acceptance and committed live generation", () => {
+    const events: Array<CRCParticleSystemEvent & Record<string, unknown>> = [];
+    const errors: unknown[] = [];
+    const effect = defineParticleEffect2D({
+      debugName: "recycled impact",
+      emitters: [
+        {
+          name: "impact",
+          capacity: 1,
+          overflow: "recycle-oldest",
+          emission: [{ type: "manual", count: 1 }],
+          shape: { type: "point" },
+          initial: { lifetimeMilliseconds: 1_000 },
+          renderer: { type: "circle" },
+        },
+      ],
+    });
+    const mounted = mountLedgerSystem(effect, {
+      onEvent: (event) => events.push(event as (typeof events)[number]),
+      onError: (error) => errors.push(error),
+    });
+
+    mounted.system.emit("impact", { count: 2 });
+    driver.flush(10);
+    driver.flush(11);
+    driver.flush(12);
+
+    expect(events.at(-1)).toMatchObject({
+      type: "burst-accepted",
+      requested: 2,
+      accepted: 2,
+    });
+    expect(errors).toEqual([]);
+    const committed = mounted.candidate.ledger.committed.emitters[0]!;
+    expect(committed.liveCount).toBe(1);
+    expect(
+      Array.from(committed.ordinals).filter(
+        (_ordinal, slot) => committed.occupied[slot] === 1,
+      ),
+    ).toEqual([1]);
+  });
+
+  it("retains a successful birth epoch before parameter adoption can prune it", () => {
+    const launch = signal(1);
+    const effect = defineParticleEffect2D({
+      parameters: {
+        launch: { type: "number", default: 1, timing: "spawn" },
+      },
+      emitters: [
+        {
+          name: "spark",
+          capacity: 1,
+          emission: [{ type: "burst", atMilliseconds: 100, count: 1 }],
+          shape: { type: "point" },
+          initial: {
+            lifetimeMilliseconds: 1_000,
+            velocity: [particle.parameter("launch"), 0],
+          },
+          renderer: { type: "circle" },
+          bounds: { min: [-10, -10], max: [10, 10] },
+        },
+      ],
+    });
+    const compiled = compileParticleEffect2D(effect);
+    let system!: CRCParticleSystem;
+    let candidate!: LedgerCandidate;
+    let renderedParameters = compiled.parameterLayout.defaults;
+    const Root = (): CRCNode => {
+      system = crcParticleSystem(effect, { autoplay: true });
+      const controller = getParticleSystemController(system);
+      renderedParameters = new Float64Array([launch.get()]);
+      useParticleSystemBinding({
+        system,
+        backend: "canvas",
+        create(owner) {
+          if (candidate !== undefined) return candidate;
+          const ledger = createCanvasBirthLedger(compiled, {
+            retainSpawnEpoch: (epoch) => controller.retainSpawnEpoch(epoch),
+            releaseSpawnEpoch: (epoch) => controller.releaseSpawnEpoch(epoch),
+          });
+          candidate = {
+            owner,
+            backend: "canvas",
+            execution: "stateless-canvas",
+            compiled,
+            get parameters() {
+              return renderedParameters;
+            },
+            ledger,
+            disposeCount: 0,
+            requestRender() {
+              crcInternalRequestRender(owner);
+            },
+            adoptFrame(nextFrame) {
+              return ledger.adoptFrame(
+                nextFrame,
+                controller.currentSpawnEpoch,
+                controller.spawnParameters(controller.currentSpawnEpoch),
+              );
+            },
+            requestedBurstCount(emitterIndex, count, seed) {
+              return ledger.requestedManualBirths(emitterIndex, count, seed);
+            },
+            emitBurst(request) {
+              const acceptance = ledger.emitManualSources({
+                ...request,
+                origin: [request.origin[0], request.origin[1]],
+                parameters: controller.spawnParameters(request.spawnEpoch),
+              });
+              return { ...ledger.candidateSummary(), ...acceptance };
+            },
+            clear() {
+              ledger.clear();
+              return ledger.candidateSummary();
+            },
+            finishTransaction(success) {
+              ledger.finishTransaction(success);
+            },
+            dispose() {
+              this.disposeCount += 1;
+              ledger.dispose();
+            },
+          };
+          return candidate;
+        },
+      });
+      return null;
+    };
+    const root = mount(createElement(Root, {}));
+    driver.flush(0);
+    if (driver.pendingHostFrames > 0) driver.flush(1);
+    if (driver.pendingHostFrames > 0) driver.flush(2);
+    const controller = getParticleSystemController(system);
+    const birthEpoch = controller.currentSpawnEpoch;
+
+    launch.set(2);
+    driver.flush(101);
+
+    const committed = candidate.ledger.committed.emitters[0]!;
+    const slot = Array.from(committed.occupied).findIndex(
+      (occupied) => occupied === 1,
+    );
+    expect(slot).toBeGreaterThanOrEqual(0);
+    expect(committed.spawnEpochs[slot]).toBe(birthEpoch);
+    expect([...controller.spawnParameters(birthEpoch)]).toEqual([1]);
+    expect(controller.currentSpawnEpoch).not.toBe(birthEpoch);
+    expect([
+      ...controller.spawnParameters(controller.currentSpawnEpoch),
+    ]).toEqual([2]);
+
+    root.dispose();
+    roots.delete(root);
+  });
+
+  it("publishes the ledger's restarted default manual count instead of the prior run's ordinal", () => {
+    const events: Array<CRCParticleSystemEvent & Record<string, unknown>> = [];
+    const effect = defineParticleEffect2D({
+      emitters: [
+        {
+          name: "impact",
+          capacity: 3,
+          emission: [{ type: "manual", count: particle.integer(1, 3) }],
+          shape: { type: "point" },
+          initial: { lifetimeMilliseconds: 1_000 },
+          renderer: { type: "circle" },
+        },
+      ],
+    });
+    const compiled = compileParticleEffect2D(effect);
+    const emitter = compiled.emitters[0]!;
+    const manual = emitter.emission.manual[0]!;
+    let seed = 0;
+    while (
+      sampleBurstCount(manual, seed, emitter.emitterHash, 0) ===
+      sampleBurstCount(manual, seed, emitter.emitterHash, 1)
+    ) {
+      seed += 1;
+    }
+    const restartedCount = sampleBurstCount(
+      manual,
+      seed,
+      emitter.emitterHash,
+      0,
+    );
+    const mounted = mountLedgerSystem(effect, {
+      seed,
+      onEvent: (event) => events.push(event as (typeof events)[number]),
+    });
+
+    mounted.system.emit("impact", { count: 1 });
+    driver.flush(10);
+    driver.flush(11);
+    driver.flush(12);
+    mounted.system.restart();
+    mounted.system.emit("impact");
+    driver.flush(20);
+    driver.flush(21);
+    driver.flush(22);
+
+    expect(
+      events.filter((event) => event.type === "burst-accepted").at(-1),
+    ).toMatchObject({
+      requested: restartedCount,
+      accepted: restartedCount,
+    });
+  });
+
+  it("finishes finite and draining systems from exact ledger births and deaths", () => {
+    const events: string[] = [];
+    const effect = defineParticleEffect2D({
+      emitters: [
+        {
+          name: "spark",
+          capacity: 2,
+          emission: [
+            { type: "burst", atMilliseconds: 0, count: 1 },
+            { type: "burst", atMilliseconds: 100, count: 1 },
+          ],
+          shape: { type: "point" },
+          initial: { lifetimeMilliseconds: 50 },
+          renderer: { type: "circle" },
+        },
+      ],
+    });
+    const mounted = mountLedgerSystem(effect, {
+      autoplay: true,
+      onEvent: (event) => events.push(event.type),
+    });
+
+    driver.flush(49);
+    expect(mounted.candidate.ledger.candidateSummary()).toMatchObject({
+      liveCount: 1,
+      nextAutomaticBirthMilliseconds: 100,
+      latestDeathMilliseconds: 50,
+    });
+    driver.flush(51);
+    expect(mounted.candidate.ledger.candidateSummary().liveCount).toBe(0);
+    expect(mounted.system.status.get()).toBe("running");
+    driver.flush(101);
+    expect(mounted.candidate.ledger.candidateSummary()).toMatchObject({
+      liveCount: 1,
+      nextAutomaticBirthMilliseconds: null,
+      latestDeathMilliseconds: 150,
+    });
+    driver.flush(151);
+    driver.flush(152);
+    expect(mounted.system.status.get()).toBe("finished");
+    expect(events).toEqual(["start", "finish"]);
+
+    mounted.root.dispose();
+    roots.delete(mounted.root);
+    const draining = mountLedgerSystem(infiniteEffect(), {
+      autoplay: true,
+      onEvent: (event) => events.push(event.type),
+    });
+    driver.flush(2_000);
+    const liveAtStop = draining.candidate.ledger.candidateSummary().liveCount;
+    expect(liveAtStop).toBeGreaterThan(0);
+    draining.system.stop({ mode: "drain" });
+    driver.flush(2_001);
+    const closed = draining.candidate.ledger.candidateSummary();
+    expect(closed.nextAutomaticBirthMilliseconds).toBeNull();
+    driver.flush(2_101);
+    expect(draining.system.status.get()).toBe("finished");
+  });
+
+  it("finishes an exact drain immediately when the ledger has no live births", () => {
+    const events: string[] = [];
+    const mounted = mountLedgerSystem(manualEffect(), {
+      autoplay: true,
+      onEvent: (event) => events.push(event.type),
+    });
+
+    if (driver.pendingHostFrames > 0) driver.flush(2);
+    if (driver.pendingHostFrames > 0) driver.flush(3);
+    expect(mounted.system.status.get()).toBe("running");
+    expect(mounted.candidate.ledger.candidateSummary().liveCount).toBe(0);
+    mounted.system.stop({ mode: "drain" });
+    driver.flush(10);
+    if (driver.pendingHostFrames > 0) driver.flush(11);
+    if (driver.pendingHostFrames > 0) driver.flush(12);
+
+    expect(mounted.system.status.get()).toBe("finished");
+    expect(events).toEqual(["start", "drain-start", "finish"]);
     expect(driver.pendingHostFrames).toBe(0);
   });
 
