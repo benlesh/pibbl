@@ -146,14 +146,24 @@ import {
   type CRCBackendPrimitiveInput,
   type CRCBackendToken,
   type CRCNestedResolverInput,
+  crcInternalAssertCommandAllowed,
   crcInternalCreateSignalConsumer,
   crcInternalCurrentFrame,
   crcInternalCurrentRenderOwner,
+  crcInternalOnRenderFinish,
+  crcInternalPaintTarget,
+  crcInternalQueueBegin,
   crcInternalQueueComplete,
+  crcInternalQueueCurrentCommit,
+  crcInternalQueueCurrentComplete,
+  crcInternalRegisterAdvance,
+  crcInternalRequestRender,
   crcInternalRequestRendererWork,
+  type CRCInternalCommandHandle,
   type CRCInternalFrame,
   type CRCInternalRendererWorkKind,
   type CRCInternalRenderOwner,
+  type CRCInternalSignalBatch,
   type CRCInternalSignalConsumer,
 } from '@crc/core/internal';
 import {
@@ -351,16 +361,28 @@ void [
 
 declare const internalOwner: CRCInternalRenderOwner;
 declare const internalFrame: CRCInternalFrame;
+declare const internalBatch: CRCInternalSignalBatch;
+declare const internalCommand: CRCInternalCommandHandle;
 declare const internalConsumer: CRCInternalSignalConsumer;
 const internalWorkKind = 'draw' satisfies CRCInternalRendererWorkKind;
 void internalOwner;
 void internalFrame;
+void internalBatch;
+void internalCommand;
 void internalConsumer;
 void internalWorkKind;
+void crcInternalAssertCommandAllowed;
 void crcInternalCreateSignalConsumer;
 void crcInternalCurrentFrame;
 void crcInternalCurrentRenderOwner;
+void crcInternalOnRenderFinish;
+void crcInternalPaintTarget;
+void crcInternalQueueBegin;
 void crcInternalQueueComplete;
+void crcInternalQueueCurrentCommit;
+void crcInternalQueueCurrentComplete;
+void crcInternalRegisterAdvance;
+void crcInternalRequestRender;
 void crcInternalRequestRendererWork;
 
 export type PublicEventTypes = {

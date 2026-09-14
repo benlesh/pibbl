@@ -88,6 +88,13 @@ export interface SignalWriterLeasePolicy {
 const trackingStack: Array<SignalDependencyCollector | undefined> = [];
 const writePolicyStack: SignalWritePolicy[] = [];
 const computedStack: ComputedSignalNode<unknown>[] = [];
+const commandAssertionNode: SignalNode<unknown> = {
+  value: undefined,
+  equals: Object.is,
+  debugName: undefined,
+  version: 0,
+  observers: new Set(),
+};
 const activeSignalRenderProvisions = new WeakMap<
   SignalNode<unknown>,
   SignalRenderProvisionState
@@ -794,6 +801,11 @@ export function withDirectSignalWriteForbidden<T>(
   return withSignalWritePolicy((_node, operation) => {
     if (operation === 'direct') throw new Error(reason);
   }, callback);
+}
+
+/** @internal Checks the active direct-write policy without mutating a signal. */
+export function assertSignalCommandAllowed(): void {
+  writePolicyStack.at(-1)?.(commandAssertionNode, 'direct');
 }
 
 /** @internal Installs the singleton policy that validates active writer leases. */

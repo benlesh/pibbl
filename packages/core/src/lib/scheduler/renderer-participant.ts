@@ -6,11 +6,27 @@ import {
   createSignalRenderConsumer,
   disposeSignalRenderConsumer,
 } from '../signals/render-consumer.js';
+import {
+  assertSignalCommandAllowed,
+} from '../signals/graph.js';
+import type { WritableSignal } from '../signals/types.js';
+import { crcPaintTarget } from '../hooks/crc-paint-target.js';
+import type {
+  CRCEventHandlers,
+  CRCEventTargetOptions,
+  CRCEventTargetSnapshot,
+  CRCPointerEvents,
+} from '../events/types.js';
 import type { CRCComponentRefs, CRCInstance } from '../types.js';
 import {
   getCurrentFrameSnapshot,
+  queueBeginCommand,
+  queueCurrentFrameCommitAcknowledgement,
+  queueCurrentFrameCompletion,
   queueRendererParticipantComplete,
+  registerAdvanceParticipant,
   removeRendererParticipantOwner,
+  requestInstanceRender,
   requestRendererParticipantWork,
   type RendererParticipantOwner,
 } from './realm-scheduler.js';
@@ -24,6 +40,17 @@ export interface CRCInternalRenderOwner {
 export interface CRCInternalFrame {
   readonly frameId: number;
   readonly logicalTime: number;
+}
+
+export interface CRCInternalSignalBatch {
+  read<T>(signal: WritableSignal<T>): T;
+  stage<T>(signal: WritableSignal<T>, value: T, writer: object): void;
+  discardWriter(writer: object): void;
+}
+
+export interface CRCInternalCommandHandle {
+  readonly sequence: number;
+  cancel(): void;
 }
 
 /**
@@ -49,6 +76,8 @@ interface RenderOwnerState {
   readonly instance: CRCInstance;
   readonly schedulerOwner: RendererParticipantOwner;
   readonly consumers: Set<CRCInternalSignalConsumer>;
+  readonly beginCommands: Set<CRCInternalCommandHandle>;
+  readonly advanceRegistrations: Set<() => void>;
   active: boolean;
 }
 
@@ -81,6 +110,8 @@ export function crcInternalCurrentRenderOwner(): CRCInternalRenderOwner {
     instance,
     schedulerOwner,
     consumers: new Set<CRCInternalSignalConsumer>(),
+    beginCommands: new Set<CRCInternalCommandHandle>(),
+    advanceRegistrations: new Set<() => void>(),
     active: true,
   });
   ownersByComponent.set(component, owner);
@@ -139,6 +170,114 @@ export function crcInternalRequestRendererWork(
   requestRendererParticipantWork(state.schedulerOwner, request);
 }
 
+export function crcInternalAssertCommandAllowed(): void {
+  assertSignalCommandAllowed();
+}
+
+export function crcInternalQueueBegin(
+  owner: CRCInternalRenderOwner,
+  callback: (
+    frame: CRCInternalFrame,
+    batch: CRCInternalSignalBatch,
+    sequence: number,
+  ) => void,
+): CRCInternalCommandHandle {
+  const state = requireActiveOwner(owner);
+  let handle: CRCInternalCommandHandle;
+  const schedulerHandle = queueBeginCommand((frame, batch, sequence) => {
+    state.beginCommands.delete(handle);
+    if (!state.schedulerOwner.isActive()) return;
+    callback(frame, batch, sequence);
+  });
+  handle = Object.freeze({
+    sequence: schedulerHandle.sequence,
+    cancel(): void {
+      state.beginCommands.delete(handle);
+      schedulerHandle.cancel();
+    },
+  });
+  state.beginCommands.add(handle);
+  return handle;
+}
+
+export function crcInternalRegisterAdvance(
+  owner: CRCInternalRenderOwner,
+  callback: (frame: CRCInternalFrame, batch: CRCInternalSignalBatch) => void,
+): () => void {
+  const state = requireActiveOwner(owner);
+  let released = false;
+  const unregister = registerAdvanceParticipant((frame, batch) => {
+    if (!state.schedulerOwner.isActive()) return;
+    callback(frame, batch);
+  });
+  const release = (): void => {
+    if (released) return;
+    released = true;
+    state.advanceRegistrations.delete(release);
+    unregister();
+  };
+  state.advanceRegistrations.add(release);
+  return release;
+}
+
+export function crcInternalQueueCurrentCommit(
+  owner: CRCInternalRenderOwner,
+  callback: (
+    frame: CRCInternalFrame,
+    outcome: Readonly<{ applied: boolean }>,
+  ) => void,
+): void {
+  const state = requireActiveOwner(owner);
+  queueCurrentFrameCommitAcknowledgement((frame, outcome) => {
+    if (!state.schedulerOwner.isActive()) return;
+    callback(frame, outcome);
+  });
+}
+
+export function crcInternalQueueCurrentComplete(
+  owner: CRCInternalRenderOwner,
+  callback: (frame: CRCInternalFrame) => void,
+): void {
+  const state = requireActiveOwner(owner);
+  queueCurrentFrameCompletion(frame => {
+    if (!state.schedulerOwner.isActive()) return;
+    callback(frame);
+  });
+}
+
+export function crcInternalRequestRender(owner: CRCInternalRenderOwner): void {
+  const state = requireActiveOwner(owner);
+  requestInstanceRender(state.instance);
+}
+
+export function crcInternalOnRenderFinish(
+  owner: CRCInternalRenderOwner,
+  callback: (success: boolean) => void,
+): void {
+  const state = requireActiveOwner(owner);
+  if (
+    GLOBAL_STATE.componentRefs !== state.component ||
+    GLOBAL_STATE.currentCRCInstance !== state.instance ||
+    !GLOBAL_STATE.renderTransaction
+  ) {
+    throw new Error(
+      'crcInternalOnRenderFinish() requires its owner to be the currently evaluating CRC component.',
+    );
+  }
+  GLOBAL_STATE.renderTransaction.onFinish(success => {
+    if (success && !state.schedulerOwner.isActive()) return;
+    callback(success);
+  });
+}
+
+export function crcInternalPaintTarget(
+  handlers: CRCEventHandlers,
+  options: CRCEventTargetOptions,
+  pointerEvents: CRCPointerEvents = 'auto',
+): CRCEventTargetSnapshot {
+  return crcPaintTarget(handlers, options, pointerEvents);
+}
+
 export function crcInternalCurrentFrame(): CRCInternalFrame {
   const frame = getCurrentFrameSnapshot();
   if (!frame) {
@@ -174,6 +313,14 @@ function disposeRenderOwner(owner: CRCInternalRenderOwner): void {
   const state = ownerStates.get(owner);
   if (!state || !state.active) return;
   state.active = false;
+  for (const command of Array.from(state.beginCommands)) {
+    command.cancel();
+  }
+  state.beginCommands.clear();
+  for (const release of Array.from(state.advanceRegistrations)) {
+    release();
+  }
+  state.advanceRegistrations.clear();
   removeRendererParticipantOwner(state.schedulerOwner);
   for (const consumer of Array.from(state.consumers)) {
     consumer.dispose();

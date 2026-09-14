@@ -98,10 +98,18 @@ if (JSON.stringify(actual) !== JSON.stringify(expected)) {
 
 const expectedInternal = [
   'cancelBackendMountFrame',
+  'crcInternalAssertCommandAllowed',
   'crcInternalCreateSignalConsumer',
   'crcInternalCurrentFrame',
   'crcInternalCurrentRenderOwner',
+  'crcInternalOnRenderFinish',
+  'crcInternalPaintTarget',
+  'crcInternalQueueBegin',
   'crcInternalQueueComplete',
+  'crcInternalQueueCurrentCommit',
+  'crcInternalQueueCurrentComplete',
+  'crcInternalRegisterAdvance',
+  'crcInternalRequestRender',
   'crcInternalRequestRendererWork',
   'createBackendToken',
   'defineBackendPrimitive',
