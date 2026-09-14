@@ -572,7 +572,7 @@ export function createAnimationPlaybackController(
     target.unregisterAdvance = registerAdvanceParticipant((snapshot, batch) => {
       if (disposed || run !== target || target.released || target.status === 'ending') return;
       advanceRun(target, snapshot, batch);
-    });
+    }, 'animation');
   }
 
   function advanceRun(

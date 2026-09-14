@@ -396,7 +396,7 @@ describe('scheduler-integrated animation playback', () => {
     unregister = registerAdvanceParticipant((_snapshot, batch) => {
       unregister();
       batch.stage(rejector, 1, {});
-    });
+    }, 'physics');
     let thrown: unknown;
     try {
       driver.flush(10);
@@ -435,7 +435,7 @@ describe('scheduler-integrated animation playback', () => {
       unregister = registerAdvanceParticipant((_snapshot, batch) => {
         unregister();
         batch.stage(value, 999, {});
-      });
+      }, 'physics');
     });
     expect(() => driver.flush(30)).toThrow(/does not own the active lease/iu);
 
@@ -780,7 +780,7 @@ describe('scheduler-integrated animation playback', () => {
     unregister = registerAdvanceParticipant((_snapshot, batch) => {
       unregister();
       batch.stage(rejector, 1, {});
-    });
+    }, 'physics');
 
     controller.handle.play();
     controller.handle.cancel();
@@ -1079,7 +1079,7 @@ describe('scheduler-integrated animation playback', () => {
       unregister = registerAdvanceParticipant((_snapshot, batch) => {
         unregister();
         batch.stage(rejector, 1, {});
-      });
+      }, 'physics');
     };
 
     rejectNextCommit();
@@ -1133,7 +1133,7 @@ describe('scheduler-integrated animation playback', () => {
     unregister = registerAdvanceParticipant((_snapshot, batch) => {
       unregister();
       batch.stage(rejector, 1, {});
-    });
+    }, 'physics');
     controller.handle.finish();
 
     let thrown: unknown;
@@ -1248,7 +1248,7 @@ describe('scheduler-integrated animation playback', () => {
       release();
       calls.push('advance');
       queueFrameCompletion(() => calls.push('late-complete'));
-    });
+    }, 'animation');
     queueFrameCompletion(() => calls.push('complete'));
 
     driver.flush(1);
@@ -1465,7 +1465,7 @@ describe('scheduler-integrated animation playback', () => {
     unregister = registerAdvanceParticipant((_snapshot, batch) => {
       unregister();
       batch.stage(rejector, 1, {});
-    });
+    }, 'physics');
 
     expect(() => driver.flush(15)).toThrow(/repeat frontier rejected/iu);
     expect([value.get(), controller.handle.currentTime.get()]).toEqual([0, 0]);
@@ -1534,7 +1534,7 @@ describe('scheduler-integrated animation playback', () => {
     unregister = registerAdvanceParticipant((_snapshot, batch) => {
       unregister();
       batch.stage(value, 999, unauthorizedWriter);
-    });
+    }, 'physics');
 
     expect(() => driver.flush(10)).toThrow(/does not own the active lease/iu);
     expect([value.get(), controller.handle.currentTime.get(), controller.handle.status.get()])
@@ -1565,7 +1565,7 @@ describe('scheduler-integrated animation playback', () => {
     unregister = registerAdvanceParticipant((_snapshot, batch) => {
       unregister();
       batch.stage(value, 999, unauthorizedWriter);
-    });
+    }, 'physics');
     controller.handle.cancel();
 
     expect(() => driver.flush(10)).toThrow(/does not own the active lease/iu);
@@ -1593,7 +1593,7 @@ describe('scheduler-integrated animation playback', () => {
     unregister = registerAdvanceParticipant((_snapshot, batch) => {
       unregister();
       batch.stage(value, 999, unauthorizedWriter);
-    });
+    }, 'physics');
     controller.handle.pause();
 
     expect(() => driver.flush(10)).toThrow(/does not own the active lease/iu);
@@ -1626,7 +1626,7 @@ describe('scheduler-integrated animation playback', () => {
       unregister = registerAdvanceParticipant((_snapshot, batch) => {
         unregister();
         batch.stage(value, 999, unauthorizedWriter);
-      });
+      }, 'physics');
     });
 
     expect(() => driver.flush(10)).toThrow(/does not own the active lease/iu);

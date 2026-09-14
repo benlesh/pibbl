@@ -41,6 +41,20 @@ export type {
   CRCHitTestOutput,
 } from './lib/events/paint-entry.js';
 export { hasCRCEventHandler } from './lib/events/event-definitions.js';
+export {
+  crcInternalCurrentSimulationOwner,
+  crcInternalOnSimulationRenderTransactionFinish,
+  crcInternalQueueSimulationBegin,
+  crcInternalQueueSimulationCommitAcknowledgement,
+  crcInternalQueueSimulationComplete,
+  crcInternalRegisterSimulationAdvance,
+  crcInternalRequestSimulationRender,
+} from './lib/scheduler/simulation-participant.js';
+export type {
+  CRCInternalAdvanceLane,
+  CRCInternalSignalBatch,
+  CRCInternalSimulationOwner,
+} from './lib/scheduler/simulation-participant.js';
 
 import type {
   CRCBackendEventTargetOptions,

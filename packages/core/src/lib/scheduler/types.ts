@@ -15,6 +15,8 @@ export interface CRCFrameSnapshot {
   readonly logicalTime: number;
 }
 
+export type CRCAdvanceLane = 'animation' | 'physics';
+
 export type CRCAdvanceParticipant = (
   snapshot: CRCFrameSnapshot,
   batch: SignalCommitBatch,

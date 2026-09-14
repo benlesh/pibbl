@@ -1,6 +1,9 @@
 import * as core from '@crc/core';
 import * as internal from '@crc/core/internal';
 import * as webgl from '@crc/webgl';
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { createRequire } from 'node:module';
 import {
   Fragment as ProductionFragment,
   jsx,
@@ -101,8 +104,15 @@ const expectedInternal = [
   'crcInternalCreateSignalConsumer',
   'crcInternalCurrentFrame',
   'crcInternalCurrentRenderOwner',
+  'crcInternalCurrentSimulationOwner',
+  'crcInternalOnSimulationRenderTransactionFinish',
   'crcInternalQueueComplete',
+  'crcInternalQueueSimulationBegin',
+  'crcInternalQueueSimulationCommitAcknowledgement',
+  'crcInternalQueueSimulationComplete',
+  'crcInternalRegisterSimulationAdvance',
   'crcInternalRequestRendererWork',
+  'crcInternalRequestSimulationRender',
   'createBackendToken',
   'defineBackendPrimitive',
   'executeBackendCRC',
@@ -145,6 +155,27 @@ for (const exportName of expected) {
   if (exportName in internal) {
     throw new Error(`@crc/core/internal re-exported public root value ${exportName}.`);
   }
+}
+
+const requireFromRuntime = createRequire(import.meta.url);
+const coreEntry = requireFromRuntime.resolve('@crc/core');
+const internalEntry = requireFromRuntime.resolve('@crc/core/internal');
+const coreSource = readFileSync(coreEntry, 'utf8');
+const internalSource = readFileSync(internalEntry, 'utf8');
+const chunkImports = source => new Set(
+  [...source.matchAll(/from "(\.\/chunks\/[^"\n]+)"/gu)]
+    .map(match => match[1]),
+);
+const coreChunks = chunkImports(coreSource);
+const sharedSchedulerChunk = [...chunkImports(internalSource)].find(chunk =>
+  coreChunks.has(chunk) &&
+  readFileSync(resolve(dirname(internalEntry), chunk), 'utf8')
+    .includes('function registerAdvanceParticipant'),
+);
+if (sharedSchedulerChunk === undefined) {
+  throw new Error(
+    '@crc/core/internal did not share the packed core scheduler identity.',
+  );
 }
 if (actual.length !== 77) {
   throw new Error(`Expected 77 @crc/core runtime exports, received ${actual.length}.`);

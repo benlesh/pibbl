@@ -149,12 +149,22 @@ import {
   crcInternalCreateSignalConsumer,
   crcInternalCurrentFrame,
   crcInternalCurrentRenderOwner,
+  crcInternalCurrentSimulationOwner,
+  crcInternalOnSimulationRenderTransactionFinish,
   crcInternalQueueComplete,
+  crcInternalQueueSimulationBegin,
+  crcInternalQueueSimulationCommitAcknowledgement,
+  crcInternalQueueSimulationComplete,
+  crcInternalRegisterSimulationAdvance,
   crcInternalRequestRendererWork,
+  crcInternalRequestSimulationRender,
+  type CRCInternalAdvanceLane,
   type CRCInternalFrame,
   type CRCInternalRendererWorkKind,
   type CRCInternalRenderOwner,
+  type CRCInternalSignalBatch,
   type CRCInternalSignalConsumer,
+  type CRCInternalSimulationOwner,
 } from '@crc/core/internal';
 import {
   crc,
@@ -377,16 +387,29 @@ void [
 declare const internalOwner: CRCInternalRenderOwner;
 declare const internalFrame: CRCInternalFrame;
 declare const internalConsumer: CRCInternalSignalConsumer;
+declare const internalSignalBatch: CRCInternalSignalBatch;
+declare const internalSimulationOwner: CRCInternalSimulationOwner;
 const internalWorkKind = 'draw' satisfies CRCInternalRendererWorkKind;
+const internalAdvanceLane = 'physics' satisfies CRCInternalAdvanceLane;
 void internalOwner;
 void internalFrame;
 void internalConsumer;
+void internalSignalBatch;
+void internalSimulationOwner;
 void internalWorkKind;
+void internalAdvanceLane;
 void crcInternalCreateSignalConsumer;
 void crcInternalCurrentFrame;
 void crcInternalCurrentRenderOwner;
+void crcInternalCurrentSimulationOwner;
+void crcInternalOnSimulationRenderTransactionFinish;
 void crcInternalQueueComplete;
+void crcInternalQueueSimulationBegin;
+void crcInternalQueueSimulationCommitAcknowledgement;
+void crcInternalQueueSimulationComplete;
+void crcInternalRegisterSimulationAdvance;
 void crcInternalRequestRendererWork;
+void crcInternalRequestSimulationRender;
 
 export type PublicEventTypes = {
   base: CRCEvent;
