@@ -23,6 +23,67 @@ export interface WebGLMeshSubmission {
   readonly keyboardNavigationBounds: CRCEventTargetRegistration['keyboardNavigationBounds'];
 }
 
+interface WebGLLightSubmissionBase {
+  readonly componentName: string;
+  readonly source: CRCElementSource | undefined;
+  readonly intensity: number;
+  readonly model?: Readonly<Float32Array>;
+}
+
+export interface WebGLAmbientLightSubmission
+  extends WebGLLightSubmissionBase {
+  readonly kind: 'ambient';
+  readonly color: WebGLRGBA;
+  readonly model?: never;
+}
+
+export interface WebGLHemisphereLightSubmission
+  extends WebGLLightSubmissionBase {
+  readonly kind: 'hemisphere';
+  readonly skyColor: WebGLRGBA;
+  readonly groundColor: WebGLRGBA;
+  readonly model: Readonly<Float32Array>;
+}
+
+export interface WebGLDirectionalLightSubmission
+  extends WebGLLightSubmissionBase {
+  readonly kind: 'directional';
+  readonly color: WebGLRGBA;
+  readonly model: Readonly<Float32Array>;
+}
+
+export interface WebGLPointLightSubmission
+  extends WebGLLightSubmissionBase {
+  readonly kind: 'point';
+  readonly color: WebGLRGBA;
+  readonly range: number | undefined;
+  readonly model: Readonly<Float32Array>;
+}
+
+export interface WebGLSpotLightSubmission
+  extends WebGLLightSubmissionBase {
+  readonly kind: 'spot';
+  readonly color: WebGLRGBA;
+  readonly range: number | undefined;
+  readonly innerConeAngleDegrees: number;
+  readonly outerConeAngleDegrees: number;
+  readonly model: Readonly<Float32Array>;
+}
+
+export type WebGLLightSubmission =
+  | WebGLAmbientLightSubmission
+  | WebGLHemisphereLightSubmission
+  | WebGLDirectionalLightSubmission
+  | WebGLPointLightSubmission
+  | WebGLSpotLightSubmission;
+
+export interface WebGLBackgroundSubmission {
+  readonly kind: 'background';
+  readonly componentName: string;
+  readonly source: CRCElementSource | undefined;
+  readonly color: WebGLRGBA;
+}
+
 export interface CreateWebGLSceneComposerInput {
   readonly frame: CRCBackendFrameInput;
   readonly camera: ResolvedWebGLCamera;
@@ -41,6 +102,49 @@ export interface SubmitWebGLMeshInput {
   readonly keyboardNavigationBounds?: CRCEventTargetRegistration['keyboardNavigationBounds'];
 }
 
+type SubmitWebGLLightBase = {
+  readonly componentName: string;
+  readonly source?: CRCElementSource;
+  readonly intensity: number;
+};
+
+type SubmitTransformableWebGLLightBase = SubmitWebGLLightBase & {
+  readonly localModel: Readonly<Float32Array>;
+};
+
+export type SubmitWebGLLightInput =
+  | (SubmitWebGLLightBase & {
+      readonly kind: 'ambient';
+      readonly color: WebGLRGBA;
+    })
+  | (SubmitTransformableWebGLLightBase & {
+      readonly kind: 'hemisphere';
+      readonly skyColor: WebGLRGBA;
+      readonly groundColor: WebGLRGBA;
+    })
+  | (SubmitTransformableWebGLLightBase & {
+      readonly kind: 'directional';
+      readonly color: WebGLRGBA;
+    })
+  | (SubmitTransformableWebGLLightBase & {
+      readonly kind: 'point';
+      readonly color: WebGLRGBA;
+      readonly range: number | undefined;
+    })
+  | (SubmitTransformableWebGLLightBase & {
+      readonly kind: 'spot';
+      readonly color: WebGLRGBA;
+      readonly range: number | undefined;
+      readonly innerConeAngleDegrees: number;
+      readonly outerConeAngleDegrees: number;
+    });
+
+export interface SubmitWebGLBackgroundInput {
+  readonly componentName: string;
+  readonly source?: CRCElementSource;
+  readonly color: WebGLRGBA;
+}
+
 export interface ClosedWebGLSceneDraft {
   readonly contextGeneration: number;
   readonly camera: ResolvedWebGLCamera;
@@ -49,6 +153,8 @@ export interface ClosedWebGLSceneDraft {
   readonly density: Readonly<{ x: number; y: number }>;
   readonly timestamp: number;
   readonly meshes: readonly WebGLMeshSubmission[];
+  readonly lights: readonly WebGLLightSubmission[];
+  readonly backgrounds: readonly WebGLBackgroundSubmission[];
 }
 
 export interface WebGLSceneComposer extends ClosedWebGLSceneDraft {

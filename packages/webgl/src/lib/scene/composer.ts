@@ -3,7 +3,11 @@ import { DEFAULT_WEBGL_MATERIAL } from '../components/material.js';
 import type {
   ClosedWebGLSceneDraft,
   CreateWebGLSceneComposerInput,
+  SubmitWebGLBackgroundInput,
+  SubmitWebGLLightInput,
   SubmitWebGLMeshInput,
+  WebGLBackgroundSubmission,
+  WebGLLightSubmission,
   WebGLMeshSubmission,
   WebGLSceneComposer,
 } from './types.js';
@@ -12,6 +16,8 @@ import type { ResolvedWebGLCamera } from '../math/camera.js';
 interface MutableComposer extends WebGLSceneComposer {
   readonly modelStack: Float32Array[];
   readonly meshes: WebGLMeshSubmission[];
+  readonly lights: WebGLLightSubmission[];
+  readonly backgrounds: WebGLBackgroundSubmission[];
   state: 'open' | 'closed';
   nextSourceIndex: number;
 }
@@ -63,10 +69,82 @@ export function createWebGLSceneComposer(
     density,
     timestamp: input.frame.renderTimestamp,
     meshes: [],
+    lights: [],
+    backgrounds: [],
     modelStack: [identity],
     state: 'open',
     nextSourceIndex: 0,
   } as MutableComposer;
+}
+
+export function submitWebGLLight(
+  composer: WebGLSceneComposer,
+  input: SubmitWebGLLightInput,
+): void {
+  const value = requireOpen(composer);
+  const common = {
+    componentName: input.componentName,
+    source: input.source,
+    intensity: input.intensity,
+  };
+  switch (input.kind) {
+    case 'ambient':
+      value.lights.push(Object.freeze({
+        ...common,
+        kind: 'ambient' as const,
+        color: snapshotColor(input.color),
+      }));
+      return;
+    case 'hemisphere':
+      value.lights.push(Object.freeze({
+        ...common,
+        kind: 'hemisphere' as const,
+        skyColor: snapshotColor(input.skyColor),
+        groundColor: snapshotColor(input.groundColor),
+        model: composeLightModel(value, input.localModel),
+      }));
+      return;
+    case 'directional':
+      value.lights.push(Object.freeze({
+        ...common,
+        kind: 'directional' as const,
+        color: snapshotColor(input.color),
+        model: composeLightModel(value, input.localModel),
+      }));
+      return;
+    case 'point':
+      value.lights.push(Object.freeze({
+        ...common,
+        kind: 'point' as const,
+        color: snapshotColor(input.color),
+        range: input.range,
+        model: composeLightModel(value, input.localModel),
+      }));
+      return;
+    case 'spot':
+      value.lights.push(Object.freeze({
+        ...common,
+        kind: 'spot' as const,
+        color: snapshotColor(input.color),
+        range: input.range,
+        innerConeAngleDegrees: input.innerConeAngleDegrees,
+        outerConeAngleDegrees: input.outerConeAngleDegrees,
+        model: composeLightModel(value, input.localModel),
+      }));
+  }
+}
+
+export function submitWebGLBackground(
+  composer: WebGLSceneComposer,
+  input: SubmitWebGLBackgroundInput,
+): void {
+  const value = requireOpen(composer);
+  value.backgrounds.push(Object.freeze({
+    kind: 'background',
+    componentName: input.componentName,
+    source: input.source,
+    color: snapshotColor(input.color),
+  }));
 }
 
 export function pushWebGLModelMatrix(
@@ -132,8 +210,23 @@ export function closeWebGLSceneComposer(
     density: value.density,
     timestamp: value.timestamp,
     meshes: Object.freeze(value.meshes.slice()),
+    lights: Object.freeze(value.lights.slice()),
+    backgrounds: Object.freeze(value.backgrounds.slice()),
   });
   return draft;
+}
+
+function snapshotColor(color: WebGLMeshSubmission['color']): WebGLMeshSubmission['color'] {
+  return Object.freeze([...color]) as unknown as WebGLMeshSubmission['color'];
+}
+
+function composeLightModel(
+  composer: MutableComposer,
+  localModel: Readonly<Float32Array>,
+): Readonly<Float32Array> {
+  const model = new Float32Array(16);
+  multiplyMatrix4(model, composer.modelStack.at(-1)!, localModel);
+  return model;
 }
 
 export function discardWebGLSceneComposer(composer: WebGLSceneComposer): void {
