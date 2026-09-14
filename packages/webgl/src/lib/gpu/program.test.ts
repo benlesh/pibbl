@@ -1,8 +1,12 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   createBuiltInProgram,
   deleteBuiltInProgram,
 } from './program.js';
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('createBuiltInProgram', () => {
   it('names the component and vertex stage and deletes a failed shader', () => {
@@ -56,6 +60,116 @@ describe('createBuiltInProgram', () => {
       shaders[0],
       shaders[1],
     ]);
+  });
+
+  it('abandons a shader handle without deletion when construction loses the context', () => {
+    const operationalError = new Error('vertex source rejected after loss');
+    const {
+      gl,
+      shaders,
+      detachShader,
+      deleteProgram,
+      deleteShader,
+      createProgram,
+    } = createProgramGL({
+      shaderSourceError: operationalError,
+      contextLostAfterOperationalFailure: true,
+    });
+
+    let caught: unknown;
+    try {
+      createBuiltInProgram(gl, 'LostMesh');
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBe(operationalError);
+    expect(shaders).toHaveLength(1);
+    expect(createProgram).not.toHaveBeenCalled();
+    expect(detachShader).not.toHaveBeenCalled();
+    expect(deleteShader).not.toHaveBeenCalled();
+    expect(deleteProgram).not.toHaveBeenCalled();
+  });
+
+  it('abandons attached shaders and a program without deletion when linking loses the context', () => {
+    const operationalError = new Error('link interrupted by context loss');
+    const {
+      gl,
+      shaders,
+      programs,
+      attachShader,
+      detachShader,
+      deleteProgram,
+      deleteShader,
+    } = createProgramGL({
+      linkProgramError: operationalError,
+      contextLostAfterOperationalFailure: true,
+    });
+
+    let caught: unknown;
+    try {
+      createBuiltInProgram(gl, 'LostSphere');
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBe(operationalError);
+    expect(shaders).toHaveLength(2);
+    expect(programs).toHaveLength(1);
+    expect(attachShader).toHaveBeenCalledTimes(2);
+    expect(detachShader).not.toHaveBeenCalled();
+    expect(deleteShader).not.toHaveBeenCalled();
+    expect(deleteProgram).not.toHaveBeenCalled();
+  });
+
+  it('preserves a shader failure when context-loss detection itself fails', () => {
+    const operationalError = new Error('shader source failed');
+    const detectionError = new Error('isContextLost failed');
+    const reported: unknown[] = [];
+    vi.spyOn(globalThis, 'reportError').mockImplementation(error => {
+      reported.push(error);
+    });
+    const { gl, detachShader, deleteProgram, deleteShader } = createProgramGL({
+      shaderSourceError: operationalError,
+      contextLossCheckError: detectionError,
+    });
+
+    let caught: unknown;
+    try {
+      createBuiltInProgram(gl, 'BrokenMesh');
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBe(operationalError);
+    expect(reported).toEqual([detectionError]);
+    expect(detachShader).not.toHaveBeenCalled();
+    expect(deleteShader).not.toHaveBeenCalled();
+    expect(deleteProgram).not.toHaveBeenCalled();
+  });
+
+  it('preserves a shader failure when healthy-context cleanup itself fails', () => {
+    const operationalError = new Error('shader source failed');
+    const cleanupError = new Error('shader deletion failed');
+    const reported: unknown[] = [];
+    vi.spyOn(globalThis, 'reportError').mockImplementation(error => {
+      reported.push(error);
+    });
+    const { gl, deleteShader } = createProgramGL({
+      shaderSourceError: operationalError,
+      deleteShaderError: cleanupError,
+    });
+
+    let caught: unknown;
+    try {
+      createBuiltInProgram(gl, 'BrokenMesh');
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBe(operationalError);
+    expect(deleteShader).toHaveBeenCalledOnce();
+    expect(reported).toEqual([cleanupError]);
   });
 
   it('publishes a linked program only after resolving every built-in uniform', () => {
@@ -128,6 +242,11 @@ interface ProgramGLOptions {
   readonly shaderLog?: string;
   readonly programLog?: string;
   readonly missingUniform?: string;
+  readonly shaderSourceError?: Error;
+  readonly linkProgramError?: Error;
+  readonly contextLostAfterOperationalFailure?: boolean;
+  readonly contextLossCheckError?: Error;
+  readonly deleteShaderError?: Error;
 }
 
 function createProgramGL(options: ProgramGLOptions = {}) {
@@ -136,8 +255,10 @@ function createProgramGL(options: ProgramGLOptions = {}) {
   const COMPILE_STATUS = 3;
   const LINK_STATUS = 4;
   const shaders: Array<{ readonly type: number; readonly id: number }> = [];
+  const programs: Array<{ readonly kind: string }> = [];
   const shaderCleanup: string[] = [];
   const program = { kind: 'program' };
+  let operationalFailure = false;
   const createShader = vi.fn((type: number) => {
     const shader = { type, id: shaders.length + 1 };
     shaders.push(shader);
@@ -145,16 +266,46 @@ function createProgramGL(options: ProgramGLOptions = {}) {
   });
   const deleteShader = vi.fn((shader: { readonly id: number }) => {
     shaderCleanup.push(`delete:${shader.id}`);
+    if (options.deleteShaderError) throw options.deleteShaderError;
   });
-  const createProgram = vi.fn(() => program);
+  const createProgram = vi.fn(() => {
+    programs.push(program);
+    return program;
+  });
   const deleteProgram = vi.fn();
+  const shaderSource = vi.fn(() => {
+    if (options.shaderSourceError) {
+      operationalFailure = true;
+      throw options.shaderSourceError;
+    }
+  });
+  const attachShader = vi.fn();
+  const detachShader = vi.fn(
+    (_program: object, shader: { readonly id: number }) => {
+      shaderCleanup.push(`detach:${shader.id}`);
+    },
+  );
+  const linkProgram = vi.fn(() => {
+    if (options.linkProgramError) {
+      operationalFailure = true;
+      throw options.linkProgramError;
+    }
+  });
+  const isContextLost = vi.fn(() => {
+    if (operationalFailure && options.contextLossCheckError) {
+      throw options.contextLossCheckError;
+    }
+    return (
+      operationalFailure && options.contextLostAfterOperationalFailure === true
+    );
+  });
   const gl = {
     VERTEX_SHADER,
     FRAGMENT_SHADER,
     COMPILE_STATUS,
     LINK_STATUS,
     createShader,
-    shaderSource: vi.fn(),
+    shaderSource,
     compileShader: vi.fn(),
     getShaderParameter(shader: { readonly type: number }, parameter: number) {
       expect(parameter).toBe(COMPILE_STATUS);
@@ -165,11 +316,9 @@ function createProgramGL(options: ProgramGLOptions = {}) {
     getShaderInfoLog: vi.fn(() => options.shaderLog ?? ''),
     deleteShader,
     createProgram,
-    attachShader: vi.fn(),
-    detachShader: vi.fn((_program: object, shader: { readonly id: number }) => {
-      shaderCleanup.push(`detach:${shader.id}`);
-    }),
-    linkProgram: vi.fn(),
+    attachShader,
+    detachShader,
+    linkProgram,
     getProgramParameter(_program: object, parameter: number) {
       expect(parameter).toBe(LINK_STATUS);
       return !options.linkFailed;
@@ -178,13 +327,17 @@ function createProgramGL(options: ProgramGLOptions = {}) {
     deleteProgram,
     getUniformLocation: vi.fn((_program: object, name: string) =>
       name === options.missingUniform ? null : { name }),
+    isContextLost,
   } as unknown as WebGL2RenderingContext;
   return {
     gl,
     program,
+    programs,
     shaders,
     shaderCleanup,
     createProgram,
+    attachShader,
+    detachShader,
     deleteProgram,
     deleteShader,
   };

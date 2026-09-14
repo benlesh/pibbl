@@ -38,6 +38,11 @@ export function createBuiltInProgram(
   let program: WebGLProgram | undefined;
   let linked = false;
   let published = false;
+  let abandonFailedHandles: boolean | undefined;
+  const shouldAbandonFailedHandles = (): boolean => {
+    abandonFailedHandles ??= contextLossPreventsProgramCleanup(gl);
+    return abandonFailedHandles;
+  };
   try {
     vertex = compileShader(
       gl,
@@ -45,6 +50,7 @@ export function createBuiltInProgram(
       'vertex',
       gl.VERTEX_SHADER,
       VERTEX_SOURCE,
+      shouldAbandonFailedHandles,
     );
     fragment = compileShader(
       gl,
@@ -52,6 +58,7 @@ export function createBuiltInProgram(
       'fragment',
       gl.FRAGMENT_SHADER,
       FRAGMENT_SOURCE,
+      shouldAbandonFailedHandles,
     );
     program = gl.createProgram() ?? undefined;
     if (!program) {
@@ -91,19 +98,24 @@ export function createBuiltInProgram(
     fragment = undefined;
     published = true;
     return builtIn;
+  } catch (error) {
+    shouldAbandonFailedHandles();
+    throw error;
   } finally {
-    if (linked && program) {
-      if (vertex) {
-        runProgramCleanup(() => gl.detachShader(program!, vertex!));
+    if (abandonFailedHandles !== true) {
+      if (linked && program) {
+        if (vertex) {
+          runProgramCleanup(() => gl.detachShader(program!, vertex!));
+        }
+        if (fragment) {
+          runProgramCleanup(() => gl.detachShader(program!, fragment!));
+        }
       }
-      if (fragment) {
-        runProgramCleanup(() => gl.detachShader(program!, fragment!));
+      if (vertex) runProgramCleanup(() => gl.deleteShader(vertex!));
+      if (fragment) runProgramCleanup(() => gl.deleteShader(fragment!));
+      if (!published && program) {
+        runProgramCleanup(() => gl.deleteProgram(program!));
       }
-    }
-    if (vertex) runProgramCleanup(() => gl.deleteShader(vertex!));
-    if (fragment) runProgramCleanup(() => gl.deleteShader(fragment!));
-    if (!published && program) {
-      runProgramCleanup(() => gl.deleteProgram(program!));
     }
   }
 }
@@ -121,6 +133,7 @@ function compileShader(
   stage: 'vertex' | 'fragment',
   shaderType: number,
   source: string,
+  shouldAbandonFailedHandles: () => boolean,
 ): WebGLShader {
   const shader = gl.createShader(shaderType);
   if (!shader) {
@@ -139,8 +152,22 @@ function compileShader(
     }
     return shader;
   } catch (error) {
-    runProgramCleanup(() => gl.deleteShader(shader));
+    if (!shouldAbandonFailedHandles()) {
+      runProgramCleanup(() => gl.deleteShader(shader));
+    }
     throw error;
+  }
+}
+
+function contextLossPreventsProgramCleanup(
+  gl: WebGL2RenderingContext,
+): boolean {
+  try {
+    return gl.isContextLost();
+  } catch (error) {
+    reportSecondaryProgramError(error);
+    // Unknown context validity is not permission to delete generation handles.
+    return true;
   }
 }
 
@@ -148,11 +175,15 @@ function runProgramCleanup(cleanup: () => void): void {
   try {
     cleanup();
   } catch (error) {
-    try {
-      globalThis.reportError(error);
-    } catch {
-      // Reporting cannot suppress release of later shader intermediates.
-    }
+    reportSecondaryProgramError(error);
+  }
+}
+
+function reportSecondaryProgramError(error: unknown): void {
+  try {
+    globalThis.reportError(error);
+  } catch {
+    // Reporting cannot suppress release of later shader intermediates.
   }
 }
 

@@ -237,6 +237,7 @@ function uploadGeometry(
   let positionBuffer: WebGLBuffer | undefined;
   let indexBuffer: WebGLBuffer | undefined;
   let published = false;
+  let abandonFailedHandles = false;
   try {
     const data = getWebGLGeometryData(geometry);
     vertexArray = gl.createVertexArray() ?? undefined;
@@ -279,6 +280,7 @@ function uploadGeometry(
     published = true;
     return resource;
   } catch (error) {
+    abandonFailedHandles = contextLossPreventsResourceCleanup(gl);
     if (error instanceof Error && error.message.startsWith(componentName)) {
       throw error;
     }
@@ -286,7 +288,7 @@ function uploadGeometry(
       cause: error,
     });
   } finally {
-    if (!published) {
+    if (!published && !abandonFailedHandles) {
       if (indexBuffer) {
         runResourceCleanup(() => gl.deleteBuffer(indexBuffer!));
       }
@@ -297,6 +299,18 @@ function uploadGeometry(
         runResourceCleanup(() => gl.deleteVertexArray(vertexArray!));
       }
     }
+  }
+}
+
+function contextLossPreventsResourceCleanup(
+  gl: WebGL2RenderingContext,
+): boolean {
+  try {
+    return gl.isContextLost();
+  } catch (error) {
+    reportSecondaryResourceError(error);
+    // Unknown context validity is not permission to delete generation handles.
+    return true;
   }
 }
 
@@ -315,10 +329,14 @@ function runResourceCleanup(cleanup: () => void): void {
   try {
     cleanup();
   } catch (error) {
-    try {
-      globalThis.reportError(error);
-    } catch {
-      // Reporting cannot suppress release of later context-owned handles.
-    }
+    reportSecondaryResourceError(error);
+  }
+}
+
+function reportSecondaryResourceError(error: unknown): void {
+  try {
+    globalThis.reportError(error);
+  } catch {
+    // Reporting cannot suppress release of later context-owned handles.
   }
 }

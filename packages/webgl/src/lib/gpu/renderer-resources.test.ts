@@ -265,6 +265,96 @@ describe('WebGLRendererResourceCache', () => {
     },
   );
 
+  it('abandons partial geometry handles without deletion when upload loses the context', () => {
+    const operationalError = new Error('position upload lost the context');
+    const recording = createResourceGL('lost-upload', {
+      throwBufferDataAt: 1,
+      bufferDataError: operationalError,
+      contextLostAfterOperationalFailure: true,
+    });
+    const cache = new WebGLRendererResourceCache(recording.gl, 4);
+    const transaction = cache.beginRender();
+
+    let caught: unknown;
+    try {
+      transaction.useGeometry(triangle(), 'LostCube');
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(Error);
+    expect((caught as Error).cause).toBe(operationalError);
+    expect(recording.vertexArrays).toHaveLength(1);
+    expect(recording.buffers).toHaveLength(1);
+    expect(recording.deleteBuffer).not.toHaveBeenCalled();
+    expect(recording.deleteVertexArray).not.toHaveBeenCalled();
+
+    transaction.rollback(true);
+    cache.dispose(false);
+    expect(recording.deleteBuffer).not.toHaveBeenCalled();
+    expect(recording.deleteVertexArray).not.toHaveBeenCalled();
+  });
+
+  it('preserves an upload failure when context-loss detection itself fails', () => {
+    const operationalError = new Error('position upload failed');
+    const detectionError = new Error('isContextLost failed');
+    const reported: unknown[] = [];
+    vi.spyOn(globalThis, 'reportError').mockImplementation((error) => {
+      reported.push(error);
+    });
+    const recording = createResourceGL('failed-loss-check', {
+      throwBufferDataAt: 1,
+      bufferDataError: operationalError,
+      contextLossCheckError: detectionError,
+    });
+    const cache = new WebGLRendererResourceCache(recording.gl, 5);
+    const transaction = cache.beginRender();
+
+    let caught: unknown;
+    try {
+      transaction.useGeometry(triangle(), 'BrokenCube');
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(Error);
+    expect((caught as Error).cause).toBe(operationalError);
+    expect(reported).toEqual([detectionError]);
+    expect(recording.deleteBuffer).not.toHaveBeenCalled();
+    expect(recording.deleteVertexArray).not.toHaveBeenCalled();
+    transaction.rollback(true);
+  });
+
+  it('preserves an upload failure when healthy-context cleanup itself fails', () => {
+    const operationalError = new Error('position upload failed');
+    const cleanupError = new Error('buffer deletion failed');
+    const reported: unknown[] = [];
+    vi.spyOn(globalThis, 'reportError').mockImplementation((error) => {
+      reported.push(error);
+    });
+    const recording = createResourceGL('failed-cleanup', {
+      throwBufferDataAt: 1,
+      bufferDataError: operationalError,
+      deleteBufferError: cleanupError,
+    });
+    const cache = new WebGLRendererResourceCache(recording.gl, 6);
+    const transaction = cache.beginRender();
+
+    let caught: unknown;
+    try {
+      transaction.useGeometry(triangle(), 'BrokenCube');
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(Error);
+    expect((caught as Error).cause).toBe(operationalError);
+    expect(recording.deleteBuffer).toHaveBeenCalledOnce();
+    expect(recording.deleteVertexArray).toHaveBeenCalledOnce();
+    expect(reported).toEqual([cleanupError]);
+    transaction.rollback();
+  });
+
   it('invalidates resident and candidate records during a transaction without GL deletion', () => {
     const recording = createResourceGL('lost');
     const cache = new WebGLRendererResourceCache(recording.gl, 9);
@@ -374,6 +464,10 @@ interface ResourceGLControls {
   failVertexArray?: boolean;
   failBufferAt?: number;
   throwBufferDataAt?: number;
+  bufferDataError?: Error;
+  contextLostAfterOperationalFailure?: boolean;
+  contextLossCheckError?: Error;
+  deleteBufferError?: Error;
 }
 
 interface OwnedHandle {
@@ -393,6 +487,7 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
   let shaderAttempt = 0;
   let bufferAttempt = 0;
   let uploadAttempt = 0;
+  let operationalFailure = false;
   const handle = (kind: string, type?: number): OwnedHandle => ({
     context,
     kind,
@@ -428,7 +523,9 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
     buffers.push(buffer);
     return buffer;
   });
-  const deleteBuffer = vi.fn();
+  const deleteBuffer = vi.fn((_buffer: OwnedHandle) => {
+    if (controls.deleteBufferError) throw controls.deleteBufferError;
+  });
   const uploads: Array<{
     readonly target: number;
     readonly length: number;
@@ -459,11 +556,24 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
       (target: number, data: ArrayLike<number>, usage: number) => {
         uploadAttempt += 1;
         if (uploadAttempt === controls.throwBufferDataAt) {
-          throw new Error('injected buffer upload failure');
+          operationalFailure = true;
+          throw (
+            controls.bufferDataError ??
+            new Error('injected buffer upload failure')
+          );
         }
         uploads.push({ target, length: data.length, usage });
       },
     ),
+    isContextLost: vi.fn(() => {
+      if (operationalFailure && controls.contextLossCheckError) {
+        throw controls.contextLossCheckError;
+      }
+      return (
+        operationalFailure &&
+        controls.contextLostAfterOperationalFailure === true
+      );
+    }),
   };
   const gl = new Proxy(
     { ...constants, ...methods },
