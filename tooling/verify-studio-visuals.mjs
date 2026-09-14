@@ -14,7 +14,11 @@ if (!/^[1-9]\d{0,4}$/.test(previewPort) || Number(previewPort) > 65_535) {
 }
 const origin = `http://127.0.0.1:${previewPort}`;
 const routes = [
-  { name: "learn-landing", hash: "#/learn", ready: ".documentation-page h1" },
+  {
+    name: "learn-landing",
+    hash: "#/learn",
+    ready: ".documentation-body a[href='#/learn/tutorials/diagram-editor']",
+  },
   { name: "api-crc", hash: "#/api/functions/crc", ready: ".documentation-page h1" },
   { name: "examples-landing", hash: "#/examples", ready: ".studio-hero-canvas canvas" },
   {
@@ -38,7 +42,7 @@ const routes = [
   {
     name: "search-open",
     hash: "#/learn",
-    ready: ".documentation-page h1",
+    ready: ".documentation-body a[href='#/learn/tutorials/diagram-editor']",
     openSearch: true,
   },
   {
@@ -177,6 +181,10 @@ try {
         );
       }
     }
+    if (route.name === "test-lab") {
+      await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+      await page.waitForFunction(() => window.scrollY === 0);
+    }
     await page.evaluate(() => document.fonts.ready);
     await page.addStyleTag({
       content:
@@ -188,10 +196,27 @@ try {
           requestAnimationFrame(() => requestAnimationFrame(resolvePromise)),
         ),
     );
+    if (route.name === "test-lab") {
+      // Chromium can return a background-only first full-page capture after
+      // this canvas-backed SPA route. Prime that compositor capture once; the
+      // next, normal capture below remains the only baseline comparison.
+      await page.screenshot({ fullPage: true, animations: "disabled" });
+    }
+    const actualPath = resolve(
+      workspaceRoot,
+      `test-screenshots/studio/${route.name}.actual.png`,
+    );
     const actual = route.captureSelector
       ? await page.locator(route.captureSelector).screenshot({
           animations: "disabled",
         })
+      : route.name === "test-lab"
+        ? (await page.screenshot({
+            path: actualPath,
+            fullPage: true,
+            animations: "disabled",
+          }),
+          await readFile(actualPath))
       : await page.screenshot({
           fullPage: true,
           animations: "disabled",
@@ -200,10 +225,6 @@ try {
     const baselinePath = resolve(
       workspaceRoot,
       `packages/core/test/visual-baselines/studio-${route.name}.expected.png`,
-    );
-    const actualPath = resolve(
-      workspaceRoot,
-      `test-screenshots/studio/${route.name}.actual.png`,
     );
     await writeFile(actualPath, actual);
     if (update) {
