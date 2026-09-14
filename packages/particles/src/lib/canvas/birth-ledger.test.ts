@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { compileParticleEffect2D } from "../compiler.js";
 import { defineParticleEffect2D } from "../definition.js";
 import { isPotentialBirthAccepted } from "../emission.js";
+import { particle } from "../particle.js";
 import type { CRCParticleEmission } from "../types.js";
 import {
   CANVAS_LEDGER_NO_SLOT,
@@ -418,6 +419,53 @@ describe("fixed-capacity Canvas birth ledger", () => {
       expect.objectContaining({ birth: 99_999, ordinal: 99_998 }),
       expect.objectContaining({ birth: 100_000, ordinal: 99_999 }),
     ]);
+  });
+
+  it("reclaims variable-lifetime births at later dropped-frame events and final time", () => {
+    const effect = defineParticleEffect2D({
+      emitters: [
+        {
+          name: "marks",
+          capacity: 1,
+          emission: [{ type: "rate", particlesPerSecond: 10 }],
+          shape: { type: "point" },
+          initial: { lifetimeMilliseconds: particle.between(1, 200) },
+          renderer: { type: "circle" },
+        },
+      ],
+    });
+    const compiled = compileParticleEffect2D(effect);
+    const parameters = compiled.parameterLayout.defaults;
+    const ledger = createCanvasBirthLedger(compiled);
+
+    const eventBoundary = ledger.adoptFrame(
+      { ...frame(1, 0, 200), seed: 0 },
+      1,
+      parameters,
+    );
+    expect(eventBoundary).toMatchObject({
+      accepted: 2,
+      rejected: 0,
+      liveCount: 1,
+    });
+    const records = orderedRecords(ledger.candidate.emitters[0]!);
+    expect(records).toEqual([
+      expect.objectContaining({ birth: 200, ordinal: 1 }),
+    ]);
+    expect(eventBoundary.latestDeathMilliseconds).toBe(records[0]?.death);
+    ledger.finishTransaction(true);
+
+    const finalBoundary = ledger.adoptFrame(
+      { ...frame(2, 0, 199), seed: 0 },
+      2,
+      parameters,
+    );
+    expect(finalBoundary).toMatchObject({
+      accepted: 1,
+      rejected: 0,
+      liveCount: 0,
+      latestDeathMilliseconds: null,
+    });
   });
 
   it("does not invent ordinals for disabled automatic sources while fast-forwarding", () => {

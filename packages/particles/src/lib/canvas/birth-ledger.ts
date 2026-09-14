@@ -589,6 +589,7 @@ function enumerateAutomaticBirths(
   while (true) {
     const time = nextAutomaticTime(emitter, cursor, includeZeroAtCursor);
     if (time === null || time > throughInclusive) break;
+    expire(ledger, time);
     const maximumSource = maximumSourceIndex(emitter);
     for (let source = 0; source <= maximumSource; source += 1) {
       for (const rate of emitter.emission.rates) {
@@ -834,6 +835,7 @@ export function createCanvasBirthLedger(
             spawnEpoch,
             parameters,
           );
+          expire(state, frame.effectTimeMilliseconds);
           accepted += births.accepted;
           rejected += births.rejected;
           enumeratedPotentialBirths += births.enumerated;
