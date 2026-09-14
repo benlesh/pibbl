@@ -1407,8 +1407,8 @@ Apply presentation only once:
 ```tsx
 <Group
   style={{
-    translateX: view.panX,
-    translateY: view.panY,
+    translateX: view.panX / view.zoom,
+    translateY: view.panY / view.zoom,
     scaleX: view.zoom,
     scaleY: view.zoom,
   }}
@@ -1417,6 +1417,10 @@ Apply presentation only once:
   {nodes}
 </Group>
 ```
+
+CRC composes Group scale before translation. Dividing the stored root-pixel pan
+by zoom keeps the final presentation translation equal to `panX`/`panY`;
+alternatively, an equivalent explicit matrix composition would be acceptable.
 
 Convert node drag points through the current view. Make Reset view's body an
 actual click target that calls `setView(INITIAL_VIEW)` and uses `cursor:
@@ -1602,8 +1606,26 @@ both hidden pixels and untargetable content. Link `#/api/components/clip`,
 Chapter 10 summary is `Filter one selected card as a combined silhouette without enlarging its target.`
 Teach typed descriptor order, combined subtree capture, inside-out nesting,
 `[]` capability-free behavior, and pixels-versus-geometry. The exercise changes
-the filter to `[brightness, dropShadow]`, then reverses it and predicts the
-visible difference. Link `#/api/types/filters` and
+the filter using these complete bindings:
+
+```ts
+const brightness: CRCBrightnessFilter = {
+  type: "brightness",
+  amount: 1.08,
+};
+const dropShadow: CRCDropShadowFilter = {
+  type: "dropShadow",
+  offsetX: 6,
+  offsetY: 8,
+  blurRadius: 10,
+  color: "rgb(23 33 29 / 35%)",
+};
+const selectedFilters: readonly CRCFilter[] = [brightness, dropShadow];
+```
+
+The page tells the learner to add the three public filter types to the existing
+`@crc/core` import, use `selectedFilters` for the selected branch, then reverse
+the array and predict the visible difference. Link `#/api/types/filters` and
 `#/learn/guides/style-and-draw`.
 
 - [ ] **Step 8: Run composition, source, and documentation checks**
@@ -1653,7 +1675,7 @@ git commit -m "docs(tutorial): clip cache and filter the editor"
 Add Chapter 11-12 path assertions. Render Chapter 11, call `tab()` twice to
 move from the page into Reset view and then Idea, press Enter, and assert status
 reports `SELECTED · IDEA`. Press
-`ArrowRight` and Enter and assert `SELECTED · SKETCH`. Reverse Tab and assert the
+`ArrowUp` and Enter and assert `SELECTED · SKETCH`. Reverse Tab and assert the
 focus moves back to Idea, reverse Tab again to Reset view, then reverse Tab once
 more and assert the Canvas naturally relinquishes focus at its source-order edge
 rather than wrapping.
@@ -1774,8 +1796,10 @@ changes:
 - use `crcMemo(() => createGridPath(), [])` inside `GridLayer` so expensive grid
   geometry is instance-owned and stable;
 - keep gesture refs for synchronous browser ownership, not presentation state;
-- centralize gesture termination in `finishGesture(pointerId)`, which clears the
-  ref only when the active session owns that exact pointer ID;
+- let each `NodeCard` own its node-drag ref and cursor state so unmounting the
+  target destroys its active session, while `Workspace` separately owns the pan
+  ref and pan cursor state;
+- terminate each target-local session only when it owns the exact pointer ID;
 - retain stable keys and data-driven edges;
 - set final toolbar hint to `DRAG NODES · DRAG SPACE · WHEEL TO ZOOM`;
 - set final initial selection to Sketch so the landing capture visibly

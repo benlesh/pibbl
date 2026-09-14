@@ -10,7 +10,7 @@ import {
 } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { dirname, extname, join, resolve } from "node:path";
+import { dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { transformAsync as babelTransform } from "@babel/core";
 import { parse } from "@babel/parser";
 import transformReactJsx from "@babel/plugin-transform-react-jsx";
@@ -166,6 +166,18 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/types/webgl.md",
   "docs/site/learn/index.md",
   "docs/site/learn/tutorials/diagram-editor/index.md",
+  "docs/site/learn/tutorials/diagram-editor/canvas-scene.md",
+  "docs/site/learn/tutorials/diagram-editor/first-node.md",
+  "docs/site/learn/tutorials/diagram-editor/connect-nodes.md",
+  "docs/site/learn/tutorials/diagram-editor/reusable-node.md",
+  "docs/site/learn/tutorials/diagram-editor/editor-chrome.md",
+  "docs/site/learn/tutorials/diagram-editor/selection.md",
+  "docs/site/learn/tutorials/diagram-editor/dragging.md",
+  "docs/site/learn/tutorials/diagram-editor/pan-and-zoom.md",
+  "docs/site/learn/tutorials/diagram-editor/viewport-and-layer.md",
+  "docs/site/learn/tutorials/diagram-editor/filters.md",
+  "docs/site/learn/tutorials/diagram-editor/keyboard-interaction.md",
+  "docs/site/learn/tutorials/diagram-editor/finished-editor.md",
   ...publicGuidePaths,
 ];
 const currentMarkdownPaths = [
@@ -506,8 +518,11 @@ export async function assertLocalLinks(
     const hashIndex = target.indexOf("#");
     const encodedFile = hashIndex < 0 ? target : target.slice(0, hashIndex);
     const encodedAnchor = hashIndex < 0 ? "" : target.slice(hashIndex + 1);
+    const decodedFile = encodedFile ? decodeURIComponent(encodedFile) : "";
     const localPath = encodedFile
-      ? resolve(repositoryRoot, dirname(path), decodeURIComponent(encodedFile))
+      ? decodedFile.startsWith("/")
+        ? resolvePublicAssetPath(decodedFile)
+        : resolve(repositoryRoot, dirname(path), decodedFile)
       : resolve(repositoryRoot, path);
 
     await assert.doesNotReject(
@@ -522,6 +537,25 @@ export async function assertLocalLinks(
       `Broken local anchor in ${path}: ${link[1]}`,
     );
   }
+}
+
+function resolvePublicAssetPath(decodedFile) {
+  const publicAssetRoot = resolve(repositoryRoot, "playground/public");
+  const localPath = resolve(
+    publicAssetRoot,
+    `.${decodedFile.replaceAll("\\", "/")}`,
+  );
+  const relativePath = relative(publicAssetRoot, localPath);
+  if (
+    relativePath === ".." ||
+    relativePath.startsWith(`..${sep}`) ||
+    isAbsolute(relativePath)
+  ) {
+    throw new Error(
+      `Root-relative public asset ${JSON.stringify(decodedFile)} must remain under playground/public.`,
+    );
+  }
+  return localPath;
 }
 
 function assertSnippetSyntax(path, source) {
@@ -1249,6 +1283,23 @@ assert.deepEqual(
 
 const currentSources = new Map();
 let parsedSnippetCount = 0;
+await assert.doesNotReject(
+  () =>
+    assertLocalLinks(
+      "docs/site/learn/tutorials/diagram-editor/index.md",
+      "[finished editor](/tutorials/diagram-editor/finished-editor.png)",
+  ),
+  "Studio-served root-relative public assets must resolve from playground/public.",
+);
+await assert.rejects(
+  () =>
+    assertLocalLinks(
+      "docs/site/learn/tutorials/diagram-editor/index.md",
+      "[outside public assets](/../../package.json)",
+    ),
+  /must remain under playground\/public/u,
+  "Studio-served root-relative public assets must reject traversal outside playground/public.",
+);
 for (const path of new Set(linkCheckedPaths)) {
   const source = await readFile(join(repositoryRoot, path), "utf8");
   currentSources.set(path, source);

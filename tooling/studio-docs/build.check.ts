@@ -3,10 +3,16 @@ import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
-import { learningExampleCatalog } from "@crc/scenarios";
+import {
+  learningExampleCatalog,
+  tutorialSnapshotCatalog,
+} from "@crc/scenarios";
 import { buildNavigation } from "../../playground/src/app/navigation";
 import { collectPublicExports, crcPublicEntryPaths } from "./api-exports";
-import { buildStudioDocumentation } from "./build";
+import {
+  buildStudioDocumentation,
+  toStudioDocumentationSearchInput,
+} from "./build";
 import { crcStudioDocs, studioDocumentationBuildOptions } from "./vite-plugin";
 
 const fixtureRoot = await mkdtemp(join(tmpdir(), "crc-studio-docs-build-"));
@@ -130,7 +136,7 @@ apiCategory: overview
   );
   await assert.rejects(
     () => buildStudioDocumentation(fixtureOptions),
-    /Unknown learning example/u,
+    /Unknown workbench source/u,
   );
 
   await writeFixture("docs/site/learn/guides/first-scene.md", guide);
@@ -362,6 +368,37 @@ order: ${String(order)}
     tutorialChapter("advanced-animation", "publish", 2),
   );
   const multipleTutorials = await buildStudioDocumentation(fixtureOptions);
+  const timeline =
+    multipleTutorials.pageByRoute[
+      "#/learn/tutorials/advanced-animation/timeline"
+    ];
+  const publish =
+    multipleTutorials.pageByRoute[
+      "#/learn/tutorials/advanced-animation/publish"
+    ];
+  assert.deepEqual(timeline.tutorialRelationship, {
+    rootRoute: "#/learn/tutorials/advanced-animation",
+    chapter: 1,
+    chapterCount: 2,
+    previous: {
+      route: "#/learn/tutorials/advanced-animation",
+      title: "Animate a scene",
+    },
+    next: {
+      route: "#/learn/tutorials/advanced-animation/publish",
+      title: "publish",
+    },
+  });
+  assert.deepEqual(publish.tutorialRelationship?.previous, {
+    route: "#/learn/tutorials/advanced-animation/timeline",
+    title: "timeline",
+  });
+  assert.equal(publish.tutorialRelationship?.next, undefined);
+  assert.equal(
+    multipleTutorials.pageByRoute["#/learn/tutorials/advanced-animation"]
+      .tutorialRelationship,
+    undefined,
+  );
   assert.deepEqual(
     multipleTutorials.pages
       .filter(({ frontmatter }) => frontmatter.kind === "tutorial")
@@ -384,6 +421,32 @@ order: ${String(order)}
       "#/learn/tutorials/diagram-editor",
     ],
     "Navigation must retain each tutorial root while hiding chapters beneath it.",
+  );
+  await writeFixture(
+    "docs/site/learn/tutorials/diagram-editor/first.md",
+    tutorialChapter("diagram-editor", "first", 1).replace(
+      "order: 1",
+      "order: 1\nexampleSlug: tutorial-only",
+    ),
+  );
+  const tutorialWorkbench = await buildStudioDocumentation({
+    ...fixtureOptions,
+    workbenchSources: [
+      {
+        slug: "tutorial-only",
+        source: { path: "fixtures/tutorial-only.example.tsx" },
+      },
+    ],
+  });
+  assert.deepEqual(
+    tutorialWorkbench.examples,
+    [],
+    "Tutorial workbench sources must not become public Examples.",
+  );
+  assert.deepEqual(
+    toStudioDocumentationSearchInput(tutorialWorkbench).examples,
+    [],
+    "Tutorial workbench sources must not create independent search records.",
   );
   await rm(
     join(fixtureRoot, "docs/site/learn/tutorials/advanced-animation/index.md"),
@@ -417,7 +480,102 @@ const real = await buildStudioDocumentation({
   repositoryRoot: resolve(import.meta.dirname, "../.."),
   apiInventory: await collectPublicExports(crcPublicEntryPaths, {}),
   examples: learningExampleCatalog,
+  workbenchSources: [...learningExampleCatalog, ...tutorialSnapshotCatalog],
 });
+
+const diagramEditorRootRoute = "#/learn/tutorials/diagram-editor";
+const diagramEditorOverviewTitle = "Learn the basics: Build a diagram editor";
+const diagramEditorVocabulary = [
+  [1, "canvas-scene", "Create the Canvas scene", "diagram-editor-canvas-scene"],
+  [2, "first-node", "Draw the first node", "diagram-editor-first-node"],
+  [3, "connect-nodes", "Connect two nodes", "diagram-editor-connect-nodes"],
+  [
+    4,
+    "reusable-node",
+    "Extract a reusable node component",
+    "diagram-editor-reusable-node",
+  ],
+  [
+    5,
+    "editor-chrome",
+    "Build the editor chrome",
+    "diagram-editor-editor-chrome",
+  ],
+  [6, "selection", "Select nodes with state", "diagram-editor-selection"],
+  [7, "dragging", "Drag nodes safely", "diagram-editor-dragging"],
+  [
+    8,
+    "pan-and-zoom",
+    "Pan and zoom the workspace",
+    "diagram-editor-pan-and-zoom",
+  ],
+  [
+    9,
+    "viewport-and-layer",
+    "Constrain the viewport",
+    "diagram-editor-viewport-and-layer",
+  ],
+  [10, "filters", "Polish selection with filters", "diagram-editor-filters"],
+  [
+    11,
+    "keyboard-interaction",
+    "Add keyboard interaction",
+    "diagram-editor-keyboard-interaction",
+  ],
+  [
+    12,
+    "finished-editor",
+    "Finish and harden the editor",
+    "diagram-editor-finished",
+  ],
+] as const;
+const tutorialChapterHeadings = [
+  "What you will make",
+  "How it works",
+  "Build the change",
+  "Predict and try",
+  "Check your result",
+  "What you learned",
+];
+for (const [
+  index,
+  [order, slug, title, exampleSlug],
+] of diagramEditorVocabulary.entries()) {
+  const route = `${diagramEditorRootRoute}/${slug}`;
+  const chapter = real.pageByRoute[route];
+  assert.ok(chapter, `Missing Chapter ${order} diagram-editor tutorial route.`);
+  assert.equal(chapter.frontmatter.kind, "tutorial");
+  assert.equal(chapter.frontmatter.tutorial, "diagram-editor");
+  assert.equal(chapter.frontmatter.title, title);
+  assert.equal(chapter.frontmatter.order, order);
+  assert.equal(chapter.frontmatter.exampleSlug, exampleSlug);
+  assert.deepEqual(
+    chapter.headings.filter(({ level }) => level === 2).map(({ text }) => text),
+    tutorialChapterHeadings,
+    `${chapter.sourcePath} must use the standard tutorial chapter sequence.`,
+  );
+  const previous = diagramEditorVocabulary[index - 1];
+  const next = diagramEditorVocabulary[index + 1];
+  assert.deepEqual(chapter.tutorialRelationship, {
+    rootRoute: diagramEditorRootRoute,
+    chapter: order,
+    chapterCount: diagramEditorVocabulary.length,
+    previous: previous
+      ? {
+          route: `${diagramEditorRootRoute}/${previous[1]}`,
+          title: previous[2],
+        }
+      : { route: diagramEditorRootRoute, title: diagramEditorOverviewTitle },
+    ...(next
+      ? {
+          next: {
+            route: `${diagramEditorRootRoute}/${next[1]}`,
+            title: next[2],
+          },
+        }
+      : {}),
+  });
+}
 
 assert.deepEqual(
   real.pages
@@ -451,6 +609,32 @@ assert.match(
   real.pageByRoute["#/learn/tutorials/diagram-editor"].plainText,
   /Finish and harden the editor/u,
 );
+const landing = real.pageByRoute["#/learn/tutorials/diagram-editor"];
+assert.match(landing.html, /finished-editor\.png/u);
+assert.deepEqual(
+  landing.internalLinks
+    .filter(({ href }) => href.includes("/diagram-editor/"))
+    .map(({ href }) => href),
+  [
+    "#/learn/tutorials/diagram-editor/finished-editor",
+    "#/learn/tutorials/diagram-editor/canvas-scene",
+    "#/learn/tutorials/diagram-editor/finished-editor",
+    "#/learn/tutorials/diagram-editor/canvas-scene",
+    "#/learn/tutorials/diagram-editor/first-node",
+    "#/learn/tutorials/diagram-editor/connect-nodes",
+    "#/learn/tutorials/diagram-editor/reusable-node",
+    "#/learn/tutorials/diagram-editor/editor-chrome",
+    "#/learn/tutorials/diagram-editor/selection",
+    "#/learn/tutorials/diagram-editor/dragging",
+    "#/learn/tutorials/diagram-editor/pan-and-zoom",
+    "#/learn/tutorials/diagram-editor/viewport-and-layer",
+    "#/learn/tutorials/diagram-editor/filters",
+    "#/learn/tutorials/diagram-editor/keyboard-interaction",
+    "#/learn/tutorials/diagram-editor/finished-editor",
+  ],
+);
+assert.doesNotMatch(landing.plainText, /forthcoming|not published yet/u);
+assert.equal(landing.frontmatter.exampleSlug, undefined);
 assert.match(
   real.pageByRoute["#/learn/guides/components-props-and-children"].plainText,
   /Style and draw/u,

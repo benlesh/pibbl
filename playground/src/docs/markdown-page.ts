@@ -1,13 +1,13 @@
-import { getLearningExampleBySlug } from "@crc/scenarios";
+import { getWorkbenchEntryBySlug } from "@crc/scenarios";
 
 import type { Disposable } from "../app/page-lifecycle";
-import { loadLearningSource } from "../learning-sources";
+import { loadWorkbenchSource } from "../learning-sources";
 import { readSharedCode } from "../share-code";
 import type { LoadedPublicDoc } from "../../../tooling/studio-docs/model";
 
 export type RenderablePublicDoc = Pick<
   LoadedPublicDoc,
-  "frontmatter" | "route" | "html" | "headings"
+  "frontmatter" | "route" | "html" | "headings" | "tutorialRelationship"
 >;
 
 export interface RenderMarkdownPageOptions {
@@ -74,6 +74,8 @@ export async function renderMarkdownPage(
 
   article.append(breadcrumb, header, body);
   if (workbenchHost) article.appendChild(workbenchHost);
+  const pagination = tutorialPagination(options.document);
+  if (pagination) article.appendChild(pagination);
   options.container.replaceChildren(article);
 
   if (options.anchor !== undefined) {
@@ -122,6 +124,38 @@ function breadcrumbItems(documentation: RenderablePublicDoc): readonly Node[] {
   );
 }
 
+function tutorialPagination(
+  documentation: RenderablePublicDoc,
+): HTMLElement | undefined {
+  const relationship = documentation.tutorialRelationship;
+  if (relationship === undefined) return undefined;
+
+  const pagination = document.createElement("nav");
+  pagination.className = "tutorial-pagination";
+  pagination.setAttribute("aria-label", "Tutorial chapters");
+
+  if (relationship.previous !== undefined) {
+    const previous = document.createElement("a");
+    previous.dataset.tutorialDirection = "previous";
+    previous.href = relationship.previous.route;
+    previous.textContent = `Previous: ${relationship.previous.title}`;
+    pagination.appendChild(previous);
+  }
+
+  const next = document.createElement("a");
+  next.dataset.tutorialDirection = "next";
+  if (relationship.next === undefined) {
+    next.href = relationship.rootRoute;
+    next.textContent = "Back to the tutorial overview";
+  } else {
+    next.href = relationship.next.route;
+    next.textContent = `Next: ${relationship.next.title}`;
+  }
+  pagination.appendChild(next);
+
+  return pagination;
+}
+
 async function mountLearningWorkbench(
   slug: string,
   container: HTMLElement,
@@ -129,17 +163,18 @@ async function mountLearningWorkbench(
 ): Promise<Disposable | undefined> {
   if (mountExample !== undefined) {
     container.replaceChildren();
+    const disposable = await mountExample({ container, slug });
     container.classList.remove("lesson-workbench-loading");
-    return mountExample({ container, slug });
+    return disposable;
   }
 
-  const entry = getLearningExampleBySlug(slug);
+  const entry = getWorkbenchEntryBySlug(slug);
   if (!entry) {
     container.textContent =
-      "This page references an unavailable learning example.";
+      "This page references an unavailable workbench source.";
     return undefined;
   }
-  const source = await loadLearningSource(entry);
+  const source = await loadWorkbenchSource(entry);
   const shared = readSharedCode(window.location.hash, source);
   container.replaceChildren();
   container.classList.remove("lesson-workbench-loading");

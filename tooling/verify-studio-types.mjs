@@ -550,6 +550,7 @@ import * as CRC_CORE_ROOT from '@crc/core';
 import * as CRC_WEBGL_ROOT from '@crc/webgl';
 import {
   Absolute,
+  Clip,
   computed,
   crc,
   crcCanvasContext,
@@ -579,6 +580,7 @@ import {
   isSignal,
   keyframes,
   KeyboardNavigation,
+  Layer,
   LayoutDiagnostic,
   Line,
   marker,
@@ -950,6 +952,39 @@ const eventHandlers = {
   onCopyCapture: (event: CRCClipboardEvent) => void event.clipboardData,
   onDragStart: (event: CRCDragEvent) => void event.dataTransfer,
 } satisfies CRCEventHandlers;
+
+const structuralEventProps = (
+  <>
+    <Group onWheel={eventHandlers.onWheel}>
+      <Rectangle style={{ width: 20, height: 20 }} />
+    </Group>
+    <Clip onWheelCapture={eventHandlers.onWheel} style={{ d: new Path2D() }}>
+      <Rectangle style={{ width: 20, height: 20 }} />
+    </Clip>
+    <Layer onPointerDown={eventHandlers.onPointerDown} style={{ width: 20, height: 20 }}>
+      <Rectangle style={{ width: 20, height: 20 }} />
+    </Layer>
+    <Absolute onMouseDown={eventHandlers.onMouseDown}>
+      <Rectangle style={{ width: 20, height: 20 }} />
+    </Absolute>
+    <Overlay onTouchStart={eventHandlers.onTouchStart}>
+      <Rectangle style={{ width: 20, height: 20 }} />
+    </Overlay>
+    <Flow onKeyDownCapture={eventHandlers.onKeyDownCapture}>
+      <Rectangle style={{ width: 20, height: 20 }} />
+    </Flow>
+    <Flex onFocus={eventHandlers.onFocus}>
+      <Rectangle style={{ width: 20, height: 20 }} />
+    </Flex>
+    <Grid
+      onCopyCapture={eventHandlers.onCopyCapture}
+      style={{ gridTemplateColumns: [20], gridTemplateRows: [20] }}
+    >
+      <Rectangle style={{ width: 20, height: 20 }} />
+    </Grid>
+  </>
+);
+void structuralEventProps;
 
 function EventProbe(): CRCNode {
   const snapshot: CRCEventTargetSnapshot = crcEventTarget(eventHandlers, {

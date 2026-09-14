@@ -276,9 +276,9 @@
   export interface VerticalLineProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
   export interface TextProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions { children?: CRCTextChild }
   export interface ImageProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
-  export interface GroupProps { children: CRCNode }
-  export interface ClipProps { children: CRCNode }
-  export interface LayerProps { children: CRCNode }
+  export interface GroupProps extends CRCEventHandlers { children: CRCNode }
+  export interface ClipProps extends CRCEventHandlers { children: CRCNode }
+  export interface LayerProps extends CRCEventHandlers { children: CRCNode }
 
   export interface RectanglePathOptions extends RoundedCornerPathOptions { x?: number; y?: number; width: number; height: number }
   export interface CirclePathOptions { cx?: number; cy?: number; radius: number }
@@ -294,16 +294,16 @@
   export interface SvgPathOptions { d: string }
 
   export type AbsoluteStyle = BoxStyle & LayoutItemStyle;
-  export interface AbsoluteProps { children: CRCNode }
+  export interface AbsoluteProps extends CRCEventHandlers { children: CRCNode }
   export interface OverlayStyle extends BoxStyle, LayoutItemStyle { justifyItems?: 'stretch' | 'start' | 'center' | 'end'; alignItems?: 'stretch' | 'start' | 'center' | 'end' }
-  export interface OverlayProps { children: CRCNode }
+  export interface OverlayProps extends CRCEventHandlers { children: CRCNode }
   export interface FlowStyle extends BoxStyle, LayoutItemStyle { direction?: 'horizontal' | 'vertical'; wrap?: boolean; gap?: number; lineGap?: number; alignItems?: 'start' | 'center' | 'end' | 'stretch' }
-  export interface FlowProps { children: CRCNode }
+  export interface FlowProps extends CRCEventHandlers { children: CRCNode }
   export interface FlexStyle extends BoxStyle, LayoutItemStyle { flexDirection?: 'row' | 'column'; flexWrap?: 'nowrap' | 'wrap'; justifyContent?: 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'; alignItems?: 'stretch' | 'flex-start' | 'flex-end' | 'center'; alignContent?: 'stretch' | 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'; gap?: number; rowGap?: number; columnGap?: number }
-  export interface FlexProps { children: CRCNode }
+  export interface FlexProps extends CRCEventHandlers { children: CRCNode }
   export type GridTrack = number | `${number}%` | `${number}fr`;
   export interface GridStyle extends BoxStyle, LayoutItemStyle { gridTemplateColumns: readonly GridTrack[]; gridTemplateRows: readonly GridTrack[]; justifyItems?: 'stretch' | 'start' | 'center' | 'end'; alignItems?: 'stretch' | 'start' | 'center' | 'end'; gap?: number; rowGap?: number; columnGap?: number }
-  export interface GridProps { children: CRCNode }
+  export interface GridProps extends CRCEventHandlers { children: CRCNode }
 
   export interface CanvasMeasurementService { measureText(text: string, font: string): TextMetrics }
   export type MeasureResult = { status: 'measured'; size: Readonly<Size> } | { status: 'unsupported'; reason: string };

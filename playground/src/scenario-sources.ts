@@ -4,6 +4,7 @@ const rawSourceModules = import.meta.glob(
   [
     '../../packages/scenarios/src/**/*.example.tsx',
     '!../../packages/scenarios/src/learning/**/*.example.tsx',
+    '!../../packages/scenarios/src/tutorials/**/*.example.tsx',
   ],
   {
     eager: true,

@@ -1,16 +1,36 @@
 import { describe, expect, it } from "vitest";
+import { tutorialSnapshotCatalog } from "@crc/scenarios";
 import {
   encodeCodeRoute,
   MAX_SHARED_URL_LENGTH,
   readSharedCode,
   replaceCodeRoute,
 } from "../../../playground/src/share-code";
+import { loadWorkbenchSource } from "../../../playground/src/learning-sources";
 import { toRunnableScript } from "../../../playground/src/sandbox-module";
 
 const route = "#/examples/drawing/rectangle";
 const canonical = "export default function mount() {}\n";
 
 describe("learning example share URLs", () => {
+  it("round-trips a small edit for every diagram-editor chapter", async () => {
+    for (const entry of tutorialSnapshotCatalog) {
+      const canonical = await loadWorkbenchSource(entry);
+      const route = `#/learn/tutorials/diagram-editor/${entry.source.path
+        .split("/")
+        .at(-1)!
+        .replace(/^\d{2}-/u, "")
+        .replace(".example.tsx", "")}`;
+      const edited = canonical.replace("WORKFLOW MAP", "MY WORKFLOW");
+      const encoded = encodeCodeRoute(route, edited, canonical);
+
+      expect(encoded.tooLong).toBe(false);
+      expect(readSharedCode(new URL(encoded.url).hash, canonical)).toEqual({
+        code: edited,
+      });
+    }
+  });
+
   it("round-trips Unicode source and cleans canonical routes", () => {
     const edited = `${canonical}// こんにちは — 🟨\n`;
     const encoded = encodeCodeRoute(route, edited, canonical);
@@ -226,16 +246,14 @@ export default function mount(canvas) {
   });
 
   it.each([
-    'export { crc };',
+    "export { crc };",
     'export * from "@crc/core";',
-    'export const extra = 1;',
-    'export default canvas => canvas;',
-    'export default function mount(canvas) { return canvas; }\nexport {};\nexport {};',
+    "export const extra = 1;",
+    "export default canvas => canvas;",
+    "export default function mount(canvas) { return canvas; }\nexport {};\nexport {};",
   ])("rejects malformed or extra exports: %s", (exportSource) => {
     expect(() =>
-      toRunnableScript(
-        `import { crc } from "@crc/core";\n${exportSource}`,
-      ),
+      toRunnableScript(`import { crc } from "@crc/core";\n${exportSource}`),
     ).toThrow(/default mount\(canvas\)/u);
   });
 
@@ -275,7 +293,9 @@ export default function mount(canvas /* retained comment */) {
 `;
     const runnable = toRunnableScript(emittedCode);
 
-    expect(runnable).toContain('// import external from "external"; export const nope = true;');
+    expect(runnable).toContain(
+      '// import external from "external"; export const nope = true;',
+    );
     expect(runnable).toContain('"import this; export {};"');
     expect(runnable).toContain(
       '`dynamic import("external") and export default`',

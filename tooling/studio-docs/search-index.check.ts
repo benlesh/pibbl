@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import MiniSearch from "minisearch";
 import { resolve } from "node:path";
+import {
+  learningExampleCatalog,
+  tutorialSnapshotCatalog,
+} from "@crc/scenarios";
 
 import { buildStudioDocumentation } from "./build";
 import {
@@ -166,9 +170,7 @@ assert.equal(
   "A type symbol must prefer its owned heading over its type-domain root.",
 );
 assert.equal(
-  first.searchRecords.some(
-    ({ id }) => id === "api-types-filters#filter-types",
-  ),
+  first.searchRecords.some(({ id }) => id === "api-types-filters#filter-types"),
   false,
   "A page root and its H1 section must not create duplicate destinations.",
 );
@@ -208,6 +210,8 @@ for (const [query, options] of [
 
 const realDocumentation = await buildStudioDocumentation({
   repositoryRoot: resolve(import.meta.dirname, "../.."),
+  examples: learningExampleCatalog,
+  workbenchSources: [...learningExampleCatalog, ...tutorialSnapshotCatalog],
 });
 const realBundle = buildSearchBundle({
   pages: realDocumentation.pages,
@@ -248,6 +252,41 @@ assert.equal(
   "#/api/types/events#crcpointerevent",
   "The public CRCPointerEvent type must resolve directly to its anchor.",
 );
+assert.equal(
+  searchSearchBundle(realBundle, "pointer capture diagram editor").some(
+    ({ url }) => url === "#/learn/tutorials/diagram-editor/dragging",
+  ),
+  true,
+  "The pointer-capture diagram-editor query must return Chapter 7.",
+);
+const tutorialPages = realDocumentation.pages.filter(
+  ({ frontmatter }) =>
+    frontmatter.kind === "tutorial" &&
+    frontmatter.tutorial === "diagram-editor" &&
+    frontmatter.order !== undefined,
+);
+assert.equal(
+  tutorialPages.length,
+  12,
+  "All twelve tutorial chapters must publish.",
+);
+for (const chapter of tutorialPages) {
+  const chapterRecords = realBundle.searchRecords.filter(
+    ({ url }) => url === chapter.route || url.startsWith(`${chapter.route}#`),
+  );
+  assert.equal(
+    chapterRecords.length,
+    7,
+    `${chapter.route} must publish one root and six H2 Learn records.`,
+  );
+}
+for (const { slug } of tutorialSnapshotCatalog) {
+  assert.equal(
+    realBundle.searchRecords.some(({ id }) => id === `example:${slug}`),
+    false,
+    "Tutorial snapshots must not become independent Examples search records.",
+  );
+}
 
 process.stdout.write(
   "Validated deterministic public MiniSearch records and ranking.\n",

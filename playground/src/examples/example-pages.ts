@@ -15,7 +15,7 @@ import {
 } from "@crc/scenarios";
 
 import type { PageLifecycle } from "../app/page-lifecycle";
-import { loadLearningSource } from "../learning-sources";
+import { loadWorkbenchSource } from "../learning-sources";
 import { readSharedCode } from "../share-code";
 
 export interface ExamplePagesOptions {
@@ -198,7 +198,7 @@ export function createExamplePages(options: ExamplePagesOptions): ExamplePages {
       options.finishRoute(entry.title);
 
       const [source, editorModule] = await Promise.all([
-        loadLearningSource(entry),
+        loadWorkbenchSource(entry),
         import("../editor-workbench"),
       ]);
       if (!options.lifecycle.isCurrent(version)) return;
