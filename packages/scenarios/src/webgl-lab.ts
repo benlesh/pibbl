@@ -1,8 +1,5 @@
 import { crc, type CRCController } from '@crc/core';
-import type {
-  CRCWebGLContext,
-  CRCWebGLPerspectiveCamera,
-} from '@crc/webgl';
+import type { CRCWebGLPerspectiveCamera } from '@crc/webgl';
 import {
   createWebGLLabScene,
   WEBGL_LAB_SOURCE_ID,
@@ -29,13 +26,13 @@ export { WEBGL_LAB_PROBES } from './webgl-lab.example';
 export const WEBGL_LAB_ACTION_IDS = [
   'show-mixed-order',
   'show-depth',
+  'show-transparency',
   'show-transforms',
   'show-clipped',
   'show-layered',
   'show-filtered',
   'show-focus',
   'show-animation',
-  'restore-context',
   'change-camera',
   'rotate-scene',
   'toggle-pointer-events',
@@ -48,13 +45,13 @@ export type WebGLLabAction = (typeof WEBGL_LAB_ACTION_IDS)[number];
 const MODE_ACTIONS: Readonly<Partial<Record<WebGLLabAction, WebGLLabMode>>> = {
   'show-mixed-order': 'mixed-order',
   'show-depth': 'depth',
+  'show-transparency': 'transparency',
   'show-transforms': 'transforms',
   'show-clipped': 'clipped',
   'show-layered': 'layered',
   'show-filtered': 'filtered',
   'show-focus': 'focus',
   'show-animation': 'animation',
-  'restore-context': 'context-restored',
 };
 
 function initialState(): WebGLLabState {
@@ -66,7 +63,7 @@ function initialState(): WebGLLabState {
     sphereSelections: 0,
     animationAngle: 0,
     focusTarget: 'none',
-    contextGeneration: 0,
+    transparencyOrder: 'near-first source → far-to-near blend',
   };
 }
 
@@ -87,7 +84,6 @@ async function mountWebGLLab(
   let rotationDegrees = 0;
   let pointerEvents: 'auto' | 'none' = 'auto';
   let starFirst = false;
-  let latestContext: CRCWebGLContext | undefined;
   let pending = Promise.resolve();
 
   const assertActive = () => {
@@ -121,15 +117,6 @@ async function mountWebGLLab(
   const recordSphereSelection = () => recordSelection('sphere');
   const recordCubeFocus = () => recordFocus('cube');
   const recordSphereFocus = () => recordFocus('sphere');
-  const recordContext = (webglContext: CRCWebGLContext) => {
-    latestContext = webglContext;
-    if (state.contextGeneration === webglContext.contextGeneration) return;
-    state = {
-      ...state,
-      contextGeneration: webglContext.contextGeneration,
-    };
-    publish();
-  };
   const render = () => {
     assertActive();
     runtime = crc(
@@ -147,7 +134,6 @@ async function mountWebGLLab(
         onSphereFocus: recordSphereFocus,
         onCubeTarget: recordCubeTarget,
         onSphereTarget: recordSphereTarget,
-        onContext: recordContext,
       }),
       { signal: abortController.signal, pixelRatio: 1 },
     );
@@ -155,25 +141,6 @@ async function mountWebGLLab(
     pending = settledFrames();
     return pending;
   };
-  const restoreContext = async () => {
-    const webglContext = latestContext;
-    if (!webglContext) {
-      throw new Error('The WebGL laboratory has no committed context.');
-    }
-    const surface = webglContext.gl.canvas;
-    const lossAccepted = surface.dispatchEvent(
-      new Event('webglcontextlost', { cancelable: true }),
-    );
-    if (lossAccepted) {
-      throw new Error(
-        'The WebGL laboratory context-loss event was not canceled by its owner.',
-      );
-    }
-    surface.dispatchEvent(new Event('webglcontextrestored'));
-    pending = settledFrames();
-    await pending;
-  };
-
   await render();
 
   return {
@@ -219,7 +186,6 @@ async function mountWebGLLab(
         starFirst = !starFirst;
       }
       await render();
-      if (action === 'restore-context') await restoreContext();
     },
     reset: async () => {
       assertActive();
@@ -258,6 +224,6 @@ export const webglLabScenario: ScenarioDefinition<WebGLLabState> = {
     { label: 'Sphere selections', value: String(state.sphereSelections) },
     { label: 'Animation angle', value: `${state.animationAngle}°` },
     { label: 'Focus target', value: state.focusTarget },
-    { label: 'Context generation', value: String(state.contextGeneration) },
+    { label: 'Transparency order', value: state.transparencyOrder },
   ],
 };

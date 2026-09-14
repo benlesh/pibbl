@@ -89,6 +89,18 @@ function pixelAt(
   return [...context.getImageData(x, y, 1, 1).data];
 }
 
+function expectPixelClose(
+  actual: readonly number[],
+  expected: readonly [number, number, number, number],
+): void {
+  expect(actual).toHaveLength(4);
+  for (let channel = 0; channel < expected.length; channel += 1) {
+    expect(Math.abs(actual[channel]! - expected[channel]!)).toBeLessThanOrEqual(
+      2,
+    );
+  }
+}
+
 afterEach(async () => {
   for (const controller of activeControllers) await controller.dispose();
   activeControllers.clear();
@@ -140,6 +152,15 @@ describe('public WebGL island scenarios', () => {
       metadata: {
         id: 'webgl-islands',
         slug: 'webgl-islands',
+        summary:
+          'Prove settled transparency, Canvas/WebGL composition, depth picking, transforms, clips, layers, filters, focus, and animation.',
+        apiTags: ['WebGLLayer', 'Group3D', 'Mesh', 'Cube', 'Sphere'],
+        conceptTags: [
+          'settled transparency',
+          'depth picking',
+          'declarative scene composition',
+          'Canvas paint order',
+        ],
       },
       canvas: { width: 480, height: 300 },
       source: {
@@ -155,13 +176,13 @@ describe('public WebGL island scenarios', () => {
     expect(WEBGL_LAB_ACTION_IDS).toEqual([
       'show-mixed-order',
       'show-depth',
+      'show-transparency',
       'show-transforms',
       'show-clipped',
       'show-layered',
       'show-filtered',
       'show-focus',
       'show-animation',
-      'restore-context',
       'change-camera',
       'rotate-scene',
       'toggle-pointer-events',
@@ -179,7 +200,7 @@ describe('public WebGL island scenarios', () => {
       sphereSelections: 5,
       animationAngle: 30,
       focusTarget: 'sphere',
-      contextGeneration: 2,
+      transparencyOrder: 'near-first source → far-to-near blend',
     })).toEqual([
       { label: 'Mode', value: 'mixed-order' },
       { label: 'Revision', value: '3' },
@@ -188,7 +209,10 @@ describe('public WebGL island scenarios', () => {
       { label: 'Sphere selections', value: '5' },
       { label: 'Animation angle', value: '30°' },
       { label: 'Focus target', value: 'sphere' },
-      { label: 'Context generation', value: '2' },
+      {
+        label: 'Transparency order',
+        value: 'near-first source → far-to-near blend',
+      },
     ]);
   });
 
@@ -212,7 +236,7 @@ describe('public WebGL island scenarios', () => {
       sphereSelections: 0,
       animationAngle: 0,
       focusTarget: 'none',
-      contextGeneration: 1,
+      transparencyOrder: 'near-first source → far-to-near blend',
     });
 
     await clickLogicalPoint(canvas, WEBGL_LAB_PROBES.lowerCanvas);
@@ -244,6 +268,49 @@ describe('public WebGL island scenarios', () => {
     await controller.perform('toggle-pointer-events');
     await clickLogicalPoint(canvas, WEBGL_LAB_PROBES.cube);
     expect(controller.getState().lastTarget).toBe('lower-canvas');
+  });
+
+  it('settles near-first transparent source into a far-to-near blend', async () => {
+    const { canvas, controller } = await mountWebGLLab();
+
+    await controller.perform('show-transparency');
+    expect(controller.getState()).toMatchObject({
+      mode: 'transparency',
+      revision: 1,
+      transparencyOrder: 'near-first source → far-to-near blend',
+    });
+
+    expectPixelClose(
+      pixelAt(
+        canvas,
+        WEBGL_LAB_PROBES.transparencyFarOnly.x,
+        WEBGL_LAB_PROBES.transparencyFarOnly.y,
+      ),
+      [127, 216, 174, 255],
+    );
+    expectPixelClose(
+      pixelAt(
+        canvas,
+        WEBGL_LAB_PROBES.transparencyOverlap.x,
+        WEBGL_LAB_PROBES.transparencyOverlap.y,
+      ),
+      [183, 142, 121, 255],
+    );
+    expectPixelClose(
+      pixelAt(
+        canvas,
+        WEBGL_LAB_PROBES.transparencyNearOnly.x,
+        WEBGL_LAB_PROBES.transparencyNearOnly.y,
+      ),
+      [229, 151, 161, 255],
+    );
+
+    // Immediate near-first drawing with depth writes would omit the far mesh.
+    expect(pixelAt(
+      canvas,
+      WEBGL_LAB_PROBES.transparencyOverlap.x,
+      WEBGL_LAB_PROBES.transparencyOverlap.y,
+    )).not.toEqual([229, 151, 161, 255]);
   });
 
   it('keeps depth, transforms, clips, Layer bridges, and filter overflow geometric', async () => {
@@ -316,9 +383,8 @@ describe('public WebGL island scenarios', () => {
     });
   });
 
-  it('changes camera, rotation, animation angle, and context generation deterministically', async () => {
+  it('changes camera, rotation, and animation angle deterministically', async () => {
     const { canvas, controller } = await mountWebGLLab();
-    const initialGeneration = controller.getState().contextGeneration;
     await clickLogicalPoint(canvas, WEBGL_LAB_PROBES.cameraOuterCube);
     expect(controller.getState()).toMatchObject({
       lastTarget: 'cube',
@@ -354,17 +420,6 @@ describe('public WebGL island scenarios', () => {
     });
     expect(pixelSignature(canvas)).not.toBe(initialAnimationPixels);
 
-    await controller.perform('restore-context');
-    expect(controller.getState()).toMatchObject({
-      mode: 'context-restored',
-      revision: 6,
-      contextGeneration: initialGeneration + 1,
-    });
-    await clickLogicalPoint(canvas, WEBGL_LAB_PROBES.cube);
-    expect(controller.getState()).toMatchObject({
-      lastTarget: 'cube',
-      cubeSelections: 2,
-    });
   });
 
   it('uses one animation timestamp for the committed pixels and pick transform', async () => {

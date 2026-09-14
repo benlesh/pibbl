@@ -480,17 +480,9 @@ if (publicTypeExports.length !== 175) {
 }
 
 const publicWebGLTypeExports = [
-  'CRCWebGLCameraSnapshot',
-  'CRCWebGLContext',
   'CRCWebGLGeometry',
   'CRCWebGLGeometryInput',
-  'CRCWebGLHitCapability',
   'CRCWebGLPerspectiveCamera',
-  'CRCWebGLPrimitiveCapabilities',
-  'CRCWebGLPrimitiveHitInput',
-  'CRCWebGLPrimitiveInput',
-  'CRCWebGLPrimitiveRender',
-  'CRCWebGLProgramProps',
   'CRCWebGLTransformStyle',
   'CRCWebGLVector3',
   'CubeProps',
@@ -505,8 +497,8 @@ const publicWebGLTypeExports = [
   'WebGLLayerStyle',
 ].sort();
 
-if (publicWebGLTypeExports.length !== 23) {
-  throw new Error(`CRC Studio must declare exactly 23 WebGL public types, received ${publicWebGLTypeExports.length}.`);
+if (publicWebGLTypeExports.length !== 15) {
+  throw new Error(`CRC Studio must declare exactly 15 WebGL public types, received ${publicWebGLTypeExports.length}.`);
 }
 
 function explicitTypeExportNames(source) {
@@ -666,21 +658,13 @@ import { jsx, jsxs } from '@crc/core/jsx-runtime';
 import { jsxDEV } from '@crc/core/jsx-dev-runtime';
 import {
   crcAnimationFrame,
-  crcWebGLContext,
   createWebGLGeometry,
   Cube,
-  defineWebGLPrimitive,
   Group3D,
   Mesh,
   Sphere,
   WebGLLayer,
-  type CRCWebGLContext,
   type CRCWebGLPerspectiveCamera,
-  type CRCWebGLPrimitiveCapabilities,
-  type CRCWebGLPrimitiveHitInput,
-  type CRCWebGLPrimitiveInput,
-  type CRCWebGLPrimitiveRender,
-  type CRCWebGLProgramProps,
   type CubeProps,
   type CubeStyle,
   type Group3DProps,
@@ -816,14 +800,10 @@ const filteredCube = <Cube style={{ filter: { type: 'blur', radius: 2 } }} />;
 void filteredCube;
 void CRC_WEBGL_ROOT.crcAnimationFrame;
 void crcAnimationFrame;
-void crcWebGLContext;
 type StudioWebGLTypes = [
-  CRCWebGLContext,
-  CRCWebGLPrimitiveCapabilities<{}, CubeStyle, CubeStyle, CubeStyle>,
-  CRCWebGLPrimitiveHitInput<CubeProps, CubeStyle>,
-  CRCWebGLPrimitiveInput<CubeProps, CubeStyle, { readonly kind: 'none' }>,
-  CRCWebGLPrimitiveRender<CubeProps, CubeStyle>,
-  CRCWebGLProgramProps<CubeProps, { readonly kind: 'none' }>,
+  CRCWebGLPerspectiveCamera,
+  CubeProps,
+  CubeStyle,
   Group3DProps,
   Group3DStyle,
   MeshProps,
@@ -834,11 +814,6 @@ type StudioWebGLTypes = [
   WebGLLayerStyle,
 ];
 void (null as unknown as StudioWebGLTypes);
-const StudioWebGLPrimitive = defineWebGLPrimitive<{}, SystemStyle>(
-  () => undefined,
-  { hit: { kind: 'none' } },
-);
-createElement(StudioWebGLPrimitive, { style: {} });
 
 const fragmentResult: CRCNode = Fragment({ children: false });
 void fragmentResult;
@@ -1557,7 +1532,6 @@ try {
     'crcSvgPath',
     'crcTransition',
     'crcWhenChanged',
-    'crcWebGLContext',
     'createArcPath',
     'createCirclePath',
     'createElement',
@@ -1571,7 +1545,6 @@ try {
     'createWedgePath',
     'createWebGLGeometry',
     'definePrimitive',
-    'defineWebGLPrimitive',
     'defineAnimation',
     'easing',
     'isSignal',
@@ -1596,8 +1569,8 @@ try {
     'untracked',
     'wait',
   ].sort();
-  if (expectedStudioRuntimeExports.length !== 89) {
-    throw new Error(`CRC Studio runtime must expose 77 core values, 9 WebGL values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`);
+  if (expectedStudioRuntimeExports.length !== 87) {
+    throw new Error(`CRC Studio runtime must expose 77 core values, 7 WebGL values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`);
   }
   if (sourceRuntimeExports.join('\n') !== expectedStudioRuntimeExports.join('\n')) {
     throw new Error(
@@ -1608,7 +1581,7 @@ try {
     throw new Error('CRC Studio source and built runtime surfaces differ.');
   }
   process.stdout.write(
-    'CRC Studio declarations passed exact export-name parity, 198-type structural ' +
+    'CRC Studio declarations passed exact export-name parity, 190-type structural ' +
     'coverage, selected signature parity, strict TSX, compiler-runtime, event-family, ' +
     'generic, and layout checks against source and built packages.\n',
   );

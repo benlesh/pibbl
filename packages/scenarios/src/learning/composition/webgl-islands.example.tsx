@@ -69,7 +69,7 @@ function WebGLIslandLesson() {
           font: '15px Arial',
         }}
       >
-        Canvas below · WebGL in the middle · Canvas text above
+        Children compose one scene · renderer runs after composition
       </Text>
       <Text
         pointerEvents="none"

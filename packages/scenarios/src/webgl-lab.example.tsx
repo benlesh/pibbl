@@ -12,10 +12,10 @@ import {
 import {
   Cube,
   Group3D,
+  Mesh,
   Sphere,
   WebGLLayer,
-  defineWebGLPrimitive,
-  type CRCWebGLContext,
+  createWebGLGeometry,
   type CRCWebGLPerspectiveCamera,
 } from '@crc/webgl';
 
@@ -24,13 +24,13 @@ export const WEBGL_LAB_SOURCE_ID = 'webgl-islands-laboratory-example';
 export type WebGLLabMode =
   | 'mixed-order'
   | 'depth'
+  | 'transparency'
   | 'transforms'
   | 'clipped'
   | 'layered'
   | 'filtered'
   | 'focus'
-  | 'animation'
-  | 'context-restored';
+  | 'animation';
 
 export type WebGLLabTarget =
   | 'lower-canvas'
@@ -48,7 +48,7 @@ export interface WebGLLabState {
   sphereSelections: number;
   animationAngle: number;
   focusTarget: WebGLLabFocusTarget;
-  contextGeneration: number;
+  transparencyOrder: 'near-first source → far-to-near blend';
 }
 
 export interface WebGLLabPoint {
@@ -64,6 +64,9 @@ export const WEBGL_LAB_PROBES = {
   upperStar: { x: 183, y: 150 },
   sphere: { x: 292, y: 150 },
   overlappingSphere: { x: 240, y: 150 },
+  transparencyFarOnly: { x: 170, y: 150 },
+  transparencyOverlap: { x: 240, y: 150 },
+  transparencyNearOnly: { x: 320, y: 150 },
   transformedCube: { x: 235, y: 128 },
   clippedVisible: { x: 210, y: 150 },
   clippedAway: { x: 292, y: 150 },
@@ -87,19 +90,17 @@ interface WebGLLabSceneProps {
   readonly onSphereFocus: () => void;
   readonly onCubeTarget: () => void;
   readonly onSphereTarget: () => void;
-  readonly onContext: (context: CRCWebGLContext) => void;
 }
 
-interface ContextReporterProps {
-  readonly onContext: (context: CRCWebGLContext) => void;
-}
-
-const ContextReporter = defineWebGLPrimitive<ContextReporterProps, {}>(
-  function renderContextReporter(props, _style, context) {
-    props.onContext(context);
-  },
-  { hit: { kind: 'none' } },
-);
+const transparencyGeometry = createWebGLGeometry({
+  positions: [
+    -1, -1, 0,
+    1, -1, 0,
+    1, 1, 0,
+    -1, 1, 0,
+  ],
+  indices: [0, 1, 2, 0, 2, 3],
+});
 
 function rectanglePath(
   x: number,
@@ -138,10 +139,6 @@ function standardObjects(props: WebGLLabSceneProps): CRCNode {
         onClick={props.onSphereSelection}
         onFocus={props.onSphereFocus}
         onTouchStart={props.onSphereTarget}
-      />
-      <ContextReporter
-        pointerEvents="none"
-        onContext={props.onContext}
       />
     </>
   );
@@ -192,9 +189,28 @@ function modeContent(props: WebGLLabSceneProps): CRCNode {
             style={{ size: 1.1, color: '#8b5cf6' }}
             onClick={props.onCubeSelection}
           />
-          <ContextReporter
+        </>,
+      );
+    case 'transparency':
+      return island(
+        props,
+        <>
+          <Mesh
+            geometry={transparencyGeometry}
             pointerEvents="none"
-            onContext={props.onContext}
+            style={{
+              translateX: 0.35,
+              translateZ: 1,
+              color: 'rgb(239 68 68 / 50%)',
+            }}
+          />
+          <Mesh
+            geometry={transparencyGeometry}
+            pointerEvents="none"
+            style={{
+              translateX: -0.35,
+              color: 'rgb(34 197 94 / 50%)',
+            }}
           />
         </>,
       );
@@ -214,10 +230,6 @@ function modeContent(props: WebGLLabSceneProps): CRCNode {
               onClick={props.onCubeSelection}
             />
           </Group3D>
-          <ContextReporter
-            pointerEvents="none"
-            onContext={props.onContext}
-          />
         </>,
       );
     case 'clipped':
@@ -240,10 +252,6 @@ function modeContent(props: WebGLLabSceneProps): CRCNode {
                 <Sphere
                   style={{ radius: 0.55, translateX: 1, color: '#fbbf24' }}
                   onClick={props.onSphereSelection}
-                />
-                <ContextReporter
-                  pointerEvents="none"
-                  onContext={props.onContext}
                 />
               </>,
               false,
@@ -270,7 +278,6 @@ function modeContent(props: WebGLLabSceneProps): CRCNode {
       );
     case 'mixed-order':
     case 'focus':
-    case 'context-restored':
       return island(props, standardObjects(props));
   }
 }
@@ -326,7 +333,7 @@ export function createWebGLLabScene(props: WebGLLabSceneProps): CRCNode {
           pointerEvents="none"
           style={{ x: 14, y: 292, fill: '#334155', font: '11px monospace' }}
         >
-          {`cube ${props.state.cubeSelections} · sphere ${props.state.sphereSelections} · generation ${props.state.contextGeneration}`}
+          {`cube ${props.state.cubeSelections} · sphere ${props.state.sphereSelections} · generation ${props.state.revision}`}
         </Text>
       </Group>
     </FocusManagement>

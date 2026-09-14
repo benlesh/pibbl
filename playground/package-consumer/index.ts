@@ -121,6 +121,8 @@ import type {
   WritableSignal,
 } from '@crc/core';
 import type * as CoreTypes from '@crc/core/types';
+import * as WebGLRuntime from '@crc/webgl';
+import type * as WebGLTypes from '@crc/webgl';
 import {
   createBackendToken,
   defineBackendPrimitive,
@@ -229,25 +231,15 @@ import {
 } from '@crc/core';
 import {
   crcAnimationFrame,
-  crcWebGLContext,
   createWebGLGeometry,
   Cube,
-  defineWebGLPrimitive,
   Group3D,
   Mesh,
   Sphere,
   WebGLLayer,
-  type CRCWebGLCameraSnapshot,
-  type CRCWebGLContext,
   type CRCWebGLGeometry,
   type CRCWebGLGeometryInput,
-  type CRCWebGLHitCapability,
   type CRCWebGLPerspectiveCamera,
-  type CRCWebGLPrimitiveCapabilities,
-  type CRCWebGLPrimitiveHitInput,
-  type CRCWebGLPrimitiveInput,
-  type CRCWebGLPrimitiveRender,
-  type CRCWebGLProgramProps,
   type CRCWebGLTransformStyle,
   type CRCWebGLVector3,
   type CubeProps,
@@ -261,6 +253,40 @@ import {
   type WebGLLayerProps,
   type WebGLLayerStyle,
 } from '@crc/webgl';
+
+// @ts-expect-error traversal-time raw GL construction is not public
+void WebGLRuntime.defineWebGLPrimitive;
+// @ts-expect-error traversal-time raw GL context access is not public
+void WebGLRuntime.crcWebGLContext;
+
+// @ts-expect-error resolved camera matrices are package-private
+type RemovedCameraSnapshot = WebGLTypes.CRCWebGLCameraSnapshot;
+// @ts-expect-error traversal-time raw GL context is not public
+type RemovedContext = WebGLTypes.CRCWebGLContext;
+// @ts-expect-error raw primitive hit capability is not public
+type RemovedHitCapability = WebGLTypes.CRCWebGLHitCapability<unknown, unknown>;
+// @ts-expect-error raw primitive capabilities are not public
+type RemovedCapabilities = WebGLTypes.CRCWebGLPrimitiveCapabilities<
+  unknown,
+  never,
+  never,
+  never
+>;
+// @ts-expect-error custom analytic hit input is not public
+type RemovedHitInput = WebGLTypes.CRCWebGLPrimitiveHitInput<unknown, unknown>;
+// @ts-expect-error backend primitive input is not public
+type RemovedPrimitiveInput = WebGLTypes.CRCWebGLPrimitiveInput<
+  unknown,
+  never,
+  never
+>;
+// @ts-expect-error raw primitive render callback is not public
+type RemovedPrimitiveRender = WebGLTypes.CRCWebGLPrimitiveRender<
+  unknown,
+  unknown
+>;
+// @ts-expect-error raw backend program props are not public
+type RemovedProgramProps = WebGLTypes.CRCWebGLProgramProps<unknown, never>;
 
 // @ts-expect-error internal library modules are outside the public export map
 import type { CRCEventRoot } from '@crc/core/lib/types';
@@ -1354,35 +1380,17 @@ const consumerWebGLCamera: CRCWebGLPerspectiveCamera = {
   far: 100,
 };
 
-const GeometryConsumerPrimitive = defineWebGLPrimitive<
-  {},
-  CRCWebGLTransformStyle
->(
-  (_props, _style, context) => {
-    const publicContext: CRCWebGLContext = crcWebGLContext();
-    const timestamp: number = crcAnimationFrame();
-    void [context, publicContext, timestamp];
-  },
-  {
-    hit: {
-      kind: 'geometry',
-      geometry: () => consumerWebGLGeometry,
+function AnimatedGeometryConsumer(): CRCNode {
+  const timestamp: number = crcAnimationFrame();
+  return createElement(Mesh, {
+    geometry: consumerWebGLGeometry,
+    pointerEvents: 'none',
+    style: {
+      color: '#f7c948',
+      rotationYDegrees: timestamp / 10,
     },
-  },
-);
-const CustomHitConsumerPrimitive = defineWebGLPrimitive<
-  { id: string },
-  CRCWebGLTransformStyle
->(() => undefined, {
-  hit: {
-    kind: 'custom',
-    resolve: input => input.props.id === 'hit' ? 0 : null,
-  },
-});
-const DecorativeConsumerPrimitive = defineWebGLPrimitive<
-  {},
-  CRCWebGLTransformStyle
->(() => undefined, { hit: { kind: 'none' } });
+  });
+}
 
 export const createElementWebGLScene = createElement(
   WebGLLayer,
@@ -1396,12 +1404,7 @@ export const createElementWebGLScene = createElement(
           geometry: consumerWebGLGeometry,
           style: { color: '#f7c948' },
         }),
-        createElement(GeometryConsumerPrimitive, { style: {} }),
-        createElement(CustomHitConsumerPrimitive, { id: 'hit', style: {} }),
-        createElement(DecorativeConsumerPrimitive, {
-          pointerEvents: 'none',
-          style: {},
-        }),
+        createElement(AnimatedGeometryConsumer, {}),
       ],
       style: { rotationYDegrees: 15 },
     }),
@@ -1413,26 +1416,9 @@ export const createElementWebGLScene = createElement(
 createElement(Cube, { style: { filter: { type: 'blur', radius: 2 } } });
 
 type PublicWebGLTypes = [
-  CRCWebGLCameraSnapshot,
-  CRCWebGLContext,
   CRCWebGLGeometry,
   CRCWebGLGeometryInput,
-  CRCWebGLHitCapability<{}, CRCWebGLTransformStyle>,
   CRCWebGLPerspectiveCamera,
-  CRCWebGLPrimitiveCapabilities<
-    {},
-    CRCWebGLTransformStyle,
-    CRCWebGLTransformStyle,
-    CRCWebGLTransformStyle
-  >,
-  CRCWebGLPrimitiveHitInput<{}, CRCWebGLTransformStyle>,
-  CRCWebGLPrimitiveInput<
-    {},
-    CRCWebGLTransformStyle,
-    { readonly kind: 'none' }
-  >,
-  CRCWebGLPrimitiveRender<{}, CRCWebGLTransformStyle>,
-  CRCWebGLProgramProps<{}, { readonly kind: 'none' }>,
   CRCWebGLTransformStyle,
   CRCWebGLVector3,
   CubeProps,

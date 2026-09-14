@@ -41,7 +41,7 @@ assert.throws(
         },
       },
     ]),
-  /Undocumented public exports: CRCWebGLContext, WebGLLayer/u,
+  /Undocumented public exports: CRCWebGLPerspectiveCamera, WebGLLayer/u,
 );
 
 await assert.rejects(
@@ -108,8 +108,8 @@ assert.deepEqual(coverage.missingTypes, []);
 const crcInventory = await collectPublicExports(crcPublicEntryPaths, {});
 assert.ok(crcInventory.root.values.length > 0);
 assert.ok(crcInventory.root.types.length > 0);
-assert.equal(crcInventory.webgl.values.length, 9);
-assert.equal(crcInventory.webgl.types.length, 23);
+assert.equal(crcInventory.webgl.values.length, 7);
+assert.equal(crcInventory.webgl.types.length, 15);
 
 process.stdout.write(
   `Validated public API coverage: ${crcInventory.root.values.length} core values, ` +
