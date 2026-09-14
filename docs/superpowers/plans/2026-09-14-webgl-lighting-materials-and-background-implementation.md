@@ -122,6 +122,7 @@ git commit -m "feat(webgl): add immutable geometry normals"
 - Create: `packages/webgl/src/lib/components/style-values.ts`
 - Create: `packages/webgl/src/lib/components/material.ts`
 - Create: `packages/webgl/src/lib/components/material.test.ts`
+- Modify: `packages/webgl/src/lib/types.ts`
 - Modify: `packages/webgl/src/lib/components/mesh.ts`
 - Modify: `packages/webgl/src/lib/components/mesh.test.tsx`
 - Modify: `packages/webgl/src/lib/components/webgl-layer.test.tsx`
