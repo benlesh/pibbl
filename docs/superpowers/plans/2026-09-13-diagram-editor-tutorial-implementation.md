@@ -1675,7 +1675,7 @@ git commit -m "docs(tutorial): clip cache and filter the editor"
 Add Chapter 11-12 path assertions. Render Chapter 11, call `tab()` twice to
 move from the page into Reset view and then Idea, press Enter, and assert status
 reports `SELECTED · IDEA`. Press
-`ArrowRight` and Enter and assert `SELECTED · SKETCH`. Reverse Tab and assert the
+`ArrowUp` and Enter and assert `SELECTED · SKETCH`. Reverse Tab and assert the
 focus moves back to Idea, reverse Tab again to Reset view, then reverse Tab once
 more and assert the Canvas naturally relinquishes focus at its source-order edge
 rather than wrapping.
@@ -1796,8 +1796,10 @@ changes:
 - use `crcMemo(() => createGridPath(), [])` inside `GridLayer` so expensive grid
   geometry is instance-owned and stable;
 - keep gesture refs for synchronous browser ownership, not presentation state;
-- centralize gesture termination in `finishGesture(pointerId)`, which clears the
-  ref only when the active session owns that exact pointer ID;
+- let each `NodeCard` own its node-drag ref and cursor state so unmounting the
+  target destroys its active session, while `Workspace` separately owns the pan
+  ref and pan cursor state;
+- terminate each target-local session only when it owns the exact pointer ID;
 - retain stable keys and data-driven edges;
 - set final toolbar hint to `DRAG NODES · DRAG SPACE · WHEEL TO ZOOM`;
 - set final initial selection to Sketch so the landing capture visibly
