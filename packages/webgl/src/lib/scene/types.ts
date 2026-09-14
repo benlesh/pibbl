@@ -5,6 +5,7 @@ import type {
 } from '@crc/core/internal';
 import type { ResolvedWebGLCamera } from '../math/camera.js';
 import type { CRCWebGLGeometry } from '../types.js';
+import type { ResolvedWebGLMaterial } from '../components/material.js';
 
 export type WebGLRGBA = readonly [red: number, green: number, blue: number, alpha: number];
 
@@ -15,6 +16,8 @@ export interface WebGLMeshSubmission {
   readonly geometry: CRCWebGLGeometry;
   readonly model: Readonly<Float32Array>;
   readonly color: WebGLRGBA;
+  readonly lit: boolean;
+  readonly material: ResolvedWebGLMaterial;
   readonly sourceIndex: number;
   readonly target: CRCEventTargetRegistration | undefined;
   readonly keyboardNavigationBounds: CRCEventTargetRegistration['keyboardNavigationBounds'];
@@ -32,6 +35,8 @@ export interface SubmitWebGLMeshInput {
   readonly geometry: CRCWebGLGeometry;
   readonly localModel: Readonly<Float32Array>;
   readonly color: WebGLRGBA;
+  readonly lit?: boolean;
+  readonly material?: ResolvedWebGLMaterial;
   readonly target?: CRCEventTargetRegistration;
   readonly keyboardNavigationBounds?: CRCEventTargetRegistration['keyboardNavigationBounds'];
 }

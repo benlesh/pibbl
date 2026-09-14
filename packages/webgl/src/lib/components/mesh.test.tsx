@@ -286,7 +286,12 @@ describe('Mesh built-in rendering', () => {
         onClick() {},
         pointerEvents: 'auto',
         keyboardFocusable: true,
-        style: { opacity: 0, cursor: 'pointer' },
+        style: {
+          opacity: 0,
+          cursor: 'pointer',
+          lit: false,
+          material: { type: 'lambert', emissiveIntensity: 0 },
+        },
       };
       const filtered: MeshInput = {
         geometry,

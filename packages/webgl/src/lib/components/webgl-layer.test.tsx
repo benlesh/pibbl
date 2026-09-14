@@ -125,6 +125,38 @@ describe('WebGLLayer public surface', () => {
     );
   });
 
+  it('uses nested material identity for retained invalidation and snapshots scalar fields on execution', async () => {
+    const platform = installComponentPlatform();
+    vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
+      .mockImplementation(() => undefined);
+    const canvas = createCanvas(32, 32);
+    const material = { type: 'lambert' as const, emissiveIntensity: 1 };
+    const scene = (descriptor: typeof material) => (
+      <WebGLLayer style={{ width: 32, height: 32 }}>
+        <Cube style={{ material: descriptor }} />
+      </WebGLLayer>
+    );
+    const controller = crc(canvas, scene(material), { pixelRatio: 1 });
+    controllers.add(controller);
+
+    await nextFrame();
+    expect(platform.draws).toHaveBeenCalledTimes(1);
+
+    material.emissiveIntensity = 2;
+    crc(canvas, scene(material));
+    await nextFrame();
+    expect(platform.draws).toHaveBeenCalledTimes(1);
+
+    const equivalent = { type: 'lambert' as const, emissiveIntensity: 2 };
+    crc(canvas, scene(equivalent));
+    await nextFrame();
+    expect(platform.draws).toHaveBeenCalledTimes(2);
+
+    crc(canvas, scene({ type: 'lambert', emissiveIntensity: 3 }));
+    await nextFrame();
+    expect(platform.draws).toHaveBeenCalledTimes(3);
+  });
+
   it('registers one bounded resolver in paint order and pointerEvents none omits it while painting', async () => {
     installComponentPlatform();
     vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
@@ -512,7 +544,8 @@ describe('WebGLLayer public surface', () => {
 function installComponentPlatform() {
   const constructed: Array<{ width: number; height: number }> = [];
   const contextRequests: Array<{ type: string; attributes: unknown }> = [];
-  const gl = createNoopGL();
+  const draws = vi.fn();
+  const gl = createNoopGL({ draws });
   const bitmap = {
     width: 1,
     height: 1,
@@ -538,10 +571,10 @@ function installComponentPlatform() {
     }
   }
   vi.stubGlobal('OffscreenCanvas', RecordingOffscreenCanvas);
-  return { constructed, contextRequests, bitmap };
+  return { constructed, contextRequests, bitmap, draws };
 }
 
-function createNoopGL(): WebGL2RenderingContext {
+function createNoopGL(options: { readonly draws?: () => void } = {}): WebGL2RenderingContext {
   let constant = 1;
   let handle = 0;
   return new Proxy({}, {
@@ -573,6 +606,8 @@ function createNoopGL(): WebGL2RenderingContext {
                     property === 'createVertexArray' ||
                     property === 'createBuffer' ?
                     () => ({ kind: property, id: ++handle }) :
+                      property === 'drawElements' || property === 'drawArrays' ?
+                        options.draws ?? (() => undefined) :
                     property === 'isContextLost' ? () => false :
                       () => undefined;
       }

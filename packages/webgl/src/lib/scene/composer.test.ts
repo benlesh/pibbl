@@ -17,7 +17,19 @@ describe('CPU-only WebGL scene composer', () => {
     const local = translation(2, 3, 4);
     const color = [0.1, 0.2, 0.3, 0.4] as const;
     const keyboardNavigationBounds = { x: 1, y: 2, width: 3, height: 4 };
-    submitWebGLMesh(scene, { componentName: 'Mesh', geometry, localModel: local, color, keyboardNavigationBounds });
+    submitWebGLMesh(scene, {
+      componentName: 'Mesh',
+      geometry,
+      localModel: local,
+      color,
+      lit: true,
+      material: {
+        type: 'lambert',
+        emissiveColor: [0.2, 0.3, 0.4, 0.5],
+        emissiveIntensity: 2,
+      },
+      keyboardNavigationBounds,
+    } as never);
     local[12] = 99;
     keyboardNavigationBounds.x = 99;
     const second = translation(5, 0, 0);
@@ -31,6 +43,14 @@ describe('CPU-only WebGL scene composer', () => {
     expect(draft.meshes.map((mesh) => mesh.sourceIndex)).toEqual([0, 1]);
     expect(Array.from(draft.meshes[0]!.model)).toEqual(Array.from(translation(2, 3, 4)));
     expect(draft.meshes[0]!.color).toEqual(color);
+    expect(draft.meshes[0]).toMatchObject({
+      lit: true,
+      material: {
+        type: 'lambert',
+        emissiveColor: [0.2, 0.3, 0.4, 0.5],
+        emissiveIntensity: 2,
+      },
+    });
     expect(draft.meshes[0]!.keyboardNavigationBounds).toEqual({ x: 1, y: 2, width: 3, height: 4 });
     expect(Object.isFrozen(draft)).toBe(true);
     expect(Object.isFrozen(draft.meshes)).toBe(true);

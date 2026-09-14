@@ -30,6 +30,14 @@ export interface CRCWebGLTransformStyle {
   scaleZ?: number;
 }
 
+export interface CRCWebGLLambertMaterial {
+  readonly type: 'lambert';
+  readonly emissiveColor?: string;
+  readonly emissiveIntensity?: number;
+}
+
+export type CRCWebGLMaterial = CRCWebGLLambertMaterial;
+
 /** Shared logical-target props for geometry-backed WebGL built-ins. */
 export interface CRCWebGLTargetProps
   extends CRCEventHandlers, CRCEventParticipationOptions {

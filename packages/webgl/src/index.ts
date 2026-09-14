@@ -28,6 +28,8 @@ export {
 export type {
   CRCWebGLGeometry,
   CRCWebGLGeometryInput,
+  CRCWebGLLambertMaterial,
+  CRCWebGLMaterial,
   CRCWebGLPerspectiveCamera,
   CRCWebGLTransformStyle,
   CRCWebGLVector3,

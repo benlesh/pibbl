@@ -1,4 +1,5 @@
 import { multiplyMatrix4, setIdentityMatrix4 } from '../math/matrix4.js';
+import { DEFAULT_WEBGL_MATERIAL } from '../components/material.js';
 import type {
   ClosedWebGLSceneDraft,
   CreateWebGLSceneComposerInput,
@@ -92,6 +93,7 @@ export function submitWebGLMesh(
   input: SubmitWebGLMeshInput,
 ): void {
   const value = requireOpen(composer);
+  const material = input.material ?? DEFAULT_WEBGL_MATERIAL;
   const model = new Float32Array(16);
   multiplyMatrix4(model, value.modelStack.at(-1)!, input.localModel);
   value.meshes.push(Object.freeze({
@@ -101,6 +103,12 @@ export function submitWebGLMesh(
     geometry: input.geometry,
     model,
     color: Object.freeze([...input.color]) as unknown as WebGLMeshSubmission['color'],
+    lit: input.lit ?? true,
+    material: Object.freeze({
+      type: material.type,
+      emissiveColor: Object.freeze([...material.emissiveColor]) as WebGLMeshSubmission['material']['emissiveColor'],
+      emissiveIntensity: material.emissiveIntensity,
+    }),
     sourceIndex: value.nextSourceIndex++,
     target: input.target,
     keyboardNavigationBounds: input.keyboardNavigationBounds === undefined ?

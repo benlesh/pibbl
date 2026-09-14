@@ -10,6 +10,8 @@ symbols:
   [
     CRCWebGLGeometry,
     CRCWebGLGeometryInput,
+    CRCWebGLLambertMaterial,
+    CRCWebGLMaterial,
     CRCWebGLPerspectiveCamera,
     CRCWebGLTransformStyle,
     CRCWebGLVector3,
@@ -51,6 +53,17 @@ validates and copies it.
 `near`, and `far`. See [`WebGLLayer`](#/api/components/webgl-layer) for defaults
 and validation.
 
+## CRCWebGLLambertMaterial
+
+`CRCWebGLLambertMaterial` is the closed material descriptor for mesh lighting.
+It requires `type: "lambert"` and may set concrete `emissiveColor` and a finite,
+nonnegative `emissiveIntensity`.
+
+## CRCWebGLMaterial
+
+`CRCWebGLMaterial` is currently the Lambert material union. Omit
+`MeshStyle.material` for the default Lambert surface.
+
 ## CRCWebGLTransformStyle
 
 `CRCWebGLTransformStyle` supplies optional `translateX/Y/Z`,
@@ -83,8 +96,9 @@ Canvas `filter` as unavailable for inner WebGL objects.
 
 ## MeshStyle
 
-`MeshStyle` adds optional concrete `color`, `opacity`, and `cursor` to the
-shared transform fields.
+`MeshStyle` adds optional concrete `color`, `opacity`, `lit`, `material`, and
+`cursor` to the shared transform fields. Meshes are lit by default; set
+`lit: false` for the unlit path.
 
 ## SphereProps
 
