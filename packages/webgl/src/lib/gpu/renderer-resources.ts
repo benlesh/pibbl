@@ -238,6 +238,7 @@ function uploadGeometry(
   let indexBuffer: WebGLBuffer | undefined;
   let published = false;
   let abandonFailedHandles = false;
+  let cleanupDecisionMade = false;
   try {
     const data = getWebGLGeometryData(geometry);
     vertexArray = gl.createVertexArray() ?? undefined;
@@ -270,6 +271,22 @@ function uploadGeometry(
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer!);
       gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, data.indices, gl.STATIC_DRAW);
     }
+    const contextValidity = readResourceContextValidity(gl);
+    if (contextValidity.status === 'lost') {
+      cleanupDecisionMade = true;
+      abandonFailedHandles = true;
+      throw new Error(
+        `${componentName} geometry upload failed because the WebGL context was lost.`,
+      );
+    }
+    if (contextValidity.status === 'unknown') {
+      cleanupDecisionMade = true;
+      abandonFailedHandles = true;
+      throw new Error(
+        `${componentName} geometry upload context validation failed.`,
+        { cause: contextValidity.error },
+      );
+    }
     const resource = Object.freeze({
       vertexArray,
       positionBuffer,
@@ -280,7 +297,9 @@ function uploadGeometry(
     published = true;
     return resource;
   } catch (error) {
-    abandonFailedHandles = contextLossPreventsResourceCleanup(gl);
+    if (!cleanupDecisionMade) {
+      abandonFailedHandles = contextLossPreventsResourceCleanup(gl);
+    }
     if (error instanceof Error && error.message.startsWith(componentName)) {
       throw error;
     }
@@ -302,16 +321,31 @@ function uploadGeometry(
   }
 }
 
+type WebGLResourceContextValidity =
+  | { readonly status: 'available' }
+  | { readonly status: 'lost' }
+  | { readonly status: 'unknown'; readonly error: unknown };
+
+function readResourceContextValidity(
+  gl: WebGL2RenderingContext,
+): WebGLResourceContextValidity {
+  try {
+    return gl.isContextLost() ? { status: 'lost' } : { status: 'available' };
+  } catch (error) {
+    return { status: 'unknown', error };
+  }
+}
+
 function contextLossPreventsResourceCleanup(
   gl: WebGL2RenderingContext,
 ): boolean {
-  try {
-    return gl.isContextLost();
-  } catch (error) {
-    reportSecondaryResourceError(error);
-    // Unknown context validity is not permission to delete generation handles.
-    return true;
+  const validity = readResourceContextValidity(gl);
+  if (validity.status === 'available') return false;
+  if (validity.status === 'unknown') {
+    reportSecondaryResourceError(validity.error);
   }
+  // Unknown context validity is not permission to delete generation handles.
+  return true;
 }
 
 function deleteGeometry(

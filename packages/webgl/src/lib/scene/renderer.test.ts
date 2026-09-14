@@ -280,7 +280,7 @@ describe('WebGLSceneRenderer', () => {
   it('does not restore or delete lost-generation handles after an operational failure', () => {
     const failure = new Error('context-losing draw failed');
     const recording = createRendererGL({
-      contextLost: true,
+      loseContextAt: { operation: 'drawArrays', at: 1 },
       throws: [{ operation: 'drawArrays', at: 1, error: failure }],
     });
     const renderer = new WebGLSceneRenderer(recording.gl, 7);
@@ -407,7 +407,7 @@ interface ThrowPoint {
 
 interface RendererGLOptions {
   readonly throws?: readonly ThrowPoint[];
-  readonly contextLost?: boolean;
+  readonly loseContextAt?: Omit<ThrowPoint, 'error'>;
 }
 
 interface DrawSnapshot {
@@ -436,10 +436,17 @@ function createRendererGL(options: RendererGLOptions = {}) {
   };
   const draws: DrawSnapshot[] = [];
   let nextHandle = 0;
+  let contextLost = false;
   const handle = (kind: string) => ({ kind, id: ++nextHandle });
   const maybeThrow = (operation: string) => {
     const at = (counts.get(operation) ?? 0) + 1;
     counts.set(operation, at);
+    if (
+      options.loseContextAt?.operation === operation &&
+      options.loseContextAt.at === at
+    ) {
+      contextLost = true;
+    }
     const point = options.throws?.find(
       candidate => candidate.operation === operation && candidate.at === at,
     );
@@ -476,7 +483,7 @@ function createRendererGL(options: RendererGLOptions = {}) {
     getParameter: method<[number], number>('getParameter', () => 2),
     isContextLost: method<[], boolean>(
       'isContextLost',
-      () => options.contextLost ?? false,
+      () => contextLost,
     ),
     bindFramebuffer: method('bindFramebuffer'),
     viewport: method('viewport'),

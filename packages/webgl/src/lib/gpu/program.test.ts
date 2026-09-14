@@ -62,8 +62,7 @@ describe('createBuiltInProgram', () => {
     ]);
   });
 
-  it('abandons a shader handle without deletion when construction loses the context', () => {
-    const operationalError = new Error('vertex source rejected after loss');
+  it('abandons a compile-status-failed shader without deletion when the context is lost', () => {
     const {
       gl,
       shaders,
@@ -72,18 +71,21 @@ describe('createBuiltInProgram', () => {
       deleteShader,
       createProgram,
     } = createProgramGL({
-      shaderSourceError: operationalError,
-      contextLostAfterOperationalFailure: true,
+      failedShader: 'vertex',
+      contextLostOnFailedShaderStatus: true,
     });
 
+    let returned: WebGLProgram | undefined;
     let caught: unknown;
     try {
-      createBuiltInProgram(gl, 'LostMesh');
+      returned = createBuiltInProgram(gl, 'LostMesh').program;
     } catch (error) {
       caught = error;
     }
 
-    expect(caught).toBe(operationalError);
+    expect(caught).toBeInstanceOf(Error);
+    expect((caught as Error).message).toMatch(/LostMesh.*vertex.*compil/i);
+    expect(returned).toBeUndefined();
     expect(shaders).toHaveLength(1);
     expect(createProgram).not.toHaveBeenCalled();
     expect(detachShader).not.toHaveBeenCalled();
@@ -91,8 +93,7 @@ describe('createBuiltInProgram', () => {
     expect(deleteProgram).not.toHaveBeenCalled();
   });
 
-  it('abandons attached shaders and a program without deletion when linking loses the context', () => {
-    const operationalError = new Error('link interrupted by context loss');
+  it('abandons link-status-failed shaders and program without deletion when the context is lost', () => {
     const {
       gl,
       shaders,
@@ -102,18 +103,21 @@ describe('createBuiltInProgram', () => {
       deleteProgram,
       deleteShader,
     } = createProgramGL({
-      linkProgramError: operationalError,
-      contextLostAfterOperationalFailure: true,
+      linkFailed: true,
+      contextLostOnFailedProgramStatus: true,
     });
 
+    let returned: WebGLProgram | undefined;
     let caught: unknown;
     try {
-      createBuiltInProgram(gl, 'LostSphere');
+      returned = createBuiltInProgram(gl, 'LostSphere').program;
     } catch (error) {
       caught = error;
     }
 
-    expect(caught).toBe(operationalError);
+    expect(caught).toBeInstanceOf(Error);
+    expect((caught as Error).message).toMatch(/LostSphere.*program.*link/i);
+    expect(returned).toBeUndefined();
     expect(shaders).toHaveLength(2);
     expect(programs).toHaveLength(1);
     expect(attachShader).toHaveBeenCalledTimes(2);
@@ -243,8 +247,8 @@ interface ProgramGLOptions {
   readonly programLog?: string;
   readonly missingUniform?: string;
   readonly shaderSourceError?: Error;
-  readonly linkProgramError?: Error;
-  readonly contextLostAfterOperationalFailure?: boolean;
+  readonly contextLostOnFailedShaderStatus?: boolean;
+  readonly contextLostOnFailedProgramStatus?: boolean;
   readonly contextLossCheckError?: Error;
   readonly deleteShaderError?: Error;
 }
@@ -259,6 +263,7 @@ function createProgramGL(options: ProgramGLOptions = {}) {
   const shaderCleanup: string[] = [];
   const program = { kind: 'program' };
   let operationalFailure = false;
+  let contextLost = false;
   const createShader = vi.fn((type: number) => {
     const shader = { type, id: shaders.length + 1 };
     shaders.push(shader);
@@ -285,19 +290,12 @@ function createProgramGL(options: ProgramGLOptions = {}) {
       shaderCleanup.push(`detach:${shader.id}`);
     },
   );
-  const linkProgram = vi.fn(() => {
-    if (options.linkProgramError) {
-      operationalFailure = true;
-      throw options.linkProgramError;
-    }
-  });
+  const linkProgram = vi.fn();
   const isContextLost = vi.fn(() => {
     if (operationalFailure && options.contextLossCheckError) {
       throw options.contextLossCheckError;
     }
-    return (
-      operationalFailure && options.contextLostAfterOperationalFailure === true
-    );
+    return contextLost;
   });
   const gl = {
     VERTEX_SHADER,
@@ -311,7 +309,12 @@ function createProgramGL(options: ProgramGLOptions = {}) {
       expect(parameter).toBe(COMPILE_STATUS);
       const failedType = options.failedShader === 'vertex' ?
         VERTEX_SHADER : FRAGMENT_SHADER;
-      return options.failedShader === undefined || shader.type !== failedType;
+      const succeeded =
+        options.failedShader === undefined || shader.type !== failedType;
+      if (!succeeded && options.contextLostOnFailedShaderStatus) {
+        contextLost = true;
+      }
+      return succeeded;
     },
     getShaderInfoLog: vi.fn(() => options.shaderLog ?? ''),
     deleteShader,
@@ -321,6 +324,9 @@ function createProgramGL(options: ProgramGLOptions = {}) {
     linkProgram,
     getProgramParameter(_program: object, parameter: number) {
       expect(parameter).toBe(LINK_STATUS);
+      if (options.linkFailed && options.contextLostOnFailedProgramStatus) {
+        contextLost = true;
+      }
       return !options.linkFailed;
     },
     getProgramInfoLog: vi.fn(() => options.programLog ?? ''),

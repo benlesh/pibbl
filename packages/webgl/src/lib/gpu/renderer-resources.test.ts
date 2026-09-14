@@ -265,31 +265,102 @@ describe('WebGLRendererResourceCache', () => {
     },
   );
 
-  it('abandons partial geometry handles without deletion when upload loses the context', () => {
-    const operationalError = new Error('position upload lost the context');
-    const recording = createResourceGL('lost-upload', {
-      throwBufferDataAt: 1,
-      bufferDataError: operationalError,
-      contextLostAfterOperationalFailure: true,
+  it('abandons partial geometry handles when later buffer creation returns null after loss', () => {
+    const recording = createResourceGL('lost-buffer-creation', {
+      failBufferAt: 2,
+      contextLostOnFailedCreation: true,
     });
     const cache = new WebGLRendererResourceCache(recording.gl, 4);
     const transaction = cache.beginRender();
 
+    let returned: unknown;
     let caught: unknown;
     try {
-      transaction.useGeometry(triangle(), 'LostCube');
+      returned = transaction.useGeometry(indexedTriangle(), 'LostCube');
     } catch (error) {
       caught = error;
     }
 
     expect(caught).toBeInstanceOf(Error);
-    expect((caught as Error).cause).toBe(operationalError);
+    expect((caught as Error).message).toMatch(
+      /LostCube.*index buffer creation failed/i,
+    );
+    expect(returned).toBeUndefined();
     expect(recording.vertexArrays).toHaveLength(1);
     expect(recording.buffers).toHaveLength(1);
     expect(recording.deleteBuffer).not.toHaveBeenCalled();
     expect(recording.deleteVertexArray).not.toHaveBeenCalled();
 
-    transaction.rollback(true);
+    transaction.commit();
+    cache.dispose(false);
+    expect(recording.deleteBuffer).not.toHaveBeenCalled();
+    expect(recording.deleteVertexArray).not.toHaveBeenCalled();
+  });
+
+  it('rejects normally uploaded geometry when the context becomes lost before publication', () => {
+    const recording = createResourceGL('lost-after-upload', {
+      loseContextAfterBufferDataAt: 1,
+    });
+    const cache = new WebGLRendererResourceCache(recording.gl, 5);
+    const transaction = cache.beginRender();
+
+    let returned: unknown;
+    let caught: unknown;
+    try {
+      returned = transaction.useGeometry(triangle(), 'LostSphere');
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(Error);
+    expect((caught as Error).message).toMatch(
+      /LostSphere.*geometry.*context.*lost/i,
+    );
+    expect(returned).toBeUndefined();
+    expect(recording.uploads).toEqual([
+      {
+        target: recording.gl.ARRAY_BUFFER,
+        length: 9,
+        usage: recording.gl.STATIC_DRAW,
+      },
+    ]);
+    expect(recording.vertexArrays).toHaveLength(1);
+    expect(recording.buffers).toHaveLength(1);
+    expect(recording.deleteBuffer).not.toHaveBeenCalled();
+    expect(recording.deleteVertexArray).not.toHaveBeenCalled();
+
+    transaction.commit();
+    cache.dispose(false);
+    expect(recording.deleteBuffer).not.toHaveBeenCalled();
+    expect(recording.deleteVertexArray).not.toHaveBeenCalled();
+  });
+
+  it('abandons normally uploaded geometry when publication context validation fails', () => {
+    const detectionError = new Error('isContextLost failed');
+    const recording = createResourceGL('failed-publication-check', {
+      contextLossCheckError: detectionError,
+    });
+    const cache = new WebGLRendererResourceCache(recording.gl, 6);
+    const transaction = cache.beginRender();
+
+    let returned: unknown;
+    let caught: unknown;
+    try {
+      returned = transaction.useGeometry(triangle(), 'UnknownCube');
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(Error);
+    expect((caught as Error).message).toMatch(
+      /UnknownCube.*geometry.*context validation failed/i,
+    );
+    expect((caught as Error).cause).toBe(detectionError);
+    expect(returned).toBeUndefined();
+    expect(recording.deleteBuffer).not.toHaveBeenCalled();
+    expect(recording.deleteVertexArray).not.toHaveBeenCalled();
+
+    transaction.commit();
     cache.dispose(false);
     expect(recording.deleteBuffer).not.toHaveBeenCalled();
     expect(recording.deleteVertexArray).not.toHaveBeenCalled();
@@ -466,6 +537,8 @@ interface ResourceGLControls {
   throwBufferDataAt?: number;
   bufferDataError?: Error;
   contextLostAfterOperationalFailure?: boolean;
+  contextLostOnFailedCreation?: boolean;
+  loseContextAfterBufferDataAt?: number;
   contextLossCheckError?: Error;
   deleteBufferError?: Error;
 }
@@ -487,7 +560,7 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
   let shaderAttempt = 0;
   let bufferAttempt = 0;
   let uploadAttempt = 0;
-  let operationalFailure = false;
+  let contextLost = false;
   const handle = (kind: string, type?: number): OwnedHandle => ({
     context,
     kind,
@@ -510,7 +583,10 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
   });
   const deleteProgram = vi.fn();
   const createVertexArray = vi.fn(() => {
-    if (controls.failVertexArray) return null;
+    if (controls.failVertexArray) {
+      if (controls.contextLostOnFailedCreation) contextLost = true;
+      return null;
+    }
     const vertexArray = handle('vertex-array');
     vertexArrays.push(vertexArray);
     return vertexArray;
@@ -518,7 +594,10 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
   const deleteVertexArray = vi.fn();
   const createBuffer = vi.fn(() => {
     bufferAttempt += 1;
-    if (bufferAttempt === controls.failBufferAt) return null;
+    if (bufferAttempt === controls.failBufferAt) {
+      if (controls.contextLostOnFailedCreation) contextLost = true;
+      return null;
+    }
     const buffer = handle('buffer');
     buffers.push(buffer);
     return buffer;
@@ -556,23 +635,24 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
       (target: number, data: ArrayLike<number>, usage: number) => {
         uploadAttempt += 1;
         if (uploadAttempt === controls.throwBufferDataAt) {
-          operationalFailure = true;
+          contextLost =
+            controls.contextLostAfterOperationalFailure === true;
           throw (
             controls.bufferDataError ??
             new Error('injected buffer upload failure')
           );
         }
         uploads.push({ target, length: data.length, usage });
+        if (uploadAttempt === controls.loseContextAfterBufferDataAt) {
+          contextLost = true;
+        }
       },
     ),
     isContextLost: vi.fn(() => {
-      if (operationalFailure && controls.contextLossCheckError) {
+      if (controls.contextLossCheckError) {
         throw controls.contextLossCheckError;
       }
-      return (
-        operationalFailure &&
-        controls.contextLostAfterOperationalFailure === true
-      );
+      return contextLost;
     }),
   };
   const gl = new Proxy(
