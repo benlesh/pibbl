@@ -9,6 +9,7 @@ const createSphereGeometry = (): CRCWebGLGeometry => {
   const positions = new Float32Array(
     (LATITUDE_SEGMENTS + 1) * (LONGITUDE_SEGMENTS + 1) * 3,
   );
+  const normals = new Float32Array(positions.length);
   const indices = new Uint32Array(LATITUDE_SEGMENTS * LONGITUDE_SEGMENTS * 6);
   let positionOffset = 0;
   for (let latitude = 0; latitude <= LATITUDE_SEGMENTS; latitude += 1) {
@@ -20,6 +21,9 @@ const createSphereGeometry = (): CRCWebGLGeometry => {
       positions[positionOffset] = RADIUS * ringRadius * Math.cos(azimuth);
       positions[positionOffset + 1] = RADIUS * y;
       positions[positionOffset + 2] = RADIUS * ringRadius * Math.sin(azimuth);
+      normals[positionOffset] = ringRadius * Math.cos(azimuth);
+      normals[positionOffset + 1] = y;
+      normals[positionOffset + 2] = ringRadius * Math.sin(azimuth);
       positionOffset += 3;
     }
   }
@@ -40,7 +44,7 @@ const createSphereGeometry = (): CRCWebGLGeometry => {
     }
   }
 
-  return createWebGLGeometry({ positions, indices });
+  return createWebGLGeometry({ positions, normals, indices });
 };
 
 const sphereGeometry = createSphereGeometry();

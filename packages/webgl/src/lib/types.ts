@@ -39,8 +39,9 @@ export interface CRCWebGLTargetProps
 }
 
 export interface CRCWebGLGeometryInput {
-  positions: ArrayLike<number>;
-  indices?: ArrayLike<number>;
+  readonly positions: ArrayLike<number>;
+  readonly normals?: ArrayLike<number>;
+  readonly indices?: ArrayLike<number>;
 }
 
 declare const crcWebGLGeometryBrand: unique symbol;
