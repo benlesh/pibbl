@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "allowJs": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "isolatedModules": true,
+    "noEmit": false,
+    "noEmitOnError": true,
+    "outDir": "./dist",
+    "paths": {
+      "@crc/particles": ["./src/index.ts"],
+      "@crc/particles/webgl": ["./src/webgl.ts"]
+    },
+    "rootDir": "./src",
+    "types": []
+  },
+  "files": ["src/index.ts", "src/webgl.ts", "src/lib/public-types.test.ts"],
+  "include": []
+}

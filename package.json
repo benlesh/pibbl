@@ -54,6 +54,7 @@
     "@babel/parser": "catalog:",
     "@babel/plugin-transform-react-jsx": "catalog:",
     "@eslint/js": "catalog:",
+    "@crc/particles": "workspace:*",
     "@crc/scenarios": "workspace:*",
     "@crc/webgl": "workspace:*",
     "@types/node": "catalog:",
