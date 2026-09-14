@@ -356,11 +356,8 @@ function diagramEditorChapterRoute(slug) {
 }
 
 async function tutorialWorkbenchContract(page, route) {
-  await page
-    .locator("#studio-main")
-    .getByText("Live · changes run automatically", { exact: true })
-    .waitFor({ timeout: 30_000 });
   const frames = page.locator("#studio-main .studio-preview__frame");
+  await frames.first().waitFor({ timeout: 30_000 });
   const count = await frames.count();
   const sandbox = await frames.first().getAttribute("sandbox");
   if (count !== 1 || sandbox !== "allow-scripts") {
@@ -370,6 +367,11 @@ async function tutorialWorkbenchContract(page, route) {
       `${count} frames; sandbox=${sandbox}`,
     );
   }
+  await frames.first().scrollIntoViewIfNeeded();
+  await page
+    .locator("#studio-main")
+    .getByText("Live · changes run automatically", { exact: true })
+    .waitFor({ timeout: 30_000 });
 }
 
 async function diagramEditorLandingContract(page) {
