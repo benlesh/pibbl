@@ -351,8 +351,50 @@ const diagramEditorChapters = [
   ["finished-editor", "Finish and harden the editor"],
 ];
 
+const diagramEditorRelationships = await serializedTutorialRelationships();
+
 function diagramEditorChapterRoute(slug) {
   return `${diagramEditorRootRoute}/${slug}`;
+}
+
+async function serializedTutorialRelationships() {
+  const program = [
+    "import { buildStudioDocumentation, toStudioDocumentationBrowserBuild } from './tooling/studio-docs/build.ts';",
+    "import { studioDocumentationBuildOptions } from './tooling/studio-docs/vite-plugin.ts';",
+    "void (async () => {",
+    "const documentation = toStudioDocumentationBrowserBuild(await buildStudioDocumentation(studioDocumentationBuildOptions(process.cwd())));",
+    "const relationships = Object.fromEntries(Object.entries(documentation.pageByRoute).flatMap(([route, page]) => page.tutorialRelationship === undefined ? [] : [[route, page.tutorialRelationship]]));",
+    "process.stdout.write(JSON.stringify(relationships));",
+    "})();",
+  ].join(" ");
+  const output = await new Promise((resolvePromise, reject) => {
+    const child = spawn(
+      "corepack",
+      ["pnpm@11.21.0", "exec", "tsx", "--eval", program],
+      { cwd: workspaceRoot, stdio: ["ignore", "pipe", "pipe"] },
+    );
+    let stdout = "";
+    let stderr = "";
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk;
+    });
+    child.once("error", reject);
+    child.once("exit", (code, signal) => {
+      if (code === 0) {
+        resolvePromise(stdout);
+        return;
+      }
+      reject(
+        new Error(
+          `Could not serialize Studio documentation relationships: ${signal ?? String(code)}\n${stderr}`,
+        ),
+      );
+    });
+  });
+  return JSON.parse(output);
 }
 
 async function tutorialWorkbenchContract(page, route) {
@@ -424,6 +466,18 @@ async function diagramEditorChapterContract(page) {
     await open(page, route);
     await expectMainHeading(page, route, title);
     await tutorialWorkbenchContract(page, route);
+
+    const relationship = diagramEditorRelationships[route];
+    if (
+      relationship?.chapter !== chapter ||
+      relationship?.chapterCount !== diagramEditorChapters.length
+    ) {
+      throw failure(
+        route,
+        `serialized tutorial relationship chapter ${chapter} of ${diagramEditorChapters.length}`,
+        JSON.stringify(relationship),
+      );
+    }
 
     const pagination = page.locator("#studio-main .tutorial-pagination");
     const previous = pagination.locator("[data-tutorial-direction='previous']");
