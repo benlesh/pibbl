@@ -72,7 +72,7 @@ describe('defineParticleEffect3D', () => {
     ]);
   });
 
-  it('records referenced spawn and simulation parameters as stateful-only reasons', () => {
+  it('keeps fixed spawn and simulation parameter references stateless-WebGL capable', () => {
     const record = getParticleEffect3DRecord(defineParticleEffect3D({
       parameters: {
         launchSpeed: { type: 'number', default: 2, timing: 'spawn' },
@@ -89,12 +89,57 @@ describe('defineParticleEffect3D', () => {
       })],
     }));
 
-    expect(record.capabilities.statelessWebGL).toBe(false);
-    expect(record.capabilities.requiresStateful).toEqual([
-      'emitter "embers" uses spawn parameter "launchSpeed"',
-      'emitter "embers" uses simulation parameter "wind"',
-    ]);
+    expect(record.capabilities.statelessWebGL).toBe(true);
+    expect(record.capabilities.requiresStateful).toEqual([]);
   });
+
+  it('requires explicit bounds for render parameters that affect billboard size', () => {
+    expect(() => defineParticleEffect3D({
+      debugName: 'live billboard size',
+      parameters: {
+        size: { type: 'number', default: 0.1, timing: 'render' },
+      },
+      emitters: [emitter({
+        initial: {
+          lifetimeMilliseconds: 1_000,
+          size: particle.parameter('size'),
+        },
+      })],
+    })).toThrowError(/live billboard size.*embers.*bounds.*explicit.*parameter/i);
+  });
+
+  it('rejects nonfinite arithmetic in compiler-derived 3D bounds', () => {
+    expect(() => defineParticleEffect3D({
+      debugName: 'overflowing volume',
+      emitters: [emitter({
+        initial: {
+          lifetimeMilliseconds: Number.MAX_VALUE,
+          velocity: [Number.MAX_VALUE, 0, 0],
+        },
+      })],
+    })).toThrowError(
+      /overflowing volume.*embers.*bounds\.max\[0\].*finite.*Infinity/i,
+    );
+  });
+
+  it.each(['depthTest', 'depthWrite'] as const)(
+    'rejects a nonboolean WebGL renderer %s value contextually',
+    property => {
+      expect(() => defineParticleEffect3D({
+        debugName: 'bad depth state',
+        emitters: [emitter({
+          renderer: {
+            type: 'point',
+            material: 'unlit',
+            blend: 'alpha',
+            [property]: 1,
+          } as never,
+        })],
+      })).toThrowError(
+        new RegExp(`bad depth state.*embers.*renderer point.*${property}.*boolean.*1`, 'i'),
+      );
+    },
+  );
 
   it('accepts additive 3D drift and sway writers without inventing a conflict', () => {
     expect(() => defineParticleEffect3D({

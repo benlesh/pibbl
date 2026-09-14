@@ -11,7 +11,6 @@ import {
   normalizeRenderer3D,
   particleDefinitionError,
   particleScalarRange,
-  referencedStatefulParameters,
   validateAppearance,
   validateScalarVector,
   type ParticleEffect3DRecord,
@@ -663,16 +662,19 @@ function normalizeEmitter(
   } else if (cannotDerive) {
     particleDefinitionError(
       { ...context, property: 'bounds' },
-      'must be explicit and finite for dynamic motion',
+      'must be explicit and finite for dynamic or parameterized motion',
     );
   } else {
-    bounds = deriveBounds(
-      normalizedShape.bounds,
-      normalizedInitial.lifetime.max,
-      normalizedInitial.velocity,
-      normalizedInitial.coneSpeed,
-      normalizedMotion.ranges,
-      maximumAppearanceSize(appearance, normalizedInitial.maximumSize),
+    bounds = normalizeBounds3D(
+      deriveBounds(
+        normalizedShape.bounds,
+        normalizedInitial.lifetime.max,
+        normalizedInitial.velocity,
+        normalizedInitial.coneSpeed,
+        normalizedMotion.ranges,
+        maximumAppearanceSize(appearance, normalizedInitial.maximumSize),
+      ),
+      context,
     );
     boundsSource = 'derived';
   }
@@ -735,14 +737,6 @@ export function defineParticleEffect3D<
     names.add(emitter.name);
     const normalized = normalizeEmitter(emitter, parameters, debugName);
     emitters.push(normalized);
-    for (const reference of referencedStatefulParameters(
-      { initial: normalized.initial, motion: normalized.motion },
-      parameters,
-    )) {
-      requiresStateful.push(
-        `emitter "${normalized.name}" uses ${reference.timing} parameter "${reference.name}"`,
-      );
-    }
     if (normalized.emission.some(source => source.type === 'manual')) {
       requiresStateful.push(`emitter "${normalized.name}" uses manual emission`);
     }

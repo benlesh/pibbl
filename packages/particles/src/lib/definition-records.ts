@@ -193,40 +193,6 @@ export function hashParticleEmitterName(name: string): number {
   return hash >>> 0;
 }
 
-export function referencedStatefulParameters(
-  value: unknown,
-  parameters: CRCParticleParameterDefinitions,
-): readonly Readonly<{ name: string; timing: 'spawn' | 'simulation' }>[] {
-  const references: Array<Readonly<{ name: string; timing: 'spawn' | 'simulation' }>> = [];
-  const names = new Set<string>();
-  const seen = new WeakSet<object>();
-  const visit = (current: unknown): void => {
-    if (current === null || typeof current !== 'object') return;
-    const descriptor = getParticleDescriptorRecord(current);
-    if (descriptor?.type === 'parameter') {
-      const definition = parameters[descriptor.name];
-      if (definition !== undefined && definition.timing !== 'render' &&
-        !names.has(descriptor.name)) {
-        names.add(descriptor.name);
-        references.push(Object.freeze({
-          name: descriptor.name,
-          timing: definition.timing,
-        }));
-      }
-      return;
-    }
-    if (descriptor !== undefined || seen.has(current)) return;
-    const prototype = Object.getPrototypeOf(current);
-    if (!Array.isArray(current) && prototype !== Object.prototype && prototype !== null) {
-      return;
-    }
-    seen.add(current);
-    for (const entry of Object.values(current)) visit(entry);
-  };
-  visit(value);
-  return Object.freeze(references);
-}
-
 export function normalizeParameters(
   parameters: CRCParticleParameterDefinitions | undefined,
   debugName: string | undefined,
@@ -352,7 +318,7 @@ function descriptorScalarRange(
       return Object.freeze({
         min: definition.default,
         max: definition.default,
-        dynamic: definition.timing !== 'render',
+        dynamic: true,
       });
     }
     default:
@@ -396,12 +362,15 @@ function validateRepeat(
   context: ParticleValidationContext,
 ): void {
   if (repeat === undefined) return;
+  if (repeat === null || typeof repeat !== 'object') {
+    particleDefinitionError(context, 'must be a record', repeat);
+  }
   assertPositiveNumber(repeat.everyMilliseconds, {
-    ...context, property: `${context.property}.repeat.everyMilliseconds`,
+    ...context, property: `${context.property}.everyMilliseconds`,
   });
   if (!Number.isSafeInteger(repeat.count) || repeat.count <= 0) {
     particleDefinitionError(
-      { ...context, property: `${context.property}.repeat.count` },
+      { ...context, property: `${context.property}.count` },
       'must be a positive safe integer',
       repeat.count,
       RangeError,
@@ -667,6 +636,20 @@ export function normalizeRenderer3D(
   if (!['none', 'oldest-first', 'youngest-first', 'distance'].includes(sorting)) {
     particleDefinitionError(
       { ...context, module, property: 'sorting' }, 'is unsupported', sorting,
+    );
+  }
+  if (renderer.depthTest !== undefined && typeof renderer.depthTest !== 'boolean') {
+    particleDefinitionError(
+      { ...context, module, property: 'depthTest' },
+      'must be boolean',
+      renderer.depthTest,
+    );
+  }
+  if (renderer.depthWrite !== undefined && typeof renderer.depthWrite !== 'boolean') {
+    particleDefinitionError(
+      { ...context, module, property: 'depthWrite' },
+      'must be boolean',
+      renderer.depthWrite,
     );
   }
   const common = {

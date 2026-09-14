@@ -181,6 +181,50 @@ describe('defineParticleEffect2D', () => {
     })).toThrowError(/dynamic wind.*sparks.*bounds.*explicit.*dynamic/i);
   });
 
+  it('requires explicit bounds for render parameters that affect particle size', () => {
+    expect(() => defineParticleEffect2D({
+      debugName: 'live size',
+      parameters: {
+        size: { type: 'number', default: 2, timing: 'render' },
+      },
+      emitters: [emitter({
+        initial: {
+          lifetimeMilliseconds: 1_000,
+          size: particle.parameter('size'),
+        },
+      })],
+    })).toThrowError(/live size.*sparks.*bounds.*explicit.*parameter/i);
+  });
+
+  it('rejects nonfinite arithmetic in compiler-derived bounds', () => {
+    expect(() => defineParticleEffect2D({
+      debugName: 'overflowing bounds',
+      emitters: [emitter({
+        initial: {
+          lifetimeMilliseconds: Number.MAX_VALUE,
+          velocity: [Number.MAX_VALUE, 0],
+        },
+      })],
+    })).toThrowError(
+      /overflowing bounds.*sparks.*bounds\.max\[0\].*finite.*Infinity/i,
+    );
+  });
+
+  it('reports a null emission repeat through a contextual definition error', () => {
+    expect(() => defineParticleEffect2D({
+      debugName: 'malformed repeat',
+      emitters: [emitter({
+        emission: [{
+          type: 'rate',
+          particlesPerSecond: 10,
+          repeat: null,
+        } as never],
+      })],
+    })).toThrowError(
+      /malformed repeat.*sparks.*emission\[0\].*repeat.*record.*null/i,
+    );
+  });
+
   it('copies caller records, deeply freezes normalized storage, and retains sprite identity', () => {
     const velocity: [number, number] = [3, -4];
     const motion: CRCParticleMotion2D[] = [{ type: 'acceleration', value: [1, 2] }];

@@ -542,15 +542,18 @@ function normalizeEmitter(
   } else if (cannotDerive) {
     particleDefinitionError(
       { ...context, property: 'bounds' },
-      'must be explicit and finite for dynamic or renderer-unbounded motion',
+      'must be explicit and finite for dynamic, parameterized, or renderer-unbounded motion',
     );
   } else {
-    bounds = deriveBounds(
-      normalizedShape.bounds,
-      normalizedInitial.lifetime.max,
-      normalizedInitial.velocity,
-      normalizedMotion.ranges,
-      maximumAppearanceSize(appearance, normalizedInitial.maximumSize),
+    bounds = normalizeBounds2D(
+      deriveBounds(
+        normalizedShape.bounds,
+        normalizedInitial.lifetime.max,
+        normalizedInitial.velocity,
+        normalizedMotion.ranges,
+        maximumAppearanceSize(appearance, normalizedInitial.maximumSize),
+      ),
+      context,
     );
     boundsSource = 'derived';
   }
