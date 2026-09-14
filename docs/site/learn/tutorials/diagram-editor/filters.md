@@ -50,7 +50,34 @@ The [filter type reference](#/api/types/filters) lists every supported typed des
 
 ## Predict and try
 
-Replace the one descriptor with `[ { type: "brightness", amount: 1.08 }, dropShadow ]`, then reverse the list. Predict the difference: the two operations receive different inputs, so brightness-before-shadow and shadow-before-brightness do not produce the same pixels.
+Add `type CRCBrightnessFilter`, `type CRCDropShadowFilter`, and `type CRCFilter` to the existing `@crc/core` import. Then replace the one descriptor with these complete typed bindings and use `selectedFilters` for the selected branch:
+
+```tsx
+const brightness: CRCBrightnessFilter = {
+  type: "brightness",
+  amount: 1.08,
+};
+const dropShadow: CRCDropShadowFilter = {
+  type: "dropShadow",
+  offsetX: 6,
+  offsetY: 8,
+  blurRadius: 10,
+  color: "rgb(23 33 29 / 35%)",
+};
+const selectedFilters: readonly CRCFilter[] = [brightness, dropShadow];
+
+<Group
+  style={{
+    translateX: node.x,
+    translateY: node.y,
+    filter: selected ? selectedFilters : [],
+  }}
+>
+  {cardPaint}
+</Group>;
+```
+
+Run it once, then reverse the array to `[dropShadow, brightness]`. Predict the difference: the two operations receive different inputs, so brightness-before-shadow and shadow-before-brightness do not produce the same pixels.
 
 ## Check your result
 

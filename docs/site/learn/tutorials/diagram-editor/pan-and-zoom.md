@@ -24,6 +24,39 @@ Nodes remain in workspace coordinates while one outer [`Group`](#/api/components
 
 The background owns a pan session. The workspace owns wheel input, calls `preventDefault()`, clamps zoom to 60%–180%, and computes pan from the pointer anchor. See [style types](#/api/types/styles) and [event types](#/api/types/events).
 
+```tsx
+const zoomAroundPoint = (
+  view: ViewTransform,
+  point: Readonly<{ x: number; y: number }>,
+  deltaY: number,
+): ViewTransform => {
+  const anchor = rootToWorkspace(point, view);
+  const zoom = Math.min(
+    1.8,
+    Math.max(0.6, view.zoom * Math.exp(-deltaY * 0.001)),
+  );
+  return {
+    zoom,
+    panX: point.x - anchor.x * zoom,
+    panY: point.y - WORKSPACE_TOP - anchor.y * zoom,
+  };
+};
+
+<Group
+  style={{
+    translateX: view.panX / view.zoom,
+    translateY: view.panY / view.zoom,
+    scaleX: view.zoom,
+    scaleY: view.zoom,
+  }}
+>
+  {connections}
+  {cards}
+</Group>;
+```
+
+CRC applies the Group scale before its translation, so the source divides the stored root-pixel pan by zoom. The anchor calculation prevents the content beneath the pointer from drifting; clamping prevents an unbounded or inverted view, and `preventDefault()` prevents the owned wheel gesture from scrolling the page.
+
 ## Predict and try
 
 Change the wheel exponent coefficient from `0.001` to `0.0015`. The zoom step changes, but the anchor remains stable.

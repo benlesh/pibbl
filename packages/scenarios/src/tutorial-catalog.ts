@@ -6,17 +6,40 @@ import type {
 import type { TutorialSnapshotCatalogEntry } from "./tutorial-types";
 
 const TUTORIAL = "diagram-editor";
-const SOURCE_PATH =
-  /^packages\/scenarios\/src\/tutorials\/diagram-editor\/\d{2}-.+\.example\.tsx$/u;
+const SOURCE_DIRECTORY = "packages/scenarios/src/tutorials/diagram-editor";
+const CANONICAL_SNAPSHOTS = [
+  ["canvas-scene", "canvas-scene"],
+  ["first-node", "first-node"],
+  ["connect-nodes", "connect-nodes"],
+  ["reusable-node", "reusable-node"],
+  ["editor-chrome", "editor-chrome"],
+  ["selection", "selection"],
+  ["dragging", "dragging"],
+  ["pan-and-zoom", "pan-and-zoom"],
+  ["viewport-and-layer", "viewport-and-layer"],
+  ["filters", "filters"],
+  ["keyboard-interaction", "keyboard-interaction"],
+  ["finished", "finished-editor"],
+] as const;
 
 export function validateTutorialSnapshotCatalog(
   catalog: readonly TutorialSnapshotCatalogEntry[],
 ): readonly TutorialSnapshotCatalogEntry[] {
+  if (catalog.length !== CANONICAL_SNAPSHOTS.length) {
+    throw new Error(
+      `The diagram-editor tutorial catalog must contain exactly 12 snapshots; received ${String(catalog.length)}.`,
+    );
+  }
   const learningSlugs = new Set(learningExampleCatalog.map(({ slug }) => slug));
   const slugs = new Set<string>();
   const paths = new Set<string>();
 
   for (const [index, entry] of catalog.entries()) {
+    const chapter = index + 1;
+    const chapterPrefix = String(chapter).padStart(2, "0");
+    const [slugSuffix, pathSuffix] = CANONICAL_SNAPSHOTS[index]!;
+    const canonicalSlug = `${TUTORIAL}-${slugSuffix}`;
+    const canonicalPath = `${SOURCE_DIRECTORY}/${chapterPrefix}-${pathSuffix}.example.tsx`;
     if (entry.chapter !== index + 1) {
       throw new Error("Tutorial chapters must be contiguous from 1.");
     }
@@ -35,9 +58,11 @@ export function validateTutorialSnapshotCatalog(
         `Tutorial snapshot "${entry.slug}" must use a 960 by 600 canvas.`,
       );
     }
-    if (!SOURCE_PATH.test(entry.source.path)) {
+    if (
+      !entry.source.path.startsWith(`${SOURCE_DIRECTORY}/${chapterPrefix}-`)
+    ) {
       throw new Error(
-        `Tutorial snapshot "${entry.slug}" must use a canonical tutorial source path.`,
+        `Tutorial Chapter ${String(chapter)} must use filename chapter prefix ${chapterPrefix} in catalog order.`,
       );
     }
     if (learningSlugs.has(entry.slug) || slugs.has(entry.slug)) {
@@ -45,6 +70,11 @@ export function validateTutorialSnapshotCatalog(
     }
     if (paths.has(entry.source.path)) {
       throw new Error(`duplicate tutorial source path "${entry.source.path}".`);
+    }
+    if (entry.slug !== canonicalSlug || entry.source.path !== canonicalPath) {
+      throw new Error(
+        `Tutorial Chapter ${String(chapter)} must keep stable diagram-editor slug/path correspondence: ${canonicalSlug} -> ${canonicalPath}.`,
+      );
     }
     slugs.add(entry.slug);
     paths.add(entry.source.path);

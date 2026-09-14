@@ -2,7 +2,6 @@ import {
   Absolute,
   Clip,
   crc,
-  crcEventListener,
   crcEventTarget,
   crcLayoutBox,
   crcRectPath,
@@ -50,20 +49,19 @@ interface ViewTransform {
 interface RegionProps {
   readonly style: BoxStyle & LayoutItemStyle;
 }
-interface DragGesture {
+interface NodeDragSession {
   readonly kind: "node";
   readonly pointerId: number;
   readonly nodeId: NodeId;
   readonly pointerStart: Point;
   readonly nodeStart: Point;
 }
-interface PanGesture {
+interface PanSession {
   readonly kind: "pan";
   readonly pointerId: number;
   readonly pointerStart: Point;
   readonly viewStart: ViewTransform;
 }
-type Gesture = DragGesture | PanGesture;
 
 const INITIAL_NODES: readonly DiagramNode[] = [
   {
@@ -96,7 +94,7 @@ const INITIAL_NODES: readonly DiagramNode[] = [
     subtitle: "Share the work",
     color: "#1f4bd8",
     x: 696,
-    y: 92,
+    y: 210,
   },
 ];
 const EDGES: readonly DiagramEdge[] = [
@@ -107,6 +105,7 @@ const EDGES: readonly DiagramEdge[] = [
 ];
 const INITIAL_VIEW: ViewTransform = { panX: 0, panY: 0, zoom: 1 };
 const WORKSPACE_TOP = 56;
+const WORKSPACE_HEIGHT = 512;
 const NODE_WIDTH = 168;
 const NODE_HEIGHT = 84;
 
@@ -118,7 +117,7 @@ function createGridPath(): Path2D {
 }
 function createWorkspaceClip(): Path2D {
   const path = new Path2D();
-  path.rect(0, 0, 960, 512);
+  path.rect(0, 0, 960, WORKSPACE_HEIGHT);
   return path;
 }
 function rootToWorkspace(point: Point, view: ViewTransform): Point {
@@ -150,7 +149,7 @@ function connectionPath(from: Point, to: Point): Path2D {
   path.bezierCurveTo(from.x + bend, from.y, to.x - bend, to.y, to.x, to.y);
   return path;
 }
-function arrowPath(point: Point): Path2D {
+function arrowheadPath(point: Point): Path2D {
   const path = new Path2D();
   path.moveTo(point.x, point.y);
   path.lineTo(point.x - 14, point.y - 7);
@@ -159,33 +158,67 @@ function arrowPath(point: Point): Path2D {
   return path;
 }
 
-interface NodeHandlers {
-  readonly down: (node: DiagramNode, event: CRCPointerEvent) => void;
-  readonly move: (event: CRCPointerEvent) => void;
-  readonly up: (event: CRCPointerEvent) => void;
-  readonly finish: (event: CRCPointerEvent) => void;
-}
 function NodeCard({
   node,
   selected,
-  dragActive,
-  handlers,
   onSelect,
+  onMove,
+  view,
 }: Readonly<{
   node: DiagramNode;
   selected: boolean;
-  dragActive: boolean;
-  handlers: NodeHandlers;
   onSelect: () => void;
+  onMove: (id: NodeId, x: number, y: number) => void;
+  view: ViewTransform;
 }>): CRCNode {
+  const dragSession = crcRef<NodeDragSession | null>(null);
+  const [dragActive, setDragActive] = crcState(false);
+  const finishDrag = (event: CRCPointerEvent): void => {
+    if (dragSession.current?.pointerId !== event.pointerId) return;
+    dragSession.current = null;
+    setDragActive(false);
+  };
+  const onPointerDown = (event: CRCPointerEvent): void => {
+    const pointerStart = rootToWorkspace(event, view);
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragSession.current = {
+      kind: "node",
+      pointerId: event.pointerId,
+      nodeId: node.id,
+      pointerStart,
+      nodeStart: { x: node.x, y: node.y },
+    };
+    setDragActive(true);
+    onSelect();
+  };
+  const onPointerMove = (event: CRCPointerEvent): void => {
+    const session = dragSession.current;
+    if (!session || session.pointerId !== event.pointerId) return;
+    const point = rootToWorkspace(event, view);
+    onMove(
+      session.nodeId,
+      session.nodeStart.x + point.x - session.pointerStart.x,
+      session.nodeStart.y + point.y - session.pointerStart.y,
+    );
+  };
+  const onPointerUp = (event: CRCPointerEvent): void => {
+    if (dragSession.current?.pointerId !== event.pointerId) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    finishDrag(event);
+  };
   return (
     <Group style={{ translateX: node.x, translateY: node.y }}>
       <NodePaint node={node} selected={selected} />
       <NodeTarget
-        node={node}
         dragActive={dragActive}
-        handlers={handlers}
-        onSelect={onSelect}
+        onClick={onSelect}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={finishDrag}
+        onLostPointerCapture={finishDrag}
       />
     </Group>
   );
@@ -301,27 +334,33 @@ function FocusVisual({ visible }: Readonly<{ visible: boolean }>): CRCNode {
   );
 }
 function NodeTarget({
-  node,
   dragActive,
-  handlers,
-  onSelect,
+  onClick,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
+  onPointerCancel,
+  onLostPointerCapture,
 }: Readonly<{
-  node: DiagramNode;
   dragActive: boolean;
-  handlers: NodeHandlers;
-  onSelect: () => void;
+  onClick: () => void;
+  onPointerDown: (event: CRCPointerEvent) => void;
+  onPointerMove: (event: CRCPointerEvent) => void;
+  onPointerUp: (event: CRCPointerEvent) => void;
+  onPointerCancel: (event: CRCPointerEvent) => void;
+  onLostPointerCapture: (event: CRCPointerEvent) => void;
 }>): CRCNode {
   const targetPath = crcRectPath(0, 0, NODE_WIDTH, NODE_HEIGHT, {
     cornerRadius: 16,
   });
   const focus = crcEventTarget(
     {
-      onClick: onSelect,
-      onPointerDown: (event) => handlers.down(node, event),
-      onPointerMove: handlers.move,
-      onPointerUp: handlers.up,
-      onPointerCancel: handlers.finish,
-      onLostPointerCapture: handlers.finish,
+      onClick,
+      onPointerDown,
+      onPointerMove,
+      onPointerUp,
+      onPointerCancel,
+      onLostPointerCapture,
     },
     {
       path: targetPath,
@@ -358,7 +397,7 @@ function Connection({
       />
       <Path
         pointerEvents="none"
-        style={{ d: arrowPath(end), fill: "#17211d" }}
+        style={{ d: arrowheadPath(end), fill: "#17211d" }}
       />
     </Fragment>
   );
@@ -471,47 +510,78 @@ function Toolbar({
 function Workspace({
   style: _style,
   nodes,
-  selected,
-  draggingNodeId,
+  selectedNodeId,
   view,
   onSelect,
+  onMove,
+  onViewChange,
   onWheel,
-  handlers,
-  panDown,
-  panMove,
-  panUp,
-  finish,
 }: RegionProps &
   Readonly<{
     nodes: readonly DiagramNode[];
-    selected: NodeId | null;
-    draggingNodeId: NodeId | null;
+    selectedNodeId: NodeId | null;
     view: ViewTransform;
     onSelect: (id: NodeId | null) => void;
+    onMove: (id: NodeId, x: number, y: number) => void;
+    onViewChange: (view: ViewTransform) => void;
     onWheel: (event: CRCWheelEvent) => void;
-    handlers: NodeHandlers;
-    panDown: (event: CRCPointerEvent) => void;
-    panMove: (event: CRCPointerEvent) => void;
-    panUp: (event: CRCPointerEvent) => void;
-    finish: (event: CRCPointerEvent) => void;
   }>): CRCNode {
   const box = crcLayoutBox();
-  crcEventListener({ onWheel });
+  const panSession = crcRef<PanSession | null>(null);
+  const [panning, setPanning] = crcState(false);
+  const finishPan = (event: CRCPointerEvent): void => {
+    if (panSession.current?.pointerId !== event.pointerId) return;
+    panSession.current = null;
+    setPanning(false);
+  };
+  const onPointerDown = (event: CRCPointerEvent): void => {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    panSession.current = {
+      kind: "pan",
+      pointerId: event.pointerId,
+      pointerStart: { x: event.x, y: event.y },
+      viewStart: view,
+    };
+    setPanning(true);
+  };
+  const onPointerMove = (event: CRCPointerEvent): void => {
+    const session = panSession.current;
+    if (!session || session.pointerId !== event.pointerId) return;
+    onViewChange({
+      ...session.viewStart,
+      panX: session.viewStart.panX + event.x - session.pointerStart.x,
+      panY: session.viewStart.panY + event.y - session.pointerStart.y,
+    });
+  };
+  const onPointerUp = (event: CRCPointerEvent): void => {
+    if (panSession.current?.pointerId !== event.pointerId) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    finishPan(event);
+  };
   return (
-    <Clip style={{ d: createWorkspaceClip(), width: 960, height: 512 }}>
+    <Clip
+      onWheel={onWheel}
+      style={{
+        d: createWorkspaceClip(),
+        width: 960,
+        height: WORKSPACE_HEIGHT,
+      }}
+    >
       <Rectangle
         keyboardFocusable={false}
         onClick={() => onSelect(null)}
-        onPointerDown={panDown}
-        onPointerMove={panMove}
-        onPointerUp={panUp}
-        onPointerCancel={finish}
-        onLostPointerCapture={finish}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={finishPan}
+        onLostPointerCapture={finishPan}
         style={{
           width: box.width,
           height: box.height,
           fill: "#eef2e8",
-          cursor: "grab",
+          cursor: panning ? "grabbing" : "grab",
         }}
       />
       <Group
@@ -535,17 +605,17 @@ function Workspace({
           <NodeCard
             key={node.id}
             node={node}
-            selected={node.id === selected}
-            dragActive={node.id === draggingNodeId}
-            handlers={handlers}
+            selected={node.id === selectedNodeId}
             onSelect={() => onSelect(node.id)}
+            onMove={onMove}
+            view={view}
           />
         ))}
       </Group>
     </Clip>
   );
 }
-function Status({
+function StatusBar({
   style: _style,
   selected,
   view,
@@ -586,88 +656,11 @@ function Status({
 function DiagramEditor(): CRCNode {
   const [nodes, setNodes] = crcState<readonly DiagramNode[]>(INITIAL_NODES);
   const [selected, setSelected] = crcState<NodeId | null>("sketch");
-  const [draggingNodeId, setDraggingNodeId] = crcState<NodeId | null>(null);
   const [view, setView] = crcState<ViewTransform>(INITIAL_VIEW);
-  const gesture = crcRef<Gesture | null>(null);
-  const finishGesture = (pointerId: number): void => {
-    if (gesture.current?.pointerId === pointerId) {
-      gesture.current = null;
-      setDraggingNodeId(null);
-    }
-  };
-  const handlers: NodeHandlers = {
-    down(node, event) {
-      const pointerStart = rootToWorkspace(event, view);
-      event.currentTarget.setPointerCapture(event.pointerId);
-      gesture.current = {
-        kind: "node",
-        pointerId: event.pointerId,
-        nodeId: node.id,
-        pointerStart,
-        nodeStart: { x: node.x, y: node.y },
-      };
-      setDraggingNodeId(node.id);
-      setSelected(node.id);
-    },
-    move(event) {
-      const session = gesture.current;
-      if (
-        !session ||
-        session.kind !== "node" ||
-        session.pointerId !== event.pointerId
-      )
-        return;
-      const point = rootToWorkspace(event, view);
-      setNodes((current) =>
-        current.map((node) =>
-          node.id === session.nodeId
-            ? {
-                ...node,
-                x: session.nodeStart.x + point.x - session.pointerStart.x,
-                y: session.nodeStart.y + point.y - session.pointerStart.y,
-              }
-            : node,
-        ),
-      );
-    },
-    up(event) {
-      if (gesture.current?.pointerId !== event.pointerId) return;
-      if (event.currentTarget.hasPointerCapture(event.pointerId))
-        event.currentTarget.releasePointerCapture(event.pointerId);
-      finishGesture(event.pointerId);
-    },
-    finish(event) {
-      finishGesture(event.pointerId);
-    },
-  };
-  const panDown = (event: CRCPointerEvent): void => {
-    event.currentTarget.setPointerCapture(event.pointerId);
-    gesture.current = {
-      kind: "pan",
-      pointerId: event.pointerId,
-      pointerStart: { x: event.x, y: event.y },
-      viewStart: view,
-    };
-  };
-  const panMove = (event: CRCPointerEvent): void => {
-    const session = gesture.current;
-    if (
-      !session ||
-      session.kind !== "pan" ||
-      session.pointerId !== event.pointerId
-    )
-      return;
-    setView({
-      ...session.viewStart,
-      panX: session.viewStart.panX + event.x - session.pointerStart.x,
-      panY: session.viewStart.panY + event.y - session.pointerStart.y,
-    });
-  };
-  const panUp = (event: CRCPointerEvent): void => {
-    if (gesture.current?.pointerId !== event.pointerId) return;
-    if (event.currentTarget.hasPointerCapture(event.pointerId))
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    finishGesture(event.pointerId);
+  const moveNode = (id: NodeId, x: number, y: number): void => {
+    setNodes((current) =>
+      current.map((node) => (node.id === id ? { ...node, x, y } : node)),
+    );
   };
   return (
     <Absolute style={{ width: 960, height: 600 }}>
@@ -676,23 +669,24 @@ function DiagramEditor(): CRCNode {
         reset={() => setView(INITIAL_VIEW)}
       />
       <Workspace
-        style={{ left: 0, top: 56, width: "100%", height: 512 }}
+        style={{
+          left: 0,
+          top: WORKSPACE_TOP,
+          width: "100%",
+          height: WORKSPACE_HEIGHT,
+        }}
         nodes={nodes}
-        selected={selected}
-        draggingNodeId={draggingNodeId}
+        selectedNodeId={selected}
         view={view}
         onSelect={setSelected}
+        onMove={moveNode}
+        onViewChange={setView}
         onWheel={(event) => {
           event.preventDefault();
           setView((current) => zoomAroundPoint(current, event, event.deltaY));
         }}
-        handlers={handlers}
-        panDown={panDown}
-        panMove={panMove}
-        panUp={panUp}
-        finish={(event) => finishGesture(event.pointerId)}
       />
-      <Status
+      <StatusBar
         style={{ left: 0, top: 568, width: "100%", height: 32 }}
         selected={nodes.find((node) => node.id === selected)}
         view={view}

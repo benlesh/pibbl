@@ -219,24 +219,30 @@ function markerFor(
   };
 }
 
-async function copyText(value: string): Promise<void> {
+async function copyText(value: string): Promise<boolean> {
   if (navigator.clipboard) {
     try {
       await navigator.clipboard.writeText(value);
-      return;
+      return true;
     } catch {
       // Fall back below when an embedded or non-secure preview rejects the
       // Clipboard API despite exposing it.
     }
   }
-  const input = document.createElement("textarea");
-  input.value = value;
-  input.style.position = "fixed";
-  input.style.opacity = "0";
-  document.body.appendChild(input);
-  input.select();
-  document.execCommand("copy");
-  input.remove();
+  let input: HTMLTextAreaElement | undefined;
+  try {
+    input = document.createElement("textarea");
+    input.value = value;
+    input.style.position = "fixed";
+    input.style.opacity = "0";
+    document.body.appendChild(input);
+    input.select();
+    return document.execCommand("copy");
+  } catch {
+    return false;
+  } finally {
+    input?.remove();
+  }
 }
 
 function button(label: string, className = "studio-tool"): HTMLButtonElement {
@@ -487,8 +493,10 @@ export async function mountEditorWorkbench(
   copyButton.addEventListener(
     "click",
     () =>
-      void copyText(model.getValue()).then(() => {
-        status.textContent = "TypeScript copied.";
+      void copyText(model.getValue()).then((copied) => {
+        status.textContent = copied
+          ? "TypeScript copied."
+          : "TypeScript copy failed.";
       }),
   );
   resetButton.addEventListener("click", () => {
@@ -510,8 +518,10 @@ export async function mountEditorWorkbench(
             "This edit is too large for a shareable URL (16,000 character limit).";
           return;
         }
-        await copyText(route.url);
-        status.textContent = "Share URL copied.";
+        const copied = await copyText(route.url);
+        status.textContent = copied
+          ? "Share URL copied."
+          : "Share URL copy failed.";
       })(),
   );
 

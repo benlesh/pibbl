@@ -28,12 +28,12 @@ The target snapshot supplies `isFocused` and `isFocusVisible`. Paint a high-cont
 
 ## Predict and try
 
-Move `Idea` after `Sketch` in the source array. Predict that Tab order changes because it follows source traversal, while ArrowRight still chooses a geometric neighbor. Restore the original order before moving on.
+Move `Idea` after `Sketch` in the source array. Predict that Tab order changes because it follows source traversal, while ArrowUp still chooses a geometric neighbor. Restore the original order before moving on.
 
 ## Check your result
 
-Tab enters Reset view, then Idea. Enter selects Idea; ArrowRight then Enter selects Sketch. Shift+Tab walks back through the same order, and Shift+Tab at Reset exits naturally to the surrounding document instead of wrapping. Pointer activation focuses a target without turning on the keyboard-only ring.
+Tab enters Reset view, then Idea. Enter selects Idea; ArrowUp then Enter selects Sketch. Shift+Tab walks back through the same order, and Shift+Tab at Reset exits naturally to the surrounding document instead of wrapping. Pointer activation focuses a target without turning on the keyboard-only ring.
 
 ## What you learned
 
-Explicit targets make Canvas keyboard behavior precise without inventing controls. The Canvas exposes no node names, roles, relationships, or screen-reader tree. A production editor needs an application-owned, synchronized semantic node-and-relationship list with equivalent actions, while avoiding duplicate keyboard paths. See [Focus and keyboard navigation](#/learn/guides/focus-and-keyboard) for the complete policy contract.
+Explicit targets make Canvas keyboard behavior precise without inventing controls. The Canvas exposes no node names, roles, relationships, or screen-reader tree. A production editor needs an application-owned, synchronized semantic node-and-relationship representation with equivalent selection, traversal, activation, editing, and relationship operations. Route that surface through the same model commands: a second keyboard path that evolves separately can diverge and report or perform different actions. See [Focus and keyboard navigation](#/learn/guides/focus-and-keyboard) for the complete policy contract.

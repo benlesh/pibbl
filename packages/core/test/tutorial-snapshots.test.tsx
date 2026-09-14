@@ -7,6 +7,15 @@ import {
   validateTutorialSnapshotCatalog,
   type TutorialSnapshotCatalogEntry,
 } from "@crc/scenarios";
+import {
+  crc,
+  crcEventTarget,
+  crcRectPath,
+  crcRef,
+  crcState,
+  createElement,
+  Rectangle,
+} from "@crc/core";
 import { afterEach, expect, it } from "vitest";
 import {
   learningSourcePaths,
@@ -24,7 +33,10 @@ import {
   tab,
   wheelLogicalPoint,
 } from "./support/user-input";
-import { validateLearningSourceText } from "../../../tooling/learning-source-contract";
+import {
+  validateDiagramEditorTutorialSourceText,
+  validateLearningSourceText,
+} from "../../../tooling/learning-source-contract";
 
 const mountedControllers: Array<{ dispose: () => void }> = [];
 
@@ -94,14 +106,37 @@ async function renderTutorialSnapshot(slug: string): Promise<{
   const pathStarts = new WeakMap<Path2D, Readonly<{ x: number; y: number }>>();
   const pathStartPaints: PathStartPaint[] = [];
   const pathRect = Path2D.prototype.rect;
-  Path2D.prototype.rect = function (x, y, width, height) {
+  const recordPathRect: typeof Path2D.prototype.rect = function (
+    this: Path2D,
+    x,
+    y,
+    width,
+    height,
+  ) {
     rectanglePaths.set(this, { x, y, width, height });
     pathRect.call(this, x, y, width, height);
   };
+  Path2D.prototype.rect = recordPathRect;
   const pathMoveTo = Path2D.prototype.moveTo;
-  Path2D.prototype.moveTo = function (x, y) {
+  const recordPathMoveTo: typeof Path2D.prototype.moveTo = function (
+    this: Path2D,
+    x,
+    y,
+  ) {
     pathStarts.set(this, { x, y });
     pathMoveTo.call(this, x, y);
+  };
+  Path2D.prototype.moveTo = recordPathMoveTo;
+  let pathsRestored = false;
+  const restorePathMethods = (): void => {
+    if (pathsRestored) return;
+    pathsRestored = true;
+    if (Path2D.prototype.rect === recordPathRect) {
+      Path2D.prototype.rect = pathRect;
+    }
+    if (Path2D.prototype.moveTo === recordPathMoveTo) {
+      Path2D.prototype.moveTo = pathMoveTo;
+    }
   };
   const clearRect = context.clearRect.bind(context);
   context.clearRect = function (x, y, width, height) {
@@ -179,18 +214,31 @@ async function renderTutorialSnapshot(slug: string): Promise<{
     fillText.apply(this, args);
   };
 
-  const module = await loadTutorialSnapshot(entry);
-  const controller = module.default(canvas);
-  mountedControllers.push(controller);
-  await new Promise<void>((resolve) =>
-    requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-  );
-  Path2D.prototype.rect = pathRect;
+  let mountedController: { dispose: () => void } | undefined;
+  try {
+    const module = await loadTutorialSnapshot(entry);
+    const runtimeController = module.default(canvas);
+    mountedController = {
+      dispose(): void {
+        try {
+          runtimeController.dispose();
+        } finally {
+          restorePathMethods();
+        }
+      },
+    };
+    mountedControllers.push(mountedController);
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    );
+  } finally {
+    if (!mountedController) restorePathMethods();
+  }
 
   return {
     canvas,
     context,
-    controller,
+    controller: mountedController,
     textPaints,
     paintOperations,
     rectanglePaints,
@@ -204,9 +252,23 @@ afterEach(() => {
 });
 
 const module = async () => ({ default: () => ({ dispose() {} }) });
+const canonicalSnapshots = [
+  ["canvas-scene", "canvas-scene"],
+  ["first-node", "first-node"],
+  ["connect-nodes", "connect-nodes"],
+  ["reusable-node", "reusable-node"],
+  ["editor-chrome", "editor-chrome"],
+  ["selection", "selection"],
+  ["dragging", "dragging"],
+  ["pan-and-zoom", "pan-and-zoom"],
+  ["viewport-and-layer", "viewport-and-layer"],
+  ["filters", "filters"],
+  ["keyboard-interaction", "keyboard-interaction"],
+  ["finished", "finished-editor"],
+] as const;
 const record = (
   chapter: number,
-  slug = `diagram-editor-chapter-${String(chapter)}`,
+  slug = `diagram-editor-${canonicalSnapshots[chapter - 1]?.[0] ?? `chapter-${String(chapter)}`}`,
 ): TutorialSnapshotCatalogEntry => ({
   slug,
   tutorial: "diagram-editor",
@@ -215,18 +277,32 @@ const record = (
   authoring: "jsx",
   canvas: { width: 960, height: 600 },
   source: {
-    path: `packages/scenarios/src/tutorials/diagram-editor/${String(chapter).padStart(2, "0")}-chapter-${String(chapter)}.example.tsx`,
+    path: `packages/scenarios/src/tutorials/diagram-editor/${String(chapter).padStart(2, "0")}-${canonicalSnapshots[chapter - 1]?.[1] ?? `chapter-${String(chapter)}`}.example.tsx`,
   },
   load: module,
 });
+const records = (): TutorialSnapshotCatalogEntry[] =>
+  canonicalSnapshots.map((_snapshot, index) => record(index + 1));
+const withRecord = (
+  chapter: number,
+  replacement: TutorialSnapshotCatalogEntry,
+): TutorialSnapshotCatalogEntry[] =>
+  records().map((entry) => (entry.chapter === chapter ? replacement : entry));
 
-it("validates one ordered tutorial prefix and rejects gaps", () => {
-  expect(validateTutorialSnapshotCatalog([record(1), record(2)])).toHaveLength(
-    2,
-  );
-  expect(() => validateTutorialSnapshotCatalog([record(1), record(3)])).toThrow(
-    /contiguous from 1/u,
-  );
+it("validates the exact ordered tutorial and rejects chapter gaps", () => {
+  expect(validateTutorialSnapshotCatalog(records())).toHaveLength(12);
+  expect(() =>
+    validateTutorialSnapshotCatalog(withRecord(2, record(3))),
+  ).toThrow(/contiguous from 1/u);
+});
+
+it("requires the exact twelve-entry diagram-editor catalog", () => {
+  expect(() =>
+    validateTutorialSnapshotCatalog(tutorialSnapshotCatalog.slice(0, -1)),
+  ).toThrow(/exactly 12/u);
+  expect(() =>
+    validateTutorialSnapshotCatalog([...tutorialSnapshotCatalog, record(13)]),
+  ).toThrow(/exactly 12/u);
 });
 
 it("keeps tutorial and ordinary learning slugs in one workbench namespace", () => {
@@ -302,59 +378,71 @@ it("keeps tutorial and ordinary learning slugs in one workbench namespace", () =
     learningExampleCatalog[0],
   );
   expect(() =>
-    validateTutorialSnapshotCatalog([
-      record(1, learningExampleCatalog[0]!.slug),
-    ]),
+    validateTutorialSnapshotCatalog(
+      withRecord(1, record(1, learningExampleCatalog[0]!.slug)),
+    ),
   ).toThrow(/duplicate workbench slug/u);
 });
 
 it("rejects metadata outside the diagram-editor JSX snapshot contract", () => {
   expect(() =>
-    validateTutorialSnapshotCatalog([
-      {
+    validateTutorialSnapshotCatalog(
+      withRecord(1, {
         ...record(1),
         tutorial: "other",
-      } as unknown as TutorialSnapshotCatalogEntry,
-    ]),
+      } as unknown as TutorialSnapshotCatalogEntry),
+    ),
   ).toThrow(/diagram-editor/u);
   expect(() =>
-    validateTutorialSnapshotCatalog([
-      {
+    validateTutorialSnapshotCatalog(
+      withRecord(1, {
         ...record(1),
         authoring: "createElement",
-      } as unknown as TutorialSnapshotCatalogEntry,
-    ]),
+      } as unknown as TutorialSnapshotCatalogEntry),
+    ),
   ).toThrow(/JSX/u);
   expect(() =>
-    validateTutorialSnapshotCatalog([
-      {
+    validateTutorialSnapshotCatalog(
+      withRecord(1, {
         ...record(1),
         canvas: { width: 959, height: 600 },
-      } as unknown as TutorialSnapshotCatalogEntry,
-    ]),
+      } as unknown as TutorialSnapshotCatalogEntry),
+    ),
   ).toThrow(/960 by 600/u);
   expect(() =>
-    validateTutorialSnapshotCatalog([
-      {
+    validateTutorialSnapshotCatalog(
+      withRecord(1, {
         ...record(1),
         source: {
           path: "packages/scenarios/src/learning/start/nope.example.tsx",
         },
-      },
-    ]),
-  ).toThrow(/canonical tutorial source path/u);
+      }),
+    ),
+  ).toThrow(/filename chapter prefix/u);
 });
 
-it("rejects duplicate chapters and source paths", () => {
+it("rejects duplicate chapters", () => {
   expect(() =>
-    validateTutorialSnapshotCatalog([record(1), record(1, "another-chapter")]),
+    validateTutorialSnapshotCatalog(withRecord(2, record(1))),
   ).toThrow(/contiguous from 1/u);
+});
+
+it("rejects filename-order and stable slug/path correspondence mutations", () => {
   expect(() =>
-    validateTutorialSnapshotCatalog([
-      record(1),
-      { ...record(2), source: record(1).source },
-    ]),
-  ).toThrow(/duplicate tutorial source path/u);
+    validateTutorialSnapshotCatalog(
+      withRecord(2, {
+        ...record(2),
+        source: {
+          path: "packages/scenarios/src/tutorials/diagram-editor/03-first-node.example.tsx",
+        },
+      }),
+    ),
+  ).toThrow(/filename chapter prefix 02/u);
+  expect(() =>
+    validateTutorialSnapshotCatalog(
+      withRecord(2, { ...record(2), slug: "diagram-editor-wrong" }),
+    ),
+  ).toThrow(/stable diagram-editor slug\/path correspondence/u);
 });
 
 it("rejects tutorial modules without a default mount function", async () => {
@@ -387,8 +475,53 @@ it("validates and loads every cataloged tutorial source", async () => {
         sourcePath: entry.source.path,
       }),
     ).not.toThrow();
+    if (entry.chapter >= 4) {
+      expect(() =>
+        validateDiagramEditorTutorialSourceText(source, {
+          chapter: entry.chapter,
+          label: `Tutorial snapshot "${entry.slug}"`,
+        }),
+      ).not.toThrow();
+    }
     expect(typeof (await loadTutorialSnapshot(entry)).default).toBe("function");
   }
+});
+
+it("rejects cumulative vocabulary and target-ownership mutations", async () => {
+  const filters = getTutorialSnapshotBySlug("diagram-editor-filters")!;
+  const filtersSource = await loadWorkbenchSource(filters);
+  expect(() =>
+    validateDiagramEditorTutorialSourceText(
+      filtersSource.replace("function NodeCard", "function Card"),
+      { chapter: filters.chapter, label: "mutated Chapter 10" },
+    ),
+  ).toThrow(/missing NodeCard/u);
+
+  const keyboard = getTutorialSnapshotBySlug(
+    "diagram-editor-keyboard-interaction",
+  )!;
+  const keyboardSource = await loadWorkbenchSource(keyboard);
+  expect(() =>
+    validateDiagramEditorTutorialSourceText(
+      keyboardSource.replace(
+        "const dragSession = crcRef<NodeDragSession | null>(null);",
+        "const dragSession = { current: null as NodeDragSession | null };",
+      ),
+      { chapter: keyboard.chapter, label: "mutated Chapter 11" },
+    ),
+  ).toThrow(/drag ownership in NodeCard/u);
+});
+
+it("restores both instrumented Path2D methods when a snapshot is disposed", async () => {
+  const pathRect = Path2D.prototype.rect;
+  const pathMoveTo = Path2D.prototype.moveTo;
+  const snapshot = await renderTutorialSnapshot("diagram-editor-canvas-scene");
+
+  snapshot.controller.dispose();
+  removeTrackedController(snapshot.controller);
+
+  expect(Path2D.prototype.rect).toBe(pathRect);
+  expect(Path2D.prototype.moveTo).toBe(pathMoveTo);
 });
 
 it.each(tutorialSnapshotCatalog)(
@@ -520,6 +653,103 @@ async function nextPaint(): Promise<void> {
   await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 }
 
+it("keeps every Chapter 4-12 node coordinate aligned with the canonical model", async () => {
+  const expected = {
+    IDEA: { x: 176, y: 270 },
+    SKETCH: { x: 410, y: 182 },
+    BUILD: { x: 476, y: 408 },
+    SHIP: { x: 780, y: 300 },
+  } as const;
+
+  for (const entry of tutorialSnapshotCatalog.slice(3)) {
+    const snapshot = await renderTutorialSnapshot(entry.slug);
+    await clickLogicalPoint(snapshot.canvas, { x: 300, y: 520 });
+    await nextPaint();
+    for (const title of ["IDEA", "SKETCH", "BUILD", "SHIP"] as const) {
+      expect(
+        latestTitlePosition(snapshot.textPaints, title),
+        `${entry.slug} ${title}`,
+      ).toMatchObject(expected[title]);
+    }
+    snapshot.controller.dispose();
+    removeTrackedController(snapshot.controller);
+    snapshot.canvas.remove();
+  }
+});
+
+it("removes an active target-local drag before pointer-up without a ghost loss or cursor", async () => {
+  const canvas = document.createElement("canvas");
+  canvas.width = 240;
+  canvas.height = 180;
+  document.body.appendChild(canvas);
+
+  let removeTarget = (): void => {
+    throw new Error("Removal harness has not mounted.");
+  };
+  let moves = 0;
+  let losses = 0;
+
+  function RemovableTarget() {
+    const pointerId = crcRef<number>();
+    const [dragging, setDragging] = crcState(false);
+    const finish = (): void => {
+      pointerId.current = undefined;
+      setDragging(false);
+    };
+    crcEventTarget(
+      {
+        onPointerDown(event) {
+          pointerId.current = event.pointerId;
+          setDragging(true);
+          event.currentTarget.setPointerCapture(event.pointerId);
+        },
+        onPointerMove(event) {
+          if (pointerId.current === event.pointerId) moves += 1;
+        },
+        onPointerUp: finish,
+        onPointerCancel: finish,
+        onLostPointerCapture() {
+          losses += 1;
+          finish();
+        },
+      },
+      {
+        path: crcRectPath(40, 40, 120, 80),
+        fill: true,
+        cursor: dragging ? "grabbing" : "grab",
+      },
+    );
+    return createElement(Rectangle, {
+      pointerEvents: "none",
+      style: { x: 40, y: 40, width: 120, height: 80, fill: "#ff6b57" },
+    });
+  }
+
+  function RemovalHarness() {
+    const [visible, setVisible] = crcState(true);
+    removeTarget = () => setVisible(false);
+    return visible ? createElement(RemovableTarget, {}) : null;
+  }
+
+  const controller = crc(canvas, createElement(RemovalHarness, {}));
+  mountedControllers.push(controller);
+  await nextPaint();
+  await pointerMoveLogicalPoint(canvas, { x: 80, y: 80 });
+  await pointerDownLogicalPoint(canvas, { x: 80, y: 80 });
+  await nextPaint();
+  expect(canvas.style.cursor).toBe("grabbing");
+  const movesBeforeRemoval = moves;
+
+  removeTarget();
+  await nextPaint();
+  expect(canvas.style.cursor).toBe("");
+  await pointerMoveLogicalPoint(canvas, { x: 100, y: 100 });
+  await nextPaint();
+  expect(moves).toBe(movesBeforeRemoval);
+  expect(losses).toBe(0);
+  await pointerUpLogicalPoint(canvas, { x: 100, y: 100 });
+});
+
 it("keeps a captured Chapter 7 node drag active outside its original body", async () => {
   const snapshot = await renderTutorialSnapshot("diagram-editor-dragging");
   const before = Object.fromEntries(
@@ -565,7 +795,7 @@ it("keeps a captured Chapter 7 node drag active outside its original body", asyn
   expect(snapshot.canvas.hasPointerCapture(pointerId!)).toBe(false);
 });
 
-it("clears a Chapter 7 node drag after cancellation or capture loss", async () => {
+it("clears a Chapter 7 node drag after pointer cancellation", async () => {
   const snapshot = await renderTutorialSnapshot("diagram-editor-dragging");
   let pointerId: number | undefined;
   snapshot.canvas.addEventListener(
@@ -593,40 +823,66 @@ it("clears a Chapter 7 node drag after cancellation or capture loss", async () =
     x: afterCancellation.x,
     y: afterCancellation.y,
   });
+});
 
-  snapshot.controller.dispose();
-  removeTrackedController(snapshot.controller);
-  snapshot.canvas.remove();
-  const captureLoss = await renderTutorialSnapshot("diagram-editor-dragging");
-  let lostPointerId: number | undefined;
-  captureLoss.canvas.addEventListener(
+it("clears Chapter 7 app drag ownership on lostpointercapture before pointer-up", async () => {
+  const snapshot = await renderTutorialSnapshot("diagram-editor-dragging");
+  let pointerId: number | undefined;
+  snapshot.canvas.addEventListener(
     "pointerdown",
     (event) => {
-      lostPointerId = event.pointerId;
+      pointerId = event.pointerId;
     },
     { capture: true, once: true },
   );
-  await pointerDownLogicalPoint(captureLoss.canvas, { x: 176, y: 278 });
+  await pointerDownLogicalPoint(snapshot.canvas, { x: 176, y: 278 });
   await nextPaint();
-  expect(captureLoss.canvas.hasPointerCapture(lostPointerId!)).toBe(true);
-  const afterLoss = latestTitlePosition(captureLoss.textPaints, "IDEA");
+  expect(snapshot.canvas.hasPointerCapture(pointerId!)).toBe(true);
+  const beforeLoss = latestTitlePosition(snapshot.textPaints, "IDEA");
+  snapshot.canvas.dispatchEvent(
+    new PointerEvent("lostpointercapture", {
+      bubbles: true,
+      pointerId: pointerId!,
+    }),
+  );
+  await pointerMoveLogicalPoint(snapshot.canvas, { x: 190, y: 290 });
+  await nextPaint();
+  expect(latestTitlePosition(snapshot.textPaints, "IDEA")).toMatchObject(
+    beforeLoss,
+  );
+  await pointerUpLogicalPoint(snapshot.canvas, { x: 190, y: 290 });
+});
+
+it("uses Chapter 7 pointer-up fallback when CDP direct release omits native capture loss", async () => {
+  const snapshot = await renderTutorialSnapshot("diagram-editor-dragging");
+  let pointerId: number | undefined;
+  snapshot.canvas.addEventListener(
+    "pointerdown",
+    (event) => {
+      pointerId = event.pointerId;
+    },
+    { capture: true, once: true },
+  );
+  await pointerDownLogicalPoint(snapshot.canvas, { x: 176, y: 278 });
+  await nextPaint();
+  expect(snapshot.canvas.hasPointerCapture(pointerId!)).toBe(true);
   let nativeLosses = 0;
-  captureLoss.canvas.addEventListener("lostpointercapture", () => {
+  snapshot.canvas.addEventListener("lostpointercapture", () => {
     nativeLosses += 1;
   });
-  captureLoss.canvas.releasePointerCapture(lostPointerId!);
+  snapshot.canvas.releasePointerCapture(pointerId!);
   await nextPaint();
   // Chromium's CDP mouse transport establishes native capture but does not
   // deliver a native loss after direct release. Keep that harness limitation
   // explicit rather than manufacturing the terminal event.
   expect(nativeLosses).toBe(0);
-  await pointerUpLogicalPoint(captureLoss.canvas, { x: 280, y: 420 });
-  await pointerMoveLogicalPoint(captureLoss.canvas, { x: 600, y: 500 });
+  const beforePointerUp = latestTitlePosition(snapshot.textPaints, "IDEA");
+  await pointerUpLogicalPoint(snapshot.canvas, { x: 176, y: 278 });
+  await pointerMoveLogicalPoint(snapshot.canvas, { x: 190, y: 290 });
   await nextPaint();
-  expect(latestTitlePosition(captureLoss.textPaints, "IDEA")).toMatchObject({
-    x: afterLoss.x,
-    y: afterLoss.y,
-  });
+  expect(latestTitlePosition(snapshot.textPaints, "IDEA")).toMatchObject(
+    beforePointerUp,
+  );
 });
 
 it("pans, pointer-zooms, clamps, and resets Chapter 8 without changing node data", async () => {
@@ -888,7 +1144,8 @@ it("filters exactly one selected Chapter 10 card without enlarging its hit geome
     });
     if (rest.length === 0 || rest.length === 2 || rest.length === 6)
       Reflect.apply(offscreenDrawImage, this, [image, first, second, ...rest]);
-    else throw new Error(`Unexpected drawImage arity ${String(rest.length + 3)}.`);
+    else
+      throw new Error(`Unexpected drawImage arity ${String(rest.length + 3)}.`);
   }
   offscreenPrototype.drawImage = recordOffscreenDrawImage;
   function recordOffscreenFill(
@@ -986,7 +1243,8 @@ it("filters exactly one selected Chapter 10 card without enlarging its hit geome
     });
     if (rest.length === 0 || rest.length === 2 || rest.length === 6)
       Reflect.apply(rootDrawImage, this, [image, first, second, ...rest]);
-    else throw new Error(`Unexpected drawImage arity ${String(rest.length + 3)}.`);
+    else
+      throw new Error(`Unexpected drawImage arity ${String(rest.length + 3)}.`);
   }
   rootPrototype.drawImage = recordRootDrawImage;
   const filterBoundariesFrom = (start: number) =>
@@ -1131,7 +1389,7 @@ it("traverses, activates, and visibly focuses Chapter 11 custom Canvas targets",
   await nextPaint();
   expect(latestStatus(snapshot.textPaints)).toBe("SELECTED · IDEA");
 
-  await pressKey("ArrowRight");
+  await pressKey("ArrowUp");
   await pressKey("Enter");
   await nextPaint();
   expect(latestStatus(snapshot.textPaints)).toBe("SELECTED · SKETCH");
@@ -1190,7 +1448,9 @@ it("publishes all twelve canonical tutorial snapshots", () => {
   expect(tutorialSnapshotCatalog.map(({ chapter }) => chapter)).toEqual([
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
   ]);
-  expect(getTutorialSnapshotBySlug("diagram-editor-finished")?.chapter).toBe(12);
+  expect(getTutorialSnapshotBySlug("diagram-editor-finished")?.chapter).toBe(
+    12,
+  );
 });
 
 it("runs the complete Chapter 12 pointer and keyboard editor flow", async () => {

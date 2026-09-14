@@ -603,6 +603,83 @@ async function diagramEditorNarrowLayoutContract(browser) {
   }
 }
 
+async function diagramEditorClipboardFallbackContract(browser) {
+  const context = await browser.newContext({
+    viewport: { width: 1280, height: 900 },
+  });
+  await context.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: async () => {
+          throw new Error("Clipboard API unavailable in test context.");
+        },
+      },
+    });
+    globalThis.__crcClipboardFallbackMode = "success";
+    globalThis.__crcCopiedText = undefined;
+    document.execCommand = (command) => {
+      if (command !== "copy") return false;
+      if (globalThis.__crcClipboardFallbackMode === "throw") {
+        throw new Error("Fallback copy failed.");
+      }
+      if (globalThis.__crcClipboardFallbackMode === "failure") return false;
+      globalThis.__crcCopiedText = document.activeElement?.value;
+      return true;
+    };
+  });
+  const page = await context.newPage();
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  const route = diagramEditorChapterRoute(diagramEditorChapters.at(-1)[0]);
+  try {
+    await open(page, route);
+    await tutorialWorkbenchContract(page, route);
+    await page.getByRole("button", { name: "Share", exact: true }).click();
+    await page
+      .locator("#studio-main .studio-run-status")
+      .getByText("Share URL copied.", { exact: true })
+      .waitFor({ timeout: 30_000 });
+    const copiedText = await page.evaluate(() => globalThis.__crcCopiedText);
+    if (copiedText !== page.url()) {
+      throw failure(
+        route,
+        "fallback clipboard text to equal the current share URL",
+        copiedText,
+      );
+    }
+
+    await page.evaluate(() => {
+      globalThis.__crcClipboardFallbackMode = "failure";
+      globalThis.__crcCopiedText = undefined;
+    });
+    await page.getByRole("button", { name: "Share", exact: true }).click();
+    await page
+      .locator("#studio-main .studio-run-status")
+      .getByText("Share URL copy failed.", { exact: true })
+      .waitFor({ timeout: 30_000 });
+
+    await page.evaluate(() => {
+      globalThis.__crcClipboardFallbackMode = "throw";
+    });
+    await page.getByRole("button", { name: "Share", exact: true }).click();
+    await page
+      .locator("#studio-main .studio-run-status")
+      .getByText("Share URL copy failed.", { exact: true })
+      .waitFor({ timeout: 30_000 });
+    const textareaCount = await page.locator("body > textarea").count();
+    if (textareaCount !== 0 || pageErrors.length !== 0) {
+      throw failure(
+        route,
+        "failed clipboard fallbacks to clean up without unhandled errors",
+        JSON.stringify({ textareaCount, pageErrors }),
+      );
+    }
+  } finally {
+    await context.close();
+  }
+}
+
 const server = spawn(
   process.execPath,
   [
@@ -643,6 +720,7 @@ try {
   await diagramEditorChapterContract(page);
   await diagramEditorTeardownContract(page);
   await diagramEditorNarrowLayoutContract(browser);
+  await diagramEditorClipboardFallbackContract(browser);
   await context.close();
   process.stdout.write("Validated CRC Studio public documentation navigation and search acceptance.\n");
 } catch (error) {

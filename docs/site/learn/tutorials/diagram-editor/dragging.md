@@ -24,6 +24,41 @@ The card captures one pointer ID on pointer down. [`crcRef`](#/api/hooks/crc-ref
 
 Record root-logical pointer and workspace node origins. Each move uses an immutable functional update. [Event types](#/api/types/events) expose capture, cancel, and loss notifications.
 
+```tsx
+const dragSession = crcRef<NodeDragSession | null>(null);
+
+const onPointerDown = (node: DiagramNode, event: CRCPointerEvent) => {
+  const pointerStart = rootToWorkspace(event);
+  event.currentTarget.setPointerCapture(event.pointerId);
+  dragSession.current = {
+    kind: "node",
+    pointerId: event.pointerId,
+    nodeId: node.id,
+    pointerStart,
+    nodeStart: { x: node.x, y: node.y },
+  };
+};
+
+const onPointerMove = (event: CRCPointerEvent) => {
+  const session = dragSession.current;
+  if (!session || session.pointerId !== event.pointerId) return;
+  const point = rootToWorkspace(event);
+  setNodes((current) =>
+    current.map((node) =>
+      node.id === session.nodeId
+        ? {
+            ...node,
+            x: session.nodeStart.x + point.x - session.pointerStart.x,
+            y: session.nodeStart.y + point.y - session.pointerStart.y,
+          }
+        : node,
+    ),
+  );
+};
+```
+
+Matching the pointer ID prevents a second pointer from stealing the drag. Capturing before the pointer leaves the card prevents outside moves from disappearing; pointer up, cancellation, and capture loss all clear the same session so a stale owner cannot move a node later.
+
 ## Predict and try
 
 Predict why a move before the next paint still has a current owner. Then clamp positions to x `-40..1232` and y `-40..816` for generous panning overscan.

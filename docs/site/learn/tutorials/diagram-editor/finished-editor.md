@@ -18,11 +18,11 @@ Review the completed 960 by 600 workflow editor: selected cards glow, dragging a
 
 ## How it works
 
-The final source puts pure model and coordinate helpers before the components that consume them. `updateNodePosition`, `rootToWorkspace`, and `zoomAroundPoint` make the mutable-looking gestures ordinary immutable model updates. [crcMemo](#/api/hooks/crc-memo) owns the expensive static grid path for the mounted `GridLayer`; the gesture ref owns only synchronous browser-event ownership.
+The final source puts pure model and coordinate helpers before the components that consume them. `updateNodePosition`, `rootToWorkspace`, and `zoomAroundPoint` make the mutable-looking gestures ordinary immutable model updates. [crcMemo](#/api/hooks/crc-memo) owns the expensive static grid path for the mounted `GridLayer`; each `NodeCard` owns its drag ref and cursor state, while `Workspace` separately owns its pan ref and cursor state.
 
 ## Build the change
 
-One `finishGesture(pointerId)` clears a gesture only when that exact pointer owns it. Pointer up, cancellation, and capture loss all pass through that terminator. There is deliberately no [crcWhenChanged](#/api/hooks/crc-when-changed): this editor owns no external resource requiring dependency-driven synchronization. The ref is still appropriate because it represents an in-flight pointer session, not visual state.
+Each local terminator clears a gesture only when that exact pointer owns it. Pointer up, cancellation, and capture loss all pass through the corresponding terminator. Removing a card unmounts the component that owns its drag session and cursor, so application ownership disappears naturally before any later pointer-up; it does not need a synthetic loss callback. There is deliberately no [crcWhenChanged](#/api/hooks/crc-when-changed): this editor owns no external resource requiring dependency-driven synchronization. The refs are appropriate because they represent in-flight pointer sessions, not visual state.
 
 Stable card and edge keys preserve identity among their same parent siblings. Reparenting or changing a key remounts a component, which is why the source keeps the component tree deliberate. [crcRef](#/api/hooks/crc-ref) and [state and lifecycle](#/learn/guides/state-and-lifecycle) explain those ownership boundaries.
 
@@ -36,4 +36,4 @@ Select and drag Idea outside its initial card, pan empty workspace, zoom around 
 
 ## What you learned
 
-This tutorial is complete, not a production diagramming product. Browser Canvas and `Path2D` behavior remain authoritative; nonempty filters and retained layers require their browser capabilities. Production work still needs semantic accessibility, persistence, editing, undo, recovery UX, and product-specific testing. Review [focus and keyboard navigation](#/learn/guides/focus-and-keyboard) and [style and draw](#/learn/guides/style-and-draw) before extending it.
+This tutorial is complete, not a production diagramming product. Browser Canvas and `Path2D` behavior remain authoritative; nonempty filters and retained layers require their browser capabilities. Production work still needs an application-owned representation of the same nodes and relationships, synchronized with the Canvas model and offering equivalent selection, traversal, activation, editing, and relationship operations to assistive technology. Do not bolt on a separate keyboard implementation that can diverge from the Canvas actions; route both surfaces through the same model commands. Persistence, undo, recovery UX, and product-specific testing also remain application work. Review [focus and keyboard navigation](#/learn/guides/focus-and-keyboard) and [style and draw](#/learn/guides/style-and-draw) before extending it.

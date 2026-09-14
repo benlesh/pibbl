@@ -16,6 +16,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { relative, resolve } from 'node:path';
 import { format } from 'prettier';
 import {
+  validateDiagramEditorTutorialSourceText,
   validateLearningSourceText,
   validateScenarioSourceText,
 } from './learning-source-contract';
@@ -218,6 +219,12 @@ async function validateSources(): Promise<void> {
       label: `Tutorial snapshot "${entry.slug}"`,
       sourcePath: entry.source.path,
     });
+    if (entry.chapter >= 4) {
+      validateDiagramEditorTutorialSourceText(sourceText, {
+        chapter: entry.chapter,
+        label: `Tutorial snapshot "${entry.slug}"`,
+      });
+    }
     await loadTutorialSnapshot(entry);
   }
 }

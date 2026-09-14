@@ -30,11 +30,17 @@ interface DiagramEdge {
   readonly to: NodeId;
 }
 
+interface ViewTransform {
+  readonly panX: number;
+  readonly panY: number;
+  readonly zoom: number;
+}
+
 interface RegionProps {
   readonly style: BoxStyle & LayoutItemStyle;
 }
 
-const NODES: readonly DiagramNode[] = [
+const INITIAL_NODES: readonly DiagramNode[] = [
   {
     id: "idea",
     title: "IDEA",
@@ -76,6 +82,9 @@ const EDGES: readonly DiagramEdge[] = [
   { id: "build-ship", from: "build", to: "ship" },
 ] as const;
 
+const INITIAL_VIEW: ViewTransform = { panX: 0, panY: 0, zoom: 1 };
+const WORKSPACE_TOP = 56;
+const WORKSPACE_HEIGHT = 512;
 const NODE_WIDTH = 168;
 const NODE_HEIGHT = 84;
 
@@ -163,8 +172,8 @@ function NodeCard({ node }: Readonly<{ node: DiagramNode }>): CRCNode {
 }
 
 function Connection({ edge }: Readonly<{ edge: DiagramEdge }>): CRCNode {
-  const from = NODES.find((node) => node.id === edge.from);
-  const to = NODES.find((node) => node.id === edge.to);
+  const from = INITIAL_NODES.find((node) => node.id === edge.from);
+  const to = INITIAL_NODES.find((node) => node.id === edge.to);
   if (!from || !to) throw new Error(`Unknown node in edge "${edge.id}".`);
   const fromPort = { x: from.x + NODE_WIDTH, y: from.y + NODE_HEIGHT / 2 };
   const toPort = { x: to.x, y: to.y + NODE_HEIGHT / 2 };
@@ -242,7 +251,7 @@ function Workspace({ style: _specifiedStyle }: RegionProps): CRCNode {
       {EDGES.map((edge) => (
         <Connection key={edge.id} edge={edge} />
       ))}
-      {NODES.map((node) => (
+      {INITIAL_NODES.map((node) => (
         <NodeCard key={node.id} node={node} />
       ))}
     </Fragment>,
@@ -259,7 +268,7 @@ function StatusBar({ style: _specifiedStyle }: RegionProps): CRCNode {
       pointerEvents="none"
       style={{ x: 20, y: 21, fill: "#fffdf6", font: "700 12px monospace" }}
     >
-      READY · 100%
+      READY · {Math.round(INITIAL_VIEW.zoom * 100)}%
     </Text>,
   ];
 }
@@ -268,7 +277,14 @@ function DiagramEditor(): CRCNode {
   return (
     <Absolute style={{ width: 960, height: 600 }}>
       <Toolbar style={{ left: 0, top: 0, width: "100%", height: 56 }} />
-      <Workspace style={{ left: 0, top: 56, width: "100%", height: 512 }} />
+      <Workspace
+        style={{
+          left: 0,
+          top: WORKSPACE_TOP,
+          width: "100%",
+          height: WORKSPACE_HEIGHT,
+        }}
+      />
       <StatusBar style={{ left: 0, top: 568, width: "100%", height: 32 }} />
     </Absolute>
   );

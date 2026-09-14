@@ -6,6 +6,9 @@ import { chromium } from "playwright";
 
 const workspaceRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const update = process.argv.includes("--update");
+const requestedRouteNames = process.argv
+  .filter((argument) => argument.startsWith("--route="))
+  .map((argument) => argument.slice("--route=".length));
 const previewPort = process.env.CRC_STUDIO_PREVIEW_PORT ?? "4174";
 if (!/^[1-9]\d{0,4}$/.test(previewPort) || Number(previewPort) > 65_535) {
   throw new Error(
@@ -13,7 +16,7 @@ if (!/^[1-9]\d{0,4}$/.test(previewPort) || Number(previewPort) > 65_535) {
   );
 }
 const origin = `http://127.0.0.1:${previewPort}`;
-const routes = [
+const allRoutes = [
   {
     name: "learn-landing",
     hash: "#/learn",
@@ -51,6 +54,20 @@ const routes = [
     ready: ".testing-area .scenario-detail__title",
   },
 ];
+const routeNames = new Set(allRoutes.map(({ name }) => name));
+const unknownRouteNames = requestedRouteNames.filter(
+  (name) => !routeNames.has(name),
+);
+if (unknownRouteNames.length > 0) {
+  throw new Error(
+    `Unknown CRC Studio visual route(s): ${unknownRouteNames.join(", ")}.`,
+  );
+}
+const requestedRouteNameSet = new Set(requestedRouteNames);
+const routes =
+  requestedRouteNames.length === 0
+    ? allRoutes
+    : allRoutes.filter(({ name }) => requestedRouteNameSet.has(name));
 
 async function waitForServer(process) {
   for (let attempt = 0; attempt < 200; attempt++) {

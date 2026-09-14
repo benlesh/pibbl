@@ -2,7 +2,6 @@ import {
   Absolute,
   Clip,
   crc,
-  crcEventListener,
   crcLayoutBox,
   crcRef,
   crcState,
@@ -119,6 +118,7 @@ const EDGES: readonly DiagramEdge[] = [
 ] as const;
 const INITIAL_VIEW: ViewTransform = { panX: 0, panY: 0, zoom: 1 };
 const WORKSPACE_TOP = 56;
+const WORKSPACE_HEIGHT = 512;
 const NODE_WIDTH = 168;
 const NODE_HEIGHT = 84;
 
@@ -310,7 +310,6 @@ function Toolbar({
     </Text>,
     <Rectangle
       onClick={onReset}
-      onPointerDown={onReset}
       style={{
         x: 820,
         y: 12,
@@ -352,7 +351,6 @@ function Workspace({
   onWorkspaceLostPointerCapture,
 }: WorkspaceProps): CRCNode {
   const box = crcLayoutBox();
-  crcEventListener({ onWheel });
   const connections = EDGES.map((edge) => (
     <Connection key={edge.id} edge={edge} nodes={nodes} />
   ));
@@ -365,7 +363,10 @@ function Workspace({
     />
   ));
   return (
-    <Clip style={{ d: getWorkspaceClip(), width: 960, height: 512 }}>
+    <Clip
+      onWheel={onWheel}
+      style={{ d: getWorkspaceClip(), width: 960, height: WORKSPACE_HEIGHT }}
+    >
       <Rectangle
         onClick={onClearSelection}
         onPointerDown={onWorkspacePointerDown}
@@ -526,7 +527,12 @@ function DiagramEditor(): CRCNode {
         onReset={() => setView(INITIAL_VIEW)}
       />
       <Workspace
-        style={{ left: 0, top: 56, width: "100%", height: 512 }}
+        style={{
+          left: 0,
+          top: WORKSPACE_TOP,
+          width: "100%",
+          height: WORKSPACE_HEIGHT,
+        }}
         nodes={nodes}
         selectedNodeId={selectedNodeId}
         view={view}
