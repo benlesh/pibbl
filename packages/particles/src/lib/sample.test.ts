@@ -147,6 +147,55 @@ describe("particle analytic sampling", () => {
     expect(output[Particle2DRegister.Live]).toBe(0);
   });
 
+  it("samples whole-vector and initial-color parameter registers in 2D", () => {
+    const effect = defineParticleEffect2D({
+      parameters: {
+        launch: { type: "vector2", default: [2, 3], timing: "spawn" },
+        wind: { type: "vector2", default: [4, 5], timing: "simulation" },
+        tint: { type: "color", default: "#33669980", timing: "render" },
+      },
+      emitters: [
+        {
+          name: "parameterized",
+          capacity: 1,
+          emission: [{ type: "burst", atMilliseconds: 0, count: 1 }],
+          shape: { type: "point" },
+          initial: {
+            lifetimeMilliseconds: 1_000,
+            velocity: particle.parameter("launch"),
+            color: particle.parameter("tint"),
+          },
+          motion: [
+            {
+              type: "acceleration",
+              value: particle.parameter("wind"),
+            },
+          ],
+          renderer: { type: "circle" },
+          bounds: { min: [-20, -20], max: [20, 20] },
+        },
+      ],
+    });
+    const plan = compileParticleEffect2D(effect);
+    const output = new Float64Array(Particle2DRegister.AtlasFrame + 1);
+
+    sampleParticle2D(
+      plan.emitters[0]!,
+      { seed: 1, ordinal: 0, birthTimeMilliseconds: 0 },
+      500,
+      plan.parameterLayout.defaults,
+      output,
+    );
+    expect(output[Particle2DRegister.X]).toBe(1.5);
+    expect(output[Particle2DRegister.Y]).toBe(2.125);
+    expect(output[Particle2DRegister.VelocityX]).toBe(4);
+    expect(output[Particle2DRegister.VelocityY]).toBe(5.5);
+    expect(output[Particle2DRegister.Red]).toBe(0.2);
+    expect(output[Particle2DRegister.Green]).toBe(0.4);
+    expect(output[Particle2DRegister.Blue]).toBe(0.6);
+    expect(output[Particle2DRegister.Alpha]).toBe(128 / 255);
+  });
+
   it("uses the closed-form drag displacement and zero-drag limit", () => {
     const dragEffect = defineParticleEffect2D({
       emitters: [
@@ -219,12 +268,59 @@ describe("particle analytic sampling", () => {
     sampleParticle2D(
       compileParticleEffect2D(effect).emitters[0]!,
       { seed: 42, ordinal: 0, birthTimeMilliseconds: 0 },
+      0,
+      new Float64Array(0),
+      output,
+    );
+    expect(output[Particle2DRegister.X]).toBe(0);
+    expect(output[Particle2DRegister.Y]).toBe(0);
+    expect(output[Particle2DRegister.VelocityX]).toBe(Math.PI);
+    expect(output[Particle2DRegister.VelocityY]).toBe(0);
+
+    sampleParticle2D(
+      compileParticleEffect2D(effect).emitters[0]!,
+      { seed: 42, ordinal: 0, birthTimeMilliseconds: 0 },
       1_000,
       new Float64Array(0),
       output,
     );
     expect(output[Particle2DRegister.X]).toBe(2);
     expect(output[Particle2DRegister.Y]).toBe(0);
+  });
+
+  it("returns the instantaneous tangential velocity of a 2D orbit", () => {
+    const effect = defineParticleEffect2D({
+      emitters: [
+        {
+          name: "orbit",
+          capacity: 1,
+          emission: [{ type: "burst", atMilliseconds: 0, count: 1 }],
+          shape: { type: "point", position: [1, 0] },
+          initial: { lifetimeMilliseconds: 2_000 },
+          motion: [
+            {
+              type: "orbit",
+              center: [0, 0],
+              degreesPerSecond: 90,
+            },
+          ],
+          renderer: { type: "circle" },
+        },
+      ],
+    });
+    const output = new Float64Array(Particle2DRegister.AtlasFrame + 1);
+
+    sampleParticle2D(
+      compileParticleEffect2D(effect).emitters[0]!,
+      { seed: 1, ordinal: 0, birthTimeMilliseconds: 0 },
+      1_000,
+      new Float64Array(0),
+      output,
+    );
+    expect(output[Particle2DRegister.X]).toBeCloseTo(0, 15);
+    expect(output[Particle2DRegister.Y]).toBeCloseTo(1, 15);
+    expect(output[Particle2DRegister.VelocityX]).toBeCloseTo(-Math.PI / 2, 15);
+    expect(output[Particle2DRegister.VelocityY]).toBeCloseTo(0, 15);
   });
 
   it("rotates 3D positions around the declared normalized orbit axis", () => {
@@ -262,6 +358,151 @@ describe("particle analytic sampling", () => {
     expect(output[Particle3DRegister.X]).toBeCloseTo(0, 15);
     expect(output[Particle3DRegister.Y]).toBeCloseTo(1, 15);
     expect(output[Particle3DRegister.Z]).toBeCloseTo(0, 15);
+    expect(output[Particle3DRegister.VelocityX]).toBeCloseTo(-Math.PI / 2, 15);
+    expect(output[Particle3DRegister.VelocityY]).toBeCloseTo(0, 15);
+    expect(output[Particle3DRegister.VelocityZ]).toBeCloseTo(0, 15);
+  });
+
+  it("returns the instantaneous velocity of 3D sway", () => {
+    const effect = defineParticleEffect3D({
+      emitters: [
+        {
+          name: "sway",
+          capacity: 1,
+          emission: [{ type: "burst", atMilliseconds: 0, count: 1 }],
+          shape: { type: "point" },
+          initial: { lifetimeMilliseconds: 1_000 },
+          motion: [
+            {
+              type: "sway",
+              direction: [0, 2, 0],
+              amplitude: 3,
+              frequency: 0.5,
+            },
+          ],
+          renderer: { type: "point", material: "unlit", blend: "alpha" },
+        },
+      ],
+    });
+    const output = new Float64Array(Particle3DRegister.AtlasFrame + 1);
+
+    sampleParticle3D(
+      compileParticleEffect3D(effect).emitters[0]!,
+      { seed: 1, ordinal: 0, birthTimeMilliseconds: 0 },
+      0,
+      new Float64Array(0),
+      output,
+    );
+    expect(output[Particle3DRegister.X]).toBe(0);
+    expect(output[Particle3DRegister.Y]).toBe(0);
+    expect(output[Particle3DRegister.Z]).toBe(0);
+    expect(output[Particle3DRegister.VelocityX]).toBe(0);
+    expect(output[Particle3DRegister.VelocityY]).toBe(6 * Math.PI);
+    expect(output[Particle3DRegister.VelocityZ]).toBe(0);
+  });
+
+  it("samples whole-vector and color parameters and retains every 3D angular axis", () => {
+    const effect = defineParticleEffect3D({
+      parameters: {
+        launch: { type: "vector3", default: [1, 2, 3], timing: "spawn" },
+        spin: {
+          type: "vector3",
+          default: [10, 20, 30],
+          timing: "simulation",
+        },
+        tint: { type: "color", default: "#33669980", timing: "render" },
+      },
+      emitters: [
+        {
+          name: "parameterized",
+          capacity: 1,
+          emission: [{ type: "burst", atMilliseconds: 0, count: 1 }],
+          shape: { type: "point" },
+          initial: {
+            lifetimeMilliseconds: 1_000,
+            velocity: particle.parameter("launch"),
+            rotationDegrees: 5,
+            angularVelocityDegreesPerSecond: 7,
+            color: particle.parameter("tint"),
+          },
+          motion: [
+            {
+              type: "angularVelocity",
+              degreesPerSecond: particle.parameter("spin"),
+            },
+          ],
+          renderer: { type: "point", material: "unlit", blend: "alpha" },
+          bounds: { min: [-10, -10, -10], max: [10, 10, 10] },
+        },
+      ],
+    });
+    const plan = compileParticleEffect3D(effect);
+    const output = new Float64Array(Particle3DRegister.AtlasFrame + 1);
+
+    sampleParticle3D(
+      plan.emitters[0]!,
+      { seed: 1, ordinal: 0, birthTimeMilliseconds: 0 },
+      500,
+      plan.parameterLayout.defaults,
+      output,
+    );
+    expect(output[Particle3DRegister.X]).toBe(0.5);
+    expect(output[Particle3DRegister.Y]).toBe(1);
+    expect(output[Particle3DRegister.Z]).toBe(1.5);
+    expect(output[Particle3DRegister.VelocityX]).toBe(1);
+    expect(output[Particle3DRegister.VelocityY]).toBe(2);
+    expect(output[Particle3DRegister.VelocityZ]).toBe(3);
+    expect(output[Particle3DRegister.RotationX]).toBe(5);
+    expect(output[Particle3DRegister.RotationY]).toBe(10);
+    expect(output[Particle3DRegister.RotationZ]).toBe(23.5);
+    expect(output[Particle3DRegister.Red]).toBe(0.2);
+    expect(output[Particle3DRegister.Green]).toBe(0.4);
+    expect(output[Particle3DRegister.Blue]).toBe(0.6);
+    expect(output[Particle3DRegister.Alpha]).toBe(128 / 255);
+  });
+
+  it("uses independent cone polar and azimuth streams", () => {
+    const effect = defineParticleEffect3D({
+      emitters: [
+        {
+          name: "cone",
+          capacity: 1,
+          emission: [{ type: "burst", atMilliseconds: 0, count: 1 }],
+          shape: { type: "point" },
+          initial: {
+            lifetimeMilliseconds: 1_000,
+            velocity: {
+              type: "cone",
+              direction: [0, 0, 1],
+              speed: particle.between(1, 2),
+              spreadDegrees: particle.between(20, 40),
+            },
+          },
+          renderer: { type: "point", material: "unlit", blend: "alpha" },
+        },
+      ],
+    });
+    const output = new Float64Array(Particle3DRegister.AtlasFrame + 1);
+
+    sampleParticle3D(
+      compileParticleEffect3D(effect).emitters[0]!,
+      { seed: 17, ordinal: 3, birthTimeMilliseconds: 0 },
+      0,
+      new Float64Array(0),
+      output,
+    );
+    expect(output[Particle3DRegister.VelocityX]).toBeCloseTo(
+      -0.20899031429834883,
+      15,
+    );
+    expect(output[Particle3DRegister.VelocityY]).toBeCloseTo(
+      -0.07522677808035927,
+      15,
+    );
+    expect(output[Particle3DRegister.VelocityZ]).toBeCloseTo(
+      1.2437579160192094,
+      15,
+    );
   });
 
   it("samples 100,000 particles without sample-time arrays or objects and repeats after restart", () => {

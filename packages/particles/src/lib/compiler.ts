@@ -16,6 +16,7 @@ import {
 import {
   compileEmissionSchedule,
   type CompiledEmissionSchedule,
+  type CompiledMaximumLifetime,
 } from "./emission.js";
 import { getParticleDescriptorRecord } from "./particle.js";
 import {
@@ -32,6 +33,8 @@ import type {
   CRCParticleParameterReference,
   CRCParticleScalar,
   CRCParticleShape2D,
+  CRCParticleVector2,
+  CRCParticleVector3,
 } from "./types.js";
 import type {
   CRCParticleConeVelocity3D,
@@ -67,10 +70,12 @@ export interface CompiledParameterLayout {
   readonly byName: ReadonlyMap<string, CompiledParameterEntry>;
 }
 
-export interface CompiledParameterReference {
+export interface CompiledParameterReference<
+  Length extends 1 | 2 | 3 | 4 = 1 | 2 | 3 | 4,
+> {
   readonly kind: "parameter";
   readonly offset: number;
-  readonly length: 1 | 2 | 3 | 4;
+  readonly length: Length;
   readonly timingMask: ParameterTimingMaskValue;
   readonly channel: number;
 }
@@ -84,7 +89,14 @@ export type CompiledScalar =
       choice: CompiledWeightedChoice<number>;
       channel: number;
     }>
-  | CompiledParameterReference;
+  | CompiledParameterReference<1>;
+
+export type CompiledVector2 =
+  readonly [CompiledScalar, CompiledScalar] | CompiledParameterReference<2>;
+
+export type CompiledVector3 =
+  | readonly [CompiledScalar, CompiledScalar, CompiledScalar]
+  | CompiledParameterReference<3>;
 
 export type CompiledColor =
   | Readonly<{ kind: "constant"; color: ParticleColor; channel: number }>
@@ -94,7 +106,8 @@ export type CompiledColor =
       cumulativeWeights: readonly number[];
       totalWeight: number;
       channel: number;
-    }>;
+    }>
+  | CompiledParameterReference<4>;
 
 export interface CompiledAppearance {
   readonly size: CompiledParticleCurve | null;
@@ -105,8 +118,8 @@ export interface CompiledAppearance {
 
 export interface CompiledInitial2D {
   readonly lifetime: CompiledScalar;
-  readonly velocity: readonly [CompiledScalar, CompiledScalar];
-  readonly size: readonly [CompiledScalar, CompiledScalar];
+  readonly velocity: CompiledVector2;
+  readonly size: CompiledVector2;
   readonly rotation: CompiledScalar;
   readonly angularVelocity: CompiledScalar;
   readonly color: CompiledColor;
@@ -116,7 +129,7 @@ export interface CompiledInitial2D {
 export type CompiledMotion2D =
   | Readonly<{
       type: "acceleration" | "gravity" | "drift";
-      value: readonly [CompiledScalar, CompiledScalar];
+      value: CompiledVector2;
     }>
   | Readonly<{ type: "drag"; amount: CompiledScalar }>
   | Readonly<{
@@ -141,15 +154,17 @@ export interface CompiledInitial3D {
   readonly velocity:
     | Readonly<{
         type: "vector";
-        value: readonly [CompiledScalar, CompiledScalar, CompiledScalar];
+        value: CompiledVector3;
       }>
     | Readonly<{
         type: "cone";
-        direction: readonly [CompiledScalar, CompiledScalar, CompiledScalar];
+        direction: CompiledVector3;
         speed: CompiledScalar;
         spreadDegrees: CompiledScalar;
+        polarChannel: number;
+        azimuthChannel: number;
       }>;
-  readonly size: readonly [CompiledScalar, CompiledScalar];
+  readonly size: CompiledVector2;
   readonly rotation: CompiledScalar;
   readonly angularVelocity: CompiledScalar;
   readonly color: CompiledColor;
@@ -159,7 +174,7 @@ export interface CompiledInitial3D {
 export type CompiledMotion3D =
   | Readonly<{
       type: "acceleration" | "gravity" | "drift";
-      value: readonly [CompiledScalar, CompiledScalar, CompiledScalar];
+      value: CompiledVector3;
     }>
   | Readonly<{ type: "drag"; amount: CompiledScalar }>
   | Readonly<{
@@ -170,22 +185,18 @@ export type CompiledMotion3D =
   | Readonly<{
       type: "orbit";
       center: readonly [number, number, number];
-      axis: readonly [CompiledScalar, CompiledScalar, CompiledScalar];
+      axis: CompiledVector3;
       degreesPerSecond: CompiledScalar;
     }>
   | Readonly<{
       type: "sway";
-      direction: readonly [CompiledScalar, CompiledScalar, CompiledScalar];
+      direction: CompiledVector3;
       amplitude: CompiledScalar;
       frequency: CompiledScalar;
     }>
   | Readonly<{
       type: "angularVelocity";
-      degreesPerSecond: readonly [
-        CompiledScalar,
-        CompiledScalar,
-        CompiledScalar,
-      ];
+      degreesPerSecond: CompiledVector3;
     }>;
 
 export interface CompiledEmitter2D {
@@ -200,7 +211,7 @@ export interface CompiledEmitter2D {
   readonly motion: readonly CompiledMotion2D[];
   readonly appearance: CompiledAppearance;
   readonly emission: CompiledEmissionSchedule;
-  readonly maximumLifetimeMilliseconds: number;
+  readonly maximumLifetime: CompiledMaximumLifetime;
   readonly renderer: ParticleEmitter2DRecord["renderer"];
   readonly bounds: ParticleEmitter2DRecord["bounds"];
 }
@@ -217,7 +228,7 @@ export interface CompiledEmitter3D {
   readonly motion: readonly CompiledMotion3D[];
   readonly appearance: CompiledAppearance;
   readonly emission: CompiledEmissionSchedule;
-  readonly maximumLifetimeMilliseconds: number;
+  readonly maximumLifetime: CompiledMaximumLifetime;
   readonly renderer: ParticleEmitter3DRecord["renderer"];
   readonly bounds: ParticleEmitter3DRecord["bounds"];
 }
@@ -334,12 +345,12 @@ function channelFor(path: string): number {
   return hashEmitterName(path);
 }
 
-export function compileParameterReference(
+export function compileParameterReference<Length extends 1 | 2 | 3 | 4>(
   reference: CRCParticleParameterReference<string>,
   layout: CompiledParameterLayout,
-  expectedDimension: 1 | 2 | 3 | 4,
+  expectedDimension: Length,
   path: string,
-): CompiledParameterReference {
+): CompiledParameterReference<Length> {
   const descriptor = getParticleDescriptorRecord(reference);
   if (descriptor?.type !== "parameter") {
     throw new TypeError(`Particle ${path} must use particle.parameter().`);
@@ -358,7 +369,7 @@ export function compileParameterReference(
   return Object.freeze({
     kind: "parameter",
     offset: entry.offset,
-    length: entry.length,
+    length: expectedDimension,
     timingMask: timingMask(entry.timing),
     channel: channelFor(path),
   });
@@ -418,26 +429,42 @@ function compileScalar(
 }
 
 function compileScalarVector2(
-  value: readonly [CRCParticleScalar, CRCParticleScalar],
+  value: CRCParticleVector2,
   layout: CompiledParameterLayout,
   path: string,
-): readonly [CompiledScalar, CompiledScalar] {
+): CompiledVector2 {
+  if (!Array.isArray(value)) {
+    return compileParameterReference(
+      value as CRCParticleParameterReference<string>,
+      layout,
+      2,
+      path,
+    );
+  }
   return Object.freeze([
     compileScalar(value[0], layout, `${path}[0]`),
     compileScalar(value[1], layout, `${path}[1]`),
-  ]);
+  ] as const);
 }
 
 function compileScalarVector3(
-  value: readonly [CRCParticleScalar, CRCParticleScalar, CRCParticleScalar],
+  value: CRCParticleVector3,
   layout: CompiledParameterLayout,
   path: string,
-): readonly [CompiledScalar, CompiledScalar, CompiledScalar] {
+): CompiledVector3 {
+  if (!Array.isArray(value)) {
+    return compileParameterReference(
+      value as CRCParticleParameterReference<string>,
+      layout,
+      3,
+      path,
+    );
+  }
   return Object.freeze([
     compileScalar(value[0], layout, `${path}[0]`),
     compileScalar(value[1], layout, `${path}[1]`),
     compileScalar(value[2], layout, `${path}[2]`),
-  ]);
+  ] as const);
 }
 
 function isScalarVector2(
@@ -458,6 +485,7 @@ function isConeVelocity3D(value: unknown): value is CRCParticleConeVelocity3D {
 
 function compileColor(
   value: CRCParticleInitial2D["color"],
+  layout: CompiledParameterLayout,
   path: string,
 ): CompiledColor {
   const channel = channelFor(path);
@@ -476,6 +504,14 @@ function compileColor(
     });
   }
   const descriptor = getParticleDescriptorRecord(value);
+  if (descriptor?.type === "parameter") {
+    return compileParameterReference(
+      value as CRCParticleParameterReference<string>,
+      layout,
+      4,
+      path,
+    );
+  }
   if (descriptor?.type !== "choice") {
     throw new TypeError(
       `Particle ${path} must be a color or particle.choice().`,
@@ -521,41 +557,55 @@ function compileSwayFrequency(
   });
 }
 
-function scalarMaximum(
+function compileMaximumLifetime(
   value: CompiledScalar,
-  defaults: Readonly<Float64Array>,
-): number {
+): CompiledMaximumLifetime {
   switch (value.kind) {
     case "constant":
-      return value.value;
+      return Object.freeze({ kind: "fixed", milliseconds: value.value });
     case "between":
     case "integer":
-      return value.max;
+      return Object.freeze({ kind: "fixed", milliseconds: value.max });
     case "choice":
-      return Math.max(...value.choice.values);
+      return Object.freeze({
+        kind: "fixed",
+        milliseconds: Math.max(...value.choice.values),
+      });
     case "parameter":
-      return defaults[value.offset]!;
+      return Object.freeze({ kind: "parameter", offset: value.offset });
   }
 }
 
 function compileSize(
   value: CRCParticleInitial2D["size"],
   layout: CompiledParameterLayout,
-): readonly [CompiledScalar, CompiledScalar] {
+): CompiledVector2 {
   if (value === undefined) {
     return Object.freeze([
       compileScalar(1, layout, "initial.size[0]"),
       compileScalar(1, layout, "initial.size[1]"),
-    ]);
+    ] as const);
   }
   if (isScalarVector2(value))
     return compileScalarVector2(value, layout, "initial.size");
+  const descriptor = getParticleDescriptorRecord(value);
+  if (descriptor?.type === "parameter") {
+    const entry = layout.byName.get(descriptor.name);
+    if (entry?.length === 2) {
+      return compileParameterReference(
+        value as CRCParticleParameterReference<string>,
+        layout,
+        2,
+        "initial.size",
+      );
+    }
+  }
   const scalar = compileScalar(
     value as CRCParticleScalar,
     layout,
     "initial.size",
   );
-  return Object.freeze([scalar, scalar]);
+  return Object.freeze([scalar, scalar] as const);
 }
 
 function compileInitial2D(
@@ -586,7 +636,7 @@ function compileInitial2D(
       layout,
       "initial.angularVelocityDegreesPerSecond",
     ),
-    color: compileColor(initial.color, "initial.color"),
+    color: compileColor(initial.color, layout, "initial.color"),
     opacity: compileScalar(initial.opacity ?? 1, layout, "initial.opacity"),
   });
 }
@@ -614,6 +664,8 @@ function compileInitial3D(
         layout,
         "initial.velocity.spreadDegrees",
       ),
+      polarChannel: channelFor("initial.velocity.conePolar"),
+      azimuthChannel: channelFor("initial.velocity.coneAzimuth"),
     });
   } else {
     velocity = Object.freeze({
@@ -646,7 +698,7 @@ function compileInitial3D(
       layout,
       "initial.angularVelocityDegreesPerSecond",
     ),
-    color: compileColor(initial.color, "initial.color"),
+    color: compileColor(initial.color, layout, "initial.color"),
     opacity: compileScalar(initial.opacity ?? 1, layout, "initial.opacity"),
   });
 }
@@ -887,10 +939,7 @@ function compileEmitter2D(
   layout: CompiledParameterLayout,
 ): CompiledEmitter2D {
   const initial = compileInitial2D(emitter.initial, layout);
-  const maximumLifetimeMilliseconds = scalarMaximum(
-    initial.lifetime,
-    layout.defaults,
-  );
+  const maximumLifetime = compileMaximumLifetime(initial.lifetime);
   return Object.freeze({
     dimension: 2,
     name: emitter.name,
@@ -906,11 +955,8 @@ function compileEmitter2D(
     initial,
     motion: compileMotion2D(emitter.motion ?? [], layout),
     appearance: compileAppearance(emitter.appearance),
-    emission: compileEmissionSchedule(
-      emitter.emission,
-      maximumLifetimeMilliseconds,
-    ),
-    maximumLifetimeMilliseconds,
+    emission: compileEmissionSchedule(emitter.emission, maximumLifetime),
+    maximumLifetime,
     renderer: emitter.renderer,
     bounds: emitter.bounds,
   });
@@ -921,10 +967,7 @@ function compileEmitter3D(
   layout: CompiledParameterLayout,
 ): CompiledEmitter3D {
   const initial = compileInitial3D(emitter.initial, layout);
-  const maximumLifetimeMilliseconds = scalarMaximum(
-    initial.lifetime,
-    layout.defaults,
-  );
+  const maximumLifetime = compileMaximumLifetime(initial.lifetime);
   return Object.freeze({
     dimension: 3,
     name: emitter.name,
@@ -940,11 +983,8 @@ function compileEmitter3D(
     initial,
     motion: compileMotion3D(emitter.motion ?? [], layout),
     appearance: compileAppearance(emitter.appearance),
-    emission: compileEmissionSchedule(
-      emitter.emission,
-      maximumLifetimeMilliseconds,
-    ),
-    maximumLifetimeMilliseconds,
+    emission: compileEmissionSchedule(emitter.emission, maximumLifetime),
+    maximumLifetime,
     renderer: emitter.renderer,
     bounds: emitter.bounds,
   });

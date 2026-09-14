@@ -96,16 +96,13 @@ export type CRCParticleScalar =
   | CRCParticleChoice<number>
   | CRCParticleParameterReference<string>;
 
-export type CRCParticleVector2 = readonly [
-  CRCParticleScalar,
-  CRCParticleScalar,
-];
+export type CRCParticleVector2 =
+  | readonly [CRCParticleScalar, CRCParticleScalar]
+  | CRCParticleParameterReference<string>;
 
-export type CRCParticleVector3 = readonly [
-  CRCParticleScalar,
-  CRCParticleScalar,
-  CRCParticleScalar,
-];
+export type CRCParticleVector3 =
+  | readonly [CRCParticleScalar, CRCParticleScalar, CRCParticleScalar]
+  | CRCParticleParameterReference<string>;
 
 export type CRCParticleCurveValue = number | readonly [number, number];
 
@@ -169,7 +166,8 @@ export interface CRCParticleInitial2D {
   readonly size?: CRCParticleScalar | CRCParticleVector2;
   readonly rotationDegrees?: CRCParticleScalar;
   readonly angularVelocityDegreesPerSecond?: CRCParticleScalar;
-  readonly color?: string | CRCParticleChoice<string>;
+  readonly color?:
+    string | CRCParticleChoice<string> | CRCParticleParameterReference<string>;
   readonly opacity?: CRCParticleScalar;
 }
 

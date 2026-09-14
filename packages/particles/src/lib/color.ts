@@ -61,36 +61,53 @@ function clampUnit(value: number): number {
   return Math.min(1, Math.max(0, value));
 }
 
+function parseNumericToken(token: string): number | undefined {
+  if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(token)) {
+    return undefined;
+  }
+  const value = Number(token);
+  return Number.isFinite(value) ? value : undefined;
+}
+
 function parseAlpha(token: string): number | undefined {
-  const value = token.endsWith("%")
-    ? Number(token.slice(0, -1)) / 100
-    : Number(token);
-  return Number.isFinite(value) ? clampUnit(value) : undefined;
+  const percentage = token.endsWith("%");
+  const value = parseNumericToken(percentage ? token.slice(0, -1) : token);
+  return value === undefined
+    ? undefined
+    : clampUnit(percentage ? value / 100 : value);
 }
 
 function parseRGBChannel(token: string): number | undefined {
-  const value = token.endsWith("%")
-    ? Number(token.slice(0, -1)) / 100
-    : Number(token) / 255;
-  return Number.isFinite(value) ? clampUnit(value) : undefined;
+  const percentage = token.endsWith("%");
+  const value = parseNumericToken(percentage ? token.slice(0, -1) : token);
+  return value === undefined
+    ? undefined
+    : clampUnit(percentage ? value / 100 : value / 255);
 }
 
 function parseHue(token: string): number | undefined {
-  let degrees: number;
-  if (token.endsWith("deg")) degrees = Number(token.slice(0, -3));
-  else if (token.endsWith("grad")) degrees = Number(token.slice(0, -4)) * 0.9;
-  else if (token.endsWith("rad"))
-    degrees = (Number(token.slice(0, -3)) * 180) / Math.PI;
-  else if (token.endsWith("turn")) degrees = Number(token.slice(0, -4)) * 360;
-  else degrees = Number(token);
-  if (!Number.isFinite(degrees)) return undefined;
+  let numeric: number | undefined;
+  let scale = 1;
+  if (token.endsWith("deg")) numeric = parseNumericToken(token.slice(0, -3));
+  else if (token.endsWith("grad")) {
+    numeric = parseNumericToken(token.slice(0, -4));
+    scale = 0.9;
+  } else if (token.endsWith("rad")) {
+    numeric = parseNumericToken(token.slice(0, -3));
+    scale = 180 / Math.PI;
+  } else if (token.endsWith("turn")) {
+    numeric = parseNumericToken(token.slice(0, -4));
+    scale = 360;
+  } else numeric = parseNumericToken(token);
+  if (numeric === undefined) return undefined;
+  const degrees = numeric * scale;
   return (((degrees % 360) + 360) % 360) / 360;
 }
 
 function parsePercentage(token: string): number | undefined {
   if (!token.endsWith("%")) return undefined;
-  const value = Number(token.slice(0, -1)) / 100;
-  return Number.isFinite(value) ? clampUnit(value) : undefined;
+  const value = parseNumericToken(token.slice(0, -1));
+  return value === undefined ? undefined : clampUnit(value / 100);
 }
 
 function hueToRGB(p: number, q: number, hue: number): number {
@@ -122,15 +139,17 @@ function parseHex(source: string): ParticleColor | undefined {
 }
 
 function splitFunctionalBody(body: string): readonly string[] | undefined {
+  let tokens: string[];
   if (body.includes(",")) {
     if (body.includes("/")) return undefined;
-    return body.split(",").map((token) => token.trim());
+    tokens = body.split(",").map((token) => token.trim());
+  } else {
+    const slashParts = body.split("/");
+    if (slashParts.length > 2) return undefined;
+    tokens = slashParts[0]!.trim().split(/\s+/);
+    if (slashParts.length === 2) tokens.push(slashParts[1]!.trim());
   }
-  const slashParts = body.split("/");
-  if (slashParts.length > 2) return undefined;
-  const channels = slashParts[0]!.trim().split(/\s+/);
-  if (slashParts.length === 2) channels.push(slashParts[1]!.trim());
-  return channels;
+  return tokens.some((token) => token.length === 0) ? undefined : tokens;
 }
 
 function parseRGB(source: string): ParticleColor | undefined {

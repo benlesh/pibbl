@@ -19,6 +19,7 @@ import {
   type ParticleValidationContext,
 } from './definition-records.js';
 import { getParticleDescriptorRecord } from './particle.js';
+import { compileParticleEffect3D } from './compiler.js';
 import type {
   CRCParticleBounds3D,
   CRCParticleConeVelocity3D,
@@ -225,6 +226,7 @@ function requireRange(
 
 function validateColor(
   value: CRCParticleInitial3D['color'],
+  parameters: CRCParticleParameterDefinitions,
   context: ParticleValidationContext,
 ): void {
   if (value === undefined) return;
@@ -235,6 +237,19 @@ function validateColor(
     return;
   }
   const record = getParticleDescriptorRecord(value);
+  if (record?.type === 'parameter') {
+    const definition = parameters[record.name];
+    if (definition === undefined) {
+      particleDefinitionError(context, 'references an unknown parameter', record.name);
+    }
+    if (definition.type !== 'color') {
+      particleDefinitionError(
+        context,
+        `parameter "${record.name}" must have type color; received ${definition.type}`,
+      );
+    }
+    return;
+  }
   if (record?.type !== 'choice') {
     particleDefinitionError(context, 'must use particle.choice for variable colors', value);
   }
@@ -325,7 +340,10 @@ function normalizeInitial(
   }
   let maximumSize = 1;
   if (initial.size !== undefined) {
-    const ranges = Array.isArray(initial.size) ? validateScalarVector(
+    const sizeDescriptor = getParticleDescriptorRecord(initial.size);
+    const vectorSize = sizeDescriptor?.type === 'parameter' &&
+      parameters[sizeDescriptor.name]?.type === 'vector2';
+    const ranges = Array.isArray(initial.size) || vectorSize ? validateScalarVector(
       initial.size,
       2,
       parameters,
@@ -360,7 +378,7 @@ function normalizeInitial(
     });
     dynamic ||= range.dynamic;
   }
-  validateColor(initial.color, {
+  validateColor(initial.color, parameters, {
     ...context, module: 'initial', property: 'initial.color',
   });
   if (initial.opacity !== undefined) {
@@ -757,7 +775,7 @@ export function defineParticleEffect3D<
       requiresStateful: frozenReasons,
     }),
   });
-  return createParticleEffect3D(record) as CRCParticleEffect3D<
+  const effect = createParticleEffect3D(record) as CRCParticleEffect3D<
     Input['emitters'][number]['name'],
     CRCParticleValuesOf<
       Input extends { readonly parameters: infer Definitions }
@@ -765,4 +783,6 @@ export function defineParticleEffect3D<
         : undefined
     >
   >;
+  compileParticleEffect3D(effect);
+  return effect;
 }

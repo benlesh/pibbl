@@ -58,6 +58,7 @@ import type {
   Particles3DProps,
   Particles3DStyle,
 } from "@crc/particles/webgl";
+import { particle } from "@crc/particles";
 import { expectTypeOf, it } from "vitest";
 
 const parameterDefinitions = {
@@ -98,7 +99,34 @@ declare const effect2D: InferredEffect;
 declare const system2D: InferredSystem;
 declare const system3D: CRCParticleSystem<"impact", Parameters, 3>;
 
-if (false) {
+function assertParticlePublicTypes(): void {
+  const vector2Reference: CRCParticleVector2 = particle.parameter("wind");
+  const vector3Reference: CRCParticleVector3 = particle.parameter("velocity");
+  const parameterizedInitial2D: CRCParticleInitial2D = {
+    lifetimeMilliseconds: 1_000,
+    velocity: particle.parameter("wind"),
+    color: particle.parameter("tint"),
+  };
+  const parameterizedMotion2D: CRCParticleMotion2D = {
+    type: "acceleration",
+    value: particle.parameter("wind"),
+  };
+  const parameterizedInitial3D: CRCParticleInitial3D = {
+    lifetimeMilliseconds: 1_000,
+    velocity: particle.parameter("velocity"),
+    color: particle.parameter("tint"),
+  };
+  const parameterizedMotion3D: CRCParticleMotion3D = {
+    type: "angularVelocity",
+    degreesPerSecond: particle.parameter("spin"),
+  };
+  void vector2Reference;
+  void vector3Reference;
+  void parameterizedInitial2D;
+  void parameterizedMotion2D;
+  void parameterizedInitial3D;
+  void parameterizedMotion3D;
+
   system2D.emit("impact");
   // @ts-expect-error emitter names stay narrowed from the inferred effect
   system2D.emit("unknown");
@@ -126,6 +154,7 @@ if (false) {
   const filtered3DStyle: Particles3DStyle = { filter: [] };
   void filtered3DStyle;
 }
+void assertParticlePublicTypes;
 
 it("runs as an inert compile fixture", () => {
   expectTypeOf<InferredSystem>().toMatchTypeOf<
@@ -194,7 +223,8 @@ type WebGLPublicTypes =
 declare const rootPublicTypes: RootPublicTypes;
 declare const webglPublicTypes: WebGLPublicTypes;
 
-if (false) {
+function assertPublicTypeUnions(): void {
   void rootPublicTypes;
   void webglPublicTypes;
 }
+void assertPublicTypeUnions;

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { defineParticleEffect2D, particle } from '../index.js';
+import { compileParticleEffect2D } from './compiler.js';
 import {
   getParticleEffect2DRecord,
   getParticleEffect3DRecord,
@@ -30,6 +31,94 @@ function emitter(
 }
 
 describe('defineParticleEffect2D', () => {
+  it('compiles easing tables during definition construction and reuses the cached plan', () => {
+    let calls = 0;
+    const effect = defineParticleEffect2D({
+      emitters: [
+        emitter({
+          appearance: {
+            opacity: particle.curve(
+              [[0, 0], [1, 1]],
+              {
+                easing: progress => {
+                  calls += 1;
+                  return progress;
+                },
+              },
+            ),
+          },
+        }),
+      ],
+    });
+
+    expect(calls).toBe(257);
+    expect(compileParticleEffect2D(effect)).toBe(compileParticleEffect2D(effect));
+    expect(calls).toBe(257);
+  });
+
+  it('rejects unsupported colors before publishing a definition', () => {
+    expect(() => defineParticleEffect2D({
+      debugName: 'contextual paint',
+      emitters: [emitter({
+        initial: { lifetimeMilliseconds: 1_000, color: 'currentColor' },
+      })],
+    })).toThrowError(/particle color.*unsupported/i);
+  });
+
+  it('rejects reversed sway frequency tuples before publishing a definition', () => {
+    expect(() => defineParticleEffect2D({
+      debugName: 'reversed sway',
+      emitters: [emitter({
+        motion: [{ type: 'sway', amplitude: 2, frequency: [0.5, 0.2] }],
+      })],
+    })).toThrowError(/motion\[0\]\.frequency.*min.*max/i);
+  });
+
+  it('accepts matching whole-vector and initial-color parameter references', () => {
+    expect(() => defineParticleEffect2D({
+      parameters: {
+        launch: { type: 'vector2', default: [2, 3], timing: 'spawn' },
+        wind: { type: 'vector2', default: [4, 5], timing: 'simulation' },
+        tint: { type: 'color', default: '#33669980', timing: 'render' },
+      },
+      emitters: [emitter({
+        initial: {
+          lifetimeMilliseconds: 1_000,
+          velocity: particle.parameter('launch'),
+          color: particle.parameter('tint'),
+        },
+        motion: [{ type: 'acceleration', value: particle.parameter('wind') }],
+        bounds: { min: [-20, -20], max: [20, 20] },
+      })],
+    })).not.toThrow();
+  });
+
+  it('rejects whole-vector and color references with mismatched parameter dimensions', () => {
+    expect(() => defineParticleEffect2D({
+      parameters: {
+        scalar: { type: 'number', default: 1, timing: 'simulation' },
+      },
+      emitters: [emitter({
+        initial: {
+          lifetimeMilliseconds: 1_000,
+          velocity: particle.parameter('scalar'),
+        },
+        bounds: { min: [-10, -10], max: [10, 10] },
+      })],
+    })).toThrowError(/scalar.*number.*2-dimensional/i);
+    expect(() => defineParticleEffect2D({
+      parameters: {
+        scalar: { type: 'number', default: 1, timing: 'render' },
+      },
+      emitters: [emitter({
+        initial: {
+          lifetimeMilliseconds: 1_000,
+          color: particle.parameter('scalar'),
+        },
+      })],
+    })).toThrowError(/scalar.*color/i);
+  });
+
   it('publishes a frozen nominal value and keeps emitter order with stable name hashes', () => {
     const effect = defineParticleEffect2D({
       debugName: 'ordered effect',

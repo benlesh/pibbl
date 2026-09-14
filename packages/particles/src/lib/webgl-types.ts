@@ -4,6 +4,7 @@ import type {
   CRCParticleEmission,
   CRCParticleOverflow,
   CRCParticleParameterDefinitions,
+  CRCParticleParameterReference,
   CRCParticleParameterValues,
   CRCParticleScalar,
   CRCParticleSystem,
@@ -53,7 +54,10 @@ export interface CRCParticleInitial3D {
   readonly size?: CRCParticleScalar | CRCParticleVector2;
   readonly rotationDegrees?: CRCParticleScalar;
   readonly angularVelocityDegreesPerSecond?: CRCParticleScalar;
-  readonly color?: string | import("./types.js").CRCParticleChoice<string>;
+  readonly color?:
+    | string
+    | import("./types.js").CRCParticleChoice<string>
+    | CRCParticleParameterReference<string>;
   readonly opacity?: CRCParticleScalar;
 }
 

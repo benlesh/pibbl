@@ -347,7 +347,29 @@ export function validateScalarVector(
   parameters: CRCParticleParameterDefinitions,
   context: ParticleValidationContext,
 ): readonly ParticleScalarRange[] {
-  if (!Array.isArray(value) || value.length !== dimension) {
+  if (!Array.isArray(value)) {
+    const descriptor = getParticleDescriptorRecord(value);
+    if (descriptor?.type !== 'parameter') {
+      particleDefinitionError(context, `must be a ${dimension}-dimensional particle vector`, value);
+    }
+    const definition = parameters[descriptor.name];
+    if (definition === undefined) {
+      particleDefinitionError(context, 'references an unknown parameter', descriptor.name);
+    }
+    const expectedType = dimension === 2 ? 'vector2' : 'vector3';
+    if (definition.type !== expectedType) {
+      particleDefinitionError(
+        context,
+        `parameter "${descriptor.name}" has type ${definition.type}; expected a ${dimension}-dimensional vector parameter`,
+      );
+    }
+    return Object.freeze(definition.default.map(entry => Object.freeze({
+      min: entry,
+      max: entry,
+      dynamic: true,
+    })));
+  }
+  if (value.length !== dimension) {
     particleDefinitionError(context, `must be a ${dimension}-dimensional particle vector`, value);
   }
   return Object.freeze(value.map((entry, index) => particleScalarRange(

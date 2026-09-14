@@ -27,6 +27,37 @@ function emitter(
 }
 
 describe('defineParticleEffect3D', () => {
+  it('accepts matching whole-vector and initial-color parameter references', () => {
+    expect(() => defineParticleEffect3D({
+      parameters: {
+        launch: { type: 'vector3', default: [1, 2, 3], timing: 'spawn' },
+        axis: { type: 'vector3', default: [0, 1, 0], timing: 'simulation' },
+        spin: { type: 'vector3', default: [10, 20, 30], timing: 'simulation' },
+        tint: { type: 'color', default: 'rebeccapurple', timing: 'render' },
+      },
+      emitters: [emitter({
+        initial: {
+          lifetimeMilliseconds: 1_000,
+          velocity: particle.parameter('launch'),
+          color: particle.parameter('tint'),
+        },
+        motion: [
+          {
+            type: 'sway',
+            direction: particle.parameter('axis'),
+            amplitude: 1,
+            frequency: 1,
+          },
+          {
+            type: 'angularVelocity',
+            degreesPerSecond: particle.parameter('spin'),
+          },
+        ],
+        bounds: { min: [-20, -20, -20], max: [20, 20, 20] },
+      })],
+    })).not.toThrow();
+  });
+
   it('classifies an automatic analytic effect as stateless WebGL capable', () => {
     const effect = defineParticleEffect3D({
       debugName: 'embers effect',

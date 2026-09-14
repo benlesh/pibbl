@@ -5,6 +5,10 @@ import { hashEmitterName, sampleInteger, sampleUnit } from "./random.js";
 export type ParticleCompletion =
   "finite" | "automatic-infinite" | "manual-open";
 
+export type CompiledMaximumLifetime =
+  | Readonly<{ kind: "fixed"; milliseconds: number }>
+  | Readonly<{ kind: "parameter"; offset: number }>;
+
 export interface CompiledRateEmission {
   readonly type: "rate";
   readonly sourceIndex: number;
@@ -42,11 +46,11 @@ export interface CompiledEmissionSchedule {
   readonly bursts: readonly CompiledBurstEmission[];
   readonly manual: readonly CompiledManualEmission[];
   readonly completion: ParticleCompletion;
-  readonly maximumLifetimeMilliseconds: number;
+  readonly maximumLifetime: CompiledMaximumLifetime;
   readonly earliestAutomaticBirthMilliseconds: number | null;
   readonly latestAutomaticBirthMilliseconds: number | null;
   readonly completionMilliseconds: number | null;
-  readonly maximumPotentiallyLiveOrdinals: number;
+  readonly maximumPotentiallyLiveOrdinals: number | null;
 }
 
 function channelFor(sourceIndex: number, property: string): number {
@@ -164,8 +168,15 @@ function finiteRateBirthTimes(
 
 export function compileEmissionSchedule(
   sources: readonly CRCParticleEmission[],
-  maximumLifetimeMilliseconds: number,
+  maximumLifetimeInput: number | CompiledMaximumLifetime,
 ): CompiledEmissionSchedule {
+  const maximumLifetime =
+    typeof maximumLifetimeInput === "number"
+      ? Object.freeze({
+          kind: "fixed" as const,
+          milliseconds: maximumLifetimeInput,
+        })
+      : maximumLifetimeInput;
   const rates: CompiledRateEmission[] = [];
   const bursts: CompiledBurstEmission[] = [];
   const manual: CompiledManualEmission[] = [];
@@ -238,7 +249,7 @@ export function compileEmissionSchedule(
   let earliest: number | null = null;
   let latest: number | null = null;
   let automaticInfinite = false;
-  let maximumPotentiallyLiveOrdinals = 0;
+  let maximumPotentiallyLiveOrdinals: number | null = 0;
 
   for (const burst of bursts) {
     if (burst.probability <= 0) continue;
@@ -250,7 +261,9 @@ export function compileEmissionSchedule(
       latest === null
         ? burst.atMilliseconds
         : Math.max(latest, burst.atMilliseconds);
-    maximumPotentiallyLiveOrdinals += burst.maximumCount;
+    if (maximumPotentiallyLiveOrdinals !== null) {
+      maximumPotentiallyLiveOrdinals += burst.maximumCount;
+    }
   }
 
   for (const rate of rates) {
@@ -260,8 +273,13 @@ export function compileEmissionSchedule(
       automaticInfinite = true;
       const first = rateBirthTimeAt(rate, 0, 0);
       earliest = earliest === null ? first : Math.min(earliest, first);
-      maximumPotentiallyLiveOrdinals +=
-        Math.ceil(maximumLifetimeMilliseconds / rate.intervalMilliseconds) + 1;
+      if (maximumLifetime.kind === "parameter") {
+        maximumPotentiallyLiveOrdinals = null;
+      } else if (maximumPotentiallyLiveOrdinals !== null) {
+        maximumPotentiallyLiveOrdinals +=
+          Math.ceil(maximumLifetime.milliseconds / rate.intervalMilliseconds) +
+          1;
+      }
       continue;
     }
     const interval = finiteRateBirthTimes(rate);
@@ -269,8 +287,10 @@ export function compileEmissionSchedule(
     earliest =
       earliest === null ? interval[0] : Math.min(earliest, interval[0]);
     latest = latest === null ? interval[1] : Math.max(latest, interval[1]);
-    maximumPotentiallyLiveOrdinals +=
-      birthsInOneRateCycle(rate) * rate.cycleCount;
+    if (maximumPotentiallyLiveOrdinals !== null) {
+      maximumPotentiallyLiveOrdinals +=
+        birthsInOneRateCycle(rate) * rate.cycleCount;
+    }
   }
 
   const completion: ParticleCompletion =
@@ -285,15 +305,17 @@ export function compileEmissionSchedule(
     bursts: Object.freeze(bursts),
     manual: Object.freeze(manual),
     completion,
-    maximumLifetimeMilliseconds,
+    maximumLifetime,
     earliestAutomaticBirthMilliseconds: earliest,
     latestAutomaticBirthMilliseconds: finiteLatest,
     completionMilliseconds:
       completion !== "finite"
         ? null
-        : finiteLatest === null
-          ? 0
-          : finiteLatest + maximumLifetimeMilliseconds,
+        : maximumLifetime.kind === "parameter"
+          ? null
+          : finiteLatest === null
+            ? 0
+            : finiteLatest + maximumLifetime.milliseconds,
     maximumPotentiallyLiveOrdinals,
   });
 }

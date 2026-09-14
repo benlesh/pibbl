@@ -19,6 +19,7 @@ import {
   type ParticleValidationContext,
 } from './definition-records.js';
 import { getParticleDescriptorRecord } from './particle.js';
+import { compileParticleEffect2D } from './compiler.js';
 import type {
   CRCParticleAppearance,
   CRCParticleBounds2D,
@@ -160,6 +161,7 @@ function requireRange(
 
 function validateColor(
   value: CRCParticleInitial2D['color'],
+  parameters: CRCParticleParameterDefinitions,
   context: ParticleValidationContext,
 ): void {
   if (value === undefined) return;
@@ -170,6 +172,19 @@ function validateColor(
     return;
   }
   const record = getParticleDescriptorRecord(value);
+  if (record?.type === 'parameter') {
+    const definition = parameters[record.name];
+    if (definition === undefined) {
+      particleDefinitionError(context, 'references an unknown parameter', record.name);
+    }
+    if (definition.type !== 'color') {
+      particleDefinitionError(
+        context,
+        `parameter "${record.name}" must have type color; received ${definition.type}`,
+      );
+    }
+    return;
+  }
   if (record?.type !== 'choice') {
     particleDefinitionError(context, 'must use particle.choice for variable colors', value);
   }
@@ -226,7 +241,10 @@ function normalizeInitial(
   let maximumSize = 1;
   let sizeDynamic = false;
   if (initial.size !== undefined) {
-    const ranges = Array.isArray(initial.size) ? validateScalarVector(
+    const sizeDescriptor = getParticleDescriptorRecord(initial.size);
+    const vectorSize = sizeDescriptor?.type === 'parameter' &&
+      parameters[sizeDescriptor.name]?.type === 'vector2';
+    const ranges = Array.isArray(initial.size) || vectorSize ? validateScalarVector(
       initial.size,
       2,
       parameters,
@@ -261,7 +279,7 @@ function normalizeInitial(
       property: 'initial.angularVelocityDegreesPerSecond',
     });
   }
-  validateColor(initial.color, {
+  validateColor(initial.color, parameters, {
     ...context, module: 'initial', property: 'initial.color',
   });
   if (initial.opacity !== undefined) {
@@ -628,7 +646,7 @@ export function defineParticleEffect2D<
       requiresStateful: Object.freeze([]),
     }),
   });
-  return createParticleEffect2D(record) as CRCParticleEffect2D<
+  const effect = createParticleEffect2D(record) as CRCParticleEffect2D<
     Input['emitters'][number]['name'],
     CRCParticleValuesOf<
       Input extends { readonly parameters: infer Definitions }
@@ -636,4 +654,6 @@ export function defineParticleEffect2D<
         : undefined
     >
   >;
+  compileParticleEffect2D(effect);
+  return effect;
 }

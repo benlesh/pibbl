@@ -3,6 +3,8 @@ import type {
   CompiledEmitter2D,
   CompiledEmitter3D,
   CompiledScalar,
+  CompiledVector2,
+  CompiledVector3,
 } from "./compiler.js";
 import { sampleParticleCurve, sampleParticleGradient } from "./curve.js";
 import { sampleBetween, sampleInteger, sampleUnit } from "./random.js";
@@ -55,7 +57,10 @@ export const enum Particle3DRegister {
   VelocityZ,
   SizeX,
   SizeY,
-  Rotation,
+  RotationX,
+  RotationY,
+  RotationZ,
+  Rotation = RotationZ,
   Red,
   Green,
   Blue,
@@ -110,10 +115,24 @@ function scalar(
   }
 }
 
+function vectorComponent(
+  value: CompiledVector2 | CompiledVector3,
+  component: number,
+  birth: ParticleBirthView,
+  emitterHash: number,
+  parameters: Readonly<Float64Array>,
+): number {
+  if (Array.isArray(value)) {
+    return scalar(value[component]!, birth, emitterHash, parameters);
+  }
+  return parameters[(value as { readonly offset: number }).offset + component]!;
+}
+
 function color(
   value: CompiledColor,
   birth: ParticleBirthView,
   emitterHash: number,
+  parameters: Readonly<Float64Array>,
   output: Float64Array,
   offset: number,
 ): void {
@@ -122,6 +141,13 @@ function color(
     output[offset + 1] = value.color[1];
     output[offset + 2] = value.color[2];
     output[offset + 3] = value.color[3];
+    return;
+  }
+  if (value.kind === "parameter") {
+    output[offset] = parameters[value.offset]!;
+    output[offset + 1] = parameters[value.offset + 1]!;
+    output[offset + 2] = parameters[value.offset + 2]!;
+    output[offset + 3] = parameters[value.offset + 3]!;
     return;
   }
   const target =
@@ -444,14 +470,16 @@ export function sampleParticle2D(
 
   const originX = output[Particle2DRegister.X]!;
   const originY = output[Particle2DRegister.Y]!;
-  const initialVelocityX = scalar(
-    plan.initial.velocity[0],
+  const initialVelocityX = vectorComponent(
+    plan.initial.velocity,
+    0,
     birth,
     plan.emitterHash,
     parameters,
   );
-  const initialVelocityY = scalar(
-    plan.initial.velocity[1],
+  const initialVelocityY = vectorComponent(
+    plan.initial.velocity,
+    1,
     birth,
     plan.emitterHash,
     parameters,
@@ -462,6 +490,7 @@ export function sampleParticle2D(
   let driftY = 0;
   let drag = 0;
   let swayX = 0;
+  let swayVelocityX = 0;
   let angularVelocity = scalar(
     plan.initial.angularVelocity,
     birth,
@@ -482,22 +511,36 @@ export function sampleParticle2D(
     switch (module.type) {
       case "acceleration":
       case "gravity":
-        accelerationX += scalar(
-          module.value[0],
+        accelerationX += vectorComponent(
+          module.value,
+          0,
           birth,
           plan.emitterHash,
           parameters,
         );
-        accelerationY += scalar(
-          module.value[1],
+        accelerationY += vectorComponent(
+          module.value,
+          1,
           birth,
           plan.emitterHash,
           parameters,
         );
         break;
       case "drift":
-        driftX += scalar(module.value[0], birth, plan.emitterHash, parameters);
-        driftY += scalar(module.value[1], birth, plan.emitterHash, parameters);
+        driftX += vectorComponent(
+          module.value,
+          0,
+          birth,
+          plan.emitterHash,
+          parameters,
+        );
+        driftY += vectorComponent(
+          module.value,
+          1,
+          birth,
+          plan.emitterHash,
+          parameters,
+        );
         break;
       case "drag":
         drag += scalar(module.amount, birth, plan.emitterHash, parameters);
@@ -542,7 +585,12 @@ export function sampleParticle2D(
           plan.emitterHash,
           parameters,
         );
-        swayX += amplitude * Math.sin(TAU * frequency * ageSeconds);
+        const angularFrequency = TAU * frequency;
+        swayX += amplitude * Math.sin(angularFrequency * ageSeconds);
+        swayVelocityX +=
+          amplitude *
+          angularFrequency *
+          Math.cos(angularFrequency * ageSeconds);
         break;
       }
       case "angularVelocity":
@@ -569,28 +617,42 @@ export function sampleParticle2D(
     initialVelocityY * dragIntegral +
     driftY * ageSeconds +
     0.5 * accelerationY * ageSeconds * ageSeconds;
+  let velocityX =
+    initialVelocityX * dragDecay +
+    driftX +
+    accelerationX * ageSeconds +
+    swayVelocityX;
+  let velocityY =
+    initialVelocityY * dragDecay + driftY + accelerationY * ageSeconds;
   if (hasOrbit) {
     const radians = (orbitDegrees * ageSeconds * Math.PI) / 180;
+    const radiansPerSecond = (orbitDegrees * Math.PI) / 180;
+    const cosine = Math.cos(radians);
+    const sine = Math.sin(radians);
     const dx = x - orbitCenterX;
     const dy = y - orbitCenterY;
-    x = orbitCenterX + dx * Math.cos(radians) - dy * Math.sin(radians);
-    y = orbitCenterY + dx * Math.sin(radians) + dy * Math.cos(radians);
+    const rotatedVelocityX = velocityX * cosine - velocityY * sine;
+    const rotatedVelocityY = velocityX * sine + velocityY * cosine;
+    x = orbitCenterX + dx * cosine - dy * sine;
+    y = orbitCenterY + dx * sine + dy * cosine;
+    velocityX = rotatedVelocityX - radiansPerSecond * (y - orbitCenterY);
+    velocityY = rotatedVelocityY + radiansPerSecond * (x - orbitCenterX);
   }
   output[Particle2DRegister.X] = x;
   output[Particle2DRegister.Y] = y;
-  output[Particle2DRegister.VelocityX] =
-    initialVelocityX * dragDecay + driftX + accelerationX * ageSeconds;
-  output[Particle2DRegister.VelocityY] =
-    initialVelocityY * dragDecay + driftY + accelerationY * ageSeconds;
+  output[Particle2DRegister.VelocityX] = velocityX;
+  output[Particle2DRegister.VelocityY] = velocityY;
 
-  const initialSizeX = scalar(
-    plan.initial.size[0],
+  const initialSizeX = vectorComponent(
+    plan.initial.size,
+    0,
     birth,
     plan.emitterHash,
     parameters,
   );
-  const initialSizeY = scalar(
-    plan.initial.size[1],
+  const initialSizeY = vectorComponent(
+    plan.initial.size,
+    1,
     birth,
     plan.emitterHash,
     parameters,
@@ -618,6 +680,7 @@ export function sampleParticle2D(
     plan.initial.color,
     birth,
     plan.emitterHash,
+    parameters,
     output,
     Particle2DRegister.Red,
   );
@@ -645,40 +708,46 @@ function sampleConeVelocity3D(
   output: Float64Array,
 ): void {
   if (plan.initial.velocity.type === "vector") {
-    output[Particle3DRegister.VelocityX] = scalar(
-      plan.initial.velocity.value[0],
+    output[Particle3DRegister.VelocityX] = vectorComponent(
+      plan.initial.velocity.value,
+      0,
       birth,
       plan.emitterHash,
       parameters,
     );
-    output[Particle3DRegister.VelocityY] = scalar(
-      plan.initial.velocity.value[1],
+    output[Particle3DRegister.VelocityY] = vectorComponent(
+      plan.initial.velocity.value,
+      1,
       birth,
       plan.emitterHash,
       parameters,
     );
-    output[Particle3DRegister.VelocityZ] = scalar(
-      plan.initial.velocity.value[2],
+    output[Particle3DRegister.VelocityZ] = vectorComponent(
+      plan.initial.velocity.value,
+      2,
       birth,
       plan.emitterHash,
       parameters,
     );
     return;
   }
-  const directionX = scalar(
-    plan.initial.velocity.direction[0],
+  const directionX = vectorComponent(
+    plan.initial.velocity.direction,
+    0,
     birth,
     plan.emitterHash,
     parameters,
   );
-  const directionY = scalar(
-    plan.initial.velocity.direction[1],
+  const directionY = vectorComponent(
+    plan.initial.velocity.direction,
+    1,
     birth,
     plan.emitterHash,
     parameters,
   );
-  const directionZ = scalar(
-    plan.initial.velocity.direction[2],
+  const directionZ = vectorComponent(
+    plan.initial.velocity.direction,
+    2,
     birth,
     plan.emitterHash,
     parameters,
@@ -704,7 +773,7 @@ function sampleConeVelocity3D(
       birth.seed,
       plan.emitterHash,
       birth.ordinal,
-      plan.initial.velocity.spreadDegrees.channel,
+      plan.initial.velocity.polarChannel,
     ) *
       (1 - Math.cos(spread));
   const sine = Math.sqrt(Math.max(0, 1 - cosine * cosine));
@@ -729,7 +798,7 @@ function sampleConeVelocity3D(
       birth.seed,
       plan.emitterHash,
       birth.ordinal,
-      plan.initial.velocity.speed.channel,
+      plan.initial.velocity.azimuthChannel,
     ) * TAU;
   const radialX = Math.cos(angle) * sine;
   const radialY = Math.sin(angle) * sine;
@@ -803,7 +872,12 @@ export function sampleParticle3D(
   let swayX = 0;
   let swayY = 0;
   let swayZ = 0;
-  let angularVelocity = scalar(
+  let swayVelocityX = 0;
+  let swayVelocityY = 0;
+  let swayVelocityZ = 0;
+  let angularVelocityX = 0;
+  let angularVelocityY = 0;
+  let angularVelocityZ = scalar(
     plan.initial.angularVelocity,
     birth,
     plan.emitterHash,
@@ -827,29 +901,50 @@ export function sampleParticle3D(
     switch (module.type) {
       case "acceleration":
       case "gravity":
-        accelerationX += scalar(
-          module.value[0],
+        accelerationX += vectorComponent(
+          module.value,
+          0,
           birth,
           plan.emitterHash,
           parameters,
         );
-        accelerationY += scalar(
-          module.value[1],
+        accelerationY += vectorComponent(
+          module.value,
+          1,
           birth,
           plan.emitterHash,
           parameters,
         );
-        accelerationZ += scalar(
-          module.value[2],
+        accelerationZ += vectorComponent(
+          module.value,
+          2,
           birth,
           plan.emitterHash,
           parameters,
         );
         break;
       case "drift":
-        driftX += scalar(module.value[0], birth, plan.emitterHash, parameters);
-        driftY += scalar(module.value[1], birth, plan.emitterHash, parameters);
-        driftZ += scalar(module.value[2], birth, plan.emitterHash, parameters);
+        driftX += vectorComponent(
+          module.value,
+          0,
+          birth,
+          plan.emitterHash,
+          parameters,
+        );
+        driftY += vectorComponent(
+          module.value,
+          1,
+          birth,
+          plan.emitterHash,
+          parameters,
+        );
+        driftZ += vectorComponent(
+          module.value,
+          2,
+          birth,
+          plan.emitterHash,
+          parameters,
+        );
         break;
       case "drag":
         drag += scalar(module.amount, birth, plan.emitterHash, parameters);
@@ -885,21 +980,60 @@ export function sampleParticle3D(
           plan.emitterHash,
           parameters,
         );
-        const displacement = amplitude * Math.sin(TAU * frequency * ageSeconds);
-        swayX +=
-          scalar(module.direction[0], birth, plan.emitterHash, parameters) *
-          displacement;
-        swayY +=
-          scalar(module.direction[1], birth, plan.emitterHash, parameters) *
-          displacement;
-        swayZ +=
-          scalar(module.direction[2], birth, plan.emitterHash, parameters) *
-          displacement;
+        const angularFrequency = TAU * frequency;
+        const displacement =
+          amplitude * Math.sin(angularFrequency * ageSeconds);
+        const displacementVelocity =
+          amplitude *
+          angularFrequency *
+          Math.cos(angularFrequency * ageSeconds);
+        const directionX = vectorComponent(
+          module.direction,
+          0,
+          birth,
+          plan.emitterHash,
+          parameters,
+        );
+        const directionY = vectorComponent(
+          module.direction,
+          1,
+          birth,
+          plan.emitterHash,
+          parameters,
+        );
+        const directionZ = vectorComponent(
+          module.direction,
+          2,
+          birth,
+          plan.emitterHash,
+          parameters,
+        );
+        swayX += directionX * displacement;
+        swayY += directionY * displacement;
+        swayZ += directionZ * displacement;
+        swayVelocityX += directionX * displacementVelocity;
+        swayVelocityY += directionY * displacementVelocity;
+        swayVelocityZ += directionZ * displacementVelocity;
         break;
       }
       case "angularVelocity":
-        angularVelocity += scalar(
-          module.degreesPerSecond[2],
+        angularVelocityX += vectorComponent(
+          module.degreesPerSecond,
+          0,
+          birth,
+          plan.emitterHash,
+          parameters,
+        );
+        angularVelocityY += vectorComponent(
+          module.degreesPerSecond,
+          1,
+          birth,
+          plan.emitterHash,
+          parameters,
+        );
+        angularVelocityZ += vectorComponent(
+          module.degreesPerSecond,
+          2,
           birth,
           plan.emitterHash,
           parameters,
@@ -910,20 +1044,23 @@ export function sampleParticle3D(
         orbitCenterX = module.center[0];
         orbitCenterY = module.center[1];
         orbitCenterZ = module.center[2];
-        orbitAxisX = scalar(
-          module.axis[0],
+        orbitAxisX = vectorComponent(
+          module.axis,
+          0,
           birth,
           plan.emitterHash,
           parameters,
         );
-        orbitAxisY = scalar(
-          module.axis[1],
+        orbitAxisY = vectorComponent(
+          module.axis,
+          1,
           birth,
           plan.emitterHash,
           parameters,
         );
-        orbitAxisZ = scalar(
-          module.axis[2],
+        orbitAxisZ = vectorComponent(
+          module.axis,
+          2,
           birth,
           plan.emitterHash,
           parameters,
@@ -958,6 +1095,21 @@ export function sampleParticle3D(
     driftZ * ageSeconds +
     0.5 * accelerationZ * ageSeconds * ageSeconds +
     swayZ;
+  let velocityX =
+    initialVelocityX * dragDecay +
+    driftX +
+    accelerationX * ageSeconds +
+    swayVelocityX;
+  let velocityY =
+    initialVelocityY * dragDecay +
+    driftY +
+    accelerationY * ageSeconds +
+    swayVelocityY;
+  let velocityZ =
+    initialVelocityZ * dragDecay +
+    driftZ +
+    accelerationZ * ageSeconds +
+    swayVelocityZ;
   if (hasOrbit) {
     const axisLength = Math.hypot(orbitAxisX, orbitAxisY, orbitAxisZ);
     const axisX = orbitAxisX / axisLength;
@@ -976,24 +1128,50 @@ export function sampleParticle3D(
     x = orbitCenterX + dx * cosine + crossX * sine + axisX * dot * (1 - cosine);
     y = orbitCenterY + dy * cosine + crossY * sine + axisY * dot * (1 - cosine);
     z = orbitCenterZ + dz * cosine + crossZ * sine + axisZ * dot * (1 - cosine);
+    const velocityDot =
+      axisX * velocityX + axisY * velocityY + axisZ * velocityZ;
+    const velocityCrossX = axisY * velocityZ - axisZ * velocityY;
+    const velocityCrossY = axisZ * velocityX - axisX * velocityZ;
+    const velocityCrossZ = axisX * velocityY - axisY * velocityX;
+    const rotatedVelocityX =
+      velocityX * cosine +
+      velocityCrossX * sine +
+      axisX * velocityDot * (1 - cosine);
+    const rotatedVelocityY =
+      velocityY * cosine +
+      velocityCrossY * sine +
+      axisY * velocityDot * (1 - cosine);
+    const rotatedVelocityZ =
+      velocityZ * cosine +
+      velocityCrossZ * sine +
+      axisZ * velocityDot * (1 - cosine);
+    const radiansPerSecond = (orbitDegrees * Math.PI) / 180;
+    const angularX = axisX * radiansPerSecond;
+    const angularY = axisY * radiansPerSecond;
+    const angularZ = axisZ * radiansPerSecond;
+    const radiusX = x - orbitCenterX;
+    const radiusY = y - orbitCenterY;
+    const radiusZ = z - orbitCenterZ;
+    velocityX = rotatedVelocityX + angularY * radiusZ - angularZ * radiusY;
+    velocityY = rotatedVelocityY + angularZ * radiusX - angularX * radiusZ;
+    velocityZ = rotatedVelocityZ + angularX * radiusY - angularY * radiusX;
   }
   output[Particle3DRegister.X] = x;
   output[Particle3DRegister.Y] = y;
   output[Particle3DRegister.Z] = z;
-  output[Particle3DRegister.VelocityX] =
-    initialVelocityX * dragDecay + driftX + accelerationX * ageSeconds;
-  output[Particle3DRegister.VelocityY] =
-    initialVelocityY * dragDecay + driftY + accelerationY * ageSeconds;
-  output[Particle3DRegister.VelocityZ] =
-    initialVelocityZ * dragDecay + driftZ + accelerationZ * ageSeconds;
-  const initialSizeX = scalar(
-    plan.initial.size[0],
+  output[Particle3DRegister.VelocityX] = velocityX;
+  output[Particle3DRegister.VelocityY] = velocityY;
+  output[Particle3DRegister.VelocityZ] = velocityZ;
+  const initialSizeX = vectorComponent(
+    plan.initial.size,
+    0,
     birth,
     plan.emitterHash,
     parameters,
   );
-  const initialSizeY = scalar(
-    plan.initial.size[1],
+  const initialSizeY = vectorComponent(
+    plan.initial.size,
+    1,
     birth,
     plan.emitterHash,
     parameters,
@@ -1010,17 +1188,20 @@ export function sampleParticle3D(
           normalizedAge,
           plan.appearance.size.dimension === 1 ? 0 : 1,
         );
-  const initialRotation =
+  output[Particle3DRegister.RotationX] = angularVelocityX * ageSeconds;
+  output[Particle3DRegister.RotationY] = angularVelocityY * ageSeconds;
+  const initialRotationZ =
     scalar(plan.initial.rotation, birth, plan.emitterHash, parameters) +
-    angularVelocity * ageSeconds;
-  output[Particle3DRegister.Rotation] =
+    angularVelocityZ * ageSeconds;
+  output[Particle3DRegister.RotationZ] =
     plan.appearance.rotation === null
-      ? initialRotation
+      ? initialRotationZ
       : sampleParticleCurve(plan.appearance.rotation, normalizedAge, 0);
   color(
     plan.initial.color,
     birth,
     plan.emitterHash,
+    parameters,
     output,
     Particle3DRegister.Red,
   );

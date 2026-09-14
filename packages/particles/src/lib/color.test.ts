@@ -44,6 +44,14 @@ describe("particle color normalization", () => {
     "color(display-p3 1 0 0)",
     "lab(50% 0 0)",
     "rgb(from red r g b)",
+    "rgb(,0,0)",
+    "rgb(0,,0)",
+    "rgba(0,0,0,)",
+    "rgb(0 0 0 /)",
+    "hsl(, 100%, 50%)",
+    "rgb(% 0 0)",
+    "hsl(deg 100% 50%)",
+    "rgb(0x10 0 0)",
     "not-a-color",
   ])("rejects contextual or out-of-grammar color %s", (color) => {
     expect(() => parseParticleColor(color)).toThrowError(
