@@ -58,4 +58,18 @@ describe("particle color normalization", () => {
       /particle color.*unsupported/i,
     );
   });
+
+  it.each([
+    "rgb(0 0 / 0)",
+    "rgb(0 0 0 0.5)",
+    "hsl(0 0% / 0%)",
+    "hsl(0 0% 0% 0.5)",
+  ])(
+    "rejects functional color with invalid separator structure %s",
+    (color) => {
+      expect(() => parseParticleColor(color)).toThrowError(
+        /particle color.*unsupported/i,
+      );
+    },
+  );
 });

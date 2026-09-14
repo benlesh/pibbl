@@ -138,31 +138,53 @@ function parseHex(source: string): ParticleColor | undefined {
   ]);
 }
 
-function splitFunctionalBody(body: string): readonly string[] | undefined {
-  let tokens: string[];
+interface FunctionalColorBody {
+  readonly syntax: "legacy" | "modern";
+  readonly channels: readonly [string, string, string];
+  readonly alpha: string | undefined;
+}
+
+function splitFunctionalBody(body: string): FunctionalColorBody | undefined {
   if (body.includes(",")) {
     if (body.includes("/")) return undefined;
-    tokens = body.split(",").map((token) => token.trim());
-  } else {
-    const slashParts = body.split("/");
-    if (slashParts.length > 2) return undefined;
-    tokens = slashParts[0]!.trim().split(/\s+/);
-    if (slashParts.length === 2) tokens.push(slashParts[1]!.trim());
+    const tokens = body.split(",").map((token) => token.trim());
+    if (
+      (tokens.length !== 3 && tokens.length !== 4) ||
+      tokens.some((token) => token.length === 0)
+    ) {
+      return undefined;
+    }
+    return {
+      syntax: "legacy",
+      channels: [tokens[0]!, tokens[1]!, tokens[2]!],
+      alpha: tokens[3],
+    };
   }
-  return tokens.some((token) => token.length === 0) ? undefined : tokens;
+
+  const slashParts = body.split("/");
+  if (slashParts.length > 2) return undefined;
+  const channelSource = slashParts[0]!.trim();
+  if (channelSource.length === 0) return undefined;
+  const channels = channelSource.split(/\s+/);
+  if (channels.length !== 3) return undefined;
+  const alpha = slashParts.length === 2 ? slashParts[1]!.trim() : undefined;
+  if (alpha !== undefined && alpha.length === 0) return undefined;
+  return {
+    syntax: "modern",
+    channels: [channels[0]!, channels[1]!, channels[2]!],
+    alpha,
+  };
 }
 
 function parseRGB(source: string): ParticleColor | undefined {
   const match = /^rgba?\((.*)\)$/.exec(source);
   if (match === null) return undefined;
-  const tokens = splitFunctionalBody(match[1]!);
-  if (tokens === undefined || (tokens.length !== 3 && tokens.length !== 4)) {
-    return undefined;
-  }
-  const red = parseRGBChannel(tokens[0]!);
-  const green = parseRGBChannel(tokens[1]!);
-  const blue = parseRGBChannel(tokens[2]!);
-  const alpha = tokens.length === 4 ? parseAlpha(tokens[3]!) : 1;
+  const body = splitFunctionalBody(match[1]!);
+  if (body === undefined) return undefined;
+  const red = parseRGBChannel(body.channels[0]);
+  const green = parseRGBChannel(body.channels[1]);
+  const blue = parseRGBChannel(body.channels[2]);
+  const alpha = body.alpha === undefined ? 1 : parseAlpha(body.alpha);
   if (
     red === undefined ||
     green === undefined ||
@@ -177,14 +199,12 @@ function parseRGB(source: string): ParticleColor | undefined {
 function parseHSL(source: string): ParticleColor | undefined {
   const match = /^hsla?\((.*)\)$/.exec(source);
   if (match === null) return undefined;
-  const tokens = splitFunctionalBody(match[1]!);
-  if (tokens === undefined || (tokens.length !== 3 && tokens.length !== 4)) {
-    return undefined;
-  }
-  const hue = parseHue(tokens[0]!);
-  const saturation = parsePercentage(tokens[1]!);
-  const lightness = parsePercentage(tokens[2]!);
-  const alpha = tokens.length === 4 ? parseAlpha(tokens[3]!) : 1;
+  const body = splitFunctionalBody(match[1]!);
+  if (body === undefined) return undefined;
+  const hue = parseHue(body.channels[0]);
+  const saturation = parsePercentage(body.channels[1]);
+  const lightness = parsePercentage(body.channels[2]);
+  const alpha = body.alpha === undefined ? 1 : parseAlpha(body.alpha);
   if (
     hue === undefined ||
     saturation === undefined ||
