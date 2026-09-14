@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { crc, createElement, signal, type CRCNode } from "@crc/core";
-import type { CRCInternalRenderOwner } from "@crc/core/internal";
+import {
+  crcInternalRequestRender,
+  type CRCInternalRenderOwner,
+} from "@crc/core/internal";
 import { clearSharedState } from "../../../../core/src/lib/global-state.js";
 import {
   installSchedulerDriverForTest,
@@ -66,7 +69,9 @@ function candidate(
     execution: "stateless-canvas",
     compiled,
     parameters: compiled.parameterLayout.defaults,
-    requestRender() {},
+    requestRender() {
+      crcInternalRequestRender(owner);
+    },
     adoptFrame() {},
     clear() {},
     dispose() {},
@@ -107,21 +112,28 @@ describe("crcParticleSystem hook ownership", () => {
 
     system.emit("burst");
     driver.flush(2);
+    driver.flush(3);
     expect(calls).toEqual(["old:start", "old:burst-accepted"]);
 
     observerVersion.set("new");
     selected.set(second);
-    driver.flush(3);
+    driver.flush(4);
     expect(system).toBe(original);
     expect(getParticleSystemController(system).compiled).toBe(
       compileParticleEffect2D(second),
     );
     expect(system.status.get()).toBe("running");
     expect(driver.pendingHostFrames).toBe(1);
-    driver.flush(4);
-    expect(system.status.get()).toBe("idle");
-    system.emit("burst");
     driver.flush(5);
+    expect(system.status.get()).toBe("running");
+    expect(particleSystemControllerSnapshot(system)).toMatchObject({
+      generation: 2,
+      effectTimeMilliseconds: 0,
+      previousEffectTimeMilliseconds: 0,
+    });
+    expect(calls).toEqual(["old:start", "old:burst-accepted", "new:start"]);
+    system.emit("burst");
+    driver.flush(6);
     expect(calls).toEqual([
       "old:start",
       "old:burst-accepted",
@@ -165,7 +177,8 @@ describe("crcParticleSystem hook ownership", () => {
     if (driver.pendingHostFrames > 0) driver.flush(1);
 
     system.emit("burst");
-    expect(() => driver.flush(10)).toThrow(/observer failed/i);
+    driver.flush(10);
+    expect(() => driver.flush(11)).toThrow(/observer failed/i);
     expect(order).toEqual([
       "system:start",
       "component:start",

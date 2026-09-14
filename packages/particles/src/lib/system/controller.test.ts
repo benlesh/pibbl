@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { crc, createElement, type CRCNode } from "@crc/core";
-import type { CRCInternalRenderOwner } from "@crc/core/internal";
+import {
+  crcInternalRequestRender,
+  type CRCInternalRenderOwner,
+} from "@crc/core/internal";
 import { clearSharedState } from "../../../../core/src/lib/global-state.js";
 import {
   installSchedulerDriverForTest,
@@ -50,11 +53,14 @@ interface TestCandidate extends ParticleBindingCandidate {
   clearCount: number;
   disposeCount: number;
   renderRequests: number;
+  failClear: boolean;
+  failDispose: boolean;
 }
 
 function createCandidate(
   owner: CRCInternalRenderOwner,
   effect: CRCParticleEffect2D,
+  requestRealRender = true,
 ): TestCandidate {
   const frames: ParticleSystemFrame[] = [];
   return {
@@ -67,17 +73,25 @@ function createCandidate(
     clearCount: 0,
     disposeCount: 0,
     renderRequests: 0,
+    failClear: false,
+    failDispose: false,
     requestRender() {
       this.renderRequests += 1;
+      if (requestRealRender) crcInternalRequestRender(owner);
     },
     adoptFrame(frame) {
       frames.push(frame);
     },
     clear() {
       this.clearCount += 1;
+      if (this.failClear) throw new Error("candidate clear failed");
     },
     dispose() {
       this.disposeCount += 1;
+      if (this.failDispose) {
+        this.failDispose = false;
+        throw new Error("candidate dispose failed");
+      }
     },
   };
 }
@@ -114,6 +128,14 @@ function mountSystem(
   };
 }
 
+function mount(node: CRCNode) {
+  const canvas = document.createElement("canvas");
+  document.body.appendChild(canvas);
+  const root = crc(canvas, node);
+  roots.add(root);
+  return root;
+}
+
 function finiteEffect(lifetimeMilliseconds = 100) {
   return defineParticleEffect2D({
     debugName: "finite sparks",
@@ -130,13 +152,13 @@ function finiteEffect(lifetimeMilliseconds = 100) {
   });
 }
 
-function manualEffect(lifetimeMilliseconds = 100) {
+function manualEffect(lifetimeMilliseconds = 100, capacity = 3) {
   return defineParticleEffect2D({
     debugName: "manual impact",
     emitters: [
       {
         name: "impact",
-        capacity: 3,
+        capacity,
         emission: [{ type: "manual", count: 2 }],
         shape: { type: "point" },
         initial: { lifetimeMilliseconds },
@@ -217,6 +239,7 @@ describe("scheduled particle system controller", () => {
     system.emit("impact", { count: 5, position: [4, 6], seedSalt: 7 });
     driver.flush(10);
     expect(system.status.get()).toBe("running");
+    driver.flush(11);
     expect(events.map((event) => event.type)).toEqual([
       "start",
       "burst-accepted",
@@ -241,6 +264,7 @@ describe("scheduled particle system controller", () => {
     system.pause();
     driver.flush(20);
     const errorsBeforePausedBurst = errors.length;
+    const framesBeforePausedBurst = candidate.frames.length;
     system.emit("impact", { count: 1 });
     driver.flush(30);
     expect(events.at(-1)).toMatchObject({
@@ -251,7 +275,7 @@ describe("scheduled particle system controller", () => {
       reason: "paused",
     });
     expect(errors).toHaveLength(errorsBeforePausedBurst);
-    expect(candidate.frames).toHaveLength(1);
+    expect(candidate.frames).toHaveLength(framesBeforePausedBurst);
 
     system.restart({ seed: 4_294_967_297 });
     driver.flush(50);
@@ -263,6 +287,7 @@ describe("scheduled particle system controller", () => {
       seed: 1,
       status: "running",
     });
+    driver.flush(51);
     expect(events.at(-1)?.type).toBe("start");
 
     system.emit("impact", { count: 1 });
@@ -287,6 +312,174 @@ describe("scheduled particle system controller", () => {
     expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(0);
   });
 
+  it("catches success delivery and accepted capacity surviving a real renderer transaction failure", () => {
+    const events: Array<CRCParticleSystemEvent & Record<string, unknown>> = [];
+    const definition = manualEffect(100, 3);
+    let system!: CRCParticleSystem;
+    let failRender = false;
+    let failedCandidate!: TestCandidate;
+    let replacementCandidate!: TestCandidate;
+    const SystemOwner = (): CRCNode => {
+      system = crcParticleSystem(definition, {
+        onEvent: (event) => events.push(event as (typeof events)[number]),
+      });
+      return null;
+    };
+    const FailedBinding = (): CRCNode => {
+      useParticleSystemBinding({
+        system,
+        backend: "canvas",
+        create(owner) {
+          return (failedCandidate ??= createCandidate(owner, definition, true));
+        },
+      });
+      if (failRender) throw new Error("injected particle renderer failure");
+      return null;
+    };
+    const ReplacementBinding = (): CRCNode => {
+      useParticleSystemBinding({
+        system,
+        backend: "canvas",
+        create(owner) {
+          return (replacementCandidate ??= createCandidate(
+            owner,
+            definition,
+            true,
+          ));
+        },
+      });
+      return null;
+    };
+    const systemRoot = mount(createElement(SystemOwner, {}));
+    driver.flush(0);
+    const failedRoot = mount(createElement(FailedBinding, {}));
+    driver.flush(1);
+    if (driver.pendingHostFrames > 0) driver.flush(2);
+
+    failRender = true;
+    system.emit("impact", { count: 3 });
+    driver.flush(10);
+    expect(() => driver.flush(11)).toThrow(
+      /injected particle renderer failure/i,
+    );
+    expect(events).toEqual([]);
+    expect(failedCandidate.disposeCount).toBe(1);
+
+    failedRoot.dispose();
+    roots.delete(failedRoot);
+    const replacementRoot = mount(createElement(ReplacementBinding, {}));
+    driver.flush(11);
+    if (driver.pendingHostFrames > 0) driver.flush(12);
+    system.emit("impact", { count: 3 });
+    driver.flush(20);
+    driver.flush(21);
+    expect(events.map((event) => event.type)).toEqual([
+      "start",
+      "burst-accepted",
+    ]);
+    expect(events.at(-1)).toMatchObject({ requested: 3, accepted: 3 });
+
+    replacementRoot.dispose();
+    roots.delete(replacementRoot);
+    systemRoot.dispose();
+    roots.delete(systemRoot);
+  });
+
+  it("catches clear finishing before the empty renderer transaction succeeds", () => {
+    const order: string[] = [];
+    const definition = manualEffect();
+    let system!: CRCParticleSystem;
+    let candidate!: TestCandidate;
+    let renderCount = 0;
+    const Root = (): CRCNode => {
+      renderCount += 1;
+      system = crcParticleSystem(definition, {
+        onEvent(event) {
+          order.push(`${event.type}@${renderCount}`);
+        },
+      });
+      useParticleSystemBinding({
+        system,
+        backend: "canvas",
+        create(owner) {
+          return (candidate ??= createCandidate(owner, definition, true));
+        },
+      });
+      return null;
+    };
+    const root = mount(createElement(Root, {}));
+    driver.flush(0);
+    if (driver.pendingHostFrames > 0) driver.flush(1);
+    system.emit("impact");
+    driver.flush(10);
+    driver.flush(11);
+    system.pause();
+    driver.flush(12);
+    expect(driver.pendingHostFrames).toBe(0);
+    const rendersBeforeClear = renderCount;
+
+    system.stop({ mode: "clear" });
+    driver.flush(20);
+    expect(candidate.clearCount).toBeGreaterThan(0);
+    expect(renderCount).toBe(rendersBeforeClear + 1);
+    expect(order.at(-1)).toBe(`finish@${renderCount}`);
+    expect(system.status.get()).toBe("finished");
+
+    root.dispose();
+    roots.delete(root);
+  });
+
+  it("catches manual births expiring from stale pre-gap effect time", () => {
+    const events: Array<CRCParticleSystemEvent & Record<string, unknown>> = [];
+    const { system } = mountSystem(manualEffect(100, 1), {
+      autoplay: true,
+      onEvent: (event) => events.push(event as (typeof events)[number]),
+    });
+    events.length = 0;
+
+    system.emit("impact", { count: 1 });
+    driver.flush(100);
+    driver.flush(101);
+    system.emit("impact", { count: 1 });
+    driver.flush(102);
+    expect(events.at(-1)).toMatchObject({
+      type: "burst-rejected",
+      reason: "capacity",
+      requested: 1,
+      accepted: 0,
+    });
+  });
+
+  it("catches candidate clear failure corrupting accepted work or escaping its error channel", () => {
+    const errors: unknown[] = [];
+    const events: Array<CRCParticleSystemEvent & Record<string, unknown>> = [];
+    const { candidate, system } = mountSystem(manualEffect(100, 1), {
+      onEvent: (event) => events.push(event as (typeof events)[number]),
+      onError: (error) => errors.push(error),
+    });
+    system.emit("impact", { count: 1 });
+    driver.flush(10);
+    candidate.failClear = true;
+
+    system.stop({ mode: "clear" });
+    expect(() => driver.flush(20)).not.toThrow();
+    expect(system.status.get()).toBe("running");
+    expect(events.some((event) => event.type === "finish")).toBe(false);
+    expect(errors).toEqual([
+      expect.objectContaining({
+        type: "execution-failed",
+        message: "candidate clear failed",
+      }),
+    ]);
+
+    system.emit("impact", { count: 1 });
+    driver.flush(30);
+    expect(events.at(-1)).toMatchObject({
+      type: "burst-rejected",
+      reason: "capacity",
+    });
+  });
+
   it("catches finite early/late finish and accidental completion of infinite or manual-open runs", () => {
     const finiteEvents: string[] = [];
     const finite = mountSystem(finiteEffect(100), {
@@ -294,6 +487,7 @@ describe("scheduled particle system controller", () => {
       onEvent: (event) => finiteEvents.push(event.type),
     });
     expect(finite.system.status.get()).toBe("running");
+    driver.flush(2);
     expect(finiteEvents).toEqual(["start"]);
     driver.flush(100);
     expect(finite.system.status.get()).toBe("running");
@@ -311,6 +505,7 @@ describe("scheduled particle system controller", () => {
     infinite.root.dispose();
     roots.delete(infinite.root);
     const manual = mountSystem(manualEffect(), { autoplay: true });
+    if (driver.pendingHostFrames > 0) driver.flush(2_001);
     expect(manual.system.status.get()).toBe("running");
     expect(snapshotRealmScheduler().registeredAdvanceParticipants).toBe(0);
     expect(driver.pendingHostFrames).toBe(0);

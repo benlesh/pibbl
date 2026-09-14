@@ -52,6 +52,7 @@ export interface ParticleSystemBindingInput {
 
 interface ParticleBindingHookSlot {
   controller: ParticleSystemController;
+  committedController: ParticleSystemController | undefined;
   owner: CRCInternalRenderOwner;
   committed: ParticleBindingCandidate | undefined;
   pending: ParticleBindingCandidate | undefined;
@@ -59,14 +60,8 @@ interface ParticleBindingHookSlot {
   latestOnEvent: ((event: CRCParticleSystemEvent) => void) | undefined;
   latestOnError: ((error: unknown) => void) | undefined;
   revision: number;
+  disposed: boolean;
   readonly observers: ParticleBindingObservers;
-}
-
-function disposeCandidate(
-  candidate: ParticleBindingCandidate | undefined,
-): void {
-  if (candidate === undefined) return;
-  candidate.dispose();
 }
 
 /**
@@ -92,6 +87,7 @@ export function useParticleSystemBinding(
       });
       value = {
         controller,
+        committedController: undefined,
         owner,
         committed: undefined,
         pending: undefined,
@@ -99,13 +95,23 @@ export function useParticleSystemBinding(
         latestOnEvent: undefined,
         latestOnError: undefined,
         revision: 0,
+        disposed: false,
         observers,
       };
       teardowns.add(() => {
+        value.disposed = true;
+        const pending = value.pending;
         value.controller.cancelBindingReservation(value.reservation);
         value.reservation = undefined;
         value.pending = undefined;
-        value.controller.releaseBinding(value.owner, value.committed);
+        if (pending !== undefined && pending !== value.committed) {
+          value.controller.discardBindingCandidate(
+            pending,
+            "dispose-pending-binding",
+          );
+        }
+        value.committedController?.releaseBinding(value.owner, value.committed);
+        value.committedController = undefined;
         value.committed = undefined;
       });
       return value;
@@ -117,9 +123,7 @@ export function useParticleSystemBinding(
   }
   if (slot.controller !== controller) {
     slot.controller.cancelBindingReservation(slot.reservation);
-    slot.controller.releaseBinding(slot.owner, slot.committed);
     slot.controller = controller;
-    slot.committed = undefined;
     slot.pending = undefined;
     slot.reservation = undefined;
   }
@@ -134,7 +138,7 @@ export function useParticleSystemBinding(
     controller.cancelBindingReservation(reservation);
     slot.reservation = undefined;
     if (candidate !== undefined && candidate !== slot.committed) {
-      disposeCandidate(candidate);
+      controller.discardBindingCandidate(candidate, "dispose-invalid-binding");
     }
     throw error;
   }
@@ -142,22 +146,38 @@ export function useParticleSystemBinding(
   const revision = ++slot.revision;
   slot.pending = candidate;
   crcInternalOnRenderFinish(owner, (success) => {
+    if (slot.disposed) return;
     if (revision !== slot.revision) {
       controller.cancelBindingReservation(reservation);
-      if (candidate !== slot.committed) disposeCandidate(candidate);
+      if (candidate !== slot.committed) {
+        controller.discardBindingCandidate(candidate, "dispose-stale-binding");
+      }
       return;
     }
     slot.pending = undefined;
     slot.reservation = undefined;
     if (!success) {
+      controller.recordRendererTransaction(owner, false);
+      if (slot.committedController !== controller) {
+        slot.committedController?.recordRendererTransaction(owner, false);
+      }
       controller.cancelBindingReservation(reservation);
-      if (candidate !== slot.committed) disposeCandidate(candidate);
+      if (candidate !== slot.committed) {
+        controller.discardBindingCandidate(candidate, "dispose-failed-binding");
+      }
       return;
     }
     slot.latestOnEvent = input.onEvent;
     slot.latestOnError = input.onError;
+    const previousController = slot.committedController;
+    const previousCandidate = slot.committed;
     controller.adoptBinding(reservation, candidate, slot.observers);
+    slot.committedController = controller;
     slot.committed = candidate;
+    if (previousController !== undefined && previousController !== controller) {
+      previousController.releaseBinding(slot.owner, previousCandidate);
+    }
+    controller.recordRendererTransaction(owner, true);
   });
   return candidate;
 }

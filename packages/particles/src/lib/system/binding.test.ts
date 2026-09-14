@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { crc, createElement, signal, type CRCNode } from "@crc/core";
-import type { CRCInternalRenderOwner } from "@crc/core/internal";
+import {
+  crcInternalRequestRender,
+  type CRCInternalRenderOwner,
+} from "@crc/core/internal";
 import { clearSharedState } from "../../../../core/src/lib/global-state.js";
 import {
   installSchedulerDriverForTest,
@@ -58,7 +61,9 @@ function candidate(
     parameters,
     frames: [],
     disposeCount: 0,
-    requestRender() {},
+    requestRender() {
+      crcInternalRequestRender(owner);
+    },
     adoptFrame(frame) {
       this.frames.push(frame);
     },
@@ -166,6 +171,65 @@ describe("particle system binding transactions", () => {
     expect(system.execution.get()).toBe("unbound");
     systemRoot.dispose();
     roots.delete(systemRoot);
+  });
+
+  it("catches a failed cross-system replacement destroying the committed binding during evaluation", () => {
+    const definition = effectWithParameters();
+    const selected = signal<"first" | "second">("first");
+    let firstSystem!: CRCParticleSystem;
+    let secondSystem!: CRCParticleSystem;
+    let first!: TestCandidate;
+    let replacementError: unknown;
+    const Systems = (): CRCNode => {
+      firstSystem = crcParticleSystem(definition);
+      secondSystem = crcParticleSystem(definition);
+      return null;
+    };
+    const Binding = (): CRCNode => {
+      const selectedSystem =
+        selected.get() === "first" ? firstSystem : secondSystem;
+      try {
+        useParticleSystemBinding({
+          system: selectedSystem,
+          backend: "canvas",
+          create(owner) {
+            if (selectedSystem === secondSystem) {
+              throw new Error("replacement candidate failed");
+            }
+            return (first ??= candidate("first", owner, definition));
+          },
+        });
+      } catch (error) {
+        replacementError = error;
+      }
+      return null;
+    };
+    const systemsRoot = mount(createElement(Systems, {}));
+    driver.flush(0);
+    const bindingRoot = mount(createElement(Binding, {}));
+    driver.flush(1);
+    if (driver.pendingHostFrames > 0) driver.flush(2);
+    expect(getParticleSystemController(firstSystem).bindingCandidate).toBe(
+      first,
+    );
+
+    selected.set("second");
+    driver.flush(3);
+    expect(replacementError).toMatchObject({
+      message: "replacement candidate failed",
+    });
+    expect(getParticleSystemController(firstSystem).bindingCandidate).toBe(
+      first,
+    );
+    expect(getParticleSystemController(secondSystem).bindingCandidate).toBe(
+      undefined,
+    );
+    expect(first.disposeCount).toBe(0);
+
+    bindingRoot.dispose();
+    roots.delete(bindingRoot);
+    systemsRoot.dispose();
+    roots.delete(systemsRoot);
   });
 
   it("catches adoption of mismatched definitions or malformed parameters after a failed render", () => {
@@ -308,6 +372,74 @@ describe("particle system binding transactions", () => {
 
     root.dispose();
     roots.delete(root);
+  });
+
+  it("catches old-candidate disposal failure corrupting the adopted binding or lease", () => {
+    const definition = effectWithParameters();
+    const values = signal(1);
+    const observed: string[] = [];
+    let system!: CRCParticleSystem;
+    let first!: TestCandidate;
+    let current!: TestCandidate;
+    const Root = (): CRCNode => {
+      const value = values.get();
+      system = crcParticleSystem(definition, {
+        onError(error) {
+          observed.push(`system:${(error as { message: string }).message}`);
+        },
+      });
+      useParticleSystemBinding({
+        system,
+        backend: "canvas",
+        create(owner) {
+          current = candidate(
+            String(value),
+            owner,
+            definition,
+            new Float64Array([value, 2, 3]),
+          );
+          if (first === undefined) {
+            first = current;
+            const dispose = first.dispose.bind(first);
+            first.dispose = () => {
+              dispose();
+              if (first.disposeCount === 1) {
+                throw new Error("old candidate dispose failed");
+              }
+            };
+          }
+          return current;
+        },
+        onError(error) {
+          observed.push(`component:${(error as { message: string }).message}`);
+        },
+      });
+      return null;
+    };
+    const baseline = particleSystemOwnershipSnapshot();
+    const root = mount(createElement(Root, {}));
+    driver.flush(0);
+    if (driver.pendingHostFrames > 0) driver.flush(1);
+    const activeAfterMount = particleSystemOwnershipSnapshot().activeBindings;
+
+    values.set(10);
+    expect(() => driver.flush(2)).not.toThrow();
+    expect(getParticleSystemController(system).bindingCandidate).toBe(current);
+    expect(particleSystemOwnershipSnapshot().activeBindings).toBe(
+      activeAfterMount,
+    );
+    expect(driver.pendingHostFrames).toBe(1);
+    driver.flush(3);
+    expect(observed).toEqual([
+      "system:old candidate dispose failed",
+      "component:old candidate dispose failed",
+    ]);
+
+    root.dispose();
+    roots.delete(root);
+    expect(particleSystemOwnershipSnapshot().activeBindings).toBe(
+      baseline.activeBindings,
+    );
   });
 });
 
