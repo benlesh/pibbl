@@ -168,6 +168,18 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/types/webgl.md",
   "docs/site/learn/index.md",
   "docs/site/learn/tutorials/diagram-editor/index.md",
+  "docs/site/learn/tutorials/diagram-editor/canvas-scene.md",
+  "docs/site/learn/tutorials/diagram-editor/first-node.md",
+  "docs/site/learn/tutorials/diagram-editor/connect-nodes.md",
+  "docs/site/learn/tutorials/diagram-editor/reusable-node.md",
+  "docs/site/learn/tutorials/diagram-editor/editor-chrome.md",
+  "docs/site/learn/tutorials/diagram-editor/selection.md",
+  "docs/site/learn/tutorials/diagram-editor/dragging.md",
+  "docs/site/learn/tutorials/diagram-editor/pan-and-zoom.md",
+  "docs/site/learn/tutorials/diagram-editor/viewport-and-layer.md",
+  "docs/site/learn/tutorials/diagram-editor/filters.md",
+  "docs/site/learn/tutorials/diagram-editor/keyboard-interaction.md",
+  "docs/site/learn/tutorials/diagram-editor/finished-editor.md",
   ...publicGuidePaths,
 ];
 const currentMarkdownPaths = [
@@ -509,7 +521,13 @@ export async function assertLocalLinks(
     const encodedFile = hashIndex < 0 ? target : target.slice(0, hashIndex);
     const encodedAnchor = hashIndex < 0 ? "" : target.slice(hashIndex + 1);
     const localPath = encodedFile
-      ? resolve(repositoryRoot, dirname(path), decodeURIComponent(encodedFile))
+      ? encodedFile.startsWith("/")
+        ? resolve(
+            repositoryRoot,
+            "playground/public",
+            `.${decodeURIComponent(encodedFile)}`,
+          )
+        : resolve(repositoryRoot, dirname(path), decodeURIComponent(encodedFile))
       : resolve(repositoryRoot, path);
 
     await assert.doesNotReject(
@@ -1251,6 +1269,14 @@ assert.deepEqual(
 
 const currentSources = new Map();
 let parsedSnippetCount = 0;
+await assert.doesNotReject(
+  () =>
+    assertLocalLinks(
+      "docs/site/learn/tutorials/diagram-editor/index.md",
+      "[finished editor](/tutorials/diagram-editor/finished-editor.png)",
+    ),
+  "Studio-served root-relative public assets must resolve from playground/public.",
+);
 for (const path of new Set(linkCheckedPaths)) {
   const source = await readFile(join(repositoryRoot, path), "utf8");
   currentSources.set(path, source);

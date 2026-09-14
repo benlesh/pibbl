@@ -335,6 +335,211 @@ async function existingStudioContract(page) {
   await page.locator(".testing-source__editor .monaco-editor").waitFor({ timeout: 30_000 });
 }
 
+const diagramEditorRootRoute = "#/learn/tutorials/diagram-editor";
+const diagramEditorChapters = [
+  ["canvas-scene", "Create the Canvas scene"],
+  ["first-node", "Draw the first node"],
+  ["connect-nodes", "Connect two nodes"],
+  ["reusable-node", "Extract a reusable node component"],
+  ["editor-chrome", "Build the editor chrome"],
+  ["selection", "Select nodes with state"],
+  ["dragging", "Drag nodes safely"],
+  ["pan-and-zoom", "Pan and zoom the workspace"],
+  ["viewport-and-layer", "Constrain the viewport"],
+  ["filters", "Polish selection with filters"],
+  ["keyboard-interaction", "Add keyboard interaction"],
+  ["finished-editor", "Finish and harden the editor"],
+];
+
+function diagramEditorChapterRoute(slug) {
+  return `${diagramEditorRootRoute}/${slug}`;
+}
+
+async function tutorialWorkbenchContract(page, route) {
+  await page
+    .locator("#studio-main")
+    .getByText("Live · changes run automatically", { exact: true })
+    .waitFor({ timeout: 30_000 });
+  const frames = page.locator("#studio-main .studio-preview__frame");
+  const count = await frames.count();
+  const sandbox = await frames.first().getAttribute("sandbox");
+  if (count !== 1 || sandbox !== "allow-scripts") {
+    throw failure(
+      route,
+      "one script-only tutorial preview frame",
+      `${count} frames; sandbox=${sandbox}`,
+    );
+  }
+}
+
+async function diagramEditorLandingContract(page) {
+  const route = diagramEditorRootRoute;
+  await open(page, route);
+  await expectMainHeading(page, route, "Learn the basics: Build a diagram editor");
+  const teaser = page.locator(
+    "#studio-main img[src$='/tutorials/diagram-editor/finished-editor.png']",
+  );
+  const curriculum = page.locator("#studio-main").getByRole("heading", {
+    name: "Curriculum",
+    exact: true,
+  });
+  await teaser.waitFor({ timeout: 30_000 });
+  await curriculum.waitFor({ timeout: 30_000 });
+  const [teaserPosition, curriculumPosition] = await Promise.all([
+    teaser.evaluate((element) =>
+      [...document.querySelectorAll("#studio-main *")].indexOf(element),
+    ),
+    curriculum.evaluate((element) =>
+      [...document.querySelectorAll("#studio-main *")].indexOf(element),
+    ),
+  ]);
+  if (teaserPosition >= curriculumPosition) {
+    throw failure(
+      route,
+      "the final editor teaser before the Curriculum heading",
+      `teaser index=${teaserPosition}; curriculum index=${curriculumPosition}`,
+    );
+  }
+
+  await page.getByRole("link", { name: /start building/i }).click();
+  if (!page.url().endsWith(diagramEditorChapterRoute(diagramEditorChapters[0][0]))) {
+    throw failure(route, "Start building to open Chapter 1", page.url());
+  }
+  await expectMainHeading(page, diagramEditorChapterRoute(diagramEditorChapters[0][0]), diagramEditorChapters[0][1]);
+
+  await open(page, route);
+  await page.getByRole("link", { name: /open the finished editor/i }).click();
+  if (!page.url().endsWith(diagramEditorChapterRoute(diagramEditorChapters.at(-1)[0]))) {
+    throw failure(route, "Open the finished editor to open Chapter 12", page.url());
+  }
+  await expectMainHeading(page, diagramEditorChapterRoute(diagramEditorChapters.at(-1)[0]), diagramEditorChapters.at(-1)[1]);
+}
+
+async function diagramEditorChapterContract(page) {
+  for (const [index, [slug, title]] of diagramEditorChapters.entries()) {
+    const chapter = index + 1;
+    const route = diagramEditorChapterRoute(slug);
+    await open(page, route);
+    await expectMainHeading(page, route, title);
+    await tutorialWorkbenchContract(page, route);
+
+    const pagination = page.locator("#studio-main .tutorial-pagination");
+    const previous = pagination.locator("[data-tutorial-direction='previous']");
+    const next = pagination.locator("[data-tutorial-direction='next']");
+    const previousCount = await previous.count();
+    const nextCount = await next.count();
+    if (previousCount !== 1 || nextCount !== 1) {
+      throw failure(
+        route,
+        `one previous and one next pagination action for Chapter ${chapter}`,
+        `${previousCount} previous; ${nextCount} next`,
+      );
+    }
+
+    const expectedPreviousRoute =
+      chapter === 1
+        ? diagramEditorRootRoute
+        : diagramEditorChapterRoute(diagramEditorChapters[index - 1][0]);
+    const expectedPreviousTitle =
+      chapter === 1
+        ? "Learn the basics: Build a diagram editor"
+        : diagramEditorChapters[index - 1][1];
+    const previousHref = await previous.getAttribute("href");
+    const previousLabel = await previous.textContent();
+    if (
+      previousHref !== expectedPreviousRoute ||
+      previousLabel?.trim() !== `Previous: ${expectedPreviousTitle}`
+    ) {
+      throw failure(
+        route,
+        `Chapter ${chapter} previous pagination ${JSON.stringify({ href: expectedPreviousRoute, label: `Previous: ${expectedPreviousTitle}` })}`,
+        JSON.stringify({ href: previousHref, label: previousLabel?.trim() }),
+      );
+    }
+
+    const nextHref = await next.getAttribute("href");
+    const nextLabel = await next.textContent();
+    if (chapter === diagramEditorChapters.length) {
+      if (nextHref !== diagramEditorRootRoute || nextLabel?.trim() !== "Back to the tutorial overview") {
+        throw failure(
+          route,
+          "Chapter 12 to offer only Back to the tutorial overview",
+          JSON.stringify({ href: nextHref, label: nextLabel?.trim() }),
+        );
+      }
+    } else {
+      const expectedNextRoute = diagramEditorChapterRoute(diagramEditorChapters[index + 1][0]);
+      const expectedNextLabel = `Next: ${diagramEditorChapters[index + 1][1]}`;
+      if (nextHref !== expectedNextRoute || nextLabel?.trim() !== expectedNextLabel) {
+        throw failure(
+          route,
+          `Chapter ${chapter} next pagination ${JSON.stringify({ href: expectedNextRoute, label: expectedNextLabel })}`,
+          JSON.stringify({ href: nextHref, label: nextLabel?.trim() }),
+        );
+      }
+    }
+
+    if (chapter === 6 || chapter === 12) {
+      await page.getByRole("button", { name: "Reset", exact: true }).click();
+      await page.getByRole("button", { name: "Share", exact: true }).click();
+      await page
+        .locator("#studio-main .studio-run-status")
+        .getByText("Share URL copied.", { exact: true })
+        .waitFor({ timeout: 30_000 });
+    }
+  }
+}
+
+async function diagramEditorTeardownContract(page) {
+  const route = diagramEditorChapterRoute(diagramEditorChapters.at(-1)[0]);
+  await open(page, route);
+  await tutorialWorkbenchContract(page, route);
+  await page.evaluate(() => {
+    window.location.hash = "#/learn/guides/author-without-jsx";
+  });
+  await page.locator("#studio-main iframe").waitFor({ state: "detached", timeout: 30_000 });
+  await page.locator("#studio-main .monaco-editor").waitFor({ state: "detached", timeout: 30_000 });
+  await expectMainHeading(page, "#/learn/guides/author-without-jsx", "Author without JSX");
+}
+
+async function diagramEditorNarrowLayoutContract(browser) {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  const assertFits = async (route, selector, description) => {
+    const box = await page.locator(selector).boundingBox();
+    if (box === null || box.x < 0 || box.x + box.width > 390) {
+      throw failure(route, `${description} to fit the narrow viewport`, JSON.stringify(box));
+    }
+  };
+  const assertPageHasNoOverflow = async (route) => {
+    const dimensions = await page.evaluate(() => ({
+      clientWidth: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+    }));
+    if (dimensions.scrollWidth > dimensions.clientWidth) {
+      throw failure(route, "no horizontal page overflow", JSON.stringify(dimensions));
+    }
+  };
+  try {
+    await open(page, diagramEditorRootRoute);
+    await assertFits(
+      diagramEditorRootRoute,
+      "#studio-main img[src$='/tutorials/diagram-editor/finished-editor.png']",
+      "the tutorial teaser",
+    );
+    await assertPageHasNoOverflow(diagramEditorRootRoute);
+
+    const middleRoute = diagramEditorChapterRoute(diagramEditorChapters[5][0]);
+    await open(page, middleRoute);
+    await tutorialWorkbenchContract(page, middleRoute);
+    await assertFits(middleRoute, "#studio-main .studio-tools", "the workbench tools");
+    await assertFits(middleRoute, "#studio-main .tutorial-pagination", "tutorial pagination");
+    await assertPageHasNoOverflow(middleRoute);
+  } finally {
+    await context.close();
+  }
+}
+
 const server = spawn(
   process.execPath,
   [
@@ -371,6 +576,10 @@ try {
   await searchRetryContract(browser);
   await searchContract(page);
   await existingStudioContract(page);
+  await diagramEditorLandingContract(page);
+  await diagramEditorChapterContract(page);
+  await diagramEditorTeardownContract(page);
+  await diagramEditorNarrowLayoutContract(browser);
   await context.close();
   process.stdout.write("Validated CRC Studio public documentation navigation and search acceptance.\n");
 } catch (error) {

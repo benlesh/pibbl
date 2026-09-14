@@ -1,5 +1,6 @@
 import {
   getWorkbenchEntryBySlug,
+  getTutorialSnapshotBySlug,
   learningExampleCatalog,
   loadTutorialSnapshot,
   tutorialSnapshotCatalog,
@@ -736,10 +737,32 @@ it("clips Chapter 9 transformed content while reusing its stable grid layer", as
   const offscreenPrototype = OffscreenCanvasRenderingContext2D.prototype;
   const fill = offscreenPrototype.fill;
   let offscreenFills = 0;
-  offscreenPrototype.fill = function (...args) {
+  function countOffscreenFill(
+    this: OffscreenCanvasRenderingContext2D,
+    fillRule?: CanvasFillRule,
+  ): void;
+  function countOffscreenFill(
+    this: OffscreenCanvasRenderingContext2D,
+    path: Path2D,
+    fillRule?: CanvasFillRule,
+  ): void;
+  function countOffscreenFill(
+    this: OffscreenCanvasRenderingContext2D,
+    pathOrFillRule?: Path2D | CanvasFillRule,
+    fillRule?: CanvasFillRule,
+  ): void {
     offscreenFills += 1;
-    fill.apply(this, args);
-  };
+    Reflect.apply(
+      fill,
+      this,
+      pathOrFillRule instanceof Path2D
+        ? [pathOrFillRule, fillRule]
+        : pathOrFillRule === undefined
+          ? []
+          : [pathOrFillRule],
+    );
+  }
+  offscreenPrototype.fill = countOffscreenFill;
   try {
     const snapshot = await renderTutorialSnapshot(
       "diagram-editor-viewport-and-layer",
@@ -825,19 +848,65 @@ it("filters exactly one selected Chapter 10 card without enlarging its hit geome
     pathRectangles.set(this, { x, y, width, height });
     pathRoundRect.call(this, x, y, width, height, radii);
   };
-  offscreenPrototype.drawImage = function (...args) {
-    const source = args[0];
+  function recordOffscreenDrawImage(
+    this: OffscreenCanvasRenderingContext2D,
+    image: CanvasImageSource,
+    dx: number,
+    dy: number,
+  ): void;
+  function recordOffscreenDrawImage(
+    this: OffscreenCanvasRenderingContext2D,
+    image: CanvasImageSource,
+    dx: number,
+    dy: number,
+    dw: number,
+    dh: number,
+  ): void;
+  function recordOffscreenDrawImage(
+    this: OffscreenCanvasRenderingContext2D,
+    image: CanvasImageSource,
+    sx: number,
+    sy: number,
+    sw: number,
+    sh: number,
+    dx: number,
+    dy: number,
+    dw: number,
+    dh: number,
+  ): void;
+  function recordOffscreenDrawImage(
+    this: OffscreenCanvasRenderingContext2D,
+    image: CanvasImageSource,
+    first: number,
+    second: number,
+    ...rest: number[]
+  ): void {
     offscreenDraws.push({
       filter: this.filter,
       surface: this.canvas,
-      source: source instanceof OffscreenCanvas ? source : undefined,
+      source: image instanceof OffscreenCanvas ? image : undefined,
     });
-    offscreenDrawImage.apply(this, args);
-  };
-  offscreenPrototype.fill = function (...args) {
-    const path = args[0];
-    if (path instanceof Path2D) {
-      const rectangle = pathRectangles.get(path);
+    if (rest.length === 0 || rest.length === 2 || rest.length === 6)
+      Reflect.apply(offscreenDrawImage, this, [image, first, second, ...rest]);
+    else throw new Error(`Unexpected drawImage arity ${String(rest.length + 3)}.`);
+  }
+  offscreenPrototype.drawImage = recordOffscreenDrawImage;
+  function recordOffscreenFill(
+    this: OffscreenCanvasRenderingContext2D,
+    fillRule?: CanvasFillRule,
+  ): void;
+  function recordOffscreenFill(
+    this: OffscreenCanvasRenderingContext2D,
+    path: Path2D,
+    fillRule?: CanvasFillRule,
+  ): void;
+  function recordOffscreenFill(
+    this: OffscreenCanvasRenderingContext2D,
+    pathOrFillRule?: Path2D | CanvasFillRule,
+    fillRule?: CanvasFillRule,
+  ): void {
+    if (pathOrFillRule instanceof Path2D) {
+      const rectangle = pathRectangles.get(pathOrFillRule);
       if (rectangle) {
         offscreenFills.push({
           surface: this.canvas,
@@ -846,27 +915,67 @@ it("filters exactly one selected Chapter 10 card without enlarging its hit geome
         });
       }
     }
-    offscreenFill.apply(this, args);
-  };
+    Reflect.apply(
+      offscreenFill,
+      this,
+      pathOrFillRule instanceof Path2D
+        ? [pathOrFillRule, fillRule]
+        : pathOrFillRule === undefined
+          ? []
+          : [pathOrFillRule],
+    );
+  }
+  offscreenPrototype.fill = recordOffscreenFill;
   OffscreenCanvas.prototype.transferToImageBitmap = function () {
     const bitmap = transferToImageBitmap.call(this);
     transferredSurfaces.set(bitmap, this);
     return bitmap;
   };
-  rootPrototype.drawImage = function (...args) {
-    const source = args[0];
+  function recordRootDrawImage(
+    this: CanvasRenderingContext2D,
+    image: CanvasImageSource,
+    dx: number,
+    dy: number,
+  ): void;
+  function recordRootDrawImage(
+    this: CanvasRenderingContext2D,
+    image: CanvasImageSource,
+    dx: number,
+    dy: number,
+    dw: number,
+    dh: number,
+  ): void;
+  function recordRootDrawImage(
+    this: CanvasRenderingContext2D,
+    image: CanvasImageSource,
+    sx: number,
+    sy: number,
+    sw: number,
+    sh: number,
+    dx: number,
+    dy: number,
+    dw: number,
+    dh: number,
+  ): void;
+  function recordRootDrawImage(
+    this: CanvasRenderingContext2D,
+    image: CanvasImageSource,
+    first: number,
+    second: number,
+    ...rest: number[]
+  ): void {
     const surface =
-      source instanceof OffscreenCanvas
-        ? source
-        : source instanceof ImageBitmap
-          ? transferredSurfaces.get(source)
+      image instanceof OffscreenCanvas
+        ? image
+        : image instanceof ImageBitmap
+          ? transferredSurfaces.get(image)
           : undefined;
     const [x, y, width, height] =
-      args.length === 3
-        ? [args[1], args[2], surface?.width, surface?.height]
-        : args.length === 5
-          ? [args[1], args[2], args[3], args[4]]
-          : [args[5], args[6], args[7], args[8]];
+      rest.length === 0
+        ? [first, second, surface?.width, surface?.height]
+        : rest.length === 2
+          ? [first, second, rest[0], rest[1]]
+          : [rest[2], rest[3], rest[4], rest[5]];
     rootComposites.push({
       context: this,
       surface,
@@ -875,8 +984,11 @@ it("filters exactly one selected Chapter 10 card without enlarging its hit geome
       width: Number(width),
       height: Number(height),
     });
-    rootDrawImage.apply(this, args);
-  };
+    if (rest.length === 0 || rest.length === 2 || rest.length === 6)
+      Reflect.apply(rootDrawImage, this, [image, first, second, ...rest]);
+    else throw new Error(`Unexpected drawImage arity ${String(rest.length + 3)}.`);
+  }
+  rootPrototype.drawImage = recordRootDrawImage;
   const filterBoundariesFrom = (start: number) =>
     offscreenDraws.slice(start).filter(({ filter }) => filter !== "none");
   const assertOneBoundaryAt = (
@@ -1078,7 +1190,7 @@ it("publishes all twelve canonical tutorial snapshots", () => {
   expect(tutorialSnapshotCatalog.map(({ chapter }) => chapter)).toEqual([
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
   ]);
-  expect(getWorkbenchEntryBySlug("diagram-editor-finished")?.chapter).toBe(12);
+  expect(getTutorialSnapshotBySlug("diagram-editor-finished")?.chapter).toBe(12);
 });
 
 it("runs the complete Chapter 12 pointer and keyboard editor flow", async () => {

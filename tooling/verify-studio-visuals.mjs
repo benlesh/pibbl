@@ -44,7 +44,7 @@ const routes = [
   {
     name: "test-lab",
     hash: "#/testing/baseline-smoke",
-    ready: ".scenario-runner canvas",
+    ready: ".testing-area .scenario-detail__title",
   },
 ];
 
