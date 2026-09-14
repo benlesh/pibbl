@@ -221,8 +221,13 @@ function markerFor(
 
 async function copyText(value: string): Promise<void> {
   if (navigator.clipboard) {
-    await navigator.clipboard.writeText(value);
-    return;
+    try {
+      await navigator.clipboard.writeText(value);
+      return;
+    } catch {
+      // Fall back below when an embedded or non-secure preview rejects the
+      // Clipboard API despite exposing it.
+    }
   }
   const input = document.createElement("textarea");
   input.value = value;

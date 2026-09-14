@@ -496,11 +496,18 @@ async function diagramEditorTeardownContract(page) {
   const route = diagramEditorChapterRoute(diagramEditorChapters.at(-1)[0]);
   await open(page, route);
   await tutorialWorkbenchContract(page, route);
+  const previousEditor = page.locator("#studio-main .monaco-editor");
+  const previousEditorUri = await previousEditor.getAttribute("data-uri");
+  if (previousEditorUri === null) {
+    throw failure(route, "a source-backed Monaco editor", "missing data-uri");
+  }
   await page.evaluate(() => {
     window.location.hash = "#/learn/guides/author-without-jsx";
   });
   await page.locator("#studio-main iframe").waitFor({ state: "detached", timeout: 30_000 });
-  await page.locator("#studio-main .monaco-editor").waitFor({ state: "detached", timeout: 30_000 });
+  await page
+    .locator(`#studio-main .monaco-editor[data-uri="${previousEditorUri}"]`)
+    .waitFor({ state: "detached", timeout: 30_000 });
   await expectMainHeading(page, "#/learn/guides/author-without-jsx", "Author without JSX");
 }
 
