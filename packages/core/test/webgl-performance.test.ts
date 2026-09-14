@@ -11,8 +11,9 @@ import {
   webglLabScenarioEntry,
 } from '@crc/scenarios';
 import {
+  Mesh,
   WebGLLayer,
-  defineWebGLPrimitive,
+  createWebGLGeometry,
 } from '@crc/webgl';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -37,18 +38,20 @@ afterEach(async () => {
 describe('public WebGL laboratory structural cost', () => {
   it('executes a public WebGL child once per invalidated island traversal', async () => {
     let childExecutions = 0;
+    const geometry = createWebGLGeometry({
+      positions: [-1, -1, 0, 1, -1, 0, 0, 1, 0],
+    });
     const onExecute = () => {
       childExecutions += 1;
     };
-    const TraversalProbe = defineWebGLPrimitive<
-      { readonly onExecute: () => void },
-      {}
-    >(
-      function renderTraversalProbe(props) {
-        props.onExecute();
-      },
-      { hit: { kind: 'none' } },
-    );
+    function CountedMesh(props: { readonly onExecute: () => void }) {
+      props.onExecute();
+      return createElement(Mesh, {
+        geometry,
+        pointerEvents: 'none',
+        style: {},
+      });
+    }
     const canvas = document.createElement('canvas');
     canvas.width = 480;
     canvas.height = 300;
@@ -65,8 +68,7 @@ describe('public WebGL laboratory structural cost', () => {
         WebGLLayer,
         {
           style: { width: islandWidth, height: 300 },
-          children: createElement(TraversalProbe, {
-            pointerEvents: 'none',
+          children: createElement(CountedMesh, {
             onExecute,
           }),
         },
@@ -94,6 +96,9 @@ describe('public WebGL laboratory structural cost', () => {
     const drawElements = vi.spyOn(glPrototype, 'drawElements');
     const readPixels = vi.spyOn(glPrototype, 'readPixels');
     const createFramebuffer = vi.spyOn(glPrototype, 'createFramebuffer');
+    const createBuffer = vi.spyOn(glPrototype, 'createBuffer');
+    const createProgram = vi.spyOn(glPrototype, 'createProgram');
+    const createVertexArray = vi.spyOn(glPrototype, 'createVertexArray');
     const deleteBuffer = vi.spyOn(glPrototype, 'deleteBuffer');
     const deleteProgram = vi.spyOn(glPrototype, 'deleteProgram');
     const deleteVertexArray = vi.spyOn(glPrototype, 'deleteVertexArray');
@@ -124,6 +129,9 @@ describe('public WebGL laboratory structural cost', () => {
       composites: composite.mock.calls.length,
       readbacks: readPixels.mock.calls.length,
       framebuffers: createFramebuffer.mock.calls.length,
+      buffers: createBuffer.mock.calls.length,
+      programs: createProgram.mock.calls.length,
+      vertexArrays: createVertexArray.mock.calls.length,
       listeners: addListener.mock.calls.map(([type]) => type),
     }).toEqual({
       draws: 2,
@@ -131,6 +139,9 @@ describe('public WebGL laboratory structural cost', () => {
       composites: 1,
       readbacks: 0,
       framebuffers: 0,
+      buffers: 4,
+      programs: 1,
+      vertexArrays: 2,
       listeners: ['webglcontextlost', 'webglcontextrestored'],
     });
 
@@ -148,29 +159,64 @@ describe('public WebGL laboratory structural cost', () => {
       composites: composite.mock.calls.length,
       readbacks: readPixels.mock.calls.length,
       framebuffers: createFramebuffer.mock.calls.length,
+      buffers: createBuffer.mock.calls.length,
+      programs: createProgram.mock.calls.length,
+      vertexArrays: createVertexArray.mock.calls.length,
+      deletedBuffers: deleteBuffer.mock.calls.length,
+      deletedVertexArrays: deleteVertexArray.mock.calls.length,
     }).toEqual({
       draws: 4,
       transfers: 2,
       composites: 3,
       readbacks: 0,
       framebuffers: 0,
+      buffers: 4,
+      programs: 1,
+      vertexArrays: 2,
+      deletedBuffers: 0,
+      deletedVertexArrays: 0,
     });
 
-    await activeController.perform('show-mixed-order');
-    const beforeRestore = {
+    await activeController.perform('show-transparency');
+    expect({
       draws: drawElements.mock.calls.length,
       transfers: transfer.mock.calls.length,
       composites: composite.mock.calls.length,
-    };
-    await activeController.perform('restore-context');
-    expect({
-      draws: drawElements.mock.calls.length - beforeRestore.draws,
-      transfers: transfer.mock.calls.length - beforeRestore.transfers,
-      composites: composite.mock.calls.length - beforeRestore.composites,
+      buffers: createBuffer.mock.calls.length,
+      programs: createProgram.mock.calls.length,
+      vertexArrays: createVertexArray.mock.calls.length,
+      deletedBuffers: deleteBuffer.mock.calls.length,
+      deletedVertexArrays: deleteVertexArray.mock.calls.length,
     }).toEqual({
-      draws: 2,
-      transfers: 1,
-      composites: 2,
+      draws: 6,
+      transfers: 3,
+      composites: 4,
+      buffers: 6,
+      programs: 1,
+      vertexArrays: 3,
+      deletedBuffers: 4,
+      deletedVertexArrays: 2,
+    });
+
+    await activeController.perform('show-mixed-order');
+    expect({
+      draws: drawElements.mock.calls.length,
+      transfers: transfer.mock.calls.length,
+      composites: composite.mock.calls.length,
+      buffers: createBuffer.mock.calls.length,
+      programs: createProgram.mock.calls.length,
+      vertexArrays: createVertexArray.mock.calls.length,
+      deletedBuffers: deleteBuffer.mock.calls.length,
+      deletedVertexArrays: deleteVertexArray.mock.calls.length,
+    }).toEqual({
+      draws: 8,
+      transfers: 4,
+      composites: 5,
+      buffers: 10,
+      programs: 1,
+      vertexArrays: 5,
+      deletedBuffers: 6,
+      deletedVertexArrays: 3,
     });
 
     await activeController.dispose();
@@ -180,8 +226,8 @@ describe('public WebGL laboratory structural cost', () => {
       'webglcontextrestored',
     ]);
     expect(deleteProgram).toHaveBeenCalledTimes(1);
-    expect(deleteBuffer).toHaveBeenCalledTimes(4);
-    expect(deleteVertexArray).toHaveBeenCalledTimes(2);
+    expect(deleteBuffer).toHaveBeenCalledTimes(10);
+    expect(deleteVertexArray).toHaveBeenCalledTimes(5);
     expect(bitmapClose).toHaveBeenCalledTimes(4);
   });
 });

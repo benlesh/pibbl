@@ -1,6 +1,4 @@
 export { createWebGLGeometry } from './lib/geometry/geometry.js';
-export { defineWebGLPrimitive } from './lib/define-webgl-primitive.js';
-export { crcWebGLContext } from './lib/hooks/crc-webgl-context.js';
 export { crcAnimationFrame } from './lib/hooks/crc-animation-frame.js';
 export {
   WebGLLayer,
@@ -28,17 +26,9 @@ export {
   type SphereStyle,
 } from './lib/components/sphere.js';
 export type {
-  CRCWebGLCameraSnapshot,
-  CRCWebGLContext,
   CRCWebGLGeometry,
   CRCWebGLGeometryInput,
-  CRCWebGLHitCapability,
   CRCWebGLPerspectiveCamera,
-  CRCWebGLPrimitiveCapabilities,
-  CRCWebGLPrimitiveHitInput,
-  CRCWebGLPrimitiveInput,
-  CRCWebGLPrimitiveRender,
-  CRCWebGLProgramProps,
   CRCWebGLTransformStyle,
   CRCWebGLVector3,
 } from './lib/types.js';

@@ -1,7 +1,7 @@
 # CRC runtime and hook contract
 
-Status: current implemented contract, updated for WebGL islands, first-class
-signals, and the realm scheduler on 2026-09-13.
+Status: current implemented contract, updated for settled WebGL scenes,
+first-class signals, and the realm scheduler on 2026-09-13.
 
 This document defines element construction, traversal, identity, updates,
 hooks, recovery, and disposal. The [resource ownership
@@ -24,9 +24,10 @@ type CRCComponent<P> = (props: P) => CRCNode | void;
 ```
 
 No definition wrapper, base class, or registration step is required. The
-function value is runtime identity. Platform components defined by
-`definePrimitive` and `defineWebGLPrimitive` use the same public element
-protocol while retaining backend-specific private capabilities.
+function value is runtime identity. Canvas platform components defined by
+`definePrimitive` and the declarative components exported by `@crc/webgl` use
+the same public element protocol while retaining backend-specific private
+capabilities.
 
 `key` accepts a string or number, is removed from delivered props, and does not
 act like a React element ref. Compiler-supplied children live in props.
@@ -68,11 +69,16 @@ On a scheduled frame CRC:
 The public root backend is Canvas 2D. A `WebGLLayer` owns a private child CRC
 instance whose root backend is WebGL. Core still establishes identity, hooks,
 style, allocation, listener ancestry, after-render work, and teardown; backend
-dispatch selects the primitive renderer and environment. Plain synchronous
-components use the same rules under either backend. A WebGL primitive outside a
-`WebGLLayer`, or a Canvas primitive inside one, reports the mismatched boundary.
-Every temporary backend, environment, instance, context, transform, and
-ownership slot is restored in `finally`.
+dispatch selects the private scene composer. Plain synchronous components use
+the same rules under either backend. `Group3D` pushes and pops CPU transform and
+listener scopes; `Mesh`, `Cube`, and `Sphere` append frame-local declarations.
+After the complete child tree succeeds, the backend closes and settles that
+draft, renders its planned queues, and publishes one candidate for Canvas
+composite and commit. No framebuffer mutation or GPU-resource construction
+occurs during child traversal. A WebGL value outside a `WebGLLayer`, or a Canvas
+primitive inside one, reports the mismatched boundary. Every temporary backend,
+composer, environment, instance, transform, and ownership slot is restored in
+`finally`.
 
 Synchronous iterables are materialized once at a receiving render or
 measurement boundary. They must be finite.
@@ -100,8 +106,11 @@ lower-level prepared-identity guard retains
 component, changing its key or type, replacing its root type, or disposing the
 instance releases that identity and every hook resource it owns.
 
-Source traversal is paint order. Coordinate targeting searches the shared
-paint ledger in reverse. Policy values `FocusManagement` and
+Source traversal is Canvas paint order and the global focus order. Within one
+WebGL child tree it establishes component identity, event ancestry, and stable
+source indices; the settled renderer may regroup opaque and transparent raster
+queues without changing those identities. Coordinate targeting searches the
+shared Canvas paint ledger in reverse. Policy values `FocusManagement` and
 `KeyboardNavigation` are identity-transparent preparation boundaries and do
 not add component or hook scopes.
 
@@ -121,12 +130,13 @@ revision, computed-validation, Layer, failure-isolation, and friend-renderer
 rules.
 
 A required `WebGLLayer` child update synchronously traverses that invalidated
-private instance once and requests the necessary parent composition without a
-second child traversal. `crcAnimationFrame()` returns the current transaction's
-timestamp and requests one continuing coalesced frame while its component is
-mounted. Canvas and WebGL work in that transaction observes the same timestamp;
-multiple animation callers do not create independent scheduler loops. Static
-WebGL content requests no continuing frame.
+private instance once, settles and renders the successful scene, and requests
+the necessary parent composition without a second child traversal.
+`crcAnimationFrame()` returns the current transaction's timestamp and requests
+one continuing coalesced frame while its component is mounted. Canvas and WebGL
+work in that transaction observes the same timestamp; multiple animation
+callers do not create independent scheduler loops. Static WebGL content requests
+no continuing frame.
 
 ## Hook sequence invariant
 
@@ -162,7 +172,6 @@ a later explicit render remounts cleanly.
 | `crcCursor(...)`                  | Owns a typed cursor hook slot and follows target/fallback ownership rules. Switching path/global modes keeps hook order valid.                                                                                                                                                                                                                                                          | `hook-contract.test.ts`, cleanup laboratory                             |
 | `crcLayoutBox()`                  | Returns the current component's stable readonly local allocation `{ x: 0, y: 0, width, height }`. Equal allocation preserves object identity. Reading does not schedule work. Unlike ordinary hooks, calling it outside a live layout context—including during pure measurement—throws `No CRC layout context is available`, not the shared hook diagnostic.                            | layout foundation and measurement-isolation suites                      |
 | `crcCanvasContext()`              | Returns the current isolated Canvas 2D context without allocating a hook slot. It is unavailable outside render and during pure measurement.                                                                                                                                                                                                                                            | plain-component and measurement-isolation suites                        |
-| `crcWebGLContext()`               | From `@crc/webgl`, returns the immutable active WebGL primitive context snapshot without allocating a hook slot. It is unavailable outside WebGL primitive rendering, under Canvas 2D, and during pure measurement.                                                                                                                                                                     | WebGL context and backend-isolation suites                              |
 | `crcAnimationFrame()`             | From `@crc/webgl`, owns a typed hook slot, returns the shared current timestamp, and retains one continuing-frame request while mounted. Removal/disposal makes stale callbacks inert.                                                                                                                                                                                                  | WebGL animation and structural-performance suites                       |
 
 The three memoized path helpers are distinct slot kinds. Reordering them is a
@@ -172,8 +181,8 @@ hook-order error even though all return `Path2D`.
 
 `measureElement` and a `definePrimitive` `measure` capability are not render
 passes. They normalize style and may recursively measure elements, but cannot
-invoke render callbacks, hooks, `crcLayoutBox`, `crcCanvasContext`,
-`crcWebGLContext`, or `crcAnimationFrame`, paint, register interaction, load
+invoke render callbacks, hooks, `crcLayoutBox`, `crcCanvasContext`, or
+`crcAnimationFrame`, compose a WebGL scene, paint, register interaction, load
 images, or acquire resources. CRC clears and
 restores temporary render state in `finally`. When measurement is nested during
 an active render, that isolation prevents attempted measurement hooks from
@@ -187,17 +196,17 @@ render callback.
 
 ## Canvas isolation, errors, and disposal
 
-CRC saves/restores Canvas state around every Canvas component subtree. WebGL
-backend callbacks receive an explicit framework state baseline; built-ins set
-every state value they depend on, and CRC reinstalls the baseline after custom
-callbacks without broad state readback. Component throws release runtime
-ownership and refs and restore global/backend state; pixels already painted
-earlier in the frame remain. Signal writes are forbidden while CRC evaluates
-components or primitive render callbacks, even for equality no-ops, and the
-guard runs before an updater or equality function. The controller's `dispose()`
-is idempotent, removes that root and its pending work from the realm scheduler,
-releases every owned resource, and cannot affect a replacement mount or
-unrelated roots. Abort uses the same guarded path.
+CRC saves/restores Canvas state around every Canvas component subtree. The
+private WebGL scene renderer owns an explicit framework state baseline and
+installs it around settled-scene execution without broad state readback.
+Component throws release runtime ownership and refs and restore global/backend
+state; a failed WebGL composition is discarded before settlement or draw, while
+pixels already painted earlier in the wider Canvas frame remain. Signal writes
+are forbidden while CRC evaluates components or primitive render callbacks,
+even for equality no-ops, and the guard runs before an updater or equality
+function. The controller's `dispose()` is idempotent, removes that root and its
+pending work from the realm scheduler, releases every owned resource, and cannot
+affect a replacement mount or unrelated roots. Abort uses the same guarded path.
 
 ## Public package boundary
 
@@ -236,9 +245,11 @@ recursive iterable diagnostics. Public type assertions compile against built
 declarations under both Bundler and NodeNext resolution.
 
 WebGL backend, hook, package-consumer, cache, and structural suites additionally
-prove one shared core identity, one traversal per invalidated child frame,
-coalesced animation requests, static cache hits, matched timestamp propagation,
-backend mismatch diagnostics, and restoration after success or failure.
+prove one shared core identity, one composition traversal per invalidated child
+frame, no GL work before successful composition, one settlement/render,
+coalesced animation requests, constant-time static cache hits, matched timestamp
+propagation, backend mismatch diagnostics, and restoration after success or
+failure.
 
 Focused suites cover signal `get()` reads, component consumers, realm scheduler
 requests, Layer invalidation, exact ownership, and isolated root render

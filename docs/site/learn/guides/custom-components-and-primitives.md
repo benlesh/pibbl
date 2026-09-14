@@ -1,7 +1,7 @@
 ---
 id: guide-custom-components-primitives
 title: Create custom components and primitives
-summary: Choose ordinary composites, direct Canvas painting, or definePrimitive for platform-level extension.
+summary: Choose ordinary composites, direct Canvas painting, definePrimitive, or declarative WebGL geometry.
 kind: guide
 slug: custom-components-and-primitives
 order: 80
@@ -220,17 +220,27 @@ Ordinary application components should rarely need `definePrimitive`. The
 executable contract is
 [`define-primitive.test.tsx`](../../../../packages/core/src/lib/define-primitive.test.tsx).
 
-## WebGL platform primitives
+## Custom WebGL shapes
 
-Use `defineWebGLPrimitive()` from `@crc/webgl` for a platform component that
-draws inside `WebGLLayer`. It has the same specified/normalized/resolved style
-stages, but its callback receives a `CRCWebGLContext` rather than a Canvas 2D
-context and every definition must declare `geometry`, `custom`, or `none` hit
-behavior.
+Build an immutable triangle descriptor with `createWebGLGeometry()`, then wrap
+`Mesh` in an ordinary component. The component may translate application props
+into declarative mesh props and style without taking ownership of WebGL state or
+GPU resources:
 
-Raw WebGL access carries additional obligations: set all state the draw depends
-on, restore extension-specific state in `finally`, allocate GPU handles through
-`context.resources.use(...)`, and keep its hit result aligned with the visible
-draw. Inner WebGL primitive styles reject Canvas filters; put `style.filter` on
-the receiving `WebGLLayer`. See [Add WebGL islands](#/learn/guides/webgl-islands#define-a-raw-webgl-primitive)
-and the [`defineWebGLPrimitive` API](#/api/functions/define-webgl-primitive).
+```tsx
+import { Mesh, createWebGLGeometry } from "@crc/webgl";
+
+const markerGeometry = createWebGLGeometry({
+  positions: [-0.5, -0.5, 0, 0.5, -0.5, 0, 0, 0.5, 0],
+});
+
+function Marker({ x }: { x: number }) {
+  return <Mesh geometry={markerGeometry} style={{ translateX: x }} />;
+}
+```
+
+`Mesh` keeps paint, geometry-backed picking, and projected focus bounds aligned.
+The layer renderer owns programs, buffers, and vertex arrays for its current
+context generation. Inner WebGL object styles reject Canvas filters; put
+`style.filter` on the receiving `WebGLLayer`. See [Add WebGL
+islands](#/learn/guides/webgl-islands#add-a-custom-shape).

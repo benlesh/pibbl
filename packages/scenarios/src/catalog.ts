@@ -1546,13 +1546,13 @@ const webglLabMetadata: ScenarioMetadata = {
   slug: "webgl-islands",
   title: "WebGL islands laboratory",
   summary:
-    "Prove transparent Canvas/WebGL composition, depth picking, transforms, clips, layers, filters, focus, animation, and context restoration.",
+    "Prove settled transparency, Canvas/WebGL composition, depth picking, transforms, clips, layers, filters, focus, and animation.",
   category: "Rendering",
-  apiTags: ["WebGLLayer", "Group3D", "Cube", "Sphere", "defineWebGLPrimitive"],
+  apiTags: ["WebGLLayer", "Group3D", "Mesh", "Cube", "Sphere"],
   conceptTags: [
-    "transparent composition",
+    "settled transparency",
     "depth picking",
-    "WebGL context restoration",
+    "declarative scene composition",
     "Canvas paint order",
   ],
   manualSteps: [
@@ -1561,6 +1561,11 @@ const webglLabMetadata: ScenarioMetadata = {
         "Compare Mixed order, Depth, Transforms, Clipped, Layered, and Filtered.",
       expected:
         "Visible WebGL geometry composes at one Canvas paint position while depth, transforms, clips, layers, and filter overflow preserve source geometry.",
+    },
+    {
+      action: "Choose Transparency and compare the far-only, overlap, and near-only probes.",
+      expected:
+        "Although the near mesh appears first in source, the overlap blends the far green mesh before the near red mesh.",
     },
     {
       action:
@@ -1574,20 +1579,15 @@ const webglLabMetadata: ScenarioMetadata = {
       expected:
         "Logical focus enters the cube, keyboard activation selects it, and the reported angle advances by one deterministic step.",
     },
-    {
-      action: "Choose Restore context.",
-      expected:
-        "The context generation advances once and the current scene is redrawn after restoration.",
-    },
   ],
   knownLimitations: [
-    "The initial backend is WebGL2-only and requires OffscreenCanvas plus ImageBitmap transfer; the restoration action dispatches the same cancelable platform events used by browser context lifecycle.",
+    "The renderer is WebGL2-only and requires OffscreenCanvas plus ImageBitmap transfer.",
     "Picking uses declared CPU triangle geometry; shader discard, texture alpha, blending, and procedural displacement do not alter hit geometry.",
   ],
   learningOrder: 170,
   visibility: "test-laboratory",
   visibilityReason:
-    "It exposes nine dense conformance modes, exact probes, and context diagnostics rather than a single beginner lesson.",
+    "It exposes nine dense conformance modes and exact geometry, interaction, and transparency probes rather than a single beginner lesson.",
   maturity: "contract",
 };
 
@@ -1597,13 +1597,13 @@ export const webglLabScenarioEntry: ScenarioCatalogEntry<WebGLLabState> = {
   actions: [
     { id: "show-mixed-order", label: "Mixed order" },
     { id: "show-depth", label: "Depth" },
+    { id: "show-transparency", label: "Transparency" },
     { id: "show-transforms", label: "Transforms" },
     { id: "show-clipped", label: "Clipped" },
     { id: "show-layered", label: "Layered" },
     { id: "show-filtered", label: "Filtered" },
     { id: "show-focus", label: "Focus" },
     { id: "show-animation", label: "Animation" },
-    { id: "restore-context", label: "Restore context" },
     { id: "change-camera", label: "Change camera" },
     { id: "rotate-scene", label: "Rotate scene" },
     { id: "toggle-pointer-events", label: "Toggle pointer events" },

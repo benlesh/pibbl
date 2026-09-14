@@ -1,6 +1,7 @@
 # CRC style-system contract
 
-Status: current implemented contract, updated for WebGL islands on 2026-09-10.
+Status: current implemented contract, updated for settled WebGL scenes on
+2026-09-13.
 
 CRC has one typed, local, closed `style` prop. Geometry, paint, cursor,
 transforms, clipping, image source, text layout, and layout participation live
@@ -82,8 +83,7 @@ offscreen surfaces, and the measured size is unchanged.
 `WebGLLayerStyle` combines core `BoxStyle` and `LayoutItemStyle`, so its
 specified filter is normalized by this same framework path around the completed
 island bitmap. `CRCWebGLTransformStyle` declares `filter?: never`; Mesh, Cube,
-Sphere, Group3D, and custom inner WebGL primitives cannot reinterpret a Canvas
-filter as WebGL state.
+Sphere, and Group3D cannot reinterpret a Canvas filter as WebGL state.
 
 ## Filter descriptors
 
@@ -182,7 +182,9 @@ rotations, then scale. Child-local transforms follow the current Group3D model
 matrix. Color must be a concrete browser-accepted Canvas color; contextual
 references such as `currentColor`, system colors, and `var(...)` reject because
 the WebGL surface has no computed DOM color context. Opacity does not remove
-hit geometry.
+hit or focus geometry. Final raster alpha is parsed color alpha multiplied by
+opacity: one is opaque, values strictly between zero and one are transparent,
+and zero skips rasterization while retaining geometry participation.
 
 There is no runtime compatibility adapter, alias, or fallback for top-level
 visual fields, content in `TextStyle`, or a render element/descriptor prop for
@@ -209,10 +211,11 @@ subset; CRC-native behavior uses names such as `rotationDegrees`, `fit`, and
 Filters do not accept raw CSS strings, `url()`/SVG filter graphs,
 `backdrop-filter`, or `boxShadow`/CSS box-shadow semantics.
 
-WebGL styles do not add lighting, materials, textures, shader graphs, multiple
-viewports/cameras, Canvas filter descriptors on inner objects, or arbitrary
-ambient GL state. Application-specific data belongs in program props or
-`style.custom` where the defined primitive intentionally reads it.
+WebGL styles do not add lighting, materials, textures, environment maps,
+shadows, emissive or glow effects, shader graphs, multiple viewports/cameras,
+Canvas filter descriptors on inner objects, or arbitrary ambient GL state.
+Application-specific data belongs in ordinary component props and may be
+translated into `Mesh` geometry or style declarations.
 
 See the [layout contract](./layout-system-contract.md), [drawing
 contract](./drawing-components-contract.md), and [custom primitive

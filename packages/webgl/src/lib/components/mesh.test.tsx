@@ -13,9 +13,10 @@ import {
 } from '../../index.js';
 import { createWebGLBackend } from '../backend.js';
 import { resolveCamera } from '../math/camera.js';
+import type { CRCWebGLGeometryPickRecord } from '../pick-ledger.js';
 
 describe('Mesh built-in rendering', () => {
-  it('draws transformed Mesh, Cube, and Sphere once in source order with explicit state and uniforms', () => {
+  it('settles transformed built-ins once, draws opaque before transparent, and omits zero alpha', () => {
     const recording = createDrawGL();
     const triangle = createWebGLGeometry({
       positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
@@ -41,6 +42,7 @@ describe('Mesh built-in rendering', () => {
       <Sphere
         key="sphere"
         onClick={() => undefined}
+        keyboardFocusable
         style={{ radius: 2, translateZ: -1, scaleZ: 0.5, opacity: 0 }}
       />,
     ];
@@ -53,36 +55,28 @@ describe('Mesh built-in rendering', () => {
       recording.constants.DEPTH_BUFFER_BIT,
     ]);
     expect(recording.draws.map(draw => [draw.kind, draw.count])).toEqual([
-      ['arrays', 3],
       ['elements', 36],
-      ['elements', 3072],
+      ['arrays', 3],
     ]);
     expectMatrix(recording.draws[0]!.model, [
-      0, 2, 0, 0,
-      -3, 0, 0, 0,
-      0, 0, 4, 0,
-      2, 0, 0, 1,
-    ]);
-    expectMatrix(recording.draws[1]!.model, [
       1, 0, 0, 0,
       0, 2, 0, 0,
       0, 0, 2, 0,
       0, 1, 0, 1,
     ]);
-    expectMatrix(recording.draws[2]!.model, [
-      4, 0, 0, 0,
-      0, 4, 0, 0,
-      0, 0, 2, 0,
-      0, 0, -1, 1,
+    expectMatrix(recording.draws[1]!.model, [
+      0, 2, 0, 0,
+      -3, 0, 0, 0,
+      0, 0, 4, 0,
+      2, 0, 0, 1,
     ]);
-    expect(recording.draws[0]!.color).toEqual([
+    expect(recording.draws[0]!.color).toEqual([1, 1, 1, 1]);
+    expect(recording.draws[1]!.color).toEqual([
       1,
       0,
       128 / 255,
       (128 / 255) * 0.5,
     ]);
-    expect(recording.draws[1]!.color).toEqual([1, 1, 1, 1]);
-    expect(recording.draws[2]!.color).toEqual([1, 1, 1, 0]);
     for (const draw of recording.draws) {
       expect(draw.enabled).toContain(recording.constants.DEPTH_TEST);
       expect(draw.enabled).not.toContain(recording.constants.CULL_FACE);
@@ -90,6 +84,29 @@ describe('Mesh built-in rendering', () => {
       expect(draw.view).toHaveLength(16);
       expect(draw.projection).toHaveLength(16);
     }
+    const completed = mounted.driver.takeCompletedFrame();
+    const picks = completed.pickEntries as readonly CRCWebGLGeometryPickRecord[];
+    expect(picks.map(entry => entry.sourceOrder)).toEqual([0, 1, 2]);
+    expectMatrix(picks[0]!.model, [
+      0, 2, 0, 0,
+      -3, 0, 0, 0,
+      0, 0, 4, 0,
+      2, 0, 0, 1,
+    ]);
+    expectMatrix(picks[1]!.model, [
+      1, 0, 0, 0,
+      0, 2, 0, 0,
+      0, 0, 2, 0,
+      0, 1, 0, 1,
+    ]);
+    expectMatrix(picks[2]!.model, [
+      4, 0, 0, 0,
+      0, 4, 0, 0,
+      0, 0, 2, 0,
+      0, 0, -1, 1,
+    ]);
+    expect(picks[2]!.target.keyboardFocusable).toBe(true);
+    expect(picks[2]!.target.live).toBe(true);
 
     mounted.dispose();
   });
@@ -345,6 +362,7 @@ function mountScene(gl: WebGL2RenderingContext, root: CRCNode) {
   });
   return {
     mount,
+    driver,
     dispose() {
       mount.dispose();
       parent.dispose();
@@ -352,7 +370,7 @@ function mountScene(gl: WebGL2RenderingContext, root: CRCNode) {
   };
 }
 
-function expectMatrix(actual: readonly number[], expected: readonly number[]) {
+function expectMatrix(actual: ArrayLike<number>, expected: readonly number[]) {
   expect(actual).toHaveLength(expected.length);
   expected.forEach((value, index) => {
     expect(actual[index]).toBeCloseTo(value, 6);

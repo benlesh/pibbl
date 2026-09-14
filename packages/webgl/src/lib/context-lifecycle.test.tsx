@@ -1,18 +1,18 @@
 import {
   crc,
   crcState,
-  createElement,
   type CRCController,
+  type CRCNode,
 } from '@crc/core';
 import type {
   CRCHitTestOutput,
   CRCEventTargetRegistration,
 } from '@crc/core/internal';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { defineWebGLPrimitive } from './define-webgl-primitive.js';
+import { Cube } from './components/cube.js';
 import { createWebGLGeometry } from './geometry/geometry.js';
 import { createBuiltInProgram } from './gpu/program.js';
-import { WebGLGPUResourceCache } from './gpu/resources.js';
+import { WebGLRendererResourceCache } from './gpu/renderer-resources.js';
 import { installWebGLStateBaseline } from './gpu/state.js';
 import { crcAnimationFrame } from './hooks/crc-animation-frame.js';
 import {
@@ -31,7 +31,7 @@ afterEach(() => {
 });
 
 describe('WebGLLayer context lifecycle', () => {
-  it('invalidates one lost generation and publishes one restored generation only after composition', () => {
+  it('invalidates lost renderer handles without deletes, restores a new generation, and disposes live handles once', () => {
     const firstBitmap = bitmap('first');
     const restoredBitmap = bitmap('restored');
     const platform = installContextPlatform([firstBitmap, restoredBitmap]);
@@ -43,39 +43,16 @@ describe('WebGLLayer context lifecycle', () => {
     vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined);
     const parentCanvas = mountParent();
     callbacks.shift()!(0);
-    const resourceCreates: number[] = [];
-    const resourceReleases: Array<{
-      readonly generation: number;
-      readonly contextLost: boolean;
-    }> = [];
-    let renders = 0;
-    const Target = defineWebGLPrimitive<{}, {}>(function renderLifecycleTarget(
-      _props,
-      _style,
-      context,
-    ) {
-      renders += 1;
-      context.resources.use(
-        () => {
-          resourceCreates.push(context.contextGeneration);
-          return { generation: context.contextGeneration };
-        },
-        (resource, releaseContext) => {
-          resourceReleases.push({
-            generation: resource.generation,
-            contextLost: releaseContext.contextLost,
-          });
-        },
-        [],
-      );
-    }, {
-      hit: { kind: 'custom', resolve: () => 1 },
-    });
-    const root = createElement(Target, {
-      keyboardFocusable: true,
-      keyboardNavigationBounds: { x: 1, y: 2, width: 3, height: 4 },
-      onClick: () => undefined,
-    });
+    let executions = 0;
+    function Target(): CRCNode {
+      executions += 1;
+      return <Cube
+        keyboardFocusable
+        keyboardNavigationBounds={{ x: 1, y: 2, width: 3, height: 4 }}
+        onClick={() => undefined}
+      />;
+    }
+    const root = <Target />;
     const surface = resolveWebGLLayerSurface(20, 10, { x: 1, y: 1 });
     const controller = new WebGLLayerController(
       parentCanvas,
@@ -87,11 +64,10 @@ describe('WebGLLayer context lifecycle', () => {
       drawImage: vi.fn(),
     } as unknown as CanvasRenderingContext2D;
 
-    expect(platform.listenerAdds).toEqual([
-      'webglcontextlost',
-      'webglcontextrestored',
-    ]);
     controller.renderUpdatedChild(root, undefined, surface, 1);
+    expect(glCount(platform, 'createProgram')).toBe(1);
+    expect(glCount(platform, 'createVertexArray')).toBe(1);
+    expect(glCount(platform, 'createBuffer')).toBe(2);
     controller.composite(parentContext, {
       x: 0,
       y: 0,
@@ -109,8 +85,6 @@ describe('WebGLLayer context lifecycle', () => {
       disposition: 2,
       target: firstTarget,
     });
-    expect(resourceCreates).toEqual([1]);
-    expect(controller.contextGeneration).toBe(1);
 
     platform.contextLost = true;
     const loss = new Event('webglcontextlost', { cancelable: true });
@@ -124,30 +98,22 @@ describe('WebGLLayer context lifecycle', () => {
     expect(resolve(controller)).toEqual({ disposition: 0, target: null });
     expect(firstTarget.keyboardNavigationBounds).toBeUndefined();
     expect(firstTarget.keyboardNavigationPoints).toBeUndefined();
-    expect(resourceReleases).toEqual([{
-      generation: 1,
-      contextLost: true,
-    }]);
+    expect(glCount(platform, 'deleteProgram')).toBe(0);
+    expect(glCount(platform, 'deleteBuffer')).toBe(0);
+    expect(glCount(platform, 'deleteVertexArray')).toBe(0);
     expect(callbacks).toEqual([]);
-
-    platform.canvas.dispatchEvent(
-      new Event('webglcontextlost', { cancelable: true }),
-    );
-    expect(controller.contextGeneration).toBe(2);
-    expect(firstBitmap.close).toHaveBeenCalledOnce();
-    expect(resourceReleases).toHaveLength(1);
 
     platform.contextLost = false;
     platform.canvas.dispatchEvent(new Event('webglcontextrestored'));
     platform.canvas.dispatchEvent(new Event('webglcontextrestored'));
     expect(callbacks).toHaveLength(1);
-
     callbacks[0]!(2);
 
-    expect(renders).toBe(2);
-    expect(resourceCreates).toEqual([1, 2]);
+    expect(executions).toBe(2);
+    expect(glCount(platform, 'createProgram')).toBe(2);
+    expect(glCount(platform, 'createVertexArray')).toBe(2);
+    expect(glCount(platform, 'createBuffer')).toBe(4);
     expect(controller.committedGeneration).toBeUndefined();
-    expect(controller.candidateGeneration).toBeUndefined();
     controller.renderRetainedChild(root, undefined, surface, 2);
     expect(controller.candidateGeneration).toBe(2);
     expect(resolve(controller)).toEqual({ disposition: 0, target: null });
@@ -159,37 +125,35 @@ describe('WebGLLayer context lifecycle', () => {
       height: 10,
     });
     expect(controller.committedGeneration).toBe(2);
-    expect(restoredBitmap.close).not.toHaveBeenCalled();
     expect(resolve(controller)).toMatchObject({
       disposition: 2,
       target: firstTarget,
     });
 
     controller.dispose();
+    controller.dispose();
     expect(platform.listenerRemoves).toEqual([
       'webglcontextlost',
       'webglcontextrestored',
     ]);
     expect(restoredBitmap.close).toHaveBeenCalledOnce();
-    expect(resourceReleases).toEqual([
-      { generation: 1, contextLost: true },
-      { generation: 2, contextLost: false },
-    ]);
-    platform.canvas.dispatchEvent(new Event('webglcontextrestored'));
-    expect(callbacks).toHaveLength(1);
+    expect(glCount(platform, 'deleteProgram')).toBe(1);
+    expect(glCount(platform, 'deleteBuffer')).toBe(2);
+    expect(glCount(platform, 'deleteVertexArray')).toBe(1);
   });
 
-  it('fences context loss during child draw before transfer or target publication', async () => {
+  it('creates no renderer resources when context loss occurs during composition', async () => {
     const unused = bitmap('unused');
     const platform = installContextPlatform([unused]);
     const parentCanvas = mountParent();
     let loss: Event | undefined;
-    const LosingTarget = defineWebGLPrimitive<{}, {}>(function renderLosingTarget() {
+    function LosingTarget(): CRCNode {
       platform.contextLost = true;
       loss = new Event('webglcontextlost', { cancelable: true });
       platform.canvas.dispatchEvent(loss);
-    }, { hit: { kind: 'custom', resolve: () => 1 } });
-    const root = createElement(LosingTarget, { onClick: () => undefined });
+      return <Cube onClick={() => undefined} />;
+    }
+    const root = <LosingTarget />;
     const controller = new WebGLLayerController(
       parentCanvas,
       root,
@@ -208,31 +172,70 @@ describe('WebGLLayer context lifecycle', () => {
       '../../../core/src/lib/global-state.js'
     );
     expect(loss?.defaultPrevented).toBe(true);
-    expect(controller.contextGeneration).toBe(2);
     expect(platform.transferCount).toBe(0);
-    expect(controller.committedGeneration).toBeUndefined();
-    expect(controller.candidateGeneration).toBeUndefined();
+    expect(glCount(platform, 'createProgram')).toBe(0);
+    expect(glCount(platform, 'createBuffer')).toBe(0);
+    expect(glCount(platform, 'createVertexArray')).toBe(0);
     expect(getCRCInstance(parentCanvas).eventRoot.targets.size).toBe(0);
-    expect(unused.close).not.toHaveBeenCalled();
+    expectNoGeneration(controller);
     controller.dispose();
   });
 
-  it('closes and rejects a bitmap transferred across context loss', async () => {
+  it('invalidates without deletes when context loss occurs during WebGL rendering', async () => {
+    const unused = bitmap('unused-render');
+    let platform: ReturnType<typeof installContextPlatform>;
+    platform = installContextPlatform([unused], {
+      onGLCall(method, canvas) {
+        if (method !== 'drawElements' || platform.contextLost) return;
+        platform.contextLost = true;
+        canvas.dispatchEvent(
+          new Event('webglcontextlost', { cancelable: true }),
+        );
+      },
+    });
+    const parentCanvas = mountParent();
+    const root = <Cube onClick={() => undefined} />;
+    const controller = new WebGLLayerController(
+      parentCanvas,
+      root,
+      undefined,
+      resolveWebGLLayerSurface(20, 10, { x: 1, y: 1 }),
+    );
+
+    expect(() => controller.renderUpdatedChild(
+      root,
+      undefined,
+      controller.surface,
+      1,
+    )).toThrowError(/WebGLLayer.*render operation lost ownership/i);
+
+    const { getCRCInstance } = await import(
+      '../../../core/src/lib/global-state.js'
+    );
+    expect(glCount(platform, 'createProgram')).toBe(1);
+    expect(glCount(platform, 'drawElements')).toBe(1);
+    expect(glCount(platform, 'deleteProgram')).toBe(0);
+    expect(glCount(platform, 'deleteBuffer')).toBe(0);
+    expect(glCount(platform, 'deleteVertexArray')).toBe(0);
+    expect(platform.transferCount).toBe(0);
+    expect(getCRCInstance(parentCanvas).eventRoot.targets.size).toBe(0);
+    expectNoGeneration(controller);
+    controller.dispose();
+  });
+
+  it('closes a bitmap transferred across context loss without publishing its picker', async () => {
     const stale = bitmap('stale-transfer');
-    let loss: Event | undefined;
     let platform: ReturnType<typeof installContextPlatform>;
     platform = installContextPlatform([stale], {
       onTransfer(canvas) {
         platform.contextLost = true;
-        loss = new Event('webglcontextlost', { cancelable: true });
-        canvas.dispatchEvent(loss);
+        canvas.dispatchEvent(
+          new Event('webglcontextlost', { cancelable: true }),
+        );
       },
     });
     const parentCanvas = mountParent();
-    const Target = defineWebGLPrimitive<{}, {}>(function renderTransferTarget() {}, {
-      hit: { kind: 'custom', resolve: () => 1 },
-    });
-    const root = createElement(Target, { onClick: () => undefined });
+    const root = <Cube onClick={() => undefined} />;
     const controller = new WebGLLayerController(
       parentCanvas,
       root,
@@ -250,23 +253,20 @@ describe('WebGLLayer context lifecycle', () => {
     const { getCRCInstance } = await import(
       '../../../core/src/lib/global-state.js'
     );
-    expect(loss?.defaultPrevented).toBe(true);
     expect(stale.close).toHaveBeenCalledOnce();
-    expect(controller.committedGeneration).toBeUndefined();
-    expect(controller.candidateGeneration).toBeUndefined();
+    expectNoGeneration(controller);
     expect(getCRCInstance(parentCanvas).eventRoot.targets.size).toBe(0);
     controller.dispose();
-    expect(stale.close).toHaveBeenCalledOnce();
   });
 
-  it('cannot commit a candidate when context loss occurs during parent draw', async () => {
+  it('cannot commit bitmap, picker, or focus metadata after loss during parent draw', async () => {
     const candidate = bitmap('stale-composite');
     const platform = installContextPlatform([candidate]);
     const parentCanvas = mountParent();
-    const Target = defineWebGLPrimitive<{}, {}>(function renderCompositeTarget() {}, {
-      hit: { kind: 'custom', resolve: () => 1 },
-    });
-    const root = createElement(Target, { onClick: () => undefined });
+    const root = <Cube
+      keyboardNavigationBounds={{ x: 1, y: 2, width: 3, height: 4 }}
+      onClick={() => undefined}
+    />;
     const controller = new WebGLLayerController(
       parentCanvas,
       root,
@@ -274,12 +274,14 @@ describe('WebGLLayer context lifecycle', () => {
       resolveWebGLLayerSurface(20, 10, { x: 1, y: 1 }),
     );
     controller.renderUpdatedChild(root, undefined, controller.surface, 1);
-    const loss = new Event('webglcontextlost', { cancelable: true });
+    const target = pendingTarget(controller);
 
     expect(() => controller.composite({
       drawImage() {
         platform.contextLost = true;
-        platform.canvas.dispatchEvent(loss);
+        platform.canvas.dispatchEvent(
+          new Event('webglcontextlost', { cancelable: true }),
+        );
       },
     } as unknown as CanvasRenderingContext2D, {
       x: 0,
@@ -291,70 +293,15 @@ describe('WebGLLayer context lifecycle', () => {
     const { getCRCInstance } = await import(
       '../../../core/src/lib/global-state.js'
     );
-    expect(loss.defaultPrevented).toBe(true);
     expect(candidate.close).toHaveBeenCalledOnce();
-    expect(controller.committedGeneration).toBeUndefined();
-    expect(controller.candidateGeneration).toBeUndefined();
+    expect(target.keyboardNavigationBounds).toBeUndefined();
+    expect(target.keyboardNavigationPoints).toBeUndefined();
     expect(getCRCInstance(parentCanvas).eventRoot.targets.size).toBe(0);
+    expectNoGeneration(controller);
     controller.dispose();
-    expect(candidate.close).toHaveBeenCalledOnce();
   });
 
-  it('attempts every layer release after application and bitmap cleanup throw', () => {
-    const applicationError = new Error('application release failed');
-    const bitmapError = new Error('candidate close failed');
-    const stable = bitmap('stable');
-    const candidate = bitmap('candidate');
-    candidate.close.mockImplementation(() => {
-      throw bitmapError;
-    });
-    const platform = installContextPlatform([stable, candidate]);
-    const reported: unknown[] = [];
-    vi.spyOn(globalThis, 'reportError').mockImplementation(error => {
-      reported.push(error);
-    });
-    const Owned = defineWebGLPrimitive<{}, {}>(function renderOwned(
-      _props,
-      _style,
-      context,
-    ) {
-      context.resources.use(
-        () => ({}),
-        () => {
-          throw applicationError;
-        },
-        [],
-      );
-    }, { hit: { kind: 'none' } });
-    const root = createElement(Owned, { pointerEvents: 'none' });
-    const controller = new WebGLLayerController(
-      mountParent(),
-      root,
-      undefined,
-      resolveWebGLLayerSurface(20, 10, { x: 1, y: 1 }),
-    );
-    const context = {
-      drawImage() {},
-    } as unknown as CanvasRenderingContext2D;
-    controller.renderUpdatedChild(root, undefined, controller.surface, 1);
-    controller.composite(context, { x: 0, y: 0, width: 20, height: 10 });
-    controller.renderUpdatedChild(root, undefined, controller.surface, 2);
-
-    expect(() => controller.dispose()).not.toThrow();
-
-    expect(reported).toEqual([applicationError, bitmapError]);
-    expect(candidate.close).toHaveBeenCalledOnce();
-    expect(stable.close).toHaveBeenCalledOnce();
-    expect(platform.listenerRemoves).toEqual([
-      'webglcontextlost',
-      'webglcontextrestored',
-    ]);
-    controller.dispose();
-    expect(candidate.close).toHaveBeenCalledOnce();
-    expect(stable.close).toHaveBeenCalledOnce();
-  });
-
-  it('cancels pre-existing child animation work when the context is lost', () => {
+  it('cancels child animation work when the context is lost', () => {
     const first = bitmap('animated');
     const platform = installContextPlatform([first]);
     const callbacks: FrameRequestCallback[] = [];
@@ -366,14 +313,15 @@ describe('WebGLLayer context lifecycle', () => {
     const cancel = vi.spyOn(window, 'cancelAnimationFrame')
       .mockImplementation(() => undefined);
     const parentCanvas = mountParent();
-    callbacks.shift()!(0);
+    callbacks.shift()?.(0);
     request.mockClear();
-    let renders = 0;
-    const Animated = defineWebGLPrimitive<{}, {}>(function renderAnimated() {
-      renders += 1;
+    let executions = 0;
+    function Animated(): CRCNode {
+      executions += 1;
       crcAnimationFrame();
-    }, { hit: { kind: 'none' } });
-    const root = createElement(Animated, { pointerEvents: 'none' });
+      return <Cube pointerEvents="none" />;
+    }
+    const root = <Animated />;
     const controller = new WebGLLayerController(
       parentCanvas,
       root,
@@ -386,7 +334,6 @@ describe('WebGLLayer context lifecycle', () => {
       { x: 0, y: 0, width: 20, height: 10 },
     );
     expect(request).toHaveBeenCalledOnce();
-    expect(renders).toBe(1);
 
     platform.contextLost = true;
     platform.canvas.dispatchEvent(
@@ -395,89 +342,15 @@ describe('WebGLLayer context lifecycle', () => {
 
     expect(cancel).toHaveBeenCalledOnce();
     callbacks[0]!(2);
-    expect(renders).toBe(1);
+    expect(executions).toBe(1);
     expect(platform.transferCount).toBe(1);
     controller.dispose();
   });
 
-  it('does not complete the old generation when loss occurs during final state restoration', async () => {
-    const restored = bitmap('restored-after-state-loss');
-    let armed = false;
-    let armedBaselinePasses = 0;
-    let platform: ReturnType<typeof installContextPlatform>;
-    platform = installContextPlatform([restored], {
-      onGLCall(method) {
-        if (!armed || method !== 'bindFramebuffer') return;
-        armedBaselinePasses += 1;
-        if (armedBaselinePasses !== 2) return;
-        platform.contextLost = true;
-        platform.canvas.dispatchEvent(
-          new Event('webglcontextlost', { cancelable: true }),
-        );
-      },
-    });
-    const callbacks: FrameRequestCallback[] = [];
-    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
-      callbacks.push(callback);
-      return callbacks.length;
-    });
-    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined);
-    const parentCanvas = mountParent();
-    callbacks.shift()!(0);
-    const Target = defineWebGLPrimitive<{}, {}>(function renderStateLossTarget() {
-      armed = true;
-    }, { hit: { kind: 'custom', resolve: () => 1 } });
-    const root = createElement(Target, { onClick: () => undefined });
-    const controller = new WebGLLayerController(
-      parentCanvas,
-      root,
-      undefined,
-      resolveWebGLLayerSurface(20, 10, { x: 1, y: 1 }),
-    );
-
-    expect(() => controller.renderUpdatedChild(
-      root,
-      undefined,
-      controller.surface,
-      1,
-    )).toThrowError(/WebGLLayer.*render operation lost ownership/i);
-
-    const driver = (controller as unknown as {
-      readonly driver: { hasCompletedFrame(): boolean };
-    }).driver;
-    const { getCRCInstance } = await import(
-      '../../../core/src/lib/global-state.js'
-    );
-    expect(armedBaselinePasses).toBe(2);
-    expect(controller.renderedGeneration).toBe(0);
-    expect(driver.hasCompletedFrame()).toBe(false);
-    expect(getCRCInstance(parentCanvas).eventRoot.targets.size).toBe(0);
-    expect(platform.transferCount).toBe(0);
-
-    armed = false;
-    platform.contextLost = false;
-    platform.canvas.dispatchEvent(new Event('webglcontextrestored'));
-    expect(callbacks).toHaveLength(1);
-    callbacks[0]!(2);
-    controller.renderRetainedChild(root, undefined, controller.surface, 2);
-    expect(controller.candidateGeneration).toBe(1);
-    controller.composite(
-      { drawImage() {} } as unknown as CanvasRenderingContext2D,
-      { x: 0, y: 0, width: 20, height: 10 },
-    );
-    expect(controller.committedGeneration).toBe(1);
-    controller.dispose();
-  });
-
-  it('does not traverse or acquire resources from private state updates while unavailable', async () => {
+  it('does not compose or touch GL for private state updates while unavailable', () => {
     const initial = bitmap('state-initial');
     const restored = bitmap('state-restored');
-    let glCalls = 0;
-    const platform = installContextPlatform([initial, restored], {
-      onGLCall() {
-        glCalls += 1;
-      },
-    });
+    const platform = installContextPlatform([initial, restored]);
     const callbacks: FrameRequestCallback[] = [];
     vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
       callbacks.push(callback);
@@ -485,40 +358,17 @@ describe('WebGLLayer context lifecycle', () => {
     });
     vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined);
     const parentCanvas = mountParent();
-    callbacks.shift()!(0);
+    callbacks.shift()?.(0);
     let setValue: ((value: number | ((old: number) => number)) => void) |
       undefined;
-    let traversals = 0;
-    const resourceCreates: number[] = [];
-    const resourceReleases: Array<{
-      readonly generation: number;
-      readonly contextLost: boolean;
-    }> = [];
-    const Stateful = defineWebGLPrimitive<{}, {}>(function renderLostState(
-      _props,
-      _style,
-      context,
-    ) {
-      traversals += 1;
+    let executions = 0;
+    function Stateful(): CRCNode {
+      executions += 1;
       const [value, setter] = crcState(0);
       setValue = setter;
-      context.resources.use(
-        () => {
-          context.gl.createBuffer();
-          resourceCreates.push(context.contextGeneration);
-          return { generation: context.contextGeneration };
-        },
-        (resource, releaseContext) => {
-          resourceReleases.push({
-            generation: resource.generation,
-            contextLost: releaseContext.contextLost,
-          });
-          setter(old => old + 1);
-        },
-        [value],
-      );
-    }, { hit: { kind: 'custom', resolve: () => 1 } });
-    const root = createElement(Stateful, { onClick: () => undefined });
+      return <Cube pointerEvents="none" style={{ translateX: value }} />;
+    }
+    const root = <Stateful />;
     const surface = resolveWebGLLayerSurface(20, 10, { x: 1, y: 1 });
     const controller = new WebGLLayerController(
       parentCanvas,
@@ -531,7 +381,7 @@ describe('WebGLLayer context lifecycle', () => {
       { drawImage() {} } as unknown as CanvasRenderingContext2D,
       { x: 0, y: 0, width: 20, height: 10 },
     );
-    const initialGLCalls = glCalls;
+    const callsBeforeLoss = platform.glCalls.length;
 
     platform.contextLost = true;
     platform.canvas.dispatchEvent(
@@ -541,148 +391,21 @@ describe('WebGLLayer context lifecycle', () => {
     expect(callbacks).toHaveLength(1);
     callbacks[0]!(2);
 
-    const { getCRCInstance } = await import(
-      '../../../core/src/lib/global-state.js'
-    );
-    expect(traversals).toBe(1);
-    expect(glCalls).toBe(initialGLCalls);
-    expect(resourceCreates).toEqual([1]);
-    expect(resourceReleases).toEqual([{
-      generation: 1,
-      contextLost: true,
-    }]);
-    expect(getCRCInstance(parentCanvas).eventRoot.targets.size).toBe(0);
+    expect(executions).toBe(1);
+    expect(platform.glCalls).toHaveLength(callsBeforeLoss);
     expect(controller.renderedGeneration).toBe(1);
-    expect(controller.candidateGeneration).toBeUndefined();
-    expect(controller.committedGeneration).toBeUndefined();
+    expectNoGeneration(controller);
 
     platform.contextLost = false;
     platform.canvas.dispatchEvent(new Event('webglcontextrestored'));
     expect(callbacks).toHaveLength(2);
     callbacks[1]!(3);
-    expect(traversals).toBe(2);
-    expect(resourceCreates).toEqual([1, 2]);
+    expect(executions).toBe(2);
+    expect(glCount(platform, 'createProgram')).toBe(2);
     controller.renderRetainedChild(root, undefined, surface, 3);
     controller.composite(
       { drawImage() {} } as unknown as CanvasRenderingContext2D,
       { x: 0, y: 0, width: 20, height: 10 },
-    );
-    expect(controller.committedGeneration).toBe(2);
-    controller.dispose();
-  });
-
-  it('restores exactly the latest parent root, camera, and surface once', () => {
-    const initial = bitmap('parent-initial');
-    const restored = bitmap('parent-restored');
-    const platform = installContextPlatform([initial, restored]);
-    const callbacks: FrameRequestCallback[] = [];
-    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
-      callbacks.push(callback);
-      return callbacks.length;
-    });
-    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined);
-    const parentCanvas = mountParent();
-    callbacks.shift()!(0);
-    let oldTraversals = 0;
-    let currentTraversals = 0;
-    const oldResourceCreates: number[] = [];
-    const currentSnapshots: unknown[] = [];
-    const Old = defineWebGLPrimitive<{}, {}>(function renderRemovedChild(
-      _props,
-      _style,
-      context,
-    ) {
-      oldTraversals += 1;
-      context.resources.use(
-        () => {
-          oldResourceCreates.push(context.contextGeneration);
-          return {};
-        },
-        () => undefined,
-        [],
-      );
-    }, { hit: { kind: 'none' } });
-    const Current = defineWebGLPrimitive<{}, {}>(function renderCurrentChild(
-      _props,
-      _style,
-      context,
-    ) {
-      currentTraversals += 1;
-      currentSnapshots.push({
-        generation: context.contextGeneration,
-        camera: context.camera.descriptor,
-        logicalViewport: context.logicalViewport,
-        backingViewport: context.backingViewport,
-      });
-    }, { hit: { kind: 'none' } });
-    const oldRoot = createElement(Old, { key: 'old', pointerEvents: 'none' });
-    const currentRoot = createElement(Current, {
-      key: 'current',
-      pointerEvents: 'none',
-    });
-    const oldSurface = resolveWebGLLayerSurface(20, 10, { x: 1, y: 1 });
-    const currentSurface = resolveWebGLLayerSurface(30, 12, { x: 2, y: 3 });
-    const currentCamera = {
-      type: 'perspective' as const,
-      position: [3, 4, 9] as const,
-      lookAt: [1, 2, 0] as const,
-      up: [0, 1, 0] as const,
-      fieldOfViewDegrees: 55,
-      near: 0.25,
-      far: 500,
-    };
-    const controller = new WebGLLayerController(
-      parentCanvas,
-      oldRoot,
-      undefined,
-      oldSurface,
-    );
-    controller.renderUpdatedChild(oldRoot, undefined, oldSurface, 1);
-    controller.composite(
-      { drawImage() {} } as unknown as CanvasRenderingContext2D,
-      { x: 0, y: 0, width: 20, height: 10 },
-    );
-
-    platform.contextLost = true;
-    platform.canvas.dispatchEvent(
-      new Event('webglcontextlost', { cancelable: true }),
-    );
-    controller.renderRetainedChild(
-      currentRoot,
-      currentCamera,
-      currentSurface,
-      2,
-    );
-    expect(callbacks).toHaveLength(0);
-
-    platform.contextLost = false;
-    platform.canvas.dispatchEvent(new Event('webglcontextrestored'));
-    expect(callbacks).toHaveLength(1);
-    callbacks[0]!(3);
-
-    expect(oldTraversals).toBe(1);
-    expect(oldResourceCreates).toEqual([1]);
-    expect(currentTraversals).toBe(1);
-    expect(currentSnapshots).toEqual([{
-      generation: 2,
-      camera: currentCamera,
-      logicalViewport: { width: 30, height: 12 },
-      backingViewport: { width: 60, height: 36 },
-    }]);
-    expect(platform.canvas.width).toBe(60);
-    expect(platform.canvas.height).toBe(36);
-
-    controller.renderRetainedChild(
-      currentRoot,
-      currentCamera,
-      currentSurface,
-      3,
-    );
-    expect(currentTraversals).toBe(1);
-    expect(platform.transferCount).toBe(2);
-    controller.composite(
-      { drawImage() {} } as unknown as CanvasRenderingContext2D,
-      { x: 0, y: 0, width: 30, height: 12 },
     );
     expect(controller.committedGeneration).toBe(2);
     controller.dispose();
@@ -708,7 +431,7 @@ describe('WebGL failure cleanup', () => {
     expect(reported).toEqual([cleanupError]);
   });
 
-  it('attempts every partial upload release when one delete throws', () => {
+  it('attempts every partial renderer upload release when one delete throws', () => {
     const cleanupError = new Error('buffer delete failed');
     const reported: unknown[] = [];
     vi.spyOn(globalThis, 'reportError').mockImplementation(error => {
@@ -718,21 +441,24 @@ describe('WebGL failure cleanup', () => {
       failBuffer: 2,
       throwDeleteBuffer: cleanupError,
     });
-    const cache = new WebGLGPUResourceCache(recording.gl, 1);
+    const cache = new WebGLRendererResourceCache(recording.gl, 1);
     const geometry = createWebGLGeometry({
       positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
       indices: [0, 1, 2],
     });
+    const transaction = cache.beginRender();
 
-    expect(() => cache.acquireGeometry(geometry, 'Cube')).toThrowError(
+    expect(() => transaction.useGeometry(geometry, 'Cube')).toThrowError(
       /Cube.*index buffer/i,
     );
     expect(recording.deleteBuffer).toHaveBeenCalledOnce();
     expect(recording.deleteVertexArray).toHaveBeenCalledOnce();
     expect(reported).toEqual([cleanupError]);
+    transaction.rollback();
+    cache.dispose(false);
   });
 
-  it('continues cache disposal after one owned handle release throws', () => {
+  it('continues renderer-cache disposal after one owned handle release throws', () => {
     const cleanupError = new Error('program delete failed');
     const reported: unknown[] = [];
     vi.spyOn(globalThis, 'reportError').mockImplementation(error => {
@@ -741,12 +467,14 @@ describe('WebGL failure cleanup', () => {
     const recording = createOwnershipGL({
       throwDeleteProgram: cleanupError,
     });
-    const cache = new WebGLGPUResourceCache(recording.gl, 1);
+    const cache = new WebGLRendererResourceCache(recording.gl, 1);
     const geometry = createWebGLGeometry({
       positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
     });
-    cache.acquireProgram('Mesh');
-    cache.acquireGeometry(geometry, 'Mesh');
+    const transaction = cache.beginRender();
+    transaction.useProgram('Mesh');
+    transaction.useGeometry(geometry, 'Mesh');
+    transaction.commit();
 
     expect(() => cache.dispose(false)).not.toThrow();
     expect(recording.deleteProgram).toHaveBeenCalledOnce();
@@ -780,19 +508,38 @@ function resolve(controller: WebGLLayerController): CRCHitTestOutput {
   return output;
 }
 
+function pendingTarget(
+  controller: WebGLLayerController,
+): CRCEventTargetRegistration {
+  return generationTarget(controller, 'pending');
+}
+
 function committedTarget(
   controller: WebGLLayerController,
 ): CRCEventTargetRegistration {
-  const state = controller as unknown as {
-    readonly committed: {
+  return generationTarget(controller, 'committed');
+}
+
+function generationTarget(
+  controller: WebGLLayerController,
+  generation: 'committed' | 'pending',
+): CRCEventTargetRegistration {
+  const state = controller as unknown as Record<
+    'committed' | 'pending',
+    {
       readonly pickLedger: {
         readonly entries: ReadonlyArray<{
           readonly target: CRCEventTargetRegistration;
         }>;
       };
-    };
-  };
-  return state.committed.pickLedger.entries[0]!.target;
+    } | undefined
+  >;
+  return state[generation]!.pickLedger.entries[0]!.target;
+}
+
+function expectNoGeneration(controller: WebGLLayerController): void {
+  expect(controller.committedGeneration).toBeUndefined();
+  expect(controller.candidateGeneration).toBeUndefined();
 }
 
 interface FakeBitmap extends ImageBitmap {
@@ -813,14 +560,22 @@ function installContextPlatform(
   transfers: FakeBitmap[],
   options: Readonly<{
     onTransfer?: (canvas: EventTarget) => void;
-    onGLCall?: (method: string) => void;
+    onGLCall?: (method: string, canvas: EventTarget) => void;
   }> = {},
 ) {
   const listenerAdds: string[] = [];
   const listenerRemoves: string[] = [];
+  const glCalls: string[] = [];
   let contextLost = false;
   let transferCount = 0;
-  const gl = createNoopGL(() => contextLost, options.onGLCall);
+  let createdCanvas: ContextLifecycleOffscreenCanvas | undefined;
+  const gl = createLifecycleGL(
+    () => contextLost,
+    method => {
+      glCalls.push(method);
+      if (createdCanvas) options.onGLCall?.(method, createdCanvas);
+    },
+  );
   class ContextLifecycleOffscreenCanvas extends EventTarget {
     width: number;
     height: number;
@@ -829,24 +584,25 @@ function installContextPlatform(
       super();
       this.width = width;
       this.height = height;
+      createdCanvas = this;
     }
 
     override addEventListener(
       type: string,
       callback: EventListenerOrEventListenerObject | null,
-      options?: boolean | AddEventListenerOptions,
+      eventOptions?: boolean | AddEventListenerOptions,
     ): void {
       listenerAdds.push(type);
-      super.addEventListener(type, callback, options);
+      super.addEventListener(type, callback, eventOptions);
     }
 
     override removeEventListener(
       type: string,
       callback: EventListenerOrEventListenerObject | null,
-      options?: boolean | EventListenerOptions,
+      eventOptions?: boolean | EventListenerOptions,
     ): void {
       listenerRemoves.push(type);
-      super.removeEventListener(type, callback, options);
+      super.removeEventListener(type, callback, eventOptions);
     }
 
     getContext(type: string): WebGL2RenderingContext | null {
@@ -865,13 +621,13 @@ function installContextPlatform(
   const result = {
     listenerAdds,
     listenerRemoves,
+    glCalls,
     get transferCount(): number {
       return transferCount;
     },
     get canvas(): ContextLifecycleOffscreenCanvas {
-      return result.createdCanvas!;
+      return createdCanvas!;
     },
-    createdCanvas: undefined as ContextLifecycleOffscreenCanvas | undefined,
     get contextLost(): boolean {
       return contextLost;
     },
@@ -879,34 +635,60 @@ function installContextPlatform(
       contextLost = value;
     },
   };
-  const Original = ContextLifecycleOffscreenCanvas;
-  class CapturingOffscreenCanvas extends Original {
-    constructor(width: number, height: number) {
-      super(width, height);
-      result.createdCanvas = this;
-    }
-  }
-  vi.stubGlobal('OffscreenCanvas', CapturingOffscreenCanvas);
   return result;
 }
 
-function createNoopGL(
+function glCount(
+  platform: ReturnType<typeof installContextPlatform>,
+  method: string,
+): number {
+  return platform.glCalls.filter(entry => entry === method).length;
+}
+
+function createLifecycleGL(
   isContextLost: () => boolean,
-  onCall?: (method: string) => void,
+  onCall: (method: string) => void,
 ): WebGL2RenderingContext {
   let constant = 1;
+  let handle = 0;
   return new Proxy({}, {
     get(target, property) {
       if (typeof property !== 'string') return undefined;
       const record = target as Record<string, unknown>;
       if (!(property in record)) {
         record[property] = /^[A-Z0-9_]+$/.test(property) ? constant++ :
-          property === 'getParameter' ? () => 8 :
-            property === 'getContextAttributes' ? () => ({
+          property === 'getParameter' ? () => {
+            onCall(property);
+            return 8;
+          } : property === 'getContextAttributes' ? () => ({
               alpha: true,
               depth: true,
-            }) : property === 'isContextLost' ? isContextLost :
-              () => onCall?.(property);
+              premultipliedAlpha: true,
+              preserveDrawingBuffer: false,
+            }) : property === 'isContextLost' ? () => {
+              onCall(property);
+              return isContextLost();
+            } : property === 'getShaderParameter' ||
+              property === 'getProgramParameter' ? () => {
+                onCall(property);
+                return true;
+              } : property === 'getShaderInfoLog' ||
+                property === 'getProgramInfoLog' ? () => {
+                  onCall(property);
+                  return '';
+                } : property === 'getUniformLocation' ?
+                  (_program: object, name: string) => {
+                    onCall(property);
+                    return { name };
+                  } : property === 'createShader' ||
+                    property === 'createProgram' ||
+                    property === 'createVertexArray' ||
+                    property === 'createBuffer' ? () => {
+                      onCall(property);
+                      return { kind: property, id: ++handle };
+                    } : (..._args: unknown[]) => {
+                      onCall(property);
+                    };
       }
       return record[property];
     },

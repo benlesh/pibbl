@@ -1,7 +1,9 @@
-import { defineWebGLPrimitive } from '../define-webgl-primitive.js';
+import { defineBackendPrimitive } from '@crc/core/internal';
+import { WEBGL_BACKEND_TOKEN } from '../backend.js';
 import { getCubeGeometry } from '../geometry/cube.js';
-import type { CRCWebGLContext, CRCWebGLTargetProps } from '../types.js';
-import { drawBuiltInMesh, type MeshStyle } from './mesh.js';
+import type { WebGLSceneComposer } from '../scene/types.js';
+import type { CRCWebGLTargetProps } from '../types.js';
+import { submitBuiltInMesh, type MeshStyle } from './mesh.js';
 
 export interface CubeProps extends CRCWebGLTargetProps {}
 
@@ -10,21 +12,21 @@ export interface CubeStyle extends MeshStyle {
 }
 
 function renderCube(
-  _props: Readonly<CubeProps>,
+  props: Readonly<CubeProps>,
   style: Readonly<CubeStyle>,
-  context: CRCWebGLContext,
 ): void {
   const size = resolvePositive(style.size ?? 1, 'size');
-  drawBuiltInMesh('Cube', getCubeGeometry(), style, context, size);
+  submitBuiltInMesh('Cube', props, getCubeGeometry(), style, size);
 }
 
-/** Draws the canonical centered unit cube with size applied as model scale. */
-export const Cube = defineWebGLPrimitive<CubeProps, CubeStyle>(renderCube, {
-  hit: {
-    kind: 'geometry',
-    geometry: () => getCubeGeometry(),
-  },
-});
+/** Submits the canonical centered unit cube with size applied as model scale. */
+export const Cube = defineBackendPrimitive<
+  CubeProps,
+  CubeStyle,
+  CubeStyle,
+  CubeStyle,
+  WebGLSceneComposer
+>(WEBGL_BACKEND_TOKEN, renderCube);
 
 function resolvePositive(value: number, field: string): number {
   if (!Number.isFinite(value)) {

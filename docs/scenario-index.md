@@ -87,7 +87,7 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 |   140 | <a id="layout-foundation"></a>**Layout foundation laboratory**<br>Prove nested Flex, Grid, Overlay, clipping, measurement, observation, and keyed reflow.                                                                                  | Layout diagnostics    | test-laboratory / contract         | `#/testing/layout-foundation`             | [`packages/scenarios/src/layout-foundation.example.tsx`](../packages/scenarios/src/layout-foundation.example.tsx)     |
 |   150 | <a id="canvas-surface"></a>**Canvas surface laboratory**<br>Verify fixed fitting, responsive logical reflow, high-density backing stores, and logical mouse coordinates.                                                                   | Rendering             | test-laboratory / contract         | `#/testing/canvas-surface`                | [`packages/scenarios/src/canvas-surface.example.tsx`](../packages/scenarios/src/canvas-surface.example.tsx)           |
 |   160 | <a id="first-class-filters"></a>**First-class filters laboratory**<br>Compare every supported filter, order-sensitive chains, nested boundaries, transforms, clips, and cached Layer interaction.                                          | Rendering             | test-laboratory / trusted          | `#/testing/filters`                       | [`packages/scenarios/src/filter-lab.example.tsx`](../packages/scenarios/src/filter-lab.example.tsx)                   |
-|   170 | <a id="webgl-islands"></a>**WebGL islands laboratory**<br>Prove transparent Canvas/WebGL composition, depth picking, transforms, clips, layers, filters, focus, animation, and context restoration.                                        | Rendering             | test-laboratory / contract         | `#/testing/webgl-islands`                 | [`packages/scenarios/src/webgl-lab.example.tsx`](../packages/scenarios/src/webgl-lab.example.tsx)                     |
+|   170 | <a id="webgl-islands"></a>**WebGL islands laboratory**<br>Prove settled transparency, Canvas/WebGL composition, depth picking, transforms, clips, layers, filters, focus, and animation.                                                   | Rendering             | test-laboratory / contract         | `#/testing/webgl-islands`                 | [`packages/scenarios/src/webgl-lab.example.tsx`](../packages/scenarios/src/webgl-lab.example.tsx)                     |
 |   180 | <a id="first-class-signals"></a>**First-class signals laboratory**<br>Prove writable, computed, dynamic, shared-root, Layer-local, and removed-consumer signal behavior through public CRC APIs.                                           | Rendering             | test-laboratory / trusted          | `#/testing/signals`                       | [`packages/scenarios/src/signals-lab.example.tsx`](../packages/scenarios/src/signals-lab.example.tsx)                 |
 |   190 | <a id="first-class-animation"></a>**First-class animation laboratory**<br>Drive deterministic playback, transitions, composition, simulation, Layer reuse, shared roots, and owner teardown through public CRC APIs.                       | Rendering             | test-laboratory / trusted          | `#/testing/animation`                     | [`packages/scenarios/src/animation-lab.example.tsx`](../packages/scenarios/src/animation-lab.example.tsx)             |
 
@@ -111,6 +111,7 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 - **KeyboardNavigation:** [Focus and keyboard navigation](#focus-and-keyboard-navigation)
 - **Layer:** [Compose a scene](#drawing-composition), [Mouse interaction contract](#mouse-interaction-contract), [Event lifecycle laboratory](#event-lifecycle-lab), [Geometry composition matrix](#geometry-composition-matrix), [Event performance laboratory](#event-performance-lab), [Runtime cleanup stress laboratory](#runtime-cleanup-stress), [First-class filters laboratory](#first-class-filters), [First-class signals laboratory](#first-class-signals), [First-class animation laboratory](#first-class-animation)
 - **Line:** [Draw lines](#drawing-lines), [User-event contract laboratory](#interaction-trace-lab), [Geometry composition matrix](#geometry-composition-matrix)
+- **Mesh:** [WebGL islands laboratory](#webgl-islands)
 - **Overlay:** [Layout foundation laboratory](#layout-foundation)
 - **Path:** [Draw shapes](#drawing-shapes), [User-event contract laboratory](#interaction-trace-lab)
 - **Polygon:** [Draw shapes](#drawing-shapes)
@@ -143,7 +144,6 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 - **crcTransition:** [First-class animation laboratory](#first-class-animation)
 - **crcWhenChanged:** [Runtime cleanup stress laboratory](#runtime-cleanup-stress), [Runtime and hooks laboratory](#runtime-hooks-laboratory)
 - **createRegularPolygonPath:** [Draw shapes](#drawing-shapes)
-- **defineWebGLPrimitive:** [WebGL islands laboratory](#webgl-islands)
 - **drag events:** [User-event contract laboratory](#interaction-trace-lab)
 - **keyboard events:** [Focus and keyboard navigation](#focus-and-keyboard-navigation), [User-event contract laboratory](#interaction-trace-lab)
 - **marker:** [First-class animation laboratory](#first-class-animation)
@@ -162,7 +162,6 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 ## By concept
 
 - **Canvas paint order:** [WebGL islands laboratory](#webgl-islands)
-- **WebGL context restoration:** [WebGL islands laboratory](#webgl-islands)
 - **activation identity:** [User-event contract laboratory](#interaction-trace-lab)
 - **alignment:** [Draw text](#drawing-text)
 - **alpha:** [Draw images](#drawing-images)
@@ -179,6 +178,7 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 - **cursor parity:** [User-event contract laboratory](#interaction-trace-lab)
 - **curved geometry:** [Draw shapes](#drawing-shapes)
 - **custom geometry:** [Draw shapes](#drawing-shapes)
+- **declarative scene composition:** [WebGL islands laboratory](#webgl-islands)
 - **dependency cleanup:** [Runtime and hooks laboratory](#runtime-hooks-laboratory)
 - **depth picking:** [WebGL islands laboratory](#webgl-islands)
 - **deterministic time:** [First-class animation laboratory](#first-class-animation)
@@ -237,6 +237,7 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 - **retarget continuity:** [First-class animation laboratory](#first-class-animation)
 - **rounded corners:** [Draw shapes](#drawing-shapes)
 - **runtime recovery:** [Runtime and hooks laboratory](#runtime-hooks-laboratory)
+- **settled transparency:** [WebGL islands laboratory](#webgl-islands)
 - **shared scheduler:** [First-class signals laboratory](#first-class-signals)
 - **source geometry:** [First-class filters laboratory](#first-class-filters)
 - **source lifecycle:** [Draw images](#drawing-images)
@@ -247,7 +248,6 @@ These fixtures are deterministic evidence for browser verification. Their visibi
 - **teardown:** [Event lifecycle laboratory](#event-lifecycle-lab)
 - **topmost target:** [Mouse interaction contract](#mouse-interaction-contract), [User-event contract laboratory](#interaction-trace-lab)
 - **transforms:** [Compose a scene](#drawing-composition)
-- **transparent composition:** [WebGL islands laboratory](#webgl-islands)
 - **typography:** [Draw text](#drawing-text)
 - **updates:** [Draw shapes](#drawing-shapes), [Draw lines](#drawing-lines), [Compose a scene](#drawing-composition)
 - **visual overflow:** [First-class filters laboratory](#first-class-filters)

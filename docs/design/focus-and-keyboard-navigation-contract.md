@@ -1,6 +1,7 @@
 # CRC focus and keyboard-navigation contract
 
-Status: current implemented contract, updated for WebGL islands on 2026-09-10.
+Status: current implemented contract, updated for settled WebGL scenes on
+2026-09-13.
 
 CRC provides optional logical focus and keyboard navigation for explicit event
 targets. The HTML Canvas remains the only native DOM focus host. While the
@@ -32,12 +33,12 @@ Only a logical event-target registration can become a focus candidate.
 Painted descendants, component props, propagation listeners, cursor
 declarations, and returned geometry do not implicitly create candidates.
 
-Canvas drawing leaves and geometry/custom-hit WebGL primitives own a logical
-target by default even when passive. They still enroll only by the rules below;
-passive paint alone is not focusable. `pointerEvents="none"` releases the leaf
-from hit and focus participation. `Group`, `Clip`, `Layer`, layout containers,
-`WebGLLayer`, and `Group3D` handler props are listener-only and cannot enroll
-their structural allocation or conceptual bounds.
+Canvas drawing leaves and geometry-backed `Mesh`, `Cube`, and `Sphere` objects
+own a logical target by default even when passive. They still enroll only by the
+rules below; passive paint alone is not focusable. `pointerEvents="none"`
+releases the leaf from hit and focus participation. `Group`, `Clip`, `Layer`,
+layout containers, `WebGLLayer`, and `Group3D` handler props are listener-only
+and cannot enroll their structural allocation or conceptual bounds.
 
 A target enrolls automatically when it has `onClick`, `onKeyDown`, or
 `onKeyUp`. `keyboardFocusable: true` explicitly includes another target and
@@ -144,13 +145,13 @@ without finite bounds remains in Tab order but cannot participate in arrow
 selection.
 
 Geometry-backed `Mesh`, `Cube`, and `Sphere` targets derive navigation geometry
-from their local geometry bounds, committed model matrix, and committed camera.
-CRC clips the projected bounds to the camera frustum, maps them into the
-logical `WebGLLayer`, then applies the same outer Canvas layout, transform, and
-clip projection used by paint and picking. An explicit
+from the same settled geometry/model/camera submissions used by rendering and
+picking. CRC clips the projected bounds to the camera frustum, maps them into
+the logical `WebGLLayer`, then applies the same outer Canvas layout, transform,
+and clip projection used by paint and picking. An explicit
 `keyboardNavigationBounds` on a WebGL target is a layer-local 2D override.
-Custom-hit primitives have no inferred 3D bounds and need that override for
-arrow selection. WebGL target source traversal remains the global Tab order.
+WebGL target source traversal remains the global Tab order even when the raster
+renderer groups opaque objects and sorts transparent objects.
 
 For each arrow, candidates outside the requested center half-plane are
 discarded. Remaining candidates compare this tuple in order:
@@ -187,9 +188,11 @@ next target, including their nested layer ancestors. Unrelated layers and
 layers rendered without focus management retain their ordinary cache behavior.
 
 `WebGLLayer` commits and replays its projected focus metadata with the same
-bitmap/pick generation. A focus revision invalidates the necessary private
-island and outer retained-Layer ancestors once; an otherwise unchanged cache
-hit reuses committed focus geometry without executing WebGL child components.
+bitmap/pick generation. No settled/rendered candidate can publish focus
+metadata before its bitmap succeeds in parent Canvas composition. A focus
+revision invalidates the necessary private island and outer retained-Layer
+ancestors once; an otherwise unchanged constant-time cache hit reuses committed
+focus geometry without composing a scene or executing WebGL child components.
 
 ## Optionality, lifecycle, and failures
 

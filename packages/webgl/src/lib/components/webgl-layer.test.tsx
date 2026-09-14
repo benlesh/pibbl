@@ -10,10 +10,11 @@ import {
   type CRCNode,
 } from '@crc/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { useBackendEventTarget } from '@crc/core/internal';
 import { jsxDEV } from '@crc/core/jsx-dev-runtime';
-import { defineWebGLPrimitive } from '../define-webgl-primitive.js';
+import * as publicWebGL from '../../index.js';
+import { createWebGLGeometry } from '../geometry/geometry.js';
 import { Cube } from './cube.js';
+import { Mesh } from './mesh.js';
 import { WebGLLayerController } from '../layer-controller.js';
 import { WebGLLayer, type WebGLLayerProps } from './webgl-layer.js';
 
@@ -28,6 +29,18 @@ afterEach(() => {
 });
 
 describe('WebGLLayer public surface', () => {
+  it('exports only the declarative runtime surface', () => {
+    expect(Object.keys(publicWebGL).sort()).toEqual([
+      'Cube',
+      'Group3D',
+      'Mesh',
+      'Sphere',
+      'WebGLLayer',
+      'crcAnimationFrame',
+      'createWebGLGeometry',
+    ]);
+  });
+
   it('includes jsxDEV source in a representative capability failure', () => {
     vi.stubGlobal('OffscreenCanvas', undefined);
     let frame: FrameRequestCallback | undefined;
@@ -66,13 +79,14 @@ describe('WebGLLayer public surface', () => {
       .mockImplementation(() => undefined);
     let iterations = 0;
     let childRenders = 0;
-    const Child = defineWebGLPrimitive<{}, {}>(function renderLayerChild() {
+    function Child(): CRCNode {
       childRenders += 1;
-    }, { hit: { kind: 'none' } });
+      return <Cube pointerEvents="none" />;
+    }
     const children: Iterable<CRCNode> = {
       *[Symbol.iterator]() {
         iterations += 1;
-        yield <Child pointerEvents="none" />;
+        yield <Child />;
       },
     };
     const canvas = createCanvas(100, 50);
@@ -117,10 +131,6 @@ describe('WebGLLayer public surface', () => {
       .mockImplementation(() => undefined);
     const resolve = vi.spyOn(WebGLLayerController.prototype, 'resolveLocal');
     const rearClick = vi.fn();
-    const Interactive = defineWebGLPrimitive<{}, {}>(
-      function renderBridgeOwnershipTarget() {},
-      { hit: { kind: 'custom', resolve: () => null } },
-    );
     const canvas = createCanvas(100, 60);
     const clip = new Path2D();
     clip.rect(0, 0, 15, 20);
@@ -139,7 +149,7 @@ describe('WebGLLayer public surface', () => {
             style={{ width: 30, height: 20 }}
             pointerEvents={pointerEvents}
           >
-            <Interactive onClick={() => undefined} />
+            <Cube onClick={() => undefined} />
           </WebGLLayer>
         </Clip>
       </Group>,
@@ -232,37 +242,37 @@ describe('WebGLLayer public surface', () => {
     installComponentPlatform();
     vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
       .mockImplementation(() => undefined);
-    const eventParents: unknown[] = [];
-    const Interactive = defineWebGLPrimitive<{}, {}>(
-      function renderEventParentProbe() {
-        const target = useBackendEventTarget({ onClick() {} });
-        eventParents.push(target?.owner.eventParent);
-      },
-      { hit: { kind: 'custom', resolve: () => null } },
-    );
     const canvas = createCanvas(40, 20);
     const controller = crc(
       canvas,
-      <WebGLLayer><Interactive /></WebGLLayer>,
+      <WebGLLayer><Cube onClick={() => undefined} /></WebGLLayer>,
       { pixelRatio: 1 },
     );
     controllers.add(controller);
 
     await nextFrame();
 
-    expect(eventParents).toHaveLength(1);
-    expect(eventParents[0]).toBeDefined();
+    const { getCRCInstance } = await import(
+      '../../../../core/src/lib/global-state.js'
+    );
+    const instance = getCRCInstance(canvas);
+    const childTarget = Array.from(instance.eventRoot.targets).find(
+      target => target.owner !== instance,
+    );
+    expect(childTarget?.owner.eventParent).toBeDefined();
   });
 
   it('composites through outer Group, Clip, Layer, and its receiving filter', async () => {
-    const PaintRed = defineWebGLPrimitive<{}, {}>(function renderRed(
-      _props,
-      _style,
-      context,
-    ) {
-      context.gl.clearColor(1, 0, 0, 1);
-      context.gl.clear(context.gl.COLOR_BUFFER_BIT);
-    }, { hit: { kind: 'none' } });
+    const redPlane = createWebGLGeometry({
+      positions: [
+        -10, -10, 0,
+        10, -10, 0,
+        -10, 10, 0,
+        -10, 10, 0,
+        10, -10, 0,
+        10, 10, 0,
+      ],
+    });
     const clip = new Path2D();
     clip.rect(0, 0, 30, 20);
     const canvas = createCanvas(80, 50);
@@ -271,7 +281,11 @@ describe('WebGLLayer public surface', () => {
         <Clip style={{ d: clip }}>
           <Layer style={{ width: 40, height: 30 }}>
             <WebGLLayer style={{ filter: { type: 'opacity', amount: 0.5 } }}>
-              <PaintRed pointerEvents="none" />
+              <Mesh
+                geometry={redPlane}
+                pointerEvents="none"
+                style={{ color: '#ff0000' }}
+              />
             </WebGLLayer>
           </Layer>
         </Clip>
@@ -427,11 +441,6 @@ describe('WebGLLayer public surface', () => {
       '../../../../core/src/lib/events/hit-test.js'
     );
     const rearClick = vi.fn();
-    const staleCustomHit = vi.fn(() => 4.9);
-    const Interactive = defineWebGLPrimitive<{}, {}>(
-      function renderReleasedTarget() {},
-      { hit: { kind: 'custom', resolve: staleCustomHit } },
-    );
     const canvas = createCanvas(100, 100);
     let resolveDuringComposite = false;
     const observations: Array<{
@@ -456,7 +465,7 @@ describe('WebGLLayer public surface', () => {
         />
         <WebGLLayer style={{ width: 100, height: 100 }}>
           {mode === 'removed' ? undefined : (
-            <Interactive pointerEvents={mode} />
+            <Cube pointerEvents={mode} />
           )}
         </WebGLLayer>
       </>
@@ -468,14 +477,12 @@ describe('WebGLLayer public surface', () => {
     resolveDuringComposite = true;
     crc(canvas, scene('none'));
     await nextFrame();
-    expect(staleCustomHit).not.toHaveBeenCalled();
 
     crc(canvas, scene('auto'));
     await nextFrame();
     resolveDuringComposite = true;
     crc(canvas, scene('removed'));
     await nextFrame();
-    expect(staleCustomHit).not.toHaveBeenCalled();
     expect(observations).toHaveLength(2);
     for (const observation of observations) {
       expect(observation.resolved).toBe(observation.rear);
@@ -536,6 +543,7 @@ function installComponentPlatform() {
 
 function createNoopGL(): WebGL2RenderingContext {
   let constant = 1;
+  let handle = 0;
   return new Proxy({}, {
     get(target, property) {
       if (typeof property !== 'string') return undefined;
@@ -554,7 +562,19 @@ function createNoopGL(): WebGL2RenderingContext {
               preserveDrawingBuffer: false,
               stencil: false,
               xrCompatible: false,
-            }) : () => undefined;
+            }) : property === 'getShaderParameter' ||
+              property === 'getProgramParameter' ? () => true :
+              property === 'getShaderInfoLog' ||
+                property === 'getProgramInfoLog' ? () => '' :
+                property === 'getUniformLocation' ?
+                  (_program: object, name: string) => ({ name }) :
+                  property === 'createShader' ||
+                    property === 'createProgram' ||
+                    property === 'createVertexArray' ||
+                    property === 'createBuffer' ?
+                    () => ({ kind: property, id: ++handle }) :
+                    property === 'isContextLost' ? () => false :
+                      () => undefined;
       }
       return record[property];
     },

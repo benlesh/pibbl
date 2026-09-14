@@ -177,17 +177,15 @@ const expectedWebGL = [
   'Sphere',
   'WebGLLayer',
   'crcAnimationFrame',
-  'crcWebGLContext',
   'createWebGLGeometry',
-  'defineWebGLPrimitive',
 ];
 const actualWebGL = Object.keys(webgl).sort();
 if (JSON.stringify(actualWebGL) !== JSON.stringify(expectedWebGL)) {
   throw new Error(`Unexpected @crc/webgl exports: ${actualWebGL.join(', ')}`);
 }
-if (actualWebGL.length !== 9) {
+if (actualWebGL.length !== 7) {
   throw new Error(
-    `Expected 9 @crc/webgl runtime exports, received ${actualWebGL.length}.`,
+    `Expected 7 @crc/webgl runtime exports, received ${actualWebGL.length}.`,
   );
 }
 for (const exportName of expectedWebGL) {
@@ -262,19 +260,19 @@ if (
 const runtimeGeometry = webgl.createWebGLGeometry({
   positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
 });
-const RuntimeWebGLPrimitive = webgl.defineWebGLPrimitive(
-  function renderRuntimeWebGLPrimitive() {},
-  { hit: { kind: 'none' } },
-);
+function RuntimeAnimatedMesh() {
+  const timestamp = webgl.crcAnimationFrame();
+  return core.createElement(webgl.Mesh, {
+    geometry: runtimeGeometry,
+    pointerEvents: 'none',
+    style: { rotationYDegrees: timestamp / 10 },
+  });
+}
 const runtimeWebGLElement = core.createElement(webgl.WebGLLayer, {
   style: { width: 1, height: 1 },
   children: core.createElement(core.Fragment, {
     children: [
-      core.createElement(webgl.Mesh, {
-        geometry: runtimeGeometry,
-        style: {},
-      }),
-      core.createElement(RuntimeWebGLPrimitive, { style: {} }),
+      core.createElement(RuntimeAnimatedMesh, {}),
     ],
   }),
 });

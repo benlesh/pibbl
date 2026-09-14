@@ -1,7 +1,9 @@
-import { defineWebGLPrimitive } from '../define-webgl-primitive.js';
+import { defineBackendPrimitive } from '@crc/core/internal';
+import { WEBGL_BACKEND_TOKEN } from '../backend.js';
 import { getSphereGeometry } from '../geometry/sphere.js';
-import type { CRCWebGLContext, CRCWebGLTargetProps } from '../types.js';
-import { drawBuiltInMesh, type MeshStyle } from './mesh.js';
+import type { WebGLSceneComposer } from '../scene/types.js';
+import type { CRCWebGLTargetProps } from '../types.js';
+import { submitBuiltInMesh, type MeshStyle } from './mesh.js';
 
 export interface SphereProps extends CRCWebGLTargetProps {}
 
@@ -10,29 +12,29 @@ export interface SphereStyle extends MeshStyle {
 }
 
 function renderSphere(
-  _props: Readonly<SphereProps>,
+  props: Readonly<SphereProps>,
   style: Readonly<SphereStyle>,
-  context: CRCWebGLContext,
 ): void {
   const radius = resolveRadius(style.radius ?? 0.5);
-  drawBuiltInMesh(
+  submitBuiltInMesh(
     'Sphere',
+    props,
     getSphereGeometry(),
     style,
-    context,
     radius * 2,
   );
 }
 
-/** Draws the canonical radius-0.5 sphere with radius applied as model scale. */
-export const Sphere = defineWebGLPrimitive<SphereProps, SphereStyle>(
+/** Submits the canonical radius-0.5 sphere with radius applied as model scale. */
+export const Sphere = defineBackendPrimitive<
+  SphereProps,
+  SphereStyle,
+  SphereStyle,
+  SphereStyle,
+  WebGLSceneComposer
+>(
+  WEBGL_BACKEND_TOKEN,
   renderSphere,
-  {
-    hit: {
-      kind: 'geometry',
-      geometry: () => getSphereGeometry(),
-    },
-  },
 );
 
 function resolveRadius(value: number): number {

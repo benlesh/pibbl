@@ -1,46 +1,57 @@
 import { crc, type CRCNode } from '@crc/core';
-import { executeBackendCRC, mountBackendCRC } from '@crc/core/internal';
+import {
+  defineBackendPrimitive,
+  executeBackendCRC,
+  mountBackendCRC,
+} from '@crc/core/internal';
 import { describe, expect, it, vi } from 'vitest';
-import { createWebGLBackend } from '../backend.js';
-import { defineWebGLPrimitive } from '../define-webgl-primitive.js';
+import { Mesh, createWebGLGeometry } from '../../index.js';
+import { WEBGL_BACKEND_TOKEN, createWebGLBackend } from '../backend.js';
 import { resolveCamera } from '../math/camera.js';
-import type { CRCWebGLTransformStyle } from '../types.js';
+import type { CRCWebGLGeometryPickRecord } from '../pick-ledger.js';
 import { Group3D } from './group-3d.js';
 
 describe('Group3D', () => {
-  it('composes nested models in parent-local T * Rz * Ry * Rx * S order and restores siblings', () => {
-    const matrices: number[][] = [];
-    const Probe = defineWebGLPrimitive<{ label: string }, CRCWebGLTransformStyle>(
-      function renderModelProbe(_props, _style, context) {
-        matrices.push(Array.from(context.modelMatrix));
-      },
-      { hit: { kind: 'none' } },
-    );
+  it('snapshots nested T * Rz * Ry * Rx * S models and restores sibling scope', () => {
+    const geometry = createWebGLGeometry({
+      positions: [-1, -1, 0, 1, -1, 0, 0, 1, 0],
+    });
     const root = [
       <Group3D key="outer" style={{ translateX: 5 }}>
-        <Group3D style={{ translateY: 3, scaleX: 2, scaleY: 2, scaleZ: 2 }}>
-          <Probe label="nested" pointerEvents="none" />
+        <Group3D style={{
+          translateX: 1,
+          translateY: 2,
+          translateZ: 3,
+          rotationXDegrees: 90,
+          rotationYDegrees: 90,
+          rotationZDegrees: 90,
+          scaleX: 2,
+          scaleY: 3,
+          scaleZ: 4,
+        }}>
+          <Mesh geometry={geometry} onClick={() => undefined} />
         </Group3D>
       </Group3D>,
-      <Probe key="sibling" label="sibling" pointerEvents="none" />,
+      <Mesh key="sibling" geometry={geometry} onClick={() => undefined} />,
     ];
     const mounted = mountScene(root);
 
     executeBackendCRC(mounted.mount, root, 1);
 
-    expect(matrices).toEqual([
-      [
-        2, 0, 0, 0,
-        0, 2, 0, 0,
-        0, 0, 2, 0,
-        5, 3, 0, 1,
-      ],
-      [
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1,
-      ],
+    const entries = mounted.driver.takeCompletedFrame()
+      .pickEntries as readonly CRCWebGLGeometryPickRecord[];
+    expect(entries).toHaveLength(2);
+    expectMatrix(entries[0]!.model, [
+      0, 0, -2, 0,
+      0, 3, 0, 0,
+      4, 0, 0, 0,
+      6, 2, 3, 1,
+    ]);
+    expectMatrix(entries[1]!.model, [
+      1, 0, 0, 0,
+      0, 1, 0, 0,
+      0, 0, 1, 0,
+      0, 0, 0, 1,
     ]);
     mounted.dispose();
   });
@@ -51,13 +62,13 @@ describe('Group3D', () => {
     [{ scaleZ: 0 }, /scaleZ.*nonzero/i],
   ] as const)('rejects an invalid transform before rendering children %#', (style, message) => {
     const child = vi.fn();
-    const Probe = defineWebGLPrimitive<{}, CRCWebGLTransformStyle>(
+    const Probe = defineBackendPrimitive<{}, {}, {}, {}, unknown>(
+      WEBGL_BACKEND_TOKEN,
       function renderInvalidChild() {
         child();
       },
-      { hit: { kind: 'none' } },
     );
-    const root = <Group3D style={style}><Probe pointerEvents="none" /></Group3D>;
+    const root = <Group3D style={style}><Probe /></Group3D>;
     const mounted = mountScene(root);
 
     expect(() => executeBackendCRC(mounted.mount, root, 1)).toThrowError(message);
@@ -84,15 +95,15 @@ describe('Group3D', () => {
       },
     };
     const failure = new Error('descendant failed');
-    const Throwing = defineWebGLPrimitive<{}, CRCWebGLTransformStyle>(
+    const Throwing = defineBackendPrimitive<{}, {}, {}, {}, unknown>(
+      WEBGL_BACKEND_TOKEN,
       function renderThrowingDescendant() {
         throw failure;
       },
-      { hit: { kind: 'none' } },
     );
     const root = (
       <Group3D style={{ translateX: 5 }}>
-        <Throwing pointerEvents="none" />
+        <Throwing />
       </Group3D>
     );
     const mount = mountBackendCRC(new OffscreenCanvas(40, 20), root, {
@@ -158,6 +169,7 @@ function mountScene(root: CRCNode) {
   });
   return {
     mount,
+    driver,
     dispose() {
       mount.dispose();
       parent.dispose();
@@ -165,15 +177,36 @@ function mountScene(root: CRCNode) {
   };
 }
 
+function expectMatrix(actual: ArrayLike<number>, expected: readonly number[]) {
+  expect(Array.from(actual)).toHaveLength(expected.length);
+  expected.forEach((value, index) => {
+    expect(actual[index]).toBeCloseTo(value, 6);
+  });
+}
+
 function createNoopGL(): WebGL2RenderingContext {
   let constant = 1;
+  let handle = 0;
   return new Proxy({}, {
     get(target, property) {
       if (typeof property !== 'string') return undefined;
       const record = target as Record<string, unknown>;
       if (!(property in record)) {
         record[property] = /^[A-Z0-9_]+$/.test(property) ? constant++ :
-          property === 'getParameter' ? () => 8 : () => undefined;
+          property === 'getParameter' ? () => 8 :
+            property === 'getShaderParameter' ||
+            property === 'getProgramParameter' ? () => true :
+              property === 'getShaderInfoLog' ||
+              property === 'getProgramInfoLog' ? () => '' :
+                property === 'getUniformLocation' ?
+                  (_program: object, name: string) => ({ name }) :
+                  property === 'createShader' ||
+                  property === 'createProgram' ||
+                  property === 'createVertexArray' ||
+                  property === 'createBuffer' ?
+                    () => ({ kind: property, id: ++handle }) :
+                    property === 'isContextLost' ? () => false :
+                      () => undefined;
       }
       return record[property];
     },

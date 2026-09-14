@@ -29,8 +29,10 @@ drawing primitives without React or generated DOM.
   transient pooling.
 - `@crc/webgl` is implemented as transparent WebGL2 islands in Canvas paint
   order. It shares core's element protocol, scheduler, events, focus, and JSX
-  runtime while owning its WebGL contexts, bitmap/pick transactions, geometry,
-  caches, animation requests, and GPU resources.
+  runtime. Each layer composes one frame-local scene, settles shared
+  raster/pick/focus records, renders planned opaque and transparent queues, and
+  transactionally commits one Canvas bitmap. Its renderer owns WebGL contexts,
+  resident GPU resources, bitmap generations, and animation requests.
 - First-class `signal`, `computed`, `untracked`, `isSignal`, and `crcSignal`
   are implemented with explicit reads, dynamic synchronous dependency graphs,
   render/Advance write guards, observation-aware computed source-edge leases,
@@ -131,9 +133,11 @@ either as the current result unless a fresh run reproduces it.
 - Canvas state is isolated with save/restore around component traversal. Render
   failure tears down runtime-owned resources and clears component refs; pixels
   already painted earlier in the failing frame are not rolled back.
-- Source traversal is paint order. Coordinate-event targeting walks the shared
-  paint ledger in reverse and resolves at most one topmost logical target.
-  Canvas and WebGL drawing primitives participate by default;
+- Source traversal is Canvas paint order. Inside one WebGL scene it establishes
+  component identity, event/focus order, and stable tie indices rather than an
+  irrevocable GPU draw sequence. Coordinate-event targeting walks the shared
+  Canvas paint ledger in reverse and resolves at most one topmost logical
+  target. Canvas and WebGL drawing primitives participate by default;
   `pointerEvents="none"` is the explicit opt-out. Structural handler props add
   propagation listeners but no independent hit geometry.
 - `Group` composes Canvas transforms. Interaction regions, `Clip`, and `Layer` capture
@@ -143,9 +147,11 @@ either as the current result unless a fresh run reproduces it.
   clean sibling bitmaps remain cached and ancestor composition follows the
   dirty path. Layers require browser `OffscreenCanvas` support.
 - `WebGLLayer` owns a private WebGL backend instance and composites one
-  transparent committed `ImageBitmap` at one Canvas paint position. Its picker
-  bridges fixed miss/block/target results into the global event stack, and its
-  geometry-backed focus targets expose projected bounds.
+  transparent committed `ImageBitmap` at one Canvas paint position. A dirty
+  child composes, settles, and renders before the parent Canvas composites and
+  commits the bitmap/pick/focus generation. Its picker bridges fixed
+  miss/block/target results into the global event stack, and its geometry-backed
+  focus targets expose projected bounds.
 - A nonempty `style.filter` creates one transient composition boundary around
   the receiving primitive and its recursive output. One list uses one native
   filter operation in declaration order; nested boundaries resolve inside out.
@@ -198,10 +204,12 @@ Public hooks: `crcState`, `crcSignal`, `crcPlayback`, `crcTransition`, `crcMemo`
 `crcEventListener`, `crcCursor`, and `crcLayoutBox`.
 
 Public `@crc/webgl` surface: `WebGLLayer`, `Group3D`, `Mesh`, `Cube`, `Sphere`,
-`createWebGLGeometry`, `defineWebGLPrimitive`, `crcWebGLContext`,
-`crcAnimationFrame`, and their public camera, geometry, transform, primitive,
-context, and component prop/style types. The package has no second JSX runtime,
-element constructor, fragment, or core hook/event vocabulary.
+`createWebGLGeometry`, `crcAnimationFrame`, and their public camera, geometry,
+transform, and component prop/style types. `Mesh` plus immutable
+`createWebGLGeometry` descriptors is the application custom-shape path. The
+package has no second JSX runtime, element constructor, fragment, core
+hook/event vocabulary, public GL context, shader/draw callback, or analytic hit
+callback.
 
 Current interaction supports DOM-aligned pointer, mouse, touch, wheel,
 keyboard/focus, editing/composition, clipboard, and drag/drop event facades,
@@ -219,7 +227,8 @@ cross-thread signals, public manual clocks/history, automatic caching, or a
 retained scene graph.
 WebGL islands do not promise WebGL1/WebGPU fallback, Canvas children inside an
 island, Canvas/WebGL subprimitive interleaving, multiple cameras or viewports in
-one island, a material/lighting engine, workers, or cross-context GPU sharing.
+one island, lighting, materials, textures, environments, shadows, emissive or
+glow effects, workers, or cross-context GPU sharing.
 Nonempty filters require browser `OffscreenCanvas` and Canvas
 `filter`; `[]` is a no-op with no filter capability requirement. Browser
 behavior remains authoritative for Canvas/`Path2D`, font
@@ -349,14 +358,24 @@ historical intent live in:
 - `docs/design/runtime-resource-ownership.md`
 - `docs/superpowers/specs/2026-09-08-first-class-filters-design.md`
 
-## Shipped WebGL islands
+## Shipped WebGL islands and settled-scene rendering
 
 The implemented 2026-09-09 design added the optional `@crc/webgl` package.
 `WebGLLayer` owns one persistent transparent WebGL2 `OffscreenCanvas`, private
 backend instance, transactional committed bitmap/pick pair, and context-owned
 GPU generations. `Group3D`, `Mesh`, `Cube`, and `Sphere` compose one depth-aware
-3D pass; `createWebGLGeometry`, `defineWebGLPrimitive`, `crcWebGLContext`, and
-`crcAnimationFrame` provide the public lower-level surface.
+3D island; `createWebGLGeometry` and `Mesh` provide custom triangle geometry,
+and `crcAnimationFrame` uses the shared scheduler.
+
+The implemented 2026-09-13 settled-scene design supersedes the 2026-09-09
+record's immediate child drawing, public context/custom-extension,
+component-resource, and source-order-only raster clauses. For a dirty island,
+components compose declarations once without GL work; CRC settles immutable
+render/pick/focus records, renders opaque source order with depth writes and
+transparent bounds-center order back-to-front without depth writes, then Canvas
+composites and transactionally commits the bitmap/pick/focus generation. Final
+alpha is color alpha multiplied by opacity; zero-alpha geometry does not raster
+but remains pick/focus eligible.
 
 Canvas and WebGL leaves now participate in coordinate targeting by default;
 `pointerEvents="none"` makes decorative paint pass through. Structural
@@ -368,11 +387,15 @@ committed model/camera state.
 
 An island is one flattened Canvas paint entry. Core filters, layout, transforms,
 clips, and composition apply outside the completed bitmap; inner WebGL
-primitives cannot use Canvas filter descriptors. Canvas children inside an
+objects cannot use Canvas filter descriptors. Canvas children inside an
 island, WebGL values outside one, and Canvas/WebGL subprimitive interleaving are
 unsupported. The official version-coupled `@crc/core/internal` friend seam is
-reserved for matching CRC packages. Exact current behavior lives in the ten
-updated contracts under `docs/design/`; historical intent lives in:
+reserved for matching CRC packages. Exact current behavior lives in the
+updated contracts under `docs/design/`; the current settled-scene design is:
+
+- `docs/superpowers/specs/2026-09-13-webgl-settled-scene-rendering-design.md`
+
+Historical island intent lives in:
 
 - `docs/superpowers/specs/2026-09-09-webgl-islands-design.md`
 - `docs/superpowers/plans/2026-09-09-webgl-islands-implementation.md`

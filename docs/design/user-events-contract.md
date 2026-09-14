@@ -1,6 +1,7 @@
 # CRC user-event contract
 
-Status: current implemented contract, updated for WebGL islands on 2026-09-10.
+Status: current implemented contract, updated for settled WebGL scenes on
+2026-09-13.
 Focus integration is governed by the implemented
 [focus and keyboard-navigation contract](./focus-and-keyboard-navigation-contract.md).
 
@@ -102,8 +103,10 @@ A `WebGLLayer` is one nested resolver at its exact Canvas composite position.
 It first rejects outer clips and layer bounds, maps through the inverse outer
 world transform to layer-local coordinates and normalized device coordinates,
 then delegates to the bitmap-matched committed scene picker. The picker casts
-one camera ray, resolves geometry or custom hit distances, chooses nearest
-supported depth, and uses later source order for an equal-depth tie.
+one camera ray against geometry from the same settled Mesh/Cube/Sphere
+submissions used by rendering, chooses nearest supported depth, and uses later
+source order for an equal-depth tie. Opaque/transparent raster queues and
+transparent blend order do not alter event identity, ancestry, or picking.
 `pointerEvents="none"` skips an object; transparent island background returns
 miss so lower Canvas content may win. Default picking performs no pixel
 readback, `readPixels`, or hidden GPU ID pass.
@@ -310,9 +313,10 @@ stays readable.
 
 The public `webgl-islands` lesson and deterministic WebGL laboratory add
 transparent pass-through, Canvas/WebGL paint order, passive occlusion,
-object/layer opt-out, depth selection, structural propagation, pointer capture,
-cursor, projected focus bounds, keyboard activation, cache replay, and context
-generation evidence through public package imports.
+object/layer opt-out, depth selection independent of transparent raster order,
+structural propagation, pointer capture, cursor, projected focus bounds,
+keyboard activation, cache replay, and bitmap/pick/focus generation evidence
+through public package imports.
 
 CRC still does not provide semantic controls, DOM accessibility, a retained
 scene graph, hidden editable DOM, pointer/touch gesture recognition, or

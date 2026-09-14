@@ -47,10 +47,11 @@ by these runtime values.
 [`Group3D`](#/api/components/group-3d), [`Mesh`](#/api/components/mesh),
 [`Cube`](#/api/components/cube), and [`Sphere`](#/api/components/sphere).
 [`createWebGLGeometry`](#/api/functions/create-webgl-geometry) builds immutable
-triangle descriptors; [`defineWebGLPrimitive`](#/api/functions/define-webgl-primitive)
-and [`crcWebGLContext`](#/api/hooks/crc-webgl-context) support raw WebGL2
-extensions; [`crcAnimationFrame`](#/api/hooks/crc-animation-frame) uses the
-shared scheduler. See the grouped [WebGL types](#/api/types/webgl).
+triangle descriptors for `Mesh`, the custom-shape extension path;
+[`crcAnimationFrame`](#/api/hooks/crc-animation-frame) uses the shared
+scheduler. A layer's children declare one frame-local scene that is settled and
+rendered only after composition succeeds. See the grouped [WebGL
+types](#/api/types/webgl).
 
 Both packages use the one `@crc/core/jsx-runtime` configured for the source
 file. `@crc/webgl` does not publish a second JSX runtime or hook/event system.

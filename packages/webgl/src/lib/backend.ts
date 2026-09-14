@@ -1,32 +1,27 @@
 import {
   createBackendToken,
-  hasCRCEventHandler,
   type CRCBackendDriver,
   type CRCBackendPrimitiveProgram,
 } from '@crc/core/internal';
 import type { SystemStyle } from '@crc/core';
-import type { CRCWebGLCameraSnapshot } from './types.js';
+import type { ResolvedWebGLCamera } from './math/camera.js';
 import {
-  createWebGLRenderEnvironment,
   releaseWebGLPickParticipation,
-  WebGLResourceGenerationRegistry,
-  withWebGLPrimitiveContext,
-  type WebGLRenderEnvironment,
-} from './render-environment.js';
+  type CRCWebGLGeometryPickRecord,
+} from './pick-ledger.js';
 import {
-  beginWebGLFrame,
-  createWebGLStateBaseline,
-  installWebGLStateBaseline,
-  type WebGLStateBaseline,
-} from './gpu/state.js';
-import { getWebGLPrimitiveHitMetadata } from './primitive-metadata.js';
-import { WebGLGPUResourceCache } from './gpu/resources.js';
+  createWebGLSceneComposer,
+  discardWebGLSceneComposer,
+} from './scene/composer.js';
+import { WebGLSceneRenderer } from './scene/renderer.js';
+import { settleWebGLScene } from './scene/settle.js';
+import type { WebGLSceneComposer } from './scene/types.js';
 
 export const WEBGL_BACKEND_TOKEN = createBackendToken('webgl2');
 
 export interface CreateWebGLBackendOptions {
   readonly gl: WebGL2RenderingContext;
-  readonly getCamera: () => CRCWebGLCameraSnapshot;
+  readonly getCamera: () => ResolvedWebGLCamera;
   readonly getContextGeneration: () => number;
   readonly isContextLost?: (generation: number) => boolean;
 }
@@ -34,14 +29,12 @@ export interface CreateWebGLBackendOptions {
 export interface WebGLCompletedFrame {
   readonly renderedGeneration: number;
   readonly contextGeneration: number;
-  readonly ownedResourceGeneration: number;
-  readonly pickEntries: readonly unknown[];
+  readonly pickEntries: readonly CRCWebGLGeometryPickRecord[];
 }
 
 export interface WebGLBackendDriver
-  extends CRCBackendDriver<WebGLRenderEnvironment> {
+  extends CRCBackendDriver<WebGLSceneComposer> {
   readonly renderedGeneration: number;
-  readonly ownedResourceGeneration: number;
   hasCompletedFrame(): boolean;
   takeFailedFrameTimestamp(): number | undefined;
   takeCompletedFrame(): WebGLCompletedFrame;
@@ -55,90 +48,48 @@ export function createWebGLBackend(
 ): WebGLBackendDriver {
   const { gl } = options;
   const isContextLost = options.isContextLost ?? (() => gl.isContextLost());
-  let baselineGeneration: number | undefined;
-  let stateBaseline: WebGLStateBaseline | undefined;
-  let gpuResourceGeneration: number | undefined;
-  let gpuResources: WebGLGPUResourceCache | undefined;
+  let renderer: WebGLSceneRenderer | undefined;
+  let rendererGeneration: number | undefined;
   let completedFrame: WebGLCompletedFrame | undefined;
   let failedFrameTimestamp: number | undefined;
   let renderedGeneration = 0;
-  let ownedResourceGeneration = 0;
   let contextAvailable = true;
-  const resourceRegistry = new WebGLResourceGenerationRegistry();
+  let disposed = false;
   const invalidContextGenerations = new Set<number>();
+  const finishedComposers = new WeakSet<WebGLSceneComposer>();
+
   return {
     token: WEBGL_BACKEND_TOKEN,
     name: 'webgl2',
     get renderedGeneration() {
       return renderedGeneration;
     },
-    get ownedResourceGeneration() {
-      return ownedResourceGeneration;
-    },
     beginFrame(frameInput) {
       const contextGeneration = options.getContextGeneration();
       if (
+        disposed ||
         !contextAvailable ||
         invalidContextGenerations.has(contextGeneration)
       ) return undefined;
-      if (
-        gpuResources === undefined ||
-        gpuResourceGeneration !== contextGeneration
-      ) {
-        if (gpuResources !== undefined && gpuResourceGeneration !== undefined) {
-          gpuResources.dispose(isContextLost(gpuResourceGeneration));
-        }
-        gpuResources = new WebGLGPUResourceCache(gl, contextGeneration);
-        gpuResourceGeneration = contextGeneration;
-        ownedResourceGeneration += 1;
-      }
-      if (
-        stateBaseline === undefined ||
-        baselineGeneration !== contextGeneration
-      ) {
-        stateBaseline = createWebGLStateBaseline(gl);
-        baselineGeneration = contextGeneration;
-      }
-      const environment = createWebGLRenderEnvironment({
-        gl,
-        contextGeneration,
-        camera: options.getCamera(),
+      const environment = createWebGLSceneComposer({
         frame: frameInput,
-        isContextLost,
-        stateBaseline,
-        gpuResources,
-        resourceRegistry,
+        camera: options.getCamera(),
+        contextGeneration,
       });
-      beginWebGLFrame(
-        gl,
-        frameInput.backingWidth,
-        frameInput.backingHeight,
-        stateBaseline,
-      );
-      if (invalidContextGenerations.has(contextGeneration)) return undefined;
+      if (
+        !contextAvailable ||
+        invalidContextGenerations.has(contextGeneration) ||
+        options.getContextGeneration() !== contextGeneration
+      ) {
+        discardWebGLSceneComposer(environment);
+        return undefined;
+      }
       return { environment };
     },
-    enterComponent(frame) {
-      const { width, height } = frame.environment.backingViewport;
-      const { stateBaseline: frameBaseline } = frame.environment;
-      installWebGLStateBaseline(gl, width, height, frameBaseline);
-      return () => {
-        if (!invalidContextGenerations.has(
-          frame.environment.contextGeneration,
-        )) {
-          installWebGLStateBaseline(gl, width, height, frameBaseline);
-        }
-      };
+    enterComponent() {
+      return () => undefined;
     },
     runPrimitive(frame, input, runProgram) {
-      const hit = getWebGLPrimitiveHitMetadata(input.definition.program);
-      if (hit?.kind === 'none') {
-        assertDecorativeNonParticipation(
-          input.componentName,
-          input.props,
-          input.style,
-        );
-      }
       if (input.style.filter !== undefined) {
         throw new Error(
           `${input.componentName} style.filter is not supported inside ` +
@@ -148,45 +99,112 @@ export function createWebGLBackend(
       const program = input.definition.program as CRCBackendPrimitiveProgram<
         Record<PropertyKey, unknown>,
         SystemStyle,
-        WebGLRenderEnvironment
+        WebGLSceneComposer
       >;
-      runProgram(() => withWebGLPrimitiveContext(
-        frame.environment,
-        () => program(input.props, input.style, frame.environment),
-      ));
+      runProgram(() => program(input.props, input.style, frame.environment));
     },
     finishFrame(frame, success) {
-      if (invalidContextGenerations.has(frame.environment.contextGeneration)) {
-        releaseWebGLPickParticipation(frame.environment.pickEntries);
-        completedFrame = undefined;
-        failedFrameTimestamp = undefined;
+      const composer = frame.environment;
+      if (finishedComposers.has(composer)) {
+        throw new Error('WebGL backend frame is already finished.');
+      }
+      finishedComposers.add(composer);
+      completedFrame = undefined;
+      if (!success) {
+        failedFrameTimestamp = composer.timestamp;
+        if (composer.state === 'open') discardWebGLSceneComposer(composer);
+        releaseComposerPickParticipation(composer);
         return;
       }
-      const { width, height } = frame.environment.backingViewport;
-      installWebGLStateBaseline(
-        gl,
-        width,
-        height,
-        frame.environment.stateBaseline,
-      );
-      if (invalidContextGenerations.has(frame.environment.contextGeneration)) {
-        releaseWebGLPickParticipation(frame.environment.pickEntries);
-        completedFrame = undefined;
+
+      if (isStaleComposer(
+        composer,
+        options,
+        contextAvailable,
+        invalidContextGenerations,
+      )) {
         failedFrameTimestamp = undefined;
+        if (composer.state === 'open') discardWebGLSceneComposer(composer);
+        releaseComposerPickParticipation(composer);
         return;
       }
-      if (success) {
+
+      let settledPickEntries: readonly CRCWebGLGeometryPickRecord[] | undefined;
+      let candidateRenderer: WebGLSceneRenderer | undefined;
+      let ownsCandidateRenderer = false;
+      try {
+        const scene = settleWebGLScene(composer);
+        settledPickEntries = scene.pickEntries;
+        if (isStaleComposer(
+          composer,
+          options,
+          contextAvailable,
+          invalidContextGenerations,
+        )) {
+          releaseWebGLPickParticipation(scene.pickEntries);
+          settledPickEntries = undefined;
+          failedFrameTimestamp = undefined;
+          return;
+        }
+
+        if (renderer && rendererGeneration === scene.contextGeneration) {
+          candidateRenderer = renderer;
+        } else {
+          candidateRenderer = new WebGLSceneRenderer(
+            gl,
+            scene.contextGeneration,
+          );
+          ownsCandidateRenderer = true;
+        }
+        candidateRenderer.render(scene);
+
+        if (isStaleComposer(
+          composer,
+          options,
+          contextAvailable,
+          invalidContextGenerations,
+        )) {
+          if (ownsCandidateRenderer) {
+            candidateRenderer.dispose(isContextLost(scene.contextGeneration));
+          }
+          releaseWebGLPickParticipation(scene.pickEntries);
+          settledPickEntries = undefined;
+          failedFrameTimestamp = undefined;
+          return;
+        }
+
+        if (ownsCandidateRenderer) {
+          const previousRenderer = renderer;
+          const previousGeneration = rendererGeneration;
+          renderer = candidateRenderer;
+          rendererGeneration = scene.contextGeneration;
+          if (previousRenderer && previousGeneration !== undefined) {
+            previousRenderer.dispose(isContextLost(previousGeneration));
+          }
+        }
         renderedGeneration += 1;
         failedFrameTimestamp = undefined;
         completedFrame = Object.freeze({
           renderedGeneration,
-          contextGeneration: frame.environment.contextGeneration,
-          ownedResourceGeneration,
-          pickEntries: Object.freeze(frame.environment.pickEntries.slice()),
+          contextGeneration: scene.contextGeneration,
+          pickEntries: scene.pickEntries,
         });
-      } else {
+        settledPickEntries = undefined;
+      } catch (error) {
+        if (ownsCandidateRenderer && candidateRenderer) {
+          runBackendCleanup(() => candidateRenderer!.dispose(
+            isContextLost(composer.contextGeneration),
+          ));
+        }
+        if (composer.state === 'open') discardWebGLSceneComposer(composer);
+        if (settledPickEntries) {
+          releaseWebGLPickParticipation(settledPickEntries);
+        } else {
+          releaseComposerPickParticipation(composer);
+        }
         completedFrame = undefined;
-        failedFrameTimestamp = frame.environment.timestamp;
+        failedFrameTimestamp = composer.timestamp;
+        throw error;
       }
     },
     hasCompletedFrame() {
@@ -208,61 +226,67 @@ export function createWebGLBackend(
     invalidateContext(generation) {
       contextAvailable = false;
       invalidContextGenerations.add(generation);
-      resourceRegistry.invalidateGeneration(generation);
-      if (
-        gpuResources !== undefined &&
-        gpuResourceGeneration === generation
-      ) {
-        gpuResources.dispose(true);
-        gpuResources = undefined;
-        gpuResourceGeneration = undefined;
-      }
-      if (baselineGeneration === generation) {
-        stateBaseline = undefined;
-        baselineGeneration = undefined;
+      if (renderer && rendererGeneration === generation) {
+        renderer.invalidateContext();
+        renderer = undefined;
+        rendererGeneration = undefined;
       }
       if (completedFrame?.contextGeneration === generation) {
+        releaseWebGLPickParticipation(completedFrame.pickEntries);
         completedFrame = undefined;
       }
       failedFrameTimestamp = undefined;
     },
     restoreContext() {
-      contextAvailable = true;
+      if (!disposed) contextAvailable = true;
     },
     dispose() {
+      if (disposed) return;
+      disposed = true;
       contextAvailable = false;
+      if (completedFrame) {
+        releaseWebGLPickParticipation(completedFrame.pickEntries);
+      }
       completedFrame = undefined;
       failedFrameTimestamp = undefined;
-      resourceRegistry.dispose(isContextLost);
-      if (gpuResources !== undefined && gpuResourceGeneration !== undefined) {
-        gpuResources.dispose(isContextLost(gpuResourceGeneration));
+      if (renderer && rendererGeneration !== undefined) {
+        renderer.dispose(isContextLost(rendererGeneration));
       }
-      gpuResources = undefined;
-      gpuResourceGeneration = undefined;
-      stateBaseline = undefined;
-      baselineGeneration = undefined;
+      renderer = undefined;
+      rendererGeneration = undefined;
       invalidContextGenerations.clear();
     },
   };
 }
 
-function assertDecorativeNonParticipation(
-  componentName: string,
-  props: Readonly<Record<PropertyKey, unknown>>,
-  style: Readonly<SystemStyle>,
+function isStaleComposer(
+  composer: WebGLSceneComposer,
+  options: CreateWebGLBackendOptions,
+  contextAvailable: boolean,
+  invalidContextGenerations: ReadonlySet<number>,
+): boolean {
+  return !contextAvailable ||
+    invalidContextGenerations.has(composer.contextGeneration) ||
+    options.getContextGeneration() !== composer.contextGeneration;
+}
+
+function releaseComposerPickParticipation(
+  composer: WebGLSceneComposer,
 ): void {
-  const styleRecord = style as Readonly<Record<PropertyKey, unknown>>;
-  if (
-    (props.pointerEvents !== undefined && props.pointerEvents !== 'none') ||
-    props.keyboardFocusable !== undefined ||
-    props.keyboardNavigationBounds !== undefined ||
-    props.cursor !== undefined ||
-    styleRecord.cursor !== undefined ||
-    hasCRCEventHandler(props)
-  ) {
-    throw new Error(
-      `${componentName} is decorative (hit kind "none"); event, focus, and ` +
-      'cursor participation is unsupported.',
-    );
+  const entries = composer.meshes.flatMap(mesh => mesh.target ? [{
+    target: mesh.target,
+  }] : []) as unknown as readonly CRCWebGLGeometryPickRecord[];
+  releaseWebGLPickParticipation(entries);
+}
+
+function runBackendCleanup(cleanup: () => void): void {
+  try {
+    cleanup();
+  } catch (error) {
+    try {
+      globalThis.reportError(error);
+    } catch {
+      // Cleanup reporting cannot replace the original frame failure.
+    }
   }
 }

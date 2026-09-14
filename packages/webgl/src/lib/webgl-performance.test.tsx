@@ -6,11 +6,10 @@ import {
   crcState,
   type CRCController,
   type CRCNode,
-  type SystemStyle,
 } from '@crc/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { Cube } from './components/cube.js';
 import { WebGLLayer } from './components/webgl-layer.js';
-import { defineWebGLPrimitive } from './define-webgl-primitive.js';
 import {
   WebGLLayerController,
   resolveWebGLLayerSurface,
@@ -31,29 +30,18 @@ describe('WebGL retained structural performance', () => {
   it('recomposites an unchanged island without child, GL, transfer, upload, or ledger work', () => {
     const counters = installPerformancePlatform();
     let childExecutions = 0;
-    interface CountedStyle extends SystemStyle {
-      tone?: number;
-    }
-    const Counted = defineWebGLPrimitive<
-      { revision: number },
-      CountedStyle
-    >(function renderCounted(_props, _style, context) {
+    function Counted(props: Readonly<{
+      revision: number;
+      style?: Readonly<{ tone?: number }>;
+      onClick?: () => void;
+    }>): CRCNode {
       childExecutions += 1;
-      context.resources.use(
-        gl => {
-          const buffer = gl.createBuffer();
-          if (!buffer) throw new Error('test buffer allocation failed');
-          gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0]), gl.STATIC_DRAW);
-          return buffer;
-        },
-        (buffer, { gl }) => gl.deleteBuffer(buffer),
-        [],
-      );
-      context.gl.drawArrays(context.gl.TRIANGLES, 0, 3);
-    }, {
-      hit: { kind: 'custom', resolve: () => null },
-    });
+      void props.revision;
+      return <Cube
+        onClick={props.onClick}
+        style={{ color: props.style?.tone === 2 ? '#00ff00' : '#ffffff' }}
+      />;
+    }
     const handleClick = () => undefined;
     const scene = (
       revision = 1,
@@ -82,11 +70,12 @@ describe('WebGL retained structural performance', () => {
       childExecutions: 1,
       glDraws: 1,
       transfers: 1,
-      uploads: 1,
+      uploads: 2,
       composites: 1,
       ledgerEntries: 1,
     });
     const firstLedger = counters.committedLedger();
+    const firstGLWork = counters.glWork;
 
     crc(canvas, scene());
     counters.frames.runNext(2);
@@ -94,11 +83,12 @@ describe('WebGL retained structural performance', () => {
       childExecutions: 1,
       glDraws: 1,
       transfers: 1,
-      uploads: 1,
+      uploads: 2,
       composites: 2,
       ledgerEntries: 1,
     });
     expect(counters.committedLedger()).toBe(firstLedger);
+    expect(counters.glWork).toBe(firstGLWork);
 
     crc(canvas, scene(2));
     counters.frames.runNext(3);
@@ -106,7 +96,7 @@ describe('WebGL retained structural performance', () => {
       childExecutions: 2,
       glDraws: 2,
       transfers: 2,
-      uploads: 1,
+      uploads: 2,
       composites: 3,
     });
 
@@ -116,7 +106,7 @@ describe('WebGL retained structural performance', () => {
       childExecutions: 3,
       glDraws: 3,
       transfers: 3,
-      uploads: 1,
+      uploads: 2,
       composites: 4,
     });
 
@@ -126,7 +116,7 @@ describe('WebGL retained structural performance', () => {
       childExecutions: 4,
       glDraws: 4,
       transfers: 4,
-      uploads: 1,
+      uploads: 2,
       composites: 5,
     });
 
@@ -136,7 +126,7 @@ describe('WebGL retained structural performance', () => {
       childExecutions: 5,
       glDraws: 5,
       transfers: 5,
-      uploads: 1,
+      uploads: 2,
       composites: 6,
     });
 
@@ -165,16 +155,15 @@ describe('WebGL retained structural performance', () => {
     const counters = installPerformancePlatform();
     let childExecutions = 0;
     let setRevision: ((value: number) => void) | undefined;
-    const Draw = defineWebGLPrimitive<{ revision: number }, {}>(
-      function renderStateFrame() {
-        childExecutions += 1;
-      },
-      { hit: { kind: 'none' } },
-    );
+    function Draw({ revision }: { revision: number }): CRCNode {
+      childExecutions += 1;
+      void revision;
+      return <Cube pointerEvents="none" />;
+    }
     function Stateful(): CRCNode {
       const [revision, setState] = crcState(0);
       setRevision = setState;
-      return <Draw revision={revision} pointerEvents="none" />;
+      return <Draw revision={revision} />;
     }
     const scene = (
       <WebGLLayer style={{ width: 30, height: 20 }}>
@@ -206,24 +195,21 @@ describe('WebGL retained structural performance', () => {
     let replacementExecutions = 0;
     let shouldFail = false;
     let setRevision: ((value: number) => void) | undefined;
-    const Draw = defineWebGLPrimitive<{ revision: number }, {}>(
-      function renderRecoverableFrame() {
-        childExecutions += 1;
-        if (shouldFail) throw failure;
-      },
-      { hit: { kind: 'none' } },
-    );
+    function Draw({ revision }: { revision: number }): CRCNode {
+      childExecutions += 1;
+      void revision;
+      if (shouldFail) throw failure;
+      return <Cube pointerEvents="none" />;
+    }
     function Stateful(): CRCNode {
       const [revision, setState] = crcState(0);
       setRevision = setState;
-      return <Draw revision={revision} pointerEvents="none" />;
+      return <Draw revision={revision} />;
     }
-    const Replacement = defineWebGLPrimitive<{}, {}>(
-      function renderReplacementFrame() {
-        replacementExecutions += 1;
-      },
-      { hit: { kind: 'none' } },
-    );
+    function Replacement(): CRCNode {
+      replacementExecutions += 1;
+      return <Cube pointerEvents="none" />;
+    }
     const scene = (
       <WebGLLayer style={{ width: 30, height: 20 }}>
         <Stateful />
@@ -231,7 +217,7 @@ describe('WebGL retained structural performance', () => {
     );
     const replacementScene = (
       <WebGLLayer style={{ width: 30, height: 20 }}>
-        <Replacement pointerEvents="none" />
+        <Replacement />
       </WebGLLayer>
     );
     const canvas = createCanvas(30, 20);
@@ -284,13 +270,14 @@ describe('WebGL retained structural performance', () => {
     const counters = installPerformancePlatform();
     let iterations = 0;
     let childExecutions = 0;
-    const Draw = defineWebGLPrimitive<{}, {}>(function renderIterableFrame() {
+    function Draw(): CRCNode {
       childExecutions += 1;
-    }, { hit: { kind: 'none' } });
+      return <Cube pointerEvents="none" />;
+    }
     const children: Iterable<CRCNode> = {
       *[Symbol.iterator]() {
         iterations += 1;
-        yield <Draw pointerEvents="none" />;
+        yield <Draw />;
       },
     };
     const scene = () => (
@@ -314,15 +301,14 @@ describe('WebGL retained structural performance', () => {
   it('invalidates once for focus revision and then reuses the new generation', () => {
     const counters = installPerformancePlatform();
     let childExecutions = 0;
-    const Draw = defineWebGLPrimitive<{}, {}>(function renderFocusedFrame() {
+    function Draw(): CRCNode {
       childExecutions += 1;
-    }, {
-      hit: { kind: 'custom', resolve: () => null },
-    });
+      return <Cube keyboardFocusable onClick={() => undefined} />;
+    }
     const scene = (
       <FocusManagement>
         <WebGLLayer style={{ width: 30, height: 20 }}>
-          <Draw keyboardFocusable onClick={() => undefined} />
+          <Draw />
         </WebGLLayer>
       </FocusManagement>
     );
@@ -362,10 +348,11 @@ describe('WebGL retained structural performance', () => {
   it('includes transparent child enhancers in retained identity', () => {
     const counters = installPerformancePlatform();
     let childExecutions = 0;
-    const Draw = defineWebGLPrimitive<{}, {}>(function renderEnhancedFrame() {
+    function Draw(): CRCNode {
       childExecutions += 1;
-    }, { hit: { kind: 'none' } });
-    const child = <Draw pointerEvents="none" />;
+      return <Cube pointerEvents="none" />;
+    }
+    const child = <Draw />;
     const scene = (directional: boolean) => (
       <FocusManagement>
         <WebGLLayer style={{ width: 30, height: 20 }}>
@@ -395,10 +382,11 @@ describe('WebGL retained structural performance', () => {
   it('invalidates independent X/Y density and context-owned resource generations once', () => {
     const counters = installPerformancePlatform();
     let childExecutions = 0;
-    const Draw = defineWebGLPrimitive<{}, {}>(function renderDensityFrame() {
+    function Draw(): CRCNode {
       childExecutions += 1;
-    }, { hit: { kind: 'none' } });
-    const root = createElement(Draw, { pointerEvents: 'none' });
+      return <Cube pointerEvents="none" />;
+    }
+    const root = createElement(Draw, {});
     const parentCanvas = createCanvas(40, 20);
     const parent = crc(parentCanvas, undefined, { pixelRatio: 1 });
     controllers.add(parent);
@@ -428,14 +416,10 @@ describe('WebGL retained structural performance', () => {
 
     const state = layer as unknown as {
       contextGenerationValue: number;
-      committed?: {
-        contextGeneration: number;
-        ownedResourceGeneration: number;
-      };
+      committed?: { contextGeneration: number };
     };
     expect(state.committed).toMatchObject({
       contextGeneration: 1,
-      ownedResourceGeneration: 1,
     });
     state.contextGenerationValue = 2;
     render(densityY, 7);
@@ -445,7 +429,6 @@ describe('WebGL retained structural performance', () => {
     expect(counters.transfers).toBe(4);
     expect(state.committed).toMatchObject({
       contextGeneration: 2,
-      ownedResourceGeneration: 2,
     });
     layer.dispose();
   });
@@ -455,14 +438,15 @@ describe('WebGL retained structural performance', () => {
     let childExecutions = 0;
     let supersedeDuringRender = false;
     let layer: WebGLLayerController;
-    const Draw = defineWebGLPrimitive<{}, {}>(function renderContextCandidate() {
+    function Draw(): CRCNode {
       childExecutions += 1;
       if (supersedeDuringRender) {
         (layer as unknown as { contextGenerationValue: number })
           .contextGenerationValue = 2;
       }
-    }, { hit: { kind: 'none' } });
-    const root = createElement(Draw, { pointerEvents: 'none' });
+      return <Cube pointerEvents="none" />;
+    }
+    const root = createElement(Draw, {});
     const parentCanvas = createCanvas(30, 20);
     const parent = crc(parentCanvas, undefined, { pixelRatio: 1 });
     controllers.add(parent);
@@ -490,11 +474,9 @@ describe('WebGL retained structural performance', () => {
     expect((layer as unknown as {
       committed?: {
         contextGeneration: number;
-        ownedResourceGeneration: number;
       };
     }).committed).toMatchObject({
       contextGeneration: 2,
-      ownedResourceGeneration: 2,
     });
     layer.dispose();
   });
@@ -519,13 +501,15 @@ function installPerformancePlatform() {
   let transfers = 0;
   let uploads = 0;
   let composites = 0;
+  let glWork = 0;
   let layerController: {
     committed?: { pickLedger: { entries: readonly unknown[] } };
   } | undefined;
   const gl = createNoopGL({
     drawArrays: () => { glDraws += 1; },
+    drawElements: () => { glDraws += 1; },
     bufferData: () => { uploads += 1; },
-  });
+  }, () => { glWork += 1; });
   class PerformanceOffscreenCanvas {
     constructor(
       public width: number,
@@ -565,6 +549,7 @@ function installPerformancePlatform() {
     get transfers() { return transfers; },
     get uploads() { return uploads; },
     get composites() { return composites; },
+    get glWork() { return glWork; },
     committedLedger() {
       return layerController?.committed?.pickLedger;
     },
@@ -617,23 +602,54 @@ function cameraAt(z: number): CRCWebGLPerspectiveCamera {
 
 function createNoopGL(
   overrides: Readonly<Record<string, (...args: any[]) => unknown>>,
+  onCall: (method: string) => void,
 ): WebGL2RenderingContext {
   let constant = 1;
-  const handles = new Set(['createBuffer', 'createShader', 'createProgram']);
+  let handle = 0;
   return new Proxy({}, {
     get(target, property) {
       if (typeof property !== 'string') return undefined;
-      if (property in overrides) return overrides[property];
+      if (property in overrides) {
+        return (...args: unknown[]) => {
+          onCall(property);
+          return overrides[property]!(...args);
+        };
+      }
       const record = target as Record<string, unknown>;
       if (!(property in record)) {
         record[property] = /^[A-Z0-9_]+$/.test(property) ? constant++ :
-          property === 'getParameter' ? () => 8 :
-            property === 'getContextAttributes' ? () => ({
+          property === 'getParameter' ? () => {
+            onCall(property);
+            return 8;
+          } : property === 'getContextAttributes' ? () => ({
               alpha: true,
               depth: true,
               premultipliedAlpha: true,
               preserveDrawingBuffer: false,
-            }) : handles.has(property) ? () => ({}) : () => undefined;
+            }) : property === 'getShaderParameter' ||
+              property === 'getProgramParameter' ? () => {
+                onCall(property);
+                return true;
+              } : property === 'getShaderInfoLog' ||
+                property === 'getProgramInfoLog' ? () => {
+                  onCall(property);
+                  return '';
+                } : property === 'getUniformLocation' ?
+                  (_program: object, name: string) => {
+                    onCall(property);
+                    return { name };
+                  } : property === 'createBuffer' ||
+                    property === 'createShader' ||
+                    property === 'createProgram' ||
+                    property === 'createVertexArray' ? () => {
+                      onCall(property);
+                      return { kind: property, id: ++handle };
+                    } : property === 'isContextLost' ? () => {
+                      onCall(property);
+                      return false;
+                    } : (..._args: unknown[]) => {
+                      onCall(property);
+                    };
       }
       return record[property];
     },

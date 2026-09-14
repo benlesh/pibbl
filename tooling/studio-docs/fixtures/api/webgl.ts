@@ -1,4 +1,4 @@
 export const WebGLLayer = 'webgl-layer';
-export interface CRCWebGLContext {
-  readonly contextGeneration: number;
+export interface CRCWebGLPerspectiveCamera {
+  readonly type: 'perspective';
 }

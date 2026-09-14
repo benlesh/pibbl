@@ -124,9 +124,9 @@ corepack pnpm@11.21.0 playground
 ```
 
 Open <http://localhost:5173/#/examples>. The CRC Interactive Examples Studio
-contains 52 focused lessons: 51 use JSX and one demonstrates the complete
+contains 53 focused lessons: 52 use JSX and one demonstrates the complete
 non-JSX API. Every lesson pairs a live Canvas with editable, type-aware source.
-The separate `#/testing` area contains 19 deterministic laboratories used by
+The separate `#/testing` area contains 20 deterministic laboratories used by
 browser verification. Old `#/scenarios` URLs redirect there.
 
 To exercise built package output instead of source aliases:
@@ -150,8 +150,8 @@ corepack pnpm@11.21.0 playground:built
 - Platform extension: `definePrimitive` plus style-resolution and pure
   measurement types
 - Optional WebGL2 islands from `@crc/webgl`: `WebGLLayer`, `Group3D`, `Mesh`,
-  `Cube`, `Sphere`, `createWebGLGeometry`, `defineWebGLPrimitive`,
-  `crcWebGLContext`, `crcAnimationFrame`, and their public types
+  `Cube`, `Sphere`, `createWebGLGeometry`, `crcAnimationFrame`, and their public
+  camera, geometry, transform, and component types
 - Compiler-only entries: `@crc/core/jsx-runtime` and
   `@crc/core/jsx-dev-runtime`
 
@@ -189,8 +189,11 @@ CRC does not generate semantic DOM descendants or an accessibility tree;
 applications remain responsible for an equivalent accessible DOM experience.
 There is no editable-input adapter, rich text, scrolling, complete CSS engine,
 retained scene graph, WebGL1/WebGPU fallback, multi-camera island, Canvas/WebGL
-subprimitive interleaving, or image CORS policy. Canvas/`Path2D`, font,
-decoded-image, `OffscreenCanvas`, and WebGL2 behavior remain browser-owned.
+subprimitive interleaving, public raw WebGL/shader extension, lighting/material/
+environment system, glow effects, or image CORS policy. Inside one WebGL island,
+children declare a settled scene; source order governs identity and ties while
+the renderer plans opaque and transparent depth-aware passes. Canvas/`Path2D`,
+font, decoded-image, `OffscreenCanvas`, and WebGL2 behavior remain browser-owned.
 
 ## License
 
