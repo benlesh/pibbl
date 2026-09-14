@@ -183,3 +183,69 @@ optimizer reload is recorded above; the clean complete rerun is authoritative.
 Lighting, material, and environment work is the next separate project. The
 settled compose → settle → render → commit lifecycle verified here is its
 prerequisite and must not be reopened by that follow-on work.
+
+## Post-final-review verification on the repaired head
+
+This addendum preserves the pre-fix evidence and cold-cache Vite investigation
+above while recording the final repaired implementation revision
+`8218d34a809be16176155b2b2fd3608de96cefb3`.
+
+The final review found one Important context-loss cleanup gap. Partial shader,
+program, buffer, and vertex-array construction could begin while the context
+was healthy and then try to detach or delete successfully created handles after
+the WebGL generation became lost. Commit `27574b8` (`fix(webgl): abandon lost
+partial resources`) made failure cleanup share one conservative context-loss
+decision. Scoped follow-up review then required realistic browser-loss evidence
+and found that a normally returning no-op geometry upload could still publish a
+resource after loss. Commit `8218d34` (`fix(webgl): fence geometry publication
+on context loss`) added the post-upload validity fence and corrected one
+adjacent renderer fixture to lose the context at its intended failing draw.
+
+The repaired evidence now covers compile/link status becoming false during
+loss, null creation handles after earlier acquisitions, normal-returning upload
+calls that transition the context to lost, and throwing `isContextLost()`
+detectors. Lost or uncertain generations abandon unpublished JavaScript handle
+references without issuing GL detach/delete calls, healthy generations retain
+their exact cleanup, publication occurs only after the validity fence, and an
+operational failure remains primary over detector or cleanup errors. The final
+scoped reviewer found no remaining Critical or Important issue; one unused
+test-double control was left as an optional Minor cleanup only.
+
+Per the final verification instruction, no standalone gate was repeated. The
+single aggregate command was run once:
+
+```sh
+fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 trust
+```
+
+It ran on macOS `26.6.2` (`25G83`), arm64, with Node.js `v24.15.0`, pnpm
+`11.21.0`, Playwright `1.62.1`, and Playwright Chromium `151.0.7922.34`. It
+exited zero on repaired head `8218d34` with these fresh results:
+
+- scenario and documentation checks passed for 53 lessons, 20 test labs, 12
+  guides, 137 current/migration files, 77 historical/work records, 667 baseline
+  and 804 current semantic units, 107 mapped post-baseline units, 53 evidence
+  mappings, and all 953 mutation probes;
+- typecheck, lint/format, package builds, source/built Studio builds, source and
+  packed consumers, Studio documentation acceptance, and the production
+  boundary passed;
+- the complete Chromium suite passed 180 files with 2,369 passed and 2
+  intentionally skipped tests of 2,371 in 25.19 seconds;
+- built-package smoke passed 1 file and 1 test in 670 ms;
+- lifecycle passed 7 files and 32 tests in 10.19 seconds; and
+- structural performance passed 35 tests and intentionally skipped 2 opt-in
+  wall-clock tests across 6 files in 2.15 seconds.
+
+The aggregate visual safeguard again rejected its deliberate mutation,
+preserved every baseline byte, and recovered green; all 6 full-page Studio
+baselines matched. The WebGL expected, actual, and neutral diff artifacts were
+reinspected at 480×300. Expected and actual remain byte-identical at SHA-256
+`ea9ed7ac801052eae0e0c93b016e4ed5ccb623d8dda23985533f27fab6585ae8`,
+the committed expected-image blob remains
+`1e91eb3a8547811283410cfa3e347a64df70939e`, and the footer still reads
+`cube 0 · sphere 0 · revision 1`. The reviewed Task 7 baseline was not changed.
+
+Non-fatal output remained the previously disclosed ignored bare-import warning
+for the side-effect-free core package, Vite's future native-config-loader
+extension warnings, ineffective dynamic-import notices, and large-chunk
+notices. No cold-cache optimizer reload recurred in this final aggregate.
