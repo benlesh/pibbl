@@ -9,7 +9,7 @@ Delivery verification date: 2026-09-14
 ## Scope and environment
 
 Final verification covered the diagram-editor tutorial candidate at
-`29e421e94d7c8ceac670201a1945bdd182242f3d`; this note is committed separately
+`d495dbb6ab87cd2717daaef125b4f67fe460e90b`; this note is committed separately
 after that verified implementation revision.
 
 - Darwin `25.6.0`, arm64
@@ -27,7 +27,8 @@ chrome, selection, dragging, pan and zoom, viewport and Layer, filters,
 keyboard interaction, and finished editor. Every chapter supplied one
 script-only preview frame, reached `Live · changes run automatically`, and
 preserved the expected previous/next links. It additionally covered Reset and
-Share, Chapter 12 teardown to a guide, and the 390×844 narrow layout.
+Share, truthful Clipboard API rejection and fallback success/failure, Chapter
+12 teardown to a guide, and the 390×844 narrow layout.
 
 Catalog validation reported 53 lessons, 12 tutorial snapshots, and 20 test
 labs. Tutorial snapshots remain a tutorial-only catalog: the scenario-source
@@ -67,12 +68,21 @@ the Test Lab baseline.
 Expected, actual, and diff artifacts were inspected before baseline changes.
 The tutorial visual routes and teaser passed exact comparison with no mask:
 
-| Artifact                                       | Dimensions | SHA-256                                                            | Disposition                                                                                                                                                 |
-| ---------------------------------------------- | ---------: | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `studio-diagram-editor-landing.expected.png`   |  1280×2503 | `1d20193067d4bb47e6b8d914ea9643b4c74c08c429a0cee9b6edffa386d1c706` | Updated after review: the tutorial-first landing and current Studio geometry are intentional.                                                               |
-| `studio-diagram-editor-finished.expected.png`  |    874×547 | `77f6e7e0ae632d94d2d98da8137d441ddfc25b3d07bef199c7faac598c6f8b6a` | Retained: the finished live editor frame matched exactly.                                                                                                   |
-| `studio-search-open.expected.png`              |  1280×1071 | `1f6bbbe04ba8249f481f5847881daa4797b671ffc66045e110dea39b5268ac0d` | Replaced only with explicit user authorization. The modal UI is unchanged; the intentionally changed dimmed background is the tutorial-first Learn landing. |
-| `tutorials/diagram-editor/finished-editor.png` |    960×600 | `3e809bc6bd63346404d330a48b5f2687bbe1786d9e8a72d61c632c81f528c702` | Retained; the teaser check reported zero differing pixels.                                                                                                  |
+| Artifact                                       | Dimensions | SHA-256                                                            | Final-wave disposition                                                                                                            |
+| ---------------------------------------------- | ---------: | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| `studio-diagram-editor-landing.expected.png`   |  1280×2503 | `e526f7ea4b3b23dff03d0c1f2a8ce3e51a76c7cc69812e380beaaeb2c6e0f74b` | Updated after inspection; its 26,661 changed pixels are confined to the corrected teaser region.                                  |
+| `studio-diagram-editor-finished.expected.png`  |    874×546 | `7cb5ed2b52e12b13c69bba2944b050cb020dc29a515c059191143555c3c98747` | Updated after inspection for Ship at workspace y=210 and the rerouted connectors; Chromium also removed one capture-height pixel. |
+| `tutorials/diagram-editor/finished-editor.png` |    960×600 | `0ec41c5517b1bcf4f4cb9ca71c15194571cb45da2823cd6b70027dc20b77d895` | Updated after inspection; 33,833 changed pixels cover only Ship's old/new positions and affected connectors.                      |
+| `studio-search-open.expected.png`              |  1280×1071 | `1f6bbbe04ba8249f481f5847881daa4797b671ffc66045e110dea39b5268ac0d` | Untouched in the final wave; it retains the earlier explicitly authorized baseline.                                               |
+| `studio-test-lab.expected.png`                 |  1280×1326 | `275e4398fa0525e97f0f22b69536a74527f9f9bbace951ebd1d0fabcb1d12722` | Untouched in the final wave.                                                                                                      |
+
+The landing diff bounds were `[779, 661]..[1101, 897]`; the teaser diff bounds
+were `[498, 146]..[868, 417]`. The old 874×547 and new 874×546 finished-frame
+captures necessarily produced a full-frame byte diff, so both full images were
+inspected directly: the new composition preserves every card, label, grid,
+status region, and connector, with only the intended Ship move and connector
+routing change. Search-open, Test Lab, and every unrelated baseline remained
+byte-identical.
 
 The Studio visual run reported: `Matched diagram-editor teaser at 960×600 with
 zero differing pixels.` and `Matched 8 CRC studio visual baselines.` No other
@@ -87,21 +97,27 @@ env PATH=/Users/benlesh/.local/share/fnm/node-versions/v24.15.0/installation/bin
 ```
 
 It exited zero at implementation revision
-`29e421e94d7c8ceac670201a1945bdd182242f3d`. Fresh results included:
+`d495dbb6ab87cd2717daaef125b4f67fe460e90b`. Fresh results included:
 
 - scenario validation: 53 lessons, 12 tutorial snapshots, and 20 test labs;
 - documentation: 12 guides, 151 current/migration files, 74 historical/work
-  records, 77 values, 175 types, 27 acceptance rows, 199 parsed snippets, 8
-  extracted TypeScript programs, 66 compiler-checked API examples, 800 current
-  semantic units, 14 current normative contracts, 107 mapped post-baseline
-  units, 53 direct evidence mappings, 85 baseline-derived field migrations,
-  149 presentation sources, and 944 RED mutation probes;
-- complete browser suite: 179 files, 2,393 passed and 2 skipped tests of 2,395;
+  records, 77 values, 175 types, 27 acceptance rows, 202 parsed snippets, 8
+  extracted TypeScript programs, 66 compiler-checked API examples, 667
+  pre-Task-14 and 800 current semantic units across 12 baseline-snapshotted and
+  14 current normative contracts, 107 mapped post-baseline units, 53 direct
+  evidence mappings, 85 baseline-derived field migrations, 149 presentation
+  sources, and 944 RED mutation probes;
+- Studio API coverage: 77 core values, 176 core types, 9 WebGL values, and 23
+  WebGL types; declaration verification covered exact export-name parity and
+  198 structural types against source and built packages;
+- complete browser suite: 179 files, 2,401 passed and 2 skipped tests of 2,403;
 - packed Bundler and NodeNext consumer, declarations, runtime exports, blocked
   deep-import and no-source checks: passed; optimized focus output was
   162,540 bytes without focus and 186,461 with focus;
 - Studio documentation acceptance, visual safeguard recovery, the eight Studio
-  baselines, and built-package smoke: passed; and
+  baselines, and built-package smoke: passed. The isolated acceptance build
+  preserved `playground/dist` at SHA-256
+  `495be6903cdd61233749c41881156b4887f8969088c5498ddf60f256be5a46d7`;
 - lifecycle: 7 files and 33 tests passed; structural performance: 6 files with
   35 passed and 2 skipped tests of 37.
 
@@ -123,12 +139,15 @@ The implementation commits before this field record are:
 - `556314226f0fbbba32b623b08ade43d76432a25b` — visual capture readiness.
 - `29e421e94d7c8ceac670201a1945bdd182242f3d` — decoded public-asset
   containment and per-chapter serialized relationship acceptance.
+- `d495dbb6ab87cd2717daaef125b4f67fe460e90b` — final broad-review
+  corrections and focused evidence.
 
-Self-review found no tutorial contamination of the Test Lab catalog and no
-baseline update beyond the inspected landing plus the explicitly authorized
-search-open replacement. The isolated worktree did not modify
-`docs/strategy/particle-effects-research.md` or include the unrelated main
-checkout particle-effects work. The remaining limitation is the narrowly
+Self-review found no tutorial contamination of the Test Lab catalog. Earlier
+work updated the inspected landing plus the explicitly authorized search-open
+baseline; the final wave updated only the teaser, landing, and finished-editor
+baselines affected by corrected canonical geometry. The isolated worktree did
+not modify `docs/strategy/particle-effects-research.md` or include the unrelated
+main checkout particle-effects work. The remaining limitation is the narrowly
 documented Chromium Test Lab compositor behavior above; it is contained to the
 visual verifier and leaves the strict baseline comparison intact.
 
@@ -148,3 +167,30 @@ serialized `chapter` equals the canonical numeric position and its
 `chapterCount` equals 12. Existing rendered heading, workbench, and pagination
 assertions remain in place. The focused Studio acceptance and the complete
 trust gate passed on the revision recorded above.
+
+## Final broad-review correction
+
+The grouped correction wave restored the Chapter 4–12 cumulative vocabulary
+and all four canonical coordinates, including Ship at workspace y=210. It
+returned Chapters 8–12 to direct supported Group/Clip wheel props and brought
+the Studio declarations into structural-event parity with source and built
+packages. Chapters 11–12 now keep drag refs and cursor state in each `NodeCard`,
+while `Workspace` owns pan state; public-runtime evidence removes a captured
+target before pointer-up and observes no ghost loss, movement, or cursor.
+
+Capture-loss and pointer-up fallback evidence are separate. A handler-level
+`lostpointercapture` before pointer-up clears the Chapter 7 application session;
+the separate CDP case records zero native loss events after direct release and
+proves pointer-up still terminates ownership. Clipboard acceptance rejects the
+Clipboard API, verifies the exact copied URL through the fallback, and checks
+false and throwing fallback results, cleanup, truthful status, and absence of
+unhandled page errors.
+
+Focused RED began with 36 tutorial tests: 33 passed and 3 failed on the
+eleven-entry catalog, leaked `Path2D.moveTo`, and stale Ship geometry. The
+strict structural consumer separately failed all eight container event props
+with TS2322, and the clipboard acceptance timed out waiting for the required
+failure state. Focused GREEN finished with 70 tutorial/share tests, exact
+declaration parity and structural compilation, scenario/catalog validation,
+typecheck, lint, Studio documentation acceptance, teaser zero-diff, and two
+targeted Studio baseline matches before the complete trust run above.
