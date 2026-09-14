@@ -44,6 +44,7 @@ interface TextPaint {
   readonly text: string;
   readonly x: number;
   readonly y: number;
+  readonly textBaseline: CanvasTextBaseline;
   readonly frame: number;
 }
 
@@ -210,7 +211,13 @@ async function renderTutorialSnapshot(slug: string): Promise<{
   context.fillText = function (...args) {
     const [text, x, y] = args;
     const point = new DOMPoint(x, y).matrixTransform(this.getTransform());
-    textPaints.push({ text, x: point.x, y: point.y, frame });
+    textPaints.push({
+      text,
+      x: point.x,
+      y: point.y,
+      textBaseline: this.textBaseline,
+      frame,
+    });
     fillText.apply(this, args);
   };
 
@@ -609,6 +616,17 @@ it("allocates the Chapter 5 editor chrome regions through Absolute", async () =>
       expect.objectContaining({ y: 568, height: 32 }),
     ]),
   );
+});
+
+it("centers the finished editor Reset View label within its button", async () => {
+  const { textPaints } = await renderTutorialSnapshot(
+    "diagram-editor-finished",
+  );
+  expect(textPaints.find(({ text }) => text === "RESET VIEW")).toMatchObject({
+    x: 878,
+    y: 28,
+    textBaseline: "middle",
+  });
 });
 
 it("selects the Idea body from the Chapter 6 initial Sketch selection", async () => {
