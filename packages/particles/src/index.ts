@@ -1,3 +1,6 @@
+export { defineParticleEffect2D } from './lib/definition.js';
+export { particle } from './lib/particle.js';
+
 export type {
   CRCParticleAppearance,
   CRCParticleBounds2D,
