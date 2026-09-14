@@ -116,17 +116,6 @@ function reportSecondaryStateError(error: unknown): void {
   }
 }
 
-/** Starts one transparent color/depth frame from the same explicit baseline. */
-export function beginWebGLFrame(
-  gl: WebGL2RenderingContext,
-  width: number,
-  height: number,
-  baseline: WebGLStateBaseline,
-): void {
-  installWebGLStateBaseline(gl, width, height, baseline);
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-}
-
 /** Installs the fixed state dependencies for opaque settled-scene draws. */
 export function installOpaqueWebGLPass(gl: WebGL2RenderingContext): void {
   gl.colorMask(true, true, true, true);

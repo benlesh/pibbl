@@ -13,17 +13,11 @@ import {
   intersectRayTriangle,
 } from './math/ray.js';
 import {
-  cloneCustomHitRecord,
-  snapshotWebGLPickCamera,
-  type CRCWebGLCustomPickRecord,
   type CRCWebGLGeometryPickRecord,
   type CRCWebGLPickLedger,
 } from './pick-ledger.js';
-import type {
-  CRCWebGLCameraSnapshot,
-  CRCWebGLPrimitiveHitInput,
-  CRCWebGLVector3,
-} from './types.js';
+import type { ResolvedWebGLCamera } from './math/camera.js';
+import type { CRCWebGLVector3 } from './types.js';
 
 const HIT_MISS = 0;
 const HIT_TARGET = 2;
@@ -55,7 +49,7 @@ const scratchPools = new WeakMap<CRCWebGLPickLedger, ScenePickerScratchPool>();
 /** Resolves one committed WebGL scene into core's caller-owned hit output. */
 export function pickScene(
   ledger: CRCWebGLPickLedger,
-  camera: CRCWebGLCameraSnapshot,
+  camera: ResolvedWebGLCamera,
   localX: number,
   localY: number,
   output: CRCHitTestOutput,
@@ -104,9 +98,7 @@ export function pickScene(
 
     for (const entry of ledger.entries) {
       if (!isBackendEventTargetLive(entry.target)) continue;
-      const distance = entry.kind === 'geometry' ?
-        intersectGeometry(entry, scratch) :
-        resolveCustom(entry, localX, localY, ndcX, ndcY, scratch);
+      const distance = intersectGeometry(entry, scratch);
       if (
         distance === undefined ||
         !isBackendEventTargetLive(entry.target)
@@ -200,51 +192,9 @@ function intersectGeometry(
   return Number.isFinite(nearest) ? nearest / localDirectionLength : undefined;
 }
 
-function resolveCustom(
-  entry: CRCWebGLCustomPickRecord,
-  layerX: number,
-  layerY: number,
-  ndcX: number,
-  ndcY: number,
-  scratch: ScenePickerScratch,
-): number | undefined {
-  const input = Object.freeze({
-    props: cloneCustomHitRecord(entry.props, entry.componentName, 'props'),
-    style: cloneCustomHitRecord(entry.style, entry.componentName, 'style'),
-    layerX,
-    layerY,
-    ndcX,
-    ndcY,
-    rayOrigin: Object.freeze([
-      scratch.worldOrigin[0]!,
-      scratch.worldOrigin[1]!,
-      scratch.worldOrigin[2]!,
-    ]) as CRCWebGLVector3,
-    rayDirection: Object.freeze([
-      scratch.worldDirection[0]!,
-      scratch.worldDirection[1]!,
-      scratch.worldDirection[2]!,
-    ]) as CRCWebGLVector3,
-    modelMatrix: new Float32Array(entry.model),
-    camera: snapshotWebGLPickCamera(entry.camera),
-  }) satisfies CRCWebGLPrimitiveHitInput<
-    Readonly<Record<PropertyKey, unknown>>,
-    Readonly<Record<PropertyKey, unknown>>
-  >;
-  const distance = entry.resolve(input);
-  if (distance === null) return undefined;
-  if (!Number.isFinite(distance) || distance < 0) {
-    throw new TypeError(
-      `${entry.componentName} custom hit resolver must return null or a ` +
-      'finite nonnegative ray distance.',
-    );
-  }
-  return distance;
-}
-
 function projectDistanceToDepth(
   distance: number,
-  camera: CRCWebGLCameraSnapshot,
+  camera: ResolvedWebGLCamera,
   scratch: ScenePickerScratch,
 ): number | undefined {
   scratch.worldHit[0] = scratch.worldOrigin[0]! +

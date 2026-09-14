@@ -1,5 +1,6 @@
 import { getWebGLGeometryData } from '../geometry/geometry.js';
 import { transformPointMatrix4 } from '../math/matrix4.js';
+import type { CRCWebGLVector3 } from '../types.js';
 import {
   commitWebGLPickLedger,
   createWebGLPickLedger,
@@ -84,7 +85,11 @@ function settleMesh(
   const world = new Float32Array(3);
   const view = new Float32Array(3);
   transformPointMatrix4(world, mesh.model, center);
-  transformPointMatrix4(view, camera.viewMatrix, world);
+  transformPointMatrix4(
+    view,
+    camera.viewMatrix,
+    world as unknown as CRCWebGLVector3,
+  );
   const viewDepth = -view[2]!;
   if (!Number.isFinite(viewDepth)) {
     const source = mesh.source;

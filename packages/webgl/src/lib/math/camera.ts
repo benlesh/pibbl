@@ -1,5 +1,4 @@
 import type {
-  CRCWebGLCameraSnapshot,
   CRCWebGLPerspectiveCamera,
   CRCWebGLVector3,
 } from '../types.js';
@@ -10,7 +9,13 @@ import {
   setPerspectiveMatrix4,
 } from './matrix4.js';
 
-export interface ResolvedWebGLCamera extends CRCWebGLCameraSnapshot {
+export interface ResolvedWebGLCamera {
+  readonly descriptor: CRCWebGLPerspectiveCamera;
+  readonly aspect: number;
+  readonly viewMatrix: Readonly<Float32Array>;
+  readonly projectionMatrix: Readonly<Float32Array>;
+  readonly projectionViewMatrix: Readonly<Float32Array>;
+  readonly inverseProjectionViewMatrix: Readonly<Float32Array>;
   readonly viewport: Readonly<{ width: number; height: number }>;
   readonly generationValues: readonly number[];
 }

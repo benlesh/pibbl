@@ -1,6 +1,5 @@
 import {
   createBackendToken,
-  hasCRCEventHandler,
   type CRCBackendDriver,
   type CRCBackendPrimitiveProgram,
 } from '@crc/core/internal';
@@ -10,7 +9,6 @@ import {
   releaseWebGLPickParticipation,
   type CRCWebGLGeometryPickRecord,
 } from './pick-ledger.js';
-import { getWebGLPrimitiveHitMetadata } from './primitive-metadata.js';
 import {
   createWebGLSceneComposer,
   discardWebGLSceneComposer,
@@ -92,14 +90,6 @@ export function createWebGLBackend(
       return () => undefined;
     },
     runPrimitive(frame, input, runProgram) {
-      const hit = getWebGLPrimitiveHitMetadata(input.definition.program);
-      if (hit?.kind === 'none') {
-        assertDecorativeNonParticipation(
-          input.componentName,
-          input.props,
-          input.style,
-        );
-      }
       if (input.style.filter !== undefined) {
         throw new Error(
           `${input.componentName} style.filter is not supported inside ` +
@@ -298,26 +288,5 @@ function runBackendCleanup(cleanup: () => void): void {
     } catch {
       // Cleanup reporting cannot replace the original frame failure.
     }
-  }
-}
-
-function assertDecorativeNonParticipation(
-  componentName: string,
-  props: Readonly<Record<PropertyKey, unknown>>,
-  style: Readonly<SystemStyle>,
-): void {
-  const styleRecord = style as Readonly<Record<PropertyKey, unknown>>;
-  if (
-    (props.pointerEvents !== undefined && props.pointerEvents !== 'none') ||
-    props.keyboardFocusable !== undefined ||
-    props.keyboardNavigationBounds !== undefined ||
-    props.cursor !== undefined ||
-    styleRecord.cursor !== undefined ||
-    hasCRCEventHandler(props)
-  ) {
-    throw new Error(
-      `${componentName} is decorative (hit kind "none"); event, focus, and ` +
-      'cursor participation is unsupported.',
-    );
   }
 }

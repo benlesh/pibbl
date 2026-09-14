@@ -3,7 +3,6 @@ import {
   type WebGLRendererResourceTransaction,
 } from '../gpu/renderer-resources.js';
 import {
-  beginWebGLFrame,
   createWebGLStateBaseline,
   installOpaqueWebGLPass,
   installTransparentWebGLPass,
@@ -38,12 +37,13 @@ export class WebGLSceneRenderer {
     this.baseline = baseline;
     const transaction = this.resources.beginRender();
     try {
-      beginWebGLFrame(
+      installWebGLStateBaseline(
         this.gl,
         scene.backingViewport.width,
         scene.backingViewport.height,
         baseline,
       );
+      this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
       installOpaqueWebGLPass(this.gl);
       for (const mesh of scene.opaque) {
         drawMesh(this.gl, transaction, scene, mesh);

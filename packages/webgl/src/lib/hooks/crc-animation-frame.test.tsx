@@ -6,13 +6,13 @@ import {
   track,
   tween,
   type CRCController,
+  type CRCNode,
   type CRCPlayback,
-  type SystemStyle,
 } from '@crc/core';
 import { getCurrentFrameTimestamp } from '@crc/core/internal';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { Cube } from '../components/cube.js';
 import { WebGLLayer } from '../components/webgl-layer.js';
-import { defineWebGLPrimitive } from '../define-webgl-primitive.js';
 import { crcAnimationFrame } from '../../index.js';
 
 const controllers = new Set<CRCController>();
@@ -34,24 +34,13 @@ describe('crcAnimationFrame', () => {
     const output = signal(0, { debugName: 'WebGL animation integration' });
     const renderedValues: number[] = [];
     let playback!: CRCPlayback;
-    type AnimatedStyle = SystemStyle & { readonly value: number };
-    const Draw = defineWebGLPrimitive<{}, AnimatedStyle>(
-      function renderAnimatedSignal(_props, style) {
-        renderedValues.push(style.value);
-      },
-      { hit: { kind: 'none' } },
-    );
-    function Animated(): ReturnType<typeof Draw> {
+    function Animated(): CRCNode {
       playback = crcPlayback(track(
         output,
         tween({ from: 0, to: 10, duration: 100 }),
       ));
-      return (
-        <Draw
-          pointerEvents="none"
-          style={{ value: output.get() }}
-        />
-      );
+      renderedValues.push(output.get());
+      return <Cube pointerEvents="none" />;
     }
     const canvas = createCanvas(20, 20);
     const controller = crc(canvas, (
@@ -84,12 +73,9 @@ describe('crcAnimationFrame', () => {
       CanvasRenderingContext2D.prototype,
       'drawImage',
     ).mockImplementation(() => undefined);
-    const Draw = defineWebGLPrimitive<{}, {}>(function renderAnimatedDraw() {}, {
-      hit: { kind: 'none' },
-    });
-    function Animated(): ReturnType<typeof Draw> {
+    function Animated(): CRCNode {
       childTimestamps.push(crcAnimationFrame());
-      return <Draw pointerEvents="none" />;
+      return <Cube pointerEvents="none" />;
     }
     function CanvasSibling(): ReturnType<typeof Rectangle> {
       canvasTimestamps.push(getCurrentFrameTimestamp());
@@ -138,12 +124,9 @@ describe('crcAnimationFrame', () => {
     vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
       .mockImplementation(() => undefined);
     const timestamps: Array<{ key: string; timestamp: number }> = [];
-    const Draw = defineWebGLPrimitive<{}, {}>(function renderReplacementDraw() {}, {
-      hit: { kind: 'none' },
-    });
-    function Animated({ label }: { label: string }): ReturnType<typeof Draw> {
+    function Animated({ label }: { label: string }): CRCNode {
       timestamps.push({ key: label, timestamp: crcAnimationFrame() });
-      return <Draw pointerEvents="none" />;
+      return <Cube pointerEvents="none" />;
     }
     const scene = (key: string) => (
       <WebGLLayer style={{ width: 20, height: 20 }}>
@@ -181,12 +164,9 @@ describe('crcAnimationFrame', () => {
       .mockImplementation(() => undefined);
     const childTimestamps: number[] = [];
     const parentLabels: string[] = [];
-    const Draw = defineWebGLPrimitive<{}, {}>(function renderOverlapDraw() {}, {
-      hit: { kind: 'none' },
-    });
-    function Animated(): ReturnType<typeof Draw> {
+    function Animated(): CRCNode {
       childTimestamps.push(crcAnimationFrame());
-      return <Draw pointerEvents="none" />;
+      return <Cube pointerEvents="none" />;
     }
     function ParentProbe({ label }: { label: string }): void {
       parentLabels.push(label);
@@ -194,7 +174,7 @@ describe('crcAnimationFrame', () => {
     const scene = (animated: boolean, label: string) => (
       <>
         <WebGLLayer style={{ width: 20, height: 20 }}>
-          {animated ? <Animated /> : <Draw pointerEvents="none" />}
+          {animated ? <Animated /> : <Cube pointerEvents="none" />}
         </WebGLLayer>
         <ParentProbe label={label} />
       </>
@@ -221,12 +201,9 @@ describe('crcAnimationFrame', () => {
       .mockImplementation(() => undefined);
     let iterations = 0;
     const timestamps: number[] = [];
-    const Draw = defineWebGLPrimitive<{}, {}>(function renderIterableDraw() {}, {
-      hit: { kind: 'none' },
-    });
-    function Animated(): ReturnType<typeof Draw> {
+    function Animated(): CRCNode {
       timestamps.push(crcAnimationFrame());
-      return <Draw pointerEvents="none" />;
+      return <Cube pointerEvents="none" />;
     }
     const children = (function* oneShotChildren() {
       iterations += 1;
@@ -319,6 +296,7 @@ function installAnimationPlatform(): void {
 
 function createNoopGL(): WebGL2RenderingContext {
   let constant = 1;
+  let handle = 0;
   return new Proxy({}, {
     get(target, property) {
       if (typeof property !== 'string') return undefined;
@@ -331,7 +309,19 @@ function createNoopGL(): WebGL2RenderingContext {
               depth: true,
               premultipliedAlpha: true,
               preserveDrawingBuffer: false,
-            }) : () => undefined;
+            }) : property === 'getShaderParameter' ||
+              property === 'getProgramParameter' ? () => true :
+              property === 'getShaderInfoLog' ||
+                property === 'getProgramInfoLog' ? () => '' :
+                property === 'getUniformLocation' ?
+                  (_program: object, name: string) => ({ name }) :
+                  property === 'createShader' ||
+                    property === 'createProgram' ||
+                    property === 'createVertexArray' ||
+                    property === 'createBuffer' ?
+                    () => ({ kind: property, id: ++handle }) :
+                    property === 'isContextLost' ? () => false :
+                      () => undefined;
       }
       return record[property];
     },

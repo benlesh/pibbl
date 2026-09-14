@@ -28,6 +28,7 @@ import {
 import {
   applyWebGLFocusMetadata,
   commitWebGLPickEntries,
+  releaseWebGLPickParticipation,
   type CRCWebGLPickLedger,
   type CRCWebGLPickRecord,
 } from './pick-ledger.js';
@@ -35,7 +36,6 @@ import { pickScene } from './scene-picker.js';
 import type {
   CRCWebGLPerspectiveCamera,
 } from './types.js';
-import { releaseWebGLPickParticipation } from './render-environment.js';
 
 const WEBGL_CONTEXT_ATTRIBUTES: WebGLContextAttributes = Object.freeze({
   alpha: true,

@@ -1,12 +1,5 @@
-import { createElement, crc, type CRCNode } from '@crc/core';
-import { executeBackendCRC, mountBackendCRC } from '@crc/core/internal';
 import { describe, expect, it } from 'vitest';
-import { createWebGLBackend } from '../backend.js';
-import { defineWebGLPrimitive } from '../define-webgl-primitive.js';
-import { resolveCamera } from '../math/camera.js';
-import type { CRCWebGLTransformStyle } from '../types.js';
 import {
-  beginWebGLFrame,
   createWebGLStateBaseline,
   installOpaqueWebGLPass,
   installTransparentWebGLPass,
@@ -14,16 +7,14 @@ import {
 } from './state.js';
 
 describe('WebGL state baseline', () => {
-  it('begins from transparent color and depth clear values and clears both buffers', () => {
+  it('installs transparent color and depth clear values without issuing a clear', () => {
     const recording = createRecordingGL();
     const baseline = createWebGLStateBaseline(recording.gl);
 
-    beginWebGLFrame(recording.gl, 320, 180, baseline);
+    installWebGLStateBaseline(recording.gl, 320, 180, baseline);
 
-    expect(recording.operations.at(-1)).toEqual([
-      'clear',
-      recording.gl.COLOR_BUFFER_BIT | recording.gl.DEPTH_BUFFER_BIT,
-    ]);
+    expect(recording.operations.some(([operation]) => operation === 'clear'))
+      .toBe(false);
     expect(recording.snapshot()).toMatchObject({
       clearColor: [0, 0, 0, 0],
       clearDepth: 1,
@@ -78,74 +69,6 @@ describe('WebGL state baseline', () => {
     }
   });
 
-  it('gives the next primitive the baseline after a sibling mutates GL state', () => {
-    const recording = createRecordingGL();
-    let observed: Record<string, unknown> | undefined;
-    const Mutator = defineWebGLPrimitive<{}, CRCWebGLTransformStyle>(
-      function renderMutator(_props, _style, context) {
-        mutateEveryState(context.gl);
-      },
-      { hit: { kind: 'none' } },
-    );
-    const Observer = defineWebGLPrimitive<{}, CRCWebGLTransformStyle>(
-      function renderObserver() {
-        observed = recording.snapshot();
-      },
-      { hit: { kind: 'none' } },
-    );
-    const mounted = mountScene(recording.gl, [
-      createElement(Mutator, { key: 'mutator', pointerEvents: 'none' }),
-      createElement(Observer, { key: 'observer', pointerEvents: 'none' }),
-    ]);
-
-    executeBackendCRC(mounted.mount, mounted.root, 10);
-
-    expect(observed).toEqual(expectedBaseline(recording.gl, 80, 40, 8));
-    expect(recording.getParameterCalls).toBe(1);
-    mounted.dispose();
-  });
-
-  it('restores the baseline when a primitive callback throws', () => {
-    const recording = createRecordingGL();
-    const failure = new Error('custom draw failed');
-    const Throwing = defineWebGLPrimitive<{}, CRCWebGLTransformStyle>(
-      function renderThrowing(_props, _style, context) {
-        mutateEveryState(context.gl);
-        throw failure;
-      },
-      { hit: { kind: 'none' } },
-    );
-    const mounted = mountScene(
-      recording.gl,
-      createElement(Throwing, { pointerEvents: 'none' }),
-    );
-
-    expect(() => executeBackendCRC(mounted.mount, mounted.root, 11)).toThrow(failure);
-    expect(recording.snapshot()).toEqual(expectedBaseline(recording.gl, 80, 40, 8));
-    expect(recording.getParameterCalls).toBe(1);
-    mounted.dispose();
-  });
-
-  it('queries the texture-unit capability once for each context generation', () => {
-    const recording = createRecordingGL();
-    let generation = 1;
-    const Probe = defineWebGLPrimitive<{}, CRCWebGLTransformStyle>(
-      function renderGenerationProbe() {},
-      { hit: { kind: 'none' } },
-    );
-    const root = createElement(Probe, { pointerEvents: 'none' });
-    const mounted = mountScene(recording.gl, root, () => generation);
-
-    executeBackendCRC(mounted.mount, root, 20);
-    executeBackendCRC(mounted.mount, root, 21);
-    expect(recording.getParameterCalls).toBe(1);
-
-    generation = 2;
-    executeBackendCRC(mounted.mount, root, 22);
-    expect(recording.getParameterCalls).toBe(2);
-    mounted.dispose();
-  });
-
   it('installs the opaque pass with blending off and less-equal depth writes on', () => {
     const recording = createRecordingGL();
     mutateEveryState(recording.gl);
@@ -186,35 +109,6 @@ describe('WebGL state baseline', () => {
     });
   });
 });
-
-function mountScene(
-  gl: WebGL2RenderingContext,
-  root: CRCNode,
-  getContextGeneration: () => number = () => 1,
-) {
-  const parentCanvas = document.createElement('canvas');
-  const parent = crc(parentCanvas, undefined);
-  const camera = resolveCamera(undefined, 40, 20);
-  const driver = createWebGLBackend({
-    gl,
-    getCamera: () => camera,
-    getContextGeneration,
-  });
-  const mount = mountBackendCRC(new OffscreenCanvas(80, 40), root, {
-    parent: parentCanvas,
-    logicalWidth: 40,
-    logicalHeight: 20,
-    driver,
-  });
-  return {
-    root,
-    mount,
-    dispose() {
-      mount.dispose();
-      parent.dispose();
-    },
-  };
-}
 
 interface RecordingGL {
   readonly gl: WebGL2RenderingContext;
