@@ -4,8 +4,8 @@
 > approved design; current shipped behavior remains governed by `docs/design/`
 > until implementation lands.
 
-Status: design approved in conversation on 2026-09-14; written-spec review
-pending.
+Status: design approved in conversation on 2026-09-14; implementation planning
+complete for the foundation and baseline 2D vertical slice.
 
 Date: 2026-09-14
 
@@ -66,6 +66,14 @@ inspectable; opaque or platform-dependent geometry requires an explicit
 collider. Every physics shape also has CRC-owned drawing support, and custom
 primitives can declare a pure collider-shape resolver without a global
 registry.
+
+The same immutable shapes are useful without a running world. Lightweight
+`@crc/physics/2d/geometry` and `@crc/physics/3d/geometry` entry points expose
+pure bounds, mass-property, point, distance, overlap, contact, ray-cast, and
+shape-cast operations. They have no scheduler, Canvas, WebGL, component, or
+world dependency. Public geometric results are semantic values rather than
+raw solver manifolds; broad-phase structures, warm-start data, and individual
+solver algorithms remain private but are tested directly inside the package.
 
 Two-dimensional and three-dimensional worlds share the scheduler and
 transaction model but remain different solvers. They do not collide directly.
@@ -145,6 +153,8 @@ loop beside them.
   primitive where the source data permits it, and require explicit stable
   geometry where it does not.
 - Supply a CRC rendering component for every public physics shape.
+- Make immutable shapes and core collision operations independently usable and
+  testable without mounting a world or loading CRC rendering and scheduling.
 - Provide forces, impulses, contacts, overlap events, collision filtering,
   ray casts, shape casts, overlap queries, sleeping, and opt-in continuous
   collision detection.
@@ -178,6 +188,8 @@ loop beside them.
   and WebGL coordinate spaces.
 - Public contact modification or arbitrary JavaScript callbacks inside the
   solver hot loop.
+- Publishing raw GJK/EPA/SAT state, broad-phase nodes, cached manifolds,
+  warm-start impulses, or another replaceable solver representation.
 - Public manual scheduler time or world-step APIs in the initial surface.
 - Bit-identical pixels, cross-browser floating-point identity, or guarantees
   beyond documented semantic and numeric tolerances.
@@ -194,17 +206,25 @@ barrel coupling both dimensions.
   -> @crc/core
   -> @crc/core/internal
 
+@crc/physics/2d/geometry
+  -> no CRC runtime or renderer dependency
+
 @crc/physics/3d
   -> @crc/core
   -> @crc/core/internal
   -> @crc/webgl
   -> matching official WebGL friend capability
+
+@crc/physics/3d/geometry
+  -> no CRC runtime or renderer dependency
 ```
 
-The package declares the matching `@crc/core` release as a peer dependency.
-`@crc/webgl` is an optional peer used only by 3D entry points. Bundled output
-must externalize both peers so the application has one core realm scheduler,
-one element identity, and one WebGL backend identity.
+The package declares matching `@crc/core` and `@crc/webgl` release ranges as
+optional peers at the package-manifest level so geometry-only consumers need
+not install them. The world-facing 2D entry point documents and requires the
+matching core peer; the world-facing 3D entry point documents and requires
+both peers. Bundled output must externalize them so a CRC application has one
+core realm scheduler, one element identity, and one WebGL backend identity.
 
 The primary entry points use top-level named ESM exports:
 
@@ -228,18 +248,23 @@ CRC will not expose `physics.dynamic()`, `physics.shapes.circle()`, or another
 runtime bag of functions. Methods are avoided for optional operations when a
 named function can accept an opaque handle.
 
-Heavy optional capabilities use separate side-effect-free subpaths:
+Separate side-effect-free subpaths keep independently useful capabilities out
+of unrelated module graphs:
 
+- `@crc/physics/2d/geometry` and `@crc/physics/3d/geometry` for pure,
+  world-independent shape operations;
 - `@crc/physics/2d/joints` and `@crc/physics/3d/joints`;
 - `@crc/physics/2d/debug` and `@crc/physics/3d/debug`; and
 - later `@crc/physics/2d/replay` and `@crc/physics/3d/replay` entry points.
 
 The package and every entry point are marked side-effect-free. Importing a
-shape, query, joint, debug renderer, or replay utility cannot register global
-behavior. Descriptor factories validate, copy, and freeze caller-owned data.
-Advanced shape implementations carry nominal collision capabilities consumed
-by a small generic solver seam rather than joining an import-time dispatch
-registry.
+shape, geometry operation, query, joint, debug renderer, or replay utility
+cannot register global behavior. The dimension entry points may re-export
+baseline geometry names for convenience, but direct `/geometry` imports are
+the guaranteed renderer- and scheduler-free path. Descriptor factories
+validate, copy, and freeze caller-owned data. Advanced shape implementations
+carry nominal collision capabilities consumed by a small generic solver seam
+rather than joining an import-time dispatch registry.
 
 The baseline solver necessarily contains the algorithms needed for its
 baseline shape vocabulary. Optional debug rendering, snapshots, advanced
@@ -384,7 +409,10 @@ Two-dimensional worlds follow Canvas presentation:
 - linear velocity uses logical units per second;
 - linear acceleration uses logical units per second squared; and
 - public angles and angular velocities are named in degrees and degrees per
-  second, matching CRC's `rotationDegrees` authoring vocabulary.
+  second, matching CRC's `rotationDegrees` authoring vocabulary. The existing
+  `Arc` and `Wedge` contour fields remain explicitly named in radians to match
+  their shipped Canvas geometry contract; they are shape parameters rather
+  than rigid-body pose.
 
 Three-dimensional worlds follow the shipped WebGL coordinate system:
 
@@ -564,7 +592,7 @@ Begin command and cannot mutate a manifold while it is being solved.
 A sensor is not a body type and has no separate fundamental factory:
 
 ```tsx
-<Circle2D
+<Circle
   physics={collider2D({
     sensor: true,
     tag: "ground-check",
@@ -590,22 +618,30 @@ Applications cannot mutate vertices behind CRC's caches.
 The 2D shape factories are designed to include:
 
 - `circleShape2D`;
+- `ellipseShape2D`;
 - `boxShape2D`;
 - `roundedBoxShape2D`;
 - `capsuleShape2D`;
+- `arcShape2D` for a finite stroked circular sweep;
+- `wedgeShape2D` for a filled circular sector;
 - `segmentShape2D`;
 - `chainShape2D`; and
 - `polygonShape2D` for validated convex polygons.
 
-Concave 2D geometry is represented as a deterministic compound of convex
-pieces. Automatic decomposition, when shipped, is a separately imported pure
-factory with fixed tolerances and stable output ordering.
+Concave or curved 2D geometry is represented as a deterministic compound of
+convex pieces. Baseline 2D includes CRC-owned curve flattening and
+triangulation with fixed tolerances and stable output ordering because the
+current `Wedge`, `Star`, rounded `Polygon`, and eligible `SvgPath` components
+must not lose collider inference merely because their contours are concave or
+curved. A separately imported advanced decomposition factory may later reduce
+piece count without changing the baseline deterministic result.
 
-Matching Canvas components include `Circle2D`, `Capsule2D`, `Segment2D`,
-`Chain2D`, `Polygon2D`, and generic `PhysicsShape2D`. Existing `Rectangle`
-renders box and rounded-box geometry. Every shape value can be passed to
-`PhysicsShape2D`, which uses ordinary CRC Canvas paint, transform, clip,
-filter, event, focus, layout, and Layer behavior.
+Existing `Circle`, `Ellipse`, `Arc`, `Wedge`, `Polygon`, and `Rectangle`
+components render their matching shape families. Physics adds `Capsule2D`,
+`Segment2D`, `Chain2D`, and generic `PhysicsShape2D` for shapes without a
+current direct renderer. Every shape value can be passed to `PhysicsShape2D`,
+which uses ordinary CRC Canvas paint, transform, clip, filter, event, focus,
+layout, and Layer behavior.
 
 The 3D shape factories are designed to include:
 
@@ -630,20 +666,118 @@ physics shape may choose a simpler visual tessellation without changing its
 analytic or support-mapped collision definition. Rendering resolution never
 changes collision results.
 
+## Standalone physics primitives and testability
+
+The immutable shape vocabulary is not coupled to JSX or a simulation world.
+The dedicated `@crc/physics/2d/geometry` and
+`@crc/physics/3d/geometry` subpaths expose named pure operations for
+applications that need collision geometry without scheduling a simulation.
+They also export their dimension's immutable shape factories and public
+geometry value/result types; the world-facing entry points re-export the
+baseline names for convenience.
+
+```ts
+// @crc/physics/2d/geometry
+boundsOfShape2D(shape, pose?)
+massProperties2D(shape, options?)
+containsPoint2D(shape, pose, point)
+distanceBetweenShapes2D(first, firstPose, second, secondPose)
+overlapShapes2D(first, firstPose, second, secondPose)
+contactBetweenShapes2D(first, firstPose, second, secondPose)
+raycastShape2D(shape, pose, ray, options?)
+shapeCastAgainstShape2D(moving, from, translation, target, targetPose, options?)
+transformShape2D(shape, transform)
+
+// @crc/physics/3d/geometry
+boundsOfShape3D(shape, pose?)
+massProperties3D(shape, options?)
+containsPoint3D(shape, pose, point)
+distanceBetweenShapes3D(first, firstPose, second, secondPose)
+overlapShapes3D(first, firstPose, second, secondPose)
+contactBetweenShapes3D(first, firstPose, second, secondPose)
+raycastShape3D(shape, pose, ray, options?)
+shapeCastAgainstShape3D(moving, from, translation, target, targetPose, options?)
+transformShape3D(shape, transform)
+```
+
+These operations accept immutable shapes and explicit poses. They do not
+accept a world, body, collider, clock, component, or render context. They
+perform no registration or mutation, read no global tolerance or scratch
+state, and return immutable values or `null`. They can run in a plain Node
+process without DOM, Canvas, WebGL, `@crc/core`, or `@crc/webgl` globals.
+Equivalent finite inputs under one package version produce results within the
+same documented numeric tolerance as world collision detection.
+
+`massProperties2D` returns area, centroid, mass, and scalar rotational inertia
+for a declared density. `massProperties3D` returns volume, center of mass,
+mass, and the local inertia tensor. Zero-area or zero-volume shapes report a
+valid zero-mass result rather than inventing thickness. World body creation
+applies its own rejection rules when a dynamic body cannot derive positive
+mass.
+
+`distanceBetweenShapes2D` and `distanceBetweenShapes3D` return signed
+separation plus stable witness points and a direction from the second shape
+toward the first. Positive separation means disjoint, zero means touching
+within the documented tolerance, and negative separation means penetration.
+`overlapShapes*` is the corresponding boolean convenience operation.
+`contactBetweenShapes*` returns `null` for separated shapes or a stable
+geometric contact summary for touching or overlapping shapes. That summary may
+contain one or more deterministically ordered contact points, but it contains
+no solver feature IDs, cached impulses, mutable manifold, body identity, or
+warm-start state.
+
+Standalone ray and shape casts operate against exactly one explicit target
+shape. Their hit records contain geometric point, outward normal, distance,
+and normalized time of impact, but no world body/collider handle or tag.
+Initial shape casts sweep translation with fixed orientation; rotational casts
+require a later separately specified API. `transformShape*` applies a finite
+rigid local transform and returns an immutable shape value; it does not apply
+scale or mutate the source.
+
+The ergonomic default returns immutable result values. The world solver uses
+private reusable scratch storage and output parameters internally so public
+purity does not force allocation in fixed-tick hot loops. A public scratch or
+batch API is deferred until measured application use justifies freezing that
+more complex ownership contract.
+
+This boundary supports editor snapping, placement validation, clearance and
+line-of-sight checks, collision prediction, and application-owned spatial
+indexes without creating another CRC loop. It deliberately does not expose a
+standalone integrator, constraint solver, or `step` function in the initial
+surface. Publishing those would freeze substantially more solver behavior and
+make competing application loops look like the recommended CRC integration.
+
+Private modules still divide the implementation into independently testable
+units: shape support functions, hull/decomposition tools, analytic pair tests,
+GJK/EPA or SAT fallback, mesh BVHs, broad-phase trees, manifold generation,
+integration, impulse constraints, island construction, sleeping, CCD/time of
+impact, fixed-tick accumulation, interpolation, checkpoint rollback, and the
+scheduler adapter. Package-internal tests may import those source modules;
+application and packed-consumer tests use only public package subpaths. This
+keeps algorithm replacement possible without sacrificing fine-grained test
+evidence.
+
 ## Existing primitive collider inference
 
 ### Canvas 2D
 
-| CRC component                            | Inferred collider                                                                                         |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `Rectangle`                              | Box, or rounded box when corner radii are present                                                         |
-| `Line`, `HorizontalLine`, `VerticalLine` | Segment or chain expanded by half the resolved stroke width                                               |
-| `SvgPath`                                | Deterministically flattened closed polygon or open chain when the path satisfies documented contour rules |
-| `Path` with opaque `Path2D`              | Explicit collider required                                                                                |
-| `Text`                                   | Explicit collider or author-declared stable box required                                                  |
-| `Image`                                  | Declared stable rectangular bounds or explicit collider                                                   |
-| Physics shape components                 | Their exact immutable physics shape                                                                       |
-| `Group`                                  | No self collider; may host a compound body                                                                |
+| CRC component                            | Inferred collider                                                                                          |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `Rectangle`                              | Box, or rounded box when corner radii are present                                                          |
+| `Circle`                                 | Analytic circle                                                                                            |
+| `Ellipse`                                | Analytic ellipse                                                                                           |
+| `Arc`                                    | Deterministically flattened circular chain expanded by half the resolved stroke width                      |
+| `Wedge`                                  | Deterministically flattened sector contour, triangulated when concave                                      |
+| `Polygon`                                | Convex polygon, or a deterministically flattened and triangulated compound when concave or rounded         |
+| `RegularPolygon`                         | Generated convex polygon, including deterministic rounded-corner flattening                                |
+| `Star`                                   | Generated contour triangulated into a deterministic compound                                               |
+| `Line`, `HorizontalLine`, `VerticalLine` | Segment or chain expanded by half the resolved stroke width                                                |
+| `SvgPath`                                | Deterministically flattened closed compound or open chain when the path satisfies documented contour rules |
+| `Path` with opaque `Path2D`              | Explicit collider required                                                                                 |
+| `Text`                                   | Explicit collider or author-declared stable box required                                                   |
+| `Image`                                  | Declared stable rectangular bounds or explicit collider                                                    |
+| Physics shape components                 | Their exact immutable physics shape                                                                        |
+| `Group`                                  | No self collider; may host a compound body                                                                 |
 
 Raw `Path2D` is intentionally opaque and browser-owned. CRC does not inspect
 its commands. Text measurement, glyph outlines, decoded alpha, and image pixels
@@ -731,8 +865,7 @@ export const Diamond = withPhysicsShape2D(RawDiamond, {
 });
 ```
 
-The 3D equivalent is `withPhysicsShape3D` around a value created with
-`defineWebGLPrimitive`. The adapter:
+The `withPhysicsShape2D` adapter:
 
 - augments the final component's prop type with the matching attachment;
 - derives one immutable self shape from already resolved style/geometry;
@@ -746,6 +879,35 @@ The 3D equivalent is `withPhysicsShape3D` around a value created with
 The same resolved geometry must drive drawing, event picking where applicable,
 and inferred collision. If a custom primitive cannot supply stable geometry,
 it may still accept an explicit collider but cannot claim self inference.
+
+WebGL has no public raw primitive or render-callback extension. Its custom
+shape path remains immutable `createWebGLGeometry` data rendered through
+`Mesh`. An ordinary 3D component forwards the attachment to that `Mesh`:
+
+```tsx
+import { Mesh, createWebGLGeometry, type MeshStyle } from "@crc/webgl";
+import type { CRCPhysicsAttachment3D } from "@crc/physics/3d";
+
+const diamondGeometry = createWebGLGeometry({
+  positions: [0, 1, 0, -1, -1, 1, 1, -1, 1, 0, -1, -1],
+  indices: [0, 1, 2, 0, 2, 3, 0, 3, 1, 1, 3, 2],
+});
+
+interface Diamond3DProps {
+  readonly style?: MeshStyle;
+  readonly physics?: CRCPhysicsAttachment3D;
+}
+
+function Diamond3D({ style, physics }: Diamond3DProps) {
+  return <Mesh geometry={diamondGeometry} style={style} physics={physics} />;
+}
+```
+
+The normal `Mesh` inference rule then creates a static triangle mesh or a
+deterministic dynamic/kinematic convex hull from the same immutable CPU
+geometry. A different collision approximation is expressed with an explicit
+shape on the attachment. Physics adds no `defineWebGLPrimitive`, raw GL
+context, shader callback, or analytic pick extension.
 
 ## Component identity, layout, and transform capture
 
@@ -983,7 +1145,7 @@ function Ball() {
   const ball = crcPhysicsBody2D();
 
   return (
-    <Circle2D
+    <Circle
       physics={dynamicBody2D({ handle: ball })}
       onClick={() => applyImpulse2D(ball, [0, -400])}
     />
@@ -1140,6 +1302,14 @@ overlapShape3D(world, shape, pose, options?)
 queryAabb3D(world, bounds, options?)
 queryPoint3D(world, point, options?)
 ```
+
+These world query names are deliberately distinct from the single-shape pure
+operations in the `/geometry` subpaths. For example,
+`raycast2D(world, ray)` searches committed colliders and returns body/collider
+identity, while `raycastShape2D(shape, pose, ray)` tests one immutable shape
+and has no world identity to return. World queries may use broad-phase and mesh
+acceleration owned by the world; standalone operations derive everything from
+their explicit inputs.
 
 Ray input contains origin, normalized or normalizable direction, and finite
 maximum distance. Results identify body and collider generation, tag, point,
@@ -1419,23 +1589,28 @@ into independently reviewable projects while keeping one approved vocabulary:
 
 1. **Physics foundation and scheduler seam**
    - package/export scaffolding;
+   - shared immutable shape protocol, numeric policy, and pure-operation test
+     harness;
    - nominal descriptors and type augmentation;
    - ordered animation/physics Advance lanes;
    - world/body/collider ownership and transaction checkpoints;
    - fixed-tick accumulator, clamp, interpolation, handles, and tracing.
 2. **Baseline 2D rigid bodies**
-   - circle, box/rounded box, capsule, segment/chain, and convex polygon;
+   - circle, ellipse, box/rounded box, capsule, arc/wedge, segment/chain,
+     convex polygon, and deterministic compound triangulation;
+   - public `/2d/geometry` operations and private narrow-phase unit evidence;
    - dynamic AABB broad phase, contacts, impulses, friction, restitution;
    - gravity, sleeping, sensors, filtering, events, queries, and CCD;
    - existing Canvas inference and matching render components.
 3. **Baseline 3D rigid bodies**
    - sphere, box, ellipsoid, capsule, and convex hull;
+   - public `/3d/geometry` operations and private narrow-phase unit evidence;
    - quaternion integration, 3D contacts/inertia, queries, sleeping, and CCD;
    - `Cube`, `Sphere`, `Mesh`, `Group3D`, and settled WebGL integration;
    - static triangle-mesh acceleration.
 4. **Extended shapes and terrain**
-   - deterministic 2D decomposition;
-   - cylinder, cone, heightfield, and extended mesh tooling;
+   - optional reduced-piece 2D decomposition tooling;
+   - cylinder, cone, heightfield, and extended 3D mesh tooling;
    - matching rendering components.
 5. **Joints and motors**
    - dimension-specific joint entry points;
@@ -1447,12 +1622,17 @@ into independently reviewable projects while keeping one approved vocabulary:
    - explicit extrusion or plane-constrained 3D bodies only after demonstrated
      use cases.
 
-Each project gets its own executable plan, failing public tests before
-production code, a representative learning example, deterministic laboratory
+The foundation and baseline 2D work travel in one executable plan because the
+foundation alone cannot satisfy CRC's public-scenario evidence gate. Each later
+project gets its own executable plan. Every delivery starts with failing public
+tests and includes a representative learning example, deterministic laboratory
 scenarios, package-consumer evidence, lifecycle evidence, and proportional
 trust-gate verification. The baseline 2D implementation precedes 3D so the
 shared scheduler and transaction model are proven before tensor inertia,
 quaternions, and 3D narrow phase are added.
+
+The first delivery is specified by
+`docs/superpowers/plans/2026-09-14-first-class-physics-2d-foundation-implementation.md`.
 
 ## Evidence and verification
 
@@ -1507,6 +1687,31 @@ Tests drive arbitrary host-frame cadences and assert:
   and
 - collision callbacks deferring commands to the next Begin.
 
+### Standalone geometry evidence
+
+Public black-box tests import only `@crc/physics/2d/geometry` or
+`@crc/physics/3d/geometry` and run in a Node process with no DOM, Canvas,
+WebGL, CRC root, realm scheduler, or mounted world. They cover:
+
+- known bounds, mass properties, containment, distance, overlap, contact,
+  ray-cast, and shape-cast results for every supported shape family;
+- symmetry of pair operations after swapping inputs, including the documented
+  normal reversal and witness-point exchange;
+- translation and rotation invariance within documented tolerance;
+- touching, penetrating, degenerate, zero-area/volume, extreme-scale, and
+  invalid nonfinite inputs;
+- deterministic ordering for multi-point geometric contact summaries;
+- seeded generated cases recorded with reproducible seeds; and
+- proof that importing one geometry subpath pulls in neither the other
+  dimension nor core/WebGL runtime code.
+
+Package-internal unit suites test analytic pair functions, support mappings,
+GJK/EPA or SAT fallback, hull/decomposition ordering, mesh BVHs, broad-phase
+updates, manifold persistence, integrators, constraints, islands, sleeping,
+CCD, accumulator/interpolation, rollback, and scheduler adaptation separately.
+Those tests may name implementation modules; no packed consumer may import
+them, and their shapes are not compatibility contracts.
+
 ### Structural and ownership evidence
 
 Deterministic counters prove:
@@ -1529,6 +1734,8 @@ Deterministic counters prove:
 Every shipped tranche verifies:
 
 - side-effect-free named runtime exports and declarations;
+- standalone geometry consumers that install no `@crc/core` or `@crc/webgl`
+  runtime dependency;
 - type augmentation only after importing the matching dimension;
 - no 2D-to-3D or 3D-to-2D bundle pull-through;
 - Bundler and NodeNext consumers;
@@ -1602,6 +1809,10 @@ The approved product and architecture decisions are:
 - all existing inspectable geometric primitives receive inferred colliders,
   opaque/platform-dependent primitives require explicit stable geometry, and
   every public collider shape receives CRC rendering support;
+- immutable shapes and stable semantic collision operations are public through
+  scheduler- and renderer-free dimensioned `/geometry` subpaths;
+- raw solver algorithms, cached manifolds, acceleration structures, scratch
+  storage, integrators, and constraints remain private but individually tested;
 - `physics` is a normal JSX prop backed by nominal immutable descriptors and
   type augmentation;
 - runtime namespace objects and import-time registries are prohibited in favor
