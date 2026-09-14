@@ -46,7 +46,7 @@ describe('CPU-only WebGL scene composer', () => {
     submitWebGLMesh(scene, { componentName: 'Mesh', geometry, localModel: identity(), color });
     mutableFrame.logicalWidth = 999;
     mutableFrame.renderTimestamp = 999;
-    camera.projectionMatrix[0] = 999;
+    mutateCallerOwnedMatrix(camera.projectionMatrix, 0, 999);
     color[0] = 999;
     const draft = closeWebGLSceneComposer(scene);
     expect(draft.logicalViewport).toEqual({ width: 100, height: 50 });
@@ -83,3 +83,11 @@ describe('CPU-only WebGL scene composer', () => {
     expect(() => submitWebGLMesh(discarded, { componentName: 'late', geometry, localModel: identity(), color: [1, 1, 1, 1] })).toThrow('already closed');
   });
 });
+
+function mutateCallerOwnedMatrix(
+  matrix: Readonly<Float32Array>,
+  index: number,
+  value: number,
+): void {
+  (matrix as Float32Array)[index] = value;
+}

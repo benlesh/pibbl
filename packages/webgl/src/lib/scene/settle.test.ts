@@ -57,7 +57,7 @@ describe('settled WebGL scene', () => {
 
     models.forEach(model => { model[14] = 99; });
     explicitBounds.x = 99;
-    camera.projectionMatrix[0] = 99;
+    mutateCallerOwnedMatrix(camera.projectionMatrix, 0, 99);
     const settled = settleWebGLScene(composer);
 
     expect(settled.meshes.map(mesh => mesh.sourceIndex)).toEqual([0, 1, 2, 3, 4, 5]);
@@ -69,7 +69,7 @@ describe('settled WebGL scene', () => {
     expect(settled.pickEntries.every(entry => entry.kind === 'geometry' && entry.depthMode === 'less-equal')).toBe(true);
     expect(settled.pickEntries.map(entry => entry.geometry)).toEqual([geometry, geometry, geometry, geometry, geometry, geometry]);
     expect(settled.pickEntries.map(entry => Array.from(entry.model)[14])).toEqual([0, 1, -3, -2, -2, 2]);
-    expect(settled.pickEntries.every(entry => entry.kind === 'geometry' && entry.camera?.projectionMatrix[0] !== 99)).toBe(true);
+    expect(settled.camera.projectionMatrix[0]).not.toBe(99);
     expect(settled.pickEntries[1]!.keyboardNavigationBounds).toEqual({ x: 1, y: 2, width: 3, height: 4 });
     expect(settled.pickEntries[0]!.keyboardNavigationPoints).toBeDefined();
     expect(Object.isFrozen(settled)).toBe(true);
@@ -82,4 +82,12 @@ describe('settled WebGL scene', () => {
 
 function fakeTarget(): CRCEventTargetRegistration {
   return { kind: 'target', live: true } as CRCEventTargetRegistration;
+}
+
+function mutateCallerOwnedMatrix(
+  matrix: Readonly<Float32Array>,
+  index: number,
+  value: number,
+): void {
+  (matrix as Float32Array)[index] = value;
 }

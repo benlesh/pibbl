@@ -370,7 +370,7 @@ function mountScene(gl: WebGL2RenderingContext, root: CRCNode) {
   };
 }
 
-function expectMatrix(actual: readonly number[], expected: readonly number[]) {
+function expectMatrix(actual: ArrayLike<number>, expected: readonly number[]) {
   expect(actual).toHaveLength(expected.length);
   expected.forEach((value, index) => {
     expect(actual[index]).toBeCloseTo(value, 6);

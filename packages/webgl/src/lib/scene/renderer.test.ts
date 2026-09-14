@@ -342,7 +342,7 @@ function scene(overrides: SceneOverrides = {}): SettledWebGLScene {
     contextGeneration: overrides.contextGeneration ?? 7,
     camera: Object.freeze({
       descriptor: Object.freeze({
-        kind: 'perspective' as const,
+        type: 'perspective' as const,
         fieldOfViewDegrees: 60,
         near: 0.1,
         far: 100,

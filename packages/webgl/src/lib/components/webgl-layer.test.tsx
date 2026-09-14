@@ -86,7 +86,7 @@ describe('WebGLLayer public surface', () => {
     const children: Iterable<CRCNode> = {
       *[Symbol.iterator]() {
         iterations += 1;
-        yield <Child pointerEvents="none" />;
+        yield <Child />;
       },
     };
     const canvas = createCanvas(100, 50);

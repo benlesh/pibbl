@@ -2,6 +2,7 @@ import {
   crc,
   createElement,
   type CRCController,
+  type CRCNode,
 } from '@crc/core';
 import {
   defineBackendPrimitive,
@@ -273,11 +274,18 @@ describe('WebGLLayerController bitmap transaction', () => {
       positions: [-1, -1, 0, 1, -1, 0, 0, 1, 0],
     });
     const failure = new Error('interactive child failed');
-    const Throwing = defineTestPrimitive<{
-      readonly failure: Error;
-    }>(function renderTransactionalFocusFailure(props) {
-      throw props.failure;
-    });
+    const Throwing = defineBackendPrimitive<
+      { readonly failure: Error },
+      {},
+      {},
+      {},
+      WebGLSceneComposer
+    >(
+      WEBGL_BACKEND_TOKEN,
+      function renderTransactionalFocusFailure(props) {
+        throw props.failure;
+      },
+    );
     const scene = (translateX: number, childFailure?: Error) => childFailure ?
       createElement(Throwing, { key: 'stable', failure: childFailure }) :
       createElement(Mesh, {
@@ -814,14 +822,14 @@ function expectGenerationPair(
   );
 }
 
-function defineTestPrimitive<P = Record<string, never>>(
+function defineTestPrimitive(
   program: (
-    props: Readonly<P>,
+    props: Readonly<{}>,
     style: Readonly<{}>,
     environment: WebGLSceneComposer,
   ) => CRCNode | void,
 ) {
-  return defineBackendPrimitive<P, {}, {}, {}, WebGLSceneComposer>(
+  return defineBackendPrimitive<{}, {}, {}, {}, WebGLSceneComposer>(
     WEBGL_BACKEND_TOKEN,
     program,
   );
