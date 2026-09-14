@@ -5,6 +5,7 @@ import type {
   CRCEventParticipationOptions,
 } from '../events/types.js';
 import type { RenderingContext2D, SystemStyle } from '../types.js';
+import type { CRCPhysics2DPropExtension } from '../types.js';
 import {
   resolveLocalOffset,
   stripLayoutParticipation,
@@ -25,7 +26,7 @@ import {
 import { renderPath } from './path.js';
 import { createEllipsePath } from '../geometry/ellipse.js';
 
-export interface EllipseProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
+export interface EllipseProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
 
 export interface EllipseStyle
   extends SystemStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle {

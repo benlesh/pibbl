@@ -26,6 +26,7 @@ import type {
   RoundedCornerStyle,
 } from '../style/types.js';
 import type { RenderingContext2D, SystemStyle } from '../types.js';
+import type { CRCPhysics2DPropExtension } from '../types.js';
 import { renderPath } from './path.js';
 import { resolveRoundedCornerStyle } from './rounded-corner-style.js';
 import {
@@ -36,7 +37,7 @@ import {
 } from './shape-style.js';
 
 export interface RegularPolygonProps
-  extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
+  extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
 
 interface RegularPolygonCommonStyle extends RoundedCornerStyle {
   sides: number;

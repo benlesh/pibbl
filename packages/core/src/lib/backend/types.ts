@@ -95,6 +95,7 @@ export interface CRCBackendPrimitiveInput {
   readonly definition: CRCBackendPrimitiveDefinition;
   readonly props: Readonly<Record<PropertyKey, unknown>>;
   readonly style: Readonly<Record<PropertyKey, unknown>>;
+  readonly presentationTransform2D?: DOMMatrix;
 }
 
 export interface CRCBackendMount {

@@ -9,6 +9,7 @@ import {
   RenderingContext2D,
   SystemStyle,
 } from '../types.js';
+import type { CRCPhysics2DPropExtension } from '../types.js';
 import { adjustForPixelGrid } from '../util/pixel-grid-adjustments.js';
 import {
   resolveLocalOffset,
@@ -25,7 +26,7 @@ import type {
 import { renderLine, type LineStyle } from './line.js';
 
 export interface HorizontalLineProps
-  extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
+  extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
 
 export interface HorizontalLineStyle
   extends SystemStyle,

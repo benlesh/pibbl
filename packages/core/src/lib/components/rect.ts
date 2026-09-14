@@ -5,6 +5,7 @@ import type {
   CRCEventParticipationOptions,
 } from '../events/types.js';
 import { RenderingContext2D } from '../types.js';
+import type { CRCPhysics2DPropExtension } from '../types.js';
 import {
   resolveLocalOffset,
   resolveRequiredLength,
@@ -17,7 +18,7 @@ import { renderPath } from './path.js';
 import { createRectanglePath } from '../geometry/rectangle.js';
 import { resolveRoundedCornerStyle } from './rounded-corner-style.js';
 
-export interface RectangleProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
+export interface RectangleProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
 
 function renderRectangle(
   props: RectangleProps,

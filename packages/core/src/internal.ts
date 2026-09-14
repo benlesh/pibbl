@@ -37,6 +37,11 @@ export type {
   CRCEventTargetRegistration,
 } from './lib/events/registrations.js';
 export type { CRCElementSource } from './lib/element/metadata.js';
+export { crcInternalCreatePropAttachment } from './lib/element-enhancers.js';
+export type {
+  CRCInternalMountedPropAttachment,
+  CRCInternalPrimitiveAttachmentInput,
+} from './lib/element-enhancers.js';
 export type {
   CRCHitTestOutput,
 } from './lib/events/paint-entry.js';

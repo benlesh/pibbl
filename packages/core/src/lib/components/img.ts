@@ -8,6 +8,7 @@ import { crcRectPath } from '../hooks/crc-rect-path.js';
 import { crcState } from '../hooks/crc-state.js';
 import { crcWhenChanged } from '../hooks/crc-when-changed.js';
 import type {
+  CRCPhysics2DPropExtension,
   MeasureInput,
   MeasureResult,
   RenderingContext2D,
@@ -24,7 +25,7 @@ import type { ImgStyle, ResolvedImgStyle } from '../style/types.js';
 import { adjustRectangleToPixelGrid } from '../util/pixel-grid-adjustments.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 
-export interface ImageProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
+export interface ImageProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
 
 interface LoadedImage {
   src: string;

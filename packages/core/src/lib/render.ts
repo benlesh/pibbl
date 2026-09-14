@@ -10,6 +10,7 @@ import { resolveElementStyle } from './style/resolve-dispatch.js';
 import {
   enterElementEnhancers,
   exitElementEnhancers,
+  prepareElementEnhancers,
   reconcileElementEnhancers,
 } from './element-enhancers.js';
 import {
@@ -34,6 +35,7 @@ import {
 } from './signals/render-consumer.js';
 import { untracked } from './signals/graph.js';
 import { requestInstanceRender } from './scheduler/realm-scheduler.js';
+import { getCurrentWorldTransform } from './render-target.js';
 
 export function render(
   node: CRCNode,
@@ -114,10 +116,12 @@ function renderComponentElement<P>(
     const id = componentRefs.id;
     GLOBAL_STATE.componentRefs = componentRefs;
     GLOBAL_STATE.componentHookIndex = 0;
+    const definition = getPrimitiveDefinition(componentRefs.element.type);
 
     reconcileElementEnhancers(
       componentRefs,
       GLOBAL_STATE.currentCRCInstance!,
+      definition !== undefined,
     );
     const enteredEnhancers = enterElementEnhancers(componentRefs);
     let enhancerSuccess = false;
@@ -136,7 +140,6 @@ function renderComponentElement<P>(
       };
       try {
         collectSignalReads(componentRefs.signalConsumer!, commitSignalReads => {
-          const definition = getPrimitiveDefinition(componentRefs.element.type);
           const renderProgram = (invoke: () => CRCNode | void) => {
             try {
               const previousReceiverToken = GLOBAL_STATE.primitiveReceiverToken;
@@ -185,17 +188,31 @@ function renderComponentElement<P>(
                 GLOBAL_STATE.primitiveReceiverToken = previousReceiverToken;
               }
             })();
+            const componentName = componentRefs.element.type.name || 'Anonymous';
+            const source = getElementSource(componentRefs.element);
+            const props = getPrimitiveProgramProps(componentRefs.element) as Readonly<
+              Record<PropertyKey, unknown>
+            >;
+            const prepared = prepareElementEnhancers(componentRefs, {
+              componentType: componentRefs.element.type,
+              componentName,
+              props,
+              style,
+              source,
+              parentWorldTransform: getCurrentWorldTransform(),
+            });
             let invoked = false;
             driver.runPrimitive(frame, {
-              componentName: componentRefs.element.type.name || 'Anonymous',
-              source: getElementSource(componentRefs.element),
+              componentName,
+              source,
               definition,
-              props: getPrimitiveProgramProps(componentRefs.element),
+              props,
               style,
+              presentationTransform2D: prepared?.presentationTransform2D,
             }, invoke => {
               if (invoked) {
                 throw new Error(
-                  `${driver.name} invoked ${componentRefs.element.type.name || 'Anonymous'} more than once in one traversal.`,
+                  `${driver.name} invoked ${componentName} more than once in one traversal.`,
                 );
               }
               invoked = true;
@@ -203,7 +220,7 @@ function renderComponentElement<P>(
             });
             if (!invoked) {
               throw new Error(
-                `${driver.name} did not invoke ${componentRefs.element.type.name || 'Anonymous'} during traversal.`,
+                `${driver.name} did not invoke ${componentName} during traversal.`,
               );
             }
           } else {

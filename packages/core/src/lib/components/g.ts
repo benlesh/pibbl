@@ -1,5 +1,6 @@
 import { definePrimitive } from '../define-primitive.js';
 import { CRCNode, SystemStyle } from '../types.js';
+import type { CRCPhysics2DPropExtension } from '../types.js';
 import {
   createGroupTransform,
   setPrimitivePresentation,
@@ -15,7 +16,7 @@ import type {
   ResolvedDrawingStyle,
 } from '../style/types.js';
 
-export interface GroupProps extends CRCStructuralEventProps {
+export interface GroupProps extends CRCStructuralEventProps, CRCPhysics2DPropExtension {
   children: CRCNode;
 }
 

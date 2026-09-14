@@ -45,6 +45,9 @@ export interface SystemStyle {
   filter?: CRCFilter | readonly CRCFilter[];
 }
 
+/** Empty declaration-merging base for the optional official 2D physics package. */
+export interface CRCPhysics2DPropExtension {}
+
 type PrimitiveReservedKey = 'key' | 'style';
 
 type UnionKeys<T> = T extends unknown ? keyof T : never;

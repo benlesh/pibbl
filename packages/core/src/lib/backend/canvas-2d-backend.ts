@@ -50,10 +50,16 @@ export const CANVAS_2D_BACKEND: CRCBackendDriver<RenderingContext2D> = {
       SystemStyle,
       RenderingContext2D
     >;
-    const presentation = getDefinitionPrimitivePresentation(
+    const definitionPresentation = getDefinitionPrimitivePresentation(
       definition,
       input.style,
     );
+    const presentation = input.presentationTransform2D ? {
+      ...definitionPresentation,
+      transform: definitionPresentation?.transform ?
+        input.presentationTransform2D.multiply(definitionPresentation.transform) :
+        input.presentationTransform2D,
+    } : definitionPresentation;
     const filters = getResolvedFilterList(input.style as Readonly<SystemStyle>);
     const invoke = () => runProgram(() => {
       const context = requireCanvasContext();

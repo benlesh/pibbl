@@ -26,6 +26,7 @@ import type {
   RoundedCornerStyle,
 } from '../style/types.js';
 import type { RenderingContext2D, SystemStyle } from '../types.js';
+import type { CRCPhysics2DPropExtension } from '../types.js';
 import { renderPath } from './path.js';
 import { resolveRoundedCornerStyle } from './rounded-corner-style.js';
 import {
@@ -35,7 +36,7 @@ import {
   shapeGeometryErrorFactory,
 } from './shape-style.js';
 
-export interface StarProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
+export interface StarProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
 
 export interface StarStyle
   extends

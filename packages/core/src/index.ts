@@ -279,6 +279,7 @@ export type {
   CRCMouseEvent,
   CRCMouseEventListener,
   CRCNode,
+  CRCPhysics2DPropExtension,
   CRCPrimitiveComponent,
   CRCTextChild,
   CRCRenderResult,

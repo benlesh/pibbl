@@ -5,6 +5,7 @@ import type {
   CRCEventParticipationOptions,
 } from '../events/types.js';
 import { RenderingContext2D } from '../types.js';
+import type { CRCPhysics2DPropExtension } from '../types.js';
 import { stripLayoutParticipation } from '../style/resolve-built-in.js';
 import { registerOpaqueStyleProperties } from '../style/resolve-dispatch.js';
 import type { PathStyle, ResolvedPathStyle } from '../style/types.js';
@@ -12,7 +13,7 @@ import type { StyleResolutionContext } from '../types.js';
 import { isTransparent } from '../util/is-transparent.js';
 import { wireCommonEvents } from '../util/wire-common-events.js';
 
-export interface PathProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
+export interface PathProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
 
 export function renderPath(
   props: PathProps,
