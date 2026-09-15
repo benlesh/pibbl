@@ -8,6 +8,8 @@ apiCategory: types
 typeDomain: webgl
 symbols:
   [
+    AmbientLightProps,
+    AmbientLightStyle,
     CRCWebGLGeometry,
     CRCWebGLGeometryInput,
     CRCWebGLLambertMaterial,
@@ -16,8 +18,6 @@ symbols:
     CRCWebGLShadowQuality,
     CRCWebGLTransformStyle,
     CRCWebGLVector3,
-    AmbientLightProps,
-    AmbientLightStyle,
     CubeProps,
     CubeStyle,
     DirectionalLightProps,
@@ -46,6 +46,16 @@ keywords: [webgl, camera, geometry, mesh, scene]
 
 Import these public contracts with `type` from `@crc/webgl`. CRC element,
 event, node, style-base, and JSX types continue to come from `@crc/core`.
+Orbit-camera options, handlers, and results are documented with
+[`crcOrbitCamera`](#/api/hooks/crc-orbit-camera).
+
+## AmbientLightProps
+
+`AmbientLightProps` has no component-specific fields.
+
+## AmbientLightStyle
+
+`AmbientLightStyle` provides optional `color` and `intensity`.
 
 ## CRCWebGLGeometry
 
@@ -58,6 +68,18 @@ event, node, style-base, and JSX types continue to come from `@crc/core`.
 `CRCWebGLGeometryInput` contains `positions`, optional triangle `indices`, and
 optional per-vertex `normals`. [`createWebGLGeometry`](#/api/functions/create-webgl-geometry)
 validates and copies every supplied array.
+
+## CRCWebGLLambertMaterial
+
+`CRCWebGLLambertMaterial` is the closed material descriptor for mesh lighting.
+It requires `type: "lambert"` and may set concrete `emissiveColor` and a finite,
+nonnegative `emissiveIntensity`. Emissive color defaults to black and intensity
+defaults to `1`; both affect RGB, never raster alpha.
+
+## CRCWebGLMaterial
+
+`CRCWebGLMaterial` is currently the Lambert material union. Omit
+`MeshStyle.material` for the default Lambert surface.
 
 ## CRCWebGLPerspectiveCamera
 
@@ -72,18 +94,6 @@ and validation.
 the layer-wide shadow-map resolution and filtering cost; omission selects
 `"medium"` and `false` disables shadow generation.
 
-## CRCWebGLLambertMaterial
-
-`CRCWebGLLambertMaterial` is the closed material descriptor for mesh lighting.
-It requires `type: "lambert"` and may set concrete `emissiveColor` and a finite,
-nonnegative `emissiveIntensity`. Emissive color defaults to black and intensity
-defaults to `1`; both affect RGB, never raster alpha.
-
-## CRCWebGLMaterial
-
-`CRCWebGLMaterial` is currently the Lambert material union. Omit
-`MeshStyle.material` for the default Lambert surface.
-
 ## CRCWebGLTransformStyle
 
 `CRCWebGLTransformStyle` supplies optional `translateX/Y/Z`,
@@ -93,33 +103,6 @@ Canvas `filter` as unavailable for inner WebGL objects.
 ## CRCWebGLVector3
 
 `CRCWebGLVector3` is the readonly tuple `[x, y, z]`.
-
-## CRCOrbitCameraOptions
-
-`CRCOrbitCameraOptions` requires finite `orbitPoint` and mount-only
-`initialPosition` vectors that differ. Positive `minDistance` defaults to `0.1`;
-optional positive `maxDistance` cannot be smaller. Finite nonnegative
-`rotateSpeed` and `zoomSpeed` default to `1`.
-
-## CRCOrbitCameraHandlers
-
-`CRCOrbitCameraHandlers` is the stable required bundle of `onPointerDown`,
-`onPointerMove`, `onPointerUp`, `onPointerCancel`, `onLostPointerCapture`, and
-`onWheel` from core's ordinary event handler contract.
-
-## CRCOrbitCameraResult
-
-`CRCOrbitCameraResult` exposes readonly `position`, `lookAt`, and `handlers`.
-See [`crcOrbitCamera`](#/api/hooks/crc-orbit-camera) for attachment and identity
-semantics.
-
-## AmbientLightProps
-
-`AmbientLightProps` has no component-specific fields.
-
-## AmbientLightStyle
-
-`AmbientLightStyle` provides optional `color` and `intensity`.
 
 ## CubeProps
 
