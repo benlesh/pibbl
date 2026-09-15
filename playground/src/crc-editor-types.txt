@@ -569,6 +569,9 @@
     readonly color?: string;
     readonly intensity?: number;
   }
+  type AmbientLightPrimitiveStyle = AmbientLightStyle & {
+    readonly filter?: never;
+  };
 
   export interface HemisphereLightProps {}
   export interface HemisphereLightStyle extends CRCWebGLTransformStyle {
@@ -599,6 +602,9 @@
   export interface WebGLBackgroundStyle {
     readonly color: string;
   }
+  type WebGLBackgroundPrimitiveStyle = WebGLBackgroundStyle & {
+    readonly filter?: never;
+  };
 
   export function createWebGLGeometry(
     input: CRCWebGLGeometryInput,
@@ -631,7 +637,7 @@
   >;
   export const AmbientLight: CRCPrimitiveComponent<
     AmbientLightProps,
-    PrimitiveInput<AmbientLightProps, AmbientLightStyle>
+    PrimitiveInput<AmbientLightProps, AmbientLightPrimitiveStyle>
   >;
   export const HemisphereLight: CRCPrimitiveComponent<
     HemisphereLightProps,
@@ -651,5 +657,5 @@
   >;
   export const WebGLBackground: CRCPrimitiveComponent<
     WebGLBackgroundProps,
-    PrimitiveInput<WebGLBackgroundProps, WebGLBackgroundStyle>
+    PrimitiveInput<WebGLBackgroundProps, WebGLBackgroundPrimitiveStyle>
   >;

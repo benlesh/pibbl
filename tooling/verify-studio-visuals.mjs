@@ -49,6 +49,11 @@ const allRoutes = [
     openSearch: true,
   },
   {
+    name: "webgl-lighting",
+    hash: "#/testing/webgl-lighting",
+    ready: ".testing-area .scenario-detail__title",
+  },
+  {
     name: "test-lab",
     hash: "#/testing/baseline-smoke",
     ready: ".testing-area .scenario-detail__title",

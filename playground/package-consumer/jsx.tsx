@@ -46,13 +46,26 @@ import {
   untracked,
 } from '@crc/core';
 import {
+  AmbientLight,
   Cube,
+  DirectionalLight,
   Group3D,
+  HemisphereLight,
   Mesh,
+  PointLight,
   Sphere,
+  SpotLight,
+  WebGLBackground,
   WebGLLayer,
+  crcOrbitCamera,
   createWebGLGeometry,
+  type CRCOrbitCameraHandlers,
+  type CRCOrbitCameraOptions,
+  type CRCOrbitCameraResult,
+  type CRCWebGLLambertMaterial,
+  type CRCWebGLMaterial,
   type CRCWebGLPerspectiveCamera,
+  type CRCWebGLShadowQuality,
 } from '@crc/webgl';
 import {
   Fragment as DevelopmentFragment,
@@ -278,33 +291,128 @@ export const roundedShapeElements: readonly CRCElement<any>[] = [
   }),
 ];
 
-const automaticWebGLCamera = {
-  type: 'perspective',
-  position: [0, 0, 5],
-  lookAt: [0, 0, 0],
-  up: [0, 1, 0],
-  fieldOfViewDegrees: 45,
-  near: 0.1,
-  far: 100,
-} as const satisfies CRCWebGLPerspectiveCamera;
 const automaticWebGLGeometry = createWebGLGeometry({
   positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+  normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
 });
+const automaticShadowQualities = [
+  false,
+  'low',
+  'medium',
+  'high',
+] as const satisfies readonly CRCWebGLShadowQuality[];
+const automaticLambertMaterial: CRCWebGLMaterial = {
+  type: 'lambert',
+  emissiveColor: '#102040',
+  emissiveIntensity: 0.25,
+} satisfies CRCWebGLLambertMaterial;
+
+function AutomaticWebGLScene(): CRCNode {
+  const orbitOptions: CRCOrbitCameraOptions = {
+    orbitPoint: [0, 0, 0],
+    initialPosition: [0, 2, 5],
+    minDistance: 2,
+    maxDistance: 12,
+    rotateSpeed: 0.8,
+    zoomSpeed: 1.2,
+  };
+  const orbit: CRCOrbitCameraResult = crcOrbitCamera(orbitOptions);
+  const handlers: CRCOrbitCameraHandlers = orbit.handlers;
+  const camera: CRCWebGLPerspectiveCamera = {
+    type: 'perspective',
+    position: orbit.position,
+    lookAt: orbit.lookAt,
+    up: [0, 1, 0],
+    fieldOfViewDegrees: 45,
+    near: 0.1,
+    far: 100,
+  };
+  return (
+    <Group {...handlers}>
+      <Rectangle style={{ width: 320, height: 180, fill: 'transparent' }} />
+      <WebGLLayer
+        camera={camera}
+        style={{
+          width: 320,
+          height: 180,
+          shadows: automaticShadowQualities[3],
+        }}
+      >
+        <WebGLBackground style={{ color: '#08111fcc' }} />
+        <AmbientLight style={{ color: '#ffffff', intensity: 0.1 }} />
+        <HemisphereLight
+          style={{
+            skyColor: '#b9dcff',
+            groundColor: '#302418',
+            intensity: 0.3,
+            rotationZDegrees: 5,
+          }}
+        />
+        <DirectionalLight
+          style={{
+            color: '#ffffff',
+            intensity: 1.2,
+            rotationXDegrees: -35,
+            rotationYDegrees: 45,
+            castShadow: false,
+          }}
+        />
+        <PointLight
+          style={{
+            color: '#ff8a4c',
+            intensity: 4,
+            range: 12,
+            translateX: 3,
+            translateY: 4,
+            translateZ: 2,
+            castShadow: true,
+          }}
+        />
+        <SpotLight
+          style={{
+            color: '#80c8ff',
+            intensity: 5,
+            range: 20,
+            innerConeAngleDegrees: 15,
+            outerConeAngleDegrees: 28,
+            translateX: -3,
+            translateY: 5,
+            translateZ: 4,
+            rotationXDegrees: -40,
+            castShadow: true,
+          }}
+        />
+        <Group3D style={{ rotationYDegrees: 15 }}>
+          <Cube
+            style={{
+              color: '#74d3ae',
+              size: 1,
+              material: automaticLambertMaterial,
+              castShadow: true,
+              receiveShadow: false,
+            }}
+          />
+          <Sphere
+            style={{
+              radius: 0.5,
+              translateX: 1,
+              lit: false,
+              castShadow: false,
+              receiveShadow: true,
+            }}
+          />
+          <Mesh
+            geometry={automaticWebGLGeometry}
+            style={{ color: '#f7c948' }}
+          />
+        </Group3D>
+      </WebGLLayer>
+    </Group>
+  );
+}
 
 export const automaticWebGLScene: CRCElement = (
-  <WebGLLayer
-    camera={automaticWebGLCamera}
-    style={{ width: 320, height: 180 }}
-  >
-    <Group3D style={{ rotationYDegrees: 15 }}>
-      <Cube style={{ color: '#74d3ae', size: 1 }} />
-      <Sphere style={{ radius: 0.5, translateX: 1 }} />
-      <Mesh
-        geometry={automaticWebGLGeometry}
-        style={{ color: '#f7c948' }}
-      />
-    </Group3D>
-  </WebGLLayer>
+  <AutomaticWebGLScene />
 );
 
 // @ts-expect-error RegularPolygon requires exactly one size property
