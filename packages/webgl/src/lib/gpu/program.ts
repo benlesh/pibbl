@@ -1,38 +1,46 @@
-export interface WebGLBuiltInProgram {
+import { WEBGL_BUILT_IN_PROGRAM_SOURCES } from './program-sources.js';
+
+export type WebGLProgramKey = 'unlit' | 'lambert';
+
+interface WebGLProgramBase {
+  readonly key: WebGLProgramKey;
   readonly program: WebGLProgram;
   readonly model: WebGLUniformLocation;
   readonly view: WebGLUniformLocation;
   readonly projection: WebGLUniformLocation;
-  readonly color: WebGLUniformLocation;
   readonly positionAttribute: 0;
 }
 
-const VERTEX_SOURCE = `#version 300 es
-layout(location = 0) in vec3 a_position;
-uniform mat4 u_model;
-uniform mat4 u_view;
-uniform mat4 u_projection;
-
-void main() {
-  gl_Position = u_projection * u_view * u_model * vec4(a_position, 1.0);
+export interface WebGLUnlitProgram extends WebGLProgramBase {
+  readonly key: 'unlit';
+  readonly displayBaseColor: WebGLUniformLocation;
+  readonly linearEmissive: WebGLUniformLocation;
 }
-`;
 
-const FRAGMENT_SOURCE = `#version 300 es
-precision highp float;
-uniform vec4 u_color;
-out vec4 out_color;
-
-void main() {
-  out_color = u_color;
+export interface WebGLLambertProgram extends WebGLProgramBase {
+  readonly key: 'lambert';
+  readonly normalMatrix: WebGLUniformLocation;
+  readonly linearBaseColor: WebGLUniformLocation;
+  readonly linearEmissive: WebGLUniformLocation;
+  readonly alpha: WebGLUniformLocation;
+  readonly lightCount: WebGLUniformLocation;
+  readonly lightKinds: WebGLUniformLocation;
+  readonly lightColorIntensities: WebGLUniformLocation;
+  readonly lightPositionRanges: WebGLUniformLocation;
+  readonly lightDirectionInnerCosines: WebGLUniformLocation;
+  readonly lightGroundOuterCosines: WebGLUniformLocation;
+  readonly normalAttribute: 1;
 }
-`;
 
-/** Compiles and links the one positions-only unlit built-in program. */
+export type WebGLBuiltInProgram = WebGLUnlitProgram | WebGLLambertProgram;
+
+/** Compiles and links one closed built-in material program. */
 export function createBuiltInProgram(
   gl: WebGL2RenderingContext,
+  key: WebGLProgramKey,
   componentName: string,
 ): WebGLBuiltInProgram {
+  const sources = WEBGL_BUILT_IN_PROGRAM_SOURCES[key];
   let vertex: WebGLShader | undefined;
   let fragment: WebGLShader | undefined;
   let program: WebGLProgram | undefined;
@@ -49,7 +57,7 @@ export function createBuiltInProgram(
       componentName,
       'vertex',
       gl.VERTEX_SHADER,
-      VERTEX_SOURCE,
+      sources.vertex,
       shouldAbandonFailedHandles,
     );
     fragment = compileShader(
@@ -57,7 +65,7 @@ export function createBuiltInProgram(
       componentName,
       'fragment',
       gl.FRAGMENT_SHADER,
-      FRAGMENT_SOURCE,
+      sources.fragment,
       shouldAbandonFailedHandles,
     );
     program = gl.createProgram() ?? undefined;
@@ -77,7 +85,8 @@ export function createBuiltInProgram(
     }
     linked = true;
 
-    const builtIn = Object.freeze({
+    const common = {
+      key,
       program,
       model: requireUniform(gl, program, componentName, 'u_model'),
       view: requireUniform(gl, program, componentName, 'u_view'),
@@ -87,9 +96,84 @@ export function createBuiltInProgram(
         componentName,
         'u_projection',
       ),
-      color: requireUniform(gl, program, componentName, 'u_color'),
       positionAttribute: 0 as const,
-    });
+    };
+    const builtIn: WebGLBuiltInProgram = key === 'unlit' ?
+      Object.freeze({
+        ...common,
+        key,
+        displayBaseColor: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_display_base_color',
+        ),
+        linearEmissive: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_linear_emissive',
+        ),
+      }) : Object.freeze({
+        ...common,
+        key,
+        normalMatrix: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_normal_matrix',
+        ),
+        linearBaseColor: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_linear_base_color',
+        ),
+        linearEmissive: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_linear_emissive',
+        ),
+        alpha: requireUniform(gl, program, componentName, 'u_alpha'),
+        lightCount: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_light_count',
+        ),
+        lightKinds: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_light_kind[0]',
+        ),
+        lightColorIntensities: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_light_color_intensity[0]',
+        ),
+        lightPositionRanges: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_light_position_range[0]',
+        ),
+        lightDirectionInnerCosines: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_light_direction_inner_cosine[0]',
+        ),
+        lightGroundOuterCosines: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_light_ground_outer_cosine[0]',
+        ),
+        normalAttribute: 1 as const,
+      });
     runProgramCleanup(() => gl.detachShader(program!, vertex!));
     runProgramCleanup(() => gl.detachShader(program!, fragment!));
     runProgramCleanup(() => gl.deleteShader(vertex!));
