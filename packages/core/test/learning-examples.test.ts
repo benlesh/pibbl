@@ -1861,7 +1861,7 @@ describe("learning example catalog", () => {
     }
   });
 
-  it("preserves the final dragged pose when a release coalesces the disable-teleport-enable handoff", async () => {
+  it("preserves the 2D physics lesson ball's final dragged pose when a release coalesces the disable-teleport-enable handoff", async () => {
     const { canvas } = await renderLearningExample("physics-2d");
     const before = solidBlueBounds(canvas);
     const target = { x: 500, y: 120 };
