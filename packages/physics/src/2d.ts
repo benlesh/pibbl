@@ -1,4 +1,3 @@
-import type { CRCPrimitiveComponent, PrimitiveInput } from '@crc/core';
 import type {
   CRCPhysicsAabb2D,
   CRCPhysicsPose2D,
@@ -7,23 +6,13 @@ import type {
   CRCPhysicsVector2,
 } from './2d-geometry.js';
 import type {
-  Capsule2DProps,
-  Capsule2DStyle,
-  Chain2DProps,
-  Chain2DStyle,
-  CRCPhysicsAttachment2D,
   CRCPhysicsBodyHandle2D,
-  CRCPhysicsPrimitiveProps2D,
   CRCPhysicsQueryHit2D,
   CRCPhysicsQueryMatch2D,
   CRCPhysicsQueryMode,
   CRCPhysicsQueryOptions2D,
   CRCPhysicsQueryResult2D,
   CRCPhysicsWorldHandle2D,
-  PhysicsShape2DProps,
-  PhysicsShape2DStyle,
-  Segment2DProps,
-  Segment2DStyle,
 } from './lib/2d/types.js';
 import {
   collider2D,
@@ -35,6 +24,13 @@ import {
   PhysicsWorld2D,
   crcPhysicsWorld2D,
 } from './lib/2d/runtime/world-component.js';
+import {
+  Capsule2D,
+  Chain2D,
+  PhysicsShape2D,
+  Segment2D,
+} from './lib/2d/canvas/components.js';
+import { withPhysicsShape2D } from './lib/2d/canvas/custom.js';
 
 export * from './2d-geometry.js';
 export {
@@ -44,42 +40,10 @@ export {
 export * from './lib/2d/types.js';
 
 export { PhysicsWorld2D };
-
-export const PhysicsShape2D: CRCPrimitiveComponent<
-  PhysicsShape2DProps,
-  PrimitiveInput<PhysicsShape2DProps, PhysicsShape2DStyle>
-> = unavailableComponent('PhysicsShape2D');
-
-export const Capsule2D: CRCPrimitiveComponent<
-  Capsule2DProps,
-  PrimitiveInput<Capsule2DProps, Capsule2DStyle>
-> = unavailableComponent('Capsule2D');
-
-export const Segment2D: CRCPrimitiveComponent<
-  Segment2DProps,
-  PrimitiveInput<Segment2DProps, Segment2DStyle>
-> = unavailableComponent('Segment2D');
-
-export const Chain2D: CRCPrimitiveComponent<
-  Chain2DProps,
-  PrimitiveInput<Chain2DProps, Chain2DStyle>
-> = unavailableComponent('Chain2D');
+export { PhysicsShape2D, Capsule2D, Segment2D, Chain2D };
 
 export { collider2D, dynamicBody2D, kinematicBody2D, staticBody2D };
-
-export function withPhysicsShape2D<P, I, ResolvedStyle>(
-  component: CRCPrimitiveComponent<P, I>,
-  options: Readonly<{
-    resolveShape(style: Readonly<ResolvedStyle>): CRCPhysicsShape2D;
-  }>,
-): CRCPrimitiveComponent<
-  P & CRCPhysicsPrimitiveProps2D,
-  I & { readonly physics?: CRCPhysicsAttachment2D }
-> {
-  void component;
-  void options;
-  return unavailable('withPhysicsShape2D');
-}
+export { withPhysicsShape2D };
 
 export function crcPhysicsBody2D(): CRCPhysicsBodyHandle2D {
   return unavailable('crcPhysicsBody2D');
@@ -228,12 +192,6 @@ export function queryPoint2D<Mode extends CRCPhysicsQueryMode = 'closest'>(
   void point;
   void options;
   return unavailable('queryPoint2D');
-}
-
-function unavailableComponent<T extends Function>(name: string): T {
-  return function unavailablePhysicsComponent(): never {
-    return unavailable(name);
-  } as unknown as T;
 }
 
 function unavailable(name: string): never {

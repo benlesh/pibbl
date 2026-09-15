@@ -21,7 +21,11 @@ export type {
   CRCBackendToken,
   CRCNestedResolverInput,
 } from './lib/backend/types.js';
-export { defineBackendPrimitive } from './lib/define-primitive.js';
+export {
+  crcInternalRunPurePrimitiveResolver,
+  defineBackendPrimitive,
+  derivePrimitive,
+} from './lib/define-primitive.js';
 export { executeBackendCRC } from './lib/execute-render.js';
 export { mountBackendCRC } from './lib/mount-crc.js';
 export { useInternalHookSlot } from './lib/hooks/hook-slot.js';

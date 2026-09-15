@@ -22,7 +22,7 @@ import {
   type CRCPhysicsBodyHandle2D,
   type CRCPhysicsWorldHandle2D,
 } from "../../../2d.js";
-import { circleShape2D } from "../../../2d-geometry.js";
+import { circleShape2D, segmentShape2D } from "../../../2d-geometry.js";
 import {
   requirePhysicsWorld2DController,
   snapshotPhysicsWorld2DControllerForTest,
@@ -45,6 +45,151 @@ afterEach(() => {
 });
 
 describe("PhysicsWorld2D controller scheduling and topology", () => {
+  it("rejects zero-area automatic mass before admitting topology while preserving explicit and non-dynamic mass authority", () => {
+    const circle = circleShape2D({ radius: 2 });
+    const segment = segmentShape2D({ start: [0, 0], end: [4, 0] });
+    let rejectedWorld!: CRCPhysicsWorldHandle2D;
+    const CaptureRejected = () => {
+      rejectedWorld = crcPhysicsWorld2D();
+      return undefined;
+    };
+    mountCRC(
+      <PhysicsWorld2D>
+        <CaptureRejected />
+        <Group physics={dynamicBody2D({ collider: false })}>
+          <Circle
+            physics={collider2D({ shape: segment })}
+            style={{ radius: 1 }}
+          />
+          <Circle
+            physics={collider2D({ shape: circle, sensor: true })}
+            style={{ radius: 2 }}
+          />
+          <Circle
+            physics={collider2D({
+              shape: circle,
+              contributesToMass: false,
+            })}
+            style={{ radius: 2 }}
+          />
+        </Group>
+      </PhysicsWorld2D>,
+    );
+
+    expect(() => frames.flush(0)).toThrow(
+      /dynamic body with automatic mass requires positive derived area/i,
+    );
+    expect(snapshot(rejectedWorld).kernel).toMatchObject({
+      bodyCount: 0,
+      colliderCount: 0,
+      counters: { bodyAllocations: 0, colliderAllocations: 0 },
+    });
+
+    let acceptedWorld!: CRCPhysicsWorldHandle2D;
+    const CaptureAccepted = () => {
+      acceptedWorld = crcPhysicsWorld2D();
+      return undefined;
+    };
+    mountCRC(
+      <PhysicsWorld2D>
+        <CaptureAccepted />
+        <Group physics={dynamicBody2D({ collider: false, mass: 2 })}>
+          <Circle
+            physics={collider2D({ shape: segment })}
+            style={{ radius: 1 }}
+          />
+        </Group>
+        <Group physics={staticBody2D({ collider: false })}>
+          <Circle
+            physics={collider2D({ shape: segment })}
+            style={{ radius: 1 }}
+          />
+        </Group>
+        <Group physics={kinematicBody2D({ collider: false })}>
+          <Circle
+            physics={collider2D({ shape: segment })}
+            style={{ radius: 1 }}
+          />
+        </Group>
+      </PhysicsWorld2D>,
+    );
+    frames.flush(1);
+    frames.flush(2);
+    expect(snapshot(acceptedWorld).kernel).toMatchObject({
+      bodyCount: 3,
+      colliderCount: 3,
+    });
+  });
+
+  it("preserves or zeros velocity explicitly when a dynamic body is re-enabled", () => {
+    const shape = circleShape2D({ radius: 2 });
+    let world!: CRCPhysicsWorldHandle2D;
+    let enabled = true;
+    let reenableVelocity: "zero" | "preserve" = "preserve";
+    const Capture = () => {
+      world = crcPhysicsWorld2D();
+      return undefined;
+    };
+    const root = () => (
+      <PhysicsWorld2D gravity={[0, 0]}>
+        <Capture />
+        <Circle
+          physics={dynamicBody2D({
+            collider: shape,
+            enabled,
+            linearVelocity: [3, 4],
+            reenableVelocity,
+          })}
+          style={{ radius: 2 }}
+        />
+      </PhysicsWorld2D>
+    );
+    const mount = mountCRC(root());
+    frames.flush(0);
+    frames.flush(0);
+    const controller = requirePhysicsWorld2DController(world);
+    const bodyId = snapshot(world).bodyIds[0]!;
+    controller.queueCommands([
+      {
+        kind: "set-velocity",
+        bodyId,
+        linearVelocityX: 7,
+        linearVelocityY: 8,
+        angularVelocityDegrees: 30,
+      },
+    ]);
+    frames.flush(0);
+
+    enabled = false;
+    crc(canvasOf(mount), root());
+    frames.flush(0);
+    frames.flush(0);
+    enabled = true;
+    crc(canvasOf(mount), root());
+    frames.flush(0);
+    frames.flush(0);
+    expect(snapshot(world).kernel.bodies[0]).toMatchObject({
+      linearVelocityX: 7,
+      linearVelocityY: 8,
+      angularVelocity: Math.PI / 6,
+    });
+
+    enabled = false;
+    crc(canvasOf(mount), root());
+    frames.flush(0);
+    frames.flush(0);
+    enabled = true;
+    reenableVelocity = "zero";
+    crc(canvasOf(mount), root());
+    frames.flush(0);
+    frames.flush(0);
+    expect(snapshot(world).kernel.bodies[0]).toMatchObject({
+      linearVelocityX: 0,
+      linearVelocityY: 0,
+      angularVelocity: 0,
+    });
+  });
+
   it("renders authored content first, applies complete topology at next Begin, and retains IDs for equivalent descriptors", () => {
     const shape = circleShape2D({ radius: 3 });
     let world!: CRCPhysicsWorldHandle2D;
@@ -207,7 +352,7 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
     mountCRC(
       <PhysicsWorld2D fixedStepMilliseconds={100}>
         <Capture />
-        <Group physics={dynamicBody2D({ collider: false })} />
+        <Group physics={dynamicBody2D({ collider: false, mass: 1 })} />
       </PhysicsWorld2D>,
     );
     frames.flush(0);
@@ -252,7 +397,9 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
         }}
       >
         <Capture />
-        <Group physics={dynamicBody2D({ handle: body, collider: false })} />
+        <Group
+          physics={dynamicBody2D({ handle: body, collider: false, mass: 1 })}
+        />
       </PhysicsWorld2D>,
     );
     frames.flush(0);
@@ -276,11 +423,11 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
       <Fragment>
         <PhysicsWorld2D onError={onError}>
           <Capture />
-          <Group physics={dynamicBody2D({ collider: false })} />
+          <Group physics={dynamicBody2D({ collider: false, mass: 1 })} />
         </PhysicsWorld2D>
         <PhysicsWorld2D>
           <Capture />
-          <Group physics={dynamicBody2D({ collider: false })} />
+          <Group physics={dynamicBody2D({ collider: false, mass: 1 })} />
         </PhysicsWorld2D>
       </Fragment>,
     );

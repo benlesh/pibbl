@@ -87,6 +87,12 @@ interface AttachmentIds2D {
   colliderId?: number;
 }
 
+interface BodyVelocity2D {
+  readonly linearVelocityX: number;
+  readonly linearVelocityY: number;
+  readonly angularVelocity: number;
+}
+
 export interface PhysicsWorld2DControllerSnapshot {
   readonly revision: number;
   readonly advanceRegistered: boolean;
@@ -108,6 +114,7 @@ export class PhysicsWorld2DController {
   private acceptedBodies: readonly AcceptedBody2D[] = Object.freeze([]);
   private acceptedConfiguration: NormalizedPhysicsWorld2DConfiguration;
   private acceptedProps: CRCPhysicsWorld2DProps = Object.freeze({});
+  private readonly suspendedVelocities = new Map<number, BodyVelocity2D>();
   private queuedBegin: Readonly<{ cancel(): void }> | undefined;
   private releaseAdvance: (() => void) | undefined;
   private liveCandidate: PhysicsWorld2DCandidate | undefined;
@@ -239,6 +246,7 @@ export class PhysicsWorld2DController {
     }
     this.kernel.dispose();
     this.draft = undefined;
+    this.suspendedVelocities.clear();
   }
 
   snapshot(): PhysicsWorld2DControllerSnapshot {
@@ -269,7 +277,9 @@ export class PhysicsWorld2DController {
     const draft = this.draft;
     this.draft = undefined;
     if (!success || draft === undefined || !this.active) return;
-    const topology = materializeTopology(draft);
+    validateAutomaticMass(draft);
+    const reenableVelocities = this.resolveReenableVelocities(draft);
+    const topology = materializeTopology(draft, reenableVelocities);
     const topologyChanged = !sameTopology(this.acceptedTopology, topology);
     const configurationChanged = !sameConfiguration(
       this.acceptedConfiguration,
@@ -306,6 +316,62 @@ export class PhysicsWorld2DController {
       "physics",
       (frame, batch) => this.advance(frame.frameId, frame.logicalTime, batch),
     );
+  }
+
+  private resolveReenableVelocities(
+    draft: RenderDraft2D,
+  ): ReadonlyMap<number, BodyVelocity2D> {
+    const previousById = new Map(
+      this.acceptedBodies.map((body) => [body.id, body]),
+    );
+    const kernelById = new Map(
+      this.kernel.snapshot().bodies.map((body) => [body.id, body]),
+    );
+    const overrides = new Map<number, BodyVelocity2D>();
+    for (const body of draft.bodies.values()) {
+      const previous = previousById.get(body.id);
+      const currentDynamic =
+        body.descriptor.bodyType === "dynamic" ? body.descriptor : undefined;
+      const previousDynamic =
+        previous?.descriptor.bodyType === "dynamic"
+          ? previous.descriptor
+          : undefined;
+      if (
+        currentDynamic !== undefined &&
+        !currentDynamic.options.enabled &&
+        previousDynamic?.options.enabled
+      ) {
+        const state = kernelById.get(body.id);
+        if (state !== undefined) {
+          this.suspendedVelocities.set(
+            body.id,
+            Object.freeze({
+              linearVelocityX: state.linearVelocityX,
+              linearVelocityY: state.linearVelocityY,
+              angularVelocity: state.angularVelocity,
+            }),
+          );
+        }
+      }
+      if (
+        currentDynamic?.options.enabled &&
+        previousDynamic !== undefined &&
+        !previousDynamic.options.enabled
+      ) {
+        const preserved = this.suspendedVelocities.get(body.id);
+        overrides.set(
+          body.id,
+          currentDynamic.options.reenableVelocity === "preserve" && preserved
+            ? preserved
+            : ZERO_VELOCITY_2D,
+        );
+      }
+    }
+    const retained = new Set(draft.bodies.keys());
+    for (const id of this.suspendedVelocities.keys()) {
+      if (!retained.has(id)) this.suspendedVelocities.delete(id);
+    }
+    return overrides;
   }
 
   private advance(
@@ -573,6 +639,7 @@ function normalizeWorldConfiguration(
 
 function materializeTopology(
   draft: RenderDraft2D,
+  reenableVelocities: ReadonlyMap<number, BodyVelocity2D>,
 ): readonly PhysicsTopologyRecord2D[] {
   const collidersByBody = new Map<number, ColliderDraft2D[]>();
   for (const collider of draft.colliders.values()) {
@@ -586,7 +653,11 @@ function materializeTopology(
       Object.freeze({
         kind: "body",
         id: body.id,
-        definition: bodyDefinition(body, collidersByBody.get(body.id) ?? []),
+        definition: bodyDefinition(
+          body,
+          collidersByBody.get(body.id) ?? [],
+          reenableVelocities.get(body.id),
+        ),
       }),
     );
   const colliders = [...draft.colliders.values()]
@@ -613,9 +684,36 @@ function materializeTopology(
   return Object.freeze([...bodies, ...colliders]);
 }
 
+function validateAutomaticMass(draft: RenderDraft2D): void {
+  const massByBody = new Map<number, number>();
+  for (const collider of draft.colliders.values()) {
+    if (!collider.options.contributesToMass) continue;
+    massByBody.set(
+      collider.bodyId,
+      (massByBody.get(collider.bodyId) ?? 0) +
+        collider.shape.area * collider.options.density,
+    );
+  }
+  for (const body of draft.bodies.values()) {
+    if (
+      body.descriptor.bodyType !== "dynamic" ||
+      !body.descriptor.options.enabled ||
+      body.descriptor.options.mass !== "auto"
+    ) {
+      continue;
+    }
+    if ((massByBody.get(body.id) ?? 0) <= 0) {
+      throw new RangeError(
+        "A dynamic body with automatic mass requires positive derived area from at least one active mass-contributing collider.",
+      );
+    }
+  }
+}
+
 function bodyDefinition(
   body: BodyDraft2D,
   colliders: readonly ColliderDraft2D[],
+  reenableVelocity?: BodyVelocity2D,
 ): BodyDefinition2D {
   const descriptor = body.descriptor;
   const enabled = descriptor.options.enabled;
@@ -633,9 +731,12 @@ function bodyDefinition(
     if (descriptor.options.fixedRotation) flags |= BODY_FIXED_ROTATION_2D;
     if (!descriptor.options.allowSleep) flags |= BODY_SLEEP_DISABLED_2D;
     if (descriptor.options.ccd) flags |= BODY_CCD_2D;
-    linearVelocityX = descriptor.options.linearVelocity[0];
-    linearVelocityY = descriptor.options.linearVelocity[1];
+    linearVelocityX =
+      reenableVelocity?.linearVelocityX ?? descriptor.options.linearVelocity[0];
+    linearVelocityY =
+      reenableVelocity?.linearVelocityY ?? descriptor.options.linearVelocity[1];
     angularVelocity =
+      reenableVelocity?.angularVelocity ??
       (descriptor.options.angularVelocityDegreesPerSecond * Math.PI) / 180;
     linearDamping = descriptor.options.linearDamping;
     angularDamping = descriptor.options.angularDamping;
@@ -671,13 +772,19 @@ function bodyDefinition(
   });
 }
 
+const ZERO_VELOCITY_2D: BodyVelocity2D = Object.freeze({
+  linearVelocityX: 0,
+  linearVelocityY: 0,
+  angularVelocity: 0,
+});
+
 function autoMass(colliders: readonly ColliderDraft2D[]): number {
   let mass = 0;
   for (const collider of colliders) {
     if (!collider.options.contributesToMass) continue;
     mass += collider.shape.area * collider.options.density;
   }
-  return mass > 0 ? mass : 1;
+  return mass;
 }
 
 function sameConfiguration(

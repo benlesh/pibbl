@@ -1,4 +1,8 @@
-import { setPrimitiveDefinition } from './element/metadata.js';
+import {
+  derivePrimitiveMetadata,
+  getPrimitiveDefinition,
+  setPrimitiveDefinition,
+} from './element/metadata.js';
 import {
   CANVAS_2D_BACKEND,
 } from './backend/canvas-2d-backend.js';
@@ -15,6 +19,8 @@ import type {
   RenderingContext2D,
   SystemStyle,
 } from './types.js';
+import { GLOBAL_STATE } from './global-state.js';
+import { withSignalWriteForbidden } from './signals/graph.js';
 
 type AllocationValue = `${number}%` | 'auto';
 type DeclaredStyleValue<S> = S extends unknown
@@ -97,6 +103,47 @@ export function defineBackendPrimitive<
     measure: capabilities.measure,
   });
   return component;
+}
+
+/** Derives a new official-package primitive identity with the source behavior. */
+export function derivePrimitive<T extends CRCPrimitiveComponent<any, any>>(
+  source: T,
+): T {
+  if (!getPrimitiveDefinition(source)) {
+    throw new TypeError('Can only derive a CRC primitive component.');
+  }
+  const componentName = source.name || 'Anonymous';
+  const derived = function CRCPrimitiveComponent(): never {
+    throw new Error(
+      `${componentName} is a CRC component and was invoked outside the CRC ` +
+      'renderer.\n' +
+      `Use <${componentName} ... /> in a CRC JSX file or ` +
+      `createElement(${componentName}, props).`,
+    );
+  } as unknown as T;
+  Object.defineProperty(derived, 'name', {
+    configurable: true,
+    value: componentName,
+  });
+  derivePrimitiveMetadata(source, derived);
+  return derived;
+}
+
+/** Runs one official-package primitive resolver without render side-effect authority. */
+export function crcInternalRunPurePrimitiveResolver<T>(callback: () => T): T {
+  const previousComponentRefs = GLOBAL_STATE.componentRefs;
+  const previousComponentHookIndex = GLOBAL_STATE.componentHookIndex;
+  const previousComponentIsMounting = GLOBAL_STATE.componentIsMounting;
+  GLOBAL_STATE.componentRefs = undefined;
+  GLOBAL_STATE.componentHookIndex = 0;
+  GLOBAL_STATE.componentIsMounting = false;
+  try {
+    return withSignalWriteForbidden('CRC pure primitive resolver', callback);
+  } finally {
+    GLOBAL_STATE.componentRefs = previousComponentRefs;
+    GLOBAL_STATE.componentHookIndex = previousComponentHookIndex;
+    GLOBAL_STATE.componentIsMounting = previousComponentIsMounting;
+  }
 }
 
 function primitiveComponentName(renderName: string): string {
