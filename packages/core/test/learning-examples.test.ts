@@ -1153,11 +1153,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 53 unique, ordered, source-backed routes including standard shapes, WebGL, signals, and animation", async () => {
+  it("contains 54 unique, ordered, source-backed routes including particles, standard shapes, WebGL, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(53);
+    expect(learningExampleCatalog).toHaveLength(54);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1209,6 +1209,7 @@ describe("learning example catalog", () => {
         "clip",
         "group",
         "layer",
+        "particle-effects",
         "signals-and-animation",
         "webgl-islands",
       ],
@@ -1283,6 +1284,7 @@ describe("learning example catalog", () => {
       "filters",
       "webgl-islands",
       "signals-and-animation",
+      "particle-effects",
       "layer",
     ]);
 
@@ -1647,11 +1649,13 @@ describe("learning example catalog", () => {
         "Clip",
         "Layer",
         "CRCFilter",
+        "Particles2D",
         "WebGLLayer",
         "Group3D",
         "Cube",
         "Sphere",
         "crcAnimationFrame",
+        "crcParticleSystem",
         "crcSignal",
         "crcTransition",
         "crcPlayback",
@@ -1659,6 +1663,10 @@ describe("learning example catalog", () => {
         "sequence",
         "marker",
         "spring",
+        "defineParticleEffect2D",
+        "particleChoice",
+        "particleCurve",
+        "particleRange",
       ]),
     );
 

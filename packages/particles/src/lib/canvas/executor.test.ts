@@ -69,6 +69,18 @@ function context() {
 }
 
 describe("Canvas particle executor commands", () => {
+  it("rejects sprite sources with nonfinite dimensions before executor acquisition", () => {
+    const sprite = document.createElement("canvas");
+    Object.defineProperty(sprite, "width", {
+      configurable: true,
+      value: Number.POSITIVE_INFINITY,
+    });
+
+    expect(() =>
+      setup(emitter("sprite", { type: "sprite", source: sprite })),
+    ).toThrowError(/decoded sprite source with finite dimensions/i);
+  });
+
   it("draws circle, rectangle, immutable Path2D, and decoded sprite renderers in emitter order", () => {
     const path = new Path2D();
     path.rect(-0.5, -0.5, 1, 1);

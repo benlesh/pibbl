@@ -133,13 +133,17 @@ function assertDecodedSpriteSources(compiled: CompiledEffect2D): void {
   for (const emitter of compiled.emitters) {
     const renderer = emitter.renderer;
     if (renderer.type !== "sprite") continue;
+    const width = imageWidth(renderer.source);
+    const height = imageHeight(renderer.source);
     if (
       (renderer.source instanceof HTMLImageElement &&
         (!renderer.source.complete || renderer.source.naturalWidth <= 0)) ||
       (renderer.source instanceof HTMLVideoElement &&
         renderer.source.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) ||
-      imageWidth(renderer.source) <= 0 ||
-      imageHeight(renderer.source) <= 0
+      !Number.isFinite(width) ||
+      !Number.isFinite(height) ||
+      width <= 0 ||
+      height <= 0
     ) {
       throw new TypeError(
         `CRC Canvas particle emitter "${emitter.name}" requires a decoded sprite source with finite dimensions.`,
