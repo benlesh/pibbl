@@ -1,8 +1,4 @@
-import type {
-  CRCComponent,
-  CRCPrimitiveComponent,
-  PrimitiveInput,
-} from '@crc/core';
+import type { CRCPrimitiveComponent, PrimitiveInput } from '@crc/core';
 import type {
   CRCPhysicsAabb2D,
   CRCPhysicsPose2D,
@@ -16,26 +12,29 @@ import type {
   Chain2DProps,
   Chain2DStyle,
   CRCPhysicsAttachment2D,
-  CRCPhysicsBodyAttachment2D,
   CRCPhysicsBodyHandle2D,
-  CRCPhysicsColliderAttachment2D,
-  CRCPhysicsColliderConfiguration2D,
-  CRCPhysicsDynamicBody2DOptions,
-  CRCPhysicsKinematicBody2DOptions,
   CRCPhysicsPrimitiveProps2D,
   CRCPhysicsQueryHit2D,
   CRCPhysicsQueryMatch2D,
   CRCPhysicsQueryMode,
   CRCPhysicsQueryOptions2D,
   CRCPhysicsQueryResult2D,
-  CRCPhysicsStaticBody2DOptions,
-  CRCPhysicsWorld2DProps,
   CRCPhysicsWorldHandle2D,
   PhysicsShape2DProps,
   PhysicsShape2DStyle,
   Segment2DProps,
   Segment2DStyle,
 } from './lib/2d/types.js';
+import {
+  collider2D,
+  dynamicBody2D,
+  kinematicBody2D,
+  staticBody2D,
+} from './lib/2d/runtime/descriptors.js';
+import {
+  PhysicsWorld2D,
+  crcPhysicsWorld2D,
+} from './lib/2d/runtime/world-component.js';
 
 export * from './2d-geometry.js';
 export {
@@ -44,8 +43,7 @@ export {
 } from './lib/2d/collision/casts.js';
 export * from './lib/2d/types.js';
 
-export const PhysicsWorld2D: CRCComponent<CRCPhysicsWorld2DProps> =
-  unavailableComponent('PhysicsWorld2D');
+export { PhysicsWorld2D };
 
 export const PhysicsShape2D: CRCPrimitiveComponent<
   PhysicsShape2DProps,
@@ -67,33 +65,7 @@ export const Chain2D: CRCPrimitiveComponent<
   PrimitiveInput<Chain2DProps, Chain2DStyle>
 > = unavailableComponent('Chain2D');
 
-export function dynamicBody2D(
-  options?: CRCPhysicsDynamicBody2DOptions,
-): CRCPhysicsBodyAttachment2D {
-  void options;
-  return unavailable('dynamicBody2D');
-}
-
-export function staticBody2D(
-  options?: CRCPhysicsStaticBody2DOptions,
-): CRCPhysicsBodyAttachment2D {
-  void options;
-  return unavailable('staticBody2D');
-}
-
-export function kinematicBody2D(
-  options?: CRCPhysicsKinematicBody2DOptions,
-): CRCPhysicsBodyAttachment2D {
-  void options;
-  return unavailable('kinematicBody2D');
-}
-
-export function collider2D(
-  options?: CRCPhysicsColliderConfiguration2D,
-): CRCPhysicsColliderAttachment2D {
-  void options;
-  return unavailable('collider2D');
-}
+export { collider2D, dynamicBody2D, kinematicBody2D, staticBody2D };
 
 export function withPhysicsShape2D<P, I, ResolvedStyle>(
   component: CRCPrimitiveComponent<P, I>,
@@ -113,9 +85,7 @@ export function crcPhysicsBody2D(): CRCPhysicsBodyHandle2D {
   return unavailable('crcPhysicsBody2D');
 }
 
-export function crcPhysicsWorld2D(): CRCPhysicsWorldHandle2D {
-  return unavailable('crcPhysicsWorld2D');
-}
+export { crcPhysicsWorld2D };
 
 export function applyForce2D(
   body: CRCPhysicsBodyHandle2D,
@@ -269,6 +239,6 @@ function unavailableComponent<T extends Function>(name: string): T {
 function unavailable(name: string): never {
   throw new Error(
     `${name} is part of the @crc/physics public scaffold and is not ` +
-    'implemented by this foundation task yet.',
+      'implemented by this foundation task yet.',
   );
 }
