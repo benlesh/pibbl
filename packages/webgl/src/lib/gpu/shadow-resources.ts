@@ -57,20 +57,18 @@ export interface WebGLShadowResourceTransaction {
   rollback(contextLost?: boolean): void;
 }
 
-interface ShadowFoundation extends WebGLShadowBindings {
-  readonly framebuffer: WebGLFramebuffer;
-}
-
 interface ShadowCandidate {
   active: boolean;
-  foundationCreated: boolean;
+  bindingsCreated: boolean;
+  framebufferCreated: boolean;
   readonly usedLights: Set<WebGLSceneIdentity>;
   readonly created: Map<WebGLSceneIdentity, WebGLShadowResource>;
 }
 
 /** Owns transactional depth targets for one renderer context generation. */
 export class WebGLShadowResourceCache {
-  private foundation: ShadowFoundation | undefined;
+  private bindings: WebGLShadowBindings | undefined;
+  private framebuffer: WebGLFramebuffer | undefined;
   private readonly resident = new Map<
     WebGLSceneIdentity,
     WebGLShadowResource
@@ -96,7 +94,8 @@ export class WebGLShadowResourceCache {
     }
     const candidate: ShadowCandidate = {
       active: true,
-      foundationCreated: false,
+      bindingsCreated: false,
+      framebufferCreated: false,
       usedLights: new Set(),
       created: new Map(),
     };
@@ -125,7 +124,8 @@ export class WebGLShadowResourceCache {
     if (this.disposed || this.invalidated) return;
     this.invalidated = true;
     this.closeActiveCandidate();
-    this.foundation = undefined;
+    this.bindings = undefined;
+    this.framebuffer = undefined;
     this.resident.clear();
     this.maximum2DResolution = undefined;
     this.maximumCubeResolution = undefined;
@@ -137,9 +137,11 @@ export class WebGLShadowResourceCache {
     const candidateResources = this.activeCandidate ?
       Array.from(this.activeCandidate.created.values()) : [];
     this.closeActiveCandidate();
-    const foundation = this.foundation;
+    const bindings = this.bindings;
+    const framebuffer = this.framebuffer;
     const resources = Array.from(this.resident.values());
-    this.foundation = undefined;
+    this.bindings = undefined;
+    this.framebuffer = undefined;
     this.resident.clear();
     this.maximum2DResolution = undefined;
     this.maximumCubeResolution = undefined;
@@ -150,10 +152,12 @@ export class WebGLShadowResourceCache {
     for (const resource of resources) {
       runShadowCleanup(() => this.gl.deleteTexture(resource.texture));
     }
-    if (foundation) {
-      runShadowCleanup(() => this.gl.deleteTexture(foundation.fallback2D));
-      runShadowCleanup(() => this.gl.deleteTexture(foundation.fallbackCube));
-      runShadowCleanup(() => this.gl.deleteFramebuffer(foundation.framebuffer));
+    if (bindings) {
+      runShadowCleanup(() => this.gl.deleteTexture(bindings.fallback2D));
+      runShadowCleanup(() => this.gl.deleteTexture(bindings.fallbackCube));
+    }
+    if (framebuffer) {
+      runShadowCleanup(() => this.gl.deleteFramebuffer(framebuffer));
     }
   }
 
@@ -190,7 +194,7 @@ export class WebGLShadowResourceCache {
       resolution,
     )) return existing;
 
-    const foundation = this.requireFoundation(candidate);
+    const framebuffer = this.requireFramebuffer(candidate);
     const texture = createDepthTexture2D(this.gl, resolution);
     const resource = Object.freeze({
       kind: 'directional' as const,
@@ -199,7 +203,7 @@ export class WebGLShadowResourceCache {
       plan,
     });
     candidate.created.set(identity, resource);
-    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, foundation.framebuffer);
+    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
     this.gl.framebufferTexture2D(
       this.gl.FRAMEBUFFER,
       this.gl.DEPTH_ATTACHMENT,
@@ -252,7 +256,7 @@ export class WebGLShadowResourceCache {
       resolution,
     )) return existing;
 
-    const foundation = this.requireFoundation(candidate);
+    const framebuffer = this.requireFramebuffer(candidate);
     const texture = createDepthTexture2D(this.gl, resolution);
     const resource = Object.freeze({
       kind: 'spot' as const,
@@ -261,7 +265,7 @@ export class WebGLShadowResourceCache {
       plan,
     });
     candidate.created.set(identity, resource);
-    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, foundation.framebuffer);
+    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
     this.gl.framebufferTexture2D(
       this.gl.FRAMEBUFFER,
       this.gl.DEPTH_ATTACHMENT,
@@ -314,7 +318,7 @@ export class WebGLShadowResourceCache {
       resolution,
     )) return existing;
 
-    const foundation = this.requireFoundation(candidate);
+    const framebuffer = this.requireFramebuffer(candidate);
     const texture = createDepthTextureCube(this.gl, resolution);
     const resource = Object.freeze({
       kind: 'point' as const,
@@ -323,7 +327,7 @@ export class WebGLShadowResourceCache {
       plan,
     });
     candidate.created.set(identity, resource);
-    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, foundation.framebuffer);
+    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
     this.gl.drawBuffers([this.gl.NONE]);
     this.gl.readBuffer(this.gl.NONE);
     for (let face = 0; face < 6; face += 1) {
@@ -347,20 +351,24 @@ export class WebGLShadowResourceCache {
   }
 
   private getBindings(candidate: ShadowCandidate): WebGLShadowBindings {
-    const foundation = this.requireFoundation(candidate);
-    return Object.freeze({
-      fallback2D: foundation.fallback2D,
-      fallbackCube: foundation.fallbackCube,
-    });
+    this.requireCandidate(candidate);
+    if (this.bindings) return this.bindings;
+    const bindings = createShadowBindings(this.gl);
+    this.bindings = bindings;
+    candidate.bindingsCreated = true;
+    return bindings;
   }
 
-  private requireFoundation(candidate: ShadowCandidate): ShadowFoundation {
+  private requireFramebuffer(candidate: ShadowCandidate): WebGLFramebuffer {
     this.requireCandidate(candidate);
-    if (this.foundation) return this.foundation;
-    const foundation = createShadowFoundation(this.gl);
-    this.foundation = foundation;
-    candidate.foundationCreated = true;
-    return foundation;
+    if (this.framebuffer) return this.framebuffer;
+    const framebuffer = this.gl.createFramebuffer();
+    if (!framebuffer) {
+      throw new Error('WebGL shadow framebuffer creation failed.');
+    }
+    this.framebuffer = framebuffer;
+    candidate.framebufferCreated = true;
+    return framebuffer;
   }
 
   private getMaximum2DResolution(): number {
@@ -419,14 +427,16 @@ export class WebGLShadowResourceCache {
       for (const resource of candidate.created.values()) {
         runShadowCleanup(() => this.gl.deleteTexture(resource.texture));
       }
-      if (candidate.foundationCreated && this.foundation) {
-        const foundation = this.foundation;
-        this.foundation = undefined;
-        runShadowCleanup(() => this.gl.deleteTexture(foundation.fallback2D));
-        runShadowCleanup(() => this.gl.deleteTexture(foundation.fallbackCube));
-        runShadowCleanup(() => this.gl.deleteFramebuffer(
-          foundation.framebuffer,
-        ));
+      if (candidate.bindingsCreated && this.bindings) {
+        const bindings = this.bindings;
+        this.bindings = undefined;
+        runShadowCleanup(() => this.gl.deleteTexture(bindings.fallback2D));
+        runShadowCleanup(() => this.gl.deleteTexture(bindings.fallbackCube));
+      }
+      if (candidate.framebufferCreated && this.framebuffer) {
+        const framebuffer = this.framebuffer;
+        this.framebuffer = undefined;
+        runShadowCleanup(() => this.gl.deleteFramebuffer(framebuffer));
       }
     } finally {
       this.closeCandidate(candidate);
@@ -465,27 +475,21 @@ export class WebGLShadowResourceCache {
   }
 }
 
-function createShadowFoundation(gl: WebGL2RenderingContext): ShadowFoundation {
-  let framebuffer: WebGLFramebuffer | undefined;
+function createShadowBindings(
+  gl: WebGL2RenderingContext,
+): WebGLShadowBindings {
   let fallback2D: WebGLTexture | undefined;
   let fallbackCube: WebGLTexture | undefined;
   let published = false;
   try {
-    framebuffer = gl.createFramebuffer() ?? undefined;
-    if (!framebuffer) {
-      throw new Error('WebGL shadow framebuffer creation failed.');
-    }
     fallback2D = createDepthTexture2D(gl, 1);
     fallbackCube = createDepthTextureCube(gl, 1);
     published = true;
-    return Object.freeze({ framebuffer, fallback2D, fallbackCube });
+    return Object.freeze({ fallback2D, fallbackCube });
   } finally {
     if (!published) {
       if (fallbackCube) runShadowCleanup(() => gl.deleteTexture(fallbackCube!));
       if (fallback2D) runShadowCleanup(() => gl.deleteTexture(fallback2D!));
-      if (framebuffer) {
-        runShadowCleanup(() => gl.deleteFramebuffer(framebuffer!));
-      }
     }
   }
 }

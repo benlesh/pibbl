@@ -7,6 +7,23 @@ afterEach(() => {
 });
 
 describe('WebGLShadowResourceCache', () => {
+  it('creates complete sampler fallbacks without allocating a shadow render target', () => {
+    const recording = createShadowGL();
+    const cache = new WebGLShadowResourceCache(recording.gl, 7);
+    const transaction = cache.beginRender();
+
+    const bindings = transaction.getBindings();
+    transaction.commit();
+
+    expect(bindings.fallback2D).toBeDefined();
+    expect(bindings.fallbackCube).toBeDefined();
+    expect(recording.textures).toHaveLength(2);
+    expect(recording.texImage2D).toHaveBeenCalledTimes(7);
+    expect(recording.createFramebuffer).not.toHaveBeenCalled();
+    expect(recording.framebufferTexture2D).not.toHaveBeenCalled();
+    expect(recording.checkFramebufferStatus).not.toHaveBeenCalled();
+  });
+
   it('clamps directional maps to the 2D limit and allocates DEPTH_COMPONENT24 with complete fallbacks', () => {
     const recording = createShadowGL({ maxTextureSize: 768 });
     const cache = new WebGLShadowResourceCache(recording.gl, 7);
@@ -123,7 +140,7 @@ describe('WebGLShadowResourceCache', () => {
 
     cache.dispose(false);
     expect(recording.deleteFramebuffer).toHaveBeenCalledOnce();
-    expect(recording.deleteTexture.mock.calls.length).toBeGreaterThanOrEqual(4);
+    expect(recording.deleteTexture).toHaveBeenCalledTimes(2);
 
     const lost = createShadowGL();
     const lostCache = new WebGLShadowResourceCache(lost.gl, 8);
@@ -161,7 +178,7 @@ describe('WebGLShadowResourceCache', () => {
     cache.dispose(false);
 
     const deleted = recording.deleteTexture.mock.calls.map(call => call[0]);
-    expect(deleted).toHaveLength(3);
+    expect(deleted).toHaveLength(1);
     expect(new Set(deleted)).toEqual(new Set(recording.textures));
     expect(recording.deleteFramebuffer).toHaveBeenCalledOnce();
 
@@ -281,7 +298,7 @@ describe('WebGLShadowResourceCache', () => {
 
     const allocationError = new Error('cube allocation failed');
     const allocation = createShadowGL({
-      texImage2DErrorAt: 8,
+      texImage2DErrorAt: 4,
       texImage2DError: allocationError,
     });
     const allocationCache = new WebGLShadowResourceCache(allocation.gl, 7);

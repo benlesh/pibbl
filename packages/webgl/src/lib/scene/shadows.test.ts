@@ -298,6 +298,61 @@ describe('point shadow planning', () => {
     expect(shifted.lightIndex).toBe(1);
     expect(haveSameWebGLShadowPlan(first, 1024, shifted, 1024)).toBe(true);
   });
+
+  it('skips finite-range point shadows without an in-range caster or receiver', () => {
+    const noCaster = settleScene({
+      lightKind: 'point',
+      lightRange: 2,
+      meshTransform: { translateX: 10 },
+      receiverTransform: {},
+    });
+    const noReceiver = settleScene({
+      lightKind: 'point',
+      lightRange: 2,
+      receiverTransform: { translateX: 10 },
+    });
+
+    expect(noCaster.shadowPlans).toEqual([]);
+    expect(noReceiver.shadowPlans).toEqual([]);
+  });
+
+  it('submits and keys only point casters intersecting the finite range', () => {
+    const first = settleScene({
+      lightKind: 'point',
+      lightRange: 3,
+      receiverTransform: {},
+      additionalCasterTransform: { translateX: 10 },
+    });
+    const movedIrrelevant = settleScene({
+      lightKind: 'point',
+      lightRange: 3,
+      receiverTransform: {},
+      additionalCasterTransform: { translateX: 20 },
+    });
+    const movedRelevant = settleScene({
+      lightKind: 'point',
+      lightRange: 3,
+      meshTransform: { translateX: 0.25 },
+      receiverTransform: {},
+      additionalCasterTransform: { translateX: 10 },
+    });
+    const plan = first.shadowPlans[0]!;
+
+    expect(plan.casters).toEqual([first.meshes[0]]);
+    expect(plan.receivers).toEqual([first.meshes[2]]);
+    expect(haveSameWebGLShadowPlan(
+      plan,
+      1024,
+      movedIrrelevant.shadowPlans[0]!,
+      1024,
+    )).toBe(true);
+    expect(haveSameWebGLShadowPlan(
+      plan,
+      1024,
+      movedRelevant.shadowPlans[0]!,
+      1024,
+    )).toBe(false);
+  });
 });
 
 describe('spot shadow planning', () => {
@@ -309,6 +364,10 @@ describe('spot shadow planning', () => {
         translateY: 3,
         translateZ: 4,
         rotationYDegrees: 90,
+      },
+      meshTransform: {
+        translateY: 3,
+        translateZ: 4,
       },
       lightRange: 10,
       outerConeAngleDegrees: 30,
@@ -502,6 +561,77 @@ describe('spot shadow planning', () => {
     expect(haveSameWebGLShadowPlan(first, 1024, cone, 1024)).toBe(false);
     expect(haveSameWebGLShadowPlan(first, 1024, movedCaster, 1024)).toBe(false);
   });
+
+  it('skips spot shadows without a caster and receiver inside range and outer cone', () => {
+    const casterOutsideRange = settleScene({
+      lightKind: 'spot',
+      lightRange: 10,
+      outerConeAngleDegrees: 20,
+      meshTransform: { translateZ: -20 },
+      receiverTransform: { translateZ: -4 },
+    });
+    const casterOutsideCone = settleScene({
+      lightKind: 'spot',
+      lightRange: 10,
+      outerConeAngleDegrees: 20,
+      meshTransform: { translateX: 5, translateZ: -4 },
+      receiverTransform: { translateZ: -4 },
+    });
+    const receiverOutsideCone = settleScene({
+      lightKind: 'spot',
+      lightRange: 10,
+      outerConeAngleDegrees: 20,
+      meshTransform: { translateZ: -4 },
+      receiverTransform: { translateX: 5, translateZ: -4 },
+    });
+
+    expect(casterOutsideRange.shadowPlans).toEqual([]);
+    expect(casterOutsideCone.shadowPlans).toEqual([]);
+    expect(receiverOutsideCone.shadowPlans).toEqual([]);
+  });
+
+  it('submits and keys only spot casters intersecting range and outer cone', () => {
+    const first = settleScene({
+      lightKind: 'spot',
+      lightRange: 10,
+      outerConeAngleDegrees: 20,
+      meshTransform: { translateZ: -4 },
+      receiverTransform: { translateZ: -6 },
+      additionalCasterTransform: { translateX: 5, translateZ: -4 },
+    });
+    const movedIrrelevant = settleScene({
+      lightKind: 'spot',
+      lightRange: 10,
+      outerConeAngleDegrees: 20,
+      meshTransform: { translateZ: -4 },
+      receiverTransform: { translateZ: -6 },
+      additionalCasterTransform: { translateX: 8, translateZ: -4 },
+    });
+    const movedRelevant = settleScene({
+      lightKind: 'spot',
+      lightRange: 10,
+      outerConeAngleDegrees: 20,
+      meshTransform: { translateX: 0.25, translateZ: -4 },
+      receiverTransform: { translateZ: -6 },
+      additionalCasterTransform: { translateX: 5, translateZ: -4 },
+    });
+    const plan = first.shadowPlans[0]!;
+
+    expect(plan.casters).toEqual([first.meshes[0]]);
+    expect(plan.receivers).toEqual([first.meshes[2]]);
+    expect(haveSameWebGLShadowPlan(
+      plan,
+      1024,
+      movedIrrelevant.shadowPlans[0]!,
+      1024,
+    )).toBe(true);
+    expect(haveSameWebGLShadowPlan(
+      plan,
+      1024,
+      movedRelevant.shadowPlans[0]!,
+      1024,
+    )).toBe(false);
+  });
 });
 
 function settleScene(options: {
@@ -516,6 +646,7 @@ function settleScene(options: {
   readonly meshTransform?: Parameters<typeof composeModelMatrix4>[1];
   readonly meshIdentity?: object;
   readonly receiverTransform?: Parameters<typeof composeModelMatrix4>[1];
+  readonly additionalCasterTransform?: Parameters<typeof composeModelMatrix4>[1];
   readonly lightKind?: 'directional' | 'point' | 'spot';
   readonly lightRange?: number;
   readonly lightCastShadow?: boolean;
@@ -591,6 +722,23 @@ function settleScene(options: {
     receiveShadow: options.receiverTransform === undefined ?
       options.receiveShadow : false,
   } as any);
+  if (options.additionalCasterTransform !== undefined) {
+    const additionalCasterModel = new Float32Array(16);
+    composeModelMatrix4(
+      additionalCasterModel,
+      options.additionalCasterTransform,
+    );
+    submitWebGLMesh(composer, {
+      identity: ADDITIONAL_CASTER_IDENTITY,
+      componentName: 'AdditionalCaster',
+      geometry,
+      localModel: additionalCasterModel,
+      color: [1, 1, 1, 1],
+      lit: true,
+      castShadow: true,
+      receiveShadow: false,
+    } as any);
+  }
   if (options.receiverTransform !== undefined) {
     const receiverModel = new Float32Array(16);
     composeModelMatrix4(receiverModel, options.receiverTransform);
@@ -623,6 +771,7 @@ function radialDepthSeparation(
 
 const DIRECT_LIGHT_IDENTITY = Object.freeze({});
 const MESH_IDENTITY = Object.freeze({});
+const ADDITIONAL_CASTER_IDENTITY = Object.freeze({});
 const RECEIVER_IDENTITY = Object.freeze({});
 
 function receiverOnlyPlan(

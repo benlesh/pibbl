@@ -79,20 +79,19 @@ export function createWebGLShadowPlans(input: Readonly<{
         input.contextGeneration,
       ));
     } else if (light.kind === 'point') {
-      plans.push(createPointPlan(
+      const plan = createPointPlan(
         light,
         lightIndex,
-        relevantBounds,
         casters,
         receivers,
         quality,
         input.contextGeneration,
-      ));
+      );
+      if (plan) plans.push(plan);
     } else {
       const plan = createSpotPlan(
         light,
         lightIndex,
-        relevantBounds,
         casters,
         receivers,
         quality,
@@ -230,16 +229,11 @@ function createDirectionalPlan(
 function createSpotPlan(
   light: SettledSpotLight,
   lightIndex: number,
-  bounds: WebGLWorldBounds,
   casters: readonly SettledWebGLMesh[],
   receivers: readonly SettledWebGLMesh[],
   quality: ResolvedWebGLShadowQuality,
   contextGeneration: number,
 ): SettledWebGLShadowPlan | undefined {
-  const farDistance = light.range ?? derivePointFarDistance(
-    light.position,
-    bounds,
-  );
   const target: CRCWebGLVector3 = [
     light.position[0] + light.direction[0],
     light.position[1] + light.direction[1],
@@ -249,13 +243,25 @@ function createSpotPlan(
     [0, 1, 0] : [1, 0, 0];
   const view = new Float32Array(16);
   setLookAtMatrix4(view, light.position, target, up);
+  const relevantCasters = Object.freeze(casters.filter(mesh =>
+    boundsIntersectSpotLight(light, view, mesh.worldBounds)));
+  const relevantReceivers = Object.freeze(receivers.filter(mesh =>
+    boundsIntersectSpotLight(light, view, mesh.worldBounds)));
+  if (relevantCasters.length === 0 || relevantReceivers.length === 0) {
+    return undefined;
+  }
+  const bounds = unionBounds([...relevantCasters, ...relevantReceivers]);
+  const farDistance = light.range ?? derivePointFarDistance(
+    light.position,
+    bounds,
+  );
   const relevant = analyzeSpotRelevantBounds(
     view,
     light.position,
-    [...casters, ...receivers],
+    [...relevantCasters, ...relevantReceivers],
   );
   if (!relevant.hasForwardBounds ||
-    relevant.minimumRadialDistance >= farDistance) return undefined;
+    relevant.minimumRadialDistance > farDistance) return undefined;
   const nearDistance = relevant.straddlesLightPlane ? Number.MIN_VALUE :
     relevant.nearestForwardDistance / 2;
   const projection = new Float32Array(16);
@@ -300,13 +306,41 @@ function createSpotPlan(
     nearDistance,
     farDistance,
     bias,
-    casters,
-    receivers,
+    casters: relevantCasters,
+    receivers: relevantReceivers,
     requestedResolution: quality.requestedResolution,
     comparisonCount: quality.comparisonCount,
     contextGeneration,
     shadowProgramGeneration: WEBGL_SHADOW_PROGRAM_GENERATION,
   });
+}
+
+function boundsIntersectSpotLight(
+  light: SettledSpotLight,
+  view: Readonly<Float32Array>,
+  bounds: WebGLWorldBounds,
+): boolean {
+  if (light.range !== undefined &&
+    minimumDistanceToBounds(light.position, bounds) > light.range) {
+    return false;
+  }
+  const lightBounds = transformBoundsMatrix4(view, bounds);
+  const centerX = (lightBounds.minimumX + lightBounds.maximumX) / 2;
+  const centerY = (lightBounds.minimumY + lightBounds.maximumY) / 2;
+  const centerZ = (lightBounds.minimumZ + lightBounds.maximumZ) / 2;
+  const radius = Math.hypot(
+    (lightBounds.maximumX - lightBounds.minimumX) / 2,
+    (lightBounds.maximumY - lightBounds.minimumY) / 2,
+    (lightBounds.maximumZ - lightBounds.minimumZ) / 2,
+  );
+  const forward = -centerZ;
+  if (forward + radius <= 0) return false;
+  const centerDistance = Math.hypot(centerX, centerY, centerZ);
+  if (centerDistance <= radius) return true;
+  const radial = Math.hypot(centerX, centerY);
+  const cosine = Math.max(-1, Math.min(1, light.outerConeCosine));
+  const sine = Math.sqrt(Math.max(0, 1 - cosine * cosine));
+  return radial * cosine - forward * sine <= radius;
 }
 
 function analyzeSpotRelevantBounds(
@@ -402,12 +436,17 @@ const POINT_SHADOW_FACES = Object.freeze([
 function createPointPlan(
   light: SettledPointLight,
   lightIndex: number,
-  bounds: WebGLWorldBounds,
   casters: readonly SettledWebGLMesh[],
   receivers: readonly SettledWebGLMesh[],
   quality: ResolvedWebGLShadowQuality,
   contextGeneration: number,
-): SettledWebGLShadowPlan {
+): SettledWebGLShadowPlan | undefined {
+  const relevantCasters = filterPointRelevantMeshes(light, casters);
+  const relevantReceivers = filterPointRelevantMeshes(light, receivers);
+  if (relevantCasters.length === 0 || relevantReceivers.length === 0) {
+    return undefined;
+  }
+  const bounds = unionBounds([...relevantCasters, ...relevantReceivers]);
   const farDistance = light.range ?? derivePointFarDistance(
     light.position,
     bounds,
@@ -440,13 +479,22 @@ function createPointPlan(
     nearDistance,
     farDistance,
     bias: 0.0015,
-    casters,
-    receivers,
+    casters: relevantCasters,
+    receivers: relevantReceivers,
     requestedResolution: quality.requestedResolution,
     comparisonCount: quality.comparisonCount,
     contextGeneration,
     shadowProgramGeneration: WEBGL_SHADOW_PROGRAM_GENERATION,
   });
+}
+
+function filterPointRelevantMeshes(
+  light: SettledPointLight,
+  meshes: readonly SettledWebGLMesh[],
+): readonly SettledWebGLMesh[] {
+  if (light.range === undefined) return meshes;
+  return Object.freeze(meshes.filter(mesh =>
+    minimumDistanceToBounds(light.position, mesh.worldBounds) <= light.range!));
 }
 
 function derivePointFarDistance(

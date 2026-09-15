@@ -174,9 +174,44 @@ describe('WebGLSceneRenderer', () => {
     );
     expect(recording.drawArrays).toHaveBeenCalledTimes(5);
     expect(recording.createProgram).toHaveBeenCalledTimes(2);
-    expect(recording.createFramebuffer).toHaveBeenCalledOnce();
+    expect(recording.createTexture).toHaveBeenCalledTimes(2);
+    expect(recording.createFramebuffer).not.toHaveBeenCalled();
+    expect(recording.framebufferTexture2D).not.toHaveBeenCalled();
+    expect(recording.clear).toHaveBeenCalledOnce();
     expect(recording.readPixels).not.toHaveBeenCalled();
   });
+
+  it.each([
+    ['point', pointLight()],
+    ['spot', spotLight()],
+  ] as const)(
+    'keeps a Lambert %s-light frame without a relevant shadow plan free of shadow targets and depth passes',
+    (_kind, light) => {
+      const recording = createRendererGL();
+      const renderer = new WebGLSceneRenderer(recording.gl, 7);
+      const drawable = mesh(0, [1, 1, 1, 1], {
+        shading: 'lambert',
+        seed: 11,
+      });
+
+      renderer.render(scene({
+        meshes: [drawable],
+        lights: [light],
+        opaque: [drawable],
+        shadowPlans: [],
+      }));
+
+      expect(recording.draws.map(draw => draw.programKey)).toEqual([
+        'lambert',
+      ]);
+      expect(recording.createTexture).toHaveBeenCalledTimes(2);
+      expect(recording.createFramebuffer).not.toHaveBeenCalled();
+      expect(recording.framebufferTexture2D).not.toHaveBeenCalled();
+      expect(recording.clear).toHaveBeenCalledExactlyOnceWith(
+        recording.gl.COLOR_BUFFER_BIT | recording.gl.DEPTH_BUFFER_BIT,
+      );
+    },
+  );
 
   it('reuses one Lambert program and geometry while uploading fixed light data once per frame', () => {
     const recording = createRendererGL();
