@@ -13,16 +13,32 @@ import {
   PhysicsWorld2D,
   collider2D,
   crcPhysicsBody2D,
+  disableBody2D,
   dynamicBody2D,
+  enableBody2D,
+  setLinearVelocity2D,
   staticBody2D,
+  teleportBody2D,
 } from "@crc/physics/2d";
 
 const BALL_RADIUS = 28;
+const MAX_THROW_SPEED = 1000;
+const TRAIL_WINDOW_MILLISECONDS = 120;
+const MAX_TRAIL_SAMPLES = 8;
+
+interface PointerTrailSample {
+  readonly x: number;
+  readonly y: number;
+  readonly timeStamp: number;
+}
 
 interface BallDragSession {
   readonly pointerId: number;
   readonly offsetX: number;
   readonly offsetY: number;
+  readonly rotationDegrees: number;
+  position: readonly [number, number];
+  readonly trail: PointerTrailSample[];
 }
 
 function clampBallPosition(
@@ -35,27 +51,87 @@ function clampBallPosition(
   };
 }
 
+function addTrailSample(
+  trail: PointerTrailSample[],
+  sample: PointerTrailSample,
+): void {
+  trail.push(sample);
+  const earliest = sample.timeStamp - TRAIL_WINDOW_MILLISECONDS;
+  while (trail.length > 1 && trail[0]!.timeStamp < earliest) trail.shift();
+  while (trail.length > MAX_TRAIL_SAMPLES) trail.shift();
+}
+
+function releaseVelocity(
+  trail: readonly PointerTrailSample[],
+): readonly [number, number] {
+  const final = trail.at(-1);
+  if (!final) return [0, 0];
+  const oldest = trail.find(
+    (sample) =>
+      sample.timeStamp < final.timeStamp &&
+      final.timeStamp - sample.timeStamp <= TRAIL_WINDOW_MILLISECONDS,
+  );
+  if (!oldest) return [0, 0];
+
+  const seconds = (final.timeStamp - oldest.timeStamp) / 1000;
+  if (seconds <= 0) return [0, 0];
+  const velocityX = (final.x - oldest.x) / seconds;
+  const velocityY = (final.y - oldest.y) / seconds;
+  const magnitude = Math.hypot(velocityX, velocityY);
+  if (magnitude <= MAX_THROW_SPEED) return [velocityX, velocityY];
+  const scale = MAX_THROW_SPEED / magnitude;
+  return [velocityX * scale, velocityY * scale];
+}
+
 function DraggableBall() {
   const body = crcPhysicsBody2D();
   const dragSession = crcRef<BallDragSession | null>(null);
   const [dragging, setDragging] = crcState(false);
-  const [authoredPosition, setAuthoredPosition] = crcState({ x: 210, y: 110 });
+  const [, requestDragPresentation] = crcState(0);
 
-  const dragTo = (event: CRCPointerEvent): void => {
+  const dragTo = (event: CRCPointerEvent): readonly [number, number] | null => {
     const session = dragSession.current;
-    if (session?.pointerId !== event.pointerId) return;
-    setAuthoredPosition(
-      clampBallPosition(
-        event.x + session.offsetX,
-        event.y + session.offsetY,
-      ),
+    if (session?.pointerId !== event.pointerId) return null;
+    const position = clampBallPosition(
+      event.x + session.offsetX,
+      event.y + session.offsetY,
     );
+    const pose = [position.x, position.y] as const;
+    teleportBody2D(body, {
+      position: pose,
+      rotationDegrees: session.rotationDegrees,
+    });
+    session.position = pose;
+    addTrailSample(session.trail, {
+      x: pose[0],
+      y: pose[1],
+      timeStamp: event.timeStamp,
+    });
+    requestDragPresentation((revision) => revision + 1);
+    return pose;
   };
 
   const finishDrag = (event: CRCPointerEvent): void => {
     const session = dragSession.current;
     if (session?.pointerId !== event.pointerId) return;
-    dragTo(event);
+    const position = clampBallPosition(
+      event.x + session.offsetX,
+      event.y + session.offsetY,
+    );
+    const pose = [position.x, position.y] as const;
+    session.position = pose;
+    addTrailSample(session.trail, {
+      x: pose[0],
+      y: pose[1],
+      timeStamp: event.timeStamp,
+    });
+    const velocity = releaseVelocity(session.trail);
+    teleportBody2D(body, {
+      position: pose,
+      rotationDegrees: session.rotationDegrees,
+    });
+    enableBody2D(body, { velocity: "zero" });
+    setLinearVelocity2D(body, velocity);
     dragSession.current = null;
     setDragging(false);
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
@@ -63,49 +139,83 @@ function DraggableBall() {
     }
   };
 
+  const cancelDrag = (event: CRCPointerEvent): void => {
+    const session = dragSession.current;
+    if (session?.pointerId !== event.pointerId) return;
+    teleportBody2D(body, {
+      position: session.position,
+      rotationDegrees: session.rotationDegrees,
+    });
+    enableBody2D(body, { velocity: "zero" });
+    dragSession.current = null;
+    setDragging(false);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  };
+
+  const draggedPosition = dragSession.current?.position;
+  const dragTranslateX =
+    dragging && draggedPosition !== undefined ? draggedPosition[0] - 210 : 0;
+  const dragTranslateY =
+    dragging && draggedPosition !== undefined ? draggedPosition[1] - 110 : 0;
+
   return (
-    <Circle
+    <Group
       physics={dynamicBody2D({
-        enabled: !dragging,
+        collider: false,
         handle: body,
-        fixedRotation: true,
         mass: 1,
-        reenableVelocity: "zero",
-        collider: { tag: "ball", restitution: 0.35 },
+        linearDamping: 0.025,
+        angularDamping: 0.04,
       })}
-      style={{
-        cx: authoredPosition.x,
-        cy: authoredPosition.y,
-        radius: BALL_RADIUS,
-        fill: "#2563eb",
-        stroke: "#17211d",
-        strokeWidth: 5,
-        cursor: dragging ? "grabbing" : "grab",
-      }}
-      onPointerDown={(event) => {
-        if (dragSession.current !== null) return;
-        const [bodyX, bodyY] = body.position.get();
-        const x = bodyX + authoredPosition.x;
-        const y = bodyY + authoredPosition.y;
-        dragSession.current = {
-          pointerId: event.pointerId,
-          offsetX: x - event.x,
-          offsetY: y - event.y,
-        };
-        setAuthoredPosition({ x, y });
-        setDragging(true);
-        event.currentTarget.setPointerCapture(event.pointerId);
-        event.preventDefault();
-      }}
-      onPointerMove={dragTo}
-      onPointerUp={finishDrag}
-      onPointerCancel={finishDrag}
-      onLostPointerCapture={(event) => {
-        if (dragSession.current?.pointerId !== event.pointerId) return;
-        dragSession.current = null;
-        setDragging(false);
-      }}
-    />
+      style={{ translateX: 210, translateY: 110 }}
+    >
+      <Group style={{ translateX: dragTranslateX, translateY: dragTranslateY }}>
+        <Circle
+          physics={collider2D({
+            tag: "ball",
+            restitution: 0.35,
+            friction: 0.65,
+          })}
+          style={{
+            cx: 0,
+            cy: 0,
+            radius: BALL_RADIUS,
+            fill: "#2563eb",
+            stroke: "#17211d",
+            strokeWidth: 5,
+            cursor: dragging ? "grabbing" : "grab",
+          }}
+          onPointerDown={(event) => {
+            if (dragSession.current !== null) return;
+            const [x, y] = body.position.get();
+            const position = [x, y] as const;
+            dragSession.current = {
+              pointerId: event.pointerId,
+              offsetX: x - event.x,
+              offsetY: y - event.y,
+              rotationDegrees: body.rotationDegrees.get(),
+              position,
+              trail: [],
+            };
+            addTrailSample(dragSession.current.trail, {
+              x,
+              y,
+              timeStamp: event.timeStamp,
+            });
+            disableBody2D(body);
+            setDragging(true);
+            event.currentTarget.setPointerCapture(event.pointerId);
+            event.preventDefault();
+          }}
+          onPointerMove={dragTo}
+          onPointerUp={finishDrag}
+          onPointerCancel={cancelDrag}
+          onLostPointerCapture={cancelDrag}
+        />
+      </Group>
+    </Group>
   );
 }
 
@@ -166,22 +276,46 @@ function PhysicsLesson() {
       <Rectangle style={{ width: 720, height: 420, fill: "#eff6ff" }} />
       <PhysicsWorld2D gravity={[0, 560]} fixedStepMilliseconds={1000 / 60}>
         <Rectangle
-          physics={staticBody2D({ collider: { tag: "ground", friction: 0.8 } })}
+          physics={staticBody2D({
+            collider: { tag: "ground", friction: 0.55 },
+          })}
           style={{ x: 54, y: 316, width: 612, height: 34, fill: "#334155" }}
         />
         <Rectangle
-          physics={staticBody2D({ collider: { tag: "left-wall", friction: 0.4 } })}
+          physics={staticBody2D({
+            collider: { tag: "left-wall", friction: 0.4 },
+          })}
           pointerEvents="none"
           style={{ x: 54, y: 96, width: 20, height: 220, fill: "#475569" }}
         />
         <Rectangle
-          physics={staticBody2D({ collider: { tag: "right-wall", friction: 0.4 } })}
+          physics={staticBody2D({
+            collider: { tag: "right-wall", friction: 0.4 },
+          })}
           pointerEvents="none"
           style={{ x: 646, y: 96, width: 20, height: 220, fill: "#475569" }}
         />
-        <StaticBumper x={250} y={205} radius={20} fill="#f59e0b" tag="bumper-left" />
-        <StaticBumper x={362} y={258} radius={22} fill="#ec4899" tag="bumper-center" />
-        <StaticBumper x={478} y={198} radius={20} fill="#22c55e" tag="bumper-right" />
+        <StaticBumper
+          x={250}
+          y={205}
+          radius={20}
+          fill="#f59e0b"
+          tag="bumper-left"
+        />
+        <StaticBumper
+          x={362}
+          y={258}
+          radius={22}
+          fill="#ec4899"
+          tag="bumper-center"
+        />
+        <StaticBumper
+          x={478}
+          y={198}
+          radius={20}
+          fill="#22c55e"
+          tag="bumper-right"
+        />
         <GroundSensor />
         <DraggableBall />
       </PhysicsWorld2D>
@@ -207,7 +341,7 @@ function PhysicsLesson() {
           textAlign: "center",
         }}
       >
-        Drag the ball above the bumpers, then let gravity take over
+        Drag and throw the ball above the bumpers
       </Text>
       <Text
         pointerEvents="none"
@@ -219,7 +353,7 @@ function PhysicsLesson() {
           textAlign: "center",
         }}
       >
-        DRAGGED POSE IS APP-OWNED · RELEASED POSE IS PHYSICS-OWNED
+        POINTER RELEASE HANDS VELOCITY TO PHYSICS
       </Text>
     </>
   );

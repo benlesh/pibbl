@@ -726,7 +726,7 @@ const drafts = [
     section: "composition",
     order: 119,
     summary:
-      "Drag and drop a dynamic ball through static bumpers and a collider-only sensor in one scheduler-owned 2D physics world.",
+      "Drag, throw, and roll a dynamic ball through static bumpers and a collider-only sensor in one scheduler-owned 2D physics world.",
     api: [
       "PhysicsWorld2D",
       "dynamicBody2D",
@@ -736,17 +736,23 @@ const drafts = [
       "crcRef",
       "crcState",
       "setPointerCapture",
+      "disableBody2D",
+      "teleportBody2D",
+      "enableBody2D",
+      "setLinearVelocity2D",
     ],
     objectives: [
       "Attach static and dynamic bodies to ordinary CRC drawing primitives, then add solid bumpers and a collider-only sensor.",
-      "Capture one pointer while application-owned coordinates drag a disabled body, then return pose ownership to physics on release.",
+      "Capture one pointer, drag a disabled body with explicit teleports, then hand measured release velocity back to physics.",
     ],
     prompts: {
-      gesture: "Drag the blue ball above a bumper and release it.",
-      code: "Change gravity, bumper restitution, or the drag bounds while leaving the world on CRC's shared scheduler.",
+      gesture:
+        "Drag the blue ball above a bumper, then throw it along the ground.",
+      code: "Change gravity, damping, bumper restitution, or the drag bounds while leaving the world on CRC's shared scheduler.",
     },
     apiNotes: [
-      "An enabled dynamic root pose is physics-owned; disable physics before animating authored position, then explicitly re-enable it.",
+      "An enabled dynamic root pose is physics-owned; named disable, teleport, enable, and velocity commands make the drag handoff explicit.",
+      "Pointer-release velocity comes from the recent captured pointer trail, is capped, and lets the ball roll under ordinary physics.",
       "Collider-only descendants share their nearest body and can act as sensors without contributing solid response.",
     ],
     canvas: { width: 720, height: 420 },
