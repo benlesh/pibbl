@@ -293,6 +293,42 @@ describe('WebGLShadowResourceCache', () => {
     allocationTransaction.rollback();
     expect(allocation.deleteTexture).toHaveBeenCalled();
   });
+
+  it('allocates one 2D spot map and reuses only an equal resident projection', () => {
+    const recording = createShadowGL({ maxTextureSize: 768 });
+    const cache = new WebGLShadowResourceCache(recording.gl, 7);
+    let transaction = cache.beginRender();
+    const firstDraw = vi.fn();
+    const first = (transaction as any).useSpot(spotPlan(), firstDraw);
+    transaction.commit();
+
+    expect(first).toMatchObject({ kind: 'spot', resolution: 768 });
+    expect(firstDraw).toHaveBeenCalledExactlyOnceWith(768);
+    expect(recording.framebufferTexture2D).toHaveBeenLastCalledWith(
+      recording.gl.FRAMEBUFFER,
+      recording.gl.DEPTH_ATTACHMENT,
+      recording.gl.TEXTURE_2D,
+      first.texture,
+      0,
+    );
+
+    transaction = cache.beginRender();
+    const hitDraw = vi.fn();
+    const hit = (transaction as any).useSpot(spotPlan(), hitDraw);
+    transaction.commit();
+    expect(hit.texture).toBe(first.texture);
+    expect(hitDraw).not.toHaveBeenCalled();
+
+    transaction = cache.beginRender();
+    const replacementDraw = vi.fn();
+    const replacement = (transaction as any).useSpot(spotPlan({
+      projectionViewMatrix: matrix(9),
+    }), replacementDraw);
+    transaction.commit();
+    expect(replacement.texture).not.toBe(first.texture);
+    expect(replacementDraw).toHaveBeenCalledExactlyOnceWith(768);
+    expect(recording.deleteTexture).toHaveBeenCalledWith(first.texture);
+  });
 });
 
 const FIRST_LIGHT = Object.freeze({});
@@ -324,6 +360,26 @@ function pointPlan(overrides: Record<string, unknown> = {}): any {
       { length: 6 },
       (_, face) => matrix(face + 1),
     )),
+    lightPosition: Object.freeze([1, 2, 3]),
+    nearDistance: 0.01,
+    farDistance: 10,
+    bias: 0.001,
+    casters: [],
+    receivers: [],
+    requestedResolution: 1024,
+    comparisonCount: 4,
+    contextGeneration: 7,
+    shadowProgramGeneration: 1,
+    ...overrides,
+  };
+}
+
+function spotPlan(overrides: Record<string, unknown> = {}): any {
+  return {
+    kind: 'spot',
+    lightIdentity: FIRST_LIGHT,
+    lightIndex: 0,
+    projectionViewMatrix: matrix(7),
     lightPosition: Object.freeze([1, 2, 3]),
     nearDistance: 0.01,
     farDistance: 10,

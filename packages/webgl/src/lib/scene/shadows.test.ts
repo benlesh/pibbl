@@ -300,6 +300,121 @@ describe('point shadow planning', () => {
   });
 });
 
+describe('spot shadow planning', () => {
+  it('builds one outer-cone perspective view from the transformed spot pose', () => {
+    const scene = settleScene({
+      lightKind: 'spot',
+      lightTransform: {
+        translateX: 2,
+        translateY: 3,
+        translateZ: 4,
+        rotationYDegrees: 90,
+      },
+      lightRange: 10,
+      outerConeAngleDegrees: 30,
+    });
+
+    expect(scene.shadowPlans).toHaveLength(1);
+    const spot = scene.shadowPlans[0] as any;
+    expect(scene.lights[0]).toMatchObject({
+      kind: 'spot',
+      position: [2, 3, 4],
+      direction: [
+        expect.closeTo(-1, 6),
+        expect.closeTo(0, 6),
+        expect.closeTo(0, 6),
+      ],
+    });
+    expect(spot).toMatchObject({
+      kind: 'spot',
+      lightIndex: 0,
+      lightPosition: [2, 3, 4],
+      nearDistance: 0.1,
+      farDistance: 10,
+      requestedResolution: 1024,
+      comparisonCount: 4,
+    });
+    expect(rounded(spot.projectionViewMatrix)).toEqual([
+      0, 0, -1.020202, -1,
+      0, 1.732051, 0, 0,
+      -1.732051, 0, 0, 0,
+      6.928203, -5.196152, 1.838384, 2,
+    ]);
+  });
+
+  it('uses finite range or bounds-derived far and keeps a pole-aligned view finite', () => {
+    const finite = settleScene({
+      lightKind: 'spot',
+      lightRange: 3,
+      outerConeAngleDegrees: 40,
+    }).shadowPlans[0] as any;
+    expect(finite.farDistance).toBe(3);
+
+    const derived = settleScene({
+      lightKind: 'spot',
+      lightTransform: { translateX: 2, translateY: 3, translateZ: 4 },
+    }).shadowPlans[0] as any;
+    expect(derived.farDistance).toBeGreaterThanOrEqual(Math.sqrt(50));
+    expect(Number.isFinite(derived.farDistance)).toBe(true);
+
+    const pole = settleScene({
+      lightKind: 'spot',
+      lightTransform: { rotationXDegrees: 90 },
+    }).shadowPlans[0] as any;
+    expect(Array.from(pole.projectionViewMatrix).every(Number.isFinite))
+      .toBe(true);
+
+    const zeroCone = settleScene({
+      lightKind: 'spot',
+      innerConeAngleDegrees: 0,
+      outerConeAngleDegrees: 0,
+    }).shadowPlans[0] as any;
+    expect(Array.from(zeroCone.projectionViewMatrix).every(Number.isFinite))
+      .toBe(true);
+  });
+
+  it('honors spot opt-out and reuses only matching depth inputs', () => {
+    const disabled = settleScene({
+      lightKind: 'spot',
+      lightCastShadow: false,
+    });
+    expect(disabled.shadowPlans).toEqual([]);
+
+    const first = settleScene({ lightKind: 'spot' }).shadowPlans[0] as any;
+    const orbit = settleScene({
+      lightKind: 'spot',
+      cameraPosition: [8, 6, 9],
+    }).shadowPlans[0] as any;
+    const recolored = settleScene({
+      lightKind: 'spot',
+      lightColor: [0.2, 0.4, 0.8, 1],
+    }).shadowPlans[0] as any;
+    const moved = settleScene({
+      lightKind: 'spot',
+      lightTransform: { translateX: 1 },
+    }).shadowPlans[0] as any;
+    const rotated = settleScene({
+      lightKind: 'spot',
+      lightTransform: { rotationYDegrees: 15 },
+    }).shadowPlans[0] as any;
+    const cone = settleScene({
+      lightKind: 'spot',
+      outerConeAngleDegrees: 30,
+    }).shadowPlans[0] as any;
+    const movedCaster = settleScene({
+      lightKind: 'spot',
+      meshTransform: { translateX: 1 },
+    }).shadowPlans[0] as any;
+
+    expect(haveSameWebGLShadowPlan(first, 1024, orbit, 1024)).toBe(true);
+    expect(haveSameWebGLShadowPlan(first, 1024, recolored, 1024)).toBe(true);
+    expect(haveSameWebGLShadowPlan(first, 1024, moved, 1024)).toBe(false);
+    expect(haveSameWebGLShadowPlan(first, 1024, rotated, 1024)).toBe(false);
+    expect(haveSameWebGLShadowPlan(first, 1024, cone, 1024)).toBe(false);
+    expect(haveSameWebGLShadowPlan(first, 1024, movedCaster, 1024)).toBe(false);
+  });
+});
+
 function settleScene(options: {
   readonly shadowQuality?: false | 'low' | 'medium' | 'high';
   readonly alpha?: number;
@@ -312,8 +427,11 @@ function settleScene(options: {
   readonly meshTransform?: Parameters<typeof composeModelMatrix4>[1];
   readonly meshIdentity?: object;
   readonly receiverTransform?: Parameters<typeof composeModelMatrix4>[1];
-  readonly lightKind?: 'directional' | 'point';
+  readonly lightKind?: 'directional' | 'point' | 'spot';
   readonly lightRange?: number;
+  readonly lightCastShadow?: boolean;
+  readonly innerConeAngleDegrees?: number;
+  readonly outerConeAngleDegrees?: number;
   readonly ambientBefore?: boolean;
 } = {}) {
   const camera = resolveCamera({
@@ -351,16 +469,22 @@ function settleScene(options: {
   const lightBase = {
     identity: DIRECT_LIGHT_IDENTITY,
     componentName: options.lightKind === 'point' ? 'PointLight' :
-      'DirectionalLight',
+      options.lightKind === 'spot' ? 'SpotLight' : 'DirectionalLight',
     localModel: lightModel,
     color: options.lightColor ?? [1, 1, 1, 1],
     intensity: 1,
-    castShadow: true,
+    castShadow: options.lightCastShadow ?? true,
   };
   submitWebGLLight(composer, options.lightKind === 'point' ? {
     ...lightBase,
     kind: 'point',
     range: options.lightRange,
+  } as any : options.lightKind === 'spot' ? {
+    ...lightBase,
+    kind: 'spot',
+    range: options.lightRange,
+    innerConeAngleDegrees: options.innerConeAngleDegrees ?? 10,
+    outerConeAngleDegrees: options.outerConeAngleDegrees ?? 45,
   } as any : {
     ...lightBase,
     kind: 'directional',

@@ -280,9 +280,19 @@ export interface SettledWebGLPointShadowPlan
   readonly farDistance: number;
 }
 
+export interface SettledWebGLSpotShadowPlan
+  extends SettledWebGLShadowPlanBase {
+  readonly kind: 'spot';
+  readonly projectionViewMatrix: Readonly<Float32Array>;
+  readonly lightPosition: CRCWebGLVector3;
+  readonly nearDistance: number;
+  readonly farDistance: number;
+}
+
 export type SettledWebGLShadowPlan =
   | SettledWebGLDirectionalShadowPlan
-  | SettledWebGLPointShadowPlan;
+  | SettledWebGLPointShadowPlan
+  | SettledWebGLSpotShadowPlan;
 
 export interface WebGLSceneComposer extends ClosedWebGLSceneDraft {
   readonly modelStack: readonly Readonly<Float32Array>[];

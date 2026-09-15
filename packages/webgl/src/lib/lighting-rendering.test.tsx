@@ -270,6 +270,70 @@ describe('public WebGL lighting rendering', () => {
     ))).toEqual([255, 255, 255, 255]);
   });
 
+  it('darkens ground occluded inside a spot cone without attenuating another light outside it', async () => {
+    const ground = createWebGLGeometry({
+      positions: [
+        -4, 0, -4, 4, 0, -4, -4, 0, 4,
+        4, 0, -4, 4, 0, 4, -4, 0, 4,
+      ],
+      normals: [
+        0, 1, 0, 0, 1, 0, 0, 1, 0,
+        0, 1, 0, 0, 1, 0, 0, 1, 0,
+      ],
+    });
+    const camera: CRCWebGLPerspectiveCamera = {
+      type: 'perspective',
+      position: [4, 4, 6],
+      lookAt: [0, -0.25, 0],
+      up: [0, 1, 0],
+      fieldOfViewDegrees: 50,
+      near: 0.1,
+      far: 100,
+    };
+    const render = (castShadow: boolean) => renderImage((
+      <>
+        <WebGLBackground style={{ color: '#101827' }} />
+        <AmbientLight style={{ intensity: 0.08 }} />
+        <SpotLight style={{
+          intensity: 80,
+          range: 12,
+          translateX: 2,
+          translateY: 4,
+          translateZ: 2,
+          rotationXDegrees: -54.7356,
+          rotationYDegrees: 45,
+          innerConeAngleDegrees: 22,
+          outerConeAngleDegrees: 35,
+          castShadow,
+        }} />
+        <Cube style={{ color: '#ef4444', translateY: 0.5 }} />
+        <Mesh geometry={ground} style={{
+          color: '#d1d5db',
+          translateY: -1,
+          receiveShadow: true,
+        }} />
+      </>
+    ), 64, 64, camera);
+
+    const shadowed = await render(true);
+    const unshadowed = await render(false);
+    expect(findDarkenedGroundPixel(shadowed, unshadowed, 30)).toBeDefined();
+
+    expect(await renderPixel((
+      <>
+        <DirectionalLight />
+        <SpotLight style={{
+          translateX: 4,
+          translateZ: 2,
+          innerConeAngleDegrees: 5,
+          outerConeAngleDegrees: 10,
+          castShadow: true,
+        }} />
+        {mesh(FRONT_TRIANGLE)}
+      </>
+    ))).toEqual([255, 255, 255, 255]);
+  });
+
   it('uses the single clear for transparent and alpha backgrounds without rasterizing alpha-zero meshes', async () => {
     expect(await renderPixel(null)).toEqual([0, 0, 0, 0]);
     expect(await renderPixel(

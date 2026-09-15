@@ -450,6 +450,51 @@ describe('WebGLSceneRenderer', () => {
     expect(recording.deleteTexture).toHaveBeenCalled();
   });
 
+  it('renders one spot depth view and binds it only to the matching light slot', () => {
+    const recording = createRendererGL();
+    const renderer = new WebGLSceneRenderer(recording.gl, 7);
+    const drawable = mesh(0, [1, 1, 1, 1], {
+      shading: 'lambert',
+      seed: 11,
+    });
+    const ambient = fixedLights()[0]!;
+    const plan = spotPlan(drawable, { lightIndex: 1 });
+
+    renderer.render(scene({
+      meshes: [drawable],
+      lights: [ambient, spotLight()],
+      opaque: [drawable],
+      shadowPlans: [plan],
+    }));
+
+    expect(recording.draws.map(draw => draw.programKey)).toEqual([
+      'shadow-depth',
+      'lambert',
+    ]);
+    expect(recording.draws[0]?.uniforms).toMatchObject({
+      u_shadow_projection_view: [721, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+      u_shadow_light_position_far: [0, 0, 0, 0],
+    });
+    expect(recording.draws[1]?.uniforms).toMatchObject({
+      'u_shadow_enabled[0]': [0, 3, 0, 0, 0, 0, 0, 0],
+      'u_shadow_matrix[0]': [
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        721, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      ],
+      u_receive_shadow: [1],
+    });
+    expect(recording.clear.mock.calls.map(([mask]) => mask)).toEqual([
+      recording.gl.DEPTH_BUFFER_BIT,
+      recording.gl.COLOR_BUFFER_BIT | recording.gl.DEPTH_BUFFER_BIT,
+    ]);
+  });
+
   it.each([
     ['depth', 4],
     ['color', 7],
@@ -791,8 +836,47 @@ function pointPlan(
   } as any);
 }
 
+function spotLight(): SettledWebGLLight {
+  return Object.freeze({
+    kind: 'spot' as const,
+    identity: SPOT_LIGHT_IDENTITY,
+    linearColor: Object.freeze([1, 1, 1] as const),
+    position: Object.freeze([1, 2, 3] as const),
+    direction: Object.freeze([0, -1, 0] as const),
+    range: 10,
+    innerConeCosine: 0.9,
+    outerConeCosine: 0.7,
+    intensity: 1,
+    castShadow: true,
+  });
+}
+
+function spotPlan(
+  mesh: SettledWebGLMesh,
+  overrides: Record<string, unknown> = {},
+): any {
+  return Object.freeze({
+    kind: 'spot',
+    lightIdentity: SPOT_LIGHT_IDENTITY,
+    lightIndex: 0,
+    projectionViewMatrix: matrix(721),
+    lightPosition: Object.freeze([1, 2, 3] as const),
+    nearDistance: 0.01,
+    farDistance: 10,
+    bias: 0.001,
+    casters: Object.freeze([mesh]),
+    receivers: Object.freeze([mesh]),
+    requestedResolution: 1024,
+    comparisonCount: 4,
+    contextGeneration: 7,
+    shadowProgramGeneration: 1,
+    ...overrides,
+  });
+}
+
 const DIRECTIONAL_LIGHT_IDENTITY = Object.freeze({});
 const POINT_LIGHT_IDENTITY = Object.freeze({});
+const SPOT_LIGHT_IDENTITY = Object.freeze({});
 
 interface MeshOptions {
   readonly indexed?: boolean;

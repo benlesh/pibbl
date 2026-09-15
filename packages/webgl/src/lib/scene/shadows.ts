@@ -10,6 +10,7 @@ import type { SettledWebGLMesh } from './settle.js';
 import type {
   SettledDirectionalLight,
   SettledPointLight,
+  SettledSpotLight,
   SettledWebGLLight,
   SettledWebGLShadowPlan,
   WebGLWorldBounds,
@@ -64,7 +65,8 @@ export function createWebGLShadowPlans(input: Readonly<{
   const plans: SettledWebGLShadowPlan[] = [];
   for (let lightIndex = 0; lightIndex < input.lights.length; lightIndex += 1) {
     const light = input.lights[lightIndex]!;
-    if ((light.kind !== 'directional' && light.kind !== 'point') ||
+    if ((light.kind !== 'directional' && light.kind !== 'point' &&
+      light.kind !== 'spot') ||
       !light.castShadow) continue;
     if (light.kind === 'directional') {
       plans.push(createDirectionalPlan(
@@ -78,6 +80,16 @@ export function createWebGLShadowPlans(input: Readonly<{
       ));
     } else if (light.kind === 'point') {
       plans.push(createPointPlan(
+        light,
+        lightIndex,
+        relevantBounds,
+        casters,
+        receivers,
+        quality,
+        input.contextGeneration,
+      ));
+    } else {
+      plans.push(createSpotPlan(
         light,
         lightIndex,
         relevantBounds,
@@ -108,7 +120,7 @@ export function haveSameWebGLShadowPlan(
     equalCasterQueue(left.casters, right.casters);
   if (!hasSameDepthInputs) return false;
 
-  return left.kind === 'point' || (
+  return left.kind === 'point' || left.kind === 'spot' || (
     left.bias === right.bias &&
     equalReceiverQueue(left.receivers, right.receivers)
   );
@@ -133,6 +145,12 @@ function equalShadowProjection(
         left.projectionViewMatrices,
         right.projectionViewMatrices,
       );
+  }
+  if (left.kind === 'spot' && right.kind === 'spot') {
+    return left.nearDistance === right.nearDistance &&
+      left.farDistance === right.farDistance &&
+      equalNumbers(left.lightPosition, right.lightPosition) &&
+      equalNumbers(left.projectionViewMatrix, right.projectionViewMatrix);
   }
   return false;
 }
@@ -198,6 +216,65 @@ function createDirectionalPlan(
     lightIdentity: light.identity,
     lightIndex,
     projectionViewMatrix,
+    bias: 0.0015,
+    casters,
+    receivers,
+    requestedResolution: quality.requestedResolution,
+    comparisonCount: quality.comparisonCount,
+    contextGeneration,
+    shadowProgramGeneration: WEBGL_SHADOW_PROGRAM_GENERATION,
+  });
+}
+
+function createSpotPlan(
+  light: SettledSpotLight,
+  lightIndex: number,
+  bounds: WebGLWorldBounds,
+  casters: readonly SettledWebGLMesh[],
+  receivers: readonly SettledWebGLMesh[],
+  quality: ResolvedWebGLShadowQuality,
+  contextGeneration: number,
+): SettledWebGLShadowPlan {
+  const farDistance = light.range ?? derivePointFarDistance(
+    light.position,
+    bounds,
+  );
+  const nearDistance = Math.min(0.1, farDistance / 2);
+  const projection = new Float32Array(16);
+  const fieldOfViewRadians = Math.max(
+    0.001,
+    Math.acos(light.outerConeCosine) * 2,
+  );
+  setPerspectiveMatrix4(
+    projection,
+    fieldOfViewRadians,
+    1,
+    nearDistance,
+    farDistance,
+  );
+  const target: CRCWebGLVector3 = [
+    light.position[0] + light.direction[0],
+    light.position[1] + light.direction[1],
+    light.position[2] + light.direction[2],
+  ];
+  const up: CRCWebGLVector3 = Math.abs(light.direction[1]) < 0.999 ?
+    [0, 1, 0] : [1, 0, 0];
+  const view = new Float32Array(16);
+  setLookAtMatrix4(view, light.position, target, up);
+  const projectionViewMatrix = new Float32Array(16);
+  multiplyMatrix4(projectionViewMatrix, projection, view);
+  return Object.freeze({
+    kind: 'spot',
+    lightIdentity: light.identity,
+    lightIndex,
+    projectionViewMatrix,
+    lightPosition: Object.freeze([
+      light.position[0],
+      light.position[1],
+      light.position[2],
+    ] as const),
+    nearDistance,
+    farDistance,
     bias: 0.0015,
     casters,
     receivers,

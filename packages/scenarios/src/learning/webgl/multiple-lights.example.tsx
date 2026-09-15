@@ -44,7 +44,6 @@ function ConceptDelta({
             range: 11,
             innerConeAngleDegrees: 12,
             outerConeAngleDegrees: 25,
-            castShadow: false,
             translateX: -3,
             translateY: 3.6,
             translateZ: 3.5,

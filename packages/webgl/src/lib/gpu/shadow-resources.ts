@@ -4,6 +4,7 @@ import {
 import type {
   SettledWebGLDirectionalShadowPlan,
   SettledWebGLPointShadowPlan,
+  SettledWebGLSpotShadowPlan,
   WebGLSceneIdentity,
 } from '../scene/types.js';
 
@@ -21,9 +22,17 @@ export interface WebGLPointShadowResource {
   readonly plan: SettledWebGLPointShadowPlan;
 }
 
+export interface WebGLSpotShadowResource {
+  readonly kind: 'spot';
+  readonly texture: WebGLTexture;
+  readonly resolution: number;
+  readonly plan: SettledWebGLSpotShadowPlan;
+}
+
 export type WebGLShadowResource =
   | WebGLDirectionalShadowResource
-  | WebGLPointShadowResource;
+  | WebGLPointShadowResource
+  | WebGLSpotShadowResource;
 
 export interface WebGLShadowBindings {
   readonly fallback2D: WebGLTexture;
@@ -39,6 +48,10 @@ export interface WebGLShadowResourceTransaction {
     plan: SettledWebGLPointShadowPlan,
     render: (face: number, resolution: number) => void,
   ): WebGLPointShadowResource;
+  useSpot(
+    plan: SettledWebGLSpotShadowPlan,
+    render: (resolution: number) => void,
+  ): WebGLSpotShadowResource;
   getBindings(): WebGLShadowBindings;
   commit(): void;
   rollback(contextLost?: boolean): void;
@@ -98,6 +111,10 @@ export class WebGLShadowResourceCache {
         plan: SettledWebGLPointShadowPlan,
         render: (face: number, resolution: number) => void,
       ) => this.usePoint(candidate, plan, render),
+      useSpot: (
+        plan: SettledWebGLSpotShadowPlan,
+        render: (resolution: number) => void,
+      ) => this.useSpot(candidate, plan, render),
       getBindings: () => this.getBindings(candidate),
       commit: () => this.commit(candidate),
       rollback: (contextLost = false) => this.rollback(candidate, contextLost),
@@ -196,6 +213,68 @@ export class WebGLShadowResourceCache {
     if (status !== this.gl.FRAMEBUFFER_COMPLETE) {
       throw new Error(
         `Directional shadow framebuffer is incomplete (status ${status}).`,
+      );
+    }
+    render(resolution);
+    return resource;
+  }
+
+  private useSpot(
+    candidate: ShadowCandidate,
+    plan: SettledWebGLSpotShadowPlan,
+    render: (resolution: number) => void,
+  ): WebGLSpotShadowResource {
+    this.requireCandidate(candidate);
+    if (plan.contextGeneration !== this.contextGeneration) {
+      throw new Error(
+        `Spot shadow generation ${plan.contextGeneration} cannot be ` +
+        `used by cache generation ${this.contextGeneration}.`,
+      );
+    }
+    const identity = plan.lightIdentity;
+    candidate.usedLights.add(identity);
+    const resolution = Math.min(
+      plan.requestedResolution,
+      this.getMaximum2DResolution(),
+    );
+    const pending = candidate.created.get(identity);
+    if (pending?.kind === 'spot' && haveSameWebGLShadowPlan(
+      pending.plan,
+      pending.resolution,
+      plan,
+      resolution,
+    )) return pending;
+    const existing = this.resident.get(identity);
+    if (existing?.kind === 'spot' && haveSameWebGLShadowPlan(
+      existing.plan,
+      existing.resolution,
+      plan,
+      resolution,
+    )) return existing;
+
+    const foundation = this.requireFoundation(candidate);
+    const texture = createDepthTexture2D(this.gl, resolution);
+    const resource = Object.freeze({
+      kind: 'spot' as const,
+      texture,
+      resolution,
+      plan,
+    });
+    candidate.created.set(identity, resource);
+    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, foundation.framebuffer);
+    this.gl.framebufferTexture2D(
+      this.gl.FRAMEBUFFER,
+      this.gl.DEPTH_ATTACHMENT,
+      this.gl.TEXTURE_2D,
+      texture,
+      0,
+    );
+    this.gl.drawBuffers([this.gl.NONE]);
+    this.gl.readBuffer(this.gl.NONE);
+    const status = this.gl.checkFramebufferStatus(this.gl.FRAMEBUFFER);
+    if (status !== this.gl.FRAMEBUFFER_COMPLETE) {
+      throw new Error(
+        `Spot shadow framebuffer is incomplete (status ${status}).`,
       );
     }
     render(resolution);

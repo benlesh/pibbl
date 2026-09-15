@@ -33,6 +33,7 @@ import type {
   SettledWebGLLight,
   SettledWebGLDirectionalShadowPlan,
   SettledWebGLPointShadowPlan,
+  SettledWebGLSpotShadowPlan,
   SettledWebGLShadowPlan,
 } from './types.js';
 
@@ -95,8 +96,9 @@ export class WebGLSceneRenderer {
       if (scene.shadowPlans.length > 0) {
         transaction = this.resources.beginRender();
         for (const plan of scene.shadowPlans) {
-          const componentName = plan.kind === 'point' ? 'PointLight' :
-            'DirectionalLight';
+          const componentName = plan.kind === 'directional' ?
+            'DirectionalLight' : plan.kind === 'point' ?
+              'PointLight' : 'SpotLight';
           const program = transaction.useProgram('shadow-depth', componentName);
           if (program.key !== 'shadow-depth') {
             throw new Error(
@@ -112,6 +114,15 @@ export class WebGLSceneRenderer {
                 program,
                 plan,
                 face,
+                resolution,
+              ),
+            ) : plan.kind === 'spot' ? shadowTransaction.useSpot(
+              plan,
+              resolution => drawSpotShadowPlan(
+                this.gl,
+                transaction!,
+                program,
+                plan,
                 resolution,
               ),
             ) : shadowTransaction.useDirectional(
@@ -398,6 +409,27 @@ function drawDirectionalShadowPlan(
   }
 }
 
+function drawSpotShadowPlan(
+  gl: WebGL2RenderingContext,
+  transaction: WebGLRendererResourceTransaction,
+  program: WebGLShadowDepthProgram,
+  plan: SettledWebGLSpotShadowPlan,
+  resolution: number,
+): void {
+  installDirectionalShadowWebGLPass(gl, resolution);
+  gl.useProgram(program.program);
+  gl.uniformMatrix4fv(
+    program.shadowProjectionView,
+    false,
+    plan.projectionViewMatrix as Float32Array,
+  );
+  gl.uniform4f(program.shadowLightPositionFar, 0, 0, 0, 0);
+  for (const mesh of plan.casters) {
+    const geometry = transaction.useGeometry(mesh.geometry, mesh.componentName);
+    bindDepthGeometry(gl, program, geometry, mesh);
+  }
+}
+
 function drawPointShadowPlan(
   gl: WebGL2RenderingContext,
   transaction: WebGLRendererResourceTransaction,
@@ -513,6 +545,10 @@ function packWebGLShadows(
       enabled[plan.lightIndex] = 2;
       parameters[parameterOffset + 3] = plan.farDistance;
       texturesCube[plan.lightIndex] = resource.texture;
+    } else if (plan.kind === 'spot' && resource.kind === 'spot') {
+      enabled[plan.lightIndex] = 3;
+      matrices.set(plan.projectionViewMatrix, plan.lightIndex * 16);
+      textures2D[plan.lightIndex] = resource.texture;
     }
   }
   return { enabled, matrices, parameters, textures2D, texturesCube, bindings };
