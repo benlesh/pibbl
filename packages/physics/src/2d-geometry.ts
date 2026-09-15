@@ -73,15 +73,19 @@ export {
   wedgeShape2D,
 } from './lib/2d/shapes.js';
 
+import {
+  contactBetweenPreparedShapes2D,
+  containsPointInShape2D,
+  distanceBetweenPreparedShapes2D,
+  overlapPreparedShapes2D,
+} from './lib/2d/collision/pairs.js';
+
 export function containsPoint2D(
   shape: CRCPhysicsShape2D,
   pose: CRCPhysicsPose2D,
   point: CRCPhysicsVector2,
 ): boolean {
-  void shape;
-  void pose;
-  void point;
-  return unavailable('containsPoint2D');
+  return containsPointInShape2D(shape, pose, point);
 }
 
 export function distanceBetweenShapes2D(
@@ -90,11 +94,7 @@ export function distanceBetweenShapes2D(
   second: CRCPhysicsShape2D,
   secondPose: CRCPhysicsPose2D,
 ): CRCPhysicsDistance2D {
-  void first;
-  void firstPose;
-  void second;
-  void secondPose;
-  return unavailable('distanceBetweenShapes2D');
+  return distanceBetweenPreparedShapes2D(first, firstPose, second, secondPose);
 }
 
 export function overlapShapes2D(
@@ -103,11 +103,7 @@ export function overlapShapes2D(
   second: CRCPhysicsShape2D,
   secondPose: CRCPhysicsPose2D,
 ): boolean {
-  void first;
-  void firstPose;
-  void second;
-  void secondPose;
-  return unavailable('overlapShapes2D');
+  return overlapPreparedShapes2D(first, firstPose, second, secondPose);
 }
 
 export function contactBetweenShapes2D(
@@ -116,11 +112,7 @@ export function contactBetweenShapes2D(
   second: CRCPhysicsShape2D,
   secondPose: CRCPhysicsPose2D,
 ): CRCPhysicsShapeContact2D | null {
-  void first;
-  void firstPose;
-  void second;
-  void secondPose;
-  return unavailable('contactBetweenShapes2D');
+  return contactBetweenPreparedShapes2D(first, firstPose, second, secondPose);
 }
 
 export function raycastShape2D(
