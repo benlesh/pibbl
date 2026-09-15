@@ -21,6 +21,7 @@ export {
   smokeScenarioEntry,
   mouseContractScenarioEntry,
   performanceLabScenarioEntry,
+  particleCelebrationLabScenarioEntry,
   runtimeHooksScenarioEntry,
   signalsLabScenarioEntry,
   validateScenarioCatalog,
@@ -31,6 +32,11 @@ export type {
   AnimationLabState,
 } from './animation-lab.example';
 export { ANIMATION_LAB_ACTION_IDS } from './animation-lab';
+export type {
+  ParticleCelebrationLabAction,
+  ParticleCelebrationLabState,
+} from './particle-celebration-lab.example';
+export { PARTICLE_CELEBRATION_LAB_ACTION_IDS } from './particle-celebration-lab';
 export type {
   SignalsLabAction,
   SignalsLabState,

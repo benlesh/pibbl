@@ -712,6 +712,37 @@ const drafts = [
     load: () => import("./learning/composition/signals-and-animation.example"),
   },
   {
+    slug: "particle-effects",
+    title: "Particle effects",
+    shortTitle: "Particle effects",
+    section: "composition",
+    order: 119,
+    summary:
+      "Combine an autoplay ambient effect with repeated pointer-positioned bursts from one explicit fixed-capacity system.",
+    api: [
+      "defineParticleEffect2D",
+      "particle",
+      "crcParticleSystem",
+      "Particles2D",
+    ],
+    objectives: [
+      "Describe particle-domain emission, seeded ranges, motion, appearance, and rendering in an immutable effect definition.",
+      "Own a reusable explicit system in one component and emit a burst at ordinary CRC pointer coordinates.",
+    ],
+    prompts: {
+      gesture: "Click several points in the stage to launch a celebration at each location.",
+      code: "Change the impact acceleration or color choices, then compare them with moving the whole component through a CRC signal.",
+    },
+    apiNotes: [
+      "A Particles2D component owns one fixed-capacity executor; particles are data inside it rather than individual CRC components.",
+      "Particle acceleration changes each mark over its lifetime. Moving Particles2D itself still uses ordinary CRC transforms, signals, or animation.",
+      "Implicit autoplay suits ambient effects, while crcParticleSystem supplies explicit repeated commands and observable status.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["signals-and-animation", "layer", "pointer-events"],
+    load: () => import("./learning/composition/particle-effects.example"),
+  },
+  {
     slug: "layer",
     title: "Layer",
     shortTitle: "Layer",

@@ -182,6 +182,9 @@ importers:
       '@crc/core':
         specifier: workspace:*
         version: link:../core
+      '@crc/particles':
+        specifier: workspace:*
+        version: link:../particles
       '@crc/webgl':
         specifier: workspace:*
         version: link:../webgl

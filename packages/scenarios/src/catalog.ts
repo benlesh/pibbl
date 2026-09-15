@@ -21,6 +21,7 @@ import type { FilterLabState } from "./filter-lab.example";
 import type { WebGLLabState } from "./webgl-lab.example";
 import type { SignalsLabState } from "./signals-lab.example";
 import type { AnimationLabState } from "./animation-lab.example";
+import type { ParticleCelebrationLabState } from "./particle-celebration-lab.example";
 import { GEOMETRY_MATRIX_CASES } from "./geometry-matrix.example";
 import { MOUSE_CONTRACT_CASES } from "./mouse-contract";
 import { PERFORMANCE_WORKLOADS } from "./performance-lab.example";
@@ -1781,6 +1782,88 @@ export const animationLabScenarioEntry: ScenarioCatalogEntry<AnimationLabState> 
     load: async () => (await import("./animation-lab")).animationLabScenario,
   };
 
+const particleCelebrationLabMetadata: ScenarioMetadata = {
+  id: "first-class-particle-celebration",
+  slug: "particle-celebration",
+  title: "Canvas particle celebration laboratory",
+  summary:
+    "Burst, pause, resume, restart, drain, clear, and remove one fixed-capacity Canvas particle system through public CRC APIs.",
+  category: "Rendering",
+  apiTags: [
+    "defineParticleEffect2D",
+    "particle",
+    "crcParticleSystem",
+    "Particles2D",
+    "Clip",
+    "Layer",
+  ],
+  conceptTags: [
+    "particle effects",
+    "deterministic bursts",
+    "fixed capacity",
+    "component ownership",
+    "Canvas composition",
+  ],
+  manualSteps: [
+    {
+      action: "Click two distant points in the dark stage, then choose Burst.",
+      expected:
+        "Circle sparkles and rectangular confetti originate at each pointer position; Burst reuses the same system at the stage center.",
+    },
+    {
+      action: "Choose Pause, try Burst, then choose Resume.",
+      expected:
+        "Paused particles freeze, the attempted burst is rejected and counted, and Resume continues the same population.",
+    },
+    {
+      action: "Choose Restart, Burst, Drain, and Clear.",
+      expected:
+        "Restart begins seed 42 again, Drain closes emission while existing particles finish, and Clear publishes a finished empty frame.",
+    },
+    {
+      action: "Toggle filter, remove the owner, then Reset.",
+      expected:
+        "The cached Layer switches its core filter, removal disposes the stable handle, and Reset mounts an independent idle system.",
+    },
+  ],
+  knownLimitations: [
+    "Canvas particle execution is CPU paint optimized and does not claim portable GPU acceleration.",
+    "The whole declared component box is the optional pointer target; individual particles are not retained targets.",
+  ],
+  learningOrder: 200,
+  visibility: "test-laboratory",
+  visibilityReason:
+    "It exposes lifecycle diagnostics, overflow accounting, composition toggles, and stale-handle evidence beyond the focused learning lesson.",
+  maturity: "contract",
+};
+
+export const particleCelebrationLabScenarioEntry: ScenarioCatalogEntry<ParticleCelebrationLabState> =
+  {
+    metadata: particleCelebrationLabMetadata,
+    canvas: { width: 640, height: 360 },
+    actions: [
+      { id: "burst", label: "Burst" },
+      { id: "pause", label: "Pause" },
+      { id: "resume", label: "Resume" },
+      { id: "restart", label: "Restart seed 42" },
+      { id: "drain", label: "Drain" },
+      { id: "clear", label: "Clear" },
+      { id: "toggle-filter", label: "Toggle filter" },
+      { id: "remove-owner", label: "Remove owner" },
+      { id: "reset", label: "Reset" },
+    ],
+    source: {
+      id: "first-class-particle-celebration-laboratory-example",
+      language: "tsx",
+      marker:
+        "PARTICLE_CELEBRATION_LAB_SOURCE_ID = 'first-class-particle-celebration-laboratory-example'",
+      path: "packages/scenarios/src/particle-celebration-lab.example.tsx",
+    },
+    load: async () =>
+      (await import("./particle-celebration-lab"))
+        .particleCelebrationLabScenario,
+  };
+
 export const canvasSurfaceScenarioEntry: ScenarioCatalogEntry<CanvasSurfaceState> =
   {
     metadata: canvasSurfaceMetadata,
@@ -1821,6 +1904,7 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
     webglLabScenarioEntry,
     signalsLabScenarioEntry,
     animationLabScenarioEntry,
+    particleCelebrationLabScenarioEntry,
   ] as const);
 
 export const scenarioCatalogIndex = createScenarioCatalogIndex(scenarioCatalog);

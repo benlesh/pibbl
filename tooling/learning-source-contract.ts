@@ -17,6 +17,7 @@ interface SourceInspection {
   readonly hasBindingViolation: boolean;
   readonly hasCommonJsSyntax: boolean;
   readonly hasCoreValueImport: boolean;
+  readonly hasParticlesValueImport: boolean;
   readonly hasWebGLValueImport: boolean;
   readonly hasCreateElementCall: boolean;
   readonly hasDirectComponentCall: boolean;
@@ -33,6 +34,7 @@ interface SourceInspection {
   readonly hasLegacyTextStyle: boolean;
   readonly hasLegacyTypes: boolean;
   readonly hasNamedValueCoreImport: boolean;
+  readonly hasNamedValueParticlesImport: boolean;
   readonly hasNamedValueWebGLImport: boolean;
   readonly hasNamespaceExport: boolean;
   readonly hasOnlyApprovedImports: boolean;
@@ -47,8 +49,15 @@ interface SourceInspection {
 }
 
 const CORE_MODULE = "@crc/core";
+const PARTICLES_MODULE = "@crc/particles";
 const WEBGL_MODULE = "@crc/webgl";
-const LEARNING_VALUE_MODULES = new Set([CORE_MODULE, WEBGL_MODULE]);
+const LEARNING_VALUE_MODULES = new Set([
+  CORE_MODULE,
+  PARTICLES_MODULE,
+  WEBGL_MODULE,
+]);
+const PARTICLES_LEARNING_SOURCE_PATH =
+  "packages/scenarios/src/learning/composition/particle-effects.example.tsx";
 const WEBGL_LEARNING_SOURCE_PATH =
   "packages/scenarios/src/learning/composition/webgl-islands.example.tsx";
 
@@ -105,6 +114,7 @@ const DESCRIPTIVE_COMPONENT_EXPORTS = new Set([
   "Cube",
   "Group3D",
   "Mesh",
+  "Particles2D",
   "Sphere",
   "WebGLLayer",
 ]);
@@ -574,6 +584,15 @@ function isApprovedCoreReference(
     const name = identifierName(node);
     return name !== undefined && valueImports.get(name) === "createElement";
   }
+  if (
+    (parent.type === "MemberExpression" ||
+      parent.type === "OptionalMemberExpression") &&
+    parent.object === node &&
+    valueImports.get(identifierName(node) ?? "") === "particle" &&
+    staticMemberName(parent) !== undefined
+  ) {
+    return true;
+  }
   if (isNonComputedPropertyName(node, parent)) return true;
   return false;
 }
@@ -830,8 +849,10 @@ function inspectSource(source: string, label: string): SourceInspection {
   const valueNamespaceBindings = new Set<string>();
   const packageImportModules = new Set<string>();
   let hasCoreValueImport = false;
+  let hasParticlesValueImport = false;
   let hasWebGLValueImport = false;
   let hasNamedValueCoreImport = false;
+  let hasNamedValueParticlesImport = false;
   let hasNamedValueWebGLImport = false;
   let hasOnlyApprovedImports = true;
   let hasOnlyScenarioImports = true;
@@ -911,6 +932,7 @@ function inspectSource(source: string, label: string): SourceInspection {
           if (statement.importKind !== "type") {
             valueNamespaceBindings.add(localName);
             if (moduleName === CORE_MODULE) hasCoreValueImport = true;
+            if (moduleName === PARTICLES_MODULE) hasParticlesValueImport = true;
             if (moduleName === WEBGL_MODULE) hasWebGLValueImport = true;
           }
         }
@@ -937,6 +959,9 @@ function inspectSource(source: string, label: string): SourceInspection {
       if (moduleName === CORE_MODULE) {
         hasCoreValueImport = true;
         hasNamedValueCoreImport = true;
+      } else if (moduleName === PARTICLES_MODULE) {
+        hasParticlesValueImport = true;
+        hasNamedValueParticlesImport = true;
       } else {
         hasWebGLValueImport = true;
         hasNamedValueWebGLImport = true;
@@ -1199,6 +1224,7 @@ function inspectSource(source: string, label: string): SourceInspection {
     hasCanonicalMount: isCanonicalMount(programBody),
     hasCommonJsSyntax,
     hasCoreValueImport,
+    hasParticlesValueImport,
     hasWebGLValueImport,
     hasCreateElementCall,
     hasDirectComponentCall,
@@ -1215,6 +1241,7 @@ function inspectSource(source: string, label: string): SourceInspection {
     hasLegacyTextStyle,
     hasLegacyTypes,
     hasNamedValueCoreImport,
+    hasNamedValueParticlesImport,
     hasNamedValueWebGLImport,
     hasNamespaceExport,
     hasOnlyApprovedImports,
@@ -1276,13 +1303,13 @@ export function validateScenarioSourceText(
   if (inspection.hasScenarioReExport) {
     throw invalid(
       label,
-      "must not re-export local, external, @crc/core, or @crc/webgl modules.",
+      "must not re-export local, external, @crc/core, @crc/particles, or @crc/webgl modules.",
     );
   }
   if (!inspection.hasCoreValueImport || !inspection.hasOnlyScenarioImports) {
     throw invalid(
       label,
-      "must use supported static imports: named or namespace imports from @crc/core and @crc/webgl, relative type-only imports, and at least one public @crc/core value.",
+      "must use supported static imports: named or namespace imports from @crc/core, @crc/particles, and @crc/webgl, relative type-only imports, and at least one public @crc/core value.",
     );
   }
   if (inspection.hasLegacyTypes) {
@@ -1325,18 +1352,32 @@ export function validateLearningSourceText(
     (sourcePath === undefined &&
       (label === "webgl-islands" ||
         label === 'Learning example "webgl-islands"'));
+  const isParticlesLesson =
+    sourcePath === PARTICLES_LEARNING_SOURCE_PATH ||
+    (sourcePath === undefined &&
+      (label === "particle-effects" ||
+        label === 'Learning example "particle-effects"'));
   const hasExactPackageImports = isWebGLLesson
     ? inspection.hasNamedValueCoreImport &&
       inspection.hasNamedValueWebGLImport &&
+      !inspection.hasNamedValueParticlesImport &&
       inspection.packageImportModules.length === 2
-    : inspection.hasNamedValueCoreImport &&
-      !inspection.hasNamedValueWebGLImport &&
-      inspection.packageImportModules.length === 1;
+    : isParticlesLesson
+      ? inspection.hasNamedValueCoreImport &&
+        inspection.hasNamedValueParticlesImport &&
+        !inspection.hasNamedValueWebGLImport &&
+        inspection.packageImportModules.length === 2
+      : inspection.hasNamedValueCoreImport &&
+        !inspection.hasNamedValueParticlesImport &&
+        !inspection.hasNamedValueWebGLImport &&
+        inspection.packageImportModules.length === 1;
   if (!inspection.hasOnlyApprovedImports || !hasExactPackageImports) {
     throw invalid(
       label,
       isWebGLLesson
         ? "must use direct, unaliased static named value imports from both @crc/core and @crc/webgl."
+        : isParticlesLesson
+          ? "must use direct, unaliased static named value imports from both @crc/core and @crc/particles."
         : "must use direct, unaliased static named imports only from @crc/core, including at least one value import.",
     );
   }
@@ -1361,6 +1402,8 @@ export function validateLearningSourceText(
       label,
       isWebGLLesson
         ? "must use direct @crc/core and @crc/webgl bindings without aliases, reassignment, or shadowing."
+        : isParticlesLesson
+          ? "must use direct @crc/core and @crc/particles bindings without aliases, reassignment, or shadowing."
         : "must use direct @crc/core bindings without aliases, reassignment, or shadowing.",
     );
   }
