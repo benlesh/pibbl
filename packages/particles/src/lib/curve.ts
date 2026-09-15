@@ -85,7 +85,7 @@ export function compileParticleCurve(
 ): CompiledParticleCurve {
   const record = getParticleDescriptorRecord(descriptor);
   if (record?.type !== "curve") {
-    throw new TypeError("Expected a curve created by particle.curve().");
+    throw new TypeError("Expected a curve created by particleCurve().");
   }
   const dimension: 1 | 2 = typeof record.keys[0]![1] === "number" ? 1 : 2;
   const easing = compileEasingTable(record.options?.easing);
@@ -130,7 +130,7 @@ export function compileParticleGradient(
 ): CompiledParticleGradient {
   const record = getParticleDescriptorRecord(descriptor);
   if (record?.type !== "gradient") {
-    throw new TypeError("Expected a gradient created by particle.gradient().");
+    throw new TypeError("Expected a gradient created by particleGradient().");
   }
   const easing = compileEasingTable(record.options?.easing);
   const samples: number[] = [];

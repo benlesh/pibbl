@@ -4,6 +4,7 @@ import {
   PARTICLE_CELEBRATION_LAB_SOURCE_ID,
   ParticleCelebrationLabRoot,
   emitCelebrationBurst,
+  type CelebrationPoint,
   type ParticleCelebrationLabAction,
   type ParticleCelebrationLabModel,
   type ParticleCelebrationLabState,
@@ -15,45 +16,53 @@ import type {
 } from './types';
 
 export const PARTICLE_CELEBRATION_LAB_ACTION_IDS = [
-  'burst',
+  'launch',
   'pause',
   'resume',
-  'restart',
-  'drain',
+  'replay',
   'clear',
-  'toggle-filter',
-  'remove-owner',
-  'reset',
+  'toggle-glow',
 ] as const satisfies readonly ParticleCelebrationLabAction[];
 
 function nextPaint(): Promise<void> {
-  return new Promise(resolve => requestAnimationFrame(() => resolve()));
+  return new Promise((resolve) => requestAnimationFrame(() => resolve()));
 }
 
 function createModel(): ParticleCelebrationLabModel {
   return {
-    filterEnabled: signal(true, {
-      debugName: 'particle celebration filter enabled',
+    glowEnabled: signal(true, {
+      debugName: 'particle celebration glow enabled',
+    }),
+    selectedPoints: signal<readonly CelebrationPoint[]>([], {
+      debugName: 'particle celebration launch points',
     }),
     system: undefined,
-    acceptedBursts: 0,
-    rejectedParticles: 0,
-    lastEvent: 'mount',
-    ownerVisible: true,
-    staleHandleInert: false,
+    celebrations: 0,
+    lastAction: 'Choose up to two launch points.',
+    lastLaunchPoints: [],
+    pendingLaunchPoints: 0,
+    acceptedLaunchPoints: 0,
     publish: undefined,
   };
 }
 
-function snapshot(model: ParticleCelebrationLabModel): ParticleCelebrationLabState {
+function snapshot(
+  model: ParticleCelebrationLabModel,
+): ParticleCelebrationLabState {
+  const status = model.system?.status.get() ?? 'idle';
   return {
-    status: model.system?.status.get() ?? 'idle',
-    execution: model.system?.execution.get() ?? 'unbound',
-    acceptedBursts: model.acceptedBursts,
-    rejectedParticles: model.rejectedParticles,
-    lastEvent: model.lastEvent,
-    owner: model.ownerVisible ? 'mounted' : 'removed',
-    staleHandleInert: model.staleHandleInert,
+    animation:
+      status === 'paused'
+        ? 'paused'
+        : status === 'scheduled' ||
+            status === 'running' ||
+            status === 'draining'
+          ? 'playing'
+          : 'ready',
+    selectedPoints: model.selectedPoints.get().length,
+    celebrations: model.celebrations,
+    lastAction: model.lastAction,
+    glow: model.glowEnabled.get(),
   };
 }
 
@@ -67,7 +76,9 @@ async function mountParticleCelebrationLab(
 
   const assertActive = (): void => {
     if (disposed) {
-      throw new Error('Cannot operate on a disposed particle celebration laboratory.');
+      throw new Error(
+        'Cannot operate on a disposed particle celebration laboratory.',
+      );
     }
   };
   const publish = (): void => context.onStateChange?.(snapshot(model));
@@ -90,55 +101,56 @@ async function mountParticleCelebrationLab(
     }
     return model.system;
   };
-  const execute = async (action: ParticleCelebrationLabAction): Promise<void> => {
-    const system = action === 'reset' ? model.system : requireSystem();
+  const launch = (
+    system: NonNullable<ParticleCelebrationLabModel['system']>,
+    requestedPoints?: readonly CelebrationPoint[],
+  ): void => {
+    const sourcePoints = requestedPoints ?? model.selectedPoints.get();
+    const points =
+      sourcePoints.length > 0 ? sourcePoints : ([[320, 198]] as const);
+    model.lastLaunchPoints = Object.freeze(
+      points.map(([x, y]) => Object.freeze([x, y]) as CelebrationPoint),
+    );
+    model.pendingLaunchPoints = model.lastLaunchPoints.length;
+    model.acceptedLaunchPoints = 0;
+    model.selectedPoints.set([]);
+    for (const [x, y] of model.lastLaunchPoints) {
+      emitCelebrationBurst(system, x, y);
+    }
+  };
+  const execute = async (
+    action: ParticleCelebrationLabAction,
+  ): Promise<void> => {
+    const system = requireSystem();
     switch (action) {
-      case 'burst':
-        if (system) emitCelebrationBurst(system, 320, 180);
+      case 'launch':
+        launch(system);
         break;
       case 'pause':
-        system?.pause();
+        system.pause();
+        model.lastAction = 'Animation paused.';
         break;
       case 'resume':
-        system?.resume();
+        system.resume();
+        model.lastAction = 'Animation resumed.';
         break;
-      case 'restart':
-        system?.restart({ seed: CELEBRATION_SEED });
-        break;
-      case 'drain':
-        system?.stop({ mode: 'drain' });
+      case 'replay':
+        system.restart({ seed: CELEBRATION_SEED });
+        launch(system, model.lastLaunchPoints);
         break;
       case 'clear':
-        system?.stop({ mode: 'clear' });
+        system.stop({ mode: 'clear' });
+        model.selectedPoints.set([]);
+        model.pendingLaunchPoints = 0;
+        model.acceptedLaunchPoints = 0;
+        model.lastAction = 'Stage cleared.';
         break;
-      case 'toggle-filter':
-        model.filterEnabled.update(value => !value);
-        break;
-      case 'remove-owner': {
-        const stale = system;
-        const acceptedBefore = model.acceptedBursts;
-        const rejectedBefore = model.rejectedParticles;
-        model.ownerVisible = false;
-        render();
-        await nextPaint();
-        stale?.play();
-        stale?.pause();
-        stale?.resume();
-        stale?.restart({ seed: CELEBRATION_SEED });
-        stale?.emit('impact', { count: 1, position: [320, 180] });
-        stale?.stop({ mode: 'clear' });
-        model.staleHandleInert =
-          stale?.status.get() === 'disposed' &&
-          stale.execution.get() === 'unbound' &&
-          model.acceptedBursts === acceptedBefore &&
-          model.rejectedParticles === rejectedBefore;
+      case 'toggle-glow': {
+        const enabled = !model.glowEnabled.get();
+        model.glowEnabled.set(enabled);
+        model.lastAction = enabled ? 'Glow turned on.' : 'Glow turned off.';
         break;
       }
-      case 'reset':
-        root?.dispose();
-        root = undefined;
-        mountRoot();
-        break;
     }
     await nextPaint();
     publish();
@@ -151,11 +163,17 @@ async function mountParticleCelebrationLab(
 
   return {
     getState: () => snapshot(model),
-    perform: actionId => {
+    perform: (actionId) => {
       assertActive();
-      if (!(PARTICLE_CELEBRATION_LAB_ACTION_IDS as readonly string[]).includes(actionId)) {
+      if (
+        !(PARTICLE_CELEBRATION_LAB_ACTION_IDS as readonly string[]).includes(
+          actionId,
+        )
+      ) {
         return Promise.reject(
-          new Error(`Particle celebration laboratory does not support action "${actionId}".`),
+          new Error(
+            `Particle celebration laboratory does not support action "${actionId}".`,
+          ),
         );
       }
       const current = actionQueue.then(() =>
@@ -166,7 +184,13 @@ async function mountParticleCelebrationLab(
     },
     reset: () => {
       assertActive();
-      const current = actionQueue.then(() => execute('reset'));
+      const current = actionQueue.then(async () => {
+        root?.dispose();
+        root = undefined;
+        mountRoot();
+        await nextPaint();
+        publish();
+      });
       actionQueue = current.catch(() => {});
       return current;
     },
@@ -186,17 +210,17 @@ async function mountParticleCelebrationLab(
   };
 }
 
-export const particleCelebrationLabScenario: ScenarioDefinition<ParticleCelebrationLabState> = {
-  id: 'first-class-particle-celebration',
-  sourceId: PARTICLE_CELEBRATION_LAB_SOURCE_ID,
-  actionIds: PARTICLE_CELEBRATION_LAB_ACTION_IDS,
-  mount: mountParticleCelebrationLab,
-  formatState: state => [
-    { label: 'System', value: `${state.status} · ${state.execution}` },
-    { label: 'Accepted bursts', value: String(state.acceptedBursts) },
-    { label: 'Rejected particles', value: String(state.rejectedParticles) },
-    { label: 'Last event', value: state.lastEvent },
-    { label: 'Owner', value: state.owner },
-    { label: 'Stale handle inert', value: state.staleHandleInert ? 'yes' : 'no' },
-  ],
-};
+export const particleCelebrationLabScenario: ScenarioDefinition<ParticleCelebrationLabState> =
+  {
+    id: 'first-class-particle-celebration',
+    sourceId: PARTICLE_CELEBRATION_LAB_SOURCE_ID,
+    actionIds: PARTICLE_CELEBRATION_LAB_ACTION_IDS,
+    mount: mountParticleCelebrationLab,
+    formatState: (state) => [
+      { label: 'Animation', value: state.animation },
+      { label: 'Launch points', value: `${state.selectedPoints} selected` },
+      { label: 'Celebrations', value: String(state.celebrations) },
+      { label: 'Last action', value: state.lastAction },
+      { label: 'Glow', value: state.glow ? 'on' : 'off' },
+    ],
+  };

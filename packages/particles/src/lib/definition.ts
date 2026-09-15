@@ -186,7 +186,7 @@ function validateColor(
     return;
   }
   if (record?.type !== 'choice') {
-    particleDefinitionError(context, 'must use particle.choice for variable colors', value);
+    particleDefinitionError(context, 'must use particleChoice for variable colors', value);
   }
   for (let index = 0; index < record.choices.length; index += 1) {
     const choice = record.choices[index]!.value;

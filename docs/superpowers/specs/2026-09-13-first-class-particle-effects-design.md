@@ -162,7 +162,10 @@ points:
 Runtime values:
 
 - `defineParticleEffect2D`;
-- `particle`;
+- `particleRange` and `particleInteger`;
+- `particleChoice`;
+- `particleParameter`;
+- `particleCurve` and `particleGradient`;
 - `crcParticleSystem`; and
 - `Particles2D`.
 
@@ -181,9 +184,9 @@ Runtime values:
 - `defineParticleEffect3D`; and
 - `Particles3D`.
 
-It reuses `particle` and `crcParticleSystem` from the root entry and exports the
-named 3D effect, emitter, shape, motion, appearance, renderer, bounds,
-component-prop, and execution-capability types.
+It reuses the named particle descriptor factories and `crcParticleSystem` from
+the root entry and exports the named 3D effect, emitter, shape, motion,
+appearance, renderer, bounds, component-prop, and execution-capability types.
 
 This entry requires the matching official `@crc/webgl` package and participates
 through a version-coupled `@crc/webgl/internal` friend seam. That seam is for
@@ -257,20 +260,24 @@ ribbons, and trails are later extensions.
 
 ## Value language, curves, and parameters
 
-The frozen `particle` helper creates closed immutable descriptors. Helpers are
-authoring conveniences, not live components and not WebGL primitives.
+Six direct, individually tree-shakable functions create closed immutable
+particle descriptors. They do not choose a value when called: the compiler
+records them and the seeded particle sampler resolves them later. They remain
+in `@crc/particles`, rather than core, because their return values are accepted
+only by particle effect definitions; they are not general random, interpolation,
+or parameter utilities.
 
 Spawn values support:
 
 - a finite constant;
-- `particle.between(min, max)` for a seeded continuous range;
-- `particle.integer(min, max)` for an inclusive seeded integer range; and
-- `particle.choice([{ value, weight }, ...])` for a seeded weighted choice.
+- `particleRange(min, max)` for a seeded continuous range;
+- `particleInteger(min, max)` for an inclusive seeded integer range; and
+- `particleChoice([{ value, weight }, ...])` for a seeded weighted choice.
 
 Over-life values support:
 
-- `particle.curve([[time, value], ...], options?)`; and
-- `particle.gradient([[time, color], ...], options?)`.
+- `particleCurve([[time, value], ...], options?)`; and
+- `particleGradient([[time, color], ...], options?)`.
 
 Curve time is normalized particle lifetime from `0` through `1`. Keys must be
 finite and monotonically increasing and must cover both endpoints after
@@ -295,7 +302,7 @@ type, and one timing category:
   analytic sample; or
 - `"render"`: changes appearance without changing particle state.
 
-A definition references a parameter through `particle.parameter(name)`. The
+A definition references a parameter through `particleParameter(name)`. The
 binding component accepts a type-inferred `parameters` record. Parameters are
 ordinary values, so authors expose reactive values through explicit signal
 reads:
@@ -1068,16 +1075,16 @@ const snowfall = defineParticleEffect2D({
         sample: "interior",
       },
       initial: {
-        lifetimeMilliseconds: particle.between(6_000, 11_000),
-        velocity: [particle.between(-12, 12), particle.between(35, 75)],
-        size: particle.between(1, 4),
+        lifetimeMilliseconds: particleRange(6_000, 11_000),
+        velocity: [particleRange(-12, 12), particleRange(35, 75)],
+        size: particleRange(1, 4),
       },
       motion: [
-        { type: "acceleration", value: particle.parameter("wind") },
+        { type: "acceleration", value: particleParameter("wind") },
         { type: "sway", amplitude: 18, frequency: [0.1, 0.25] },
       ],
       appearance: {
-        opacity: particle.curve([
+        opacity: particleCurve([
           [0, 0],
           [0.08, 1],
           [0.85, 1],
@@ -1130,17 +1137,17 @@ const campfire2D = defineParticleEffect2D({
       emission: [{ type: "rate", particlesPerSecond: 24 }],
       shape: { type: "line", from: [-12, 0], to: [12, 0] },
       initial: {
-        lifetimeMilliseconds: particle.between(1_800, 3_500),
-        velocity: [particle.between(-10, 10), particle.between(-55, -32)],
-        size: particle.between(16, 30),
+        lifetimeMilliseconds: particleRange(1_800, 3_500),
+        velocity: [particleRange(-10, 10), particleRange(-55, -32)],
+        size: particleRange(16, 30),
       },
       motion: [{ type: "sway", amplitude: 12, frequency: [0.4, 0.8] }],
       appearance: {
-        size: particle.curve([
+        size: particleCurve([
           [0, 0.6],
           [1, 1.8],
         ]),
-        color: particle.gradient([
+        color: particleGradient([
           [0, "rgb(80 70 65 / 45%)"],
           [1, "rgb(30 30 35 / 0%)"],
         ]),
@@ -1200,26 +1207,26 @@ const embers3D = defineParticleEffect3D({
       emission: [{ type: "rate", particlesPerSecond: 700 }],
       shape: { type: "sphere", radius: 0.35, sample: "volume" },
       initial: {
-        lifetimeMilliseconds: particle.between(1_500, 4_000),
+        lifetimeMilliseconds: particleRange(1_500, 4_000),
         velocity: {
           type: "cone",
           direction: [0, 1, 0],
           spreadDegrees: 28,
-          speed: particle.between(0.8, 2.4),
+          speed: particleRange(0.8, 2.4),
         },
-        size: particle.between(0.02, 0.05),
+        size: particleRange(0.02, 0.05),
       },
       motion: [
         { type: "acceleration", value: [0, 0.25, 0] },
         { type: "drag", amount: 0.04 },
       ],
       appearance: {
-        size: particle.curve([
+        size: particleCurve([
           [0, 1],
           [0.7, 0.55],
           [1, 0],
         ]),
-        color: particle.gradient([
+        color: particleGradient([
           [0, "#fff4c2"],
           [0.45, "#ff7a18"],
           [1, "rgb(125 23 4 / 0%)"],
@@ -1274,10 +1281,10 @@ const stars = defineParticleEffect3D({
       },
       initial: {
         lifetimeMilliseconds: 60_000,
-        size: particle.between(0.02, 0.08),
+        size: particleRange(0.02, 0.08),
       },
       appearance: {
-        opacity: particle.curve([
+        opacity: particleCurve([
           [0, 0],
           [0.02, 1],
           [0.98, 1],

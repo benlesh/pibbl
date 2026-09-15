@@ -577,9 +577,9 @@ Project 1 rejects distance sorting at WebGL binding and does not expose atlas fr
 - Seed values are finite safe integers normalized to unsigned 32-bit values.
 - Stable emitter-name hashes use UTF-16 FNV-1a. The hash is mixed with the run seed, spawn ordinal, and a compiler-assigned channel id through the fixed 32-bit avalanche in packages/particles/src/lib/random.ts.
 - Unit samples are unsignedHash / 4294967296 and therefore lie in [0, 1).
-- particle.between uses min + unit * (max - min).
-- particle.integer uses min + floor(unit * (max - min + 1)).
-- particle.choice accumulates positive finite weights in source order and selects the first cumulative interval strictly greater than unit * totalWeight.
+- particleRange uses min + unit * (max - min).
+- particleInteger uses min + floor(unit * (max - min + 1)).
+- particleChoice accumulates positive finite weights in source order and selects the first cumulative interval strictly greater than unit * totalWeight.
 - Curves and gradients normalize to 257 samples at construction: endpoints plus 255 equally spaced interior samples. Numeric/vector runtime lookup clamps normalized age to [0, 1], multiplies by 256, and linearly interpolates adjacent samples.
 - Gradient construction interpolates straight sRGB channels plus alpha into 257 samples. Both backends select round(clampedAge * 256); Canvas stores construction-time CSS strings and WebGL uses texelFetch, avoiding per-particle string creation while preserving the same quantization. Effective renderer alpha multiplies component opacity and sampled color alpha exactly once.
 - Circle interior radii use sqrt(unit); sphere-volume radii use cbrt(unit). Angular direction samples are uniform over their declared measure.
@@ -1522,7 +1522,7 @@ git commit -m "test(particles): verify package consumers"
 - Create: docs/site/api/components/particles-3d.md
 - Create: docs/site/api/functions/define-particle-effect-2d.md
 - Create: docs/site/api/functions/define-particle-effect-3d.md
-- Create: docs/site/api/functions/particle.md
+- Create: docs/site/api/functions/particle-descriptors.md
 - Create: docs/site/api/hooks/crc-particle-system.md
 - Create: docs/site/api/types/particles.md
 - Create: docs/site/learn/guides/particle-effects.md
@@ -1578,7 +1578,7 @@ corepack pnpm@11.21.0 lint:format
 - [ ] Commit only Task 15 files plus exact generated documentation inventory changes.
 
 ```sh
-git add docs/site/api/components/particles-2d.md docs/site/api/components/particles-3d.md docs/site/api/functions/define-particle-effect-2d.md docs/site/api/functions/define-particle-effect-3d.md docs/site/api/functions/particle.md docs/site/api/hooks/crc-particle-system.md docs/site/api/types/particles.md docs/site/learn/guides/particle-effects.md docs/site/api/index.md docs/design/animation-contract.md docs/design/signals-and-scheduling-contract.md docs/design/canvas-surface-contract.md docs/design/runtime-hooks-contract.md docs/design/drawing-components-contract.md docs/design/style-system-contract.md docs/design/layout-system-contract.md docs/design/user-events-contract.md docs/design/focus-and-keyboard-navigation-contract.md docs/design/mouse-interaction-contract.md docs/design/event-resource-ownership.md docs/design/runtime-resource-ownership.md README.md packages/core/README.md packages/webgl/README.md docs/library-status.md AGENTS.md tooling/verify-docs.mjs tooling/docs-contract-preservation-baseline.json tooling/studio-docs/api-exports.ts tooling/studio-docs/api-exports.check.ts tooling/studio-docs/fixtures/api/particles.ts
+git add docs/site/api/components/particles-2d.md docs/site/api/components/particles-3d.md docs/site/api/functions/define-particle-effect-2d.md docs/site/api/functions/define-particle-effect-3d.md docs/site/api/functions/particle-descriptors.md docs/site/api/hooks/crc-particle-system.md docs/site/api/types/particles.md docs/site/learn/guides/particle-effects.md docs/site/api/index.md docs/design/animation-contract.md docs/design/signals-and-scheduling-contract.md docs/design/canvas-surface-contract.md docs/design/runtime-hooks-contract.md docs/design/drawing-components-contract.md docs/design/style-system-contract.md docs/design/layout-system-contract.md docs/design/user-events-contract.md docs/design/focus-and-keyboard-navigation-contract.md docs/design/mouse-interaction-contract.md docs/design/event-resource-ownership.md docs/design/runtime-resource-ownership.md README.md packages/core/README.md packages/webgl/README.md docs/library-status.md AGENTS.md tooling/verify-docs.mjs tooling/docs-contract-preservation-baseline.json tooling/studio-docs/api-exports.ts tooling/studio-docs/api-exports.check.ts tooling/studio-docs/fixtures/api/particles.ts
 git commit -m "docs(particles): publish first-class particle effects"
 ```
 

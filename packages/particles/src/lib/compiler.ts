@@ -353,7 +353,7 @@ export function compileParameterReference<Length extends 1 | 2 | 3 | 4>(
 ): CompiledParameterReference<Length> {
   const descriptor = getParticleDescriptorRecord(reference);
   if (descriptor?.type !== "parameter") {
-    throw new TypeError(`Particle ${path} must use particle.parameter().`);
+    throw new TypeError(`Particle ${path} must use particleParameter().`);
   }
   const entry = layout.byName.get(descriptor.name);
   if (entry === undefined) {
@@ -514,7 +514,7 @@ function compileColor(
   }
   if (descriptor?.type !== "choice") {
     throw new TypeError(
-      `Particle ${path} must be a color or particle.choice().`,
+      `Particle ${path} must be a color or particleChoice().`,
     );
   }
   const choices = compileWeightedChoice(

@@ -65,7 +65,7 @@ function countRange(
   if (typeof count === "number") return [count, count];
   const record = getParticleDescriptorRecord(count);
   if (record?.type !== "integer") {
-    throw new TypeError("Particle emission count must use particle.integer().");
+    throw new TypeError("Particle emission count must use particleInteger().");
   }
   return [record.min, record.max];
 }

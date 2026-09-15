@@ -422,7 +422,7 @@ function validateCount(
   if (descriptor?.type !== 'integer' || descriptor.min <= 0) {
     particleDefinitionError(
       context,
-      'must be a positive integer or positive particle.integer range',
+      'must be a positive integer or positive particleInteger range',
       value,
       RangeError,
     );

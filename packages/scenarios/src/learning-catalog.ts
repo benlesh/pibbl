@@ -721,7 +721,9 @@ const drafts = [
       "Combine an autoplay ambient effect with repeated pointer-positioned bursts from one explicit fixed-capacity system.",
     api: [
       "defineParticleEffect2D",
-      "particle",
+      "particleRange",
+      "particleChoice",
+      "particleCurve",
       "crcParticleSystem",
       "Particles2D",
     ],
@@ -730,11 +732,13 @@ const drafts = [
       "Own a reusable explicit system in one component and emit a burst at ordinary CRC pointer coordinates.",
     ],
     prompts: {
-      gesture: "Click several points in the stage to launch a celebration at each location.",
+      gesture:
+        "Click several points in the stage to launch a celebration at each location.",
       code: "Change the impact acceleration or color choices, then compare them with moving the whole component through a CRC signal.",
     },
     apiNotes: [
       "A Particles2D component owns one fixed-capacity executor; particles are data inside it rather than individual CRC components.",
+      "Particle value descriptors are direct named exports, so unused descriptor factories remain tree-shakable.",
       "Particle acceleration changes each mark over its lifetime. Moving Particles2D itself still uses ordinary CRC transforms, signals, or animation.",
       "Implicit autoplay suits ambient effects, while crcParticleSystem supplies explicit repeated commands and observable status.",
     ],

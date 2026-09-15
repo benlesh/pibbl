@@ -4,6 +4,7 @@ const SUPPORTED_CRC_MODULES = new Set([
   "@crc/core",
   "@crc/core/jsx-runtime",
   "@crc/core/jsx-dev-runtime",
+  "@crc/particles",
   "@crc/webgl",
 ]);
 
@@ -16,7 +17,7 @@ interface SourceEdit {
 function invalidModuleShape(): Error {
   return new Error(
     "Lessons may contain named imports only from @crc/core, " +
-      "@crc/core/jsx-runtime, @crc/core/jsx-dev-runtime, and @crc/webgl, plus exactly " +
+      "@crc/core/jsx-runtime, @crc/core/jsx-dev-runtime, @crc/particles, and @crc/webgl, plus exactly " +
       "one default mount(canvas) export.",
   );
 }
@@ -26,10 +27,7 @@ function requiredOffset(value: number | null | undefined): number {
   return value;
 }
 
-function inspectSyntax(
-  value: unknown,
-  identifiers: Set<string>,
-): boolean {
+function inspectSyntax(value: unknown, identifiers: Set<string>): boolean {
   if (!value || typeof value !== "object") return false;
   if (Array.isArray(value)) {
     return value.some((item) => inspectSyntax(item, identifiers));
@@ -55,7 +53,9 @@ function inspectSyntax(
 
 function applyEdits(source: string, edits: readonly SourceEdit[]): string {
   let result = source;
-  for (const edit of [...edits].sort((left, right) => right.start - left.start)) {
+  for (const edit of [...edits].sort(
+    (left, right) => right.start - left.start,
+  )) {
     result =
       result.slice(0, edit.start) + edit.replacement + result.slice(edit.end);
   }

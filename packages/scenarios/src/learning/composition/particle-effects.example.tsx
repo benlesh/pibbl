@@ -1,15 +1,11 @@
-import {
-  Group,
-  Rectangle,
-  Text,
-  crc,
-  type CRCController,
-} from '@crc/core';
+import { Group, Rectangle, Text, crc, type CRCController } from '@crc/core';
 import {
   Particles2D,
   crcParticleSystem,
   defineParticleEffect2D,
-  particle,
+  particleChoice,
+  particleCurve,
+  particleRange,
 } from '@crc/particles';
 
 const ambientDust = defineParticleEffect2D({
@@ -22,10 +18,10 @@ const ambientDust = defineParticleEffect2D({
       emission: [{ type: 'rate', particlesPerSecond: 14 }],
       shape: { type: 'rectangle', width: 720, height: 330, sample: 'interior' },
       initial: {
-        lifetimeMilliseconds: particle.between(2_800, 4_600),
-        velocity: [particle.between(-5, 5), particle.between(-16, -7)],
-        size: particle.between(2, 5),
-        color: particle.choice([
+        lifetimeMilliseconds: particleRange(2_800, 4_600),
+        velocity: [particleRange(-5, 5), particleRange(-16, -7)],
+        size: particleRange(2, 5),
+        color: particleChoice([
           { value: '#7dd3fc', weight: 2 },
           { value: '#f7c948', weight: 1 },
           { value: '#ffffff', weight: 1 },
@@ -33,7 +29,7 @@ const ambientDust = defineParticleEffect2D({
       },
       motion: [{ type: 'sway', amplitude: 11, frequency: [0.2, 0.45] }],
       appearance: {
-        opacity: particle.curve([
+        opacity: particleCurve([
           [0, 0],
           [0.16, 0.7],
           [0.8, 0.7],
@@ -56,10 +52,10 @@ const clickBurst = defineParticleEffect2D({
       emission: [{ type: 'manual', count: 40 }],
       shape: { type: 'circle', radius: 6, sample: 'interior' },
       initial: {
-        lifetimeMilliseconds: particle.between(650, 950),
-        velocity: [particle.between(-135, 135), particle.between(-180, -65)],
-        size: particle.between(5, 10),
-        color: particle.choice([
+        lifetimeMilliseconds: particleRange(650, 950),
+        velocity: [particleRange(-135, 135), particleRange(-180, -65)],
+        size: particleRange(5, 10),
+        color: particleChoice([
           { value: '#fb7185', weight: 2 },
           { value: '#a78bfa', weight: 2 },
           { value: '#34d399', weight: 2 },
@@ -71,7 +67,7 @@ const clickBurst = defineParticleEffect2D({
       // ordinary CRC signal or animation and pass its resolved value to style.
       motion: [{ type: 'acceleration', value: [0, 260] }],
       appearance: {
-        opacity: particle.curve([
+        opacity: particleCurve([
           [0, 1],
           [0.72, 1],
           [1, 0],
@@ -119,19 +115,37 @@ function ParticleEffectsStudy() {
       />
       <Text
         pointerEvents="none"
-        style={{ x: 360, y: 38, fill: '#f8fafc', font: '900 24px sans-serif', textAlign: 'center' }}
+        style={{
+          x: 360,
+          y: 38,
+          fill: '#f8fafc',
+          font: '900 24px sans-serif',
+          textAlign: 'center',
+        }}
       >
         PARTICLE EFFECTS
       </Text>
       <Text
         pointerEvents="none"
-        style={{ x: 360, y: 64, fill: '#7dd3fc', font: '700 12px monospace', textAlign: 'center' }}
+        style={{
+          x: 360,
+          y: 64,
+          fill: '#7dd3fc',
+          font: '700 12px monospace',
+          textAlign: 'center',
+        }}
       >
         AMBIENT AUTOPLAY + EXPLICIT CLICK BURSTS
       </Text>
       <Text
         pointerEvents="none"
-        style={{ x: 360, y: 396, fill: '#cbd5e1', font: '600 12px monospace', textAlign: 'center' }}
+        style={{
+          x: 360,
+          y: 396,
+          fill: '#cbd5e1',
+          font: '600 12px monospace',
+          textAlign: 'center',
+        }}
       >
         CLICK THE STAGE · ONE SYSTEM REUSES FIXED STORAGE
       </Text>

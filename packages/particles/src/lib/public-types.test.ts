@@ -58,7 +58,7 @@ import type {
   Particles3DProps,
   Particles3DStyle,
 } from "@crc/particles/webgl";
-import { particle } from "@crc/particles";
+import { particleParameter } from "@crc/particles";
 import { expectTypeOf, it } from "vitest";
 
 const parameterDefinitions = {
@@ -100,25 +100,25 @@ declare const system2D: InferredSystem;
 declare const system3D: CRCParticleSystem<"impact", Parameters, 3>;
 
 function assertParticlePublicTypes(): void {
-  const vector2Reference: CRCParticleVector2 = particle.parameter("wind");
-  const vector3Reference: CRCParticleVector3 = particle.parameter("velocity");
+  const vector2Reference: CRCParticleVector2 = particleParameter("wind");
+  const vector3Reference: CRCParticleVector3 = particleParameter("velocity");
   const parameterizedInitial2D: CRCParticleInitial2D = {
     lifetimeMilliseconds: 1_000,
-    velocity: particle.parameter("wind"),
-    color: particle.parameter("tint"),
+    velocity: particleParameter("wind"),
+    color: particleParameter("tint"),
   };
   const parameterizedMotion2D: CRCParticleMotion2D = {
     type: "acceleration",
-    value: particle.parameter("wind"),
+    value: particleParameter("wind"),
   };
   const parameterizedInitial3D: CRCParticleInitial3D = {
     lifetimeMilliseconds: 1_000,
-    velocity: particle.parameter("velocity"),
-    color: particle.parameter("tint"),
+    velocity: particleParameter("velocity"),
+    color: particleParameter("tint"),
   };
   const parameterizedMotion3D: CRCParticleMotion3D = {
     type: "angularVelocity",
-    degreesPerSecond: particle.parameter("spin"),
+    degreesPerSecond: particleParameter("spin"),
   };
   void vector2Reference;
   void vector3Reference;

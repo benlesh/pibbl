@@ -205,6 +205,9 @@ importers:
       '@crc/core':
         specifier: workspace:*
         version: link:../packages/core
+      '@crc/particles':
+        specifier: workspace:*
+        version: link:../packages/particles
       '@crc/scenarios':
         specifier: workspace:*
         version: link:../packages/scenarios

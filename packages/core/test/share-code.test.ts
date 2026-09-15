@@ -198,6 +198,42 @@ export default function mount(canvas) {
     });
   });
 
+  it("executes core and particle imports through one Studio runtime", () => {
+    const result = executeSandbox(
+      `
+import { crc } from "@crc/core";
+import { jsx as _jsx } from "@crc/core/jsx-runtime";
+import { Particles2D, defineParticleEffect2D, particleRange } from "@crc/particles";
+const effect = defineParticleEffect2D({
+  emitters: [{
+    name: "spark",
+    capacity: 1,
+    emission: [{ type: "manual" }],
+    shape: { type: "point" },
+    initial: { lifetimeMilliseconds: particleRange(100, 200) },
+    renderer: { type: "circle" },
+  }],
+});
+export default function mount(canvas) {
+  return crc(canvas, _jsx(Particles2D, { effect, style: { width: 320, height: 180 } }));
+}
+`,
+      {
+        crc: (_canvas: unknown, node: unknown) => node,
+        jsx: (type: unknown, props: unknown) => ({ type, props }),
+        Particles2D: "particles-component",
+        defineParticleEffect2D: (effect: unknown) => effect,
+        particleRange: (min: number, max: number) => ({ min, max }),
+      },
+      {},
+    );
+
+    expect(result).toMatchObject({
+      type: "particles-component",
+      props: { style: { width: 320, height: 180 } },
+    });
+  });
+
   it.each([
     'import external from "external";',
     'import * as CRC from "@crc/core";',
@@ -226,16 +262,14 @@ export default function mount(canvas) {
   });
 
   it.each([
-    'export { crc };',
+    "export { crc };",
     'export * from "@crc/core";',
-    'export const extra = 1;',
-    'export default canvas => canvas;',
-    'export default function mount(canvas) { return canvas; }\nexport {};\nexport {};',
+    "export const extra = 1;",
+    "export default canvas => canvas;",
+    "export default function mount(canvas) { return canvas; }\nexport {};\nexport {};",
   ])("rejects malformed or extra exports: %s", (exportSource) => {
     expect(() =>
-      toRunnableScript(
-        `import { crc } from "@crc/core";\n${exportSource}`,
-      ),
+      toRunnableScript(`import { crc } from "@crc/core";\n${exportSource}`),
     ).toThrow(/default mount\(canvas\)/u);
   });
 
@@ -275,7 +309,9 @@ export default function mount(canvas /* retained comment */) {
 `;
     const runnable = toRunnableScript(emittedCode);
 
-    expect(runnable).toContain('// import external from "external"; export const nope = true;');
+    expect(runnable).toContain(
+      '// import external from "external"; export const nope = true;',
+    );
     expect(runnable).toContain('"import this; export {};"');
     expect(runnable).toContain(
       '`dynamic import("external") and export default`',

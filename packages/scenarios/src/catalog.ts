@@ -1564,7 +1564,8 @@ const webglLabMetadata: ScenarioMetadata = {
         "Visible WebGL geometry composes at one Canvas paint position while depth, transforms, clips, layers, and filter overflow preserve source geometry.",
     },
     {
-      action: "Choose Transparency and compare the far-only, overlap, and near-only probes.",
+      action:
+        "Choose Transparency and compare the far-only, overlap, and near-only probes.",
       expected:
         "Although the near mesh appears first in source, the overlap blends the far green mesh before the near red mesh.",
     },
@@ -1787,43 +1788,39 @@ const particleCelebrationLabMetadata: ScenarioMetadata = {
   slug: "particle-celebration",
   title: "Canvas particle celebration laboratory",
   summary:
-    "Burst, pause, resume, restart, drain, clear, and remove one fixed-capacity Canvas particle system through public CRC APIs.",
+    "Place launch points and trigger a colorful Canvas particle celebration through public CRC APIs.",
   category: "Rendering",
   apiTags: [
     "defineParticleEffect2D",
-    "particle",
+    "particleRange",
+    "particleChoice",
+    "particleCurve",
     "crcParticleSystem",
     "Particles2D",
     "Clip",
     "Layer",
   ],
-  conceptTags: [
-    "particle effects",
-    "deterministic bursts",
-    "fixed capacity",
-    "component ownership",
-    "Canvas composition",
-  ],
+  conceptTags: ["particle effects", "pointer bursts", "Canvas composition"],
   manualSteps: [
     {
-      action: "Click two distant points in the dark stage, then choose Burst.",
+      action: "Click one or two points in the dark stage.",
       expected:
-        "Circle sparkles and rectangular confetti originate at each pointer position; Burst reuses the same system at the stage center.",
+        "Numbered launch markers remain visible so you can see exactly where the celebration will begin.",
     },
     {
-      action: "Choose Pause, try Burst, then choose Resume.",
+      action: "Choose Launch celebration.",
       expected:
-        "Paused particles freeze, the attempted burst is rejected and counted, and Resume continues the same population.",
+        "Sparkles and confetti originate at every selected point, and the launch markers clear.",
     },
     {
-      action: "Choose Restart, Burst, Drain, and Clear.",
+      action: "Try Pause animation, Resume animation, Replay, and Clear stage.",
       expected:
-        "Restart begins seed 42 again, Drain closes emission while existing particles finish, and Clear publishes a finished empty frame.",
+        "The animation pauses and resumes; Replay repeats the last seeded launch; Clear stage removes the active effect.",
     },
     {
-      action: "Toggle filter, remove the owner, then Reset.",
+      action: "Choose Glow on / off, then Reset.",
       expected:
-        "The cached Layer switches its core filter, removal disposes the stable handle, and Reset mounts an independent idle system.",
+        "Glow changes the presentation, while Reset returns the entire example to its initial state.",
     },
   ],
   knownLimitations: [
@@ -1833,7 +1830,7 @@ const particleCelebrationLabMetadata: ScenarioMetadata = {
   learningOrder: 200,
   visibility: "test-laboratory",
   visibilityReason:
-    "It exposes lifecycle diagnostics, overflow accounting, composition toggles, and stale-handle evidence beyond the focused learning lesson.",
+    "It provides an interactive public-API test surface for pointer launches, playback controls, and Canvas composition.",
   maturity: "contract",
 };
 
@@ -1842,15 +1839,12 @@ export const particleCelebrationLabScenarioEntry: ScenarioCatalogEntry<ParticleC
     metadata: particleCelebrationLabMetadata,
     canvas: { width: 640, height: 360 },
     actions: [
-      { id: "burst", label: "Burst" },
-      { id: "pause", label: "Pause" },
-      { id: "resume", label: "Resume" },
-      { id: "restart", label: "Restart seed 42" },
-      { id: "drain", label: "Drain" },
-      { id: "clear", label: "Clear" },
-      { id: "toggle-filter", label: "Toggle filter" },
-      { id: "remove-owner", label: "Remove owner" },
-      { id: "reset", label: "Reset" },
+      { id: "launch", label: "Launch celebration" },
+      { id: "pause", label: "Pause animation" },
+      { id: "resume", label: "Resume animation" },
+      { id: "replay", label: "Replay" },
+      { id: "clear", label: "Clear stage" },
+      { id: "toggle-glow", label: "Glow on / off" },
     ],
     source: {
       id: "first-class-particle-celebration-laboratory-example",

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { defineParticleEffect2D, particle } from '../index.js';
+import { defineParticleEffect2D } from '../index.js';
+import { particle } from './particle.js';
 import { defineParticleEffect3D } from '../webgl.js';
 import {
   getParticleEffect2DRecord,

@@ -1,5 +1,12 @@
 export { defineParticleEffect2D } from "./lib/definition.js";
-export { particle } from "./lib/particle.js";
+export {
+  particleChoice,
+  particleCurve,
+  particleGradient,
+  particleInteger,
+  particleParameter,
+  particleRange,
+} from "./lib/particle.js";
 export { crcParticleSystem } from "./lib/system/hook.js";
 export { Particles2D } from "./lib/canvas/component.js";
 

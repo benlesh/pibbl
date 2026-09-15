@@ -13,9 +13,12 @@ import {
 import { afterEach, describe, expect, it } from 'vitest';
 import { loadLearningSource } from '../../../playground/src/learning-sources';
 import { loadScenarioSource } from '../../../playground/src/scenario-sources';
+import { mountScenarioSurface } from '@crc/scenarios/surface';
 import { clickLogicalPoint } from './support/user-input';
 
-const activeControllers = new Set<ScenarioController<ParticleCelebrationLabState>>();
+const activeControllers = new Set<
+  ScenarioController<ParticleCelebrationLabState>
+>();
 
 afterEach(async () => {
   for (const controller of activeControllers) await controller.dispose();
@@ -25,7 +28,9 @@ afterEach(async () => {
 
 async function nextPaint(count = 2): Promise<void> {
   for (let index = 0; index < count; index += 1) {
-    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => resolve()),
+    );
   }
 }
 
@@ -34,8 +39,10 @@ function pixels(
   region: Readonly<{ x: number; y: number; width: number; height: number }>,
 ): Uint8ClampedArray {
   const context = canvas.getContext('2d');
-  if (!context) throw new Error('The particle celebration Canvas has no 2D context.');
-  return context.getImageData(region.x, region.y, region.width, region.height).data;
+  if (!context)
+    throw new Error('The particle celebration Canvas has no 2D context.');
+  return context.getImageData(region.x, region.y, region.width, region.height)
+    .data;
 }
 
 function changedPixelCount(
@@ -76,7 +83,10 @@ function occupiedParticleCells(
   return occupied;
 }
 
-function overlapRatio(left: ReadonlySet<string>, right: ReadonlySet<string>): number {
+function overlapRatio(
+  left: ReadonlySet<string>,
+  right: ReadonlySet<string>,
+): number {
   const union = new Set([...left, ...right]);
   let intersection = 0;
   for (const value of left) {
@@ -106,7 +116,9 @@ describe('first-class Canvas particle public scenarios', () => {
       section: 'composition',
       api: [
         'defineParticleEffect2D',
-        'particle',
+        'particleRange',
+        'particleChoice',
+        'particleCurve',
         'crcParticleSystem',
         'Particles2D',
       ],
@@ -136,21 +148,19 @@ describe('first-class Canvas particle public scenarios', () => {
       },
     });
     expect(PARTICLE_CELEBRATION_LAB_ACTION_IDS).toEqual([
-      'burst',
+      'launch',
       'pause',
       'resume',
-      'restart',
-      'drain',
+      'replay',
       'clear',
-      'toggle-filter',
-      'remove-owner',
-      'reset',
+      'toggle-glow',
     ]);
-    expect(particleCelebrationLabScenarioEntry.actions.map(action => action.id)).toEqual(
-      PARTICLE_CELEBRATION_LAB_ACTION_IDS,
-    );
+    expect(
+      particleCelebrationLabScenarioEntry.actions.map((action) => action.id),
+    ).toEqual(PARTICLE_CELEBRATION_LAB_ACTION_IDS);
 
-    if (!learning) throw new Error('Missing particle-effects learning example.');
+    if (!learning)
+      throw new Error('Missing particle-effects learning example.');
     const [learningSource, labSource] = await Promise.all([
       loadLearningSource(learning),
       loadScenarioSource(particleCelebrationLabScenarioEntry),
@@ -158,7 +168,9 @@ describe('first-class Canvas particle public scenarios', () => {
     for (const source of [learningSource, labSource]) {
       expect(source).toMatch(/from ['"]@crc\/particles['"]/u);
       expect(source).toMatch(/from ['"]@crc\/core['"]/u);
-      expect(source).not.toMatch(/@crc\/(?:particles|core)\/(?:internal|lib|src)\b/u);
+      expect(source).not.toMatch(
+        /@crc\/(?:particles|core)\/(?:internal|lib|src)\b/u,
+      );
     }
 
     const definition = await loadScenario(particleCelebrationLabScenarioEntry);
@@ -169,16 +181,14 @@ describe('first-class Canvas particle public scenarios', () => {
     });
   });
 
-  it('runs positioned bursts and every lifecycle command through public state', async () => {
+  it('shows selected launch points, launches there, and exposes human-readable state', async () => {
     const { canvas, controller } = await mountCelebrationLab();
     expect(controller.getState()).toEqual({
-      status: 'idle',
-      execution: 'stateless-canvas',
-      acceptedBursts: 0,
-      rejectedParticles: 0,
-      lastEvent: 'mount',
-      owner: 'mounted',
-      staleHandleInert: false,
+      animation: 'ready',
+      selectedPoints: 0,
+      celebrations: 0,
+      lastAction: 'Choose up to two launch points.',
+      glow: true,
     });
 
     const leftRegion = { x: 96, y: 116, width: 128, height: 128 };
@@ -191,85 +201,129 @@ describe('first-class Canvas particle public scenarios', () => {
     await clickLogicalPoint(canvas, { x: 480, y: 170 });
     await controller.settled();
 
-    expect(controller.getState()).toMatchObject({
-      status: 'running',
-      execution: 'stateless-canvas',
-      acceptedBursts: 4,
-      rejectedParticles: 0,
-      lastEvent: 'burst-accepted',
+    expect(controller.getState()).toEqual({
+      animation: 'ready',
+      selectedPoints: 2,
+      celebrations: 0,
+      lastAction: '2 launch points ready.',
+      glow: true,
     });
-    expect(changedPixelCount(beforeLeft, pixels(canvas, leftRegion))).toBeGreaterThan(20);
-    expect(changedPixelCount(beforeRight, pixels(canvas, rightRegion))).toBeGreaterThan(20);
+    expect(
+      changedPixelCount(beforeLeft, pixels(canvas, leftRegion)),
+    ).toBeGreaterThan(10);
+    expect(
+      changedPixelCount(beforeRight, pixels(canvas, rightRegion)),
+    ).toBeGreaterThan(10);
+
+    await controller.perform('launch');
+    await controller.settled();
+    expect(controller.getState()).toEqual({
+      animation: 'playing',
+      selectedPoints: 0,
+      celebrations: 2,
+      lastAction: 'Celebration launched from 2 points.',
+      glow: true,
+    });
+    expect(
+      changedPixelCount(beforeLeft, pixels(canvas, leftRegion)),
+    ).toBeGreaterThan(20);
+    expect(
+      changedPixelCount(beforeRight, pixels(canvas, rightRegion)),
+    ).toBeGreaterThan(20);
 
     await controller.perform('pause');
     await controller.settled();
-    expect(controller.getState().status).toBe('paused');
-
-    await controller.perform('burst');
-    await controller.settled();
     expect(controller.getState()).toMatchObject({
-      status: 'paused',
-      acceptedBursts: 4,
-      rejectedParticles: 60,
-      lastEvent: 'burst-rejected',
+      animation: 'paused',
+      lastAction: 'Animation paused.',
     });
 
     await controller.perform('resume');
     await controller.settled();
-    expect(controller.getState().status).toBe('running');
+    expect(controller.getState()).toMatchObject({
+      animation: 'playing',
+      lastAction: 'Animation resumed.',
+    });
 
-    await controller.perform('restart');
-    await controller.perform('burst');
+    await controller.perform('replay');
     await controller.settled();
-    const firstSeededBurst = pixels(canvas, { x: 240, y: 100, width: 160, height: 160 });
+    const replayRegion = { x: 12, y: 52, width: 616, height: 292 };
+    const firstSeededBurst = pixels(canvas, replayRegion);
 
     await controller.perform('clear');
-    await controller.perform('restart');
-    await controller.perform('burst');
+    await controller.perform('replay');
     await controller.settled();
-    const repeatedSeededBurst = pixels(canvas, { x: 240, y: 100, width: 160, height: 160 });
+    const repeatedSeededBurst = pixels(canvas, replayRegion);
     expect(
       overlapRatio(
-        occupiedParticleCells(firstSeededBurst, 160),
-        occupiedParticleCells(repeatedSeededBurst, 160),
+        occupiedParticleCells(firstSeededBurst, replayRegion.width),
+        occupiedParticleCells(repeatedSeededBurst, replayRegion.width),
       ),
     ).toBeGreaterThan(0.8);
 
-    await controller.perform('drain');
-    await controller.settled();
-    expect(controller.getState()).toMatchObject({
-      status: 'draining',
-      lastEvent: 'drain-start',
-    });
-
     await controller.perform('clear');
     await controller.settled();
     expect(controller.getState()).toMatchObject({
-      status: 'finished',
-      lastEvent: 'finish',
+      animation: 'ready',
+      selectedPoints: 0,
+      lastAction: 'Stage cleared.',
     });
 
-    await controller.perform('toggle-filter');
-    await controller.perform('remove-owner');
+    await controller.perform('toggle-glow');
     await controller.settled();
     expect(controller.getState()).toMatchObject({
-      status: 'disposed',
-      execution: 'unbound',
-      owner: 'removed',
-      staleHandleInert: true,
+      glow: false,
+      lastAction: 'Glow turned off.',
     });
 
     await controller.reset();
     await controller.settled();
     expect(controller.getState()).toEqual({
-      status: 'idle',
-      execution: 'stateless-canvas',
-      acceptedBursts: 0,
-      rejectedParticles: 0,
-      lastEvent: 'mount',
-      owner: 'mounted',
-      staleHandleInert: false,
+      animation: 'ready',
+      selectedPoints: 0,
+      celebrations: 0,
+      lastAction: 'Choose up to two launch points.',
+      glow: true,
     });
+  });
+
+  it('presents one Reset and only understandable particle controls', async () => {
+    const container = document.createElement('main');
+    document.body.appendChild(container);
+    const definition = await loadScenario(particleCelebrationLabScenarioEntry);
+    const sourceText = await loadScenarioSource(
+      particleCelebrationLabScenarioEntry,
+    );
+    const surface = await mountScenarioSurface({
+      container,
+      entry: particleCelebrationLabScenarioEntry,
+      definition,
+      sourceText,
+    });
+
+    try {
+      expect([...surface.actionButtons.keys()]).toEqual([
+        'launch',
+        'pause',
+        'resume',
+        'replay',
+        'clear',
+        'toggle-glow',
+      ]);
+      expect(
+        [...container.querySelectorAll('button')].filter(
+          (button) => button.textContent === 'Reset',
+        ),
+      ).toHaveLength(1);
+      expect(
+        container.querySelector('.scenario-runner__state')?.textContent,
+      ).toContain('Choose up to two launch points.');
+      expect(
+        container.querySelector('.scenario-runner__state')?.textContent,
+      ).not.toMatch(/unbound|owner|rejected|stale/iu);
+    } finally {
+      await surface.dispose();
+    }
   });
 
   it('mounts the learning ambient effect and accepts an explicit click burst', async () => {
@@ -284,15 +338,25 @@ describe('first-class Canvas particle public scenarios', () => {
     const controller = module.default(canvas);
     try {
       await nextPaint(3);
-      const before = pixels(canvas, { x: 260, y: 120, width: 200, height: 200 });
-      await clickLogicalPoint(canvas, { x: 360, y: 220 });
-      await nextPaint(3);
-      expect(changedPixelCount(before, pixels(canvas, {
+      const before = pixels(canvas, {
         x: 260,
         y: 120,
         width: 200,
         height: 200,
-      }))).toBeGreaterThan(20);
+      });
+      await clickLogicalPoint(canvas, { x: 360, y: 220 });
+      await nextPaint(3);
+      expect(
+        changedPixelCount(
+          before,
+          pixels(canvas, {
+            x: 260,
+            y: 120,
+            width: 200,
+            height: 200,
+          }),
+        ),
+      ).toBeGreaterThan(20);
     } finally {
       controller.dispose();
     }

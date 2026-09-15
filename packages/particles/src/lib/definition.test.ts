@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { defineParticleEffect2D, particle } from '../index.js';
+import { defineParticleEffect2D } from '../index.js';
+import { particle } from './particle.js';
 import { compileParticleEffect2D } from './compiler.js';
 import {
   getParticleEffect2DRecord,
