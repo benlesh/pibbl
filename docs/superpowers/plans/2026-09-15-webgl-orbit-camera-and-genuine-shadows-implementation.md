@@ -1,37 +1,42 @@
-# WebGL Orbit Camera and Genuine Shadows Implementation Plan
+# WebGL Lighting Vertical Slices Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: use `superpowers:subagent-driven-development`. Implement and review one browser-visible vertical slice at a time. Do not run broad verification before the explicit visual checkpoint.
 
-**Goal:** Add a composable `crcOrbitCamera()` pose-and-handler hook plus cached genuine shadow maps for every direct WebGL light, then make the complete lighting vertical slice interactive, documented, browser-visible, and fully verified.
+**Goal:** Resume the original composition-first WebGL goal and fold its approved lighting, materials, backgrounds, orbit-camera, and genuine-shadow work into one implementation stream that becomes browser-visible early.
 
-**Architecture:** `crcOrbitCamera()` retains spherical state in component hook slots and returns ordinary camera values plus stable CRC event handlers; `WebGLLayer` continues to consume only a plain camera descriptor. Shadow participation is composed and settled entirely on the CPU, while the renderer owns per-light transactional depth resources, renders directional/spot single-view and point six-view maps, and samples them only against each light's direct Lambert contribution. Camera-only renders reuse light-space generations.
+**Architecture:** `WebGLLayer` continues to compose one CPU-only scene, settle the completed declarations, render required light-space depth maps, render the main opaque/transparent queues, transfer one bitmap, and transactionally publish bitmap/pick/focus generations. `crcOrbitCamera()` returns plain pose values plus stable ordinary CRC event handlers; it does not create a camera instance or add controls to `WebGLLayer`.
 
-**Tech Stack:** TypeScript, CRC automatic JSX and signal/event hooks, WebGL2/GLSL ES 3.00, depth textures and framebuffers, Vitest browser mode with Playwright Chromium, pnpm 11.21.0 on Node 24.15.0, Markdown public documentation, deterministic scenario catalogs, and Studio/browser visual evidence.
+**Binding specs:**
 
-**Spec:** [`docs/superpowers/specs/2026-09-15-webgl-orbit-camera-and-genuine-shadows-design.md`](../specs/2026-09-15-webgl-orbit-camera-and-genuine-shadows-design.md)
+- [`2026-09-14 WebGL lighting, materials, and background design`](../specs/2026-09-14-webgl-lighting-materials-and-background-design.md)
+- [`2026-09-15 WebGL orbit camera and genuine shadows design`](../specs/2026-09-15-webgl-orbit-camera-and-genuine-shadows-design.md)
 
-## Global Constraints
+## Execution constraints
 
-- Work only in `/Users/benlesh/GitHub/crc/.worktrees/webgl-lighting-materials` on `codex/webgl-lighting-materials`; preserve every unrelated main-checkout change.
-- Start from approved design commit `9286895`. Existing commits through `5e9e5e9` implement the lighting/material/background runtime and eleven Studio-visible lessons; this plan incorporates the unfinished laboratory, documentation, consumer, review, and verification tail from the 2026-09-14 lighting plan rather than running that tail separately.
-- Use a fresh implementer subagent for each task and a fresh spec-compliance/code-quality reviewer gate before the next task. Reviewers inspect tests and diffs but do not rerun commands during Tasks 1-10.
-- Add failing observable evidence before production behavior. Public features require public-import/JSX evidence in addition to private unit tests.
-- During Tasks 1-10, run only the focused RED and GREEN commands named by that task. Do not run `trust`, any `trust:*` script, `test:ci`, a broad lifecycle/performance suite, or a visual aggregate.
-- Task 11 performs all baseline capture, branch-wide review, full aggregate verification, and browser inspection after implementation and documentation settle.
-- The documented execution environment is Node 24.15.0 or newer on the Node 24 LTS line, pnpm 11.21.0, and Playwright Chromium. Use `fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0` for plan commands.
-- Preserve one CPU-only child traversal, settled-scene ordering, opaque/transparent queues, geometry-based picking/focus, transactional bitmap/pick/focus publication, context-generation isolation, and exact teardown ownership.
-- `WebGLLayer.camera` remains `CRCWebGLPerspectiveCamera | undefined`; do not add a camera class, `controls` prop, independent animation loop, or WebGL input subsystem.
-- `crcOrbitCamera()` returns exactly `{ position, lookAt, handlers }`; handlers use ordinary CRC pointer/wheel events and request no idle frames.
-- `WebGLLayer.style.shadows` is `false | "low" | "medium" | "high"`, defaults to `"medium"`, and means 0/512/1024/2048 requested pixels per view with 0/1/4/9 depth comparisons.
-- Directional, point, and spot lights cast by default. Ambient and hemisphere lights never expose `castShadow`. CRC never silently chooses a primary shadow light.
-- Opaque meshes cast and receive by default; partial-alpha meshes receive when lit but do not cast by default; final-alpha-zero meshes do neither even under an explicit `true`.
-- Shadowing attenuates only the matching direct light's diffuse contribution. Ambient, hemisphere, other direct lights, and emissive contribution remain independent.
-- Do not add panning, damping, autorotation, multi-touch pinch, cascades, screen-space/fake shadows, transmissive shadows, public shadow cameras/bias/map sizes, textures, PBR, HDR, environments, bloom, or raw GL access.
-- Do not rewrite a visual baseline merely to pass. In Task 11 inspect actual, expected, and diff images and record why each intentional new baseline is correct.
+- Work only in `/Users/benlesh/GitHub/crc/.worktrees/webgl-lighting-materials` on `codex/webgl-lighting-materials`. Never modify the main checkout.
+- Existing commits through `5e9e5e9` already provide settled-scene lighting, Lambert materials/emission, solid backgrounds, and eleven same-scene lessons. Preserve that work.
+- Use a fresh implementation subagent and a separate review subagent for each task. Implementation subagents must not spawn their own agents.
+- Every runtime change starts with focused failing evidence. Tasks 1-4 may run only their named tests/checks and a narrow `@crc/webgl` build.
+- Do not run `trust`, `trust:*`, `test:ci`, packed consumers, broad lifecycle/performance suites, visual aggregates, or baseline updates during Tasks 1-4.
+- After Task 1, start the Studio from this worktree and give the user `http://127.0.0.1:5173/#/examples/webgl/multiple-lights` immediately. Keep the server available while later slices land.
+- Task 1 completes orbit plus genuine directional shadows end to end. Task 2 completes genuine point shadows and updates its same-scene lesson. Task 3 completes genuine spot shadows and updates its same-scene lesson.
+- Task 4 makes all twelve lessons and the deterministic lighting laboratory browser-visible, then stops for the user's visual inspection. Do not begin Task 5 until the user explicitly approves the visible demonstrations.
+- Tasks 5-6 are the post-approval documentation, compatibility, visual-baseline, broad-review, and aggregate-verification tail.
+- `WebGLLayer.camera` remains a plain `CRCWebGLPerspectiveCamera`. Do not add a camera class, a `controls` prop, a WebGL input subsystem, or an independent animation loop.
+- `crcOrbitCamera()` returns exactly `{ position, lookAt, handlers }`. Its handler object/functions are stable for the hook-slot lifetime; unchanged vectors reuse their snapshots; input changes schedule work only when state changes.
+- `WebGLLayer.style.shadows` is `false | "low" | "medium" | "high"`, defaults to `"medium"`, requests 0/512/1024/2048 pixels per view, and uses 0/1/4/9 depth comparisons.
+- Directional, point, and spot lights cast by default. Ambient and hemisphere lights cannot cast. CRC never silently chooses one primary shadow light.
+- Opaque meshes cast and receive by default. Partial-alpha meshes receive when lit but do not cast by default. Final-alpha-zero meshes never color-raster or shadow-raster, even under explicit `true`, while existing pick/focus eligibility remains unchanged.
+- Shadowing attenuates only the matching direct light's diffuse Lambert contribution. Ambient, hemisphere, other direct lights, and emission remain independent.
+- Directional and spot lights use one 2D depth view. Point lights use six cube-map depth views. Camera-only orbit reuses valid light-space generations.
+- Preserve one child traversal, settled opaque/transparent rules, geometry ray picking/focus, source identity/tie ordering, context-generation isolation, and transactional bitmap/pick/focus publication.
+- Do not add panning, damping, autorotation, pinch, cascades, fake/screen-space shadows, public shadow cameras/bias/map sizes, textures, PBR, HDR environments, bloom, or raw GL access.
 
 ---
 
-### Task 1: Add the composable orbit-camera hook
+### Task 1: Ship the orbitable directional-shadow vertical slice
+
+**Outcome:** The existing `multiple-lights` and `directional-light` lessons can be dragged and wheel-zoomed in the Studio, and their objects cast genuine directional shadows on the common plane.
 
 **Files:**
 
@@ -39,688 +44,152 @@
 - Create: `packages/webgl/src/lib/hooks/crc-orbit-camera.test.tsx`
 - Modify: `packages/core/src/internal.ts`
 - Modify: `packages/webgl/src/index.ts`
-
-**Interfaces:**
-
-- Consumes: public `signal`, `CRCEventHandlers`, `CRCPointerEvent`, and `CRCWheelEvent`; friend `useInternalHookSlot` plus two narrow render-context helpers.
-- Produces: `CRCOrbitCameraOptions`, `CRCOrbitCameraHandlers`, `CRCOrbitCameraResult`, and `crcOrbitCamera(options)` with stable handlers and value snapshots.
-
-- [ ] **Step 1: Write failing public hook evidence.**
-
-Create browser tests that import `crcOrbitCamera` from `@crc/webgl`, mount it in an ordinary CRC component, attach `result.handlers` to a Rectangle, and assert the exact initial pose, required handler keys, stable handler identities across a successful rerender, unchanged vector snapshot identity when values are equal, primary-pointer capture, root-logical drag deltas, unrelated-pointer rejection, pole clamping, wheel scaling, min/max distance clamping, one coalesced scheduled update per input change, and no idle frame request.
-
-```tsx
-const orbit = crcOrbitCamera({
-  orbitPoint: [0, 1, 0],
-  initialPosition: [0, 1, 10],
-  minDistance: 2,
-  maxDistance: 12,
-});
-snapshots.push({
-  position: orbit.position,
-  lookAt: orbit.lookAt,
-  handlers: orbit.handlers,
-});
-return <Rectangle {...orbit.handlers} style={{ width: 200, height: 120 }} />;
-```
-
-- [ ] **Step 2: Run the focused hook test and confirm RED.**
-
-```sh
-fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec vitest run \
-  packages/webgl/src/lib/hooks/crc-orbit-camera.test.tsx \
-  --browser.headless --browser.ui=false
-```
-
-Expected: collection or assertions fail because `crcOrbitCamera` and its exported types do not exist.
-
-- [ ] **Step 3: Add the narrow official-package render helpers.**
-
-Export these version-coupled helpers only from `@crc/core/internal`; do not add them to `@crc/core`:
-
-```ts
-export function getCurrentLogicalViewport(): Readonly<{
-  width: number;
-  height: number;
-}> {
-  const surface = getSurfaceSnapshot(getCurrentCRCInstance());
-  return Object.freeze({
-    width: surface.logicalWidth,
-    height: surface.logicalHeight,
-  });
-}
-
-export function onCurrentRenderFinish(
-  callback: (success: boolean) => void,
-): void {
-  const transaction = GLOBAL_STATE.renderTransaction;
-  if (!transaction)
-    throw new Error(
-      "onCurrentRenderFinish requires an active CRC render transaction.",
-    );
-  transaction.onFinish(callback);
-}
-```
-
-- [ ] **Step 4: Implement the stable hook slot and handlers.**
-
-Validate every candidate before accessing the slot. Store azimuth, polar angle, distance, one active pointer record, a signal-backed pose revision, latest committed live options, cached immutable position/lookAt snapshots, and one frozen required handler object in the slot. Use `onCurrentRenderFinish` plus a render revision to adopt only the latest successful options. Use the candidate `orbitPoint` and clamped candidate distance for the current returned pose, reusing each cached vector object when its numeric values are unchanged.
-
-```ts
-export function crcOrbitCamera(
-  options: CRCOrbitCameraOptions,
-): CRCOrbitCameraResult {
-  const candidate = normalizeOrbitOptions(options);
-  const viewport = getCurrentLogicalViewport();
-  const slot = useInternalHookSlot<OrbitSlot>("webglOrbitCamera", (teardowns) =>
-    createOrbitSlot(candidate, teardowns),
-  ).value;
-  slot.revision.get();
-  stageOrbitOptions(slot, candidate, viewport);
-  return snapshotOrbitResult(slot, candidate);
-}
-```
-
-Use `0.01 * rotateSpeed` radians per root-logical drag pixel, clamp polar angle to `0.001..Math.PI - 0.001`, normalize wheel input with multipliers 1 pixel for pixel mode, 16 pixels for line mode, and the root logical height for page mode, and multiply distance by `Math.exp(deltaY * 0.001 * zoomSpeed)`. Call `preventDefault()` only when wheel input changes distance.
-
-- [ ] **Step 5: Run the focused hook test and confirm GREEN.**
-
-Run the Step 2 command. Expected: all orbit-hook tests pass with no continuously pending frame after input settles.
-
-- [ ] **Step 6: Review and commit the hook.**
-
-Confirm the root export contains no camera instance/class and the core root package exposes neither helper.
-
-```sh
-git add packages/core/src/internal.ts packages/webgl/src/index.ts packages/webgl/src/lib/hooks/crc-orbit-camera.ts packages/webgl/src/lib/hooks/crc-orbit-camera.test.tsx
-git commit -m "feat(webgl): add composable orbit camera hook"
-```
-
----
-
-### Task 2: Carry shadow quality through the retained layer boundary
-
-**Files:**
-
 - Modify: `packages/webgl/src/lib/types.ts`
-- Modify: `packages/webgl/src/lib/components/webgl-layer.ts`
-- Modify: `packages/webgl/src/lib/components/webgl-layer.test.tsx`
-- Modify: `packages/webgl/src/lib/layer-controller.ts`
-- Modify: `packages/webgl/src/lib/layer-controller.test.ts`
-- Modify: `packages/webgl/src/lib/backend.ts`
-- Modify: `packages/webgl/src/lib/backend.test.ts`
-- Modify: `packages/webgl/src/lib/scene/types.ts`
-- Modify: `packages/webgl/src/lib/scene/composer.ts`
-- Modify: `packages/webgl/src/lib/scene/composer.test.ts`
-- Modify: `packages/webgl/src/index.ts`
-
-**Interfaces:**
-
-- Consumes: current WebGLLayer style resolution, controller retained-generation equality, and `CreateWebGLSceneComposerInput`.
-- Produces: `CRCWebGLShadowQuality`, one normalized layer quality snapshot, and `ClosedWebGLSceneDraft.shadowQuality`.
-
-- [ ] **Step 1: Add failing quality/default/cache-boundary tests.**
-
-Assert omission resolves to `"medium"`; all four values reach the closed CPU draft; invalid runtime values name `WebGLLayer style.shadows`; a quality change invalidates the retained child generation once; an equal value reuses it; and `false` performs no shadow-specific GL operation.
-
-```tsx
-<WebGLLayer style={{ width: 64, height: 64, shadows: "high" }}>
-  <Cube style={{ lit: false }} />
-</WebGLLayer>
-```
-
-- [ ] **Step 2: Run the focused retained-boundary tests and confirm RED.**
-
-```sh
-fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec vitest run \
-  packages/webgl/src/lib/components/webgl-layer.test.tsx \
-  packages/webgl/src/lib/layer-controller.test.ts \
-  packages/webgl/src/lib/backend.test.ts \
-  packages/webgl/src/lib/scene/composer.test.ts \
-  --browser.headless --browser.ui=false
-```
-
-Expected: type/runtime assertions fail because `shadows` is not part of the layer or composer contract.
-
-- [ ] **Step 3: Normalize quality in `WebGLLayer`.**
-
-```ts
-export type CRCWebGLShadowQuality = false | "low" | "medium" | "high";
-
-function resolveShadowQuality(value: unknown): CRCWebGLShadowQuality {
-  if (value === undefined) return "medium";
-  if (
-    value === false ||
-    value === "low" ||
-    value === "medium" ||
-    value === "high"
-  ) {
-    return value;
-  }
-  throw new TypeError(
-    'WebGLLayer style.shadows must be false, "low", "medium", or "high".',
-  );
-}
-```
-
-Add the resolved quality to the layer style and pass it through controller construction and both render methods.
-
-- [ ] **Step 4: Make quality part of retained equality and frame composition.**
-
-Track `currentShadowQuality`, `retainedShadowQuality`, and each pending/committed generation's quality. Add `getShadowQuality` to `CreateWebGLBackendOptions`; snapshot it into every composer and closed draft. A quality-only update must execute the private child exactly once and publish a replacement candidate.
-
-- [ ] **Step 5: Run the focused retained-boundary tests and confirm GREEN.**
-
-Run the Step 2 command. Expected: all four files pass and composition remains CPU-only.
-
-- [ ] **Step 6: Review and commit quality propagation.**
-
-```sh
-git add packages/webgl/src
-git commit -m "feat(webgl): add layer shadow quality"
-```
-
----
-
-### Task 3: Settle light and mesh shadow participation
-
-**Files:**
-
-- Modify: `packages/webgl/src/lib/components/lights.ts`
-- Modify: `packages/webgl/src/lib/components/lights.test.tsx`
-- Modify: `packages/webgl/src/lib/components/mesh.ts`
-- Modify: `packages/webgl/src/lib/components/mesh.test.tsx`
-- Modify: `packages/webgl/src/lib/scene/types.ts`
-- Modify: `packages/webgl/src/lib/scene/composer.ts`
-- Modify: `packages/webgl/src/lib/scene/composer.test.ts`
-- Modify: `packages/webgl/src/lib/scene/settle.ts`
-- Modify: `packages/webgl/src/lib/scene/settle.test.ts`
-
-**Interfaces:**
-
-- Consumes: final mesh alpha, `style.lit`, direct-light settled pose, and one stable private light declaration identity.
-- Produces: optional submitted `castShadow`/`receiveShadow`, effective `SettledWebGLMesh.castsShadow`/`receivesShadow`, and direct-light `identity`/`castsShadow` fields.
-
-- [ ] **Step 1: Add failing public and settlement tests.**
-
-Cover closed style-key/type validation; default-true direct lights; absence of the field on ambient/hemisphere types; opaque, partial-alpha, and zero-alpha mesh defaults; explicit overrides; unlit/emissive casting; final-alpha-zero dominance; and unchanged pick/focus records.
-
-```ts
-expect(settled.opaque[0]).toMatchObject({
-  castsShadow: true,
-  receivesShadow: true,
-});
-expect(settled.transparent[0]).toMatchObject({
-  castsShadow: false,
-  receivesShadow: true,
-});
-expect(
-  settled.lights.find((light) => light.kind === "directional"),
-).toMatchObject({
-  castsShadow: true,
-});
-```
-
-- [ ] **Step 2: Run the focused component/settlement tests and confirm RED.**
-
-```sh
-fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec vitest run \
-  packages/webgl/src/lib/components/lights.test.tsx \
-  packages/webgl/src/lib/components/mesh.test.tsx \
-  packages/webgl/src/lib/scene/composer.test.ts \
-  packages/webgl/src/lib/scene/settle.test.ts \
-  --browser.headless --browser.ui=false
-```
-
-Expected: assertions fail because submissions and settled records contain no shadow participation.
-
-- [ ] **Step 3: Resolve and snapshot the new style booleans.**
-
-Add `castShadow?: boolean` to directional/point/spot styles and both fields to `MeshStyle`. Reuse a field-aware resolver:
-
-```ts
-function resolveOptionalBoolean(
-  componentName: string,
-  fieldName: string,
-  value: boolean | undefined,
-): boolean | undefined {
-  if (value !== undefined && typeof value !== "boolean") {
-    throw new TypeError(`${componentName} ${fieldName} must be a boolean.`);
-  }
-  return value;
-}
-```
-
-Create one private frozen identity per mounted direct-light primitive with `useInternalHookSlot("webglLightIdentity", () => Object.freeze({}))` and submit it with the light record. The identity owns no GPU or event resource.
-
-- [ ] **Step 4: Derive effective participation during settlement.**
-
-```ts
-const alpha = mesh.color[3];
-const castsShadow = alpha === 0 ? false : (mesh.castShadow ?? alpha === 1);
-const receivesShadow = alpha === 0 ? false : (mesh.receiveShadow ?? mesh.lit);
-```
-
-Direct lights use `castsShadow = submission.castShadow ?? true`. Ambient and hemisphere records remain shadow-field-free. Preserve all existing queue and target behavior.
-
-- [ ] **Step 5: Run the focused component/settlement tests and confirm GREEN.**
-
-Run the Step 2 command. Expected: all participation/default/error tests pass without a GL call during composition or settlement.
-
-- [ ] **Step 6: Review and commit participation semantics.**
-
-```sh
-git add packages/webgl/src/lib/components packages/webgl/src/lib/scene
-git commit -m "feat(webgl): settle shadow participation"
-```
-
----
-
-### Task 4: Build deterministic shadow projections and cache keys
-
-**Files:**
-
+- Modify: `packages/webgl/src/lib/components/{webgl-layer,lights,mesh}.ts`
+- Modify focused component tests beside those files
+- Modify: `packages/webgl/src/lib/{layer-controller,backend}.ts`
+- Modify focused tests beside those files
+- Modify: `packages/webgl/src/lib/scene/{types,composer,settle,renderer}.ts`
 - Create: `packages/webgl/src/lib/scene/shadows.ts`
-- Create: `packages/webgl/src/lib/scene/shadows.test.ts`
+- Create/modify focused tests beside those files
 - Modify: `packages/webgl/src/lib/math/matrix4.ts`
 - Modify: `packages/webgl/src/lib/math/matrix4.test.ts`
-- Modify: `packages/webgl/src/lib/scene/settle.ts`
-- Modify: `packages/webgl/src/lib/scene/settle.test.ts`
-
-**Interfaces:**
-
-- Consumes: settled world models, immutable geometry bounds, light pose/range/cone, effective participation, and layer quality.
-- Produces: `SettledWebGLShadowPlan`, `SettledWebGLShadowLightPlan`, `SettledWebGLShadowCaster`, world bounds, one/six view-projection matrices, requested resolution, comparison count, and semantic cache equality.
-
-- [ ] **Step 1: Add failing pure projection tests.**
-
-Prove exact quality mappings, transformed eight-corner AABBs, stable directional fits, spot outer-cone perspective, six canonical point directions/up vectors, finite-range and derived-far behavior, pole-parallel up fallback, no-light/no-caster/no-receiver empty plans, and equality that ignores camera/base color but detects geometry/model/projection/caster changes.
-
-```ts
-expect(planShadowQuality("medium")).toEqual({
-  quality: "medium",
-  requestedResolution: 1024,
-  comparisonCount: 4,
-});
-expect(pointPlan.viewProjectionMatrices).toHaveLength(6);
-expect(sameShadowDepthPlan(before, cameraOnlyChange)).toBe(true);
-```
-
-- [ ] **Step 2: Run the focused math/settlement tests and confirm RED.**
-
-```sh
-fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec vitest run \
-  packages/webgl/src/lib/math/matrix4.test.ts \
-  packages/webgl/src/lib/scene/shadows.test.ts \
-  packages/webgl/src/lib/scene/settle.test.ts \
-  --browser.headless --browser.ui=false
-```
-
-Expected: tests fail because orthographic and shadow-plan functions are missing.
-
-- [ ] **Step 3: Add orthographic and world-bounds math.**
-
-```ts
-export function setOrthographicMatrix4<T extends WritableNumbers>(
-  out: T,
-  left: number,
-  right: number,
-  bottom: number,
-  top: number,
-  near: number,
-  far: number,
-): T;
-```
-
-Transform all eight immutable geometry-bound corners through the model matrix and reject non-finite or degenerate derived projection extents with a source-aware diagnostic.
-
-- [ ] **Step 4: Produce immutable per-light shadow plans.**
-
-Use these private shapes consistently in later tasks:
-
-```ts
-export interface SettledWebGLShadowCaster {
-  readonly geometry: CRCWebGLGeometry;
-  readonly model: Readonly<Float32Array>;
-  readonly sourceIndex: number;
-}
-
-export interface SettledWebGLShadowLightPlan {
-  readonly identity: object;
-  readonly lightIndex: number;
-  readonly kind: "directional" | "point" | "spot";
-  readonly far: number;
-  readonly bias: number;
-  readonly viewProjectionMatrices: readonly Readonly<Float32Array>[];
-  readonly casters: readonly SettledWebGLShadowCaster[];
-}
-
-export interface SettledWebGLShadowPlan {
-  readonly quality: CRCWebGLShadowQuality;
-  readonly requestedResolution: number;
-  readonly comparisonCount: 0 | 1 | 4 | 9;
-  readonly lights: readonly SettledWebGLShadowLightPlan[];
-}
-```
-
-Directional/spot plans contain one matrix and point plans contain six. Derive automatic projection extents from settled caster/receiver world bounds, but keep the presentation camera out of shadow equality.
-
-- [ ] **Step 5: Attach the plan to `SettledWebGLScene`.**
-
-Settle meshes and direct lights first, then call `settleWebGLShadowPlan`. `false` produces resolution/comparisons zero and no light plans. Add `worldBounds` to settled meshes for the planner without changing pick/focus geometry.
-
-- [ ] **Step 6: Run the focused math/settlement tests and confirm GREEN.**
-
-Run the Step 2 command. Expected: all projection matrices and semantic equality assertions pass.
-
-- [ ] **Step 7: Review and commit shadow planning.**
-
-```sh
-git add packages/webgl/src/lib/math packages/webgl/src/lib/scene
-git commit -m "feat(webgl): plan light-space shadow views"
-```
-
----
-
-### Task 5: Add the shadow-depth and shadow-sampling programs
-
-**Files:**
-
-- Modify: `packages/webgl/src/lib/gpu/program-sources.ts`
-- Modify: `packages/webgl/src/lib/gpu/program.ts`
-- Modify: `packages/webgl/src/lib/gpu/program.test.ts`
-
-**Interfaces:**
-
-- Consumes: eight fixed light slots, one/six shadow projections, per-mesh receive state, and 1/4/9 comparisons.
-- Produces: `WebGLProgramKey = "unlit" | "lambert" | "shadow-depth"`, `WebGLShadowDepthProgram`, and complete Lambert shadow uniforms/samplers.
-
-- [ ] **Step 1: Add failing fake-GL and real-WebGL2 program tests.**
-
-Assert the depth key selects distinct sources; every required depth/Lambert location is resolved and source-named on failure; all three programs compile/link in Chromium; and deletion remains exact by handle.
-
-```ts
-expect(
-  createBuiltInProgram(gl, "shadow-depth", "DirectionalLight"),
-).toMatchObject({
-  key: "shadow-depth",
-  positionAttribute: 0,
-});
-```
-
-- [ ] **Step 2: Run the focused program test and confirm RED.**
-
-```sh
-fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec vitest run \
-  packages/webgl/src/lib/gpu/program.test.ts \
-  --browser.headless --browser.ui=false
-```
-
-Expected: compile-time/runtime failures report the absent `shadow-depth` key and uniforms.
-
-- [ ] **Step 3: Add a depth-only built-in program.**
-
-The vertex stage transforms `a_position` by `u_shadow_projection_view * u_model` and passes world position. The fragment stage writes ordinary `gl_FragCoord.z` for directional/spot views and radial `distance(v_world_position, u_shadow_light_position) / u_shadow_far` for point faces.
-
-```glsl
-uniform int u_shadow_radial;
-uniform vec3 u_shadow_light_position;
-uniform float u_shadow_far;
-
-void main() {
-  gl_FragDepth = u_shadow_radial == 1
-    ? clamp(distance(v_world_position, u_shadow_light_position) / u_shadow_far, 0.0, 1.0)
-    : gl_FragCoord.z;
-}
-```
-
-- [ ] **Step 4: Extend Lambert with fixed-slot shadow sampling.**
-
-Add per-frame `u_shadow_enabled[8]`, `u_shadow_matrix[8]`, `u_shadow_far_bias[8]`, `u_shadow_texel_size[8]`, and `u_shadow_comparison_count`; per-mesh `u_receive_shadow`; eight `sampler2D` and eight `samplerCube` uniforms. Generate constant-index branch functions in TypeScript so GLSL never dynamically indexes a sampler array.
-
-```glsl
-float direct_light_visibility(int index, int kind, vec3 world_position) {
-  if (u_receive_shadow == 0 || u_shadow_enabled[index] == 0) return 1.0;
-  if (kind == LIGHT_KIND_POINT) return sample_point_shadow(index, world_position);
-  return sample_projected_shadow(index, world_position);
-}
-```
-
-Multiply only the directional/point/spot diffuse result for the matching loop index by this visibility. Leave ambient, hemisphere, and emissive equations byte-for-byte equivalent.
-
-- [ ] **Step 5: Run the focused program test and confirm GREEN.**
-
-Run the Step 2 command. Expected: all three programs compile in real WebGL2 and fake-GL cleanup/location tests pass.
-
-- [ ] **Step 6: Review and commit the program family.**
-
-Confirm no public shader strings, callbacks, map sizes, or bias values escaped.
-
-```sh
-git add packages/webgl/src/lib/gpu/program-sources.ts packages/webgl/src/lib/gpu/program.ts packages/webgl/src/lib/gpu/program.test.ts
-git commit -m "feat(webgl): add shadow map shaders"
-```
-
----
-
-### Task 6: Own per-light shadow resources transactionally
-
-**Files:**
-
+- Modify: `packages/webgl/src/lib/gpu/{program-sources,program,renderer-resources,state}.ts`
 - Create: `packages/webgl/src/lib/gpu/shadow-resources.ts`
-- Create: `packages/webgl/src/lib/gpu/shadow-resources.test.ts`
+- Create/modify focused tests beside those files
+- Modify: `packages/webgl/src/lib/lighting-rendering.test.tsx`
+- Modify: `packages/scenarios/src/learning/webgl/{directional-light,multiple-lights}.example.tsx`
+- Modify minimally: `playground/src/crc-editor-types.txt`
 
-**Interfaces:**
+- [ ] **Step 1: Add the focused RED evidence.**
 
-- Consumes: `SettledWebGLShadowLightPlan`, requested resolution, target-specific context limits, and semantic plan equality.
-- Produces: `WebGLShadowResourceCache`, `WebGLShadowResourceTransaction`, and leases for reusable/candidate 2D or cube depth textures.
+Add public hook tests for validation, initial pose, live transactional options, stable handlers/vectors, primary pointer capture, unrelated-pointer rejection, root-logical drag, pole and distance clamps, pixel/line/page wheel normalization, `preventDefault`, one coalesced scheduled update, teardown, and no idle frame. Add focused layer/component/settlement tests for quality default/validation, light/mesh participation, directional Group3D pose, no composition-time GL, and unchanged pick/focus queues. Add pure tests for orthographic fitting, transformed eight-corner bounds, directional plan equality, camera exclusion, and exact quality mappings. Add fake/real WebGL2 tests for the depth program, 2D depth resources, rollback, state restoration, cache reuse, and a real occluded ground pixel.
 
-- [ ] **Step 1: Add failing resource ownership tests.**
-
-Cover lazy framebuffer/dummy allocation; `DEPTH_COMPONENT24` 2D/cube creation; framebuffer completeness failure; target-specific resolution clamping; exact six cube faces; resident reuse; one-light replacement without replacing siblings; sweep of omitted lights; candidate rollback; renderer shadow-program-generation invalidation; context-loss abandonment; cleanup-error reporting; and exact-once healthy disposal.
-
-```ts
-const transaction = cache.beginFrame();
-const first = transaction.acquire(directionalPlan, 1024);
-expect(first).toMatchObject({ needsRender: true, resolution: 1024, faces: 1 });
-transaction.commit();
-
-const reused = cache.beginFrame().acquire(equalDirectionalPlan, 1024);
-expect(reused.needsRender).toBe(false);
-```
-
-- [ ] **Step 2: Run the focused resource test and confirm RED.**
+- [ ] **Step 2: Run only the focused RED set.**
 
 ```sh
-fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec vitest run \
-  packages/webgl/src/lib/gpu/shadow-resources.test.ts \
-  --browser.headless --browser.ui=false
+fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec vitest run packages/webgl/src/lib/hooks/crc-orbit-camera.test.tsx packages/webgl/src/lib/components/webgl-layer.test.tsx packages/webgl/src/lib/components/lights.test.tsx packages/webgl/src/lib/components/mesh.test.tsx packages/webgl/src/lib/scene/settle.test.ts packages/webgl/src/lib/scene/shadows.test.ts packages/webgl/src/lib/gpu/program.test.ts packages/webgl/src/lib/gpu/shadow-resources.test.ts packages/webgl/src/lib/scene/renderer.test.ts packages/webgl/src/lib/lighting-rendering.test.tsx --browser.headless --browser.ui=false
 ```
 
-Expected: collection fails because the shadow cache module does not exist.
+- [ ] **Step 3: Implement `crcOrbitCamera()`.**
 
-- [ ] **Step 3: Implement candidate/resident ownership.**
+Expose `CRCOrbitCameraOptions`, `CRCOrbitCameraHandlers`, `CRCOrbitCameraResult`, and `crcOrbitCamera` from `@crc/webgl`. Add only `getCurrentLogicalViewport()` and `onCurrentRenderFinish(callback)` to `@crc/core/internal`. Required options are `orbitPoint` and `initialPosition`; defaults are min `0.1`, max `Infinity`, and speeds `1`. Vectors must be finite and initial position must differ from the orbit point. Bounds are finite positive values and max cannot be below min; speeds are finite nonnegative values.
 
-Use stable direct-light identity as the resident map key. Equal plans lease the resident texture; changed plans allocate a candidate texture and leave the previous resident untouched until commit. Commit installs candidates and deletes replaced/omitted healthy resources; rollback deletes only candidate handles.
+Store azimuth, polar angle, distance, one active pointer, latest committed live options, cached immutable pose vectors, one reactive revision, and one frozen handler bundle in the mounted hook slot. Validate before acquiring the slot. Candidate options affect that render's pose but become handler-visible only after successful render. Primary drag uses `0.01 * rotateSpeed` radians per root-logical pixel and clamps polar to `0.001..PI-0.001`. Wheel uses multipliers pixel=1, line=16, page=root logical height and distance multiplier `exp(deltaY * 0.001 * zoomSpeed)`.
 
-```ts
-export interface WebGLShadowResourceLease {
-  readonly texture: WebGLTexture;
-  readonly target: "2d" | "cube";
-  readonly resolution: number;
-  readonly faces: 1 | 6;
-  readonly needsRender: boolean;
-}
+- [ ] **Step 4: Carry shadow quality and participation through composition and settlement.**
 
-export interface WebGLShadowResourceTransaction {
-  acquire(
-    plan: SettledWebGLShadowLightPlan,
-    requestedResolution: number,
-  ): WebGLShadowResourceLease;
-  attach(lease: WebGLShadowResourceLease, face: number): void;
-  bindSamplingTextures(lights: readonly SettledWebGLShadowLightPlan[]): void;
-  commit(): void;
-  rollback(contextLost?: boolean): void;
-}
-```
+Add `CRCWebGLShadowQuality` and `WebGLLayerStyle.shadows`, normalize omission to `"medium"`, and include quality in controller retained equality and the closed scene draft. Add `castShadow?: boolean` only to direct-light styles and assign each mounted direct light one stable private identity. Add `castShadow?`/`receiveShadow?` to mesh styles. Derive effective values from final alpha and `lit` exactly as specified. Leave ambient/hemisphere shadow-field-free.
 
-`beginFrame` also snapshots the renderer shadow-program generation, which participates in resident equality even when all semantic light/caster inputs remain equal.
+- [ ] **Step 5: Plan and cache directional depth generations.**
 
-- [ ] **Step 4: Allocate complete fallback textures and one framebuffer.**
+Add immutable world bounds and `SettledWebGLShadowPlan`. Directional plans fit an orthographic projection to relevant settled caster/receiver bounds and contain the light identity/index, one projection-view matrix, private bias, caster queue, requested resolution, and comparison count. Semantic equality includes quality/resolved resolution, light pose/projection, caster identity/geometry/model/final-alpha class/effective state, receiver-derived extents, context generation, and shadow-program generation; it excludes presentation camera, colors, emission, and background.
 
-Bind one complete 1x1 depth `TEXTURE_2D` fallback to unused 2D slots and one complete 1x1 depth cube fallback to unused cube slots. Assign texture units 0-7 to 2D slots and 8-15 to cube slots. Configure depth textures with clamp-to-edge and nearest sampling; filtering comes from explicit shader comparisons.
+Implement a renderer-owned transactional shadow cache with one framebuffer, complete fallback depth textures, lazy 2D depth allocation using `DEPTH_COMPONENT24`, target-specific resolution clamping, framebuffer-completeness errors, resident reuse, candidate rollback, omitted-light sweep, context-loss abandonment, cleanup-error continuation, and exact healthy teardown.
 
-- [ ] **Step 5: Run the focused resource test and confirm GREEN.**
+- [ ] **Step 6: Render and sample directional shadows.**
 
-Run the Step 2 command. Expected: all ownership, rollback, clamp, and exact-delete assertions pass.
+Add a `shadow-depth` program. The depth vertex stage uses shadow projection-view times model; non-point depth uses `gl_FragCoord.z`. Extend Lambert with eight fixed 2D and eight fixed cube sampler uniforms using generated constant-slot branches, plus fixed shadow metadata and per-mesh receive state. Unused slots bind complete fallbacks. For this first slice, only directional shadow slots are enabled; point and spot stay temporarily disabled inside the renderer until their own slices.
 
-- [ ] **Step 6: Review and commit the resource cache.**
+Render dirty directional depth views before clearing the default framebuffer. Depth state uses depth test/write, disabled blending/color writes, polygon offset, and lease resolution, then restores the full renderer baseline. Multiply only the matching directional diffuse term by its visibility. Commit ordinary and shadow transactions only after both color queues finish; rollback candidates on allocation/depth/color failure. A later bitmap-transfer failure publishes no bitmap/pick/focus generation and leaks nothing, while an already-valid renderer shadow cache may remain reusable.
+
+- [ ] **Step 7: Make the two lessons visible immediately.**
+
+In both lessons call `crcOrbitCamera({ orbitPoint: [0, -0.25, 0], initialPosition: [5.8, 4.2, 7.8], minDistance: 3, maxDistance: 18 })`. Wrap the viewport in `<Group {...orbit.handlers}>`, place a transparent 720×420 Rectangle beneath the island as empty-space hit geometry, and pass `orbit.position`/`orbit.lookAt` into the otherwise plain perspective camera. Preserve the existing scene geometry/material/background. In `multiple-lights`, temporarily set point and spot `castShadow: false` so only the completed directional path participates. Synchronize only the declarations required for the Studio editor to accept the new public symbols.
+
+- [ ] **Step 8: Run only the focused GREEN set and narrow package build.**
+
+Run the Step 2 command, then:
 
 ```sh
-git add packages/webgl/src/lib/gpu/shadow-resources.ts packages/webgl/src/lib/gpu/shadow-resources.test.ts
-git commit -m "feat(webgl): own shadow map resources"
+fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 -C packages/webgl run build
 ```
+
+- [ ] **Step 9: Review, commit, and expose the slice.**
+
+After the separate task review is clean, commit the slice. The controller then starts the Studio in the isolated worktree, opens `#/examples/webgl/multiple-lights`, confirms no editor diagnostics, and immediately gives the user the exact URL. Do not wait for point/spot work before exposing this slice.
 
 ---
 
-### Task 7: Render and sample directional and spot shadows
+### Task 2: Ship the point-shadow vertical slice
+
+**Outcome:** The same orbitable `point-light` scene casts an omnidirectional point-light shadow, and `multiple-lights` enables its point shadow without changing the shared geometry.
 
 **Files:**
 
-- Modify: `packages/webgl/src/lib/gpu/state.ts`
-- Modify: `packages/webgl/src/lib/gpu/state.test.ts`
-- Modify: `packages/webgl/src/lib/scene/renderer.ts`
-- Modify: `packages/webgl/src/lib/scene/renderer.test.ts`
+- Modify: `packages/webgl/src/lib/scene/{shadows,renderer}.ts`
+- Modify tests beside those files
+- Modify: `packages/webgl/src/lib/gpu/{program-sources,program,shadow-resources}.ts`
+- Modify tests beside those files
 - Modify: `packages/webgl/src/lib/lighting-rendering.test.tsx`
-
-**Interfaces:**
-
-- Consumes: one-view shadow plans, shadow-depth program, shadow resource transactions, and Lambert shadow uniforms.
-- Produces: depth-pass-before-color ordering, cached projected shadows, and real browser pixels for directional and spot occlusion.
-
-- [ ] **Step 1: Add failing renderer/state/pixel tests.**
-
-Assert a dirty directional/spot light performs one clear/depth pass before the default-framebuffer background clear; draws only effective casters; binds all fixed sampler units; writes `u_receive_shadow`; uses 1/4/9 comparisons; leaves unlit and nonreceiving pixels unchanged; and makes an occluded ground pixel darker than a nearby lit pixel in real WebGL2.
-
-```ts
-expect(operationCount(recording.operations, "framebufferTexture2D")).toBe(1);
-expect(indexOf(recording.operations, "shadow:draw")).toBeLessThan(
-  indexOf(recording.operations, "default:clear"),
-);
-```
-
-- [ ] **Step 2: Run the focused direct-shadow tests and confirm RED.**
-
-```sh
-fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec vitest run \
-  packages/webgl/src/lib/gpu/state.test.ts \
-  packages/webgl/src/lib/scene/renderer.test.ts \
-  packages/webgl/src/lib/lighting-rendering.test.tsx \
-  --browser.headless --browser.ui=false
-```
-
-Expected: renderer ordering/pixel assertions fail because no depth pass or shadow sampling occurs.
-
-- [ ] **Step 3: Add an isolated shadow-depth state installer.**
-
-Configure the bound shadow framebuffer for depth test/write, disabled blending, disabled color writes, front-face polygon offset, and the lease resolution. Always restore the full renderer baseline before binding and clearing the default framebuffer.
-
-```ts
-export function installShadowDepthWebGLPass(
-  gl: WebGL2RenderingContext,
-  resolution: number,
-  slopeBias: number,
-  constantBias: number,
-): void;
-```
-
-- [ ] **Step 4: Render dirty one-view leases.**
-
-Begin both ordinary resource and shadow transactions after the baseline capability read. For each directional/spot lease with `needsRender`, attach face zero, clear depth, bind the shadow-depth program, upload its one projection-view matrix and radial flag zero, and draw every settled caster with its resident position/index geometry.
-
-- [ ] **Step 5: Bind shadow inputs during Lambert color rendering.**
-
-Restore baseline/default framebuffer, clear background/depth, bind all real/fallback shadow textures, upload fixed light-slot shadow metadata once per Lambert program per frame, and upload `u_receive_shadow` per mesh. Commit both resource transactions only after opaque and transparent queues complete; roll both back on failure.
-
-- [ ] **Step 6: Run the focused direct-shadow tests and confirm GREEN.**
-
-Run the Step 2 command. Expected: deterministic directional and spot shadow pixels plus renderer ordering/state tests pass.
-
-- [ ] **Step 7: Review and commit direct shadows.**
-
-```sh
-git add packages/webgl/src/lib/gpu/state.ts packages/webgl/src/lib/gpu/state.test.ts packages/webgl/src/lib/scene/renderer.ts packages/webgl/src/lib/scene/renderer.test.ts packages/webgl/src/lib/lighting-rendering.test.tsx
-git commit -m "feat(webgl): render directional and spot shadows"
-```
-
----
-
-### Task 8: Render point-light cube shadows and prove cache/lifecycle behavior
-
-**Files:**
-
-- Modify: `packages/webgl/src/lib/scene/renderer.ts`
-- Modify: `packages/webgl/src/lib/scene/renderer.test.ts`
-- Modify: `packages/webgl/src/lib/lighting-rendering.test.tsx`
-- Modify: `packages/webgl/src/lib/gpu/shadow-resources.test.ts`
 - Modify: `packages/webgl/src/lib/context-lifecycle.test.tsx`
 - Modify: `packages/webgl/src/lib/webgl-performance.test.tsx`
+- Modify: `packages/scenarios/src/learning/webgl/{point-light,multiple-lights}.example.tsx`
 
-**Interfaces:**
+- [ ] **Step 1: Add focused point RED evidence.**
 
-- Consumes: six-view point plans, cube leases, radial depth shader path, main-shader cube sampling, and controller camera invalidation.
-- Produces: omnidirectional point shadows, per-light cache reuse/replacement, rollback, context restoration, and no depth regeneration for camera-only orbit.
+Assert six canonical 90-degree view/projection matrices and up-vector fallbacks; finite-range and derived-far behavior; `DEPTH_COMPONENT24` cube allocation; exactly six attached/cleared faces in +X/-X/+Y/-Y/+Z/-Z order; radial depth values; cube sampling; real point occlusion pixels; equal-plan reuse; camera-only color rerender with zero shadow draws; one-light replacement; caster invalidation; allocation/depth/color rollback; context restoration; and exact cleanup.
 
-- [ ] **Step 1: Add failing point/caching/lifecycle tests.**
-
-Assert one dirty point light attaches and clears six cube faces in canonical order; each face uses radial mode and matching projection; a cube occludes the ground from the point source in real pixels; equal light/casters reuse all faces; camera-only updates issue color draws but zero shadow clears/draws; changing one light replaces only that light; caster changes invalidate every affected direct light; depth/color failures release candidates without corrupting resident reuse; transfer failure publishes no bitmap/pick/focus generation and leaks nothing while leaving already-valid renderer shadow caches reusable; and context loss abandons the lost generation.
-
-```ts
-expect(recording.shadowFaces).toEqual([0, 1, 2, 3, 4, 5]);
-expect(recording.shadowRadialValues).toEqual([1, 1, 1, 1, 1, 1]);
-expect(afterOrbit.shadowDraws - beforeOrbit.shadowDraws).toBe(0);
-```
-
-- [ ] **Step 2: Run the focused point/cache/lifecycle tests and confirm RED.**
+- [ ] **Step 2: Run only the focused point set and confirm RED.**
 
 ```sh
-fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec vitest run \
-  packages/webgl/src/lib/scene/renderer.test.ts \
-  packages/webgl/src/lib/lighting-rendering.test.tsx \
-  packages/webgl/src/lib/gpu/shadow-resources.test.ts \
-  packages/webgl/src/lib/context-lifecycle.test.tsx \
-  packages/webgl/src/lib/webgl-performance.test.tsx \
-  --browser.headless --browser.ui=false
+fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec vitest run packages/webgl/src/lib/scene/shadows.test.ts packages/webgl/src/lib/gpu/program.test.ts packages/webgl/src/lib/gpu/shadow-resources.test.ts packages/webgl/src/lib/scene/renderer.test.ts packages/webgl/src/lib/lighting-rendering.test.tsx packages/webgl/src/lib/context-lifecycle.test.tsx packages/webgl/src/lib/webgl-performance.test.tsx --browser.headless --browser.ui=false
 ```
 
-Expected: six-face and reuse assertions fail while the one-view implementation remains green.
+- [ ] **Step 3: Implement point planning, cube resources, and radial rendering.**
 
-- [ ] **Step 3: Execute six radial depth views for point lights.**
+Point plans use six canonical views, finite `range` when present, otherwise relevant settled bounds. Allocate complete cube depth textures, attach `TEXTURE_CUBE_MAP_POSITIVE_X + face`, and render every dirty face with radial `gl_FragDepth = distance(worldPosition, lightPosition) / far`. Bind point textures in fixed cube slots and compare normalized radial receiver distance minus private bias with the tier's 1/4/9 deterministic offsets. Preserve all directional behavior and per-light independent attenuation.
 
-For each dirty cube lease, loop faces `0..5`, attach `TEXTURE_CUBE_MAP_POSITIVE_X + face`, upload the corresponding settled matrix, set radial mode one, light position, and far distance, clear depth, and draw the caster queue.
+- [ ] **Step 4: Update the point lesson and combined lesson.**
 
-- [ ] **Step 4: Finish point sampling and cache invalidation.**
+Apply the same orbit Group/backing Rectangle/plain-camera pattern to `point-light`. Remove only the temporary point-light `castShadow: false` from `multiple-lights`; keep spot disabled until Task 3. The common plane must visibly receive the point shadow in both scenes.
 
-Select the major cube direction from `worldPosition - lightPosition`, compare normalized radial distance minus private bias, and apply the tier's 1/4/9 tangent-space offsets. Keep color/intensity-only and presentation-camera changes outside `sameShadowDepthPlan`; include projection, caster geometry/model/alpha class, quality, and context generation.
+- [ ] **Step 5: Run the same focused set and narrow build, review, and commit.**
 
-- [ ] **Step 5: Close failure and lifecycle paths.**
-
-On ordinary failure, roll back candidate shadow leases before restoring baseline. On context loss, abandon every context-generation handle without deletion. On healthy replacement/removal/disposal, delete each framebuffer, fallback texture, resident/candidate depth texture, and added program exactly once while continuing after cleanup errors.
-
-- [ ] **Step 6: Run the focused point/cache/lifecycle tests and confirm GREEN.**
-
-Run the Step 2 command. Expected: all five files pass, including zero regenerated shadow faces for a camera-only update.
-
-- [ ] **Step 7: Review and commit point shadows and lifecycle.**
-
-```sh
-git add packages/webgl/src/lib/scene packages/webgl/src/lib/gpu packages/webgl/src/lib/context-lifecycle.test.tsx packages/webgl/src/lib/lighting-rendering.test.tsx packages/webgl/src/lib/webgl-performance.test.tsx
-git commit -m "feat(webgl): add cached point light shadows"
-```
+Run Step 2 and the `packages/webgl` build from Task 1. After separate review approval, commit and let the live Studio reload. Do not run visual aggregates or broad suites.
 
 ---
 
-### Task 9: Make the shared lighting scenes orbitable and visibly shadowed
+### Task 3: Ship the spot-shadow vertical slice
+
+**Outcome:** The same orbitable `spot-light` scene casts a cone-aligned genuine shadow, and `multiple-lights` enables all of its direct-light shadows.
+
+**Files:**
+
+- Modify: `packages/webgl/src/lib/scene/{shadows,renderer}.ts`
+- Modify tests beside those files
+- Modify: `packages/webgl/src/lib/gpu/{program-sources,program,shadow-resources}.ts`
+- Modify tests beside those files
+- Modify: `packages/webgl/src/lib/lighting-rendering.test.tsx`
+- Modify: `packages/scenarios/src/learning/webgl/{spot-light,multiple-lights}.example.tsx`
+
+- [ ] **Step 1: Add focused spot RED evidence.**
+
+Assert an outer-cone perspective projection from settled position/direction, finite range or bounds-derived far, pole-parallel up fallback, one 2D depth pass, matching fixed-slot sampling, real occluded ground pixels inside the cone, no shadow contribution outside the cone, Group3D-transformed pose, per-light opt-out, and cache invalidation/reuse.
+
+- [ ] **Step 2: Run only the focused spot set and confirm RED.**
+
+```sh
+fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec vitest run packages/webgl/src/lib/components/lights.test.tsx packages/webgl/src/lib/scene/shadows.test.ts packages/webgl/src/lib/gpu/program.test.ts packages/webgl/src/lib/gpu/shadow-resources.test.ts packages/webgl/src/lib/scene/renderer.test.ts packages/webgl/src/lib/lighting-rendering.test.tsx --browser.headless --browser.ui=false
+```
+
+- [ ] **Step 3: Implement the spot plan and projected sampling.**
+
+Reuse the transactional 2D depth path with the spot outer cone, settled world position/direction, and deterministic near/far/bias. Enable only the matching spot slot and attenuate only its own direct diffuse contribution. Preserve point/directional caches and the existing eight-total-light limit.
+
+- [ ] **Step 4: Update the spot and combined lessons.**
+
+Apply the common orbit target/camera pattern to `spot-light`. Remove the final temporary spot `castShadow: false` from `multiple-lights`, leaving all direct lights at their public default. Preserve the same cube, sphere, plane, materials, and background.
+
+- [ ] **Step 5: Run the same focused set and narrow build, review, and commit.**
+
+Run Step 2 and the narrow WebGL build. After separate review approval, commit and let the live Studio reload.
+
+---
+
+### Task 4: Complete every visible demonstration and the deterministic lab
+
+**Outcome:** Twelve same-scene lessons and the private lighting laboratory are browser-visible and exercise the complete approved runtime. This task ends at the user's visual checkpoint.
 
 **Files:**
 
@@ -731,162 +200,72 @@ git commit -m "feat(webgl): add cached point light shadows"
 - Modify: `packages/scenarios/src/learning-catalog.ts`
 - Create: `packages/scenarios/src/webgl-lighting-lab.example.tsx`
 - Create: `packages/scenarios/src/webgl-lighting-lab.ts`
-- Modify: `packages/scenarios/src/catalog.ts`
-- Modify: `packages/scenarios/src/index.ts`
+- Modify: `packages/scenarios/src/{catalog,index}.ts`
 - Modify: `packages/scenarios/package.json`
 - Create: `packages/core/test/webgl-lighting-lab.test.ts`
 - Modify generated: `docs/scenario-index.md`
+- Modify only if needed for visible source acceptance: `playground/src/crc-editor-types.txt`
 
-**Interfaces:**
+- [ ] **Step 1: Strengthen the source contract and add focused lab evidence.**
 
-- Consumes: `crcOrbitCamera`, default medium shadows, direct-light/mesh defaults, and the existing literal shared-scene contract.
-- Produces: twelve identical-base lighting lessons, one dense deterministic laboratory, headless orbit/shadow probes, and the browser-visible `multiple-lights` vertical slice.
+Require exactly these ordered IDs: `lit-and-unlit`, `ambient-light`, `hemisphere-light`, `directional-light`, `point-light`, `spot-light`, `emissive-material`, `webgl-background`, `custom-geometry-normals`, `multiple-lights`, `transformed-light`, `shadow-quality`. Require one common hook call, handler Group, transparent 720×420 target, dynamic position/lookAt, identical camera/geometry/material/background outside each concept-delta region, and one `layerShadows: CRCWebGLShadowQuality = "medium"` delta literal. Only the quality lesson changes that literal.
 
-- [ ] **Step 1: Strengthen the source contract and write failing lab tests.**
-
-Require exactly twelve ordered lesson IDs by appending `shadow-quality`; require `crcOrbitCamera`, one `Group {...orbit.handlers}`, one transparent viewport hit Rectangle, dynamic `position: orbit.position`/`lookAt: orbit.lookAt`, the same ground geometry, and no differences outside each concept-delta region. Add lab assertions for initial state, drag-changed camera pose, wheel distance, direct shadow pixel contrast, ambient/hemisphere no-shadow behavior, point-light six-direction coverage, quality switching, and disposal.
-
-```ts
-export const WEBGL_LIGHTING_EXAMPLE_IDS = [
-  "lit-and-unlit",
-  "ambient-light",
-  "hemisphere-light",
-  "directional-light",
-  "point-light",
-  "spot-light",
-  "emissive-material",
-  "webgl-background",
-  "custom-geometry-normals",
-  "multiple-lights",
-  "transformed-light",
-  "shadow-quality",
-] as const;
-```
+The lab uses public imports and test-owned signals to cover every light/background/material mode, transformed lights, custom normals, opaque/partial/zero alpha, lit/unlit/emissive meshes, all quality modes, orbit drag/wheel, direct shadow pixel contrast, ambient/hemisphere non-shadow behavior, point six-direction coverage, cache probes, and disposal. Register scenario id `webgl-lighting`, source id `webgl-lighting-laboratory-example`, route `#/testing/webgl-lighting`, and package subpath `@crc/scenarios/webgl-lighting-lab`.
 
 - [ ] **Step 2: Run only the source-contract and lab RED checks.**
 
 ```sh
 fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec tsx tooling/webgl-lighting-example-contract.check.ts
-fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec vitest run \
-  packages/core/test/webgl-lighting-lab.test.ts \
-  --browser.headless --browser.ui=false
+fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec vitest run packages/core/test/webgl-lighting-lab.test.ts --browser.headless --browser.ui=false
 ```
 
-Expected: source count/required-fragment checks and missing lab module tests fail.
+The lab visual assertion must be skipped or semantic-only until Task 6; do not create/update PNG baselines here.
 
-- [ ] **Step 3: Update the canonical lesson base once and replicate it literally.**
+- [ ] **Step 3: Replicate the exact shared scene and complete the laboratory.**
 
-Each lesson calls the hook before returning JSX, wraps the viewport in the handler Group, leaves the two decorative Rectangles noninteractive, adds one transparent full-size Rectangle as empty-space hit geometry, and uses the returned pose in the otherwise unchanged camera.
+Use the same orbit options from Task 1 in every lesson. Every direct-light lesson visibly shadows the common plane. Ambient-only and hemisphere-only lessons explicitly explain why they cannot. The quality lesson exposes one editable quality literal. Keep background click-through, pick/focus geometry, and lesson-specific concept deltas intact.
 
-```tsx
-const orbit = crcOrbitCamera({
-  orbitPoint: [0, -0.25, 0],
-  initialPosition: [5.8, 4.2, 7.8],
-  minDistance: 3,
-  maxDistance: 18,
-});
-
-return (
-  <Group {...orbit.handlers}>
-    <Rectangle style={{ width: 720, height: 420, fill: "rgba(0, 0, 0, 0)" }} />
-    <WebGLLayer
-      camera={{
-        type: "perspective",
-        position: orbit.position,
-        lookAt: orbit.lookAt,
-        up: [0, 1, 0],
-        fieldOfViewDegrees: 50,
-        near: 0.1,
-        far: 100,
-      }}
-      style={{ width: 720, height: 420, shadows: layerShadows }}
-    >
-      {scene}
-    </WebGLLayer>
-  </Group>
-);
-```
-
-Every concept delta declares `const layerShadows: CRCWebGLShadowQuality = "medium"`; only `shadow-quality` changes that literal inside its concept-delta markers. Keep the shared `WebGLLayer` style byte-identical outside the delta. Ambient-only and hemisphere-only scenes document that they cannot cast direct shadows; every direct-light scene visibly projects onto the common plane.
-
-- [ ] **Step 4: Build and register the deterministic lighting laboratory.**
-
-Use public imports only. Include every light, background, transformed direct light, opaque/partial/zero-alpha, lit/unlit/emissive/custom-normal meshes, all quality modes through test-owned signals, a common viewport target, and exported immutable probe snapshots. Register scenario id `webgl-lighting`, source id `webgl-lighting-laboratory-example`, test route `#/testing/webgl-lighting`, and package subpath `@crc/scenarios/webgl-lighting-lab`.
-
-- [ ] **Step 5: Run the same two focused checks and confirm GREEN.**
-
-Run the Step 2 commands. Expected: twelve source files pass exact drift validation and the headless laboratory passes semantic orbit/shadow assertions.
-
-- [ ] **Step 6: Regenerate only the scenario index and commit.**
+- [ ] **Step 4: Run the same focused checks, regenerate only the index, review, and commit.**
 
 ```sh
 fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 scenarios:write-index
-git add tooling/webgl-lighting-example-contract.ts tooling/webgl-lighting-example-contract.check.ts packages/scenarios packages/core/test/webgl-lighting-lab.test.ts docs/scenario-index.md
-git commit -m "docs(webgl): add orbitable shadow examples"
 ```
 
-Do not capture PNG baselines in this task.
+After separate review approval, commit without visual baselines.
+
+- [ ] **Step 5: Expose every demonstration, then stop.**
+
+Using the already-running Studio, inspect `#/examples/webgl/multiple-lights`, each individual light lesson, `#/examples/webgl/shadow-quality`, and `#/testing/webgl-lighting` for compilation/runtime diagnostics. Give the user exact URLs and ask them to visually inspect drag, zoom, silhouettes, and quality. Stop here. Do not dispatch Task 5 before explicit user approval.
 
 ---
 
-### Task 10: Synchronize contracts, API docs, Studio types, and consumers
+### Task 5: Publish contracts, Learn/API docs, Studio types, and consumers
+
+**Gate:** Begin only after the user approves the browser-visible demonstrations.
 
 **Files:**
 
-- Modify: `AGENTS.md`
-- Modify: `README.md`
-- Modify: `docs/library-status.md`
-- Modify: `docs/design/drawing-components-contract.md`
-- Modify: `docs/design/style-system-contract.md`
-- Modify: `docs/design/canvas-surface-contract.md`
-- Modify: `docs/design/runtime-hooks-contract.md`
-- Modify: `docs/design/user-events-contract.md`
-- Modify: `docs/design/mouse-interaction-contract.md`
-- Modify: `docs/design/focus-and-keyboard-navigation-contract.md`
-- Modify: `docs/design/event-resource-ownership.md`
-- Modify: `docs/design/runtime-resource-ownership.md`
-- Modify: `docs/site/learn/README.md`
+- Modify: `AGENTS.md`, `README.md`, `docs/library-status.md`
+- Modify: relevant contracts under `docs/design/`, including drawing, style, surface, hooks, user/mouse/focus events, event ownership, and runtime resource ownership
 - Create: `docs/site/learn/guides/webgl-lighting.md`
-- Modify: `docs/site/learn/guides/webgl-islands.md`
-- Modify: `docs/site/api/README.md`
+- Modify: `docs/site/learn/README.md`, `docs/site/learn/guides/webgl-islands.md`
 - Create: `docs/site/api/hooks/crc-orbit-camera.md`
-- Modify: `docs/site/api/components/{webgl-layer,group-3d,mesh,cube,sphere,directional-light,point-light,spot-light}.md`
-- Modify: `docs/site/api/functions/create-webgl-geometry.md`
-- Modify: `docs/site/api/types/webgl.md`
+- Modify: `docs/site/api/README.md`
+- Modify: WebGL component/type/function API pages, including WebGLLayer, Group3D, Mesh/Cube/Sphere, direct lights, WebGL types, and custom geometry
 - Modify: `tooling/studio-docs/fixtures/api/webgl.ts`
 - Modify: `playground/src/crc-editor-types.txt`
-- Modify: `playground/package-consumer/index.ts`
-- Modify: `playground/package-consumer/jsx.tsx`
-- Modify: `playground/package-consumer/runtime.mjs`
-- Modify: `tooling/verify-packed-consumer.mjs`
-- Modify: `tooling/verify-studio-visuals.mjs`
+- Modify: source, JSX, runtime, and packed package-consumer fixtures
+- Modify: `tooling/verify-studio-visuals.mjs` to register only Studio route `webgl-lighting`
 
-**Interfaces:**
+- [ ] **Step 1: Add failing focused static/consumer inventories.**
 
-- Consumes: the completed public runtime/types, twelve lessons, and deterministic lab.
-- Produces: current normative contracts, searchable Learn/API pages, synchronized editor declarations and fixtures, NodeNext/bundler/runtime/packed evidence, the lab visual assertion, and one registered Studio visual route without baseline capture.
+Exercise every public quality/participation option and all four orbit symbols in source and JSX consumers; pass the returned pose into a plain camera and spread handlers onto CRC event participants. Add runtime/packed export expectations, Studio fixture ownership/related-type links, and the Studio visual route without a baseline.
 
-- [ ] **Step 1: Add failing consumer/type/docs assertions.**
+- [ ] **Step 2: Synchronize normative and public documentation.**
 
-Add type checks that construct every quality and participation option, call `crcOrbitCamera`, spread required handlers onto a CRC Group/Rectangle, and pass its pose into a plain perspective camera. Add runtime/packed export lists for `crcOrbitCamera`. Add Studio fixture inventories for the four orbit symbols and shadow types/fields. Register the `webgl-lighting` Studio visual route without creating its expected image; the separate laboratory visual remains inside `webgl-lighting-lab.test.ts`.
+Document compose → settle → shadow depth → color → transfer/commit; light/material/background behavior; exact quality/default/alpha rules; independent per-light attenuation; six-view point cost and camera-only reuse; handler attachment and structural hit geometry; validation, failure, context loss, and teardown; and current non-goals.
 
-```ts
-const orbit: CRCOrbitCameraResult = crcOrbitCamera({
-  orbitPoint: [0, 0, 0],
-  initialPosition: [4, 3, 8],
-});
-const camera: CRCWebGLPerspectiveCamera = {
-  type: "perspective",
-  position: orbit.position,
-  lookAt: orbit.lookAt,
-  up: [0, 1, 0],
-  fieldOfViewDegrees: 50,
-  near: 0.1,
-  far: 100,
-};
-```
-
-- [ ] **Step 2: Run focused static/consumer checks and confirm RED.**
+- [ ] **Step 3: Run only narrow static checks.**
 
 ```sh
 fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 -C packages/webgl run build
@@ -896,98 +275,42 @@ fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec tsc -p playground/packag
 fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec tsc -p playground/package-consumer/tsconfig.nodenext.json --noEmit
 ```
 
-Expected: the newly asserted WebGL build, docs/type inventories, and source consumer projects fail until every surface is synchronized. Packed and runtime consumer execution remain deferred to Task 11's aggregate trust gate.
+- [ ] **Step 4: Review and commit the shipping surfaces.**
 
-- [ ] **Step 3: Update normative contracts and repository status.**
-
-Remove statements that WebGL does not promise lighting/materials/backgrounds/shadows. Document compose → settle → shadow depth → color → bitmap commit, direct-light defaults, alpha participation, quality tiers, cache invalidation, six point views, camera-only reuse, hook ownership, ordinary event propagation, no independent hit geometry, and exact GPU teardown.
-
-- [ ] **Step 4: Publish Learn and API documentation.**
-
-The lighting guide teaches the shared scene, all five light families, nested Lambert material/emission, solid background, genuine shadows, and limits. The orbit API page shows `{ position, lookAt, handlers }` attached to one mesh and to a Group with backing Rectangle, explains stable per-render hook identity, and lists exact drag/wheel equations. Component/type pages list every new default and transparency rule.
-
-- [ ] **Step 5: Synchronize Studio and package consumers.**
-
-Copy the exact source declarations into `crc-editor-types.txt`; update grouped fixture ownership and related-type links; exercise JSX and non-JSX authoring in the package consumer; assert runtime and packed exports; keep `@crc/core/internal` absent from application imports.
-
-- [ ] **Step 6: Run the focused static/consumer checks and confirm GREEN.**
-
-Run the Step 2 commands. Expected: the WebGL package build, Studio declaration/docs consistency, and Bundler/NodeNext source consumer type checks pass.
-
-- [ ] **Step 7: Review and commit shipping surfaces.**
-
-```sh
-git add AGENTS.md README.md docs packages/webgl playground tooling
-git commit -m "docs(webgl): publish orbit cameras and shadows"
-```
-
-Do not update visual baselines or run browser aggregates in this task.
+Do not update baselines or run aggregate verification yet.
 
 ---
 
-### Task 11: Consolidated review, visual inspection, and final aggregate verification
+### Task 6: Final review, intentional visuals, aggregate trust, and browser confirmation
 
 **Files:**
 
 - Create after inspection: `packages/core/test/visual-baselines/webgl-lighting.expected.png`
 - Create after inspection: `packages/core/test/visual-baselines/studio-webgl-lighting.expected.png`
 - Create: `docs/testing/field-notes/2026-09-15-webgl-lighting-orbit-and-shadows.md`
-- Modify only for final fixes: files already named in Tasks 1-10
-- Modify: both implementation plan checkbox states after evidence is final
+- Modify only for reviewed fixes: files already in Tasks 1-5
+- Mark both lighting implementation plans complete only after evidence is final
 
-**Interfaces:**
+- [ ] **Step 1: Run one broad whole-branch review.**
 
-- Consumes: the complete branch, both approved specs, both lighting implementation plans, focused evidence, lab route, and Studio route.
-- Produces: reviewed fixes, intentionally accepted visual baselines, one fresh aggregate trust result, browser-visible confirmation, final evidence notes, and a clean handoff branch.
+Compare `a356be2...HEAD` against both approved specs. Review public API drift, one-traversal settlement, shadow math/pixels, independent lights, point six-view cost, cache keys, transaction/failure order, context loss/disposal, orbit lifecycle, interaction/focus, examples, docs, and consumers. Dispatch one focused fix wave if needed, with only covering checks, then one scoped re-review.
 
-- [ ] **Step 1: Run a fresh whole-branch spec and code review before broad verification.**
+- [ ] **Step 2: Capture and inspect only the two new visual baselines.**
 
-Compare `a356be2...HEAD` against both approved design specs. Review public API drift, one-traversal settlement, shadow correctness, point six-view cost, cache keys, renderer transaction order, context loss/disposal, orbit handler lifecycle, interaction/focus invariants, examples, docs, and consumers. Record every Critical or Important finding and dispatch focused fix subagents until review is clean.
+Run the dedicated lab test once to create its missing-baseline actual candidate, inspect it, install only that reviewed PNG, rerun the test, and inspect expected/actual/diff. Build the Playground, update only Studio route `webgl-lighting`, inspect expected/actual, then rerun that route without `--update`. Never rewrite unrelated baselines.
 
-```sh
-git diff --stat a356be2...HEAD
-git diff --check a356be2...HEAD
-```
-
-- [ ] **Step 2: Run focused commands only for review fixes.**
-
-For each fix, rerun the smallest test file or static command that failed or directly covers the changed contract. Do not start the aggregate gate until the review diff is clean and every focused fix is committed.
-
-- [ ] **Step 3: Capture and inspect only the new visual baselines.**
-
-Run the dedicated lab visual test once to produce its missing-baseline candidate, inspect that candidate, install only the reviewed candidate as `webgl-lighting.expected.png`, rerun the test, and inspect its expected, actual, and diff artifacts. Then build the Playground and update only the registered Studio `webgl-lighting` route; inspect its expected and actual captures before running the route comparison without `--update`. Accept images only when the shared ground plane shows genuine object silhouettes, the scene framing is correct, lighting remains concept-specific, and no Studio diagnostics obscure the preview.
-
-```sh
-fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec vitest run packages/core/test/webgl-lighting-lab.test.ts --browser.headless --browser.ui=false
-# Inspect test-screenshots/webgl-lighting/webgl-lighting.actual.png, then install the reviewed PNG as packages/core/test/visual-baselines/webgl-lighting.expected.png.
-fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec vitest run packages/core/test/webgl-lighting-lab.test.ts --browser.headless --browser.ui=false
-fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 playground:build
-fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec node tooling/verify-studio-visuals.mjs --update --route=webgl-lighting
-fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 exec node tooling/verify-studio-visuals.mjs --route=webgl-lighting
-```
-
-- [ ] **Step 4: Run the complete aggregate trust gate.**
+- [ ] **Step 3: Run the complete aggregate gate once the branch is ready.**
 
 ```sh
 fnm exec --using=v24.15.0 -- corepack pnpm@11.21.0 trust
 ```
 
-Record Node, pnpm, Playwright Chromium, command, exit status, suite counts, and duration. If it fails, preserve the first output, diagnose only the failing gate, add a failing focused regression where appropriate, commit the fix, rerun the focused gate, and then rerun the full aggregate once the branch is ready for a fresh completion claim.
+If it fails, preserve the first output, diagnose only the failed gate, add focused evidence where appropriate, commit the fix, rerun the focused gate, and rerun full trust only when ready for a fresh completion claim.
 
-- [ ] **Step 5: Verify the user-visible browser slice.**
+- [ ] **Step 4: Perform final browser confirmation.**
 
-Launch the Studio from this isolated worktree and inspect `#/examples/webgl/multiple-lights` in the in-app browser. Drag on empty viewport space and over geometry, wheel zoom, orbit behind both objects, and confirm the cube and sphere cast genuine moving-view shadows onto the plane without editor diagnostics. Also inspect the shadow-quality lesson at low/medium/high by editing code.
+Inspect `#/examples/webgl/multiple-lights`, all individual light lessons, `#/examples/webgl/shadow-quality`, and `#/testing/webgl-lighting`. Drag empty space and geometry, wheel zoom, orbit behind objects, and verify genuine silhouettes on the plane without editor diagnostics.
 
-- [ ] **Step 6: Write and commit the evidence record.**
+- [ ] **Step 5: Record evidence and hand off safely.**
 
-Document approved contracts, commit range, review findings/fixes, focused commands, visual-baseline rationale, aggregate output, and browser observations in the field note. Mark both plans complete only after fresh evidence supports every shipped claim.
-
-```sh
-git add packages/core/test/visual-baselines docs/testing/field-notes docs/superpowers/plans
-git commit -m "test(webgl): record lighting and shadow trust evidence"
-git status --short --branch
-```
-
-- [ ] **Step 7: Hand off without integrating destructively.**
-
-Report the isolated worktree path, branch, final commit, fresh aggregate result, browser URL, remaining intentional non-goals, and safe integration choices. Do not merge, rebase, delete the worktree, or modify the user's main checkout without explicit instruction.
+Record environment, commit range, review findings/fixes, focused commands, baseline rationale, aggregate output, and browser observations. Commit the evidence. Report worktree, branch, final commit, trust result, URLs, and intentional non-goals. Do not merge, rebase, push, delete the worktree, or modify the main checkout without explicit instruction.
