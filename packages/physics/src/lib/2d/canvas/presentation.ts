@@ -1,6 +1,8 @@
 import type { CRCPhysicsPose2D } from '../../../2d-geometry.js';
 import { Group } from '@crc/core';
 
+const MATRIX_EPSILON = 1e-6;
+
 export interface CanvasBodyPresentationCapture2D {
   readonly initialPose: CRCPhysicsPose2D;
   readonly parentWorld: DOMMatrix;
@@ -136,11 +138,11 @@ function sameMatrix(left: DOMMatrixReadOnly, right: DOMMatrixReadOnly): boolean 
 }
 
 function close(left: number, right: number): boolean {
-  return Math.abs(left - right) <= 1e-8;
+  return Math.abs(left - right) <= MATRIX_EPSILON;
 }
 
 function clean(value: number): number {
-  return Math.abs(value) <= 1e-6 ? 0 : value;
+  return Math.abs(value) <= MATRIX_EPSILON ? 0 : value;
 }
 
 function cleanMatrix(source: DOMMatrixReadOnly): DOMMatrix {

@@ -211,6 +211,23 @@ describe('Canvas 2D physics pose presentation', () => {
       'Rectangle',
     )).toThrow(/non-rigid|scale/i);
   });
+
+  it('accepts browser transform round-trip noise around a rigid ancestor', () => {
+    const browserIdentity = new DOMMatrix([
+      0.9999999803366121,
+      0,
+      0,
+      1.0000000018736235,
+      0,
+      3.3213614218633807e-22,
+    ]);
+
+    expect(() => captureBodyPresentation2D(
+      browserIdentity,
+      new DOMMatrix(),
+      'Circle',
+    )).not.toThrow();
+  });
 });
 
 function matrix(value: DOMMatrixReadOnly): readonly number[] {
