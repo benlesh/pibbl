@@ -201,7 +201,7 @@ export type { CRCKeyboardNavigationOptions } from './lib/focus/types.js';
 
 export { definePrimitive } from './lib/define-primitive.js';
 export { createElement } from './lib/element/create-element.js';
-export { Fragment } from './lib/element/jsx-runtime.js';
+export { Fragment } from './lib/element/fragment.js';
 export type {
   BoxStyle,
   CursorStyle,

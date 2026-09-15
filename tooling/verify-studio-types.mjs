@@ -6,6 +6,7 @@ import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import { runInNewContext } from 'node:vm';
 import { parse } from '@babel/parser';
+import { build } from 'esbuild';
 import { crcRuntimeSource } from './crc-runtime-source.ts';
 
 const repositoryRoot = resolve(import.meta.dirname, '..');
@@ -1712,7 +1713,24 @@ async function studioRuntime(mode) {
   return runtime;
 }
 
+async function assertBuiltCoreBundlesWithoutWarnings() {
+  const result = await build({
+    entryPoints: [join(repositoryRoot, 'packages/core/dist/index.mjs')],
+    bundle: true,
+    format: 'esm',
+    platform: 'browser',
+    write: false,
+    logLevel: 'silent',
+  });
+  assert.deepEqual(
+    result.warnings,
+    [],
+    'The built @crc/core entry point must remain warning-free when bundled for the Studio.',
+  );
+}
+
 try {
+  await assertBuiltCoreBundlesWithoutWarnings();
   for (const { moduleName, content } of declarationModules) {
     const declarationPath = join(directory, modulePaths.get(moduleName));
     await mkdir(dirname(declarationPath), { recursive: true });
