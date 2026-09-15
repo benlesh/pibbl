@@ -91,8 +91,9 @@ export type PhysicsCommand2D =
       bodyId: number;
       forceX: number;
       forceY: number;
-      pointX: number;
-      pointY: number;
+      pointX?: number;
+      pointY?: number;
+      wake?: boolean;
     }>
   | Readonly<{ kind: "apply-torque"; bodyId: number; torque: number }>
   | Readonly<{
@@ -100,8 +101,9 @@ export type PhysicsCommand2D =
       bodyId: number;
       impulseX: number;
       impulseY: number;
-      pointX: number;
-      pointY: number;
+      pointX?: number;
+      pointY?: number;
+      wake?: boolean;
     }>
   | Readonly<{
       kind: "set-pose";
@@ -115,11 +117,34 @@ export type PhysicsCommand2D =
       linearVelocityY: number;
       angularVelocityDegrees: number;
     }>
+  | Readonly<{
+      kind: "set-linear-velocity";
+      bodyId: number;
+      linearVelocityX: number;
+      linearVelocityY: number;
+    }>
+  | Readonly<{
+      kind: "set-angular-velocity";
+      bodyId: number;
+      angularVelocityDegrees: number;
+    }>
   | Readonly<{ kind: "wake"; bodyId: number }>
+  | Readonly<{ kind: "sleep"; bodyId: number }>
+  | Readonly<{ kind: "disable"; bodyId: number }>
+  | Readonly<{
+      kind: "enable";
+      bodyId: number;
+      velocity: "zero" | "preserve";
+    }>
   | Readonly<{
       kind: "configure";
       configuration: PhysicsWorld2DConfiguration;
     }>;
+
+export type PhysicsBodyCommand2D = Exclude<
+  PhysicsCommand2D,
+  Readonly<{ kind: "configure"; configuration: PhysicsWorld2DConfiguration }>
+>;
 
 export type PhysicsWorld2DFailureStage =
   | "topology"
@@ -169,6 +194,7 @@ interface CoordinatorState2D {
   colliderSlots: Map<number, ColliderSlot2D>;
   bodyRecords: Map<number, PhysicsBodyTopologyRecord2D>;
   colliderRecords: Map<number, PhysicsColliderTopologyRecord2D>;
+  disabledBodies: Map<number, DisabledBodyState2D>;
   previousPositionX: Float64Array;
   previousPositionY: Float64Array;
   previousRotationRadians: Float64Array;
@@ -179,10 +205,41 @@ interface CoordinatorState2D {
   eventTicks: Float64Array;
   eventKinds: Uint8Array;
   eventFirstColliderIndices: Int32Array;
+  eventFirstColliderGenerations: Uint32Array;
   eventSecondColliderIndices: Int32Array;
+  eventSecondColliderGenerations: Uint32Array;
+  eventNormalX: Float64Array;
+  eventNormalY: Float64Array;
+  eventPointCounts: Uint8Array;
+  eventPointFirstX: Float64Array;
+  eventPointFirstY: Float64Array;
+  eventPointSecondX: Float64Array;
+  eventPointSecondY: Float64Array;
+  eventPointSeparations: Float64Array;
+  eventTotalNormalImpulses: Float64Array;
   eventCount: number;
+  contactEventFacts: Map<string, ContactEventFact2D>;
   savedNormalImpulses: Float64Array;
   savedTangentImpulses: Float64Array;
+}
+
+interface ContactEventFact2D {
+  readonly normalX: number;
+  readonly normalY: number;
+  readonly pointCount: number;
+  readonly pointFirstX: readonly [number, number];
+  readonly pointFirstY: readonly [number, number];
+  readonly pointSecondX: readonly [number, number];
+  readonly pointSecondY: readonly [number, number];
+  readonly pointSeparations: readonly [number, number];
+  readonly totalNormalImpulse: number;
+}
+
+interface DisabledBodyState2D {
+  readonly flags: number;
+  readonly linearVelocityX: number;
+  readonly linearVelocityY: number;
+  readonly angularVelocity: number;
 }
 
 interface ValueSnapshot {
@@ -243,7 +300,18 @@ export class PhysicsWorld2DCandidate {
     readonly eventTicks: Float64Array,
     readonly eventKinds: Uint8Array,
     readonly eventFirstColliderIndices: Int32Array,
+    readonly eventFirstColliderGenerations: Uint32Array,
     readonly eventSecondColliderIndices: Int32Array,
+    readonly eventSecondColliderGenerations: Uint32Array,
+    readonly eventNormalX: Float64Array,
+    readonly eventNormalY: Float64Array,
+    readonly eventPointCounts: Uint8Array,
+    readonly eventPointFirstX: Float64Array,
+    readonly eventPointFirstY: Float64Array,
+    readonly eventPointSecondX: Float64Array,
+    readonly eventPointSecondY: Float64Array,
+    readonly eventPointSeparations: Float64Array,
+    readonly eventTotalNormalImpulses: Float64Array,
     readonly topologyRevision: number,
     readonly commandRevision: number,
     readonly commandCount: number,
@@ -295,6 +363,7 @@ export class PhysicsWorld2DKernel {
       colliderSlots: new Map(),
       bodyRecords: new Map(),
       colliderRecords: new Map(),
+      disabledBodies: new Map(),
       previousPositionX: new Float64Array(this.bodies.capacity),
       previousPositionY: new Float64Array(this.bodies.capacity),
       previousRotationRadians: new Float64Array(this.bodies.capacity),
@@ -305,8 +374,20 @@ export class PhysicsWorld2DKernel {
       eventTicks: new Float64Array(4),
       eventKinds: new Uint8Array(4),
       eventFirstColliderIndices: new Int32Array(4),
+      eventFirstColliderGenerations: new Uint32Array(4),
       eventSecondColliderIndices: new Int32Array(4),
+      eventSecondColliderGenerations: new Uint32Array(4),
+      eventNormalX: new Float64Array(4),
+      eventNormalY: new Float64Array(4),
+      eventPointCounts: new Uint8Array(4),
+      eventPointFirstX: new Float64Array(8),
+      eventPointFirstY: new Float64Array(8),
+      eventPointSecondX: new Float64Array(8),
+      eventPointSecondY: new Float64Array(8),
+      eventPointSeparations: new Float64Array(8),
+      eventTotalNormalImpulses: new Float64Array(4),
       eventCount: 0,
+      contactEventFacts: new Map(),
       savedNormalImpulses: new Float64Array(8),
       savedTangentImpulses: new Float64Array(8),
     };
@@ -426,7 +507,18 @@ export class PhysicsWorld2DKernel {
         this.state.eventTicks,
         this.state.eventKinds,
         this.state.eventFirstColliderIndices,
+        this.state.eventFirstColliderGenerations,
         this.state.eventSecondColliderIndices,
+        this.state.eventSecondColliderGenerations,
+        this.state.eventNormalX,
+        this.state.eventNormalY,
+        this.state.eventPointCounts,
+        this.state.eventPointFirstX,
+        this.state.eventPointFirstY,
+        this.state.eventPointSecondX,
+        this.state.eventPointSecondY,
+        this.state.eventPointSeparations,
+        this.state.eventTotalNormalImpulses,
         topologyRevision,
         commandRevision,
         commandCount,
@@ -493,6 +585,43 @@ export class PhysicsWorld2DKernel {
       this.bodies.positionY[slot.index]!,
       this.bodies.rotationRadians[slot.index]!,
     );
+  }
+
+  isBodyEnabled(bodyId: number): boolean {
+    this.assertUsable();
+    return (
+      this.state.bodySlots.has(bodyId) && !this.state.disabledBodies.has(bodyId)
+    );
+  }
+
+  bodyIdentity(
+    bodyId: number,
+  ): Readonly<{ index: number; generation: number }> | undefined {
+    this.assertUsable();
+    return this.state.bodySlots.get(bodyId);
+  }
+
+  bodyIdForIdentity(index: number, generation: number): number | undefined {
+    this.assertUsable();
+    for (const [id, slot] of this.state.bodySlots) {
+      if (slot.index === index && slot.generation === generation) return id;
+    }
+    return undefined;
+  }
+
+  colliderIdForIdentity(index: number, generation: number): number | undefined {
+    this.assertUsable();
+    for (const [id, slot] of this.state.colliderSlots) {
+      if (slot.index === index && slot.generation === generation) return id;
+    }
+    return undefined;
+  }
+
+  colliderIdentity(
+    colliderId: number,
+  ): Readonly<{ index: number; generation: number }> | undefined {
+    this.assertUsable();
+    return this.state.colliderSlots.get(colliderId);
   }
 
   presentationPose(bodyId: number): PhysicsPose2D {
@@ -655,6 +784,7 @@ export class PhysicsWorld2DKernel {
       this.bodies.release(slot.index, slot.generation);
       this.state.bodySlots.delete(id);
       this.state.bodyRecords.delete(id);
+      this.state.disabledBodies.delete(id);
     }
     for (const [id, record] of sortedEntries(desiredBodies)) {
       const existing = this.state.bodySlots.get(id);
@@ -676,6 +806,7 @@ export class PhysicsWorld2DKernel {
           record.definition,
         )
       ) {
+        this.state.disabledBodies.delete(id);
         if (this.wakeBody(existing.index)) {
           this.state.anchored = false;
           this.state.accumulatorMilliseconds = 0;
@@ -700,34 +831,9 @@ export class PhysicsWorld2DKernel {
         continue;
       }
       if (existing !== undefined) this.releaseCollider(existing);
-      const index = this.colliders.allocate({
-        ...record.definition,
-        bodyIndex: body.index,
-        bodyGeneration: body.generation,
-      });
-      const generation = this.colliders.generations[index]!;
-      const bounds = colliderBounds(
-        record.definition.shape,
-        this.bodies.positionX[body.index]!,
-        this.bodies.positionY[body.index]!,
-        this.bodies.rotationRadians[body.index]!,
-      );
-      const proxy = this.broadPhase.createProxy(
-        index,
-        generation,
-        bounds[0],
-        bounds[1],
-        bounds[2],
-        bounds[3],
-      );
-      this.colliders.setProxy(
-        index,
-        generation,
-        proxy,
-        this.broadPhase.proxyGenerations[proxy]!,
-      );
-      this.state.colliderSlots.set(id, Object.freeze({ index, generation }));
       this.state.colliderRecords.set(id, record);
+      if (this.state.disabledBodies.has(record.bodyId)) continue;
+      this.allocateColliderRecord(id, record, body);
       if (this.wakeBody(body.index)) {
         this.state.anchored = false;
         this.state.accumulatorMilliseconds = 0;
@@ -773,23 +879,21 @@ export class PhysicsWorld2DKernel {
       }
       const slot = this.state.bodySlots.get(command.bodyId);
       if (slot === undefined) continue;
-      if (this.wakeBody(slot.index)) {
-        this.state.anchored = false;
-        this.state.accumulatorMilliseconds = 0;
-      }
       switch (command.kind) {
         case "apply-force":
+          if (command.wake !== false) this.wakeCommandBody(slot.index);
           applyForceAtPointToCandidateBody2D(
             this.bodies,
             slot.index,
             slot.generation,
             command.forceX,
             command.forceY,
-            command.pointX,
-            command.pointY,
+            command.pointX ?? this.bodies.positionX[slot.index]!,
+            command.pointY ?? this.bodies.positionY[slot.index]!,
           );
           break;
         case "apply-torque":
+          this.wakeCommandBody(slot.index);
           applyTorqueToCandidateBody2D(
             this.bodies,
             slot.index,
@@ -798,33 +902,176 @@ export class PhysicsWorld2DKernel {
           );
           break;
         case "apply-impulse":
+          if (command.wake !== false) this.wakeCommandBody(slot.index);
           applyImpulseAtPointToCandidateBody2D(
             this.bodies,
             slot.index,
             slot.generation,
             command.impulseX,
             command.impulseY,
-            command.pointX,
-            command.pointY,
+            command.pointX ?? this.bodies.positionX[slot.index]!,
+            command.pointY ?? this.bodies.positionY[slot.index]!,
           );
           break;
         case "set-pose":
+          this.wakeCommandBody(slot.index);
           this.bodies.positionX[slot.index] = command.pose.position[0];
           this.bodies.positionY[slot.index] = command.pose.position[1];
           this.bodies.rotationRadians[slot.index] =
             command.pose.rotationDegrees / RADIANS_TO_DEGREES;
           this.snapPreviousPose(slot.index);
+          this.moveBroadPhaseProxies();
           break;
         case "set-velocity":
+          this.wakeCommandBody(slot.index);
           this.bodies.linearVelocityX[slot.index] = command.linearVelocityX;
           this.bodies.linearVelocityY[slot.index] = command.linearVelocityY;
           this.bodies.angularVelocity[slot.index] =
             command.angularVelocityDegrees / RADIANS_TO_DEGREES;
           break;
+        case "set-linear-velocity":
+          this.wakeCommandBody(slot.index);
+          this.bodies.linearVelocityX[slot.index] = command.linearVelocityX;
+          this.bodies.linearVelocityY[slot.index] = command.linearVelocityY;
+          break;
+        case "set-angular-velocity":
+          this.wakeCommandBody(slot.index);
+          this.bodies.angularVelocity[slot.index] =
+            command.angularVelocityDegrees / RADIANS_TO_DEGREES;
+          break;
         case "wake":
+          this.wakeCommandBody(slot.index);
+          break;
+        case "sleep":
+          this.sleepCommandBody(slot.index);
+          break;
+        case "disable":
+          this.disableCommandBody(command.bodyId, slot);
+          break;
+        case "enable":
+          this.enableCommandBody(command.bodyId, slot, command.velocity);
           break;
       }
     }
+  }
+
+  private wakeCommandBody(bodyIndex: number): void {
+    if (this.wakeBody(bodyIndex)) {
+      this.state.anchored = false;
+      this.state.accumulatorMilliseconds = 0;
+    }
+  }
+
+  private sleepCommandBody(bodyIndex: number): void {
+    if ((this.bodies.flags[bodyIndex]! & BODY_SLEEPING_2D) !== 0) return;
+    this.bodies.flags[bodyIndex] |= BODY_SLEEPING_2D;
+    this.bodies.linearVelocityX[bodyIndex] = 0;
+    this.bodies.linearVelocityY[bodyIndex] = 0;
+    this.bodies.angularVelocity[bodyIndex] = 0;
+    this.bodies.forceX[bodyIndex] = 0;
+    this.bodies.forceY[bodyIndex] = 0;
+    this.bodies.torque[bodyIndex] = 0;
+    this.appendEvent(6, bodyIndex, NO_INDEX);
+  }
+
+  private disableCommandBody(bodyId: number, slot: BodySlot2D): void {
+    if (this.state.disabledBodies.has(bodyId)) return;
+    this.state.disabledBodies.set(
+      bodyId,
+      Object.freeze({
+        flags: this.bodies.flags[slot.index]!,
+        linearVelocityX: this.bodies.linearVelocityX[slot.index]!,
+        linearVelocityY: this.bodies.linearVelocityY[slot.index]!,
+        angularVelocity: this.bodies.angularVelocity[slot.index]!,
+      }),
+    );
+    for (const [colliderId, record] of this.state.colliderRecords) {
+      if (record.bodyId !== bodyId) continue;
+      const collider = this.state.colliderSlots.get(colliderId);
+      if (collider !== undefined) this.releaseCollider(collider);
+      this.state.colliderSlots.delete(colliderId);
+    }
+    this.bodies.flags[slot.index] = 0;
+    this.bodies.linearVelocityX[slot.index] = 0;
+    this.bodies.linearVelocityY[slot.index] = 0;
+    this.bodies.angularVelocity[slot.index] = 0;
+    this.bodies.forceX[slot.index] = 0;
+    this.bodies.forceY[slot.index] = 0;
+    this.bodies.torque[slot.index] = 0;
+    this.broadPhase.publishPairs();
+    updateSortedContactCache2D(
+      this.contacts,
+      this.broadPhase,
+      this.colliders,
+      (first, second) => this.manifoldBetweenColliders(first, second),
+    );
+    this.stageContactEvents();
+  }
+
+  private enableCommandBody(
+    bodyId: number,
+    slot: BodySlot2D,
+    velocity: "zero" | "preserve",
+  ): void {
+    const disabled = this.state.disabledBodies.get(bodyId);
+    if (disabled === undefined) return;
+    const authored = this.state.bodyRecords.get(bodyId)?.definition;
+    if (authored === undefined) return;
+    this.state.disabledBodies.delete(bodyId);
+    this.bodies.positionX[slot.index] = authored.positionX;
+    this.bodies.positionY[slot.index] = authored.positionY;
+    this.bodies.rotationRadians[slot.index] = authored.rotationRadians;
+    this.bodies.flags[slot.index] = disabled.flags & ~BODY_SLEEPING_2D;
+    this.bodies.linearVelocityX[slot.index] =
+      velocity === "preserve" ? disabled.linearVelocityX : 0;
+    this.bodies.linearVelocityY[slot.index] =
+      velocity === "preserve" ? disabled.linearVelocityY : 0;
+    this.bodies.angularVelocity[slot.index] =
+      velocity === "preserve" ? disabled.angularVelocity : 0;
+    this.snapPreviousPose(slot.index);
+    for (const [colliderId, record] of sortedEntries(
+      this.state.colliderRecords,
+    )) {
+      if (record.bodyId !== bodyId || this.state.colliderSlots.has(colliderId))
+        continue;
+      this.allocateColliderRecord(colliderId, record, slot);
+    }
+    this.state.anchored = false;
+    this.state.accumulatorMilliseconds = 0;
+  }
+
+  private allocateColliderRecord(
+    id: number,
+    record: PhysicsColliderTopologyRecord2D,
+    body: BodySlot2D,
+  ): void {
+    const index = this.colliders.allocate({
+      ...record.definition,
+      bodyIndex: body.index,
+      bodyGeneration: body.generation,
+    });
+    const generation = this.colliders.generations[index]!;
+    const bounds = colliderBounds(
+      record.definition.shape,
+      this.bodies.positionX[body.index]!,
+      this.bodies.positionY[body.index]!,
+      this.bodies.rotationRadians[body.index]!,
+    );
+    const proxy = this.broadPhase.createProxy(
+      index,
+      generation,
+      bounds[0],
+      bounds[1],
+      bounds[2],
+      bounds[3],
+    );
+    this.colliders.setProxy(
+      index,
+      generation,
+      proxy,
+      this.broadPhase.proxyGenerations[proxy]!,
+    );
+    this.state.colliderSlots.set(id, Object.freeze({ index, generation }));
   }
 
   private manifoldBetweenColliders(first: number, second: number) {
@@ -901,12 +1148,118 @@ export class PhysicsWorld2DKernel {
 
   private stageContactEvents(): void {
     for (let event = 0; event < this.contacts.eventCount; event += 1) {
+      const first = this.contacts.eventFirstColliderIndices[event]!;
+      const firstGeneration =
+        this.contacts.eventFirstColliderGenerations[event]!;
+      const second = this.contacts.eventSecondColliderIndices[event]!;
+      const secondGeneration =
+        this.contacts.eventSecondColliderGenerations[event]!;
+      const kind = this.contacts.eventTypes[event]!;
+      const contact = this.findContact(
+        first,
+        firstGeneration,
+        second,
+        secondGeneration,
+      );
+      const key = contactKey(first, firstGeneration, second, secondGeneration);
       this.appendEvent(
-        this.contacts.eventTypes[event]!,
-        this.contacts.eventFirstColliderIndices[event]!,
-        this.contacts.eventSecondColliderIndices[event]!,
+        kind,
+        first,
+        second,
+        firstGeneration,
+        secondGeneration,
+        kind === 2 || kind === 4
+          ? this.state.contactEventFacts.get(key)
+          : contact < 0
+            ? undefined
+            : this.contactEventFact(contact),
       );
     }
+    for (let contact = 0; contact < this.contacts.contactCount; contact += 1) {
+      if (this.contacts.sensorFlags[contact] !== 0) continue;
+      const first = this.contacts.firstColliderIndices[contact]!;
+      const second = this.contacts.secondColliderIndices[contact]!;
+      if (
+        !hasColliderHandler(this.colliders.handlers[first], "onHit") &&
+        !hasColliderHandler(this.colliders.handlers[second], "onHit")
+      ) {
+        continue;
+      }
+      const fact = this.contactEventFact(contact);
+      if (fact.totalNormalImpulse <= 0) continue;
+      this.appendEvent(
+        7,
+        first,
+        second,
+        this.contacts.firstColliderGenerations[contact]!,
+        this.contacts.secondColliderGenerations[contact]!,
+        fact,
+      );
+    }
+    this.state.contactEventFacts.clear();
+    for (let contact = 0; contact < this.contacts.contactCount; contact += 1) {
+      this.state.contactEventFacts.set(
+        contactKey(
+          this.contacts.firstColliderIndices[contact]!,
+          this.contacts.firstColliderGenerations[contact]!,
+          this.contacts.secondColliderIndices[contact]!,
+          this.contacts.secondColliderGenerations[contact]!,
+        ),
+        this.contactEventFact(contact),
+      );
+    }
+  }
+
+  private findContact(
+    first: number,
+    firstGeneration: number,
+    second: number,
+    secondGeneration: number,
+  ): number {
+    for (let contact = 0; contact < this.contacts.contactCount; contact += 1) {
+      if (
+        this.contacts.firstColliderIndices[contact] === first &&
+        this.contacts.firstColliderGenerations[contact] === firstGeneration &&
+        this.contacts.secondColliderIndices[contact] === second &&
+        this.contacts.secondColliderGenerations[contact] === secondGeneration
+      ) {
+        return contact;
+      }
+    }
+    return -1;
+  }
+
+  private contactEventFact(contact: number): ContactEventFact2D {
+    const base = contact * 2;
+    const pointCount = this.contacts.pointCounts[contact]!;
+    return Object.freeze({
+      normalX: this.contacts.normalX[contact]!,
+      normalY: this.contacts.normalY[contact]!,
+      pointCount,
+      pointFirstX: Object.freeze([
+        this.contacts.pointFirstX[base]!,
+        this.contacts.pointFirstX[base + 1]!,
+      ] as const),
+      pointFirstY: Object.freeze([
+        this.contacts.pointFirstY[base]!,
+        this.contacts.pointFirstY[base + 1]!,
+      ] as const),
+      pointSecondX: Object.freeze([
+        this.contacts.pointSecondX[base]!,
+        this.contacts.pointSecondX[base + 1]!,
+      ] as const),
+      pointSecondY: Object.freeze([
+        this.contacts.pointSecondY[base]!,
+        this.contacts.pointSecondY[base + 1]!,
+      ] as const),
+      pointSeparations: Object.freeze([
+        this.contacts.pointSeparations[base]!,
+        this.contacts.pointSeparations[base + 1]!,
+      ] as const),
+      totalNormalImpulse:
+        this.contacts.pointNormalImpulses[base]! +
+        this.contacts.pointNormalImpulses[base + 1]!,
+    });
   }
 
   private solvePositions(): void {
@@ -956,13 +1309,39 @@ export class PhysicsWorld2DKernel {
     );
   }
 
-  private appendEvent(kind: number, first: number, second: number): void {
+  private appendEvent(
+    kind: number,
+    first: number,
+    second: number,
+    firstGeneration = 0,
+    secondGeneration = 0,
+    fact?: ContactEventFact2D,
+  ): void {
     this.ensureEventCapacity(this.state.eventCount + 1);
     const event = this.state.eventCount;
     this.state.eventTicks[event] = this.state.tick + 1;
     this.state.eventKinds[event] = kind;
     this.state.eventFirstColliderIndices[event] = first;
+    this.state.eventFirstColliderGenerations[event] = firstGeneration;
     this.state.eventSecondColliderIndices[event] = second;
+    this.state.eventSecondColliderGenerations[event] = secondGeneration;
+    this.state.eventNormalX[event] = fact?.normalX ?? 0;
+    this.state.eventNormalY[event] = fact?.normalY ?? 0;
+    this.state.eventPointCounts[event] = fact?.pointCount ?? 0;
+    this.state.eventTotalNormalImpulses[event] = fact?.totalNormalImpulse ?? 0;
+    const pointBase = event * 2;
+    for (let point = 0; point < 2; point += 1) {
+      this.state.eventPointFirstX[pointBase + point] =
+        fact?.pointFirstX[point] ?? 0;
+      this.state.eventPointFirstY[pointBase + point] =
+        fact?.pointFirstY[point] ?? 0;
+      this.state.eventPointSecondX[pointBase + point] =
+        fact?.pointSecondX[point] ?? 0;
+      this.state.eventPointSecondY[pointBase + point] =
+        fact?.pointSecondY[point] ?? 0;
+      this.state.eventPointSeparations[pointBase + point] =
+        fact?.pointSeparations[point] ?? 0;
+    }
     this.state.eventCount += 1;
   }
 
@@ -976,8 +1355,46 @@ export class PhysicsWorld2DKernel {
       this.state.eventFirstColliderIndices,
       capacity,
     );
+    this.state.eventFirstColliderGenerations = growUint32(
+      this.state.eventFirstColliderGenerations,
+      capacity,
+    );
     this.state.eventSecondColliderIndices = growInt32(
       this.state.eventSecondColliderIndices,
+      capacity,
+    );
+    this.state.eventSecondColliderGenerations = growUint32(
+      this.state.eventSecondColliderGenerations,
+      capacity,
+    );
+    this.state.eventNormalX = growFloat64(this.state.eventNormalX, capacity);
+    this.state.eventNormalY = growFloat64(this.state.eventNormalY, capacity);
+    this.state.eventPointCounts = growUint8(
+      this.state.eventPointCounts,
+      capacity,
+    );
+    this.state.eventPointFirstX = growFloat64(
+      this.state.eventPointFirstX,
+      capacity * 2,
+    );
+    this.state.eventPointFirstY = growFloat64(
+      this.state.eventPointFirstY,
+      capacity * 2,
+    );
+    this.state.eventPointSecondX = growFloat64(
+      this.state.eventPointSecondX,
+      capacity * 2,
+    );
+    this.state.eventPointSecondY = growFloat64(
+      this.state.eventPointSecondY,
+      capacity * 2,
+    );
+    this.state.eventPointSeparations = growFloat64(
+      this.state.eventPointSeparations,
+      capacity * 2,
+    );
+    this.state.eventTotalNormalImpulses = growFloat64(
+      this.state.eventTotalNormalImpulses,
       capacity,
     );
   }
@@ -1042,15 +1459,20 @@ export class PhysicsWorld2DKernel {
   private wakeBody(bodyIndex: number): boolean {
     const wasSleeping =
       (this.bodies.flags[bodyIndex]! & BODY_SLEEPING_2D) !== 0;
+    let targetWakeRecorded = false;
     const islandChanged = this.solver.wakeIslandContainingCandidate(
       this.bodies,
       bodyIndex,
       (body, sleeping) => {
+        if (body === bodyIndex && !sleeping) targetWakeRecorded = true;
         this.appendEvent(sleeping ? 6 : 5, body, NO_INDEX);
       },
     );
     this.bodies.flags[bodyIndex] &= ~BODY_SLEEPING_2D;
     this.bodies.sleepTime[bodyIndex] = 0;
+    if (wasSleeping && !targetWakeRecorded) {
+      this.appendEvent(5, bodyIndex, NO_INDEX);
+    }
     return wasSleeping || islandChanged;
   }
 
@@ -1265,6 +1687,14 @@ function validateTopology(records: readonly PhysicsTopologyRecord2D[]): void {
   }
 }
 
+function hasColliderHandler(handlers: unknown, name: "onHit"): boolean {
+  return (
+    typeof handlers === "object" &&
+    handlers !== null &&
+    typeof (handlers as Readonly<Record<string, unknown>>)[name] === "function"
+  );
+}
+
 function validateBodyDefinition(definition: BodyDefinition2D): void {
   for (const [name, value] of Object.entries(definition)) {
     if (name === "owner" || name === "flags") continue;
@@ -1287,8 +1717,16 @@ function validateCommand(command: PhysicsCommand2D): void {
     validatePose(command.pose, "command pose");
     return;
   }
+  if (command.kind === "enable") {
+    if (command.velocity !== "zero" && command.velocity !== "preserve") {
+      throw new RangeError('command velocity must be "zero" or "preserve".');
+    }
+    return;
+  }
   for (const [name, value] of Object.entries(command)) {
-    if (name === "kind" || name === "bodyId") continue;
+    if (name === "kind" || name === "bodyId" || name === "wake") continue;
+    if ((name === "pointX" || name === "pointY") && value === undefined)
+      continue;
     if (typeof value !== "number" || !Number.isFinite(value)) {
       throw new RangeError(`command ${name} must be finite.`);
     }
@@ -1477,6 +1915,15 @@ function sortedEntries<T>(
   );
 }
 
+function contactKey(
+  first: number,
+  firstGeneration: number,
+  second: number,
+  secondGeneration: number,
+): string {
+  return `${String(first)}:${String(firstGeneration)}:${String(second)}:${String(secondGeneration)}`;
+}
+
 function growFloat64(source: Float64Array, capacity: number): Float64Array {
   const result = new Float64Array(capacity);
   result.set(source);
@@ -1491,6 +1938,12 @@ function growInt32(source: Int32Array, capacity: number): Int32Array {
 
 function growUint8(source: Uint8Array, capacity: number): Uint8Array {
   const result = new Uint8Array(capacity);
+  result.set(source);
+  return result;
+}
+
+function growUint32(source: Uint32Array, capacity: number): Uint32Array {
+  const result = new Uint32Array(capacity);
   result.set(source);
   return result;
 }
