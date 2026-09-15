@@ -8,8 +8,8 @@ import {
   updateSortedContactCache2D,
   type SortedColliderPairs2D,
 } from "./contact-cache.js";
-import { BODY_TYPE_DYNAMIC_2D } from "./integrator.js";
-import { SequentialImpulseSolver2D } from "./solver.js";
+import { BODY_TYPE_DYNAMIC_2D, BODY_TYPE_KINEMATIC_2D } from "./integrator.js";
+import { BODY_SLEEP_DISABLED_2D, BODY_SLEEPING_2D, SequentialImpulseSolver2D } from "./solver.js";
 import { BodyStore2D, ColliderStore2D } from "./storage.js";
 
 const shapeRecord: ShapeRecord2D = Object.freeze({
@@ -33,18 +33,21 @@ interface Scene {
   readonly contacts: ContactCache2D;
   readonly solver: SequentialImpulseSolver2D;
   readonly bodyIndices: Int32Array;
-  addBody(options?: Readonly<{
-    dynamic?: boolean;
-    x?: number;
-    y?: number;
-    vx?: number;
-    vy?: number;
-    angularVelocity?: number;
-    inverseInertia?: number;
-    friction?: number;
-    restitution?: number;
-    sensor?: boolean;
-  }>): SceneBody;
+  addBody(
+    options?: Readonly<{
+      dynamic?: boolean;
+      x?: number;
+      y?: number;
+      vx?: number;
+      vy?: number;
+      angularVelocity?: number;
+      inverseInertia?: number;
+      friction?: number;
+      restitution?: number;
+      sensor?: boolean;
+      sleepDisabled?: boolean;
+    }>,
+  ): SceneBody;
   setContacts(
     entries: readonly Readonly<{
       first: SceneBody;
@@ -97,7 +100,7 @@ function createScene(capacity = 8): Scene {
         angularDamping: 0,
         gravityScale: 1,
         sleepTime: 0,
-        flags: dynamic ? BODY_TYPE_DYNAMIC_2D : 0,
+        flags: (dynamic ? BODY_TYPE_DYNAMIC_2D : 0) | (options.sleepDisabled === true ? BODY_SLEEP_DISABLED_2D : 0),
         owner: {},
       });
       allocated.push(index);
@@ -119,57 +122,39 @@ function createScene(capacity = 8): Scene {
     },
     setContacts(entries) {
       const sorted = [...entries].sort(
-        (left, right) =>
-          left.first.collider - right.first.collider ||
-          left.second.collider - right.second.collider,
+        (left, right) => left.first.collider - right.first.collider || left.second.collider - right.second.collider,
       );
       const source: SortedColliderPairs2D = {
-        pairFirstColliderIndices: Int32Array.from(
-          sorted.map((entry) => entry.first.collider),
-        ),
+        pairFirstColliderIndices: Int32Array.from(sorted.map((entry) => entry.first.collider)),
         pairFirstColliderGenerations: new Uint32Array(sorted.length).fill(1),
-        pairSecondColliderIndices: Int32Array.from(
-          sorted.map((entry) => entry.second.collider),
-        ),
+        pairSecondColliderIndices: Int32Array.from(sorted.map((entry) => entry.second.collider)),
         pairSecondColliderGenerations: new Uint32Array(sorted.length).fill(1),
         pairCount: sorted.length,
       };
-      updateSortedContactCache2D(
-        contacts,
-        source,
-        colliders,
-        (first, second): PrivateManifold2D | null => {
-          const entry = sorted.find(
-            (candidate) =>
-              candidate.first.collider === first &&
-              candidate.second.collider === second,
-          );
-          if (entry === undefined) return null;
-          return {
-            normalX: entry.normalX,
-            normalY: entry.normalY,
-            firstLeaf: 0,
-            secondLeaf: 0,
-            points: entry.points.map((point, index) => ({
-              ...point,
-              firstFeature: point.firstFeature ?? index,
-              secondFeature: point.secondFeature ?? index,
-            })),
-          };
-        },
-      );
+      updateSortedContactCache2D(contacts, source, colliders, (first, second): PrivateManifold2D | null => {
+        const entry = sorted.find(
+          (candidate) => candidate.first.collider === first && candidate.second.collider === second,
+        );
+        if (entry === undefined) return null;
+        return {
+          normalX: entry.normalX,
+          normalY: entry.normalY,
+          firstLeaf: 0,
+          secondLeaf: 0,
+          points: entry.points.map((point, index) => ({
+            ...point,
+            firstFeature: point.firstFeature ?? index,
+            secondFeature: point.secondFeature ?? index,
+          })),
+        };
+      });
     },
   };
   return scene;
 }
 
 function solve(scene: Scene, order = scene.bodyIndices): void {
-  scene.solver.solveCandidate(
-    scene.bodies,
-    order,
-    order.length,
-    scene.contacts,
-  );
+  scene.solver.solveCandidate(scene.bodies, order, order.length, scene.contacts);
 }
 
 describe("deterministic 2D sequential impulse solver", () => {
@@ -247,16 +232,24 @@ describe("deterministic 2D sequential impulse solver", () => {
     expect(scene.bodies.linearVelocityY[lower.index]).toBeCloseTo(0, 2);
     expect(scene.bodies.linearVelocityY[upper.index]).toBeCloseTo(0, 2);
     expect(scene.solver.islandCount).toBe(1);
-    expect(
-      Array.from(scene.solver.islandBodyIndices.subarray(0, 2)),
-    ).toEqual([lower.index, upper.index]);
+    expect(Array.from(scene.solver.islandBodyIndices.subarray(0, 2))).toEqual([lower.index, upper.index]);
   });
 
   it("applies symmetric restitution only past the closing-speed threshold", () => {
     const run = (speed: number) => {
       const scene = createScene();
-      const first = scene.addBody({ x: -0.9, vx: speed, restitution: 1, friction: 0 });
-      const second = scene.addBody({ x: 0.9, vx: -speed, restitution: 1, friction: 0 });
+      const first = scene.addBody({
+        x: -0.9,
+        vx: speed,
+        restitution: 1,
+        friction: 0,
+      });
+      const second = scene.addBody({
+        x: 0.9,
+        vx: -speed,
+        restitution: 1,
+        friction: 0,
+      });
       scene.setContacts([
         {
           first,
@@ -275,10 +268,7 @@ describe("deterministic 2D sequential impulse solver", () => {
         },
       ]);
       solve(scene);
-      return [
-        scene.bodies.linearVelocityX[first.index]!,
-        scene.bodies.linearVelocityX[second.index]!,
-      ] as const;
+      return [scene.bodies.linearVelocityX[first.index]!, scene.bodies.linearVelocityX[second.index]!] as const;
     };
 
     expect(run(2)[0]).toBeCloseTo(-2, 12);
@@ -358,32 +348,22 @@ describe("deterministic 2D sequential impulse solver", () => {
         second: first,
         normalX: 0,
         normalY: 1,
-        points: [
-          { firstX: -2, firstY: 0, secondX: -2, secondY: 0, separation: 0 },
-        ],
+        points: [{ firstX: -2, firstY: 0, secondX: -2, secondY: 0, separation: 0 }],
       },
       {
         first: sharedGround,
         second,
         normalX: 0,
         normalY: 1,
-        points: [
-          { firstX: 2, firstY: 0, secondX: 2, secondY: 0, separation: 0 },
-        ],
+        points: [{ firstX: 2, firstY: 0, secondX: 2, secondY: 0, separation: 0 }],
       },
     ]);
 
     solve(scene, new Int32Array([second.index, sharedGround.index, first.index]));
 
     expect(scene.solver.islandCount).toBe(2);
-    expect(Array.from(scene.solver.islandBodyIndices.subarray(0, 2))).toEqual([
-      first.index,
-      second.index,
-    ]);
-    expect(Array.from(scene.solver.islandContactIndices.subarray(0, 2))).toEqual([
-      0,
-      1,
-    ]);
+    expect(Array.from(scene.solver.islandBodyIndices.subarray(0, 2))).toEqual([first.index, second.index]);
+    expect(Array.from(scene.solver.islandContactIndices.subarray(0, 2))).toEqual([0, 1]);
   });
 
   it("bounds each positional correction iteration", () => {
@@ -425,9 +405,7 @@ describe("deterministic 2D sequential impulse solver", () => {
           second: lower,
           normalX: 0,
           normalY: 1,
-          points: [
-            { firstX: 0, firstY: 0, secondX: 0, secondY: 0, separation: -0.1 },
-          ],
+          points: [{ firstX: 0, firstY: 0, secondX: 0, secondY: 0, separation: -0.1 }],
         },
         {
           first: lower,
@@ -435,23 +413,23 @@ describe("deterministic 2D sequential impulse solver", () => {
           normalX: 0,
           normalY: 1,
           points: [
-            { firstX: 0, firstY: 0.4, secondX: 0, secondY: 0.4, separation: -0.1 },
+            {
+              firstX: 0,
+              firstY: 0.4,
+              secondX: 0,
+              secondY: 0.4,
+              separation: -0.1,
+            },
           ],
         },
       ]);
       solve(scene);
       return {
-        islands: Array.from(
-          scene.solver.islandBodyIndices.subarray(0, scene.solver.islandBodyCount),
-        ),
-        constraints: Array.from(
-          scene.solver.islandContactIndices.subarray(0, scene.solver.constraintCount),
-        ),
+        islands: Array.from(scene.solver.islandBodyIndices.subarray(0, scene.solver.islandBodyCount)),
+        constraints: Array.from(scene.solver.islandContactIndices.subarray(0, scene.solver.constraintCount)),
         positions: Array.from(scene.bodies.positionY.subarray(0, 3)),
         velocities: Array.from(scene.bodies.linearVelocityY.subarray(0, 3)),
-        impulses: Array.from(
-          scene.contacts.pointNormalImpulses.subarray(0, 2),
-        ),
+        impulses: Array.from(scene.contacts.pointNormalImpulses.subarray(0, 2)),
       };
     };
 
@@ -476,9 +454,7 @@ describe("deterministic 2D sequential impulse solver", () => {
         second: ground,
         normalX: 0,
         normalY: -1,
-        points: [
-          { firstX: 0, firstY: 0, secondX: 0, secondY: 0, separation: 0 },
-        ],
+        points: [{ firstX: 0, firstY: 0, secondX: 0, secondY: 0, separation: 0 }],
       },
     ]);
     solve(scene);
@@ -491,5 +467,197 @@ describe("deterministic 2D sequential impulse solver", () => {
     expect(scene.solver.islandBodyIndices).toBe(bodies);
     expect(scene.solver.islandContactIndices).toBe(contacts);
     expect(scene.solver.pointNormalMasses).toBe(normalMasses);
+  });
+
+  it("sleeps a whole resting island only after one continuous half second and skips its solver work", () => {
+    const scene = createScene();
+    const first = scene.addBody({
+      vx: 0.04,
+      angularVelocity: (0.4 * Math.PI) / 180,
+    });
+    const second = scene.addBody({ vx: 0.03 });
+    scene.setContacts([
+      {
+        first,
+        second,
+        normalX: -1,
+        normalY: 0,
+        points: [{ firstX: 0, firstY: 0, secondX: 0, secondY: 0, separation: 0 }],
+      },
+    ]);
+    const transitions: readonly [number, boolean][] = [];
+
+    solve(scene);
+    expect(
+      scene.solver.updateSleepingCandidate(scene.bodies, scene.contacts, 0.49, {
+        enabled: true,
+        recordTransition: (body, sleeping) => {
+          (transitions as [number, boolean][]).push([body, sleeping]);
+        },
+      }),
+    ).toBe(false);
+    expect(scene.bodies.flags[first.index]! & BODY_SLEEPING_2D).toBe(0);
+
+    solve(scene);
+    expect(
+      scene.solver.updateSleepingCandidate(scene.bodies, scene.contacts, 0.01, {
+        enabled: true,
+        recordTransition: (body, sleeping) => {
+          (transitions as [number, boolean][]).push([body, sleeping]);
+        },
+      }),
+    ).toBe(true);
+    expect(transitions).toEqual([
+      [first.index, true],
+      [second.index, true],
+    ]);
+    expect(scene.bodies.linearVelocityX[first.index]).toBe(0);
+    expect(scene.bodies.angularVelocity[first.index]).toBe(0);
+
+    solve(scene);
+    expect(scene.solver.solvedIslandCount).toBe(0);
+    expect(scene.solver.velocityIterationsPerformed).toBe(0);
+    expect(scene.solver.positionIterationsPerformed).toBe(0);
+  });
+
+  it("resets the whole island timer when any member exceeds either threshold", () => {
+    const scene = createScene();
+    const first = scene.addBody({ vx: 0.04 });
+    const second = scene.addBody({ angularVelocity: (0.4 * Math.PI) / 180 });
+    scene.setContacts([
+      {
+        first,
+        second,
+        normalX: -1,
+        normalY: 0,
+        points: [{ firstX: 0, firstY: 0, secondX: 0, secondY: 0, separation: 0 }],
+      },
+    ]);
+
+    solve(scene);
+    scene.solver.updateSleepingCandidate(scene.bodies, scene.contacts, 0.4, {
+      enabled: true,
+    });
+    scene.bodies.linearVelocityX[second.index] = 0.051;
+    solve(scene);
+    scene.solver.updateSleepingCandidate(scene.bodies, scene.contacts, 0.2, {
+      enabled: true,
+    });
+    expect(scene.bodies.sleepTime[first.index]).toBe(0);
+    expect(scene.bodies.sleepTime[second.index]).toBe(0);
+    scene.bodies.linearVelocityX[second.index] = 0;
+    solve(scene);
+    scene.solver.updateSleepingCandidate(scene.bodies, scene.contacts, 0.4, {
+      enabled: true,
+    });
+    scene.bodies.angularVelocity[second.index] = (0.501 * Math.PI) / 180;
+    solve(scene);
+    scene.solver.updateSleepingCandidate(scene.bodies, scene.contacts, 0.2, {
+      enabled: true,
+    });
+    expect(scene.bodies.sleepTime[first.index]).toBe(0);
+    expect(scene.bodies.sleepTime[second.index]).toBe(0);
+    scene.bodies.angularVelocity[second.index] = 0;
+    solve(scene);
+    scene.solver.updateSleepingCandidate(scene.bodies, scene.contacts, 0.49, {
+      enabled: true,
+    });
+    expect(scene.bodies.flags[first.index]! & BODY_SLEEPING_2D).toBe(0);
+  });
+
+  it("wakes complete islands deterministically for commands, topology changes, and awake contact", () => {
+    const scene = createScene();
+    const first = scene.addBody();
+    const second = scene.addBody();
+    scene.setContacts([
+      {
+        first,
+        second,
+        normalX: -1,
+        normalY: 0,
+        points: [{ firstX: 0, firstY: 0, secondX: 0, secondY: 0, separation: 0 }],
+      },
+    ]);
+    solve(scene);
+    scene.solver.updateSleepingCandidate(scene.bodies, scene.contacts, 0.5, {
+      enabled: true,
+    });
+    const transitions: [number, boolean][] = [];
+
+    for (const reason of ["force", "impulse", "teleport", "topology"] as const) {
+      expect(
+        scene.solver.wakeIslandContainingCandidate(scene.bodies, second.index, (body, sleeping) =>
+          transitions.push([body, sleeping]),
+        ),
+      ).toBe(true);
+      expect(transitions.splice(0)).toEqual([
+        [first.index, false],
+        [second.index, false],
+      ]);
+      scene.solver.updateSleepingCandidate(scene.bodies, scene.contacts, 0.5, {
+        enabled: true,
+      });
+      transitions.splice(0);
+      expect(reason).toBeTruthy();
+    }
+
+    scene.bodies.flags[second.index] &= ~BODY_SLEEPING_2D;
+    solve(scene);
+    scene.solver.updateSleepingCandidate(scene.bodies, scene.contacts, 0, {
+      enabled: true,
+      recordTransition: (body, sleeping) => transitions.push([body, sleeping]),
+    });
+    expect(transitions).toEqual([[first.index, false]]);
+    expect(scene.bodies.flags[second.index]! & BODY_SLEEPING_2D).toBe(0);
+  });
+
+  it("wakes a sleeping dynamic island touching a moving kinematic body", () => {
+    const scene = createScene();
+    const dynamic = scene.addBody();
+    const kinematic = scene.addBody({ dynamic: false });
+    scene.bodies.flags[kinematic.index] = BODY_TYPE_KINEMATIC_2D;
+    scene.setContacts([
+      {
+        first: dynamic,
+        second: kinematic,
+        normalX: -1,
+        normalY: 0,
+        points: [{ firstX: 0, firstY: 0, secondX: 0, secondY: 0, separation: 0 }],
+      },
+    ]);
+    solve(scene);
+    scene.solver.updateSleepingCandidate(scene.bodies, scene.contacts, 0.5, {
+      enabled: true,
+    });
+    expect(scene.bodies.flags[dynamic.index]! & BODY_SLEEPING_2D).toBe(BODY_SLEEPING_2D);
+
+    scene.bodies.linearVelocityX[kinematic.index] = 1;
+    solve(scene);
+    scene.solver.updateSleepingCandidate(scene.bodies, scene.contacts, 0, {
+      enabled: true,
+    });
+    expect(scene.bodies.flags[dynamic.index]! & BODY_SLEEPING_2D).toBe(0);
+  });
+
+  it("keeps every body awake and advance-eligible when sleeping is disabled or body-opted-out", () => {
+    const scene = createScene();
+    const enabled = scene.addBody();
+    const optedOut = scene.addBody({ sleepDisabled: true });
+
+    solve(scene);
+    expect(
+      scene.solver.updateSleepingCandidate(scene.bodies, scene.contacts, 5, {
+        enabled: false,
+      }),
+    ).toBe(false);
+    expect(scene.solver.advanceEligible).toBe(true);
+    expect(scene.bodies.flags[enabled.index]! & BODY_SLEEPING_2D).toBe(0);
+
+    solve(scene);
+    scene.solver.updateSleepingCandidate(scene.bodies, scene.contacts, 5, {
+      enabled: true,
+    });
+    expect(scene.bodies.flags[optedOut.index]! & BODY_SLEEPING_2D).toBe(0);
+    expect(scene.solver.advanceEligible).toBe(true);
   });
 });

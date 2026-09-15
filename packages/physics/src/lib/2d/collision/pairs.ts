@@ -15,12 +15,12 @@ import { gjkConvexLeaves2D } from './gjk.js';
 import {
   createPrivateManifold2D,
   publicContactFromManifold2D,
+  type PrivateManifold2D,
   type PrivatePairDistance2D,
 } from './manifold.js';
 import { centerOfLeaf2D } from './support.js';
 
 interface PreparedShape2D {
-  readonly shell: CRCPhysicsShape2D;
   readonly record: ShapeRecord2D;
   readonly pose: InternalPose2D;
   readonly order: number;
@@ -51,12 +51,9 @@ export function containsPointInShape2D(
 ): boolean {
   const prepared = prepareShape(shape, pose, 'shape', 'pose');
   const copiedPoint = copyFiniteVector2(point, 'point');
-  return prepared.record.leaves.some((leaf) => containsPointInLeaf(
-    leaf,
-    prepared.pose,
-    copiedPoint[0],
-    copiedPoint[1],
-  ));
+  return prepared.record.leaves.some((leaf) =>
+    containsPointInLeaf(leaf, prepared.pose, copiedPoint[0], copiedPoint[1]),
+  );
 }
 
 export function distanceBetweenPreparedShapes2D(
@@ -92,13 +89,26 @@ export function contactBetweenPreparedShapes2D(
   if (result.status === 'failed' || result.distance.separation > 0) {
     return null;
   }
-  return publicContactFromManifold2D(createPrivateManifold2D(
-    result.distance,
-    result.first,
-    result.firstPose,
-    result.second,
-    result.secondPose,
-  ));
+  return publicContactFromManifold2D(
+    createPrivateManifold2D(result.distance, result.first, result.firstPose, result.second, result.secondPose),
+  );
+}
+
+/** Package-private world/cache seam. Not exported from a package entry. */
+export function manifoldBetweenShapeRecords2D(
+  firstRecord: ShapeRecord2D,
+  firstPose: InternalPose2D,
+  firstOrder: number,
+  secondRecord: ShapeRecord2D,
+  secondPose: InternalPose2D,
+  secondOrder: number,
+): PrivateManifold2D | null {
+  const result = collideShapeRecords(
+    prepareShapeRecord(firstRecord, firstPose, firstOrder),
+    prepareShapeRecord(secondRecord, secondPose, secondOrder),
+  );
+  if (result.status === 'failed' || result.distance.separation > 0) return null;
+  return createPrivateManifold2D(result.distance, result.first, result.firstPose, result.second, result.secondPose);
 }
 
 function collidePreparedShapes(
@@ -109,6 +119,10 @@ function collidePreparedShapes(
 ): PairResult2D {
   const first = prepareShape(firstShape, firstPublicPose, 'first', 'firstPose');
   const second = prepareShape(secondShape, secondPublicPose, 'second', 'secondPose');
+  return collideShapeRecords(first, second);
+}
+
+function collideShapeRecords(first: PreparedShape2D, second: PreparedShape2D): PairResult2D {
   let selected: SuccessfulPair2D | null = null;
   let failures = 0;
   for (const firstLeaf of first.record.leaves) {
@@ -172,14 +186,7 @@ function distanceBetweenLeaves(
     };
   }
 
-  const gjk = gjkConvexLeaves2D(
-    first,
-    firstPose,
-    second,
-    secondPose,
-    fallback[0],
-    fallback[1],
-  );
+  const gjk = gjkConvexLeaves2D(first, firstPose, second, secondPose, fallback[0], fallback[1]);
   if (gjk.status === 'failed') return null;
   if (gjk.status === 'penetrating') {
     const epa = epaConvexLeaves2D(first, firstPose, second, secondPose, gjk.simplex);
@@ -214,7 +221,15 @@ function prepareShape(
 ): PreparedShape2D {
   const record = requireShapeRecord2D(shell);
   const pose = composePose2D(copyPose2D(publicPose, posePath), record.localPose);
-  return { shell, record, pose, order: shapeOrder(shell, shapePath) };
+  return { record, pose, order: shapeOrder(shell, shapePath) };
+}
+
+function prepareShapeRecord(record: ShapeRecord2D, outerPose: InternalPose2D, order: number): PreparedShape2D {
+  return {
+    record,
+    pose: composePose2D(outerPose, record.localPose),
+    order,
+  };
 }
 
 function shapeOrder(shape: CRCPhysicsShape2D, _path: string): number {
@@ -245,12 +260,7 @@ function preferredNormal(
   return firstShape.order <= secondShape.order ? [1, 0] : [-1, 0];
 }
 
-function containsPointInLeaf(
-  leaf: ConvexLeaf2D,
-  pose: InternalPose2D,
-  pointX: number,
-  pointY: number,
-): boolean {
+function containsPointInLeaf(leaf: ConvexLeaf2D, pose: InternalPose2D, pointX: number, pointY: number): boolean {
   const local = inversePoint(pointX, pointY, pose);
   switch (leaf.kind) {
     case 'circle':
@@ -265,26 +275,32 @@ function containsPointInLeaf(
       return (x / leaf.radiusX) ** 2 + (y / leaf.radiusY) ** 2 <= 1 + GEOMETRY_EPSILON;
     }
     case 'box':
-      return Math.abs(local[0] - leaf.center[0]!) <= leaf.halfWidth + GEOMETRY_EPSILON &&
-        Math.abs(local[1] - leaf.center[1]!) <= leaf.halfHeight + GEOMETRY_EPSILON;
+      return (
+        Math.abs(local[0] - leaf.center[0]!) <= leaf.halfWidth + GEOMETRY_EPSILON &&
+        Math.abs(local[1] - leaf.center[1]!) <= leaf.halfHeight + GEOMETRY_EPSILON
+      );
     case 'rounded-box': {
       const dx = local[0] - leaf.center[0]!;
       const dy = local[1] - leaf.center[1]!;
-      if (Math.abs(dx) > leaf.halfWidth + GEOMETRY_EPSILON || Math.abs(dy) > leaf.halfHeight + GEOMETRY_EPSILON) return false;
-      const feature = dy < 0 ? (dx < 0 ? 0 : 1) : (dx < 0 ? 3 : 2);
+      if (Math.abs(dx) > leaf.halfWidth + GEOMETRY_EPSILON || Math.abs(dy) > leaf.halfHeight + GEOMETRY_EPSILON)
+        return false;
+      const feature = dy < 0 ? (dx < 0 ? 0 : 1) : dx < 0 ? 3 : 2;
       const radius = leaf.radii[feature]!;
       const cornerDx = Math.max(0, Math.abs(dx) - (leaf.halfWidth - radius));
       const cornerDy = Math.max(0, Math.abs(dy) - (leaf.halfHeight - radius));
       return cornerDx * cornerDx + cornerDy * cornerDy <= radius * radius + GEOMETRY_EPSILON;
     }
     case 'capsule':
-      return distancePointToSegment2D(
-        local[0], local[1], leaf.start[0]!, leaf.start[1]!, leaf.end[0]!, leaf.end[1]!,
-      ).separation <= leaf.radius + GEOMETRY_EPSILON;
+      return (
+        distancePointToSegment2D(local[0], local[1], leaf.start[0]!, leaf.start[1]!, leaf.end[0]!, leaf.end[1]!)
+          .separation <=
+        leaf.radius + GEOMETRY_EPSILON
+      );
     case 'segment':
-      return distancePointToSegment2D(
-        local[0], local[1], leaf.start[0]!, leaf.start[1]!, leaf.end[0]!, leaf.end[1]!,
-      ).separation <= GEOMETRY_EPSILON;
+      return (
+        distancePointToSegment2D(local[0], local[1], leaf.start[0]!, leaf.start[1]!, leaf.end[0]!, leaf.end[1]!)
+          .separation <= GEOMETRY_EPSILON
+      );
     case 'polygon': {
       for (let index = 0; index < leaf.vertices.length / 2; index += 1) {
         const next = (index + 1) % (leaf.vertices.length / 2);
@@ -310,20 +326,44 @@ function inversePoint(x: number, y: number, pose: InternalPose2D): readonly [num
 function roundSpine(
   leaf: ConvexLeaf2D,
   pose: InternalPose2D,
-): Readonly<{ startX: number; startY: number; endX: number; endY: number; radius: number }> | null {
+): Readonly<{
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+  radius: number;
+}> | null {
   const output = new Float64Array(4);
   switch (leaf.kind) {
     case 'circle':
       transformPointInto(output, 0, leaf.center[0]!, leaf.center[1]!, pose);
-      return { startX: output[0]!, startY: output[1]!, endX: output[0]!, endY: output[1]!, radius: leaf.radius };
+      return {
+        startX: output[0]!,
+        startY: output[1]!,
+        endX: output[0]!,
+        endY: output[1]!,
+        radius: leaf.radius,
+      };
     case 'capsule':
       transformPointInto(output, 0, leaf.start[0]!, leaf.start[1]!, pose);
       transformPointInto(output, 2, leaf.end[0]!, leaf.end[1]!, pose);
-      return { startX: output[0]!, startY: output[1]!, endX: output[2]!, endY: output[3]!, radius: leaf.radius };
+      return {
+        startX: output[0]!,
+        startY: output[1]!,
+        endX: output[2]!,
+        endY: output[3]!,
+        radius: leaf.radius,
+      };
     case 'segment':
       transformPointInto(output, 0, leaf.start[0]!, leaf.start[1]!, pose);
       transformPointInto(output, 2, leaf.end[0]!, leaf.end[1]!, pose);
-      return { startX: output[0]!, startY: output[1]!, endX: output[2]!, endY: output[3]!, radius: 0 };
+      return {
+        startX: output[0]!,
+        startY: output[1]!,
+        endX: output[2]!,
+        endY: output[3]!,
+        radius: 0,
+      };
     default:
       return null;
   }
@@ -339,9 +379,12 @@ function comparePairCandidates(
   if (Math.abs(separationDifference) > GEOMETRY_EPSILON) return separationDifference;
   const firstKey = canonicalLeafKey(first.distance, firstShapeOrder, secondShapeOrder);
   const secondKey = canonicalLeafKey(second.distance, firstShapeOrder, secondShapeOrder);
-  return firstKey[0] - secondKey[0] || firstKey[1] - secondKey[1] ||
+  return (
+    firstKey[0] - secondKey[0] ||
+    firstKey[1] - secondKey[1] ||
     first.distance.firstFeature - second.distance.firstFeature ||
-    first.distance.secondFeature - second.distance.secondFeature;
+    first.distance.secondFeature - second.distance.secondFeature
+  );
 }
 
 function canonicalLeafKey(

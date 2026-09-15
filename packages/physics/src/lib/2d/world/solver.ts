@@ -2,15 +2,27 @@ import {
   CONTACT_SLOP,
   DEFAULT_POSITION_ITERATIONS,
   DEFAULT_VELOCITY_ITERATIONS,
+  DEGREES_TO_RADIANS,
   MAX_POSITION_CORRECTION,
   RESTITUTION_VELOCITY_THRESHOLD,
+  SLEEP_ANGULAR_SPEED_DEGREES,
+  SLEEP_DURATION_SECONDS,
+  SLEEP_LINEAR_SPEED,
 } from "../numeric-policy.js";
 import type { ContactCache2D } from "./contact-cache.js";
-import { BODY_TYPE_DYNAMIC_2D } from "./integrator.js";
+import { BODY_TYPE_DYNAMIC_2D, BODY_TYPE_KINEMATIC_2D } from "./integrator.js";
 import type { BodyStore2D } from "./storage.js";
 
 const POINTS_PER_CONTACT = 2;
 const NO_INDEX = -1;
+
+export const BODY_SLEEP_DISABLED_2D = 1 << 3;
+export const BODY_SLEEPING_2D = 1 << 4;
+
+export interface SleepingCandidateOptions2D {
+  readonly enabled: boolean;
+  readonly recordTransition?: (bodyIndex: number, sleeping: boolean) => void;
+}
 
 export class SequentialImpulseSolver2D {
   constraintCount = 0;
@@ -18,6 +30,8 @@ export class SequentialImpulseSolver2D {
   islandBodyCount = 0;
   velocityIterationsPerformed = 0;
   positionIterationsPerformed = 0;
+  solvedIslandCount = 0;
+  advanceEligible = true;
 
   islandBodyIndices: Int32Array;
   islandContactIndices: Int32Array;
@@ -34,6 +48,7 @@ export class SequentialImpulseSolver2D {
   private islandContactCounts: Int32Array;
   private islandBodyWrites: Int32Array;
   private islandContactWrites: Int32Array;
+  private islandAwake: Uint8Array;
   private constraintContactIndices: Int32Array;
   private pointFirstLocalX: Float64Array;
   private pointFirstLocalY: Float64Array;
@@ -58,6 +73,7 @@ export class SequentialImpulseSolver2D {
     this.islandContactCounts = new Int32Array(bodyCapacity);
     this.islandBodyWrites = new Int32Array(bodyCapacity);
     this.islandContactWrites = new Int32Array(bodyCapacity);
+    this.islandAwake = new Uint8Array(bodyCapacity);
     this.constraintContactIndices = new Int32Array(contactCapacity);
     this.pointFirstLocalX = new Float64Array(contactCapacity * POINTS_PER_CONTACT);
     this.pointFirstLocalY = new Float64Array(contactCapacity * POINTS_PER_CONTACT);
@@ -77,6 +93,7 @@ export class SequentialImpulseSolver2D {
     this.ensureBodyCapacity(Math.max(bodies.capacity, bodyCount));
     this.ensureContactCapacity(contacts.contactCount);
     this.buildIslands(bodies, bodyIndices, bodyCount, contacts);
+    this.markAwakeIslands(bodies);
     this.prepareConstraints(bodies, contacts);
     this.warmStart(bodies, contacts);
     for (let iteration = 0; iteration < velocityIterations; iteration += 1) {
@@ -85,8 +102,78 @@ export class SequentialImpulseSolver2D {
     for (let iteration = 0; iteration < positionIterations; iteration += 1) {
       this.solvePositionConstraints(bodies, contacts);
     }
-    this.velocityIterationsPerformed = velocityIterations;
-    this.positionIterationsPerformed = positionIterations;
+    this.velocityIterationsPerformed = this.solvedIslandCount === 0 ? 0 : velocityIterations;
+    this.positionIterationsPerformed = this.solvedIslandCount === 0 ? 0 : positionIterations;
+  }
+
+  updateSleepingCandidate(
+    bodies: BodyStore2D,
+    contacts: ContactCache2D,
+    dt: number,
+    options: SleepingCandidateOptions2D,
+  ): boolean {
+    if (!Number.isFinite(dt) || dt < 0) {
+      throw new RangeError("sleep dt must be finite and nonnegative.");
+    }
+    if (!options.enabled) {
+      for (let island = 0; island < this.islandCount; island += 1) {
+        this.wakeIsland(bodies, island, options.recordTransition);
+      }
+      this.advanceEligible = true;
+      return false;
+    }
+
+    let sleepingIslands = 0;
+    for (let island = 0; island < this.islandCount; island += 1) {
+      let belowThresholds = true;
+      let sleepDisabled = false;
+      let hasSleeping = false;
+      let hasAwake = false;
+      let minimumTime = Number.POSITIVE_INFINITY;
+      for (let offset = this.islandBodyOffsets[island]!; offset < this.islandBodyOffsets[island + 1]!; offset += 1) {
+        const body = this.islandBodyIndices[offset]!;
+        const flags = bodies.flags[body]!;
+        sleepDisabled ||= (flags & BODY_SLEEP_DISABLED_2D) !== 0;
+        hasSleeping ||= (flags & BODY_SLEEPING_2D) !== 0;
+        hasAwake ||= (flags & BODY_SLEEPING_2D) === 0;
+        minimumTime = Math.min(minimumTime, bodies.sleepTime[body]!);
+        belowThresholds &&=
+          Math.hypot(bodies.linearVelocityX[body]!, bodies.linearVelocityY[body]!) < SLEEP_LINEAR_SPEED &&
+          Math.abs(bodies.angularVelocity[body]!) < SLEEP_ANGULAR_SPEED_DEGREES * DEGREES_TO_RADIANS;
+      }
+      const wakeFromContact = (hasSleeping && hasAwake) || this.touchesMovingKinematic(bodies, contacts, island);
+      if (sleepDisabled || wakeFromContact || !belowThresholds) {
+        this.wakeIsland(bodies, island, options.recordTransition);
+        continue;
+      }
+      if (hasSleeping) {
+        sleepingIslands += 1;
+        continue;
+      }
+      const elapsed = minimumTime + dt;
+      if (elapsed + Number.EPSILON < SLEEP_DURATION_SECONDS) {
+        this.setIslandSleepTime(bodies, island, elapsed);
+        continue;
+      }
+      this.sleepIsland(bodies, island, options.recordTransition);
+      sleepingIslands += 1;
+    }
+    const allSleeping = this.islandCount > 0 && sleepingIslands === this.islandCount;
+    this.advanceEligible = !allSleeping;
+    return allSleeping;
+  }
+
+  wakeIslandContainingCandidate(
+    bodies: BodyStore2D,
+    bodyIndex: number,
+    recordTransition?: (bodyIndex: number, sleeping: boolean) => void,
+  ): boolean {
+    const dynamic = this.dynamicIndex(bodyIndex);
+    if (dynamic === NO_INDEX) return false;
+    const island = this.dynamicIslandIndices[dynamic]!;
+    const changed = this.wakeIsland(bodies, island, recordTransition);
+    this.advanceEligible = this.islandCount > 0;
+    return changed;
   }
 
   private buildIslands(
@@ -101,10 +188,7 @@ export class SequentialImpulseSolver2D {
       const body = bodyIndices[source]!;
       if (!isDynamic(bodies, body)) continue;
       let insertion = dynamicCount;
-      while (
-        insertion > 0 &&
-        this.sortedBodyIndices[insertion - 1]! > body
-      ) {
+      while (insertion > 0 && this.sortedBodyIndices[insertion - 1]! > body) {
         this.sortedBodyIndices[insertion] = this.sortedBodyIndices[insertion - 1]!;
         insertion -= 1;
       }
@@ -156,10 +240,8 @@ export class SequentialImpulseSolver2D {
     this.islandBodyOffsets[0] = 0;
     this.islandContactOffsets[0] = 0;
     for (let island = 0; island < this.islandCount; island += 1) {
-      this.islandBodyOffsets[island + 1] =
-        this.islandBodyOffsets[island]! + this.islandBodyCounts[island]!;
-      this.islandContactOffsets[island + 1] =
-        this.islandContactOffsets[island]! + this.islandContactCounts[island]!;
+      this.islandBodyOffsets[island + 1] = this.islandBodyOffsets[island]! + this.islandBodyCounts[island]!;
+      this.islandContactOffsets[island + 1] = this.islandContactOffsets[island]! + this.islandContactCounts[island]!;
       this.islandBodyWrites[island] = this.islandBodyOffsets[island]!;
       this.islandContactWrites[island] = this.islandContactOffsets[island]!;
     }
@@ -182,10 +264,79 @@ export class SequentialImpulseSolver2D {
     this.islandBodyCount = dynamicCount;
   }
 
-  private prepareConstraints(
+  private markAwakeIslands(bodies: BodyStore2D): void {
+    this.solvedIslandCount = 0;
+    for (let island = 0; island < this.islandCount; island += 1) {
+      let awake = false;
+      for (let offset = this.islandBodyOffsets[island]!; offset < this.islandBodyOffsets[island + 1]!; offset += 1) {
+        if ((bodies.flags[this.islandBodyIndices[offset]!]! & BODY_SLEEPING_2D) === 0) {
+          awake = true;
+          break;
+        }
+      }
+      this.islandAwake[island] = awake ? 1 : 0;
+      if (awake) this.solvedIslandCount += 1;
+    }
+  }
+
+  private touchesMovingKinematic(bodies: BodyStore2D, contacts: ContactCache2D, island: number): boolean {
+    for (
+      let offset = this.islandContactOffsets[island]!;
+      offset < this.islandContactOffsets[island + 1]!;
+      offset += 1
+    ) {
+      const contact = this.islandContactIndices[offset]!;
+      const first = contacts.firstBodyIndices[contact]!;
+      const second = contacts.secondBodyIndices[contact]!;
+      if (isMovingKinematic(bodies, first) || isMovingKinematic(bodies, second)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private setIslandSleepTime(bodies: BodyStore2D, island: number, sleepTime: number): void {
+    for (let offset = this.islandBodyOffsets[island]!; offset < this.islandBodyOffsets[island + 1]!; offset += 1) {
+      bodies.sleepTime[this.islandBodyIndices[offset]!] = sleepTime;
+    }
+  }
+
+  private sleepIsland(
     bodies: BodyStore2D,
-    contacts: ContactCache2D,
+    island: number,
+    recordTransition?: (bodyIndex: number, sleeping: boolean) => void,
   ): void {
+    for (let offset = this.islandBodyOffsets[island]!; offset < this.islandBodyOffsets[island + 1]!; offset += 1) {
+      const body = this.islandBodyIndices[offset]!;
+      bodies.flags[body] |= BODY_SLEEPING_2D;
+      bodies.sleepTime[body] = SLEEP_DURATION_SECONDS;
+      bodies.linearVelocityX[body] = 0;
+      bodies.linearVelocityY[body] = 0;
+      bodies.angularVelocity[body] = 0;
+      recordTransition?.(body, true);
+    }
+  }
+
+  private wakeIsland(
+    bodies: BodyStore2D,
+    island: number,
+    recordTransition?: (bodyIndex: number, sleeping: boolean) => void,
+  ): boolean {
+    let changed = false;
+    for (let offset = this.islandBodyOffsets[island]!; offset < this.islandBodyOffsets[island + 1]!; offset += 1) {
+      const body = this.islandBodyIndices[offset]!;
+      const wasSleeping = (bodies.flags[body]! & BODY_SLEEPING_2D) !== 0;
+      bodies.flags[body] &= ~BODY_SLEEPING_2D;
+      bodies.sleepTime[body] = 0;
+      if (wasSleeping) {
+        changed = true;
+        recordTransition?.(body, false);
+      }
+    }
+    return changed;
+  }
+
+  private prepareConstraints(bodies: BodyStore2D, contacts: ContactCache2D): void {
     for (let constraint = 0; constraint < this.constraintCount; constraint += 1) {
       const contact = this.constraintContactIndices[constraint]!;
       const firstBody = contacts.firstBodyIndices[contact]!;
@@ -216,14 +367,16 @@ export class SequentialImpulseSolver2D {
         const firstNormalCross = cross(firstWorldX, firstWorldY, normalX, normalY);
         const secondNormalCross = cross(secondWorldX, secondWorldY, normalX, normalY);
         const normalDenominator =
-          firstInverseMass + secondInverseMass +
+          firstInverseMass +
+          secondInverseMass +
           firstInverseInertia * firstNormalCross * firstNormalCross +
           secondInverseInertia * secondNormalCross * secondNormalCross;
         this.pointNormalMasses[index] = normalDenominator > 0 ? 1 / normalDenominator : 0;
         const firstTangentCross = cross(firstWorldX, firstWorldY, tangentX, tangentY);
         const secondTangentCross = cross(secondWorldX, secondWorldY, tangentX, tangentY);
         const tangentDenominator =
-          firstInverseMass + secondInverseMass +
+          firstInverseMass +
+          secondInverseMass +
           firstInverseInertia * firstTangentCross * firstTangentCross +
           secondInverseInertia * secondTangentCross * secondTangentCross;
         this.pointTangentMasses[index] = tangentDenominator > 0 ? 1 / tangentDenominator : 0;
@@ -238,15 +391,15 @@ export class SequentialImpulseSolver2D {
           normalX,
           normalY,
         );
-        this.pointVelocityBias[index] = normalVelocity < -RESTITUTION_VELOCITY_THRESHOLD
-          ? contacts.mixedRestitution[contact]! * normalVelocity
-          : 0;
+        this.pointVelocityBias[index] =
+          normalVelocity < -RESTITUTION_VELOCITY_THRESHOLD ? contacts.mixedRestitution[contact]! * normalVelocity : 0;
       }
     }
   }
 
   private warmStart(bodies: BodyStore2D, contacts: ContactCache2D): void {
     for (let island = 0; island < this.islandCount; island += 1) {
+      if (this.islandAwake[island] === 0) continue;
       for (
         let offset = this.islandContactOffsets[island]!;
         offset < this.islandContactOffsets[island + 1]!;
@@ -273,11 +426,9 @@ export class SequentialImpulseSolver2D {
     }
   }
 
-  private solveVelocityConstraints(
-    bodies: BodyStore2D,
-    contacts: ContactCache2D,
-  ): void {
+  private solveVelocityConstraints(bodies: BodyStore2D, contacts: ContactCache2D): void {
     for (let island = 0; island < this.islandCount; island += 1) {
+      if (this.islandAwake[island] === 0) continue;
       for (
         let offset = this.islandContactOffsets[island]!;
         offset < this.islandContactOffsets[island + 1]!;
@@ -302,33 +453,38 @@ export class SequentialImpulseSolver2D {
           const secondX = secondCosine * this.pointSecondLocalX[index]! - secondSine * this.pointSecondLocalY[index]!;
           const secondY = secondSine * this.pointSecondLocalX[index]! + secondCosine * this.pointSecondLocalY[index]!;
           const normalVelocity = relativeVelocityAlong(
-            bodies, firstBody, secondBody, firstX, firstY, secondX, secondY, normalX, normalY,
+            bodies,
+            firstBody,
+            secondBody,
+            firstX,
+            firstY,
+            secondX,
+            secondY,
+            normalX,
+            normalY,
           );
-          const normalDelta = -this.pointNormalMasses[index]! *
-            (normalVelocity + this.pointVelocityBias[index]!);
+          const normalDelta = -this.pointNormalMasses[index]! * (normalVelocity + this.pointVelocityBias[index]!);
           const previousNormal = contacts.pointNormalImpulses[index]!;
           const accumulatedNormal = Math.max(0, previousNormal + normalDelta);
           contacts.pointNormalImpulses[index] = accumulatedNormal;
           const appliedNormal = accumulatedNormal - previousNormal;
-          this.applyPointImpulse(
-            bodies,
-            contacts,
-            contact,
-            index,
-            normalX * appliedNormal,
-            normalY * appliedNormal,
-          );
+          this.applyPointImpulse(bodies, contacts, contact, index, normalX * appliedNormal, normalY * appliedNormal);
 
           const tangentVelocity = relativeVelocityAlong(
-            bodies, firstBody, secondBody, firstX, firstY, secondX, secondY, tangentX, tangentY,
+            bodies,
+            firstBody,
+            secondBody,
+            firstX,
+            firstY,
+            secondX,
+            secondY,
+            tangentX,
+            tangentY,
           );
           const tangentDelta = -this.pointTangentMasses[index]! * tangentVelocity;
           const previousTangent = contacts.pointTangentImpulses[index]!;
           const frictionLimit = contacts.mixedFriction[contact]! * accumulatedNormal;
-          const accumulatedTangent = Math.max(
-            -frictionLimit,
-            Math.min(frictionLimit, previousTangent + tangentDelta),
-          );
+          const accumulatedTangent = Math.max(-frictionLimit, Math.min(frictionLimit, previousTangent + tangentDelta));
           contacts.pointTangentImpulses[index] = accumulatedTangent;
           const appliedTangent = accumulatedTangent - previousTangent;
           this.applyPointImpulse(
@@ -344,11 +500,9 @@ export class SequentialImpulseSolver2D {
     }
   }
 
-  private solvePositionConstraints(
-    bodies: BodyStore2D,
-    contacts: ContactCache2D,
-  ): void {
+  private solvePositionConstraints(bodies: BodyStore2D, contacts: ContactCache2D): void {
     for (let island = 0; island < this.islandCount; island += 1) {
+      if (this.islandAwake[island] === 0) continue;
       for (
         let offset = this.islandContactOffsets[island]!;
         offset < this.islandContactOffsets[island + 1]!;
@@ -375,15 +529,13 @@ export class SequentialImpulseSolver2D {
           const separation =
             (bodies.positionX[firstBody]! + firstX - bodies.positionX[secondBody]! - secondX) * normalX +
             (bodies.positionY[firstBody]! + firstY - bodies.positionY[secondBody]! - secondY) * normalY;
-          const correction = Math.min(
-            MAX_POSITION_CORRECTION,
-            Math.max(0, -(separation + CONTACT_SLOP)),
-          );
+          const correction = Math.min(MAX_POSITION_CORRECTION, Math.max(0, -(separation + CONTACT_SLOP)));
           if (correction === 0) continue;
           const firstCross = cross(firstX, firstY, normalX, normalY);
           const secondCross = cross(secondX, secondY, normalX, normalY);
           const denominator =
-            bodies.inverseMass[firstBody]! + bodies.inverseMass[secondBody]! +
+            bodies.inverseMass[firstBody]! +
+            bodies.inverseMass[secondBody]! +
             bodies.inverseInertia[firstBody]! * firstCross * firstCross +
             bodies.inverseInertia[secondBody]! * secondCross * secondCross;
           if (denominator <= 0) continue;
@@ -417,20 +569,21 @@ export class SequentialImpulseSolver2D {
     const secondSine = Math.sin(secondAngle);
     const firstX = firstCosine * this.pointFirstLocalX[pointIndex]! - firstSine * this.pointFirstLocalY[pointIndex]!;
     const firstY = firstSine * this.pointFirstLocalX[pointIndex]! + firstCosine * this.pointFirstLocalY[pointIndex]!;
-    const secondX = secondCosine * this.pointSecondLocalX[pointIndex]! - secondSine * this.pointSecondLocalY[pointIndex]!;
-    const secondY = secondSine * this.pointSecondLocalX[pointIndex]! + secondCosine * this.pointSecondLocalY[pointIndex]!;
+    const secondX =
+      secondCosine * this.pointSecondLocalX[pointIndex]! - secondSine * this.pointSecondLocalY[pointIndex]!;
+    const secondY =
+      secondSine * this.pointSecondLocalX[pointIndex]! + secondCosine * this.pointSecondLocalY[pointIndex]!;
     bodies.linearVelocityX[firstBody] += impulseX * bodies.inverseMass[firstBody]!;
     bodies.linearVelocityY[firstBody] += impulseY * bodies.inverseMass[firstBody]!;
     bodies.angularVelocity[firstBody] += cross(firstX, firstY, impulseX, impulseY) * bodies.inverseInertia[firstBody]!;
     bodies.linearVelocityX[secondBody] -= impulseX * bodies.inverseMass[secondBody]!;
     bodies.linearVelocityY[secondBody] -= impulseY * bodies.inverseMass[secondBody]!;
-    bodies.angularVelocity[secondBody] -= cross(secondX, secondY, impulseX, impulseY) * bodies.inverseInertia[secondBody]!;
+    bodies.angularVelocity[secondBody] -=
+      cross(secondX, secondY, impulseX, impulseY) * bodies.inverseInertia[secondBody]!;
   }
 
   private dynamicIndex(body: number): number {
-    return body >= 0 && body < this.bodyToDynamic.length
-      ? this.bodyToDynamic[body]!
-      : NO_INDEX;
+    return body >= 0 && body < this.bodyToDynamic.length ? this.bodyToDynamic[body]! : NO_INDEX;
   }
 
   private findRoot(dynamic: number): number {
@@ -471,6 +624,7 @@ export class SequentialImpulseSolver2D {
     this.islandContactCounts = growInt32(this.islandContactCounts, capacity);
     this.islandBodyWrites = growInt32(this.islandBodyWrites, capacity);
     this.islandContactWrites = growInt32(this.islandContactWrites, capacity);
+    this.islandAwake = growUint8(this.islandAwake, capacity);
   }
 
   private ensureContactCapacity(required: number): void {
@@ -488,6 +642,15 @@ export class SequentialImpulseSolver2D {
     this.pointSecondLocalY = growFloat64(this.pointSecondLocalY, pointCapacity);
     this.pointVelocityBias = growFloat64(this.pointVelocityBias, pointCapacity);
   }
+}
+
+function isMovingKinematic(bodies: BodyStore2D, body: number): boolean {
+  return (
+    body >= 0 &&
+    body < bodies.capacity &&
+    (bodies.flags[body]! & BODY_TYPE_KINEMATIC_2D) !== 0 &&
+    (bodies.linearVelocityX[body] !== 0 || bodies.linearVelocityY[body] !== 0 || bodies.angularVelocity[body] !== 0)
+  );
 }
 
 function isDynamic(bodies: BodyStore2D, body: number): boolean {
@@ -513,11 +676,15 @@ function relativeVelocityAlong(
   const firstAngular = bodies.angularVelocity[firstBody]!;
   const secondAngular = bodies.angularVelocity[secondBody]!;
   const relativeX =
-    bodies.linearVelocityX[firstBody]! - firstAngular * firstY -
-    bodies.linearVelocityX[secondBody]! + secondAngular * secondY;
+    bodies.linearVelocityX[firstBody]! -
+    firstAngular * firstY -
+    bodies.linearVelocityX[secondBody]! +
+    secondAngular * secondY;
   const relativeY =
-    bodies.linearVelocityY[firstBody]! + firstAngular * firstX -
-    bodies.linearVelocityY[secondBody]! - secondAngular * secondX;
+    bodies.linearVelocityY[firstBody]! +
+    firstAngular * firstX -
+    bodies.linearVelocityY[secondBody]! -
+    secondAngular * secondX;
   return relativeX * axisX + relativeY * axisY;
 }
 
@@ -540,11 +707,7 @@ function filledInt32(capacity: number, fill: number): Int32Array {
   return result;
 }
 
-function growInt32(
-  source: Int32Array,
-  capacity: number,
-  fill?: number,
-): Int32Array {
+function growInt32(source: Int32Array, capacity: number, fill?: number): Int32Array {
   const result = new Int32Array(capacity);
   if (fill !== undefined) result.fill(fill);
   result.set(source);
@@ -553,6 +716,12 @@ function growInt32(
 
 function growFloat64(source: Float64Array, capacity: number): Float64Array {
   const result = new Float64Array(capacity);
+  result.set(source);
+  return result;
+}
+
+function growUint8(source: Uint8Array, capacity: number): Uint8Array {
+  const result = new Uint8Array(capacity);
   result.set(source);
   return result;
 }
