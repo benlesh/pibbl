@@ -58,10 +58,39 @@ candidate to Canvas.
 The root package exports:
 
 - composition and drawing: `WebGLLayer`, `Group3D`, `Mesh`, `Cube`, `Sphere`;
+- scene declarations: `AmbientLight`, `HemisphereLight`, `DirectionalLight`,
+  `PointLight`, `SpotLight`, and `WebGLBackground`;
 - geometry and custom shapes: `createWebGLGeometry` with `Mesh`;
-- animation: `crcAnimationFrame`;
-- the public camera, vector, geometry, transform, and component prop/style
-  types used by those values.
+- camera interaction and animation: `crcOrbitCamera` and
+  `crcAnimationFrame`;
+- the public orbit-camera, perspective-camera, vector, geometry, Lambert
+  material, shadow-quality, transform, and component prop/style types used by
+  those values.
+
+Meshes are Lambert-lit by default. Common appearance fields such as `color`,
+`opacity`, and `lit` remain flat on the mesh style; the nested
+`style.material` descriptor contains Lambert-specific emission through
+`emissiveColor` and `emissiveIntensity`. A lit, non-emissive mesh is black when
+the scene has no lights. Set `lit: false` for an unlit surface. Emission makes
+the surface itself visible but does not illuminate other geometry or imply a
+glow effect.
+
+Ambient and hemisphere lights provide non-directional illumination.
+Directional, point, and spot lights provide direct illumination and cast
+genuine depth-map shadows by default. Mesh `castShadow` and `receiveShadow`
+fields and direct-light `castShadow` fields provide local opt-outs, while
+`WebGLLayer.style.shadows` selects `"low"`, `"medium"`, or `"high"` quality
+for the whole island; omission uses `"medium"` and `false` disables shadow
+work. Ambient and hemisphere contributions are never shadowed. Directional
+and spot shadows render one depth view when invalidated; point shadows render
+six, and camera-only movement reuses valid shadow maps.
+
+`crcOrbitCamera` owns one mounted spherical camera pose and returns
+`position`, `lookAt`, and ordinary CRC pointer/wheel handlers. Attach those
+handlers to whichever CRC target should control the camera, then pass the two
+vectors into the layer's perspective-camera descriptor. `WebGLBackground`
+declares one solid scene color; it is not geometry and does not participate in
+events or shadows.
 
 Drawing geometry participates in hit testing by default. Empty transparent
 island background passes through; `pointerEvents="none"` skips an individual
@@ -85,10 +114,19 @@ queues but remains pick/focus eligible unless `pointerEvents="none"` opts out.
 Canvas filters apply outside the completed island through
 `WebGLLayer.style.filter`; inner WebGL objects reject them. The complete
 island is one flattened Canvas entry, so Canvas content cannot appear between
-two objects inside the same WebGL pass. There is no Canvas child support inside
-an island, WebGL1 fallback, multiple cameras/viewports per layer, retained scene
-graph, lighting, materials, textures, environments, shadows, emissive or glow
-effects, worker renderer, WebGPU backend, or cross-context GPU-resource sharing.
+two objects inside the same WebGL pass.
+
+Current deliberate non-goals include Canvas children inside an island, WebGL1
+fallback, multiple cameras or viewports per layer, and a retained scene graph.
+The package has no texture or image-material slots, image backgrounds,
+environment maps or image-based lighting (IBL), HDR/tone mapping,
+metallic-roughness PBR or other material families, glow/bloom or other
+post-processing effects, or rectangle/disk/line/cookie/IES area lights.
+Advanced shadow techniques are also deferred: there are no cascaded, contact,
+screen-space, ray-traced, baked, colored, transmissive, or alpha-tested
+shadows, and no public shadow camera, map-size, bias, kernel, or atlas controls.
+Worker rendering, a WebGPU backend, and cross-context GPU-resource sharing
+remain unsupported.
 
 This package peer-depends on the same `@crc/core` release and consumes the
 version-coupled `@crc/core/internal` friend seam. Applications must not import
