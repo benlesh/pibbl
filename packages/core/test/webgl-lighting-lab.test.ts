@@ -6,6 +6,7 @@ import {
   dragPointerLogicalPoint,
   wheelLogicalPoint,
 } from './support/user-input';
+import { expectVisualMatch } from './visual-compare';
 
 const laboratorySources = import.meta.glob(
   '../../scenarios/src/webgl-lighting-lab.example.tsx',
@@ -368,5 +369,31 @@ describe('public WebGL lighting laboratory', () => {
       'webglcontextlost',
       'webglcontextrestored',
     ]);
+  });
+
+  it('matches the reviewed all-lights visual laboratory', async () => {
+    const { canvas, controller } = await mountLab();
+    await controller.settled();
+    expect(controller.getState()).toMatchObject({
+      lightMode: 'all',
+      backgroundMode: 'alpha',
+      shadowQuality: 'medium',
+      casterAlpha: 'opaque',
+      lit: true,
+      emissive: true,
+      revision: 0,
+    });
+
+    await expectVisualMatch({
+      element: canvas,
+      expectedPath:
+        'packages/core/test/visual-baselines/webgl-lighting.expected.png',
+      expectedArtifactPath:
+        'test-screenshots/webgl-lighting/webgl-lighting.expected.png',
+      actualPath:
+        '../../../test-screenshots/webgl-lighting/webgl-lighting.actual.png',
+      diffPath:
+        'test-screenshots/webgl-lighting/webgl-lighting.diff.png',
+    });
   });
 });
