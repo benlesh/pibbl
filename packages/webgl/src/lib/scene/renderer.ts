@@ -104,8 +104,9 @@ export class WebGLSceneRenderer {
       transaction.commit();
     } catch (error) {
       const contextLost = this.contextIsLost();
-      if (transaction) {
-        attemptRendererCleanup(() => transaction.rollback(contextLost));
+      const failedTransaction = transaction;
+      if (failedTransaction) {
+        attemptRendererCleanup(() => failedTransaction.rollback(contextLost));
       }
       if (!contextLost && !this.invalidated && !this.disposed) {
         attemptRendererCleanup(() =>

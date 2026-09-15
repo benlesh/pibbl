@@ -488,6 +488,14 @@
     scaleZ?: number;
   }
 
+  export interface CRCWebGLLambertMaterial {
+    readonly type: 'lambert';
+    readonly emissiveColor?: string;
+    readonly emissiveIntensity?: number;
+  }
+
+  export type CRCWebGLMaterial = CRCWebGLLambertMaterial;
+
   interface CRCWebGLTargetProps extends CRCEventHandlers, CRCEventParticipationOptions {
     readonly keyboardFocusable?: CRCEventTargetOptions['keyboardFocusable'];
     readonly keyboardNavigationBounds?: CRCEventTargetOptions['keyboardNavigationBounds'];
@@ -495,6 +503,7 @@
 
   export interface CRCWebGLGeometryInput {
     positions: ArrayLike<number>;
+    normals?: ArrayLike<number>;
     indices?: ArrayLike<number>;
   }
 
@@ -523,6 +532,8 @@
   export interface MeshStyle extends CRCWebGLTransformStyle {
     readonly color?: string;
     readonly opacity?: number;
+    readonly lit?: boolean;
+    readonly material?: CRCWebGLMaterial;
     readonly cursor?: string;
   }
 
@@ -530,6 +541,41 @@
   export interface CubeStyle extends MeshStyle { readonly size?: number }
   export interface SphereProps extends CRCWebGLTargetProps {}
   export interface SphereStyle extends MeshStyle { readonly radius?: number }
+
+  export interface AmbientLightProps {}
+  export interface AmbientLightStyle {
+    readonly color?: string;
+    readonly intensity?: number;
+  }
+
+  export interface HemisphereLightProps {}
+  export interface HemisphereLightStyle extends CRCWebGLTransformStyle {
+    readonly skyColor?: string;
+    readonly groundColor?: string;
+    readonly intensity?: number;
+  }
+
+  export interface DirectionalLightProps {}
+  export interface DirectionalLightStyle extends CRCWebGLTransformStyle {
+    readonly color?: string;
+    readonly intensity?: number;
+  }
+
+  export interface PointLightProps {}
+  export interface PointLightStyle extends DirectionalLightStyle {
+    readonly range?: number;
+  }
+
+  export interface SpotLightProps {}
+  export interface SpotLightStyle extends PointLightStyle {
+    readonly innerConeAngleDegrees?: number;
+    readonly outerConeAngleDegrees?: number;
+  }
+
+  export interface WebGLBackgroundProps {}
+  export interface WebGLBackgroundStyle {
+    readonly color: string;
+  }
 
   export function createWebGLGeometry(
     input: CRCWebGLGeometryInput,
@@ -556,4 +602,28 @@
   export const Sphere: CRCPrimitiveComponent<
     SphereProps,
     PrimitiveInput<SphereProps, SphereStyle>
+  >;
+  export const AmbientLight: CRCPrimitiveComponent<
+    AmbientLightProps,
+    PrimitiveInput<AmbientLightProps, AmbientLightStyle>
+  >;
+  export const HemisphereLight: CRCPrimitiveComponent<
+    HemisphereLightProps,
+    PrimitiveInput<HemisphereLightProps, HemisphereLightStyle>
+  >;
+  export const DirectionalLight: CRCPrimitiveComponent<
+    DirectionalLightProps,
+    PrimitiveInput<DirectionalLightProps, DirectionalLightStyle>
+  >;
+  export const PointLight: CRCPrimitiveComponent<
+    PointLightProps,
+    PrimitiveInput<PointLightProps, PointLightStyle>
+  >;
+  export const SpotLight: CRCPrimitiveComponent<
+    SpotLightProps,
+    PrimitiveInput<SpotLightProps, SpotLightStyle>
+  >;
+  export const WebGLBackground: CRCPrimitiveComponent<
+    WebGLBackgroundProps,
+    PrimitiveInput<WebGLBackgroundProps, WebGLBackgroundStyle>
   >;

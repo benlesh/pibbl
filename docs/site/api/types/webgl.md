@@ -15,14 +15,26 @@ symbols:
     CRCWebGLPerspectiveCamera,
     CRCWebGLTransformStyle,
     CRCWebGLVector3,
+    AmbientLightProps,
+    AmbientLightStyle,
     CubeProps,
     CubeStyle,
+    DirectionalLightProps,
+    DirectionalLightStyle,
     Group3DProps,
     Group3DStyle,
+    HemisphereLightProps,
+    HemisphereLightStyle,
     MeshProps,
     MeshStyle,
+    PointLightProps,
+    PointLightStyle,
     SphereProps,
     SphereStyle,
+    SpotLightProps,
+    SpotLightStyle,
+    WebGLBackgroundProps,
+    WebGLBackgroundStyle,
     WebGLLayerProps,
     WebGLLayerStyle,
   ]
@@ -42,9 +54,9 @@ event, node, style-base, and JSX types continue to come from `@crc/core`.
 
 ## CRCWebGLGeometryInput
 
-`CRCWebGLGeometryInput` is `{ positions: ArrayLike<number>; indices?:
-ArrayLike<number> }`. [`createWebGLGeometry`](#/api/functions/create-webgl-geometry)
-validates and copies it.
+`CRCWebGLGeometryInput` contains `positions`, optional triangle `indices`, and
+optional per-vertex `normals`. [`createWebGLGeometry`](#/api/functions/create-webgl-geometry)
+validates and copies every supplied array.
 
 ## CRCWebGLPerspectiveCamera
 
@@ -74,6 +86,14 @@ Canvas `filter` as unavailable for inner WebGL objects.
 
 `CRCWebGLVector3` is the readonly tuple `[x, y, z]`.
 
+## AmbientLightProps
+
+`AmbientLightProps` has no component-specific fields.
+
+## AmbientLightStyle
+
+`AmbientLightStyle` provides optional `color` and `intensity`.
+
 ## CubeProps
 
 `CubeProps` accepts event/focus participation.
@@ -82,6 +102,15 @@ Canvas `filter` as unavailable for inner WebGL objects.
 
 `CubeStyle` extends mesh style with optional positive `size`, default `1`.
 
+## DirectionalLightProps
+
+`DirectionalLightProps` has no component-specific fields.
+
+## DirectionalLightStyle
+
+`DirectionalLightStyle` combines transform fields with optional `color` and
+`intensity`.
+
 ## Group3DProps
 
 `Group3DProps` requires recursive `children` and accepts propagation handlers.
@@ -89,6 +118,15 @@ Canvas `filter` as unavailable for inner WebGL objects.
 ## Group3DStyle
 
 `Group3DStyle` is the shared WebGL transform style.
+
+## HemisphereLightProps
+
+`HemisphereLightProps` has no component-specific fields.
+
+## HemisphereLightStyle
+
+`HemisphereLightStyle` combines transform fields with optional `skyColor`,
+`groundColor`, and `intensity`.
 
 ## MeshProps
 
@@ -100,6 +138,15 @@ Canvas `filter` as unavailable for inner WebGL objects.
 `cursor` to the shared transform fields. Meshes are lit by default; set
 `lit: false` for the unlit path.
 
+## PointLightProps
+
+`PointLightProps` has no component-specific fields.
+
+## PointLightStyle
+
+`PointLightStyle` combines transform fields with optional `color`, `intensity`,
+and positive `range`.
+
 ## SphereProps
 
 `SphereProps` accepts event/focus participation.
@@ -108,6 +155,23 @@ Canvas `filter` as unavailable for inner WebGL objects.
 
 `SphereStyle` extends mesh style with optional positive `radius`, default
 `0.5`.
+
+## SpotLightProps
+
+`SpotLightProps` has no component-specific fields.
+
+## SpotLightStyle
+
+`SpotLightStyle` extends point-light style with optional inner and outer cone
+half-angles in degrees.
+
+## WebGLBackgroundProps
+
+`WebGLBackgroundProps` has no component-specific fields.
+
+## WebGLBackgroundStyle
+
+`WebGLBackgroundStyle` requires one concrete `color`.
 
 ## WebGLLayerProps
 
