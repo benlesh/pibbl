@@ -336,6 +336,9 @@ describe('createBuiltInProgram', () => {
     expect(shaderSources.join('\n')).toMatch(
       /distance\([^;]+u_shadow_light_position_far\.xyz[^;]+\)\s*\/\s*u_shadow_light_position_far\.w/,
     );
+    expect(shaderSources.join('\n')).toMatch(
+      /spot_shadow_visibility[\s\S]+length\(light_to_surface\)[\s\S]+u_shadow_parameters\[index\]\.w/,
+    );
   });
 
   it('compiles and links both built-in programs in real WebGL2', () => {

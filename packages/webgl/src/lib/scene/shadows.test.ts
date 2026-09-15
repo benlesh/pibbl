@@ -389,7 +389,51 @@ describe('spot shadow planning', () => {
     expect(plan.receivers).toEqual([scene.meshes[0]]);
   });
 
-  it('derives scale-stable projected bias above depth precision but below close occlusion separation', () => {
+  it('keeps high-dynamic-range forward bounds inside the spot frustum', () => {
+    const scene = settleScene({
+      lightKind: 'spot',
+      lightRange: 1_000_000,
+      lightTransform: { translateZ: 1.5 },
+    });
+    const plan = scene.shadowPlans[0] as any;
+
+    expect(plan.farDistance).toBe(1_000_000);
+    expect(plan.nearDistance).toBeGreaterThan(0);
+    expect(plan.nearDistance).toBeLessThan(0.5);
+    expect(plan.casters).toEqual([scene.meshes[0]]);
+  });
+
+  it('keeps close forward geometry from a straddling bound', () => {
+    const straddling = settleScene({
+      lightKind: 'spot',
+      lightRange: 10,
+      meshTransform: {
+        scaleX: 0.000001,
+        scaleY: 0.000001,
+        scaleZ: 0.000001,
+      },
+    });
+    const plan = straddling.shadowPlans[0] as any;
+    expect(plan.nearDistance).toBeGreaterThan(0);
+    expect(plan.nearDistance).toBeLessThan(0.000001);
+    expect(plan.casters).toEqual([straddling.meshes[0]]);
+  });
+
+  it('skips a spot depth plan when every relevant bound is behind the light', () => {
+    const behindOnly = settleScene({
+      lightKind: 'spot',
+      lightRange: 10,
+      meshTransform: {
+        translateZ: 2,
+        scaleX: 0.1,
+        scaleY: 0.1,
+        scaleZ: 0.1,
+      },
+    });
+    expect(behindOnly.shadowPlans).toEqual([]);
+  });
+
+  it('derives scale-stable radial bias above depth precision but below close occlusion separation', () => {
     const small = settleScene({
       lightKind: 'spot',
       lightRange: 10,
@@ -406,14 +450,12 @@ describe('spot shadow planning', () => {
     expect(large.bias).toBeCloseTo(small.bias, 7);
     expect(small.bias).toBeGreaterThan(1 / 0xffffff);
     expect(large.bias).toBeGreaterThan(1 / 0xffffff);
-    expect(small.bias).toBeLessThan(projectedDepthSeparation(
-      small.nearDistance,
+    expect(small.bias).toBeLessThan(radialDepthSeparation(
       small.farDistance,
       4,
       4.005,
     ));
-    expect(large.bias).toBeLessThan(projectedDepthSeparation(
-      large.nearDistance,
+    expect(large.bias).toBeLessThan(radialDepthSeparation(
       large.farDistance,
       4_000,
       4_005,
@@ -570,14 +612,12 @@ function rounded(values: ArrayLike<number>): number[] {
   return Array.from(values, value => Number(value.toFixed(6)));
 }
 
-function projectedDepthSeparation(
-  near: number,
+function radialDepthSeparation(
   far: number,
   firstDistance: number,
   secondDistance: number,
 ): number {
-  const depth = (distance: number) => far / (far - near) -
-    far * near / ((far - near) * distance);
+  const depth = (distance: number) => distance / far;
   return depth(secondDistance) - depth(firstDistance);
 }
 

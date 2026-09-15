@@ -473,10 +473,20 @@ describe('WebGLSceneRenderer', () => {
     ]);
     expect(recording.draws[0]?.uniforms).toMatchObject({
       u_shadow_projection_view: [721, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-      u_shadow_light_position_far: [0, 0, 0, 0],
+      u_shadow_light_position_far: [1, 2, 3, 10],
     });
     expect(recording.draws[1]?.uniforms).toMatchObject({
       'u_shadow_enabled[0]': [0, 3, 0, 0, 0, 0, 0, 0],
+      'u_shadow_parameters[0]': float32([
+        0, 0, 0, 0,
+        0.001, 1 / 1024, 4, 10,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+      ]),
       'u_shadow_matrix[0]': [
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         721, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,

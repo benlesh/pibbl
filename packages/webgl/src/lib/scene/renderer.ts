@@ -423,7 +423,13 @@ function drawSpotShadowPlan(
     false,
     plan.projectionViewMatrix as Float32Array,
   );
-  gl.uniform4f(program.shadowLightPositionFar, 0, 0, 0, 0);
+  gl.uniform4f(
+    program.shadowLightPositionFar,
+    plan.lightPosition[0],
+    plan.lightPosition[1],
+    plan.lightPosition[2],
+    plan.farDistance,
+  );
   for (const mesh of plan.casters) {
     const geometry = transaction.useGeometry(mesh.geometry, mesh.componentName);
     bindDepthGeometry(gl, program, geometry, mesh);
@@ -547,6 +553,7 @@ function packWebGLShadows(
       texturesCube[plan.lightIndex] = resource.texture;
     } else if (plan.kind === 'spot' && resource.kind === 'spot') {
       enabled[plan.lightIndex] = 3;
+      parameters[parameterOffset + 3] = plan.farDistance;
       matrices.set(plan.projectionViewMatrix, plan.lightIndex * 16);
       textures2D[plan.lightIndex] = resource.texture;
     }

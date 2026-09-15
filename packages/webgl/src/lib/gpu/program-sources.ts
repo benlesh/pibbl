@@ -202,17 +202,11 @@ float compare_directional_shadow(
   return current_depth <= stored_depth ? 1.0 : 0.0;
 }
 
-float directional_shadow_visibility(int index) {
-  vec4 clip = u_shadow_matrix[index] * vec4(v_world_position, 1.0);
-  if (clip.w == 0.0) return 1.0;
-  vec3 projected = clip.xyz / clip.w;
-  vec2 coordinates = projected.xy * 0.5 + 0.5;
-  float current_depth = projected.z * 0.5 + 0.5 -
-    u_shadow_parameters[index].x;
-  if (coordinates.x < 0.0 || coordinates.x > 1.0 ||
-      coordinates.y < 0.0 || coordinates.y > 1.0 ||
-      current_depth < 0.0 || current_depth > 1.0) return 1.0;
-
+float filtered_shadow_2d_visibility(
+  int index,
+  vec2 coordinates,
+  float current_depth
+) {
   float texel = u_shadow_parameters[index].y;
   int comparisons = int(u_shadow_parameters[index].z);
   if (comparisons <= 1) {
@@ -253,6 +247,32 @@ float directional_shadow_visibility(int index) {
     }
   }
   return visibility / 9.0;
+}
+
+float directional_shadow_visibility(int index) {
+  vec4 clip = u_shadow_matrix[index] * vec4(v_world_position, 1.0);
+  if (clip.w == 0.0) return 1.0;
+  vec3 projected = clip.xyz / clip.w;
+  vec2 coordinates = projected.xy * 0.5 + 0.5;
+  float current_depth = projected.z * 0.5 + 0.5 -
+    u_shadow_parameters[index].x;
+  if (coordinates.x < 0.0 || coordinates.x > 1.0 ||
+      coordinates.y < 0.0 || coordinates.y > 1.0 ||
+      current_depth < 0.0 || current_depth > 1.0) return 1.0;
+  return filtered_shadow_2d_visibility(index, coordinates, current_depth);
+}
+
+float spot_shadow_visibility(int index, vec3 light_position) {
+  vec4 clip = u_shadow_matrix[index] * vec4(v_world_position, 1.0);
+  if (clip.w <= 0.0 || u_shadow_parameters[index].w <= 0.0) return 1.0;
+  vec2 coordinates = (clip.xy / clip.w) * 0.5 + 0.5;
+  vec3 light_to_surface = v_world_position - light_position;
+  float current_depth = length(light_to_surface) /
+    u_shadow_parameters[index].w - u_shadow_parameters[index].x;
+  if (coordinates.x < 0.0 || coordinates.x > 1.0 ||
+      coordinates.y < 0.0 || coordinates.y > 1.0 ||
+      current_depth < 0.0 || current_depth > 1.0) return 1.0;
+  return filtered_shadow_2d_visibility(index, coordinates, current_depth);
 }
 
 float compare_point_shadow(
@@ -425,7 +445,7 @@ void main() {
       );
       float visibility = 1.0;
       if (u_receive_shadow && u_shadow_enabled[index] == 3) {
-        visibility = directional_shadow_visibility(index);
+        visibility = spot_shadow_visibility(index, position_range.xyz);
       }
       lighting += contribution * visibility;
     }

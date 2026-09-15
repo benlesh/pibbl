@@ -89,7 +89,7 @@ export function createWebGLShadowPlans(input: Readonly<{
         input.contextGeneration,
       ));
     } else {
-      plans.push(createSpotPlan(
+      const plan = createSpotPlan(
         light,
         lightIndex,
         relevantBounds,
@@ -97,7 +97,8 @@ export function createWebGLShadowPlans(input: Readonly<{
         receivers,
         quality,
         input.contextGeneration,
-      ));
+      );
+      if (plan) plans.push(plan);
     }
   }
   return Object.freeze(plans);
@@ -234,7 +235,7 @@ function createSpotPlan(
   receivers: readonly SettledWebGLMesh[],
   quality: ResolvedWebGLShadowQuality,
   contextGeneration: number,
-): SettledWebGLShadowPlan {
+): SettledWebGLShadowPlan | undefined {
   const farDistance = light.range ?? derivePointFarDistance(
     light.position,
     bounds,
@@ -248,17 +249,15 @@ function createSpotPlan(
     [0, 1, 0] : [1, 0, 0];
   const view = new Float32Array(16);
   setLookAtMatrix4(view, light.position, target, up);
-  const lightBounds = transformBoundsMatrix4(view, bounds);
-  const nearestForwardDistance = Math.max(0, -lightBounds.maximumZ);
-  const minimumRepresentableNear = farDistance / 1_048_576;
-  const nearDistance = Math.min(
-    farDistance / 2,
-    Math.max(
-      minimumRepresentableNear,
-      nearestForwardDistance > 0 ?
-        nearestForwardDistance / 2 : farDistance / 65_536,
-    ),
+  const relevant = analyzeSpotRelevantBounds(
+    view,
+    light.position,
+    [...casters, ...receivers],
   );
+  if (!relevant.hasForwardBounds ||
+    relevant.minimumRadialDistance >= farDistance) return undefined;
+  const nearDistance = relevant.straddlesLightPlane ? Number.MIN_VALUE :
+    relevant.nearestForwardDistance / 2;
   const projection = new Float32Array(16);
   const fieldOfViewRadians = Math.max(
     0.001,
@@ -275,24 +274,18 @@ function createSpotPlan(
   multiplyMatrix4(projectionViewMatrix, projection, view);
   const closestRelevantDepth = Math.min(
     farDistance,
-    Math.max(nearDistance, nearestForwardDistance),
+    relevant.minimumRadialDistance,
   );
   const farthestRelevantDepth = Math.min(
     farDistance,
-    Math.max(closestRelevantDepth, -lightBounds.minimumZ),
+    relevant.maximumRadialDistance,
   );
-  const projectedDepthSpan = perspectiveDepth(
-    farthestRelevantDepth,
-    nearDistance,
-    farDistance,
-  ) - perspectiveDepth(
-    closestRelevantDepth,
-    nearDistance,
-    farDistance,
-  );
+  const radialDepthSpan = (
+    farthestRelevantDepth - closestRelevantDepth
+  ) / farDistance;
   const bias = Math.max(
     4 / 0xffffff,
-    projectedDepthSpan / (quality.requestedResolution * 4),
+    radialDepthSpan / (quality.requestedResolution * 4),
   );
   return Object.freeze({
     kind: 'spot',
@@ -316,12 +309,85 @@ function createSpotPlan(
   });
 }
 
-function perspectiveDepth(
-  distance: number,
-  near: number,
-  far: number,
+function analyzeSpotRelevantBounds(
+  view: Readonly<Float32Array>,
+  lightPosition: CRCWebGLVector3,
+  meshes: readonly SettledWebGLMesh[],
+): Readonly<{
+  hasForwardBounds: boolean;
+  straddlesLightPlane: boolean;
+  nearestForwardDistance: number;
+  minimumRadialDistance: number;
+  maximumRadialDistance: number;
+}> {
+  let hasForwardBounds = false;
+  let straddlesLightPlane = false;
+  let nearestForwardDistance = Number.POSITIVE_INFINITY;
+  let minimumRadialDistance = Number.POSITIVE_INFINITY;
+  let maximumRadialDistance = 0;
+  const visited = new Set<object>();
+  for (const mesh of meshes) {
+    if (visited.has(mesh.identity)) continue;
+    visited.add(mesh.identity);
+    const lightBounds = transformBoundsMatrix4(view, mesh.worldBounds);
+    if (lightBounds.minimumZ >= 0) continue;
+    hasForwardBounds = true;
+    if (lightBounds.maximumZ >= 0) {
+      straddlesLightPlane = true;
+    } else {
+      nearestForwardDistance = Math.min(
+        nearestForwardDistance,
+        -lightBounds.maximumZ,
+      );
+    }
+    minimumRadialDistance = Math.min(
+      minimumRadialDistance,
+      minimumDistanceToBounds(lightPosition, mesh.worldBounds),
+    );
+    maximumRadialDistance = Math.max(
+      maximumRadialDistance,
+      maximumDistanceToBounds(lightPosition, mesh.worldBounds),
+    );
+  }
+  return Object.freeze({
+    hasForwardBounds,
+    straddlesLightPlane,
+    nearestForwardDistance,
+    minimumRadialDistance,
+    maximumRadialDistance,
+  });
+}
+
+function minimumDistanceToBounds(
+  position: CRCWebGLVector3,
+  bounds: WebGLWorldBounds,
 ): number {
-  return far / (far - near) - far * near / ((far - near) * distance);
+  const x = position[0] < bounds.minimumX ? bounds.minimumX - position[0] :
+    position[0] > bounds.maximumX ? position[0] - bounds.maximumX : 0;
+  const y = position[1] < bounds.minimumY ? bounds.minimumY - position[1] :
+    position[1] > bounds.maximumY ? position[1] - bounds.maximumY : 0;
+  const z = position[2] < bounds.minimumZ ? bounds.minimumZ - position[2] :
+    position[2] > bounds.maximumZ ? position[2] - bounds.maximumZ : 0;
+  return Math.hypot(x, y, z);
+}
+
+function maximumDistanceToBounds(
+  position: CRCWebGLVector3,
+  bounds: WebGLWorldBounds,
+): number {
+  let maximumDistance = 0;
+  for (const x of [bounds.minimumX, bounds.maximumX]) {
+    for (const y of [bounds.minimumY, bounds.maximumY]) {
+      for (const z of [bounds.minimumZ, bounds.maximumZ]) {
+        maximumDistance = Math.max(maximumDistance, Math.hypot(
+          x - position[0],
+          y - position[1],
+          z - position[2],
+        ));
+      }
+    }
+  }
+  return maximumDistance;
 }
 
 const POINT_SHADOW_FACES = Object.freeze([
@@ -387,19 +453,7 @@ function derivePointFarDistance(
   position: CRCWebGLVector3,
   bounds: WebGLWorldBounds,
 ): number {
-  let maximumDistance = 0;
-  for (const x of [bounds.minimumX, bounds.maximumX]) {
-    for (const y of [bounds.minimumY, bounds.maximumY]) {
-      for (const z of [bounds.minimumZ, bounds.maximumZ]) {
-        maximumDistance = Math.max(maximumDistance, Math.hypot(
-          x - position[0],
-          y - position[1],
-          z - position[2],
-        ));
-      }
-    }
-  }
-  return Math.max(0.02, maximumDistance * 1.05);
+  return Math.max(0.02, maximumDistanceToBounds(position, bounds) * 1.05);
 }
 
 function unionBounds(meshes: readonly SettledWebGLMesh[]): WebGLWorldBounds {
