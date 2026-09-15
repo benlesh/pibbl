@@ -58,7 +58,7 @@ function addTrailSample(
   trail.push(sample);
   const earliest = sample.timeStamp - TRAIL_WINDOW_MILLISECONDS;
   while (trail.length > 1 && trail[0]!.timeStamp < earliest) trail.shift();
-  while (trail.length > MAX_TRAIL_SAMPLES) trail.shift();
+  while (trail.length > MAX_TRAIL_SAMPLES) trail.splice(1, 1);
 }
 
 function releaseVelocity(
@@ -103,8 +103,8 @@ function DraggableBall() {
     });
     session.position = pose;
     addTrailSample(session.trail, {
-      x: pose[0],
-      y: pose[1],
+      x: event.x,
+      y: event.y,
       timeStamp: event.timeStamp,
     });
     requestDragPresentation((revision) => revision + 1);
@@ -121,8 +121,8 @@ function DraggableBall() {
     const pose = [position.x, position.y] as const;
     session.position = pose;
     addTrailSample(session.trail, {
-      x: pose[0],
-      y: pose[1],
+      x: event.x,
+      y: event.y,
       timeStamp: event.timeStamp,
     });
     const velocity = releaseVelocity(session.trail);
@@ -200,8 +200,8 @@ function DraggableBall() {
               trail: [],
             };
             addTrailSample(dragSession.current.trail, {
-              x,
-              y,
+              x: event.x,
+              y: event.y,
               timeStamp: event.timeStamp,
             });
             disableBody2D(body);

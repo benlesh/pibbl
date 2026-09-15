@@ -3,8 +3,12 @@ import {
   Fragment,
   Group,
   crc,
+  crcPlayback,
   signal,
+  track,
+  tween,
   type CRCController,
+  type CRCPlayback,
   type WritableSignal,
 } from "@crc/core";
 import {
@@ -15,9 +19,12 @@ import {
 import {
   PhysicsWorld2D,
   collider2D,
+  crcPhysicsBody2D,
   crcPhysicsWorld2D,
   dynamicBody2D,
   kinematicBody2D,
+  setAngularVelocity2D,
+  sleepBody2D,
   staticBody2D,
   type CRCPhysicsBodyHandle2D,
   type CRCPhysicsWorldHandle2D,
@@ -377,6 +384,359 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
     expect(target.get()).toEqual([12, 34]);
     expect(world.revision.get()).toBe(1);
     expect(revisions).toEqual([0, 1]);
+  });
+
+  it("reaches an animation target in the terminal frame when a target-bound kinematic Group renders from that signal after dynamics sleep", () => {
+    const position = signal<readonly [number, number]>([220, 142]);
+    let playback!: CRCPlayback;
+    let body!: CRCPhysicsBodyHandle2D;
+    let sleeper!: CRCPhysicsBodyHandle2D;
+    const AnimationOwner = () => {
+      playback = crcPlayback(
+        track(
+          position,
+          tween({
+            to: [310, 142] as const,
+            duration: 600,
+            interpolate: (from, to, progress) =>
+              [
+                from[0] + (to[0] - from[0]) * progress,
+                from[1] + (to[1] - from[1]) * progress,
+              ] as const,
+          }),
+        ),
+      );
+      return undefined;
+    };
+    const SettledBody = () => {
+      sleeper = crcPhysicsBody2D();
+      return (
+        <Circle
+          physics={dynamicBody2D({ handle: sleeper, mass: 1 })}
+          style={{ cx: 40, cy: 40, radius: 4 }}
+        />
+      );
+    };
+    const Platform = () => {
+      body = crcPhysicsBody2D();
+      const authoredPosition = position.get();
+      return (
+        <Group
+          physics={kinematicBody2D({
+            handle: body,
+            collider: false,
+            target: { position },
+          })}
+          style={{
+            translateX: authoredPosition[0],
+            translateY: authoredPosition[1],
+          }}
+        >
+          <Circle physics={collider2D()} style={{ radius: 4 }} />
+        </Group>
+      );
+    };
+    const PresentationProbe = () => {
+      body.position.get();
+      sleeper.position.get();
+      return undefined;
+    };
+
+    mountCRC(
+      <PhysicsWorld2D fixedStepMilliseconds={50} maxCatchUpSteps={3}>
+        <AnimationOwner />
+        <SettledBody />
+        <Platform />
+        <PresentationProbe />
+      </PhysicsWorld2D>,
+    );
+    frames.flush(0);
+    frames.flush(50);
+    sleepBody2D(sleeper);
+    for (const time of [100, 150, 200, 250, 300]) frames.flush(time);
+    expect(sleeper.sleeping.get()).toBe(true);
+
+    playback.play();
+    frames.flush(300);
+    frames.flush(600);
+    expect(body.position.get()).toEqual([265, 142]);
+    frames.flush(900);
+
+    expect(playback.currentTime.get()).toBe(600);
+    expect(body.position.get()).toEqual([310, 142]);
+  });
+
+  it("keeps a rotating dynamic descendant Circle's local mass and collider allocation stable across presentation renders", () => {
+    let world!: CRCPhysicsWorldHandle2D;
+    let body!: CRCPhysicsBodyHandle2D;
+    const Capture = () => {
+      world = crcPhysicsWorld2D();
+      world.revision.get();
+      return undefined;
+    };
+    const Ball = () => {
+      body = crcPhysicsBody2D();
+      return (
+        <Group
+          physics={dynamicBody2D({
+            handle: body,
+            collider: false,
+            mass: 1,
+            allowSleep: false,
+          })}
+          style={{ translateX: 720, translateY: 360 }}
+        >
+          <Circle physics={collider2D()} style={{ radius: 12 }} />
+        </Group>
+      );
+    };
+
+    mountCRC(
+      <PhysicsWorld2D fixedStepMilliseconds={50} sleeping={false}>
+        <Capture />
+        <Ball />
+      </PhysicsWorld2D>,
+    );
+    frames.flush(0);
+    frames.flush(50);
+    const initial = snapshot(world).kernel;
+    const initialBody = initial.bodies.find((candidate) => candidate.id === 0);
+    if (!initialBody) throw new Error("missing rotating body");
+
+    setAngularVelocity2D(body, 90);
+    for (const time of [100, 150, 200, 250, 300]) frames.flush(time);
+
+    const current = snapshot(world).kernel;
+    const currentBody = current.bodies.find((candidate) => candidate.id === 0);
+    if (!currentBody) throw new Error("missing rotating body");
+    expect(currentBody.inverseInertia).toBeCloseTo(
+      initialBody.inverseInertia,
+      12,
+    );
+    expect(current.counters).toMatchObject({
+      bodyAllocations: 1,
+      bodyReleases: 0,
+      colliderAllocations: 1,
+      colliderReleases: 0,
+    });
+    expect(current.tick - initial.tick).toBe(5);
+  });
+
+  it("stabilizes a rotating dynamic nested collider's roundoff without hiding a meaningful authored transform", () => {
+    let world!: CRCPhysicsWorldHandle2D;
+    let body!: CRCPhysicsBodyHandle2D;
+    const scaleX = signal(1);
+    const translateX = signal(0);
+    const Capture = () => {
+      world = crcPhysicsWorld2D();
+      world.revision.get();
+      return undefined;
+    };
+    const Ball = () => {
+      body = crcPhysicsBody2D();
+      return (
+        <Group
+          physics={dynamicBody2D({
+            handle: body,
+            collider: false,
+            mass: 1,
+            allowSleep: false,
+          })}
+          style={{ translateX: 720, translateY: 360 }}
+        >
+          <Group
+            style={{
+              translateX: 0.0000001 + translateX.get(),
+              rotationDegrees: 17,
+              scaleX: scaleX.get(),
+              scaleY: 0.8,
+              filter: { type: "opacity", amount: 1 },
+            }}
+          >
+            <Circle physics={collider2D()} style={{ cx: 4, cy: -3, radius: 12 }} />
+          </Group>
+        </Group>
+      );
+    };
+
+    mountCRC(
+      <PhysicsWorld2D fixedStepMilliseconds={50} sleeping={false}>
+        <Capture />
+        <Ball />
+      </PhysicsWorld2D>,
+    );
+    frames.flush(0);
+    frames.flush(50);
+    const initial = snapshot(world).kernel;
+    const initialBody = initial.bodies.find((candidate) => candidate.id === 0);
+    if (!initialBody) throw new Error("missing rotating nested body");
+
+    setAngularVelocity2D(body, 90);
+    for (const time of [100, 150, 200, 250, 300]) frames.flush(time);
+
+    const stable = snapshot(world).kernel;
+    const stableBody = stable.bodies.find((candidate) => candidate.id === 0);
+    if (!stableBody) throw new Error("missing rotating nested body");
+    expect(stableBody.inverseInertia).toBeCloseTo(initialBody.inverseInertia, 12);
+    expect(stable.counters).toMatchObject({
+      bodyAllocations: 1,
+      bodyReleases: 0,
+      colliderAllocations: 1,
+      colliderReleases: 0,
+    });
+    expect(stable.tick - initial.tick).toBe(5);
+
+    translateX.set(0.0000001);
+    frames.flush(350);
+    frames.flush(400);
+
+    const tinyChange = snapshot(world).kernel;
+    expect(tinyChange.counters).toMatchObject({
+      bodyAllocations: 1,
+      bodyReleases: 0,
+      colliderAllocations: 2,
+      colliderReleases: 1,
+    });
+
+    scaleX.set(1.0000001);
+    frames.flush(450);
+    frames.flush(500);
+
+    const scaleChange = snapshot(world).kernel;
+    expect(scaleChange.counters).toMatchObject({
+      bodyAllocations: 1,
+      bodyReleases: 0,
+      colliderAllocations: 3,
+      colliderReleases: 2,
+    });
+  });
+
+  it("retains the target-bound kinematic origin without a sub-step reset when its unbound rotation changes", () => {
+    const position = signal<readonly [number, number]>([30, 20]);
+    let authoredRotation = 0;
+    let body!: CRCPhysicsBodyHandle2D;
+    const Platform = () => {
+      body = crcPhysicsBody2D();
+      const authoredPosition = position.get();
+      return (
+        <Group
+          physics={kinematicBody2D({
+            handle: body,
+            collider: false,
+            target: { position },
+          })}
+          style={{
+            translateX: authoredPosition[0],
+            translateY: authoredPosition[1],
+            rotationDegrees: authoredRotation,
+          }}
+        >
+          <Circle
+            physics={collider2D()}
+            style={{ cx: 12, cy: -5, radius: 4 }}
+          />
+        </Group>
+      );
+    };
+    const root = () => (
+      <PhysicsWorld2D fixedStepMilliseconds={50}>
+        <Platform />
+      </PhysicsWorld2D>
+    );
+    const mount = mountCRC(root());
+    frames.flush(0);
+    frames.flush(50);
+
+    authoredRotation = 45;
+    crc(canvasOf(mount), root());
+    frames.flush(75);
+
+    expect(body.position.get()[0]).toBeCloseTo(30, 12);
+    expect(body.position.get()[1]).toBeCloseTo(20, 12);
+    expect(body.rotationDegrees.get()).toBeCloseTo(0, 12);
+    frames.flush(100);
+    expect(body.position.get()[0]).toBeCloseTo(30, 12);
+    expect(body.position.get()[1]).toBeCloseTo(20, 12);
+    expect(body.rotationDegrees.get()).toBeCloseTo(45, 12);
+  });
+
+  it("retains the target-bound kinematic rotation without a sub-step reset when its unbound origin changes", () => {
+    const rotationDegrees = signal(0);
+    let authoredPosition: readonly [number, number] = [30, 20];
+    let body!: CRCPhysicsBodyHandle2D;
+    const Platform = () => {
+      body = crcPhysicsBody2D();
+      return (
+        <Group
+          physics={kinematicBody2D({
+            handle: body,
+            collider: false,
+            target: { rotationDegrees },
+          })}
+          style={{
+            translateX: authoredPosition[0],
+            translateY: authoredPosition[1],
+            rotationDegrees: rotationDegrees.get(),
+          }}
+        >
+          <Circle
+            physics={collider2D()}
+            style={{ cx: 12, cy: -5, radius: 4 }}
+          />
+        </Group>
+      );
+    };
+    const root = () => (
+      <PhysicsWorld2D fixedStepMilliseconds={50}>
+        <Platform />
+      </PhysicsWorld2D>
+    );
+    const mount = mountCRC(root());
+    frames.flush(0);
+    frames.flush(50);
+
+    authoredPosition = [90, 60];
+    crc(canvasOf(mount), root());
+    frames.flush(75);
+
+    expect(body.position.get()).toEqual([30, 20]);
+    expect(body.rotationDegrees.get()).toBeCloseTo(0, 12);
+    frames.flush(100);
+    expect(body.position.get()).toEqual([90, 60]);
+    expect(body.rotationDegrees.get()).toBeCloseTo(0, 12);
+  });
+
+  it("preserves an intentional tiny descendant translation in a dynamic body's canonical collider shape", () => {
+    let world!: CRCPhysicsWorldHandle2D;
+    const Capture = () => {
+      world = crcPhysicsWorld2D();
+      world.revision.get();
+      return undefined;
+    };
+    mountCRC(
+      <PhysicsWorld2D fixedStepMilliseconds={50} sleeping={false}>
+        <Capture />
+        <Group
+          physics={dynamicBody2D({
+            collider: false,
+            mass: 1,
+            allowSleep: false,
+          })}
+        >
+          <Group style={{ translateX: 0.0000001 }}>
+            <Circle physics={collider2D()} style={{ radius: 12 }} />
+          </Group>
+        </Group>
+      </PhysicsWorld2D>,
+    );
+    frames.flush(0);
+    frames.flush(50);
+
+    const kernel = snapshot(world).kernel;
+    const body = kernel.bodies.find((candidate) => candidate.id === 0);
+    if (!body) throw new Error("missing tiny-transform body");
+    expect(body.localCenterX).toBeCloseTo(0.0000001, 12);
+    expect(body.localCenterY).toBeCloseTo(0, 12);
   });
 
   it("releases its sole Advance registration after sleep and a queued command wakes it", () => {

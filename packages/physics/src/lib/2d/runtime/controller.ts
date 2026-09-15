@@ -465,7 +465,19 @@ export class PhysicsWorld2DController {
     if (!success || draft === undefined || !this.active) return;
     validateAutomaticMass(draft);
     const reenableVelocities = this.resolveReenableVelocities(draft);
-    const topology = materializeTopology(draft, reenableVelocities);
+    const previousBodyDefinitions = new Map(
+      this.acceptedTopology
+        .filter(
+          (record): record is PhysicsBodyTopologyRecord2D =>
+            record.kind === "body",
+        )
+        .map((record) => [record.id, record.definition] as const),
+    );
+    const topology = materializeTopology(
+      draft,
+      reenableVelocities,
+      previousBodyDefinitions,
+    );
     const topologyChanged = !sameTopology(this.acceptedTopology, topology);
     const configurationChanged = !sameConfiguration(
       this.acceptedConfiguration,
@@ -648,9 +660,6 @@ export class PhysicsWorld2DController {
     batch: CRCInternalSignalBatch,
   ): ReadonlyMap<number, CRCPhysicsPose2D> {
     const targets = new Map<number, CRCPhysicsPose2D>();
-    const currentIds = new Set(
-      this.kernel.snapshot().bodies.map((body) => body.id),
-    );
     for (const body of this.acceptedBodies) {
       if (
         body.descriptor.bodyType !== "kinematic" ||
@@ -664,18 +673,15 @@ export class PhysicsWorld2DController {
       ) {
         continue;
       }
-      const current = currentIds.has(body.id)
-        ? this.kernel.authoritativePose(body.id)
-        : body.initialPose;
       const position =
         target.position === undefined
-          ? current.position
+          ? body.initialPose.position
           : batch.read(
               target.position as WritableSignal<readonly [number, number]>,
             );
       const rotationDegrees =
         target.rotationDegrees === undefined
-          ? current.rotationDegrees
+          ? body.initialPose.rotationDegrees
           : batch.read(target.rotationDegrees as WritableSignal<number>);
       targets.set(
         body.id,
@@ -1099,6 +1105,7 @@ function denormalizeWorldConfiguration(
 function materializeTopology(
   draft: RenderDraft2D,
   reenableVelocities: ReadonlyMap<number, BodyVelocity2D>,
+  previousBodyDefinitions: ReadonlyMap<number, BodyDefinition2D>,
 ): readonly PhysicsTopologyRecord2D[] {
   const collidersByBody = new Map<number, ColliderDraft2D[]>();
   for (const collider of draft.colliders.values()) {
@@ -1116,6 +1123,7 @@ function materializeTopology(
           body,
           collidersByBody.get(body.id) ?? [],
           reenableVelocities.get(body.id),
+          previousBodyDefinitions.get(body.id),
         ),
       }),
     );
@@ -1173,6 +1181,7 @@ function bodyDefinition(
   body: BodyDraft2D,
   colliders: readonly ColliderDraft2D[],
   reenableVelocity?: BodyVelocity2D,
+  previous?: BodyDefinition2D,
 ): BodyDefinition2D {
   const descriptor = body.descriptor;
   const enabled = descriptor.options.enabled;
@@ -1222,19 +1231,46 @@ function bodyDefinition(
     flags |= BODY_TYPE_KINEMATIC_2D;
     if (!descriptor.options.allowSleep) flags |= BODY_SLEEP_DISABLED_2D;
   }
-  const rotationRadians = (body.initialPose.rotationDegrees * Math.PI) / 180;
-  const cosine = Math.cos(rotationRadians);
-  const sine = Math.sin(rotationRadians);
+  const authoredRotationRadians =
+    (body.initialPose.rotationDegrees * Math.PI) / 180;
+  const previousKinematic =
+    previous !== undefined &&
+    (previous.flags & BODY_TYPE_KINEMATIC_2D) !== 0
+      ? previous
+      : undefined;
+  const preserveTargetBoundKinematicPose =
+    descriptor.bodyType === "kinematic" &&
+    (descriptor.options.target.position !== undefined ||
+      descriptor.options.target.rotationDegrees !== undefined) &&
+    previousKinematic !== undefined;
+  const previousRotationRadians = previousKinematic?.rotationRadians ?? 0;
+  const previousCosine = Math.cos(previousRotationRadians);
+  const previousSine = Math.sin(previousRotationRadians);
+  const previousOriginX = previousKinematic === undefined
+    ? 0
+    : previousKinematic.positionX -
+      previousCosine * (previousKinematic.localCenterX ?? 0) +
+      previousSine * (previousKinematic.localCenterY ?? 0);
+  const previousOriginY = previousKinematic === undefined
+    ? 0
+    : previousKinematic.positionY -
+      previousSine * (previousKinematic.localCenterX ?? 0) -
+      previousCosine * (previousKinematic.localCenterY ?? 0);
+  const positionX = preserveTargetBoundKinematicPose
+    ? previousOriginX
+    : body.initialPose.position[0];
+  const positionY = preserveTargetBoundKinematicPose
+    ? previousOriginY
+    : body.initialPose.position[1];
+  const effectiveRotationRadians = preserveTargetBoundKinematicPose
+    ? previousKinematic!.rotationRadians
+    : authoredRotationRadians;
+  const cosine = Math.cos(effectiveRotationRadians);
+  const sine = Math.sin(effectiveRotationRadians);
   return Object.freeze({
-    positionX:
-      body.initialPose.position[0] +
-      cosine * localCenterX -
-      sine * localCenterY,
-    positionY:
-      body.initialPose.position[1] +
-      sine * localCenterX +
-      cosine * localCenterY,
-    rotationRadians,
+    positionX: positionX + cosine * localCenterX - sine * localCenterY,
+    positionY: positionY + sine * localCenterX + cosine * localCenterY,
+    rotationRadians: effectiveRotationRadians,
     localCenterX,
     localCenterY,
     linearVelocityX,

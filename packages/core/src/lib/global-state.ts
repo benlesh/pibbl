@@ -20,6 +20,14 @@ import { runTeardown } from './teardowns.js';
 export const NO_PENDING_ROOT = Symbol('CRC_NO_PENDING_ROOT');
 export type PendingRoot = CRCNode | typeof NO_PENDING_ROOT;
 
+/** @internal Exact CRC-owned presentation transforms for the active traversal. */
+export interface CRCPresentationTransformLineage {
+  readonly parent: CRCPresentationTransformLineage | undefined;
+  readonly localTransform: DOMMatrix;
+  /** Number of raw Canvas transform deltas absorbed before this CRC node. */
+  readonly untrackedCanvasTransformCount: number;
+}
+
 export interface GlobalState {
   crcInstances: Map<Canvas, CRCInstance>;
   currentCRCInstance: CRCInstance | undefined;
@@ -33,6 +41,10 @@ export interface GlobalState {
   renderContext: RenderingContext2D | undefined;
   renderTarget: RenderTargetSnapshot | undefined;
   worldBaseTransform: DOMMatrix | undefined;
+  worldExactTransform: DOMMatrix | undefined;
+  worldPaintAnchorTransform: DOMMatrix | undefined;
+  presentationTransformLineage: CRCPresentationTransformLineage | undefined;
+  presentationTransformLineageTrackingDepth: number;
   renderTransaction: CRCRenderTransaction | undefined;
   frameSnapshot: CRCFrameSnapshot | undefined;
   primitiveReceiverToken: object | undefined;
@@ -58,6 +70,10 @@ export const GLOBAL_STATE: GlobalState = {
   renderContext: undefined,
   renderTarget: undefined,
   worldBaseTransform: undefined,
+  worldExactTransform: undefined,
+  worldPaintAnchorTransform: undefined,
+  presentationTransformLineage: undefined,
+  presentationTransformLineageTrackingDepth: 0,
   renderTransaction: undefined,
   frameSnapshot: undefined,
   primitiveReceiverToken: undefined,
@@ -206,6 +222,10 @@ export function clearTempState() {
   GLOBAL_STATE.renderContext = undefined;
   GLOBAL_STATE.renderTarget = undefined;
   GLOBAL_STATE.worldBaseTransform = undefined;
+  GLOBAL_STATE.worldExactTransform = undefined;
+  GLOBAL_STATE.worldPaintAnchorTransform = undefined;
+  GLOBAL_STATE.presentationTransformLineage = undefined;
+  GLOBAL_STATE.presentationTransformLineageTrackingDepth = 0;
   GLOBAL_STATE.renderTransaction = undefined;
   GLOBAL_STATE.frameSnapshot = undefined;
   GLOBAL_STATE.primitiveReceiverToken = undefined;

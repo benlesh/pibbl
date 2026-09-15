@@ -174,11 +174,21 @@ describe("public 2D physics laboratory", () => {
 
     await perform(controller, "cross-sensor");
     expect(driver.pendingHostFrames).toBe(1);
-    for (let index = 0; index < 3; index += 1) flushAfter();
+    flushAfter();
     expect(controller.getState().overlaps).toEqual([
       "sensor>sensor-mover:start",
       "sensor-mover>sensor:start",
     ]);
+    flushAfter();
+    const completedOverlaps = [
+      "sensor>sensor-mover:start",
+      "sensor-mover>sensor:start",
+      "sensor>sensor-mover:end",
+      "sensor-mover>sensor:end",
+    ];
+    expect(controller.getState().overlaps).toEqual(completedOverlaps);
+    flushAfter();
+    expect(controller.getState().overlaps).toEqual(completedOverlaps);
     expect(controller.getState().contacts.slice(0, 2)).toEqual([
       "ground>left-wall:start",
       "ground>right-wall:start",

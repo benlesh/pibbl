@@ -5,10 +5,7 @@ import {
   definePrimitive,
   type CRCController,
   type CRCElementType,
-  type CRCPhysics2DPropExtension,
-  type GroupProps,
   type PrimitiveInputOf,
-  type RectangleProps,
   type SystemStyle,
 } from '@crc/core';
 import {
@@ -24,20 +21,10 @@ import { mountCRC } from '../mount-crc.js';
 import { focusManaged } from '../focus/policy-test-support.js';
 import { resolveTargetRootBounds } from '../focus/geometry.js';
 
-type PublicExtensionHasPhysics = 'physics' extends keyof CRCPhysics2DPropExtension
-  ? true
-  : false;
-type RectangleHasPhysics = 'physics' extends keyof RectangleProps ? true : false;
-type GroupHasPhysics = 'physics' extends keyof GroupProps ? true : false;
-
-const publicExtensionHasPhysics: PublicExtensionHasPhysics = false;
-const rectangleHasPhysics: RectangleHasPhysics = false;
-const groupHasPhysics: GroupHasPhysics = false;
-
-type PhysicsGroupProps = PrimitiveInputOf<typeof Group> & {
+type PhysicsGroupProps = Omit<PrimitiveInputOf<typeof Group>, 'physics'> & {
   readonly physics?: object;
 };
-type PhysicsRectangleProps = PrimitiveInputOf<typeof Rectangle> & {
+type PhysicsRectangleProps = Omit<PrimitiveInputOf<typeof Rectangle>, 'physics'> & {
   readonly physics?: object;
 };
 
@@ -55,12 +42,6 @@ afterEach(() => {
 });
 
 describe('primitive attachment presentation', () => {
-  it('keeps the public core physics extension empty before package augmentation', () => {
-    expect(publicExtensionHasPhysics).toBe(false);
-    expect(rectangleHasPhysics).toBe(false);
-    expect(groupHasPhysics).toBe(false);
-  });
-
   it('prepares resolved geometry and applies attachment presentation before Group presentation', async () => {
     const prepared: CRCInternalPrimitiveAttachmentInput[] = [];
     const descendantWorld: DOMMatrix[] = [];

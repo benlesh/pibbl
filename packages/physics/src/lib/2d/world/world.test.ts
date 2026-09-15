@@ -99,6 +99,160 @@ function collidingTopology(): readonly PhysicsTopologyRecord2D[] {
   ];
 }
 
+const BALL_RADIUS = 28;
+const FLOOR_TOP = 316;
+const LEFT_WALL_INNER_EDGE = 74;
+const RIGHT_WALL_INNER_EDGE = 646;
+// A 1,000 px/s discrete body can move 16.67 px per fixed tick.
+const MAX_DISCRETE_WALL_PENETRATION = 15;
+// The iterative floor correction may retain a small amount of penetration.
+const MAX_FLOOR_SOLVER_PENETRATION = 5;
+
+function arenaBody(
+  id: number,
+  options: Readonly<{
+    x?: number;
+    y?: number;
+    dynamic?: boolean;
+  }> = {},
+): PhysicsTopologyRecord2D {
+  const dynamic = options.dynamic ?? false;
+  return {
+    kind: "body",
+    id,
+    definition: {
+      positionX: options.x ?? 0,
+      positionY: options.y ?? 0,
+      rotationRadians: 0,
+      localCenterX: 0,
+      localCenterY: 0,
+      linearVelocityX: 0,
+      linearVelocityY: 0,
+      angularVelocity: 0,
+      forceX: 0,
+      forceY: 0,
+      torque: 0,
+      inverseMass: dynamic ? 1 : 0,
+      inverseInertia: dynamic ? 1 / 392 : 0,
+      linearDamping: dynamic ? 0.025 : 0,
+      angularDamping: dynamic ? 0.04 : 0,
+      gravityScale: dynamic ? 1 : 0,
+      sleepTime: 0,
+      flags: dynamic ? 1 : 0,
+      owner: null,
+    },
+  };
+}
+
+function arenaCollider(
+  id: number,
+  bodyId: number,
+  shape: ReturnType<typeof circleShape2D> | ReturnType<typeof boxShape2D>,
+  material: Readonly<{ friction: number; restitution: number }>,
+): PhysicsTopologyRecord2D {
+  return {
+    kind: "collider",
+    id,
+    bodyId,
+    definition: {
+      shape: requireShapeRecord2D(shape),
+      material,
+      filter: null,
+      tag: null,
+      handlers: null,
+      owner: null,
+      flags: 0,
+    },
+  };
+}
+
+function throwableBallArenaTopology(): readonly PhysicsTopologyRecord2D[] {
+  return [
+    arenaBody(1, { x: 210, y: 110, dynamic: true }),
+    arenaBody(2),
+    arenaBody(3),
+    arenaBody(4),
+    arenaBody(5),
+    arenaBody(6),
+    arenaBody(7),
+    arenaCollider(10, 1, circleShape2D({ radius: BALL_RADIUS }), {
+      friction: 0.65,
+      restitution: 0.35,
+    }),
+    arenaCollider(
+      20,
+      2,
+      boxShape2D({ width: 612, height: 34, center: [360, 333] }),
+      { friction: 0.55, restitution: 0 },
+    ),
+    arenaCollider(
+      30,
+      3,
+      boxShape2D({ width: 20, height: 220, center: [64, 206] }),
+      { friction: 0.4, restitution: 0 },
+    ),
+    arenaCollider(
+      40,
+      4,
+      boxShape2D({ width: 20, height: 220, center: [656, 206] }),
+      { friction: 0.4, restitution: 0 },
+    ),
+    arenaCollider(50, 5, circleShape2D({ radius: 20, center: [250, 205] }), {
+      friction: 0.15,
+      restitution: 0.8,
+    }),
+    arenaCollider(60, 6, circleShape2D({ radius: 22, center: [362, 258] }), {
+      friction: 0.15,
+      restitution: 0.8,
+    }),
+    arenaCollider(70, 7, circleShape2D({ radius: 20, center: [478, 198] }), {
+      friction: 0.15,
+      restitution: 0.8,
+    }),
+  ];
+}
+
+function advanceAndReadEvents(
+  world: PhysicsWorld2DKernel,
+  frameId: number,
+  logicalTime: number,
+): readonly (readonly number[])[] {
+  const candidate = world.advance({
+    frameId,
+    logicalTime,
+    stagedKinematicTargets: new Map(),
+  });
+  expect(candidate).toBeDefined();
+  const events: number[][] = [];
+  for (let offset = 0; offset < candidate!.eventCount; offset += 1) {
+    const event = candidate!.eventOffset + offset;
+    events.push([
+      candidate!.eventTicks[event]!,
+      candidate!.eventKinds[event]!,
+      candidate!.eventFirstColliderIndices[event]!,
+      candidate!.eventFirstColliderGenerations[event]!,
+      candidate!.eventSecondColliderIndices[event]!,
+      candidate!.eventSecondColliderGenerations[event]!,
+      candidate!.eventNormalX[event]!,
+      candidate!.eventNormalY[event]!,
+      candidate!.eventPointCounts[event]!,
+      candidate!.eventTotalNormalImpulses[event]!,
+      candidate!.eventPointFirstX[event * 2]!,
+      candidate!.eventPointFirstY[event * 2]!,
+      candidate!.eventPointSecondX[event * 2]!,
+      candidate!.eventPointSecondY[event * 2]!,
+      candidate!.eventPointSeparations[event * 2]!,
+      candidate!.eventPointFirstX[event * 2 + 1]!,
+      candidate!.eventPointFirstY[event * 2 + 1]!,
+      candidate!.eventPointSecondX[event * 2 + 1]!,
+      candidate!.eventPointSecondY[event * 2 + 1]!,
+      candidate!.eventPointSeparations[event * 2 + 1]!,
+    ]);
+  }
+  world.adopt(candidate!);
+  return events;
+}
+
 describe("transactional fixed-tick 2D world cadence", () => {
   it.each([220, 1000])(
     "keeps the released local circle finite and between both walls at %i px/s",
@@ -426,6 +580,285 @@ describe("transactional fixed-tick 2D world cadence", () => {
     advance(world, 2, 150);
 
     expect(world.presentationPose(1)).toEqual(world.authoritativePose(1));
+  });
+});
+
+describe("deterministic throwable-ball mechanics", () => {
+  function replayCommandStream() {
+    const world = new PhysicsWorld2DKernel({
+      gravity: [0, 560],
+      fixedStepMilliseconds: 1000 / 60,
+      sleeping: false,
+    });
+    world.proposeTopology(throwableBallArenaTopology());
+    const events: (readonly number[])[] = [];
+    const snapshots: ReturnType<PhysicsWorld2DKernel["snapshot"]>[] = [];
+    events.push(...advanceAndReadEvents(world, 1, 0));
+
+    for (let frame = 2; frame <= 361; frame += 1) {
+      if (frame === 2) {
+        world.applyBegin([
+          { kind: "disable", bodyId: 1 },
+          {
+            kind: "set-pose",
+            bodyId: 1,
+            pose: { position: [300, 140], rotationDegrees: 0 },
+          },
+          { kind: "enable", bodyId: 1, velocity: "zero" },
+          {
+            kind: "set-linear-velocity",
+            bodyId: 1,
+            linearVelocityX: 900,
+            linearVelocityY: 0,
+          },
+        ]);
+      } else if (frame === 72) {
+        world.applyBegin([
+          {
+            kind: "apply-impulse",
+            bodyId: 1,
+            impulseX: -120,
+            impulseY: -180,
+          },
+        ]);
+      } else if (frame === 182) {
+        world.applyBegin([
+          { kind: "disable", bodyId: 1 },
+          {
+            kind: "set-pose",
+            bodyId: 1,
+            pose: { position: [540, 125], rotationDegrees: 18 },
+          },
+          { kind: "enable", bodyId: 1, velocity: "zero" },
+          {
+            kind: "set-velocity",
+            bodyId: 1,
+            linearVelocityX: -760,
+            linearVelocityY: 80,
+            angularVelocityDegrees: -90,
+          },
+        ]);
+      }
+
+      events.push(
+        ...advanceAndReadEvents(world, frame, ((frame - 1) * 1000) / 60),
+      );
+      if (frame % 30 === 1) snapshots.push(world.snapshot());
+    }
+
+    return { events, snapshots };
+  }
+
+  it("replays an identical topology and command stream into exact snapshots and events", () => {
+    const first = replayCommandStream();
+    const second = replayCommandStream();
+
+    expect(first).toEqual(second);
+    expect(first.events.some((event) => event[1] === 1)).toBe(true);
+    expect(first.events.some((event) => event[1] === 2)).toBe(true);
+    expect(first.snapshots.at(-1)).toMatchObject({
+      bodyCount: 7,
+      colliderCount: 7,
+    });
+  });
+
+  it("keeps every pose and velocity finite within wall and floor solver tolerances for 3,600 fixed ticks", () => {
+    const world = new PhysicsWorld2DKernel({
+      gravity: [0, 560],
+      fixedStepMilliseconds: 1000 / 60,
+      sleeping: false,
+    });
+    world.proposeTopology(throwableBallArenaTopology());
+    advance(world, 1, 0);
+    world.applyBegin([
+      { kind: "disable", bodyId: 1 },
+      {
+        kind: "set-pose",
+        bodyId: 1,
+        pose: { position: [300, 140], rotationDegrees: 0 },
+      },
+      { kind: "enable", bodyId: 1, velocity: "zero" },
+      {
+        kind: "set-linear-velocity",
+        bodyId: 1,
+        linearVelocityX: 1_000,
+        linearVelocityY: 0,
+      },
+    ]);
+
+    let allFinite = true;
+    let minimumX = Number.POSITIVE_INFINITY;
+    let maximumX = Number.NEGATIVE_INFINITY;
+    let maximumY = Number.NEGATIVE_INFINITY;
+    let maximumSpeed = 0;
+    let frame = 1;
+    while (world.snapshot().tick < 3_600) {
+      frame += 1;
+      expect(frame).toBeLessThanOrEqual(3_603);
+      advance(world, frame, ((frame - 1) * 1000) / 60);
+      const pose = world.authoritativePose(1);
+      const body = world.snapshot().bodies[0]!;
+      const values = [
+        ...pose.position,
+        pose.rotationDegrees,
+        body.linearVelocityX,
+        body.linearVelocityY,
+        body.angularVelocity,
+      ];
+      allFinite &&= values.every(Number.isFinite);
+      minimumX = Math.min(minimumX, pose.position[0]);
+      maximumX = Math.max(maximumX, pose.position[0]);
+      maximumY = Math.max(maximumY, pose.position[1]);
+      maximumSpeed = Math.max(
+        maximumSpeed,
+        Math.hypot(body.linearVelocityX, body.linearVelocityY),
+      );
+    }
+
+    expect(allFinite).toBe(true);
+    expect(world.snapshot().tick).toBe(3_600);
+    expect(minimumX).toBeGreaterThanOrEqual(
+      LEFT_WALL_INNER_EDGE - MAX_DISCRETE_WALL_PENETRATION + BALL_RADIUS,
+    );
+    expect(maximumX).toBeLessThanOrEqual(
+      RIGHT_WALL_INNER_EDGE + MAX_DISCRETE_WALL_PENETRATION - BALL_RADIUS,
+    );
+    expect(maximumY).toBeLessThanOrEqual(
+      FLOOR_TOP - BALL_RADIUS + MAX_FLOOR_SOLVER_PENETRATION,
+    );
+    expect(maximumSpeed).toBeLessThanOrEqual(1_100);
+  });
+
+  it("survives repeated disable, teleport, enable, and throw handoffs without losing its collider", () => {
+    const world = new PhysicsWorld2DKernel({
+      gravity: [0, 560],
+      fixedStepMilliseconds: 1000 / 60,
+      sleeping: false,
+    });
+    world.proposeTopology(throwableBallArenaTopology());
+    advance(world, 1, 0);
+    let frame = 1;
+
+    for (let cycle = 0; cycle < 12; cycle += 1) {
+      const throwLeft = cycle % 2 === 0;
+      const position = [throwLeft ? 150 : 570, 280] as const;
+      const velocityX = throwLeft ? -900 : 900;
+      const wallColliderId = throwLeft ? 30 : 40;
+      world.applyBegin([{ kind: "disable", bodyId: 1 }]);
+      frame += 1;
+      advance(world, frame, ((frame - 1) * 1000) / 60);
+      expect(world.isBodyEnabled(1)).toBe(false);
+      expect(world.snapshot().colliderCount).toBe(6);
+
+      world.applyBegin([
+        {
+          kind: "set-pose",
+          bodyId: 1,
+          pose: { position, rotationDegrees: cycle * 7 },
+        },
+      ]);
+      frame += 1;
+      advance(world, frame, ((frame - 1) * 1000) / 60);
+      expect(world.isBodyEnabled(1)).toBe(false);
+      expect(world.snapshot().colliderCount).toBe(6);
+      expect(world.authoritativePose(1)).toEqual({
+        position,
+        rotationDegrees: cycle * 7,
+      });
+
+      world.applyBegin([
+        {
+          kind: "set-pose",
+          bodyId: 1,
+          pose: { position, rotationDegrees: cycle * 7 },
+        },
+        { kind: "enable", bodyId: 1, velocity: "zero" },
+        {
+          kind: "set-linear-velocity",
+          bodyId: 1,
+          linearVelocityX: velocityX,
+          linearVelocityY: 0,
+        },
+      ]);
+      frame += 1;
+      advance(world, frame, ((frame - 1) * 1000) / 60);
+
+      expect(world.isBodyEnabled(1)).toBe(true);
+      expect(world.authoritativePose(1)).toEqual({
+        position,
+        rotationDegrees: cycle * 7,
+      });
+      expect(world.snapshot()).toMatchObject({
+        bodyCount: 7,
+        colliderCount: 7,
+        counters: {
+          liveBodies: 7,
+          liveColliders: 7,
+          liveProxies: 7,
+        },
+      });
+      expect(world.snapshot().bodies[0]!.linearVelocityX).toBe(velocityX);
+
+      const ballCollider = world.colliderIdentity(10)!;
+      const wallCollider = world.colliderIdentity(wallColliderId)!;
+      let sawWallContact = false;
+      let sawWallResponse = false;
+      let extremeX = position[0];
+      for (let tick = 0; tick < 20; tick += 1) {
+        frame += 1;
+        const events = advanceAndReadEvents(
+          world,
+          frame,
+          ((frame - 1) * 1000) / 60,
+        );
+        const pose = world.authoritativePose(1);
+        const body = world.snapshot().bodies[0]!;
+        extremeX = throwLeft
+          ? Math.min(extremeX, pose.position[0])
+          : Math.max(extremeX, pose.position[0]);
+        const contactedWall = events.some(
+          (event) =>
+            event[1] === 1 &&
+            ((event[2] === ballCollider.index &&
+              event[3] === ballCollider.generation &&
+              event[4] === wallCollider.index &&
+              event[5] === wallCollider.generation) ||
+              (event[2] === wallCollider.index &&
+                event[3] === wallCollider.generation &&
+                event[4] === ballCollider.index &&
+                event[5] === ballCollider.generation)),
+        );
+        if (contactedWall) {
+          sawWallContact = true;
+          sawWallResponse ||= throwLeft
+            ? body.linearVelocityX >= 0
+            : body.linearVelocityX <= 0;
+        }
+        expect(
+          [
+            ...pose.position,
+            pose.rotationDegrees,
+            body.linearVelocityX,
+            body.linearVelocityY,
+            body.angularVelocity,
+          ].every(Number.isFinite),
+        ).toBe(true);
+        expect(
+          Math.hypot(body.linearVelocityX, body.linearVelocityY),
+        ).toBeLessThanOrEqual(1_005);
+      }
+      expect(sawWallContact).toBe(true);
+      expect(sawWallResponse).toBe(true);
+      if (throwLeft) {
+        expect(extremeX).toBeGreaterThanOrEqual(
+          LEFT_WALL_INNER_EDGE - MAX_DISCRETE_WALL_PENETRATION + BALL_RADIUS,
+        );
+      } else {
+        expect(extremeX).toBeLessThanOrEqual(
+          RIGHT_WALL_INNER_EDGE + MAX_DISCRETE_WALL_PENETRATION - BALL_RADIUS,
+        );
+      }
+    }
   });
 });
 

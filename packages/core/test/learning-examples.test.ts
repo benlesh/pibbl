@@ -24,6 +24,7 @@ import {
   pointerUpLogicalPoint,
   pressKey,
 } from "./support/user-input";
+import { backingPointForLogical } from "./support/mouse-input";
 
 const mountedControllers: Array<{ dispose: () => void }> = [];
 const removedDefinitionWrapper = ["define", "Comp"].join("");
@@ -1801,7 +1802,13 @@ describe("learning example catalog", () => {
         "staticBody2D",
         "collider2D",
         "crcPhysicsBody2D",
-        "applyImpulse2D",
+        "crcRef",
+        "crcState",
+        "setPointerCapture",
+        "disableBody2D",
+        "teleportBody2D",
+        "enableBody2D",
+        "setLinearVelocity2D",
       ]),
     );
 
@@ -1898,6 +1905,48 @@ describe("learning example catalog", () => {
     expect(rolling.centerX).toBeGreaterThan(released.centerX + 8);
   });
 
+  it("uses captured pointer motion to throw the physics lesson ball while its presentation remains clamped", async () => {
+    const { canvas } = await renderLearningExample("physics-2d");
+    const before = solidBlueBounds(canvas);
+    const clamped = { x: 560, y: 40 };
+    const continuedPointerMotion = { x: 560, y: 80 };
+
+    await pointerDownLogicalPoint(canvas, {
+      x: before.centerX,
+      y: before.centerY,
+    });
+    await pointerMoveLogicalPoint(canvas, clamped);
+    await new Promise<void>((resolve) => setTimeout(resolve, 140));
+    await pointerMoveLogicalPoint(canvas, clamped);
+    await pointerUpLogicalPoint(canvas, continuedPointerMotion);
+    await nextPaint();
+    for (let frame = 0; frame < 2; frame += 1) await nextPaint();
+    const thrown = solidBlueBounds(canvas);
+
+    expect(thrown.centerY).toBeGreaterThan(130);
+  });
+
+  it("preserves an older useful release sample after more than eight rapid captured pointer samples", async () => {
+    const { canvas } = await renderLearningExample("physics-2d");
+    const before = solidBlueBounds(canvas);
+    const target = { x: 360, y: 120 };
+
+    await pointerDownLogicalPoint(canvas, {
+      x: before.centerX,
+      y: before.centerY,
+    });
+    for (let sample = 0; sample < 8; sample += 1) {
+      await pointerMoveLogicalPoint(canvas, target);
+    }
+    await pointerUpLogicalPoint(canvas, target);
+    await nextPaint();
+    const released = solidBlueBounds(canvas);
+    for (let frame = 0; frame < 4; frame += 1) await nextPaint();
+    const rolling = solidBlueBounds(canvas);
+
+    expect(rolling.centerX).toBeGreaterThan(released.centerX + 30);
+  });
+
   it("preserves the off-center grab offset while dragging the physics lesson ball", async () => {
     const { canvas } = await renderLearningExample("physics-2d");
     const before = solidBlueBounds(canvas);
@@ -1906,6 +1955,13 @@ describe("learning example catalog", () => {
 
     await pointerDownLogicalPoint(canvas, start);
     try {
+      await nextPaint();
+      const grabbed = solidBlueBounds(canvas);
+      expect(grabbed.centerX).toBeGreaterThanOrEqual(before.centerX - 1);
+      expect(grabbed.centerX).toBeLessThanOrEqual(before.centerX + 1);
+      expect(grabbed.centerY).toBeGreaterThanOrEqual(before.centerY - 1);
+      expect(grabbed.centerY).toBeLessThanOrEqual(before.centerY + 1);
+
       await pointerMoveLogicalPoint(canvas, target);
       await nextPaint();
       const dragged = solidBlueBounds(canvas);
@@ -1914,6 +1970,43 @@ describe("learning example catalog", () => {
       expect(dragged.centerX).toBeLessThanOrEqual(433);
       expect(dragged.centerY).toBeGreaterThanOrEqual(151);
       expect(dragged.centerY).toBeLessThanOrEqual(153);
+    } finally {
+      await pointerUpLogicalPoint(canvas, target);
+    }
+  });
+
+  it("preserves a settled ball's off-center grab on a scaled lesson canvas", async () => {
+    const { canvas } = await renderLearningExample("physics-2d");
+    canvas.style.width = "568px";
+    canvas.style.height = "331px";
+    for (let frame = 0; frame < 75; frame += 1) await nextPaint();
+
+    const before = solidBlueBounds(canvas);
+    const beforeLogical = {
+      x: (before.centerX * 720) / canvas.width,
+      y: (before.centerY * 420) / canvas.height,
+    };
+    const start = { x: beforeLogical.x - 12, y: beforeLogical.y + 8 };
+    const target = { x: 420, y: 160 };
+
+    await pointerDownLogicalPoint(canvas, start);
+    try {
+      await nextPaint();
+      const grabbed = solidBlueBounds(canvas);
+      expect(grabbed.centerX).toBeGreaterThanOrEqual(before.centerX - 1);
+      expect(grabbed.centerX).toBeLessThanOrEqual(before.centerX + 1);
+      expect(grabbed.centerY).toBeGreaterThanOrEqual(before.centerY - 1);
+      expect(grabbed.centerY).toBeLessThanOrEqual(before.centerY + 1);
+
+      await pointerMoveLogicalPoint(canvas, target);
+      await nextPaint();
+      const dragged = solidBlueBounds(canvas);
+      const expected = backingPointForLogical(canvas, { x: 432, y: 152 });
+
+      expect(dragged.centerX).toBeGreaterThanOrEqual(expected.x - 1);
+      expect(dragged.centerX).toBeLessThanOrEqual(expected.x + 1);
+      expect(dragged.centerY).toBeGreaterThanOrEqual(expected.y - 1);
+      expect(dragged.centerY).toBeLessThanOrEqual(expected.y + 1);
     } finally {
       await pointerUpLogicalPoint(canvas, target);
     }

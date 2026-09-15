@@ -92,6 +92,43 @@ describe('primitive presentation', () => {
     });
   });
 
+  it('retains known CRC world precision while including a direct Canvas context delta', () => {
+    const context = document.createElement('canvas').getContext('2d')!;
+    const target = identityTarget(40, 30);
+    const parentPaint = new DOMMatrix().translate(3, 5);
+    const localTransform = new DOMMatrix().rotate(4.5).scale(2, 3).translate(7, 11);
+    context.setTransform(parentPaint);
+
+    withRenderTarget(context, target, new DOMMatrix().translate(100, 200), () => {
+      const release = enterPrimitivePresentation({ transform: localTransform });
+      const expectedWorld = new DOMMatrix()
+        .translate(100, 200)
+        .multiply(parentPaint)
+        .multiply(localTransform);
+      expect(matrixValues(getCurrentWorldTransform()))
+        .toEqual(matrixValues(expectedWorld));
+
+      context.translate(13, 17);
+      const expectedCustomWorld = expectedWorld.translate(13, 17);
+      for (const [index, value] of matrixValues(getCurrentWorldTransform()).entries()) {
+        expect(value).toBeCloseTo(matrixValues(expectedCustomWorld)[index]!, 12);
+      }
+      release();
+    });
+  });
+
+  it('does not allocate presentation lineage outside an attachment traversal', () => {
+    const context = document.createElement('canvas').getContext('2d')!;
+    const target = identityTarget(40, 30);
+    withRenderTarget(context, target, new DOMMatrix(), () => {
+      const release = enterPrimitivePresentation({
+        transform: new DOMMatrix().translate(7, 11),
+      });
+      expect(GLOBAL_STATE.presentationTransformLineage).toBeUndefined();
+      release();
+    });
+  });
+
   it('keeps deferred source paint upright while publishing transformed world geometry', () => {
     const context = new OffscreenCanvas(40, 30).getContext('2d')!;
     const renderTransform = new DOMMatrix().scale(2).translate(6, 8);

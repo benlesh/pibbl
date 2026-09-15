@@ -10,6 +10,7 @@ import type {
   CRCElement,
   CRCInstance,
 } from './types.js';
+import type { CRCPresentationTransformLineage } from './global-state.js';
 
 export interface CRCInternalPrimitiveAttachmentInput {
   readonly componentType: Function;
@@ -18,6 +19,11 @@ export interface CRCInternalPrimitiveAttachmentInput {
   readonly style: Readonly<Record<PropertyKey, unknown>>;
   readonly source: CRCElementSource | undefined;
   readonly parentWorldTransform: DOMMatrix;
+  /** Exact CRC-owned transform lineage at this primitive's parent. */
+  readonly presentationTransformLineage:
+    CRCPresentationTransformLineage | undefined;
+  /** A direct Canvas transform occurred outside the tracked CRC lineage. */
+  readonly hasUntrackedCanvasTransform: boolean;
 }
 
 export interface CRCInternalMountedPropAttachment {
@@ -187,6 +193,13 @@ export function reconcileElementEnhancers(
     }
   }
   disposeEntries(removed);
+}
+
+/** @internal Reports whether a primitive has mounted official attachments. */
+export function hasElementEnhancers(component: CRCComponentRefs<any>): boolean {
+  return (mountedElementEnhancers.get(component) ?? []).some(
+    entry => entry.mounted.preparePrimitive !== undefined,
+  );
 }
 
 /** @internal Prepares mounted official attachments against resolved geometry. */

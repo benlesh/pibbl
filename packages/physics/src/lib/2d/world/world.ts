@@ -493,7 +493,11 @@ export class PhysicsWorld2DKernel {
           this.state.accumulatorMilliseconds = 0;
         }
       }
-      if (stepCount > 0 && !this.solver.advanceEligible) {
+      if (
+        stepCount > 0 &&
+        !this.solver.advanceEligible &&
+        !this.hasKinematicBodies()
+      ) {
         this.state.accumulatorMilliseconds = 0;
         this.state.anchored = false;
         this.capturePreviousPoses();
@@ -1590,6 +1594,15 @@ export class PhysicsWorld2DKernel {
       if ((this.bodies.flags[body]! & BODY_TYPE_KINEMATIC_2D) !== 0)
         return true;
       if ((this.bodies.flags[body]! & BODY_SLEEPING_2D) === 0) return true;
+    }
+    return false;
+  }
+
+  private hasKinematicBodies(): boolean {
+    for (let offset = 0; offset < this.state.bodyCount; offset += 1) {
+      const body = this.state.bodyIndices[offset]!;
+      if ((this.bodies.flags[body]! & BODY_TYPE_KINEMATIC_2D) !== 0)
+        return true;
     }
     return false;
   }
