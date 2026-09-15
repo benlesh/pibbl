@@ -7,11 +7,13 @@ import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
 
 const focusImplementationMarker = 'CRC_FOCUS_MANAGEMENT_V1';
+const physicsGeometryOnly = process.argv.includes('--physics-geometry-only');
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const temporaryRoot = mkdtempSync(join(tmpdir(), 'crc-packed-consumer-'));
 const packageDirectory = join(temporaryRoot, 'packages');
 const consumerDirectory = join(temporaryRoot, 'consumer');
+const geometryConsumerDirectory = join(temporaryRoot, 'physics-geometry-consumer');
 
 function run(command, args, options = {}) {
   execFileSync(command, args, {
@@ -80,9 +82,9 @@ function findPackageRoot(packageEntry) {
   throw new Error(`Could not find the package root for ${packageEntry}.`);
 }
 
-async function bundleConsumerEntry(source) {
+async function bundleConsumerEntry(source, directory = consumerDirectory) {
   const result = await build({
-    absWorkingDir: consumerDirectory,
+    absWorkingDir: directory,
     bundle: true,
     format: 'esm',
     minify: true,
@@ -90,7 +92,7 @@ async function bundleConsumerEntry(source) {
     stdin: {
       contents: source,
       loader: 'tsx',
-      resolveDir: consumerDirectory,
+      resolveDir: directory,
     },
     jsx: 'automatic',
     jsxImportSource: '@crc/core',
@@ -102,6 +104,29 @@ async function bundleConsumerEntry(source) {
     code: result.outputFiles.map(file => file.text).join('\n'),
     metafile: result.metafile,
   };
+}
+
+function assertGeometryOnlyPhysicsBundle(metafile, code) {
+  const normalizedInputs = Object.keys(metafile.inputs).map(input =>
+    input.replaceAll('\\', '/'),
+  );
+  const forbiddenInputs = normalizedInputs.filter(input =>
+    input.includes('/node_modules/@crc/core/') ||
+    input.includes('/node_modules/@crc/webgl/') ||
+    /physics(?:-|\/)world/iu.test(input),
+  );
+  if (forbiddenInputs.length > 0) {
+    throw new Error(
+      `Packed physics geometry bundle crossed a runtime boundary: ${forbiddenInputs.join(', ')}`,
+    );
+  }
+  for (const marker of ['requestAnimationFrame', 'Canvas', 'OffscreenCanvas']) {
+    if (code.includes(marker)) {
+      throw new Error(
+        `Packed physics geometry bundle retained forbidden runtime marker ${marker}.`,
+      );
+    }
+  }
 }
 
 function assertSinglePackedRuntime(metafile) {
@@ -143,33 +168,113 @@ function assertIdentityMarkerOnce(code, marker, label) {
 
 try {
   mkdirSync(packageDirectory, { recursive: true });
-  mkdirSync(consumerDirectory, { recursive: true });
+  mkdirSync(geometryConsumerDirectory, { recursive: true });
 
-  const typesTarball = pack('packages/types');
-  const coreTarball = pack('packages/core');
-  const webglTarball = pack('packages/webgl');
-  assertTarballHasNoSources(typesTarball);
-  const coreEntries = assertTarballHasNoSources(coreTarball);
-  const webglEntries = assertTarballHasNoSources(webglTarball);
-  assertRequiredEntries(coreEntries, [
-    'package/dist/index.d.ts',
-    'package/dist/index.mjs',
-    'package/dist/internal.d.ts',
-    'package/dist/internal.mjs',
-    'package/dist/internal.mjs.map',
-    'package/dist/jsx-dev-runtime.d.ts',
-    'package/dist/jsx-dev-runtime.mjs',
-    'package/dist/jsx-dev-runtime.mjs.map',
-    'package/dist/jsx-runtime.d.ts',
-    'package/dist/jsx-runtime.mjs',
-    'package/dist/jsx-runtime.mjs.map',
-    'package/dist/types.d.ts',
+  const physicsTarball = pack('packages/physics');
+  const physicsEntries = assertTarballHasNoSources(physicsTarball);
+  assertRequiredEntries(physicsEntries, [
+    'package/dist/2d-geometry.d.ts',
+    'package/dist/2d-geometry.mjs',
+    'package/dist/2d-geometry.mjs.map',
+    'package/dist/2d.d.ts',
+    'package/dist/2d.mjs',
+    'package/dist/2d.mjs.map',
   ]);
-  assertRequiredEntries(webglEntries, [
-    'package/dist/index.d.ts',
-    'package/dist/index.mjs',
-    'package/dist/index.mjs.map',
-  ]);
+
+  writeFileSync(join(geometryConsumerDirectory, 'package.json'), `${JSON.stringify({
+    name: 'crc-packed-physics-geometry-consumer',
+    private: true,
+    type: 'module',
+    dependencies: {
+      '@crc/physics': `file:${physicsTarball}`,
+    },
+  }, null, 2)}\n`);
+  writeFileSync(
+    join(geometryConsumerDirectory, 'pnpm-workspace.yaml'),
+    'packages:\n  - .\n',
+  );
+  const geometrySource = `
+    import {
+      boxShape2D,
+      circleShape2D,
+      distanceBetweenShapes2D,
+      raycastShape2D,
+    } from '@crc/physics/2d/geometry';
+    const identity = { position: [0, 0], rotationDegrees: 0 };
+    const distance = distanceBetweenShapes2D(
+      circleShape2D({ radius: 1 }),
+      identity,
+      boxShape2D({ width: 2, height: 2 }),
+      { position: [4, 0], rotationDegrees: 0 },
+    );
+    const hit = raycastShape2D(
+      circleShape2D({ radius: 1 }),
+      { position: [5, 0], rotationDegrees: 0 },
+      { origin: [0, 0], direction: [2, 0], maxDistance: 10 },
+    );
+    if (
+      Math.abs(distance.separation - 2) > 1e-9 ||
+      Math.abs((hit?.distance ?? Number.NaN) - 4) > 1e-9 ||
+      Math.abs((hit?.timeOfImpact ?? Number.NaN) - 0.4) > 1e-9
+    ) {
+      throw new Error('Packed physics geometry produced an unexpected result.');
+    }
+  `;
+  writeFileSync(
+    join(geometryConsumerDirectory, 'runtime.mjs'),
+    geometrySource,
+  );
+  pnpm(['install', '--offline', '--ignore-scripts', '--strict-peer-dependencies'], {
+    cwd: geometryConsumerDirectory,
+  });
+  const requireFromGeometryConsumer = createRequire(
+    join(geometryConsumerDirectory, 'runtime.mjs'),
+  );
+  const installedPhysicsGeometryEntry = realpathSync(
+    requireFromGeometryConsumer.resolve('@crc/physics/2d/geometry'),
+  );
+  if (!installedPhysicsGeometryEntry.startsWith(realpathSync(join(geometryConsumerDirectory, 'node_modules')))) {
+    throw new Error(
+      `@crc/physics/2d/geometry resolved outside the packed consumer: ${installedPhysicsGeometryEntry}`,
+    );
+  }
+  if (existsSync(join(geometryConsumerDirectory, 'node_modules/@crc/core'))) {
+    throw new Error('Packed physics geometry consumer unexpectedly installed @crc/core.');
+  }
+  run(process.execPath, ['runtime.mjs'], { cwd: geometryConsumerDirectory });
+  const geometryBundle = await bundleConsumerEntry(
+    geometrySource,
+    geometryConsumerDirectory,
+  );
+  assertGeometryOnlyPhysicsBundle(geometryBundle.metafile, geometryBundle.code);
+
+  if (!physicsGeometryOnly) {
+    mkdirSync(consumerDirectory, { recursive: true });
+    const typesTarball = pack('packages/types');
+    const coreTarball = pack('packages/core');
+    const webglTarball = pack('packages/webgl');
+    assertTarballHasNoSources(typesTarball);
+    const coreEntries = assertTarballHasNoSources(coreTarball);
+    const webglEntries = assertTarballHasNoSources(webglTarball);
+    assertRequiredEntries(coreEntries, [
+      'package/dist/index.d.ts',
+      'package/dist/index.mjs',
+      'package/dist/internal.d.ts',
+      'package/dist/internal.mjs',
+      'package/dist/internal.mjs.map',
+      'package/dist/jsx-dev-runtime.d.ts',
+      'package/dist/jsx-dev-runtime.mjs',
+      'package/dist/jsx-dev-runtime.mjs.map',
+      'package/dist/jsx-runtime.d.ts',
+      'package/dist/jsx-runtime.mjs',
+      'package/dist/jsx-runtime.mjs.map',
+      'package/dist/types.d.ts',
+    ]);
+    assertRequiredEntries(webglEntries, [
+      'package/dist/index.d.ts',
+      'package/dist/index.mjs',
+      'package/dist/index.mjs.map',
+    ]);
 
   writeFileSync(join(consumerDirectory, 'package.json'), `${JSON.stringify({
     name: 'crc-packed-consumer',
@@ -414,6 +519,10 @@ try {
     `runtime exports, blocked deep imports, no-src checks, one shared core identity, and ` +
     `optimized focus elimination (marker absent without focus; present with focus; ` +
     `${noFocusBytes} no-focus bytes vs ${withFocusBytes} with-focus bytes).\n`,
+  );
+  }
+  process.stdout.write(
+    'Packed @crc/physics/2d/geometry installed and executed without core, WebGL, world, Canvas, or scheduler code.\n',
   );
 } finally {
   rmSync(temporaryRoot, { force: true, recursive: true });

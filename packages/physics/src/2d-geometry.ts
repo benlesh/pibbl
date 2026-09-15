@@ -79,6 +79,10 @@ import {
   distanceBetweenPreparedShapes2D,
   overlapPreparedShapes2D,
 } from './lib/2d/collision/pairs.js';
+export {
+  raycastShape2D,
+  shapeCastAgainstShape2D,
+} from './lib/2d/collision/casts.js';
 
 export function containsPoint2D(
   shape: CRCPhysicsShape2D,
@@ -113,41 +117,4 @@ export function contactBetweenShapes2D(
   secondPose: CRCPhysicsPose2D,
 ): CRCPhysicsShapeContact2D | null {
   return contactBetweenPreparedShapes2D(first, firstPose, second, secondPose);
-}
-
-export function raycastShape2D(
-  shape: CRCPhysicsShape2D,
-  pose: CRCPhysicsPose2D,
-  ray: CRCPhysicsRay2D,
-  options?: Readonly<{ includeInitialOverlap?: boolean }>,
-): CRCPhysicsShapeHit2D | null {
-  void shape;
-  void pose;
-  void ray;
-  void options;
-  return unavailable('raycastShape2D');
-}
-
-export function shapeCastAgainstShape2D(
-  moving: CRCPhysicsShape2D,
-  from: CRCPhysicsPose2D,
-  translation: CRCPhysicsVector2,
-  target: CRCPhysicsShape2D,
-  targetPose: CRCPhysicsPose2D,
-  options?: Readonly<{ includeInitialOverlap?: boolean }>,
-): CRCPhysicsShapeHit2D | null {
-  void moving;
-  void from;
-  void translation;
-  void target;
-  void targetPose;
-  void options;
-  return unavailable('shapeCastAgainstShape2D');
-}
-
-function unavailable(name: string): never {
-  throw new Error(
-    `${name} is part of the @crc/physics public scaffold and is not ` +
-    'implemented by this foundation task yet.',
-  );
 }

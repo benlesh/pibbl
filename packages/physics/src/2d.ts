@@ -38,6 +38,10 @@ import type {
 } from './lib/2d/types.js';
 
 export * from './2d-geometry.js';
+export {
+  raycastShape2D,
+  shapeCastAgainstShape2D,
+} from './lib/2d/collision/casts.js';
 export * from './lib/2d/types.js';
 
 export const PhysicsWorld2D: CRCComponent<CRCPhysicsWorld2DProps> =
