@@ -1,7 +1,9 @@
-import { Group, Rectangle, crc, type CRCController } from '@crc/core';
+import { Circle, Group, Rectangle, crc, type CRCController } from '@crc/core';
 import {
   PhysicsWorld2D,
+  applyImpulse2D,
   collider2D,
+  crcPhysicsBody2D,
   crcPhysicsWorld2D,
   dynamicBody2D,
   kinematicBody2D,
@@ -71,6 +73,49 @@ describe('Canvas 2D physics pose presentation', () => {
 
     crc(canvas, root(11));
     expect(() => frames.flush(3)).toThrow(/ancestor transform|authored pose/i);
+  });
+
+  it('moves a dynamic primitive when its Canvas click applies an impulse', () => {
+    const frames = new ManualFrames();
+    frames.install();
+    let body!: ReturnType<typeof crcPhysicsBody2D>;
+    let clickCount = 0;
+    const Ball = () => {
+      body = crcPhysicsBody2D();
+      return (
+        <Circle
+          physics={dynamicBody2D({ handle: body, mass: 1 })}
+          style={{ cx: 20, cy: 20, radius: 5, fill: '#2563eb' }}
+          onClick={() => {
+            clickCount += 1;
+            applyImpulse2D(body, [100, 0]);
+          }}
+        />
+      );
+    };
+    const canvas = document.createElement('canvas');
+    canvas.width = 60;
+    canvas.height = 40;
+    document.body.appendChild(canvas);
+    mounts.push(crc(canvas, (
+      <PhysicsWorld2D gravity={[0, 0]} fixedStepMilliseconds={100}>
+        <Ball />
+      </PhysicsWorld2D>
+    )));
+    frames.flush(0);
+    frames.flush(0);
+
+    expect(pixelAt(canvas, 20, 20)).toEqual([37, 99, 235, 255]);
+    click(canvas, 20, 20);
+    expect(clickCount).toBe(1);
+    frames.flush(100);
+
+    expect(body.position.get()).toEqual([10, 0]);
+    expect(body.linearVelocity.get()).toEqual([100, 0]);
+    frames.flush(200);
+
+    expect(pixelAt(canvas, 30, 20)).toEqual([37, 99, 235, 255]);
+    expect(pixelAt(canvas, 15, 20)).toEqual([0, 0, 0, 0]);
   });
 
   it('leaves kinematic authored placement under application authority', () => {

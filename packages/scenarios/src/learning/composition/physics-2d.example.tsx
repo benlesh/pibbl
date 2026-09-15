@@ -21,6 +21,7 @@ function ImpulseBall() {
     <Circle
       physics={dynamicBody2D({
         handle: body,
+        mass: 1,
         collider: { tag: "ball", restitution: 0.35 },
       })}
       style={{
@@ -32,7 +33,9 @@ function ImpulseBall() {
         strokeWidth: 5,
         cursor: "pointer",
       }}
-      onClick={() => applyImpulse2D(body, [90, -170])}
+      onClick={() => {
+        applyImpulse2D(body, [45, -120]);
+      }}
     />
   );
 }

@@ -125,6 +125,42 @@ function pixelAt(
   return Array.from(canvas.getContext("2d")!.getImageData(x, y, 1, 1).data);
 }
 
+function solidBlueBounds(canvas: HTMLCanvasElement): {
+  readonly centerX: number;
+  readonly centerY: number;
+} {
+  const pixels = canvas
+    .getContext("2d")!
+    .getImageData(0, 0, canvas.width, canvas.height).data;
+  let left = canvas.width;
+  let right = -1;
+  let top = canvas.height;
+  let bottom = -1;
+  for (let y = 0; y < canvas.height; y += 1) {
+    for (let x = 0; x < canvas.width; x += 1) {
+      const offset = (y * canvas.width + x) * 4;
+      if (
+        pixels[offset] === 37 &&
+        pixels[offset + 1] === 99 &&
+        pixels[offset + 2] === 235 &&
+        pixels[offset + 3] === 255
+      ) {
+        left = Math.min(left, x);
+        right = Math.max(right, x);
+        top = Math.min(top, y);
+        bottom = Math.max(bottom, y);
+      }
+    }
+  }
+  if (right < left || bottom < top) {
+    throw new Error("Expected the physics lesson's solid blue ball to paint.");
+  }
+  return {
+    centerX: (left + right) / 2,
+    centerY: (top + bottom) / 2,
+  };
+}
+
 async function nextPaint(): Promise<void> {
   await new Promise<void>((resolve) =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
@@ -1779,6 +1815,19 @@ describe("learning example catalog", () => {
     expect(latestPaints).toContain("FOCUSED: INNER 2");
     expect(latestPaints).toContain("ACTIVE BOUNDARY: INNER");
     expect(latestPaints).toContain("LAST INPUT: ArrowRight");
+  });
+
+  it("makes the 2D physics lesson ball visibly react to a click", async () => {
+    const { canvas } = await renderLearningExample("physics-2d");
+    const before = solidBlueBounds(canvas);
+
+    await clickLogicalPoint(canvas, { x: before.centerX, y: before.centerY });
+    await nextPaint();
+    await nextPaint();
+    const after = solidBlueBounds(canvas);
+
+    expect(after.centerX).toBeGreaterThanOrEqual(before.centerX + 1);
+    expect(after.centerY).toBeLessThan(before.centerY - 1);
   });
 
   it.each(learningExampleCatalog)(
