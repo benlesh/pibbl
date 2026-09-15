@@ -292,7 +292,7 @@ describe('WebGLLayerController bitmap transaction', () => {
         key: 'stable',
         geometry,
         onClick: () => undefined,
-        style: { translateX },
+        style: { translateX, lit: false },
       });
     const initial = scene(0);
     const surface = resolveWebGLLayerSurface(10, 8, { x: 1, y: 1 });
@@ -357,6 +357,7 @@ describe('WebGLLayerController bitmap transaction', () => {
       geometry,
       keyboardNavigationBounds: bounds,
       onClick: () => undefined,
+      style: { lit: false },
     });
     const surface = resolveWebGLLayerSurface(10, 8, { x: 1, y: 1 });
     const controller = new WebGLLayerController(
@@ -403,6 +404,7 @@ describe('WebGLLayerController bitmap transaction', () => {
       geometry,
       keyboardNavigationBounds: { x: 20, y: 30, width: 40, height: 50 },
       onClick: () => undefined,
+      style: { lit: false },
     });
     expect(() => controller.renderUpdatedChild(
       changed,
@@ -426,6 +428,7 @@ describe('WebGLLayerController bitmap transaction', () => {
     const root = createElement(Mesh, {
       geometry,
       onClick: () => undefined,
+      style: { lit: false },
     });
     const controller = new WebGLLayerController(
       mountParent(),
@@ -537,7 +540,7 @@ describe('WebGLLayerController bitmap transaction', () => {
     const scene = (translateX: number) => createElement(Mesh, {
       geometry,
       onClick: () => undefined,
-      style: { translateX },
+      style: { translateX, lit: false },
     });
     const surface = resolveWebGLLayerSurface(10, 8, { x: 1, y: 1 });
     const controller = new WebGLLayerController(

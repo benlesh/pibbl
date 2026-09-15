@@ -28,7 +28,7 @@ describe('deferred WebGL backend phases', () => {
     const geometry = triangle();
     function SceneMesh(props: { readonly label: string }) {
       trace.push(`primitive:${props.label}`);
-      return createElement(Mesh, { geometry });
+      return createElement(Mesh, { geometry, style: { lit: false } });
     }
     function Wrapper(props: {
       readonly label: string;
@@ -107,6 +107,7 @@ describe('deferred WebGL backend phases', () => {
       geometry: triangle(),
       localModel: identity(),
       color: [1, 0, 0, 1],
+      lit: false,
       target,
     });
 
@@ -137,6 +138,7 @@ describe('deferred WebGL backend phases', () => {
       geometry: triangle(),
       localModel: identity(),
       color: [1, 0, 0, 1],
+      lit: false,
       target,
     });
     pushWebGLModelMatrix(frame.environment, identity());
@@ -196,6 +198,7 @@ describe('deferred WebGL backend phases', () => {
       geometry: triangle(),
       localModel: identity(),
       color: [1, 0, 0, 1],
+      lit: false,
       target,
     });
 
@@ -257,6 +260,21 @@ describe('deferred WebGL backend phases', () => {
     );
     expect(trace).toEqual([]);
 
+    mounted.dispose();
+  });
+
+  it('accepts an explicit-unlit public geometry without normals', () => {
+    const trace: string[] = [];
+    const recording = createPhaseGL(trace);
+    const root = createElement(Mesh, {
+      geometry: triangleWithoutNormals(),
+      style: { color: '#ff0000', lit: false },
+    });
+    const mounted = mountScene(recording.gl, root);
+
+    executeBackendCRC(mounted.mount, root, 10);
+
+    expect(recording.drawArrays).toHaveBeenCalledOnce();
     mounted.dispose();
   });
 

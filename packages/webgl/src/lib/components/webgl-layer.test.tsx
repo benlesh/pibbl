@@ -15,6 +15,7 @@ import * as publicWebGL from '../../index.js';
 import { createWebGLGeometry } from '../geometry/geometry.js';
 import { Cube } from './cube.js';
 import { Mesh } from './mesh.js';
+import { WebGLBackground } from './webgl-background.js';
 import { WebGLLayerController } from '../layer-controller.js';
 import { WebGLLayer, type WebGLLayerProps } from './webgl-layer.js';
 
@@ -31,10 +32,16 @@ afterEach(() => {
 describe('WebGLLayer public surface', () => {
   it('exports only the declarative runtime surface', () => {
     expect(Object.keys(publicWebGL).sort()).toEqual([
+      'AmbientLight',
       'Cube',
+      'DirectionalLight',
       'Group3D',
+      'HemisphereLight',
       'Mesh',
+      'PointLight',
       'Sphere',
+      'SpotLight',
+      'WebGLBackground',
       'WebGLLayer',
       'crcAnimationFrame',
       'createWebGLGeometry',
@@ -181,7 +188,7 @@ describe('WebGLLayer public surface', () => {
             style={{ width: 30, height: 20 }}
             pointerEvents={pointerEvents}
           >
-            <Cube onClick={() => undefined} />
+            <Cube style={{ lit: false }} onClick={() => undefined} />
           </WebGLLayer>
         </Clip>
       </Group>,
@@ -277,7 +284,9 @@ describe('WebGLLayer public surface', () => {
     const canvas = createCanvas(40, 20);
     const controller = crc(
       canvas,
-      <WebGLLayer><Cube onClick={() => undefined} /></WebGLLayer>,
+      <WebGLLayer>
+        <Cube style={{ lit: false }} onClick={() => undefined} />
+      </WebGLLayer>,
       { pixelRatio: 1 },
     );
     controllers.add(controller);
@@ -316,7 +325,7 @@ describe('WebGLLayer public surface', () => {
               <Mesh
                 geometry={redPlane}
                 pointerEvents="none"
-                style={{ color: '#ff0000' }}
+                style={{ color: '#ff0000', lit: false }}
               />
             </WebGLLayer>
           </Layer>
@@ -360,6 +369,7 @@ describe('WebGLLayer public surface', () => {
           <Cube
             onClick={cubeClick}
             pointerEvents={cubePointerEvents}
+            style={{ lit: false }}
           />
         </WebGLLayer>
         <Star
@@ -407,6 +417,38 @@ describe('WebGLLayer public surface', () => {
     expect(readPixels).not.toHaveBeenCalled();
   });
 
+  it('treats opaque WebGLBackground pixels as nested resolver misses', async () => {
+    const rearClick = vi.fn();
+    const cubeClick = vi.fn();
+    const canvas = createCanvas(100, 100);
+    const controller = crc(canvas, (
+      <>
+        <Rectangle
+          style={{ width: 100, height: 100, fill: '#1d4ed8' }}
+          onClick={rearClick}
+        />
+        <WebGLLayer style={{ width: 100, height: 100 }}>
+          <WebGLBackground style={{ color: '#ffffff' }} />
+          <Cube
+            style={{ color: '#ff0000', lit: false }}
+            onClick={cubeClick}
+          />
+        </WebGLLayer>
+      </>
+    ), { pixelRatio: 1 });
+    controllers.add(controller);
+    await nextFrame();
+
+    expect(Array.from(pixel(canvas, 5, 5))).toEqual([255, 255, 255, 255]);
+    dispatchClick(canvas, 5, 5);
+    expect(rearClick).toHaveBeenCalledOnce();
+    expect(cubeClick).not.toHaveBeenCalled();
+
+    dispatchClick(canvas, 50, 50);
+    expect(cubeClick).toHaveBeenCalledOnce();
+    expect(rearClick).toHaveBeenCalledOnce();
+  });
+
   it('uses two WebGLLayers to interleave a Canvas target between WebGL passes', async () => {
     const backClick = vi.fn();
     const canvasClick = vi.fn();
@@ -421,7 +463,7 @@ describe('WebGLLayer public surface', () => {
           key="back"
           style={{ width: 100, height: 100 }}
         >
-          <Cube onClick={backClick} />
+          <Cube style={{ lit: false }} onClick={backClick} />
         </WebGLLayer>
         <Rectangle
           pointerEvents={canvasPointerEvents}
@@ -439,7 +481,7 @@ describe('WebGLLayer public surface', () => {
           pointerEvents={frontPointerEvents}
           style={{ width: 100, height: 100 }}
         >
-          <Cube onClick={frontClick} />
+          <Cube style={{ lit: false }} onClick={frontClick} />
         </WebGLLayer>
       </>
     );
@@ -497,7 +539,7 @@ describe('WebGLLayer public surface', () => {
         />
         <WebGLLayer style={{ width: 100, height: 100 }}>
           {mode === 'removed' ? undefined : (
-            <Cube pointerEvents={mode} />
+            <Cube style={{ lit: false }} pointerEvents={mode} />
           )}
         </WebGLLayer>
       </>

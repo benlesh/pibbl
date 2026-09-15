@@ -172,12 +172,15 @@ describe('WebGL pick ledger', () => {
         geometry,
         onClick: () => undefined,
         pointerEvents: props.pointerEvents,
-        style: { opacity: props.opacity },
+        style: { opacity: props.opacity, lit: false },
       });
     }
     function CountedCube(_props: {}): CRCNode {
       executions.push('cube');
-      return createElement(Cube, { pointerEvents: 'none' });
+      return createElement(Cube, {
+        pointerEvents: 'none',
+        style: { lit: false },
+      });
     }
     const root = createElement(Group3D, {
       style: { translateX: 2, scaleX: -2, scaleY: 3 },
