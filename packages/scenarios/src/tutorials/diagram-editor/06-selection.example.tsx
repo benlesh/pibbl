@@ -245,10 +245,11 @@ function Toolbar({ style: _specifiedStyle }: RegionProps): CRCNode {
       pointerEvents="none"
       style={{
         x: 878,
-        y: 33,
+        y: 28,
         fill: "#17211d",
         font: "800 12px sans-serif",
         textAlign: "center",
+        textBaseline: "middle",
       }}
     >
       RESET VIEW

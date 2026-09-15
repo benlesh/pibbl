@@ -420,10 +420,11 @@ function ResetPaint(): CRCNode {
         pointerEvents="none"
         style={{
           x: 58,
-          y: 21,
+          y: 16,
           fill: "#17211d",
           font: "800 12px sans-serif",
           textAlign: "center",
+          textBaseline: "middle",
         }}
       >
         RESET VIEW
