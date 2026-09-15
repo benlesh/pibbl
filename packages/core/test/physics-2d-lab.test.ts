@@ -72,7 +72,9 @@ describe("public 2D physics laboratory", () => {
         "staticBody2D",
         "collider2D",
         "crcPhysicsBody2D",
-        "applyImpulse2D",
+        "crcRef",
+        "crcState",
+        "setPointerCapture",
       ],
       source: {
         path: "packages/scenarios/src/learning/composition/physics-2d.example.tsx",

@@ -726,22 +726,24 @@ const drafts = [
     section: "composition",
     order: 119,
     summary:
-      "Compose a static ground, dynamic ball, collider-only sensor, and handle-driven impulse in one scheduler-owned 2D physics world.",
+      "Drag and drop a dynamic ball through static bumpers and a collider-only sensor in one scheduler-owned 2D physics world.",
     api: [
       "PhysicsWorld2D",
       "dynamicBody2D",
       "staticBody2D",
       "collider2D",
       "crcPhysicsBody2D",
-      "applyImpulse2D",
+      "crcRef",
+      "crcState",
+      "setPointerCapture",
     ],
     objectives: [
-      "Attach static and dynamic bodies to ordinary CRC drawing primitives, then add a collider-only sensor beneath the ball.",
-      "Capture a component-owned body handle and apply an impulse without exposing a manual world step.",
+      "Attach static and dynamic bodies to ordinary CRC drawing primitives, then add solid bumpers and a collider-only sensor.",
+      "Capture one pointer while application-owned coordinates drag a disabled body, then return pose ownership to physics on release.",
     ],
     prompts: {
-      gesture: "Click the blue ball to apply an upward-right impulse.",
-      code: "Change gravity, restitution, or the impulse while leaving the world on CRC's shared scheduler.",
+      gesture: "Drag the blue ball above a bumper and release it.",
+      code: "Change gravity, bumper restitution, or the drag bounds while leaving the world on CRC's shared scheduler.",
     },
     apiNotes: [
       "An enabled dynamic root pose is physics-owned; disable physics before animating authored position, then explicitly re-enable it.",

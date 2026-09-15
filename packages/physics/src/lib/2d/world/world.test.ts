@@ -422,12 +422,20 @@ describe("normalized 2D world configuration and topology admission", () => {
     expect(world.snapshot().colliderCount).toBe(0);
 
     world.applyBegin([
+      {
+        kind: "set-pose",
+        bodyId: 1,
+        pose: { position: [4, 5], rotationDegrees: 30 },
+      },
       { kind: "enable", bodyId: 1, velocity: "preserve" },
     ]);
     advance(world, 4, 0);
     expect(world.isBodyEnabled(1)).toBe(true);
     expect(world.snapshot().colliderCount).toBe(1);
-    expect(world.authoritativePose(1).position[0]).toBe(0);
+    const pose = world.authoritativePose(1);
+    expect(pose.position[0]).toBeCloseTo(4, 12);
+    expect(pose.position[1]).toBeCloseTo(5, 12);
+    expect(pose.rotationDegrees).toBeCloseTo(30, 12);
     expect(world.snapshot().bodies[0]!.linearVelocityX).toBe(3);
     expect(world.snapshot().bodies[0]!.localCenterX).toBe(2);
   });

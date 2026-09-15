@@ -1063,8 +1063,10 @@ export class PhysicsWorld2DKernel {
     if (disabled === undefined) return;
     const authored = this.state.bodyRecords.get(bodyId)?.definition;
     if (authored === undefined) return;
+    const disabledPose = publicBodyOriginPose(this.bodies, slot.index);
     this.state.disabledBodies.delete(bodyId);
     writeBodyDefinition(this.bodies, slot.index, authored);
+    this.setBodyOriginPose(slot.index, disabledPose);
     this.bodies.flags[slot.index] = disabled.flags & ~BODY_SLEEPING_2D;
     this.bodies.linearVelocityX[slot.index] =
       velocity === "preserve" ? disabled.linearVelocityX : 0;

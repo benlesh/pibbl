@@ -17,7 +17,13 @@ import {
   validateLearningSourceText,
 } from "../../../tooling/learning-source-contract";
 import { WEBGL_LIGHTING_EXAMPLE_IDS } from "../../../tooling/webgl-lighting-example-contract";
-import { clickLogicalPoint, pressKey } from "./support/user-input";
+import {
+  clickLogicalPoint,
+  pointerDownLogicalPoint,
+  pointerMoveLogicalPoint,
+  pointerUpLogicalPoint,
+  pressKey,
+} from "./support/user-input";
 
 const mountedControllers: Array<{ dispose: () => void }> = [];
 const removedDefinitionWrapper = ["define", "Comp"].join("");
@@ -1817,17 +1823,47 @@ describe("learning example catalog", () => {
     expect(latestPaints).toContain("LAST INPUT: ArrowRight");
   });
 
-  it("makes the 2D physics lesson ball visibly react to a click", async () => {
+  it("makes the 2D physics lesson ball follow its captured pointer", async () => {
     const { canvas } = await renderLearningExample("physics-2d");
     const before = solidBlueBounds(canvas);
+    const target = { x: 500, y: 120 };
 
-    await clickLogicalPoint(canvas, { x: before.centerX, y: before.centerY });
+    await pointerDownLogicalPoint(canvas, {
+      x: before.centerX,
+      y: before.centerY,
+    });
+    await pointerMoveLogicalPoint(canvas, target);
     await nextPaint();
-    await nextPaint();
-    const after = solidBlueBounds(canvas);
+    const dragged = solidBlueBounds(canvas);
 
-    expect(after.centerX).toBeGreaterThanOrEqual(before.centerX + 1);
-    expect(after.centerY).toBeLessThan(before.centerY - 1);
+    expect(dragged.centerX).toBeGreaterThanOrEqual(target.x - 1);
+    expect(dragged.centerX).toBeLessThanOrEqual(target.x + 1);
+    expect(dragged.centerY).toBeGreaterThanOrEqual(target.y - 1);
+    expect(dragged.centerY).toBeLessThanOrEqual(target.y + 1);
+  });
+
+  it("drops the 2D physics lesson ball onto a static deflector", async () => {
+    const { canvas } = await renderLearningExample("physics-2d");
+    const before = solidBlueBounds(canvas);
+    const target = { x: 230, y: 120 };
+
+    await pointerDownLogicalPoint(canvas, {
+      x: before.centerX,
+      y: before.centerY,
+    });
+    await pointerMoveLogicalPoint(canvas, target);
+    await nextPaint();
+    const releasedAt = solidBlueBounds(canvas);
+
+    await pointerUpLogicalPoint(canvas, target);
+    let dropped = releasedAt;
+    for (let frame = 0; frame < 120; frame += 1) {
+      await nextPaint();
+      dropped = solidBlueBounds(canvas);
+      if (dropped.centerX < releasedAt.centerX - 4) break;
+    }
+
+    expect(dropped.centerX).toBeLessThan(releasedAt.centerX - 4);
   });
 
   it.each(learningExampleCatalog)(
