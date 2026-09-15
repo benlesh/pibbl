@@ -11,6 +11,8 @@
       "@crc/core/jsx-runtime": ["./packages/core/src/jsx-runtime.ts"],
       "@crc/core/types": ["./packages/core/src/types.ts"],
       "@crc/core": ["./packages/core/src/index.ts"],
+      "@crc/physics/2d/geometry": ["./packages/physics/src/2d-geometry.ts"],
+      "@crc/physics/2d": ["./packages/physics/src/2d.ts"],
       "@crc/webgl": ["./packages/webgl/src/index.ts"],
       "@crc/types": ["./packages/types/src/index.ts"],
       "virtual:crc-studio-docs": ["./playground/src/studio-docs.d.ts"]
@@ -36,6 +38,7 @@
     "**/vendor/**",
     "**/node_modules/**",
     "**/dist/**",
-    "**/fixtures/**"
+    "**/fixtures/**",
+    "packages/physics/**"
   ]
 }

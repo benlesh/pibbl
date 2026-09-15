@@ -101,6 +101,9 @@ importers:
       '@babel/plugin-transform-react-jsx':
         specifier: 'catalog:'
         version: 8.0.1(@babel/core@8.0.1)
+      '@crc/physics':
+        specifier: workspace:*
+        version: link:packages/physics
       '@crc/scenarios':
         specifier: workspace:*
         version: link:packages/scenarios
@@ -164,6 +167,12 @@ importers:
       '@crc/types':
         specifier: workspace:*
         version: link:../types
+
+  packages/physics:
+    devDependencies:
+      '@crc/core':
+        specifier: workspace:*
+        version: link:../core
 
   packages/scenarios:
     dependencies:
