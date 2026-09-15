@@ -138,10 +138,28 @@ describe('public WebGL lighting rendering', () => {
 
     const shadowed = await render(true);
     const unshadowed = await render(false);
-    const occludedPixel = findDarkenedOpaquePixel(shadowed, unshadowed, 40);
+    const occludedPixel = findDarkenedGroundPixel(shadowed, unshadowed, 40);
     expect(occludedPixel).toBeDefined();
     expect(occludedPixel!.shadowed[3]).toBe(255);
     expect(occludedPixel!.unshadowed[3]).toBe(255);
+    const unshadowedSpread = Math.max(
+      ...occludedPixel!.unshadowed.slice(0, 3),
+    ) - Math.min(...occludedPixel!.unshadowed.slice(0, 3));
+    expect(unshadowedSpread).toBeLessThanOrEqual(10);
+  });
+
+  it('does not let an occluder-only darkening satisfy ground-shadow evidence', () => {
+    const shadowed = Uint8ClampedArray.from([
+      120, 20, 20, 255,
+      160, 160, 160, 255,
+    ]);
+    const unshadowed = Uint8ClampedArray.from([
+      200, 80, 80, 255,
+      160, 160, 160, 255,
+    ]);
+
+    expect(findDarkenedGroundPixel(shadowed, unshadowed, 40))
+      .toBeUndefined();
   });
 
   it('applies point inverse square, the distance floor, and finite range', async () => {
@@ -277,7 +295,7 @@ async function renderImage(
   return canvas.getContext('2d')!.getImageData(0, 0, width, height).data;
 }
 
-function findDarkenedOpaquePixel(
+function findDarkenedGroundPixel(
   shadowed: Uint8ClampedArray,
   unshadowed: Uint8ClampedArray,
   minimumDifference: number,
@@ -285,8 +303,11 @@ function findDarkenedOpaquePixel(
   for (let offset = 0; offset < shadowed.length; offset += 4) {
     const shadow = Array.from(shadowed.slice(offset, offset + 4));
     const lit = Array.from(unshadowed.slice(offset, offset + 4));
+    const litSpread = Math.max(...lit.slice(0, 3)) -
+      Math.min(...lit.slice(0, 3));
     if (
       shadow[3] === 255 && lit[3] === 255 &&
+      litSpread <= 10 &&
       lit[0]! - shadow[0]! >= minimumDifference &&
       lit[1]! - shadow[1]! >= minimumDifference &&
       lit[2]! - shadow[2]! >= minimumDifference

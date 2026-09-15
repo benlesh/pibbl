@@ -106,21 +106,20 @@ export function crcOrbitCamera(
       candidateDistance,
     ),
   );
-  state.lookAt = lookAt;
-  state.position = position;
-  if (
-    !state.result ||
-    state.result.position !== position ||
-    state.result.lookAt !== lookAt
-  ) {
-    state.result = Object.freeze({ position, lookAt, handlers: state.handlers });
-  }
+  const result = !state.result ||
+      state.result.position !== position ||
+      state.result.lookAt !== lookAt ?
+    Object.freeze({ position, lookAt, handlers: state.handlers }) :
+    state.result;
   internalOnCurrentRenderFinish((success: boolean) => {
     if (!success || !state.active) return;
     state.options = candidate;
     state.distance = candidateDistance;
+    state.lookAt = lookAt;
+    state.position = position;
+    state.result = result;
   });
-  return state.result;
+  return result;
 }
 
 function createHandlers(state: OrbitCameraSlot): CRCOrbitCameraHandlers {

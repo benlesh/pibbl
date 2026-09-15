@@ -1,4 +1,9 @@
 import { crc, type CRCController, type CRCNode } from '@crc/core';
+import {
+  crcInternalCurrentRenderOwner,
+  crcInternalRequestRendererWork,
+  type CRCInternalRenderOwner,
+} from '@crc/core/internal';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as publicWebGL from '../../index.js';
 
@@ -267,6 +272,53 @@ describe('crcOrbitCamera', () => {
     controller.dispose();
     handlers.onWheel({ deltaY: 1, deltaMode: 0, preventDefault } as any);
     expect(frames.pendingIds()).toEqual([]);
+  });
+
+  it('does not publish equal-value vector caches when a later sibling makes the root transaction fail', () => {
+    const frames = installControlledFrames();
+    const snapshots: any[] = [];
+    let orbitPoint: readonly [number, number, number] = [0, 0, 0];
+    let owner!: CRCInternalRenderOwner;
+    let failComposition = false;
+    const workKey = {};
+    function Probe(): void {
+      snapshots.push(orbitCamera()({
+        orbitPoint,
+        initialPosition: [0, 0, 10],
+      }));
+    }
+    function LaterSibling(): void {
+      owner ??= crcInternalCurrentRenderOwner();
+    }
+    const scene = () => <><Probe /><LaterSibling /></>;
+    const canvas = createCanvas(100, 100);
+    controllers.add(crc(canvas, scene(), { pixelRatio: 1 }));
+    frames.runNext(1);
+    crcInternalRequestRendererWork(owner, {
+      key: workKey,
+      kind: 'compose',
+      run: () => {
+        if (failComposition) {
+          throw new Error('expected later sibling composition failure');
+        }
+      },
+    });
+
+    orbitPoint = [1, 2, 3];
+    failComposition = true;
+    crc(canvas, scene());
+    expect(() => frames.runNext(2))
+      .toThrowError('expected later sibling composition failure');
+    expect(snapshots[1].lookAt).toEqual([1, 2, 3]);
+
+    orbitPoint = [0, 0, 0];
+    failComposition = false;
+    crc(canvas, scene());
+    frames.runNext(3);
+
+    expect(snapshots[2].position).toBe(snapshots[0].position);
+    expect(snapshots[2].lookAt).toBe(snapshots[0].lookAt);
+    expect(snapshots[2]).toBe(snapshots[0]);
   });
 });
 

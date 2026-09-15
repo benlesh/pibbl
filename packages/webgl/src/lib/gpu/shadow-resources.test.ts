@@ -149,6 +149,35 @@ describe('WebGLShadowResourceCache', () => {
     transaction.rollback();
     expect(recording.deleteTexture).toHaveBeenCalled();
   });
+
+  it('deletes every active candidate handle exactly once on healthy disposal while abandoning context-lost handles', () => {
+    const recording = createShadowGL();
+    const cache = new WebGLShadowResourceCache(recording.gl, 7);
+    const transaction = cache.beginRender();
+    transaction.useDirectional(plan(), () => undefined);
+
+    cache.dispose(false);
+    transaction.rollback();
+    cache.dispose(false);
+
+    const deleted = recording.deleteTexture.mock.calls.map(call => call[0]);
+    expect(deleted).toHaveLength(3);
+    expect(new Set(deleted)).toEqual(new Set(recording.textures));
+    expect(recording.deleteFramebuffer).toHaveBeenCalledOnce();
+
+    const lost = createShadowGL();
+    const lostCache = new WebGLShadowResourceCache(lost.gl, 8);
+    const lostTransaction = lostCache.beginRender();
+    lostTransaction.useDirectional(
+      plan({ contextGeneration: 8 }),
+      () => undefined,
+    );
+
+    lostCache.dispose(true);
+    lostTransaction.rollback();
+    expect(lost.deleteTexture).not.toHaveBeenCalled();
+    expect(lost.deleteFramebuffer).not.toHaveBeenCalled();
+  });
 });
 
 const FIRST_LIGHT = Object.freeze({});

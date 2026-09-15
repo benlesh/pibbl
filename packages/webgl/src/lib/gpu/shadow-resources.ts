@@ -91,6 +91,8 @@ export class WebGLShadowResourceCache {
   dispose(contextLost: boolean): void {
     if (this.disposed) return;
     this.disposed = true;
+    const candidateResources = this.activeCandidate ?
+      Array.from(this.activeCandidate.created.values()) : [];
     this.closeActiveCandidate();
     const foundation = this.foundation;
     const resources = Array.from(this.resident.values());
@@ -98,6 +100,9 @@ export class WebGLShadowResourceCache {
     this.resident.clear();
     this.maximum2DResolution = undefined;
     if (contextLost || this.invalidated) return;
+    for (const resource of candidateResources) {
+      runShadowCleanup(() => this.gl.deleteTexture(resource.texture));
+    }
     for (const resource of resources) {
       runShadowCleanup(() => this.gl.deleteTexture(resource.texture));
     }
