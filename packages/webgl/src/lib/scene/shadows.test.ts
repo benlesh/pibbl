@@ -259,6 +259,45 @@ describe('point shadow planning', () => {
       false,
     );
   });
+
+  it('keeps finite-range receiver-only movement out of the point depth key', () => {
+    const first = settleScene({
+      lightKind: 'point',
+      lightRange: 10,
+      receiverTransform: { translateX: 2 },
+    }).shadowPlans[0]!;
+    const movedReceiver = settleScene({
+      lightKind: 'point',
+      lightRange: 10,
+      receiverTransform: { translateX: 5 },
+    }).shadowPlans[0]!;
+
+    expect(first.casters).toHaveLength(1);
+    expect(first.receivers).toHaveLength(1);
+    expect(first.receivers[0]!.worldBounds).not.toEqual(
+      movedReceiver.receivers[0]!.worldBounds,
+    );
+    expect(haveSameWebGLShadowPlan(
+      first,
+      1024,
+      movedReceiver,
+      1024,
+    )).toBe(true);
+  });
+
+  it('keeps insertion of a non-shadow light out of the point depth key', () => {
+    const first = settleScene({ lightKind: 'point', lightRange: 10 })
+      .shadowPlans[0]!;
+    const shifted = settleScene({
+      lightKind: 'point',
+      lightRange: 10,
+      ambientBefore: true,
+    }).shadowPlans[0]!;
+
+    expect(first.lightIndex).toBe(0);
+    expect(shifted.lightIndex).toBe(1);
+    expect(haveSameWebGLShadowPlan(first, 1024, shifted, 1024)).toBe(true);
+  });
 });
 
 function settleScene(options: {
@@ -272,8 +311,10 @@ function settleScene(options: {
   readonly lightTransform?: Parameters<typeof composeModelMatrix4>[1];
   readonly meshTransform?: Parameters<typeof composeModelMatrix4>[1];
   readonly meshIdentity?: object;
+  readonly receiverTransform?: Parameters<typeof composeModelMatrix4>[1];
   readonly lightKind?: 'directional' | 'point';
   readonly lightRange?: number;
+  readonly ambientBefore?: boolean;
 } = {}) {
   const camera = resolveCamera({
     type: 'perspective',
@@ -297,6 +338,14 @@ function settleScene(options: {
     contextGeneration: 7,
     shadowQuality: options.shadowQuality ?? 'medium',
   } as any);
+  if (options.ambientBefore) {
+    submitWebGLLight(composer, {
+      kind: 'ambient',
+      componentName: 'AmbientLight',
+      color: [0.1, 0.1, 0.1, 1],
+      intensity: 0.2,
+    } as any);
+  }
   const lightModel = new Float32Array(16);
   composeModelMatrix4(lightModel, options.lightTransform);
   const lightBase = {
@@ -326,8 +375,23 @@ function settleScene(options: {
     color: [1, 1, 1, options.alpha ?? 1],
     lit: options.lit ?? true,
     castShadow: options.castShadow,
-    receiveShadow: options.receiveShadow,
+    receiveShadow: options.receiverTransform === undefined ?
+      options.receiveShadow : false,
   } as any);
+  if (options.receiverTransform !== undefined) {
+    const receiverModel = new Float32Array(16);
+    composeModelMatrix4(receiverModel, options.receiverTransform);
+    submitWebGLMesh(composer, {
+      identity: RECEIVER_IDENTITY,
+      componentName: 'Receiver',
+      geometry,
+      localModel: receiverModel,
+      color: [1, 1, 1, 1],
+      lit: true,
+      castShadow: false,
+      receiveShadow: true,
+    } as any);
+  }
   return settleWebGLScene(composer);
 }
 
@@ -337,6 +401,7 @@ function rounded(values: ArrayLike<number>): number[] {
 
 const DIRECT_LIGHT_IDENTITY = Object.freeze({});
 const MESH_IDENTITY = Object.freeze({});
+const RECEIVER_IDENTITY = Object.freeze({});
 
 function receiverOnlyPlan(
   plan: ReturnType<typeof settleScene>['shadowPlans'][number],

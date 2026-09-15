@@ -97,18 +97,21 @@ export function haveSameWebGLShadowPlan(
   right: SettledWebGLShadowPlan,
   rightResolvedResolution: number,
 ): boolean {
-  return left.kind === right.kind &&
+  const hasSameDepthInputs = left.kind === right.kind &&
     left.lightIdentity === right.lightIdentity &&
-    left.lightIndex === right.lightIndex &&
     left.requestedResolution === right.requestedResolution &&
     leftResolvedResolution === rightResolvedResolution &&
     left.comparisonCount === right.comparisonCount &&
-    left.bias === right.bias &&
     left.contextGeneration === right.contextGeneration &&
     left.shadowProgramGeneration === right.shadowProgramGeneration &&
     equalShadowProjection(left, right) &&
-    equalCasterQueue(left.casters, right.casters) &&
-    equalReceiverQueue(left.receivers, right.receivers);
+    equalCasterQueue(left.casters, right.casters);
+  if (!hasSameDepthInputs) return false;
+
+  return left.kind === 'point' || (
+    left.bias === right.bias &&
+    equalReceiverQueue(left.receivers, right.receivers)
+  );
 }
 
 function equalShadowProjection(

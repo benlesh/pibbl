@@ -396,6 +396,34 @@ describe('WebGLSceneRenderer', () => {
     expect(recording.createTexture).toHaveBeenCalledTimes(textureCount);
   });
 
+  it('reuses point depth after a non-shadow light changes its slot and binds the current slot', () => {
+    const recording = createRendererGL();
+    const renderer = new WebGLSceneRenderer(recording.gl, 7);
+    const drawable = mesh(0, [1, 1, 1, 1], {
+      shading: 'lambert',
+      seed: 11,
+    });
+
+    renderer.render(scene({
+      meshes: [drawable],
+      lights: [pointLight()],
+      opaque: [drawable],
+      shadowPlans: [pointPlan(drawable)],
+    }));
+    renderer.render(scene({
+      meshes: [drawable],
+      lights: [fixedLights()[0]!, pointLight()],
+      opaque: [drawable],
+      shadowPlans: [pointPlan(drawable, { lightIndex: 1 })],
+    }));
+
+    expect(recording.draws.filter(draw => draw.programKey === 'shadow-depth'))
+      .toHaveLength(6);
+    expect(recording.draws.at(-1)?.uniforms).toMatchObject({
+      'u_shadow_enabled[0]': [0, 2, 0, 0, 0, 0, 0, 0],
+    });
+  });
+
   it('invalidates a point cube when caster depth changes', () => {
     const recording = createRendererGL();
     const renderer = new WebGLSceneRenderer(recording.gl, 7);
@@ -737,7 +765,10 @@ function pointLight(): SettledWebGLLight {
   });
 }
 
-function pointPlan(mesh: SettledWebGLMesh): SettledWebGLShadowPlan {
+function pointPlan(
+  mesh: SettledWebGLMesh,
+  overrides: Partial<SettledWebGLShadowPlan> = {},
+): SettledWebGLShadowPlan {
   return Object.freeze({
     kind: 'point',
     lightIdentity: POINT_LIGHT_IDENTITY,
@@ -756,6 +787,7 @@ function pointPlan(mesh: SettledWebGLMesh): SettledWebGLShadowPlan {
     comparisonCount: 4,
     contextGeneration: 7,
     shadowProgramGeneration: 1,
+    ...overrides,
   } as any);
 }
 
