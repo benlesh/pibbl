@@ -21,6 +21,7 @@ export {
   smokeScenarioEntry,
   mouseContractScenarioEntry,
   performanceLabScenarioEntry,
+  physics2DLabScenarioEntry,
   runtimeHooksScenarioEntry,
   signalsLabScenarioEntry,
   validateScenarioCatalog,
@@ -32,6 +33,13 @@ export type {
   AnimationLabState,
 } from './animation-lab.example';
 export { ANIMATION_LAB_ACTION_IDS } from './animation-lab';
+export type {
+  Physics2DLabAction,
+  Physics2DLabBodyId,
+  Physics2DLabBodySnapshot,
+  Physics2DLabState,
+} from './physics-2d-lab.example';
+export { PHYSICS_2D_LAB_ACTION_IDS } from './physics-2d-lab';
 export type {
   SignalsLabAction,
   SignalsLabState,

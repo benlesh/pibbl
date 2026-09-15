@@ -1,4 +1,5 @@
 export * from "@crc/core";
+export * from "@crc/physics/2d";
 export * from "@crc/webgl";
 export { computed, crcSignal, isSignal, signal, untracked } from "@crc/core";
 export {

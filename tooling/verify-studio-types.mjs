@@ -13,6 +13,10 @@ const declarationBundle = await readFile(
   join(repositoryRoot, 'playground/src/crc-editor-types.txt'),
   'utf8',
 );
+const physicsLessonSource = await readFile(
+  join(repositoryRoot, 'packages/scenarios/src/learning/composition/physics-2d.example.tsx'),
+  'utf8',
+);
 const directory = await mkdtemp(join(tmpdir(), 'crc-studio-types-'));
 const require = createRequire(import.meta.url);
 const tsc = join(dirname(require.resolve('typescript')), 'tsc.js');
@@ -21,6 +25,8 @@ const modulePaths = new Map([
   ['@crc/core', 'node_modules/@crc/core/index.d.ts'],
   ['@crc/core/jsx-runtime', 'node_modules/@crc/core/jsx-runtime.d.ts'],
   ['@crc/core/jsx-dev-runtime', 'node_modules/@crc/core/jsx-dev-runtime.d.ts'],
+  ['@crc/physics/2d', 'node_modules/@crc/physics/2d.d.ts'],
+  ['@crc/physics/2d/geometry', 'node_modules/@crc/physics/2d/geometry.d.ts'],
   ['@crc/webgl', 'node_modules/@crc/webgl/index.d.ts'],
 ]);
 
@@ -28,17 +34,18 @@ function readDeclarationModules(bundle) {
   const markers = [...bundle.matchAll(/^\/\* @crc-studio-module (.+) \*\/$/gmu)];
   const modules = markers.map((marker, index) => ({
     moduleName: marker[1],
-    content: bundle.slice(
-      marker.index + marker[0].length,
-      markers[index + 1]?.index ?? bundle.length,
-    ).trimStart(),
+    content: bundle
+      .slice(marker.index + marker[0].length, markers[index + 1]?.index ?? bundle.length)
+      .trimStart(),
   }));
   if (
     modules.length !== modulePaths.size ||
     new Set(modules.map(({ moduleName }) => moduleName)).size !== modulePaths.size ||
     modules.some(({ moduleName }) => !modulePaths.has(moduleName))
   ) {
-    throw new Error('CRC Studio declarations must define the four package entry points exactly once.');
+    throw new Error(
+      'CRC Studio declarations must define the six package entry points exactly once.',
+    );
   }
   return modules;
 }
@@ -74,15 +81,23 @@ const removedAuthoringImports = [
   [['Img', 'Props'], 'RemovedImageFactoryProps'],
   [['G', 'Props'], 'RemovedGroupFactoryProps'],
   [['Comp', 'Refs'], 'RemovedComponentRefsType'],
-].map(([parts, alias]) =>
-  '// @ts-expect-error removed authoring export\n' +
-  `import type { ${parts.join('')} as ${alias} } from '@crc/core';`,
-).join('\n');
+]
+  .map(
+    ([parts, alias]) =>
+      '// @ts-expect-error removed authoring export\n' +
+      `import type { ${parts.join('')} as ${alias} } from '@crc/core';`,
+  )
+  .join('\n');
 
-function explicitExportNames(source, surfaceLabel) {
+function explicitExportNames(
+  source,
+  surfaceLabel,
+  allowedAmbientModuleNames = new Set(),
+  declarationFile = true,
+) {
   const sourceFile = parse(source, {
     sourceType: 'module',
-    plugins: [['typescript', { dts: true }]],
+    plugins: declarationFile ? [['typescript', { dts: true }]] : ['typescript'],
   });
   const names = new Set();
 
@@ -96,6 +111,7 @@ function explicitExportNames(source, surfaceLabel) {
       statement.kind === 'module' &&
       statement.id.type === 'StringLiteral'
     ) {
+      if (allowedAmbientModuleNames.has(statement.id.value)) continue;
       throw new Error(
         `CRC ${surfaceLabel} declaration rejects ambient external module: ${statement.id.value}.`,
       );
@@ -159,9 +175,21 @@ function assertExactDeclarationSurface(
   expectedSource,
   actualLabel,
   actualSource,
+  expectedDeclarationFile = true,
+  actualDeclarationFile = true,
 ) {
-  const expectedNames = explicitExportNames(expectedSource, `${expectedLabel} ${moduleName}`);
-  const actualNames = explicitExportNames(actualSource, `${actualLabel} ${moduleName}`);
+  const expectedNames = explicitExportNames(
+    expectedSource,
+    `${expectedLabel} ${moduleName}`,
+    new Set(),
+    expectedDeclarationFile,
+  );
+  const actualNames = explicitExportNames(
+    actualSource,
+    `${actualLabel} ${moduleName}`,
+    new Set(),
+    actualDeclarationFile,
+  );
   if (expectedNames.join('\n') === actualNames.join('\n')) return;
 
   const expectedNameSet = new Set(expectedNames);
@@ -170,8 +198,8 @@ function assertExactDeclarationSurface(
   const extra = actualNames.filter((name) => !expectedNameSet.has(name));
   throw new Error(
     `CRC ${actualLabel} declaration surface differs from ${expectedLabel} for ${moduleName}.\n` +
-    `Missing: ${missing.join(', ') || '(none)'}.\n` +
-    `Extra: ${extra.join(', ') || '(none)'}.`,
+      `Missing: ${missing.join(', ') || '(none)'}.\n` +
+      `Extra: ${extra.join(', ') || '(none)'}.`,
   );
 }
 
@@ -264,6 +292,10 @@ const packageDeclarationSources = new Map([
     await readFile(join(repositoryRoot, 'packages/core/src/jsx-dev-runtime.ts'), 'utf8'),
   ],
   ['@crc/webgl', await readFile(join(repositoryRoot, 'packages/webgl/src/index.ts'), 'utf8')],
+  [
+    '@crc/physics/2d/geometry',
+    await readFile(join(repositoryRoot, 'packages/physics/src/2d-geometry.ts'), 'utf8'),
+  ],
 ]);
 
 const builtPackageDeclarationSources = new Map([
@@ -277,16 +309,23 @@ const builtPackageDeclarationSources = new Map([
     await readFile(join(repositoryRoot, 'packages/core/dist/jsx-dev-runtime.d.ts'), 'utf8'),
   ],
   ['@crc/webgl', await readFile(join(repositoryRoot, 'packages/webgl/dist/index.d.ts'), 'utf8')],
+  [
+    '@crc/physics/2d/geometry',
+    await readFile(join(repositoryRoot, 'packages/physics/dist/2d-geometry.d.ts'), 'utf8'),
+  ],
 ]);
 
 for (const { moduleName, content } of declarationModules) {
+  if (moduleName === '@crc/physics/2d') continue;
   const packageSource = packageDeclarationSources.get(moduleName);
+  const sourceIsDeclarationFile = moduleName !== '@crc/physics/2d/geometry';
   assertExactDeclarationSurface(
     moduleName,
     'source package',
     packageSource,
     'built package',
     builtPackageDeclarationSources.get(moduleName),
+    sourceIsDeclarationFile,
   );
   assertExactDeclarationSurface(
     moduleName,
@@ -294,6 +333,7 @@ for (const { moduleName, content } of declarationModules) {
     packageSource,
     'Studio',
     content,
+    sourceIsDeclarationFile,
   );
 }
 
@@ -366,6 +406,7 @@ const publicTypeExports = [
   'CRCPixelRatio',
   'CRCPointerEvent',
   'CRCPointerEvents',
+  'CRCPhysics2DPropExtension',
   'CRCPlayback',
   'CRCPlaybackEvent',
   'CRCPlaybackOptions',
@@ -475,8 +516,10 @@ const publicTypeExports = [
   'WritableSignal',
 ].sort();
 
-if (publicTypeExports.length !== 175) {
-  throw new Error(`CRC Studio must declare exactly 175 core public types, received ${publicTypeExports.length}.`);
+if (publicTypeExports.length !== 176) {
+  throw new Error(
+    `CRC Studio must declare exactly 176 core public types, received ${publicTypeExports.length}.`,
+  );
 }
 
 const publicWebGLTypeExports = [
@@ -519,6 +562,124 @@ if (publicWebGLTypeExports.length !== 33) {
   throw new Error(`CRC Studio must declare exactly 33 WebGL public types, received ${publicWebGLTypeExports.length}.`);
 }
 
+const publicPhysics2DTypeExports = [
+  'CRCPhysicsAabb2D',
+  'CRCPhysicsAttachment2D',
+  'CRCPhysicsBodyAttachment2D',
+  'CRCPhysicsBodyHandle2D',
+  'CRCPhysicsBodyStateEvent2D',
+  'CRCPhysicsBodyStateHandler2D',
+  'CRCPhysicsColliderAttachment2D',
+  'CRCPhysicsColliderConfiguration2D',
+  'CRCPhysicsColliderHandle2D',
+  'CRCPhysicsCollisionEvent2D',
+  'CRCPhysicsCollisionFilter',
+  'CRCPhysicsCollisionHandler2D',
+  'CRCPhysicsContactPoint2D',
+  'CRCPhysicsDistance2D',
+  'CRCPhysicsDynamicBody2DOptions',
+  'CRCPhysicsHitHandler2D',
+  'CRCPhysicsKinematicBody2DOptions',
+  'CRCPhysicsKinematicTarget2D',
+  'CRCPhysicsMassProperties2D',
+  'CRCPhysicsOverlapEvent2D',
+  'CRCPhysicsOverlapHandler2D',
+  'CRCPhysicsPose2D',
+  'CRCPhysicsPrimitiveProps2D',
+  'CRCPhysicsQueryHit2D',
+  'CRCPhysicsQueryMatch2D',
+  'CRCPhysicsQueryMode',
+  'CRCPhysicsQueryOptions2D',
+  'CRCPhysicsQueryResult2D',
+  'CRCPhysicsRay2D',
+  'CRCPhysicsShape2D',
+  'CRCPhysicsShapeContact2D',
+  'CRCPhysicsShapeHit2D',
+  'CRCPhysicsSolverOptions',
+  'CRCPhysicsStaticBody2DOptions',
+  'CRCPhysicsTransform2D',
+  'CRCPhysicsVector2',
+  'CRCPhysicsWorld2DProps',
+  'CRCPhysicsWorldHandle2D',
+  'Capsule2DProps',
+  'Capsule2DStyle',
+  'Chain2DProps',
+  'Chain2DStyle',
+  'PhysicsShape2DProps',
+  'PhysicsShape2DStyle',
+  'Segment2DProps',
+  'Segment2DStyle',
+].sort();
+
+const publicPhysics2DValueExports = [
+  'Capsule2D',
+  'Chain2D',
+  'PhysicsShape2D',
+  'PhysicsWorld2D',
+  'Segment2D',
+  'applyForce2D',
+  'applyImpulse2D',
+  'applyTorque2D',
+  'arcShape2D',
+  'boundsOfShape2D',
+  'boxShape2D',
+  'capsuleShape2D',
+  'chainShape2D',
+  'circleShape2D',
+  'collider2D',
+  'contactBetweenShapes2D',
+  'containsPoint2D',
+  'crcPhysicsBody2D',
+  'crcPhysicsWorld2D',
+  'disableBody2D',
+  'distanceBetweenShapes2D',
+  'dynamicBody2D',
+  'ellipseShape2D',
+  'enableBody2D',
+  'kinematicBody2D',
+  'massProperties2D',
+  'overlapShape2D',
+  'overlapShapes2D',
+  'polygonShape2D',
+  'queryAabb2D',
+  'queryPoint2D',
+  'raycast2D',
+  'raycastShape2D',
+  'roundedBoxShape2D',
+  'segmentShape2D',
+  'setAngularVelocity2D',
+  'setLinearVelocity2D',
+  'shapeCast2D',
+  'shapeCastAgainstShape2D',
+  'sleepBody2D',
+  'staticBody2D',
+  'teleportBody2D',
+  'transformShape2D',
+  'wakeBody2D',
+  'wedgeShape2D',
+  'withPhysicsShape2D',
+].sort();
+
+if (publicPhysics2DTypeExports.length !== 46 || publicPhysics2DValueExports.length !== 46) {
+  throw new Error('CRC Studio must declare exactly 46 physics 2D types and 46 physics 2D values.');
+}
+
+const physics2DStudioDeclaration = declarationModules.find(
+  ({ moduleName }) => moduleName === '@crc/physics/2d',
+)?.content;
+const physics2DStudioExports = explicitExportNames(
+  physics2DStudioDeclaration,
+  'Studio @crc/physics/2d',
+  new Set(['@crc/core']),
+);
+const expectedPhysics2DStudioExports = [
+  ...publicPhysics2DTypeExports,
+  ...publicPhysics2DValueExports,
+].sort();
+if (physics2DStudioExports.join('\n') !== expectedPhysics2DStudioExports.join('\n')) {
+  throw new Error('CRC Studio @crc/physics/2d declaration differs from its fixed public manifest.');
+}
+
 function explicitTypeExportNames(source) {
   const names = [];
   for (const match of source.matchAll(
@@ -539,14 +700,12 @@ for (const [moduleName, publicTypes] of [
   ['@crc/core', publicTypeExports],
   ['@crc/webgl', publicWebGLTypeExports],
 ]) {
-  const packageTypeExports = explicitTypeExportNames(
-    packageDeclarationSources.get(moduleName),
-  );
+  const packageTypeExports = explicitTypeExportNames(packageDeclarationSources.get(moduleName));
   if (packageTypeExports.join('\n') !== publicTypes.join('\n')) {
     throw new Error(
       `CRC Studio public type manifest differs from ${moduleName} source.\n` +
-      `Package: ${packageTypeExports.join(', ')}.\n` +
-      `Studio verifier: ${publicTypes.join(', ')}.`,
+        `Package: ${packageTypeExports.join(', ')}.\n` +
+        `Studio verifier: ${publicTypes.join(', ')}.`,
     );
   }
 }
@@ -558,6 +717,9 @@ import type {
 import type {
   ${publicWebGLTypeExports.join(',\n  ')}
 } from '@crc/webgl';
+import type {
+  ${publicPhysics2DTypeExports.join(',\n  ')}
+} from '@crc/physics/2d';
 `;
 
 const consumer = `
@@ -1558,24 +1720,25 @@ try {
   }
   await writeFile(join(directory, 'consumer.tsx'), consumer);
   await writeFile(join(directory, 'package-consumer.tsx'), packageConsumer);
+  await writeFile(join(directory, 'physics-lesson.tsx'), physicsLessonSource);
+  await writeFile(join(directory, 'public-type-surface.ts'), publicTypeSurfaceConsumer);
   await writeFile(
-    join(directory, 'public-type-surface.ts'),
-    publicTypeSurfaceConsumer,
+    join(directory, 'tsconfig.json'),
+    JSON.stringify({
+      compilerOptions: {
+        jsx: 'react-jsx',
+        jsxImportSource: '@crc/core',
+        lib: ['ESNext', 'DOM'],
+        module: 'ESNext',
+        moduleResolution: 'Bundler',
+        noEmit: true,
+        skipLibCheck: false,
+        strict: true,
+        target: 'ESNext',
+      },
+      files: ['consumer.tsx', 'physics-lesson.tsx', 'public-type-surface.ts'],
+    }),
   );
-  await writeFile(join(directory, 'tsconfig.json'), JSON.stringify({
-    compilerOptions: {
-      jsx: 'react-jsx',
-      jsxImportSource: '@crc/core',
-      lib: ['ESNext', 'DOM'],
-      module: 'ESNext',
-      moduleResolution: 'Bundler',
-      noEmit: true,
-      skipLibCheck: false,
-      strict: true,
-      target: 'ESNext',
-    },
-    files: ['consumer.tsx', 'public-type-surface.ts'],
-  }));
   const packageEntrySets = [
     {
       label: 'source',
@@ -1583,6 +1746,8 @@ try {
       internal: join(repositoryRoot, 'packages/core/src/internal.ts'),
       jsxRuntime: join(repositoryRoot, 'packages/core/src/jsx-runtime.ts'),
       jsxDevRuntime: join(repositoryRoot, 'packages/core/src/jsx-dev-runtime.ts'),
+      physics2d: join(repositoryRoot, 'packages/physics/src/2d.ts'),
+      physicsGeometry: join(repositoryRoot, 'packages/physics/src/2d-geometry.ts'),
       webgl: join(repositoryRoot, 'packages/webgl/src/index.ts'),
     },
     {
@@ -1591,40 +1756,42 @@ try {
       internal: join(repositoryRoot, 'packages/core/dist/internal.d.ts'),
       jsxRuntime: join(repositoryRoot, 'packages/core/dist/jsx-runtime.d.ts'),
       jsxDevRuntime: join(repositoryRoot, 'packages/core/dist/jsx-dev-runtime.d.ts'),
+      physics2d: join(repositoryRoot, 'packages/physics/dist/2d.d.ts'),
+      physicsGeometry: join(repositoryRoot, 'packages/physics/dist/2d-geometry.d.ts'),
       webgl: join(repositoryRoot, 'packages/webgl/dist/index.d.ts'),
     },
   ];
   for (const entries of packageEntrySets) {
-    const packageTsconfigPath = join(
-      directory,
-      `tsconfig.package-${entries.label}.json`,
-    );
-    await writeFile(packageTsconfigPath, JSON.stringify({
-      compilerOptions: {
-        jsx: 'react-jsx',
-        jsxImportSource: '@crc/core',
-        lib: ['ESNext', 'DOM'],
-        module: 'ESNext',
-        moduleResolution: 'Bundler',
-        noEmit: true,
-        paths: {
-          '@crc/core': [entries.root],
-          '@crc/core/internal': [entries.internal],
-          '@crc/core/jsx-runtime': [entries.jsxRuntime],
-          '@crc/core/jsx-dev-runtime': [entries.jsxDevRuntime],
-          '@crc/webgl': [entries.webgl],
+    const packageTsconfigPath = join(directory, `tsconfig.package-${entries.label}.json`);
+    await writeFile(
+      packageTsconfigPath,
+      JSON.stringify({
+        compilerOptions: {
+          jsx: 'react-jsx',
+          jsxImportSource: '@crc/core',
+          lib: ['ESNext', 'DOM'],
+          module: 'ESNext',
+          moduleResolution: 'Bundler',
+          noEmit: true,
+          paths: {
+            '@crc/core': [entries.root],
+            '@crc/core/internal': [entries.internal],
+            '@crc/core/jsx-runtime': [entries.jsxRuntime],
+            '@crc/core/jsx-dev-runtime': [entries.jsxDevRuntime],
+            '@crc/physics/2d': [entries.physics2d],
+            '@crc/physics/2d/geometry': [entries.physicsGeometry],
+            '@crc/webgl': [entries.webgl],
+          },
+          skipLibCheck: false,
+          strict: true,
+          target: 'ESNext',
         },
-        skipLibCheck: false,
-        strict: true,
-        target: 'ESNext',
-      },
-      files: ['package-consumer.tsx', 'public-type-surface.ts'],
-    }));
-    const packageResult = spawnSync(
-      process.execPath,
-      [tsc, '-p', packageTsconfigPath],
-      { encoding: 'utf8' },
+        files: ['package-consumer.tsx', 'physics-lesson.tsx', 'public-type-surface.ts'],
+      }),
     );
+    const packageResult = spawnSync(process.execPath, [tsc, '-p', packageTsconfigPath], {
+      encoding: 'utf8',
+    });
     if (packageResult.status !== 0) {
       process.stderr.write(packageResult.stdout);
       process.stderr.write(packageResult.stderr);
@@ -1643,14 +1810,8 @@ try {
   }
   const foreignRuntimeDirectory = join(directory, 'foreign-runtime');
   await mkdir(foreignRuntimeDirectory, { recursive: true });
-  await writeFile(
-    join(foreignRuntimeDirectory, 'jsx-runtime.d.ts'),
-    foreignRuntimeDeclarations,
-  );
-  await writeFile(
-    join(directory, 'foreign-runtime-consumer.tsx'),
-    foreignRuntimeConsumer,
-  );
+  await writeFile(join(foreignRuntimeDirectory, 'jsx-runtime.d.ts'), foreignRuntimeDeclarations);
+  await writeFile(join(directory, 'foreign-runtime-consumer.tsx'), foreignRuntimeConsumer);
   await writeFile(
     join(directory, 'tsconfig.foreign-runtime.json'),
     JSON.stringify({
@@ -1673,16 +1834,13 @@ try {
     [tsc, '-p', join(directory, 'tsconfig.foreign-runtime.json')],
     { encoding: 'utf8' },
   );
-  const foreignRuntimeOutput =
-    foreignRuntimeResult.stdout + foreignRuntimeResult.stderr;
+  const foreignRuntimeOutput = foreignRuntimeResult.stdout + foreignRuntimeResult.stderr;
   if (
     foreignRuntimeResult.status === 0 ||
     !foreignRuntimeOutput.includes("not assignable to parameter of type 'CRCNode'")
   ) {
     process.stderr.write(foreignRuntimeOutput);
-    throw new Error(
-      'CRC Studio declarations did not diagnose a foreign JSX runtime at crc().',
-    );
+    throw new Error('CRC Studio declarations did not diagnose a foreign JSX runtime at crc().');
   }
   const sourceRuntime = await studioRuntime('source');
   const builtRuntime = await studioRuntime('built');
@@ -1727,6 +1885,7 @@ try {
     'Wedge',
     'WebGLBackground',
     'WebGLLayer',
+    ...publicPhysics2DValueExports,
     'crcAnimationFrame',
     'crcOrbitCamera',
     'computed',
@@ -1784,8 +1943,10 @@ try {
     'untracked',
     'wait',
   ].sort();
-  if (expectedStudioRuntimeExports.length !== 94) {
-    throw new Error(`CRC Studio runtime must expose 77 core values, 14 WebGL values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`);
+  if (expectedStudioRuntimeExports.length !== 140) {
+    throw new Error(
+      `CRC Studio runtime must expose 77 core values, 46 physics values, 14 WebGL values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`,
+    );
   }
   if (sourceRuntimeExports.join('\n') !== expectedStudioRuntimeExports.join('\n')) {
     throw new Error(
@@ -1796,9 +1957,9 @@ try {
     throw new Error('CRC Studio source and built runtime surfaces differ.');
   }
   process.stdout.write(
-    'CRC Studio declarations passed exact export-name parity, 208-type structural ' +
-    'coverage, selected signature parity, strict TSX, compiler-runtime, event-family, ' +
-    'generic, and layout checks against source and built packages.\n',
+    'CRC Studio declarations passed exact export-name parity, 255-type structural ' +
+      'coverage, selected signature parity, strict TSX, compiler-runtime, event-family, ' +
+      'generic, and layout checks against source and built packages.\n',
   );
 } finally {
   await rm(directory, { recursive: true, force: true });

@@ -22,6 +22,7 @@ import type { WebGLLabState } from "./webgl-lab.example";
 import type { WebGLLightingLabState } from "./webgl-lighting-lab.example";
 import type { SignalsLabState } from "./signals-lab.example";
 import type { AnimationLabState } from "./animation-lab.example";
+import type { Physics2DLabState } from "./physics-2d-lab.example";
 import { GEOMETRY_MATRIX_CASES } from "./geometry-matrix.example";
 import { MOUSE_CONTRACT_CASES } from "./mouse-contract";
 import { PERFORMANCE_WORKLOADS } from "./performance-lab.example";
@@ -1564,7 +1565,8 @@ const webglLabMetadata: ScenarioMetadata = {
         "Visible WebGL geometry composes at one Canvas paint position while depth, transforms, clips, layers, and filter overflow preserve source geometry.",
     },
     {
-      action: "Choose Transparency and compare the far-only, overlap, and near-only probes.",
+      action:
+        "Choose Transparency and compare the far-only, overlap, and near-only probes.",
       expected:
         "Although the near mesh appears first in source, the overlap blends the far green mesh before the near red mesh.",
     },
@@ -1880,6 +1882,94 @@ export const animationLabScenarioEntry: ScenarioCatalogEntry<AnimationLabState> 
     load: async () => (await import("./animation-lab")).animationLabScenario,
   };
 
+const physics2DLabMetadata: ScenarioMetadata = {
+  id: "first-class-physics-2d",
+  slug: "physics-2d",
+  title: "First-class 2D physics laboratory",
+  summary:
+    "Drive rigid bodies, sensors, queries, a kinematic animation target, and explicit animation-to-physics pose ownership through public CRC APIs.",
+  category: "Simulation",
+  apiTags: [
+    "PhysicsWorld2D",
+    "dynamicBody2D",
+    "staticBody2D",
+    "kinematicBody2D",
+    "collider2D",
+    "crcPhysicsBody2D",
+    "crcPhysicsWorld2D",
+    "applyImpulse2D",
+    "disableBody2D",
+    "enableBody2D",
+    "queryAabb2D",
+    "tween",
+  ],
+  conceptTags: [
+    "fixed-step physics",
+    "central scheduler",
+    "collision ordering",
+    "sensor overlap",
+    "kinematic target",
+    "pose ownership handoff",
+    "world queries",
+  ],
+  manualSteps: [
+    {
+      action: "Choose Settle, then Impulse circle.",
+      expected:
+        "The circle changes from sleeping to awake and its authoritative velocity reports the impulse.",
+    },
+    {
+      action: "Choose Cross sensor, Move platform, and Query world.",
+      expected:
+        "Sensor receiver records stay ordered while the mover exits, the kinematic platform follows its animated target, and public query tags list matching colliders.",
+    },
+    {
+      action: "Choose Disable handoff, then Transfer animation.",
+      expected:
+        "The orange ball keeps its presented pose, moves under a CRC tween while disabled, and returns to physics with zero velocity after completion.",
+    },
+    {
+      action: "Choose Re-enable handoff, Remove owner, or Reset.",
+      expected:
+        "Named commands restore physics ownership, component removal preserves the last generation snapshot, and Reset creates a fresh scene.",
+    },
+  ],
+  knownLimitations: [
+    "The laboratory presents semantic body, event, and query snapshots; screenshot baselines are maintained by the later visual verification pass.",
+    "The example uses one fixed logical viewport and Chromium Canvas behavior rather than a public manual physics clock.",
+  ],
+  learningOrder: 200,
+  visibility: "test-laboratory",
+  visibilityReason:
+    "It exposes authoritative poses, velocities, generations, event order, and ownership stages for deterministic browser evidence.",
+  maturity: "contract",
+};
+
+export const physics2DLabScenarioEntry: ScenarioCatalogEntry<Physics2DLabState> =
+  {
+    metadata: physics2DLabMetadata,
+    canvas: { width: 480, height: 240 },
+    actions: [
+      { id: "settle", label: "Settle / observe" },
+      { id: "impulse", label: "Impulse circle" },
+      { id: "cross-sensor", label: "Cross sensor" },
+      { id: "move-platform", label: "Move platform" },
+      { id: "query", label: "Query world" },
+      { id: "disable-handoff", label: "Disable handoff" },
+      { id: "transfer-animation", label: "Transfer animation" },
+      { id: "reenable-handoff", label: "Re-enable handoff" },
+      { id: "remove-owner", label: "Remove owner" },
+    ],
+    source: {
+      id: "first-class-physics-2d-laboratory-example",
+      language: "tsx",
+      marker:
+        "PHYSICS_2D_LAB_SOURCE_ID = 'first-class-physics-2d-laboratory-example'",
+      path: "packages/scenarios/src/physics-2d-lab.example.tsx",
+    },
+    load: async () => (await import("./physics-2d-lab")).physics2DLabScenario,
+  };
+
 export const canvasSurfaceScenarioEntry: ScenarioCatalogEntry<CanvasSurfaceState> =
   {
     metadata: canvasSurfaceMetadata,
@@ -1921,6 +2011,7 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
     webglLightingLabScenarioEntry,
     signalsLabScenarioEntry,
     animationLabScenarioEntry,
+    physics2DLabScenarioEntry,
   ] as const);
 
 export const scenarioCatalogIndex = createScenarioCatalogIndex(scenarioCatalog);

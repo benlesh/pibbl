@@ -139,6 +139,8 @@ afterEach(() => {
 describe("learning example catalog", () => {
   const webglLessonSourcePath =
     "packages/scenarios/src/learning/composition/webgl-islands.example.tsx";
+  const physicsLessonSourcePath =
+    "packages/scenarios/src/learning/composition/physics-2d.example.tsx";
 
   it("requires direct core and WebGL package imports for the WebGL lesson", () => {
     const source = `
@@ -213,6 +215,53 @@ describe("learning example catalog", () => {
         sourcePath: webglLessonSourcePath,
       }),
     ).toThrow(/direct, unaliased/u);
+  });
+
+  it("permits only the exact physics lesson to import the public 2D entry", () => {
+    const source = `
+      import { Circle, crc, type CRCController } from "@crc/core";
+      import { PhysicsWorld2D, dynamicBody2D } from "@crc/physics/2d";
+      function Scene() {
+        return (
+          <PhysicsWorld2D>
+            <Circle physics={dynamicBody2D()} style={{ radius: 10 }} />
+          </PhysicsWorld2D>
+        );
+      }
+      export default function mount(canvas: HTMLCanvasElement): CRCController {
+        return crc(canvas, <Scene />);
+      }
+    `;
+
+    expect(() =>
+      validateLearningSourceText(source, {
+        authoring: "jsx",
+        label: "fixture",
+        sourcePath: physicsLessonSourcePath,
+      }),
+    ).not.toThrow();
+    expect(() =>
+      validateLearningSourceText(source, {
+        authoring: "jsx",
+        label: "physics-2d",
+      }),
+    ).not.toThrow();
+    expect(() =>
+      validateLearningSourceText(source, {
+        authoring: "jsx",
+        label: "circle",
+      }),
+    ).toThrow(/only from @crc\/core/u);
+    expect(() =>
+      validateLearningSourceText(
+        source.replace("@crc/physics/2d", "@crc/physics/src/2d"),
+        {
+          authoring: "jsx",
+          label: "fixture",
+          sourcePath: physicsLessonSourcePath,
+        },
+      ),
+    ).toThrow(/both @crc\/core and @crc\/physics\/2d/u);
   });
 
   it("rejects even type-only WebGL imports from ordinary lessons", () => {
@@ -1154,11 +1203,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 65 unique, ordered, source-backed routes including standard shapes, WebGL, signals, and animation", async () => {
+  it("contains 66 unique, ordered, source-backed routes including standard shapes, WebGL, lighting, signals, animation, and physics", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(65);
+    expect(learningExampleCatalog).toHaveLength(66);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1210,6 +1259,7 @@ describe("learning example catalog", () => {
         "clip",
         "group",
         "layer",
+        "physics-2d",
         "signals-and-animation",
         "webgl-islands",
       ],
@@ -1285,6 +1335,7 @@ describe("learning example catalog", () => {
       "filters",
       "webgl-islands",
       "signals-and-animation",
+      "physics-2d",
       "layer",
     ]);
 
@@ -1688,6 +1739,12 @@ describe("learning example catalog", () => {
         "sequence",
         "marker",
         "spring",
+        "PhysicsWorld2D",
+        "dynamicBody2D",
+        "staticBody2D",
+        "collider2D",
+        "crcPhysicsBody2D",
+        "applyImpulse2D",
       ]),
     );
 

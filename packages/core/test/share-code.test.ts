@@ -218,12 +218,56 @@ export default function mount(canvas) {
     });
   });
 
+  it("executes the exact public physics entries through one Studio runtime", () => {
+    const result = executeSandbox(
+      `
+import { crc } from "@crc/core";
+import { jsx as _jsx } from "@crc/core/jsx-runtime";
+import { PhysicsWorld2D, dynamicBody2D } from "@crc/physics/2d";
+import { circleShape2D } from "@crc/physics/2d/geometry";
+export default function mount(canvas) {
+  return crc(canvas, _jsx(PhysicsWorld2D, {
+    gravity: [0, 600],
+    children: dynamicBody2D({ collider: circleShape2D({ radius: 12 }) }),
+  }));
+}
+`,
+      {
+        crc: (_canvas: unknown, node: unknown) => node,
+        jsx: (type: unknown, props: unknown) => ({ type, props }),
+        PhysicsWorld2D: "physics-world-component",
+        dynamicBody2D: (options: unknown) => ({ kind: "dynamic", options }),
+        circleShape2D: (input: { radius: number }) => ({
+          kind: "circle",
+          radius: input.radius,
+        }),
+      },
+      {},
+    );
+
+    expect(result).toEqual({
+      type: "physics-world-component",
+      props: {
+        gravity: [0, 600],
+        children: {
+          kind: "dynamic",
+          options: { collider: { kind: "circle", radius: 12 } },
+        },
+      },
+    });
+  });
+
   it.each([
     'import external from "external";',
     'import * as CRC from "@crc/core";',
     'import CRC from "@crc/core";',
     'import { jsx } from "@crc/core/private-runtime";',
     'import { jsx } from "@crc/webgl/jsx-runtime";',
+    'import { dynamicBody2D } from "@crc/physics";',
+    'import { dynamicBody2D } from "@crc/physics/internal";',
+    'import { dynamicBody2D } from "@crc/physics/src/2d";',
+    'import { dynamicBody2D } from "@crc/physics/2d/private";',
+    'import { circleShape2D } from "@crc/physics/2d/geometry/private";',
     'import "@crc/core";',
     'import type { CRCNode } from "@crc/core";',
   ])("rejects unsupported emitted module syntax: %s", (statement) => {

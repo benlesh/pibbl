@@ -720,6 +720,38 @@ const drafts = [
     load: () => import("./learning/composition/signals-and-animation.example"),
   },
   {
+    slug: "physics-2d",
+    title: "2D physics",
+    shortTitle: "2D physics",
+    section: "composition",
+    order: 119,
+    summary:
+      "Compose a static ground, dynamic ball, collider-only sensor, and handle-driven impulse in one scheduler-owned 2D physics world.",
+    api: [
+      "PhysicsWorld2D",
+      "dynamicBody2D",
+      "staticBody2D",
+      "collider2D",
+      "crcPhysicsBody2D",
+      "applyImpulse2D",
+    ],
+    objectives: [
+      "Attach static and dynamic bodies to ordinary CRC drawing primitives, then add a collider-only sensor beneath the ball.",
+      "Capture a component-owned body handle and apply an impulse without exposing a manual world step.",
+    ],
+    prompts: {
+      gesture: "Click the blue ball to apply an upward-right impulse.",
+      code: "Change gravity, restitution, or the impulse while leaving the world on CRC's shared scheduler.",
+    },
+    apiNotes: [
+      "An enabled dynamic root pose is physics-owned; disable physics before animating authored position, then explicitly re-enable it.",
+      "Collider-only descendants share their nearest body and can act as sensors without contributing solid response.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["signals-and-animation", "group", "circle"],
+    load: () => import("./learning/composition/physics-2d.example"),
+  },
+  {
     slug: "layer",
     title: "Layer",
     shortTitle: "Layer",

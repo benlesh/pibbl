@@ -13,6 +13,7 @@
     "@fontsource-variable/space-grotesk": "catalog:",
     "@babel/parser": "catalog:",
     "@crc/core": "workspace:*",
+    "@crc/physics": "workspace:*",
     "@crc/scenarios": "workspace:*",
     "@crc/webgl": "workspace:*",
     "lz-string": "catalog:",

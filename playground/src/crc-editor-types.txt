@@ -184,6 +184,7 @@
   export interface CRCSepiaFilter { type: 'sepia'; amount: number }
   export type CRCFilter = CRCBlurFilter | CRCBrightnessFilter | CRCContrastFilter | CRCDropShadowFilter | CRCGrayscaleFilter | CRCHueRotateFilter | CRCInvertFilter | CRCOpacityFilter | CRCSaturateFilter | CRCSepiaFilter;
   export interface SystemStyle { custom?: unknown; filter?: CRCFilter | readonly CRCFilter[] }
+  export interface CRCPhysics2DPropExtension {}
   type PrimitiveReservedKey = 'key' | 'style';
   type UnionKeys<T> = T extends unknown ? keyof T : never;
   export type PrimitiveProgramProps<P> = 0 extends (1 & P) ? P : Extract<UnionKeys<P>, PrimitiveReservedKey> extends never ? P : never;
@@ -261,22 +262,22 @@
   export interface ClipStyle extends BoxStyle, LayoutItemStyle { d: Path2D; fillRule?: CanvasFillRule }
   export interface LayerStyle extends BoxStyle, LayoutItemStyle {}
 
-  export interface PathProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
-  export interface RectangleProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
-  export interface CircleProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
-  export interface EllipseProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
-  export interface ArcProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
-  export interface WedgeProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
-  export interface PolygonProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
-  export interface RegularPolygonProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
-  export interface StarProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
+  export interface PathProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
+  export interface RectangleProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
+  export interface CircleProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
+  export interface EllipseProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
+  export interface ArcProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
+  export interface WedgeProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
+  export interface PolygonProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
+  export interface RegularPolygonProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
+  export interface StarProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
   export interface SvgPathProps extends PathProps {}
-  export interface LineProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
-  export interface HorizontalLineProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
-  export interface VerticalLineProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
-  export interface TextProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions { children?: CRCTextChild }
-  export interface ImageProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
-  export interface GroupProps extends CRCEventHandlers { children: CRCNode }
+  export interface LineProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
+  export interface HorizontalLineProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
+  export interface VerticalLineProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
+  export interface TextProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension { children?: CRCTextChild }
+  export interface ImageProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions, CRCPhysics2DPropExtension {}
+  export interface GroupProps extends CRCEventHandlers, CRCPhysics2DPropExtension { children: CRCNode }
   export interface ClipProps extends CRCEventHandlers { children: CRCNode }
   export interface LayerProps extends CRCEventHandlers { children: CRCNode }
 
@@ -450,6 +451,115 @@
     export interface IntrinsicElements {}
     export type LibraryManagedAttributes<C, P> = C extends CRCPrimitiveComponent<any, any> ? PrimitiveInputOf<C> : 'key' extends keyof P ? never : P;
   }
+
+/* @crc-studio-module @crc/physics/2d/geometry */
+  export type CRCPhysicsVector2 = readonly [x: number, y: number];
+  export interface CRCPhysicsPose2D { readonly position: CRCPhysicsVector2; readonly rotationDegrees: number }
+  export type CRCPhysicsTransform2D = CRCPhysicsPose2D;
+  export interface CRCPhysicsAabb2D { readonly min: CRCPhysicsVector2; readonly max: CRCPhysicsVector2 }
+  export interface CRCPhysicsRay2D { readonly origin: CRCPhysicsVector2; readonly direction: CRCPhysicsVector2; readonly maxDistance: number }
+  declare const physicsShape2DBrand: unique symbol;
+  export interface CRCPhysicsShape2D { readonly [physicsShape2DBrand]: true }
+  export interface CRCPhysicsMassProperties2D { readonly area: number; readonly centroid: CRCPhysicsVector2; readonly mass: number; readonly rotationalInertia: number }
+  export interface CRCPhysicsDistance2D { readonly separation: number; readonly pointOnFirst: CRCPhysicsVector2; readonly pointOnSecond: CRCPhysicsVector2; readonly normal: CRCPhysicsVector2 }
+  export interface CRCPhysicsContactPoint2D { readonly pointOnFirst: CRCPhysicsVector2; readonly pointOnSecond: CRCPhysicsVector2; readonly separation: number }
+  export interface CRCPhysicsShapeContact2D { readonly normal: CRCPhysicsVector2; readonly points: readonly CRCPhysicsContactPoint2D[] }
+  export interface CRCPhysicsShapeHit2D { readonly point: CRCPhysicsVector2; readonly normal: CRCPhysicsVector2; readonly distance: number; readonly timeOfImpact: number }
+
+  export function circleShape2D(input: Readonly<{ radius: number; center?: CRCPhysicsVector2 }>): CRCPhysicsShape2D;
+  export function ellipseShape2D(input: Readonly<{ radiusX: number; radiusY: number; center?: CRCPhysicsVector2; rotationDegrees?: number }>): CRCPhysicsShape2D;
+  export function boxShape2D(input: Readonly<{ width: number; height: number; center?: CRCPhysicsVector2 }>): CRCPhysicsShape2D;
+  export function roundedBoxShape2D(input: Readonly<{ width: number; height: number; radius: number | readonly [topLeft: number, topRight: number, bottomRight: number, bottomLeft: number]; center?: CRCPhysicsVector2 }>): CRCPhysicsShape2D;
+  export function capsuleShape2D(input: Readonly<{ start: CRCPhysicsVector2; end: CRCPhysicsVector2; radius: number }>): CRCPhysicsShape2D;
+  export function arcShape2D(input: Readonly<{ center?: CRCPhysicsVector2; radius: number; startAngleRadians: number; endAngleRadians: number; counterclockwise?: boolean; thickness: number }>): CRCPhysicsShape2D;
+  export function wedgeShape2D(input: Readonly<{ center?: CRCPhysicsVector2; radius: number; startAngleRadians: number; endAngleRadians: number; counterclockwise?: boolean }>): CRCPhysicsShape2D;
+  export function segmentShape2D(input: Readonly<{ start: CRCPhysicsVector2; end: CRCPhysicsVector2 }>): CRCPhysicsShape2D;
+  export function chainShape2D(input: Readonly<{ points: readonly CRCPhysicsVector2[]; closed?: boolean; radius?: number }>): CRCPhysicsShape2D;
+  export function polygonShape2D(input: Readonly<{ points: readonly CRCPhysicsVector2[] }>): CRCPhysicsShape2D;
+  export function boundsOfShape2D(shape: CRCPhysicsShape2D, pose?: CRCPhysicsPose2D): CRCPhysicsAabb2D;
+  export function massProperties2D(shape: CRCPhysicsShape2D, options?: Readonly<{ density?: number }>): CRCPhysicsMassProperties2D;
+  export function transformShape2D(shape: CRCPhysicsShape2D, transform: CRCPhysicsTransform2D): CRCPhysicsShape2D;
+  export function raycastShape2D(shape: CRCPhysicsShape2D, pose: CRCPhysicsPose2D, ray: CRCPhysicsRay2D, options?: Readonly<{ includeInitialOverlap?: boolean }>): CRCPhysicsShapeHit2D | null;
+  export function shapeCastAgainstShape2D(moving: CRCPhysicsShape2D, from: CRCPhysicsPose2D, translation: CRCPhysicsVector2, target: CRCPhysicsShape2D, targetPose: CRCPhysicsPose2D, options?: Readonly<{ includeInitialOverlap?: boolean }>): CRCPhysicsShapeHit2D | null;
+  export function containsPoint2D(shape: CRCPhysicsShape2D, pose: CRCPhysicsPose2D, point: CRCPhysicsVector2): boolean;
+  export function distanceBetweenShapes2D(first: CRCPhysicsShape2D, firstPose: CRCPhysicsPose2D, second: CRCPhysicsShape2D, secondPose: CRCPhysicsPose2D): CRCPhysicsDistance2D;
+  export function overlapShapes2D(first: CRCPhysicsShape2D, firstPose: CRCPhysicsPose2D, second: CRCPhysicsShape2D, secondPose: CRCPhysicsPose2D): boolean;
+  export function contactBetweenShapes2D(first: CRCPhysicsShape2D, firstPose: CRCPhysicsPose2D, second: CRCPhysicsShape2D, secondPose: CRCPhysicsPose2D): CRCPhysicsShapeContact2D | null;
+
+/* @crc-studio-module @crc/physics/2d */
+  import type { BoxStyle, CRCEventHandlers, CRCEventParticipationOptions, CRCNode, CRCPrimitiveComponent, CursorStyle, LayoutBox, LayoutItemStyle, PaintStyle, PrimitiveInput, Signal, SystemStyle } from '@crc/core';
+  import type { CRCPhysicsAabb2D, CRCPhysicsContactPoint2D, CRCPhysicsPose2D, CRCPhysicsRay2D, CRCPhysicsShape2D, CRCPhysicsShapeHit2D, CRCPhysicsVector2 } from '@crc/physics/2d/geometry';
+  export { arcShape2D, boundsOfShape2D, boxShape2D, capsuleShape2D, chainShape2D, circleShape2D, contactBetweenShapes2D, containsPoint2D, distanceBetweenShapes2D, ellipseShape2D, massProperties2D, overlapShapes2D, polygonShape2D, raycastShape2D, roundedBoxShape2D, segmentShape2D, shapeCastAgainstShape2D, transformShape2D, wedgeShape2D } from '@crc/physics/2d/geometry';
+  export type { CRCPhysicsAabb2D, CRCPhysicsContactPoint2D, CRCPhysicsDistance2D, CRCPhysicsMassProperties2D, CRCPhysicsPose2D, CRCPhysicsRay2D, CRCPhysicsShape2D, CRCPhysicsShapeContact2D, CRCPhysicsShapeHit2D, CRCPhysicsTransform2D, CRCPhysicsVector2 } from '@crc/physics/2d/geometry';
+
+  export interface CRCPhysicsCollisionFilter { readonly category?: number; readonly mask?: number; readonly group?: number }
+  export type CRCPhysicsCollisionHandler2D = (event: CRCPhysicsCollisionEvent2D) => void;
+  export type CRCPhysicsHitHandler2D = (event: CRCPhysicsCollisionEvent2D) => void;
+  export type CRCPhysicsOverlapHandler2D = (event: CRCPhysicsOverlapEvent2D) => void;
+  export type CRCPhysicsBodyStateHandler2D = (event: CRCPhysicsBodyStateEvent2D) => void;
+  export interface CRCPhysicsColliderConfiguration2D { readonly shape?: 'self' | CRCPhysicsShape2D; readonly offset?: CRCPhysicsVector2; readonly rotationDegrees?: number; readonly density?: number; readonly friction?: number; readonly restitution?: number; readonly sensor?: boolean; readonly contributesToMass?: boolean; readonly collisionFilter?: CRCPhysicsCollisionFilter; readonly tag?: unknown; readonly onCollisionStart?: CRCPhysicsCollisionHandler2D; readonly onCollisionEnd?: CRCPhysicsCollisionHandler2D; readonly onHit?: CRCPhysicsHitHandler2D; readonly onOverlapStart?: CRCPhysicsOverlapHandler2D; readonly onOverlapEnd?: CRCPhysicsOverlapHandler2D }
+  export interface CRCPhysicsDynamicBody2DOptions { readonly enabled?: boolean; readonly handle?: CRCPhysicsBodyHandle2D; readonly linearVelocity?: CRCPhysicsVector2; readonly angularVelocityDegreesPerSecond?: number; readonly linearDamping?: number; readonly angularDamping?: number; readonly gravityScale?: number; readonly mass?: 'auto' | number; readonly fixedRotation?: boolean; readonly allowSleep?: boolean; readonly ccd?: boolean; readonly reenableVelocity?: 'zero' | 'preserve'; readonly collider?: false | CRCPhysicsColliderConfiguration2D | CRCPhysicsShape2D }
+  export interface CRCPhysicsStaticBody2DOptions { readonly enabled?: boolean; readonly handle?: CRCPhysicsBodyHandle2D; readonly collider?: false | CRCPhysicsColliderConfiguration2D | CRCPhysicsShape2D }
+  export interface CRCPhysicsKinematicTarget2D { readonly position?: Signal<CRCPhysicsVector2>; readonly rotationDegrees?: Signal<number> }
+  export interface CRCPhysicsKinematicBody2DOptions { readonly enabled?: boolean; readonly handle?: CRCPhysicsBodyHandle2D; readonly target?: CRCPhysicsKinematicTarget2D; readonly allowSleep?: boolean; readonly collider?: false | CRCPhysicsColliderConfiguration2D | CRCPhysicsShape2D }
+  declare const physicsAttachment2DBrand: unique symbol;
+  export interface CRCPhysicsBodyAttachment2D { readonly [physicsAttachment2DBrand]: 'body' }
+  export interface CRCPhysicsColliderAttachment2D { readonly [physicsAttachment2DBrand]: 'collider' }
+  export type CRCPhysicsAttachment2D = CRCPhysicsBodyAttachment2D | CRCPhysicsColliderAttachment2D;
+  declare module '@crc/core' { interface CRCPhysics2DPropExtension { readonly physics?: CRCPhysicsAttachment2D } }
+  export interface CRCPhysicsSolverOptions { readonly velocityIterations?: number; readonly positionIterations?: number }
+  export interface CRCPhysicsWorld2DProps { readonly gravity?: CRCPhysicsVector2; readonly fixedStepMilliseconds?: number; readonly maxCatchUpSteps?: number; readonly interpolation?: 'linear' | 'none'; readonly sleeping?: boolean; readonly solver?: CRCPhysicsSolverOptions; readonly onSleep?: CRCPhysicsBodyStateHandler2D; readonly onWake?: CRCPhysicsBodyStateHandler2D; readonly onError?: (error: unknown) => void; readonly children?: CRCNode }
+  export interface CRCPhysicsPrimitiveProps2D extends CRCEventHandlers, CRCEventParticipationOptions { readonly keyboardFocusable?: boolean; readonly keyboardNavigationBounds?: Readonly<LayoutBox>; readonly physics?: CRCPhysicsAttachment2D }
+  export interface PhysicsShape2DProps extends CRCPhysicsPrimitiveProps2D {}
+  export interface PhysicsShape2DStyle extends SystemStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { readonly shape: CRCPhysicsShape2D; readonly lineInteractionWidth?: number }
+  export interface Capsule2DProps extends CRCPhysicsPrimitiveProps2D {}
+  export interface Capsule2DStyle extends SystemStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { readonly start: CRCPhysicsVector2; readonly end: CRCPhysicsVector2; readonly radius: number; readonly lineInteractionWidth?: number }
+  export interface Segment2DProps extends CRCPhysicsPrimitiveProps2D {}
+  export interface Segment2DStyle extends SystemStyle, Omit<PaintStyle, 'fill'>, CursorStyle, BoxStyle, LayoutItemStyle { readonly start: CRCPhysicsVector2; readonly end: CRCPhysicsVector2; readonly lineInteractionWidth?: number }
+  export interface Chain2DProps extends CRCPhysicsPrimitiveProps2D {}
+  export interface Chain2DStyle extends SystemStyle, PaintStyle, CursorStyle, BoxStyle, LayoutItemStyle { readonly points: readonly CRCPhysicsVector2[]; readonly closed?: boolean; readonly radius?: number; readonly lineInteractionWidth?: number }
+  declare const bodyHandle2DBrand: unique symbol;
+  export interface CRCPhysicsBodyHandle2D { readonly [bodyHandle2DBrand]: true; readonly position: Signal<CRCPhysicsVector2>; readonly rotationDegrees: Signal<number>; readonly linearVelocity: Signal<CRCPhysicsVector2>; readonly angularVelocityDegreesPerSecond: Signal<number>; readonly sleeping: Signal<boolean>; readonly enabled: Signal<boolean>; readonly generation: Signal<number> }
+  declare const colliderHandle2DBrand: unique symbol;
+  export interface CRCPhysicsColliderHandle2D { readonly [colliderHandle2DBrand]: true }
+  declare const worldHandle2DBrand: unique symbol;
+  export interface CRCPhysicsWorldHandle2D { readonly [worldHandle2DBrand]: true; readonly revision: Signal<number> }
+  export type CRCPhysicsQueryMode = 'closest' | 'any' | 'all';
+  export interface CRCPhysicsQueryOptions2D<Mode extends CRCPhysicsQueryMode = 'closest'> { readonly mode?: Mode; readonly sensors?: 'include' | 'exclude' | 'only'; readonly collisionFilter?: CRCPhysicsCollisionFilter; readonly excludeBody?: CRCPhysicsBodyHandle2D; readonly excludeCollider?: CRCPhysicsColliderHandle2D }
+  export interface CRCPhysicsQueryHit2D extends CRCPhysicsShapeHit2D { readonly body: CRCPhysicsBodyHandle2D; readonly collider: CRCPhysicsColliderHandle2D; readonly bodyGeneration: number; readonly colliderGeneration: number; readonly tag: unknown }
+  export interface CRCPhysicsQueryMatch2D { readonly body: CRCPhysicsBodyHandle2D; readonly collider: CRCPhysicsColliderHandle2D; readonly bodyGeneration: number; readonly colliderGeneration: number; readonly tag: unknown }
+  export type CRCPhysicsQueryResult2D<Mode extends CRCPhysicsQueryMode, Result> = Mode extends 'any' ? boolean : Mode extends 'all' ? readonly Result[] : Result | null;
+  export interface CRCPhysicsCollisionEvent2D { readonly selfBody: CRCPhysicsBodyHandle2D; readonly selfCollider: CRCPhysicsColliderHandle2D; readonly otherBody: CRCPhysicsBodyHandle2D; readonly otherCollider: CRCPhysicsColliderHandle2D; readonly normal: CRCPhysicsVector2; readonly points: readonly CRCPhysicsContactPoint2D[]; readonly totalNormalImpulse: number; readonly tick: number; readonly selfTag: unknown; readonly otherTag: unknown }
+  export interface CRCPhysicsOverlapEvent2D { readonly selfBody: CRCPhysicsBodyHandle2D; readonly selfCollider: CRCPhysicsColliderHandle2D; readonly otherBody: CRCPhysicsBodyHandle2D; readonly otherCollider: CRCPhysicsColliderHandle2D; readonly tick: number; readonly selfTag: unknown; readonly otherTag: unknown }
+  export interface CRCPhysicsBodyStateEvent2D { readonly body: CRCPhysicsBodyHandle2D; readonly sleeping: boolean; readonly tick: number }
+
+  export const PhysicsWorld2D: (props: CRCPhysicsWorld2DProps) => CRCNode;
+  export const PhysicsShape2D: CRCPrimitiveComponent<PhysicsShape2DProps, PrimitiveInput<PhysicsShape2DProps, PhysicsShape2DStyle>>;
+  export const Capsule2D: CRCPrimitiveComponent<Capsule2DProps, PrimitiveInput<Capsule2DProps, Capsule2DStyle>>;
+  export const Segment2D: CRCPrimitiveComponent<Segment2DProps, PrimitiveInput<Segment2DProps, Segment2DStyle>>;
+  export const Chain2D: CRCPrimitiveComponent<Chain2DProps, PrimitiveInput<Chain2DProps, Chain2DStyle>>;
+  export function dynamicBody2D(options?: CRCPhysicsDynamicBody2DOptions): CRCPhysicsBodyAttachment2D;
+  export function staticBody2D(options?: CRCPhysicsStaticBody2DOptions): CRCPhysicsBodyAttachment2D;
+  export function kinematicBody2D(options?: CRCPhysicsKinematicBody2DOptions): CRCPhysicsBodyAttachment2D;
+  export function collider2D(options?: CRCPhysicsColliderConfiguration2D): CRCPhysicsColliderAttachment2D;
+  export function withPhysicsShape2D<P, I, ResolvedStyle>(component: CRCPrimitiveComponent<P, I>, options: Readonly<{ resolveShape(style: Readonly<ResolvedStyle>): CRCPhysicsShape2D }>): CRCPrimitiveComponent<P & CRCPhysicsPrimitiveProps2D, I & { readonly physics?: CRCPhysicsAttachment2D }>;
+  export function crcPhysicsBody2D(): CRCPhysicsBodyHandle2D;
+  export function crcPhysicsWorld2D(): CRCPhysicsWorldHandle2D;
+  export function applyForce2D(body: CRCPhysicsBodyHandle2D, force: CRCPhysicsVector2, options?: Readonly<{ at?: CRCPhysicsVector2; wake?: boolean }>): void;
+  export function applyImpulse2D(body: CRCPhysicsBodyHandle2D, impulse: CRCPhysicsVector2, options?: Readonly<{ at?: CRCPhysicsVector2; wake?: boolean }>): void;
+  export function applyTorque2D(body: CRCPhysicsBodyHandle2D, torque: number): void;
+  export function disableBody2D(body: CRCPhysicsBodyHandle2D): void;
+  export function enableBody2D(body: CRCPhysicsBodyHandle2D, options?: Readonly<{ velocity?: 'zero' | 'preserve' }>): void;
+  export function setAngularVelocity2D(body: CRCPhysicsBodyHandle2D, degreesPerSecond: number): void;
+  export function setLinearVelocity2D(body: CRCPhysicsBodyHandle2D, velocity: CRCPhysicsVector2): void;
+  export function sleepBody2D(body: CRCPhysicsBodyHandle2D): void;
+  export function teleportBody2D(body: CRCPhysicsBodyHandle2D, pose: CRCPhysicsPose2D): void;
+  export function wakeBody2D(body: CRCPhysicsBodyHandle2D): void;
+  export function raycast2D<Mode extends CRCPhysicsQueryMode = 'closest'>(world: CRCPhysicsWorldHandle2D, ray: CRCPhysicsRay2D, options?: CRCPhysicsQueryOptions2D<Mode>): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryHit2D>;
+  export function shapeCast2D<Mode extends CRCPhysicsQueryMode = 'closest'>(world: CRCPhysicsWorldHandle2D, shape: CRCPhysicsShape2D, from: CRCPhysicsPose2D, translation: CRCPhysicsVector2, options?: CRCPhysicsQueryOptions2D<Mode>): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryHit2D>;
+  export function overlapShape2D<Mode extends CRCPhysicsQueryMode = 'closest'>(world: CRCPhysicsWorldHandle2D, shape: CRCPhysicsShape2D, pose: CRCPhysicsPose2D, options?: CRCPhysicsQueryOptions2D<Mode>): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D>;
+  export function queryAabb2D<Mode extends CRCPhysicsQueryMode = 'closest'>(world: CRCPhysicsWorldHandle2D, bounds: CRCPhysicsAabb2D, options?: CRCPhysicsQueryOptions2D<Mode>): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D>;
+  export function queryPoint2D<Mode extends CRCPhysicsQueryMode = 'closest'>(world: CRCPhysicsWorldHandle2D, point: CRCPhysicsVector2, options?: CRCPhysicsQueryOptions2D<Mode>): CRCPhysicsQueryResult2D<Mode, CRCPhysicsQueryMatch2D>;
 
 /* @crc-studio-module @crc/webgl */
   import type {

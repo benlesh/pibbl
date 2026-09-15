@@ -17,6 +17,7 @@ interface SourceInspection {
   readonly hasBindingViolation: boolean;
   readonly hasCommonJsSyntax: boolean;
   readonly hasCoreValueImport: boolean;
+  readonly hasPhysicsValueImport: boolean;
   readonly hasWebGLValueImport: boolean;
   readonly hasCreateElementCall: boolean;
   readonly hasDirectComponentCall: boolean;
@@ -33,6 +34,7 @@ interface SourceInspection {
   readonly hasLegacyTextStyle: boolean;
   readonly hasLegacyTypes: boolean;
   readonly hasNamedValueCoreImport: boolean;
+  readonly hasNamedValuePhysicsImport: boolean;
   readonly hasNamedValueWebGLImport: boolean;
   readonly hasNamespaceExport: boolean;
   readonly hasOnlyApprovedImports: boolean;
@@ -48,12 +50,19 @@ interface SourceInspection {
 }
 
 const CORE_MODULE = "@crc/core";
+const PHYSICS_MODULE = "@crc/physics/2d";
 const WEBGL_MODULE = "@crc/webgl";
-const LEARNING_VALUE_MODULES = new Set([CORE_MODULE, WEBGL_MODULE]);
+const LEARNING_VALUE_MODULES = new Set([
+  CORE_MODULE,
+  PHYSICS_MODULE,
+  WEBGL_MODULE,
+]);
 const WEBGL_ISLAND_LEARNING_SOURCE_PATH =
   "packages/scenarios/src/learning/composition/webgl-islands.example.tsx";
 const WEBGL_LIGHTING_LEARNING_SOURCE_DIRECTORY =
   "packages/scenarios/src/learning/webgl/";
+const PHYSICS_LEARNING_SOURCE_PATH =
+  "packages/scenarios/src/learning/composition/physics-2d.example.tsx";
 
 const LEGACY_AUTHORING_NAMES = new Set([
   ["define", "Comp"].join(""),
@@ -116,6 +125,7 @@ const DESCRIPTIVE_COMPONENT_EXPORTS = new Set([
   "SpotLight",
   "WebGLBackground",
   "WebGLLayer",
+  "PhysicsWorld2D",
 ]);
 const COMMONJS_BINDING_NAMES = new Set(["exports", "module", "require"]);
 const COMMONJS_GLOBAL_NAMES = new Set([
@@ -851,8 +861,10 @@ function inspectSource(source: string, label: string): SourceInspection {
   const valueNamespaceBindings = new Set<string>();
   const packageImportModules = new Set<string>();
   let hasCoreValueImport = false;
+  let hasPhysicsValueImport = false;
   let hasWebGLValueImport = false;
   let hasNamedValueCoreImport = false;
+  let hasNamedValuePhysicsImport = false;
   let hasNamedValueWebGLImport = false;
   let hasOnlyApprovedImports = true;
   let hasOnlyScenarioImports = true;
@@ -932,6 +944,7 @@ function inspectSource(source: string, label: string): SourceInspection {
           if (statement.importKind !== "type") {
             valueNamespaceBindings.add(localName);
             if (moduleName === CORE_MODULE) hasCoreValueImport = true;
+            if (moduleName === PHYSICS_MODULE) hasPhysicsValueImport = true;
             if (moduleName === WEBGL_MODULE) hasWebGLValueImport = true;
           }
         }
@@ -958,6 +971,9 @@ function inspectSource(source: string, label: string): SourceInspection {
       if (moduleName === CORE_MODULE) {
         hasCoreValueImport = true;
         hasNamedValueCoreImport = true;
+      } else if (moduleName === PHYSICS_MODULE) {
+        hasPhysicsValueImport = true;
+        hasNamedValuePhysicsImport = true;
       } else {
         hasWebGLValueImport = true;
         hasNamedValueWebGLImport = true;
@@ -1227,6 +1243,7 @@ function inspectSource(source: string, label: string): SourceInspection {
     hasCanonicalMount: isCanonicalMount(programBody),
     hasCommonJsSyntax,
     hasCoreValueImport,
+    hasPhysicsValueImport,
     hasWebGLValueImport,
     hasCreateElementCall,
     hasDirectComponentCall,
@@ -1243,6 +1260,7 @@ function inspectSource(source: string, label: string): SourceInspection {
     hasLegacyTextStyle,
     hasLegacyTypes,
     hasNamedValueCoreImport,
+    hasNamedValuePhysicsImport,
     hasNamedValueWebGLImport,
     hasNamespaceExport,
     hasOnlyApprovedImports,
@@ -1355,19 +1373,33 @@ export function validateLearningSourceText(
     (sourcePath === undefined &&
       (label === "webgl-islands" ||
         label === 'Learning example "webgl-islands"'));
+  const isPhysicsLesson =
+    sourcePath === PHYSICS_LEARNING_SOURCE_PATH ||
+    (sourcePath === undefined &&
+      (label === "physics-2d" ||
+        label === 'Learning example "physics-2d"'));
   const hasExactPackageImports = isWebGLLesson
     ? inspection.hasNamedValueCoreImport &&
       inspection.hasNamedValueWebGLImport &&
+      !inspection.hasNamedValuePhysicsImport &&
       inspection.packageImportModules.length === 2
-    : inspection.hasNamedValueCoreImport &&
-      !inspection.hasNamedValueWebGLImport &&
-      inspection.packageImportModules.length === 1;
+    : isPhysicsLesson
+      ? inspection.hasNamedValueCoreImport &&
+        inspection.hasNamedValuePhysicsImport &&
+        !inspection.hasNamedValueWebGLImport &&
+        inspection.packageImportModules.length === 2
+      : inspection.hasNamedValueCoreImport &&
+        !inspection.hasNamedValuePhysicsImport &&
+        !inspection.hasNamedValueWebGLImport &&
+        inspection.packageImportModules.length === 1;
   if (!inspection.hasOnlyApprovedImports || !hasExactPackageImports) {
     throw invalid(
       label,
       isWebGLLesson
         ? "must use direct, unaliased static named value imports from both @crc/core and @crc/webgl."
-        : "must use direct, unaliased static named imports only from @crc/core, including at least one value import.",
+        : isPhysicsLesson
+          ? "must use direct, unaliased static named value imports from both @crc/core and @crc/physics/2d."
+          : "must use direct, unaliased static named imports only from @crc/core, including at least one value import.",
     );
   }
   if (
@@ -1391,7 +1423,9 @@ export function validateLearningSourceText(
       label,
       isWebGLLesson
         ? "must use direct @crc/core and @crc/webgl bindings without aliases, reassignment, or shadowing."
-        : "must use direct @crc/core bindings without aliases, reassignment, or shadowing.",
+        : isPhysicsLesson
+          ? "must use direct @crc/core and @crc/physics/2d bindings without aliases, reassignment, or shadowing."
+          : "must use direct @crc/core bindings without aliases, reassignment, or shadowing.",
     );
   }
   if (inspection.hasTestScaffolding) {
