@@ -4,18 +4,23 @@ import {
   createBuiltInProgram,
   deleteBuiltInProgram,
   type WebGLBuiltInProgram,
+  type WebGLProgramKey,
 } from './program.js';
 
 export interface WebGLGeometryResource {
   readonly vertexArray: WebGLVertexArrayObject;
   readonly positionBuffer: WebGLBuffer;
+  readonly normalBuffer: WebGLBuffer | undefined;
   readonly indexBuffer: WebGLBuffer | undefined;
   readonly vertexCount: number;
   readonly indexCount: number | undefined;
 }
 
 export interface WebGLRendererResourceTransaction {
-  useProgram(componentName: string): WebGLBuiltInProgram;
+  useProgram(
+    key: WebGLProgramKey,
+    componentName: string,
+  ): WebGLBuiltInProgram;
   useGeometry(
     geometry: CRCWebGLGeometry,
     componentName: string,
@@ -26,9 +31,9 @@ export interface WebGLRendererResourceTransaction {
 
 interface ResourceCandidate {
   active: boolean;
-  usedProgram: boolean;
+  readonly usedProgramKeys: Set<WebGLProgramKey>;
   readonly usedGeometries: Set<CRCWebGLGeometry>;
-  createdProgram: WebGLBuiltInProgram | undefined;
+  readonly createdPrograms: Map<WebGLProgramKey, WebGLBuiltInProgram>;
   readonly createdGeometries: Map<CRCWebGLGeometry, WebGLGeometryResource>;
 }
 
@@ -38,9 +43,9 @@ export class WebGLRendererResourceCache {
     CRCWebGLGeometry,
     WebGLGeometryResource
   >();
+  private readonly programs = new Map<WebGLProgramKey, WebGLBuiltInProgram>();
+  private readonly residentProgramKeys = new Set<WebGLProgramKey>();
   private readonly residentGeometries = new Set<CRCWebGLGeometry>();
-  private program: WebGLBuiltInProgram | undefined;
-  private programResident = false;
   private activeCandidate: ResourceCandidate | undefined;
   private invalidated = false;
   private disposed = false;
@@ -60,15 +65,17 @@ export class WebGLRendererResourceCache {
     }
     const candidate: ResourceCandidate = {
       active: true,
-      usedProgram: false,
+      usedProgramKeys: new Set(),
       usedGeometries: new Set(),
-      createdProgram: undefined,
+      createdPrograms: new Map(),
       createdGeometries: new Map(),
     };
     this.activeCandidate = candidate;
     return Object.freeze({
-      useProgram: (componentName: string): WebGLBuiltInProgram =>
-        this.useProgram(candidate, componentName),
+      useProgram: (
+        key: WebGLProgramKey,
+        componentName: string,
+      ): WebGLBuiltInProgram => this.useProgram(candidate, key, componentName),
       useGeometry: (
         geometry: CRCWebGLGeometry,
         componentName: string,
@@ -84,8 +91,8 @@ export class WebGLRendererResourceCache {
     if (this.disposed || this.invalidated) return;
     this.invalidated = true;
     this.closeActiveCandidate();
-    this.program = undefined;
-    this.programResident = false;
+    this.programs.clear();
+    this.residentProgramKeys.clear();
     this.geometries.clear();
     this.residentGeometries.clear();
   }
@@ -94,14 +101,14 @@ export class WebGLRendererResourceCache {
     if (this.disposed) return;
     this.disposed = true;
     this.closeActiveCandidate();
-    const program = this.program;
+    const programs = Array.from(this.programs.values());
     const geometries = Array.from(this.geometries.values());
-    this.program = undefined;
-    this.programResident = false;
+    this.programs.clear();
+    this.residentProgramKeys.clear();
     this.geometries.clear();
     this.residentGeometries.clear();
     if (contextLost || this.invalidated) return;
-    if (program) {
+    for (const program of programs) {
       runResourceCleanup(() => deleteBuiltInProgram(this.gl, program));
     }
     for (const geometry of geometries) {
@@ -111,14 +118,16 @@ export class WebGLRendererResourceCache {
 
   private useProgram(
     candidate: ResourceCandidate,
+    key: WebGLProgramKey,
     componentName: string,
   ): WebGLBuiltInProgram {
     this.requireCandidate(candidate);
-    candidate.usedProgram = true;
-    if (this.program) return this.program;
-    const program = createBuiltInProgram(this.gl, componentName);
-    this.program = program;
-    candidate.createdProgram = program;
+    candidate.usedProgramKeys.add(key);
+    const existing = this.programs.get(key);
+    if (existing) return existing;
+    const program = createBuiltInProgram(this.gl, key, componentName);
+    this.programs.set(key, program);
+    candidate.createdPrograms.set(key, program);
     return program;
   }
 
@@ -141,10 +150,13 @@ export class WebGLRendererResourceCache {
     if (!candidate.active) return;
     this.requireCandidate(candidate);
     try {
-      if (this.programResident && !candidate.usedProgram && this.program) {
-        const omitted = this.program;
-        this.program = undefined;
-        runResourceCleanup(() => deleteBuiltInProgram(this.gl, omitted));
+      for (const key of this.residentProgramKeys) {
+        if (candidate.usedProgramKeys.has(key)) continue;
+        const omitted = this.programs.get(key);
+        this.programs.delete(key);
+        if (omitted) {
+          runResourceCleanup(() => deleteBuiltInProgram(this.gl, omitted));
+        }
       }
       for (const geometry of this.residentGeometries) {
         if (candidate.usedGeometries.has(geometry)) continue;
@@ -152,8 +164,10 @@ export class WebGLRendererResourceCache {
         this.geometries.delete(geometry);
         if (omitted) deleteGeometry(this.gl, omitted);
       }
-      this.programResident =
-        candidate.usedProgram && this.program !== undefined;
+      this.residentProgramKeys.clear();
+      for (const key of candidate.usedProgramKeys) {
+        if (this.programs.has(key)) this.residentProgramKeys.add(key);
+      }
       this.residentGeometries.clear();
       for (const geometry of candidate.usedGeometries) {
         if (this.geometries.has(geometry)) {
@@ -173,12 +187,10 @@ export class WebGLRendererResourceCache {
       return;
     }
     try {
-      if (
-        candidate.createdProgram &&
-        this.program === candidate.createdProgram
-      ) {
-        const created = candidate.createdProgram;
-        this.program = undefined;
+      for (const [key, created] of candidate.createdPrograms) {
+        if (this.programs.get(key) === created) {
+          this.programs.delete(key);
+        }
         runResourceCleanup(() => deleteBuiltInProgram(this.gl, created));
       }
       for (const [geometry, created] of candidate.createdGeometries) {
@@ -220,9 +232,9 @@ export class WebGLRendererResourceCache {
 
   private closeCandidate(candidate: ResourceCandidate): void {
     candidate.active = false;
-    candidate.usedProgram = false;
+    candidate.usedProgramKeys.clear();
     candidate.usedGeometries.clear();
-    candidate.createdProgram = undefined;
+    candidate.createdPrograms.clear();
     candidate.createdGeometries.clear();
     if (this.activeCandidate === candidate) this.activeCandidate = undefined;
   }
@@ -235,6 +247,7 @@ function uploadGeometry(
 ): WebGLGeometryResource {
   let vertexArray: WebGLVertexArrayObject | undefined;
   let positionBuffer: WebGLBuffer | undefined;
+  let normalBuffer: WebGLBuffer | undefined;
   let indexBuffer: WebGLBuffer | undefined;
   let published = false;
   let abandonFailedHandles = false;
@@ -253,6 +266,14 @@ function uploadGeometry(
         `${componentName} geometry position buffer creation failed.`,
       );
     }
+    if (data.normals !== undefined) {
+      normalBuffer = gl.createBuffer() ?? undefined;
+      if (!normalBuffer) {
+        throw new Error(
+          `${componentName} geometry normal buffer creation failed.`,
+        );
+      }
+    }
     if (data.indices !== undefined) {
       indexBuffer = gl.createBuffer() ?? undefined;
       if (!indexBuffer) {
@@ -267,6 +288,12 @@ function uploadGeometry(
     gl.bufferData(gl.ARRAY_BUFFER, data.positions, gl.STATIC_DRAW);
     gl.enableVertexAttribArray(0);
     gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+    if (data.normals !== undefined) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer!);
+      gl.bufferData(gl.ARRAY_BUFFER, data.normals, gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(1);
+      gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+    }
     if (data.indices !== undefined) {
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer!);
       gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, data.indices, gl.STATIC_DRAW);
@@ -290,6 +317,7 @@ function uploadGeometry(
     const resource = Object.freeze({
       vertexArray,
       positionBuffer,
+      normalBuffer,
       indexBuffer,
       vertexCount: geometry.vertexCount,
       indexCount: data.indices?.length,
@@ -310,6 +338,9 @@ function uploadGeometry(
     if (!published && !abandonFailedHandles) {
       if (indexBuffer) {
         runResourceCleanup(() => gl.deleteBuffer(indexBuffer!));
+      }
+      if (normalBuffer) {
+        runResourceCleanup(() => gl.deleteBuffer(normalBuffer!));
       }
       if (positionBuffer) {
         runResourceCleanup(() => gl.deleteBuffer(positionBuffer!));
@@ -354,6 +385,9 @@ function deleteGeometry(
 ): void {
   if (geometry.indexBuffer) {
     runResourceCleanup(() => gl.deleteBuffer(geometry.indexBuffer!));
+  }
+  if (geometry.normalBuffer) {
+    runResourceCleanup(() => gl.deleteBuffer(geometry.normalBuffer!));
   }
   runResourceCleanup(() => gl.deleteBuffer(geometry.positionBuffer));
   runResourceCleanup(() => gl.deleteVertexArray(geometry.vertexArray));

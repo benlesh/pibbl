@@ -7,67 +7,86 @@ afterEach(() => {
 });
 
 describe('WebGLRendererResourceCache', () => {
-  it('shares candidate resources and reuses them across identical successful scenes', () => {
+  it('shares geometry across keyed programs and reuses the successful resident set', () => {
     const recording = createResourceGL('reuse');
     const cache = new WebGLRendererResourceCache(recording.gl, 7);
-    const geometry = triangle();
+    const geometry = indexedTriangleWithNormals();
 
     const first = cache.beginRender();
-    const firstProgram = first.useProgram('Mesh');
+    const unlit = first.useProgram('unlit', 'Mesh');
+    const lambert = first.useProgram('lambert', 'Cube');
     const firstGeometry = first.useGeometry(geometry, 'Mesh');
 
-    expect(first.useProgram('Cube')).toBe(firstProgram);
+    expect(first.useProgram('unlit', 'Sphere')).toBe(unlit);
+    expect(first.useProgram('lambert', 'Sphere')).toBe(lambert);
+    expect(unlit.key).toBe('unlit');
+    expect(lambert.key).toBe('lambert');
+    expect(lambert).not.toBe(unlit);
     expect(first.useGeometry(geometry, 'Cube')).toBe(firstGeometry);
-    expect(recording.createProgram).toHaveBeenCalledOnce();
+    expect(recording.createProgram).toHaveBeenCalledTimes(2);
     expect(recording.createVertexArray).toHaveBeenCalledOnce();
-    expect(recording.createBuffer).toHaveBeenCalledOnce();
+    expect(recording.createBuffer).toHaveBeenCalledTimes(3);
+    expect(recording.enableVertexAttribArray.mock.calls).toEqual([[0], [1]]);
+    expect(recording.vertexAttribPointer.mock.calls).toEqual([
+      [0, 3, recording.gl.FLOAT, false, 0, 0],
+      [1, 3, recording.gl.FLOAT, false, 0, 0],
+    ]);
     first.commit();
 
     const second = cache.beginRender();
-    expect(second.useProgram('Sphere')).toBe(firstProgram);
+    expect(second.useProgram('lambert', 'Sphere')).toBe(lambert);
+    expect(second.useProgram('unlit', 'Sphere')).toBe(unlit);
     expect(second.useGeometry(geometry, 'Sphere')).toBe(firstGeometry);
     second.commit();
 
-    expect(recording.createProgram).toHaveBeenCalledOnce();
+    expect(recording.createProgram).toHaveBeenCalledTimes(2);
     expect(recording.createVertexArray).toHaveBeenCalledOnce();
-    expect(recording.createBuffer).toHaveBeenCalledOnce();
+    expect(recording.createBuffer).toHaveBeenCalledTimes(3);
     expect(recording.deleteProgram).not.toHaveBeenCalled();
     expect(recording.deleteBuffer).not.toHaveBeenCalled();
     expect(recording.deleteVertexArray).not.toHaveBeenCalled();
   });
 
-  it('sweeps geometry omitted by the next scene and all resources after an empty scene', () => {
+  it('sweeps omitted program and geometry keys before clearing the remaining residents', () => {
     const recording = createResourceGL('sweep');
     const cache = new WebGLRendererResourceCache(recording.gl, 1);
     const keptGeometry = triangle();
-    const omittedGeometry = indexedTriangle();
+    const omittedGeometry = indexedTriangleWithNormals();
     const initial = cache.beginRender();
-    const program = initial.useProgram('Mesh');
+    const unlit = initial.useProgram('unlit', 'Mesh');
+    const lambert = initial.useProgram('lambert', 'Cube');
     const kept = initial.useGeometry(keptGeometry, 'Mesh');
     const omitted = initial.useGeometry(omittedGeometry, 'Mesh');
+    expect(kept.normalBuffer).toBeUndefined();
+    expect(omitted.normalBuffer).toBeDefined();
     initial.commit();
 
     const reduced = cache.beginRender();
-    expect(reduced.useProgram('Cube')).toBe(program);
+    expect(reduced.useProgram('lambert', 'Cube')).toBe(lambert);
     expect(reduced.useGeometry(keptGeometry, 'Cube')).toBe(kept);
     reduced.commit();
 
     expect(recording.deleteBuffer.mock.calls.map(([value]) => value)).toEqual([
       omitted.indexBuffer,
+      omitted.normalBuffer,
       omitted.positionBuffer,
     ]);
     expect(recording.deleteVertexArray).toHaveBeenCalledExactlyOnceWith(
       omitted.vertexArray,
     );
-    expect(recording.deleteProgram).not.toHaveBeenCalled();
+    expect(recording.deleteProgram).toHaveBeenCalledExactlyOnceWith(
+      unlit.program,
+    );
 
     cache.beginRender().commit();
 
-    expect(recording.deleteProgram).toHaveBeenCalledExactlyOnceWith(
-      program.program,
-    );
+    expect(recording.deleteProgram.mock.calls.map(([value]) => value)).toEqual([
+      unlit.program,
+      lambert.program,
+    ]);
     expect(recording.deleteBuffer.mock.calls.map(([value]) => value)).toEqual([
       omitted.indexBuffer,
+      omitted.normalBuffer,
       omitted.positionBuffer,
       kept.positionBuffer,
     ]);
@@ -85,7 +104,7 @@ describe('WebGLRendererResourceCache', () => {
       /active render transaction/i,
     );
     committed.commit();
-    expect(() => committed.useProgram('Mesh')).toThrowError(
+    expect(() => committed.useProgram('unlit', 'Mesh')).toThrowError(
       /transaction.*closed/i,
     );
     expect(() => committed.useGeometry(triangle(), 'Mesh')).toThrowError(
@@ -96,7 +115,7 @@ describe('WebGLRendererResourceCache', () => {
 
     const rolledBack = cache.beginRender();
     rolledBack.rollback();
-    expect(() => rolledBack.useProgram('Mesh')).toThrowError(
+    expect(() => rolledBack.useProgram('unlit', 'Mesh')).toThrowError(
       /transaction.*closed/i,
     );
   });
@@ -106,16 +125,17 @@ describe('WebGLRendererResourceCache', () => {
     const recording = createResourceGL('rollback', controls);
     const cache = new WebGLRendererResourceCache(recording.gl, 1);
     const residentGeometry = triangle();
-    const candidateGeometry = triangle(2);
+    const candidateGeometry = indexedTriangleWithNormals(2);
     const failedGeometry = triangle(4);
     const initial = cache.beginRender();
-    const residentProgram = initial.useProgram('Mesh');
+    const residentProgram = initial.useProgram('unlit', 'Mesh');
     const resident = initial.useGeometry(residentGeometry, 'Mesh');
     initial.commit();
 
-    controls.throwBufferDataAt = 3;
+    controls.throwBufferDataAt = 5;
     const candidate = cache.beginRender();
-    expect(candidate.useProgram('Cube')).toBe(residentProgram);
+    expect(candidate.useProgram('unlit', 'Cube')).toBe(residentProgram);
+    const candidateProgram = candidate.useProgram('lambert', 'Cube');
     expect(candidate.useGeometry(residentGeometry, 'Cube')).toBe(resident);
     const created = candidate.useGeometry(candidateGeometry, 'Cube');
     expect(() => candidate.useGeometry(failedGeometry, 'Sphere')).toThrowError(
@@ -124,13 +144,17 @@ describe('WebGLRendererResourceCache', () => {
     candidate.rollback();
 
     expect(recording.deleteBuffer.mock.calls.map(([value]) => value)).toEqual([
-      recording.buffers[2],
+      recording.buffers[4],
+      created.indexBuffer,
+      created.normalBuffer,
       created.positionBuffer,
     ]);
     expect(
       recording.deleteVertexArray.mock.calls.map(([value]) => value),
     ).toEqual([recording.vertexArrays[2], created.vertexArray]);
-    expect(recording.deleteProgram).not.toHaveBeenCalled();
+    expect(recording.deleteProgram).toHaveBeenCalledExactlyOnceWith(
+      candidateProgram.program,
+    );
     expect(recording.deleteBuffer).not.toHaveBeenCalledWith(
       resident.positionBuffer,
     );
@@ -139,28 +163,31 @@ describe('WebGLRendererResourceCache', () => {
     );
 
     const next = cache.beginRender();
-    expect(next.useProgram('Mesh')).toBe(residentProgram);
+    expect(next.useProgram('unlit', 'Mesh')).toBe(residentProgram);
     expect(next.useGeometry(residentGeometry, 'Mesh')).toBe(resident);
     next.commit();
-    expect(recording.createProgram).toHaveBeenCalledOnce();
+    expect(recording.createProgram).toHaveBeenCalledTimes(2);
     expect(recording.createVertexArray).toHaveBeenCalledTimes(3);
   });
 
   it('rolls back an initial candidate program and geometry by exact handle', () => {
     const recording = createResourceGL('initial-rollback');
     const cache = new WebGLRendererResourceCache(recording.gl, 1);
-    const geometry = indexedTriangle();
+    const geometry = indexedTriangleWithNormals();
     const candidate = cache.beginRender();
-    const program = candidate.useProgram('Mesh');
+    const unlit = candidate.useProgram('unlit', 'Mesh');
+    const lambert = candidate.useProgram('lambert', 'Cube');
     const resource = candidate.useGeometry(geometry, 'Mesh');
 
     candidate.rollback();
 
     expect(recording.deleteProgram.mock.calls.map(([value]) => value)).toEqual([
-      program.program,
+      unlit.program,
+      lambert.program,
     ]);
     expect(recording.deleteBuffer.mock.calls.map(([value]) => value)).toEqual([
       resource.indexBuffer,
+      resource.normalBuffer,
       resource.positionBuffer,
     ]);
     expect(
@@ -168,11 +195,15 @@ describe('WebGLRendererResourceCache', () => {
     ).toEqual([resource.vertexArray]);
 
     const retry = cache.beginRender();
-    expect(retry.useProgram('Mesh')).not.toBe(program);
+    expect(retry.useProgram('unlit', 'Mesh')).not.toBe(unlit);
+    expect(retry.useProgram('lambert', 'Mesh')).not.toBe(lambert);
     expect(retry.useGeometry(geometry, 'Mesh')).not.toBe(resource);
     retry.rollback();
-    expect(recording.createProgram).toHaveBeenCalledTimes(2);
+    expect(recording.createProgram).toHaveBeenCalledTimes(4);
     expect(recording.createVertexArray).toHaveBeenCalledTimes(2);
+    expect(recording.deleteProgram).toHaveBeenCalledTimes(4);
+    expect(recording.deleteBuffer).toHaveBeenCalledTimes(6);
+    expect(recording.deleteVertexArray).toHaveBeenCalledTimes(2);
   });
 
   it.each([
@@ -190,7 +221,7 @@ describe('WebGLRendererResourceCache', () => {
     },
     {
       name: 'program publication',
-      controls: { missingUniform: 'u_color' },
+      controls: { missingUniform: 'u_projection' },
       deletedShaders: 2,
       deletedPrograms: 1,
     },
@@ -201,7 +232,7 @@ describe('WebGLRendererResourceCache', () => {
       const cache = new WebGLRendererResourceCache(recording.gl, 1);
       const transaction = cache.beginRender();
 
-      expect(() => transaction.useProgram('BrokenMesh')).toThrowError(
+      expect(() => transaction.useProgram('unlit', 'BrokenMesh')).toThrowError(
         /BrokenMesh.*(?:shader|program)/i,
       );
       expect(recording.deleteShader.mock.calls.map(([value]) => value)).toEqual(
@@ -233,10 +264,17 @@ describe('WebGLRendererResourceCache', () => {
       deletedVertexArrays: 1,
     },
     {
-      name: 'index buffer creation',
+      name: 'normal buffer creation',
       controls: { failBufferAt: 2 },
       createdBuffers: 1,
       deletedBuffers: 1,
+      deletedVertexArrays: 1,
+    },
+    {
+      name: 'index buffer creation',
+      controls: { failBufferAt: 3 },
+      createdBuffers: 2,
+      deletedBuffers: 2,
       deletedVertexArrays: 1,
     },
   ])(
@@ -247,11 +285,11 @@ describe('WebGLRendererResourceCache', () => {
       const transaction = cache.beginRender();
 
       expect(() =>
-        transaction.useGeometry(indexedTriangle(), 'BrokenCube'),
+        transaction.useGeometry(indexedTriangleWithNormals(), 'BrokenCube'),
       ).toThrowError(/BrokenCube.*geometry.*creation failed/i);
       expect(recording.buffers).toHaveLength(createdBuffers);
       expect(recording.deleteBuffer.mock.calls.map(([value]) => value)).toEqual(
-        recording.buffers.slice(0, deletedBuffers),
+        recording.buffers.slice(0, deletedBuffers).reverse(),
       );
       expect(
         recording.deleteVertexArray.mock.calls.map(([value]) => value),
@@ -262,6 +300,43 @@ describe('WebGLRendererResourceCache', () => {
       expect(recording.deleteVertexArray).toHaveBeenCalledTimes(
         deletedVertexArrays,
       );
+    },
+  );
+
+  it.each([
+    { name: 'position', throwBufferDataAt: 1 },
+    { name: 'normal', throwBufferDataAt: 2 },
+    { name: 'index', throwBufferDataAt: 3 },
+  ])(
+    'cleans every owned handle after a healthy $name upload failure',
+    ({ name, throwBufferDataAt }) => {
+      const operationalError = new Error(`${name} upload failed`);
+      const recording = createResourceGL('failed-upload', {
+        throwBufferDataAt,
+        bufferDataError: operationalError,
+      });
+      const cache = new WebGLRendererResourceCache(recording.gl, 1);
+      const transaction = cache.beginRender();
+
+      let caught: unknown;
+      try {
+        transaction.useGeometry(indexedTriangleWithNormals(), 'BrokenCube');
+      } catch (error) {
+        caught = error;
+      }
+
+      expect(caught).toBeInstanceOf(Error);
+      expect((caught as Error).cause).toBe(operationalError);
+      expect(recording.deleteBuffer.mock.calls.map(([value]) => value)).toEqual(
+        recording.buffers.slice().reverse(),
+      );
+      expect(
+        recording.deleteVertexArray.mock.calls.map(([value]) => value),
+      ).toEqual(recording.vertexArrays);
+      transaction.rollback();
+      cache.dispose(false);
+      expect(recording.deleteBuffer).toHaveBeenCalledTimes(3);
+      expect(recording.deleteVertexArray).toHaveBeenCalledOnce();
     },
   );
 
@@ -276,14 +351,17 @@ describe('WebGLRendererResourceCache', () => {
     let returned: unknown;
     let caught: unknown;
     try {
-      returned = transaction.useGeometry(indexedTriangle(), 'LostCube');
+      returned = transaction.useGeometry(
+        indexedTriangleWithNormals(),
+        'LostCube',
+      );
     } catch (error) {
       caught = error;
     }
 
     expect(caught).toBeInstanceOf(Error);
     expect((caught as Error).message).toMatch(
-      /LostCube.*index buffer creation failed/i,
+      /LostCube.*normal buffer creation failed/i,
     );
     expect(returned).toBeUndefined();
     expect(recording.vertexArrays).toHaveLength(1);
@@ -299,7 +377,7 @@ describe('WebGLRendererResourceCache', () => {
 
   it('rejects normally uploaded geometry when the context becomes lost before publication', () => {
     const recording = createResourceGL('lost-after-upload', {
-      loseContextAfterBufferDataAt: 1,
+      loseContextAfterBufferDataAt: 3,
     });
     const cache = new WebGLRendererResourceCache(recording.gl, 5);
     const transaction = cache.beginRender();
@@ -307,7 +385,10 @@ describe('WebGLRendererResourceCache', () => {
     let returned: unknown;
     let caught: unknown;
     try {
-      returned = transaction.useGeometry(triangle(), 'LostSphere');
+      returned = transaction.useGeometry(
+        indexedTriangleWithNormals(),
+        'LostSphere',
+      );
     } catch (error) {
       caught = error;
     }
@@ -323,9 +404,19 @@ describe('WebGLRendererResourceCache', () => {
         length: 9,
         usage: recording.gl.STATIC_DRAW,
       },
+      {
+        target: recording.gl.ARRAY_BUFFER,
+        length: 9,
+        usage: recording.gl.STATIC_DRAW,
+      },
+      {
+        target: recording.gl.ELEMENT_ARRAY_BUFFER,
+        length: 3,
+        usage: recording.gl.STATIC_DRAW,
+      },
     ]);
     expect(recording.vertexArrays).toHaveLength(1);
-    expect(recording.buffers).toHaveLength(1);
+    expect(recording.buffers).toHaveLength(3);
     expect(recording.deleteBuffer).not.toHaveBeenCalled();
     expect(recording.deleteVertexArray).not.toHaveBeenCalled();
 
@@ -430,20 +521,20 @@ describe('WebGLRendererResourceCache', () => {
     const recording = createResourceGL('lost');
     const cache = new WebGLRendererResourceCache(recording.gl, 9);
     const residentGeometry = triangle();
-    const candidateGeometry = indexedTriangle();
+    const candidateGeometry = indexedTriangleWithNormals();
     const resident = cache.beginRender();
-    resident.useProgram('Mesh');
+    resident.useProgram('unlit', 'Mesh');
     resident.useGeometry(residentGeometry, 'Mesh');
     resident.commit();
     const candidate = cache.beginRender();
-    candidate.useProgram('Mesh');
+    candidate.useProgram('lambert', 'Mesh');
     candidate.useGeometry(candidateGeometry, 'Cube');
 
     cache.invalidateContext();
     expect(recording.deleteProgram).not.toHaveBeenCalled();
     expect(recording.deleteBuffer).not.toHaveBeenCalled();
     expect(recording.deleteVertexArray).not.toHaveBeenCalled();
-    expect(() => candidate.useProgram('Mesh')).toThrowError(
+    expect(() => candidate.useProgram('unlit', 'Mesh')).toThrowError(
       /transaction.*closed/i,
     );
     expect(() => candidate.rollback()).not.toThrow();
@@ -460,13 +551,13 @@ describe('WebGLRendererResourceCache', () => {
     const recording = createResourceGL('dispose');
     const cache = new WebGLRendererResourceCache(recording.gl, 2);
     const residentGeometry = triangle();
-    const candidateGeometry = indexedTriangle();
+    const candidateGeometry = indexedTriangleWithNormals();
     const resident = cache.beginRender();
-    const program = resident.useProgram('Mesh');
+    const unlit = resident.useProgram('unlit', 'Mesh');
     const residentResource = resident.useGeometry(residentGeometry, 'Mesh');
     resident.commit();
     const candidate = cache.beginRender();
-    candidate.useProgram('Cube');
+    const lambert = candidate.useProgram('lambert', 'Cube');
     candidate.useGeometry(residentGeometry, 'Cube');
     const candidateResource = candidate.useGeometry(candidateGeometry, 'Cube');
 
@@ -476,11 +567,13 @@ describe('WebGLRendererResourceCache', () => {
     candidate.commit();
 
     expect(recording.deleteProgram.mock.calls.map(([value]) => value)).toEqual([
-      program.program,
+      unlit.program,
+      lambert.program,
     ]);
     expect(recording.deleteBuffer.mock.calls.map(([value]) => value)).toEqual([
       residentResource.positionBuffer,
       candidateResource.indexBuffer,
+      candidateResource.normalBuffer,
       candidateResource.positionBuffer,
     ]);
     expect(
@@ -496,8 +589,8 @@ describe('WebGLRendererResourceCache', () => {
     const recording = createResourceGL('cleanup-errors');
     const cache = new WebGLRendererResourceCache(recording.gl, 1);
     const transaction = cache.beginRender();
-    transaction.useProgram('Mesh');
-    transaction.useGeometry(indexedTriangle(), 'Mesh');
+    transaction.useProgram('unlit', 'Mesh');
+    transaction.useGeometry(indexedTriangleWithNormals(), 'Mesh');
     transaction.commit();
     const programError = new Error('program delete failed');
     const indexError = new Error('index delete failed');
@@ -520,10 +613,12 @@ describe('WebGLRendererResourceCache', () => {
     expect(() => empty.commit()).not.toThrow();
 
     expect(recording.deleteProgram).toHaveBeenCalledOnce();
-    expect(recording.deleteBuffer).toHaveBeenCalledTimes(2);
+    expect(recording.deleteBuffer).toHaveBeenCalledTimes(3);
     expect(recording.deleteVertexArray).toHaveBeenCalledOnce();
     expect(reported).toEqual([programError, indexError, vertexArrayError]);
-    expect(() => empty.useProgram('Mesh')).toThrowError(/transaction.*closed/i);
+    expect(() => empty.useProgram('unlit', 'Mesh')).toThrowError(
+      /transaction.*closed/i,
+    );
     expect(() => cache.beginRender().commit()).not.toThrow();
   });
 });
@@ -605,6 +700,9 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
   const deleteBuffer = vi.fn((_buffer: OwnedHandle) => {
     if (controls.deleteBufferError) throw controls.deleteBufferError;
   });
+  const bindBuffer = vi.fn();
+  const enableVertexAttribArray = vi.fn();
+  const vertexAttribPointer = vi.fn();
   const uploads: Array<{
     readonly target: number;
     readonly length: number;
@@ -631,6 +729,9 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
     deleteVertexArray,
     createBuffer,
     deleteBuffer,
+    bindBuffer,
+    enableVertexAttribArray,
+    vertexAttribPointer,
     bufferData: vi.fn(
       (target: number, data: ArrayLike<number>, usage: number) => {
         uploadAttempt += 1;
@@ -682,6 +783,9 @@ function createResourceGL(context: string, controls: ResourceGLControls = {}) {
     deleteVertexArray,
     createBuffer,
     deleteBuffer,
+    bindBuffer,
+    enableVertexAttribArray,
+    vertexAttribPointer,
   };
 }
 
@@ -691,9 +795,10 @@ function triangle(offset = 0) {
   });
 }
 
-function indexedTriangle() {
+function indexedTriangleWithNormals(offset = 0) {
   return createWebGLGeometry({
-    positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+    positions: [offset, 0, 0, offset + 1, 0, 0, offset, 1, 0],
+    normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
     indices: [0, 1, 2],
   });
 }

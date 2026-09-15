@@ -67,7 +67,7 @@ describe('WebGLLayer context lifecycle', () => {
     controller.renderUpdatedChild(root, undefined, surface, 1);
     expect(glCount(platform, 'createProgram')).toBe(1);
     expect(glCount(platform, 'createVertexArray')).toBe(1);
-    expect(glCount(platform, 'createBuffer')).toBe(2);
+    expect(glCount(platform, 'createBuffer')).toBe(3);
     controller.composite(parentContext, {
       x: 0,
       y: 0,
@@ -112,7 +112,7 @@ describe('WebGLLayer context lifecycle', () => {
     expect(executions).toBe(2);
     expect(glCount(platform, 'createProgram')).toBe(2);
     expect(glCount(platform, 'createVertexArray')).toBe(2);
-    expect(glCount(platform, 'createBuffer')).toBe(4);
+    expect(glCount(platform, 'createBuffer')).toBe(6);
     expect(controller.committedGeneration).toBeUndefined();
     controller.renderRetainedChild(root, undefined, surface, 2);
     expect(controller.candidateGeneration).toBe(2);
@@ -138,7 +138,7 @@ describe('WebGLLayer context lifecycle', () => {
     ]);
     expect(restoredBitmap.close).toHaveBeenCalledOnce();
     expect(glCount(platform, 'deleteProgram')).toBe(1);
-    expect(glCount(platform, 'deleteBuffer')).toBe(2);
+    expect(glCount(platform, 'deleteBuffer')).toBe(3);
     expect(glCount(platform, 'deleteVertexArray')).toBe(1);
   });
 
@@ -424,9 +424,9 @@ describe('WebGL failure cleanup', () => {
       throwDeletingShader: { stage: 'fragment', error: cleanupError },
     });
 
-    expect(() => createBuiltInProgram(recording.gl, 'Mesh')).toThrowError(
-      /Mesh.*fragment.*compil/i,
-    );
+    expect(() =>
+      createBuiltInProgram(recording.gl, 'unlit', 'Mesh'),
+    ).toThrowError(/Mesh.*fragment.*compil/i);
     expect(recording.deletedShaders).toEqual(['fragment', 'vertex']);
     expect(reported).toEqual([cleanupError]);
   });
@@ -438,12 +438,13 @@ describe('WebGL failure cleanup', () => {
       reported.push(error);
     });
     const recording = createOwnershipGL({
-      failBuffer: 2,
+      failBuffer: 3,
       throwDeleteBuffer: cleanupError,
     });
     const cache = new WebGLRendererResourceCache(recording.gl, 1);
     const geometry = createWebGLGeometry({
       positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+      normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
       indices: [0, 1, 2],
     });
     const transaction = cache.beginRender();
@@ -451,14 +452,14 @@ describe('WebGL failure cleanup', () => {
     expect(() => transaction.useGeometry(geometry, 'Cube')).toThrowError(
       /Cube.*index buffer/i,
     );
-    expect(recording.deleteBuffer).toHaveBeenCalledOnce();
+    expect(recording.deleteBuffer).toHaveBeenCalledTimes(2);
     expect(recording.deleteVertexArray).toHaveBeenCalledOnce();
-    expect(reported).toEqual([cleanupError]);
+    expect(reported).toEqual([cleanupError, cleanupError]);
     transaction.rollback();
     cache.dispose(false);
   });
 
-  it('continues renderer-cache disposal after one owned handle release throws', () => {
+  it('disposes two keyed programs and one shared normal geometry after one release throws', () => {
     const cleanupError = new Error('program delete failed');
     const reported: unknown[] = [];
     vi.spyOn(globalThis, 'reportError').mockImplementation(error => {
@@ -470,17 +471,21 @@ describe('WebGL failure cleanup', () => {
     const cache = new WebGLRendererResourceCache(recording.gl, 1);
     const geometry = createWebGLGeometry({
       positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+      normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
+      indices: [0, 1, 2],
     });
     const transaction = cache.beginRender();
-    transaction.useProgram('Mesh');
+    transaction.useProgram('unlit', 'Mesh');
+    transaction.useProgram('lambert', 'Mesh');
     transaction.useGeometry(geometry, 'Mesh');
+    transaction.useGeometry(geometry, 'Cube');
     transaction.commit();
 
     expect(() => cache.dispose(false)).not.toThrow();
-    expect(recording.deleteProgram).toHaveBeenCalledOnce();
-    expect(recording.deleteBuffer).toHaveBeenCalledOnce();
+    expect(recording.deleteProgram).toHaveBeenCalledTimes(2);
+    expect(recording.deleteBuffer).toHaveBeenCalledTimes(3);
     expect(recording.deleteVertexArray).toHaveBeenCalledOnce();
-    expect(reported).toEqual([cleanupError]);
+    expect(reported).toEqual([cleanupError, cleanupError]);
   });
 
   it('attempts later baseline categories after an early restoration failure', () => {
