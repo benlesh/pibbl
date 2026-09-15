@@ -18,15 +18,25 @@ function movingBody(
     velocityX?: number;
     rotationDegrees?: number;
     angularVelocityDegrees?: number;
+    localCenterX?: number;
+    localCenterY?: number;
   }> = {},
 ): PhysicsTopologyRecord2D {
+  const rotationRadians = ((options.rotationDegrees ?? 0) * Math.PI) / 180;
+  const localCenterX = options.localCenterX ?? 0;
+  const localCenterY = options.localCenterY ?? 0;
+  const cosine = Math.cos(rotationRadians);
+  const sine = Math.sin(rotationRadians);
   return {
     kind: "body",
     id,
     definition: {
-      positionX: options.x ?? 0,
-      positionY: 0,
-      rotationRadians: ((options.rotationDegrees ?? 0) * Math.PI) / 180,
+      positionX:
+        (options.x ?? 0) + cosine * localCenterX - sine * localCenterY,
+      positionY: sine * localCenterX + cosine * localCenterY,
+      rotationRadians,
+      localCenterX,
+      localCenterY,
       linearVelocityX: options.velocityX ?? 0,
       linearVelocityY: 0,
       angularVelocity: ((options.angularVelocityDegrees ?? 0) * Math.PI) / 180,
@@ -235,6 +245,43 @@ describe("transactional fixed-tick 2D world cadence", () => {
     expect(tie.presentationPose(1).rotationDegrees).toBeCloseTo(90, 12);
   });
 
+  it("projects interpolation and teleports through an off-origin center of mass", () => {
+    const world = new PhysicsWorld2DKernel({
+      fixedStepMilliseconds: 1_000,
+      sleeping: false,
+    });
+    world.proposeTopology([
+      movingBody(1, {
+        angularVelocityDegrees: 90,
+        localCenterX: 2,
+      }),
+    ]);
+    advance(world, 1, 0);
+    advance(world, 2, 1_500);
+
+    const authoritative = world.authoritativePose(1);
+    expect(authoritative.position[0]).toBeCloseTo(2, 12);
+    expect(authoritative.position[1]).toBeCloseTo(-2, 12);
+    expect(authoritative.rotationDegrees).toBeCloseTo(90, 12);
+    const interpolated = world.presentationPose(1);
+    expect(interpolated.position[0]).toBeCloseTo(2 - Math.SQRT2, 12);
+    expect(interpolated.position[1]).toBeCloseTo(-Math.SQRT2, 12);
+    expect(interpolated.rotationDegrees).toBeCloseTo(45, 12);
+
+    world.applyBegin([
+      {
+        kind: "set-pose",
+        bodyId: 1,
+        pose: { position: [7, 8], rotationDegrees: 90 },
+      },
+    ]);
+    advance(world, 3, 1_500);
+    const teleported = world.authoritativePose(1);
+    expect(teleported.position[0]).toBeCloseTo(7, 12);
+    expect(teleported.position[1]).toBeCloseTo(8, 12);
+    expect(teleported.rotationDegrees).toBeCloseTo(90, 12);
+  });
+
   it('returns the current authoritative pose when interpolation is "none"', () => {
     const world = new PhysicsWorld2DKernel({
       fixedStepMilliseconds: 100,
@@ -309,6 +356,80 @@ describe("normalized 2D world configuration and topology admission", () => {
     expect(second.counters.proxyAllocations).toBe(
       first.counters.proxyAllocations,
     );
+  });
+
+  it("preserves dynamic pose and velocity when automatic mass properties change", () => {
+    const world = new PhysicsWorld2DKernel({
+      fixedStepMilliseconds: 100,
+      sleeping: false,
+    });
+    const body = (localCenterX: number): PhysicsTopologyRecord2D => ({
+      kind: "body",
+      id: 1,
+      definition: {
+        positionX: localCenterX,
+        positionY: 0,
+        rotationRadians: 0,
+        localCenterX,
+        localCenterY: 0,
+        linearVelocityX: 1,
+        linearVelocityY: 0,
+        angularVelocity: 0,
+        forceX: 0,
+        forceY: 0,
+        torque: 0,
+        inverseMass: 1,
+        inverseInertia: 1,
+        linearDamping: 0,
+        angularDamping: 0,
+        gravityScale: 0,
+        sleepTime: 0,
+        flags: 1,
+        owner: null,
+      },
+    });
+
+    world.proposeTopology([body(5)]);
+    advance(world, 1, 0);
+    advance(world, 2, 100);
+    expect(world.authoritativePose(1).position[0]).toBeCloseTo(0.1, 12);
+
+    world.proposeTopology([body(10)]);
+    advance(world, 3, 200);
+
+    expect(world.authoritativePose(1).position[0]).toBeCloseTo(0.2, 12);
+    expect(world.snapshot().bodies[0]!.linearVelocityX).toBe(1);
+  });
+
+  it("retains imperative disablement while mass properties change", () => {
+    const world = new PhysicsWorld2DKernel({ sleeping: false });
+    const initial = movingBody(1, { velocityX: 3 });
+    world.proposeTopology([initial, collider(10, 1, 1)]);
+    advance(world, 1, 0);
+
+    world.applyBegin([{ kind: "disable", bodyId: 1 }]);
+    advance(world, 2, 0);
+    expect(world.isBodyEnabled(1)).toBe(false);
+    expect(world.snapshot().colliderCount).toBe(0);
+
+    const changed = movingBody(1, {
+      velocityX: 99,
+      localCenterX: 2,
+    });
+    world.proposeTopology([changed, collider(10, 1, 2)]);
+    advance(world, 3, 0);
+    expect(world.isBodyEnabled(1)).toBe(false);
+    expect(world.snapshot().colliderCount).toBe(0);
+
+    world.applyBegin([
+      { kind: "enable", bodyId: 1, velocity: "preserve" },
+    ]);
+    advance(world, 4, 0);
+    expect(world.isBodyEnabled(1)).toBe(true);
+    expect(world.snapshot().colliderCount).toBe(1);
+    expect(world.authoritativePose(1).position[0]).toBe(0);
+    expect(world.snapshot().bodies[0]!.linearVelocityX).toBe(3);
+    expect(world.snapshot().bodies[0]!.localCenterX).toBe(2);
   });
 });
 

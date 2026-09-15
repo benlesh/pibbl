@@ -80,13 +80,17 @@ function createFixture() {
       tag?: unknown;
       filter?: Readonly<{ category?: number; mask?: number; group?: number }>;
       presentationX?: number;
+      localCenterX?: number;
     }>,
   ) => {
     const shape = options.shape ?? circleShape2D({ radius: 0.5 });
+    const localCenterX = options.localCenterX ?? 0;
     const body = bodies.allocate({
-      positionX: options.x,
+      positionX: options.x + localCenterX,
       positionY: options.y ?? 0,
       rotationRadians: 0,
+      localCenterX,
+      localCenterY: 0,
       linearVelocityX: 0,
       linearVelocityY: 0,
       angularVelocity: 0,
@@ -214,6 +218,25 @@ describe("committed-authoritative 2D world queries", () => {
     expect(scene.queries.queryAabb(7, { min: [2.41, -0.1], max: [2.45, 0.1] }, { mode: "any" })).toBe(false);
     expect(scene.queries.queryPoint(7, [4, 0], { mode: "all" })).toHaveLength(1);
     expect(scene.queries.queryPoint(7, [4, 2], { mode: "closest" })).toBeNull();
+  });
+
+  it("queries collider geometry from the authored origin instead of the internal center of mass", () => {
+    const scene = createFixture();
+    scene.add({
+      x: 4,
+      shape: circleShape2D({ radius: 0.5, center: [2, 0] }),
+      localCenterX: 2,
+    });
+
+    expect(scene.queries.queryPoint(7, [6, 0], { mode: "any" })).toBe(true);
+    expect(scene.queries.queryPoint(7, [8, 0], { mode: "any" })).toBe(false);
+    expect(
+      scene.queries.raycast(7, {
+        origin: [0, 0],
+        direction: [1, 0],
+        maxDistance: 10,
+      })?.distance,
+    ).toBeCloseTo(5.5, 12);
   });
 
   it("applies sensor modes, group/category/mask filters, and exact exclusions", () => {

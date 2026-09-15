@@ -49,6 +49,7 @@ import {
   type PhysicsBodyCommand2D,
   type PhysicsColliderTopologyRecord2D,
   type PhysicsCommand2D,
+  type PhysicsWorld2DConfiguration,
   type PhysicsTopologyRecord2D,
   type PhysicsWorld2DCandidate,
 } from "../world/world.js";
@@ -179,7 +180,9 @@ export class PhysicsWorld2DController {
     initialProps: CRCPhysicsWorld2DProps,
   ) {
     const configuration = normalizeWorldConfiguration(initialProps);
-    this.kernel = new PhysicsWorld2DKernel(configuration);
+    this.kernel = new PhysicsWorld2DKernel(
+      denormalizeWorldConfiguration(configuration),
+    );
     this.queries = new CommittedWorldQueries2D({
       generation: 1,
       bodies: this.kernel.bodies,
@@ -511,7 +514,12 @@ export class PhysicsWorld2DController {
       if (topologyChanged) this.kernel.proposeTopology(topology);
       if (configurationChanged) {
         this.kernel.applyBegin([
-          { kind: "configure", configuration: draft.configuration },
+          {
+            kind: "configure",
+            configuration: denormalizeWorldConfiguration(
+              draft.configuration,
+            ),
+          },
         ]);
       }
     });
@@ -1069,6 +1077,25 @@ function normalizeWorldConfiguration(
   });
 }
 
+function denormalizeWorldConfiguration(
+  configuration: NormalizedPhysicsWorld2DConfiguration,
+): PhysicsWorld2DConfiguration {
+  return Object.freeze({
+    gravity: Object.freeze([
+      configuration.gravityX,
+      configuration.gravityY,
+    ] as const),
+    fixedStepMilliseconds: configuration.fixedStepMilliseconds,
+    maxCatchUpSteps: configuration.maxCatchUpSteps,
+    interpolation: configuration.interpolation,
+    sleeping: configuration.sleeping,
+    solver: Object.freeze({
+      velocityIterations: configuration.velocityIterations,
+      positionIterations: configuration.positionIterations,
+    }),
+  });
+}
+
 function materializeTopology(
   draft: RenderDraft2D,
   reenableVelocities: ReadonlyMap<number, BodyVelocity2D>,
@@ -1149,6 +1176,7 @@ function bodyDefinition(
 ): BodyDefinition2D {
   const descriptor = body.descriptor;
   const enabled = descriptor.options.enabled;
+  const massData = compoundMassData(colliders);
   let flags = 0;
   let linearVelocityX = 0;
   let linearVelocityY = 0;
@@ -1158,6 +1186,8 @@ function bodyDefinition(
   let gravityScale = 0;
   let inverseMass = 0;
   let inverseInertia = 0;
+  let localCenterX = 0;
+  let localCenterY = 0;
   if (enabled && descriptor.bodyType === "dynamic") {
     flags |= BODY_TYPE_DYNAMIC_2D;
     if (descriptor.options.fixedRotation) flags |= BODY_FIXED_ROTATION_2D;
@@ -1175,18 +1205,38 @@ function bodyDefinition(
     gravityScale = descriptor.options.gravityScale;
     const mass =
       descriptor.options.mass === "auto"
-        ? autoMass(colliders)
+        ? massData.mass
         : descriptor.options.mass;
     inverseMass = mass > 0 ? 1 / mass : 1;
-    inverseInertia = descriptor.options.fixedRotation ? 0 : inverseMass;
+    localCenterX = massData.centerX;
+    localCenterY = massData.centerY;
+    const inertia = massData.mass > 0
+      ? massData.inertia * (mass / massData.mass)
+      : 0;
+    inverseInertia = descriptor.options.fixedRotation
+      ? 0
+      : inertia > 0
+        ? 1 / inertia
+        : inverseMass;
   } else if (enabled && descriptor.bodyType === "kinematic") {
     flags |= BODY_TYPE_KINEMATIC_2D;
     if (!descriptor.options.allowSleep) flags |= BODY_SLEEP_DISABLED_2D;
   }
+  const rotationRadians = (body.initialPose.rotationDegrees * Math.PI) / 180;
+  const cosine = Math.cos(rotationRadians);
+  const sine = Math.sin(rotationRadians);
   return Object.freeze({
-    positionX: body.initialPose.position[0],
-    positionY: body.initialPose.position[1],
-    rotationRadians: (body.initialPose.rotationDegrees * Math.PI) / 180,
+    positionX:
+      body.initialPose.position[0] +
+      cosine * localCenterX -
+      sine * localCenterY,
+    positionY:
+      body.initialPose.position[1] +
+      sine * localCenterX +
+      cosine * localCenterY,
+    rotationRadians,
+    localCenterX,
+    localCenterY,
     linearVelocityX,
     linearVelocityY,
     angularVelocity,
@@ -1210,13 +1260,54 @@ const ZERO_VELOCITY_2D: BodyVelocity2D = Object.freeze({
   angularVelocity: 0,
 });
 
-function autoMass(colliders: readonly ColliderDraft2D[]): number {
-  let mass = 0;
-  for (const collider of colliders) {
-    if (!collider.options.contributesToMass) continue;
-    mass += collider.shape.area * collider.options.density;
+function compoundMassData(
+  colliders: readonly ColliderDraft2D[],
+): Readonly<{
+  mass: number;
+  centerX: number;
+  centerY: number;
+  inertia: number;
+}> {
+  const entries = colliders
+    .filter((collider) => collider.options.contributesToMass)
+    .map((collider) => {
+      const shape = collider.shape;
+      const cosine = Math.cos(shape.localPose.rotationRadians);
+      const sine = Math.sin(shape.localPose.rotationRadians);
+      const centerX =
+        shape.localPose.x +
+        cosine * shape.centroidX -
+        sine * shape.centroidY;
+      const centerY =
+        shape.localPose.y +
+        sine * shape.centroidX +
+        cosine * shape.centroidY;
+      return {
+        mass: shape.area * collider.options.density,
+        centerX,
+        centerY,
+        centroidInertia: shape.unitInertia * collider.options.density,
+      };
+    });
+  const mass = entries.reduce((sum, entry) => sum + entry.mass, 0);
+  if (mass <= 0) {
+    return { mass: 0, centerX: 0, centerY: 0, inertia: 0 };
   }
-  return mass;
+  const centerX = entries.reduce(
+    (sum, entry) => sum + entry.mass * entry.centerX,
+    0,
+  ) / mass;
+  const centerY = entries.reduce(
+    (sum, entry) => sum + entry.mass * entry.centerY,
+    0,
+  ) / mass;
+  const inertia = entries.reduce((sum, entry) => {
+    const offsetX = entry.centerX - centerX;
+    const offsetY = entry.centerY - centerY;
+    return sum + entry.centroidInertia +
+      entry.mass * (offsetX * offsetX + offsetY * offsetY);
+  }, 0);
+  return { mass, centerX, centerY, inertia };
 }
 
 function sameConfiguration(

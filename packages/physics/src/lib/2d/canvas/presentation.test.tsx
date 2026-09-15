@@ -7,6 +7,7 @@ import {
   crcPhysicsWorld2D,
   dynamicBody2D,
   kinematicBody2D,
+  staticBody2D,
   type CRCPhysicsWorldHandle2D,
 } from '../../../2d.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -116,6 +117,189 @@ describe('Canvas 2D physics pose presentation', () => {
 
     expect(pixelAt(canvas, 30, 20)).toEqual([37, 99, 235, 255]);
     expect(pixelAt(canvas, 15, 20)).toEqual([0, 0, 0, 0]);
+  });
+
+  it('advances a dynamic primitive under its world gravity', () => {
+    const frames = new ManualFrames();
+    frames.install();
+    let body!: ReturnType<typeof crcPhysicsBody2D>;
+    const Ball = () => {
+      body = crcPhysicsBody2D();
+      return (
+        <Circle
+          physics={dynamicBody2D({ handle: body, mass: 1 })}
+          style={{ cx: 20, cy: 10, radius: 5, fill: '#2563eb' }}
+        />
+      );
+    };
+    const canvas = document.createElement('canvas');
+    canvas.width = 40;
+    canvas.height = 40;
+    document.body.appendChild(canvas);
+    mounts.push(crc(canvas, (
+      <PhysicsWorld2D gravity={[0, 10]} fixedStepMilliseconds={100}>
+        <Ball />
+      </PhysicsWorld2D>
+    )));
+    frames.flush(0);
+    frames.flush(0);
+    frames.flush(100);
+    frames.flush(200);
+
+    expect(body.position.get()[0]).toBe(0);
+    expect(body.position.get()[1]).toBeCloseTo(0.3);
+    expect(body.linearVelocity.get()).toEqual([0, 2]);
+  });
+
+  it('applies world gravity updates to an existing dynamic primitive', () => {
+    const frames = new ManualFrames();
+    frames.install();
+    let body!: ReturnType<typeof crcPhysicsBody2D>;
+    const Ball = () => {
+      body = crcPhysicsBody2D();
+      return (
+        <Circle
+          physics={dynamicBody2D({ handle: body, mass: 1 })}
+          style={{ cx: 20, cy: 10, radius: 5, fill: '#2563eb' }}
+        />
+      );
+    };
+    const root = (gravityY: number) => (
+      <PhysicsWorld2D gravity={[0, gravityY]} fixedStepMilliseconds={100}>
+        <Ball />
+      </PhysicsWorld2D>
+    );
+    const canvas = document.createElement('canvas');
+    canvas.width = 40;
+    canvas.height = 40;
+    document.body.appendChild(canvas);
+    mounts.push(crc(canvas, root(0)));
+    frames.flush(0);
+    frames.flush(0);
+    frames.flush(100);
+
+    crc(canvas, root(20));
+    frames.flush(200);
+    frames.flush(300);
+
+    expect(body.position.get()[0]).toBe(0);
+    expect(body.position.get()[1]).toBeCloseTo(0.2, 12);
+    expect(body.linearVelocity.get()).toEqual([0, 2]);
+  });
+
+  it('settles an inferred Circle body on an inferred Rectangle body', () => {
+    const frames = new ManualFrames();
+    frames.install();
+    let body!: ReturnType<typeof crcPhysicsBody2D>;
+    const Ball = () => {
+      body = crcPhysicsBody2D();
+      return (
+        <Circle
+          physics={dynamicBody2D({ handle: body, mass: 1 })}
+          style={{ cx: 20, cy: 10, radius: 5, fill: '#2563eb' }}
+        />
+      );
+    };
+    const canvas = document.createElement('canvas');
+    canvas.width = 40;
+    canvas.height = 40;
+    document.body.appendChild(canvas);
+    mounts.push(crc(canvas, (
+      <PhysicsWorld2D gravity={[0, 10]} fixedStepMilliseconds={100}>
+        <Rectangle
+          physics={staticBody2D()}
+          style={{ x: 0, y: 30, width: 40, height: 5, fill: '#334155' }}
+        />
+        <Ball />
+      </PhysicsWorld2D>
+    )));
+    frames.flush(0);
+    frames.flush(0);
+    for (let milliseconds = 100; milliseconds <= 3000; milliseconds += 100) {
+      frames.flush(milliseconds);
+      if (body.sleeping.get()) break;
+    }
+
+    expect(body.position.get()[1]).toBeCloseTo(15, 1);
+    expect(body.linearVelocity.get()[1]).toBeCloseTo(0, 1);
+  });
+
+  it('keeps the learning-example ball bounded before and after its impulse', () => {
+    const frames = new ManualFrames();
+    frames.install();
+    let body!: ReturnType<typeof crcPhysicsBody2D>;
+    const Ball = () => {
+      body = crcPhysicsBody2D();
+      return (
+        <Circle
+          physics={dynamicBody2D({
+            handle: body,
+            mass: 1,
+            collider: { restitution: 0.35 },
+          })}
+          style={{ cx: 210, cy: 110, radius: 28, fill: '#2563eb' }}
+        />
+      );
+    };
+    const canvas = document.createElement('canvas');
+    canvas.width = 720;
+    canvas.height = 420;
+    document.body.appendChild(canvas);
+    mounts.push(crc(canvas, (
+      <PhysicsWorld2D
+        gravity={[0, 560]}
+        fixedStepMilliseconds={1000 / 60}
+      >
+        <Rectangle
+          physics={staticBody2D({ collider: { friction: 0.8 } })}
+          style={{ x: 72, y: 316, width: 576, height: 34, fill: '#334155' }}
+        />
+        <Group physics={staticBody2D({ collider: false })}>
+          <Rectangle
+            physics={collider2D({ sensor: true })}
+            pointerEvents="none"
+            style={{ x: 164, y: 304, width: 92, height: 12 }}
+          />
+        </Group>
+        <Ball />
+      </PhysicsWorld2D>
+    )));
+    frames.flush(0);
+    frames.flush(0);
+    for (let frame = 1; frame <= 300; frame += 1) {
+      frames.flush((frame * 1000) / 60);
+      if (body.sleeping.get()) break;
+    }
+
+    const position = body.position.get();
+    const rotation = body.rotationDegrees.get() * Math.PI / 180;
+    const centerX = position[0] + Math.cos(rotation) * 210 - Math.sin(rotation) * 110;
+    const centerY = position[1] + Math.sin(rotation) * 210 + Math.cos(rotation) * 110;
+    expect(centerX).toBeCloseTo(210, 1);
+    expect(centerY).toBeCloseTo(288, 0);
+    expect(Math.abs(body.linearVelocity.get()[1])).toBeLessThan(3);
+
+    applyImpulse2D(body, [45, -120]);
+    frames.flush((301 * 1000) / 60);
+    expect(body.linearVelocity.get()[0]).toBeGreaterThan(40);
+    expect(body.linearVelocity.get()[1]).toBeLessThan(-100);
+
+    for (let frame = 302; frame <= 600; frame += 1) {
+      frames.flush((frame * 1000) / 60);
+    }
+    const returnedPosition = body.position.get();
+    const returnedRotation = body.rotationDegrees.get() * Math.PI / 180;
+    const returnedCenterX =
+      returnedPosition[0] +
+      Math.cos(returnedRotation) * 210 -
+      Math.sin(returnedRotation) * 110;
+    const returnedCenterY =
+      returnedPosition[1] +
+      Math.sin(returnedRotation) * 210 +
+      Math.cos(returnedRotation) * 110;
+    expect(returnedCenterX).toBeGreaterThan(210);
+    expect(returnedCenterX).toBeLessThan(648);
+    expect(returnedCenterY).toBeCloseTo(288, 0);
   });
 
   it('leaves kinematic authored placement under application authority', () => {

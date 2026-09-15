@@ -23,6 +23,8 @@ function bodyDefinition(seed: number, owner: object): BodyDefinition2D {
     positionX: seed + 0.1,
     positionY: seed + 0.2,
     rotationRadians: seed + 0.3,
+    localCenterX: seed + 1.6,
+    localCenterY: seed + 1.7,
     linearVelocityX: seed + 0.4,
     linearVelocityY: seed + 0.5,
     angularVelocity: seed + 0.6,
@@ -117,8 +119,12 @@ describe("pooled 2D world storage", () => {
       true,
     );
     expect(Array.from(read)).toEqual([1.1, 1.2]);
+    expect(bodies.localCenterX[firstIndex]).toBe(2.6);
+    expect(bodies.localCenterY[firstIndex]).toBe(2.7);
     expect(bodies.release(firstIndex, firstGeneration)).toBe(true);
     expect(bodies.owners[firstIndex]).toBeNull();
+    expect(bodies.localCenterX[firstIndex]).toBe(0);
+    expect(bodies.localCenterY[firstIndex]).toBe(0);
 
     const replacementOwner = {};
     const replacementIndex = bodies.allocate(
@@ -138,6 +144,8 @@ describe("pooled 2D world storage", () => {
     );
     expect(bodies.positionX[replacementIndex]).toBe(9.1);
     expect(bodies.positionY[replacementIndex]).toBe(9.2);
+    expect(bodies.localCenterX[replacementIndex]).toBe(10.6);
+    expect(bodies.localCenterY[replacementIndex]).toBe(10.7);
     expect(bodies.release(firstIndex, firstGeneration)).toBe(false);
     expect(bodies.owners[replacementIndex]).toBe(replacementOwner);
 
@@ -244,6 +252,8 @@ describe("pooled 2D world storage", () => {
       const colliderIndex = colliderIndices[seed]!;
       expect(bodies.has(bodyIndex, bodyGenerations[seed]!)).toBe(true);
       expect(bodies.positionX[bodyIndex]).toBe(seed + 0.1);
+      expect(bodies.localCenterX[bodyIndex]).toBe(seed + 1.6);
+      expect(bodies.localCenterY[bodyIndex]).toBe(seed + 1.7);
       expect(bodies.angularVelocity[bodyIndex]).toBe(seed + 0.6);
       expect(bodies.inverseInertia[bodyIndex]).toBe(seed + 1.1);
       expect(bodies.flags[bodyIndex]).toBe(seed + 1);

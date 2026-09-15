@@ -121,6 +121,42 @@ describe("PhysicsWorld2D controller scheduling and topology", () => {
     });
   });
 
+  it("derives a density-weighted center and parallel-axis inertia for compound bodies", () => {
+    let world!: CRCPhysicsWorldHandle2D;
+    const Capture = () => {
+      world = crcPhysicsWorld2D();
+      return undefined;
+    };
+    mountCRC(
+      <PhysicsWorld2D>
+        <Capture />
+        <Group
+          physics={dynamicBody2D({
+            collider: false,
+            mass: 8 * Math.PI,
+          })}
+        >
+          <Circle
+            physics={collider2D({ density: 1 })}
+            style={{ cx: 0, cy: 0, radius: 1 }}
+          />
+          <Circle
+            physics={collider2D({ density: 3 })}
+            style={{ cx: 4, cy: 0, radius: 1 }}
+          />
+        </Group>
+      </PhysicsWorld2D>,
+    );
+    frames.flush(0);
+    frames.flush(0);
+
+    const body = snapshot(world).kernel.bodies[0]!;
+    expect(body.positionX).toBeCloseTo(3, 12);
+    expect(body.positionY).toBe(0);
+    expect(body.inverseMass).toBeCloseTo(1 / (8 * Math.PI), 12);
+    expect(body.inverseInertia).toBeCloseTo(1 / (28 * Math.PI), 12);
+  });
+
   it("preserves or zeros velocity explicitly when a dynamic body is re-enabled", () => {
     const shape = circleShape2D({ radius: 2 });
     let world!: CRCPhysicsWorldHandle2D;

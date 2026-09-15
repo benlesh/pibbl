@@ -157,9 +157,24 @@ export class BoundedCcd2D {
       const movingRecord = colliders.shapes[movingCollider];
       if (movingRecord === null || !isSupportedSolid(movingRecord)) continue;
       const movingShape = this.shapeShell(movingRecord);
-      const fromPose = publicPose(fromX, fromY, rotationRadians);
+      const fromPose = publicPoseFromCenter(
+        bodies,
+        body,
+        fromX,
+        fromY,
+        rotationRadians,
+      );
       const start = boundsOfShape2D(movingShape, fromPose);
-      const end = boundsOfShape2D(movingShape, publicPose(fromX + translationX, fromY + translationY, rotationRadians));
+      const end = boundsOfShape2D(
+        movingShape,
+        publicPoseFromCenter(
+          bodies,
+          body,
+          fromX + translationX,
+          fromY + translationY,
+          rotationRadians,
+        ),
+      );
       const candidateCount = broadPhase.queryAabbInto(
         Math.min(start.min[0], end.min[0]),
         Math.min(start.min[1], end.min[1]),
@@ -186,7 +201,13 @@ export class BoundedCcd2D {
           fromPose,
           [translationX, translationY],
           this.shapeShell(targetRecord),
-          publicPose(bodies.positionX[targetBody]!, bodies.positionY[targetBody]!, bodies.rotationRadians[targetBody]!),
+          publicPoseFromCenter(
+            bodies,
+            targetBody,
+            bodies.positionX[targetBody]!,
+            bodies.positionY[targetBody]!,
+            bodies.rotationRadians[targetBody]!,
+          ),
         );
         if (hit === null) continue;
         if (
@@ -266,6 +287,24 @@ function publicPose(x: number, y: number, rotationRadians: number): CRCPhysicsPo
     position: [x, y],
     rotationDegrees: rotationRadians * RADIANS_TO_DEGREES,
   };
+}
+
+function publicPoseFromCenter(
+  bodies: BodyStore2D,
+  index: number,
+  centerX: number,
+  centerY: number,
+  rotationRadians: number,
+): CRCPhysicsPose2D {
+  const cosine = Math.cos(rotationRadians);
+  const sine = Math.sin(rotationRadians);
+  const localCenterX = bodies.localCenterX[index]!;
+  const localCenterY = bodies.localCenterY[index]!;
+  return publicPose(
+    centerX - cosine * localCenterX + sine * localCenterY,
+    centerY - sine * localCenterX - cosine * localCenterY,
+    rotationRadians,
+  );
 }
 
 function materialRestitution(material: unknown): number {

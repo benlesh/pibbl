@@ -299,6 +299,9 @@ function compileFixture(source: string): string {
           noEmit: true,
           paths: {
             '@crc/core': [`${repositoryRoot}/packages/core/src/index.ts`],
+            '@crc/core/internal': [
+              `${repositoryRoot}/packages/core/src/internal.ts`,
+            ],
             '@crc/physics/2d': [
               `${repositoryRoot}/packages/physics/src/2d.ts`,
             ],

@@ -9,6 +9,8 @@ export interface BodyDefinition2D {
   readonly positionX: number;
   readonly positionY: number;
   readonly rotationRadians: number;
+  readonly localCenterX?: number;
+  readonly localCenterY?: number;
   readonly linearVelocityX: number;
   readonly linearVelocityY: number;
   readonly angularVelocity: number;
@@ -41,6 +43,8 @@ export class BodyStore2D {
   positionX: Float64Array;
   positionY: Float64Array;
   rotationRadians: Float64Array;
+  localCenterX: Float64Array;
+  localCenterY: Float64Array;
   linearVelocityX: Float64Array;
   linearVelocityY: Float64Array;
   angularVelocity: Float64Array;
@@ -69,6 +73,8 @@ export class BodyStore2D {
     this.positionX = new Float64Array(capacity);
     this.positionY = new Float64Array(capacity);
     this.rotationRadians = new Float64Array(capacity);
+    this.localCenterX = new Float64Array(capacity);
+    this.localCenterY = new Float64Array(capacity);
     this.linearVelocityX = new Float64Array(capacity);
     this.linearVelocityY = new Float64Array(capacity);
     this.angularVelocity = new Float64Array(capacity);
@@ -105,6 +111,8 @@ export class BodyStore2D {
     this.positionX[index] = definition.positionX;
     this.positionY[index] = definition.positionY;
     this.rotationRadians[index] = definition.rotationRadians;
+    this.localCenterX[index] = definition.localCenterX ?? 0;
+    this.localCenterY[index] = definition.localCenterY ?? 0;
     this.linearVelocityX[index] = definition.linearVelocityX;
     this.linearVelocityY[index] = definition.linearVelocityY;
     this.angularVelocity[index] = definition.angularVelocity;
@@ -159,6 +167,8 @@ export class BodyStore2D {
     this.positionX[index] = 0;
     this.positionY[index] = 0;
     this.rotationRadians[index] = 0;
+    this.localCenterX[index] = 0;
+    this.localCenterY[index] = 0;
     this.linearVelocityX[index] = 0;
     this.linearVelocityY[index] = 0;
     this.angularVelocity[index] = 0;
@@ -192,6 +202,8 @@ export class BodyStore2D {
     this.positionX = growFloat64(this.positionX, capacity);
     this.positionY = growFloat64(this.positionY, capacity);
     this.rotationRadians = growFloat64(this.rotationRadians, capacity);
+    this.localCenterX = growFloat64(this.localCenterX, capacity);
+    this.localCenterY = growFloat64(this.localCenterY, capacity);
     this.linearVelocityX = growFloat64(this.linearVelocityX, capacity);
     this.linearVelocityY = growFloat64(this.linearVelocityY, capacity);
     this.angularVelocity = growFloat64(this.angularVelocity, capacity);

@@ -297,7 +297,7 @@ export class CommittedWorldQueries2D {
       bodyIndex,
       bodyGeneration,
       shape: this.shapeShell(record),
-      pose: publicPose(bodies.positionX[bodyIndex]!, bodies.positionY[bodyIndex]!, bodies.rotationRadians[bodyIndex]!),
+      pose: publicBodyOriginPose(bodies, bodyIndex),
     };
   }
 
@@ -492,6 +492,22 @@ function publicPose(x: number, y: number, rotationRadians: number): CRCPhysicsPo
     position: [x, y],
     rotationDegrees: rotationRadians * RADIANS_TO_DEGREES,
   };
+}
+
+function publicBodyOriginPose(
+  bodies: BodyStore2D,
+  index: number,
+): CRCPhysicsPose2D {
+  const rotationRadians = bodies.rotationRadians[index]!;
+  const cosine = Math.cos(rotationRadians);
+  const sine = Math.sin(rotationRadians);
+  const localCenterX = bodies.localCenterX[index]!;
+  const localCenterY = bodies.localCenterY[index]!;
+  return publicPose(
+    bodies.positionX[index]! - cosine * localCenterX + sine * localCenterY,
+    bodies.positionY[index]! - sine * localCenterX - cosine * localCenterY,
+    rotationRadians,
+  );
 }
 
 function copyAabb(bounds: CRCPhysicsAabb2D): CRCPhysicsAabb2D {

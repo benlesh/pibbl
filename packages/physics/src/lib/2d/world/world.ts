@@ -21,6 +21,7 @@ import { DynamicAabbBroadPhase2D } from "./broad-phase.js";
 import { BoundedCcd2D, collisionFiltersAllow2D } from "./ccd.js";
 import { ContactCache2D, updateSortedContactCache2D } from "./contact-cache.js";
 import {
+  BODY_TYPE_DYNAMIC_2D,
   BODY_TYPE_KINEMATIC_2D,
   applyForceAtPointToCandidateBody2D,
   applyImpulseAtPointToCandidateBody2D,
@@ -276,9 +277,13 @@ export interface PhysicsWorld2DSnapshot {
     positionX: number;
     positionY: number;
     rotationRadians: number;
+    localCenterX: number;
+    localCenterY: number;
     linearVelocityX: number;
     linearVelocityY: number;
     angularVelocity: number;
+    inverseMass: number;
+    inverseInertia: number;
     flags: number;
   }>[];
 }
@@ -580,11 +585,7 @@ export class PhysicsWorld2DKernel {
   authoritativePose(bodyId: number): PhysicsPose2D {
     this.assertUsable();
     const slot = this.requireBody(bodyId);
-    return publicPose(
-      this.bodies.positionX[slot.index]!,
-      this.bodies.positionY[slot.index]!,
-      this.bodies.rotationRadians[slot.index]!,
-    );
+    return publicBodyOriginPose(this.bodies, slot.index);
   }
 
   isBodyEnabled(bodyId: number): boolean {
@@ -636,7 +637,9 @@ export class PhysicsWorld2DKernel {
       this.state.configuration.fixedStepMilliseconds;
     const previousRotation = this.state.previousRotationRadians[index]!;
     const currentRotation = this.bodies.rotationRadians[index]!;
-    return publicPose(
+    return publicPoseFromCenter(
+      this.bodies,
+      index,
       lerp(
         this.state.previousPositionX[index]!,
         this.bodies.positionX[index]!,
@@ -647,8 +650,7 @@ export class PhysicsWorld2DKernel {
         this.bodies.positionY[index]!,
         alpha,
       ),
-      previousRotation +
-        shortestRadians(previousRotation, currentRotation) * alpha,
+      previousRotation + shortestRadians(previousRotation, currentRotation) * alpha,
     );
   }
 
@@ -663,9 +665,13 @@ export class PhysicsWorld2DKernel {
           positionX: this.bodies.positionX[slot.index]!,
           positionY: this.bodies.positionY[slot.index]!,
           rotationRadians: this.bodies.rotationRadians[slot.index]!,
+          localCenterX: this.bodies.localCenterX[slot.index]!,
+          localCenterY: this.bodies.localCenterY[slot.index]!,
           linearVelocityX: this.bodies.linearVelocityX[slot.index]!,
           linearVelocityY: this.bodies.linearVelocityY[slot.index]!,
           angularVelocity: this.bodies.angularVelocity[slot.index]!,
+          inverseMass: this.bodies.inverseMass[slot.index]!,
+          inverseInertia: this.bodies.inverseInertia[slot.index]!,
           flags: this.bodies.flags[slot.index]!,
         }),
       );
@@ -806,12 +812,55 @@ export class PhysicsWorld2DKernel {
           record.definition,
         )
       ) {
-        this.state.disabledBodies.delete(id);
-        if (this.wakeBody(existing.index)) {
+        const disabledState = this.state.disabledBodies.get(id);
+        if (disabledState === undefined && this.wakeBody(existing.index)) {
           this.state.anchored = false;
           this.state.accumulatorMilliseconds = 0;
         }
+        const preserveDynamicPose =
+          disabledState === undefined &&
+          (this.bodies.flags[existing.index]! & BODY_TYPE_DYNAMIC_2D) !== 0 &&
+          (record.definition.flags & BODY_TYPE_DYNAMIC_2D) !== 0;
+        const dynamicState = preserveDynamicPose
+          ? {
+              pose: publicBodyOriginPose(this.bodies, existing.index),
+              linearVelocityX: this.bodies.linearVelocityX[existing.index]!,
+              linearVelocityY: this.bodies.linearVelocityY[existing.index]!,
+              angularVelocity: this.bodies.angularVelocity[existing.index]!,
+              forceX: this.bodies.forceX[existing.index]!,
+              forceY: this.bodies.forceY[existing.index]!,
+              torque: this.bodies.torque[existing.index]!,
+            }
+          : null;
         writeBodyDefinition(this.bodies, existing.index, record.definition);
+        if (dynamicState !== null) {
+          this.setBodyOriginPose(existing.index, dynamicState.pose);
+          this.bodies.linearVelocityX[existing.index] =
+            dynamicState.linearVelocityX;
+          this.bodies.linearVelocityY[existing.index] =
+            dynamicState.linearVelocityY;
+          this.bodies.angularVelocity[existing.index] =
+            dynamicState.angularVelocity;
+          this.bodies.forceX[existing.index] = dynamicState.forceX;
+          this.bodies.forceY[existing.index] = dynamicState.forceY;
+          this.bodies.torque[existing.index] = dynamicState.torque;
+        }
+        if (disabledState !== undefined) {
+          this.state.disabledBodies.set(
+            id,
+            Object.freeze({
+              ...disabledState,
+              flags: record.definition.flags,
+            }),
+          );
+          this.bodies.flags[existing.index] = 0;
+          this.bodies.linearVelocityX[existing.index] = 0;
+          this.bodies.linearVelocityY[existing.index] = 0;
+          this.bodies.angularVelocity[existing.index] = 0;
+          this.bodies.forceX[existing.index] = 0;
+          this.bodies.forceY[existing.index] = 0;
+          this.bodies.torque[existing.index] = 0;
+        }
         this.snapPreviousPose(existing.index);
         this.state.bodyRecords.set(id, record);
       }
@@ -915,10 +964,7 @@ export class PhysicsWorld2DKernel {
           break;
         case "set-pose":
           this.wakeCommandBody(slot.index);
-          this.bodies.positionX[slot.index] = command.pose.position[0];
-          this.bodies.positionY[slot.index] = command.pose.position[1];
-          this.bodies.rotationRadians[slot.index] =
-            command.pose.rotationDegrees / RADIANS_TO_DEGREES;
+          this.setBodyOriginPose(slot.index, command.pose);
           this.snapPreviousPose(slot.index);
           this.moveBroadPhaseProxies();
           break;
@@ -1018,9 +1064,7 @@ export class PhysicsWorld2DKernel {
     const authored = this.state.bodyRecords.get(bodyId)?.definition;
     if (authored === undefined) return;
     this.state.disabledBodies.delete(bodyId);
-    this.bodies.positionX[slot.index] = authored.positionX;
-    this.bodies.positionY[slot.index] = authored.positionY;
-    this.bodies.rotationRadians[slot.index] = authored.rotationRadians;
+    writeBodyDefinition(this.bodies, slot.index, authored);
     this.bodies.flags[slot.index] = disabled.flags & ~BODY_SLEEPING_2D;
     this.bodies.linearVelocityX[slot.index] =
       velocity === "preserve" ? disabled.linearVelocityX : 0;
@@ -1051,11 +1095,12 @@ export class PhysicsWorld2DKernel {
       bodyGeneration: body.generation,
     });
     const generation = this.colliders.generations[index]!;
+    const pose = internalPose(this.bodies, body.index);
     const bounds = colliderBounds(
       record.definition.shape,
-      this.bodies.positionX[body.index]!,
-      this.bodies.positionY[body.index]!,
-      this.bodies.rotationRadians[body.index]!,
+      pose.x,
+      pose.y,
+      pose.rotationRadians,
     );
     const proxy = this.broadPhase.createProxy(
       index,
@@ -1103,11 +1148,12 @@ export class PhysicsWorld2DKernel {
       const body = this.colliders.bodyIndices[slot.index]!;
       const shape = this.colliders.shapes[slot.index];
       if (shape === null) continue;
+      const pose = internalPose(this.bodies, body);
       const bounds = colliderBounds(
         shape,
-        this.bodies.positionX[body]!,
-        this.bodies.positionY[body]!,
-        this.bodies.rotationRadians[body]!,
+        pose.x,
+        pose.y,
+        pose.rotationRadians,
       );
       this.broadPhase.moveProxy(
         this.colliders.proxyIndices[slot.index]!,
@@ -1131,11 +1177,18 @@ export class PhysicsWorld2DKernel {
       if (slot === undefined) continue;
       const index = slot.index;
       if ((this.bodies.flags[index]! & BODY_TYPE_KINEMATIC_2D) === 0) continue;
-      this.bodies.linearVelocityX[index] =
-        (pose.position[0] - this.bodies.positionX[index]!) / dt;
-      this.bodies.linearVelocityY[index] =
-        (pose.position[1] - this.bodies.positionY[index]!) / dt;
       const targetRadians = pose.rotationDegrees / RADIANS_TO_DEGREES;
+      const targetCenter = centerFromOrigin(
+        this.bodies,
+        index,
+        pose.position[0],
+        pose.position[1],
+        targetRadians,
+      );
+      this.bodies.linearVelocityX[index] =
+        (targetCenter[0] - this.bodies.positionX[index]!) / dt;
+      this.bodies.linearVelocityY[index] =
+        (targetCenter[1] - this.bodies.positionY[index]!) / dt;
       this.bodies.angularVelocity[index] =
         shortestRadians(this.bodies.rotationRadians[index]!, targetRadians) /
         dt;
@@ -1410,6 +1463,20 @@ export class PhysicsWorld2DKernel {
     this.state.previousPositionY[index] = this.bodies.positionY[index]!;
     this.state.previousRotationRadians[index] =
       this.bodies.rotationRadians[index]!;
+  }
+
+  private setBodyOriginPose(index: number, pose: PhysicsPose2D): void {
+    const rotationRadians = pose.rotationDegrees / RADIANS_TO_DEGREES;
+    const center = centerFromOrigin(
+      this.bodies,
+      index,
+      pose.position[0],
+      pose.position[1],
+      rotationRadians,
+    );
+    this.bodies.positionX[index] = center[0];
+    this.bodies.positionY[index] = center[1];
+    this.bodies.rotationRadians[index] = rotationRadians;
   }
 
   private rebuildBodyIndices(): void {
@@ -1775,6 +1842,8 @@ function writeBodyDefinition(
   bodies.positionX[index] = definition.positionX;
   bodies.positionY[index] = definition.positionY;
   bodies.rotationRadians[index] = definition.rotationRadians;
+  bodies.localCenterX[index] = definition.localCenterX ?? 0;
+  bodies.localCenterY[index] = definition.localCenterY ?? 0;
   bodies.linearVelocityX[index] = definition.linearVelocityX;
   bodies.linearVelocityY[index] = definition.linearVelocityY;
   bodies.angularVelocity[index] = definition.angularVelocity;
@@ -1800,6 +1869,8 @@ function sameBodyDefinition(
     first.positionX === second.positionX &&
     first.positionY === second.positionY &&
     first.rotationRadians === second.rotationRadians &&
+    (first.localCenterX ?? 0) === (second.localCenterX ?? 0) &&
+    (first.localCenterY ?? 0) === (second.localCenterY ?? 0) &&
     first.linearVelocityX === second.linearVelocityX &&
     first.linearVelocityY === second.linearVelocityY &&
     first.angularVelocity === second.angularVelocity &&
@@ -1877,11 +1948,65 @@ function colliderBounds(
 }
 
 function internalPose(bodies: BodyStore2D, index: number): InternalPose2D {
+  const rotationRadians = bodies.rotationRadians[index]!;
+  const cosine = Math.cos(rotationRadians);
+  const sine = Math.sin(rotationRadians);
+  const localCenterX = bodies.localCenterX[index]!;
+  const localCenterY = bodies.localCenterY[index]!;
   return {
-    x: bodies.positionX[index]!,
-    y: bodies.positionY[index]!,
-    rotationRadians: bodies.rotationRadians[index]!,
+    x:
+      bodies.positionX[index]! -
+      cosine * localCenterX +
+      sine * localCenterY,
+    y:
+      bodies.positionY[index]! -
+      sine * localCenterX -
+      cosine * localCenterY,
+    rotationRadians,
   };
+}
+
+function centerFromOrigin(
+  bodies: BodyStore2D,
+  index: number,
+  originX: number,
+  originY: number,
+  rotationRadians: number,
+): readonly [number, number] {
+  const cosine = Math.cos(rotationRadians);
+  const sine = Math.sin(rotationRadians);
+  const localCenterX = bodies.localCenterX[index]!;
+  const localCenterY = bodies.localCenterY[index]!;
+  return [
+    originX + cosine * localCenterX - sine * localCenterY,
+    originY + sine * localCenterX + cosine * localCenterY,
+  ];
+}
+
+function publicBodyOriginPose(
+  bodies: BodyStore2D,
+  index: number,
+): PhysicsPose2D {
+  const pose = internalPose(bodies, index);
+  return publicPose(pose.x, pose.y, pose.rotationRadians);
+}
+
+function publicPoseFromCenter(
+  bodies: BodyStore2D,
+  index: number,
+  centerX: number,
+  centerY: number,
+  rotationRadians: number,
+): PhysicsPose2D {
+  const cosine = Math.cos(rotationRadians);
+  const sine = Math.sin(rotationRadians);
+  const localCenterX = bodies.localCenterX[index]!;
+  const localCenterY = bodies.localCenterY[index]!;
+  return publicPose(
+    centerX - cosine * localCenterX + sine * localCenterY,
+    centerY - sine * localCenterX - cosine * localCenterY,
+    rotationRadians,
+  );
 }
 
 function publicPose(

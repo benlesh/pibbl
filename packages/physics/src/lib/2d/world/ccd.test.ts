@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { boxShape2D, circleShape2D } from "../../../2d-geometry.js";
+import {
+  boundsOfShape2D,
+  boxShape2D,
+  circleShape2D,
+} from "../../../2d-geometry.js";
 import { requireShapeRecord2D } from "../shape-records.js";
 import { createPhysicsOwnershipCounters2D } from "../runtime/ownership.js";
 import { COLLIDER_SENSOR_2D } from "./contact-cache.js";
@@ -22,6 +26,7 @@ interface CcdFixture {
       ccd?: boolean;
       sensor?: boolean;
       restitution?: number;
+      localCenterX?: number;
     }>,
   ): Readonly<{ body: number; collider: number }>;
   addWall(x: number, options?: Readonly<{ sensor?: boolean; restitution?: number }>): number;
@@ -43,12 +48,15 @@ function createFixture(): CcdFixture {
       ccd: boolean;
       sensor: boolean;
       restitution: number;
+      localCenterX: number;
     }>,
   ) => {
     const body = bodies.allocate({
-      positionX: options.x,
+      positionX: options.x + options.localCenterX,
       positionY: 0,
       rotationRadians: 0,
+      localCenterX: options.localCenterX,
+      localCenterY: 0,
       linearVelocityX: 0,
       linearVelocityY: 0,
       angularVelocity: 0,
@@ -76,15 +84,17 @@ function createFixture(): CcdFixture {
       owner: shape,
       flags: options.sensor ? COLLIDER_SENSOR_2D : 0,
     });
-    const halfWidth = shape === wallShape ? 0.1 : requireShapeRecord2D(shape).localBounds[2]!;
-    const halfHeight = shape === wallShape ? 5 : requireShapeRecord2D(shape).localBounds[3]!;
+    const bounds = boundsOfShape2D(shape, {
+      position: [options.x, 0],
+      rotationDegrees: 0,
+    });
     const proxy = broadPhase.createProxy(
       collider,
       colliders.generations[collider]!,
-      options.x - halfWidth,
-      -halfHeight,
-      options.x + halfWidth,
-      halfHeight,
+      bounds.min[0],
+      bounds.min[1],
+      bounds.max[0],
+      bounds.max[1],
     );
     colliders.setProxy(collider, colliders.generations[collider]!, proxy, broadPhase.proxyGenerations[proxy]!);
     return { body, collider };
@@ -96,13 +106,21 @@ function createFixture(): CcdFixture {
     ccd,
     bodyIndices,
     addCircle(options) {
-      return add(circleShape2D({ radius: options.radius }), {
-        x: options.x,
-        dynamic: options.dynamic ?? true,
-        ccd: options.ccd ?? false,
-        sensor: options.sensor ?? false,
-        restitution: options.restitution ?? 0,
-      });
+      const localCenterX = options.localCenterX ?? 0;
+      return add(
+        circleShape2D({
+          radius: options.radius,
+          center: [localCenterX, 0],
+        }),
+        {
+          x: options.x,
+          dynamic: options.dynamic ?? true,
+          ccd: options.ccd ?? false,
+          sensor: options.sensor ?? false,
+          restitution: options.restitution ?? 0,
+          localCenterX,
+        },
+      );
     },
     addWall(x, options = {}) {
       return add(wallShape, {
@@ -111,6 +129,7 @@ function createFixture(): CcdFixture {
         ccd: false,
         sensor: options.sensor ?? false,
         restitution: options.restitution ?? 0,
+        localCenterX: 0,
       }).collider;
     },
     resolve(body, fromX) {
@@ -162,6 +181,41 @@ describe("bounded opted-in 2D CCD", () => {
     scene.resolve(bullet.body, 0);
 
     expect(scene.ccd.impactColliderIndices[0]).toBe(lower);
+  });
+
+  it("sweeps an off-origin moving collider from center-of-mass storage", () => {
+    const scene = createFixture();
+    const bullet = scene.addCircle({
+      x: 0,
+      radius: 0.1,
+      ccd: true,
+      localCenterX: 2,
+    });
+    const wall = scene.addWall(5);
+    scene.bodies.positionX[bullet.body] = 12;
+    scene.bodies.linearVelocityX[bullet.body] = 10;
+
+    scene.resolve(bullet.body, 2);
+
+    expect(scene.ccd.impactColliderIndices[0]).toBe(wall);
+    expect(scene.bodies.positionX[bullet.body]).toBeCloseTo(4.8, 5);
+  });
+
+  it("casts against an off-origin target collider from its authored body pose", () => {
+    const scene = createFixture();
+    const bullet = scene.addCircle({ x: 0, radius: 0.1, ccd: true });
+    const target = scene.addCircle({
+      x: 5,
+      radius: 0.1,
+      localCenterX: 2,
+    });
+    scene.bodies.positionX[bullet.body] = 10;
+    scene.bodies.linearVelocityX[bullet.body] = 10;
+
+    scene.resolve(bullet.body, 0);
+
+    expect(scene.ccd.impactColliderIndices[0]).toBe(target.collider);
+    expect(scene.bodies.positionX[bullet.body]).toBeCloseTo(6.8, 5);
   });
 
   it("characterizes disabled CCD and sensors as discrete", () => {
