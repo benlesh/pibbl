@@ -1,10 +1,12 @@
 # WebGL orbit camera and genuine shadows design
 
-> **Design status: APPROVED IN CHAT; WRITTEN SPEC REVIEW PENDING.** This
-> document records the approved design discussion. Current shipped behavior
-> remains governed by `docs/design/` until implementation lands.
+> **Historical status: APPROVED DESIGN RECORD.** This document records the
+> approved design; current shipped behavior remains governed by `docs/design/`
+> until implementation lands.
 
 Date: 2026-09-15
+
+Status: design and written specification approved on 2026-09-15.
 
 ## Summary
 
