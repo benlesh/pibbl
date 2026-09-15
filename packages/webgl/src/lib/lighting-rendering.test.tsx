@@ -1,6 +1,7 @@
 import { crc, type CRCController, type CRCNode } from '@crc/core';
 import {
   AmbientLight,
+  Cube,
   DirectionalLight,
   HemisphereLight,
   Mesh,
@@ -95,6 +96,52 @@ describe('public WebGL lighting rendering', () => {
         {mesh(FRONT_TRIANGLE)}
       </>
     ))).toEqual([0, 0, 0, 255]);
+  });
+
+  it('darkens a real ground pixel occluded from a directional light by geometry depth', async () => {
+    const ground = createWebGLGeometry({
+      positions: [
+        -4, 0, -4, 4, 0, -4, -4, 0, 4,
+        4, 0, -4, 4, 0, 4, -4, 0, 4,
+      ],
+      normals: [
+        0, 1, 0, 0, 1, 0, 0, 1, 0,
+        0, 1, 0, 0, 1, 0, 0, 1, 0,
+      ],
+    });
+    const camera: CRCWebGLPerspectiveCamera = {
+      type: 'perspective',
+      position: [4, 4, 6],
+      lookAt: [0, -0.25, 0],
+      up: [0, 1, 0],
+      fieldOfViewDegrees: 50,
+      near: 0.1,
+      far: 100,
+    };
+    const render = (castShadow: boolean) => renderImage((
+      <>
+        <WebGLBackground style={{ color: '#101827' }} />
+        <AmbientLight style={{ intensity: 0.12 }} />
+        <DirectionalLight style={{
+          intensity: 1.1,
+          rotationXDegrees: -45,
+          castShadow,
+        }} />
+        <Cube style={{ color: '#ef4444', translateY: 0 }} />
+        <Mesh geometry={ground} style={{
+          color: '#d1d5db',
+          translateY: -1,
+          receiveShadow: true,
+        }} />
+      </>
+    ), 64, 64, camera);
+
+    const shadowed = await render(true);
+    const unshadowed = await render(false);
+    const occludedPixel = findDarkenedOpaquePixel(shadowed, unshadowed, 40);
+    expect(occludedPixel).toBeDefined();
+    expect(occludedPixel!.shadowed[3]).toBe(255);
+    expect(occludedPixel!.unshadowed[3]).toBe(255);
   });
 
   it('applies point inverse square, the distance floor, and finite range', async () => {
@@ -201,6 +248,51 @@ async function renderPixel(children: CRCNode): Promise<readonly number[]> {
   }));
   await nextFrame();
   return Array.from(canvas.getContext('2d')!.getImageData(0, 0, 1, 1).data);
+}
+
+async function renderImage(
+  children: CRCNode,
+  width: number,
+  height: number,
+  camera: CRCWebGLPerspectiveCamera,
+): Promise<Uint8ClampedArray> {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  canvas.style.cssText = `display:block;width:${width}px;height:${height}px`;
+  document.body.appendChild(canvas);
+  controllers.add(crc(canvas, (
+    <WebGLLayer
+      camera={camera}
+      style={{ width, height, shadows: 'low' }}
+    >
+      {children}
+    </WebGLLayer>
+  ), {
+    viewport: { width, height },
+    fit: 'fill',
+    pixelRatio: 1,
+  }));
+  await nextFrame();
+  return canvas.getContext('2d')!.getImageData(0, 0, width, height).data;
+}
+
+function findDarkenedOpaquePixel(
+  shadowed: Uint8ClampedArray,
+  unshadowed: Uint8ClampedArray,
+  minimumDifference: number,
+): { shadowed: number[]; unshadowed: number[] } | undefined {
+  for (let offset = 0; offset < shadowed.length; offset += 4) {
+    const shadow = Array.from(shadowed.slice(offset, offset + 4));
+    const lit = Array.from(unshadowed.slice(offset, offset + 4));
+    if (
+      shadow[3] === 255 && lit[3] === 255 &&
+      lit[0]! - shadow[0]! >= minimumDifference &&
+      lit[1]! - shadow[1]! >= minimumDifference &&
+      lit[2]! - shadow[2]! >= minimumDifference
+    ) return { shadowed: shadow, unshadowed: lit };
+  }
+  return undefined;
 }
 
 function nextFrame(): Promise<void> {

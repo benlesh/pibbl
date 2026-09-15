@@ -223,6 +223,18 @@ describe('createBuiltInProgram', () => {
       lightGroundOuterCosines: {
         name: 'u_light_ground_outer_cosine[0]',
       },
+      shadowEnabled: { name: 'u_shadow_enabled[0]' },
+      shadowMatrices: { name: 'u_shadow_matrix[0]' },
+      shadowParameters: { name: 'u_shadow_parameters[0]' },
+      receiveShadow: { name: 'u_receive_shadow' },
+      shadow2DSamplers: Array.from(
+        { length: 8 },
+        (_, index) => ({ name: `u_shadow_map_2d_${index}` }),
+      ),
+      shadowCubeSamplers: Array.from(
+        { length: 8 },
+        (_, index) => ({ name: `u_shadow_map_cube_${index}` }),
+      ),
       positionAttribute: 0,
       normalAttribute: 1,
     });
@@ -302,11 +314,32 @@ describe('createBuiltInProgram', () => {
     ]);
   });
 
+  it('links the depth program and fixed Lambert shadow sampler locations', () => {
+    const { gl, shaderSources, uniformNames } = createProgramGL();
+    const depth = createBuiltInProgram(gl, 'shadow-depth' as never, 'DirectionalLight') as any;
+    const lambert = createBuiltInProgram(gl, 'lambert', 'Cube') as any;
+
+    expect(depth).toMatchObject({
+      key: 'shadow-depth',
+      model: { name: 'u_model' },
+      shadowProjectionView: { name: 'u_shadow_projection_view' },
+      positionAttribute: 0,
+    });
+    expect(lambert.shadowEnabled).toEqual({ name: 'u_shadow_enabled[0]' });
+    expect(lambert.shadowMatrices).toEqual({ name: 'u_shadow_matrix[0]' });
+    expect(lambert.receiveShadow).toEqual({ name: 'u_receive_shadow' });
+    expect(lambert.shadow2DSamplers).toHaveLength(8);
+    expect(lambert.shadowCubeSamplers).toHaveLength(8);
+    expect(uniformNames).toContain('u_shadow_map_2d_7');
+    expect(uniformNames).toContain('u_shadow_map_cube_7');
+    expect(shaderSources.join('\n')).toMatch(/gl_FragDepth\s*=\s*gl_FragCoord\.z/);
+  });
+
   it('compiles and links both built-in programs in real WebGL2', () => {
     const gl = new OffscreenCanvas(8, 8).getContext('webgl2');
     expect(gl).not.toBeNull();
 
-    for (const key of ['unlit', 'lambert'] as const) {
+    for (const key of ['unlit', 'lambert', 'shadow-depth'] as const) {
       const builtIn = createBuiltInProgram(gl!, key, 'Mesh');
       expect(builtIn.key).toBe(key);
       expect(gl!.getAttachedShaders(builtIn.program)).toEqual([]);

@@ -464,6 +464,24 @@
   } from '@crc/core';
 
   export type CRCWebGLVector3 = readonly [x: number, y: number, z: number];
+  export type CRCWebGLShadowQuality = false | 'low' | 'medium' | 'high';
+
+  export interface CRCOrbitCameraOptions {
+    readonly orbitPoint: CRCWebGLVector3;
+    readonly initialPosition: CRCWebGLVector3;
+    readonly minDistance?: number;
+    readonly maxDistance?: number;
+    readonly rotateSpeed?: number;
+    readonly zoomSpeed?: number;
+  }
+  export type CRCOrbitCameraHandlers = Required<Pick<CRCEventHandlers,
+    'onPointerDown' | 'onPointerMove' | 'onPointerUp' | 'onPointerCancel' |
+    'onLostPointerCapture' | 'onWheel'>>;
+  export interface CRCOrbitCameraResult {
+    readonly position: CRCWebGLVector3;
+    readonly lookAt: CRCWebGLVector3;
+    readonly handlers: CRCOrbitCameraHandlers;
+  }
 
   export interface CRCWebGLPerspectiveCamera {
     type: 'perspective';
@@ -519,7 +537,9 @@
     camera?: CRCWebGLPerspectiveCamera;
     pointerEvents?: 'auto' | 'none';
   }
-  export interface WebGLLayerStyle extends BoxStyle, LayoutItemStyle {}
+  export interface WebGLLayerStyle extends BoxStyle, LayoutItemStyle {
+    readonly shadows?: CRCWebGLShadowQuality;
+  }
 
   export interface Group3DProps extends CRCEventHandlers {
     readonly children: CRCNode;
@@ -534,6 +554,8 @@
     readonly opacity?: number;
     readonly lit?: boolean;
     readonly material?: CRCWebGLMaterial;
+    readonly castShadow?: boolean;
+    readonly receiveShadow?: boolean;
     readonly cursor?: string;
   }
 
@@ -559,6 +581,7 @@
   export interface DirectionalLightStyle extends CRCWebGLTransformStyle {
     readonly color?: string;
     readonly intensity?: number;
+    readonly castShadow?: boolean;
   }
 
   export interface PointLightProps {}
@@ -582,6 +605,9 @@
   ): CRCWebGLGeometry;
 
   export function crcAnimationFrame(): number;
+  export function crcOrbitCamera(
+    options: CRCOrbitCameraOptions,
+  ): CRCOrbitCameraResult;
 
   export const WebGLLayer: CRCPrimitiveComponent<
     WebGLLayerProps,

@@ -35,6 +35,7 @@ import {
 import { pickScene } from './scene-picker.js';
 import type {
   CRCWebGLPerspectiveCamera,
+  CRCWebGLShadowQuality,
 } from './types.js';
 
 const WEBGL_CONTEXT_ATTRIBUTES: WebGLContextAttributes = Object.freeze({
@@ -73,6 +74,7 @@ interface WebGLLayerGeneration {
   readonly retainedTree: LayerNodeSnapshot;
   readonly focusRevision: number | undefined;
   readonly contextGeneration: number;
+  readonly shadowQuality: CRCWebGLShadowQuality;
 }
 
 /** Resolves one upright WebGL surface using core's managed-layer rounding. */
@@ -111,6 +113,9 @@ export class WebGLLayerController {
   private currentSurface: WebGLLayerSurface;
   private retainedCamera: ResolvedWebGLCamera;
   private retainedSurface: WebGLLayerSurface;
+  private currentShadowQuality: CRCWebGLShadowQuality;
+  private retainedShadowQuality: CRCWebGLShadowQuality;
+  private readonly source: CRCElementSource | undefined;
   private mountedRoot: CRCNode;
   private renderedTree: LayerNodeSnapshot | undefined;
   private restorationTree: LayerNodeSnapshot | undefined;
@@ -129,20 +134,42 @@ export class WebGLLayerController {
     root: CRCNode,
     camera: CRCWebGLPerspectiveCamera | undefined,
     surface: WebGLLayerSurface,
-    private readonly source?: CRCElementSource,
+    source?: CRCElementSource,
+  );
+  constructor(
+    parent: Canvas,
+    root: CRCNode,
+    camera: CRCWebGLPerspectiveCamera | undefined,
+    surface: WebGLLayerSurface,
+    shadowQuality: CRCWebGLShadowQuality,
+    source?: CRCElementSource,
+  );
+  constructor(
+    parent: Canvas,
+    root: CRCNode,
+    camera: CRCWebGLPerspectiveCamera | undefined,
+    surface: WebGLLayerSurface,
+    shadowQualityOrSource?: CRCWebGLShadowQuality | CRCElementSource,
+    source?: CRCElementSource,
   ) {
-    validateSurface(surface, source);
+    const hasQuality = isShadowQuality(shadowQualityOrSource);
+    const shadowQuality = hasQuality ? shadowQualityOrSource : 'medium';
+    this.source = hasQuality ? source : shadowQualityOrSource;
+    validateSurface(surface, this.source);
     this.mountedRoot = root;
     this.currentSurface = surface;
-    this.currentCamera = resolveCameraWithSource(camera, surface, source);
+    this.currentCamera = resolveCameraWithSource(camera, surface, this.source);
     this.retainedCamera = this.currentCamera;
     this.retainedSurface = surface;
-    this.canvas = createOffscreenCanvas(surface, source);
-    this.gl = acquireWebGL2Context(this.canvas, source);
+    this.currentShadowQuality = shadowQuality;
+    this.retainedShadowQuality = shadowQuality;
+    this.canvas = createOffscreenCanvas(surface, this.source);
+    this.gl = acquireWebGL2Context(this.canvas, this.source);
     this.driver = createWebGLBackend({
       gl: this.gl,
       getCamera: () => this.currentCamera,
       getContextGeneration: () => this.contextGenerationValue,
+      getShadowQuality: () => this.currentShadowQuality,
       isContextLost: generation =>
         !this.contextAvailable || generation < this.contextGenerationValue,
     });
@@ -185,8 +212,26 @@ export class WebGLLayerController {
     camera: CRCWebGLPerspectiveCamera | undefined,
     surface: WebGLLayerSurface,
     timestamp: number,
+  ): void;
+  renderUpdatedChild(
+    root: CRCNode,
+    camera: CRCWebGLPerspectiveCamera | undefined,
+    surface: WebGLLayerSurface,
+    shadowQuality: CRCWebGLShadowQuality,
+    timestamp: number,
+  ): void;
+  renderUpdatedChild(
+    root: CRCNode,
+    camera: CRCWebGLPerspectiveCamera | undefined,
+    surface: WebGLLayerSurface,
+    shadowQualityOrTimestamp: CRCWebGLShadowQuality | number,
+    timestamp?: number,
   ): void {
-    this.renderChild(root, camera, surface, timestamp, true);
+    const [shadowQuality, renderTimestamp] = resolveRenderQualityAndTimestamp(
+      shadowQualityOrTimestamp,
+      timestamp,
+    );
+    this.renderChild(root, camera, surface, shadowQuality, renderTimestamp, true);
   }
 
   renderRetainedChild(
@@ -194,14 +239,40 @@ export class WebGLLayerController {
     camera: CRCWebGLPerspectiveCamera | undefined,
     surface: WebGLLayerSurface,
     timestamp: number,
+  ): void;
+  renderRetainedChild(
+    root: CRCNode,
+    camera: CRCWebGLPerspectiveCamera | undefined,
+    surface: WebGLLayerSurface,
+    shadowQuality: CRCWebGLShadowQuality,
+    timestamp: number,
+  ): void;
+  renderRetainedChild(
+    root: CRCNode,
+    camera: CRCWebGLPerspectiveCamera | undefined,
+    surface: WebGLLayerSurface,
+    shadowQualityOrTimestamp: CRCWebGLShadowQuality | number,
+    timestamp?: number,
   ): void {
-    this.renderChild(root, camera, surface, timestamp, false);
+    const [shadowQuality, renderTimestamp] = resolveRenderQualityAndTimestamp(
+      shadowQualityOrTimestamp,
+      timestamp,
+    );
+    this.renderChild(
+      root,
+      camera,
+      surface,
+      shadowQuality,
+      renderTimestamp,
+      false,
+    );
   }
 
   private renderChild(
     root: CRCNode,
     camera: CRCWebGLPerspectiveCamera | undefined,
     surface: WebGLLayerSurface,
+    shadowQuality: CRCWebGLShadowQuality,
     timestamp: number,
     force: boolean,
   ): void {
@@ -213,6 +284,7 @@ export class WebGLLayerController {
       this.mountedRoot = root;
       this.retainedCamera = nextCamera;
       this.retainedSurface = surface;
+      this.retainedShadowQuality = shadowQuality;
       if (!this.contextAvailable) {
         retainBackendMountRoot(this.mount, root);
         this.cacheInvalidated = true;
@@ -230,6 +302,7 @@ export class WebGLLayerController {
           haveSameLayerNodeTree(committed.retainedTree, root) &&
           haveSameCamera(committed.camera, nextCamera) &&
           haveSameSurface(committed.surface, surface) &&
+          committed.shadowQuality === shadowQuality &&
           committed.focusRevision === currentFocusRevision(
             committed.pickLedger,
           ) &&
@@ -249,6 +322,7 @@ export class WebGLLayerController {
           ) &&
           haveSameCamera(this.currentCamera, nextCamera) &&
           haveSameSurface(this.currentSurface, surface) &&
+          this.currentShadowQuality === shadowQuality &&
           completedFrame.contextGeneration === this.contextGenerationValue
         ) {
           this.publishCompletedFrame(root, surface, completedFrame, epoch);
@@ -264,6 +338,7 @@ export class WebGLLayerController {
         !haveSameLayerNodeTree(committed.retainedTree, root) ||
         !haveSameCamera(committed.camera, nextCamera) ||
         !haveSameSurface(committed.surface, surface) ||
+        committed.shadowQuality !== shadowQuality ||
         committed.focusRevision !== focusRevision ||
         committed.contextGeneration !== this.contextGenerationValue;
       if (!shouldRender) return;
@@ -272,6 +347,7 @@ export class WebGLLayerController {
         this.resizeSurface(surface);
       }
       this.currentCamera = nextCamera;
+      this.currentShadowQuality = shadowQuality;
       this.restorationTree = undefined;
       executeBackendCRC(this.mount, root, timestamp);
       this.requireCurrentOperation('render', epoch);
@@ -448,6 +524,7 @@ export class WebGLLayerController {
       }
     }
     this.currentCamera = this.retainedCamera;
+    this.currentShadowQuality = this.retainedShadowQuality;
     retainBackendMountRoot(this.mount, this.mountedRoot);
     this.restorationTree = snapshotLayerNodeTree(this.mountedRoot);
     this.driver.restoreContext();
@@ -547,6 +624,7 @@ export class WebGLLayerController {
         retainedTree,
         focusRevision: currentFocusRevision(pickLedger),
         contextGeneration: completedFrame.contextGeneration,
+        shadowQuality: this.currentShadowQuality,
       });
       this.requireCurrentOperation('render', epoch);
       this.renderedTree = retainedTree;
@@ -613,6 +691,22 @@ export class WebGLLayerController {
       this.operation = 'idle';
     }
   }
+}
+
+function isShadowQuality(
+  value: CRCWebGLShadowQuality | CRCElementSource | undefined,
+): value is CRCWebGLShadowQuality {
+  return value === false || value === 'low' || value === 'medium' ||
+    value === 'high';
+}
+
+function resolveRenderQualityAndTimestamp(
+  qualityOrTimestamp: CRCWebGLShadowQuality | number,
+  timestamp: number | undefined,
+): readonly [CRCWebGLShadowQuality, number] {
+  return typeof qualityOrTimestamp === 'number' ?
+    ['medium', qualityOrTimestamp] :
+    [qualityOrTimestamp, timestamp!];
 }
 
 function createOffscreenCanvas(

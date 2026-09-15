@@ -9,6 +9,7 @@ import type { SettledWebGLMesh, SettledWebGLScene } from './settle.js';
 import type {
   SettledWebGLBackground,
   SettledWebGLLight,
+  SettledWebGLShadowPlan,
 } from './types.js';
 import { WebGLSceneRenderer } from './renderer.js';
 
@@ -173,7 +174,7 @@ describe('WebGLSceneRenderer', () => {
     );
     expect(recording.drawArrays).toHaveBeenCalledTimes(5);
     expect(recording.createProgram).toHaveBeenCalledTimes(2);
-    expect(recording.createFramebuffer).not.toHaveBeenCalled();
+    expect(recording.createFramebuffer).toHaveBeenCalledOnce();
     expect(recording.readPixels).not.toHaveBeenCalled();
   });
 
@@ -196,6 +197,7 @@ describe('WebGLSceneRenderer', () => {
     });
     const lights = fixedLights();
 
+    let lastWrites: readonly UniformWrite[] = [];
     for (let count = 0; count <= 8; count += 1) {
       const firstWrite = recording.uniformWrites.length;
       renderer.render(scene({
@@ -204,6 +206,7 @@ describe('WebGLSceneRenderer', () => {
         opaque: [first, second],
       }));
       const writes = recording.uniformWrites.slice(firstWrite);
+      lastWrites = writes;
       expect(valuesFor(writes, 'u_light_count')).toEqual([[count]]);
       expect(valuesFor(writes, 'u_light_kind[0]')).toHaveLength(1);
       expect(valuesFor(writes, 'u_light_kind[0]')[0]).toHaveLength(8);
@@ -219,7 +222,6 @@ describe('WebGLSceneRenderer', () => {
       expect(valuesFor(writes, 'u_normal_matrix')).toHaveLength(2);
     }
 
-    const lastWrites = recording.uniformWrites.slice(-18);
     expect(valuesFor(lastWrites, 'u_light_kind[0]')).toEqual([
       [0, 1, 2, 3, 4, 0, 3, 4],
     ]);
@@ -245,6 +247,83 @@ describe('WebGLSceneRenderer', () => {
     expect(recording.createProgram).toHaveBeenCalledOnce();
     expect(recording.createVertexArray).toHaveBeenCalledOnce();
     expect(recording.createBuffer).toHaveBeenCalledTimes(2);
+  });
+
+  it('renders dirty directional depth before the color clear and reuses it across a camera-only frame', () => {
+    const recording = createRendererGL();
+    const renderer = new WebGLSceneRenderer(recording.gl, 7);
+    const drawable = mesh(0, [1, 1, 1, 1], {
+      shading: 'lambert',
+      seed: 11,
+    });
+    const plan = directionalPlan(drawable);
+    const firstScene = scene({
+      meshes: [drawable],
+      lights: [directionalLight()],
+      opaque: [drawable],
+      shadowPlans: [plan],
+    });
+
+    renderer.render(firstScene);
+    expect(recording.draws.map(draw => draw.programKey)).toEqual([
+      'shadow-depth',
+      'lambert',
+    ]);
+    expect(recording.clear.mock.calls.map(([mask]) => mask)).toEqual([
+      recording.gl.DEPTH_BUFFER_BIT,
+      recording.gl.COLOR_BUFFER_BIT | recording.gl.DEPTH_BUFFER_BIT,
+    ]);
+    expect(recording.clear.mock.invocationCallOrder[0]).toBeLessThan(
+      recording.drawArrays.mock.invocationCallOrder[0]!,
+    );
+    expect(recording.drawArrays.mock.invocationCallOrder[0]).toBeLessThan(
+      recording.clear.mock.invocationCallOrder[1]!,
+    );
+    expect(recording.draws[0]).toMatchObject({
+      blend: false,
+      depthTest: true,
+      depthMask: true,
+    });
+    expect(recording.draws[1]?.uniforms).toMatchObject({
+      'u_shadow_enabled[0]': [1, 0, 0, 0, 0, 0, 0, 0],
+      u_receive_shadow: [1],
+    });
+    const firstTextureCount = recording.createTexture.mock.calls.length;
+
+    renderer.render(scene({
+      meshes: [drawable],
+      lights: [directionalLight()],
+      opaque: [drawable],
+      shadowPlans: [plan],
+      cameraSeed: 999,
+    }));
+    expect(recording.draws.map(draw => draw.programKey)).toEqual([
+      'shadow-depth',
+      'lambert',
+      'lambert',
+    ]);
+    expect(recording.createTexture).toHaveBeenCalledTimes(firstTextureCount);
+  });
+
+  it('rolls back a directional candidate when the later color draw fails', () => {
+    const failure = new Error('color draw failed');
+    const recording = createRendererGL({
+      throws: [{ operation: 'drawArrays', at: 2, error: failure }],
+    });
+    const renderer = new WebGLSceneRenderer(recording.gl, 7);
+    const drawable = mesh(0, [1, 1, 1, 1], {
+      shading: 'lambert',
+      seed: 11,
+    });
+
+    expect(() => renderer.render(scene({
+      meshes: [drawable],
+      lights: [directionalLight()],
+      opaque: [drawable],
+      shadowPlans: [directionalPlan(drawable)],
+    }))).toThrow(failure);
+    expect(recording.deleteTexture).toHaveBeenCalled();
+    expect(() => renderer.render(scene())).not.toThrow();
   });
 
   it('rejects another context generation before any GL work', () => {
@@ -435,6 +514,8 @@ interface SceneOverrides {
   readonly background?: SettledWebGLBackground;
   readonly opaque?: readonly SettledWebGLMesh[];
   readonly transparent?: readonly SettledWebGLMesh[];
+  readonly shadowPlans?: readonly SettledWebGLShadowPlan[];
+  readonly cameraSeed?: number;
 }
 
 function scene(overrides: SceneOverrides = {}): SettledWebGLScene {
@@ -451,10 +532,10 @@ function scene(overrides: SceneOverrides = {}): SettledWebGLScene {
         up: [0, 1, 0] as const,
       }),
       aspect: 2,
-      viewMatrix: matrix(101),
-      projectionMatrix: matrix(201),
-      projectionViewMatrix: matrix(301),
-      inverseProjectionViewMatrix: matrix(401),
+      viewMatrix: matrix(overrides.cameraSeed ?? 101),
+      projectionMatrix: matrix((overrides.cameraSeed ?? 101) + 100),
+      projectionViewMatrix: matrix((overrides.cameraSeed ?? 101) + 200),
+      inverseProjectionViewMatrix: matrix((overrides.cameraSeed ?? 101) + 300),
       viewport: Object.freeze({ width: 160, height: 90 }),
       generationValues: Object.freeze([]),
     }),
@@ -467,9 +548,40 @@ function scene(overrides: SceneOverrides = {}): SettledWebGLScene {
     background: overrides.background,
     opaque: overrides.opaque ?? Object.freeze([]),
     transparent: overrides.transparent ?? Object.freeze([]),
+    shadowQuality: 'medium',
+    shadowPlans: overrides.shadowPlans ?? Object.freeze([]),
     pickEntries: Object.freeze([]),
   });
 }
+
+function directionalLight(): SettledWebGLLight {
+  return Object.freeze({
+    kind: 'directional' as const,
+    identity: DIRECTIONAL_LIGHT_IDENTITY,
+    linearColor: Object.freeze([1, 1, 1] as const),
+    direction: Object.freeze([0, 0, -1] as const),
+    intensity: 1,
+    castShadow: true,
+  });
+}
+
+function directionalPlan(mesh: SettledWebGLMesh): SettledWebGLShadowPlan {
+  return Object.freeze({
+    kind: 'directional' as const,
+    lightIdentity: DIRECTIONAL_LIGHT_IDENTITY,
+    lightIndex: 0,
+    projectionViewMatrix: matrix(701),
+    bias: 0.001,
+    casters: Object.freeze([mesh]),
+    receivers: Object.freeze([mesh]),
+    requestedResolution: 1024,
+    comparisonCount: 4,
+    contextGeneration: 7,
+    shadowProgramGeneration: 1,
+  });
+}
+
+const DIRECTIONAL_LIGHT_IDENTITY = Object.freeze({});
 
 interface MeshOptions {
   readonly indexed?: boolean;
@@ -497,6 +609,7 @@ function mesh(
     componentName: `Mesh${sourceIndex}`,
     source: undefined,
     geometry,
+    identity: Object.freeze({}),
     model: matrix(seed),
     color: Object.freeze(color),
     lit: shading === 'lambert',
@@ -519,6 +632,16 @@ function mesh(
     target: undefined,
     keyboardNavigationBounds: undefined,
     viewDepth: 10 - sourceIndex,
+    worldBounds: Object.freeze({
+      minimumX: 0,
+      minimumY: 0,
+      minimumZ: 0,
+      maximumX: seed,
+      maximumY: seed,
+      maximumZ: 0,
+    }),
+    castShadow: true,
+    receiveShadow: shading === 'lambert',
   });
 }
 
@@ -668,6 +791,8 @@ interface RendererGLRecording {
   readonly drawElements: ReturnType<typeof vi.fn>;
   readonly readPixels: ReturnType<typeof vi.fn>;
   readonly createFramebuffer: ReturnType<typeof vi.fn>;
+  readonly createTexture: ReturnType<typeof vi.fn>;
+  readonly deleteTexture: ReturnType<typeof vi.fn>;
 }
 
 function createRendererGL(
@@ -760,7 +885,8 @@ function createRendererGL(
     state.attributeLocations.length = 0;
   };
   const methods = {
-    getParameter: method<[number], number>('getParameter', () => 2),
+    getParameter: method<[number], number>('getParameter', parameter =>
+      parameter === constants.MAX_COMBINED_TEXTURE_IMAGE_UNITS ? 16 : 4096),
     isContextLost: method<[], boolean>('isContextLost', () => contextLost),
     bindFramebuffer: method('bindFramebuffer'),
     viewport: method('viewport'),
@@ -845,6 +971,7 @@ function createRendererGL(
     >('getUniformLocation', (program, name) => {
       if (name === 'u_display_base_color') program.key = 'unlit';
       if (name === 'u_normal_matrix') program.key = 'lambert';
+      if (name === 'u_shadow_projection_view') program.key = 'shadow-depth';
       return { program, name };
     }),
     createVertexArray: method<[], object>('createVertexArray', () =>
@@ -899,6 +1026,18 @@ function createRendererGL(
     createFramebuffer: method<[], object>('createFramebuffer', () =>
       handle('framebuffer'),
     ),
+    deleteFramebuffer: method('deleteFramebuffer'),
+    framebufferTexture2D: method('framebufferTexture2D'),
+    checkFramebufferStatus: method<[], number>(
+      'checkFramebufferStatus',
+      () => constants.FRAMEBUFFER_COMPLETE,
+    ),
+    drawBuffers: method('drawBuffers'),
+    readBuffer: method('readBuffer'),
+    createTexture: method<[], object>('createTexture', () => handle('texture')),
+    deleteTexture: method('deleteTexture'),
+    texParameteri: method('texParameteri'),
+    texImage2D: method('texImage2D'),
   };
   const gl = { ...constants, ...methods } as unknown as WebGL2RenderingContext;
   return {
@@ -949,12 +1088,16 @@ function createConstants(): Record<string, number> {
     'ACTIVE_TEXTURE', 'ALWAYS', 'ARRAY_BUFFER', 'BACK', 'BLEND',
     'BROWSER_DEFAULT_WEBGL', 'CCW', 'COLOR_BUFFER_BIT', 'COMPILE_STATUS',
     'CULL_FACE', 'DEPTH_BUFFER_BIT', 'DEPTH_TEST', 'ELEMENT_ARRAY_BUFFER',
-    'FLOAT', 'FRAGMENT_SHADER', 'FRAMEBUFFER', 'FRONT', 'FUNC_ADD', 'KEEP',
+    'DEPTH_ATTACHMENT', 'DEPTH_COMPONENT', 'DEPTH_COMPONENT24',
+    'FLOAT', 'FRAGMENT_SHADER', 'FRAMEBUFFER', 'FRAMEBUFFER_COMPLETE', 'FRONT', 'FUNC_ADD', 'KEEP',
     'LEQUAL', 'LESS', 'LINK_STATUS', 'MAX_COMBINED_TEXTURE_IMAGE_UNITS',
+    'MAX_CUBE_MAP_TEXTURE_SIZE', 'MAX_TEXTURE_SIZE', 'NEAREST', 'NONE',
     'ONE', 'ONE_MINUS_SRC_ALPHA', 'PACK_ALIGNMENT', 'PACK_ROW_LENGTH',
     'PACK_SKIP_PIXELS', 'PACK_SKIP_ROWS', 'POLYGON_OFFSET_FILL',
     'SCISSOR_TEST', 'SRC_ALPHA', 'STATIC_DRAW', 'STENCIL_TEST', 'TEXTURE0',
     'TEXTURE_2D', 'TEXTURE_2D_ARRAY', 'TEXTURE_3D', 'TEXTURE_CUBE_MAP',
+    'TEXTURE_CUBE_MAP_POSITIVE_X', 'TEXTURE_MAG_FILTER', 'TEXTURE_MIN_FILTER',
+    'TEXTURE_WRAP_R', 'TEXTURE_WRAP_S', 'TEXTURE_WRAP_T', 'CLAMP_TO_EDGE',
     'TRIANGLES', 'UNPACK_ALIGNMENT', 'UNPACK_COLORSPACE_CONVERSION_WEBGL',
     'UNPACK_FLIP_Y_WEBGL', 'UNPACK_IMAGE_HEIGHT',
     'UNPACK_PREMULTIPLY_ALPHA_WEBGL', 'UNPACK_ROW_LENGTH',

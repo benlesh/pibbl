@@ -4,6 +4,8 @@ import {
   invertMatrix4,
   multiplyMatrix4,
   setIdentityMatrix4,
+  setOrthographicMatrix4,
+  transformBoundsMatrix4,
   transformDirectionMatrix4,
   transformOriginMatrix4,
   transformPointMatrix4,
@@ -107,5 +109,45 @@ describe('column-major matrix math', () => {
     );
     expect(Array.from(origin)).toEqual([5, 6, 7]);
     expect(Array.from(direction)).toEqual([0, 3, 0]);
+  });
+
+  test('maps an orthographic fit to the exact WebGL clip cube', () => {
+    const matrix = new Float32Array(16);
+    const point = new Float32Array(3);
+    setOrthographicMatrix4(matrix, -2, 6, -4, 8, 3, 11);
+
+    transformPointMatrix4(point, matrix, [-2, -4, -3]);
+    expectMatrixClose(point, [-1, -1, -1]);
+    transformPointMatrix4(point, matrix, [6, 8, -11]);
+    expectMatrixClose(point, [1, 1, 1]);
+  });
+
+  test('transforms all eight bounds corners instead of only opposite corners', () => {
+    const matrix = new Float32Array(16);
+    composeModelMatrix4(matrix, {
+      translateX: 5,
+      translateY: -2,
+      translateZ: 3,
+      rotationZDegrees: 45,
+      scaleX: 2,
+      scaleY: 1,
+      scaleZ: 3,
+    });
+
+    const bounds = transformBoundsMatrix4(matrix, {
+      minimumX: -1,
+      minimumY: -2,
+      minimumZ: -1,
+      maximumX: 1,
+      maximumY: 2,
+      maximumZ: 1,
+    });
+
+    expect(bounds.minimumX).toBeCloseTo(2.1715729, 5);
+    expect(bounds.maximumX).toBeCloseTo(7.8284271, 5);
+    expect(bounds.minimumY).toBeCloseTo(-4.8284271, 5);
+    expect(bounds.maximumY).toBeCloseTo(0.8284271, 5);
+    expect(bounds.minimumZ).toBeCloseTo(0, 5);
+    expect(bounds.maximumZ).toBeCloseTo(6, 5);
   });
 });

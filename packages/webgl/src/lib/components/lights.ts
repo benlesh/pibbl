@@ -2,6 +2,7 @@ import {
   defineBackendPrimitive,
   getBackendEnvironment,
   getCurrentElementSource,
+  useInternalHookSlot,
 } from '@crc/core/internal';
 import { WEBGL_BACKEND_TOKEN } from '../backend.js';
 import { composeModelMatrix4 } from '../math/matrix4.js';
@@ -36,6 +37,7 @@ export interface HemisphereLightStyle extends CRCWebGLTransformStyle {
 export interface DirectionalLightStyle extends CRCWebGLTransformStyle {
   readonly color?: string;
   readonly intensity?: number;
+  readonly castShadow?: boolean;
 }
 
 export interface PointLightStyle extends DirectionalLightStyle {
@@ -71,6 +73,7 @@ const directionalFields = new Set([
   ...transformFields,
   'color',
   'intensity',
+  'castShadow',
 ]);
 const pointFields = new Set([...directionalFields, 'range']);
 const spotFields = new Set([
@@ -133,12 +136,14 @@ function renderPointLight(
   validateStyleKeys(componentName, style, pointFields);
   submitWebGLLight(currentComposer(), {
     kind: 'point',
+    identity: useLightIdentity(),
     componentName,
     source: getCurrentElementSource(),
     localModel: resolveLocalModel(style),
     color: resolveColor(componentName, 'style.color', style.color),
     intensity: resolveIntensity(componentName, style.intensity),
     range: resolveRange(componentName, style.range),
+    castShadow: resolveCastShadow(componentName, style.castShadow),
   });
 }
 
@@ -167,6 +172,7 @@ function renderSpotLight(
   }
   submitWebGLLight(currentComposer(), {
     kind: 'spot',
+    identity: useLightIdentity(),
     componentName,
     source: getCurrentElementSource(),
     localModel: resolveLocalModel(style),
@@ -175,6 +181,7 @@ function renderSpotLight(
     range: resolveRange(componentName, style.range),
     innerConeAngleDegrees,
     outerConeAngleDegrees,
+    castShadow: resolveCastShadow(componentName, style.castShadow),
   });
 }
 
@@ -187,12 +194,30 @@ function submitDirectionalLight(
   validateStyleKeys(componentName, style, directionalFields);
   submitWebGLLight(currentComposer(), {
     kind: 'directional',
+    identity: useLightIdentity(),
     componentName,
     source: getCurrentElementSource(),
     localModel: resolveLocalModel(style),
     color: resolveColor(componentName, 'style.color', style.color),
     intensity: resolveIntensity(componentName, style.intensity),
+    castShadow: resolveCastShadow(componentName, style.castShadow),
   });
+}
+
+function useLightIdentity(): object {
+  return useInternalHookSlot('webglDirectLightIdentity', () =>
+    Object.freeze({})).value;
+}
+
+function resolveCastShadow(
+  componentName: string,
+  value: boolean | undefined,
+): boolean {
+  if (value === undefined) return true;
+  if (typeof value !== 'boolean') {
+    throw new TypeError(`${componentName} style.castShadow must be a boolean.`);
+  }
+  return value;
 }
 
 function currentComposer(): WebGLSceneComposer {

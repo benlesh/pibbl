@@ -6,6 +6,8 @@ import type {
 
 export type CRCWebGLVector3 = readonly [x: number, y: number, z: number];
 
+export type CRCWebGLShadowQuality = false | 'low' | 'medium' | 'high';
+
 export interface CRCWebGLPerspectiveCamera {
   type: 'perspective';
   position: CRCWebGLVector3;

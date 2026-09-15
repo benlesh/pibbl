@@ -68,6 +68,7 @@ export function createWebGLSceneComposer(
     backingViewport,
     density,
     timestamp: input.frame.renderTimestamp,
+    shadowQuality: input.shadowQuality ?? 'medium',
     meshes: [],
     lights: [],
     backgrounds: [],
@@ -108,6 +109,8 @@ export function submitWebGLLight(
       value.lights.push(Object.freeze({
         ...common,
         kind: 'directional' as const,
+        identity: input.identity ?? Object.freeze({}),
+        castShadow: input.castShadow ?? true,
         color: snapshotColor(input.color),
         model: composeLightModel(value, input.localModel),
       }));
@@ -116,6 +119,8 @@ export function submitWebGLLight(
       value.lights.push(Object.freeze({
         ...common,
         kind: 'point' as const,
+        identity: input.identity ?? Object.freeze({}),
+        castShadow: input.castShadow ?? true,
         color: snapshotColor(input.color),
         range: input.range,
         model: composeLightModel(value, input.localModel),
@@ -125,6 +130,8 @@ export function submitWebGLLight(
       value.lights.push(Object.freeze({
         ...common,
         kind: 'spot' as const,
+        identity: input.identity ?? Object.freeze({}),
+        castShadow: input.castShadow ?? true,
         color: snapshotColor(input.color),
         range: input.range,
         innerConeAngleDegrees: input.innerConeAngleDegrees,
@@ -179,9 +186,12 @@ export function submitWebGLMesh(
     componentName: input.componentName,
     source: input.source,
     geometry: input.geometry,
+    identity: input.identity ?? Object.freeze({}),
     model,
     color: Object.freeze([...input.color]) as unknown as WebGLMeshSubmission['color'],
     lit: input.lit ?? true,
+    castShadow: input.castShadow,
+    receiveShadow: input.receiveShadow,
     material: Object.freeze({
       type: material.type,
       emissiveColor: Object.freeze([...material.emissiveColor]) as WebGLMeshSubmission['material']['emissiveColor'],
@@ -209,6 +219,7 @@ export function closeWebGLSceneComposer(
     backingViewport: value.backingViewport,
     density: value.density,
     timestamp: value.timestamp,
+    shadowQuality: value.shadowQuality,
     meshes: Object.freeze(value.meshes.slice()),
     lights: Object.freeze(value.lights.slice()),
     backgrounds: Object.freeze(value.backgrounds.slice()),

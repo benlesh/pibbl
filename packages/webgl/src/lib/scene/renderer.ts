@@ -1,25 +1,38 @@
 import {
   WebGLRendererResourceCache,
+  type WebGLGeometryResource,
   type WebGLRendererResourceTransaction,
 } from '../gpu/renderer-resources.js';
 import {
+  WebGLShadowResourceCache,
+  type WebGLDirectionalShadowResource,
+  type WebGLShadowBindings,
+  type WebGLShadowResourceTransaction,
+} from '../gpu/shadow-resources.js';
+import {
   WEBGL_LIGHT_KIND,
   WEBGL_MAX_LIGHTS,
+  WEBGL_MAX_SHADOWS,
 } from '../gpu/program-sources.js';
 import type {
   WebGLBuiltInProgram,
   WebGLLambertProgram,
+  WebGLShadowDepthProgram,
   WebGLUnlitProgram,
 } from '../gpu/program.js';
 import {
   createWebGLStateBaseline,
+  installDirectionalShadowWebGLPass,
   installOpaqueWebGLPass,
   installTransparentWebGLPass,
   installWebGLStateBaseline,
   type WebGLStateBaseline,
 } from '../gpu/state.js';
 import type { SettledWebGLMesh, SettledWebGLScene } from './settle.js';
-import type { SettledWebGLLight } from './types.js';
+import type {
+  SettledWebGLLight,
+  SettledWebGLShadowPlan,
+} from './types.js';
 
 interface PackedWebGLLights {
   readonly count: number;
@@ -30,9 +43,18 @@ interface PackedWebGLLights {
   readonly groundOuterCosines: Float32Array;
 }
 
+interface PackedWebGLShadows {
+  readonly enabled: Int32Array;
+  readonly matrices: Float32Array;
+  readonly parameters: Float32Array;
+  readonly textures: readonly WebGLTexture[];
+  readonly bindings: WebGLShadowBindings;
+}
+
 /** Executes immutable settled render queues for one WebGL context generation. */
 export class WebGLSceneRenderer {
   private readonly resources: WebGLRendererResourceCache;
+  private readonly shadows: WebGLShadowResourceCache;
   private baseline: WebGLStateBaseline | undefined;
   private invalidated = false;
   private disposed = false;
@@ -42,6 +64,7 @@ export class WebGLSceneRenderer {
     readonly contextGeneration: number,
   ) {
     this.resources = new WebGLRendererResourceCache(gl, contextGeneration);
+    this.shadows = new WebGLShadowResourceCache(gl, contextGeneration);
   }
 
   render(scene: SettledWebGLScene): void {
@@ -56,6 +79,7 @@ export class WebGLSceneRenderer {
     this.baseline = baseline;
     const lights = packWebGLLights(scene.lights);
     let transaction: WebGLRendererResourceTransaction | undefined;
+    let shadowTransaction: WebGLShadowResourceTransaction | undefined;
     try {
       installWebGLStateBaseline(
         this.gl,
@@ -63,6 +87,39 @@ export class WebGLSceneRenderer {
         scene.backingViewport.height,
         baseline,
       );
+      shadowTransaction = this.shadows.beginRender();
+      const shadowResources = new Map<number, WebGLDirectionalShadowResource>();
+      if (scene.shadowPlans.length > 0) {
+        transaction = this.resources.beginRender();
+        for (const plan of scene.shadowPlans) {
+          const program = transaction.useProgram(
+            'shadow-depth',
+            'DirectionalLight',
+          );
+          if (program.key !== 'shadow-depth') {
+            throw new Error(
+              'Directional shadow renderer acquired the wrong program.',
+            );
+          }
+          const resource = shadowTransaction.useDirectional(
+            plan,
+            resolution => drawDirectionalShadowPlan(
+              this.gl,
+              transaction!,
+              program,
+              plan,
+              resolution,
+            ),
+          );
+          shadowResources.set(plan.lightIndex, resource);
+        }
+        installWebGLStateBaseline(
+          this.gl,
+          scene.backingViewport.width,
+          scene.backingViewport.height,
+          baseline,
+        );
+      }
       const background = scene.background?.color;
       this.gl.clearColor(
         background?.[0] ?? 0,
@@ -71,7 +128,14 @@ export class WebGLSceneRenderer {
         background?.[3] ?? 0,
       );
       this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-      transaction = this.resources.beginRender();
+      transaction ??= this.resources.beginRender();
+      const needsLambert = scene.opaque.some(isLambertMesh) ||
+        scene.transparent.some(isLambertMesh);
+      const packedShadows = needsLambert ? packWebGLShadows(
+        scene.shadowPlans,
+        shadowResources,
+        shadowTransaction.getBindings(),
+      ) : undefined;
       const frameBoundPrograms = new Set<WebGLBuiltInProgram>();
       installOpaqueWebGLPass(this.gl);
       for (const mesh of scene.opaque) {
@@ -81,6 +145,7 @@ export class WebGLSceneRenderer {
           scene,
           mesh,
           lights,
+          packedShadows,
           frameBoundPrograms,
         );
       }
@@ -92,6 +157,7 @@ export class WebGLSceneRenderer {
           scene,
           mesh,
           lights,
+          packedShadows,
           frameBoundPrograms,
         );
       }
@@ -102,11 +168,18 @@ export class WebGLSceneRenderer {
         baseline,
       );
       transaction.commit();
+      shadowTransaction.commit();
     } catch (error) {
       const contextLost = this.contextIsLost();
       const failedTransaction = transaction;
       if (failedTransaction) {
         attemptRendererCleanup(() => failedTransaction.rollback(contextLost));
+      }
+      const failedShadowTransaction = shadowTransaction;
+      if (failedShadowTransaction) {
+        attemptRendererCleanup(() =>
+          failedShadowTransaction.rollback(contextLost),
+        );
       }
       if (!contextLost && !this.invalidated && !this.disposed) {
         attemptRendererCleanup(() =>
@@ -126,6 +199,7 @@ export class WebGLSceneRenderer {
     if (this.invalidated || this.disposed) return;
     this.invalidated = true;
     this.resources.invalidateContext();
+    this.shadows.invalidateContext();
     this.baseline = undefined;
   }
 
@@ -133,6 +207,7 @@ export class WebGLSceneRenderer {
     if (this.disposed) return;
     this.disposed = true;
     this.resources.dispose(contextLost);
+    this.shadows.dispose(contextLost);
     this.baseline = undefined;
   }
 
@@ -166,12 +241,18 @@ function drawMesh(
   scene: SettledWebGLScene,
   mesh: SettledWebGLMesh,
   lights: PackedWebGLLights,
+  shadows: PackedWebGLShadows | undefined,
   frameBoundPrograms: Set<WebGLBuiltInProgram>,
 ): void {
   const program = transaction.useProgram(
     mesh.shading.kind,
     mesh.componentName,
   );
+  if (program.key === 'shadow-depth') {
+    throw new Error(
+      `${mesh.componentName} renderer acquired a depth program for color.`,
+    );
+  }
   const geometry = transaction.useGeometry(mesh.geometry, mesh.componentName);
   gl.useProgram(program.program);
   bindFrameProgram(
@@ -179,6 +260,7 @@ function drawMesh(
     program,
     scene,
     lights,
+    shadows,
     frameBoundPrograms,
   );
   gl.bindVertexArray(geometry.vertexArray);
@@ -206,7 +288,7 @@ function drawMesh(
       0,
       0,
     );
-    bindLambertMesh(gl, program, mesh.shading);
+    bindLambertMesh(gl, program, mesh);
   } else {
     throw new Error(
       `${mesh.componentName} renderer program did not match settled shading.`,
@@ -221,9 +303,10 @@ function drawMesh(
 
 function bindFrameProgram(
   gl: WebGL2RenderingContext,
-  program: WebGLBuiltInProgram,
+  program: WebGLUnlitProgram | WebGLLambertProgram,
   scene: SettledWebGLScene,
   lights: PackedWebGLLights,
+  shadows: PackedWebGLShadows | undefined,
   frameBoundPrograms: Set<WebGLBuiltInProgram>,
 ): void {
   if (frameBoundPrograms.has(program)) return;
@@ -237,7 +320,13 @@ function bindFrameProgram(
     false,
     scene.camera.projectionMatrix as Float32Array,
   );
-  if (program.key === 'lambert') bindLights(gl, program, lights);
+  if (program.key === 'lambert') {
+    bindLights(gl, program, lights);
+    if (!shadows) {
+      throw new Error('Lambert renderer is missing its shadow bindings.');
+    }
+    bindShadows(gl, program, shadows);
+  }
   frameBoundPrograms.add(program);
 }
 
@@ -253,8 +342,12 @@ function bindUnlitMesh(
 function bindLambertMesh(
   gl: WebGL2RenderingContext,
   program: WebGLLambertProgram,
-  shading: Extract<SettledWebGLMesh['shading'], { readonly kind: 'lambert' }>,
+  mesh: SettledWebGLMesh,
 ): void {
+  const shading = mesh.shading;
+  if (shading.kind !== 'lambert') {
+    throw new Error('Lambert mesh binding received unlit shading.');
+  }
   gl.uniformMatrix3fv(
     program.normalMatrix,
     false,
@@ -268,6 +361,46 @@ function bindLambertMesh(
   );
   gl.uniform3f(program.linearEmissive, ...shading.linearEmissive);
   gl.uniform1f(program.alpha, shading.linearBaseColor[3]);
+  gl.uniform1i(program.receiveShadow, mesh.receiveShadow ? 1 : 0);
+}
+
+function drawDirectionalShadowPlan(
+  gl: WebGL2RenderingContext,
+  transaction: WebGLRendererResourceTransaction,
+  program: WebGLShadowDepthProgram,
+  plan: SettledWebGLShadowPlan,
+  resolution: number,
+): void {
+  installDirectionalShadowWebGLPass(gl, resolution);
+  gl.useProgram(program.program);
+  gl.uniformMatrix4fv(
+    program.shadowProjectionView,
+    false,
+    plan.projectionViewMatrix as Float32Array,
+  );
+  for (const mesh of plan.casters) {
+    const geometry = transaction.useGeometry(mesh.geometry, mesh.componentName);
+    bindDepthGeometry(gl, program, geometry, mesh);
+  }
+}
+
+function bindDepthGeometry(
+  gl: WebGL2RenderingContext,
+  program: WebGLShadowDepthProgram,
+  geometry: WebGLGeometryResource,
+  mesh: SettledWebGLMesh,
+): void {
+  gl.bindVertexArray(geometry.vertexArray);
+  gl.bindBuffer(gl.ARRAY_BUFFER, geometry.positionBuffer);
+  gl.enableVertexAttribArray(program.positionAttribute);
+  gl.vertexAttribPointer(program.positionAttribute, 3, gl.FLOAT, false, 0, 0);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, geometry.indexBuffer ?? null);
+  gl.uniformMatrix4fv(program.model, false, mesh.model as Float32Array);
+  if (geometry.indexCount !== undefined) {
+    gl.drawElements(gl.TRIANGLES, geometry.indexCount, gl.UNSIGNED_INT, 0);
+  } else {
+    gl.drawArrays(gl.TRIANGLES, 0, geometry.vertexCount);
+  }
 }
 
 function bindLights(
@@ -284,6 +417,56 @@ function bindLights(
     lights.directionInnerCosines,
   );
   gl.uniform4fv(program.lightGroundOuterCosines, lights.groundOuterCosines);
+}
+
+function bindShadows(
+  gl: WebGL2RenderingContext,
+  program: WebGLLambertProgram,
+  shadows: PackedWebGLShadows,
+): void {
+  gl.uniform1iv(program.shadowEnabled, shadows.enabled);
+  gl.uniformMatrix4fv(program.shadowMatrices, false, shadows.matrices);
+  gl.uniform4fv(program.shadowParameters, shadows.parameters);
+  for (let index = 0; index < WEBGL_MAX_SHADOWS; index += 1) {
+    gl.activeTexture(gl.TEXTURE0 + index);
+    gl.bindTexture(
+      gl.TEXTURE_2D,
+      shadows.textures[index] ?? shadows.bindings.fallback2D,
+    );
+    gl.uniform1i(program.shadow2DSamplers[index]!, index);
+    const cubeUnit = WEBGL_MAX_SHADOWS + index;
+    gl.activeTexture(gl.TEXTURE0 + cubeUnit);
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, shadows.bindings.fallbackCube);
+    gl.uniform1i(program.shadowCubeSamplers[index]!, cubeUnit);
+  }
+}
+
+function packWebGLShadows(
+  plans: readonly SettledWebGLShadowPlan[],
+  resources: ReadonlyMap<number, WebGLDirectionalShadowResource>,
+  bindings: WebGLShadowBindings,
+): PackedWebGLShadows {
+  const enabled = new Int32Array(WEBGL_MAX_SHADOWS);
+  const matrices = new Float32Array(WEBGL_MAX_SHADOWS * 16);
+  const parameters = new Float32Array(WEBGL_MAX_SHADOWS * 4);
+  const textures = Array<WebGLTexture>(WEBGL_MAX_SHADOWS)
+    .fill(bindings.fallback2D);
+  for (const plan of plans) {
+    const resource = resources.get(plan.lightIndex);
+    if (!resource || plan.lightIndex >= WEBGL_MAX_SHADOWS) continue;
+    enabled[plan.lightIndex] = 1;
+    matrices.set(plan.projectionViewMatrix, plan.lightIndex * 16);
+    const parameterOffset = plan.lightIndex * 4;
+    parameters[parameterOffset] = plan.bias;
+    parameters[parameterOffset + 1] = 1 / resource.resolution;
+    parameters[parameterOffset + 2] = plan.comparisonCount;
+    textures[plan.lightIndex] = resource.texture;
+  }
+  return { enabled, matrices, parameters, textures, bindings };
+}
+
+function isLambertMesh(mesh: SettledWebGLMesh): boolean {
+  return mesh.shading.kind === 'lambert';
 }
 
 function packWebGLLights(

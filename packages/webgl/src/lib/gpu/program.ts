@@ -1,23 +1,26 @@
 import { WEBGL_BUILT_IN_PROGRAM_SOURCES } from './program-sources.js';
 
-export type WebGLProgramKey = 'unlit' | 'lambert';
+export type WebGLProgramKey = 'unlit' | 'lambert' | 'shadow-depth';
 
 interface WebGLProgramBase {
   readonly key: WebGLProgramKey;
   readonly program: WebGLProgram;
   readonly model: WebGLUniformLocation;
-  readonly view: WebGLUniformLocation;
-  readonly projection: WebGLUniformLocation;
   readonly positionAttribute: 0;
 }
 
-export interface WebGLUnlitProgram extends WebGLProgramBase {
+interface WebGLMaterialProgramBase extends WebGLProgramBase {
+  readonly view: WebGLUniformLocation;
+  readonly projection: WebGLUniformLocation;
+}
+
+export interface WebGLUnlitProgram extends WebGLMaterialProgramBase {
   readonly key: 'unlit';
   readonly displayBaseColor: WebGLUniformLocation;
   readonly linearEmissive: WebGLUniformLocation;
 }
 
-export interface WebGLLambertProgram extends WebGLProgramBase {
+export interface WebGLLambertProgram extends WebGLMaterialProgramBase {
   readonly key: 'lambert';
   readonly normalMatrix: WebGLUniformLocation;
   readonly linearBaseColor: WebGLUniformLocation;
@@ -29,10 +32,24 @@ export interface WebGLLambertProgram extends WebGLProgramBase {
   readonly lightPositionRanges: WebGLUniformLocation;
   readonly lightDirectionInnerCosines: WebGLUniformLocation;
   readonly lightGroundOuterCosines: WebGLUniformLocation;
+  readonly shadowEnabled: WebGLUniformLocation;
+  readonly shadowMatrices: WebGLUniformLocation;
+  readonly shadowParameters: WebGLUniformLocation;
+  readonly receiveShadow: WebGLUniformLocation;
+  readonly shadow2DSamplers: readonly WebGLUniformLocation[];
+  readonly shadowCubeSamplers: readonly WebGLUniformLocation[];
   readonly normalAttribute: 1;
 }
 
-export type WebGLBuiltInProgram = WebGLUnlitProgram | WebGLLambertProgram;
+export interface WebGLShadowDepthProgram extends WebGLProgramBase {
+  readonly key: 'shadow-depth';
+  readonly shadowProjectionView: WebGLUniformLocation;
+}
+
+export type WebGLBuiltInProgram =
+  | WebGLUnlitProgram
+  | WebGLLambertProgram
+  | WebGLShadowDepthProgram;
 
 /** Compiles and links one closed built-in material program. */
 export function createBuiltInProgram(
@@ -89,6 +106,10 @@ export function createBuiltInProgram(
       key,
       program,
       model: requireUniform(gl, program, componentName, 'u_model'),
+      positionAttribute: 0 as const,
+    };
+    const materialCommon = key === 'shadow-depth' ? undefined : {
+      ...common,
       view: requireUniform(gl, program, componentName, 'u_view'),
       projection: requireUniform(
         gl,
@@ -96,11 +117,10 @@ export function createBuiltInProgram(
         componentName,
         'u_projection',
       ),
-      positionAttribute: 0 as const,
     };
     const builtIn: WebGLBuiltInProgram = key === 'unlit' ?
       Object.freeze({
-        ...common,
+        ...materialCommon!,
         key,
         displayBaseColor: requireUniform(
           gl,
@@ -114,8 +134,8 @@ export function createBuiltInProgram(
           componentName,
           'u_linear_emissive',
         ),
-      }) : Object.freeze({
-        ...common,
+      }) : key === 'lambert' ? Object.freeze({
+        ...materialCommon!,
         key,
         normalMatrix: requireUniform(
           gl,
@@ -172,7 +192,58 @@ export function createBuiltInProgram(
           componentName,
           'u_light_ground_outer_cosine[0]',
         ),
+        shadowEnabled: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_shadow_enabled[0]',
+        ),
+        shadowMatrices: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_shadow_matrix[0]',
+        ),
+        shadowParameters: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_shadow_parameters[0]',
+        ),
+        receiveShadow: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_receive_shadow',
+        ),
+        shadow2DSamplers: Object.freeze(Array.from(
+          { length: 8 },
+          (_, index) => requireUniform(
+            gl,
+            program!,
+            componentName,
+            `u_shadow_map_2d_${index}`,
+          ),
+        )),
+        shadowCubeSamplers: Object.freeze(Array.from(
+          { length: 8 },
+          (_, index) => requireUniform(
+            gl,
+            program!,
+            componentName,
+            `u_shadow_map_cube_${index}`,
+          ),
+        )),
         normalAttribute: 1 as const,
+      }) : Object.freeze({
+        ...common,
+        key,
+        shadowProjectionView: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_shadow_projection_view',
+        ),
       });
     runProgramCleanup(() => gl.detachShader(program!, vertex!));
     runProgramCleanup(() => gl.detachShader(program!, fragment!));

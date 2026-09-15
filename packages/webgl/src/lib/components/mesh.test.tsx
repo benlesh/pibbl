@@ -123,6 +123,8 @@ describe('Mesh built-in rendering', () => {
     [{ opacity: -0.01 }, /Mesh.*opacity.*between 0 and 1/i],
     [{ opacity: 1.01 }, /Mesh.*opacity.*between 0 and 1/i],
     [{ opacity: Number.NaN }, /Mesh.*opacity.*finite/i],
+    [{ castShadow: 'yes' }, /Mesh.*castShadow.*boolean/i],
+    [{ receiveShadow: 1 }, /Mesh.*receiveShadow.*boolean/i],
   ] as const)('rejects invalid paint before acquiring GPU resources %#', (style, message) => {
     const recording = createDrawGL();
     const geometry = createWebGLGeometry({
@@ -301,6 +303,8 @@ describe('Mesh built-in rendering', () => {
           cursor: 'pointer',
           lit: false,
           material: { type: 'lambert', emissiveIntensity: 0 },
+          castShadow: true,
+          receiveShadow: false,
         },
       };
       const filtered: MeshInput = {
@@ -426,7 +430,7 @@ function createDrawGL() {
       model: uniforms.get('u_model')?.slice() ?? [],
       view: uniforms.get('u_view')?.slice() ?? [],
       projection: uniforms.get('u_projection')?.slice() ?? [],
-      color: uniforms.get('u_color')?.slice() ?? [],
+      color: uniforms.get('u_display_base_color')?.slice() ?? [],
       enabled: Array.from(enabled),
       depthFunction,
     });

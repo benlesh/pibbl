@@ -4,8 +4,15 @@ import type {
   CRCEventTargetRegistration,
 } from '@crc/core/internal';
 import type { ResolvedWebGLCamera } from '../math/camera.js';
-import type { CRCWebGLGeometry, CRCWebGLVector3 } from '../types.js';
+import type {
+  CRCWebGLGeometry,
+  CRCWebGLShadowQuality,
+  CRCWebGLVector3,
+} from '../types.js';
 import type { ResolvedWebGLMaterial } from '../components/material.js';
+import type { Matrix4Bounds } from '../math/matrix4.js';
+
+export type WebGLSceneIdentity = object;
 
 export type WebGLRGBA = readonly [red: number, green: number, blue: number, alpha: number];
 
@@ -14,9 +21,12 @@ export interface WebGLMeshSubmission {
   readonly componentName: string;
   readonly source: CRCElementSource | undefined;
   readonly geometry: CRCWebGLGeometry;
+  readonly identity: WebGLSceneIdentity;
   readonly model: Readonly<Float32Array>;
   readonly color: WebGLRGBA;
   readonly lit: boolean;
+  readonly castShadow: boolean | undefined;
+  readonly receiveShadow: boolean | undefined;
   readonly material: ResolvedWebGLMaterial;
   readonly sourceIndex: number;
   readonly target: CRCEventTargetRegistration | undefined;
@@ -28,6 +38,11 @@ interface WebGLLightSubmissionBase {
   readonly source: CRCElementSource | undefined;
   readonly intensity: number;
   readonly model?: Readonly<Float32Array>;
+}
+
+interface WebGLDirectLightSubmissionBase extends WebGLLightSubmissionBase {
+  readonly identity: WebGLSceneIdentity;
+  readonly castShadow: boolean;
 }
 
 export interface WebGLAmbientLightSubmission
@@ -46,14 +61,14 @@ export interface WebGLHemisphereLightSubmission
 }
 
 export interface WebGLDirectionalLightSubmission
-  extends WebGLLightSubmissionBase {
+  extends WebGLDirectLightSubmissionBase {
   readonly kind: 'directional';
   readonly color: WebGLRGBA;
   readonly model: Readonly<Float32Array>;
 }
 
 export interface WebGLPointLightSubmission
-  extends WebGLLightSubmissionBase {
+  extends WebGLDirectLightSubmissionBase {
   readonly kind: 'point';
   readonly color: WebGLRGBA;
   readonly range: number | undefined;
@@ -61,7 +76,7 @@ export interface WebGLPointLightSubmission
 }
 
 export interface WebGLSpotLightSubmission
-  extends WebGLLightSubmissionBase {
+  extends WebGLDirectLightSubmissionBase {
   readonly kind: 'spot';
   readonly color: WebGLRGBA;
   readonly range: number | undefined;
@@ -117,6 +132,8 @@ export interface SettledDirectionalLight extends SettledWebGLLightBase {
   readonly kind: 'directional';
   readonly linearColor: CRCWebGLVector3;
   readonly direction: CRCWebGLVector3;
+  readonly identity: WebGLSceneIdentity;
+  readonly castShadow: boolean;
 }
 
 export interface SettledPointLight extends SettledWebGLLightBase {
@@ -124,6 +141,8 @@ export interface SettledPointLight extends SettledWebGLLightBase {
   readonly linearColor: CRCWebGLVector3;
   readonly position: CRCWebGLVector3;
   readonly range: number | undefined;
+  readonly identity: WebGLSceneIdentity;
+  readonly castShadow: boolean;
 }
 
 export interface SettledSpotLight extends SettledWebGLLightBase {
@@ -134,6 +153,8 @@ export interface SettledSpotLight extends SettledWebGLLightBase {
   readonly range: number | undefined;
   readonly innerConeCosine: number;
   readonly outerConeCosine: number;
+  readonly identity: WebGLSceneIdentity;
+  readonly castShadow: boolean;
 }
 
 export type SettledWebGLLight =
@@ -152,16 +173,20 @@ export interface CreateWebGLSceneComposerInput {
   readonly frame: CRCBackendFrameInput;
   readonly camera: ResolvedWebGLCamera;
   readonly contextGeneration: number;
+  readonly shadowQuality?: CRCWebGLShadowQuality;
 }
 
 export interface SubmitWebGLMeshInput {
   readonly componentName: string;
   readonly source?: CRCElementSource;
   readonly geometry: CRCWebGLGeometry;
+  readonly identity?: WebGLSceneIdentity;
   readonly localModel: Readonly<Float32Array>;
   readonly color: WebGLRGBA;
   readonly lit?: boolean;
   readonly material?: ResolvedWebGLMaterial;
+  readonly castShadow?: boolean;
+  readonly receiveShadow?: boolean;
   readonly target?: CRCEventTargetRegistration;
   readonly keyboardNavigationBounds?: CRCEventTargetRegistration['keyboardNavigationBounds'];
 }
@@ -176,6 +201,11 @@ type SubmitTransformableWebGLLightBase = SubmitWebGLLightBase & {
   readonly localModel: Readonly<Float32Array>;
 };
 
+type SubmitDirectWebGLLightBase = SubmitTransformableWebGLLightBase & {
+  readonly identity?: WebGLSceneIdentity;
+  readonly castShadow?: boolean;
+};
+
 export type SubmitWebGLLightInput =
   | (SubmitWebGLLightBase & {
       readonly kind: 'ambient';
@@ -186,16 +216,16 @@ export type SubmitWebGLLightInput =
       readonly skyColor: WebGLRGBA;
       readonly groundColor: WebGLRGBA;
     })
-  | (SubmitTransformableWebGLLightBase & {
+  | (SubmitDirectWebGLLightBase & {
       readonly kind: 'directional';
       readonly color: WebGLRGBA;
     })
-  | (SubmitTransformableWebGLLightBase & {
+  | (SubmitDirectWebGLLightBase & {
       readonly kind: 'point';
       readonly color: WebGLRGBA;
       readonly range: number | undefined;
     })
-  | (SubmitTransformableWebGLLightBase & {
+  | (SubmitDirectWebGLLightBase & {
       readonly kind: 'spot';
       readonly color: WebGLRGBA;
       readonly range: number | undefined;
@@ -216,9 +246,25 @@ export interface ClosedWebGLSceneDraft {
   readonly backingViewport: Readonly<{ width: number; height: number }>;
   readonly density: Readonly<{ x: number; y: number }>;
   readonly timestamp: number;
+  readonly shadowQuality: CRCWebGLShadowQuality;
   readonly meshes: readonly WebGLMeshSubmission[];
   readonly lights: readonly WebGLLightSubmission[];
   readonly backgrounds: readonly WebGLBackgroundSubmission[];
+}
+export type WebGLWorldBounds = Matrix4Bounds;
+
+export interface SettledWebGLShadowPlan {
+  readonly kind: 'directional';
+  readonly lightIdentity: WebGLSceneIdentity;
+  readonly lightIndex: number;
+  readonly projectionViewMatrix: Readonly<Float32Array>;
+  readonly bias: number;
+  readonly casters: readonly import('./settle.js').SettledWebGLMesh[];
+  readonly receivers: readonly import('./settle.js').SettledWebGLMesh[];
+  readonly requestedResolution: number;
+  readonly comparisonCount: 1 | 4 | 9;
+  readonly contextGeneration: number;
+  readonly shadowProgramGeneration: number;
 }
 
 export interface WebGLSceneComposer extends ClosedWebGLSceneDraft {

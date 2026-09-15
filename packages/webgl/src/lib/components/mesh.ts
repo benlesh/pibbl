@@ -3,6 +3,7 @@ import {
   getBackendEnvironment,
   getCurrentElementSource,
   useBackendEventTarget,
+  useInternalHookSlot,
 } from '@crc/core/internal';
 import { WEBGL_BACKEND_TOKEN } from '../backend.js';
 import {
@@ -28,6 +29,8 @@ export interface MeshStyle extends CRCWebGLTransformStyle {
   readonly opacity?: number;
   readonly lit?: boolean;
   readonly material?: CRCWebGLMaterial;
+  readonly castShadow?: boolean;
+  readonly receiveShadow?: boolean;
   readonly cursor?: string;
 }
 
@@ -53,6 +56,16 @@ export function submitBuiltInMesh(
   const color = parseConcreteColor(componentName, 'style.color', style.color ?? '#ffffff');
   const lit = resolveLit(componentName, style.lit);
   const material = resolveWebGLMaterial(componentName, style.material);
+  const castShadow = resolveShadowBoolean(
+    componentName,
+    'castShadow',
+    style.castShadow,
+  );
+  const receiveShadow = resolveShadowBoolean(
+    componentName,
+    'receiveShadow',
+    style.receiveShadow,
+  );
   const localModel = new Float32Array(16);
   composeModelMatrix4(localModel, scaledStyle(style, uniformScale));
   const target = useBackendEventTarget(
@@ -64,6 +77,10 @@ export function submitBuiltInMesh(
     },
     props.pointerEvents === 'none' ? 'none' : 'auto',
   );
+  const identity = useInternalHookSlot(
+    'webglMeshIdentity',
+    () => Object.freeze({}),
+  ).value;
   const finalColor = Object.freeze([
     color.red,
     color.green,
@@ -74,13 +91,28 @@ export function submitBuiltInMesh(
     componentName,
     source: getCurrentElementSource(),
     geometry,
+    identity,
     localModel,
     color: finalColor,
     lit,
     material,
+    castShadow,
+    receiveShadow,
     target,
     keyboardNavigationBounds: props.keyboardNavigationBounds,
   });
+}
+
+function resolveShadowBoolean(
+  componentName: string,
+  field: 'castShadow' | 'receiveShadow',
+  value: boolean | undefined,
+): boolean | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'boolean') {
+    throw new TypeError(`${componentName} style.${field} must be a boolean.`);
+  }
+  return value;
 }
 
 function resolveLit(componentName: string, value: boolean | undefined): boolean {

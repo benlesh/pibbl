@@ -44,8 +44,52 @@ describe('WebGLLayer public surface', () => {
       'WebGLBackground',
       'WebGLLayer',
       'crcAnimationFrame',
+      'crcOrbitCamera',
       'createWebGLGeometry',
     ]);
+  });
+
+  it('defaults shadows to medium, forwards explicit quality, and rejects invalid values before GL work', async () => {
+    const platform = installComponentPlatform();
+    vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
+      .mockImplementation(() => undefined);
+    const render = vi.spyOn(
+      WebGLLayerController.prototype,
+      'renderRetainedChild',
+    );
+    const canvas = createCanvas(24, 24);
+    const controller = crc(canvas, (
+      <WebGLLayer style={{ width: 24, height: 24 }}>
+        <Cube />
+      </WebGLLayer>
+    ), { pixelRatio: 1 });
+    controllers.add(controller);
+    await nextFrame();
+    expect(render.mock.calls[0]![3]).toBe('medium');
+    expect(platform.draws).toHaveBeenCalledOnce();
+
+    crc(canvas, (
+      <WebGLLayer style={{ width: 24, height: 24, shadows: 'high' }}>
+        <Cube />
+      </WebGLLayer>
+    ));
+    await nextFrame();
+    expect(render.mock.calls.at(-1)![3]).toBe('high');
+    expect(platform.draws).toHaveBeenCalledTimes(2);
+
+    let invalidFrame: FrameRequestCallback | undefined;
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
+      invalidFrame = callback;
+      return 99;
+    });
+    crc(canvas, (
+      <WebGLLayer style={{ width: 24, height: 24, shadows: 'ultra' as never }}>
+        <Cube />
+      </WebGLLayer>
+    ));
+    expect(() => invalidFrame?.(3)).toThrowError(
+      /WebGLLayer style\.shadows.*false.*low.*medium.*high/i,
+    );
   });
 
   it('includes jsxDEV source in a representative capability failure', () => {
@@ -646,8 +690,15 @@ function createNoopGL(options: { readonly draws?: () => void } = {}): WebGL2Rend
                   property === 'createShader' ||
                     property === 'createProgram' ||
                     property === 'createVertexArray' ||
-                    property === 'createBuffer' ?
+                    property === 'createBuffer' ||
+                    property === 'createFramebuffer' ||
+                    property === 'createTexture' ?
                     () => ({ kind: property, id: ++handle }) :
+                      property === 'checkFramebufferStatus' ?
+                        () => {
+                          record.FRAMEBUFFER_COMPLETE ??= constant++;
+                          return record.FRAMEBUFFER_COMPLETE;
+                        } :
                       property === 'drawElements' || property === 'drawArrays' ?
                         options.draws ?? (() => undefined) :
                     property === 'isContextLost' ? () => false :

@@ -1,5 +1,5 @@
 // Concept delta: start
-import { Rectangle, crc, type CRCController } from '@crc/core';
+import { Group, Rectangle, crc, type CRCController } from '@crc/core';
 import {
   AmbientLight,
   Cube,
@@ -12,6 +12,7 @@ import {
   WebGLBackground,
   WebGLLayer,
   createWebGLGeometry,
+  crcOrbitCamera,
 } from '@crc/webgl';
 
 const cubeLit = true;
@@ -31,6 +32,7 @@ function ConceptDelta({
             color: '#ff8a5b',
             intensity: 32,
             range: 8,
+            castShadow: false,
             translateX: 3,
             translateY: 2.2,
             translateZ: 1.5,
@@ -43,6 +45,7 @@ function ConceptDelta({
             range: 11,
             innerConeAngleDegrees: 12,
             outerConeAngleDegrees: 25,
+            castShadow: false,
             translateX: -3,
             translateY: 3.6,
             translateZ: 3.5,
@@ -85,8 +88,14 @@ const groundGeometry = createWebGLGeometry({
 });
 
 function LightingLesson() {
+  const orbit = crcOrbitCamera({
+    orbitPoint: [0, -0.25, 0],
+    initialPosition: [5.8, 4.2, 7.8],
+    minDistance: 3,
+    maxDistance: 18,
+  });
   return (
-    <>
+    <Group {...orbit.handlers}>
       <Rectangle
         pointerEvents="none"
         style={{ width: 360, height: 420, fill: '#173047' }}
@@ -95,11 +104,12 @@ function LightingLesson() {
         pointerEvents="none"
         style={{ x: 360, width: 360, height: 420, fill: '#44254f' }}
       />
+      <Rectangle style={{ width: 720, height: 420, fill: 'transparent' }} />
       <WebGLLayer
         camera={{
           type: 'perspective',
-          position: [5.8, 4.2, 7.8],
-          lookAt: [0, -0.25, 0],
+          position: orbit.position,
+          lookAt: orbit.lookAt,
           up: [0, 1, 0],
           fieldOfViewDegrees: 48,
           near: 0.1,
@@ -147,7 +157,7 @@ function LightingLesson() {
         />
         <ConceptDelta position="after" />
       </WebGLLayer>
-    </>
+    </Group>
   );
 }
 

@@ -1,4 +1,5 @@
 export const WEBGL_MAX_LIGHTS = 8;
+export const WEBGL_MAX_SHADOWS = 8;
 
 export const WEBGL_LIGHT_KIND = Object.freeze({
   ambient: 0,
@@ -53,6 +54,44 @@ void main() {
 }
 `;
 
+const SHADOW_DEPTH_VERTEX_SOURCE = `#version 300 es
+layout(location = 0) in vec3 a_position;
+uniform mat4 u_model;
+uniform mat4 u_shadow_projection_view;
+
+void main() {
+  gl_Position = u_shadow_projection_view * u_model * vec4(a_position, 1.0);
+}
+`;
+
+const SHADOW_DEPTH_FRAGMENT_SOURCE = `#version 300 es
+precision highp float;
+
+void main() {
+  gl_FragDepth = gl_FragCoord.z;
+}
+`;
+
+const SHADOW_2D_SAMPLERS = Array.from(
+  { length: WEBGL_MAX_SHADOWS },
+  (_, index) => `uniform sampler2D u_shadow_map_2d_${index};`,
+).join('\n');
+
+const SHADOW_CUBE_SAMPLERS = Array.from(
+  { length: WEBGL_MAX_SHADOWS },
+  (_, index) => `uniform samplerCube u_shadow_map_cube_${index};`,
+).join('\n');
+
+const SHADOW_2D_BRANCHES = Array.from(
+  { length: WEBGL_MAX_SHADOWS },
+  (_, index) => `  if (index == ${index}) return texture(u_shadow_map_2d_${index}, coordinates).r;`,
+).join('\n');
+
+const SHADOW_CUBE_BRANCHES = Array.from(
+  { length: WEBGL_MAX_SHADOWS },
+  (_, index) => `  if (index == ${index}) return texture(u_shadow_map_cube_${index}, direction).r;`,
+).join('\n');
+
 const LAMBERT_VERTEX_SOURCE = `#version 300 es
 precision highp float;
 layout(location = 0) in vec3 a_position;
@@ -105,6 +144,12 @@ uniform vec4 u_light_color_intensity[MAX_LIGHTS];
 uniform vec4 u_light_position_range[MAX_LIGHTS];
 uniform vec4 u_light_direction_inner_cosine[MAX_LIGHTS];
 uniform vec4 u_light_ground_outer_cosine[MAX_LIGHTS];
+uniform int u_shadow_enabled[MAX_LIGHTS];
+uniform mat4 u_shadow_matrix[MAX_LIGHTS];
+uniform vec4 u_shadow_parameters[MAX_LIGHTS];
+uniform bool u_receive_shadow;
+${SHADOW_2D_SAMPLERS}
+${SHADOW_CUBE_SAMPLERS}
 
 in vec3 v_world_position;
 in vec3 v_world_normal;
@@ -127,6 +172,84 @@ vec3 linear_to_srgb(vec3 color) {
   vec3 linear_segment = color * 12.92;
   vec3 power_segment = 1.055 * pow(color, vec3(1.0 / 2.4)) - 0.055;
   return mix(power_segment, linear_segment, use_linear_segment);
+}
+
+float sample_shadow_2d(int index, vec2 coordinates) {
+${SHADOW_2D_BRANCHES}
+  return 1.0;
+}
+
+float sample_shadow_cube(int index, vec3 direction) {
+${SHADOW_CUBE_BRANCHES}
+  return 1.0;
+}
+
+float compare_directional_shadow(
+  int index,
+  vec2 coordinates,
+  float current_depth
+) {
+  float stored_depth = sample_shadow_2d(index, coordinates);
+  return current_depth <= stored_depth ? 1.0 : 0.0;
+}
+
+float directional_shadow_visibility(int index) {
+  vec4 clip = u_shadow_matrix[index] * vec4(v_world_position, 1.0);
+  if (clip.w == 0.0) return 1.0;
+  vec3 projected = clip.xyz / clip.w;
+  vec2 coordinates = projected.xy * 0.5 + 0.5;
+  float current_depth = projected.z * 0.5 + 0.5 -
+    u_shadow_parameters[index].x;
+  if (coordinates.x < 0.0 || coordinates.x > 1.0 ||
+      coordinates.y < 0.0 || coordinates.y > 1.0 ||
+      current_depth < 0.0 || current_depth > 1.0) return 1.0;
+
+  float texel = u_shadow_parameters[index].y;
+  int comparisons = int(u_shadow_parameters[index].z);
+  if (comparisons <= 1) {
+    return compare_directional_shadow(index, coordinates, current_depth);
+  }
+  if (comparisons <= 4) {
+    float visibility = 0.0;
+    visibility += compare_directional_shadow(
+      index,
+      coordinates + vec2(-0.5, -0.5) * texel,
+      current_depth
+    );
+    visibility += compare_directional_shadow(
+      index,
+      coordinates + vec2(0.5, -0.5) * texel,
+      current_depth
+    );
+    visibility += compare_directional_shadow(
+      index,
+      coordinates + vec2(-0.5, 0.5) * texel,
+      current_depth
+    );
+    visibility += compare_directional_shadow(
+      index,
+      coordinates + vec2(0.5, 0.5) * texel,
+      current_depth
+    );
+    return visibility * 0.25;
+  }
+  float visibility = 0.0;
+  for (int y = -1; y <= 1; y += 1) {
+    for (int x = -1; x <= 1; x += 1) {
+      visibility += compare_directional_shadow(
+        index,
+        coordinates + vec2(float(x), float(y)) * texel,
+        current_depth
+      );
+    }
+  }
+  return visibility / 9.0;
+}
+
+float local_shadow_visibility(int index, vec3 to_light_vector) {
+  float stored_depth = sample_shadow_cube(index, -to_light_vector);
+  return length(to_light_vector) - u_shadow_parameters[index].x <=
+      stored_depth ? 1.0 : 0.0;
 }
 
 vec3 local_light_contribution(
@@ -199,9 +322,14 @@ void main() {
     } else if (kind == LIGHT_KIND_DIRECTIONAL) {
       vec3 to_light = -direction_inner_cosine.xyz;
       float diffuse = max(dot(world_normal, to_light), 0.0);
-      lighting += color_intensity.rgb * color_intensity.w * diffuse;
+      float visibility = 1.0;
+      if (u_receive_shadow && u_shadow_enabled[index] == 1) {
+        visibility = directional_shadow_visibility(index);
+      }
+      lighting += color_intensity.rgb * color_intensity.w * diffuse *
+        visibility;
     } else if (kind == LIGHT_KIND_POINT) {
-      lighting += local_light_contribution(
+      vec3 contribution = local_light_contribution(
         world_normal,
         color_intensity,
         position_range,
@@ -209,8 +337,16 @@ void main() {
         ground_outer_cosine,
         false
       );
+      float visibility = 1.0;
+      if (u_receive_shadow && u_shadow_enabled[index] == 2) {
+        visibility = local_shadow_visibility(
+          index,
+          position_range.xyz - v_world_position
+        );
+      }
+      lighting += contribution * visibility;
     } else if (kind == LIGHT_KIND_SPOT) {
-      lighting += local_light_contribution(
+      vec3 contribution = local_light_contribution(
         world_normal,
         color_intensity,
         position_range,
@@ -218,6 +354,11 @@ void main() {
         ground_outer_cosine,
         true
       );
+      float visibility = 1.0;
+      if (u_receive_shadow && u_shadow_enabled[index] == 3) {
+        visibility = directional_shadow_visibility(index);
+      }
+      lighting += contribution * visibility;
     }
   }
 
@@ -238,5 +379,9 @@ export const WEBGL_BUILT_IN_PROGRAM_SOURCES = Object.freeze({
   lambert: Object.freeze({
     vertex: LAMBERT_VERTEX_SOURCE,
     fragment: LAMBERT_FRAGMENT_SOURCE,
+  }),
+  'shadow-depth': Object.freeze({
+    vertex: SHADOW_DEPTH_VERTEX_SOURCE,
+    fragment: SHADOW_DEPTH_FRAGMENT_SOURCE,
   }),
 });

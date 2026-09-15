@@ -49,7 +49,8 @@ by these runtime values.
 [`createWebGLGeometry`](#/api/functions/create-webgl-geometry) builds immutable
 triangle descriptors for `Mesh`, the custom-shape extension path;
 [`crcAnimationFrame`](#/api/hooks/crc-animation-frame) uses the shared
-scheduler. A layer's children declare one frame-local scene that is settled and
+scheduler, and [`crcOrbitCamera`](#/api/hooks/crc-orbit-camera) supplies stable
+drag-orbit and wheel-zoom handlers. A layer's children declare one frame-local scene that is settled and
 rendered only after composition succeeds. See the grouped [WebGL
 types](#/api/types/webgl).
 

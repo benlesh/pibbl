@@ -27,7 +27,10 @@ import {
   WebGLLayerController,
   resolveWebGLLayerSurface,
 } from '../layer-controller.js';
-import type { CRCWebGLPerspectiveCamera } from '../types.js';
+import type {
+  CRCWebGLPerspectiveCamera,
+  CRCWebGLShadowQuality,
+} from '../types.js';
 
 export interface WebGLLayerProps extends CRCEventHandlers {
   children: CRCNode;
@@ -35,12 +38,15 @@ export interface WebGLLayerProps extends CRCEventHandlers {
   pointerEvents?: 'auto' | 'none';
 }
 
-export interface WebGLLayerStyle extends BoxStyle, LayoutItemStyle {}
+export interface WebGLLayerStyle extends BoxStyle, LayoutItemStyle {
+  readonly shadows?: CRCWebGLShadowQuality;
+}
 
 interface ResolvedWebGLLayerStyle {
   readonly width: number;
   readonly height: number;
   readonly filter?: WebGLLayerStyle['filter'];
+  readonly shadows: CRCWebGLShadowQuality;
 }
 
 interface WebGLLayerChildrenSlot {
@@ -89,6 +95,7 @@ function renderWebGLLayer(
         root,
         props.camera,
         surface,
+        style.shadows,
         source,
       );
       teardowns.add(() => controller.dispose());
@@ -105,6 +112,7 @@ function renderWebGLLayer(
     root,
     props.camera,
     surface,
+    style.shadows,
     getCurrentFrameTimestamp(),
   );
   controller.composite(context, {
@@ -141,7 +149,22 @@ function resolveWebGLLayerStyle(
     'height',
     context,
   );
-  return { width, height };
+  return {
+    width,
+    height,
+    shadows: resolveShadowQuality(style.shadows),
+  };
+}
+
+function resolveShadowQuality(
+  value: WebGLLayerStyle['shadows'],
+): CRCWebGLShadowQuality {
+  if (value === undefined) return 'medium';
+  if (value === false || value === 'low' || value === 'medium' ||
+    value === 'high') return value;
+  throw new TypeError(
+    'WebGLLayer style.shadows must be false, "low", "medium", or "high".',
+  );
 }
 
 function resolveLayerLength(

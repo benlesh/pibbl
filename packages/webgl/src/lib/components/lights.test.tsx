@@ -123,6 +123,31 @@ describe('WebGL light declarations', () => {
     expect(Array.from(scene.lights[1]!.model!)).toEqual(identity());
     expect(Array.from(scene.lights[2]!.model!)).toEqual(identity());
     expect(Array.from(scene.lights[4]!.model!)).toEqual(identity());
+    expect(scene.lights.slice(2).map(light => light.castShadow)).toEqual([
+      true,
+      true,
+      true,
+    ]);
+    expect(scene.lights.slice(2).every(light => light.identity !== undefined))
+      .toBe(true);
+    expect('castShadow' in scene.lights[0]!).toBe(false);
+    expect('castShadow' in scene.lights[1]!).toBe(false);
+  });
+
+  it('keeps direct-light shadow identity stable while snapshotting participation', () => {
+    let completed: ReturnType<typeof closeWebGLSceneComposer> | undefined;
+    const root = <DirectionalLight style={{ castShadow: false }} />;
+    const mounted = mountComposingScene(root, scene => {
+      completed = scene;
+    });
+    executeBackendCRC(mounted.mount, root, 1);
+    const first = completed!.lights[0]!;
+    executeBackendCRC(mounted.mount, root, 2);
+    const second = completed!.lights[0]!;
+
+    expect(first.castShadow).toBe(false);
+    expect(second.identity).toBe(first.identity);
+    mounted.dispose();
   });
 
   it.each([
@@ -136,6 +161,7 @@ describe('WebGL light declarations', () => {
     [createElement(SpotLight, { style: { innerConeAngleDegrees: 50, outerConeAngleDegrees: 40 } }), /SpotLight.*innerConeAngleDegrees.*not exceed.*outerConeAngleDegrees/i],
     [createElement(AmbientLight, { style: { color: 'currentColor' } }), /AmbientLight.*color.*contextual/i],
     [createElement(HemisphereLight, { style: { skyColor: 'not-a-color' } }), /HemisphereLight.*skyColor.*concrete/i],
+    [createElement(DirectionalLight, { style: { castShadow: 'yes' } } as never), /DirectionalLight.*castShadow.*boolean/i],
   ])('rejects invalid light input before submission %#', (root, message) => {
     expect(() => compose(root)).toThrowError(message);
   });
@@ -216,6 +242,53 @@ describe('WebGL light declarations', () => {
     void typeContract;
   });
 });
+
+function mountComposingScene(
+  root: CRCNode,
+  complete: (scene: ReturnType<typeof closeWebGLSceneComposer>) => void,
+) {
+  const driver: CRCBackendDriver<WebGLSceneComposer> = {
+    token: WEBGL_BACKEND_TOKEN,
+    name: 'webgl-test-composer',
+    beginFrame(frame) {
+      return { environment: createWebGLSceneComposer({
+        frame,
+        camera: resolveCamera(undefined, frame.logicalWidth, frame.logicalHeight),
+        contextGeneration: 1,
+        shadowQuality: 'medium',
+      } as any) };
+    },
+    enterComponent() { return () => undefined; },
+    runPrimitive(frame, input, runProgram) {
+      const program = input.definition.program as CRCBackendPrimitiveProgram<
+        Record<PropertyKey, unknown>,
+        Record<PropertyKey, unknown>,
+        WebGLSceneComposer
+      >;
+      runProgram(() => program(input.props, input.style, frame.environment));
+    },
+    finishFrame(frame, success) {
+      if (success) complete(closeWebGLSceneComposer(frame.environment));
+      else discardWebGLSceneComposer(frame.environment);
+    },
+    dispose() {},
+  };
+  const parentCanvas = document.createElement('canvas');
+  const parent = crc(parentCanvas, undefined);
+  const mount = mountBackendCRC(new OffscreenCanvas(16, 16), root, {
+    parent: parentCanvas,
+    logicalWidth: 16,
+    logicalHeight: 16,
+    driver,
+  });
+  return {
+    mount,
+    dispose() {
+      mount.dispose();
+      parent.dispose();
+    },
+  };
+}
 
 function compose(root: CRCNode) {
   let completed: ReturnType<typeof closeWebGLSceneComposer> | undefined;

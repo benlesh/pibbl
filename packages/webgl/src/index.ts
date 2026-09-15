@@ -1,6 +1,12 @@
 export { createWebGLGeometry } from './lib/geometry/geometry.js';
 export { crcAnimationFrame } from './lib/hooks/crc-animation-frame.js';
 export {
+  crcOrbitCamera,
+  type CRCOrbitCameraHandlers,
+  type CRCOrbitCameraOptions,
+  type CRCOrbitCameraResult,
+} from './lib/hooks/crc-orbit-camera.js';
+export {
   WebGLLayer,
   type WebGLLayerProps,
   type WebGLLayerStyle,
@@ -53,6 +59,7 @@ export type {
   CRCWebGLLambertMaterial,
   CRCWebGLMaterial,
   CRCWebGLPerspectiveCamera,
+  CRCWebGLShadowQuality,
   CRCWebGLTransformStyle,
   CRCWebGLVector3,
 } from './lib/types.js';

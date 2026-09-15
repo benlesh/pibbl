@@ -168,6 +168,37 @@ export function setPerspectiveMatrix4<T extends WritableNumbers>(
   return destination;
 }
 
+export function setOrthographicMatrix4<T extends WritableNumbers>(
+  destination: T,
+  left: number,
+  right: number,
+  bottom: number,
+  top: number,
+  near: number,
+  far: number,
+): T {
+  const width = right - left;
+  const height = top - bottom;
+  const depth = far - near;
+  destination[0] = 2 / width;
+  destination[1] = 0;
+  destination[2] = 0;
+  destination[3] = 0;
+  destination[4] = 0;
+  destination[5] = 2 / height;
+  destination[6] = 0;
+  destination[7] = 0;
+  destination[8] = 0;
+  destination[9] = 0;
+  destination[10] = -2 / depth;
+  destination[11] = 0;
+  destination[12] = -(right + left) / width;
+  destination[13] = -(top + bottom) / height;
+  destination[14] = -(far + near) / depth;
+  destination[15] = 1;
+  return destination;
+}
+
 export function setLookAtMatrix4<T extends WritableNumbers>(
   destination: T,
   position: CRCWebGLVector3,
@@ -307,4 +338,52 @@ export function transformDirectionMatrix4<T extends WritableNumbers>(
   destination[1] = matrix[1]! * x + matrix[5]! * y + matrix[9]! * z;
   destination[2] = matrix[2]! * x + matrix[6]! * y + matrix[10]! * z;
   return destination;
+}
+
+export interface Matrix4Bounds {
+  readonly minimumX: number;
+  readonly minimumY: number;
+  readonly minimumZ: number;
+  readonly maximumX: number;
+  readonly maximumY: number;
+  readonly maximumZ: number;
+}
+
+/** Computes an affine AABB from all eight source corners. */
+export function transformBoundsMatrix4(
+  matrix: ArrayLike<number>,
+  bounds: Matrix4Bounds,
+): Matrix4Bounds {
+  let minimumX = Infinity;
+  let minimumY = Infinity;
+  let minimumZ = Infinity;
+  let maximumX = -Infinity;
+  let maximumY = -Infinity;
+  let maximumZ = -Infinity;
+  const transformed = new Float64Array(3);
+  for (const x of [bounds.minimumX, bounds.maximumX]) {
+    for (const y of [bounds.minimumY, bounds.maximumY]) {
+      for (const z of [bounds.minimumZ, bounds.maximumZ]) {
+        transformPointMatrix4(transformed, matrix, [x, y, z]);
+        minimumX = Math.min(minimumX, transformed[0]!);
+        minimumY = Math.min(minimumY, transformed[1]!);
+        minimumZ = Math.min(minimumZ, transformed[2]!);
+        maximumX = Math.max(maximumX, transformed[0]!);
+        maximumY = Math.max(maximumY, transformed[1]!);
+        maximumZ = Math.max(maximumZ, transformed[2]!);
+      }
+    }
+  }
+  if (![minimumX, minimumY, minimumZ, maximumX, maximumY, maximumZ]
+    .every(Number.isFinite)) {
+    throw new RangeError('WebGL transformed bounds must be finite.');
+  }
+  return Object.freeze({
+    minimumX,
+    minimumY,
+    minimumZ,
+    maximumX,
+    maximumY,
+    maximumZ,
+  });
 }

@@ -3,6 +3,7 @@ import {
   transformDirectionMatrix4,
   transformOriginMatrix4,
   transformPointMatrix4,
+  transformBoundsMatrix4,
 } from '../math/matrix4.js';
 import type { CRCWebGLGeometry, CRCWebGLVector3 } from '../types.js';
 import {
@@ -25,7 +26,10 @@ import type {
   WebGLMeshSubmission,
   WebGLRGBA,
   WebGLSceneComposer,
+  SettledWebGLShadowPlan,
+  WebGLWorldBounds,
 } from './types.js';
+import { createDirectionalShadowPlans } from './shadows.js';
 
 const MAX_LIGHTS = 8;
 const DEGREES_TO_RADIANS = Math.PI / 180;
@@ -33,6 +37,9 @@ const DEGREES_TO_RADIANS = Math.PI / 180;
 export interface SettledWebGLMesh extends WebGLMeshSubmission {
   readonly shading: SettledWebGLShading;
   readonly viewDepth: number;
+  readonly worldBounds: WebGLWorldBounds;
+  readonly castShadow: boolean;
+  readonly receiveShadow: boolean;
 }
 
 export interface SettledWebGLScene {
@@ -47,6 +54,8 @@ export interface SettledWebGLScene {
   readonly background: SettledWebGLBackground | undefined;
   readonly opaque: readonly SettledWebGLMesh[];
   readonly transparent: readonly SettledWebGLMesh[];
+  readonly shadowQuality: ReturnType<typeof closeWebGLSceneComposer>['shadowQuality'];
+  readonly shadowPlans: readonly SettledWebGLShadowPlan[];
   readonly pickEntries: readonly CRCWebGLGeometryPickRecord[];
 }
 
@@ -95,6 +104,12 @@ export function settleWebGLScene(composer: WebGLSceneComposer): SettledWebGLScen
   );
   const pickEntries = commitWebGLPickLedger(ledger).entries as
     readonly CRCWebGLGeometryPickRecord[];
+  const shadowPlans = createDirectionalShadowPlans({
+    meshes,
+    lights,
+    quality: draft.shadowQuality,
+    contextGeneration: draft.contextGeneration,
+  });
   return Object.freeze({
     contextGeneration: draft.contextGeneration,
     camera: draft.camera,
@@ -107,6 +122,8 @@ export function settleWebGLScene(composer: WebGLSceneComposer): SettledWebGLScen
     background,
     opaque: Object.freeze(opaque),
     transparent: Object.freeze(transparent),
+    shadowQuality: draft.shadowQuality,
+    shadowPlans,
     pickEntries,
   });
 }
@@ -145,6 +162,10 @@ function settleMesh(
     color: copyRGBA(mesh.color),
     shading,
     viewDepth,
+    worldBounds: transformBoundsMatrix4(mesh.model, bounds),
+    castShadow: mesh.color[3] > 0 && (mesh.castShadow ?? mesh.color[3] === 1),
+    receiveShadow: mesh.color[3] > 0 && mesh.lit &&
+      (mesh.receiveShadow ?? true),
   });
 }
 
@@ -238,6 +259,8 @@ function settleLight(light: WebGLLightSubmission): SettledWebGLLight {
         linearColor: linearContribution(light, 'style.color', light.color, 1),
         intensity,
         direction: settleDirection(light, [0, 0, -1], 'direction'),
+        identity: light.identity,
+        castShadow: light.castShadow,
       });
     case 'point':
       return Object.freeze({
@@ -246,6 +269,8 @@ function settleLight(light: WebGLLightSubmission): SettledWebGLLight {
         intensity,
         position: settlePosition(light),
         range: settleRange(light),
+        identity: light.identity,
+        castShadow: light.castShadow,
       });
     case 'spot': {
       const innerConeAngleDegrees = settleConeAngle(
@@ -278,6 +303,8 @@ function settleLight(light: WebGLLightSubmission): SettledWebGLLight {
         outerConeCosine: Math.cos(
           outerConeAngleDegrees * DEGREES_TO_RADIANS,
         ),
+        identity: light.identity,
+        castShadow: light.castShadow,
       });
     }
   }

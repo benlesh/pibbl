@@ -13,6 +13,7 @@ symbols:
     CRCWebGLLambertMaterial,
     CRCWebGLMaterial,
     CRCWebGLPerspectiveCamera,
+    CRCWebGLShadowQuality,
     CRCWebGLTransformStyle,
     CRCWebGLVector3,
     AmbientLightProps,
@@ -65,6 +66,12 @@ validates and copies every supplied array.
 `near`, and `far`. See [`WebGLLayer`](#/api/components/webgl-layer) for defaults
 and validation.
 
+## CRCWebGLShadowQuality
+
+`CRCWebGLShadowQuality` is `false | "low" | "medium" | "high"`. It controls
+the layer-wide shadow-map resolution and filtering cost; omission selects
+`"medium"` and `false` disables shadow generation.
+
 ## CRCWebGLLambertMaterial
 
 `CRCWebGLLambertMaterial` is the closed material descriptor for mesh lighting.
@@ -108,8 +115,8 @@ Canvas `filter` as unavailable for inner WebGL objects.
 
 ## DirectionalLightStyle
 
-`DirectionalLightStyle` combines transform fields with optional `color` and
-`intensity`.
+`DirectionalLightStyle` combines transform fields with optional `color`,
+`intensity`, and `castShadow`.
 
 ## Group3DProps
 
@@ -134,9 +141,9 @@ Canvas `filter` as unavailable for inner WebGL objects.
 
 ## MeshStyle
 
-`MeshStyle` adds optional concrete `color`, `opacity`, `lit`, `material`, and
-`cursor` to the shared transform fields. Meshes are lit by default; set
-`lit: false` for the unlit path.
+`MeshStyle` adds optional concrete `color`, `opacity`, `lit`, `material`,
+`castShadow`, `receiveShadow`, and `cursor` to the shared transform fields.
+Meshes are lit by default; set `lit: false` for the unlit path.
 
 ## PointLightProps
 
@@ -181,4 +188,5 @@ half-angles in degrees.
 ## WebGLLayerStyle
 
 `WebGLLayerStyle` combines core box and layout-item style; width/height may be
-omitted and core filters apply to the completed island.
+omitted, `shadows` selects layer-wide shadow quality, and core filters apply to
+the completed island.
