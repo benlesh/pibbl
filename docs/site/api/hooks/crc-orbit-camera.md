@@ -30,7 +30,10 @@ const orbit = crcOrbitCamera({
 });
 
 return (
-  <>
+  <Group {...orbit.handlers}>
+    <Rectangle
+      style={{ width: 640, height: 360, fill: "rgba(0, 0, 0, 0)" }}
+    />
     <WebGLLayer
       camera={{
         type: "perspective",
@@ -41,16 +44,20 @@ return (
         near: 0.1,
         far: 100,
       }}
+      style={{ width: 640, height: 360 }}
     >
       {scene}
     </WebGLLayer>
-    <Rectangle
-      {...orbit.handlers}
-      style={{ width: 640, height: 360, fill: "rgba(0, 0, 0, 0)" }}
-    />
-  </>
+  </Group>
 );
 ```
+
+The backing rectangle paints first and the island second. Because CRC resolves
+targets in reverse paint order, a WebGL mesh stays reachable as the top target
+with its own cursor, focus, picking, and handlers; the event then bubbles to the
+common `Group` and its orbit handlers. An empty island miss falls through to the
+rectangle and bubbles through that same group, enabling orbit input across the
+whole example.
 
 Required `orbitPoint` and `initialPosition`
 [`CRCWebGLVector3`](#/api/types/webgl#crcwebglvector3) values must be finite
@@ -73,9 +80,11 @@ frames.
 
 These are ordinary CRC handlers: a structural `Group`, layout component,
 `WebGLLayer`, or `Group3D` adds propagation ancestry but no rectangular hit
-geometry. Attach the bundle to an explicit Canvas or WebGL drawing target when
-empty space should orbit. The hook does not create a focus candidate or change
-mesh picking/focus geometry, and a camera-only update can reuse unchanged
-shadow-depth generations. Teardown makes retained handlers inert and releases
-active pointer state; the hook owns no native listener or independent frame
-loop. See [Light WebGL scenes](#/learn/guides/webgl-lighting).
+geometry. Use an explicit backing target when empty space should orbit. The
+handler bundle creates no target or focus candidate and preserves logical mesh
+target identity and ownership. The resulting camera change does update ray-pick
+geometry and projected focus bounds on the next committed scene, while a
+camera-only update can reuse unchanged shadow-depth generations. Teardown makes
+retained handlers inert and releases active pointer state; the hook owns no
+native listener or independent frame loop. See
+[Light WebGL scenes](#/learn/guides/webgl-lighting).

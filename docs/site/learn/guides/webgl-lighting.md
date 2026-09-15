@@ -52,7 +52,11 @@ function Scene() {
   });
 
   return (
-    <Group>
+    <Group {...orbit.handlers}>
+      {/* The backing target paints first, underneath the WebGL island. */}
+      <Rectangle
+        style={{ width: 720, height: 420, fill: "rgba(0, 0, 0, 0)" }}
+      />
       <WebGLLayer
         camera={{
           type: "perspective",
@@ -113,12 +117,6 @@ function Scene() {
           style={{ color: "#334155", receiveShadow: true }}
         />
       </WebGLLayer>
-
-      {/* A transparent drawing primitive supplies full-viewport hit geometry. */}
-      <Rectangle
-        {...orbit.handlers}
-        style={{ width: 720, height: 420, fill: "rgba(0, 0, 0, 0)" }}
-      />
     </Group>
   );
 }
@@ -126,11 +124,14 @@ function Scene() {
 crc(document.querySelector("canvas")!, <Scene />);
 ```
 
-The transparent `Rectangle` is painted after the island, so drag and wheel
-input works across the complete viewport. You may attach `orbit.handlers` to
-any drawing target instead. Structural components such as `Group` and
-`WebGLLayer` provide propagation ancestry but no rectangular hit area of their
-own; use an explicit backing target when empty space must control the camera.
+The transparent `Rectangle` paints first and supplies full-viewport hit
+geometry; the `WebGLLayer` paints second. CRC targets in reverse paint order, so
+a WebGL mesh remains the topmost target and keeps its own picking, focus,
+cursor, and handlers before the event bubbles through the shared `Group` to the
+orbit handlers. When the island picker misses empty space, targeting falls
+through to the backing rectangle and then bubbles through the same group. The
+structural `Group` provides common propagation ancestry, not rectangular hit
+geometry of its own.
 
 ## Understand the orbit contract
 
@@ -146,6 +147,9 @@ short of either pole. Wheel zoom is exponential, normalizing line deltas as 16
 pixels and page deltas as the logical viewport height. It calls
 `preventDefault()` only when the bounded distance actually changes. Interaction
 requests ordinary CRC renders; an idle camera owns no animation loop.
+The handler bundle itself creates no target or focus candidate and does not
+replace mesh target identity or ownership. A changed camera pose does change
+ray-pick geometry and projected focus bounds when the next scene commits.
 
 ## Choose lights and materials
 
