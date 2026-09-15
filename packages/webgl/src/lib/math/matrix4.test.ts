@@ -4,6 +4,8 @@ import {
   invertMatrix4,
   multiplyMatrix4,
   setIdentityMatrix4,
+  transformDirectionMatrix4,
+  transformOriginMatrix4,
   transformPointMatrix4,
 } from './matrix4.js';
 
@@ -84,5 +86,26 @@ describe('column-major matrix math', () => {
 
     expect(invertMatrix4(destination, singular)).toBeUndefined();
     expect(Array.from(destination)).toEqual(new Array<number>(16).fill(7));
+  });
+
+  test('transforms affine origins with w = 1 and directions with w = 0', () => {
+    const matrix = new Float32Array(16);
+    const origin = new Float32Array(3);
+    const direction = new Float32Array(3);
+    composeModelMatrix4(matrix, {
+      translateX: 5,
+      translateY: 6,
+      translateZ: 7,
+      scaleX: 2,
+      scaleY: 3,
+      scaleZ: 4,
+    });
+
+    expect(transformOriginMatrix4(origin, matrix)).toBe(origin);
+    expect(transformDirectionMatrix4(direction, matrix, [0, 1, 0])).toBe(
+      direction,
+    );
+    expect(Array.from(origin)).toEqual([5, 6, 7]);
+    expect(Array.from(direction)).toEqual([0, 3, 0]);
   });
 });

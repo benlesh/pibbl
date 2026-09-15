@@ -282,3 +282,29 @@ export function transformPointMatrix4<T extends WritableNumbers>(
     (matrix[2]! * x + matrix[6]! * y + matrix[10]! * z + matrix[14]!) / w;
   return destination;
 }
+
+/** Transforms the local origin through an affine matrix with w = 1. */
+export function transformOriginMatrix4<T extends WritableNumbers>(
+  destination: T,
+  matrix: ArrayLike<number>,
+): T {
+  destination[0] = matrix[12]!;
+  destination[1] = matrix[13]!;
+  destination[2] = matrix[14]!;
+  return destination;
+}
+
+/** Transforms a direction through only an affine matrix's linear part (w = 0). */
+export function transformDirectionMatrix4<T extends WritableNumbers>(
+  destination: T,
+  matrix: ArrayLike<number>,
+  direction: CRCWebGLVector3,
+): T {
+  const x = direction[0];
+  const y = direction[1];
+  const z = direction[2];
+  destination[0] = matrix[0]! * x + matrix[4]! * y + matrix[8]! * z;
+  destination[1] = matrix[1]! * x + matrix[5]! * y + matrix[9]! * z;
+  destination[2] = matrix[2]! * x + matrix[6]! * y + matrix[10]! * z;
+  return destination;
+}

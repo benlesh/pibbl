@@ -4,7 +4,7 @@ import type {
   CRCEventTargetRegistration,
 } from '@crc/core/internal';
 import type { ResolvedWebGLCamera } from '../math/camera.js';
-import type { CRCWebGLGeometry } from '../types.js';
+import type { CRCWebGLGeometry, CRCWebGLVector3 } from '../types.js';
 import type { ResolvedWebGLMaterial } from '../components/material.js';
 
 export type WebGLRGBA = readonly [red: number, green: number, blue: number, alpha: number];
@@ -81,6 +81,70 @@ export interface WebGLBackgroundSubmission {
   readonly kind: 'background';
   readonly componentName: string;
   readonly source: CRCElementSource | undefined;
+  readonly color: WebGLRGBA;
+}
+
+export type SettledWebGLShading =
+  | {
+      readonly kind: 'unlit';
+      readonly displayBaseColor: WebGLRGBA;
+      readonly linearEmissive: CRCWebGLVector3;
+    }
+  | {
+      readonly kind: 'lambert';
+      readonly linearBaseColor: WebGLRGBA;
+      readonly linearEmissive: CRCWebGLVector3;
+      readonly normalMatrix: Readonly<Float32Array>;
+    };
+
+interface SettledWebGLLightBase {
+  readonly intensity: number;
+}
+
+export interface SettledAmbientLight extends SettledWebGLLightBase {
+  readonly kind: 'ambient';
+  readonly linearColor: CRCWebGLVector3;
+}
+
+export interface SettledHemisphereLight extends SettledWebGLLightBase {
+  readonly kind: 'hemisphere';
+  readonly linearSkyColor: CRCWebGLVector3;
+  readonly linearGroundColor: CRCWebGLVector3;
+  readonly axis: CRCWebGLVector3;
+}
+
+export interface SettledDirectionalLight extends SettledWebGLLightBase {
+  readonly kind: 'directional';
+  readonly linearColor: CRCWebGLVector3;
+  readonly direction: CRCWebGLVector3;
+}
+
+export interface SettledPointLight extends SettledWebGLLightBase {
+  readonly kind: 'point';
+  readonly linearColor: CRCWebGLVector3;
+  readonly position: CRCWebGLVector3;
+  readonly range: number | undefined;
+}
+
+export interface SettledSpotLight extends SettledWebGLLightBase {
+  readonly kind: 'spot';
+  readonly linearColor: CRCWebGLVector3;
+  readonly position: CRCWebGLVector3;
+  readonly direction: CRCWebGLVector3;
+  readonly range: number | undefined;
+  readonly innerConeCosine: number;
+  readonly outerConeCosine: number;
+}
+
+export type SettledWebGLLight =
+  | SettledAmbientLight
+  | SettledHemisphereLight
+  | SettledDirectionalLight
+  | SettledPointLight
+  | SettledSpotLight;
+
+export interface SettledWebGLBackground {
+  readonly kind: 'background';
   readonly color: WebGLRGBA;
 }
 
