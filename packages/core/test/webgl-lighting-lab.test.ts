@@ -14,6 +14,7 @@ const laboratorySources = import.meta.glob(
 
 type LightingLabState = {
   readonly lightMode: string;
+  readonly backgroundMode: 'transparent' | 'opaque' | 'alpha';
   readonly shadowQuality: false | 'low' | 'medium' | 'high';
   readonly transformedLight: boolean;
   readonly casterAlpha: 'opaque' | 'partial' | 'zero';
@@ -60,6 +61,15 @@ function imageData(canvas: HTMLCanvasElement): Uint8ClampedArray {
   const context = canvas.getContext('2d');
   if (!context) throw new Error('The WebGL lighting lab has no 2D context.');
   return context.getImageData(0, 0, canvas.width, canvas.height).data;
+}
+
+function pixelAt(
+  canvas: HTMLCanvasElement,
+  point: { readonly x: number; readonly y: number },
+): readonly number[] {
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('The WebGL lighting lab has no 2D context.');
+  return [...context.getImageData(point.x, point.y, 1, 1).data];
 }
 
 function hasDarkenedNeutralPixel(
@@ -168,6 +178,9 @@ describe('public WebGL lighting laboratory', () => {
       'show-point',
       'show-spot',
       'show-all',
+      'show-background-transparent',
+      'show-background-opaque',
+      'show-background-alpha',
       'shadows-off',
       'shadows-low',
       'shadows-medium',
@@ -199,6 +212,7 @@ describe('public WebGL lighting laboratory', () => {
     const { controller } = await mountLab();
     expect(controller.getState()).toMatchObject({
       lightMode: 'all',
+      backgroundMode: 'alpha',
       shadowQuality: 'medium',
       transformedLight: false,
       casterAlpha: 'opaque',
@@ -214,6 +228,9 @@ describe('public WebGL lighting laboratory', () => {
       ['show-point', { lightMode: 'point' }],
       ['show-spot', { lightMode: 'spot' }],
       ['show-all', { lightMode: 'all' }],
+      ['show-background-transparent', { backgroundMode: 'transparent' }],
+      ['show-background-opaque', { backgroundMode: 'opaque' }],
+      ['show-background-alpha', { backgroundMode: 'alpha' }],
       ['shadows-off', { shadowQuality: false }],
       ['shadows-low', { shadowQuality: 'low' }],
       ['shadows-medium', { shadowQuality: 'medium' }],
@@ -228,7 +245,7 @@ describe('public WebGL lighting laboratory', () => {
       await controller.perform(action);
       expect(controller.getState()).toMatchObject(expected);
     }
-    expect(controller.getState().revision).toBe(16);
+    expect(controller.getState().revision).toBe(19);
   });
 
   it('keeps ambient and hemisphere shadowless, renders six point faces, and reuses direct shadows while orbiting', async () => {
@@ -248,17 +265,20 @@ describe('public WebGL lighting laboratory', () => {
     await controller.perform('show-point');
     attach.mockClear();
     await controller.perform('move-caster');
-    const cubeFaces = new Set([
+    const expectedCubeFaces = [
       probeContext.TEXTURE_CUBE_MAP_POSITIVE_X,
       probeContext.TEXTURE_CUBE_MAP_NEGATIVE_X,
       probeContext.TEXTURE_CUBE_MAP_POSITIVE_Y,
       probeContext.TEXTURE_CUBE_MAP_NEGATIVE_Y,
       probeContext.TEXTURE_CUBE_MAP_POSITIVE_Z,
       probeContext.TEXTURE_CUBE_MAP_NEGATIVE_Z,
-    ]);
+    ] as const;
+    const cubeFaces = new Set(expectedCubeFaces);
     expect(
-      attach.mock.calls.filter((call) => cubeFaces.has(call[2])).map((call) => call[2]),
-    ).toHaveLength(6);
+      attach.mock.calls
+        .filter((call) => cubeFaces.has(call[2]))
+        .map((call) => call[2]),
+    ).toEqual(expectedCubeFaces);
 
     attach.mockClear();
     const beforeOrbit = pixelSignature(canvas);
@@ -267,14 +287,48 @@ describe('public WebGL lighting laboratory', () => {
       probes().orbitStart,
       probes().orbitEnd,
     );
+    await controller.settled();
     const afterDrag = pixelSignature(canvas);
     await wheelLogicalPoint(canvas, probes().orbitEnd, 180);
+    await controller.settled();
     const afterWheel = pixelSignature(canvas);
     expect(afterDrag).not.toBe(beforeOrbit);
     expect(afterWheel).not.toBe(afterDrag);
     expect(
       attach.mock.calls.filter((call) => cubeFaces.has(call[2])),
     ).toHaveLength(0);
+  });
+
+  it('renders transparent-default, opaque, and alpha backgrounds without intercepting clicks', async () => {
+    const { canvas, controller } = await mountLab();
+    const backgroundProbe = probes().emptyBackground;
+    const initialAlpha = pixelAt(canvas, backgroundProbe);
+
+    await clickLogicalPoint(canvas, backgroundProbe);
+    expect(controller.getState().lastTarget).toBe('backing');
+
+    await controller.perform('show-background-transparent');
+    const transparent = pixelAt(canvas, backgroundProbe);
+    expect(transparent).toEqual([23, 48, 71, 255]);
+    await clickLogicalPoint(canvas, backgroundProbe);
+    expect(controller.getState().lastTarget).toBe('backing');
+
+    await controller.perform('show-background-opaque');
+    const opaque = pixelAt(canvas, backgroundProbe);
+    expect(opaque).toEqual([7, 17, 31, 255]);
+    await clickLogicalPoint(canvas, backgroundProbe);
+    expect(controller.getState().lastTarget).toBe('backing');
+
+    await controller.perform('show-background-alpha');
+    const alpha = pixelAt(canvas, backgroundProbe);
+    expect(alpha).toEqual(initialAlpha);
+    expect(alpha[3]).toBe(255);
+    for (let channel = 0; channel < 3; channel += 1) {
+      expect(alpha[channel]).toBeGreaterThan(opaque[channel]!);
+      expect(alpha[channel]).toBeLessThan(transparent[channel]!);
+    }
+    await clickLogicalPoint(canvas, backgroundProbe);
+    expect(controller.getState().lastTarget).toBe('backing');
   });
 
   it('shows genuine direct-light contrast while keeping zero-alpha focus geometry and releasing owned resources', async () => {

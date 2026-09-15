@@ -59,6 +59,7 @@ export {
 } from './webgl-lighting-lab';
 export type {
   WebGLLightingLabAction,
+  WebGLLightingLabBackgroundMode,
   WebGLLightingLabCasterAlpha,
   WebGLLightingLabConfiguration,
   WebGLLightingLabFocusTarget,

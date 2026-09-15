@@ -2,6 +2,7 @@ import { crc, createElement, signal, type CRCController } from '@crc/core';
 import {
   WEBGL_LIGHTING_LAB_SOURCE_ID,
   WebGLLightingLabScene,
+  type WebGLLightingLabBackgroundMode,
   type WebGLLightingLabCasterAlpha,
   type WebGLLightingLabConfiguration,
   type WebGLLightingLabFocusTarget,
@@ -16,6 +17,7 @@ import type {
 } from './types';
 
 export type {
+  WebGLLightingLabBackgroundMode,
   WebGLLightingLabCasterAlpha,
   WebGLLightingLabConfiguration,
   WebGLLightingLabFocusTarget,
@@ -32,6 +34,9 @@ export const WEBGL_LIGHTING_LAB_ACTION_IDS = [
   'show-point',
   'show-spot',
   'show-all',
+  'show-background-transparent',
+  'show-background-opaque',
+  'show-background-alpha',
   'shadows-off',
   'shadows-low',
   'shadows-medium',
@@ -82,9 +87,18 @@ const ALPHA_ACTIONS: Readonly<
   'caster-zero': 'zero',
 };
 
+const BACKGROUND_ACTIONS: Readonly<
+  Partial<Record<WebGLLightingLabAction, WebGLLightingLabBackgroundMode>>
+> = {
+  'show-background-transparent': 'transparent',
+  'show-background-opaque': 'opaque',
+  'show-background-alpha': 'alpha',
+};
+
 function initialConfiguration(): WebGLLightingLabConfiguration {
   return {
     lightMode: 'all',
+    backgroundMode: 'alpha',
     shadowQuality: 'medium',
     transformedLight: false,
     casterAlpha: 'opaque',
@@ -114,6 +128,7 @@ function configurationFromState(
 ): WebGLLightingLabConfiguration {
   return {
     lightMode: state.lightMode,
+    backgroundMode: state.backgroundMode,
     shadowQuality: state.shadowQuality,
     transformedLight: state.transformedLight,
     casterAlpha: state.casterAlpha,
@@ -187,6 +202,8 @@ async function mountWebGLLightingLab(
         return;
       }
       const lightMode = LIGHT_ACTIONS[action] ?? state.lightMode;
+      const backgroundMode =
+        BACKGROUND_ACTIONS[action] ?? state.backgroundMode;
       const shadowQuality = Object.prototype.hasOwnProperty.call(
         SHADOW_ACTIONS,
         action,
@@ -197,6 +214,7 @@ async function mountWebGLLightingLab(
       await apply({
         ...state,
         lightMode,
+        backgroundMode,
         shadowQuality,
         casterAlpha,
         transformedLight:
@@ -238,6 +256,7 @@ export const webglLightingLabScenario: ScenarioDefinition<WebGLLightingLabState>
   mount: mountWebGLLightingLab,
   formatState: (state) => [
     { label: 'Light', value: state.lightMode },
+    { label: 'Background', value: state.backgroundMode },
     { label: 'Shadows', value: String(state.shadowQuality) },
     { label: 'Transformed', value: state.transformedLight ? 'yes' : 'no' },
     { label: 'Caster alpha', value: state.casterAlpha },

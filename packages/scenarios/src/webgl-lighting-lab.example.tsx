@@ -35,11 +35,16 @@ export type WebGLLightingLabMode =
   | 'all';
 
 export type WebGLLightingLabCasterAlpha = 'opaque' | 'partial' | 'zero';
+export type WebGLLightingLabBackgroundMode =
+  | 'transparent'
+  | 'opaque'
+  | 'alpha';
 export type WebGLLightingLabTarget = 'backing' | 'caster';
 export type WebGLLightingLabFocusTarget = 'none' | 'caster';
 
 export interface WebGLLightingLabConfiguration {
   readonly lightMode: WebGLLightingLabMode;
+  readonly backgroundMode: WebGLLightingLabBackgroundMode;
   readonly shadowQuality: CRCWebGLShadowQuality;
   readonly transformedLight: boolean;
   readonly casterAlpha: WebGLLightingLabCasterAlpha;
@@ -162,6 +167,17 @@ function casterColor(alpha: WebGLLightingLabCasterAlpha): string {
   return '#f472b6';
 }
 
+function sceneBackground(mode: WebGLLightingLabBackgroundMode): CRCNode {
+  if (mode === 'transparent') return null;
+  return (
+    <WebGLBackground
+      style={{
+        color: mode === 'opaque' ? '#07111f' : 'rgb(7 17 31 / 50%)',
+      }}
+    />
+  );
+}
+
 export function WebGLLightingLabScene(
   props: WebGLLightingLabSceneProps,
 ): CRCNode {
@@ -203,7 +219,7 @@ export function WebGLLightingLabScene(
             shadows: configuration.shadowQuality,
           }}
         >
-          <WebGLBackground style={{ color: 'rgb(7 17 31 / 82%)' }} />
+          {sceneBackground(configuration.backgroundMode)}
           {sceneLights(configuration)}
           <Cube
             keyboardFocusable

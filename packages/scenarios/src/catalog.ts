@@ -1655,6 +1655,11 @@ const webglLightingLabMetadata: ScenarioMetadata = {
         "Fill lights shade without cast shadows; every direct light produces a geometry silhouette on the ground.",
     },
     {
+      action: "Compare Transparent, Opaque, and Alpha background modes.",
+      expected:
+        "The transparent default reveals the Canvas underlay; solid and alpha backgrounds remain visible but never become WebGL event targets.",
+    },
+    {
       action: "Compare Off, Low, Medium, and High shadow quality.",
       expected:
         "Off removes direct occlusion; the three named tiers retain genuine shadow maps with progressively filtered edges.",
@@ -1686,6 +1691,9 @@ export const webglLightingLabScenarioEntry: ScenarioCatalogEntry<WebGLLightingLa
     { id: "show-point", label: "Point" },
     { id: "show-spot", label: "Spot" },
     { id: "show-all", label: "All lights" },
+    { id: "show-background-transparent", label: "Transparent background" },
+    { id: "show-background-opaque", label: "Opaque background" },
+    { id: "show-background-alpha", label: "Alpha background" },
     { id: "shadows-off", label: "Shadows off" },
     { id: "shadows-low", label: "Low shadows" },
     { id: "shadows-medium", label: "Medium shadows" },
