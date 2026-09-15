@@ -31,7 +31,10 @@ import { SpotLight } from "@crc/webgl";
 the inner angle defaults to `0`, the outer angle to `45`, and both must lie
 between `0` and `90` with inner no greater than outer. Equal angles create a
 hard cone. Group scale changes pose only, never range, intensity, or cone
-angles.
+angles. Point-style inverse-square and optional range attenuation are evaluated
+independently from the cone falloff. `castShadow` defaults to `true` and uses
+one perspective 2D depth view; its shadow attenuates only this spot light's
+diffuse contribution. Color alpha scales RGB contribution only.
 
 [`SpotLightProps`](#/api/types/webgl#spotlightprops) has no component-specific
 fields. [`SpotLightStyle`](#/api/types/webgl#spotlightstyle) uses the shared

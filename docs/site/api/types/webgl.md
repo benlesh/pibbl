@@ -1,7 +1,7 @@
 ---
 id: api-types-webgl
 title: WebGL types
-summary: Camera, geometry, transform, and component contracts for @crc/webgl.
+summary: Camera, orbit, geometry, material, light, shadow, and component contracts for @crc/webgl.
 kind: api
 slug: webgl
 apiCategory: types
@@ -76,7 +76,8 @@ the layer-wide shadow-map resolution and filtering cost; omission selects
 
 `CRCWebGLLambertMaterial` is the closed material descriptor for mesh lighting.
 It requires `type: "lambert"` and may set concrete `emissiveColor` and a finite,
-nonnegative `emissiveIntensity`.
+nonnegative `emissiveIntensity`. Emissive color defaults to black and intensity
+defaults to `1`; both affect RGB, never raster alpha.
 
 ## CRCWebGLMaterial
 
@@ -92,6 +93,25 @@ Canvas `filter` as unavailable for inner WebGL objects.
 ## CRCWebGLVector3
 
 `CRCWebGLVector3` is the readonly tuple `[x, y, z]`.
+
+## CRCOrbitCameraOptions
+
+`CRCOrbitCameraOptions` requires finite `orbitPoint` and mount-only
+`initialPosition` vectors that differ. Positive `minDistance` defaults to `0.1`;
+optional positive `maxDistance` cannot be smaller. Finite nonnegative
+`rotateSpeed` and `zoomSpeed` default to `1`.
+
+## CRCOrbitCameraHandlers
+
+`CRCOrbitCameraHandlers` is the stable required bundle of `onPointerDown`,
+`onPointerMove`, `onPointerUp`, `onPointerCancel`, `onLostPointerCapture`, and
+`onWheel` from core's ordinary event handler contract.
+
+## CRCOrbitCameraResult
+
+`CRCOrbitCameraResult` exposes readonly `position`, `lookAt`, and `handlers`.
+See [`crcOrbitCamera`](#/api/hooks/crc-orbit-camera) for attachment and identity
+semantics.
 
 ## AmbientLightProps
 
@@ -116,7 +136,8 @@ Canvas `filter` as unavailable for inner WebGL objects.
 ## DirectionalLightStyle
 
 `DirectionalLightStyle` combines transform fields with optional `color`,
-`intensity`, and `castShadow`.
+`intensity`, and `castShadow`. Color and intensity default to white and `1`;
+direct-light shadow casting defaults to `true`.
 
 ## Group3DProps
 
@@ -143,7 +164,10 @@ Canvas `filter` as unavailable for inner WebGL objects.
 
 `MeshStyle` adds optional concrete `color`, `opacity`, `lit`, `material`,
 `castShadow`, `receiveShadow`, and `cursor` to the shared transform fields.
-Meshes are lit by default; set `lit: false` for the unlit path.
+Meshes are lit by default; set `lit: false` for the unlit path. Color/opacity
+default to white/`1`. Fully opaque meshes cast by default, partially transparent
+meshes do not, and zero-alpha meshes never cast. Nonzero-alpha lit meshes
+receive by default; unlit meshes never receive.
 
 ## PointLightProps
 
@@ -152,7 +176,7 @@ Meshes are lit by default; set `lit: false` for the unlit path.
 ## PointLightStyle
 
 `PointLightStyle` combines transform fields with optional `color`, `intensity`,
-and positive `range`.
+positive `range`, and `castShadow`, which defaults to `true`.
 
 ## SphereProps
 
@@ -170,7 +194,7 @@ and positive `range`.
 ## SpotLightStyle
 
 `SpotLightStyle` extends point-light style with optional inner and outer cone
-half-angles in degrees.
+half-angles in degrees, defaulting to `0` and `45`; inner cannot exceed outer.
 
 ## WebGLBackgroundProps
 

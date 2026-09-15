@@ -1,7 +1,7 @@
 # CRC drawing-component contract
 
-Status: current implemented contract, updated for settled WebGL scenes on
-2026-09-13.
+Status: current implemented contract, updated for WebGL lighting, orbit-camera,
+and genuine-shadow behavior on 2026-09-15.
 
 CRC exports descriptive component values. Authors construct them with JSX or
 `createElement`; none is a callable factory. Geometry, paint, cursor, transform,
@@ -167,15 +167,22 @@ interaction bounds remain exact.
 
 ## WebGL island values
 
-`@crc/webgl` supplies one Canvas composition boundary and four WebGL children:
+`@crc/webgl` supplies one Canvas composition boundary and these scene
+declarations:
 
-| Export       | Contract                                                                                                                                                                                               |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `WebGLLayer` | Resolves a finite positive logical box; composes, settles, and renders one frame-local WebGL scene through a private backend; then transfers and transactionally commits one transparent Canvas entry. |
-| `Group3D`    | Scopes translation × Z/Y/X degree rotations × scale for recursive WebGL declarations and contributes listener ancestry without paint, a scene submission, or hit geometry.                             |
-| `Mesh`       | Submits one immutable triangle geometry, composed model transform, final unlit color, and target participation shared by settled raster, ray-pick, and focus records.                                  |
-| `Cube`       | Uses centered indexed cube geometry; positive `size` defaults to one and drives the same submitted model scale for raster and pick.                                                                    |
-| `Sphere`     | Uses deterministic centered indexed sphere geometry; positive `radius` defaults to `0.5` and drives the same submitted model scale for raster and pick.                                                |
+| Export | Contract |
+| --- | --- |
+| `WebGLLayer` | Resolves a finite positive logical box; composes and settles one frame-local WebGL scene, reuses or renders its shadow-depth generations, renders its color queues, then transfers and transactionally commits one Canvas entry. |
+| `Group3D` | Scopes translation × Z/Y/X degree rotations × scale for recursive WebGL declarations and contributes listener ancestry without paint, a scene submission, or hit geometry. |
+| `Mesh` | Submits one immutable triangle geometry, composed model transform, local material/shadow settings, final color, and target participation shared by settlement, raster, ray-pick, and focus records. |
+| `Cube` | Uses centered per-face normal geometry; positive `size` defaults to one and drives the same submitted model scale for raster and pick. |
+| `Sphere` | Uses deterministic centered geometry with canonical outward normals; positive `radius` defaults to `0.5` and drives the same submitted model scale for raster and pick. |
+| `AmbientLight` | Adds uniform color × intensity to every lit mesh in the complete settled scene; it has no transform or shadow projection. |
+| `HemisphereLight` | Blends ground/sky colors by each world normal and transformed local `+Y` sky axis; it has no direct-light shadow projection. |
+| `DirectionalLight` | Emits parallel light along transformed local `-Z`; translation is optically inert and one genuine 2D shadow view is eligible by default. |
+| `PointLight` | Emits from the transformed local origin with inverse-square attenuation and an optional smooth finite range; six cube shadow views are eligible by default. |
+| `SpotLight` | Adds a transformed local `-Z` cone to point attenuation; one outer-cone 2D shadow view is eligible by default. |
+| `WebGLBackground` | Supplies one solid or alpha clear behind the scene without illuminating geometry, drawing another pass, or creating a target. |
 
 `WebGLLayer` accepts one optional perspective camera; omission uses position
 `[0, 0, 5]`, look-at `[0, 0, 0]`, up `[0, 1, 0]`, field of view `50`, near
@@ -186,20 +193,70 @@ event, pointer-participation, and focus props. Geometry-backed focus bounds are
 projected from the committed model/camera state unless a layer-local 2D override
 is supplied.
 
+`crcOrbitCamera()` is a component-owned pose hook, not another camera type. It
+returns current `position` and `lookAt` snapshots plus a stable bundle of
+ordinary pointer/wheel handlers. The author passes those snapshots into the
+plain perspective descriptor and attaches the handlers to a mesh, a structural
+listener ancestor, or an explicit viewport-sized Canvas target. A structural
+component alone never creates draggable hit geometry. Primary-pointer capture,
+root-logical drag deltas, wheel cancellation, scheduling, and teardown use the
+ordinary CRC event and hook contracts; the hook owns no animation loop or GL
+resource.
+
 `createWebGLGeometry` validates and copies a finite nonempty XYZ triangle list
-and optional in-range triangle indices into an immutable branded descriptor.
+plus optional per-position finite nonzero XYZ normals and optional in-range
+triangle indices into an immutable branded descriptor. A lit custom mesh
+requires normals; an unlit mesh and a shadow-depth caster do not.
 An application-defined shape is an ordinary component that returns `Mesh` with
 one of these descriptors. `@crc/webgl` exposes no application shader/draw
 callback, analytic hit callback, mutable scene draft, GPU handle, or context
 resource operation.
 
+`Mesh`, `Cube`, and `Sphere` are Lambert-lit by default. Their local closed
+`style.material` is omitted-Lambert or `{ type: "lambert",
+emissiveColor?, emissiveIntensity? }`; it never inherits through `Group3D`.
+`style.color` remains base RGB/alpha, `style.opacity` remains the final alpha
+multiplier, and `style.lit = false` opts one mesh out of every scene light. A
+non-emissive lit mesh with no illumination is black. Emission adds to lit or
+unlit RGB but does not light neighboring geometry or imply bloom. Light and
+emissive color alpha scale RGB contribution only; they do not change mesh
+output alpha.
+
+All lights contribute globally and additively to lit meshes regardless of JSX
+position. The limit is eight total light declarations, including zero-intensity
+ones. Ambient is uniform; hemisphere blends by normal; directional is parallel;
+point and spot use independent inverse-square attenuation with a `0.01` minimum
+effective distance and optional smooth range cutoff. Spot additionally applies
+its inner/outer half-angle cone. Containing `Group3D` transforms light pose, but
+scale never changes optical intensity, range, cone angles, or shadow quality.
+
 For one dirty scene, core traverses the child tree exactly once to compose
-declarations without framebuffer mutation or GPU-resource construction. After
-successful composition, the backend closes and settles the complete draft,
-derives raster queues plus geometry pick/focus records from the same immutable
-submissions, renders the WebGL passes, and publishes one candidate for Canvas
-composite and transactional bitmap/pick/focus commit. A failed composition is
-discarded without settling or rendering.
+mesh, light, material, and background declarations without framebuffer mutation
+or GPU-resource construction. After successful composition, the backend closes
+and settles the complete draft, derives raster queues, shadow participants,
+plus geometry pick/focus records from the same immutable submissions, reuses or
+renders the required shadow-depth generations, and then renders the main color
+queues. It transfers one candidate bitmap for Canvas composite and
+transactional bitmap/pick/focus commit. A failed composition is discarded
+without settlement or GL work.
+
+Omitted `WebGLLayer.style.shadows` resolves to `"medium"`; accepted values are
+`false`, `"low"`, `"medium"`, and `"high"`. The enabled tiers request square
+depth views of 512/1024/2048 pixels and use 1/4/9 comparisons respectively;
+device limits may clamp resolution without changing comparison count. `false`
+allocates no shadow targets and performs no depth pass. Directional, point, and
+spot lights default `castShadow` to true. Ambient and hemisphere lights expose
+no such field. Each shadow factor attenuates only its matching direct diffuse
+contribution; ambient, hemisphere, other direct lights, and emission remain
+independent.
+
+Final-alpha-one meshes cast and, when lit, receive by default. Final alpha
+strictly between zero and one does not cast by default but does receive when
+lit. Explicit `castShadow: true` makes such a mesh write an opaque depth
+silhouette. Final-alpha-zero meshes never write color or shadow depth even when
+explicitly enabled. `castShadow` is independent of `lit`, so an opaque unlit or
+emissive mesh still occludes direct light by default. `receiveShadow` affects
+only lit direct contributions.
 
 Final alpha is parsed color alpha multiplied by `style.opacity`. Alpha `1`
 enters the opaque queue in ascending source order with depth test and writes.
@@ -214,6 +271,13 @@ Canvas primitives inside a WebGL island and WebGL primitives outside one are
 backend errors. One island is flattened: its individual objects cannot
 alternate around an external Canvas sibling. Authors use two `WebGLLayer`
 passes for `WebGL back -> Canvas -> WebGL front`.
+
+Shadow maps are renderer-owned and cached independently of the presentation
+camera. Camera-only orbit rerenders the color queues while reusing valid depth.
+Light pose/projection, caster depth inputs, relevant automatic receiver extent,
+quality/resolved resolution, context, or shadow-program generation changes
+invalidate the affected generation. Directional and spot lights use one 2D
+view; each invalidated point light uses six 90-degree cube views.
 
 ## Filter composition
 
@@ -329,7 +393,12 @@ Cube/Sphere/Mesh/Group3D composition, Canvas/WebGL order, transparent
 pass-through and object sorting, default participation and opt-out,
 propagation, depth, projected focus, animation, filters outside the island,
 constant-time clean cache reuse, context restoration, and deterministic
-renderer-resource/bitmap ownership.
+renderer-resource/bitmap ownership. Twelve same-scene WebGL lighting lessons
+and `#/testing/webgl-lighting` additionally cover all light families,
+normal-aware geometry, lit/unlit/emissive surfaces, background alpha, orbit
+input, default and explicit shadow participation, all four quality settings,
+genuine directional/spot/point shadows, camera-only cache reuse, failure, and
+teardown.
 
 CRC adds no rich text, semantic DOM, accessibility tree, image CORS policy, SVG
 validator, retained scene graph, generic `Shape` component or registry, or
@@ -343,8 +412,9 @@ See the
 The filter surface does not accept raw CSS strings, `url()`/SVG graphs,
 backdrop sampling, or a box-shadow model.
 
-WebGL islands add no lighting, materials, textures, environment maps, shadows,
-emissive surfaces, glow/bloom, or post-processing API. They remain one-camera,
+WebGL islands add no textures, image environments/IBL, PBR, glow/bloom, area
+lights, cascaded/soft/contact/transparent shadows, public shadow cameras or
+map/bias/filter controls, or post-processing API. They remain one-camera,
 flattened Canvas entries rather than retained public scene graphs.
 
 ## Rounded shapes and public path creators

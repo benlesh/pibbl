@@ -1,7 +1,8 @@
 # CRC runtime resource ownership
 
 Status: current implemented contract, updated for settled WebGL scenes,
-first-class signals, animation, and the realm scheduler on 2026-09-13.
+first-class signals, animation, the realm scheduler, WebGL lighting, orbit
+controls, and genuine shadows on 2026-09-15.
 
 This contract extends the [event resource ownership contract](./event-resource-ownership.md) to every current non-event runtime resource. It defines deterministic ownership and release conditions; garbage collection is supporting evidence only and is never the cleanup oracle.
 
@@ -23,7 +24,9 @@ This contract extends the [event resource ownership contract](./event-resource-o
 | WebGL context generation             | Successful WebGL2 context acquisition                            | Owning `WebGLLayer` controller and renderer             | Context loss, layer removal, failure teardown, or disposal                                          | No GPU handle, bitmap, pick/focus entry, or restore callback can publish through the dead generation.                                                    |
 | WebGL candidate bitmap/pick/focus    | Completed settled-scene render and bitmap transfer               | Current uncommitted layer transaction                   | Successful parent Canvas composite/commit, or any transfer/composite failure                        | Bitmap, picker, and focus metadata commit together; an uncommitted bitmap closes and its metadata is discarded.                                          |
 | WebGL committed bitmap/pick/focus    | Successful parent Canvas composition                             | Owning layer generation                                 | Successful replacement, context loss, layer removal, invalidation that discards output, or disposal | Visible bitmap and selectable/projected metadata always describe the same rendered generation; replaced bitmap closes once.                              |
-| WebGL renderer resident set          | First settled render referencing a program or immutable geometry | Renderer resource cache in one valid context generation | Successful candidate sweep, context loss, layer removal, render-failure teardown, or disposal       | Candidate-only handles roll back; retired or still-live handles are deleted exactly once while valid, and lost handles are invalidated without deletion. |
+| WebGL renderer resident set          | First settled render referencing a program, immutable geometry, or shadow target | Renderer resource cache in one valid context generation | Successful candidate sweep, context loss, layer removal, render-failure teardown, or disposal       | Candidate-only handles roll back; retired or still-live handles are deleted exactly once while valid, and lost handles are invalidated without deletion. |
+| WebGL shadow generation/cache        | Successful settlement of shadow-casting direct lights and casters | Owning renderer generation                             | Relevant light/caster/quality change, context loss, layer removal, failure teardown, or disposal    | Reusable depth generations stay private; camera-only color invalidation may reuse them, while changed generations replace or release their exact targets. |
+| WebGL orbit-camera hook              | `crcOrbitCamera()` mount                                          | Exact component hook slot                              | Component removal, layer/root teardown, or disposal                                                 | Retained handlers and returned camera snapshots become inert runtime capabilities; no native listener, pointer capture, or independent frame request remains owned by the hook. |
 | WebGL continuing-frame hook          | `crcAnimationFrame()` render                                     | That component hook slot                                | Component removal, hook teardown, child/layer disposal, or root disposal                            | Its request is released once; stale callbacks cannot schedule a replacement mount.                                                                       |
 | WebGL scene draft/render transaction | Start of one required island composition                         | Current synchronous WebGL frame                         | Composition discard or settlement/render `finally` on success or failure                            | Draft, submissions, queues, candidate metadata, resource transaction, backend globals, and GL baseline cannot survive the frame.                         |
 | Filter scratch pool                  | CRC instance construction                                        | That CRC instance                                       | Instance main teardown                                                                              | Every reusable source/result canvas and context reference is released; a remount receives a distinct pool.                                               |
@@ -79,23 +82,28 @@ transform to their entering values.
 
 One `WebGLLayer` owns one persistent WebGL2 `OffscreenCanvas`, context,
 context-loss/restoration listener pair, private CRC child instance, scene
-renderer/resource cache, and at most one committed
-`ImageBitmap`/pick/focus-generation tuple. One dirty frame proceeds through four
-owned stages: child composition appends frame-local mesh submissions; settlement
-closes and validates the draft and derives raster/pick/focus records; rendering
-executes the settled queues; then Canvas composition transactionally commits the
-transferred candidate. Child traversal performs no framebuffer mutation or
-GPU-resource construction.
+renderer/resource and shadow cache, and at most one committed
+`ImageBitmap`/pick/focus-generation tuple. One dirty frame proceeds through
+owned phases: child composition appends frame-local mesh, light, and background
+declarations; settlement closes and validates the draft and derives immutable
+raster, shadow, pick, and focus records; reusable shadow-depth work executes;
+the opaque and transparent color queues render; then Canvas composition
+transactionally commits the transferred candidate. Child traversal performs no
+framebuffer mutation or GPU-resource construction.
 
 Only a successful parent Canvas composite commits the bitmap, picker, and focus
 metadata together and closes the previous committed bitmap. Composition,
-settlement, render, transfer, or composite failure publishes no partial
-generation. Candidate target participation releases idempotently, and an
-uncommitted bitmap closes. The backend success-completion path owns settlement,
-render-transaction rollback, GL-baseline restoration, and failed-timestamp
-recording before it rethrows; the pre-success completion path only closes and
-discards its draft. Core remains authoritative for broader fail-closed root
-teardown, which may then release a previously committed tuple.
+settlement, shadow-depth work, color rendering, transfer, or composite failure
+publishes no partial bitmap/pick/focus generation. Candidate target
+participation releases idempotently, and an uncommitted bitmap closes. Resident
+program, geometry, and reusable shadow resources adopt after successful color
+rendering, before bitmap transfer; a later transfer/composite failure therefore
+does not corrupt or roll back those valid private resources, while still
+publishing no partial Canvas-visible generation. The backend success-completion
+path owns settlement, render-transaction rollback, GL-baseline restoration, and
+failed-timestamp recording before it rethrows; the pre-success completion path
+only closes and discards its draft. Core remains authoritative for broader
+fail-closed root teardown, which may then release a previously committed tuple.
 
 A clean cache hit is constant-time with respect to scene size: it composites the
 committed bitmap and replays matching pick/focus metadata without executing
@@ -107,24 +115,27 @@ schedule a scene. Comparison materializes direct opaque child iterables once
 rather than preflighting the component tree.
 
 All GPU objects belong to the renderer for exactly one WebGL2 context
-generation. Its cache retains the program and immutable-geometry handles used by
-the previous successful render. Each render opens a candidate transaction,
+generation. Its cache retains the program, immutable-geometry, and shadow-target
+handles used by the previous successful render. Each render opens a candidate
+transaction,
 marks the keys referenced by the settled scene, and lazily creates missing
 handles only during rendering. Success adopts that candidate resident set and
 deletes no-longer-referenced handles. Failure deletes handles created only for
 the candidate and leaves the prior resident set internally valid. Partial
-shader, program, buffer, or vertex-array construction deletes every successfully
+shader, program, buffer, vertex-array, framebuffer, texture, or renderbuffer
+construction deletes every successfully
 created intermediate before propagating its error, and every transaction closes
 in `finally`.
 
-At most one handle exists for a program or immutable geometry key in one valid
-generation; during a candidate render, handles are bounded by the union of the
+At most one handle exists for a program, immutable geometry, or shadow-resource
+key in one valid generation; during a candidate render, handles are bounded by the union of the
 prior and candidate resident sets. The cache retains no component, transform,
 target, focus, or draw-order record. Context loss invalidates the whole resident
 set without calling WebGL deletion against lost handles, closes/removes
 committed bitmap/pick/focus state, and suppresses stale publication. Restoration
-creates a new renderer generation on an ordinary CRC frame from component state
-and immutable geometry descriptors. Removal/disposal detaches the listener pair,
+creates a new renderer generation on an ordinary CRC frame from component state,
+immutable geometry descriptors, and current light/shadow declarations.
+Removal/disposal detaches the listener pair,
 closes every bitmap, and deletes every still-live valid-generation handle
 exactly once before stale restoration can schedule work.
 
@@ -158,12 +169,14 @@ and preserves Layer cache hits. Wall-clock thresholds and heap timing remain
 diagnostic rather than correctness gates.
 
 The focused WebGL ownership and performance suites prove exact context,
-listener, bitmap, pick/focus generation, renderer-resident
-program/shader/buffer/vertex-array, animation-request, backend-global, and
+listener, bitmap, pick/focus generation, renderer-resident program, shader,
+buffer, vertex-array, framebuffer, texture, renderbuffer, animation-request,
+backend-global, and
 component-ref baselines through candidate commit/rollback, resident sweep,
 replacement, context loss/restoration, injected failure, removal, root disposal,
 and remount. Structural checks cover one child composition and settled render
-plus one bitmap transfer per updated island, constant-time clean cache hits, one
+plus the required reusable shadow-depth work and one bitmap transfer per updated
+island, constant-time clean cache hits, camera-only shadow-depth reuse, one
 Canvas composite, no default pixel readback/ID pass, and exact bitmap/handle
 closure.
 

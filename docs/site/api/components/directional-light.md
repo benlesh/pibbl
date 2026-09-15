@@ -22,7 +22,10 @@ import { DirectionalLight } from "@crc/webgl";
 `DirectionalLight` emits parallel rays along transformed local `-Z`.
 `color` defaults to white and finite nonnegative `intensity` defaults to `1`.
 Translation has no effect; containing `Group3D` rotation changes direction,
-while scale does not change intensity.
+while scale does not change intensity. `castShadow` defaults to `true` and uses
+one orthographic 2D depth view when the layer enables shadows and the scene has
+eligible casters and receivers. That shadow attenuates only this light's
+diffuse contribution. Color alpha scales RGB contribution only.
 
 [`DirectionalLightProps`](#/api/types/webgl#directionallightprops) has no
 component-specific fields. [`DirectionalLightStyle`](#/api/types/webgl#directionallightstyle)

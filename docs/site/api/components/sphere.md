@@ -16,9 +16,10 @@ import { Sphere } from "@crc/webgl";
 ```
 
 `Sphere` uses deterministic indexed sphere geometry centered at the local
-origin. `style.radius` defaults to `0.5` and must be finite and positive. It
-also accepts the [`Mesh`](#/api/components/mesh) transform, color, opacity, and
-cursor style plus event/focus props.
+origin. `style.radius` defaults to `0.5` and must be finite and positive. Its
+built-in smooth normals support the default Lambert-lit path. It also accepts
+the [`Mesh`](#/api/components/mesh) transform, color, opacity, lit/material,
+cast/receive-shadow, and cursor style plus event/focus props.
 Its public surface is [`SphereProps`](#/api/types/webgl#sphereprops) with
 [`SphereStyle`](#/api/types/webgl#spherestyle), including the shared
 [`CRCWebGLTransformStyle`](#/api/types/webgl#crcwebgltransformstyle).
@@ -32,4 +33,5 @@ Its public surface is [`SphereProps`](#/api/types/webgl#sphereprops) with
 
 The same committed model transform drives paint, picking, and projected focus
 bounds. `pointerEvents="none"` keeps the sphere visible but removes it from hit
-and focus participation.
+and focus participation. Material, alpha, and shadow defaults are the same as
+[`Mesh`](#/api/components/mesh).

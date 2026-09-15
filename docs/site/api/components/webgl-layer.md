@@ -13,7 +13,7 @@ relatedTypes:
 # WebGLLayer
 
 ```ts
-import { Cube, WebGLLayer } from "@crc/webgl";
+import { Cube, DirectionalLight, WebGLLayer } from "@crc/webgl";
 ```
 
 `WebGLLayer` is a Canvas composition primitive whose recursive `children` run
@@ -26,7 +26,8 @@ declared by [`WebGLLayerProps`](#/api/types/webgl#webgllayerprops), while
 allocation and presentation.
 
 ```tsx
-<WebGLLayer style={{ width: 480, height: 300 }}>
+<WebGLLayer style={{ width: 480, height: 300, shadows: "medium" }}>
+  <DirectionalLight style={{ rotationXDegrees: -45, intensity: 1.2 }} />
   <Cube style={{ size: 1.5, color: "#8b5cf6" }} />
 </WebGLLayer>
 ```
@@ -40,7 +41,22 @@ independent target. Transparent island background passes through to lower
 Canvas content. `pointerEvents="none"` disables the complete nested picker
 without changing paint.
 
+`style.shadows` accepts `false`, `"low"`, `"medium"`, or `"high"` and defaults
+to `"medium"`. The levels request 512/one-comparison, 1024/four-comparison, and
+2048/nine-comparison shadow maps respectively, clamped to the device limit.
+Directional and spot lights use one 2D depth view; a point light uses six cube
+views. `false` disables shadow generation without changing lighting, picking,
+or focus. Unchanged light/caster generations can reuse shadow depth across a
+camera-only color rerender.
+
 One mounted layer owns one persistent WebGL2 `OffscreenCanvas`, private CRC
-instance, context generation, bitmap transaction, pick ledger, cache, and
-context-loss listeners. It requires WebGL2, `OffscreenCanvas`, and
-`transferToImageBitmap()`. See [Add WebGL islands](#/learn/guides/webgl-islands).
+instance, context generation, renderer/shadow resources, bitmap transaction,
+pick ledger, cache, and context-loss listeners. A dirty scene composes, settles,
+executes needed shadow-depth passes and color queues, transfers one bitmap, and
+commits bitmap/pick/focus state only after parent Canvas composition succeeds.
+Failure publishes no partial Canvas-visible generation. Context loss removes
+stale paint/targeting and abandons lost handles; restoration rebuilds from
+declarations. Removal and disposal release all still-valid resources exactly
+once. It requires WebGL2, `OffscreenCanvas`, and `transferToImageBitmap()`.
+See [Add WebGL islands](#/learn/guides/webgl-islands) and
+[Light WebGL scenes](#/learn/guides/webgl-lighting).

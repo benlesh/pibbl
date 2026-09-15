@@ -16,9 +16,10 @@ import { Cube } from "@crc/webgl";
 ```
 
 `Cube` uses the built-in indexed cube geometry centered at the local origin.
-`style.size` defaults to `1` and must be finite and positive. It also accepts
-the [`Mesh`](#/api/components/mesh) transform, color, opacity, and cursor style
-plus event/focus props.
+`style.size` defaults to `1` and must be finite and positive. Its built-in
+per-face normals support the default Lambert-lit path. It also accepts the
+[`Mesh`](#/api/components/mesh) transform, color, opacity, lit/material,
+cast/receive-shadow, and cursor style plus event/focus props.
 Its public surface is [`CubeProps`](#/api/types/webgl#cubeprops) with
 [`CubeStyle`](#/api/types/webgl#cubestyle), including the shared
 [`CRCWebGLTransformStyle`](#/api/types/webgl#crcwebgltransformstyle).
@@ -33,4 +34,5 @@ Its public surface is [`CubeProps`](#/api/types/webgl#cubeprops) with
 
 The same committed model transform drives paint, picking, and projected focus
 bounds. `pointerEvents="none"` keeps the cube visible but removes it from hit
-and focus participation.
+and focus participation. Material, alpha, and shadow defaults are the same as
+[`Mesh`](#/api/components/mesh).

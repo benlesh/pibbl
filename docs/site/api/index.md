@@ -45,13 +45,21 @@ by these runtime values.
 
 `@crc/webgl` adds [`WebGLLayer`](#/api/components/webgl-layer),
 [`Group3D`](#/api/components/group-3d), [`Mesh`](#/api/components/mesh),
-[`Cube`](#/api/components/cube), and [`Sphere`](#/api/components/sphere).
+[`Cube`](#/api/components/cube), [`Sphere`](#/api/components/sphere),
+[`AmbientLight`](#/api/components/ambient-light),
+[`HemisphereLight`](#/api/components/hemisphere-light),
+[`DirectionalLight`](#/api/components/directional-light),
+[`PointLight`](#/api/components/point-light),
+[`SpotLight`](#/api/components/spot-light), and
+[`WebGLBackground`](#/api/components/webgl-background).
 [`createWebGLGeometry`](#/api/functions/create-webgl-geometry) builds immutable
 triangle descriptors for `Mesh`, the custom-shape extension path;
 [`crcAnimationFrame`](#/api/hooks/crc-animation-frame) uses the shared
 scheduler, and [`crcOrbitCamera`](#/api/hooks/crc-orbit-camera) supplies stable
-drag-orbit and wheel-zoom handlers. A layer's children declare one frame-local scene that is settled and
-rendered only after composition succeeds. See the grouped [WebGL
+drag-orbit and wheel-zoom handlers. A layer's children declare one frame-local
+scene that composes and settles before shadow-depth passes and color queues run;
+one transferred bitmap plus matched pick/focus metadata commits only after the
+parent Canvas composite succeeds. See the grouped [WebGL
 types](#/api/types/webgl).
 
 Both packages use the one `@crc/core/jsx-runtime` configured for the source
@@ -101,3 +109,5 @@ crc(document.querySelector("canvas")!, <Poster />);
 
 Start with the [Getting started guide](#/learn/guides/configure-jsx).
 Add 3D content with the [WebGL islands guide](#/learn/guides/webgl-islands).
+Then add materials, lights, orbit controls, backgrounds, and shadows with
+[Light WebGL scenes](#/learn/guides/webgl-lighting).

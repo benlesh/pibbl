@@ -1,7 +1,7 @@
 # CRC focus and keyboard-navigation contract
 
-Status: current implemented contract, updated for settled WebGL scenes on
-2026-09-13.
+Status: current implemented contract, updated for WebGL lighting, orbit-camera,
+and genuine-shadow behavior on 2026-09-15.
 
 CRC provides optional logical focus and keyboard navigation for explicit event
 targets. The HTML Canvas remains the only native DOM focus host. While the
@@ -38,7 +38,9 @@ own a logical target by default even when passive. They still enroll only by the
 rules below; passive paint alone is not focusable. `pointerEvents="none"`
 releases the leaf from hit and focus participation. `Group`, `Clip`, `Layer`,
 layout containers, `WebGLLayer`, and `Group3D` handler props are listener-only
-and cannot enroll their structural allocation or conceptual bounds.
+and cannot enroll their structural allocation or conceptual bounds. Analytic
+lights and `WebGLBackground` expose no event/focus props or geometry and can
+never enroll, regardless of visual contribution or background opacity.
 
 A target enrolls automatically when it has `onClick`, `onKeyDown`, or
 `onKeyUp`. `keyboardFocusable: true` explicitly includes another target and
@@ -151,7 +153,15 @@ the logical `WebGLLayer`, then applies the same outer Canvas layout, transform,
 and clip projection used by paint and picking. An explicit
 `keyboardNavigationBounds` on a WebGL target is a layer-local 2D override.
 WebGL target source traversal remains the global Tab order even when the raster
-renderer groups opaque objects and sorts transparent objects.
+renderer groups opaque objects, renders light-space shadow depth, and sorts
+transparent objects. Lighting, normals, material, emission, background, and
+shadow participation do not change projected bounds or directional ranking.
+
+`crcOrbitCamera()` is independent of focus and picking. Its handlers may sit on
+a focusable mesh or any ordinary listener ancestor, but the hook creates no
+candidate and camera motion does not move focus ownership. An explicit
+viewport-sized target is still required when empty viewport space should begin
+an orbit gesture.
 
 For each arrow, candidates outside the requested center half-plane are
 discarded. Remaining candidates compare this tuple in order:
@@ -231,6 +241,11 @@ The `webgl-islands` lesson and deterministic WebGL laboratory additionally
 prove projected and explicit bounds, source-order Tab, directional movement,
 press focus, keyboard activation, outer transforms/clips/Layers, and focus
 cache replay across the nested WebGL event-parent bridge.
+
+The `webgl-lighting` laboratory proves that light/material/background/shadow
+changes leave pick and focus geometry unchanged, zero-alpha meshes can retain
+focus participation without raster or shadow depth, an opaque background does
+not enroll, and orbit input leaves logical focus ownership independent.
 
 See [Canvas accessibility guidance](./canvas-accessibility-guidance.md) for the
 separate semantic responsibility.

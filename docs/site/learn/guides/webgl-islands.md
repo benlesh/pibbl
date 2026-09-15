@@ -15,8 +15,9 @@ exampleSlug: webgl-islands
 scene. A [`WebGLLayer`](#/api/components/webgl-layer) is one Canvas composition
 entry: Canvas content can paint before or after it, while the island's own
 children declare one frame-local 3D scene. CRC composes the complete successful
-scene first, settles its render and pick data, renders its WebGL passes, and
-then composites and transactionally commits one bitmap to Canvas.
+scene first, settles render, shadow, and pick data, executes any shadow-depth
+work and the color queues, and then composites and transactionally commits one
+bitmap to Canvas.
 
 Install the version-matched packages together:
 
@@ -61,11 +62,11 @@ function Scene() {
           onClick={() => console.log("the selected object is in this group")}
         >
           <Cube
-            style={{ size: 1.3, translateX: -0.9, color: "#8b5cf6" }}
+            style={{ size: 1.3, translateX: -0.9, color: "#8b5cf6", lit: false }}
             onClick={() => setSelected("cube")}
           />
           <Sphere
-            style={{ radius: 0.7, translateX: 0.9, color: "#22c55e" }}
+            style={{ radius: 0.7, translateX: 0.9, color: "#22c55e", lit: false }}
             onClick={() => setSelected("sphere")}
           />
         </Group3D>
@@ -117,7 +118,7 @@ Supply one explicit perspective camera when the scene needs another view:
   }}
   style={{ width: 640, height: 360 }}
 >
-  <Cube style={{ size: 2, color: "#38bdf8" }} />
+  <Cube style={{ size: 2, color: "#38bdf8", lit: false }} />
 </WebGLLayer>
 ```
 
@@ -149,7 +150,7 @@ const triangle = createWebGLGeometry({
 const mark = (
   <Mesh
     geometry={triangle}
-    style={{ color: "#f97316", opacity: 0.9, translateZ: -1 }}
+    style={{ color: "#f97316", opacity: 0.9, translateZ: -1, lit: false }}
     onClick={() => console.log("triangle")}
   />
 );
@@ -161,10 +162,14 @@ Positions are a nonempty finite XYZ list. Non-indexed vertex counts and index
 counts must be divisible by three; supplied indices must be nonnegative integers
 within the vertex range.
 
-`Mesh`, `Cube`, and `Sphere` use an unlit solid color. `color` defaults to white
-and must be a concrete browser-accepted Canvas color. `opacity` defaults to one
-and stays between zero and one. Final raster alpha is parsed color alpha
-multiplied by `opacity`. Opacity affects pixels, not hit or focus geometry.
+`Mesh`, `Cube`, and `Sphere` are Lambert-lit by default. These introductory
+examples set `lit: false` so their colors remain visible without a light.
+`color` defaults to white and must be a concrete browser-accepted Canvas color.
+`opacity` defaults to one and stays between zero and one. Final raster alpha is
+parsed color alpha multiplied by `opacity`. Opacity affects pixels, not hit or
+focus geometry. Continue with [Light WebGL scenes](#/learn/guides/webgl-lighting)
+for normals, materials, analytic lights, backgrounds, orbit controls, and
+genuine shadows.
 
 ## Add a custom shape
 
@@ -179,7 +184,7 @@ const markerGeometry = createWebGLGeometry({
 });
 
 function Marker({ x }: { x: number }) {
-  return <Mesh geometry={markerGeometry} style={{ translateX: x }} />;
+  return <Mesh geometry={markerGeometry} style={{ translateX: x, lit: false }} />;
 }
 ```
 
@@ -254,7 +259,7 @@ function Spinner() {
   const timestamp = crcAnimationFrame();
   return (
     <Group3D style={{ rotationYDegrees: (timestamp / 30) % 360 }}>
-      <Cube style={{ color: "#a78bfa" }} />
+      <Cube style={{ color: "#a78bfa", lit: false }} />
     </Group3D>
   );
 }
@@ -284,7 +289,7 @@ const scene = createElement(
   createElement(
     Group3D,
     { style: { rotationYDegrees: 25 }, children: null },
-    createElement(Cube, { style: { size: 1.4, color: "#22d3ee" } }),
+    createElement(Cube, { style: { size: 1.4, color: "#22d3ee", lit: false } }),
   ),
 );
 
@@ -295,16 +300,18 @@ crc(document.querySelector("canvas")!, scene);
 
 A `WebGLLayer` owns one persistent WebGL2 `OffscreenCanvas`, context, renderer,
 committed `ImageBitmap`, and matched pick/focus generation. A dirty frame has
-four distinct stages:
+five distinct stages:
 
-1. **compose** — components evaluate once and Mesh/Cube/Sphere declarations
-   append frame-local submissions without framebuffer changes or GPU-resource
-   construction;
+1. **compose** — components evaluate once and mesh, light, and background
+   declarations append frame-local submissions without framebuffer changes or
+   GPU-resource construction;
 2. **settle** — CRC closes and validates the complete draft and derives raster,
    pick, and focus records from the same immutable submissions;
-3. **render** — the layer renderer acquires its context-owned resources and
-   issues the opaque and transparent WebGL passes; and
-4. **Canvas composite and transactional commit** — CRC transfers one candidate
+3. **shadow depth** — the renderer reuses or renders the required direct-light
+   depth maps;
+4. **color render** — the renderer acquires its context-owned resources and
+   issues the opaque and transparent WebGL queues; and
+5. **Canvas composite and transactional commit** — CRC transfers one candidate
    bitmap, composites it into the parent Canvas, and commits the bitmap,
    picker, and focus metadata together.
 
@@ -334,15 +341,17 @@ primitive cannot be interleaved between two objects in the same island. Use two
 Outer Canvas layout, `Group` transforms, `Clip`, alpha/compositing, and
 `style.filter` apply to the completed island bitmap. A filter on `WebGLLayer`
 therefore affects the whole island after its settled WebGL passes and does not
-change picking or focus geometry. The initial package has one perspective
-camera per island and no WebGL1 fallback, multiple viewports, lighting,
-materials, textures, environment maps, shadows, emissive surfaces, glow/bloom,
-post-processing API, loader, retained scene graph, worker renderer, WebGPU
-backend, or cross-context GPU sharing.
+change picking or focus geometry. The package has one perspective camera per
+island and no WebGL1 fallback, multiple viewports, textures, environment maps
+or IBL, PBR materials, area lights, cascaded/transparent/contact shadows,
+public map-size/bias/shadow-camera controls, glow/bloom, post-processing API,
+loader, retained scene graph, worker renderer, WebGPU backend, or cross-context
+GPU sharing.
 
 The package uses the version-coupled `@crc/core/internal` friend entry to keep
 one element brand, scheduler, and event root. That entry is reserved for
 matching official CRC packages and is not an application compatibility promise.
 
 Explore the [WebGL islands live example](#/examples/composition/webgl-islands)
-and the [`@crc/webgl` API types](#/api/types/webgl).
+and the [`@crc/webgl` API types](#/api/types/webgl). For the complete lighting
+pipeline, see [Light WebGL scenes](#/learn/guides/webgl-lighting).

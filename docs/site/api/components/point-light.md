@@ -23,7 +23,10 @@ import { PointLight } from "@crc/webgl";
 inverse-square attenuation. `color` defaults to white and `intensity` defaults
 to `1`. Optional `range` must be finite and positive; when omitted the light is
 unbounded. A containing `Group3D` transforms the origin, but its scale does not
-alter range or intensity.
+alter range or intensity. `castShadow` defaults to `true`; eligible shadows use
+six cube depth views around the transformed origin. That shadow attenuates only
+this point light's independently attenuated diffuse contribution. Color alpha
+scales RGB contribution only.
 
 [`PointLightProps`](#/api/types/webgl#pointlightprops) has no
 component-specific fields. [`PointLightStyle`](#/api/types/webgl#pointlightstyle)

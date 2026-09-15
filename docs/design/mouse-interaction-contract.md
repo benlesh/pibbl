@@ -1,7 +1,8 @@
 # CRC mouse interaction contract
 
 Status: current geometry, coordinates, cursor, and observer contract, updated
-for settled WebGL scenes on 2026-09-13. The DOM-aligned [user-event contract](./user-events-contract.md)
+for WebGL lighting, orbit-camera, and genuine-shadow behavior on 2026-09-15.
+The DOM-aligned [user-event contract](./user-events-contract.md)
 superseded this document's mouse-only non-propagation, hidden related-target,
 no-cancellation, no-capture, and sibling no-activation clauses on 2026-08-29.
 Optional press focus and keyboard activation now defer to the implemented
@@ -89,7 +90,9 @@ One root dispatcher owns interaction state across the root Canvas and every nest
 A `WebGLLayer` adds one nested resolver at its Canvas bitmap position. After
 outer clip/bounds rejection, it maps the root point through the inverse Canvas
 world transform to layer-local coordinates and delegates to its committed scene
-picker. Transparent background reports miss. The picker consumes geometry,
+picker. Uncovered background reports miss whether the clear is transparent,
+alpha, or opaque. Analytic lights, materials, normals, and shadow maps add no
+paint candidate or hit geometry. The picker consumes geometry,
 model matrix, camera, and source index from the same settled mesh submissions as
 the renderer, uses one camera ray and nearest supported WebGL depth, and chooses
 the later source index for an equal-depth tie. Opaque/transparent raster queues
@@ -205,6 +208,15 @@ from its logical layer size. Selected WebGL leaves retain public root-logical
 event coordinates; layer-local/NDC/ray values remain private resolver inputs. See
 the [Canvas surface contract](./canvas-surface-contract.md) for the complete
 projection model.
+
+`crcOrbitCamera()` consumes those root-logical pointer coordinates through its
+ordinary handler bundle. At default speed each captured primary-pointer pixel
+changes the matching spherical angle by `0.01` radians; its polar clamp prevents
+camera flips. Authors may attach the bundle to a geometry target or a listener
+ancestor, but an ancestor needs an explicit backing target to receive empty-
+viewport drags. Orbit camera movement changes presentation only: committed
+mesh geometry remains the source of target/focus resolution, and valid
+light-space shadow depth can be reused.
 
 Clips form an intersection: the point must be inside every active clip and the
 target path. `lineInteractionWidth` expands only that candidate's stroke hit

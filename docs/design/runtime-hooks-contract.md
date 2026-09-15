@@ -1,7 +1,7 @@
 # CRC runtime and hook contract
 
 Status: current implemented contract, updated for settled WebGL scenes,
-first-class signals, and the realm scheduler on 2026-09-13.
+first-class signals, the realm scheduler, and `crcOrbitCamera` on 2026-09-15.
 
 This document defines element construction, traversal, identity, updates,
 hooks, recovery, and disposal. The [resource ownership
@@ -71,14 +71,15 @@ instance whose root backend is WebGL. Core still establishes identity, hooks,
 style, allocation, listener ancestry, after-render work, and teardown; backend
 dispatch selects the private scene composer. Plain synchronous components use
 the same rules under either backend. `Group3D` pushes and pops CPU transform and
-listener scopes; `Mesh`, `Cube`, and `Sphere` append frame-local declarations.
+listener scopes; meshes, analytic lights, and `WebGLBackground` append
+frame-local declarations.
 After the complete child tree succeeds, the backend closes and settles that
-draft, renders its planned queues, and publishes one candidate for Canvas
-composite and commit. No framebuffer mutation or GPU-resource construction
-occurs during child traversal. A WebGL value outside a `WebGLLayer`, or a Canvas
-primitive inside one, reports the mismatched boundary. Every temporary backend,
-composer, environment, instance, transform, and ownership slot is restored in
-`finally`.
+draft, reuses or renders the required shadow-depth generations, renders its
+planned color queues, and publishes one candidate for Canvas composite and
+commit. No framebuffer mutation or GPU-resource construction occurs during
+child traversal. A WebGL value outside a `WebGLLayer`, or a Canvas primitive
+inside one, reports the mismatched boundary. Every temporary backend, composer,
+environment, instance, transform, and ownership slot is restored in `finally`.
 
 Synchronous iterables are materialized once at a receiving render or
 measurement boundary. They must be finite.
@@ -173,6 +174,7 @@ a later explicit render remounts cleanly.
 | `crcLayoutBox()`                  | Returns the current component's stable readonly local allocation `{ x: 0, y: 0, width, height }`. Equal allocation preserves object identity. Reading does not schedule work. Unlike ordinary hooks, calling it outside a live layout context—including during pure measurement—throws `No CRC layout context is available`, not the shared hook diagnostic.                            | layout foundation and measurement-isolation suites                      |
 | `crcCanvasContext()`              | Returns the current isolated Canvas 2D context without allocating a hook slot. It is unavailable outside render and during pure measurement.                                                                                                                                                                                                                                            | plain-component and measurement-isolation suites                        |
 | `crcAnimationFrame()`             | From `@crc/webgl`, owns a typed hook slot, returns the shared current timestamp, and retains one continuing-frame request while mounted. Removal/disposal makes stale callbacks inert.                                                                                                                                                                                                  | WebGL animation and structural-performance suites                       |
+| `crcOrbitCamera(options)`         | From `@crc/webgl`, owns spherical azimuth/polar/distance plus one revision signal in a typed component slot. It returns immutable current `position`/`lookAt` snapshots and a hook-lifetime-stable bundle of ordinary CRC pointer/wheel handlers. `initialPosition` is mount-only; orbit point, bounds, and speeds are live candidates adopted only after successful render. Input changes request scheduled renders and no idle animation frames. | Orbit-camera hook and WebGL lighting laboratory suites                  |
 
 The three memoized path helpers are distinct slot kinds. Reordering them is a
 hook-order error even though all return `Path2D`.
@@ -182,8 +184,8 @@ hook-order error even though all return `Path2D`.
 `measureElement` and a `definePrimitive` `measure` capability are not render
 passes. They normalize style and may recursively measure elements, but cannot
 invoke render callbacks, hooks, `crcLayoutBox`, `crcCanvasContext`, or
-`crcAnimationFrame`, compose a WebGL scene, paint, register interaction, load
-images, or acquire resources. CRC clears and
+`crcAnimationFrame`, `crcOrbitCamera`, compose a WebGL scene, paint, register
+interaction, load images, or acquire resources. CRC clears and
 restores temporary render state in `finally`. When measurement is nested during
 an active render, that isolation prevents attempted measurement hooks from
 consuming or reordering the parent component's hook slots. Direct or indirect
@@ -218,12 +220,14 @@ boundary, and blocked private subpaths. The `runtime-hooks-laboratory`, JSX
 authoring tests, lifecycle stress suite, and cleanup ledgers cover traversal,
 identity, hook order, recovery, and disposal through public elements.
 
-`@crc/webgl` consumes that one installed core instance as a matching peer and
-exports no second JSX runtime, element constructor, fragment, or core
-hook/event vocabulary. The explicit `@crc/core/internal` friend entry supports
-matching official CRC packages only. It is version-coupled, absent from the
-application API reference, and carries no independent semantic-versioning or
-compatibility promise. Applications must not import it.
+`@crc/webgl` consumes that one installed core instance as a matching peer. Its
+`crcAnimationFrame` and `crcOrbitCamera` hooks use core-owned hook/scheduling
+and event facilities; the package exports no second JSX runtime, element
+constructor, fragment, or competing core hook/event vocabulary. The explicit
+`@crc/core/internal` friend entry supports matching official CRC packages only.
+It is version-coupled, absent from the application API reference, and carries
+no independent semantic-versioning or compatibility promise. Applications must
+not import it.
 
 The root `@crc/core` entry also exports `Signal`, `WritableSignal`,
 `SignalOptions`, `SignalEquals`, `signal`, `computed`, `untracked`, `isSignal`,
@@ -250,6 +254,13 @@ frame, no GL work before successful composition, one settlement/render,
 coalesced animation requests, constant-time static cache hits, matched timestamp
 propagation, backend mismatch diagnostics, and restoration after success or
 failure.
+
+The orbit-camera suite additionally proves stable handler and unchanged-pose
+identity, primary-pointer capture/termination, unrelated-pointer rejection,
+root-logical rotation, polar and distance clamps, pixel/line/page wheel
+normalization, prevention only for an applied zoom, live successful-render
+option adoption, failed-render rollback, scheduled invalidation, and inert
+teardown callbacks without continuing frames.
 
 Focused suites cover signal `get()` reads, component consumers, realm scheduler
 requests, Layer invalidation, exact ownership, and isolated root render

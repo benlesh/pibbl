@@ -102,6 +102,7 @@ starts from installation and mounting and does not require the JSX guides.
 - [Compose and lay out scenes](docs/site/learn/guides/compose-and-layout.md)
 - [Manage state and lifecycle](docs/site/learn/guides/state-and-lifecycle.md)
 - [Add WebGL islands](docs/site/learn/guides/webgl-islands.md)
+- [Light WebGL scenes](docs/site/learn/guides/webgl-lighting.md)
 - [Add focus and keyboard navigation](docs/site/learn/guides/focus-and-keyboard.md)
 - [Create custom components and primitives](docs/site/learn/guides/custom-components-and-primitives.md)
 - [Integrate with React](docs/site/learn/guides/react-integration.md)
@@ -150,8 +151,9 @@ corepack pnpm@11.21.0 playground:built
 - Platform extension: `definePrimitive` plus style-resolution and pure
   measurement types
 - Optional WebGL2 islands from `@crc/webgl`: `WebGLLayer`, `Group3D`, `Mesh`,
-  `Cube`, `Sphere`, `createWebGLGeometry`, `crcAnimationFrame`, and their public
-  camera, geometry, transform, and component types
+  `Cube`, `Sphere`, five analytic lights, `WebGLBackground`,
+  `createWebGLGeometry`, `crcAnimationFrame`, `crcOrbitCamera`, and their public
+  camera, orbit, geometry, material, shadow, transform, and component types
 - Compiler-only entries: `@crc/core/jsx-runtime` and
   `@crc/core/jsx-dev-runtime`
 
@@ -189,11 +191,13 @@ CRC does not generate semantic DOM descendants or an accessibility tree;
 applications remain responsible for an equivalent accessible DOM experience.
 There is no editable-input adapter, rich text, scrolling, complete CSS engine,
 retained scene graph, WebGL1/WebGPU fallback, multi-camera island, Canvas/WebGL
-subprimitive interleaving, public raw WebGL/shader extension, lighting/material/
-environment system, glow effects, or image CORS policy. Inside one WebGL island,
-children declare a settled scene; source order governs identity and ties while
-the renderer plans opaque and transparent depth-aware passes. Canvas/`Path2D`,
-font, decoded-image, `OffscreenCanvas`, and WebGL2 behavior remain browser-owned.
+subprimitive interleaving, public raw WebGL/shader extension, textures, image
+environments/IBL, PBR, glow/bloom, area lights, cascaded/soft/contact/
+transparent shadows, or image CORS policy. Inside one WebGL island, children
+declare a settled scene; source order governs identity and ties while the
+renderer plans genuine shadow-depth passes followed by opaque and transparent
+color queues. Canvas/`Path2D`, font, decoded-image, `OffscreenCanvas`, and
+WebGL2 behavior remain browser-owned.
 
 ## License
 

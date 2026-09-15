@@ -22,7 +22,8 @@ import { HemisphereLight } from "@crc/webgl";
 `HemisphereLight` blends `groundColor` to `skyColor` using each lit surface's
 normal. Both colors default to white and `intensity` defaults to `1`. Its local
 `+Y` axis is transformed by containing `Group3D` rotations; group scale does
-not change intensity.
+not change intensity. Color alpha scales RGB contribution only. Hemisphere
+light never casts a shadow and is not darkened by a direct light's shadow.
 
 [`HemisphereLightProps`](#/api/types/webgl#hemispherelightprops) has no
 component-specific fields. [`HemisphereLightStyle`](#/api/types/webgl#hemispherelightstyle)

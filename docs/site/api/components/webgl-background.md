@@ -20,7 +20,10 @@ import { WebGLBackground } from "@crc/webgl";
 `WebGLBackground` sets the color and alpha used by the layer's existing clear;
 it adds no draw pass. A layer accepts at most one background, and its JSX
 position does not affect rendering. Background pixels create no WebGL target,
-so even an opaque background remains click-through.
+so even an opaque background remains click-through. Omitting the component
+preserves the transparent-island default. A translucent color composites its
+clear alpha with lower Canvas content. The background neither illuminates the
+scene nor participates in shadow, pick, or focus records.
 
 [`WebGLBackgroundProps`](#/api/types/webgl#webglbackgroundprops) has no
 component-specific fields; [`WebGLBackgroundStyle`](#/api/types/webgl#webglbackgroundstyle)
