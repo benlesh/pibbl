@@ -329,16 +329,16 @@ describe('spot shadow planning', () => {
       kind: 'spot',
       lightIndex: 0,
       lightPosition: [2, 3, 4],
-      nearDistance: 0.1,
+      nearDistance: 0.5,
       farDistance: 10,
       requestedResolution: 1024,
       comparisonCount: 4,
     });
     expect(rounded(spot.projectionViewMatrix)).toEqual([
-      0, 0, -1.020202, -1,
+      0, 0, -1.105263, -1,
       0, 1.732051, 0, 0,
       -1.732051, 0, 0, 0,
-      6.928203, -5.196152, 1.838384, 2,
+      6.928203, -5.196152, 1.157895, 2,
     ]);
   });
 
@@ -371,6 +371,53 @@ describe('spot shadow planning', () => {
     }).shadowPlans[0] as any;
     expect(Array.from(zeroCone.projectionViewMatrix).every(Number.isFinite))
       .toBe(true);
+  });
+
+  it('keeps short-range caster bounds before far/2 inside the spot frustum', () => {
+    const scene = settleScene({
+      lightKind: 'spot',
+      lightRange: 0.1,
+      lightTransform: { translateZ: 0.05 },
+      meshTransform: { scaleX: 0.01, scaleY: 0.01, scaleZ: 0.01 },
+    });
+    const plan = scene.shadowPlans[0] as any;
+
+    expect(plan.farDistance).toBe(0.1);
+    expect(plan.nearDistance).toBeGreaterThan(0);
+    expect(plan.nearDistance).toBeLessThan(0.04);
+    expect(plan.casters).toEqual([scene.meshes[0]]);
+    expect(plan.receivers).toEqual([scene.meshes[0]]);
+  });
+
+  it('derives scale-stable projected bias above depth precision but below close occlusion separation', () => {
+    const small = settleScene({
+      lightKind: 'spot',
+      lightRange: 10,
+      lightTransform: { translateZ: 5 },
+    }).shadowPlans[0] as any;
+    const large = settleScene({
+      lightKind: 'spot',
+      lightRange: 10_000,
+      lightTransform: { translateZ: 5_000 },
+      meshTransform: { scaleX: 1_000, scaleY: 1_000, scaleZ: 1_000 },
+    }).shadowPlans[0] as any;
+
+    expect(large.nearDistance / small.nearDistance).toBeCloseTo(1_000, 5);
+    expect(large.bias).toBeCloseTo(small.bias, 7);
+    expect(small.bias).toBeGreaterThan(1 / 0xffffff);
+    expect(large.bias).toBeGreaterThan(1 / 0xffffff);
+    expect(small.bias).toBeLessThan(projectedDepthSeparation(
+      small.nearDistance,
+      small.farDistance,
+      4,
+      4.005,
+    ));
+    expect(large.bias).toBeLessThan(projectedDepthSeparation(
+      large.nearDistance,
+      large.farDistance,
+      4_000,
+      4_005,
+    ));
   });
 
   it('honors spot opt-out and reuses only matching depth inputs', () => {
@@ -521,6 +568,17 @@ function settleScene(options: {
 
 function rounded(values: ArrayLike<number>): number[] {
   return Array.from(values, value => Number(value.toFixed(6)));
+}
+
+function projectedDepthSeparation(
+  near: number,
+  far: number,
+  firstDistance: number,
+  secondDistance: number,
+): number {
+  const depth = (distance: number) => far / (far - near) -
+    far * near / ((far - near) * distance);
+  return depth(secondDistance) - depth(firstDistance);
 }
 
 const DIRECT_LIGHT_IDENTITY = Object.freeze({});

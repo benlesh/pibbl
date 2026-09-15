@@ -239,7 +239,26 @@ function createSpotPlan(
     light.position,
     bounds,
   );
-  const nearDistance = Math.min(0.1, farDistance / 2);
+  const target: CRCWebGLVector3 = [
+    light.position[0] + light.direction[0],
+    light.position[1] + light.direction[1],
+    light.position[2] + light.direction[2],
+  ];
+  const up: CRCWebGLVector3 = Math.abs(light.direction[1]) < 0.999 ?
+    [0, 1, 0] : [1, 0, 0];
+  const view = new Float32Array(16);
+  setLookAtMatrix4(view, light.position, target, up);
+  const lightBounds = transformBoundsMatrix4(view, bounds);
+  const nearestForwardDistance = Math.max(0, -lightBounds.maximumZ);
+  const minimumRepresentableNear = farDistance / 1_048_576;
+  const nearDistance = Math.min(
+    farDistance / 2,
+    Math.max(
+      minimumRepresentableNear,
+      nearestForwardDistance > 0 ?
+        nearestForwardDistance / 2 : farDistance / 65_536,
+    ),
+  );
   const projection = new Float32Array(16);
   const fieldOfViewRadians = Math.max(
     0.001,
@@ -252,17 +271,29 @@ function createSpotPlan(
     nearDistance,
     farDistance,
   );
-  const target: CRCWebGLVector3 = [
-    light.position[0] + light.direction[0],
-    light.position[1] + light.direction[1],
-    light.position[2] + light.direction[2],
-  ];
-  const up: CRCWebGLVector3 = Math.abs(light.direction[1]) < 0.999 ?
-    [0, 1, 0] : [1, 0, 0];
-  const view = new Float32Array(16);
-  setLookAtMatrix4(view, light.position, target, up);
   const projectionViewMatrix = new Float32Array(16);
   multiplyMatrix4(projectionViewMatrix, projection, view);
+  const closestRelevantDepth = Math.min(
+    farDistance,
+    Math.max(nearDistance, nearestForwardDistance),
+  );
+  const farthestRelevantDepth = Math.min(
+    farDistance,
+    Math.max(closestRelevantDepth, -lightBounds.minimumZ),
+  );
+  const projectedDepthSpan = perspectiveDepth(
+    farthestRelevantDepth,
+    nearDistance,
+    farDistance,
+  ) - perspectiveDepth(
+    closestRelevantDepth,
+    nearDistance,
+    farDistance,
+  );
+  const bias = Math.max(
+    4 / 0xffffff,
+    projectedDepthSpan / (quality.requestedResolution * 4),
+  );
   return Object.freeze({
     kind: 'spot',
     lightIdentity: light.identity,
@@ -275,7 +306,7 @@ function createSpotPlan(
     ] as const),
     nearDistance,
     farDistance,
-    bias: 0.0015,
+    bias,
     casters,
     receivers,
     requestedResolution: quality.requestedResolution,
@@ -283,6 +314,14 @@ function createSpotPlan(
     contextGeneration,
     shadowProgramGeneration: WEBGL_SHADOW_PROGRAM_GENERATION,
   });
+}
+
+function perspectiveDepth(
+  distance: number,
+  near: number,
+  far: number,
+): number {
+  return far / (far - near) - far * near / ((far - near) * distance);
 }
 
 const POINT_SHADOW_FACES = Object.freeze([
