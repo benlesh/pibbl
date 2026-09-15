@@ -520,9 +520,9 @@
   }
 
   export interface CRCWebGLGeometryInput {
-    positions: ArrayLike<number>;
-    normals?: ArrayLike<number>;
-    indices?: ArrayLike<number>;
+    readonly positions: ArrayLike<number>;
+    readonly normals?: ArrayLike<number>;
+    readonly indices?: ArrayLike<number>;
   }
 
   declare const crcWebGLGeometryBrand: unique symbol;
@@ -564,7 +564,12 @@
   export interface SphereProps extends CRCWebGLTargetProps {}
   export interface SphereStyle extends MeshStyle { readonly radius?: number }
 
-  export interface AmbientLightProps {}
+  declare const lightDeclarationPropsMarker: unique symbol;
+  interface LightDeclarationProps {
+    readonly [lightDeclarationPropsMarker]?: never;
+  }
+
+  export interface AmbientLightProps extends LightDeclarationProps {}
   export interface AmbientLightStyle {
     readonly color?: string;
     readonly intensity?: number;
@@ -573,32 +578,35 @@
     readonly filter?: never;
   };
 
-  export interface HemisphereLightProps {}
+  export interface HemisphereLightProps extends LightDeclarationProps {}
   export interface HemisphereLightStyle extends CRCWebGLTransformStyle {
     readonly skyColor?: string;
     readonly groundColor?: string;
     readonly intensity?: number;
   }
 
-  export interface DirectionalLightProps {}
+  export interface DirectionalLightProps extends LightDeclarationProps {}
   export interface DirectionalLightStyle extends CRCWebGLTransformStyle {
     readonly color?: string;
     readonly intensity?: number;
     readonly castShadow?: boolean;
   }
 
-  export interface PointLightProps {}
+  export interface PointLightProps extends LightDeclarationProps {}
   export interface PointLightStyle extends DirectionalLightStyle {
     readonly range?: number;
   }
 
-  export interface SpotLightProps {}
+  export interface SpotLightProps extends LightDeclarationProps {}
   export interface SpotLightStyle extends PointLightStyle {
     readonly innerConeAngleDegrees?: number;
     readonly outerConeAngleDegrees?: number;
   }
 
-  export interface WebGLBackgroundProps {}
+  declare const webGLBackgroundPropsMarker: unique symbol;
+  export interface WebGLBackgroundProps {
+    readonly [webGLBackgroundPropsMarker]?: never;
+  }
   export interface WebGLBackgroundStyle {
     readonly color: string;
   }

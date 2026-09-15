@@ -927,9 +927,33 @@ function StudioWebGLScene(): CRCNode {
 }
 const webglScene = <StudioWebGLScene />;
 void webglScene;
+// @ts-expect-error light declarations reject arbitrary component props
+const ambientLightWithChildren: AmbientLightProps = { children: [] };
+// @ts-expect-error light declarations reject arbitrary component props
+const hemisphereLightWithChildren: HemisphereLightProps = { children: [] };
+// @ts-expect-error light declarations reject arbitrary component props
+const directionalLightWithChildren: DirectionalLightProps = { children: [] };
+// @ts-expect-error light declarations reject arbitrary component props
+const pointLightWithChildren: PointLightProps = { children: [] };
+// @ts-expect-error light declarations reject arbitrary component props
+const spotLightWithChildren: SpotLightProps = { children: [] };
+// @ts-expect-error background declarations reject arbitrary component props
+const backgroundWithChildren: WebGLBackgroundProps = { children: [] };
+void [
+  ambientLightWithChildren,
+  hemisphereLightWithChildren,
+  directionalLightWithChildren,
+  pointLightWithChildren,
+  spotLightWithChildren,
+  backgroundWithChildren,
+];
 // @ts-expect-error filters belong on WebGLLayer, never inner WebGL geometry
 const filteredCube = <Cube style={{ filter: { type: 'blur', radius: 2 } }} />;
-void filteredCube;
+// @ts-expect-error filters belong on WebGLLayer, never light declarations
+const filteredAmbientLight = <AmbientLight style={{ filter: { type: 'blur', radius: 2 } }} />;
+// @ts-expect-error filters belong on WebGLLayer, never background declarations
+const filteredWebGLBackground = <WebGLBackground style={{ color: '#08111f', filter: { type: 'blur', radius: 2 } }} />;
+void [filteredCube, filteredAmbientLight, filteredWebGLBackground];
 void CRC_WEBGL_ROOT.crcAnimationFrame;
 void CRC_WEBGL_ROOT.crcOrbitCamera;
 void crcAnimationFrame;

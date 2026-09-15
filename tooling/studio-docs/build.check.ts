@@ -591,6 +591,7 @@ assert.deepEqual(
     "Manage state and lifecycle",
     "Use signals and animation",
     "Add WebGL islands",
+    "Light WebGL scenes",
     "Add focus and keyboard navigation",
     "Create custom components and primitives",
     "Integrate with React",
