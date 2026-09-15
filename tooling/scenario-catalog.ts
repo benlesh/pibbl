@@ -39,6 +39,8 @@ function publicLocation(entry: (typeof learningExampleCatalog)[number]): string 
       return 'Drawing';
     case 'composition':
       return 'Composition';
+    case 'webgl':
+      return 'WebGL';
     case 'layout':
       return 'Layout';
     case 'events-and-interaction':
@@ -205,6 +207,7 @@ async function validateSources(): Promise<void> {
     validateLearningSourceText(sourceText, {
       authoring: entry.authoring,
       label: `Learning example "${entry.slug}"`,
+      sourcePath: entry.source.path,
     });
     await loadLearningExample(entry);
   }

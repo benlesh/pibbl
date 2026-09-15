@@ -49,8 +49,10 @@ interface SourceInspection {
 const CORE_MODULE = "@crc/core";
 const WEBGL_MODULE = "@crc/webgl";
 const LEARNING_VALUE_MODULES = new Set([CORE_MODULE, WEBGL_MODULE]);
-const WEBGL_LEARNING_SOURCE_PATH =
+const WEBGL_ISLAND_LEARNING_SOURCE_PATH =
   "packages/scenarios/src/learning/composition/webgl-islands.example.tsx";
+const WEBGL_LIGHTING_LEARNING_SOURCE_DIRECTORY =
+  "packages/scenarios/src/learning/webgl/";
 
 const LEGACY_AUTHORING_NAMES = new Set([
   ["define", "Comp"].join(""),
@@ -103,9 +105,15 @@ const DESCRIPTIVE_COMPONENT_EXPORTS = new Set([
   "Text",
   "VerticalLine",
   "Cube",
+  "AmbientLight",
+  "DirectionalLight",
   "Group3D",
+  "HemisphereLight",
   "Mesh",
+  "PointLight",
   "Sphere",
+  "SpotLight",
+  "WebGLBackground",
   "WebGLLayer",
 ]);
 const COMMONJS_BINDING_NAMES = new Set(["exports", "module", "require"]);
@@ -1321,7 +1329,8 @@ export function validateLearningSourceText(
   const { authoring, label, sourcePath } = contract;
   const inspection = inspectSource(source, label);
   const isWebGLLesson =
-    sourcePath === WEBGL_LEARNING_SOURCE_PATH ||
+    sourcePath === WEBGL_ISLAND_LEARNING_SOURCE_PATH ||
+    sourcePath?.startsWith(WEBGL_LIGHTING_LEARNING_SOURCE_DIRECTORY) === true ||
     (sourcePath === undefined &&
       (label === "webgl-islands" ||
         label === 'Learning example "webgl-islands"'));

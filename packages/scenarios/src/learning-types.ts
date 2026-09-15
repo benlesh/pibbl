@@ -8,13 +8,15 @@ export type LearningSectionId =
   | "mouse-events"
   | "user-events"
   | "keyboard-focus"
-  | "advanced-interactions";
+  | "advanced-interactions"
+  | "webgl";
 
 export type LearningAuthoring = "jsx" | "createElement";
 
 export type LearningBrowseGroup =
   | "drawing"
   | "composition"
+  | "webgl"
   | "layout"
   | "events-and-interaction"
   | "focus-and-keyboard";

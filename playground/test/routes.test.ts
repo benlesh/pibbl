@@ -51,6 +51,11 @@ describe("Studio routes", () => {
       group: "drawing",
       slug: "rectangle",
     });
+    expect(parseStudioRoute("#/examples/webgl/ambient-light")).toEqual({
+      kind: "example",
+      group: "webgl",
+      slug: "ambient-light",
+    });
     expect(parseStudioRoute("#/testing")).toEqual({ kind: "testing" });
     expect(parseStudioRoute("#/testing/baseline-smoke")).toEqual({
       kind: "test",
@@ -119,6 +124,11 @@ describe("Studio routes", () => {
         parseStudioRoute("#/examples/made-up/filters"),
       ),
     ).toBeUndefined();
+    expect(
+      resolveLearningExampleRoute(
+        parseStudioRoute("#/examples/webgl/ambient-light"),
+      )?.slug,
+    ).toBe("ambient-light");
 
     const legacy = canonicalizeHash("#/examples/composition/filters");
     expect(resolveLearningExampleRoute(legacy.route)?.slug).toBe("filters");
