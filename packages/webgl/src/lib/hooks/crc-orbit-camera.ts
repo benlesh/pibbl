@@ -70,10 +70,10 @@ export function crcOrbitCamera(
   options: CRCOrbitCameraOptions,
 ): CRCOrbitCameraResult {
   const candidate = resolveOptions(options);
-  const initial = resolveInitialSpherical(options, candidate);
   const slot = coreInternal.useInternalHookSlot<OrbitCameraSlot>(
     'webglOrbitCamera',
     teardowns => {
+      const initial = resolveInitialSpherical(options, candidate);
       const state = {} as OrbitCameraSlot;
       state.active = true;
       state.azimuth = initial.azimuth;
@@ -209,7 +209,6 @@ function resolveOptions(
   options: CRCOrbitCameraOptions,
 ): ResolvedOrbitCameraOptions {
   const orbitPoint = resolveVector(options.orbitPoint, 'orbitPoint');
-  resolveVector(options.initialPosition, 'initialPosition');
   const minDistance = resolvePositive(
     options.minDistance ?? 0.1,
     'minDistance',

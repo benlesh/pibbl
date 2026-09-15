@@ -19,6 +19,7 @@ afterEach(() => {
 describe('crcOrbitCamera', () => {
   it.each([
     ['non-finite orbit point', { orbitPoint: [0, Infinity, 0], initialPosition: [0, 0, 5] }, /orbitPoint.*finite/i],
+    ['non-finite initial position', { orbitPoint: [0, 0, 0], initialPosition: [0, Infinity, 5] }, /initialPosition.*finite/i],
     ['coincident pose', { orbitPoint: [0, 0, 0], initialPosition: [0, 0, 0] }, /initialPosition.*differ/i],
     ['zero minimum', { orbitPoint: [0, 0, 0], initialPosition: [0, 0, 5], minDistance: 0 }, /minDistance.*positive/i],
     ['inverted bounds', { orbitPoint: [0, 0, 0], initialPosition: [0, 0, 5], minDistance: 4, maxDistance: 3 }, /maxDistance.*minDistance/i],
@@ -65,6 +66,35 @@ describe('crcOrbitCamera', () => {
     expect(results[1].handlers.onPointerMove)
       .toBe(results[0].handlers.onPointerMove);
     expect(frames.pendingIds()).toEqual([]);
+  });
+
+  it('reads initialPosition only when mounting while continuing to adopt live options', () => {
+    const frames = installControlledFrames();
+    let result: any;
+    let orbitPoint: readonly [number, number, number] = [0, 0, 0];
+    let initialPosition: readonly [number, number, number] = [0, 0, 10];
+    function Probe(): void {
+      result = orbitCamera()({ orbitPoint, initialPosition });
+    }
+    const canvas = createCanvas(100, 100);
+    controllers.add(crc(canvas, <Probe />, { pixelRatio: 1 }));
+    frames.runNext(1);
+    const handlers = result.handlers;
+
+    orbitPoint = [0, 0, 10];
+    crc(canvas, <Probe />);
+    frames.runNext(2);
+    expect(result.lookAt).toEqual([0, 0, 10]);
+    expect(result.position).toEqual([0, 0, 20]);
+    expect(result.handlers).toBe(handlers);
+
+    orbitPoint = [1, 2, 3];
+    initialPosition = [0, Infinity, 0];
+    crc(canvas, <Probe />);
+    expect(() => frames.runNext(3)).not.toThrow();
+    expect(result.lookAt).toEqual([1, 2, 3]);
+    expect(result.position).toEqual([1, 2, 13]);
+    expect(result.handlers).toBe(handlers);
   });
 
   it('captures one primary pointer and uses root-logical drag deltas without letting unrelated pointers steal it', () => {

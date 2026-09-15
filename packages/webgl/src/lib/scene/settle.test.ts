@@ -317,6 +317,79 @@ describe('settled WebGL scene', () => {
     expect(Object.isFrozen(settled.lights[0]!.linearColor)).toBe(true);
   });
 
+  test.each(['point', 'spot'] as const)(
+    'rejects %s ranges that underflow to the omitted-range Float32 sentinel',
+    kind => {
+      const composer = createComposer();
+      const common = {
+        componentName: kind === 'point' ? 'PointLight' : 'SpotLight',
+        localModel: identity(),
+        color: [1, 1, 1, 1] as const,
+        intensity: 1,
+        range: Number.MIN_VALUE,
+        castShadow: false,
+      };
+      if (kind === 'point') {
+        submitWebGLLight(composer, { ...common, kind });
+      } else {
+        submitWebGLLight(composer, {
+          ...common,
+          kind,
+          innerConeAngleDegrees: 0,
+          outerConeAngleDegrees: 45,
+        });
+      }
+
+      expect(() => settleWebGLScene(composer)).toThrowError(
+        new RegExp(
+          `${common.componentName}.*range.*finite.*positive.*Float32`,
+          'i',
+        ),
+      );
+    },
+  );
+
+  test('accepts the smallest positive Float32 range and preserves omitted range', () => {
+    const smallestPositiveFloat32 = Math.fround(1e-45);
+    const composer = createComposer();
+    submitWebGLLight(composer, {
+      kind: 'point',
+      componentName: 'PointLight',
+      localModel: identity(),
+      color: [1, 1, 1, 1],
+      intensity: 1,
+      range: smallestPositiveFloat32,
+      castShadow: false,
+    });
+    submitWebGLLight(composer, {
+      kind: 'spot',
+      componentName: 'SpotLight',
+      localModel: identity(),
+      color: [1, 1, 1, 1],
+      intensity: 1,
+      range: smallestPositiveFloat32,
+      innerConeAngleDegrees: 0,
+      outerConeAngleDegrees: 45,
+      castShadow: false,
+    });
+    submitWebGLLight(composer, {
+      kind: 'point',
+      componentName: 'UnboundedPointLight',
+      localModel: identity(),
+      color: [1, 1, 1, 1],
+      intensity: 1,
+      range: undefined,
+      castShadow: false,
+    });
+
+    expect(settleWebGLScene(composer).lights.map(light =>
+      'range' in light ? light.range : null)).toEqual([
+      smallestPositiveFloat32,
+      smallestPositiveFloat32,
+      undefined,
+    ]);
+  });
+
   test('composes group scale into light pose but not intensity, range, or cone', () => {
     const composer = createComposer();
     const release = pushWebGLModelMatrix(composer, scale(2, 3, 4));

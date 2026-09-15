@@ -29,6 +29,7 @@ import {
   createWebGLSceneComposer,
   discardWebGLSceneComposer,
 } from '../scene/composer.js';
+import { settleWebGLScene } from '../scene/settle.js';
 import type { WebGLSceneComposer } from '../scene/types.js';
 
 const geometry = createWebGLGeometry({
@@ -166,6 +167,16 @@ describe('WebGL light declarations', () => {
     expect(() => compose(root)).toThrowError(message);
   });
 
+  it.each([
+    ['PointLight', <PointLight style={{ range: Number.MIN_VALUE }} />],
+    ['SpotLight', <SpotLight style={{ range: Number.MIN_VALUE }} />],
+  ])('rejects a %s range that cannot remain positive through settlement',
+    (_name, root) => {
+      expect(() => settleComposition(root)).toThrowError(
+        /style\.range.*finite.*positive.*Float32/i,
+      );
+    });
+
   it('rejects unknown own props and style fields from untyped callers', () => {
     expect(() => compose(createElement(
       AmbientLight,
@@ -291,7 +302,18 @@ function mountComposingScene(
 }
 
 function compose(root: CRCNode) {
-  let completed: ReturnType<typeof closeWebGLSceneComposer> | undefined;
+  return runComposition(root, closeWebGLSceneComposer);
+}
+
+function settleComposition(root: CRCNode) {
+  return runComposition(root, settleWebGLScene);
+}
+
+function runComposition<T>(
+  root: CRCNode,
+  complete: (composer: WebGLSceneComposer) => T,
+): T {
+  let completed: T | undefined;
   const driver: CRCBackendDriver<WebGLSceneComposer> = {
     token: WEBGL_BACKEND_TOKEN,
     name: 'webgl-test-composer',
@@ -316,7 +338,7 @@ function compose(root: CRCNode) {
       runProgram(() => program(input.props, input.style, frame.environment));
     },
     finishFrame(frame, success) {
-      if (success) completed = closeWebGLSceneComposer(frame.environment);
+      if (success) completed = complete(frame.environment);
       else discardWebGLSceneComposer(frame.environment);
     },
     dispose() {},

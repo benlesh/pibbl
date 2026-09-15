@@ -395,9 +395,11 @@ function settleRange(
       light.source,
     ));
   }
-  if (!Number.isFinite(Math.fround(light.range))) {
+  const float32Range = Math.fround(light.range);
+  if (!Number.isFinite(float32Range) || float32Range <= 0) {
     throw new RangeError(withSource(
-      `${light.componentName} style.range must be representable as a finite Float32.`,
+      `${light.componentName} style.range must be representable as a ` +
+      'finite, positive Float32.',
       light.source,
     ));
   }
