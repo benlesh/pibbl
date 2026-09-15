@@ -1571,7 +1571,7 @@ const drafts = [
       "Set style.lit to false when a mesh should retain its base color without lighting.",
     ],
     prompts: {
-      gesture: "Compare the colored unlit cube with the black lit sphere and ground.",
+      gesture: "Drag to orbit, use the wheel to zoom, and compare the colored unlit cube with the black lit sphere and ground.",
       code: "Change cubeLit to true, then add an AmbientLight to compare both modes.",
     },
     apiNotes: [
@@ -1596,12 +1596,12 @@ const drafts = [
       "Recognize that AmbientLight contributes equally to every lit surface.",
     ],
     prompts: {
-      gesture: "Compare the equally visible faces of the cube and the smooth sphere.",
+      gesture: "Drag to orbit, use the wheel to zoom, and compare the equally visible faces of the cube and smooth sphere.",
       code: "Lower intensity or tint color to make the ambient contribution easier to isolate.",
     },
     apiNotes: [
       "AmbientLight has no transform because its contribution is uniform everywhere.",
-      "Light color alpha multiplies RGB contribution and never changes mesh output alpha.",
+      "Ambient fill has no singular light-space view, so it cannot cast a direct shadow.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["hemisphere-light", "multiple-lights"],
@@ -1621,12 +1621,12 @@ const drafts = [
       "Rotate transformed local +Y to change the hemisphere sky axis.",
     ],
     prompts: {
-      gesture: "Compare the sphere’s sky-facing and ground-facing gradients.",
+      gesture: "Drag to orbit, use the wheel to zoom, and compare the sphere’s sky-facing and ground-facing gradients.",
       code: "Swap the sky and ground colors or rotate the light around Z.",
     },
     apiNotes: [
       "HemisphereLight uses transformed local +Y as its normalized sky axis.",
-      "Equal sky and ground colors reproduce a flat ambient-like fill.",
+      "Hemisphere fill has no singular light-space view, so it cannot cast a direct shadow.",
     ],
     canvas: { width: 720, height: 420 },
     related: ["ambient-light", "directional-light"],
@@ -1646,7 +1646,7 @@ const drafts = [
       "Read flat cube faces and curved sphere normals under parallel light.",
     ],
     prompts: {
-      gesture: "Compare the sharp face changes on the cube with the sphere’s smooth response.",
+      gesture: "Drag to orbit, use the wheel to zoom, and inspect the directional silhouettes on the ground.",
       code: "Edit rotationXDegrees and rotationYDegrees to sweep the light direction.",
     },
     apiNotes: [
@@ -1671,7 +1671,7 @@ const drafts = [
       "Tune dimensionless intensity and the optional smooth range cutoff.",
     ],
     prompts: {
-      gesture: "Compare the nearby cube with surfaces farther from the warm point light.",
+      gesture: "Drag to orbit, use the wheel to zoom, and inspect the point-light silhouettes from every side.",
       code: "Move translateX or shorten range to expose the local falloff.",
     },
     apiNotes: [
@@ -1696,7 +1696,7 @@ const drafts = [
       "Use inner and outer cone angles to control the smooth edge transition.",
     ],
     prompts: {
-      gesture: "Find the bright inner cone and its softer outer edge on the scene.",
+      gesture: "Drag to orbit, use the wheel to zoom, and inspect the spot cone and cast silhouettes.",
       code: "Narrow outerConeAngleDegrees or rotate the spot away from the sphere.",
     },
     apiNotes: [
@@ -1721,7 +1721,7 @@ const drafts = [
       "Distinguish a surface’s emission from light bounce and post-processing bloom.",
     ],
     prompts: {
-      gesture: "Notice that the blue sphere remains visible while the non-emissive meshes stay black.",
+      gesture: "Drag to orbit, use the wheel to zoom, and notice that emission stays on the sphere rather than lighting nearby meshes.",
       code: "Change emissiveColor or emissiveIntensity and confirm nearby meshes remain unchanged.",
     },
     apiNotes: [
@@ -1746,7 +1746,7 @@ const drafts = [
       "Remove the declaration to reveal the transparent WebGL island default.",
     ],
     prompts: {
-      gesture: "See the two Canvas underlay colors through the alpha background.",
+      gesture: "Drag to orbit, use the wheel to zoom, and see the two Canvas underlay colors through the alpha background.",
       code: "Change the background alpha, or remove WebGLBackground to restore full transparency.",
     },
     apiNotes: [
@@ -1771,7 +1771,7 @@ const drafts = [
       "Edit the existing upward normal array to understand directional Lambert response.",
     ],
     prompts: {
-      gesture: "Compare the flat ground response with the curved sphere and face-normal cube.",
+      gesture: "Drag to orbit, use the wheel to zoom, and compare the flat ground response with curved and face normals.",
       code: "Edit the unchanged ground normal triples while leaving positions and indices intact.",
     },
     apiNotes: [
@@ -1803,7 +1803,7 @@ const drafts = [
       "Place local lights after meshes without changing whole-scene illumination.",
     ],
     prompts: {
-      gesture: "Compare the warm and cool local accents layered over the global fill lights.",
+      gesture: "Drag to orbit, use the wheel to zoom, and inspect every direct light’s independent ground shadow.",
       code: "Move a late PointLight before the meshes and confirm the rendered result is unchanged.",
     },
     apiNotes: [
@@ -1837,7 +1837,7 @@ const drafts = [
       "Separate composed light pose from fixed range, intensity, and cone settings.",
     ],
     prompts: {
-      gesture: "Watch the warm point and cool spot contributions orbit across the fixed meshes.",
+      gesture: "Drag to orbit, use the wheel to zoom, and watch the transformed point and spot shadows move across the ground.",
       code: "Change group scale and observe pose movement without changing range, intensity, or cone angles.",
     },
     apiNotes: [
@@ -1847,6 +1847,31 @@ const drafts = [
     canvas: { width: 720, height: 420 },
     related: ["point-light", "spot-light", "multiple-lights"],
     load: () => import("./learning/webgl/transformed-light.example"),
+  },
+  {
+    slug: "shadow-quality",
+    title: "WebGL shadow quality",
+    shortTitle: "Shadow quality",
+    section: "webgl",
+    order: 490,
+    summary:
+      "Compare familiar disabled, low, medium, and high settings over the same genuine directional shadow map.",
+    api: ["CRCWebGLShadowQuality", "WebGLLayer", "DirectionalLight"],
+    objectives: [
+      "Choose a layer-wide shadow quality tier without exposing renderer texture or filter knobs.",
+      "See that every enabled tier remains geometry-based while false disables shadow allocation and sampling.",
+    ],
+    prompts: {
+      gesture: "Orbit behind the cube and sphere to inspect the cast silhouettes from several angles.",
+      code: "Change layerShadows from medium to false, low, or high and compare the ground-plane edges.",
+    },
+    apiNotes: [
+      "Omitting style.shadows selects medium; false performs no shadow depth pass.",
+      "Low uses a hard comparison while medium and high use progressively wider filtering at higher requested resolutions.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["directional-light", "point-light", "spot-light"],
+    load: () => import("./learning/webgl/shadow-quality.example"),
   },
 ] as const satisfies readonly LearningDraft[];
 

@@ -13,10 +13,13 @@ import {
   WebGLLayer,
   createWebGLGeometry,
   crcOrbitCamera,
+  type CRCWebGLShadowQuality,
 } from '@crc/webgl';
 
 const cubeLit = true;
 const sphereMaterial = { type: 'lambert' } as const;
+const sceneBackground = '#07111f';
+const layerShadows: CRCWebGLShadowQuality = 'medium';
 
 function ConceptDelta({
   position,
@@ -56,7 +59,6 @@ function ConceptDelta({
   }
   return (
     <>
-      <WebGLBackground style={{ color: '#07111f' }} />
       <AmbientLight style={{ color: '#ffffff', intensity: 0.12 }} />
       <HemisphereLight
         style={{
@@ -113,8 +115,9 @@ function LightingLesson() {
           near: 0.1,
           far: 100,
         }}
-        style={{ width: 720, height: 420 }}
+        style={{ width: 720, height: 420, shadows: layerShadows }}
       >
+        <WebGLBackground style={{ color: sceneBackground }} />
         <ConceptDelta position="before" />
         <Cube
           pointerEvents="none"

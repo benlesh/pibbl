@@ -10,6 +10,7 @@ export const WEBGL_LIGHTING_EXAMPLE_IDS = [
   'custom-geometry-normals',
   'multiple-lights',
   'transformed-light',
+  'shadow-quality',
 ] as const;
 
 export type WebGLLightingExampleId =
@@ -32,6 +33,15 @@ const requiredBaseFragments = [
   'normals: [',
   'indices: [',
   "type: 'perspective'",
+  'const orbit = crcOrbitCamera({',
+  'orbitPoint: [0, -0.25, 0]',
+  'initialPosition: [5.8, 4.2, 7.8]',
+  '<Group {...orbit.handlers}>',
+  "<Rectangle style={{ width: 720, height: 420, fill: 'transparent' }} />",
+  'position: orbit.position',
+  'lookAt: orbit.lookAt',
+  '<WebGLBackground style={{ color: sceneBackground }} />',
+  'shadows: layerShadows',
   '<Cube',
   '<Sphere',
   '<Mesh',
@@ -56,7 +66,7 @@ export function validateWebGLLightingExampleSources(
     actualIds.some((id, index) => id !== WEBGL_LIGHTING_EXAMPLE_IDS[index])
   ) {
     throw new Error(
-      'WebGL lighting examples must enumerate exactly the eleven canonical lessons in order.',
+      'WebGL lighting examples must enumerate exactly the twelve canonical lessons in order.',
     );
   }
 
@@ -71,6 +81,23 @@ export function validateWebGLLightingExampleSources(
     requireCount(normalizedSource, sharedBaseEnd, 1, label);
     requireCount(normalizedSource, "from '@crc/core'", 1, label);
     requireCount(normalizedSource, "from '@crc/webgl'", 1, label);
+    requireCount(normalizedSource, 'crcOrbitCamera({', 1, label);
+    requireCount(normalizedSource, '<Group {...orbit.handlers}>', 1, label);
+    requireCount(
+      normalizedSource,
+      "<Rectangle style={{ width: 720, height: 420, fill: 'transparent' }} />",
+      1,
+      label,
+    );
+    requireCount(normalizedSource, 'position: orbit.position', 1, label);
+    requireCount(normalizedSource, 'lookAt: orbit.lookAt', 1, label);
+    requireCount(normalizedSource, 'shadows: layerShadows', 1, label);
+    requireCount(
+      normalizedSource,
+      "const layerShadows: CRCWebGLShadowQuality = 'medium';",
+      1,
+      label,
+    );
     requireCount(
       normalizedSource,
       'export default function mount(canvas: HTMLCanvasElement): CRCController',

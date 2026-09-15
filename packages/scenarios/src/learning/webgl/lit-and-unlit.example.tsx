@@ -1,5 +1,5 @@
 // Concept delta: start
-import { Rectangle, crc, type CRCController } from '@crc/core';
+import { Group, Rectangle, crc, type CRCController } from '@crc/core';
 import {
   Cube,
   Mesh,
@@ -7,10 +7,14 @@ import {
   WebGLBackground,
   WebGLLayer,
   createWebGLGeometry,
+  crcOrbitCamera,
+  type CRCWebGLShadowQuality,
 } from '@crc/webgl';
 
 const cubeLit = false;
 const sphereMaterial = { type: 'lambert' } as const;
+const sceneBackground = '#07111f';
+const layerShadows: CRCWebGLShadowQuality = 'medium';
 
 function ConceptDelta({
   position,
@@ -19,7 +23,7 @@ function ConceptDelta({
 }) {
   if (position === 'after') return null;
   // With no lights, lit geometry is black. The unlit cube keeps its base color.
-  return <WebGLBackground style={{ color: '#07111f' }} />;
+  return null;
 }
 // Concept delta: end
 
@@ -31,8 +35,14 @@ const groundGeometry = createWebGLGeometry({
 });
 
 function LightingLesson() {
+  const orbit = crcOrbitCamera({
+    orbitPoint: [0, -0.25, 0],
+    initialPosition: [5.8, 4.2, 7.8],
+    minDistance: 3,
+    maxDistance: 18,
+  });
   return (
-    <>
+    <Group {...orbit.handlers}>
       <Rectangle
         pointerEvents="none"
         style={{ width: 360, height: 420, fill: '#173047' }}
@@ -41,18 +51,20 @@ function LightingLesson() {
         pointerEvents="none"
         style={{ x: 360, width: 360, height: 420, fill: '#44254f' }}
       />
+      <Rectangle style={{ width: 720, height: 420, fill: 'transparent' }} />
       <WebGLLayer
         camera={{
           type: 'perspective',
-          position: [5.8, 4.2, 7.8],
-          lookAt: [0, -0.25, 0],
+          position: orbit.position,
+          lookAt: orbit.lookAt,
           up: [0, 1, 0],
           fieldOfViewDegrees: 48,
           near: 0.1,
           far: 100,
         }}
-        style={{ width: 720, height: 420 }}
+        style={{ width: 720, height: 420, shadows: layerShadows }}
       >
+        <WebGLBackground style={{ color: sceneBackground }} />
         <ConceptDelta position="before" />
         <Cube
           pointerEvents="none"
@@ -93,7 +105,7 @@ function LightingLesson() {
         />
         <ConceptDelta position="after" />
       </WebGLLayer>
-    </>
+    </Group>
   );
 }
 

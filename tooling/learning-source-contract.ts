@@ -37,6 +37,7 @@ interface SourceInspection {
   readonly hasNamespaceExport: boolean;
   readonly hasOnlyApprovedImports: boolean;
   readonly hasOnlyScenarioImports: boolean;
+  readonly hasOrbitHandlersSpread: boolean;
   readonly hasScenarioReExport: boolean;
   readonly hasCanonicalMount: boolean;
   readonly hasTestScaffolding: boolean;
@@ -514,6 +515,18 @@ function staticMemberName(node: SyntaxNode): string | undefined {
   return propertyName(property);
 }
 
+function isOrbitHandlersSpread(attribute: SyntaxNode): boolean {
+  if (attribute.type !== "JSXSpreadAttribute") return false;
+  const argument = unwrapTransparentExpression(attribute.argument);
+  return (
+    argument !== undefined &&
+    (argument.type === "MemberExpression" ||
+      argument.type === "OptionalMemberExpression") &&
+    identifierName(argument.object) === "orbit" &&
+    staticMemberName(argument) === "handlers"
+  );
+}
+
 function knownGlobalAccessPath(value: unknown): readonly string[] | undefined {
   const node = unwrapTransparentExpression(value);
   if (!node) return undefined;
@@ -973,6 +986,7 @@ function inspectSource(source: string, label: string): SourceInspection {
   let hasLegacyLayerRender = false;
   let hasLegacyTextStyle = false;
   let hasNamespaceExport = false;
+  let hasOrbitHandlersSpread = false;
   let hasTestScaffolding = false;
   let hasUninspectableProps = false;
   let hasUninspectableLegacySensitiveProps = false;
@@ -1118,14 +1132,20 @@ function inspectSource(source: string, label: string): SourceInspection {
     if (node.type === "JSXElement") {
       const opening = isNode(node.openingElement) ? node.openingElement : undefined;
       if (!opening) return;
+      const componentName = resolveCoreValue(opening.name);
+      const spreadAttributes = nodes(opening.attributes).filter(
+        (attribute) => attribute.type === "JSXSpreadAttribute",
+      );
+      const orbitHandlerSpreads = spreadAttributes.filter(isOrbitHandlersSpread);
       if (
-        nodes(opening.attributes).some(
-          (attribute) => attribute.type === "JSXSpreadAttribute",
-        )
+        spreadAttributes.length !== orbitHandlerSpreads.length ||
+        (orbitHandlerSpreads.length > 0 && componentName !== "Group")
       ) {
         hasUninspectableProps = true;
       }
-      const componentName = resolveCoreValue(opening.name);
+      if (orbitHandlerSpreads.length > 0 && componentName === "Group") {
+        hasOrbitHandlersSpread = true;
+      }
       const styleAttribute = jsxAttribute(opening, "style");
       const style = jsxAttributeExpression(styleAttribute);
       if (
@@ -1227,6 +1247,7 @@ function inspectSource(source: string, label: string): SourceInspection {
     hasNamespaceExport,
     hasOnlyApprovedImports,
     hasOnlyScenarioImports,
+    hasOrbitHandlersSpread,
     hasScenarioReExport,
     hasTestScaffolding,
     hasUninspectableProps,
@@ -1391,7 +1412,11 @@ export function validateLearningSourceText(
   if (inspection.hasLegacyLayerRender) {
     throw invalid(label, "uses the legacy Layer render prop.");
   }
-  if (inspection.hasUninspectableProps) {
+  if (
+    inspection.hasUninspectableProps ||
+    (inspection.hasOrbitHandlersSpread &&
+      sourcePath?.startsWith(WEBGL_LIGHTING_LEARNING_SOURCE_DIRECTORY) !== true)
+  ) {
     throw invalid(
       label,
       "must use inline object props and inline style objects without spreads.",
