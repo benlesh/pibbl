@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { circleShape2D } from "../../../2d-geometry.js";
+import { boxShape2D, circleShape2D } from "../../../2d-geometry.js";
 import { requireShapeRecord2D } from "../shape-records.js";
 import { installPhysicsWorld2DTraceCollectorForTest } from "../runtime/trace.js";
 import {
@@ -31,8 +31,7 @@ function movingBody(
     kind: "body",
     id,
     definition: {
-      positionX:
-        (options.x ?? 0) + cosine * localCenterX - sine * localCenterY,
+      positionX: (options.x ?? 0) + cosine * localCenterX - sine * localCenterY,
       positionY: sine * localCenterX + cosine * localCenterY,
       rotationRadians,
       localCenterX,
@@ -101,6 +100,140 @@ function collidingTopology(): readonly PhysicsTopologyRecord2D[] {
 }
 
 describe("transactional fixed-tick 2D world cadence", () => {
+  it.each([220, 1000])(
+    "keeps the released local circle finite and between both walls at %i px/s",
+    (releaseSpeed) => {
+      const world = new PhysicsWorld2DKernel({
+        gravity: [0, 560],
+        fixedStepMilliseconds: 1000 / 60,
+        sleeping: false,
+      });
+      const staticBody = (id: number): PhysicsTopologyRecord2D => ({
+        kind: "body",
+        id,
+        definition: {
+          positionX: 0,
+          positionY: 0,
+          rotationRadians: 0,
+          localCenterX: 0,
+          localCenterY: 0,
+          linearVelocityX: 0,
+          linearVelocityY: 0,
+          angularVelocity: 0,
+          forceX: 0,
+          forceY: 0,
+          torque: 0,
+          inverseMass: 0,
+          inverseInertia: 0,
+          linearDamping: 0,
+          angularDamping: 0,
+          gravityScale: 0,
+          sleepTime: 0,
+          flags: 0,
+          owner: null,
+        },
+      });
+      const shapedCollider = (
+        id: number,
+        bodyId: number,
+        shape: ReturnType<typeof circleShape2D> | ReturnType<typeof boxShape2D>,
+      ): PhysicsTopologyRecord2D => ({
+        kind: "collider",
+        id,
+        bodyId,
+        definition: {
+          shape: requireShapeRecord2D(shape),
+          material: { friction: 0.55, restitution: 0.35 },
+          filter: null,
+          tag: null,
+          handlers: null,
+          owner: null,
+          flags: 0,
+        },
+      });
+      const dynamicBall: PhysicsTopologyRecord2D = {
+        kind: "body",
+        id: 1,
+        definition: {
+          positionX: 210,
+          positionY: 110,
+          rotationRadians: 0,
+          localCenterX: 0,
+          localCenterY: 0,
+          linearVelocityX: 0,
+          linearVelocityY: 0,
+          angularVelocity: 0,
+          forceX: 0,
+          forceY: 0,
+          torque: 0,
+          inverseMass: 1,
+          inverseInertia: 1,
+          linearDamping: 0.025,
+          angularDamping: 0.04,
+          gravityScale: 1,
+          sleepTime: 0,
+          flags: 1,
+          owner: null,
+        },
+      };
+      world.proposeTopology([
+        dynamicBall,
+        staticBody(2),
+        staticBody(3),
+        staticBody(4),
+        shapedCollider(10, 1, circleShape2D({ radius: 28 })),
+        shapedCollider(
+          20,
+          2,
+          boxShape2D({ width: 612, height: 34, center: [360, 333] }),
+        ),
+        shapedCollider(
+          30,
+          3,
+          boxShape2D({ width: 20, height: 220, center: [64, 206] }),
+        ),
+        shapedCollider(
+          40,
+          4,
+          boxShape2D({ width: 20, height: 220, center: [656, 206] }),
+        ),
+      ]);
+      advance(world, 1, 0);
+      world.applyBegin([
+        { kind: "disable", bodyId: 1 },
+        {
+          kind: "set-pose",
+          bodyId: 1,
+          pose: { position: [300, 280], rotationDegrees: 0 },
+        },
+        { kind: "enable", bodyId: 1, velocity: "zero" },
+        {
+          kind: "set-linear-velocity",
+          bodyId: 1,
+          linearVelocityX: releaseSpeed,
+          linearVelocityY: 0,
+        },
+      ]);
+
+      let maximumSpeed = 0;
+      for (let tick = 1; tick <= 180; tick += 1) {
+        advance(world, tick + 1, (tick * 1000) / 60);
+        const pose = world.authoritativePose(1);
+        const body = world.snapshot().bodies[0]!;
+        expect(pose.position.every(Number.isFinite)).toBe(true);
+        expect(Number.isFinite(body.linearVelocityX)).toBe(true);
+        expect(Number.isFinite(body.linearVelocityY)).toBe(true);
+        expect(pose.position[0]).toBeGreaterThanOrEqual(53.99);
+        expect(pose.position[0]).toBeLessThanOrEqual(666.01);
+        maximumSpeed = Math.max(
+          maximumSpeed,
+          Math.hypot(body.linearVelocityX, body.linearVelocityY),
+        );
+      }
+      expect(maximumSpeed).toBeLessThanOrEqual(1_005);
+    },
+  );
+
   it("runs zero, one, and three complete ticks while retaining a presentation remainder", () => {
     const world = new PhysicsWorld2DKernel({
       fixedStepMilliseconds: 100,

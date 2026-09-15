@@ -340,33 +340,60 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
         bodyFrames = new Map();
         bodyFramesByWorld2D.set(world, bodyFrames);
       }
-      const poseMatrix = matrixFromPose(presentation.initialPose);
-      bodyFrames.set(bodyId, Object.freeze({ poseMatrix }));
+      const authoredPoseMatrix = matrixFromPose(presentation.initialPose);
       const collider = descriptor.options.collider;
-      const effectiveCollider = collider === false
-        ? false
-        : collider.shape === "self" && input.componentType === Group
+      const effectiveCollider =
+        collider === false
           ? false
-          : withColliderShape(
-              collider,
-              this.bakeShape(
-                collider.shape === "self" ? this.resolveSelfShape(input) : collider.shape,
-                poseMatrix.inverse().multiply(input.parentWorldTransform),
-              ),
-            );
-      const effectiveDescriptor = effectiveCollider === collider
-        ? descriptor
-        : Object.freeze({
-            ...descriptor,
-            options: Object.freeze({ ...descriptor.options, collider: effectiveCollider }),
-          }) as PhysicsBodyAttachment2DDescriptor;
-      world.collectBody(this, bodyId, effectiveDescriptor, presentation.initialPose);
+          : collider.shape === "self" && input.componentType === Group
+            ? false
+            : withColliderShape(
+                collider,
+                this.bakeShape(
+                  collider.shape === "self"
+                    ? this.resolveSelfShape(input)
+                    : collider.shape,
+                  authoredPoseMatrix
+                    .inverse()
+                    .multiply(input.parentWorldTransform),
+                ),
+              );
+      const effectiveDescriptor =
+        effectiveCollider === collider
+          ? descriptor
+          : (Object.freeze({
+              ...descriptor,
+              options: Object.freeze({
+                ...descriptor.options,
+                collider: effectiveCollider,
+              }),
+            }) as PhysicsBodyAttachment2DDescriptor);
+      world.collectBody(
+        this,
+        bodyId,
+        effectiveDescriptor,
+        presentation.initialPose,
+      );
       this.wasEnabled = enabled;
-      if (!enabled || descriptor.bodyType !== "dynamic") return;
+      if (!enabled || descriptor.bodyType !== "dynamic") {
+        bodyFrames.set(
+          bodyId,
+          Object.freeze({ poseMatrix: authoredPoseMatrix }),
+        );
+        return;
+      }
       world.handle.revision.get();
       const presentedPose = reenabled
         ? presentation.initialPose
-        : world.presentationPose(bodyId) ?? presentation.initialPose;
+        : (world.presentationPose(bodyId) ?? presentation.initialPose);
+      bodyFrames.set(
+        bodyId,
+        Object.freeze({
+          poseMatrix: matrixFromPose(presentedPose).multiply(
+            presentation.poseResidual,
+          ),
+        }),
+      );
       return {
         presentationTransform2D: resolveDynamicPresentationTransform2D(
           presentation,
@@ -383,7 +410,8 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
           this.descriptor.options.shape === "self"
             ? this.resolveSelfShape(input)
             : this.descriptor.options.shape,
-          requireBodyFrame(world, bodyId).poseMatrix.inverse()
+          requireBodyFrame(world, bodyId)
+            .poseMatrix.inverse()
             .multiply(input.parentWorldTransform),
         ),
       );
@@ -449,12 +477,18 @@ export class MountedPhysicsAttachment2D implements CRCInternalMountedPropAttachm
     transform: DOMMatrixReadOnly,
   ): CRCPhysicsShape2D {
     const values = [
-      transform.a, transform.b, transform.c,
-      transform.d, transform.e, transform.f,
+      transform.a,
+      transform.b,
+      transform.c,
+      transform.d,
+      transform.e,
+      transform.f,
     ];
     if (
       this.cachedBakedSource === shape &&
-      this.cachedBakedTransform?.every((value, index) => value === values[index])
+      this.cachedBakedTransform?.every(
+        (value, index) => value === values[index],
+      )
     ) {
       return this.cachedBakedShape!;
     }
@@ -471,7 +505,8 @@ function requireBodyFrame(
   bodyId: number,
 ): Readonly<{ poseMatrix: DOMMatrix }> {
   const frame = bodyFramesByWorld2D.get(world)?.get(bodyId);
-  if (!frame) throw new Error("A collider requires its body geometry to prepare first.");
+  if (!frame)
+    throw new Error("A collider requires its body geometry to prepare first.");
   return frame;
 }
 
@@ -482,9 +517,13 @@ function withColliderShape(
   return Object.freeze({ ...options, shape });
 }
 
-function stableGeometryKey(style: Readonly<Record<PropertyKey, unknown>>): string {
+function stableGeometryKey(
+  style: Readonly<Record<PropertyKey, unknown>>,
+): string {
   return JSON.stringify(style, (key, value: unknown) => {
-    if (["fill", "stroke", "opacity", "cursor", "filter", "src"].includes(key)) {
+    if (
+      ["fill", "stroke", "opacity", "cursor", "filter", "src"].includes(key)
+    ) {
       return undefined;
     }
     if (typeof value === "function") return undefined;
