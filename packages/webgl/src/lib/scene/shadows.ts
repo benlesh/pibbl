@@ -2,12 +2,14 @@ import {
   multiplyMatrix4,
   setLookAtMatrix4,
   setOrthographicMatrix4,
+  setPerspectiveMatrix4,
   transformBoundsMatrix4,
 } from '../math/matrix4.js';
 import type { CRCWebGLShadowQuality, CRCWebGLVector3 } from '../types.js';
 import type { SettledWebGLMesh } from './settle.js';
 import type {
   SettledDirectionalLight,
+  SettledPointLight,
   SettledWebGLLight,
   SettledWebGLShadowPlan,
   WebGLWorldBounds,
@@ -47,7 +49,7 @@ export function resolveWebGLShadowQuality(
   }
 }
 
-export function createDirectionalShadowPlans(input: Readonly<{
+export function createWebGLShadowPlans(input: Readonly<{
   meshes: readonly SettledWebGLMesh[];
   lights: readonly SettledWebGLLight[];
   quality: CRCWebGLShadowQuality;
@@ -62,21 +64,34 @@ export function createDirectionalShadowPlans(input: Readonly<{
   const plans: SettledWebGLShadowPlan[] = [];
   for (let lightIndex = 0; lightIndex < input.lights.length; lightIndex += 1) {
     const light = input.lights[lightIndex]!;
-    if (light.kind !== 'directional' || !light.castShadow) continue;
-    plans.push(createDirectionalPlan(
-      light,
-      lightIndex,
-      relevantBounds,
-      casters,
-      receivers,
-      quality,
-      input.contextGeneration,
-    ));
+    if ((light.kind !== 'directional' && light.kind !== 'point') ||
+      !light.castShadow) continue;
+    if (light.kind === 'directional') {
+      plans.push(createDirectionalPlan(
+        light,
+        lightIndex,
+        relevantBounds,
+        casters,
+        receivers,
+        quality,
+        input.contextGeneration,
+      ));
+    } else if (light.kind === 'point') {
+      plans.push(createPointPlan(
+        light,
+        lightIndex,
+        relevantBounds,
+        casters,
+        receivers,
+        quality,
+        input.contextGeneration,
+      ));
+    }
   }
   return Object.freeze(plans);
 }
 
-export function haveSameDirectionalShadowPlan(
+export function haveSameWebGLShadowPlan(
   left: SettledWebGLShadowPlan,
   leftResolvedResolution: number,
   right: SettledWebGLShadowPlan,
@@ -91,9 +106,32 @@ export function haveSameDirectionalShadowPlan(
     left.bias === right.bias &&
     left.contextGeneration === right.contextGeneration &&
     left.shadowProgramGeneration === right.shadowProgramGeneration &&
-    equalNumbers(left.projectionViewMatrix, right.projectionViewMatrix) &&
+    equalShadowProjection(left, right) &&
     equalCasterQueue(left.casters, right.casters) &&
     equalReceiverQueue(left.receivers, right.receivers);
+}
+
+function equalShadowProjection(
+  left: SettledWebGLShadowPlan,
+  right: SettledWebGLShadowPlan,
+): boolean {
+  if (left.kind !== right.kind) return false;
+  if (left.kind === 'directional' && right.kind === 'directional') {
+    return equalNumbers(
+      left.projectionViewMatrix,
+      right.projectionViewMatrix,
+    );
+  }
+  if (left.kind === 'point' && right.kind === 'point') {
+    return left.nearDistance === right.nearDistance &&
+      left.farDistance === right.farDistance &&
+      equalNumbers(left.lightPosition, right.lightPosition) &&
+      equalMatrixQueue(
+        left.projectionViewMatrices,
+        right.projectionViewMatrices,
+      );
+  }
+  return false;
 }
 
 function createDirectionalPlan(
@@ -167,6 +205,84 @@ function createDirectionalPlan(
   });
 }
 
+const POINT_SHADOW_FACES = Object.freeze([
+  Object.freeze({ direction: [1, 0, 0] as const, up: [0, -1, 0] as const }),
+  Object.freeze({ direction: [-1, 0, 0] as const, up: [0, -1, 0] as const }),
+  Object.freeze({ direction: [0, 1, 0] as const, up: [0, 0, 1] as const }),
+  Object.freeze({ direction: [0, -1, 0] as const, up: [0, 0, -1] as const }),
+  Object.freeze({ direction: [0, 0, 1] as const, up: [0, -1, 0] as const }),
+  Object.freeze({ direction: [0, 0, -1] as const, up: [0, -1, 0] as const }),
+]);
+
+function createPointPlan(
+  light: SettledPointLight,
+  lightIndex: number,
+  bounds: WebGLWorldBounds,
+  casters: readonly SettledWebGLMesh[],
+  receivers: readonly SettledWebGLMesh[],
+  quality: ResolvedWebGLShadowQuality,
+  contextGeneration: number,
+): SettledWebGLShadowPlan {
+  const farDistance = light.range ?? derivePointFarDistance(
+    light.position,
+    bounds,
+  );
+  const nearDistance = Math.min(0.01, farDistance / 2);
+  const projection = new Float32Array(16);
+  setPerspectiveMatrix4(projection, Math.PI / 2, 1, nearDistance, farDistance);
+  const projectionViewMatrices = Object.freeze(POINT_SHADOW_FACES.map(face => {
+    const target: CRCWebGLVector3 = [
+      light.position[0] + face.direction[0],
+      light.position[1] + face.direction[1],
+      light.position[2] + face.direction[2],
+    ];
+    const view = new Float32Array(16);
+    setLookAtMatrix4(view, light.position, target, face.up);
+    const projectionView = new Float32Array(16);
+    multiplyMatrix4(projectionView, projection, view);
+    return projectionView as Readonly<Float32Array>;
+  }));
+  return Object.freeze({
+    kind: 'point',
+    lightIdentity: light.identity,
+    lightIndex,
+    projectionViewMatrices,
+    lightPosition: Object.freeze([
+      light.position[0],
+      light.position[1],
+      light.position[2],
+    ] as const),
+    nearDistance,
+    farDistance,
+    bias: 0.0015,
+    casters,
+    receivers,
+    requestedResolution: quality.requestedResolution,
+    comparisonCount: quality.comparisonCount,
+    contextGeneration,
+    shadowProgramGeneration: WEBGL_SHADOW_PROGRAM_GENERATION,
+  });
+}
+
+function derivePointFarDistance(
+  position: CRCWebGLVector3,
+  bounds: WebGLWorldBounds,
+): number {
+  let maximumDistance = 0;
+  for (const x of [bounds.minimumX, bounds.maximumX]) {
+    for (const y of [bounds.minimumY, bounds.maximumY]) {
+      for (const z of [bounds.minimumZ, bounds.maximumZ]) {
+        maximumDistance = Math.max(maximumDistance, Math.hypot(
+          x - position[0],
+          y - position[1],
+          z - position[2],
+        ));
+      }
+    }
+  }
+  return Math.max(0.02, maximumDistance * 1.05);
+}
+
 function unionBounds(meshes: readonly SettledWebGLMesh[]): WebGLWorldBounds {
   let bounds = meshes[0]!.worldBounds;
   for (const mesh of meshes.slice(1)) {
@@ -231,6 +347,17 @@ function equalNumbers(left: ArrayLike<number>, right: ArrayLike<number>): boolea
   if (left.length !== right.length) return false;
   for (let index = 0; index < left.length; index += 1) {
     if (left[index] !== right[index]) return false;
+  }
+  return true;
+}
+
+function equalMatrixQueue(
+  left: readonly ArrayLike<number>[],
+  right: readonly ArrayLike<number>[],
+): boolean {
+  if (left.length !== right.length) return false;
+  for (let index = 0; index < left.length; index += 1) {
+    if (!equalNumbers(left[index]!, right[index]!)) return false;
   }
   return true;
 }

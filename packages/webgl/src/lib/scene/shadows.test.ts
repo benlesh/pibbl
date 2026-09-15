@@ -8,7 +8,7 @@ import {
   submitWebGLMesh,
 } from './composer.js';
 import {
-  haveSameDirectionalShadowPlan,
+  haveSameWebGLShadowPlan,
   resolveWebGLShadowQuality,
 } from './shadows.js';
 import { settleWebGLScene } from './settle.js';
@@ -132,17 +132,17 @@ describe('directional shadow planning', () => {
       lightTransform: { rotationYDegrees: 15 },
     }).shadowPlans[0]!;
 
-    expect(haveSameDirectionalShadowPlan(first, 1024, orbit, 1024)).toBe(true);
-    expect(haveSameDirectionalShadowPlan(first, 1024, recolored, 1024)).toBe(
+    expect(haveSameWebGLShadowPlan(first, 1024, orbit, 1024)).toBe(true);
+    expect(haveSameWebGLShadowPlan(first, 1024, recolored, 1024)).toBe(
       true,
     );
-    expect(haveSameDirectionalShadowPlan(first, 1024, movedCaster, 1024)).toBe(
+    expect(haveSameWebGLShadowPlan(first, 1024, movedCaster, 1024)).toBe(
       false,
     );
-    expect(haveSameDirectionalShadowPlan(first, 1024, movedLight, 1024)).toBe(
+    expect(haveSameWebGLShadowPlan(first, 1024, movedLight, 1024)).toBe(
       false,
     );
-    expect(haveSameDirectionalShadowPlan(first, 1024, first, 512)).toBe(false);
+    expect(haveSameWebGLShadowPlan(first, 1024, first, 512)).toBe(false);
   });
 
   it('keeps receiver remount identity out of the depth key when its derived extent is unchanged', () => {
@@ -151,11 +151,11 @@ describe('directional shadow planning', () => {
     const remounted = settleScene({ meshIdentity: Object.freeze({}) })
       .shadowPlans[0]!;
 
-    expect(haveSameDirectionalShadowPlan(first, 1024, remounted, 1024))
+    expect(haveSameWebGLShadowPlan(first, 1024, remounted, 1024))
       .toBe(false);
     const receiverOnlyFirst = receiverOnlyPlan(first);
     const receiverOnlyRemounted = receiverOnlyPlan(remounted);
-    expect(haveSameDirectionalShadowPlan(
+    expect(haveSameWebGLShadowPlan(
       receiverOnlyFirst,
       1024,
       receiverOnlyRemounted,
@@ -177,6 +177,90 @@ describe('directional shadow planning', () => {
   });
 });
 
+describe('point shadow planning', () => {
+  it('builds the six canonical 90-degree cube views with pole-safe up vectors', () => {
+    const scene = settleScene({
+      lightKind: 'point',
+      lightTransform: {
+        translateX: 2,
+        translateY: 3,
+        translateZ: 4,
+      },
+      lightRange: 10,
+    });
+
+    expect(scene.shadowPlans).toHaveLength(1);
+    const point = scene.shadowPlans[0] as any;
+    expect(point).toMatchObject({
+      kind: 'point',
+      lightIndex: 0,
+      lightPosition: [2, 3, 4],
+      nearDistance: 0.01,
+      farDistance: 10,
+      requestedResolution: 1024,
+      comparisonCount: 4,
+    });
+    expect(point.projectionViewMatrices.map((value: Float32Array) =>
+      rounded(value))).toEqual([
+      [0, 0, 1.002002, 1, 0, -1, 0, 0, -1, 0, 0, 0, 4, 3, -2.024024, -2],
+      [0, 0, -1.002002, -1, 0, -1, 0, 0, 1, 0, 0, 0, -4, 3, 1.983984, 2],
+      [1, 0, 0, 0, 0, 0, 1.002002, 1, 0, 1, 0, 0, -2, -4, -3.026026, -3],
+      [1, 0, 0, 0, 0, 0, -1.002002, -1, 0, -1, 0, 0, -2, 4, 2.985986, 3],
+      [1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1.002002, 1, -2, 3, -4.028028, -4],
+      [-1, 0, 0, 0, 0, -1, 0, 0, 0, 0, -1.002002, -1, 2, 3, 3.987988, 4],
+    ]);
+  });
+
+  it('uses finite range as far distance and otherwise encloses every relevant bound', () => {
+    const finite = settleScene({
+      lightKind: 'point',
+      lightRange: 3,
+    }).shadowPlans[0] as any;
+    expect(finite.farDistance).toBe(3);
+
+    const derived = settleScene({
+      lightKind: 'point',
+      lightTransform: { translateX: 2, translateY: 3, translateZ: 4 },
+    }).shadowPlans[0] as any;
+    expect(derived.farDistance).toBeGreaterThanOrEqual(Math.sqrt(50));
+    expect(Number.isFinite(derived.farDistance)).toBe(true);
+  });
+
+  it('reuses camera-only and recolor plans but invalidates point pose, range, and casters', () => {
+    const first = settleScene({ lightKind: 'point' }).shadowPlans[0] as any;
+    const orbit = settleScene({
+      lightKind: 'point',
+      cameraPosition: [8, 6, 9],
+    }).shadowPlans[0] as any;
+    const recolored = settleScene({
+      lightKind: 'point',
+      lightColor: [0.2, 0.4, 0.8, 1],
+    }).shadowPlans[0] as any;
+    const moved = settleScene({
+      lightKind: 'point',
+      lightTransform: { translateX: 1 },
+    }).shadowPlans[0] as any;
+    const ranged = settleScene({
+      lightKind: 'point',
+      lightRange: 4,
+    }).shadowPlans[0] as any;
+    const movedCaster = settleScene({
+      lightKind: 'point',
+      meshTransform: { translateX: 1 },
+    }).shadowPlans[0] as any;
+
+    expect(haveSameWebGLShadowPlan(first, 1024, orbit, 1024)).toBe(true);
+    expect(haveSameWebGLShadowPlan(first, 1024, recolored, 1024)).toBe(
+      true,
+    );
+    expect(haveSameWebGLShadowPlan(first, 1024, moved, 1024)).toBe(false);
+    expect(haveSameWebGLShadowPlan(first, 1024, ranged, 1024)).toBe(false);
+    expect(haveSameWebGLShadowPlan(first, 1024, movedCaster, 1024)).toBe(
+      false,
+    );
+  });
+});
+
 function settleScene(options: {
   readonly shadowQuality?: false | 'low' | 'medium' | 'high';
   readonly alpha?: number;
@@ -188,6 +272,8 @@ function settleScene(options: {
   readonly lightTransform?: Parameters<typeof composeModelMatrix4>[1];
   readonly meshTransform?: Parameters<typeof composeModelMatrix4>[1];
   readonly meshIdentity?: object;
+  readonly lightKind?: 'directional' | 'point';
+  readonly lightRange?: number;
 } = {}) {
   const camera = resolveCamera({
     type: 'perspective',
@@ -213,14 +299,22 @@ function settleScene(options: {
   } as any);
   const lightModel = new Float32Array(16);
   composeModelMatrix4(lightModel, options.lightTransform);
-  submitWebGLLight(composer, {
-    kind: 'directional',
+  const lightBase = {
     identity: DIRECT_LIGHT_IDENTITY,
-    componentName: 'DirectionalLight',
+    componentName: options.lightKind === 'point' ? 'PointLight' :
+      'DirectionalLight',
     localModel: lightModel,
     color: options.lightColor ?? [1, 1, 1, 1],
     intensity: 1,
     castShadow: true,
+  };
+  submitWebGLLight(composer, options.lightKind === 'point' ? {
+    ...lightBase,
+    kind: 'point',
+    range: options.lightRange,
+  } as any : {
+    ...lightBase,
+    kind: 'directional',
   } as any);
   const meshModel = new Float32Array(16);
   composeModelMatrix4(meshModel, options.meshTransform);
@@ -235,6 +329,10 @@ function settleScene(options: {
     receiveShadow: options.receiveShadow,
   } as any);
   return settleWebGLScene(composer);
+}
+
+function rounded(values: ArrayLike<number>): number[] {
+  return Array.from(values, value => Number(value.toFixed(6)));
 }
 
 const DIRECT_LIGHT_IDENTITY = Object.freeze({});

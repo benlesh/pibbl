@@ -44,6 +44,7 @@ export interface WebGLLambertProgram extends WebGLMaterialProgramBase {
 export interface WebGLShadowDepthProgram extends WebGLProgramBase {
   readonly key: 'shadow-depth';
   readonly shadowProjectionView: WebGLUniformLocation;
+  readonly shadowLightPositionFar: WebGLUniformLocation;
 }
 
 export type WebGLBuiltInProgram =
@@ -243,6 +244,12 @@ export function createBuiltInProgram(
           program,
           componentName,
           'u_shadow_projection_view',
+        ),
+        shadowLightPositionFar: requireUniform(
+          gl,
+          program,
+          componentName,
+          'u_shadow_light_position_far',
         ),
       });
     runProgramCleanup(() => gl.detachShader(program!, vertex!));

@@ -323,6 +323,7 @@ describe('createBuiltInProgram', () => {
       key: 'shadow-depth',
       model: { name: 'u_model' },
       shadowProjectionView: { name: 'u_shadow_projection_view' },
+      shadowLightPositionFar: { name: 'u_shadow_light_position_far' },
       positionAttribute: 0,
     });
     expect(lambert.shadowEnabled).toEqual({ name: 'u_shadow_enabled[0]' });
@@ -332,7 +333,9 @@ describe('createBuiltInProgram', () => {
     expect(lambert.shadowCubeSamplers).toHaveLength(8);
     expect(uniformNames).toContain('u_shadow_map_2d_7');
     expect(uniformNames).toContain('u_shadow_map_cube_7');
-    expect(shaderSources.join('\n')).toMatch(/gl_FragDepth\s*=\s*gl_FragCoord\.z/);
+    expect(shaderSources.join('\n')).toMatch(
+      /distance\([^;]+u_shadow_light_position_far\.xyz[^;]+\)\s*\/\s*u_shadow_light_position_far\.w/,
+    );
   });
 
   it('compiles and links both built-in programs in real WebGL2', () => {

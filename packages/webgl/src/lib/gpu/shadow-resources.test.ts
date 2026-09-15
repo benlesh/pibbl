@@ -178,6 +178,121 @@ describe('WebGLShadowResourceCache', () => {
     expect(lost.deleteTexture).not.toHaveBeenCalled();
     expect(lost.deleteFramebuffer).not.toHaveBeenCalled();
   });
+
+  it('allocates one clamped DEPTH_COMPONENT24 cube and attaches all six canonical faces', () => {
+    const recording = createShadowGL({ maxCubeMapTextureSize: 640 });
+    const cache = new WebGLShadowResourceCache(recording.gl, 7);
+    const renderedFaces: Array<readonly [number, number]> = [];
+    const transaction = cache.beginRender();
+    const resource = (transaction as any).usePoint(
+      pointPlan(),
+      (face: number, resolution: number) => {
+        renderedFaces.push([face, resolution]);
+      },
+    );
+    transaction.commit();
+
+    expect(resource.resolution).toBe(640);
+    expect(renderedFaces).toEqual([
+      [0, 640], [1, 640], [2, 640], [3, 640], [4, 640], [5, 640],
+    ]);
+    expect(recording.texImage2D.mock.calls.filter(call =>
+      call[0] >= recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X &&
+      call[0] < recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X + 6 &&
+      call[3] === 640,
+    )).toEqual(Array.from({ length: 6 }, (_, face) => [
+      recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
+      0,
+      recording.gl.DEPTH_COMPONENT24,
+      640,
+      640,
+      0,
+      recording.gl.DEPTH_COMPONENT,
+      recording.gl.UNSIGNED_INT,
+      null,
+    ]));
+    expect(recording.framebufferTexture2D.mock.calls.slice(-6)).toEqual(
+      Array.from({ length: 6 }, (_, face) => [
+        recording.gl.FRAMEBUFFER,
+        recording.gl.DEPTH_ATTACHMENT,
+        recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
+        resource.texture,
+        0,
+      ]),
+    );
+    expect(recording.checkFramebufferStatus).toHaveBeenCalledTimes(6);
+  });
+
+  it('reuses equal point cubes, replaces one changed light, and preserves resident data on rollback', () => {
+    const recording = createShadowGL();
+    const cache = new WebGLShadowResourceCache(recording.gl, 7);
+    let transaction = cache.beginRender();
+    const initialDraw = vi.fn();
+    const initial = (transaction as any).usePoint(pointPlan(), initialDraw);
+    transaction.commit();
+    expect(initialDraw).toHaveBeenCalledTimes(6);
+
+    transaction = cache.beginRender();
+    const hitDraw = vi.fn();
+    const hit = (transaction as any).usePoint(pointPlan(), hitDraw);
+    transaction.commit();
+    expect(hit.texture).toBe(initial.texture);
+    expect(hitDraw).not.toHaveBeenCalled();
+
+    transaction = cache.beginRender();
+    const replacementDraw = vi.fn();
+    const replacement = (transaction as any).usePoint(pointPlan({
+      farDistance: 8,
+    }), replacementDraw);
+    transaction.commit();
+    expect(replacement.texture).not.toBe(initial.texture);
+    expect(replacementDraw).toHaveBeenCalledTimes(6);
+    expect(recording.deleteTexture).toHaveBeenCalledWith(initial.texture);
+
+    transaction = cache.beginRender();
+    const failure = new Error('point face failed');
+    expect(() => (transaction as any).usePoint(pointPlan({
+      farDistance: 12,
+    }), (face: number) => {
+      if (face === 3) throw failure;
+    })).toThrow(failure);
+    transaction.rollback();
+
+    transaction = cache.beginRender();
+    const retryDraw = vi.fn();
+    const reused = (transaction as any).usePoint(pointPlan({
+      farDistance: 8,
+    }), retryDraw);
+    transaction.commit();
+    expect(reused.texture).toBe(replacement.texture);
+    expect(retryDraw).not.toHaveBeenCalled();
+  });
+
+  it('rolls back incomplete and partially allocated point cubes without publishing them', () => {
+    const incomplete = createShadowGL({ framebufferIncompleteAt: 4 });
+    const incompleteCache = new WebGLShadowResourceCache(incomplete.gl, 7);
+    const incompleteTransaction = incompleteCache.beginRender();
+    expect(() => (incompleteTransaction as any).usePoint(
+      pointPlan(),
+      () => undefined,
+    )).toThrowError(/point.*face 3.*framebuffer.*incomplete/i);
+    incompleteTransaction.rollback();
+    expect(incomplete.deleteTexture).toHaveBeenCalled();
+
+    const allocationError = new Error('cube allocation failed');
+    const allocation = createShadowGL({
+      texImage2DErrorAt: 8,
+      texImage2DError: allocationError,
+    });
+    const allocationCache = new WebGLShadowResourceCache(allocation.gl, 7);
+    const allocationTransaction = allocationCache.beginRender();
+    expect(() => (allocationTransaction as any).usePoint(
+      pointPlan(),
+      () => undefined,
+    )).toThrow(allocationError);
+    allocationTransaction.rollback();
+    expect(allocation.deleteTexture).toHaveBeenCalled();
+  });
 });
 
 const FIRST_LIGHT = Object.freeze({});
@@ -200,6 +315,29 @@ function plan(overrides: Partial<SettledWebGLShadowPlan> = {}): SettledWebGLShad
   };
 }
 
+function pointPlan(overrides: Record<string, unknown> = {}): any {
+  return {
+    kind: 'point',
+    lightIdentity: FIRST_LIGHT,
+    lightIndex: 0,
+    projectionViewMatrices: Object.freeze(Array.from(
+      { length: 6 },
+      (_, face) => matrix(face + 1),
+    )),
+    lightPosition: Object.freeze([1, 2, 3]),
+    nearDistance: 0.01,
+    farDistance: 10,
+    bias: 0.001,
+    casters: [],
+    receivers: [],
+    requestedResolution: 1024,
+    comparisonCount: 4,
+    contextGeneration: 7,
+    shadowProgramGeneration: 1,
+    ...overrides,
+  };
+}
+
 function matrix(seed: number): Float32Array {
   const value = new Float32Array(16);
   value[0] = seed;
@@ -211,12 +349,18 @@ function matrix(seed: number): Float32Array {
 
 function createShadowGL(options: {
   readonly maxTextureSize?: number;
+  readonly maxCubeMapTextureSize?: number;
   readonly framebufferComplete?: boolean;
+  readonly framebufferIncompleteAt?: number;
+  readonly texImage2DErrorAt?: number;
+  readonly texImage2DError?: Error;
   readonly deleteTextureErrorAt?: number;
   readonly deleteTextureError?: Error;
 } = {}) {
   const textures: object[] = [];
   let deleteTextureCount = 0;
+  let framebufferStatusCount = 0;
+  let texImage2DCount = 0;
   const gl = {
     MAX_TEXTURE_SIZE: 1,
     MAX_CUBE_MAP_TEXTURE_SIZE: 2,
@@ -238,12 +382,16 @@ function createShadowGL(options: {
     CLAMP_TO_EDGE: 29,
     NONE: 30,
     getParameter: vi.fn((parameter: number) => parameter === 1 ?
-      (options.maxTextureSize ?? 4096) : 4096),
+      (options.maxTextureSize ?? 4096) :
+      (options.maxCubeMapTextureSize ?? 4096)),
     createFramebuffer: vi.fn(() => ({ kind: 'framebuffer' })),
     deleteFramebuffer: vi.fn(),
     bindFramebuffer: vi.fn(),
-    checkFramebufferStatus: vi.fn(() => options.framebufferComplete === false ?
-      999 : 4),
+    checkFramebufferStatus: vi.fn(() => {
+      framebufferStatusCount += 1;
+      return options.framebufferComplete === false ||
+        framebufferStatusCount === options.framebufferIncompleteAt ? 999 : 4;
+    }),
     framebufferTexture2D: vi.fn(),
     drawBuffers: vi.fn(),
     readBuffer: vi.fn(),
@@ -260,7 +408,12 @@ function createShadowGL(options: {
     }),
     bindTexture: vi.fn(),
     texParameteri: vi.fn(),
-    texImage2D: vi.fn(),
+    texImage2D: vi.fn(() => {
+      texImage2DCount += 1;
+      if (texImage2DCount === options.texImage2DErrorAt) {
+        throw options.texImage2DError;
+      }
+    }),
     isContextLost: vi.fn(() => false),
   } as unknown as WebGL2RenderingContext;
   return {
@@ -270,6 +423,7 @@ function createShadowGL(options: {
     createFramebuffer: vi.mocked(gl.createFramebuffer),
     deleteFramebuffer: vi.mocked(gl.deleteFramebuffer),
     checkFramebufferStatus: vi.mocked(gl.checkFramebufferStatus),
+    framebufferTexture2D: vi.mocked(gl.framebufferTexture2D),
     texImage2D: vi.mocked(gl.texImage2D),
     deleteTexture: vi.mocked(gl.deleteTexture),
   };

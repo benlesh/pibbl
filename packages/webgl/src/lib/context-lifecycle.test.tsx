@@ -10,6 +10,7 @@ import type {
 } from '@crc/core/internal';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Cube } from './components/cube.js';
+import { PointLight } from './components/lights.js';
 import { createWebGLGeometry } from './geometry/geometry.js';
 import { createBuiltInProgram } from './gpu/program.js';
 import { WebGLRendererResourceCache } from './gpu/renderer-resources.js';
@@ -140,6 +141,62 @@ describe('WebGLLayer context lifecycle', () => {
     expect(glCount(platform, 'deleteProgram')).toBe(1);
     expect(glCount(platform, 'deleteBuffer')).toBe(3);
     expect(glCount(platform, 'deleteVertexArray')).toBe(1);
+  });
+
+  it('abandons a lost point cube, rebuilds all six faces, and deletes only the restored generation', () => {
+    const firstBitmap = bitmap('point-first');
+    const restoredBitmap = bitmap('point-restored');
+    const platform = installContextPlatform([firstBitmap, restoredBitmap]);
+    const callbacks: FrameRequestCallback[] = [];
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
+      callbacks.push(callback);
+      return callbacks.length;
+    });
+    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined);
+    const parentCanvas = mountParent();
+    callbacks.shift()!(0);
+    const root = (
+      <>
+        <PointLight style={{ translateY: 3, range: 8 }} />
+        <Cube pointerEvents="none" />
+      </>
+    );
+    const surface = resolveWebGLLayerSurface(20, 10, { x: 1, y: 1 });
+    const controller = new WebGLLayerController(
+      parentCanvas,
+      root,
+      undefined,
+      surface,
+    );
+    const parentContext = { drawImage: vi.fn() } as unknown as
+      CanvasRenderingContext2D;
+
+    controller.renderUpdatedChild(root, undefined, surface, 1);
+    controller.composite(parentContext, { x: 0, y: 0, width: 20, height: 10 });
+    expect(glCount(platform, 'drawElements')).toBe(7);
+    expect(glCount(platform, 'createTexture')).toBe(3);
+    expect(glCount(platform, 'createFramebuffer')).toBe(1);
+
+    platform.contextLost = true;
+    platform.canvas.dispatchEvent(
+      new Event('webglcontextlost', { cancelable: true }),
+    );
+    expect(glCount(platform, 'deleteTexture')).toBe(0);
+    expect(glCount(platform, 'deleteFramebuffer')).toBe(0);
+
+    platform.contextLost = false;
+    platform.canvas.dispatchEvent(new Event('webglcontextrestored'));
+    callbacks[0]!(2);
+    controller.renderRetainedChild(root, undefined, surface, 2);
+    controller.composite(parentContext, { x: 0, y: 0, width: 20, height: 10 });
+    expect(glCount(platform, 'drawElements')).toBe(14);
+    expect(glCount(platform, 'createTexture')).toBe(6);
+    expect(glCount(platform, 'createFramebuffer')).toBe(2);
+
+    controller.dispose();
+    controller.dispose();
+    expect(glCount(platform, 'deleteTexture')).toBe(3);
+    expect(glCount(platform, 'deleteFramebuffer')).toBe(1);
   });
 
   it('creates no renderer resources when context loss occurs during composition', async () => {
@@ -688,9 +745,17 @@ function createLifecycleGL(
                   } : property === 'createShader' ||
                     property === 'createProgram' ||
                     property === 'createVertexArray' ||
-                    property === 'createBuffer' ? () => {
+                    property === 'createBuffer' ||
+                    property === 'createFramebuffer' ||
+                    property === 'createTexture' ? () => {
                       onCall(property);
                       return { kind: property, id: ++handle };
+                    } : property === 'checkFramebufferStatus' ? () => {
+                      onCall(property);
+                      if (!('FRAMEBUFFER_COMPLETE' in record)) {
+                        record.FRAMEBUFFER_COMPLETE = constant++;
+                      }
+                      return record.FRAMEBUFFER_COMPLETE;
                     } : (..._args: unknown[]) => {
                       onCall(property);
                     };

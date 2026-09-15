@@ -58,17 +58,26 @@ const SHADOW_DEPTH_VERTEX_SOURCE = `#version 300 es
 layout(location = 0) in vec3 a_position;
 uniform mat4 u_model;
 uniform mat4 u_shadow_projection_view;
+out vec3 v_shadow_world_position;
 
 void main() {
-  gl_Position = u_shadow_projection_view * u_model * vec4(a_position, 1.0);
+  vec4 world_position = u_model * vec4(a_position, 1.0);
+  v_shadow_world_position = world_position.xyz;
+  gl_Position = u_shadow_projection_view * world_position;
 }
 `;
 
 const SHADOW_DEPTH_FRAGMENT_SOURCE = `#version 300 es
 precision highp float;
+uniform vec4 u_shadow_light_position_far;
+in vec3 v_shadow_world_position;
 
 void main() {
-  gl_FragDepth = gl_FragCoord.z;
+  gl_FragDepth = u_shadow_light_position_far.w > 0.0 ?
+    distance(
+      v_shadow_world_position,
+      u_shadow_light_position_far.xyz
+    ) / u_shadow_light_position_far.w : gl_FragCoord.z;
 }
 `;
 
@@ -246,10 +255,70 @@ float directional_shadow_visibility(int index) {
   return visibility / 9.0;
 }
 
-float local_shadow_visibility(int index, vec3 to_light_vector) {
-  float stored_depth = sample_shadow_cube(index, -to_light_vector);
-  return length(to_light_vector) - u_shadow_parameters[index].x <=
-      stored_depth ? 1.0 : 0.0;
+float compare_point_shadow(
+  int index,
+  vec3 direction,
+  float current_depth
+) {
+  float stored_depth = sample_shadow_cube(index, direction);
+  return current_depth <= stored_depth ? 1.0 : 0.0;
+}
+
+float point_shadow_visibility(int index, vec3 light_position) {
+  vec3 light_to_surface = v_world_position - light_position;
+  float far_distance = u_shadow_parameters[index].w;
+  if (far_distance <= 0.0) return 1.0;
+  float current_depth = length(light_to_surface) / far_distance -
+    u_shadow_parameters[index].x;
+  if (current_depth < 0.0 || current_depth > 1.0) return 1.0;
+
+  vec3 direction = safe_normalize(light_to_surface);
+  float texel = u_shadow_parameters[index].y;
+  int comparisons = int(u_shadow_parameters[index].z);
+  if (comparisons <= 1) {
+    return compare_point_shadow(index, direction, current_depth);
+  }
+  vec3 up = abs(direction.y) < 0.999 ? vec3(0.0, 1.0, 0.0) :
+    vec3(1.0, 0.0, 0.0);
+  vec3 tangent = safe_normalize(cross(up, direction));
+  vec3 bitangent = cross(direction, tangent);
+  if (comparisons <= 4) {
+    float visibility = 0.0;
+    visibility += compare_point_shadow(
+      index,
+      direction + (-0.5 * tangent - 0.5 * bitangent) * texel,
+      current_depth
+    );
+    visibility += compare_point_shadow(
+      index,
+      direction + (0.5 * tangent - 0.5 * bitangent) * texel,
+      current_depth
+    );
+    visibility += compare_point_shadow(
+      index,
+      direction + (-0.5 * tangent + 0.5 * bitangent) * texel,
+      current_depth
+    );
+    visibility += compare_point_shadow(
+      index,
+      direction + (0.5 * tangent + 0.5 * bitangent) * texel,
+      current_depth
+    );
+    return visibility * 0.25;
+  }
+  float visibility = 0.0;
+  for (int y = -1; y <= 1; y += 1) {
+    for (int x = -1; x <= 1; x += 1) {
+      visibility += compare_point_shadow(
+        index,
+        direction + (
+          float(x) * tangent + float(y) * bitangent
+        ) * texel,
+        current_depth
+      );
+    }
+  }
+  return visibility / 9.0;
 }
 
 vec3 local_light_contribution(
@@ -339,9 +408,9 @@ void main() {
       );
       float visibility = 1.0;
       if (u_receive_shadow && u_shadow_enabled[index] == 2) {
-        visibility = local_shadow_visibility(
+        visibility = point_shadow_visibility(
           index,
-          position_range.xyz - v_world_position
+          position_range.xyz
         );
       }
       lighting += contribution * visibility;

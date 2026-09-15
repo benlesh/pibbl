@@ -32,7 +32,6 @@ function ConceptDelta({
             color: '#ff8a5b',
             intensity: 32,
             range: 8,
-            castShadow: false,
             translateX: 3,
             translateY: 2.2,
             translateZ: 1.5,

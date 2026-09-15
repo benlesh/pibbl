@@ -29,7 +29,7 @@ import type {
   SettledWebGLShadowPlan,
   WebGLWorldBounds,
 } from './types.js';
-import { createDirectionalShadowPlans } from './shadows.js';
+import { createWebGLShadowPlans } from './shadows.js';
 
 const MAX_LIGHTS = 8;
 const DEGREES_TO_RADIANS = Math.PI / 180;
@@ -104,7 +104,7 @@ export function settleWebGLScene(composer: WebGLSceneComposer): SettledWebGLScen
   );
   const pickEntries = commitWebGLPickLedger(ledger).entries as
     readonly CRCWebGLGeometryPickRecord[];
-  const shadowPlans = createDirectionalShadowPlans({
+  const shadowPlans = createWebGLShadowPlans({
     meshes,
     lights,
     quality: draft.shadowQuality,

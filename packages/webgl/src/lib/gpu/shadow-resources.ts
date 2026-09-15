@@ -1,13 +1,29 @@
 import {
-  haveSameDirectionalShadowPlan,
+  haveSameWebGLShadowPlan,
 } from '../scene/shadows.js';
-import type { SettledWebGLShadowPlan, WebGLSceneIdentity } from '../scene/types.js';
+import type {
+  SettledWebGLDirectionalShadowPlan,
+  SettledWebGLPointShadowPlan,
+  WebGLSceneIdentity,
+} from '../scene/types.js';
 
 export interface WebGLDirectionalShadowResource {
+  readonly kind: 'directional';
   readonly texture: WebGLTexture;
   readonly resolution: number;
-  readonly plan: SettledWebGLShadowPlan;
+  readonly plan: SettledWebGLDirectionalShadowPlan;
 }
+
+export interface WebGLPointShadowResource {
+  readonly kind: 'point';
+  readonly texture: WebGLTexture;
+  readonly resolution: number;
+  readonly plan: SettledWebGLPointShadowPlan;
+}
+
+export type WebGLShadowResource =
+  | WebGLDirectionalShadowResource
+  | WebGLPointShadowResource;
 
 export interface WebGLShadowBindings {
   readonly fallback2D: WebGLTexture;
@@ -16,9 +32,13 @@ export interface WebGLShadowBindings {
 
 export interface WebGLShadowResourceTransaction {
   useDirectional(
-    plan: SettledWebGLShadowPlan,
+    plan: SettledWebGLDirectionalShadowPlan,
     render: (resolution: number) => void,
   ): WebGLDirectionalShadowResource;
+  usePoint(
+    plan: SettledWebGLPointShadowPlan,
+    render: (face: number, resolution: number) => void,
+  ): WebGLPointShadowResource;
   getBindings(): WebGLShadowBindings;
   commit(): void;
   rollback(contextLost?: boolean): void;
@@ -32,7 +52,7 @@ interface ShadowCandidate {
   active: boolean;
   foundationCreated: boolean;
   readonly usedLights: Set<WebGLSceneIdentity>;
-  readonly created: Map<WebGLSceneIdentity, WebGLDirectionalShadowResource>;
+  readonly created: Map<WebGLSceneIdentity, WebGLShadowResource>;
 }
 
 /** Owns transactional depth targets for one renderer context generation. */
@@ -40,10 +60,11 @@ export class WebGLShadowResourceCache {
   private foundation: ShadowFoundation | undefined;
   private readonly resident = new Map<
     WebGLSceneIdentity,
-    WebGLDirectionalShadowResource
+    WebGLShadowResource
   >();
   private activeCandidate: ShadowCandidate | undefined;
   private maximum2DResolution: number | undefined;
+  private maximumCubeResolution: number | undefined;
   private invalidated = false;
   private disposed = false;
 
@@ -69,10 +90,14 @@ export class WebGLShadowResourceCache {
     this.activeCandidate = candidate;
     return Object.freeze({
       useDirectional: (
-        plan: SettledWebGLShadowPlan,
+        plan: SettledWebGLDirectionalShadowPlan,
         render: (resolution: number) => void,
       ) =>
         this.useDirectional(candidate, plan, render),
+      usePoint: (
+        plan: SettledWebGLPointShadowPlan,
+        render: (face: number, resolution: number) => void,
+      ) => this.usePoint(candidate, plan, render),
       getBindings: () => this.getBindings(candidate),
       commit: () => this.commit(candidate),
       rollback: (contextLost = false) => this.rollback(candidate, contextLost),
@@ -86,6 +111,7 @@ export class WebGLShadowResourceCache {
     this.foundation = undefined;
     this.resident.clear();
     this.maximum2DResolution = undefined;
+    this.maximumCubeResolution = undefined;
   }
 
   dispose(contextLost: boolean): void {
@@ -99,6 +125,7 @@ export class WebGLShadowResourceCache {
     this.foundation = undefined;
     this.resident.clear();
     this.maximum2DResolution = undefined;
+    this.maximumCubeResolution = undefined;
     if (contextLost || this.invalidated) return;
     for (const resource of candidateResources) {
       runShadowCleanup(() => this.gl.deleteTexture(resource.texture));
@@ -115,7 +142,7 @@ export class WebGLShadowResourceCache {
 
   private useDirectional(
     candidate: ShadowCandidate,
-    plan: SettledWebGLShadowPlan,
+    plan: SettledWebGLDirectionalShadowPlan,
     render: (resolution: number) => void,
   ): WebGLDirectionalShadowResource {
     this.requireCandidate(candidate);
@@ -132,14 +159,14 @@ export class WebGLShadowResourceCache {
       this.getMaximum2DResolution(),
     );
     const pending = candidate.created.get(identity);
-    if (pending && haveSameDirectionalShadowPlan(
+    if (pending?.kind === 'directional' && haveSameWebGLShadowPlan(
       pending.plan,
       pending.resolution,
       plan,
       resolution,
     )) return pending;
     const existing = this.resident.get(identity);
-    if (existing && haveSameDirectionalShadowPlan(
+    if (existing?.kind === 'directional' && haveSameWebGLShadowPlan(
       existing.plan,
       existing.resolution,
       plan,
@@ -148,7 +175,12 @@ export class WebGLShadowResourceCache {
 
     const foundation = this.requireFoundation(candidate);
     const texture = createDepthTexture2D(this.gl, resolution);
-    const resource = Object.freeze({ texture, resolution, plan });
+    const resource = Object.freeze({
+      kind: 'directional' as const,
+      texture,
+      resolution,
+      plan,
+    });
     candidate.created.set(identity, resource);
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, foundation.framebuffer);
     this.gl.framebufferTexture2D(
@@ -167,6 +199,71 @@ export class WebGLShadowResourceCache {
       );
     }
     render(resolution);
+    return resource;
+  }
+
+  private usePoint(
+    candidate: ShadowCandidate,
+    plan: SettledWebGLPointShadowPlan,
+    render: (face: number, resolution: number) => void,
+  ): WebGLPointShadowResource {
+    this.requireCandidate(candidate);
+    if (plan.contextGeneration !== this.contextGeneration) {
+      throw new Error(
+        `Point shadow generation ${plan.contextGeneration} cannot be ` +
+        `used by cache generation ${this.contextGeneration}.`,
+      );
+    }
+    const identity = plan.lightIdentity;
+    candidate.usedLights.add(identity);
+    const resolution = Math.min(
+      plan.requestedResolution,
+      this.getMaximumCubeResolution(),
+    );
+    const pending = candidate.created.get(identity);
+    if (pending?.kind === 'point' && haveSameWebGLShadowPlan(
+      pending.plan,
+      pending.resolution,
+      plan,
+      resolution,
+    )) return pending;
+    const existing = this.resident.get(identity);
+    if (existing?.kind === 'point' && haveSameWebGLShadowPlan(
+      existing.plan,
+      existing.resolution,
+      plan,
+      resolution,
+    )) return existing;
+
+    const foundation = this.requireFoundation(candidate);
+    const texture = createDepthTextureCube(this.gl, resolution);
+    const resource = Object.freeze({
+      kind: 'point' as const,
+      texture,
+      resolution,
+      plan,
+    });
+    candidate.created.set(identity, resource);
+    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, foundation.framebuffer);
+    this.gl.drawBuffers([this.gl.NONE]);
+    this.gl.readBuffer(this.gl.NONE);
+    for (let face = 0; face < 6; face += 1) {
+      this.gl.framebufferTexture2D(
+        this.gl.FRAMEBUFFER,
+        this.gl.DEPTH_ATTACHMENT,
+        this.gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
+        texture,
+        0,
+      );
+      const status = this.gl.checkFramebufferStatus(this.gl.FRAMEBUFFER);
+      if (status !== this.gl.FRAMEBUFFER_COMPLETE) {
+        throw new Error(
+          `Point shadow face ${face} framebuffer is incomplete ` +
+          `(status ${status}).`,
+        );
+      }
+      render(face, resolution);
+    }
     return resource;
   }
 
@@ -195,6 +292,22 @@ export class WebGLShadowResourceCache {
     }
     this.maximum2DResolution = value as number;
     return this.maximum2DResolution;
+  }
+
+  private getMaximumCubeResolution(): number {
+    if (this.maximumCubeResolution !== undefined) {
+      return this.maximumCubeResolution;
+    }
+    const value = this.gl.getParameter(
+      this.gl.MAX_CUBE_MAP_TEXTURE_SIZE,
+    ) as unknown;
+    if (!Number.isInteger(value) || (value as number) < 1) {
+      throw new Error(
+        'WebGL2 MAX_CUBE_MAP_TEXTURE_SIZE must be a positive integer.',
+      );
+    }
+    this.maximumCubeResolution = value as number;
+    return this.maximumCubeResolution;
   }
 
   private commit(candidate: ShadowCandidate): void {

@@ -183,6 +183,55 @@ describe('public WebGL lighting rendering', () => {
     ))).toEqual([0, 0, 0, 255]);
   });
 
+  it('darkens a real ground pixel occluded from a point light in any cube direction', async () => {
+    const ground = createWebGLGeometry({
+      positions: [
+        -4, 0, -4, 4, 0, -4, -4, 0, 4,
+        4, 0, -4, 4, 0, 4, -4, 0, 4,
+      ],
+      normals: [
+        0, 1, 0, 0, 1, 0, 0, 1, 0,
+        0, 1, 0, 0, 1, 0, 0, 1, 0,
+      ],
+    });
+    const camera: CRCWebGLPerspectiveCamera = {
+      type: 'perspective',
+      position: [4, 4, 6],
+      lookAt: [0, -0.25, 0],
+      up: [0, 1, 0],
+      fieldOfViewDegrees: 50,
+      near: 0.1,
+      far: 100,
+    };
+    const render = (castShadow: boolean) => renderImage((
+      <>
+        <WebGLBackground style={{ color: '#101827' }} />
+        <AmbientLight style={{ intensity: 0.08 }} />
+        <PointLight style={{
+          intensity: 70,
+          range: 12,
+          translateX: 2,
+          translateY: 4,
+          translateZ: 2,
+          castShadow,
+        }} />
+        <Cube style={{ color: '#ef4444', translateY: 0 }} />
+        <Mesh geometry={ground} style={{
+          color: '#d1d5db',
+          translateY: -1,
+          receiveShadow: true,
+        }} />
+      </>
+    ), 64, 64, camera);
+
+    const shadowed = await render(true);
+    const unshadowed = await render(false);
+    const occludedPixel = findDarkenedGroundPixel(shadowed, unshadowed, 30);
+    expect(occludedPixel).toBeDefined();
+    expect(occludedPixel!.shadowed[3]).toBe(255);
+    expect(occludedPixel!.unshadowed[3]).toBe(255);
+  });
+
   it('renders smooth and equal-angle spot cones', async () => {
     const inner = 20;
     const outer = 40;

@@ -253,11 +253,9 @@ export interface ClosedWebGLSceneDraft {
 }
 export type WebGLWorldBounds = Matrix4Bounds;
 
-export interface SettledWebGLShadowPlan {
-  readonly kind: 'directional';
+interface SettledWebGLShadowPlanBase {
   readonly lightIdentity: WebGLSceneIdentity;
   readonly lightIndex: number;
-  readonly projectionViewMatrix: Readonly<Float32Array>;
   readonly bias: number;
   readonly casters: readonly import('./settle.js').SettledWebGLMesh[];
   readonly receivers: readonly import('./settle.js').SettledWebGLMesh[];
@@ -266,6 +264,25 @@ export interface SettledWebGLShadowPlan {
   readonly contextGeneration: number;
   readonly shadowProgramGeneration: number;
 }
+
+export interface SettledWebGLDirectionalShadowPlan
+  extends SettledWebGLShadowPlanBase {
+  readonly kind: 'directional';
+  readonly projectionViewMatrix: Readonly<Float32Array>;
+}
+
+export interface SettledWebGLPointShadowPlan
+  extends SettledWebGLShadowPlanBase {
+  readonly kind: 'point';
+  readonly projectionViewMatrices: readonly Readonly<Float32Array>[];
+  readonly lightPosition: CRCWebGLVector3;
+  readonly nearDistance: number;
+  readonly farDistance: number;
+}
+
+export type SettledWebGLShadowPlan =
+  | SettledWebGLDirectionalShadowPlan
+  | SettledWebGLPointShadowPlan;
 
 export interface WebGLSceneComposer extends ClosedWebGLSceneDraft {
   readonly modelStack: readonly Readonly<Float32Array>[];

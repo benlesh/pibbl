@@ -5,7 +5,7 @@ import {
 } from '../gpu/renderer-resources.js';
 import {
   WebGLShadowResourceCache,
-  type WebGLDirectionalShadowResource,
+  type WebGLShadowResource,
   type WebGLShadowBindings,
   type WebGLShadowResourceTransaction,
 } from '../gpu/shadow-resources.js';
@@ -31,6 +31,8 @@ import {
 import type { SettledWebGLMesh, SettledWebGLScene } from './settle.js';
 import type {
   SettledWebGLLight,
+  SettledWebGLDirectionalShadowPlan,
+  SettledWebGLPointShadowPlan,
   SettledWebGLShadowPlan,
 } from './types.js';
 
@@ -47,7 +49,8 @@ interface PackedWebGLShadows {
   readonly enabled: Int32Array;
   readonly matrices: Float32Array;
   readonly parameters: Float32Array;
-  readonly textures: readonly WebGLTexture[];
+  readonly textures2D: readonly WebGLTexture[];
+  readonly texturesCube: readonly WebGLTexture[];
   readonly bindings: WebGLShadowBindings;
 }
 
@@ -88,29 +91,39 @@ export class WebGLSceneRenderer {
         baseline,
       );
       shadowTransaction = this.shadows.beginRender();
-      const shadowResources = new Map<number, WebGLDirectionalShadowResource>();
+      const shadowResources = new Map<number, WebGLShadowResource>();
       if (scene.shadowPlans.length > 0) {
         transaction = this.resources.beginRender();
         for (const plan of scene.shadowPlans) {
-          const program = transaction.useProgram(
-            'shadow-depth',
-            'DirectionalLight',
-          );
+          const componentName = plan.kind === 'point' ? 'PointLight' :
+            'DirectionalLight';
+          const program = transaction.useProgram('shadow-depth', componentName);
           if (program.key !== 'shadow-depth') {
             throw new Error(
-              'Directional shadow renderer acquired the wrong program.',
+              'Shadow renderer acquired the wrong program.',
             );
           }
-          const resource = shadowTransaction.useDirectional(
-            plan,
-            resolution => drawDirectionalShadowPlan(
-              this.gl,
-              transaction!,
-              program,
+          const resource = plan.kind === 'point' ?
+            shadowTransaction.usePoint(
               plan,
-              resolution,
-            ),
-          );
+              (face, resolution) => drawPointShadowPlan(
+                this.gl,
+                transaction!,
+                program,
+                plan,
+                face,
+                resolution,
+              ),
+            ) : shadowTransaction.useDirectional(
+              plan,
+              resolution => drawDirectionalShadowPlan(
+                this.gl,
+                transaction!,
+                program,
+                plan,
+                resolution,
+              ),
+            );
           shadowResources.set(plan.lightIndex, resource);
         }
         installWebGLStateBaseline(
@@ -368,7 +381,7 @@ function drawDirectionalShadowPlan(
   gl: WebGL2RenderingContext,
   transaction: WebGLRendererResourceTransaction,
   program: WebGLShadowDepthProgram,
-  plan: SettledWebGLShadowPlan,
+  plan: SettledWebGLDirectionalShadowPlan,
   resolution: number,
 ): void {
   installDirectionalShadowWebGLPass(gl, resolution);
@@ -377,6 +390,35 @@ function drawDirectionalShadowPlan(
     program.shadowProjectionView,
     false,
     plan.projectionViewMatrix as Float32Array,
+  );
+  gl.uniform4f(program.shadowLightPositionFar, 0, 0, 0, 0);
+  for (const mesh of plan.casters) {
+    const geometry = transaction.useGeometry(mesh.geometry, mesh.componentName);
+    bindDepthGeometry(gl, program, geometry, mesh);
+  }
+}
+
+function drawPointShadowPlan(
+  gl: WebGL2RenderingContext,
+  transaction: WebGLRendererResourceTransaction,
+  program: WebGLShadowDepthProgram,
+  plan: SettledWebGLPointShadowPlan,
+  face: number,
+  resolution: number,
+): void {
+  installDirectionalShadowWebGLPass(gl, resolution);
+  gl.useProgram(program.program);
+  gl.uniformMatrix4fv(
+    program.shadowProjectionView,
+    false,
+    plan.projectionViewMatrices[face] as Float32Array,
+  );
+  gl.uniform4f(
+    program.shadowLightPositionFar,
+    plan.lightPosition[0],
+    plan.lightPosition[1],
+    plan.lightPosition[2],
+    plan.farDistance,
   );
   for (const mesh of plan.casters) {
     const geometry = transaction.useGeometry(mesh.geometry, mesh.componentName);
@@ -431,38 +473,49 @@ function bindShadows(
     gl.activeTexture(gl.TEXTURE0 + index);
     gl.bindTexture(
       gl.TEXTURE_2D,
-      shadows.textures[index] ?? shadows.bindings.fallback2D,
+      shadows.textures2D[index] ?? shadows.bindings.fallback2D,
     );
     gl.uniform1i(program.shadow2DSamplers[index]!, index);
     const cubeUnit = WEBGL_MAX_SHADOWS + index;
     gl.activeTexture(gl.TEXTURE0 + cubeUnit);
-    gl.bindTexture(gl.TEXTURE_CUBE_MAP, shadows.bindings.fallbackCube);
+    gl.bindTexture(
+      gl.TEXTURE_CUBE_MAP,
+      shadows.texturesCube[index] ?? shadows.bindings.fallbackCube,
+    );
     gl.uniform1i(program.shadowCubeSamplers[index]!, cubeUnit);
   }
 }
 
 function packWebGLShadows(
   plans: readonly SettledWebGLShadowPlan[],
-  resources: ReadonlyMap<number, WebGLDirectionalShadowResource>,
+  resources: ReadonlyMap<number, WebGLShadowResource>,
   bindings: WebGLShadowBindings,
 ): PackedWebGLShadows {
   const enabled = new Int32Array(WEBGL_MAX_SHADOWS);
   const matrices = new Float32Array(WEBGL_MAX_SHADOWS * 16);
   const parameters = new Float32Array(WEBGL_MAX_SHADOWS * 4);
-  const textures = Array<WebGLTexture>(WEBGL_MAX_SHADOWS)
+  const textures2D = Array<WebGLTexture>(WEBGL_MAX_SHADOWS)
     .fill(bindings.fallback2D);
+  const texturesCube = Array<WebGLTexture>(WEBGL_MAX_SHADOWS)
+    .fill(bindings.fallbackCube);
   for (const plan of plans) {
     const resource = resources.get(plan.lightIndex);
     if (!resource || plan.lightIndex >= WEBGL_MAX_SHADOWS) continue;
-    enabled[plan.lightIndex] = 1;
-    matrices.set(plan.projectionViewMatrix, plan.lightIndex * 16);
     const parameterOffset = plan.lightIndex * 4;
     parameters[parameterOffset] = plan.bias;
     parameters[parameterOffset + 1] = 1 / resource.resolution;
     parameters[parameterOffset + 2] = plan.comparisonCount;
-    textures[plan.lightIndex] = resource.texture;
+    if (plan.kind === 'directional' && resource.kind === 'directional') {
+      enabled[plan.lightIndex] = 1;
+      matrices.set(plan.projectionViewMatrix, plan.lightIndex * 16);
+      textures2D[plan.lightIndex] = resource.texture;
+    } else if (plan.kind === 'point' && resource.kind === 'point') {
+      enabled[plan.lightIndex] = 2;
+      parameters[parameterOffset + 3] = plan.farDistance;
+      texturesCube[plan.lightIndex] = resource.texture;
+    }
   }
-  return { enabled, matrices, parameters, textures, bindings };
+  return { enabled, matrices, parameters, textures2D, texturesCube, bindings };
 }
 
 function isLambertMesh(mesh: SettledWebGLMesh): boolean {

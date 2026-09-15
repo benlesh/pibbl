@@ -305,6 +305,150 @@ describe('WebGLSceneRenderer', () => {
     expect(recording.createTexture).toHaveBeenCalledTimes(firstTextureCount);
   });
 
+  it('renders six radial point faces before color, binds the cube, and reuses it for camera-only work', () => {
+    const recording = createRendererGL();
+    const renderer = new WebGLSceneRenderer(recording.gl, 7);
+    const drawable = mesh(0, [1, 1, 1, 1], {
+      shading: 'lambert',
+      seed: 11,
+    });
+    const plan = pointPlan(drawable);
+
+    renderer.render(scene({
+      meshes: [drawable],
+      lights: [pointLight()],
+      opaque: [drawable],
+      shadowPlans: [plan],
+    }));
+
+    expect(recording.draws.map(draw => draw.programKey)).toEqual([
+      'shadow-depth',
+      'shadow-depth',
+      'shadow-depth',
+      'shadow-depth',
+      'shadow-depth',
+      'shadow-depth',
+      'lambert',
+    ]);
+    expect(recording.draws.slice(0, 6).map(draw =>
+      draw.uniforms.u_shadow_projection_view?.[0])).toEqual([
+      711, 712, 713, 714, 715, 716,
+    ]);
+    expect(recording.draws.slice(0, 6).map(draw =>
+      draw.uniforms.u_shadow_light_position_far)).toEqual(
+      Array.from({ length: 6 }, () => [1, 2, 3, 10]),
+    );
+    expect(recording.clear.mock.calls.map(([mask]) => mask)).toEqual([
+      recording.gl.DEPTH_BUFFER_BIT,
+      recording.gl.DEPTH_BUFFER_BIT,
+      recording.gl.DEPTH_BUFFER_BIT,
+      recording.gl.DEPTH_BUFFER_BIT,
+      recording.gl.DEPTH_BUFFER_BIT,
+      recording.gl.DEPTH_BUFFER_BIT,
+      recording.gl.COLOR_BUFFER_BIT | recording.gl.DEPTH_BUFFER_BIT,
+    ]);
+    const cubeAttachments = recording.framebufferTexture2D.mock.calls.filter(
+      call => call[2] >= recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X &&
+        call[2] < recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X + 6,
+    );
+    expect(cubeAttachments.map(call => call[2])).toEqual(
+      Array.from({ length: 6 }, (_, face) =>
+        recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X + face),
+    );
+    const pointTexture = cubeAttachments[0]![3];
+    expect(recording.bindTexture).toHaveBeenCalledWith(
+      recording.gl.TEXTURE_CUBE_MAP,
+      pointTexture,
+    );
+    expect(recording.draws[6]?.uniforms).toMatchObject({
+      'u_shadow_enabled[0]': [2, 0, 0, 0, 0, 0, 0, 0],
+      'u_shadow_parameters[0]': float32([
+        0.001, 1 / 1024, 4, 10,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+      ]),
+      u_receive_shadow: [1],
+    });
+    const textureCount = recording.createTexture.mock.calls.length;
+
+    renderer.render(scene({
+      meshes: [drawable],
+      lights: [pointLight()],
+      opaque: [drawable],
+      shadowPlans: [plan],
+      cameraSeed: 999,
+    }));
+    expect(recording.draws.map(draw => draw.programKey)).toEqual([
+      'shadow-depth',
+      'shadow-depth',
+      'shadow-depth',
+      'shadow-depth',
+      'shadow-depth',
+      'shadow-depth',
+      'lambert',
+      'lambert',
+    ]);
+    expect(recording.createTexture).toHaveBeenCalledTimes(textureCount);
+  });
+
+  it('invalidates a point cube when caster depth changes', () => {
+    const recording = createRendererGL();
+    const renderer = new WebGLSceneRenderer(recording.gl, 7);
+    const first = mesh(0, [1, 1, 1, 1], { shading: 'lambert', seed: 11 });
+    renderer.render(scene({
+      meshes: [first],
+      lights: [pointLight()],
+      opaque: [first],
+      shadowPlans: [pointPlan(first)],
+    }));
+    const replacement = mesh(0, [1, 1, 1, 1], {
+      shading: 'lambert',
+      seed: 12,
+    });
+    renderer.render(scene({
+      meshes: [replacement],
+      lights: [pointLight()],
+      opaque: [replacement],
+      shadowPlans: [pointPlan(replacement)],
+    }));
+
+    expect(recording.draws.filter(draw => draw.programKey === 'shadow-depth'))
+      .toHaveLength(12);
+    expect(recording.deleteTexture).toHaveBeenCalled();
+  });
+
+  it.each([
+    ['depth', 4],
+    ['color', 7],
+  ] as const)('rolls back a point candidate when the %s draw fails', (
+    _stage,
+    at,
+  ) => {
+    const failure = new Error('point render failed');
+    const recording = createRendererGL({
+      throws: [{ operation: 'drawArrays', at, error: failure }],
+    });
+    const renderer = new WebGLSceneRenderer(recording.gl, 7);
+    const drawable = mesh(0, [1, 1, 1, 1], {
+      shading: 'lambert',
+      seed: 11,
+    });
+
+    expect(() => renderer.render(scene({
+      meshes: [drawable],
+      lights: [pointLight()],
+      opaque: [drawable],
+      shadowPlans: [pointPlan(drawable)],
+    }))).toThrow(failure);
+    expect(recording.deleteTexture).toHaveBeenCalled();
+    expect(() => renderer.render(scene())).not.toThrow();
+  });
+
   it('rolls back a directional candidate when the later color draw fails', () => {
     const failure = new Error('color draw failed');
     const recording = createRendererGL({
@@ -581,7 +725,42 @@ function directionalPlan(mesh: SettledWebGLMesh): SettledWebGLShadowPlan {
   });
 }
 
+function pointLight(): SettledWebGLLight {
+  return Object.freeze({
+    kind: 'point' as const,
+    identity: POINT_LIGHT_IDENTITY,
+    linearColor: Object.freeze([1, 1, 1] as const),
+    position: Object.freeze([1, 2, 3] as const),
+    range: 10,
+    intensity: 1,
+    castShadow: true,
+  });
+}
+
+function pointPlan(mesh: SettledWebGLMesh): SettledWebGLShadowPlan {
+  return Object.freeze({
+    kind: 'point',
+    lightIdentity: POINT_LIGHT_IDENTITY,
+    lightIndex: 0,
+    projectionViewMatrices: Object.freeze(Array.from(
+      { length: 6 },
+      (_, face) => matrix(711 + face),
+    )),
+    lightPosition: Object.freeze([1, 2, 3] as const),
+    nearDistance: 0.01,
+    farDistance: 10,
+    bias: 0.001,
+    casters: Object.freeze([mesh]),
+    receivers: Object.freeze([mesh]),
+    requestedResolution: 1024,
+    comparisonCount: 4,
+    contextGeneration: 7,
+    shadowProgramGeneration: 1,
+  } as any);
+}
+
 const DIRECTIONAL_LIGHT_IDENTITY = Object.freeze({});
+const POINT_LIGHT_IDENTITY = Object.freeze({});
 
 interface MeshOptions {
   readonly indexed?: boolean;
@@ -780,6 +959,7 @@ interface RendererGLRecording {
   readonly uniformWrites: UniformWrite[];
   readonly getParameter: ReturnType<typeof vi.fn>;
   readonly bindFramebuffer: ReturnType<typeof vi.fn>;
+  readonly bindTexture: ReturnType<typeof vi.fn>;
   readonly clear: ReturnType<typeof vi.fn>;
   readonly createProgram: ReturnType<typeof vi.fn>;
   readonly deleteProgram: ReturnType<typeof vi.fn>;
@@ -791,6 +971,7 @@ interface RendererGLRecording {
   readonly drawElements: ReturnType<typeof vi.fn>;
   readonly readPixels: ReturnType<typeof vi.fn>;
   readonly createFramebuffer: ReturnType<typeof vi.fn>;
+  readonly framebufferTexture2D: ReturnType<typeof vi.fn>;
   readonly createTexture: ReturnType<typeof vi.fn>;
   readonly deleteTexture: ReturnType<typeof vi.fn>;
 }
