@@ -57,143 +57,21 @@ export interface CRCPhysicsShapeHit2D {
   readonly timeOfImpact: number;
 }
 
-export function circleShape2D(
-  input: Readonly<{
-    radius: number;
-    center?: CRCPhysicsVector2;
-  }>,
-): CRCPhysicsShape2D {
-  void input;
-  return unavailable('circleShape2D');
-}
-
-export function ellipseShape2D(
-  input: Readonly<{
-    radiusX: number;
-    radiusY: number;
-    center?: CRCPhysicsVector2;
-    rotationDegrees?: number;
-  }>,
-): CRCPhysicsShape2D {
-  void input;
-  return unavailable('ellipseShape2D');
-}
-
-export function boxShape2D(
-  input: Readonly<{
-    width: number;
-    height: number;
-    center?: CRCPhysicsVector2;
-  }>,
-): CRCPhysicsShape2D {
-  void input;
-  return unavailable('boxShape2D');
-}
-
-export function roundedBoxShape2D(
-  input: Readonly<{
-    width: number;
-    height: number;
-    radius:
-      | number
-      | readonly [
-          topLeft: number,
-          topRight: number,
-          bottomRight: number,
-          bottomLeft: number,
-        ];
-    center?: CRCPhysicsVector2;
-  }>,
-): CRCPhysicsShape2D {
-  void input;
-  return unavailable('roundedBoxShape2D');
-}
-
-export function capsuleShape2D(
-  input: Readonly<{
-    start: CRCPhysicsVector2;
-    end: CRCPhysicsVector2;
-    radius: number;
-  }>,
-): CRCPhysicsShape2D {
-  void input;
-  return unavailable('capsuleShape2D');
-}
-
-export function arcShape2D(
-  input: Readonly<{
-    center?: CRCPhysicsVector2;
-    radius: number;
-    startAngleRadians: number;
-    endAngleRadians: number;
-    counterclockwise?: boolean;
-    thickness: number;
-  }>,
-): CRCPhysicsShape2D {
-  void input;
-  return unavailable('arcShape2D');
-}
-
-export function wedgeShape2D(
-  input: Readonly<{
-    center?: CRCPhysicsVector2;
-    radius: number;
-    startAngleRadians: number;
-    endAngleRadians: number;
-    counterclockwise?: boolean;
-  }>,
-): CRCPhysicsShape2D {
-  void input;
-  return unavailable('wedgeShape2D');
-}
-
-export function segmentShape2D(
-  input: Readonly<{
-    start: CRCPhysicsVector2;
-    end: CRCPhysicsVector2;
-  }>,
-): CRCPhysicsShape2D {
-  void input;
-  return unavailable('segmentShape2D');
-}
-
-export function chainShape2D(
-  input: Readonly<{
-    points: readonly CRCPhysicsVector2[];
-    closed?: boolean;
-    radius?: number;
-  }>,
-): CRCPhysicsShape2D {
-  void input;
-  return unavailable('chainShape2D');
-}
-
-export function polygonShape2D(
-  input: Readonly<{
-    points: readonly CRCPhysicsVector2[];
-  }>,
-): CRCPhysicsShape2D {
-  void input;
-  return unavailable('polygonShape2D');
-}
-
-export function boundsOfShape2D(
-  shape: CRCPhysicsShape2D,
-  pose?: CRCPhysicsPose2D,
-): CRCPhysicsAabb2D {
-  void shape;
-  void pose;
-  return unavailable('boundsOfShape2D');
-}
-
-export function massProperties2D(
-  shape: CRCPhysicsShape2D,
-  options?: Readonly<{ density?: number }>,
-): CRCPhysicsMassProperties2D {
-  void shape;
-  void options;
-  return unavailable('massProperties2D');
-}
+export {
+  arcShape2D,
+  boundsOfShape2D,
+  boxShape2D,
+  capsuleShape2D,
+  chainShape2D,
+  circleShape2D,
+  ellipseShape2D,
+  massProperties2D,
+  polygonShape2D,
+  roundedBoxShape2D,
+  segmentShape2D,
+  transformShape2D,
+  wedgeShape2D,
+} from './lib/2d/shapes.js';
 
 export function containsPoint2D(
   shape: CRCPhysicsShape2D,
@@ -273,15 +151,6 @@ export function shapeCastAgainstShape2D(
   void targetPose;
   void options;
   return unavailable('shapeCastAgainstShape2D');
-}
-
-export function transformShape2D(
-  shape: CRCPhysicsShape2D,
-  transform: CRCPhysicsTransform2D,
-): CRCPhysicsShape2D {
-  void shape;
-  void transform;
-  return unavailable('transformShape2D');
 }
 
 function unavailable(name: string): never {
