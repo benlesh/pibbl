@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { buildSearchBundle } from "../../tooling/studio-docs/search-index";
 import type { NavigationArea } from "../src/app/navigation";
@@ -160,8 +160,7 @@ describe("Studio shell navigation", () => {
     )!;
 
     trigger.click();
-    await settle();
-    expect(document.querySelector<HTMLDialogElement>("dialog")?.open).toBe(true);
+    await waitForOpenSearchDialog();
     expect(document.activeElement).toBe(
       document.querySelector("[data-search-input]"),
     );
@@ -170,8 +169,7 @@ describe("Studio shell navigation", () => {
     document.dispatchEvent(
       new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }),
     );
-    await settle();
-    expect(document.querySelector<HTMLDialogElement>("dialog")?.open).toBe(true);
+    await waitForOpenSearchDialog();
 
     shell.dispose();
   });
@@ -209,10 +207,7 @@ describe("Studio shell navigation", () => {
     document.dispatchEvent(
       new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }),
     );
-    await settle();
-    expect(document.querySelector<HTMLDialogElement>(".studio-search-dialog")?.open).toBe(
-      true,
-    );
+    await waitForOpenSearchDialog();
     document.dispatchEvent(
       new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }),
     );
@@ -254,6 +249,14 @@ async function settle(): Promise<void> {
   await Promise.resolve();
   await new Promise((resolve) => setTimeout(resolve, 0));
   await new Promise((resolve) => setTimeout(resolve, 50));
+}
+
+async function waitForOpenSearchDialog(): Promise<void> {
+  await vi.waitFor(() => {
+    expect(
+      document.querySelector<HTMLDialogElement>(".studio-search-dialog")?.open,
+    ).toBe(true);
+  });
 }
 
 function link(container: HTMLElement, id: string): HTMLAnchorElement {
