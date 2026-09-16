@@ -26,7 +26,6 @@ import {
 import { distanceBetweenPreparedShapes3D } from "./pairs.js";
 import {
   prepareConvexShape3D,
-  supportShape3D,
   type PreparedBox3D,
   type PreparedConvexShape3D,
 } from "./support.js";
@@ -36,6 +35,291 @@ const CAST_HIT_TOLERANCE = 1e-7;
 const CAST_TIME_TOLERANCE = 1e-12;
 
 type CastCandidate3D = AnalyticCastCandidate3D;
+
+function raycastPreparedConvex(
+  shape: PreparedConvexShape3D,
+  origin: ArrayLike<number>,
+  direction: ArrayLike<number>,
+  maxDistance: number,
+): CastCandidate3D | null {
+  if (shape.kind === "box")
+    return raycastBox(shape, origin, direction, maxDistance);
+  if (shape.kind === "ellipsoid") {
+    const localOrigin = localPoint(shape.center, shape.axes, origin);
+    const localDirection = localVector(shape.axes, direction);
+    const ox = localOrigin[0] / shape.radii[0]!;
+    const oy = localOrigin[1] / shape.radii[1]!;
+    const oz = localOrigin[2] / shape.radii[2]!;
+    const dx = localDirection[0] / shape.radii[0]!;
+    const dy = localDirection[1] / shape.radii[1]!;
+    const dz = localDirection[2] / shape.radii[2]!;
+    const t = smallestQuadraticRoot(
+      dx * dx + dy * dy + dz * dz,
+      2 * (ox * dx + oy * dy + oz * dz),
+      ox * ox + oy * oy + oz * oz - 1,
+      maxDistance,
+    );
+    if (t === null) return null;
+    const localHit = [
+      localOrigin[0] + localDirection[0] * t,
+      localOrigin[1] + localDirection[1] * t,
+      localOrigin[2] + localDirection[2] * t,
+    ] as const;
+    return candidateAt(
+      shape,
+      origin,
+      direction,
+      t,
+      [
+        localHit[0] / shape.radii[0]! ** 2,
+        localHit[1] / shape.radii[1]! ** 2,
+        localHit[2] / shape.radii[2]! ** 2,
+      ],
+      maxDistance,
+    );
+  }
+  if (shape.kind === "capsule")
+    return raycastCapsule(shape, origin, direction, maxDistance);
+  if (shape.kind === "hull")
+    return raycastHull(shape, origin, direction, maxDistance);
+  if (shape.kind === "sphere") return null;
+  return raycastAxial(shape, origin, direction, maxDistance);
+}
+
+function raycastCapsule(
+  shape: Extract<PreparedConvexShape3D, { kind: "capsule" }>,
+  origin: ArrayLike<number>,
+  direction: ArrayLike<number>,
+  maxDistance: number,
+): CastCandidate3D | null {
+  const bax = shape.end[0]! - shape.start[0]!;
+  const bay = shape.end[1]! - shape.start[1]!;
+  const baz = shape.end[2]! - shape.start[2]!;
+  const oax = origin[0]! - shape.start[0]!;
+  const oay = origin[1]! - shape.start[1]!;
+  const oaz = origin[2]! - shape.start[2]!;
+  const baba = bax * bax + bay * bay + baz * baz;
+  const bard = bax * direction[0]! + bay * direction[1]! + baz * direction[2]!;
+  const baoa = bax * oax + bay * oay + baz * oaz;
+  const rdoa = direction[0]! * oax + direction[1]! * oay + direction[2]! * oaz;
+  const oaoa = oax * oax + oay * oay + oaz * oaz;
+  const a = baba - bard * bard;
+  const b = baba * rdoa - baoa * bard;
+  const c = baba * oaoa - baoa * baoa - shape.radius ** 2 * baba;
+  const roots: number[] = [];
+  const discriminant = b * b - a * c;
+  if (Math.abs(a) > GEOMETRY_EPSILON_3D && discriminant >= 0) {
+    const t = (-b - Math.sqrt(discriminant)) / a;
+    const y = baoa + t * bard;
+    if (t >= 0 && t <= maxDistance && y >= 0 && y <= baba) roots.push(t);
+  }
+  for (const endpoint of [shape.start, shape.end]) {
+    const ox = origin[0]! - endpoint[0]!;
+    const oy = origin[1]! - endpoint[1]!;
+    const oz = origin[2]! - endpoint[2]!;
+    const t = smallestQuadraticRoot(
+      1,
+      2 * (ox * direction[0]! + oy * direction[1]! + oz * direction[2]!),
+      ox * ox + oy * oy + oz * oz - shape.radius ** 2,
+      maxDistance,
+    );
+    if (t !== null) roots.push(t);
+  }
+  if (roots.length === 0) return null;
+  const t = Math.min(...roots);
+  const hit = [
+    origin[0]! + direction[0]! * t,
+    origin[1]! + direction[1]! * t,
+    origin[2]! + direction[2]! * t,
+  ] as const;
+  const projection = Math.max(
+    0,
+    Math.min(
+      1,
+      ((hit[0] - shape.start[0]!) * bax +
+        (hit[1] - shape.start[1]!) * bay +
+        (hit[2] - shape.start[2]!) * baz) /
+        baba,
+    ),
+  );
+  return worldCandidate(
+    origin,
+    direction,
+    t,
+    [
+      hit[0] - (shape.start[0]! + bax * projection),
+      hit[1] - (shape.start[1]! + bay * projection),
+      hit[2] - (shape.start[2]! + baz * projection),
+    ],
+    maxDistance,
+  );
+}
+
+function raycastAxial(
+  shape: Extract<PreparedConvexShape3D, { kind: "cylinder" | "cone" }>,
+  origin: ArrayLike<number>,
+  direction: ArrayLike<number>,
+  maxDistance: number,
+): CastCandidate3D | null {
+  const o = localPoint(shape.center, shape.axes, origin);
+  const d = localVector(shape.axes, direction);
+  const candidates: readonly [number, readonly [number, number, number]][] = [];
+  const mutable = candidates as [number, readonly [number, number, number]][];
+  if (shape.kind === "cylinder") {
+    const a = d[0] ** 2 + d[2] ** 2;
+    const b = 2 * (o[0] * d[0] + o[2] * d[2]);
+    const c = o[0] ** 2 + o[2] ** 2 - shape.radius ** 2;
+    for (const t of quadraticRoots(a, b, c)) {
+      const y = o[1] + d[1] * t;
+      if (
+        t >= 0 &&
+        t <= maxDistance &&
+        y >= -shape.halfHeight &&
+        y <= shape.halfHeight
+      )
+        mutable.push([t, [o[0] + d[0] * t, 0, o[2] + d[2] * t]]);
+    }
+  } else {
+    const k = shape.radius / (2 * shape.halfHeight);
+    const a = d[0] ** 2 + d[2] ** 2 - k ** 2 * d[1] ** 2;
+    const b =
+      2 *
+      (o[0] * d[0] + o[2] * d[2] + k ** 2 * (shape.halfHeight - o[1]) * d[1]);
+    const c = o[0] ** 2 + o[2] ** 2 - k ** 2 * (shape.halfHeight - o[1]) ** 2;
+    for (const t of quadraticRoots(a, b, c)) {
+      const y = o[1] + d[1] * t;
+      if (
+        t >= 0 &&
+        t <= maxDistance &&
+        y >= -shape.halfHeight &&
+        y <= shape.halfHeight
+      ) {
+        const x = o[0] + d[0] * t,
+          z = o[2] + d[2] * t;
+        mutable.push([t, [x, k ** 2 * (shape.halfHeight - y), z]]);
+      }
+    }
+  }
+  if (Math.abs(d[1]) > GEOMETRY_EPSILON_3D) {
+    for (const y of shape.kind === "cylinder"
+      ? [-shape.halfHeight, shape.halfHeight]
+      : [-shape.halfHeight]) {
+      const t = (y - o[1]) / d[1];
+      const x = o[0] + d[0] * t,
+        z = o[2] + d[2] * t;
+      if (
+        t >= 0 &&
+        t <= maxDistance &&
+        x * x + z * z <= shape.radius ** 2 + GEOMETRY_EPSILON_3D
+      )
+        mutable.push([t, [0, y < 0 ? -1 : 1, 0]]);
+    }
+  }
+  if (mutable.length === 0) return null;
+  mutable.sort((left, right) => left[0] - right[0]);
+  return candidateAt(
+    shape,
+    origin,
+    direction,
+    mutable[0]![0],
+    mutable[0]![1],
+    maxDistance,
+  );
+}
+
+function raycastHull(
+  shape: Extract<PreparedConvexShape3D, { kind: "hull" }>,
+  origin: ArrayLike<number>,
+  direction: ArrayLike<number>,
+  maxDistance: number,
+): CastCandidate3D | null {
+  let enter = 0;
+  let normal: readonly [number, number, number] = [
+    -direction[0]!,
+    -direction[1]!,
+    -direction[2]!,
+  ];
+  for (let index = 0; index < shape.faces.length; index += 3) {
+    const a = vertex(shape.vertices, shape.faces[index]!);
+    const b = vertex(shape.vertices, shape.faces[index + 1]!);
+    const c = vertex(shape.vertices, shape.faces[index + 2]!);
+    const n = cross(subtract(b, a), subtract(c, a));
+    const denominator = dot(n, direction);
+    const numerator = dot(n, subtract(a, origin));
+    if (Math.abs(denominator) <= GEOMETRY_EPSILON_3D) {
+      if (numerator < 0) return null;
+      continue;
+    }
+    const t = numerator / denominator;
+    if (denominator < 0 && t > enter) {
+      enter = t;
+      normal = n;
+    }
+    if (denominator > 0 && t < enter) return null;
+  }
+  return enter <= maxDistance
+    ? worldCandidate(origin, direction, enter, normal, maxDistance)
+    : null;
+}
+
+function containsPreparedPoint(
+  shape: PreparedConvexShape3D,
+  point: ArrayLike<number>,
+): boolean {
+  if (shape.kind === "sphere")
+    return (
+      Math.hypot(
+        point[0]! - shape.center[0]!,
+        point[1]! - shape.center[1]!,
+        point[2]! - shape.center[2]!,
+      ) <= shape.radius
+    );
+  if (shape.kind === "box") return containsPreparedBoxPoint(shape, point);
+  if (shape.kind === "capsule") {
+    const ab = subtract(shape.end, shape.start);
+    const ap = subtract(point, shape.start);
+    const t = Math.max(0, Math.min(1, dot(ap, ab) / dot(ab, ab)));
+    return (
+      Math.hypot(
+        point[0]! - (shape.start[0]! + ab[0] * t),
+        point[1]! - (shape.start[1]! + ab[1] * t),
+        point[2]! - (shape.start[2]! + ab[2] * t),
+      ) <= shape.radius
+    );
+  }
+  if (shape.kind === "hull")
+    return shape.faces.every(
+      (_, index) =>
+        index % 3 !== 0 ||
+        dot(
+          cross(
+            subtract(
+              vertex(shape.vertices, shape.faces[index + 1]!),
+              vertex(shape.vertices, shape.faces[index]!),
+            ),
+            subtract(
+              vertex(shape.vertices, shape.faces[index + 2]!),
+              vertex(shape.vertices, shape.faces[index]!),
+            ),
+          ),
+          subtract(point, vertex(shape.vertices, shape.faces[index]!)),
+        ) <= GEOMETRY_EPSILON_3D,
+    );
+  const local = localPoint(shape.center, shape.axes, point);
+  if (shape.kind === "ellipsoid")
+    return (
+      (local[0] / shape.radii[0]!) ** 2 +
+        (local[1] / shape.radii[1]!) ** 2 +
+        (local[2] / shape.radii[2]!) ** 2 <=
+      1
+    );
+  if (local[1] < -shape.halfHeight || local[1] > shape.halfHeight) return false;
+  const radius =
+    shape.kind === "cone"
+      ? (shape.radius * (shape.halfHeight - local[1])) / (2 * shape.halfHeight)
+      : shape.radius;
+  return Math.hypot(local[0], local[2]) <= radius;
+}
 
 export function raycastShape3D(
   shape: CRCPhysicsShape3D,
@@ -68,7 +352,6 @@ export function raycastShape3D(
     return candidate === null ? null : publicHit(candidate, true);
   }
 
-  const box = prepared.kind === "box" ? prepared : boundsBoxFor(prepared);
   const scaledX = sourceDirection[0]! / scale;
   const scaledY = sourceDirection[1]! / scale;
   const scaledZ = sourceDirection[2]! / scale;
@@ -78,7 +361,7 @@ export function raycastShape3D(
     scaledY / scaledLength,
     scaledZ / scaledLength,
   ] as const;
-  if (containsPreparedBoxPoint(box, origin)) {
+  if (containsPreparedPoint(prepared, origin)) {
     return includeInitialOverlap
       ? publicHit({
           pointX: origin[0]!,
@@ -93,30 +376,13 @@ export function raycastShape3D(
       : null;
   }
   if (maxDistance === 0) return null;
-  const candidate = raycastBox(box, origin, direction, maxDistance);
+  const candidate = raycastPreparedConvex(
+    prepared,
+    origin,
+    direction,
+    maxDistance,
+  );
   return candidate === null ? null : publicHit(candidate);
-}
-
-function boundsBoxFor(shape: PreparedConvexShape3D): PreparedBox3D {
-  const point = new Float64Array(3);
-  const extents = new Float64Array(3);
-  const center = new Float64Array(3);
-  for (let axis = 0; axis < 3; axis += 1) {
-    const direction = [0, 0, 0];
-    direction[axis] = 1;
-    supportShape3D(point, shape, direction[0]!, direction[1]!, direction[2]!);
-    const maximum = point[axis]!;
-    supportShape3D(point, shape, -direction[0]!, -direction[1]!, -direction[2]!);
-    const minimum = point[axis]!;
-    center[axis] = (minimum + maximum) / 2;
-    extents[axis] = Math.max((maximum - minimum) / 2, GEOMETRY_EPSILON_3D);
-  }
-  return {
-    kind: "box",
-    center,
-    axes: new Float64Array([1, 0, 0, 0, 1, 0, 0, 0, 1]),
-    halfExtents: extents,
-  };
 }
 
 export function shapeCastAgainstShape3D(
@@ -135,7 +401,8 @@ export function shapeCastAgainstShape3D(
   const movingPrepared = prepareConvexShape3D(movingRecord, from);
   const targetPrepared = prepareConvexShape3D(targetRecord, targetPose);
   const includeInitialOverlap = options?.includeInitialOverlap === true;
-  const exactAnalytic = movingPrepared.kind === "sphere" &&
+  const exactAnalytic =
+    movingPrepared.kind === "sphere" &&
     (targetPrepared.kind === "sphere" || targetPrepared.kind === "box");
   let candidate: CastCandidate3D | null;
   if (movingPrepared.kind === "sphere" && targetPrepared.kind === "sphere") {
@@ -145,7 +412,10 @@ export function shapeCastAgainstShape3D(
       targetPrepared,
       includeInitialOverlap,
     );
-  } else if (movingPrepared.kind === "sphere" && targetPrepared.kind === "box") {
+  } else if (
+    movingPrepared.kind === "sphere" &&
+    targetPrepared.kind === "box"
+  ) {
     candidate = castSphereAgainstBoxAnalytically(
       movingPrepared,
       translation,
@@ -207,8 +477,7 @@ function raycastBox(
     const face = axis * 2 + (nearSign > 0 ? 1 : 0);
     if (
       near > minimum + CAST_TIME_TOLERANCE ||
-      (Math.abs(near - minimum) <= CAST_TIME_TOLERANCE &&
-        face < selectedFace)
+      (Math.abs(near - minimum) <= CAST_TIME_TOLERANCE && face < selectedFace)
     ) {
       minimum = near;
       selectedFace = face;
@@ -219,7 +488,8 @@ function raycastBox(
   if (
     minimum < -CAST_TIME_TOLERANCE ||
     minimum > maxDistance + CAST_TIME_TOLERANCE
-  ) return null;
+  )
+    return null;
   const distance = Math.max(0, Math.min(maxDistance, minimum));
   const axis = Math.floor(selectedFace / 2);
   const sign = (selectedFace & 1) === 0 ? -1 : 1;
@@ -240,6 +510,125 @@ function raycastBox(
   };
 }
 
+function localPoint(
+  center: ArrayLike<number>,
+  axes: ArrayLike<number>,
+  point: ArrayLike<number>,
+): readonly [number, number, number] {
+  return localVector(axes, subtract(point, center));
+}
+
+function localVector(
+  axes: ArrayLike<number>,
+  vector: ArrayLike<number>,
+): readonly [number, number, number] {
+  return [
+    axes[0]! * vector[0]! + axes[1]! * vector[1]! + axes[2]! * vector[2]!,
+    axes[3]! * vector[0]! + axes[4]! * vector[1]! + axes[5]! * vector[2]!,
+    axes[6]! * vector[0]! + axes[7]! * vector[1]! + axes[8]! * vector[2]!,
+  ];
+}
+
+function candidateAt(
+  shape: Extract<PreparedConvexShape3D, { axes: Float64Array }>,
+  origin: ArrayLike<number>,
+  direction: ArrayLike<number>,
+  distance: number,
+  localNormal: ArrayLike<number>,
+  maxDistance: number,
+): CastCandidate3D {
+  const normal = [
+    shape.axes[0]! * localNormal[0]! +
+      shape.axes[3]! * localNormal[1]! +
+      shape.axes[6]! * localNormal[2]!,
+    shape.axes[1]! * localNormal[0]! +
+      shape.axes[4]! * localNormal[1]! +
+      shape.axes[7]! * localNormal[2]!,
+    shape.axes[2]! * localNormal[0]! +
+      shape.axes[5]! * localNormal[1]! +
+      shape.axes[8]! * localNormal[2]!,
+  ] as const;
+  return worldCandidate(origin, direction, distance, normal, maxDistance);
+}
+
+function worldCandidate(
+  origin: ArrayLike<number>,
+  direction: ArrayLike<number>,
+  distance: number,
+  sourceNormal: ArrayLike<number>,
+  maxDistance: number,
+): CastCandidate3D {
+  const length = Math.hypot(
+    sourceNormal[0]!,
+    sourceNormal[1]!,
+    sourceNormal[2]!,
+  );
+  const normal =
+    length > 0
+      ? [
+          sourceNormal[0]! / length,
+          sourceNormal[1]! / length,
+          sourceNormal[2]! / length,
+        ]
+      : [-direction[0]!, -direction[1]!, -direction[2]!];
+  return {
+    pointX: origin[0]! + direction[0]! * distance,
+    pointY: origin[1]! + direction[1]! * distance,
+    pointZ: origin[2]! + direction[2]! * distance,
+    normalX: normal[0]!,
+    normalY: normal[1]!,
+    normalZ: normal[2]!,
+    distance,
+    timeOfImpact: Number.isFinite(maxDistance) ? distance / maxDistance : 0,
+  };
+}
+
+function quadraticRoots(a: number, b: number, c: number): number[] {
+  if (Math.abs(a) <= GEOMETRY_EPSILON_3D)
+    return Math.abs(b) <= GEOMETRY_EPSILON_3D ? [] : [-c / b];
+  const discriminant = b * b - 4 * a * c;
+  if (discriminant < 0) return [];
+  const root = Math.sqrt(discriminant);
+  return [(-b - root) / (2 * a), (-b + root) / (2 * a)];
+}
+
+function smallestQuadraticRoot(
+  a: number,
+  b: number,
+  c: number,
+  maximum: number,
+): number | null {
+  const roots = quadraticRoots(a, b, c).filter(
+    (value) => value >= 0 && value <= maximum,
+  );
+  return roots.length === 0 ? null : Math.min(...roots);
+}
+
+function vertex(
+  values: Float64Array,
+  index: number,
+): readonly [number, number, number] {
+  return [values[index * 3]!, values[index * 3 + 1]!, values[index * 3 + 2]!];
+}
+
+function subtract(
+  left: ArrayLike<number>,
+  right: ArrayLike<number>,
+): readonly [number, number, number] {
+  return [left[0]! - right[0]!, left[1]! - right[1]!, left[2]! - right[2]!];
+}
+
+function cross(
+  left: ArrayLike<number>,
+  right: ArrayLike<number>,
+): readonly [number, number, number] {
+  return [
+    left[1]! * right[2]! - left[2]! * right[1]!,
+    left[2]! * right[0]! - left[0]! * right[2]!,
+    left[0]! * right[1]! - left[1]! * right[0]!,
+  ];
+}
+
 function conservativelyCast(
   moving: CRCPhysicsShape3D,
   from: InternalPose3D,
@@ -251,11 +640,7 @@ function conservativelyCast(
 ): CastCandidate3D | null {
   let time = 0;
   let separatedTime = 0;
-  for (
-    let iteration = 0;
-    iteration < MAX_GJK_ITERATIONS_3D;
-    iteration += 1
-  ) {
+  for (let iteration = 0; iteration < MAX_GJK_ITERATIONS_3D; iteration += 1) {
     const distance = sampleTranslatedDistance(
       moving,
       from,
@@ -274,12 +659,7 @@ function conservativelyCast(
           distance.normal[2],
           translation,
         );
-        return candidateFromDistance(
-          distance,
-          normal,
-          translationLength,
-          time,
-        );
+        return candidateFromDistance(distance, normal, translationLength, time);
       }
       return refineCrossing(
         moving,
@@ -308,7 +688,8 @@ function conservativelyCast(
       !Number.isFinite(nextTime) ||
       nextTime <= time ||
       nextTime > 1 + CAST_TIME_TOLERANCE
-    ) break;
+    )
+      break;
     separatedTime = time;
     time = Math.min(1, nextTime);
   }
@@ -405,12 +786,7 @@ function refineBoundedTangent(
     tangent.normal[2],
     translation,
   );
-  return candidateFromDistance(
-    tangent,
-    normal,
-    translationLength,
-    impactTime,
-  );
+  return candidateFromDistance(tangent, normal, translationLength, impactTime);
 }
 
 function refineCrossing(
@@ -455,12 +831,7 @@ function refineCrossing(
     impact.normal[2],
     translation,
   );
-  return candidateFromDistance(
-    impact,
-    normal,
-    translationLength,
-    impactTime,
-  );
+  return candidateFromDistance(impact, normal, translationLength, impactTime);
 }
 
 function sampleTranslatedDistance(
@@ -532,10 +903,8 @@ function containsPreparedBoxPoint(
       dx * shape.axes[axis * 3]! +
       dy * shape.axes[axis * 3 + 1]! +
       dz * shape.axes[axis * 3 + 2]!;
-    if (
-      Math.abs(local) >
-      shape.halfExtents[axis]! + GEOMETRY_EPSILON_3D
-    ) return false;
+    if (Math.abs(local) > shape.halfExtents[axis]! + GEOMETRY_EPSILON_3D)
+      return false;
   }
   return true;
 }
@@ -549,9 +918,7 @@ function unitAgainstMotion(
   const length = Math.hypot(x, y, z);
   if (Number.isFinite(length) && length > 0) {
     const unit = [x / length, y / length, z / length] as const;
-    return dot(unit, motion) > 0
-      ? [-unit[0], -unit[1], -unit[2]]
-      : unit;
+    return dot(unit, motion) > 0 ? [-unit[0], -unit[1], -unit[2]] : unit;
   }
   const motionLength = Math.hypot(motion[0]!, motion[1]!, motion[2]!);
   return Number.isFinite(motionLength) && motionLength > 0
@@ -590,16 +957,19 @@ function publicHit(
   candidate: CastCandidate3D,
   preserveExactScale = false,
 ): CRCPhysicsShapeHit3D | null {
-  if (![
-    candidate.pointX,
-    candidate.pointY,
-    candidate.pointZ,
-    candidate.normalX,
-    candidate.normalY,
-    candidate.normalZ,
-    candidate.distance,
-    candidate.timeOfImpact,
-  ].every(Number.isFinite)) return null;
+  if (
+    ![
+      candidate.pointX,
+      candidate.pointY,
+      candidate.pointZ,
+      candidate.normalX,
+      candidate.normalY,
+      candidate.normalZ,
+      candidate.distance,
+      candidate.timeOfImpact,
+    ].every(Number.isFinite)
+  )
+    return null;
   return Object.freeze({
     point: freezeCastVector3(
       candidate.pointX,
@@ -632,7 +1002,7 @@ function freezeCastVector3(
 }
 
 function dot(first: ArrayLike<number>, second: ArrayLike<number>): number {
-  return first[0]! * second[0]! +
-    first[1]! * second[1]! +
-    first[2]! * second[2]!;
+  return (
+    first[0]! * second[0]! + first[1]! * second[1]! + first[2]! * second[2]!
+  );
 }

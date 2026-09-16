@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { boxShape3D, sphereShape3D } from "../../../3d-geometry.js";
+import {
+  boxShape3D,
+  coneShape3D,
+  cylinderShape3D,
+  ellipsoidShape3D,
+  sphereShape3D,
+} from "../../../3d-geometry.js";
 import { IDENTITY_POSE_3D, copyPose3D } from "../math.js";
 import { requireShapeRecord3D } from "../shape-records.js";
 import {
@@ -28,7 +34,10 @@ describe("convex 3D support maps", () => {
     const rotated = prepareConvexShape3D(
       requireShapeRecord3D(boxShape3D({ width: 4, height: 2, depth: 2 })),
       copyPose3D(
-        { position: [3, 0, 0], orientation: [0, 0, Math.SQRT1_2, Math.SQRT1_2] },
+        {
+          position: [3, 0, 0],
+          orientation: [0, 0, Math.SQRT1_2, Math.SQRT1_2],
+        },
         "pose",
       ),
     );
@@ -45,8 +54,38 @@ describe("convex 3D support maps", () => {
     expect(minkowski.secondFeature).toBe(0);
     expect(minkowski.x).toBeCloseTo(5, 12);
   });
+
+  it("uses exact analytic support for smooth convex families", () => {
+    const output = new Float64Array(3);
+    const ellipsoid = prepareConvexShape3D(
+      requireShapeRecord3D(ellipsoidShape3D({ radii: [2, 3, 4] })),
+      IDENTITY_POSE_3D,
+    );
+    supportShape3D(output, ellipsoid, 1, 1, 0);
+    const denominator = Math.hypot(2, 3);
+    expectVectorClose(output, [4 / denominator, 9 / denominator, 0]);
+
+    const cylinder = prepareConvexShape3D(
+      requireShapeRecord3D(cylinderShape3D({ radius: 2, halfHeight: 3 })),
+      IDENTITY_POSE_3D,
+    );
+    supportShape3D(output, cylinder, 1, 0, 1);
+    expectVectorClose(output, [Math.SQRT2, -3, Math.SQRT2]);
+
+    const cone = prepareConvexShape3D(
+      requireShapeRecord3D(coneShape3D({ radius: 2, halfHeight: 3 })),
+      IDENTITY_POSE_3D,
+    );
+    supportShape3D(output, cone, 0, 1, 0);
+    expectVectorClose(output, [0, 3, 0]);
+  });
 });
 
-function expectVectorClose(actual: ArrayLike<number>, expected: readonly number[]): void {
-  expected.forEach((value, index) => expect(actual[index]).toBeCloseTo(value, 12));
+function expectVectorClose(
+  actual: ArrayLike<number>,
+  expected: readonly number[],
+): void {
+  expected.forEach((value, index) =>
+    expect(actual[index]).toBeCloseTo(value, 12),
+  );
 }

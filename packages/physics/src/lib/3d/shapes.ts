@@ -22,6 +22,7 @@ import {
   type InternalPose3D,
 } from "./math.js";
 import { createShape3D, requireShapeRecord3D } from "./shape-records.js";
+import { buildCanonicalHull3D } from "./hull.js";
 
 const identityQuaternion: CRCPhysicsQuaternion = [0, 0, 0, 1];
 const zeroVector: CRCPhysicsVector3 = [0, 0, 0];
@@ -164,28 +165,12 @@ export function coneShape3D(
 export function convexHullShape3D(
   input: Readonly<{ points: readonly CRCPhysicsVector3[] }>,
 ): CRCPhysicsShape3D {
-  if (input.points.length < 4)
-    throw new RangeError("convex hull requires at least four points.");
-  const unique = new Map<string, Float64Array>();
-  for (let index = 0; index < input.points.length; index += 1) {
-    const point = copyFiniteVector3(
-      input.points[index]!,
-      `convexHull.points[${index}]`,
-    );
-    unique.set(`${point[0]},${point[1]},${point[2]}`, point);
-  }
-  if (unique.size < 4)
-    throw new RangeError("convex hull requires at least four distinct points.");
-  const points = [...unique.values()].sort(comparePoint3D);
-  if (!hasNoncoplanarTetrahedron(points)) {
-    throw new RangeError("convex hull points must span a nonzero volume.");
-  }
-  const vertices = new Float64Array(points.length * 3);
-  points.forEach((point, index) => vertices.set(point, index * 3));
+  const { vertices, faces } = buildCanonicalHull3D(input.points);
   return createShape3D({
     kind: "convexHull",
     center: averageVertices(vertices),
     vertices,
+    faces,
     localPose: IDENTITY_POSE_3D,
   });
 }
@@ -345,12 +330,59 @@ export function boundsOfShape3D(
   transformPointInto(center, zeroVector, worldBoxPose);
   const rotation = new Float64Array(9);
   rotationMatrixInto(rotation, worldBoxPose.orientation);
-  const halfExtents =
-    record.kind === "box"
-      ? record.halfExtents
-      : record.kind === "ellipsoid"
-        ? record.radii
-        : new Float64Array([record.radius, record.halfHeight, record.radius]);
+  if (record.kind === "ellipsoid") {
+    const extents = new Float64Array(3);
+    for (let axis = 0; axis < 3; axis += 1) {
+      extents[axis] = Math.hypot(
+        rotation[axis * 3]! * record.radii[0]!,
+        rotation[axis * 3 + 1]! * record.radii[1]!,
+        rotation[axis * 3 + 2]! * record.radii[2]!,
+      );
+    }
+    return freezeBounds3D(
+      center[0]! - extents[0]!,
+      center[1]! - extents[1]!,
+      center[2]! - extents[2]!,
+      center[0]! + extents[0]!,
+      center[1]! + extents[1]!,
+      center[2]! + extents[2]!,
+    );
+  }
+  if (record.kind === "cylinder" || record.kind === "cone") {
+    const minimum = new Float64Array(3);
+    const maximum = new Float64Array(3);
+    for (let axis = 0; axis < 3; axis += 1) {
+      const dx = rotation[axis * 3]!;
+      const dy = rotation[axis * 3 + 1]!;
+      const dz = rotation[axis * 3 + 2]!;
+      if (record.kind === "cylinder") {
+        const extent =
+          record.radius * Math.hypot(dx, dz) + record.halfHeight * Math.abs(dy);
+        minimum[axis] = center[axis]! - extent;
+        maximum[axis] = center[axis]! + extent;
+      } else {
+        const positive = Math.max(
+          record.halfHeight * dy,
+          record.radius * Math.hypot(dx, dz) - record.halfHeight * dy,
+        );
+        const negative = Math.max(
+          -record.halfHeight * dy,
+          record.radius * Math.hypot(dx, dz) + record.halfHeight * dy,
+        );
+        minimum[axis] = center[axis]! - negative;
+        maximum[axis] = center[axis]! + positive;
+      }
+    }
+    return freezeBounds3D(
+      minimum[0]!,
+      minimum[1]!,
+      minimum[2]!,
+      maximum[0]!,
+      maximum[1]!,
+      maximum[2]!,
+    );
+  }
+  const halfExtents = record.halfExtents;
   const extentX =
     Math.abs(rotation[0]!) * halfExtents[0]! +
     Math.abs(rotation[1]!) * halfExtents[1]! +
@@ -405,6 +437,42 @@ export function massProperties3D(
   if (record.kind === "triangleMesh" || record.kind === "heightfield") {
     return freezeMassProperties(0, center, 0, [0, 0, 0, 0, 0, 0, 0, 0, 0]);
   }
+  if (record.kind === "convexHull") {
+    const hull = hullMassProperties(record.vertices, record.faces, density);
+    const hullCenter = new Float64Array(3);
+    transformPointInto(hullCenter, hull.center, record.localPose);
+    return freezeMassProperties(
+      hull.volume,
+      hullCenter,
+      hull.mass,
+      rotateTensor(hull.tensor, record.localPose.orientation),
+    );
+  }
+  if (record.kind === "capsule") {
+    const length = segmentLength(record);
+    const cylinderMass = Math.PI * record.radius ** 2 * length * density;
+    const sphereMass = (4 * Math.PI * record.radius ** 3 * density) / 3;
+    const mass = cylinderMass + sphereMass;
+    const axial =
+      (cylinderMass * record.radius ** 2) / 2 +
+      (2 * sphereMass * record.radius ** 2) / 5;
+    const capDistance = length / 2 + (3 * record.radius) / 8;
+    const transverse =
+      (cylinderMass * (3 * record.radius ** 2 + length ** 2)) / 12 +
+      sphereMass * ((83 * record.radius ** 2) / 320 + capDistance ** 2);
+    const axis = new Float64Array([
+      (record.end[0]! - record.start[0]!) / length,
+      (record.end[1]! - record.start[1]!) / length,
+      (record.end[2]! - record.start[2]!) / length,
+    ]);
+    const tensor = axialTensor(transverse, axial, axis);
+    return freezeMassProperties(
+      cylinderMass / density + sphereMass / density,
+      center,
+      mass,
+      rotateTensor(tensor, record.localPose.orientation),
+    );
+  }
   const dimensions = massDimensions(record);
   const width = dimensions[0] * 2;
   const height = dimensions[1] * 2;
@@ -416,30 +484,167 @@ export function massProperties3D(
         ? Math.PI * record.radius ** 2 * record.halfHeight * 2
         : record.kind === "cone"
           ? (Math.PI * record.radius ** 2 * record.halfHeight * 2) / 3
-          : record.kind === "capsule"
-            ? Math.PI * record.radius ** 2 * segmentLength(record) +
-              (4 * Math.PI * record.radius ** 3) / 3
-            : width * height * depth;
+          : width * height * depth;
   const mass = volume * density;
-  const orientation =
-    record.kind === "box" ||
-    record.kind === "ellipsoid" ||
-    record.kind === "cylinder" ||
-    record.kind === "cone"
-      ? composePose3D(record.localPose, poseFor(zeroVector, record.orientation))
-          .orientation
-      : record.localPose.orientation;
+  const orientation = composePose3D(
+    record.localPose,
+    poseFor(zeroVector, record.orientation),
+  ).orientation;
+  let diagonalX = (mass * (height ** 2 + depth ** 2)) / 12;
+  let diagonalY = (mass * (width ** 2 + depth ** 2)) / 12;
+  let diagonalZ = (mass * (width ** 2 + height ** 2)) / 12;
+  if (record.kind === "ellipsoid") {
+    diagonalX = (mass * (record.radii[1]! ** 2 + record.radii[2]! ** 2)) / 5;
+    diagonalY = (mass * (record.radii[0]! ** 2 + record.radii[2]! ** 2)) / 5;
+    diagonalZ = (mass * (record.radii[0]! ** 2 + record.radii[1]! ** 2)) / 5;
+  } else if (record.kind === "cylinder") {
+    diagonalX = diagonalZ =
+      (mass * (3 * record.radius ** 2 + 4 * record.halfHeight ** 2)) / 12;
+    diagonalY = (mass * record.radius ** 2) / 2;
+  } else if (record.kind === "cone") {
+    diagonalX = diagonalZ =
+      (3 * mass * (record.radius ** 2 + record.halfHeight ** 2)) / 20;
+    diagonalY = (3 * mass * record.radius ** 2) / 10;
+    const localCenter = new Float64Array([0, -record.halfHeight / 2, 0]);
+    const shapePose = composePose3D(
+      record.localPose,
+      poseFor(record.center, record.orientation),
+    );
+    transformPointInto(center, localCenter, shapePose);
+  }
   return freezeMassProperties(
     volume,
     center,
     mass,
-    rotateDiagonalTensor(
-      (mass * (height ** 2 + depth ** 2)) / 12,
-      (mass * (width ** 2 + depth ** 2)) / 12,
-      (mass * (width ** 2 + height ** 2)) / 12,
-      orientation,
-    ),
+    rotateDiagonalTensor(diagonalX, diagonalY, diagonalZ, orientation),
   );
+}
+
+function axialTensor(
+  transverse: number,
+  axial: number,
+  axis: Float64Array,
+): number[] {
+  const delta = axial - transverse;
+  return [
+    transverse + delta * axis[0]! ** 2,
+    delta * axis[0]! * axis[1]!,
+    delta * axis[0]! * axis[2]!,
+    delta * axis[1]! * axis[0]!,
+    transverse + delta * axis[1]! ** 2,
+    delta * axis[1]! * axis[2]!,
+    delta * axis[2]! * axis[0]!,
+    delta * axis[2]! * axis[1]!,
+    transverse + delta * axis[2]! ** 2,
+  ];
+}
+
+function rotateTensor(
+  tensor: ArrayLike<number>,
+  orientation: ArrayLike<number>,
+): CRCPhysicsMassProperties3D["inertiaTensor"] {
+  const rotation = new Float64Array(9);
+  rotationMatrixInto(rotation, orientation);
+  const intermediate = new Float64Array(9);
+  const result = new Array<number>(9);
+  for (let row = 0; row < 3; row += 1)
+    for (let column = 0; column < 3; column += 1)
+      intermediate[row * 3 + column] =
+        rotation[row * 3]! * tensor[column]! +
+        rotation[row * 3 + 1]! * tensor[3 + column]! +
+        rotation[row * 3 + 2]! * tensor[6 + column]!;
+  for (let row = 0; row < 3; row += 1)
+    for (let column = 0; column < 3; column += 1)
+      result[row * 3 + column] = cleanZero(
+        intermediate[row * 3]! * rotation[column * 3]! +
+          intermediate[row * 3 + 1]! * rotation[column * 3 + 1]! +
+          intermediate[row * 3 + 2]! * rotation[column * 3 + 2]!,
+      );
+  return Object.freeze(result) as CRCPhysicsMassProperties3D["inertiaTensor"];
+}
+
+function hullMassProperties(
+  vertices: Float64Array,
+  faces: Uint32Array,
+  density: number,
+) {
+  let volume = 0;
+  const firstMoment = new Float64Array(3);
+  let x2 = 0,
+    y2 = 0,
+    z2 = 0,
+    xy = 0,
+    xz = 0,
+    yz = 0;
+  for (let index = 0; index < faces.length; index += 3) {
+    const a = vertices.subarray(faces[index]! * 3, faces[index]! * 3 + 3);
+    const b = vertices.subarray(
+      faces[index + 1]! * 3,
+      faces[index + 1]! * 3 + 3,
+    );
+    const c = vertices.subarray(
+      faces[index + 2]! * 3,
+      faces[index + 2]! * 3 + 3,
+    );
+    const signed =
+      (a[0]! * (b[1]! * c[2]! - b[2]! * c[1]!) -
+        a[1]! * (b[0]! * c[2]! - b[2]! * c[0]!) +
+        a[2]! * (b[0]! * c[1]! - b[1]! * c[0]!)) /
+      6;
+    volume += signed;
+    for (let axis = 0; axis < 3; axis += 1)
+      firstMoment[axis] += (signed * (a[axis]! + b[axis]! + c[axis]!)) / 4;
+    const second = (axis: number) =>
+      (signed / 10) *
+      (a[axis]! ** 2 +
+        b[axis]! ** 2 +
+        c[axis]! ** 2 +
+        a[axis]! * b[axis]! +
+        a[axis]! * c[axis]! +
+        b[axis]! * c[axis]!);
+    const product = (u: number, v: number) =>
+      (signed / 20) *
+      (2 * (a[u]! * a[v]! + b[u]! * b[v]! + c[u]! * c[v]!) +
+        a[u]! * b[v]! +
+        a[v]! * b[u]! +
+        a[u]! * c[v]! +
+        a[v]! * c[u]! +
+        b[u]! * c[v]! +
+        b[v]! * c[u]!);
+    x2 += second(0);
+    y2 += second(1);
+    z2 += second(2);
+    xy += product(0, 1);
+    xz += product(0, 2);
+    yz += product(1, 2);
+  }
+  const sign = volume < 0 ? -1 : 1;
+  volume *= sign;
+  for (let axis = 0; axis < 3; axis += 1) firstMoment[axis] *= sign;
+  x2 *= sign;
+  y2 *= sign;
+  z2 *= sign;
+  xy *= sign;
+  xz *= sign;
+  yz *= sign;
+  const center = new Float64Array([
+    firstMoment[0]! / volume,
+    firstMoment[1]! / volume,
+    firstMoment[2]! / volume,
+  ]);
+  const mass = volume * density;
+  const tensor = [
+    density * (y2 + z2) - mass * (center[1]! ** 2 + center[2]! ** 2),
+    -density * xy + mass * center[0]! * center[1]!,
+    -density * xz + mass * center[0]! * center[2]!,
+    -density * xy + mass * center[0]! * center[1]!,
+    density * (x2 + z2) - mass * (center[0]! ** 2 + center[2]! ** 2),
+    -density * yz + mass * center[1]! * center[2]!,
+    -density * xz + mass * center[0]! * center[2]!,
+    -density * yz + mass * center[1]! * center[2]!,
+    density * (x2 + y2) - mass * (center[0]! ** 2 + center[1]! ** 2),
+  ];
+  return { volume, center, mass, tensor };
 }
 
 export function transformShape3D(
@@ -506,39 +711,6 @@ function rejectScale(transform: CRCPhysicsTransform3D): void {
   ) {
     throw new TypeError("transform must not contain scale.");
   }
-}
-
-function comparePoint3D(
-  left: ArrayLike<number>,
-  right: ArrayLike<number>,
-): number {
-  return left[0]! - right[0]! || left[1]! - right[1]! || left[2]! - right[2]!;
-}
-
-function hasNoncoplanarTetrahedron(points: readonly Float64Array[]): boolean {
-  const a = points[0]!;
-  for (let bIndex = 1; bIndex < points.length - 2; bIndex += 1) {
-    const b = points[bIndex]!;
-    for (let cIndex = bIndex + 1; cIndex < points.length - 1; cIndex += 1) {
-      const c = points[cIndex]!;
-      const ab = [b[0]! - a[0]!, b[1]! - a[1]!, b[2]! - a[2]!] as const;
-      const ac = [c[0]! - a[0]!, c[1]! - a[1]!, c[2]! - a[2]!] as const;
-      const cross = [
-        ab[1] * ac[2] - ab[2] * ac[1],
-        ab[2] * ac[0] - ab[0] * ac[2],
-        ab[0] * ac[1] - ab[1] * ac[0],
-      ] as const;
-      for (let dIndex = cIndex + 1; dIndex < points.length; dIndex += 1) {
-        const d = points[dIndex]!;
-        const volume6 =
-          cross[0] * (d[0]! - a[0]!) +
-          cross[1] * (d[1]! - a[1]!) +
-          cross[2] * (d[2]! - a[2]!);
-        if (volume6 !== 0) return true;
-      }
-    }
-  }
-  return false;
 }
 
 function averageVertices(vertices: Float64Array): Float64Array {

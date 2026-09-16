@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   boundsOfShape3D,
   boxShape3D,
+  coneShape3D,
+  convexHullShape3D,
+  cylinderShape3D,
+  ellipsoidShape3D,
   massProperties3D,
   sphereShape3D,
   transformShape3D,
@@ -161,6 +165,58 @@ describe("immutable 3D sphere and box factories", () => {
       mass: 144,
       inertiaTensor: [624, 0, 0, 0, 480, 0, 0, 0, 240],
     });
+  });
+
+  it("returns exact analytic tensors instead of bounding-box approximations", () => {
+    const ellipsoid = massProperties3D(ellipsoidShape3D({ radii: [2, 3, 4] }), {
+      density: 2,
+    });
+    expect(ellipsoid.inertiaTensor[0]).toBeCloseTo(
+      (ellipsoid.mass * (3 ** 2 + 4 ** 2)) / 5,
+      12,
+    );
+    expect(ellipsoid.inertiaTensor[4]).toBeCloseTo(
+      (ellipsoid.mass * (2 ** 2 + 4 ** 2)) / 5,
+      12,
+    );
+    const cylinder = massProperties3D(
+      cylinderShape3D({ radius: 2, halfHeight: 3 }),
+    );
+    expect(cylinder.inertiaTensor[0]).toBeCloseTo(
+      (cylinder.mass * (3 * 2 ** 2 + 4 * 3 ** 2)) / 12,
+      12,
+    );
+    expect(cylinder.inertiaTensor[4]).toBeCloseTo(
+      (cylinder.mass * 2 ** 2) / 2,
+      12,
+    );
+    const cone = massProperties3D(coneShape3D({ radius: 2, halfHeight: 3 }));
+    expect(cone.centerOfMass).toEqual([0, -1.5, 0]);
+    expect(cone.inertiaTensor[4]).toBeCloseTo(
+      (3 * cone.mass * 2 ** 2) / 10,
+      12,
+    );
+  });
+
+  it("stores only canonical boundary vertices and faces for a hull", () => {
+    const shape = convexHullShape3D({
+      points: [
+        [-1, -1, -1],
+        [1, -1, -1],
+        [-1, 1, -1],
+        [1, 1, -1],
+        [-1, -1, 1],
+        [1, -1, 1],
+        [-1, 1, 1],
+        [1, 1, 1],
+        [0, 0, 0],
+      ],
+    });
+    const record = requireShapeRecord3D(shape);
+    expect(record.kind).toBe("convexHull");
+    if (record.kind !== "convexHull") return;
+    expect(record.vertices).toHaveLength(24);
+    expect(record.faces).toHaveLength(36);
   });
 
   it("rotates a box inertia tensor and center of mass with the shape", () => {

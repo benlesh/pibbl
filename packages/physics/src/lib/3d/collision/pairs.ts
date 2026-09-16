@@ -70,20 +70,70 @@ export function containsPoint3D(
   const prepared = prepareShape(shape, pose, "shape", "pose");
   const copied = copyFiniteVector3(point, "point");
   if (prepared.convex.kind === "sphere") {
-    return Math.hypot(
-      copied[0]! - prepared.convex.center[0]!,
-      copied[1]! - prepared.convex.center[1]!,
-      copied[2]! - prepared.convex.center[2]!,
-    ) <= prepared.convex.radius + GEOMETRY_EPSILON_3D;
+    return (
+      Math.hypot(
+        copied[0]! - prepared.convex.center[0]!,
+        copied[1]! - prepared.convex.center[1]!,
+        copied[2]! - prepared.convex.center[2]!,
+      ) <=
+      prepared.convex.radius + GEOMETRY_EPSILON_3D
+    );
   }
-  if (prepared.convex.kind === "vertices") {
-    const bounds = vertexCloudBounds(prepared.convex.vertices);
-    return copied[0]! >= bounds[0] - GEOMETRY_EPSILON_3D &&
-      copied[0]! <= bounds[3] + GEOMETRY_EPSILON_3D &&
-      copied[1]! >= bounds[1] - GEOMETRY_EPSILON_3D &&
-      copied[1]! <= bounds[4] + GEOMETRY_EPSILON_3D &&
-      copied[2]! >= bounds[2] - GEOMETRY_EPSILON_3D &&
-      copied[2]! <= bounds[5] + GEOMETRY_EPSILON_3D;
+  if (prepared.convex.kind === "capsule") {
+    return (
+      pointSegmentDistanceSquared(
+        copied,
+        prepared.convex.start,
+        prepared.convex.end,
+      ) <=
+      (prepared.convex.radius + GEOMETRY_EPSILON_3D) ** 2
+    );
+  }
+  if (prepared.convex.kind === "hull") {
+    for (let index = 0; index < prepared.convex.faces.length; index += 3) {
+      const a = vertex(prepared.convex.vertices, prepared.convex.faces[index]!);
+      const b = vertex(
+        prepared.convex.vertices,
+        prepared.convex.faces[index + 1]!,
+      );
+      const c = vertex(
+        prepared.convex.vertices,
+        prepared.convex.faces[index + 2]!,
+      );
+      if (signedTrianglePlane(a, b, c, copied) > GEOMETRY_EPSILON_3D)
+        return false;
+    }
+    return true;
+  }
+  if (
+    prepared.convex.kind === "ellipsoid" ||
+    prepared.convex.kind === "cylinder" ||
+    prepared.convex.kind === "cone"
+  ) {
+    const local = localPoint(
+      prepared.convex.center,
+      prepared.convex.axes,
+      copied,
+    );
+    if (prepared.convex.kind === "ellipsoid") {
+      return (
+        (local[0] / prepared.convex.radii[0]!) ** 2 +
+          (local[1] / prepared.convex.radii[1]!) ** 2 +
+          (local[2] / prepared.convex.radii[2]!) ** 2 <=
+        1 + GEOMETRY_EPSILON_3D
+      );
+    }
+    if (
+      local[1] < -prepared.convex.halfHeight - GEOMETRY_EPSILON_3D ||
+      local[1] > prepared.convex.halfHeight + GEOMETRY_EPSILON_3D
+    )
+      return false;
+    const radius =
+      prepared.convex.kind === "cone"
+        ? (prepared.convex.radius * (prepared.convex.halfHeight - local[1])) /
+          (2 * prepared.convex.halfHeight)
+        : prepared.convex.radius;
+    return Math.hypot(local[0], local[2]) <= radius + GEOMETRY_EPSILON_3D;
   }
   const dx = copied[0]! - prepared.convex.center[0]!;
   const dy = copied[1]! - prepared.convex.center[1]!;
@@ -93,7 +143,11 @@ export function containsPoint3D(
       dx * prepared.convex.axes[axis * 3]! +
       dy * prepared.convex.axes[axis * 3 + 1]! +
       dz * prepared.convex.axes[axis * 3 + 2]!;
-    if (Math.abs(local) > prepared.convex.halfExtents[axis]! + GEOMETRY_EPSILON_3D) return false;
+    if (
+      Math.abs(local) >
+      prepared.convex.halfExtents[axis]! + GEOMETRY_EPSILON_3D
+    )
+      return false;
   }
   return true;
 }
@@ -104,9 +158,16 @@ export function distanceBetweenPreparedShapes3D(
   secondShape: CRCPhysicsShape3D,
   secondPose: CRCPhysicsPose3D,
 ): CRCPhysicsDistance3D {
-  const result = collidePreparedShapes(firstShape, firstPose, secondShape, secondPose);
+  const result = collidePreparedShapes(
+    firstShape,
+    firstPose,
+    secondShape,
+    secondPose,
+  );
   if (result.status === "failed") {
-    throw new Error("3D collision distance did not converge within its fixed iteration bounds.");
+    throw new Error(
+      "3D collision distance did not converge within its fixed iteration bounds.",
+    );
   }
   return publicDistance(result.distance);
 }
@@ -117,7 +178,12 @@ export function distanceBetweenShapes3D(
   secondShape: CRCPhysicsShape3D,
   secondPose: CRCPhysicsPose3D,
 ): CRCPhysicsDistance3D {
-  return distanceBetweenPreparedShapes3D(firstShape, firstPose, secondShape, secondPose);
+  return distanceBetweenPreparedShapes3D(
+    firstShape,
+    firstPose,
+    secondShape,
+    secondPose,
+  );
 }
 
 export function overlapPreparedShapes3D(
@@ -126,7 +192,12 @@ export function overlapPreparedShapes3D(
   secondShape: CRCPhysicsShape3D,
   secondPose: CRCPhysicsPose3D,
 ): boolean {
-  const result = collidePreparedShapes(firstShape, firstPose, secondShape, secondPose);
+  const result = collidePreparedShapes(
+    firstShape,
+    firstPose,
+    secondShape,
+    secondPose,
+  );
   return result.status === "success" && result.distance.separation <= 0;
 }
 
@@ -136,7 +207,12 @@ export function overlapShapes3D(
   secondShape: CRCPhysicsShape3D,
   secondPose: CRCPhysicsPose3D,
 ): boolean {
-  return overlapPreparedShapes3D(firstShape, firstPose, secondShape, secondPose);
+  return overlapPreparedShapes3D(
+    firstShape,
+    firstPose,
+    secondShape,
+    secondPose,
+  );
 }
 
 export function contactBetweenPreparedShapes3D(
@@ -159,7 +235,12 @@ export function contactBetweenShapes3D(
   secondShape: CRCPhysicsShape3D,
   secondPose: CRCPhysicsPose3D,
 ): CRCPhysicsShapeContact3D | null {
-  return contactBetweenPreparedShapes3D(firstShape, firstPose, secondShape, secondPose);
+  return contactBetweenPreparedShapes3D(
+    firstShape,
+    firstPose,
+    secondShape,
+    secondPose,
+  );
 }
 
 /** Package-private world/cache seam. Not exported from a package entry. */
@@ -206,7 +287,11 @@ function manifoldResultBetweenPreparedRecords(
     const result = collideCanonical(first, second, iterationLimits);
     if (result.status === "failed") return result;
     if (result.distance.separation > 0) return { status: "separated" };
-    const manifold = createPrivateManifold3D(result.distance, result.first, result.second);
+    const manifold = createPrivateManifold3D(
+      result.distance,
+      result.first,
+      result.second,
+    );
     return finitePrivateManifold(manifold)
       ? { status: "contact", manifold }
       : { status: "failed", reason: "nonfinite" };
@@ -229,12 +314,21 @@ function collidePreparedShapes(
   secondPublicPose: CRCPhysicsPose3D,
 ): PairResult3D {
   const first = prepareShape(firstShape, firstPublicPose, "first", "firstPose");
-  const second = prepareShape(secondShape, secondPublicPose, "second", "secondPose");
+  const second = prepareShape(
+    secondShape,
+    secondPublicPose,
+    "second",
+    "secondPose",
+  );
   return collidePreparedRecords(first, second);
 }
 
-function collidePreparedRecords(first: PreparedShape3D, second: PreparedShape3D): PairResult3D {
-  if (comparePrepared(first, second) <= 0) return collideCanonical(first, second);
+function collidePreparedRecords(
+  first: PreparedShape3D,
+  second: PreparedShape3D,
+): PairResult3D {
+  if (comparePrepared(first, second) <= 0)
+    return collideCanonical(first, second);
   const result = collideCanonical(second, first);
   return result.status === "failed" ? result : invertResult(result);
 }
@@ -247,29 +341,37 @@ function collideCanonical(
   const fallback = preferredNormal(first, second);
   let distance: PrivatePairDistance3D;
   if (first.convex.kind === "sphere" && second.convex.kind === "sphere") {
-    distance = analyticToPrivate(distanceSphereToSphere3D(
-      first.convex.center,
-      first.convex.radius,
-      second.convex.center,
-      second.convex.radius,
-      fallback,
-    ));
+    distance = analyticToPrivate(
+      distanceSphereToSphere3D(
+        first.convex.center,
+        first.convex.radius,
+        second.convex.center,
+        second.convex.radius,
+        fallback,
+      ),
+    );
   } else if (first.convex.kind === "sphere" && second.convex.kind === "box") {
-    distance = analyticToPrivate(distanceSphereToBox3D(
-      first.convex.center,
-      first.convex.radius,
-      second.convex.center,
-      second.convex.axes,
-      second.convex.halfExtents,
-    ));
+    distance = analyticToPrivate(
+      distanceSphereToBox3D(
+        first.convex.center,
+        first.convex.radius,
+        second.convex.center,
+        second.convex.axes,
+        second.convex.halfExtents,
+      ),
+    );
   } else if (first.convex.kind === "box" && second.convex.kind === "sphere") {
-    distance = invertDistance(analyticToPrivate(distanceSphereToBox3D(
-      second.convex.center,
-      second.convex.radius,
-      first.convex.center,
-      first.convex.axes,
-      first.convex.halfExtents,
-    )));
+    distance = invertDistance(
+      analyticToPrivate(
+        distanceSphereToBox3D(
+          second.convex.center,
+          second.convex.radius,
+          first.convex.center,
+          first.convex.axes,
+          first.convex.halfExtents,
+        ),
+      ),
+    );
   } else {
     const convex = collideConvexShapes3D(
       first.convex,
@@ -281,7 +383,12 @@ function collideCanonical(
     distance = convex.distance;
   }
   return finitePrivateDistance(distance)
-    ? { status: "success", distance, first: first.convex, second: second.convex }
+    ? {
+        status: "success",
+        distance,
+        first: first.convex,
+        second: second.convex,
+      }
     : { status: "failed", reason: "nonfinite" };
 }
 
@@ -329,7 +436,11 @@ export function collideConvexShapes3D(
       secondFeature: gjk.secondFeature,
     };
   }
-  const rescaled = rescaleDistance(distance, normalized.origin, normalized.scale);
+  const rescaled = rescaleDistance(
+    distance,
+    normalized.origin,
+    normalized.scale,
+  );
   return rescaled === null
     ? { status: "failed", reason: gjk.status === "penetrating" ? "epa" : "gjk" }
     : { status: "success", distance: rescaled };
@@ -395,25 +506,64 @@ function scalePreparedShape(
   if (shape.kind === "sphere") {
     return { kind: "sphere", center, radius: shape.radius / scale };
   }
-  if (shape.kind === "vertices") {
+  if (shape.kind === "hull") {
     const vertices = new Float64Array(shape.vertices.length);
     for (let index = 0; index < vertices.length; index += 3) {
-      vertices[index] = (shape.vertices[index]! - (shape.center[0]! - center[0]! * scale)) / scale;
-      vertices[index + 1] = (shape.vertices[index + 1]! - (shape.center[1]! - center[1]! * scale)) / scale;
-      vertices[index + 2] = (shape.vertices[index + 2]! - (shape.center[2]! - center[2]! * scale)) / scale;
+      vertices[index] =
+        (shape.vertices[index]! - (shape.center[0]! - center[0]! * scale)) /
+        scale;
+      vertices[index + 1] =
+        (shape.vertices[index + 1]! - (shape.center[1]! - center[1]! * scale)) /
+        scale;
+      vertices[index + 2] =
+        (shape.vertices[index + 2]! - (shape.center[2]! - center[2]! * scale)) /
+        scale;
     }
-    return { kind: "vertices", center, vertices };
+    return { kind: "hull", center, vertices, faces: shape.faces };
   }
+  if (shape.kind === "capsule") {
+    const offsetX = shape.center[0]! - center[0]! * scale;
+    const offsetY = shape.center[1]! - center[1]! * scale;
+    const offsetZ = shape.center[2]! - center[2]! * scale;
+    return {
+      kind: "capsule",
+      center,
+      start: new Float64Array([
+        (shape.start[0]! - offsetX) / scale,
+        (shape.start[1]! - offsetY) / scale,
+        (shape.start[2]! - offsetZ) / scale,
+      ]),
+      end: new Float64Array([
+        (shape.end[0]! - offsetX) / scale,
+        (shape.end[1]! - offsetY) / scale,
+        (shape.end[2]! - offsetZ) / scale,
+      ]),
+      radius: shape.radius / scale,
+    };
+  }
+  if (shape.kind === "ellipsoid")
+    return {
+      ...shape,
+      center,
+      radii: new Float64Array(shape.radii.map((value) => value / scale)),
+    };
+  if (shape.kind === "cylinder" || shape.kind === "cone")
+    return {
+      ...shape,
+      center,
+      radius: shape.radius / scale,
+      halfHeight: shape.halfHeight / scale,
+    };
   return {
-        kind: "box",
-        center,
-        axes: shape.axes,
-        halfExtents: new Float64Array([
-          shape.halfExtents[0]! / scale,
-          shape.halfExtents[1]! / scale,
-          shape.halfExtents[2]! / scale,
-        ]),
-      };
+    kind: "box",
+    center,
+    axes: shape.axes,
+    halfExtents: new Float64Array([
+      shape.halfExtents[0]! / scale,
+      shape.halfExtents[1]! / scale,
+      shape.halfExtents[2]! / scale,
+    ]),
+  };
 }
 
 function rescaleDistance(
@@ -493,21 +643,35 @@ function prepareShapeRecord(
   order: number,
 ): PreparedShape3D {
   const shell = Object.freeze({}) as CRCPhysicsShape3D;
-  return { shape: shell, record, pose, convex: prepareConvexShape3D(record, pose), order };
+  return {
+    shape: shell,
+    record,
+    pose,
+    convex: prepareConvexShape3D(record, pose),
+    order,
+  };
 }
 
-function preferredNormal(first: PreparedShape3D, second: PreparedShape3D): readonly [number, number, number] {
+function preferredNormal(
+  first: PreparedShape3D,
+  second: PreparedShape3D,
+): readonly [number, number, number] {
   const dx = first.convex.center[0]! - second.convex.center[0]!;
   const dy = first.convex.center[1]! - second.convex.center[1]!;
   const dz = first.convex.center[2]! - second.convex.center[2]!;
   const length = Math.hypot(dx, dy, dz);
-  if (length > GEOMETRY_EPSILON_3D) return [dx / length, dy / length, dz / length];
+  if (length > GEOMETRY_EPSILON_3D)
+    return [dx / length, dy / length, dz / length];
   return comparePrepared(first, second) <= 0 ? [1, 0, 0] : [-1, 0, 0];
 }
 
-function comparePrepared(first: PreparedShape3D, second: PreparedShape3D): number {
+function comparePrepared(
+  first: PreparedShape3D,
+  second: PreparedShape3D,
+): number {
   if (first.order !== second.order) return first.order < second.order ? -1 : 1;
-  const poseOrder = compareArrays(first.pose.position, second.pose.position) ||
+  const poseOrder =
+    compareArrays(first.pose.position, second.pose.position) ||
     compareArrays(first.pose.orientation, second.pose.orientation);
   if (poseOrder !== 0) return poseOrder;
   const centerOrder = compareArrays(first.convex.center, second.convex.center);
@@ -518,15 +682,20 @@ function comparePrepared(first: PreparedShape3D, second: PreparedShape3D): numbe
   if (first.convex.kind === "sphere" && second.convex.kind === "sphere") {
     return first.convex.radius < second.convex.radius
       ? -1
-      : first.convex.radius > second.convex.radius ? 1 : 0;
+      : first.convex.radius > second.convex.radius
+        ? 1
+        : 0;
   }
   if (first.convex.kind === "box" && second.convex.kind === "box") {
     const axesOrder = compareArrays(first.convex.axes, second.convex.axes);
     if (axesOrder !== 0) return axesOrder;
-    const extentsOrder = compareArrays(first.convex.halfExtents, second.convex.halfExtents);
+    const extentsOrder = compareArrays(
+      first.convex.halfExtents,
+      second.convex.halfExtents,
+    );
     if (extentsOrder !== 0) return extentsOrder;
   }
-  if (first.convex.kind === "vertices" && second.convex.kind === "vertices") {
+  if (first.convex.kind === "hull" && second.convex.kind === "hull") {
     return compareArrays(first.convex.vertices, second.convex.vertices);
   }
   return 0;
@@ -535,6 +704,24 @@ function comparePrepared(first: PreparedShape3D, second: PreparedShape3D): numbe
 function preparedMagnitude(shape: PreparedConvexShape3D): number {
   if (shape.kind === "sphere") return shape.radius;
   if (shape.kind === "box") return Math.max(...shape.halfExtents);
+  if (shape.kind === "ellipsoid") return Math.max(...shape.radii);
+  if (shape.kind === "cylinder" || shape.kind === "cone")
+    return Math.max(shape.radius, shape.halfHeight);
+  if (shape.kind === "capsule")
+    return (
+      Math.max(
+        Math.hypot(
+          shape.start[0]! - shape.center[0]!,
+          shape.start[1]! - shape.center[1]!,
+          shape.start[2]! - shape.center[2]!,
+        ),
+        Math.hypot(
+          shape.end[0]! - shape.center[0]!,
+          shape.end[1]! - shape.center[1]!,
+          shape.end[2]! - shape.center[2]!,
+        ),
+      ) + shape.radius
+    );
   let maximum = 0;
   for (let index = 0; index < shape.vertices.length; index += 3) {
     maximum = Math.max(
@@ -547,25 +734,76 @@ function preparedMagnitude(shape: PreparedConvexShape3D): number {
   return maximum;
 }
 
-function vertexCloudBounds(vertices: Float64Array): readonly [number, number, number, number, number, number] {
-  let minX = Infinity;
-  let minY = Infinity;
-  let minZ = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  let maxZ = -Infinity;
-  for (let index = 0; index < vertices.length; index += 3) {
-    minX = Math.min(minX, vertices[index]!);
-    minY = Math.min(minY, vertices[index + 1]!);
-    minZ = Math.min(minZ, vertices[index + 2]!);
-    maxX = Math.max(maxX, vertices[index]!);
-    maxY = Math.max(maxY, vertices[index + 1]!);
-    maxZ = Math.max(maxZ, vertices[index + 2]!);
-  }
-  return [minX, minY, minZ, maxX, maxY, maxZ];
+function localPoint(
+  center: ArrayLike<number>,
+  axes: ArrayLike<number>,
+  point: ArrayLike<number>,
+): readonly [number, number, number] {
+  const x = point[0]! - center[0]!;
+  const y = point[1]! - center[1]!;
+  const z = point[2]! - center[2]!;
+  return [
+    x * axes[0]! + y * axes[1]! + z * axes[2]!,
+    x * axes[3]! + y * axes[4]! + z * axes[5]!,
+    x * axes[6]! + y * axes[7]! + z * axes[8]!,
+  ];
 }
 
-function compareArrays(first: ArrayLike<number>, second: ArrayLike<number>): number {
+function pointSegmentDistanceSquared(
+  point: ArrayLike<number>,
+  start: ArrayLike<number>,
+  end: ArrayLike<number>,
+): number {
+  const x = end[0]! - start[0]!;
+  const y = end[1]! - start[1]!;
+  const z = end[2]! - start[2]!;
+  const denominator = x * x + y * y + z * z;
+  const t = Math.max(
+    0,
+    Math.min(
+      1,
+      ((point[0]! - start[0]!) * x +
+        (point[1]! - start[1]!) * y +
+        (point[2]! - start[2]!) * z) /
+        denominator,
+    ),
+  );
+  const dx = point[0]! - (start[0]! + x * t);
+  const dy = point[1]! - (start[1]! + y * t);
+  const dz = point[2]! - (start[2]! + z * t);
+  return dx * dx + dy * dy + dz * dz;
+}
+
+function vertex(
+  values: Float64Array,
+  index: number,
+): readonly [number, number, number] {
+  return [values[index * 3]!, values[index * 3 + 1]!, values[index * 3 + 2]!];
+}
+
+function signedTrianglePlane(
+  a: ArrayLike<number>,
+  b: ArrayLike<number>,
+  c: ArrayLike<number>,
+  point: ArrayLike<number>,
+): number {
+  const abx = b[0]! - a[0]!;
+  const aby = b[1]! - a[1]!;
+  const abz = b[2]! - a[2]!;
+  const acx = c[0]! - a[0]!;
+  const acy = c[1]! - a[1]!;
+  const acz = c[2]! - a[2]!;
+  return (
+    (aby * acz - abz * acy) * (point[0]! - a[0]!) +
+    (abz * acx - abx * acz) * (point[1]! - a[1]!) +
+    (abx * acy - aby * acx) * (point[2]! - a[2]!)
+  );
+}
+
+function compareArrays(
+  first: ArrayLike<number>,
+  second: ArrayLike<number>,
+): number {
   for (let index = 0; index < first.length; index += 1) {
     if (first[index]! < second[index]!) return -1;
     if (first[index]! > second[index]!) return 1;
@@ -573,12 +811,20 @@ function compareArrays(first: ArrayLike<number>, second: ArrayLike<number>): num
   return 0;
 }
 
-function analyticToPrivate(distance: AnalyticDistance3D): PrivatePairDistance3D {
+function analyticToPrivate(
+  distance: AnalyticDistance3D,
+): PrivatePairDistance3D {
   return {
     separation: distance.separation,
-    firstX: distance.first[0], firstY: distance.first[1], firstZ: distance.first[2],
-    secondX: distance.second[0], secondY: distance.second[1], secondZ: distance.second[2],
-    normalX: distance.normal[0], normalY: distance.normal[1], normalZ: distance.normal[2],
+    firstX: distance.first[0],
+    firstY: distance.first[1],
+    firstZ: distance.first[2],
+    secondX: distance.second[0],
+    secondY: distance.second[1],
+    secondZ: distance.second[2],
+    normalX: distance.normal[0],
+    normalY: distance.normal[1],
+    normalZ: distance.normal[2],
     firstFeature: distance.firstFeature,
     secondFeature: distance.secondFeature,
   };
@@ -593,12 +839,20 @@ function invertResult(result: SuccessfulPair3D): SuccessfulPair3D {
   };
 }
 
-function invertDistance(distance: PrivatePairDistance3D): PrivatePairDistance3D {
+function invertDistance(
+  distance: PrivatePairDistance3D,
+): PrivatePairDistance3D {
   return {
     separation: distance.separation,
-    firstX: distance.secondX, firstY: distance.secondY, firstZ: distance.secondZ,
-    secondX: distance.firstX, secondY: distance.firstY, secondZ: distance.firstZ,
-    normalX: -distance.normalX, normalY: -distance.normalY, normalZ: -distance.normalZ,
+    firstX: distance.secondX,
+    firstY: distance.secondY,
+    firstZ: distance.secondZ,
+    secondX: distance.firstX,
+    secondY: distance.firstY,
+    secondZ: distance.firstZ,
+    normalX: -distance.normalX,
+    normalY: -distance.normalY,
+    normalZ: -distance.normalZ,
     firstFeature: distance.secondFeature,
     secondFeature: distance.firstFeature,
   };
@@ -626,8 +880,20 @@ function invertManifold(manifold: PrivateManifold3D): PrivateManifold3D {
 function publicDistance(distance: PrivatePairDistance3D): CRCPhysicsDistance3D {
   return Object.freeze({
     separation: cleanZero(distance.separation),
-    pointOnFirst: freezeCollisionVector3(distance.firstX, distance.firstY, distance.firstZ),
-    pointOnSecond: freezeCollisionVector3(distance.secondX, distance.secondY, distance.secondZ),
-    normal: freezeCollisionVector3(distance.normalX, distance.normalY, distance.normalZ),
+    pointOnFirst: freezeCollisionVector3(
+      distance.firstX,
+      distance.firstY,
+      distance.firstZ,
+    ),
+    pointOnSecond: freezeCollisionVector3(
+      distance.secondX,
+      distance.secondY,
+      distance.secondZ,
+    ),
+    normal: freezeCollisionVector3(
+      distance.normalX,
+      distance.normalY,
+      distance.normalZ,
+    ),
   });
 }

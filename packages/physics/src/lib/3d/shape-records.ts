@@ -54,6 +54,7 @@ export interface ConvexHullShapeRecord3D extends ShapeRecordBase3D {
   readonly kind: "convexHull";
   readonly center: Float64Array;
   readonly vertices: Float64Array;
+  readonly faces: Uint32Array;
 }
 
 export interface TriangleMeshShapeRecord3D extends ShapeRecordBase3D {

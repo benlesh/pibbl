@@ -205,7 +205,8 @@ function geometryForShape(shape: CRCPhysicsShape3D): CRCWebGLGeometry {
       record.orientation,
       true,
     );
-  else if (record.kind === "convexHull") appendHull(triangles, record.vertices);
+  else if (record.kind === "convexHull")
+    appendIndexed(triangles, record.vertices, record.faces);
   else if (record.kind === "triangleMesh")
     appendIndexed(triangles, record.positions, record.indices);
   else appendHeightfield(triangles, record);
@@ -357,38 +358,6 @@ function appendCylinder(
   }
 }
 
-function appendHull(output: number[], vertices: Float64Array): void {
-  const count = vertices.length / 3;
-  const center = [0, 0, 0];
-  for (let index = 0; index < count; index += 1)
-    for (let axis = 0; axis < 3; axis += 1)
-      center[axis]! += vertices[index * 3 + axis]! / count;
-  const seen = new Set<string>();
-  for (let a = 0; a < count - 2; a += 1)
-    for (let b = a + 1; b < count - 1; b += 1)
-      for (let c = b + 1; c < count; c += 1) {
-        const pa = vertex(vertices, a);
-        let pb = vertex(vertices, b);
-        let pc = vertex(vertices, c);
-        const normal = cross(subtract(pb, pa), subtract(pc, pa));
-        if (Math.hypot(...normal) < 1e-9) continue;
-        let positive = false;
-        let negative = false;
-        for (let other = 0; other < count; other += 1) {
-          if (other === a || other === b || other === c) continue;
-          const side = dot(normal, subtract(vertex(vertices, other), pa));
-          positive ||= side > 1e-8;
-          negative ||= side < -1e-8;
-        }
-        if (positive && negative) continue;
-        const key = `${a},${b},${c}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        if (dot(normal, subtract(center, pa)) > 0) [pb, pc] = [pc, pb];
-        triangle(output, pa, pb, pc);
-      }
-}
-
 function appendIndexed(
   output: number[],
   positions: Float64Array,
@@ -526,10 +495,6 @@ function cross(left: ArrayLike<number>, right: ArrayLike<number>): number[] {
     left[2]! * right[0]! - left[0]! * right[2]!,
     left[0]! * right[1]! - left[1]! * right[0]!,
   ];
-}
-
-function dot(left: ArrayLike<number>, right: ArrayLike<number>): number {
-  return left[0]! * right[0]! + left[1]! * right[1]! + left[2]! * right[2]!;
 }
 
 function unit(value: readonly number[]): number[] {

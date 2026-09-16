@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   boxShape3D,
+  ellipsoidShape3D,
   raycastShape3D,
   shapeCastAgainstShape3D,
   sphereShape3D,
@@ -11,11 +12,13 @@ const identity = { position: [0, 0, 0], orientation: [0, 0, 0, 1] } as const;
 
 describe("standalone 3D rays and translational casts", () => {
   it("normalizes ray direction and reports physical distance and normalized time", () => {
-    expect(raycastShape3D(
-      sphereShape3D({ radius: 1 }),
-      pose([5, 0, 0]),
-      { origin: [0, 0, 0], direction: [10, 0, 0], maxDistance: 10 },
-    )).toEqual({
+    expect(
+      raycastShape3D(sphereShape3D({ radius: 1 }), pose([5, 0, 0]), {
+        origin: [0, 0, 0],
+        direction: [10, 0, 0],
+        maxDistance: 10,
+      }),
+    ).toEqual({
       point: [4, 0, 0],
       normal: [-1, 0, 0],
       distance: 4,
@@ -50,10 +53,12 @@ describe("standalone 3D rays and translational casts", () => {
     } as const;
 
     expect(raycastShape3D(shape, pose([2, 0, 0]), ray)?.timeOfImpact).toBe(1);
-    expect(raycastShape3D(shape, pose([2, 0, 0]), {
-      ...ray,
-      maxDistance: nextRepresentableDown(1),
-    })).toBeNull();
+    expect(
+      raycastShape3D(shape, pose([2, 0, 0]), {
+        ...ray,
+        maxDistance: nextRepresentableDown(1),
+      }),
+    ).toBeNull();
   });
 
   it("raycasts a sphere with finite values near 1e200", () => {
@@ -69,7 +74,11 @@ describe("standalone 3D rays and translational casts", () => {
     expect(hit!.normal).toEqual([-1, 0, 0]);
     expect(hit!.distance / 1e200).toBeCloseTo(4, 12);
     expect(hit!.timeOfImpact).toBeCloseTo(0.4, 12);
-    expect(Object.values(hit ?? {}).flat().every(Number.isFinite)).toBe(true);
+    expect(
+      Object.values(hit ?? {})
+        .flat()
+        .every(Number.isFinite),
+    ).toBe(true);
   });
 
   it("materializes a finite early sphere-ray hit with maximum-finite direction components", () => {
@@ -86,34 +95,42 @@ describe("standalone 3D rays and translational casts", () => {
     expect(hit).not.toBeNull();
     expect(hit!.distance).toBeGreaterThan(1e300);
     expect(hit!.distance).toBeLessThan(2e300);
-    expect(Object.values(hit ?? {}).flat().every(Number.isFinite)).toBe(true);
+    expect(
+      Object.values(hit ?? {})
+        .flat()
+        .every(Number.isFinite),
+    ).toBe(true);
   });
 
   it("does not let an enormous ray limit underflow ordinary sphere geometry", () => {
-    const hit = raycastShape3D(
-      sphereShape3D({ radius: 1 }),
-      pose([5, 0, 0]),
-      { origin: [0, 0, 0], direction: [1, 0, 0], maxDistance: 1e300 },
-    );
+    const hit = raycastShape3D(sphereShape3D({ radius: 1 }), pose([5, 0, 0]), {
+      origin: [0, 0, 0],
+      direction: [1, 0, 0],
+      maxDistance: 1e300,
+    });
 
     expect(hit?.point).toEqual([4, 0, 0]);
     expect(hit?.distance).toBe(4);
   });
 
   it("rejects a large-offset sphere ray with a representable radial miss", () => {
-    expect(raycastShape3D(
-      sphereShape3D({ radius: 1 }),
-      pose([1e20, 2, 0]),
-      { origin: [0, 0, 0], direction: [1, 0, 0], maxDistance: 2e20 },
-    )).toBeNull();
+    expect(
+      raycastShape3D(sphereShape3D({ radius: 1 }), pose([1e20, 2, 0]), {
+        origin: [0, 0, 0],
+        direction: [1, 0, 0],
+        maxDistance: 2e20,
+      }),
+    ).toBeNull();
   });
 
   it("rejects a sphere ray whose rounded hypot hides a positive squared gap", () => {
-    expect(raycastShape3D(
-      sphereShape3D({ radius: 1.625 }),
-      pose([1e20, nextRepresentableUp(0.625), 1.5]),
-      { origin: [0, 0, 0], direction: [1, 0, 0], maxDistance: 2e20 },
-    )).toBeNull();
+    expect(
+      raycastShape3D(
+        sphereShape3D({ radius: 1.625 }),
+        pose([1e20, nextRepresentableUp(0.625), 1.5]),
+        { origin: [0, 0, 0], direction: [1, 0, 0], maxDistance: 2e20 },
+      ),
+    ).toBeNull();
   });
 
   it("counts tangent sphere rays and raycasts rotated boxes", () => {
@@ -137,11 +154,34 @@ describe("standalone 3D rays and translational casts", () => {
     expect(boxHit?.normal[2]).toBe(0);
   });
 
+  it("rejects a ray that clips an ellipsoid AABB without hitting the ellipsoid", () => {
+    expect(
+      raycastShape3D(ellipsoidShape3D({ radii: [2, 1, 1] }), identity, {
+        origin: [-3, 0.9, 0.9],
+        direction: [1, 0, 0],
+        maxDistance: 8,
+      }),
+    ).toBeNull();
+    const hit = raycastShape3D(
+      ellipsoidShape3D({ radii: [2, 1, 1] }),
+      identity,
+      { origin: [-3, 0, 0], direction: [1, 0, 0], maxDistance: 8 },
+    );
+    expect(hit?.point).toEqual([-2, 0, 0]);
+    expect(hit?.normal).toEqual([-1, 0, 0]);
+  });
+
   it("includes or skips initial ray overlap explicitly", () => {
     const sphere = sphereShape3D({ radius: 2 });
-    const ray = { origin: [0, 0, 0], direction: [3, 0, 0], maxDistance: 8 } as const;
+    const ray = {
+      origin: [0, 0, 0],
+      direction: [3, 0, 0],
+      maxDistance: 8,
+    } as const;
     expect(raycastShape3D(sphere, identity, ray)).toBeNull();
-    expect(raycastShape3D(sphere, identity, ray, { includeInitialOverlap: true })).toEqual({
+    expect(
+      raycastShape3D(sphere, identity, ray, { includeInitialOverlap: true }),
+    ).toEqual({
       point: [0, 0, 0],
       normal: [-1, 0, 0],
       distance: 0,
@@ -150,12 +190,14 @@ describe("standalone 3D rays and translational casts", () => {
   });
 
   it("does not fabricate initial sphere-ray overlap from a rounded hypot equality", () => {
-    expect(raycastShape3D(
-      sphereShape3D({ radius: 1.625 }),
-      pose([nextRepresentableUp(0.625), 1.5, 0]),
-      { origin: [0, 0, 0], direction: [-1, 0, 0], maxDistance: 10 },
-      { includeInitialOverlap: true },
-    )).toBeNull();
+    expect(
+      raycastShape3D(
+        sphereShape3D({ radius: 1.625 }),
+        pose([nextRepresentableUp(0.625), 1.5, 0]),
+        { origin: [0, 0, 0], direction: [-1, 0, 0], maxDistance: 10 },
+        { includeInitialOverlap: true },
+      ),
+    ).toBeNull();
   });
 
   it("returns the earliest analytic sphere-sphere cast hit", () => {
@@ -189,7 +231,11 @@ describe("standalone 3D rays and translational casts", () => {
     expect(hit!.normal).toEqual([-1, 0, 0]);
     expect(hit!.distance / 1e200).toBeCloseTo(4, 12);
     expect(hit!.timeOfImpact).toBeCloseTo(0.4, 12);
-    expect(Object.values(hit ?? {}).flat().every(Number.isFinite)).toBe(true);
+    expect(
+      Object.values(hit ?? {})
+        .flat()
+        .every(Number.isFinite),
+    ).toBe(true);
   });
 
   it("materializes a finite early sphere sweep when the full translation length overflows", () => {
@@ -204,27 +250,35 @@ describe("standalone 3D rays and translational casts", () => {
     expect(hit).not.toBeNull();
     expect(hit!.distance).toBeGreaterThan(1e300);
     expect(hit!.distance).toBeLessThan(2e300);
-    expect(Object.values(hit ?? {}).flat().every(Number.isFinite)).toBe(true);
+    expect(
+      Object.values(hit ?? {})
+        .flat()
+        .every(Number.isFinite),
+    ).toBe(true);
   });
 
   it("rejects a large-offset sphere sweep with a representable radial miss", () => {
-    expect(shapeCastAgainstShape3D(
-      sphereShape3D({ radius: 1 }),
-      identity,
-      [2e20, 0, 0],
-      sphereShape3D({ radius: 1 }),
-      pose([1e20, 3, 0]),
-    )).toBeNull();
+    expect(
+      shapeCastAgainstShape3D(
+        sphereShape3D({ radius: 1 }),
+        identity,
+        [2e20, 0, 0],
+        sphereShape3D({ radius: 1 }),
+        pose([1e20, 3, 0]),
+      ),
+    ).toBeNull();
   });
 
   it("rejects a sphere sweep whose rounded hypot hides a positive squared gap", () => {
-    expect(shapeCastAgainstShape3D(
-      sphereShape3D({ radius: 0.625 }),
-      identity,
-      [2e20, 0, 0],
-      sphereShape3D({ radius: 1 }),
-      pose([1e20, nextRepresentableUp(0.625), 1.5]),
-    )).toBeNull();
+    expect(
+      shapeCastAgainstShape3D(
+        sphereShape3D({ radius: 0.625 }),
+        identity,
+        [2e20, 0, 0],
+        sphereShape3D({ radius: 1 }),
+        pose([1e20, nextRepresentableUp(0.625), 1.5]),
+      ),
+    ).toBeNull();
   });
 
   it("casts fixed-orientation boxes and spheres with conservative advancement", () => {
@@ -280,44 +334,52 @@ describe("standalone 3D rays and translational casts", () => {
   });
 
   it("rejects a large-offset sphere-box sweep with a representable radial miss", () => {
-    expect(shapeCastAgainstShape3D(
-      sphereShape3D({ radius: 1 }),
-      pose([0, 3, 0]),
-      [2e10, 0, 0],
-      boxShape3D({ width: 2, height: 2, depth: 2 }),
-      pose([1e10, 0, 0]),
-    )).toBeNull();
+    expect(
+      shapeCastAgainstShape3D(
+        sphereShape3D({ radius: 1 }),
+        pose([0, 3, 0]),
+        [2e10, 0, 0],
+        boxShape3D({ width: 2, height: 2, depth: 2 }),
+        pose([1e10, 0, 0]),
+      ),
+    ).toBeNull();
   });
 
   it("rejects a representable 1e-12 positive sphere-box tangent gap", () => {
-    expect(shapeCastAgainstShape3D(
-      sphereShape3D({ radius: 1 }),
-      pose([0, 2 + 1e-12, 0]),
-      [10, 0, 0],
-      boxShape3D({ width: 2, height: 2, depth: 2 }),
-      pose([5, 0, 0]),
-    )).toBeNull();
+    expect(
+      shapeCastAgainstShape3D(
+        sphereShape3D({ radius: 1 }),
+        pose([0, 2 + 1e-12, 0]),
+        [10, 0, 0],
+        boxShape3D({ width: 2, height: 2, depth: 2 }),
+        pose([5, 0, 0]),
+      ),
+    ).toBeNull();
   });
 
   it("rejects a box-vertex sweep whose rounded hypot hides a positive squared gap", () => {
-    expect(shapeCastAgainstShape3D(
-      sphereShape3D({ radius: 1.625 }),
-      pose([0, nextRepresentableUp(1.625), 2.5]),
-      [8, 0, 0],
-      boxShape3D({ width: 2, height: 2, depth: 2 }),
-      pose([4, 0, 0]),
-    )).toBeNull();
+    expect(
+      shapeCastAgainstShape3D(
+        sphereShape3D({ radius: 1.625 }),
+        pose([0, nextRepresentableUp(1.625), 2.5]),
+        [8, 0, 0],
+        boxShape3D({ width: 2, height: 2, depth: 2 }),
+        pose([4, 0, 0]),
+      ),
+    ).toBeNull();
   });
 
   it("does not fabricate initial sphere-box overlap from a rounded hypot equality", () => {
-    expect(shapeCastAgainstShape3D(
-      sphereShape3D({ radius: 1.625 }),
-      pose([3, nextRepresentableUp(1.625), 2.5]),
-      [-8, 0, 0],
-      boxShape3D({ width: 2, height: 2, depth: 2 }),
-      pose([4, 0, 0]),
-      { includeInitialOverlap: true },
-    )).toBeNull();
+    expect(
+      shapeCastAgainstShape3D(
+        sphereShape3D({ radius: 1.625 }),
+        pose([3, nextRepresentableUp(1.625), 2.5]),
+        [-8, 0, 0],
+        boxShape3D({ width: 2, height: 2, depth: 2 }),
+        pose([4, 0, 0]),
+        { includeInitialOverlap: true },
+      ),
+    ).toBeNull();
   });
 
   it("keeps the corrected first edge root instead of returning the far-side exit", () => {
@@ -346,7 +408,11 @@ describe("standalone 3D rays and translational casts", () => {
     expect(hit?.timeOfImpact).toBeCloseTo(0.4999999999066987, 15);
     expect(hit?.distance).toBeCloseTo(9999999998.133974, 5);
     expect(hit?.point).toEqual([9999999999, 1, 0]);
-    expect(Object.values(hit ?? {}).flat().every(Number.isFinite)).toBe(true);
+    expect(
+      Object.values(hit ?? {})
+        .flat()
+        .every(Number.isFinite),
+    ).toBe(true);
   });
 
   it("preserves an exact box-vertex tangent", () => {
@@ -481,11 +547,13 @@ describe("standalone 3D rays and translational casts", () => {
     expect(tangent?.normal[0]).toBeCloseTo(-0.8, 15);
     expect(tangent?.normal[1]).toBeCloseTo(0.6, 15);
 
-    expect(raycastShape3D(
-      sphereShape3D({ radius: 1 }),
-      pose([2, nextRepresentableDown(1), 0]),
-      ray,
-    )).toBeNull();
+    expect(
+      raycastShape3D(
+        sphereShape3D({ radius: 1 }),
+        pose([2, nextRepresentableDown(1), 0]),
+        ray,
+      ),
+    ).toBeNull();
 
     const crossing = raycastShape3D(
       sphereShape3D({ radius: 1 }),
@@ -510,13 +578,15 @@ describe("standalone 3D rays and translational casts", () => {
     expect(tangent?.timeOfImpact).toBe(0.4);
     expect(tangent?.distance).toBe(4);
     expect(tangent?.point).toEqual([4, 1, 0]);
-    expect(shapeCastAgainstShape3D(
-      sphereShape3D({ radius: 1 }),
-      pose([0, nextRepresentableUp(2), 0]),
-      translation,
-      box,
-      pose([5, 0, 0]),
-    )).toBeNull();
+    expect(
+      shapeCastAgainstShape3D(
+        sphereShape3D({ radius: 1 }),
+        pose([0, nextRepresentableUp(2), 0]),
+        translation,
+        box,
+        pose([5, 0, 0]),
+      ),
+    ).toBeNull();
 
     const crossing = shapeCastAgainstShape3D(
       sphereShape3D({ radius: 1 }),
@@ -530,14 +600,16 @@ describe("standalone 3D rays and translational casts", () => {
   });
 
   it("keeps the exact two-radius sum when an initially separated sphere moves away", () => {
-    expect(shapeCastAgainstShape3D(
-      sphereShape3D({ radius: nextRepresentableUp(1) }),
-      identity,
-      [-1, 0, 0],
-      sphereShape3D({ radius: 2 ** -53 }),
-      pose([1.0000000000000004, 0, 0]),
-      { includeInitialOverlap: true },
-    )).toBeNull();
+    expect(
+      shapeCastAgainstShape3D(
+        sphereShape3D({ radius: nextRepresentableUp(1) }),
+        identity,
+        [-1, 0, 0],
+        sphereShape3D({ radius: 2 ** -53 }),
+        pose([1.0000000000000004, 0, 0]),
+        { includeInitialOverlap: true },
+      ),
+    ).toBeNull();
   });
 
   it("returns an included true sphere overlap at time zero when casting away", () => {
@@ -546,21 +618,25 @@ describe("standalone 3D rays and translational casts", () => {
     const translation = [-1, 0, 0] as const;
     const targetPose = pose([1, 0, 0]);
 
-    expect(shapeCastAgainstShape3D(
-      moving,
-      identity,
-      translation,
-      target,
-      targetPose,
-    )).toBeNull();
-    expect(shapeCastAgainstShape3D(
-      moving,
-      identity,
-      translation,
-      target,
-      targetPose,
-      { includeInitialOverlap: true },
-    )).toEqual({
+    expect(
+      shapeCastAgainstShape3D(
+        moving,
+        identity,
+        translation,
+        target,
+        targetPose,
+      ),
+    ).toBeNull();
+    expect(
+      shapeCastAgainstShape3D(
+        moving,
+        identity,
+        translation,
+        target,
+        targetPose,
+        { includeInitialOverlap: true },
+      ),
+    ).toEqual({
       point: [2, 0, 0],
       normal: [1, 0, 0],
       distance: 0,
@@ -592,7 +668,11 @@ describe("standalone 3D rays and translational casts", () => {
         sphereShape3D({ radius: 5 * scale }),
         pose([0, 11 * scale, 12 * scale]),
         [10 * scale, 0, 0],
-        boxShape3D({ width: 16 * scale, height: 16 * scale, depth: 16 * scale }),
+        boxShape3D({
+          width: 16 * scale,
+          height: 16 * scale,
+          depth: 16 * scale,
+        }),
         pose([12 * scale, 0, 0]),
       );
 
@@ -626,7 +706,11 @@ describe("standalone 3D rays and translational casts", () => {
           sphereShape3D({ radius: 5 * scale }),
           pose(fixture.from(scale)),
           fixture.motion(scale),
-          boxShape3D({ width: 16 * scale, height: 16 * scale, depth: 16 * scale }),
+          boxShape3D({
+            width: 16 * scale,
+            height: 16 * scale,
+            depth: 16 * scale,
+          }),
           pose(fixture.target(scale)),
         );
         expect(hit?.timeOfImpact).toBe(0.4);
@@ -634,49 +718,63 @@ describe("standalone 3D rays and translational casts", () => {
         hit?.normal.forEach((value, axis) => {
           expect(value).toBeCloseTo(fixture.normal[axis]!, 15);
         });
-        expect(Object.values(hit ?? {}).flat().every(Number.isFinite)).toBe(true);
+        expect(
+          Object.values(hit ?? {})
+            .flat()
+            .every(Number.isFinite),
+        ).toBe(true);
       }
     }
   });
 
   it("admits exact cast endpoints and rejects contact beyond the closed interval", () => {
     const sphere = sphereShape3D({ radius: 1 });
-    expect(shapeCastAgainstShape3D(
-      sphere,
-      identity,
-      [10, 0, 0],
-      sphere,
-      pose([12, 0, 0]),
-    )?.timeOfImpact).toBe(1);
-    expect(shapeCastAgainstShape3D(
-      sphere,
-      identity,
-      [10, 0, 0],
-      sphere,
-      pose([nextRepresentableUp(12), 0, 0]),
-    )).toBeNull();
+    expect(
+      shapeCastAgainstShape3D(
+        sphere,
+        identity,
+        [10, 0, 0],
+        sphere,
+        pose([12, 0, 0]),
+      )?.timeOfImpact,
+    ).toBe(1);
+    expect(
+      shapeCastAgainstShape3D(
+        sphere,
+        identity,
+        [10, 0, 0],
+        sphere,
+        pose([nextRepresentableUp(12), 0, 0]),
+      ),
+    ).toBeNull();
 
     const box = boxShape3D({ width: 2, height: 2, depth: 2 });
-    expect(shapeCastAgainstShape3D(
-      sphere,
-      identity,
-      [10, 0, 0],
-      box,
-      pose([12, 0, 0]),
-    )?.timeOfImpact).toBe(1);
-    expect(shapeCastAgainstShape3D(
-      sphere,
-      identity,
-      [10, 0, 0],
-      box,
-      pose([nextRepresentableUp(12), 0, 0]),
-    )).toBeNull();
+    expect(
+      shapeCastAgainstShape3D(
+        sphere,
+        identity,
+        [10, 0, 0],
+        box,
+        pose([12, 0, 0]),
+      )?.timeOfImpact,
+    ).toBe(1);
+    expect(
+      shapeCastAgainstShape3D(
+        sphere,
+        identity,
+        [10, 0, 0],
+        box,
+        pose([nextRepresentableUp(12), 0, 0]),
+      ),
+    ).toBeNull();
   });
 
   it("handles zero translation and initial overlap deterministically", () => {
     const sphere = sphereShape3D({ radius: 1 });
     const box = boxShape3D({ width: 4, height: 4, depth: 4 });
-    expect(shapeCastAgainstShape3D(sphere, identity, [0, 0, 0], box, identity)).toBeNull();
+    expect(
+      shapeCastAgainstShape3D(sphere, identity, [0, 0, 0], box, identity),
+    ).toBeNull();
     const included = shapeCastAgainstShape3D(
       sphere,
       identity,
@@ -704,37 +802,43 @@ describe("standalone 3D rays and translational casts", () => {
 
   it("validates finite inputs and returns deeply frozen copied hits", () => {
     const sphere = sphereShape3D({ radius: 1 });
-    expect(() => raycastShape3D(
-      sphere,
-      identity,
-      { origin: [0, 0, 0], direction: [0, 0, 0], maxDistance: 1 },
-    )).toThrow("ray.direction must be non-zero");
-    expect(() => shapeCastAgainstShape3D(
-      sphere,
-      identity,
-      [Number.NaN, 0, 0],
-      sphere,
-      identity,
-    )).toThrow();
+    expect(() =>
+      raycastShape3D(sphere, identity, {
+        origin: [0, 0, 0],
+        direction: [0, 0, 0],
+        maxDistance: 1,
+      }),
+    ).toThrow("ray.direction must be non-zero");
+    expect(() =>
+      shapeCastAgainstShape3D(
+        sphere,
+        identity,
+        [Number.NaN, 0, 0],
+        sphere,
+        identity,
+      ),
+    ).toThrow();
 
-    const hit = raycastShape3D(
-      sphere,
-      pose([5, 0, 0]),
-      { origin: [0, 0, 0], direction: [1, 0, 0], maxDistance: 10 },
-    )!;
+    const hit = raycastShape3D(sphere, pose([5, 0, 0]), {
+      origin: [0, 0, 0],
+      direction: [1, 0, 0],
+      maxDistance: 10,
+    })!;
     expect(Object.isFrozen(hit)).toBe(true);
     expect(Object.isFrozen(hit.point)).toBe(true);
     expect(Object.isFrozen(hit.normal)).toBe(true);
   });
 
   it("fails closed when a finite translation has an unrepresentable magnitude", () => {
-    expect(shapeCastAgainstShape3D(
-      sphereShape3D({ radius: 1 }),
-      identity,
-      [Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE],
-      sphereShape3D({ radius: 1 }),
-      pose([10, 0, 0]),
-    )).toBeNull();
+    expect(
+      shapeCastAgainstShape3D(
+        sphereShape3D({ radius: 1 }),
+        identity,
+        [Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE],
+        sphereShape3D({ radius: 1 }),
+        pose([10, 0, 0]),
+      ),
+    ).toBeNull();
   });
 });
 

@@ -7,6 +7,7 @@ import {
 import { GEOMETRY_EPSILON_3D } from "../numeric-policy.js";
 import type {
   BoxShapeRecord3D,
+  ConvexShapeRecord3D,
   ShapeRecord3D,
   SphereShapeRecord3D,
 } from "../shape-records.js";
@@ -27,12 +28,46 @@ export interface PreparedBox3D extends PreparedShapeBase3D {
 }
 
 export interface PreparedVertexCloud3D extends PreparedShapeBase3D {
-  readonly kind: "vertices";
+  readonly kind: "hull";
   readonly vertices: Float64Array;
+  readonly faces: Uint32Array;
+}
+
+export interface PreparedEllipsoid3D extends PreparedShapeBase3D {
+  readonly kind: "ellipsoid";
+  readonly axes: Float64Array;
+  readonly radii: Float64Array;
+}
+
+export interface PreparedCapsule3D extends PreparedShapeBase3D {
+  readonly kind: "capsule";
+  readonly start: Float64Array;
+  readonly end: Float64Array;
+  readonly radius: number;
+}
+
+export interface PreparedCylinder3D extends PreparedShapeBase3D {
+  readonly kind: "cylinder";
+  readonly axes: Float64Array;
+  readonly radius: number;
+  readonly halfHeight: number;
+}
+
+export interface PreparedCone3D extends PreparedShapeBase3D {
+  readonly kind: "cone";
+  readonly axes: Float64Array;
+  readonly radius: number;
+  readonly halfHeight: number;
 }
 
 export type PreparedConvexShape3D =
-  PreparedSphere3D | PreparedBox3D | PreparedVertexCloud3D;
+  | PreparedSphere3D
+  | PreparedBox3D
+  | PreparedVertexCloud3D
+  | PreparedEllipsoid3D
+  | PreparedCapsule3D
+  | PreparedCylinder3D
+  | PreparedCone3D;
 
 export interface MinkowskiVertex3D {
   readonly x: number;
@@ -54,7 +89,67 @@ export function prepareConvexShape3D(
 ): PreparedConvexShape3D {
   if (record.kind === "sphere") return prepareSphere(record, outerPose);
   if (record.kind === "box") return prepareBox(record, outerPose);
-  return prepareVertexCloud(record, outerPose);
+  if (record.kind === "triangleMesh" || record.kind === "heightfield") {
+    return prepareTemporaryConcaveBounds(record, outerPose);
+  }
+  if (record.kind === "capsule") {
+    const pose = composePose3D(outerPose, record.localPose);
+    const start = new Float64Array(3);
+    const end = new Float64Array(3);
+    const center = new Float64Array(3);
+    transformPointInto(start, record.start, pose);
+    transformPointInto(end, record.end, pose);
+    transformPointInto(center, record.center, pose);
+    return { kind: "capsule", center, start, end, radius: record.radius };
+  }
+  if (record.kind === "convexHull") return prepareHull(record, outerPose);
+  const shapePose = composePose3D(composePose3D(outerPose, record.localPose), {
+    position: record.center,
+    orientation: record.orientation,
+  });
+  const axes = axesForPose(shapePose);
+  if (record.kind === "ellipsoid") {
+    return {
+      kind: "ellipsoid",
+      center: new Float64Array(shapePose.position),
+      axes,
+      radii: record.radii,
+    };
+  }
+  return {
+    kind: record.kind,
+    center: new Float64Array(shapePose.position),
+    axes,
+    radius: record.radius,
+    halfHeight: record.halfHeight,
+  };
+}
+
+function prepareTemporaryConcaveBounds(
+  record: Extract<ShapeRecord3D, { kind: "triangleMesh" | "heightfield" }>,
+  outerPose: InternalPose3D,
+): PreparedBox3D {
+  const center = new Float64Array([
+    (record.minimum[0]! + record.maximum[0]!) / 2,
+    (record.minimum[1]! + record.maximum[1]!) / 2,
+    (record.minimum[2]! + record.maximum[2]!) / 2,
+  ]);
+  const halfExtents = new Float64Array([
+    Math.max((record.maximum[0]! - record.minimum[0]!) / 2, 0.025),
+    Math.max((record.maximum[1]! - record.minimum[1]!) / 2, 0.025),
+    Math.max((record.maximum[2]! - record.minimum[2]!) / 2, 0.025),
+  ]);
+  return prepareBox(
+    {
+      kind: "box",
+      identity: record.identity,
+      center,
+      orientation: new Float64Array([0, 0, 0, 1]),
+      halfExtents,
+      localPose: record.localPose,
+    },
+    outerPose,
+  );
 }
 
 export function supportShape3D(
@@ -75,7 +170,7 @@ export function supportShape3D(
     return 0;
   }
 
-  if (shape.kind === "vertices") {
+  if (shape.kind === "hull") {
     let selectedFeature = 0;
     let selectedProjection = Number.NEGATIVE_INFINITY;
     for (let feature = 0; feature < shape.vertices.length / 3; feature += 1) {
@@ -93,6 +188,86 @@ export function supportShape3D(
     output[1] = shape.vertices[selectedFeature * 3 + 1]!;
     output[2] = shape.vertices[selectedFeature * 3 + 2]!;
     return selectedFeature;
+  }
+
+  if (shape.kind === "ellipsoid") {
+    const localX = dotAxis(shape.axes, 0, directionX, directionY, directionZ);
+    const localY = dotAxis(shape.axes, 1, directionX, directionY, directionZ);
+    const localZ = dotAxis(shape.axes, 2, directionX, directionY, directionZ);
+    const denominator = Math.hypot(
+      shape.radii[0]! * localX,
+      shape.radii[1]! * localY,
+      shape.radii[2]! * localZ,
+    );
+    const x =
+      denominator > GEOMETRY_EPSILON_3D
+        ? (shape.radii[0]! ** 2 * localX) / denominator
+        : shape.radii[0]!;
+    const y =
+      denominator > GEOMETRY_EPSILON_3D
+        ? (shape.radii[1]! ** 2 * localY) / denominator
+        : 0;
+    const z =
+      denominator > GEOMETRY_EPSILON_3D
+        ? (shape.radii[2]! ** 2 * localZ) / denominator
+        : 0;
+    writeOriented(output, shape.center, shape.axes, x, y, z);
+    return 0;
+  }
+
+  if (shape.kind === "capsule") {
+    const startProjection =
+      shape.start[0]! * directionX +
+      shape.start[1]! * directionY +
+      shape.start[2]! * directionZ;
+    const endProjection =
+      shape.end[0]! * directionX +
+      shape.end[1]! * directionY +
+      shape.end[2]! * directionZ;
+    const endpoint =
+      endProjection > startProjection + GEOMETRY_EPSILON_3D
+        ? shape.end
+        : shape.start;
+    const length = Math.hypot(directionX, directionY, directionZ);
+    const inverse = length > GEOMETRY_EPSILON_3D ? 1 / length : 0;
+    output[0] =
+      endpoint[0]! + shape.radius * (inverse === 0 ? 1 : directionX * inverse);
+    output[1] = endpoint[1]! + shape.radius * directionY * inverse;
+    output[2] = endpoint[2]! + shape.radius * directionZ * inverse;
+    return endpoint === shape.start ? 0 : 1;
+  }
+
+  if (shape.kind === "cylinder" || shape.kind === "cone") {
+    const localX = dotAxis(shape.axes, 0, directionX, directionY, directionZ);
+    const localY = dotAxis(shape.axes, 1, directionX, directionY, directionZ);
+    const localZ = dotAxis(shape.axes, 2, directionX, directionY, directionZ);
+    const radial = Math.hypot(localX, localZ);
+    const x =
+      radial > GEOMETRY_EPSILON_3D
+        ? (shape.radius * localX) / radial
+        : shape.radius;
+    const z =
+      radial > GEOMETRY_EPSILON_3D ? (shape.radius * localZ) / radial : 0;
+    if (shape.kind === "cone") {
+      const baseProjection =
+        x * localX - shape.halfHeight * localY + z * localZ;
+      const apexProjection = shape.halfHeight * localY;
+      if (apexProjection > baseProjection + GEOMETRY_EPSILON_3D) {
+        writeOriented(output, shape.center, shape.axes, 0, shape.halfHeight, 0);
+        return 1;
+      }
+      writeOriented(output, shape.center, shape.axes, x, -shape.halfHeight, z);
+      return 0;
+    }
+    writeOriented(
+      output,
+      shape.center,
+      shape.axes,
+      x,
+      localY > GEOMETRY_EPSILON_3D ? shape.halfHeight : -shape.halfHeight,
+      z,
+    );
+    return localY > GEOMETRY_EPSILON_3D ? 1 : 0;
   }
 
   let selectedFeature = 0;
@@ -213,11 +388,11 @@ function prepareBox(
   };
 }
 
-function prepareVertexCloud(
-  record: Exclude<ShapeRecord3D, SphereShapeRecord3D | BoxShapeRecord3D>,
+function prepareHull(
+  record: Extract<ConvexShapeRecord3D, { kind: "convexHull" }>,
   outerPose: InternalPose3D,
 ): PreparedVertexCloud3D {
-  const local = localVertices(record);
+  const local = record.vertices;
   const pose = composePose3D(outerPose, record.localPose);
   const vertices = new Float64Array(local.length);
   for (let index = 0; index < local.length; index += 3) {
@@ -229,152 +404,46 @@ function prepareVertexCloud(
   }
   const center = new Float64Array(3);
   transformPointInto(center, record.center, pose);
-  return { kind: "vertices", center, vertices };
+  return { kind: "hull", center, vertices, faces: record.faces };
 }
 
-function localVertices(
-  record: Exclude<ShapeRecord3D, SphereShapeRecord3D | BoxShapeRecord3D>,
-): Float64Array {
-  if (record.kind === "convexHull") return new Float64Array(record.vertices);
-  if (record.kind === "triangleMesh" || record.kind === "heightfield") {
-    return boxVertices(record.minimum, record.maximum, 0.025);
-  }
-  if (record.kind === "capsule") {
-    const values: number[] = [];
-    const axis = normalizedAxis(record.start, record.end);
-    const basis = perpendicularBasis(axis);
-    for (const endpoint of [record.start, record.end]) {
-      for (let ring = 0; ring <= 4; ring += 1) {
-        const angle = ((ring / 4) * Math.PI) / 2;
-        const axial = Math.cos(angle) * record.radius;
-        const radial = Math.sin(angle) * record.radius;
-        const sign = endpoint === record.start ? -1 : 1;
-        for (let segment = 0; segment < 12; segment += 1) {
-          const around = (segment / 12) * Math.PI * 2;
-          values.push(
-            endpoint[0]! +
-              axis[0] * axial * sign +
-              radial *
-                (basis[0][0] * Math.cos(around) +
-                  basis[1][0] * Math.sin(around)),
-            endpoint[1]! +
-              axis[1] * axial * sign +
-              radial *
-                (basis[0][1] * Math.cos(around) +
-                  basis[1][1] * Math.sin(around)),
-            endpoint[2]! +
-              axis[2] * axial * sign +
-              radial *
-                (basis[0][2] * Math.cos(around) +
-                  basis[1][2] * Math.sin(around)),
-          );
-        }
-      }
-    }
-    return new Float64Array(values);
-  }
-  const values: number[] = [];
-  const radii =
-    record.kind === "ellipsoid"
-      ? record.radii
-      : new Float64Array([record.radius, record.halfHeight, record.radius]);
-  if (record.kind === "ellipsoid") {
-    for (let latitude = 0; latitude <= 8; latitude += 1) {
-      const phi = -Math.PI / 2 + (latitude / 8) * Math.PI;
-      for (let longitude = 0; longitude < 16; longitude += 1) {
-        const theta = (longitude / 16) * Math.PI * 2;
-        values.push(
-          Math.cos(phi) * Math.cos(theta) * radii[0]!,
-          Math.sin(phi) * radii[1]!,
-          Math.cos(phi) * Math.sin(theta) * radii[2]!,
-        );
-      }
-    }
-  } else {
-    const topRadius = record.kind === "cone" ? 0 : record.radius;
-    for (let segment = 0; segment < 20; segment += 1) {
-      const angle = (segment / 20) * Math.PI * 2;
-      values.push(
-        record.radius * Math.cos(angle),
-        -record.halfHeight,
-        record.radius * Math.sin(angle),
-        topRadius * Math.cos(angle),
-        record.halfHeight,
-        topRadius * Math.sin(angle),
-      );
-    }
-  }
-  const oriented = new Float64Array(values.length);
-  const pose: InternalPose3D = {
-    position: record.center,
-    orientation: record.orientation,
-  };
-  const source = new Float64Array(values);
-  for (let index = 0; index < source.length; index += 3) {
-    transformPointInto(
-      oriented.subarray(index, index + 3),
-      source.subarray(index, index + 3),
-      pose,
-    );
-  }
-  return oriented;
+function axesForPose(pose: InternalPose3D): Float64Array {
+  const rotation = new Float64Array(9);
+  rotationMatrixInto(rotation, pose.orientation);
+  return new Float64Array([
+    rotation[0]!,
+    rotation[3]!,
+    rotation[6]!,
+    rotation[1]!,
+    rotation[4]!,
+    rotation[7]!,
+    rotation[2]!,
+    rotation[5]!,
+    rotation[8]!,
+  ]);
 }
 
-function boxVertices(
-  minimum: Float64Array,
-  maximum: Float64Array,
-  minimumHalfThickness: number,
-): Float64Array {
-  const center = [
-    (minimum[0]! + maximum[0]!) / 2,
-    (minimum[1]! + maximum[1]!) / 2,
-    (minimum[2]! + maximum[2]!) / 2,
-  ] as const;
-  const half = [
-    Math.max((maximum[0]! - minimum[0]!) / 2, minimumHalfThickness),
-    Math.max((maximum[1]! - minimum[1]!) / 2, minimumHalfThickness),
-    Math.max((maximum[2]! - minimum[2]!) / 2, minimumHalfThickness),
-  ] as const;
-  const values = new Float64Array(24);
-  for (let feature = 0; feature < 8; feature += 1) {
-    values[feature * 3] =
-      center[0] + ((feature & 1) === 0 ? -half[0] : half[0]);
-    values[feature * 3 + 1] =
-      center[1] + ((feature & 2) === 0 ? -half[1] : half[1]);
-    values[feature * 3 + 2] =
-      center[2] + ((feature & 4) === 0 ? -half[2] : half[2]);
-  }
-  return values;
+function dotAxis(
+  axes: Float64Array,
+  axis: number,
+  x: number,
+  y: number,
+  z: number,
+): number {
+  return (
+    axes[axis * 3]! * x + axes[axis * 3 + 1]! * y + axes[axis * 3 + 2]! * z
+  );
 }
 
-function normalizedAxis(
-  start: Float64Array,
-  end: Float64Array,
-): readonly [number, number, number] {
-  const x = end[0]! - start[0]!;
-  const y = end[1]! - start[1]!;
-  const z = end[2]! - start[2]!;
-  const length = Math.hypot(x, y, z);
-  return [x / length, y / length, z / length];
-}
-
-function perpendicularBasis(
-  axis: readonly [number, number, number],
-): readonly [
-  readonly [number, number, number],
-  readonly [number, number, number],
-] {
-  const seed =
-    Math.abs(axis[1]) < 0.9 ? ([0, 1, 0] as const) : ([1, 0, 0] as const);
-  const ux = axis[1] * seed[2] - axis[2] * seed[1];
-  const uy = axis[2] * seed[0] - axis[0] * seed[2];
-  const uz = axis[0] * seed[1] - axis[1] * seed[0];
-  const length = Math.hypot(ux, uy, uz);
-  const first = [ux / length, uy / length, uz / length] as const;
-  const second = [
-    axis[1] * first[2] - axis[2] * first[1],
-    axis[2] * first[0] - axis[0] * first[2],
-    axis[0] * first[1] - axis[1] * first[0],
-  ] as const;
-  return [first, second];
+function writeOriented(
+  output: Float64Array,
+  center: Float64Array,
+  axes: Float64Array,
+  x: number,
+  y: number,
+  z: number,
+): void {
+  output[0] = center[0]! + axes[0]! * x + axes[3]! * y + axes[6]! * z;
+  output[1] = center[1]! + axes[1]! * x + axes[4]! * y + axes[7]! * z;
+  output[2] = center[2]! + axes[2]! * x + axes[5]! * y + axes[8]! * z;
 }
