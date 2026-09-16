@@ -50,6 +50,14 @@ describe("standalone 3D rays and translational casts", () => {
     expect(hit?.distance).toBe(4);
   });
 
+  it("rejects a large-offset sphere ray with a representable radial miss", () => {
+    expect(raycastShape3D(
+      sphereShape3D({ radius: 1 }),
+      pose([1e20, 2, 0]),
+      { origin: [0, 0, 0], direction: [1, 0, 0], maxDistance: 2e20 },
+    )).toBeNull();
+  });
+
   it("counts tangent sphere rays and raycasts rotated boxes", () => {
     const tangent = raycastShape3D(
       sphereShape3D({ radius: 1 }),
@@ -117,6 +125,16 @@ describe("standalone 3D rays and translational casts", () => {
     expect(Object.values(hit ?? {}).flat().every(Number.isFinite)).toBe(true);
   });
 
+  it("rejects a large-offset sphere sweep with a representable radial miss", () => {
+    expect(shapeCastAgainstShape3D(
+      sphereShape3D({ radius: 1 }),
+      identity,
+      [2e20, 0, 0],
+      sphereShape3D({ radius: 1 }),
+      pose([1e20, 3, 0]),
+    )).toBeNull();
+  });
+
   it("casts fixed-orientation boxes and spheres with conservative advancement", () => {
     const hit = shapeCastAgainstShape3D(
       boxShape3D({ width: 2, height: 2, depth: 2 }),
@@ -167,6 +185,26 @@ describe("standalone 3D rays and translational casts", () => {
     );
 
     expect(hit).toBeNull();
+  });
+
+  it("rejects a large-offset sphere-box sweep with a representable radial miss", () => {
+    expect(shapeCastAgainstShape3D(
+      sphereShape3D({ radius: 1 }),
+      pose([0, 3, 0]),
+      [2e10, 0, 0],
+      boxShape3D({ width: 2, height: 2, depth: 2 }),
+      pose([1e10, 0, 0]),
+    )).toBeNull();
+  });
+
+  it("rejects a representable 1e-12 positive sphere-box tangent gap", () => {
+    expect(shapeCastAgainstShape3D(
+      sphereShape3D({ radius: 1 }),
+      pose([0, 2 + 1e-12, 0]),
+      [10, 0, 0],
+      boxShape3D({ width: 2, height: 2, depth: 2 }),
+      pose([5, 0, 0]),
+    )).toBeNull();
   });
 
   it("returns the true earliest time for an exact sphere-box tangent", () => {

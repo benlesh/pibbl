@@ -27,7 +27,6 @@ import {
 const CAST_REFINEMENT_ITERATIONS = 64;
 const CAST_HIT_TOLERANCE = 1e-7;
 const CAST_TIME_TOLERANCE = 1e-12;
-const QUADRATIC_NORMALIZATION_THRESHOLD = Number.MAX_VALUE ** 0.25 / 16;
 
 interface CastCandidate3D {
   readonly pointX: number;
@@ -189,6 +188,8 @@ function castSphereAgainstBox(
   ): void => {
     if (time < -CAST_TIME_TOLERANCE || time > 1 + CAST_TIME_TOLERANCE) return;
     const boundedTime = Math.max(0, Math.min(1, time));
+    const center = localPositionAt(localOrigin, localTranslation, boundedTime);
+    if (!sphereTouchesLocalBoxBoundary(center, target.halfExtents, moving.radius)) return;
     if (
       selected !== null &&
       (boundedTime > selected.timeOfImpact + CAST_TIME_TOLERANCE ||
@@ -252,7 +253,10 @@ function castSphereAgainstBox(
             secondDelta * secondSign < -GEOMETRY_EPSILON_3D
           ) continue;
           const length = Math.hypot(firstDelta, secondDelta);
-          if (length <= GEOMETRY_EPSILON_3D) continue;
+          if (
+            length <= GEOMETRY_EPSILON_3D ||
+            !isSphereBoundaryDistance(length, moving.radius)
+          ) continue;
           normal[firstAxis] = firstDelta / length;
           normal[secondAxis] = secondDelta / length;
           const point = [...center] as [number, number, number];
@@ -292,7 +296,10 @@ function castSphereAgainstBox(
         dz * ((vertex & 4) === 0 ? -1 : 1) < -GEOMETRY_EPSILON_3D
       ) continue;
       const length = Math.hypot(dx, dy, dz);
-      if (length <= GEOMETRY_EPSILON_3D) continue;
+      if (
+        length <= GEOMETRY_EPSILON_3D ||
+        !isSphereBoundaryDistance(length, moving.radius)
+      ) continue;
       consider(time, point, [dx / length, dy / length, dz / length], 18 + vertex);
       break;
     }
@@ -309,41 +316,35 @@ function raycastSphere(
   const relativeX = origin[0]! - sphere.center[0]!;
   const relativeY = origin[1]! - sphere.center[1]!;
   const relativeZ = origin[2]! - sphere.center[2]!;
-  const scale = Math.max(
-    Math.abs(relativeX),
-    Math.abs(relativeY),
-    Math.abs(relativeZ),
+  const roots = scaledSweepRoots(
+    [relativeX, relativeY, relativeZ],
+    [direction[0]!, direction[1]!, direction[2]!],
     sphere.radius,
   );
-  if (!Number.isFinite(scale) || scale <= 0) return null;
-  const numericScale = scale > QUADRATIC_NORMALIZATION_THRESHOLD ? scale : 1;
-  const scaledX = relativeX / numericScale;
-  const scaledY = relativeY / numericScale;
-  const scaledZ = relativeZ / numericScale;
-  const scaledRadius = sphere.radius / numericScale;
-  const projection =
-    scaledX * direction[0]! +
-    scaledY * direction[1]! +
-    scaledZ * direction[2]!;
-  const roots = quadraticRoots(
-    1,
-    2 * projection,
-    scaledX * scaledX + scaledY * scaledY + scaledZ * scaledZ - scaledRadius * scaledRadius,
-  );
   if (roots === null) return null;
-  const maximum = maxDistance / numericScale;
-  const scaledDistance = roots.find((root) =>
-    root >= -CAST_TIME_TOLERANCE && root <= maximum + CAST_TIME_TOLERANCE,
+  const distance = roots.find((root) =>
+    root >= -CAST_TIME_TOLERANCE && root <= maxDistance + CAST_TIME_TOLERANCE,
   );
-  if (scaledDistance === undefined) return null;
-  const boundedDistance = Math.max(0, Math.min(maxDistance, scaledDistance * numericScale));
+  if (distance === undefined) return null;
+  const boundedDistance = validateSphereSweepEntry(
+    [relativeX, relativeY, relativeZ],
+    [direction[0]!, direction[1]!, direction[2]!],
+    sphere.radius,
+    Math.max(0, Math.min(maxDistance, distance)),
+  );
+  if (boundedDistance === null || boundedDistance > maxDistance) return null;
+  const hitOffset = [
+    relativeX + direction[0]! * boundedDistance,
+    relativeY + direction[1]! * boundedDistance,
+    relativeZ + direction[2]! * boundedDistance,
+  ] as const;
   const pointX = origin[0]! + direction[0]! * boundedDistance;
   const pointY = origin[1]! + direction[1]! * boundedDistance;
   const pointZ = origin[2]! + direction[2]! * boundedDistance;
   const normal = unitAgainstMotion(
-    pointX - sphere.center[0]!,
-    pointY - sphere.center[1]!,
-    pointZ - sphere.center[2]!,
+    hitOffset[0],
+    hitOffset[1],
+    hitOffset[2],
     direction,
   );
   return {
@@ -427,29 +428,9 @@ function castSphereAgainstSphere(
   const relativeY = moving.center[1]! - target.center[1]!;
   const relativeZ = moving.center[2]! - target.center[2]!;
   const radius = moving.radius + target.radius;
-  const scale = Math.max(
-    Math.abs(relativeX),
-    Math.abs(relativeY),
-    Math.abs(relativeZ),
-    Math.abs(translation[0]!),
-    Math.abs(translation[1]!),
-    Math.abs(translation[2]!),
-    radius,
-  );
-  if (!Number.isFinite(scale) || scale <= 0) return null;
-  const numericScale = scale > QUADRATIC_NORMALIZATION_THRESHOLD ? scale : 1;
-  const scaledRelativeX = relativeX / numericScale;
-  const scaledRelativeY = relativeY / numericScale;
-  const scaledRelativeZ = relativeZ / numericScale;
-  const scaledTranslationX = translation[0]! / numericScale;
-  const scaledTranslationY = translation[1]! / numericScale;
-  const scaledTranslationZ = translation[2]! / numericScale;
-  const scaledRadius = radius / numericScale;
-  const initialSquared =
-    scaledRelativeX * scaledRelativeX +
-    scaledRelativeY * scaledRelativeY +
-    scaledRelativeZ * scaledRelativeZ;
-  if (initialSquared <= scaledRadius * scaledRadius) {
+  const initialDistance = Math.hypot(relativeX, relativeY, relativeZ);
+  if (!Number.isFinite(initialDistance)) return null;
+  if (initialDistance <= radius) {
     if (!includeInitialOverlap) return null;
     const normal = unitAgainstMotion(relativeX, relativeY, relativeZ, translation);
     return {
@@ -462,29 +443,31 @@ function castSphereAgainstSphere(
     };
   }
   if (translationLength === 0) return null;
-  const roots = quadraticRoots(
-    scaledTranslationX * scaledTranslationX +
-      scaledTranslationY * scaledTranslationY +
-      scaledTranslationZ * scaledTranslationZ,
-    2 * (
-      scaledRelativeX * scaledTranslationX +
-      scaledRelativeY * scaledTranslationY +
-      scaledRelativeZ * scaledTranslationZ
-    ),
-    initialSquared - scaledRadius * scaledRadius,
+  const roots = scaledSweepRoots(
+    [relativeX, relativeY, relativeZ],
+    [translation[0]!, translation[1]!, translation[2]!],
+    radius,
   );
   if (roots === null) return null;
   const time = roots.find((root) => root >= -CAST_TIME_TOLERANCE);
   if (time === undefined) return null;
   if (time < -CAST_TIME_TOLERANCE || time > 1 + CAST_TIME_TOLERANCE) return null;
-  const timeOfImpact = Math.max(0, Math.min(1, time));
-  const movingX = moving.center[0]! + translation[0]! * timeOfImpact;
-  const movingY = moving.center[1]! + translation[1]! * timeOfImpact;
-  const movingZ = moving.center[2]! + translation[2]! * timeOfImpact;
+  const timeOfImpact = validateSphereSweepEntry(
+    [relativeX, relativeY, relativeZ],
+    [translation[0]!, translation[1]!, translation[2]!],
+    radius,
+    Math.max(0, Math.min(1, time)),
+  );
+  if (timeOfImpact === null || timeOfImpact > 1) return null;
+  const impactOffset = [
+    relativeX + translation[0]! * timeOfImpact,
+    relativeY + translation[1]! * timeOfImpact,
+    relativeZ + translation[2]! * timeOfImpact,
+  ] as const;
   const normal = unitAgainstMotion(
-    movingX - target.center[0]!,
-    movingY - target.center[1]!,
-    movingZ - target.center[2]!,
+    impactOffset[0],
+    impactOffset[1],
+    impactOffset[2],
     translation,
   );
   return {
@@ -803,38 +786,92 @@ function scaledSweepRoots(
 ): readonly [number, number] | null {
   const scale = Math.max(...offset.map(Math.abs), ...translation.map(Math.abs), radius);
   if (!Number.isFinite(scale) || scale <= 0) return null;
-  const numericScale = scale > QUADRATIC_NORMALIZATION_THRESHOLD ? scale : 1;
-  let a = 0;
-  let b = 0;
-  let c = -((radius / numericScale) ** 2);
+  const scaledOffset: number[] = [];
+  const scaledTranslation: number[] = [];
   for (let index = 0; index < offset.length; index += 1) {
-    const scaledOffset = offset[index]! / numericScale;
-    const scaledTranslation = translation[index]! / numericScale;
-    a += scaledTranslation * scaledTranslation;
-    b += 2 * scaledOffset * scaledTranslation;
-    c += scaledOffset * scaledOffset;
+    scaledOffset.push(offset[index]! / scale);
+    scaledTranslation.push(translation[index]! / scale);
   }
-  return quadraticRoots(a, b, c);
-}
-
-function quadraticRoots(
-  a: number,
-  b: number,
-  c: number,
-): readonly [number, number] | null {
-  if (![a, b, c].every(Number.isFinite) || a <= 0) return null;
-  const discriminant = b * b - 4 * a * c;
-  if (!Number.isFinite(discriminant) || discriminant < -GEOMETRY_EPSILON_3D) return null;
-  const squareRoot = Math.sqrt(Math.max(0, discriminant));
-  if (squareRoot === 0) {
-    const root = -b / (2 * a);
-    return Number.isFinite(root) ? [root, root] : null;
-  }
-  const q = -0.5 * (b + (b >= 0 ? squareRoot : -squareRoot));
-  const first = q / a;
-  const second = c / q;
+  const translationLength = Math.hypot(...scaledTranslation);
+  if (!Number.isFinite(translationLength) || translationLength === 0) return null;
+  const direction = scaledTranslation.map((value) => value / translationLength);
+  const closestDistance = -compensatedDot(scaledOffset, direction);
+  const perpendicular = scaledOffset.map((value, index) =>
+    value + direction[index]! * closestDistance,
+  );
+  const perpendicularDistance = Math.hypot(...perpendicular);
+  const scaledRadius = radius / scale;
+  if (
+    !Number.isFinite(closestDistance) ||
+    !Number.isFinite(perpendicularDistance) ||
+    perpendicularDistance > scaledRadius
+  ) return null;
+  const halfChord = Math.sqrt(
+    (scaledRadius - perpendicularDistance) * (scaledRadius + perpendicularDistance),
+  );
+  const first = (closestDistance - halfChord) / translationLength;
+  const second = (closestDistance + halfChord) / translationLength;
   if (!Number.isFinite(first) || !Number.isFinite(second)) return null;
   return first <= second ? [first, second] : [second, first];
+}
+
+function compensatedDot(first: readonly number[], second: readonly number[]): number {
+  let sum = 0;
+  let correction = 0;
+  for (let index = 0; index < first.length; index += 1) {
+    const adjusted = first[index]! * second[index]! - correction;
+    const next = sum + adjusted;
+    correction = (next - sum) - adjusted;
+    sum = next;
+  }
+  return sum;
+}
+
+function sphereTouchesLocalBoxBoundary(
+  center: ArrayLike<number>,
+  halfExtents: ArrayLike<number>,
+  radius: number,
+): boolean {
+  const outsideX = Math.max(0, Math.abs(center[0]!) - halfExtents[0]!);
+  const outsideY = Math.max(0, Math.abs(center[1]!) - halfExtents[1]!);
+  const outsideZ = Math.max(0, Math.abs(center[2]!) - halfExtents[2]!);
+  return isSphereBoundaryDistance(Math.hypot(outsideX, outsideY, outsideZ), radius);
+}
+
+function isSphereBoundaryDistance(distance: number, radius: number): boolean {
+  if (!Number.isFinite(distance) || distance > radius) return false;
+  const tolerance = Math.max(
+    GEOMETRY_EPSILON_3D,
+    Number.EPSILON * 16 * Math.max(distance, radius),
+  );
+  return radius - distance <= tolerance;
+}
+
+function validateSphereSweepEntry(
+  offset: readonly number[],
+  translation: readonly number[],
+  radius: number,
+  candidate: number,
+): number | null {
+  let time = candidate;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const point = offset.map((value, index) => value + translation[index]! * time);
+    const distance = Math.hypot(...point);
+    if (isSphereBoundaryDistance(distance, radius)) return time;
+    if (!Number.isFinite(distance) || distance < radius) return null;
+    time = nextRepresentableUp(time);
+  }
+  return null;
+}
+
+function nextRepresentableUp(value: number): number {
+  if (value === Number.POSITIVE_INFINITY) return value;
+  if (Object.is(value, -0) || value === 0) return Number.MIN_VALUE;
+  const floats = new Float64Array(1);
+  const bits = new BigUint64Array(floats.buffer);
+  floats[0] = value;
+  bits[0] = bits[0]! + (value > 0 ? 1n : -1n);
+  return floats[0]!;
 }
 
 function dot(first: ArrayLike<number>, second: ArrayLike<number>): number {
