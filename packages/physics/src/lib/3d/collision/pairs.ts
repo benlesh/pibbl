@@ -7,8 +7,10 @@ import type {
 } from "../../../3d-geometry.js";
 import {
   cleanZero,
+  composePose3D,
   copyFiniteVector3,
   copyPose3D,
+  transformPointInto,
   type InternalPose3D,
 } from "../math.js";
 import { GEOMETRY_EPSILON_3D } from "../numeric-policy.js";
@@ -27,13 +29,17 @@ import {
   type PrivateManifold3D,
   type PrivatePairDistance3D,
 } from "./manifold.js";
-import { prepareConvexShape3D, type PreparedConvexShape3D } from "./support.js";
+import {
+  prepareConvexShape3D,
+  supportShape3D,
+  type PreparedConvexShape3D,
+} from "./support.js";
 
 interface PreparedShape3D {
   readonly shape: CRCPhysicsShape3D;
   readonly record: ShapeRecord3D;
   readonly pose: InternalPose3D;
-  readonly convex: PreparedConvexShape3D;
+  readonly convex: PreparedConvexShape3D | null;
   readonly order: number;
 }
 
@@ -69,6 +75,7 @@ export function containsPoint3D(
 ): boolean {
   const prepared = prepareShape(shape, pose, "shape", "pose");
   const copied = copyFiniteVector3(point, "point");
+  if (prepared.convex === null) return containsConcavePoint(prepared, copied);
   if (prepared.convex.kind === "sphere") {
     return (
       Math.hypot(
@@ -338,6 +345,9 @@ function collideCanonical(
   second: PreparedShape3D,
   iterationLimits: Readonly<{ gjk?: number; epa?: number }> = {},
 ): PairResult3D {
+  if (first.convex === null || second.convex === null) {
+    return collideWithConcave(first, second, iterationLimits);
+  }
   const fallback = preferredNormal(first, second);
   let distance: PrivatePairDistance3D;
   if (first.convex.kind === "sphere" && second.convex.kind === "sphere") {
@@ -390,6 +400,183 @@ function collideCanonical(
         second: second.convex,
       }
     : { status: "failed", reason: "nonfinite" };
+}
+
+function collideWithConcave(
+  first: PreparedShape3D,
+  second: PreparedShape3D,
+  iterationLimits: Readonly<{ gjk?: number; epa?: number }>,
+): PairResult3D {
+  if (first.convex !== null && second.convex === null) {
+    return collideConvexConcave(first.convex, second, iterationLimits);
+  }
+  if (first.convex === null && second.convex !== null) {
+    const result = collideConvexConcave(second.convex, first, iterationLimits);
+    return result.status === "failed" ? result : invertResult(result);
+  }
+  if (first.convex === null && second.convex === null) {
+    let best: PairResult3D | null = null;
+    for (const firstTriangle of preparedTriangles(first)) {
+      for (const secondTriangle of preparedTriangles(second)) {
+        const result = collideConvexShapes3D(
+          firstTriangle.shape,
+          secondTriangle.shape,
+          [1, 0, 0],
+          iterationLimits,
+        );
+        if (result.status === "failed") continue;
+        const candidate: SuccessfulPair3D = {
+          status: "success",
+          distance: {
+            ...result.distance,
+            firstFeature: firstTriangle.sourceId,
+            secondFeature: secondTriangle.sourceId,
+          },
+          first: firstTriangle.shape,
+          second: secondTriangle.shape,
+        };
+        if (
+          best === null ||
+          (best.status === "success" &&
+            candidate.distance.separation < best.distance.separation)
+        )
+          best = candidate;
+      }
+    }
+    return best ?? { status: "failed", reason: "gjk" };
+  }
+  return { status: "failed", reason: "gjk" };
+}
+
+function collideConvexConcave(
+  convex: PreparedConvexShape3D,
+  concave: PreparedShape3D,
+  iterationLimits: Readonly<{ gjk?: number; epa?: number }>,
+): PairResult3D {
+  let best: SuccessfulPair3D | null = null;
+  for (const triangle of preparedTriangles(concave)) {
+    const distance = distanceConvexTriangle(
+      convex,
+      triangle.shape,
+      triangle.sourceId,
+      iterationLimits,
+    );
+    if (distance === null) continue;
+    const candidate: SuccessfulPair3D = {
+      status: "success",
+      distance,
+      first: convex,
+      second: triangle.shape,
+    };
+    if (
+      best === null ||
+      distance.separation < best.distance.separation - GEOMETRY_EPSILON_3D ||
+      (Math.abs(distance.separation - best.distance.separation) <=
+        GEOMETRY_EPSILON_3D &&
+        triangle.sourceId < best.distance.secondFeature)
+    )
+      best = candidate;
+  }
+  return best ?? { status: "failed", reason: "gjk" };
+}
+
+function distanceConvexTriangle(
+  convex: PreparedConvexShape3D,
+  triangle: Extract<PreparedConvexShape3D, { kind: "hull" }>,
+  sourceId: number,
+  iterationLimits: Readonly<{ gjk?: number; epa?: number }>,
+): PrivatePairDistance3D | null {
+  const a = triangle.vertices.subarray(0, 3),
+    b = triangle.vertices.subarray(3, 6),
+    c = triangle.vertices.subarray(6, 9);
+  let normal = cross3(subtract3(b, a), subtract3(c, a));
+  const length = Math.hypot(...normal);
+  if (length <= GEOMETRY_EPSILON_3D) return null;
+  normal = normal.map((value) => value / length) as [number, number, number];
+  if (dot3(subtract3(convex.center, a), normal) < 0)
+    normal = normal.map((value) => -value) as [number, number, number];
+  const witness = new Float64Array(3);
+  const feature = supportShape3D(
+    witness,
+    convex,
+    -normal[0],
+    -normal[1],
+    -normal[2],
+  );
+  const separation = dot3(subtract3(witness, a), normal);
+  const projected = new Float64Array([
+    witness[0]! - normal[0] * separation,
+    witness[1]! - normal[1] * separation,
+    witness[2]! - normal[2] * separation,
+  ]);
+  if (pointInTriangle(projected, a, b, c, normal)) {
+    return {
+      separation,
+      firstX: witness[0]!,
+      firstY: witness[1]!,
+      firstZ: witness[2]!,
+      secondX: projected[0]!,
+      secondY: projected[1]!,
+      secondZ: projected[2]!,
+      normalX: normal[0],
+      normalY: normal[1],
+      normalZ: normal[2],
+      firstFeature: feature,
+      secondFeature: sourceId,
+    };
+  }
+  const result = collideConvexShapes3D(
+    convex,
+    triangle,
+    normal,
+    iterationLimits,
+  );
+  return result.status === "success"
+    ? { ...result.distance, secondFeature: sourceId }
+    : null;
+}
+
+function preparedTriangles(shape: PreparedShape3D): readonly Readonly<{
+  sourceId: number;
+  shape: Extract<PreparedConvexShape3D, { kind: "hull" }>;
+}>[] {
+  if (
+    shape.record.kind !== "triangleMesh" &&
+    shape.record.kind !== "heightfield"
+  )
+    return [];
+  const record = shape.record;
+  const pose = composePose3D(shape.pose, record.localPose);
+  const result = Array.from(
+    { length: record.sourceTriangleIds.length },
+    (_, triangle) => {
+      const vertices = new Float64Array(9);
+      for (let vertex = 0; vertex < 3; vertex += 1)
+        transformPointInto(
+          vertices.subarray(vertex * 3, vertex * 3 + 3),
+          record.triangles.subarray(
+            triangle * 9 + vertex * 3,
+            triangle * 9 + vertex * 3 + 3,
+          ),
+          pose,
+        );
+      const center = new Float64Array([
+        (vertices[0]! + vertices[3]! + vertices[6]!) / 3,
+        (vertices[1]! + vertices[4]! + vertices[7]!) / 3,
+        (vertices[2]! + vertices[5]! + vertices[8]!) / 3,
+      ]);
+      return {
+        sourceId: record.sourceTriangleIds[triangle]!,
+        shape: {
+          kind: "hull" as const,
+          center,
+          vertices,
+          faces: new Uint32Array(0),
+        },
+      };
+    },
+  );
+  return result.sort((left, right) => left.sourceId - right.sourceId);
 }
 
 export function collideConvexShapes3D(
@@ -632,7 +819,10 @@ function prepareShape(
     shape,
     record,
     pose,
-    convex: prepareConvexShape3D(record, pose),
+    convex:
+      record.kind === "triangleMesh" || record.kind === "heightfield"
+        ? null
+        : prepareConvexShape3D(record, pose),
     order: record.identity,
   };
 }
@@ -647,7 +837,10 @@ function prepareShapeRecord(
     shape: shell,
     record,
     pose,
-    convex: prepareConvexShape3D(record, pose),
+    convex:
+      record.kind === "triangleMesh" || record.kind === "heightfield"
+        ? null
+        : prepareConvexShape3D(record, pose),
     order,
   };
 }
@@ -656,9 +849,11 @@ function preferredNormal(
   first: PreparedShape3D,
   second: PreparedShape3D,
 ): readonly [number, number, number] {
-  const dx = first.convex.center[0]! - second.convex.center[0]!;
-  const dy = first.convex.center[1]! - second.convex.center[1]!;
-  const dz = first.convex.center[2]! - second.convex.center[2]!;
+  const firstCenter = preparedCenter(first);
+  const secondCenter = preparedCenter(second);
+  const dx = firstCenter[0]! - secondCenter[0]!;
+  const dy = firstCenter[1]! - secondCenter[1]!;
+  const dz = firstCenter[2]! - secondCenter[2]!;
   const length = Math.hypot(dx, dy, dz);
   if (length > GEOMETRY_EPSILON_3D)
     return [dx / length, dy / length, dz / length];
@@ -674,8 +869,18 @@ function comparePrepared(
     compareArrays(first.pose.position, second.pose.position) ||
     compareArrays(first.pose.orientation, second.pose.orientation);
   if (poseOrder !== 0) return poseOrder;
-  const centerOrder = compareArrays(first.convex.center, second.convex.center);
+  const centerOrder = compareArrays(
+    preparedCenter(first),
+    preparedCenter(second),
+  );
   if (centerOrder !== 0) return centerOrder;
+  if (first.convex === null || second.convex === null) {
+    return first.record.kind < second.record.kind
+      ? -1
+      : first.record.kind > second.record.kind
+        ? 1
+        : 0;
+  }
   if (first.convex.kind !== second.convex.kind) {
     return first.convex.kind < second.convex.kind ? -1 : 1;
   }
@@ -699,6 +904,110 @@ function comparePrepared(
     return compareArrays(first.convex.vertices, second.convex.vertices);
   }
   return 0;
+}
+
+function preparedCenter(shape: PreparedShape3D): Float64Array {
+  if (shape.convex !== null) return shape.convex.center;
+  const pose = composePose3D(shape.pose, shape.record.localPose);
+  const center = new Float64Array(3);
+  transformPointInto(center, shape.record.center, pose);
+  return center;
+}
+
+function containsConcavePoint(
+  shape: PreparedShape3D,
+  point: Float64Array,
+): boolean {
+  const triangles = preparedTriangles(shape);
+  for (const triangle of triangles) {
+    const a = triangle.shape.vertices.subarray(0, 3);
+    const b = triangle.shape.vertices.subarray(3, 6);
+    const c = triangle.shape.vertices.subarray(6, 9);
+    const normal = cross3(subtract3(b, a), subtract3(c, a));
+    const length = Math.hypot(...normal);
+    if (
+      length > 0 &&
+      Math.abs(dot3(subtract3(point, a), normal)) / length <=
+        GEOMETRY_EPSILON_3D &&
+      pointInTriangle(point, a, b, c, normal)
+    )
+      return true;
+  }
+  if (shape.record.kind !== "triangleMesh" || !shape.record.closedManifold)
+    return false;
+  let crossings = 0;
+  const direction = [1, 0.3713906763541037, 0.17320508075688773] as const;
+  for (const triangle of triangles) {
+    const a = triangle.shape.vertices.subarray(0, 3);
+    const b = triangle.shape.vertices.subarray(3, 6);
+    const c = triangle.shape.vertices.subarray(6, 9);
+    if (rayTriangleTime(point, direction, a, b, c) !== null) crossings += 1;
+  }
+  return crossings % 2 === 1;
+}
+
+function pointInTriangle(
+  point: ArrayLike<number>,
+  a: ArrayLike<number>,
+  b: ArrayLike<number>,
+  c: ArrayLike<number>,
+  normal: ArrayLike<number>,
+): boolean {
+  const edges = [
+    [a, b],
+    [b, c],
+    [c, a],
+  ] as const;
+  return edges.every(
+    ([start, end]) =>
+      dot3(cross3(subtract3(end, start), subtract3(point, start)), normal) >=
+      -GEOMETRY_EPSILON_3D,
+  );
+}
+
+function rayTriangleTime(
+  origin: ArrayLike<number>,
+  direction: ArrayLike<number>,
+  a: ArrayLike<number>,
+  b: ArrayLike<number>,
+  c: ArrayLike<number>,
+): number | null {
+  const edge1 = subtract3(b, a),
+    edge2 = subtract3(c, a);
+  const p = cross3(direction, edge2);
+  const determinant = dot3(edge1, p);
+  if (Math.abs(determinant) <= GEOMETRY_EPSILON_3D) return null;
+  const inverse = 1 / determinant;
+  const tvec = subtract3(origin, a);
+  const u = dot3(tvec, p) * inverse;
+  const q = cross3(tvec, edge1);
+  const v = dot3(direction, q) * inverse;
+  const time = dot3(edge2, q) * inverse;
+  return u >= 0 && v >= 0 && u + v <= 1 && time > GEOMETRY_EPSILON_3D
+    ? time
+    : null;
+}
+
+function subtract3(
+  left: ArrayLike<number>,
+  right: ArrayLike<number>,
+): [number, number, number] {
+  return [left[0]! - right[0]!, left[1]! - right[1]!, left[2]! - right[2]!];
+}
+
+function cross3(
+  left: ArrayLike<number>,
+  right: ArrayLike<number>,
+): [number, number, number] {
+  return [
+    left[1]! * right[2]! - left[2]! * right[1]!,
+    left[2]! * right[0]! - left[0]! * right[2]!,
+    left[0]! * right[1]! - left[1]! * right[0]!,
+  ];
+}
+
+function dot3(left: ArrayLike<number>, right: ArrayLike<number>): number {
+  return left[0]! * right[0]! + left[1]! * right[1]! + left[2]! * right[2]!;
 }
 
 function preparedMagnitude(shape: PreparedConvexShape3D): number {

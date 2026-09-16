@@ -5,6 +5,7 @@ import {
   raycastShape3D,
   shapeCastAgainstShape3D,
   sphereShape3D,
+  triangleMeshShape3D,
   type CRCPhysicsPose3D,
 } from "../../../3d-geometry.js";
 
@@ -169,6 +170,28 @@ describe("standalone 3D rays and translational casts", () => {
     );
     expect(hit?.point).toEqual([-2, 0, 0]);
     expect(hit?.normal).toEqual([-1, 0, 0]);
+  });
+
+  it("raycasts canonical mesh triangles with stable barycentric metadata", () => {
+    const mesh = triangleMeshShape3D({
+      positions: [0, 0, 0, 2, 0, 0, 0, 2, 0, 10, 10, 10],
+      indices: [0, 1, 2, 3, 3, 3],
+    });
+    const miss = raycastShape3D(mesh, identity, {
+      origin: [1.8, 1.8, 2],
+      direction: [0, 0, -1],
+      maxDistance: 5,
+    });
+    expect(miss).toBeNull();
+    const hit = raycastShape3D(mesh, identity, {
+      origin: [0.5, 0.5, 2],
+      direction: [0, 0, -1],
+      maxDistance: 5,
+    });
+    expect(hit).toMatchObject({
+      triangleIndex: 0,
+      barycentric: [0.5, 0.25, 0.25],
+    });
   });
 
   it("includes or skips initial ray overlap explicitly", () => {

@@ -23,6 +23,10 @@ import {
 } from "./math.js";
 import { createShape3D, requireShapeRecord3D } from "./shape-records.js";
 import { buildCanonicalHull3D } from "./hull.js";
+import {
+  buildHeightfieldTriangles3D,
+  buildMeshTriangles3D,
+} from "./mesh-bvh.js";
 
 const identityQuaternion: CRCPhysicsQuaternion = [0, 0, 0, 1];
 const zeroVector: CRCPhysicsVector3 = [0, 0, 0];
@@ -197,7 +201,8 @@ export function triangleMeshShape3D(
       "triangle mesh indices must contain complete nonempty triangles.",
     );
   }
-  const { minimum, maximum } = vertexBounds(positions);
+  const triangleData = buildMeshTriangles3D(positions, indices);
+  const { minimum, maximum } = vertexBounds(triangleData.triangles);
   return createShape3D({
     kind: "triangleMesh",
     center: midpoint(minimum, maximum),
@@ -205,6 +210,8 @@ export function triangleMeshShape3D(
     indices,
     minimum,
     maximum,
+    ...triangleData,
+    closedManifold: isConsistentlyWoundClosedManifold(indices),
     localPose: IDENTITY_POSE_3D,
   });
 }
@@ -268,6 +275,15 @@ export function heightfieldShape3D(
     origin[1]! + maximumHeight,
     origin[2]! + (input.rows - 1) * cellSizeZ,
   ]);
+  const triangleData = buildHeightfieldTriangles3D(
+    input.rows,
+    input.columns,
+    heights,
+    cellSizeX,
+    cellSizeZ,
+    heightScale,
+    origin,
+  );
   return createShape3D({
     kind: "heightfield",
     center: midpoint(minimum, maximum),
@@ -280,8 +296,35 @@ export function heightfieldShape3D(
     origin,
     minimum,
     maximum,
+    ...triangleData,
     localPose: IDENTITY_POSE_3D,
   });
+}
+
+function isConsistentlyWoundClosedManifold(indices: Uint32Array): boolean {
+  const edges = new Map<string, [number, number][]>();
+  for (let index = 0; index < indices.length; index += 3) {
+    const a = indices[index]!,
+      b = indices[index + 1]!,
+      c = indices[index + 2]!;
+    for (const edge of [
+      [a, b],
+      [b, c],
+      [c, a],
+    ] as const) {
+      const key =
+        edge[0] < edge[1] ? `${edge[0]},${edge[1]}` : `${edge[1]},${edge[0]}`;
+      const values = edges.get(key) ?? [];
+      values.push([edge[0], edge[1]]);
+      edges.set(key, values);
+    }
+  }
+  return [...edges.values()].every(
+    (values) =>
+      values.length === 2 &&
+      values[0]![0] === values[1]![1] &&
+      values[0]![1] === values[1]![0],
+  );
 }
 
 export function boundsOfShape3D(
@@ -405,6 +448,12 @@ export function boundsOfShape3D(
   );
 }
 
+function triangleSoupMassProperties(triangles: Float64Array, density: number) {
+  const vertexCount = triangles.length / 3;
+  const faces = Uint32Array.from({ length: vertexCount }, (_, index) => index);
+  return hullMassProperties(triangles, faces, density);
+}
+
 export function massProperties3D(
   shape: CRCPhysicsShape3D,
   options?: Readonly<{ density?: number }>,
@@ -416,6 +465,18 @@ export function massProperties3D(
   );
   const center = new Float64Array(3);
   transformPointInto(center, record.center, record.localPose);
+
+  if (record.kind === "triangleMesh" && record.closedManifold) {
+    const mesh = triangleSoupMassProperties(record.triangles, density);
+    const meshCenter = new Float64Array(3);
+    transformPointInto(meshCenter, mesh.center, record.localPose);
+    return freezeMassProperties(
+      mesh.volume,
+      meshCenter,
+      mesh.mass,
+      rotateTensor(mesh.tensor, record.localPose.orientation),
+    );
+  }
 
   if (record.kind === "sphere") {
     const volume = (4 * Math.PI * record.radius ** 3) / 3;

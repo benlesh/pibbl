@@ -1,5 +1,6 @@
 import type { CRCPhysicsShape3D } from "../../3d-geometry.js";
 import type { InternalPose3D } from "./math.js";
+import type { MeshBvh3D } from "./mesh-bvh.js";
 
 interface ShapeRecordBase3D {
   readonly identity: number;
@@ -64,6 +65,10 @@ export interface TriangleMeshShapeRecord3D extends ShapeRecordBase3D {
   readonly indices: Uint32Array;
   readonly minimum: Float64Array;
   readonly maximum: Float64Array;
+  readonly triangles: Float64Array;
+  readonly sourceTriangleIds: Uint32Array;
+  readonly bvh: MeshBvh3D;
+  readonly closedManifold: boolean;
 }
 
 export interface HeightfieldShapeRecord3D extends ShapeRecordBase3D {
@@ -78,6 +83,9 @@ export interface HeightfieldShapeRecord3D extends ShapeRecordBase3D {
   readonly origin: Float64Array;
   readonly minimum: Float64Array;
   readonly maximum: Float64Array;
+  readonly triangles: Float64Array;
+  readonly sourceTriangleIds: Uint32Array;
+  readonly bvh: MeshBvh3D;
 }
 
 export type ConvexShapeRecord3D =

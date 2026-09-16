@@ -8,6 +8,7 @@ import {
   ellipsoidShape3D,
   massProperties3D,
   sphereShape3D,
+  triangleMeshShape3D,
   transformShape3D,
   type CRCPhysicsAabb3D,
   type CRCPhysicsMatrix3,
@@ -217,6 +218,21 @@ describe("immutable 3D sphere and box factories", () => {
     if (record.kind !== "convexHull") return;
     expect(record.vertices).toHaveLength(24);
     expect(record.faces).toHaveLength(36);
+  });
+
+  it("derives mass only for consistently wound closed triangle manifolds", () => {
+    const positions = [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1];
+    const closed = triangleMeshShape3D({
+      positions,
+      indices: [0, 2, 1, 0, 1, 3, 0, 3, 2, 1, 2, 3],
+    });
+    const properties = massProperties3D(closed);
+    expect(properties.volume).toBeCloseTo(1 / 6, 12);
+    expectVectorClose(properties.centerOfMass, [0.25, 0.25, 0.25]);
+    expect(properties.inertiaTensor[0]).toBeCloseTo(1 / 80, 12);
+
+    const open = triangleMeshShape3D({ positions, indices: [0, 2, 1] });
+    expect(massProperties3D(open).mass).toBe(0);
   });
 
   it("rotates a box inertia tensor and center of mass with the shape", () => {

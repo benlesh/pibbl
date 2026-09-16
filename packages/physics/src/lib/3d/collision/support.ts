@@ -8,7 +8,6 @@ import { GEOMETRY_EPSILON_3D } from "../numeric-policy.js";
 import type {
   BoxShapeRecord3D,
   ConvexShapeRecord3D,
-  ShapeRecord3D,
   SphereShapeRecord3D,
 } from "../shape-records.js";
 
@@ -84,14 +83,11 @@ export interface MinkowskiVertex3D {
 }
 
 export function prepareConvexShape3D(
-  record: ShapeRecord3D,
+  record: ConvexShapeRecord3D,
   outerPose: InternalPose3D,
 ): PreparedConvexShape3D {
   if (record.kind === "sphere") return prepareSphere(record, outerPose);
   if (record.kind === "box") return prepareBox(record, outerPose);
-  if (record.kind === "triangleMesh" || record.kind === "heightfield") {
-    return prepareTemporaryConcaveBounds(record, outerPose);
-  }
   if (record.kind === "capsule") {
     const pose = composePose3D(outerPose, record.localPose);
     const start = new Float64Array(3);
@@ -123,33 +119,6 @@ export function prepareConvexShape3D(
     radius: record.radius,
     halfHeight: record.halfHeight,
   };
-}
-
-function prepareTemporaryConcaveBounds(
-  record: Extract<ShapeRecord3D, { kind: "triangleMesh" | "heightfield" }>,
-  outerPose: InternalPose3D,
-): PreparedBox3D {
-  const center = new Float64Array([
-    (record.minimum[0]! + record.maximum[0]!) / 2,
-    (record.minimum[1]! + record.maximum[1]!) / 2,
-    (record.minimum[2]! + record.maximum[2]!) / 2,
-  ]);
-  const halfExtents = new Float64Array([
-    Math.max((record.maximum[0]! - record.minimum[0]!) / 2, 0.025),
-    Math.max((record.maximum[1]! - record.minimum[1]!) / 2, 0.025),
-    Math.max((record.maximum[2]! - record.minimum[2]!) / 2, 0.025),
-  ]);
-  return prepareBox(
-    {
-      kind: "box",
-      identity: record.identity,
-      center,
-      orientation: new Float64Array([0, 0, 0, 1]),
-      halfExtents,
-      localPose: record.localPose,
-    },
-    outerPose,
-  );
 }
 
 export function supportShape3D(

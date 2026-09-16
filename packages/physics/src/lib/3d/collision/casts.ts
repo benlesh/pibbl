@@ -8,15 +8,20 @@ import type {
 import { requireNonnegativeNumber } from "../../shared/validation.js";
 import {
   cleanZero,
+  composePose3D,
   copyFiniteVector3,
   copyPose3D,
+  transformPointInto,
   type InternalPose3D,
 } from "../math.js";
 import {
   GEOMETRY_EPSILON_3D,
   MAX_GJK_ITERATIONS_3D,
 } from "../numeric-policy.js";
-import { requireShapeRecord3D } from "../shape-records.js";
+import {
+  requireShapeRecord3D,
+  type ConcaveShapeRecord3D,
+} from "../shape-records.js";
 import {
   castSphereAgainstBoxAnalytically,
   castSphereAgainstSphereAnalytically,
@@ -34,7 +39,11 @@ const CAST_REFINEMENT_ITERATIONS = 64;
 const CAST_HIT_TOLERANCE = 1e-7;
 const CAST_TIME_TOLERANCE = 1e-12;
 
-type CastCandidate3D = AnalyticCastCandidate3D;
+type CastCandidate3D = AnalyticCastCandidate3D &
+  Readonly<{
+    triangleIndex?: number;
+    barycentric?: readonly [number, number, number];
+  }>;
 
 function raycastPreparedConvex(
   shape: PreparedConvexShape3D,
@@ -327,7 +336,8 @@ export function raycastShape3D(
   ray: CRCPhysicsRay3D,
   options?: Readonly<{ includeInitialOverlap?: boolean }>,
 ): CRCPhysicsShapeHit3D | null {
-  const prepared = prepareShape(shape, publicPose, "pose");
+  const record = requireShapeRecord3D(shape);
+  const pose = copyPose3D(publicPose, "pose");
   const origin = copyFiniteVector3(ray.origin, "ray.origin");
   const sourceDirection = copyFiniteVector3(ray.direction, "ray.direction");
   const scale = Math.max(
@@ -341,6 +351,27 @@ export function raycastShape3D(
     "ray.maxDistance",
   );
   const includeInitialOverlap = options?.includeInitialOverlap === true;
+  const scaledX = sourceDirection[0]! / scale;
+  const scaledY = sourceDirection[1]! / scale;
+  const scaledZ = sourceDirection[2]! / scale;
+  const scaledLength = Math.hypot(scaledX, scaledY, scaledZ);
+  const direction = [
+    scaledX / scaledLength,
+    scaledY / scaledLength,
+    scaledZ / scaledLength,
+  ] as const;
+  if (record.kind === "triangleMesh" || record.kind === "heightfield") {
+    if (maxDistance === 0) return null;
+    const candidate = raycastConcave(
+      record,
+      pose,
+      origin,
+      direction,
+      maxDistance,
+    );
+    return candidate === null ? null : publicHit(candidate);
+  }
+  const prepared = prepareConvexShape3D(record, pose);
   if (prepared.kind === "sphere") {
     const candidate = raycastSphereAnalytically(
       prepared,
@@ -351,16 +382,6 @@ export function raycastShape3D(
     );
     return candidate === null ? null : publicHit(candidate, true);
   }
-
-  const scaledX = sourceDirection[0]! / scale;
-  const scaledY = sourceDirection[1]! / scale;
-  const scaledZ = sourceDirection[2]! / scale;
-  const scaledLength = Math.hypot(scaledX, scaledY, scaledZ);
-  const direction = [
-    scaledX / scaledLength,
-    scaledY / scaledLength,
-    scaledZ / scaledLength,
-  ] as const;
   if (containsPreparedPoint(prepared, origin)) {
     return includeInitialOverlap
       ? publicHit({
@@ -398,14 +419,24 @@ export function shapeCastAgainstShape3D(
   const targetPose = copyPose3D(publicTargetPose, "targetPose");
   const movingRecord = requireShapeRecord3D(moving);
   const targetRecord = requireShapeRecord3D(target);
+  if (
+    movingRecord.kind === "triangleMesh" ||
+    movingRecord.kind === "heightfield"
+  ) {
+    throw new TypeError("moving shape casts require a convex 3D shape.");
+  }
   const movingPrepared = prepareConvexShape3D(movingRecord, from);
-  const targetPrepared = prepareConvexShape3D(targetRecord, targetPose);
+  const targetPrepared =
+    targetRecord.kind === "triangleMesh" || targetRecord.kind === "heightfield"
+      ? null
+      : prepareConvexShape3D(targetRecord, targetPose);
   const includeInitialOverlap = options?.includeInitialOverlap === true;
   const exactAnalytic =
     movingPrepared.kind === "sphere" &&
+    targetPrepared !== null &&
     (targetPrepared.kind === "sphere" || targetPrepared.kind === "box");
   let candidate: CastCandidate3D | null;
-  if (movingPrepared.kind === "sphere" && targetPrepared.kind === "sphere") {
+  if (movingPrepared.kind === "sphere" && targetPrepared?.kind === "sphere") {
     candidate = castSphereAgainstSphereAnalytically(
       movingPrepared,
       translation,
@@ -414,7 +445,7 @@ export function shapeCastAgainstShape3D(
     );
   } else if (
     movingPrepared.kind === "sphere" &&
-    targetPrepared.kind === "box"
+    targetPrepared?.kind === "box"
   ) {
     candidate = castSphereAgainstBoxAnalytically(
       movingPrepared,
@@ -439,7 +470,187 @@ export function shapeCastAgainstShape3D(
       includeInitialOverlap,
     );
   }
-  return candidate === null ? null : publicHit(candidate, exactAnalytic);
+  if (candidate === null) return null;
+  if (
+    targetRecord.kind === "triangleMesh" ||
+    targetRecord.kind === "heightfield"
+  ) {
+    const metadata = closestTriangleMetadata(targetRecord, targetPose, [
+      candidate.pointX,
+      candidate.pointY,
+      candidate.pointZ,
+    ]);
+    return publicHit({ ...candidate, ...metadata });
+  }
+  return publicHit(candidate, exactAnalytic);
+}
+
+function closestTriangleMetadata(
+  record: ConcaveShapeRecord3D,
+  outerPose: InternalPose3D,
+  point: ArrayLike<number>,
+): Readonly<{
+  triangleIndex: number;
+  barycentric: readonly [number, number, number];
+}> {
+  const pose = composePose3D(outerPose, record.localPose);
+  let bestDistance = Infinity;
+  let bestTriangle = Infinity;
+  let bestBarycentric: readonly [number, number, number] = [1, 0, 0];
+  for (
+    let triangle = 0;
+    triangle < record.sourceTriangleIds.length;
+    triangle += 1
+  ) {
+    const a = new Float64Array(3),
+      b = new Float64Array(3),
+      c = new Float64Array(3);
+    transformPointInto(
+      a,
+      record.triangles.subarray(triangle * 9, triangle * 9 + 3),
+      pose,
+    );
+    transformPointInto(
+      b,
+      record.triangles.subarray(triangle * 9 + 3, triangle * 9 + 6),
+      pose,
+    );
+    transformPointInto(
+      c,
+      record.triangles.subarray(triangle * 9 + 6, triangle * 9 + 9),
+      pose,
+    );
+    const barycentric = barycentricCoordinates(point, a, b, c);
+    const projected = [
+      a[0]! * barycentric[0] + b[0]! * barycentric[1] + c[0]! * barycentric[2],
+      a[1]! * barycentric[0] + b[1]! * barycentric[1] + c[1]! * barycentric[2],
+      a[2]! * barycentric[0] + b[2]! * barycentric[1] + c[2]! * barycentric[2],
+    ];
+    const distance = Math.hypot(
+      point[0]! - projected[0]!,
+      point[1]! - projected[1]!,
+      point[2]! - projected[2]!,
+    );
+    const sourceId = record.sourceTriangleIds[triangle]!;
+    if (
+      distance < bestDistance - GEOMETRY_EPSILON_3D ||
+      (Math.abs(distance - bestDistance) <= GEOMETRY_EPSILON_3D &&
+        sourceId < bestTriangle)
+    ) {
+      bestDistance = distance;
+      bestTriangle = sourceId;
+      bestBarycentric = barycentric;
+    }
+  }
+  return { triangleIndex: bestTriangle, barycentric: bestBarycentric };
+}
+
+function barycentricCoordinates(
+  point: ArrayLike<number>,
+  a: ArrayLike<number>,
+  b: ArrayLike<number>,
+  c: ArrayLike<number>,
+): readonly [number, number, number] {
+  const v0 = subtract(b, a),
+    v1 = subtract(c, a),
+    v2 = subtract(point, a);
+  const d00 = dot(v0, v0),
+    d01 = dot(v0, v1),
+    d11 = dot(v1, v1),
+    d20 = dot(v2, v0),
+    d21 = dot(v2, v1);
+  const denominator = d00 * d11 - d01 * d01;
+  let v = (d11 * d20 - d01 * d21) / denominator;
+  let w = (d00 * d21 - d01 * d20) / denominator;
+  let u = 1 - v - w;
+  u = Math.max(0, Math.min(1, u));
+  v = Math.max(0, Math.min(1 - u, v));
+  w = 1 - u - v;
+  return [u, v, w];
+}
+
+function raycastConcave(
+  record: ConcaveShapeRecord3D,
+  outerPose: InternalPose3D,
+  origin: ArrayLike<number>,
+  direction: ArrayLike<number>,
+  maxDistance: number,
+): CastCandidate3D | null {
+  const pose = composePose3D(outerPose, record.localPose);
+  let best: CastCandidate3D | null = null;
+  const stack = [0];
+  while (stack.length > 0) {
+    const node = stack.pop()!;
+    const triangle = record.bvh.triangle[node]!;
+    if (triangle >= 0) {
+      const a = new Float64Array(3),
+        b = new Float64Array(3),
+        c = new Float64Array(3);
+      transformPointInto(
+        a,
+        record.triangles.subarray(triangle * 9, triangle * 9 + 3),
+        pose,
+      );
+      transformPointInto(
+        b,
+        record.triangles.subarray(triangle * 9 + 3, triangle * 9 + 6),
+        pose,
+      );
+      transformPointInto(
+        c,
+        record.triangles.subarray(triangle * 9 + 6, triangle * 9 + 9),
+        pose,
+      );
+      const hit = rayTriangle(origin, direction, maxDistance, a, b, c);
+      if (hit !== null) {
+        const sourceId = record.sourceTriangleIds[triangle]!;
+        if (
+          best === null ||
+          hit.distance < best.distance - CAST_TIME_TOLERANCE ||
+          (Math.abs(hit.distance - best.distance) <= CAST_TIME_TOLERANCE &&
+            sourceId < best.triangleIndex!)
+        ) {
+          best = { ...hit, triangleIndex: sourceId };
+        }
+      }
+      continue;
+    }
+    const left = record.bvh.left[node]!,
+      right = record.bvh.right[node]!;
+    if (right >= 0) stack.push(right);
+    if (left >= 0) stack.push(left);
+  }
+  return best;
+}
+
+function rayTriangle(
+  origin: ArrayLike<number>,
+  direction: ArrayLike<number>,
+  maxDistance: number,
+  a: ArrayLike<number>,
+  b: ArrayLike<number>,
+  c: ArrayLike<number>,
+): CastCandidate3D | null {
+  const edge1 = subtract(b, a),
+    edge2 = subtract(c, a);
+  const p = cross(direction, edge2);
+  const determinant = dot(edge1, p);
+  if (Math.abs(determinant) <= GEOMETRY_EPSILON_3D) return null;
+  const inverse = 1 / determinant;
+  const tvec = subtract(origin, a);
+  const u = dot(tvec, p) * inverse;
+  if (u < -GEOMETRY_EPSILON_3D || u > 1 + GEOMETRY_EPSILON_3D) return null;
+  const q = cross(tvec, edge1);
+  const v = dot(direction, q) * inverse;
+  if (v < -GEOMETRY_EPSILON_3D || u + v > 1 + GEOMETRY_EPSILON_3D) return null;
+  const distance = dot(edge2, q) * inverse;
+  if (distance < 0 || distance > maxDistance) return null;
+  let normal = cross(edge1, edge2);
+  if (dot(normal, direction) > 0) normal = [-normal[0], -normal[1], -normal[2]];
+  return {
+    ...worldCandidate(origin, direction, distance, normal, maxDistance),
+    barycentric: [1 - u - v, u, v],
+  };
 }
 
 function raycastBox(
@@ -880,17 +1091,6 @@ function candidateFromDistance(
   };
 }
 
-function prepareShape(
-  shape: CRCPhysicsShape3D,
-  publicPose: CRCPhysicsPose3D,
-  path: string,
-): PreparedConvexShape3D {
-  return prepareConvexShape3D(
-    requireShapeRecord3D(shape),
-    copyPose3D(publicPose, path),
-  );
-}
-
 function containsPreparedBoxPoint(
   shape: PreparedBox3D,
   point: ArrayLike<number>,
@@ -985,6 +1185,16 @@ function publicHit(
     ),
     distance: cleanZero(candidate.distance),
     timeOfImpact: cleanZero(candidate.timeOfImpact),
+    ...(candidate.triangleIndex === undefined
+      ? {}
+      : { triangleIndex: candidate.triangleIndex }),
+    ...(candidate.barycentric === undefined
+      ? {}
+      : {
+          barycentric: Object.freeze(
+            candidate.barycentric.map(cleanZero),
+          ) as CRCPhysicsVector3,
+        }),
   });
 }
 
