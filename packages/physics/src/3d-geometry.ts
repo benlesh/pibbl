@@ -84,3 +84,13 @@ export {
   sphereShape3D,
   transformShape3D,
 } from "./lib/3d/shapes.js";
+export {
+  contactBetweenShapes3D,
+  containsPoint3D,
+  distanceBetweenShapes3D,
+  overlapShapes3D,
+} from "./lib/3d/collision/pairs.js";
+export {
+  raycastShape3D,
+  shapeCastAgainstShape3D,
+} from "./lib/3d/collision/casts.js";

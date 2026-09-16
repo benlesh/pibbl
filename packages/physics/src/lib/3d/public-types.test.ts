@@ -98,6 +98,8 @@ describe("@crc/physics public 3D type surface", () => {
 const completeSurfaceFixture = `
   import {
     sphereShape3D, boxShape3D, boundsOfShape3D, massProperties3D,
+    containsPoint3D, distanceBetweenShapes3D, overlapShapes3D,
+    contactBetweenShapes3D, raycastShape3D, shapeCastAgainstShape3D,
     transformShape3D,
     type CRCPhysicsVector3, type CRCPhysicsQuaternion,
     type CRCPhysicsMatrix3, type CRCPhysicsPose3D,
@@ -112,6 +114,12 @@ const completeSurfaceFixture = `
     boxShape3D as boxFromWorld,
     boundsOfShape3D as boundsFromWorld,
     massProperties3D as massFromWorld,
+    containsPoint3D as containsFromWorld,
+    distanceBetweenShapes3D as distanceFromWorld,
+    overlapShapes3D as overlapFromWorld,
+    contactBetweenShapes3D as contactFromWorld,
+    raycastShape3D as raycastFromWorld,
+    shapeCastAgainstShape3D as shapeCastFromWorld,
     transformShape3D as transformFromWorld,
     type CRCPhysicsAxisLocks3D,
     type CRCPhysicsCollisionFilter,
@@ -142,9 +150,23 @@ const completeSurfaceFixture = `
     type CRCPhysicsBodyStateHandler3D,
   } from '@crc/physics/3d';
 
+  declare const shape: CRCPhysicsShape3D;
+  declare const pose: CRCPhysicsPose3D;
+  declare const point: CRCPhysicsVector3;
+  declare const ray: CRCPhysicsRay3D;
+  const contains: boolean = containsPoint3D(shape, pose, point);
+  const distance: CRCPhysicsDistance3D = distanceBetweenShapes3D(shape, pose, shape, pose);
+  const overlap: boolean = overlapShapes3D(shape, pose, shape, pose);
+  const contact: CRCPhysicsShapeContact3D | null = contactBetweenShapes3D(shape, pose, shape, pose);
+  const rayHit: CRCPhysicsShapeHit3D | null = raycastShape3D(shape, pose, ray, { includeInitialOverlap: true });
+  const castHit: CRCPhysicsShapeHit3D | null = shapeCastAgainstShape3D(shape, pose, point, shape, pose);
   void [sphereShape3D, boxShape3D, boundsOfShape3D, massProperties3D,
+    containsPoint3D, distanceBetweenShapes3D, overlapShapes3D,
+    contactBetweenShapes3D, raycastShape3D, shapeCastAgainstShape3D,
     transformShape3D, sphereFromWorld, boxFromWorld, boundsFromWorld,
-    massFromWorld, transformFromWorld];
+    massFromWorld, containsFromWorld, distanceFromWorld, overlapFromWorld,
+    contactFromWorld, raycastFromWorld, shapeCastFromWorld,
+    transformFromWorld, contains, distance, overlap, contact, rayHit, castHit];
 
   type GeometryTypes = [CRCPhysicsVector3, CRCPhysicsQuaternion,
     CRCPhysicsMatrix3, CRCPhysicsPose3D, CRCPhysicsTransform3D,

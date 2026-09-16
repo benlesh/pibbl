@@ -120,7 +120,15 @@ function assertGeometryOnlyPhysicsBundle(metafile, code) {
       `Packed physics geometry bundle crossed a runtime boundary: ${forbiddenInputs.join(', ')}`,
     );
   }
-  for (const marker of ['requestAnimationFrame', 'Canvas', 'OffscreenCanvas']) {
+  for (const marker of [
+    'requestAnimationFrame',
+    'Canvas',
+    'OffscreenCanvas',
+    'scheduler',
+    'document',
+    'navigator',
+    'window',
+  ]) {
     if (code.includes(marker)) {
       throw new Error(
         `Packed physics geometry bundle retained forbidden runtime marker ${marker}.`,
@@ -179,6 +187,12 @@ try {
     'package/dist/2d.d.ts',
     'package/dist/2d.mjs',
     'package/dist/2d.mjs.map',
+    'package/dist/3d-geometry.d.ts',
+    'package/dist/3d-geometry.mjs',
+    'package/dist/3d-geometry.mjs.map',
+    'package/dist/3d.d.ts',
+    'package/dist/3d.mjs',
+    'package/dist/3d.mjs.map',
   ]);
 
   writeFileSync(join(geometryConsumerDirectory, 'package.json'), `${JSON.stringify({
@@ -200,6 +214,12 @@ try {
       distanceBetweenShapes2D,
       raycastShape2D,
     } from '@crc/physics/2d/geometry';
+    import {
+      boxShape3D,
+      distanceBetweenShapes3D,
+      raycastShape3D,
+      sphereShape3D,
+    } from '@crc/physics/3d/geometry';
     const identity = { position: [0, 0], rotationDegrees: 0 };
     const distance = distanceBetweenShapes2D(
       circleShape2D({ radius: 1 }),
@@ -212,10 +232,25 @@ try {
       { position: [5, 0], rotationDegrees: 0 },
       { origin: [0, 0], direction: [2, 0], maxDistance: 10 },
     );
+    const identity3D = { position: [0, 0, 0], orientation: [0, 0, 0, 1] };
+    const distance3D = distanceBetweenShapes3D(
+      sphereShape3D({ radius: 1 }),
+      identity3D,
+      boxShape3D({ width: 2, height: 2, depth: 2 }),
+      { position: [4, 0, 0], orientation: [0, 0, 0, 1] },
+    );
+    const hit3D = raycastShape3D(
+      boxShape3D({ width: 2, height: 2, depth: 2 }),
+      { position: [5, 0, 0], orientation: [0, 0, 0, 1] },
+      { origin: [0, 0, 0], direction: [2, 0, 0], maxDistance: 10 },
+    );
     if (
       Math.abs(distance.separation - 2) > 1e-9 ||
       Math.abs((hit?.distance ?? Number.NaN) - 4) > 1e-9 ||
-      Math.abs((hit?.timeOfImpact ?? Number.NaN) - 0.4) > 1e-9
+      Math.abs((hit?.timeOfImpact ?? Number.NaN) - 0.4) > 1e-9 ||
+      Math.abs(distance3D.separation - 2) > 1e-9 ||
+      Math.abs((hit3D?.distance ?? Number.NaN) - 4) > 1e-9 ||
+      Math.abs((hit3D?.timeOfImpact ?? Number.NaN) - 0.4) > 1e-9
     ) {
       throw new Error('Packed physics geometry produced an unexpected result.');
     }
@@ -236,6 +271,14 @@ try {
   if (!installedPhysicsGeometryEntry.startsWith(realpathSync(join(geometryConsumerDirectory, 'node_modules')))) {
     throw new Error(
       `@crc/physics/2d/geometry resolved outside the packed consumer: ${installedPhysicsGeometryEntry}`,
+    );
+  }
+  const installedPhysicsGeometry3DEntry = realpathSync(
+    requireFromGeometryConsumer.resolve('@crc/physics/3d/geometry'),
+  );
+  if (!installedPhysicsGeometry3DEntry.startsWith(realpathSync(join(geometryConsumerDirectory, 'node_modules')))) {
+    throw new Error(
+      `@crc/physics/3d/geometry resolved outside the packed consumer: ${installedPhysicsGeometry3DEntry}`,
     );
   }
   if (existsSync(join(geometryConsumerDirectory, 'node_modules/@crc/core'))) {
@@ -536,7 +579,7 @@ try {
   );
   }
   process.stdout.write(
-    'Packed @crc/physics/2d/geometry installed and executed without core, WebGL, world, Canvas, or scheduler code.\n',
+    'Packed @crc/physics 2D and 3D geometry entries installed and executed without core, WebGL, world, Canvas, browser, or scheduler code.\n',
   );
 } finally {
   rmSync(temporaryRoot, { force: true, recursive: true });

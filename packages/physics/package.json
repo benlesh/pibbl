@@ -46,7 +46,7 @@
     "dev": "pnpm run build",
     "prepublishOnly": "pnpm run build",
     "test": "pnpm run test:geometry",
-    "test:geometry": "vitest run src/lib/2d/public-types.test.ts --browser.enabled=false --environment node"
+    "test:geometry": "vitest run src/lib/2d/public-types.test.ts src/lib/3d/public-types.test.ts src/lib/3d/shapes.test.ts src/lib/3d/collision --browser.enabled=false --environment node"
   },
   "peerDependencies": {
     "@crc/core": "0.0.1",
