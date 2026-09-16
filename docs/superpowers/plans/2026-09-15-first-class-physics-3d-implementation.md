@@ -720,11 +720,11 @@ All-hit ray/shape casts sort by time then collider identity; overlap/AABB/point 
 **Interfaces:**
 
 - Consumes: shared finite validation only; geometry entry consumes no core/WebGL type or runtime.
-- Produces: the fixed public 3D geometry/runtime declarations, nominal sphere/box shapes, canonical quaternion math, bounds, rigid transforms, and analytic mass properties.
+- Produces: the fixed public 3D geometry declarations, runtime-facing public types, a `/3d` entry that re-exports implemented geometry without placeholder runtime values, nominal sphere/box shapes, canonical quaternion math, bounds, rigid transforms, and analytic mass properties. Tasks 6, 7, and 10 add runtime values only when their implementations exist.
 
 - [ ] **Step 1: Write failing public-boundary and known-answer tests**
 
-  Import every fixed geometry name from `/3d/geometry`, every runtime name from `/3d`, and assert no root barrel. Prove declarations for `/geometry` contain no CRC/WebGL references. Cover copied arrays, frozen results, quaternion canonicalization, transformed bounds, sphere mass, and a `2 × 4 × 6` box at density `3` with volume `48`, mass `144`, center `[0,0,0]`, and diagonal inertia `[624, 480, 240]`.
+  Import every fixed geometry name from `/3d/geometry`, geometry re-exports plus all available runtime-facing types from `/3d`, and assert no root barrel. Prove declarations for `/geometry` contain no CRC/WebGL references. Cover copied arrays, frozen results, quaternion canonicalization, transformed bounds, sphere mass, and a `2 × 4 × 6` box at density `3` with volume `48`, mass `144`, center `[0,0,0]`, and diagonal inertia `[624, 480, 240]`.
 
 - [ ] **Step 2: Run Node tests and typecheck to observe missing entries**
 
@@ -737,7 +737,7 @@ All-hit ray/shape casts sort by time then collider identity; overlap/AABB/point 
 
 - [ ] **Step 3: Add side-effect-free entries and exact public types**
 
-  Add `./3d` and `./3d/geometry` exports, optional `@crc/webgl` peer metadata, workspace dev dependency, source aliases, and four-entry physics build. Externalize both CRC peers/internal entries. Define every fixed signature and module augmentation without stub exports that survive the task commit.
+  Add `./3d` and `./3d/geometry` exports, optional `@crc/webgl` peer metadata, workspace dev dependency, source aliases, and four-entry physics build. Externalize both CRC peers/internal entries. Define the fixed geometry signatures and runtime-facing public types; keep not-yet-implemented runtime values absent rather than shipping throwing stubs.
 
 - [ ] **Step 4: Implement quaternion/vector/matrix primitives and nominal records**
 
@@ -968,7 +968,7 @@ All-hit ray/shape casts sort by time then collider identity; overlap/AABB/point 
 
 - [ ] **Step 1: Write failing descriptor, scope, and attachment tests**
 
-  Assert copied/frozen options, nominal recognition, stable mounted identity across recreated descriptors, one inferred self collider by default, `collider: false`, Group3D body-only behavior, collider-only nearest-body requirement, missing/mismatched WebGL world diagnostics, same-dimension nesting rejection, and no acquisition after invalid mass/material/filter/velocity inputs.
+  Assert copied/frozen options, nominal recognition, stable mounted identity across recreated descriptors, a normalized `"self"` request that awaits Task 7 resolved-primitive inference, `collider: false`, Group3D body-only behavior, collider-only nearest-body requirement, missing/mismatched WebGL world diagnostics, same-dimension nesting rejection, and no acquisition after invalid mass/material/filter/velocity inputs.
 
 - [ ] **Step 2: Run runtime tests and observe missing APIs**
 
@@ -1029,7 +1029,7 @@ All-hit ray/shape casts sort by time then collider identity; overlap/AABB/point 
 
 - [ ] **Step 1: Write failing WebGL inference and presentation tests**
 
-  Assert Cube dimensions include size and absolute scale; uniformly scaled Sphere infers sphere and nonuniform scale infers ellipsoid; Group3D hosts a body with child colliders; body pose excludes scale; initial pixels do not jump; dynamic presentation uses authoritative parent/body capture; render, pick, and focus models match; context loss keeps CPU simulation advancing; camera-only changes leave physics unchanged; authored dynamic pose changes diagnose conflict.
+  Assert Cube dimensions include size and absolute scale; uniformly scaled Sphere infers sphere; Group3D hosts a body with untransformed child box/sphere colliders; body pose excludes scale; initial pixels do not jump; dynamic presentation uses authoritative parent/body capture; render, pick, and focus models match; context loss keeps CPU simulation advancing; camera-only changes leave physics unchanged; authored dynamic pose changes diagnose conflict. Nonuniform Sphere inference begins in Task 11 after Task 8 supplies ellipsoid geometry.
 
 - [ ] **Step 2: Run focused browser tests and observe missing integration**
 
@@ -1170,7 +1170,7 @@ All-hit ray/shape casts sort by time then collider identity; overlap/AABB/point 
 - [ ] **Step 5: Run geometry, acceleration, and package tests**
 
   ```bash
-  fnm exec --using=24.15.0 corepack pnpm@11.21.0 exec vitest run packages/physics/src/lib/3d --browser.enabled=false --environment node
+  fnm exec --using=24.15.0 corepack pnpm@11.21.0 exec vitest run packages/physics/src/lib/3d/shapes.test.ts packages/physics/src/lib/3d/hull.test.ts packages/physics/src/lib/3d/mesh-bvh.test.ts packages/physics/src/lib/3d/collision --browser.enabled=false --environment node
   fnm exec --using=24.15.0 corepack pnpm@11.21.0 run test:package-consumer:packed
   ```
 
@@ -1318,7 +1318,7 @@ All-hit ray/shape casts sort by time then collider identity; overlap/AABB/point 
 
 - [ ] **Step 4: Add long-run and repeated lifecycle cycles**
 
-  Run two identical action tapes and compare stable identities/discrete state plus numeric tolerance; run 100,000 fixed ticks through ordinary scheduler-driven frames; repeat enable → teleport → throw → disable → removal/remount 1,000 times; assert finite bounded state, no stale callback/command, increasing generations, and all counters/resources back to baseline after final disposal.
+  Run two identical public action tapes and compare stable identities/discrete state plus numeric tolerance; retain Task 5's 100,000-tick Node kernel evidence as the long-run gate; repeat enable → teleport → throw → disable → removal/remount 1,000 times through ordinary scheduled frames; assert finite bounded state, no stale callback/command, increasing generations, and all counters/resources back to baseline after final disposal.
 
 - [ ] **Step 5: Run public browser and scenario catalog evidence**
 
@@ -1493,7 +1493,7 @@ All-hit ray/shape casts sort by time then collider identity; overlap/AABB/point 
 - [ ] **Step 1: Run the pure Node geometry and solver suites**
 
   ```bash
-  fnm exec --using=24.15.0 corepack pnpm@11.21.0 exec vitest run packages/physics/src/lib/3d --browser.enabled=false --environment node
+  fnm exec --using=24.15.0 corepack pnpm@11.21.0 exec vitest run packages/physics/src/lib/3d/shapes.test.ts packages/physics/src/lib/3d/hull.test.ts packages/physics/src/lib/3d/mesh-bvh.test.ts packages/physics/src/lib/3d/collision packages/physics/src/lib/3d/world --browser.enabled=false --environment node
   ```
 
   Expected: PASS for pure geometry, deterministic replay, long-running finiteness, broad/narrow phase, integration, impulses, sleeping, sensors, filters, CCD, queries, rollback, and repeated lifecycle cycles.
