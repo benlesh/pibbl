@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
   boxShape3D,
+  capsuleShape3D,
+  coneShape3D,
   contactBetweenShapes3D,
   containsPoint3D,
+  cylinderShape3D,
   distanceBetweenShapes3D,
   ellipsoidShape3D,
   overlapShapes3D,
   sphereShape3D,
+  triangleMeshShape3D,
   type CRCPhysicsDistance3D,
   type CRCPhysicsPose3D,
   type CRCPhysicsShape3D,
@@ -15,6 +19,72 @@ import {
 const identity = { position: [0, 0, 0], orientation: [0, 0, 0, 1] } as const;
 
 describe("standalone 3D sphere and box pairs", () => {
+  it("resolves ordinary smooth-family penetrations without EPA misses", () => {
+    const ellipsoid = ellipsoidShape3D({ radii: [1, 1, 1] });
+    const penetrating = distanceBetweenShapes3D(
+      ellipsoid,
+      identity,
+      ellipsoid,
+      pose([1.9, 0, 0]),
+    );
+    expect(penetrating.separation).toBeCloseTo(-0.1, 8);
+    expect(
+      overlapShapes3D(ellipsoid, identity, ellipsoid, pose([1.9, 0, 0])),
+    ).toBe(true);
+    expect(
+      contactBetweenShapes3D(ellipsoid, identity, ellipsoid, pose([1.9, 0, 0])),
+    ).not.toBeNull();
+
+    const coincident = [
+      capsuleShape3D({ start: [0, -1, 0], end: [0, 1, 0], radius: 1 }),
+      cylinderShape3D({ radius: 1, halfHeight: 1 }),
+      coneShape3D({ radius: 1, halfHeight: 1 }),
+    ];
+    for (const shape of coincident) {
+      const distance = distanceBetweenShapes3D(
+        shape,
+        identity,
+        shape,
+        identity,
+      );
+      expect(distance.separation).toBeLessThan(0);
+      expect(overlapShapes3D(shape, identity, shape, identity)).toBe(true);
+      expect(
+        contactBetweenShapes3D(shape, identity, shape, identity),
+      ).not.toBeNull();
+    }
+  });
+
+  it("preserves small-scale ellipsoid separation", () => {
+    const shape = ellipsoidShape3D({ radii: [1e-6, 1e-6, 1e-6] });
+    expect(
+      distanceBetweenShapes3D(shape, identity, shape, pose([3e-6, 0, 0]))
+        .separation,
+    ).toBeCloseTo(1e-6, 15);
+  });
+
+  it("treats closed concave volume containment as overlap", () => {
+    const outer = triangleMeshShape3D({
+      positions: [0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0, 4],
+      indices: [0, 2, 1, 0, 1, 3, 0, 3, 2, 1, 2, 3],
+    });
+    const sphere = sphereShape3D({ radius: 0.1 });
+    expect(
+      overlapShapes3D(sphere, pose([0.5, 0.5, 0.5]), outer, identity),
+    ).toBe(true);
+    expect(
+      contactBetweenShapes3D(sphere, pose([0.5, 0.5, 0.5]), outer, identity),
+    ).not.toBeNull();
+
+    const inner = triangleMeshShape3D({
+      positions: [0, 0, 0, 0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.2],
+      indices: [0, 2, 1, 0, 1, 3, 0, 3, 2, 1, 2, 3],
+    });
+    expect(overlapShapes3D(inner, pose([0.5, 0.5, 0.5]), outer, identity)).toBe(
+      true,
+    );
+  });
+
   it("reports exact separated, touching, penetrating, and coincident spheres", () => {
     const first = sphereShape3D({ radius: 2 });
     const second = sphereShape3D({ radius: 3 });

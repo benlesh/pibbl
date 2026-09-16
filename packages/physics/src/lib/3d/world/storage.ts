@@ -463,6 +463,8 @@ export class ColliderStore3D {
   handlers: (unknown | null)[];
   owners: (unknown | null)[];
 
+  private bodyColliderHeads: Map<number, number>;
+  private nextBodyColliderIndices: Int32Array;
   private active: Uint8Array;
   private nextFree: Int32Array;
   private freeHead = NO_INDEX;
@@ -496,6 +498,8 @@ export class ColliderStore3D {
     this.tags = createReferenceArray(capacity);
     this.handlers = createReferenceArray(capacity);
     this.owners = createReferenceArray(capacity);
+    this.bodyColliderHeads = new Map();
+    this.nextBodyColliderIndices = filledInt32(capacity, NO_INDEX);
     this.active = new Uint8Array(capacity);
     this.nextFree = createFreeList(capacity, 0);
     this.freeHead = 0;
@@ -520,6 +524,9 @@ export class ColliderStore3D {
     this.generations[index] = nextGeneration(this.generations[index]!);
     this.bodyIndices[index] = snapshot.bodyIndex;
     this.bodyGenerations[index] = snapshot.bodyGeneration;
+    this.nextBodyColliderIndices[index] =
+      this.bodyColliderHeads.get(snapshot.bodyIndex) ?? NO_INDEX;
+    this.bodyColliderHeads.set(snapshot.bodyIndex, index);
     this.proxyIndices[index] = NO_INDEX;
     this.proxyGenerations[index] = 0;
     this.localPositionX[index] = snapshot.localPositionX;
@@ -576,8 +583,27 @@ export class ColliderStore3D {
     return true;
   }
 
+  bodyColliderIndicesInto(
+    bodyIndex: number,
+    output: Int32Array,
+    maxCount: number,
+  ): number {
+    if (!Number.isInteger(bodyIndex) || maxCount <= 0) {
+      return 0;
+    }
+    let count = 0;
+    let collider = this.bodyColliderHeads.get(bodyIndex) ?? NO_INDEX;
+    while (collider !== NO_INDEX && count < maxCount && count < output.length) {
+      output[count++] = collider;
+      collider = this.nextBodyColliderIndices[collider]!;
+    }
+    sortInt32Prefix(output, count);
+    return count;
+  }
+
   release(index: number, generation: number): boolean {
     if (!this.has(index, generation)) return false;
+    this.unlinkBodyCollider(index, this.bodyIndices[index]!);
     this.active[index] = 0;
     this.clear(index);
     this.counters.colliderReleases += 1;
@@ -596,6 +622,7 @@ export class ColliderStore3D {
   private clear(index: number): void {
     this.bodyIndices[index] = NO_INDEX;
     this.bodyGenerations[index] = 0;
+    this.nextBodyColliderIndices[index] = NO_INDEX;
     this.proxyIndices[index] = NO_INDEX;
     this.proxyGenerations[index] = 0;
     this.localPositionX[index] = 0;
@@ -656,6 +683,11 @@ export class ColliderStore3D {
     this.tags = growReferences(this.tags, capacity);
     this.handlers = growReferences(this.handlers, capacity);
     this.owners = growReferences(this.owners, capacity);
+    this.nextBodyColliderIndices = growInt32(
+      this.nextBodyColliderIndices,
+      capacity,
+      NO_INDEX,
+    );
     this.active = growUint8(this.active, capacity);
     this.nextFree = growFreeList(this.nextFree, capacity, oldCapacity);
     this.freeHead = oldCapacity;
@@ -666,6 +698,23 @@ export class ColliderStore3D {
 
   private assertUsable(): void {
     if (this.disposed) throw new Error("collider store is disposed.");
+  }
+
+  private unlinkBodyCollider(index: number, bodyIndex: number): void {
+    let previous = NO_INDEX;
+    let collider = this.bodyColliderHeads.get(bodyIndex) ?? NO_INDEX;
+    while (collider !== NO_INDEX) {
+      if (collider === index) {
+        const next = this.nextBodyColliderIndices[collider]!;
+        if (previous === NO_INDEX) {
+          if (next === NO_INDEX) this.bodyColliderHeads.delete(bodyIndex);
+          else this.bodyColliderHeads.set(bodyIndex, next);
+        } else this.nextBodyColliderIndices[previous] = next;
+        return;
+      }
+      previous = collider;
+      collider = this.nextBodyColliderIndices[collider]!;
+    }
   }
 }
 
@@ -914,4 +963,16 @@ function growInt32(
   const result = filledInt32(capacity, fill);
   result.set(source);
   return result;
+}
+
+function sortInt32Prefix(values: Int32Array, length: number): void {
+  for (let index = 1; index < length; index += 1) {
+    const value = values[index]!;
+    let cursor = index - 1;
+    while (cursor >= 0 && values[cursor]! > value) {
+      values[cursor + 1] = values[cursor]!;
+      cursor -= 1;
+    }
+    values[cursor + 1] = value;
+  }
 }

@@ -306,16 +306,19 @@ function appendCapsule(
     Math.hypot(end[0]! - start[0]!, end[1]! - start[1]!, end[2]! - start[2]!) /
     2;
   const point = (latitude: number, longitude: number) => {
-    const phi = -Math.PI / 2 + (latitude / 12) * Math.PI;
+    const lower = latitude <= 6;
+    const phi = lower
+      ? -Math.PI / 2 + (latitude / 6) * (Math.PI / 2)
+      : ((latitude - 7) / 6) * (Math.PI / 2);
     const theta = (longitude / 20) * Math.PI * 2;
-    const y = Math.sin(phi) * radius + (Math.sin(phi) < 0 ? -half : half);
+    const y = Math.sin(phi) * radius + (lower ? -half : half);
     return orientedPoint(center, rotation, [
       Math.cos(phi) * Math.cos(theta) * radius,
       y,
       Math.cos(phi) * Math.sin(theta) * radius,
     ]);
   };
-  for (let latitude = 0; latitude < 12; latitude += 1)
+  for (let latitude = 0; latitude < 13; latitude += 1)
     for (let longitude = 0; longitude < 20; longitude += 1) {
       const next = (longitude + 1) % 20;
       const a = point(latitude, longitude);

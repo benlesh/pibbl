@@ -203,6 +203,7 @@ export class PhysicsWorld3DController {
       generation: 1,
       bodies: this.kernel.bodies,
       colliders: this.kernel.colliders,
+      broadPhase: this.kernel.broadPhase,
       materializeBody: (index, generation) =>
         this.materializeBodyHandle(index, generation),
       materializeCollider: (index, generation) =>

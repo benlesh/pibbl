@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   boxShape3D,
+  capsuleShape3D,
+  coneShape3D,
+  convexHullShape3D,
+  cylinderShape3D,
   ellipsoidShape3D,
   raycastShape3D,
   shapeCastAgainstShape3D,
@@ -172,6 +176,46 @@ describe("standalone 3D rays and translational casts", () => {
     expect(hit?.normal).toEqual([-1, 0, 0]);
   });
 
+  it("clips convex hull rays against both entry and exit intervals", () => {
+    const hull = convexHullShape3D({
+      points: [
+        [-1, -1, -1],
+        [1, -1, -1],
+        [-1, 1, -1],
+        [1, 1, -1],
+        [-1, -1, 1],
+        [1, -1, 1],
+        [-1, 1, 1],
+        [1, 1, 1],
+      ],
+    });
+    expect(
+      raycastShape3D(hull, identity, {
+        origin: [2, 2, 0],
+        direction: [-1, -0.2, 0],
+        maxDistance: 10,
+      }),
+    ).toBeNull();
+  });
+
+  it("rejects large-offset radial misses for every analytic convex ray", () => {
+    const shapes = [
+      ellipsoidShape3D({ radii: [1, 1, 1] }),
+      capsuleShape3D({ start: [0, -0.5, 0], end: [0, 0.5, 0], radius: 0.5 }),
+      cylinderShape3D({ radius: 1, halfHeight: 1 }),
+      coneShape3D({ radius: 1, halfHeight: 1 }),
+    ];
+    for (const shape of shapes) {
+      expect(
+        raycastShape3D(shape, pose([1e20, 2, 0]), {
+          origin: [0, 0, 0],
+          direction: [1, 0, 0],
+          maxDistance: 2e20,
+        }),
+      ).toBeNull();
+    }
+  });
+
   it("raycasts canonical mesh triangles with stable barycentric metadata", () => {
     const mesh = triangleMeshShape3D({
       positions: [0, 0, 0, 2, 0, 0, 0, 2, 0, 10, 10, 10],
@@ -192,6 +236,24 @@ describe("standalone 3D rays and translational casts", () => {
       triangleIndex: 0,
       barycentric: [0.5, 0.25, 0.25],
     });
+  });
+
+  it("honors initial-overlap policy inside a closed mesh volume", () => {
+    const tetrahedron = triangleMeshShape3D({
+      positions: [0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2],
+      indices: [0, 2, 1, 0, 1, 3, 0, 3, 2, 1, 2, 3],
+    });
+    const ray = {
+      origin: [0.25, 0.25, 0.25],
+      direction: [1, 0, 0],
+      maxDistance: 10,
+    } as const;
+    expect(raycastShape3D(tetrahedron, identity, ray)).toBeNull();
+    expect(
+      raycastShape3D(tetrahedron, identity, ray, {
+        includeInitialOverlap: true,
+      }),
+    ).toMatchObject({ distance: 0, timeOfImpact: 0 });
   });
 
   it("includes or skips initial ray overlap explicitly", () => {

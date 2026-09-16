@@ -4,7 +4,6 @@ import {
   transformPointInto,
   type InternalPose3D,
 } from "../math.js";
-import { GEOMETRY_EPSILON_3D } from "../numeric-policy.js";
 import type {
   BoxShapeRecord3D,
   ConvexShapeRecord3D,
@@ -105,6 +104,16 @@ export function prepareConvexShape3D(
   });
   const axes = axesForPose(shapePose);
   if (record.kind === "ellipsoid") {
+    if (
+      record.radii[0] === record.radii[1] &&
+      record.radii[1] === record.radii[2]
+    ) {
+      return {
+        kind: "sphere",
+        center: new Float64Array(shapePose.position),
+        radius: record.radii[0]!,
+      };
+    }
     return {
       kind: "ellipsoid",
       center: new Float64Array(shapePose.position),
@@ -129,28 +138,32 @@ export function supportShape3D(
   directionZ: number,
 ): number {
   if (shape.kind === "sphere") {
-    const length = Math.hypot(directionX, directionY, directionZ);
-    const inverseLength = length > GEOMETRY_EPSILON_3D ? 1 / length : 0;
-    output[0] =
-      shape.center[0]! +
-      shape.radius * (inverseLength === 0 ? 1 : directionX * inverseLength);
-    output[1] = shape.center[1]! + shape.radius * directionY * inverseLength;
-    output[2] = shape.center[2]! + shape.radius * directionZ * inverseLength;
+    const unit = unitDirection(directionX, directionY, directionZ);
+    output[0] = shape.center[0]! + shape.radius * unit[0];
+    output[1] = shape.center[1]! + shape.radius * unit[1];
+    output[2] = shape.center[2]! + shape.radius * unit[2];
     return 0;
   }
 
   if (shape.kind === "hull") {
     let selectedFeature = 0;
-    let selectedProjection = Number.NEGATIVE_INFINITY;
-    for (let feature = 0; feature < shape.vertices.length / 3; feature += 1) {
+    for (let feature = 1; feature < shape.vertices.length / 3; feature += 1) {
       const offset = feature * 3;
-      const projection =
-        shape.vertices[offset]! * directionX +
-        shape.vertices[offset + 1]! * directionY +
-        shape.vertices[offset + 2]! * directionZ;
-      if (projection > selectedProjection + GEOMETRY_EPSILON_3D) {
+      const selectedOffset = selectedFeature * 3;
+      if (
+        pointProjectsFarther(
+          shape.vertices[offset]!,
+          shape.vertices[offset + 1]!,
+          shape.vertices[offset + 2]!,
+          shape.vertices[selectedOffset]!,
+          shape.vertices[selectedOffset + 1]!,
+          shape.vertices[selectedOffset + 2]!,
+          directionX,
+          directionY,
+          directionZ,
+        )
+      ) {
         selectedFeature = feature;
-        selectedProjection = projection;
       }
     }
     output[0] = shape.vertices[selectedFeature * 3]!;
@@ -163,46 +176,42 @@ export function supportShape3D(
     const localX = dotAxis(shape.axes, 0, directionX, directionY, directionZ);
     const localY = dotAxis(shape.axes, 1, directionX, directionY, directionZ);
     const localZ = dotAxis(shape.axes, 2, directionX, directionY, directionZ);
+    const localUnit = unitDirection(localX, localY, localZ);
     const denominator = Math.hypot(
-      shape.radii[0]! * localX,
-      shape.radii[1]! * localY,
-      shape.radii[2]! * localZ,
+      shape.radii[0]! * localUnit[0],
+      shape.radii[1]! * localUnit[1],
+      shape.radii[2]! * localUnit[2],
     );
     const x =
-      denominator > GEOMETRY_EPSILON_3D
-        ? (shape.radii[0]! ** 2 * localX) / denominator
+      denominator > 0
+        ? (shape.radii[0]! ** 2 * localUnit[0]) / denominator
         : shape.radii[0]!;
     const y =
-      denominator > GEOMETRY_EPSILON_3D
-        ? (shape.radii[1]! ** 2 * localY) / denominator
-        : 0;
+      denominator > 0 ? (shape.radii[1]! ** 2 * localUnit[1]) / denominator : 0;
     const z =
-      denominator > GEOMETRY_EPSILON_3D
-        ? (shape.radii[2]! ** 2 * localZ) / denominator
-        : 0;
+      denominator > 0 ? (shape.radii[2]! ** 2 * localUnit[2]) / denominator : 0;
     writeOriented(output, shape.center, shape.axes, x, y, z);
     return 0;
   }
 
   if (shape.kind === "capsule") {
-    const startProjection =
-      shape.start[0]! * directionX +
-      shape.start[1]! * directionY +
-      shape.start[2]! * directionZ;
-    const endProjection =
-      shape.end[0]! * directionX +
-      shape.end[1]! * directionY +
-      shape.end[2]! * directionZ;
-    const endpoint =
-      endProjection > startProjection + GEOMETRY_EPSILON_3D
-        ? shape.end
-        : shape.start;
-    const length = Math.hypot(directionX, directionY, directionZ);
-    const inverse = length > GEOMETRY_EPSILON_3D ? 1 / length : 0;
-    output[0] =
-      endpoint[0]! + shape.radius * (inverse === 0 ? 1 : directionX * inverse);
-    output[1] = endpoint[1]! + shape.radius * directionY * inverse;
-    output[2] = endpoint[2]! + shape.radius * directionZ * inverse;
+    const endpoint = pointProjectsFarther(
+      shape.end[0]!,
+      shape.end[1]!,
+      shape.end[2]!,
+      shape.start[0]!,
+      shape.start[1]!,
+      shape.start[2]!,
+      directionX,
+      directionY,
+      directionZ,
+    )
+      ? shape.end
+      : shape.start;
+    const unit = unitDirection(directionX, directionY, directionZ);
+    output[0] = endpoint[0]! + shape.radius * unit[0];
+    output[1] = endpoint[1]! + shape.radius * unit[1];
+    output[2] = endpoint[2]! + shape.radius * unit[2];
     return endpoint === shape.start ? 0 : 1;
   }
 
@@ -210,18 +219,24 @@ export function supportShape3D(
     const localX = dotAxis(shape.axes, 0, directionX, directionY, directionZ);
     const localY = dotAxis(shape.axes, 1, directionX, directionY, directionZ);
     const localZ = dotAxis(shape.axes, 2, directionX, directionY, directionZ);
+    const radialUnit = unitDirection(localX, 0, localZ);
     const radial = Math.hypot(localX, localZ);
-    const x =
-      radial > GEOMETRY_EPSILON_3D
-        ? (shape.radius * localX) / radial
-        : shape.radius;
-    const z =
-      radial > GEOMETRY_EPSILON_3D ? (shape.radius * localZ) / radial : 0;
+    const x = radial > 0 ? shape.radius * radialUnit[0] : shape.radius;
+    const z = radial > 0 ? shape.radius * radialUnit[2] : 0;
     if (shape.kind === "cone") {
-      const baseProjection =
-        x * localX - shape.halfHeight * localY + z * localZ;
-      const apexProjection = shape.halfHeight * localY;
-      if (apexProjection > baseProjection + GEOMETRY_EPSILON_3D) {
+      if (
+        pointProjectsFarther(
+          0,
+          shape.halfHeight,
+          0,
+          x,
+          -shape.halfHeight,
+          z,
+          localX,
+          localY,
+          localZ,
+        )
+      ) {
         writeOriented(output, shape.center, shape.axes, 0, shape.halfHeight, 0);
         return 1;
       }
@@ -233,52 +248,127 @@ export function supportShape3D(
       shape.center,
       shape.axes,
       x,
-      localY > GEOMETRY_EPSILON_3D ? shape.halfHeight : -shape.halfHeight,
+      positiveDirection(localY, localX, localY, localZ)
+        ? shape.halfHeight
+        : -shape.halfHeight,
       z,
     );
-    return localY > GEOMETRY_EPSILON_3D ? 1 : 0;
+    return positiveDirection(localY, localX, localY, localZ) ? 1 : 0;
   }
 
-  let selectedFeature = 0;
-  let selectedProjection = Number.NEGATIVE_INFINITY;
-  let selectedX = 0;
-  let selectedY = 0;
-  let selectedZ = 0;
-  for (let feature = 0; feature < 8; feature += 1) {
-    const localX =
-      (feature & 1) === 0 ? -shape.halfExtents[0]! : shape.halfExtents[0]!;
-    const localY =
-      (feature & 2) === 0 ? -shape.halfExtents[1]! : shape.halfExtents[1]!;
-    const localZ =
-      (feature & 4) === 0 ? -shape.halfExtents[2]! : shape.halfExtents[2]!;
-    const x =
-      shape.center[0]! +
-      shape.axes[0]! * localX +
-      shape.axes[3]! * localY +
-      shape.axes[6]! * localZ;
-    const y =
-      shape.center[1]! +
-      shape.axes[1]! * localX +
-      shape.axes[4]! * localY +
-      shape.axes[7]! * localZ;
-    const z =
-      shape.center[2]! +
-      shape.axes[2]! * localX +
-      shape.axes[5]! * localY +
-      shape.axes[8]! * localZ;
-    const projection = x * directionX + y * directionY + z * directionZ;
-    if (projection > selectedProjection + GEOMETRY_EPSILON_3D) {
-      selectedFeature = feature;
-      selectedProjection = projection;
-      selectedX = x;
-      selectedY = y;
-      selectedZ = z;
-    }
-  }
-  output[0] = selectedX;
-  output[1] = selectedY;
-  output[2] = selectedZ;
+  const localDirectionX = dotAxis(
+    shape.axes,
+    0,
+    directionX,
+    directionY,
+    directionZ,
+  );
+  const localDirectionY = dotAxis(
+    shape.axes,
+    1,
+    directionX,
+    directionY,
+    directionZ,
+  );
+  const localDirectionZ = dotAxis(
+    shape.axes,
+    2,
+    directionX,
+    directionY,
+    directionZ,
+  );
+  const selectedFeature =
+    (positiveDirection(
+      localDirectionX,
+      localDirectionX,
+      localDirectionY,
+      localDirectionZ,
+    )
+      ? 1
+      : 0) |
+    (positiveDirection(
+      localDirectionY,
+      localDirectionX,
+      localDirectionY,
+      localDirectionZ,
+    )
+      ? 2
+      : 0) |
+    (positiveDirection(
+      localDirectionZ,
+      localDirectionX,
+      localDirectionY,
+      localDirectionZ,
+    )
+      ? 4
+      : 0);
+  writeOriented(
+    output,
+    shape.center,
+    shape.axes,
+    (selectedFeature & 1) === 0
+      ? -shape.halfExtents[0]!
+      : shape.halfExtents[0]!,
+    (selectedFeature & 2) === 0
+      ? -shape.halfExtents[1]!
+      : shape.halfExtents[1]!,
+    (selectedFeature & 4) === 0
+      ? -shape.halfExtents[2]!
+      : shape.halfExtents[2]!,
+  );
   return selectedFeature;
+}
+
+function unitDirection(
+  x: number,
+  y: number,
+  z: number,
+): readonly [number, number, number] {
+  const scale = Math.max(Math.abs(x), Math.abs(y), Math.abs(z));
+  if (scale === 0) return [1, 0, 0];
+  const sx = x / scale;
+  const sy = y / scale;
+  const sz = z / scale;
+  const inverse = 1 / Math.hypot(sx, sy, sz);
+  return [sx * inverse, sy * inverse, sz * inverse];
+}
+
+function pointProjectsFarther(
+  candidateX: number,
+  candidateY: number,
+  candidateZ: number,
+  selectedX: number,
+  selectedY: number,
+  selectedZ: number,
+  directionX: number,
+  directionY: number,
+  directionZ: number,
+): boolean {
+  const dx = candidateX - selectedX;
+  const dy = candidateY - selectedY;
+  const dz = candidateZ - selectedZ;
+  const difference = dx * directionX + dy * directionY + dz * directionZ;
+  const roundoff =
+    Number.EPSILON *
+    16 *
+    (Math.abs(dx * directionX) +
+      Math.abs(dy * directionY) +
+      Math.abs(dz * directionZ));
+  return difference > roundoff;
+}
+
+function positiveDirection(
+  candidate: number,
+  directionX: number,
+  directionY: number,
+  directionZ: number,
+): boolean {
+  return (
+    candidate >
+    Number.EPSILON *
+      16 *
+      Math.max(Math.abs(directionX), Math.abs(directionY), Math.abs(directionZ))
+  );
 }
 
 export function supportMinkowski3D(

@@ -12,6 +12,12 @@ import {
 } from "../../../../../webgl/src/lib/layer-controller.js";
 import type { CRCPhysicsPose3D } from "../../../3d-geometry.js";
 import {
+  Capsule3D,
+  Cone3D,
+  ConvexHull3D,
+  Cylinder3D,
+  Ellipsoid3D,
+  Heightfield3D,
   PhysicsWorld3D,
   collider3D,
   crcPhysicsBody3D,
@@ -194,6 +200,91 @@ describe("mounted WebGL 3D physics integration", () => {
     for (const mount of mounts.splice(0)) mount.dispose();
     vi.restoreAllMocks();
     document.body.replaceChildren();
+  });
+
+  it("settles and presents every public physics shape component through a mounted WebGL layer", () => {
+    const render = vi.spyOn(
+      WebGLLayerController.prototype,
+      "renderRetainedChild",
+    );
+    const frames = new ManualFrames();
+    frames.install();
+    let world!: CRCPhysicsWorldHandle3D;
+    const Capture = () => {
+      world = crcPhysicsWorld3D();
+      return undefined;
+    };
+    const canvas = document.createElement("canvas");
+    canvas.width = 200;
+    canvas.height = 120;
+    document.body.appendChild(canvas);
+    mounts.push(crc(canvas, (
+      <WebGLLayer style={{ width: 200, height: 120 }}>
+        <PhysicsWorld3D
+          gravity={[0, 0, 0]}
+          fixedStepMilliseconds={10}
+          sleeping={false}
+        >
+          <Capture />
+          <Ellipsoid3D
+            radii={[0.7, 0.5, 0.4]}
+            physics={dynamicBody3D({ mass: 1, linearVelocity: [1, 0, 0] })}
+            style={{ lit: false, translateX: -5 }}
+          />
+          <Capsule3D
+            start={[0, -0.5, 0]}
+            end={[0, 0.5, 0]}
+            radius={0.35}
+            physics={staticBody3D()}
+            style={{ lit: false, translateX: -3 }}
+          />
+          <Cylinder3D
+            radius={0.5}
+            halfHeight={0.6}
+            physics={staticBody3D()}
+            style={{ lit: false, translateX: -1 }}
+          />
+          <Cone3D
+            radius={0.5}
+            halfHeight={0.6}
+            physics={staticBody3D()}
+            style={{ lit: false, translateX: 1 }}
+          />
+          <ConvexHull3D
+            points={[
+              [-0.5, -0.5, -0.5],
+              [0.5, -0.5, -0.5],
+              [0, 0.5, -0.5],
+              [0, 0, 0.5],
+            ]}
+            physics={staticBody3D()}
+            style={{ lit: false, translateX: 3 }}
+          />
+          <Heightfield3D
+            rows={2}
+            columns={2}
+            heights={[0, 0.25, 0, 0]}
+            physics={staticBody3D()}
+            style={{ lit: false, translateX: 5 }}
+          />
+        </PhysicsWorld3D>
+      </WebGLLayer>
+    )));
+
+    frames.flush(0);
+    frames.flush(10);
+
+    const controller = requirePhysicsWorld3DController(world);
+    expect(snapshotPhysicsWorld3DControllerForTest(controller).kernel).toMatchObject({
+      bodyCount: 6,
+      colliderCount: 6,
+    });
+    const layer = render.mock.instances[0] as WebGLLayerController;
+    const committed = (layer as unknown as {
+      committed?: { pickLedger: { entries: readonly unknown[] } };
+    }).committed;
+    expect(committed?.pickLedger.entries).toHaveLength(6);
+    expect(render).toHaveBeenCalledTimes(2);
   });
 
   it("mounts inferred self geometry and basic Group3D compounds at authored poses", () => {

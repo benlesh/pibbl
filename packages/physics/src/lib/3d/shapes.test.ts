@@ -220,6 +220,24 @@ describe("immutable 3D sphere and box factories", () => {
     expect(record.faces).toHaveLength(36);
   });
 
+  it("keeps hull mass and centroidal inertia translation invariant", () => {
+    const points = [
+      [0, 0, 0],
+      [1, 0, 0],
+      [0, 1, 0],
+      [0, 0, 1],
+    ] as const;
+    const baseline = massProperties3D(convexHullShape3D({ points }));
+    const translated = massProperties3D(
+      convexHullShape3D({
+        points: points.map(([x, y, z]) => [x + 1000, y + 1000, z + 1000]),
+      }),
+    );
+    expect(translated.volume).toBeCloseTo(baseline.volume, 12);
+    expectVectorClose(translated.centerOfMass, [1000.25, 1000.25, 1000.25]);
+    expectMatrixClose(translated.inertiaTensor, baseline.inertiaTensor);
+  });
+
   it("derives mass only for consistently wound closed triangle manifolds", () => {
     const positions = [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1];
     const closed = triangleMeshShape3D({
@@ -233,6 +251,32 @@ describe("immutable 3D sphere and box factories", () => {
 
     const open = triangleMeshShape3D({ positions, indices: [0, 2, 1] });
     expect(massProperties3D(open).mass).toBe(0);
+
+    const withDegenerate = triangleMeshShape3D({
+      positions: [...positions, 10, 10, 10],
+      indices: [0, 2, 1, 0, 1, 3, 0, 3, 2, 1, 2, 3, 4, 4, 4],
+    });
+    expect(massProperties3D(withDegenerate).volume).toBeCloseTo(1 / 6, 12);
+
+    const nonindexed = triangleMeshShape3D({
+      positions: [
+        0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1,
+        0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1,
+      ],
+    });
+    expect(massProperties3D(nonindexed).volume).toBeCloseTo(1 / 6, 12);
+  });
+
+  it("computes tight rotated concave bounds from canonical vertices", () => {
+    const mesh = triangleMeshShape3D({
+      positions: [0, 0, 0, 2, 0, 0, 1, 1, 0],
+    });
+    const rotated = boundsOfShape3D(mesh, {
+      position: [0, 0, 0],
+      orientation: [0, 0, Math.sin(Math.PI / 8), Math.cos(Math.PI / 8)],
+    });
+    expect(rotated.min[0]).toBeCloseTo(0, 12);
+    expect(rotated.max[0]).toBeCloseTo(Math.SQRT2, 12);
   });
 
   it("rotates a box inertia tensor and center of mass with the shape", () => {

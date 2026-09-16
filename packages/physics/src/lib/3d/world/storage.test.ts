@@ -260,6 +260,39 @@ describe("pooled 3D world storage", () => {
     expect(counters.liveColliderStores).toBe(0);
   });
 
+  it("maintains stable per-body collider membership across release and reuse", () => {
+    const counters = createPhysicsOwnershipCounters3D();
+    const colliders = new ColliderStore3D(counters, 2);
+    const first = colliders.allocate(
+      colliderDefinition(1, 3, 7, { tag: {}, handlers: {}, owner: {} }),
+    );
+    const second = colliders.allocate(
+      colliderDefinition(2, 3, 7, { tag: {}, handlers: {}, owner: {} }),
+    );
+    const output = new Int32Array(4);
+    expect(
+      Array.from(
+        output.subarray(0, colliders.bodyColliderIndicesInto(3, output, 4)),
+      ),
+    ).toEqual([first, second]);
+
+    expect(colliders.release(first, colliders.generations[first]!)).toBe(true);
+    expect(
+      Array.from(
+        output.subarray(0, colliders.bodyColliderIndicesInto(3, output, 4)),
+      ),
+    ).toEqual([second]);
+
+    const reused = colliders.allocate(
+      colliderDefinition(3, 4, 7, { tag: {}, handlers: {}, owner: {} }),
+    );
+    expect(reused).toBe(first);
+    expect(colliders.bodyColliderIndicesInto(3, output, 4)).toBe(1);
+    expect(output[0]).toBe(second);
+    expect(colliders.bodyColliderIndicesInto(4, output, 4)).toBe(1);
+    expect(output[0]).toBe(reused);
+  });
+
   it("does not grow a full body store when repeated final owner reads throw", () => {
     const counters = createPhysicsOwnershipCounters3D();
     const bodies = new BodyStore3D(counters, 1);

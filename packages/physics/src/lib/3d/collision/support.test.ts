@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   boxShape3D,
+  capsuleShape3D,
   coneShape3D,
+  convexHullShape3D,
   cylinderShape3D,
   ellipsoidShape3D,
   sphereShape3D,
@@ -78,6 +80,56 @@ describe("convex 3D support maps", () => {
     );
     supportShape3D(output, cone, 0, 1, 0);
     expectVectorClose(output, [0, 3, 0]);
+  });
+
+  it("keeps smooth support positively homogeneous below the geometry scale", () => {
+    for (const publicShape of [
+      ellipsoidShape3D({ radii: [2, 1, 0.5] }),
+      capsuleShape3D({ start: [0, -1, 0], end: [0, 1, 0], radius: 0.5 }),
+      cylinderShape3D({ radius: 0.5, halfHeight: 1 }),
+      coneShape3D({ radius: 0.5, halfHeight: 1 }),
+    ]) {
+      const shape = prepareConvexShape3D(
+        requireShapeRecord3D(publicShape),
+        IDENTITY_POSE_3D,
+      );
+      const ordinary = new Float64Array(3);
+      const tiny = new Float64Array(3);
+      const huge = new Float64Array(3);
+      supportShape3D(ordinary, shape, 1, 0.25, -0.5);
+      supportShape3D(tiny, shape, 1e-300, 0.25e-300, -0.5e-300);
+      supportShape3D(huge, shape, 1e300, 0.25e300, -0.5e300);
+      expect([...tiny]).toEqual([...ordinary]);
+      expect([...huge]).toEqual([...ordinary]);
+    }
+  });
+
+  it("locks canonical hull ties independently of direction magnitude", () => {
+    const hull = prepareConvexShape3D(
+      requireShapeRecord3D(
+        convexHullShape3D({
+          points: [
+            [-1, -1, -1],
+            [1, -1, -1],
+            [-1, 1, -1],
+            [1, 1, -1],
+            [-1, -1, 1],
+            [1, -1, 1],
+            [-1, 1, 1],
+            [1, 1, 1],
+          ],
+        }),
+      ),
+      IDENTITY_POSE_3D,
+    );
+    const ordinary = new Float64Array(3);
+    const tiny = new Float64Array(3);
+    const huge = new Float64Array(3);
+    const ordinaryFeature = supportShape3D(ordinary, hull, 0, 1, 0);
+    expect(supportShape3D(tiny, hull, 0, 1e-300, 0)).toBe(ordinaryFeature);
+    expect(supportShape3D(huge, hull, 0, 1e300, 0)).toBe(ordinaryFeature);
+    expect([...tiny]).toEqual([...ordinary]);
+    expect([...huge]).toEqual([...ordinary]);
   });
 });
 

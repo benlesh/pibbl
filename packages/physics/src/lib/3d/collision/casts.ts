@@ -28,7 +28,7 @@ import {
   raycastSphereAnalytically,
   type AnalyticCastCandidate3D,
 } from "./analytic-casts.js";
-import { distanceBetweenPreparedShapes3D } from "./pairs.js";
+import { containsPoint3D, distanceBetweenPreparedShapes3D } from "./pairs.js";
 import {
   prepareConvexShape3D,
   type PreparedBox3D,
@@ -56,6 +56,15 @@ function raycastPreparedConvex(
   if (shape.kind === "ellipsoid") {
     const localOrigin = localPoint(shape.center, shape.axes, origin);
     const localDirection = localVector(shape.axes, direction);
+    if (
+      !rayIntersectsLocalBounds(
+        localOrigin,
+        localDirection,
+        shape.radii,
+        maxDistance,
+      )
+    )
+      return null;
     const ox = localOrigin[0] / shape.radii[0]!;
     const oy = localOrigin[1] / shape.radii[1]!;
     const oz = localOrigin[2] / shape.radii[2]!;
@@ -101,6 +110,24 @@ function raycastCapsule(
   direction: ArrayLike<number>,
   maxDistance: number,
 ): CastCandidate3D | null {
+  if (
+    !rayIntersectsBounds(
+      origin,
+      direction,
+      [
+        Math.min(shape.start[0]!, shape.end[0]!) - shape.radius,
+        Math.min(shape.start[1]!, shape.end[1]!) - shape.radius,
+        Math.min(shape.start[2]!, shape.end[2]!) - shape.radius,
+      ],
+      [
+        Math.max(shape.start[0]!, shape.end[0]!) + shape.radius,
+        Math.max(shape.start[1]!, shape.end[1]!) + shape.radius,
+        Math.max(shape.start[2]!, shape.end[2]!) + shape.radius,
+      ],
+      maxDistance,
+    )
+  )
+    return null;
   const bax = shape.end[0]! - shape.start[0]!;
   const bay = shape.end[1]! - shape.start[1]!;
   const baz = shape.end[2]! - shape.start[2]!;
@@ -172,6 +199,15 @@ function raycastAxial(
 ): CastCandidate3D | null {
   const o = localPoint(shape.center, shape.axes, origin);
   const d = localVector(shape.axes, direction);
+  if (
+    !rayIntersectsLocalBounds(
+      o,
+      d,
+      [shape.radius, shape.halfHeight, shape.radius],
+      maxDistance,
+    )
+  )
+    return null;
   const candidates: readonly [number, readonly [number, number, number]][] = [];
   const mutable = candidates as [number, readonly [number, number, number]][];
   if (shape.kind === "cylinder") {
@@ -243,6 +279,7 @@ function raycastHull(
   maxDistance: number,
 ): CastCandidate3D | null {
   let enter = 0;
+  let exit = maxDistance;
   let normal: readonly [number, number, number] = [
     -direction[0]!,
     -direction[1]!,
@@ -254,19 +291,20 @@ function raycastHull(
     const c = vertex(shape.vertices, shape.faces[index + 2]!);
     const n = cross(subtract(b, a), subtract(c, a));
     const denominator = dot(n, direction);
-    const numerator = dot(n, subtract(a, origin));
+    const signedOrigin = dot(n, subtract(origin, a));
     if (Math.abs(denominator) <= GEOMETRY_EPSILON_3D) {
-      if (numerator < 0) return null;
+      if (signedOrigin > 0) return null;
       continue;
     }
-    const t = numerator / denominator;
+    const t = -signedOrigin / denominator;
     if (denominator < 0 && t > enter) {
       enter = t;
       normal = n;
     }
-    if (denominator > 0 && t < enter) return null;
+    if (denominator > 0 && t < exit) exit = t;
+    if (enter > exit) return null;
   }
-  return enter <= maxDistance
+  return enter >= 0 && enter <= exit && enter <= maxDistance
     ? worldCandidate(origin, direction, enter, normal, maxDistance)
     : null;
 }
@@ -361,6 +399,22 @@ export function raycastShape3D(
     scaledZ / scaledLength,
   ] as const;
   if (record.kind === "triangleMesh" || record.kind === "heightfield") {
+    if (
+      containsPoint3D(shape, publicPose, [origin[0]!, origin[1]!, origin[2]!])
+    ) {
+      return includeInitialOverlap
+        ? publicHit({
+            pointX: origin[0]!,
+            pointY: origin[1]!,
+            pointZ: origin[2]!,
+            normalX: -direction[0],
+            normalY: -direction[1],
+            normalZ: -direction[2],
+            distance: 0,
+            timeOfImpact: 0,
+          })
+        : null;
+    }
     if (maxDistance === 0) return null;
     const candidate = raycastConcave(
       record,
@@ -497,11 +551,33 @@ function closestTriangleMetadata(
   let bestDistance = Infinity;
   let bestTriangle = Infinity;
   let bestBarycentric: readonly [number, number, number] = [1, 0, 0];
-  for (
-    let triangle = 0;
-    triangle < record.sourceTriangleIds.length;
-    triangle += 1
-  ) {
+  const rootBounds = concaveNodeBounds(record, pose, 0);
+  const queue: Array<Readonly<{ node: number; lower: number }>> = [
+    { node: 0, lower: pointBoundsDistance(point, rootBounds) },
+  ];
+  while (queue.length > 0) {
+    queue.sort(
+      (left, right) => left.lower - right.lower || left.node - right.node,
+    );
+    const candidate = queue.shift()!;
+    if (candidate.lower > bestDistance) break;
+    const triangle = record.bvh.triangle[candidate.node]!;
+    if (triangle < 0) {
+      for (const child of [
+        record.bvh.left[candidate.node]!,
+        record.bvh.right[candidate.node]!,
+      ].sort((left, right) => left - right)) {
+        if (child < 0) continue;
+        queue.push({
+          node: child,
+          lower: pointBoundsDistance(
+            point,
+            concaveNodeBounds(record, pose, child),
+          ),
+        });
+      }
+      continue;
+    }
     const a = new Float64Array(3),
       b = new Float64Array(3),
       c = new Float64Array(3);
@@ -578,9 +654,22 @@ function raycastConcave(
 ): CastCandidate3D | null {
   const pose = composePose3D(outerPose, record.localPose);
   let best: CastCandidate3D | null = null;
-  const stack = [0];
-  while (stack.length > 0) {
-    const node = stack.pop()!;
+  const rootEntry = rayBoundsEntry(
+    origin,
+    direction,
+    concaveNodeBounds(record, pose, 0),
+    maxDistance,
+  );
+  if (rootEntry === null) return null;
+  const queue: Array<Readonly<{ node: number; entry: number }>> = [
+    { node: 0, entry: rootEntry },
+  ];
+  while (queue.length > 0) {
+    queue.sort(
+      (left, right) => left.entry - right.entry || left.node - right.node,
+    );
+    const { node, entry } = queue.shift()!;
+    if (best !== null && entry > best.distance) break;
     const triangle = record.bvh.triangle[node]!;
     if (triangle >= 0) {
       const a = new Float64Array(3),
@@ -615,12 +704,96 @@ function raycastConcave(
       }
       continue;
     }
-    const left = record.bvh.left[node]!,
-      right = record.bvh.right[node]!;
-    if (right >= 0) stack.push(right);
-    if (left >= 0) stack.push(left);
+    for (const child of [record.bvh.left[node]!, record.bvh.right[node]!].sort(
+      (left, right) => left - right,
+    )) {
+      if (child < 0) continue;
+      const childEntry = rayBoundsEntry(
+        origin,
+        direction,
+        concaveNodeBounds(record, pose, child),
+        best?.distance ?? maxDistance,
+      );
+      if (childEntry !== null) queue.push({ node: child, entry: childEntry });
+    }
   }
   return best;
+}
+
+interface CastBounds3D {
+  readonly minimum: readonly [number, number, number];
+  readonly maximum: readonly [number, number, number];
+}
+
+function concaveNodeBounds(
+  record: ConcaveShapeRecord3D,
+  pose: InternalPose3D,
+  node: number,
+): CastBounds3D {
+  const sourceMinimum = record.bvh.minimum.subarray(node * 3, node * 3 + 3);
+  const sourceMaximum = record.bvh.maximum.subarray(node * 3, node * 3 + 3);
+  const minimum = [Infinity, Infinity, Infinity] as [number, number, number];
+  const maximum = [-Infinity, -Infinity, -Infinity] as [number, number, number];
+  const local = new Float64Array(3);
+  const world = new Float64Array(3);
+  for (let corner = 0; corner < 8; corner += 1) {
+    for (let axis = 0; axis < 3; axis += 1)
+      local[axis] =
+        (corner & (1 << axis)) === 0
+          ? sourceMinimum[axis]!
+          : sourceMaximum[axis]!;
+    transformPointInto(world, local, pose);
+    for (let axis = 0; axis < 3; axis += 1) {
+      minimum[axis] = Math.min(minimum[axis]!, world[axis]!);
+      maximum[axis] = Math.max(maximum[axis]!, world[axis]!);
+    }
+  }
+  return { minimum, maximum };
+}
+
+function rayBoundsEntry(
+  origin: ArrayLike<number>,
+  direction: ArrayLike<number>,
+  bounds: CastBounds3D,
+  distanceLimit: number,
+): number | null {
+  let enter = 0;
+  let exit = distanceLimit;
+  for (let axis = 0; axis < 3; axis += 1) {
+    const delta = direction[axis]!;
+    if (delta === 0) {
+      if (
+        origin[axis]! < bounds.minimum[axis]! ||
+        origin[axis]! > bounds.maximum[axis]!
+      )
+        return null;
+      continue;
+    }
+    let first = (bounds.minimum[axis]! - origin[axis]!) / delta;
+    let second = (bounds.maximum[axis]! - origin[axis]!) / delta;
+    if (first > second) [first, second] = [second, first];
+    enter = Math.max(enter, first);
+    exit = Math.min(exit, second);
+    if (enter > exit) return null;
+  }
+  return exit >= 0 && enter <= distanceLimit ? enter : null;
+}
+
+function pointBoundsDistance(
+  point: ArrayLike<number>,
+  bounds: CastBounds3D,
+): number {
+  let squared = 0;
+  for (let axis = 0; axis < 3; axis += 1) {
+    const gap =
+      point[axis]! < bounds.minimum[axis]!
+        ? bounds.minimum[axis]! - point[axis]!
+        : point[axis]! > bounds.maximum[axis]!
+          ? point[axis]! - bounds.maximum[axis]!
+          : 0;
+    squared += gap * gap;
+  }
+  return Math.sqrt(squared);
 }
 
 function rayTriangle(
@@ -1052,25 +1225,64 @@ function sampleTranslatedDistance(
   time: number,
   target: CRCPhysicsShape3D,
   targetPose: InternalPose3D,
-): ReturnType<typeof distanceBetweenPreparedShapes3D> | null {
-  try {
-    const distance = distanceBetweenPreparedShapes3D(
-      moving,
-      internalPoseAsPublic({
-        position: new Float64Array([
-          from.position[0]! + translation[0]! * time,
-          from.position[1]! + translation[1]! * time,
-          from.position[2]! + translation[2]! * time,
-        ]),
-        orientation: from.orientation,
-      }),
-      target,
-      internalPoseAsPublic(targetPose),
-    );
-    return isFiniteDistance(distance) ? distance : null;
-  } catch {
-    return null;
+): ReturnType<typeof distanceBetweenPreparedShapes3D> {
+  const distance = distanceBetweenPreparedShapes3D(
+    moving,
+    internalPoseAsPublic({
+      position: new Float64Array([
+        from.position[0]! + translation[0]! * time,
+        from.position[1]! + translation[1]! * time,
+        from.position[2]! + translation[2]! * time,
+      ]),
+      orientation: from.orientation,
+    }),
+    target,
+    internalPoseAsPublic(targetPose),
+  );
+  if (!isFiniteDistance(distance))
+    throw new Error("3D shape cast produced a nonfinite distance sample.");
+  return distance;
+}
+
+function rayIntersectsLocalBounds(
+  origin: ArrayLike<number>,
+  direction: ArrayLike<number>,
+  halfExtents: ArrayLike<number>,
+  maximum: number,
+): boolean {
+  return rayIntersectsBounds(
+    origin,
+    direction,
+    [-halfExtents[0]!, -halfExtents[1]!, -halfExtents[2]!],
+    [halfExtents[0]!, halfExtents[1]!, halfExtents[2]!],
+    maximum,
+  );
+}
+
+function rayIntersectsBounds(
+  origin: ArrayLike<number>,
+  direction: ArrayLike<number>,
+  minimum: ArrayLike<number>,
+  maximum: ArrayLike<number>,
+  distanceLimit: number,
+): boolean {
+  let enter = 0;
+  let exit = distanceLimit;
+  for (let axis = 0; axis < 3; axis += 1) {
+    const delta = direction[axis]!;
+    if (delta === 0) {
+      if (origin[axis]! < minimum[axis]! || origin[axis]! > maximum[axis]!)
+        return false;
+      continue;
+    }
+    let first = (minimum[axis]! - origin[axis]!) / delta;
+    let second = (maximum[axis]! - origin[axis]!) / delta;
+    if (first > second) [first, second] = [second, first];
+    enter = Math.max(enter, first);
+    exit = Math.min(exit, second);
+    if (enter > exit) return false;
   }
+  return exit >= 0 && enter <= distanceLimit;
 }
 
 function candidateFromDistance(

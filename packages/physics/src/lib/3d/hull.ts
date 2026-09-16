@@ -1,5 +1,4 @@
 import type { CRCPhysicsVector3 } from "../../3d-geometry.js";
-import { GEOMETRY_EPSILON_3D } from "./numeric-policy.js";
 
 export interface CanonicalHull3D {
   readonly vertices: Float64Array;
@@ -16,7 +15,8 @@ export function buildCanonicalHull3D(
   input: readonly CRCPhysicsVector3[],
 ): CanonicalHull3D {
   const points = canonicalPoints(input);
-  const seed = seedTetrahedron(points);
+  const tolerance = hullVolumeTolerance(points);
+  const seed = seedTetrahedron(points, tolerance);
   if (seed === null) {
     throw new RangeError("convex hull points must span a nonzero volume.");
   }
@@ -39,8 +39,7 @@ export function buildCanonicalHull3D(
       .map((face, index) => ({ face, index }))
       .filter(
         ({ face }) =>
-          signedFaceDistance(face, points, points[point]!) >
-          GEOMETRY_EPSILON_3D,
+          signedFaceDistance(face, points, points[point]!) > tolerance,
       );
     if (visible.length === 0) continue;
     const visibleIds = new Set(visible.map(({ index }) => index));
@@ -116,6 +115,7 @@ function canonicalPoints(input: readonly CRCPhysicsVector3[]): Float64Array[] {
 
 function seedTetrahedron(
   points: readonly Float64Array[],
+  tolerance: number,
 ): readonly [number, number, number, number] | null {
   for (let a = 0; a < points.length - 3; a += 1)
     for (let b = a + 1; b < points.length - 2; b += 1)
@@ -123,7 +123,7 @@ function seedTetrahedron(
         for (let d = c + 1; d < points.length; d += 1)
           if (
             Math.abs(volume6(points[a]!, points[b]!, points[c]!, points[d]!)) >
-            GEOMETRY_EPSILON_3D
+            tolerance
           )
             return [a, b, c, d];
   return null;
@@ -194,9 +194,19 @@ function comparePoint(
 }
 
 function samePoint(left: ArrayLike<number>, right: ArrayLike<number>): boolean {
-  return (
-    Math.abs(left[0]! - right[0]!) <= GEOMETRY_EPSILON_3D &&
-    Math.abs(left[1]! - right[1]!) <= GEOMETRY_EPSILON_3D &&
-    Math.abs(left[2]! - right[2]!) <= GEOMETRY_EPSILON_3D
-  );
+  return left[0] === right[0] && left[1] === right[1] && left[2] === right[2];
+}
+
+function hullVolumeTolerance(points: readonly Float64Array[]): number {
+  let scale = 0;
+  for (let axis = 0; axis < 3; axis += 1) {
+    let minimum = Number.POSITIVE_INFINITY;
+    let maximum = Number.NEGATIVE_INFINITY;
+    for (const point of points) {
+      minimum = Math.min(minimum, point[axis]!);
+      maximum = Math.max(maximum, point[axis]!);
+    }
+    scale = Math.max(scale, maximum - minimum);
+  }
+  return scale ** 3 * Number.EPSILON * 64;
 }

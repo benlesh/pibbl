@@ -1496,7 +1496,9 @@ export class PhysicsWorld3DKernel {
         secondCollider: second,
         reason: result.reason,
       });
-      return null;
+      throw new Error(
+        `3D narrow-phase collision failed for colliders ${first} and ${second}: ${result.reason}.`,
+      );
     }
     return result.status === "contact" ? result.manifold : null;
   }

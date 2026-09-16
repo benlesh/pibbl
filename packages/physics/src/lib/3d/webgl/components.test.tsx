@@ -1,6 +1,7 @@
 import { getWebGLGeometrySnapshot } from "@crc/webgl/internal";
 import { describe, expect, it } from "vitest";
 import {
+  capsuleShape3D,
   convexHullShape3D,
   ellipsoidShape3D,
   heightfieldShape3D,
@@ -40,6 +41,26 @@ describe("deterministic physics 3D render geometry", () => {
       getWebGLGeometrySnapshot(physicsGeometryForShape3DForTest(heightfield))
         .positions,
     ).toHaveLength(2 * 9);
+  });
+
+  it("emits both capsule equator seams around the cylindrical span", () => {
+    const capsule = capsuleShape3D({
+      start: [0, -2, 0],
+      end: [0, 2, 0],
+      radius: 1,
+    });
+    const positions = getWebGLGeometrySnapshot(
+      physicsGeometryForShape3DForTest(capsule),
+    ).positions;
+    const seamY = new Set<number>();
+    for (let offset = 0; offset < positions.length; offset += 3) {
+      const x = positions[offset]!;
+      const y = positions[offset + 1]!;
+      const z = positions[offset + 2]!;
+      if (Math.abs(Math.hypot(x, z) - 1) < 1e-12) seamY.add(y);
+    }
+    expect([...seamY].sort((first, second) => first - second)).toContain(-2);
+    expect([...seamY].sort((first, second) => first - second)).toContain(2);
   });
 
   it("binds default self physics to the exact shape with stable identity", () => {

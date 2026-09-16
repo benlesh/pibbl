@@ -1,6 +1,5 @@
-import type {
-  CRCPhysicsPose3D,
-} from "../../../3d-geometry.js";
+import type { CRCPhysicsPose3D } from "../../../3d-geometry.js";
+import { boundsOfShape3D } from "../shapes.js";
 import { shapeCastAgainstShape3D } from "../collision/casts.js";
 import {
   composePose3D,
@@ -51,6 +50,8 @@ export class BoundedCcd3D {
   candidateVelocityX: Float64Array;
   candidateVelocityY: Float64Array;
   candidateVelocityZ: Float64Array;
+  private movingColliderIndices: Int32Array;
+  private broadPhaseTargets: Int32Array;
 
   constructor(initialCapacity = 4) {
     const capacity = normalizedCapacity(initialCapacity);
@@ -61,6 +62,8 @@ export class BoundedCcd3D {
     this.candidateVelocityX = new Float64Array(capacity);
     this.candidateVelocityY = new Float64Array(capacity);
     this.candidateVelocityZ = new Float64Array(capacity);
+    this.movingColliderIndices = new Int32Array(capacity);
+    this.broadPhaseTargets = new Int32Array(capacity);
   }
 
   resolveCandidateBodies(
@@ -77,13 +80,15 @@ export class BoundedCcd3D {
     previousOrientationZ: Float64Array,
     previousOrientationW: Float64Array,
   ): void {
-    void broadPhase;
     this.impactCount = 0;
     this.capCount = 0;
     this.ensureImpactCapacity(
       Math.max(1, bodyCount * MAX_CCD_IMPACTS_PER_TICK_3D),
     );
     this.ensureBodyCapacity(bodies.capacity);
+    this.ensureColliderCapacity(
+      Math.max(colliders.capacity, broadPhase.proxyCapacity),
+    );
     this.candidatePositionX.set(bodies.positionX);
     this.candidatePositionY.set(bodies.positionY);
     this.candidatePositionZ.set(bodies.positionZ);
@@ -93,9 +98,16 @@ export class BoundedCcd3D {
     for (let offset = 0; offset < bodyCount; offset += 1) {
       const body = bodyIndices[offset]!;
       if (!this.isEligibleBody(bodies, body)) continue;
+      const movingColliderCount = colliders.bodyColliderIndicesInto(
+        body,
+        this.movingColliderIndices,
+        this.movingColliderIndices.length,
+      );
       this.resolveBody(
         bodies,
         colliders,
+        broadPhase,
+        movingColliderCount,
         body,
         previousPositionX[body]!,
         previousPositionY[body]!,
@@ -118,6 +130,8 @@ export class BoundedCcd3D {
   private resolveBody(
     bodies: BodyStore3D,
     colliders: ColliderStore3D,
+    broadPhase: DynamicAabbBroadPhase3D,
+    movingColliderCount: number,
     body: number,
     fromX: number,
     fromY: number,
@@ -150,6 +164,8 @@ export class BoundedCcd3D {
       const selected = this.findEarliestImpact(
         bodies,
         colliders,
+        broadPhase,
+        movingColliderCount,
         body,
         currentX,
         currentY,
@@ -269,6 +285,8 @@ export class BoundedCcd3D {
   private findEarliestImpact(
     bodies: BodyStore3D,
     colliders: ColliderStore3D,
+    broadPhase: DynamicAabbBroadPhase3D,
+    movingColliderCount: number,
     body: number,
     fromX: number,
     fromY: number,
@@ -292,10 +310,11 @@ export class BoundedCcd3D {
   ): SelectedImpact3D | null {
     let selected: SelectedImpact3D | null = null;
     for (
-      let movingCollider = 0;
-      movingCollider < colliders.capacity;
-      movingCollider += 1
+      let candidateOffset = 0;
+      candidateOffset < movingColliderCount;
+      candidateOffset += 1
     ) {
+      const movingCollider = this.movingColliderIndices[candidateOffset]!;
       const movingGeneration = colliders.generations[movingCollider]!;
       if (!colliders.has(movingCollider, movingGeneration)) continue;
       if (colliders.bodyIndices[movingCollider] !== body) continue;
@@ -320,12 +339,36 @@ export class BoundedCcd3D {
         orientationZ,
         orientationW,
       );
+      const toPose: CRCPhysicsPose3D = {
+        position: [
+          fromPose.position[0] + translationX,
+          fromPose.position[1] + translationY,
+          fromPose.position[2] + translationZ,
+        ],
+        orientation: fromPose.orientation,
+      };
+      const fromBounds = boundsOfShape3D(movingShape, fromPose);
+      const toBounds = boundsOfShape3D(movingShape, toPose);
+      const targetCount = broadPhase.queryAabbInto(
+        Math.min(fromBounds.min[0], toBounds.min[0]),
+        Math.min(fromBounds.min[1], toBounds.min[1]),
+        Math.min(fromBounds.min[2], toBounds.min[2]),
+        Math.max(fromBounds.max[0], toBounds.max[0]),
+        Math.max(fromBounds.max[1], toBounds.max[1]),
+        Math.max(fromBounds.max[2], toBounds.max[2]),
+        this.broadPhaseTargets,
+        0,
+        this.broadPhaseTargets.length,
+      );
       for (
-        let targetCollider = 0;
-        targetCollider < colliders.capacity;
-        targetCollider += 1
+        let targetOffset = 0;
+        targetOffset < targetCount;
+        targetOffset += 1
       ) {
-        const targetGeneration = colliders.generations[targetCollider]!;
+        const targetProxy = this.broadPhaseTargets[targetOffset]!;
+        const targetCollider = broadPhase.proxyColliderIndices[targetProxy]!;
+        const targetGeneration =
+          broadPhase.proxyColliderGenerations[targetProxy]!;
         if (!colliders.has(targetCollider, targetGeneration)) continue;
         if (targetCollider === movingCollider) continue;
         const targetBody = colliders.bodyIndices[targetCollider]!;
@@ -434,6 +477,16 @@ export class BoundedCcd3D {
     this.candidateVelocityX = growFloat64(this.candidateVelocityX, capacity);
     this.candidateVelocityY = growFloat64(this.candidateVelocityY, capacity);
     this.candidateVelocityZ = growFloat64(this.candidateVelocityZ, capacity);
+  }
+
+  private ensureColliderCapacity(required: number): void {
+    if (required <= this.movingColliderIndices.length) return;
+    const capacity = normalizedCapacity(required);
+    this.movingColliderIndices = growInt32(
+      this.movingColliderIndices,
+      capacity,
+    );
+    this.broadPhaseTargets = growInt32(this.broadPhaseTargets, capacity);
   }
 
   private targetVelocity(
@@ -564,6 +617,12 @@ function normalizedCapacity(required: number): number {
 
 function growFloat64(source: Float64Array, capacity: number): Float64Array {
   const result = new Float64Array(capacity);
+  result.set(source);
+  return result;
+}
+
+function growInt32(source: Int32Array, capacity: number): Int32Array {
+  const result = new Int32Array(capacity);
   result.set(source);
   return result;
 }

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   boxShape3D,
+  capsuleShape3D,
+  coneShape3D,
+  convexHullShape3D,
+  cylinderShape3D,
+  ellipsoidShape3D,
   heightfieldShape3D,
   sphereShape3D,
   type CRCPhysicsPose3D,
@@ -248,6 +253,50 @@ function hasGrownReference(
 }
 
 describe("transactional fixed-tick 3D world cadence", () => {
+  it.each([
+    ["ellipsoid", ellipsoidShape3D({ radii: [1, 0.8, 0.7] })],
+    [
+      "capsule",
+      capsuleShape3D({ start: [0, -0.5, 0], end: [0, 0.5, 0], radius: 0.5 }),
+    ],
+    ["cylinder", cylinderShape3D({ radius: 0.75, halfHeight: 0.75 })],
+    ["cone", coneShape3D({ radius: 0.75, halfHeight: 0.75 })],
+    [
+      "convex hull",
+      convexHullShape3D({
+        points: [
+          [-0.75, -0.75, -0.75],
+          [0.75, -0.75, -0.75],
+          [-0.75, 0.75, -0.75],
+          [0.75, 0.75, -0.75],
+          [-0.75, -0.75, 0.75],
+          [0.75, -0.75, 0.75],
+          [-0.75, 0.75, 0.75],
+          [0.75, 0.75, 0.75],
+        ],
+      }),
+    ],
+  ] as const)(
+    "solves an ordinary %s contact in the fixed-tick world",
+    (_name, shape) => {
+      const world = new PhysicsWorld3DKernel({
+        gravity: [0, 0, 0],
+        fixedStepMilliseconds: 10,
+        sleeping: false,
+      });
+      world.proposeTopology([
+        body(1),
+        body(2, { type: "static" }),
+        collider(10, 1, shape),
+        collider(20, 2, boxShape3D({ width: 1.5, height: 1.5, depth: 1.5 })),
+      ]);
+      advance(world, 1, 0);
+      advance(world, 2, 10);
+
+      expect(world.contacts.contactCount).toBe(1);
+    },
+  );
+
   it("rejects concave children on every moving body before topology adoption", () => {
     const concave = heightfieldShape3D({
       rows: 2,
@@ -1167,6 +1216,7 @@ describe("transactional 3D world candidate rollback", () => {
       generation: 1,
       bodies: world.bodies,
       colliders: world.colliders,
+      broadPhase: world.broadPhase,
       materializeBody: (index, generation) =>
         ({ index, generation }) as unknown as CRCPhysicsBodyHandle3D,
       materializeCollider: (index, generation) =>

@@ -1,7 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
+  boundsOfShape3D,
   boxShape3D,
+  capsuleShape3D,
+  coneShape3D,
+  convexHullShape3D,
+  cylinderShape3D,
+  ellipsoidShape3D,
+  heightfieldShape3D,
   sphereShape3D,
+  triangleMeshShape3D,
   type CRCPhysicsShape3D,
 } from "../../../3d-geometry.js";
 import { requireShapeRecord3D } from "../shape-records.js";
@@ -22,6 +30,7 @@ import {
   BodyStore3D,
   ColliderStore3D,
 } from "./storage.js";
+import { DynamicAabbBroadPhase3D } from "./broad-phase.js";
 
 interface FakeHandle {
   readonly index: number;
@@ -64,6 +73,7 @@ function createFixture() {
   const counters = createPhysicsOwnershipCounters3D();
   const bodies = new BodyStore3D(counters, 16);
   const colliders = new ColliderStore3D(counters, 16);
+  const broadPhase = new DynamicAabbBroadPhase3D(counters, 16, 32);
   const materializedBodies = new Map<string, CRCPhysicsBodyHandle3D>();
   const materializedColliders = new Map<string, CRCPhysicsColliderHandle3D>();
   let bodyMaterializations = 0;
@@ -72,6 +82,7 @@ function createFixture() {
     generation: 7,
     bodies,
     colliders,
+    broadPhase,
     materializeBody(index, generation) {
       bodyMaterializations += 1;
       const key = `${String(index)}:${String(generation)}`;
@@ -176,17 +187,44 @@ function createFixture() {
         COLLIDER_ENABLED_3D |
         (options.sensor === true ? COLLIDER_SENSOR_3D : 0),
     });
+    const colliderBounds = boundsOfShape3D(shape, {
+      position: [
+        options.x + (options.colliderOffsetX ?? 0),
+        options.y ?? 0,
+        options.z ?? 0,
+      ],
+      orientation: [0, 0, 0, 1],
+    });
+    const proxy = broadPhase.createProxy(
+      collider,
+      colliders.generations[collider]!,
+      colliderBounds.min[0],
+      colliderBounds.min[1],
+      colliderBounds.min[2],
+      colliderBounds.max[0],
+      colliderBounds.max[1],
+      colliderBounds.max[2],
+    );
+    colliders.setProxy(
+      collider,
+      colliders.generations[collider]!,
+      proxy,
+      broadPhase.proxyGenerations[proxy]!,
+    );
     return {
       body,
       bodyGeneration: bodies.generations[body]!,
       collider,
       colliderGeneration: colliders.generations[collider]!,
+      proxy,
+      proxyGeneration: broadPhase.proxyGenerations[proxy]!,
     };
   };
   return {
     counters,
     bodies,
     colliders,
+    broadPhase,
     queries,
     add,
     materializationCounts: () => ({
@@ -197,6 +235,96 @@ function createFixture() {
 }
 
 describe("committed-authoritative 3D world queries", () => {
+  it("prunes far colliders before semantic query validation", () => {
+    const scene = createFixture();
+    const near = scene.add({ x: 5 });
+    const far = scene.add({ x: 1_000 });
+    const has = vi.spyOn(scene.colliders, "has");
+
+    const hit = scene.queries.raycast(7, {
+      origin: [0, 0, 0],
+      direction: [1, 0, 0],
+      maxDistance: 10,
+    });
+
+    expect(identityOf(hit!.collider)!.index).toBe(near.collider);
+    expect(has.mock.calls.some(([index]) => index === far.collider)).toBe(
+      false,
+    );
+  });
+
+  it.each([
+    ["ellipsoid", ellipsoidShape3D({ radii: [0.5, 0.75, 0.5] })],
+    [
+      "capsule",
+      capsuleShape3D({ start: [0, -0.5, 0], end: [0, 0.5, 0], radius: 0.4 }),
+    ],
+    ["cylinder", cylinderShape3D({ radius: 0.5, halfHeight: 0.75 })],
+    ["cone", coneShape3D({ radius: 0.5, halfHeight: 0.75 })],
+    [
+      "convex hull",
+      convexHullShape3D({
+        points: [
+          [-0.5, -0.5, -0.5],
+          [0.5, -0.5, -0.5],
+          [-0.5, 0.5, -0.5],
+          [0.5, 0.5, -0.5],
+          [-0.5, -0.5, 0.5],
+          [0.5, -0.5, 0.5],
+          [-0.5, 0.5, 0.5],
+          [0.5, 0.5, 0.5],
+        ],
+      }),
+    ],
+  ] as const)(
+    "shape-casts a %s through broad-phase candidates",
+    (_name, shape) => {
+      const scene = createFixture();
+      const target = scene.add({ x: 5 });
+
+      const hit = scene.queries.shapeCast(
+        7,
+        shape,
+        { position: [0, 0, 0], orientation: [0, 0, 0, 1] },
+        [10, 0, 0],
+      );
+
+      expect(identityOf(hit!.collider)!.index).toBe(target.collider);
+      expect(hit!.timeOfImpact).toBeGreaterThan(0);
+      expect(hit!.timeOfImpact).toBeLessThan(1);
+    },
+  );
+
+  it.each([
+    [
+      "triangle mesh",
+      triangleMeshShape3D({
+        positions: [-2, 0, -2, 2, 0, -2, 2, 0, 2, -2, 0, 2],
+        indices: [0, 2, 1, 0, 3, 2],
+      }),
+    ],
+    [
+      "heightfield",
+      heightfieldShape3D({ rows: 2, columns: 2, heights: [0, 0, 0, 0] }),
+    ],
+  ] as const)(
+    "raycasts a static %s through broad-phase candidates",
+    (_name, shape) => {
+      const scene = createFixture();
+      const target = scene.add({ x: 5, shape });
+
+      const hit = scene.queries.raycast(7, {
+        origin: [5, 3, 0],
+        direction: [0, -1, 0],
+        maxDistance: 10,
+      });
+
+      expect(identityOf(hit!.collider)!.index).toBe(target.collider);
+      expect(hit!.triangleIndex).toBeTypeOf("number");
+      expect(hit!.barycentric).toHaveLength(3);
+    },
+  );
+
   it("requires an owner-bound committed-read guard", () => {
     const counters = createPhysicsOwnershipCounters3D();
     const bodies = new BodyStore3D(counters, 1);
@@ -205,6 +333,7 @@ describe("committed-authoritative 3D world queries", () => {
       generation: 1,
       bodies,
       colliders,
+      broadPhase: new DynamicAabbBroadPhase3D(counters, 1, 2),
       materializeBody: bodyHandle,
       materializeCollider: colliderHandle,
       resolveBody: identityOf,
@@ -457,6 +586,9 @@ describe("committed-authoritative 3D world queries", () => {
       released.colliderGeneration,
     );
     expect(
+      scene.broadPhase.destroyProxy(released.proxy, released.proxyGeneration),
+    ).toBe(true);
+    expect(
       scene.colliders.release(released.collider, released.colliderGeneration),
     ).toBe(true);
     expect(scene.bodies.release(released.body, released.bodyGeneration)).toBe(
@@ -497,11 +629,13 @@ describe("committed-authoritative 3D world queries", () => {
     const counters = createPhysicsOwnershipCounters3D();
     const bodies = new BodyStore3D(counters, 1);
     const colliders = new ColliderStore3D(counters, 1);
+    const broadPhase = new DynamicAabbBroadPhase3D(counters, 1, 2);
     let readable = true;
     const queries = new CommittedWorldQueries3D({
       generation: 1,
       bodies,
       colliders,
+      broadPhase,
       materializeBody: bodyHandle,
       materializeCollider: colliderHandle,
       resolveBody: identityOf,

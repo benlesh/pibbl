@@ -32,6 +32,7 @@ import type {
   CRCPhysicsQueryResult3D,
 } from "../types.js";
 import { collisionFiltersAllow3D } from "./ccd.js";
+import type { DynamicAabbBroadPhase3D } from "./broad-phase.js";
 import {
   BODY_ENABLED_3D,
   COLLIDER_ENABLED_3D,
@@ -49,6 +50,7 @@ export interface CommittedWorldQueriesOptions3D {
   readonly generation: number;
   readonly bodies: BodyStore3D;
   readonly colliders: ColliderStore3D;
+  readonly broadPhase: DynamicAabbBroadPhase3D;
   readonly materializeBody: (
     index: number,
     generation: number,
@@ -128,7 +130,7 @@ export class CommittedWorldQueries3D {
       maxDistance,
     };
     const hits: RawHit3D[] = [];
-    for (let index = 0; index < this.options.colliders.capacity; index += 1) {
+    for (const index of this.candidateColliderIndices(rayBounds(copiedRay))) {
       const collider = this.semanticCollider(index, prepared);
       if (collider === null) continue;
       const hit = raycastShape3D(collider.shape, collider.pose, copiedRay);
@@ -153,13 +155,25 @@ export class CommittedWorldQueries3D {
     if (!this.isUsable(worldGeneration, prepared)) {
       return emptyResult(prepared.mode);
     }
-    boundsOfShape3D(shape, from);
+    const startingBounds = boundsOfShape3D(shape, from);
     const copiedTranslation = publicVector(
       copyFiniteVector3(translation, "translation"),
     );
     const copiedFrom = publicPose(from);
+    const endingPose: CRCPhysicsPose3D = {
+      position: [
+        copiedFrom.position[0] + copiedTranslation[0],
+        copiedFrom.position[1] + copiedTranslation[1],
+        copiedFrom.position[2] + copiedTranslation[2],
+      ],
+      orientation: copiedFrom.orientation,
+    };
+    const sweptBounds = unionAabb(
+      startingBounds,
+      boundsOfShape3D(shape, endingPose),
+    );
     const hits: RawHit3D[] = [];
-    for (let index = 0; index < this.options.colliders.capacity; index += 1) {
+    for (const index of this.candidateColliderIndices(sweptBounds)) {
       const collider = this.semanticCollider(index, prepared);
       if (collider === null) continue;
       const hit = shapeCastAgainstShape3D(
@@ -188,10 +202,19 @@ export class CommittedWorldQueries3D {
     if (!this.isGenerationLive(worldGeneration)) {
       return emptyResult(modeOf(queryOptions));
     }
-    boundsOfShape3D(shape, pose);
+    const queryBounds = boundsOfShape3D(shape, pose);
     const copiedPose = publicPose(pose);
-    return this.runMatchQuery(worldGeneration, queryOptions, (collider) =>
-      overlapPreparedShapes3D(shape, copiedPose, collider.shape, collider.pose),
+    return this.runMatchQuery(
+      worldGeneration,
+      queryOptions,
+      queryBounds,
+      (collider) =>
+        overlapPreparedShapes3D(
+          shape,
+          copiedPose,
+          collider.shape,
+          collider.pose,
+        ),
     );
   }
 
@@ -205,8 +228,12 @@ export class CommittedWorldQueries3D {
       return emptyResult(modeOf(queryOptions));
     }
     const copied = copyAabb(bounds);
-    return this.runMatchQuery(worldGeneration, queryOptions, (collider) =>
-      aabbsOverlap(copied, boundsOfShape3D(collider.shape, collider.pose)),
+    return this.runMatchQuery(
+      worldGeneration,
+      queryOptions,
+      copied,
+      (collider) =>
+        aabbsOverlap(copied, boundsOfShape3D(collider.shape, collider.pose)),
     );
   }
 
@@ -220,14 +247,19 @@ export class CommittedWorldQueries3D {
       return emptyResult(modeOf(queryOptions));
     }
     const copied = publicVector(copyFiniteVector3(point, "point"));
-    return this.runMatchQuery(worldGeneration, queryOptions, (collider) =>
-      containsPoint3D(collider.shape, collider.pose, copied),
+    const pointBounds = { min: copied, max: copied };
+    return this.runMatchQuery(
+      worldGeneration,
+      queryOptions,
+      pointBounds,
+      (collider) => containsPoint3D(collider.shape, collider.pose, copied),
     );
   }
 
   private runMatchQuery<Mode extends CRCPhysicsQueryMode>(
     worldGeneration: number,
     queryOptions: CRCPhysicsQueryOptions3D<Mode> | undefined,
+    bounds: CRCPhysicsAabb3D,
     matches: (collider: SemanticCollider3D) => boolean,
   ): CRCPhysicsQueryResult3D<Mode, CRCPhysicsQueryMatch3D> {
     const prepared = this.prepareOptions(queryOptions);
@@ -235,7 +267,7 @@ export class CommittedWorldQueries3D {
       return emptyResult(prepared.mode);
     }
     const matchesFound: SemanticCollider3D[] = [];
-    for (let index = 0; index < this.options.colliders.capacity; index += 1) {
+    for (const index of this.candidateColliderIndices(bounds)) {
       const collider = this.semanticCollider(index, prepared);
       if (collider === null || !matches(collider)) continue;
       if (prepared.mode === "any") {
@@ -257,6 +289,37 @@ export class CommittedWorldQueries3D {
     return Object.freeze(
       matchesFound.map((collider) => this.materializeMatch(collider)),
     ) as CRCPhysicsQueryResult3D<Mode, CRCPhysicsQueryMatch3D>;
+  }
+
+  private candidateColliderIndices(
+    bounds: CRCPhysicsAabb3D,
+  ): readonly number[] {
+    const broadPhase = this.options.broadPhase;
+    const proxies = new Int32Array(Math.max(1, broadPhase.proxyCapacity));
+    const count = broadPhase.queryAabbInto(
+      bounds.min[0],
+      bounds.min[1],
+      bounds.min[2],
+      bounds.max[0],
+      bounds.max[1],
+      bounds.max[2],
+      proxies,
+      0,
+      proxies.length,
+    );
+    const colliders: number[] = [];
+    for (let offset = 0; offset < count; offset += 1) {
+      const proxy = proxies[offset]!;
+      const collider = broadPhase.proxyColliderIndices[proxy]!;
+      if (collider >= 0) colliders.push(collider);
+    }
+    colliders.sort(
+      (left, right) =>
+        left - right ||
+        this.options.colliders.generations[left]! -
+          this.options.colliders.generations[right]!,
+    );
+    return colliders;
   }
 
   private prepareOptions<Mode extends CRCPhysicsQueryMode>(
@@ -514,6 +577,55 @@ function aabbsOverlap(
     first.min[2] <= second.max[2] &&
     first.max[2] >= second.min[2]
   );
+}
+
+function rayBounds(ray: CRCPhysicsRay3D): CRCPhysicsAabb3D {
+  const scale = Math.max(
+    Math.abs(ray.direction[0]),
+    Math.abs(ray.direction[1]),
+    Math.abs(ray.direction[2]),
+  );
+  const scaled = [
+    ray.direction[0] / scale,
+    ray.direction[1] / scale,
+    ray.direction[2] / scale,
+  ] as const;
+  const length = Math.hypot(...scaled);
+  const end = [
+    ray.origin[0] + (scaled[0] / length) * ray.maxDistance,
+    ray.origin[1] + (scaled[1] / length) * ray.maxDistance,
+    ray.origin[2] + (scaled[2] / length) * ray.maxDistance,
+  ] as const;
+  return {
+    min: [
+      Math.min(ray.origin[0], end[0]),
+      Math.min(ray.origin[1], end[1]),
+      Math.min(ray.origin[2], end[2]),
+    ],
+    max: [
+      Math.max(ray.origin[0], end[0]),
+      Math.max(ray.origin[1], end[1]),
+      Math.max(ray.origin[2], end[2]),
+    ],
+  };
+}
+
+function unionAabb(
+  first: CRCPhysicsAabb3D,
+  second: CRCPhysicsAabb3D,
+): CRCPhysicsAabb3D {
+  return {
+    min: [
+      Math.min(first.min[0], second.min[0]),
+      Math.min(first.min[1], second.min[1]),
+      Math.min(first.min[2], second.min[2]),
+    ],
+    max: [
+      Math.max(first.max[0], second.max[0]),
+      Math.max(first.max[1], second.max[1]),
+      Math.max(first.max[2], second.max[2]),
+    ],
+  };
 }
 
 function compareHits(first: RawHit3D, second: RawHit3D): number {

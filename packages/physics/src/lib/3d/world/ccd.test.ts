@@ -1,7 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   boundsOfShape3D,
   boxShape3D,
+  capsuleShape3D,
+  coneShape3D,
+  convexHullShape3D,
+  cylinderShape3D,
+  ellipsoidShape3D,
   sphereShape3D,
   type CRCPhysicsShape3D,
 } from "../../../3d-geometry.js";
@@ -178,6 +183,89 @@ const bulletSphere = sphereShape3D({ radius: 0.1 });
 const thinWall = boxShape3D({ width: 0.2, height: 10, depth: 10 });
 
 describe("bounded opted-in 3D CCD", () => {
+  it("prunes far colliders before narrow-phase candidate validation", () => {
+    const scene = createFixture();
+    const moving = scene.add(bulletSphere, {
+      x: 0,
+      dynamic: true,
+      ccd: true,
+      sensor: false,
+      restitution: 0,
+    });
+    scene.add(thinWall, {
+      x: 5,
+      dynamic: false,
+      ccd: false,
+      sensor: false,
+      restitution: 0,
+    });
+    const far = scene.add(thinWall, {
+      x: 1_000,
+      dynamic: false,
+      ccd: false,
+      sensor: false,
+      restitution: 0,
+    });
+    const has = vi.spyOn(scene.colliders, "has");
+    scene.bodies.positionX[moving.body] = 10;
+
+    scene.resolve(moving.body, 0);
+
+    expect(has.mock.calls.some(([index]) => index === far.collider)).toBe(
+      false,
+    );
+  });
+
+  it.each([
+    ["ellipsoid", ellipsoidShape3D({ radii: [0.1, 0.15, 0.1] })],
+    [
+      "capsule",
+      capsuleShape3D({ start: [0, -0.1, 0], end: [0, 0.1, 0], radius: 0.1 }),
+    ],
+    ["cylinder", cylinderShape3D({ radius: 0.1, halfHeight: 0.15 })],
+    ["cone", coneShape3D({ radius: 0.1, halfHeight: 0.15 })],
+    [
+      "convex hull",
+      convexHullShape3D({
+        points: [
+          [-0.1, -0.1, -0.1],
+          [0.1, -0.1, -0.1],
+          [-0.1, 0.1, -0.1],
+          [0.1, 0.1, -0.1],
+          [-0.1, -0.1, 0.1],
+          [0.1, -0.1, 0.1],
+          [-0.1, 0.1, 0.1],
+          [0.1, 0.1, 0.1],
+        ],
+      }),
+    ],
+  ] as const)(
+    "casts a fast %s through broad-phase candidates",
+    (_name, shape) => {
+      const scene = createFixture();
+      const moving = scene.add(shape, {
+        x: 0,
+        dynamic: true,
+        ccd: true,
+        sensor: false,
+        restitution: 0,
+      });
+      const wall = scene.add(thinWall, {
+        x: 5,
+        dynamic: false,
+        ccd: false,
+        sensor: false,
+        restitution: 0,
+      });
+      scene.bodies.positionX[moving.body] = 10;
+
+      scene.resolve(moving.body, 0);
+
+      expect(scene.ccd.impactColliderIndices[0]).toBe(wall.collider);
+      expect(scene.bodies.positionX[moving.body]).toBeLessThan(5);
+    },
+  );
+
   it("casts crossing dynamic bodies from target start poses with relative translation", () => {
     const scene = createFixture();
     const first = scene.add(bulletSphere, {

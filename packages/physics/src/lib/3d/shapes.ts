@@ -211,7 +211,7 @@ export function triangleMeshShape3D(
     minimum,
     maximum,
     ...triangleData,
-    closedManifold: isConsistentlyWoundClosedManifold(indices),
+    closedManifold: isConsistentlyWoundClosedManifold(triangleData.triangles),
     localPose: IDENTITY_POSE_3D,
   });
 }
@@ -301,19 +301,19 @@ export function heightfieldShape3D(
   });
 }
 
-function isConsistentlyWoundClosedManifold(indices: Uint32Array): boolean {
-  const edges = new Map<string, [number, number][]>();
-  for (let index = 0; index < indices.length; index += 3) {
-    const a = indices[index]!,
-      b = indices[index + 1]!,
-      c = indices[index + 2]!;
+function isConsistentlyWoundClosedManifold(triangles: Float64Array): boolean {
+  const edges = new Map<string, [string, string][]>();
+  for (let index = 0; index < triangles.length; index += 9) {
+    const a = triangleVertexKey(triangles, index),
+      b = triangleVertexKey(triangles, index + 3),
+      c = triangleVertexKey(triangles, index + 6);
     for (const edge of [
       [a, b],
       [b, c],
       [c, a],
     ] as const) {
       const key =
-        edge[0] < edge[1] ? `${edge[0]},${edge[1]}` : `${edge[1]},${edge[0]}`;
+        edge[0] < edge[1] ? `${edge[0]}|${edge[1]}` : `${edge[1]}|${edge[0]}`;
       const values = edges.get(key) ?? [];
       values.push([edge[0], edge[1]]);
       edges.set(key, values);
@@ -325,6 +325,10 @@ function isConsistentlyWoundClosedManifold(indices: Uint32Array): boolean {
       values[0]![0] === values[1]![1] &&
       values[0]![1] === values[1]![0],
   );
+}
+
+function triangleVertexKey(values: Float64Array, offset: number): string {
+  return `${values[offset]!},${values[offset + 1]!},${values[offset + 2]!}`;
 }
 
 export function boundsOfShape3D(
@@ -365,7 +369,7 @@ export function boundsOfShape3D(
     return transformedVertexBounds(record.vertices, worldPose);
   }
   if (record.kind === "triangleMesh" || record.kind === "heightfield") {
-    return transformedBoxBounds(record.minimum, record.maximum, worldPose);
+    return transformedVertexBounds(record.triangles, worldPose);
   }
 
   const orientationPose = poseFor(record.center, record.orientation);
@@ -629,6 +633,7 @@ function hullMassProperties(
   faces: Uint32Array,
   density: number,
 ) {
+  const reference = vertices.subarray(0, 3);
   let volume = 0;
   const firstMoment = new Float64Array(3);
   let x2 = 0,
@@ -638,15 +643,9 @@ function hullMassProperties(
     xz = 0,
     yz = 0;
   for (let index = 0; index < faces.length; index += 3) {
-    const a = vertices.subarray(faces[index]! * 3, faces[index]! * 3 + 3);
-    const b = vertices.subarray(
-      faces[index + 1]! * 3,
-      faces[index + 1]! * 3 + 3,
-    );
-    const c = vertices.subarray(
-      faces[index + 2]! * 3,
-      faces[index + 2]! * 3 + 3,
-    );
+    const a = shiftedVertex(vertices, faces[index]!, reference);
+    const b = shiftedVertex(vertices, faces[index + 1]!, reference);
+    const c = shiftedVertex(vertices, faces[index + 2]!, reference);
     const signed =
       (a[0]! * (b[1]! * c[2]! - b[2]! * c[1]!) -
         a[1]! * (b[0]! * c[2]! - b[2]! * c[0]!) +
@@ -689,23 +688,40 @@ function hullMassProperties(
   xz *= sign;
   yz *= sign;
   const center = new Float64Array([
-    firstMoment[0]! / volume,
-    firstMoment[1]! / volume,
-    firstMoment[2]! / volume,
+    reference[0]! + firstMoment[0]! / volume,
+    reference[1]! + firstMoment[1]! / volume,
+    reference[2]! + firstMoment[2]! / volume,
   ]);
+  const localCenter = [
+    center[0]! - reference[0]!,
+    center[1]! - reference[1]!,
+    center[2]! - reference[2]!,
+  ];
   const mass = volume * density;
   const tensor = [
-    density * (y2 + z2) - mass * (center[1]! ** 2 + center[2]! ** 2),
-    -density * xy + mass * center[0]! * center[1]!,
-    -density * xz + mass * center[0]! * center[2]!,
-    -density * xy + mass * center[0]! * center[1]!,
-    density * (x2 + z2) - mass * (center[0]! ** 2 + center[2]! ** 2),
-    -density * yz + mass * center[1]! * center[2]!,
-    -density * xz + mass * center[0]! * center[2]!,
-    -density * yz + mass * center[1]! * center[2]!,
-    density * (x2 + y2) - mass * (center[0]! ** 2 + center[1]! ** 2),
+    density * (y2 + z2) - mass * (localCenter[1]! ** 2 + localCenter[2]! ** 2),
+    -density * xy + mass * localCenter[0]! * localCenter[1]!,
+    -density * xz + mass * localCenter[0]! * localCenter[2]!,
+    -density * xy + mass * localCenter[0]! * localCenter[1]!,
+    density * (x2 + z2) - mass * (localCenter[0]! ** 2 + localCenter[2]! ** 2),
+    -density * yz + mass * localCenter[1]! * localCenter[2]!,
+    -density * xz + mass * localCenter[0]! * localCenter[2]!,
+    -density * yz + mass * localCenter[1]! * localCenter[2]!,
+    density * (x2 + y2) - mass * (localCenter[0]! ** 2 + localCenter[1]! ** 2),
   ];
   return { volume, center, mass, tensor };
+}
+
+function shiftedVertex(
+  vertices: Float64Array,
+  index: number,
+  reference: ArrayLike<number>,
+): readonly [number, number, number] {
+  return [
+    vertices[index * 3]! - reference[0]!,
+    vertices[index * 3 + 1]! - reference[1]!,
+    vertices[index * 3 + 2]! - reference[2]!,
+  ];
 }
 
 export function transformShape3D(
@@ -874,20 +890,6 @@ function transformedVertexBounds(
     maximum[1]!,
     maximum[2]!,
   );
-}
-
-function transformedBoxBounds(
-  minimum: Float64Array,
-  maximum: Float64Array,
-  pose: InternalPose3D,
-): CRCPhysicsAabb3D {
-  const vertices = new Float64Array(24);
-  for (let feature = 0; feature < 8; feature += 1) {
-    vertices[feature * 3] = (feature & 1) === 0 ? minimum[0]! : maximum[0]!;
-    vertices[feature * 3 + 1] = (feature & 2) === 0 ? minimum[1]! : maximum[1]!;
-    vertices[feature * 3 + 2] = (feature & 4) === 0 ? minimum[2]! : maximum[2]!;
-  }
-  return transformedVertexBounds(vertices, pose);
 }
 
 function segmentLength(record: {

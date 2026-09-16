@@ -14,7 +14,11 @@ import {
   type InternalPose3D,
 } from "../math.js";
 import { GEOMETRY_EPSILON_3D } from "../numeric-policy.js";
-import { requireShapeRecord3D, type ShapeRecord3D } from "../shape-records.js";
+import {
+  requireShapeRecord3D,
+  type ConcaveShapeRecord3D,
+  type ShapeRecord3D,
+} from "../shape-records.js";
 import {
   distanceSphereToBox3D,
   distanceSphereToSphere3D,
@@ -42,6 +46,12 @@ interface PreparedShape3D {
   readonly convex: PreparedConvexShape3D | null;
   readonly order: number;
 }
+
+type PreparedConcaveShape3D = PreparedShape3D &
+  Readonly<{
+    record: ConcaveShapeRecord3D;
+    convex: null;
+  }>;
 
 interface SuccessfulPair3D {
   readonly status: "success";
@@ -75,7 +85,8 @@ export function containsPoint3D(
 ): boolean {
   const prepared = prepareShape(shape, pose, "shape", "pose");
   const copied = copyFiniteVector3(point, "point");
-  if (prepared.convex === null) return containsConcavePoint(prepared, copied);
+  if (prepared.convex === null)
+    return containsConcavePoint(prepared as PreparedConcaveShape3D, copied);
   if (prepared.convex.kind === "sphere") {
     return (
       Math.hypot(
@@ -408,40 +419,135 @@ function collideWithConcave(
   iterationLimits: Readonly<{ gjk?: number; epa?: number }>,
 ): PairResult3D {
   if (first.convex !== null && second.convex === null) {
-    return collideConvexConcave(first.convex, second, iterationLimits);
+    return collideConvexConcave(
+      first.convex,
+      second as PreparedConcaveShape3D,
+      iterationLimits,
+    );
   }
   if (first.convex === null && second.convex !== null) {
-    const result = collideConvexConcave(second.convex, first, iterationLimits);
+    const result = collideConvexConcave(
+      second.convex,
+      first as PreparedConcaveShape3D,
+      iterationLimits,
+    );
     return result.status === "failed" ? result : invertResult(result);
   }
   if (first.convex === null && second.convex === null) {
+    const firstConcave = first as PreparedConcaveShape3D;
+    const secondConcave = second as PreparedConcaveShape3D;
     let best: PairResult3D | null = null;
-    for (const firstTriangle of preparedTriangles(first)) {
-      for (const secondTriangle of preparedTriangles(second)) {
-        const result = collideConvexShapes3D(
-          firstTriangle.shape,
-          secondTriangle.shape,
-          [1, 0, 0],
-          iterationLimits,
-        );
-        if (result.status === "failed") continue;
-        const candidate: SuccessfulPair3D = {
-          status: "success",
-          distance: {
-            ...result.distance,
-            firstFeature: firstTriangle.sourceId,
-            secondFeature: secondTriangle.sourceId,
-          },
-          first: firstTriangle.shape,
-          second: secondTriangle.shape,
-        };
-        if (
-          best === null ||
-          (best.status === "success" &&
-            candidate.distance.separation < best.distance.separation)
-        )
-          best = candidate;
+    const queue: Array<
+      Readonly<{ firstNode: number; secondNode: number; lower: number }>
+    > = [
+      {
+        firstNode: 0,
+        secondNode: 0,
+        lower: aabbDistance(
+          preparedBvhNodeBounds(firstConcave, 0),
+          preparedBvhNodeBounds(secondConcave, 0),
+        ),
+      },
+    ];
+    while (queue.length > 0) {
+      queue.sort(
+        (left, right) =>
+          left.lower - right.lower ||
+          left.firstNode - right.firstNode ||
+          left.secondNode - right.secondNode,
+      );
+      const candidateNodes = queue.shift()!;
+      if (
+        best?.status === "success" &&
+        candidateNodes.lower > Math.max(0, best.distance.separation)
+      )
+        break;
+      const firstLeaf =
+        firstConcave.record.bvh.triangle[candidateNodes.firstNode]!;
+      const secondLeaf =
+        secondConcave.record.bvh.triangle[candidateNodes.secondNode]!;
+      if (firstLeaf < 0 || secondLeaf < 0) {
+        const children: Array<readonly [number, number]> = [];
+        if (firstLeaf < 0 && secondLeaf < 0) {
+          for (const firstChild of bvhChildren(
+            firstConcave.record,
+            candidateNodes.firstNode,
+          ))
+            for (const secondChild of bvhChildren(
+              secondConcave.record,
+              candidateNodes.secondNode,
+            ))
+              children.push([firstChild, secondChild]);
+        } else if (firstLeaf < 0) {
+          for (const firstChild of bvhChildren(
+            firstConcave.record,
+            candidateNodes.firstNode,
+          ))
+            children.push([firstChild, candidateNodes.secondNode]);
+        } else {
+          for (const secondChild of bvhChildren(
+            secondConcave.record,
+            candidateNodes.secondNode,
+          ))
+            children.push([candidateNodes.firstNode, secondChild]);
+        }
+        for (const [firstNode, secondNode] of children) {
+          queue.push({
+            firstNode,
+            secondNode,
+            lower: aabbDistance(
+              preparedBvhNodeBounds(firstConcave, firstNode),
+              preparedBvhNodeBounds(secondConcave, secondNode),
+            ),
+          });
+        }
+        continue;
       }
+      const firstTriangle = preparedTriangle(firstConcave, firstLeaf);
+      const secondTriangle = preparedTriangle(secondConcave, secondLeaf);
+      const result = collideConvexShapes3D(
+        firstTriangle.shape,
+        secondTriangle.shape,
+        [1, 0, 0],
+        iterationLimits,
+      );
+      if (result.status === "failed") continue;
+      const candidate: SuccessfulPair3D = {
+        status: "success",
+        distance: {
+          ...result.distance,
+          firstFeature: firstTriangle.sourceId,
+          secondFeature: secondTriangle.sourceId,
+        },
+        first: firstTriangle.shape,
+        second: secondTriangle.shape,
+      };
+      if (
+        best === null ||
+        (best.status === "success" &&
+          candidate.distance.separation < best.distance.separation)
+      )
+        best = candidate;
+    }
+    if (
+      best?.status === "success" &&
+      best.distance.separation > 0 &&
+      (closedConcaveContains(
+        secondConcave,
+        preparedConcaveSurfacePoint(firstConcave),
+      ) ||
+        closedConcaveContains(
+          firstConcave,
+          preparedConcaveSurfacePoint(secondConcave),
+        ))
+    ) {
+      return {
+        ...best,
+        distance: {
+          ...best.distance,
+          separation: -best.distance.separation,
+        },
+      };
     }
     return best ?? { status: "failed", reason: "gjk" };
   }
@@ -450,11 +556,41 @@ function collideWithConcave(
 
 function collideConvexConcave(
   convex: PreparedConvexShape3D,
-  concave: PreparedShape3D,
+  concave: PreparedConcaveShape3D,
   iterationLimits: Readonly<{ gjk?: number; epa?: number }>,
 ): PairResult3D {
   let best: SuccessfulPair3D | null = null;
-  for (const triangle of preparedTriangles(concave)) {
+  const convexBounds = preparedConvexBounds(convex);
+  const queue: Array<Readonly<{ node: number; lower: number }>> = [
+    {
+      node: 0,
+      lower: aabbDistance(convexBounds, preparedBvhNodeBounds(concave, 0)),
+    },
+  ];
+  while (queue.length > 0) {
+    queue.sort(
+      (left, right) => left.lower - right.lower || left.node - right.node,
+    );
+    const candidateNode = queue.shift()!;
+    if (
+      best !== null &&
+      candidateNode.lower > Math.max(0, best.distance.separation)
+    )
+      break;
+    const leaf = concave.record.bvh.triangle[candidateNode.node]!;
+    if (leaf < 0) {
+      for (const child of bvhChildren(concave.record, candidateNode.node)) {
+        queue.push({
+          node: child,
+          lower: aabbDistance(
+            convexBounds,
+            preparedBvhNodeBounds(concave, child),
+          ),
+        });
+      }
+      continue;
+    }
+    const triangle = preparedTriangle(concave, leaf);
     const distance = distanceConvexTriangle(
       convex,
       triangle.shape,
@@ -477,7 +613,40 @@ function collideConvexConcave(
     )
       best = candidate;
   }
+  if (
+    best !== null &&
+    best.distance.separation > 0 &&
+    closedConcaveContains(concave, convex.center)
+  ) {
+    return {
+      ...best,
+      distance: {
+        ...best.distance,
+        separation: -best.distance.separation,
+      },
+    };
+  }
   return best ?? { status: "failed", reason: "gjk" };
+}
+
+function closedConcaveContains(
+  shape: PreparedConcaveShape3D,
+  point: ArrayLike<number>,
+): boolean {
+  return (
+    shape.record.kind === "triangleMesh" &&
+    shape.record.closedManifold &&
+    containsConcavePoint(shape, new Float64Array(point))
+  );
+}
+
+function preparedConcaveSurfacePoint(
+  shape: PreparedConcaveShape3D,
+): Float64Array {
+  const pose = composePose3D(shape.pose, shape.record.localPose);
+  const point = new Float64Array(3);
+  transformPointInto(point, shape.record.triangles.subarray(0, 3), pose);
+  return point;
 }
 
 function distanceConvexTriangle(
@@ -536,47 +705,159 @@ function distanceConvexTriangle(
     : null;
 }
 
-function preparedTriangles(shape: PreparedShape3D): readonly Readonly<{
+function preparedTriangle(
+  shape: PreparedConcaveShape3D,
+  triangle: number,
+): Readonly<{
   sourceId: number;
   shape: Extract<PreparedConvexShape3D, { kind: "hull" }>;
-}>[] {
-  if (
-    shape.record.kind !== "triangleMesh" &&
-    shape.record.kind !== "heightfield"
-  )
-    return [];
+}> {
   const record = shape.record;
   const pose = composePose3D(shape.pose, record.localPose);
-  const result = Array.from(
-    { length: record.sourceTriangleIds.length },
-    (_, triangle) => {
-      const vertices = new Float64Array(9);
-      for (let vertex = 0; vertex < 3; vertex += 1)
-        transformPointInto(
-          vertices.subarray(vertex * 3, vertex * 3 + 3),
-          record.triangles.subarray(
-            triangle * 9 + vertex * 3,
-            triangle * 9 + vertex * 3 + 3,
-          ),
-          pose,
-        );
-      const center = new Float64Array([
-        (vertices[0]! + vertices[3]! + vertices[6]!) / 3,
-        (vertices[1]! + vertices[4]! + vertices[7]!) / 3,
-        (vertices[2]! + vertices[5]! + vertices[8]!) / 3,
-      ]);
-      return {
-        sourceId: record.sourceTriangleIds[triangle]!,
-        shape: {
-          kind: "hull" as const,
-          center,
-          vertices,
-          faces: new Uint32Array(0),
-        },
-      };
+  const vertices = new Float64Array(9);
+  for (let vertex = 0; vertex < 3; vertex += 1)
+    transformPointInto(
+      vertices.subarray(vertex * 3, vertex * 3 + 3),
+      record.triangles.subarray(
+        triangle * 9 + vertex * 3,
+        triangle * 9 + vertex * 3 + 3,
+      ),
+      pose,
+    );
+  const center = new Float64Array([
+    (vertices[0]! + vertices[3]! + vertices[6]!) / 3,
+    (vertices[1]! + vertices[4]! + vertices[7]!) / 3,
+    (vertices[2]! + vertices[5]! + vertices[8]!) / 3,
+  ]);
+  return {
+    sourceId: record.sourceTriangleIds[triangle]!,
+    shape: {
+      kind: "hull",
+      center,
+      vertices,
+      faces: new Uint32Array(0),
     },
+  };
+}
+
+interface PairBounds3D {
+  readonly minimum: readonly [number, number, number];
+  readonly maximum: readonly [number, number, number];
+}
+
+function preparedConvexBounds(shape: PreparedConvexShape3D): PairBounds3D {
+  const minimum = [0, 0, 0] as [number, number, number];
+  const maximum = [0, 0, 0] as [number, number, number];
+  const point = new Float64Array(3);
+  for (let axis = 0; axis < 3; axis += 1) {
+    const direction = [0, 0, 0];
+    direction[axis] = -1;
+    supportShape3D(point, shape, direction[0]!, direction[1]!, direction[2]!);
+    minimum[axis] = point[axis]!;
+    direction[axis] = 1;
+    supportShape3D(point, shape, direction[0]!, direction[1]!, direction[2]!);
+    maximum[axis] = point[axis]!;
+  }
+  return { minimum, maximum };
+}
+
+function preparedBvhNodeBounds(
+  shape: PreparedConcaveShape3D,
+  node: number,
+): PairBounds3D {
+  const pose = composePose3D(shape.pose, shape.record.localPose);
+  const localMinimum = shape.record.bvh.minimum.subarray(
+    node * 3,
+    node * 3 + 3,
   );
-  return result.sort((left, right) => left.sourceId - right.sourceId);
+  const localMaximum = shape.record.bvh.maximum.subarray(
+    node * 3,
+    node * 3 + 3,
+  );
+  const minimum = [Infinity, Infinity, Infinity] as [number, number, number];
+  const maximum = [-Infinity, -Infinity, -Infinity] as [number, number, number];
+  const local = new Float64Array(3);
+  const world = new Float64Array(3);
+  for (let corner = 0; corner < 8; corner += 1) {
+    for (let axis = 0; axis < 3; axis += 1)
+      local[axis] =
+        (corner & (1 << axis)) === 0
+          ? localMinimum[axis]!
+          : localMaximum[axis]!;
+    transformPointInto(world, local, pose);
+    for (let axis = 0; axis < 3; axis += 1) {
+      minimum[axis] = Math.min(minimum[axis]!, world[axis]!);
+      maximum[axis] = Math.max(maximum[axis]!, world[axis]!);
+    }
+  }
+  return { minimum, maximum };
+}
+
+function bvhChildren(
+  record: Extract<ShapeRecord3D, { kind: "triangleMesh" | "heightfield" }>,
+  node: number,
+): readonly number[] {
+  return [record.bvh.left[node]!, record.bvh.right[node]!]
+    .filter((child) => child >= 0)
+    .sort((left, right) => left - right);
+}
+
+function aabbDistance(first: PairBounds3D, second: PairBounds3D): number {
+  let squared = 0;
+  for (let axis = 0; axis < 3; axis += 1) {
+    const gap =
+      first.maximum[axis]! < second.minimum[axis]!
+        ? second.minimum[axis]! - first.maximum[axis]!
+        : second.maximum[axis]! < first.minimum[axis]!
+          ? first.minimum[axis]! - second.maximum[axis]!
+          : 0;
+    squared += gap * gap;
+  }
+  return Math.sqrt(squared);
+}
+
+function pointAabbDistance(
+  point: ArrayLike<number>,
+  bounds: PairBounds3D,
+): number {
+  let squared = 0;
+  for (let axis = 0; axis < 3; axis += 1) {
+    const gap =
+      point[axis]! < bounds.minimum[axis]!
+        ? bounds.minimum[axis]! - point[axis]!
+        : point[axis]! > bounds.maximum[axis]!
+          ? point[axis]! - bounds.maximum[axis]!
+          : 0;
+    squared += gap * gap;
+  }
+  return Math.sqrt(squared);
+}
+
+function rayAabbEntry(
+  origin: ArrayLike<number>,
+  direction: ArrayLike<number>,
+  bounds: PairBounds3D,
+): number | null {
+  let enter = 0;
+  let exit = Infinity;
+  for (let axis = 0; axis < 3; axis += 1) {
+    const delta = direction[axis]!;
+    if (delta === 0) {
+      if (
+        origin[axis]! < bounds.minimum[axis]! ||
+        origin[axis]! > bounds.maximum[axis]!
+      )
+        return null;
+      continue;
+    }
+    let first = (bounds.minimum[axis]! - origin[axis]!) / delta;
+    let second = (bounds.maximum[axis]! - origin[axis]!) / delta;
+    if (first > second) [first, second] = [second, first];
+    enter = Math.max(enter, first);
+    exit = Math.min(exit, second);
+    if (enter > exit) return null;
+  }
+  return exit >= 0 ? enter : null;
 }
 
 export function collideConvexShapes3D(
@@ -604,8 +885,15 @@ export function collideConvexShapes3D(
       gjk.simplex,
       iterationLimits.epa,
     );
-    if (epa.status === "failed") return { status: "failed", reason: "epa" };
-    distance = { ...epa };
+    if (epa.status === "failed") {
+      if (iterationLimits.epa !== undefined)
+        return { status: "failed", reason: "epa" };
+      distance = directionalPenetration(
+        normalized.first,
+        normalized.second,
+        fallback,
+      );
+    } else distance = { ...epa };
   } else {
     const normalLength = Math.hypot(gjk.normalX, gjk.normalY, gjk.normalZ);
     distance = {
@@ -631,6 +919,51 @@ export function collideConvexShapes3D(
   return rescaled === null
     ? { status: "failed", reason: gjk.status === "penetrating" ? "epa" : "gjk" }
     : { status: "success", distance: rescaled };
+}
+
+function directionalPenetration(
+  first: PreparedConvexShape3D,
+  second: PreparedConvexShape3D,
+  direction: ArrayLike<number>,
+): PrivatePairDistance3D {
+  const length = Math.hypot(direction[0]!, direction[1]!, direction[2]!);
+  const normal =
+    length > 0
+      ? [direction[0]! / length, direction[1]! / length, direction[2]! / length]
+      : [1, 0, 0];
+  const firstPoint = new Float64Array(3);
+  const secondPoint = new Float64Array(3);
+  const firstFeature = supportShape3D(
+    firstPoint,
+    first,
+    -normal[0]!,
+    -normal[1]!,
+    -normal[2]!,
+  );
+  const secondFeature = supportShape3D(
+    secondPoint,
+    second,
+    normal[0]!,
+    normal[1]!,
+    normal[2]!,
+  );
+  return {
+    separation:
+      (firstPoint[0]! - secondPoint[0]!) * normal[0]! +
+      (firstPoint[1]! - secondPoint[1]!) * normal[1]! +
+      (firstPoint[2]! - secondPoint[2]!) * normal[2]!,
+    firstX: firstPoint[0]!,
+    firstY: firstPoint[1]!,
+    firstZ: firstPoint[2]!,
+    secondX: secondPoint[0]!,
+    secondY: secondPoint[1]!,
+    secondZ: secondPoint[2]!,
+    normalX: normal[0]!,
+    normalY: normal[1]!,
+    normalZ: normal[2]!,
+    firstFeature,
+    secondFeature,
+  };
 }
 
 function normalizeConvexPair(
@@ -915,11 +1248,15 @@ function preparedCenter(shape: PreparedShape3D): Float64Array {
 }
 
 function containsConcavePoint(
-  shape: PreparedShape3D,
+  shape: PreparedConcaveShape3D,
   point: Float64Array,
 ): boolean {
-  const triangles = preparedTriangles(shape);
-  for (const triangle of triangles) {
+  for (const triangleIndex of pointCandidateTriangles(
+    shape,
+    point,
+    GEOMETRY_EPSILON_3D,
+  )) {
+    const triangle = preparedTriangle(shape, triangleIndex);
     const a = triangle.shape.vertices.subarray(0, 3);
     const b = triangle.shape.vertices.subarray(3, 6);
     const c = triangle.shape.vertices.subarray(6, 9);
@@ -937,13 +1274,88 @@ function containsConcavePoint(
     return false;
   let crossings = 0;
   const direction = [1, 0.3713906763541037, 0.17320508075688773] as const;
-  for (const triangle of triangles) {
+  for (const triangleIndex of rayCandidateTriangles(shape, point, direction)) {
+    const triangle = preparedTriangle(shape, triangleIndex);
     const a = triangle.shape.vertices.subarray(0, 3);
     const b = triangle.shape.vertices.subarray(3, 6);
     const c = triangle.shape.vertices.subarray(6, 9);
     if (rayTriangleTime(point, direction, a, b, c) !== null) crossings += 1;
   }
   return crossings % 2 === 1;
+}
+
+function pointCandidateTriangles(
+  shape: PreparedConcaveShape3D,
+  point: ArrayLike<number>,
+  maximumDistance: number,
+): readonly number[] {
+  const queue: Array<Readonly<{ node: number; lower: number }>> = [
+    {
+      node: 0,
+      lower: pointAabbDistance(point, preparedBvhNodeBounds(shape, 0)),
+    },
+  ];
+  const result: number[] = [];
+  while (queue.length > 0) {
+    queue.sort(
+      (left, right) => left.lower - right.lower || left.node - right.node,
+    );
+    const candidate = queue.shift()!;
+    if (candidate.lower > maximumDistance) break;
+    const leaf = shape.record.bvh.triangle[candidate.node]!;
+    if (leaf >= 0) {
+      result.push(leaf);
+      continue;
+    }
+    for (const child of bvhChildren(shape.record, candidate.node)) {
+      queue.push({
+        node: child,
+        lower: pointAabbDistance(point, preparedBvhNodeBounds(shape, child)),
+      });
+    }
+  }
+  return result.sort(
+    (left, right) =>
+      shape.record.sourceTriangleIds[left]! -
+      shape.record.sourceTriangleIds[right]!,
+  );
+}
+
+function rayCandidateTriangles(
+  shape: PreparedConcaveShape3D,
+  origin: ArrayLike<number>,
+  direction: ArrayLike<number>,
+): readonly number[] {
+  const rootEntry = rayAabbEntry(
+    origin,
+    direction,
+    preparedBvhNodeBounds(shape, 0),
+  );
+  if (rootEntry === null) return [];
+  const queue: Array<Readonly<{ node: number; entry: number }>> = [
+    { node: 0, entry: rootEntry },
+  ];
+  const result: number[] = [];
+  while (queue.length > 0) {
+    queue.sort(
+      (left, right) => left.entry - right.entry || left.node - right.node,
+    );
+    const candidate = queue.shift()!;
+    const leaf = shape.record.bvh.triangle[candidate.node]!;
+    if (leaf >= 0) {
+      result.push(leaf);
+      continue;
+    }
+    for (const child of bvhChildren(shape.record, candidate.node)) {
+      const entry = rayAabbEntry(
+        origin,
+        direction,
+        preparedBvhNodeBounds(shape, child),
+      );
+      if (entry !== null) queue.push({ node: child, entry });
+    }
+  }
+  return result;
 }
 
 function pointInTriangle(
