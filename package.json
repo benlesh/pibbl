@@ -19,6 +19,7 @@
     "test:smoke:built": "corepack pnpm@11.21.0 build && vitest run packages/core/test/smoke-scenario.test.ts --mode built --browser.headless --browser.ui=false",
     "test:package-consumer": "corepack pnpm@11.21.0 build && tsc -p playground/package-consumer/tsconfig.bundler.json && tsc -p playground/package-consumer/tsconfig.nodenext.json && node playground/package-consumer/runtime.mjs",
     "test:package-consumer:packed": "corepack pnpm@11.21.0 build && node tooling/verify-packed-consumer.mjs",
+    "test:webgl-friend:packed": "corepack pnpm@11.21.0 -C packages/types run build && corepack pnpm@11.21.0 -C packages/core run build && corepack pnpm@11.21.0 -C packages/webgl run build && node tooling/verify-packed-webgl-friend.mjs",
     "test:visual-safeguard": "node tooling/verify-visual-safeguard.mjs",
     "test:studio-visual": "corepack pnpm@11.21.0 playground:build && node tooling/verify-diagram-editor-teaser.mjs && node tooling/verify-studio-visuals.mjs",
     "test:studio-visual:update": "corepack pnpm@11.21.0 playground:build && node tooling/verify-diagram-editor-teaser.mjs --update && node tooling/verify-studio-visuals.mjs --update",
