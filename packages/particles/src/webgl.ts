@@ -1,4 +1,5 @@
 export { defineParticleEffect3D } from './lib/webgl-definition.js';
+export { Particles3D } from './lib/webgl/component.js';
 
 export type {
   CRCParticleBounds3D,

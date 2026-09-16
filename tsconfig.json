@@ -13,6 +13,7 @@
       "@crc/core": ["./packages/core/src/index.ts"],
       "@crc/particles": ["./packages/particles/src/index.ts"],
       "@crc/particles/webgl": ["./packages/particles/src/webgl.ts"],
+      "@crc/webgl/internal": ["./packages/webgl/src/internal.ts"],
       "@crc/webgl": ["./packages/webgl/src/index.ts"],
       "@crc/types": ["./packages/types/src/index.ts"],
       "virtual:crc-studio-docs": ["./playground/src/studio-docs.d.ts"]
