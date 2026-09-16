@@ -5,7 +5,11 @@ import type {
 import { crc, signal, type CRCController } from "@crc/core";
 import { Cube, Group3D, Sphere, WebGLLayer } from "@crc/webgl";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { WebGLLayerController } from "../../../../../webgl/src/lib/layer-controller.js";
+import { executeRender } from "../../../../../core/src/lib/execute-render.js";
+import {
+  WebGLLayerController,
+  resolveWebGLLayerSurface,
+} from "../../../../../webgl/src/lib/layer-controller.js";
 import type { CRCPhysicsPose3D } from "../../../3d-geometry.js";
 import {
   PhysicsWorld3D,
@@ -17,10 +21,14 @@ import {
   type CRCPhysicsWorldHandle3D,
 } from "../../../3d.js";
 import {
+  PhysicsWorld3DController,
   requirePhysicsWorld3DController,
   snapshotPhysicsWorld3DControllerForTest,
 } from "../runtime/controller.js";
-import { snapshotPhysicsBodyFrames3DForTest } from "../runtime/descriptors.js";
+import {
+  MountedPhysicsAttachment3D,
+  snapshotPhysicsBodyFrames3DForTest,
+} from "../runtime/descriptors.js";
 import { requireShapeRecord3D } from "../shape-records.js";
 import { inferWebGLColliderShape3D } from "./inference.js";
 import {
@@ -404,6 +412,199 @@ describe("mounted WebGL 3D physics integration", () => {
     expect(after.colliderIds).toEqual(before.colliderIds);
     expect(after.kernel.bodies).toEqual(before.kernel.bodies);
     expect(body.position.get()).toEqual([2, 3, 4]);
+  });
+
+  it("adopts only the latest body presentation when one transaction supersedes its WebGL child draft", () => {
+    const finishRender = vi.spyOn(
+      PhysicsWorld3DController.prototype as unknown as {
+        finishRender(success: boolean): void;
+      },
+      "finishRender",
+    );
+    const frames = new ManualFrames();
+    frames.install();
+    let world!: CRCPhysicsWorldHandle3D;
+    const Capture = () => {
+      world = crcPhysicsWorld3D();
+      return undefined;
+    };
+    const scene = (translateX: number) => (
+      <PhysicsWorld3D gravity={[0, 0, 0]}>
+        <Capture />
+        <Cube
+          physics={dynamicBody3D({ mass: 1, collider: false })}
+          style={{ translateX }}
+        />
+      </PhysicsWorld3D>
+    );
+    const first = scene(1);
+    const latest = scene(2);
+    const canvas = document.createElement("canvas");
+    canvas.width = 100;
+    canvas.height = 100;
+    document.body.appendChild(canvas);
+    mounts.push(crc(canvas, undefined));
+    const surface = resolveWebGLLayerSurface(100, 100, { x: 1, y: 1 });
+    const layer = new WebGLLayerController(
+      canvas,
+      first,
+      undefined,
+      surface,
+    );
+    const RenderPair = () => {
+      layer.renderUpdatedChild(first, undefined, surface, 1);
+      layer.renderUpdatedChild(latest, undefined, surface, 1);
+      return undefined;
+    };
+    const RenderLatest = () => {
+      layer.renderUpdatedChild(latest, undefined, surface, 2);
+      return undefined;
+    };
+    const RenderSuperseded = () => {
+      layer.renderUpdatedChild(first, undefined, surface, 3);
+      return undefined;
+    };
+
+    try {
+      expect(() => executeRender(canvas, 1, <RenderPair />)).not.toThrow();
+      expect(finishRender).toHaveBeenCalledOnce();
+      expect(snapshotPhysicsWorld3DControllerForTest(
+        requirePhysicsWorld3DController(world),
+      ).bodyIds).toHaveLength(1);
+
+      expect(() => executeRender(canvas, 2, <RenderLatest />)).not.toThrow();
+      expect(finishRender).toHaveBeenCalledTimes(2);
+      expect(() => executeRender(canvas, 3, <RenderSuperseded />)).toThrow(
+        /authored pose changed.*dynamic body owns pose.*teleportBody3D/i,
+      );
+      expect(finishRender).toHaveBeenCalledTimes(2);
+    } finally {
+      layer.dispose();
+    }
+  });
+
+  it("adopts neither body presentation when a superseded WebGL child transaction fails", () => {
+    const finishRender = vi.spyOn(
+      PhysicsWorld3DController.prototype as unknown as {
+        finishRender(success: boolean): void;
+      },
+      "finishRender",
+    );
+    const frames = new ManualFrames();
+    frames.install();
+    const failure = new Error("superseded WebGL body traversal failed");
+    const scene = (translateX: number) => (
+      <PhysicsWorld3D gravity={[0, 0, 0]}>
+        <Cube
+          physics={dynamicBody3D({ mass: 1, collider: false })}
+          style={{ translateX }}
+        />
+      </PhysicsWorld3D>
+    );
+    const first = scene(10);
+    const superseding = scene(20);
+    const recovery = scene(30);
+    const canvas = document.createElement("canvas");
+    canvas.width = 100;
+    canvas.height = 100;
+    document.body.appendChild(canvas);
+    mounts.push(crc(canvas, undefined));
+    const surface = resolveWebGLLayerSurface(100, 100, { x: 1, y: 1 });
+    const layer = new WebGLLayerController(
+      canvas,
+      first,
+      undefined,
+      surface,
+    );
+    const FailAfterPair = () => {
+      layer.renderUpdatedChild(first, undefined, surface, 1);
+      layer.renderUpdatedChild(superseding, undefined, surface, 1);
+      throw failure;
+    };
+    const RenderRecovery = () => {
+      layer.renderUpdatedChild(recovery, undefined, surface, 2);
+      return undefined;
+    };
+
+    try {
+      expect(() => executeRender(canvas, 1, <FailAfterPair />)).toThrow(
+        failure,
+      );
+      expect(finishRender).toHaveBeenCalledOnce();
+      expect(() => executeRender(canvas, 2, <RenderRecovery />)).not.toThrow();
+      expect(finishRender).toHaveBeenCalledTimes(2);
+    } finally {
+      layer.dispose();
+    }
+  });
+
+  it("clears committed body presentation state when the body is removed and disposed", () => {
+    const originalDispose = MountedPhysicsAttachment3D.prototype.dispose;
+    let removed: MountedPhysicsAttachment3D | undefined;
+    vi.spyOn(MountedPhysicsAttachment3D.prototype, "dispose")
+      .mockImplementation(function disposeAndCapture() {
+        removed = this;
+        originalDispose.call(this);
+      });
+    const frames = new ManualFrames();
+    frames.install();
+    let world!: CRCPhysicsWorldHandle3D;
+    const Capture = () => {
+      world = crcPhysicsWorld3D();
+      return undefined;
+    };
+    const populated = (
+      <PhysicsWorld3D gravity={[0, 0, 0]}>
+        <Capture />
+        <Cube
+          physics={dynamicBody3D({ mass: 1, collider: false })}
+          style={{ translateX: 7 }}
+        />
+      </PhysicsWorld3D>
+    );
+    const empty = (
+      <PhysicsWorld3D gravity={[0, 0, 0]}>
+        <Capture />
+      </PhysicsWorld3D>
+    );
+    const canvas = document.createElement("canvas");
+    canvas.width = 100;
+    canvas.height = 100;
+    document.body.appendChild(canvas);
+    mounts.push(crc(canvas, undefined));
+    const surface = resolveWebGLLayerSurface(100, 100, { x: 1, y: 1 });
+    const layer = new WebGLLayerController(
+      canvas,
+      populated,
+      undefined,
+      surface,
+    );
+    const RenderPopulated = () => {
+      layer.renderUpdatedChild(populated, undefined, surface, 1);
+      return undefined;
+    };
+    const RenderEmpty = () => {
+      layer.renderUpdatedChild(empty, undefined, surface, 2);
+      return undefined;
+    };
+
+    try {
+      executeRender(canvas, 1, <RenderPopulated />);
+      executeRender(canvas, 2, <RenderEmpty />);
+      expect(snapshotPhysicsWorld3DControllerForTest(
+        requirePhysicsWorld3DController(world),
+      ).bodyIds).toEqual([]);
+      expect(removed).toBeDefined();
+      expect(removed as unknown as {
+        bodyPresentation?: unknown;
+        wasEnabled: boolean;
+      }).toMatchObject({
+        bodyPresentation: undefined,
+        wasEnabled: false,
+      });
+    } finally {
+      layer.dispose();
+    }
   });
 
   it("returns body frame records to baseline across removal, failure, and dispose", () => {

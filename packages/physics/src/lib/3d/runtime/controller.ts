@@ -80,6 +80,7 @@ import {
   type MountedPhysicsAttachment3D,
   type NormalizedPhysicsColliderConfiguration3D,
   type PhysicsBodyAttachment3DDescriptor,
+  type PhysicsBodyPresentationState3D,
 } from "./descriptors.js";
 
 const worldController3DSymbol = Symbol("PhysicsWorld3DController");
@@ -94,6 +95,7 @@ interface BodyDraft3D {
   readonly attachment: MountedPhysicsAttachment3D;
   readonly descriptor: PhysicsBodyAttachment3DDescriptor;
   readonly initialPose: CRCPhysicsPose3D;
+  readonly presentationState: PhysicsBodyPresentationState3D | undefined;
 }
 
 interface ColliderDraft3D {
@@ -253,6 +255,7 @@ export class PhysicsWorld3DController {
     bodyId: number,
     descriptor: PhysicsBodyAttachment3DDescriptor,
     initialPose: CRCPhysicsPose3D = ZERO_POSE_3D,
+    presentationState?: PhysicsBodyPresentationState3D,
   ): void {
     const draft = this.requireDraft();
     draft.bodies.set(bodyId, {
@@ -260,6 +263,7 @@ export class PhysicsWorld3DController {
       attachment,
       descriptor,
       initialPose: copyPhysicsPose3D(initialPose),
+      presentationState,
     });
     const collider = descriptor.options.collider;
     if (
@@ -562,6 +566,7 @@ export class PhysicsWorld3DController {
       removedTargetCommands.length === 0
     ) {
       if (changedKinematicTarget) this.ensureAdvance();
+      this.adoptBodyPresentationStates(nextBodies);
       return;
     }
     this.acceptedTopology = topology;
@@ -585,6 +590,15 @@ export class PhysicsWorld3DController {
       }
     });
     this.ensureAdvance();
+    this.adoptBodyPresentationStates(nextBodies);
+  }
+
+  private adoptBodyPresentationStates(bodies: readonly BodyDraft3D[]): void {
+    for (const body of bodies) {
+      if (body.presentationState !== undefined) {
+        body.attachment.adoptBodyPresentationState(body.presentationState);
+      }
+    }
   }
 
   private ensureAdvance(): void {

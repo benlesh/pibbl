@@ -62,6 +62,11 @@ interface OwnedBodyFrame3D {
   readonly frame: WebGLBodyFrame3D;
 }
 
+export interface PhysicsBodyPresentationState3D {
+  readonly presentation: WebGLBodyPresentationCapture3D;
+  readonly enabled: boolean;
+}
+
 const bodyFramesByWorld3D = new WeakMap<object, Map<number, OwnedBodyFrame3D>>();
 
 export function snapshotPhysicsBodyFrames3DForTest(
@@ -319,17 +324,16 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
       const descriptor = this.descriptor;
       const enabled = descriptor.options.enabled;
       const reenabled = !this.wasEnabled && enabled;
-      if (
+      const presentation = (
         this.bodyPresentation === undefined ||
         reenabled ||
         descriptor.bodyType !== "dynamic"
-      ) {
-        this.bodyPresentation = captureWebGLBodyPresentation3D(
+      )
+        ? captureWebGLBodyPresentation3D(
           facts,
           input.componentName,
-        );
-      }
-      const presentation = this.bodyPresentation;
+        )
+        : this.bodyPresentation;
       const frame = resolveWebGLBodyFrame3D(
         presentation,
         facts,
@@ -380,8 +384,8 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
         bodyId,
         effectiveDescriptor,
         presentation.initialPose,
+        Object.freeze({ presentation, enabled }),
       );
-      this.wasEnabled = enabled;
     } else {
       const bodyFrame = requireBodyFrame3D(world, bodyId);
       const matrix = resolveWebGLColliderForwardMatrix3D(
@@ -422,7 +426,17 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
   }
 
   dispose(): void {
-    this.exit(false);
+    try {
+      this.exit(false);
+    } finally {
+      this.bodyPresentation = undefined;
+      this.wasEnabled = false;
+    }
+  }
+
+  adoptBodyPresentationState(state: PhysicsBodyPresentationState3D): void {
+    this.bodyPresentation = state.presentation;
+    this.wasEnabled = state.enabled;
   }
 
   resolveShape(options: NormalizedPhysicsColliderConfiguration3D): ShapeRecord3D {
