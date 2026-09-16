@@ -116,7 +116,7 @@ describe('deferred WebGL backend phases', () => {
     expect(frame.environment.state).toBe('closed');
     expect(target.live).toBe(false);
     expect(recording.deleteProgram).toHaveBeenCalledOnce();
-    expect(recording.deleteBuffer).toHaveBeenCalledOnce();
+    expect(recording.deleteBuffer).toHaveBeenCalledTimes(2);
     expect(recording.deleteVertexArray).toHaveBeenCalledOnce();
     expect(driver.hasCompletedFrame()).toBe(false);
     expect(driver.takeFailedFrameTimestamp()).toBe(73);

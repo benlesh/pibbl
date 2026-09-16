@@ -406,6 +406,7 @@ describe('WebGL event integration', () => {
       await nextFrame();
 
       dispatchPointer(canvas, 'pointermove', 50, 50, 21);
+      dispatchMouse(canvas, 'mousemove', 50, 50);
       expect(canvas.style.cursor).toBe('crosshair');
       dispatchPointer(canvas, 'pointerdown', 50, 50, 21);
       dispatchPointer(canvas, 'gotpointercapture', 50, 50, 21);

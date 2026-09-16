@@ -1,9 +1,3 @@
-import {
-  Cube,
-  Group3D,
-  Mesh,
-  createWebGLGeometry,
-} from '../index.js';
 import { crc, createElement, type CRCNode } from '@crc/core';
 import {
   executeBackendCRC,
@@ -12,6 +6,10 @@ import {
 } from '@crc/core/internal';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createWebGLBackend } from './backend.js';
+import { Cube } from './components/cube.js';
+import { Group3D } from './components/group-3d.js';
+import { Mesh } from './components/mesh.js';
+import { createWebGLGeometry } from './geometry/geometry.js';
 import { resolveCamera } from './math/camera.js';
 import {
   commitWebGLPickLedger,

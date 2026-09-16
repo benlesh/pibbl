@@ -76,7 +76,7 @@ describe('backend ownership cleanup', () => {
       bitmaps: transfer.mock.calls.length,
       contextListeners: addContextListener.mock.calls.map(([type]) => type),
     }).toEqual({
-      buffers: 4,
+      buffers: 6,
       programs: 1,
       vertexArrays: 2,
       bitmaps: 1,
@@ -115,7 +115,7 @@ describe('backend ownership cleanup', () => {
       'webglcontextrestored',
     ]);
     expect(deleteProgram).toHaveBeenCalledTimes(1);
-    expect(deleteBuffer).toHaveBeenCalledTimes(4);
+    expect(deleteBuffer).toHaveBeenCalledTimes(6);
     expect(deleteVertexArray).toHaveBeenCalledTimes(2);
     expect(bitmapClose).toHaveBeenCalledOnce();
   });

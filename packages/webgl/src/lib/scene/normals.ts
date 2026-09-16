@@ -63,7 +63,10 @@ export function createSettledNormalMatrix(
         'lit normal matrix must be representable as finite Float32 values.',
       );
     }
-    settled[index] = value;
+    // A zero matrix component has no orientation. Canonicalize signed zero at
+    // the settled Float32 boundary so equivalent transforms produce identical
+    // matrix values regardless of cofactor or determinant sign.
+    settled[index] = value === 0 ? 0 : value;
   }
   return settled;
 }

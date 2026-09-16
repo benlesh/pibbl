@@ -6,8 +6,10 @@ import {
   crcPlayback,
   crcSignal,
   repeat,
+  sequence,
   track,
   tween,
+  wait,
   type CRCController,
 } from '@crc/core';
 import {
@@ -40,14 +42,17 @@ function ConceptDelta({
   const orbit = crcSignal(-35, { debugName: 'transformed light orbit' });
   crcPlayback(
     repeat(
-      track(
-        orbit,
-        tween({
-          from: -35,
-          to: 325,
-          duration: 7_000,
-          debugName: 'transformed light rotation',
-        }),
+      sequence(
+        track(
+          orbit,
+          tween({
+            from: -35,
+            to: 325,
+            duration: 7_000,
+            debugName: 'transformed light rotation',
+          }),
+        ),
+        wait(1),
       ),
       { iterations: Number.POSITIVE_INFINITY },
     ),

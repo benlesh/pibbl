@@ -1154,11 +1154,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 64 unique, ordered, source-backed routes including standard shapes, WebGL, signals, and animation", async () => {
+  it("contains 65 unique, ordered, source-backed routes including standard shapes, WebGL, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(64);
+    expect(learningExampleCatalog).toHaveLength(65);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1547,7 +1547,7 @@ describe("learning example catalog", () => {
     }
   });
 
-  it("contains exactly the eleven same-scene WebGL lighting lessons", async () => {
+  it("contains exactly the twelve same-scene WebGL lighting lessons", async () => {
     const webglLessons = learningExampleCatalog.filter(
       (entry) => entry.section === "webgl",
     );
@@ -1556,7 +1556,7 @@ describe("learning example catalog", () => {
       WEBGL_LIGHTING_EXAMPLE_IDS,
     );
     expect(webglLessons.map((entry) => entry.order)).toEqual([
-      380, 390, 400, 410, 420, 430, 440, 450, 460, 470, 480,
+      380, 390, 400, 410, 420, 430, 440, 450, 460, 470, 480, 490,
     ]);
     expect(webglLessons.map(getLearningExampleRoute)).toEqual(
       WEBGL_LIGHTING_EXAMPLE_IDS.map(

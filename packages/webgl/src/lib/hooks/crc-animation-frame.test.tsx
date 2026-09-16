@@ -40,7 +40,7 @@ describe('crcAnimationFrame', () => {
         tween({ from: 0, to: 10, duration: 100 }),
       ));
       renderedValues.push(output.get());
-      return <Cube pointerEvents="none" />;
+      return <Cube pointerEvents="none" style={{ lit: false }} />;
     }
     const canvas = createCanvas(20, 20);
     const controller = crc(canvas, (
@@ -75,7 +75,7 @@ describe('crcAnimationFrame', () => {
     ).mockImplementation(() => undefined);
     function Animated(): CRCNode {
       childTimestamps.push(crcAnimationFrame());
-      return <Cube pointerEvents="none" />;
+      return <Cube pointerEvents="none" style={{ lit: false }} />;
     }
     function CanvasSibling(): ReturnType<typeof Rectangle> {
       canvasTimestamps.push(getCurrentFrameTimestamp());
@@ -126,7 +126,7 @@ describe('crcAnimationFrame', () => {
     const timestamps: Array<{ key: string; timestamp: number }> = [];
     function Animated({ label }: { label: string }): CRCNode {
       timestamps.push({ key: label, timestamp: crcAnimationFrame() });
-      return <Cube pointerEvents="none" />;
+      return <Cube pointerEvents="none" style={{ lit: false }} />;
     }
     const scene = (key: string) => (
       <WebGLLayer style={{ width: 20, height: 20 }}>
@@ -166,7 +166,7 @@ describe('crcAnimationFrame', () => {
     const parentLabels: string[] = [];
     function Animated(): CRCNode {
       childTimestamps.push(crcAnimationFrame());
-      return <Cube pointerEvents="none" />;
+      return <Cube pointerEvents="none" style={{ lit: false }} />;
     }
     function ParentProbe({ label }: { label: string }): void {
       parentLabels.push(label);
@@ -174,7 +174,9 @@ describe('crcAnimationFrame', () => {
     const scene = (animated: boolean, label: string) => (
       <>
         <WebGLLayer style={{ width: 20, height: 20 }}>
-          {animated ? <Animated /> : <Cube pointerEvents="none" />}
+          {animated ? <Animated /> : (
+            <Cube pointerEvents="none" style={{ lit: false }} />
+          )}
         </WebGLLayer>
         <ParentProbe label={label} />
       </>
@@ -203,7 +205,7 @@ describe('crcAnimationFrame', () => {
     const timestamps: number[] = [];
     function Animated(): CRCNode {
       timestamps.push(crcAnimationFrame());
-      return <Cube pointerEvents="none" />;
+      return <Cube pointerEvents="none" style={{ lit: false }} />;
     }
     const children = (function* oneShotChildren() {
       iterations += 1;
