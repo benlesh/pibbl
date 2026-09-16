@@ -49,7 +49,7 @@ describe("@crc/physics public 3D type surface", () => {
     expect(MAX_CCD_IMPACTS_PER_TICK_3D).toBe(4);
   });
 
-  it("exports only the implemented geometry values from both dimensioned entries", () => {
+  it("exports the implemented geometry and runtime values from both dimensioned entries", () => {
     expect(compileFixture(completeSurfaceFixture)).toBe("");
     expect(
       compileFixture(`
@@ -110,6 +110,12 @@ const completeSurfaceFixture = `
     type CRCPhysicsShapeHit3D,
   } from '@crc/physics/3d/geometry';
   import {
+    PhysicsWorld3D, crcPhysicsWorld3D,
+    dynamicBody3D, staticBody3D, kinematicBody3D, collider3D,
+    crcPhysicsBody3D, applyForce3D, applyImpulse3D, applyTorque3D,
+    setLinearVelocity3D, setAngularVelocity3D, teleportBody3D,
+    wakeBody3D, sleepBody3D, enableBody3D, disableBody3D,
+    raycast3D, shapeCast3D, overlapShape3D, queryAabb3D, queryPoint3D,
     sphereShape3D as sphereFromWorld,
     boxShape3D as boxFromWorld,
     boundsOfShape3D as boundsFromWorld,
@@ -154,19 +160,40 @@ const completeSurfaceFixture = `
   declare const pose: CRCPhysicsPose3D;
   declare const point: CRCPhysicsVector3;
   declare const ray: CRCPhysicsRay3D;
+  declare const bounds: CRCPhysicsAabb3D;
+  declare const bodyHandle: CRCPhysicsBodyHandle3D;
+  declare const worldHandle: CRCPhysicsWorldHandle3D;
   const contains: boolean = containsPoint3D(shape, pose, point);
   const distance: CRCPhysicsDistance3D = distanceBetweenShapes3D(shape, pose, shape, pose);
   const overlap: boolean = overlapShapes3D(shape, pose, shape, pose);
   const contact: CRCPhysicsShapeContact3D | null = contactBetweenShapes3D(shape, pose, shape, pose);
   const rayHit: CRCPhysicsShapeHit3D | null = raycastShape3D(shape, pose, ray, { includeInitialOverlap: true });
   const castHit: CRCPhysicsShapeHit3D | null = shapeCastAgainstShape3D(shape, pose, point, shape, pose);
+  const worldRayHit: CRCPhysicsQueryHit3D | null = raycast3D(worldHandle, ray);
+  const worldCastHit: CRCPhysicsQueryHit3D | null = shapeCast3D(worldHandle, shape, pose, point);
+  const worldOverlap: CRCPhysicsQueryMatch3D | null = overlapShape3D(worldHandle, shape, pose);
+  const worldAabb: CRCPhysicsQueryMatch3D | null = queryAabb3D(worldHandle, bounds);
+  const worldPoint: CRCPhysicsQueryMatch3D | null = queryPoint3D(worldHandle, point);
+  applyForce3D(bodyHandle, point);
+  applyImpulse3D(bodyHandle, point);
+  applyTorque3D(bodyHandle, point);
+  setLinearVelocity3D(bodyHandle, point);
+  setAngularVelocity3D(bodyHandle, point);
+  teleportBody3D(bodyHandle, pose);
+  wakeBody3D(bodyHandle);
+  sleepBody3D(bodyHandle);
+  enableBody3D(bodyHandle);
+  disableBody3D(bodyHandle);
   void [sphereShape3D, boxShape3D, boundsOfShape3D, massProperties3D,
     containsPoint3D, distanceBetweenShapes3D, overlapShapes3D,
     contactBetweenShapes3D, raycastShape3D, shapeCastAgainstShape3D,
     transformShape3D, sphereFromWorld, boxFromWorld, boundsFromWorld,
     massFromWorld, containsFromWorld, distanceFromWorld, overlapFromWorld,
     contactFromWorld, raycastFromWorld, shapeCastFromWorld,
-    transformFromWorld, contains, distance, overlap, contact, rayHit, castHit];
+    transformFromWorld, contains, distance, overlap, contact, rayHit, castHit,
+    PhysicsWorld3D, crcPhysicsWorld3D, dynamicBody3D, staticBody3D,
+    kinematicBody3D, collider3D, crcPhysicsBody3D, worldRayHit, worldCastHit,
+    worldOverlap, worldAabb, worldPoint];
 
   type GeometryTypes = [CRCPhysicsVector3, CRCPhysicsQuaternion,
     CRCPhysicsMatrix3, CRCPhysicsPose3D, CRCPhysicsTransform3D,
@@ -195,13 +222,9 @@ const completeSurfaceFixture = `
   void runtimeTypes;
 
   // Runtime values arrive with their implementations, never as throwing stubs.
-  // @ts-expect-error Task 2 does not export a world component.
-  import { PhysicsWorld3D } from '@crc/physics/3d';
-  // @ts-expect-error Task 2 does not export descriptor factories.
-  import { dynamicBody3D } from '@crc/physics/3d';
-  // @ts-expect-error Task 2 does not export future geometry factories.
+  // @ts-expect-error Task 6 does not export future geometry factories.
   import { ellipsoidShape3D } from '@crc/physics/3d/geometry';
-  void [PhysicsWorld3D, dynamicBody3D, ellipsoidShape3D];
+  void ellipsoidShape3D;
 `;
 
 const nominalFixture = `

@@ -1,6 +1,7 @@
 import {
   boundsOfShape3D,
   type CRCPhysicsPose3D,
+  type CRCPhysicsQuaternion,
   type CRCPhysicsVector3,
 } from "../../../3d-geometry.js";
 import {
@@ -232,6 +233,11 @@ interface ContactEventFact3D {
   readonly pointSecondZ: readonly number[];
   readonly pointSeparations: readonly number[];
   readonly totalNormalImpulse: number;
+}
+
+interface KinematicTrajectory3D {
+  readonly from: PhysicsPose3D;
+  readonly to: PhysicsPose3D;
 }
 
 interface CoordinatorState3D {
@@ -563,10 +569,18 @@ export class PhysicsWorld3DKernel {
             configuration.fixedStepMilliseconds,
         ),
       );
+      const kinematicTrajectories =
+        this.createKinematicTrajectories(input.stagedKinematicTargets);
       for (let step = 0; step < stepCount; step += 1) {
-        this.simulateFixedTick(input, (current) => {
-          stage = current;
-        });
+        this.simulateFixedTick(
+          input,
+          kinematicTrajectories,
+          step,
+          stepCount,
+          (current) => {
+            stage = current;
+          },
+        );
         this.state.accumulatorMilliseconds -=
           configuration.fixedStepMilliseconds;
         if (
@@ -840,13 +854,22 @@ export class PhysicsWorld3DKernel {
       logicalTime: number;
       stagedKinematicTargets: ReadonlyMap<number, PhysicsPose3D>;
     }>,
+    kinematicTrajectories: ReadonlyMap<number, KinematicTrajectory3D>,
+    step: number,
+    stepCount: number,
     setStage: (stage: PhysicsWorld3DFailureStage) => void,
   ): void {
     setStage("broad-phase");
     this.ensureBodyScratchCapacity();
     this.capturePreviousPoses();
     const dt = this.state.configuration.fixedStepMilliseconds / 1_000;
-    this.applyKinematicTargets(input.stagedKinematicTargets, dt);
+    this.applyKinematicTargets(
+      input.stagedKinematicTargets,
+      kinematicTrajectories,
+      step,
+      stepCount,
+      dt,
+    );
     this.rebuildIntegrationBodyIndices();
     integrateCandidateBodies3D(
       this.bodies,
@@ -856,6 +879,11 @@ export class PhysicsWorld3DKernel {
       this.state.configuration.gravityY,
       this.state.configuration.gravityZ,
       dt,
+    );
+    this.snapKinematicTargets(
+      kinematicTrajectories,
+      step,
+      stepCount,
     );
     this.moveBroadPhaseProxies();
     injectFailure("broad-phase");
@@ -1478,9 +1506,12 @@ export class PhysicsWorld3DKernel {
 
   private applyKinematicTargets(
     targets: ReadonlyMap<number, PhysicsPose3D>,
+    trajectories: ReadonlyMap<number, KinematicTrajectory3D>,
+    step: number,
+    stepCount: number,
     dt: number,
   ): void {
-    for (const [bodyId, pose] of sortedEntries(targets)) {
+    for (const [bodyId] of sortedEntries(targets)) {
       const slot = this.state.bodySlots.get(bodyId);
       if (slot === undefined) continue;
       const index = slot.index;
@@ -1490,14 +1521,31 @@ export class PhysicsWorld3DKernel {
       ) {
         continue;
       }
-      const targetOrientation = copyCanonicalQuaternion(
-        pose.orientation,
-        "kinematic target orientation",
+      const trajectory = trajectories.get(bodyId);
+      if (trajectory === undefined) continue;
+      const alpha = (step + 1) / stepCount;
+      const from = trajectory.from;
+      const to = trajectory.to;
+      const targetOrientation = slerpCanonical(
+        from.orientation[0],
+        from.orientation[1],
+        from.orientation[2],
+        from.orientation[3],
+        to.orientation[0],
+        to.orientation[1],
+        to.orientation[2],
+        to.orientation[3],
+        alpha,
       );
+      const targetPosition = Object.freeze([
+        lerp(from.position[0], to.position[0], alpha),
+        lerp(from.position[1], to.position[1], alpha),
+        lerp(from.position[2], to.position[2], alpha),
+      ] as const);
       const targetCenter = centerFromOrigin(
         this.bodies,
         index,
-        pose.position,
+        targetPosition,
         targetOrientation,
       );
       this.bodies.linearVelocityX[index] =
@@ -1508,6 +1556,68 @@ export class PhysicsWorld3DKernel {
         (targetCenter[2]! - this.bodies.positionZ[index]!) / dt;
       writeAngularVelocityToTarget(this.bodies, index, targetOrientation, dt);
       this.wakeCommandBody(index);
+    }
+  }
+
+  private createKinematicTrajectories(
+    targets: ReadonlyMap<number, PhysicsPose3D>,
+  ): ReadonlyMap<number, KinematicTrajectory3D> {
+    const trajectories = new Map<number, KinematicTrajectory3D>();
+    for (const [bodyId, pose] of sortedEntries(targets)) {
+      const slot = this.state.bodySlots.get(bodyId);
+      if (slot === undefined) continue;
+      const index = slot.index;
+      if (
+        (this.bodies.flags[index]! & BODY_TYPE_MASK_3D) !==
+        BODY_TYPE_KINEMATIC_3D
+      ) {
+        continue;
+      }
+      trajectories.set(
+        bodyId,
+        Object.freeze({
+          from: this.authoritativePose(bodyId),
+          to: copyKinematicTargetPose(pose),
+        }),
+      );
+    }
+    return trajectories;
+  }
+
+  private snapKinematicTargets(
+    trajectories: ReadonlyMap<number, KinematicTrajectory3D>,
+    step: number,
+    stepCount: number,
+  ): void {
+    const alpha = (step + 1) / stepCount;
+    for (const [bodyId, trajectory] of sortedEntries(trajectories)) {
+      const slot = this.state.bodySlots.get(bodyId);
+      if (slot === undefined) continue;
+      const index = slot.index;
+      if (
+        (this.bodies.flags[index]! & BODY_TYPE_MASK_3D) !==
+        BODY_TYPE_KINEMATIC_3D
+      ) {
+        continue;
+      }
+      this.setBodyOriginPose(index, {
+        position: Object.freeze([
+          lerp(trajectory.from.position[0], trajectory.to.position[0], alpha),
+          lerp(trajectory.from.position[1], trajectory.to.position[1], alpha),
+          lerp(trajectory.from.position[2], trajectory.to.position[2], alpha),
+        ] as const),
+        orientation: slerpCanonical(
+          trajectory.from.orientation[0],
+          trajectory.from.orientation[1],
+          trajectory.from.orientation[2],
+          trajectory.from.orientation[3],
+          trajectory.to.orientation[0],
+          trajectory.to.orientation[1],
+          trajectory.to.orientation[2],
+          trajectory.to.orientation[3],
+          alpha,
+        ) as unknown as CRCPhysicsQuaternion,
+      });
     }
   }
 
@@ -2250,6 +2360,30 @@ function validatePose(pose: PhysicsPose3D, path: string): void {
   copyCanonicalQuaternion(pose.orientation, `${path}.orientation`);
 }
 
+function copyKinematicTargetPose(pose: PhysicsPose3D): PhysicsPose3D {
+  const position = copyFiniteVector3(
+    pose.position,
+    "staged kinematic pose.position",
+  );
+  const orientation = copyCanonicalQuaternion(
+    pose.orientation,
+    "staged kinematic pose.orientation",
+  );
+  return Object.freeze({
+    position: Object.freeze([
+      position[0]!,
+      position[1]!,
+      position[2]!,
+    ] as const),
+    orientation: Object.freeze([
+      orientation[0]!,
+      orientation[1]!,
+      orientation[2]!,
+      orientation[3]!,
+    ] as const),
+  });
+}
+
 function validateId(value: number, path: string): void {
   if (!Number.isSafeInteger(value) || value < 0) {
     throw new RangeError(`${path} must be a nonnegative safe integer.`);
@@ -2428,13 +2562,13 @@ function publicOriginPoseFromCenter(
       cleanZero(centerX - offset[0]!),
       cleanZero(centerY - offset[1]!),
       cleanZero(centerZ - offset[2]!),
-    ]),
+    ] as const),
     orientation: Object.freeze([
       cleanZero(orientation[0]!),
       cleanZero(orientation[1]!),
       cleanZero(orientation[2]!),
       cleanZero(orientation[3]!),
-    ]),
+    ] as const),
   });
 }
 

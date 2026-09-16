@@ -1,6 +1,5 @@
 import type {
   CRCPhysicsPose3D,
-  CRCPhysicsShape3D,
 } from "../../../3d-geometry.js";
 import { shapeCastAgainstShape3D } from "../collision/casts.js";
 import {

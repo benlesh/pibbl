@@ -1,0 +1,564 @@
+import {
+  crc,
+  signal,
+  type CRCController,
+  type CRCNode,
+  type WritableSignal,
+} from "@crc/core";
+import {
+  crcInternalCurrentSimulationOwner,
+  crcInternalRegisterSimulationAdvance,
+  useInternalHookSlot,
+} from "@crc/core/internal";
+import { Group3D, WebGLLayer } from "@crc/webgl";
+import {
+  PhysicsWorld3D,
+  crcPhysicsWorld3D,
+  dynamicBody3D,
+  kinematicBody3D,
+  queryPoint3D,
+  staticBody3D,
+  type CRCPhysicsWorldHandle3D,
+} from "../../../3d.js";
+import { sphereShape3D } from "../../../3d-geometry.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  BODY_ENABLED_3D,
+  BODY_TYPE_KINEMATIC_3D,
+} from "../world/storage.js";
+import {
+  installPhysicsWorld3DFailureInjectorForTest,
+  PhysicsWorld3DKernel,
+  type PhysicsTopologyRecord3D,
+} from "../world/world.js";
+import {
+  requirePhysicsWorld3DController,
+  snapshotPhysicsWorld3DControllerForTest,
+} from "./controller.js";
+
+let frames: ManualFrames;
+const mounts: CRCController[] = [];
+
+beforeEach(() => {
+  document.body.innerHTML = "";
+  frames = new ManualFrames();
+  frames.install();
+});
+
+afterEach(() => {
+  for (const mount of mounts.splice(0)) mount.dispose();
+  vi.restoreAllMocks();
+});
+
+describe("PhysicsWorld3D controller scheduling and topology", () => {
+  it("interpolates one accepted kinematic target across every catch-up tick", () => {
+    // Production break caught: forwarding one final target pose to every fixed
+    // tick jumps to the target on tick one instead of traversing the accepted
+    // previous-to-current sample over the frame's four ticks.
+    const world = new PhysicsWorld3DKernel({
+      gravity: [0, 0, 0],
+      fixedStepMilliseconds: 10,
+      maxCatchUpSteps: 4,
+      sleeping: false,
+    });
+    world.proposeTopology([kinematicBody(1)]);
+    const mounted = world.advance({
+      frameId: 1,
+      logicalTime: 0,
+      stagedKinematicTargets: new Map([
+        [
+          1,
+          {
+            position: [4, 0, 0],
+            orientation: [0, 0, 0, 1],
+          },
+        ],
+      ]),
+    });
+    world.adopt(mounted);
+
+    const positionsAfterTicks: number[] = [];
+    const restore = installPhysicsWorld3DFailureInjectorForTest((stage) => {
+      if (stage === "broad-phase") {
+        positionsAfterTicks.push(world.snapshot().bodies[0]!.positionX);
+      }
+    });
+    try {
+      const candidate = world.advance({
+        frameId: 2,
+        logicalTime: 40,
+        stagedKinematicTargets: new Map([
+          [
+            1,
+            {
+              position: [4, 0, 0],
+              orientation: [0, 0, 0, 1],
+            },
+          ],
+        ]),
+      });
+      world.adopt(candidate);
+    } finally {
+      restore();
+      world.dispose();
+    }
+
+    expect(positionsAfterTicks).toEqual([1, 2, 3, 4]);
+  });
+
+  it("owns one world registration for multiple bodies and rolls failed traversal back", () => {
+    let world!: CRCPhysicsWorldHandle3D;
+    const Capture = () => {
+      world = crcPhysicsWorld3D();
+      return undefined;
+    };
+    const failure = new Error("topology traversal failed");
+    const Throw = () => {
+      throw failure;
+    };
+    const failed = mountWebGL(
+      <PhysicsWorld3D>
+        <Capture />
+        <Group3D physics={dynamicBody3D({ mass: 1, collider: false })} />
+        <Throw />
+      </PhysicsWorld3D>,
+    );
+    expect(() => frames.flush(0)).toThrow(failure);
+    expect(() => requirePhysicsWorld3DController(world).snapshot()).toThrow(
+      /disposed/i,
+    );
+    failed.dispose();
+
+    mountWebGL(
+      <PhysicsWorld3D gravity={[0, 0, 0]}>
+        <Capture />
+        <Group3D physics={dynamicBody3D({ mass: 1, collider: false })} />
+        <Group3D physics={dynamicBody3D({ mass: 1, collider: false })} />
+      </PhysicsWorld3D>,
+    );
+    frames.flush(1);
+    expect(snapshot(world)).toMatchObject({
+      advanceRegistered: true,
+      bodyIds: [0, 1],
+    });
+    frames.flush(1);
+    expect(snapshot(world).kernel.bodyCount).toBe(2);
+  });
+
+  it("composes sparse position and orientation targets from committed pose", () => {
+    const position = signal<readonly [number, number, number]>([0, 0, 0]);
+    const orientation = signal<readonly [number, number, number, number]>([0, 0, 0, 1]);
+    let world!: CRCPhysicsWorldHandle3D;
+    const Capture = () => {
+      world = crcPhysicsWorld3D();
+      return undefined;
+    };
+    mountWebGL(
+      <PhysicsWorld3D gravity={[0, 0, 0]} fixedStepMilliseconds={10} sleeping={false}>
+        <Capture />
+        <Group3D physics={kinematicBody3D({ target: { position }, collider: false })} />
+        <Group3D physics={kinematicBody3D({ target: { orientation }, collider: false })} />
+        <Group3D physics={dynamicBody3D({ mass: 1, collider: false })} />
+      </PhysicsWorld3D>,
+    );
+    frames.flush(0);
+    frames.flush(0);
+    position.set([2, 3, 4]);
+    orientation.set([0, 0, 1, 0]);
+    frames.flush(10);
+    expect(snapshot(world).advanceRegistered).toBe(true);
+    frames.flush(20);
+
+    const bodies = snapshot(world).kernel.bodies;
+    expect(bodies[0]).toMatchObject({
+      positionX: 2,
+      positionY: 3,
+      positionZ: 4,
+      orientationX: 0,
+      orientationY: 0,
+      orientationZ: 0,
+      orientationW: 1,
+    });
+    expect(bodies[1]).toMatchObject({
+      positionX: 0,
+      positionY: 0,
+      positionZ: 0,
+      orientationX: 0,
+      orientationY: 0,
+      orientationZ: 1,
+      orientationW: 0,
+    });
+  });
+
+  it("keeps one registration while a kinematic target binding can produce a later sample", () => {
+    // Production break caught: releasing the participant when the current
+    // target is reached leaves a later write to the same unobserved binding
+    // with no frame or descriptor change capable of waking physics.
+    const position = signal<readonly [number, number, number]>([1, 0, 0]);
+    let world!: CRCPhysicsWorldHandle3D;
+    const Body = () => {
+      world = crcPhysicsWorld3D();
+      return <Group3D physics={kinematicBody3D({
+        target: { position },
+        collider: false,
+      })} />;
+    };
+    mountWebGL(
+      <PhysicsWorld3D gravity={[0, 0, 0]} fixedStepMilliseconds={10}>
+        <Body />
+      </PhysicsWorld3D>,
+    );
+    frames.flush(0);
+    frames.flush(10);
+    frames.flush(20);
+    expect(snapshot(world).kernel.bodies[0]!.positionX).toBe(1);
+    expect(snapshot(world).advanceRegistered).toBe(true);
+
+    position.set([5, 0, 0]);
+    frames.flush(30);
+    expect(snapshot(world).kernel.bodies[0]!.positionX).toBe(1);
+    expect(snapshot(world).advanceRegistered).toBe(true);
+    frames.flush(40);
+    expect(snapshot(world).kernel.bodies[0]!.positionX).toBe(5);
+  });
+
+  it("reads animation-lane target staging in the same frame and publishes only at Commit", () => {
+    // Production break caught: reading the committed signal before the
+    // animation lane stages it delays a 3D kinematic target by one frame;
+    // publishing revision early exposes a candidate before shared Commit.
+    const target = signal<readonly [number, number, number]>([0, 0, 0]);
+    let world!: CRCPhysicsWorldHandle3D;
+    const revisions: number[] = [];
+    const Capture = () => {
+      world = crcPhysicsWorld3D();
+      revisions.push(world.revision.get());
+      return undefined;
+    };
+    const Animate = () => {
+      const owner = crcInternalCurrentSimulationOwner();
+      useInternalHookSlot("task6AnimationProbe3D", (teardowns) => {
+        const release = crcInternalRegisterSimulationAdvance(
+          owner,
+          "animation",
+          (_frame, batch) => {
+            batch.stage(
+              target as WritableSignal<readonly [number, number, number]>,
+              [12, 34, 56],
+              owner,
+            );
+            release();
+          },
+        );
+        teardowns.add(release);
+        return undefined;
+      });
+      return undefined;
+    };
+    mountWebGL(
+      <PhysicsWorld3D gravity={[0, 0, 0]} fixedStepMilliseconds={100}>
+        <Animate />
+        <Capture />
+        <Group3D physics={kinematicBody3D({
+          collider: false,
+          target: { position: target },
+        })} />
+      </PhysicsWorld3D>,
+    );
+    frames.flush(0);
+    frames.flush(100);
+
+    expect(target.get()).toEqual([12, 34, 56]);
+    expect(snapshot(world).kernel.anchored).toBe(true);
+    expect(snapshot(world).advanceRegistered).toBe(true);
+    expect(world.revision.get()).toBe(1);
+    expect(revisions).toEqual([0, 1]);
+
+    frames.flush(200);
+    expect(snapshot(world).kernel.bodies[0]).toMatchObject({
+      positionX: 12,
+      positionY: 34,
+      positionZ: 56,
+    });
+  });
+
+  it("removing a target retains pose and clears target-derived velocity", () => {
+    const position = signal<readonly [number, number, number]>([1, 0, 0]);
+    const bound = signal(true);
+    let world!: CRCPhysicsWorldHandle3D;
+    const Body = () => {
+      world = crcPhysicsWorld3D();
+      return <Group3D physics={kinematicBody3D({
+        target: bound.get() ? { position } : {},
+        collider: false,
+      })} />;
+    };
+    mountWebGL(
+      <PhysicsWorld3D gravity={[0, 0, 0]} fixedStepMilliseconds={10}>
+        <Body />
+      </PhysicsWorld3D>,
+    );
+    frames.flush(0);
+    frames.flush(10);
+    frames.flush(20);
+    expect(snapshot(world).kernel.bodies[0]!.positionX).toBe(1);
+    bound.set(false);
+    frames.flush(30);
+    frames.flush(40);
+    const retained = snapshot(world).kernel.bodies[0]!;
+    expect(retained.positionX).toBe(1);
+    expect(retained.linearVelocityX).toBe(0);
+    expect(retained.linearVelocityY).toBe(0);
+    expect(retained.linearVelocityZ).toBe(0);
+    expect(snapshot(world).advanceRegistered).toBe(false);
+    position.set([8, 0, 0]);
+    frames.flush(50);
+    expect(frames.pending).toBe(0);
+    expect(snapshot(world).kernel.bodies[0]!.positionX).toBe(1);
+
+    bound.set(true);
+    frames.flush(60);
+    expect(snapshot(world).advanceRegistered).toBe(true);
+    frames.flush(70);
+    frames.flush(80);
+    expect(snapshot(world).kernel.bodies[0]!.positionX).toBe(8);
+  });
+
+  it("routes public queries through the mandatory committed-read guard", () => {
+    let world!: CRCPhysicsWorldHandle3D;
+    const Capture = () => {
+      world = crcPhysicsWorld3D();
+      return undefined;
+    };
+    mountWebGL(<PhysicsWorld3D><Capture /></PhysicsWorld3D>);
+    frames.flush(0);
+    const guard = vi.spyOn(PhysicsWorld3DKernel.prototype, "assertCommittedReadable");
+    expect(queryPoint3D(world, [0, 0, 0])).toBeNull();
+    expect(guard).toHaveBeenCalledOnce();
+  });
+
+  it("materializes immutable committed query handles without scheduling and rejects stale identities", () => {
+    // Production break caught: bypassing the runtime facade can expose private
+    // records, schedule work on reads, or let a reused slot revive old handles.
+    const shown = signal(true);
+    const shape = sphereShape3D({ radius: 1 });
+    let world!: CRCPhysicsWorldHandle3D;
+    const Scene = () => {
+      world = crcPhysicsWorld3D();
+      return shown.get()
+        ? <Group3D physics={staticBody3D({
+            collider: { shape, sensor: true },
+          })} />
+        : undefined;
+    };
+    const mount = mountWebGL(
+      <PhysicsWorld3D gravity={[0, 0, 0]}><Scene /></PhysicsWorld3D>,
+    );
+    frames.flush(0);
+    frames.flush(0);
+    const pendingBefore = frames.pending;
+    const first = queryPoint3D(world, [0, 0, 0], { sensors: "only" });
+    expect(first).not.toBeNull();
+    expect(Object.isFrozen(first)).toBe(true);
+    expect(Object.isFrozen(first!.body)).toBe(true);
+    expect(Object.isFrozen(first!.collider)).toBe(true);
+    expect(queryPoint3D(world, [0, 0, 0], { sensors: "exclude" })).toBeNull();
+    expect(frames.pending).toBe(pendingBefore);
+    expect(snapshot(world)).toMatchObject({
+      materializedBodyHandles: 1,
+      materializedColliderHandles: 1,
+    });
+
+    shown.set(false);
+    frames.flush(1);
+    frames.flush(1);
+    shown.set(true);
+    frames.flush(2);
+    frames.flush(2);
+    expect(queryPoint3D(world, [0, 0, 0], {
+      sensors: "only",
+      excludeCollider: first!.collider,
+    })).toBeNull();
+    const replacement = queryPoint3D(world, [0, 0, 0], {
+      sensors: "only",
+    });
+    expect(replacement).not.toBeNull();
+    expect(replacement!.collider).not.toBe(first!.collider);
+    expect(replacement!.colliderGeneration).toBeGreaterThan(
+      first!.colliderGeneration,
+    );
+
+    mount.dispose();
+    expect(() => queryPoint3D(world, [0, 0, 0])).toThrow(/live.*world/i);
+  });
+
+  it("scales the authoritative compound inertia tensor for explicit mass", () => {
+    // Production break caught: reimplementing compound mass math in the
+    // controller can diverge from the Task 5 tensor and parallel-axis rules.
+    let world!: CRCPhysicsWorldHandle3D;
+    const Capture = () => {
+      world = crcPhysicsWorld3D();
+      return undefined;
+    };
+    mountWebGL(
+      <PhysicsWorld3D gravity={[0, 0, 0]}>
+        <Capture />
+        <Group3D physics={dynamicBody3D({
+          mass: 2,
+          collider: { shape: sphereShape3D({ radius: 1 }) },
+        })} />
+      </PhysicsWorld3D>,
+    );
+    frames.flush(0);
+    frames.flush(0);
+    const body = snapshot(world).kernel.bodies[0]!;
+    expect(body.inverseMass).toBe(0.5);
+    expect(body.localInverseInertiaXX).toBeCloseTo(1.25, 12);
+    expect(body.localInverseInertiaYY).toBeCloseTo(1.25, 12);
+    expect(body.localInverseInertiaZZ).toBeCloseTo(1.25, 12);
+    expect(body.localInverseInertiaXY).toBe(0);
+    expect(body.localInverseInertiaXZ).toBe(0);
+    expect(body.localInverseInertiaYZ).toBe(0);
+  });
+
+  it("isolates one failed world candidate from a sibling world in the realm", () => {
+    // Production break caught: a failed physics participant must roll itself
+    // back without preventing a later sibling participant from adopting.
+    let failedWorld!: CRCPhysicsWorldHandle3D;
+    let healthyWorld!: CRCPhysicsWorldHandle3D;
+    const errors: unknown[] = [];
+    const FailedCapture = () => {
+      failedWorld = crcPhysicsWorld3D();
+      return undefined;
+    };
+    const HealthyCapture = () => {
+      healthyWorld = crcPhysicsWorld3D();
+      return undefined;
+    };
+    mountWebGL(
+      <PhysicsWorld3D gravity={[0, 0, 0]} sleeping={false} onError={(error) => errors.push(error)}>
+        <FailedCapture />
+        <Group3D physics={dynamicBody3D({ mass: 1, collider: false })} />
+      </PhysicsWorld3D>,
+    );
+    mountWebGL(
+      <PhysicsWorld3D gravity={[0, 0, 0]} sleeping={false}>
+        <HealthyCapture />
+        <Group3D physics={dynamicBody3D({ mass: 1, collider: false })} />
+      </PhysicsWorld3D>,
+    );
+    frames.flush(0);
+    frames.flush(0);
+    frames.flush(10);
+    const failedRevision = snapshot(failedWorld).revision;
+    const healthyRevision = snapshot(healthyWorld).revision;
+    const failure = new Error("failed sibling world");
+    let injected = false;
+    const restore = installPhysicsWorld3DFailureInjectorForTest((stage) => {
+      if (!injected && stage === "broad-phase") {
+        injected = true;
+        throw failure;
+      }
+    });
+    try {
+      expect(() => frames.flush(20)).toThrow(failure);
+    } finally {
+      restore();
+    }
+
+    expect(errors).toEqual([failure]);
+    expect(snapshot(failedWorld).revision).toBe(failedRevision);
+    expect(snapshot(healthyWorld).revision).toBe(healthyRevision + 1);
+  });
+});
+
+function kinematicBody(id: number): PhysicsTopologyRecord3D {
+  return {
+    kind: "body",
+    id,
+    definition: {
+      positionX: 0,
+      positionY: 0,
+      positionZ: 0,
+      orientationX: 0,
+      orientationY: 0,
+      orientationZ: 0,
+      orientationW: 1,
+      linearVelocityX: 0,
+      linearVelocityY: 0,
+      linearVelocityZ: 0,
+      angularVelocityX: 0,
+      angularVelocityY: 0,
+      angularVelocityZ: 0,
+      forceX: 0,
+      forceY: 0,
+      forceZ: 0,
+      torqueX: 0,
+      torqueY: 0,
+      torqueZ: 0,
+      inverseMass: 0,
+      localInverseInertiaXX: 0,
+      localInverseInertiaYY: 0,
+      localInverseInertiaZZ: 0,
+      localInverseInertiaXY: 0,
+      localInverseInertiaXZ: 0,
+      localInverseInertiaYZ: 0,
+      linearDamping: 0,
+      angularDamping: 0,
+      gravityScale: 0,
+      sleepTime: 0,
+      translationLocks: 0,
+      rotationLocks: 0,
+      flags: BODY_ENABLED_3D | BODY_TYPE_KINEMATIC_3D,
+      owner: null,
+    },
+  };
+}
+
+function snapshot(world: CRCPhysicsWorldHandle3D) {
+  return snapshotPhysicsWorld3DControllerForTest(
+    requirePhysicsWorld3DController(world),
+  );
+}
+
+function mountWebGL(children: CRCNode): CRCController {
+  const canvas = document.createElement("canvas");
+  canvas.width = 100;
+  canvas.height = 100;
+  canvas.style.cssText = "display:block;width:100px;height:100px";
+  document.body.appendChild(canvas);
+  const mount = crc(
+    canvas,
+    <WebGLLayer style={{ width: 100, height: 100 }}>{children}</WebGLLayer>,
+  );
+  mounts.push(mount);
+  return mount;
+}
+
+class ManualFrames {
+  private callbacks = new Map<number, FrameRequestCallback>();
+  private nextId = 0;
+
+  get pending(): number {
+    return this.callbacks.size;
+  }
+
+  install(): void {
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation((callback) => {
+      const id = ++this.nextId;
+      this.callbacks.set(id, callback);
+      return id;
+    });
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation((id) => {
+      this.callbacks.delete(id);
+    });
+  }
+
+  flush(time: number): void {
+    const entry = this.callbacks.entries().next().value as
+      | readonly [number, FrameRequestCallback]
+      | undefined;
+    if (!entry) throw new Error("No CRC host frame is pending.");
+    this.callbacks.delete(entry[0]);
+    entry[1](time);
+  }
+}

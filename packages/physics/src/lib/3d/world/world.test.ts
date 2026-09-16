@@ -1030,6 +1030,117 @@ describe("transactional 3D world candidate rollback", () => {
     expect(() => world.discard(adopted)).toThrow(/live candidate/);
   });
 
+  it("interpolates one accepted kinematic target across every catch-up tick", () => {
+    // Production break caught: applying the same final target on every fixed
+    // tick jumps to x=4 on tick one instead of traversing 1, 2, 3, 4.
+    const world = new PhysicsWorld3DKernel({
+      gravity: [0, 0, 0],
+      fixedStepMilliseconds: 10,
+      maxCatchUpSteps: 4,
+      sleeping: false,
+    });
+    world.proposeTopology([body(1, { type: "kinematic" })]);
+    advance(
+      world,
+      1,
+      0,
+      new Map([
+        [
+          1,
+          {
+            position: [4, 0, 0],
+            orientation: [0, 0, 0, 1],
+          },
+        ],
+      ]),
+    );
+
+    const positionsAfterTicks: number[] = [];
+    const orientationsAfterTicks: number[] = [];
+    const restore = installPhysicsWorld3DFailureInjectorForTest((stage) => {
+      if (stage === "broad-phase") {
+        positionsAfterTicks.push(world.snapshot().bodies[0]!.positionX);
+        orientationsAfterTicks.push(world.snapshot().bodies[0]!.orientationZ);
+      }
+    });
+    try {
+      advance(
+        world,
+        2,
+        40,
+        new Map([
+          [
+            1,
+            {
+              position: [4, 0, 0],
+              // q and -q describe one rotation. The negative representation
+              // must still take the canonical shortest path from identity.
+              orientation: [0, 0, -2, -2],
+            },
+          ],
+        ]),
+      );
+    } finally {
+      restore();
+      world.dispose();
+    }
+
+    expect(positionsAfterTicks).toEqual([1, 2, 3, 4]);
+    expect(orientationsAfterTicks).toEqual([
+      Math.sin(Math.PI / 16),
+      Math.sin(Math.PI / 8),
+      Math.sin((3 * Math.PI) / 16),
+      Math.SQRT1_2,
+    ].map((value) => expect.closeTo(value, 12)));
+  });
+
+  it("restores and deterministically retries an interpolated kinematic trajectory", () => {
+    // Production break caught: trajectory state retained outside the candidate
+    // journal makes a discarded catch-up sample alter its deterministic retry.
+    const world = new PhysicsWorld3DKernel({
+      fixedStepMilliseconds: 10,
+      maxCatchUpSteps: 4,
+      sleeping: false,
+    });
+    world.proposeTopology([body(1, { type: "kinematic" })]);
+    const target = new Map([
+      [
+        1,
+        {
+          position: [4, 3, 2] as const,
+          orientation: [0, 0, 1, 1] as const,
+        },
+      ],
+    ]);
+    advance(world, 1, 0, target);
+    const before = world.snapshot();
+    const discarded = world.advance({
+      frameId: 2,
+      logicalTime: 40,
+      stagedKinematicTargets: target,
+    });
+    const advanced = world.snapshot();
+    world.discard(discarded);
+    expect(world.snapshot()).toEqual(before);
+
+    const retried = world.advance({
+      frameId: 3,
+      logicalTime: 40,
+      stagedKinematicTargets: target,
+    });
+    expect(world.snapshot()).toEqual(advanced);
+    world.adopt(retried);
+    const adopted = world.authoritativePose(1);
+    expect(adopted.position).toEqual([4, 3, 2]);
+    expect(adopted.orientation).toEqual([
+      0,
+      0,
+      expect.closeTo(Math.SQRT1_2, 14),
+      expect.closeTo(Math.SQRT1_2, 14),
+    ]);
+    world.dispose();
+  });
+
   it("binds the real committed query facade to the live-candidate lock", () => {
     const world = new PhysicsWorld3DKernel({ sleeping: false });
     world.proposeTopology([body(1), collider(10, 1)]);
