@@ -12,45 +12,29 @@ import {
   copyPose3D,
   type InternalPose3D,
 } from "../math.js";
-import { GEOMETRY_EPSILON_3D, MAX_GJK_ITERATIONS_3D } from "../numeric-policy.js";
+import {
+  GEOMETRY_EPSILON_3D,
+  MAX_GJK_ITERATIONS_3D,
+} from "../numeric-policy.js";
 import { requireShapeRecord3D } from "../shape-records.js";
-import { distanceSphereToBox3D } from "./analytic.js";
+import {
+  castSphereAgainstBoxAnalytically,
+  castSphereAgainstSphereAnalytically,
+  raycastSphereAnalytically,
+  type AnalyticCastCandidate3D,
+} from "./analytic-casts.js";
 import { distanceBetweenPreparedShapes3D } from "./pairs.js";
-import { freezeCollisionVector3 } from "./manifold.js";
 import {
   prepareConvexShape3D,
   type PreparedBox3D,
   type PreparedConvexShape3D,
-  type PreparedSphere3D,
 } from "./support.js";
 
 const CAST_REFINEMENT_ITERATIONS = 64;
 const CAST_HIT_TOLERANCE = 1e-7;
 const CAST_TIME_TOLERANCE = 1e-12;
 
-interface CastCandidate3D {
-  readonly pointX: number;
-  readonly pointY: number;
-  readonly pointZ: number;
-  readonly normalX: number;
-  readonly normalY: number;
-  readonly normalZ: number;
-  readonly distance: number;
-  readonly timeOfImpact: number;
-}
-
-type SphereSweepContactProof =
-  | Readonly<{
-      kind: "tangent";
-      time: number;
-      radialPoint: readonly number[];
-    }>
-  | Readonly<{
-      kind: "crossing";
-      outsideTime: number;
-      time: number;
-      radialPoint: readonly number[];
-    }>;
+type CastCandidate3D = AnalyticCastCandidate3D;
 
 export function raycastShape3D(
   shape: CRCPhysicsShape3D,
@@ -67,6 +51,22 @@ export function raycastShape3D(
     Math.abs(sourceDirection[2]!),
   );
   if (scale === 0) throw new RangeError("ray.direction must be non-zero.");
+  const maxDistance = requireNonnegativeNumber(
+    ray.maxDistance,
+    "ray.maxDistance",
+  );
+  const includeInitialOverlap = options?.includeInitialOverlap === true;
+  if (prepared.kind === "sphere") {
+    const candidate = raycastSphereAnalytically(
+      prepared,
+      origin,
+      sourceDirection,
+      maxDistance,
+      includeInitialOverlap,
+    );
+    return candidate === null ? null : publicHit(candidate, true);
+  }
+
   const scaledX = sourceDirection[0]! / scale;
   const scaledY = sourceDirection[1]! / scale;
   const scaledZ = sourceDirection[2]! / scale;
@@ -76,21 +76,22 @@ export function raycastShape3D(
     scaledY / scaledLength,
     scaledZ / scaledLength,
   ] as const;
-  const maxDistance = requireNonnegativeNumber(ray.maxDistance, "ray.maxDistance");
-  if (containsPreparedPoint(prepared, origin)) {
-    return options?.includeInitialOverlap === true
+  if (containsPreparedBoxPoint(prepared, origin)) {
+    return includeInitialOverlap
       ? publicHit({
-          pointX: origin[0]!, pointY: origin[1]!, pointZ: origin[2]!,
-          normalX: -direction[0], normalY: -direction[1], normalZ: -direction[2],
+          pointX: origin[0]!,
+          pointY: origin[1]!,
+          pointZ: origin[2]!,
+          normalX: -direction[0],
+          normalY: -direction[1],
+          normalZ: -direction[2],
           distance: 0,
           timeOfImpact: 0,
         })
       : null;
   }
   if (maxDistance === 0) return null;
-  const candidate = prepared.kind === "sphere"
-    ? raycastSphere(prepared, origin, direction, maxDistance)
-    : raycastBox(prepared, origin, direction, maxDistance);
+  const candidate = raycastBox(prepared, origin, direction, maxDistance);
   return candidate === null ? null : publicHit(candidate);
 }
 
@@ -107,253 +108,44 @@ export function shapeCastAgainstShape3D(
   const targetPose = copyPose3D(publicTargetPose, "targetPose");
   const movingRecord = requireShapeRecord3D(moving);
   const targetRecord = requireShapeRecord3D(target);
-  const translationLength = Math.hypot(translation[0]!, translation[1]!, translation[2]!);
-  if (!Number.isFinite(translationLength)) return null;
   const movingPrepared = prepareConvexShape3D(movingRecord, from);
   const targetPrepared = prepareConvexShape3D(targetRecord, targetPose);
   const includeInitialOverlap = options?.includeInitialOverlap === true;
-  const candidate = movingPrepared.kind === "sphere" && targetPrepared.kind === "sphere"
-    ? castSphereAgainstSphere(
-        movingPrepared,
-        translation,
-        translationLength,
-        targetPrepared,
-        includeInitialOverlap,
-      )
-    : movingPrepared.kind === "sphere" && targetPrepared.kind === "box"
-      ? castSphereAgainstBox(
-          movingPrepared,
-          translation,
-          translationLength,
-          targetPrepared,
-          includeInitialOverlap,
-        )
-    : conservativelyCast(
-        moving,
-        from,
-        translation,
-        translationLength,
-        target,
-        targetPose,
-        includeInitialOverlap,
-      );
-  return candidate === null ? null : publicHit(candidate);
-}
-
-function castSphereAgainstBox(
-  moving: PreparedSphere3D,
-  translation: ArrayLike<number>,
-  translationLength: number,
-  target: PreparedBox3D,
-  includeInitialOverlap: boolean,
-): CastCandidate3D | null {
-  const offset = [
-    moving.center[0]! - target.center[0]!,
-    moving.center[1]! - target.center[1]!,
-    moving.center[2]! - target.center[2]!,
-  ] as const;
-  const localOrigin = [0, 1, 2].map((axis) =>
-    offset[0] * target.axes[axis * 3]! +
-    offset[1] * target.axes[axis * 3 + 1]! +
-    offset[2] * target.axes[axis * 3 + 2]!,
-  );
-  const localTranslation = [0, 1, 2].map((axis) =>
-    translation[0]! * target.axes[axis * 3]! +
-    translation[1]! * target.axes[axis * 3 + 1]! +
-    translation[2]! * target.axes[axis * 3 + 2]!,
-  );
-  if (![...localOrigin, ...localTranslation].every(Number.isFinite)) return null;
-  const initialRelation = exactSquaredDistanceRelation(
-    localBoxOutsideVector(localOrigin, target.halfExtents),
-    moving.radius,
-  );
-  if (initialRelation === null) return null;
-  if (initialRelation <= 0) {
-    if (!includeInitialOverlap) return null;
-    const initial = distanceSphereToBox3D(
-      moving.center,
-      moving.radius,
-      target.center,
-      target.axes,
-      target.halfExtents,
-    );
-    const normal = unitAgainstMotion(
-      initial.normal[0],
-      initial.normal[1],
-      initial.normal[2],
+  const exactAnalytic = movingPrepared.kind === "sphere" &&
+    (targetPrepared.kind === "sphere" || targetPrepared.kind === "box");
+  let candidate: CastCandidate3D | null;
+  if (movingPrepared.kind === "sphere" && targetPrepared.kind === "sphere") {
+    candidate = castSphereAgainstSphereAnalytically(
+      movingPrepared,
       translation,
+      targetPrepared,
+      includeInitialOverlap,
     );
-    return {
-      pointX: initial.second[0],
-      pointY: initial.second[1],
-      pointZ: initial.second[2],
-      normalX: normal[0],
-      normalY: normal[1],
-      normalZ: normal[2],
-      distance: 0,
-      timeOfImpact: 0,
-    };
-  }
-  if (translationLength === 0) return null;
-
-  let selected: CastCandidate3D | null = null;
-  let selectedFeature = Number.POSITIVE_INFINITY;
-  const consider = (
-    proof: SphereSweepContactProof,
-    localPoint: readonly [number, number, number],
-    localNormal: readonly [number, number, number],
-    feature: number,
-  ): void => {
-    const time = proof.time;
-    if (time < 0 || time > 1) return;
-    const boundedTime = time;
-    if (
-      selected !== null &&
-      (boundedTime > selected.timeOfImpact + CAST_TIME_TOLERANCE ||
-        (Math.abs(boundedTime - selected.timeOfImpact) <= CAST_TIME_TOLERANCE &&
-          feature >= selectedFeature))
-    ) return;
-    const point = boxLocalPointToWorld(target, localPoint);
-    const normal = boxLocalVectorToWorld(target, localNormal);
-    selected = {
-      pointX: point[0],
-      pointY: point[1],
-      pointZ: point[2],
-      normalX: normal[0],
-      normalY: normal[1],
-      normalZ: normal[2],
-      distance: translationLength * boundedTime,
-      timeOfImpact: boundedTime,
-    };
-    selectedFeature = feature;
-  };
-
-  for (let axis = 0; axis < 3; axis += 1) {
-    if (localTranslation[axis] === 0) continue;
-    for (const sign of [-1, 1] as const) {
-      const proof = sweepSphereEntryProof(
-        [localOrigin[axis]! - sign * target.halfExtents[axis]!],
-        [localTranslation[axis]!],
-        moving.radius,
-      );
-      if (proof === null) continue;
-      const center = localPositionAt(localOrigin, localTranslation, proof.time);
-      const otherAxes = [0, 1, 2].filter((candidate) => candidate !== axis);
-      if (otherAxes.some((other) => Math.abs(center[other]!) > target.halfExtents[other]!)) continue;
-      const point = [...center] as [number, number, number];
-      const normal = [0, 0, 0] as [number, number, number];
-      point[axis] = sign * target.halfExtents[axis]!;
-      normal[axis] = sign;
-      consider(proof, point, normal, axis * 2 + (sign > 0 ? 1 : 0));
-    }
-  }
-
-  let edgeFeature = 6;
-  for (let edgeAxis = 0; edgeAxis < 3; edgeAxis += 1) {
-    const fixedAxes = [0, 1, 2].filter((axis) => axis !== edgeAxis);
-    for (const firstSign of [-1, 1] as const) {
-      for (const secondSign of [-1, 1] as const) {
-        const firstAxis = fixedAxes[0]!;
-        const secondAxis = fixedAxes[1]!;
-        const firstOffset = localOrigin[firstAxis]! - firstSign * target.halfExtents[firstAxis]!;
-        const secondOffset = localOrigin[secondAxis]! - secondSign * target.halfExtents[secondAxis]!;
-        const proof = sweepSphereEntryProof(
-          [firstOffset, secondOffset],
-          [localTranslation[firstAxis]!, localTranslation[secondAxis]!],
-          moving.radius,
-        );
-        if (proof !== null) {
-          const center = localPositionAt(localOrigin, localTranslation, proof.time);
-          if (Math.abs(center[edgeAxis]!) > target.halfExtents[edgeAxis]!) continue;
-          const normal = [0, 0, 0] as [number, number, number];
-          const firstDelta = proof.radialPoint[0]!;
-          const secondDelta = proof.radialPoint[1]!;
-          if (
-            firstDelta * firstSign < 0 ||
-            secondDelta * secondSign < 0
-          ) continue;
-          const length = Math.hypot(firstDelta, secondDelta);
-          if (!Number.isFinite(length) || length === 0) continue;
-          normal[firstAxis] = firstDelta / length;
-          normal[secondAxis] = secondDelta / length;
-          const point = [...center] as [number, number, number];
-          point[firstAxis] = firstSign * target.halfExtents[firstAxis]!;
-          point[secondAxis] = secondSign * target.halfExtents[secondAxis]!;
-          consider(proof, point, normal, edgeFeature);
-        }
-        edgeFeature += 1;
-      }
-    }
-  }
-
-  for (let vertex = 0; vertex < 8; vertex += 1) {
-    const point = [
-      (vertex & 1) === 0 ? -target.halfExtents[0]! : target.halfExtents[0]!,
-      (vertex & 2) === 0 ? -target.halfExtents[1]! : target.halfExtents[1]!,
-      (vertex & 4) === 0 ? -target.halfExtents[2]! : target.halfExtents[2]!,
-    ] as const;
-    const proof = sweepSphereEntryProof(
-      [
-        localOrigin[0]! - point[0],
-        localOrigin[1]! - point[1],
-        localOrigin[2]! - point[2],
-      ],
-      localTranslation,
-      moving.radius,
+  } else if (movingPrepared.kind === "sphere" && targetPrepared.kind === "box") {
+    candidate = castSphereAgainstBoxAnalytically(
+      movingPrepared,
+      translation,
+      targetPrepared,
+      includeInitialOverlap,
     );
-    if (proof !== null) {
-      const dx = proof.radialPoint[0]!;
-      const dy = proof.radialPoint[1]!;
-      const dz = proof.radialPoint[2]!;
-      if (
-        dx * ((vertex & 1) === 0 ? -1 : 1) < 0 ||
-        dy * ((vertex & 2) === 0 ? -1 : 1) < 0 ||
-        dz * ((vertex & 4) === 0 ? -1 : 1) < 0
-      ) continue;
-      const length = Math.hypot(dx, dy, dz);
-      if (!Number.isFinite(length) || length === 0) continue;
-      consider(proof, point, [dx / length, dy / length, dz / length], 18 + vertex);
-    }
+  } else {
+    const translationLength = Math.hypot(
+      translation[0]!,
+      translation[1]!,
+      translation[2]!,
+    );
+    if (!Number.isFinite(translationLength)) return null;
+    candidate = conservativelyCast(
+      moving,
+      from,
+      translation,
+      translationLength,
+      target,
+      targetPose,
+      includeInitialOverlap,
+    );
   }
-  return selected;
-}
-
-function raycastSphere(
-  sphere: PreparedSphere3D,
-  origin: ArrayLike<number>,
-  direction: ArrayLike<number>,
-  maxDistance: number,
-): CastCandidate3D | null {
-  const relativeX = origin[0]! - sphere.center[0]!;
-  const relativeY = origin[1]! - sphere.center[1]!;
-  const relativeZ = origin[2]! - sphere.center[2]!;
-  const proof = sweepSphereEntryProof(
-    [relativeX, relativeY, relativeZ],
-    [direction[0]!, direction[1]!, direction[2]!],
-    sphere.radius,
-  );
-  if (
-    proof === null ||
-    proof.time < 0 ||
-    proof.time > maxDistance
-  ) return null;
-  const boundedDistance = proof.time;
-  const hitOffset = proof.radialPoint;
-  const pointX = origin[0]! + direction[0]! * boundedDistance;
-  const pointY = origin[1]! + direction[1]! * boundedDistance;
-  const pointZ = origin[2]! + direction[2]! * boundedDistance;
-  const normal = unitAgainstMotion(
-    hitOffset[0],
-    hitOffset[1],
-    hitOffset[2],
-    direction,
-  );
-  return {
-    pointX, pointY, pointZ,
-    normalX: normal[0], normalY: normal[1], normalZ: normal[2],
-    distance: boundedDistance,
-    timeOfImpact: boundedDistance / maxDistance,
-  };
+  return candidate === null ? null : publicHit(candidate, exactAnalytic);
 }
 
 function raycastBox(
@@ -391,7 +183,8 @@ function raycastBox(
     const face = axis * 2 + (nearSign > 0 ? 1 : 0);
     if (
       near > minimum + CAST_TIME_TOLERANCE ||
-      (Math.abs(near - minimum) <= CAST_TIME_TOLERANCE && face < selectedFace)
+      (Math.abs(near - minimum) <= CAST_TIME_TOLERANCE &&
+        face < selectedFace)
     ) {
       minimum = near;
       selectedFace = face;
@@ -399,7 +192,10 @@ function raycastBox(
     maximum = Math.min(maximum, far);
     if (minimum > maximum + CAST_TIME_TOLERANCE) return null;
   }
-  if (minimum < -CAST_TIME_TOLERANCE || minimum > maxDistance + CAST_TIME_TOLERANCE) return null;
+  if (
+    minimum < -CAST_TIME_TOLERANCE ||
+    minimum > maxDistance + CAST_TIME_TOLERANCE
+  ) return null;
   const distance = Math.max(0, Math.min(maxDistance, minimum));
   const axis = Math.floor(selectedFace / 2);
   const sign = (selectedFace & 1) === 0 ? -1 : 1;
@@ -412,62 +208,11 @@ function raycastBox(
     pointX: origin[0]! + direction[0]! * distance,
     pointY: origin[1]! + direction[1]! * distance,
     pointZ: origin[2]! + direction[2]! * distance,
-    normalX: normal[0], normalY: normal[1], normalZ: normal[2],
+    normalX: normal[0],
+    normalY: normal[1],
+    normalZ: normal[2],
     distance,
     timeOfImpact: distance / maxDistance,
-  };
-}
-
-function castSphereAgainstSphere(
-  moving: PreparedSphere3D,
-  translation: ArrayLike<number>,
-  translationLength: number,
-  target: PreparedSphere3D,
-  includeInitialOverlap: boolean,
-): CastCandidate3D | null {
-  const relativeX = moving.center[0]! - target.center[0]!;
-  const relativeY = moving.center[1]! - target.center[1]!;
-  const relativeZ = moving.center[2]! - target.center[2]!;
-  const radius = moving.radius + target.radius;
-  const initialRelation = exactSquaredDistanceRelation(
-    [relativeX, relativeY, relativeZ],
-    radius,
-  );
-  if (initialRelation === null) return null;
-  if (initialRelation <= 0) {
-    if (!includeInitialOverlap) return null;
-    const normal = unitAgainstMotion(relativeX, relativeY, relativeZ, translation);
-    return {
-      pointX: target.center[0]! + normal[0] * target.radius,
-      pointY: target.center[1]! + normal[1] * target.radius,
-      pointZ: target.center[2]! + normal[2] * target.radius,
-      normalX: normal[0], normalY: normal[1], normalZ: normal[2],
-      distance: 0,
-      timeOfImpact: 0,
-    };
-  }
-  if (translationLength === 0) return null;
-  const proof = sweepSphereEntryProof(
-    [relativeX, relativeY, relativeZ],
-    [translation[0]!, translation[1]!, translation[2]!],
-    radius,
-  );
-  if (proof === null || proof.time < 0 || proof.time > 1) return null;
-  const timeOfImpact = proof.time;
-  const impactOffset = proof.radialPoint;
-  const normal = unitAgainstMotion(
-    impactOffset[0],
-    impactOffset[1],
-    impactOffset[2],
-    translation,
-  );
-  return {
-    pointX: target.center[0]! + normal[0] * target.radius,
-    pointY: target.center[1]! + normal[1] * target.radius,
-    pointZ: target.center[2]! + normal[2] * target.radius,
-    normalX: normal[0], normalY: normal[1], normalZ: normal[2],
-    distance: translationLength * timeOfImpact,
-    timeOfImpact,
   };
 }
 
@@ -482,8 +227,19 @@ function conservativelyCast(
 ): CastCandidate3D | null {
   let time = 0;
   let separatedTime = 0;
-  for (let iteration = 0; iteration < MAX_GJK_ITERATIONS_3D; iteration += 1) {
-    const distance = sampleTranslatedDistance(moving, from, translation, time, target, targetPose);
+  for (
+    let iteration = 0;
+    iteration < MAX_GJK_ITERATIONS_3D;
+    iteration += 1
+  ) {
+    const distance = sampleTranslatedDistance(
+      moving,
+      from,
+      translation,
+      time,
+      target,
+      targetPose,
+    );
     if (distance === null) return null;
     if (distance.separation <= 0) {
       if (time === 0 && !includeInitialOverlap) return null;
@@ -494,7 +250,12 @@ function conservativelyCast(
           distance.normal[2],
           translation,
         );
-        return candidateFromDistance(distance, normal, translationLength, time);
+        return candidateFromDistance(
+          distance,
+          normal,
+          translationLength,
+          time,
+        );
       }
       return refineCrossing(
         moving,
@@ -519,11 +280,22 @@ function conservativelyCast(
     const step = distance.separation / closingSpeed;
     if (!Number.isFinite(step) || step <= CAST_TIME_TOLERANCE) break;
     const nextTime = time + step;
-    if (!Number.isFinite(nextTime) || nextTime <= time || nextTime > 1 + CAST_TIME_TOLERANCE) break;
+    if (
+      !Number.isFinite(nextTime) ||
+      nextTime <= time ||
+      nextTime > 1 + CAST_TIME_TOLERANCE
+    ) break;
     separatedTime = time;
     time = Math.min(1, nextTime);
   }
-  return refineBoundedTangent(moving, from, translation, translationLength, target, targetPose);
+  return refineBoundedTangent(
+    moving,
+    from,
+    translation,
+    translationLength,
+    target,
+    targetPose,
+  );
 }
 
 function refineBoundedTangent(
@@ -537,11 +309,29 @@ function refineBoundedTangent(
   let minimumTime = 0;
   let maximumTime = 1;
   let tangentTime = 0;
-  let tangent = sampleTranslatedDistance(moving, from, translation, tangentTime, target, targetPose);
+  let tangent = sampleTranslatedDistance(
+    moving,
+    from,
+    translation,
+    tangentTime,
+    target,
+    targetPose,
+  );
   if (tangent === null) return null;
-  for (let iteration = 0; iteration < CAST_REFINEMENT_ITERATIONS; iteration += 1) {
+  for (
+    let iteration = 0;
+    iteration < CAST_REFINEMENT_ITERATIONS;
+    iteration += 1
+  ) {
     const middleTime = (minimumTime + maximumTime) / 2;
-    const middle = sampleTranslatedDistance(moving, from, translation, middleTime, target, targetPose);
+    const middle = sampleTranslatedDistance(
+      moving,
+      from,
+      translation,
+      middleTime,
+      target,
+      targetPose,
+    );
     if (middle === null) return null;
     if (
       middle.separation < tangent.separation ||
@@ -562,9 +352,20 @@ function refineBoundedTangent(
   let impactTime = tangentTime;
   if (tangent.separation < -GEOMETRY_EPSILON_3D) {
     let separatedTime = 0;
-    for (let iteration = 0; iteration < CAST_REFINEMENT_ITERATIONS; iteration += 1) {
+    for (
+      let iteration = 0;
+      iteration < CAST_REFINEMENT_ITERATIONS;
+      iteration += 1
+    ) {
       const middleTime = (separatedTime + impactTime) / 2;
-      const middle = sampleTranslatedDistance(moving, from, translation, middleTime, target, targetPose);
+      const middle = sampleTranslatedDistance(
+        moving,
+        from,
+        translation,
+        middleTime,
+        target,
+        targetPose,
+      );
       if (middle === null) return null;
       if (middle.separation <= 0) {
         impactTime = middleTime;
@@ -574,8 +375,18 @@ function refineBoundedTangent(
       }
     }
   }
-  const normal = unitAgainstMotion(tangent.normal[0], tangent.normal[1], tangent.normal[2], translation);
-  return candidateFromDistance(tangent, normal, translationLength, impactTime);
+  const normal = unitAgainstMotion(
+    tangent.normal[0],
+    tangent.normal[1],
+    tangent.normal[2],
+    translation,
+  );
+  return candidateFromDistance(
+    tangent,
+    normal,
+    translationLength,
+    impactTime,
+  );
 }
 
 function refineCrossing(
@@ -592,9 +403,20 @@ function refineCrossing(
   let separatedTime = initialSeparatedTime;
   let impactTime = initialImpactTime;
   let impact = initialImpact;
-  for (let iteration = 0; iteration < CAST_REFINEMENT_ITERATIONS; iteration += 1) {
+  for (
+    let iteration = 0;
+    iteration < CAST_REFINEMENT_ITERATIONS;
+    iteration += 1
+  ) {
     const middleTime = (separatedTime + impactTime) / 2;
-    const middle = sampleTranslatedDistance(moving, from, translation, middleTime, target, targetPose);
+    const middle = sampleTranslatedDistance(
+      moving,
+      from,
+      translation,
+      middleTime,
+      target,
+      targetPose,
+    );
     if (middle === null) return null;
     if (middle.separation <= 0) {
       impactTime = middleTime;
@@ -609,7 +431,12 @@ function refineCrossing(
     impact.normal[2],
     translation,
   );
-  return candidateFromDistance(impact, normal, translationLength, impactTime);
+  return candidateFromDistance(
+    impact,
+    normal,
+    translationLength,
+    impactTime,
+  );
 }
 
 function sampleTranslatedDistance(
@@ -650,7 +477,9 @@ function candidateFromDistance(
     pointX: distance.pointOnSecond[0],
     pointY: distance.pointOnSecond[1],
     pointZ: distance.pointOnSecond[2],
-    normalX: normal[0], normalY: normal[1], normalZ: normal[2],
+    normalX: normal[0],
+    normalY: normal[1],
+    normalZ: normal[2],
     distance: translationLength * timeOfImpact,
     timeOfImpact,
   };
@@ -661,27 +490,28 @@ function prepareShape(
   publicPose: CRCPhysicsPose3D,
   path: string,
 ): PreparedConvexShape3D {
-  return prepareConvexShape3D(requireShapeRecord3D(shape), copyPose3D(publicPose, path));
+  return prepareConvexShape3D(
+    requireShapeRecord3D(shape),
+    copyPose3D(publicPose, path),
+  );
 }
 
-function containsPreparedPoint(shape: PreparedConvexShape3D, point: ArrayLike<number>): boolean {
-  if (shape.kind === "sphere") {
-    const relation = exactSquaredDistanceRelation(
-      [
-        point[0]! - shape.center[0]!,
-        point[1]! - shape.center[1]!,
-        point[2]! - shape.center[2]!,
-      ],
-      shape.radius,
-    );
-    return relation !== null && relation <= 0;
-  }
+function containsPreparedBoxPoint(
+  shape: PreparedBox3D,
+  point: ArrayLike<number>,
+): boolean {
   const dx = point[0]! - shape.center[0]!;
   const dy = point[1]! - shape.center[1]!;
   const dz = point[2]! - shape.center[2]!;
   for (let axis = 0; axis < 3; axis += 1) {
-    const local = dx * shape.axes[axis * 3]! + dy * shape.axes[axis * 3 + 1]! + dz * shape.axes[axis * 3 + 2]!;
-    if (Math.abs(local) > shape.halfExtents[axis]! + GEOMETRY_EPSILON_3D) return false;
+    const local =
+      dx * shape.axes[axis * 3]! +
+      dy * shape.axes[axis * 3 + 1]! +
+      dz * shape.axes[axis * 3 + 2]!;
+    if (
+      Math.abs(local) >
+      shape.halfExtents[axis]! + GEOMETRY_EPSILON_3D
+    ) return false;
   }
   return true;
 }
@@ -695,11 +525,17 @@ function unitAgainstMotion(
   const length = Math.hypot(x, y, z);
   if (Number.isFinite(length) && length > 0) {
     const unit = [x / length, y / length, z / length] as const;
-    return dot(unit, motion) > 0 ? [-unit[0], -unit[1], -unit[2]] : unit;
+    return dot(unit, motion) > 0
+      ? [-unit[0], -unit[1], -unit[2]]
+      : unit;
   }
   const motionLength = Math.hypot(motion[0]!, motion[1]!, motion[2]!);
   return Number.isFinite(motionLength) && motionLength > 0
-    ? [-motion[0]! / motionLength, -motion[1]! / motionLength, -motion[2]! / motionLength]
+    ? [
+        -motion[0]! / motionLength,
+        -motion[1]! / motionLength,
+        -motion[2]! / motionLength,
+      ]
     : [1, 0, 0];
 }
 
@@ -707,12 +543,17 @@ function internalPoseAsPublic(pose: InternalPose3D): CRCPhysicsPose3D {
   return {
     position: [pose.position[0]!, pose.position[1]!, pose.position[2]!],
     orientation: [
-      pose.orientation[0]!, pose.orientation[1]!, pose.orientation[2]!, pose.orientation[3]!,
+      pose.orientation[0]!,
+      pose.orientation[1]!,
+      pose.orientation[2]!,
+      pose.orientation[3]!,
     ],
   };
 }
 
-function isFiniteDistance(distance: ReturnType<typeof distanceBetweenPreparedShapes3D>): boolean {
+function isFiniteDistance(
+  distance: ReturnType<typeof distanceBetweenPreparedShapes3D>,
+): boolean {
   return [
     distance.separation,
     ...distance.pointOnFirst,
@@ -721,7 +562,10 @@ function isFiniteDistance(distance: ReturnType<typeof distanceBetweenPreparedSha
   ].every(Number.isFinite);
 }
 
-function publicHit(candidate: CastCandidate3D): CRCPhysicsShapeHit3D | null {
+function publicHit(
+  candidate: CastCandidate3D,
+  preserveExactScale = false,
+): CRCPhysicsShapeHit3D | null {
   if (![
     candidate.pointX,
     candidate.pointY,
@@ -733,173 +577,38 @@ function publicHit(candidate: CastCandidate3D): CRCPhysicsShapeHit3D | null {
     candidate.timeOfImpact,
   ].every(Number.isFinite)) return null;
   return Object.freeze({
-    point: freezeCollisionVector3(candidate.pointX, candidate.pointY, candidate.pointZ),
-    normal: freezeCollisionVector3(candidate.normalX, candidate.normalY, candidate.normalZ),
+    point: freezeCastVector3(
+      candidate.pointX,
+      candidate.pointY,
+      candidate.pointZ,
+      preserveExactScale,
+    ),
+    normal: freezeCastVector3(
+      candidate.normalX,
+      candidate.normalY,
+      candidate.normalZ,
+      preserveExactScale,
+    ),
     distance: cleanZero(candidate.distance),
     timeOfImpact: cleanZero(candidate.timeOfImpact),
   });
 }
 
-function localPositionAt(
-  origin: ArrayLike<number>,
-  translation: ArrayLike<number>,
-  time: number,
-): [number, number, number] {
-  return [
-    origin[0]! + translation[0]! * time,
-    origin[1]! + translation[1]! * time,
-    origin[2]! + translation[2]! * time,
-  ];
-}
-
-function boxLocalPointToWorld(
-  box: PreparedBox3D,
-  point: ArrayLike<number>,
-): readonly [number, number, number] {
-  return [
-    box.center[0]! + box.axes[0]! * point[0]! + box.axes[3]! * point[1]! + box.axes[6]! * point[2]!,
-    box.center[1]! + box.axes[1]! * point[0]! + box.axes[4]! * point[1]! + box.axes[7]! * point[2]!,
-    box.center[2]! + box.axes[2]! * point[0]! + box.axes[5]! * point[1]! + box.axes[8]! * point[2]!,
-  ];
-}
-
-function boxLocalVectorToWorld(
-  box: PreparedBox3D,
-  vector: ArrayLike<number>,
-): readonly [number, number, number] {
-  return [
-    box.axes[0]! * vector[0]! + box.axes[3]! * vector[1]! + box.axes[6]! * vector[2]!,
-    box.axes[1]! * vector[0]! + box.axes[4]! * vector[1]! + box.axes[7]! * vector[2]!,
-    box.axes[2]! * vector[0]! + box.axes[5]! * vector[1]! + box.axes[8]! * vector[2]!,
-  ];
-}
-
-function sweepSphereEntryProof(
-  offset: readonly number[],
-  translation: readonly number[],
-  radius: number,
-): SphereSweepContactProof | null {
-  const initialRelation = exactSquaredDistanceRelation(offset, radius);
-  if (initialRelation === null || initialRelation <= 0) return null;
-  const scale = Math.max(...offset.map(Math.abs), ...translation.map(Math.abs), radius);
-  if (!Number.isFinite(scale) || scale <= 0) return null;
-  const scaledOffset: number[] = [];
-  const scaledTranslation: number[] = [];
-  for (let index = 0; index < offset.length; index += 1) {
-    scaledOffset.push(offset[index]! / scale);
-    scaledTranslation.push(translation[index]! / scale);
-  }
-  const translationLength = Math.hypot(...scaledTranslation);
-  if (!Number.isFinite(translationLength) || translationLength === 0) return null;
-  const direction = scaledTranslation.map((value) => value / translationLength);
-  const closestDistance = -compensatedDot(scaledOffset, direction);
-  const closestTime = closestDistance / translationLength;
-  if (!Number.isFinite(closestTime) || closestTime < 0) return null;
-  const closestPoint = positionAlongSweep(offset, translation, closestTime);
-  const closestRelation = exactSquaredDistanceRelation(closestPoint, radius);
-  if (closestRelation === null || closestRelation > 0) return null;
-  if (closestRelation === 0) {
-    return { kind: "tangent", time: closestTime, radialPoint: closestPoint };
-  }
-
-  let outsideTime = 0;
-  let insideTime = closestTime;
-  for (let iteration = 0; iteration < CAST_REFINEMENT_ITERATIONS; iteration += 1) {
-    const middleTime = outsideTime / 2 + insideTime / 2;
-    if (middleTime === outsideTime || middleTime === insideTime) break;
-    const middlePoint = positionAlongSweep(offset, translation, middleTime);
-    const relation = exactSquaredDistanceRelation(middlePoint, radius);
-    if (relation === null) return null;
-    if (relation > 0) outsideTime = middleTime;
-    else insideTime = middleTime;
-  }
-  const radialPoint = positionAlongSweep(offset, translation, insideTime);
-  const finalRelation = exactSquaredDistanceRelation(radialPoint, radius);
-  return finalRelation !== null && finalRelation <= 0
-    ? { kind: "crossing", outsideTime, time: insideTime, radialPoint }
-    : null;
-}
-
-function compensatedDot(first: readonly number[], second: readonly number[]): number {
-  let sum = 0;
-  let correction = 0;
-  for (let index = 0; index < first.length; index += 1) {
-    const adjusted = first[index]! * second[index]! - correction;
-    const next = sum + adjusted;
-    correction = (next - sum) - adjusted;
-    sum = next;
-  }
-  return sum;
-}
-
-function localBoxOutsideVector(
-  center: ArrayLike<number>,
-  halfExtents: ArrayLike<number>,
-): readonly [number, number, number] {
-  return [
-    Math.max(0, Math.abs(center[0]!) - halfExtents[0]!),
-    Math.max(0, Math.abs(center[1]!) - halfExtents[1]!),
-    Math.max(0, Math.abs(center[2]!) - halfExtents[2]!),
-  ];
-}
-
-function positionAlongSweep(
-  offset: readonly number[],
-  translation: readonly number[],
-  time: number,
-): readonly number[] {
-  return offset.map((value, index) => value + translation[index]! * time);
-}
-
-function exactSquaredDistanceRelation(
-  point: readonly number[],
-  radius: number,
-): -1 | 0 | 1 | null {
-  if (!Number.isFinite(radius) || radius < 0 || !point.every(Number.isFinite)) return null;
-  const terms = [...point.map(exactSquareTerm), exactSquareTerm(radius)];
-  if (terms.some((term) => term === null)) return null;
-  let minimumExponent = Number.POSITIVE_INFINITY;
-  for (const term of terms) {
-    if (term !== null && term.significand !== 0n) {
-      minimumExponent = Math.min(minimumExponent, term.exponent);
-    }
-  }
-  if (!Number.isFinite(minimumExponent)) return 0;
-  let residual = 0n;
-  for (let index = 0; index < point.length; index += 1) {
-    const term = terms[index]!;
-    if (term.significand === 0n) continue;
-    residual += term.significand << BigInt(term.exponent - minimumExponent);
-  }
-  const radiusTerm = terms[terms.length - 1]!;
-  if (radiusTerm.significand !== 0n) {
-    residual -= radiusTerm.significand << BigInt(radiusTerm.exponent - minimumExponent);
-  }
-  return residual < 0n ? -1 : residual > 0n ? 1 : 0;
-}
-
-function exactSquareTerm(
-  value: number,
-): Readonly<{ significand: bigint; exponent: number }> | null {
-  if (!Number.isFinite(value)) return null;
-  const floats = new Float64Array(1);
-  const bits = new BigUint64Array(floats.buffer);
-  floats[0] = Math.abs(value);
-  const encoded = bits[0]!;
-  const exponentBits = Number((encoded >> 52n) & 0x7ffn);
-  const fraction = encoded & 0x000f_ffff_ffff_ffffn;
-  const significand = exponentBits === 0
-    ? fraction
-    : (1n << 52n) | fraction;
-  const exponent = exponentBits === 0
-    ? -1074
-    : exponentBits - 1023 - 52;
-  return {
-    significand: significand * significand,
-    exponent: exponent * 2,
-  };
+function freezeCastVector3(
+  x: number,
+  y: number,
+  z: number,
+  preserveExactScale: boolean,
+): CRCPhysicsVector3 {
+  const clean = preserveExactScale
+    ? cleanZero
+    : (value: number): number =>
+        Math.abs(value) <= Number.EPSILON ? 0 : value;
+  return Object.freeze([clean(x), clean(y), clean(z)] as const);
 }
 
 function dot(first: ArrayLike<number>, second: ArrayLike<number>): number {
-  return first[0]! * second[0]! + first[1]! * second[1]! + first[2]! * second[2]!;
+  return first[0]! * second[0]! +
+    first[1]! * second[1]! +
+    first[2]! * second[2]!;
 }

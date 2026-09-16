@@ -39,6 +39,23 @@ describe("standalone 3D rays and translational casts", () => {
     expect(Object.values(hit ?? {}).flat().every(Number.isFinite)).toBe(true);
   });
 
+  it("materializes a finite early sphere-ray hit with maximum-finite direction components", () => {
+    const hit = raycastShape3D(
+      sphereShape3D({ radius: 1e290 }),
+      pose([1e300, 1e300, 0]),
+      {
+        origin: [0, 0, 0],
+        direction: [Number.MAX_VALUE, Number.MAX_VALUE, 0],
+        maxDistance: 2e300,
+      },
+    );
+
+    expect(hit).not.toBeNull();
+    expect(hit!.distance).toBeGreaterThan(1e300);
+    expect(hit!.distance).toBeLessThan(2e300);
+    expect(Object.values(hit ?? {}).flat().every(Number.isFinite)).toBe(true);
+  });
+
   it("does not let an enormous ray limit underflow ordinary sphere geometry", () => {
     const hit = raycastShape3D(
       sphereShape3D({ radius: 1 }),
@@ -139,6 +156,21 @@ describe("standalone 3D rays and translational casts", () => {
     expect(hit!.normal).toEqual([-1, 0, 0]);
     expect(hit!.distance / 1e200).toBeCloseTo(4, 12);
     expect(hit!.timeOfImpact).toBeCloseTo(0.4, 12);
+    expect(Object.values(hit ?? {}).flat().every(Number.isFinite)).toBe(true);
+  });
+
+  it("materializes a finite early sphere sweep when the full translation length overflows", () => {
+    const hit = shapeCastAgainstShape3D(
+      sphereShape3D({ radius: 1e290 }),
+      identity,
+      [Number.MAX_VALUE, Number.MAX_VALUE, 0],
+      sphereShape3D({ radius: 1e290 }),
+      pose([1e300, 1e300, 0]),
+    );
+
+    expect(hit).not.toBeNull();
+    expect(hit!.distance).toBeGreaterThan(1e300);
+    expect(hit!.distance).toBeLessThan(2e300);
     expect(Object.values(hit ?? {}).flat().every(Number.isFinite)).toBe(true);
   });
 
@@ -381,6 +413,205 @@ describe("standalone 3D rays and translational casts", () => {
     expect(hit!.point).toEqual([4, 1, 0]);
   });
 
+  it("selects the earlier edge instead of a time-tied invalid far face", () => {
+    const hit = shapeCastAgainstShape3D(
+      sphereShape3D({ radius: 1 }),
+      pose([0, 1_000_000.999999, 0]),
+      [2e12, -2e6, 0],
+      boxShape3D({ width: 2, height: 2, depth: 2 }),
+      pose([1e12, 0, 0]),
+    );
+
+    expect(hit).not.toBeNull();
+    expect(hit!.timeOfImpact).toBe(0.499999999999);
+    expect(hit!.point).toEqual([999_999_999_999, 1, 0]);
+    expect(hit!.normal[0]).toBeLessThan(-0.999999999999);
+    expect(hit!.normal[1]).toBeGreaterThan(0);
+  });
+
+  it("classifies a non-axis sphere-ray tangent and its adjacent binary64 variants exactly", () => {
+    const ray = {
+      origin: [0, 0, 0],
+      direction: [3, 4, 0],
+      maxDistance: 2,
+    } as const;
+    const tangent = raycastShape3D(
+      sphereShape3D({ radius: 1 }),
+      pose([2, 1, 0]),
+      ray,
+    );
+
+    expect(tangent?.distance).toBe(2);
+    expect(tangent?.timeOfImpact).toBe(1);
+    expect(tangent?.point[0]).toBeCloseTo(1.2, 15);
+    expect(tangent?.point[1]).toBeCloseTo(1.6, 15);
+    expect(tangent?.normal[0]).toBeCloseTo(-0.8, 15);
+    expect(tangent?.normal[1]).toBeCloseTo(0.6, 15);
+
+    expect(raycastShape3D(
+      sphereShape3D({ radius: 1 }),
+      pose([2, nextRepresentableDown(1), 0]),
+      ray,
+    )).toBeNull();
+
+    const crossing = raycastShape3D(
+      sphereShape3D({ radius: 1 }),
+      pose([2, nextRepresentableUp(1), 0]),
+      ray,
+    );
+    expect(crossing).not.toBeNull();
+    expect(crossing!.distance).toBeLessThan(2);
+  });
+
+  it("classifies the exact sphere-box edge tangent and adjacent gaps without tolerance", () => {
+    const box = boxShape3D({ width: 2, height: 2, depth: 2 });
+    const translation = [10, 0, 0] as const;
+    const tangent = shapeCastAgainstShape3D(
+      sphereShape3D({ radius: 1 }),
+      pose([0, 2, 0]),
+      translation,
+      box,
+      pose([5, 0, 0]),
+    );
+
+    expect(tangent?.timeOfImpact).toBe(0.4);
+    expect(tangent?.distance).toBe(4);
+    expect(tangent?.point).toEqual([4, 1, 0]);
+    expect(shapeCastAgainstShape3D(
+      sphereShape3D({ radius: 1 }),
+      pose([0, nextRepresentableUp(2), 0]),
+      translation,
+      box,
+      pose([5, 0, 0]),
+    )).toBeNull();
+
+    const crossing = shapeCastAgainstShape3D(
+      sphereShape3D({ radius: 1 }),
+      pose([0, nextRepresentableDown(2), 0]),
+      translation,
+      box,
+      pose([5, 0, 0]),
+    );
+    expect(crossing).not.toBeNull();
+    expect(crossing!.timeOfImpact).toBeLessThan(0.4);
+  });
+
+  it("keeps the exact two-radius sum when an initially separated sphere moves away", () => {
+    expect(shapeCastAgainstShape3D(
+      sphereShape3D({ radius: nextRepresentableUp(1) }),
+      identity,
+      [-1, 0, 0],
+      sphereShape3D({ radius: 2 ** -53 }),
+      pose([1.0000000000000004, 0, 0]),
+      { includeInitialOverlap: true },
+    )).toBeNull();
+  });
+
+  it("materializes a downscaled initial edge normal without an epsilon fallback", () => {
+    const scale = 2 ** -100;
+    const hit = shapeCastAgainstShape3D(
+      sphereShape3D({ radius: 5 * scale }),
+      pose([0, 11 * scale, 12 * scale]),
+      [0, 0, 0],
+      boxShape3D({ width: 16 * scale, height: 16 * scale, depth: 16 * scale }),
+      identity,
+      { includeInitialOverlap: true },
+    );
+
+    expect(hit?.timeOfImpact).toBe(0);
+    expect(hit?.distance).toBe(0);
+    expect(hit?.normal).toEqual([0, 0.6, 0.8]);
+    expect(hit?.point).toEqual([0, 8 * scale, 8 * scale]);
+  });
+
+  it.each([Number.MIN_VALUE, 2 ** -1060])(
+    "preserves an exact 3-4-5 edge entry at scale %s",
+    (scale) => {
+      const hit = shapeCastAgainstShape3D(
+        sphereShape3D({ radius: 5 * scale }),
+        pose([0, 11 * scale, 12 * scale]),
+        [10 * scale, 0, 0],
+        boxShape3D({ width: 16 * scale, height: 16 * scale, depth: 16 * scale }),
+        pose([12 * scale, 0, 0]),
+      );
+
+      expect(hit?.timeOfImpact).toBe(0.4);
+      expect(hit?.distance).toBe(4 * scale);
+      expect(hit?.point).toEqual([4 * scale, 8 * scale, 8 * scale]);
+      expect(hit?.normal).toEqual([0, 0.6, 0.8]);
+    },
+  );
+
+  it("preserves exact edge entry topology across axes, signs, and power-of-two scales", () => {
+    const scales = [2 ** -500, 1, 2 ** 500] as const;
+    const cases = [
+      {
+        from: (scale: number) => [0, 11 * scale, 12 * scale] as const,
+        motion: (scale: number) => [10 * scale, 0, 0] as const,
+        target: (scale: number) => [12 * scale, 0, 0] as const,
+        normal: [0, 0.6, 0.8] as const,
+      },
+      {
+        from: (scale: number) => [-12 * scale, 0, -11 * scale] as const,
+        motion: (scale: number) => [0, -10 * scale, 0] as const,
+        target: (scale: number) => [0, -12 * scale, 0] as const,
+        normal: [-0.8, 0, -0.6] as const,
+      },
+    ];
+
+    for (const scale of scales) {
+      for (const fixture of cases) {
+        const hit = shapeCastAgainstShape3D(
+          sphereShape3D({ radius: 5 * scale }),
+          pose(fixture.from(scale)),
+          fixture.motion(scale),
+          boxShape3D({ width: 16 * scale, height: 16 * scale, depth: 16 * scale }),
+          pose(fixture.target(scale)),
+        );
+        expect(hit?.timeOfImpact).toBe(0.4);
+        expect(hit?.distance).toBe(4 * scale);
+        hit?.normal.forEach((value, axis) => {
+          expect(value).toBeCloseTo(fixture.normal[axis]!, 15);
+        });
+        expect(Object.values(hit ?? {}).flat().every(Number.isFinite)).toBe(true);
+      }
+    }
+  });
+
+  it("admits exact cast endpoints and rejects contact beyond the closed interval", () => {
+    const sphere = sphereShape3D({ radius: 1 });
+    expect(shapeCastAgainstShape3D(
+      sphere,
+      identity,
+      [10, 0, 0],
+      sphere,
+      pose([12, 0, 0]),
+    )?.timeOfImpact).toBe(1);
+    expect(shapeCastAgainstShape3D(
+      sphere,
+      identity,
+      [10, 0, 0],
+      sphere,
+      pose([nextRepresentableUp(12), 0, 0]),
+    )).toBeNull();
+
+    const box = boxShape3D({ width: 2, height: 2, depth: 2 });
+    expect(shapeCastAgainstShape3D(
+      sphere,
+      identity,
+      [10, 0, 0],
+      box,
+      pose([12, 0, 0]),
+    )?.timeOfImpact).toBe(1);
+    expect(shapeCastAgainstShape3D(
+      sphere,
+      identity,
+      [10, 0, 0],
+      box,
+      pose([nextRepresentableUp(12), 0, 0]),
+    )).toBeNull();
+  });
+
   it("handles zero translation and initial overlap deterministically", () => {
     const sphere = sphereShape3D({ radius: 1 });
     const box = boxShape3D({ width: 4, height: 4, depth: 4 });
@@ -395,7 +626,19 @@ describe("standalone 3D rays and translational casts", () => {
     );
     expect(included?.distance).toBe(0);
     expect(included?.timeOfImpact).toBe(0);
-    expect(included?.normal.every(Number.isFinite)).toBe(true);
+    expect(included?.normal).toEqual([-1, 0, 0]);
+
+    const onFace = shapeCastAgainstShape3D(
+      sphere,
+      pose([2, 0, 0]),
+      [0, 0, 0],
+      box,
+      identity,
+      { includeInitialOverlap: true },
+    );
+    expect(onFace?.distance).toBe(0);
+    expect(onFace?.timeOfImpact).toBe(0);
+    expect(onFace?.normal).toEqual([1, 0, 0]);
   });
 
   it("validates finite inputs and returns deeply frozen copied hits", () => {
@@ -446,5 +689,13 @@ function nextRepresentableUp(value: number): number {
   const bits = new BigUint64Array(floats.buffer);
   floats[0] = value;
   bits[0] = bits[0]! + 1n;
+  return floats[0]!;
+}
+
+function nextRepresentableDown(value: number): number {
+  const floats = new Float64Array(1);
+  const bits = new BigUint64Array(floats.buffer);
+  floats[0] = value;
+  bits[0] = bits[0]! - 1n;
   return floats[0]!;
 }
