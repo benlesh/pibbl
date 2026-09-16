@@ -9,6 +9,8 @@ import type { SettledWebGLMesh, SettledWebGLScene } from './settle.js';
 import type {
   SettledWebGLBackground,
   SettledWebGLLight,
+  SettledWebGLPointShadowPlan,
+  SettledWebGLSpotShadowPlan,
   SettledWebGLShadowPlan,
 } from './types.js';
 import { WebGLSceneRenderer } from './renderer.js';
@@ -857,8 +859,8 @@ function pointLight(): SettledWebGLLight {
 
 function pointPlan(
   mesh: SettledWebGLMesh,
-  overrides: Partial<SettledWebGLShadowPlan> = {},
-): SettledWebGLShadowPlan {
+  overrides: Partial<SettledWebGLPointShadowPlan> = {},
+): SettledWebGLPointShadowPlan {
   return Object.freeze({
     kind: 'point',
     lightIdentity: POINT_LIGHT_IDENTITY,
@@ -878,7 +880,7 @@ function pointPlan(
     contextGeneration: 7,
     shadowProgramGeneration: 1,
     ...overrides,
-  } as any);
+  });
 }
 
 function spotLight(): SettledWebGLLight {
@@ -898,8 +900,8 @@ function spotLight(): SettledWebGLLight {
 
 function spotPlan(
   mesh: SettledWebGLMesh,
-  overrides: Record<string, unknown> = {},
-): any {
+  overrides: Partial<SettledWebGLSpotShadowPlan> = {},
+): SettledWebGLSpotShadowPlan {
   return Object.freeze({
     kind: 'spot',
     lightIdentity: SPOT_LIGHT_IDENTITY,
@@ -922,6 +924,8 @@ function spotPlan(
 const DIRECTIONAL_LIGHT_IDENTITY = Object.freeze({});
 const POINT_LIGHT_IDENTITY = Object.freeze({});
 const SPOT_LIGHT_IDENTITY = Object.freeze({});
+const SECOND_POINT_LIGHT_IDENTITY = Object.freeze({});
+const SECOND_SPOT_LIGHT_IDENTITY = Object.freeze({});
 
 interface MeshOptions {
   readonly indexed?: boolean;
@@ -1007,19 +1011,24 @@ function fixedLights(): readonly SettledWebGLLight[] {
     }),
     Object.freeze({
       kind: 'directional' as const,
+      identity: DIRECTIONAL_LIGHT_IDENTITY,
       linearColor: Object.freeze([0.2, 0.3, 0.4] as const),
       direction: Object.freeze([0, 0, -1] as const),
       intensity: 2,
+      castShadow: true,
     }),
     Object.freeze({
       kind: 'point' as const,
+      identity: POINT_LIGHT_IDENTITY,
       linearColor: Object.freeze([0.3, 0.4, 0.5] as const),
       position: Object.freeze([1, 2, 3] as const),
       range: undefined,
       intensity: 3,
+      castShadow: true,
     }),
     Object.freeze({
       kind: 'spot' as const,
+      identity: SPOT_LIGHT_IDENTITY,
       linearColor: Object.freeze([0.4, 0.5, 0.6] as const),
       position: Object.freeze([-1, -2, -3] as const),
       direction: Object.freeze([0, -1, 0] as const),
@@ -1027,6 +1036,7 @@ function fixedLights(): readonly SettledWebGLLight[] {
       innerConeCosine: 0.9,
       outerConeCosine: 0.7,
       intensity: 4,
+      castShadow: true,
     }),
     Object.freeze({
       kind: 'ambient' as const,
@@ -1035,13 +1045,16 @@ function fixedLights(): readonly SettledWebGLLight[] {
     }),
     Object.freeze({
       kind: 'point' as const,
+      identity: SECOND_POINT_LIGHT_IDENTITY,
       linearColor: Object.freeze([1, 0, 0] as const),
       position: Object.freeze([0, 0, 1] as const),
       range: 2,
       intensity: 1,
+      castShadow: false,
     }),
     Object.freeze({
       kind: 'spot' as const,
+      identity: SECOND_SPOT_LIGHT_IDENTITY,
       linearColor: Object.freeze([0, 1, 0] as const),
       position: Object.freeze([0, 0, 1] as const),
       direction: Object.freeze([0, 0, -1] as const),
@@ -1049,6 +1062,7 @@ function fixedLights(): readonly SettledWebGLLight[] {
       innerConeCosine: 1,
       outerConeCosine: 1,
       intensity: 1,
+      castShadow: false,
     }),
   ]);
 }

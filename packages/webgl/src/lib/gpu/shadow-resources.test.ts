@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { SettledWebGLShadowPlan } from '../scene/types.js';
+import type {
+  SettledWebGLDirectionalShadowPlan,
+  SettledWebGLPointShadowPlan,
+  SettledWebGLSpotShadowPlan,
+} from '../scene/types.js';
 import { WebGLShadowResourceCache } from './shadow-resources.js';
 
 afterEach(() => {
@@ -201,7 +205,7 @@ describe('WebGLShadowResourceCache', () => {
     const cache = new WebGLShadowResourceCache(recording.gl, 7);
     const renderedFaces: Array<readonly [number, number]> = [];
     const transaction = cache.beginRender();
-    const resource = (transaction as any).usePoint(
+    const resource = transaction.usePoint(
       pointPlan(),
       (face: number, resolution: number) => {
         renderedFaces.push([face, resolution]);
@@ -245,20 +249,20 @@ describe('WebGLShadowResourceCache', () => {
     const cache = new WebGLShadowResourceCache(recording.gl, 7);
     let transaction = cache.beginRender();
     const initialDraw = vi.fn();
-    const initial = (transaction as any).usePoint(pointPlan(), initialDraw);
+    const initial = transaction.usePoint(pointPlan(), initialDraw);
     transaction.commit();
     expect(initialDraw).toHaveBeenCalledTimes(6);
 
     transaction = cache.beginRender();
     const hitDraw = vi.fn();
-    const hit = (transaction as any).usePoint(pointPlan(), hitDraw);
+    const hit = transaction.usePoint(pointPlan(), hitDraw);
     transaction.commit();
     expect(hit.texture).toBe(initial.texture);
     expect(hitDraw).not.toHaveBeenCalled();
 
     transaction = cache.beginRender();
     const replacementDraw = vi.fn();
-    const replacement = (transaction as any).usePoint(pointPlan({
+    const replacement = transaction.usePoint(pointPlan({
       farDistance: 8,
     }), replacementDraw);
     transaction.commit();
@@ -268,7 +272,7 @@ describe('WebGLShadowResourceCache', () => {
 
     transaction = cache.beginRender();
     const failure = new Error('point face failed');
-    expect(() => (transaction as any).usePoint(pointPlan({
+    expect(() => transaction.usePoint(pointPlan({
       farDistance: 12,
     }), (face: number) => {
       if (face === 3) throw failure;
@@ -277,7 +281,7 @@ describe('WebGLShadowResourceCache', () => {
 
     transaction = cache.beginRender();
     const retryDraw = vi.fn();
-    const reused = (transaction as any).usePoint(pointPlan({
+    const reused = transaction.usePoint(pointPlan({
       farDistance: 8,
     }), retryDraw);
     transaction.commit();
@@ -289,7 +293,7 @@ describe('WebGLShadowResourceCache', () => {
     const incomplete = createShadowGL({ framebufferIncompleteAt: 4 });
     const incompleteCache = new WebGLShadowResourceCache(incomplete.gl, 7);
     const incompleteTransaction = incompleteCache.beginRender();
-    expect(() => (incompleteTransaction as any).usePoint(
+    expect(() => incompleteTransaction.usePoint(
       pointPlan(),
       () => undefined,
     )).toThrowError(/point.*face 3.*framebuffer.*incomplete/i);
@@ -303,7 +307,7 @@ describe('WebGLShadowResourceCache', () => {
     });
     const allocationCache = new WebGLShadowResourceCache(allocation.gl, 7);
     const allocationTransaction = allocationCache.beginRender();
-    expect(() => (allocationTransaction as any).usePoint(
+    expect(() => allocationTransaction.usePoint(
       pointPlan(),
       () => undefined,
     )).toThrow(allocationError);
@@ -316,7 +320,7 @@ describe('WebGLShadowResourceCache', () => {
     const cache = new WebGLShadowResourceCache(recording.gl, 7);
     let transaction = cache.beginRender();
     const firstDraw = vi.fn();
-    const first = (transaction as any).useSpot(spotPlan(), firstDraw);
+    const first = transaction.useSpot(spotPlan(), firstDraw);
     transaction.commit();
 
     expect(first).toMatchObject({ kind: 'spot', resolution: 768 });
@@ -331,14 +335,14 @@ describe('WebGLShadowResourceCache', () => {
 
     transaction = cache.beginRender();
     const hitDraw = vi.fn();
-    const hit = (transaction as any).useSpot(spotPlan(), hitDraw);
+    const hit = transaction.useSpot(spotPlan(), hitDraw);
     transaction.commit();
     expect(hit.texture).toBe(first.texture);
     expect(hitDraw).not.toHaveBeenCalled();
 
     transaction = cache.beginRender();
     const replacementDraw = vi.fn();
-    const replacement = (transaction as any).useSpot(spotPlan({
+    const replacement = transaction.useSpot(spotPlan({
       projectionViewMatrix: matrix(9),
     }), replacementDraw);
     transaction.commit();
@@ -351,7 +355,9 @@ describe('WebGLShadowResourceCache', () => {
 const FIRST_LIGHT = Object.freeze({});
 const SECOND_LIGHT = Object.freeze({});
 
-function plan(overrides: Partial<SettledWebGLShadowPlan> = {}): SettledWebGLShadowPlan {
+function plan(
+  overrides: Partial<SettledWebGLDirectionalShadowPlan> = {},
+): SettledWebGLDirectionalShadowPlan {
   return {
     kind: 'directional',
     lightIdentity: FIRST_LIGHT,
@@ -368,7 +374,9 @@ function plan(overrides: Partial<SettledWebGLShadowPlan> = {}): SettledWebGLShad
   };
 }
 
-function pointPlan(overrides: Record<string, unknown> = {}): any {
+function pointPlan(
+  overrides: Partial<SettledWebGLPointShadowPlan> = {},
+): SettledWebGLPointShadowPlan {
   return {
     kind: 'point',
     lightIdentity: FIRST_LIGHT,
@@ -391,7 +399,9 @@ function pointPlan(overrides: Record<string, unknown> = {}): any {
   };
 }
 
-function spotPlan(overrides: Record<string, unknown> = {}): any {
+function spotPlan(
+  overrides: Partial<SettledWebGLSpotShadowPlan> = {},
+): SettledWebGLSpotShadowPlan {
   return {
     kind: 'spot',
     lightIdentity: FIRST_LIGHT,

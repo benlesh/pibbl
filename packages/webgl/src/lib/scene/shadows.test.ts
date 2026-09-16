@@ -91,9 +91,12 @@ describe('directional shadow planning', () => {
       comparisonCount: 4,
       casters: [scene.meshes[0]],
     });
-    expect(Array.from(scene.shadowPlans[0]!.projectionViewMatrix))
-      .toHaveLength(16);
-    expect(Array.from(scene.shadowPlans[0]!.projectionViewMatrix)
+    const shadowPlan = scene.shadowPlans[0];
+    if (shadowPlan?.kind !== 'directional') {
+      throw new Error('Expected a directional shadow plan.');
+    }
+    expect(Array.from(shadowPlan.projectionViewMatrix)).toHaveLength(16);
+    expect(Array.from(shadowPlan.projectionViewMatrix)
       .every(Number.isFinite)).toBe(true);
   });
 
