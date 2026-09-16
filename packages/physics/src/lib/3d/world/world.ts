@@ -31,10 +31,7 @@ import {
   applyTorqueToCandidateBody3D,
   integrateCandidateBodies3D,
 } from "./integrator.js";
-import {
-  BODY_SLEEPING_3D,
-  SequentialImpulseSolver3D,
-} from "./solver.js";
+import { BODY_SLEEPING_3D, SequentialImpulseSolver3D } from "./solver.js";
 import {
   BODY_ENABLED_3D,
   BODY_TYPE_DYNAMIC_3D,
@@ -105,8 +102,7 @@ export interface PhysicsColliderTopologyRecord3D {
 }
 
 export type PhysicsTopologyRecord3D =
-  | PhysicsBodyTopologyRecord3D
-  | PhysicsColliderTopologyRecord3D;
+  PhysicsBodyTopologyRecord3D | PhysicsColliderTopologyRecord3D;
 
 export type PhysicsCommand3D =
   | Readonly<{
@@ -452,33 +448,19 @@ export class PhysicsWorld3DKernel {
       eventNormalY: new Float64Array(eventCapacity),
       eventNormalZ: new Float64Array(eventCapacity),
       eventPointCounts: new Uint8Array(eventCapacity),
-      eventPointFirstX: new Float64Array(
-        eventCapacity * POINTS_PER_CONTACT,
-      ),
-      eventPointFirstY: new Float64Array(
-        eventCapacity * POINTS_PER_CONTACT,
-      ),
-      eventPointFirstZ: new Float64Array(
-        eventCapacity * POINTS_PER_CONTACT,
-      ),
-      eventPointSecondX: new Float64Array(
-        eventCapacity * POINTS_PER_CONTACT,
-      ),
-      eventPointSecondY: new Float64Array(
-        eventCapacity * POINTS_PER_CONTACT,
-      ),
-      eventPointSecondZ: new Float64Array(
-        eventCapacity * POINTS_PER_CONTACT,
-      ),
+      eventPointFirstX: new Float64Array(eventCapacity * POINTS_PER_CONTACT),
+      eventPointFirstY: new Float64Array(eventCapacity * POINTS_PER_CONTACT),
+      eventPointFirstZ: new Float64Array(eventCapacity * POINTS_PER_CONTACT),
+      eventPointSecondX: new Float64Array(eventCapacity * POINTS_PER_CONTACT),
+      eventPointSecondY: new Float64Array(eventCapacity * POINTS_PER_CONTACT),
+      eventPointSecondZ: new Float64Array(eventCapacity * POINTS_PER_CONTACT),
       eventPointSeparations: new Float64Array(
         eventCapacity * POINTS_PER_CONTACT,
       ),
       eventTotalNormalImpulses: new Float64Array(eventCapacity),
       eventCount: 0,
       contactEventFacts: new Map(),
-      savedNormalImpulses: new Float64Array(
-        eventCapacity * POINTS_PER_CONTACT,
-      ),
+      savedNormalImpulses: new Float64Array(eventCapacity * POINTS_PER_CONTACT),
       savedTangentImpulses1: new Float64Array(
         eventCapacity * POINTS_PER_CONTACT,
       ),
@@ -545,11 +527,19 @@ export class PhysicsWorld3DKernel {
       }
       injectFailure(stage);
 
+      const logicalTimeMovedBackward =
+        this.state.anchored &&
+        input.logicalTime < this.state.previousLogicalTime;
+      if (logicalTimeMovedBackward) {
+        this.state.accumulatorMilliseconds = 0;
+        this.state.anchored = false;
+        this.capturePreviousPoses();
+      }
       const elapsed = this.state.anchored
-        ? Math.max(0, input.logicalTime - this.state.previousLogicalTime)
+        ? input.logicalTime - this.state.previousLogicalTime
         : 0;
       this.state.previousLogicalTime = input.logicalTime;
-      this.state.anchored = true;
+      this.state.anchored = !logicalTimeMovedBackward;
       const configuration = this.state.configuration;
       const maximumElapsed =
         configuration.fixedStepMilliseconds * configuration.maxCatchUpSteps;
@@ -586,11 +576,7 @@ export class PhysicsWorld3DKernel {
           this.state.accumulatorMilliseconds = 0;
         }
       }
-      if (
-        stepCount > 0 &&
-        !this.solver.advanceEligible &&
-        !this.hasKinematicBodies()
-      ) {
+      if (!this.hasAdvanceWork(input.stagedKinematicTargets)) {
         this.state.accumulatorMilliseconds = 0;
         this.state.anchored = false;
         this.capturePreviousPoses();
@@ -604,7 +590,7 @@ export class PhysicsWorld3DKernel {
         stepCount,
         this.state.tick,
         this.state.accumulatorMilliseconds,
-        this.hasAdvanceWork(),
+        this.hasAdvanceWork(input.stagedKinematicTargets),
         eventOffset,
         this.state.eventCount - eventOffset,
         this.state.eventTicks,
@@ -666,6 +652,7 @@ export class PhysicsWorld3DKernel {
         this.pendingCommands.slice(candidate.commandCount),
       );
     }
+    this.state.eventCount = 0;
     recordPhysicsWorld3DTrace({
       kind: "physics-3d-adopt",
       frameId: candidate.frameId,
@@ -746,8 +733,7 @@ export class PhysicsWorld3DKernel {
   isBodyEnabled(bodyId: number): boolean {
     this.assertUsable();
     return (
-      this.state.bodySlots.has(bodyId) &&
-      !this.state.disabledBodies.has(bodyId)
+      this.state.bodySlots.has(bodyId) && !this.state.disabledBodies.has(bodyId)
     );
   }
 
@@ -782,6 +768,7 @@ export class PhysicsWorld3DKernel {
   }
 
   snapshot(): PhysicsWorld3DSnapshot {
+    this.assertUsable();
     const bodies = [...this.state.bodySlots.entries()]
       .sort(([first], [second]) => first - second)
       .map(([id, slot]) => {
@@ -807,18 +794,12 @@ export class PhysicsWorld3DKernel {
           angularVelocityY: this.bodies.angularVelocityY[index]!,
           angularVelocityZ: this.bodies.angularVelocityZ[index]!,
           inverseMass: this.bodies.inverseMass[index]!,
-          localInverseInertiaXX:
-            this.bodies.localInverseInertiaXX[index]!,
-          localInverseInertiaYY:
-            this.bodies.localInverseInertiaYY[index]!,
-          localInverseInertiaZZ:
-            this.bodies.localInverseInertiaZZ[index]!,
-          localInverseInertiaXY:
-            this.bodies.localInverseInertiaXY[index]!,
-          localInverseInertiaXZ:
-            this.bodies.localInverseInertiaXZ[index]!,
-          localInverseInertiaYZ:
-            this.bodies.localInverseInertiaYZ[index]!,
+          localInverseInertiaXX: this.bodies.localInverseInertiaXX[index]!,
+          localInverseInertiaYY: this.bodies.localInverseInertiaYY[index]!,
+          localInverseInertiaZZ: this.bodies.localInverseInertiaZZ[index]!,
+          localInverseInertiaXY: this.bodies.localInverseInertiaXY[index]!,
+          localInverseInertiaXZ: this.bodies.localInverseInertiaXZ[index]!,
+          localInverseInertiaYZ: this.bodies.localInverseInertiaYZ[index]!,
           flags: this.bodies.flags[index]!,
         });
       });
@@ -946,14 +927,9 @@ export class PhysicsWorld3DKernel {
     });
   }
 
-  private reconcileTopology(
-    records: readonly PhysicsTopologyRecord3D[],
-  ): void {
+  private reconcileTopology(records: readonly PhysicsTopologyRecord3D[]): void {
     const desiredBodies = new Map<number, PhysicsBodyTopologyRecord3D>();
-    const desiredColliders = new Map<
-      number,
-      PhysicsColliderTopologyRecord3D
-    >();
+    const desiredColliders = new Map<number, PhysicsColliderTopologyRecord3D>();
     for (const record of records) {
       if (record.kind === "body") desiredBodies.set(record.id, record);
       else desiredColliders.set(record.id, record);
@@ -997,6 +973,15 @@ export class PhysicsWorld3DKernel {
         continue;
       }
       const disabled = this.state.disabledBodies.get(id);
+      const wasActiveDynamic =
+        disabled === undefined &&
+        (this.bodies.flags[existing.index]! & BODY_ENABLED_3D) !== 0 &&
+        (this.bodies.flags[existing.index]! & BODY_TYPE_MASK_3D) ===
+          BODY_TYPE_DYNAMIC_3D;
+      const becomesActiveDynamic =
+        disabled === undefined &&
+        (record.definition.flags & BODY_ENABLED_3D) !== 0 &&
+        (record.definition.flags & BODY_TYPE_MASK_3D) === BODY_TYPE_DYNAMIC_3D;
       if (disabled === undefined) {
         this.wakeForBodyTopology(id, existing.index);
       }
@@ -1025,12 +1010,9 @@ export class PhysicsWorld3DKernel {
       writeBodyDefinition(this.bodies, existing.index, record.definition);
       if (preserved !== null) {
         this.setBodyOriginPose(existing.index, preserved.pose);
-        this.bodies.linearVelocityX[existing.index] =
-          preserved.linearVelocityX;
-        this.bodies.linearVelocityY[existing.index] =
-          preserved.linearVelocityY;
-        this.bodies.linearVelocityZ[existing.index] =
-          preserved.linearVelocityZ;
+        this.bodies.linearVelocityX[existing.index] = preserved.linearVelocityX;
+        this.bodies.linearVelocityY[existing.index] = preserved.linearVelocityY;
+        this.bodies.linearVelocityZ[existing.index] = preserved.linearVelocityZ;
         this.bodies.angularVelocityX[existing.index] =
           preserved.angularVelocityX;
         this.bodies.angularVelocityY[existing.index] =
@@ -1053,6 +1035,10 @@ export class PhysicsWorld3DKernel {
       }
       this.state.bodyRecords.set(id, record);
       this.snapPreviousPose(existing.index);
+      if (!wasActiveDynamic && becomesActiveDynamic) {
+        this.state.accumulatorMilliseconds = 0;
+        this.state.anchored = false;
+      }
     }
 
     for (const [id, record] of sortedEntries(desiredColliders)) {
@@ -1077,9 +1063,7 @@ export class PhysicsWorld3DKernel {
       this.state.colliderRecords.set(id, record);
       if (this.state.disabledBodies.has(record.bodyId)) continue;
       this.allocateColliderRecord(id, record, bodySlot);
-      this.wakeForNewSolidColliderTopology(
-        this.state.colliderSlots.get(id)!,
-      );
+      this.wakeForNewSolidColliderTopology(this.state.colliderSlots.get(id)!);
     }
     this.rebuildBodyIndices();
     this.moveBroadPhaseProxies();
@@ -1088,33 +1072,39 @@ export class PhysicsWorld3DKernel {
   private applyCommands(commands: readonly PhysicsCommand3D[]): void {
     for (const command of commands) {
       if (command.kind === "configure") {
-        const previousStep = this.state.configuration.fixedStepMilliseconds;
-        const sleepingWasEnabled = this.state.configuration.sleeping;
-        this.state.configuration = normalizePhysicsWorld3DConfiguration({
-          gravity: [
-            this.state.configuration.gravityX,
-            this.state.configuration.gravityY,
-            this.state.configuration.gravityZ,
-          ],
-          fixedStepMilliseconds:
-            this.state.configuration.fixedStepMilliseconds,
-          maxCatchUpSteps: this.state.configuration.maxCatchUpSteps,
-          interpolation: this.state.configuration.interpolation,
-          sleeping: this.state.configuration.sleeping,
+        const previous = this.state.configuration;
+        const next = normalizePhysicsWorld3DConfiguration({
+          gravity: [previous.gravityX, previous.gravityY, previous.gravityZ],
+          fixedStepMilliseconds: previous.fixedStepMilliseconds,
+          maxCatchUpSteps: previous.maxCatchUpSteps,
+          interpolation: previous.interpolation,
+          sleeping: previous.sleeping,
           ...command.configuration,
           solver: {
-            velocityIterations: this.state.configuration.velocityIterations,
-            positionIterations: this.state.configuration.positionIterations,
+            velocityIterations: previous.velocityIterations,
+            positionIterations: previous.positionIterations,
             ...command.configuration.solver,
           },
         });
-        if (this.state.configuration.fixedStepMilliseconds !== previousStep) {
+        this.state.configuration = next;
+        const changesSimulation =
+          next.gravityX !== previous.gravityX ||
+          next.gravityY !== previous.gravityY ||
+          next.gravityZ !== previous.gravityZ ||
+          next.fixedStepMilliseconds !== previous.fixedStepMilliseconds ||
+          next.velocityIterations !== previous.velocityIterations ||
+          next.positionIterations !== previous.positionIterations ||
+          (previous.sleeping && !next.sleeping);
+        if (changesSimulation) {
           this.state.accumulatorMilliseconds = 0;
           this.state.anchored = false;
-        }
-        if (sleepingWasEnabled && !this.state.configuration.sleeping) {
-          for (let offset = 0; offset < this.state.bodyCount; offset += 1) {
-            this.wakeCommandBody(this.state.bodyIndices[offset]!);
+          for (const [, slot] of sortedEntries(this.state.bodySlots)) {
+            if (
+              (this.bodies.flags[slot.index]! & BODY_TYPE_MASK_3D) ===
+              BODY_TYPE_DYNAMIC_3D
+            ) {
+              this.wakeCommandBody(slot.index);
+            }
           }
         }
         continue;
@@ -1351,9 +1341,7 @@ export class PhysicsWorld3DKernel {
   }
 
   private wakeForSolidColliderTopology(slot: ColliderSlot3D): void {
-    if (
-      (this.colliders.flags[slot.index]! & COLLIDER_SENSOR_3D) !== 0
-    ) {
+    if ((this.colliders.flags[slot.index]! & COLLIDER_SENSOR_3D) !== 0) {
       return;
     }
     const affectedBodies = new Set<number>([
@@ -1371,7 +1359,9 @@ export class PhysicsWorld3DKernel {
       affectedBodies.add(this.contacts.firstBodyIndices[contact]!);
       affectedBodies.add(this.contacts.secondBodyIndices[contact]!);
     }
-    for (const body of [...affectedBodies].sort((first, second) => first - second)) {
+    for (const body of [...affectedBodies].sort(
+      (first, second) => first - second,
+    )) {
       this.wakeCommandBody(body);
     }
   }
@@ -1417,13 +1407,18 @@ export class PhysicsWorld3DKernel {
             group: this.colliders.collisionGroup[candidateIndex]!,
           },
         ) ||
-        !boundsOverlap(bounds, colliderBounds(this.bodies, this.colliders, candidateIndex))
+        !boundsOverlap(
+          bounds,
+          colliderBounds(this.bodies, this.colliders, candidateIndex),
+        )
       ) {
         continue;
       }
       affectedBodies.add(this.colliders.bodyIndices[candidateIndex]!);
     }
-    for (const body of [...affectedBodies].sort((first, second) => first - second)) {
+    for (const body of [...affectedBodies].sort(
+      (first, second) => first - second,
+    )) {
       this.wakeCommandBody(body);
     }
   }
@@ -1459,15 +1454,14 @@ export class PhysicsWorld3DKernel {
     const firstShape = this.colliders.shapes[first];
     const secondShape = this.colliders.shapes[second];
     if (firstShape === null || secondShape === null) return null;
-    const result: PrivateManifoldResult3D =
-      manifoldResultBetweenShapeRecords3D(
-        firstShape,
-        colliderWorldPose(this.bodies, this.colliders, first),
-        first,
-        secondShape,
-        colliderWorldPose(this.bodies, this.colliders, second),
-        second,
-      );
+    const result: PrivateManifoldResult3D = manifoldResultBetweenShapeRecords3D(
+      firstShape,
+      colliderWorldPose(this.bodies, this.colliders, first),
+      first,
+      secondShape,
+      colliderWorldPose(this.bodies, this.colliders, second),
+      second,
+    );
     if (result.status === "failed") {
       recordPhysicsWorld3DTrace({
         kind: "physics-3d-collision-failure",
@@ -1512,12 +1506,7 @@ export class PhysicsWorld3DKernel {
         (targetCenter[1]! - this.bodies.positionY[index]!) / dt;
       this.bodies.linearVelocityZ[index] =
         (targetCenter[2]! - this.bodies.positionZ[index]!) / dt;
-      writeAngularVelocityToTarget(
-        this.bodies,
-        index,
-        targetOrientation,
-        dt,
-      );
+      writeAngularVelocityToTarget(this.bodies, index, targetOrientation, dt);
       this.wakeCommandBody(index);
     }
   }
@@ -1537,12 +1526,7 @@ export class PhysicsWorld3DKernel {
         second,
         secondGeneration,
       );
-      const key = contactKey(
-        first,
-        firstGeneration,
-        second,
-        secondGeneration,
-      );
+      const key = contactKey(first, firstGeneration, second, secondGeneration);
       this.appendEvent(
         kind,
         first,
@@ -1721,8 +1705,7 @@ export class PhysicsWorld3DKernel {
     this.state.eventNormalY[event] = fact?.normalY ?? 0;
     this.state.eventNormalZ[event] = fact?.normalZ ?? 0;
     this.state.eventPointCounts[event] = fact?.pointCount ?? 0;
-    this.state.eventTotalNormalImpulses[event] =
-      fact?.totalNormalImpulse ?? 0;
+    this.state.eventTotalNormalImpulses[event] = fact?.totalNormalImpulse ?? 0;
     const base = event * POINTS_PER_CONTACT;
     for (let offset = 0; offset < POINTS_PER_CONTACT; offset += 1) {
       const point = base + offset;
@@ -1811,14 +1794,10 @@ export class PhysicsWorld3DKernel {
     this.state.previousPositionX[index] = this.bodies.positionX[index]!;
     this.state.previousPositionY[index] = this.bodies.positionY[index]!;
     this.state.previousPositionZ[index] = this.bodies.positionZ[index]!;
-    this.state.previousOrientationX[index] =
-      this.bodies.orientationX[index]!;
-    this.state.previousOrientationY[index] =
-      this.bodies.orientationY[index]!;
-    this.state.previousOrientationZ[index] =
-      this.bodies.orientationZ[index]!;
-    this.state.previousOrientationW[index] =
-      this.bodies.orientationW[index]!;
+    this.state.previousOrientationX[index] = this.bodies.orientationX[index]!;
+    this.state.previousOrientationY[index] = this.bodies.orientationY[index]!;
+    this.state.previousOrientationZ[index] = this.bodies.orientationZ[index]!;
+    this.state.previousOrientationW[index] = this.bodies.orientationW[index]!;
   }
 
   private setBodyOriginPose(index: number, pose: PhysicsPose3D): void {
@@ -1827,12 +1806,7 @@ export class PhysicsWorld3DKernel {
       "body pose orientation",
     );
     const position = copyFiniteVector3(pose.position, "body pose position");
-    const center = centerFromOrigin(
-      this.bodies,
-      index,
-      position,
-      orientation,
-    );
+    const center = centerFromOrigin(this.bodies, index, position, orientation);
     this.bodies.positionX[index] = center[0]!;
     this.bodies.positionY[index] = center[1]!;
     this.bodies.positionZ[index] = center[2]!;
@@ -1953,30 +1927,73 @@ export class PhysicsWorld3DKernel {
     return slot;
   }
 
-  private hasAdvanceWork(): boolean {
-    if (this.pendingTopology !== undefined || this.pendingCommands.length > 0) {
+  private hasAdvanceWork(
+    stagedKinematicTargets: ReadonlyMap<number, PhysicsPose3D>,
+  ): boolean {
+    if (
+      (this.pendingTopology !== undefined &&
+        this.nextTopologyRevision > this.state.topologyRevision) ||
+      (this.pendingCommands.length > 0 &&
+        this.nextCommandRevision > this.state.commandRevision)
+    ) {
       return true;
+    }
+    const stationaryTargetBodies = new Set<number>();
+    for (const [bodyId, pose] of sortedEntries(stagedKinematicTargets)) {
+      const slot = this.state.bodySlots.get(bodyId);
+      if (slot === undefined) continue;
+      const body = slot.index;
+      if (
+        (this.bodies.flags[body]! & BODY_ENABLED_3D) === 0 ||
+        (this.bodies.flags[body]! & BODY_TYPE_MASK_3D) !==
+          BODY_TYPE_KINEMATIC_3D
+      ) {
+        continue;
+      }
+      const orientation = copyCanonicalQuaternion(
+        pose.orientation,
+        "kinematic target orientation",
+      );
+      const center = centerFromOrigin(
+        this.bodies,
+        body,
+        pose.position,
+        orientation,
+      );
+      const orientationDot = Math.abs(
+        orientation[0]! * this.bodies.orientationX[body]! +
+          orientation[1]! * this.bodies.orientationY[body]! +
+          orientation[2]! * this.bodies.orientationZ[body]! +
+          orientation[3]! * this.bodies.orientationW[body]!,
+      );
+      if (
+        Math.abs(center[0]! - this.bodies.positionX[body]!) > 1e-12 ||
+        Math.abs(center[1]! - this.bodies.positionY[body]!) > 1e-12 ||
+        Math.abs(center[2]! - this.bodies.positionZ[body]!) > 1e-12 ||
+        1 - orientationDot > 1e-12
+      ) {
+        return true;
+      }
+      stationaryTargetBodies.add(body);
     }
     for (let offset = 0; offset < this.state.bodyCount; offset += 1) {
       const body = this.state.bodyIndices[offset]!;
       const type = this.bodies.flags[body]! & BODY_TYPE_MASK_3D;
-      if (type === BODY_TYPE_KINEMATIC_3D) return true;
       if (
-        type === BODY_TYPE_DYNAMIC_3D &&
-        (this.bodies.flags[body]! & BODY_SLEEPING_3D) === 0
+        type === BODY_TYPE_KINEMATIC_3D &&
+        !stationaryTargetBodies.has(body) &&
+        (this.bodies.linearVelocityX[body] !== 0 ||
+          this.bodies.linearVelocityY[body] !== 0 ||
+          this.bodies.linearVelocityZ[body] !== 0 ||
+          this.bodies.angularVelocityX[body] !== 0 ||
+          this.bodies.angularVelocityY[body] !== 0 ||
+          this.bodies.angularVelocityZ[body] !== 0)
       ) {
         return true;
       }
-    }
-    return false;
-  }
-
-  private hasKinematicBodies(): boolean {
-    for (let offset = 0; offset < this.state.bodyCount; offset += 1) {
-      const body = this.state.bodyIndices[offset]!;
       if (
-        (this.bodies.flags[body]! & BODY_TYPE_MASK_3D) ===
-        BODY_TYPE_KINEMATIC_3D
+        type === BODY_TYPE_DYNAMIC_3D &&
+        (this.bodies.flags[body]! & BODY_SLEEPING_3D) === 0
       ) {
         return true;
       }
@@ -2015,9 +2032,7 @@ export function normalizePhysicsWorld3DConfiguration(
   const fixedStepMilliseconds =
     configuration.fixedStepMilliseconds ?? DEFAULT_FIXED_STEP_MILLISECONDS;
   if (!Number.isFinite(fixedStepMilliseconds) || fixedStepMilliseconds <= 0) {
-    throw new RangeError(
-      "fixedStepMilliseconds must be finite and positive.",
-    );
+    throw new RangeError("fixedStepMilliseconds must be finite and positive.");
   }
   const maxCatchUpSteps =
     configuration.maxCatchUpSteps ?? DEFAULT_MAX_CATCH_UP_STEPS;
@@ -2348,9 +2363,7 @@ function sameColliderRecord(
   const secondDefinition = second.definition as Record<PropertyKey, unknown>;
   const keys = Reflect.ownKeys(secondDefinition);
   if (keys.length !== Reflect.ownKeys(firstDefinition).length) return false;
-  return keys.every(
-    (key) => firstDefinition[key] === secondDefinition[key],
-  );
+  return keys.every((key) => firstDefinition[key] === secondDefinition[key]);
 }
 
 function zeroBodyMotion(bodies: BodyStore3D, index: number): void {
@@ -2567,8 +2580,7 @@ function writeAngularVelocityToTarget(
     return;
   }
   const scale =
-    (2 * Math.atan2(vectorLength, Math.max(0, deltaW))) /
-    (vectorLength * dt);
+    (2 * Math.atan2(vectorLength, Math.max(0, deltaW))) / (vectorLength * dt);
   bodies.angularVelocityX[index] = deltaX * scale;
   bodies.angularVelocityY[index] = deltaY * scale;
   bodies.angularVelocityZ[index] = deltaZ * scale;
@@ -2590,10 +2602,7 @@ function slerpCanonical(
   let targetZ = toZ;
   let targetW = toW;
   let dot =
-    fromX * targetX +
-    fromY * targetY +
-    fromZ * targetZ +
-    fromW * targetW;
+    fromX * targetX + fromY * targetY + fromZ * targetZ + fromW * targetW;
   if (dot < 0) {
     targetX = -targetX;
     targetY = -targetY;
@@ -2646,10 +2655,7 @@ function normalizedCapacity(required: number): number {
   return capacity;
 }
 
-function growFloat64(
-  source: Float64Array,
-  capacity: number,
-): Float64Array {
+function growFloat64(source: Float64Array, capacity: number): Float64Array {
   const result = new Float64Array(capacity);
   result.set(source);
   return result;

@@ -4,6 +4,7 @@ import {
   type CRCPhysicsPose3D,
   type CRCPhysicsRay3D,
   type CRCPhysicsShape3D,
+  type CRCPhysicsShapeHit3D,
   type CRCPhysicsVector3,
 } from "../../../3d-geometry.js";
 import { requireNonnegativeNumber } from "../../shared/validation.js";
@@ -62,7 +63,7 @@ export interface CommittedWorldQueriesOptions3D {
   readonly resolveCollider: (
     handle: CRCPhysicsColliderHandle3D,
   ) => HandleIdentity3D | null;
-  readonly assertReadable?: () => void;
+  readonly assertReadable: () => void;
 }
 
 interface PreparedQueryOptions3D {
@@ -83,18 +84,20 @@ interface SemanticCollider3D {
   readonly pose: CRCPhysicsPose3D;
 }
 
-interface RawHit3D {
+interface RawHit3D extends CRCPhysicsShapeHit3D {
   readonly collider: SemanticCollider3D;
-  readonly point: CRCPhysicsVector3;
-  readonly normal: CRCPhysicsVector3;
-  readonly distance: number;
-  readonly timeOfImpact: number;
 }
 
 export class CommittedWorldQueries3D {
   private active = true;
 
-  constructor(private readonly options: CommittedWorldQueriesOptions3D) {}
+  constructor(private readonly options: CommittedWorldQueriesOptions3D) {
+    if (typeof options.assertReadable !== "function") {
+      throw new Error(
+        "committed queries require an owner-bound committed-read guard.",
+      );
+    }
+  }
 
   invalidate(): void {
     this.active = false;
@@ -105,7 +108,7 @@ export class CommittedWorldQueries3D {
     ray: CRCPhysicsRay3D,
     queryOptions?: CRCPhysicsQueryOptions3D<Mode>,
   ): CRCPhysicsQueryResult3D<Mode, CRCPhysicsQueryHit3D> {
-    this.options.assertReadable?.();
+    this.options.assertReadable();
     const prepared = this.prepareOptions(queryOptions);
     if (!this.isUsable(worldGeneration, prepared)) {
       return emptyResult(prepared.mode);
@@ -145,7 +148,7 @@ export class CommittedWorldQueries3D {
     translation: CRCPhysicsVector3,
     queryOptions?: CRCPhysicsQueryOptions3D<Mode>,
   ): CRCPhysicsQueryResult3D<Mode, CRCPhysicsQueryHit3D> {
-    this.options.assertReadable?.();
+    this.options.assertReadable();
     const prepared = this.prepareOptions(queryOptions);
     if (!this.isUsable(worldGeneration, prepared)) {
       return emptyResult(prepared.mode);
@@ -181,7 +184,7 @@ export class CommittedWorldQueries3D {
     pose: CRCPhysicsPose3D,
     queryOptions?: CRCPhysicsQueryOptions3D<Mode>,
   ): CRCPhysicsQueryResult3D<Mode, CRCPhysicsQueryMatch3D> {
-    this.options.assertReadable?.();
+    this.options.assertReadable();
     if (!this.isGenerationLive(worldGeneration)) {
       return emptyResult(modeOf(queryOptions));
     }
@@ -197,7 +200,7 @@ export class CommittedWorldQueries3D {
     bounds: CRCPhysicsAabb3D,
     queryOptions?: CRCPhysicsQueryOptions3D<Mode>,
   ): CRCPhysicsQueryResult3D<Mode, CRCPhysicsQueryMatch3D> {
-    this.options.assertReadable?.();
+    this.options.assertReadable();
     if (!this.isGenerationLive(worldGeneration)) {
       return emptyResult(modeOf(queryOptions));
     }
@@ -212,7 +215,7 @@ export class CommittedWorldQueries3D {
     point: CRCPhysicsVector3,
     queryOptions?: CRCPhysicsQueryOptions3D<Mode>,
   ): CRCPhysicsQueryResult3D<Mode, CRCPhysicsQueryMatch3D> {
-    this.options.assertReadable?.();
+    this.options.assertReadable();
     if (!this.isGenerationLive(worldGeneration)) {
       return emptyResult(modeOf(queryOptions));
     }
@@ -245,12 +248,11 @@ export class CommittedWorldQueries3D {
       return false as CRCPhysicsQueryResult3D<Mode, CRCPhysicsQueryMatch3D>;
     }
     if (prepared.mode === "closest") {
-      return (matchesFound.length === 0
-        ? null
-        : this.materializeMatch(matchesFound[0]!)) as CRCPhysicsQueryResult3D<
-        Mode,
-        CRCPhysicsQueryMatch3D
-      >;
+      return (
+        matchesFound.length === 0
+          ? null
+          : this.materializeMatch(matchesFound[0]!)
+      ) as CRCPhysicsQueryResult3D<Mode, CRCPhysicsQueryMatch3D>;
     }
     return Object.freeze(
       matchesFound.map((collider) => this.materializeMatch(collider)),
@@ -324,16 +326,11 @@ export class CommittedWorldQueries3D {
       !bodies.has(bodyIndex, bodyGeneration) ||
       (bodies.flags[bodyIndex]! & BODY_ENABLED_3D) === 0 ||
       sameIdentity(prepared.excludeBody, bodyIndex, bodyGeneration) ||
-      sameIdentity(
-        prepared.excludeCollider,
-        colliderIndex,
-        colliderGeneration,
-      )
+      sameIdentity(prepared.excludeCollider, colliderIndex, colliderGeneration)
     ) {
       return null;
     }
-    const sensor =
-      (colliders.flags[colliderIndex]! & COLLIDER_SENSOR_3D) !== 0;
+    const sensor = (colliders.flags[colliderIndex]! & COLLIDER_SENSOR_3D) !== 0;
     if (
       (prepared.sensors === "exclude" && sensor) ||
       (prepared.sensors === "only" && !sensor)
@@ -371,12 +368,9 @@ export class CommittedWorldQueries3D {
       return false as CRCPhysicsQueryResult3D<Mode, CRCPhysicsQueryHit3D>;
     }
     if (mode === "closest") {
-      return (hits.length === 0
-        ? null
-        : this.materializeHit(hits[0]!)) as CRCPhysicsQueryResult3D<
-        Mode,
-        CRCPhysicsQueryHit3D
-      >;
+      return (
+        hits.length === 0 ? null : this.materializeHit(hits[0]!)
+      ) as CRCPhysicsQueryResult3D<Mode, CRCPhysicsQueryHit3D>;
     }
     return Object.freeze(
       hits.map((hit) => this.materializeHit(hit)),
@@ -386,10 +380,7 @@ export class CommittedWorldQueries3D {
   private materializeHit(hit: RawHit3D): CRCPhysicsQueryHit3D {
     return Object.freeze({
       ...this.materializeMatch(hit.collider),
-      point: Object.freeze([...hit.point]) as CRCPhysicsVector3,
-      normal: Object.freeze([...hit.normal]) as CRCPhysicsVector3,
-      distance: hit.distance,
-      timeOfImpact: hit.timeOfImpact,
+      ...projectQueryHitGeometry3D(hit),
     });
   }
 
@@ -410,6 +401,25 @@ export class CommittedWorldQueries3D {
       tag: this.options.colliders.tags[collider.colliderIndex],
     });
   }
+}
+
+export function projectQueryHitGeometry3D(
+  hit: CRCPhysicsShapeHit3D,
+): CRCPhysicsShapeHit3D {
+  return Object.freeze({
+    point: Object.freeze([...hit.point]) as CRCPhysicsVector3,
+    normal: Object.freeze([...hit.normal]) as CRCPhysicsVector3,
+    distance: hit.distance,
+    timeOfImpact: hit.timeOfImpact,
+    ...(hit.triangleIndex === undefined
+      ? {}
+      : { triangleIndex: hit.triangleIndex }),
+    ...(hit.barycentric === undefined
+      ? {}
+      : {
+          barycentric: Object.freeze([...hit.barycentric]) as CRCPhysicsVector3,
+        }),
+  });
 }
 
 function colliderPose(
@@ -536,11 +546,9 @@ function modeOf<Mode extends CRCPhysicsQueryMode>(
 function emptyResult<Mode extends CRCPhysicsQueryMode, Result>(
   mode: CRCPhysicsQueryMode,
 ): CRCPhysicsQueryResult3D<Mode, Result> {
-  return (mode === "any"
-    ? false
-    : mode === "all"
-      ? Object.freeze([])
-      : null) as CRCPhysicsQueryResult3D<Mode, Result>;
+  return (
+    mode === "any" ? false : mode === "all" ? Object.freeze([]) : null
+  ) as CRCPhysicsQueryResult3D<Mode, Result>;
 }
 
 function sameIdentity(

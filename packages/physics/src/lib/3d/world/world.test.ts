@@ -6,7 +6,12 @@ import {
 } from "../../../3d-geometry.js";
 import { requireShapeRecord3D } from "../shape-records.js";
 import { installPhysicsWorld3DTraceCollectorForTest } from "../runtime/trace.js";
+import type {
+  CRCPhysicsBodyHandle3D,
+  CRCPhysicsColliderHandle3D,
+} from "../types.js";
 import { BODY_CCD_3D } from "./ccd.js";
+import { CommittedWorldQueries3D } from "./queries.js";
 import { BODY_SLEEPING_3D } from "./solver.js";
 import {
   BODY_ENABLED_3D,
@@ -27,7 +32,9 @@ import {
 
 const dynamicFlags = BODY_TYPE_DYNAMIC_3D | BODY_ENABLED_3D;
 
-function quaternionZ(degrees: number): readonly [number, number, number, number] {
+function quaternionZ(
+  degrees: number,
+): readonly [number, number, number, number] {
   const radians = (degrees * Math.PI) / 180;
   return [0, 0, Math.sin(radians / 2), Math.cos(radians / 2)];
 }
@@ -114,6 +121,10 @@ function collider(
   id: number,
   bodyId: number,
   shape = sphereShape3D({ radius: 1 }),
+  options: Readonly<{
+    friction?: number;
+    restitution?: number;
+  }> = {},
 ): PhysicsTopologyRecord3D {
   return {
     kind: "collider",
@@ -129,8 +140,8 @@ function collider(
       localOrientationZ: 0,
       localOrientationW: 1,
       density: 1,
-      friction: 0.5,
-      restitution: 0,
+      friction: options.friction ?? 0.5,
+      restitution: options.restitution ?? 0,
       collisionCategory: 1,
       collisionMask: 0xffff_ffff,
       collisionGroup: 0,
@@ -218,6 +229,21 @@ function expectOwnerRestored(
       expect(current).toBe(property.reference);
     }
   }
+}
+
+function hasGrownReference(
+  owners: readonly object[],
+  captured: readonly (readonly CapturedProperty[])[],
+): boolean {
+  return owners.some((owner, ownerIndex) =>
+    captured[ownerIndex]!.some((property) => {
+      const reference = property.reference;
+      return (
+        (ArrayBuffer.isView(reference) || Array.isArray(reference)) &&
+        Reflect.get(owner, property.key) !== reference
+      );
+    }),
+  );
 }
 
 describe("transactional fixed-tick 3D world cadence", () => {
@@ -390,7 +416,8 @@ describe("transactional fixed-tick 3D world cadence", () => {
     const pose = simple.presentationPose(1);
     const authoritative = simple.authoritativePose(1);
     const authoritativeAngle =
-      2 * Math.atan2(authoritative.orientation[2], authoritative.orientation[3]);
+      2 *
+      Math.atan2(authoritative.orientation[2], authoritative.orientation[3]);
     expect(pose.position[0]).toBeCloseTo(1, 12);
     expect(pose.orientation[2]).toBeCloseTo(
       Math.sin(authoritativeAngle / 4),
@@ -416,8 +443,7 @@ describe("transactional fixed-tick 3D world cadence", () => {
     advance(seam, 2, 1_500);
     const midpoint = seam.presentationPose(2).orientation;
     const seamAuthoritative = seam.authoritativePose(2).orientation;
-    let endAngle =
-      2 * Math.atan2(seamAuthoritative[2], seamAuthoritative[3]);
+    let endAngle = 2 * Math.atan2(seamAuthoritative[2], seamAuthoritative[3]);
     if (endAngle < (170 * Math.PI) / 180 - Math.PI) endAngle += 2 * Math.PI;
     const expectedMidpoint = ((170 * Math.PI) / 180 + endAngle) / 2;
     expect(Math.abs(midpoint[2])).toBeCloseTo(
@@ -437,6 +463,34 @@ describe("transactional fixed-tick 3D world cadence", () => {
     advance(stationary, 1, 0);
     advance(stationary, 2, 1_500);
     expect(stationary.presentationPose(3).orientation).toEqual([0, 0, 0, 1]);
+  });
+
+  it("uses the canonical zero-angle result when interpolating q against -q", () => {
+    const world = new PhysicsWorld3DKernel({
+      fixedStepMilliseconds: 100,
+      sleeping: false,
+    });
+    world.proposeTopology([body(1)]);
+    advance(world, 1, 0);
+    const index = world.bodyIdentity(1)!.index;
+    const state = Reflect.get(world, "state") as {
+      accumulatorMilliseconds: number;
+      previousOrientationX: Float64Array;
+      previousOrientationY: Float64Array;
+      previousOrientationZ: Float64Array;
+      previousOrientationW: Float64Array;
+    };
+    state.accumulatorMilliseconds = 50;
+    state.previousOrientationX[index] = 0;
+    state.previousOrientationY[index] = 0;
+    state.previousOrientationZ[index] = 0;
+    state.previousOrientationW[index] = 1;
+    world.bodies.orientationX[index] = 0;
+    world.bodies.orientationY[index] = 0;
+    world.bodies.orientationZ[index] = 0;
+    world.bodies.orientationW[index] = -1;
+
+    expect(world.presentationPose(1).orientation).toEqual([0, 0, 0, 1]);
   });
 
   it("returns authoritative state for interpolation none and projects an off-origin center of mass", () => {
@@ -477,6 +531,160 @@ describe("transactional fixed-tick 3D world cadence", () => {
     expect(world.snapshot().bodies[0]!.flags & BODY_SLEEPING_3D).toBe(0);
   });
 
+  it("reanchors after backward logical time without replaying an accepted interval", () => {
+    const world = new PhysicsWorld3DKernel({
+      fixedStepMilliseconds: 100,
+      sleeping: false,
+    });
+    world.proposeTopology([body(1, { velocityX: 1 })]);
+
+    advance(world, 1, 1_000);
+    expect(advance(world, 2, 1_100).stepCount).toBe(1);
+    expect(world.authoritativePose(1).position[0]).toBeCloseTo(0.1, 12);
+    expect(advance(world, 3, 1_000).stepCount).toBe(0);
+    expect(advance(world, 4, 1_100).stepCount).toBe(0);
+    expect(world.authoritativePose(1).position[0]).toBeCloseTo(0.1, 12);
+    expect(advance(world, 5, 1_200).stepCount).toBe(1);
+    expect(world.authoritativePose(1).position[0]).toBeCloseTo(0.2, 12);
+
+    const negative = new PhysicsWorld3DKernel({
+      fixedStepMilliseconds: 100,
+      sleeping: false,
+    });
+    negative.proposeTopology([body(1, { velocityX: 1 })]);
+    expect(advance(negative, 1, -1_000).stepCount).toBe(0);
+    expect(advance(negative, 2, -900).stepCount).toBe(1);
+  });
+
+  it("anchors static, kinematic, and disabled bodies activated as dynamic after ten inactive seconds", () => {
+    for (const type of ["static", "kinematic"] as const) {
+      const world = new PhysicsWorld3DKernel({
+        fixedStepMilliseconds: 100,
+        sleeping: false,
+      });
+      world.proposeTopology([body(1, { type })]);
+      advance(world, 1, 0);
+
+      world.proposeTopology([body(1, { velocityX: 1 })]);
+      const activated = advance(world, 2, 10_000);
+
+      expect(activated.stepCount, type).toBe(0);
+      expect(world.authoritativePose(1).position[0], type).toBe(0);
+      expect(advance(world, 3, 10_100).stepCount, type).toBe(1);
+      expect(world.authoritativePose(1).position[0], type).toBeCloseTo(0.1, 12);
+    }
+
+    const disabled = new PhysicsWorld3DKernel({
+      fixedStepMilliseconds: 100,
+      sleeping: false,
+    });
+    disabled.proposeTopology([body(1, { velocityX: 1 })]);
+    advance(disabled, 1, 0);
+    disabled.applyBegin([{ kind: "disable", bodyId: 1 }]);
+    advance(disabled, 2, 0);
+    disabled.applyBegin([{ kind: "enable", bodyId: 1, velocity: "preserve" }]);
+    expect(advance(disabled, 3, 10_000).stepCount).toBe(0);
+    expect(disabled.authoritativePose(1).position[0]).toBe(0);
+    expect(advance(disabled, 4, 10_100).stepCount).toBe(1);
+    expect(disabled.authoritativePose(1).position[0]).toBeCloseTo(0.1, 12);
+  });
+
+  it("wakes complete sleeping islands for gravity and solver changes and responds on the next accepted tick", () => {
+    for (const configuration of [
+      { gravity: [0, -10, 0] as const },
+      { fixedStepMilliseconds: 50 },
+      { solver: { velocityIterations: 9 } },
+      { solver: { positionIterations: 4 } },
+      { sleeping: false },
+    ]) {
+      const world = new PhysicsWorld3DKernel({
+        fixedStepMilliseconds: 100,
+        sleeping: true,
+      });
+      world.proposeTopology(collidingTopology());
+      advance(world, 1, 0);
+      advance(world, 2, 100);
+      const first = world.bodyIdentity(1)!.index;
+      const second = world.bodyIdentity(2)!.index;
+      for (const index of [first, second]) {
+        world.bodies.flags[index] |= BODY_SLEEPING_3D;
+        world.bodies.sleepTime[index] = 0.5;
+      }
+
+      world.applyBegin([{ kind: "configure", configuration }]);
+      const configured = advance(world, 3, 10_000);
+
+      expect(configured.stepCount).toBe(0);
+      expect(world.bodies.flags[first]! & BODY_SLEEPING_3D).toBe(0);
+      expect(world.bodies.flags[second]! & BODY_SLEEPING_3D).toBe(0);
+      expect(world.bodies.sleepTime[first]).toBe(0);
+      expect(world.bodies.sleepTime[second]).toBe(0);
+      const transitioned = Array.from(
+        configured.eventFirstColliderIndices.subarray(
+          configured.eventOffset,
+          configured.eventOffset + configured.eventCount,
+        ),
+      );
+      expect(transitioned).toEqual([...transitioned].sort((a, b) => a - b));
+
+      const nextLogicalTime =
+        "fixedStepMilliseconds" in configuration ? 10_050 : 10_100;
+      const ticked = advance(world, 4, nextLogicalTime);
+      expect(ticked.stepCount).toBe(1);
+      if ("gravity" in configuration) {
+        expect(world.snapshot().bodies[0]!.linearVelocityY).toBeLessThan(0);
+      }
+    }
+  });
+
+  it("keeps sleeping islands asleep for presentation and catch-up-only configuration changes", () => {
+    for (const configuration of [
+      { interpolation: "none" as const },
+      { maxCatchUpSteps: 5 },
+    ]) {
+      const world = new PhysicsWorld3DKernel({
+        fixedStepMilliseconds: 100,
+        sleeping: true,
+      });
+      world.proposeTopology([body(1)]);
+      advance(world, 1, 0);
+      const index = world.bodyIdentity(1)!.index;
+      world.bodies.flags[index] |= BODY_SLEEPING_3D;
+      world.bodies.sleepTime[index] = 0.5;
+
+      world.applyBegin([{ kind: "configure", configuration }]);
+      const configured = advance(world, 2, 0);
+
+      expect(configured.stepCount).toBe(0);
+      expect(configured.eventCount).toBe(0);
+      expect(world.bodies.flags[index]! & BODY_SLEEPING_3D).not.toBe(0);
+      expect(world.bodies.sleepTime[index]).toBe(0.5);
+    }
+  });
+
+  it("does not keep stationary targetless kinematics eligible and reanchors after target motion stops", () => {
+    const stationary = new PhysicsWorld3DKernel({
+      fixedStepMilliseconds: 100,
+      sleeping: true,
+    });
+    stationary.proposeTopology([body(1, { type: "kinematic" })]);
+    expect(advance(stationary, 1, 0).advanceEligible).toBe(false);
+    expect(advance(stationary, 2, 10_000).stepCount).toBe(0);
+
+    const targeted = new PhysicsWorld3DKernel({
+      fixedStepMilliseconds: 100,
+      sleeping: true,
+    });
+    targeted.proposeTopology([body(1, { type: "kinematic" })]);
+    advance(targeted, 1, 0);
+    const target = new Map<number, CRCPhysicsPose3D>([
+      [1, { position: [1, 0, 0], orientation: [0, 0, 0, 1] }],
+    ]);
+    expect(advance(targeted, 2, 100, target).advanceEligible).toBe(true);
+    expect(advance(targeted, 3, 200, target).advanceEligible).toBe(false);
+    expect(advance(targeted, 4, 10_000, target).stepCount).toBe(0);
+  });
+
   it("wakes a complete sleeping island in identity order when solid topology is removed", () => {
     const world = new PhysicsWorld3DKernel({
       fixedStepMilliseconds: 100,
@@ -494,7 +702,9 @@ describe("transactional fixed-tick 3D world cadence", () => {
     world.bodies.sleepTime[second] = 0.5;
 
     world.proposeTopology(
-      topology.filter((record) => record.kind !== "collider" || record.id !== 20),
+      topology.filter(
+        (record) => record.kind !== "collider" || record.id !== 20,
+      ),
     );
     advance(world, 3, 100);
 
@@ -565,6 +775,46 @@ describe("transactional fixed-tick 3D world cadence", () => {
     expect(world.bodies.sleepTime[dynamic]).toBe(0);
   });
 
+  it("wakes a sleeping dynamic on the same tick a moving kinematic makes solid contact, then solves it on the next tick", () => {
+    const world = new PhysicsWorld3DKernel({
+      fixedStepMilliseconds: 100,
+      sleeping: true,
+    });
+    world.proposeTopology([
+      body(1),
+      body(2, { x: 3, type: "kinematic" }),
+      collider(10, 1),
+      collider(20, 2),
+    ]);
+    advance(world, 1, 0);
+    const dynamic = world.bodyIdentity(1)!.index;
+    world.bodies.flags[dynamic] |= BODY_SLEEPING_3D;
+    world.bodies.sleepTime[dynamic] = 0.5;
+
+    const firstTarget = new Map<number, CRCPhysicsPose3D>([
+      [2, { position: [1.5, 0, 0], orientation: [0, 0, 0, 1] }],
+    ]);
+    const contacted = advance(world, 2, 100, firstTarget);
+
+    expect(contacted.stepCount).toBe(1);
+    expect(world.bodies.flags[dynamic]! & BODY_SLEEPING_3D).toBe(0);
+    expect(world.bodies.linearVelocityX[dynamic]).toBe(0);
+    expect(
+      Array.from(
+        contacted.eventKinds.subarray(
+          contacted.eventOffset,
+          contacted.eventOffset + contacted.eventCount,
+        ),
+      ),
+    ).toContain(5);
+
+    const secondTarget = new Map<number, CRCPhysicsPose3D>([
+      [2, { position: [0.5, 0, 0], orientation: [0, 0, 0, 1] }],
+    ]);
+    advance(world, 3, 200, secondTarget);
+    expect(world.bodies.linearVelocityX[dynamic]).toBeLessThan(0);
+  });
+
   it("routes force, impulse, and teleport wakeups through the complete solid island", () => {
     const commands = [
       {
@@ -631,27 +881,45 @@ describe("transactional 3D world candidate rollback", () => {
 
   for (const stage of stages) {
     it(`restores exact values, references, ownership, and deterministic retry after ${stage}`, () => {
-      const world = new PhysicsWorld3DKernel({
-        fixedStepMilliseconds: 100,
-        sleeping: false,
-      });
-      world.proposeTopology(collidingTopology());
-      advance(world, 1, 0);
-      advance(world, 2, 100);
-      const expanded: PhysicsTopologyRecord3D[] = [...collidingTopology()];
+      const bodiesOnly: PhysicsTopologyRecord3D[] = [];
+      const expanded: PhysicsTopologyRecord3D[] = [];
       for (let index = 0; index < 12; index += 1) {
-        expanded.push(body(100 + index, { x: 20 + index }));
-        expanded.push(collider(200 + index, 100 + index));
+        const bodyRecord = body(100 + index, {
+          x: (index % 3) * 0.05,
+          y: (index % 2) * 0.05,
+          ccd: true,
+        });
+        bodiesOnly.push(bodyRecord);
+        expanded.push(bodyRecord, collider(200 + index, 100 + index));
       }
-      const topologyBoundary = stage === "topology" || stage === "output";
-      if (topologyBoundary) {
-        world.proposeTopology(expanded);
-      } else {
-        world.proposeTopology(expanded);
-        advance(world, 3, 200);
-      }
+      const setup = () => {
+        const result = new PhysicsWorld3DKernel({
+          fixedStepMilliseconds: 100,
+          sleeping: false,
+        });
+        if (stage !== "topology") {
+          result.proposeTopology(bodiesOnly);
+          advance(result, 1, 0);
+        }
+        result.proposeTopology(expanded);
+        result.applyBegin([
+          {
+            kind: "apply-impulse",
+            bodyId: 100,
+            impulseX: 2,
+            impulseY: 1,
+            impulseZ: 0,
+          },
+        ]);
+        return result;
+      };
+      const world = setup();
       const before = world.snapshot();
+      const coordinator = Reflect.get(world, "state") as object;
       const owners = [
+        world,
+        coordinator,
+        world.counters,
         world.bodies,
         world.colliders,
         world.broadPhase,
@@ -661,23 +929,36 @@ describe("transactional 3D world candidate rollback", () => {
         world.ccd,
       ] as const;
       const captured = owners.map(captureOwner);
-      world.applyBegin([
-        {
-          kind: "apply-impulse",
-          bodyId: 1,
-          impulseX: 2,
-          impulseY: 1,
-          impulseZ: 0,
-        },
-      ]);
+      let grewInsideCandidate = false;
+      let phaseOwnerGrewInsideCandidate = false;
       const restore = installPhysicsWorld3DFailureInjectorForTest((current) => {
-        if (current === stage) throw new Error(`injected ${stage}`);
+        if (current !== stage) return;
+        grewInsideCandidate = hasGrownReference(owners, captured);
+        const phaseOwner =
+          stage === "topology"
+            ? 3
+            : stage === "broad-phase"
+              ? 5
+              : stage === "ccd"
+                ? 9
+                : stage === "narrow-phase"
+                  ? 6
+                  : stage === "velocity-solve"
+                    ? 7
+                    : stage === "position-solve"
+                      ? 8
+                      : 1;
+        phaseOwnerGrewInsideCandidate = hasGrownReference(
+          [owners[phaseOwner]!],
+          [captured[phaseOwner]!],
+        );
+        throw new Error(`injected ${stage}`);
       });
       try {
         expect(() =>
           world.advance({
-            frameId: 4,
-            logicalTime: topologyBoundary ? 200 : 300,
+            frameId: 2,
+            logicalTime: stage === "topology" ? 0 : 100,
             stagedKinematicTargets: new Map(),
           }),
         ).toThrow(`injected ${stage}`);
@@ -685,20 +966,35 @@ describe("transactional 3D world candidate rollback", () => {
         restore();
       }
 
+      expect(grewInsideCandidate).toBe(true);
+      expect(phaseOwnerGrewInsideCandidate).toBe(true);
       expect(world.snapshot()).toEqual(before);
       owners.forEach((owner, index) => {
         expectOwnerRestored(owner, captured[index]!);
       });
 
-      const retry = advance(
-        world,
-        5,
-        topologyBoundary ? 200 : 300,
+      const retry = advance(world, 3, stage === "topology" ? 0 : 100);
+      const control = setup();
+      const expected = advance(control, 2, stage === "topology" ? 0 : 100);
+      expect(world.snapshot()).toEqual(control.snapshot());
+      expect(
+        Array.from(
+          retry.eventKinds.subarray(
+            retry.eventOffset,
+            retry.eventOffset + retry.eventCount,
+          ),
+        ),
+      ).toEqual(
+        Array.from(
+          expected.eventKinds.subarray(
+            expected.eventOffset,
+            expected.eventOffset + expected.eventCount,
+          ),
+        ),
       );
-      expect(retry.tick).toBe(topologyBoundary ? 1 : 2);
       expect(world.snapshot()).toMatchObject({
-        bodyCount: 14,
-        colliderCount: 14,
+        bodyCount: 12,
+        colliderCount: 12,
       });
     });
   }
@@ -734,6 +1030,129 @@ describe("transactional 3D world candidate rollback", () => {
     expect(() => world.discard(adopted)).toThrow(/live candidate/);
   });
 
+  it("binds the real committed query facade to the live-candidate lock", () => {
+    const world = new PhysicsWorld3DKernel({ sleeping: false });
+    world.proposeTopology([body(1), collider(10, 1)]);
+    advance(world, 1, 0);
+    const queries = new CommittedWorldQueries3D({
+      generation: 1,
+      bodies: world.bodies,
+      colliders: world.colliders,
+      materializeBody: (index, generation) =>
+        ({ index, generation }) as unknown as CRCPhysicsBodyHandle3D,
+      materializeCollider: (index, generation) =>
+        ({ index, generation }) as unknown as CRCPhysicsColliderHandle3D,
+      resolveBody: (handle) =>
+        handle as unknown as { index: number; generation: number },
+      resolveCollider: (handle) =>
+        handle as unknown as { index: number; generation: number },
+      assertReadable: () => world.assertCommittedReadable(),
+    });
+    const ray = {
+      origin: [-2, 0, 0],
+      direction: [1, 0, 0],
+      maxDistance: 4,
+    } as const;
+    expect(queries.raycast(1, ray)).not.toBeNull();
+
+    const candidate = world.advance({
+      frameId: 2,
+      logicalTime: 0,
+      stagedKinematicTargets: new Map(),
+    });
+    expect(() => queries.raycast(1, ray)).toThrow(/uncommitted candidate/);
+    world.discard(candidate);
+    expect(queries.raycast(1, ray)).not.toBeNull();
+  });
+
+  it("discards a live candidate before disposing every owned resource", () => {
+    const world = new PhysicsWorld3DKernel({ sleeping: false });
+    world.proposeTopology(collidingTopology());
+    const candidate = world.advance({
+      frameId: 1,
+      logicalTime: 0,
+      stagedKinematicTargets: new Map(),
+    });
+
+    world.dispose();
+
+    expect(candidate.lifecycle).toBe("discarded");
+    expect(world.counters).toMatchObject({
+      liveBodyStores: 0,
+      liveColliderStores: 0,
+      liveBroadPhases: 0,
+      liveContactCaches: 0,
+      liveSolvers: 0,
+      liveBodies: 0,
+      liveColliders: 0,
+      liveProxies: 0,
+      liveContacts: 0,
+    });
+    expect(() => world.snapshot()).toThrow(/disposed/);
+  });
+
+  it("preserves the newest topology proposal across candidate adopt and discard boundaries", () => {
+    const world = new PhysicsWorld3DKernel({ sleeping: false });
+    world.proposeTopology([body(1)]);
+    world.proposeTopology([body(2)]);
+    const second = world.advance({
+      frameId: 1,
+      logicalTime: 0,
+      stagedKinematicTargets: new Map(),
+    });
+    expect(world.snapshot().bodies.map(({ id }) => id)).toEqual([2]);
+    world.proposeTopology([body(3)]);
+    world.adopt(second);
+    advance(world, 2, 0);
+    expect(world.snapshot().bodies.map(({ id }) => id)).toEqual([3]);
+
+    world.proposeTopology([body(4)]);
+    const fourth = world.advance({
+      frameId: 3,
+      logicalTime: 0,
+      stagedKinematicTargets: new Map(),
+    });
+    expect(world.snapshot().bodies.map(({ id }) => id)).toEqual([4]);
+    world.proposeTopology([body(5)]);
+    world.discard(fourth);
+    expect(world.snapshot().bodies.map(({ id }) => id)).toEqual([3]);
+    advance(world, 4, 0);
+    expect(world.snapshot().bodies.map(({ id }) => id)).toEqual([5]);
+  });
+
+  it("reuses compound body and collider slots only with new generations", () => {
+    const world = new PhysicsWorld3DKernel({ sleeping: false });
+    const compound = [body(1), collider(10, 1), collider(11, 1)];
+    world.proposeTopology(compound);
+    advance(world, 1, 0);
+    const firstBody = world.bodyIdentity(1)!;
+    const firstColliders = [
+      world.colliderIdentity(10)!,
+      world.colliderIdentity(11)!,
+    ];
+    world.proposeTopology([]);
+    advance(world, 2, 0);
+    world.proposeTopology(compound);
+    advance(world, 3, 0);
+
+    const replacementBody = world.bodyIdentity(1)!;
+    const replacementColliders = [
+      world.colliderIdentity(10)!,
+      world.colliderIdentity(11)!,
+    ];
+    expect(replacementBody.index).toBe(firstBody.index);
+    expect(replacementBody.generation).toBeGreaterThan(firstBody.generation);
+    expect(replacementColliders.map(({ index }) => index).sort()).toEqual(
+      firstColliders.map(({ index }) => index).sort(),
+    );
+    for (const colliderIdentity of replacementColliders) {
+      const previous = firstColliders.find(
+        ({ index }) => index === colliderIdentity.index,
+      )!;
+      expect(colliderIdentity.generation).toBeGreaterThan(previous.generation);
+    }
+  });
+
   it("restores pre-candidate storage references and capacities after staged growth is discarded", () => {
     const world = new PhysicsWorld3DKernel({ sleeping: false });
     const owners = [
@@ -766,7 +1185,10 @@ describe("transactional 3D world candidate rollback", () => {
       expectOwnerRestored(owner, captured[index]!);
     });
     advance(world, 2, 0);
-    expect(world.snapshot()).toMatchObject({ bodyCount: 12, colliderCount: 12 });
+    expect(world.snapshot()).toMatchObject({
+      bodyCount: 12,
+      colliderCount: 12,
+    });
   });
 
   it("preserves Begin commands staged after an older candidate without replaying sealed commands", () => {
@@ -774,7 +1196,13 @@ describe("transactional 3D world candidate rollback", () => {
     world.proposeTopology([body(1)]);
     advance(world, 1, 0);
     world.applyBegin([
-      { kind: "apply-impulse", bodyId: 1, impulseX: 1, impulseY: 0, impulseZ: 0 },
+      {
+        kind: "apply-impulse",
+        bodyId: 1,
+        impulseX: 1,
+        impulseY: 0,
+        impulseZ: 0,
+      },
     ]);
     const first = world.advance({
       frameId: 2,
@@ -782,7 +1210,13 @@ describe("transactional 3D world candidate rollback", () => {
       stagedKinematicTargets: new Map(),
     });
     world.applyBegin([
-      { kind: "apply-impulse", bodyId: 1, impulseX: 2, impulseY: 0, impulseZ: 0 },
+      {
+        kind: "apply-impulse",
+        bodyId: 1,
+        impulseX: 2,
+        impulseY: 0,
+        impulseZ: 0,
+      },
     ]);
     world.adopt(first);
     advance(world, 3, 0);
@@ -801,6 +1235,70 @@ describe("transactional 3D world candidate rollback", () => {
     expect(contacted.eventKinds[contacted.eventOffset]).toBe(1);
     expect(contacted.eventTicks[contacted.eventOffset]).toBe(1);
     expect(advance(world, 3, 200).eventCount).toBe(0);
+  });
+
+  it("rotates adopted sleep/wake event ranges without retaining delivered history", () => {
+    const world = new PhysicsWorld3DKernel({ sleeping: true });
+    world.proposeTopology([body(1)]);
+    advance(world, 1, 0);
+    const index = world.bodyIdentity(1)!.index;
+    for (let cycle = 0; cycle < 32; cycle += 1) {
+      world.bodies.flags[index] |= BODY_SLEEPING_3D;
+      world.bodies.sleepTime[index] = 0.5;
+      world.applyBegin([{ kind: "wake", bodyId: 1 }]);
+      const candidate = world.advance({
+        frameId: cycle + 2,
+        logicalTime: cycle + 1,
+        stagedKinematicTargets: new Map(),
+      });
+      expect(candidate.eventOffset).toBe(0);
+      expect(candidate.eventCount).toBe(1);
+      expect(candidate.eventKinds[0]).toBe(5);
+      expect(candidate.eventFirstColliderIndices[0]).toBe(index);
+      expect(candidate.eventTicks[0]).toBe(1);
+      expect(candidate.eventTicks.length).toBe(4);
+      world.adopt(candidate);
+      expect(world.snapshot().eventCount).toBe(0);
+    }
+  });
+
+  it("restores event references and capacity after a grown wake range is discarded", () => {
+    const world = new PhysicsWorld3DKernel({ sleeping: true });
+    const topology: PhysicsTopologyRecord3D[] = [];
+    for (let id = 0; id < 8; id += 1) topology.push(body(id));
+    world.proposeTopology(topology);
+    advance(world, 1, 0);
+    const state = Reflect.get(world, "state") as {
+      eventTicks: Float64Array;
+      eventCount: number;
+    };
+    const committedEvents = state.eventTicks;
+    for (const record of world.snapshot().bodies) {
+      world.bodies.flags[record.index] |= BODY_SLEEPING_3D;
+      world.bodies.sleepTime[record.index] = 0.5;
+    }
+    world.applyBegin(
+      topology.map((record) => ({
+        kind: "wake" as const,
+        bodyId: record.id,
+      })),
+    );
+    const candidate = world.advance({
+      frameId: 2,
+      logicalTime: 0,
+      stagedKinematicTargets: new Map(),
+    });
+    expect(candidate.eventCount).toBe(8);
+    expect(candidate.eventTicks.length).toBe(8);
+
+    world.discard(candidate);
+
+    expect(state.eventTicks).toBe(committedEvents);
+    expect(state.eventTicks.length).toBe(4);
+    expect(state.eventCount).toBe(0);
+    const retry = advance(world, 3, 0);
+    expect(retry.eventOffset).toBe(0);
+    expect(retry.eventCount).toBe(8);
   });
 
   it("balances all world-owned resources after discard and disposal", () => {
@@ -840,34 +1338,73 @@ describe("deterministic 3D world replay and bounded long-run state", () => {
       sleeping: false,
     });
     world.proposeTopology([
-      body(1, { x: -4, velocityX: 0.01, angularVelocityZDegrees: 0.25 }),
-      body(2, { x: 20, type: "static" }),
-      collider(10, 1, sphereShape3D({ radius: 0.5 })),
-      collider(20, 2, boxShape3D({ width: 2, height: 2, depth: 2 })),
+      body(1, { velocityX: 4, angularVelocityZDegrees: 0.25 }),
+      body(2, { x: -5, type: "static" }),
+      body(3, { x: 5, type: "static" }),
+      collider(10, 1, sphereShape3D({ radius: 0.5 }), {
+        friction: 0,
+        restitution: 1,
+      }),
+      collider(20, 2, boxShape3D({ width: 1, height: 4, depth: 4 }), {
+        friction: 0,
+        restitution: 1,
+      }),
+      collider(30, 3, boxShape3D({ width: 1, height: 4, depth: 4 }), {
+        friction: 0,
+        restitution: 1,
+      }),
     ]);
     advance(world, 1, 0);
+    const moving = world.bodyIdentity(1)!.index;
+    let previousDirection = Math.sign(world.bodies.linearVelocityX[moving]!);
+    let directionReversals = 0;
+    let contactTicks = 0;
     for (let tick = 1; tick <= ticks; tick += 1) {
       advance(world, tick + 1, (tick * 1000) / 60);
+      const direction = Math.sign(world.bodies.linearVelocityX[moving]!);
+      if (
+        direction !== 0 &&
+        previousDirection !== 0 &&
+        direction !== previousDirection
+      ) {
+        directionReversals += 1;
+      }
+      if (direction !== 0) previousDirection = direction;
+      if (world.contacts.contactCount > 0) contactTicks += 1;
     }
-    return world.snapshot();
+    return {
+      snapshot: world.snapshot(),
+      directionReversals,
+      contactTicks,
+    };
   }
 
   it("replays 10,000 sphere/box ticks with exact identities and tolerance-equal numerics", () => {
-    const first = runReplay(10_000);
-    const second = runReplay(10_000);
+    const firstRun = runReplay(10_000);
+    const secondRun = runReplay(10_000);
+    const first = firstRun.snapshot;
+    const second = secondRun.snapshot;
     expect(first.tick).toBe(10_000);
     expect(second.tick).toBe(10_000);
-    expect(first.bodies.map(({ id, index, generation, flags }) => ({
-      id,
-      index,
-      generation,
-      flags,
-    }))).toEqual(second.bodies.map(({ id, index, generation, flags }) => ({
-      id,
-      index,
-      generation,
-      flags,
-    })));
+    expect(firstRun.directionReversals).toBeGreaterThan(0);
+    expect(firstRun.contactTicks).toBeGreaterThan(0);
+    expect(secondRun.directionReversals).toBe(firstRun.directionReversals);
+    expect(secondRun.contactTicks).toBe(firstRun.contactTicks);
+    expect(
+      first.bodies.map(({ id, index, generation, flags }) => ({
+        id,
+        index,
+        generation,
+        flags,
+      })),
+    ).toEqual(
+      second.bodies.map(({ id, index, generation, flags }) => ({
+        id,
+        index,
+        generation,
+        flags,
+      })),
+    );
     for (let index = 0; index < first.bodies.length; index += 1) {
       const a = first.bodies[index]!;
       const b = second.bodies[index]!;
@@ -897,24 +1434,75 @@ describe("deterministic 3D world replay and bounded long-run state", () => {
       sleeping: false,
     });
     world.proposeTopology([
-      body(1, { velocityX: 0.001, angularVelocityZDegrees: 0.01 }),
+      body(1, {
+        velocityX: 3,
+        velocityY: 2,
+        velocityZ: 1,
+        angularVelocityZDegrees: 0.1,
+      }),
       body(2, { x: -9.5, type: "static" }),
       body(3, { x: 9.5, type: "static" }),
       body(4, { y: -9.5, type: "static" }),
       body(5, { y: 9.5, type: "static" }),
       body(6, { z: -9.5, type: "static" }),
       body(7, { z: 9.5, type: "static" }),
-      collider(10, 1, sphereShape3D({ radius: 0.5 })),
-      collider(20, 2, boxShape3D({ width: 1, height: 20, depth: 20 })),
-      collider(30, 3, boxShape3D({ width: 1, height: 20, depth: 20 })),
-      collider(40, 4, boxShape3D({ width: 20, height: 1, depth: 20 })),
-      collider(50, 5, boxShape3D({ width: 20, height: 1, depth: 20 })),
-      collider(60, 6, boxShape3D({ width: 20, height: 20, depth: 1 })),
-      collider(70, 7, boxShape3D({ width: 20, height: 20, depth: 1 })),
+      collider(10, 1, sphereShape3D({ radius: 0.5 }), {
+        friction: 0,
+        restitution: 1,
+      }),
+      collider(20, 2, boxShape3D({ width: 1, height: 20, depth: 20 }), {
+        friction: 0,
+        restitution: 1,
+      }),
+      collider(30, 3, boxShape3D({ width: 1, height: 20, depth: 20 }), {
+        friction: 0,
+        restitution: 1,
+      }),
+      collider(40, 4, boxShape3D({ width: 20, height: 1, depth: 20 }), {
+        friction: 0,
+        restitution: 1,
+      }),
+      collider(50, 5, boxShape3D({ width: 20, height: 1, depth: 20 }), {
+        friction: 0,
+        restitution: 1,
+      }),
+      collider(60, 6, boxShape3D({ width: 20, height: 20, depth: 1 }), {
+        friction: 0,
+        restitution: 1,
+      }),
+      collider(70, 7, boxShape3D({ width: 20, height: 20, depth: 1 }), {
+        friction: 0,
+        restitution: 1,
+      }),
     ]);
     advance(world, 1, 0);
+    const moving = world.bodyIdentity(1)!.index;
+    let previousDirections = [
+      Math.sign(world.bodies.linearVelocityX[moving]!),
+      Math.sign(world.bodies.linearVelocityY[moving]!),
+      Math.sign(world.bodies.linearVelocityZ[moving]!),
+    ];
+    const reversedAxes = new Set<number>();
+    let contactTicks = 0;
     for (let tick = 1; tick <= 100_000; tick += 1) {
       advance(world, tick + 1, (tick * 1000) / 60);
+      const directions = [
+        Math.sign(world.bodies.linearVelocityX[moving]!),
+        Math.sign(world.bodies.linearVelocityY[moving]!),
+        Math.sign(world.bodies.linearVelocityZ[moving]!),
+      ];
+      for (let axis = 0; axis < directions.length; axis += 1) {
+        if (
+          directions[axis] !== 0 &&
+          previousDirections[axis] !== 0 &&
+          directions[axis] !== previousDirections[axis]
+        ) {
+          reversedAxes.add(axis);
+        }
+        if (directions[axis] !== 0)
+          previousDirections[axis] = directions[axis]!;
+      }
+      if (world.contacts.contactCount > 0) contactTicks += 1;
     }
 
     const snapshot = world.snapshot();
@@ -922,6 +1510,8 @@ describe("deterministic 3D world replay and bounded long-run state", () => {
     expect(Number.isFinite(snapshot.accumulatorMilliseconds)).toBe(true);
     expect(snapshot.accumulatorMilliseconds).toBeGreaterThanOrEqual(0);
     expect(snapshot.accumulatorMilliseconds).toBeLessThan(1000 / 60);
+    expect(contactTicks).toBeGreaterThan(0);
+    expect(reversedAxes.size).toBeGreaterThanOrEqual(2);
     for (const record of snapshot.bodies) {
       const numeric = Object.values(record).filter(
         (value): value is number => typeof value === "number",
@@ -995,9 +1585,11 @@ describe("source-only 3D world tracing", () => {
 
   it("records the exact rollback failure phase without retaining a history", () => {
     const records: unknown[] = [];
-    const restoreTrace = installPhysicsWorld3DTraceCollectorForTest((record) => {
-      records.push(record);
-    });
+    const restoreTrace = installPhysicsWorld3DTraceCollectorForTest(
+      (record) => {
+        records.push(record);
+      },
+    );
     const world = new PhysicsWorld3DKernel({
       fixedStepMilliseconds: 100,
       sleeping: false,

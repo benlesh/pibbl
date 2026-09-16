@@ -10,7 +10,11 @@ import type {
   CRCPhysicsColliderHandle3D,
 } from "../types.js";
 import { createPhysicsOwnershipCounters3D } from "../runtime/ownership.js";
-import { CommittedWorldQueries3D } from "./queries.js";
+import {
+  CommittedWorldQueries3D,
+  projectQueryHitGeometry3D,
+  type CommittedWorldQueriesOptions3D,
+} from "./queries.js";
 import {
   BODY_ENABLED_3D,
   COLLIDER_ENABLED_3D,
@@ -90,6 +94,7 @@ function createFixture() {
     },
     resolveBody: identityOf,
     resolveCollider: identityOf,
+    assertReadable() {},
   });
   const add = (
     options: Readonly<{
@@ -192,6 +197,51 @@ function createFixture() {
 }
 
 describe("committed-authoritative 3D world queries", () => {
+  it("requires an owner-bound committed-read guard", () => {
+    const counters = createPhysicsOwnershipCounters3D();
+    const bodies = new BodyStore3D(counters, 1);
+    const colliders = new ColliderStore3D(counters, 1);
+    const unlocked = {
+      generation: 1,
+      bodies,
+      colliders,
+      materializeBody: bodyHandle,
+      materializeCollider: colliderHandle,
+      resolveBody: identityOf,
+      resolveCollider: identityOf,
+    } as unknown as CommittedWorldQueriesOptions3D;
+
+    expect(() => new CommittedWorldQueries3D(unlocked)).toThrow(
+      /committed-read guard/,
+    );
+  });
+
+  it("copies and freezes optional triangle projection metadata", () => {
+    const sourceBarycentric = [0.2, 0.3, 0.5] as const;
+    const projected = projectQueryHitGeometry3D({
+      point: [1, 2, 3],
+      normal: [0, 1, 0],
+      distance: 4,
+      timeOfImpact: 0.4,
+      triangleIndex: 17,
+      barycentric: sourceBarycentric,
+    });
+
+    expect(projected).toEqual({
+      point: [1, 2, 3],
+      normal: [0, 1, 0],
+      distance: 4,
+      timeOfImpact: 0.4,
+      triangleIndex: 17,
+      barycentric: [0.2, 0.3, 0.5],
+    });
+    expect(Object.isFrozen(projected)).toBe(true);
+    expect(Object.isFrozen(projected.point)).toBe(true);
+    expect(Object.isFrozen(projected.normal)).toBe(true);
+    expect(Object.isFrozen(projected.barycentric)).toBe(true);
+    expect(projected.barycentric).not.toBe(sourceBarycentric);
+  });
+
   it("supports closest, any, and frozen all ray results sorted by time then collider identity", () => {
     const scene = createFixture();
     const firstTag = { name: "first" };
@@ -291,9 +341,9 @@ describe("committed-authoritative 3D world queries", () => {
         { mode: "any" },
       ),
     ).toBe(false);
-    expect(scene.queries.queryPoint(7, [6, 0, 0], { mode: "all" })).toHaveLength(
-      1,
-    );
+    expect(
+      scene.queries.queryPoint(7, [6, 0, 0], { mode: "all" }),
+    ).toHaveLength(1);
     expect(scene.queries.queryPoint(7, [6, 3, 0])).toBeNull();
   });
 
@@ -389,13 +439,58 @@ describe("committed-authoritative 3D world queries", () => {
       }),
     ).toBeNull();
     expect(scene.queries.raycast(7, ray)!.distance).toBe(4.5);
-    expect(committedNumericState(scene.bodies, scene.colliders)).toEqual(arrays);
+    expect(committedNumericState(scene.bodies, scene.colliders)).toEqual(
+      arrays,
+    );
     expect(scene.counters).toEqual(counters);
 
     scene.queries.invalidate();
-    expect(scene.queries.queryPoint(7, [5, 0, 0], { mode: "any" })).toBe(
-      false,
+    expect(scene.queries.queryPoint(7, [5, 0, 0], { mode: "any" })).toBe(false);
+  });
+
+  it("fails closed for stale compound generations after deterministic slot reuse", () => {
+    const scene = createFixture();
+    const released = scene.add({ x: 2, colliderOffsetX: 0.25 });
+    const staleBody = bodyHandle(released.body, released.bodyGeneration);
+    const staleCollider = colliderHandle(
+      released.collider,
+      released.colliderGeneration,
     );
+    expect(
+      scene.colliders.release(released.collider, released.colliderGeneration),
+    ).toBe(true);
+    expect(scene.bodies.release(released.body, released.bodyGeneration)).toBe(
+      true,
+    );
+    const replacement = scene.add({ x: 4, colliderOffsetX: -0.25 });
+    expect(replacement.body).toBe(released.body);
+    expect(replacement.collider).toBe(released.collider);
+    expect(replacement.bodyGeneration).toBeGreaterThan(released.bodyGeneration);
+    expect(replacement.colliderGeneration).toBeGreaterThan(
+      released.colliderGeneration,
+    );
+
+    const ray = {
+      origin: [0, 0, 0],
+      direction: [1, 0, 0],
+      maxDistance: 10,
+    } as const;
+    const hits = scene.queries.raycast(7, ray, { mode: "all" });
+    expect(hits).toHaveLength(1);
+    expect(hits[0]!.bodyGeneration).toBe(replacement.bodyGeneration);
+    expect(hits[0]!.colliderGeneration).toBe(replacement.colliderGeneration);
+    expect(
+      scene.queries.raycast(7, ray, {
+        mode: "all",
+        excludeBody: staleBody,
+      }),
+    ).toEqual([]);
+    expect(
+      scene.queries.raycast(7, ray, {
+        mode: "all",
+        excludeCollider: staleCollider,
+      }),
+    ).toEqual([]);
   });
 
   it("explicitly rejects every query while its owner has an uncommitted candidate", () => {
