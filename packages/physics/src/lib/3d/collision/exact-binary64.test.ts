@@ -18,6 +18,8 @@ import {
   projectAffineAtExactTime,
   projectDyadicNormalizedComponent,
   projectExactTime,
+  projectNonnegativeScaledExactTime,
+  projectNonnegativeScaledExactTimeRatio,
   quadraticDiscriminantSign,
   quadraticRoot,
   rationalFromBigInts,
@@ -224,6 +226,34 @@ describe("exact binary64 arithmetic", () => {
       dyadicFromBigInt(-3n, -2200),
       squaredLength,
     )).toBe(-0.6);
+  });
+
+  it("projects a nonnegative scaled algebraic-time ratio without materializing its numerator", () => {
+    const eventTime = quadraticRoot(exactQuadratic(
+      dyadicFromNumber(2),
+      dyadicFromNumber(-4),
+      dyadicFromNumber(1),
+    ), "lower")!;
+
+    expect(projectNonnegativeScaledExactTimeRatio(
+      eventTime,
+      dyadicFromNumber(2),
+      dyadicFromNumber(1),
+    )).toBe(0.41421356237309503);
+  });
+
+  it("rejects negative times in the explicitly nonnegative scaled projector", () => {
+    const negativeTime = rationalTime(rationalFromBigInts(-1n, 1n));
+
+    expect(() => projectNonnegativeScaledExactTime(
+      negativeTime,
+      dyadicFromNumber(2),
+    )).toThrow(/time must be nonnegative/);
+    expect(() => projectNonnegativeScaledExactTimeRatio(
+      negativeTime,
+      dyadicFromNumber(2),
+      dyadicFromNumber(1),
+    )).toThrow(/time must be nonnegative/);
   });
 });
 

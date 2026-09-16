@@ -493,7 +493,7 @@ export function projectAffineRatioAtExactTime(
   );
 }
 
-export function compareScaledExactTimeToDyadic(
+export function compareNonnegativeScaledExactTimeToDyadic(
   time: ExactTime,
   scaleSquared: ExactDyadic,
   value: ExactDyadic,
@@ -501,6 +501,7 @@ export function compareScaledExactTimeToDyadic(
   if (dyadicSign(scaleSquared) < 0) {
     throw new RangeError("exact squared scale must be nonnegative.");
   }
+  requireNonnegativeExactTime(time);
   if (dyadicSign(value) < 0) return 1;
   if (scaleSquared.significand === 0n) {
     return dyadicCompare(ZERO_DYADIC, value);
@@ -516,13 +517,14 @@ export function compareScaledExactTimeToDyadic(
   return compareExactTimes(time, limit);
 }
 
-export function projectScaledExactTime(
+export function projectNonnegativeScaledExactTime(
   time: ExactTime,
   scaleSquared: ExactDyadic,
 ): number | null {
   if (dyadicSign(scaleSquared) < 0) {
     throw new RangeError("exact squared scale must be nonnegative.");
   }
+  requireNonnegativeExactTime(time);
   if (scaleSquared.significand === 0n) return 0;
   return projectExactValue((value) => {
     if (rationalSign(value) < 0) return 1;
@@ -533,7 +535,7 @@ export function projectScaledExactTime(
       dyadicNegate(dyadicFromRationalSquare(squaredValue)),
     ), "upper");
     if (limit !== null) return compareExactTimes(time, limit);
-    return compareScaledTimeToRationalWithoutDyadicRoot(
+    return compareNonnegativeScaledExactTimeToRational(
       time,
       scaleSquared,
       value,
@@ -541,11 +543,34 @@ export function projectScaledExactTime(
   });
 }
 
+export function projectNonnegativeScaledExactTimeRatio(
+  time: ExactTime,
+  scaleSquared: ExactDyadic,
+  denominator: ExactDyadic,
+): number | null {
+  if (dyadicSign(scaleSquared) < 0) {
+    throw new RangeError("exact squared scale must be nonnegative.");
+  }
+  if (dyadicSign(denominator) <= 0) {
+    throw new RangeError("exact scaled-time denominator must be positive.");
+  }
+  requireNonnegativeExactTime(time);
+  if (scaleSquared.significand === 0n) return 0;
+  const rationalDenominator = rationalFromDyadic(denominator);
+  return projectExactValue((value) =>
+    compareNonnegativeScaledExactTimeToRational(
+      time,
+      scaleSquared,
+      rationalMultiply(value, rationalDenominator),
+    )
+  );
+}
+
 export function projectDyadicSquareRoot(value: ExactDyadic): number | null {
   if (dyadicSign(value) < 0) {
     throw new RangeError("exact square-root input must be nonnegative.");
   }
-  return projectScaledExactTime(
+  return projectNonnegativeScaledExactTime(
     rationalTime(rationalFromBigInts(1n, 1n)),
     value,
   );
@@ -613,7 +638,7 @@ function dyadicFromRationalSquare(value: ExactRational): ExactDyadic {
   return dyadicFromBigInt(value.numerator, -denominatorExponent);
 }
 
-function compareScaledTimeToRationalWithoutDyadicRoot(
+function compareNonnegativeScaledExactTimeToRational(
   time: ExactTime,
   scaleSquared: ExactDyadic,
   value: ExactRational,
@@ -643,6 +668,12 @@ function compareScaledTimeToRationalWithoutDyadicRoot(
     slope,
     time,
   );
+}
+
+function requireNonnegativeExactTime(time: ExactTime): void {
+  if (compareExactTimeToRational(time, ZERO_RATIONAL) < 0) {
+    throw new RangeError("exact scaled time must be nonnegative.");
+  }
 }
 
 function signRationalAffineAtQuadraticRoot(

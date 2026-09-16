@@ -3,7 +3,7 @@ import {
   affineSignAtExactTime,
   compareExactTimes,
   compareRationals,
-  compareScaledExactTimeToDyadic,
+  compareNonnegativeScaledExactTimeToDyadic,
   dyadicAdd,
   dyadicDot3,
   dyadicFromBigInt,
@@ -23,7 +23,8 @@ import {
   projectAffineRatioAtExactTime,
   projectDyadicNormalizedComponent,
   projectExactTime,
-  projectScaledExactTime,
+  projectNonnegativeScaledExactTime,
+  projectNonnegativeScaledExactTimeRatio,
   quadraticDiscriminantSign,
   quadraticRoot,
   quadraticSignAtRational,
@@ -144,14 +145,23 @@ export function raycastSphereAnalytically(
 
   const event = proveSphereSweepFromZero(offset, motion, radius);
   if (event === null || event.kind === "initial") return null;
+  const exactMaxDistance = dyadicFromNumber(maxDistance);
   if (
-    compareScaledExactTimeToDyadic(
+    compareNonnegativeScaledExactTimeToDyadic(
       event.time,
       motionSquared,
-      dyadicFromNumber(maxDistance),
+      exactMaxDistance,
     ) > 0
   ) return null;
-  const distance = projectScaledExactTime(event.time, motionSquared);
+  const distance = projectNonnegativeScaledExactTime(
+    event.time,
+    motionSquared,
+  );
+  const normalizedTime = projectNonnegativeScaledExactTimeRatio(
+    event.time,
+    motionSquared,
+    exactMaxDistance,
+  );
   const point = materializeAffineVector3(
     exactVector3FromNumbers(origin),
     motion,
@@ -163,7 +173,12 @@ export function raycastSphereAnalytically(
     event.time,
     radius,
   );
-  if (distance === null || point === null || normal === null) return null;
+  if (
+    distance === null ||
+    normalizedTime === null ||
+    point === null ||
+    normal === null
+  ) return null;
   return finiteCandidate({
     pointX: point[0],
     pointY: point[1],
@@ -172,7 +187,7 @@ export function raycastSphereAnalytically(
     normalY: normal[1],
     normalZ: normal[2],
     distance,
-    timeOfImpact: Math.min(1, distance / maxDistance),
+    timeOfImpact: normalizedTime,
   });
 }
 
@@ -213,7 +228,10 @@ export function castSphereAgainstSphereAnalytically(
   );
   if (event === null || event.kind === "initial") return null;
   const time = projectExactTime(event.time);
-  const distance = projectScaledExactTime(event.time, translationSquared);
+  const distance = projectNonnegativeScaledExactTime(
+    event.time,
+    translationSquared,
+  );
   const normal = materializeUnitAffineVector3(
     offset,
     motion,
@@ -450,7 +468,10 @@ function materializeSphereBoxEvent(
   time: ExactTime,
 ): AnalyticCastCandidate3D | null {
   const projectedTime = projectExactTime(time);
-  const distance = projectScaledExactTime(time, geometry.translationSquared);
+  const distance = projectNonnegativeScaledExactTime(
+    time,
+    geometry.translationSquared,
+  );
   return projectedTime === null || distance === null
     ? null
     : materializeSphereBoxCandidate(

@@ -23,6 +23,39 @@ describe("standalone 3D rays and translational casts", () => {
     });
   });
 
+  it.each([1, 2 ** -1060, Number.MIN_VALUE])(
+    "projects sphere-ray normalized time directly at scale %s",
+    (scale) => {
+      const hit = raycastShape3D(
+        sphereShape3D({ radius: scale }),
+        pose([scale, scale, 0]),
+        {
+          origin: [0, 0, 0],
+          direction: [scale, scale, 0],
+          maxDistance: scale,
+        },
+      );
+
+      expect(hit).not.toBeNull();
+      expect(hit!.timeOfImpact).toBe(0.41421356237309503);
+    },
+  );
+
+  it("admits an exact sphere-ray distance limit and rejects one ULP below it", () => {
+    const shape = sphereShape3D({ radius: 1 });
+    const ray = {
+      origin: [0, 0, 0],
+      direction: [3, 0, 0],
+      maxDistance: 1,
+    } as const;
+
+    expect(raycastShape3D(shape, pose([2, 0, 0]), ray)?.timeOfImpact).toBe(1);
+    expect(raycastShape3D(shape, pose([2, 0, 0]), {
+      ...ray,
+      maxDistance: nextRepresentableDown(1),
+    })).toBeNull();
+  });
+
   it("raycasts a sphere with finite values near 1e200", () => {
     const hit = raycastShape3D(
       sphereShape3D({ radius: 1e200 }),
@@ -505,6 +538,34 @@ describe("standalone 3D rays and translational casts", () => {
       pose([1.0000000000000004, 0, 0]),
       { includeInitialOverlap: true },
     )).toBeNull();
+  });
+
+  it("returns an included true sphere overlap at time zero when casting away", () => {
+    const moving = sphereShape3D({ radius: 1 });
+    const target = sphereShape3D({ radius: 1 });
+    const translation = [-1, 0, 0] as const;
+    const targetPose = pose([1, 0, 0]);
+
+    expect(shapeCastAgainstShape3D(
+      moving,
+      identity,
+      translation,
+      target,
+      targetPose,
+    )).toBeNull();
+    expect(shapeCastAgainstShape3D(
+      moving,
+      identity,
+      translation,
+      target,
+      targetPose,
+      { includeInitialOverlap: true },
+    )).toEqual({
+      point: [2, 0, 0],
+      normal: [1, 0, 0],
+      distance: 0,
+      timeOfImpact: 0,
+    });
   });
 
   it("materializes a downscaled initial edge normal without an epsilon fallback", () => {
