@@ -12,6 +12,11 @@
     "rootDir": "./src",
     "types": []
   },
-  "files": ["src/2d.ts", "src/2d-geometry.ts"],
+  "files": [
+    "src/2d.ts",
+    "src/2d-geometry.ts",
+    "src/3d.ts",
+    "src/3d-geometry.ts"
+  ],
   "include": []
 }

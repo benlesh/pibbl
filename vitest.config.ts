@@ -46,6 +46,14 @@ export default defineConfig(({ mode }) => ({
         replacement: fileURLToPath(new URL('./packages/physics/src/2d.ts', import.meta.url)),
       },
       {
+        find: /^@crc\/physics\/3d\/geometry$/,
+        replacement: fileURLToPath(new URL('./packages/physics/src/3d-geometry.ts', import.meta.url)),
+      },
+      {
+        find: /^@crc\/physics\/3d$/,
+        replacement: fileURLToPath(new URL('./packages/physics/src/3d.ts', import.meta.url)),
+      },
+      {
         find: /^@crc\/webgl\/internal$/,
         replacement: fileURLToPath(new URL('./packages/webgl/src/internal.ts', import.meta.url)),
       },

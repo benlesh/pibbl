@@ -173,6 +173,9 @@ importers:
       '@crc/core':
         specifier: workspace:*
         version: link:../core
+      '@crc/webgl':
+        specifier: workspace:*
+        version: link:../webgl
 
   packages/scenarios:
     dependencies:

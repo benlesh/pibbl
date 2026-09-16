@@ -192,6 +192,7 @@ const currentMarkdownPaths = [
   "AGENTS.md",
   "README.md",
   "packages/core/README.md",
+  "packages/physics/README.md",
   "packages/types/README.md",
   "packages/webgl/README.md",
   "docs/architecture/style-and-layout-architecture.md",
@@ -233,6 +234,7 @@ const migrationMarkdownPaths = new Set([
 ]);
 const operationalMarkdownPaths = new Set([
   ".beads/README.md",
+  "docs/superpowers/plans/2026-09-15-first-class-physics-3d-implementation.md",
   "tooling/studio-docs/fixtures/invalid-script.md",
   "tooling/studio-docs/fixtures/valid-guide.md",
 ]);
@@ -1327,8 +1329,10 @@ assert.equal(
 );
 const repositoryMarkdownPaths = markdownListing.stdout.trim().split("\n");
 const currentMarkdownSet = new Set(currentMarkdownPaths);
-const historicalMarkdownPaths = repositoryMarkdownPaths.filter((path) =>
-  historicalMarkdownPatterns.some((pattern) => pattern.test(path)),
+const historicalMarkdownPaths = repositoryMarkdownPaths.filter(
+  (path) =>
+    !operationalMarkdownPaths.has(path) &&
+    historicalMarkdownPatterns.some((pattern) => pattern.test(path)),
 );
 const unclassifiedMarkdownPaths = repositoryMarkdownPaths.filter(
   (path) =>
@@ -1602,8 +1606,8 @@ const webglManifest = JSON.parse(
 );
 assert.deepEqual(
   Object.keys(webglManifest.exports),
-  ["."],
-  "@crc/webgl must expose only its root package entry.",
+  [".", "./internal"],
+  "@crc/webgl must expose only its root and official friend entries.",
 );
 assert.deepEqual(
   webglManifest.peerDependencies,
