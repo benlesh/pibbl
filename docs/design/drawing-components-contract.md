@@ -170,19 +170,19 @@ interaction bounds remain exact.
 `@crc/webgl` supplies one Canvas composition boundary and these scene
 declarations:
 
-| Export | Contract |
-| --- | --- |
-| `WebGLLayer` | Resolves a finite positive logical box; composes and settles one frame-local WebGL scene, reuses or renders its shadow-depth generations, renders its color queues, then transfers and transactionally commits one Canvas entry. |
-| `Group3D` | Scopes translation × Z/Y/X degree rotations × scale for recursive WebGL declarations and contributes listener ancestry without paint, a scene submission, or hit geometry. |
-| `Mesh` | Submits one immutable triangle geometry, composed model transform, local material/shadow settings, final color, and target participation shared by settlement, raster, ray-pick, and focus records. |
-| `Cube` | Uses centered per-face normal geometry; positive `size` defaults to one and drives the same submitted model scale for raster and pick. |
-| `Sphere` | Uses deterministic centered geometry with canonical outward normals; positive `radius` defaults to `0.5` and drives the same submitted model scale for raster and pick. |
-| `AmbientLight` | Adds uniform color × intensity to every lit mesh in the complete settled scene; it has no transform or shadow projection. |
-| `HemisphereLight` | Blends ground/sky colors by each world normal and transformed local `+Y` sky axis; it has no direct-light shadow projection. |
-| `DirectionalLight` | Emits parallel light along transformed local `-Z`; translation is optically inert and one genuine 2D shadow view is eligible by default. |
-| `PointLight` | Emits from the transformed local origin with inverse-square attenuation and an optional smooth finite range; six cube shadow views are eligible by default. |
-| `SpotLight` | Adds a transformed local `-Z` cone to point attenuation; one outer-cone 2D shadow view is eligible by default. |
-| `WebGLBackground` | Supplies one solid or alpha clear behind the scene without illuminating geometry, drawing another pass, or creating a target. |
+| Export             | Contract                                                                                                                                                                                                                         |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `WebGLLayer`       | Resolves a finite positive logical box; composes and settles one frame-local WebGL scene, reuses or renders its shadow-depth generations, renders its color queues, then transfers and transactionally commits one Canvas entry. |
+| `Group3D`          | Scopes translation × Z/Y/X degree rotations × scale for recursive WebGL declarations and contributes listener ancestry without paint, a scene submission, or hit geometry.                                                       |
+| `Mesh`             | Submits one immutable triangle geometry, composed model transform, local material/shadow settings, final color, and target participation shared by settlement, raster, ray-pick, and focus records.                              |
+| `Cube`             | Uses centered per-face normal geometry; positive `size` defaults to one and drives the same submitted model scale for raster and pick.                                                                                           |
+| `Sphere`           | Uses deterministic centered geometry with canonical outward normals; positive `radius` defaults to `0.5` and drives the same submitted model scale for raster and pick.                                                          |
+| `AmbientLight`     | Adds uniform color × intensity to every lit mesh in the complete settled scene; it has no transform or shadow projection.                                                                                                        |
+| `HemisphereLight`  | Blends ground/sky colors by each world normal and transformed local `+Y` sky axis; it has no direct-light shadow projection.                                                                                                     |
+| `DirectionalLight` | Emits parallel light along transformed local `-Z`; translation is optically inert and one genuine 2D shadow view is eligible by default.                                                                                         |
+| `PointLight`       | Emits from the transformed local origin with inverse-square attenuation and an optional smooth finite range; six cube shadow views are eligible by default.                                                                      |
+| `SpotLight`        | Adds a transformed local `-Z` cone to point attenuation; one outer-cone 2D shadow view is eligible by default.                                                                                                                   |
+| `WebGLBackground`  | Supplies one solid or alpha clear behind the scene without illuminating geometry, drawing another pass, or creating a target.                                                                                                    |
 
 `WebGLLayer` accepts one optional perspective camera; omission uses position
 `[0, 0, 5]`, look-at `[0, 0, 0]`, up `[0, 1, 0]`, field of view `50`, near

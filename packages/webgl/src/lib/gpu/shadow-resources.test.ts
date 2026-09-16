@@ -1,13 +1,13 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { SettledWebGLShadowPlan } from '../scene/types.js';
-import { WebGLShadowResourceCache } from './shadow-resources.js';
+import { afterEach, describe, expect, it, vi } from "vitest";
+import type { SettledWebGLDirectionalShadowPlan } from "../scene/types.js";
+import { WebGLShadowResourceCache } from "./shadow-resources.js";
 
 afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('WebGLShadowResourceCache', () => {
-  it('creates complete sampler fallbacks without allocating a shadow render target', () => {
+describe("WebGLShadowResourceCache", () => {
+  it("creates complete sampler fallbacks without allocating a shadow render target", () => {
     const recording = createShadowGL();
     const cache = new WebGLShadowResourceCache(recording.gl, 7);
     const transaction = cache.beginRender();
@@ -24,12 +24,12 @@ describe('WebGLShadowResourceCache', () => {
     expect(recording.checkFramebufferStatus).not.toHaveBeenCalled();
   });
 
-  it('clamps directional maps to the 2D limit and allocates DEPTH_COMPONENT24 with complete fallbacks', () => {
+  it("clamps directional maps to the 2D limit and allocates DEPTH_COMPONENT24 with complete fallbacks", () => {
     const recording = createShadowGL({ maxTextureSize: 768 });
     const cache = new WebGLShadowResourceCache(recording.gl, 7);
     const draws: number[] = [];
     const transaction = cache.beginRender();
-    const resource = transaction.useDirectional(plan(), resolution => {
+    const resource = transaction.useDirectional(plan(), (resolution) => {
       draws.push(resolution);
     });
     const bindings = transaction.getBindings();
@@ -39,9 +39,11 @@ describe('WebGLShadowResourceCache', () => {
     expect(draws).toEqual([768]);
     expect(recording.createFramebuffer).toHaveBeenCalledOnce();
     expect(recording.checkFramebufferStatus).toHaveBeenCalledOnce();
-    expect(recording.texImage2D.mock.calls.filter(
-      call => call[0] === recording.gl.TEXTURE_2D && call[3] === 768,
-    )).toEqual([
+    expect(
+      recording.texImage2D.mock.calls.filter(
+        (call) => call[0] === recording.gl.TEXTURE_2D && call[3] === 768,
+      ),
+    ).toEqual([
       [
         recording.gl.TEXTURE_2D,
         0,
@@ -54,15 +56,18 @@ describe('WebGLShadowResourceCache', () => {
         null,
       ],
     ]);
-    expect(recording.texImage2D.mock.calls.filter(
-      call => call[0] >= recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X &&
-        call[0] < recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X + 6,
-    )).toHaveLength(6);
+    expect(
+      recording.texImage2D.mock.calls.filter(
+        (call) =>
+          call[0] >= recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X &&
+          call[0] < recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X + 6,
+      ),
+    ).toHaveLength(6);
     expect(bindings.fallback2D).toBeDefined();
     expect(bindings.fallbackCube).toBeDefined();
   });
 
-  it('reuses equal resident generations and replaces only depth-affecting changes', () => {
+  it("reuses equal resident generations and replaces only depth-affecting changes", () => {
     const recording = createShadowGL();
     const cache = new WebGLShadowResourceCache(recording.gl, 7);
     const firstDraw = vi.fn();
@@ -90,19 +95,23 @@ describe('WebGLShadowResourceCache', () => {
     expect(recording.deleteTexture).toHaveBeenCalledWith(first.texture);
   });
 
-  it('rolls back a failed candidate while preserving a resident generation', () => {
+  it("rolls back a failed candidate while preserving a resident generation", () => {
     const recording = createShadowGL();
     const cache = new WebGLShadowResourceCache(recording.gl, 7);
     let transaction = cache.beginRender();
     const resident = transaction.useDirectional(plan(), () => undefined);
     transaction.commit();
 
-    const failure = new Error('depth draw failed');
+    const failure = new Error("depth draw failed");
     transaction = cache.beginRender();
-    expect(() => transaction.useDirectional(
-      plan({ projectionViewMatrix: matrix(2) }),
-      () => { throw failure; },
-    )).toThrow(failure);
+    expect(() =>
+      transaction.useDirectional(
+        plan({ projectionViewMatrix: matrix(2) }),
+        () => {
+          throw failure;
+        },
+      ),
+    ).toThrow(failure);
     transaction.rollback();
 
     const retryDraw = vi.fn();
@@ -113,14 +122,14 @@ describe('WebGLShadowResourceCache', () => {
     expect(retryDraw).not.toHaveBeenCalled();
   });
 
-  it('sweeps omitted lights, abandons context-lost handles, and continues healthy cleanup after deletion errors', () => {
-    const cleanupFailure = new Error('texture cleanup failed');
+  it("sweeps omitted lights, abandons context-lost handles, and continues healthy cleanup after deletion errors", () => {
+    const cleanupFailure = new Error("texture cleanup failed");
     const recording = createShadowGL({
       deleteTextureErrorAt: 1,
       deleteTextureError: cleanupFailure,
     });
     const reported: unknown[] = [];
-    vi.spyOn(globalThis, 'reportError').mockImplementation(error => {
+    vi.spyOn(globalThis, "reportError").mockImplementation((error) => {
       reported.push(error);
     });
     const cache = new WebGLShadowResourceCache(recording.gl, 7);
@@ -156,18 +165,19 @@ describe('WebGLShadowResourceCache', () => {
     expect(lost.deleteTexture).not.toHaveBeenCalled();
   });
 
-  it('rejects incomplete directional framebuffers and releases the candidate texture', () => {
+  it("rejects incomplete directional framebuffers and releases the candidate texture", () => {
     const recording = createShadowGL({ framebufferComplete: false });
     const cache = new WebGLShadowResourceCache(recording.gl, 7);
     const transaction = cache.beginRender();
 
-    expect(() => transaction.useDirectional(plan(), () => undefined))
-      .toThrowError(/directional.*framebuffer.*incomplete/i);
+    expect(() =>
+      transaction.useDirectional(plan(), () => undefined),
+    ).toThrowError(/directional.*framebuffer.*incomplete/i);
     transaction.rollback();
     expect(recording.deleteTexture).toHaveBeenCalled();
   });
 
-  it('deletes every active candidate handle exactly once on healthy disposal while abandoning context-lost handles', () => {
+  it("deletes every active candidate handle exactly once on healthy disposal while abandoning context-lost handles", () => {
     const recording = createShadowGL();
     const cache = new WebGLShadowResourceCache(recording.gl, 7);
     const transaction = cache.beginRender();
@@ -177,7 +187,7 @@ describe('WebGLShadowResourceCache', () => {
     transaction.rollback();
     cache.dispose(false);
 
-    const deleted = recording.deleteTexture.mock.calls.map(call => call[0]);
+    const deleted = recording.deleteTexture.mock.calls.map((call) => call[0]);
     expect(deleted).toHaveLength(1);
     expect(new Set(deleted)).toEqual(new Set(recording.textures));
     expect(recording.deleteFramebuffer).toHaveBeenCalledOnce();
@@ -196,7 +206,7 @@ describe('WebGLShadowResourceCache', () => {
     expect(lost.deleteFramebuffer).not.toHaveBeenCalled();
   });
 
-  it('allocates one clamped DEPTH_COMPONENT24 cube and attaches all six canonical faces', () => {
+  it("allocates one clamped DEPTH_COMPONENT24 cube and attaches all six canonical faces", () => {
     const recording = createShadowGL({ maxCubeMapTextureSize: 640 });
     const cache = new WebGLShadowResourceCache(recording.gl, 7);
     const renderedFaces: Array<readonly [number, number]> = [];
@@ -211,23 +221,33 @@ describe('WebGLShadowResourceCache', () => {
 
     expect(resource.resolution).toBe(640);
     expect(renderedFaces).toEqual([
-      [0, 640], [1, 640], [2, 640], [3, 640], [4, 640], [5, 640],
+      [0, 640],
+      [1, 640],
+      [2, 640],
+      [3, 640],
+      [4, 640],
+      [5, 640],
     ]);
-    expect(recording.texImage2D.mock.calls.filter(call =>
-      call[0] >= recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X &&
-      call[0] < recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X + 6 &&
-      call[3] === 640,
-    )).toEqual(Array.from({ length: 6 }, (_, face) => [
-      recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
-      0,
-      recording.gl.DEPTH_COMPONENT24,
-      640,
-      640,
-      0,
-      recording.gl.DEPTH_COMPONENT,
-      recording.gl.UNSIGNED_INT,
-      null,
-    ]));
+    expect(
+      recording.texImage2D.mock.calls.filter(
+        (call) =>
+          call[0] >= recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X &&
+          call[0] < recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X + 6 &&
+          call[3] === 640,
+      ),
+    ).toEqual(
+      Array.from({ length: 6 }, (_, face) => [
+        recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
+        0,
+        recording.gl.DEPTH_COMPONENT24,
+        640,
+        640,
+        0,
+        recording.gl.DEPTH_COMPONENT,
+        recording.gl.UNSIGNED_INT,
+        null,
+      ]),
+    );
     expect(recording.framebufferTexture2D.mock.calls.slice(-6)).toEqual(
       Array.from({ length: 6 }, (_, face) => [
         recording.gl.FRAMEBUFFER,
@@ -240,7 +260,7 @@ describe('WebGLShadowResourceCache', () => {
     expect(recording.checkFramebufferStatus).toHaveBeenCalledTimes(6);
   });
 
-  it('reuses equal point cubes, replaces one changed light, and preserves resident data on rollback', () => {
+  it("reuses equal point cubes, replaces one changed light, and preserves resident data on rollback", () => {
     const recording = createShadowGL();
     const cache = new WebGLShadowResourceCache(recording.gl, 7);
     let transaction = cache.beginRender();
@@ -258,60 +278,69 @@ describe('WebGLShadowResourceCache', () => {
 
     transaction = cache.beginRender();
     const replacementDraw = vi.fn();
-    const replacement = (transaction as any).usePoint(pointPlan({
-      farDistance: 8,
-    }), replacementDraw);
+    const replacement = (transaction as any).usePoint(
+      pointPlan({
+        farDistance: 8,
+      }),
+      replacementDraw,
+    );
     transaction.commit();
     expect(replacement.texture).not.toBe(initial.texture);
     expect(replacementDraw).toHaveBeenCalledTimes(6);
     expect(recording.deleteTexture).toHaveBeenCalledWith(initial.texture);
 
     transaction = cache.beginRender();
-    const failure = new Error('point face failed');
-    expect(() => (transaction as any).usePoint(pointPlan({
-      farDistance: 12,
-    }), (face: number) => {
-      if (face === 3) throw failure;
-    })).toThrow(failure);
+    const failure = new Error("point face failed");
+    expect(() =>
+      (transaction as any).usePoint(
+        pointPlan({
+          farDistance: 12,
+        }),
+        (face: number) => {
+          if (face === 3) throw failure;
+        },
+      ),
+    ).toThrow(failure);
     transaction.rollback();
 
     transaction = cache.beginRender();
     const retryDraw = vi.fn();
-    const reused = (transaction as any).usePoint(pointPlan({
-      farDistance: 8,
-    }), retryDraw);
+    const reused = (transaction as any).usePoint(
+      pointPlan({
+        farDistance: 8,
+      }),
+      retryDraw,
+    );
     transaction.commit();
     expect(reused.texture).toBe(replacement.texture);
     expect(retryDraw).not.toHaveBeenCalled();
   });
 
-  it('rolls back incomplete and partially allocated point cubes without publishing them', () => {
+  it("rolls back incomplete and partially allocated point cubes without publishing them", () => {
     const incomplete = createShadowGL({ framebufferIncompleteAt: 4 });
     const incompleteCache = new WebGLShadowResourceCache(incomplete.gl, 7);
     const incompleteTransaction = incompleteCache.beginRender();
-    expect(() => (incompleteTransaction as any).usePoint(
-      pointPlan(),
-      () => undefined,
-    )).toThrowError(/point.*face 3.*framebuffer.*incomplete/i);
+    expect(() =>
+      (incompleteTransaction as any).usePoint(pointPlan(), () => undefined),
+    ).toThrowError(/point.*face 3.*framebuffer.*incomplete/i);
     incompleteTransaction.rollback();
     expect(incomplete.deleteTexture).toHaveBeenCalled();
 
-    const allocationError = new Error('cube allocation failed');
+    const allocationError = new Error("cube allocation failed");
     const allocation = createShadowGL({
       texImage2DErrorAt: 4,
       texImage2DError: allocationError,
     });
     const allocationCache = new WebGLShadowResourceCache(allocation.gl, 7);
     const allocationTransaction = allocationCache.beginRender();
-    expect(() => (allocationTransaction as any).usePoint(
-      pointPlan(),
-      () => undefined,
-    )).toThrow(allocationError);
+    expect(() =>
+      (allocationTransaction as any).usePoint(pointPlan(), () => undefined),
+    ).toThrow(allocationError);
     allocationTransaction.rollback();
     expect(allocation.deleteTexture).toHaveBeenCalled();
   });
 
-  it('allocates one 2D spot map and reuses only an equal resident projection', () => {
+  it("allocates one 2D spot map and reuses only an equal resident projection", () => {
     const recording = createShadowGL({ maxTextureSize: 768 });
     const cache = new WebGLShadowResourceCache(recording.gl, 7);
     let transaction = cache.beginRender();
@@ -319,7 +348,7 @@ describe('WebGLShadowResourceCache', () => {
     const first = (transaction as any).useSpot(spotPlan(), firstDraw);
     transaction.commit();
 
-    expect(first).toMatchObject({ kind: 'spot', resolution: 768 });
+    expect(first).toMatchObject({ kind: "spot", resolution: 768 });
     expect(firstDraw).toHaveBeenCalledExactlyOnceWith(768);
     expect(recording.framebufferTexture2D).toHaveBeenLastCalledWith(
       recording.gl.FRAMEBUFFER,
@@ -338,9 +367,12 @@ describe('WebGLShadowResourceCache', () => {
 
     transaction = cache.beginRender();
     const replacementDraw = vi.fn();
-    const replacement = (transaction as any).useSpot(spotPlan({
-      projectionViewMatrix: matrix(9),
-    }), replacementDraw);
+    const replacement = (transaction as any).useSpot(
+      spotPlan({
+        projectionViewMatrix: matrix(9),
+      }),
+      replacementDraw,
+    );
     transaction.commit();
     expect(replacement.texture).not.toBe(first.texture);
     expect(replacementDraw).toHaveBeenCalledExactlyOnceWith(768);
@@ -351,9 +383,11 @@ describe('WebGLShadowResourceCache', () => {
 const FIRST_LIGHT = Object.freeze({});
 const SECOND_LIGHT = Object.freeze({});
 
-function plan(overrides: Partial<SettledWebGLShadowPlan> = {}): SettledWebGLShadowPlan {
+function plan(
+  overrides: Partial<SettledWebGLDirectionalShadowPlan> = {},
+): SettledWebGLDirectionalShadowPlan {
   return {
-    kind: 'directional',
+    kind: "directional",
     lightIdentity: FIRST_LIGHT,
     lightIndex: 0,
     projectionViewMatrix: matrix(1),
@@ -370,13 +404,12 @@ function plan(overrides: Partial<SettledWebGLShadowPlan> = {}): SettledWebGLShad
 
 function pointPlan(overrides: Record<string, unknown> = {}): any {
   return {
-    kind: 'point',
+    kind: "point",
     lightIdentity: FIRST_LIGHT,
     lightIndex: 0,
-    projectionViewMatrices: Object.freeze(Array.from(
-      { length: 6 },
-      (_, face) => matrix(face + 1),
-    )),
+    projectionViewMatrices: Object.freeze(
+      Array.from({ length: 6 }, (_, face) => matrix(face + 1)),
+    ),
     lightPosition: Object.freeze([1, 2, 3]),
     nearDistance: 0.01,
     farDistance: 10,
@@ -393,7 +426,7 @@ function pointPlan(overrides: Record<string, unknown> = {}): any {
 
 function spotPlan(overrides: Record<string, unknown> = {}): any {
   return {
-    kind: 'spot',
+    kind: "spot",
     lightIdentity: FIRST_LIGHT,
     lightIndex: 0,
     projectionViewMatrix: matrix(7),
@@ -420,16 +453,18 @@ function matrix(seed: number): Float32Array {
   return value;
 }
 
-function createShadowGL(options: {
-  readonly maxTextureSize?: number;
-  readonly maxCubeMapTextureSize?: number;
-  readonly framebufferComplete?: boolean;
-  readonly framebufferIncompleteAt?: number;
-  readonly texImage2DErrorAt?: number;
-  readonly texImage2DError?: Error;
-  readonly deleteTextureErrorAt?: number;
-  readonly deleteTextureError?: Error;
-} = {}) {
+function createShadowGL(
+  options: {
+    readonly maxTextureSize?: number;
+    readonly maxCubeMapTextureSize?: number;
+    readonly framebufferComplete?: boolean;
+    readonly framebufferIncompleteAt?: number;
+    readonly texImage2DErrorAt?: number;
+    readonly texImage2DError?: Error;
+    readonly deleteTextureErrorAt?: number;
+    readonly deleteTextureError?: Error;
+  } = {},
+) {
   const textures: object[] = [];
   let deleteTextureCount = 0;
   let framebufferStatusCount = 0;
@@ -454,22 +489,26 @@ function createShadowGL(options: {
     NEAREST: 28,
     CLAMP_TO_EDGE: 29,
     NONE: 30,
-    getParameter: vi.fn((parameter: number) => parameter === 1 ?
-      (options.maxTextureSize ?? 4096) :
-      (options.maxCubeMapTextureSize ?? 4096)),
-    createFramebuffer: vi.fn(() => ({ kind: 'framebuffer' })),
+    getParameter: vi.fn((parameter: number) =>
+      parameter === 1
+        ? (options.maxTextureSize ?? 4096)
+        : (options.maxCubeMapTextureSize ?? 4096),
+    ),
+    createFramebuffer: vi.fn(() => ({ kind: "framebuffer" })),
     deleteFramebuffer: vi.fn(),
     bindFramebuffer: vi.fn(),
     checkFramebufferStatus: vi.fn(() => {
       framebufferStatusCount += 1;
       return options.framebufferComplete === false ||
-        framebufferStatusCount === options.framebufferIncompleteAt ? 999 : 4;
+        framebufferStatusCount === options.framebufferIncompleteAt
+        ? 999
+        : 4;
     }),
     framebufferTexture2D: vi.fn(),
     drawBuffers: vi.fn(),
     readBuffer: vi.fn(),
     createTexture: vi.fn(() => {
-      const texture = { kind: 'texture', id: textures.length + 1 };
+      const texture = { kind: "texture", id: textures.length + 1 };
       textures.push(texture);
       return texture;
     }),

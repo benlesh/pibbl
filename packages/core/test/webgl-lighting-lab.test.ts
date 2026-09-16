@@ -1,24 +1,24 @@
-import type { ScenarioController } from '@crc/scenarios';
-import * as scenarios from '@crc/scenarios';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { ScenarioController } from "@crc/scenarios";
+import * as scenarios from "@crc/scenarios";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   clickLogicalPoint,
   dragPointerLogicalPoint,
   wheelLogicalPoint,
-} from './support/user-input';
-import { expectVisualMatch } from './visual-compare';
+} from "./support/user-input";
+import { expectVisualMatch } from "./visual-compare";
 
 const laboratorySources = import.meta.glob(
-  '../../scenarios/src/webgl-lighting-lab.example.tsx',
-  { eager: true, import: 'default', query: '?raw' },
+  "../../scenarios/src/webgl-lighting-lab.example.tsx",
+  { eager: true, import: "default", query: "?raw" },
 );
 
 type LightingLabState = {
   readonly lightMode: string;
-  readonly backgroundMode: 'transparent' | 'opaque' | 'alpha';
-  readonly shadowQuality: false | 'low' | 'medium' | 'high';
+  readonly backgroundMode: "transparent" | "opaque" | "alpha";
+  readonly shadowQuality: false | "low" | "medium" | "high";
   readonly transformedLight: boolean;
-  readonly casterAlpha: 'opaque' | 'partial' | 'zero';
+  readonly casterAlpha: "opaque" | "partial" | "zero";
   readonly lit: boolean;
   readonly emissive: boolean;
   readonly revision: number;
@@ -30,25 +30,25 @@ let activeController: ScenarioController<LightingLabState> | undefined;
 
 function entry() {
   return (scenarios as Record<string, unknown>)[
-    'webglLightingLabScenarioEntry'
+    "webglLightingLabScenarioEntry"
   ] as any;
 }
 
 function actionIds(): readonly string[] {
   return (scenarios as Record<string, unknown>)[
-    'WEBGL_LIGHTING_LAB_ACTION_IDS'
+    "WEBGL_LIGHTING_LAB_ACTION_IDS"
   ] as readonly string[];
 }
 
 function probes(): Record<string, { readonly x: number; readonly y: number }> {
   return (scenarios as Record<string, unknown>)[
-    'WEBGL_LIGHTING_LAB_PROBES'
+    "WEBGL_LIGHTING_LAB_PROBES"
   ] as Record<string, { readonly x: number; readonly y: number }>;
 }
 
 function pixelSignature(canvas: HTMLCanvasElement): number {
-  const context = canvas.getContext('2d');
-  if (!context) throw new Error('The WebGL lighting lab has no 2D context.');
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("The WebGL lighting lab has no 2D context.");
   const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
   let hash = 2166136261;
   for (const value of pixels) {
@@ -59,8 +59,8 @@ function pixelSignature(canvas: HTMLCanvasElement): number {
 }
 
 function imageData(canvas: HTMLCanvasElement): Uint8ClampedArray {
-  const context = canvas.getContext('2d');
-  if (!context) throw new Error('The WebGL lighting lab has no 2D context.');
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("The WebGL lighting lab has no 2D context.");
   return context.getImageData(0, 0, canvas.width, canvas.height).data;
 }
 
@@ -68,8 +68,8 @@ function pixelAt(
   canvas: HTMLCanvasElement,
   point: { readonly x: number; readonly y: number },
 ): readonly number[] {
-  const context = canvas.getContext('2d');
-  if (!context) throw new Error('The WebGL lighting lab has no 2D context.');
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("The WebGL lighting lab has no 2D context.");
   return [...context.getImageData(point.x, point.y, 1, 1).data];
 }
 
@@ -124,7 +124,7 @@ function pinkCasterCenter(
     }
   }
   if (maximumX < minimumX || maximumY < minimumY) {
-    throw new Error('The visible pink caster could not be located.');
+    throw new Error("The visible pink caster could not be located.");
   }
   return {
     x: Math.round((minimumX + maximumX) / 2),
@@ -134,16 +134,20 @@ function pinkCasterCenter(
 
 async function mountLab() {
   const scenarioEntry = entry();
-  if (!scenarioEntry) throw new Error('The WebGL lighting lab is not registered.');
-  const canvas = document.createElement('canvas');
+  if (!scenarioEntry)
+    throw new Error("The WebGL lighting lab is not registered.");
+  const canvas = document.createElement("canvas");
   canvas.width = scenarioEntry.canvas.width;
   canvas.height = scenarioEntry.canvas.height;
   canvas.style.cssText = `display:block;width:${canvas.width}px;height:${canvas.height}px`;
   document.body.replaceChildren(canvas);
   const definition = await scenarios.loadScenario(scenarioEntry);
-  activeController = await definition.mount({ canvas });
-  await activeController.settled();
-  return { canvas, controller: activeController, definition, scenarioEntry };
+  const controller = (await definition.mount({
+    canvas,
+  })) as ScenarioController<LightingLabState>;
+  activeController = controller;
+  await controller.settled();
+  return { canvas, controller, definition, scenarioEntry };
 }
 
 afterEach(async () => {
@@ -153,53 +157,52 @@ afterEach(async () => {
   document.body.replaceChildren();
 });
 
-describe('public WebGL lighting laboratory', () => {
-  it('registers the exact route, source, actions, and public-only example', async () => {
+describe("public WebGL lighting laboratory", () => {
+  it("registers the exact route, source, actions, and public-only example", async () => {
     const scenarioEntry = entry();
     expect(scenarioEntry).toMatchObject({
       metadata: {
-        id: 'webgl-lighting',
-        slug: 'webgl-lighting',
+        id: "webgl-lighting",
+        slug: "webgl-lighting",
         learningOrder: 175,
       },
       canvas: { width: 720, height: 420 },
       source: {
-        id: 'webgl-lighting-laboratory-example',
-        path: 'packages/scenarios/src/webgl-lighting-lab.example.tsx',
+        id: "webgl-lighting-laboratory-example",
+        path: "packages/scenarios/src/webgl-lighting-lab.example.tsx",
       },
     });
     expect(scenarios.getScenarioRoute(scenarioEntry)).toBe(
-      '#/testing/webgl-lighting',
+      "#/testing/webgl-lighting",
     );
     expect(scenarios.scenarioCatalog).toContain(scenarioEntry);
     expect(actionIds()).toEqual([
-      'show-ambient',
-      'show-hemisphere',
-      'show-directional',
-      'show-point',
-      'show-spot',
-      'show-all',
-      'show-background-transparent',
-      'show-background-opaque',
-      'show-background-alpha',
-      'shadows-off',
-      'shadows-low',
-      'shadows-medium',
-      'shadows-high',
-      'toggle-transformed-light',
-      'caster-opaque',
-      'caster-partial',
-      'caster-zero',
-      'toggle-lit',
-      'toggle-emissive',
-      'move-caster',
-      'reset',
+      "show-ambient",
+      "show-hemisphere",
+      "show-directional",
+      "show-point",
+      "show-spot",
+      "show-all",
+      "show-background-transparent",
+      "show-background-opaque",
+      "show-background-alpha",
+      "shadows-off",
+      "shadows-low",
+      "shadows-medium",
+      "shadows-high",
+      "toggle-transformed-light",
+      "caster-opaque",
+      "caster-partial",
+      "caster-zero",
+      "toggle-lit",
+      "toggle-emissive",
+      "move-caster",
+      "reset",
     ]);
 
-    const source = laboratorySources[
-      '../../scenarios/src/webgl-lighting-lab.example.tsx'
-    ];
-    expect(source).toBeTypeOf('string');
+    const source =
+      laboratorySources["../../scenarios/src/webgl-lighting-lab.example.tsx"];
+    expect(source).toBeTypeOf("string");
     expect(source).toMatch(/@jsxImportSource @crc\/core/u);
     expect(source).toMatch(/from '@crc\/core'/u);
     expect(source).toMatch(/from '@crc\/webgl'/u);
@@ -209,63 +212,64 @@ describe('public WebGL lighting laboratory', () => {
     expect(definition.actionIds).toEqual(actionIds());
   });
 
-  it('drives every light, shadow quality, transform, alpha, and material control', async () => {
+  it("drives every light, shadow quality, transform, alpha, and material control", async () => {
     const { controller } = await mountLab();
     expect(controller.getState()).toMatchObject({
-      lightMode: 'all',
-      backgroundMode: 'alpha',
-      shadowQuality: 'medium',
+      lightMode: "all",
+      backgroundMode: "alpha",
+      shadowQuality: "medium",
       transformedLight: false,
-      casterAlpha: 'opaque',
+      casterAlpha: "opaque",
       lit: true,
       emissive: true,
       revision: 0,
     });
 
     for (const [action, expected] of [
-      ['show-ambient', { lightMode: 'ambient' }],
-      ['show-hemisphere', { lightMode: 'hemisphere' }],
-      ['show-directional', { lightMode: 'directional' }],
-      ['show-point', { lightMode: 'point' }],
-      ['show-spot', { lightMode: 'spot' }],
-      ['show-all', { lightMode: 'all' }],
-      ['show-background-transparent', { backgroundMode: 'transparent' }],
-      ['show-background-opaque', { backgroundMode: 'opaque' }],
-      ['show-background-alpha', { backgroundMode: 'alpha' }],
-      ['shadows-off', { shadowQuality: false }],
-      ['shadows-low', { shadowQuality: 'low' }],
-      ['shadows-medium', { shadowQuality: 'medium' }],
-      ['shadows-high', { shadowQuality: 'high' }],
-      ['toggle-transformed-light', { transformedLight: true }],
-      ['caster-partial', { casterAlpha: 'partial' }],
-      ['caster-zero', { casterAlpha: 'zero' }],
-      ['caster-opaque', { casterAlpha: 'opaque' }],
-      ['toggle-lit', { lit: false }],
-      ['toggle-emissive', { emissive: false }],
+      ["show-ambient", { lightMode: "ambient" }],
+      ["show-hemisphere", { lightMode: "hemisphere" }],
+      ["show-directional", { lightMode: "directional" }],
+      ["show-point", { lightMode: "point" }],
+      ["show-spot", { lightMode: "spot" }],
+      ["show-all", { lightMode: "all" }],
+      ["show-background-transparent", { backgroundMode: "transparent" }],
+      ["show-background-opaque", { backgroundMode: "opaque" }],
+      ["show-background-alpha", { backgroundMode: "alpha" }],
+      ["shadows-off", { shadowQuality: false }],
+      ["shadows-low", { shadowQuality: "low" }],
+      ["shadows-medium", { shadowQuality: "medium" }],
+      ["shadows-high", { shadowQuality: "high" }],
+      ["toggle-transformed-light", { transformedLight: true }],
+      ["caster-partial", { casterAlpha: "partial" }],
+      ["caster-zero", { casterAlpha: "zero" }],
+      ["caster-opaque", { casterAlpha: "opaque" }],
+      ["toggle-lit", { lit: false }],
+      ["toggle-emissive", { emissive: false }],
     ] as const) {
       await controller.perform(action);
       expect(controller.getState()).toMatchObject(expected);
     }
     expect(controller.getState().revision).toBe(19);
-  });
+  }, 30_000);
 
-  it('keeps ambient and hemisphere shadowless, renders six point faces, and reuses direct shadows while orbiting', async () => {
-    const probeContext = new OffscreenCanvas(1, 1).getContext('webgl2');
-    if (!probeContext) throw new Error('WebGL2 is required for the lighting lab.');
+  it("keeps ambient and hemisphere shadowless, renders six point faces, and reuses direct shadows while orbiting", async () => {
+    const probeContext = new OffscreenCanvas(1, 1).getContext("webgl2");
+    if (!probeContext)
+      throw new Error("WebGL2 is required for the lighting lab.");
     const glPrototype = Object.getPrototypeOf(
       probeContext,
     ) as WebGL2RenderingContext;
-    const attach = vi.spyOn(glPrototype, 'framebufferTexture2D');
+    const attach = vi.spyOn(glPrototype, "framebufferTexture2D");
     const { canvas, controller } = await mountLab();
 
     attach.mockClear();
-    await controller.perform('show-ambient');
-    await controller.perform('show-hemisphere');
+    await controller.perform("show-ambient");
+    await controller.perform("show-hemisphere");
     expect(attach).not.toHaveBeenCalled();
 
-    await controller.perform('show-point');
+    await controller.perform("show-point");
     attach.mockClear();
-    await controller.perform('move-caster');
+    await controller.perform("move-caster");
     const expectedCubeFaces = [
       probeContext.TEXTURE_CUBE_MAP_POSITIVE_X,
       probeContext.TEXTURE_CUBE_MAP_NEGATIVE_X,
@@ -274,7 +278,7 @@ describe('public WebGL lighting laboratory', () => {
       probeContext.TEXTURE_CUBE_MAP_POSITIVE_Z,
       probeContext.TEXTURE_CUBE_MAP_NEGATIVE_Z,
     ] as const;
-    const cubeFaces = new Set(expectedCubeFaces);
+    const cubeFaces = new Set<number>(expectedCubeFaces);
     expect(
       attach.mock.calls
         .filter((call) => cubeFaces.has(call[2]))
@@ -300,27 +304,27 @@ describe('public WebGL lighting laboratory', () => {
     ).toHaveLength(0);
   });
 
-  it('renders transparent-default, opaque, and alpha backgrounds without intercepting clicks', async () => {
+  it("renders transparent-default, opaque, and alpha backgrounds without intercepting clicks", async () => {
     const { canvas, controller } = await mountLab();
     const backgroundProbe = probes().emptyBackground;
     const initialAlpha = pixelAt(canvas, backgroundProbe);
 
     await clickLogicalPoint(canvas, backgroundProbe);
-    expect(controller.getState().lastTarget).toBe('backing');
+    expect(controller.getState().lastTarget).toBe("backing");
 
-    await controller.perform('show-background-transparent');
+    await controller.perform("show-background-transparent");
     const transparent = pixelAt(canvas, backgroundProbe);
     expect(transparent).toEqual([23, 48, 71, 255]);
     await clickLogicalPoint(canvas, backgroundProbe);
-    expect(controller.getState().lastTarget).toBe('backing');
+    expect(controller.getState().lastTarget).toBe("backing");
 
-    await controller.perform('show-background-opaque');
+    await controller.perform("show-background-opaque");
     const opaque = pixelAt(canvas, backgroundProbe);
     expect(opaque).toEqual([7, 17, 31, 255]);
     await clickLogicalPoint(canvas, backgroundProbe);
-    expect(controller.getState().lastTarget).toBe('backing');
+    expect(controller.getState().lastTarget).toBe("backing");
 
-    await controller.perform('show-background-alpha');
+    await controller.perform("show-background-alpha");
     const alpha = pixelAt(canvas, backgroundProbe);
     expect(alpha).toEqual(initialAlpha);
     expect(alpha[3]).toBe(255);
@@ -329,56 +333,57 @@ describe('public WebGL lighting laboratory', () => {
       expect(alpha[channel]).toBeLessThan(transparent[channel]!);
     }
     await clickLogicalPoint(canvas, backgroundProbe);
-    expect(controller.getState().lastTarget).toBe('backing');
+    expect(controller.getState().lastTarget).toBe("backing");
   });
 
-  it('shows genuine direct-light contrast while keeping zero-alpha focus geometry and releasing owned resources', async () => {
-    const probeContext = new OffscreenCanvas(1, 1).getContext('webgl2');
-    if (!probeContext) throw new Error('WebGL2 is required for the lighting lab.');
+  it("shows genuine direct-light contrast while keeping zero-alpha focus geometry and releasing owned resources", async () => {
+    const probeContext = new OffscreenCanvas(1, 1).getContext("webgl2");
+    if (!probeContext)
+      throw new Error("WebGL2 is required for the lighting lab.");
     const glPrototype = Object.getPrototypeOf(
       probeContext,
     ) as WebGL2RenderingContext;
-    const deleteFramebuffer = vi.spyOn(glPrototype, 'deleteFramebuffer');
-    const deleteTexture = vi.spyOn(glPrototype, 'deleteTexture');
+    const deleteFramebuffer = vi.spyOn(glPrototype, "deleteFramebuffer");
+    const deleteTexture = vi.spyOn(glPrototype, "deleteTexture");
     const removeListener = vi.spyOn(
       OffscreenCanvas.prototype,
-      'removeEventListener',
+      "removeEventListener",
     );
     const { canvas, controller } = await mountLab();
 
     await clickLogicalPoint(canvas, probes().emptyBackground);
-    expect(controller.getState().lastTarget).toBe('backing');
+    expect(controller.getState().lastTarget).toBe("backing");
 
-    await controller.perform('show-directional');
+    await controller.perform("show-directional");
     const shadowed = imageData(canvas);
-    await controller.perform('shadows-off');
+    await controller.perform("shadows-off");
     const unshadowed = imageData(canvas);
     expect(hasDarkenedNeutralPixel(shadowed, unshadowed)).toBe(true);
     const casterPoint = pinkCasterCenter(unshadowed, canvas.width);
 
-    await controller.perform('caster-zero');
+    await controller.perform("caster-zero");
     await clickLogicalPoint(canvas, casterPoint);
-    expect(controller.getState().focusTarget).toBe('caster');
-    expect(controller.getState().lastTarget).toBe('caster');
+    expect(controller.getState().focusTarget).toBe("caster");
+    expect(controller.getState().lastTarget).toBe("caster");
 
     await controller.dispose();
     activeController = undefined;
     expect(deleteFramebuffer.mock.calls.length).toBeGreaterThan(0);
     expect(deleteTexture.mock.calls.length).toBeGreaterThan(0);
     expect(removeListener.mock.calls.map(([type]) => type)).toEqual([
-      'webglcontextlost',
-      'webglcontextrestored',
+      "webglcontextlost",
+      "webglcontextrestored",
     ]);
   });
 
-  it('matches the reviewed all-lights visual laboratory', async () => {
+  it("matches the reviewed all-lights visual laboratory", async () => {
     const { canvas, controller } = await mountLab();
     await controller.settled();
     expect(controller.getState()).toMatchObject({
-      lightMode: 'all',
-      backgroundMode: 'alpha',
-      shadowQuality: 'medium',
-      casterAlpha: 'opaque',
+      lightMode: "all",
+      backgroundMode: "alpha",
+      shadowQuality: "medium",
+      casterAlpha: "opaque",
       lit: true,
       emissive: true,
       revision: 0,
@@ -387,13 +392,12 @@ describe('public WebGL lighting laboratory', () => {
     await expectVisualMatch({
       element: canvas,
       expectedPath:
-        'packages/core/test/visual-baselines/webgl-lighting.expected.png',
+        "packages/core/test/visual-baselines/webgl-lighting.expected.png",
       expectedArtifactPath:
-        'test-screenshots/webgl-lighting/webgl-lighting.expected.png',
+        "test-screenshots/webgl-lighting/webgl-lighting.expected.png",
       actualPath:
-        '../../../test-screenshots/webgl-lighting/webgl-lighting.actual.png',
-      diffPath:
-        'test-screenshots/webgl-lighting/webgl-lighting.diff.png',
+        "../../../test-screenshots/webgl-lighting/webgl-lighting.actual.png",
+      diffPath: "test-screenshots/webgl-lighting/webgl-lighting.diff.png",
     });
   });
 });

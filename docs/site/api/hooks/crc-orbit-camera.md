@@ -6,7 +6,12 @@ kind: api
 slug: crc-orbit-camera
 apiCategory: hook
 symbols:
-  [crcOrbitCamera, CRCOrbitCameraOptions, CRCOrbitCameraHandlers, CRCOrbitCameraResult]
+  [
+    crcOrbitCamera,
+    CRCOrbitCameraOptions,
+    CRCOrbitCameraHandlers,
+    CRCOrbitCameraResult,
+  ]
 relatedTypes: [CRCWebGLVector3]
 ---
 

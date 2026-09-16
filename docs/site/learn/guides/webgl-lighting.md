@@ -157,13 +157,13 @@ All light colors are concrete Canvas colors. Their alpha scales RGB
 contribution; it does not make mesh pixels transparent. Intensity is finite,
 nonnegative, dimensionless, and linear.
 
-| Declaration | Contribution and transform behavior | Shadows |
-| --- | --- | --- |
-| `AmbientLight` | Uniform whole-scene contribution; ignores `Group3D` transforms | Never casts |
-| `HemisphereLight` | Blends ground to sky across the transformed local `+Y` direction | Never casts |
-| `DirectionalLight` | Parallel rays along transformed local `-Z`; translation is irrelevant | Casts by default; one 2D depth view |
-| `PointLight` | Transformed origin, inverse-square attenuation, optional positive `range` | Casts by default; six cube depth views |
-| `SpotLight` | Point attenuation inside transformed local `-Z` cone; half-angles default to `0`/`45` degrees | Casts by default; one 2D depth view |
+| Declaration        | Contribution and transform behavior                                                           | Shadows                                |
+| ------------------ | --------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `AmbientLight`     | Uniform whole-scene contribution; ignores `Group3D` transforms                                | Never casts                            |
+| `HemisphereLight`  | Blends ground to sky across the transformed local `+Y` direction                              | Never casts                            |
+| `DirectionalLight` | Parallel rays along transformed local `-Z`; translation is irrelevant                         | Casts by default; one 2D depth view    |
+| `PointLight`       | Transformed origin, inverse-square attenuation, optional positive `range`                     | Casts by default; six cube depth views |
+| `SpotLight`        | Point attenuation inside transformed local `-Z` cone; half-angles default to `0`/`45` degrees | Casts by default; one 2D depth view    |
 
 Containing `Group3D` transforms affect a light's pose. Group scale can move a
 translated local origin through the group transform, but never changes
@@ -199,11 +199,11 @@ Ambient, hemisphere, emissive, and other-light contributions remain intact.
 `WebGLLayer style.shadows` is `false | "low" | "medium" | "high"` and defaults
 to `"medium"`:
 
-| Quality | Requested map size | Comparisons per sample |
-| --- | ---: | ---: |
-| `"low"` | 512 | 1 |
-| `"medium"` | 1024 | 4 |
-| `"high"` | 2048 | 9 |
+| Quality    | Requested map size | Comparisons per sample |
+| ---------- | -----------------: | ---------------------: |
+| `"low"`    |                512 |                      1 |
+| `"medium"` |               1024 |                      4 |
+| `"high"`   |               2048 |                      9 |
 
 The actual map size clamps to the device limit. Shadow depth is reused when the
 light, casters, quality, context generation, and relevant projection inputs are

@@ -1,16 +1,19 @@
-import { describe, expect, test } from 'vitest';
-import type { CRCBackendFrameInput, CRCEventTargetRegistration } from '@crc/core/internal';
-import { createWebGLGeometry } from '../geometry/geometry.js';
-import { resolveCamera } from '../math/camera.js';
+import { describe, expect, test } from "vitest";
+import type {
+  CRCBackendFrameInput,
+  CRCEventTargetRegistration,
+} from "@crc/core/internal";
+import { createWebGLGeometry } from "../geometry/geometry.js";
+import { resolveCamera } from "../math/camera.js";
 import {
   createWebGLSceneComposer,
   pushWebGLModelMatrix,
   submitWebGLBackground,
   submitWebGLLight,
   submitWebGLMesh,
-} from './composer.js';
-import { settleWebGLScene } from './settle.js';
-import type { WebGLSceneComposer } from './types.js';
+} from "./composer.js";
+import { settleWebGLScene } from "./settle.js";
+import type { WebGLSceneComposer } from "./types.js";
 
 const frame = {
   canvas: {} as HTMLCanvasElement,
@@ -21,18 +24,10 @@ const frame = {
   renderTimestamp: 123.5,
 } as CRCBackendFrameInput;
 
-const identity = () => new Float32Array([
-  1, 0, 0, 0,
-  0, 1, 0, 0,
-  0, 0, 1, 0,
-  0, 0, 0, 1,
-]);
-const translatedZ = (z: number) => new Float32Array([
-  1, 0, 0, 0,
-  0, 1, 0, 0,
-  0, 0, 1, 0,
-  0, 0, z, 1,
-]);
+const identity = () =>
+  new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
+const translatedZ = (z: number) =>
+  new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, z, 1]);
 const geometry = createWebGLGeometry({
   positions: [-1, -1, 0, 1, -1, 0, 0, 1, 0],
   normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
@@ -41,10 +36,14 @@ const geometryWithoutNormals = createWebGLGeometry({
   positions: [-1, -1, 0, 1, -1, 0, 0, 1, 0],
 });
 
-describe('settled WebGL scene', () => {
-  test('classifies final alpha, sorts transparent bounds centers, and derives shared pick data', () => {
+describe("settled WebGL scene", () => {
+  test("classifies final alpha, sorts transparent bounds centers, and derives shared pick data", () => {
     const camera = resolveCamera(undefined, 100, 100);
-    const composer = createWebGLSceneComposer({ frame, camera, contextGeneration: 7 });
+    const composer = createWebGLSceneComposer({
+      frame,
+      camera,
+      contextGeneration: 7,
+    });
     const opaqueFirst = fakeTarget();
     const opaqueSecond = fakeTarget();
     const transparentFar = fakeTarget();
@@ -52,9 +51,23 @@ describe('settled WebGL scene', () => {
     const transparentTieLater = fakeTarget();
     const transparentZero = fakeTarget();
     const explicitBounds = { x: 1, y: 2, width: 3, height: 4 };
-    const models = [identity(), translatedZ(1), translatedZ(-3), translatedZ(-2), translatedZ(-2), translatedZ(2)];
+    const models = [
+      identity(),
+      translatedZ(1),
+      translatedZ(-3),
+      translatedZ(-2),
+      translatedZ(-2),
+      translatedZ(2),
+    ];
     const colors = [1, 1, 0.75, 0.25, 0.25, 0] as const;
-    const targets = [opaqueFirst, opaqueSecond, transparentFar, transparentTieFirst, transparentTieLater, transparentZero];
+    const targets = [
+      opaqueFirst,
+      opaqueSecond,
+      transparentFar,
+      transparentTieFirst,
+      transparentTieLater,
+      transparentZero,
+    ];
     for (let index = 0; index < models.length; index += 1) {
       submitWebGLMesh(composer, {
         componentName: `Mesh${index}`,
@@ -66,22 +79,48 @@ describe('settled WebGL scene', () => {
       });
     }
 
-    models.forEach(model => { model[14] = 99; });
+    models.forEach((model) => {
+      model[14] = 99;
+    });
     explicitBounds.x = 99;
     mutateCallerOwnedMatrix(camera.projectionMatrix, 0, 99);
     const settled = settleWebGLScene(composer);
 
-    expect(settled.meshes.map(mesh => mesh.sourceIndex)).toEqual([0, 1, 2, 3, 4, 5]);
-    expect(settled.opaque.map(mesh => mesh.sourceIndex)).toEqual([0, 1]);
-    expect(settled.transparent.map(mesh => mesh.sourceIndex)).toEqual([2, 3, 4]);
-    expect(settled.transparent.map(mesh => mesh.viewDepth)).toEqual([8, 7, 7]);
+    expect(settled.meshes.map((mesh) => mesh.sourceIndex)).toEqual([
+      0, 1, 2, 3, 4, 5,
+    ]);
+    expect(settled.opaque.map((mesh) => mesh.sourceIndex)).toEqual([0, 1]);
+    expect(settled.transparent.map((mesh) => mesh.sourceIndex)).toEqual([
+      2, 3, 4,
+    ]);
+    expect(settled.transparent.map((mesh) => mesh.viewDepth)).toEqual([
+      8, 7, 7,
+    ]);
     expect(settled.pickEntries).toHaveLength(6);
-    expect(settled.pickEntries.map(entry => entry.sourceOrder)).toEqual([0, 1, 2, 3, 4, 5]);
-    expect(settled.pickEntries.every(entry => entry.kind === 'geometry' && entry.depthMode === 'less-equal')).toBe(true);
-    expect(settled.pickEntries.map(entry => entry.geometry)).toEqual([geometry, geometry, geometry, geometry, geometry, geometry]);
-    expect(settled.pickEntries.map(entry => Array.from(entry.model)[14])).toEqual([0, 1, -3, -2, -2, 2]);
+    expect(settled.pickEntries.map((entry) => entry.sourceOrder)).toEqual([
+      0, 1, 2, 3, 4, 5,
+    ]);
+    expect(
+      settled.pickEntries.every(
+        (entry) =>
+          entry.kind === "geometry" && entry.depthMode === "less-equal",
+      ),
+    ).toBe(true);
+    expect(
+      settled.pickEntries.map((entry) =>
+        entry.kind === "geometry" ? entry.geometry : undefined,
+      ),
+    ).toEqual([geometry, geometry, geometry, geometry, geometry, geometry]);
+    expect(
+      settled.pickEntries.map((entry) => Array.from(entry.model)[14]),
+    ).toEqual([0, 1, -3, -2, -2, 2]);
     expect(settled.camera.projectionMatrix[0]).not.toBe(99);
-    expect(settled.pickEntries[1]!.keyboardNavigationBounds).toEqual({ x: 1, y: 2, width: 3, height: 4 });
+    expect(settled.pickEntries[1]!.keyboardNavigationBounds).toEqual({
+      x: 1,
+      y: 2,
+      width: 3,
+      height: 4,
+    });
     expect(settled.pickEntries[0]!.keyboardNavigationPoints).toBeDefined();
     expect(Object.isFrozen(settled)).toBe(true);
     expect(Object.isFrozen(settled.meshes)).toBe(true);
@@ -90,12 +129,12 @@ describe('settled WebGL scene', () => {
     expect(Object.isFrozen(settled.pickEntries)).toBe(true);
   });
 
-  test('requires normals for default-lit meshes with component and JSX diagnostics', () => {
+  test("requires normals for default-lit meshes with component and JSX diagnostics", () => {
     const composer = createComposer();
     submitWebGLMesh(composer, {
-      componentName: 'CustomSurface',
+      componentName: "CustomSurface",
       source: {
-        fileName: '/app/lighting-scene.tsx',
+        fileName: "/app/lighting-scene.tsx",
         lineNumber: 12,
         columnNumber: 7,
       },
@@ -105,30 +144,30 @@ describe('settled WebGL scene', () => {
     });
 
     expect(() => settleWebGLScene(composer)).toThrow(
-      'CustomSurface lit geometry requires normals. ' +
-      'JSX source: /app/lighting-scene.tsx:12:7.',
+      "CustomSurface lit geometry requires normals. " +
+        "JSX source: /app/lighting-scene.tsx:12:7.",
     );
   });
 
-  test('accepts singular unlit models but rejects singular lit normal matrices', () => {
+  test("accepts singular unlit models but rejects singular lit normal matrices", () => {
     const singular = new Float32Array(16);
     singular[5] = 1;
     singular[10] = 1;
     singular[15] = 1;
     const lit = createComposer();
     submitWebGLMesh(lit, {
-      componentName: 'LitSurface',
+      componentName: "LitSurface",
       geometry,
       localModel: singular,
       color: [1, 1, 1, 1],
     });
     expect(() => settleWebGLScene(lit)).toThrow(
-      'LitSurface lit normal matrix must be invertible',
+      "LitSurface lit normal matrix must be invertible",
     );
 
     const unlit = createComposer();
     submitWebGLMesh(unlit, {
-      componentName: 'UnlitSurface',
+      componentName: "UnlitSurface",
       geometry: geometryWithoutNormals,
       localModel: singular,
       color: [1, 1, 1, 1],
@@ -137,12 +176,24 @@ describe('settled WebGL scene', () => {
     expect(() => settleWebGLScene(unlit)).not.toThrow();
   });
 
-  test('rejects lit normal pairings that lose a required Float32 direction', () => {
+  test("rejects lit normal pairings that lose a required Float32 direction", () => {
     const extreme = new Float32Array([
-      Math.fround(3e38), 0, 0, 0,
-      0, Math.fround(1e-45), 0, 0,
-      0, 0, 1, 0,
-      0, 0, 0, 1,
+      Math.fround(3e38),
+      0,
+      0,
+      0,
+      0,
+      Math.fround(1e-45),
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      1,
     ]);
     const xNormalGeometry = createWebGLGeometry({
       positions: [-1, -1, 0, 1, -1, 0, 0, 1, 0],
@@ -150,45 +201,45 @@ describe('settled WebGL scene', () => {
     });
     const composer = createComposer();
     submitWebGLMesh(composer, {
-      componentName: 'ExtremeSurface',
+      componentName: "ExtremeSurface",
       geometry: xNormalGeometry,
       localModel: extreme,
       color: [1, 1, 1, 1],
     });
 
     expect(() => settleWebGLScene(composer)).toThrow(
-      'ExtremeSurface lit normal matrix must transform every geometry normal',
+      "ExtremeSurface lit normal matrix must transform every geometry normal",
     );
   });
 
-  test('settles unlit display color and linear lit base and emissive values', () => {
+  test("settles unlit display color and linear lit base and emissive values", () => {
     const composer = createComposer();
     submitWebGLMesh(composer, {
-      componentName: 'UnlitFastPath',
+      componentName: "UnlitFastPath",
       geometry: geometryWithoutNormals,
       localModel: identity(),
       color: [0.5, 0.25, 1, 0.4],
       lit: false,
     });
     submitWebGLMesh(composer, {
-      componentName: 'UnlitEmission',
+      componentName: "UnlitEmission",
       geometry: geometryWithoutNormals,
       localModel: identity(),
       color: [0.5, 0.25, 1, 0.4],
       lit: false,
       material: {
-        type: 'lambert',
+        type: "lambert",
         emissiveColor: [0.5, 0.25, 1, 0.5],
         emissiveIntensity: 2,
       },
     });
     submitWebGLMesh(composer, {
-      componentName: 'LambertSurface',
+      componentName: "LambertSurface",
       geometry,
       localModel: identity(),
       color: [0.5, 0.25, 1, 0.4],
       material: {
-        type: 'lambert',
+        type: "lambert",
         emissiveColor: [0.5, 0.25, 1, 0.5],
         emissiveIntensity: 2,
       },
@@ -196,85 +247,74 @@ describe('settled WebGL scene', () => {
 
     const settled = settleWebGLScene(composer);
     expect(settled.meshes[0]!.shading).toEqual({
-      kind: 'unlit',
+      kind: "unlit",
       displayBaseColor: [0.5, 0.25, 1, 0.4],
       linearEmissive: [0, 0, 0],
     });
     expect(settled.meshes[1]!.shading).toEqual({
-      kind: 'unlit',
+      kind: "unlit",
       displayBaseColor: [0.5, 0.25, 1, 0.4],
-      linearEmissive: [
-        0.21404114048223255,
-        0.05087608817155679,
-        1,
-      ],
+      linearEmissive: [0.21404114048223255, 0.05087608817155679, 1],
     });
     expect(settled.meshes[2]!.shading).toMatchObject({
-      kind: 'lambert',
-      linearBaseColor: [
-        0.21404114048223255,
-        0.05087608817155679,
-        1,
-        0.4,
-      ],
-      linearEmissive: [
-        0.21404114048223255,
-        0.05087608817155679,
-        1,
-      ],
+      kind: "lambert",
+      linearBaseColor: [0.21404114048223255, 0.05087608817155679, 1, 0.4],
+      linearEmissive: [0.21404114048223255, 0.05087608817155679, 1],
     });
-    expect('normalMatrix' in settled.meshes[0]!.shading).toBe(false);
-    expect(Array.from(
-      settled.meshes[2]!.shading.kind === 'lambert' ?
-        settled.meshes[2]!.shading.normalMatrix : [],
-    )).toEqual([
-      1, 0, 0,
-      0, 1, 0,
-      0, 0, 1,
-    ]);
+    expect("normalMatrix" in settled.meshes[0]!.shading).toBe(false);
+    expect(
+      Array.from(
+        settled.meshes[2]!.shading.kind === "lambert"
+          ? settled.meshes[2]!.shading.normalMatrix
+          : [],
+      ),
+    ).toEqual([1, 0, 0, 0, 1, 0, 0, 0, 1]);
     expect(Object.isFrozen(settled.meshes[0]!.shading)).toBe(true);
-    expect(Object.isFrozen(settled.meshes[0]!.shading.displayBaseColor)).toBe(
-      true,
-    );
+    const unlitShading = settled.meshes[0]!.shading;
+    expect(unlitShading.kind).toBe("unlit");
+    if (unlitShading.kind !== "unlit") {
+      throw new Error("Expected the first mesh to use unlit shading.");
+    }
+    expect(Object.isFrozen(unlitShading.displayBaseColor)).toBe(true);
     expect(Object.isFrozen(settled.meshes[0]!.shading.linearEmissive)).toBe(
       true,
     );
   });
 
-  test('settles ordered world-space light poses without scaling optical fields', () => {
+  test("settles ordered world-space light poses without scaling optical fields", () => {
     const composer = createComposer();
     submitWebGLLight(composer, {
-      kind: 'ambient',
-      componentName: 'AmbientLight',
+      kind: "ambient",
+      componentName: "AmbientLight",
       color: [0.5, 0.25, 1, 0.5],
       intensity: 0.25,
     });
     submitWebGLLight(composer, {
-      kind: 'hemisphere',
-      componentName: 'HemisphereLight',
+      kind: "hemisphere",
+      componentName: "HemisphereLight",
       localModel: identity(),
       skyColor: [1, 1, 1, 1],
       groundColor: [0, 0, 0, 1],
       intensity: 0.5,
     });
     submitWebGLLight(composer, {
-      kind: 'directional',
-      componentName: 'DirectionalLight',
+      kind: "directional",
+      componentName: "DirectionalLight",
       localModel: identity(),
       color: [1, 1, 1, 1],
       intensity: 1,
     });
     submitWebGLLight(composer, {
-      kind: 'point',
-      componentName: 'PointLight',
+      kind: "point",
+      componentName: "PointLight",
       localModel: translation(3, 4, 2),
       color: [1, 1, 1, 1],
       intensity: 2,
       range: 12,
     });
     submitWebGLLight(composer, {
-      kind: 'spot',
-      componentName: 'SpotLight',
+      kind: "spot",
+      componentName: "SpotLight",
       localModel: identity(),
       color: [1, 1, 1, 1],
       intensity: 3,
@@ -286,24 +326,20 @@ describe('settled WebGL scene', () => {
     const settled = settleWebGLScene(composer);
     expect(settled.lights).toMatchObject([
       {
-        kind: 'ambient',
-        linearColor: [
-          0.10702057024111628,
-          0.025438044085778395,
-          0.5,
-        ],
+        kind: "ambient",
+        linearColor: [0.10702057024111628, 0.025438044085778395, 0.5],
         intensity: 0.25,
       },
-      { kind: 'hemisphere', axis: [0, 1, 0], intensity: 0.5 },
-      { kind: 'directional', direction: [0, 0, -1], intensity: 1 },
+      { kind: "hemisphere", axis: [0, 1, 0], intensity: 0.5 },
+      { kind: "directional", direction: [0, 0, -1], intensity: 1 },
       {
-        kind: 'point',
+        kind: "point",
         position: [3, 4, 2],
         range: 12,
         intensity: 2,
       },
       {
-        kind: 'spot',
+        kind: "spot",
         position: [0, 0, 0],
         direction: [0, 0, -1],
         range: undefined,
@@ -314,22 +350,27 @@ describe('settled WebGL scene', () => {
     ]);
     expect(Object.isFrozen(settled.lights)).toBe(true);
     expect(Object.isFrozen(settled.lights[0])).toBe(true);
-    expect(Object.isFrozen(settled.lights[0]!.linearColor)).toBe(true);
+    const ambient = settled.lights[0]!;
+    expect(ambient.kind).toBe("ambient");
+    if (ambient.kind !== "ambient") {
+      throw new Error("Expected the first settled light to be ambient.");
+    }
+    expect(Object.isFrozen(ambient.linearColor)).toBe(true);
   });
 
-  test.each(['point', 'spot'] as const)(
-    'rejects %s ranges that underflow to the omitted-range Float32 sentinel',
-    kind => {
+  test.each(["point", "spot"] as const)(
+    "rejects %s ranges that underflow to the omitted-range Float32 sentinel",
+    (kind) => {
       const composer = createComposer();
       const common = {
-        componentName: kind === 'point' ? 'PointLight' : 'SpotLight',
+        componentName: kind === "point" ? "PointLight" : "SpotLight",
         localModel: identity(),
         color: [1, 1, 1, 1] as const,
         intensity: 1,
         range: Number.MIN_VALUE,
         castShadow: false,
       };
-      if (kind === 'point') {
+      if (kind === "point") {
         submitWebGLLight(composer, { ...common, kind });
       } else {
         submitWebGLLight(composer, {
@@ -343,18 +384,18 @@ describe('settled WebGL scene', () => {
       expect(() => settleWebGLScene(composer)).toThrowError(
         new RegExp(
           `${common.componentName}.*range.*finite.*positive.*Float32`,
-          'i',
+          "i",
         ),
       );
     },
   );
 
-  test('accepts the smallest positive Float32 range and preserves omitted range', () => {
+  test("accepts the smallest positive Float32 range and preserves omitted range", () => {
     const smallestPositiveFloat32 = Math.fround(1e-45);
     const composer = createComposer();
     submitWebGLLight(composer, {
-      kind: 'point',
-      componentName: 'PointLight',
+      kind: "point",
+      componentName: "PointLight",
       localModel: identity(),
       color: [1, 1, 1, 1],
       intensity: 1,
@@ -362,8 +403,8 @@ describe('settled WebGL scene', () => {
       castShadow: false,
     });
     submitWebGLLight(composer, {
-      kind: 'spot',
-      componentName: 'SpotLight',
+      kind: "spot",
+      componentName: "SpotLight",
       localModel: identity(),
       color: [1, 1, 1, 1],
       intensity: 1,
@@ -373,8 +414,8 @@ describe('settled WebGL scene', () => {
       castShadow: false,
     });
     submitWebGLLight(composer, {
-      kind: 'point',
-      componentName: 'UnboundedPointLight',
+      kind: "point",
+      componentName: "UnboundedPointLight",
       localModel: identity(),
       color: [1, 1, 1, 1],
       intensity: 1,
@@ -382,28 +423,27 @@ describe('settled WebGL scene', () => {
       castShadow: false,
     });
 
-    expect(settleWebGLScene(composer).lights.map(light =>
-      'range' in light ? light.range : null)).toEqual([
-      smallestPositiveFloat32,
-      smallestPositiveFloat32,
-      undefined,
-    ]);
+    expect(
+      settleWebGLScene(composer).lights.map((light) =>
+        "range" in light ? light.range : null,
+      ),
+    ).toEqual([smallestPositiveFloat32, smallestPositiveFloat32, undefined]);
   });
 
-  test('composes group scale into light pose but not intensity, range, or cone', () => {
+  test("composes group scale into light pose but not intensity, range, or cone", () => {
     const composer = createComposer();
     const release = pushWebGLModelMatrix(composer, scale(2, 3, 4));
     submitWebGLLight(composer, {
-      kind: 'point',
-      componentName: 'PointLight',
+      kind: "point",
+      componentName: "PointLight",
       localModel: translation(3, 4, 2),
       color: [1, 1, 1, 1],
       intensity: 2,
       range: 12,
     });
     submitWebGLLight(composer, {
-      kind: 'spot',
-      componentName: 'SpotLight',
+      kind: "spot",
+      componentName: "SpotLight",
       localModel: identity(),
       color: [1, 1, 1, 1],
       intensity: 3,
@@ -415,22 +455,22 @@ describe('settled WebGL scene', () => {
 
     const settled = settleWebGLScene(composer);
     expect(settled.lights[0]).toMatchObject({
-      kind: 'point',
+      kind: "point",
       position: [6, 12, 8],
       intensity: 2,
       range: 12,
     });
     expect(settled.lights[1]).toMatchObject({
-      kind: 'spot',
+      kind: "spot",
       direction: [0, 0, -1],
       intensity: 3,
       range: 10,
-      innerConeCosine: Math.cos(15 * Math.PI / 180),
-      outerConeCosine: Math.cos(30 * Math.PI / 180),
+      innerConeCosine: Math.cos((15 * Math.PI) / 180),
+      outerConeCosine: Math.cos((30 * Math.PI) / 180),
     });
   });
 
-  test('accepts eight lights, counts zero intensity, and rejects the ninth', () => {
+  test("accepts eight lights, counts zero intensity, and rejects the ninth", () => {
     const accepted = createComposer();
     submitAmbientLights(accepted, 8);
     expect(settleWebGLScene(accepted).lights).toHaveLength(8);
@@ -438,21 +478,21 @@ describe('settled WebGL scene', () => {
     const rejected = createComposer();
     submitAmbientLights(rejected, 9);
     expect(() => settleWebGLScene(rejected)).toThrow(
-      'WebGLLayer supports at most 8 light declarations',
+      "WebGLLayer supports at most 8 light declarations",
     );
   });
 
-  test('accepts one immutable background and rejects a second with JSX diagnostics', () => {
+  test("accepts one immutable background and rejects a second with JSX diagnostics", () => {
     const accepted = createComposer();
     const color = [0.1, 0.2, 0.3, 0.4] as [number, number, number, number];
     submitWebGLBackground(accepted, {
-      componentName: 'WebGLBackground',
+      componentName: "WebGLBackground",
       color,
     });
     color[0] = 1;
     const settled = settleWebGLScene(accepted);
     expect(settled.background).toEqual({
-      kind: 'background',
+      kind: "background",
       color: [0.1, 0.2, 0.3, 0.4],
     });
     expect(Object.isFrozen(settled.background)).toBe(true);
@@ -460,22 +500,22 @@ describe('settled WebGL scene', () => {
 
     const rejected = createComposer();
     submitWebGLBackground(rejected, {
-      componentName: 'FirstBackground',
+      componentName: "FirstBackground",
       color: [0, 0, 0, 1],
     });
     submitWebGLBackground(rejected, {
-      componentName: 'SecondBackground',
+      componentName: "SecondBackground",
       source: {
-        fileName: '/app/backgrounds.tsx',
+        fileName: "/app/backgrounds.tsx",
         lineNumber: 8,
         columnNumber: 5,
       },
       color: [1, 1, 1, 1],
     });
     expect(() => settleWebGLScene(rejected)).toThrow(
-      'WebGLLayer supports at most one WebGLBackground declaration; ' +
-      'the second is SecondBackground. ' +
-      'JSX source: /app/backgrounds.tsx:8:5.',
+      "WebGLLayer supports at most one WebGLBackground declaration; " +
+        "the second is SecondBackground. " +
+        "JSX source: /app/backgrounds.tsx:8:5.",
     );
   });
 });
@@ -489,21 +529,11 @@ function createComposer(): WebGLSceneComposer {
 }
 
 function translation(x: number, y: number, z: number): Float32Array {
-  return new Float32Array([
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    x, y, z, 1,
-  ]);
+  return new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1]);
 }
 
 function scale(x: number, y: number, z: number): Float32Array {
-  return new Float32Array([
-    x, 0, 0, 0,
-    0, y, 0, 0,
-    0, 0, z, 0,
-    0, 0, 0, 1,
-  ]);
+  return new Float32Array([x, 0, 0, 0, 0, y, 0, 0, 0, 0, z, 0, 0, 0, 0, 1]);
 }
 
 function submitAmbientLights(
@@ -512,15 +542,17 @@ function submitAmbientLights(
 ): void {
   for (let index = 0; index < count; index += 1) {
     submitWebGLLight(composer, {
-      kind: 'ambient',
+      kind: "ambient",
       componentName: `AmbientLight${index}`,
-      ...(index === 8 ? {
-        source: {
-          fileName: '/app/lights.tsx',
-          lineNumber: 18,
-          columnNumber: 9,
-        },
-      } : {}),
+      ...(index === 8
+        ? {
+            source: {
+              fileName: "/app/lights.tsx",
+              lineNumber: 18,
+              columnNumber: 9,
+            },
+          }
+        : {}),
       color: [1, 1, 1, 1],
       intensity: index === 0 ? 0 : 1,
     });
@@ -528,7 +560,7 @@ function submitAmbientLights(
 }
 
 function fakeTarget(): CRCEventTargetRegistration {
-  return { kind: 'target', live: true } as CRCEventTargetRegistration;
+  return { kind: "target", live: true } as CRCEventTargetRegistration;
 }
 
 function mutateCallerOwnedMatrix(

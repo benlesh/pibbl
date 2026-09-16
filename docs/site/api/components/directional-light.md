@@ -6,7 +6,8 @@ kind: api
 slug: directional-light
 apiCategory: component
 symbols: [DirectionalLight]
-relatedTypes: [DirectionalLightProps, DirectionalLightStyle, CRCWebGLTransformStyle]
+relatedTypes:
+  [DirectionalLightProps, DirectionalLightStyle, CRCWebGLTransformStyle]
 ---
 
 # DirectionalLight
