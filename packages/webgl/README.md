@@ -31,8 +31,12 @@ const scene = (
     />
     <WebGLLayer style={{ width: 480, height: 300 }}>
       <Group3D style={{ rotationYDegrees: 25 }}>
-        <Cube style={{ size: 1.2, translateX: -0.8, color: "#8b5cf6", lit: false }} />
-        <Sphere style={{ radius: 0.6, translateX: 0.8, color: "#22c55e", lit: false }} />
+        <Cube
+          style={{ size: 1.2, translateX: -0.8, color: "#8b5cf6", lit: false }}
+        />
+        <Sphere
+          style={{ radius: 0.6, translateX: 0.8, color: "#22c55e", lit: false }}
+        />
       </Group3D>
     </WebGLLayer>
     <Text pointerEvents="none" style={{ x: 20, y: 20, fill: "white" }}>

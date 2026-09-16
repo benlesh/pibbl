@@ -62,11 +62,21 @@ function Scene() {
           onClick={() => console.log("the selected object is in this group")}
         >
           <Cube
-            style={{ size: 1.3, translateX: -0.9, color: "#8b5cf6", lit: false }}
+            style={{
+              size: 1.3,
+              translateX: -0.9,
+              color: "#8b5cf6",
+              lit: false,
+            }}
             onClick={() => setSelected("cube")}
           />
           <Sphere
-            style={{ radius: 0.7, translateX: 0.9, color: "#22c55e", lit: false }}
+            style={{
+              radius: 0.7,
+              translateX: 0.9,
+              color: "#22c55e",
+              lit: false,
+            }}
             onClick={() => setSelected("sphere")}
           />
         </Group3D>
@@ -184,7 +194,9 @@ const markerGeometry = createWebGLGeometry({
 });
 
 function Marker({ x }: { x: number }) {
-  return <Mesh geometry={markerGeometry} style={{ translateX: x, lit: false }} />;
+  return (
+    <Mesh geometry={markerGeometry} style={{ translateX: x, lit: false }} />
+  );
 }
 ```
 

@@ -169,19 +169,19 @@ for every removed field and structural form.
 
 The optional `@crc/webgl` package adds this separate closed style vocabulary:
 
-| Component | WebGL-specific style fields | Defaults and validation |
-| --- | --- | --- |
-| `WebGLLayer` | Core box/layout-item fields including `width`, `height`, `filter`; local `shadows` | Each omitted dimension uses current logical allocation and resolves finite positive; `shadows = "medium"`, accepting `false`, `"low"`, `"medium"`, or `"high"` |
-| `Group3D` | `translateX/Y/Z`, `rotationXDegrees/YDegrees/ZDegrees`, `scaleX/Y/Z` | Translation/rotation `0`, scale `1`; all finite, scale nonzero; negative scale supported |
-| `Mesh` | Shared transform plus `color`, `opacity`, `lit`, `material`, `castShadow`, `receiveShadow`, and `cursor` | Concrete `color = "#ffffff"`; finite `opacity = 1` in `[0, 1]`; `lit = true`; omitted material is Lambert; shadow defaults depend on final alpha; `geometry` is a program prop |
-| `Cube` | Mesh style plus `size` | `size = 1`, finite and positive |
-| `Sphere` | Mesh style plus `radius` | `radius = 0.5`, finite and positive |
-| `AmbientLight` | `color`, `intensity` | White and `1`; finite nonnegative intensity; no transform or shadow field |
-| `HemisphereLight` | Shared transform plus `skyColor`, `groundColor`, `intensity` | Both colors white and intensity `1`; no shadow field |
-| `DirectionalLight` | Shared transform plus `color`, `intensity`, `castShadow` | White, `1`, and `true` |
-| `PointLight` | Directional-light style plus `range` | Omitted range is unbounded; supplied range is finite and positive |
-| `SpotLight` | Point-light style plus `innerConeAngleDegrees`, `outerConeAngleDegrees` | `0` and `45`; finite half-angles satisfy `0 <= inner <= outer <= 90` |
-| `WebGLBackground` | Required `color` | One concrete color declaration per scene; transforms are not accepted |
+| Component          | WebGL-specific style fields                                                                              | Defaults and validation                                                                                                                                                        |
+| ------------------ | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `WebGLLayer`       | Core box/layout-item fields including `width`, `height`, `filter`; local `shadows`                       | Each omitted dimension uses current logical allocation and resolves finite positive; `shadows = "medium"`, accepting `false`, `"low"`, `"medium"`, or `"high"`                 |
+| `Group3D`          | `translateX/Y/Z`, `rotationXDegrees/YDegrees/ZDegrees`, `scaleX/Y/Z`                                     | Translation/rotation `0`, scale `1`; all finite, scale nonzero; negative scale supported                                                                                       |
+| `Mesh`             | Shared transform plus `color`, `opacity`, `lit`, `material`, `castShadow`, `receiveShadow`, and `cursor` | Concrete `color = "#ffffff"`; finite `opacity = 1` in `[0, 1]`; `lit = true`; omitted material is Lambert; shadow defaults depend on final alpha; `geometry` is a program prop |
+| `Cube`             | Mesh style plus `size`                                                                                   | `size = 1`, finite and positive                                                                                                                                                |
+| `Sphere`           | Mesh style plus `radius`                                                                                 | `radius = 0.5`, finite and positive                                                                                                                                            |
+| `AmbientLight`     | `color`, `intensity`                                                                                     | White and `1`; finite nonnegative intensity; no transform or shadow field                                                                                                      |
+| `HemisphereLight`  | Shared transform plus `skyColor`, `groundColor`, `intensity`                                             | Both colors white and intensity `1`; no shadow field                                                                                                                           |
+| `DirectionalLight` | Shared transform plus `color`, `intensity`, `castShadow`                                                 | White, `1`, and `true`                                                                                                                                                         |
+| `PointLight`       | Directional-light style plus `range`                                                                     | Omitted range is unbounded; supplied range is finite and positive                                                                                                              |
+| `SpotLight`        | Point-light style plus `innerConeAngleDegrees`, `outerConeAngleDegrees`                                  | `0` and `45`; finite half-angles satisfy `0 <= inner <= outer <= 90`                                                                                                           |
+| `WebGLBackground`  | Required `color`                                                                                         | One concrete color declaration per scene; transforms are not accepted                                                                                                          |
 
 The fixed 3D transform order is translation multiplied by Z, Y, and X degree
 rotations, then scale. Child-local transforms follow the current Group3D model

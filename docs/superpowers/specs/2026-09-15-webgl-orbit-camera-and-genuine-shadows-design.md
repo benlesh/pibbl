@@ -181,15 +181,17 @@ export interface CRCOrbitCameraOptions {
   readonly zoomSpeed?: number;
 }
 
-export type CRCOrbitCameraHandlers = Required<Pick<
-  CRCEventHandlers,
-  | "onPointerDown"
-  | "onPointerMove"
-  | "onPointerUp"
-  | "onPointerCancel"
-  | "onLostPointerCapture"
-  | "onWheel"
->>;
+export type CRCOrbitCameraHandlers = Required<
+  Pick<
+    CRCEventHandlers,
+    | "onPointerDown"
+    | "onPointerMove"
+    | "onPointerUp"
+    | "onPointerCancel"
+    | "onLostPointerCapture"
+    | "onWheel"
+  >
+>;
 
 export interface CRCOrbitCameraResult {
   readonly position: CRCWebGLVector3;
@@ -304,11 +306,11 @@ inert without making them invalid.
 
 The tiers define intent and minimum algorithm shape:
 
-| Quality | Requested square resolution per view | Depth comparisons |
-| --- | ---: | ---: |
-| `"low"` | 512 | 1, hard edge |
-| `"medium"` | 1024 | 4, filtered |
-| `"high"` | 2048 | 9, filtered |
+| Quality    | Requested square resolution per view | Depth comparisons |
+| ---------- | -----------------------------------: | ----------------: |
+| `"low"`    |                                  512 |      1, hard edge |
+| `"medium"` |                                 1024 |       4, filtered |
+| `"high"`   |                                 2048 |       9, filtered |
 
 The renderer clamps the requested resolution to the WebGL2 context's supported
 maximum. A device clamp does not change the selected comparison count. The
@@ -356,11 +358,11 @@ readonly receiveShadow?: boolean;
 The effective defaults depend on final mesh alpha, which remains parsed color
 alpha multiplied by `style.opacity`:
 
-| Final alpha | Default cast | Default receive |
-| --- | --- | --- |
-| `1` | yes | yes when lit |
-| greater than `0` and less than `1` | no | yes when lit |
-| `0` | no | no |
+| Final alpha                        | Default cast | Default receive |
+| ---------------------------------- | ------------ | --------------- |
+| `1`                                | yes          | yes when lit    |
+| greater than `0` and less than `1` | no           | yes when lit    |
+| `0`                                | no           | no              |
 
 `castShadow` is independent of `style.lit`. An opaque unlit or emissive mesh
 therefore occludes direct lights by default. `receiveShadow` affects only a

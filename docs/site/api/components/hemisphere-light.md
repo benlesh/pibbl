@@ -6,7 +6,8 @@ kind: api
 slug: hemisphere-light
 apiCategory: component
 symbols: [HemisphereLight]
-relatedTypes: [HemisphereLightProps, HemisphereLightStyle, CRCWebGLTransformStyle]
+relatedTypes:
+  [HemisphereLightProps, HemisphereLightStyle, CRCWebGLTransformStyle]
 ---
 
 # HemisphereLight
