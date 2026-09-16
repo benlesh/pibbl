@@ -490,10 +490,26 @@ export class PhysicsWorld3DController {
         )
         .map((record) => [record.id, record.definition] as const),
     );
+    const committedBodyIds = new Set(
+      this.kernel.snapshot().bodies.map((body) => body.id),
+    );
+    const committedKinematicPoses = new Map<number, CRCPhysicsPose3D>();
+    for (const body of this.acceptedBodies) {
+      if (
+        body.descriptor.bodyType === "kinematic" &&
+        committedBodyIds.has(body.id)
+      ) {
+        committedKinematicPoses.set(
+          body.id,
+          this.kernel.authoritativePose(body.id),
+        );
+      }
+    }
     const topology = materializeTopology(
       draft,
       reenableVelocities,
       previousBodyDefinitions,
+      committedKinematicPoses,
     );
     const topologyChanged = !sameTopology(this.acceptedTopology, topology);
     const configurationChanged = !sameConfiguration(
@@ -511,7 +527,7 @@ export class PhysicsWorld3DController {
       this.acceptedBodies,
       nextBodies,
     );
-    validateUniqueBodyHandles(nextBodies);
+    validateBodyHandleBindingTransition(this, this.acceptedBodies, nextBodies);
     for (const body of this.acceptedBodies) {
       const retained = nextBodies.some(
         (next) =>
@@ -1151,6 +1167,7 @@ function materializeTopology(
   draft: RenderDraft3D,
   reenableVelocities: ReadonlyMap<number, BodyVelocity3D>,
   previousBodyDefinitions: ReadonlyMap<number, BodyDefinition3D>,
+  committedKinematicPoses: ReadonlyMap<number, CRCPhysicsPose3D>,
 ): readonly PhysicsTopologyRecord3D[] {
   const collidersByBody = new Map<number, ColliderDraft3D[]>();
   for (const collider of draft.colliders.values()) {
@@ -1169,6 +1186,7 @@ function materializeTopology(
           collidersByBody.get(body.id) ?? [],
           reenableVelocities.get(body.id),
           previousBodyDefinitions.get(body.id),
+          committedKinematicPoses.get(body.id),
         ),
       }),
     );
@@ -1232,6 +1250,7 @@ function bodyDefinition(
   colliders: readonly ColliderDraft3D[],
   reenableVelocity?: BodyVelocity3D,
   previous?: BodyDefinition3D,
+  committedKinematicPose?: CRCPhysicsPose3D,
 ): BodyDefinition3D {
   const descriptor = body.descriptor;
   const enabled = descriptor.options.enabled;
@@ -1308,14 +1327,15 @@ function bodyDefinition(
     (previous.flags & BODY_TYPE_KINEMATIC_3D) !== 0
       ? previous
       : undefined;
-  const orientation = previousKinematic === undefined
-    ? body.initialPose.orientation
-    : freezeQuaternion([
+  const orientation = committedKinematicPose?.orientation ??
+    (previousKinematic === undefined
+      ? body.initialPose.orientation
+      : freezeQuaternion([
         previousKinematic.orientationX,
         previousKinematic.orientationY,
         previousKinematic.orientationZ,
         previousKinematic.orientationW,
-      ]);
+      ]));
   const previousCenterOffset = new Float64Array(3);
   if (previousKinematic !== undefined) {
     rotateVectorInto(previousCenterOffset, [
@@ -1324,13 +1344,14 @@ function bodyDefinition(
       previousKinematic.localCenterZ ?? 0,
     ], orientation);
   }
-  const origin = previousKinematic === undefined
-    ? body.initialPose.position
-    : freezeVector3([
+  const origin = committedKinematicPose?.position ??
+    (previousKinematic === undefined
+      ? body.initialPose.position
+      : freezeVector3([
         previousKinematic.positionX - previousCenterOffset[0]!,
         previousKinematic.positionY - previousCenterOffset[1]!,
         previousKinematic.positionZ - previousCenterOffset[2]!,
-      ]);
+      ]));
   const centerOffset = new Float64Array(3);
   rotateVectorInto(centerOffset, localCenter, orientation);
   return Object.freeze({
@@ -1480,7 +1501,11 @@ function sameRecord(left: unknown, right: unknown): boolean {
   );
 }
 
-function validateUniqueBodyHandles(bodies: readonly BodyDraft3D[]): void {
+function validateBodyHandleBindingTransition(
+  controller: PhysicsWorld3DController,
+  previousBodies: readonly AcceptedBody3D[],
+  bodies: readonly BodyDraft3D[],
+): void {
   const ids = new Map<CRCPhysicsBodyHandle3D, number>();
   for (const body of bodies) {
     const handle = body.descriptor.options.handle;
@@ -1492,6 +1517,34 @@ function validateUniqueBodyHandles(bodies: readonly BodyDraft3D[]): void {
       );
     }
     ids.set(handle, body.id);
+  }
+  for (const [handle, bodyId] of ids) {
+    if (typeof handle !== "object" || handle === null) {
+      throw new TypeError("Expected a live CRC physics 3D body handle.");
+    }
+    const binding = physicsBodyHandleBinding3D(handle);
+    if (
+      binding === undefined ||
+      (binding.controller === controller && binding.bodyId === bodyId)
+    ) {
+      continue;
+    }
+    const releasable = previousBodies.some((previous) =>
+      previous.descriptor.options.handle === handle &&
+      previous.id === binding.bodyId &&
+      previous.handleBindingGeneration === binding.bindingGeneration &&
+      binding.controller === controller &&
+      !bodies.some(
+        (next) =>
+          next.id === previous.id &&
+          next.descriptor.options.handle === handle,
+      )
+    );
+    if (!releasable) {
+      throw new Error(
+        "A CRC physics 3D body handle may bind to at most one live body.",
+      );
+    }
   }
 }
 

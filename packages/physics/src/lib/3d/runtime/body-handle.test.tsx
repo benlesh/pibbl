@@ -21,9 +21,14 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { snapshotPhysicsBodyHandle3DForTest } from "./body-handle.js";
 import {
+  createPhysicsBodyHandle3D,
+  physicsBodyHandleBinding3D,
+} from "./body-handle.js";
+import {
   requirePhysicsWorld3DController,
   snapshotPhysicsWorld3DControllerForTest,
 } from "./controller.js";
+import { requirePhysicsAttachment3DDescriptor } from "./descriptors.js";
 
 let frames: ManualFrames;
 const mounts: CRCController[] = [];
@@ -40,6 +45,109 @@ afterEach(() => {
 });
 
 describe("3D physics body handles", () => {
+  it("does not leak an earlier handle when a later initial binding conflicts across worlds", () => {
+    // Production break caught: binding bodies during Array.map leaves an
+    // earlier handle attached when a later cross-world binding throws.
+    const free = createPhysicsBodyHandle3D({} as never);
+    const shared = createPhysicsBodyHandle3D({} as never);
+    let firstWorld!: CRCPhysicsWorldHandle3D;
+    const First = () => {
+      firstWorld = crcPhysicsWorld3D();
+      return <Group3D physics={dynamicBody3D({
+        handle: shared,
+        collider: false,
+        mass: 1,
+      })} />;
+    };
+    mountWebGL(<PhysicsWorld3D gravity={[0, 0, 0]}><First /></PhysicsWorld3D>);
+    frames.flush(0);
+    frames.flush(0);
+    const foreign = requirePhysicsWorld3DController(firstWorld);
+    expect(physicsBodyHandleBinding3D(shared)?.controller).toBe(foreign);
+    expect(physicsBodyHandleBinding3D(free)).toBeUndefined();
+
+    mountWebGL(
+      <PhysicsWorld3D gravity={[0, 0, 0]}>
+        <Group3D physics={dynamicBody3D({ handle: free, collider: false, mass: 1 })} />
+        <Group3D physics={dynamicBody3D({ handle: shared, collider: false, mass: 1 })} />
+      </PhysicsWorld3D>,
+    );
+    expect(() => frames.flush(1)).toThrow(/at most one live body/i);
+    expect(physicsBodyHandleBinding3D(free)).toBeUndefined();
+    expect(physicsBodyHandleBinding3D(shared)?.controller).toBe(foreign);
+  });
+
+  it("keeps old bindings and avoids partial new bindings when a rerender conflicts across worlds", () => {
+    // Production break caught: rerender finalization unbinds the accepted
+    // handle and binds an earlier replacement before discovering a later
+    // cross-world conflict.
+    const old = createPhysicsBodyHandle3D({} as never);
+    const free = createPhysicsBodyHandle3D({} as never);
+    const shared = createPhysicsBodyHandle3D({} as never);
+    let firstWorld!: CRCPhysicsWorldHandle3D;
+    let secondWorld!: CRCPhysicsWorldHandle3D;
+    const First = () => {
+      firstWorld = crcPhysicsWorld3D();
+      return <Group3D physics={dynamicBody3D({
+        handle: shared,
+        collider: false,
+        mass: 1,
+      })} />;
+    };
+    const Second = () => {
+      secondWorld = crcPhysicsWorld3D();
+      return [
+        <Group3D key="first" physics={dynamicBody3D({
+          handle: old,
+          collider: false,
+          mass: 1,
+        })} />,
+        <Group3D key="second" physics={dynamicBody3D({
+          collider: false,
+          mass: 1,
+        })} />,
+      ];
+    };
+    mountWebGL(<PhysicsWorld3D gravity={[0, 0, 0]}><First /></PhysicsWorld3D>);
+    mountWebGL(<PhysicsWorld3D gravity={[0, 0, 0]}><Second /></PhysicsWorld3D>);
+    frames.flush(0);
+    frames.flush(0);
+    const accepted = physicsBodyHandleBinding3D(old);
+    const secondController = requirePhysicsWorld3DController(secondWorld);
+    expect(accepted?.controller).toBe(secondController);
+    const probe = secondController as unknown as BindingFinalizationProbe3D;
+    const [firstBody, secondBody] = probe.acceptedBodies;
+    probe.draft = {
+      configuration: probe.acceptedConfiguration,
+      props: probe.acceptedProps,
+      bodies: new Map([
+        [firstBody!.id, {
+          ...firstBody!,
+          descriptor: requirePhysicsAttachment3DDescriptor(dynamicBody3D({
+            handle: free,
+            collider: false,
+            mass: 1,
+          })),
+        }],
+        [secondBody!.id, {
+          ...secondBody!,
+          descriptor: requirePhysicsAttachment3DDescriptor(dynamicBody3D({
+            handle: shared,
+            collider: false,
+            mass: 1,
+          })),
+        }],
+      ]),
+      colliders: new Map(),
+    };
+    expect(() => probe.finishRender(true)).toThrow(/at most one live body/i);
+    expect(physicsBodyHandleBinding3D(old)).toEqual(accepted);
+    expect(physicsBodyHandleBinding3D(free)).toBeUndefined();
+    expect(physicsBodyHandleBinding3D(shared)?.controller).toBe(
+      requirePhysicsWorld3DController(firstWorld),
+    );
+  });
+
   it("keeps one hook shell stable and materializes readonly signals lazily", () => {
     const seen: CRCPhysicsBodyHandle3D[] = [];
     const rerender = signal(0);
@@ -159,6 +267,20 @@ describe("3D physics body handles", () => {
     expect(snapshot(world).kernel.bodyCount).toBe(1);
   });
 });
+
+interface BindingFinalizationProbe3D {
+  readonly acceptedBodies: readonly Readonly<{
+    readonly id: number;
+    readonly attachment: unknown;
+    readonly descriptor: unknown;
+    readonly initialPose: unknown;
+    readonly handleBindingGeneration: number | undefined;
+  }>[];
+  readonly acceptedConfiguration: unknown;
+  readonly acceptedProps: unknown;
+  draft: unknown;
+  finishRender(success: boolean): void;
+}
 
 function snapshot(world: CRCPhysicsWorldHandle3D) {
   return snapshotPhysicsWorld3DControllerForTest(

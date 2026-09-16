@@ -190,6 +190,122 @@ describe("PhysicsWorld3D controller scheduling and topology", () => {
     });
   });
 
+  it("retains committed sparse kinematic poses when topology options change", () => {
+    // Production break caught: rebuilding from the last accepted topology
+    // definition snaps moved kinematics back to their original pose before
+    // the next fixed tick can run.
+    const position = signal<readonly [number, number, number]>([2, 3, 4]);
+    const orientation = signal<readonly [number, number, number, number]>([
+      0,
+      0,
+      Math.SQRT1_2,
+      Math.SQRT1_2,
+    ]);
+    const allowSleep = signal(true);
+    let world!: CRCPhysicsWorldHandle3D;
+    const Scene = () => {
+      world = crcPhysicsWorld3D();
+      const sleeping = allowSleep.get();
+      return [
+        <Group3D key="position" physics={kinematicBody3D({
+          allowSleep: sleeping,
+          target: { position },
+          collider: false,
+        })} />,
+        <Group3D key="orientation" physics={kinematicBody3D({
+          allowSleep: sleeping,
+          target: { orientation },
+          collider: false,
+        })} />,
+      ];
+    };
+    mountWebGL(
+      <PhysicsWorld3D gravity={[0, 0, 0]} fixedStepMilliseconds={10}>
+        <Scene />
+      </PhysicsWorld3D>,
+    );
+    frames.flush(0);
+    frames.flush(0);
+    frames.flush(10);
+    const accepted = snapshot(world).kernel.bodies;
+    expect(accepted[0]).toMatchObject({
+      positionX: 2,
+      positionY: 3,
+      positionZ: 4,
+    });
+    expect(accepted[1]).toMatchObject({
+      orientationX: 0,
+      orientationY: 0,
+      orientationZ: expect.closeTo(Math.SQRT1_2, 14),
+      orientationW: expect.closeTo(Math.SQRT1_2, 14),
+    });
+
+    allowSleep.set(false);
+    frames.flush(10);
+    frames.flush(10);
+    const retained = snapshot(world).kernel.bodies;
+    expect(retained[0]).toMatchObject({
+      positionX: 2,
+      positionY: 3,
+      positionZ: 4,
+      orientationX: 0,
+      orientationY: 0,
+      orientationZ: 0,
+      orientationW: 1,
+    });
+    expect(retained[1]).toMatchObject({
+      positionX: 0,
+      positionY: 0,
+      positionZ: 0,
+      orientationX: 0,
+      orientationY: 0,
+      orientationZ: expect.closeTo(Math.SQRT1_2, 14),
+      orientationW: expect.closeTo(Math.SQRT1_2, 14),
+    });
+  });
+
+  it("reuses an explicit transformed collider across recreated descriptors", () => {
+    // Production break caught: caching by normalized options object identity
+    // regenerates a nominal transformed shape and churns topology on every
+    // physics-requested render.
+    const version = signal(0);
+    const shape = sphereShape3D({ radius: 1 });
+    let world!: CRCPhysicsWorldHandle3D;
+    const Scene = () => {
+      version.get();
+      world = crcPhysicsWorld3D();
+      return <Group3D physics={staticBody3D({
+        collider: {
+          shape,
+          offset: [2, 0, 0],
+          orientation: [0, 0, Math.SQRT1_2, Math.SQRT1_2],
+        },
+      })} />;
+    };
+    mountWebGL(<PhysicsWorld3D gravity={[0, 0, 0]}><Scene /></PhysicsWorld3D>);
+    frames.flush(0);
+    frames.flush(0);
+    const first = queryPoint3D(world, [2, 0, 0]);
+    expect(first).not.toBeNull();
+    const counters = snapshot(world).kernel.counters;
+
+    version.set(1);
+    frames.flush(1);
+    const pendingAfterRender = frames.pending;
+    if (pendingAfterRender > 0) frames.flush(1);
+    const second = queryPoint3D(world, [2, 0, 0]);
+    expect(second).not.toBeNull();
+    expect(second!.collider).toBe(first!.collider);
+    expect(second!.colliderGeneration).toBe(first!.colliderGeneration);
+    expect(snapshot(world).kernel.counters.colliderAllocations).toBe(
+      counters.colliderAllocations,
+    );
+    expect(snapshot(world).kernel.counters.colliderReleases).toBe(
+      counters.colliderReleases,
+    );
+    expect(pendingAfterRender).toBe(0);
+  });
+
   it("keeps one registration while a kinematic target binding can produce a later sample", () => {
     // Production break caught: releasing the participant when the current
     // target is reached leaves a later write to the same unobserved binding

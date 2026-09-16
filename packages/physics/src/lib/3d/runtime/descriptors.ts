@@ -232,7 +232,9 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
   private world: ReturnType<typeof requireCurrentPhysicsWorld3D> | undefined;
   private bodyId: number | undefined;
   private releaseBodyScope: (() => void) | undefined;
-  private cachedShapeInput: NormalizedPhysicsColliderConfiguration3D | undefined;
+  private cachedShapeSource: CRCPhysicsShape3D | undefined;
+  private cachedShapeOffset: CRCPhysicsVector3 | undefined;
+  private cachedShapeOrientation: CRCPhysicsQuaternion | undefined;
   private cachedShape: ShapeRecord3D | undefined;
 
   constructor(value: CRCPhysicsAttachment3D) {
@@ -298,9 +300,15 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
   }
 
   resolveShape(options: NormalizedPhysicsColliderConfiguration3D): ShapeRecord3D {
-    if (this.cachedShapeInput === options) return this.cachedShape!;
     if (options.shape === "self") {
       throw new Error("Self collider inference is not available in this runtime task.");
+    }
+    if (
+      this.cachedShapeSource === options.shape &&
+      sameVector3(this.cachedShapeOffset, options.offset) &&
+      sameQuaternion(this.cachedShapeOrientation, options.orientation)
+    ) {
+      return this.cachedShape!;
     }
     const identityOrientation =
       options.orientation[0] === 0 && options.orientation[1] === 0 &&
@@ -312,10 +320,33 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
             position: options.offset,
             orientation: options.orientation,
           });
-    this.cachedShapeInput = options;
+    this.cachedShapeSource = options.shape;
+    this.cachedShapeOffset = options.offset;
+    this.cachedShapeOrientation = options.orientation;
     this.cachedShape = requireShapeRecord3D(transformed);
     return this.cachedShape;
   }
+}
+
+function sameVector3(
+  left: CRCPhysicsVector3 | undefined,
+  right: CRCPhysicsVector3,
+): boolean {
+  return left !== undefined &&
+    left[0] === right[0] &&
+    left[1] === right[1] &&
+    left[2] === right[2];
+}
+
+function sameQuaternion(
+  left: CRCPhysicsQuaternion | undefined,
+  right: CRCPhysicsQuaternion,
+): boolean {
+  return left !== undefined &&
+    left[0] === right[0] &&
+    left[1] === right[1] &&
+    left[2] === right[2] &&
+    left[3] === right[3];
 }
 
 function normalizeOptionalCollider(
