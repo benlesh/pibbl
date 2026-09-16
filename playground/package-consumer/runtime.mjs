@@ -1,6 +1,7 @@
 import * as core from '@crc/core';
 import * as internal from '@crc/core/internal';
 import * as webgl from '@crc/webgl';
+import * as webglInternal from '@crc/webgl/internal';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { createRequire } from 'node:module';
@@ -101,6 +102,7 @@ if (JSON.stringify(actual) !== JSON.stringify(expected)) {
 
 const expectedInternal = [
   'cancelBackendMountFrame',
+  'crcInternalCreatePropAttachment',
   'crcInternalCreateSignalConsumer',
   'crcInternalCurrentFrame',
   'crcInternalCurrentRenderOwner',
@@ -113,8 +115,10 @@ const expectedInternal = [
   'crcInternalRegisterSimulationAdvance',
   'crcInternalRequestRendererWork',
   'crcInternalRequestSimulationRender',
+  'crcInternalRunPurePrimitiveResolver',
   'createBackendToken',
   'defineBackendPrimitive',
+  'derivePrimitive',
   'executeBackendCRC',
   'getBackendEnvironment',
   'getCurrentBackendHostCanvas',
@@ -234,6 +238,33 @@ for (const exportName of expectedWebGL) {
   }
 }
 
+const expectedWebGLInternal = [
+  'getWebGLGeometrySnapshot',
+  'pushPhysicsPresentation',
+  'resolveWebGLPhysicsPrimitive',
+];
+const actualWebGLInternal = Object.keys(webglInternal).sort();
+if (
+  JSON.stringify(actualWebGLInternal) !==
+    JSON.stringify(expectedWebGLInternal)
+) {
+  throw new Error(
+    `Unexpected @crc/webgl/internal exports: ${actualWebGLInternal.join(', ')}`,
+  );
+}
+for (const exportName of expectedWebGLInternal) {
+  if (typeof webglInternal[exportName] !== 'function') {
+    throw new Error(
+      `Expected @crc/webgl/internal ${exportName} to be callable.`,
+    );
+  }
+  if (exportName in webgl) {
+    throw new Error(
+      `Internal WebGL friend function leaked from @crc/webgl: ${exportName}.`,
+    );
+  }
+}
+
 for (const [exportName, value] of Object.entries({
   jsx,
   jsxs,
@@ -301,6 +332,18 @@ const runtimeGeometry = webgl.createWebGLGeometry({
   positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
   normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
 });
+const runtimeGeometrySnapshot = webglInternal.getWebGLGeometrySnapshot(
+  runtimeGeometry,
+);
+if (
+  runtimeGeometrySnapshot.positions.length !== 9 ||
+  runtimeGeometrySnapshot.bounds.maximumX !== 1 ||
+  runtimeGeometrySnapshot.bounds.maximumY !== 1
+) {
+  throw new Error(
+    '@crc/webgl/internal did not snapshot public packed geometry.',
+  );
+}
 function RuntimeAnimatedMesh() {
   const timestamp = webgl.crcAnimationFrame();
   return core.createElement(webgl.Mesh, {
@@ -432,7 +475,6 @@ for (const specifier of [
   '@crc/core/lib/types',
   '@crc/core/lib/global-state',
   '@crc/core/src/index',
-  '@crc/webgl/internal',
   '@crc/webgl/lib/backend',
   '@crc/webgl/lib/types',
   '@crc/webgl/src/index',

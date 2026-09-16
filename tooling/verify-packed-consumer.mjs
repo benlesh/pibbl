@@ -274,6 +274,9 @@ try {
       'package/dist/index.d.ts',
       'package/dist/index.mjs',
       'package/dist/index.mjs.map',
+      'package/dist/internal.d.ts',
+      'package/dist/internal.mjs',
+      'package/dist/internal.mjs.map',
     ]);
 
   writeFileSync(join(consumerDirectory, 'package.json'), `${JSON.stringify({
@@ -312,7 +315,13 @@ try {
 
   const requireFromConsumer = createRequire(join(consumerDirectory, 'runtime.mjs'));
   const installedPackageRoots = new Map();
-  for (const packageName of ['@crc/core', '@crc/core/internal', '@crc/types', '@crc/webgl']) {
+  for (const packageName of [
+    '@crc/core',
+    '@crc/core/internal',
+    '@crc/types',
+    '@crc/webgl',
+    '@crc/webgl/internal',
+  ]) {
     const packageEntry = realpathSync(requireFromConsumer.resolve(packageName));
     if (!packageEntry.startsWith(realpathSync(join(consumerDirectory, 'node_modules')))) {
       throw new Error(`${packageName} resolved outside the packed consumer: ${packageEntry}`);
@@ -331,6 +340,11 @@ try {
 
   const installedCoreEntry = realpathSync(requireFromConsumer.resolve('@crc/core'));
   const installedWebGLRoot = installedPackageRoots.get('@crc/webgl');
+  if (installedPackageRoots.get('@crc/webgl/internal') !== installedWebGLRoot) {
+    throw new Error(
+      '@crc/webgl/internal did not resolve inside the installed @crc/webgl package.',
+    );
+  }
   const installedWebGLEntry = realpathSync(requireFromConsumer.resolve('@crc/webgl'));
   const requireFromWebGL = createRequire(installedWebGLEntry);
   const webglCoreEntry = realpathSync(requireFromWebGL.resolve('@crc/core'));

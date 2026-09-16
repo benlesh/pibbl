@@ -60,7 +60,14 @@ export default defineConfig(({ mode }) => ({
     ],
   },
   test: {
-    exclude: [...configDefaults.exclude, '.pnpm-store/**', '.superpowers/**'],
+    exclude: [
+      ...configDefaults.exclude,
+      '.pnpm-store/**',
+      '.superpowers/**',
+      ...(mode === 'built' ? [] : [
+        'packages/webgl/test/internal-entry-identity.test.tsx',
+      ]),
+    ],
     browser: {
       enabled: true,
       headless: true,
