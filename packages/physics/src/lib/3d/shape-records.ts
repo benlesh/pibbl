@@ -2,6 +2,7 @@ import type { CRCPhysicsShape3D } from "../../3d-geometry.js";
 import type { InternalPose3D } from "./math.js";
 
 interface ShapeRecordBase3D {
+  readonly identity: number;
   readonly localPose: InternalPose3D;
 }
 
@@ -20,11 +21,18 @@ export interface BoxShapeRecord3D extends ShapeRecordBase3D {
 
 export type ShapeRecord3D = SphereShapeRecord3D | BoxShapeRecord3D;
 
-const shapeRecords3D = new WeakMap<object, ShapeRecord3D>();
+type ShapeRecordInput3D =
+  | Omit<SphereShapeRecord3D, "identity">
+  | Omit<BoxShapeRecord3D, "identity">;
 
-export function createShape3D(record: ShapeRecord3D): CRCPhysicsShape3D {
+const shapeRecords3D = new WeakMap<object, ShapeRecord3D>();
+let nextShapeIdentity3D = 0;
+
+export function createShape3D(record: ShapeRecordInput3D): CRCPhysicsShape3D {
   const shell = Object.freeze({}) as CRCPhysicsShape3D;
-  shapeRecords3D.set(shell, Object.freeze(record));
+  const identity = nextShapeIdentity3D;
+  nextShapeIdentity3D += 1;
+  shapeRecords3D.set(shell, Object.freeze({ ...record, identity }) as ShapeRecord3D);
   return shell;
 }
 

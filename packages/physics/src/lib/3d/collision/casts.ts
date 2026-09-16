@@ -14,6 +14,7 @@ import {
 } from "../math.js";
 import { GEOMETRY_EPSILON_3D, MAX_GJK_ITERATIONS_3D } from "../numeric-policy.js";
 import { requireShapeRecord3D } from "../shape-records.js";
+import { distanceSphereToBox3D } from "./analytic.js";
 import { distanceBetweenPreparedShapes3D } from "./pairs.js";
 import { freezeCollisionVector3 } from "./manifold.js";
 import {
@@ -26,6 +27,7 @@ import {
 const CAST_REFINEMENT_ITERATIONS = 64;
 const CAST_HIT_TOLERANCE = 1e-7;
 const CAST_TIME_TOLERANCE = 1e-12;
+const QUADRATIC_NORMALIZATION_THRESHOLD = Number.MAX_VALUE ** 0.25 / 16;
 
 interface CastCandidate3D {
   readonly pointX: number;
@@ -94,9 +96,7 @@ export function shapeCastAgainstShape3D(
   const movingRecord = requireShapeRecord3D(moving);
   const targetRecord = requireShapeRecord3D(target);
   const translationLength = Math.hypot(translation[0]!, translation[1]!, translation[2]!);
-  if (!Number.isFinite(translationLength)) {
-    throw new RangeError("translation magnitude must be finite.");
-  }
+  if (!Number.isFinite(translationLength)) return null;
   const movingPrepared = prepareConvexShape3D(movingRecord, from);
   const targetPrepared = prepareConvexShape3D(targetRecord, targetPose);
   const includeInitialOverlap = options?.includeInitialOverlap === true;
@@ -108,6 +108,14 @@ export function shapeCastAgainstShape3D(
         targetPrepared,
         includeInitialOverlap,
       )
+    : movingPrepared.kind === "sphere" && targetPrepared.kind === "box"
+      ? castSphereAgainstBox(
+          movingPrepared,
+          translation,
+          translationLength,
+          targetPrepared,
+          includeInitialOverlap,
+        )
     : conservativelyCast(
         moving,
         from,
@@ -120,6 +128,178 @@ export function shapeCastAgainstShape3D(
   return candidate === null ? null : publicHit(candidate);
 }
 
+function castSphereAgainstBox(
+  moving: PreparedSphere3D,
+  translation: ArrayLike<number>,
+  translationLength: number,
+  target: PreparedBox3D,
+  includeInitialOverlap: boolean,
+): CastCandidate3D | null {
+  const initial = distanceSphereToBox3D(
+    moving.center,
+    moving.radius,
+    target.center,
+    target.axes,
+    target.halfExtents,
+  );
+  if (initial.separation <= 0) {
+    if (!includeInitialOverlap) return null;
+    const normal = unitAgainstMotion(
+      initial.normal[0],
+      initial.normal[1],
+      initial.normal[2],
+      translation,
+    );
+    return {
+      pointX: initial.second[0],
+      pointY: initial.second[1],
+      pointZ: initial.second[2],
+      normalX: normal[0],
+      normalY: normal[1],
+      normalZ: normal[2],
+      distance: 0,
+      timeOfImpact: 0,
+    };
+  }
+  if (translationLength === 0) return null;
+  const offset = [
+    moving.center[0]! - target.center[0]!,
+    moving.center[1]! - target.center[1]!,
+    moving.center[2]! - target.center[2]!,
+  ] as const;
+  const localOrigin = [0, 1, 2].map((axis) =>
+    offset[0] * target.axes[axis * 3]! +
+    offset[1] * target.axes[axis * 3 + 1]! +
+    offset[2] * target.axes[axis * 3 + 2]!,
+  );
+  const localTranslation = [0, 1, 2].map((axis) =>
+    translation[0]! * target.axes[axis * 3]! +
+    translation[1]! * target.axes[axis * 3 + 1]! +
+    translation[2]! * target.axes[axis * 3 + 2]!,
+  );
+  if (![...localOrigin, ...localTranslation].every(Number.isFinite)) return null;
+
+  let selected: CastCandidate3D | null = null;
+  let selectedFeature = Number.POSITIVE_INFINITY;
+  const consider = (
+    time: number,
+    localPoint: readonly [number, number, number],
+    localNormal: readonly [number, number, number],
+    feature: number,
+  ): void => {
+    if (time < -CAST_TIME_TOLERANCE || time > 1 + CAST_TIME_TOLERANCE) return;
+    const boundedTime = Math.max(0, Math.min(1, time));
+    if (
+      selected !== null &&
+      (boundedTime > selected.timeOfImpact + CAST_TIME_TOLERANCE ||
+        (Math.abs(boundedTime - selected.timeOfImpact) <= CAST_TIME_TOLERANCE &&
+          feature >= selectedFeature))
+    ) return;
+    const point = boxLocalPointToWorld(target, localPoint);
+    const normal = boxLocalVectorToWorld(target, localNormal);
+    selected = {
+      pointX: point[0],
+      pointY: point[1],
+      pointZ: point[2],
+      normalX: normal[0],
+      normalY: normal[1],
+      normalZ: normal[2],
+      distance: translationLength * boundedTime,
+      timeOfImpact: boundedTime,
+    };
+    selectedFeature = feature;
+  };
+
+  for (let axis = 0; axis < 3; axis += 1) {
+    if (Math.abs(localTranslation[axis]!) <= GEOMETRY_EPSILON_3D) continue;
+    for (const sign of [-1, 1] as const) {
+      const time = (
+        sign * (target.halfExtents[axis]! + moving.radius) - localOrigin[axis]!
+      ) / localTranslation[axis]!;
+      const center = localPositionAt(localOrigin, localTranslation, time);
+      const otherAxes = [0, 1, 2].filter((candidate) => candidate !== axis);
+      if (otherAxes.some((other) => Math.abs(center[other]!) > target.halfExtents[other]!)) continue;
+      const point = [...center] as [number, number, number];
+      const normal = [0, 0, 0] as [number, number, number];
+      point[axis] = sign * target.halfExtents[axis]!;
+      normal[axis] = sign;
+      consider(time, point, normal, axis * 2 + (sign > 0 ? 1 : 0));
+    }
+  }
+
+  let edgeFeature = 6;
+  for (let edgeAxis = 0; edgeAxis < 3; edgeAxis += 1) {
+    const fixedAxes = [0, 1, 2].filter((axis) => axis !== edgeAxis);
+    for (const firstSign of [-1, 1] as const) {
+      for (const secondSign of [-1, 1] as const) {
+        const firstAxis = fixedAxes[0]!;
+        const secondAxis = fixedAxes[1]!;
+        const firstOffset = localOrigin[firstAxis]! - firstSign * target.halfExtents[firstAxis]!;
+        const secondOffset = localOrigin[secondAxis]! - secondSign * target.halfExtents[secondAxis]!;
+        const roots = scaledSweepRoots(
+          [firstOffset, secondOffset],
+          [localTranslation[firstAxis]!, localTranslation[secondAxis]!],
+          moving.radius,
+        );
+        for (const time of roots ?? []) {
+          const center = localPositionAt(localOrigin, localTranslation, time);
+          if (Math.abs(center[edgeAxis]!) > target.halfExtents[edgeAxis]!) continue;
+          const normal = [0, 0, 0] as [number, number, number];
+          const firstDelta = center[firstAxis]! - firstSign * target.halfExtents[firstAxis]!;
+          const secondDelta = center[secondAxis]! - secondSign * target.halfExtents[secondAxis]!;
+          if (
+            firstDelta * firstSign < -GEOMETRY_EPSILON_3D ||
+            secondDelta * secondSign < -GEOMETRY_EPSILON_3D
+          ) continue;
+          const length = Math.hypot(firstDelta, secondDelta);
+          if (length <= GEOMETRY_EPSILON_3D) continue;
+          normal[firstAxis] = firstDelta / length;
+          normal[secondAxis] = secondDelta / length;
+          const point = [...center] as [number, number, number];
+          point[firstAxis] = firstSign * target.halfExtents[firstAxis]!;
+          point[secondAxis] = secondSign * target.halfExtents[secondAxis]!;
+          consider(time, point, normal, edgeFeature);
+          break;
+        }
+        edgeFeature += 1;
+      }
+    }
+  }
+
+  for (let vertex = 0; vertex < 8; vertex += 1) {
+    const point = [
+      (vertex & 1) === 0 ? -target.halfExtents[0]! : target.halfExtents[0]!,
+      (vertex & 2) === 0 ? -target.halfExtents[1]! : target.halfExtents[1]!,
+      (vertex & 4) === 0 ? -target.halfExtents[2]! : target.halfExtents[2]!,
+    ] as const;
+    const roots = scaledSweepRoots(
+      [
+        localOrigin[0]! - point[0],
+        localOrigin[1]! - point[1],
+        localOrigin[2]! - point[2],
+      ],
+      localTranslation,
+      moving.radius,
+    );
+    for (const time of roots ?? []) {
+      const center = localPositionAt(localOrigin, localTranslation, time);
+      const dx = center[0]! - point[0];
+      const dy = center[1]! - point[1];
+      const dz = center[2]! - point[2];
+      if (
+        dx * ((vertex & 1) === 0 ? -1 : 1) < -GEOMETRY_EPSILON_3D ||
+        dy * ((vertex & 2) === 0 ? -1 : 1) < -GEOMETRY_EPSILON_3D ||
+        dz * ((vertex & 4) === 0 ? -1 : 1) < -GEOMETRY_EPSILON_3D
+      ) continue;
+      const length = Math.hypot(dx, dy, dz);
+      if (length <= GEOMETRY_EPSILON_3D) continue;
+      consider(time, point, [dx / length, dy / length, dz / length], 18 + vertex);
+      break;
+    }
+  }
+  return selected;
+}
+
 function raycastSphere(
   sphere: PreparedSphere3D,
   origin: ArrayLike<number>,
@@ -129,13 +309,34 @@ function raycastSphere(
   const relativeX = origin[0]! - sphere.center[0]!;
   const relativeY = origin[1]! - sphere.center[1]!;
   const relativeZ = origin[2]! - sphere.center[2]!;
-  const projection = relativeX * direction[0]! + relativeY * direction[1]! + relativeZ * direction[2]!;
-  const discriminant = projection * projection -
-    (relativeX * relativeX + relativeY * relativeY + relativeZ * relativeZ - sphere.radius ** 2);
-  if (discriminant < -GEOMETRY_EPSILON_3D) return null;
-  const distance = -projection - Math.sqrt(Math.max(0, discriminant));
-  if (distance < -CAST_TIME_TOLERANCE || distance > maxDistance + CAST_TIME_TOLERANCE) return null;
-  const boundedDistance = Math.max(0, Math.min(maxDistance, distance));
+  const scale = Math.max(
+    Math.abs(relativeX),
+    Math.abs(relativeY),
+    Math.abs(relativeZ),
+    sphere.radius,
+  );
+  if (!Number.isFinite(scale) || scale <= 0) return null;
+  const numericScale = scale > QUADRATIC_NORMALIZATION_THRESHOLD ? scale : 1;
+  const scaledX = relativeX / numericScale;
+  const scaledY = relativeY / numericScale;
+  const scaledZ = relativeZ / numericScale;
+  const scaledRadius = sphere.radius / numericScale;
+  const projection =
+    scaledX * direction[0]! +
+    scaledY * direction[1]! +
+    scaledZ * direction[2]!;
+  const roots = quadraticRoots(
+    1,
+    2 * projection,
+    scaledX * scaledX + scaledY * scaledY + scaledZ * scaledZ - scaledRadius * scaledRadius,
+  );
+  if (roots === null) return null;
+  const maximum = maxDistance / numericScale;
+  const scaledDistance = roots.find((root) =>
+    root >= -CAST_TIME_TOLERANCE && root <= maximum + CAST_TIME_TOLERANCE,
+  );
+  if (scaledDistance === undefined) return null;
+  const boundedDistance = Math.max(0, Math.min(maxDistance, scaledDistance * numericScale));
   const pointX = origin[0]! + direction[0]! * boundedDistance;
   const pointY = origin[1]! + direction[1]! * boundedDistance;
   const pointZ = origin[2]! + direction[2]! * boundedDistance;
@@ -226,7 +427,29 @@ function castSphereAgainstSphere(
   const relativeY = moving.center[1]! - target.center[1]!;
   const relativeZ = moving.center[2]! - target.center[2]!;
   const radius = moving.radius + target.radius;
-  if (relativeX ** 2 + relativeY ** 2 + relativeZ ** 2 <= radius ** 2) {
+  const scale = Math.max(
+    Math.abs(relativeX),
+    Math.abs(relativeY),
+    Math.abs(relativeZ),
+    Math.abs(translation[0]!),
+    Math.abs(translation[1]!),
+    Math.abs(translation[2]!),
+    radius,
+  );
+  if (!Number.isFinite(scale) || scale <= 0) return null;
+  const numericScale = scale > QUADRATIC_NORMALIZATION_THRESHOLD ? scale : 1;
+  const scaledRelativeX = relativeX / numericScale;
+  const scaledRelativeY = relativeY / numericScale;
+  const scaledRelativeZ = relativeZ / numericScale;
+  const scaledTranslationX = translation[0]! / numericScale;
+  const scaledTranslationY = translation[1]! / numericScale;
+  const scaledTranslationZ = translation[2]! / numericScale;
+  const scaledRadius = radius / numericScale;
+  const initialSquared =
+    scaledRelativeX * scaledRelativeX +
+    scaledRelativeY * scaledRelativeY +
+    scaledRelativeZ * scaledRelativeZ;
+  if (initialSquared <= scaledRadius * scaledRadius) {
     if (!includeInitialOverlap) return null;
     const normal = unitAgainstMotion(relativeX, relativeY, relativeZ, translation);
     return {
@@ -239,12 +462,20 @@ function castSphereAgainstSphere(
     };
   }
   if (translationLength === 0) return null;
-  const a = translationLength ** 2;
-  const b = 2 * (relativeX * translation[0]! + relativeY * translation[1]! + relativeZ * translation[2]!);
-  const c = relativeX ** 2 + relativeY ** 2 + relativeZ ** 2 - radius ** 2;
-  const discriminant = b * b - 4 * a * c;
-  if (discriminant < -GEOMETRY_EPSILON_3D) return null;
-  const time = (-b - Math.sqrt(Math.max(0, discriminant))) / (2 * a);
+  const roots = quadraticRoots(
+    scaledTranslationX * scaledTranslationX +
+      scaledTranslationY * scaledTranslationY +
+      scaledTranslationZ * scaledTranslationZ,
+    2 * (
+      scaledRelativeX * scaledTranslationX +
+      scaledRelativeY * scaledTranslationY +
+      scaledRelativeZ * scaledTranslationZ
+    ),
+    initialSquared - scaledRadius * scaledRadius,
+  );
+  if (roots === null) return null;
+  const time = roots.find((root) => root >= -CAST_TIME_TOLERANCE);
+  if (time === undefined) return null;
   if (time < -CAST_TIME_TOLERANCE || time > 1 + CAST_TIME_TOLERANCE) return null;
   const timeOfImpact = Math.max(0, Math.min(1, time));
   const movingX = moving.center[0]! + translation[0]! * timeOfImpact;
@@ -276,15 +507,35 @@ function conservativelyCast(
   includeInitialOverlap: boolean,
 ): CastCandidate3D | null {
   let time = 0;
+  let separatedTime = 0;
   for (let iteration = 0; iteration < MAX_GJK_ITERATIONS_3D; iteration += 1) {
     const distance = sampleTranslatedDistance(moving, from, translation, time, target, targetPose);
     if (distance === null) return null;
-    if (distance.separation <= (time === 0 ? 0 : CAST_HIT_TOLERANCE)) {
+    if (distance.separation <= 0) {
       if (time === 0 && !includeInitialOverlap) return null;
-      const normal = unitAgainstMotion(distance.normal[0], distance.normal[1], distance.normal[2], translation);
-      return candidateFromDistance(distance, normal, translationLength, time);
+      if (time === 0) {
+        const normal = unitAgainstMotion(
+          distance.normal[0],
+          distance.normal[1],
+          distance.normal[2],
+          translation,
+        );
+        return candidateFromDistance(distance, normal, translationLength, time);
+      }
+      return refineCrossing(
+        moving,
+        from,
+        translation,
+        translationLength,
+        target,
+        targetPose,
+        separatedTime,
+        time,
+        distance,
+      );
     }
     if (translationLength === 0) return null;
+    if (distance.separation <= CAST_HIT_TOLERANCE) break;
     const closingSpeed = -(
       distance.normal[0] * translation[0]! +
       distance.normal[1] * translation[1]! +
@@ -295,6 +546,7 @@ function conservativelyCast(
     if (!Number.isFinite(step) || step <= CAST_TIME_TOLERANCE) break;
     const nextTime = time + step;
     if (!Number.isFinite(nextTime) || nextTime <= time || nextTime > 1 + CAST_TIME_TOLERANCE) break;
+    separatedTime = time;
     time = Math.min(1, nextTime);
   }
   return refineBoundedTangent(moving, from, translation, translationLength, target, targetPose);
@@ -317,7 +569,10 @@ function refineBoundedTangent(
     const middleTime = (minimumTime + maximumTime) / 2;
     const middle = sampleTranslatedDistance(moving, from, translation, middleTime, target, targetPose);
     if (middle === null) return null;
-    if (middle.separation < tangent.separation) {
+    if (
+      middle.separation < tangent.separation ||
+      (middle.separation === tangent.separation && middleTime < tangentTime)
+    ) {
       tangentTime = middleTime;
       tangent = middle;
     }
@@ -329,15 +584,15 @@ function refineBoundedTangent(
     if (derivative < 0) minimumTime = middleTime;
     else maximumTime = middleTime;
   }
-  if (tangent.separation > CAST_HIT_TOLERANCE) return null;
+  if (tangent.separation > GEOMETRY_EPSILON_3D) return null;
   let impactTime = tangentTime;
-  if (tangent.separation < 0) {
+  if (tangent.separation < -GEOMETRY_EPSILON_3D) {
     let separatedTime = 0;
     for (let iteration = 0; iteration < CAST_REFINEMENT_ITERATIONS; iteration += 1) {
       const middleTime = (separatedTime + impactTime) / 2;
       const middle = sampleTranslatedDistance(moving, from, translation, middleTime, target, targetPose);
       if (middle === null) return null;
-      if (middle.separation <= CAST_HIT_TOLERANCE) {
+      if (middle.separation <= 0) {
         impactTime = middleTime;
         tangent = middle;
       } else {
@@ -347,6 +602,40 @@ function refineBoundedTangent(
   }
   const normal = unitAgainstMotion(tangent.normal[0], tangent.normal[1], tangent.normal[2], translation);
   return candidateFromDistance(tangent, normal, translationLength, impactTime);
+}
+
+function refineCrossing(
+  moving: CRCPhysicsShape3D,
+  from: InternalPose3D,
+  translation: ArrayLike<number>,
+  translationLength: number,
+  target: CRCPhysicsShape3D,
+  targetPose: InternalPose3D,
+  initialSeparatedTime: number,
+  initialImpactTime: number,
+  initialImpact: ReturnType<typeof distanceBetweenPreparedShapes3D>,
+): CastCandidate3D | null {
+  let separatedTime = initialSeparatedTime;
+  let impactTime = initialImpactTime;
+  let impact = initialImpact;
+  for (let iteration = 0; iteration < CAST_REFINEMENT_ITERATIONS; iteration += 1) {
+    const middleTime = (separatedTime + impactTime) / 2;
+    const middle = sampleTranslatedDistance(moving, from, translation, middleTime, target, targetPose);
+    if (middle === null) return null;
+    if (middle.separation <= 0) {
+      impactTime = middleTime;
+      impact = middle;
+    } else {
+      separatedTime = middleTime;
+    }
+  }
+  const normal = unitAgainstMotion(
+    impact.normal[0],
+    impact.normal[1],
+    impact.normal[2],
+    translation,
+  );
+  return candidateFromDistance(impact, normal, translationLength, impactTime);
 }
 
 function sampleTranslatedDistance(
@@ -454,13 +743,98 @@ function isFiniteDistance(distance: ReturnType<typeof distanceBetweenPreparedSha
   ].every(Number.isFinite);
 }
 
-function publicHit(candidate: CastCandidate3D): CRCPhysicsShapeHit3D {
+function publicHit(candidate: CastCandidate3D): CRCPhysicsShapeHit3D | null {
+  if (![
+    candidate.pointX,
+    candidate.pointY,
+    candidate.pointZ,
+    candidate.normalX,
+    candidate.normalY,
+    candidate.normalZ,
+    candidate.distance,
+    candidate.timeOfImpact,
+  ].every(Number.isFinite)) return null;
   return Object.freeze({
     point: freezeCollisionVector3(candidate.pointX, candidate.pointY, candidate.pointZ),
     normal: freezeCollisionVector3(candidate.normalX, candidate.normalY, candidate.normalZ),
     distance: cleanZero(candidate.distance),
     timeOfImpact: cleanZero(candidate.timeOfImpact),
   });
+}
+
+function localPositionAt(
+  origin: ArrayLike<number>,
+  translation: ArrayLike<number>,
+  time: number,
+): [number, number, number] {
+  return [
+    origin[0]! + translation[0]! * time,
+    origin[1]! + translation[1]! * time,
+    origin[2]! + translation[2]! * time,
+  ];
+}
+
+function boxLocalPointToWorld(
+  box: PreparedBox3D,
+  point: ArrayLike<number>,
+): readonly [number, number, number] {
+  return [
+    box.center[0]! + box.axes[0]! * point[0]! + box.axes[3]! * point[1]! + box.axes[6]! * point[2]!,
+    box.center[1]! + box.axes[1]! * point[0]! + box.axes[4]! * point[1]! + box.axes[7]! * point[2]!,
+    box.center[2]! + box.axes[2]! * point[0]! + box.axes[5]! * point[1]! + box.axes[8]! * point[2]!,
+  ];
+}
+
+function boxLocalVectorToWorld(
+  box: PreparedBox3D,
+  vector: ArrayLike<number>,
+): readonly [number, number, number] {
+  return [
+    box.axes[0]! * vector[0]! + box.axes[3]! * vector[1]! + box.axes[6]! * vector[2]!,
+    box.axes[1]! * vector[0]! + box.axes[4]! * vector[1]! + box.axes[7]! * vector[2]!,
+    box.axes[2]! * vector[0]! + box.axes[5]! * vector[1]! + box.axes[8]! * vector[2]!,
+  ];
+}
+
+function scaledSweepRoots(
+  offset: readonly number[],
+  translation: readonly number[],
+  radius: number,
+): readonly [number, number] | null {
+  const scale = Math.max(...offset.map(Math.abs), ...translation.map(Math.abs), radius);
+  if (!Number.isFinite(scale) || scale <= 0) return null;
+  const numericScale = scale > QUADRATIC_NORMALIZATION_THRESHOLD ? scale : 1;
+  let a = 0;
+  let b = 0;
+  let c = -((radius / numericScale) ** 2);
+  for (let index = 0; index < offset.length; index += 1) {
+    const scaledOffset = offset[index]! / numericScale;
+    const scaledTranslation = translation[index]! / numericScale;
+    a += scaledTranslation * scaledTranslation;
+    b += 2 * scaledOffset * scaledTranslation;
+    c += scaledOffset * scaledOffset;
+  }
+  return quadraticRoots(a, b, c);
+}
+
+function quadraticRoots(
+  a: number,
+  b: number,
+  c: number,
+): readonly [number, number] | null {
+  if (![a, b, c].every(Number.isFinite) || a <= 0) return null;
+  const discriminant = b * b - 4 * a * c;
+  if (!Number.isFinite(discriminant) || discriminant < -GEOMETRY_EPSILON_3D) return null;
+  const squareRoot = Math.sqrt(Math.max(0, discriminant));
+  if (squareRoot === 0) {
+    const root = -b / (2 * a);
+    return Number.isFinite(root) ? [root, root] : null;
+  }
+  const q = -0.5 * (b + (b >= 0 ? squareRoot : -squareRoot));
+  const first = q / a;
+  const second = c / q;
+  if (!Number.isFinite(first) || !Number.isFinite(second)) return null;
+  return first <= second ? [first, second] : [second, first];
 }
 
 function dot(first: ArrayLike<number>, second: ArrayLike<number>): number {

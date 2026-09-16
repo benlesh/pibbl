@@ -23,6 +23,33 @@ describe("standalone 3D rays and translational casts", () => {
     });
   });
 
+  it("raycasts a sphere with finite values near 1e200", () => {
+    const hit = raycastShape3D(
+      sphereShape3D({ radius: 1e200 }),
+      pose([5e200, 0, 0]),
+      { origin: [0, 0, 0], direction: [3e200, 0, 0], maxDistance: 1e201 },
+    );
+
+    expect(hit).not.toBeNull();
+    expect(hit!.point[0] / 1e200).toBeCloseTo(4, 12);
+    expect(hit!.point.slice(1)).toEqual([0, 0]);
+    expect(hit!.normal).toEqual([-1, 0, 0]);
+    expect(hit!.distance / 1e200).toBeCloseTo(4, 12);
+    expect(hit!.timeOfImpact).toBeCloseTo(0.4, 12);
+    expect(Object.values(hit ?? {}).flat().every(Number.isFinite)).toBe(true);
+  });
+
+  it("does not let an enormous ray limit underflow ordinary sphere geometry", () => {
+    const hit = raycastShape3D(
+      sphereShape3D({ radius: 1 }),
+      pose([5, 0, 0]),
+      { origin: [0, 0, 0], direction: [1, 0, 0], maxDistance: 1e300 },
+    );
+
+    expect(hit?.point).toEqual([4, 0, 0]);
+    expect(hit?.distance).toBe(4);
+  });
+
   it("counts tangent sphere rays and raycasts rotated boxes", () => {
     const tangent = raycastShape3D(
       sphereShape3D({ radius: 1 }),
@@ -72,6 +99,24 @@ describe("standalone 3D rays and translational casts", () => {
     });
   });
 
+  it("casts spheres with finite values near 1e200", () => {
+    const hit = shapeCastAgainstShape3D(
+      sphereShape3D({ radius: 1e200 }),
+      identity,
+      [1e201, 0, 0],
+      sphereShape3D({ radius: 2e200 }),
+      pose([7e200, 0, 0]),
+    );
+
+    expect(hit).not.toBeNull();
+    expect(hit!.point[0] / 1e200).toBeCloseTo(5, 12);
+    expect(hit!.point.slice(1)).toEqual([0, 0]);
+    expect(hit!.normal).toEqual([-1, 0, 0]);
+    expect(hit!.distance / 1e200).toBeCloseTo(4, 12);
+    expect(hit!.timeOfImpact).toBeCloseTo(0.4, 12);
+    expect(Object.values(hit ?? {}).flat().every(Number.isFinite)).toBe(true);
+  });
+
   it("casts fixed-orientation boxes and spheres with conservative advancement", () => {
     const hit = shapeCastAgainstShape3D(
       boxShape3D({ width: 2, height: 2, depth: 2 }),
@@ -110,6 +155,33 @@ describe("standalone 3D rays and translational casts", () => {
     expect(boxBox?.timeOfImpact).toBeCloseTo(0.3, 7);
     expect(boxBox?.point[0]).toBeCloseTo(4, 7);
     expect(boxBox?.normal).toEqual([-1, 0, 0]);
+  });
+
+  it("rejects a positive near-tangent gap below the cast convergence tolerance", () => {
+    const hit = shapeCastAgainstShape3D(
+      sphereShape3D({ radius: 1 }),
+      pose([0, 2.00000005, 0]),
+      [10, 0, 0],
+      boxShape3D({ width: 2, height: 2, depth: 2 }),
+      pose([5, 0, 0]),
+    );
+
+    expect(hit).toBeNull();
+  });
+
+  it("returns the true earliest time for an exact sphere-box tangent", () => {
+    const hit = shapeCastAgainstShape3D(
+      sphereShape3D({ radius: 1 }),
+      pose([0, 2, 0]),
+      [10, 0, 0],
+      boxShape3D({ width: 2, height: 2, depth: 2 }),
+      pose([5, 0, 0]),
+    );
+
+    expect(hit).not.toBeNull();
+    expect(hit!.distance).toBeCloseTo(4, 9);
+    expect(hit!.timeOfImpact).toBeCloseTo(0.4, 10);
+    expect(hit!.point).toEqual([4, 1, 0]);
   });
 
   it("handles zero translation and initial overlap deterministically", () => {
@@ -152,6 +224,16 @@ describe("standalone 3D rays and translational casts", () => {
     expect(Object.isFrozen(hit)).toBe(true);
     expect(Object.isFrozen(hit.point)).toBe(true);
     expect(Object.isFrozen(hit.normal)).toBe(true);
+  });
+
+  it("fails closed when a finite translation has an unrepresentable magnitude", () => {
+    expect(shapeCastAgainstShape3D(
+      sphereShape3D({ radius: 1 }),
+      identity,
+      [Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE],
+      sphereShape3D({ radius: 1 }),
+      pose([10, 0, 0]),
+    )).toBeNull();
   });
 });
 

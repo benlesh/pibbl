@@ -24,7 +24,6 @@ import {
 import {
   createShape3D,
   requireShapeRecord3D,
-  type ShapeRecord3D,
 } from "./shape-records.js";
 
 const identityQuaternion: CRCPhysicsQuaternion = [0, 0, 0, 1];
@@ -176,7 +175,7 @@ export function transformShape3D(
     copyPose3D(transform, "transform"),
     source.localPose,
   );
-  return createShape3D({ ...source, localPose } as ShapeRecord3D);
+  return createShape3D({ ...source, localPose });
 }
 
 function poseFor(

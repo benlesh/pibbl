@@ -63,6 +63,47 @@ describe("standalone 3D sphere and box pairs", () => {
     }
   });
 
+  it("swaps witnesses and normals for one box descriptor at one center with different orientations", () => {
+    const box = boxShape3D({ width: 4, height: 2, depth: 1 });
+    const firstPose = pose(
+      [0, 0, 0],
+      [0, 0, Math.sin(Math.PI / 12), Math.cos(Math.PI / 12)],
+    );
+    const secondPose = pose(
+      [0, 0, 0],
+      [Math.sin(Math.PI / 10), 0, 0, Math.cos(Math.PI / 10)],
+    );
+
+    const forward = distanceBetweenShapes3D(box, firstPose, box, secondPose);
+    const reverse = distanceBetweenShapes3D(box, secondPose, box, firstPose);
+
+    expectSymmetricExact(forward, reverse);
+  });
+
+  it("does not let earlier collision queries change coincident tie results", () => {
+    const untouchedFirst = sphereShape3D({ radius: 1 });
+    const untouchedSecond = sphereShape3D({ radius: 1 });
+    const historyFirst = sphereShape3D({ radius: 1 });
+    const historySecond = sphereShape3D({ radius: 1 });
+    const unrelated = sphereShape3D({ radius: 0.5 });
+    const baseline = distanceBetweenShapes3D(
+      untouchedFirst,
+      identity,
+      untouchedSecond,
+      identity,
+    );
+
+    distanceBetweenShapes3D(historySecond, pose([10, 0, 0]), unrelated, identity);
+    const afterHistory = distanceBetweenShapes3D(
+      historyFirst,
+      identity,
+      historySecond,
+      identity,
+    );
+
+    expect(afterHistory).toEqual(baseline);
+  });
+
   it("keeps seeded rotated sphere/box distances finite and swap-symmetric", () => {
     const seed = 0x3d_c011;
     let state = seed;
@@ -111,6 +152,27 @@ describe("standalone 3D sphere and box pairs", () => {
     );
     expect(rotated.separation).toBeLessThan(0);
     expect(rotated.normal.every(Number.isFinite)).toBe(true);
+  });
+
+  it("keeps large finite separated boxes finite", () => {
+    const box = boxShape3D({ width: 2e200, height: 2e200, depth: 2e200 });
+    const distance = distanceBetweenShapes3D(
+      box,
+      identity,
+      box,
+      pose([5e200, 0, 0]),
+    );
+
+    expect(distance.separation / 1e200).toBeCloseTo(3, 12);
+    expectLargeVector(distance.pointOnFirst, [1, -1, -1]);
+    expectLargeVector(distance.pointOnSecond, [4, -1, -1]);
+    expect(distance.normal).toEqual([-1, 0, 0]);
+    expect([
+      distance.separation,
+      ...distance.pointOnFirst,
+      ...distance.pointOnSecond,
+      ...distance.normal,
+    ].every(Number.isFinite)).toBe(true);
   });
 
   it("is invariant under a common rigid transform", () => {
@@ -172,6 +234,22 @@ function expectSymmetric(first: CRCPhysicsDistance3D, second: CRCPhysicsDistance
     expect(second.pointOnSecond[axis], seed).toBeCloseTo(first.pointOnFirst[axis]!, 8);
     expect(second.normal[axis], seed).toBeCloseTo(-first.normal[axis]!, 8);
   }
+}
+
+function expectSymmetricExact(first: CRCPhysicsDistance3D, second: CRCPhysicsDistance3D): void {
+  expect(second.separation).toBe(first.separation);
+  expect(second.pointOnFirst).toEqual(first.pointOnSecond);
+  expect(second.pointOnSecond).toEqual(first.pointOnFirst);
+  expect(second.normal).toEqual(first.normal.map((value) => value === 0 ? 0 : -value));
+}
+
+function expectLargeVector(
+  actual: readonly number[],
+  expectedUnits: readonly number[],
+): void {
+  expectedUnits.forEach((value, axis) => {
+    expect(actual[axis]! / 1e200).toBeCloseTo(value, 12);
+  });
 }
 
 function rotateAndTranslate(

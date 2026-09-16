@@ -62,4 +62,75 @@ describe("stable public 3D contact manifolds", () => {
       expect(reverse.points[index]?.separation).toBe(point.separation);
     });
   });
+
+  it("emits one stable closest-edge point for a rotated edge-edge contact", () => {
+    const first = boxShape3D({ width: 4, height: 0.8, depth: 0.8 });
+    const second = boxShape3D({ width: 4, height: 0.8, depth: 0.8 });
+    const secondPose = {
+      position: [0.9326463451143354, 0.8658053576946259, 0.3712205656338483],
+      orientation: [
+        -0.2930362787804211,
+        0.06142761015161281,
+        0.8653775884709862,
+        -0.40184327467524616,
+      ],
+    } as const;
+    const forward = contactBetweenShapes3D(first, identity, second, secondPose)!;
+    const reverse = contactBetweenShapes3D(second, secondPose, first, identity)!;
+
+    expect(forward.points).toHaveLength(1);
+    expect(reverse.points).toHaveLength(1);
+    expectPointSeparationsMatchNormal(forward);
+    expectPointSeparationsMatchNormal(reverse);
+    expect(reverse.normal).toEqual(forward.normal.map((value) => value === 0 ? 0 : -value));
+    expect(reverse.points[0]?.pointOnFirst).toEqual(forward.points[0]?.pointOnSecond);
+    expect(reverse.points[0]?.pointOnSecond).toEqual(forward.points[0]?.pointOnFirst);
+    expect(reverse.points[0]?.separation).toBe(forward.points[0]?.separation);
+  });
+
+  it("never projects non-finite values from an unrepresentable large manifold", () => {
+    const first = boxShape3D({ width: 4e200, height: 0.8e200, depth: 0.8e200 });
+    const second = boxShape3D({ width: 4e200, height: 0.8e200, depth: 0.8e200 });
+    const contact = contactBetweenShapes3D(
+      first,
+      identity,
+      second,
+      {
+        position: [
+          0.9326463451143354 * 1e200,
+          0.8658053576946259 * 1e200,
+          0.3712205656338483 * 1e200,
+        ],
+        orientation: [
+          -0.2930362787804211,
+          0.06142761015161281,
+          0.8653775884709862,
+          -0.40184327467524616,
+        ],
+      },
+    );
+
+    if (contact === null) return;
+    expect([
+      ...contact.normal,
+      ...contact.points.flatMap((point) => [
+        ...point.pointOnFirst,
+        ...point.pointOnSecond,
+        point.separation,
+      ]),
+    ].every(Number.isFinite)).toBe(true);
+  });
 });
+
+function expectPointSeparationsMatchNormal(
+  contact: NonNullable<ReturnType<typeof contactBetweenShapes3D>>,
+): void {
+  for (const point of contact.points) {
+    const dx = point.pointOnFirst[0] - point.pointOnSecond[0];
+    const dy = point.pointOnFirst[1] - point.pointOnSecond[1];
+    const dz = point.pointOnFirst[2] - point.pointOnSecond[2];
+    expect(
+      dx * contact.normal[0] + dy * contact.normal[1] + dz * contact.normal[2],
+    ).toBeCloseTo(point.separation, 10);
+  }
+}

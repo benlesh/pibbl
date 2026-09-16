@@ -58,19 +58,32 @@ interface ClipVertex3D {
   readonly feature: number;
 }
 
+interface BoxEdge3D {
+  readonly start: readonly [number, number, number];
+  readonly end: readonly [number, number, number];
+  readonly feature: number;
+}
+
+interface EdgeAxisPair3D {
+  readonly firstAxis: number;
+  readonly secondAxis: number;
+  readonly normal: readonly [number, number, number];
+  readonly alignment: number;
+}
+
 export function createPrivateManifold3D(
   distance: PrivatePairDistance3D,
   first: PreparedConvexShape3D,
   second: PreparedConvexShape3D,
 ): PrivateManifold3D {
-  const points = first.kind === "box" && second.kind === "box"
-    ? boxContactPoints(distance, first, second)
-    : [fallbackPoint(distance)];
+  if (first.kind === "box" && second.kind === "box") {
+    return boxContactManifold(distance, first, second);
+  }
   return {
     normalX: distance.normalX,
     normalY: distance.normalY,
     normalZ: distance.normalZ,
-    points,
+    points: [fallbackPoint(distance)],
   };
 }
 
@@ -100,19 +113,52 @@ export function freezeCollisionVector3(
   ] as const);
 }
 
-function boxContactPoints(
+function boxContactManifold(
   distance: PrivatePairDistance3D,
   first: PreparedBox3D,
   second: PreparedBox3D,
-): readonly PrivateManifoldPoint3D[] {
+): PrivateManifold3D {
   const normal = [distance.normalX, distance.normalY, distance.normalZ] as const;
   const firstFace = supportingFace(first, [-normal[0], -normal[1], -normal[2]]);
   const secondFace = supportingFace(second, normal);
   const firstAlignment = -dot(firstFace.normal, normal);
   const secondAlignment = dot(secondFace.normal, normal);
+  const edgePair = bestEdgeAxisPair(first, second, normal);
+  if (edgePair.alignment > Math.max(firstAlignment, secondAlignment) + GEOMETRY_EPSILON_3D) {
+    const firstEdge = supportingEdge(
+      first,
+      edgePair.firstAxis,
+      [-edgePair.normal[0], -edgePair.normal[1], -edgePair.normal[2]],
+    );
+    const secondEdge = supportingEdge(second, edgePair.secondAxis, edgePair.normal);
+    const closest = closestSegmentPoints(firstEdge, secondEdge);
+    const separation =
+      (closest.first[0] - closest.second[0]) * edgePair.normal[0] +
+      (closest.first[1] - closest.second[1]) * edgePair.normal[1] +
+      (closest.first[2] - closest.second[2]) * edgePair.normal[2];
+    return {
+      normalX: edgePair.normal[0],
+      normalY: edgePair.normal[1],
+      normalZ: edgePair.normal[2],
+      points: [{
+        firstX: closest.first[0],
+        firstY: closest.first[1],
+        firstZ: closest.first[2],
+        secondX: closest.second[0],
+        secondY: closest.second[1],
+        secondZ: closest.second[2],
+        separation,
+        firstFeature: firstEdge.feature,
+        secondFeature: secondEdge.feature,
+      }],
+    };
+  }
   const firstIsReference = firstAlignment >= secondAlignment - GEOMETRY_EPSILON_3D;
   const reference = firstIsReference ? firstFace : secondFace;
   const incident = firstIsReference ? secondFace : firstFace;
+  const publicNormal = firstIsReference
+    ? [-reference.normal[0], -reference.normal[1], -reference.normal[2]] as const
+    : reference.normal;
   let polygon = [...incident.vertices];
   polygon = clipPolygon(polygon, reference.tangentU, dot(reference.center, reference.tangentU) + reference.halfU, true, 0);
   polygon = clipPolygon(polygon, reference.tangentU, dot(reference.center, reference.tangentU) - reference.halfU, false, 1);
@@ -132,25 +178,168 @@ function boxContactPoints(
       vertex.y - separation * reference.normal[1],
       vertex.z - separation * reference.normal[2],
     ] as const;
-    points.push(firstIsReference
+    const point = firstIsReference
       ? {
           firstX: projected[0], firstY: projected[1], firstZ: projected[2],
           secondX: vertex.x, secondY: vertex.y, secondZ: vertex.z,
-          separation,
+          separation: 0,
           firstFeature: reference.feature,
           secondFeature: vertex.feature,
         }
       : {
           firstX: vertex.x, firstY: vertex.y, firstZ: vertex.z,
           secondX: projected[0], secondY: projected[1], secondZ: projected[2],
-          separation,
+          separation: 0,
           firstFeature: vertex.feature,
           secondFeature: reference.feature,
-        });
+        };
+    points.push({
+      ...point,
+      separation:
+        (point.firstX - point.secondX) * publicNormal[0] +
+        (point.firstY - point.secondY) * publicNormal[1] +
+        (point.firstZ - point.secondZ) * publicNormal[2],
+    });
   }
-  if (points.length === 0) return [fallbackPoint(distance)];
+  if (points.length === 0) {
+    const fallback = fallbackPoint(distance);
+    return {
+      normalX: publicNormal[0],
+      normalY: publicNormal[1],
+      normalZ: publicNormal[2],
+      points: [{
+        ...fallback,
+        separation:
+          (fallback.firstX - fallback.secondX) * publicNormal[0] +
+          (fallback.firstY - fallback.secondY) * publicNormal[1] +
+          (fallback.firstZ - fallback.secondZ) * publicNormal[2],
+      }],
+    };
+  }
   points.sort(compareManifoldPoints);
-  return points.slice(0, 4);
+  return {
+    normalX: publicNormal[0],
+    normalY: publicNormal[1],
+    normalZ: publicNormal[2],
+    points: points.slice(0, 4),
+  };
+}
+
+function bestEdgeAxisPair(
+  first: PreparedBox3D,
+  second: PreparedBox3D,
+  normal: ArrayLike<number>,
+): EdgeAxisPair3D {
+  let selected: EdgeAxisPair3D | null = null;
+  for (let firstAxis = 0; firstAxis < 3; firstAxis += 1) {
+    const firstDirection = axisVector(first, firstAxis, 1);
+    for (let secondAxis = 0; secondAxis < 3; secondAxis += 1) {
+      const secondDirection = axisVector(second, secondAxis, 1);
+      let crossX = firstDirection[1] * secondDirection[2] - firstDirection[2] * secondDirection[1];
+      let crossY = firstDirection[2] * secondDirection[0] - firstDirection[0] * secondDirection[2];
+      let crossZ = firstDirection[0] * secondDirection[1] - firstDirection[1] * secondDirection[0];
+      const length = Math.hypot(crossX, crossY, crossZ);
+      if (length <= GEOMETRY_EPSILON_3D) continue;
+      crossX /= length;
+      crossY /= length;
+      crossZ /= length;
+      if (crossX * normal[0]! + crossY * normal[1]! + crossZ * normal[2]! < 0) {
+        crossX = -crossX;
+        crossY = -crossY;
+        crossZ = -crossZ;
+      }
+      const alignment =
+        crossX * normal[0]! + crossY * normal[1]! + crossZ * normal[2]!;
+      if (
+        selected === null ||
+        alignment > selected.alignment + GEOMETRY_EPSILON_3D ||
+        (Math.abs(alignment - selected.alignment) <= GEOMETRY_EPSILON_3D &&
+          (firstAxis < selected.firstAxis ||
+            (firstAxis === selected.firstAxis && secondAxis < selected.secondAxis)))
+      ) {
+        selected = {
+          firstAxis,
+          secondAxis,
+          normal: [crossX, crossY, crossZ],
+          alignment,
+        };
+      }
+    }
+  }
+  return selected ?? {
+    firstAxis: 0,
+    secondAxis: 0,
+    normal: [normal[0]!, normal[1]!, normal[2]!],
+    alignment: Number.NEGATIVE_INFINITY,
+  };
+}
+
+function supportingEdge(
+  box: PreparedBox3D,
+  edgeAxis: number,
+  direction: ArrayLike<number>,
+): BoxEdge3D {
+  const local = [0, 0, 0];
+  let featureBits = 0;
+  for (let axis = 0; axis < 3; axis += 1) {
+    if (axis === edgeAxis) continue;
+    const axisDirection = axisVector(box, axis, 1);
+    const projection = dot(axisDirection, direction);
+    const sign = projection > GEOMETRY_EPSILON_3D ? 1 : -1;
+    local[axis] = sign * box.halfExtents[axis]!;
+    if (sign > 0) featureBits |= 1 << axis;
+  }
+  local[edgeAxis] = -box.halfExtents[edgeAxis]!;
+  const start = boxLocalPoint(box, local);
+  local[edgeAxis] = box.halfExtents[edgeAxis]!;
+  const end = boxLocalPoint(box, local);
+  return { start, end, feature: edgeAxis * 8 + featureBits };
+}
+
+function closestSegmentPoints(
+  first: BoxEdge3D,
+  second: BoxEdge3D,
+): Readonly<{
+  first: readonly [number, number, number];
+  second: readonly [number, number, number];
+}> {
+  const firstDirection = subtract(first.end, first.start);
+  const secondDirection = subtract(second.end, second.start);
+  const offset = subtract(first.start, second.start);
+  const firstLengthSquared = dot(firstDirection, firstDirection);
+  const secondLengthSquared = dot(secondDirection, secondDirection);
+  const directionsDot = dot(firstDirection, secondDirection);
+  const firstOffsetDot = dot(firstDirection, offset);
+  const secondOffsetDot = dot(secondDirection, offset);
+  const denominator =
+    firstLengthSquared * secondLengthSquared - directionsDot * directionsDot;
+  let firstAmount = Math.abs(denominator) <= GEOMETRY_EPSILON_3D ** 2
+    ? 0
+    : clamp(
+        (directionsDot * secondOffsetDot - firstOffsetDot * secondLengthSquared) /
+          denominator,
+        0,
+        1,
+      );
+  let secondAmount = clamp(
+    (directionsDot * firstAmount + secondOffsetDot) / secondLengthSquared,
+    0,
+    1,
+  );
+  firstAmount = clamp(
+    (directionsDot * secondAmount - firstOffsetDot) / firstLengthSquared,
+    0,
+    1,
+  );
+  secondAmount = clamp(
+    (directionsDot * firstAmount + secondOffsetDot) / secondLengthSquared,
+    0,
+    1,
+  );
+  return {
+    first: addScaled(first.start, firstDirection, firstAmount),
+    second: addScaled(second.start, secondDirection, secondAmount),
+  };
 }
 
 function supportingFace(box: PreparedBox3D, direction: ArrayLike<number>): BoxFace3D {
@@ -272,6 +461,44 @@ function axisVector(box: PreparedBox3D, axis: number, sign: number): readonly [n
     sign * box.axes[axis * 3 + 1]!,
     sign * box.axes[axis * 3 + 2]!,
   ];
+}
+
+function boxLocalPoint(
+  box: PreparedBox3D,
+  local: ArrayLike<number>,
+): readonly [number, number, number] {
+  return [
+    box.center[0]! + box.axes[0]! * local[0]! + box.axes[3]! * local[1]! + box.axes[6]! * local[2]!,
+    box.center[1]! + box.axes[1]! * local[0]! + box.axes[4]! * local[1]! + box.axes[7]! * local[2]!,
+    box.center[2]! + box.axes[2]! * local[0]! + box.axes[5]! * local[1]! + box.axes[8]! * local[2]!,
+  ];
+}
+
+function subtract(
+  first: ArrayLike<number>,
+  second: ArrayLike<number>,
+): readonly [number, number, number] {
+  return [
+    first[0]! - second[0]!,
+    first[1]! - second[1]!,
+    first[2]! - second[2]!,
+  ];
+}
+
+function addScaled(
+  start: ArrayLike<number>,
+  direction: ArrayLike<number>,
+  amount: number,
+): readonly [number, number, number] {
+  return [
+    start[0]! + direction[0]! * amount,
+    start[1]! + direction[1]! * amount,
+    start[2]! + direction[2]! * amount,
+  ];
+}
+
+function clamp(value: number, minimum: number, maximum: number): number {
+  return Math.max(minimum, Math.min(maximum, value));
 }
 
 function dot(first: ArrayLike<number>, second: ArrayLike<number>): number {
