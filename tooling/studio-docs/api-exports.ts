@@ -62,6 +62,12 @@ export const crcPublicEntryPaths = {
   webgl: fileURLToPath(
     new URL("../../packages/webgl/src/index.ts", import.meta.url),
   ),
+  particles: fileURLToPath(
+    new URL("../../packages/particles/src/index.ts", import.meta.url),
+  ),
+  particlesWebgl: fileURLToPath(
+    new URL("../../packages/particles/src/webgl.ts", import.meta.url),
+  ),
   types: fileURLToPath(
     new URL("../../packages/core/src/types.ts", import.meta.url),
   ),

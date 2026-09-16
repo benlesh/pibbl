@@ -160,9 +160,15 @@ assert.ok(crcInventory.root.values.length > 0);
 assert.ok(crcInventory.root.types.length > 0);
 assert.equal(crcInventory.webgl.values.length, 14);
 assert.equal(crcInventory.webgl.types.length, 33);
+assert.equal(crcInventory.particles.values.length, 9);
+assert.equal(crcInventory.particles.types.length, 44);
+assert.equal(crcInventory.particlesWebgl.values.length, 2);
+assert.equal(crcInventory.particlesWebgl.types.length, 13);
 
 process.stdout.write(
   `Validated public API coverage: ${crcInventory.root.values.length} core values, ` +
     `${crcInventory.root.types.length} core types, ${crcInventory.webgl.values.length} ` +
-    `WebGL values, and ${crcInventory.webgl.types.length} WebGL types.\n`,
+    `WebGL values, ${crcInventory.webgl.types.length} WebGL types, ` +
+    `${crcInventory.particles.values.length + crcInventory.particlesWebgl.values.length} ` +
+    `particle values, and ${crcInventory.particles.types.length + crcInventory.particlesWebgl.types.length} particle type exports.\n`,
 );

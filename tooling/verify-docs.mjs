@@ -67,6 +67,7 @@ const publicGuidePaths = [
   "docs/site/learn/guides/custom-components-and-primitives.md",
   "docs/site/learn/guides/focus-and-keyboard.md",
   "docs/site/learn/guides/jsx-troubleshooting.md",
+  "docs/site/learn/guides/particle-effects.md",
   "docs/site/learn/guides/react-integration.md",
   "docs/site/learn/guides/signals-and-animation.md",
   "docs/site/learn/guides/state-and-lifecycle.md",
@@ -99,6 +100,8 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/components/mesh.md",
   "docs/site/api/components/overlay.md",
   "docs/site/api/components/path.md",
+  "docs/site/api/components/particles-2d.md",
+  "docs/site/api/components/particles-3d.md",
   "docs/site/api/components/point-light.md",
   "docs/site/api/components/polygon.md",
   "docs/site/api/components/rectangle.md",
@@ -136,6 +139,9 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/functions/measure-element.md",
   "docs/site/api/functions/normalize-edges.md",
   "docs/site/api/functions/parallel.md",
+  "docs/site/api/functions/define-particle-effect-2d.md",
+  "docs/site/api/functions/define-particle-effect-3d.md",
+  "docs/site/api/functions/particle-descriptors.md",
   "docs/site/api/functions/repeat.md",
   "docs/site/api/functions/resolve-box.md",
   "docs/site/api/functions/resolve-length.md",
@@ -157,6 +163,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/hooks/crc-line-path.md",
   "docs/site/api/hooks/crc-memo.md",
   "docs/site/api/hooks/crc-orbit-camera.md",
+  "docs/site/api/hooks/crc-particle-system.md",
   "docs/site/api/hooks/crc-playback.md",
   "docs/site/api/hooks/crc-rect-path.md",
   "docs/site/api/hooks/crc-ref.md",
@@ -170,6 +177,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/types/events.md",
   "docs/site/api/types/filters.md",
   "docs/site/api/types/layout.md",
+  "docs/site/api/types/particles.md",
   "docs/site/api/types/styles.md",
   "docs/site/api/types/webgl.md",
   "docs/site/learn/index.md",
@@ -192,6 +200,7 @@ const currentMarkdownPaths = [
   "AGENTS.md",
   "README.md",
   "packages/core/README.md",
+  "packages/particles/README.md",
   "packages/types/README.md",
   "packages/webgl/README.md",
   "docs/architecture/style-and-layout-architecture.md",
@@ -775,6 +784,12 @@ async function typecheckCompleteSnippets(snippets) {
               ],
               "@crc/core/types": [
                 join(repositoryRoot, "packages/core/src/types.ts"),
+              ],
+              "@crc/particles": [
+                join(repositoryRoot, "packages/particles/src/index.ts"),
+              ],
+              "@crc/particles/webgl": [
+                join(repositoryRoot, "packages/particles/src/webgl.ts"),
               ],
               "@crc/webgl": [
                 join(repositoryRoot, "packages/webgl/src/index.ts"),
@@ -1511,6 +1526,14 @@ const webglSource = await readFile(
   join(repositoryRoot, "packages/webgl/src/index.ts"),
   "utf8",
 );
+const particlesSource = await readFile(
+  join(repositoryRoot, "packages/particles/src/index.ts"),
+  "utf8",
+);
+const particlesWebglSource = await readFile(
+  join(repositoryRoot, "packages/particles/src/webgl.ts"),
+  "utf8",
+);
 const rootExports = exportedSpecifiers(
   rootSource,
   "packages/core/src/index.ts",
@@ -1526,6 +1549,14 @@ const devRuntimeExports = exportedSpecifiers(
 const webglExports = exportedSpecifiers(
   webglSource,
   "packages/webgl/src/index.ts",
+);
+const particleExports = exportedSpecifiers(
+  particlesSource,
+  "packages/particles/src/index.ts",
+);
+const particleWebglExports = exportedSpecifiers(
+  particlesWebglSource,
+  "packages/particles/src/webgl.ts",
 );
 assertSameNames(
   [...documentedApiSymbols].filter((name) => rootExports.values.has(name)),
@@ -1558,6 +1589,30 @@ assertSameNames(
   [...documentedApiSymbols].filter((name) => webglExports.types.has(name)),
   webglExports.types,
   "Documented @crc/webgl types",
+);
+assertSameNames(
+  [...documentedApiSymbols].filter((name) => particleExports.values.has(name)),
+  particleExports.values,
+  "Documented @crc/particles runtime values",
+);
+assertSameNames(
+  [...documentedApiSymbols].filter((name) => particleExports.types.has(name)),
+  particleExports.types,
+  "Documented @crc/particles types",
+);
+assertSameNames(
+  [...documentedApiSymbols].filter((name) =>
+    particleWebglExports.values.has(name),
+  ),
+  particleWebglExports.values,
+  "Documented @crc/particles/webgl runtime values",
+);
+assertSameNames(
+  [...documentedApiSymbols].filter((name) =>
+    particleWebglExports.types.has(name),
+  ),
+  particleWebglExports.types,
+  "Documented @crc/particles/webgl types",
 );
 const namespaceMembers = jsxNamespaceMembers(
   runtimeSource,
@@ -1602,8 +1657,8 @@ const webglManifest = JSON.parse(
 );
 assert.deepEqual(
   Object.keys(webglManifest.exports),
-  ["."],
-  "@crc/webgl must expose only its root package entry.",
+  [".", "./internal", "./package.json"],
+  "@crc/webgl must expose only its root, official internal seam, and manifest entries.",
 );
 assert.deepEqual(
   webglManifest.peerDependencies,
@@ -1627,6 +1682,25 @@ for (const dependencies of [
     "@crc/webgl must not depend on @crc/types.",
   );
 }
+const particlesManifest = JSON.parse(
+  await readFile(join(repositoryRoot, "packages/particles/package.json"), "utf8"),
+);
+assert.deepEqual(
+  Object.keys(particlesManifest.exports),
+  [".", "./webgl", "./package.json"],
+  "@crc/particles must expose its Canvas root and optional WebGL subpath.",
+);
+assert.deepEqual(
+  particlesManifest.peerDependencies,
+  { "@crc/core": "0.0.1", "@crc/webgl": "0.0.1" },
+  "@crc/particles must use matching core and WebGL peer releases.",
+);
+assert.equal(
+  particlesManifest.peerDependenciesMeta?.["@crc/webgl"]?.optional,
+  true,
+  "@crc/particles must keep the WebGL peer optional for root-only consumers.",
+);
+assert.equal(particlesManifest.sideEffects, false);
 const typesManifest = JSON.parse(
   await readFile(join(repositoryRoot, "packages/types/package.json"), "utf8"),
 );
@@ -2687,6 +2761,18 @@ const matrixRequirements = [
       "shadows.test.ts",
       "shadow-resources.test.ts",
       "webgl-lighting-lab.test.ts",
+    ],
+  },
+  {
+    topic: /Deterministic Canvas and instanced WebGL particle effects/u,
+    guides: [
+      "site/learn/guides/particle-effects.md",
+      "site/api/types/particles.md",
+    ],
+    evidence: [
+      "particle-effects.example.tsx",
+      "embers.example.tsx",
+      "fireflies.example.tsx",
     ],
   },
   {

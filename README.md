@@ -1,7 +1,8 @@
 # CRC — Canvas Rendering Components
 
 CRC is a small functional component runtime for the HTML Canvas 2D API, with an
-optional `@crc/webgl` package for WebGL2 islands. JSX is the preferred authoring
+optional `@crc/webgl` package for WebGL2 islands and `@crc/particles` for
+fixed-capacity Canvas and instanced WebGL effects. JSX is the preferred authoring
 syntax, but CRC has its own renderer, hooks, element brand, and lifecycle: it
 does not depend on React and it does not create DOM nodes.
 
@@ -103,6 +104,7 @@ starts from installation and mounting and does not require the JSX guides.
 - [Manage state and lifecycle](docs/site/learn/guides/state-and-lifecycle.md)
 - [Add WebGL islands](docs/site/learn/guides/webgl-islands.md)
 - [Light WebGL scenes](docs/site/learn/guides/webgl-lighting.md)
+- [Create particle effects](docs/site/learn/guides/particle-effects.md)
 - [Add focus and keyboard navigation](docs/site/learn/guides/focus-and-keyboard.md)
 - [Create custom components and primitives](docs/site/learn/guides/custom-components-and-primitives.md)
 - [Integrate with React](docs/site/learn/guides/react-integration.md)
@@ -154,10 +156,14 @@ corepack pnpm@11.21.0 playground:built
   `Cube`, `Sphere`, five analytic lights, `WebGLBackground`,
   `createWebGLGeometry`, `crcAnimationFrame`, `crcOrbitCamera`, and their public
   camera, orbit, geometry, material, shadow, transform, and component types
+- Optional particle effects from `@crc/particles`: `Particles2D`,
+  `crcParticleSystem`, immutable 2D definitions, and direct descriptor
+  factories; `@crc/particles/webgl` adds `Particles3D` and immutable 3D
+  definitions without making WebGL a dependency of root-only consumers
 - Compiler-only entries: `@crc/core/jsx-runtime` and
   `@crc/core/jsx-dev-runtime`
 
-Both packages use the same `@crc/core` JSX runtime, element brand, scheduler,
+All official packages use the same `@crc/core` JSX runtime, element brand, scheduler,
 and event system. The exported `@crc/core/internal` friend seam is reserved for
 matching official CRC packages and is not an application compatibility promise.
 

@@ -178,6 +178,14 @@ animation loop. Worker or WASM numeric execution remains future work and may
 ship only if its results, Commit atomicity, stale-result rejection, lifecycle,
 and main-thread fallback remain observationally identical.
 
+Particle `acceleration`, `gravity`, `drag`, and related modules from
+`@crc/particles` are closed population-domain descriptors. They tell a particle
+executor how each emitted member moves; they are not WebGL primitives or a new
+general animation system. Continue to drive component transforms, cameras,
+materials, lights, and ordinary application values with signals and the
+animation definitions described above. See [Create particle
+effects](#/learn/guides/particle-effects).
+
 For exact defaults, validation, repeat/overlap budgets, error isolation, and
 teardown rules, read the [animation contract](../../../design/animation-contract.md)
 and [signals and scheduling

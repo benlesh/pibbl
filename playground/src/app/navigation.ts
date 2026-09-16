@@ -27,6 +27,7 @@ const typeDomains = [
   ["events", "Events"],
   ["filters", "Filters"],
   ["layout", "Layout"],
+  ["particles", "Particles"],
   ["styles", "Styles"],
 ] as const satisfies readonly [TypeDomain, string][];
 

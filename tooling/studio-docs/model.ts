@@ -7,6 +7,7 @@ export type TypeDomain =
   | "events"
   | "filters"
   | "layout"
+  | "particles"
   | "styles"
   | "webgl";
 
@@ -86,6 +87,7 @@ const typeDomains = new Set<TypeDomain>([
   "events",
   "filters",
   "layout",
+  "particles",
   "styles",
   "webgl",
 ]);
