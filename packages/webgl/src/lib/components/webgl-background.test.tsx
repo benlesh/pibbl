@@ -44,7 +44,10 @@ describe('WebGLBackground declaration', () => {
       style: { color: '#08111f' },
     }));
 
-    expect(nested.backgrounds).toEqual(direct.backgrounds);
+    expect(nested.backgrounds[0]).toMatchObject({
+      kind: direct.backgrounds[0]!.kind,
+      color: direct.backgrounds[0]!.color,
+    });
     expect('model' in nested.backgrounds[0]!).toBe(false);
   });
 

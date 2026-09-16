@@ -63,7 +63,7 @@ export function createSettledNormalMatrix(
         'lit normal matrix must be representable as finite Float32 values.',
       );
     }
-    settled[index] = value;
+    settled[index] = Object.is(value, -0) ? 0 : value;
   }
   return settled;
 }

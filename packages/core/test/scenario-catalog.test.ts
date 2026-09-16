@@ -10,6 +10,7 @@ import {
   signalsLabScenarioEntry,
   validateScenarioCatalog,
   webglLabScenarioEntry,
+  webglLightingLabScenarioEntry,
 } from '@crc/scenarios';
 import { afterEach, describe, expect, it } from 'vitest';
 import { validateScenarioSourceText } from '../../../tooling/learning-source-contract';
@@ -884,7 +885,7 @@ describe('scenario catalog trust gate', () => {
     expect(
       scenarioCatalogIndex.byApi.find(group => group.key === 'WebGLLayer')
         ?.scenarios,
-    ).toEqual([webglLabScenarioEntry]);
+    ).toEqual([webglLabScenarioEntry, webglLightingLabScenarioEntry]);
   });
 
   it('rejects duplicate executable source identities and paths', () => {
