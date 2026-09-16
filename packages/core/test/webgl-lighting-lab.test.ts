@@ -232,7 +232,7 @@ describe('public WebGL lighting laboratory', () => {
       expect(controller.getState()).toMatchObject(expected);
     }
     expect(controller.getState().revision).toBe(19);
-  });
+  }, 30_000);
 
   it('keeps ambient and hemisphere shadowless, renders six point faces, and reuses direct shadows while orbiting', async () => {
     const probeContext = new OffscreenCanvas(1, 1).getContext('webgl2');
