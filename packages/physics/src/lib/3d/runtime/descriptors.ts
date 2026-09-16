@@ -19,7 +19,11 @@ import {
   copyCanonicalQuaternion,
   copyFiniteVector3,
 } from "../math.js";
-import { requireShapeRecord3D, type ShapeRecord3D } from "../shape-records.js";
+import {
+  isConcaveShapeRecord3D,
+  requireShapeRecord3D,
+  type ShapeRecord3D,
+} from "../shape-records.js";
 import type {
   CRCPhysicsAttachment3D,
   CRCPhysicsAxisLocks3D,
@@ -379,6 +383,15 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
               collider: effectiveCollider,
             }),
           }) as PhysicsBodyAttachment3DDescriptor;
+      if (
+        descriptor.bodyType !== "static" &&
+        effectiveCollider !== false &&
+        isConcaveShapeRecord3D(
+          requireShapeRecord3D(effectiveCollider.shape as CRCPhysicsShape3D),
+        )
+      ) {
+        throw new Error("triangle mesh and heightfield colliders require a static body.");
+      }
       world.collectBody(
         this,
         bodyId,

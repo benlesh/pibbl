@@ -12,13 +12,27 @@ import {
   type CRCWebGLPerspectiveCamera,
 } from "@crc/webgl";
 import {
+  Capsule3D,
+  Cone3D,
+  ConvexHull3D,
+  Cylinder3D,
+  Ellipsoid3D,
+  Heightfield3D,
   PhysicsWorld3D,
+  PhysicsShape3D,
+  capsuleShape3D,
   collider3D,
+  coneShape3D,
+  convexHullShape3D,
   crcPhysicsBody3D,
   crcPhysicsWorld3D,
+  cylinderShape3D,
   dynamicBody3D,
+  ellipsoidShape3D,
+  heightfieldShape3D,
   queryPoint3D,
   staticBody3D,
+  triangleMeshShape3D,
   type CRCPhysicsBodyHandle3D,
   type CRCPhysicsColliderConfiguration3D,
   type CRCPhysicsCollisionEvent3D,
@@ -38,6 +52,11 @@ export const PHYSICS_3D_BODY_IDS = [
   "sphere-b",
   "sphere-c",
   "compound",
+  "ellipsoid",
+  "capsule",
+  "cylinder",
+  "cone",
+  "convex-hull",
 ] as const;
 
 export type Physics3DBodyId = (typeof PHYSICS_3D_BODY_IDS)[number];
@@ -96,9 +115,43 @@ export const PHYSICS_3D_INITIAL_POSITIONS: Readonly<
   "sphere-b": Object.freeze([4.1, 7.2, 1.4] as const),
   "sphere-c": Object.freeze([0.1, 10, 1.2] as const),
   compound: Object.freeze([4.3, 9.2, -1.7] as const),
+  ellipsoid: Object.freeze([-5.2, 3.7, -2.2] as const),
+  capsule: Object.freeze([-2.8, 4.4, -2.6] as const),
+  cylinder: Object.freeze([-0.4, 5.1, -2.5] as const),
+  cone: Object.freeze([2.1, 5.8, -2.5] as const),
+  "convex-hull": Object.freeze([4.8, 6.5, -2.4] as const),
 });
 
 const IDENTITY_ORIENTATION = Object.freeze([0, 0, 0, 1] as const);
+const HULL_POINTS = Object.freeze([
+  [-0.65, -0.55, -0.5],
+  [0.65, -0.55, -0.5],
+  [0.55, -0.55, 0.55],
+  [-0.55, -0.55, 0.55],
+  [0, 0.8, 0],
+] as const satisfies readonly CRCPhysicsVector3[]);
+const ELLIPSOID_SHAPE = ellipsoidShape3D({ radii: [0.72, 0.42, 0.5] });
+const CAPSULE_SHAPE = capsuleShape3D({ start: [0, -0.55, 0], end: [0, 0.55, 0], radius: 0.34 });
+const CYLINDER_SHAPE = cylinderShape3D({ radius: 0.48, halfHeight: 0.58 });
+const CONE_SHAPE = coneShape3D({ radius: 0.58, halfHeight: 0.7 });
+const HULL_SHAPE = convexHullShape3D({ points: HULL_POINTS });
+const MESH_SHAPE = triangleMeshShape3D({
+  positions: [-6, 0, -2, 6, 0, -2, 6, 0, 2, -6, 0, 2],
+  indices: [0, 2, 1, 0, 3, 2],
+});
+const HEIGHTFIELD_HEIGHTS = Object.freeze([
+  0, 0.15, 0.3, 0.15,
+  0.1, 0.35, 0.7, 0.25,
+  0, 0.2, 0.45, 0.1,
+] as const);
+const HEIGHTFIELD_SHAPE = heightfieldShape3D({
+  rows: 3,
+  columns: 4,
+  heights: HEIGHTFIELD_HEIGHTS,
+  cellSizeX: 1.1,
+  cellSizeZ: 1.1,
+  origin: [-1.65, 0, -1.1],
+});
 
 export function createPhysics3DModel(): Physics3DModel {
   let model!: Physics3DModel;
@@ -128,6 +181,13 @@ export function createPhysics3DModel(): Physics3DModel {
       "sphere-c": configuration("sphere-c", 0.8, 0.25),
       "compound-left": configuration("compound-left", 0.5, 0.2),
       "compound-right": configuration("compound-right", 0.2, 0.55),
+      ellipsoid: { ...configuration("ellipsoid", 0.45, 0.35), shape: ELLIPSOID_SHAPE },
+      capsule: { ...configuration("capsule", 0.55, 0.2), shape: CAPSULE_SHAPE },
+      cylinder: { ...configuration("cylinder", 0.7, 0.12), shape: CYLINDER_SHAPE },
+      cone: { ...configuration("cone", 0.6, 0.18), shape: CONE_SHAPE },
+      "convex-hull": { ...configuration("convex-hull", 0.5, 0.28), shape: HULL_SHAPE },
+      mesh: { ...configuration("triangle-mesh", 0.9, 0.04), shape: MESH_SHAPE },
+      heightfield: { ...configuration("heightfield", 0.85, 0.08), shape: HEIGHTFIELD_SHAPE },
     });
   model = {
     handles: {},
@@ -142,6 +202,36 @@ export function createPhysics3DModel(): Physics3DModel {
     notifyRendered: undefined,
   };
   return model;
+}
+
+function ShowcaseBodies({ model }: { readonly model: Physics3DModel }) {
+  const body = (id: Extract<Physics3DBodyId, "ellipsoid" | "capsule" | "cylinder" | "cone" | "convex-hull">) => {
+    const handle = crcPhysicsBody3D();
+    model.handles[id] = handle;
+    return dynamicBody3D({
+      handle,
+      mass: "auto",
+      linearDamping: 0.035,
+      angularDamping: 0.045,
+      collider: model.colliderConfigurations[id],
+    });
+  };
+  const style = (id: Physics3DBodyId, color: string) => ({
+    color,
+    lit: false,
+    translateX: PHYSICS_3D_INITIAL_POSITIONS[id][0],
+    translateY: PHYSICS_3D_INITIAL_POSITIONS[id][1],
+    translateZ: PHYSICS_3D_INITIAL_POSITIONS[id][2],
+  } as const);
+  return (
+    <>
+      <Ellipsoid3D radii={[0.72, 0.42, 0.5]} physics={body("ellipsoid")} style={style("ellipsoid", "#60a5fa")} />
+      <Capsule3D start={[0, -0.55, 0]} end={[0, 0.55, 0]} radius={0.34} physics={body("capsule")} style={style("capsule", "#c084fc")} />
+      <Cylinder3D radius={0.48} halfHeight={0.58} physics={body("cylinder")} style={style("cylinder", "#facc15")} />
+      <Cone3D radius={0.58} halfHeight={0.7} physics={body("cone")} style={style("cone", "#fb7185")} />
+      <ConvexHull3D points={HULL_POINTS} physics={body("convex-hull")} style={style("convex-hull", "#34d399")} />
+    </>
+  );
 }
 
 function WorldCapture({ model }: { readonly model: Physics3DModel }) {
@@ -309,6 +399,34 @@ export function Physics3DRoot({ model }: { readonly model: Physics3DModel }) {
               scaleZ: 10,
             }}
           />
+          <PhysicsShape3D
+            shape={MESH_SHAPE}
+            physics={staticBody3D({ collider: model.colliderConfigurations.mesh })}
+            style={{
+              color: "#1e40af",
+              lit: false,
+              translateX: -3.2,
+              translateY: -1.95,
+              translateZ: -2.8,
+              rotationZDegrees: -7,
+            }}
+          />
+          <Heightfield3D
+            rows={3}
+            columns={4}
+            heights={HEIGHTFIELD_HEIGHTS}
+            cellSizeX={1.1}
+            cellSizeZ={1.1}
+            origin={[-1.65, 0, -1.1]}
+            physics={staticBody3D({ collider: model.colliderConfigurations.heightfield })}
+            style={{
+              color: "#166534",
+              lit: false,
+              translateX: 3.6,
+              translateY: -1.9,
+              translateZ: -2.6,
+            }}
+          />
           <Cube
             physics={staticBody3D({
               collider: model.colliderConfigurations.obstacle,
@@ -362,6 +480,7 @@ export function Physics3DRoot({ model }: { readonly model: Physics3DModel }) {
             radius={0.44}
           />
           <CompoundBody model={model} />
+          <ShowcaseBodies model={model} />
           <RayMarker model={model} />
         </PhysicsWorld3D>
       </WebGLLayer>

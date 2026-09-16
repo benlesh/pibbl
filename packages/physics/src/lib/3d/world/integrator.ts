@@ -524,17 +524,27 @@ function shapeMassProperties(
     diagonalY = diagonalX;
     diagonalZ = diagonalX;
   } else {
-    const width = collider.shape.halfExtents[0]! * 2;
-    const height = collider.shape.halfExtents[1]! * 2;
-    const depth = collider.shape.halfExtents[2]! * 2;
-    mass = width * height * depth * collider.density;
+    const halfExtents = approximateMassHalfExtents(collider.shape);
+    const width = halfExtents[0]! * 2;
+    const height = halfExtents[1]! * 2;
+    const depth = halfExtents[2]! * 2;
+    const volume = collider.shape.kind === "ellipsoid"
+      ? (4 * Math.PI * halfExtents[0]! * halfExtents[1]! * halfExtents[2]!) / 3
+      : collider.shape.kind === "cylinder"
+        ? Math.PI * collider.shape.radius ** 2 * collider.shape.halfHeight * 2
+        : collider.shape.kind === "cone"
+          ? (Math.PI * collider.shape.radius ** 2 * collider.shape.halfHeight * 2) / 3
+          : width * height * depth;
+    mass = volume * collider.density;
     diagonalX = (mass * (height ** 2 + depth ** 2)) / 12;
     diagonalY = (mass * (width ** 2 + depth ** 2)) / 12;
     diagonalZ = (mass * (width ** 2 + height ** 2)) / 12;
-    orientation = composePose3D(shapePose, {
-      position: new Float64Array(3),
-      orientation: collider.shape.orientation,
-    }).orientation;
+    if ("orientation" in collider.shape) {
+      orientation = composePose3D(shapePose, {
+        position: new Float64Array(3),
+        orientation: collider.shape.orientation,
+      }).orientation;
+    }
   }
   const tensor = rotateDiagonal(diagonalX, diagonalY, diagonalZ, orientation);
   return {
@@ -549,6 +559,41 @@ function shapeMassProperties(
     inertiaXZ: tensor[2]!,
     inertiaYZ: tensor[5]!,
   };
+}
+
+function approximateMassHalfExtents(
+  shape: CompoundColliderMassInput3D["shape"],
+): Float64Array {
+  if (shape.kind === "sphere") {
+    return new Float64Array([shape.radius, shape.radius, shape.radius]);
+  }
+  if (shape.kind === "box") return shape.halfExtents;
+  if (shape.kind === "ellipsoid") return shape.radii;
+  if (shape.kind === "cylinder" || shape.kind === "cone") {
+    return new Float64Array([shape.radius, shape.halfHeight, shape.radius]);
+  }
+  if (shape.kind === "capsule") {
+    const length = Math.hypot(
+      shape.end[0]! - shape.start[0]!,
+      shape.end[1]! - shape.start[1]!,
+      shape.end[2]! - shape.start[2]!,
+    );
+    return new Float64Array([shape.radius, length / 2 + shape.radius, shape.radius]);
+  }
+  if (shape.kind === "convexHull") {
+    const half = new Float64Array(3);
+    for (let index = 0; index < shape.vertices.length; index += 3) {
+      half[0] = Math.max(half[0]!, Math.abs(shape.vertices[index]! - shape.center[0]!));
+      half[1] = Math.max(half[1]!, Math.abs(shape.vertices[index + 1]! - shape.center[1]!));
+      half[2] = Math.max(half[2]!, Math.abs(shape.vertices[index + 2]! - shape.center[2]!));
+    }
+    return half;
+  }
+  return new Float64Array([
+    (shape.maximum[0]! - shape.minimum[0]!) / 2,
+    Math.max((shape.maximum[1]! - shape.minimum[1]!) / 2, 0.025),
+    (shape.maximum[2]! - shape.minimum[2]!) / 2,
+  ]);
 }
 
 function rotateDiagonal(

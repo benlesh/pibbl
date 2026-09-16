@@ -40,6 +40,25 @@ import {
 } from "./lib/3d/runtime/body-handle.js";
 import { requirePhysicsWorld3DController } from "./lib/3d/runtime/controller.js";
 
+export {
+  Box3D,
+  Capsule3D,
+  Cone3D,
+  ConvexHull3D,
+  Cylinder3D,
+  Ellipsoid3D,
+  Heightfield3D,
+  PhysicsShape3D,
+  type Box3DProps,
+  type Capsule3DProps,
+  type Cone3DProps,
+  type ConvexHull3DProps,
+  type Cylinder3DProps,
+  type Ellipsoid3DProps,
+  type Heightfield3DProps,
+  type PhysicsShape3DProps,
+} from "./lib/3d/webgl/components.js";
+
 export { PhysicsWorld3D, crcPhysicsWorld3D };
 export { collider3D, dynamicBody3D, kinematicBody3D, staticBody3D };
 export { crcPhysicsBody3D };

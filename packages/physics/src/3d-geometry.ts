@@ -80,8 +80,15 @@ export interface CRCPhysicsShapeHit3D {
 export {
   boundsOfShape3D,
   boxShape3D,
+  capsuleShape3D,
+  coneShape3D,
+  convexHullShape3D,
+  cylinderShape3D,
+  ellipsoidShape3D,
+  heightfieldShape3D,
   massProperties3D,
   sphereShape3D,
+  triangleMeshShape3D,
   transformShape3D,
 } from "./lib/3d/shapes.js";
 export {

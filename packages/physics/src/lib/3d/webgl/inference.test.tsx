@@ -24,7 +24,7 @@ describe("WebGL 3D collider inference", () => {
     expect(Math.hypot(...record.orientation)).toBe(1);
   });
 
-  it("infers a uniformly scaled Sphere and defers nonuniform ellipsoids", () => {
+  it("infers uniformly scaled Sphere and nonuniform Ellipsoid geometry", () => {
     expect(summary(
       inferWebGLColliderShape3D(
         facts("sphere", transform({ scale: [6, -6, 6] })),
@@ -35,19 +35,26 @@ describe("WebGL 3D collider inference", () => {
       radius: 3,
     });
 
-    expect(() =>
+    expect(summary(
       inferWebGLColliderShape3D(
         facts("sphere", transform({ scale: [2, 3, 2] })),
       ),
-    ).toThrow(/nonuniform Sphere.*ellipsoid/i);
+    )).toMatchObject({
+      kind: "ellipsoid",
+      center: [0, 0, 0],
+      radii: [1, 1.5, 1],
+    });
   });
 
-  it("rejects direct tiny nonuniform Sphere scale", () => {
-    expect(() =>
+  it("retains tiny finite nonuniform Sphere dimensions as an ellipsoid", () => {
+    expect(summary(
       inferWebGLColliderShape3D(
         facts("sphere", transform({ scale: [1e-8, 9e-8, 5e-8] })),
       ),
-    ).toThrow(/nonuniform Sphere.*ellipsoid/i);
+    )).toMatchObject({
+      kind: "ellipsoid",
+      radii: [5e-9, 4.5e-8, 2.5e-8],
+    });
   });
 
   it("rejects equal-length Sphere columns produced by nested scale and rotation shear", () => {
@@ -145,16 +152,22 @@ function columnLengths(
 
 function summary(shape: Parameters<typeof requireShapeRecord3D>[0]) {
   const record = requireShapeRecord3D(shape);
-  return record.kind === "sphere"
-    ? {
+  if (record.kind === "sphere") return {
         kind: record.kind,
         center: [...record.center],
         radius: record.radius,
-      }
-    : {
+      };
+  if (record.kind === "box") return {
         kind: record.kind,
         center: [...record.center],
         halfExtents: [...record.halfExtents],
         orientation: [...record.orientation],
       };
+  if (record.kind === "ellipsoid") return {
+    kind: record.kind,
+    center: [...record.center],
+    radii: [...record.radii],
+    orientation: [...record.orientation],
+  };
+  return { kind: record.kind };
 }

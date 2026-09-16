@@ -140,7 +140,7 @@ async function mountPhysics3D(
           throw new Error("Physics 3D world has not rendered yet.");
         }
         const hit = raycast3D(world, {
-          origin: [6.5, 10, 0],
+          origin: [3.6, 10, -2.6],
           direction: [0, -1, 0],
           maxDistance: 30,
         });

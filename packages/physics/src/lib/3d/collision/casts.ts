@@ -26,6 +26,7 @@ import {
 import { distanceBetweenPreparedShapes3D } from "./pairs.js";
 import {
   prepareConvexShape3D,
+  supportShape3D,
   type PreparedBox3D,
   type PreparedConvexShape3D,
 } from "./support.js";
@@ -67,6 +68,7 @@ export function raycastShape3D(
     return candidate === null ? null : publicHit(candidate, true);
   }
 
+  const box = prepared.kind === "box" ? prepared : boundsBoxFor(prepared);
   const scaledX = sourceDirection[0]! / scale;
   const scaledY = sourceDirection[1]! / scale;
   const scaledZ = sourceDirection[2]! / scale;
@@ -76,7 +78,7 @@ export function raycastShape3D(
     scaledY / scaledLength,
     scaledZ / scaledLength,
   ] as const;
-  if (containsPreparedBoxPoint(prepared, origin)) {
+  if (containsPreparedBoxPoint(box, origin)) {
     return includeInitialOverlap
       ? publicHit({
           pointX: origin[0]!,
@@ -91,8 +93,30 @@ export function raycastShape3D(
       : null;
   }
   if (maxDistance === 0) return null;
-  const candidate = raycastBox(prepared, origin, direction, maxDistance);
+  const candidate = raycastBox(box, origin, direction, maxDistance);
   return candidate === null ? null : publicHit(candidate);
+}
+
+function boundsBoxFor(shape: PreparedConvexShape3D): PreparedBox3D {
+  const point = new Float64Array(3);
+  const extents = new Float64Array(3);
+  const center = new Float64Array(3);
+  for (let axis = 0; axis < 3; axis += 1) {
+    const direction = [0, 0, 0];
+    direction[axis] = 1;
+    supportShape3D(point, shape, direction[0]!, direction[1]!, direction[2]!);
+    const maximum = point[axis]!;
+    supportShape3D(point, shape, -direction[0]!, -direction[1]!, -direction[2]!);
+    const minimum = point[axis]!;
+    center[axis] = (minimum + maximum) / 2;
+    extents[axis] = Math.max((maximum - minimum) / 2, GEOMETRY_EPSILON_3D);
+  }
+  return {
+    kind: "box",
+    center,
+    axes: new Float64Array([1, 0, 0, 0, 1, 0, 0, 0, 1]),
+    halfExtents: extents,
+  };
 }
 
 export function shapeCastAgainstShape3D(

@@ -4,7 +4,12 @@ import type {
   CRCPhysicsShape3D,
   CRCPhysicsVector3,
 } from "../../../3d-geometry.js";
-import { boxShape3D, sphereShape3D } from "../../../3d-geometry.js";
+import {
+  boxShape3D,
+  ellipsoidShape3D,
+  sphereShape3D,
+  triangleMeshShape3D,
+} from "../../../3d-geometry.js";
 import { requireShapeRecord3D } from "../shape-records.js";
 
 const ORTHOGONAL_EPSILON = 1e-7;
@@ -33,8 +38,13 @@ export function inferWebGLColliderShape3D(
         "Group3D has no self geometry; attach collider3D() to physical descendants.",
       );
     case "mesh":
-      throw new Error(
-        "Mesh self collider inference requires the later mesh geometry adapter; provide an explicit 3D shape for now.",
+      return bakeWebGLShapeTransform3D(
+        triangleMeshShape3D({
+          positions: facts.geometrySnapshot.positions,
+          indices: facts.geometrySnapshot.indices,
+        }),
+        transform,
+        "Mesh",
       );
   }
 }
@@ -56,20 +66,39 @@ export function bakeWebGLShapeTransform3D(
   if (source.kind === "sphere") {
     const center = transformPoint(posed, source.center);
     const scales = columnLengths(posed);
-    if (!sameScale(scales[0], scales[1]) ||
-        !sameScale(scales[0], scales[2])) {
-      throw new Error(
-        `${componentName} has nonuniform Sphere scale; ellipsoid inference is introduced with ellipsoid geometry.`,
-      );
+    const axes = normalizedColumns(posed, scales);
+    validateOrthogonalAxes(axes, componentName);
+    canonicalizeReflectedBoxAxes(axes);
+    return sameScale(scales[0], scales[1]) && sameScale(scales[0], scales[2])
+      ? sphereShape3D({ radius: source.radius * scales[0], center })
+      : ellipsoidShape3D({
+          radii: [
+            source.radius * scales[0],
+            source.radius * scales[1],
+            source.radius * scales[2],
+          ],
+          center,
+          orientation: quaternionFromAxes(axes),
+        });
+  }
+
+  if (source.kind === "triangleMesh") {
+    const positions = new Float64Array(source.positions.length);
+    for (let index = 0; index < positions.length; index += 3) {
+      const point = transformPoint(posed, source.positions.subarray(index, index + 3));
+      positions[index] = point[0];
+      positions[index + 1] = point[1];
+      positions[index + 2] = point[2];
     }
-    validateOrthogonalAxes(
-      normalizedColumns(posed, scales),
-      componentName,
-    );
-    return sphereShape3D({
-      radius: source.radius * scales[0],
-      center,
-    });
+    return triangleMeshShape3D({ positions, indices: source.indices });
+  }
+
+  if (source.kind !== "box") {
+    const scales = columnLengths(posed);
+    if (!sameScale(scales[0], 1) || !sameScale(scales[1], 1) || !sameScale(scales[2], 1)) {
+      throw new Error(`${componentName} explicit non-box shape does not support authored scale.`);
+    }
+    return shape;
   }
 
   const centered = multiplyMatrix4(

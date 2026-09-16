@@ -1976,7 +1976,7 @@ const physics3DMetadata: ScenarioMetadata = {
   slug: "physics-3d",
   title: "First-class 3D physics browser slice",
   summary:
-    "Simulate inferred Cube and Sphere bodies, a Group3D compound, contacts, impulses, and a visible public ray query in one settled WebGL island.",
+    "Drop the complete convex shape vocabulary onto box, triangle-mesh, and heightfield terrain, alongside inferred primitives, a compound body, contacts, impulses, and a visible public query.",
   category: "Simulation",
   apiTags: [
     "PhysicsWorld3D",
@@ -1992,6 +1992,13 @@ const physics3DMetadata: ScenarioMetadata = {
     "Group3D",
     "Cube",
     "Sphere",
+    "PhysicsShape3D",
+    "Ellipsoid3D",
+    "Capsule3D",
+    "Cylinder3D",
+    "Cone3D",
+    "ConvexHull3D",
+    "Heightfield3D",
   ],
   conceptTags: [
     "fixed-step 3D physics",
@@ -2006,7 +2013,7 @@ const physics3DMetadata: ScenarioMetadata = {
     {
       action: "Observe the initial drop.",
       expected:
-        "Six independent cubes and spheres plus one compound body fall, contact the floor or obstacle, and remain aligned with their rendered geometry.",
+        "Cubes, spheres, ellipsoid, capsule, cylinder, cone, convex hull, and one compound body fall onto the box floor, blue triangle mesh, and green heightfield.",
     },
     {
       action: "Choose Drop, then Impulse.",
@@ -2016,7 +2023,7 @@ const physics3DMetadata: ScenarioMetadata = {
     {
       action: "Choose Query.",
       expected:
-        "The public downward ray reports the floor and renders a pink marker at the committed hit point.",
+        "The public downward ray reports the heightfield and renders a pink marker at the committed hit point.",
     },
     {
       action: "Choose Reset.",
@@ -2025,7 +2032,7 @@ const physics3DMetadata: ScenarioMetadata = {
     },
   ],
   knownLimitations: [
-    "This first browser slice infers boxes and uniformly scaled spheres; nonuniform Sphere ellipsoids and Mesh inference arrive in later 3D geometry tasks.",
+    "This visible-first slice uses bounded convex sampling and concave proxy narrow phase; exhaustive analytic, BVH, degeneracy, lifecycle, and performance hardening remains deferred.",
     "The scene uses one fixed WebGL2 camera and one fixed logical viewport; it does not expose a public manual clock or a second animation loop.",
   ],
   learningOrder: 210,

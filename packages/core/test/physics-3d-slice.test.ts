@@ -70,6 +70,17 @@ describe("public first-class 3D physics browser slice", () => {
     expect(physics3DSource).toMatch(/from ["']@crc\/core["']/u);
     expect(physics3DSource).toMatch(/from ["']@crc\/webgl["']/u);
     expect(physics3DSource).toMatch(/from ["']@crc\/physics\/3d["']/u);
+    for (const component of [
+      "Ellipsoid3D",
+      "Capsule3D",
+      "Cylinder3D",
+      "Cone3D",
+      "ConvexHull3D",
+      "PhysicsShape3D",
+      "Heightfield3D",
+    ]) {
+      expect(physics3DSource).toContain(component);
+    }
     expect(physics3DSource).not.toMatch(
       /\/(?:internal|lib|src)(?:\/|["'])|requestAnimationFrame|set(?:Timeout|Interval)|ManualSchedulerDriver/u,
     );
@@ -103,6 +114,8 @@ describe("public first-class 3D physics browser slice", () => {
       body.enabled && body.generation === 1
     )).toBe(true);
     expect(initial.bodies["drop-cube"].position).toEqual([-4.2, 6, 0]);
+    expect(initial.bodies.ellipsoid.position).toEqual([-5.2, 3.7, -2.2]);
+    expect(initial.bodies["convex-hull"].position).toEqual([4.8, 6.5, -2.4]);
     expect(initial.compoundAligned).toBe(true);
 
     expect(layer.committedGeneration).toBeGreaterThan(0);
@@ -129,6 +142,12 @@ describe("public first-class 3D physics browser slice", () => {
     const settled = controller.getState();
     expect(settled.bodies["drop-cube"].position[1]).toBeLessThan(
       initial.bodies["drop-cube"].position[1],
+    );
+    expect(settled.bodies.capsule.position[1]).toBeLessThan(
+      initial.bodies.capsule.position[1],
+    );
+    expect(settled.bodies.cylinder.position[1]).toBeLessThan(
+      initial.bodies.cylinder.position[1],
     );
     expect(sawContact).toBe(true);
     expect(sawBounce).toBe(true);
@@ -180,7 +199,7 @@ describe("public first-class 3D physics browser slice", () => {
 
     await controller.perform("query");
     expect(controller.getState()).toMatchObject({
-      queryTag: "floor",
+      queryTag: "heightfield",
       queryPoint: expect.any(Array),
       lastAction: "query",
     });

@@ -76,6 +76,15 @@ export function containsPoint3D(
       copied[2]! - prepared.convex.center[2]!,
     ) <= prepared.convex.radius + GEOMETRY_EPSILON_3D;
   }
+  if (prepared.convex.kind === "vertices") {
+    const bounds = vertexCloudBounds(prepared.convex.vertices);
+    return copied[0]! >= bounds[0] - GEOMETRY_EPSILON_3D &&
+      copied[0]! <= bounds[3] + GEOMETRY_EPSILON_3D &&
+      copied[1]! >= bounds[1] - GEOMETRY_EPSILON_3D &&
+      copied[1]! <= bounds[4] + GEOMETRY_EPSILON_3D &&
+      copied[2]! >= bounds[2] - GEOMETRY_EPSILON_3D &&
+      copied[2]! <= bounds[5] + GEOMETRY_EPSILON_3D;
+  }
   const dx = copied[0]! - prepared.convex.center[0]!;
   const dy = copied[1]! - prepared.convex.center[1]!;
   const dz = copied[2]! - prepared.convex.center[2]!;
@@ -338,8 +347,8 @@ function normalizeConvexPair(
   const maximum = Math.max(
     ...first.center.map(Math.abs),
     ...second.center.map(Math.abs),
-    first.kind === "sphere" ? first.radius : Math.max(...first.halfExtents),
-    second.kind === "sphere" ? second.radius : Math.max(...second.halfExtents),
+    preparedMagnitude(first),
+    preparedMagnitude(second),
   );
   if (!Number.isFinite(maximum)) return null;
   if (maximum <= GJK_NORMALIZATION_THRESHOLD) {
@@ -363,8 +372,8 @@ function normalizeConvexPair(
   const scale = Math.max(
     ...firstOffset.map(Math.abs),
     ...secondOffset.map(Math.abs),
-    first.kind === "sphere" ? first.radius : Math.max(...first.halfExtents),
-    second.kind === "sphere" ? second.radius : Math.max(...second.halfExtents),
+    preparedMagnitude(first),
+    preparedMagnitude(second),
   );
   if (!Number.isFinite(scale) || scale <= 0) return null;
   return {
@@ -383,9 +392,19 @@ function scalePreparedShape(
   center[0] /= scale;
   center[1] /= scale;
   center[2] /= scale;
-  return shape.kind === "sphere"
-    ? { kind: "sphere", center, radius: shape.radius / scale }
-    : {
+  if (shape.kind === "sphere") {
+    return { kind: "sphere", center, radius: shape.radius / scale };
+  }
+  if (shape.kind === "vertices") {
+    const vertices = new Float64Array(shape.vertices.length);
+    for (let index = 0; index < vertices.length; index += 3) {
+      vertices[index] = (shape.vertices[index]! - (shape.center[0]! - center[0]! * scale)) / scale;
+      vertices[index + 1] = (shape.vertices[index + 1]! - (shape.center[1]! - center[1]! * scale)) / scale;
+      vertices[index + 2] = (shape.vertices[index + 2]! - (shape.center[2]! - center[2]! * scale)) / scale;
+    }
+    return { kind: "vertices", center, vertices };
+  }
+  return {
         kind: "box",
         center,
         axes: shape.axes,
@@ -493,7 +512,9 @@ function comparePrepared(first: PreparedShape3D, second: PreparedShape3D): numbe
   if (poseOrder !== 0) return poseOrder;
   const centerOrder = compareArrays(first.convex.center, second.convex.center);
   if (centerOrder !== 0) return centerOrder;
-  if (first.convex.kind !== second.convex.kind) return first.convex.kind === "sphere" ? -1 : 1;
+  if (first.convex.kind !== second.convex.kind) {
+    return first.convex.kind < second.convex.kind ? -1 : 1;
+  }
   if (first.convex.kind === "sphere" && second.convex.kind === "sphere") {
     return first.convex.radius < second.convex.radius
       ? -1
@@ -505,7 +526,43 @@ function comparePrepared(first: PreparedShape3D, second: PreparedShape3D): numbe
     const extentsOrder = compareArrays(first.convex.halfExtents, second.convex.halfExtents);
     if (extentsOrder !== 0) return extentsOrder;
   }
+  if (first.convex.kind === "vertices" && second.convex.kind === "vertices") {
+    return compareArrays(first.convex.vertices, second.convex.vertices);
+  }
   return 0;
+}
+
+function preparedMagnitude(shape: PreparedConvexShape3D): number {
+  if (shape.kind === "sphere") return shape.radius;
+  if (shape.kind === "box") return Math.max(...shape.halfExtents);
+  let maximum = 0;
+  for (let index = 0; index < shape.vertices.length; index += 3) {
+    maximum = Math.max(
+      maximum,
+      Math.abs(shape.vertices[index]! - shape.center[0]!),
+      Math.abs(shape.vertices[index + 1]! - shape.center[1]!),
+      Math.abs(shape.vertices[index + 2]! - shape.center[2]!),
+    );
+  }
+  return maximum;
+}
+
+function vertexCloudBounds(vertices: Float64Array): readonly [number, number, number, number, number, number] {
+  let minX = Infinity;
+  let minY = Infinity;
+  let minZ = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  let maxZ = -Infinity;
+  for (let index = 0; index < vertices.length; index += 3) {
+    minX = Math.min(minX, vertices[index]!);
+    minY = Math.min(minY, vertices[index + 1]!);
+    minZ = Math.min(minZ, vertices[index + 2]!);
+    maxX = Math.max(maxX, vertices[index]!);
+    maxY = Math.max(maxY, vertices[index + 1]!);
+    maxZ = Math.max(maxZ, vertices[index + 2]!);
+  }
+  return [minX, minY, minZ, maxX, maxY, maxZ];
 }
 
 function compareArrays(first: ArrayLike<number>, second: ArrayLike<number>): number {
