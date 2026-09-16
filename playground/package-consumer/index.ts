@@ -121,17 +121,53 @@ import type {
   WritableSignal,
 } from '@crc/core';
 import type * as CoreTypes from '@crc/core/types';
+import * as ParticleRuntime from '@crc/particles';
+import type * as ParticleTypes from '@crc/particles';
+import * as ParticleWebGLRuntime from '@crc/particles/webgl';
+import type * as ParticleWebGLTypes from '@crc/particles/webgl';
+import {
+  Particles2D,
+  crcParticleSystem,
+  defineParticleEffect2D,
+  particleChoice,
+  particleCurve,
+  particleGradient,
+  particleInteger,
+  particleParameter,
+  particleRange,
+  type CRCParticleEffect2D,
+  type CRCParticleParameterValues,
+  type CRCParticleSystem,
+  type Particles2DProps,
+} from '@crc/particles';
+import {
+  Particles3D,
+  defineParticleEffect3D,
+  type CRCParticleEffect3D,
+  type Particles3DProps,
+} from '@crc/particles/webgl';
 import * as WebGLRuntime from '@crc/webgl';
 import type * as WebGLTypes from '@crc/webgl';
+import {
+  submitWebGLInstanced,
+  type CRCWebGLBounds,
+  type CRCWebGLInstancedRecipe,
+  type CRCWebGLInstancedSubmission,
+  type CRCWebGLLookupTableRecipe,
+  type CRCWebGLSceneMaterialIntent,
+  type CRCWebGLSpriteRecipe,
+} from '@crc/webgl/internal';
 import {
   createBackendToken,
   defineBackendPrimitive,
   executeBackendCRC,
   getBackendEnvironment,
   getCurrentFrameTimestamp,
+  getCurrentLogicalViewport,
   haveSameLayerNodeTree,
   isBackendEventTargetLive,
   mountBackendCRC,
+  onCurrentRenderFinish,
   registerNestedInteractionResolver,
   requestCurrentInstanceFrame,
   setCurrentComponentAfterRender,
@@ -146,14 +182,24 @@ import {
   type CRCBackendPrimitiveInput,
   type CRCBackendToken,
   type CRCNestedResolverInput,
+  crcInternalAssertCommandAllowed,
   crcInternalCreateSignalConsumer,
   crcInternalCurrentFrame,
   crcInternalCurrentRenderOwner,
+  crcInternalOnRenderFinish,
+  crcInternalPaintTarget,
+  crcInternalQueueBegin,
   crcInternalQueueComplete,
+  crcInternalQueueCurrentCommit,
+  crcInternalQueueCurrentComplete,
+  crcInternalRegisterAdvance,
+  crcInternalRequestRender,
   crcInternalRequestRendererWork,
+  type CRCInternalCommandHandle,
   type CRCInternalFrame,
   type CRCInternalRendererWorkKind,
   type CRCInternalRenderOwner,
+  type CRCInternalSignalBatch,
   type CRCInternalSignalConsumer,
 } from '@crc/core/internal';
 import {
@@ -279,6 +325,153 @@ import {
   type WebGLLayerStyle,
 } from '@crc/webgl';
 
+const packedParticleSize = particleRange(2, 6);
+const packedParticleCount = particleInteger(4, 8);
+const packedParticleColor = particleChoice([
+  { value: '#f97316', weight: 2 },
+  { value: '#fde68a', weight: 1 },
+]);
+const packedParticleIntensity = particleParameter('intensity');
+const packedParticleOpacity = particleCurve([
+  [0, 0],
+  [0.2, 1],
+  [1, 0],
+]);
+const packedParticleGradient = particleGradient([
+  [0, '#fff7cc'],
+  [1, '#f97316'],
+]);
+
+const packedParticleEffect2D = defineParticleEffect2D({
+  parameters: {
+    intensity: { type: 'number', default: 1, timing: 'render' },
+  },
+  emitters: [
+    {
+      name: 'spark',
+      capacity: 32,
+      emission: [{ type: 'manual', count: packedParticleCount }],
+      shape: { type: 'point' },
+      initial: {
+        lifetimeMilliseconds: 500,
+        velocity: [particleRange(-20, 20), particleRange(-60, -20)],
+        size: packedParticleSize,
+        color: packedParticleColor,
+        opacity: packedParticleIntensity,
+      },
+      appearance: { opacity: packedParticleOpacity, color: packedParticleGradient },
+      renderer: { type: 'circle', blend: 'additive' },
+      bounds: { min: [-30, -70], max: [30, 10] },
+    },
+  ],
+});
+
+const packedParticleEffect3D = defineParticleEffect3D({
+  emitters: [
+    {
+      name: 'ember',
+      capacity: 64,
+      emission: [{ type: 'rate', particlesPerSecond: 12 }],
+      shape: { type: 'sphere', radius: 1, sample: 'volume' },
+      initial: {
+        lifetimeMilliseconds: particleRange(800, 1_200),
+        velocity: [0, particleRange(0.5, 1.2), 0],
+        size: packedParticleSize,
+        color: '#f97316',
+      },
+      appearance: { opacity: packedParticleOpacity, color: packedParticleGradient },
+      renderer: {
+        type: 'point',
+        material: 'emissive',
+        blend: 'additive',
+      },
+      bounds: { min: [-2, -1, -2], max: [2, 4, 2] },
+    },
+  ],
+});
+
+function PackedParticleScene() {
+  const system = crcParticleSystem(packedParticleEffect2D, {
+    autoplay: false,
+    seed: 42,
+  });
+  return createElement(Group, {
+    children: [
+      createElement(Particles2D, {
+        system,
+        parameters: { intensity: 0.8 },
+        style: { width: 100, height: 100 },
+      }),
+      createElement(WebGLLayer, {
+        camera: {
+          type: 'perspective',
+          position: [0, 0, 5],
+          lookAt: [0, 0, 0],
+          up: [0, 1, 0],
+          fieldOfViewDegrees: 45,
+          near: 0.1,
+          far: 100,
+        },
+        style: { width: 100, height: 100 },
+        children: createElement(Particles3D, {
+          effect: packedParticleEffect3D,
+          autoplay: true,
+          seed: 42,
+          pointerEvents: 'none' as const,
+        }),
+      }),
+    ],
+  });
+}
+
+createElement(PackedParticleScene, {});
+void ParticleRuntime;
+void ParticleWebGLRuntime;
+void (undefined as unknown as ParticleTypes.CRCParticleEmitter2D);
+void (undefined as unknown as ParticleWebGLTypes.CRCParticleEmitter3D);
+void (undefined as unknown as CRCParticleEffect2D<'spark'>);
+void (undefined as unknown as CRCParticleEffect3D<'ember'>);
+void (undefined as unknown as CRCParticleSystem<'spark', CRCParticleParameterValues, 2>);
+void (undefined as unknown as Particles2DProps<'spark'>);
+void (undefined as unknown as Particles3DProps<'ember'>);
+
+const packedInstancedRecipe = {
+  key: {},
+  topology: 'points',
+  vertexSource: '#version 300 es\nvoid main(){gl_Position=vec4(0.0);}',
+  fragmentSource: '#version 300 es\nout vec4 c;void main(){c=vec4(1.0);}',
+  verticesPerInstance: 1,
+  capacity: 1,
+  lookupTables: [],
+} satisfies CRCWebGLInstancedRecipe;
+const packedInstancedBounds = {
+  min: [-1, -1, -1],
+  max: [1, 1, 1],
+} satisfies CRCWebGLBounds;
+const packedMaterialIntent = {
+  type: 'unlit',
+  blend: 'alpha',
+} satisfies CRCWebGLSceneMaterialIntent;
+const packedInstancedSubmission = {
+  kind: 'instanced',
+  componentName: 'PackageConsumer',
+  source: undefined,
+  localModel: new Float32Array(16),
+  localBounds: packedInstancedBounds,
+  opacity: 1,
+  material: packedMaterialIntent,
+  depthTest: true,
+  depthWrite: false,
+  sorting: 'none',
+  target: undefined,
+  recipe: packedInstancedRecipe,
+  frameUniforms: new Float32Array(),
+} satisfies CRCWebGLInstancedSubmission;
+void submitWebGLInstanced;
+void packedInstancedSubmission;
+void (undefined as unknown as CRCWebGLLookupTableRecipe);
+void (undefined as unknown as CRCWebGLSpriteRecipe);
+
 // @ts-expect-error traversal-time raw GL construction is not public
 void WebGLRuntime.defineWebGLPrimitive;
 // @ts-expect-error traversal-time raw GL context access is not public
@@ -376,17 +569,31 @@ void [
 
 declare const internalOwner: CRCInternalRenderOwner;
 declare const internalFrame: CRCInternalFrame;
+declare const internalBatch: CRCInternalSignalBatch;
+declare const internalCommand: CRCInternalCommandHandle;
 declare const internalConsumer: CRCInternalSignalConsumer;
 const internalWorkKind = 'draw' satisfies CRCInternalRendererWorkKind;
 void internalOwner;
 void internalFrame;
+void internalBatch;
+void internalCommand;
 void internalConsumer;
 void internalWorkKind;
+void crcInternalAssertCommandAllowed;
 void crcInternalCreateSignalConsumer;
 void crcInternalCurrentFrame;
 void crcInternalCurrentRenderOwner;
+void crcInternalOnRenderFinish;
+void crcInternalPaintTarget;
+void crcInternalQueueBegin;
 void crcInternalQueueComplete;
+void crcInternalQueueCurrentCommit;
+void crcInternalQueueCurrentComplete;
+void crcInternalRegisterAdvance;
+void crcInternalRequestRender;
 void crcInternalRequestRendererWork;
+void getCurrentLogicalViewport;
+void onCurrentRenderFinish;
 
 export type PublicEventTypes = {
   base: CRCEvent;

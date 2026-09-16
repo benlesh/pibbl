@@ -1154,11 +1154,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 65 unique, ordered, source-backed routes including standard shapes, WebGL, signals, and animation", async () => {
+  it("contains 68 unique, ordered, source-backed routes including particles, standard shapes, WebGL lighting, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(65);
+    expect(learningExampleCatalog).toHaveLength(68);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1210,10 +1210,11 @@ describe("learning example catalog", () => {
         "clip",
         "group",
         "layer",
+        "particle-effects",
         "signals-and-animation",
         "webgl-islands",
       ],
-      webgl: [...WEBGL_LIGHTING_EXAMPLE_IDS],
+      webgl: [...WEBGL_LIGHTING_EXAMPLE_IDS, "embers", "fireflies"],
       layout: ["absolute-and-overlay", "flex", "flow", "grid"],
       "events-and-interaction": [
         "click",
@@ -1285,6 +1286,7 @@ describe("learning example catalog", () => {
       "filters",
       "webgl-islands",
       "signals-and-animation",
+      "particle-effects",
       "layer",
     ]);
 
@@ -1549,7 +1551,10 @@ describe("learning example catalog", () => {
 
   it("contains exactly the twelve same-scene WebGL lighting lessons", async () => {
     const webglLessons = learningExampleCatalog.filter(
-      (entry) => entry.section === "webgl",
+      (entry) =>
+        WEBGL_LIGHTING_EXAMPLE_IDS.includes(
+          entry.slug as (typeof WEBGL_LIGHTING_EXAMPLE_IDS)[number],
+        ),
     );
 
     expect(webglLessons.map((entry) => entry.slug)).toEqual(
@@ -1676,11 +1681,13 @@ describe("learning example catalog", () => {
         "Clip",
         "Layer",
         "CRCFilter",
+        "Particles2D",
         "WebGLLayer",
         "Group3D",
         "Cube",
         "Sphere",
         "crcAnimationFrame",
+        "crcParticleSystem",
         "crcSignal",
         "crcTransition",
         "crcPlayback",
@@ -1688,6 +1695,10 @@ describe("learning example catalog", () => {
         "sequence",
         "marker",
         "spring",
+        "defineParticleEffect2D",
+        "particleChoice",
+        "particleCurve",
+        "particleRange",
       ]),
     );
 

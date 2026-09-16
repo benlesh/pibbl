@@ -132,6 +132,7 @@ describe("Studio navigation", () => {
       "Events",
       "Filters",
       "Layout",
+      "Particles",
       "Styles",
     ]);
     expect(api.children?.[4]?.children?.map(({ href }) => href)).toEqual([
@@ -140,6 +141,7 @@ describe("Studio navigation", () => {
       "#/api/types/events",
       "#/api/types/filters",
       "#/api/types/layout",
+      "#/api/types/particles",
       "#/api/types/styles",
     ]);
   });

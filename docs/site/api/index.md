@@ -1,7 +1,7 @@
 ---
 id: api-overview
 title: API overview
-summary: The supported @crc/core and @crc/webgl APIs, arranged by authoring role.
+summary: The supported @crc/core, @crc/webgl, and @crc/particles APIs, arranged by authoring role.
 kind: api
 slug: overview
 apiCategory: overview
@@ -12,11 +12,15 @@ keywords: [canvas, webgl, JSX, createElement, API]
 # API overview
 
 Import Canvas/runtime values and types from `@crc/core`. Import optional WebGL2
-island values and types from `@crc/webgl`. Subpaths below `@crc/core/lib/*`,
-`@crc/core/src/*`, and `@crc/webgl/lib/*` are not supported.
+island values and types from `@crc/webgl`. Import particle descriptors,
+systems, and Canvas components from `@crc/particles`, with 3D definitions and
+components from `@crc/particles/webgl`. Package source and `lib/*` paths are not
+supported.
 
 ```ts
 import { Fragment, Rectangle, Text, crc } from "@crc/core";
+import { Particles2D } from "@crc/particles";
+import { Particles3D } from "@crc/particles/webgl";
 import { Cube, WebGLLayer } from "@crc/webgl";
 ```
 
@@ -61,6 +65,19 @@ scene that composes and settles before shadow-depth passes and color queues run;
 one transferred bitmap plus matched pick/focus metadata commits only after the
 parent Canvas composite succeeds. See the grouped [WebGL
 types](#/api/types/webgl).
+
+## Particle effects
+
+`@crc/particles` adds [`Particles2D`](#/api/components/particles-2d),
+[`crcParticleSystem`](#/api/hooks/crc-particle-system),
+[`defineParticleEffect2D`](#/api/functions/define-particle-effect-2d), and the
+direct [particle descriptor functions](#/api/functions/particle-descriptors).
+`@crc/particles/webgl` adds
+[`Particles3D`](#/api/components/particles-3d) and
+[`defineParticleEffect3D`](#/api/functions/define-particle-effect-3d) without
+making WebGL a requirement for root-only Canvas consumers. See the grouped
+[particle types](#/api/types/particles) and
+[particle effects guide](#/learn/guides/particle-effects).
 
 Both packages use the one `@crc/core/jsx-runtime` configured for the source
 file. `@crc/webgl` does not publish a second JSX runtime or hook/event system.
@@ -111,3 +128,5 @@ Start with the [Getting started guide](#/learn/guides/configure-jsx).
 Add 3D content with the [WebGL islands guide](#/learn/guides/webgl-islands).
 Then add materials, lights, orbit controls, backgrounds, and shadows with
 [Light WebGL scenes](#/learn/guides/webgl-lighting).
+Build Canvas celebrations or instanced ambience with
+[Create particle effects](#/learn/guides/particle-effects).

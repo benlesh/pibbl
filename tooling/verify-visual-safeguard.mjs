@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const baselineRoot = join(repositoryRoot, 'packages/core/test/visual-baselines');
+const vitestEntry = join(repositoryRoot, 'node_modules/vitest/vitest.mjs');
 const smokeArguments = [
   'packages/core/test/smoke-scenario.test.ts',
   '--browser.headless',
@@ -31,8 +32,8 @@ function baselineSnapshot() {
 
 function runSmoke(environment = {}) {
   const result = spawnSync(
-    'corepack',
-    ['pnpm@11.21.0', 'exec', 'vitest', 'run', ...smokeArguments],
+    process.execPath,
+    [vitestEntry, 'run', ...smokeArguments],
     {
       cwd: repositoryRoot,
       encoding: 'utf8',

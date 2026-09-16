@@ -2,6 +2,10 @@
 
 WebGL2 islands for the CRC Canvas component runtime.
 
+High-count particle effects are provided separately by
+`@crc/particles/webgl`; `Particles3D` contributes closed instanced recipes to
+the same settled material/pass pipeline without exposing raw GL callbacks.
+
 Install the matching releases together:
 
 ```sh

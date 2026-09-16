@@ -22,6 +22,7 @@ import type { WebGLLabState } from "./webgl-lab.example";
 import type { WebGLLightingLabState } from "./webgl-lighting-lab.example";
 import type { SignalsLabState } from "./signals-lab.example";
 import type { AnimationLabState } from "./animation-lab.example";
+import type { ParticleCelebrationLabState } from "./particle-celebration-lab.example";
 import { GEOMETRY_MATRIX_CASES } from "./geometry-matrix.example";
 import { MOUSE_CONTRACT_CASES } from "./mouse-contract";
 import { PERFORMANCE_WORKLOADS } from "./performance-lab.example";
@@ -1564,7 +1565,8 @@ const webglLabMetadata: ScenarioMetadata = {
         "Visible WebGL geometry composes at one Canvas paint position while depth, transforms, clips, layers, and filter overflow preserve source geometry.",
     },
     {
-      action: "Choose Transparency and compare the far-only, overlap, and near-only probes.",
+      action:
+        "Choose Transparency and compare the far-only, overlap, and near-only probes.",
       expected:
         "Although the near mesh appears first in source, the overlap blends the far green mesh before the near red mesh.",
     },
@@ -1880,6 +1882,81 @@ export const animationLabScenarioEntry: ScenarioCatalogEntry<AnimationLabState> 
     load: async () => (await import("./animation-lab")).animationLabScenario,
   };
 
+const particleCelebrationLabMetadata: ScenarioMetadata = {
+  id: "first-class-particle-celebration",
+  slug: "particle-celebration",
+  title: "Canvas particle celebration laboratory",
+  summary:
+    "Place launch points and trigger a colorful Canvas particle celebration through public CRC APIs.",
+  category: "Rendering",
+  apiTags: [
+    "defineParticleEffect2D",
+    "particleRange",
+    "particleChoice",
+    "particleCurve",
+    "crcParticleSystem",
+    "Particles2D",
+    "Clip",
+    "Layer",
+  ],
+  conceptTags: ["particle effects", "pointer bursts", "Canvas composition"],
+  manualSteps: [
+    {
+      action: "Click one or two points in the dark stage.",
+      expected:
+        "Numbered launch markers remain visible so you can see exactly where the celebration will begin.",
+    },
+    {
+      action: "Choose Launch celebration.",
+      expected:
+        "Sparkles and confetti originate at every selected point, and the launch markers clear.",
+    },
+    {
+      action: "Try Pause animation, Resume animation, Replay, and Clear stage.",
+      expected:
+        "The animation pauses and resumes; Replay repeats the last seeded launch; Clear stage removes the active effect.",
+    },
+    {
+      action: "Choose Glow on / off, then Reset.",
+      expected:
+        "Glow changes the presentation, while Reset returns the entire example to its initial state.",
+    },
+  ],
+  knownLimitations: [
+    "Canvas particle execution is CPU paint optimized and does not claim portable GPU acceleration.",
+    "The whole declared component box is the optional pointer target; individual particles are not retained targets.",
+  ],
+  learningOrder: 200,
+  visibility: "test-laboratory",
+  visibilityReason:
+    "It provides an interactive public-API test surface for pointer launches, playback controls, and Canvas composition.",
+  maturity: "contract",
+};
+
+export const particleCelebrationLabScenarioEntry: ScenarioCatalogEntry<ParticleCelebrationLabState> =
+  {
+    metadata: particleCelebrationLabMetadata,
+    canvas: { width: 640, height: 360 },
+    actions: [
+      { id: "launch", label: "Launch celebration" },
+      { id: "pause", label: "Pause animation" },
+      { id: "resume", label: "Resume animation" },
+      { id: "replay", label: "Replay" },
+      { id: "clear", label: "Clear stage" },
+      { id: "toggle-glow", label: "Glow on / off" },
+    ],
+    source: {
+      id: "first-class-particle-celebration-laboratory-example",
+      language: "tsx",
+      marker:
+        "PARTICLE_CELEBRATION_LAB_SOURCE_ID = 'first-class-particle-celebration-laboratory-example'",
+      path: "packages/scenarios/src/particle-celebration-lab.example.tsx",
+    },
+    load: async () =>
+      (await import("./particle-celebration-lab"))
+        .particleCelebrationLabScenario,
+  };
+
 export const canvasSurfaceScenarioEntry: ScenarioCatalogEntry<CanvasSurfaceState> =
   {
     metadata: canvasSurfaceMetadata,
@@ -1921,6 +1998,7 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
     webglLightingLabScenarioEntry,
     signalsLabScenarioEntry,
     animationLabScenarioEntry,
+    particleCelebrationLabScenarioEntry,
   ] as const);
 
 export const scenarioCatalogIndex = createScenarioCatalogIndex(scenarioCatalog);

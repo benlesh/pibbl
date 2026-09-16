@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@crc/core": "workspace:*",
+    "@crc/particles": "workspace:*",
     "@crc/webgl": "workspace:*"
   }
 }

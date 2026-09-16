@@ -218,6 +218,42 @@ export default function mount(canvas) {
     });
   });
 
+  it("executes core and particle imports through one Studio runtime", () => {
+    const result = executeSandbox(
+      `
+import { crc } from "@crc/core";
+import { jsx as _jsx } from "@crc/core/jsx-runtime";
+import { Particles2D, defineParticleEffect2D, particleRange } from "@crc/particles";
+const effect = defineParticleEffect2D({
+  emitters: [{
+    name: "spark",
+    capacity: 1,
+    emission: [{ type: "manual" }],
+    shape: { type: "point" },
+    initial: { lifetimeMilliseconds: particleRange(100, 200) },
+    renderer: { type: "circle" },
+  }],
+});
+export default function mount(canvas) {
+  return crc(canvas, _jsx(Particles2D, { effect, style: { width: 320, height: 180 } }));
+}
+`,
+      {
+        crc: (_canvas: unknown, node: unknown) => node,
+        jsx: (type: unknown, props: unknown) => ({ type, props }),
+        Particles2D: "particles-component",
+        defineParticleEffect2D: (effect: unknown) => effect,
+        particleRange: (min: number, max: number) => ({ min, max }),
+      },
+      {},
+    );
+
+    expect(result).toMatchObject({
+      type: "particles-component",
+      props: { style: { width: 320, height: 180 } },
+    });
+  });
+
   it.each([
     'import external from "external";',
     'import * as CRC from "@crc/core";',

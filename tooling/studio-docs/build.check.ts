@@ -591,6 +591,7 @@ assert.deepEqual(
     "Manage state and lifecycle",
     "Use signals and animation",
     "Add WebGL islands",
+    "Create particle effects",
     "Light WebGL scenes",
     "Add focus and keyboard navigation",
     "Create custom components and primitives",
@@ -678,6 +679,7 @@ const typeDomains = [
   "events",
   "filters",
   "layout",
+  "particles",
   "styles",
   "webgl",
 ] as const;

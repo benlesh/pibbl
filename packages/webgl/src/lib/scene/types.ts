@@ -16,6 +16,66 @@ export type WebGLSceneIdentity = object;
 
 export type WebGLRGBA = readonly [red: number, green: number, blue: number, alpha: number];
 
+/** Version-coupled bounds accepted from official WebGL sibling packages. */
+export interface CRCWebGLBounds {
+  readonly min: readonly [x: number, y: number, z: number];
+  readonly max: readonly [x: number, y: number, z: number];
+}
+
+/** Immutable Float32 lookup texture owned by one trusted instanced recipe. */
+export interface CRCWebGLLookupTableRecipe {
+  readonly width: number;
+  readonly height: number;
+  readonly channels: 1 | 2 | 3 | 4;
+  readonly data: Readonly<Float32Array>;
+}
+
+/** Immutable decoded sprite source owned by one trusted instanced recipe. */
+export interface CRCWebGLSpriteRecipe {
+  readonly source: TexImageSource;
+}
+
+/** Closed shader/resource recipe supplied only by an official CRC package. */
+export interface CRCWebGLInstancedRecipe {
+  readonly key: object;
+  readonly topology: 'points' | 'triangles';
+  readonly vertexSource: string;
+  readonly fragmentSource: string;
+  readonly verticesPerInstance: number;
+  readonly capacity: number;
+  readonly staticVertexData?: Readonly<Float32Array>;
+  readonly lookupTables: readonly CRCWebGLLookupTableRecipe[];
+  readonly sprite?: CRCWebGLSpriteRecipe;
+}
+
+/** Scene-owned material and blend intent for an official instanced recipe. */
+export interface CRCWebGLSceneMaterialIntent {
+  readonly type: 'unlit' | 'emissive';
+  readonly blend: 'alpha' | 'additive' | 'cutout';
+}
+
+export interface CRCWebGLInstancedSubmission {
+  readonly kind: 'instanced';
+  readonly componentName: string;
+  readonly source: CRCElementSource | undefined;
+  readonly localModel: Readonly<Float32Array>;
+  readonly localBounds: CRCWebGLBounds;
+  readonly opacity: number;
+  readonly material: CRCWebGLSceneMaterialIntent;
+  readonly depthTest: boolean;
+  readonly depthWrite: boolean;
+  readonly sorting: 'none' | 'oldest-first' | 'youngest-first';
+  readonly target: CRCEventTargetRegistration | undefined;
+  readonly recipe: CRCWebGLInstancedRecipe;
+  readonly frameUniforms: Readonly<Float32Array>;
+}
+
+export interface WebGLInstancedSubmission
+  extends Omit<CRCWebGLInstancedSubmission, 'localModel'> {
+  readonly model: Readonly<Float32Array>;
+  readonly sourceIndex: number;
+}
+
 export interface WebGLMeshSubmission {
   readonly kind: 'mesh';
   readonly componentName: string;
@@ -248,6 +308,7 @@ export interface ClosedWebGLSceneDraft {
   readonly timestamp: number;
   readonly shadowQuality: CRCWebGLShadowQuality;
   readonly meshes: readonly WebGLMeshSubmission[];
+  readonly instanced: readonly WebGLInstancedSubmission[];
   readonly lights: readonly WebGLLightSubmission[];
   readonly backgrounds: readonly WebGLBackgroundSubmission[];
 }

@@ -42,6 +42,10 @@ version-coupled friend seam reserved for matching official CRC packages; it is
 not supported for application imports and has no independent compatibility
 promise.
 
+The optional `@crc/particles` package also shares this runtime. Its root entry
+adds Canvas particle components and systems; its `./webgl` entry contributes
+instanced particle recipes through the official WebGL scene seam.
+
 Drawing and layout values use closed, local `style` objects. Styles do not
 cascade or inherit. Structural containers accept recursive synchronous
 children; `Text` separately accepts textual children, including numeric zero.

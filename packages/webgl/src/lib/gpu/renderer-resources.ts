@@ -1,5 +1,9 @@
 import { getWebGLGeometryData } from '../geometry/geometry.js';
 import type { CRCWebGLGeometry } from '../types.js';
+import type {
+  CRCWebGLInstancedRecipe,
+  CRCWebGLLookupTableRecipe,
+} from '../scene/types.js';
 import {
   createBuiltInProgram,
   deleteBuiltInProgram,
@@ -16,6 +20,22 @@ export interface WebGLGeometryResource {
   readonly indexCount: number | undefined;
 }
 
+export interface WebGLInstancedResources {
+  readonly program: WebGLProgram;
+  readonly vertexArray: WebGLVertexArrayObject;
+  readonly staticVertexBuffer: WebGLBuffer | undefined;
+  readonly lookupTextures: readonly WebGLTexture[];
+  readonly spriteTexture: WebGLTexture | undefined;
+  readonly projectionView: WebGLUniformLocation;
+  readonly model: WebGLUniformLocation;
+  readonly cameraRight: WebGLUniformLocation | null;
+  readonly cameraUp: WebGLUniformLocation | null;
+  readonly effectiveOpacity: WebGLUniformLocation;
+  readonly frameUniforms: WebGLUniformLocation | null;
+  readonly lookupSamplers: readonly WebGLUniformLocation[];
+  readonly spriteSampler: WebGLUniformLocation | null;
+}
+
 export interface WebGLRendererResourceTransaction {
   useProgram(
     key: WebGLProgramKey,
@@ -25,6 +45,10 @@ export interface WebGLRendererResourceTransaction {
     geometry: CRCWebGLGeometry,
     componentName: string,
   ): WebGLGeometryResource;
+  useInstanced(
+    recipe: CRCWebGLInstancedRecipe,
+    componentName: string,
+  ): WebGLInstancedResources;
   commit(): void;
   rollback(contextLost?: boolean): void;
 }
@@ -33,8 +57,10 @@ interface ResourceCandidate {
   active: boolean;
   readonly usedProgramKeys: Set<WebGLProgramKey>;
   readonly usedGeometries: Set<CRCWebGLGeometry>;
+  readonly usedInstancedKeys: Set<object>;
   readonly createdPrograms: Map<WebGLProgramKey, WebGLBuiltInProgram>;
   readonly createdGeometries: Map<CRCWebGLGeometry, WebGLGeometryResource>;
+  readonly createdInstanced: Map<object, WebGLInstancedResources>;
 }
 
 /** Owns the resident GPU resources for one renderer context generation. */
@@ -46,6 +72,8 @@ export class WebGLRendererResourceCache {
   private readonly programs = new Map<WebGLProgramKey, WebGLBuiltInProgram>();
   private readonly residentProgramKeys = new Set<WebGLProgramKey>();
   private readonly residentGeometries = new Set<CRCWebGLGeometry>();
+  private readonly instanced = new Map<object, WebGLInstancedResources>();
+  private readonly residentInstancedKeys = new Set<object>();
   private activeCandidate: ResourceCandidate | undefined;
   private invalidated = false;
   private disposed = false;
@@ -67,8 +95,10 @@ export class WebGLRendererResourceCache {
       active: true,
       usedProgramKeys: new Set(),
       usedGeometries: new Set(),
+      usedInstancedKeys: new Set(),
       createdPrograms: new Map(),
       createdGeometries: new Map(),
+      createdInstanced: new Map(),
     };
     this.activeCandidate = candidate;
     return Object.freeze({
@@ -81,6 +111,11 @@ export class WebGLRendererResourceCache {
         componentName: string,
       ): WebGLGeometryResource =>
         this.useGeometry(candidate, geometry, componentName),
+      useInstanced: (
+        recipe: CRCWebGLInstancedRecipe,
+        componentName: string,
+      ): WebGLInstancedResources =>
+        this.useInstanced(candidate, recipe, componentName),
       commit: (): void => this.commit(candidate),
       rollback: (contextLost = false): void =>
         this.rollback(candidate, contextLost),
@@ -95,6 +130,8 @@ export class WebGLRendererResourceCache {
     this.residentProgramKeys.clear();
     this.geometries.clear();
     this.residentGeometries.clear();
+    this.instanced.clear();
+    this.residentInstancedKeys.clear();
   }
 
   dispose(contextLost: boolean): void {
@@ -103,16 +140,22 @@ export class WebGLRendererResourceCache {
     this.closeActiveCandidate();
     const programs = Array.from(this.programs.values());
     const geometries = Array.from(this.geometries.values());
+    const instanced = Array.from(this.instanced.values());
     this.programs.clear();
     this.residentProgramKeys.clear();
     this.geometries.clear();
     this.residentGeometries.clear();
+    this.instanced.clear();
+    this.residentInstancedKeys.clear();
     if (contextLost || this.invalidated) return;
     for (const program of programs) {
       runResourceCleanup(() => deleteBuiltInProgram(this.gl, program));
     }
     for (const geometry of geometries) {
       deleteGeometry(this.gl, geometry);
+    }
+    for (const resource of instanced) {
+      deleteInstancedResources(this.gl, resource);
     }
   }
 
@@ -146,6 +189,21 @@ export class WebGLRendererResourceCache {
     return created;
   }
 
+  private useInstanced(
+    candidate: ResourceCandidate,
+    recipe: CRCWebGLInstancedRecipe,
+    componentName: string,
+  ): WebGLInstancedResources {
+    this.requireCandidate(candidate);
+    candidate.usedInstancedKeys.add(recipe.key);
+    const existing = this.instanced.get(recipe.key);
+    if (existing) return existing;
+    const created = createInstancedResources(this.gl, recipe, componentName);
+    this.instanced.set(recipe.key, created);
+    candidate.createdInstanced.set(recipe.key, created);
+    return created;
+  }
+
   private commit(candidate: ResourceCandidate): void {
     if (!candidate.active) return;
     this.requireCandidate(candidate);
@@ -164,6 +222,12 @@ export class WebGLRendererResourceCache {
         this.geometries.delete(geometry);
         if (omitted) deleteGeometry(this.gl, omitted);
       }
+      for (const key of this.residentInstancedKeys) {
+        if (candidate.usedInstancedKeys.has(key)) continue;
+        const omitted = this.instanced.get(key);
+        this.instanced.delete(key);
+        if (omitted) deleteInstancedResources(this.gl, omitted);
+      }
       this.residentProgramKeys.clear();
       for (const key of candidate.usedProgramKeys) {
         if (this.programs.has(key)) this.residentProgramKeys.add(key);
@@ -173,6 +237,10 @@ export class WebGLRendererResourceCache {
         if (this.geometries.has(geometry)) {
           this.residentGeometries.add(geometry);
         }
+      }
+      this.residentInstancedKeys.clear();
+      for (const key of candidate.usedInstancedKeys) {
+        if (this.instanced.has(key)) this.residentInstancedKeys.add(key);
       }
     } finally {
       this.closeCandidate(candidate);
@@ -198,6 +266,10 @@ export class WebGLRendererResourceCache {
           this.geometries.delete(geometry);
         }
         deleteGeometry(this.gl, created);
+      }
+      for (const [key, created] of candidate.createdInstanced) {
+        if (this.instanced.get(key) === created) this.instanced.delete(key);
+        deleteInstancedResources(this.gl, created);
       }
     } finally {
       this.closeCandidate(candidate);
@@ -234,10 +306,340 @@ export class WebGLRendererResourceCache {
     candidate.active = false;
     candidate.usedProgramKeys.clear();
     candidate.usedGeometries.clear();
+    candidate.usedInstancedKeys.clear();
     candidate.createdPrograms.clear();
     candidate.createdGeometries.clear();
+    candidate.createdInstanced.clear();
     if (this.activeCandidate === candidate) this.activeCandidate = undefined;
   }
+}
+
+function createInstancedResources(
+  gl: WebGL2RenderingContext,
+  recipe: CRCWebGLInstancedRecipe,
+  componentName: string,
+): WebGLInstancedResources {
+  let program: WebGLProgram | undefined;
+  let vertexArray: WebGLVertexArrayObject | undefined;
+  let staticVertexBuffer: WebGLBuffer | undefined;
+  const lookupTextures: WebGLTexture[] = [];
+  let spriteTexture: WebGLTexture | undefined;
+  let published = false;
+  let abandonFailedHandles = false;
+  try {
+    program = createInstancedProgram(gl, recipe, componentName);
+    vertexArray = gl.createVertexArray() ?? undefined;
+    if (!vertexArray) {
+      throw new Error(`${componentName} instanced vertex array creation failed.`);
+    }
+    gl.bindVertexArray(vertexArray);
+    if (recipe.staticVertexData !== undefined) {
+      const components = recipe.staticVertexData.length /
+        recipe.verticesPerInstance;
+      if (!Number.isInteger(components) || components < 1 || components > 4) {
+        throw new Error(
+          `${componentName} instanced static vertex data must contain one ` +
+          'to four components per vertex.',
+        );
+      }
+      staticVertexBuffer = gl.createBuffer() ?? undefined;
+      if (!staticVertexBuffer) {
+        throw new Error(
+          `${componentName} instanced static vertex buffer creation failed.`,
+        );
+      }
+      gl.bindBuffer(gl.ARRAY_BUFFER, staticVertexBuffer);
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+        recipe.staticVertexData as Float32Array,
+        gl.STATIC_DRAW,
+      );
+      gl.enableVertexAttribArray(0);
+      gl.vertexAttribPointer(0, components, gl.FLOAT, false, 0, 0);
+    }
+    for (const table of recipe.lookupTables) {
+      lookupTextures.push(uploadLookupTable(gl, table, componentName));
+    }
+    if (recipe.sprite !== undefined) {
+      spriteTexture = uploadSprite(gl, recipe.sprite.source, componentName);
+    }
+    const resource = Object.freeze({
+      program,
+      vertexArray,
+      staticVertexBuffer,
+      lookupTextures: Object.freeze(lookupTextures.slice()),
+      spriteTexture,
+      projectionView: requireInstancedUniform(
+        gl,
+        program,
+        componentName,
+        'u_projection_view',
+      ),
+      model: requireInstancedUniform(gl, program, componentName, 'u_model'),
+      cameraRight: gl.getUniformLocation(program, 'u_camera_right'),
+      cameraUp: gl.getUniformLocation(program, 'u_camera_up'),
+      effectiveOpacity: requireInstancedUniform(
+        gl,
+        program,
+        componentName,
+        'u_effective_opacity',
+      ),
+      frameUniforms: gl.getUniformLocation(program, 'u_frame_uniforms[0]'),
+      lookupSamplers: Object.freeze(recipe.lookupTables.map((_, index) =>
+        requireInstancedUniform(
+          gl,
+          program!,
+          componentName,
+          `u_lookup_${index}`,
+        ),
+      )),
+      spriteSampler: recipe.sprite === undefined ? null :
+        requireInstancedUniform(gl, program, componentName, 'u_sprite'),
+    });
+    published = true;
+    return resource;
+  } catch (error) {
+    abandonFailedHandles = contextLossPreventsResourceCleanup(gl);
+    if (error instanceof Error && error.message.startsWith(componentName)) {
+      throw error;
+    }
+    throw new Error(`${componentName} instanced resource creation failed.`, {
+      cause: error,
+    });
+  } finally {
+    if (!published && !abandonFailedHandles) {
+      if (spriteTexture) {
+        runResourceCleanup(() => gl.deleteTexture(spriteTexture!));
+      }
+      for (const texture of lookupTextures.reverse()) {
+        runResourceCleanup(() => gl.deleteTexture(texture));
+      }
+      if (staticVertexBuffer) {
+        runResourceCleanup(() => gl.deleteBuffer(staticVertexBuffer!));
+      }
+      if (vertexArray) {
+        runResourceCleanup(() => gl.deleteVertexArray(vertexArray!));
+      }
+      if (program) runResourceCleanup(() => gl.deleteProgram(program!));
+    }
+  }
+}
+
+function createInstancedProgram(
+  gl: WebGL2RenderingContext,
+  recipe: CRCWebGLInstancedRecipe,
+  componentName: string,
+): WebGLProgram {
+  let vertex: WebGLShader | undefined;
+  let fragment: WebGLShader | undefined;
+  let program: WebGLProgram | undefined;
+  let linked = false;
+  let published = false;
+  let abandonFailedHandles = false;
+  try {
+    vertex = compileInstancedShader(
+      gl,
+      gl.VERTEX_SHADER,
+      recipe.vertexSource,
+      componentName,
+      'vertex',
+    );
+    fragment = compileInstancedShader(
+      gl,
+      gl.FRAGMENT_SHADER,
+      recipe.fragmentSource,
+      componentName,
+      'fragment',
+    );
+    program = gl.createProgram() ?? undefined;
+    if (!program) {
+      throw new Error(`${componentName} instanced program creation failed.`);
+    }
+    gl.attachShader(program, vertex);
+    gl.attachShader(program, fragment);
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      throw new Error(
+        `${componentName} instanced program link failed: ` +
+        sanitizePlatformLog(gl.getProgramInfoLog(program)),
+      );
+    }
+    linked = true;
+    runResourceCleanup(() => gl.detachShader(program!, vertex!));
+    runResourceCleanup(() => gl.detachShader(program!, fragment!));
+    runResourceCleanup(() => gl.deleteShader(vertex!));
+    vertex = undefined;
+    runResourceCleanup(() => gl.deleteShader(fragment!));
+    fragment = undefined;
+    published = true;
+    return program;
+  } catch (error) {
+    abandonFailedHandles = contextLossPreventsResourceCleanup(gl);
+    throw error;
+  } finally {
+    if (!abandonFailedHandles) {
+      if (linked && program) {
+        if (vertex) runResourceCleanup(() => gl.detachShader(program!, vertex!));
+        if (fragment) {
+          runResourceCleanup(() => gl.detachShader(program!, fragment!));
+        }
+      }
+      if (vertex) runResourceCleanup(() => gl.deleteShader(vertex!));
+      if (fragment) runResourceCleanup(() => gl.deleteShader(fragment!));
+      if (!published && program) {
+        runResourceCleanup(() => gl.deleteProgram(program!));
+      }
+    }
+  }
+}
+
+function compileInstancedShader(
+  gl: WebGL2RenderingContext,
+  type: number,
+  source: string,
+  componentName: string,
+  stage: 'vertex' | 'fragment',
+): WebGLShader {
+  const shader = gl.createShader(type);
+  if (!shader) {
+    throw new Error(`${componentName} instanced ${stage} shader creation failed.`);
+  }
+  try {
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      throw new Error(
+        `${componentName} instanced ${stage} shader compilation failed: ` +
+        sanitizePlatformLog(gl.getShaderInfoLog(shader)),
+      );
+    }
+    return shader;
+  } catch (error) {
+    if (!contextLossPreventsResourceCleanup(gl)) {
+      runResourceCleanup(() => gl.deleteShader(shader));
+    }
+    throw error;
+  }
+}
+
+function uploadLookupTable(
+  gl: WebGL2RenderingContext,
+  table: CRCWebGLLookupTableRecipe,
+  componentName: string,
+): WebGLTexture {
+  const texture = gl.createTexture();
+  if (!texture) {
+    throw new Error(`${componentName} instanced lookup texture creation failed.`);
+  }
+  try {
+    const formats = lookupFormats(gl, table.channels);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      formats.internal,
+      table.width,
+      table.height,
+      0,
+      formats.format,
+      gl.FLOAT,
+      table.data as Float32Array,
+    );
+    return texture;
+  } catch (error) {
+    if (!contextLossPreventsResourceCleanup(gl)) {
+      runResourceCleanup(() => gl.deleteTexture(texture));
+    }
+    throw error;
+  }
+}
+
+function uploadSprite(
+  gl: WebGL2RenderingContext,
+  source: TexImageSource,
+  componentName: string,
+): WebGLTexture {
+  const texture = gl.createTexture();
+  if (!texture) {
+    throw new Error(`${componentName} instanced sprite texture creation failed.`);
+  }
+  try {
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      source,
+    );
+    return texture;
+  } catch (error) {
+    if (!contextLossPreventsResourceCleanup(gl)) {
+      runResourceCleanup(() => gl.deleteTexture(texture));
+    }
+    throw error;
+  }
+}
+
+function lookupFormats(
+  gl: WebGL2RenderingContext,
+  channels: CRCWebGLLookupTableRecipe['channels'],
+): Readonly<{ internal: number; format: number }> {
+  switch (channels) {
+    case 1: return { internal: gl.R32F, format: gl.RED };
+    case 2: return { internal: gl.RG32F, format: gl.RG };
+    case 3: return { internal: gl.RGB32F, format: gl.RGB };
+    case 4: return { internal: gl.RGBA32F, format: gl.RGBA };
+  }
+}
+
+function requireInstancedUniform(
+  gl: WebGL2RenderingContext,
+  program: WebGLProgram,
+  componentName: string,
+  name: string,
+): WebGLUniformLocation {
+  const location = gl.getUniformLocation(program, name);
+  if (location === null) {
+    throw new Error(
+      `${componentName} instanced program link did not expose ${name}.`,
+    );
+  }
+  return location;
+}
+
+function sanitizePlatformLog(log: string | null): string {
+  const sanitized = Array.from(log ?? '', character => {
+    const code = character.charCodeAt(0);
+    return code <= 0x1f || code === 0x7f ? ' ' : character;
+  }).join('').replace(/\s+/g, ' ').trim();
+  return sanitized || 'no platform diagnostic was provided';
+}
+
+function deleteInstancedResources(
+  gl: WebGL2RenderingContext,
+  resource: WebGLInstancedResources,
+): void {
+  if (resource.spriteTexture) {
+    runResourceCleanup(() => gl.deleteTexture(resource.spriteTexture!));
+  }
+  for (const texture of resource.lookupTextures) {
+    runResourceCleanup(() => gl.deleteTexture(texture));
+  }
+  if (resource.staticVertexBuffer) {
+    runResourceCleanup(() => gl.deleteBuffer(resource.staticVertexBuffer!));
+  }
+  runResourceCleanup(() => gl.deleteVertexArray(resource.vertexArray));
+  runResourceCleanup(() => gl.deleteProgram(resource.program));
 }
 
 function uploadGeometry(

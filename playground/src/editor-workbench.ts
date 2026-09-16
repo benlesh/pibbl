@@ -84,13 +84,15 @@ let monacoConfigured = false;
 
 const declarationModulePaths = new Map([
   ["@crc/core", "file:///node_modules/@crc/core/index.d.ts"],
-  [
-    "@crc/core/jsx-runtime",
-    "file:///node_modules/@crc/core/jsx-runtime.d.ts",
-  ],
+  ["@crc/core/jsx-runtime", "file:///node_modules/@crc/core/jsx-runtime.d.ts"],
   [
     "@crc/core/jsx-dev-runtime",
     "file:///node_modules/@crc/core/jsx-dev-runtime.d.ts",
+  ],
+  ["@crc/particles", "file:///node_modules/@crc/particles/index.d.ts"],
+  [
+    "@crc/particles/webgl",
+    "file:///node_modules/@crc/particles/webgl.d.ts",
   ],
   ["@crc/webgl", "file:///node_modules/@crc/webgl/index.d.ts"],
 ]);
@@ -100,9 +102,7 @@ function declarationLibraries(): Array<{
   filePath: string;
 }> {
   const markers = [
-    ...crcDeclarationBundle.matchAll(
-      /^\/\* @crc-studio-module (.+) \*\/$/gmu,
-    ),
+    ...crcDeclarationBundle.matchAll(/^\/\* @crc-studio-module (.+) \*\/$/gmu),
   ];
   const libraries = markers.map((marker, index) => {
     const moduleName = marker[1];
@@ -124,7 +124,7 @@ function declarationLibraries(): Array<{
       declarationModulePaths.size
   ) {
     throw new Error(
-      "CRC Studio declarations must define all four package entry points.",
+      "CRC Studio declarations must define all six package entry points.",
     );
   }
   return libraries;

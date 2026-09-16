@@ -179,8 +179,11 @@ try {
   });
 
   for (const route of routes) {
+    if (route.name === "webgl-lighting") await page.goto("about:blank");
     await page.goto(`${origin}/${route.hash}`);
     await page.locator(route.ready).waitFor({ timeout: 30_000 });
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+    await page.waitForFunction(() => window.scrollY === 0);
     await page.evaluate(() => {
       if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     });

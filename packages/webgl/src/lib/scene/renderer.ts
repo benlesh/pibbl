@@ -23,12 +23,18 @@ import type {
 import {
   createWebGLStateBaseline,
   installDirectionalShadowWebGLPass,
+  installInstancedWebGLPass,
   installOpaqueWebGLPass,
   installTransparentWebGLPass,
   installWebGLStateBaseline,
   type WebGLStateBaseline,
 } from '../gpu/state.js';
-import type { SettledWebGLMesh, SettledWebGLScene } from './settle.js';
+import type {
+  SettledWebGLInstanced,
+  SettledWebGLMesh,
+  SettledWebGLScene,
+  SettledWebGLSceneEntry,
+} from './settle.js';
 import type {
   SettledWebGLLight,
   SettledWebGLDirectionalShadowPlan,
@@ -162,28 +168,41 @@ export class WebGLSceneRenderer {
       ) : undefined;
       const frameBoundPrograms = new Set<WebGLBuiltInProgram>();
       installOpaqueWebGLPass(this.gl);
-      for (const mesh of scene.opaque) {
-        drawMesh(
-          this.gl,
-          transaction,
-          scene,
-          mesh,
-          lights,
-          packedShadows,
-          frameBoundPrograms,
-        );
+      for (const entry of scene.opaque) {
+        if (entry.kind === 'mesh') {
+          installOpaqueWebGLPass(this.gl);
+          drawMesh(
+            this.gl,
+            transaction,
+            scene,
+            entry,
+            lights,
+            packedShadows,
+            frameBoundPrograms,
+          );
+        } else {
+          drawInstanced(this.gl, transaction, scene, entry);
+        }
       }
       installTransparentWebGLPass(this.gl);
-      for (const mesh of scene.transparent) {
-        drawMesh(
-          this.gl,
-          transaction,
-          scene,
-          mesh,
-          lights,
-          packedShadows,
-          frameBoundPrograms,
-        );
+      for (const entry of scene.transparent) {
+        if (entry.kind === 'mesh') {
+          installTransparentWebGLPass(this.gl);
+          drawMesh(
+            this.gl,
+            transaction,
+            scene,
+            entry,
+            lights,
+            packedShadows,
+            frameBoundPrograms,
+          );
+        } else {
+          drawInstanced(this.gl, transaction, scene, entry);
+        }
+      }
+      for (const entry of scene.additive) {
+        drawInstanced(this.gl, transaction, scene, entry);
       }
       installWebGLStateBaseline(
         this.gl,
@@ -257,6 +276,75 @@ export class WebGLSceneRenderer {
       return false;
     }
   }
+}
+
+function drawInstanced(
+  gl: WebGL2RenderingContext,
+  transaction: WebGLRendererResourceTransaction,
+  scene: SettledWebGLScene,
+  entry: SettledWebGLInstanced,
+): void {
+  installInstancedWebGLPass(
+    gl,
+    entry.material.blend,
+    entry.depthTest,
+    entry.depthWrite,
+  );
+  const resource = transaction.useInstanced(
+    entry.recipe,
+    entry.componentName,
+  );
+  gl.useProgram(resource.program);
+  gl.bindVertexArray(resource.vertexArray);
+  gl.uniformMatrix4fv(
+    resource.projectionView,
+    false,
+    scene.camera.projectionViewMatrix,
+  );
+  gl.uniformMatrix4fv(resource.model, false, entry.model);
+  if (resource.cameraRight !== null) {
+    gl.uniform3f(
+      resource.cameraRight,
+      scene.camera.viewMatrix[0]!,
+      scene.camera.viewMatrix[4]!,
+      scene.camera.viewMatrix[8]!,
+    );
+  }
+  if (resource.cameraUp !== null) {
+    gl.uniform3f(
+      resource.cameraUp,
+      scene.camera.viewMatrix[1]!,
+      scene.camera.viewMatrix[5]!,
+      scene.camera.viewMatrix[9]!,
+    );
+  }
+  gl.uniform1f(resource.effectiveOpacity, entry.effectiveOpacity);
+  if (entry.frameUniforms.length > 0) {
+    if (resource.frameUniforms === null) {
+      throw new Error(
+        `${entry.componentName} instanced program link did not expose ` +
+        'u_frame_uniforms[0].',
+      );
+    }
+    gl.uniform1fv(resource.frameUniforms, entry.frameUniforms as Float32Array);
+  }
+  for (let index = 0; index < resource.lookupTextures.length; index += 1) {
+    gl.activeTexture(gl.TEXTURE0 + index);
+    gl.bindTexture(gl.TEXTURE_2D, resource.lookupTextures[index]!);
+    gl.uniform1i(resource.lookupSamplers[index]!, index);
+  }
+  if (resource.spriteTexture && resource.spriteSampler) {
+    const unit = resource.lookupTextures.length;
+    gl.activeTexture(gl.TEXTURE0 + unit);
+    gl.bindTexture(gl.TEXTURE_2D, resource.spriteTexture);
+    gl.uniform1i(resource.spriteSampler, unit);
+  }
+  gl.drawArraysInstanced(
+    entry.recipe.topology === 'points' ? gl.POINTS : gl.TRIANGLES,
+    0,
+    entry.recipe.verticesPerInstance,
+    entry.recipe.capacity,
+  );
 }
 
 function drawMesh(
@@ -561,8 +649,10 @@ function packWebGLShadows(
   return { enabled, matrices, parameters, textures2D, texturesCube, bindings };
 }
 
-function isLambertMesh(mesh: SettledWebGLMesh): boolean {
-  return mesh.shading.kind === 'lambert';
+function isLambertMesh(
+  entry: SettledWebGLSceneEntry,
+): entry is SettledWebGLMesh {
+  return entry.kind === 'mesh' && entry.shading.kind === 'lambert';
 }
 
 function packWebGLLights(

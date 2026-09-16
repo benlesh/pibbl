@@ -21,6 +21,8 @@ const modulePaths = new Map([
   ['@crc/core', 'node_modules/@crc/core/index.d.ts'],
   ['@crc/core/jsx-runtime', 'node_modules/@crc/core/jsx-runtime.d.ts'],
   ['@crc/core/jsx-dev-runtime', 'node_modules/@crc/core/jsx-dev-runtime.d.ts'],
+  ['@crc/particles', 'node_modules/@crc/particles/index.d.ts'],
+  ['@crc/particles/webgl', 'node_modules/@crc/particles/webgl.d.ts'],
   ['@crc/webgl', 'node_modules/@crc/webgl/index.d.ts'],
 ]);
 
@@ -38,7 +40,7 @@ function readDeclarationModules(bundle) {
     new Set(modules.map(({ moduleName }) => moduleName)).size !== modulePaths.size ||
     modules.some(({ moduleName }) => !modulePaths.has(moduleName))
   ) {
-    throw new Error('CRC Studio declarations must define the four package entry points exactly once.');
+    throw new Error('CRC Studio declarations must define the six package entry points exactly once.');
   }
   return modules;
 }
@@ -263,6 +265,8 @@ const packageDeclarationSources = new Map([
     '@crc/core/jsx-dev-runtime',
     await readFile(join(repositoryRoot, 'packages/core/src/jsx-dev-runtime.ts'), 'utf8'),
   ],
+  ['@crc/particles', await readFile(join(repositoryRoot, 'packages/particles/src/index.ts'), 'utf8')],
+  ['@crc/particles/webgl', await readFile(join(repositoryRoot, 'packages/particles/src/webgl.ts'), 'utf8')],
   ['@crc/webgl', await readFile(join(repositoryRoot, 'packages/webgl/src/index.ts'), 'utf8')],
 ]);
 
@@ -276,6 +280,8 @@ const builtPackageDeclarationSources = new Map([
     '@crc/core/jsx-dev-runtime',
     await readFile(join(repositoryRoot, 'packages/core/dist/jsx-dev-runtime.d.ts'), 'utf8'),
   ],
+  ['@crc/particles', await readFile(join(repositoryRoot, 'packages/particles/dist/index.d.ts'), 'utf8')],
+  ['@crc/particles/webgl', await readFile(join(repositoryRoot, 'packages/particles/dist/webgl.d.ts'), 'utf8')],
   ['@crc/webgl', await readFile(join(repositoryRoot, 'packages/webgl/dist/index.d.ts'), 'utf8')],
 ]);
 
@@ -1583,6 +1589,8 @@ try {
       internal: join(repositoryRoot, 'packages/core/src/internal.ts'),
       jsxRuntime: join(repositoryRoot, 'packages/core/src/jsx-runtime.ts'),
       jsxDevRuntime: join(repositoryRoot, 'packages/core/src/jsx-dev-runtime.ts'),
+      particles: join(repositoryRoot, 'packages/particles/src/index.ts'),
+      particlesWebGL: join(repositoryRoot, 'packages/particles/src/webgl.ts'),
       webgl: join(repositoryRoot, 'packages/webgl/src/index.ts'),
     },
     {
@@ -1591,6 +1599,8 @@ try {
       internal: join(repositoryRoot, 'packages/core/dist/internal.d.ts'),
       jsxRuntime: join(repositoryRoot, 'packages/core/dist/jsx-runtime.d.ts'),
       jsxDevRuntime: join(repositoryRoot, 'packages/core/dist/jsx-dev-runtime.d.ts'),
+      particles: join(repositoryRoot, 'packages/particles/dist/index.d.ts'),
+      particlesWebGL: join(repositoryRoot, 'packages/particles/dist/webgl.d.ts'),
       webgl: join(repositoryRoot, 'packages/webgl/dist/index.d.ts'),
     },
   ];
@@ -1612,6 +1622,8 @@ try {
           '@crc/core/internal': [entries.internal],
           '@crc/core/jsx-runtime': [entries.jsxRuntime],
           '@crc/core/jsx-dev-runtime': [entries.jsxDevRuntime],
+          '@crc/particles': [entries.particles],
+          '@crc/particles/webgl': [entries.particlesWebGL],
           '@crc/webgl': [entries.webgl],
         },
         skipLibCheck: false,
@@ -1772,6 +1784,17 @@ try {
     'measureElement',
     'normalizeEdges',
     'parallel',
+    'Particles2D',
+    'Particles3D',
+    'crcParticleSystem',
+    'defineParticleEffect2D',
+    'defineParticleEffect3D',
+    'particleChoice',
+    'particleCurve',
+    'particleGradient',
+    'particleInteger',
+    'particleParameter',
+    'particleRange',
     'repeat',
     'resolveBox',
     'resolveLength',
@@ -1784,8 +1807,8 @@ try {
     'untracked',
     'wait',
   ].sort();
-  if (expectedStudioRuntimeExports.length !== 94) {
-    throw new Error(`CRC Studio runtime must expose 77 core values, 14 WebGL values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`);
+  if (expectedStudioRuntimeExports.length !== 105) {
+    throw new Error(`CRC Studio runtime must expose 77 core values, 14 WebGL values, 11 particle values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`);
   }
   if (sourceRuntimeExports.join('\n') !== expectedStudioRuntimeExports.join('\n')) {
     throw new Error(

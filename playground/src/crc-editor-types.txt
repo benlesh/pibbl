@@ -451,6 +451,338 @@
     export type LibraryManagedAttributes<C, P> = C extends CRCPrimitiveComponent<any, any> ? PrimitiveInputOf<C> : 'key' extends keyof P ? never : P;
   }
 
+/* @crc-studio-module @crc/particles */
+  import type {
+    BoxStyle,
+    CRCEventHandlers,
+    CRCEventParticipationOptions,
+    CRCNode,
+    CursorStyle,
+    LayoutBox,
+    LayoutItemStyle,
+    Signal,
+    SystemStyle,
+  } from '@crc/core';
+
+  export type CRCParticleParameterTiming = 'spawn' | 'simulation' | 'render';
+  export type CRCParticleParameterDefinition =
+    | Readonly<{ type: 'number'; default: number; timing: CRCParticleParameterTiming }>
+    | Readonly<{ type: 'vector2'; default: readonly [number, number]; timing: CRCParticleParameterTiming }>
+    | Readonly<{ type: 'vector3'; default: readonly [number, number, number]; timing: CRCParticleParameterTiming }>
+    | Readonly<{ type: 'color'; default: string; timing: CRCParticleParameterTiming }>;
+  export type CRCParticleParameterDefinitions = Readonly<Record<string, CRCParticleParameterDefinition>>;
+  export type CRCParticleValueFor<Definition extends CRCParticleParameterDefinition> =
+    Definition['type'] extends 'number' ? number :
+    Definition['type'] extends 'vector2' ? readonly [number, number] :
+    Definition['type'] extends 'vector3' ? readonly [number, number, number] :
+    Definition['type'] extends 'color' ? string : never;
+  export type CRCParticleValuesOf<Definitions extends CRCParticleParameterDefinitions | undefined> =
+    Definitions extends CRCParticleParameterDefinitions
+      ? Readonly<{ [Name in keyof Definitions]: CRCParticleValueFor<Definitions[Name]> }>
+      : Readonly<Record<never, never>>;
+  export type CRCParticleParameterValue = number | string | readonly [number, number] | readonly [number, number, number];
+  export type CRCParticleParameterValues = Readonly<Record<string, CRCParticleParameterValue>>;
+
+  export interface CRCParticleRange { readonly type: 'between'; readonly min: number; readonly max: number }
+  export interface CRCParticleIntegerRange { readonly type: 'integer'; readonly min: number; readonly max: number }
+  export interface CRCParticleChoice<T> {
+    readonly type: 'choice';
+    readonly choices: readonly Readonly<{ value: T; weight: number }>[];
+  }
+  export interface CRCParticleParameterReference<Name extends string> { readonly type: 'parameter'; readonly name: Name }
+  export type CRCParticleScalar = number | CRCParticleRange | CRCParticleIntegerRange | CRCParticleChoice<number> | CRCParticleParameterReference<string>;
+  export type CRCParticleVector2 = readonly [CRCParticleScalar, CRCParticleScalar] | CRCParticleParameterReference<string>;
+  export type CRCParticleVector3 = readonly [CRCParticleScalar, CRCParticleScalar, CRCParticleScalar] | CRCParticleParameterReference<string>;
+  export type CRCParticleCurveValue = number | readonly [number, number];
+  export interface CRCParticleCurveOptions { readonly easing?: import('@crc/core').CRCEasing }
+  export interface CRCParticleCurve<T extends CRCParticleCurveValue> {
+    readonly type: 'curve';
+    readonly keys: readonly (readonly [time: number, value: T])[];
+    readonly options?: CRCParticleCurveOptions;
+  }
+  export interface CRCParticleGradient {
+    readonly type: 'gradient';
+    readonly keys: readonly (readonly [time: number, color: string])[];
+    readonly options?: CRCParticleCurveOptions;
+  }
+
+  export type CRCParticleEmission =
+    | Readonly<{
+        type: 'rate';
+        particlesPerSecond: number;
+        startMilliseconds?: number;
+        durationMilliseconds?: number;
+        probability?: number;
+        repeat?: Readonly<{ everyMilliseconds: number; count: number }>;
+      }>
+    | Readonly<{
+        type: 'burst';
+        atMilliseconds: number;
+        count: number | CRCParticleIntegerRange;
+        probability?: number;
+        repeat?: Readonly<{ everyMilliseconds: number; count: number }>;
+      }>
+    | Readonly<{ type: 'manual'; count?: number | CRCParticleIntegerRange }>;
+  export type CRCParticleShape2D =
+    | Readonly<{ type: 'point'; position?: readonly [number, number] }>
+    | Readonly<{ type: 'line'; from: readonly [number, number]; to: readonly [number, number] }>
+    | Readonly<{ type: 'rectangle'; width: number; height: number; sample: 'interior' | 'edge' }>
+    | Readonly<{ type: 'circle'; radius: number; sample: 'interior' | 'circumference' }>
+    | Readonly<{ type: 'ring'; innerRadius: number; outerRadius: number }>;
+  export interface CRCParticleInitial2D {
+    readonly lifetimeMilliseconds: CRCParticleScalar;
+    readonly velocity?: CRCParticleVector2;
+    readonly size?: CRCParticleScalar | CRCParticleVector2;
+    readonly rotationDegrees?: CRCParticleScalar;
+    readonly angularVelocityDegreesPerSecond?: CRCParticleScalar;
+    readonly color?: string | CRCParticleChoice<string> | CRCParticleParameterReference<string>;
+    readonly opacity?: CRCParticleScalar;
+  }
+  export type CRCParticleMotion2D =
+    | Readonly<{ type: 'acceleration' | 'gravity'; value: CRCParticleVector2 }>
+    | Readonly<{ type: 'drag'; amount: CRCParticleScalar }>
+    | Readonly<{ type: 'drift'; velocity: CRCParticleVector2 }>
+    | Readonly<{ type: 'radialAcceleration'; center: readonly [number, number]; amount: CRCParticleScalar }>
+    | Readonly<{ type: 'orbit'; center: readonly [number, number]; degreesPerSecond: CRCParticleScalar }>
+    | Readonly<{ type: 'sway'; amplitude: CRCParticleScalar; frequency: CRCParticleScalar | readonly [number, number] }>
+    | Readonly<{ type: 'angularVelocity'; degreesPerSecond: CRCParticleScalar }>;
+  export interface CRCParticleAppearance {
+    readonly size?: CRCParticleCurve<number | readonly [number, number]>;
+    readonly rotationDegrees?: CRCParticleCurve<number>;
+    readonly color?: CRCParticleGradient;
+    readonly opacity?: CRCParticleCurve<number>;
+  }
+  export type CRCParticleRenderer2D =
+    | Readonly<{ type: 'circle'; blend?: 'source-over' | 'additive' }>
+    | Readonly<{ type: 'rectangle'; aspectRatio?: number; blend?: 'source-over' | 'additive' }>
+    | Readonly<{ type: 'path'; path: Path2D; blend?: 'source-over' | 'additive' }>
+    | Readonly<{ type: 'sprite'; source: CanvasImageSource; anchor?: readonly [number, number]; blend?: 'source-over' | 'additive' }>;
+  export interface CRCParticleBounds2D { readonly min: readonly [number, number]; readonly max: readonly [number, number] }
+  export type CRCParticleOverflow = 'reject-newest' | 'recycle-oldest';
+  export interface CRCParticleEmitter2D {
+    readonly name: string;
+    readonly capacity: number;
+    readonly overflow?: CRCParticleOverflow;
+    readonly space?: 'local';
+    readonly emission: readonly CRCParticleEmission[];
+    readonly shape: CRCParticleShape2D;
+    readonly initial: CRCParticleInitial2D;
+    readonly motion?: readonly CRCParticleMotion2D[];
+    readonly appearance?: CRCParticleAppearance;
+    readonly renderer: CRCParticleRenderer2D;
+    readonly bounds?: CRCParticleBounds2D;
+  }
+  export interface CRCParticleEffect2DInput {
+    readonly debugName?: string;
+    readonly parameters?: CRCParticleParameterDefinitions;
+    readonly emitters: readonly [CRCParticleEmitter2D, ...CRCParticleEmitter2D[]];
+  }
+  declare const particleEffectBrand: unique symbol;
+  export interface CRCParticleEffect2D<
+    EmitterName extends string = string,
+    Parameters extends CRCParticleParameterValues = CRCParticleParameterValues,
+  > {
+    readonly dimension: 2;
+    readonly [particleEffectBrand]: { readonly emitterName: EmitterName; readonly parameters: Parameters };
+  }
+
+  export type CRCParticleSystemStatus = 'idle' | 'scheduled' | 'running' | 'paused' | 'draining' | 'finished' | 'disposed';
+  export type CRCParticleExecution = 'unbound' | 'stateless-canvas' | 'stateful-canvas' | 'stateless-webgl' | 'stateful-cpu-webgl' | 'stateful-gpu-webgl';
+  export interface CRCParticleStartEvent { readonly type: 'start' }
+  export interface CRCParticleBurstAcceptedEvent { readonly type: 'burst-accepted'; readonly emitter: string; readonly requested: number; readonly accepted: number }
+  export interface CRCParticleBurstRejectedEvent { readonly type: 'burst-rejected'; readonly emitter: string; readonly requested: number; readonly accepted: number; readonly reason: 'capacity' | 'paused' | 'stopped' | 'disposed' }
+  export interface CRCParticleDrainStartEvent { readonly type: 'drain-start' }
+  export interface CRCParticleFinishEvent { readonly type: 'finish' }
+  export type CRCParticleSystemEvent = CRCParticleStartEvent | CRCParticleBurstAcceptedEvent | CRCParticleBurstRejectedEvent | CRCParticleDrainStartEvent | CRCParticleFinishEvent;
+  export type CRCParticleDiagnostic =
+    | Readonly<{ type: 'definition-invalid'; message: string; effect?: string; emitter?: string; property?: string }>
+    | Readonly<{ type: 'capability-unsupported'; message: string; capability: string; effect?: string; emitter?: string }>
+    | Readonly<{ type: 'asset-invalid' | 'binding-conflict' | 'backend-mismatch'; message: string; effect?: string; emitter?: string }>
+    | Readonly<{ type: 'capacity-rejected' | 'execution-failed' | 'disposed'; message: string; effect?: string; emitter?: string }>;
+  export interface CRCParticleSystemOptions {
+    readonly autoplay?: boolean;
+    readonly seed?: number;
+    readonly debugName?: string;
+    readonly onEvent?: (event: CRCParticleSystemEvent) => void;
+    readonly onError?: (error: unknown) => void;
+  }
+  export interface CRCParticleBurstOverrides<Dimension extends 2 | 3 = 2 | 3> {
+    readonly count?: number;
+    readonly position?: Dimension extends 2 ? readonly [number, number] : readonly [number, number, number];
+    readonly seedSalt?: number;
+    readonly parameters?: Readonly<Record<string, number | readonly number[] | string>>;
+  }
+  declare const particleSystemBrand: unique symbol;
+  export interface CRCParticleSystem<
+    EmitterName extends string = string,
+    Parameters extends CRCParticleParameterValues = CRCParticleParameterValues,
+    Dimension extends 2 | 3 = 2 | 3,
+  > {
+    readonly [particleSystemBrand]: { readonly parameters: Parameters; readonly dimension: Dimension };
+    readonly status: Signal<CRCParticleSystemStatus>;
+    readonly execution: Signal<CRCParticleExecution>;
+    play(): void;
+    pause(): void;
+    resume(): void;
+    restart(options?: Readonly<{ seed?: number }>): void;
+    emit(emitter: EmitterName, options?: CRCParticleBurstOverrides<Dimension>): void;
+    stop(options?: Readonly<{ mode?: 'drain' | 'clear' }>): void;
+  }
+  export interface CRCParticleCommonProps<Parameters extends CRCParticleParameterValues>
+    extends CRCEventHandlers, CRCEventParticipationOptions {
+    readonly parameters?: Readonly<Partial<Parameters>>;
+    readonly keyboardFocusable?: boolean;
+    readonly keyboardNavigationBounds?: Readonly<LayoutBox>;
+    readonly onEvent?: (event: CRCParticleSystemEvent) => void;
+    readonly onError?: (error: unknown) => void;
+  }
+  export interface Particles2DStyle extends SystemStyle, BoxStyle, LayoutItemStyle, CursorStyle { readonly opacity?: number }
+  export type Particles2DProps<
+    EmitterName extends string = string,
+    Parameters extends CRCParticleParameterValues = CRCParticleParameterValues,
+  > = CRCParticleCommonProps<Parameters> & { readonly style?: Particles2DStyle } & (
+    | { readonly effect: CRCParticleEffect2D<EmitterName, Parameters>; readonly system?: never; readonly autoplay?: boolean; readonly seed?: number }
+    | { readonly effect?: never; readonly system: CRCParticleSystem<EmitterName, Parameters, 2>; readonly autoplay?: never; readonly seed?: never }
+  );
+
+  export declare function defineParticleEffect2D<const Input extends CRCParticleEffect2DInput>(
+    input: Input,
+  ): CRCParticleEffect2D<
+    Input['emitters'][number]['name'],
+    CRCParticleValuesOf<Input extends { readonly parameters: infer Definitions }
+      ? Extract<Definitions, CRCParticleParameterDefinitions>
+      : undefined>
+  >;
+  export declare function particleRange(min: number, max: number): CRCParticleRange;
+  export declare function particleInteger(min: number, max: number): CRCParticleIntegerRange;
+  export declare function particleChoice<const T>(choices: readonly Readonly<{ value: T; weight: number }>[]): CRCParticleChoice<T>;
+  export declare function particleParameter<const Name extends string>(name: Name): CRCParticleParameterReference<Name>;
+  export declare function particleCurve<const T extends CRCParticleCurveValue>(keys: readonly (readonly [time: number, value: T])[], options?: CRCParticleCurveOptions): CRCParticleCurve<T>;
+  export declare function particleGradient(keys: readonly (readonly [time: number, color: string])[], options?: CRCParticleCurveOptions): CRCParticleGradient;
+  export declare function crcParticleSystem<
+    EmitterName extends string,
+    Parameters extends CRCParticleParameterValues,
+  >(
+    effect: CRCParticleEffect2D<EmitterName, Parameters>,
+    options?: CRCParticleSystemOptions,
+  ): CRCParticleSystem<EmitterName, Parameters, 2>;
+  export declare function Particles2D<
+    EmitterName extends string,
+    Parameters extends CRCParticleParameterValues,
+  >(props: Particles2DProps<EmitterName, Parameters>): CRCNode;
+
+/* @crc-studio-module @crc/particles/webgl */
+  import type { CRCNode } from '@crc/core';
+  import type { CRCWebGLTransformStyle } from '@crc/webgl';
+  import type {
+    CRCParticleAppearance,
+    CRCParticleCommonProps,
+    CRCParticleEmission,
+    CRCParticleOverflow,
+    CRCParticleParameterDefinitions,
+    CRCParticleParameterReference,
+    CRCParticleParameterValues,
+    CRCParticleScalar,
+    CRCParticleSystem,
+    CRCParticleValuesOf,
+    CRCParticleVector2,
+    CRCParticleVector3 as SharedCRCParticleVector3,
+  } from '@crc/particles';
+
+  export type CRCParticleVector3 = SharedCRCParticleVector3;
+  export type CRCParticleShape3D =
+    | Readonly<{ type: 'point'; position?: readonly [number, number, number] }>
+    | Readonly<{ type: 'line'; from: readonly [number, number, number]; to: readonly [number, number, number] }>
+    | Readonly<{ type: 'box'; size: readonly [number, number, number]; sample: 'volume' | 'surface' }>
+    | Readonly<{ type: 'sphere'; radius: number; thickness?: number; sample: 'volume' | 'surface' }>
+    | Readonly<{ type: 'ring'; innerRadius: number; outerRadius: number }>
+    | Readonly<{ type: 'cone'; direction: readonly [number, number, number]; spreadDegrees: number; length: number; sample: 'volume' | 'surface' }>;
+  export interface CRCParticleConeVelocity3D {
+    readonly type: 'cone';
+    readonly direction: CRCParticleVector3;
+    readonly speed: CRCParticleScalar;
+    readonly spreadDegrees: CRCParticleScalar;
+  }
+  export interface CRCParticleInitial3D {
+    readonly lifetimeMilliseconds: CRCParticleScalar;
+    readonly velocity?: CRCParticleVector3 | CRCParticleConeVelocity3D;
+    readonly size?: CRCParticleScalar | CRCParticleVector2;
+    readonly rotationDegrees?: CRCParticleScalar;
+    readonly angularVelocityDegreesPerSecond?: CRCParticleScalar;
+    readonly color?: string | import('@crc/particles').CRCParticleChoice<string> | CRCParticleParameterReference<string>;
+    readonly opacity?: CRCParticleScalar;
+  }
+  export type CRCParticleMotion3D =
+    | Readonly<{ type: 'acceleration' | 'gravity'; value: CRCParticleVector3 }>
+    | Readonly<{ type: 'drag'; amount: CRCParticleScalar }>
+    | Readonly<{ type: 'drift'; velocity: CRCParticleVector3 }>
+    | Readonly<{ type: 'radialAcceleration'; center: readonly [number, number, number]; amount: CRCParticleScalar }>
+    | Readonly<{ type: 'orbit'; center: readonly [number, number, number]; axis: CRCParticleVector3; degreesPerSecond: CRCParticleScalar }>
+    | Readonly<{ type: 'sway'; direction: CRCParticleVector3; amplitude: CRCParticleScalar; frequency: CRCParticleScalar | readonly [number, number] }>
+    | Readonly<{ type: 'angularVelocity'; degreesPerSecond: CRCParticleVector3 }>;
+  export type CRCParticleRenderer3D =
+    | Readonly<{ type: 'point'; material: 'unlit' | 'emissive'; blend: 'alpha' | 'additive' | 'cutout'; depthTest?: boolean; depthWrite?: boolean; sorting?: 'none' | 'oldest-first' | 'youngest-first' | 'distance' }>
+    | Readonly<{ type: 'billboard'; source?: CanvasImageSource; material: 'unlit' | 'emissive'; blend: 'alpha' | 'additive' | 'cutout'; depthTest?: boolean; depthWrite?: boolean; sorting?: 'none' | 'oldest-first' | 'youngest-first' | 'distance' }>;
+  export interface CRCParticleBounds3D { readonly min: readonly [number, number, number]; readonly max: readonly [number, number, number] }
+  export interface CRCParticleEmitter3D {
+    readonly name: string;
+    readonly capacity: number;
+    readonly overflow?: CRCParticleOverflow;
+    readonly space?: 'local';
+    readonly emission: readonly CRCParticleEmission[];
+    readonly shape: CRCParticleShape3D;
+    readonly initial: CRCParticleInitial3D;
+    readonly motion?: readonly CRCParticleMotion3D[];
+    readonly appearance?: CRCParticleAppearance;
+    readonly renderer: CRCParticleRenderer3D;
+    readonly bounds?: CRCParticleBounds3D;
+  }
+  export interface CRCParticleEffect3DInput {
+    readonly debugName?: string;
+    readonly parameters?: CRCParticleParameterDefinitions;
+    readonly emitters: readonly [CRCParticleEmitter3D, ...CRCParticleEmitter3D[]];
+  }
+  declare const particleEffect3DBrand: unique symbol;
+  export interface CRCParticleEffect3D<
+    EmitterName extends string = string,
+    Parameters extends CRCParticleParameterValues = CRCParticleParameterValues,
+  > {
+    readonly dimension: 3;
+    readonly [particleEffect3DBrand]: { readonly emitterName: EmitterName; readonly parameters: Parameters };
+  }
+  export type CRCParticleExecutionCapability =
+    | Readonly<{ type: 'stateless-canvas'; supported: true }>
+    | Readonly<{ type: 'stateless-webgl'; supported: true }>
+    | Readonly<{ type: 'stateful-canvas' | 'stateful-cpu-webgl' | 'stateful-gpu-webgl'; supported: false; reasons: readonly string[] }>;
+  export interface Particles3DStyle extends CRCWebGLTransformStyle {
+    readonly opacity?: number;
+    readonly cursor?: string;
+    readonly filter?: never;
+  }
+  export type Particles3DProps<
+    EmitterName extends string = string,
+    Parameters extends CRCParticleParameterValues = CRCParticleParameterValues,
+  > = CRCParticleCommonProps<Parameters> & {
+    readonly style?: Particles3DStyle;
+    readonly execution?: 'auto' | 'cpu' | 'gpu';
+    readonly interactionBounds?: CRCParticleBounds3D;
+  } & (
+    | { readonly effect: CRCParticleEffect3D<EmitterName, Parameters>; readonly system?: never; readonly autoplay?: boolean; readonly seed?: number }
+    | { readonly effect?: never; readonly system: CRCParticleSystem<EmitterName, Parameters, 3>; readonly autoplay?: never; readonly seed?: never }
+  );
+  export declare function defineParticleEffect3D<const Input extends CRCParticleEffect3DInput>(
+    input: Input,
+  ): CRCParticleEffect3D<
+    Input['emitters'][number]['name'],
+    CRCParticleValuesOf<Input extends { readonly parameters: infer Definitions }
+      ? Extract<Definitions, CRCParticleParameterDefinitions>
+      : undefined>
+  >;
+  export declare function Particles3D<
+    EmitterName extends string,
+    Parameters extends CRCParticleParameterValues,
+  >(props: Particles3DProps<EmitterName, Parameters>): CRCNode;
+
 /* @crc-studio-module @crc/webgl */
   import type {
     BoxStyle,

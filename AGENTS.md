@@ -36,6 +36,9 @@ drawing primitives without React or generated DOM.
   contexts, resident GPU and shadow resources, bitmap generations, and
   animation requests. `crcOrbitCamera` supplies an attach-anywhere public event
   handler bundle while cameras remain plain perspective descriptors.
+- `@crc/particles` is implemented as immutable 2D/3D effect definitions,
+  direct deterministic descriptor factories, component-owned systems, one
+  fixed-capacity Canvas primitive, and stateless instanced WebGL submissions.
 - First-class `signal`, `computed`, `untracked`, `isSignal`, and `crcSignal`
   are implemented with explicit reads, dynamic synchronous dependency graphs,
   render/Advance write guards, observation-aware computed source-edge leases,
@@ -83,6 +86,9 @@ either as the current result unless a fresh run reproduces it.
 - `packages/webgl`: the optional public `@crc/webgl` WebGL2-island components,
   immutable geometry, hooks, render/pick backend, and deterministic ownership
   evidence.
+- `packages/particles`: the optional public `@crc/particles` Canvas component,
+  system hook, descriptors, and the `@crc/particles/webgl` instanced scene
+  entry.
 - `packages/scenarios`: private learning examples and deterministic test-lab
   scenarios. Keep their catalogs and presentation metadata separate.
 - `packages/types`: deliberately minimal compatibility package; shared public
@@ -226,6 +232,14 @@ transform, and component prop/style types. `Mesh` plus immutable
 package has no second JSX runtime, element constructor, fragment, core
 hook/event vocabulary, public GL context, shader/draw callback, or analytic hit
 callback.
+
+Public `@crc/particles` surface: `Particles2D`, `crcParticleSystem`,
+`defineParticleEffect2D`, `particleRange`, `particleInteger`,
+`particleChoice`, `particleParameter`, `particleCurve`, and
+`particleGradient`; `@crc/particles/webgl` adds `Particles3D` and
+`defineParticleEffect3D`. Public guidance lives in
+`docs/site/learn/guides/particle-effects.md` and the implementation plan remains
+the dated execution record.
 
 Current interaction supports DOM-aligned pointer, mouse, touch, wheel,
 keyboard/focus, editing/composition, clipboard, and drag/drop event facades,

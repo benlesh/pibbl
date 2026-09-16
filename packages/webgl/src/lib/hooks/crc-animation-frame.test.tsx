@@ -320,7 +320,8 @@ function createNoopGL(): WebGL2RenderingContext {
                   property === 'createShader' ||
                     property === 'createProgram' ||
                     property === 'createVertexArray' ||
-                    property === 'createBuffer' ?
+                    property === 'createBuffer' ||
+                    property === 'createTexture' ?
                     () => ({ kind: property, id: ++handle }) :
                     property === 'isContextLost' ? () => false :
                       () => undefined;

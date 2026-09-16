@@ -78,7 +78,9 @@ describe('settled WebGL scene', () => {
     expect(settled.pickEntries).toHaveLength(6);
     expect(settled.pickEntries.map(entry => entry.sourceOrder)).toEqual([0, 1, 2, 3, 4, 5]);
     expect(settled.pickEntries.every(entry => entry.kind === 'geometry' && entry.depthMode === 'less-equal')).toBe(true);
-    expect(settled.pickEntries.map(entry => entry.geometry)).toEqual([geometry, geometry, geometry, geometry, geometry, geometry]);
+    expect(settled.pickEntries.map(entry =>
+      entry.kind === 'geometry' ? entry.geometry : undefined,
+    )).toEqual([geometry, geometry, geometry, geometry, geometry, geometry]);
     expect(settled.pickEntries.map(entry => Array.from(entry.model)[14])).toEqual([0, 1, -3, -2, -2, 2]);
     expect(settled.camera.projectionMatrix[0]).not.toBe(99);
     expect(settled.pickEntries[1]!.keyboardNavigationBounds).toEqual({ x: 1, y: 2, width: 3, height: 4 });

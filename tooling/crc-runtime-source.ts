@@ -4,7 +4,7 @@ import { isAbsolute, resolve, sep } from "node:path";
 const VIRTUAL_RUNTIME_ID = "virtual:crc-runtime-source";
 const RESOLVED_RUNTIME_ID = `\0${VIRTUAL_RUNTIME_ID}`;
 const CRC_ENTRY_POINT =
-  /^@crc\/(?:core(?:\/internal|\/jsx-runtime|\/jsx-dev-runtime)?|webgl)$/;
+  /^@crc\/(?:core(?:\/internal|\/jsx-runtime|\/jsx-dev-runtime)?|particles(?:\/webgl)?|webgl(?:\/internal)?)$/;
 
 function crcEntryPoints(mode: string): ReadonlyMap<string, string> {
   const directory = mode === "built" ? "dist" : "src";
@@ -39,10 +39,31 @@ function crcEntryPoints(mode: string): ReadonlyMap<string, string> {
       ),
     ],
     [
+      "@crc/particles",
+      resolve(
+        import.meta.dirname,
+        `../packages/particles/${directory}/index.${extension}`,
+      ),
+    ],
+    [
+      "@crc/particles/webgl",
+      resolve(
+        import.meta.dirname,
+        `../packages/particles/${directory}/webgl.${extension}`,
+      ),
+    ],
+    [
       "@crc/webgl",
       resolve(
         import.meta.dirname,
         `../packages/webgl/${directory}/index.${extension}`,
+      ),
+    ],
+    [
+      "@crc/webgl/internal",
+      resolve(
+        import.meta.dirname,
+        `../packages/webgl/${directory}/internal.${extension}`,
       ),
     ],
   ]);
@@ -56,15 +77,14 @@ function assertSingleRuntimeMode(
   const inputs = Object.keys(metafile.inputs).map((path) =>
     isAbsolute(path) ? path : resolve(repositoryRoot, path),
   );
-  for (const packageName of ["core", "webgl"]) {
+  for (const packageName of ["core", "particles", "webgl"]) {
     const packageRoot = resolve(repositoryRoot, `packages/${packageName}`);
     const expectedRoot = resolve(
       packageRoot,
       mode === "built" ? "dist" : "src",
     );
     const packageInputs = inputs.filter(
-      (path) =>
-        path === packageRoot || path.startsWith(`${packageRoot}${sep}`),
+      (path) => path === packageRoot || path.startsWith(`${packageRoot}${sep}`),
     );
     if (
       packageInputs.length === 0 ||
@@ -73,9 +93,7 @@ function assertSingleRuntimeMode(
           path !== expectedRoot && !path.startsWith(`${expectedRoot}${sep}`),
       ) ||
       inputs.some((path) =>
-        path.includes(
-          `${sep}node_modules${sep}@crc${sep}${packageName}${sep}`,
-        ),
+        path.includes(`${sep}node_modules${sep}@crc${sep}${packageName}${sep}`),
       )
     ) {
       throw new Error(
@@ -86,15 +104,16 @@ function assertSingleRuntimeMode(
 }
 
 export function crcRuntimeSource(mode: string) {
+  const entryPoints = crcEntryPoints(mode);
   return {
     name: "crc-runtime-source",
     resolveId(id: string) {
-      return id === VIRTUAL_RUNTIME_ID ? RESOLVED_RUNTIME_ID : undefined;
+      if (id === VIRTUAL_RUNTIME_ID) return RESOLVED_RUNTIME_ID;
+      return entryPoints.get(id);
     },
     async load(id: string) {
       if (id !== RESOLVED_RUNTIME_ID) return undefined;
       const repositoryRoot = resolve(import.meta.dirname, "..");
-      const entryPoints = crcEntryPoints(mode);
       const result = await build({
         absWorkingDir: repositoryRoot,
         entryPoints: [

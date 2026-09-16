@@ -392,15 +392,25 @@ function isCurrentInstanceFrameRequestActive(
     state.instance.refs.get(state.componentRefs.id) === state.componentRefs;
 }
 export {
+  crcInternalAssertCommandAllowed,
   crcInternalCreateSignalConsumer,
   crcInternalCurrentFrame,
   crcInternalCurrentRenderOwner,
+  crcInternalOnRenderFinish,
+  crcInternalPaintTarget,
+  crcInternalQueueBegin,
   crcInternalQueueComplete,
+  crcInternalQueueCurrentCommit,
+  crcInternalQueueCurrentComplete,
+  crcInternalRegisterAdvance,
+  crcInternalRequestRender,
   crcInternalRequestRendererWork,
 } from './lib/scheduler/renderer-participant.js';
 export type {
+  CRCInternalCommandHandle,
   CRCInternalFrame,
   CRCInternalRendererWorkKind,
   CRCInternalRenderOwner,
+  CRCInternalSignalBatch,
   CRCInternalSignalConsumer,
 } from './lib/scheduler/renderer-participant.js';

@@ -720,6 +720,41 @@ const drafts = [
     load: () => import("./learning/composition/signals-and-animation.example"),
   },
   {
+    slug: "particle-effects",
+    title: "Particle effects",
+    shortTitle: "Particle effects",
+    section: "composition",
+    order: 119,
+    summary:
+      "Combine an autoplay ambient effect with repeated pointer-positioned bursts from one explicit fixed-capacity system.",
+    api: [
+      "defineParticleEffect2D",
+      "particleRange",
+      "particleChoice",
+      "particleCurve",
+      "crcParticleSystem",
+      "Particles2D",
+    ],
+    objectives: [
+      "Describe particle-domain emission, seeded ranges, motion, appearance, and rendering in an immutable effect definition.",
+      "Own a reusable explicit system in one component and emit a burst at ordinary CRC pointer coordinates.",
+    ],
+    prompts: {
+      gesture:
+        "Click several points in the stage to launch a celebration at each location.",
+      code: "Change the impact acceleration or color choices, then compare them with moving the whole component through a CRC signal.",
+    },
+    apiNotes: [
+      "A Particles2D component owns one fixed-capacity executor; particles are data inside it rather than individual CRC components.",
+      "Particle value descriptors are direct named exports, so unused descriptor factories remain tree-shakable.",
+      "Particle acceleration changes each mark over its lifetime. Moving Particles2D itself still uses ordinary CRC transforms, signals, or animation.",
+      "Implicit autoplay suits ambient effects, while crcParticleSystem supplies explicit repeated commands and observable status.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["signals-and-animation", "layer", "pointer-events"],
+    load: () => import("./learning/composition/particle-effects.example"),
+  },
+  {
     slug: "layer",
     title: "Layer",
     shortTitle: "Layer",
@@ -1872,6 +1907,71 @@ const drafts = [
     canvas: { width: 720, height: 420 },
     related: ["directional-light", "point-light", "spot-light"],
     load: () => import("./learning/webgl/shadow-quality.example"),
+  },
+  {
+    slug: "embers",
+    title: "GPU embers",
+    shortTitle: "Embers",
+    section: "webgl",
+    order: 500,
+    summary:
+      "Render a rising emissive ember field as one fixed-capacity analytic instanced submission.",
+    api: [
+      "defineParticleEffect3D",
+      "Particles3D",
+      "particleRange",
+      "particleCurve",
+      "particleGradient",
+      "WebGLLayer",
+    ],
+    objectives: [
+      "Describe seeded 3D birth, cone velocity, acceleration, drag, sway, and age appearance without per-particle components.",
+      "Use emissive additive point rendering while the WebGL layer owns the GPU program and resources.",
+    ],
+    prompts: {
+      gesture: "Watch the deterministic ember field rise and fade; no interaction is required.",
+      code: "Change the emission rate, cone spread, or gradient while keeping the same fixed capacity.",
+    },
+    apiNotes: [
+      "Particles3D compiles the closed effect definition into a CRC-owned shader recipe; application shader strings and GL callbacks are not exposed.",
+      "Each GPU instance reconstructs its birth and analytic state from the system seed, emitter hash, ordinal, and channel hashes.",
+      "Emissive additive particles are self-colored; they do not illuminate nearby meshes or imply a bloom pass.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["fireflies", "emissive-material", "particle-effects"],
+    load: () => import("./learning/webgl/embers.example"),
+  },
+  {
+    slug: "fireflies",
+    title: "GPU fireflies",
+    shortTitle: "Fireflies",
+    section: "webgl",
+    order: 510,
+    summary:
+      "Fill a 3D volume with seeded fireflies whose sway, color, and repeating age pulse run analytically on the GPU.",
+    api: [
+      "defineParticleEffect3D",
+      "Particles3D",
+      "particleRange",
+      "particleCurve",
+      "particleGradient",
+      "WebGLLayer",
+    ],
+    objectives: [
+      "Contrast a calm volume effect with the directional ember emitter while using the same component contract.",
+      "Use a multi-key opacity curve as a sampled GPU lookup table rather than updating each particle from JavaScript.",
+    ],
+    prompts: {
+      gesture: "Watch the seeded points drift and pulse at independent deterministic phases.",
+      code: "Edit the volume, sway frequency, or opacity keys to change the character of the field.",
+    },
+    apiNotes: [
+      "Curve and gradient descriptors compile to immutable 257-sample lookup textures shared by the resident recipe.",
+      "The component contributes one fixed-capacity instanced draw; dead instances clip before visible raster output.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["embers", "webgl-background", "particle-effects"],
+    load: () => import("./learning/webgl/fireflies.example"),
   },
 ] as const satisfies readonly LearningDraft[];
 

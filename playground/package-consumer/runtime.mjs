@@ -1,6 +1,9 @@
 import * as core from '@crc/core';
 import * as internal from '@crc/core/internal';
 import * as webgl from '@crc/webgl';
+import * as webglInternal from '@crc/webgl/internal';
+import * as particles from '@crc/particles';
+import * as particlesWebGL from '@crc/particles/webgl';
 import {
   Fragment as ProductionFragment,
   jsx,
@@ -98,10 +101,18 @@ if (JSON.stringify(actual) !== JSON.stringify(expected)) {
 
 const expectedInternal = [
   'cancelBackendMountFrame',
+  'crcInternalAssertCommandAllowed',
   'crcInternalCreateSignalConsumer',
   'crcInternalCurrentFrame',
   'crcInternalCurrentRenderOwner',
+  'crcInternalOnRenderFinish',
+  'crcInternalPaintTarget',
+  'crcInternalQueueBegin',
   'crcInternalQueueComplete',
+  'crcInternalQueueCurrentCommit',
+  'crcInternalQueueCurrentComplete',
+  'crcInternalRegisterAdvance',
+  'crcInternalRequestRender',
   'crcInternalRequestRendererWork',
   'createBackendToken',
   'defineBackendPrimitive',
@@ -201,6 +212,88 @@ for (const exportName of expectedWebGL) {
   if (typeof webgl[exportName] !== 'function') {
     throw new Error(`Expected @crc/webgl ${exportName} to be a runtime function.`);
   }
+}
+const actualWebGLInternal = Object.keys(webglInternal).sort();
+if (JSON.stringify(actualWebGLInternal) !== JSON.stringify([
+  'submitWebGLInstanced',
+])) {
+  throw new Error(
+    `Unexpected @crc/webgl/internal exports: ${actualWebGLInternal.join(', ')}`,
+  );
+}
+if (typeof webglInternal.submitWebGLInstanced !== 'function') {
+  throw new Error('Expected @crc/webgl/internal submission to be callable.');
+}
+if ('submitWebGLInstanced' in webgl) {
+  throw new Error('The official instanced seam leaked from @crc/webgl.');
+}
+
+const expectedParticles = [
+  'Particles2D',
+  'crcParticleSystem',
+  'defineParticleEffect2D',
+  'particleChoice',
+  'particleCurve',
+  'particleGradient',
+  'particleInteger',
+  'particleParameter',
+  'particleRange',
+];
+const actualParticles = Object.keys(particles).sort();
+if (JSON.stringify(actualParticles) !== JSON.stringify(expectedParticles)) {
+  throw new Error(`Unexpected @crc/particles exports: ${actualParticles.join(', ')}`);
+}
+for (const exportName of expectedParticles) {
+  if (typeof particles[exportName] !== 'function') {
+    throw new Error(`Expected @crc/particles ${exportName} to be callable.`);
+  }
+}
+const expectedParticlesWebGL = ['Particles3D', 'defineParticleEffect3D'];
+const actualParticlesWebGL = Object.keys(particlesWebGL).sort();
+if (
+  JSON.stringify(actualParticlesWebGL) !==
+  JSON.stringify(expectedParticlesWebGL)
+) {
+  throw new Error(
+    `Unexpected @crc/particles/webgl exports: ${actualParticlesWebGL.join(', ')}`,
+  );
+}
+for (const exportName of expectedParticlesWebGL) {
+  if (typeof particlesWebGL[exportName] !== 'function') {
+    throw new Error(`Expected @crc/particles/webgl ${exportName} to be callable.`);
+  }
+}
+const particleRange = particles.particleRange(1, 2);
+if (
+  particleRange.type !== 'between' ||
+  particleRange.min !== 1 ||
+  particleRange.max !== 2 ||
+  !Object.isFrozen(particleRange)
+) {
+  throw new Error('Packed particle descriptors lost their immutable public shape.');
+}
+const particleEffect2D = particles.defineParticleEffect2D({
+  emitters: [{
+    name: 'spark',
+    capacity: 4,
+    emission: [{ type: 'rate', particlesPerSecond: 1 }],
+    shape: { type: 'point' },
+    initial: { lifetimeMilliseconds: 100 },
+    renderer: { type: 'circle' },
+  }],
+});
+const particleEffect3D = particlesWebGL.defineParticleEffect3D({
+  emitters: [{
+    name: 'ember',
+    capacity: 4,
+    emission: [{ type: 'rate', particlesPerSecond: 1 }],
+    shape: { type: 'point' },
+    initial: { lifetimeMilliseconds: 100 },
+    renderer: { type: 'point', material: 'emissive', blend: 'additive' },
+  }],
+});
+if (particleEffect2D.dimension !== 2 || particleEffect3D.dimension !== 3) {
+  throw new Error('Packed particle definitions lost their dimensional identity.');
 }
 
 for (const [exportName, value] of Object.entries({
@@ -401,7 +494,6 @@ for (const specifier of [
   '@crc/core/lib/types',
   '@crc/core/lib/global-state',
   '@crc/core/src/index',
-  '@crc/webgl/internal',
   '@crc/webgl/lib/backend',
   '@crc/webgl/lib/types',
   '@crc/webgl/src/index',

@@ -9,8 +9,10 @@ import type { CRCWebGLGeometry, CRCWebGLVector3 } from '../types.js';
 import {
   commitWebGLPickLedger,
   createWebGLPickLedger,
+  projectWebGLBoundsPoints,
+  recordBoundsWebGLPick,
   recordGeometryWebGLPick,
-  type CRCWebGLGeometryPickRecord,
+  type CRCWebGLPickRecord,
 } from '../pick-ledger.js';
 import { closeWebGLSceneComposer } from './composer.js';
 import {
@@ -27,6 +29,7 @@ import type {
   WebGLRGBA,
   WebGLSceneComposer,
   SettledWebGLShadowPlan,
+  WebGLInstancedSubmission,
   WebGLWorldBounds,
 } from './types.js';
 import { createWebGLShadowPlans } from './shadows.js';
@@ -42,6 +45,20 @@ export interface SettledWebGLMesh extends WebGLMeshSubmission {
   readonly receiveShadow: boolean;
 }
 
+export type SettledWebGLPass = 'opaque' | 'transparent' | 'additive';
+
+export interface SettledWebGLInstanced extends WebGLInstancedSubmission {
+  readonly effectiveOpacity: number;
+  readonly pass: SettledWebGLPass;
+  readonly shading: 'unlit' | 'emissive';
+  readonly viewDepth: number;
+  readonly worldBounds: WebGLWorldBounds;
+}
+
+export type SettledWebGLSceneEntry =
+  | SettledWebGLMesh
+  | SettledWebGLInstanced;
+
 export interface SettledWebGLScene {
   readonly contextGeneration: number;
   readonly camera: ReturnType<typeof closeWebGLSceneComposer>['camera'];
@@ -50,13 +67,16 @@ export interface SettledWebGLScene {
   readonly density: ReturnType<typeof closeWebGLSceneComposer>['density'];
   readonly timestamp: number;
   readonly meshes: readonly SettledWebGLMesh[];
+  readonly instanced: readonly SettledWebGLInstanced[];
+  readonly entries: readonly SettledWebGLSceneEntry[];
   readonly lights: readonly SettledWebGLLight[];
   readonly background: SettledWebGLBackground | undefined;
-  readonly opaque: readonly SettledWebGLMesh[];
-  readonly transparent: readonly SettledWebGLMesh[];
+  readonly opaque: readonly SettledWebGLSceneEntry[];
+  readonly transparent: readonly SettledWebGLSceneEntry[];
+  readonly additive: readonly SettledWebGLInstanced[];
   readonly shadowQuality: ReturnType<typeof closeWebGLSceneComposer>['shadowQuality'];
   readonly shadowPlans: readonly SettledWebGLShadowPlan[];
-  readonly pickEntries: readonly CRCWebGLGeometryPickRecord[];
+  readonly pickEntries: readonly CRCWebGLPickRecord[];
 }
 
 /** Closes one CPU-only scene draft and derives its immutable render and pick plans. */
@@ -72,11 +92,20 @@ export function settleWebGLScene(composer: WebGLSceneComposer): SettledWebGLScen
     draft.camera,
     validatedNormalPairs,
   )));
+  const instanced = Object.freeze(draft.instanced.flatMap(submission => {
+    const settled = settleInstanced(submission, draft.camera);
+    return settled === undefined ? [] : [settled];
+  }));
+  const entries = Object.freeze([
+    ...meshes,
+    ...instanced,
+  ].sort((left, right) => left.sourceIndex - right.sourceIndex));
   const lights = Object.freeze(draft.lights.map(settleLight));
   const background = draft.backgrounds[0] === undefined ? undefined :
     settleBackground(draft.backgrounds[0]);
-  const opaque: SettledWebGLMesh[] = [];
-  const transparent: SettledWebGLMesh[] = [];
+  const opaque: SettledWebGLSceneEntry[] = [];
+  const transparent: SettledWebGLSceneEntry[] = [];
+  const additive: SettledWebGLInstanced[] = [];
   const ledger = createWebGLPickLedger(
     draft.logicalViewport.width,
     draft.logicalViewport.height,
@@ -98,12 +127,31 @@ export function settleWebGLScene(composer: WebGLSceneComposer): SettledWebGLScen
       });
     }
   }
+  for (const submission of instanced) {
+    if (submission.effectiveOpacity > 0) {
+      if (submission.pass === 'opaque') opaque.push(submission);
+      else if (submission.pass === 'transparent') transparent.push(submission);
+      else additive.push(submission);
+    }
+    if (submission.target) {
+      recordBoundsWebGLPick(ledger, {
+        componentName: submission.componentName,
+        target: submission.target,
+        bounds: localBoundsToMatrixBounds(submission),
+        model: submission.model,
+        camera: draft.camera,
+        sourceOrder: submission.sourceIndex,
+        depthMode: 'less-equal',
+      });
+    }
+  }
+  opaque.sort((left, right) => left.sourceIndex - right.sourceIndex);
   transparent.sort(
     (left, right) => right.viewDepth - left.viewDepth ||
       left.sourceIndex - right.sourceIndex,
   );
-  const pickEntries = commitWebGLPickLedger(ledger).entries as
-    readonly CRCWebGLGeometryPickRecord[];
+  additive.sort((left, right) => left.sourceIndex - right.sourceIndex);
+  const pickEntries = commitWebGLPickLedger(ledger).entries;
   const shadowPlans = createWebGLShadowPlans({
     meshes,
     lights,
@@ -118,13 +166,69 @@ export function settleWebGLScene(composer: WebGLSceneComposer): SettledWebGLScen
     density: draft.density,
     timestamp: draft.timestamp,
     meshes,
+    instanced,
+    entries,
     lights,
     background,
     opaque: Object.freeze(opaque),
     transparent: Object.freeze(transparent),
+    additive: Object.freeze(additive),
     shadowQuality: draft.shadowQuality,
     shadowPlans,
     pickEntries,
+  });
+}
+
+function settleInstanced(
+  submission: WebGLInstancedSubmission,
+  camera: ReturnType<typeof closeWebGLSceneComposer>['camera'],
+): SettledWebGLInstanced | undefined {
+  validateInstancedSubmission(submission);
+  const localBounds = localBoundsToMatrixBounds(submission);
+  const projected = projectWebGLBoundsPoints(
+    localBounds,
+    submission.model,
+    camera,
+    camera.viewport,
+  );
+  if (projected === undefined) return undefined;
+  const center = Object.freeze([
+    (localBounds.minimumX + localBounds.maximumX) / 2,
+    (localBounds.minimumY + localBounds.maximumY) / 2,
+    (localBounds.minimumZ + localBounds.maximumZ) / 2,
+  ]) as CRCWebGLVector3;
+  const world = new Float32Array(3);
+  const view = new Float32Array(3);
+  transformPointMatrix4(world, submission.model, center);
+  transformPointMatrix4(
+    view,
+    camera.viewMatrix,
+    world as unknown as CRCWebGLVector3,
+  );
+  const viewDepth = -view[2]!;
+  if (!Number.isFinite(viewDepth)) {
+    throw new RangeError(withSource(
+      `${submission.componentName} bounds produce a non-finite view depth.`,
+      submission.source,
+    ));
+  }
+  return Object.freeze({
+    ...submission,
+    model: new Float32Array(submission.model),
+    localBounds: Object.freeze({
+      min: Object.freeze([...submission.localBounds.min]) as
+        readonly [number, number, number],
+      max: Object.freeze([...submission.localBounds.max]) as
+        readonly [number, number, number],
+    }),
+    material: Object.freeze({ ...submission.material }),
+    frameUniforms: new Float32Array(submission.frameUniforms),
+    effectiveOpacity: submission.opacity,
+    pass: submission.material.blend === 'cutout' ? 'opaque' :
+      submission.material.blend === 'additive' ? 'additive' : 'transparent',
+    shading: submission.material.type,
+    viewDepth,
+    worldBounds: transformBoundsMatrix4(submission.model, localBounds),
   });
 }
 
@@ -526,6 +630,144 @@ function validateMeshSubmission(mesh: WebGLMeshSubmission): void {
       mesh.source,
     ));
   }
+}
+
+function validateInstancedSubmission(
+  submission: WebGLInstancedSubmission,
+): void {
+  if (submission.model.length !== 16 ||
+    !submission.model.every(Number.isFinite)) {
+    throw new RangeError(withSource(
+      `${submission.componentName} model matrix must contain sixteen finite ` +
+      'Float32 values.',
+      submission.source,
+    ));
+  }
+  const bounds = localBoundsToMatrixBounds(submission);
+  for (const value of Object.values(bounds)) {
+    if (!Number.isFinite(value)) {
+      throw new RangeError(withSource(
+        `${submission.componentName} local bounds must be finite.`,
+        submission.source,
+      ));
+    }
+  }
+  if (bounds.minimumX > bounds.maximumX ||
+    bounds.minimumY > bounds.maximumY ||
+    bounds.minimumZ > bounds.maximumZ) {
+    throw new RangeError(withSource(
+      `${submission.componentName} local bounds minimum must not exceed maximum.`,
+      submission.source,
+    ));
+  }
+  if (!Number.isFinite(submission.opacity) ||
+    submission.opacity < 0 || submission.opacity > 1) {
+    throw new RangeError(withSource(
+      `${submission.componentName} opacity must be finite and between 0 and 1.`,
+      submission.source,
+    ));
+  }
+  if (submission.material.type !== 'unlit' &&
+    submission.material.type !== 'emissive') {
+    throw new TypeError(withSource(
+      `${submission.componentName} material type must be "unlit" or "emissive".`,
+      submission.source,
+    ));
+  }
+  if (submission.material.blend !== 'alpha' &&
+    submission.material.blend !== 'additive' &&
+    submission.material.blend !== 'cutout') {
+    throw new TypeError(withSource(
+      `${submission.componentName} material blend must be "alpha", ` +
+      '"additive", or "cutout".',
+      submission.source,
+    ));
+  }
+  if (typeof submission.depthTest !== 'boolean' ||
+    typeof submission.depthWrite !== 'boolean') {
+    throw new TypeError(withSource(
+      `${submission.componentName} depthTest and depthWrite must be booleans.`,
+      submission.source,
+    ));
+  }
+  if (submission.sorting !== 'none' &&
+    submission.sorting !== 'oldest-first' &&
+    submission.sorting !== 'youngest-first') {
+    throw new TypeError(withSource(
+      `${submission.componentName} sorting is not supported.`,
+      submission.source,
+    ));
+  }
+  if (!submission.frameUniforms.every(Number.isFinite)) {
+    throw new RangeError(withSource(
+      `${submission.componentName} frame uniforms must be finite Float32 values.`,
+      submission.source,
+    ));
+  }
+  validateInstancedRecipe(submission);
+}
+
+function validateInstancedRecipe(submission: WebGLInstancedSubmission): void {
+  const { recipe } = submission;
+  if (recipe.key === null ||
+    (typeof recipe.key !== 'object' && typeof recipe.key !== 'function')) {
+    throw new TypeError(withSource(
+      `${submission.componentName} instanced recipe key must be an object.`,
+      submission.source,
+    ));
+  }
+  if (recipe.topology !== 'points' && recipe.topology !== 'triangles') {
+    throw new TypeError(withSource(
+      `${submission.componentName} instanced recipe topology is unsupported.`,
+      submission.source,
+    ));
+  }
+  if (recipe.vertexSource.length === 0 || recipe.fragmentSource.length === 0) {
+    throw new TypeError(withSource(
+      `${submission.componentName} instanced shader sources must be nonempty.`,
+      submission.source,
+    ));
+  }
+  if (!Number.isInteger(recipe.verticesPerInstance) ||
+    recipe.verticesPerInstance <= 0 ||
+    !Number.isInteger(recipe.capacity) || recipe.capacity <= 0) {
+    throw new RangeError(withSource(
+      `${submission.componentName} instanced recipe counts must be positive integers.`,
+      submission.source,
+    ));
+  }
+  if (recipe.staticVertexData !== undefined &&
+    !recipe.staticVertexData.every(Number.isFinite)) {
+    throw new RangeError(withSource(
+      `${submission.componentName} static vertex data must be finite.`,
+      submission.source,
+    ));
+  }
+  for (const table of recipe.lookupTables) {
+    if (!Number.isInteger(table.width) || table.width <= 0 ||
+      !Number.isInteger(table.height) || table.height <= 0 ||
+      ![1, 2, 3, 4].includes(table.channels) ||
+      table.data.length !== table.width * table.height * table.channels ||
+      !table.data.every(Number.isFinite)) {
+      throw new RangeError(withSource(
+        `${submission.componentName} lookup table dimensions and data must agree.`,
+        submission.source,
+      ));
+    }
+  }
+}
+
+function localBoundsToMatrixBounds(
+  submission: Pick<WebGLInstancedSubmission, 'localBounds'>,
+): WebGLWorldBounds {
+  return Object.freeze({
+    minimumX: submission.localBounds.min[0],
+    minimumY: submission.localBounds.min[1],
+    minimumZ: submission.localBounds.min[2],
+    maximumX: submission.localBounds.max[0],
+    maximumY: submission.localBounds.max[1],
+    maximumZ: submission.localBounds.max[2],
+  });
 }
 
 function validateRGBA(
