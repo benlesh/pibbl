@@ -185,6 +185,8 @@ try {
       if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     });
     if (route.openSearch) {
+      await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+      await page.waitForFunction(() => window.scrollY === 0);
       await page.getByRole("button", { name: "Search documentation" }).first().click();
       await page.locator(".studio-search-dialog[open]").waitFor({ timeout: 30_000 });
     }
@@ -207,6 +209,7 @@ try {
       await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
       await page.waitForFunction(() => window.scrollY === 0);
     }
+    await page.mouse.move(1279, 899);
     await page.evaluate(() => document.fonts.ready);
     await page.addStyleTag({
       content:
