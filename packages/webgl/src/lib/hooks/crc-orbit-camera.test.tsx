@@ -46,6 +46,7 @@ describe('crcOrbitCamera', () => {
     };
     function Probe(): CRCNode {
       results.push(orbitCamera()(options));
+      return null;
     }
     const canvas = createCanvas(100, 100);
     controllers.add(crc(canvas, <Probe />, { pixelRatio: 1 }));

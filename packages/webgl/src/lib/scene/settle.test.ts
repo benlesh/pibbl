@@ -232,13 +232,13 @@ describe('settled WebGL scene', () => {
       0, 1, 0,
       0, 0, 1,
     ]);
-    expect(Object.isFrozen(settled.meshes[0]!.shading)).toBe(true);
-    expect(Object.isFrozen(settled.meshes[0]!.shading.displayBaseColor)).toBe(
-      true,
-    );
-    expect(Object.isFrozen(settled.meshes[0]!.shading.linearEmissive)).toBe(
-      true,
-    );
+    const unlitShading = settled.meshes[0]!.shading;
+    if (unlitShading.kind !== 'unlit') {
+      throw new Error('Expected the first mesh to use unlit shading.');
+    }
+    expect(Object.isFrozen(unlitShading)).toBe(true);
+    expect(Object.isFrozen(unlitShading.displayBaseColor)).toBe(true);
+    expect(Object.isFrozen(unlitShading.linearEmissive)).toBe(true);
   });
 
   test('settles ordered world-space light poses without scaling optical fields', () => {
@@ -312,9 +312,13 @@ describe('settled WebGL scene', () => {
         intensity: 3,
       },
     ]);
+    const ambientLight = settled.lights[0]!;
+    if (ambientLight.kind !== 'ambient') {
+      throw new Error('Expected the first settled light to be ambient.');
+    }
     expect(Object.isFrozen(settled.lights)).toBe(true);
-    expect(Object.isFrozen(settled.lights[0])).toBe(true);
-    expect(Object.isFrozen(settled.lights[0]!.linearColor)).toBe(true);
+    expect(Object.isFrozen(ambientLight)).toBe(true);
+    expect(Object.isFrozen(ambientLight.linearColor)).toBe(true);
   });
 
   test.each(['point', 'spot'] as const)(

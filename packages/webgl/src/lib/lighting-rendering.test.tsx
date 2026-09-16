@@ -19,9 +19,9 @@ const controllers = new Set<CRCController>();
 
 const CAMERA: CRCWebGLPerspectiveCamera = Object.freeze({
   type: 'perspective',
-  position: [0, 0, 5],
-  lookAt: [0, 0, 0],
-  up: [0, 1, 0],
+  position: [0, 0, 5] as const,
+  lookAt: [0, 0, 0] as const,
+  up: [0, 1, 0] as const,
   fieldOfViewDegrees: 90,
   near: 0.1,
   far: 100,

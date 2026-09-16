@@ -10,6 +10,7 @@ import {
   Mesh,
   Sphere,
   createWebGLGeometry,
+  type MeshStyle,
 } from '../../index.js';
 import { createWebGLBackend } from '../backend.js';
 import { resolveCamera } from '../math/camera.js';
@@ -130,7 +131,8 @@ describe('Mesh built-in rendering', () => {
     const geometry = createWebGLGeometry({
       positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
     });
-    const root = <Mesh geometry={geometry} style={{ ...style, lit: false }} />;
+    const invalidStyle = runtimeInvalidMeshStyle({ ...style, lit: false });
+    const root = <Mesh geometry={geometry} style={invalidStyle} />;
     const mounted = mountScene(recording.gl, root);
 
     expect(() => executeBackendCRC(mounted.mount, root, 1))
@@ -364,6 +366,10 @@ describe('Mesh built-in rendering', () => {
     parent.dispose();
   });
 });
+
+function runtimeInvalidMeshStyle(style: unknown): MeshStyle {
+  return style as MeshStyle;
+}
 
 interface DrawRecord {
   readonly kind: 'arrays' | 'elements';

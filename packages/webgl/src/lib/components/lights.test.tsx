@@ -30,7 +30,10 @@ import {
   discardWebGLSceneComposer,
 } from '../scene/composer.js';
 import { settleWebGLScene } from '../scene/settle.js';
-import type { WebGLSceneComposer } from '../scene/types.js';
+import type {
+  WebGLLightSubmission,
+  WebGLSceneComposer,
+} from '../scene/types.js';
 
 const geometry = createWebGLGeometry({
   positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
@@ -124,12 +127,13 @@ describe('WebGL light declarations', () => {
     expect(Array.from(scene.lights[1]!.model!)).toEqual(identity());
     expect(Array.from(scene.lights[2]!.model!)).toEqual(identity());
     expect(Array.from(scene.lights[4]!.model!)).toEqual(identity());
-    expect(scene.lights.slice(2).map(light => light.castShadow)).toEqual([
+    const directLights = scene.lights.filter(isDirectLight);
+    expect(directLights.map(light => light.castShadow)).toEqual([
       true,
       true,
       true,
     ]);
-    expect(scene.lights.slice(2).every(light => light.identity !== undefined))
+    expect(directLights.every(light => light.identity !== undefined))
       .toBe(true);
     expect('castShadow' in scene.lights[0]!).toBe(false);
     expect('castShadow' in scene.lights[1]!).toBe(false);
@@ -145,6 +149,10 @@ describe('WebGL light declarations', () => {
     const first = completed!.lights[0]!;
     executeBackendCRC(mounted.mount, root, 2);
     const second = completed!.lights[0]!;
+
+    if (first.kind !== 'directional' || second.kind !== 'directional') {
+      throw new Error('Expected two directional-light submissions.');
+    }
 
     expect(first.castShadow).toBe(false);
     expect(second.identity).toBe(first.identity);
@@ -253,6 +261,14 @@ describe('WebGL light declarations', () => {
     void typeContract;
   });
 });
+
+function isDirectLight(
+  light: WebGLLightSubmission,
+): light is Extract<WebGLLightSubmission, { readonly castShadow: boolean }> {
+  return light.kind === 'directional' ||
+    light.kind === 'point' ||
+    light.kind === 'spot';
+}
 
 function mountComposingScene(
   root: CRCNode,
