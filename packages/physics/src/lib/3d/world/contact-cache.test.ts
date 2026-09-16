@@ -7,6 +7,7 @@ import {
   CONTACT_EVENT_BEGIN_3D,
   CONTACT_EVENT_END_3D,
   OVERLAP_EVENT_BEGIN_3D,
+  OVERLAP_EVENT_END_3D,
   ContactCache3D,
   updateSortedContactCache3D,
   type SortedColliderPairs3D,
@@ -242,7 +243,7 @@ describe("persistent 3D contact cache", () => {
     expect(cache.pointTangentImpulse2[0]).toBe(-3);
   });
 
-  it("prunes stale pairs and allocates no event candidates when unobserved", () => {
+  it("prunes stale pairs without materializing unobserved transition facts", () => {
     const fixture = createFixture();
     const first = fixture.addCollider(fixture.addBody());
     const second = fixture.addCollider(fixture.addBody(false));
@@ -259,7 +260,7 @@ describe("persistent 3D contact cache", () => {
     );
     expect(cache.contactCount).toBe(1);
     expect(cache.eventCount).toBe(0);
-    expect(fixture.counters.publicEventAllocations).toBe(0);
+    expect(fixture.counters.contactEventFactWrites).toBe(0);
 
     updateSortedContactCache3D(
       cache,
@@ -279,8 +280,256 @@ describe("persistent 3D contact cache", () => {
     );
     expect(cache.contactCount).toBe(0);
     expect(cache.eventCount).toBe(0);
+    expect(fixture.counters.contactEventFactWrites).toBe(0);
     expect(fixture.counters.contactAllocations).toBe(1);
     expect(fixture.counters.contactReleases).toBe(1);
+  });
+
+  it("leaves committed contacts, events, and ownership unchanged when a staged addition throws", () => {
+    const fixture = createFixture();
+    const first = fixture.addCollider(fixture.addBody());
+    const second = fixture.addCollider(fixture.addBody(false));
+    const third = fixture.addCollider(fixture.addBody(false));
+    const cache = new ContactCache3D(fixture.counters);
+    const source = pairs([
+      [first, second],
+      [first, third],
+    ]);
+    const committedPairs = cache.firstColliderIndices;
+    const committedPoints = cache.pointNormalImpulses;
+    const committedEvents = cache.eventTypes;
+    let calls = 0;
+
+    expect(() =>
+      updateSortedContactCache3D(
+        cache,
+        source,
+        fixture.bodies,
+        fixture.colliders,
+        () => {
+          calls += 1;
+          if (calls === 2) throw new Error("narrow phase failed");
+          return manifold([{ firstFeature: 1, secondFeature: 2 }]);
+        },
+        true,
+      ),
+    ).toThrow("narrow phase failed");
+
+    expect(cache.contactCount).toBe(0);
+    expect(cache.eventCount).toBe(0);
+    expect(cache.firstColliderIndices).toBe(committedPairs);
+    expect(cache.pointNormalImpulses).toBe(committedPoints);
+    expect(cache.eventTypes).toBe(committedEvents);
+    expect(cache.eventTypes[0]).toBe(0);
+    expect(fixture.counters.contactAllocations).toBe(0);
+    expect(fixture.counters.contactReleases).toBe(0);
+    expect(fixture.counters.liveContacts).toBe(0);
+    expect(fixture.counters.contactEventFactWrites).toBe(0);
+
+    updateSortedContactCache3D(
+      cache,
+      source,
+      fixture.bodies,
+      fixture.colliders,
+      () => manifold([{ firstFeature: 1, secondFeature: 2 }]),
+      true,
+    );
+    expect(cache.contactCount).toBe(2);
+    expect(fixture.counters.contactAllocations).toBe(2);
+    expect(fixture.counters.liveContacts).toBe(2);
+    cache.dispose();
+    cache.dispose();
+    expect(fixture.counters.contactAllocations).toBe(2);
+    expect(fixture.counters.contactReleases).toBe(2);
+    expect(fixture.counters.liveContacts).toBe(0);
+  });
+
+  it("leaves committed contacts, events, and ownership unchanged when a staged removal throws", () => {
+    const fixture = createFixture();
+    const first = fixture.addCollider(fixture.addBody());
+    const second = fixture.addCollider(fixture.addBody(false));
+    const third = fixture.addCollider(fixture.addBody(false));
+    const cache = new ContactCache3D(fixture.counters);
+    const source = pairs([
+      [first, second],
+      [first, third],
+    ]);
+    updateSortedContactCache3D(
+      cache,
+      source,
+      fixture.bodies,
+      fixture.colliders,
+      () => manifold([{ firstFeature: 1, secondFeature: 2 }]),
+      true,
+    );
+    cache.pointNormalImpulses[0] = 3;
+    cache.pointNormalImpulses[4] = 7;
+    const committedPairs = cache.firstColliderIndices;
+    const committedPoints = cache.pointNormalImpulses;
+    const committedEvents = cache.eventTypes;
+    const committedEventRows = eventRows(cache);
+    let calls = 0;
+
+    expect(() =>
+      updateSortedContactCache3D(
+        cache,
+        source,
+        fixture.bodies,
+        fixture.colliders,
+        () => {
+          calls += 1;
+          if (calls === 2) throw new Error("narrow phase failed");
+          return null;
+        },
+        true,
+      ),
+    ).toThrow("narrow phase failed");
+
+    expect(cache.contactCount).toBe(2);
+    expect(cache.eventCount).toBe(2);
+    expect(cache.firstColliderIndices).toBe(committedPairs);
+    expect(cache.pointNormalImpulses).toBe(committedPoints);
+    expect(cache.eventTypes).toBe(committedEvents);
+    expect(eventRows(cache)).toEqual(committedEventRows);
+    expect(Array.from(cache.pointNormalImpulses.subarray(0, 5))).toEqual([
+      3, 0, 0, 0, 7,
+    ]);
+    expect(fixture.counters.contactAllocations).toBe(2);
+    expect(fixture.counters.contactReleases).toBe(0);
+    expect(fixture.counters.liveContacts).toBe(2);
+    expect(fixture.counters.contactEventFactWrites).toBe(2);
+
+    calls = 0;
+    updateSortedContactCache3D(
+      cache,
+      source,
+      fixture.bodies,
+      fixture.colliders,
+      () => {
+        calls += 1;
+        return calls === 1
+          ? null
+          : manifold([{ firstFeature: 1, secondFeature: 2 }]);
+      },
+      true,
+    );
+    expect(cache.contactCount).toBe(1);
+    expect(fixture.counters.contactAllocations).toBe(2);
+    expect(fixture.counters.contactReleases).toBe(1);
+    expect(fixture.counters.liveContacts).toBe(1);
+    cache.dispose();
+    expect(fixture.counters.contactAllocations).toBe(2);
+    expect(fixture.counters.contactReleases).toBe(2);
+    expect(fixture.counters.liveContacts).toBe(0);
+  });
+
+  it("ends and begins observed semantics while clearing impulses across sensor-state changes", () => {
+    const fixture = createFixture();
+    const first = fixture.addCollider(fixture.addBody());
+    const second = fixture.addCollider(fixture.addBody(false));
+    const cache = new ContactCache3D(fixture.counters);
+    const source = pairs([[first, second]]);
+    const provider = () => manifold([{ firstFeature: 1, secondFeature: 2 }]);
+    updateSortedContactCache3D(
+      cache,
+      source,
+      fixture.bodies,
+      fixture.colliders,
+      provider,
+      true,
+    );
+    cache.pointNormalImpulses[0] = 6;
+    cache.pointTangentImpulse1[0] = -2;
+    cache.pointTangentImpulse2[0] = 3;
+
+    fixture.colliders.flags[first] |= COLLIDER_SENSOR_3D;
+    updateSortedContactCache3D(
+      cache,
+      source,
+      fixture.bodies,
+      fixture.colliders,
+      provider,
+      true,
+    );
+    expect(cache.sensorFlags[0]).toBe(1);
+    expect(eventRows(cache)).toEqual([
+      [CONTACT_EVENT_END_3D, first, second],
+      [OVERLAP_EVENT_BEGIN_3D, first, second],
+    ]);
+    expect(cache.pointNormalImpulses[0]).toBe(0);
+    expect(cache.pointTangentImpulse1[0]).toBe(0);
+    expect(cache.pointTangentImpulse2[0]).toBe(0);
+
+    cache.pointNormalImpulses[0] = 8;
+    cache.pointTangentImpulse1[0] = 4;
+    cache.pointTangentImpulse2[0] = -3;
+    fixture.colliders.flags[first] &= ~COLLIDER_SENSOR_3D;
+    updateSortedContactCache3D(
+      cache,
+      source,
+      fixture.bodies,
+      fixture.colliders,
+      provider,
+      true,
+    );
+    expect(cache.sensorFlags[0]).toBe(0);
+    expect(eventRows(cache)).toEqual([
+      [OVERLAP_EVENT_END_3D, first, second],
+      [CONTACT_EVENT_BEGIN_3D, first, second],
+    ]);
+    expect(cache.pointNormalImpulses[0]).toBe(0);
+    expect(cache.pointTangentImpulse1[0]).toBe(0);
+    expect(cache.pointTangentImpulse2[0]).toBe(0);
+  });
+
+  it("clears impulses without transition facts across unobserved sensor-state changes", () => {
+    const fixture = createFixture();
+    const first = fixture.addCollider(fixture.addBody());
+    const second = fixture.addCollider(fixture.addBody(false));
+    const cache = new ContactCache3D(fixture.counters);
+    const source = pairs([[first, second]]);
+    const provider = () => manifold([{ firstFeature: 1, secondFeature: 2 }]);
+    updateSortedContactCache3D(
+      cache,
+      source,
+      fixture.bodies,
+      fixture.colliders,
+      provider,
+    );
+    cache.pointNormalImpulses[0] = 6;
+    cache.pointTangentImpulse1[0] = -2;
+    cache.pointTangentImpulse2[0] = 3;
+
+    fixture.colliders.flags[first] |= COLLIDER_SENSOR_3D;
+    updateSortedContactCache3D(
+      cache,
+      source,
+      fixture.bodies,
+      fixture.colliders,
+      provider,
+    );
+    expect(cache.sensorFlags[0]).toBe(1);
+    expect(cache.eventCount).toBe(0);
+    expect(cache.pointNormalImpulses[0]).toBe(0);
+    expect(cache.pointTangentImpulse1[0]).toBe(0);
+    expect(cache.pointTangentImpulse2[0]).toBe(0);
+
+    cache.pointNormalImpulses[0] = 8;
+    cache.pointTangentImpulse1[0] = 4;
+    cache.pointTangentImpulse2[0] = -3;
+    fixture.colliders.flags[first] &= ~COLLIDER_SENSOR_3D;
+    updateSortedContactCache3D(
+      cache,
+      source,
+      fixture.bodies,
+      fixture.colliders,
+      provider,
+    );
+    expect(cache.sensorFlags[0]).toBe(0);
+    expect(cache.eventCount).toBe(0);
+    expect(cache.pointNormalImpulses[0]).toBe(0);
+    expect(cache.pointTangentImpulse1[0]).toBe(0);
+    expect(cache.pointTangentImpulse2[0]).toBe(0);
   });
 
   it("records observed contact and overlap transitions in pair order", () => {
@@ -306,6 +555,7 @@ describe("persistent 3D contact cache", () => {
       [CONTACT_EVENT_BEGIN_3D, first, second],
       [OVERLAP_EVENT_BEGIN_3D, first, sensor],
     ]);
+    expect(fixture.counters.contactEventFactWrites).toBe(2);
 
     updateSortedContactCache3D(
       cache,
@@ -320,6 +570,7 @@ describe("persistent 3D contact cache", () => {
       first,
       second,
     ]);
+    expect(fixture.counters.contactEventFactWrites).toBe(4);
   });
 
   it("filters same-body, disabled, mask-rejected, negative-group, and static-static pairs before narrow phase", () => {

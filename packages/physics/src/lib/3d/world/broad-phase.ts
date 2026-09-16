@@ -357,8 +357,12 @@ export class DynamicAabbBroadPhase3D {
     );
     if (order === 0) return;
     if (order > 0) {
-      [firstIndex, secondIndex] = [secondIndex, firstIndex];
-      [firstGeneration, secondGeneration] = [secondGeneration, firstGeneration];
+      const index = firstIndex;
+      firstIndex = secondIndex;
+      secondIndex = index;
+      const generation = firstGeneration;
+      firstGeneration = secondGeneration;
+      secondGeneration = generation;
     }
     this.ensurePairCapacity(this.pairCount + 1);
     this.pairFirstColliderIndices[this.pairCount] = firstIndex;

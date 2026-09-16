@@ -223,6 +223,19 @@ function solve(
 }
 
 describe("deterministic 3D sequential impulse solver", () => {
+  it("counts each configured solver pass from inside the loops and resets per solve", () => {
+    const fixture = createFixture();
+    const body = fixture.addBody();
+
+    solve(fixture, [body], 2, 3);
+    expect(fixture.solver.velocityIterationsPerformed).toBe(2);
+    expect(fixture.solver.positionIterationsPerformed).toBe(3);
+
+    solve(fixture, [body], 1, 0);
+    expect(fixture.solver.velocityIterationsPerformed).toBe(1);
+    expect(fixture.solver.positionIterationsPerformed).toBe(0);
+  });
+
   it("rests a sphere on the ground and executes exactly configured iterations", () => {
     const fixture = createFixture();
     const sphereBody = fixture.addBody({ y: 0.9, vy: -1 });

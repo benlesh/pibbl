@@ -46,7 +46,7 @@
     "dev": "pnpm run build",
     "prepublishOnly": "pnpm run build",
     "test": "pnpm run test:node && pnpm run test:browser",
-    "test:node": "vitest run src/lib/2d/public-types.test.ts src/lib/2d/shapes.test.ts src/lib/2d/collision src/lib/2d/world src/lib/3d/public-types.test.ts src/lib/3d/shapes.test.ts src/lib/3d/collision --browser.enabled=false --environment node",
+    "test:node": "vitest run src/lib/2d/public-types.test.ts src/lib/2d/shapes.test.ts src/lib/2d/collision src/lib/2d/world src/lib/3d/public-types.test.ts src/lib/3d/shapes.test.ts src/lib/3d/collision src/lib/3d/world --browser.enabled=false --environment node",
     "test:browser": "vitest run src/lib/2d/canvas src/lib/2d/runtime --browser.headless --browser.ui=false"
   },
   "peerDependencies": {

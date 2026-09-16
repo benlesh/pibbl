@@ -104,6 +104,11 @@ export class ContactCache3D {
   private stagingPointNormalImpulses: Float64Array;
   private stagingPointTangentImpulse1: Float64Array;
   private stagingPointTangentImpulse2: Float64Array;
+  private stagingEventTypes: Uint8Array;
+  private stagingEventFirstColliderIndices: Int32Array;
+  private stagingEventFirstColliderGenerations: Uint32Array;
+  private stagingEventSecondColliderIndices: Int32Array;
+  private stagingEventSecondColliderGenerations: Uint32Array;
   private readonly pointOrderScratch = new Int32Array(POINTS_PER_CONTACT);
   private disposed = false;
 
@@ -186,6 +191,11 @@ export class ContactCache3D {
     this.eventFirstColliderGenerations = new Uint32Array(eventCapacity);
     this.eventSecondColliderIndices = new Int32Array(eventCapacity);
     this.eventSecondColliderGenerations = new Uint32Array(eventCapacity);
+    this.stagingEventTypes = new Uint8Array(eventCapacity);
+    this.stagingEventFirstColliderIndices = new Int32Array(eventCapacity);
+    this.stagingEventFirstColliderGenerations = new Uint32Array(eventCapacity);
+    this.stagingEventSecondColliderIndices = new Int32Array(eventCapacity);
+    this.stagingEventSecondColliderGenerations = new Uint32Array(eventCapacity);
     counters.contactCacheAllocations += 1;
     counters.liveContactCaches += 1;
     counters.contactCapacity = capacity;
@@ -390,6 +400,23 @@ export class ContactCache3D {
       this.eventSecondColliderGenerations,
       capacity,
     );
+    this.stagingEventTypes = growUint8(this.stagingEventTypes, capacity);
+    this.stagingEventFirstColliderIndices = growInt32(
+      this.stagingEventFirstColliderIndices,
+      capacity,
+    );
+    this.stagingEventFirstColliderGenerations = growUint32(
+      this.stagingEventFirstColliderGenerations,
+      capacity,
+    );
+    this.stagingEventSecondColliderIndices = growInt32(
+      this.stagingEventSecondColliderIndices,
+      capacity,
+    );
+    this.stagingEventSecondColliderGenerations = growUint32(
+      this.stagingEventSecondColliderGenerations,
+      capacity,
+    );
     this.counters.contactEventCapacity = capacity;
     this.counters.contactEventCapacityGrowths += 1;
   }
@@ -489,107 +516,123 @@ export class ContactCache3D {
   }
 
   swapGenerations(nextCount: number, nextEventCount: number): void {
-    [this.firstColliderIndices, this.stagingFirstColliderIndices] = [
-      this.stagingFirstColliderIndices,
-      this.firstColliderIndices,
-    ];
-    [this.firstColliderGenerations, this.stagingFirstColliderGenerations] = [
-      this.stagingFirstColliderGenerations,
-      this.firstColliderGenerations,
-    ];
-    [this.secondColliderIndices, this.stagingSecondColliderIndices] = [
-      this.stagingSecondColliderIndices,
-      this.secondColliderIndices,
-    ];
-    [this.secondColliderGenerations, this.stagingSecondColliderGenerations] = [
-      this.stagingSecondColliderGenerations,
-      this.secondColliderGenerations,
-    ];
-    [this.firstBodyIndices, this.stagingFirstBodyIndices] = [
-      this.stagingFirstBodyIndices,
-      this.firstBodyIndices,
-    ];
-    [this.firstBodyGenerations, this.stagingFirstBodyGenerations] = [
-      this.stagingFirstBodyGenerations,
-      this.firstBodyGenerations,
-    ];
-    [this.secondBodyIndices, this.stagingSecondBodyIndices] = [
-      this.stagingSecondBodyIndices,
-      this.secondBodyIndices,
-    ];
-    [this.secondBodyGenerations, this.stagingSecondBodyGenerations] = [
-      this.stagingSecondBodyGenerations,
-      this.secondBodyGenerations,
-    ];
-    [this.sensorFlags, this.stagingSensorFlags] = [
-      this.stagingSensorFlags,
-      this.sensorFlags,
-    ];
-    [this.mixedFriction, this.stagingMixedFriction] = [
-      this.stagingMixedFriction,
-      this.mixedFriction,
-    ];
-    [this.mixedRestitution, this.stagingMixedRestitution] = [
-      this.stagingMixedRestitution,
-      this.mixedRestitution,
-    ];
-    [this.normalX, this.stagingNormalX] = [this.stagingNormalX, this.normalX];
-    [this.normalY, this.stagingNormalY] = [this.stagingNormalY, this.normalY];
-    [this.normalZ, this.stagingNormalZ] = [this.stagingNormalZ, this.normalZ];
-    [this.pointCounts, this.stagingPointCounts] = [
-      this.stagingPointCounts,
-      this.pointCounts,
-    ];
-    [this.pointFirstX, this.stagingPointFirstX] = [
-      this.stagingPointFirstX,
-      this.pointFirstX,
-    ];
-    [this.pointFirstY, this.stagingPointFirstY] = [
-      this.stagingPointFirstY,
-      this.pointFirstY,
-    ];
-    [this.pointFirstZ, this.stagingPointFirstZ] = [
-      this.stagingPointFirstZ,
-      this.pointFirstZ,
-    ];
-    [this.pointSecondX, this.stagingPointSecondX] = [
-      this.stagingPointSecondX,
-      this.pointSecondX,
-    ];
-    [this.pointSecondY, this.stagingPointSecondY] = [
-      this.stagingPointSecondY,
-      this.pointSecondY,
-    ];
-    [this.pointSecondZ, this.stagingPointSecondZ] = [
-      this.stagingPointSecondZ,
-      this.pointSecondZ,
-    ];
-    [this.pointSeparations, this.stagingPointSeparations] = [
-      this.stagingPointSeparations,
-      this.pointSeparations,
-    ];
-    [this.pointFirstFeatures, this.stagingPointFirstFeatures] = [
-      this.stagingPointFirstFeatures,
-      this.pointFirstFeatures,
-    ];
-    [this.pointSecondFeatures, this.stagingPointSecondFeatures] = [
-      this.stagingPointSecondFeatures,
-      this.pointSecondFeatures,
-    ];
-    [this.pointNormalImpulses, this.stagingPointNormalImpulses] = [
-      this.stagingPointNormalImpulses,
-      this.pointNormalImpulses,
-    ];
-    [this.pointTangentImpulse1, this.stagingPointTangentImpulse1] = [
-      this.stagingPointTangentImpulse1,
-      this.pointTangentImpulse1,
-    ];
-    [this.pointTangentImpulse2, this.stagingPointTangentImpulse2] = [
-      this.stagingPointTangentImpulse2,
-      this.pointTangentImpulse2,
-    ];
+    let int32 = this.firstColliderIndices;
+    this.firstColliderIndices = this.stagingFirstColliderIndices;
+    this.stagingFirstColliderIndices = int32;
+    let uint32 = this.firstColliderGenerations;
+    this.firstColliderGenerations = this.stagingFirstColliderGenerations;
+    this.stagingFirstColliderGenerations = uint32;
+    int32 = this.secondColliderIndices;
+    this.secondColliderIndices = this.stagingSecondColliderIndices;
+    this.stagingSecondColliderIndices = int32;
+    uint32 = this.secondColliderGenerations;
+    this.secondColliderGenerations = this.stagingSecondColliderGenerations;
+    this.stagingSecondColliderGenerations = uint32;
+    int32 = this.firstBodyIndices;
+    this.firstBodyIndices = this.stagingFirstBodyIndices;
+    this.stagingFirstBodyIndices = int32;
+    uint32 = this.firstBodyGenerations;
+    this.firstBodyGenerations = this.stagingFirstBodyGenerations;
+    this.stagingFirstBodyGenerations = uint32;
+    int32 = this.secondBodyIndices;
+    this.secondBodyIndices = this.stagingSecondBodyIndices;
+    this.stagingSecondBodyIndices = int32;
+    uint32 = this.secondBodyGenerations;
+    this.secondBodyGenerations = this.stagingSecondBodyGenerations;
+    this.stagingSecondBodyGenerations = uint32;
+    let uint8 = this.sensorFlags;
+    this.sensorFlags = this.stagingSensorFlags;
+    this.stagingSensorFlags = uint8;
+    let float64 = this.mixedFriction;
+    this.mixedFriction = this.stagingMixedFriction;
+    this.stagingMixedFriction = float64;
+    float64 = this.mixedRestitution;
+    this.mixedRestitution = this.stagingMixedRestitution;
+    this.stagingMixedRestitution = float64;
+    float64 = this.normalX;
+    this.normalX = this.stagingNormalX;
+    this.stagingNormalX = float64;
+    float64 = this.normalY;
+    this.normalY = this.stagingNormalY;
+    this.stagingNormalY = float64;
+    float64 = this.normalZ;
+    this.normalZ = this.stagingNormalZ;
+    this.stagingNormalZ = float64;
+    uint8 = this.pointCounts;
+    this.pointCounts = this.stagingPointCounts;
+    this.stagingPointCounts = uint8;
+    float64 = this.pointFirstX;
+    this.pointFirstX = this.stagingPointFirstX;
+    this.stagingPointFirstX = float64;
+    float64 = this.pointFirstY;
+    this.pointFirstY = this.stagingPointFirstY;
+    this.stagingPointFirstY = float64;
+    float64 = this.pointFirstZ;
+    this.pointFirstZ = this.stagingPointFirstZ;
+    this.stagingPointFirstZ = float64;
+    float64 = this.pointSecondX;
+    this.pointSecondX = this.stagingPointSecondX;
+    this.stagingPointSecondX = float64;
+    float64 = this.pointSecondY;
+    this.pointSecondY = this.stagingPointSecondY;
+    this.stagingPointSecondY = float64;
+    float64 = this.pointSecondZ;
+    this.pointSecondZ = this.stagingPointSecondZ;
+    this.stagingPointSecondZ = float64;
+    float64 = this.pointSeparations;
+    this.pointSeparations = this.stagingPointSeparations;
+    this.stagingPointSeparations = float64;
+    int32 = this.pointFirstFeatures;
+    this.pointFirstFeatures = this.stagingPointFirstFeatures;
+    this.stagingPointFirstFeatures = int32;
+    int32 = this.pointSecondFeatures;
+    this.pointSecondFeatures = this.stagingPointSecondFeatures;
+    this.stagingPointSecondFeatures = int32;
+    float64 = this.pointNormalImpulses;
+    this.pointNormalImpulses = this.stagingPointNormalImpulses;
+    this.stagingPointNormalImpulses = float64;
+    float64 = this.pointTangentImpulse1;
+    this.pointTangentImpulse1 = this.stagingPointTangentImpulse1;
+    this.stagingPointTangentImpulse1 = float64;
+    float64 = this.pointTangentImpulse2;
+    this.pointTangentImpulse2 = this.stagingPointTangentImpulse2;
+    this.stagingPointTangentImpulse2 = float64;
+    uint8 = this.eventTypes;
+    this.eventTypes = this.stagingEventTypes;
+    this.stagingEventTypes = uint8;
+    int32 = this.eventFirstColliderIndices;
+    this.eventFirstColliderIndices = this.stagingEventFirstColliderIndices;
+    this.stagingEventFirstColliderIndices = int32;
+    uint32 = this.eventFirstColliderGenerations;
+    this.eventFirstColliderGenerations =
+      this.stagingEventFirstColliderGenerations;
+    this.stagingEventFirstColliderGenerations = uint32;
+    int32 = this.eventSecondColliderIndices;
+    this.eventSecondColliderIndices = this.stagingEventSecondColliderIndices;
+    this.stagingEventSecondColliderIndices = int32;
+    uint32 = this.eventSecondColliderGenerations;
+    this.eventSecondColliderGenerations =
+      this.stagingEventSecondColliderGenerations;
+    this.stagingEventSecondColliderGenerations = uint32;
     this.contactCount = nextCount;
     this.eventCount = nextEventCount;
+  }
+
+  writeStagingEvent(
+    index: number,
+    type: number,
+    firstColliderIndex: number,
+    firstColliderGeneration: number,
+    secondColliderIndex: number,
+    secondColliderGeneration: number,
+  ): number {
+    this.stagingEventTypes[index] = type;
+    this.stagingEventFirstColliderIndices[index] = firstColliderIndex;
+    this.stagingEventFirstColliderGenerations[index] = firstColliderGeneration;
+    this.stagingEventSecondColliderIndices[index] = secondColliderIndex;
+    this.stagingEventSecondColliderGenerations[index] =
+      secondColliderGeneration;
+    return index + 1;
   }
 
   dispose(): void {
@@ -655,6 +698,8 @@ export function updateSortedContactCache3D(
   let pair = 0;
   let nextContact = 0;
   let nextEvent = 0;
+  let contactAllocations = 0;
+  let contactReleases = 0;
   while (oldContact < cache.contactCount || pair < pairs.pairCount) {
     let firstIndex: number;
     let firstGeneration: number;
@@ -715,6 +760,10 @@ export function updateSortedContactCache3D(
       ? manifoldProvider(firstIndex, secondIndex)
       : null;
     if (manifold !== null && manifold.points.length > 0) {
+      const sensor = isSensorPair(colliders, firstIndex, secondIndex);
+      const changesSensorState =
+        oldIndex !== NO_CONTACT &&
+        (cache.sensorFlags[oldIndex] !== 0) !== sensor;
       cache.writeStagingContact(
         nextContact,
         firstIndex,
@@ -723,18 +772,38 @@ export function updateSortedContactCache3D(
         secondGeneration,
         colliders,
         manifold,
-        oldIndex,
+        changesSensorState ? NO_CONTACT : oldIndex,
       );
-      if (!matchedOld) {
-        cache.counters.contactAllocations += 1;
-        cache.counters.liveContacts += 1;
+      if (changesSensorState) {
         if (observeEvents) {
           nextEvent = writeEvent(
             cache,
             nextEvent,
-            isSensorPair(colliders, firstIndex, secondIndex)
-              ? OVERLAP_EVENT_BEGIN_3D
-              : CONTACT_EVENT_BEGIN_3D,
+            cache.sensorFlags[oldIndex] !== 0
+              ? OVERLAP_EVENT_END_3D
+              : CONTACT_EVENT_END_3D,
+            firstIndex,
+            firstGeneration,
+            secondIndex,
+            secondGeneration,
+          );
+          nextEvent = writeEvent(
+            cache,
+            nextEvent,
+            sensor ? OVERLAP_EVENT_BEGIN_3D : CONTACT_EVENT_BEGIN_3D,
+            firstIndex,
+            firstGeneration,
+            secondIndex,
+            secondGeneration,
+          );
+        }
+      } else if (!matchedOld) {
+        contactAllocations += 1;
+        if (observeEvents) {
+          nextEvent = writeEvent(
+            cache,
+            nextEvent,
+            sensor ? OVERLAP_EVENT_BEGIN_3D : CONTACT_EVENT_BEGIN_3D,
             firstIndex,
             firstGeneration,
             secondIndex,
@@ -744,8 +813,7 @@ export function updateSortedContactCache3D(
       }
       nextContact += 1;
     } else if (matchedOld) {
-      cache.counters.contactReleases += 1;
-      cache.counters.liveContacts -= 1;
+      contactReleases += 1;
       if (observeEvents) {
         nextEvent = writeEvent(
           cache,
@@ -762,6 +830,10 @@ export function updateSortedContactCache3D(
     }
   }
   cache.swapGenerations(nextContact, observeEvents ? nextEvent : 0);
+  cache.counters.contactAllocations += contactAllocations;
+  cache.counters.contactReleases += contactReleases;
+  cache.counters.liveContacts += contactAllocations - contactReleases;
+  cache.counters.contactEventFactWrites += observeEvents ? nextEvent : 0;
 }
 
 export function manifoldBetweenStoredColliders3D(
@@ -896,12 +968,14 @@ function writeEvent(
   secondIndex: number,
   secondGeneration: number,
 ): number {
-  cache.eventTypes[index] = type;
-  cache.eventFirstColliderIndices[index] = firstIndex;
-  cache.eventFirstColliderGenerations[index] = firstGeneration;
-  cache.eventSecondColliderIndices[index] = secondIndex;
-  cache.eventSecondColliderGenerations[index] = secondGeneration;
-  return index + 1;
+  return cache.writeStagingEvent(
+    index,
+    type,
+    firstIndex,
+    firstGeneration,
+    secondIndex,
+    secondGeneration,
+  );
 }
 
 function compareContactToPair(

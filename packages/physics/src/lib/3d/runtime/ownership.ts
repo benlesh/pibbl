@@ -56,7 +56,7 @@ export interface PhysicsOwnershipCounters3D {
   liveContacts: number;
   contactEventCapacity: number;
   contactEventCapacityGrowths: number;
-  publicEventAllocations: number;
+  contactEventFactWrites: number;
   solverAllocations: number;
   solverReleases: number;
   liveSolvers: number;
@@ -125,7 +125,7 @@ export function createPhysicsOwnershipCounters3D(): PhysicsOwnershipCounters3D {
     liveContacts: 0,
     contactEventCapacity: 0,
     contactEventCapacityGrowths: 0,
-    publicEventAllocations: 0,
+    contactEventFactWrites: 0,
     solverAllocations: 0,
     solverReleases: 0,
     liveSolvers: 0,

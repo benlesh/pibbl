@@ -181,13 +181,30 @@ export class BodyStore3D {
 
   allocate(definition: BodyDefinition3D): number {
     this.assertUsable();
+    const orientation = canonicalQuaternion(
+      definition.orientationX,
+      definition.orientationY,
+      definition.orientationZ,
+      definition.orientationW,
+      "body orientation",
+    );
     if (this.freeHead === NO_INDEX) this.grow();
     const index = this.freeHead;
     this.freeHead = this.nextFree[index]!;
     this.nextFree[index] = NO_INDEX;
     this.active[index] = 1;
-    this.generations[index] = nextGeneration(this.generations[index]!);
-    this.write(index, definition);
+    const previousGeneration = this.generations[index]!;
+    this.generations[index] = nextGeneration(previousGeneration);
+    try {
+      this.write(index, definition, orientation);
+    } catch (error) {
+      this.active[index] = 0;
+      this.clear(index);
+      this.generations[index] = previousGeneration;
+      this.nextFree[index] = this.freeHead;
+      this.freeHead = index;
+      throw error;
+    }
     this.counters.bodyAllocations += 1;
     this.counters.liveBodies += 1;
     this.counters.freeBodySlots -= 1;
@@ -275,14 +292,11 @@ export class BodyStore3D {
     this.counters.liveBodyStores -= 1;
   }
 
-  private write(index: number, definition: BodyDefinition3D): void {
-    const orientation = canonicalQuaternion(
-      definition.orientationX,
-      definition.orientationY,
-      definition.orientationZ,
-      definition.orientationW,
-      "body orientation",
-    );
+  private write(
+    index: number,
+    definition: BodyDefinition3D,
+    orientation: Float64Array,
+  ): void {
     this.positionX[index] = definition.positionX;
     this.positionY[index] = definition.positionY;
     this.positionZ[index] = definition.positionZ;
@@ -514,12 +528,6 @@ export class ColliderStore3D {
 
   allocate(definition: ColliderDefinition3D): number {
     this.assertUsable();
-    if (this.freeHead === NO_INDEX) this.grow();
-    const index = this.freeHead;
-    this.freeHead = this.nextFree[index]!;
-    this.nextFree[index] = NO_INDEX;
-    this.active[index] = 1;
-    this.generations[index] = nextGeneration(this.generations[index]!);
     const orientation = canonicalQuaternion(
       definition.localOrientationX,
       definition.localOrientationY,
@@ -527,28 +535,44 @@ export class ColliderStore3D {
       definition.localOrientationW,
       "collider local orientation",
     );
-    this.bodyIndices[index] = definition.bodyIndex;
-    this.bodyGenerations[index] = definition.bodyGeneration;
-    this.proxyIndices[index] = NO_INDEX;
-    this.proxyGenerations[index] = 0;
-    this.localPositionX[index] = definition.localPositionX;
-    this.localPositionY[index] = definition.localPositionY;
-    this.localPositionZ[index] = definition.localPositionZ;
-    this.localOrientationX[index] = orientation[0]!;
-    this.localOrientationY[index] = orientation[1]!;
-    this.localOrientationZ[index] = orientation[2]!;
-    this.localOrientationW[index] = orientation[3]!;
-    this.densities[index] = definition.density;
-    this.frictions[index] = definition.friction;
-    this.restitutions[index] = definition.restitution;
-    this.collisionCategories[index] = definition.collisionCategory;
-    this.collisionMasks[index] = definition.collisionMask;
-    this.collisionGroup[index] = definition.collisionGroup;
-    this.flags[index] = definition.flags;
-    this.shapes[index] = definition.shape;
-    this.tags[index] = definition.tag;
-    this.handlers[index] = definition.handlers;
-    this.owners[index] = definition.owner;
+    if (this.freeHead === NO_INDEX) this.grow();
+    const index = this.freeHead;
+    this.freeHead = this.nextFree[index]!;
+    this.nextFree[index] = NO_INDEX;
+    this.active[index] = 1;
+    const previousGeneration = this.generations[index]!;
+    this.generations[index] = nextGeneration(previousGeneration);
+    try {
+      this.bodyIndices[index] = definition.bodyIndex;
+      this.bodyGenerations[index] = definition.bodyGeneration;
+      this.proxyIndices[index] = NO_INDEX;
+      this.proxyGenerations[index] = 0;
+      this.localPositionX[index] = definition.localPositionX;
+      this.localPositionY[index] = definition.localPositionY;
+      this.localPositionZ[index] = definition.localPositionZ;
+      this.localOrientationX[index] = orientation[0]!;
+      this.localOrientationY[index] = orientation[1]!;
+      this.localOrientationZ[index] = orientation[2]!;
+      this.localOrientationW[index] = orientation[3]!;
+      this.densities[index] = definition.density;
+      this.frictions[index] = definition.friction;
+      this.restitutions[index] = definition.restitution;
+      this.collisionCategories[index] = definition.collisionCategory;
+      this.collisionMasks[index] = definition.collisionMask;
+      this.collisionGroup[index] = definition.collisionGroup;
+      this.flags[index] = definition.flags;
+      this.shapes[index] = definition.shape;
+      this.tags[index] = definition.tag;
+      this.handlers[index] = definition.handlers;
+      this.owners[index] = definition.owner;
+    } catch (error) {
+      this.active[index] = 0;
+      this.clear(index);
+      this.generations[index] = previousGeneration;
+      this.nextFree[index] = this.freeHead;
+      this.freeHead = index;
+      throw error;
+    }
     this.counters.colliderAllocations += 1;
     this.counters.liveColliders += 1;
     this.counters.freeColliderSlots -= 1;
@@ -588,6 +612,21 @@ export class ColliderStore3D {
   release(index: number, generation: number): boolean {
     if (!this.has(index, generation)) return false;
     this.active[index] = 0;
+    this.clear(index);
+    this.counters.colliderReleases += 1;
+    this.counters.liveColliders -= 1;
+    if (generation === MAX_GENERATION) {
+      this.nextFree[index] = NO_INDEX;
+      this.counters.retiredColliderSlots += 1;
+    } else {
+      this.nextFree[index] = this.freeHead;
+      this.freeHead = index;
+      this.counters.freeColliderSlots += 1;
+    }
+    return true;
+  }
+
+  private clear(index: number): void {
     this.bodyIndices[index] = NO_INDEX;
     this.bodyGenerations[index] = 0;
     this.proxyIndices[index] = NO_INDEX;
@@ -610,17 +649,6 @@ export class ColliderStore3D {
     this.tags[index] = null;
     this.handlers[index] = null;
     this.owners[index] = null;
-    this.counters.colliderReleases += 1;
-    this.counters.liveColliders -= 1;
-    if (generation === MAX_GENERATION) {
-      this.nextFree[index] = NO_INDEX;
-      this.counters.retiredColliderSlots += 1;
-    } else {
-      this.nextFree[index] = this.freeHead;
-      this.freeHead = index;
-      this.counters.freeColliderSlots += 1;
-    }
-    return true;
   }
 
   dispose(): void {

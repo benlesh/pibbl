@@ -147,16 +147,16 @@ export class SequentialImpulseSolver3D {
     this.buildIslands(bodies, bodyIndices, bodyCount, contacts);
     this.prepareConstraints(bodies, contacts);
     this.warmStart(bodies, contacts);
+    this.velocityIterationsPerformed = 0;
+    this.positionIterationsPerformed = 0;
     for (let iteration = 0; iteration < velocityIterations; iteration += 1) {
       this.solveVelocityConstraints(bodies, contacts);
+      this.velocityIterationsPerformed += 1;
     }
     for (let iteration = 0; iteration < positionIterations; iteration += 1) {
       this.solvePositionConstraints(bodies, contacts);
+      this.positionIterationsPerformed += 1;
     }
-    this.velocityIterationsPerformed =
-      this.constraintCount === 0 ? 0 : velocityIterations;
-    this.positionIterationsPerformed =
-      this.constraintCount === 0 ? 0 : positionIterations;
   }
 
   dispose(): void {

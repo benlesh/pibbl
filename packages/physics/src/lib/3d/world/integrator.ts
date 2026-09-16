@@ -131,12 +131,13 @@ export function applyImpulseAtPointToCandidateBody3D(
   const angularImpulseY = offsetZ * impulseX - offsetX * impulseZ;
   const angularImpulseZ = offsetX * impulseY - offsetY * impulseX;
   const worldInverseInertia = new Float64Array(9);
+  const rotation = new Float64Array(9);
   writeWorldInverseInertia3D(
     bodies,
     bodyIndex,
     worldInverseInertia,
     0,
-    new Float64Array(9),
+    rotation,
   );
   bodies.angularVelocityX[bodyIndex] +=
     worldInverseInertia[0]! * angularImpulseX +
@@ -150,7 +151,7 @@ export function applyImpulseAtPointToCandidateBody3D(
     worldInverseInertia[6]! * angularImpulseX +
     worldInverseInertia[7]! * angularImpulseY +
     worldInverseInertia[8]! * angularImpulseZ;
-  projectLockedAngularVelocity(bodies, bodyIndex);
+  projectLockedAngularVelocity(bodies, bodyIndex, rotation);
   return true;
 }
 
@@ -186,7 +187,7 @@ export function integrateCandidateBodies3D(
       integratePose(bodies, bodyIndex, dt, orientation);
     } else if (type === BODY_TYPE_KINEMATIC_3D) {
       enforceTranslationLocks(bodies, bodyIndex);
-      projectLockedAngularVelocity(bodies, bodyIndex);
+      projectLockedAngularVelocity(bodies, bodyIndex, rotation);
       integratePose(bodies, bodyIndex, dt, orientation);
     }
     bodies.forceX[bodyIndex] = 0;
@@ -424,7 +425,7 @@ function integrateDynamicVelocity(
           worldInverseInertia[7]! * torqueY +
           worldInverseInertia[8]! * torqueZ)) *
     angularDamping;
-  projectLockedAngularVelocity(bodies, bodyIndex);
+  projectLockedAngularVelocity(bodies, bodyIndex, rotation);
 }
 
 function integratePose(
@@ -467,10 +468,10 @@ function enforceTranslationLocks(bodies: BodyStore3D, bodyIndex: number): void {
 function projectLockedAngularVelocity(
   bodies: BodyStore3D,
   bodyIndex: number,
+  rotation: Float64Array,
 ): void {
   const locks = bodies.rotationLocks[bodyIndex]!;
   if (locks === 0) return;
-  const rotation = new Float64Array(9);
   writeRotationMatrixFromComponents(
     rotation,
     bodies.orientationX[bodyIndex]!,
