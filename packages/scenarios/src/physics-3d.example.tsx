@@ -5,9 +5,7 @@ import {
   type WritableSignal,
 } from "@crc/core";
 import {
-  AmbientLight,
   Cube,
-  DirectionalLight,
   Group3D,
   Sphere,
   WebGLLayer,
@@ -181,6 +179,7 @@ function DynamicCubeBody({
       style={{
         size,
         color,
+        lit: false,
         translateX: position[0],
         translateY: position[1],
         translateZ: position[2],
@@ -215,6 +214,7 @@ function DynamicSphereBody({
       style={{
         radius,
         color,
+        lit: false,
         translateX: position[0],
         translateY: position[1],
         translateZ: position[2],
@@ -247,6 +247,7 @@ function CompoundBody({ model }: { readonly model: Physics3DModel }) {
         style={{
           size: 0.72,
           color: "#f97316",
+          lit: false,
           translateX: -0.65,
         }}
       />
@@ -255,6 +256,7 @@ function CompoundBody({ model }: { readonly model: Physics3DModel }) {
         style={{
           radius: 0.42,
           color: "#fb923c",
+          lit: false,
           translateX: 0.65,
         }}
       />
@@ -270,6 +272,7 @@ function RayMarker({ model }: { readonly model: Physics3DModel }) {
       style={{
         radius: 0.16,
         color: "#f43f5e",
+        lit: false,
         translateX: point[0],
         translateY: point[1],
         translateZ: point[2],
@@ -286,16 +289,6 @@ export function Physics3DRoot({ model }: { readonly model: Physics3DModel }) {
         camera={PHYSICS_3D_CAMERA}
         style={{ width: 480, height: 300 }}
       >
-        <AmbientLight style={{ color: "#ffffff", intensity: 0.18 }} />
-        <DirectionalLight
-          style={{
-            color: "#fff4de",
-            intensity: 0.9,
-            rotationXDegrees: -42,
-            rotationYDegrees: 35,
-            castShadow: false,
-          }}
-        />
         <PhysicsWorld3D
           gravity={[0, -12, 0]}
           fixedStepMilliseconds={1000 / 60}
@@ -309,6 +302,7 @@ export function Physics3DRoot({ model }: { readonly model: Physics3DModel }) {
             })}
             style={{
               color: "#334155",
+              lit: false,
               translateY: -2.5,
               scaleX: 14,
               scaleY: 0.5,
@@ -321,6 +315,7 @@ export function Physics3DRoot({ model }: { readonly model: Physics3DModel }) {
             })}
             style={{
               color: "#64748b",
+              lit: false,
               translateX: 2.1,
               translateY: -0.35,
               translateZ: -0.4,

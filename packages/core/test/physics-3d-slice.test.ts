@@ -114,14 +114,18 @@ describe("public first-class 3D physics browser slice", () => {
     let sawBounce = false;
     let sawContact = false;
     let previousBounceVelocity = initial.bodies["bounce-sphere"].linearVelocity[1];
-    for (let frame = 0; frame < 180; frame += 1) {
-      flushAfter();
+    let simulatedTicks = 0;
+    while (simulatedTicks < 120) {
+      const batchTicks = Math.min(8, 120 - simulatedTicks);
+      flushAfter(batchTicks * (1000 / 60));
+      simulatedTicks += batchTicks;
       const state = controller.getState();
       const velocity = state.bodies["bounce-sphere"].linearVelocity[1];
       sawBounce ||= previousBounceVelocity < -0.5 && velocity > 0.5;
       previousBounceVelocity = velocity;
       sawContact ||= state.contacts.some((entry) => entry.includes("floor"));
     }
+    flushAfter((1000 / 60) * (1 - 1e-6));
     const settled = controller.getState();
     expect(settled.bodies["drop-cube"].position[1]).toBeLessThan(
       initial.bodies["drop-cube"].position[1],
