@@ -144,6 +144,38 @@ export function installTransparentWebGLPass(gl: WebGL2RenderingContext): void {
   gl.depthRange(0, 1);
 }
 
+/** Installs the settled blend/depth state for one official instanced draw. */
+export function installInstancedWebGLPass(
+  gl: WebGL2RenderingContext,
+  blend: 'alpha' | 'additive' | 'cutout',
+  depthTest: boolean,
+  depthWrite: boolean,
+): void {
+  gl.colorMask(true, true, true, true);
+  if (blend === 'cutout') {
+    gl.disable(gl.BLEND);
+  } else {
+    gl.enable(gl.BLEND);
+    gl.blendColor(0, 0, 0, 0);
+    gl.blendEquationSeparate(gl.FUNC_ADD, gl.FUNC_ADD);
+    if (blend === 'additive') {
+      gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE, gl.ONE, gl.ONE);
+    } else {
+      gl.blendFuncSeparate(
+        gl.SRC_ALPHA,
+        gl.ONE_MINUS_SRC_ALPHA,
+        gl.ONE,
+        gl.ONE_MINUS_SRC_ALPHA,
+      );
+    }
+  }
+  if (depthTest) gl.enable(gl.DEPTH_TEST);
+  else gl.disable(gl.DEPTH_TEST);
+  gl.depthMask(depthWrite);
+  gl.depthFunc(gl.LEQUAL);
+  gl.depthRange(0, 1);
+}
+
 /** Installs the depth-only state for one directional shadow target. */
 export function installDirectionalShadowWebGLPass(
   gl: WebGL2RenderingContext,
