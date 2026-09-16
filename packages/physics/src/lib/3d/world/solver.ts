@@ -2,6 +2,9 @@ import {
   CONTACT_SLOP_3D,
   MAX_POSITION_CORRECTION_3D,
   RESTITUTION_VELOCITY_THRESHOLD_3D,
+  SLEEP_ANGULAR_SPEED_DEGREES_3D,
+  SLEEP_DURATION_SECONDS_3D,
+  SLEEP_LINEAR_SPEED_3D,
 } from "../numeric-policy.js";
 import { rotationMatrixInto } from "../math.js";
 import type { PhysicsOwnershipCounters3D } from "../runtime/ownership.js";
@@ -13,6 +16,7 @@ import {
 import {
   BODY_ENABLED_3D,
   BODY_TYPE_DYNAMIC_3D,
+  BODY_TYPE_KINEMATIC_3D,
   BODY_TYPE_MASK_3D,
   type BodyStore3D,
 } from "./storage.js";
@@ -21,6 +25,15 @@ const DEFAULT_VELOCITY_ITERATIONS_3D = 8;
 const DEFAULT_POSITION_ITERATIONS_3D = 3;
 const POINTS_PER_CONTACT = 4;
 const NO_INDEX = -1;
+const DEGREES_TO_RADIANS = Math.PI / 180;
+
+export const BODY_SLEEP_DISABLED_3D = 1 << 3;
+export const BODY_SLEEPING_3D = 1 << 4;
+
+export interface SleepingCandidateOptions3D {
+  readonly enabled: boolean;
+  readonly recordTransition?: (bodyIndex: number, sleeping: boolean) => void;
+}
 
 export class SequentialImpulseSolver3D {
   constraintCount = 0;
@@ -28,6 +41,8 @@ export class SequentialImpulseSolver3D {
   islandBodyCount = 0;
   velocityIterationsPerformed = 0;
   positionIterationsPerformed = 0;
+  solvedIslandCount = 0;
+  advanceEligible = true;
 
   islandBodyIndices: Int32Array;
   islandContactIndices: Int32Array;
@@ -45,6 +60,7 @@ export class SequentialImpulseSolver3D {
   private islandContactCounts: Int32Array;
   private islandBodyWrites: Int32Array;
   private islandContactWrites: Int32Array;
+  private islandAwake: Uint8Array;
   private constraintContactIndices: Int32Array;
   private tangent1X: Float64Array;
   private tangent1Y: Float64Array;
@@ -96,6 +112,7 @@ export class SequentialImpulseSolver3D {
     this.islandContactCounts = new Int32Array(bodyCapacity);
     this.islandBodyWrites = new Int32Array(bodyCapacity);
     this.islandContactWrites = new Int32Array(bodyCapacity);
+    this.islandAwake = new Uint8Array(bodyCapacity);
     this.constraintContactIndices = new Int32Array(contactCapacity);
     this.tangent1X = new Float64Array(contactCapacity);
     this.tangent1Y = new Float64Array(contactCapacity);
@@ -145,18 +162,109 @@ export class SequentialImpulseSolver3D {
     this.ensureBodyCapacity(Math.max(bodies.capacity, bodyCount));
     this.ensureContactCapacity(contacts.contactCount);
     this.buildIslands(bodies, bodyIndices, bodyCount, contacts);
+    this.markAwakeIslands(bodies);
     this.prepareConstraints(bodies, contacts);
     this.warmStart(bodies, contacts);
     this.velocityIterationsPerformed = 0;
     this.positionIterationsPerformed = 0;
-    for (let iteration = 0; iteration < velocityIterations; iteration += 1) {
-      this.solveVelocityConstraints(bodies, contacts);
-      this.velocityIterationsPerformed += 1;
+    if (this.solvedIslandCount > 0) {
+      for (let iteration = 0; iteration < velocityIterations; iteration += 1) {
+        this.solveVelocityConstraints(bodies, contacts);
+        this.velocityIterationsPerformed += 1;
+      }
+      for (let iteration = 0; iteration < positionIterations; iteration += 1) {
+        this.solvePositionConstraints(bodies, contacts);
+        this.positionIterationsPerformed += 1;
+      }
     }
-    for (let iteration = 0; iteration < positionIterations; iteration += 1) {
-      this.solvePositionConstraints(bodies, contacts);
-      this.positionIterationsPerformed += 1;
+  }
+
+  updateSleepingCandidate(
+    bodies: BodyStore3D,
+    contacts: ContactCache3D,
+    dt: number,
+    options: SleepingCandidateOptions3D,
+  ): boolean {
+    this.assertUsable();
+    if (!Number.isFinite(dt) || dt < 0) {
+      throw new RangeError("sleep dt must be finite and nonnegative.");
     }
+    if (!options.enabled) {
+      for (let island = 0; island < this.islandCount; island += 1) {
+        this.wakeIsland(bodies, island, options.recordTransition);
+      }
+      this.advanceEligible = true;
+      return false;
+    }
+
+    let sleepingIslands = 0;
+    for (let island = 0; island < this.islandCount; island += 1) {
+      let belowThresholds = true;
+      let sleepDisabled = false;
+      let hasSleeping = false;
+      let hasAwake = false;
+      let minimumTime = Number.POSITIVE_INFINITY;
+      for (
+        let offset = this.islandBodyOffsets[island]!;
+        offset < this.islandBodyOffsets[island + 1]!;
+        offset += 1
+      ) {
+        const body = this.islandBodyIndices[offset]!;
+        const flags = bodies.flags[body]!;
+        sleepDisabled ||= (flags & BODY_SLEEP_DISABLED_3D) !== 0;
+        hasSleeping ||= (flags & BODY_SLEEPING_3D) !== 0;
+        hasAwake ||= (flags & BODY_SLEEPING_3D) === 0;
+        minimumTime = Math.min(minimumTime, bodies.sleepTime[body]!);
+        belowThresholds &&=
+          Math.hypot(
+            bodies.linearVelocityX[body]!,
+            bodies.linearVelocityY[body]!,
+            bodies.linearVelocityZ[body]!,
+          ) < SLEEP_LINEAR_SPEED_3D &&
+          Math.hypot(
+            bodies.angularVelocityX[body]!,
+            bodies.angularVelocityY[body]!,
+            bodies.angularVelocityZ[body]!,
+          ) <
+            SLEEP_ANGULAR_SPEED_DEGREES_3D * DEGREES_TO_RADIANS;
+      }
+      const wakeFromContact =
+        (hasSleeping && hasAwake) ||
+        this.touchesMovingKinematic(bodies, contacts, island);
+      if (sleepDisabled || wakeFromContact || !belowThresholds) {
+        this.wakeIsland(bodies, island, options.recordTransition);
+        continue;
+      }
+      if (hasSleeping) {
+        sleepingIslands += 1;
+        continue;
+      }
+      const elapsed = minimumTime + dt;
+      if (elapsed + Number.EPSILON < SLEEP_DURATION_SECONDS_3D) {
+        this.setIslandSleepTime(bodies, island, elapsed);
+        continue;
+      }
+      this.sleepIsland(bodies, island, options.recordTransition);
+      sleepingIslands += 1;
+    }
+    const allSleeping =
+      this.islandCount > 0 && sleepingIslands === this.islandCount;
+    this.advanceEligible = !allSleeping;
+    return allSleeping;
+  }
+
+  wakeIslandContainingCandidate(
+    bodies: BodyStore3D,
+    bodyIndex: number,
+    recordTransition?: (bodyIndex: number, sleeping: boolean) => void,
+  ): boolean {
+    this.assertUsable();
+    const dynamic = this.dynamicIndex(bodyIndex);
+    if (dynamic === NO_INDEX) return false;
+    const island = this.dynamicIslandIndices[dynamic]!;
+    const changed = this.wakeIsland(bodies, island, recordTransition);
+    this.advanceEligible = this.islandCount > 0;
+    return changed;
   }
 
   dispose(): void {
@@ -165,6 +273,7 @@ export class SequentialImpulseSolver3D {
     this.constraintCount = 0;
     this.islandCount = 0;
     this.islandBodyCount = 0;
+    this.solvedIslandCount = 0;
     this.counters.solverReleases += 1;
     this.counters.liveSolvers -= 1;
   }
@@ -283,6 +392,132 @@ export class SequentialImpulseSolver3D {
     this.islandBodyCount = dynamicCount;
   }
 
+  private markAwakeIslands(bodies: BodyStore3D): void {
+    this.solvedIslandCount = 0;
+    for (let island = 0; island < this.islandCount; island += 1) {
+      let awake = false;
+      for (
+        let offset = this.islandBodyOffsets[island]!;
+        offset < this.islandBodyOffsets[island + 1]!;
+        offset += 1
+      ) {
+        if (
+          (bodies.flags[this.islandBodyIndices[offset]!]! &
+            BODY_SLEEPING_3D) ===
+          0
+        ) {
+          awake = true;
+          break;
+        }
+      }
+      this.islandAwake[island] = awake ? 1 : 0;
+      if (awake) this.solvedIslandCount += 1;
+    }
+  }
+
+  private touchesMovingKinematic(
+    bodies: BodyStore3D,
+    contacts: ContactCache3D,
+    island: number,
+  ): boolean {
+    for (
+      let offset = this.islandContactOffsets[island]!;
+      offset < this.islandContactOffsets[island + 1]!;
+      offset += 1
+    ) {
+      const contact = this.islandContactIndices[offset]!;
+      if (
+        isMovingKinematic(bodies, contacts.firstBodyIndices[contact]!) ||
+        isMovingKinematic(bodies, contacts.secondBodyIndices[contact]!)
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private setIslandSleepTime(
+    bodies: BodyStore3D,
+    island: number,
+    sleepTime: number,
+  ): void {
+    for (
+      let offset = this.islandBodyOffsets[island]!;
+      offset < this.islandBodyOffsets[island + 1]!;
+      offset += 1
+    ) {
+      bodies.sleepTime[this.islandBodyIndices[offset]!] = sleepTime;
+    }
+  }
+
+  private sleepIsland(
+    bodies: BodyStore3D,
+    island: number,
+    recordTransition?: (bodyIndex: number, sleeping: boolean) => void,
+  ): void {
+    for (
+      let offset = this.islandBodyOffsets[island]!;
+      offset < this.islandBodyOffsets[island + 1]!;
+      offset += 1
+    ) {
+      const body = this.islandBodyIndices[offset]!;
+      const wasSleeping = (bodies.flags[body]! & BODY_SLEEPING_3D) !== 0;
+      bodies.flags[body] |= BODY_SLEEPING_3D;
+      bodies.sleepTime[body] = SLEEP_DURATION_SECONDS_3D;
+      bodies.linearVelocityX[body] = 0;
+      bodies.linearVelocityY[body] = 0;
+      bodies.linearVelocityZ[body] = 0;
+      bodies.angularVelocityX[body] = 0;
+      bodies.angularVelocityY[body] = 0;
+      bodies.angularVelocityZ[body] = 0;
+      bodies.forceX[body] = 0;
+      bodies.forceY[body] = 0;
+      bodies.forceZ[body] = 0;
+      bodies.torqueX[body] = 0;
+      bodies.torqueY[body] = 0;
+      bodies.torqueZ[body] = 0;
+      if (!wasSleeping) recordTransition?.(body, true);
+    }
+  }
+
+  private wakeIsland(
+    bodies: BodyStore3D,
+    island: number,
+    recordTransition?: (bodyIndex: number, sleeping: boolean) => void,
+  ): boolean {
+    let changed = false;
+    for (
+      let offset = this.islandBodyOffsets[island]!;
+      offset < this.islandBodyOffsets[island + 1]!;
+      offset += 1
+    ) {
+      const body = this.islandBodyIndices[offset]!;
+      const wasSleeping = (bodies.flags[body]! & BODY_SLEEPING_3D) !== 0;
+      bodies.flags[body] &= ~BODY_SLEEPING_3D;
+      bodies.sleepTime[body] = 0;
+      if (wasSleeping) {
+        changed = true;
+        recordTransition?.(body, false);
+      }
+    }
+    return changed;
+  }
+
+  private contactBelongsToAwakeIsland(
+    contacts: ContactCache3D,
+    contact: number,
+  ): boolean {
+    const firstDynamic = this.dynamicIndex(contacts.firstBodyIndices[contact]!);
+    const dynamic =
+      firstDynamic !== NO_INDEX
+        ? firstDynamic
+        : this.dynamicIndex(contacts.secondBodyIndices[contact]!);
+    return (
+      dynamic !== NO_INDEX &&
+      this.islandAwake[this.dynamicIslandIndices[dynamic]!] === 1
+    );
+  }
+
   private prepareConstraints(
     bodies: BodyStore3D,
     contacts: ContactCache3D,
@@ -294,6 +529,7 @@ export class SequentialImpulseSolver3D {
       constraint += 1
     ) {
       const contact = this.constraintContactIndices[constraint]!;
+      if (!this.contactBelongsToAwakeIsland(contacts, contact)) continue;
       const firstBody = contacts.firstBodyIndices[contact]!;
       const secondBody = contacts.secondBodyIndices[contact]!;
       writeWorldInverseInertia3D(
@@ -438,6 +674,7 @@ export class SequentialImpulseSolver3D {
       constraint += 1
     ) {
       const contact = this.constraintContactIndices[constraint]!;
+      if (!this.contactBelongsToAwakeIsland(contacts, contact)) continue;
       const normalX = contacts.normalX[contact]!;
       const normalY = contacts.normalY[contact]!;
       const normalZ = contacts.normalZ[contact]!;
@@ -482,6 +719,7 @@ export class SequentialImpulseSolver3D {
       constraint += 1
     ) {
       const contact = this.constraintContactIndices[constraint]!;
+      if (!this.contactBelongsToAwakeIsland(contacts, contact)) continue;
       const firstBody = contacts.firstBodyIndices[contact]!;
       const secondBody = contacts.secondBodyIndices[contact]!;
       const normalX = contacts.normalX[contact]!;
@@ -617,6 +855,7 @@ export class SequentialImpulseSolver3D {
       constraint += 1
     ) {
       const contact = this.constraintContactIndices[constraint]!;
+      if (!this.contactBelongsToAwakeIsland(contacts, contact)) continue;
       const firstBody = contacts.firstBodyIndices[contact]!;
       const secondBody = contacts.secondBodyIndices[contact]!;
       const normalX = contacts.normalX[contact]!;
@@ -1039,6 +1278,7 @@ export class SequentialImpulseSolver3D {
     this.islandContactCounts = growInt32(this.islandContactCounts, capacity);
     this.islandBodyWrites = growInt32(this.islandBodyWrites, capacity);
     this.islandContactWrites = growInt32(this.islandContactWrites, capacity);
+    this.islandAwake = growUint8(this.islandAwake, capacity);
     this.bodyWorldInverseInertia = growFloat64(
       this.bodyWorldInverseInertia,
       capacity * 9,
@@ -1097,6 +1337,21 @@ function isDynamicBody(bodies: BodyStore3D, body: number): boolean {
     (bodies.flags[body]! & BODY_ENABLED_3D) !== 0 &&
     (bodies.flags[body]! & BODY_TYPE_MASK_3D) === BODY_TYPE_DYNAMIC_3D &&
     bodies.inverseMass[body]! > 0
+  );
+}
+
+function isMovingKinematic(bodies: BodyStore3D, body: number): boolean {
+  return (
+    body >= 0 &&
+    body < bodies.capacity &&
+    (bodies.flags[body]! & BODY_ENABLED_3D) !== 0 &&
+    (bodies.flags[body]! & BODY_TYPE_MASK_3D) === BODY_TYPE_KINEMATIC_3D &&
+    (bodies.linearVelocityX[body] !== 0 ||
+      bodies.linearVelocityY[body] !== 0 ||
+      bodies.linearVelocityZ[body] !== 0 ||
+      bodies.angularVelocityX[body] !== 0 ||
+      bodies.angularVelocityY[body] !== 0 ||
+      bodies.angularVelocityZ[body] !== 0)
   );
 }
 
@@ -1298,6 +1553,12 @@ function growInt32(
 
 function growFloat64(source: Float64Array, capacity: number): Float64Array {
   const result = new Float64Array(capacity);
+  result.set(source);
+  return result;
+}
+
+function growUint8(source: Uint8Array, capacity: number): Uint8Array {
+  const result = new Uint8Array(capacity);
   result.set(source);
   return result;
 }

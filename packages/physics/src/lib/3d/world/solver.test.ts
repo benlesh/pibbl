@@ -10,10 +10,15 @@ import {
   type SortedColliderPairs3D,
 } from "./contact-cache.js";
 import { integrateCandidateBodies3D } from "./integrator.js";
-import { SequentialImpulseSolver3D } from "./solver.js";
+import {
+  BODY_SLEEP_DISABLED_3D,
+  BODY_SLEEPING_3D,
+  SequentialImpulseSolver3D,
+} from "./solver.js";
 import {
   BODY_ENABLED_3D,
   BODY_TYPE_DYNAMIC_3D,
+  BODY_TYPE_KINEMATIC_3D,
   COLLIDER_ENABLED_3D,
   COLLIDER_SENSOR_3D,
   BodyStore3D,
@@ -475,5 +480,170 @@ describe("deterministic 3D sequential impulse solver", () => {
     }
 
     expect(run()).toEqual(run());
+  });
+});
+
+describe("deterministic 3D island sleeping", () => {
+  it("sleeps a complete solid-connected island only after 0.5 simulated seconds below both thresholds", () => {
+    const fixture = createFixture();
+    const firstBody = fixture.addBody();
+    const secondBody = fixture.addBody();
+    const first = fixture.addCollider(firstBody, sphere);
+    const second = fixture.addCollider(secondBody, sphere);
+    updateSortedContactCache3D(
+      fixture.cache,
+      pairs([[first, second]], fixture),
+      fixture.bodies,
+      fixture.colliders,
+      () => manualManifold(),
+    );
+    solve(fixture, [secondBody, firstBody], 1, 0);
+    const transitions: Array<readonly [number, boolean]> = [];
+
+    for (let tick = 0; tick < 29; tick += 1) {
+      fixture.solver.updateSleepingCandidate(
+        fixture.bodies,
+        fixture.cache,
+        1 / 60,
+        {
+          enabled: true,
+          recordTransition: (body, sleeping) =>
+            transitions.push([body, sleeping]),
+        },
+      );
+    }
+    expect(fixture.bodies.flags[firstBody]! & BODY_SLEEPING_3D).toBe(0);
+    expect(fixture.bodies.flags[secondBody]! & BODY_SLEEPING_3D).toBe(0);
+
+    fixture.solver.updateSleepingCandidate(
+      fixture.bodies,
+      fixture.cache,
+      1 / 60,
+      {
+        enabled: true,
+        recordTransition: (body, sleeping) =>
+          transitions.push([body, sleeping]),
+      },
+    );
+
+    expect(fixture.bodies.flags[firstBody]! & BODY_SLEEPING_3D).not.toBe(0);
+    expect(fixture.bodies.flags[secondBody]! & BODY_SLEEPING_3D).not.toBe(0);
+    expect(fixture.bodies.sleepTime[firstBody]).toBe(0.5);
+    expect(fixture.bodies.sleepTime[secondBody]).toBe(0.5);
+    expect(transitions).toEqual([
+      [firstBody, true],
+      [secondBody, true],
+    ]);
+    expect(fixture.solver.advanceEligible).toBe(false);
+
+    solve(fixture, [secondBody, firstBody], 2, 3);
+    expect(fixture.solver.solvedIslandCount).toBe(0);
+    expect(fixture.solver.velocityIterationsPerformed).toBe(0);
+    expect(fixture.solver.positionIterationsPerformed).toBe(0);
+  });
+
+  it("keeps islands awake at either exact threshold and when any member disables sleep", () => {
+    const fixture = createFixture();
+    const first = fixture.addBody({ vx: 0.05 });
+    const second = fixture.addBody({ wz: (0.5 * Math.PI) / 180 });
+    fixture.bodies.flags[second] |= BODY_SLEEP_DISABLED_3D;
+    solve(fixture, [first, second], 0, 0);
+
+    for (let tick = 0; tick < 60; tick += 1) {
+      fixture.solver.updateSleepingCandidate(
+        fixture.bodies,
+        fixture.cache,
+        1 / 60,
+        { enabled: true },
+      );
+    }
+
+    expect(fixture.bodies.flags[first]! & BODY_SLEEPING_3D).toBe(0);
+    expect(fixture.bodies.flags[second]! & BODY_SLEEPING_3D).toBe(0);
+    expect(fixture.bodies.sleepTime[first]).toBe(0);
+    expect(fixture.bodies.sleepTime[second]).toBe(0);
+  });
+
+  it("wakes the full island in body identity order and resets every timer", () => {
+    const fixture = createFixture();
+    const firstBody = fixture.addBody();
+    const secondBody = fixture.addBody();
+    const first = fixture.addCollider(firstBody, sphere);
+    const second = fixture.addCollider(secondBody, sphere);
+    collide(fixture, [[first, second]]);
+    solve(fixture, [secondBody, firstBody], 0, 0);
+    fixture.bodies.flags[firstBody] |= BODY_SLEEPING_3D;
+    fixture.bodies.flags[secondBody] |= BODY_SLEEPING_3D;
+    fixture.bodies.sleepTime[firstBody] = 0.5;
+    fixture.bodies.sleepTime[secondBody] = 0.5;
+    const transitions: Array<readonly [number, boolean]> = [];
+
+    expect(
+      fixture.solver.wakeIslandContainingCandidate(
+        fixture.bodies,
+        secondBody,
+        (body, sleeping) => transitions.push([body, sleeping]),
+      ),
+    ).toBe(true);
+
+    expect(transitions).toEqual([
+      [firstBody, false],
+      [secondBody, false],
+    ]);
+    expect(fixture.bodies.flags[firstBody]! & BODY_SLEEPING_3D).toBe(0);
+    expect(fixture.bodies.flags[secondBody]! & BODY_SLEEPING_3D).toBe(0);
+    expect(fixture.bodies.sleepTime[firstBody]).toBe(0);
+    expect(fixture.bodies.sleepTime[secondBody]).toBe(0);
+  });
+
+  it("propagates awake solid and moving-kinematic contact but not sensor contact", () => {
+    const solid = createFixture();
+    const sleepingBody = solid.addBody();
+    const awakeBody = solid.addBody();
+    const sleepingCollider = solid.addCollider(sleepingBody, sphere);
+    const awakeCollider = solid.addCollider(awakeBody, sphere);
+    collide(solid, [[sleepingCollider, awakeCollider]]);
+    solve(solid, [sleepingBody, awakeBody], 0, 0);
+    solid.bodies.flags[sleepingBody] |= BODY_SLEEPING_3D;
+    solid.bodies.sleepTime[sleepingBody] = 0.5;
+    solid.solver.updateSleepingCandidate(solid.bodies, solid.cache, 0, {
+      enabled: true,
+    });
+    expect(solid.bodies.flags[sleepingBody]! & BODY_SLEEPING_3D).toBe(0);
+
+    const sensor = createFixture();
+    const sensorSleeping = sensor.addBody();
+    const sensorAwake = sensor.addBody();
+    const sensorFirst = sensor.addCollider(sensorSleeping, sphere, {
+      sensor: true,
+    });
+    const sensorSecond = sensor.addCollider(sensorAwake, sphere);
+    collide(sensor, [[sensorFirst, sensorSecond]]);
+    solve(sensor, [sensorSleeping, sensorAwake], 0, 0);
+    sensor.bodies.flags[sensorSleeping] |= BODY_SLEEPING_3D;
+    sensor.bodies.sleepTime[sensorSleeping] = 0.5;
+    sensor.solver.updateSleepingCandidate(sensor.bodies, sensor.cache, 0, {
+      enabled: true,
+    });
+    expect(sensor.bodies.flags[sensorSleeping]! & BODY_SLEEPING_3D).not.toBe(0);
+
+    const kinematic = createFixture();
+    const dynamicBody = kinematic.addBody();
+    const kinematicBody = kinematic.addBody({ dynamic: false, vx: 1 });
+    kinematic.bodies.flags[kinematicBody] =
+      BODY_ENABLED_3D | BODY_TYPE_KINEMATIC_3D;
+    const dynamicCollider = kinematic.addCollider(dynamicBody, sphere);
+    const kinematicCollider = kinematic.addCollider(kinematicBody, sphere);
+    collide(kinematic, [[dynamicCollider, kinematicCollider]]);
+    solve(kinematic, [dynamicBody, kinematicBody], 0, 0);
+    kinematic.bodies.flags[dynamicBody] |= BODY_SLEEPING_3D;
+    kinematic.bodies.sleepTime[dynamicBody] = 0.5;
+    kinematic.solver.updateSleepingCandidate(
+      kinematic.bodies,
+      kinematic.cache,
+      0,
+      { enabled: true },
+    );
+    expect(kinematic.bodies.flags[dynamicBody]! & BODY_SLEEPING_3D).toBe(0);
   });
 });
