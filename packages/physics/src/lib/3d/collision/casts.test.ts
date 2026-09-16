@@ -99,6 +99,15 @@ describe("standalone 3D rays and translational casts", () => {
     });
   });
 
+  it("does not fabricate initial sphere-ray overlap from a rounded hypot equality", () => {
+    expect(raycastShape3D(
+      sphereShape3D({ radius: 1.625 }),
+      pose([nextRepresentableUp(0.625), 1.5, 0]),
+      { origin: [0, 0, 0], direction: [-1, 0, 0], maxDistance: 10 },
+      { includeInitialOverlap: true },
+    )).toBeNull();
+  });
+
   it("returns the earliest analytic sphere-sphere cast hit", () => {
     const hit = shapeCastAgainstShape3D(
       sphereShape3D({ radius: 1 }),
@@ -235,6 +244,17 @@ describe("standalone 3D rays and translational casts", () => {
     )).toBeNull();
   });
 
+  it("does not fabricate initial sphere-box overlap from a rounded hypot equality", () => {
+    expect(shapeCastAgainstShape3D(
+      sphereShape3D({ radius: 1.625 }),
+      pose([3, nextRepresentableUp(1.625), 2.5]),
+      [-8, 0, 0],
+      boxShape3D({ width: 2, height: 2, depth: 2 }),
+      pose([4, 0, 0]),
+      { includeInitialOverlap: true },
+    )).toBeNull();
+  });
+
   it("keeps the corrected first edge root instead of returning the far-side exit", () => {
     const hit = shapeCastAgainstShape3D(
       sphereShape3D({ radius: 1 }),
@@ -249,6 +269,21 @@ describe("standalone 3D rays and translational casts", () => {
     expect(hit?.point).toEqual([4, 1, 0]);
   });
 
+  it("preserves a proven first edge crossing at large translation scale", () => {
+    const hit = shapeCastAgainstShape3D(
+      sphereShape3D({ radius: 1 }),
+      pose([0, 1.5, 0]),
+      [2e10, 0, 0],
+      boxShape3D({ width: 2, height: 2, depth: 2 }),
+      pose([1e10, 0, 0]),
+    );
+
+    expect(hit?.timeOfImpact).toBeCloseTo(0.4999999999066987, 15);
+    expect(hit?.distance).toBeCloseTo(9999999998.133974, 5);
+    expect(hit?.point).toEqual([9999999999, 1, 0]);
+    expect(Object.values(hit ?? {}).flat().every(Number.isFinite)).toBe(true);
+  });
+
   it("preserves an exact box-vertex tangent", () => {
     const hit = shapeCastAgainstShape3D(
       sphereShape3D({ radius: 1.625 }),
@@ -261,6 +296,74 @@ describe("standalone 3D rays and translational casts", () => {
     expect(hit?.timeOfImpact).toBe(0.4);
     expect(hit?.distance).toBe(4);
     expect(hit?.point).toEqual([4, 1, 1]);
+  });
+
+  it("preserves downscaled exact vertex tangencies across axes and signs", () => {
+    const scale = 2 ** -100;
+    const cases = [
+      {
+        from: [0, 1.625 * scale, 2.5 * scale],
+        translation: [10 * scale, 0, 0],
+        target: [5 * scale, 0, 0],
+        normal: [0, 5 / 13, 12 / 13],
+      },
+      {
+        from: [1.625 * scale, -2.5 * scale, 0],
+        translation: [0, 0, -10 * scale],
+        target: [0, 0, -5 * scale],
+        normal: [5 / 13, -12 / 13, 0],
+      },
+    ] as const;
+
+    for (const fixture of cases) {
+      const hit = shapeCastAgainstShape3D(
+        sphereShape3D({ radius: 1.625 * scale }),
+        pose(fixture.from),
+        fixture.translation,
+        boxShape3D({ width: 2 * scale, height: 2 * scale, depth: 2 * scale }),
+        pose(fixture.target),
+      );
+      expect(hit?.timeOfImpact).toBe(0.4);
+      expect(hit?.distance).toBe(4 * scale);
+      expect(hit?.point.every(Number.isFinite)).toBe(true);
+      hit?.normal.forEach((value, axis) => {
+        expect(value).toBeCloseTo(fixture.normal[axis]!, 15);
+      });
+    }
+  });
+
+  it("preserves downscaled first edge entries across axes and signs", () => {
+    const scale = 2 ** -100;
+    const cases = [
+      {
+        from: [0, 1.5 * scale, 0],
+        translation: [10 * scale, 0, 0],
+        target: [5 * scale, 0, 0],
+        normal: [-Math.sqrt(3) / 2, 0.5, 0],
+      },
+      {
+        from: [0, 0, -1.5 * scale],
+        translation: [0, -10 * scale, 0],
+        target: [0, -5 * scale, 0],
+        normal: [0, Math.sqrt(3) / 2, -0.5],
+      },
+    ] as const;
+
+    for (const fixture of cases) {
+      const hit = shapeCastAgainstShape3D(
+        sphereShape3D({ radius: scale }),
+        pose(fixture.from),
+        fixture.translation,
+        boxShape3D({ width: 2 * scale, height: 2 * scale, depth: 2 * scale }),
+        pose(fixture.target),
+      );
+      expect(hit?.timeOfImpact).toBeCloseTo(0.3133974596215562, 15);
+      expect(hit?.distance).toBeCloseTo(3.133974596215562 * scale, 15);
+      expect(hit?.point.every(Number.isFinite)).toBe(true);
+      hit?.normal.forEach((value, axis) => {
+        expect(value).toBeCloseTo(fixture.normal[axis]!, 15);
+      });
+    }
   });
 
   it("returns the true earliest time for an exact sphere-box tangent", () => {

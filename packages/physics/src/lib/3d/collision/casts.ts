@@ -39,6 +39,19 @@ interface CastCandidate3D {
   readonly timeOfImpact: number;
 }
 
+type SphereSweepContactProof =
+  | Readonly<{
+      kind: "tangent";
+      time: number;
+      radialPoint: readonly number[];
+    }>
+  | Readonly<{
+      kind: "crossing";
+      outsideTime: number;
+      time: number;
+      radialPoint: readonly number[];
+    }>;
+
 export function raycastShape3D(
   shape: CRCPhysicsShape3D,
   publicPose: CRCPhysicsPose3D,
@@ -134,15 +147,36 @@ function castSphereAgainstBox(
   target: PreparedBox3D,
   includeInitialOverlap: boolean,
 ): CastCandidate3D | null {
-  const initial = distanceSphereToBox3D(
-    moving.center,
-    moving.radius,
-    target.center,
-    target.axes,
-    target.halfExtents,
+  const offset = [
+    moving.center[0]! - target.center[0]!,
+    moving.center[1]! - target.center[1]!,
+    moving.center[2]! - target.center[2]!,
+  ] as const;
+  const localOrigin = [0, 1, 2].map((axis) =>
+    offset[0] * target.axes[axis * 3]! +
+    offset[1] * target.axes[axis * 3 + 1]! +
+    offset[2] * target.axes[axis * 3 + 2]!,
   );
-  if (initial.separation <= 0) {
+  const localTranslation = [0, 1, 2].map((axis) =>
+    translation[0]! * target.axes[axis * 3]! +
+    translation[1]! * target.axes[axis * 3 + 1]! +
+    translation[2]! * target.axes[axis * 3 + 2]!,
+  );
+  if (![...localOrigin, ...localTranslation].every(Number.isFinite)) return null;
+  const initialRelation = exactSquaredDistanceRelation(
+    localBoxOutsideVector(localOrigin, target.halfExtents),
+    moving.radius,
+  );
+  if (initialRelation === null) return null;
+  if (initialRelation <= 0) {
     if (!includeInitialOverlap) return null;
+    const initial = distanceSphereToBox3D(
+      moving.center,
+      moving.radius,
+      target.center,
+      target.axes,
+      target.halfExtents,
+    );
     const normal = unitAgainstMotion(
       initial.normal[0],
       initial.normal[1],
@@ -161,35 +195,18 @@ function castSphereAgainstBox(
     };
   }
   if (translationLength === 0) return null;
-  const offset = [
-    moving.center[0]! - target.center[0]!,
-    moving.center[1]! - target.center[1]!,
-    moving.center[2]! - target.center[2]!,
-  ] as const;
-  const localOrigin = [0, 1, 2].map((axis) =>
-    offset[0] * target.axes[axis * 3]! +
-    offset[1] * target.axes[axis * 3 + 1]! +
-    offset[2] * target.axes[axis * 3 + 2]!,
-  );
-  const localTranslation = [0, 1, 2].map((axis) =>
-    translation[0]! * target.axes[axis * 3]! +
-    translation[1]! * target.axes[axis * 3 + 1]! +
-    translation[2]! * target.axes[axis * 3 + 2]!,
-  );
-  if (![...localOrigin, ...localTranslation].every(Number.isFinite)) return null;
 
   let selected: CastCandidate3D | null = null;
   let selectedFeature = Number.POSITIVE_INFINITY;
   const consider = (
-    time: number,
+    proof: SphereSweepContactProof,
     localPoint: readonly [number, number, number],
     localNormal: readonly [number, number, number],
     feature: number,
   ): void => {
-    if (time < -CAST_TIME_TOLERANCE || time > 1 + CAST_TIME_TOLERANCE) return;
-    const boundedTime = Math.max(0, Math.min(1, time));
-    const center = localPositionAt(localOrigin, localTranslation, boundedTime);
-    if (!sphereTouchesLocalBoxBoundary(center, target.halfExtents, moving.radius)) return;
+    const time = proof.time;
+    if (time < 0 || time > 1) return;
+    const boundedTime = time;
     if (
       selected !== null &&
       (boundedTime > selected.timeOfImpact + CAST_TIME_TOLERANCE ||
@@ -212,19 +229,22 @@ function castSphereAgainstBox(
   };
 
   for (let axis = 0; axis < 3; axis += 1) {
-    if (Math.abs(localTranslation[axis]!) <= GEOMETRY_EPSILON_3D) continue;
+    if (localTranslation[axis] === 0) continue;
     for (const sign of [-1, 1] as const) {
-      const time = (
-        sign * (target.halfExtents[axis]! + moving.radius) - localOrigin[axis]!
-      ) / localTranslation[axis]!;
-      const center = localPositionAt(localOrigin, localTranslation, time);
+      const proof = sweepSphereEntryProof(
+        [localOrigin[axis]! - sign * target.halfExtents[axis]!],
+        [localTranslation[axis]!],
+        moving.radius,
+      );
+      if (proof === null) continue;
+      const center = localPositionAt(localOrigin, localTranslation, proof.time);
       const otherAxes = [0, 1, 2].filter((candidate) => candidate !== axis);
       if (otherAxes.some((other) => Math.abs(center[other]!) > target.halfExtents[other]!)) continue;
       const point = [...center] as [number, number, number];
       const normal = [0, 0, 0] as [number, number, number];
       point[axis] = sign * target.halfExtents[axis]!;
       normal[axis] = sign;
-      consider(time, point, normal, axis * 2 + (sign > 0 ? 1 : 0));
+      consider(proof, point, normal, axis * 2 + (sign > 0 ? 1 : 0));
     }
   }
 
@@ -237,32 +257,29 @@ function castSphereAgainstBox(
         const secondAxis = fixedAxes[1]!;
         const firstOffset = localOrigin[firstAxis]! - firstSign * target.halfExtents[firstAxis]!;
         const secondOffset = localOrigin[secondAxis]! - secondSign * target.halfExtents[secondAxis]!;
-        const time = sweepSphereEntryTime(
+        const proof = sweepSphereEntryProof(
           [firstOffset, secondOffset],
           [localTranslation[firstAxis]!, localTranslation[secondAxis]!],
           moving.radius,
         );
-        if (time !== null) {
-          const center = localPositionAt(localOrigin, localTranslation, time);
+        if (proof !== null) {
+          const center = localPositionAt(localOrigin, localTranslation, proof.time);
           if (Math.abs(center[edgeAxis]!) > target.halfExtents[edgeAxis]!) continue;
           const normal = [0, 0, 0] as [number, number, number];
-          const firstDelta = center[firstAxis]! - firstSign * target.halfExtents[firstAxis]!;
-          const secondDelta = center[secondAxis]! - secondSign * target.halfExtents[secondAxis]!;
+          const firstDelta = proof.radialPoint[0]!;
+          const secondDelta = proof.radialPoint[1]!;
           if (
-            firstDelta * firstSign < -GEOMETRY_EPSILON_3D ||
-            secondDelta * secondSign < -GEOMETRY_EPSILON_3D
+            firstDelta * firstSign < 0 ||
+            secondDelta * secondSign < 0
           ) continue;
           const length = Math.hypot(firstDelta, secondDelta);
-          if (
-            length <= GEOMETRY_EPSILON_3D ||
-            !isSphereBoundaryPoint([firstDelta, secondDelta], moving.radius)
-          ) continue;
+          if (!Number.isFinite(length) || length === 0) continue;
           normal[firstAxis] = firstDelta / length;
           normal[secondAxis] = secondDelta / length;
           const point = [...center] as [number, number, number];
           point[firstAxis] = firstSign * target.halfExtents[firstAxis]!;
           point[secondAxis] = secondSign * target.halfExtents[secondAxis]!;
-          consider(time, point, normal, edgeFeature);
+          consider(proof, point, normal, edgeFeature);
         }
         edgeFeature += 1;
       }
@@ -275,7 +292,7 @@ function castSphereAgainstBox(
       (vertex & 2) === 0 ? -target.halfExtents[1]! : target.halfExtents[1]!,
       (vertex & 4) === 0 ? -target.halfExtents[2]! : target.halfExtents[2]!,
     ] as const;
-    const time = sweepSphereEntryTime(
+    const proof = sweepSphereEntryProof(
       [
         localOrigin[0]! - point[0],
         localOrigin[1]! - point[1],
@@ -284,22 +301,18 @@ function castSphereAgainstBox(
       localTranslation,
       moving.radius,
     );
-    if (time !== null) {
-      const center = localPositionAt(localOrigin, localTranslation, time);
-      const dx = center[0]! - point[0];
-      const dy = center[1]! - point[1];
-      const dz = center[2]! - point[2];
+    if (proof !== null) {
+      const dx = proof.radialPoint[0]!;
+      const dy = proof.radialPoint[1]!;
+      const dz = proof.radialPoint[2]!;
       if (
-        dx * ((vertex & 1) === 0 ? -1 : 1) < -GEOMETRY_EPSILON_3D ||
-        dy * ((vertex & 2) === 0 ? -1 : 1) < -GEOMETRY_EPSILON_3D ||
-        dz * ((vertex & 4) === 0 ? -1 : 1) < -GEOMETRY_EPSILON_3D
+        dx * ((vertex & 1) === 0 ? -1 : 1) < 0 ||
+        dy * ((vertex & 2) === 0 ? -1 : 1) < 0 ||
+        dz * ((vertex & 4) === 0 ? -1 : 1) < 0
       ) continue;
       const length = Math.hypot(dx, dy, dz);
-      if (
-        length <= GEOMETRY_EPSILON_3D ||
-        !isSphereBoundaryPoint([dx, dy, dz], moving.radius)
-      ) continue;
-      consider(time, point, [dx / length, dy / length, dz / length], 18 + vertex);
+      if (!Number.isFinite(length) || length === 0) continue;
+      consider(proof, point, [dx / length, dy / length, dz / length], 18 + vertex);
     }
   }
   return selected;
@@ -314,22 +327,18 @@ function raycastSphere(
   const relativeX = origin[0]! - sphere.center[0]!;
   const relativeY = origin[1]! - sphere.center[1]!;
   const relativeZ = origin[2]! - sphere.center[2]!;
-  const distance = sweepSphereEntryTime(
+  const proof = sweepSphereEntryProof(
     [relativeX, relativeY, relativeZ],
     [direction[0]!, direction[1]!, direction[2]!],
     sphere.radius,
   );
   if (
-    distance === null ||
-    distance < -CAST_TIME_TOLERANCE ||
-    distance > maxDistance + CAST_TIME_TOLERANCE
+    proof === null ||
+    proof.time < 0 ||
+    proof.time > maxDistance
   ) return null;
-  const boundedDistance = Math.max(0, Math.min(maxDistance, distance));
-  const hitOffset = [
-    relativeX + direction[0]! * boundedDistance,
-    relativeY + direction[1]! * boundedDistance,
-    relativeZ + direction[2]! * boundedDistance,
-  ] as const;
+  const boundedDistance = proof.time;
+  const hitOffset = proof.radialPoint;
   const pointX = origin[0]! + direction[0]! * boundedDistance;
   const pointY = origin[1]! + direction[1]! * boundedDistance;
   const pointZ = origin[2]! + direction[2]! * boundedDistance;
@@ -438,19 +447,14 @@ function castSphereAgainstSphere(
     };
   }
   if (translationLength === 0) return null;
-  const time = sweepSphereEntryTime(
+  const proof = sweepSphereEntryProof(
     [relativeX, relativeY, relativeZ],
     [translation[0]!, translation[1]!, translation[2]!],
     radius,
   );
-  if (time === null) return null;
-  if (time < -CAST_TIME_TOLERANCE || time > 1 + CAST_TIME_TOLERANCE) return null;
-  const timeOfImpact = Math.max(0, Math.min(1, time));
-  const impactOffset = [
-    relativeX + translation[0]! * timeOfImpact,
-    relativeY + translation[1]! * timeOfImpact,
-    relativeZ + translation[2]! * timeOfImpact,
-  ] as const;
+  if (proof === null || proof.time < 0 || proof.time > 1) return null;
+  const timeOfImpact = proof.time;
+  const impactOffset = proof.radialPoint;
   const normal = unitAgainstMotion(
     impactOffset[0],
     impactOffset[1],
@@ -662,11 +666,15 @@ function prepareShape(
 
 function containsPreparedPoint(shape: PreparedConvexShape3D, point: ArrayLike<number>): boolean {
   if (shape.kind === "sphere") {
-    return Math.hypot(
-      point[0]! - shape.center[0]!,
-      point[1]! - shape.center[1]!,
-      point[2]! - shape.center[2]!,
-    ) <= shape.radius + GEOMETRY_EPSILON_3D;
+    const relation = exactSquaredDistanceRelation(
+      [
+        point[0]! - shape.center[0]!,
+        point[1]! - shape.center[1]!,
+        point[2]! - shape.center[2]!,
+      ],
+      shape.radius,
+    );
+    return relation !== null && relation <= 0;
   }
   const dx = point[0]! - shape.center[0]!;
   const dy = point[1]! - shape.center[1]!;
@@ -685,12 +693,12 @@ function unitAgainstMotion(
   motion: ArrayLike<number>,
 ): readonly [number, number, number] {
   const length = Math.hypot(x, y, z);
-  if (length > GEOMETRY_EPSILON_3D) {
+  if (Number.isFinite(length) && length > 0) {
     const unit = [x / length, y / length, z / length] as const;
     return dot(unit, motion) > 0 ? [-unit[0], -unit[1], -unit[2]] : unit;
   }
   const motionLength = Math.hypot(motion[0]!, motion[1]!, motion[2]!);
-  return motionLength > GEOMETRY_EPSILON_3D
+  return Number.isFinite(motionLength) && motionLength > 0
     ? [-motion[0]! / motionLength, -motion[1]! / motionLength, -motion[2]! / motionLength]
     : [1, 0, 0];
 }
@@ -766,11 +774,11 @@ function boxLocalVectorToWorld(
   ];
 }
 
-function sweepSphereEntryTime(
+function sweepSphereEntryProof(
   offset: readonly number[],
   translation: readonly number[],
   radius: number,
-): number | null {
+): SphereSweepContactProof | null {
   const initialRelation = exactSquaredDistanceRelation(offset, radius);
   if (initialRelation === null || initialRelation <= 0) return null;
   const scale = Math.max(...offset.map(Math.abs), ...translation.map(Math.abs), radius);
@@ -790,7 +798,9 @@ function sweepSphereEntryTime(
   const closestPoint = positionAlongSweep(offset, translation, closestTime);
   const closestRelation = exactSquaredDistanceRelation(closestPoint, radius);
   if (closestRelation === null || closestRelation > 0) return null;
-  if (closestRelation === 0) return closestTime;
+  if (closestRelation === 0) {
+    return { kind: "tangent", time: closestTime, radialPoint: closestPoint };
+  }
 
   let outsideTime = 0;
   let insideTime = closestTime;
@@ -803,8 +813,10 @@ function sweepSphereEntryTime(
     if (relation > 0) outsideTime = middleTime;
     else insideTime = middleTime;
   }
-  return isSphereBoundaryPoint(positionAlongSweep(offset, translation, insideTime), radius)
-    ? insideTime
+  const radialPoint = positionAlongSweep(offset, translation, insideTime);
+  const finalRelation = exactSquaredDistanceRelation(radialPoint, radius);
+  return finalRelation !== null && finalRelation <= 0
+    ? { kind: "crossing", outsideTime, time: insideTime, radialPoint }
     : null;
 }
 
@@ -820,27 +832,15 @@ function compensatedDot(first: readonly number[], second: readonly number[]): nu
   return sum;
 }
 
-function sphereTouchesLocalBoxBoundary(
+function localBoxOutsideVector(
   center: ArrayLike<number>,
   halfExtents: ArrayLike<number>,
-  radius: number,
-): boolean {
-  const outsideX = Math.max(0, Math.abs(center[0]!) - halfExtents[0]!);
-  const outsideY = Math.max(0, Math.abs(center[1]!) - halfExtents[1]!);
-  const outsideZ = Math.max(0, Math.abs(center[2]!) - halfExtents[2]!);
-  return isSphereBoundaryPoint([outsideX, outsideY, outsideZ], radius);
-}
-
-function isSphereBoundaryPoint(point: readonly number[], radius: number): boolean {
-  const relation = exactSquaredDistanceRelation(point, radius);
-  if (relation === null || relation > 0) return false;
-  const distance = Math.hypot(...point);
-  if (!Number.isFinite(distance)) return false;
-  const tolerance = Math.max(
-    GEOMETRY_EPSILON_3D,
-    Number.EPSILON * 16 * Math.max(distance, radius),
-  );
-  return radius - distance <= tolerance;
+): readonly [number, number, number] {
+  return [
+    Math.max(0, Math.abs(center[0]!) - halfExtents[0]!),
+    Math.max(0, Math.abs(center[1]!) - halfExtents[1]!),
+    Math.max(0, Math.abs(center[2]!) - halfExtents[2]!),
+  ];
 }
 
 function positionAlongSweep(
