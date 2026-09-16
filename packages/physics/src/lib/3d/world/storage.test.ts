@@ -87,6 +87,98 @@ function colliderDefinition(
   };
 }
 
+type StoreArrayReference3D =
+  | Float64Array
+  | Int32Array
+  | Uint32Array
+  | Uint8Array
+  | readonly (unknown | null)[];
+
+function bodyStoreArrayReferences(
+  bodies: BodyStore3D,
+): readonly StoreArrayReference3D[] {
+  return [
+    bodies.positionX,
+    bodies.positionY,
+    bodies.positionZ,
+    bodies.orientationX,
+    bodies.orientationY,
+    bodies.orientationZ,
+    bodies.orientationW,
+    bodies.localCenterX,
+    bodies.localCenterY,
+    bodies.localCenterZ,
+    bodies.linearVelocityX,
+    bodies.linearVelocityY,
+    bodies.linearVelocityZ,
+    bodies.angularVelocityX,
+    bodies.angularVelocityY,
+    bodies.angularVelocityZ,
+    bodies.forceX,
+    bodies.forceY,
+    bodies.forceZ,
+    bodies.torqueX,
+    bodies.torqueY,
+    bodies.torqueZ,
+    bodies.inverseMass,
+    bodies.localInverseInertiaXX,
+    bodies.localInverseInertiaYY,
+    bodies.localInverseInertiaZZ,
+    bodies.localInverseInertiaXY,
+    bodies.localInverseInertiaXZ,
+    bodies.localInverseInertiaYZ,
+    bodies.linearDamping,
+    bodies.angularDamping,
+    bodies.gravityScale,
+    bodies.sleepTime,
+    bodies.translationLocks,
+    bodies.rotationLocks,
+    bodies.flags,
+    bodies.generations,
+    bodies.owners,
+  ];
+}
+
+function colliderStoreArrayReferences(
+  colliders: ColliderStore3D,
+): readonly StoreArrayReference3D[] {
+  return [
+    colliders.bodyIndices,
+    colliders.bodyGenerations,
+    colliders.proxyIndices,
+    colliders.proxyGenerations,
+    colliders.localPositionX,
+    colliders.localPositionY,
+    colliders.localPositionZ,
+    colliders.localOrientationX,
+    colliders.localOrientationY,
+    colliders.localOrientationZ,
+    colliders.localOrientationW,
+    colliders.densities,
+    colliders.frictions,
+    colliders.restitutions,
+    colliders.collisionCategories,
+    colliders.collisionMasks,
+    colliders.collisionGroup,
+    colliders.flags,
+    colliders.generations,
+    colliders.shapes,
+    colliders.tags,
+    colliders.handlers,
+    colliders.owners,
+  ];
+}
+
+function expectStoreArrayReferences(
+  actual: readonly StoreArrayReference3D[],
+  expected: readonly StoreArrayReference3D[],
+): void {
+  expect(actual).toHaveLength(expected.length);
+  for (let index = 0; index < actual.length; index += 1) {
+    expect(actual[index]).toBe(expected[index]);
+  }
+}
+
 describe("pooled 3D world storage", () => {
   it("rejects an invalid body quaternion before acquiring or advancing a slot", () => {
     const counters = createPhysicsOwnershipCounters3D();
@@ -168,10 +260,22 @@ describe("pooled 3D world storage", () => {
     expect(counters.liveColliderStores).toBe(0);
   });
 
-  it("rolls back body acquisition if the final reference read throws", () => {
+  it("does not grow a full body store when repeated final owner reads throw", () => {
     const counters = createPhysicsOwnershipCounters3D();
     const bodies = new BodyStore3D(counters, 1);
-    const invalid = bodyDefinition(1, {}) as BodyDefinition3D & {
+    const committedOwner = {};
+    const committed = bodies.allocate(bodyDefinition(1, committedOwner));
+    const generation = bodies.generations[committed]!;
+    const committedArrays = bodyStoreArrayReferences(bodies);
+    const committedCounters = {
+      bodyCapacity: counters.bodyCapacity,
+      bodyCapacityGrowths: counters.bodyCapacityGrowths,
+      freeBodySlots: counters.freeBodySlots,
+      bodyAllocations: counters.bodyAllocations,
+      bodyReleases: counters.bodyReleases,
+      liveBodies: counters.liveBodies,
+    };
+    const invalid = bodyDefinition(2, {}) as BodyDefinition3D & {
       owner: unknown;
     };
     Object.defineProperty(invalid, "owner", {
@@ -180,28 +284,59 @@ describe("pooled 3D world storage", () => {
       },
     });
 
-    expect(() => bodies.allocate(invalid)).toThrow("invalid body owner");
-    expect(bodies.generations[0]).toBe(0);
-    expect(bodies.has(0, 1)).toBe(false);
-    expect(bodies.positionX[0]).toBe(0);
-    expect(bodies.owners[0]).toBeNull();
-    expect(counters.freeBodySlots).toBe(1);
-    expect(counters.bodyAllocations).toBe(0);
-    expect(counters.bodyReleases).toBe(0);
-    expect(counters.liveBodies).toBe(0);
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      expect(() => bodies.allocate(invalid)).toThrow("invalid body owner");
+      expectStoreArrayReferences(
+        bodyStoreArrayReferences(bodies),
+        committedArrays,
+      );
+      expect(bodies.capacity).toBe(1);
+      expect(bodies.generations[committed]).toBe(generation);
+      expect(bodies.has(committed, generation)).toBe(true);
+      expect(bodies.positionX[committed]).toBe(1.1);
+      expect(bodies.owners[committed]).toBe(committedOwner);
+      expect({
+        bodyCapacity: counters.bodyCapacity,
+        bodyCapacityGrowths: counters.bodyCapacityGrowths,
+        freeBodySlots: counters.freeBodySlots,
+        bodyAllocations: counters.bodyAllocations,
+        bodyReleases: counters.bodyReleases,
+        liveBodies: counters.liveBodies,
+      }).toEqual(committedCounters);
+    }
 
-    const body = bodies.allocate(bodyDefinition(2, {}));
-    expect(body).toBe(0);
+    const body = bodies.allocate(bodyDefinition(3, {}));
+    expect(body).toBe(1);
     expect(bodies.generations[body]).toBe(1);
+    expect(counters.bodyCapacityGrowths).toBe(1);
     bodies.dispose();
-    expect(counters.bodyAllocations).toBe(counters.bodyReleases);
+    bodies.dispose();
+    expect(counters.bodyAllocations).toBe(2);
+    expect(counters.bodyReleases).toBe(2);
     expect(counters.liveBodies).toBe(0);
+    expect(counters.bodyStoreAllocations).toBe(1);
+    expect(counters.bodyStoreReleases).toBe(1);
+    expect(counters.liveBodyStores).toBe(0);
   });
 
-  it("rolls back collider acquisition if the final reference read throws", () => {
+  it("does not grow a full collider store when repeated final owner reads throw", () => {
     const counters = createPhysicsOwnershipCounters3D();
     const colliders = new ColliderStore3D(counters, 1);
-    const invalid = colliderDefinition(1, 3, 7, {
+    const committedReferences = { tag: {}, handlers: {}, owner: {} };
+    const committed = colliders.allocate(
+      colliderDefinition(1, 3, 7, committedReferences),
+    );
+    const generation = colliders.generations[committed]!;
+    const committedArrays = colliderStoreArrayReferences(colliders);
+    const committedCounters = {
+      colliderCapacity: counters.colliderCapacity,
+      colliderCapacityGrowths: counters.colliderCapacityGrowths,
+      freeColliderSlots: counters.freeColliderSlots,
+      colliderAllocations: counters.colliderAllocations,
+      colliderReleases: counters.colliderReleases,
+      liveColliders: counters.liveColliders,
+    };
+    const invalid = colliderDefinition(2, 5, 11, {
       tag: {},
       handlers: {},
       owner: {},
@@ -212,27 +347,46 @@ describe("pooled 3D world storage", () => {
       },
     });
 
-    expect(() => colliders.allocate(invalid)).toThrow("invalid collider owner");
-    expect(colliders.generations[0]).toBe(0);
-    expect(colliders.has(0, 1)).toBe(false);
-    expect(colliders.bodyIndices[0]).toBe(-1);
-    expect(colliders.shapes[0]).toBeNull();
-    expect(colliders.tags[0]).toBeNull();
-    expect(colliders.handlers[0]).toBeNull();
-    expect(colliders.owners[0]).toBeNull();
-    expect(counters.freeColliderSlots).toBe(1);
-    expect(counters.colliderAllocations).toBe(0);
-    expect(counters.colliderReleases).toBe(0);
-    expect(counters.liveColliders).toBe(0);
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      expect(() => colliders.allocate(invalid)).toThrow(
+        "invalid collider owner",
+      );
+      expectStoreArrayReferences(
+        colliderStoreArrayReferences(colliders),
+        committedArrays,
+      );
+      expect(colliders.capacity).toBe(1);
+      expect(colliders.generations[committed]).toBe(generation);
+      expect(colliders.has(committed, generation)).toBe(true);
+      expect(colliders.bodyIndices[committed]).toBe(3);
+      expect(colliders.shapes[committed]).toBe(shapeRecord);
+      expect(colliders.tags[committed]).toBe(committedReferences.tag);
+      expect(colliders.handlers[committed]).toBe(committedReferences.handlers);
+      expect(colliders.owners[committed]).toBe(committedReferences.owner);
+      expect({
+        colliderCapacity: counters.colliderCapacity,
+        colliderCapacityGrowths: counters.colliderCapacityGrowths,
+        freeColliderSlots: counters.freeColliderSlots,
+        colliderAllocations: counters.colliderAllocations,
+        colliderReleases: counters.colliderReleases,
+        liveColliders: counters.liveColliders,
+      }).toEqual(committedCounters);
+    }
 
     const collider = colliders.allocate(
-      colliderDefinition(2, 5, 11, { tag: {}, handlers: {}, owner: {} }),
+      colliderDefinition(3, 5, 11, { tag: {}, handlers: {}, owner: {} }),
     );
-    expect(collider).toBe(0);
+    expect(collider).toBe(1);
     expect(colliders.generations[collider]).toBe(1);
+    expect(counters.colliderCapacityGrowths).toBe(1);
     colliders.dispose();
-    expect(counters.colliderAllocations).toBe(counters.colliderReleases);
+    colliders.dispose();
+    expect(counters.colliderAllocations).toBe(2);
+    expect(counters.colliderReleases).toBe(2);
     expect(counters.liveColliders).toBe(0);
+    expect(counters.colliderStoreAllocations).toBe(1);
+    expect(counters.colliderStoreReleases).toBe(1);
+    expect(counters.liveColliderStores).toBe(0);
   });
 
   it("rejects stale body handles after deterministic reuse and canonicalizes orientation", () => {

@@ -78,6 +78,9 @@ export interface ColliderDefinition3D {
   readonly flags: number;
 }
 
+type BodyDefinitionSnapshot3D = Required<BodyDefinition3D>;
+type ColliderDefinitionSnapshot3D = ColliderDefinition3D;
+
 export class BodyStore3D {
   positionX: Float64Array;
   positionY: Float64Array;
@@ -181,30 +184,14 @@ export class BodyStore3D {
 
   allocate(definition: BodyDefinition3D): number {
     this.assertUsable();
-    const orientation = canonicalQuaternion(
-      definition.orientationX,
-      definition.orientationY,
-      definition.orientationZ,
-      definition.orientationW,
-      "body orientation",
-    );
+    const snapshot = snapshotBodyDefinition3D(definition);
     if (this.freeHead === NO_INDEX) this.grow();
     const index = this.freeHead;
     this.freeHead = this.nextFree[index]!;
     this.nextFree[index] = NO_INDEX;
     this.active[index] = 1;
-    const previousGeneration = this.generations[index]!;
-    this.generations[index] = nextGeneration(previousGeneration);
-    try {
-      this.write(index, definition, orientation);
-    } catch (error) {
-      this.active[index] = 0;
-      this.clear(index);
-      this.generations[index] = previousGeneration;
-      this.nextFree[index] = this.freeHead;
-      this.freeHead = index;
-      throw error;
-    }
+    this.generations[index] = nextGeneration(this.generations[index]!);
+    this.write(index, snapshot);
     this.counters.bodyAllocations += 1;
     this.counters.liveBodies += 1;
     this.counters.freeBodySlots -= 1;
@@ -292,63 +279,59 @@ export class BodyStore3D {
     this.counters.liveBodyStores -= 1;
   }
 
-  private write(
-    index: number,
-    definition: BodyDefinition3D,
-    orientation: Float64Array,
-  ): void {
-    this.positionX[index] = definition.positionX;
-    this.positionY[index] = definition.positionY;
-    this.positionZ[index] = definition.positionZ;
-    this.orientationX[index] = orientation[0]!;
-    this.orientationY[index] = orientation[1]!;
-    this.orientationZ[index] = orientation[2]!;
-    this.orientationW[index] = orientation[3]!;
-    this.localCenterX[index] = definition.localCenterX ?? 0;
-    this.localCenterY[index] = definition.localCenterY ?? 0;
-    this.localCenterZ[index] = definition.localCenterZ ?? 0;
-    this.linearVelocityX[index] = definition.linearVelocityX;
-    this.linearVelocityY[index] = definition.linearVelocityY;
-    this.linearVelocityZ[index] = definition.linearVelocityZ;
-    this.angularVelocityX[index] = definition.angularVelocityX;
-    this.angularVelocityY[index] = definition.angularVelocityY;
-    this.angularVelocityZ[index] = definition.angularVelocityZ;
-    this.forceX[index] = definition.forceX;
-    this.forceY[index] = definition.forceY;
-    this.forceZ[index] = definition.forceZ;
-    this.torqueX[index] = definition.torqueX;
-    this.torqueY[index] = definition.torqueY;
-    this.torqueZ[index] = definition.torqueZ;
+  private write(index: number, snapshot: BodyDefinitionSnapshot3D): void {
+    this.positionX[index] = snapshot.positionX;
+    this.positionY[index] = snapshot.positionY;
+    this.positionZ[index] = snapshot.positionZ;
+    this.orientationX[index] = snapshot.orientationX;
+    this.orientationY[index] = snapshot.orientationY;
+    this.orientationZ[index] = snapshot.orientationZ;
+    this.orientationW[index] = snapshot.orientationW;
+    this.localCenterX[index] = snapshot.localCenterX;
+    this.localCenterY[index] = snapshot.localCenterY;
+    this.localCenterZ[index] = snapshot.localCenterZ;
+    this.linearVelocityX[index] = snapshot.linearVelocityX;
+    this.linearVelocityY[index] = snapshot.linearVelocityY;
+    this.linearVelocityZ[index] = snapshot.linearVelocityZ;
+    this.angularVelocityX[index] = snapshot.angularVelocityX;
+    this.angularVelocityY[index] = snapshot.angularVelocityY;
+    this.angularVelocityZ[index] = snapshot.angularVelocityZ;
+    this.forceX[index] = snapshot.forceX;
+    this.forceY[index] = snapshot.forceY;
+    this.forceZ[index] = snapshot.forceZ;
+    this.torqueX[index] = snapshot.torqueX;
+    this.torqueY[index] = snapshot.torqueY;
+    this.torqueZ[index] = snapshot.torqueZ;
     const dynamic =
-      (definition.flags & BODY_ENABLED_3D) !== 0 &&
-      (definition.flags & BODY_TYPE_MASK_3D) === BODY_TYPE_DYNAMIC_3D;
-    this.inverseMass[index] = dynamic ? definition.inverseMass : 0;
+      (snapshot.flags & BODY_ENABLED_3D) !== 0 &&
+      (snapshot.flags & BODY_TYPE_MASK_3D) === BODY_TYPE_DYNAMIC_3D;
+    this.inverseMass[index] = dynamic ? snapshot.inverseMass : 0;
     this.localInverseInertiaXX[index] = dynamic
-      ? definition.localInverseInertiaXX
+      ? snapshot.localInverseInertiaXX
       : 0;
     this.localInverseInertiaYY[index] = dynamic
-      ? definition.localInverseInertiaYY
+      ? snapshot.localInverseInertiaYY
       : 0;
     this.localInverseInertiaZZ[index] = dynamic
-      ? definition.localInverseInertiaZZ
+      ? snapshot.localInverseInertiaZZ
       : 0;
     this.localInverseInertiaXY[index] = dynamic
-      ? definition.localInverseInertiaXY
+      ? snapshot.localInverseInertiaXY
       : 0;
     this.localInverseInertiaXZ[index] = dynamic
-      ? definition.localInverseInertiaXZ
+      ? snapshot.localInverseInertiaXZ
       : 0;
     this.localInverseInertiaYZ[index] = dynamic
-      ? definition.localInverseInertiaYZ
+      ? snapshot.localInverseInertiaYZ
       : 0;
-    this.linearDamping[index] = definition.linearDamping;
-    this.angularDamping[index] = definition.angularDamping;
-    this.gravityScale[index] = definition.gravityScale;
-    this.sleepTime[index] = definition.sleepTime;
-    this.translationLocks[index] = definition.translationLocks;
-    this.rotationLocks[index] = definition.rotationLocks;
-    this.flags[index] = definition.flags;
-    this.owners[index] = definition.owner;
+    this.linearDamping[index] = snapshot.linearDamping;
+    this.angularDamping[index] = snapshot.angularDamping;
+    this.gravityScale[index] = snapshot.gravityScale;
+    this.sleepTime[index] = snapshot.sleepTime;
+    this.translationLocks[index] = snapshot.translationLocks;
+    this.rotationLocks[index] = snapshot.rotationLocks;
+    this.flags[index] = snapshot.flags;
+    this.owners[index] = snapshot.owner;
   }
 
   private clear(index: number): void {
@@ -528,51 +511,35 @@ export class ColliderStore3D {
 
   allocate(definition: ColliderDefinition3D): number {
     this.assertUsable();
-    const orientation = canonicalQuaternion(
-      definition.localOrientationX,
-      definition.localOrientationY,
-      definition.localOrientationZ,
-      definition.localOrientationW,
-      "collider local orientation",
-    );
+    const snapshot = snapshotColliderDefinition3D(definition);
     if (this.freeHead === NO_INDEX) this.grow();
     const index = this.freeHead;
     this.freeHead = this.nextFree[index]!;
     this.nextFree[index] = NO_INDEX;
     this.active[index] = 1;
-    const previousGeneration = this.generations[index]!;
-    this.generations[index] = nextGeneration(previousGeneration);
-    try {
-      this.bodyIndices[index] = definition.bodyIndex;
-      this.bodyGenerations[index] = definition.bodyGeneration;
-      this.proxyIndices[index] = NO_INDEX;
-      this.proxyGenerations[index] = 0;
-      this.localPositionX[index] = definition.localPositionX;
-      this.localPositionY[index] = definition.localPositionY;
-      this.localPositionZ[index] = definition.localPositionZ;
-      this.localOrientationX[index] = orientation[0]!;
-      this.localOrientationY[index] = orientation[1]!;
-      this.localOrientationZ[index] = orientation[2]!;
-      this.localOrientationW[index] = orientation[3]!;
-      this.densities[index] = definition.density;
-      this.frictions[index] = definition.friction;
-      this.restitutions[index] = definition.restitution;
-      this.collisionCategories[index] = definition.collisionCategory;
-      this.collisionMasks[index] = definition.collisionMask;
-      this.collisionGroup[index] = definition.collisionGroup;
-      this.flags[index] = definition.flags;
-      this.shapes[index] = definition.shape;
-      this.tags[index] = definition.tag;
-      this.handlers[index] = definition.handlers;
-      this.owners[index] = definition.owner;
-    } catch (error) {
-      this.active[index] = 0;
-      this.clear(index);
-      this.generations[index] = previousGeneration;
-      this.nextFree[index] = this.freeHead;
-      this.freeHead = index;
-      throw error;
-    }
+    this.generations[index] = nextGeneration(this.generations[index]!);
+    this.bodyIndices[index] = snapshot.bodyIndex;
+    this.bodyGenerations[index] = snapshot.bodyGeneration;
+    this.proxyIndices[index] = NO_INDEX;
+    this.proxyGenerations[index] = 0;
+    this.localPositionX[index] = snapshot.localPositionX;
+    this.localPositionY[index] = snapshot.localPositionY;
+    this.localPositionZ[index] = snapshot.localPositionZ;
+    this.localOrientationX[index] = snapshot.localOrientationX;
+    this.localOrientationY[index] = snapshot.localOrientationY;
+    this.localOrientationZ[index] = snapshot.localOrientationZ;
+    this.localOrientationW[index] = snapshot.localOrientationW;
+    this.densities[index] = snapshot.density;
+    this.frictions[index] = snapshot.friction;
+    this.restitutions[index] = snapshot.restitution;
+    this.collisionCategories[index] = snapshot.collisionCategory;
+    this.collisionMasks[index] = snapshot.collisionMask;
+    this.collisionGroup[index] = snapshot.collisionGroup;
+    this.flags[index] = snapshot.flags;
+    this.shapes[index] = snapshot.shape;
+    this.tags[index] = snapshot.tag;
+    this.handlers[index] = snapshot.handlers;
+    this.owners[index] = snapshot.owner;
     this.counters.colliderAllocations += 1;
     this.counters.liveColliders += 1;
     this.counters.freeColliderSlots -= 1;
@@ -700,6 +667,148 @@ export class ColliderStore3D {
   private assertUsable(): void {
     if (this.disposed) throw new Error("collider store is disposed.");
   }
+}
+
+function snapshotBodyDefinition3D(
+  definition: BodyDefinition3D,
+): BodyDefinitionSnapshot3D {
+  const positionX = +definition.positionX;
+  const positionY = +definition.positionY;
+  const positionZ = +definition.positionZ;
+  const orientationX = +definition.orientationX;
+  const orientationY = +definition.orientationY;
+  const orientationZ = +definition.orientationZ;
+  const orientationW = +definition.orientationW;
+  const localCenterX = +(definition.localCenterX ?? 0);
+  const localCenterY = +(definition.localCenterY ?? 0);
+  const localCenterZ = +(definition.localCenterZ ?? 0);
+  const linearVelocityX = +definition.linearVelocityX;
+  const linearVelocityY = +definition.linearVelocityY;
+  const linearVelocityZ = +definition.linearVelocityZ;
+  const angularVelocityX = +definition.angularVelocityX;
+  const angularVelocityY = +definition.angularVelocityY;
+  const angularVelocityZ = +definition.angularVelocityZ;
+  const forceX = +definition.forceX;
+  const forceY = +definition.forceY;
+  const forceZ = +definition.forceZ;
+  const torqueX = +definition.torqueX;
+  const torqueY = +definition.torqueY;
+  const torqueZ = +definition.torqueZ;
+  const inverseMass = +definition.inverseMass;
+  const localInverseInertiaXX = +definition.localInverseInertiaXX;
+  const localInverseInertiaYY = +definition.localInverseInertiaYY;
+  const localInverseInertiaZZ = +definition.localInverseInertiaZZ;
+  const localInverseInertiaXY = +definition.localInverseInertiaXY;
+  const localInverseInertiaXZ = +definition.localInverseInertiaXZ;
+  const localInverseInertiaYZ = +definition.localInverseInertiaYZ;
+  const linearDamping = +definition.linearDamping;
+  const angularDamping = +definition.angularDamping;
+  const gravityScale = +definition.gravityScale;
+  const sleepTime = +definition.sleepTime;
+  const translationLocks = definition.translationLocks & 0xff;
+  const rotationLocks = definition.rotationLocks & 0xff;
+  const flags = definition.flags >>> 0;
+  const owner = definition.owner;
+  const orientation = canonicalQuaternion(
+    orientationX,
+    orientationY,
+    orientationZ,
+    orientationW,
+    "body orientation",
+  );
+  return {
+    positionX,
+    positionY,
+    positionZ,
+    orientationX: orientation[0]!,
+    orientationY: orientation[1]!,
+    orientationZ: orientation[2]!,
+    orientationW: orientation[3]!,
+    localCenterX,
+    localCenterY,
+    localCenterZ,
+    linearVelocityX,
+    linearVelocityY,
+    linearVelocityZ,
+    angularVelocityX,
+    angularVelocityY,
+    angularVelocityZ,
+    forceX,
+    forceY,
+    forceZ,
+    torqueX,
+    torqueY,
+    torqueZ,
+    inverseMass,
+    localInverseInertiaXX,
+    localInverseInertiaYY,
+    localInverseInertiaZZ,
+    localInverseInertiaXY,
+    localInverseInertiaXZ,
+    localInverseInertiaYZ,
+    linearDamping,
+    angularDamping,
+    gravityScale,
+    sleepTime,
+    translationLocks,
+    rotationLocks,
+    flags,
+    owner,
+  };
+}
+
+function snapshotColliderDefinition3D(
+  definition: ColliderDefinition3D,
+): ColliderDefinitionSnapshot3D {
+  const bodyIndex = definition.bodyIndex | 0;
+  const bodyGeneration = definition.bodyGeneration >>> 0;
+  const shape = definition.shape;
+  const localPositionX = +definition.localPositionX;
+  const localPositionY = +definition.localPositionY;
+  const localPositionZ = +definition.localPositionZ;
+  const localOrientationX = +definition.localOrientationX;
+  const localOrientationY = +definition.localOrientationY;
+  const localOrientationZ = +definition.localOrientationZ;
+  const localOrientationW = +definition.localOrientationW;
+  const density = +definition.density;
+  const friction = +definition.friction;
+  const restitution = +definition.restitution;
+  const collisionCategory = definition.collisionCategory >>> 0;
+  const collisionMask = definition.collisionMask >>> 0;
+  const collisionGroup = definition.collisionGroup | 0;
+  const tag = definition.tag;
+  const handlers = definition.handlers;
+  const flags = definition.flags >>> 0;
+  const owner = definition.owner;
+  const orientation = canonicalQuaternion(
+    localOrientationX,
+    localOrientationY,
+    localOrientationZ,
+    localOrientationW,
+    "collider local orientation",
+  );
+  return {
+    bodyIndex,
+    bodyGeneration,
+    shape,
+    localPositionX,
+    localPositionY,
+    localPositionZ,
+    localOrientationX: orientation[0]!,
+    localOrientationY: orientation[1]!,
+    localOrientationZ: orientation[2]!,
+    localOrientationW: orientation[3]!,
+    density,
+    friction,
+    restitution,
+    collisionCategory,
+    collisionMask,
+    collisionGroup,
+    tag,
+    handlers,
+    owner,
+    flags,
+  };
 }
 
 function canonicalQuaternion(

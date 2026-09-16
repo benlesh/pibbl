@@ -202,86 +202,17 @@ export class ContactCache3D {
     counters.contactEventCapacity = eventCapacity;
   }
 
-  ensureCapacity(required: number): void {
+  ensureStagingCapacity(required: number): void {
     this.assertUsable();
-    if (required <= this.firstColliderIndices.length) return;
-    const capacity = nextCapacity(this.firstColliderIndices.length, required);
-    this.firstColliderIndices = growInt32(this.firstColliderIndices, capacity);
-    this.firstColliderGenerations = growUint32(
-      this.firstColliderGenerations,
-      capacity,
+    const requiredCapacity = Math.max(
+      this.firstColliderIndices.length,
+      required,
     );
-    this.secondColliderIndices = growInt32(
-      this.secondColliderIndices,
-      capacity,
+    if (requiredCapacity <= this.stagingFirstColliderIndices.length) return;
+    const capacity = nextCapacity(
+      this.stagingFirstColliderIndices.length,
+      requiredCapacity,
     );
-    this.secondColliderGenerations = growUint32(
-      this.secondColliderGenerations,
-      capacity,
-    );
-    this.firstBodyIndices = growInt32(this.firstBodyIndices, capacity);
-    this.firstBodyGenerations = growUint32(this.firstBodyGenerations, capacity);
-    this.secondBodyIndices = growInt32(this.secondBodyIndices, capacity);
-    this.secondBodyGenerations = growUint32(
-      this.secondBodyGenerations,
-      capacity,
-    );
-    this.sensorFlags = growUint8(this.sensorFlags, capacity);
-    this.mixedFriction = growFloat64(this.mixedFriction, capacity);
-    this.mixedRestitution = growFloat64(this.mixedRestitution, capacity);
-    this.normalX = growFloat64(this.normalX, capacity);
-    this.normalY = growFloat64(this.normalY, capacity);
-    this.normalZ = growFloat64(this.normalZ, capacity);
-    this.pointCounts = growUint8(this.pointCounts, capacity);
-    this.pointFirstX = growFloat64(
-      this.pointFirstX,
-      capacity * POINTS_PER_CONTACT,
-    );
-    this.pointFirstY = growFloat64(
-      this.pointFirstY,
-      capacity * POINTS_PER_CONTACT,
-    );
-    this.pointFirstZ = growFloat64(
-      this.pointFirstZ,
-      capacity * POINTS_PER_CONTACT,
-    );
-    this.pointSecondX = growFloat64(
-      this.pointSecondX,
-      capacity * POINTS_PER_CONTACT,
-    );
-    this.pointSecondY = growFloat64(
-      this.pointSecondY,
-      capacity * POINTS_PER_CONTACT,
-    );
-    this.pointSecondZ = growFloat64(
-      this.pointSecondZ,
-      capacity * POINTS_PER_CONTACT,
-    );
-    this.pointSeparations = growFloat64(
-      this.pointSeparations,
-      capacity * POINTS_PER_CONTACT,
-    );
-    this.pointFirstFeatures = growInt32(
-      this.pointFirstFeatures,
-      capacity * POINTS_PER_CONTACT,
-    );
-    this.pointSecondFeatures = growInt32(
-      this.pointSecondFeatures,
-      capacity * POINTS_PER_CONTACT,
-    );
-    this.pointNormalImpulses = growFloat64(
-      this.pointNormalImpulses,
-      capacity * POINTS_PER_CONTACT,
-    );
-    this.pointTangentImpulse1 = growFloat64(
-      this.pointTangentImpulse1,
-      capacity * POINTS_PER_CONTACT,
-    );
-    this.pointTangentImpulse2 = growFloat64(
-      this.pointTangentImpulse2,
-      capacity * POINTS_PER_CONTACT,
-    );
-
     this.stagingFirstColliderIndices = growInt32(
       this.stagingFirstColliderIndices,
       capacity,
@@ -375,30 +306,15 @@ export class ContactCache3D {
       this.stagingPointTangentImpulse2,
       capacity * POINTS_PER_CONTACT,
     );
-    this.counters.contactCapacity = capacity;
-    this.counters.contactCapacityGrowths += 1;
   }
 
-  ensureEventCapacity(required: number): void {
+  ensureStagingEventCapacity(required: number): void {
     this.assertUsable();
-    if (required <= this.eventTypes.length) return;
-    const capacity = nextCapacity(this.eventTypes.length, required);
-    this.eventTypes = growUint8(this.eventTypes, capacity);
-    this.eventFirstColliderIndices = growInt32(
-      this.eventFirstColliderIndices,
-      capacity,
-    );
-    this.eventFirstColliderGenerations = growUint32(
-      this.eventFirstColliderGenerations,
-      capacity,
-    );
-    this.eventSecondColliderIndices = growInt32(
-      this.eventSecondColliderIndices,
-      capacity,
-    );
-    this.eventSecondColliderGenerations = growUint32(
-      this.eventSecondColliderGenerations,
-      capacity,
+    const requiredCapacity = Math.max(this.eventTypes.length, required);
+    if (requiredCapacity <= this.stagingEventTypes.length) return;
+    const capacity = nextCapacity(
+      this.stagingEventTypes.length,
+      requiredCapacity,
     );
     this.stagingEventTypes = growUint8(this.stagingEventTypes, capacity);
     this.stagingEventFirstColliderIndices = growInt32(
@@ -417,8 +333,6 @@ export class ContactCache3D {
       this.stagingEventSecondColliderGenerations,
       capacity,
     );
-    this.counters.contactEventCapacity = capacity;
-    this.counters.contactEventCapacityGrowths += 1;
   }
 
   writeStagingContact(
@@ -516,6 +430,10 @@ export class ContactCache3D {
   }
 
   swapGenerations(nextCount: number, nextEventCount: number): void {
+    const previousContactCapacity = this.firstColliderIndices.length;
+    const nextContactCapacity = this.stagingFirstColliderIndices.length;
+    const previousEventCapacity = this.eventTypes.length;
+    const nextEventCapacity = this.stagingEventTypes.length;
     let int32 = this.firstColliderIndices;
     this.firstColliderIndices = this.stagingFirstColliderIndices;
     this.stagingFirstColliderIndices = int32;
@@ -616,6 +534,14 @@ export class ContactCache3D {
     this.stagingEventSecondColliderGenerations = uint32;
     this.contactCount = nextCount;
     this.eventCount = nextEventCount;
+    this.counters.contactCapacity = nextContactCapacity;
+    this.counters.contactEventCapacity = nextEventCapacity;
+    if (nextContactCapacity > previousContactCapacity) {
+      this.counters.contactCapacityGrowths += 1;
+    }
+    if (nextEventCapacity > previousEventCapacity) {
+      this.counters.contactEventCapacityGrowths += 1;
+    }
   }
 
   writeStagingEvent(
@@ -691,9 +617,9 @@ export function updateSortedContactCache3D(
   manifoldProvider: PrivateManifoldProvider3D,
   observeEvents = false,
 ): void {
-  cache.ensureCapacity(cache.contactCount + pairs.pairCount);
-  if (observeEvents)
-    cache.ensureEventCapacity(cache.contactCount + pairs.pairCount);
+  const requiredCapacity = cache.contactCount + pairs.pairCount;
+  cache.ensureStagingCapacity(requiredCapacity);
+  cache.ensureStagingEventCapacity(observeEvents ? requiredCapacity : 0);
   let oldContact = 0;
   let pair = 0;
   let nextContact = 0;

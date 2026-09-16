@@ -169,6 +169,74 @@ function eventRows(cache: ContactCache3D): number[][] {
   return result;
 }
 
+type CacheArrayReference3D =
+  Float64Array | Int32Array | Uint32Array | Uint8Array;
+
+function committedCacheArrayReferences(
+  cache: ContactCache3D,
+): readonly CacheArrayReference3D[] {
+  return [
+    cache.firstColliderIndices,
+    cache.firstColliderGenerations,
+    cache.secondColliderIndices,
+    cache.secondColliderGenerations,
+    cache.firstBodyIndices,
+    cache.firstBodyGenerations,
+    cache.secondBodyIndices,
+    cache.secondBodyGenerations,
+    cache.sensorFlags,
+    cache.mixedFriction,
+    cache.mixedRestitution,
+    cache.normalX,
+    cache.normalY,
+    cache.normalZ,
+    cache.pointCounts,
+    cache.pointFirstX,
+    cache.pointFirstY,
+    cache.pointFirstZ,
+    cache.pointSecondX,
+    cache.pointSecondY,
+    cache.pointSecondZ,
+    cache.pointSeparations,
+    cache.pointFirstFeatures,
+    cache.pointSecondFeatures,
+    cache.pointNormalImpulses,
+    cache.pointTangentImpulse1,
+    cache.pointTangentImpulse2,
+    cache.eventTypes,
+    cache.eventFirstColliderIndices,
+    cache.eventFirstColliderGenerations,
+    cache.eventSecondColliderIndices,
+    cache.eventSecondColliderGenerations,
+  ];
+}
+
+function expectCommittedCacheArrayReferences(
+  cache: ContactCache3D,
+  expected: readonly CacheArrayReference3D[],
+): void {
+  const actual = committedCacheArrayReferences(cache);
+  expect(actual).toHaveLength(expected.length);
+  for (let index = 0; index < actual.length; index += 1) {
+    expect(actual[index]).toBe(expected[index]);
+  }
+}
+
+function contactTransactionCounters(
+  counters: ReturnType<typeof createPhysicsOwnershipCounters3D>,
+): Readonly<Record<string, number>> {
+  return {
+    contactCapacity: counters.contactCapacity,
+    contactCapacityGrowths: counters.contactCapacityGrowths,
+    contactEventCapacity: counters.contactEventCapacity,
+    contactEventCapacityGrowths: counters.contactEventCapacityGrowths,
+    contactAllocations: counters.contactAllocations,
+    contactReleases: counters.contactReleases,
+    liveContacts: counters.liveContacts,
+    contactEventFactWrites: counters.contactEventFactWrites,
+  };
+}
+
 describe("persistent 3D contact cache", () => {
   it("merges sorted candidates, orders four-point features, and warm-starts exact matches", () => {
     const fixture = createFixture();
@@ -421,6 +489,163 @@ describe("persistent 3D contact cache", () => {
     expect(fixture.counters.contactAllocations).toBe(2);
     expect(fixture.counters.contactReleases).toBe(2);
     expect(fixture.counters.liveContacts).toBe(0);
+  });
+
+  it("does not publish staged contact or event growth when an added pair throws", () => {
+    const fixture = createFixture();
+    const first = fixture.addCollider(fixture.addBody());
+    const second = fixture.addCollider(fixture.addBody(false));
+    const third = fixture.addCollider(fixture.addBody(false));
+    const cache = new ContactCache3D(fixture.counters, 1);
+    const firstPair = pairs([[first, second]]);
+    const expandedPairs = pairs([
+      [first, second],
+      [first, third],
+    ]);
+    const contact = () => manifold([{ firstFeature: 1, secondFeature: 2 }]);
+    updateSortedContactCache3D(
+      cache,
+      firstPair,
+      fixture.bodies,
+      fixture.colliders,
+      contact,
+      true,
+    );
+    cache.pointNormalImpulses[0] = 5;
+    const committedArrays = committedCacheArrayReferences(cache);
+    const committedCounters = contactTransactionCounters(fixture.counters);
+    const committedEvents = eventRows(cache);
+    let calls = 0;
+
+    expect(() =>
+      updateSortedContactCache3D(
+        cache,
+        expandedPairs,
+        fixture.bodies,
+        fixture.colliders,
+        () => {
+          calls += 1;
+          if (calls === 2) throw new Error("growth addition failed");
+          return contact();
+        },
+        true,
+      ),
+    ).toThrow("growth addition failed");
+
+    expect(cache.contactCount).toBe(1);
+    expect(cache.eventCount).toBe(1);
+    expect(cache.pointNormalImpulses[0]).toBe(5);
+    expect(eventRows(cache)).toEqual(committedEvents);
+    expectCommittedCacheArrayReferences(cache, committedArrays);
+    expect(contactTransactionCounters(fixture.counters)).toEqual(
+      committedCounters,
+    );
+    expect(fixture.counters.contactCapacity).toBe(1);
+    expect(fixture.counters.contactCapacityGrowths).toBe(0);
+    expect(fixture.counters.contactEventCapacity).toBe(2);
+    expect(fixture.counters.contactEventCapacityGrowths).toBe(0);
+
+    updateSortedContactCache3D(
+      cache,
+      expandedPairs,
+      fixture.bodies,
+      fixture.colliders,
+      contact,
+      true,
+    );
+    expect(cache.contactCount).toBe(2);
+    expect(fixture.counters.contactCapacity).toBe(4);
+    expect(fixture.counters.contactCapacityGrowths).toBe(1);
+    expect(fixture.counters.contactEventCapacity).toBe(4);
+    expect(fixture.counters.contactEventCapacityGrowths).toBe(1);
+    cache.dispose();
+    cache.dispose();
+    expect(fixture.counters.contactAllocations).toBe(2);
+    expect(fixture.counters.contactReleases).toBe(2);
+    expect(fixture.counters.liveContacts).toBe(0);
+    expect(fixture.counters.contactCacheAllocations).toBe(1);
+    expect(fixture.counters.contactCacheReleases).toBe(1);
+    expect(fixture.counters.liveContactCaches).toBe(0);
+  });
+
+  it("does not publish staged contact or event growth when a removed pair precedes a throw", () => {
+    const fixture = createFixture();
+    const first = fixture.addCollider(fixture.addBody());
+    const second = fixture.addCollider(fixture.addBody(false));
+    const third = fixture.addCollider(fixture.addBody(false));
+    const cache = new ContactCache3D(fixture.counters, 1);
+    const firstPair = pairs([[first, second]]);
+    const expandedPairs = pairs([
+      [first, second],
+      [first, third],
+    ]);
+    const contact = () => manifold([{ firstFeature: 1, secondFeature: 2 }]);
+    updateSortedContactCache3D(
+      cache,
+      firstPair,
+      fixture.bodies,
+      fixture.colliders,
+      contact,
+      true,
+    );
+    cache.pointNormalImpulses[0] = 7;
+    const committedArrays = committedCacheArrayReferences(cache);
+    const committedCounters = contactTransactionCounters(fixture.counters);
+    const committedEvents = eventRows(cache);
+    let calls = 0;
+
+    expect(() =>
+      updateSortedContactCache3D(
+        cache,
+        expandedPairs,
+        fixture.bodies,
+        fixture.colliders,
+        () => {
+          calls += 1;
+          if (calls === 2) throw new Error("growth removal failed");
+          return null;
+        },
+        true,
+      ),
+    ).toThrow("growth removal failed");
+
+    expect(cache.contactCount).toBe(1);
+    expect(cache.eventCount).toBe(1);
+    expect(cache.pointNormalImpulses[0]).toBe(7);
+    expect(eventRows(cache)).toEqual(committedEvents);
+    expectCommittedCacheArrayReferences(cache, committedArrays);
+    expect(contactTransactionCounters(fixture.counters)).toEqual(
+      committedCounters,
+    );
+    expect(fixture.counters.contactCapacity).toBe(1);
+    expect(fixture.counters.contactCapacityGrowths).toBe(0);
+    expect(fixture.counters.contactEventCapacity).toBe(2);
+    expect(fixture.counters.contactEventCapacityGrowths).toBe(0);
+
+    calls = 0;
+    updateSortedContactCache3D(
+      cache,
+      expandedPairs,
+      fixture.bodies,
+      fixture.colliders,
+      () => {
+        calls += 1;
+        return calls === 1 ? null : contact();
+      },
+      true,
+    );
+    expect(cache.contactCount).toBe(1);
+    expect(fixture.counters.contactCapacity).toBe(4);
+    expect(fixture.counters.contactCapacityGrowths).toBe(1);
+    expect(fixture.counters.contactEventCapacity).toBe(4);
+    expect(fixture.counters.contactEventCapacityGrowths).toBe(1);
+    cache.dispose();
+    expect(fixture.counters.contactAllocations).toBe(2);
+    expect(fixture.counters.contactReleases).toBe(2);
+    expect(fixture.counters.liveContacts).toBe(0);
+    expect(fixture.counters.contactCacheAllocations).toBe(1);
+    expect(fixture.counters.contactCacheReleases).toBe(1);
+    expect(fixture.counters.liveContactCaches).toBe(0);
   });
 
   it("ends and begins observed semantics while clearing impulses across sensor-state changes", () => {
