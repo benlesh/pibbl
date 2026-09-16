@@ -216,20 +216,18 @@ export class PhysicsWorld3DController {
 
   beginRender(props: CRCPhysicsWorld3DProps): void {
     this.assertActive();
-    if (this.draft !== undefined) {
-      throw new Error(
-        "PhysicsWorld3D began a second render before finishing the first.",
-      );
-    }
+    const hasPendingDraft = this.draft !== undefined;
     this.draft = {
       configuration: normalizeWorldConfiguration(props),
       props,
       bodies: new Map(),
       colliders: new Map(),
     };
-    crcInternalOnSimulationRenderTransactionFinish(this.owner, (success) =>
-      this.finishRender(success),
-    );
+    if (!hasPendingDraft) {
+      crcInternalOnSimulationRenderTransactionFinish(this.owner, (success) =>
+        this.finishRender(success),
+      );
+    }
   }
 
   bodyIdFor(attachment: MountedPhysicsAttachment3D): number {

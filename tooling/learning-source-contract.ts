@@ -18,6 +18,8 @@ interface SourceInspection {
   readonly hasCommonJsSyntax: boolean;
   readonly hasCoreValueImport: boolean;
   readonly hasPhysicsValueImport: boolean;
+  readonly hasPhysics2DValueImport: boolean;
+  readonly hasPhysics3DValueImport: boolean;
   readonly hasWebGLValueImport: boolean;
   readonly hasCreateElementCall: boolean;
   readonly hasDirectComponentCall: boolean;
@@ -50,11 +52,16 @@ interface SourceInspection {
 }
 
 const CORE_MODULE = "@crc/core";
-const PHYSICS_MODULE = "@crc/physics/2d";
+const PHYSICS_2D_MODULE = "@crc/physics/2d";
+const PHYSICS_3D_MODULE = "@crc/physics/3d";
+const PHYSICS_MODULES = new Set([
+  PHYSICS_2D_MODULE,
+  PHYSICS_3D_MODULE,
+]);
 const WEBGL_MODULE = "@crc/webgl";
 const LEARNING_VALUE_MODULES = new Set([
   CORE_MODULE,
-  PHYSICS_MODULE,
+  ...PHYSICS_MODULES,
   WEBGL_MODULE,
 ]);
 const WEBGL_ISLAND_LEARNING_SOURCE_PATH =
@@ -126,6 +133,7 @@ const DESCRIPTIVE_COMPONENT_EXPORTS = new Set([
   "WebGLBackground",
   "WebGLLayer",
   "PhysicsWorld2D",
+  "PhysicsWorld3D",
 ]);
 const COMMONJS_BINDING_NAMES = new Set(["exports", "module", "require"]);
 const COMMONJS_GLOBAL_NAMES = new Set([
@@ -862,6 +870,8 @@ function inspectSource(source: string, label: string): SourceInspection {
   const packageImportModules = new Set<string>();
   let hasCoreValueImport = false;
   let hasPhysicsValueImport = false;
+  let hasPhysics2DValueImport = false;
+  let hasPhysics3DValueImport = false;
   let hasWebGLValueImport = false;
   let hasNamedValueCoreImport = false;
   let hasNamedValuePhysicsImport = false;
@@ -944,7 +954,14 @@ function inspectSource(source: string, label: string): SourceInspection {
           if (statement.importKind !== "type") {
             valueNamespaceBindings.add(localName);
             if (moduleName === CORE_MODULE) hasCoreValueImport = true;
-            if (moduleName === PHYSICS_MODULE) hasPhysicsValueImport = true;
+            if (PHYSICS_MODULES.has(moduleName ?? "")) {
+              hasPhysicsValueImport = true;
+              if (moduleName === PHYSICS_2D_MODULE) {
+                hasPhysics2DValueImport = true;
+              } else {
+                hasPhysics3DValueImport = true;
+              }
+            }
             if (moduleName === WEBGL_MODULE) hasWebGLValueImport = true;
           }
         }
@@ -971,10 +988,15 @@ function inspectSource(source: string, label: string): SourceInspection {
       if (moduleName === CORE_MODULE) {
         hasCoreValueImport = true;
         hasNamedValueCoreImport = true;
-      } else if (moduleName === PHYSICS_MODULE) {
+      } else if (PHYSICS_MODULES.has(moduleName ?? "")) {
         hasPhysicsValueImport = true;
         hasNamedValuePhysicsImport = true;
-      } else {
+        if (moduleName === PHYSICS_2D_MODULE) {
+          hasPhysics2DValueImport = true;
+        } else {
+          hasPhysics3DValueImport = true;
+        }
+      } else if (moduleName === WEBGL_MODULE) {
         hasWebGLValueImport = true;
         hasNamedValueWebGLImport = true;
       }
@@ -1244,6 +1266,8 @@ function inspectSource(source: string, label: string): SourceInspection {
     hasCommonJsSyntax,
     hasCoreValueImport,
     hasPhysicsValueImport,
+    hasPhysics2DValueImport,
+    hasPhysics3DValueImport,
     hasWebGLValueImport,
     hasCreateElementCall,
     hasDirectComponentCall,
@@ -1323,13 +1347,17 @@ export function validateScenarioSourceText(
   if (inspection.hasScenarioReExport) {
     throw invalid(
       label,
-      "must not re-export local, external, @crc/core, or @crc/webgl modules.",
+      "must not re-export local, external, or public CRC package modules.",
     );
   }
-  if (!inspection.hasCoreValueImport || !inspection.hasOnlyScenarioImports) {
+  if (
+    !inspection.hasCoreValueImport ||
+    !inspection.hasOnlyScenarioImports ||
+    (inspection.hasPhysics3DValueImport && !inspection.hasWebGLValueImport)
+  ) {
     throw invalid(
       label,
-      "must use supported static imports: named or namespace imports from @crc/core and @crc/webgl, relative type-only imports, and at least one public @crc/core value.",
+      "must use supported static imports: named or namespace imports from @crc/core, @crc/webgl, @crc/physics/2d, and @crc/physics/3d; 3D physics requires @crc/webgl; relative imports must be type-only; and at least one public @crc/core value is required.",
     );
   }
   if (inspection.hasLegacyTypes) {
@@ -1386,6 +1414,8 @@ export function validateLearningSourceText(
     : isPhysicsLesson
       ? inspection.hasNamedValueCoreImport &&
         inspection.hasNamedValuePhysicsImport &&
+        inspection.hasPhysics2DValueImport &&
+        !inspection.hasPhysics3DValueImport &&
         !inspection.hasNamedValueWebGLImport &&
         inspection.packageImportModules.length === 2
       : inspection.hasNamedValueCoreImport &&

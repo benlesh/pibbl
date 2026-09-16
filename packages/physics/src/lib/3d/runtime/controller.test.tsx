@@ -13,6 +13,7 @@ import {
 import { Group3D, WebGLLayer } from "@crc/webgl";
 import {
   PhysicsWorld3D,
+  crcPhysicsBody3D,
   crcPhysicsWorld3D,
   dynamicBody3D,
   kinematicBody3D,
@@ -32,9 +33,19 @@ import {
   type PhysicsTopologyRecord3D,
 } from "../world/world.js";
 import {
+  PhysicsWorld3DController,
   requirePhysicsWorld3DController,
   snapshotPhysicsWorld3DControllerForTest,
 } from "./controller.js";
+import {
+  physicsBodyHandleBinding3D,
+  snapshotPhysicsBodyHandle3DForTest,
+} from "./body-handle.js";
+import {
+  MountedPhysicsAttachment3D,
+  requirePhysicsAttachment3DDescriptor,
+} from "./descriptors.js";
+import { snapshotRealmScheduler } from "../../../../../core/src/lib/scheduler/testing.js";
 
 let frames: ManualFrames;
 const mounts: CRCController[] = [];
@@ -51,6 +62,181 @@ afterEach(() => {
 });
 
 describe("PhysicsWorld3D controller scheduling and topology", () => {
+  it("publishes only the latest draft when one transaction renders the world twice", () => {
+    const finishRender = vi.spyOn(
+      PhysicsWorld3DController.prototype as unknown as {
+        finishRender(success: boolean): void;
+      },
+      "finishRender",
+    );
+    const proposeTopology = vi.spyOn(
+      PhysicsWorld3DKernel.prototype,
+      "proposeTopology",
+    );
+    let world!: CRCPhysicsWorldHandle3D;
+    let firstHandle!: ReturnType<typeof crcPhysicsBody3D>;
+    let latestHandle!: ReturnType<typeof crcPhysicsBody3D>;
+    let latestBodyId = -1;
+    let renders = 0;
+    let useLatestConfiguration = false;
+
+    const Probe = () => {
+      world = crcPhysicsWorld3D();
+      firstHandle = crcPhysicsBody3D();
+      latestHandle = crcPhysicsBody3D();
+      const controller = requirePhysicsWorld3DController(world);
+      const slot = useInternalHookSlot("superseded3DRenderDraft", (teardowns) => {
+        const firstValue = dynamicBody3D({
+          handle: firstHandle,
+          mass: 1,
+          collider: false,
+        });
+        const latestValue = dynamicBody3D({
+          handle: latestHandle,
+          mass: 1,
+          collider: false,
+        });
+        const firstAttachment = new MountedPhysicsAttachment3D(firstValue);
+        const latestAttachment = new MountedPhysicsAttachment3D(latestValue);
+        teardowns.add(() => firstAttachment.dispose());
+        teardowns.add(() => latestAttachment.dispose());
+        return {
+          firstAttachment,
+          firstDescriptor: requirePhysicsAttachment3DDescriptor(firstValue),
+          latestAttachment,
+          latestDescriptor: requirePhysicsAttachment3DDescriptor(latestValue),
+        };
+      }).value;
+
+      if (renders++ === 0) {
+        controller.collectBody(
+          slot.firstAttachment,
+          controller.bodyIdFor(slot.firstAttachment),
+          slot.firstDescriptor as never,
+          { position: [0, 99, 0], orientation: [0, 0, 0, 1] },
+        );
+        controller.beginRender({
+          gravity: [0, 0, 0],
+          fixedStepMilliseconds: 10,
+          sleeping: false,
+        });
+        useLatestConfiguration = true;
+      }
+      latestBodyId = controller.bodyIdFor(slot.latestAttachment);
+      controller.collectBody(
+        slot.latestAttachment,
+        latestBodyId,
+        slot.latestDescriptor as never,
+        { position: [0, 4, 0], orientation: [0, 0, 0, 1] },
+      );
+      return undefined;
+    };
+    const Scene = () => (
+      <PhysicsWorld3D
+        gravity={useLatestConfiguration ? [0, 0, 0] : [0, -50, 0]}
+        fixedStepMilliseconds={10}
+        sleeping={false}
+      >
+        <Probe />
+      </PhysicsWorld3D>
+    );
+    mountWebGL(<Scene />);
+
+    frames.flush(0);
+    expect(finishRender).toHaveBeenCalledOnce();
+    expect(snapshot(world)).toMatchObject({
+      bodyIds: [latestBodyId],
+      kernel: { bodyCount: 0 },
+      advanceRegistered: true,
+    });
+    expect(snapshotPhysicsBodyHandle3DForTest(firstHandle)).toMatchObject({
+      bound: false,
+      bindingGeneration: 0,
+    });
+    expect(snapshotPhysicsBodyHandle3DForTest(latestHandle)).toMatchObject({
+      bound: true,
+      bindingGeneration: 1,
+    });
+    expect(snapshotRealmScheduler()).toMatchObject({
+      registeredAdvanceParticipants: 1,
+      queuedBeginCommands: 1,
+      queuedFrameCompletions: 0,
+    });
+
+    frames.flush(10);
+    expect(finishRender).toHaveBeenCalledOnce();
+    expect(proposeTopology).toHaveBeenCalledOnce();
+    expect(snapshot(world).kernel).toMatchObject({
+      bodyCount: 1,
+      eventCount: 0,
+    });
+    expect(snapshot(world).kernel.bodies[0]).toMatchObject({
+      id: latestBodyId,
+      positionY: 4,
+    });
+
+    frames.flush(20);
+    expect(finishRender).toHaveBeenCalledTimes(2);
+    expect(proposeTopology).toHaveBeenCalledOnce();
+    expect(snapshot(world).kernel.bodies[0]!.positionY).toBe(4);
+  });
+
+  it("adopts neither draft when traversal fails after supersession", () => {
+    const proposeTopology = vi.spyOn(
+      PhysicsWorld3DKernel.prototype,
+      "proposeTopology",
+    );
+    const failure = new Error("superseded traversal failed");
+    let firstHandle!: ReturnType<typeof crcPhysicsBody3D>;
+    let latestHandle!: ReturnType<typeof crcPhysicsBody3D>;
+    const Probe = () => {
+      const world = crcPhysicsWorld3D();
+      firstHandle = crcPhysicsBody3D();
+      latestHandle = crcPhysicsBody3D();
+      const controller = requirePhysicsWorld3DController(world);
+      const firstValue = dynamicBody3D({
+        handle: firstHandle,
+        mass: 1,
+        collider: false,
+      });
+      const latestValue = dynamicBody3D({
+        handle: latestHandle,
+        mass: 1,
+        collider: false,
+      });
+      const firstAttachment = new MountedPhysicsAttachment3D(firstValue);
+      const latestAttachment = new MountedPhysicsAttachment3D(latestValue);
+      controller.collectBody(
+        firstAttachment,
+        controller.bodyIdFor(firstAttachment),
+        requirePhysicsAttachment3DDescriptor(firstValue) as never,
+      );
+      controller.beginRender({ gravity: [0, 0, 0] });
+      controller.collectBody(
+        latestAttachment,
+        controller.bodyIdFor(latestAttachment),
+        requirePhysicsAttachment3DDescriptor(latestValue) as never,
+      );
+      throw failure;
+    };
+    const failed = mountWebGL(
+      <PhysicsWorld3D gravity={[0, -50, 0]}>
+        <Probe />
+      </PhysicsWorld3D>,
+    );
+
+    expect(() => frames.flush(0)).toThrow(failure);
+    expect(proposeTopology).not.toHaveBeenCalled();
+    expect(physicsBodyHandleBinding3D(firstHandle)).toBeUndefined();
+    expect(physicsBodyHandleBinding3D(latestHandle)).toBeUndefined();
+    expect(snapshotRealmScheduler()).toMatchObject({
+      registeredAdvanceParticipants: 0,
+      queuedBeginCommands: 0,
+      queuedFrameCompletions: 0,
+    });
+    failed.dispose();
+  });
+
   it("interpolates one accepted kinematic target across every catch-up tick", () => {
     // Production break caught: forwarding one final target pose to every fixed
     // tick jumps to the target on tick one instead of traversing the accepted

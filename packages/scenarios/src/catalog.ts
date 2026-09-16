@@ -23,6 +23,7 @@ import type { WebGLLightingLabState } from "./webgl-lighting-lab.example";
 import type { SignalsLabState } from "./signals-lab.example";
 import type { AnimationLabState } from "./animation-lab.example";
 import type { Physics2DLabState } from "./physics-2d-lab.example";
+import type { Physics3DState } from "./physics-3d.example";
 import { GEOMETRY_MATRIX_CASES } from "./geometry-matrix.example";
 import { MOUSE_CONTRACT_CASES } from "./mouse-contract";
 import { PERFORMANCE_WORKLOADS } from "./performance-lab.example";
@@ -1970,6 +1971,88 @@ export const physics2DLabScenarioEntry: ScenarioCatalogEntry<Physics2DLabState> 
     load: async () => (await import("./physics-2d-lab")).physics2DLabScenario,
   };
 
+const physics3DMetadata: ScenarioMetadata = {
+  id: "first-class-physics-3d",
+  slug: "physics-3d",
+  title: "First-class 3D physics browser slice",
+  summary:
+    "Simulate inferred Cube and Sphere bodies, a Group3D compound, contacts, impulses, and a visible public ray query in one settled WebGL island.",
+  category: "Simulation",
+  apiTags: [
+    "PhysicsWorld3D",
+    "dynamicBody3D",
+    "staticBody3D",
+    "collider3D",
+    "crcPhysicsBody3D",
+    "crcPhysicsWorld3D",
+    "applyImpulse3D",
+    "teleportBody3D",
+    "raycast3D",
+    "WebGLLayer",
+    "Group3D",
+    "Cube",
+    "Sphere",
+  ],
+  conceptTags: [
+    "fixed-step 3D physics",
+    "central scheduler",
+    "WebGL presentation",
+    "inferred collider geometry",
+    "compound body",
+    "world queries",
+    "context loss continuity",
+  ],
+  manualSteps: [
+    {
+      action: "Observe the initial drop.",
+      expected:
+        "Six independent cubes and spheres plus one compound body fall, contact the floor or obstacle, and remain aligned with their rendered geometry.",
+    },
+    {
+      action: "Choose Drop, then Impulse.",
+      expected:
+        "The blue cube returns above the scene, falls under shared-scheduler gravity, and gains visible translation and rotation from the off-center impulse.",
+    },
+    {
+      action: "Choose Query.",
+      expected:
+        "The public downward ray reports the floor and renders a pink marker at the committed hit point.",
+    },
+    {
+      action: "Choose Reset.",
+      expected:
+        "The complete fixed-camera scene remounts at its authored poses with fresh body generations and cleared diagnostics.",
+    },
+  ],
+  knownLimitations: [
+    "This first browser slice infers boxes and uniformly scaled spheres; nonuniform Sphere ellipsoids and Mesh inference arrive in later 3D geometry tasks.",
+    "The scene uses one fixed WebGL2 camera and one fixed logical viewport; it does not expose a public manual clock or a second animation loop.",
+  ],
+  learningOrder: 210,
+  visibility: "test-laboratory",
+  visibilityReason:
+    "It exposes authoritative body snapshots, contact order, compound alignment, query identity, and context-loss continuity for deterministic browser evidence.",
+  maturity: "contract",
+};
+
+export const physics3DScenarioEntry: ScenarioCatalogEntry<Physics3DState> = {
+  metadata: physics3DMetadata,
+  canvas: { width: 480, height: 300 },
+  actions: [
+    { id: "reset", label: "Reset" },
+    { id: "drop", label: "Drop cube" },
+    { id: "impulse", label: "Impulse cube" },
+    { id: "query", label: "Ray query" },
+  ],
+  source: {
+    id: "first-class-physics-3d-example",
+    language: "tsx",
+    marker: "PHYSICS_3D_SOURCE_ID = 'first-class-physics-3d-example'",
+    path: "packages/scenarios/src/physics-3d.example.tsx",
+  },
+  load: async () => (await import("./physics-3d")).physics3DScenario,
+};
+
 export const canvasSurfaceScenarioEntry: ScenarioCatalogEntry<CanvasSurfaceState> =
   {
     metadata: canvasSurfaceMetadata,
@@ -2012,6 +2095,7 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
     signalsLabScenarioEntry,
     animationLabScenarioEntry,
     physics2DLabScenarioEntry,
+    physics3DScenarioEntry,
   ] as const);
 
 export const scenarioCatalogIndex = createScenarioCatalogIndex(scenarioCatalog);

@@ -529,6 +529,7 @@ const publicWebGLTypeExports = [
   'CRCOrbitCameraHandlers',
   'CRCOrbitCameraOptions',
   'CRCOrbitCameraResult',
+  'CRCPhysics3DPropExtension',
   'CRCWebGLGeometry',
   'CRCWebGLGeometryInput',
   'CRCWebGLLambertMaterial',
@@ -559,8 +560,10 @@ const publicWebGLTypeExports = [
   'WebGLLayerStyle',
 ].sort();
 
-if (publicWebGLTypeExports.length !== 33) {
-  throw new Error(`CRC Studio must declare exactly 33 WebGL public types, received ${publicWebGLTypeExports.length}.`);
+if (publicWebGLTypeExports.length !== 34) {
+  throw new Error(
+    `CRC Studio must declare exactly 34 WebGL public types, received ${publicWebGLTypeExports.length}.`,
+  );
 }
 
 const publicPhysics2DTypeExports = [

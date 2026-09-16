@@ -1,4 +1,5 @@
 import { crc, type CRCNode } from '@crc/core';
+import type { CRCPhysicsAttachment3D } from '@crc/physics/3d';
 import {
   crcInternalCreatePropAttachment,
   defineBackendPrimitive,
@@ -27,13 +28,6 @@ import type {
   WebGLMeshSubmission,
   WebGLSceneComposer,
 } from './scene/types.js';
-import type { CRCPhysics3DPropExtension } from './types.js';
-
-declare module '@crc/webgl' {
-  interface CRCPhysics3DPropExtension {
-    readonly physics?: TestPhysicsAttachment;
-  }
-}
 
 interface TestPhysicsAttachment {
   readonly label: string;
@@ -241,7 +235,7 @@ function createAttachment(
   facts: Map<string, CRCWebGLPhysicsPrimitiveFacts>,
   releases: (() => void)[],
   presentationX = 0,
-): TestPhysicsAttachment {
+): TestPhysicsAttachment & CRCPhysicsAttachment3D {
   const value = Object.freeze({ label });
   return crcInternalCreatePropAttachment('physics', value, () => {
     let release: (() => void) | undefined;
@@ -264,7 +258,7 @@ function createAttachment(
       dispose() {},
     };
     return mounted;
-  });
+  }) as TestPhysicsAttachment & CRCPhysicsAttachment3D;
 }
 
 function mountScene(root: CRCNode) {
@@ -366,9 +360,6 @@ function createRecordingGL(trace: string[]): WebGL2RenderingContext {
     };
   }
 }
-
-type PublicAugmentationContract = CRCPhysics3DPropExtension;
-void (undefined as unknown as PublicAugmentationContract);
 
 function expectTupleClose(
   actual: readonly number[],

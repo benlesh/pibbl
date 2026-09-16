@@ -4,7 +4,11 @@ import {
   type CRCInternalPrimitiveAttachmentInput,
   type CRCInternalMountedPropAttachment,
 } from "@crc/core/internal";
-import { resolveWebGLPhysicsPrimitive } from "@crc/webgl/internal";
+import {
+  pushPhysicsPresentation,
+  resolveWebGLPhysicsPrimitive,
+  type CRCWebGLPhysicsPrimitiveFacts,
+} from "@crc/webgl/internal";
 import type {
   CRCPhysicsQuaternion,
   CRCPhysicsShape3D,
@@ -40,6 +44,20 @@ import {
   requireCurrentPhysicsBody3D,
   requireCurrentPhysicsWorld3D,
 } from "./context.js";
+import {
+  bakeWebGLShapeTransform3D,
+  inferWebGLColliderShape3D,
+} from "../webgl/inference.js";
+import {
+  captureWebGLBodyPresentation3D,
+  resolveWebGLBodyFrame3D,
+  resolveWebGLColliderForwardMatrix3D,
+  resolveWebGLDynamicPresentationMatrix3D,
+  type WebGLBodyFrame3D,
+  type WebGLBodyPresentationCapture3D,
+} from "../webgl/presentation.js";
+
+const bodyFramesByWorld3D = new WeakMap<object, Map<number, WebGLBodyFrame3D>>();
 
 const attachmentRecord3DSymbol = Symbol("CRCPhysicsAttachment3D");
 
@@ -232,10 +250,19 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
   private world: ReturnType<typeof requireCurrentPhysicsWorld3D> | undefined;
   private bodyId: number | undefined;
   private releaseBodyScope: (() => void) | undefined;
+  private releasePresentationScope: (() => void) | undefined;
   private cachedShapeSource: CRCPhysicsShape3D | undefined;
   private cachedShapeOffset: CRCPhysicsVector3 | undefined;
   private cachedShapeOrientation: CRCPhysicsQuaternion | undefined;
   private cachedShape: ShapeRecord3D | undefined;
+  private cachedBakedSource:
+    | CRCPhysicsShape3D
+    | CRCWebGLPhysicsPrimitiveFacts["kind"]
+    | undefined;
+  private cachedBakedTransform: readonly number[] | undefined;
+  private cachedBakedShape: CRCPhysicsShape3D | undefined;
+  private bodyPresentation: WebGLBodyPresentationCapture3D | undefined;
+  private wasEnabled = false;
 
   constructor(value: CRCPhysicsAttachment3D) {
     this.descriptor = requirePhysicsAttachment3DDescriptor(value);
@@ -265,33 +292,109 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
     }
     const facts = resolveWebGLPhysicsPrimitive(input);
     if (this.descriptor.kind === "body") {
-      const collider = this.descriptor.options.collider;
-      const effectiveCollider =
-        collider === false || collider.shape === "self"
-          ? false
-          : collider;
-      const descriptor = effectiveCollider === collider
-        ? this.descriptor
+      const descriptor = this.descriptor;
+      const enabled = descriptor.options.enabled;
+      const reenabled = !this.wasEnabled && enabled;
+      if (
+        this.bodyPresentation === undefined ||
+        reenabled ||
+        descriptor.bodyType !== "dynamic"
+      ) {
+        this.bodyPresentation = captureWebGLBodyPresentation3D(
+          facts,
+          input.componentName,
+        );
+      }
+      const presentation = this.bodyPresentation;
+      const frame = resolveWebGLBodyFrame3D(
+        presentation,
+        facts,
+        input.componentName,
+        descriptor.bodyType === "dynamic" && enabled && !reenabled,
+      );
+      let bodyFrames = bodyFramesByWorld3D.get(world);
+      if (bodyFrames === undefined) {
+        bodyFrames = new Map();
+        bodyFramesByWorld3D.set(world, bodyFrames);
+      }
+      bodyFrames.set(bodyId, frame);
+
+      if (descriptor.bodyType === "dynamic" && enabled) {
+        world.handle.revision.get();
+        const presentedPose = reenabled
+          ? presentation.initialPose
+          : (world.presentationPose(bodyId) ?? presentation.initialPose);
+        this.releasePresentationScope = pushPhysicsPresentation(
+          resolveWebGLDynamicPresentationMatrix3D(
+            presentation,
+            presentedPose,
+            frame,
+            input.componentName,
+          ),
+        );
+      }
+
+      const collider = descriptor.options.collider;
+      const effectiveCollider = collider === false ||
+          (collider.shape === "self" && facts.kind === "group")
+        ? false
+        : withColliderShape(
+            collider,
+            this.resolveBakedShape(
+              facts,
+              collider.shape,
+              frame.geometryMatrix,
+              input.componentName,
+            ),
+          );
+      const effectiveDescriptor = effectiveCollider === collider
+        ? descriptor
         : Object.freeze({
-            ...this.descriptor,
-            options: Object.freeze({ ...this.descriptor.options, collider: effectiveCollider }),
+            ...descriptor,
+            options: Object.freeze({
+              ...descriptor.options,
+              collider: effectiveCollider,
+            }),
           }) as PhysicsBodyAttachment3DDescriptor;
-      world.collectBody(this, bodyId, descriptor);
-      // A self Group3D is deliberately body-only in Task 6. All other self
-      // requests remain normalized but unresolved until Task 7 inference.
-      void facts;
-    } else if (this.descriptor.options.shape !== "self") {
-      world.collectCollider(this, bodyId, this.descriptor.options);
+      world.collectBody(
+        this,
+        bodyId,
+        effectiveDescriptor,
+        presentation.initialPose,
+      );
+      this.wasEnabled = enabled;
+    } else {
+      const bodyFrame = requireBodyFrame3D(world, bodyId);
+      const matrix = resolveWebGLColliderForwardMatrix3D(
+        bodyFrame,
+        facts,
+        input.componentName,
+      );
+      const options = withColliderShape(
+        this.descriptor.options,
+        this.resolveBakedShape(
+          facts,
+          this.descriptor.options.shape,
+          matrix,
+          input.componentName,
+        ),
+      );
+      world.collectCollider(this, bodyId, options);
     }
   }
 
   exit(_success: boolean): void {
     try {
-      this.releaseBodyScope?.();
+      this.releasePresentationScope?.();
     } finally {
-      this.releaseBodyScope = undefined;
-      this.bodyId = undefined;
-      this.world = undefined;
+      try {
+        this.releaseBodyScope?.();
+      } finally {
+        this.releasePresentationScope = undefined;
+        this.releaseBodyScope = undefined;
+        this.bodyId = undefined;
+        this.world = undefined;
+      }
     }
   }
 
@@ -326,6 +429,49 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
     this.cachedShape = requireShapeRecord3D(transformed);
     return this.cachedShape;
   }
+
+  private resolveBakedShape(
+    facts: CRCWebGLPhysicsPrimitiveFacts,
+    source: "self" | CRCPhysicsShape3D,
+    transform: Readonly<ArrayLike<number>>,
+    componentName: string,
+  ): CRCPhysicsShape3D {
+    const sourceKey = source === "self" ? facts.kind : source;
+    const values = Object.freeze(Array.from(transform));
+    if (
+      this.cachedBakedSource === sourceKey &&
+      this.cachedBakedTransform?.every(
+        (value, index) => value === values[index],
+      )
+    ) {
+      return this.cachedBakedShape!;
+    }
+    const shape = source === "self"
+      ? inferWebGLColliderShape3D(facts, values)
+      : bakeWebGLShapeTransform3D(source, values, componentName);
+    this.cachedBakedSource = sourceKey;
+    this.cachedBakedTransform = values;
+    this.cachedBakedShape = shape;
+    return shape;
+  }
+}
+
+function requireBodyFrame3D(
+  world: object,
+  bodyId: number,
+): WebGLBodyFrame3D {
+  const frame = bodyFramesByWorld3D.get(world)?.get(bodyId);
+  if (frame === undefined) {
+    throw new Error("A collider requires its body geometry to prepare first.");
+  }
+  return frame;
+}
+
+function withColliderShape(
+  options: NormalizedPhysicsColliderConfiguration3D,
+  shape: CRCPhysicsShape3D,
+): NormalizedPhysicsColliderConfiguration3D {
+  return Object.freeze({ ...options, shape });
 }
 
 function sameVector3(

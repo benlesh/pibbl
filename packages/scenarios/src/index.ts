@@ -22,6 +22,7 @@ export {
   mouseContractScenarioEntry,
   performanceLabScenarioEntry,
   physics2DLabScenarioEntry,
+  physics3DScenarioEntry,
   runtimeHooksScenarioEntry,
   signalsLabScenarioEntry,
   validateScenarioCatalog,
@@ -40,6 +41,16 @@ export type {
   Physics2DLabState,
 } from './physics-2d-lab.example';
 export { PHYSICS_2D_LAB_ACTION_IDS } from './physics-2d-lab';
+export type {
+  Physics3DAction,
+  Physics3DBodyId,
+  Physics3DBodySnapshot,
+  Physics3DState,
+} from './physics-3d.example';
+export {
+  PHYSICS_3D_ACTION_IDS,
+  PHYSICS_3D_BODY_IDS,
+} from './physics-3d';
 export type {
   SignalsLabAction,
   SignalsLabState,
