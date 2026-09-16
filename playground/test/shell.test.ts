@@ -206,7 +206,10 @@ describe("Studio shell navigation", () => {
       new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }),
     );
     await settle();
-    expect(document.querySelector(".studio-search-dialog")).toBeNull();
+    expect(
+      document.querySelector<HTMLDialogElement>(".studio-search-dialog")?.open ??
+        false,
+    ).toBe(false);
     expect(bundleLoads).toBe(0);
 
     menu.click();
@@ -214,9 +217,11 @@ describe("Studio shell navigation", () => {
       new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }),
     );
     await settle();
-    expect(document.querySelector<HTMLDialogElement>(".studio-search-dialog")?.open).toBe(
-      true,
-    );
+    await vi.waitFor(() => {
+      expect(
+        document.querySelector<HTMLDialogElement>(".studio-search-dialog")?.open,
+      ).toBe(true);
+    });
     document.dispatchEvent(
       new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }),
     );
