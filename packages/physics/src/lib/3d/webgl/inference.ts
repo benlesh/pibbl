@@ -56,12 +56,16 @@ export function bakeWebGLShapeTransform3D(
   if (source.kind === "sphere") {
     const center = transformPoint(posed, source.center);
     const scales = columnLengths(posed);
-    if (!close(scales[0], scales[1], UNIFORM_EPSILON) ||
-        !close(scales[0], scales[2], UNIFORM_EPSILON)) {
+    if (!sameScale(scales[0], scales[1]) ||
+        !sameScale(scales[0], scales[2])) {
       throw new Error(
         `${componentName} has nonuniform Sphere scale; ellipsoid inference is introduced with ellipsoid geometry.`,
       );
     }
+    validateOrthogonalAxes(
+      normalizedColumns(posed, scales),
+      componentName,
+    );
     return sphereShape3D({
       radius: source.radius * scales[0],
       center,
@@ -279,6 +283,11 @@ function quaternionFromAxes(
 function close(left: number, right: number, epsilon: number): boolean {
   return Math.abs(left - right) <= epsilon *
     Math.max(1, Math.abs(left), Math.abs(right));
+}
+
+function sameScale(left: number, right: number): boolean {
+  return Math.abs(left - right) <= UNIFORM_EPSILON *
+    Math.max(Math.abs(left), Math.abs(right));
 }
 
 function clean(value: number): number {

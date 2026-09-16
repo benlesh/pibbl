@@ -42,6 +42,26 @@ describe("WebGL 3D collider inference", () => {
     ).toThrow(/nonuniform Sphere.*ellipsoid/i);
   });
 
+  it("rejects direct tiny nonuniform Sphere scale", () => {
+    expect(() =>
+      inferWebGLColliderShape3D(
+        facts("sphere", transform({ scale: [1e-8, 9e-8, 5e-8] })),
+      ),
+    ).toThrow(/nonuniform Sphere.*ellipsoid/i);
+  });
+
+  it("rejects equal-length Sphere columns produced by nested scale and rotation shear", () => {
+    const parent = transform({ scale: [1, 2, Math.sqrt(2.5)] });
+    const child = transform({ rotationZDegrees: 45 });
+    const nested = multiplyMatrix4(parent.matrix, child.matrix);
+    expect(columnLengths(nested)[0]).toBeCloseTo(columnLengths(nested)[1]!);
+    expect(columnLengths(nested)[1]).toBeCloseTo(columnLengths(nested)[2]!);
+
+    expect(() =>
+      inferWebGLColliderShape3D(facts("sphere", child), nested),
+    ).toThrow(/shear.*cannot be represented.*sphere/i);
+  });
+
   it("keeps Group3D body-only and requires descendant collider geometry", () => {
     expect(() =>
       inferWebGLColliderShape3D({
@@ -70,21 +90,57 @@ function transform(
   input: Readonly<{
     translation?: readonly [number, number, number];
     scale?: readonly [number, number, number];
+    rotationZDegrees?: number;
   }> = {},
 ): CRCWebGLAuthoredTransform {
   const translation = input.translation ?? [0, 0, 0];
   const scale = input.scale ?? [1, 1, 1];
+  const rotationZ = (input.rotationZDegrees ?? 0) * Math.PI / 180;
+  const cosine = Math.cos(rotationZ);
+  const sine = Math.sin(rotationZ);
   return Object.freeze({
     translation: Object.freeze([...translation]) as never,
-    orientation: Object.freeze([0, 0, 0, 1] as const),
+    orientation: Object.freeze([
+      0,
+      0,
+      Math.sin(rotationZ / 2),
+      Math.cos(rotationZ / 2),
+    ] as const),
     scale: Object.freeze([...scale]) as never,
     matrix: Object.freeze([
-      scale[0], 0, 0, 0,
-      0, scale[1], 0, 0,
+      cosine * scale[0], sine * scale[0], 0, 0,
+      -sine * scale[1], cosine * scale[1], 0, 0,
       0, 0, scale[2], 0,
       translation[0], translation[1], translation[2], 1,
     ]),
   });
+}
+
+function multiplyMatrix4(
+  left: Readonly<ArrayLike<number>>,
+  right: Readonly<ArrayLike<number>>,
+): readonly number[] {
+  const output = Array<number>(16).fill(0);
+  for (let column = 0; column < 4; column += 1) {
+    for (let row = 0; row < 4; row += 1) {
+      output[column * 4 + row] =
+        left[row]! * right[column * 4]! +
+        left[4 + row]! * right[column * 4 + 1]! +
+        left[8 + row]! * right[column * 4 + 2]! +
+        left[12 + row]! * right[column * 4 + 3]!;
+    }
+  }
+  return Object.freeze(output);
+}
+
+function columnLengths(
+  matrix: Readonly<ArrayLike<number>>,
+): readonly [number, number, number] {
+  return [
+    Math.hypot(matrix[0]!, matrix[1]!, matrix[2]!),
+    Math.hypot(matrix[4]!, matrix[5]!, matrix[6]!),
+    Math.hypot(matrix[8]!, matrix[9]!, matrix[10]!),
+  ];
 }
 
 function summary(shape: Parameters<typeof requireShapeRecord3D>[0]) {

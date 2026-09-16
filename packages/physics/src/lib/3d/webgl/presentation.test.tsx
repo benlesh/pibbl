@@ -5,6 +5,7 @@ import type {
 import { crc, signal, type CRCController } from "@crc/core";
 import { Cube, Group3D, Sphere, WebGLLayer } from "@crc/webgl";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { WebGLLayerController } from "../../../../../webgl/src/lib/layer-controller.js";
 import type { CRCPhysicsPose3D } from "../../../3d-geometry.js";
 import {
   PhysicsWorld3D,
@@ -19,6 +20,7 @@ import {
   requirePhysicsWorld3DController,
   snapshotPhysicsWorld3DControllerForTest,
 } from "../runtime/controller.js";
+import { snapshotPhysicsBodyFrames3DForTest } from "../runtime/descriptors.js";
 import { requireShapeRecord3D } from "../shape-records.js";
 import { inferWebGLColliderShape3D } from "./inference.js";
 import {
@@ -147,6 +149,34 @@ describe("WebGL 3D physics presentation", () => {
       true,
     )).toThrow(/authored pose changed.*dynamic body owns pose.*teleportBody3D/i);
   });
+
+  it("diagnoses a represented large-coordinate translation while accepting q-negation", () => {
+    const initialTransform = transform({ translation: [1e9, 0, 0] });
+    const capture = captureWebGLBodyPresentation3D(
+      facts("cube", initialTransform),
+      "Cube",
+    );
+    const negatedOrientation = Object.freeze({
+      ...initialTransform,
+      orientation: Object.freeze([0, 0, 0, -1] as const),
+    });
+
+    expect(() => resolveWebGLBodyFrame3D(
+      capture,
+      facts("cube", negatedOrientation),
+      "Cube",
+      true,
+    )).not.toThrow();
+
+    const moved = transform({ translation: [1e9 + 50, 0, 0] });
+    expect(moved.matrix[12]).toBe(1_000_000_064);
+    expect(() => resolveWebGLBodyFrame3D(
+      capture,
+      facts("cube", moved),
+      "Cube",
+      true,
+    )).toThrow(/authored pose changed.*dynamic body owns pose.*teleportBody3D/i);
+  });
 });
 
 describe("mounted WebGL 3D physics integration", () => {
@@ -217,6 +247,97 @@ describe("mounted WebGL 3D physics integration", () => {
     });
   });
 
+  it("keeps one render, pick, and focus model for a moving Cube scaled to 1e-5", () => {
+    const render = vi.spyOn(
+      WebGLLayerController.prototype,
+      "renderRetainedChild",
+    );
+    const frames = new ManualFrames();
+    frames.install();
+    let world!: CRCPhysicsWorldHandle3D;
+    const Capture = () => {
+      world = crcPhysicsWorld3D();
+      return undefined;
+    };
+    const canvas = document.createElement("canvas");
+    canvas.width = 100;
+    canvas.height = 100;
+    document.body.appendChild(canvas);
+    mounts.push(crc(canvas, (
+      <WebGLLayer style={{ width: 100, height: 100 }}>
+        <PhysicsWorld3D
+          gravity={[0, 0, 0]}
+          fixedStepMilliseconds={10}
+          sleeping={false}
+        >
+          <Capture />
+          <Cube
+            keyboardFocusable
+            physics={dynamicBody3D({
+              mass: 1,
+              linearVelocity: [1, 0, 0],
+            })}
+            style={{
+              scaleX: 1e-5,
+              scaleY: 1e-5,
+              scaleZ: 1e-5,
+            }}
+          />
+        </PhysicsWorld3D>
+      </WebGLLayer>
+    )));
+
+    frames.flush(0);
+    const layer = render.mock.instances[0] as WebGLLayerController;
+    const uniformMatrix = vi.spyOn(layer.gl, "uniformMatrix4fv");
+    frames.flush(0);
+    frames.flush(10);
+    frames.flush(20);
+
+    const controller = requirePhysicsWorld3DController(world);
+    const snapshot = snapshotPhysicsWorld3DControllerForTest(controller);
+    const pose = controller.presentationPose(snapshot.bodyIds[0]!);
+    expect(pose?.position[0]).toBeGreaterThan(0);
+    const committed = (layer as unknown as {
+      committed?: {
+        pickLedger: {
+          entries: readonly {
+            componentName: string;
+            model: Readonly<Float32Array>;
+            keyboardNavigationPoints?: readonly Readonly<{
+              x: number;
+              y: number;
+            }>[];
+            target: {
+              keyboardNavigationPoints?: readonly Readonly<{
+                x: number;
+                y: number;
+              }>[];
+            };
+          }[];
+        };
+      };
+    }).committed;
+    const entry = committed?.pickLedger.entries.find(
+      (candidate) => candidate.componentName === "Cube",
+    );
+    expect(entry).toBeDefined();
+    expect(entry?.model[0]).toBeCloseTo(1e-5, 10);
+    expect(entry?.model[5]).toBeCloseTo(1e-5, 10);
+    expect(entry?.model[10]).toBeCloseTo(1e-5, 10);
+    expect(entry?.model[12]).toBeCloseTo(pose!.position[0], 7);
+    expect(entry?.keyboardNavigationPoints?.length).toBeGreaterThan(0);
+    expect(entry?.keyboardNavigationPoints?.every((point) =>
+      Number.isFinite(point.x) && Number.isFinite(point.y)
+    )).toBe(true);
+    expect(entry?.target.keyboardNavigationPoints).toBe(
+      entry?.keyboardNavigationPoints,
+    );
+    expect(uniformMatrix.mock.calls.some((call) =>
+      sameMatrix(call[2] as Float32List, entry!.model)
+    )).toBe(true);
+  });
+
   it("keeps authoritative physics unchanged across a camera-only render", () => {
     const frames = new ManualFrames();
     frames.install();
@@ -285,6 +406,62 @@ describe("mounted WebGL 3D physics integration", () => {
     expect(body.position.get()).toEqual([2, 3, 4]);
   });
 
+  it("returns body frame records to baseline across removal, failure, and dispose", () => {
+    const frames = new ManualFrames();
+    frames.install();
+    const visible = signal(false);
+    const fail = signal(false);
+    const failure = new Error("body subtree render failed");
+    let world!: CRCPhysicsWorldHandle3D;
+    const Capture = () => {
+      world = crcPhysicsWorld3D();
+      return undefined;
+    };
+    const Throw = () => {
+      if (fail.get()) throw failure;
+      return undefined;
+    };
+    const MaybeBody = () => visible.get() ? (
+      <Group3D physics={dynamicBody3D({ mass: 1, collider: false })}>
+        <Throw />
+      </Group3D>
+    ) : undefined;
+    const canvas = document.createElement("canvas");
+    canvas.width = 100;
+    canvas.height = 100;
+    document.body.appendChild(canvas);
+    const mount = crc(canvas, (
+      <WebGLLayer style={{ width: 100, height: 100 }}>
+        <PhysicsWorld3D gravity={[0, 0, 0]}>
+          <Capture />
+          <MaybeBody />
+        </PhysicsWorld3D>
+      </WebGLLayer>
+    ));
+    mounts.push(mount);
+    frames.flush(0);
+    const controller = requirePhysicsWorld3DController(world);
+    const baseline = snapshotPhysicsBodyFrames3DForTest(controller);
+    expect(baseline).toEqual({ frameCount: 0, bodyIds: [] });
+
+    for (let cycle = 1; cycle <= 3; cycle += 1) {
+      visible.set(true);
+      frames.flush(cycle * 2);
+      expect(snapshotPhysicsBodyFrames3DForTest(controller)).toEqual(baseline);
+      visible.set(false);
+      frames.flush(cycle * 2 + 1);
+      expect(snapshotPhysicsBodyFrames3DForTest(controller)).toEqual(baseline);
+    }
+
+    visible.set(true);
+    fail.set(true);
+    expect(() => frames.flush(10)).toThrow(failure);
+    expect(snapshotPhysicsBodyFrames3DForTest(controller)).toEqual(baseline);
+    mount.dispose();
+    mounts.splice(mounts.indexOf(mount), 1);
+    expect(snapshotPhysicsBodyFrames3DForTest(controller)).toEqual(baseline);
+  });
+
   it("rejects an authored pose writer after a dynamic body takes authority", () => {
     const frames = new ManualFrames();
     frames.install();
@@ -349,12 +526,12 @@ function transform(
     translation: Object.freeze([...translation]) as never,
     orientation: Object.freeze([0, 0, 0, 1] as const),
     scale: Object.freeze([...scale]) as never,
-    matrix: Object.freeze([
+    matrix: Object.freeze(Array.from(new Float32Array([
       scale[0], 0, 0, 0,
       0, scale[1], 0, 0,
       0, 0, scale[2], 0,
       translation[0], translation[1], translation[2], 1,
-    ]),
+    ]))),
   });
 }
 
@@ -383,4 +560,15 @@ class ManualFrames {
     this.callbacks.delete(entry[0]);
     entry[1](time);
   }
+}
+
+function sameMatrix(
+  left: Float32List,
+  right: Readonly<ArrayLike<number>>,
+): boolean {
+  if (left.length !== right.length) return false;
+  for (let index = 0; index < left.length; index += 1) {
+    if (left[index] !== right[index]) return false;
+  }
+  return true;
 }

@@ -57,7 +57,24 @@ import {
   type WebGLBodyPresentationCapture3D,
 } from "../webgl/presentation.js";
 
-const bodyFramesByWorld3D = new WeakMap<object, Map<number, WebGLBodyFrame3D>>();
+interface OwnedBodyFrame3D {
+  readonly owner: MountedPhysicsAttachment3D;
+  readonly frame: WebGLBodyFrame3D;
+}
+
+const bodyFramesByWorld3D = new WeakMap<object, Map<number, OwnedBodyFrame3D>>();
+
+export function snapshotPhysicsBodyFrames3DForTest(
+  world: object,
+): Readonly<{ frameCount: number; bodyIds: readonly number[] }> {
+  const frames = bodyFramesByWorld3D.get(world);
+  return Object.freeze({
+    frameCount: frames?.size ?? 0,
+    bodyIds: Object.freeze(frames === undefined
+      ? []
+      : [...frames.keys()].sort((left, right) => left - right)),
+  });
+}
 
 const attachmentRecord3DSymbol = Symbol("CRCPhysicsAttachment3D");
 
@@ -251,6 +268,13 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
   private bodyId: number | undefined;
   private releaseBodyScope: (() => void) | undefined;
   private releasePresentationScope: (() => void) | undefined;
+  private bodyFrameLease:
+    | Readonly<{
+        world: object;
+        bodyId: number;
+        record: OwnedBodyFrame3D;
+      }>
+    | undefined;
   private cachedShapeSource: CRCPhysicsShape3D | undefined;
   private cachedShapeOffset: CRCPhysicsVector3 | undefined;
   private cachedShapeOrientation: CRCPhysicsQuaternion | undefined;
@@ -312,12 +336,7 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
         input.componentName,
         descriptor.bodyType === "dynamic" && enabled && !reenabled,
       );
-      let bodyFrames = bodyFramesByWorld3D.get(world);
-      if (bodyFrames === undefined) {
-        bodyFrames = new Map();
-        bodyFramesByWorld3D.set(world, bodyFrames);
-      }
-      bodyFrames.set(bodyId, frame);
+      this.publishBodyFrame(world, bodyId, frame);
 
       if (descriptor.bodyType === "dynamic" && enabled) {
         world.handle.revision.get();
@@ -388,12 +407,16 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
       this.releasePresentationScope?.();
     } finally {
       try {
-        this.releaseBodyScope?.();
+        this.releaseBodyFrame();
       } finally {
-        this.releasePresentationScope = undefined;
-        this.releaseBodyScope = undefined;
-        this.bodyId = undefined;
-        this.world = undefined;
+        try {
+          this.releaseBodyScope?.();
+        } finally {
+          this.releasePresentationScope = undefined;
+          this.releaseBodyScope = undefined;
+          this.bodyId = undefined;
+          this.world = undefined;
+        }
       }
     }
   }
@@ -454,17 +477,43 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
     this.cachedBakedShape = shape;
     return shape;
   }
+
+  private publishBodyFrame(
+    world: object,
+    bodyId: number,
+    frame: WebGLBodyFrame3D,
+  ): void {
+    this.releaseBodyFrame();
+    let frames = bodyFramesByWorld3D.get(world);
+    if (frames === undefined) {
+      frames = new Map();
+      bodyFramesByWorld3D.set(world, frames);
+    }
+    const record = Object.freeze({ owner: this, frame });
+    frames.set(bodyId, record);
+    this.bodyFrameLease = Object.freeze({ world, bodyId, record });
+  }
+
+  private releaseBodyFrame(): void {
+    const lease = this.bodyFrameLease;
+    this.bodyFrameLease = undefined;
+    if (lease === undefined) return;
+    const frames = bodyFramesByWorld3D.get(lease.world);
+    if (frames?.get(lease.bodyId) !== lease.record) return;
+    frames.delete(lease.bodyId);
+    if (frames.size === 0) bodyFramesByWorld3D.delete(lease.world);
+  }
 }
 
 function requireBodyFrame3D(
   world: object,
   bodyId: number,
 ): WebGLBodyFrame3D {
-  const frame = bodyFramesByWorld3D.get(world)?.get(bodyId);
-  if (frame === undefined) {
+  const record = bodyFramesByWorld3D.get(world)?.get(bodyId);
+  if (record === undefined) {
     throw new Error("A collider requires its body geometry to prepare first.");
   }
-  return frame;
+  return record.frame;
 }
 
 function withColliderShape(

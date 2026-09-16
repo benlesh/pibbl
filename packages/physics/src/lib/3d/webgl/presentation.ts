@@ -7,8 +7,6 @@ import type {
   CRCPhysicsQuaternion,
 } from "../../../3d-geometry.js";
 
-const POSE_EPSILON = 1e-7;
-
 export interface WebGLBodyPresentationCapture3D {
   readonly initialPose: CRCPhysicsPose3D;
 }
@@ -38,7 +36,10 @@ export function resolveWebGLBodyFrame3D(
   enforceDynamicPose: boolean,
 ): WebGLBodyFrame3D {
   const frame = rawBodyFrame(facts, componentName);
-  if (enforceDynamicPose && !samePose(frame.authoredPose, capture.initialPose)) {
+  if (
+    enforceDynamicPose &&
+    !samePoseRepresentation(frame.authoredPose, capture.initialPose)
+  ) {
     throw new Error(
       `${componentName} authored pose changed while an enabled dynamic body owns pose. ` +
       "Use teleportBody3D(), a kinematic body, or disable physics before authored motion.",
@@ -58,7 +59,9 @@ export function resolveWebGLDynamicPresentationMatrix3D(
   componentName: string,
 ): Readonly<Float64Array> {
   validatePose(presentedPose, `${componentName} physics presentation pose`);
-  if (samePose(presentedPose, frame.authoredPose)) return identityMatrix4();
+  if (samePoseRepresentation(presentedPose, frame.authoredPose)) {
+    return identityMatrix4();
+  }
   const parentInverse = invertMatrix4(frame.parentMatrix);
   const localInverse = invertMatrix4(frame.localMatrix);
   if (parentInverse === undefined || localInverse === undefined) {
@@ -241,45 +244,69 @@ function multiplyMatrix4(
 }
 
 function invertMatrix4(matrix: ArrayLike<number>): Float64Array | undefined {
-  const output = new Float64Array(16);
-  const a00 = matrix[0]!, a01 = matrix[1]!, a02 = matrix[2]!, a03 = matrix[3]!;
-  const a10 = matrix[4]!, a11 = matrix[5]!, a12 = matrix[6]!, a13 = matrix[7]!;
-  const a20 = matrix[8]!, a21 = matrix[9]!, a22 = matrix[10]!, a23 = matrix[11]!;
-  const a30 = matrix[12]!, a31 = matrix[13]!, a32 = matrix[14]!, a33 = matrix[15]!;
-  const b00 = a00 * a11 - a01 * a10;
-  const b01 = a00 * a12 - a02 * a10;
-  const b02 = a00 * a13 - a03 * a10;
-  const b03 = a01 * a12 - a02 * a11;
-  const b04 = a01 * a13 - a03 * a11;
-  const b05 = a02 * a13 - a03 * a12;
-  const b06 = a20 * a31 - a21 * a30;
-  const b07 = a20 * a32 - a22 * a30;
-  const b08 = a20 * a33 - a23 * a30;
-  const b09 = a21 * a32 - a22 * a31;
-  const b10 = a21 * a33 - a23 * a31;
-  const b11 = a22 * a33 - a23 * a32;
-  const determinant = b00 * b11 - b01 * b10 + b02 * b09 +
-    b03 * b08 - b04 * b07 + b05 * b06;
-  if (!Number.isFinite(determinant) || Math.abs(determinant) <= 1e-14) {
+  const rows = Array.from({ length: 4 }, (_, row) => {
+    const values = Array<number>(8).fill(0);
+    for (let column = 0; column < 4; column += 1) {
+      const value = matrix[column * 4 + row];
+      if (!Number.isFinite(value)) return undefined;
+      values[column] = value!;
+    }
+    values[4 + row] = 1;
+    return values;
+  });
+  if (rows.some((row) => row === undefined)) return undefined;
+  const augmented = rows as number[][];
+  const rowScales = augmented.map((row) =>
+    Math.max(...row.slice(0, 4).map(Math.abs)),
+  );
+  if (rowScales.some((scale) => scale === 0 || !Number.isFinite(scale))) {
     return undefined;
   }
-  const reciprocal = 1 / determinant;
-  output[0] = (a11 * b11 - a12 * b10 + a13 * b09) * reciprocal;
-  output[1] = (a02 * b10 - a01 * b11 - a03 * b09) * reciprocal;
-  output[2] = (a31 * b05 - a32 * b04 + a33 * b03) * reciprocal;
-  output[3] = (a22 * b04 - a21 * b05 - a23 * b03) * reciprocal;
-  output[4] = (a12 * b08 - a10 * b11 - a13 * b07) * reciprocal;
-  output[5] = (a00 * b11 - a02 * b08 + a03 * b07) * reciprocal;
-  output[6] = (a32 * b02 - a30 * b05 - a33 * b01) * reciprocal;
-  output[7] = (a20 * b05 - a22 * b02 + a23 * b01) * reciprocal;
-  output[8] = (a10 * b10 - a11 * b08 + a13 * b06) * reciprocal;
-  output[9] = (a01 * b08 - a00 * b10 - a03 * b06) * reciprocal;
-  output[10] = (a30 * b04 - a31 * b02 + a33 * b00) * reciprocal;
-  output[11] = (a21 * b02 - a20 * b04 - a23 * b00) * reciprocal;
-  output[12] = (a11 * b07 - a10 * b09 - a12 * b06) * reciprocal;
-  output[13] = (a00 * b09 - a01 * b07 + a02 * b06) * reciprocal;
-  output[14] = (a31 * b01 - a30 * b03 - a32 * b00) * reciprocal;
-  output[15] = (a20 * b03 - a21 * b01 + a22 * b00) * reciprocal;
+
+  for (let column = 0; column < 4; column += 1) {
+    let pivotRow = column;
+    let pivotRatio = -1;
+    for (let row = column; row < 4; row += 1) {
+      const ratio = Math.abs(augmented[row]![column]!) / rowScales[row]!;
+      if (ratio > pivotRatio) {
+        pivotRatio = ratio;
+        pivotRow = row;
+      }
+    }
+    const pivot = augmented[pivotRow]![column]!;
+    if (pivot === 0 || !Number.isFinite(pivot)) return undefined;
+    if (pivotRow !== column) {
+      [augmented[column], augmented[pivotRow]] = [
+        augmented[pivotRow]!,
+        augmented[column]!,
+      ];
+      [rowScales[column], rowScales[pivotRow]] = [
+        rowScales[pivotRow]!,
+        rowScales[column]!,
+      ];
+    }
+
+    for (let index = 0; index < 8; index += 1) {
+      augmented[column]![index] = augmented[column]![index]! / pivot;
+      if (!Number.isFinite(augmented[column]![index])) return undefined;
+    }
+    for (let row = 0; row < 4; row += 1) {
+      if (row === column) continue;
+      const factor = augmented[row]![column]!;
+      if (factor === 0) continue;
+      for (let index = 0; index < 8; index += 1) {
+        augmented[row]![index] -= factor * augmented[column]![index]!;
+        if (!Number.isFinite(augmented[row]![index])) return undefined;
+      }
+    }
+  }
+
+  const output = new Float64Array(16);
+  for (let row = 0; row < 4; row += 1) {
+    for (let column = 0; column < 4; column += 1) {
+      output[column * 4 + row] = augmented[row]![4 + column]!;
+    }
+  }
   return output;
 }
 
@@ -318,20 +345,19 @@ function validatePose(pose: CRCPhysicsPose3D, label: string): void {
   }
 }
 
-function samePose(left: CRCPhysicsPose3D, right: CRCPhysicsPose3D): boolean {
-  if (!left.position.every((value, index) => close(value, right.position[index]!))) {
+function samePoseRepresentation(
+  left: CRCPhysicsPose3D,
+  right: CRCPhysicsPose3D,
+): boolean {
+  if (!left.position.every((value, index) => value === right.position[index])) {
     return false;
   }
-  const dot = left.orientation[0] * right.orientation[0] +
-    left.orientation[1] * right.orientation[1] +
-    left.orientation[2] * right.orientation[2] +
-    left.orientation[3] * right.orientation[3];
-  return Math.abs(1 - Math.abs(dot)) <= POSE_EPSILON;
-}
-
-function close(left: number, right: number): boolean {
-  return Math.abs(left - right) <= POSE_EPSILON *
-    Math.max(1, Math.abs(left), Math.abs(right));
+  const direct = left.orientation.every(
+    (value, index) => value === right.orientation[index],
+  );
+  return direct || left.orientation.every(
+    (value, index) => value === -right.orientation[index]!,
+  );
 }
 
 function clean(value: number): number {
