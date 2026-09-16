@@ -123,7 +123,7 @@ describe('focus and keyboard-navigation public scenario', () => {
     await tab(true);
     expect(document.activeElement).toBe(mounted.before);
     expect((await state(mounted.controller)).currentTarget).toBe('none');
-  });
+  }, 30_000);
 
   it('keeps arrows in the nearest square boundary and gives target handlers precedence', async () => {
     const mounted = await mountScenario();

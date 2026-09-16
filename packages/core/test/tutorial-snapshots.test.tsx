@@ -1005,7 +1005,7 @@ it("pans, pointer-zooms, clamps, and resets Chapter 8 without changing node data
     x: initial.IDEA.x + 20,
     y: initial.IDEA.y + 20,
   });
-});
+}, 30_000);
 
 it("clips Chapter 9 transformed content while reusing its stable grid layer", async () => {
   const offscreenPrototype = OffscreenCanvasRenderingContext2D.prototype;

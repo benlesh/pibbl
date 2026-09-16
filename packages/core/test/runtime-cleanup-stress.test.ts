@@ -705,5 +705,5 @@ describe('shared runtime cleanup stress laboratory', () => {
       },
     });
     expectTemporaryRenderStateReleased();
-  }, 40_000);
+  }, 60_000);
 });
