@@ -657,9 +657,20 @@ export function createCanvasParticleExecutor(
       ledgerTransactionOpen = false;
       parameterTransactionOpen = false;
       disposed = true;
-      ledger.dispose();
-      rasterCache.dispose();
-      colorStrings.clear();
+      let firstError: unknown;
+      try {
+        ledger.dispose();
+      } catch (error) {
+        firstError = error;
+      }
+      try {
+        rasterCache.dispose();
+      } catch (error) {
+        firstError ??= error;
+      } finally {
+        colorStrings.clear();
+      }
+      if (firstError !== undefined) throw firstError;
     },
   };
   return executor;

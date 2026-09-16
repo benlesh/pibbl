@@ -24,6 +24,7 @@ import {
   defineParticleEffect2D,
   type CRCParticleSystem,
 } from "../../index.js";
+import { particleSystemOwnershipSnapshot } from "../system/ownership.js";
 
 let driver: ManualSchedulerDriver;
 let restoreDriver: () => void;
@@ -96,6 +97,54 @@ function pixel(canvas: HTMLCanvasElement, x: number, y: number) {
 }
 
 describe("Particles2D component", () => {
+  it("balances systems, bindings, scheduler registration, and the fixed ledger on disposal", () => {
+    const baseline = particleSystemOwnershipSnapshot();
+    const ambient = defineParticleEffect2D({
+      emitters: [
+        {
+          name: "ambient",
+          capacity: 8,
+          emission: [{ type: "rate", particlesPerSecond: 4 }],
+          shape: { type: "point" },
+          initial: { lifetimeMilliseconds: 1_000, size: 2 },
+          renderer: { type: "circle" },
+        },
+      ],
+    });
+    const mounted = mount(
+      <Particles2D
+        effect={ambient}
+        autoplay
+        pointerEvents="none"
+        style={{ width: 40, height: 40 }}
+      />,
+      40,
+      40,
+    );
+    flush(0);
+    flush(1);
+    flush(2);
+
+    const active = particleSystemOwnershipSnapshot();
+    expect(active.activeSystems).toBe(baseline.activeSystems + 1);
+    expect(active.activeBindings).toBe(baseline.activeBindings + 1);
+    expect(active.schedulerRegistrations).toBe(
+      baseline.schedulerRegistrations + 1,
+    );
+    expect(active.canvasLedgers).toBe(baseline.canvasLedgers + 1);
+
+    mounted.root.dispose();
+    roots.delete(mounted.root);
+    expect(particleSystemOwnershipSnapshot()).toMatchObject({
+      activeSystems: baseline.activeSystems,
+      activeBindings: baseline.activeBindings,
+      schedulerRegistrations: baseline.schedulerRegistrations,
+      canvasLedgers: baseline.canvasLedgers,
+      canvasRasterEntries: baseline.canvasRasterEntries,
+      webglRecipes: baseline.webglRecipes,
+    });
+  });
+
   it("renders both implicit autoplay and explicit system modes", () => {
     const automatic = effect({ automatic: true });
     const implicit = mount(

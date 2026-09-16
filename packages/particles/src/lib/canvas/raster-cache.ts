@@ -1,3 +1,5 @@
+import { recordCanvasParticleRasterEntryCreated } from "../system/ownership.js";
+
 export interface CanvasOwnedRaster {
   close?(): void;
 }
@@ -24,6 +26,7 @@ export interface CanvasRasterCache {
 
 interface CacheEntry {
   readonly raster: CanvasOwnedRaster;
+  readonly releaseOwnership: () => void;
   lastUsed: number;
 }
 
@@ -92,7 +95,11 @@ export function createCanvasRasterCache(
       close(raster);
       return present.raster as T;
     }
-    cache.entries.set(key, { raster, lastUsed: ++clock });
+    cache.entries.set(key, {
+      raster,
+      releaseOwnership: recordCanvasParticleRasterEntryCreated(),
+      lastUsed: ++clock,
+    });
     totalSize += 1;
 
     if (cache.entries.size > maximumEntriesPerSource) {
@@ -108,6 +115,7 @@ export function createCanvasRasterCache(
         const evicted = cache.entries.get(oldestKey)!;
         cache.entries.delete(oldestKey);
         totalSize -= 1;
+        evicted.releaseOwnership();
         close(evicted.raster);
       }
     }
@@ -138,12 +146,21 @@ export function createCanvasRasterCache(
     dispose(): void {
       if (disposed) return;
       disposed = true;
+      let firstError: unknown;
       for (const cache of ownedCaches) {
-        for (const entry of cache.entries.values()) close(entry.raster);
+        for (const entry of cache.entries.values()) {
+          entry.releaseOwnership();
+          try {
+            close(entry.raster);
+          } catch (error) {
+            firstError ??= error;
+          }
+        }
         cache.entries.clear();
       }
       ownedCaches.clear();
       totalSize = 0;
+      if (firstError !== undefined) throw firstError;
     },
   };
 }

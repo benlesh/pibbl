@@ -39,7 +39,10 @@ import {
   type ParticleBindingFrameState,
   type ParticleSystemFrame,
 } from "../system/binding.js";
-import { createParticleRecipes3D } from "./recipe.js";
+import {
+  acquireParticleRecipes3D,
+  type CompiledParticleRecipe3D,
+} from "./recipe.js";
 
 interface ImplicitSystemSlot {
   readonly owner: CRCInternalRenderOwner;
@@ -61,6 +64,7 @@ interface WebGLExecutorSlot {
 
 interface WebGLParticleCandidate extends ParticleBindingCandidate {
   readonly compiled: CompiledEffect3D;
+  readonly recipes: readonly CompiledParticleRecipe3D[];
   prepareParameters(parameters: Readonly<Float64Array>): void;
   frameUniforms(): Readonly<Float32Array>;
 }
@@ -224,12 +228,14 @@ function createWebGLParticleCandidate(input: Readonly<{
   let emissionCutoff = 0;
   let generation = -1;
   let disposed = false;
+  const recipeLease = acquireParticleRecipes3D(input.compiled, input.parameters);
 
   const candidate: WebGLParticleCandidate = {
     owner: input.owner,
     backend: "webgl",
     execution: "stateless-webgl",
     compiled: input.compiled,
+    recipes: recipeLease.recipes,
     get parameters() {
       return pendingParameters;
     },
@@ -289,8 +295,10 @@ function createWebGLParticleCandidate(input: Readonly<{
       return output;
     },
     dispose() {
+      if (disposed) return;
       disposed = true;
       frame = undefined;
+      recipeLease.release();
     },
   };
   return Object.freeze(candidate);
@@ -577,7 +585,7 @@ export function Particles3D<
   const localModel = composeModelMatrix(looseProps.style);
   const source = getCurrentElementSource();
   const frameUniforms = candidate.frameUniforms();
-  const recipes = createParticleRecipes3D(compiled, candidate.parameters);
+  const recipes = candidate.recipes;
   for (let index = 0; index < recipes.length; index += 1) {
     const { emitter, recipe } = recipes[index]!;
     const bounds = interactionBounds ?? emitter.bounds;

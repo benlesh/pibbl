@@ -44,6 +44,7 @@ import {
   recordParticleBindingAcquired,
   recordParticleCommandCreated,
   recordParticleParameterEpochCreated,
+  recordParticleSchedulerRegistration,
   recordParticleSystemCreated,
 } from "./ownership.js";
 
@@ -990,7 +991,14 @@ export function createParticleSystemController(
 
   function synchronizeAdvanceRegistration(): void {
     if (shouldAdvance()) {
-      unregisterAdvance ??= crcInternalRegisterAdvance(owner, advance);
+      if (unregisterAdvance === undefined) {
+        const unregister = crcInternalRegisterAdvance(owner, advance);
+        const releaseOwnership = recordParticleSchedulerRegistration();
+        unregisterAdvance = () => {
+          unregister();
+          releaseOwnership();
+        };
+      }
     } else if (unregisterAdvance !== undefined) {
       unregisterAdvance();
       unregisterAdvance = undefined;

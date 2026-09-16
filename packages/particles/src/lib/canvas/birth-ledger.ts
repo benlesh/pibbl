@@ -12,6 +12,7 @@ import {
 } from "../emission.js";
 import { mix32, sampleBetween, sampleInteger, sampleUnit } from "../random.js";
 import type { ParticleSystemFrame } from "../system/binding.js";
+import { recordCanvasParticleLedgerCreated } from "../system/ownership.js";
 
 export const CANVAS_LEDGER_NO_SLOT = 0xffff_ffff;
 
@@ -738,6 +739,7 @@ export function createCanvasBirthLedger(
   compiled: CompiledEffect2D,
   options: CanvasBirthLedgerOptions = {},
 ): CanvasBirthLedger {
+  const releaseOwnership = recordCanvasParticleLedgerCreated();
   let committed = createGeneration(compiled);
   let candidate = createGeneration(compiled);
   let transactionOpen = false;
@@ -1045,14 +1047,19 @@ export function createCanvasBirthLedger(
     },
     dispose() {
       if (disposed) return;
-      if (transactionOpen) api.finishTransaction(false);
-      disposed = true;
-      for (const emitter of committed.emitters) {
-        for (let slot = 0; slot < emitter.capacity; slot += 1) {
-          if (emitter.occupied[slot] === 1) {
-            options.releaseSpawnEpoch?.(emitter.spawnEpochs[slot]!);
+      try {
+        if (transactionOpen) api.finishTransaction(false);
+        disposed = true;
+        for (const emitter of committed.emitters) {
+          for (let slot = 0; slot < emitter.capacity; slot += 1) {
+            if (emitter.occupied[slot] === 1) {
+              options.releaseSpawnEpoch?.(emitter.spawnEpochs[slot]!);
+            }
           }
         }
+      } finally {
+        disposed = true;
+        releaseOwnership();
       }
     },
   };

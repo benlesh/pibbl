@@ -11,6 +11,10 @@ export interface ParticleSystemOwnershipSnapshot {
   readonly queuedCommands: number;
   readonly createdCommands: number;
   readonly releasedCommands: number;
+  readonly schedulerRegistrations: number;
+  readonly canvasLedgers: number;
+  readonly canvasRasterEntries: number;
+  readonly webglRecipes: number;
 }
 
 let activeSystems = 0;
@@ -25,6 +29,10 @@ let releasedParameterEpochs = 0;
 let queuedCommands = 0;
 let createdCommands = 0;
 let releasedCommands = 0;
+let schedulerRegistrations = 0;
+let canvasLedgers = 0;
+let canvasRasterEntries = 0;
+let webglRecipes = 0;
 
 /** @internal Deterministic controller resource counters for tests and diagnostics. */
 export function particleSystemOwnershipSnapshot(): ParticleSystemOwnershipSnapshot {
@@ -41,6 +49,10 @@ export function particleSystemOwnershipSnapshot(): ParticleSystemOwnershipSnapsh
     queuedCommands,
     createdCommands,
     releasedCommands,
+    schedulerRegistrations,
+    canvasLedgers,
+    canvasRasterEntries,
+    webglRecipes,
   });
 }
 
@@ -90,4 +102,61 @@ export function recordParticleCommandCreated(): () => void {
     queuedCommands -= 1;
     releasedCommands += 1;
   };
+}
+
+function recordActiveResource(
+  acquire: () => void,
+  release: () => void,
+): () => void {
+  acquire();
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    release();
+  };
+}
+
+export function recordParticleSchedulerRegistration(): () => void {
+  return recordActiveResource(
+    () => {
+      schedulerRegistrations += 1;
+    },
+    () => {
+      schedulerRegistrations -= 1;
+    },
+  );
+}
+
+export function recordCanvasParticleLedgerCreated(): () => void {
+  return recordActiveResource(
+    () => {
+      canvasLedgers += 1;
+    },
+    () => {
+      canvasLedgers -= 1;
+    },
+  );
+}
+
+export function recordCanvasParticleRasterEntryCreated(): () => void {
+  return recordActiveResource(
+    () => {
+      canvasRasterEntries += 1;
+    },
+    () => {
+      canvasRasterEntries -= 1;
+    },
+  );
+}
+
+export function recordWebGLParticleRecipeAcquired(): () => void {
+  return recordActiveResource(
+    () => {
+      webglRecipes += 1;
+    },
+    () => {
+      webglRecipes -= 1;
+    },
+  );
 }

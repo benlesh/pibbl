@@ -139,7 +139,7 @@ describe('public WebGL laboratory structural cost', () => {
       composites: 1,
       readbacks: 0,
       framebuffers: 0,
-      buffers: 4,
+      buffers: 6,
       programs: 1,
       vertexArrays: 2,
       listeners: ['webglcontextlost', 'webglcontextrestored'],
@@ -170,7 +170,7 @@ describe('public WebGL laboratory structural cost', () => {
       composites: 3,
       readbacks: 0,
       framebuffers: 0,
-      buffers: 4,
+      buffers: 6,
       programs: 1,
       vertexArrays: 2,
       deletedBuffers: 0,
@@ -191,10 +191,10 @@ describe('public WebGL laboratory structural cost', () => {
       draws: 6,
       transfers: 3,
       composites: 4,
-      buffers: 6,
+      buffers: 8,
       programs: 1,
       vertexArrays: 3,
-      deletedBuffers: 4,
+      deletedBuffers: 6,
       deletedVertexArrays: 2,
     });
 
@@ -212,10 +212,10 @@ describe('public WebGL laboratory structural cost', () => {
       draws: 8,
       transfers: 4,
       composites: 5,
-      buffers: 10,
+      buffers: 14,
       programs: 1,
       vertexArrays: 5,
-      deletedBuffers: 6,
+      deletedBuffers: 8,
       deletedVertexArrays: 3,
     });
 
@@ -226,7 +226,7 @@ describe('public WebGL laboratory structural cost', () => {
       'webglcontextrestored',
     ]);
     expect(deleteProgram).toHaveBeenCalledTimes(1);
-    expect(deleteBuffer).toHaveBeenCalledTimes(10);
+    expect(deleteBuffer).toHaveBeenCalledTimes(14);
     expect(deleteVertexArray).toHaveBeenCalledTimes(5);
     expect(bitmapClose).toHaveBeenCalledTimes(4);
   });

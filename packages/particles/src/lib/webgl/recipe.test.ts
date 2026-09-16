@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 import { particleCurve, particleGradient } from "../particle.js";
 import { compileParticleEffect3D } from "../compiler.js";
 import { defineParticleEffect3D } from "../webgl-definition.js";
-import { createParticleRecipes3D } from "./recipe.js";
+import { particleSystemOwnershipSnapshot } from "../system/ownership.js";
+import {
+  acquireParticleRecipes3D,
+  createParticleRecipes3D,
+} from "./recipe.js";
 
 describe("WebGL particle recipes", () => {
   it("creates one fixed-capacity point recipe with 257-sample appearance tables", () => {
@@ -88,5 +92,47 @@ describe("WebGL particle recipes", () => {
     expect(created!.recipe.verticesPerInstance).toBe(6);
     expect(created!.recipe.staticVertexData).toHaveLength(12);
     expect(created!.recipe.sprite?.source).toBe(source);
+  });
+
+  it("leases stable recipes with exact idempotent ownership", () => {
+    const compiled = compileParticleEffect3D(
+      defineParticleEffect3D({
+        emitters: [
+          {
+            name: "embers",
+            capacity: 128,
+            emission: [{ type: "rate", particlesPerSecond: 20 }],
+            shape: { type: "point" },
+            initial: { lifetimeMilliseconds: 1_000, size: 4 },
+            renderer: {
+              type: "point",
+              material: "emissive",
+              blend: "additive",
+            },
+          },
+        ],
+      }),
+    );
+    const baseline = particleSystemOwnershipSnapshot();
+    const first = acquireParticleRecipes3D(
+      compiled,
+      compiled.parameterLayout.defaults,
+    );
+    const second = acquireParticleRecipes3D(
+      compiled,
+      compiled.parameterLayout.defaults,
+    );
+
+    expect(first.recipes[0]!.recipe).toBe(second.recipes[0]!.recipe);
+    expect(particleSystemOwnershipSnapshot().webglRecipes).toBe(
+      baseline.webglRecipes + 2,
+    );
+
+    first.release();
+    first.release();
+    second.release();
+    expect(particleSystemOwnershipSnapshot().webglRecipes).toBe(
+      baseline.webglRecipes,
+    );
   });
 });

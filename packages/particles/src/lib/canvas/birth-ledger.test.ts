@@ -3,6 +3,7 @@ import { compileParticleEffect2D } from "../compiler.js";
 import { defineParticleEffect2D } from "../definition.js";
 import { isPotentialBirthAccepted } from "../emission.js";
 import { particle } from "../particle.js";
+import { particleSystemOwnershipSnapshot } from "../system/ownership.js";
 import type { CRCParticleEmission } from "../types.js";
 import {
   CANVAS_LEDGER_NO_SLOT,
@@ -75,11 +76,15 @@ function orderedRecords(ledger: CanvasEmitterLedger) {
 
 describe("fixed-capacity Canvas birth ledger", () => {
   it("keeps fixed typed-array identities and never uses Array.splice across 10,000 births", () => {
+    const baseline = particleSystemOwnershipSnapshot();
     const { compiled, parameters } = compiledEmitter({
       capacity: 3,
       overflow: "recycle-oldest",
     });
     const ledger = createCanvasBirthLedger(compiled);
+    expect(particleSystemOwnershipSnapshot().canvasLedgers).toBe(
+      baseline.canvasLedgers + 1,
+    );
     const arrays = [
       ...ledger.committed.emitters.flatMap((emitter) => [
         emitter.birthTimes,
@@ -138,6 +143,10 @@ describe("fixed-capacity Canvas birth ledger", () => {
       ),
     ).toBe(true);
     splice.mockRestore();
+    ledger.dispose();
+    expect(particleSystemOwnershipSnapshot().canvasLedgers).toBe(
+      baseline.canvasLedgers,
+    );
   });
 
   it("accepts equal-time rate and burst births in emission source order", () => {

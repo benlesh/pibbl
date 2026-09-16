@@ -19,6 +19,7 @@ import type {
   ClosedWebGLSceneDraft,
   WebGLSceneComposer,
 } from "../../../../webgl/src/lib/scene/types.js";
+import { particleSystemOwnershipSnapshot } from "../system/ownership.js";
 
 const effect = defineParticleEffect3D({
   emitters: [
@@ -39,6 +40,7 @@ const effect = defineParticleEffect3D({
 
 describe("Particles3D", () => {
   it("contributes an instanced recipe through Group3D ancestry without GL work", () => {
+    const baseline = particleSystemOwnershipSnapshot();
     const scene = compose(
       <Group3D style={{ translateX: 3 }}>
         <Particles3D
@@ -67,6 +69,9 @@ describe("Particles3D", () => {
     expect(scene.instanced[0]!.recipe.capacity).toBe(128);
     expect(scene.instanced[0]!.frameUniforms[3]).toBe(0);
     expect(scene.instanced[0]!.target).toBeUndefined();
+    expect(particleSystemOwnershipSnapshot().webglRecipes).toBe(
+      baseline.webglRecipes,
+    );
   });
 
   it("requires an explicit interaction volume for default pointer participation", () => {

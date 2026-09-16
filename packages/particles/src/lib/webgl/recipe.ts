@@ -7,10 +7,16 @@ import type {
   CompiledEmitter3D,
 } from "../compiler.js";
 import { buildParticleShader, type ParticleLookupTableIndices } from "./shader.js";
+import { recordWebGLParticleRecipeAcquired } from "../system/ownership.js";
 
 export interface CompiledParticleRecipe3D {
   readonly emitter: CompiledEmitter3D;
   readonly recipe: CRCWebGLInstancedRecipe;
+}
+
+export interface ParticleRecipeLease3D {
+  readonly recipes: readonly CompiledParticleRecipe3D[];
+  release(): void;
 }
 
 const BILLBOARD_VERTICES = new Float32Array([
@@ -135,4 +141,22 @@ export function createParticleRecipes3D(
       return Object.freeze({ emitter, recipe });
     }),
   );
+}
+
+/** Acquires stable recipe identities for one mounted WebGL particle executor. */
+export function acquireParticleRecipes3D(
+  compiled: CompiledEffect3D,
+  parameters: Readonly<Float64Array>,
+): ParticleRecipeLease3D {
+  const recipes = createParticleRecipes3D(compiled, parameters);
+  const releases = recipes.map(() => recordWebGLParticleRecipeAcquired());
+  let released = false;
+  return Object.freeze({
+    recipes,
+    release() {
+      if (released) return;
+      released = true;
+      for (const release of releases) release();
+    },
+  });
 }
