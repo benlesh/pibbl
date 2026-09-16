@@ -58,6 +58,14 @@ describe("standalone 3D rays and translational casts", () => {
     )).toBeNull();
   });
 
+  it("rejects a sphere ray whose rounded hypot hides a positive squared gap", () => {
+    expect(raycastShape3D(
+      sphereShape3D({ radius: 1.625 }),
+      pose([1e20, nextRepresentableUp(0.625), 1.5]),
+      { origin: [0, 0, 0], direction: [1, 0, 0], maxDistance: 2e20 },
+    )).toBeNull();
+  });
+
   it("counts tangent sphere rays and raycasts rotated boxes", () => {
     const tangent = raycastShape3D(
       sphereShape3D({ radius: 1 }),
@@ -135,6 +143,16 @@ describe("standalone 3D rays and translational casts", () => {
     )).toBeNull();
   });
 
+  it("rejects a sphere sweep whose rounded hypot hides a positive squared gap", () => {
+    expect(shapeCastAgainstShape3D(
+      sphereShape3D({ radius: 0.625 }),
+      identity,
+      [2e20, 0, 0],
+      sphereShape3D({ radius: 1 }),
+      pose([1e20, nextRepresentableUp(0.625), 1.5]),
+    )).toBeNull();
+  });
+
   it("casts fixed-orientation boxes and spheres with conservative advancement", () => {
     const hit = shapeCastAgainstShape3D(
       boxShape3D({ width: 2, height: 2, depth: 2 }),
@@ -205,6 +223,44 @@ describe("standalone 3D rays and translational casts", () => {
       boxShape3D({ width: 2, height: 2, depth: 2 }),
       pose([5, 0, 0]),
     )).toBeNull();
+  });
+
+  it("rejects a box-vertex sweep whose rounded hypot hides a positive squared gap", () => {
+    expect(shapeCastAgainstShape3D(
+      sphereShape3D({ radius: 1.625 }),
+      pose([0, nextRepresentableUp(1.625), 2.5]),
+      [8, 0, 0],
+      boxShape3D({ width: 2, height: 2, depth: 2 }),
+      pose([4, 0, 0]),
+    )).toBeNull();
+  });
+
+  it("keeps the corrected first edge root instead of returning the far-side exit", () => {
+    const hit = shapeCastAgainstShape3D(
+      sphereShape3D({ radius: 1 }),
+      pose([0, 1.5, 0]),
+      [10, 0, 0],
+      boxShape3D({ width: 2, height: 2, depth: 2 }),
+      pose([5, 0, 0]),
+    );
+
+    expect(hit?.timeOfImpact).toBeCloseTo(0.3133974596215562, 15);
+    expect(hit?.distance).toBeCloseTo(3.133974596215562, 14);
+    expect(hit?.point).toEqual([4, 1, 0]);
+  });
+
+  it("preserves an exact box-vertex tangent", () => {
+    const hit = shapeCastAgainstShape3D(
+      sphereShape3D({ radius: 1.625 }),
+      pose([0, 1.625, 2.5]),
+      [10, 0, 0],
+      boxShape3D({ width: 2, height: 2, depth: 2 }),
+      pose([5, 0, 0]),
+    );
+
+    expect(hit?.timeOfImpact).toBe(0.4);
+    expect(hit?.distance).toBe(4);
+    expect(hit?.point).toEqual([4, 1, 1]);
   });
 
   it("returns the true earliest time for an exact sphere-box tangent", () => {
@@ -280,4 +336,12 @@ function pose(
   orientation: readonly [number, number, number, number] = [0, 0, 0, 1],
 ): CRCPhysicsPose3D {
   return { position, orientation };
+}
+
+function nextRepresentableUp(value: number): number {
+  const floats = new Float64Array(1);
+  const bits = new BigUint64Array(floats.buffer);
+  floats[0] = value;
+  bits[0] = bits[0]! + 1n;
+  return floats[0]!;
 }

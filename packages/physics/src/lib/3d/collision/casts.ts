@@ -237,12 +237,12 @@ function castSphereAgainstBox(
         const secondAxis = fixedAxes[1]!;
         const firstOffset = localOrigin[firstAxis]! - firstSign * target.halfExtents[firstAxis]!;
         const secondOffset = localOrigin[secondAxis]! - secondSign * target.halfExtents[secondAxis]!;
-        const roots = scaledSweepRoots(
+        const time = sweepSphereEntryTime(
           [firstOffset, secondOffset],
           [localTranslation[firstAxis]!, localTranslation[secondAxis]!],
           moving.radius,
         );
-        for (const time of roots ?? []) {
+        if (time !== null) {
           const center = localPositionAt(localOrigin, localTranslation, time);
           if (Math.abs(center[edgeAxis]!) > target.halfExtents[edgeAxis]!) continue;
           const normal = [0, 0, 0] as [number, number, number];
@@ -255,7 +255,7 @@ function castSphereAgainstBox(
           const length = Math.hypot(firstDelta, secondDelta);
           if (
             length <= GEOMETRY_EPSILON_3D ||
-            !isSphereBoundaryDistance(length, moving.radius)
+            !isSphereBoundaryPoint([firstDelta, secondDelta], moving.radius)
           ) continue;
           normal[firstAxis] = firstDelta / length;
           normal[secondAxis] = secondDelta / length;
@@ -263,7 +263,6 @@ function castSphereAgainstBox(
           point[firstAxis] = firstSign * target.halfExtents[firstAxis]!;
           point[secondAxis] = secondSign * target.halfExtents[secondAxis]!;
           consider(time, point, normal, edgeFeature);
-          break;
         }
         edgeFeature += 1;
       }
@@ -276,7 +275,7 @@ function castSphereAgainstBox(
       (vertex & 2) === 0 ? -target.halfExtents[1]! : target.halfExtents[1]!,
       (vertex & 4) === 0 ? -target.halfExtents[2]! : target.halfExtents[2]!,
     ] as const;
-    const roots = scaledSweepRoots(
+    const time = sweepSphereEntryTime(
       [
         localOrigin[0]! - point[0],
         localOrigin[1]! - point[1],
@@ -285,7 +284,7 @@ function castSphereAgainstBox(
       localTranslation,
       moving.radius,
     );
-    for (const time of roots ?? []) {
+    if (time !== null) {
       const center = localPositionAt(localOrigin, localTranslation, time);
       const dx = center[0]! - point[0];
       const dy = center[1]! - point[1];
@@ -298,10 +297,9 @@ function castSphereAgainstBox(
       const length = Math.hypot(dx, dy, dz);
       if (
         length <= GEOMETRY_EPSILON_3D ||
-        !isSphereBoundaryDistance(length, moving.radius)
+        !isSphereBoundaryPoint([dx, dy, dz], moving.radius)
       ) continue;
       consider(time, point, [dx / length, dy / length, dz / length], 18 + vertex);
-      break;
     }
   }
   return selected;
@@ -316,23 +314,17 @@ function raycastSphere(
   const relativeX = origin[0]! - sphere.center[0]!;
   const relativeY = origin[1]! - sphere.center[1]!;
   const relativeZ = origin[2]! - sphere.center[2]!;
-  const roots = scaledSweepRoots(
+  const distance = sweepSphereEntryTime(
     [relativeX, relativeY, relativeZ],
     [direction[0]!, direction[1]!, direction[2]!],
     sphere.radius,
   );
-  if (roots === null) return null;
-  const distance = roots.find((root) =>
-    root >= -CAST_TIME_TOLERANCE && root <= maxDistance + CAST_TIME_TOLERANCE,
-  );
-  if (distance === undefined) return null;
-  const boundedDistance = validateSphereSweepEntry(
-    [relativeX, relativeY, relativeZ],
-    [direction[0]!, direction[1]!, direction[2]!],
-    sphere.radius,
-    Math.max(0, Math.min(maxDistance, distance)),
-  );
-  if (boundedDistance === null || boundedDistance > maxDistance) return null;
+  if (
+    distance === null ||
+    distance < -CAST_TIME_TOLERANCE ||
+    distance > maxDistance + CAST_TIME_TOLERANCE
+  ) return null;
+  const boundedDistance = Math.max(0, Math.min(maxDistance, distance));
   const hitOffset = [
     relativeX + direction[0]! * boundedDistance,
     relativeY + direction[1]! * boundedDistance,
@@ -428,9 +420,12 @@ function castSphereAgainstSphere(
   const relativeY = moving.center[1]! - target.center[1]!;
   const relativeZ = moving.center[2]! - target.center[2]!;
   const radius = moving.radius + target.radius;
-  const initialDistance = Math.hypot(relativeX, relativeY, relativeZ);
-  if (!Number.isFinite(initialDistance)) return null;
-  if (initialDistance <= radius) {
+  const initialRelation = exactSquaredDistanceRelation(
+    [relativeX, relativeY, relativeZ],
+    radius,
+  );
+  if (initialRelation === null) return null;
+  if (initialRelation <= 0) {
     if (!includeInitialOverlap) return null;
     const normal = unitAgainstMotion(relativeX, relativeY, relativeZ, translation);
     return {
@@ -443,22 +438,14 @@ function castSphereAgainstSphere(
     };
   }
   if (translationLength === 0) return null;
-  const roots = scaledSweepRoots(
+  const time = sweepSphereEntryTime(
     [relativeX, relativeY, relativeZ],
     [translation[0]!, translation[1]!, translation[2]!],
     radius,
   );
-  if (roots === null) return null;
-  const time = roots.find((root) => root >= -CAST_TIME_TOLERANCE);
-  if (time === undefined) return null;
+  if (time === null) return null;
   if (time < -CAST_TIME_TOLERANCE || time > 1 + CAST_TIME_TOLERANCE) return null;
-  const timeOfImpact = validateSphereSweepEntry(
-    [relativeX, relativeY, relativeZ],
-    [translation[0]!, translation[1]!, translation[2]!],
-    radius,
-    Math.max(0, Math.min(1, time)),
-  );
-  if (timeOfImpact === null || timeOfImpact > 1) return null;
+  const timeOfImpact = Math.max(0, Math.min(1, time));
   const impactOffset = [
     relativeX + translation[0]! * timeOfImpact,
     relativeY + translation[1]! * timeOfImpact,
@@ -779,11 +766,13 @@ function boxLocalVectorToWorld(
   ];
 }
 
-function scaledSweepRoots(
+function sweepSphereEntryTime(
   offset: readonly number[],
   translation: readonly number[],
   radius: number,
-): readonly [number, number] | null {
+): number | null {
+  const initialRelation = exactSquaredDistanceRelation(offset, radius);
+  if (initialRelation === null || initialRelation <= 0) return null;
   const scale = Math.max(...offset.map(Math.abs), ...translation.map(Math.abs), radius);
   if (!Number.isFinite(scale) || scale <= 0) return null;
   const scaledOffset: number[] = [];
@@ -796,23 +785,27 @@ function scaledSweepRoots(
   if (!Number.isFinite(translationLength) || translationLength === 0) return null;
   const direction = scaledTranslation.map((value) => value / translationLength);
   const closestDistance = -compensatedDot(scaledOffset, direction);
-  const perpendicular = scaledOffset.map((value, index) =>
-    value + direction[index]! * closestDistance,
-  );
-  const perpendicularDistance = Math.hypot(...perpendicular);
-  const scaledRadius = radius / scale;
-  if (
-    !Number.isFinite(closestDistance) ||
-    !Number.isFinite(perpendicularDistance) ||
-    perpendicularDistance > scaledRadius
-  ) return null;
-  const halfChord = Math.sqrt(
-    (scaledRadius - perpendicularDistance) * (scaledRadius + perpendicularDistance),
-  );
-  const first = (closestDistance - halfChord) / translationLength;
-  const second = (closestDistance + halfChord) / translationLength;
-  if (!Number.isFinite(first) || !Number.isFinite(second)) return null;
-  return first <= second ? [first, second] : [second, first];
+  const closestTime = closestDistance / translationLength;
+  if (!Number.isFinite(closestTime) || closestTime < 0) return null;
+  const closestPoint = positionAlongSweep(offset, translation, closestTime);
+  const closestRelation = exactSquaredDistanceRelation(closestPoint, radius);
+  if (closestRelation === null || closestRelation > 0) return null;
+  if (closestRelation === 0) return closestTime;
+
+  let outsideTime = 0;
+  let insideTime = closestTime;
+  for (let iteration = 0; iteration < CAST_REFINEMENT_ITERATIONS; iteration += 1) {
+    const middleTime = outsideTime / 2 + insideTime / 2;
+    if (middleTime === outsideTime || middleTime === insideTime) break;
+    const middlePoint = positionAlongSweep(offset, translation, middleTime);
+    const relation = exactSquaredDistanceRelation(middlePoint, radius);
+    if (relation === null) return null;
+    if (relation > 0) outsideTime = middleTime;
+    else insideTime = middleTime;
+  }
+  return isSphereBoundaryPoint(positionAlongSweep(offset, translation, insideTime), radius)
+    ? insideTime
+    : null;
 }
 
 function compensatedDot(first: readonly number[], second: readonly number[]): number {
@@ -835,11 +828,14 @@ function sphereTouchesLocalBoxBoundary(
   const outsideX = Math.max(0, Math.abs(center[0]!) - halfExtents[0]!);
   const outsideY = Math.max(0, Math.abs(center[1]!) - halfExtents[1]!);
   const outsideZ = Math.max(0, Math.abs(center[2]!) - halfExtents[2]!);
-  return isSphereBoundaryDistance(Math.hypot(outsideX, outsideY, outsideZ), radius);
+  return isSphereBoundaryPoint([outsideX, outsideY, outsideZ], radius);
 }
 
-function isSphereBoundaryDistance(distance: number, radius: number): boolean {
-  if (!Number.isFinite(distance) || distance > radius) return false;
+function isSphereBoundaryPoint(point: readonly number[], radius: number): boolean {
+  const relation = exactSquaredDistanceRelation(point, radius);
+  if (relation === null || relation > 0) return false;
+  const distance = Math.hypot(...point);
+  if (!Number.isFinite(distance)) return false;
   const tolerance = Math.max(
     GEOMETRY_EPSILON_3D,
     Number.EPSILON * 16 * Math.max(distance, radius),
@@ -847,31 +843,61 @@ function isSphereBoundaryDistance(distance: number, radius: number): boolean {
   return radius - distance <= tolerance;
 }
 
-function validateSphereSweepEntry(
+function positionAlongSweep(
   offset: readonly number[],
   translation: readonly number[],
-  radius: number,
-  candidate: number,
-): number | null {
-  let time = candidate;
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    const point = offset.map((value, index) => value + translation[index]! * time);
-    const distance = Math.hypot(...point);
-    if (isSphereBoundaryDistance(distance, radius)) return time;
-    if (!Number.isFinite(distance) || distance < radius) return null;
-    time = nextRepresentableUp(time);
-  }
-  return null;
+  time: number,
+): readonly number[] {
+  return offset.map((value, index) => value + translation[index]! * time);
 }
 
-function nextRepresentableUp(value: number): number {
-  if (value === Number.POSITIVE_INFINITY) return value;
-  if (Object.is(value, -0) || value === 0) return Number.MIN_VALUE;
+function exactSquaredDistanceRelation(
+  point: readonly number[],
+  radius: number,
+): -1 | 0 | 1 | null {
+  if (!Number.isFinite(radius) || radius < 0 || !point.every(Number.isFinite)) return null;
+  const terms = [...point.map(exactSquareTerm), exactSquareTerm(radius)];
+  if (terms.some((term) => term === null)) return null;
+  let minimumExponent = Number.POSITIVE_INFINITY;
+  for (const term of terms) {
+    if (term !== null && term.significand !== 0n) {
+      minimumExponent = Math.min(minimumExponent, term.exponent);
+    }
+  }
+  if (!Number.isFinite(minimumExponent)) return 0;
+  let residual = 0n;
+  for (let index = 0; index < point.length; index += 1) {
+    const term = terms[index]!;
+    if (term.significand === 0n) continue;
+    residual += term.significand << BigInt(term.exponent - minimumExponent);
+  }
+  const radiusTerm = terms[terms.length - 1]!;
+  if (radiusTerm.significand !== 0n) {
+    residual -= radiusTerm.significand << BigInt(radiusTerm.exponent - minimumExponent);
+  }
+  return residual < 0n ? -1 : residual > 0n ? 1 : 0;
+}
+
+function exactSquareTerm(
+  value: number,
+): Readonly<{ significand: bigint; exponent: number }> | null {
+  if (!Number.isFinite(value)) return null;
   const floats = new Float64Array(1);
   const bits = new BigUint64Array(floats.buffer);
-  floats[0] = value;
-  bits[0] = bits[0]! + (value > 0 ? 1n : -1n);
-  return floats[0]!;
+  floats[0] = Math.abs(value);
+  const encoded = bits[0]!;
+  const exponentBits = Number((encoded >> 52n) & 0x7ffn);
+  const fraction = encoded & 0x000f_ffff_ffff_ffffn;
+  const significand = exponentBits === 0
+    ? fraction
+    : (1n << 52n) | fraction;
+  const exponent = exponentBits === 0
+    ? -1074
+    : exponentBits - 1023 - 52;
+  return {
+    significand: significand * significand,
+    exponent: exponent * 2,
+  };
 }
 
 function dot(first: ArrayLike<number>, second: ArrayLike<number>): number {
