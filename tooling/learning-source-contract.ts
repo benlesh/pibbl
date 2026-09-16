@@ -51,10 +51,12 @@ interface SourceInspection {
 
 const CORE_MODULE = "@crc/core";
 const PARTICLES_MODULE = "@crc/particles";
+const PARTICLES_WEBGL_MODULE = "@crc/particles/webgl";
 const WEBGL_MODULE = "@crc/webgl";
 const LEARNING_VALUE_MODULES = new Set([
   CORE_MODULE,
   PARTICLES_MODULE,
+  PARTICLES_WEBGL_MODULE,
   WEBGL_MODULE,
 ]);
 const PARTICLES_LEARNING_SOURCE_PATH =
@@ -121,6 +123,7 @@ const DESCRIPTIVE_COMPONENT_EXPORTS = new Set([
   "HemisphereLight",
   "Mesh",
   "Particles2D",
+  "Particles3D",
   "PointLight",
   "Sphere",
   "SpotLight",
@@ -953,7 +956,11 @@ function inspectSource(source: string, label: string): SourceInspection {
           if (statement.importKind !== "type") {
             valueNamespaceBindings.add(localName);
             if (moduleName === CORE_MODULE) hasCoreValueImport = true;
-            if (moduleName === PARTICLES_MODULE) hasParticlesValueImport = true;
+            if (
+              moduleName === PARTICLES_MODULE ||
+              moduleName === PARTICLES_WEBGL_MODULE
+            )
+              hasParticlesValueImport = true;
             if (moduleName === WEBGL_MODULE) hasWebGLValueImport = true;
           }
         }
@@ -980,7 +987,10 @@ function inspectSource(source: string, label: string): SourceInspection {
       if (moduleName === CORE_MODULE) {
         hasCoreValueImport = true;
         hasNamedValueCoreImport = true;
-      } else if (moduleName === PARTICLES_MODULE) {
+      } else if (
+        moduleName === PARTICLES_MODULE ||
+        moduleName === PARTICLES_WEBGL_MODULE
+      ) {
         hasParticlesValueImport = true;
         hasNamedValueParticlesImport = true;
       } else {
@@ -1387,7 +1397,16 @@ export function validateLearningSourceText(
     (sourcePath === undefined &&
       (label === "particle-effects" ||
         label === 'Learning example "particle-effects"'));
-  const hasExactPackageImports = isWebGLLesson
+  const isParticleWebGLLesson =
+    inspection.packageImportModules.includes(PARTICLES_WEBGL_MODULE);
+  const hasExactPackageImports = isParticleWebGLLesson
+    ? inspection.hasNamedValueCoreImport &&
+      inspection.hasNamedValueParticlesImport &&
+      inspection.hasNamedValueWebGLImport &&
+      inspection.packageImportModules.includes(PARTICLES_MODULE) &&
+      inspection.packageImportModules.includes(PARTICLES_WEBGL_MODULE) &&
+      inspection.packageImportModules.length === 4
+    : isWebGLLesson
     ? inspection.hasNamedValueCoreImport &&
       inspection.hasNamedValueWebGLImport &&
       !inspection.hasNamedValueParticlesImport &&
@@ -1404,7 +1423,9 @@ export function validateLearningSourceText(
   if (!inspection.hasOnlyApprovedImports || !hasExactPackageImports) {
     throw invalid(
       label,
-      isWebGLLesson
+      isParticleWebGLLesson
+        ? "must use direct, unaliased static named value imports from @crc/core, @crc/particles, @crc/particles/webgl, and @crc/webgl."
+        : isWebGLLesson
         ? "must use direct, unaliased static named value imports from both @crc/core and @crc/webgl."
         : isParticlesLesson
           ? "must use direct, unaliased static named value imports from both @crc/core and @crc/particles."
@@ -1430,7 +1451,9 @@ export function validateLearningSourceText(
   if (inspection.hasBindingViolation) {
     throw invalid(
       label,
-      isWebGLLesson
+      isParticleWebGLLesson
+        ? "must use direct CRC particle-WebGL lesson bindings without aliases, reassignment, or shadowing."
+        : isWebGLLesson
         ? "must use direct @crc/core and @crc/webgl bindings without aliases, reassignment, or shadowing."
         : isParticlesLesson
           ? "must use direct @crc/core and @crc/particles bindings without aliases, reassignment, or shadowing."

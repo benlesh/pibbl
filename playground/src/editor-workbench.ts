@@ -90,6 +90,10 @@ const declarationModulePaths = new Map([
     "file:///node_modules/@crc/core/jsx-dev-runtime.d.ts",
   ],
   ["@crc/particles", "file:///node_modules/@crc/particles/index.d.ts"],
+  [
+    "@crc/particles/webgl",
+    "file:///node_modules/@crc/particles/webgl.d.ts",
+  ],
   ["@crc/webgl", "file:///node_modules/@crc/webgl/index.d.ts"],
 ]);
 
@@ -120,7 +124,7 @@ function declarationLibraries(): Array<{
       declarationModulePaths.size
   ) {
     throw new Error(
-      "CRC Studio declarations must define all five package entry points.",
+      "CRC Studio declarations must define all six package entry points.",
     );
   }
   return libraries;
