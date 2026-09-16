@@ -1,6 +1,9 @@
 # WebGL Lighting Vertical Slices Implementation Plan
 
-> **Historical status: FINAL VERIFICATION IN PROGRESS.** The implementation and reviewed baselines are complete; final aggregate evidence and merge status remain pending.
+> **Historical status: IMPLEMENTED.** The browser-visible vertical slices,
+> public surfaces, reviewed baselines, and aggregate repository gate are
+> complete. Final evidence is recorded in
+> `docs/testing/field-notes/2026-09-15-webgl-lighting-orbit-and-shadows.md`.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: use `superpowers:subagent-driven-development`. Implement and review one browser-visible vertical slice at a time. Do not run broad verification before the explicit visual checkpoint.
 

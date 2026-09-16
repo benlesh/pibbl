@@ -1,6 +1,9 @@
 # WebGL Lighting, Materials, and Background Implementation Plan
 
-> **Historical status: READY IMPLEMENTATION PLAN.** This plan records the approved implementation sequence; current shipped behavior remains governed by `docs/design/` until every shipping gate below passes.
+> **Historical status: IMPLEMENTED.** This plan was completed together with the
+> orbit-camera and genuine-shadow follow-on plan. The final implementation and
+> aggregate evidence are recorded in
+> `docs/testing/field-notes/2026-09-15-webgl-lighting-orbit-and-shadows.md`.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
