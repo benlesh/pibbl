@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { boxShape3D, sphereShape3D } from "../../../3d-geometry.js";
+import {
+  boxShape3D,
+  ellipsoidShape3D,
+  massProperties3D,
+  sphereShape3D,
+} from "../../../3d-geometry.js";
 import { requireShapeRecord3D } from "../shape-records.js";
 import { createPhysicsOwnershipCounters3D } from "../runtime/ownership.js";
 import {
@@ -304,6 +309,41 @@ describe("candidate 3D tensor integration", () => {
 });
 
 describe("automatic 3D compound mass properties", () => {
+  it("uses the same authoritative tensor as standalone geometry", () => {
+    const shape = ellipsoidShape3D({
+      radii: [2, 3, 4],
+      orientation: [0, 0, Math.sin(Math.PI / 8), Math.cos(Math.PI / 8)],
+    });
+    const expected = massProperties3D(shape, { density: 2 });
+    const actual = deriveCompoundMassProperties3D(
+      [
+        {
+          shape: requireShapeRecord3D(shape),
+          position: [0, 0, 0],
+          orientation: [0, 0, 0, 1],
+          density: 2,
+          contributesToMass: true,
+        },
+      ],
+      "dynamic",
+    );
+    expect(actual.mass).toBeCloseTo(expected.mass, 12);
+    const tensor = [
+      actual.inertiaXX,
+      actual.inertiaXY,
+      actual.inertiaXZ,
+      actual.inertiaXY,
+      actual.inertiaYY,
+      actual.inertiaYZ,
+      actual.inertiaXZ,
+      actual.inertiaYZ,
+      actual.inertiaZZ,
+    ];
+    tensor.forEach((value, index) =>
+      expect(value).toBeCloseTo(expected.inertiaTensor[index]!, 12),
+    );
+  });
+
   it("uses density, local rigid poses, and the full parallel-axis tensor", () => {
     const box = requireShapeRecord3D(
       boxShape3D({ width: 2, height: 4, depth: 6 }),

@@ -221,8 +221,7 @@ const completeSurfaceFixture = `
   void geometryTypes;
   void runtimeTypes;
 
-  // Runtime values arrive with their implementations, never as throwing stubs.
-  // @ts-expect-error Task 6 does not export future geometry factories.
+  // The complete shape vocabulary is available from the geometry entry.
   import { ellipsoidShape3D } from '@crc/physics/3d/geometry';
   void ellipsoidShape3D;
 `;

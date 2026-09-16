@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   boxShape3D,
+  heightfieldShape3D,
   sphereShape3D,
   type CRCPhysicsPose3D,
 } from "../../../3d-geometry.js";
@@ -247,6 +248,21 @@ function hasGrownReference(
 }
 
 describe("transactional fixed-tick 3D world cadence", () => {
+  it("rejects concave children on every moving body before topology adoption", () => {
+    const concave = heightfieldShape3D({
+      rows: 2,
+      columns: 2,
+      heights: [0, 0, 0, 0],
+    });
+    for (const type of ["dynamic", "kinematic"] as const) {
+      const world = new PhysicsWorld3DKernel();
+      expect(() =>
+        world.proposeTopology([body(1, { type }), collider(2, 1, concave)]),
+      ).toThrow(/require a static body/i);
+      expect(world.snapshot().bodies).toEqual([]);
+    }
+  });
+
   it("normalizes the fixed documented defaults and nested solver options", () => {
     expect(normalizePhysicsWorld3DConfiguration({})).toEqual({
       gravityX: 0,
@@ -1086,12 +1102,14 @@ describe("transactional 3D world candidate rollback", () => {
     }
 
     expect(positionsAfterTicks).toEqual([1, 2, 3, 4]);
-    expect(orientationsAfterTicks).toEqual([
-      Math.sin(Math.PI / 16),
-      Math.sin(Math.PI / 8),
-      Math.sin((3 * Math.PI) / 16),
-      Math.SQRT1_2,
-    ].map((value) => expect.closeTo(value, 12)));
+    expect(orientationsAfterTicks).toEqual(
+      [
+        Math.sin(Math.PI / 16),
+        Math.sin(Math.PI / 8),
+        Math.sin((3 * Math.PI) / 16),
+        Math.SQRT1_2,
+      ].map((value) => expect.closeTo(value, 12)),
+    );
   });
 
   it("restores and deterministically retries an interpolated kinematic trajectory", () => {

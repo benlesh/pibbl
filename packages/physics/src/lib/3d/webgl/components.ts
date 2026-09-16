@@ -22,6 +22,7 @@ import {
 } from "../../../3d-geometry.js";
 import { composePose3D, transformPointInto } from "../math.js";
 import { requireShapeRecord3D, type ShapeRecord3D } from "../shape-records.js";
+import { bindPhysicsAttachmentShape3D } from "../runtime/descriptors.js";
 
 export interface PhysicsShape3DProps extends Omit<MeshProps, "geometry"> {
   readonly shape: CRCPhysicsShape3D;
@@ -74,13 +75,29 @@ export interface Heightfield3DProps extends Omit<PhysicsShape3DProps, "shape"> {
 const geometries = new WeakMap<object, CRCWebGLGeometry>();
 
 export function PhysicsShape3D(props: Readonly<PhysicsShape3DProps>) {
-  let geometry = geometries.get(props.shape as object);
-  if (geometry === undefined) {
-    geometry = geometryForShape(props.shape);
-    geometries.set(props.shape as object, geometry);
-  }
+  const geometry = physicsGeometryForShape3DForTest(props.shape);
   const { shape: _shape, ...meshProps } = props;
-  return createElement(Mesh, { ...meshProps, geometry });
+  return createElement(Mesh, {
+    ...meshProps,
+    geometry,
+    ...(meshProps.physics === undefined
+      ? {}
+      : {
+          physics: bindPhysicsAttachmentShape3D(meshProps.physics, props.shape),
+        }),
+  });
+}
+
+/** Package-private deterministic geometry/cache evidence. */
+export function physicsGeometryForShape3DForTest(
+  shape: CRCPhysicsShape3D,
+): CRCWebGLGeometry {
+  let geometry = geometries.get(shape as object);
+  if (geometry === undefined) {
+    geometry = geometryForShape(shape);
+    geometries.set(shape as object, geometry);
+  }
+  return geometry;
 }
 
 export function Box3D(props: Readonly<Box3DProps>) {
@@ -207,9 +224,8 @@ function geometryForShape(shape: CRCPhysicsShape3D): CRCWebGLGeometry {
     );
   else if (record.kind === "convexHull")
     appendIndexed(triangles, record.vertices, record.faces);
-  else if (record.kind === "triangleMesh")
-    appendIndexed(triangles, record.positions, record.indices);
-  else appendHeightfield(triangles, record);
+  else if (record.kind === "triangleMesh" || record.kind === "heightfield")
+    triangles.push(...record.triangles);
   applyLocalPose(triangles, record);
   const normals = triangleNormals(triangles);
   return createWebGLGeometry({ positions: triangles, normals });
@@ -371,27 +387,6 @@ function appendIndexed(
       vertex(positions, indices[index + 2]!),
     );
   }
-}
-
-function appendHeightfield(
-  output: number[],
-  record: Extract<ShapeRecord3D, { kind: "heightfield" }>,
-): void {
-  const point = (row: number, column: number) => [
-    record.origin[0]! + column * record.cellSizeX,
-    record.origin[1]! +
-      record.heights[row * record.columns + column]! * record.heightScale,
-    record.origin[2]! + row * record.cellSizeZ,
-  ];
-  for (let row = 0; row < record.rows - 1; row += 1)
-    for (let column = 0; column < record.columns - 1; column += 1) {
-      const a = point(row, column);
-      const b = point(row, column + 1);
-      const c = point(row + 1, column + 1);
-      const d = point(row + 1, column);
-      triangle(output, a, c, b);
-      triangle(output, a, d, c);
-    }
 }
 
 function applyLocalPose(positions: number[], record: ShapeRecord3D): void {

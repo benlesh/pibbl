@@ -15,10 +15,7 @@ import type {
   CRCPhysicsVector3,
 } from "../../../3d-geometry.js";
 import { transformShape3D } from "../../../3d-geometry.js";
-import {
-  copyCanonicalQuaternion,
-  copyFiniteVector3,
-} from "../math.js";
+import { copyCanonicalQuaternion, copyFiniteVector3 } from "../math.js";
 import {
   isConcaveShapeRecord3D,
   requireShapeRecord3D,
@@ -71,7 +68,10 @@ export interface PhysicsBodyPresentationState3D {
   readonly enabled: boolean;
 }
 
-const bodyFramesByWorld3D = new WeakMap<object, Map<number, OwnedBodyFrame3D>>();
+const bodyFramesByWorld3D = new WeakMap<
+  object,
+  Map<number, OwnedBodyFrame3D>
+>();
 
 export function snapshotPhysicsBodyFrames3DForTest(
   world: object,
@@ -79,13 +79,19 @@ export function snapshotPhysicsBodyFrames3DForTest(
   const frames = bodyFramesByWorld3D.get(world);
   return Object.freeze({
     frameCount: frames?.size ?? 0,
-    bodyIds: Object.freeze(frames === undefined
-      ? []
-      : [...frames.keys()].sort((left, right) => left - right)),
+    bodyIds: Object.freeze(
+      frames === undefined
+        ? []
+        : [...frames.keys()].sort((left, right) => left - right),
+    ),
   });
 }
 
 const attachmentRecord3DSymbol = Symbol("CRCPhysicsAttachment3D");
+const shapedAttachments3D = new WeakMap<
+  object,
+  WeakMap<object, CRCPhysicsAttachment3D>
+>();
 
 export interface NormalizedPhysicsCollisionFilter3D {
   readonly category: number;
@@ -145,9 +151,21 @@ export interface NormalizedPhysicsKinematicBody3DOptions {
 }
 
 export type PhysicsBodyAttachment3DDescriptor =
-  | Readonly<{ kind: "body"; bodyType: "dynamic"; options: NormalizedPhysicsDynamicBody3DOptions }>
-  | Readonly<{ kind: "body"; bodyType: "static"; options: NormalizedPhysicsStaticBody3DOptions }>
-  | Readonly<{ kind: "body"; bodyType: "kinematic"; options: NormalizedPhysicsKinematicBody3DOptions }>;
+  | Readonly<{
+      kind: "body";
+      bodyType: "dynamic";
+      options: NormalizedPhysicsDynamicBody3DOptions;
+    }>
+  | Readonly<{
+      kind: "body";
+      bodyType: "static";
+      options: NormalizedPhysicsStaticBody3DOptions;
+    }>
+  | Readonly<{
+      kind: "body";
+      bodyType: "kinematic";
+      options: NormalizedPhysicsKinematicBody3DOptions;
+    }>;
 
 export interface PhysicsColliderAttachment3DDescriptor {
   readonly kind: "collider";
@@ -155,8 +173,7 @@ export interface PhysicsColliderAttachment3DDescriptor {
 }
 
 export type PhysicsAttachment3DDescriptor =
-  | PhysicsBodyAttachment3DDescriptor
-  | PhysicsColliderAttachment3DDescriptor;
+  PhysicsBodyAttachment3DDescriptor | PhysicsColliderAttachment3DDescriptor;
 
 type RegisteredAttachment3D = Readonly<{
   readonly [attachmentRecord3DSymbol]: PhysicsAttachment3DDescriptor;
@@ -169,7 +186,9 @@ export function dynamicBody3D(
   if (mass !== "auto") requirePositiveNumber(mass, "options.mass");
   const reenableVelocity = options.reenableVelocity ?? "zero";
   if (reenableVelocity !== "zero" && reenableVelocity !== "preserve") {
-    throw new TypeError('options.reenableVelocity must be "zero" or "preserve".');
+    throw new TypeError(
+      'options.reenableVelocity must be "zero" or "preserve".',
+    );
   }
   return createAttachment({
     kind: "body",
@@ -177,17 +196,30 @@ export function dynamicBody3D(
     options: Object.freeze({
       enabled: options.enabled ?? true,
       handle: options.handle,
-      linearVelocity: freezeVector(copyFiniteVector3(
-        options.linearVelocity ?? [0, 0, 0],
-        "options.linearVelocity",
-      )),
-      angularVelocityDegreesPerSecond: freezeVector(copyFiniteVector3(
-        options.angularVelocityDegreesPerSecond ?? [0, 0, 0],
-        "options.angularVelocityDegreesPerSecond",
-      )),
-      linearDamping: requireNonnegativeNumber(options.linearDamping ?? 0, "options.linearDamping"),
-      angularDamping: requireNonnegativeNumber(options.angularDamping ?? 0, "options.angularDamping"),
-      gravityScale: requireFiniteNumber(options.gravityScale ?? 1, "options.gravityScale"),
+      linearVelocity: freezeVector(
+        copyFiniteVector3(
+          options.linearVelocity ?? [0, 0, 0],
+          "options.linearVelocity",
+        ),
+      ),
+      angularVelocityDegreesPerSecond: freezeVector(
+        copyFiniteVector3(
+          options.angularVelocityDegreesPerSecond ?? [0, 0, 0],
+          "options.angularVelocityDegreesPerSecond",
+        ),
+      ),
+      linearDamping: requireNonnegativeNumber(
+        options.linearDamping ?? 0,
+        "options.linearDamping",
+      ),
+      angularDamping: requireNonnegativeNumber(
+        options.angularDamping ?? 0,
+        "options.angularDamping",
+      ),
+      gravityScale: requireFiniteNumber(
+        options.gravityScale ?? 1,
+        "options.gravityScale",
+      ),
       mass,
       lockTranslation: normalizeLocks(options.lockTranslation),
       lockRotation: normalizeLocks(options.lockRotation),
@@ -242,24 +274,69 @@ export function kinematicBody3D(
 export function collider3D(
   options: CRCPhysicsColliderConfiguration3D = {},
 ): CRCPhysicsColliderAttachment3D {
-  return createAttachment({ kind: "collider", options: normalizeCollider(options, "options") });
+  return createAttachment({
+    kind: "collider",
+    options: normalizeCollider(options, "options"),
+  });
 }
 
 export function requirePhysicsAttachment3DDescriptor(
   value: CRCPhysicsAttachment3D,
 ): PhysicsAttachment3DDescriptor {
-  const descriptor = typeof value === "object" && value !== null
-    ? (value as Partial<RegisteredAttachment3D>)[attachmentRecord3DSymbol]
-    : undefined;
+  const descriptor =
+    typeof value === "object" && value !== null
+      ? (value as Partial<RegisteredAttachment3D>)[attachmentRecord3DSymbol]
+      : undefined;
   if (descriptor === undefined) {
     throw new TypeError("Expected a registered CRC physics 3D attachment.");
   }
   return descriptor;
 }
 
+export function bindPhysicsAttachmentShape3D(
+  value: CRCPhysicsAttachment3D,
+  shape: CRCPhysicsShape3D,
+): CRCPhysicsAttachment3D {
+  const descriptor = requirePhysicsAttachment3DDescriptor(value);
+  let byShape = shapedAttachments3D.get(value as object);
+  const cached = byShape?.get(shape as object);
+  if (cached !== undefined) return cached;
+  let bound: CRCPhysicsAttachment3D;
+  if (descriptor.kind === "collider") {
+    bound =
+      descriptor.options.shape === "self"
+        ? createAttachment({
+            ...descriptor,
+            options: withColliderShape(descriptor.options, shape),
+          })
+        : value;
+  } else if (
+    descriptor.options.collider === false ||
+    descriptor.options.collider.shape !== "self"
+  ) {
+    bound = value;
+  } else {
+    bound = createAttachment({
+      ...descriptor,
+      options: Object.freeze({
+        ...descriptor.options,
+        collider: withColliderShape(descriptor.options.collider, shape),
+      }),
+    } as PhysicsBodyAttachment3DDescriptor) as CRCPhysicsAttachment3D;
+  }
+  if (byShape === undefined) {
+    byShape = new WeakMap();
+    shapedAttachments3D.set(value as object, byShape);
+  }
+  byShape.set(shape as object, bound);
+  return bound;
+}
+
 function createAttachment<T extends PhysicsAttachment3DDescriptor>(
   descriptor: T,
-): T["kind"] extends "body" ? CRCPhysicsBodyAttachment3D : CRCPhysicsColliderAttachment3D {
+): T["kind"] extends "body"
+  ? CRCPhysicsBodyAttachment3D
+  : CRCPhysicsColliderAttachment3D {
   const frozenDescriptor = Object.freeze(descriptor);
   const value = Object.freeze({
     [attachmentRecord3DSymbol]: frozenDescriptor,
@@ -289,9 +366,7 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
   private cachedShapeOrientation: CRCPhysicsQuaternion | undefined;
   private cachedShape: ShapeRecord3D | undefined;
   private cachedBakedSource:
-    | CRCPhysicsShape3D
-    | CRCWebGLPhysicsPrimitiveFacts["kind"]
-    | undefined;
+    CRCPhysicsShape3D | CRCWebGLPhysicsPrimitiveFacts["kind"] | undefined;
   private cachedBakedTransform: readonly number[] | undefined;
   private cachedBakedShape: CRCPhysicsShape3D | undefined;
   private bodyPresentation: WebGLBodyPresentationCapture3D | undefined;
@@ -302,7 +377,9 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
   }
 
   update(value: unknown): void {
-    this.descriptor = requirePhysicsAttachment3DDescriptor(value as CRCPhysicsAttachment3D);
+    this.descriptor = requirePhysicsAttachment3DDescriptor(
+      value as CRCPhysicsAttachment3D,
+    );
   }
 
   enter(): void {
@@ -321,23 +398,21 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
     const world = this.world;
     const bodyId = this.bodyId;
     if (world === undefined || bodyId === undefined) {
-      throw new Error("Physics 3D attachment preparation requires its entered scope.");
+      throw new Error(
+        "Physics 3D attachment preparation requires its entered scope.",
+      );
     }
     const facts = resolveWebGLPhysicsPrimitive(input);
     if (this.descriptor.kind === "body") {
       const descriptor = this.descriptor;
       const enabled = descriptor.options.enabled;
       const reenabled = !this.wasEnabled && enabled;
-      const presentation = (
+      const presentation =
         this.bodyPresentation === undefined ||
         reenabled ||
         descriptor.bodyType !== "dynamic"
-      )
-        ? captureWebGLBodyPresentation3D(
-          facts,
-          input.componentName,
-        )
-        : this.bodyPresentation;
+          ? captureWebGLBodyPresentation3D(facts, input.componentName)
+          : this.bodyPresentation;
       const frame = resolveWebGLBodyFrame3D(
         presentation,
         facts,
@@ -362,27 +437,29 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
       }
 
       const collider = descriptor.options.collider;
-      const effectiveCollider = collider === false ||
-          (collider.shape === "self" && facts.kind === "group")
-        ? false
-        : withColliderShape(
-            collider,
-            this.resolveBakedShape(
-              facts,
-              collider.shape,
-              frame.geometryMatrix,
-              input.componentName,
-            ),
-          );
-      const effectiveDescriptor = effectiveCollider === collider
-        ? descriptor
-        : Object.freeze({
-            ...descriptor,
-            options: Object.freeze({
-              ...descriptor.options,
-              collider: effectiveCollider,
-            }),
-          }) as PhysicsBodyAttachment3DDescriptor;
+      const effectiveCollider =
+        collider === false ||
+        (collider.shape === "self" && facts.kind === "group")
+          ? false
+          : withColliderShape(
+              collider,
+              this.resolveBakedShape(
+                facts,
+                collider.shape,
+                frame.geometryMatrix,
+                input.componentName,
+              ),
+            );
+      const effectiveDescriptor =
+        effectiveCollider === collider
+          ? descriptor
+          : (Object.freeze({
+              ...descriptor,
+              options: Object.freeze({
+                ...descriptor.options,
+                collider: effectiveCollider,
+              }),
+            }) as PhysicsBodyAttachment3DDescriptor);
       if (
         descriptor.bodyType !== "static" &&
         effectiveCollider !== false &&
@@ -390,7 +467,9 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
           requireShapeRecord3D(effectiveCollider.shape as CRCPhysicsShape3D),
         )
       ) {
-        throw new Error("triangle mesh and heightfield colliders require a static body.");
+        throw new Error(
+          "triangle mesh and heightfield colliders require a static body.",
+        );
       }
       world.collectBody(
         this,
@@ -452,9 +531,13 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
     this.wasEnabled = state.enabled;
   }
 
-  resolveShape(options: NormalizedPhysicsColliderConfiguration3D): ShapeRecord3D {
+  resolveShape(
+    options: NormalizedPhysicsColliderConfiguration3D,
+  ): ShapeRecord3D {
     if (options.shape === "self") {
-      throw new Error("Self collider inference is not available in this runtime task.");
+      throw new Error(
+        "Self collider inference is not available in this runtime task.",
+      );
     }
     if (
       this.cachedShapeSource === options.shape &&
@@ -464,10 +547,15 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
       return this.cachedShape!;
     }
     const identityOrientation =
-      options.orientation[0] === 0 && options.orientation[1] === 0 &&
-      options.orientation[2] === 0 && options.orientation[3] === 1;
+      options.orientation[0] === 0 &&
+      options.orientation[1] === 0 &&
+      options.orientation[2] === 0 &&
+      options.orientation[3] === 1;
     const transformed =
-      options.offset[0] === 0 && options.offset[1] === 0 && options.offset[2] === 0 && identityOrientation
+      options.offset[0] === 0 &&
+      options.offset[1] === 0 &&
+      options.offset[2] === 0 &&
+      identityOrientation
         ? options.shape
         : transformShape3D(options.shape, {
             position: options.offset,
@@ -496,9 +584,10 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
     ) {
       return this.cachedBakedShape!;
     }
-    const shape = source === "self"
-      ? inferWebGLColliderShape3D(facts, values)
-      : bakeWebGLShapeTransform3D(source, values, componentName);
+    const shape =
+      source === "self"
+        ? inferWebGLColliderShape3D(facts, values)
+        : bakeWebGLShapeTransform3D(source, values, componentName);
     this.cachedBakedSource = sourceKey;
     this.cachedBakedTransform = values;
     this.cachedBakedShape = shape;
@@ -532,10 +621,7 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
   }
 }
 
-function requireBodyFrame3D(
-  world: object,
-  bodyId: number,
-): WebGLBodyFrame3D {
+function requireBodyFrame3D(world: object, bodyId: number): WebGLBodyFrame3D {
   const record = bodyFramesByWorld3D.get(world)?.get(bodyId);
   if (record === undefined) {
     throw new Error("A collider requires its body geometry to prepare first.");
@@ -554,25 +640,30 @@ function sameVector3(
   left: CRCPhysicsVector3 | undefined,
   right: CRCPhysicsVector3,
 ): boolean {
-  return left !== undefined &&
+  return (
+    left !== undefined &&
     left[0] === right[0] &&
     left[1] === right[1] &&
-    left[2] === right[2];
+    left[2] === right[2]
+  );
 }
 
 function sameQuaternion(
   left: CRCPhysicsQuaternion | undefined,
   right: CRCPhysicsQuaternion,
 ): boolean {
-  return left !== undefined &&
+  return (
+    left !== undefined &&
     left[0] === right[0] &&
     left[1] === right[1] &&
     left[2] === right[2] &&
-    left[3] === right[3];
+    left[3] === right[3]
+  );
 }
 
 function normalizeOptionalCollider(
-  value: false | CRCPhysicsColliderConfiguration3D | CRCPhysicsShape3D | undefined,
+  value:
+    false | CRCPhysicsColliderConfiguration3D | CRCPhysicsShape3D | undefined,
   path: string,
 ): false | NormalizedPhysicsColliderConfiguration3D {
   if (value === false) return false;
@@ -594,17 +685,30 @@ function normalizeCollider(
   if (shape !== "self") requireShapeRecord3D(shape);
   return Object.freeze({
     shape,
-    offset: freezeVector(copyFiniteVector3(options.offset ?? [0, 0, 0], `${path}.offset`)),
-    orientation: freezeQuaternion(copyCanonicalQuaternion(
-      options.orientation ?? [0, 0, 0, 1],
-      `${path}.orientation`,
-    )),
+    offset: freezeVector(
+      copyFiniteVector3(options.offset ?? [0, 0, 0], `${path}.offset`),
+    ),
+    orientation: freezeQuaternion(
+      copyCanonicalQuaternion(
+        options.orientation ?? [0, 0, 0, 1],
+        `${path}.orientation`,
+      ),
+    ),
     density: requirePositiveNumber(options.density ?? 1, `${path}.density`),
-    friction: requireNonnegativeNumber(options.friction ?? 0.5, `${path}.friction`),
-    restitution: requireUnitInterval(options.restitution ?? 0, `${path}.restitution`),
+    friction: requireNonnegativeNumber(
+      options.friction ?? 0.5,
+      `${path}.friction`,
+    ),
+    restitution: requireUnitInterval(
+      options.restitution ?? 0,
+      `${path}.restitution`,
+    ),
     sensor,
     contributesToMass: options.contributesToMass ?? !sensor,
-    collisionFilter: normalizeFilter(options.collisionFilter, `${path}.collisionFilter`),
+    collisionFilter: normalizeFilter(
+      options.collisionFilter,
+      `${path}.collisionFilter`,
+    ),
     tag: options.tag,
     handlers: Object.freeze({
       onCollisionStart: options.onCollisionStart,
@@ -621,19 +725,41 @@ function normalizeFilter(
   path: string,
 ): NormalizedPhysicsCollisionFilter3D {
   return Object.freeze({
-    category: requireSafeIntegerInRange(filter?.category ?? 1, 0, 0xffff_ffff, `${path}.category`),
-    mask: requireSafeIntegerInRange(filter?.mask ?? 0xffff_ffff, 0, 0xffff_ffff, `${path}.mask`),
-    group: requireSafeIntegerInRange(filter?.group ?? 0, -0x8000_0000, 0x7fff_ffff, `${path}.group`),
+    category: requireSafeIntegerInRange(
+      filter?.category ?? 1,
+      0,
+      0xffff_ffff,
+      `${path}.category`,
+    ),
+    mask: requireSafeIntegerInRange(
+      filter?.mask ?? 0xffff_ffff,
+      0,
+      0xffff_ffff,
+      `${path}.mask`,
+    ),
+    group: requireSafeIntegerInRange(
+      filter?.group ?? 0,
+      -0x8000_0000,
+      0x7fff_ffff,
+      `${path}.group`,
+    ),
   });
 }
 
-function normalizeLocks(value: CRCPhysicsAxisLocks3D | undefined): Required<CRCPhysicsAxisLocks3D> {
-  return Object.freeze({ x: value?.x ?? false, y: value?.y ?? false, z: value?.z ?? false });
+function normalizeLocks(
+  value: CRCPhysicsAxisLocks3D | undefined,
+): Required<CRCPhysicsAxisLocks3D> {
+  return Object.freeze({
+    x: value?.x ?? false,
+    y: value?.y ?? false,
+    z: value?.z ?? false,
+  });
 }
 
 function requireUnitInterval(value: number, path: string): number {
   const finite = requireFiniteNumber(value, path);
-  if (finite < 0 || finite > 1) throw new RangeError(`${path} must be from 0 through 1.`);
+  if (finite < 0 || finite > 1)
+    throw new RangeError(`${path} must be from 0 through 1.`);
   return finite;
 }
 

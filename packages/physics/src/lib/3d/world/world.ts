@@ -15,7 +15,7 @@ import {
   rotateVectorInto,
   type InternalPose3D,
 } from "../math.js";
-import { shapeForRecord3D } from "../shape-records.js";
+import { isConcaveShapeRecord3D, shapeForRecord3D } from "../shape-records.js";
 import { createPhysicsOwnershipCounters3D } from "../runtime/ownership.js";
 import { recordPhysicsWorld3DTrace } from "../runtime/trace.js";
 import { DynamicAabbBroadPhase3D } from "./broad-phase.js";
@@ -569,8 +569,9 @@ export class PhysicsWorld3DKernel {
             configuration.fixedStepMilliseconds,
         ),
       );
-      const kinematicTrajectories =
-        this.createKinematicTrajectories(input.stagedKinematicTargets);
+      const kinematicTrajectories = this.createKinematicTrajectories(
+        input.stagedKinematicTargets,
+      );
       for (let step = 0; step < stepCount; step += 1) {
         this.simulateFixedTick(
           input,
@@ -880,11 +881,7 @@ export class PhysicsWorld3DKernel {
       this.state.configuration.gravityZ,
       dt,
     );
-    this.snapKinematicTargets(
-      kinematicTrajectories,
-      step,
-      stepCount,
-    );
+    this.snapKinematicTargets(kinematicTrajectories, step, stepCount);
     this.moveBroadPhaseProxies();
     injectFailure("broad-phase");
     setStage("ccd");
@@ -2255,6 +2252,7 @@ function restoreObject(snapshot: ObjectSnapshot): void {
 
 function validateTopology(records: readonly PhysicsTopologyRecord3D[]): void {
   const bodyIds = new Set<number>();
+  const bodyDefinitions = new Map<number, BodyDefinition3D>();
   const colliderIds = new Set<number>();
   for (const record of records) {
     validateId(record.id, `${record.kind} id`);
@@ -2265,6 +2263,7 @@ function validateTopology(records: readonly PhysicsTopologyRecord3D[]): void {
     ids.add(record.id);
     if (record.kind === "body") {
       validateBodyDefinition(record.definition);
+      bodyDefinitions.set(record.id, record.definition);
     } else {
       validateId(record.bodyId, "collider bodyId");
       validateColliderDefinition(record.definition);
@@ -2275,6 +2274,18 @@ function validateTopology(records: readonly PhysicsTopologyRecord3D[]): void {
       throw new Error(
         `collider ${String(record.id)} references missing body ${String(record.bodyId)}.`,
       );
+    }
+    if (record.kind === "collider") {
+      const body = bodyDefinitions.get(record.bodyId);
+      if (
+        body !== undefined &&
+        (body.flags & BODY_TYPE_MASK_3D) !== 0 &&
+        isConcaveShapeRecord3D(record.definition.shape)
+      ) {
+        throw new Error(
+          "triangle mesh and heightfield colliders require a static body.",
+        );
+      }
     }
   }
 }

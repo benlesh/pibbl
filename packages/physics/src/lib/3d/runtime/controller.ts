@@ -16,7 +16,10 @@ import type {
   CRCPhysicsShape3D,
   CRCPhysicsVector3,
 } from "../../../3d-geometry.js";
-import type { ShapeRecord3D } from "../shape-records.js";
+import {
+  isConcaveShapeRecord3D,
+  type ShapeRecord3D,
+} from "../shape-records.js";
 import type {
   CRCPhysicsBodyHandle3D,
   CRCPhysicsColliderHandle3D,
@@ -142,7 +145,10 @@ interface BodyVelocity3D {
   readonly angularVelocityZ: number;
 }
 
-type PhysicsBodyCommand3D = Extract<PhysicsCommand3D, { readonly bodyId: number }>;
+type PhysicsBodyCommand3D = Extract<
+  PhysicsCommand3D,
+  { readonly bodyId: number }
+>;
 
 export interface PhysicsWorld3DControllerSnapshot {
   readonly revision: number;
@@ -482,6 +488,7 @@ export class PhysicsWorld3DController {
     const draft = this.draft;
     this.draft = undefined;
     if (!success || draft === undefined || !this.active) return;
+    validateMovingConcave(draft);
     validateAutomaticMass(draft);
     const reenableVelocities = this.resolveReenableVelocities(draft);
     const previousBodyDefinitions = new Map(
@@ -579,9 +586,7 @@ export class PhysicsWorld3DController {
         this.kernel.applyBegin([
           {
             kind: "configure",
-            configuration: denormalizeWorldConfiguration(
-              draft.configuration,
-            ),
+            configuration: denormalizeWorldConfiguration(draft.configuration),
           },
         ]);
       }
@@ -739,17 +744,15 @@ export class PhysicsWorld3DController {
       if (target.position === undefined && target.orientation === undefined) {
         continue;
       }
-      const acceptedPose = this.kernel.snapshot().bodies.some(
-        (candidate) => candidate.id === body.id,
-      )
+      const acceptedPose = this.kernel
+        .snapshot()
+        .bodies.some((candidate) => candidate.id === body.id)
         ? this.kernel.authoritativePose(body.id)
         : body.initialPose;
       const position =
         target.position === undefined
           ? acceptedPose.position
-          : batch.read(
-              target.position as WritableSignal<CRCPhysicsVector3>,
-            );
+          : batch.read(target.position as WritableSignal<CRCPhysicsVector3>);
       const orientation =
         target.orientation === undefined
           ? acceptedPose.orientation
@@ -763,7 +766,10 @@ export class PhysicsWorld3DController {
         Object.freeze({
           position: freezeVector3(position),
           orientation: freezeQuaternion(
-            copyCanonicalQuaternion(orientation, "kinematic target orientation"),
+            copyCanonicalQuaternion(
+              orientation,
+              "kinematic target orientation",
+            ),
           ),
         }),
       );
@@ -1124,6 +1130,21 @@ export class PhysicsWorld3DController {
   }
 }
 
+function validateMovingConcave(draft: RenderDraft3D): void {
+  for (const body of draft.bodies.values()) {
+    if (body.descriptor.bodyType === "static") continue;
+    const concave = [...draft.colliders.values()].find(
+      (collider) =>
+        collider.bodyId === body.id && isConcaveShapeRecord3D(collider.shape),
+    );
+    if (concave !== undefined) {
+      throw new Error(
+        "triangle mesh and heightfield colliders require a static body.",
+      );
+    }
+  }
+}
+
 export function requirePhysicsWorld3DController(
   handle: CRCPhysicsWorldHandle3D,
 ): PhysicsWorld3DController {
@@ -1296,11 +1317,14 @@ function bodyDefinition(
       reenableVelocity?.linearVelocityY ?? descriptor.options.linearVelocity[1];
     linearVelocityZ =
       reenableVelocity?.linearVelocityZ ?? descriptor.options.linearVelocity[2];
-    angularVelocityX = reenableVelocity?.angularVelocityX ??
+    angularVelocityX =
+      reenableVelocity?.angularVelocityX ??
       degreesToRadians(descriptor.options.angularVelocityDegreesPerSecond[0]);
-    angularVelocityY = reenableVelocity?.angularVelocityY ??
+    angularVelocityY =
+      reenableVelocity?.angularVelocityY ??
       degreesToRadians(descriptor.options.angularVelocityDegreesPerSecond[1]);
-    angularVelocityZ = reenableVelocity?.angularVelocityZ ??
+    angularVelocityZ =
+      reenableVelocity?.angularVelocityZ ??
       degreesToRadians(descriptor.options.angularVelocityDegreesPerSecond[2]);
     linearDamping = descriptor.options.linearDamping;
     angularDamping = descriptor.options.angularDamping;
@@ -1312,19 +1336,29 @@ function bodyDefinition(
       colliders.map(compoundMassInput),
       contributingColliders.length > 0 ? "dynamic" : "static",
     );
-    const mass = descriptor.options.mass === "auto" ? derived.mass : descriptor.options.mass;
+    const mass =
+      descriptor.options.mass === "auto"
+        ? derived.mass
+        : descriptor.options.mass;
     inverseMass = 1 / mass;
-    localCenter = freezeVector3([derived.centerX, derived.centerY, derived.centerZ]);
+    localCenter = freezeVector3([
+      derived.centerX,
+      derived.centerY,
+      derived.centerZ,
+    ]);
     const inverseInertiaScale = derived.mass > 0 ? derived.mass / mass : 1;
-    inverseInertiaXX = derived.mass > 0
-      ? derived.inverseInertiaXX * inverseInertiaScale
-      : inverseMass;
-    inverseInertiaYY = derived.mass > 0
-      ? derived.inverseInertiaYY * inverseInertiaScale
-      : inverseMass;
-    inverseInertiaZZ = derived.mass > 0
-      ? derived.inverseInertiaZZ * inverseInertiaScale
-      : inverseMass;
+    inverseInertiaXX =
+      derived.mass > 0
+        ? derived.inverseInertiaXX * inverseInertiaScale
+        : inverseMass;
+    inverseInertiaYY =
+      derived.mass > 0
+        ? derived.inverseInertiaYY * inverseInertiaScale
+        : inverseMass;
+    inverseInertiaZZ =
+      derived.mass > 0
+        ? derived.inverseInertiaZZ * inverseInertiaScale
+        : inverseMass;
     inverseInertiaXY = derived.inverseInertiaXY * inverseInertiaScale;
     inverseInertiaXZ = derived.inverseInertiaXZ * inverseInertiaScale;
     inverseInertiaYZ = derived.inverseInertiaYZ * inverseInertiaScale;
@@ -1335,35 +1369,40 @@ function bodyDefinition(
     if (!descriptor.options.allowSleep) flags |= BODY_SLEEP_DISABLED_3D;
   }
   const previousKinematic =
-    previous !== undefined &&
-    (previous.flags & BODY_TYPE_KINEMATIC_3D) !== 0
+    previous !== undefined && (previous.flags & BODY_TYPE_KINEMATIC_3D) !== 0
       ? previous
       : undefined;
-  const orientation = committedKinematicPose?.orientation ??
+  const orientation =
+    committedKinematicPose?.orientation ??
     (previousKinematic === undefined
       ? body.initialPose.orientation
       : freezeQuaternion([
-        previousKinematic.orientationX,
-        previousKinematic.orientationY,
-        previousKinematic.orientationZ,
-        previousKinematic.orientationW,
-      ]));
+          previousKinematic.orientationX,
+          previousKinematic.orientationY,
+          previousKinematic.orientationZ,
+          previousKinematic.orientationW,
+        ]));
   const previousCenterOffset = new Float64Array(3);
   if (previousKinematic !== undefined) {
-    rotateVectorInto(previousCenterOffset, [
-      previousKinematic.localCenterX ?? 0,
-      previousKinematic.localCenterY ?? 0,
-      previousKinematic.localCenterZ ?? 0,
-    ], orientation);
+    rotateVectorInto(
+      previousCenterOffset,
+      [
+        previousKinematic.localCenterX ?? 0,
+        previousKinematic.localCenterY ?? 0,
+        previousKinematic.localCenterZ ?? 0,
+      ],
+      orientation,
+    );
   }
-  const origin = committedKinematicPose?.position ??
+  const origin =
+    committedKinematicPose?.position ??
     (previousKinematic === undefined
       ? body.initialPose.position
       : freezeVector3([
-        previousKinematic.positionX - previousCenterOffset[0]!,
-        previousKinematic.positionY - previousCenterOffset[1]!,
-        previousKinematic.positionZ - previousCenterOffset[2]!,
-      ]));
+          previousKinematic.positionX - previousCenterOffset[0]!,
+          previousKinematic.positionY - previousCenterOffset[1]!,
+          previousKinematic.positionZ - previousCenterOffset[2]!,
+        ]));
   const centerOffset = new Float64Array(3);
   rotateVectorInto(centerOffset, localCenter, orientation);
   return Object.freeze({
@@ -1479,14 +1518,19 @@ function sameTopology(
         first.definition.localPositionX === second.definition.localPositionX &&
         first.definition.localPositionY === second.definition.localPositionY &&
         first.definition.localPositionZ === second.definition.localPositionZ &&
-        first.definition.localOrientationX === second.definition.localOrientationX &&
-        first.definition.localOrientationY === second.definition.localOrientationY &&
-        first.definition.localOrientationZ === second.definition.localOrientationZ &&
-        first.definition.localOrientationW === second.definition.localOrientationW &&
+        first.definition.localOrientationX ===
+          second.definition.localOrientationX &&
+        first.definition.localOrientationY ===
+          second.definition.localOrientationY &&
+        first.definition.localOrientationZ ===
+          second.definition.localOrientationZ &&
+        first.definition.localOrientationW ===
+          second.definition.localOrientationW &&
         first.definition.density === second.definition.density &&
         first.definition.friction === second.definition.friction &&
         first.definition.restitution === second.definition.restitution &&
-        first.definition.collisionCategory === second.definition.collisionCategory &&
+        first.definition.collisionCategory ===
+          second.definition.collisionCategory &&
         first.definition.collisionMask === second.definition.collisionMask &&
         first.definition.collisionGroup === second.definition.collisionGroup &&
         sameRecord(first.definition.handlers, second.definition.handlers)
@@ -1541,16 +1585,17 @@ function validateBodyHandleBindingTransition(
     ) {
       continue;
     }
-    const releasable = previousBodies.some((previous) =>
-      previous.descriptor.options.handle === handle &&
-      previous.id === binding.bodyId &&
-      previous.handleBindingGeneration === binding.bindingGeneration &&
-      binding.controller === controller &&
-      !bodies.some(
-        (next) =>
-          next.id === previous.id &&
-          next.descriptor.options.handle === handle,
-      )
+    const releasable = previousBodies.some(
+      (previous) =>
+        previous.descriptor.options.handle === handle &&
+        previous.id === binding.bodyId &&
+        previous.handleBindingGeneration === binding.bindingGeneration &&
+        binding.controller === controller &&
+        !bodies.some(
+          (next) =>
+            next.id === previous.id &&
+            next.descriptor.options.handle === handle,
+        ),
     );
     if (!releasable) {
       throw new Error(
@@ -1564,7 +1609,9 @@ function hasChangedKinematicTarget(
   previous: readonly AcceptedBody3D[],
   next: readonly BodyDraft3D[],
 ): boolean {
-  const previousById = new Map(previous.map((body) => [body.id, body] as const));
+  const previousById = new Map(
+    previous.map((body) => [body.id, body] as const),
+  );
   return next.some((body) => {
     if (body.descriptor.bodyType !== "kinematic") return false;
     const target = body.descriptor.options.target;
@@ -1572,9 +1619,11 @@ function hasChangedKinematicTarget(
       return false;
     }
     const old = previousById.get(body.id)?.descriptor;
-    return old?.bodyType !== "kinematic" ||
+    return (
+      old?.bodyType !== "kinematic" ||
       old.options.target.position !== target.position ||
-      old.options.target.orientation !== target.orientation;
+      old.options.target.orientation !== target.orientation
+    );
   });
 }
 
@@ -1606,22 +1655,26 @@ function commandsForRemovedKinematicTargets(
     const before = previous.descriptor.options.target;
     const after = next.descriptor.options.target;
     if (before.position !== undefined && after.position === undefined) {
-      commands.push(Object.freeze({
-        kind: "set-linear-velocity",
-        bodyId: previous.id,
-        linearVelocityX: 0,
-        linearVelocityY: 0,
-        linearVelocityZ: 0,
-      }));
+      commands.push(
+        Object.freeze({
+          kind: "set-linear-velocity",
+          bodyId: previous.id,
+          linearVelocityX: 0,
+          linearVelocityY: 0,
+          linearVelocityZ: 0,
+        }),
+      );
     }
     if (before.orientation !== undefined && after.orientation === undefined) {
-      commands.push(Object.freeze({
-        kind: "set-angular-velocity",
-        bodyId: previous.id,
-        angularVelocityXDegrees: 0,
-        angularVelocityYDegrees: 0,
-        angularVelocityZDegrees: 0,
-      }));
+      commands.push(
+        Object.freeze({
+          kind: "set-angular-velocity",
+          bodyId: previous.id,
+          angularVelocityXDegrees: 0,
+          angularVelocityYDegrees: 0,
+          angularVelocityZDegrees: 0,
+        }),
+      );
     }
   }
   return Object.freeze(commands);
@@ -1656,7 +1709,9 @@ function degreesToRadians(value: number): number {
   return (value * Math.PI) / 180;
 }
 
-function axisLockBits(locks: Readonly<{ x: boolean; y: boolean; z: boolean }>): number {
+function axisLockBits(
+  locks: Readonly<{ x: boolean; y: boolean; z: boolean }>,
+): number {
   return (locks.x ? 1 : 0) | (locks.y ? 2 : 0) | (locks.z ? 4 : 0);
 }
 
@@ -1664,6 +1719,8 @@ function freezeVector3(value: ArrayLike<number>): CRCPhysicsVector3 {
   return Object.freeze([value[0]!, value[1]!, value[2]!] as const);
 }
 
-function freezeQuaternion(value: ArrayLike<number>): readonly [number, number, number, number] {
+function freezeQuaternion(
+  value: ArrayLike<number>,
+): readonly [number, number, number, number] {
   return Object.freeze([value[0]!, value[1]!, value[2]!, value[3]!] as const);
 }

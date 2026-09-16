@@ -1,11 +1,11 @@
 import {
-  composePose3D,
   copyCanonicalQuaternion,
   rotationMatrixInto,
   transformPointInto,
   type InternalPose3D,
 } from "../math.js";
-import type { ShapeRecord3D } from "../shape-records.js";
+import { shapeForRecord3D, type ShapeRecord3D } from "../shape-records.js";
+import { massProperties3D } from "../shapes.js";
 import {
   BODY_ENABLED_3D,
   BODY_TYPE_DYNAMIC_3D,
@@ -509,46 +509,17 @@ function shapeMassProperties(
       "collider orientation",
     ),
   };
-  const shapePose = composePose3D(colliderPose, collider.shape.localPose);
+  const properties = massProperties3D(shapeForRecord3D(collider.shape), {
+    density: collider.density,
+  });
   const center = new Float64Array(3);
-  transformPointInto(center, collider.shape.center, shapePose);
-  let mass: number;
-  let diagonalX: number;
-  let diagonalY: number;
-  let diagonalZ: number;
-  let orientation = shapePose.orientation;
-  if (collider.shape.kind === "sphere") {
-    const volume = (4 * Math.PI * collider.shape.radius ** 3) / 3;
-    mass = volume * collider.density;
-    diagonalX = (2 * mass * collider.shape.radius ** 2) / 5;
-    diagonalY = diagonalX;
-    diagonalZ = diagonalX;
-  } else {
-    const halfExtents = approximateMassHalfExtents(collider.shape);
-    const width = halfExtents[0]! * 2;
-    const height = halfExtents[1]! * 2;
-    const depth = halfExtents[2]! * 2;
-    const volume = collider.shape.kind === "ellipsoid"
-      ? (4 * Math.PI * halfExtents[0]! * halfExtents[1]! * halfExtents[2]!) / 3
-      : collider.shape.kind === "cylinder"
-        ? Math.PI * collider.shape.radius ** 2 * collider.shape.halfHeight * 2
-        : collider.shape.kind === "cone"
-          ? (Math.PI * collider.shape.radius ** 2 * collider.shape.halfHeight * 2) / 3
-          : width * height * depth;
-    mass = volume * collider.density;
-    diagonalX = (mass * (height ** 2 + depth ** 2)) / 12;
-    diagonalY = (mass * (width ** 2 + depth ** 2)) / 12;
-    diagonalZ = (mass * (width ** 2 + height ** 2)) / 12;
-    if ("orientation" in collider.shape) {
-      orientation = composePose3D(shapePose, {
-        position: new Float64Array(3),
-        orientation: collider.shape.orientation,
-      }).orientation;
-    }
-  }
-  const tensor = rotateDiagonal(diagonalX, diagonalY, diagonalZ, orientation);
+  transformPointInto(center, properties.centerOfMass, colliderPose);
+  const tensor = rotateTensor(
+    properties.inertiaTensor,
+    colliderPose.orientation,
+  );
   return {
-    mass,
+    mass: properties.mass,
     centerX: center[0]!,
     centerY: center[1]!,
     centerZ: center[2]!,
@@ -560,57 +531,28 @@ function shapeMassProperties(
     inertiaYZ: tensor[5]!,
   };
 }
-
-function approximateMassHalfExtents(
-  shape: CompoundColliderMassInput3D["shape"],
-): Float64Array {
-  if (shape.kind === "sphere") {
-    return new Float64Array([shape.radius, shape.radius, shape.radius]);
-  }
-  if (shape.kind === "box") return shape.halfExtents;
-  if (shape.kind === "ellipsoid") return shape.radii;
-  if (shape.kind === "cylinder" || shape.kind === "cone") {
-    return new Float64Array([shape.radius, shape.halfHeight, shape.radius]);
-  }
-  if (shape.kind === "capsule") {
-    const length = Math.hypot(
-      shape.end[0]! - shape.start[0]!,
-      shape.end[1]! - shape.start[1]!,
-      shape.end[2]! - shape.start[2]!,
-    );
-    return new Float64Array([shape.radius, length / 2 + shape.radius, shape.radius]);
-  }
-  if (shape.kind === "convexHull") {
-    const half = new Float64Array(3);
-    for (let index = 0; index < shape.vertices.length; index += 3) {
-      half[0] = Math.max(half[0]!, Math.abs(shape.vertices[index]! - shape.center[0]!));
-      half[1] = Math.max(half[1]!, Math.abs(shape.vertices[index + 1]! - shape.center[1]!));
-      half[2] = Math.max(half[2]!, Math.abs(shape.vertices[index + 2]! - shape.center[2]!));
-    }
-    return half;
-  }
-  return new Float64Array([
-    (shape.maximum[0]! - shape.minimum[0]!) / 2,
-    Math.max((shape.maximum[1]! - shape.minimum[1]!) / 2, 0.025),
-    (shape.maximum[2]! - shape.minimum[2]!) / 2,
-  ]);
-}
-
-function rotateDiagonal(
-  diagonalX: number,
-  diagonalY: number,
-  diagonalZ: number,
+function rotateTensor(
+  tensor: ArrayLike<number>,
   orientation: ArrayLike<number>,
 ): Float64Array {
   const rotation = new Float64Array(9);
+  const intermediate = new Float64Array(9);
   const result = new Float64Array(9);
   rotationMatrixInto(rotation, orientation);
   for (let row = 0; row < 3; row += 1) {
     for (let column = 0; column < 3; column += 1) {
+      intermediate[row * 3 + column] =
+        rotation[row * 3]! * tensor[column]! +
+        rotation[row * 3 + 1]! * tensor[3 + column]! +
+        rotation[row * 3 + 2]! * tensor[6 + column]!;
+    }
+  }
+  for (let row = 0; row < 3; row += 1) {
+    for (let column = 0; column < 3; column += 1) {
       result[row * 3 + column] =
-        rotation[row * 3]! * diagonalX * rotation[column * 3]! +
-        rotation[row * 3 + 1]! * diagonalY * rotation[column * 3 + 1]! +
-        rotation[row * 3 + 2]! * diagonalZ * rotation[column * 3 + 2]!;
+        intermediate[row * 3]! * rotation[column * 3]! +
+        intermediate[row * 3 + 1]! * rotation[column * 3 + 1]! +
+        intermediate[row * 3 + 2]! * rotation[column * 3 + 2]!;
     }
   }
   return result;
