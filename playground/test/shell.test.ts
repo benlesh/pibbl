@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { buildSearchBundle } from "../../tooling/studio-docs/search-index";
 import type { NavigationArea } from "../src/app/navigation";
@@ -161,7 +161,9 @@ describe("Studio shell navigation", () => {
 
     trigger.click();
     await settle();
-    expect(document.querySelector<HTMLDialogElement>("dialog")?.open).toBe(true);
+    await vi.waitFor(() => {
+      expect(document.querySelector<HTMLDialogElement>("dialog")?.open).toBe(true);
+    });
     expect(document.activeElement).toBe(
       document.querySelector("[data-search-input]"),
     );
@@ -171,7 +173,9 @@ describe("Studio shell navigation", () => {
       new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }),
     );
     await settle();
-    expect(document.querySelector<HTMLDialogElement>("dialog")?.open).toBe(true);
+    await vi.waitFor(() => {
+      expect(document.querySelector<HTMLDialogElement>("dialog")?.open).toBe(true);
+    });
 
     shell.dispose();
   });

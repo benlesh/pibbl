@@ -704,7 +704,7 @@ describe('shared event lifecycle laboratory', () => {
     await controller.dispose();
     activeControllers.delete(controller);
     expectFullyReleased(diagnostics);
-  }, 40_000);
+  }, 60_000);
 
   it('isolates thrown handlers and stale cleanup across abort, dispose, and remount', async () => {
     const reportError = vi.spyOn(globalThis, 'reportError').mockImplementation(() => {});

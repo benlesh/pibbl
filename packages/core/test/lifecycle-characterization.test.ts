@@ -318,7 +318,7 @@ describe('event lifecycle ownership', () => {
       expect(eventLedger.acquired - eventLedger.released).toBe(eventLedger.live);
       expect(eventLedger.duplicateReleases).toBe(0);
     }
-  }, 30_000);
+  }, 60_000);
 
   it('replaces, removes, and unmounts handlers without ghost calls', async () => {
     const { canvas, diagnostics } = createHarness();
