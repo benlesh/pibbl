@@ -198,6 +198,10 @@ function renderComponentElement<P>(
               Record<PropertyKey, unknown>
             >;
             const tracksPresentationLineage = hasElementEnhancers(componentRefs);
+            const tracksCanvasWorldTransform =
+              GLOBAL_STATE.worldBaseTransform !== undefined &&
+              GLOBAL_STATE.renderContext !== undefined &&
+              GLOBAL_STATE.renderTarget !== undefined;
             const prepared = tracksPresentationLineage
               ? prepareElementEnhancers(componentRefs, {
                   componentType: componentRefs.element.type,
@@ -205,10 +209,11 @@ function renderComponentElement<P>(
                   props,
                   style,
                   source,
-                  parentWorldTransform: getCurrentWorldTransform(),
+                  parentWorldTransform: tracksCanvasWorldTransform ?
+                    getCurrentWorldTransform() : new DOMMatrix(),
                   presentationTransformLineage:
                     GLOBAL_STATE.presentationTransformLineage,
-                  hasUntrackedCanvasTransform:
+                  hasUntrackedCanvasTransform: tracksCanvasWorldTransform &&
                     hasCurrentWorldTransformCanvasDelta(),
                 })
               : undefined;

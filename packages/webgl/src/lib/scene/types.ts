@@ -14,6 +14,26 @@ import type { Matrix4Bounds } from '../math/matrix4.js';
 
 export type WebGLSceneIdentity = object;
 
+export type WebGLTransformVector3 = readonly [
+  x: number,
+  y: number,
+  z: number,
+];
+
+export type WebGLTransformQuaternion = readonly [
+  x: number,
+  y: number,
+  z: number,
+  w: number,
+];
+
+export interface CRCWebGLAuthoredTransform {
+  readonly translation: WebGLTransformVector3;
+  readonly orientation: WebGLTransformQuaternion;
+  readonly scale: WebGLTransformVector3;
+  readonly matrix: readonly number[];
+}
+
 export type WebGLRGBA = readonly [red: number, green: number, blue: number, alpha: number];
 
 export interface WebGLMeshSubmission {
@@ -181,7 +201,7 @@ export interface SubmitWebGLMeshInput {
   readonly source?: CRCElementSource;
   readonly geometry: CRCWebGLGeometry;
   readonly identity?: WebGLSceneIdentity;
-  readonly localModel: Readonly<Float32Array>;
+  readonly localModel: Readonly<ArrayLike<number>>;
   readonly color: WebGLRGBA;
   readonly lit?: boolean;
   readonly material?: ResolvedWebGLMaterial;
@@ -296,5 +316,6 @@ export type SettledWebGLShadowPlan =
 
 export interface WebGLSceneComposer extends ClosedWebGLSceneDraft {
   readonly modelStack: readonly Readonly<Float32Array>[];
+  readonly authoredTransformStack: readonly CRCWebGLAuthoredTransform[];
   readonly state: 'open' | 'closed';
 }

@@ -1,6 +1,12 @@
-import { multiplyMatrix4, setIdentityMatrix4 } from '../math/matrix4.js';
 import { DEFAULT_WEBGL_MATERIAL } from '../components/material.js';
+import {
+  composeModelMatrix4,
+  multiplyMatrix4,
+  setIdentityMatrix4,
+} from '../math/matrix4.js';
+import type { CRCWebGLTransformStyle } from '../types.js';
 import type {
+  CRCWebGLAuthoredTransform,
   ClosedWebGLSceneDraft,
   CreateWebGLSceneComposerInput,
   SubmitWebGLBackgroundInput,
@@ -15,12 +21,20 @@ import type { ResolvedWebGLCamera } from '../math/camera.js';
 
 interface MutableComposer extends WebGLSceneComposer {
   readonly modelStack: Float32Array[];
+  readonly authoredTransformStack: CRCWebGLAuthoredTransform[];
   readonly meshes: WebGLMeshSubmission[];
   readonly lights: WebGLLightSubmission[];
   readonly backgrounds: WebGLBackgroundSubmission[];
   state: 'open' | 'closed';
   nextSourceIndex: number;
 }
+
+const transformCache = new WeakMap<
+  CRCWebGLTransformStyle,
+  Map<number, CRCWebGLAuthoredTransform>
+>();
+
+const DEGREES_TO_RADIANS = Math.PI / 180;
 
 const requireOpen = (composer: WebGLSceneComposer): MutableComposer => {
   const value = composer as MutableComposer;
@@ -73,6 +87,7 @@ export function createWebGLSceneComposer(
     lights: [],
     backgrounds: [],
     modelStack: [identity],
+    authoredTransformStack: [],
     state: 'open',
     nextSourceIndex: 0,
   } as MutableComposer;
@@ -154,9 +169,91 @@ export function submitWebGLBackground(
   }));
 }
 
+/** Resolves one authored WebGL T * Rz * Ry * Rx * S transform record. */
+export function resolveWebGLTransform(
+  style: Readonly<CRCWebGLTransformStyle>,
+  uniformScale = 1,
+): CRCWebGLAuthoredTransform {
+  if (!Number.isFinite(uniformScale) || uniformScale === 0) {
+    throw new RangeError('WebGL transform uniform scale must be finite and nonzero.');
+  }
+  let byUniformScale = transformCache.get(style);
+  const cached = byUniformScale?.get(uniformScale);
+  if (cached) return cached;
+
+  const translation = Object.freeze([
+    resolveTransformNumber(style, 'translateX', 0),
+    resolveTransformNumber(style, 'translateY', 0),
+    resolveTransformNumber(style, 'translateZ', 0),
+  ]) as CRCWebGLAuthoredTransform['translation'];
+  const scale = Object.freeze([
+    resolveTransformNumber(style, 'scaleX', 1) * uniformScale,
+    resolveTransformNumber(style, 'scaleY', 1) * uniformScale,
+    resolveTransformNumber(style, 'scaleZ', 1) * uniformScale,
+  ]) as CRCWebGLAuthoredTransform['scale'];
+  for (const [index, value] of scale.entries()) {
+    if (!Number.isFinite(value) || value === 0) {
+      const field = ['scaleX', 'scaleY', 'scaleZ'][index]!;
+      throw new RangeError(`WebGL transform.${field} must resolve to a finite nonzero value.`);
+    }
+  }
+  const rotationX = resolveTransformNumber(style, 'rotationXDegrees', 0);
+  const rotationY = resolveTransformNumber(style, 'rotationYDegrees', 0);
+  const rotationZ = resolveTransformNumber(style, 'rotationZDegrees', 0);
+  const orientation = quaternionFromEulerDegrees(
+    rotationX,
+    rotationY,
+    rotationZ,
+  );
+  const effectiveStyle = {
+    translateX: translation[0],
+    translateY: translation[1],
+    translateZ: translation[2],
+    rotationXDegrees: rotationX,
+    rotationYDegrees: rotationY,
+    rotationZDegrees: rotationZ,
+    scaleX: scale[0],
+    scaleY: scale[1],
+    scaleZ: scale[2],
+  };
+  const mutableMatrix = new Float32Array(16);
+  composeModelMatrix4(mutableMatrix, effectiveStyle);
+  const resolved = Object.freeze({
+    translation,
+    orientation,
+    scale,
+    matrix: Object.freeze(Array.from(mutableMatrix)),
+  });
+  byUniformScale ??= new Map();
+  byUniformScale.set(uniformScale, resolved);
+  transformCache.set(style, byUniformScale);
+  return resolved;
+}
+
+export function pushWebGLAuthoredTransform(
+  composer: WebGLSceneComposer,
+  transform: CRCWebGLAuthoredTransform,
+): () => void {
+  const value = requireOpen(composer);
+  const popModel = pushWebGLModelMatrix(value, transform.matrix);
+  value.authoredTransformStack.push(transform);
+  let active = true;
+  return () => {
+    if (!active) return;
+    if (value.authoredTransformStack.at(-1) !== transform) {
+      throw new Error(
+        'Group3D authored transform scopes must be released in traversal order.',
+      );
+    }
+    popModel();
+    active = false;
+    value.authoredTransformStack.pop();
+  };
+}
+
 export function pushWebGLModelMatrix(
   composer: WebGLSceneComposer,
-  local: Readonly<Float32Array>,
+  local: Readonly<ArrayLike<number>>,
 ): () => void {
   const value = requireOpen(composer);
   const composed = new Float32Array(16);
@@ -211,6 +308,11 @@ export function closeWebGLSceneComposer(
   if (value.modelStack.length !== 1) {
     throw new Error('Cannot close WebGL scene composer with an unbalanced model stack.');
   }
+  if (value.authoredTransformStack.length !== 0) {
+    throw new Error(
+      'Cannot close WebGL scene composer with an unbalanced authored transform stack.',
+    );
+  }
   value.state = 'closed';
   const draft = Object.freeze({
     contextGeneration: value.contextGeneration,
@@ -242,4 +344,52 @@ function composeLightModel(
 
 export function discardWebGLSceneComposer(composer: WebGLSceneComposer): void {
   requireOpen(composer).state = 'closed';
+}
+
+function resolveTransformNumber(
+  style: Readonly<CRCWebGLTransformStyle>,
+  field: keyof CRCWebGLTransformStyle,
+  fallback: number,
+): number {
+  const value = style[field] ?? fallback;
+  if (!Number.isFinite(value)) {
+    throw new TypeError(`WebGL transform.${field} must be finite.`);
+  }
+  if (field.startsWith('scale') && value === 0) {
+    throw new RangeError(`WebGL transform.${field} must be nonzero.`);
+  }
+  return value;
+}
+
+function quaternionFromEulerDegrees(
+  rotationX: number,
+  rotationY: number,
+  rotationZ: number,
+): CRCWebGLAuthoredTransform['orientation'] {
+  const halfX = rotationX * DEGREES_TO_RADIANS / 2;
+  const halfY = rotationY * DEGREES_TO_RADIANS / 2;
+  const halfZ = rotationZ * DEGREES_TO_RADIANS / 2;
+  const sinX = Math.sin(halfX);
+  const cosX = Math.cos(halfX);
+  const sinY = Math.sin(halfY);
+  const cosY = Math.cos(halfY);
+  const sinZ = Math.sin(halfZ);
+  const cosZ = Math.cos(halfZ);
+  let x = sinX * cosY * cosZ - cosX * sinY * sinZ;
+  let y = cosX * sinY * cosZ + sinX * cosY * sinZ;
+  let z = cosX * cosY * sinZ - sinX * sinY * cosZ;
+  let w = cosX * cosY * cosZ + sinX * sinY * sinZ;
+  const length = Math.hypot(x, y, z, w);
+  x /= length;
+  y /= length;
+  z /= length;
+  w /= length;
+  const firstSignificant = [w, x, y, z].find(value => value !== 0) ?? 1;
+  if (firstSignificant < 0) {
+    x = -x;
+    y = -y;
+    z = -z;
+    w = -w;
+  }
+  return Object.freeze([x, y, z, w]);
 }

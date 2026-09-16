@@ -40,9 +40,17 @@ export interface CRCWebGLLambertMaterial {
 
 export type CRCWebGLMaterial = CRCWebGLLambertMaterial;
 
+/**
+ * Declaration-merging hook reserved for the matching official 3D physics
+ * package. It deliberately contributes no runtime value.
+ */
+export interface CRCPhysics3DPropExtension {}
+
 /** Shared logical-target props for geometry-backed WebGL built-ins. */
 export interface CRCWebGLTargetProps
-  extends CRCEventHandlers, CRCEventParticipationOptions {
+  extends CRCEventHandlers,
+    CRCEventParticipationOptions,
+    CRCPhysics3DPropExtension {
   readonly keyboardFocusable?: CRCEventTargetOptions['keyboardFocusable'];
   readonly keyboardNavigationBounds?:
     CRCEventTargetOptions['keyboardNavigationBounds'];
