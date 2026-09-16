@@ -22,8 +22,9 @@ tree are not public Studio pages and never enter public search.
 The persistent public navigation has three areas, in this order:
 
 - **Learn** has cumulative Tutorials followed by a shallow, curated list of
-  Guides. The diagram-editor tutorial is a published syllabus and landing page;
-  its twelve independently runnable chapters are intentionally deferred.
+  Guides. The complete source-backed diagram-editor course lives at
+  `#/learn/tutorials/diagram-editor`, with twelve independently runnable
+  chapters that stay separate from Examples and automated test labs.
 - **API** has an overview, then alphabetized Components, Functions, and Hooks.
   Types remain grouped by domain so the declaration surface stays navigable.
 - **Examples** has live public lessons grouped as Drawing, Composition, Layout,
@@ -78,11 +79,10 @@ opaque `sandbox="allow-scripts"` preview frame. Automated test labs retain their
 scenario IDs, action sets, source markers, test controls, visual baselines, and
 headless consumers.
 
-## Deferred work
+## Independent future decisions
 
-The first implementation deliberately does not author the twelve complete
-diagram-editor tutorial chapters or a broader new guide collection. It also
-does not migrate the existing Vite Studio to a documentation framework. Those
-are separate design and implementation decisions; future work can build on the
-validated content model and static search without merging public learning
-content into test fixtures.
+The completed diagram-editor tutorial does not require a documentation-framework
+migration, public-content versioning, analytics, prerendering, or hosted search.
+Those remain independent future decisions. Any later work can build on the
+validated Vite Studio, local static search, and the existing separation between
+public learning material and deterministic test fixtures.

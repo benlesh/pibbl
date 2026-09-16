@@ -9,7 +9,7 @@ import {
   toStudioDocumentationSearchInput,
   type StudioDocumentationBuild,
 } from "./build";
-import { loadStudioLearningExamples } from "./learning-catalog-adapter";
+import { loadStudioLearningCatalogs } from "./learning-catalog-adapter";
 import { buildSearchBundle, type SerializedSearchBundle } from "./search-index";
 
 const virtualDocumentationId = "virtual:crc-studio-docs";
@@ -98,7 +98,7 @@ export function crcStudioDocs(options: { repositoryRoot: string }): Plugin {
 export function studioDocumentationBuildOptions(repositoryRoot: string) {
   return {
     repositoryRoot,
-    examples: loadStudioLearningExamples(repositoryRoot),
+    ...loadStudioLearningCatalogs(repositoryRoot),
   };
 }
 
@@ -106,6 +106,8 @@ function relevantCatalogPaths(repositoryRoot: string): readonly string[] {
   return [
     resolve(repositoryRoot, "packages/scenarios/src/learning-catalog.ts"),
     resolve(repositoryRoot, "packages/scenarios/src/learning-types.ts"),
+    resolve(repositoryRoot, "packages/scenarios/src/tutorial-catalog.ts"),
+    resolve(repositoryRoot, "packages/scenarios/src/tutorial-types.ts"),
   ];
 }
 

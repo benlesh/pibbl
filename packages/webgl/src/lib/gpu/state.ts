@@ -143,3 +143,22 @@ export function installTransparentWebGLPass(gl: WebGL2RenderingContext): void {
   gl.depthFunc(gl.LEQUAL);
   gl.depthRange(0, 1);
 }
+
+/** Installs the depth-only state for one directional shadow target. */
+export function installDirectionalShadowWebGLPass(
+  gl: WebGL2RenderingContext,
+  resolution: number,
+): void {
+  gl.viewport(0, 0, resolution, resolution);
+  gl.disable(gl.SCISSOR_TEST);
+  gl.colorMask(false, false, false, false);
+  gl.disable(gl.BLEND);
+  gl.enable(gl.DEPTH_TEST);
+  gl.depthMask(true);
+  gl.depthFunc(gl.LESS);
+  gl.depthRange(0, 1);
+  gl.enable(gl.POLYGON_OFFSET_FILL);
+  gl.polygonOffset(2, 4);
+  gl.clearDepth(1);
+  gl.clear(gl.DEPTH_BUFFER_BIT);
+}

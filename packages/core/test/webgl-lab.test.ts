@@ -446,7 +446,12 @@ describe('public WebGL island scenarios', () => {
       return createElement(Group3D, {
         style: { rotationYDegrees: timestamp / 10 },
         children: createElement(Cube, {
-          style: { size: 1, translateX: 1.2, color: '#8b5cf6' },
+          style: {
+            size: 1,
+            translateX: 1.2,
+            color: '#8b5cf6',
+            lit: false,
+          },
           onClick: () => {
             lastTarget = 'cube';
           },

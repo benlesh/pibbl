@@ -8,13 +8,15 @@ export type LearningSectionId =
   | "mouse-events"
   | "user-events"
   | "keyboard-focus"
-  | "advanced-interactions";
+  | "advanced-interactions"
+  | "webgl";
 
 export type LearningAuthoring = "jsx" | "createElement";
 
 export type LearningBrowseGroup =
   | "drawing"
   | "composition"
+  | "webgl"
   | "layout"
   | "events-and-interaction"
   | "focus-and-keyboard";
@@ -37,9 +39,19 @@ export interface LearningRelationships {
   related: readonly string[];
 }
 
-export interface LearningExampleMetadata {
-  authoring: LearningAuthoring;
+export interface WorkbenchSourceMetadata {
   slug: string;
+  canvas: {
+    width: number;
+    height: number;
+  };
+  source: {
+    path: string;
+  };
+}
+
+export interface LearningExampleMetadata extends WorkbenchSourceMetadata {
+  authoring: LearningAuthoring;
   title: string;
   shortTitle: string;
   section: LearningSectionId;
@@ -55,13 +67,6 @@ export interface LearningExampleMetadata {
   prompts: LearningPrompt;
   apiNotes: readonly string[];
   relationships: LearningRelationships;
-  canvas: {
-    width: number;
-    height: number;
-  };
-  source: {
-    path: string;
-  };
 }
 
 export type LearningMount = (canvas: HTMLCanvasElement) => CRCController;

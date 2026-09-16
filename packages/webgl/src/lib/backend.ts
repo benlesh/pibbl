@@ -16,6 +16,7 @@ import {
 import { WebGLSceneRenderer } from './scene/renderer.js';
 import { settleWebGLScene } from './scene/settle.js';
 import type { WebGLSceneComposer } from './scene/types.js';
+import type { CRCWebGLShadowQuality } from './types.js';
 
 export const WEBGL_BACKEND_TOKEN = createBackendToken('webgl2');
 
@@ -23,6 +24,7 @@ export interface CreateWebGLBackendOptions {
   readonly gl: WebGL2RenderingContext;
   readonly getCamera: () => ResolvedWebGLCamera;
   readonly getContextGeneration: () => number;
+  readonly getShadowQuality?: () => CRCWebGLShadowQuality;
   readonly isContextLost?: (generation: number) => boolean;
 }
 
@@ -75,6 +77,7 @@ export function createWebGLBackend(
         frame: frameInput,
         camera: options.getCamera(),
         contextGeneration,
+        shadowQuality: options.getShadowQuality?.() ?? 'medium',
       });
       if (
         !contextAvailable ||

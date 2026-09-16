@@ -11,19 +11,23 @@ import {
 describe('createWebGLGeometry', () => {
   test('copies indexed triangle data into a frozen opaque descriptor', () => {
     const positions = [0, 0, 0, 1, 0, 0, 0, 1, 0];
+    const normals = [0, 0, 1, 0, 0, 1, 0, 0, 1];
     const indices = [0, 1, 2];
 
-    const geometry = createWebGLGeometry({ positions, indices });
+    const geometry = createWebGLGeometry({ positions, normals, indices });
     positions[0] = 99;
+    normals[2] = 0;
     indices[0] = 2;
 
     expect(geometry.vertexCount).toBe(3);
     expect(geometry.triangleCount).toBe(1);
     expect(Object.isFrozen(geometry)).toBe(true);
     expect('positions' in geometry).toBe(false);
+    expect('normals' in geometry).toBe(false);
     expect('indices' in geometry).toBe(false);
     expect(getWebGLGeometryData(geometry)).toEqual({
       positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+      normals: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
       indices: new Uint32Array([0, 1, 2]),
       bounds: {
         minimumX: 0,
@@ -34,6 +38,19 @@ describe('createWebGLGeometry', () => {
         maximumZ: 0,
       },
     });
+  });
+
+  test('copies valid normals into descriptor-owned Float32 data', () => {
+    const normals = [0, 1, 0, 0, 1, 0, 0, 1, 0];
+    const geometry = createWebGLGeometry({
+      positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+      normals,
+    });
+    normals[1] = 0;
+
+    expect(Array.from(getWebGLGeometryData(geometry).normals ?? [])).toEqual([
+      0, 1, 0, 0, 1, 0, 0, 1, 0,
+    ]);
   });
 
   test('accepts non-indexed triangles and derives their counts', () => {
@@ -50,6 +67,7 @@ describe('createWebGLGeometry', () => {
 
     expect(geometry.vertexCount).toBe(6);
     expect(geometry.triangleCount).toBe(2);
+    expect(getWebGLGeometryData(geometry).normals).toBeUndefined();
     expect(getWebGLGeometryData(geometry).indices).toBeUndefined();
   });
 
@@ -130,6 +148,31 @@ describe('createWebGLGeometry', () => {
     [
       { positions: [0, 0, 0, 1, 0, 0, 0, 1, 0], indices: [0, 1, 3] },
       /createWebGLGeometry indices\[2\] must be less than vertexCount 3/,
+    ],
+    [
+      { positions: [0, 0, 0, 1, 0, 0, 0, 1, 0], normals: [0, 1, 0] },
+      /createWebGLGeometry normals length must match positions.length/,
+    ],
+    [
+      {
+        positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+        normals: [0, 1, 0, 0, Number.NaN, 0, 0, 1, 0],
+      },
+      /createWebGLGeometry normals\[4\] must be finite/,
+    ],
+    [
+      {
+        positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+        normals: [0, Number.MAX_VALUE, 0, 0, 1, 0, 0, 1, 0],
+      },
+      /createWebGLGeometry normals\[1\] must be representable as a finite Float32/,
+    ],
+    [
+      {
+        positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+        normals: [0, 0, 0, 0, 1, 0, 0, 1, 0],
+      },
+      /createWebGLGeometry normals\[0\.\.2\] must be nonzero/,
     ],
   ])('rejects malformed triangle input %#', (input, message) => {
     expect(() => createWebGLGeometry(input)).toThrow(message);

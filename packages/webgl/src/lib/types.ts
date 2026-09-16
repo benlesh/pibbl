@@ -6,6 +6,8 @@ import type {
 
 export type CRCWebGLVector3 = readonly [x: number, y: number, z: number];
 
+export type CRCWebGLShadowQuality = false | 'low' | 'medium' | 'high';
+
 export interface CRCWebGLPerspectiveCamera {
   type: 'perspective';
   position: CRCWebGLVector3;
@@ -30,6 +32,14 @@ export interface CRCWebGLTransformStyle {
   scaleZ?: number;
 }
 
+export interface CRCWebGLLambertMaterial {
+  readonly type: 'lambert';
+  readonly emissiveColor?: string;
+  readonly emissiveIntensity?: number;
+}
+
+export type CRCWebGLMaterial = CRCWebGLLambertMaterial;
+
 /** Shared logical-target props for geometry-backed WebGL built-ins. */
 export interface CRCWebGLTargetProps
   extends CRCEventHandlers, CRCEventParticipationOptions {
@@ -39,8 +49,9 @@ export interface CRCWebGLTargetProps
 }
 
 export interface CRCWebGLGeometryInput {
-  positions: ArrayLike<number>;
-  indices?: ArrayLike<number>;
+  readonly positions: ArrayLike<number>;
+  readonly normals?: ArrayLike<number>;
+  readonly indices?: ArrayLike<number>;
 }
 
 declare const crcWebGLGeometryBrand: unique symbol;

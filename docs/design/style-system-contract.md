@@ -1,7 +1,7 @@
 # CRC style-system contract
 
-Status: current implemented contract, updated for settled WebGL scenes on
-2026-09-13.
+Status: current implemented contract, updated for WebGL lighting, materials,
+background, and genuine shadows on 2026-09-15.
 
 CRC has one typed, local, closed `style` prop. Geometry, paint, cursor,
 transforms, clipping, image source, text layout, and layout participation live
@@ -169,22 +169,43 @@ for every removed field and structural form.
 
 The optional `@crc/webgl` package adds this separate closed style vocabulary:
 
-| Component    | WebGL-specific style fields                                                | Defaults and validation                                                                      |
-| ------------ | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `WebGLLayer` | Core box and layout-item fields, including `width`, `height`, and `filter` | Each omitted dimension uses current logical allocation; both resolve finite and positive     |
-| `Group3D`    | `translateX/Y/Z`, `rotationXDegrees/YDegrees/ZDegrees`, `scaleX/Y/Z`       | Translation/rotation `0`, scale `1`; all finite, scale nonzero; negative scale supported     |
-| `Mesh`       | Shared 3D transform plus `color`, `opacity`, and `cursor`                  | Concrete `color = "#ffffff"`; finite `opacity = 1` in `[0, 1]`; `geometry` is a program prop |
-| `Cube`       | Mesh style plus `size`                                                     | `size = 1`, finite and positive                                                              |
-| `Sphere`     | Mesh style plus `radius`                                                   | `radius = 0.5`, finite and positive                                                          |
+| Component | WebGL-specific style fields | Defaults and validation |
+| --- | --- | --- |
+| `WebGLLayer` | Core box/layout-item fields including `width`, `height`, `filter`; local `shadows` | Each omitted dimension uses current logical allocation and resolves finite positive; `shadows = "medium"`, accepting `false`, `"low"`, `"medium"`, or `"high"` |
+| `Group3D` | `translateX/Y/Z`, `rotationXDegrees/YDegrees/ZDegrees`, `scaleX/Y/Z` | Translation/rotation `0`, scale `1`; all finite, scale nonzero; negative scale supported |
+| `Mesh` | Shared transform plus `color`, `opacity`, `lit`, `material`, `castShadow`, `receiveShadow`, and `cursor` | Concrete `color = "#ffffff"`; finite `opacity = 1` in `[0, 1]`; `lit = true`; omitted material is Lambert; shadow defaults depend on final alpha; `geometry` is a program prop |
+| `Cube` | Mesh style plus `size` | `size = 1`, finite and positive |
+| `Sphere` | Mesh style plus `radius` | `radius = 0.5`, finite and positive |
+| `AmbientLight` | `color`, `intensity` | White and `1`; finite nonnegative intensity; no transform or shadow field |
+| `HemisphereLight` | Shared transform plus `skyColor`, `groundColor`, `intensity` | Both colors white and intensity `1`; no shadow field |
+| `DirectionalLight` | Shared transform plus `color`, `intensity`, `castShadow` | White, `1`, and `true` |
+| `PointLight` | Directional-light style plus `range` | Omitted range is unbounded; supplied range is finite and positive |
+| `SpotLight` | Point-light style plus `innerConeAngleDegrees`, `outerConeAngleDegrees` | `0` and `45`; finite half-angles satisfy `0 <= inner <= outer <= 90` |
+| `WebGLBackground` | Required `color` | One concrete color declaration per scene; transforms are not accepted |
 
 The fixed 3D transform order is translation multiplied by Z, Y, and X degree
 rotations, then scale. Child-local transforms follow the current Group3D model
 matrix. Color must be a concrete browser-accepted Canvas color; contextual
 references such as `currentColor`, system colors, and `var(...)` reject because
-the WebGL surface has no computed DOM color context. Opacity does not remove
-hit or focus geometry. Final raster alpha is parsed color alpha multiplied by
-opacity: one is opaque, values strictly between zero and one are transparent,
-and zero skips rasterization while retaining geometry participation.
+the WebGL surface has no computed DOM color context. Light and emissive color
+alpha scale their RGB contribution and do not change mesh output alpha. The
+nested `material` value is local and immutable by contract: replacing it is the
+supported update; mutating an already supplied object in place need not
+invalidate a retained layer. The only current descriptor is
+`{ type: "lambert", emissiveColor?, emissiveIntensity? }`, with black emission
+and intensity one by default. Emissive intensity is finite and nonnegative.
+
+Opacity does not remove hit or focus geometry. Final raster alpha is parsed
+base-color alpha multiplied by opacity: one is opaque, values strictly between
+zero and one are transparent, and zero skips color and shadow rasterization
+while retaining geometry participation. Opaque meshes cast by default;
+partially transparent meshes require explicit `castShadow: true`; nonzero lit
+meshes receive by default. `castShadow` remains independent of `lit`.
+
+The fixed 3D transform order also governs transformable light pose. Local `-Z`
+is directional/spot direction, local origin is point/spot position, and local
+`+Y` is hemisphere sky axis. Containing scale can reposition a translated
+origin but never scales intensity, range, cone angles, or shadow quality.
 
 There is no runtime compatibility adapter, alias, or fallback for top-level
 visual fields, content in `TextStyle`, or a render element/descriptor prop for
@@ -211,8 +232,9 @@ subset; CRC-native behavior uses names such as `rotationDegrees`, `fit`, and
 Filters do not accept raw CSS strings, `url()`/SVG filter graphs,
 `backdrop-filter`, or `boxShadow`/CSS box-shadow semantics.
 
-WebGL styles do not add lighting, materials, textures, environment maps,
-shadows, emissive or glow effects, shader graphs, multiple viewports/cameras,
+WebGL styles do not add textures, image environments/IBL, PBR, glow/bloom,
+area lights, cascaded/soft/contact/transparent shadows, public shadow cameras,
+map sizes, bias/filter controls, shader graphs, multiple viewports/cameras,
 Canvas filter descriptors on inner objects, or arbitrary ambient GL state.
 Application-specific data belongs in ordinary component props and may be
 translated into `Mesh` geometry or style declarations.

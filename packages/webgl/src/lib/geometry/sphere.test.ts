@@ -5,7 +5,7 @@ import { getSphereGeometry } from './sphere.js';
 describe('getSphereGeometry', () => {
   test('returns a deterministic indexed radius-0.5 UV sphere', () => {
     const geometry = getSphereGeometry();
-    const { positions, indices } = getWebGLGeometryData(geometry);
+    const { positions, normals, indices } = getWebGLGeometryData(geometry);
 
     expect(geometry.vertexCount).toBe(561);
     expect(geometry.triangleCount).toBe(1024);
@@ -26,6 +26,19 @@ describe('getSphereGeometry', () => {
         positions[index + 2]!,
       );
       expect(radius).toBeCloseTo(0.5, 6);
+      expect(normals).toBeDefined();
+      const normalLength = Math.hypot(
+        normals![index]!,
+        normals![index + 1]!,
+        normals![index + 2]!,
+      );
+      const alignment = (
+        positions[index]! * normals![index]! +
+        positions[index + 1]! * normals![index + 1]! +
+        positions[index + 2]! * normals![index + 2]!
+      ) / radius;
+      expect(normalLength).toBeCloseTo(1, 6);
+      expect(alignment).toBeCloseTo(1, 6);
     }
   });
 

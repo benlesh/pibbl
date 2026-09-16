@@ -10,7 +10,7 @@ import {
 } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { dirname, extname, join, resolve } from "node:path";
+import { dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { transformAsync as babelTransform } from "@babel/core";
 import { parse } from "@babel/parser";
 import transformReactJsx from "@babel/plugin-transform-react-jsx";
@@ -72,14 +72,17 @@ const publicGuidePaths = [
   "docs/site/learn/guides/state-and-lifecycle.md",
   "docs/site/learn/guides/style-and-draw.md",
   "docs/site/learn/guides/webgl-islands.md",
+  "docs/site/learn/guides/webgl-lighting.md",
 ];
 const publicSiteMarkdownPaths = [
   "docs/site/api/index.md",
   "docs/site/api/components/absolute.md",
+  "docs/site/api/components/ambient-light.md",
   "docs/site/api/components/arc.md",
   "docs/site/api/components/circle.md",
   "docs/site/api/components/clip.md",
   "docs/site/api/components/cube.md",
+  "docs/site/api/components/directional-light.md",
   "docs/site/api/components/ellipse.md",
   "docs/site/api/components/flex.md",
   "docs/site/api/components/flow.md",
@@ -87,6 +90,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/components/grid.md",
   "docs/site/api/components/group-3d.md",
   "docs/site/api/components/group.md",
+  "docs/site/api/components/hemisphere-light.md",
   "docs/site/api/components/horizontal-line.md",
   "docs/site/api/components/image.md",
   "docs/site/api/components/keyboard-navigation.md",
@@ -95,15 +99,18 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/components/mesh.md",
   "docs/site/api/components/overlay.md",
   "docs/site/api/components/path.md",
+  "docs/site/api/components/point-light.md",
   "docs/site/api/components/polygon.md",
   "docs/site/api/components/rectangle.md",
   "docs/site/api/components/regular-polygon.md",
   "docs/site/api/components/star.md",
   "docs/site/api/components/sphere.md",
+  "docs/site/api/components/spot-light.md",
   "docs/site/api/components/svg-path.md",
   "docs/site/api/components/text.md",
   "docs/site/api/components/vertical-line.md",
   "docs/site/api/components/wedge.md",
+  "docs/site/api/components/webgl-background.md",
   "docs/site/api/components/webgl-layer.md",
   "docs/site/api/functions/crc.md",
   "docs/site/api/functions/computed.md",
@@ -149,6 +156,7 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/hooks/crc-layout-box.md",
   "docs/site/api/hooks/crc-line-path.md",
   "docs/site/api/hooks/crc-memo.md",
+  "docs/site/api/hooks/crc-orbit-camera.md",
   "docs/site/api/hooks/crc-playback.md",
   "docs/site/api/hooks/crc-rect-path.md",
   "docs/site/api/hooks/crc-ref.md",
@@ -166,6 +174,18 @@ const publicSiteMarkdownPaths = [
   "docs/site/api/types/webgl.md",
   "docs/site/learn/index.md",
   "docs/site/learn/tutorials/diagram-editor/index.md",
+  "docs/site/learn/tutorials/diagram-editor/canvas-scene.md",
+  "docs/site/learn/tutorials/diagram-editor/first-node.md",
+  "docs/site/learn/tutorials/diagram-editor/connect-nodes.md",
+  "docs/site/learn/tutorials/diagram-editor/reusable-node.md",
+  "docs/site/learn/tutorials/diagram-editor/editor-chrome.md",
+  "docs/site/learn/tutorials/diagram-editor/selection.md",
+  "docs/site/learn/tutorials/diagram-editor/dragging.md",
+  "docs/site/learn/tutorials/diagram-editor/pan-and-zoom.md",
+  "docs/site/learn/tutorials/diagram-editor/viewport-and-layer.md",
+  "docs/site/learn/tutorials/diagram-editor/filters.md",
+  "docs/site/learn/tutorials/diagram-editor/keyboard-interaction.md",
+  "docs/site/learn/tutorials/diagram-editor/finished-editor.md",
   ...publicGuidePaths,
 ];
 const currentMarkdownPaths = [
@@ -506,8 +526,11 @@ export async function assertLocalLinks(
     const hashIndex = target.indexOf("#");
     const encodedFile = hashIndex < 0 ? target : target.slice(0, hashIndex);
     const encodedAnchor = hashIndex < 0 ? "" : target.slice(hashIndex + 1);
+    const decodedFile = encodedFile ? decodeURIComponent(encodedFile) : "";
     const localPath = encodedFile
-      ? resolve(repositoryRoot, dirname(path), decodeURIComponent(encodedFile))
+      ? decodedFile.startsWith("/")
+        ? resolvePublicAssetPath(decodedFile)
+        : resolve(repositoryRoot, dirname(path), decodedFile)
       : resolve(repositoryRoot, path);
 
     await assert.doesNotReject(
@@ -522,6 +545,25 @@ export async function assertLocalLinks(
       `Broken local anchor in ${path}: ${link[1]}`,
     );
   }
+}
+
+function resolvePublicAssetPath(decodedFile) {
+  const publicAssetRoot = resolve(repositoryRoot, "playground/public");
+  const localPath = resolve(
+    publicAssetRoot,
+    `.${decodedFile.replaceAll("\\", "/")}`,
+  );
+  const relativePath = relative(publicAssetRoot, localPath);
+  if (
+    relativePath === ".." ||
+    relativePath.startsWith(`..${sep}`) ||
+    isAbsolute(relativePath)
+  ) {
+    throw new Error(
+      `Root-relative public asset ${JSON.stringify(decodedFile)} must remain under playground/public.`,
+    );
+  }
+  return localPath;
 }
 
 function assertSnippetSyntax(path, source) {
@@ -1249,6 +1291,23 @@ assert.deepEqual(
 
 const currentSources = new Map();
 let parsedSnippetCount = 0;
+await assert.doesNotReject(
+  () =>
+    assertLocalLinks(
+      "docs/site/learn/tutorials/diagram-editor/index.md",
+      "[finished editor](/tutorials/diagram-editor/finished-editor.png)",
+  ),
+  "Studio-served root-relative public assets must resolve from playground/public.",
+);
+await assert.rejects(
+  () =>
+    assertLocalLinks(
+      "docs/site/learn/tutorials/diagram-editor/index.md",
+      "[outside public assets](/../../package.json)",
+    ),
+  /must remain under playground\/public/u,
+  "Studio-served root-relative public assets must reject traversal outside playground/public.",
+);
 for (const path of new Set(linkCheckedPaths)) {
   const source = await readFile(join(repositoryRoot, path), "utf8");
   currentSources.set(path, source);
@@ -2191,7 +2250,7 @@ export function assertMixedLegacyTask9Preservation(manifest) {
   );
   assert.deepEqual(
     publicPackage?.currentIds,
-    ["c0056"],
+    ["c0057"],
     "Public-package JSX translation must remain isolated from signal additions",
   );
   assert.deepEqual(
@@ -2213,7 +2272,7 @@ export function assertMixedLegacyTask9Preservation(manifest) {
   );
   assert.deepEqual(
     deterministicEvidence?.currentIds,
-    ["c0059"],
+    ["c0060"],
     "Deterministic-evidence JSX translation must remain isolated from signal additions",
   );
   assert.deepEqual(
@@ -2235,7 +2294,7 @@ export function assertMixedLegacyTask9Preservation(manifest) {
   );
   assert.deepEqual(
     publicSignalAddition?.currentIds,
-    ["c0058"],
+    ["c0059"],
     "Public signal package proof must remain a separate semantic addition",
   );
   const signalEvidenceAddition = additionsById.get(
@@ -2251,7 +2310,7 @@ export function assertMixedLegacyTask9Preservation(manifest) {
   );
   assert.deepEqual(
     signalEvidenceAddition?.currentIds,
-    ["c0061"],
+    ["c0063"],
     "Signal evidence proof must remain a separate semantic addition",
   );
 }
@@ -2602,6 +2661,33 @@ const matrixRequirements = [
       "design/runtime-resource-ownership.md",
     ],
     evidence: ["mesh.test.tsx", "webgl-ownership.test.ts"],
+  },
+  {
+    topic: /Analytic lighting, local Lambert/u,
+    guides: [
+      "site/learn/guides/webgl-lighting.md",
+      "design/drawing-components-contract.md",
+      "design/style-system-contract.md",
+    ],
+    evidence: [
+      "multiple-lights.example.tsx",
+      "lighting-rendering.test.tsx",
+      "webgl-lighting-lab.test.ts",
+    ],
+  },
+  {
+    topic: /Orbit handlers, genuine shadows/u,
+    guides: [
+      "site/learn/guides/webgl-lighting.md",
+      "site/api/hooks/crc-orbit-camera.md",
+      "design/runtime-resource-ownership.md",
+    ],
+    evidence: [
+      "crc-orbit-camera.test.tsx",
+      "shadows.test.ts",
+      "shadow-resources.test.ts",
+      "webgl-lighting-lab.test.ts",
+    ],
   },
   {
     topic: /Default drawing participation migration/u,

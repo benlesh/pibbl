@@ -1,7 +1,7 @@
 # CRC event resource ownership
 
-Status: current implemented contract, updated for settled WebGL scenes on
-2026-09-13.
+Status: current implemented contract, updated for WebGL lighting, orbit-camera,
+and genuine-shadow behavior on 2026-09-15.
 
 This contract assigns every event-related resource to one owner and one
 idempotent release path. It supplements the [user-event
@@ -56,6 +56,7 @@ after the first cleanup request.
 | WebGL backend target/pick record | One Mesh/Cube/Sphere target slot and candidate settled-scene generation | Default-participating geometry submission                      | `pointerEvents="none"`, failed/uncommitted generation, context loss, component/layer removal, or disposal | No committed picker, focus index, or root dispatcher state refers to that target generation.                          |
 | WebGL nested-resolver entry      | Owning `WebGLLayer` component                                           | Successful Canvas composite and generation commit              | Opt-out, generation replacement/loss, layer removal, or root disposal                                     | The global paint ledger cannot invoke a stale island picker or mismatched focus generation.                           |
 | WebGL event-parent bridge        | Owning `WebGLLayer` child instance                                      | Private backend mount                                          | Child generation replacement, layer removal, failure, or root disposal                                    | Temporary paths cannot retain the removed WebGL subtree or its Canvas parent.                                         |
+| Orbit-camera hook slot           | Mounted component calling `crcOrbitCamera()`                            | First call in that hook position                               | Component/hook/root teardown                                                                              | Spherical state, active-pointer record, and revision ownership cannot schedule work; retained handlers are inert.     |
 | Component refs                   | CRC instance                                                            | Render                                                         | Component removal or instance disposal                                                                    | Removed refs run teardown and become unreachable.                                                                     |
 
 ## Central disposal sequence
@@ -90,6 +91,15 @@ capture, retained touch contacts, drag hover, mouse hover/activation, and cursor
 state that still references it. A built-in remains a passive target without
 those properties until `pointerEvents="none"` or component teardown releases
 it.
+
+`crcOrbitCamera()` owns stable handler functions but no native listener,
+logical target, focus candidate, or pointer-capture resource merely by being
+called. Spreading its handlers onto a geometry participant or structural
+ancestor acquires the ordinary target/listener resources owned by that
+receiving component. During a gesture, capture remains owned by the receiving
+live event node and root dispatcher; hook teardown clears its local active
+pointer and makes the retained handler bundle inert. Lights, materials,
+backgrounds, and shadow maps likewise acquire no event resource.
 
 The root dispatcher snapshots one temporary ancestry route, then re-reads each
 node's liveness and current handler before invocation. Removal during dispatch
@@ -154,6 +164,11 @@ geometry-target acquisition, object/layer opt-out, bitmap/pick/focus generation
 replacement, nested propagation, pointer capture/focus/cursor cleanup, context
 loss/restoration, candidate rollback, and exact target/resolver/bridge
 baselines after failure, removal, and disposal.
+
+The orbit-camera suite additionally proves stable handler identities, ordinary
+capture acquisition/release, teardown during an active gesture, and inert
+retained callbacks without leaked native requests or independently scheduled
+frames.
 
 ## Deliberate boundary
 

@@ -16,6 +16,7 @@ import {
   learningSourceContainsJsx,
   validateLearningSourceText,
 } from "../../../tooling/learning-source-contract";
+import { WEBGL_LIGHTING_EXAMPLE_IDS } from "../../../tooling/webgl-lighting-example-contract";
 import { clickLogicalPoint, pressKey } from "./support/user-input";
 
 const mountedControllers: Array<{ dispose: () => void }> = [];
@@ -1153,11 +1154,11 @@ describe("learning example catalog", () => {
     );
   });
 
-  it("contains 54 unique, ordered, source-backed routes including particles, standard shapes, WebGL, signals, and animation", async () => {
+  it("contains 66 unique, ordered, source-backed routes including particles, standard shapes, WebGL lighting, signals, and animation", async () => {
     expect(validateLearningExampleCatalog(learningExampleCatalog)).toBe(
       learningExampleCatalog,
     );
-    expect(learningExampleCatalog).toHaveLength(54);
+    expect(learningExampleCatalog).toHaveLength(66);
     expect(
       learningExampleCatalog.map((entry) => entry.source.path).sort(),
     ).toEqual(learningSourcePaths);
@@ -1213,6 +1214,7 @@ describe("learning example catalog", () => {
         "signals-and-animation",
         "webgl-islands",
       ],
+      webgl: [...WEBGL_LIGHTING_EXAMPLE_IDS],
       layout: ["absolute-and-overlay", "flex", "flow", "grid"],
       "events-and-interaction": [
         "click",
@@ -1541,8 +1543,35 @@ describe("learning example catalog", () => {
         validateLearningSourceText(source, {
           authoring: entry.authoring,
           label: entry.slug,
+          sourcePath: entry.source.path,
         }),
       ).not.toThrow();
+    }
+  });
+
+  it("contains exactly the twelve same-scene WebGL lighting lessons", async () => {
+    const webglLessons = learningExampleCatalog.filter(
+      (entry) => entry.section === "webgl",
+    );
+
+    expect(webglLessons.map((entry) => entry.slug)).toEqual(
+      WEBGL_LIGHTING_EXAMPLE_IDS,
+    );
+    expect(webglLessons.map((entry) => entry.order)).toEqual([
+      380, 390, 400, 410, 420, 430, 440, 450, 460, 470, 480, 490,
+    ]);
+    expect(webglLessons.map(getLearningExampleRoute)).toEqual(
+      WEBGL_LIGHTING_EXAMPLE_IDS.map(
+        (slug) => `#/examples/webgl/${slug}`,
+      ),
+    );
+    for (const entry of webglLessons) {
+      const source = await loadLearningSource(entry);
+      expect(source.match(/from ["'][^"']+["']/gu)).toEqual([
+        expect.stringMatching(/from ["']@crc\/core["']/u),
+        expect.stringMatching(/from ["']@crc\/webgl["']/u),
+      ]);
+      expect(source).not.toMatch(/@crc\/(?:core|webgl)\/(?:internal|lib|src)\b/u);
     }
   });
 

@@ -276,9 +276,9 @@
   export interface VerticalLineProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
   export interface TextProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions { children?: CRCTextChild }
   export interface ImageProps extends CRCEventHandlers, CRCEventFocusOptions, CRCEventParticipationOptions {}
-  export interface GroupProps { children: CRCNode }
-  export interface ClipProps { children: CRCNode }
-  export interface LayerProps { children: CRCNode }
+  export interface GroupProps extends CRCEventHandlers { children: CRCNode }
+  export interface ClipProps extends CRCEventHandlers { children: CRCNode }
+  export interface LayerProps extends CRCEventHandlers { children: CRCNode }
 
   export interface RectanglePathOptions extends RoundedCornerPathOptions { x?: number; y?: number; width: number; height: number }
   export interface CirclePathOptions { cx?: number; cy?: number; radius: number }
@@ -294,16 +294,16 @@
   export interface SvgPathOptions { d: string }
 
   export type AbsoluteStyle = BoxStyle & LayoutItemStyle;
-  export interface AbsoluteProps { children: CRCNode }
+  export interface AbsoluteProps extends CRCEventHandlers { children: CRCNode }
   export interface OverlayStyle extends BoxStyle, LayoutItemStyle { justifyItems?: 'stretch' | 'start' | 'center' | 'end'; alignItems?: 'stretch' | 'start' | 'center' | 'end' }
-  export interface OverlayProps { children: CRCNode }
+  export interface OverlayProps extends CRCEventHandlers { children: CRCNode }
   export interface FlowStyle extends BoxStyle, LayoutItemStyle { direction?: 'horizontal' | 'vertical'; wrap?: boolean; gap?: number; lineGap?: number; alignItems?: 'start' | 'center' | 'end' | 'stretch' }
-  export interface FlowProps { children: CRCNode }
+  export interface FlowProps extends CRCEventHandlers { children: CRCNode }
   export interface FlexStyle extends BoxStyle, LayoutItemStyle { flexDirection?: 'row' | 'column'; flexWrap?: 'nowrap' | 'wrap'; justifyContent?: 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'; alignItems?: 'stretch' | 'flex-start' | 'flex-end' | 'center'; alignContent?: 'stretch' | 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly'; gap?: number; rowGap?: number; columnGap?: number }
-  export interface FlexProps { children: CRCNode }
+  export interface FlexProps extends CRCEventHandlers { children: CRCNode }
   export type GridTrack = number | `${number}%` | `${number}fr`;
   export interface GridStyle extends BoxStyle, LayoutItemStyle { gridTemplateColumns: readonly GridTrack[]; gridTemplateRows: readonly GridTrack[]; justifyItems?: 'stretch' | 'start' | 'center' | 'end'; alignItems?: 'stretch' | 'start' | 'center' | 'end'; gap?: number; rowGap?: number; columnGap?: number }
-  export interface GridProps { children: CRCNode }
+  export interface GridProps extends CRCEventHandlers { children: CRCNode }
 
   export interface CanvasMeasurementService { measureText(text: string, font: string): TextMetrics }
   export type MeasureResult = { status: 'measured'; size: Readonly<Size> } | { status: 'unsupported'; reason: string };
@@ -684,6 +684,24 @@
   } from '@crc/core';
 
   export type CRCWebGLVector3 = readonly [x: number, y: number, z: number];
+  export type CRCWebGLShadowQuality = false | 'low' | 'medium' | 'high';
+
+  export interface CRCOrbitCameraOptions {
+    readonly orbitPoint: CRCWebGLVector3;
+    readonly initialPosition: CRCWebGLVector3;
+    readonly minDistance?: number;
+    readonly maxDistance?: number;
+    readonly rotateSpeed?: number;
+    readonly zoomSpeed?: number;
+  }
+  export type CRCOrbitCameraHandlers = Required<Pick<CRCEventHandlers,
+    'onPointerDown' | 'onPointerMove' | 'onPointerUp' | 'onPointerCancel' |
+    'onLostPointerCapture' | 'onWheel'>>;
+  export interface CRCOrbitCameraResult {
+    readonly position: CRCWebGLVector3;
+    readonly lookAt: CRCWebGLVector3;
+    readonly handlers: CRCOrbitCameraHandlers;
+  }
 
   export interface CRCWebGLPerspectiveCamera {
     type: 'perspective';
@@ -708,14 +726,23 @@
     scaleZ?: number;
   }
 
+  export interface CRCWebGLLambertMaterial {
+    readonly type: 'lambert';
+    readonly emissiveColor?: string;
+    readonly emissiveIntensity?: number;
+  }
+
+  export type CRCWebGLMaterial = CRCWebGLLambertMaterial;
+
   interface CRCWebGLTargetProps extends CRCEventHandlers, CRCEventParticipationOptions {
     readonly keyboardFocusable?: CRCEventTargetOptions['keyboardFocusable'];
     readonly keyboardNavigationBounds?: CRCEventTargetOptions['keyboardNavigationBounds'];
   }
 
   export interface CRCWebGLGeometryInput {
-    positions: ArrayLike<number>;
-    indices?: ArrayLike<number>;
+    readonly positions: ArrayLike<number>;
+    readonly normals?: ArrayLike<number>;
+    readonly indices?: ArrayLike<number>;
   }
 
   declare const crcWebGLGeometryBrand: unique symbol;
@@ -730,7 +757,9 @@
     camera?: CRCWebGLPerspectiveCamera;
     pointerEvents?: 'auto' | 'none';
   }
-  export interface WebGLLayerStyle extends BoxStyle, LayoutItemStyle {}
+  export interface WebGLLayerStyle extends BoxStyle, LayoutItemStyle {
+    readonly shadows?: CRCWebGLShadowQuality;
+  }
 
   export interface Group3DProps extends CRCEventHandlers {
     readonly children: CRCNode;
@@ -743,6 +772,10 @@
   export interface MeshStyle extends CRCWebGLTransformStyle {
     readonly color?: string;
     readonly opacity?: number;
+    readonly lit?: boolean;
+    readonly material?: CRCWebGLMaterial;
+    readonly castShadow?: boolean;
+    readonly receiveShadow?: boolean;
     readonly cursor?: string;
   }
 
@@ -751,11 +784,64 @@
   export interface SphereProps extends CRCWebGLTargetProps {}
   export interface SphereStyle extends MeshStyle { readonly radius?: number }
 
+  declare const lightDeclarationPropsMarker: unique symbol;
+  interface LightDeclarationProps {
+    readonly [lightDeclarationPropsMarker]?: never;
+  }
+
+  export interface AmbientLightProps extends LightDeclarationProps {}
+  export interface AmbientLightStyle {
+    readonly color?: string;
+    readonly intensity?: number;
+  }
+  type AmbientLightPrimitiveStyle = AmbientLightStyle & {
+    readonly filter?: never;
+  };
+
+  export interface HemisphereLightProps extends LightDeclarationProps {}
+  export interface HemisphereLightStyle extends CRCWebGLTransformStyle {
+    readonly skyColor?: string;
+    readonly groundColor?: string;
+    readonly intensity?: number;
+  }
+
+  export interface DirectionalLightProps extends LightDeclarationProps {}
+  export interface DirectionalLightStyle extends CRCWebGLTransformStyle {
+    readonly color?: string;
+    readonly intensity?: number;
+    readonly castShadow?: boolean;
+  }
+
+  export interface PointLightProps extends LightDeclarationProps {}
+  export interface PointLightStyle extends DirectionalLightStyle {
+    readonly range?: number;
+  }
+
+  export interface SpotLightProps extends LightDeclarationProps {}
+  export interface SpotLightStyle extends PointLightStyle {
+    readonly innerConeAngleDegrees?: number;
+    readonly outerConeAngleDegrees?: number;
+  }
+
+  declare const webGLBackgroundPropsMarker: unique symbol;
+  export interface WebGLBackgroundProps {
+    readonly [webGLBackgroundPropsMarker]?: never;
+  }
+  export interface WebGLBackgroundStyle {
+    readonly color: string;
+  }
+  type WebGLBackgroundPrimitiveStyle = WebGLBackgroundStyle & {
+    readonly filter?: never;
+  };
+
   export function createWebGLGeometry(
     input: CRCWebGLGeometryInput,
   ): CRCWebGLGeometry;
 
   export function crcAnimationFrame(): number;
+  export function crcOrbitCamera(
+    options: CRCOrbitCameraOptions,
+  ): CRCOrbitCameraResult;
 
   export const WebGLLayer: CRCPrimitiveComponent<
     WebGLLayerProps,
@@ -776,4 +862,28 @@
   export const Sphere: CRCPrimitiveComponent<
     SphereProps,
     PrimitiveInput<SphereProps, SphereStyle>
+  >;
+  export const AmbientLight: CRCPrimitiveComponent<
+    AmbientLightProps,
+    PrimitiveInput<AmbientLightProps, AmbientLightPrimitiveStyle>
+  >;
+  export const HemisphereLight: CRCPrimitiveComponent<
+    HemisphereLightProps,
+    PrimitiveInput<HemisphereLightProps, HemisphereLightStyle>
+  >;
+  export const DirectionalLight: CRCPrimitiveComponent<
+    DirectionalLightProps,
+    PrimitiveInput<DirectionalLightProps, DirectionalLightStyle>
+  >;
+  export const PointLight: CRCPrimitiveComponent<
+    PointLightProps,
+    PrimitiveInput<PointLightProps, PointLightStyle>
+  >;
+  export const SpotLight: CRCPrimitiveComponent<
+    SpotLightProps,
+    PrimitiveInput<SpotLightProps, SpotLightStyle>
+  >;
+  export const WebGLBackground: CRCPrimitiveComponent<
+    WebGLBackgroundProps,
+    PrimitiveInput<WebGLBackgroundProps, WebGLBackgroundPrimitiveStyle>
   >;

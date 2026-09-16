@@ -9,6 +9,7 @@ import {
 } from '@crc/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Cube } from './components/cube.js';
+import { PointLight } from './components/lights.js';
 import { WebGLLayer } from './components/webgl-layer.js';
 import {
   WebGLLayerController,
@@ -27,6 +28,33 @@ afterEach(() => {
 });
 
 describe('WebGL retained structural performance', () => {
+  it('reuses all six point-shadow faces for camera-only frames and invalidates them for caster movement', () => {
+    const counters = installPerformancePlatform();
+    const scene = (casterX: number, camera: CRCWebGLPerspectiveCamera) => (
+      <WebGLLayer camera={camera} style={{ width: 40, height: 40 }}>
+        <PointLight style={{ translateY: 3, translateZ: 2, range: 8 }} />
+        <Cube pointerEvents="none" style={{ translateX: casterX }} />
+      </WebGLLayer>
+    );
+    const canvas = createCanvas(40, 40);
+    const controller = crc(canvas, scene(0, cameraAt(5)), { pixelRatio: 1 });
+    controllers.add(controller);
+
+    counters.frames.runNext(1);
+    expect(counters.glDraws).toBe(7);
+    expect(counters.shadowAttachments).toBe(6);
+
+    crc(canvas, scene(0, cameraAt(6)));
+    counters.frames.runNext(2);
+    expect(counters.glDraws).toBe(8);
+    expect(counters.shadowAttachments).toBe(6);
+
+    crc(canvas, scene(1, cameraAt(6)));
+    counters.frames.runNext(3);
+    expect(counters.glDraws).toBe(15);
+    expect(counters.shadowAttachments).toBe(12);
+  });
+
   it('recomposites an unchanged island without child, GL, transfer, upload, or ledger work', () => {
     const counters = installPerformancePlatform();
     let childExecutions = 0;
@@ -70,7 +98,7 @@ describe('WebGL retained structural performance', () => {
       childExecutions: 1,
       glDraws: 1,
       transfers: 1,
-      uploads: 2,
+      uploads: 3,
       composites: 1,
       ledgerEntries: 1,
     });
@@ -83,7 +111,7 @@ describe('WebGL retained structural performance', () => {
       childExecutions: 1,
       glDraws: 1,
       transfers: 1,
-      uploads: 2,
+      uploads: 3,
       composites: 2,
       ledgerEntries: 1,
     });
@@ -96,7 +124,7 @@ describe('WebGL retained structural performance', () => {
       childExecutions: 2,
       glDraws: 2,
       transfers: 2,
-      uploads: 2,
+      uploads: 3,
       composites: 3,
     });
 
@@ -106,7 +134,7 @@ describe('WebGL retained structural performance', () => {
       childExecutions: 3,
       glDraws: 3,
       transfers: 3,
-      uploads: 2,
+      uploads: 3,
       composites: 4,
     });
 
@@ -116,7 +144,7 @@ describe('WebGL retained structural performance', () => {
       childExecutions: 4,
       glDraws: 4,
       transfers: 4,
-      uploads: 2,
+      uploads: 3,
       composites: 5,
     });
 
@@ -126,7 +154,7 @@ describe('WebGL retained structural performance', () => {
       childExecutions: 5,
       glDraws: 5,
       transfers: 5,
-      uploads: 2,
+      uploads: 3,
       composites: 6,
     });
 
@@ -145,7 +173,7 @@ describe('WebGL retained structural performance', () => {
       childExecutions: 7,
       glDraws: 7,
       transfers: 6,
-      uploads: 2,
+      uploads: 3,
       composites: 7,
       ledgerEntries: 2,
     });
@@ -502,6 +530,7 @@ function installPerformancePlatform() {
   let uploads = 0;
   let composites = 0;
   let glWork = 0;
+  let shadowAttachments = 0;
   let layerController: {
     committed?: { pickLedger: { entries: readonly unknown[] } };
   } | undefined;
@@ -509,6 +538,7 @@ function installPerformancePlatform() {
     drawArrays: () => { glDraws += 1; },
     drawElements: () => { glDraws += 1; },
     bufferData: () => { uploads += 1; },
+    framebufferTexture2D: () => { shadowAttachments += 1; },
   }, () => { glWork += 1; });
   class PerformanceOffscreenCanvas {
     constructor(
@@ -550,6 +580,7 @@ function installPerformancePlatform() {
     get uploads() { return uploads; },
     get composites() { return composites; },
     get glWork() { return glWork; },
+    get shadowAttachments() { return shadowAttachments; },
     committedLedger() {
       return layerController?.committed?.pickLedger;
     },
@@ -641,9 +672,17 @@ function createNoopGL(
                   } : property === 'createBuffer' ||
                     property === 'createShader' ||
                     property === 'createProgram' ||
-                    property === 'createVertexArray' ? () => {
+                    property === 'createVertexArray' ||
+                    property === 'createFramebuffer' ||
+                    property === 'createTexture' ? () => {
                       onCall(property);
                       return { kind: property, id: ++handle };
+                    } : property === 'checkFramebufferStatus' ? () => {
+                      onCall(property);
+                      if (!('FRAMEBUFFER_COMPLETE' in record)) {
+                        record.FRAMEBUFFER_COMPLETE = constant++;
+                      }
+                      return record.FRAMEBUFFER_COMPLETE;
                     } : property === 'isContextLost' ? () => {
                       onCall(property);
                       return false;

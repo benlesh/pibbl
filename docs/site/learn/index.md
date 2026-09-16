@@ -27,6 +27,7 @@ question while you work.
 - [Manage state and lifecycle](#/learn/guides/state-and-lifecycle)
 - [Use signals and animation](#/learn/guides/signals-and-animation)
 - [Add WebGL islands](#/learn/guides/webgl-islands)
+- [Light WebGL scenes](#/learn/guides/webgl-lighting)
 - [Add focus and keyboard navigation](#/learn/guides/focus-and-keyboard)
 - [Create custom components and primitives](#/learn/guides/custom-components-and-primitives)
 - [Integrate with React](#/learn/guides/react-integration)

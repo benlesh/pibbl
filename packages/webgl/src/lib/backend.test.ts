@@ -1,4 +1,5 @@
 import { crc, createElement, type CRCNode } from '@crc/core';
+import { jsxDEV } from '@crc/core/jsx-dev-runtime';
 import {
   executeBackendCRC,
   mountBackendCRC,
@@ -6,7 +7,13 @@ import {
   type CRCEventTargetRegistration,
 } from '@crc/core/internal';
 import { describe, expect, it, vi } from 'vitest';
-import { Mesh, createWebGLGeometry } from '../index.js';
+import {
+  AmbientLight,
+  Cube,
+  Mesh,
+  WebGLBackground,
+  createWebGLGeometry,
+} from '../index.js';
 import { resolveCamera } from './math/camera.js';
 import {
   pushWebGLModelMatrix,
@@ -21,7 +28,7 @@ describe('deferred WebGL backend phases', () => {
     const geometry = triangle();
     function SceneMesh(props: { readonly label: string }) {
       trace.push(`primitive:${props.label}`);
-      return createElement(Mesh, { geometry });
+      return createElement(Mesh, { geometry, style: { lit: false } });
     }
     function Wrapper(props: {
       readonly label: string;
@@ -100,6 +107,7 @@ describe('deferred WebGL backend phases', () => {
       geometry: triangle(),
       localModel: identity(),
       color: [1, 0, 0, 1],
+      lit: false,
       target,
     });
 
@@ -130,6 +138,7 @@ describe('deferred WebGL backend phases', () => {
       geometry: triangle(),
       localModel: identity(),
       color: [1, 0, 0, 1],
+      lit: false,
       target,
     });
     pushWebGLModelMatrix(frame.environment, identity());
@@ -189,6 +198,7 @@ describe('deferred WebGL backend phases', () => {
       geometry: triangle(),
       localModel: identity(),
       color: [1, 0, 0, 1],
+      lit: false,
       target,
     });
 
@@ -205,6 +215,101 @@ describe('deferred WebGL backend phases', () => {
     expect(driver.takeFailedFrameTimestamp()).toBe(101);
     expect(driver.takeFailedFrameTimestamp()).toBeUndefined();
     driver.dispose();
+  });
+
+  it.each([
+    ['default-lit', undefined],
+    ['unlit', false],
+  ])('rejects public %s zero scale before any GL operation', (_label, lit) => {
+    const trace: string[] = [];
+    const recording = createPhaseGL(trace);
+    const root = createElement(Cube, {
+      style: lit === undefined ? { scaleX: 0 } : { scaleX: 0, lit },
+    });
+    const mounted = mountScene(recording.gl, root);
+
+    expect(() => executeBackendCRC(mounted.mount, root, 10)).toThrow(
+      'WebGL transform.scaleX must be nonzero',
+    );
+    expect(trace).toEqual([]);
+
+    mounted.dispose();
+  });
+
+  it('rejects a default-lit geometry without normals and reports JSX source before GL', () => {
+    const trace: string[] = [];
+    const recording = createPhaseGL(trace);
+    const source = {
+      fileName: '/app/custom-lit-mesh.tsx',
+      lineNumber: 24,
+      columnNumber: 11,
+    };
+    const root = jsxDEV(
+      Mesh,
+      { geometry: triangleWithoutNormals() },
+      undefined,
+      false,
+      source,
+      undefined,
+    );
+    const mounted = mountScene(recording.gl, root);
+
+    expect(() => executeBackendCRC(mounted.mount, root, 10)).toThrow(
+      'Mesh lit geometry requires normals. ' +
+      'JSX source: /app/custom-lit-mesh.tsx:24:11.',
+    );
+    expect(trace).toEqual([]);
+
+    mounted.dispose();
+  });
+
+  it('accepts an explicit-unlit public geometry without normals', () => {
+    const trace: string[] = [];
+    const recording = createPhaseGL(trace);
+    const root = createElement(Mesh, {
+      geometry: triangleWithoutNormals(),
+      style: { color: '#ff0000', lit: false },
+    });
+    const mounted = mountScene(recording.gl, root);
+
+    executeBackendCRC(mounted.mount, root, 10);
+
+    expect(recording.drawArrays).toHaveBeenCalledOnce();
+    mounted.dispose();
+  });
+
+  it('rejects a ninth light before any GL operation and counts zero intensity', () => {
+    const trace: string[] = [];
+    const recording = createPhaseGL(trace);
+    const root = Array.from({ length: 9 }, (_, index) => createElement(
+      AmbientLight,
+      { style: { intensity: index === 0 ? 0 : 1 } },
+    ));
+    const mounted = mountScene(recording.gl, root);
+
+    expect(() => executeBackendCRC(mounted.mount, root, 10)).toThrow(
+      'WebGLLayer supports at most 8 light declarations',
+    );
+    expect(trace).toEqual([]);
+
+    mounted.dispose();
+  });
+
+  it('rejects a second background before any GL operation', () => {
+    const trace: string[] = [];
+    const recording = createPhaseGL(trace);
+    const root = [
+      createElement(WebGLBackground, { style: { color: '#000000' } }),
+      createElement(WebGLBackground, { style: { color: '#ffffff' } }),
+    ];
+    const mounted = mountScene(recording.gl, root);
+
+    expect(() => executeBackendCRC(mounted.mount, root, 10)).toThrow(
+      'WebGLLayer supports at most one WebGLBackground declaration',
+    );
+    expect(trace).toEqual([]);
+
+    mounted.dispose();
   });
 });
 
@@ -243,6 +348,13 @@ function frameInput(renderTimestamp: number): CRCBackendFrameInput {
 }
 
 function triangle() {
+  return createWebGLGeometry({
+    positions: [-1, -1, 0, 1, -1, 0, 0, 1, 0],
+    normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
+  });
+}
+
+function triangleWithoutNormals() {
   return createWebGLGeometry({
     positions: [-1, -1, 0, 1, -1, 0, 0, 1, 0],
   });

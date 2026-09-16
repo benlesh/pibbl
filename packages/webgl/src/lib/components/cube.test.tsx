@@ -29,7 +29,13 @@ describe('Cube', () => {
       const valid: CubeInput = {
         onPointerDown() {},
         keyboardFocusable: true,
-        style: { size: 2, color: 'red', cursor: 'pointer' },
+        style: {
+          size: 2,
+          color: 'red',
+          cursor: 'pointer',
+          lit: false,
+          material: { type: 'lambert', emissiveColor: '#ff0000' },
+        },
       };
       const invalid: CubeInput = {
         // @ts-expect-error Cube size belongs to style.

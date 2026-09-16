@@ -1,16 +1,36 @@
 import { describe, expect, it } from "vitest";
+import { tutorialSnapshotCatalog } from "@crc/scenarios";
 import {
   encodeCodeRoute,
   MAX_SHARED_URL_LENGTH,
   readSharedCode,
   replaceCodeRoute,
 } from "../../../playground/src/share-code";
+import { loadWorkbenchSource } from "../../../playground/src/learning-sources";
 import { toRunnableScript } from "../../../playground/src/sandbox-module";
 
 const route = "#/examples/drawing/rectangle";
 const canonical = "export default function mount() {}\n";
 
 describe("learning example share URLs", () => {
+  it("round-trips a small edit for every diagram-editor chapter", async () => {
+    for (const entry of tutorialSnapshotCatalog) {
+      const canonical = await loadWorkbenchSource(entry);
+      const route = `#/learn/tutorials/diagram-editor/${entry.source.path
+        .split("/")
+        .at(-1)!
+        .replace(/^\d{2}-/u, "")
+        .replace(".example.tsx", "")}`;
+      const edited = canonical.replace("WORKFLOW MAP", "MY WORKFLOW");
+      const encoded = encodeCodeRoute(route, edited, canonical);
+
+      expect(encoded.tooLong).toBe(false);
+      expect(readSharedCode(new URL(encoded.url).hash, canonical)).toEqual({
+        code: edited,
+      });
+    }
+  });
+
   it("round-trips Unicode source and cleans canonical routes", () => {
     const edited = `${canonical}// こんにちは — 🟨\n`;
     const encoded = encodeCodeRoute(route, edited, canonical);

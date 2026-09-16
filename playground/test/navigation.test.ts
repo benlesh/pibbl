@@ -71,6 +71,7 @@ const examples = [
   example("filters", "Filters", "drawing"),
   example("rectangle", "Rectangle", "drawing"),
   example("group", "Group", "composition"),
+  example("ambient-light", "Ambient light", "webgl"),
   example("flex", "Flex", "layout"),
   example("click", "Click", "events-and-interaction"),
   example("focus-management", "Focus management", "focus-and-keyboard"),
@@ -143,12 +144,13 @@ describe("Studio navigation", () => {
     ]);
   });
 
-  it("uses the five public example groups and excludes automated test labs", () => {
+  it("uses the six public example groups and excludes automated test labs", () => {
     const examplesArea = navigation[2];
 
     expect(examplesArea.children?.map(({ id, label }) => ({ id, label }))).toEqual([
       { id: "examples-drawing", label: "Drawing" },
       { id: "examples-composition", label: "Composition" },
+      { id: "examples-webgl", label: "WebGL" },
       { id: "examples-layout", label: "Layout" },
       { id: "examples-events-and-interaction", label: "Events and interaction" },
       { id: "examples-focus-and-keyboard", label: "Focus and keyboard" },
@@ -156,6 +158,9 @@ describe("Studio navigation", () => {
     expect(examplesArea.children?.[0]?.children?.map(({ label }) => label)).toEqual([
       "Filters",
       "Rectangle",
+    ]);
+    expect(examplesArea.children?.[2]?.children?.map(({ label }) => label)).toEqual([
+      "Ambient light",
     ]);
     expect(JSON.stringify(navigation)).not.toContain("test");
   });
@@ -253,6 +258,7 @@ function example(
   browseGroup:
     | "drawing"
     | "composition"
+    | "webgl"
     | "layout"
     | "events-and-interaction"
     | "focus-and-keyboard",

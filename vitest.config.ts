@@ -2,9 +2,15 @@ import { fileURLToPath } from 'node:url';
 import { playwright } from '@vitest/browser-playwright';
 import { configDefaults, defineConfig } from 'vitest/config';
 import { assertBuiltCore } from './tooling/assert-built-core.ts';
+import { crcStudioDocs } from './tooling/studio-docs/vite-plugin.ts';
 
 export default defineConfig(({ mode }) => ({
-  plugins: mode === 'built' ? [assertBuiltCore()] : [],
+  plugins: [
+    crcStudioDocs({
+      repositoryRoot: fileURLToPath(new URL('.', import.meta.url)),
+    }),
+    ...(mode === 'built' ? [assertBuiltCore()] : []),
+  ],
   resolve: {
     alias: mode === 'built' ? [] : [
       {

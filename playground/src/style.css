@@ -639,6 +639,20 @@ code {
   margin: 0;
 }
 
+.documentation-body img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: var(--line);
+  background: var(--paper);
+  box-shadow: 5px 5px 0 var(--ink);
+}
+
+.documentation-body a:focus-visible img {
+  outline: 4px solid var(--cobalt);
+  outline-offset: 4px;
+}
+
 .documentation-body pre {
   overflow-x: auto;
   padding: 18px;
@@ -674,6 +688,32 @@ code {
 
 .documentation-workbench {
   margin-top: 18px;
+}
+
+.tutorial-pagination {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+  max-width: 840px;
+}
+
+.tutorial-pagination a {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 14px 16px;
+  border: var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 800;
+  line-height: 1.35;
+  text-decoration: none;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.tutorial-pagination a:hover {
+  background: var(--mint);
 }
 
 .documentation-page--missing {
@@ -1654,7 +1694,8 @@ code {
 
   .lesson-objectives ol,
   .lesson-teaching-grid,
-  .lesson-pagination {
+  .lesson-pagination,
+  .tutorial-pagination {
     grid-template-columns: 1fr;
   }
 

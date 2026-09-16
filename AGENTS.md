@@ -29,10 +29,13 @@ drawing primitives without React or generated DOM.
   transient pooling.
 - `@crc/webgl` is implemented as transparent WebGL2 islands in Canvas paint
   order. It shares core's element protocol, scheduler, events, focus, and JSX
-  runtime. Each layer composes one frame-local scene, settles shared
-  raster/pick/focus records, renders planned opaque and transparent queues, and
-  transactionally commits one Canvas bitmap. Its renderer owns WebGL contexts,
-  resident GPU resources, bitmap generations, and animation requests.
+  runtime. Each layer composes one frame-local scene, settles meshes, analytic
+  lights, materials, background, pick/focus records, and genuine shadow plans,
+  renders shadow-depth passes followed by opaque and transparent color queues,
+  and transactionally commits one Canvas bitmap. Its renderer owns WebGL
+  contexts, resident GPU and shadow resources, bitmap generations, and
+  animation requests. `crcOrbitCamera` supplies an attach-anywhere public event
+  handler bundle while cameras remain plain perspective descriptors.
 - First-class `signal`, `computed`, `untracked`, `isSignal`, and `crcSignal`
   are implemented with explicit reads, dynamic synchronous dependency graphs,
   render/Advance write guards, observation-aware computed source-edge leases,
@@ -148,10 +151,21 @@ either as the current result unless a fresh run reproduces it.
   dirty path. Layers require browser `OffscreenCanvas` support.
 - `WebGLLayer` owns a private WebGL backend instance and composites one
   transparent committed `ImageBitmap` at one Canvas paint position. A dirty
-  child composes, settles, and renders before the parent Canvas composites and
-  commits the bitmap/pick/focus generation. Its picker bridges fixed
+  child composes, settles, renders any invalid shadow-depth generations, then
+  renders the color queues before the parent Canvas composites and commits the
+  bitmap/pick/focus generation. Its picker bridges fixed
   miss/block/target results into the global event stack, and its geometry-backed
   focus targets expose projected bounds.
+- WebGL meshes are Lambert-lit by default. Ambient, hemisphere, directional,
+  point, and spot declarations affect the complete settled scene independently
+  of JSX order. Direct lights cast genuine shadows by default at the layer's
+  default `"medium"` quality; directional and spot lights use one 2D depth
+  view, while point lights use six cube faces. Camera-only changes reuse valid
+  light-space depth generations.
+- `crcOrbitCamera` owns spherical pose state in one component hook slot and
+  returns stable ordinary pointer/wheel handlers. Authors attach those handlers
+  to a mesh, structural ancestor, or explicit viewport-sized target; structural
+  listeners never invent hit geometry.
 - A nonempty `style.filter` creates one transient composition boundary around
   the receiving primitive and its recursive output. One list uses one native
   filter operation in declaration order; nested boundaries resolve inside out.
@@ -204,7 +218,9 @@ Public hooks: `crcState`, `crcSignal`, `crcPlayback`, `crcTransition`, `crcMemo`
 `crcEventListener`, `crcCursor`, and `crcLayoutBox`.
 
 Public `@crc/webgl` surface: `WebGLLayer`, `Group3D`, `Mesh`, `Cube`, `Sphere`,
-`createWebGLGeometry`, `crcAnimationFrame`, and their public camera, geometry,
+`AmbientLight`, `HemisphereLight`, `DirectionalLight`, `PointLight`,
+`SpotLight`, `WebGLBackground`, `createWebGLGeometry`, `crcAnimationFrame`, and
+`crcOrbitCamera`, plus their public camera, orbit, geometry, material, shadow,
 transform, and component prop/style types. `Mesh` plus immutable
 `createWebGLGeometry` descriptors is the application custom-shape path. The
 package has no second JSX runtime, element constructor, fragment, core
@@ -227,8 +243,9 @@ cross-thread signals, public manual clocks/history, automatic caching, or a
 retained scene graph.
 WebGL islands do not promise WebGL1/WebGPU fallback, Canvas children inside an
 island, Canvas/WebGL subprimitive interleaving, multiple cameras or viewports in
-one island, lighting, materials, textures, environments, shadows, emissive or
-glow effects, workers, or cross-context GPU sharing.
+one island, textures, image environments/IBL, PBR, glow/bloom, area lights,
+cascaded/soft/contact/transparent shadows, workers, or cross-context GPU
+sharing.
 Nonempty filters require browser `OffscreenCanvas` and Canvas
 `filter`; `[]` is a no-op with no filter capability requirement. Browser
 behavior remains authoritative for Canvas/`Path2D`, font
@@ -358,7 +375,7 @@ historical intent live in:
 - `docs/design/runtime-resource-ownership.md`
 - `docs/superpowers/specs/2026-09-08-first-class-filters-design.md`
 
-## Shipped WebGL islands and settled-scene rendering
+## Shipped WebGL islands, lighting, orbit controls, and genuine shadows
 
 The implemented 2026-09-09 design added the optional `@crc/webgl` package.
 `WebGLLayer` owns one persistent transparent WebGL2 `OffscreenCanvas`, private
@@ -394,6 +411,26 @@ reserved for matching CRC packages. Exact current behavior lives in the
 updated contracts under `docs/design/`; the current settled-scene design is:
 
 - `docs/superpowers/specs/2026-09-13-webgl-settled-scene-rendering-design.md`
+
+The implemented 2026-09-14 lighting design adds immutable geometry normals,
+local closed Lambert material descriptors, five global analytic-light
+declarations, and one solid/alpha `WebGLBackground`. Meshes are lit by default;
+a non-emissive lit mesh with no illumination is black, while `style.lit = false`
+keeps the base color and emission without receiving lights. Light and emissive
+color alpha scale RGB contribution but never mesh output alpha.
+
+The implemented 2026-09-15 orbit/shadow design adds the component-owned
+`crcOrbitCamera` hook and renderer-owned genuine depth maps. Omitted
+`WebGLLayer.style.shadows` means `"medium"`; direct lights and opaque meshes
+cast by default, and lit nonzero-alpha meshes receive by default. Directional
+and spot lights use one 2D shadow view; point lights use six cube faces. Each
+shadow attenuates only its matching direct-light contribution, and presentation
+camera movement does not invalidate a valid light-space cache. Exact current
+behavior lives in the updated contracts under `docs/design/`; approved intent
+is recorded in:
+
+- `docs/superpowers/specs/2026-09-14-webgl-lighting-materials-and-background-design.md`
+- `docs/superpowers/specs/2026-09-15-webgl-orbit-camera-and-genuine-shadows-design.md`
 
 Historical island intent lives in:
 

@@ -48,6 +48,14 @@ export interface PublicDocInternalLink {
   readonly text: string;
 }
 
+export interface TutorialPageRelationship {
+  readonly rootRoute: string;
+  readonly chapter: number;
+  readonly chapterCount: number;
+  readonly previous?: { readonly route: string; readonly title: string };
+  readonly next?: { readonly route: string; readonly title: string };
+}
+
 export interface LoadedPublicDoc {
   readonly frontmatter: PublicDocFrontmatter;
   readonly route: string;
@@ -56,6 +64,7 @@ export interface LoadedPublicDoc {
   readonly headings: readonly PublicDocHeading[];
   readonly sections: readonly PublicDocSection[];
   readonly internalLinks: readonly PublicDocInternalLink[];
+  readonly tutorialRelationship?: TutorialPageRelationship;
 }
 
 const documentKinds = new Set<PublicDocKind>([

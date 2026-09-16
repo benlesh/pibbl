@@ -49,7 +49,7 @@ describe('public WebGL laboratory structural cost', () => {
       return createElement(Mesh, {
         geometry,
         pointerEvents: 'none',
-        style: {},
+        style: { lit: false },
       });
     }
     const canvas = document.createElement('canvas');

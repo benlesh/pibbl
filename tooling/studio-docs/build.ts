@@ -10,7 +10,7 @@ import {
   type PublicApiInventory,
 } from "./api-exports";
 import { parsePublicMarkdown } from "./markdown";
-import type { LoadedPublicDoc } from "./model";
+import type { LoadedPublicDoc, TutorialPageRelationship } from "./model";
 
 const legacyRelativeAlias = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 const legacyHashRoute =
@@ -49,6 +49,11 @@ export interface StudioDocumentationExampleInput {
   };
 }
 
+export interface StudioDocumentationWorkbenchInput {
+  readonly slug: string;
+  readonly source: { readonly path: string };
+}
+
 export interface SerializedApiCoverage {
   readonly values: Readonly<Record<string, ApiCoverageDestination>>;
   readonly types: Readonly<Record<string, ApiCoverageDestination>>;
@@ -78,7 +83,7 @@ export interface StudioDocumentationSearchInput {
 /** Browser rendering needs generated HTML and anchors, never search-only text. */
 export type StudioDocumentationBrowserPage = Pick<
   StudioDocumentationPage,
-  "frontmatter" | "route" | "html" | "headings"
+  "frontmatter" | "route" | "html" | "headings" | "tutorialRelationship"
 >;
 
 export interface StudioDocumentationBrowserBuild {
@@ -95,6 +100,7 @@ export interface StudioDocumentationBuildOptions {
   readonly docsDirectory?: string;
   readonly apiInventory?: PublicApiInventory;
   readonly examples?: readonly StudioDocumentationExampleInput[];
+  readonly workbenchSources?: readonly StudioDocumentationWorkbenchInput[];
 }
 
 /**
@@ -114,7 +120,7 @@ export async function buildStudioDocumentation(
     repositoryRoot,
     docsDirectory,
   );
-  const pages = await Promise.all(
+  let pages: readonly StudioDocumentationPage[] = await Promise.all(
     sourcePaths.map(async (sourcePath) => {
       const source = await readFile(
         resolve(repositoryRoot, sourcePath),
@@ -139,9 +145,13 @@ export async function buildStudioDocumentation(
     examples,
     options.examples !== undefined,
   );
-  validateTutorialOrder(pages);
-  if (options.examples !== undefined)
-    validateExampleReferences(pages, examples);
+  pages = deriveTutorialRelationships(pages);
+  validateExampleReferences(
+    pages,
+    validateWorkbenchSources(
+      options.workbenchSources ?? options.examples ?? [],
+    ),
+  );
 
   const inventory =
     options.apiInventory ??
@@ -175,11 +185,12 @@ export function toStudioDocumentationBrowserBuild(
   documentation: StudioDocumentationBuild,
 ): StudioDocumentationBrowserBuild {
   const pages = documentation.pages.map(
-    ({ frontmatter, route, html, headings }) => ({
+    ({ frontmatter, route, html, headings, tutorialRelationship }) => ({
       frontmatter,
       route,
       html,
       headings,
+      ...(tutorialRelationship === undefined ? {} : { tutorialRelationship }),
     }),
   );
   return {
@@ -244,10 +255,6 @@ function validatePageIdentity(pages: readonly StudioDocumentationPage[]): void {
   assertUnique(
     pages.map(({ frontmatter }) => frontmatter.id),
     "content ID",
-  );
-  assertUnique(
-    pages.map(({ frontmatter }) => frontmatter.slug),
-    "content slug",
   );
 }
 
@@ -382,9 +389,9 @@ function splitInternalLink(href: string): { route: string; anchor?: string } {
   };
 }
 
-function validateTutorialOrder(
+function deriveTutorialRelationships(
   pages: readonly StudioDocumentationPage[],
-): void {
+): readonly StudioDocumentationPage[] {
   const rootsByTutorial = new Map<string, StudioDocumentationPage[]>();
   const chaptersByTutorial = new Map<string, StudioDocumentationPage[]>();
   for (const page of pages) {
@@ -411,6 +418,7 @@ function validateTutorialOrder(
     chaptersByTutorial.set(frontmatter.tutorial, chapters);
   }
 
+  const relationships = new Map<string, TutorialPageRelationship>();
   for (const [tutorial, chapters] of chaptersByTutorial) {
     const roots = rootsByTutorial.get(tutorial) ?? [];
     if (roots.length !== 1) {
@@ -427,7 +435,40 @@ function validateTutorialOrder(
         `Tutorial "${tutorial}" chapter order must be unique and contiguous from 1.`,
       );
     }
+    const root = roots[0]!;
+    const orderedChapters = [...chapters].sort(
+      (left, right) => left.frontmatter.order! - right.frontmatter.order!,
+    );
+    for (const [index, chapter] of orderedChapters.entries()) {
+      relationships.set(chapter.route, {
+        rootRoute: root.route,
+        chapter: index + 1,
+        chapterCount: orderedChapters.length,
+        previous:
+          index === 0
+            ? { route: root.route, title: root.frontmatter.title }
+            : {
+                route: orderedChapters[index - 1]!.route,
+                title: orderedChapters[index - 1]!.frontmatter.title,
+              },
+        ...(orderedChapters[index + 1] === undefined
+          ? {}
+          : {
+              next: {
+                route: orderedChapters[index + 1]!.route,
+                title: orderedChapters[index + 1]!.frontmatter.title,
+              },
+            }),
+      });
+    }
   }
+
+  return pages.map((page) => {
+    const tutorialRelationship = relationships.get(page.route);
+    return tutorialRelationship === undefined
+      ? page
+      : { ...page, tutorialRelationship };
+  });
 }
 
 function normalizeExamples(
@@ -467,17 +508,31 @@ function normalizeExamples(
 
 function validateExampleReferences(
   pages: readonly StudioDocumentationPage[],
-  examples: readonly StudioDocumentationExample[],
+  workbenchSources: readonly StudioDocumentationWorkbenchInput[],
 ): void {
-  const exampleSlugs = new Set(examples.map(({ slug }) => slug));
+  const workbenchSlugs = new Set(workbenchSources.map(({ slug }) => slug));
   for (const page of pages) {
     const slug = page.frontmatter.exampleSlug;
-    if (slug !== undefined && !exampleSlugs.has(slug)) {
+    if (slug !== undefined && !workbenchSlugs.has(slug)) {
       throw new Error(
-        `${page.sourcePath}: Unknown learning example "${slug}" referenced by exampleSlug.`,
+        `${page.sourcePath}: Unknown workbench source "${slug}" referenced by exampleSlug.`,
       );
     }
   }
+}
+
+function validateWorkbenchSources(
+  sources: readonly StudioDocumentationWorkbenchInput[],
+): readonly StudioDocumentationWorkbenchInput[] {
+  assertUnique(
+    sources.map(({ slug }) => slug),
+    "workbench source slug",
+  );
+  assertUnique(
+    sources.map(({ source }) => source.path),
+    "workbench source path",
+  );
+  return sources;
 }
 
 function validateRelatedTypeLinks(

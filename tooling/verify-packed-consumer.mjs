@@ -311,21 +311,85 @@ try {
 
 
   const sharedRuntimeBundle = await bundleConsumerEntry(`
-    import { Fragment, crc, createElement } from '@crc/core';
+    import { Fragment, Group, Rectangle, crc, createElement } from '@crc/core';
     import {
+      AmbientLight,
       Cube,
+      DirectionalLight,
+      Group3D,
+      HemisphereLight,
+      Mesh,
+      PointLight,
+      Sphere,
+      SpotLight,
+      WebGLBackground,
       WebGLLayer,
       crcAnimationFrame,
+      crcOrbitCamera,
       createWebGLGeometry,
     } from '@crc/webgl';
     const geometry = createWebGLGeometry({
       positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+      normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
     });
-    const scene = (
-      <WebGLLayer style={{ width: 1, height: 1 }}>
-        <Cube style={{ size: geometry.vertexCount }} />
-      </WebGLLayer>
-    );
+    const qualities = [false, 'low', 'medium', 'high'];
+    function Scene() {
+      const orbit = crcOrbitCamera({
+        orbitPoint: [0, 0, 0],
+        initialPosition: [0, 2, 5],
+      });
+      const camera = {
+        type: 'perspective',
+        position: orbit.position,
+        lookAt: orbit.lookAt,
+        up: [0, 1, 0],
+        fieldOfViewDegrees: 45,
+        near: 0.1,
+        far: 100,
+      };
+      const timestamp = crcAnimationFrame();
+      return (
+        <Group {...orbit.handlers}>
+          <Rectangle style={{ width: 1, height: 1, fill: 'transparent' }} />
+          {qualities.map(shadows => (
+            <WebGLLayer camera={camera} style={{ width: 1, height: 1, shadows }}>
+              <WebGLBackground style={{ color: '#08111f' }} />
+              <AmbientLight style={{ color: '#ffffff', intensity: 0.1 }} />
+              <HemisphereLight
+                style={{ skyColor: '#b9dcff', groundColor: '#302418', intensity: 0.3 }}
+              />
+              <DirectionalLight style={{ castShadow: false }} />
+              <PointLight style={{ range: 12, castShadow: true }} />
+              <SpotLight
+                style={{
+                  range: 20,
+                  innerConeAngleDegrees: 15,
+                  outerConeAngleDegrees: 28,
+                  castShadow: true,
+                }}
+              />
+              <Group3D style={{ rotationYDegrees: timestamp / 10 }}>
+                <Cube
+                  style={{
+                    size: geometry.vertexCount,
+                    material: {
+                      type: 'lambert',
+                      emissiveColor: '#102040',
+                      emissiveIntensity: 0.25,
+                    },
+                    castShadow: true,
+                    receiveShadow: false,
+                  }}
+                />
+                <Sphere style={{ lit: false, castShadow: false, receiveShadow: true }} />
+                <Mesh geometry={geometry} />
+              </Group3D>
+            </WebGLLayer>
+          ))}
+        </Group>
+      );
+    }
+    const scene = <Scene />;
     console.log(Fragment, crc, createElement, crcAnimationFrame, scene);
   `);
   assertSinglePackedRuntime(sharedRuntimeBundle.metafile);

@@ -240,26 +240,51 @@ import {
   wait,
 } from '@crc/core';
 import {
+  AmbientLight,
   crcAnimationFrame,
+  crcOrbitCamera,
   createWebGLGeometry,
   Cube,
+  DirectionalLight,
   Group3D,
+  HemisphereLight,
   Mesh,
+  PointLight,
   Sphere,
+  SpotLight,
+  WebGLBackground,
   WebGLLayer,
+  type AmbientLightProps,
+  type AmbientLightStyle,
+  type CRCOrbitCameraHandlers,
+  type CRCOrbitCameraOptions,
+  type CRCOrbitCameraResult,
   type CRCWebGLGeometry,
   type CRCWebGLGeometryInput,
+  type CRCWebGLLambertMaterial,
+  type CRCWebGLMaterial,
   type CRCWebGLPerspectiveCamera,
+  type CRCWebGLShadowQuality,
   type CRCWebGLTransformStyle,
   type CRCWebGLVector3,
   type CubeProps,
   type CubeStyle,
+  type DirectionalLightProps,
+  type DirectionalLightStyle,
   type Group3DProps,
   type Group3DStyle,
+  type HemisphereLightProps,
+  type HemisphereLightStyle,
   type MeshProps,
   type MeshStyle,
+  type PointLightProps,
+  type PointLightStyle,
   type SphereProps,
   type SphereStyle,
+  type SpotLightProps,
+  type SpotLightStyle,
+  type WebGLBackgroundProps,
+  type WebGLBackgroundStyle,
   type WebGLLayerProps,
   type WebGLLayerStyle,
 } from '@crc/webgl';
@@ -1386,21 +1411,24 @@ crcCursor({ style: 'pointer', capture: true });
 
 const consumerWebGLGeometryInput = {
   positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+  normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
   indices: [0, 1, 2],
 } satisfies CRCWebGLGeometryInput;
 const consumerWebGLGeometry: CRCWebGLGeometry = createWebGLGeometry(
   consumerWebGLGeometryInput,
 );
 const consumerWebGLVector: CRCWebGLVector3 = [0, 0, 5];
-const consumerWebGLCamera: CRCWebGLPerspectiveCamera = {
-  type: 'perspective',
-  position: consumerWebGLVector,
-  lookAt: [0, 0, 0],
-  up: [0, 1, 0],
-  fieldOfViewDegrees: 45,
-  near: 0.1,
-  far: 100,
-};
+const consumerShadowQualities = [
+  false,
+  'low',
+  'medium',
+  'high',
+] as const satisfies readonly CRCWebGLShadowQuality[];
+const consumerLambertMaterial: CRCWebGLMaterial = {
+  type: 'lambert',
+  emissiveColor: '#102040',
+  emissiveIntensity: 0.25,
+} satisfies CRCWebGLLambertMaterial;
 
 function AnimatedGeometryConsumer(): CRCNode {
   const timestamp: number = crcAnimationFrame();
@@ -1414,43 +1442,160 @@ function AnimatedGeometryConsumer(): CRCNode {
   });
 }
 
-export const createElementWebGLScene = createElement(
-  WebGLLayer,
-  {
-    camera: consumerWebGLCamera,
-    children: createElement(Group3D, {
-      children: [
-        createElement(Cube, { style: { color: '#74d3ae', size: 1 } }),
-        createElement(Sphere, { style: { radius: 0.5, translateX: 1 } }),
-        createElement(Mesh, {
-          geometry: consumerWebGLGeometry,
-          style: { color: '#f7c948' },
+function OrbitingWebGLConsumer(): CRCNode {
+  const orbitOptions: CRCOrbitCameraOptions = {
+    orbitPoint: [0, 0, 0],
+    initialPosition: consumerWebGLVector,
+    minDistance: 2,
+    maxDistance: 12,
+    rotateSpeed: 0.8,
+    zoomSpeed: 1.2,
+  };
+  const orbit: CRCOrbitCameraResult = crcOrbitCamera(orbitOptions);
+  const handlers: CRCOrbitCameraHandlers = orbit.handlers;
+  const camera: CRCWebGLPerspectiveCamera = {
+    type: 'perspective',
+    position: orbit.position,
+    lookAt: orbit.lookAt,
+    up: [0, 1, 0],
+    fieldOfViewDegrees: 45,
+    near: 0.1,
+    far: 100,
+  };
+  return createElement(Group, {
+    ...handlers,
+    children: [
+      createElement(Rectangle, {
+        style: { width: 320, height: 180, fill: 'transparent' },
+      }),
+      consumerShadowQualities.map(shadows =>
+        createElement(WebGLLayer, {
+          camera,
+          children: [
+            createElement(WebGLBackground, {
+              style: { color: '#08111fcc' },
+            }),
+            createElement(AmbientLight, {
+              style: { color: '#ffffff', intensity: 0.1 },
+            }),
+            createElement(HemisphereLight, {
+              style: {
+                skyColor: '#b9dcff',
+                groundColor: '#302418',
+                intensity: 0.3,
+                rotationZDegrees: 5,
+              },
+            }),
+            createElement(DirectionalLight, {
+              style: {
+                color: '#ffffff',
+                intensity: 1.2,
+                rotationXDegrees: -35,
+                rotationYDegrees: 45,
+                castShadow: false,
+              },
+            }),
+            createElement(PointLight, {
+              style: {
+                color: '#ff8a4c',
+                intensity: 4,
+                range: 12,
+                translateX: 3,
+                translateY: 4,
+                translateZ: 2,
+                castShadow: true,
+              },
+            }),
+            createElement(SpotLight, {
+              style: {
+                color: '#80c8ff',
+                intensity: 5,
+                range: 20,
+                innerConeAngleDegrees: 15,
+                outerConeAngleDegrees: 28,
+                translateX: -3,
+                translateY: 5,
+                translateZ: 4,
+                rotationXDegrees: -40,
+                castShadow: true,
+              },
+            }),
+            createElement(Group3D, {
+              children: [
+                createElement(Cube, {
+                  style: {
+                    color: '#74d3ae',
+                    size: 1,
+                    material: consumerLambertMaterial,
+                    castShadow: true,
+                    receiveShadow: false,
+                  },
+                }),
+                createElement(Sphere, {
+                  style: {
+                    radius: 0.5,
+                    translateX: 1,
+                    lit: false,
+                    castShadow: false,
+                    receiveShadow: true,
+                  },
+                }),
+                createElement(Mesh, {
+                  geometry: consumerWebGLGeometry,
+                  style: { color: '#f7c948' },
+                }),
+                createElement(AnimatedGeometryConsumer, {}),
+              ],
+              style: { rotationYDegrees: 15 },
+            }),
+          ],
+          style: { width: 320, height: 180, shadows },
         }),
-        createElement(AnimatedGeometryConsumer, {}),
-      ],
-      style: { rotationYDegrees: 15 },
-    }),
-    style: { width: 320, height: 180 },
-  },
+      ),
+    ],
+  });
+}
+
+export const createElementWebGLScene = createElement(
+  OrbitingWebGLConsumer,
+  {},
 );
 
 // @ts-expect-error Canvas filters belong on WebGLLayer, never inner WebGL geometry
 createElement(Cube, { style: { filter: { type: 'blur', radius: 2 } } });
 
 type PublicWebGLTypes = [
+  AmbientLightProps,
+  AmbientLightStyle,
+  CRCOrbitCameraHandlers,
+  CRCOrbitCameraOptions,
+  CRCOrbitCameraResult,
   CRCWebGLGeometry,
   CRCWebGLGeometryInput,
+  CRCWebGLLambertMaterial,
+  CRCWebGLMaterial,
   CRCWebGLPerspectiveCamera,
+  CRCWebGLShadowQuality,
   CRCWebGLTransformStyle,
   CRCWebGLVector3,
   CubeProps,
   CubeStyle,
+  DirectionalLightProps,
+  DirectionalLightStyle,
   Group3DProps,
   Group3DStyle,
+  HemisphereLightProps,
+  HemisphereLightStyle,
   MeshProps,
   MeshStyle,
+  PointLightProps,
+  PointLightStyle,
   SphereProps,
   SphereStyle,
+  SpotLightProps,
+  SpotLightStyle,
+  WebGLBackgroundProps,
+  WebGLBackgroundStyle,
   WebGLLayerProps,
   WebGLLayerStyle,
 ];

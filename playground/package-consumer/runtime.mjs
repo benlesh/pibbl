@@ -179,21 +179,28 @@ if (typeof internal.createBackendToken('consumer') !== 'object') {
 }
 
 const expectedWebGL = [
+  'AmbientLight',
   'Cube',
+  'DirectionalLight',
   'Group3D',
+  'HemisphereLight',
   'Mesh',
+  'PointLight',
   'Sphere',
+  'SpotLight',
+  'WebGLBackground',
   'WebGLLayer',
   'crcAnimationFrame',
+  'crcOrbitCamera',
   'createWebGLGeometry',
 ];
 const actualWebGL = Object.keys(webgl).sort();
 if (JSON.stringify(actualWebGL) !== JSON.stringify(expectedWebGL)) {
   throw new Error(`Unexpected @crc/webgl exports: ${actualWebGL.join(', ')}`);
 }
-if (actualWebGL.length !== 7) {
+if (actualWebGL.length !== 14) {
   throw new Error(
-    `Expected 7 @crc/webgl runtime exports, received ${actualWebGL.length}.`,
+    `Expected 14 @crc/webgl runtime exports, received ${actualWebGL.length}.`,
   );
 }
 for (const exportName of expectedWebGL) {
@@ -267,6 +274,7 @@ if (
 
 const runtimeGeometry = webgl.createWebGLGeometry({
   positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+  normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
 });
 function RuntimeAnimatedMesh() {
   const timestamp = webgl.crcAnimationFrame();
@@ -284,11 +292,110 @@ const runtimeWebGLElement = core.createElement(webgl.WebGLLayer, {
     ],
   }),
 });
+const runtimeShadowQualities = [false, 'low', 'medium', 'high'];
+function RuntimeOrbitScene() {
+  const orbit = webgl.crcOrbitCamera({
+    orbitPoint: [0, 0, 0],
+    initialPosition: [0, 2, 5],
+    minDistance: 2,
+    maxDistance: 12,
+    rotateSpeed: 0.8,
+    zoomSpeed: 1.2,
+  });
+  const camera = {
+    type: 'perspective',
+    position: orbit.position,
+    lookAt: orbit.lookAt,
+    up: [0, 1, 0],
+    fieldOfViewDegrees: 45,
+    near: 0.1,
+    far: 100,
+  };
+  return core.createElement(core.Group, {
+    ...orbit.handlers,
+    children: [
+      core.createElement(core.Rectangle, {
+        style: { width: 320, height: 180, fill: 'transparent' },
+      }),
+      ...runtimeShadowQualities.map(shadows =>
+        core.createElement(webgl.WebGLLayer, {
+          camera,
+          children: [
+            core.createElement(webgl.WebGLBackground, {
+              style: { color: '#08111fcc' },
+            }),
+            core.createElement(webgl.AmbientLight, {
+              style: { color: '#ffffff', intensity: 0.1 },
+            }),
+            core.createElement(webgl.HemisphereLight, {
+              style: {
+                skyColor: '#b9dcff',
+                groundColor: '#302418',
+                intensity: 0.3,
+              },
+            }),
+            core.createElement(webgl.DirectionalLight, {
+              style: { color: '#ffffff', intensity: 1.2, castShadow: false },
+            }),
+            core.createElement(webgl.PointLight, {
+              style: {
+                color: '#ff8a4c',
+                intensity: 4,
+                range: 12,
+                castShadow: true,
+              },
+            }),
+            core.createElement(webgl.SpotLight, {
+              style: {
+                color: '#80c8ff',
+                intensity: 5,
+                range: 20,
+                innerConeAngleDegrees: 15,
+                outerConeAngleDegrees: 28,
+                castShadow: true,
+              },
+            }),
+            core.createElement(webgl.Group3D, {
+              children: [
+                core.createElement(webgl.Cube, {
+                  style: {
+                    color: '#74d3ae',
+                    material: {
+                      type: 'lambert',
+                      emissiveColor: '#102040',
+                      emissiveIntensity: 0.25,
+                    },
+                    castShadow: true,
+                    receiveShadow: false,
+                  },
+                }),
+                core.createElement(webgl.Sphere, {
+                  style: {
+                    lit: false,
+                    castShadow: false,
+                    receiveShadow: true,
+                  },
+                }),
+                core.createElement(webgl.Mesh, {
+                  geometry: runtimeGeometry,
+                  style: { color: '#f7c948' },
+                }),
+              ],
+            }),
+          ],
+          style: { width: 320, height: 180, shadows },
+        }),
+      ),
+    ],
+  });
+}
+const runtimeOrbitElement = core.createElement(RuntimeOrbitScene, {});
 if (
   runtimeWebGLElement.type !== webgl.WebGLLayer ||
   runtimeWebGLElement.props.children.type !== core.Fragment ||
   runtimeWebGLElement.$$typeof !== Symbol.for('@crc/core.element') ||
-  runtimeWebGLElement.props.children.$$typeof !== runtimeWebGLElement.$$typeof
+  runtimeWebGLElement.props.children.$$typeof !== runtimeWebGLElement.$$typeof ||
+  runtimeOrbitElement.$$typeof !== runtimeWebGLElement.$$typeof
 ) {
   throw new Error(
     '@crc/webgl did not share the @crc/core Fragment and element identity.',

@@ -29,10 +29,19 @@ describe('Group3D', () => {
           scaleY: 3,
           scaleZ: 4,
         }}>
-          <Mesh geometry={geometry} onClick={() => undefined} />
+          <Mesh
+            geometry={geometry}
+            style={{ lit: false }}
+            onClick={() => undefined}
+          />
         </Group3D>
       </Group3D>,
-      <Mesh key="sibling" geometry={geometry} onClick={() => undefined} />,
+      <Mesh
+        key="sibling"
+        geometry={geometry}
+        style={{ lit: false }}
+        onClick={() => undefined}
+      />,
     ];
     const mounted = mountScene(root);
 

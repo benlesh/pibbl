@@ -29,7 +29,13 @@ describe('Sphere', () => {
       const valid: SphereInput = {
         onClick() {},
         pointerEvents: 'none',
-        style: { radius: 2, opacity: 0.5, cursor: 'crosshair' },
+        style: {
+          radius: 2,
+          opacity: 0.5,
+          cursor: 'crosshair',
+          lit: false,
+          material: { type: 'lambert', emissiveIntensity: 0.5 },
+        },
       };
       const invalid: SphereInput = {
         // @ts-expect-error Sphere radius belongs to style.

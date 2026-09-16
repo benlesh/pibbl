@@ -1,7 +1,7 @@
 # CRC user-event contract
 
-Status: current implemented contract, updated for settled WebGL scenes on
-2026-09-13.
+Status: current implemented contract, updated for WebGL lighting, orbit-camera,
+and genuine-shadow behavior on 2026-09-15.
 Focus integration is governed by the implemented
 [focus and keyboard-navigation contract](./focus-and-keyboard-navigation-contract.md).
 
@@ -30,7 +30,9 @@ resolution while leaving paint unchanged.
 
 `Mesh`, `Cube`, and `Sphere` from `@crc/webgl` follow the same default
 participation rule with committed ray-pick geometry. `WebGLLayer` can disable
-its complete nested resolver with `pointerEvents="none"`.
+its complete nested resolver with `pointerEvents="none"`. Analytic light and
+`WebGLBackground` declarations never add targets, pick geometry, cursor regions,
+or focus candidates. An opaque background remains a nested-resolver miss.
 
 `crcEventTarget(handlers, options)` creates one grouped custom target. Its
 required `Path2D`, fill/stroke hit options, captured render transform, clips,
@@ -56,6 +58,13 @@ The child-bearing `Group`, `Clip`, `Layer`, `Absolute`, `Overlay`, `Flow`,
 semantics. `WebGLLayer` and `Group3D` do the same. These structural values add
 listener ancestry only: they have no independent rectangle or conceptual-bounds
 target, and empty space does not select them.
+
+`crcOrbitCamera()` returns ordinary stable CRC handlers rather than installing
+a hidden listener or target. Authors may spread them onto geometry or a
+structural listener ancestor. To make a whole viewport draggable, that ancestor
+must contain an explicit viewport-sized target; the structural component alone
+does not make empty space hit. JSX spread order does not merge the orbit bundle
+with another callback, so applications compose both behaviors explicitly.
 
 ## Event vocabulary
 
@@ -192,6 +201,15 @@ modifier/mouse fields. Calling logical `preventDefault()` makes the native
 cancelable wheel event default-prevented. Wheel and cancellable touch native
 listeners are installed with non-passive options.
 
+The `crcOrbitCamera()` handler bundle uses these same rules. A primary
+`pointerdown` captures one pointer on `currentTarget`; matching root-logical
+pointer moves rotate, and up/cancel/lost-capture ends the gesture. Other
+pointers cannot steal it. Wheel zoom normalizes pixel deltas directly, line
+deltas at 16 pixels per line, and page deltas by the root logical viewport
+height. It calls `preventDefault()` only when the clamped distance actually
+changes. Each applied change schedules ordinary CRC work; no handler starts an
+independent or idle frame loop.
+
 Drag/drop preserves root-logical coordinates, modifiers, and the native
 `dataTransfer`. Root-local drag hover is cleared by root leave, drop, drag end,
 target removal, or disposal. As a deliberate Canvas divergence, `drag` and
@@ -317,6 +335,12 @@ object/layer opt-out, depth selection independent of transparent raster order,
 structural propagation, pointer capture, cursor, projected focus bounds,
 keyboard activation, cache replay, and bitmap/pick/focus generation evidence
 through public package imports.
+
+The twelve WebGL lighting lessons and `webgl-lighting` laboratory add the
+attach-anywhere orbit bundle, viewport backing-target geometry, primary pointer
+capture, wheel cancellation, unchanged picking/focus under light/material/
+shadow changes, opaque-background pass-through, and camera-only shadow-cache
+reuse through public imports.
 
 CRC still does not provide semantic controls, DOM accessibility, a retained
 scene graph, hidden editable DOM, pointer/touch gesture recognition, or

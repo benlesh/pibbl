@@ -3,7 +3,7 @@ import type { CRCBackendFrameInput } from '@crc/core/internal';
 import type { ResolvedWebGLCamera } from '../math/camera.js';
 import { createWebGLGeometry } from '../geometry/geometry.js';
 import { resolveCamera } from '../math/camera.js';
-import { closeWebGLSceneComposer, createWebGLSceneComposer, discardWebGLSceneComposer, pushWebGLModelMatrix, submitWebGLMesh } from './composer.js';
+import { closeWebGLSceneComposer, createWebGLSceneComposer, discardWebGLSceneComposer, pushWebGLModelMatrix, submitWebGLBackground, submitWebGLLight, submitWebGLMesh } from './composer.js';
 
 const identity = () => new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
 const translation = (x: number, y: number, z: number) => new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1]);
@@ -17,7 +17,19 @@ describe('CPU-only WebGL scene composer', () => {
     const local = translation(2, 3, 4);
     const color = [0.1, 0.2, 0.3, 0.4] as const;
     const keyboardNavigationBounds = { x: 1, y: 2, width: 3, height: 4 };
-    submitWebGLMesh(scene, { componentName: 'Mesh', geometry, localModel: local, color, keyboardNavigationBounds });
+    submitWebGLMesh(scene, {
+      componentName: 'Mesh',
+      geometry,
+      localModel: local,
+      color,
+      lit: true,
+      material: {
+        type: 'lambert',
+        emissiveColor: [0.2, 0.3, 0.4, 0.5],
+        emissiveIntensity: 2,
+      },
+      keyboardNavigationBounds,
+    } as never);
     local[12] = 99;
     keyboardNavigationBounds.x = 99;
     const second = translation(5, 0, 0);
@@ -31,6 +43,14 @@ describe('CPU-only WebGL scene composer', () => {
     expect(draft.meshes.map((mesh) => mesh.sourceIndex)).toEqual([0, 1]);
     expect(Array.from(draft.meshes[0]!.model)).toEqual(Array.from(translation(2, 3, 4)));
     expect(draft.meshes[0]!.color).toEqual(color);
+    expect(draft.meshes[0]).toMatchObject({
+      lit: true,
+      material: {
+        type: 'lambert',
+        emissiveColor: [0.2, 0.3, 0.4, 0.5],
+        emissiveIntensity: 2,
+      },
+    });
     expect(draft.meshes[0]!.keyboardNavigationBounds).toEqual({ x: 1, y: 2, width: 3, height: 4 });
     expect(Object.isFrozen(draft)).toBe(true);
     expect(Object.isFrozen(draft.meshes)).toBe(true);
@@ -67,6 +87,45 @@ describe('CPU-only WebGL scene composer', () => {
     const draft = closeWebGLSceneComposer(scene);
     expect(Array.from(draft.meshes[0]!.model)).toEqual(Array.from(translation(10, 20, 0)));
     expect(Array.from(draft.meshes[1]!.model)).toEqual(Array.from(translation(10, 0, 0)));
+  });
+
+  test('owns ordered light and background declarations without consuming mesh indices', () => {
+    const scene = composer();
+    submitWebGLMesh(scene, { componentName: 'First', geometry, localModel: identity(), color: [1, 1, 1, 1] });
+    submitWebGLLight(scene, {
+      kind: 'ambient',
+      componentName: 'AmbientLight',
+      color: [1, 1, 1, 1],
+      intensity: 0.25,
+    });
+    const release = pushWebGLModelMatrix(scene, translation(3, 0, 0));
+    submitWebGLLight(scene, {
+      kind: 'point',
+      componentName: 'PointLight',
+      localModel: identity(),
+      color: [1, 0, 0, 1],
+      intensity: 1,
+      range: 10,
+    });
+    submitWebGLBackground(scene, {
+      componentName: 'WebGLBackground',
+      color: [0, 0, 0, 0.5],
+    });
+    release();
+    submitWebGLMesh(scene, { componentName: 'Second', geometry, localModel: identity(), color: [1, 1, 1, 1] });
+
+    const draft = closeWebGLSceneComposer(scene);
+    expect(draft.meshes.map(mesh => mesh.sourceIndex)).toEqual([0, 1]);
+    expect(draft.lights).toMatchObject([
+      { kind: 'ambient', intensity: 0.25 },
+      { kind: 'point', intensity: 1, range: 10 },
+    ]);
+    expect(Array.from(draft.lights[1]!.model!)).toEqual(Array.from(translation(3, 0, 0)));
+    expect(draft.backgrounds).toMatchObject([{ kind: 'background', color: [0, 0, 0, 0.5] }]);
+    expect(Object.isFrozen(draft.lights)).toBe(true);
+    expect(Object.isFrozen(draft.lights[0])).toBe(true);
+    expect(Object.isFrozen(draft.backgrounds)).toBe(true);
+    expect(Object.isFrozen(draft.backgrounds[0])).toBe(true);
   });
 
   test('rejects invalid lifecycle transitions and unbalanced close', () => {

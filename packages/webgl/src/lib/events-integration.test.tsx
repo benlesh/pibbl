@@ -16,6 +16,7 @@ import {
   Group3D,
   Sphere,
   WebGLLayer,
+  type CubeStyle,
 } from '@crc/webgl';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createGroupTransform } from '../../../core/src/lib/primitive-presentation.js';
@@ -26,6 +27,21 @@ import {
 } from './math/matrix4.js';
 
 const controllers = new Set<CRCController>();
+const interactionStyles = [
+  ['default-lit', { cursor: 'crosshair' }],
+  ['explicit-unlit', { cursor: 'crosshair', lit: false }],
+  [
+    'emissive',
+    {
+      cursor: 'crosshair',
+      material: {
+        type: 'lambert',
+        emissiveColor: '#ffffff',
+        emissiveIntensity: 0.5,
+      },
+    },
+  ],
+] as const satisfies ReadonlyArray<readonly [string, CubeStyle]>;
 
 afterEach(() => {
   for (const controller of controllers) controller.dispose();
@@ -54,6 +70,7 @@ describe('WebGL event integration', () => {
             onClick={() => trace.push('group-bubble')}
           >
             <Cube
+              style={{ lit: false }}
               onClickCapture={() => trace.push('target-capture')}
               onClick={() => trace.push('target')}
             />
@@ -108,6 +125,7 @@ describe('WebGL event integration', () => {
           >
             {showCube ? (
               <Cube
+                style={{ lit: false }}
                 onClickCapture={() => trace.push('removed-target-capture')}
                 onClick={() => trace.push('removed-target')}
               />
@@ -177,7 +195,7 @@ describe('WebGL event integration', () => {
             <WebGLLayer style={{ width: 100, height: 100 }}>
               {showCube ? (
                 <Cube
-                  style={{ cursor: 'crosshair' }}
+                  style={{ cursor: 'crosshair', lit: false }}
                   onPointerOver={record}
                   onPointerEnter={record}
                   onPointerMove={record}
@@ -358,6 +376,60 @@ describe('WebGL event integration', () => {
     expect(canvas.style.cursor).toBe('');
   });
 
+  it.each(interactionStyles)(
+    'keeps target, cursor, capture, focus, and keyboard activation for %s geometry',
+    async (_label, interactionStyle) => {
+      const canvas = createCanvas(100, 100);
+      const nativeCapture = installNativePointerCapture(canvas);
+      let target: CRCEventTarget | undefined;
+      const focus = vi.fn();
+      const keyboardActivations: string[] = [];
+      controllers.add(crc(canvas, (
+        <FocusManagement>
+          <WebGLLayer style={{ width: 100, height: 100 }}>
+            <Cube
+              style={interactionStyle}
+              onPointerDown={event => {
+                target = event.target;
+                event.currentTarget.setPointerCapture(event.pointerId);
+              }}
+              onFocus={focus}
+              onClick={event => {
+                if (event.sourceEvent instanceof KeyboardEvent) {
+                  keyboardActivations.push(event.sourceEvent.key);
+                }
+              }}
+            />
+          </WebGLLayer>
+        </FocusManagement>
+      ), { pixelRatio: 1 }));
+      await nextFrame();
+
+      dispatchPointer(canvas, 'pointermove', 50, 50, 21);
+      expect(canvas.style.cursor).toBe('crosshair');
+      dispatchPointer(canvas, 'pointerdown', 50, 50, 21);
+      dispatchPointer(canvas, 'gotpointercapture', 50, 50, 21);
+      expect(target).toBeDefined();
+      expect(target?.hasPointerCapture(21)).toBe(true);
+      expect(nativeCapture.active).toContain(21);
+      expect(focus).toHaveBeenCalledOnce();
+
+      for (const key of ['Enter', ' '] as const) {
+        canvas.dispatchEvent(new KeyboardEvent('keydown', {
+          bubbles: true,
+          cancelable: true,
+          key,
+        }));
+        canvas.dispatchEvent(new KeyboardEvent('keyup', {
+          bubbles: true,
+          cancelable: true,
+          key,
+        }));
+      }
+      expect(keyboardActivations).toEqual(['Enter', ' ']);
+    },
+  );
+
   it('follows native pointer capture transitions for a WebGL target', async () => {
     const trace: string[] = [];
     let trustedPointerDown = false;
@@ -368,6 +440,7 @@ describe('WebGL event integration', () => {
     controllers.add(crc(canvas, (
       <WebGLLayer style={{ width: 100, height: 100 }}>
         <Cube
+          style={{ lit: false }}
           onPointerDown={event => {
             trace.push(`down:${event.pointerId}`);
             event.currentTarget.setPointerCapture(event.pointerId);
@@ -406,7 +479,7 @@ describe('WebGL focus geometry', () => {
         <KeyboardNavigation mode="directional">
           <WebGLLayer style={{ width: 100, height: 100 }}>
             <Cube
-              style={{ translateZ: 10 }}
+              style={{ translateZ: 10, lit: false }}
               onClick={() => undefined}
               onFocus={() => focusTrace.push('clipped')}
             />
@@ -442,6 +515,7 @@ describe('WebGL focus geometry', () => {
       rotationXDegrees: 20,
       rotationYDegrees: 35,
       rotationZDegrees: 10,
+      lit: false,
     } as const;
     controllers.add(crc(canvas, (
       <FocusManagement>
@@ -497,11 +571,13 @@ describe('WebGL focus geometry', () => {
           onClick={layerClick}
         >
           <Cube
+            style={{ lit: false }}
             onClick={cubeClick}
             onFocus={() => focusTrace.push('cube')}
           />
           <Sphere
             keyboardNavigationBounds={{ x: 70, y: 8, width: 12, height: 10 }}
+            style={{ lit: false }}
             onClick={sphereClick}
             onFocus={() => focusTrace.push('sphere')}
           />
@@ -611,7 +687,7 @@ describe('WebGL focus geometry', () => {
             pointerEvents={pointerEvents}
             style={{ width: 100, height: 80 }}
           >
-            <Cube key="cube" onClick={cubeClick} />
+            <Cube key="cube" style={{ lit: false }} onClick={cubeClick} />
           </WebGLLayer>
         </Group>
       ) : undefined,
@@ -667,10 +743,10 @@ describe('WebGL focus geometry', () => {
       <FocusManagement>
         <Group style={{ translateX: 20, translateY: 30 }}>
           <WebGLLayer style={{ width: 200, height: 100 }}>
-            <Cube onClick={() => undefined} />
+            <Cube style={{ lit: false }} onClick={() => undefined} />
             <Sphere
               keyboardNavigationBounds={{ x: 150, y: 10, width: 20, height: 15 }}
-              style={{ translateX: -2 }}
+              style={{ translateX: -2, lit: false }}
               onClick={() => undefined}
             />
           </WebGLLayer>
@@ -710,7 +786,7 @@ describe('WebGL focus geometry', () => {
     });
   });
 
-  it('keeps source-order Tab and uses projected bounds for directional movement', async () => {
+  it('keeps source-order Tab and projected directional bounds across lit, unlit, and emissive geometry', async () => {
     const focusTrace: string[] = [];
     const before = document.createElement('button');
     before.textContent = 'before';
@@ -724,18 +800,27 @@ describe('WebGL focus geometry', () => {
           <WebGLLayer style={{ width: 240, height: 120 }}>
             <Cube
               key="center"
+              style={{ color: '#ef4444' }}
               onClick={() => undefined}
               onFocus={() => focusTrace.push('center')}
             />
             <Sphere
               key="left"
-              style={{ translateX: -2 }}
+              style={{ translateX: -2, lit: false, color: '#22c55e' }}
               onClick={() => undefined}
               onFocus={() => focusTrace.push('left')}
             />
             <Cube
               key="right"
-              style={{ translateX: 2 }}
+              style={{
+                translateX: 2,
+                color: '#3b82f6',
+                material: {
+                  type: 'lambert',
+                  emissiveColor: '#ffffff',
+                  emissiveIntensity: 0.5,
+                },
+              }}
               onClick={() => undefined}
               onFocus={() => focusTrace.push('right')}
             />

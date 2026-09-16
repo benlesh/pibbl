@@ -19,6 +19,7 @@ import type { RuntimeHooksState } from "./runtime-hooks.example";
 import type { CanvasSurfaceState } from "./canvas-surface.example";
 import type { FilterLabState } from "./filter-lab.example";
 import type { WebGLLabState } from "./webgl-lab.example";
+import type { WebGLLightingLabState } from "./webgl-lighting-lab.example";
 import type { SignalsLabState } from "./signals-lab.example";
 import type { AnimationLabState } from "./animation-lab.example";
 import type { ParticleCelebrationLabState } from "./particle-celebration-lab.example";
@@ -1621,6 +1622,104 @@ export const webglLabScenarioEntry: ScenarioCatalogEntry<WebGLLabState> = {
   load: async () => (await import("./webgl-lab")).webglLabScenario,
 };
 
+const webglLightingLabMetadata: ScenarioMetadata = {
+  id: "webgl-lighting",
+  slug: "webgl-lighting",
+  title: "WebGL lighting laboratory",
+  summary:
+    "Exercise every analytic light, Lambert material mode, orbit control, and genuine shadow quality in one settled scene.",
+  category: "Rendering",
+  apiTags: [
+    "WebGLLayer",
+    "crcOrbitCamera",
+    "AmbientLight",
+    "HemisphereLight",
+    "DirectionalLight",
+    "PointLight",
+    "SpotLight",
+  ],
+  conceptTags: [
+    "settled lighting",
+    "genuine shadows",
+    "shadow cache",
+    "orbit camera",
+    "Lambert material",
+  ],
+  manualSteps: [
+    {
+      action: "Drag across the scene and use the wheel over either geometry or empty space.",
+      expected:
+        "The camera orbits and zooms around the fixed scene while unchanged light-space shadow maps remain reusable.",
+    },
+    {
+      action: "Compare Ambient, Hemisphere, Directional, Point, Spot, and All lights.",
+      expected:
+        "Fill lights shade without cast shadows; every direct light produces a geometry silhouette on the ground.",
+    },
+    {
+      action: "Compare Transparent, Opaque, and Alpha background modes.",
+      expected:
+        "The transparent default reveals the Canvas underlay; solid and alpha backgrounds remain visible but never become WebGL event targets.",
+    },
+    {
+      action: "Compare Off, Low, Medium, and High shadow quality.",
+      expected:
+        "Off removes direct occlusion; the three named tiers retain genuine shadow maps with progressively filtered edges.",
+    },
+    {
+      action: "Change caster alpha, lit and emissive state, then transform or move the light/caster.",
+      expected:
+        "Material appearance, direct-light participation, and transformed light pose update without changing pick or focus geometry.",
+    },
+  ],
+  knownLimitations: [
+    "Point shadows use six depth views whenever their cached light-space generation is invalidated.",
+    "Shadows are depth silhouettes; colored transmission, texture alpha, area-light penumbrae, bloom, and image environments are not included.",
+  ],
+  learningOrder: 175,
+  visibility: "test-laboratory",
+  visibilityReason:
+    "It exposes dense renderer modes, cache behavior, alpha participation, and interaction probes rather than one beginner concept.",
+  maturity: "contract",
+};
+
+export const webglLightingLabScenarioEntry: ScenarioCatalogEntry<WebGLLightingLabState> = {
+  metadata: webglLightingLabMetadata,
+  canvas: { width: 720, height: 420 },
+  actions: [
+    { id: "show-ambient", label: "Ambient" },
+    { id: "show-hemisphere", label: "Hemisphere" },
+    { id: "show-directional", label: "Directional" },
+    { id: "show-point", label: "Point" },
+    { id: "show-spot", label: "Spot" },
+    { id: "show-all", label: "All lights" },
+    { id: "show-background-transparent", label: "Transparent background" },
+    { id: "show-background-opaque", label: "Opaque background" },
+    { id: "show-background-alpha", label: "Alpha background" },
+    { id: "shadows-off", label: "Shadows off" },
+    { id: "shadows-low", label: "Low shadows" },
+    { id: "shadows-medium", label: "Medium shadows" },
+    { id: "shadows-high", label: "High shadows" },
+    { id: "toggle-transformed-light", label: "Transform light" },
+    { id: "caster-opaque", label: "Opaque caster" },
+    { id: "caster-partial", label: "Partial caster" },
+    { id: "caster-zero", label: "Zero-alpha caster" },
+    { id: "toggle-lit", label: "Toggle lit" },
+    { id: "toggle-emissive", label: "Toggle emission" },
+    { id: "move-caster", label: "Move caster" },
+    { id: "reset", label: "Reset" },
+  ],
+  source: {
+    id: "webgl-lighting-laboratory-example",
+    language: "tsx",
+    marker:
+      "WEBGL_LIGHTING_LAB_SOURCE_ID =\n  'webgl-lighting-laboratory-example'",
+    path: "packages/scenarios/src/webgl-lighting-lab.example.tsx",
+  },
+  load: async () =>
+    (await import("./webgl-lighting-lab")).webglLightingLabScenario,
+};
+
 const signalsLabMetadata: ScenarioMetadata = {
   id: "first-class-signals",
   slug: "signals",
@@ -1896,6 +1995,7 @@ export const scenarioCatalog: readonly AnyScenarioCatalogEntry[] =
     canvasSurfaceScenarioEntry,
     filterLabScenarioEntry,
     webglLabScenarioEntry,
+    webglLightingLabScenarioEntry,
     signalsLabScenarioEntry,
     animationLabScenarioEntry,
     particleCelebrationLabScenarioEntry,

@@ -15,6 +15,7 @@ const collator = new Intl.Collator("en", {
 const exampleGroups = [
   ["drawing", "Drawing"],
   ["composition", "Composition"],
+  ["webgl", "WebGL"],
   ["layout", "Layout"],
   ["events-and-interaction", "Events and interaction"],
   ["focus-and-keyboard", "Focus and keyboard"],

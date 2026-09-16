@@ -2,6 +2,7 @@ import type { CRCWebGLGeometry, CRCWebGLGeometryInput } from '../types.js';
 
 export interface WebGLGeometryData {
   readonly positions: Float32Array;
+  readonly normals: Float32Array | undefined;
   readonly indices: Uint32Array | undefined;
   readonly bounds: Readonly<{
     minimumX: number;
@@ -84,6 +85,45 @@ export function createWebGLGeometry(input: CRCWebGLGeometryInput): CRCWebGLGeome
   });
 
   const vertexCount = positionLength / 3;
+  let normals: Float32Array | undefined;
+  if (input.normals !== undefined) {
+    const normalLength = getLength(input.normals, 'normals');
+    if (normalLength !== positionLength) {
+      throw new TypeError('createWebGLGeometry normals length must match positions.length.');
+    }
+    normals = new Float32Array(normalLength);
+    for (let index = 0; index < normalLength; index += 1) {
+      const value = input.normals[index];
+      if (!Number.isFinite(value)) {
+        throw new TypeError(`createWebGLGeometry normals[${index}] must be finite.`);
+      }
+      const copiedValue = Math.fround(value!);
+      if (!Number.isFinite(copiedValue)) {
+        throw new RangeError(
+          `createWebGLGeometry normals[${index}] must be representable as a finite Float32.`,
+        );
+      }
+      normals[index] = copiedValue;
+    }
+    for (let index = 0; index < normalLength; index += 3) {
+      const maximumComponent = Math.max(
+        Math.abs(normals[index]!),
+        Math.abs(normals[index + 1]!),
+        Math.abs(normals[index + 2]!),
+      );
+      if (maximumComponent === 0) {
+        throw new TypeError(`createWebGLGeometry normals[${index}..${index + 2}] must be nonzero.`);
+      }
+      const scaledX = normals[index]! / maximumComponent;
+      const scaledY = normals[index + 1]! / maximumComponent;
+      const scaledZ = normals[index + 2]! / maximumComponent;
+      const scaledLengthSquared = scaledX * scaledX + scaledY * scaledY + scaledZ * scaledZ;
+      if (!Number.isFinite(scaledLengthSquared) || scaledLengthSquared === 0) {
+        throw new TypeError(`createWebGLGeometry normals[${index}..${index + 2}] must be nonzero.`);
+      }
+    }
+  }
+
   let indices: Uint32Array | undefined;
   let triangleCount: number;
 
@@ -122,7 +162,7 @@ export function createWebGLGeometry(input: CRCWebGLGeometryInput): CRCWebGLGeome
     vertexCount,
     triangleCount,
   }) as unknown as CRCWebGLGeometry;
-  geometryData.set(geometry, { positions, indices, bounds });
+  geometryData.set(geometry, { positions, normals, indices, bounds });
   return geometry;
 }
 

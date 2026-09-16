@@ -10,6 +10,7 @@ import type {
 } from '@crc/core/internal';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Cube } from './components/cube.js';
+import { PointLight } from './components/lights.js';
 import { createWebGLGeometry } from './geometry/geometry.js';
 import { createBuiltInProgram } from './gpu/program.js';
 import { WebGLRendererResourceCache } from './gpu/renderer-resources.js';
@@ -67,7 +68,7 @@ describe('WebGLLayer context lifecycle', () => {
     controller.renderUpdatedChild(root, undefined, surface, 1);
     expect(glCount(platform, 'createProgram')).toBe(1);
     expect(glCount(platform, 'createVertexArray')).toBe(1);
-    expect(glCount(platform, 'createBuffer')).toBe(2);
+    expect(glCount(platform, 'createBuffer')).toBe(3);
     controller.composite(parentContext, {
       x: 0,
       y: 0,
@@ -112,7 +113,7 @@ describe('WebGLLayer context lifecycle', () => {
     expect(executions).toBe(2);
     expect(glCount(platform, 'createProgram')).toBe(2);
     expect(glCount(platform, 'createVertexArray')).toBe(2);
-    expect(glCount(platform, 'createBuffer')).toBe(4);
+    expect(glCount(platform, 'createBuffer')).toBe(6);
     expect(controller.committedGeneration).toBeUndefined();
     controller.renderRetainedChild(root, undefined, surface, 2);
     expect(controller.candidateGeneration).toBe(2);
@@ -138,8 +139,64 @@ describe('WebGLLayer context lifecycle', () => {
     ]);
     expect(restoredBitmap.close).toHaveBeenCalledOnce();
     expect(glCount(platform, 'deleteProgram')).toBe(1);
-    expect(glCount(platform, 'deleteBuffer')).toBe(2);
+    expect(glCount(platform, 'deleteBuffer')).toBe(3);
     expect(glCount(platform, 'deleteVertexArray')).toBe(1);
+  });
+
+  it('abandons a lost point cube, rebuilds all six faces, and deletes only the restored generation', () => {
+    const firstBitmap = bitmap('point-first');
+    const restoredBitmap = bitmap('point-restored');
+    const platform = installContextPlatform([firstBitmap, restoredBitmap]);
+    const callbacks: FrameRequestCallback[] = [];
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
+      callbacks.push(callback);
+      return callbacks.length;
+    });
+    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined);
+    const parentCanvas = mountParent();
+    callbacks.shift()!(0);
+    const root = (
+      <>
+        <PointLight style={{ translateY: 3, range: 8 }} />
+        <Cube pointerEvents="none" />
+      </>
+    );
+    const surface = resolveWebGLLayerSurface(20, 10, { x: 1, y: 1 });
+    const controller = new WebGLLayerController(
+      parentCanvas,
+      root,
+      undefined,
+      surface,
+    );
+    const parentContext = { drawImage: vi.fn() } as unknown as
+      CanvasRenderingContext2D;
+
+    controller.renderUpdatedChild(root, undefined, surface, 1);
+    controller.composite(parentContext, { x: 0, y: 0, width: 20, height: 10 });
+    expect(glCount(platform, 'drawElements')).toBe(7);
+    expect(glCount(platform, 'createTexture')).toBe(3);
+    expect(glCount(platform, 'createFramebuffer')).toBe(1);
+
+    platform.contextLost = true;
+    platform.canvas.dispatchEvent(
+      new Event('webglcontextlost', { cancelable: true }),
+    );
+    expect(glCount(platform, 'deleteTexture')).toBe(0);
+    expect(glCount(platform, 'deleteFramebuffer')).toBe(0);
+
+    platform.contextLost = false;
+    platform.canvas.dispatchEvent(new Event('webglcontextrestored'));
+    callbacks[0]!(2);
+    controller.renderRetainedChild(root, undefined, surface, 2);
+    controller.composite(parentContext, { x: 0, y: 0, width: 20, height: 10 });
+    expect(glCount(platform, 'drawElements')).toBe(14);
+    expect(glCount(platform, 'createTexture')).toBe(6);
+    expect(glCount(platform, 'createFramebuffer')).toBe(2);
+
+    controller.dispose();
+    controller.dispose();
+    expect(glCount(platform, 'deleteTexture')).toBe(3);
+    expect(glCount(platform, 'deleteFramebuffer')).toBe(1);
   });
 
   it('creates no renderer resources when context loss occurs during composition', async () => {
@@ -424,9 +481,9 @@ describe('WebGL failure cleanup', () => {
       throwDeletingShader: { stage: 'fragment', error: cleanupError },
     });
 
-    expect(() => createBuiltInProgram(recording.gl, 'Mesh')).toThrowError(
-      /Mesh.*fragment.*compil/i,
-    );
+    expect(() =>
+      createBuiltInProgram(recording.gl, 'unlit', 'Mesh'),
+    ).toThrowError(/Mesh.*fragment.*compil/i);
     expect(recording.deletedShaders).toEqual(['fragment', 'vertex']);
     expect(reported).toEqual([cleanupError]);
   });
@@ -438,12 +495,13 @@ describe('WebGL failure cleanup', () => {
       reported.push(error);
     });
     const recording = createOwnershipGL({
-      failBuffer: 2,
+      failBuffer: 3,
       throwDeleteBuffer: cleanupError,
     });
     const cache = new WebGLRendererResourceCache(recording.gl, 1);
     const geometry = createWebGLGeometry({
       positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+      normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
       indices: [0, 1, 2],
     });
     const transaction = cache.beginRender();
@@ -451,14 +509,14 @@ describe('WebGL failure cleanup', () => {
     expect(() => transaction.useGeometry(geometry, 'Cube')).toThrowError(
       /Cube.*index buffer/i,
     );
-    expect(recording.deleteBuffer).toHaveBeenCalledOnce();
+    expect(recording.deleteBuffer).toHaveBeenCalledTimes(2);
     expect(recording.deleteVertexArray).toHaveBeenCalledOnce();
-    expect(reported).toEqual([cleanupError]);
+    expect(reported).toEqual([cleanupError, cleanupError]);
     transaction.rollback();
     cache.dispose(false);
   });
 
-  it('continues renderer-cache disposal after one owned handle release throws', () => {
+  it('disposes two keyed programs and one shared normal geometry after one release throws', () => {
     const cleanupError = new Error('program delete failed');
     const reported: unknown[] = [];
     vi.spyOn(globalThis, 'reportError').mockImplementation(error => {
@@ -470,17 +528,21 @@ describe('WebGL failure cleanup', () => {
     const cache = new WebGLRendererResourceCache(recording.gl, 1);
     const geometry = createWebGLGeometry({
       positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+      normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
+      indices: [0, 1, 2],
     });
     const transaction = cache.beginRender();
-    transaction.useProgram('Mesh');
+    transaction.useProgram('unlit', 'Mesh');
+    transaction.useProgram('lambert', 'Mesh');
     transaction.useGeometry(geometry, 'Mesh');
+    transaction.useGeometry(geometry, 'Cube');
     transaction.commit();
 
     expect(() => cache.dispose(false)).not.toThrow();
-    expect(recording.deleteProgram).toHaveBeenCalledOnce();
-    expect(recording.deleteBuffer).toHaveBeenCalledOnce();
+    expect(recording.deleteProgram).toHaveBeenCalledTimes(2);
+    expect(recording.deleteBuffer).toHaveBeenCalledTimes(3);
     expect(recording.deleteVertexArray).toHaveBeenCalledOnce();
-    expect(reported).toEqual([cleanupError]);
+    expect(reported).toEqual([cleanupError, cleanupError]);
   });
 
   it('attempts later baseline categories after an early restoration failure', () => {
@@ -683,9 +745,17 @@ function createLifecycleGL(
                   } : property === 'createShader' ||
                     property === 'createProgram' ||
                     property === 'createVertexArray' ||
-                    property === 'createBuffer' ? () => {
+                    property === 'createBuffer' ||
+                    property === 'createFramebuffer' ||
+                    property === 'createTexture' ? () => {
                       onCall(property);
                       return { kind: property, id: ++handle };
+                    } : property === 'checkFramebufferStatus' ? () => {
+                      onCall(property);
+                      if (!('FRAMEBUFFER_COMPLETE' in record)) {
+                        record.FRAMEBUFFER_COMPLETE = constant++;
+                      }
+                      return record.FRAMEBUFFER_COMPLETE;
                     } : (..._args: unknown[]) => {
                       onCall(property);
                     };

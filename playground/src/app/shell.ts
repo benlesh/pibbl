@@ -137,6 +137,7 @@ export function createStudioShell(options: StudioShellOptions): StudioShell {
       !(event.metaKey || event.ctrlKey) ||
       event.key.toLocaleLowerCase("en-US") !== "k" ||
       hasOpenModalOwner() ||
+      document.body.classList.contains("studio-drawer-open") ||
       isMonacoInput(document.activeElement)
     ) {
       return;

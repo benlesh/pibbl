@@ -1,7 +1,8 @@
 # CRC canvas surface contract
 
 Status: current implemented contract, updated for settled WebGL scenes,
-first-class signals, and the realm scheduler on 2026-09-13.
+first-class signals, the realm scheduler, lighting, and genuine shadows on
+2026-09-15.
 
 This document defines how a root CRC mount maps logical drawing units to the
 Canvas CSS content box and physical backing store. The mapping is owned by the
@@ -139,10 +140,19 @@ width and height determine camera aspect and local picking coordinates, while
 its backing width and height determine raster resolution only. The surface is
 created with alpha, depth, premultiplied alpha, and an unpreserved drawing
 buffer. After the child tree composes successfully, the backend settles one
-frame-local scene, renders its planned queues, and transfers a candidate
+frame-local scene, reuses or renders required light-space shadow depth, renders
+its opaque and transparent color queues, and transfers a candidate
 `ImageBitmap`. Parent Canvas composition draws that complete physical source
 into one logical destination before bitmap, pick, and focus metadata commit as
-one matching generation.
+one matching generation. Shadow-map resolution is independent of presentation
+backing size: the selected 512/1024/2048 request is clamped only to the
+applicable WebGL2 texture or cube-map limit.
+
+Omitting `WebGLBackground` clears the island to transparent black. One
+declaration replaces that clear with its concrete RGB and alpha, remains behind
+all geometry, and participates in the bitmap's eventual Canvas alpha
+composition. It does not add a draw pass or nested hit target: uncovered pixels
+remain a resolver miss even when the clear is fully opaque.
 
 Runtime-created Layer and filter surfaces are upright local targets. CRC keeps
 the current paint transform, which maps local drawing into the active target,
@@ -198,11 +208,13 @@ does not cancel unrelated work already owned by the realm scheduler. See the
 phase admission and root/Layer revision rules.
 
 Each `WebGLLayer` owns its context loss/restoration listeners. Loss invalidates
-the renderer-owned resident set without deleting handles from the lost
-generation, closes the committed bitmap, and removes matching pick/focus state;
-restoration requests one ordinary coalesced CRC frame under a new context
-generation. Layer removal or root disposal detaches those listeners and
-prevents a stale restore notification from scheduling work.
+the renderer-owned resident and shadow sets without deleting handles from the
+lost generation, closes the committed bitmap, and removes matching pick/focus
+state; restoration requests one ordinary coalesced CRC frame under a new
+context generation. Publication waits for one complete compose, settle,
+shadow-depth/color render, transfer, parent composite, and transaction commit.
+Layer removal or root disposal detaches those listeners and prevents a stale
+restore notification from scheduling work.
 
 ## Evidence
 

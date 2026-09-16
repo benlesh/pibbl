@@ -26,6 +26,7 @@ export {
   signalsLabScenarioEntry,
   validateScenarioCatalog,
   webglLabScenarioEntry,
+  webglLightingLabScenarioEntry,
 } from './catalog';
 export type {
   AnimationLabAction,
@@ -58,6 +59,20 @@ export {
   WEBGL_LAB_ACTION_IDS,
   WEBGL_LAB_PROBES,
 } from './webgl-lab';
+export {
+  WEBGL_LIGHTING_LAB_ACTION_IDS,
+  WEBGL_LIGHTING_LAB_PROBES,
+} from './webgl-lighting-lab';
+export type {
+  WebGLLightingLabAction,
+  WebGLLightingLabBackgroundMode,
+  WebGLLightingLabCasterAlpha,
+  WebGLLightingLabConfiguration,
+  WebGLLightingLabFocusTarget,
+  WebGLLightingLabMode,
+  WebGLLightingLabState,
+  WebGLLightingLabTarget,
+} from './webgl-lighting-lab';
 export type {
   WebGLLabAction,
   WebGLLabFocusTarget,
@@ -89,6 +104,13 @@ export {
   loadLearningExample,
   validateLearningExampleCatalog,
 } from './learning-catalog';
+export {
+  getTutorialSnapshotBySlug,
+  getWorkbenchEntryBySlug,
+  loadTutorialSnapshot,
+  tutorialSnapshotCatalog,
+  validateTutorialSnapshotCatalog,
+} from './tutorial-catalog';
 export {
   CLEANUP_IMAGE_SOURCES,
 } from './cleanup-stress.example';
@@ -228,4 +250,9 @@ export type {
   LearningRelationships,
   LearningSection,
   LearningSectionId,
+  WorkbenchSourceMetadata,
 } from './learning-types';
+export type {
+  TutorialSnapshotCatalogEntry,
+  TutorialSnapshotMetadata,
+} from './tutorial-types';

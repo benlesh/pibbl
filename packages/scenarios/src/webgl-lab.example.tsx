@@ -123,6 +123,7 @@ function standardObjects(props: WebGLLabSceneProps): CRCNode {
           translateX: -0.8,
           color: '#8b5cf6',
           cursor: 'pointer',
+          lit: false,
         }}
         onClick={props.onCubeSelection}
         onFocus={props.onCubeFocus}
@@ -135,6 +136,7 @@ function standardObjects(props: WebGLLabSceneProps): CRCNode {
           translateX: 0.8,
           color: '#22c55e',
           cursor: 'pointer',
+          lit: false,
         }}
         onClick={props.onSphereSelection}
         onFocus={props.onSphereFocus}
@@ -182,11 +184,16 @@ function modeContent(props: WebGLLabSceneProps): CRCNode {
         props,
         <>
           <Sphere
-            style={{ radius: 0.65, translateZ: 1, color: '#22c55e' }}
+            style={{
+              radius: 0.65,
+              translateZ: 1,
+              color: '#22c55e',
+              lit: false,
+            }}
             onClick={props.onSphereSelection}
           />
           <Cube
-            style={{ size: 1.1, color: '#8b5cf6' }}
+            style={{ size: 1.1, color: '#8b5cf6', lit: false }}
             onClick={props.onCubeSelection}
           />
         </>,
@@ -202,6 +209,7 @@ function modeContent(props: WebGLLabSceneProps): CRCNode {
               translateX: 0.35,
               translateZ: 1,
               color: 'rgb(239 68 68 / 50%)',
+              lit: false,
             }}
           />
           <Mesh
@@ -210,6 +218,7 @@ function modeContent(props: WebGLLabSceneProps): CRCNode {
             style={{
               translateX: -0.35,
               color: 'rgb(34 197 94 / 50%)',
+              lit: false,
             }}
           />
         </>,
@@ -226,7 +235,12 @@ function modeContent(props: WebGLLabSceneProps): CRCNode {
             }}
           >
             <Cube
-              style={{ size: 1.2, translateX: -0.35, color: '#f97316' }}
+              style={{
+                size: 1.2,
+                translateX: -0.35,
+                color: '#f97316',
+                lit: false,
+              }}
               onClick={props.onCubeSelection}
             />
           </Group3D>
@@ -246,11 +260,16 @@ function modeContent(props: WebGLLabSceneProps): CRCNode {
               props,
               <>
                 <Cube
-                  style={{ size: 1.2, color: '#38bdf8' }}
+                  style={{ size: 1.2, color: '#38bdf8', lit: false }}
                   onClick={props.onCubeSelection}
                 />
                 <Sphere
-                  style={{ radius: 0.55, translateX: 1, color: '#fbbf24' }}
+                  style={{
+                    radius: 0.55,
+                    translateX: 1,
+                    color: '#fbbf24',
+                    lit: false,
+                  }}
                   onClick={props.onSphereSelection}
                 />
               </>,

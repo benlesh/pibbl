@@ -136,6 +136,30 @@ export function getCurrentSurfaceDensity(): Readonly<{ x: number; y: number }> {
   });
 }
 
+/** Returns the active root-logical viewport for an official renderer hook. */
+export function getCurrentLogicalViewport(): Readonly<{
+  width: number;
+  height: number;
+}> {
+  const surface = getSurfaceSnapshot(getCurrentCRCInstance());
+  return Object.freeze({
+    width: surface.logicalWidth,
+    height: surface.logicalHeight,
+  });
+}
+
+/** Registers a callback on the root-wide transaction containing this render. */
+export function onCurrentRenderFinish(
+  callback: (success: boolean) => void,
+): void {
+  requireHookContext();
+  const transaction = GLOBAL_STATE.renderTransaction;
+  if (!transaction) {
+    throw new Error('No CRC render transaction is active.');
+  }
+  transaction.onFinish(callback);
+}
+
 /** Requests a coalesced frame for the current private backend instance. */
 export function requestCurrentInstanceFrame(updateParents: boolean): void {
   const { componentRefs, crcInstance } = requireHookContext();

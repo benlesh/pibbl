@@ -33,17 +33,24 @@ describe('Mesh built-in rendering', () => {
           scaleZ: 4,
           color: 'rgba(255, 0, 128, 0.5)',
           opacity: 0.5,
+          lit: false,
         }}
       />,
       <Cube
         key="cube"
-        style={{ size: 2, translateY: 1, scaleX: 0.5 }}
+        style={{ size: 2, translateY: 1, scaleX: 0.5, lit: false }}
       />,
       <Sphere
         key="sphere"
         onClick={() => undefined}
         keyboardFocusable
-        style={{ radius: 2, translateZ: -1, scaleZ: 0.5, opacity: 0 }}
+        style={{
+          radius: 2,
+          translateZ: -1,
+          scaleZ: 0.5,
+          opacity: 0,
+          lit: false,
+        }}
       />,
     ];
     const mounted = mountScene(recording.gl, root);
@@ -116,12 +123,14 @@ describe('Mesh built-in rendering', () => {
     [{ opacity: -0.01 }, /Mesh.*opacity.*between 0 and 1/i],
     [{ opacity: 1.01 }, /Mesh.*opacity.*between 0 and 1/i],
     [{ opacity: Number.NaN }, /Mesh.*opacity.*finite/i],
+    [{ castShadow: 'yes' }, /Mesh.*castShadow.*boolean/i],
+    [{ receiveShadow: 1 }, /Mesh.*receiveShadow.*boolean/i],
   ] as const)('rejects invalid paint before acquiring GPU resources %#', (style, message) => {
     const recording = createDrawGL();
     const geometry = createWebGLGeometry({
       positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
     });
-    const root = <Mesh geometry={geometry} style={style} />;
+    const root = <Mesh geometry={geometry} style={{ ...style, lit: false }} />;
     const mounted = mountScene(recording.gl, root);
 
     expect(() => executeBackendCRC(mounted.mount, root, 1))
@@ -156,7 +165,7 @@ describe('Mesh built-in rendering', () => {
       const geometry = createWebGLGeometry({
         positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
       });
-      const root = <Mesh geometry={geometry} style={{ color }} />;
+      const root = <Mesh geometry={geometry} style={{ color, lit: false }} />;
       const mounted = mountScene(recording.gl, root);
 
       expect(() => executeBackendCRC(mounted.mount, root, 1))
@@ -181,7 +190,7 @@ describe('Mesh built-in rendering', () => {
       const geometry = createWebGLGeometry({
         positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
       });
-      const root = <Mesh geometry={geometry} style={{ color }} />;
+      const root = <Mesh geometry={geometry} style={{ color, lit: false }} />;
       const mounted = mountScene(recording.gl, root);
 
       expect(() => executeBackendCRC(mounted.mount, root, 1))
@@ -213,7 +222,7 @@ describe('Mesh built-in rendering', () => {
     const geometry = createWebGLGeometry({
       positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
     });
-    const root = <Mesh geometry={geometry} style={{ color }} />;
+    const root = <Mesh geometry={geometry} style={{ color, lit: false }} />;
     const mounted = mountScene(recording.gl, root);
 
     expect(() => executeBackendCRC(mounted.mount, root, 1)).not.toThrow();
@@ -235,7 +244,7 @@ describe('Mesh built-in rendering', () => {
       const geometry = createWebGLGeometry({
         positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
       });
-      const root = <Mesh geometry={geometry} style={{ color }} />;
+      const root = <Mesh geometry={geometry} style={{ color, lit: false }} />;
       const mounted = mountScene(recording.gl, root);
 
       let error: unknown;
@@ -255,7 +264,10 @@ describe('Mesh built-in rendering', () => {
 
   it('uses unit Cube and radius-0.5 Sphere defaults without extra model scale', () => {
     const recording = createDrawGL();
-    const root = [<Cube key="cube" />, <Sphere key="sphere" />];
+    const root = [
+      <Cube key="cube" style={{ lit: false }} />,
+      <Sphere key="sphere" style={{ lit: false }} />,
+    ];
     const mounted = mountScene(recording.gl, root);
 
     executeBackendCRC(mounted.mount, root, 1);
@@ -286,7 +298,14 @@ describe('Mesh built-in rendering', () => {
         onClick() {},
         pointerEvents: 'auto',
         keyboardFocusable: true,
-        style: { opacity: 0, cursor: 'pointer' },
+        style: {
+          opacity: 0,
+          cursor: 'pointer',
+          lit: false,
+          material: { type: 'lambert', emissiveIntensity: 0 },
+          castShadow: true,
+          receiveShadow: false,
+        },
       };
       const filtered: MeshInput = {
         geometry,
@@ -300,7 +319,14 @@ describe('Mesh built-in rendering', () => {
     void typeContract;
   });
 
-  it('renders a public Cube through a real Chromium WebGL2 context', () => {
+  it.each([
+    ['default-lit black without lights', false, [0, 0, 0, 255]],
+    ['explicit-unlit legacy color', true, [255, 0, 0, 255]],
+  ] as const)('renders public %s through a real Chromium WebGL2 context', (
+    _label,
+    unlit,
+    expected,
+  ) => {
     const surface = new OffscreenCanvas(32, 32);
     const gl = surface.getContext('webgl2', {
       alpha: true,
@@ -311,7 +337,11 @@ describe('Mesh built-in rendering', () => {
     expect(gl).not.toBeNull();
     const parentCanvas = document.createElement('canvas');
     const parent = crc(parentCanvas, undefined);
-    const root = <Cube style={{ color: '#ff0000' }} />;
+    const root = unlit ? (
+      <Cube style={{ color: '#ff0000', lit: false }} />
+    ) : (
+      <Cube style={{ color: '#ff0000' }} />
+    );
     const driver = createWebGLBackend({
       gl: gl!,
       getCamera: () => resolveCamera(undefined, 32, 32),
@@ -329,7 +359,7 @@ describe('Mesh built-in rendering', () => {
     gl!.readPixels(16, 16, 1, 1, gl!.RGBA, gl!.UNSIGNED_BYTE, pixel);
 
     expect(gl!.getError()).toBe(gl!.NO_ERROR);
-    expect(Array.from(pixel)).toEqual([255, 0, 0, 255]);
+    expect(Array.from(pixel)).toEqual(expected);
     mount.dispose();
     parent.dispose();
   });
@@ -400,7 +430,7 @@ function createDrawGL() {
       model: uniforms.get('u_model')?.slice() ?? [],
       view: uniforms.get('u_view')?.slice() ?? [],
       projection: uniforms.get('u_projection')?.slice() ?? [],
-      color: uniforms.get('u_color')?.slice() ?? [],
+      color: uniforms.get('u_display_base_color')?.slice() ?? [],
       enabled: Array.from(enabled),
       depthFunction,
     });

@@ -6,6 +6,9 @@ import { chromium } from "playwright";
 
 const workspaceRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const update = process.argv.includes("--update");
+const requestedRouteNames = process.argv
+  .filter((argument) => argument.startsWith("--route="))
+  .map((argument) => argument.slice("--route=".length));
 const previewPort = process.env.CRC_STUDIO_PREVIEW_PORT ?? "4174";
 if (!/^[1-9]\d{0,4}$/.test(previewPort) || Number(previewPort) > 65_535) {
   throw new Error(
@@ -13,27 +16,63 @@ if (!/^[1-9]\d{0,4}$/.test(previewPort) || Number(previewPort) > 65_535) {
   );
 }
 const origin = `http://127.0.0.1:${previewPort}`;
-const routes = [
-  { name: "learn-landing", hash: "#/learn", ready: ".documentation-page h1" },
+const allRoutes = [
+  {
+    name: "learn-landing",
+    hash: "#/learn",
+    ready: ".documentation-body a[href='#/learn/tutorials/diagram-editor']",
+  },
   { name: "api-crc", hash: "#/api/functions/crc", ready: ".documentation-page h1" },
   { name: "examples-landing", hash: "#/examples", ready: ".studio-hero-canvas canvas" },
   {
     name: "filters",
     hash: "#/examples/drawing/filters",
     ready: ".studio-preview__frame",
+    waitForWorkbench: true,
+  },
+  {
+    name: "diagram-editor-landing",
+    hash: "#/learn/tutorials/diagram-editor",
+    ready: "img[src$='/tutorials/diagram-editor/finished-editor.png']",
+  },
+  {
+    name: "diagram-editor-finished",
+    hash: "#/learn/tutorials/diagram-editor/finished-editor",
+    ready: ".studio-preview__frame",
+    waitForWorkbench: true,
+    captureSelector: ".studio-preview__frame",
   },
   {
     name: "search-open",
     hash: "#/learn",
-    ready: ".documentation-page h1",
+    ready: ".documentation-body a[href='#/learn/tutorials/diagram-editor']",
     openSearch: true,
+  },
+  {
+    name: "webgl-lighting",
+    hash: "#/testing/webgl-lighting",
+    ready: ".testing-area .scenario-detail__title",
   },
   {
     name: "test-lab",
     hash: "#/testing/baseline-smoke",
-    ready: ".scenario-runner canvas",
+    ready: ".testing-area .scenario-detail__title",
   },
 ];
+const routeNames = new Set(allRoutes.map(({ name }) => name));
+const unknownRouteNames = requestedRouteNames.filter(
+  (name) => !routeNames.has(name),
+);
+if (unknownRouteNames.length > 0) {
+  throw new Error(
+    `Unknown CRC Studio visual route(s): ${unknownRouteNames.join(", ")}.`,
+  );
+}
+const requestedRouteNameSet = new Set(requestedRouteNames);
+const routes =
+  requestedRouteNames.length === 0
+    ? allRoutes
+    : allRoutes.filter(({ name }) => requestedRouteNameSet.has(name));
 
 async function waitForServer(process) {
   for (let attempt = 0; attempt < 200; attempt++) {
@@ -149,7 +188,9 @@ try {
       await page.getByRole("button", { name: "Search documentation" }).first().click();
       await page.locator(".studio-search-dialog[open]").waitFor({ timeout: 30_000 });
     }
-    if (route.hash.startsWith("#/examples/")) {
+    if (route.waitForWorkbench) {
+      if (route.captureSelector)
+        await page.locator(route.ready).scrollIntoViewIfNeeded();
       await page
         .getByText("Live · changes run automatically")
         .waitFor({ timeout: 30_000 });
@@ -162,6 +203,10 @@ try {
         );
       }
     }
+    if (route.name === "test-lab") {
+      await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+      await page.waitForFunction(() => window.scrollY === 0);
+    }
     await page.evaluate(() => document.fonts.ready);
     await page.addStyleTag({
       content:
@@ -173,18 +218,35 @@ try {
           requestAnimationFrame(() => requestAnimationFrame(resolvePromise)),
         ),
     );
-    const actual = await page.screenshot({
-      fullPage: true,
-      animations: "disabled",
-    });
+    if (route.name === "test-lab") {
+      // Chromium can return a background-only first full-page capture after
+      // this canvas-backed SPA route. Prime that compositor capture once; the
+      // next, normal capture below remains the only baseline comparison.
+      await page.screenshot({ fullPage: true, animations: "disabled" });
+    }
+    const actualPath = resolve(
+      workspaceRoot,
+      `test-screenshots/studio/${route.name}.actual.png`,
+    );
+    const actual = route.captureSelector
+      ? await page.locator(route.captureSelector).screenshot({
+          animations: "disabled",
+        })
+      : route.name === "test-lab"
+        ? (await page.screenshot({
+            path: actualPath,
+            fullPage: true,
+            animations: "disabled",
+          }),
+          await readFile(actualPath))
+      : await page.screenshot({
+          fullPage: true,
+          animations: "disabled",
+        });
     if (route.openSearch) await page.keyboard.press("Escape");
     const baselinePath = resolve(
       workspaceRoot,
       `packages/core/test/visual-baselines/studio-${route.name}.expected.png`,
-    );
-    const actualPath = resolve(
-      workspaceRoot,
-      `test-screenshots/studio/${route.name}.actual.png`,
     );
     await writeFile(actualPath, actual);
     if (update) {
@@ -204,7 +266,7 @@ try {
     }
   }
   process.stdout.write(
-    `${update ? "Updated and inspected" : "Matched"} ${routes.length} full-page CRC studio visual baselines.\n`,
+    `${update ? "Updated and inspected" : "Matched"} ${routes.length} CRC studio visual baselines.\n`,
   );
 } catch (error) {
   if (serverOutput) process.stderr.write(serverOutput);

@@ -36,3 +36,10 @@ declared by [`Group3DProps`](#/api/types/webgl#group3dprops), and
 Handler props are listener-only propagation ancestry. `Group3D` has no geometry
 or independent target, so empty projected space never selects it. It is valid
 only inside [`WebGLLayer`](#/api/components/webgl-layer).
+
+Light declarations participate in the same nested transform. Rotation changes
+hemisphere orientation and directional/spot direction; translation places point
+and spot origins. Scale may reposition a translated local origin as part of the
+composed transform, but it never changes a light's intensity, range, cone
+angles, shadow quality, or shadow-map resolution. `AmbientLight` ignores the
+transform because its contribution is uniform.

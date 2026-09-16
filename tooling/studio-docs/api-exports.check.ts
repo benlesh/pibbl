@@ -41,8 +41,58 @@ assert.throws(
         },
       },
     ]),
-  /Undocumented public exports: CRCWebGLPerspectiveCamera, WebGLLayer/u,
+  /Undocumented public exports: CRCOrbitCameraHandlers, CRCOrbitCameraOptions, CRCOrbitCameraResult, CRCWebGLPerspectiveCamera, CRCWebGLVector3, WebGLLayer, crcOrbitCamera/u,
 );
+
+const multiPackageCoverage = validateApiCoverage(multiPackageInventory, [
+  {
+    route: "#/api/components/circle",
+    frontmatter: {
+      id: "api-core",
+      symbols: ["Circle", "crc", "CRCConfig", "CircleProps"],
+    },
+  },
+  {
+    route: "#/api/components/webgl-layer",
+    frontmatter: {
+      id: "api-component-webgl-layer",
+      symbols: ["WebGLLayer"],
+    },
+  },
+  {
+    route: "#/api/hooks/crc-orbit-camera",
+    frontmatter: {
+      id: "api-hook-crc-orbit-camera",
+      symbols: [
+        "crcOrbitCamera",
+        "CRCOrbitCameraOptions",
+        "CRCOrbitCameraHandlers",
+        "CRCOrbitCameraResult",
+      ],
+    },
+  },
+  {
+    route: "#/api/types/webgl",
+    frontmatter: {
+      id: "api-types-webgl",
+      symbols: ["CRCWebGLPerspectiveCamera", "CRCWebGLVector3"],
+    },
+  },
+]);
+assert.equal(
+  multiPackageCoverage.values.get("crcOrbitCamera")?.route,
+  "#/api/hooks/crc-orbit-camera",
+);
+assert.equal(
+  multiPackageCoverage.types.get("CRCOrbitCameraOptions")?.route,
+  "#/api/hooks/crc-orbit-camera",
+);
+assert.equal(
+  multiPackageCoverage.types.get("CRCWebGLVector3")?.route,
+  "#/api/types/webgl",
+);
+assert.deepEqual(multiPackageCoverage.missingValues, []);
+assert.deepEqual(multiPackageCoverage.missingTypes, []);
 
 await assert.rejects(
   () =>
@@ -108,8 +158,8 @@ assert.deepEqual(coverage.missingTypes, []);
 const crcInventory = await collectPublicExports(crcPublicEntryPaths, {});
 assert.ok(crcInventory.root.values.length > 0);
 assert.ok(crcInventory.root.types.length > 0);
-assert.equal(crcInventory.webgl.values.length, 7);
-assert.equal(crcInventory.webgl.types.length, 15);
+assert.equal(crcInventory.webgl.values.length, 14);
+assert.equal(crcInventory.webgl.types.length, 33);
 
 process.stdout.write(
   `Validated public API coverage: ${crcInventory.root.values.length} core values, ` +

@@ -35,6 +35,7 @@ function WebGLIslandLesson() {
               translateX: -0.9,
               color: selection === 'cube' ? '#fbbf24' : '#8b5cf6',
               cursor: 'pointer',
+              lit: false,
             }}
             onClick={() => setSelection('cube')}
           />
@@ -44,6 +45,7 @@ function WebGLIslandLesson() {
               translateX: 0.95,
               color: selection === 'sphere' ? '#fb7185' : '#22c55e',
               cursor: 'pointer',
+              lit: false,
             }}
             onClick={() => setSelection('sphere')}
           />

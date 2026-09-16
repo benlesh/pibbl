@@ -68,6 +68,13 @@ export const learningSections = [
     description: "Reason about ordering, hit geometry, and composed targets.",
     order: 8,
   },
+  {
+    id: "webgl",
+    label: "WebGL",
+    description:
+      "Light settled 3D scenes with editable materials, normals, and backgrounds.",
+    order: 9,
+  },
 ] as const satisfies readonly LearningSection[];
 
 interface LearningDraft extends Omit<
@@ -98,6 +105,7 @@ function browseGroupFor(
   if (section === "start") return undefined;
   if (section === "drawing" || slug === "filters") return "drawing";
   if (section === "composition") return "composition";
+  if (section === "webgl") return "webgl";
   if (section === "layout") return "layout";
   if (
     section === "mouse-events" ||
@@ -1583,6 +1591,322 @@ const drafts = [
     related: ["group", "clip", "layer"],
     load: () =>
       import("./learning/advanced-interactions/transformed-clipped-layered-targets.example"),
+  },
+  {
+    slug: "lit-and-unlit",
+    title: "Lit and unlit meshes",
+    shortTitle: "Lit and unlit",
+    section: "webgl",
+    order: 380,
+    summary:
+      "Compare the default Lambert-lit result with one mesh that explicitly ignores every scene light.",
+    api: ["WebGLLayer", "Cube", "Sphere", "Mesh", "lit"],
+    objectives: [
+      "See that lit geometry without a light resolves to black apart from emission.",
+      "Set style.lit to false when a mesh should retain its base color without lighting.",
+    ],
+    prompts: {
+      gesture: "Drag to orbit, use the wheel to zoom, and compare the colored unlit cube with the black lit sphere and ground.",
+      code: "Change cubeLit to true, then add an AmbientLight to compare both modes.",
+    },
+    apiNotes: [
+      "Mesh, Cube, and Sphere are Lambert-lit by default; style.lit is the explicit per-mesh opt-out.",
+      "A lit non-emissive mesh in a scene with no lights renders black.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["ambient-light", "emissive-material"],
+    load: () => import("./learning/webgl/lit-and-unlit.example"),
+  },
+  {
+    slug: "ambient-light",
+    title: "Ambient light",
+    shortTitle: "Ambient light",
+    section: "webgl",
+    order: 390,
+    summary:
+      "Add an even scene-wide fill that does not depend on position, direction, or surface orientation.",
+    api: ["AmbientLight", "WebGLLayer"],
+    objectives: [
+      "Use color and intensity to tune a uniform fill light.",
+      "Recognize that AmbientLight contributes equally to every lit surface.",
+    ],
+    prompts: {
+      gesture: "Drag to orbit, use the wheel to zoom, and compare the equally visible faces of the cube and smooth sphere.",
+      code: "Lower intensity or tint color to make the ambient contribution easier to isolate.",
+    },
+    apiNotes: [
+      "AmbientLight has no transform because its contribution is uniform everywhere.",
+      "Ambient fill has no singular light-space view, so it cannot cast a direct shadow.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["hemisphere-light", "multiple-lights"],
+    load: () => import("./learning/webgl/ambient-light.example"),
+  },
+  {
+    slug: "hemisphere-light",
+    title: "Hemisphere light",
+    shortTitle: "Hemisphere light",
+    section: "webgl",
+    order: 400,
+    summary:
+      "Blend separate sky and ground colors across each surface using a transformable local up axis.",
+    api: ["HemisphereLight", "WebGLLayer"],
+    objectives: [
+      "Set independent skyColor and groundColor contributions.",
+      "Rotate transformed local +Y to change the hemisphere sky axis.",
+    ],
+    prompts: {
+      gesture: "Drag to orbit, use the wheel to zoom, and compare the sphere’s sky-facing and ground-facing gradients.",
+      code: "Swap the sky and ground colors or rotate the light around Z.",
+    },
+    apiNotes: [
+      "HemisphereLight uses transformed local +Y as its normalized sky axis.",
+      "Hemisphere fill has no singular light-space view, so it cannot cast a direct shadow.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["ambient-light", "directional-light"],
+    load: () => import("./learning/webgl/hemisphere-light.example"),
+  },
+  {
+    slug: "directional-light",
+    title: "Directional light",
+    shortTitle: "Directional light",
+    section: "webgl",
+    order: 410,
+    summary:
+      "Aim parallel illumination with rotations while translation remains visually irrelevant.",
+    api: ["DirectionalLight", "WebGLLayer"],
+    objectives: [
+      "Use rotations to aim the light’s transformed local -Z direction.",
+      "Read flat cube faces and curved sphere normals under parallel light.",
+    ],
+    prompts: {
+      gesture: "Drag to orbit, use the wheel to zoom, and inspect the directional silhouettes on the ground.",
+      code: "Edit rotationXDegrees and rotationYDegrees to sweep the light direction.",
+    },
+    apiNotes: [
+      "DirectionalLight emits parallel rays along transformed local -Z.",
+      "Translation does not affect a directional light.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["hemisphere-light", "custom-geometry-normals"],
+    load: () => import("./learning/webgl/directional-light.example"),
+  },
+  {
+    slug: "point-light",
+    title: "Point light",
+    shortTitle: "Point light",
+    section: "webgl",
+    order: 420,
+    summary:
+      "Place a local light whose inverse-square contribution fades smoothly to zero at its optional range.",
+    api: ["PointLight", "WebGLLayer"],
+    objectives: [
+      "Position a point light with the shared 3D transform fields.",
+      "Tune dimensionless intensity and the optional smooth range cutoff.",
+    ],
+    prompts: {
+      gesture: "Drag to orbit, use the wheel to zoom, and inspect the point-light silhouettes from every side.",
+      code: "Move translateX or shorten range to expose the local falloff.",
+    },
+    apiNotes: [
+      "PointLight uses the transformed local origin and inverse-square distance falloff.",
+      "Range is an optional positive cutoff; omitted range is unbounded.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["spot-light", "transformed-light"],
+    load: () => import("./learning/webgl/point-light.example"),
+  },
+  {
+    slug: "spot-light",
+    title: "Spot light",
+    shortTitle: "Spot light",
+    section: "webgl",
+    order: 430,
+    summary:
+      "Shape a transform-aimed local light with editable inner and outer cone half-angles.",
+    api: ["SpotLight", "WebGLLayer"],
+    objectives: [
+      "Position and aim a spot light through its transformed origin and local -Z direction.",
+      "Use inner and outer cone angles to control the smooth edge transition.",
+    ],
+    prompts: {
+      gesture: "Drag to orbit, use the wheel to zoom, and inspect the spot cone and cast silhouettes.",
+      code: "Narrow outerConeAngleDegrees or rotate the spot away from the sphere.",
+    },
+    apiNotes: [
+      "Spot cone fields are half-angles in degrees and the inner angle cannot exceed the outer angle.",
+      "SpotLight combines cone response with the same inverse-square and range behavior as PointLight.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["point-light", "transformed-light"],
+    load: () => import("./learning/webgl/spot-light.example"),
+  },
+  {
+    slug: "emissive-material",
+    title: "Emissive Lambert material",
+    shortTitle: "Emissive material",
+    section: "webgl",
+    order: 440,
+    summary:
+      "Make one Lambert surface self-lit without implying bloom, a halo, or illumination of nearby geometry.",
+    api: ["CRCWebGLLambertMaterial", "material", "WebGLLayer"],
+    objectives: [
+      "Set emissiveColor and emissiveIntensity inside the closed Lambert material descriptor.",
+      "Distinguish a surface’s emission from light bounce and post-processing bloom.",
+    ],
+    prompts: {
+      gesture: "Drag to orbit, use the wheel to zoom, and notice that emission stays on the sphere rather than lighting nearby meshes.",
+      code: "Change emissiveColor or emissiveIntensity and confirm nearby meshes remain unchanged.",
+    },
+    apiNotes: [
+      "Emission adds to the receiving surface whether style.lit is true or false.",
+      "Emissive material does not illuminate other meshes and does not create a halo.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["lit-and-unlit", "multiple-lights"],
+    load: () => import("./learning/webgl/emissive-material.example"),
+  },
+  {
+    slug: "webgl-background",
+    title: "WebGL background",
+    shortTitle: "WebGL background",
+    section: "webgl",
+    order: 450,
+    summary:
+      "Clear an island to one solid or alpha color while preserving transparent islands as the default.",
+    api: ["WebGLBackground", "WebGLLayer"],
+    objectives: [
+      "Declare one solid-color background independently from scene lighting.",
+      "Remove the declaration to reveal the transparent WebGL island default.",
+    ],
+    prompts: {
+      gesture: "Drag to orbit, use the wheel to zoom, and see the two Canvas underlay colors through the alpha background.",
+      code: "Change the background alpha, or remove WebGLBackground to restore full transparency.",
+    },
+    apiNotes: [
+      "WebGLBackground affects the clear color only; it never illuminates geometry.",
+      "Even an opaque WebGL background remains a miss for the nested interaction resolver.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["ambient-light", "webgl-islands"],
+    load: () => import("./learning/webgl/webgl-background.example"),
+  },
+  {
+    slug: "custom-geometry-normals",
+    title: "Custom geometry normals",
+    shortTitle: "Geometry normals",
+    section: "webgl",
+    order: 460,
+    summary:
+      "Give a custom ground mesh explicit vertex normals so it participates in Lambert lighting.",
+    api: ["createWebGLGeometry", "CRCWebGLGeometryInput", "Mesh"],
+    objectives: [
+      "Keep positions, normals, and indices aligned in one immutable geometry descriptor.",
+      "Edit the existing upward normal array to understand directional Lambert response.",
+    ],
+    prompts: {
+      gesture: "Drag to orbit, use the wheel to zoom, and compare the flat ground response with curved and face normals.",
+      code: "Edit the unchanged ground normal triples while leaving positions and indices intact.",
+    },
+    apiNotes: [
+      "A lit custom geometry requires one finite nonzero XYZ normal for every position triple.",
+      "createWebGLGeometry copies the arrays; the descriptor exposes no mutable geometry handles.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["directional-light", "lit-and-unlit"],
+    load: () => import("./learning/webgl/custom-geometry-normals.example"),
+  },
+  {
+    slug: "multiple-lights",
+    title: "Multiple WebGL lights",
+    shortTitle: "Multiple lights",
+    section: "webgl",
+    order: 470,
+    summary:
+      "Combine every analytic light family and prove that late JSX siblings illuminate earlier meshes.",
+    api: [
+      "AmbientLight",
+      "HemisphereLight",
+      "DirectionalLight",
+      "PointLight",
+      "SpotLight",
+      "WebGLLayer",
+    ],
+    objectives: [
+      "Compose additive ambient, hemisphere, directional, point, and spot contributions.",
+      "Place local lights after meshes without changing whole-scene illumination.",
+    ],
+    prompts: {
+      gesture: "Drag to orbit, use the wheel to zoom, and inspect every direct light’s independent ground shadow.",
+      code: "Move a late PointLight before the meshes and confirm the rendered result is unchanged.",
+    },
+    apiNotes: [
+      "All eight-or-fewer declarations affect every lit mesh in the settled WebGLLayer regardless of JSX order.",
+      "The ninth declaration rejects during settlement instead of being silently truncated.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["ambient-light", "transformed-light"],
+    load: () => import("./learning/webgl/multiple-lights.example"),
+  },
+  {
+    slug: "transformed-light",
+    title: "Transformed lights",
+    shortTitle: "Transformed lights",
+    section: "webgl",
+    order: 480,
+    summary:
+      "Animate a Group3D containing point and spot lights while optical settings remain unchanged by scale.",
+    api: [
+      "Group3D",
+      "PointLight",
+      "SpotLight",
+      "crcSignal",
+      "crcPlayback",
+      "repeat",
+      "track",
+      "tween",
+    ],
+    objectives: [
+      "Drive a containing Group3D rotation from an animated signal.",
+      "Separate composed light pose from fixed range, intensity, and cone settings.",
+    ],
+    prompts: {
+      gesture: "Drag to orbit, use the wheel to zoom, and watch the transformed point and spot shadows move across the ground.",
+      code: "Change group scale and observe pose movement without changing range, intensity, or cone angles.",
+    },
+    apiNotes: [
+      "Group3D composes the point/spot origin and spot direction before the complete scene settles.",
+      "Group scale can reposition a nested translated origin; it does not scale range, intensity, or cone angles.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["point-light", "spot-light", "multiple-lights"],
+    load: () => import("./learning/webgl/transformed-light.example"),
+  },
+  {
+    slug: "shadow-quality",
+    title: "WebGL shadow quality",
+    shortTitle: "Shadow quality",
+    section: "webgl",
+    order: 490,
+    summary:
+      "Compare familiar disabled, low, medium, and high settings over the same genuine directional shadow map.",
+    api: ["CRCWebGLShadowQuality", "WebGLLayer", "DirectionalLight"],
+    objectives: [
+      "Choose a layer-wide shadow quality tier without exposing renderer texture or filter knobs.",
+      "See that every enabled tier remains geometry-based while false disables shadow allocation and sampling.",
+    ],
+    prompts: {
+      gesture: "Orbit behind the cube and sphere to inspect the cast silhouettes from several angles.",
+      code: "Change layerShadows from medium to false, low, or high and compare the ground-plane edges.",
+    },
+    apiNotes: [
+      "Omitting style.shadows selects medium; false performs no shadow depth pass.",
+      "Low uses a hard comparison while medium and high use progressively wider filtering at higher requested resolutions.",
+    ],
+    canvas: { width: 720, height: 420 },
+    related: ["directional-light", "point-light", "spot-light"],
+    load: () => import("./learning/webgl/shadow-quality.example"),
   },
 ] as const satisfies readonly LearningDraft[];
 

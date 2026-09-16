@@ -483,25 +483,43 @@ if (publicTypeExports.length !== 175) {
 }
 
 const publicWebGLTypeExports = [
+  'AmbientLightProps',
+  'AmbientLightStyle',
+  'CRCOrbitCameraHandlers',
+  'CRCOrbitCameraOptions',
+  'CRCOrbitCameraResult',
   'CRCWebGLGeometry',
   'CRCWebGLGeometryInput',
+  'CRCWebGLLambertMaterial',
+  'CRCWebGLMaterial',
   'CRCWebGLPerspectiveCamera',
+  'CRCWebGLShadowQuality',
   'CRCWebGLTransformStyle',
   'CRCWebGLVector3',
   'CubeProps',
   'CubeStyle',
+  'DirectionalLightProps',
+  'DirectionalLightStyle',
   'Group3DProps',
   'Group3DStyle',
+  'HemisphereLightProps',
+  'HemisphereLightStyle',
   'MeshProps',
   'MeshStyle',
+  'PointLightProps',
+  'PointLightStyle',
   'SphereProps',
   'SphereStyle',
+  'SpotLightProps',
+  'SpotLightStyle',
+  'WebGLBackgroundProps',
+  'WebGLBackgroundStyle',
   'WebGLLayerProps',
   'WebGLLayerStyle',
 ].sort();
 
-if (publicWebGLTypeExports.length !== 15) {
-  throw new Error(`CRC Studio must declare exactly 15 WebGL public types, received ${publicWebGLTypeExports.length}.`);
+if (publicWebGLTypeExports.length !== 33) {
+  throw new Error(`CRC Studio must declare exactly 33 WebGL public types, received ${publicWebGLTypeExports.length}.`);
 }
 
 function explicitTypeExportNames(source) {
@@ -553,6 +571,7 @@ import * as CRC_CORE_ROOT from '@crc/core';
 import * as CRC_WEBGL_ROOT from '@crc/webgl';
 import {
   Absolute,
+  Clip,
   computed,
   crc,
   crcCanvasContext,
@@ -582,6 +601,7 @@ import {
   isSignal,
   keyframes,
   KeyboardNavigation,
+  Layer,
   LayoutDiagnostic,
   Line,
   marker,
@@ -660,22 +680,47 @@ import {
 import { jsx, jsxs } from '@crc/core/jsx-runtime';
 import { jsxDEV } from '@crc/core/jsx-dev-runtime';
 import {
+  AmbientLight,
   crcAnimationFrame,
+  crcOrbitCamera,
   createWebGLGeometry,
   Cube,
+  DirectionalLight,
   Group3D,
+  HemisphereLight,
   Mesh,
+  PointLight,
   Sphere,
+  SpotLight,
+  WebGLBackground,
   WebGLLayer,
+  type AmbientLightProps,
+  type AmbientLightStyle,
+  type CRCOrbitCameraHandlers,
+  type CRCOrbitCameraOptions,
+  type CRCOrbitCameraResult,
+  type CRCWebGLLambertMaterial,
+  type CRCWebGLMaterial,
   type CRCWebGLPerspectiveCamera,
+  type CRCWebGLShadowQuality,
   type CubeProps,
   type CubeStyle,
+  type DirectionalLightProps,
+  type DirectionalLightStyle,
   type Group3DProps,
   type Group3DStyle,
+  type HemisphereLightProps,
+  type HemisphereLightStyle,
   type MeshProps,
   type MeshStyle,
+  type PointLightProps,
+  type PointLightStyle,
   type SphereProps,
   type SphereStyle,
+  type SpotLightProps,
+  type SpotLightStyle,
+  type WebGLBackgroundProps,
+  type WebGLBackgroundStyle,
   type WebGLLayerProps,
   type WebGLLayerStyle,
 } from '@crc/webgl';
@@ -776,43 +821,173 @@ type StudioSignatureParity = [
 ];
 void (null as unknown as StudioSignatureParity);
 
-const studioCamera = {
-  type: 'perspective',
-  position: [0, 0, 5],
-  lookAt: [0, 0, 0],
-  up: [0, 1, 0],
-  fieldOfViewDegrees: 45,
-  near: 0.1,
-  far: 100,
-} as const satisfies CRCWebGLPerspectiveCamera;
 const studioGeometry = createWebGLGeometry({
   positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+  normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
 });
-const webglScene = (
-  <WebGLLayer style={{ width: 320, height: 180 }} camera={studioCamera}>
-    <Group3D style={{ rotationYDegrees: 15 }}>
-      <Cube style={{ size: 1, color: '#74d3ae' }} />
-      <Sphere style={{ radius: 0.5, translateX: 1 }} />
-      <Mesh geometry={studioGeometry} style={{ color: '#f7c948' }} />
-    </Group3D>
-  </WebGLLayer>
-);
+const studioShadowQualities = [false, 'low', 'medium', 'high'] as const satisfies
+  readonly CRCWebGLShadowQuality[];
+function StudioWebGLScene(): CRCNode {
+  const orbitOptions: CRCOrbitCameraOptions = {
+    orbitPoint: [0, 0, 0],
+    initialPosition: [0, 2, 5],
+    minDistance: 2,
+    maxDistance: 12,
+    rotateSpeed: 0.8,
+    zoomSpeed: 1.2,
+  };
+  const orbit: CRCOrbitCameraResult = crcOrbitCamera(orbitOptions);
+  const handlers: CRCOrbitCameraHandlers = orbit.handlers;
+  const camera: CRCWebGLPerspectiveCamera = {
+    type: 'perspective',
+    position: orbit.position,
+    lookAt: orbit.lookAt,
+    up: [0, 1, 0],
+    fieldOfViewDegrees: 45,
+    near: 0.1,
+    far: 100,
+  };
+  const material: CRCWebGLMaterial = {
+    type: 'lambert',
+    emissiveColor: '#102040',
+    emissiveIntensity: 0.25,
+  } satisfies CRCWebGLLambertMaterial;
+  return (
+    <Group {...handlers}>
+      <Rectangle style={{ width: 320, height: 180, fill: 'transparent' }} />
+      <WebGLLayer
+        style={{ width: 320, height: 180, shadows: studioShadowQualities[2] }}
+        camera={camera}
+      >
+        <WebGLBackground style={{ color: '#08111fcc' }} />
+        <AmbientLight style={{ color: '#ffffff', intensity: 0.1 }} />
+        <HemisphereLight
+          style={{
+            skyColor: '#b9dcff',
+            groundColor: '#302418',
+            intensity: 0.3,
+            rotationZDegrees: 5,
+          }}
+        />
+        <DirectionalLight
+          style={{
+            color: '#ffffff',
+            intensity: 1.2,
+            rotationXDegrees: -35,
+            rotationYDegrees: 45,
+            castShadow: false,
+          }}
+        />
+        <PointLight
+          style={{
+            color: '#ff8a4c',
+            intensity: 4,
+            range: 12,
+            translateX: 3,
+            translateY: 4,
+            translateZ: 2,
+            castShadow: true,
+          }}
+        />
+        <SpotLight
+          style={{
+            color: '#80c8ff',
+            intensity: 5,
+            range: 20,
+            innerConeAngleDegrees: 15,
+            outerConeAngleDegrees: 28,
+            translateX: -3,
+            translateY: 5,
+            translateZ: 4,
+            rotationXDegrees: -40,
+            castShadow: true,
+          }}
+        />
+        <Group3D style={{ rotationYDegrees: 15 }}>
+          <Cube
+            style={{
+              size: 1,
+              color: '#74d3ae',
+              material,
+              castShadow: true,
+              receiveShadow: false,
+            }}
+          />
+          <Sphere
+            style={{
+              radius: 0.5,
+              translateX: 1,
+              lit: false,
+              castShadow: false,
+              receiveShadow: true,
+            }}
+          />
+          <Mesh geometry={studioGeometry} style={{ color: '#f7c948' }} />
+        </Group3D>
+      </WebGLLayer>
+    </Group>
+  );
+}
+const webglScene = <StudioWebGLScene />;
 void webglScene;
+// @ts-expect-error light declarations reject arbitrary component props
+const ambientLightWithChildren: AmbientLightProps = { children: [] };
+// @ts-expect-error light declarations reject arbitrary component props
+const hemisphereLightWithChildren: HemisphereLightProps = { children: [] };
+// @ts-expect-error light declarations reject arbitrary component props
+const directionalLightWithChildren: DirectionalLightProps = { children: [] };
+// @ts-expect-error light declarations reject arbitrary component props
+const pointLightWithChildren: PointLightProps = { children: [] };
+// @ts-expect-error light declarations reject arbitrary component props
+const spotLightWithChildren: SpotLightProps = { children: [] };
+// @ts-expect-error background declarations reject arbitrary component props
+const backgroundWithChildren: WebGLBackgroundProps = { children: [] };
+void [
+  ambientLightWithChildren,
+  hemisphereLightWithChildren,
+  directionalLightWithChildren,
+  pointLightWithChildren,
+  spotLightWithChildren,
+  backgroundWithChildren,
+];
 // @ts-expect-error filters belong on WebGLLayer, never inner WebGL geometry
 const filteredCube = <Cube style={{ filter: { type: 'blur', radius: 2 } }} />;
-void filteredCube;
+// @ts-expect-error filters belong on WebGLLayer, never light declarations
+const filteredAmbientLight = <AmbientLight style={{ filter: { type: 'blur', radius: 2 } }} />;
+// @ts-expect-error filters belong on WebGLLayer, never background declarations
+const filteredWebGLBackground = <WebGLBackground style={{ color: '#08111f', filter: { type: 'blur', radius: 2 } }} />;
+void [filteredCube, filteredAmbientLight, filteredWebGLBackground];
 void CRC_WEBGL_ROOT.crcAnimationFrame;
+void CRC_WEBGL_ROOT.crcOrbitCamera;
 void crcAnimationFrame;
 type StudioWebGLTypes = [
+  AmbientLightProps,
+  AmbientLightStyle,
+  CRCOrbitCameraHandlers,
+  CRCOrbitCameraOptions,
+  CRCOrbitCameraResult,
+  CRCWebGLLambertMaterial,
+  CRCWebGLMaterial,
   CRCWebGLPerspectiveCamera,
+  CRCWebGLShadowQuality,
   CubeProps,
   CubeStyle,
+  DirectionalLightProps,
+  DirectionalLightStyle,
   Group3DProps,
   Group3DStyle,
+  HemisphereLightProps,
+  HemisphereLightStyle,
   MeshProps,
   MeshStyle,
+  PointLightProps,
+  PointLightStyle,
   SphereProps,
   SphereStyle,
+  SpotLightProps,
+  SpotLightStyle,
+  WebGLBackgroundProps,
+  WebGLBackgroundStyle,
   WebGLLayerProps,
   WebGLLayerStyle,
 ];
@@ -953,6 +1128,39 @@ const eventHandlers = {
   onCopyCapture: (event: CRCClipboardEvent) => void event.clipboardData,
   onDragStart: (event: CRCDragEvent) => void event.dataTransfer,
 } satisfies CRCEventHandlers;
+
+const structuralEventProps = (
+  <>
+    <Group onWheel={eventHandlers.onWheel}>
+      <Rectangle style={{ width: 20, height: 20 }} />
+    </Group>
+    <Clip onWheelCapture={eventHandlers.onWheel} style={{ d: new Path2D() }}>
+      <Rectangle style={{ width: 20, height: 20 }} />
+    </Clip>
+    <Layer onPointerDown={eventHandlers.onPointerDown} style={{ width: 20, height: 20 }}>
+      <Rectangle style={{ width: 20, height: 20 }} />
+    </Layer>
+    <Absolute onMouseDown={eventHandlers.onMouseDown}>
+      <Rectangle style={{ width: 20, height: 20 }} />
+    </Absolute>
+    <Overlay onTouchStart={eventHandlers.onTouchStart}>
+      <Rectangle style={{ width: 20, height: 20 }} />
+    </Overlay>
+    <Flow onKeyDownCapture={eventHandlers.onKeyDownCapture}>
+      <Rectangle style={{ width: 20, height: 20 }} />
+    </Flow>
+    <Flex onFocus={eventHandlers.onFocus}>
+      <Rectangle style={{ width: 20, height: 20 }} />
+    </Flex>
+    <Grid
+      onCopyCapture={eventHandlers.onCopyCapture}
+      style={{ gridTemplateColumns: [20], gridTemplateRows: [20] }}
+    >
+      <Rectangle style={{ width: 20, height: 20 }} />
+    </Grid>
+  </>
+);
+void structuralEventProps;
 
 function EventProbe(): CRCNode {
   const snapshot: CRCEventTargetSnapshot = crcEventTarget(eventHandlers, {
@@ -1488,10 +1696,12 @@ try {
   const builtRuntimeExports = Object.keys(builtRuntime).sort();
   const expectedStudioRuntimeExports = [
     'Absolute',
+    'AmbientLight',
     'Arc',
     'Circle',
     'Clip',
     'Cube',
+    'DirectionalLight',
     'Ellipse',
     'Flex',
     'Flow',
@@ -1500,6 +1710,7 @@ try {
     'Grid',
     'Group',
     'Group3D',
+    'HemisphereLight',
     'HorizontalLine',
     'Image',
     'KeyboardNavigation',
@@ -1510,16 +1721,20 @@ try {
     'Overlay',
     'Path',
     'Polygon',
+    'PointLight',
     'Rectangle',
     'RegularPolygon',
     'Star',
     'Sphere',
+    'SpotLight',
     'SvgPath',
     'Text',
     'VerticalLine',
     'Wedge',
+    'WebGLBackground',
     'WebGLLayer',
     'crcAnimationFrame',
+    'crcOrbitCamera',
     'computed',
     'crc',
     'crcCanvasContext',
@@ -1584,8 +1799,8 @@ try {
     'untracked',
     'wait',
   ].sort();
-  if (expectedStudioRuntimeExports.length !== 96) {
-    throw new Error(`CRC Studio runtime must expose 77 core values, 7 WebGL values, 9 particle values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`);
+  if (expectedStudioRuntimeExports.length !== 103) {
+    throw new Error(`CRC Studio runtime must expose 77 core values, 14 WebGL values, 9 particle values, and 3 compiler values, received ${expectedStudioRuntimeExports.length}.`);
   }
   if (sourceRuntimeExports.join('\n') !== expectedStudioRuntimeExports.join('\n')) {
     throw new Error(
@@ -1596,7 +1811,7 @@ try {
     throw new Error('CRC Studio source and built runtime surfaces differ.');
   }
   process.stdout.write(
-    'CRC Studio declarations passed exact export-name parity, 190-type structural ' +
+    'CRC Studio declarations passed exact export-name parity, 208-type structural ' +
     'coverage, selected signature parity, strict TSX, compiler-runtime, event-family, ' +
     'generic, and layout checks against source and built packages.\n',
   );

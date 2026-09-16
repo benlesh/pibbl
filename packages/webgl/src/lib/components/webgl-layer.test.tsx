@@ -15,6 +15,7 @@ import * as publicWebGL from '../../index.js';
 import { createWebGLGeometry } from '../geometry/geometry.js';
 import { Cube } from './cube.js';
 import { Mesh } from './mesh.js';
+import { WebGLBackground } from './webgl-background.js';
 import { WebGLLayerController } from '../layer-controller.js';
 import { WebGLLayer, type WebGLLayerProps } from './webgl-layer.js';
 
@@ -31,14 +32,64 @@ afterEach(() => {
 describe('WebGLLayer public surface', () => {
   it('exports only the declarative runtime surface', () => {
     expect(Object.keys(publicWebGL).sort()).toEqual([
+      'AmbientLight',
       'Cube',
+      'DirectionalLight',
       'Group3D',
+      'HemisphereLight',
       'Mesh',
+      'PointLight',
       'Sphere',
+      'SpotLight',
+      'WebGLBackground',
       'WebGLLayer',
       'crcAnimationFrame',
+      'crcOrbitCamera',
       'createWebGLGeometry',
     ]);
+  });
+
+  it('defaults shadows to medium, forwards explicit quality, and rejects invalid values before GL work', async () => {
+    const platform = installComponentPlatform();
+    vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
+      .mockImplementation(() => undefined);
+    const render = vi.spyOn(
+      WebGLLayerController.prototype,
+      'renderRetainedChild',
+    );
+    const canvas = createCanvas(24, 24);
+    const controller = crc(canvas, (
+      <WebGLLayer style={{ width: 24, height: 24 }}>
+        <Cube />
+      </WebGLLayer>
+    ), { pixelRatio: 1 });
+    controllers.add(controller);
+    await nextFrame();
+    expect(render.mock.calls[0]![3]).toBe('medium');
+    expect(platform.draws).toHaveBeenCalledOnce();
+
+    crc(canvas, (
+      <WebGLLayer style={{ width: 24, height: 24, shadows: 'high' }}>
+        <Cube />
+      </WebGLLayer>
+    ));
+    await nextFrame();
+    expect(render.mock.calls.at(-1)![3]).toBe('high');
+    expect(platform.draws).toHaveBeenCalledTimes(2);
+
+    let invalidFrame: FrameRequestCallback | undefined;
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
+      invalidFrame = callback;
+      return 99;
+    });
+    crc(canvas, (
+      <WebGLLayer style={{ width: 24, height: 24, shadows: 'ultra' as never }}>
+        <Cube />
+      </WebGLLayer>
+    ));
+    expect(() => invalidFrame?.(3)).toThrowError(
+      /WebGLLayer style\.shadows.*false.*low.*medium.*high/i,
+    );
   });
 
   it('includes jsxDEV source in a representative capability failure', () => {
@@ -125,6 +176,38 @@ describe('WebGLLayer public surface', () => {
     );
   });
 
+  it('uses nested material identity for retained invalidation and snapshots scalar fields on execution', async () => {
+    const platform = installComponentPlatform();
+    vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
+      .mockImplementation(() => undefined);
+    const canvas = createCanvas(32, 32);
+    const material = { type: 'lambert' as const, emissiveIntensity: 1 };
+    const scene = (descriptor: typeof material) => (
+      <WebGLLayer style={{ width: 32, height: 32 }}>
+        <Cube style={{ material: descriptor }} />
+      </WebGLLayer>
+    );
+    const controller = crc(canvas, scene(material), { pixelRatio: 1 });
+    controllers.add(controller);
+
+    await nextFrame();
+    expect(platform.draws).toHaveBeenCalledTimes(1);
+
+    material.emissiveIntensity = 2;
+    crc(canvas, scene(material));
+    await nextFrame();
+    expect(platform.draws).toHaveBeenCalledTimes(1);
+
+    const equivalent = { type: 'lambert' as const, emissiveIntensity: 2 };
+    crc(canvas, scene(equivalent));
+    await nextFrame();
+    expect(platform.draws).toHaveBeenCalledTimes(2);
+
+    crc(canvas, scene({ type: 'lambert', emissiveIntensity: 3 }));
+    await nextFrame();
+    expect(platform.draws).toHaveBeenCalledTimes(3);
+  });
+
   it('registers one bounded resolver in paint order and pointerEvents none omits it while painting', async () => {
     installComponentPlatform();
     vi.spyOn(CanvasRenderingContext2D.prototype, 'drawImage')
@@ -149,7 +232,7 @@ describe('WebGLLayer public surface', () => {
             style={{ width: 30, height: 20 }}
             pointerEvents={pointerEvents}
           >
-            <Cube onClick={() => undefined} />
+            <Cube style={{ lit: false }} onClick={() => undefined} />
           </WebGLLayer>
         </Clip>
       </Group>,
@@ -245,7 +328,9 @@ describe('WebGLLayer public surface', () => {
     const canvas = createCanvas(40, 20);
     const controller = crc(
       canvas,
-      <WebGLLayer><Cube onClick={() => undefined} /></WebGLLayer>,
+      <WebGLLayer>
+        <Cube style={{ lit: false }} onClick={() => undefined} />
+      </WebGLLayer>,
       { pixelRatio: 1 },
     );
     controllers.add(controller);
@@ -284,7 +369,7 @@ describe('WebGLLayer public surface', () => {
               <Mesh
                 geometry={redPlane}
                 pointerEvents="none"
-                style={{ color: '#ff0000' }}
+                style={{ color: '#ff0000', lit: false }}
               />
             </WebGLLayer>
           </Layer>
@@ -328,6 +413,7 @@ describe('WebGLLayer public surface', () => {
           <Cube
             onClick={cubeClick}
             pointerEvents={cubePointerEvents}
+            style={{ lit: false }}
           />
         </WebGLLayer>
         <Star
@@ -375,6 +461,38 @@ describe('WebGLLayer public surface', () => {
     expect(readPixels).not.toHaveBeenCalled();
   });
 
+  it('treats opaque WebGLBackground pixels as nested resolver misses', async () => {
+    const rearClick = vi.fn();
+    const cubeClick = vi.fn();
+    const canvas = createCanvas(100, 100);
+    const controller = crc(canvas, (
+      <>
+        <Rectangle
+          style={{ width: 100, height: 100, fill: '#1d4ed8' }}
+          onClick={rearClick}
+        />
+        <WebGLLayer style={{ width: 100, height: 100 }}>
+          <WebGLBackground style={{ color: '#ffffff' }} />
+          <Cube
+            style={{ color: '#ff0000', lit: false }}
+            onClick={cubeClick}
+          />
+        </WebGLLayer>
+      </>
+    ), { pixelRatio: 1 });
+    controllers.add(controller);
+    await nextFrame();
+
+    expect(Array.from(pixel(canvas, 5, 5))).toEqual([255, 255, 255, 255]);
+    dispatchClick(canvas, 5, 5);
+    expect(rearClick).toHaveBeenCalledOnce();
+    expect(cubeClick).not.toHaveBeenCalled();
+
+    dispatchClick(canvas, 50, 50);
+    expect(cubeClick).toHaveBeenCalledOnce();
+    expect(rearClick).toHaveBeenCalledOnce();
+  });
+
   it('uses two WebGLLayers to interleave a Canvas target between WebGL passes', async () => {
     const backClick = vi.fn();
     const canvasClick = vi.fn();
@@ -389,7 +507,7 @@ describe('WebGLLayer public surface', () => {
           key="back"
           style={{ width: 100, height: 100 }}
         >
-          <Cube onClick={backClick} />
+          <Cube style={{ lit: false }} onClick={backClick} />
         </WebGLLayer>
         <Rectangle
           pointerEvents={canvasPointerEvents}
@@ -407,7 +525,7 @@ describe('WebGLLayer public surface', () => {
           pointerEvents={frontPointerEvents}
           style={{ width: 100, height: 100 }}
         >
-          <Cube onClick={frontClick} />
+          <Cube style={{ lit: false }} onClick={frontClick} />
         </WebGLLayer>
       </>
     );
@@ -465,7 +583,7 @@ describe('WebGLLayer public surface', () => {
         />
         <WebGLLayer style={{ width: 100, height: 100 }}>
           {mode === 'removed' ? undefined : (
-            <Cube pointerEvents={mode} />
+            <Cube style={{ lit: false }} pointerEvents={mode} />
           )}
         </WebGLLayer>
       </>
@@ -512,7 +630,8 @@ describe('WebGLLayer public surface', () => {
 function installComponentPlatform() {
   const constructed: Array<{ width: number; height: number }> = [];
   const contextRequests: Array<{ type: string; attributes: unknown }> = [];
-  const gl = createNoopGL();
+  const draws = vi.fn();
+  const gl = createNoopGL({ draws });
   const bitmap = {
     width: 1,
     height: 1,
@@ -538,10 +657,10 @@ function installComponentPlatform() {
     }
   }
   vi.stubGlobal('OffscreenCanvas', RecordingOffscreenCanvas);
-  return { constructed, contextRequests, bitmap };
+  return { constructed, contextRequests, bitmap, draws };
 }
 
-function createNoopGL(): WebGL2RenderingContext {
+function createNoopGL(options: { readonly draws?: () => void } = {}): WebGL2RenderingContext {
   let constant = 1;
   let handle = 0;
   return new Proxy({}, {
@@ -571,8 +690,17 @@ function createNoopGL(): WebGL2RenderingContext {
                   property === 'createShader' ||
                     property === 'createProgram' ||
                     property === 'createVertexArray' ||
-                    property === 'createBuffer' ?
+                    property === 'createBuffer' ||
+                    property === 'createFramebuffer' ||
+                    property === 'createTexture' ?
                     () => ({ kind: property, id: ++handle }) :
+                      property === 'checkFramebufferStatus' ?
+                        () => {
+                          record.FRAMEBUFFER_COMPLETE ??= constant++;
+                          return record.FRAMEBUFFER_COMPLETE;
+                        } :
+                      property === 'drawElements' || property === 'drawArrays' ?
+                        options.draws ?? (() => undefined) :
                     property === 'isContextLost' ? () => false :
                       () => undefined;
       }

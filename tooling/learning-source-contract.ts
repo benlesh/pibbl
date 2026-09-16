@@ -39,6 +39,7 @@ interface SourceInspection {
   readonly hasNamespaceExport: boolean;
   readonly hasOnlyApprovedImports: boolean;
   readonly hasOnlyScenarioImports: boolean;
+  readonly hasOrbitHandlersSpread: boolean;
   readonly hasScenarioReExport: boolean;
   readonly hasCanonicalMount: boolean;
   readonly hasTestScaffolding: boolean;
@@ -58,8 +59,10 @@ const LEARNING_VALUE_MODULES = new Set([
 ]);
 const PARTICLES_LEARNING_SOURCE_PATH =
   "packages/scenarios/src/learning/composition/particle-effects.example.tsx";
-const WEBGL_LEARNING_SOURCE_PATH =
+const WEBGL_ISLAND_LEARNING_SOURCE_PATH =
   "packages/scenarios/src/learning/composition/webgl-islands.example.tsx";
+const WEBGL_LIGHTING_LEARNING_SOURCE_DIRECTORY =
+  "packages/scenarios/src/learning/webgl/";
 
 const LEGACY_AUTHORING_NAMES = new Set([
   ["define", "Comp"].join(""),
@@ -112,10 +115,16 @@ const DESCRIPTIVE_COMPONENT_EXPORTS = new Set([
   "Text",
   "VerticalLine",
   "Cube",
+  "AmbientLight",
+  "DirectionalLight",
   "Group3D",
+  "HemisphereLight",
   "Mesh",
   "Particles2D",
+  "PointLight",
   "Sphere",
+  "SpotLight",
+  "WebGLBackground",
   "WebGLLayer",
 ]);
 const COMMONJS_BINDING_NAMES = new Set(["exports", "module", "require"]);
@@ -514,6 +523,18 @@ function staticMemberName(node: SyntaxNode): string | undefined {
     return undefined;
   }
   return propertyName(property);
+}
+
+function isOrbitHandlersSpread(attribute: SyntaxNode): boolean {
+  if (attribute.type !== "JSXSpreadAttribute") return false;
+  const argument = unwrapTransparentExpression(attribute.argument);
+  return (
+    argument !== undefined &&
+    (argument.type === "MemberExpression" ||
+      argument.type === "OptionalMemberExpression") &&
+    identifierName(argument.object) === "orbit" &&
+    staticMemberName(argument) === "handlers"
+  );
 }
 
 function knownGlobalAccessPath(value: unknown): readonly string[] | undefined {
@@ -990,6 +1011,7 @@ function inspectSource(source: string, label: string): SourceInspection {
   let hasLegacyLayerRender = false;
   let hasLegacyTextStyle = false;
   let hasNamespaceExport = false;
+  let hasOrbitHandlersSpread = false;
   let hasTestScaffolding = false;
   let hasUninspectableProps = false;
   let hasUninspectableLegacySensitiveProps = false;
@@ -1135,14 +1157,20 @@ function inspectSource(source: string, label: string): SourceInspection {
     if (node.type === "JSXElement") {
       const opening = isNode(node.openingElement) ? node.openingElement : undefined;
       if (!opening) return;
+      const componentName = resolveCoreValue(opening.name);
+      const spreadAttributes = nodes(opening.attributes).filter(
+        (attribute) => attribute.type === "JSXSpreadAttribute",
+      );
+      const orbitHandlerSpreads = spreadAttributes.filter(isOrbitHandlersSpread);
       if (
-        nodes(opening.attributes).some(
-          (attribute) => attribute.type === "JSXSpreadAttribute",
-        )
+        spreadAttributes.length !== orbitHandlerSpreads.length ||
+        (orbitHandlerSpreads.length > 0 && componentName !== "Group")
       ) {
         hasUninspectableProps = true;
       }
-      const componentName = resolveCoreValue(opening.name);
+      if (orbitHandlerSpreads.length > 0 && componentName === "Group") {
+        hasOrbitHandlersSpread = true;
+      }
       const styleAttribute = jsxAttribute(opening, "style");
       const style = jsxAttributeExpression(styleAttribute);
       if (
@@ -1246,6 +1274,7 @@ function inspectSource(source: string, label: string): SourceInspection {
     hasNamespaceExport,
     hasOnlyApprovedImports,
     hasOnlyScenarioImports,
+    hasOrbitHandlersSpread,
     hasScenarioReExport,
     hasTestScaffolding,
     hasUninspectableProps,
@@ -1348,7 +1377,8 @@ export function validateLearningSourceText(
   const { authoring, label, sourcePath } = contract;
   const inspection = inspectSource(source, label);
   const isWebGLLesson =
-    sourcePath === WEBGL_LEARNING_SOURCE_PATH ||
+    sourcePath === WEBGL_ISLAND_LEARNING_SOURCE_PATH ||
+    sourcePath?.startsWith(WEBGL_LIGHTING_LEARNING_SOURCE_DIRECTORY) === true ||
     (sourcePath === undefined &&
       (label === "webgl-islands" ||
         label === 'Learning example "webgl-islands"'));
@@ -1425,7 +1455,11 @@ export function validateLearningSourceText(
   if (inspection.hasLegacyLayerRender) {
     throw invalid(label, "uses the legacy Layer render prop.");
   }
-  if (inspection.hasUninspectableProps) {
+  if (
+    inspection.hasUninspectableProps ||
+    (inspection.hasOrbitHandlersSpread &&
+      sourcePath?.startsWith(WEBGL_LIGHTING_LEARNING_SOURCE_DIRECTORY) !== true)
+  ) {
     throw invalid(
       label,
       "must use inline object props and inline style objects without spreads.",
@@ -1448,5 +1482,208 @@ export function validateLearningSourceText(
       label,
       "must invoke imported createElement with a normal CallExpression.",
     );
+  }
+}
+
+const DIAGRAM_EDITOR_BASE_DECLARATIONS = [
+  "NodeId",
+  "DiagramNode",
+  "DiagramEdge",
+  "ViewTransform",
+  "INITIAL_NODES",
+  "EDGES",
+  "INITIAL_VIEW",
+  "WORKSPACE_TOP",
+  "WORKSPACE_HEIGHT",
+  "NODE_WIDTH",
+  "NODE_HEIGHT",
+  "NodeCard",
+  "Connection",
+  "DiagramEditor",
+  "connectionPath",
+  "arrowheadPath",
+] as const;
+
+function topLevelDeclarationNames(sourceFile: SyntaxNode): Set<string> {
+  const program = isNode(sourceFile.program) ? sourceFile.program : undefined;
+  const names = new Set<string>();
+  for (const statement of nodes(program?.body)) {
+    if (
+      statement.type === "FunctionDeclaration" ||
+      statement.type === "TSInterfaceDeclaration" ||
+      statement.type === "TSTypeAliasDeclaration"
+    ) {
+      const name = identifierName(statement.id);
+      if (name) names.add(name);
+      continue;
+    }
+    if (statement.type !== "VariableDeclaration") continue;
+    for (const declaration of nodes(statement.declarations)) {
+      const name = identifierName(declaration.id);
+      if (name) names.add(name);
+    }
+  }
+  return names;
+}
+
+function topLevelFunction(
+  sourceFile: SyntaxNode,
+  name: string,
+): SyntaxNode | undefined {
+  const program = isNode(sourceFile.program) ? sourceFile.program : undefined;
+  return nodes(program?.body).find(
+    (statement) =>
+      statement.type === "FunctionDeclaration" &&
+      identifierName(statement.id) === name,
+  );
+}
+
+function callsIdentifier(node: SyntaxNode | undefined, name: string): boolean {
+  let found = false;
+  if (!node) return found;
+  walk(node, (candidate) => {
+    if (
+      candidate.type === "CallExpression" &&
+      identifierName(candidate.callee) === name
+    ) {
+      found = true;
+    }
+  });
+  return found;
+}
+
+function hasJsxEventProp(
+  sourceFile: SyntaxNode,
+  elementName: string,
+  propName: string,
+): boolean {
+  let found = false;
+  walk(sourceFile, (node) => {
+    if (node.type !== "JSXOpeningElement") return;
+    if (propertyName(node.name) !== elementName) return;
+    if (
+      nodes(node.attributes).some(
+        (attribute) =>
+          attribute.type === "JSXAttribute" &&
+          propertyName(attribute.name) === propName,
+      )
+    ) {
+      found = true;
+    }
+  });
+  return found;
+}
+
+function hasDuplicatedClickAndPointerDown(
+  sourceFile: SyntaxNode | undefined,
+): boolean {
+  let found = false;
+  if (!sourceFile) return found;
+  walk(sourceFile, (node) => {
+    if (node.type !== "JSXOpeningElement") return;
+    const names = new Set(
+      nodes(node.attributes)
+        .filter((attribute) => attribute.type === "JSXAttribute")
+        .map((attribute) => propertyName(attribute.name)),
+    );
+    if (names.has("onClick") && names.has("onPointerDown")) found = true;
+  });
+  return found;
+}
+
+export function validateDiagramEditorTutorialSourceText(
+  source: string,
+  contract: Readonly<{ chapter: number; label: string }>,
+): void {
+  const { chapter, label } = contract;
+  if (!Number.isInteger(chapter) || chapter < 4 || chapter > 12) {
+    throw invalid(
+      label,
+      "must identify a diagram-editor chapter from 4 through 12.",
+    );
+  }
+  const sourceFile = parseSource(source, label);
+  const declarationNames = topLevelDeclarationNames(sourceFile);
+  const required = [
+    ...DIAGRAM_EDITOR_BASE_DECLARATIONS,
+    ...(chapter >= 5 ? ["Toolbar", "Workspace", "StatusBar"] : []),
+    ...(chapter >= 7 ? ["NodeDragSession", "rootToWorkspace"] : []),
+    ...(chapter >= 8 ? ["PanSession", "zoomAroundPoint"] : []),
+    ...(chapter >= 7 && chapter <= 10 ? ["NodePointerHandlers"] : []),
+    ...(chapter >= 8 && chapter <= 10 ? ["GestureSession"] : []),
+    ...(chapter === 12 ? ["GridLayer", "FocusRing", "updateNodePosition"] : []),
+  ];
+  const missing = required.filter((name) => !declarationNames.has(name));
+  if (missing.length > 0) {
+    throw invalid(
+      label,
+      `must preserve the cumulative diagram-editor vocabulary; missing ${missing.join(", ")}.`,
+    );
+  }
+
+  const parallelVocabulary = [
+    "Node",
+    "Edge",
+    "View",
+    "Drag",
+    "Pan",
+    "Gesture",
+    "NodeHandlers",
+    "NODES",
+    "WIDTH",
+    "HEIGHT",
+    "Card",
+    "Status",
+    "Editor",
+    "toWorkspace",
+    "zoomAround",
+    "curve",
+    "arrow",
+  ].filter((name) => declarationNames.has(name));
+  if (parallelVocabulary.length > 0) {
+    throw invalid(
+      label,
+      `must not introduce parallel tutorial vocabulary: ${parallelVocabulary.join(", ")}.`,
+    );
+  }
+
+  if (
+    source.includes("crcEventListener") ||
+    source.includes("crcWhenChanged")
+  ) {
+    throw invalid(
+      label,
+      "must use direct structural event props and component-owned teardown.",
+    );
+  }
+  const wheelOwner =
+    chapter === 8 ? "Group" : chapter >= 9 ? "Clip" : undefined;
+  if (wheelOwner && !hasJsxEventProp(sourceFile, wheelOwner, "onWheel")) {
+    throw invalid(label, `must put onWheel directly on ${wheelOwner}.`);
+  }
+  if (
+    chapter >= 8 &&
+    chapter <= 10 &&
+    hasDuplicatedClickAndPointerDown(topLevelFunction(sourceFile, "Toolbar"))
+  ) {
+    throw invalid(label, "must not duplicate a click action on pointerdown.");
+  }
+
+  if (chapter >= 11) {
+    const nodeCard = topLevelFunction(sourceFile, "NodeCard");
+    const workspace = topLevelFunction(sourceFile, "Workspace");
+    const editor = topLevelFunction(sourceFile, "DiagramEditor");
+    if (
+      !callsIdentifier(nodeCard, "crcRef") ||
+      !callsIdentifier(nodeCard, "crcState") ||
+      !callsIdentifier(workspace, "crcRef") ||
+      !callsIdentifier(workspace, "crcState") ||
+      callsIdentifier(editor, "crcRef")
+    ) {
+      throw invalid(
+        label,
+        "must keep drag ownership in NodeCard, pan ownership in Workspace, and no gesture ref in DiagramEditor.",
+      );
+    }
   }
 }

@@ -5,9 +5,9 @@ import { getCubeGeometry } from './cube.js';
 describe('getCubeGeometry', () => {
   test('returns deterministic indexed unit-cube triangles centered at the origin', () => {
     const geometry = getCubeGeometry();
-    const { positions, indices } = getWebGLGeometryData(geometry);
+    const { positions, normals, indices } = getWebGLGeometryData(geometry);
 
-    expect(geometry.vertexCount).toBe(8);
+    expect(geometry.vertexCount).toBe(24);
     expect(geometry.triangleCount).toBe(12);
     expect(Array.from(positions)).toEqual([
       -0.5, -0.5, -0.5,
@@ -18,14 +18,38 @@ describe('getCubeGeometry', () => {
       0.5, -0.5, 0.5,
       0.5, 0.5, 0.5,
       -0.5, 0.5, 0.5,
+      -0.5, -0.5, -0.5,
+      -0.5, -0.5, 0.5,
+      -0.5, 0.5, 0.5,
+      -0.5, 0.5, -0.5,
+      0.5, -0.5, -0.5,
+      0.5, 0.5, -0.5,
+      0.5, 0.5, 0.5,
+      0.5, -0.5, 0.5,
+      -0.5, 0.5, -0.5,
+      -0.5, 0.5, 0.5,
+      0.5, 0.5, 0.5,
+      0.5, 0.5, -0.5,
+      -0.5, -0.5, -0.5,
+      0.5, -0.5, -0.5,
+      0.5, -0.5, 0.5,
+      -0.5, -0.5, 0.5,
+    ]);
+    expect(Array.from(normals ?? [])).toEqual([
+      0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1,
+      0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
+      -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0,
+      1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0,
+      0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0,
+      0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0,
     ]);
     expect(Array.from(indices ?? [])).toEqual([
       0, 2, 1, 0, 3, 2,
       4, 5, 6, 4, 6, 7,
-      0, 4, 7, 0, 7, 3,
-      1, 2, 6, 1, 6, 5,
-      3, 7, 6, 3, 6, 2,
-      0, 1, 5, 0, 5, 4,
+      8, 9, 10, 8, 10, 11,
+      12, 13, 14, 12, 14, 15,
+      16, 17, 18, 16, 18, 19,
+      20, 21, 22, 20, 22, 23,
     ]);
 
     for (let axis = 0; axis < 3; axis += 1) {

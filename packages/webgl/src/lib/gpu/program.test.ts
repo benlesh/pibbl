@@ -15,7 +15,7 @@ describe('createBuiltInProgram', () => {
       shaderLog: ' driver\n vertex\t failure ',
     });
 
-    expect(() => createBuiltInProgram(gl, 'Cube')).toThrowError(
+    expect(() => createBuiltInProgram(gl, 'lambert', 'Cube')).toThrowError(
       /Cube.*vertex.*compil.*driver vertex failure/i,
     );
     expect(deleteShader).toHaveBeenCalledOnce();
@@ -29,7 +29,7 @@ describe('createBuiltInProgram', () => {
       shaderLog: 'fragment failure',
     });
 
-    expect(() => createBuiltInProgram(gl, 'Mesh')).toThrowError(
+    expect(() => createBuiltInProgram(gl, 'lambert', 'Mesh')).toThrowError(
       /Mesh.*fragment.*compil.*fragment failure/i,
     );
     expect(deleteShader.mock.calls.map(([shader]) => shader)).toEqual([
@@ -51,7 +51,7 @@ describe('createBuiltInProgram', () => {
       programLog: ' link\n failure ',
     });
 
-    expect(() => createBuiltInProgram(gl, 'Sphere')).toThrowError(
+    expect(() => createBuiltInProgram(gl, 'lambert', 'Sphere')).toThrowError(
       /Sphere.*program.*link.*link failure/i,
     );
     expect(deleteProgram).toHaveBeenCalledOnce();
@@ -78,7 +78,7 @@ describe('createBuiltInProgram', () => {
     let returned: WebGLProgram | undefined;
     let caught: unknown;
     try {
-      returned = createBuiltInProgram(gl, 'LostMesh').program;
+      returned = createBuiltInProgram(gl, 'lambert', 'LostMesh').program;
     } catch (error) {
       caught = error;
     }
@@ -110,7 +110,7 @@ describe('createBuiltInProgram', () => {
     let returned: WebGLProgram | undefined;
     let caught: unknown;
     try {
-      returned = createBuiltInProgram(gl, 'LostSphere').program;
+      returned = createBuiltInProgram(gl, 'lambert', 'LostSphere').program;
     } catch (error) {
       caught = error;
     }
@@ -140,7 +140,7 @@ describe('createBuiltInProgram', () => {
 
     let caught: unknown;
     try {
-      createBuiltInProgram(gl, 'BrokenMesh');
+      createBuiltInProgram(gl, 'lambert', 'BrokenMesh');
     } catch (error) {
       caught = error;
     }
@@ -166,7 +166,7 @@ describe('createBuiltInProgram', () => {
 
     let caught: unknown;
     try {
-      createBuiltInProgram(gl, 'BrokenMesh');
+      createBuiltInProgram(gl, 'lambert', 'BrokenMesh');
     } catch (error) {
       caught = error;
     }
@@ -176,32 +176,81 @@ describe('createBuiltInProgram', () => {
     expect(reported).toEqual([cleanupError]);
   });
 
-  it('publishes a linked program only after resolving every built-in uniform', () => {
+  it('selects separate keyed sources and resolves every required location', () => {
     const {
       gl,
-      program,
+      programs,
       shaders,
+      shaderSources,
+      uniformNames,
       shaderCleanup,
       deleteProgram,
       deleteShader,
     } = createProgramGL();
 
-    const builtIn = createBuiltInProgram(gl, 'Mesh');
+    const unlit = createBuiltInProgram(gl, 'unlit', 'Mesh');
+    const lambert = createBuiltInProgram(gl, 'lambert', 'Cube');
 
-    expect(builtIn).toEqual({
-      program,
+    expect(unlit).toEqual({
+      key: 'unlit',
+      program: programs[0],
       model: { name: 'u_model' },
       view: { name: 'u_view' },
       projection: { name: 'u_projection' },
-      color: { name: 'u_color' },
+      displayBaseColor: { name: 'u_display_base_color' },
+      linearEmissive: { name: 'u_linear_emissive' },
       positionAttribute: 0,
     });
+    expect(lambert).toEqual({
+      key: 'lambert',
+      program: programs[1],
+      model: { name: 'u_model' },
+      view: { name: 'u_view' },
+      projection: { name: 'u_projection' },
+      normalMatrix: { name: 'u_normal_matrix' },
+      linearBaseColor: { name: 'u_linear_base_color' },
+      linearEmissive: { name: 'u_linear_emissive' },
+      alpha: { name: 'u_alpha' },
+      lightCount: { name: 'u_light_count' },
+      lightKinds: { name: 'u_light_kind[0]' },
+      lightColorIntensities: {
+        name: 'u_light_color_intensity[0]',
+      },
+      lightPositionRanges: { name: 'u_light_position_range[0]' },
+      lightDirectionInnerCosines: {
+        name: 'u_light_direction_inner_cosine[0]',
+      },
+      lightGroundOuterCosines: {
+        name: 'u_light_ground_outer_cosine[0]',
+      },
+      shadowEnabled: { name: 'u_shadow_enabled[0]' },
+      shadowMatrices: { name: 'u_shadow_matrix[0]' },
+      shadowParameters: { name: 'u_shadow_parameters[0]' },
+      receiveShadow: { name: 'u_receive_shadow' },
+      shadow2DSamplers: Array.from(
+        { length: 8 },
+        (_, index) => ({ name: `u_shadow_map_2d_${index}` }),
+      ),
+      shadowCubeSamplers: Array.from(
+        { length: 8 },
+        (_, index) => ({ name: `u_shadow_map_cube_${index}` }),
+      ),
+      positionAttribute: 0,
+      normalAttribute: 1,
+    });
+    expect(shaderSources.slice(0, 2)).not.toEqual(shaderSources.slice(2));
+    expect(uniformNames).toContain('u_light_kind[0]');
+    expect(uniformNames).toContain('u_light_color_intensity[0]');
     expect(deleteShader.mock.calls.map(([shader]) => shader)).toEqual(shaders);
     expect(shaderCleanup).toEqual([
       `detach:${shaders[0]!.id}`,
       `detach:${shaders[1]!.id}`,
       `delete:${shaders[0]!.id}`,
       `delete:${shaders[1]!.id}`,
+      `detach:${shaders[2]!.id}`,
+      `detach:${shaders[3]!.id}`,
+      `delete:${shaders[2]!.id}`,
+      `delete:${shaders[3]!.id}`,
     ]);
     expect(deleteProgram).not.toHaveBeenCalled();
   });
@@ -215,7 +264,7 @@ describe('createBuiltInProgram', () => {
       deleteProgram,
     } = createProgramGL({ missingUniform: 'u_projection' });
 
-    expect(() => createBuiltInProgram(gl, 'Cube')).toThrowError(
+    expect(() => createBuiltInProgram(gl, 'unlit', 'Cube')).toThrowError(
       /Cube.*program.*u_projection/i,
     );
     expect(shaderCleanup).toEqual([
@@ -228,14 +277,80 @@ describe('createBuiltInProgram', () => {
     expect(deleteProgram).toHaveBeenCalledWith(program);
   });
 
-  it('publishes a real WebGL2 program with no attached shader intermediates', () => {
+  it('diagnoses an inactive Lambert array uniform by its portable [0] name', () => {
+    const {
+      gl,
+      program,
+      shaders,
+      shaderCleanup,
+      deleteProgram,
+      uniformNames,
+    } = createProgramGL({ missingUniform: 'u_light_kind[0]' });
+
+    expect(() => createBuiltInProgram(gl, 'lambert', 'Cube')).toThrowError(
+      /Cube.*program.*u_light_kind\[0\]/i,
+    );
+    expect(uniformNames).toContain('u_light_kind[0]');
+    expect(shaderCleanup).toEqual([
+      `detach:${shaders[0]!.id}`,
+      `detach:${shaders[1]!.id}`,
+      `delete:${shaders[0]!.id}`,
+      `delete:${shaders[1]!.id}`,
+    ]);
+    expect(deleteProgram).toHaveBeenCalledExactlyOnceWith(program);
+  });
+
+  it('deletes each published keyed program by its exact handle once', () => {
+    const { gl, programs, deleteProgram } = createProgramGL();
+    const unlit = createBuiltInProgram(gl, 'unlit', 'Mesh');
+    const lambert = createBuiltInProgram(gl, 'lambert', 'Cube');
+
+    deleteBuiltInProgram(gl, lambert);
+    deleteBuiltInProgram(gl, unlit);
+
+    expect(deleteProgram.mock.calls.map(([program]) => program)).toEqual([
+      programs[1],
+      programs[0],
+    ]);
+  });
+
+  it('links the depth program and fixed Lambert shadow sampler locations', () => {
+    const { gl, shaderSources, uniformNames } = createProgramGL();
+    const depth = createBuiltInProgram(gl, 'shadow-depth' as never, 'DirectionalLight') as any;
+    const lambert = createBuiltInProgram(gl, 'lambert', 'Cube') as any;
+
+    expect(depth).toMatchObject({
+      key: 'shadow-depth',
+      model: { name: 'u_model' },
+      shadowProjectionView: { name: 'u_shadow_projection_view' },
+      shadowLightPositionFar: { name: 'u_shadow_light_position_far' },
+      positionAttribute: 0,
+    });
+    expect(lambert.shadowEnabled).toEqual({ name: 'u_shadow_enabled[0]' });
+    expect(lambert.shadowMatrices).toEqual({ name: 'u_shadow_matrix[0]' });
+    expect(lambert.receiveShadow).toEqual({ name: 'u_receive_shadow' });
+    expect(lambert.shadow2DSamplers).toHaveLength(8);
+    expect(lambert.shadowCubeSamplers).toHaveLength(8);
+    expect(uniformNames).toContain('u_shadow_map_2d_7');
+    expect(uniformNames).toContain('u_shadow_map_cube_7');
+    expect(shaderSources.join('\n')).toMatch(
+      /distance\([^;]+u_shadow_light_position_far\.xyz[^;]+\)\s*\/\s*u_shadow_light_position_far\.w/,
+    );
+    expect(shaderSources.join('\n')).toMatch(
+      /spot_shadow_visibility[\s\S]+length\(light_to_surface\)[\s\S]+u_shadow_parameters\[index\]\.w/,
+    );
+  });
+
+  it('compiles and links both built-in programs in real WebGL2', () => {
     const gl = new OffscreenCanvas(8, 8).getContext('webgl2');
     expect(gl).not.toBeNull();
 
-    const builtIn = createBuiltInProgram(gl!, 'Mesh');
-
-    expect(gl!.getAttachedShaders(builtIn.program)).toEqual([]);
-    deleteBuiltInProgram(gl!, builtIn);
+    for (const key of ['unlit', 'lambert', 'shadow-depth'] as const) {
+      const builtIn = createBuiltInProgram(gl!, key, 'Mesh');
+      expect(builtIn.key).toBe(key);
+      expect(gl!.getAttachedShaders(builtIn.program)).toEqual([]);
+      deleteBuiltInProgram(gl!, builtIn);
+    }
     expect(gl!.getError()).toBe(gl!.NO_ERROR);
   });
 });
@@ -259,9 +374,11 @@ function createProgramGL(options: ProgramGLOptions = {}) {
   const COMPILE_STATUS = 3;
   const LINK_STATUS = 4;
   const shaders: Array<{ readonly type: number; readonly id: number }> = [];
-  const programs: Array<{ readonly kind: string }> = [];
+  const programs: Array<{ readonly kind: string; readonly id: number }> = [];
+  const program = { kind: 'program', id: 1 };
   const shaderCleanup: string[] = [];
-  const program = { kind: 'program' };
+  const shaderSources: string[] = [];
+  const uniformNames: string[] = [];
   let operationalFailure = false;
   let contextLost = false;
   const createShader = vi.fn((type: number) => {
@@ -274,11 +391,14 @@ function createProgramGL(options: ProgramGLOptions = {}) {
     if (options.deleteShaderError) throw options.deleteShaderError;
   });
   const createProgram = vi.fn(() => {
-    programs.push(program);
-    return program;
+    const created = programs.length === 0 ?
+      program : { kind: 'program', id: programs.length + 1 };
+    programs.push(created);
+    return created;
   });
   const deleteProgram = vi.fn();
-  const shaderSource = vi.fn(() => {
+  const shaderSource = vi.fn((_shader: object, source: string) => {
+    shaderSources.push(source);
     if (options.shaderSourceError) {
       operationalFailure = true;
       throw options.shaderSourceError;
@@ -331,8 +451,10 @@ function createProgramGL(options: ProgramGLOptions = {}) {
     },
     getProgramInfoLog: vi.fn(() => options.programLog ?? ''),
     deleteProgram,
-    getUniformLocation: vi.fn((_program: object, name: string) =>
-      name === options.missingUniform ? null : { name }),
+    getUniformLocation: vi.fn((_program: object, name: string) => {
+      uniformNames.push(name);
+      return name === options.missingUniform ? null : { name };
+    }),
     isContextLost,
   } as unknown as WebGL2RenderingContext;
   return {
@@ -340,6 +462,8 @@ function createProgramGL(options: ProgramGLOptions = {}) {
     program,
     programs,
     shaders,
+    shaderSources,
+    uniformNames,
     shaderCleanup,
     createProgram,
     attachShader,

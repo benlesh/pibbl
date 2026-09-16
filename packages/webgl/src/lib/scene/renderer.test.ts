@@ -1,6 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createWebGLGeometry } from '../geometry/geometry.js';
+import {
+  WebGLRendererResourceCache,
+  type WebGLRendererResourceTransaction,
+} from '../gpu/renderer-resources.js';
+import type { WebGLProgramKey } from '../gpu/program.js';
 import type { SettledWebGLMesh, SettledWebGLScene } from './settle.js';
+import type {
+  SettledWebGLBackground,
+  SettledWebGLLight,
+  SettledWebGLShadowPlan,
+} from './types.js';
 import { WebGLSceneRenderer } from './renderer.js';
 
 afterEach(() => {
@@ -8,128 +18,577 @@ afterEach(() => {
 });
 
 describe('WebGLSceneRenderer', () => {
-  it('constructs without GL work and renders settled opaque and transparent queues exactly once', () => {
+  it('installs the baseline before one background clear and opens the resource transaction afterward', () => {
     const recording = createRendererGL();
+    traceTransactions(recording);
     const renderer = new WebGLSceneRenderer(recording.gl, 7);
-    const opaqueFirst = mesh(0, [1, 0, 0, 1]);
-    const opaqueSecond = mesh(1, [0, 1, 0, 1]);
-    const transparentFar = mesh(4, [0, 0, 1, 0.25]);
-    const transparentNear = mesh(2, [1, 1, 0, 0.5]);
-    const invisible = mesh(3, [1, 0, 1, 0]);
 
     expect(recording.operations).toEqual([]);
-
-    renderer.render(
-      scene({
-        meshes: [
-          opaqueFirst,
-          opaqueSecond,
-          transparentNear,
-          invisible,
-          transparentFar,
-        ],
-        opaque: [opaqueFirst, opaqueSecond],
-        transparent: [transparentFar, transparentNear],
-      }),
-    );
+    renderer.render(scene({
+      background: background([0.1, 0.2, 0.3, 0.4]),
+    }));
 
     expect(recording.getParameter).toHaveBeenCalledOnce();
-    expect(recording.clear.mock.calls).toEqual([
-      [recording.gl.COLOR_BUFFER_BIT | recording.gl.DEPTH_BUFFER_BIT],
+    expect(recording.clearColors).toEqual([
+      [0, 0, 0, 0],
+      [0.1, 0.2, 0.3, 0.4],
+      [0, 0, 0, 0],
     ]);
-    expect(recording.draws.map(draw => draw.color)).toEqual([
-      opaqueFirst.color,
-      opaqueSecond.color,
-      transparentFar.color,
-      transparentNear.color,
-    ]);
-    expect(recording.draws.slice(0, 2)).toMatchObject([
-      { blend: false, depthTest: true, depthMask: true },
-      { blend: false, depthTest: true, depthMask: true },
-    ]);
-    expect(recording.draws.slice(2)).toMatchObject([
-      {
-        blend: true,
-        blendFunction: [
-          recording.gl.SRC_ALPHA,
-          recording.gl.ONE_MINUS_SRC_ALPHA,
-          recording.gl.ONE,
-          recording.gl.ONE_MINUS_SRC_ALPHA,
-        ],
-        depthTest: true,
-        depthMask: false,
-      },
-      {
-        blend: true,
-        blendFunction: [
-          recording.gl.SRC_ALPHA,
-          recording.gl.ONE_MINUS_SRC_ALPHA,
-          recording.gl.ONE,
-          recording.gl.ONE_MINUS_SRC_ALPHA,
-        ],
-        depthTest: true,
-        depthMask: false,
-      },
-    ]);
-    expect(
-      recording.draws.every(draw => draw.depthFunction === recording.gl.LEQUAL),
-    ).toBe(true);
-    expect(recording.createVertexArray).toHaveBeenCalledTimes(4);
+    expect(recording.clears).toEqual([[0.1, 0.2, 0.3, 0.4]]);
+    expect(recording.clear).toHaveBeenCalledExactlyOnceWith(
+      recording.gl.COLOR_BUFFER_BIT | recording.gl.DEPTH_BUFFER_BIT,
+    );
+    const clearIndex = indexOf(recording.operations, 'clear');
+    expect(recording.operations[clearIndex - 1]?.[0]).toBe('clearColor');
+    expect(recording.operations[clearIndex - 2]?.[0]).toBe('pixelStorei');
+    expect(indexOf(recording.operations, 'clear')).toBeGreaterThan(
+      indexOf(recording.operations, 'pixelStorei'),
+    );
+    expect(indexOf(recording.operations, 'beginRender')).toBeGreaterThan(
+      indexOf(recording.operations, 'clear'),
+    );
+    expect(lastIndexOf(recording.operations, 'pixelStorei')).toBeLessThan(
+      indexOf(recording.operations, 'commit'),
+    );
     expect(recording.bindFramebuffer.mock.calls).toEqual([
       [recording.gl.FRAMEBUFFER, null],
       [recording.gl.FRAMEBUFFER, null],
     ]);
-    expect(indexOf(recording.operations, 'bindFramebuffer')).toBeLessThan(
-      indexOf(recording.operations, 'clear'),
-    );
-    expect(
-      lastIndexOf(recording.operations, 'bindFramebuffer'),
-    ).toBeGreaterThan(lastIndexOf(recording.operations, 'drawArrays'));
-    expect(recording.readPixels).not.toHaveBeenCalled();
+    expect(recording.drawArrays).not.toHaveBeenCalled();
+    expect(recording.drawElements).not.toHaveBeenCalled();
     expect(recording.createFramebuffer).not.toHaveBeenCalled();
+    expect(recording.readPixels).not.toHaveBeenCalled();
   });
 
-  it('binds exact settled matrices and colors for non-indexed and indexed geometry', () => {
+  it('clears omitted backgrounds to transparent black and commits empty used sets', () => {
+    const recording = createRendererGL();
+    traceTransactions(recording);
+    const renderer = new WebGLSceneRenderer(recording.gl, 7);
+    const drawable = mesh(0, [1, 0, 0, 1]);
+
+    renderer.render(scene({ meshes: [drawable], opaque: [drawable] }));
+    renderer.render(scene({ background: background([0, 0, 1, 1]) }));
+    renderer.render(scene());
+
+    expect(recording.clears).toEqual([
+      [0, 0, 0, 0],
+      [0, 0, 1, 1],
+      [0, 0, 0, 0],
+    ]);
+    expect(operationCount(recording.operations, 'beginRender')).toBe(3);
+    expect(operationCount(recording.operations, 'commit')).toBe(3);
+    expect(recording.deleteProgram).toHaveBeenCalledOnce();
+    expect(recording.deleteBuffer).toHaveBeenCalledOnce();
+    expect(recording.deleteVertexArray).toHaveBeenCalledOnce();
+    expect(recording.createFramebuffer).not.toHaveBeenCalled();
+    expect(recording.readPixels).not.toHaveBeenCalled();
+  });
+
+  it('switches keyed programs without changing opaque or transparent queue order', () => {
     const recording = createRendererGL();
     const renderer = new WebGLSceneRenderer(recording.gl, 7);
-    const nonIndexed = mesh(0, [0.1, 0.2, 0.3, 1], false, 11);
-    const indexed = mesh(1, [0.4, 0.5, 0.6, 0.7], true, 31);
-    const settled = scene({
-      meshes: [nonIndexed, indexed],
-      opaque: [nonIndexed],
-      transparent: [indexed],
+    const opaqueUnlit = mesh(0, [1, 0, 0, 1], { seed: 1 });
+    const opaqueLambert = mesh(1, [0, 1, 0, 1], {
+      shading: 'lambert',
+      seed: 2,
     });
+    const opaqueUnlitLast = mesh(2, [0, 0, 1, 1], { seed: 3 });
+    const transparentNear = mesh(3, [1, 1, 0, 0.5], {
+      shading: 'lambert',
+      seed: 4,
+    });
+    const transparentFar = mesh(4, [1, 0, 1, 0.25], {
+      indexed: true,
+      shading: 'lambert',
+      seed: 5,
+    });
+    const transparentMiddle = mesh(5, [0, 1, 1, 0.75], { seed: 6 });
 
-    renderer.render(settled);
+    renderer.render(scene({
+      meshes: [
+        opaqueUnlit,
+        opaqueLambert,
+        opaqueUnlitLast,
+        transparentNear,
+        transparentFar,
+        transparentMiddle,
+      ],
+      opaque: [opaqueUnlit, opaqueLambert, opaqueUnlitLast],
+      transparent: [
+        transparentFar,
+        transparentMiddle,
+        transparentNear,
+      ],
+    }));
 
-    expect(recording.drawArrays).toHaveBeenCalledExactlyOnceWith(
-      recording.gl.TRIANGLES,
-      0,
-      nonIndexed.geometry.vertexCount,
-    );
+    expect(recording.draws.map(draw => draw.model[0])).toEqual([
+      1, 2, 3, 5, 6, 4,
+    ]);
+    expect(recording.draws.map(draw => draw.programKey)).toEqual([
+      'unlit', 'lambert', 'unlit', 'lambert', 'unlit', 'lambert',
+    ]);
+    expect(recording.draws.map(draw => draw.attributeLocations)).toEqual([
+      [0], [0, 1], [0], [0, 1], [0], [0, 1],
+    ]);
+    expect(recording.draws.slice(0, 3)).toMatchObject([
+      { blend: false, depthTest: true, depthMask: true },
+      { blend: false, depthTest: true, depthMask: true },
+      { blend: false, depthTest: true, depthMask: true },
+    ]);
+    expect(recording.draws.slice(3)).toMatchObject([
+      {
+        blend: true,
+        blendFunction: [
+          recording.gl.SRC_ALPHA,
+          recording.gl.ONE_MINUS_SRC_ALPHA,
+          recording.gl.ONE,
+          recording.gl.ONE_MINUS_SRC_ALPHA,
+        ],
+        depthTest: true,
+        depthMask: false,
+      },
+      { blend: true, depthTest: true, depthMask: false },
+      { blend: true, depthTest: true, depthMask: false },
+    ]);
+    expect(
+      recording.draws.every(draw => draw.depthFunction === recording.gl.LEQUAL),
+    ).toBe(true);
+    expect(recording.draws[0]?.uniforms).toMatchObject({
+      u_display_base_color: opaqueUnlit.color,
+      u_linear_emissive: [0, 0, 0],
+    });
+    expect(recording.draws[1]?.uniforms).toMatchObject({
+      u_linear_base_color: [0, 1, 0],
+      u_linear_emissive: [0, 0, 0],
+      u_alpha: [1],
+      u_normal_matrix: Array.from(
+        opaqueLambert.shading.kind === 'lambert' ?
+          opaqueLambert.shading.normalMatrix : [],
+      ),
+    });
     expect(recording.drawElements).toHaveBeenCalledExactlyOnceWith(
       recording.gl.TRIANGLES,
       3,
       recording.gl.UNSIGNED_INT,
       0,
     );
-    expect(recording.draws).toMatchObject([
-      {
-        model: Array.from(nonIndexed.model),
-        view: Array.from(settled.camera.viewMatrix),
-        projection: Array.from(settled.camera.projectionMatrix),
-        color: nonIndexed.color,
-      },
-      {
-        model: Array.from(indexed.model),
-        view: Array.from(settled.camera.viewMatrix),
-        projection: Array.from(settled.camera.projectionMatrix),
-        color: indexed.color,
-      },
+    expect(recording.drawArrays).toHaveBeenCalledTimes(5);
+    expect(recording.createProgram).toHaveBeenCalledTimes(2);
+    expect(recording.createTexture).toHaveBeenCalledTimes(2);
+    expect(recording.createFramebuffer).not.toHaveBeenCalled();
+    expect(recording.framebufferTexture2D).not.toHaveBeenCalled();
+    expect(recording.clear).toHaveBeenCalledOnce();
+    expect(recording.readPixels).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['point', pointLight()],
+    ['spot', spotLight()],
+  ] as const)(
+    'keeps a Lambert %s-light frame without a relevant shadow plan free of shadow targets and depth passes',
+    (_kind, light) => {
+      const recording = createRendererGL();
+      const renderer = new WebGLSceneRenderer(recording.gl, 7);
+      const drawable = mesh(0, [1, 1, 1, 1], {
+        shading: 'lambert',
+        seed: 11,
+      });
+
+      renderer.render(scene({
+        meshes: [drawable],
+        lights: [light],
+        opaque: [drawable],
+        shadowPlans: [],
+      }));
+
+      expect(recording.draws.map(draw => draw.programKey)).toEqual([
+        'lambert',
+      ]);
+      expect(recording.createTexture).toHaveBeenCalledTimes(2);
+      expect(recording.createFramebuffer).not.toHaveBeenCalled();
+      expect(recording.framebufferTexture2D).not.toHaveBeenCalled();
+      expect(recording.clear).toHaveBeenCalledExactlyOnceWith(
+        recording.gl.COLOR_BUFFER_BIT | recording.gl.DEPTH_BUFFER_BIT,
+      );
+    },
+  );
+
+  it('reuses one Lambert program and geometry while uploading fixed light data once per frame', () => {
+    const recording = createRendererGL();
+    const renderer = new WebGLSceneRenderer(recording.gl, 7);
+    const geometry = createWebGLGeometry({
+      positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+      normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
+    });
+    const first = mesh(0, [1, 1, 1, 1], {
+      geometry,
+      shading: 'lambert',
+      seed: 11,
+    });
+    const second = mesh(1, [0.5, 0.5, 0.5, 1], {
+      geometry,
+      shading: 'lambert',
+      seed: 21,
+    });
+    const lights = fixedLights();
+
+    let lastWrites: readonly UniformWrite[] = [];
+    for (let count = 0; count <= 8; count += 1) {
+      const firstWrite = recording.uniformWrites.length;
+      renderer.render(scene({
+        meshes: [first, second],
+        lights: lights.slice(0, count),
+        opaque: [first, second],
+      }));
+      const writes = recording.uniformWrites.slice(firstWrite);
+      lastWrites = writes;
+      expect(valuesFor(writes, 'u_light_count')).toEqual([[count]]);
+      expect(valuesFor(writes, 'u_light_kind[0]')).toHaveLength(1);
+      expect(valuesFor(writes, 'u_light_kind[0]')[0]).toHaveLength(8);
+      expect(valuesFor(writes, 'u_light_color_intensity[0]')[0]).toHaveLength(32);
+      expect(valuesFor(writes, 'u_light_position_range[0]')[0]).toHaveLength(32);
+      expect(valuesFor(writes, 'u_light_direction_inner_cosine[0]')[0])
+        .toHaveLength(32);
+      expect(valuesFor(writes, 'u_light_ground_outer_cosine[0]')[0])
+        .toHaveLength(32);
+      expect(valuesFor(writes, 'u_view')).toHaveLength(1);
+      expect(valuesFor(writes, 'u_projection')).toHaveLength(1);
+      expect(valuesFor(writes, 'u_model')).toHaveLength(2);
+      expect(valuesFor(writes, 'u_normal_matrix')).toHaveLength(2);
+    }
+
+    expect(valuesFor(lastWrites, 'u_light_kind[0]')).toEqual([
+      [0, 1, 2, 3, 4, 0, 3, 4],
+    ]);
+    const positions = valuesFor(
+      lastWrites,
+      'u_light_position_range[0]',
+    )[0]!;
+    expect(positions.slice(12, 16)).toEqual(float32([1, 2, 3, 0]));
+    expect(positions.slice(16, 20)).toEqual(float32([-1, -2, -3, 5]));
+    const directions = valuesFor(
+      lastWrites,
+      'u_light_direction_inner_cosine[0]',
+    )[0]!;
+    expect(directions.slice(4, 8)).toEqual(float32([0, 1, 0, 0]));
+    expect(directions.slice(8, 12)).toEqual(float32([0, 0, -1, 0]));
+    expect(directions.slice(16, 20)).toEqual(float32([0, -1, 0, 0.9]));
+    const ground = valuesFor(
+      lastWrites,
+      'u_light_ground_outer_cosine[0]',
+    )[0]!;
+    expect(ground.slice(4, 8)).toEqual(float32([0.8, 0.9, 1, 0]));
+    expect(ground.slice(16, 20)).toEqual(float32([0, 0, 0, 0.7]));
+    expect(recording.createProgram).toHaveBeenCalledOnce();
+    expect(recording.createVertexArray).toHaveBeenCalledOnce();
+    expect(recording.createBuffer).toHaveBeenCalledTimes(2);
+  });
+
+  it('renders dirty directional depth before the color clear and reuses it across a camera-only frame', () => {
+    const recording = createRendererGL();
+    const renderer = new WebGLSceneRenderer(recording.gl, 7);
+    const drawable = mesh(0, [1, 1, 1, 1], {
+      shading: 'lambert',
+      seed: 11,
+    });
+    const plan = directionalPlan(drawable);
+    const firstScene = scene({
+      meshes: [drawable],
+      lights: [directionalLight()],
+      opaque: [drawable],
+      shadowPlans: [plan],
+    });
+
+    renderer.render(firstScene);
+    expect(recording.draws.map(draw => draw.programKey)).toEqual([
+      'shadow-depth',
+      'lambert',
+    ]);
+    expect(recording.clear.mock.calls.map(([mask]) => mask)).toEqual([
+      recording.gl.DEPTH_BUFFER_BIT,
+      recording.gl.COLOR_BUFFER_BIT | recording.gl.DEPTH_BUFFER_BIT,
+    ]);
+    expect(recording.clear.mock.invocationCallOrder[0]).toBeLessThan(
+      recording.drawArrays.mock.invocationCallOrder[0]!,
+    );
+    expect(recording.drawArrays.mock.invocationCallOrder[0]).toBeLessThan(
+      recording.clear.mock.invocationCallOrder[1]!,
+    );
+    expect(recording.draws[0]).toMatchObject({
+      blend: false,
+      depthTest: true,
+      depthMask: true,
+    });
+    expect(recording.draws[1]?.uniforms).toMatchObject({
+      'u_shadow_enabled[0]': [1, 0, 0, 0, 0, 0, 0, 0],
+      u_receive_shadow: [1],
+    });
+    const firstTextureCount = recording.createTexture.mock.calls.length;
+
+    renderer.render(scene({
+      meshes: [drawable],
+      lights: [directionalLight()],
+      opaque: [drawable],
+      shadowPlans: [plan],
+      cameraSeed: 999,
+    }));
+    expect(recording.draws.map(draw => draw.programKey)).toEqual([
+      'shadow-depth',
+      'lambert',
+      'lambert',
+    ]);
+    expect(recording.createTexture).toHaveBeenCalledTimes(firstTextureCount);
+  });
+
+  it('renders six radial point faces before color, binds the cube, and reuses it for camera-only work', () => {
+    const recording = createRendererGL();
+    const renderer = new WebGLSceneRenderer(recording.gl, 7);
+    const drawable = mesh(0, [1, 1, 1, 1], {
+      shading: 'lambert',
+      seed: 11,
+    });
+    const plan = pointPlan(drawable);
+
+    renderer.render(scene({
+      meshes: [drawable],
+      lights: [pointLight()],
+      opaque: [drawable],
+      shadowPlans: [plan],
+    }));
+
+    expect(recording.draws.map(draw => draw.programKey)).toEqual([
+      'shadow-depth',
+      'shadow-depth',
+      'shadow-depth',
+      'shadow-depth',
+      'shadow-depth',
+      'shadow-depth',
+      'lambert',
+    ]);
+    expect(recording.draws.slice(0, 6).map(draw =>
+      draw.uniforms.u_shadow_projection_view?.[0])).toEqual([
+      711, 712, 713, 714, 715, 716,
+    ]);
+    expect(recording.draws.slice(0, 6).map(draw =>
+      draw.uniforms.u_shadow_light_position_far)).toEqual(
+      Array.from({ length: 6 }, () => [1, 2, 3, 10]),
+    );
+    expect(recording.clear.mock.calls.map(([mask]) => mask)).toEqual([
+      recording.gl.DEPTH_BUFFER_BIT,
+      recording.gl.DEPTH_BUFFER_BIT,
+      recording.gl.DEPTH_BUFFER_BIT,
+      recording.gl.DEPTH_BUFFER_BIT,
+      recording.gl.DEPTH_BUFFER_BIT,
+      recording.gl.DEPTH_BUFFER_BIT,
+      recording.gl.COLOR_BUFFER_BIT | recording.gl.DEPTH_BUFFER_BIT,
+    ]);
+    const cubeAttachments = recording.framebufferTexture2D.mock.calls.filter(
+      call => call[2] >= recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X &&
+        call[2] < recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X + 6,
+    );
+    expect(cubeAttachments.map(call => call[2])).toEqual(
+      Array.from({ length: 6 }, (_, face) =>
+        recording.gl.TEXTURE_CUBE_MAP_POSITIVE_X + face),
+    );
+    const pointTexture = cubeAttachments[0]![3];
+    expect(recording.bindTexture).toHaveBeenCalledWith(
+      recording.gl.TEXTURE_CUBE_MAP,
+      pointTexture,
+    );
+    expect(recording.draws[6]?.uniforms).toMatchObject({
+      'u_shadow_enabled[0]': [2, 0, 0, 0, 0, 0, 0, 0],
+      'u_shadow_parameters[0]': float32([
+        0.001, 1 / 1024, 4, 10,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+      ]),
+      u_receive_shadow: [1],
+    });
+    const textureCount = recording.createTexture.mock.calls.length;
+
+    renderer.render(scene({
+      meshes: [drawable],
+      lights: [pointLight()],
+      opaque: [drawable],
+      shadowPlans: [plan],
+      cameraSeed: 999,
+    }));
+    expect(recording.draws.map(draw => draw.programKey)).toEqual([
+      'shadow-depth',
+      'shadow-depth',
+      'shadow-depth',
+      'shadow-depth',
+      'shadow-depth',
+      'shadow-depth',
+      'lambert',
+      'lambert',
+    ]);
+    expect(recording.createTexture).toHaveBeenCalledTimes(textureCount);
+  });
+
+  it('reuses point depth after a non-shadow light changes its slot and binds the current slot', () => {
+    const recording = createRendererGL();
+    const renderer = new WebGLSceneRenderer(recording.gl, 7);
+    const drawable = mesh(0, [1, 1, 1, 1], {
+      shading: 'lambert',
+      seed: 11,
+    });
+
+    renderer.render(scene({
+      meshes: [drawable],
+      lights: [pointLight()],
+      opaque: [drawable],
+      shadowPlans: [pointPlan(drawable)],
+    }));
+    renderer.render(scene({
+      meshes: [drawable],
+      lights: [fixedLights()[0]!, pointLight()],
+      opaque: [drawable],
+      shadowPlans: [pointPlan(drawable, { lightIndex: 1 })],
+    }));
+
+    expect(recording.draws.filter(draw => draw.programKey === 'shadow-depth'))
+      .toHaveLength(6);
+    expect(recording.draws.at(-1)?.uniforms).toMatchObject({
+      'u_shadow_enabled[0]': [0, 2, 0, 0, 0, 0, 0, 0],
+    });
+  });
+
+  it('invalidates a point cube when caster depth changes', () => {
+    const recording = createRendererGL();
+    const renderer = new WebGLSceneRenderer(recording.gl, 7);
+    const first = mesh(0, [1, 1, 1, 1], { shading: 'lambert', seed: 11 });
+    renderer.render(scene({
+      meshes: [first],
+      lights: [pointLight()],
+      opaque: [first],
+      shadowPlans: [pointPlan(first)],
+    }));
+    const replacement = mesh(0, [1, 1, 1, 1], {
+      shading: 'lambert',
+      seed: 12,
+    });
+    renderer.render(scene({
+      meshes: [replacement],
+      lights: [pointLight()],
+      opaque: [replacement],
+      shadowPlans: [pointPlan(replacement)],
+    }));
+
+    expect(recording.draws.filter(draw => draw.programKey === 'shadow-depth'))
+      .toHaveLength(12);
+    expect(recording.deleteTexture).toHaveBeenCalled();
+  });
+
+  it('renders one spot depth view and binds it only to the matching light slot', () => {
+    const recording = createRendererGL();
+    const renderer = new WebGLSceneRenderer(recording.gl, 7);
+    const drawable = mesh(0, [1, 1, 1, 1], {
+      shading: 'lambert',
+      seed: 11,
+    });
+    const ambient = fixedLights()[0]!;
+    const plan = spotPlan(drawable, { lightIndex: 1 });
+
+    renderer.render(scene({
+      meshes: [drawable],
+      lights: [ambient, spotLight()],
+      opaque: [drawable],
+      shadowPlans: [plan],
+    }));
+
+    expect(recording.draws.map(draw => draw.programKey)).toEqual([
+      'shadow-depth',
+      'lambert',
+    ]);
+    expect(recording.draws[0]?.uniforms).toMatchObject({
+      u_shadow_projection_view: [721, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+      u_shadow_light_position_far: [1, 2, 3, 10],
+    });
+    expect(recording.draws[1]?.uniforms).toMatchObject({
+      'u_shadow_enabled[0]': [0, 3, 0, 0, 0, 0, 0, 0],
+      'u_shadow_parameters[0]': float32([
+        0, 0, 0, 0,
+        0.001, 1 / 1024, 4, 10,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+      ]),
+      'u_shadow_matrix[0]': [
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        721, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      ],
+      u_receive_shadow: [1],
+    });
+    expect(recording.clear.mock.calls.map(([mask]) => mask)).toEqual([
+      recording.gl.DEPTH_BUFFER_BIT,
+      recording.gl.COLOR_BUFFER_BIT | recording.gl.DEPTH_BUFFER_BIT,
     ]);
   });
 
-  it('rejects a scene from another context generation before any GL work', () => {
+  it.each([
+    ['depth', 4],
+    ['color', 7],
+  ] as const)('rolls back a point candidate when the %s draw fails', (
+    _stage,
+    at,
+  ) => {
+    const failure = new Error('point render failed');
+    const recording = createRendererGL({
+      throws: [{ operation: 'drawArrays', at, error: failure }],
+    });
+    const renderer = new WebGLSceneRenderer(recording.gl, 7);
+    const drawable = mesh(0, [1, 1, 1, 1], {
+      shading: 'lambert',
+      seed: 11,
+    });
+
+    expect(() => renderer.render(scene({
+      meshes: [drawable],
+      lights: [pointLight()],
+      opaque: [drawable],
+      shadowPlans: [pointPlan(drawable)],
+    }))).toThrow(failure);
+    expect(recording.deleteTexture).toHaveBeenCalled();
+    expect(() => renderer.render(scene())).not.toThrow();
+  });
+
+  it('rolls back a directional candidate when the later color draw fails', () => {
+    const failure = new Error('color draw failed');
+    const recording = createRendererGL({
+      throws: [{ operation: 'drawArrays', at: 2, error: failure }],
+    });
+    const renderer = new WebGLSceneRenderer(recording.gl, 7);
+    const drawable = mesh(0, [1, 1, 1, 1], {
+      shading: 'lambert',
+      seed: 11,
+    });
+
+    expect(() => renderer.render(scene({
+      meshes: [drawable],
+      lights: [directionalLight()],
+      opaque: [drawable],
+      shadowPlans: [directionalPlan(drawable)],
+    }))).toThrow(failure);
+    expect(recording.deleteTexture).toHaveBeenCalled();
+    expect(() => renderer.render(scene())).not.toThrow();
+  });
+
+  it('rejects another context generation before any GL work', () => {
     const recording = createRendererGL();
     const renderer = new WebGLSceneRenderer(recording.gl, 8);
 
@@ -155,11 +614,19 @@ describe('WebGLSceneRenderer', () => {
   });
 
   it.each([
-    { name: 'clear', operation: 'clear', at: 1, programs: 0, geometries: 0 },
+    {
+      name: 'background clear',
+      operation: 'clear',
+      at: 1,
+      transaction: false,
+      programs: 0,
+      geometries: 0,
+    },
     {
       name: 'program acquisition',
       operation: 'createProgram',
       at: 1,
+      transaction: true,
       programs: 0,
       geometries: 0,
     },
@@ -167,77 +634,57 @@ describe('WebGLSceneRenderer', () => {
       name: 'geometry upload',
       operation: 'bufferData',
       at: 1,
+      transaction: true,
       programs: 1,
       geometries: 1,
     },
     {
-      name: 'first draw',
+      name: 'draw',
       operation: 'drawArrays',
       at: 1,
+      transaction: true,
       programs: 1,
       geometries: 1,
-    },
-    {
-      name: 'second draw',
-      operation: 'drawArrays',
-      at: 2,
-      programs: 1,
-      geometries: 2,
     },
     {
       name: 'final baseline restoration',
       operation: 'bindFramebuffer',
       at: 2,
+      transaction: true,
       programs: 1,
-      geometries: 2,
+      geometries: 1,
     },
   ])(
-    'rolls back resources and retries the baseline after $name fails',
-    ({ operation, at, programs, geometries }) => {
-      const failure = new Error(`${operation} failed`);
+    'rolls back candidate resources and restores the baseline after $name fails',
+    ({ operation, at, transaction, programs, geometries }) => {
       const recording = createRendererGL({
-        throws: [{ operation, at, error: failure }],
+        throws: [{ operation, at, error: new Error(`${operation} failed`) }],
       });
+      traceTransactions(recording);
       const renderer = new WebGLSceneRenderer(recording.gl, 7);
-      const first = mesh(0, [1, 0, 0, 1]);
-      const second = mesh(1, [0, 1, 0, 1]);
+      const drawable = mesh(0, [1, 0, 0, 1]);
 
-      const render = () =>
-        renderer.render(
-          scene({
-            meshes: [first, second],
-            opaque: [first, second],
-          }),
-        );
-      let thrown: unknown;
-      try {
-        render();
-      } catch (error) {
-        thrown = error;
-      }
-      if (operation === 'bufferData') {
-        expect(thrown).toBeInstanceOf(Error);
-        expect((thrown as Error).message).toMatch(
-          /Mesh0.*geometry upload failed/i,
-        );
-        expect((thrown as Error).cause).toBe(failure);
-      } else {
-        expect(thrown).toBe(failure);
-      }
+      expect(() => renderer.render(scene({
+        meshes: [drawable],
+        opaque: [drawable],
+      }))).toThrow();
 
-      expect(
-        recording.bindFramebuffer.mock.calls.length,
-      ).toBeGreaterThanOrEqual(2);
+      expect(operationCount(recording.operations, 'beginRender'))
+        .toBe(transaction ? 1 : 0);
+      expect(operationCount(recording.operations, 'rollback'))
+        .toBe(transaction ? 1 : 0);
+      expect(recording.bindFramebuffer.mock.calls.length)
+        .toBeGreaterThanOrEqual(2);
       expect(recording.deleteProgram).toHaveBeenCalledTimes(programs);
       expect(recording.deleteVertexArray).toHaveBeenCalledTimes(geometries);
-      expect(indexOf(recording.operations, 'bindFramebuffer')).toBeLessThan(
-        lastIndexOf(recording.operations, 'pixelStorei'),
+      expect(lastIndexOf(recording.operations, 'pixelStorei')).toBeGreaterThan(
+        lastIndexOf(recording.operations, 'bindFramebuffer'),
       );
       expect(() => renderer.render(scene())).not.toThrow();
     },
   );
 
-  it('keeps the draw failure authoritative while reporting cleanup failures and attempting later cleanup', () => {
+  it('keeps the draw failure authoritative while attempting every healthy cleanup', () => {
     const drawFailure = new Error('draw failed');
     const programCleanupFailure = new Error('program cleanup failed');
     const bufferCleanupFailure = new Error('buffer cleanup failed');
@@ -257,14 +704,10 @@ describe('WebGLSceneRenderer', () => {
     const renderer = new WebGLSceneRenderer(recording.gl, 7);
     const drawable = mesh(0, [1, 0, 0, 1]);
 
-    expect(() =>
-      renderer.render(
-        scene({
-          meshes: [drawable],
-          opaque: [drawable],
-        }),
-      ),
-    ).toThrow(drawFailure);
+    expect(() => renderer.render(scene({
+      meshes: [drawable],
+      opaque: [drawable],
+    }))).toThrow(drawFailure);
 
     expect(reported).toEqual([
       programCleanupFailure,
@@ -277,7 +720,7 @@ describe('WebGLSceneRenderer', () => {
     );
   });
 
-  it('does not restore or delete lost-generation handles after an operational failure', () => {
+  it('abandons lost-generation handles without restoring the baseline', () => {
     const failure = new Error('context-losing draw failed');
     const recording = createRendererGL({
       loseContextAt: { operation: 'drawArrays', at: 1 },
@@ -286,14 +729,10 @@ describe('WebGLSceneRenderer', () => {
     const renderer = new WebGLSceneRenderer(recording.gl, 7);
     const drawable = mesh(0, [1, 0, 0, 1]);
 
-    expect(() =>
-      renderer.render(
-        scene({
-          meshes: [drawable],
-          opaque: [drawable],
-        }),
-      ),
-    ).toThrow(failure);
+    expect(() => renderer.render(scene({
+      meshes: [drawable],
+      opaque: [drawable],
+    }))).toThrow(failure);
 
     expect(recording.bindFramebuffer).toHaveBeenCalledOnce();
     expect(recording.deleteProgram).not.toHaveBeenCalled();
@@ -333,8 +772,12 @@ describe('WebGLSceneRenderer', () => {
 interface SceneOverrides {
   readonly contextGeneration?: number;
   readonly meshes?: readonly SettledWebGLMesh[];
+  readonly lights?: readonly SettledWebGLLight[];
+  readonly background?: SettledWebGLBackground;
   readonly opaque?: readonly SettledWebGLMesh[];
   readonly transparent?: readonly SettledWebGLMesh[];
+  readonly shadowPlans?: readonly SettledWebGLShadowPlan[];
+  readonly cameraSeed?: number;
 }
 
 function scene(overrides: SceneOverrides = {}): SettledWebGLScene {
@@ -351,10 +794,10 @@ function scene(overrides: SceneOverrides = {}): SettledWebGLScene {
         up: [0, 1, 0] as const,
       }),
       aspect: 2,
-      viewMatrix: matrix(101),
-      projectionMatrix: matrix(201),
-      projectionViewMatrix: matrix(301),
-      inverseProjectionViewMatrix: matrix(401),
+      viewMatrix: matrix(overrides.cameraSeed ?? 101),
+      projectionMatrix: matrix((overrides.cameraSeed ?? 101) + 100),
+      projectionViewMatrix: matrix((overrides.cameraSeed ?? 101) + 200),
+      inverseProjectionViewMatrix: matrix((overrides.cameraSeed ?? 101) + 300),
       viewport: Object.freeze({ width: 160, height: 90 }),
       generationValues: Object.freeze([]),
     }),
@@ -363,40 +806,268 @@ function scene(overrides: SceneOverrides = {}): SettledWebGLScene {
     density: Object.freeze({ x: 2, y: 2 }),
     timestamp: 123,
     meshes: overrides.meshes ?? Object.freeze([]),
+    lights: overrides.lights ?? Object.freeze([]),
+    background: overrides.background,
     opaque: overrides.opaque ?? Object.freeze([]),
     transparent: overrides.transparent ?? Object.freeze([]),
+    shadowQuality: 'medium',
+    shadowPlans: overrides.shadowPlans ?? Object.freeze([]),
     pickEntries: Object.freeze([]),
   });
+}
+
+function directionalLight(): SettledWebGLLight {
+  return Object.freeze({
+    kind: 'directional' as const,
+    identity: DIRECTIONAL_LIGHT_IDENTITY,
+    linearColor: Object.freeze([1, 1, 1] as const),
+    direction: Object.freeze([0, 0, -1] as const),
+    intensity: 1,
+    castShadow: true,
+  });
+}
+
+function directionalPlan(mesh: SettledWebGLMesh): SettledWebGLShadowPlan {
+  return Object.freeze({
+    kind: 'directional' as const,
+    lightIdentity: DIRECTIONAL_LIGHT_IDENTITY,
+    lightIndex: 0,
+    projectionViewMatrix: matrix(701),
+    bias: 0.001,
+    casters: Object.freeze([mesh]),
+    receivers: Object.freeze([mesh]),
+    requestedResolution: 1024,
+    comparisonCount: 4,
+    contextGeneration: 7,
+    shadowProgramGeneration: 1,
+  });
+}
+
+function pointLight(): SettledWebGLLight {
+  return Object.freeze({
+    kind: 'point' as const,
+    identity: POINT_LIGHT_IDENTITY,
+    linearColor: Object.freeze([1, 1, 1] as const),
+    position: Object.freeze([1, 2, 3] as const),
+    range: 10,
+    intensity: 1,
+    castShadow: true,
+  });
+}
+
+function pointPlan(
+  mesh: SettledWebGLMesh,
+  overrides: Partial<SettledWebGLShadowPlan> = {},
+): SettledWebGLShadowPlan {
+  return Object.freeze({
+    kind: 'point',
+    lightIdentity: POINT_LIGHT_IDENTITY,
+    lightIndex: 0,
+    projectionViewMatrices: Object.freeze(Array.from(
+      { length: 6 },
+      (_, face) => matrix(711 + face),
+    )),
+    lightPosition: Object.freeze([1, 2, 3] as const),
+    nearDistance: 0.01,
+    farDistance: 10,
+    bias: 0.001,
+    casters: Object.freeze([mesh]),
+    receivers: Object.freeze([mesh]),
+    requestedResolution: 1024,
+    comparisonCount: 4,
+    contextGeneration: 7,
+    shadowProgramGeneration: 1,
+    ...overrides,
+  } as any);
+}
+
+function spotLight(): SettledWebGLLight {
+  return Object.freeze({
+    kind: 'spot' as const,
+    identity: SPOT_LIGHT_IDENTITY,
+    linearColor: Object.freeze([1, 1, 1] as const),
+    position: Object.freeze([1, 2, 3] as const),
+    direction: Object.freeze([0, -1, 0] as const),
+    range: 10,
+    innerConeCosine: 0.9,
+    outerConeCosine: 0.7,
+    intensity: 1,
+    castShadow: true,
+  });
+}
+
+function spotPlan(
+  mesh: SettledWebGLMesh,
+  overrides: Record<string, unknown> = {},
+): any {
+  return Object.freeze({
+    kind: 'spot',
+    lightIdentity: SPOT_LIGHT_IDENTITY,
+    lightIndex: 0,
+    projectionViewMatrix: matrix(721),
+    lightPosition: Object.freeze([1, 2, 3] as const),
+    nearDistance: 0.01,
+    farDistance: 10,
+    bias: 0.001,
+    casters: Object.freeze([mesh]),
+    receivers: Object.freeze([mesh]),
+    requestedResolution: 1024,
+    comparisonCount: 4,
+    contextGeneration: 7,
+    shadowProgramGeneration: 1,
+    ...overrides,
+  });
+}
+
+const DIRECTIONAL_LIGHT_IDENTITY = Object.freeze({});
+const POINT_LIGHT_IDENTITY = Object.freeze({});
+const SPOT_LIGHT_IDENTITY = Object.freeze({});
+
+interface MeshOptions {
+  readonly indexed?: boolean;
+  readonly shading?: WebGLProgramKey;
+  readonly seed?: number;
+  readonly geometry?: SettledWebGLMesh['geometry'];
 }
 
 function mesh(
   sourceIndex: number,
   color: SettledWebGLMesh['color'],
-  indexed = false,
-  seed = sourceIndex + 1,
+  options: MeshOptions = {},
 ): SettledWebGLMesh {
-  const geometry = createWebGLGeometry({
+  const shading = options.shading ?? 'unlit';
+  const seed = options.seed ?? sourceIndex + 1;
+  const geometry = options.geometry ?? createWebGLGeometry({
     positions: [0, 0, 0, seed, 0, 0, 0, seed, 0],
-    indices: indexed ? [0, 1, 2] : undefined,
+    normals: shading === 'lambert' ?
+      [0, 0, 1, 0, 0, 1, 0, 0, 1] : undefined,
+    indices: options.indexed ? [0, 1, 2] : undefined,
   });
+  const linearEmissive = Object.freeze([0, 0, 0] as const);
   return Object.freeze({
     kind: 'mesh' as const,
     componentName: `Mesh${sourceIndex}`,
     source: undefined,
     geometry,
+    identity: Object.freeze({}),
     model: matrix(seed),
     color: Object.freeze(color),
+    lit: shading === 'lambert',
+    material: Object.freeze({
+      type: 'lambert' as const,
+      emissiveColor: Object.freeze([0, 0, 0, 1] as const),
+      emissiveIntensity: 1,
+    }),
+    shading: shading === 'unlit' ? Object.freeze({
+      kind: 'unlit' as const,
+      displayBaseColor: Object.freeze(color),
+      linearEmissive,
+    }) : Object.freeze({
+      kind: 'lambert' as const,
+      linearBaseColor: Object.freeze(color),
+      linearEmissive,
+      normalMatrix: normalMatrix(seed),
+    }),
     sourceIndex,
     target: undefined,
     keyboardNavigationBounds: undefined,
     viewDepth: 10 - sourceIndex,
+    worldBounds: Object.freeze({
+      minimumX: 0,
+      minimumY: 0,
+      minimumZ: 0,
+      maximumX: seed,
+      maximumY: seed,
+      maximumZ: 0,
+    }),
+    castShadow: true,
+    receiveShadow: shading === 'lambert',
   });
 }
 
+function background(
+  color: SettledWebGLBackground['color'],
+): SettledWebGLBackground {
+  return Object.freeze({ kind: 'background', color: Object.freeze(color) });
+}
+
+function fixedLights(): readonly SettledWebGLLight[] {
+  return Object.freeze([
+    Object.freeze({
+      kind: 'ambient' as const,
+      linearColor: Object.freeze([0.1, 0.2, 0.3] as const),
+      intensity: 0.4,
+    }),
+    Object.freeze({
+      kind: 'hemisphere' as const,
+      linearSkyColor: Object.freeze([0.5, 0.6, 0.7] as const),
+      linearGroundColor: Object.freeze([0.8, 0.9, 1] as const),
+      axis: Object.freeze([0, 1, 0] as const),
+      intensity: 1.1,
+    }),
+    Object.freeze({
+      kind: 'directional' as const,
+      linearColor: Object.freeze([0.2, 0.3, 0.4] as const),
+      direction: Object.freeze([0, 0, -1] as const),
+      intensity: 2,
+    }),
+    Object.freeze({
+      kind: 'point' as const,
+      linearColor: Object.freeze([0.3, 0.4, 0.5] as const),
+      position: Object.freeze([1, 2, 3] as const),
+      range: undefined,
+      intensity: 3,
+    }),
+    Object.freeze({
+      kind: 'spot' as const,
+      linearColor: Object.freeze([0.4, 0.5, 0.6] as const),
+      position: Object.freeze([-1, -2, -3] as const),
+      direction: Object.freeze([0, -1, 0] as const),
+      range: 5,
+      innerConeCosine: 0.9,
+      outerConeCosine: 0.7,
+      intensity: 4,
+    }),
+    Object.freeze({
+      kind: 'ambient' as const,
+      linearColor: Object.freeze([0, 0, 0] as const),
+      intensity: 0,
+    }),
+    Object.freeze({
+      kind: 'point' as const,
+      linearColor: Object.freeze([1, 0, 0] as const),
+      position: Object.freeze([0, 0, 1] as const),
+      range: 2,
+      intensity: 1,
+    }),
+    Object.freeze({
+      kind: 'spot' as const,
+      linearColor: Object.freeze([0, 1, 0] as const),
+      position: Object.freeze([0, 0, 1] as const),
+      direction: Object.freeze([0, 0, -1] as const),
+      range: undefined,
+      innerConeCosine: 1,
+      outerConeCosine: 1,
+      intensity: 1,
+    }),
+  ]);
+}
+
 function matrix(seed: number): Float32Array {
-  return new Float32Array(
-    Array.from({ length: 16 }, (_, index) => seed + index / 10),
-  );
+  const value = new Float32Array(16);
+  value[0] = seed;
+  value[5] = 1;
+  value[10] = 1;
+  value[15] = 1;
+  return value;
+}
+
+function normalMatrix(seed: number): Float32Array {
+  return new Float32Array([
+    seed, 0, 0,
+    0, 1, 0,
+    0, 0, 1,
+  ]);
 }
 
 interface ThrowPoint {
@@ -410,20 +1081,65 @@ interface RendererGLOptions {
   readonly loseContextAt?: Omit<ThrowPoint, 'error'>;
 }
 
+interface UniformWrite {
+  readonly programKey: WebGLProgramKey | undefined;
+  readonly name: string;
+  readonly value: readonly number[];
+}
+
 interface DrawSnapshot {
   readonly method: 'drawArrays' | 'drawElements';
+  readonly programKey: WebGLProgramKey | undefined;
   readonly blend: boolean;
   readonly blendFunction: readonly unknown[];
   readonly depthTest: boolean;
   readonly depthMask: boolean;
   readonly depthFunction: unknown;
+  readonly attributeLocations: readonly number[];
   readonly model: readonly number[];
-  readonly view: readonly number[];
-  readonly projection: readonly number[];
-  readonly color: readonly number[];
+  readonly uniforms: Readonly<Record<string, readonly number[]>>;
 }
 
-function createRendererGL(options: RendererGLOptions = {}) {
+interface ProgramHandle {
+  readonly kind: 'program';
+  readonly id: number;
+  key?: WebGLProgramKey;
+}
+
+interface UniformLocationHandle {
+  readonly program: ProgramHandle;
+  readonly name: string;
+}
+
+interface RendererGLRecording {
+  readonly gl: WebGL2RenderingContext;
+  readonly operations: unknown[][];
+  readonly draws: DrawSnapshot[];
+  readonly clearColors: number[][];
+  readonly clears: number[][];
+  readonly uniformWrites: UniformWrite[];
+  readonly getParameter: ReturnType<typeof vi.fn>;
+  readonly bindFramebuffer: ReturnType<typeof vi.fn>;
+  readonly bindTexture: ReturnType<typeof vi.fn>;
+  readonly clear: ReturnType<typeof vi.fn>;
+  readonly createProgram: ReturnType<typeof vi.fn>;
+  readonly deleteProgram: ReturnType<typeof vi.fn>;
+  readonly createVertexArray: ReturnType<typeof vi.fn>;
+  readonly deleteVertexArray: ReturnType<typeof vi.fn>;
+  readonly createBuffer: ReturnType<typeof vi.fn>;
+  readonly deleteBuffer: ReturnType<typeof vi.fn>;
+  readonly drawArrays: ReturnType<typeof vi.fn>;
+  readonly drawElements: ReturnType<typeof vi.fn>;
+  readonly readPixels: ReturnType<typeof vi.fn>;
+  readonly createFramebuffer: ReturnType<typeof vi.fn>;
+  readonly framebufferTexture2D: ReturnType<typeof vi.fn>;
+  readonly createTexture: ReturnType<typeof vi.fn>;
+  readonly deleteTexture: ReturnType<typeof vi.fn>;
+}
+
+function createRendererGL(
+  options: RendererGLOptions = {},
+): RendererGLRecording {
   const constants = createConstants();
   const operations: unknown[][] = [];
   const counts = new Map<string, number>();
@@ -432,9 +1148,15 @@ function createRendererGL(options: RendererGLOptions = {}) {
     depthMask: true,
     depthFunction: 0,
     blendFunction: [] as unknown[],
-    uniforms: new Map<string, number[]>(),
+    clearColor: [0, 0, 0, 0] as number[],
+    currentProgram: null as ProgramHandle | null,
+    attributeLocations: [] as number[],
+    uniforms: new Map<ProgramHandle, Map<string, readonly number[]>>(),
   };
   const draws: DrawSnapshot[] = [];
+  const clearColors: number[][] = [];
+  const clears: number[][] = [];
+  const uniformWrites: UniformWrite[] = [];
   let nextHandle = 0;
   let contextLost = false;
   const handle = (kind: string) => ({ kind, id: ++nextHandle });
@@ -459,39 +1181,65 @@ function createRendererGL(options: RendererGLOptions = {}) {
   const method = <T extends unknown[], R>(
     operation: string,
     implementation?: (...args: T) => R,
-  ) =>
-    vi.fn((...args: T) => {
-      record(operation, args);
-      return implementation?.(...args) as R;
+  ) => vi.fn((...args: T) => {
+    record(operation, args);
+    return implementation?.(...args) as R;
+  });
+  const writeUniform = (
+    operation: string,
+    location: UniformLocationHandle,
+    value: readonly number[],
+  ) => {
+    record(operation, [location, value]);
+    const copied = [...value];
+    let programUniforms = state.uniforms.get(location.program);
+    if (!programUniforms) {
+      programUniforms = new Map();
+      state.uniforms.set(location.program, programUniforms);
+    }
+    programUniforms.set(location.name, copied);
+    uniformWrites.push({
+      programKey: location.program.key,
+      name: location.name,
+      value: copied,
     });
+  };
   const draw = (operation: DrawSnapshot['method'], args: unknown[]) => {
     record(operation, args);
+    const program = state.currentProgram;
+    const uniforms = program === null ? new Map() :
+      state.uniforms.get(program) ?? new Map();
+    const snapshot = Object.fromEntries(
+      Array.from(uniforms, ([name, value]) => [name, [...value]]),
+    );
     draws.push({
       method: operation,
+      programKey: program?.key,
       blend: state.capabilities.get(constants.BLEND) ?? false,
       blendFunction: [...state.blendFunction],
       depthTest: state.capabilities.get(constants.DEPTH_TEST) ?? false,
       depthMask: state.depthMask,
       depthFunction: state.depthFunction,
-      model: [...(state.uniforms.get('u_model') ?? [])],
-      view: [...(state.uniforms.get('u_view') ?? [])],
-      projection: [...(state.uniforms.get('u_projection') ?? [])],
-      color: [...(state.uniforms.get('u_color') ?? [])],
+      attributeLocations: [...state.attributeLocations],
+      model: [...(snapshot.u_model ?? [])],
+      uniforms: snapshot,
     });
+    state.attributeLocations.length = 0;
   };
   const methods = {
-    getParameter: method<[number], number>('getParameter', () => 2),
-    isContextLost: method<[], boolean>(
-      'isContextLost',
-      () => contextLost,
-    ),
+    getParameter: method<[number], number>('getParameter', parameter =>
+      parameter === constants.MAX_COMBINED_TEXTURE_IMAGE_UNITS ? 16 : 4096),
+    isContextLost: method<[], boolean>('isContextLost', () => contextLost),
     bindFramebuffer: method('bindFramebuffer'),
     viewport: method('viewport'),
     disable: method<[number], void>('disable', capability => {
       state.capabilities.set(capability, false);
     }),
     scissor: method('scissor'),
-    useProgram: method('useProgram'),
+    useProgram: method<[ProgramHandle | null], void>('useProgram', program => {
+      state.currentProgram = program;
+      state.attributeLocations.length = 0;
+    }),
     bindVertexArray: method('bindVertexArray'),
     bindBuffer: method('bindBuffer'),
     activeTexture: method('activeTexture'),
@@ -522,11 +1270,19 @@ function createRendererGL(options: RendererGLOptions = {}) {
     stencilFuncSeparate: method('stencilFuncSeparate'),
     stencilOpSeparate: method('stencilOpSeparate'),
     polygonOffset: method('polygonOffset'),
-    clearColor: method('clearColor'),
+    clearColor: method<[number, number, number, number], void>(
+      'clearColor',
+      (...color) => {
+        state.clearColor = color;
+        clearColors.push([...color]);
+      },
+    ),
     clearDepth: method('clearDepth'),
     clearStencil: method('clearStencil'),
     pixelStorei: method('pixelStorei'),
-    clear: method('clear'),
+    clear: method<[number], void>('clear', () => {
+      clears.push([...state.clearColor]);
+    }),
     createShader: method<[number], object>('createShader', type => ({
       ...handle('shader'),
       type,
@@ -539,7 +1295,9 @@ function createRendererGL(options: RendererGLOptions = {}) {
     ),
     getShaderInfoLog: method<unknown[], string>('getShaderInfoLog', () => ''),
     deleteShader: method('deleteShader'),
-    createProgram: method<[], object>('createProgram', () => handle('program')),
+    createProgram: method<[], ProgramHandle>('createProgram', () =>
+      handle('program') as ProgramHandle,
+    ),
     attachShader: method('attachShader'),
     detachShader: method('detachShader'),
     linkProgram: method('linkProgram'),
@@ -549,10 +1307,15 @@ function createRendererGL(options: RendererGLOptions = {}) {
     ),
     getProgramInfoLog: method<unknown[], string>('getProgramInfoLog', () => ''),
     deleteProgram: method('deleteProgram'),
-    getUniformLocation: method<[object, string], object>(
-      'getUniformLocation',
-      (_program, name) => ({ name }),
-    ),
+    getUniformLocation: method<
+      [ProgramHandle, string],
+      UniformLocationHandle
+    >('getUniformLocation', (program, name) => {
+      if (name === 'u_display_base_color') program.key = 'unlit';
+      if (name === 'u_normal_matrix') program.key = 'lambert';
+      if (name === 'u_shadow_projection_view') program.key = 'shadow-depth';
+      return { program, name };
+    }),
     createVertexArray: method<[], object>('createVertexArray', () =>
       handle('vertex-array'),
     ),
@@ -561,91 +1324,136 @@ function createRendererGL(options: RendererGLOptions = {}) {
     deleteBuffer: method('deleteBuffer'),
     bufferData: method('bufferData'),
     enableVertexAttribArray: method('enableVertexAttribArray'),
-    vertexAttribPointer: method('vertexAttribPointer'),
-    uniformMatrix4fv: method<
-      [object & { name?: string }, boolean, Float32Array],
-      void
-    >('uniformMatrix4fv', (location, _transpose, value) => {
-      state.uniforms.set(location.name ?? '', Array.from(value));
-    }),
-    uniform4f: method<
-      [object & { name?: string }, number, number, number, number],
-      void
-    >('uniform4f', (location, ...value) => {
-      state.uniforms.set(location.name ?? '', value);
-    }),
+    vertexAttribPointer: method<[number, ...unknown[]], void>(
+      'vertexAttribPointer',
+      location => {
+        if (state.currentProgram !== null) {
+          state.attributeLocations.push(location);
+        }
+      },
+    ),
+    uniformMatrix4fv: vi.fn((
+      location: UniformLocationHandle,
+      _transpose: boolean,
+      value: Float32Array,
+    ) => writeUniform('uniformMatrix4fv', location, Array.from(value))),
+    uniformMatrix3fv: vi.fn((
+      location: UniformLocationHandle,
+      _transpose: boolean,
+      value: Float32Array,
+    ) => writeUniform('uniformMatrix3fv', location, Array.from(value))),
+    uniform4f: vi.fn((
+      location: UniformLocationHandle,
+      ...value: number[]
+    ) => writeUniform('uniform4f', location, value)),
+    uniform3f: vi.fn((
+      location: UniformLocationHandle,
+      ...value: number[]
+    ) => writeUniform('uniform3f', location, value)),
+    uniform1f: vi.fn((location: UniformLocationHandle, value: number) =>
+      writeUniform('uniform1f', location, [value])),
+    uniform1i: vi.fn((location: UniformLocationHandle, value: number) =>
+      writeUniform('uniform1i', location, [value])),
+    uniform1iv: vi.fn((
+      location: UniformLocationHandle,
+      value: Int32Array,
+    ) => writeUniform('uniform1iv', location, Array.from(value))),
+    uniform4fv: vi.fn((
+      location: UniformLocationHandle,
+      value: Float32Array,
+    ) => writeUniform('uniform4fv', location, Array.from(value))),
     drawArrays: vi.fn((...args: unknown[]) => draw('drawArrays', args)),
     drawElements: vi.fn((...args: unknown[]) => draw('drawElements', args)),
     readPixels: method('readPixels'),
     createFramebuffer: method<[], object>('createFramebuffer', () =>
       handle('framebuffer'),
     ),
+    deleteFramebuffer: method('deleteFramebuffer'),
+    framebufferTexture2D: method('framebufferTexture2D'),
+    checkFramebufferStatus: method<[], number>(
+      'checkFramebufferStatus',
+      () => constants.FRAMEBUFFER_COMPLETE,
+    ),
+    drawBuffers: method('drawBuffers'),
+    readBuffer: method('readBuffer'),
+    createTexture: method<[], object>('createTexture', () => handle('texture')),
+    deleteTexture: method('deleteTexture'),
+    texParameteri: method('texParameteri'),
+    texImage2D: method('texImage2D'),
   };
   const gl = { ...constants, ...methods } as unknown as WebGL2RenderingContext;
   return {
     gl,
     operations,
     draws,
+    clearColors,
+    clears,
+    uniformWrites,
     ...methods,
   };
 }
 
+function traceTransactions(recording: RendererGLRecording): void {
+  const original = WebGLRendererResourceCache.prototype.beginRender;
+  vi.spyOn(WebGLRendererResourceCache.prototype, 'beginRender')
+    .mockImplementation(function (this: WebGLRendererResourceCache) {
+      recording.operations.push(['beginRender']);
+      const transaction = original.call(this);
+      return Object.freeze({
+        useProgram: transaction.useProgram,
+        useGeometry: transaction.useGeometry,
+        commit() {
+          recording.operations.push(['commit']);
+          transaction.commit();
+        },
+        rollback(contextLost?: boolean) {
+          recording.operations.push(['rollback', contextLost]);
+          transaction.rollback(contextLost);
+        },
+      }) satisfies WebGLRendererResourceTransaction;
+    });
+}
+
+function valuesFor(
+  writes: readonly UniformWrite[],
+  name: string,
+): readonly (readonly number[])[] {
+  return writes.filter(write => write.name === name).map(write => write.value);
+}
+
+function float32(values: readonly number[]): number[] {
+  return Array.from(new Float32Array(values));
+}
+
 function createConstants(): Record<string, number> {
   const names = [
-    'ACTIVE_TEXTURE',
-    'ALWAYS',
-    'ARRAY_BUFFER',
-    'BACK',
-    'BLEND',
-    'BROWSER_DEFAULT_WEBGL',
-    'CCW',
-    'COLOR_BUFFER_BIT',
-    'COMPILE_STATUS',
-    'CULL_FACE',
-    'DEPTH_BUFFER_BIT',
-    'DEPTH_TEST',
-    'ELEMENT_ARRAY_BUFFER',
-    'FLOAT',
-    'FRAGMENT_SHADER',
-    'FRAMEBUFFER',
-    'FRONT',
-    'FUNC_ADD',
-    'KEEP',
-    'LEQUAL',
-    'LESS',
-    'LINK_STATUS',
-    'MAX_COMBINED_TEXTURE_IMAGE_UNITS',
-    'ONE',
-    'ONE_MINUS_SRC_ALPHA',
-    'PACK_ALIGNMENT',
-    'PACK_ROW_LENGTH',
-    'PACK_SKIP_PIXELS',
-    'PACK_SKIP_ROWS',
-    'POLYGON_OFFSET_FILL',
-    'SCISSOR_TEST',
-    'SRC_ALPHA',
-    'STATIC_DRAW',
-    'STENCIL_TEST',
-    'TEXTURE0',
-    'TEXTURE_2D',
-    'TEXTURE_2D_ARRAY',
-    'TEXTURE_3D',
-    'TEXTURE_CUBE_MAP',
-    'TRIANGLES',
-    'UNPACK_ALIGNMENT',
-    'UNPACK_COLORSPACE_CONVERSION_WEBGL',
-    'UNPACK_FLIP_Y_WEBGL',
-    'UNPACK_IMAGE_HEIGHT',
-    'UNPACK_PREMULTIPLY_ALPHA_WEBGL',
-    'UNPACK_ROW_LENGTH',
-    'UNPACK_SKIP_IMAGES',
-    'UNPACK_SKIP_PIXELS',
-    'UNPACK_SKIP_ROWS',
-    'UNSIGNED_INT',
-    'VERTEX_SHADER',
-    'ZERO',
+    'ACTIVE_TEXTURE', 'ALWAYS', 'ARRAY_BUFFER', 'BACK', 'BLEND',
+    'BROWSER_DEFAULT_WEBGL', 'CCW', 'COLOR_BUFFER_BIT', 'COMPILE_STATUS',
+    'CULL_FACE', 'DEPTH_BUFFER_BIT', 'DEPTH_TEST', 'ELEMENT_ARRAY_BUFFER',
+    'DEPTH_ATTACHMENT', 'DEPTH_COMPONENT', 'DEPTH_COMPONENT24',
+    'FLOAT', 'FRAGMENT_SHADER', 'FRAMEBUFFER', 'FRAMEBUFFER_COMPLETE', 'FRONT', 'FUNC_ADD', 'KEEP',
+    'LEQUAL', 'LESS', 'LINK_STATUS', 'MAX_COMBINED_TEXTURE_IMAGE_UNITS',
+    'MAX_CUBE_MAP_TEXTURE_SIZE', 'MAX_TEXTURE_SIZE', 'NEAREST', 'NONE',
+    'ONE', 'ONE_MINUS_SRC_ALPHA', 'PACK_ALIGNMENT', 'PACK_ROW_LENGTH',
+    'PACK_SKIP_PIXELS', 'PACK_SKIP_ROWS', 'POLYGON_OFFSET_FILL',
+    'SCISSOR_TEST', 'SRC_ALPHA', 'STATIC_DRAW', 'STENCIL_TEST', 'TEXTURE0',
+    'TEXTURE_2D', 'TEXTURE_2D_ARRAY', 'TEXTURE_3D', 'TEXTURE_CUBE_MAP',
+    'TEXTURE_CUBE_MAP_POSITIVE_X', 'TEXTURE_MAG_FILTER', 'TEXTURE_MIN_FILTER',
+    'TEXTURE_WRAP_R', 'TEXTURE_WRAP_S', 'TEXTURE_WRAP_T', 'CLAMP_TO_EDGE',
+    'TRIANGLES', 'UNPACK_ALIGNMENT', 'UNPACK_COLORSPACE_CONVERSION_WEBGL',
+    'UNPACK_FLIP_Y_WEBGL', 'UNPACK_IMAGE_HEIGHT',
+    'UNPACK_PREMULTIPLY_ALPHA_WEBGL', 'UNPACK_ROW_LENGTH',
+    'UNPACK_SKIP_IMAGES', 'UNPACK_SKIP_PIXELS', 'UNPACK_SKIP_ROWS',
+    'UNSIGNED_INT', 'VERTEX_SHADER', 'ZERO',
   ];
   return Object.fromEntries(names.map((name, index) => [name, index + 1]));
+}
+
+function operationCount(
+  operations: readonly unknown[][],
+  operation: string,
+): number {
+  return operations.filter(([name]) => name === operation).length;
 }
 
 function indexOf(operations: readonly unknown[][], operation: string): number {
