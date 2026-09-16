@@ -5,7 +5,9 @@ import {
   type WritableSignal,
 } from "@crc/core";
 import {
+  AmbientLight,
   Cube,
+  DirectionalLight,
   Group3D,
   Sphere,
   WebGLLayer,
@@ -284,6 +286,16 @@ export function Physics3DRoot({ model }: { readonly model: Physics3DModel }) {
         camera={PHYSICS_3D_CAMERA}
         style={{ width: 480, height: 300 }}
       >
+        <AmbientLight style={{ color: "#ffffff", intensity: 0.18 }} />
+        <DirectionalLight
+          style={{
+            color: "#fff4de",
+            intensity: 0.9,
+            rotationXDegrees: -42,
+            rotationYDegrees: 35,
+            castShadow: false,
+          }}
+        />
         <PhysicsWorld3D
           gravity={[0, -12, 0]}
           fixedStepMilliseconds={1000 / 60}

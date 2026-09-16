@@ -96,6 +96,7 @@ describe("public first-class 3D physics browser slice", () => {
     flushAfter(0);
     expect(pixelSignature(canvas)).toEqual(firstPixels);
     expect(firstPixels.nonTransparentPixels).toBeGreaterThan(0);
+    expect(firstPixels.maximumRgbChannel).toBeGreaterThan(96);
     const initial = controller.getState();
     expect(Object.keys(initial.bodies)).toEqual([...PHYSICS_3D_BODY_IDS]);
     expect(Object.values(initial.bodies).every((body) =>
@@ -212,17 +213,26 @@ describe("public first-class 3D physics browser slice", () => {
 function pixelSignature(canvas: HTMLCanvasElement): Readonly<{
   hash: number;
   nonTransparentPixels: number;
+  maximumRgbChannel: number;
 }> {
   const context = canvas.getContext("2d");
   if (context === null) throw new Error("Expected a Canvas 2D context.");
   const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
   let hash = 0x811c9dc5;
   let nonTransparentPixels = 0;
+  let maximumRgbChannel = 0;
   for (let index = 0; index < pixels.length; index += 1) {
     hash = Math.imul(hash ^ pixels[index]!, 0x01000193);
     if (index % 4 === 3 && pixels[index] !== 0) nonTransparentPixels += 1;
+    if (index % 4 !== 3) {
+      maximumRgbChannel = Math.max(maximumRgbChannel, pixels[index]!);
+    }
   }
-  return Object.freeze({ hash: hash >>> 0, nonTransparentPixels });
+  return Object.freeze({
+    hash: hash >>> 0,
+    nonTransparentPixels,
+    maximumRgbChannel,
+  });
 }
 
 function sameMatrix(

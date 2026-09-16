@@ -36,12 +36,19 @@ interface TestPhysicsAttachment {
 describe('WebGL physics friend seam', () => {
   it('keeps friend values out of the public root and returns isolated geometry copies', () => {
     expect(Object.keys(publicWebGL).sort()).toEqual([
+      'AmbientLight',
       'Cube',
+      'DirectionalLight',
       'Group3D',
+      'HemisphereLight',
       'Mesh',
+      'PointLight',
       'Sphere',
+      'SpotLight',
+      'WebGLBackground',
       'WebGLLayer',
       'crcAnimationFrame',
+      'crcOrbitCamera',
       'createWebGLGeometry',
     ]);
     const geometry = createWebGLGeometry({
@@ -98,16 +105,16 @@ describe('WebGL physics friend seam', () => {
         <Cube
           physics={attachment('cube')}
           keyboardFocusable
-          style={{ size: 2, translateX: 0.25, scaleX: 0.5 }}
+          style={{ size: 2, translateX: 0.25, scaleX: 0.5, lit: false }}
         />
         <Sphere
           physics={attachment('sphere')}
-          style={{ radius: 2, scaleY: 0.5 }}
+          style={{ radius: 2, scaleY: 0.5, lit: false }}
         />
         <Mesh
           physics={attachment('mesh')}
           geometry={triangle}
-          style={{ translateZ: 7, scaleZ: -2 }}
+          style={{ translateZ: 7, scaleZ: -2, lit: false }}
         />
       </Group3D>
     );
