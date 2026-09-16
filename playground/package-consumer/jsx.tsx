@@ -68,6 +68,16 @@ import {
   type CRCWebGLShadowQuality,
 } from '@crc/webgl';
 import {
+  Particles2D,
+  defineParticleEffect2D,
+  particleCurve,
+  particleRange,
+} from '@crc/particles';
+import {
+  Particles3D,
+  defineParticleEffect3D,
+} from '@crc/particles/webgl';
+import {
   Fragment as DevelopmentFragment,
   jsxDEV,
   type JSX as DevelopmentJSX,
@@ -413,6 +423,74 @@ function AutomaticWebGLScene(): CRCNode {
 
 export const automaticWebGLScene: CRCElement = (
   <AutomaticWebGLScene />
+);
+
+const automaticParticleOpacity = particleCurve([
+  [0, 1],
+  [1, 0],
+]);
+const automaticParticleEffect2D = defineParticleEffect2D({
+  emitters: [{
+    name: 'spark',
+    capacity: 16,
+    emission: [{ type: 'rate', particlesPerSecond: 4 }],
+    shape: { type: 'point' },
+    initial: {
+      lifetimeMilliseconds: 500,
+      velocity: [particleRange(-10, 10), particleRange(-20, -5)],
+      size: 3,
+    },
+    appearance: { opacity: automaticParticleOpacity },
+    renderer: { type: 'circle' },
+    bounds: { min: [-20, -30], max: [20, 10] },
+  }],
+});
+const automaticParticleEffect3D = defineParticleEffect3D({
+  emitters: [{
+    name: 'ember',
+    capacity: 32,
+    emission: [{ type: 'rate', particlesPerSecond: 8 }],
+    shape: { type: 'sphere', radius: 1, sample: 'volume' },
+    initial: {
+      lifetimeMilliseconds: particleRange(600, 900),
+      velocity: [0, particleRange(0.5, 1), 0],
+      size: 4,
+    },
+    appearance: { opacity: automaticParticleOpacity },
+    renderer: { type: 'point', material: 'emissive', blend: 'additive' },
+    bounds: { min: [-2, -1, -2], max: [2, 3, 2] },
+  }],
+});
+
+export const automaticParticleScene: CRCElement = (
+  <Group>
+    <Particles2D
+      effect={automaticParticleEffect2D}
+      autoplay
+      seed={42}
+      pointerEvents="none"
+      style={{ width: 100, height: 100 }}
+    />
+    <WebGLLayer
+      camera={{
+        type: 'perspective',
+        position: [0, 0, 5],
+        lookAt: [0, 0, 0],
+        up: [0, 1, 0],
+        fieldOfViewDegrees: 45,
+        near: 0.1,
+        far: 100,
+      }}
+      style={{ width: 100, height: 100 }}
+    >
+      <Particles3D
+        effect={automaticParticleEffect3D}
+        autoplay
+        seed={42}
+        pointerEvents="none"
+      />
+    </WebGLLayer>
+  </Group>
 );
 
 // @ts-expect-error RegularPolygon requires exactly one size property

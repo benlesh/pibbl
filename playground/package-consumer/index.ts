@@ -121,6 +121,31 @@ import type {
   WritableSignal,
 } from '@crc/core';
 import type * as CoreTypes from '@crc/core/types';
+import * as ParticleRuntime from '@crc/particles';
+import type * as ParticleTypes from '@crc/particles';
+import * as ParticleWebGLRuntime from '@crc/particles/webgl';
+import type * as ParticleWebGLTypes from '@crc/particles/webgl';
+import {
+  Particles2D,
+  crcParticleSystem,
+  defineParticleEffect2D,
+  particleChoice,
+  particleCurve,
+  particleGradient,
+  particleInteger,
+  particleParameter,
+  particleRange,
+  type CRCParticleEffect2D,
+  type CRCParticleParameterValues,
+  type CRCParticleSystem,
+  type Particles2DProps,
+} from '@crc/particles';
+import {
+  Particles3D,
+  defineParticleEffect3D,
+  type CRCParticleEffect3D,
+  type Particles3DProps,
+} from '@crc/particles/webgl';
 import * as WebGLRuntime from '@crc/webgl';
 import type * as WebGLTypes from '@crc/webgl';
 import {
@@ -299,6 +324,116 @@ import {
   type WebGLLayerProps,
   type WebGLLayerStyle,
 } from '@crc/webgl';
+
+const packedParticleSize = particleRange(2, 6);
+const packedParticleCount = particleInteger(4, 8);
+const packedParticleColor = particleChoice([
+  { value: '#f97316', weight: 2 },
+  { value: '#fde68a', weight: 1 },
+]);
+const packedParticleIntensity = particleParameter('intensity');
+const packedParticleOpacity = particleCurve([
+  [0, 0],
+  [0.2, 1],
+  [1, 0],
+]);
+const packedParticleGradient = particleGradient([
+  [0, '#fff7cc'],
+  [1, '#f97316'],
+]);
+
+const packedParticleEffect2D = defineParticleEffect2D({
+  parameters: {
+    intensity: { type: 'number', default: 1, timing: 'render' },
+  },
+  emitters: [
+    {
+      name: 'spark',
+      capacity: 32,
+      emission: [{ type: 'manual', count: packedParticleCount }],
+      shape: { type: 'point' },
+      initial: {
+        lifetimeMilliseconds: 500,
+        velocity: [particleRange(-20, 20), particleRange(-60, -20)],
+        size: packedParticleSize,
+        color: packedParticleColor,
+        opacity: packedParticleIntensity,
+      },
+      appearance: { opacity: packedParticleOpacity, color: packedParticleGradient },
+      renderer: { type: 'circle', blend: 'additive' },
+      bounds: { min: [-30, -70], max: [30, 10] },
+    },
+  ],
+});
+
+const packedParticleEffect3D = defineParticleEffect3D({
+  emitters: [
+    {
+      name: 'ember',
+      capacity: 64,
+      emission: [{ type: 'rate', particlesPerSecond: 12 }],
+      shape: { type: 'sphere', radius: 1, sample: 'volume' },
+      initial: {
+        lifetimeMilliseconds: particleRange(800, 1_200),
+        velocity: [0, particleRange(0.5, 1.2), 0],
+        size: packedParticleSize,
+        color: '#f97316',
+      },
+      appearance: { opacity: packedParticleOpacity, color: packedParticleGradient },
+      renderer: {
+        type: 'point',
+        material: 'emissive',
+        blend: 'additive',
+      },
+      bounds: { min: [-2, -1, -2], max: [2, 4, 2] },
+    },
+  ],
+});
+
+function PackedParticleScene() {
+  const system = crcParticleSystem(packedParticleEffect2D, {
+    autoplay: false,
+    seed: 42,
+  });
+  return createElement(Group, {
+    children: [
+      createElement(Particles2D, {
+        system,
+        parameters: { intensity: 0.8 },
+        style: { width: 100, height: 100 },
+      }),
+      createElement(WebGLLayer, {
+        camera: {
+          type: 'perspective',
+          position: [0, 0, 5],
+          lookAt: [0, 0, 0],
+          up: [0, 1, 0],
+          fieldOfViewDegrees: 45,
+          near: 0.1,
+          far: 100,
+        },
+        style: { width: 100, height: 100 },
+        children: createElement(Particles3D, {
+          effect: packedParticleEffect3D,
+          autoplay: true,
+          seed: 42,
+          pointerEvents: 'none' as const,
+        }),
+      }),
+    ],
+  });
+}
+
+createElement(PackedParticleScene, {});
+void ParticleRuntime;
+void ParticleWebGLRuntime;
+void (undefined as unknown as ParticleTypes.CRCParticleEmitter2D);
+void (undefined as unknown as ParticleWebGLTypes.CRCParticleEmitter3D);
+void (undefined as unknown as CRCParticleEffect2D<'spark'>);
+void (undefined as unknown as CRCParticleEffect3D<'ember'>);
+void (undefined as unknown as CRCParticleSystem<'spark', CRCParticleParameterValues, 2>);
+void (undefined as unknown as Particles2DProps<'spark'>);
+void (undefined as unknown as Particles3DProps<'ember'>);
 
 const packedInstancedRecipe = {
   key: {},

@@ -12,6 +12,7 @@ const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const temporaryRoot = mkdtempSync(join(tmpdir(), 'crc-packed-consumer-'));
 const packageDirectory = join(temporaryRoot, 'packages');
 const consumerDirectory = join(temporaryRoot, 'consumer');
+const rootOnlyConsumerDirectory = join(temporaryRoot, 'root-only-consumer');
 
 function run(command, args, options = {}) {
   execFileSync(command, args, {
@@ -80,9 +81,9 @@ function findPackageRoot(packageEntry) {
   throw new Error(`Could not find the package root for ${packageEntry}.`);
 }
 
-async function bundleConsumerEntry(source) {
+async function bundleConsumerEntry(source, directory = consumerDirectory) {
   const result = await build({
-    absWorkingDir: consumerDirectory,
+    absWorkingDir: directory,
     bundle: true,
     format: 'esm',
     minify: true,
@@ -90,7 +91,7 @@ async function bundleConsumerEntry(source) {
     stdin: {
       contents: source,
       loader: 'tsx',
-      resolveDir: consumerDirectory,
+      resolveDir: directory,
     },
     jsx: 'automatic',
     jsxImportSource: '@crc/core',
@@ -116,7 +117,7 @@ function assertSinglePackedRuntime(metafile) {
       `Packed consumer resolved workspace sources: ${leakedSources.join(', ')}`,
     );
   }
-  for (const packageName of ['core', 'webgl']) {
+  for (const packageName of ['core', 'particles', 'webgl']) {
     const marker = `/node_modules/@crc/${packageName}/`;
     const packageRoots = new Set(
       normalizedInputs
@@ -144,13 +145,16 @@ function assertIdentityMarkerOnce(code, marker, label) {
 try {
   mkdirSync(packageDirectory, { recursive: true });
   mkdirSync(consumerDirectory, { recursive: true });
+  mkdirSync(rootOnlyConsumerDirectory, { recursive: true });
 
   const typesTarball = pack('packages/types');
   const coreTarball = pack('packages/core');
   const webglTarball = pack('packages/webgl');
+  const particlesTarball = pack('packages/particles');
   assertTarballHasNoSources(typesTarball);
   const coreEntries = assertTarballHasNoSources(coreTarball);
   const webglEntries = assertTarballHasNoSources(webglTarball);
+  const particleEntries = assertTarballHasNoSources(particlesTarball);
   assertRequiredEntries(coreEntries, [
     'package/dist/index.d.ts',
     'package/dist/index.mjs',
@@ -170,6 +174,68 @@ try {
     'package/dist/index.mjs',
     'package/dist/index.mjs.map',
   ]);
+  assertRequiredEntries(particleEntries, [
+    'package/dist/index.d.ts',
+    'package/dist/index.mjs',
+    'package/dist/index.mjs.map',
+    'package/dist/webgl.d.ts',
+    'package/dist/webgl.mjs',
+    'package/dist/webgl.mjs.map',
+  ]);
+
+  writeFileSync(join(rootOnlyConsumerDirectory, 'package.json'), `${JSON.stringify({
+    name: 'crc-packed-particles-root-consumer',
+    private: true,
+    type: 'module',
+    dependencies: {
+      '@crc/core': `file:${coreTarball}`,
+      '@crc/particles': `file:${particlesTarball}`,
+      '@crc/types': `file:${typesTarball}`,
+    },
+  }, null, 2)}\n`);
+  writeFileSync(
+    join(rootOnlyConsumerDirectory, 'pnpm-workspace.yaml'),
+    `packages:\n  - .\noverrides:\n  '@crc/types': file:${typesTarball}\n`,
+  );
+  pnpm(['install', '--offline', '--ignore-scripts', '--strict-peer-dependencies'], {
+    cwd: rootOnlyConsumerDirectory,
+  });
+  const requireFromRootOnly = createRequire(
+    join(rootOnlyConsumerDirectory, 'runtime.mjs'),
+  );
+  requireFromRootOnly.resolve('@crc/core');
+  requireFromRootOnly.resolve('@crc/particles');
+  try {
+    requireFromRootOnly.resolve('@crc/webgl');
+    throw new Error('The particles root-only consumer unexpectedly installed @crc/webgl.');
+  } catch (error) {
+    if (error?.code !== 'MODULE_NOT_FOUND') throw error;
+  }
+  const rootOnlyParticleBundle = await bundleConsumerEntry(`
+    import { defineParticleEffect2D, particleRange } from '@crc/particles';
+    const effect = defineParticleEffect2D({
+      emitters: [{
+        name: 'spark',
+        capacity: 4,
+        emission: [{ type: 'rate', particlesPerSecond: 1 }],
+        shape: { type: 'point' },
+        initial: { lifetimeMilliseconds: particleRange(100, 200) },
+        renderer: { type: 'circle' },
+      }],
+    });
+    console.log(effect.dimension);
+  `, rootOnlyConsumerDirectory);
+  const rootOnlyInputs = Object.keys(rootOnlyParticleBundle.metafile.inputs)
+    .map(input => input.replaceAll('\\', '/'));
+  if (
+    rootOnlyInputs.some(input => input.includes('/node_modules/@crc/webgl/')) ||
+    rootOnlyParticleBundle.code.includes('gl_InstanceID') ||
+    rootOnlyParticleBundle.code.includes('#version 300 es')
+  ) {
+    throw new Error(
+      'The packed @crc/particles root bundle retained WebGL package or shader code.',
+    );
+  }
 
   writeFileSync(join(consumerDirectory, 'package.json'), `${JSON.stringify({
     name: 'crc-packed-consumer',
@@ -179,6 +245,7 @@ try {
       '@crc/core': `file:${coreTarball}`,
       '@crc/types': `file:${typesTarball}`,
       '@crc/webgl': `file:${webglTarball}`,
+      '@crc/particles': `file:${particlesTarball}`,
     },
   }, null, 2)}\n`);
   writeFileSync(
@@ -207,7 +274,15 @@ try {
 
   const requireFromConsumer = createRequire(join(consumerDirectory, 'runtime.mjs'));
   const installedPackageRoots = new Map();
-  for (const packageName of ['@crc/core', '@crc/core/internal', '@crc/types', '@crc/webgl']) {
+  for (const packageName of [
+    '@crc/core',
+    '@crc/core/internal',
+    '@crc/types',
+    '@crc/webgl',
+    '@crc/webgl/internal',
+    '@crc/particles',
+    '@crc/particles/webgl',
+  ]) {
     const packageEntry = realpathSync(requireFromConsumer.resolve(packageName));
     if (!packageEntry.startsWith(realpathSync(join(consumerDirectory, 'node_modules')))) {
       throw new Error(`${packageName} resolved outside the packed consumer: ${packageEntry}`);
@@ -227,11 +302,61 @@ try {
   const installedCoreEntry = realpathSync(requireFromConsumer.resolve('@crc/core'));
   const installedWebGLRoot = installedPackageRoots.get('@crc/webgl');
   const installedWebGLEntry = realpathSync(requireFromConsumer.resolve('@crc/webgl'));
+  const installedParticlesRoot = installedPackageRoots.get('@crc/particles');
+  const installedParticlesEntry = realpathSync(
+    requireFromConsumer.resolve('@crc/particles'),
+  );
+  const installedParticlesWebGLEntry = realpathSync(
+    requireFromConsumer.resolve('@crc/particles/webgl'),
+  );
   const requireFromWebGL = createRequire(installedWebGLEntry);
   const webglCoreEntry = realpathSync(requireFromWebGL.resolve('@crc/core'));
   if (webglCoreEntry !== installedCoreEntry) {
     throw new Error(
       `@crc/webgl resolved a second core identity: ${webglCoreEntry}.`,
+    );
+  }
+  const requireFromParticles = createRequire(installedParticlesEntry);
+  const requireFromParticlesWebGL = createRequire(installedParticlesWebGLEntry);
+  if (
+    realpathSync(requireFromParticles.resolve('@crc/core')) !== installedCoreEntry ||
+    realpathSync(requireFromParticlesWebGL.resolve('@crc/core')) !== installedCoreEntry ||
+    realpathSync(requireFromParticlesWebGL.resolve('@crc/webgl')) !==
+      installedWebGLEntry
+  ) {
+    throw new Error(
+      '@crc/particles did not resolve the packed consumer core/WebGL identities.',
+    );
+  }
+  const particlesManifest = JSON.parse(
+    readFileSync(join(installedParticlesRoot, 'package.json'), 'utf8'),
+  );
+  if (
+    JSON.stringify(particlesManifest.peerDependencies) !==
+      JSON.stringify({ '@crc/core': '0.0.1', '@crc/webgl': '0.0.1' }) ||
+    particlesManifest.peerDependenciesMeta?.['@crc/webgl']?.optional !== true ||
+    Object.keys(particlesManifest.dependencies ?? {}).length !== 0
+  ) {
+    throw new Error(
+      '@crc/particles must keep core and optional WebGL as exact peer dependencies.',
+    );
+  }
+  const installedParticlesRootBundle = readFileSync(installedParticlesEntry, 'utf8');
+  if (
+    installedParticlesRootBundle.includes('gl_InstanceID') ||
+    installedParticlesRootBundle.includes('#version 300 es')
+  ) {
+    throw new Error('Packed @crc/particles root embedded WebGL shader implementation.');
+  }
+  const particleRootSourceMap = JSON.parse(
+    readFileSync(`${installedParticlesEntry}.map`, 'utf8'),
+  );
+  const leakedWebGLSources = particleRootSourceMap.sources.filter(source =>
+    /(?:packages\/webgl|node_modules\/@crc\/webgl|lib\/webgl)/u.test(source),
+  );
+  if (leakedWebGLSources.length > 0) {
+    throw new Error(
+      `Packed @crc/particles root source map embedded WebGL sources: ${leakedWebGLSources.join(', ')}`,
     );
   }
   const webglManifest = JSON.parse(
@@ -313,6 +438,13 @@ try {
   const sharedRuntimeBundle = await bundleConsumerEntry(`
     import { Fragment, Group, Rectangle, crc, createElement } from '@crc/core';
     import {
+      Particles2D,
+      defineParticleEffect2D,
+      particleCurve,
+      particleRange,
+    } from '@crc/particles';
+    import { Particles3D, defineParticleEffect3D } from '@crc/particles/webgl';
+    import {
       AmbientLight,
       Cube,
       DirectionalLight,
@@ -333,6 +465,29 @@ try {
       normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
     });
     const qualities = [false, 'low', 'medium', 'high'];
+    const opacity = particleCurve([[0, 1], [1, 0]]);
+    const effect2D = defineParticleEffect2D({
+      emitters: [{
+        name: 'spark',
+        capacity: 8,
+        emission: [{ type: 'rate', particlesPerSecond: 2 }],
+        shape: { type: 'point' },
+        initial: { lifetimeMilliseconds: particleRange(100, 200), size: 2 },
+        appearance: { opacity },
+        renderer: { type: 'circle' },
+      }],
+    });
+    const effect3D = defineParticleEffect3D({
+      emitters: [{
+        name: 'ember',
+        capacity: 8,
+        emission: [{ type: 'rate', particlesPerSecond: 2 }],
+        shape: { type: 'point' },
+        initial: { lifetimeMilliseconds: particleRange(100, 200), size: 2 },
+        appearance: { opacity },
+        renderer: { type: 'point', material: 'emissive', blend: 'additive' },
+      }],
+    });
     function Scene() {
       const orbit = crcOrbitCamera({
         orbitPoint: [0, 0, 0],
@@ -351,6 +506,7 @@ try {
       return (
         <Group {...orbit.handlers}>
           <Rectangle style={{ width: 1, height: 1, fill: 'transparent' }} />
+          <Particles2D effect={effect2D} autoplay seed={42} pointerEvents="none" />
           {qualities.map(shadows => (
             <WebGLLayer camera={camera} style={{ width: 1, height: 1, shadows }}>
               <WebGLBackground style={{ color: '#08111f' }} />
@@ -384,6 +540,12 @@ try {
                 <Sphere style={{ lit: false, castShadow: false, receiveShadow: true }} />
                 <Mesh geometry={geometry} />
               </Group3D>
+              <Particles3D
+                effect={effect3D}
+                autoplay
+                seed={42}
+                pointerEvents="none"
+              />
             </WebGLLayer>
           ))}
         </Group>
@@ -410,7 +572,7 @@ try {
   );
 
   process.stdout.write(
-    `Packed @crc/core and @crc/webgl consumer passed Bundler, NodeNext, declarations, ` +
+    `Packed @crc/core, @crc/webgl, and @crc/particles consumer passed Bundler, NodeNext, declarations, ` +
     `runtime exports, blocked deep imports, no-src checks, one shared core identity, and ` +
     `optimized focus elimination (marker absent without focus; present with focus; ` +
     `${noFocusBytes} no-focus bytes vs ${withFocusBytes} with-focus bytes).\n`,
