@@ -1,4 +1,7 @@
-import type { ScenarioController } from '@crc/scenarios';
+import type {
+  ScenarioController,
+  WebGLLightingLabState,
+} from '@crc/scenarios';
 import * as scenarios from '@crc/scenarios';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -13,37 +16,18 @@ const laboratorySources = import.meta.glob(
   { eager: true, import: 'default', query: '?raw' },
 );
 
-type LightingLabState = {
-  readonly lightMode: string;
-  readonly backgroundMode: 'transparent' | 'opaque' | 'alpha';
-  readonly shadowQuality: false | 'low' | 'medium' | 'high';
-  readonly transformedLight: boolean;
-  readonly casterAlpha: 'opaque' | 'partial' | 'zero';
-  readonly lit: boolean;
-  readonly emissive: boolean;
-  readonly revision: number;
-  readonly lastTarget: string | null;
-  readonly focusTarget: string;
-};
-
-let activeController: ScenarioController<LightingLabState> | undefined;
+let activeController: ScenarioController<WebGLLightingLabState> | undefined;
 
 function entry() {
-  return (scenarios as Record<string, unknown>)[
-    'webglLightingLabScenarioEntry'
-  ] as any;
+  return scenarios.webglLightingLabScenarioEntry;
 }
 
 function actionIds(): readonly string[] {
-  return (scenarios as Record<string, unknown>)[
-    'WEBGL_LIGHTING_LAB_ACTION_IDS'
-  ] as readonly string[];
+  return scenarios.WEBGL_LIGHTING_LAB_ACTION_IDS;
 }
 
 function probes(): Record<string, { readonly x: number; readonly y: number }> {
-  return (scenarios as Record<string, unknown>)[
-    'WEBGL_LIGHTING_LAB_PROBES'
-  ] as Record<string, { readonly x: number; readonly y: number }>;
+  return scenarios.WEBGL_LIGHTING_LAB_PROBES;
 }
 
 function pixelSignature(canvas: HTMLCanvasElement): number {
@@ -141,9 +125,10 @@ async function mountLab() {
   canvas.style.cssText = `display:block;width:${canvas.width}px;height:${canvas.height}px`;
   document.body.replaceChildren(canvas);
   const definition = await scenarios.loadScenario(scenarioEntry);
-  activeController = await definition.mount({ canvas });
-  await activeController.settled();
-  return { canvas, controller: activeController, definition, scenarioEntry };
+  const controller = await definition.mount({ canvas });
+  activeController = controller;
+  await controller.settled();
+  return { canvas, controller, definition, scenarioEntry };
 }
 
 afterEach(async () => {
@@ -274,7 +259,7 @@ describe('public WebGL lighting laboratory', () => {
       probeContext.TEXTURE_CUBE_MAP_POSITIVE_Z,
       probeContext.TEXTURE_CUBE_MAP_NEGATIVE_Z,
     ] as const;
-    const cubeFaces = new Set(expectedCubeFaces);
+    const cubeFaces = new Set<number>(expectedCubeFaces);
     expect(
       attach.mock.calls
         .filter((call) => cubeFaces.has(call[2]))
