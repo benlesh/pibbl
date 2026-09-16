@@ -173,7 +173,7 @@ validates exact semantic mappings, link anchors, example extensions,
 fail-closed API inventory, extracted complete programs, compiler transforms,
 visible historical status, the fixed exhaustive normative preservation
 manifest and JSX-era translation/evidence allowlist, and
-configuration/vocabulary rules. That manifest covers 667 preserved baseline units and 804 current semantic units across all 12 baseline-snapshotted normative contracts.
+configuration/vocabulary rules. That manifest covers 667 preserved baseline units and 838 current semantic units across all 12 baseline-snapshotted normative contracts.
 Together with the post-baseline signal and animation records, this covers 14 current normative contracts.
 Those two records contain 107 exhaustively mapped post-baseline units.
 The evidence inventory contains 53 unique direct source/test mappings.

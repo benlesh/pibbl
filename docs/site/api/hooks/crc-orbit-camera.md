@@ -22,34 +22,39 @@ handlers to any drawing target covering the desired interaction area, then pass
 the pose to a perspective `WebGLLayer` camera.
 
 ```tsx
-const orbit = crcOrbitCamera({
-  orbitPoint: [0, 0, 0],
-  initialPosition: [4, 3, 6],
-  minDistance: 2,
-  maxDistance: 12,
-});
+import { Group, Rectangle } from "@crc/core";
+import { Cube, WebGLLayer } from "@crc/webgl";
 
-return (
-  <Group {...orbit.handlers}>
-    <Rectangle
-      style={{ width: 640, height: 360, fill: "rgba(0, 0, 0, 0)" }}
-    />
-    <WebGLLayer
-      camera={{
-        type: "perspective",
-        position: orbit.position,
-        lookAt: orbit.lookAt,
-        up: [0, 1, 0],
-        fieldOfViewDegrees: 45,
-        near: 0.1,
-        far: 100,
-      }}
-      style={{ width: 640, height: 360 }}
-    >
-      {scene}
-    </WebGLLayer>
-  </Group>
-);
+function Scene() {
+  const orbit = crcOrbitCamera({
+    orbitPoint: [0, 0, 0],
+    initialPosition: [4, 3, 6],
+    minDistance: 2,
+    maxDistance: 12,
+  });
+
+  return (
+    <Group {...orbit.handlers}>
+      <Rectangle
+        style={{ width: 640, height: 360, fill: "rgba(0, 0, 0, 0)" }}
+      />
+      <WebGLLayer
+        camera={{
+          type: "perspective",
+          position: orbit.position,
+          lookAt: orbit.lookAt,
+          up: [0, 1, 0],
+          fieldOfViewDegrees: 45,
+          near: 0.1,
+          far: 100,
+        }}
+        style={{ width: 640, height: 360 }}
+      >
+        <Cube style={{ color: "#f472b6" }} />
+      </WebGLLayer>
+    </Group>
+  );
+}
 ```
 
 The backing rectangle paints first and the island second. Because CRC resolves

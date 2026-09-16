@@ -1,5 +1,7 @@
 # WebGL Lighting Vertical Slices Implementation Plan
 
+> **Historical status: FINAL VERIFICATION IN PROGRESS.** The implementation and reviewed baselines are complete; final aggregate evidence and merge status remain pending.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: use `superpowers:subagent-driven-development`. Implement and review one browser-visible vertical slice at a time. Do not run broad verification before the explicit visual checkpoint.
 
 **Goal:** Resume the original composition-first WebGL goal and fold its approved lighting, materials, backgrounds, orbit-camera, and genuine-shadow work into one implementation stream that becomes browser-visible early.
