@@ -49,6 +49,14 @@ describe('settled instanced WebGL rendering', () => {
     expect(recording.uniform1f.mock.calls.map(call => call[1])).toEqual([
       0.5, 0.75, 0.25,
     ]);
+    expect(recording.uniform3f.mock.calls.map(call => call.slice(1))).toEqual([
+      [1, 0, 0],
+      [0, 1, 0],
+      [1, 0, 0],
+      [0, 1, 0],
+      [1, 0, 0],
+      [0, 1, 0],
+    ]);
     expect(recording.draws.map(draw => [
       draw.blend,
       draw.depthTest,
@@ -135,7 +143,7 @@ function recipe(): CRCWebGLInstancedRecipe {
   return Object.freeze({
     key: Object.freeze({}),
     topology: 'triangles',
-    vertexSource: '#version 300 es\nuniform mat4 u_projection_view; uniform mat4 u_model; uniform float u_effective_opacity; uniform float u_frame_uniforms[3]; void main(){gl_Position=vec4(0.0);}',
+    vertexSource: '#version 300 es\nuniform mat4 u_projection_view; uniform mat4 u_model; uniform vec3 u_camera_right; uniform vec3 u_camera_up; uniform float u_effective_opacity; uniform float u_frame_uniforms[3]; void main(){gl_Position=vec4(u_camera_right + u_camera_up, 1.0);}',
     fragmentSource: '#version 300 es\nprecision highp float; uniform sampler2D u_lookup_0; uniform sampler2D u_sprite; out vec4 c; void main(){c=vec4(1.0);}',
     verticesPerInstance: 6,
     capacity: 20_000,
@@ -241,7 +249,7 @@ function createInstancedGL(drawFailure?: Error) {
     'depthFunc', 'depthRange', 'detachShader', 'enableVertexAttribArray',
     'frontFace', 'linkProgram', 'pixelStorei', 'polygonOffset', 'readPixels',
     'scissor', 'shaderSource', 'stencilFuncSeparate', 'stencilMaskSeparate',
-    'stencilOpSeparate', 'texImage2D', 'texParameteri', 'uniform1f',
+    'stencilOpSeparate', 'texImage2D', 'texParameteri', 'uniform1f', 'uniform3f',
     'uniform1fv', 'uniform1i', 'uniformMatrix4fv', 'useProgram',
     'vertexAttribPointer', 'viewport',
   ]) if (!methods[name]) method(name);
@@ -262,6 +270,7 @@ function createInstancedGL(drawFailure?: Error) {
     texImage2D: methods.texImage2D!,
     drawArraysInstanced: methods.drawArraysInstanced!,
     uniform1f: methods.uniform1f!,
+    uniform3f: methods.uniform3f!,
     uniform1fv: methods.uniform1fv!,
     readPixels: methods.readPixels!,
     deleteProgram: methods.deleteProgram!,

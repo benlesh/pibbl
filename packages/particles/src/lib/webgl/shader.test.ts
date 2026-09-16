@@ -50,4 +50,77 @@ describe("WebGL particle shader compiler", () => {
     expect(shader.vertexSource).not.toContain("eval(");
     expect(shader.fragmentSource).toContain("out_color");
   });
+
+  it("expands every repeated rate cycle into the deterministic birth schedule", () => {
+    const compiled = compileParticleEffect3D(
+      defineParticleEffect3D({
+        emitters: [
+          {
+            name: "repeat",
+            capacity: 64,
+            emission: [
+              {
+                type: "rate",
+                particlesPerSecond: 10,
+                startMilliseconds: 10,
+                durationMilliseconds: 100,
+                repeat: { everyMilliseconds: 250, count: 3 },
+              },
+            ],
+            shape: { type: "point" },
+            initial: { lifetimeMilliseconds: 500, size: 2 },
+            renderer: { type: "point", material: "unlit", blend: "alpha" },
+          },
+        ],
+      }),
+    );
+
+    const shader = buildParticleShader({
+      emitter: compiled.emitters[0]!,
+      parameterLayout: compiled.parameterLayout,
+      fixedParameters: compiled.parameterLayout.defaults,
+      lookupTableIndices: {},
+    });
+
+    expect(shader.vertexSource).toContain("effect_ms - 10.0");
+    expect(shader.vertexSource).toContain("effect_ms - 260.0");
+    expect(shader.vertexSource).toContain("effect_ms - 510.0");
+    expect(shader.vertexSource).toContain("- 1 - local_slot");
+  });
+
+  it("builds billboards from camera right and up instead of a fixed local plane", () => {
+    const compiled = compileParticleEffect3D(
+      defineParticleEffect3D({
+        emitters: [
+          {
+            name: "smoke",
+            capacity: 32,
+            emission: [{ type: "rate", particlesPerSecond: 4 }],
+            shape: { type: "point" },
+            initial: { lifetimeMilliseconds: 1_000, size: 0.4 },
+            renderer: {
+              type: "billboard",
+              material: "unlit",
+              blend: "alpha",
+            },
+          },
+        ],
+      }),
+    );
+
+    const shader = buildParticleShader({
+      emitter: compiled.emitters[0]!,
+      parameterLayout: compiled.parameterLayout,
+      fixedParameters: compiled.parameterLayout.defaults,
+      lookupTableIndices: {},
+    });
+
+    expect(shader.vertexSource).toContain("uniform vec3 u_camera_right;");
+    expect(shader.vertexSource).toContain("uniform vec3 u_camera_up;");
+    expect(shader.vertexSource).toContain("u_camera_right * corner.x");
+    expect(shader.vertexSource).toContain("u_camera_up * corner.y");
+    expect(shader.vertexSource).not.toContain(
+      "position + vec3(corner * final_size, 0.0)",
+    );
+  });
 });

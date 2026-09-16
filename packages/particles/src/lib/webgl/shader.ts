@@ -218,7 +218,15 @@ function motionStatements(
 
 function birthFunction(emitter: CompiledEmitter3D): string {
   const sources = [
-    ...emitter.emission.rates.map((rate) => ({ kind: "rate" as const, rate })),
+    ...emitter.emission.rates.flatMap((rate) =>
+      Array.from({ length: rate.cycleCount }, (_, cycleIndex) => ({
+        kind: "rate" as const,
+        rate,
+        startMilliseconds:
+          rate.startMilliseconds +
+          cycleIndex * (rate.repeatEveryMilliseconds ?? 0),
+      })),
+    ),
     ...emitter.emission.bursts.map((burst) => ({
       kind: "burst" as const,
       burst,
@@ -231,15 +239,16 @@ function birthFunction(emitter: CompiledEmitter3D): string {
     const prefix = sourceIndex === 0 ? "if" : "else if";
     if (source.kind === "rate") {
       const rate = source.rate;
+      const startMilliseconds = source.startMilliseconds;
       const durationCheck =
         rate.durationMilliseconds === null
           ? ""
-          : ` || birth_ms > ${numberLiteral(rate.startMilliseconds + rate.durationMilliseconds)}`;
+          : ` || birth_ms > ${numberLiteral(startMilliseconds + rate.durationMilliseconds)}`;
       return `${prefix} (source == ${sourceIndex}) {
     float interval_ms = ${numberLiteral(rate.intervalMilliseconds)};
-    int latest = int(floor((effect_ms - ${numberLiteral(rate.startMilliseconds)}) / interval_ms)) - local_slot;
+    int latest = int(floor((effect_ms - ${numberLiteral(startMilliseconds)}) / interval_ms)) - 1 - local_slot;
     if (latest < 0) return ParticleBirth(false, 0.0, 0u);
-    float birth_ms = ${numberLiteral(rate.startMilliseconds)} + float(latest + 1) * interval_ms;
+    float birth_ms = ${numberLiteral(startMilliseconds)} + float(latest + 1) * interval_ms;
     uint ordinal = uint(latest * ${sources.length} + ${sourceIndex});
     bool accepted = particle_sample(seed, emitter_hash, ordinal, ${uintLiteral(rate.probabilityChannel)}) < ${numberLiteral(rate.probability)};
     if (!accepted${durationCheck}) return ParticleBirth(false, birth_ms, ordinal);
@@ -313,8 +322,12 @@ export function buildParticleShader(
     ? `float rotation = radians(${rotationExpression} + ${rotationCurve});
   vec2 corner = mat2(cos(rotation), -sin(rotation), sin(rotation), cos(rotation)) * a_corner;
   vec2 final_size = ${sizeExpression} * ${sizeCurve};
-  vec3 billboard_position = position + vec3(corner * final_size, 0.0);
-  gl_Position = u_projection_view * u_model * vec4(billboard_position, 1.0);
+  vec3 world_center = (u_model * vec4(position, 1.0)).xyz;
+  vec2 model_scale = vec2(length(u_model[0].xyz), length(u_model[1].xyz));
+  vec3 billboard_position = world_center +
+    u_camera_right * corner.x * final_size.x * model_scale.x +
+    u_camera_up * corner.y * final_size.y * model_scale.y;
+  gl_Position = u_projection_view * vec4(billboard_position, 1.0);
   v_uv = a_corner + 0.5;`
     : `gl_Position = u_projection_view * u_model * vec4(position, 1.0);
   gl_PointSize = max(0.0, max((${sizeExpression} * ${sizeCurve}).x, (${sizeExpression} * ${sizeCurve}).y));
@@ -326,6 +339,7 @@ precision highp int;
 ${billboard ? "layout(location = 0) in vec2 a_corner;" : ""}
 uniform mat4 u_projection_view;
 uniform mat4 u_model;
+${billboard ? "uniform vec3 u_camera_right;\nuniform vec3 u_camera_up;" : ""}
 uniform float u_effective_opacity;
 uniform float u_frame_uniforms[${uniformCount}];
 ${lookupDeclarations(lookupTableIndices)}

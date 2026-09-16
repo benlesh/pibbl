@@ -302,6 +302,22 @@ function drawInstanced(
     scene.camera.projectionViewMatrix,
   );
   gl.uniformMatrix4fv(resource.model, false, entry.model);
+  if (resource.cameraRight !== null) {
+    gl.uniform3f(
+      resource.cameraRight,
+      scene.camera.viewMatrix[0]!,
+      scene.camera.viewMatrix[4]!,
+      scene.camera.viewMatrix[8]!,
+    );
+  }
+  if (resource.cameraUp !== null) {
+    gl.uniform3f(
+      resource.cameraUp,
+      scene.camera.viewMatrix[1]!,
+      scene.camera.viewMatrix[5]!,
+      scene.camera.viewMatrix[9]!,
+    );
+  }
   gl.uniform1f(resource.effectiveOpacity, entry.effectiveOpacity);
   if (entry.frameUniforms.length > 0) {
     if (resource.frameUniforms === null) {

@@ -28,6 +28,8 @@ export interface WebGLInstancedResources {
   readonly spriteTexture: WebGLTexture | undefined;
   readonly projectionView: WebGLUniformLocation;
   readonly model: WebGLUniformLocation;
+  readonly cameraRight: WebGLUniformLocation | null;
+  readonly cameraUp: WebGLUniformLocation | null;
   readonly effectiveOpacity: WebGLUniformLocation;
   readonly frameUniforms: WebGLUniformLocation | null;
   readonly lookupSamplers: readonly WebGLUniformLocation[];
@@ -374,6 +376,8 @@ function createInstancedResources(
         'u_projection_view',
       ),
       model: requireInstancedUniform(gl, program, componentName, 'u_model'),
+      cameraRight: gl.getUniformLocation(program, 'u_camera_right'),
+      cameraUp: gl.getUniformLocation(program, 'u_camera_up'),
       effectiveOpacity: requireInstancedUniform(
         gl,
         program,
