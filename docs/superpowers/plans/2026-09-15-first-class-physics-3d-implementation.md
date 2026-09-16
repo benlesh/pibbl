@@ -830,6 +830,82 @@ All-hit ray/shape casts sort by time then collider identity; overlap/AABB/point 
   git commit -m "feat(physics): add pure 3d sphere and box collisions"
   ```
 
+#### Task 3 review-limit reassessment: replace sampled analytic casts
+
+Five independent review passes proved that sampled closest points, floating
+time tolerances, and post-hoc exact residual checks cannot preserve the
+required hit/miss topology, strict earliest ordering, exact two-radius sums,
+and scale invariance for every finite binary64 input. Before Task 4, replace
+the analytic sphere cast paths with one exact algebraic event kernel. This is a
+Task 3 correction, not a new public capability.
+
+**Additional files:**
+
+- Create: `packages/physics/src/lib/3d/collision/exact-binary64.ts`
+- Create: `packages/physics/src/lib/3d/collision/exact-binary64.test.ts`
+- Create: `packages/physics/src/lib/3d/collision/analytic-casts.ts`
+- Create: `packages/physics/src/lib/3d/collision/analytic-casts.test.ts`
+- Modify: `packages/physics/src/lib/3d/collision/casts.ts`
+- Modify: `packages/physics/src/lib/3d/collision/casts.test.ts`
+
+- [ ] **Step 8: Write the complete failed-boundary RED matrix**
+
+  Lock every review reproduction before replacement: invalid far-face versus
+  earlier edge; exact non-axis ray and sphere/box tangencies; one-ULP positive
+  gaps; exact two-term radius sums; initial-overlap away motion; large-offset
+  cancellation; first-entry versus far exit; time endpoints; axis/sign
+  permutations; and power-of-two replicas from subnormal through large finite
+  scales. Assert strict global earliest time, correct feature witness/normal,
+  finite output, and invariant normalized time.
+
+- [ ] **Step 9: Implement exact dyadic coefficients and ordered event times**
+
+  Represent finite binary64 values as canonical signed dyadics. Provide exact
+  add/subtract/multiply/square/dot, exact two-term radius sums, rational slab
+  times, quadratic discriminant signs, lower-root versus rational comparison,
+  affine-at-root signs, and deterministic projection of the winning event.
+  BigInt work is fixed by binary64 width and dimension; no user-sized exact
+  collection is allowed. Topology and ordering never use geometry, hit, or
+  time epsilon. Indeterminate or unrepresentable public projection fails
+  closed.
+
+- [ ] **Step 10: Replace sphere ray and sphere/sphere sampled proofs**
+
+  Form the exact quadratic from original offset, raw motion, and exact radius
+  (or exact two-radius sum). Exact `c` decides initial overlap; exact
+  discriminant decides miss, tangent, or crossing; exact root/domain
+  comparison admits `[0,maxDistance]` or `[0,1]`. Materialize point, normal,
+  distance, and time only after the winner is proven. Preserve non-normalized
+  ray semantics and the existing explicit time-zero overlap policy.
+
+- [ ] **Step 11: Replace sphere/box feature enumeration with an exact cell sweep**
+
+  Build exact box-local affine coordinates from the prepared binary64 center,
+  axes, half-extents, and translation. Sort the at-most-six exact slab
+  crossings plus endpoints. Each open interval has one exact closest-feature
+  cell and one exact distance quadratic. Scan intervals chronologically; the
+  first root in its owning cell is globally earliest. At exact boundaries,
+  resolve face/edge/vertex ownership by exact coordinate relations and use
+  stable feature identity only when exact event times are equal. Initial
+  overlap constructs its closest point and scale-safe normal directly; it does
+  not call an epsilon-based analytic normal helper.
+
+- [ ] **Step 12: Remove sampled topology and verify the replacement**
+
+  Remove analytic-route use of rounded radial-point proofs, floating candidate
+  time ties, epsilon topology checks, and original-domain subnormal
+  refinement. Keep the bounded generic conservative cast for non-analytic
+  pairs unchanged. Run exact-arithmetic unit tests, the full boundary matrix,
+  complete 3D and package Node/browser suites, typecheck, physics build,
+  packed geometry isolation, export inventory, lint, format, and diff checks.
+
+- [ ] **Step 13: Commit the exact analytic cast replacement**
+
+  ```bash
+  git add packages/physics/src/lib/3d/collision/exact-binary64.ts packages/physics/src/lib/3d/collision/exact-binary64.test.ts packages/physics/src/lib/3d/collision/analytic-casts.ts packages/physics/src/lib/3d/collision/analytic-casts.test.ts packages/physics/src/lib/3d/collision/casts.ts packages/physics/src/lib/3d/collision/casts.test.ts
+  git commit -m "fix(physics): replace sampled 3d analytic casts"
+  ```
+
 ### Task 4: Build the pooled 3D sphere/box world kernel
 
 **Files:**
