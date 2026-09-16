@@ -9,6 +9,7 @@ import type { ResolvedWebGLCamera } from './math/camera.js';
 import {
   invertMatrix4,
   multiplyMatrix4,
+  type Matrix4Bounds,
 } from './math/matrix4.js';
 
 export interface CRCWebGLGeometryPickRecord {
@@ -25,7 +26,22 @@ export interface CRCWebGLGeometryPickRecord {
   readonly depthMode: 'less-equal';
 }
 
-export type CRCWebGLPickRecord = CRCWebGLGeometryPickRecord;
+export interface CRCWebGLBoundsPickRecord {
+  readonly kind: 'bounds';
+  readonly componentName: string;
+  readonly target: CRCEventTargetRegistration;
+  readonly bounds: Matrix4Bounds;
+  readonly model: Readonly<Float32Array>;
+  readonly keyboardNavigationBounds: undefined;
+  readonly keyboardNavigationPoints:
+    CRCEventTargetRegistration['keyboardNavigationPoints'];
+  readonly sourceOrder: number;
+  readonly depthMode: 'less-equal';
+}
+
+export type CRCWebGLPickRecord =
+  | CRCWebGLGeometryPickRecord
+  | CRCWebGLBoundsPickRecord;
 
 export interface CRCWebGLPickLedger {
   readonly logicalViewport: Readonly<{ width: number; height: number }>;
@@ -46,6 +62,16 @@ interface GeometryPickInput {
   readonly camera?: ResolvedWebGLCamera;
   readonly keyboardNavigationBounds?:
     CRCEventTargetRegistration['keyboardNavigationBounds'];
+  readonly sourceOrder: number;
+  readonly depthMode: 'less-equal';
+}
+
+interface BoundsPickInput {
+  readonly componentName: string;
+  readonly target: CRCEventTargetRegistration;
+  readonly bounds: Matrix4Bounds;
+  readonly model: Readonly<Float32Array>;
+  readonly camera: ResolvedWebGLCamera;
   readonly sourceOrder: number;
   readonly depthMode: 'less-equal';
 }
@@ -74,8 +100,8 @@ export function recordGeometryWebGLPick(
   const keyboardNavigationBounds = input.keyboardNavigationBounds === undefined ?
     undefined : snapshotNavigationBounds(input.keyboardNavigationBounds);
   const keyboardNavigationPoints = input.keyboardNavigationBounds !== undefined ||
-      input.camera === undefined ? undefined : projectGeometryPoints(
-      input.geometry,
+      input.camera === undefined ? undefined : projectWebGLBoundsPoints(
+      getWebGLGeometryData(input.geometry).bounds,
       model,
       input.camera,
       ledger.logicalViewport,
@@ -88,6 +114,32 @@ export function recordGeometryWebGLPick(
     model,
     keyboardNavigationBounds,
     keyboardNavigationPoints,
+    sourceOrder: input.sourceOrder,
+    depthMode: input.depthMode,
+  }));
+}
+
+/** Records one component-level AABB without retaining any particle geometry. */
+export function recordBoundsWebGLPick(
+  ledger: MutableCRCWebGLPickLedger,
+  input: BoundsPickInput,
+): void {
+  assertMutable(ledger);
+  const model = new Float32Array(input.model);
+  const bounds = snapshotBounds(input.bounds);
+  ledger.entries.push(Object.freeze({
+    kind: 'bounds',
+    componentName: input.componentName,
+    target: input.target,
+    bounds,
+    model,
+    keyboardNavigationBounds: undefined,
+    keyboardNavigationPoints: projectWebGLBoundsPoints(
+      bounds,
+      model,
+      input.camera,
+      ledger.logicalViewport,
+    ),
     sourceOrder: input.sourceOrder,
     depthMode: input.depthMode,
   }));
@@ -158,8 +210,6 @@ function snapshotNavigationBounds(
   });
 }
 
-type GeometryBounds = ReturnType<typeof getWebGLGeometryData>['bounds'];
-
 interface HomogeneousPoint {
   readonly x: number;
   readonly y: number;
@@ -191,13 +241,12 @@ const CLIP_SPACE_BOUNDS = Object.freeze({
   maximumZ: 1,
 });
 
-function projectGeometryPoints(
-  geometry: CRCWebGLGeometry,
+export function projectWebGLBoundsPoints(
+  bounds: Matrix4Bounds,
   model: Readonly<Float32Array>,
   camera: ResolvedWebGLCamera,
   viewport: Readonly<{ width: number; height: number }>,
 ): CRCEventTargetRegistration['keyboardNavigationPoints'] {
-  const bounds = getWebGLGeometryData(geometry).bounds;
   const localCorners = boxCorners(bounds);
   const projectionModel = new Float32Array(16);
   multiplyMatrix4(projectionModel, camera.projectionViewMatrix, model);
@@ -247,7 +296,7 @@ function projectGeometryPoints(
   return points.length === 0 ? undefined : Object.freeze(points);
 }
 
-function boxCorners(bounds: GeometryBounds): LocalPoint[] {
+function boxCorners(bounds: Matrix4Bounds): LocalPoint[] {
   const corners: LocalPoint[] = [];
   for (const x of [bounds.minimumX, bounds.maximumX]) {
     for (const y of [bounds.minimumY, bounds.maximumY]) {
@@ -332,7 +381,7 @@ function homogeneousToLocal(point: HomogeneousPoint): LocalPoint | undefined {
 function clipLocalSegment(
   start: LocalPoint,
   end: LocalPoint,
-  bounds: GeometryBounds,
+  bounds: Matrix4Bounds,
 ): readonly [LocalPoint, LocalPoint] | undefined {
   let minimum = 0;
   let maximum = 1;
@@ -357,6 +406,17 @@ function clipLocalSegment(
     lerpLocalPoint(start, end, minimum),
     lerpLocalPoint(start, end, maximum),
   ];
+}
+
+function snapshotBounds(bounds: Matrix4Bounds): Matrix4Bounds {
+  return Object.freeze({
+    minimumX: bounds.minimumX,
+    minimumY: bounds.minimumY,
+    minimumZ: bounds.minimumZ,
+    maximumX: bounds.maximumX,
+    maximumY: bounds.maximumY,
+    maximumZ: bounds.maximumZ,
+  });
 }
 
 function lerpLocalPoint(

@@ -124,14 +124,25 @@ import type * as CoreTypes from '@crc/core/types';
 import * as WebGLRuntime from '@crc/webgl';
 import type * as WebGLTypes from '@crc/webgl';
 import {
+  submitWebGLInstanced,
+  type CRCWebGLBounds,
+  type CRCWebGLInstancedRecipe,
+  type CRCWebGLInstancedSubmission,
+  type CRCWebGLLookupTableRecipe,
+  type CRCWebGLSceneMaterialIntent,
+  type CRCWebGLSpriteRecipe,
+} from '@crc/webgl/internal';
+import {
   createBackendToken,
   defineBackendPrimitive,
   executeBackendCRC,
   getBackendEnvironment,
   getCurrentFrameTimestamp,
+  getCurrentLogicalViewport,
   haveSameLayerNodeTree,
   isBackendEventTargetLive,
   mountBackendCRC,
+  onCurrentRenderFinish,
   registerNestedInteractionResolver,
   requestCurrentInstanceFrame,
   setCurrentComponentAfterRender,
@@ -289,6 +300,43 @@ import {
   type WebGLLayerStyle,
 } from '@crc/webgl';
 
+const packedInstancedRecipe = {
+  key: {},
+  topology: 'points',
+  vertexSource: '#version 300 es\nvoid main(){gl_Position=vec4(0.0);}',
+  fragmentSource: '#version 300 es\nout vec4 c;void main(){c=vec4(1.0);}',
+  verticesPerInstance: 1,
+  capacity: 1,
+  lookupTables: [],
+} satisfies CRCWebGLInstancedRecipe;
+const packedInstancedBounds = {
+  min: [-1, -1, -1],
+  max: [1, 1, 1],
+} satisfies CRCWebGLBounds;
+const packedMaterialIntent = {
+  type: 'unlit',
+  blend: 'alpha',
+} satisfies CRCWebGLSceneMaterialIntent;
+const packedInstancedSubmission = {
+  kind: 'instanced',
+  componentName: 'PackageConsumer',
+  source: undefined,
+  localModel: new Float32Array(16),
+  localBounds: packedInstancedBounds,
+  opacity: 1,
+  material: packedMaterialIntent,
+  depthTest: true,
+  depthWrite: false,
+  sorting: 'none',
+  target: undefined,
+  recipe: packedInstancedRecipe,
+  frameUniforms: new Float32Array(),
+} satisfies CRCWebGLInstancedSubmission;
+void submitWebGLInstanced;
+void packedInstancedSubmission;
+void (undefined as unknown as CRCWebGLLookupTableRecipe);
+void (undefined as unknown as CRCWebGLSpriteRecipe);
+
 // @ts-expect-error traversal-time raw GL construction is not public
 void WebGLRuntime.defineWebGLPrimitive;
 // @ts-expect-error traversal-time raw GL context access is not public
@@ -409,6 +457,8 @@ void crcInternalQueueCurrentComplete;
 void crcInternalRegisterAdvance;
 void crcInternalRequestRender;
 void crcInternalRequestRendererWork;
+void getCurrentLogicalViewport;
+void onCurrentRenderFinish;
 
 export type PublicEventTypes = {
   base: CRCEvent;

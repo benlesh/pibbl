@@ -1,6 +1,7 @@
 import * as core from '@crc/core';
 import * as internal from '@crc/core/internal';
 import * as webgl from '@crc/webgl';
+import * as webglInternal from '@crc/webgl/internal';
 import {
   Fragment as ProductionFragment,
   jsx,
@@ -118,12 +119,14 @@ const expectedInternal = [
   'getCurrentBackendHostCanvas',
   'getCurrentElementSource',
   'getCurrentFrameTimestamp',
+  'getCurrentLogicalViewport',
   'getCurrentSurfaceDensity',
   'hasCRCEventHandler',
   'haveSameLayerNodeTree',
   'isBackendEventTargetLive',
   'materializeRetainedLayerChildren',
   'mountBackendCRC',
+  'onCurrentRenderFinish',
   'registerNestedInteractionResolver',
   'releaseBackendEventTarget',
   'requestCurrentInstanceFrame',
@@ -207,6 +210,20 @@ for (const exportName of expectedWebGL) {
   if (typeof webgl[exportName] !== 'function') {
     throw new Error(`Expected @crc/webgl ${exportName} to be a runtime function.`);
   }
+}
+const actualWebGLInternal = Object.keys(webglInternal).sort();
+if (JSON.stringify(actualWebGLInternal) !== JSON.stringify([
+  'submitWebGLInstanced',
+])) {
+  throw new Error(
+    `Unexpected @crc/webgl/internal exports: ${actualWebGLInternal.join(', ')}`,
+  );
+}
+if (typeof webglInternal.submitWebGLInstanced !== 'function') {
+  throw new Error('Expected @crc/webgl/internal submission to be callable.');
+}
+if ('submitWebGLInstanced' in webgl) {
+  throw new Error('The official instanced seam leaked from @crc/webgl.');
 }
 
 for (const [exportName, value] of Object.entries({
@@ -407,7 +424,6 @@ for (const specifier of [
   '@crc/core/lib/types',
   '@crc/core/lib/global-state',
   '@crc/core/src/index',
-  '@crc/webgl/internal',
   '@crc/webgl/lib/backend',
   '@crc/webgl/lib/types',
   '@crc/webgl/src/index',

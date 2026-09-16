@@ -13,8 +13,10 @@ import {
   intersectRayTriangle,
 } from './math/ray.js';
 import {
+  type CRCWebGLBoundsPickRecord,
   type CRCWebGLGeometryPickRecord,
   type CRCWebGLPickLedger,
+  type CRCWebGLPickRecord,
 } from './pick-ledger.js';
 import type { ResolvedWebGLCamera } from './math/camera.js';
 import type { CRCWebGLVector3 } from './types.js';
@@ -98,7 +100,7 @@ export function pickScene(
 
     for (const entry of ledger.entries) {
       if (!isBackendEventTargetLive(entry.target)) continue;
-      const distance = intersectGeometry(entry, scratch);
+      const distance = intersectEntry(entry, scratch);
       if (
         distance === undefined ||
         !isBackendEventTargetLive(entry.target)
@@ -141,8 +143,8 @@ export function pickScene(
   }
 }
 
-function intersectGeometry(
-  entry: CRCWebGLGeometryPickRecord,
+function intersectEntry(
+  entry: CRCWebGLPickRecord,
   scratch: ScenePickerScratch,
 ): number | undefined {
   if (invertMatrix4(scratch.inverseModel, entry.model) === undefined) {
@@ -170,6 +172,16 @@ function intersectGeometry(
   scratch.localDirection[0] /= localDirectionLength;
   scratch.localDirection[1] /= localDirectionLength;
   scratch.localDirection[2] /= localDirectionLength;
+  const localDistance = entry.kind === 'geometry' ?
+    intersectGeometry(entry, scratch) : intersectBounds(entry, scratch);
+  return localDistance === undefined ? undefined :
+    localDistance / localDirectionLength;
+}
+
+function intersectGeometry(
+  entry: CRCWebGLGeometryPickRecord,
+  scratch: ScenePickerScratch,
+): number | undefined {
   const { positions, indices } = getWebGLGeometryData(entry.geometry);
   let nearest = Number.POSITIVE_INFINITY;
   const elementCount = indices?.length ?? positions.length / 3;
@@ -189,7 +201,36 @@ function intersectGeometry(
     );
     if (distance !== undefined && distance < nearest) nearest = distance;
   }
-  return Number.isFinite(nearest) ? nearest / localDirectionLength : undefined;
+  return Number.isFinite(nearest) ? nearest : undefined;
+}
+
+function intersectBounds(
+  entry: CRCWebGLBoundsPickRecord,
+  scratch: ScenePickerScratch,
+): number | undefined {
+  let near = Number.NEGATIVE_INFINITY;
+  let far = Number.POSITIVE_INFINITY;
+  const axes = [
+    [scratch.localOrigin[0]!, scratch.localDirection[0]!,
+      entry.bounds.minimumX, entry.bounds.maximumX],
+    [scratch.localOrigin[1]!, scratch.localDirection[1]!,
+      entry.bounds.minimumY, entry.bounds.maximumY],
+    [scratch.localOrigin[2]!, scratch.localDirection[2]!,
+      entry.bounds.minimumZ, entry.bounds.maximumZ],
+  ] as const;
+  for (const [origin, direction, minimum, maximum] of axes) {
+    if (direction === 0) {
+      if (origin < minimum || origin > maximum) return undefined;
+      continue;
+    }
+    const first = (minimum - origin) / direction;
+    const second = (maximum - origin) / direction;
+    near = Math.max(near, Math.min(first, second));
+    far = Math.min(far, Math.max(first, second));
+    if (near > far) return undefined;
+  }
+  if (!Number.isFinite(far) || far < 0) return undefined;
+  return Math.max(0, near);
 }
 
 function projectDistanceToDepth(

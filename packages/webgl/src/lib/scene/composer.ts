@@ -2,11 +2,13 @@ import { multiplyMatrix4, setIdentityMatrix4 } from '../math/matrix4.js';
 import { DEFAULT_WEBGL_MATERIAL } from '../components/material.js';
 import type {
   ClosedWebGLSceneDraft,
+  CRCWebGLInstancedSubmission,
   CreateWebGLSceneComposerInput,
   SubmitWebGLBackgroundInput,
   SubmitWebGLLightInput,
   SubmitWebGLMeshInput,
   WebGLBackgroundSubmission,
+  WebGLInstancedSubmission,
   WebGLLightSubmission,
   WebGLMeshSubmission,
   WebGLSceneComposer,
@@ -16,6 +18,7 @@ import type { ResolvedWebGLCamera } from '../math/camera.js';
 interface MutableComposer extends WebGLSceneComposer {
   readonly modelStack: Float32Array[];
   readonly meshes: WebGLMeshSubmission[];
+  readonly instanced: WebGLInstancedSubmission[];
   readonly lights: WebGLLightSubmission[];
   readonly backgrounds: WebGLBackgroundSubmission[];
   state: 'open' | 'closed';
@@ -70,6 +73,7 @@ export function createWebGLSceneComposer(
     timestamp: input.frame.renderTimestamp,
     shadowQuality: input.shadowQuality ?? 'medium',
     meshes: [],
+    instanced: [],
     lights: [],
     backgrounds: [],
     modelStack: [identity],
@@ -204,6 +208,34 @@ export function submitWebGLMesh(
   }));
 }
 
+/** Snapshots one official instanced declaration without touching WebGL. */
+export function submitWebGLInstancedSubmission(
+  composer: WebGLSceneComposer,
+  input: CRCWebGLInstancedSubmission,
+): void {
+  const value = requireOpen(composer);
+  const model = new Float32Array(16);
+  multiplyMatrix4(model, value.modelStack.at(-1)!, input.localModel);
+  value.instanced.push(Object.freeze({
+    kind: 'instanced' as const,
+    componentName: input.componentName,
+    source: input.source === undefined ? undefined : Object.freeze({
+      ...input.source,
+    }),
+    model,
+    localBounds: snapshotBounds(input.localBounds),
+    opacity: input.opacity,
+    material: Object.freeze({ ...input.material }),
+    depthTest: input.depthTest,
+    depthWrite: input.depthWrite,
+    sorting: input.sorting,
+    target: input.target,
+    recipe: input.recipe,
+    frameUniforms: new Float32Array(input.frameUniforms),
+    sourceIndex: value.nextSourceIndex++,
+  }));
+}
+
 export function closeWebGLSceneComposer(
   composer: WebGLSceneComposer,
 ): ClosedWebGLSceneDraft {
@@ -221,10 +253,20 @@ export function closeWebGLSceneComposer(
     timestamp: value.timestamp,
     shadowQuality: value.shadowQuality,
     meshes: Object.freeze(value.meshes.slice()),
+    instanced: Object.freeze(value.instanced.slice()),
     lights: Object.freeze(value.lights.slice()),
     backgrounds: Object.freeze(value.backgrounds.slice()),
   });
   return draft;
+}
+
+function snapshotBounds(
+  bounds: CRCWebGLInstancedSubmission['localBounds'],
+): WebGLInstancedSubmission['localBounds'] {
+  return Object.freeze({
+    min: Object.freeze([...bounds.min]) as readonly [number, number, number],
+    max: Object.freeze([...bounds.max]) as readonly [number, number, number],
+  });
 }
 
 function snapshotColor(color: WebGLMeshSubmission['color']): WebGLMeshSubmission['color'] {

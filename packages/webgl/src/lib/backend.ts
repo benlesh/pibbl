@@ -7,7 +7,7 @@ import type { SystemStyle } from '@crc/core';
 import type { ResolvedWebGLCamera } from './math/camera.js';
 import {
   releaseWebGLPickParticipation,
-  type CRCWebGLGeometryPickRecord,
+  type CRCWebGLPickRecord,
 } from './pick-ledger.js';
 import {
   createWebGLSceneComposer,
@@ -31,7 +31,7 @@ export interface CreateWebGLBackendOptions {
 export interface WebGLCompletedFrame {
   readonly renderedGeneration: number;
   readonly contextGeneration: number;
-  readonly pickEntries: readonly CRCWebGLGeometryPickRecord[];
+  readonly pickEntries: readonly CRCWebGLPickRecord[];
 }
 
 export interface WebGLBackendDriver
@@ -132,7 +132,7 @@ export function createWebGLBackend(
         return;
       }
 
-      let settledPickEntries: readonly CRCWebGLGeometryPickRecord[] | undefined;
+      let settledPickEntries: readonly CRCWebGLPickRecord[] | undefined;
       let candidateRenderer: WebGLSceneRenderer | undefined;
       let ownsCandidateRenderer = false;
       try {
@@ -276,9 +276,9 @@ function isStaleComposer(
 function releaseComposerPickParticipation(
   composer: WebGLSceneComposer,
 ): void {
-  const entries = composer.meshes.flatMap(mesh => mesh.target ? [{
-    target: mesh.target,
-  }] : []) as unknown as readonly CRCWebGLGeometryPickRecord[];
+  const entries = [...composer.meshes, ...composer.instanced].flatMap(
+    submission => submission.target ? [{ target: submission.target }] : [],
+  ) as unknown as readonly CRCWebGLPickRecord[];
   releaseWebGLPickParticipation(entries);
 }
 

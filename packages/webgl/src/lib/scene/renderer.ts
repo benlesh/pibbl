@@ -28,7 +28,11 @@ import {
   installWebGLStateBaseline,
   type WebGLStateBaseline,
 } from '../gpu/state.js';
-import type { SettledWebGLMesh, SettledWebGLScene } from './settle.js';
+import type {
+  SettledWebGLMesh,
+  SettledWebGLScene,
+  SettledWebGLSceneEntry,
+} from './settle.js';
 import type {
   SettledWebGLLight,
   SettledWebGLDirectionalShadowPlan,
@@ -163,6 +167,7 @@ export class WebGLSceneRenderer {
       const frameBoundPrograms = new Set<WebGLBuiltInProgram>();
       installOpaqueWebGLPass(this.gl);
       for (const mesh of scene.opaque) {
+        if (mesh.kind !== 'mesh') continue;
         drawMesh(
           this.gl,
           transaction,
@@ -175,6 +180,7 @@ export class WebGLSceneRenderer {
       }
       installTransparentWebGLPass(this.gl);
       for (const mesh of scene.transparent) {
+        if (mesh.kind !== 'mesh') continue;
         drawMesh(
           this.gl,
           transaction,
@@ -561,8 +567,10 @@ function packWebGLShadows(
   return { enabled, matrices, parameters, textures2D, texturesCube, bindings };
 }
 
-function isLambertMesh(mesh: SettledWebGLMesh): boolean {
-  return mesh.shading.kind === 'lambert';
+function isLambertMesh(
+  entry: SettledWebGLSceneEntry,
+): entry is SettledWebGLMesh {
+  return entry.kind === 'mesh' && entry.shading.kind === 'lambert';
 }
 
 function packWebGLLights(
