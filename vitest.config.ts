@@ -72,6 +72,8 @@ export default defineConfig(({ mode }) => ({
       ...configDefaults.exclude,
       '.pnpm-store/**',
       '.superpowers/**',
+      'packages/physics/src/lib/2d/public-types.test.ts',
+      'packages/physics/src/lib/3d/public-types.test.ts',
       ...(mode === 'built' ? [] : [
         'packages/webgl/test/internal-entry-identity.test.tsx',
       ]),

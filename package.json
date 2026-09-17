@@ -14,7 +14,7 @@
     "release": "bumpp",
     "publish:ci": "pnpm -r publish --access public --no-git-checks",
     "test": "corepack pnpm@11.21.0 test:ui",
-    "test:ci": "vitest run --browser.headless",
+    "test:ci": "vitest run --browser.headless --maxWorkers=4",
     "test:smoke": "vitest run packages/core/test/smoke-scenario.test.ts --browser.headless --browser.ui=false",
     "test:smoke:built": "corepack pnpm@11.21.0 build && vitest run packages/core/test/smoke-scenario.test.ts packages/webgl/test/internal-entry-identity.test.tsx --mode built --browser.headless --browser.ui=false",
     "test:package-consumer": "corepack pnpm@11.21.0 build && tsc -p playground/package-consumer/tsconfig.bundler.json && tsc -p playground/package-consumer/tsconfig.nodenext.json && node playground/package-consumer/runtime.mjs",

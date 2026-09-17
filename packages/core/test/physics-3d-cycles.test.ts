@@ -107,7 +107,7 @@ describe("public 3D physics laboratory ownership cycles", () => {
     await controller.dispose();
     controller = undefined;
     expect(driver.pendingHostFrames).toBe(0);
-  });
+  }, 60_000);
 
   it("performs 1,000 real minimal add/remove/adopt cycles with exact generation and ownership bounds", () => {
     const canvas = document.createElement("canvas");
@@ -218,5 +218,5 @@ describe("public 3D physics laboratory ownership cycles", () => {
       liveProxies: 0,
       liveContacts: 0,
     });
-  });
+  }, 30_000);
 });

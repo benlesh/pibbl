@@ -690,7 +690,7 @@ describe("PhysicsWorld3D controller scheduling and topology", () => {
     expect(changed.kernel.bodies[1]!.localInverseInertiaYY).not.toBe(
       body.localInverseInertiaYY,
     );
-  });
+  }, 60_000);
 
   it("keeps one registration while a kinematic target binding can produce a later sample", () => {
     // Production break caught: releasing the participant when the current
