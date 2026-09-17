@@ -952,6 +952,7 @@ describe("mounted WebGL 3D physics integration", () => {
     frames.install();
     const enabled = signal(false);
     const authoredX = signal(1);
+    const authoredRotation = signal(0);
     let world!: CRCPhysicsWorldHandle3D;
     const Capture = () => {
       world = crcPhysicsWorld3D();
@@ -965,7 +966,10 @@ describe("mounted WebGL 3D physics integration", () => {
           linearVelocity: [9, 0, 0],
           reenableVelocity: "zero",
         })}
-        style={{ translateX: authoredX.get() }}
+        style={{
+          translateX: authoredX.get(),
+          rotationZDegrees: authoredRotation.get(),
+        }}
       />
     );
     const canvas = document.createElement("canvas");
@@ -987,6 +991,7 @@ describe("mounted WebGL 3D physics integration", () => {
     frames.flush(0);
     frames.flush(0);
     authoredX.set(5);
+    authoredRotation.set(90);
     frames.flush(1);
 
     enabled.set(true);
@@ -996,13 +1001,15 @@ describe("mounted WebGL 3D physics integration", () => {
       requirePhysicsWorld3DController(world),
     ).kernel.bodies[0]!;
     expect(body.positionX).toBe(5);
+    expect(body.orientationZ).toBeCloseTo(Math.SQRT1_2, 14);
+    expect(body.orientationW).toBeCloseTo(Math.SQRT1_2, 14);
     expect(body.linearVelocityX).toBe(0);
   });
 
-  it("merges bound kinematic targets with unbound authored fields for solver and presentation", () => {
-    // Production break caught: presenting only dynamic bodies leaves bound
-    // kinematic targets visually stale, while preserving the full committed
-    // kinematic pose leaves authored unbound fields collision-stale.
+  it("retains accepted partial-target counterparts until the complete target is removed", () => {
+    // Production breaks caught: presenting only dynamic bodies leaves bound
+    // kinematic targets visually stale, while sourcing an omitted counterpart
+    // from live authored style violates independent partial-target ownership.
     const frames = new ManualFrames();
     frames.install();
     const positionTarget = signal<readonly [number, number, number]>([1, 0, 0]);
@@ -1011,6 +1018,8 @@ describe("mounted WebGL 3D physics integration", () => {
     );
     const authoredRotation = signal(0);
     const authoredX = signal(10);
+    const bindPosition = signal(true);
+    const bindOrientation = signal(true);
     let world!: CRCPhysicsWorldHandle3D;
     const Capture = () => {
       world = crcPhysicsWorld3D();
@@ -1019,7 +1028,9 @@ describe("mounted WebGL 3D physics integration", () => {
     const Bodies = () => (
       <>
         <Cube
-          physics={kinematicBody3D({ target: { position: positionTarget } })}
+          physics={kinematicBody3D({
+            target: bindPosition.get() ? { position: positionTarget } : {},
+          })}
           style={{
             lit: false,
             translateX: 1,
@@ -1028,7 +1039,9 @@ describe("mounted WebGL 3D physics integration", () => {
         />
         <Cube
           physics={kinematicBody3D({
-            target: { orientation: orientationTarget },
+            target: bindOrientation.get()
+              ? { orientation: orientationTarget }
+              : {},
           })}
           style={{ lit: false, translateX: authoredX.get() }}
         />
@@ -1073,11 +1086,11 @@ describe("mounted WebGL 3D physics integration", () => {
     expect(bodies[0]).toMatchObject({
       positionX: 4,
       positionY: 2,
-      orientationZ: expect.closeTo(Math.SQRT1_2, 14),
-      orientationW: expect.closeTo(Math.SQRT1_2, 14),
+      orientationZ: 0,
+      orientationW: 1,
     });
     expect(bodies[1]).toMatchObject({
-      positionX: 12,
+      positionX: 10,
       positionY: 0,
       orientationZ: expect.closeTo(Math.SQRT1_2, 14),
       orientationW: expect.closeTo(Math.SQRT1_2, 14),
@@ -1096,10 +1109,48 @@ describe("mounted WebGL 3D physics integration", () => {
       (entry) => entry.componentName === "Cube",
     );
     expect(entries).toHaveLength(2);
-    expect(entries?.map((entry) => entry.model[12])).toEqual([4, 12]);
+    expect(entries?.map((entry) => entry.model[12])).toEqual([4, 10]);
     expect(entries?.map((entry) => [entry.model[0], entry.model[1]])).toEqual([
+      [expect.closeTo(1, 6), expect.closeTo(0, 6)],
       [expect.closeTo(0, 6), expect.closeTo(1, 6)],
+    ]);
+
+    bindPosition.set(false);
+    bindOrientation.set(false);
+    frames.flush(30);
+    frames.flush(40);
+    const authoredBodies = snapshotPhysicsWorld3DControllerForTest(
+      requirePhysicsWorld3DController(world),
+    ).kernel.bodies;
+    expect(authoredBodies[0]).toMatchObject({
+      positionX: 1,
+      positionY: 0,
+      orientationZ: expect.closeTo(Math.SQRT1_2, 14),
+      orientationW: expect.closeTo(Math.SQRT1_2, 14),
+    });
+    expect(authoredBodies[1]).toMatchObject({
+      positionX: 12,
+      positionY: 0,
+      orientationZ: 0,
+      orientationW: 1,
+    });
+    const authoredEntries = (
+      layer as unknown as {
+        committed?: {
+          pickLedger: {
+            entries: readonly { componentName: string; model: Float32Array }[];
+          };
+        };
+      }
+    ).committed?.pickLedger.entries.filter(
+      (entry) => entry.componentName === "Cube",
+    );
+    expect(authoredEntries?.map((entry) => entry.model[12])).toEqual([1, 12]);
+    expect(
+      authoredEntries?.map((entry) => [entry.model[0], entry.model[1]]),
+    ).toEqual([
       [expect.closeTo(0, 6), expect.closeTo(1, 6)],
+      [expect.closeTo(1, 6), expect.closeTo(0, 6)],
     ]);
   });
 });

@@ -584,6 +584,18 @@ describe("PhysicsWorld3D controller scheduling and topology", () => {
     expect(instrumentation.shapeBakeCount).toBe(3);
     expect(instrumentation.massPropertyDerivations).toBe(1);
     expect(initial.kernel.contactCount).toBe(2);
+    expect(initial.contactPairs).toHaveLength(2);
+    const [floorId, leftId, rightId] = initial.colliderIds;
+    expect(
+      initial.contactPairs.map((pair) => [
+        pair.firstColliderId,
+        pair.secondColliderId,
+      ]),
+    ).toEqual([
+      [floorId, leftId],
+      [floorId, rightId],
+    ]);
+    const stableRightPair = initial.contactPairs[1]!;
     const counters = initial.kernel.counters;
     const body = initial.kernel.bodies[1]!;
     const left = queryPoint3D(world, [-1, 1, 0]);
@@ -643,9 +655,37 @@ describe("PhysicsWorld3D controller scheduling and topology", () => {
       unchanged.massPropertyDerivations + 1,
     );
     const rebuiltRight = queryPoint3D(world, [1, 1, 0]);
+    const rebuiltLeft = queryPoint3D(world, [-2, 1, 0]);
+    expect(rebuiltLeft?.tag).toBe("left");
+    expect(rebuiltLeft?.colliderGeneration).toBe(
+      (left?.colliderGeneration ?? 0) + 1,
+    );
     expect(rebuiltRight?.tag).toBe("right");
     expect(rebuiltRight?.colliderGeneration).toBe(right?.colliderGeneration);
     expect(rebuiltRight?.collider).toBe(right?.collider);
+    expect(changed.kernel.counters.colliderAllocations).toBe(
+      unchanged.kernel.counters.colliderAllocations + 1,
+    );
+    expect(changed.kernel.counters.colliderReleases).toBe(
+      unchanged.kernel.counters.colliderReleases + 1,
+    );
+    expect(changed.kernel.counters.proxyAllocations).toBe(
+      unchanged.kernel.counters.proxyAllocations + 1,
+    );
+    expect(changed.kernel.counters.proxyReleases).toBe(
+      unchanged.kernel.counters.proxyReleases + 1,
+    );
+    expect(changed.contactPairs).toHaveLength(2);
+    expect(
+      changed.contactPairs.map((pair) => [
+        pair.firstColliderId,
+        pair.secondColliderId,
+      ]),
+    ).toEqual([
+      [floorId, leftId],
+      [floorId, rightId],
+    ]);
+    expect(changed.contactPairs[1]).toEqual(stableRightPair);
     expect(changed.kernel.bodies[1]!.inverseMass).toBe(body.inverseMass);
     expect(changed.kernel.bodies[1]!.localInverseInertiaYY).not.toBe(
       body.localInverseInertiaYY,

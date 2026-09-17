@@ -160,6 +160,12 @@ export interface PhysicsWorld3DControllerSnapshot {
   readonly colliderIds: readonly number[];
   readonly shapeBakeCount: number;
   readonly massPropertyDerivations: number;
+  readonly contactPairs: readonly Readonly<{
+    firstColliderId: number;
+    firstColliderGeneration: number;
+    secondColliderId: number;
+    secondColliderGeneration: number;
+  }>[];
   readonly kernel: ReturnType<PhysicsWorld3DKernel["snapshot"]>;
 }
 
@@ -502,6 +508,26 @@ export class PhysicsWorld3DController {
         0,
       ),
       massPropertyDerivations: this.massPropertyDerivations,
+      contactPairs: Object.freeze(
+        Array.from(
+          { length: this.kernel.contacts.contactCount },
+          (_, contact) =>
+            Object.freeze({
+              firstColliderId: this.kernel.colliderIdForIdentity(
+                this.kernel.contacts.firstColliderIndices[contact]!,
+                this.kernel.contacts.firstColliderGenerations[contact]!,
+              )!,
+              firstColliderGeneration:
+                this.kernel.contacts.firstColliderGenerations[contact]!,
+              secondColliderId: this.kernel.colliderIdForIdentity(
+                this.kernel.contacts.secondColliderIndices[contact]!,
+                this.kernel.contacts.secondColliderGenerations[contact]!,
+              )!,
+              secondColliderGeneration:
+                this.kernel.contacts.secondColliderGenerations[contact]!,
+            }),
+        ),
+      ),
       kernel: this.kernel.snapshot(),
     });
   }
@@ -532,18 +558,11 @@ export class PhysicsWorld3DController {
       ) {
         const committed = this.kernel.authoritativePose(body.id);
         const target = body.descriptor.options.target;
+        const hasPartialTarget =
+          target.position !== undefined || target.orientation !== undefined;
         committedKinematicPoses.set(
           body.id,
-          Object.freeze({
-            position:
-              target.position === undefined
-                ? body.initialPose.position
-                : committed.position,
-            orientation:
-              target.orientation === undefined
-                ? body.initialPose.orientation
-                : committed.orientation,
-          }),
+          hasPartialTarget ? committed : body.initialPose,
         );
       }
     }
@@ -829,13 +848,17 @@ export class PhysicsWorld3DController {
       if (target.position === undefined && target.orientation === undefined) {
         continue;
       }
+      const committed =
+        this.kernel.bodyIdentity(body.id) === undefined
+          ? body.initialPose
+          : this.kernel.authoritativePose(body.id);
       const position =
         target.position === undefined
-          ? body.initialPose.position
+          ? committed.position
           : batch.read(target.position as WritableSignal<CRCPhysicsVector3>);
       const orientation =
         target.orientation === undefined
-          ? body.initialPose.orientation
+          ? committed.orientation
           : batch.read(
               target.orientation as WritableSignal<
                 readonly [number, number, number, number]

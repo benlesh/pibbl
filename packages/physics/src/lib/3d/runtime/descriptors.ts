@@ -430,18 +430,16 @@ export class MountedPhysicsAttachment3D implements CRCInternalMountedPropAttachm
         const authoritativePose = reenabled
           ? presentation.initialPose
           : (world.presentationPose(bodyId) ?? presentation.initialPose);
+        const target =
+          descriptor.bodyType === "kinematic"
+            ? descriptor.options.target
+            : undefined;
         const presentedPose =
           descriptor.bodyType === "kinematic"
-            ? Object.freeze({
-                position:
-                  descriptor.options.target.position === undefined
-                    ? frame.authoredPose.position
-                    : authoritativePose.position,
-                orientation:
-                  descriptor.options.target.orientation === undefined
-                    ? frame.authoredPose.orientation
-                    : authoritativePose.orientation,
-              })
+            ? target?.position === undefined &&
+              target?.orientation === undefined
+              ? frame.authoredPose
+              : authoritativePose
             : authoritativePose;
         this.releasePresentationScope = pushPhysicsPresentation(
           resolveWebGLBodyPresentationMatrix3D(
