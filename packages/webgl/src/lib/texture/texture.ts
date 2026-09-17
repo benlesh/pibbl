@@ -17,6 +17,7 @@ export interface InternalWebGLTextureProducer {
 
 interface InternalWebGLTextureRecord {
   readonly data: InternalWebGLTextureData;
+  readonly releaseBitmap: () => void;
   leases: number;
 }
 
@@ -26,6 +27,7 @@ const textureRecords = new WeakMap<CRCWebGLTexture, InternalWebGLTextureRecord>(
 export function createInternalWebGLTexture(
   bitmap: ImageBitmap,
   sampler: Partial<CRCWebGLTextureSampler> = {},
+  releaseBitmap: () => void = () => bitmap.close(),
 ): InternalWebGLTextureProducer {
   const texture = Object.freeze({}) as CRCWebGLTexture;
   const normalizedSampler = Object.freeze({
@@ -40,7 +42,7 @@ export function createInternalWebGLTexture(
     bitmap,
     sampler: normalizedSampler,
   });
-  textureRecords.set(texture, { data, leases: 1 });
+  textureRecords.set(texture, { data, releaseBitmap, leases: 1 });
   let active = true;
   return Object.freeze({
     texture,
@@ -82,5 +84,5 @@ function releaseTextureLease(texture: CRCWebGLTexture): void {
   record.leases -= 1;
   if (record.leases !== 0) return;
   textureRecords.delete(texture);
-  record.data.bitmap.close();
+  record.releaseBitmap();
 }
